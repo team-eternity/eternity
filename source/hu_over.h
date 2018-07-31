@@ -73,6 +73,9 @@ protected:
 public:
    virtual void Setup() = 0;
 
+   //
+   // Draws the overlay
+   //
    inline void DrawOverlay(overlay_e overlay)
    {
       if(!drawerdata[overlay].enabled)
@@ -110,26 +113,20 @@ public:
       }
    }
 
+   //
+   // Sets up the offsets of a given overlay
+   //
    inline void SetupOverlay(overlay_e o, int x, int y)
    {
       drawerdata[o].x = x;
       drawerdata[o].y = y;
    }
 
-   void SetOverlayEnabled(overlay_e overlay, bool enabled)
+   //
+   // Default constructor
+   //
+   HUDOverlay() : drawerdata{}
    {
-      drawerdata[overlay].enabled = enabled;
-   }
-
-   inline bool GetOverlayEnabled(overlay_e overlay) const
-   {
-      return drawerdata[overlay].enabled;
-   }
-
-   HUDOverlay()
-   {
-      for(auto &data : drawerdata)
-         data = { 0, 0, false };
    }
 };
 
@@ -141,9 +138,9 @@ enum hudoverlay_e : unsigned int
    HUO_MAXOVERLAYS
 };
 
-int HU_WC_PlayerAmmo(weaponinfo_t *w);
+int  HU_WC_PlayerAmmo(weaponinfo_t *w);
 bool HU_WC_NoAmmo(weaponinfo_t *w);
-int HU_WC_MaxAmmo(weaponinfo_t *w);
+int  HU_WC_MaxAmmo(weaponinfo_t *w);
 char HU_WeapColor(weaponinfo_t *w);
 
 char HU_HealthColor();

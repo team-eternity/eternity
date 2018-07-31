@@ -265,19 +265,19 @@ void BoomHUD::Setup()
 
    // decide where to put all the widgets
 
-   for(unsigned int i = 0; i < NUMOVERLAY; i++)
-      SetOverlayEnabled(static_cast<overlay_e>(i), true); // turn em all on
+   for(auto &data : drawerdata)
+      data.enabled = true; // turn em all on
 
    // turn off status if we aren't using it
    if(hud_hidestatus)
-      SetOverlayEnabled(ol_status, false);
+      drawerdata[ol_status].enabled = false;
 
    // turn off frag counter or key display,
    // according to if we're in a deathmatch game or not
    if(GameType == gt_dm)
-      SetOverlayEnabled(ol_key, false);
+      drawerdata[ol_key].enabled = false;
    else
-      SetOverlayEnabled(ol_frag, false);
+      drawerdata[ol_frag].enabled = false;
 
    // now build according to style
 
@@ -285,8 +285,8 @@ void BoomHUD::Setup()
    {
    case HUD_OFF:       // 'off'
    case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
-      for(unsigned int i = 0; i < NUMOVERLAY; i++)
-         SetOverlayEnabled(static_cast<overlay_e>(i), false);
+      for(auto &data : drawerdata)
+         data.enabled = false;
       break;
 
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
@@ -294,7 +294,7 @@ void BoomHUD::Setup()
 
       for(int i = NUMOVERLAY - 1; i >= 0; --i)
       {
-         if(GetOverlayEnabled(static_cast<overlay_e>(i)))
+         if(drawerdata[i].enabled)
          {
             SetupOverlay(static_cast<overlay_e>(i), 0, y);
             y -= 8;
@@ -323,15 +323,15 @@ void BoomHUD::Setup()
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
-      SetupOverlay(ol_health, SCREENWIDTH-138,   0);
-      SetupOverlay(ol_armor,  SCREENWIDTH-138,   8);
-      SetupOverlay(ol_weap,   SCREENWIDTH-138, 184);
-      SetupOverlay(ol_ammo,   SCREENWIDTH-138, 192);
+      SetupOverlay(ol_health, SCREENWIDTH - 138,   0);
+      SetupOverlay(ol_armor,  SCREENWIDTH - 138,   8);
+      SetupOverlay(ol_weap,   SCREENWIDTH - 138, 184);
+      SetupOverlay(ol_ammo,   SCREENWIDTH - 138, 192);
 
       if(GameType == gt_dm)  // if dm, put frags in place of keys
          SetupOverlay(ol_frag, 0, 192);
       else
-         SetupOverlay(ol_key, 0, 192);
+         SetupOverlay(ol_key,  0, 192);
 
       if(!hud_hidestatus)
          SetupOverlay(ol_status, 0, 184);

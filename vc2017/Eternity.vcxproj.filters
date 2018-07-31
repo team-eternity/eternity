@@ -387,13 +387,13 @@
     <ClCompile Include="..\Source\g_gfs.cpp">
       <Filter>Source Files\G_\G_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\hu_frags.cpp">
+    <ClCompile Include="..\source\hu_frags.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\hu_over.cpp">
+    <ClCompile Include="..\source\hu_over.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\hu_stuff.cpp">
+    <ClCompile Include="..\source\hu_stuff.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\hi_stuff.cpp">
@@ -1193,13 +1193,13 @@
     <ClInclude Include="..\Source\g_gfs.h">
       <Filter>Source Files\G_\G_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Hu_frags.h">
+    <ClInclude Include="..\source\hu_frags.h">
       <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Hu_over.h">
+    <ClInclude Include="..\source\hu_over.h">
       <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\Source\Hu_stuff.h">
+    <ClInclude Include="..\source\hu_stuff.h">
       <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\hi_stuff.h">
