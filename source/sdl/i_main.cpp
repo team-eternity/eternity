@@ -44,7 +44,7 @@
 #endif
 
 // MaxW: Necessary for a specific check that seems to help with audio issues
-extern bool I_IsWindows10OrHigher();
+#include "../Win32/i_winversion.h"
 
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 

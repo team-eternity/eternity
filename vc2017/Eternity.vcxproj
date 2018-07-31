@@ -1999,6 +1999,7 @@
     <ClInclude Include="..\source\textscreen\txt_window.h" />
     <ClInclude Include="..\source\textscreen\txt_window_action.h" />
     <ClInclude Include="..\source\v_image.h" />
+    <ClInclude Include="..\source\Win32\i_winversion.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />
     <ClInclude Include="..\Source\m_argv.h" />
     <ClInclude Include="..\Source\m_bbox.h" />

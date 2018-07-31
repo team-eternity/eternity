@@ -1787,6 +1787,9 @@
     <ClInclude Include="..\source\e_edfmetatable.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\source\Win32\i_winversion.h">
+      <Filter>Source Files\Win32\Win32 Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\ee.ico">
