@@ -23,6 +23,7 @@
 
 #include "angelscript.h"
 
+#include "aeon_fixed.h"
 #include "aeon_string.h"
 #include "c_io.h"
 #include "d_dwfile.h"
@@ -43,7 +44,7 @@ static void MessageCallback(const asSMessageInfo *msg, void *param)
       type = "WARN";
    else if(msg->type == asMSGTYPE_INFORMATION)
       type = "INFO";
-   C_Printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
+   printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
 }
 
 //
@@ -58,6 +59,11 @@ bool RegisterTypedefs(asIScriptEngine *engine)
       return false;
 
    return true;
+}
+
+static bool RegisterObjectTypes(asIScriptEngine *engine)
+{
+
 }
 
 int Aeon_Init()
@@ -78,6 +84,8 @@ int Aeon_Init()
    // Register typedefs
    RegisterTypedefs(engine);
 
+   ASScriptObjFixed::Init(engine);
+
    // Register qstring type
    if(!RegisterQString(engine))
       I_Error("Aeon_Init: Failed while registering qstring type\n");
@@ -95,7 +103,7 @@ int Aeon_Init()
    if(asmodule->AddScriptSection("section", buf, dwfile.fileLength(), 0) < 0)
       I_Error("Aeon_Init: Could not add code to module\n");
 
-   if(asmodule->Build() < 0)
+    if(asmodule->Build() < 0)
       I_Error("Aeon_Init: Could not build module\n");
 
    // call main function

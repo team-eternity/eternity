@@ -21,10 +21,11 @@
 // Authors: James Haley, Max Waine
 //
 
-#include "angelscript.h"
-
+#include "aeon_common.h"
+#include "aeon_fixed.h"
 #include "c_io.h"
 #include "i_system.h"
+#include "m_fixed.h"
 #include "m_qstr.h"
 #include "m_utils.h"
 
@@ -145,18 +146,16 @@ static void ASPrint(float f)
    C_Printf("%f\n", f);
 }
 
+static void ASPrint(ASFixed f)
+{
+   C_Printf("%f\n", M_FixedToDouble(f.value));
+}
+
 template<typename T>
 class sizer
 {
 public:
    static const size_t size = sizeof(T);
-};
-
-struct aeonfuncreg_t
-{
-   const char *declaration;
-   asSFuncPtr  funcPointer;
-   asDWORD     callConv;
 };
 
 #define QSTRMETHOD(m) asMETHOD(qstring, m)
@@ -314,6 +313,10 @@ bool RegisterQString(asIScriptEngine *engine)
       return false;
    if(engine->RegisterGlobalFunction("void print(float)",
                                      asFUNCTIONPR(ASPrint, (float), void),
+                                     asCALL_CDECL) < 0)
+      return false;
+   if(engine->RegisterGlobalFunction("void print(fixed)",
+                                     asFUNCTIONPR(ASPrint, (ASFixed), void),
                                      asCALL_CDECL) < 0)
       return false;
 
