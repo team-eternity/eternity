@@ -1,10 +1,11 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2047
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcxproj", "{233045E2-53A6-4579-A272-3D3CF6D97405}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A3D79066-950D-42E4-8555-D7663BA5E0C7} = {A3D79066-950D-42E4-8555-D7663BA5E0C7}
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD} = {39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "snes_spc", "snes_spc.vcxproj", "{8B8CBCA2-21D3-4C23-A397-A4D084F649D3}"
@@ -14,6 +15,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "libpng.vcxproj", "{D431963B-F2D5-4BA6-9D01-4A942FC63E96}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ACSVM", "ACSVM.vcxproj", "{A3D79066-950D-42E4-8555-D7663BA5E0C7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "angelscript", "..\angelscript\angelscript\projects\msvc2017\angelscript.vcxproj", "{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,8 +66,19 @@ Global
 		{A3D79066-950D-42E4-8555-D7663BA5E0C7}.Release|Win32.Build.0 = Release|Win32
 		{A3D79066-950D-42E4-8555-D7663BA5E0C7}.Release|x64.ActiveCfg = Release|x64
 		{A3D79066-950D-42E4-8555-D7663BA5E0C7}.Release|x64.Build.0 = Release|x64
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Debug|Win32.Build.0 = Debug|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Debug|x64.ActiveCfg = Debug|x64
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Debug|x64.Build.0 = Debug|x64
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Release|Win32.ActiveCfg = Release|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Release|Win32.Build.0 = Release|Win32
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Release|x64.ActiveCfg = Release|x64
+		{39E6AF97-6BA3-4A72-8C61-BCEBF214EBFD}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9FF3F373-5F3A-4D2A-9A22-EE880510A922}
 	EndGlobalSection
 EndGlobal
