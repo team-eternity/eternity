@@ -690,6 +690,14 @@ int qstring::strCmp(const char *str) const
 }
 
 //
+// Convenience overload
+//
+int qstring::strCmp(const qstring &str) const
+{
+   return strCmp(str.constPtr());
+}
+
+//
 // qstring::strNCmp
 //
 // C-style string compare with length limitation.

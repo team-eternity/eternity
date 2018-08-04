@@ -316,6 +316,8 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\aeon_init.cpp" />
+    <ClCompile Include="..\source\aeon_string.cpp" />
     <ClCompile Include="..\Source\am_color.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1879,6 +1881,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h" />
+    <ClInclude Include="..\source\aeon_init.h" />
+    <ClInclude Include="..\source\aeon_string.h" />
     <ClInclude Include="..\Source\am_map.h" />
     <ClInclude Include="..\source\a_args.h" />
     <ClInclude Include="..\source\cam_common.h" />

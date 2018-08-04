@@ -35,6 +35,7 @@
 #include "z_zone.h"
 
 #include "acs_intr.h"
+#include "aeon_init.h"
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
@@ -1672,6 +1673,9 @@ static void D_DoomInit()
 
    startupmsg("S_Init", "Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
+
+   startupmsg("Aeon_Init", "Setting up AngelScript.");
+   Aeon_Init();
 
    //
    // NETCODE_FIXME: Netgame check.
