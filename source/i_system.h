@@ -26,6 +26,8 @@
 #ifndef I_SYSTEM_H__
 #define I_SYSTEM_H__
 
+#include <stdarg.h>
+
 #include "d_keywds.h"
 
 struct ticcmd_t;
