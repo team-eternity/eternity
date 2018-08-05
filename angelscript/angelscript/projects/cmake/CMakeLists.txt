@@ -120,7 +120,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)    
 endif()
 
-add_definitions(-DANGELSCRIPT_EXPORT -D_LIB)
+add_definitions(-DANGELSCRIPT_EXPORT -DAS_MAX_PORTABILITY -D_LIB)
 
 # Fix x64 issues on Linux
 if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" AND NOT APPLE)
