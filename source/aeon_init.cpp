@@ -22,6 +22,7 @@
 //
 
 #include "angelscript.h"
+#include "aswrappedcall.h"
 
 #include "aeon_common.h"
 #include "aeon_fixed.h"
@@ -51,28 +52,24 @@ static void MessageCallback(const asSMessageInfo *msg, void *param)
 //
 // Register typedefs
 //
-bool RegisterTypedefs(asIScriptEngine *engine)
+static void RegisterTypedefs(asIScriptEngine *e)
 {
-   if(engine->RegisterTypedef("char", "int8") < 0)
-      return false;
-
-   if(engine->RegisterTypedef("uchar", "uint8") < 0)
-      return false;
-
-   return true;
+   e->RegisterTypedef("char", "int8");
+   e->RegisterTypedef("uchar", "uint8");
+   //e->RegisterTypedef("angle", "uint32");
 }
 
 static void RegisterPrintFuncs(asIScriptEngine *e)
 {
    e->RegisterGlobalFunction("void print(int)",
-      asFUNCTIONPR(ASPrint, (int), void),
-      asCALL_CDECL);
+                             WRAP_FN_PR(ASPrint, (int), void),
+                             asCALL_GENERIC);
    e->RegisterGlobalFunction("void print(uint)",
-      asFUNCTIONPR(ASPrint, (unsigned int), void),
-      asCALL_CDECL);
+                             WRAP_FN_PR(ASPrint, (unsigned int), void),
+                             asCALL_GENERIC);
    e->RegisterGlobalFunction("void print(float)",
-      asFUNCTIONPR(ASPrint, (float), void),
-      asCALL_CDECL);
+                             WRAP_FN_PR(ASPrint, (float), void),
+                             asCALL_GENERIC);
 }
 
 int Aeon_Init()
@@ -109,7 +106,7 @@ int Aeon_Init()
    for(char *temp = buf; !dwfile.atEof(); temp++)
       *temp = dwfile.getChar();
 
-   asIScriptModule *asmodule = engine->GetModule("MyModule", asGM_CREATE_IF_NOT_EXISTS);
+   asIScriptModule *asmodule = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS);
    if(!asmodule)
       I_Error("Aeon_Init: Could not create module\n");
 

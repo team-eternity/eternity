@@ -25,7 +25,7 @@
 #ifndef AEON_FIXED_H__
 #define AEON_FIXED_H__
 
-#include "m_fixed.h"
+#include <stdint.h>
 
 class AeonScriptObjFixed
 {
@@ -34,6 +34,7 @@ public:
    static void ConstructFromOther(const ASFixed &other, ASFixed *thisFixed);
    static void ConstructFromDouble(double other, ASFixed *thisFixed);
    static void ConstructFromInt(int other, ASFixed *thisFixed);
+   static void ConstructFromPair(int16_t integer, double frac, ASFixed *thisFixed);
 
    static void Init(asIScriptEngine *e);
 };

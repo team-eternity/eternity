@@ -314,6 +314,7 @@ ENDIF (WIN32)
 ######################### Set Build Targets   ##################################
 
 INCLUDE_DIRECTORIES(acsvm)
+INCLUDE_DIRECTORIES(angelscript/add_on/autowrapper)
 INCLUDE_DIRECTORIES(angelscript/angelscript/include)
 INCLUDE_DIRECTORIES(libpng)
 INCLUDE_DIRECTORIES(zlib)

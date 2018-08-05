@@ -22,10 +22,7 @@
 //
 
 #include "aeon_common.h"
-#include "aeon_fixed.h"
 #include "c_io.h"
-#include "m_fixed.h"
-#include "m_qstr.h"
 
 void ASPrint(int i)
 {
