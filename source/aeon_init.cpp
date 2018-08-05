@@ -21,9 +21,6 @@
 // Authors: James Haley, Max Waine
 //
 
-#include "angelscript.h"
-#include "aswrappedcall.h"
-
 #include "aeon_common.h"
 #include "aeon_fixed.h"
 #include "aeon_string.h"

@@ -26,6 +26,7 @@
 #define AEON_COMMON_H__
 
 #include "angelscript.h"
+#include "aswrappedcall.h"
 
 class ASFixed;
 class qstring;
@@ -34,7 +35,9 @@ struct aeonfuncreg_t
 {
    const char *declaration;
    asSFuncPtr  funcPointer;
-   asDWORD     callConv;
+   // TODO: Re-implement when ARM and Mac get non-generic calling conventions
+   //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
+   // asDWORD     callConv;
 };
 
 //

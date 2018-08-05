@@ -22,9 +22,6 @@
 // Authors: Max Waine
 //
 
-#include "angelscript.h"
-#include "aswrappedcall.h"
-
 #include "aeon_common.h"
 #include "aeon_fixed.h"
 #include "c_io.h"
@@ -125,19 +122,19 @@ static void ASPrint(ASFixed f)
 
 static aeonfuncreg_t fixedFuncs[] =
 {
-   { "fixed opAdd(const fixed &in)",        FIXEDBINOP(+, const ASFixed &),        asCALL_GENERIC },
-   { "fixed opAdd(const int val)",          FIXEDBINOP(+, const int),              asCALL_GENERIC },
-   { "fixed opMul(const fixed &in)",        FIXEDBINOP(*, const ASFixed &),        asCALL_GENERIC },
-   { "fixed opMul(const int val)",          FIXEDBINOP(*, const int),              asCALL_GENERIC },
-   { "fixed opDiv(const fixed &in)",        FIXEDBINOP(/, const ASFixed &),        asCALL_GENERIC },
-   { "fixed opDiv(const int val)",          FIXEDBINOP(/, const int),              asCALL_GENERIC },
-   { "fixed &opAddAssign(const fixed &in)", FIXEDASSIGNOP(+=, const ASFixed &),    asCALL_GENERIC },
-   { "fixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int),          asCALL_GENERIC },
-   { "fixed &opMulAssign(const fixed &in)", FIXEDASSIGNOP(*=, const ASFixed &),    asCALL_GENERIC },
-   { "fixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int),          asCALL_GENERIC },
-   { "fixed &opDivAssign(const fixed &in)", FIXEDASSIGNOP(/=, const ASFixed &),    asCALL_GENERIC },
-   { "fixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int),          asCALL_GENERIC },
-   { "double opImplConv()", WRAP_MFN_PR(ASFixed, operator double, (void), double), asCALL_GENERIC },
+   { "fixed opAdd(const fixed &in)",        FIXEDBINOP(+, const ASFixed &)         },
+   { "fixed opAdd(const int val)",          FIXEDBINOP(+, const int),              },
+   { "fixed opMul(const fixed &in)",        FIXEDBINOP(*, const ASFixed &)         },
+   { "fixed opMul(const int val)",          FIXEDBINOP(*, const int)               },
+   { "fixed opDiv(const fixed &in)",        FIXEDBINOP(/, const ASFixed &)         },
+   { "fixed opDiv(const int val)",          FIXEDBINOP(/, const int)               },
+   { "fixed &opAddAssign(const fixed &in)", FIXEDASSIGNOP(+=, const ASFixed &)     },
+   { "fixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int)           },
+   { "fixed &opMulAssign(const fixed &in)", FIXEDASSIGNOP(*=, const ASFixed &)     },
+   { "fixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int)           },
+   { "fixed &opDivAssign(const fixed &in)", FIXEDASSIGNOP(/=, const ASFixed &)     },
+   { "fixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int)           },
+   { "double opImplConv()",                 WRAP_MFN(ASFixed, operator double)     },
 };
 
 void AeonScriptObjFixed::Init(asIScriptEngine *e)
@@ -157,7 +154,7 @@ void AeonScriptObjFixed::Init(asIScriptEngine *e)
                               WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
 
    for(const aeonfuncreg_t &fn : fixedFuncs)
-      e->RegisterObjectMethod("fixed", fn.declaration, fn.funcPointer, fn.callConv);
+      e->RegisterObjectMethod("fixed", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
    e->RegisterGlobalFunction("void print(fixed)", WRAP_FN_PR(ASPrint, (ASFixed), void),
                              asCALL_GENERIC);

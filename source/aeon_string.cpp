@@ -21,17 +21,10 @@
 // Authors: James Haley, Max Waine
 //
 
-#include "angelscript.h"
-#include "aswrappedcall.h"
-
 #include "aeon_common.h"
-#include "aeon_fixed.h"
 #include "aeon_string.h"
 #include "c_io.h"
-#include "i_system.h"
-#include "m_fixed.h"
 #include "m_qstr.h"
-#include "m_utils.h"
 
 class ASRefQString : public qstring
 {
@@ -149,37 +142,37 @@ public:
 
 static aeonfuncreg_t qstringFuncs[] =
 {
-   { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos),  asCALL_GENERIC },
-   { "uint length() const",            QSTRMETHOD(length),           asCALL_GENERIC },
-   { "bool empty() const",             QSTRMETHOD(empty),            asCALL_GENERIC },
-   { "qstring &clear()",               QSTRMETHOD(clear),            asCALL_GENERIC },
-   { "char charAt(uint idx) const",    QSTRMETHOD(charAt),           asCALL_GENERIC },
-   { "uchar ucharAt(uint idx) const",  QSTRMETHOD(ucharAt),          asCALL_GENERIC },
-   { "qstring &push(char ch)",         QSTRMETHOD(Putc),             asCALL_GENERIC },
-   { "qstring &pop()",                 QSTRMETHOD(Delc),             asCALL_GENERIC },
-   { XFORMSIG("concat"),               QSTRXFORM(concat),            asCALL_GENERIC },
-   { QUERYSIG("compare"),              QSTRQUERY(compare),           asCALL_GENERIC },
-   { "uint hashCode() const",          QSTRMETHOD(hashCode),         asCALL_GENERIC },
-   { "uint hashCodeCase() const",      QSTRMETHOD(hashCodeCase),     asCALL_GENERIC },
-   { COMPRSIG("strCmp"),               QSTRCOMPR(strCmp),            asCALL_GENERIC },
-   { XFORMSIG("copy"),                 QSTRXFORM(copy),              asCALL_GENERIC },
-   { MARGSIG("copyInto"),              QSTRMARG(copyInto),           asCALL_GENERIC },
-   { "void swapWith(qstring &inout)",  QSTRMETHOD(swapWith),         asCALL_GENERIC },
-   { "qstring &toUpper()",             QSTRMETHOD(toUpper),          asCALL_GENERIC },
-   { "qstring &toLower()",             QSTRMETHOD(toLower),          asCALL_GENERIC },
-   { "int toInt() const",              QSTRMETHOD(toInt),            asCALL_GENERIC },
-   { "uint findFirstOf(int) const",    QSTRMETHOD(findFirstOf),      asCALL_GENERIC },
-   { "uint findFirstNotOf(int) const", QSTRMETHOD(findFirstNotOf),   asCALL_GENERIC },
-   { "uint findLastOf(int) const",     QSTRMETHOD(findLastOf),       asCALL_GENERIC },
-   { XFORMSIG("opAssign"),             QSTRXFORM(operator =),        asCALL_GENERIC },
-   { XFORMSIG("opAddAssign"),          QSTRXFORM(operator +=),       asCALL_GENERIC },
-   { QUERYSIG("opEquals"),             QSTRQUERY(compare),           asCALL_GENERIC },
-   { COMPRSIG("opCmp"),                QSTRCOMPR(strCmp),            asCALL_GENERIC },
-   { XFORMSIG("opShl"),                QSTRXFORM(operator <<),       asCALL_GENERIC },
-   { "qstring &opShl(int)",            QSTRFMINT(operator <<),       asCALL_GENERIC },
-   { "qstring &opShl(double)",         QSTRFMDBL(operator <<),       asCALL_GENERIC },
-   { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(QStrGetOpIdx), asCALL_GENERIC },
-   { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(QStrSetOpIdx), asCALL_GENERIC },
+   { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos)  },
+   { "uint length() const",            QSTRMETHOD(length)           },
+   { "bool empty() const",             QSTRMETHOD(empty)            },
+   { "qstring &clear()",               QSTRMETHOD(clear)            },
+   { "char charAt(uint idx) const",    QSTRMETHOD(charAt)           },
+   { "uchar ucharAt(uint idx) const",  QSTRMETHOD(ucharAt)          },
+   { "qstring &push(char ch)",         QSTRMETHOD(Putc)             },
+   { "qstring &pop()",                 QSTRMETHOD(Delc)             },
+   { XFORMSIG("concat"),               QSTRXFORM(concat)            },
+   { QUERYSIG("compare"),              QSTRQUERY(compare)           },
+   { "uint hashCode() const",          QSTRMETHOD(hashCode)         },
+   { "uint hashCodeCase() const",      QSTRMETHOD(hashCodeCase)     },
+   { COMPRSIG("strCmp"),               QSTRCOMPR(strCmp)            },
+   { XFORMSIG("copy"),                 QSTRXFORM(copy)              },
+   { MARGSIG("copyInto"),              QSTRMARG(copyInto)           },
+   { "void swapWith(qstring &inout)",  QSTRMETHOD(swapWith)         },
+   { "qstring &toUpper()",             QSTRMETHOD(toUpper)          },
+   { "qstring &toLower()",             QSTRMETHOD(toLower)          },
+   { "int toInt() const",              QSTRMETHOD(toInt)            },
+   { "uint findFirstOf(int) const",    QSTRMETHOD(findFirstOf)      },
+   { "uint findFirstNotOf(int) const", QSTRMETHOD(findFirstNotOf)   },
+   { "uint findLastOf(int) const",     QSTRMETHOD(findLastOf)       },
+   { XFORMSIG("opAssign"),             QSTRXFORM(operator =)        },
+   { XFORMSIG("opAddAssign"),          QSTRXFORM(operator +=)       },
+   { QUERYSIG("opEquals"),             QSTRQUERY(compare)           },
+   { COMPRSIG("opCmp"),                QSTRCOMPR(strCmp)            },
+   { XFORMSIG("opShl"),                QSTRXFORM(operator <<)       },
+   { "qstring &opShl(int)",            QSTRFMINT(operator <<)       },
+   { "qstring &opShl(double)",         QSTRFMDBL(operator <<)       },
+   { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(QStrGetOpIdx) },
+   { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(QStrSetOpIdx) },
 };
 
 //
@@ -205,7 +198,7 @@ void AeonScriptObjQString::Init(asIScriptEngine *e)
    e->RegisterStringFactory("qstring", &aeonStringFactory);
 
    for(const aeonfuncreg_t &fn : qstringFuncs)
-      e->RegisterObjectMethod("qstring", fn.declaration, fn.funcPointer, fn.callConv);
+      e->RegisterObjectMethod("qstring", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
    // register global print func
    e->RegisterGlobalFunction("void print(const qstring &in)",
