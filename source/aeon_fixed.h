@@ -27,36 +27,7 @@
 
 #include "m_fixed.h"
 
-class ASFixed
-{
-public:
-   fixed_t value;
-
-   ASFixed() : value(0)
-   {
-   }
-
-   ASFixed(fixed_t value) : value(value)
-   {
-   }
-
-   ASFixed operator + (const ASFixed &other);
-   ASFixed operator + (const fixed_t other);
-   ASFixed &operator += (const ASFixed &in);
-   ASFixed &operator += (const int val);
-   ASFixed operator * (const ASFixed &other);
-   ASFixed operator * (const fixed_t other);
-   ASFixed &operator *= (const ASFixed &in);
-   ASFixed &operator *= (const int val);
-   ASFixed operator / (const ASFixed &other);
-   ASFixed operator / (const fixed_t other);
-   ASFixed &operator /= (const ASFixed &in);
-   ASFixed &operator /= (const int val);
-
-   operator double() { return M_FixedToDouble(value);  }
-};
-
-class ASScriptObjFixed
+class AeonScriptObjFixed
 {
 public:
    static void Construct(ASFixed *thisFixed);

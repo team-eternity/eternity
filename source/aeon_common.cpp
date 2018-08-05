@@ -1,4 +1,3 @@
-//
 // The Eternity Engine
 // Copyright(C) 2018 James Haley, Max Waine, et al.
 //
@@ -19,32 +18,29 @@
 // file COPYING-EE for details.
 //
 // Purpose: Common Aeon functions and definitions
-// Authors: Max Waine
+// Authors: James Haley, Max Waine
 //
 
-#ifndef AEON_COMMON_H__
-#define AEON_COMMON_H__
+#include "aeon_common.h"
+#include "aeon_fixed.h"
+#include "c_io.h"
+#include "m_fixed.h"
+#include "m_qstr.h"
 
-#include "angelscript.h"
-
-class ASFixed;
-class qstring;
-
-struct aeonfuncreg_t
+void ASPrint(int i)
 {
-   const char *declaration;
-   asSFuncPtr  funcPointer;
-   asDWORD     callConv;
-};
+   C_Printf("%d\n", i);
+}
 
-//
-// Print function for AngelScript
-//
-void ASPrint(int i);
-void ASPrint(unsigned int u);
-void ASPrint(float f);
+void ASPrint(unsigned int u)
+{
+   C_Printf("%u\n", u);
+}
 
-#endif
+void ASPrint(float f)
+{
+   C_Printf("%f\n", f);
+}
 
 // EOF
 

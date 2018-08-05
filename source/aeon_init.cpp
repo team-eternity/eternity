@@ -23,6 +23,7 @@
 
 #include "angelscript.h"
 
+#include "aeon_common.h"
 #include "aeon_fixed.h"
 #include "aeon_string.h"
 #include "c_io.h"
@@ -61,9 +62,17 @@ bool RegisterTypedefs(asIScriptEngine *engine)
    return true;
 }
 
-static bool RegisterObjectTypes(asIScriptEngine *engine)
+static void RegisterPrintFuncs(asIScriptEngine *e)
 {
-
+   e->RegisterGlobalFunction("void print(int)",
+      asFUNCTIONPR(ASPrint, (int), void),
+      asCALL_CDECL);
+   e->RegisterGlobalFunction("void print(uint)",
+      asFUNCTIONPR(ASPrint, (unsigned int), void),
+      asCALL_CDECL);
+   e->RegisterGlobalFunction("void print(float)",
+      asFUNCTIONPR(ASPrint, (float), void),
+      asCALL_CDECL);
 }
 
 int Aeon_Init()
@@ -84,12 +93,16 @@ int Aeon_Init()
    // Register typedefs
    RegisterTypedefs(engine);
 
-   ASScriptObjFixed::Init(engine);
+   // Register print functions for primitive types
+   RegisterPrintFuncs(engine);
+
+   // Register fixed-point number type
+   AeonScriptObjFixed::Init(engine);
 
    // Register qstring type
-   if(!RegisterQString(engine))
-      I_Error("Aeon_Init: Failed while registering qstring type\n");
+   AeonScriptObjQString::Init(engine);
 
+   // FIXME: Below is temporary gross hacks
    DWFILE dwfile;
    dwfile.openFile(M_SafeFilePath(basepath, "test.asc"), "rb");
    char *buf = ecalloc(char *, dwfile.fileLength(), sizeof(char));

@@ -29,63 +29,84 @@
 #include "c_io.h"
 #include "m_fixed.h"
 
-ASFixed ASFixed::operator + (const ASFixed &in) { return value + in.value; }
-ASFixed ASFixed::operator + (const int val) { return value + (val << FRACBITS); }
-ASFixed &ASFixed::operator += (const ASFixed &in)
+class ASFixed
 {
-   value += in.value;
-   return *this;
-}
-ASFixed &ASFixed::operator += (const int val)
-{
-   value += val << FRACBITS;
-   return *this;
-}
+public:
+   fixed_t value;
 
-ASFixed ASFixed::operator * (const ASFixed &in) { return FixedMul(value, in.value); }
-ASFixed ASFixed::operator * (const int val)     { return value * val; }
-ASFixed &ASFixed::operator *= (const ASFixed &in)
-{
-   value = FixedMul(value, in.value);
-   return *this;
-}
-ASFixed &ASFixed::operator *= (const int val)
-{
-   value *= val;
-   return *this;
-}
+   ASFixed() : value(0)
+   {
+   }
 
-ASFixed ASFixed::operator / (const ASFixed &in) { return FixedDiv(value, in.value); }
-ASFixed ASFixed::operator / (const int val)     { return value / val; }
-ASFixed &ASFixed::operator /= (const ASFixed &in)
-{
-   value = FixedDiv(value, in.value);
-   return *this;
-}
-ASFixed &ASFixed::operator /= (const int val)
-{
-   value /= val;
-   return *this;
-}
+   ASFixed(fixed_t value) : value(value)
+   {
+   }
 
-void ASScriptObjFixed::Construct(ASFixed *thisFixed)
+   ASFixed operator + (const ASFixed &in) { return value + in.value; }
+   ASFixed operator + (const fixed_t val) { return value + (val << FRACBITS); }
+   ASFixed operator * (const ASFixed &in) { return FixedMul(value, in.value); }
+   ASFixed operator * (const fixed_t val) { return value * val; }
+   ASFixed operator / (const ASFixed &in) { return FixedDiv(value, in.value); }
+   ASFixed operator / (const fixed_t val) { return value / val; }
+
+   ASFixed &operator += (const ASFixed &in)
+   {
+      value += in.value;
+      return *this;
+   }
+   ASFixed &operator += (const int val)
+   {
+      value += val << FRACBITS;
+      return *this;
+   }
+   ASFixed &operator *= (const ASFixed &in)
+   {
+      value = FixedMul(value, in.value);
+      return *this;
+   }
+   ASFixed &operator *= (const int val)
+   {
+      value *= val;
+      return *this;
+   }
+
+   ASFixed &operator /= (const ASFixed &in)
+   {
+      value = FixedDiv(value, in.value);
+      return *this;
+   }
+   ASFixed &operator /= (const int val)
+   {
+      value /= val;
+      return *this;
+   }
+
+   operator double() { return M_FixedToDouble(value); }
+};
+
+void AeonScriptObjFixed::Construct(ASFixed *thisFixed)
 {
    *thisFixed = ASFixed();
 }
 
-void ASScriptObjFixed::ConstructFromOther(const ASFixed &other, ASFixed *thisFixed)
+void AeonScriptObjFixed::ConstructFromOther(const ASFixed &other, ASFixed *thisFixed)
 {
    *thisFixed = ASFixed(other);
 }
 
-void ASScriptObjFixed::ConstructFromDouble(double other, ASFixed *thisFixed)
+void AeonScriptObjFixed::ConstructFromDouble(double other, ASFixed *thisFixed)
 {
    thisFixed->value = M_DoubleToFixed(other);
 }
 
-void ASScriptObjFixed::ConstructFromInt(int other, ASFixed *thisFixed)
+void AeonScriptObjFixed::ConstructFromInt(int other, ASFixed *thisFixed)
 {
    thisFixed->value = other << FRACBITS;
+}
+
+static void ASPrint(ASFixed f)
+{
+   C_Printf("%f\n", M_FixedToDouble(f.value));
 }
 
 #define FIXEDBINOP(op, param) \
@@ -111,7 +132,7 @@ static aeonfuncreg_t fixedFuncs[] =
    { "double opImplConv()", asMETHODPR(ASFixed, operator double, (void), double), asCALL_THISCALL },
 };
 
-void ASScriptObjFixed::Init(asIScriptEngine *e)
+void AeonScriptObjFixed::Init(asIScriptEngine *e)
 {
    e->RegisterObjectType("fixed", sizeof(ASFixed),
                          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
@@ -127,6 +148,9 @@ void ASScriptObjFixed::Init(asIScriptEngine *e)
 
    for(const aeonfuncreg_t &fn : fixedFuncs)
       e->RegisterObjectMethod("fixed", fn.declaration, fn.funcPointer, fn.callConv);
+
+   e->RegisterGlobalFunction("void print(fixed)", asFUNCTIONPR(ASPrint, (ASFixed), void),
+                             asCALL_CDECL);
 }
 
 // EOF

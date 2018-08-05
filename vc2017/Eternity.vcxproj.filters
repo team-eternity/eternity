@@ -1023,6 +1023,9 @@
     <ClCompile Include="..\source\aeon_fixed.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\aeon_common.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">

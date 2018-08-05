@@ -235,6 +235,15 @@
     <Filter Include="Source Files\XL_\XL_ Source">
       <UniqueIdentifier>{09ccd1ab-91bb-4216-9ff4-c314b45f28c8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Aeon_">
+      <UniqueIdentifier>{4dd0c182-ceed-4dd8-9e1f-800f59a8eaa2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon_\Aeon_ Source">
+      <UniqueIdentifier>{6b6e15b0-7dec-4b9d-af05-26ee7cf884d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Aeon_\Aeon_ Headers">
+      <UniqueIdentifier>{31eb45ba-a9b4-4902-b6d7-78bfdc0bc0f9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\source\acs_func.cpp">
@@ -1004,6 +1013,18 @@
     </ClCompile>
     <ClCompile Include="..\source\e_edfmetatable.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\aeon_common.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\aeon_fixed.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\aeon_init.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\aeon_string.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1789,6 +1810,18 @@
     </ClInclude>
     <ClInclude Include="..\source\Win32\i_winversion.h">
       <Filter>Source Files\Win32\Win32 Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_common.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_fixed.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_init.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_string.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

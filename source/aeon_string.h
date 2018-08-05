@@ -27,7 +27,11 @@
 
 class asIScriptEngine;
 
-bool RegisterQString(asIScriptEngine *engine);
+class AeonScriptObjQString
+{
+public:
+   static void Init(asIScriptEngine *e);
+};
 
 #endif
 

@@ -23,6 +23,7 @@
 
 #include "aeon_common.h"
 #include "aeon_fixed.h"
+#include "aeon_string.h"
 #include "c_io.h"
 #include "i_system.h"
 #include "m_fixed.h"
@@ -42,14 +43,12 @@ public:
    static qstring *Factory()
    {
       auto qstr = new ASRefQString();
-      //gPlatform->debugMsg("%p: newborn qstring leaving factory\n", qstr);
       return qstr;
    }
 
    static qstring *FactoryFromOther(const qstring &other)
    {
       auto qstr = new ASRefQString(static_cast<const ASRefQString &>(other));
-      //gPlatform->debugMsg("%p: newborn qstring from %s leaving factory\n", qstr, other.constPtr());
       return qstr;
    }
 
@@ -57,19 +56,13 @@ public:
    {
       auto asRefQStr = static_cast<ASRefQString *>(qstr);
       ++asRefQStr->refcount;
-      //gPlatform->debugMsg("%p: refcount increased to %u\n", asRefQStr, asRefQStr->refcount);
    }
 
    static void Release(qstring *qstr)
    {
       auto asRefQStr = static_cast<ASRefQString *>(qstr);
       if(--asRefQStr->refcount == 0)
-      {
-         //gPlatform->debugMsg("%p: refcount is zero, destroying\n", asRefQStr);
          delete asRefQStr;
-      }
-      else
-         ;//gPlatform->debugMsg("%p: refcount decreased to %u\n", asRefQStr, asRefQStr->refcount);
    }
 };
 
@@ -105,7 +98,7 @@ public:
 //
 // npos wrapper
 //
-unsigned int QStrGetNpos(qstring *qstr)
+static unsigned int QStrGetNpos(qstring *qstr)
 {
    return qstring::npos;
 }
@@ -113,12 +106,12 @@ unsigned int QStrGetNpos(qstring *qstr)
 //
 // Wrappers for operator []
 //
-int QStrGetOpIdx(const qstring *qstr, int idx)
+static int QStrGetOpIdx(const qstring *qstr, int idx)
 {
    return (*qstr)[idx];
 }
 
-void QStrSetOpIdx(qstring *qstr, int idx, int value)
+static void QStrSetOpIdx(qstring *qstr, int idx, int value)
 {
    (*qstr)[idx] = static_cast<char>(value);
 }
@@ -129,26 +122,6 @@ void QStrSetOpIdx(qstring *qstr, int idx, int value)
 static void ASPrint(const qstring &qstr)
 {
    C_Printf("%s\n", qstr.constPtr());
-}
-
-static void ASPrint(int i)
-{
-   C_Printf("%d\n", i);
-}
-
-static void ASPrint(unsigned int u)
-{
-   C_Printf("%u\n", u);
-}
-
-static void ASPrint(float f)
-{
-   C_Printf("%f\n", f);
-}
-
-static void ASPrint(ASFixed f)
-{
-   C_Printf("%f\n", M_FixedToDouble(f.value));
 }
 
 template<typename T>
@@ -206,121 +179,35 @@ static aeonfuncreg_t qstringFuncs[] =
    { "void set_opIndex(int, int)",     asFUNCTION(QStrSetOpIdx),   asCALL_CDECL_OBJFIRST },
 };
 
-static bool Aeon_RegisterClassMethods(asIScriptEngine *engine, const char *classname,
-                                      aeonfuncreg_t *funcs, size_t numfuncs)
-{
-   for(size_t i = 0; i < numfuncs; i++)
-   {
-      aeonfuncreg_t &fn = funcs[i];
-      if(engine->RegisterObjectMethod(classname, fn.declaration, fn.funcPointer, fn.callConv) < 0)
-         return false;
-   }
-
-   return true;
-}
-
 //
 // Register qstring as a reftype and register desired methods
 //
-bool RegisterQString(asIScriptEngine *engine)
+void AeonScriptObjQString::Init(asIScriptEngine *e)
 {
    // register type
-   if(engine->RegisterObjectType("qstring", 0, asOBJ_REF) < 0)
-      return false;
+   e->RegisterObjectType("qstring", 0, asOBJ_REF);
 
    // register behaviors
-   if(engine->RegisterObjectBehaviour("qstring", asBEHAVE_FACTORY, "qstring @f()",
-                                      asFUNCTION(ASRefQString::Factory), asCALL_CDECL) < 0)
-      return false;
-   if(engine->RegisterObjectBehaviour("qstring", asBEHAVE_FACTORY, "qstring @f(const qstring &in)",
-                                      asFUNCTION(ASRefQString::FactoryFromOther), asCALL_CDECL) < 0)
-      return false;
-   if(engine->RegisterObjectBehaviour("qstring", asBEHAVE_ADDREF, "void f()",
-                                      asFUNCTION(ASRefQString::AddRef), asCALL_CDECL_OBJFIRST) < 0)
-      return false;
-   if(engine->RegisterObjectBehaviour("qstring", asBEHAVE_RELEASE, "void f()",
-                                      asFUNCTION(ASRefQString::Release), asCALL_CDECL_OBJFIRST) < 0)
-      return false;
+   e->RegisterObjectBehaviour("qstring", asBEHAVE_FACTORY, "qstring @f()",
+                              asFUNCTION(ASRefQString::Factory), asCALL_CDECL);
+   e->RegisterObjectBehaviour("qstring", asBEHAVE_FACTORY, "qstring @f(const qstring &in)",
+                              asFUNCTION(ASRefQString::FactoryFromOther), asCALL_CDECL);
+   e->RegisterObjectBehaviour("qstring", asBEHAVE_ADDREF, "void f()",
+                              asFUNCTION(ASRefQString::AddRef), asCALL_CDECL_OBJFIRST);
+   e->RegisterObjectBehaviour("qstring", asBEHAVE_RELEASE, "void f()",
+                              asFUNCTION(ASRefQString::Release), asCALL_CDECL_OBJFIRST);
 
    // register qstring as the string factory
    // "qstring @"???
-   if(engine->RegisterStringFactory("qstring", &aeonStringFactory) < 0)
-      return false;
+   e->RegisterStringFactory("qstring", &aeonStringFactory);
 
-   // register methods
-   if(!Aeon_RegisterClassMethods(engine, "qstring", qstringFuncs, earrlen(qstringFuncs)))
-      return false;
-
-   /*
-   // Concatenation and insertion/deletion
-   qstring &insert(const char *insertstr, size_t pos);
-
-   // Comparisons: C and C++ style
-   int  strNCmp(const char *str, size_t maxcount) const;
-   int  strCaseCmp(const char *str) const;
-   int  strNCaseCmp(const char *str, size_t maxcount) const;
-
-   // Substring Replacements
-   size_t replace(const char *filter, char repl);
-   size_t replaceNotOf(const char *filter, char repl);
-
-   // File Path Utilities
-   qstring &normalizeSlashes();
-   qstring &pathConcatenate(const char *addend);
-   qstring &pathConcatenate(const qstring &other);
-   qstring &addDefaultExtension(const char *ext);
-   qstring &removeFileSpec();
-   void     extractFileBase(qstring &dest);
-
-   // Numeric Conversions
-   long   toLong(char **endptr, int radix) const;
-   double toDouble(char **endptr) const;
-
-   // Searching/Substring Finding Routines
-   const char *strChr(char c) const;
-   const char *strRChr(char c) const;
-   const char *findSubStr(const char *substr) const;
-   const char *findSubStrNoCase(const char *substr) const;
-   size_t find(const char *s, size_t pos = 0) const;
-
-   // Stripping and Truncation
-   qstring &lstrip(char c);
-   qstring &rstrip(char c);
-   qstring &truncate(size_t pos);
-   qstring &erase(size_t pos, size_t n = npos);
-
-   // Special Formatting
-   qstring &makeQuoted();
-   int      printf(size_t maxlen, const char *fmt, ...);
-
-   // Operators
-   qstring &operator += (char  ch);
-   qstring &operator << (char   ch);
-   */
+   for(const aeonfuncreg_t &fn : qstringFuncs)
+      e->RegisterObjectMethod("qstring", fn.declaration, fn.funcPointer, fn.callConv);
 
    // register global print func
-   if(engine->RegisterGlobalFunction("void print(const qstring &in)",
-                                     asFUNCTIONPR(ASPrint, (const qstring &), void),
-                                     asCALL_CDECL) < 0)
-      return false;
-   if(engine->RegisterGlobalFunction("void print(int)",
-                                     asFUNCTIONPR(ASPrint, (int), void),
-                                     asCALL_CDECL) < 0)
-      return false;
-   if(engine->RegisterGlobalFunction("void print(uint)",
-                                     asFUNCTIONPR(ASPrint, (unsigned int), void),
-                                     asCALL_CDECL) < 0)
-      return false;
-   if(engine->RegisterGlobalFunction("void print(float)",
-                                     asFUNCTIONPR(ASPrint, (float), void),
-                                     asCALL_CDECL) < 0)
-      return false;
-   if(engine->RegisterGlobalFunction("void print(fixed)",
-                                     asFUNCTIONPR(ASPrint, (ASFixed), void),
-                                     asCALL_CDECL) < 0)
-      return false;
-
-   return true;
+   e->RegisterGlobalFunction("void print(const qstring &in)",
+                             asFUNCTIONPR(ASPrint, (const qstring &), void),
+                             asCALL_CDECL);
 }
 
 // EOF
