@@ -27,6 +27,8 @@
 
 #include <stdint.h>
 
+class ASFixed;
+
 class AeonScriptObjFixed
 {
 public:
@@ -36,7 +38,7 @@ public:
    static void ConstructFromInt(int other, ASFixed *thisFixed);
    static void ConstructFromPair(int16_t integer, double frac, ASFixed *thisFixed);
 
-   static void Init(asIScriptEngine *e);
+   static void Init();
 };
 
 #endif

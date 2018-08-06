@@ -17,8 +17,8 @@
 //
 // A lot of this code is based on Quasar's astest.
 //
-// Purpose: Aeon initialisation
-// Authors: James Haley, Max Waine
+// Purpose: Aeon system
+// Authors: Samuel Villarreal, James Haley, Max Waine
 //
 
 #include "aeon_common.h"
@@ -30,13 +30,34 @@
 #include "i_system.h"
 #include "m_utils.h"
 #include "w_wad.h"
+#include "aeon_system.h"
 
-static asIScriptEngine *engine;
 
-//
-// AngelScript message callback
-//
-static void MessageCallback(const asSMessageInfo *msg, void *param)
+asIScriptEngine  *AeonScriptManager::engine = nullptr;
+asIScriptContext *AeonScriptManager::ctx    = nullptr;
+asIScriptModule  *AeonScriptManager::module = nullptr;
+
+void AeonScriptManager::RegisterTypedefs()
+{
+   engine->RegisterTypedef("char", "int8");
+   engine->RegisterTypedef("uchar", "uint8");
+   engine->RegisterTypedef("angle", "uint32");
+}
+
+void AeonScriptManager::RegisterPrimitivePrintFuncs()
+{
+   engine->RegisterGlobalFunction("void print(int)",
+                                  WRAP_FN_PR(ASPrint, (int), void),
+                                  asCALL_GENERIC);
+   engine->RegisterGlobalFunction("void print(uint)",
+                                  WRAP_FN_PR(ASPrint, (unsigned int), void),
+                                  asCALL_GENERIC);
+   engine->RegisterGlobalFunction("void print(float)",
+                                  WRAP_FN_PR(ASPrint, (float), void),
+                                  asCALL_GENERIC);
+}
+
+void AeonScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)
 {
    const char *type = "ERR ";
    if(msg->type == asMSGTYPE_WARNING)
@@ -46,55 +67,27 @@ static void MessageCallback(const asSMessageInfo *msg, void *param)
    printf("%s (%d, %d) : %s : %s\n", msg->section, msg->row, msg->col, type, msg->message);
 }
 
-//
-// Register typedefs
-//
-static void RegisterTypedefs(asIScriptEngine *e)
-{
-   e->RegisterTypedef("char", "int8");
-   e->RegisterTypedef("uchar", "uint8");
-   //e->RegisterTypedef("angle", "uint32");
-}
-
-static void RegisterPrintFuncs(asIScriptEngine *e)
-{
-   e->RegisterGlobalFunction("void print(int)",
-                             WRAP_FN_PR(ASPrint, (int), void),
-                             asCALL_GENERIC);
-   e->RegisterGlobalFunction("void print(uint)",
-                             WRAP_FN_PR(ASPrint, (unsigned int), void),
-                             asCALL_GENERIC);
-   e->RegisterGlobalFunction("void print(float)",
-                             WRAP_FN_PR(ASPrint, (float), void),
-                             asCALL_GENERIC);
-}
-
-int Aeon_Init()
+void AeonScriptManager::Init()
 {
    // create AngelScript engine instance
    engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
    if(!engine)
-      I_Error("Aeon_Init: Could not create AngelScript engine\n");
+      I_Error("AeonScriptManager::Init: Could not create AngelScript engine\n");
 
    // set message callback
-   if(engine->SetMessageCallback(asFUNCTION(MessageCallback), nullptr, asCALL_CDECL) < 0)
-      I_Error("Aeon_Init: Could not set AngelScript message callback\n");
+   if(engine->SetMessageCallback(asFUNCTION(AeonScriptManager::MessageCallback),
+                                 nullptr, asCALL_CDECL) < 0)
+      I_Error("AeonScriptManager::Init: Could not set AngelScript message callback\n");
 
    // set engine properties
    engine->SetEngineProperty(asEP_SCRIPT_SCANNER,         0); // ASCII
    engine->SetEngineProperty(asEP_USE_CHARACTER_LITERALS, 1); // allow 'c' to be a char
 
-   // Register typedefs
-   RegisterTypedefs(engine);
+   RegisterTypedefs();
+   RegisterPrimitivePrintFuncs();
 
-   // Register print functions for primitive types
-   RegisterPrintFuncs(engine);
-
-   // Register fixed-point number type
-   AeonScriptObjFixed::Init(engine);
-
-   // Register qstring type
-   AeonScriptObjQString::Init(engine);
+   AeonScriptObjString::Init();
+   AeonScriptObjFixed::Init();
 
    // FIXME: Below is temporary gross hacks
    DWFILE dwfile;
@@ -103,23 +96,23 @@ int Aeon_Init()
    for(char *temp = buf; !dwfile.atEof(); temp++)
       *temp = dwfile.getChar();
 
-   asIScriptModule *asmodule = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS);
-   if(!asmodule)
+   module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS);
+   if(!module)
       I_Error("Aeon_Init: Could not create module\n");
 
-   if(asmodule->AddScriptSection("section", buf, dwfile.fileLength(), 0) < 0)
+   if(module->AddScriptSection("section", buf, dwfile.fileLength(), 0) < 0)
       I_Error("Aeon_Init: Could not add code to module\n");
 
-    if(asmodule->Build() < 0)
+    if(module->Build() < 0)
       I_Error("Aeon_Init: Could not build module\n");
 
    // call main function
-   auto func = asmodule->GetFunctionByDecl("void main()");
+   auto func = module->GetFunctionByDecl("void main()");
    if(!func)
       I_Error("Aeon_Init: Could not find main function in script\n");
 
    // create execution context
-   auto ctx = engine->CreateContext();
+   ctx = engine->CreateContext();
    if(!ctx)
       I_Error("Aeon_Init: Could not create execution context\n");
 
@@ -135,11 +128,13 @@ int Aeon_Init()
          C_Printf("An exception '%s' occurred.\n", ctx->GetExceptionString());
    }
 
-      // shut down
-      ctx->Release();
-      engine->Release();
+   atexit(Shutdown);
+}
 
-   return 0;
+void AeonScriptManager::Shutdown()
+{
+   ctx->Release();
+   engine->Release();
 }
 
 // EOF

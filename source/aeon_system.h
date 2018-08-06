@@ -18,14 +18,38 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon initialisation
-// Authors: Max Waine
+// Purpose: Aeon system
+// Authors: Samuel Villarreal, Max Waine
 //
 
 #ifndef AEON_INIT_H__
 #define AEON_INIT_H__
 
-int Aeon_Init();
+#include "angelscript.h"
+
+//
+// Adapted from kexScriptManager into (effectively) a static class
+//
+class AeonScriptManager
+{
+public:
+   AeonScriptManager() = delete;
+
+   static void Init();
+   static void Shutdown();
+
+   static asIScriptEngine  *Engine()  { return engine; }
+   static asIScriptContext *Context() { return ctx; }
+   static asIScriptModule  *Module()  { return module; }
+private:
+   static void RegisterTypedefs();
+   static void RegisterPrimitivePrintFuncs();
+   static void MessageCallback(const asSMessageInfo *msg, void *param);
+
+   static asIScriptEngine  *engine;
+   static asIScriptContext *ctx;
+   static asIScriptModule  *module;
+};
 
 #endif
 

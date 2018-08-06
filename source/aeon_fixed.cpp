@@ -24,6 +24,7 @@
 
 #include "aeon_common.h"
 #include "aeon_fixed.h"
+#include "aeon_system.h"
 #include "c_io.h"
 #include "m_fixed.h"
 
@@ -137,8 +138,10 @@ static aeonfuncreg_t fixedFuncs[] =
    { "double opImplConv()",                 WRAP_MFN(ASFixed, operator double)     },
 };
 
-void AeonScriptObjFixed::Init(asIScriptEngine *e)
+void AeonScriptObjFixed::Init()
 {
+   asIScriptEngine *e = AeonScriptManager::Engine();
+
    e->RegisterObjectType("fixed", sizeof(ASFixed),
                          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 

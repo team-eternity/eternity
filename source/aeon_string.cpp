@@ -23,6 +23,7 @@
 
 #include "aeon_common.h"
 #include "aeon_string.h"
+#include "aeon_system.h"
 #include "c_io.h"
 #include "m_qstr.h"
 
@@ -178,8 +179,10 @@ static aeonfuncreg_t qstringFuncs[] =
 //
 // Register qstring as a reftype and register desired methods
 //
-void AeonScriptObjQString::Init(asIScriptEngine *e)
+void AeonScriptObjString::Init()
 {
+   asIScriptEngine *e = AeonScriptManager::Engine();
+
    // register type
    e->RegisterObjectType("qstring", 0, asOBJ_REF);
 

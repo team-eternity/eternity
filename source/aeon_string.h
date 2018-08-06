@@ -27,10 +27,10 @@
 
 class asIScriptEngine;
 
-class AeonScriptObjQString
+class AeonScriptObjString
 {
 public:
-   static void Init(asIScriptEngine *e);
+   static void Init();
 };
 
 #endif
