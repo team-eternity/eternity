@@ -1020,10 +1020,10 @@
     <ClCompile Include="..\source\aeon_fixed.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_init.cpp">
+    <ClCompile Include="..\source\aeon_string.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_string.cpp">
+    <ClCompile Include="..\source\aeon_system.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -1817,10 +1817,10 @@
     <ClInclude Include="..\source\aeon_fixed.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\aeon_init.h">
+    <ClInclude Include="..\source\aeon_string.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\aeon_string.h">
+    <ClInclude Include="..\source\aeon_system.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
   </ItemGroup>

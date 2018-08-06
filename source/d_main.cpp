@@ -35,7 +35,7 @@
 #include "z_zone.h"
 
 #include "acs_intr.h"
-#include "aeon_init.h"
+#include "aeon_system.h"
 #include "am_map.h"
 #include "c_io.h"
 #include "c_net.h"
