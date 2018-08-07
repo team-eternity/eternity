@@ -18,7 +18,7 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon string functions
+// Purpose: Aeon wrapper for qstring
 // Authors: Max Waine
 //
 

@@ -17,7 +17,7 @@
 //
 // Most of this code is based on Quasar's astest.
 //
-// Purpose: Aeon string functions
+// Purpose: Aeon wrapper for qstring
 // Authors: James Haley, Max Waine
 //
 

@@ -18,7 +18,7 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon fixed_t functions
+// Purpose: Aeon wrapper for fixed_t
 // Authors: Max Waine
 //
 

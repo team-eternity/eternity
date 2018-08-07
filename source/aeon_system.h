@@ -28,7 +28,7 @@
 #include "angelscript.h"
 
 //
-// Adapted from kexScriptManager into (effectively) a static class
+// Adapted from Powerslave EX's kexScriptManager into (effectively) a static class
 //
 class AeonScriptManager
 {
@@ -39,7 +39,7 @@ public:
    static void Shutdown();
 
    static asIScriptEngine  *Engine()  { return engine; }
-   static asIScriptContext *Context() { return ctx; }
+   static asIScriptContext *Context() { return ctx;    }
    static asIScriptModule  *Module()  { return module; }
 private:
    static void RegisterTypedefs();

@@ -96,29 +96,27 @@ void AeonScriptManager::Init()
    for(char *temp = buf; !dwfile.atEof(); temp++)
       *temp = dwfile.getChar();
 
-   module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS);
-   if(!module)
-      I_Error("Aeon_Init: Could not create module\n");
+   if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
+      I_Error("AeonScriptManager::Init: Could not create module\n");
 
    if(module->AddScriptSection("section", buf, dwfile.fileLength(), 0) < 0)
-      I_Error("Aeon_Init: Could not add code to module\n");
+      I_Error("AeonScriptManager::Init: Could not add code to module\n");
 
     if(module->Build() < 0)
-      I_Error("Aeon_Init: Could not build module\n");
+      I_Error("AeonScriptManager::Init: Could not build module\n");
+
+   // create execution context
+   if(!(ctx = engine->CreateContext()))
+      I_Error("AeonScriptManager::Init: Could not create execution context\n");
 
    // call main function
    auto func = module->GetFunctionByDecl("void main()");
    if(!func)
-      I_Error("Aeon_Init: Could not find main function in script\n");
-
-   // create execution context
-   ctx = engine->CreateContext();
-   if(!ctx)
-      I_Error("Aeon_Init: Could not create execution context\n");
+      I_Error("AeonScriptManager::Init: Could not find main function in script\n");
 
    // prepare
    if(ctx->Prepare(func) < 0)
-      I_Error("Aeon_Init: Prepare failed\n");
+      I_Error("AeonScriptManager::Init: Prepare failed\n");
 
    // execute
    int r = ctx->Execute();
