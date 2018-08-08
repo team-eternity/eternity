@@ -23,14 +23,15 @@
 
 #include "aeon_common.h"
 #include "aeon_fixed.h"
+#include "aeon_mobj.h"
 #include "aeon_string.h"
+#include "aeon_system.h"
 #include "c_io.h"
 #include "d_dwfile.h"
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_utils.h"
 #include "w_wad.h"
-#include "aeon_system.h"
 
 
 asIScriptEngine  *AeonScriptManager::engine = nullptr;
@@ -88,6 +89,10 @@ void AeonScriptManager::Init()
 
    AeonScriptObjString::Init();
    AeonScriptObjFixed::Init();
+   AeonScriptObjMobj::Init();
+
+   if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
+      I_Error("AeonScriptManager::Init: Could not create module\n");
 
    // FIXME: Below is temporary gross hacks
    DWFILE dwfile;
@@ -95,9 +100,6 @@ void AeonScriptManager::Init()
    char *buf = ecalloc(char *, dwfile.fileLength(), sizeof(char));
    for(char *temp = buf; !dwfile.atEof(); temp++)
       *temp = dwfile.getChar();
-
-   if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
-      I_Error("AeonScriptManager::Init: Could not create module\n");
 
    if(module->AddScriptSection("section", buf, dwfile.fileLength(), 0) < 0)
       I_Error("AeonScriptManager::Init: Could not add code to module\n");

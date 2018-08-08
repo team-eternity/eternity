@@ -15,37 +15,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Aeon system
-// Authors: Samuel Villarreal, Max Waine
+// Additional terms and conditions compatible with the GPLv3 apply. See the
+// file COPYING-EE for details.
+//
+// Purpose: Aeon wrapper for Mobj
+// Authors: Max Waine
 //
 
-#ifndef AEON_INIT_H__
-#define AEON_INIT_H__
+#ifndef AEON_MOBJ_H__
+#define AEON_MOBJ_H__
 
-#include "angelscript.h"
-
-//
-// Adapted from Powerslave EX's kexScriptManager into (effectively) a static class
-//
-class AeonScriptManager
+class AeonScriptObjMobj
 {
 public:
-   AeonScriptManager() = delete;
-
    static void Init();
-   static void Shutdown();
-
-   static asIScriptEngine  *Engine()  { return engine; }
-   static asIScriptContext *Context() { return ctx;    }
-   static asIScriptModule  *Module()  { return module; }
-private:
-   static void RegisterTypedefs();
-   static void RegisterPrimitivePrintFuncs();
-   static void MessageCallback(const asSMessageInfo *msg, void *param);
-
-   static asIScriptEngine  *engine;
-   static asIScriptContext *ctx;
-   static asIScriptModule  *module;
 };
 
 #endif
