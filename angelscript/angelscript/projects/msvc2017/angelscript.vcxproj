@@ -93,6 +93,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalIncludeDirectories>..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -113,6 +114,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FloatingPointModel>Fast</FloatingPointModel>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
@@ -133,6 +135,7 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalIncludeDirectories>..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -154,12 +157,14 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>
       </FloatingPointExceptions>
+      <AdditionalIncludeDirectories>..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\add_on\scriptarray\scriptarray.cpp" />
     <ClCompile Include="..\..\source\as_atomic.cpp" />
     <ClCompile Include="..\..\source\as_builder.cpp" />
     <ClCompile Include="..\..\source\as_bytecode.cpp" />
@@ -200,6 +205,7 @@
     <ClCompile Include="..\..\source\as_variablescope.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\add_on\scriptarray\scriptarray.h" />
     <ClInclude Include="..\..\include\angelscript.h" />
     <ClInclude Include="..\..\source\as_array.h" />
     <ClInclude Include="..\..\source\as_atomic.h" />

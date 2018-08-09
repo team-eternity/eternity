@@ -21,6 +21,8 @@
 // Authors: Samuel Villarreal, James Haley, Max Waine
 //
 
+#include "scriptarray.h"
+
 #include "aeon_common.h"
 #include "aeon_fixed.h"
 #include "aeon_mobj.h"
@@ -86,6 +88,7 @@ void AeonScriptManager::Init()
 
    RegisterTypedefs();
    RegisterPrimitivePrintFuncs();
+   RegisterScriptArray(engine, true);
 
    AeonScriptObjString::Init();
    AeonScriptObjFixed::Init();

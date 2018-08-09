@@ -39,17 +39,45 @@ static Mobj *MobjFactoryFromOther(const Mobj &in)
    return new Mobj(in);
 }
 
+//
+// Sanity checked getter for mo->counters[ctrnum]
+// Returns 0 on failure
+//
+static int GetMobjCounter(const unsigned int ctrnum, Mobj *mo)
+{
+   if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
+      return mo->counters[ctrnum];
+   else
+      return 0; // TODO: C_Printf warning?
+}
+
+//
+// Sanity checked getter for mo->counters[ctrnum]
+// Doesn't set on failure
+//
+static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
+{
+   if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
+      mo->counters[ctrnum] = val;
+   // TODO: else C_Printf warning?
+}
+
 static aeonfuncreg_t mobjFuncs[]
 {
    { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth) },
+
+   // Indexed property accessors (enables [] syntax for counters)
+   { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)},
+   { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)},
 };
 
-#define REGISTERMOBJFLAG(flag) e->RegisterEnumValue("EnumMobjFlags", #flag, flag);
-
-extern dehflags_t deh_mobjflags[];
+#define DECLAREMOBJFLAGS(x) \
+   e->RegisterEnum("EnumMobjFlags" #x); \
+   e->RegisterObjectProperty("Mobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
 
 void AeonScriptObjMobj::Init()
 {
+   extern dehflags_t deh_mobjflags[];
    asIScriptEngine *e = AeonScriptManager::Engine();
 
    e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
@@ -64,17 +92,20 @@ void AeonScriptObjMobj::Init()
    e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
                               WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
 
+   for(const aeonfuncreg_t &fn : mobjFuncs)
+      e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
    e->RegisterObjectProperty("Mobj", "fixed x", asOFFSET(Mobj, x));
    e->RegisterObjectProperty("Mobj", "fixed y", asOFFSET(Mobj, y));
    e->RegisterObjectProperty("Mobj", "fixed z", asOFFSET(Mobj, z));
 
-   for(const aeonfuncreg_t &fn : mobjFuncs)
-      e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+   e->RegisterObjectProperty("Mobj", "fixed radius", asOFFSET(Mobj, radius));
+   e->RegisterObjectProperty("Mobj", "fixed height", asOFFSET(Mobj, height));
 
-   e->RegisterEnum("EnumMobjFlags");
-   e->RegisterEnum("EnumMobjFlags2");
-   e->RegisterEnum("EnumMobjFlags3");
-   e->RegisterEnum("EnumMobjFlags4");
+   DECLAREMOBJFLAGS();
+   DECLAREMOBJFLAGS(2);
+   DECLAREMOBJFLAGS(3);
+   DECLAREMOBJFLAGS(4);
    for(dehflags_t *flag = deh_mobjflags; flag->name != nullptr; flag++)
    {
       qstring type("EnumMobjFlags");
