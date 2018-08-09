@@ -27,16 +27,46 @@
 
 #include <stdint.h>
 
-class ASFixed;
+#include "m_fixed.h"
+
+class AeonFixed
+{
+public:
+   fixed_t value;
+
+   AeonFixed() : value(0)
+   {
+   }
+
+   AeonFixed(fixed_t value) : value(value)
+   {
+   }
+
+   AeonFixed operator + (const AeonFixed &in);
+   AeonFixed operator + (const int val);
+   AeonFixed operator * (const AeonFixed &in);
+   AeonFixed operator * (const int val);
+   AeonFixed operator / (const AeonFixed &in);
+   AeonFixed operator / (const int val);
+
+   AeonFixed &operator += (const AeonFixed &in);
+   AeonFixed &operator += (const int val);
+   AeonFixed &operator *= (const AeonFixed &in);
+   AeonFixed &operator *= (const int val);
+   AeonFixed &operator /= (const AeonFixed &in);
+   AeonFixed &operator /= (const int val);
+
+   operator double() const;
+};
 
 class AeonScriptObjFixed
 {
 public:
-   static void Construct(ASFixed *thisFixed);
-   static void ConstructFromOther(const ASFixed &other, ASFixed *thisFixed);
-   static void ConstructFromDouble(double other, ASFixed *thisFixed);
-   static void ConstructFromInt(int other, ASFixed *thisFixed);
-   static void ConstructFromPair(int16_t integer, double frac, ASFixed *thisFixed);
+   static void Construct(AeonFixed *thisFixed);
+   static void ConstructFromOther(const AeonFixed &other, AeonFixed *thisFixed);
+   static void ConstructFromDouble(double other, AeonFixed *thisFixed);
+   static void ConstructFromInt(int other, AeonFixed *thisFixed);
+   static void ConstructFromPair(int16_t integer, double frac, AeonFixed *thisFixed);
 
    static void Init();
 };

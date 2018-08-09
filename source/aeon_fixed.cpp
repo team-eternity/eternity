@@ -28,121 +28,107 @@
 #include "c_io.h"
 #include "m_fixed.h"
 
-class ASFixed
+AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
+AeonFixed AeonFixed::operator + (const int val)     { return value + (val << FRACBITS); }
+AeonFixed AeonFixed::operator * (const AeonFixed &in) { return FixedMul(value, in.value); }
+AeonFixed AeonFixed::operator * (const int val)     { return value * val;               }
+AeonFixed AeonFixed::operator / (const AeonFixed &in) { return FixedDiv(value, in.value); }
+AeonFixed AeonFixed::operator / (const int val)     { return value / val;               }
+
+AeonFixed &AeonFixed::operator += (const AeonFixed &in)
 {
-public:
-   fixed_t value;
-
-   ASFixed() : value(0)
-   {
-   }
-
-   ASFixed(fixed_t value) : value(value)
-   {
-   }
-
-   ASFixed operator + (const ASFixed &in) { return value + in.value; }
-   ASFixed operator + (const fixed_t val) { return value + (val << FRACBITS); }
-   ASFixed operator * (const ASFixed &in) { return FixedMul(value, in.value); }
-   ASFixed operator * (const fixed_t val) { return value * val; }
-   ASFixed operator / (const ASFixed &in) { return FixedDiv(value, in.value); }
-   ASFixed operator / (const fixed_t val) { return value / val; }
-
-   ASFixed &operator += (const ASFixed &in)
-   {
-      value += in.value;
-      return *this;
-   }
-   ASFixed &operator += (const int val)
-   {
-      value += val << FRACBITS;
-      return *this;
-   }
-   ASFixed &operator *= (const ASFixed &in)
-   {
-      value = FixedMul(value, in.value);
-      return *this;
-   }
-   ASFixed &operator *= (const int val)
-   {
-      value *= val;
-      return *this;
-   }
-
-   ASFixed &operator /= (const ASFixed &in)
-   {
-      value = FixedDiv(value, in.value);
-      return *this;
-   }
-   ASFixed &operator /= (const int val)
-   {
-      value /= val;
-      return *this;
-   }
-
-   operator double() { return M_FixedToDouble(value); }
-};
-
-void AeonScriptObjFixed::Construct(ASFixed *thisFixed)
+   value += in.value;
+   return *this;
+}
+AeonFixed &AeonFixed::operator += (const int val)
 {
-   *thisFixed = ASFixed();
+   value += val << FRACBITS;
+   return *this;
+}
+AeonFixed &AeonFixed::operator *= (const AeonFixed &in)
+{
+   value = FixedMul(value, in.value);
+   return *this;
+}
+AeonFixed &AeonFixed::operator *= (const int val)
+{
+   value *= val;
+   return *this;
 }
 
-void AeonScriptObjFixed::ConstructFromOther(const ASFixed &other, ASFixed *thisFixed)
+AeonFixed &AeonFixed::operator /= (const AeonFixed &in)
 {
-   *thisFixed = ASFixed(other);
+   value = FixedDiv(value, in.value);
+   return *this;
+}
+AeonFixed &AeonFixed::operator /= (const int val)
+{
+   value /= val;
+   return *this;
 }
 
-void AeonScriptObjFixed::ConstructFromDouble(double other, ASFixed *thisFixed)
+AeonFixed::operator double() const { return M_FixedToDouble(value); }
+
+void AeonScriptObjFixed::Construct(AeonFixed *thisFixed)
+{
+   *thisFixed = AeonFixed();
+}
+
+void AeonScriptObjFixed::ConstructFromOther(const AeonFixed &other, AeonFixed *thisFixed)
+{
+   *thisFixed = AeonFixed(other);
+}
+
+void AeonScriptObjFixed::ConstructFromDouble(double other, AeonFixed *thisFixed)
 {
    thisFixed->value = M_DoubleToFixed(other);
 }
 
-void AeonScriptObjFixed::ConstructFromInt(int other, ASFixed *thisFixed)
+void AeonScriptObjFixed::ConstructFromInt(int other, AeonFixed *thisFixed)
 {
    thisFixed->value = other << FRACBITS;
 }
 
-void AeonScriptObjFixed::ConstructFromPair(int16_t integer, double frac, ASFixed *thisFixed)
+void AeonScriptObjFixed::ConstructFromPair(int16_t integer, double frac, AeonFixed *thisFixed)
 {
    thisFixed->value = static_cast<int32_t>(integer) << FRACBITS;
    if(frac < 1.0 && frac >= 0.0)
       thisFixed->value |= M_DoubleToFixed(frac);
 }
 
-static void ASPrint(ASFixed f)
+static void ASPrint(AeonFixed f)
 {
    C_Printf("%f\n", M_FixedToDouble(f.value));
 }
 
 #define FIXEDBINOP(op, param) \
-   WRAP_MFN_PR(ASFixed, operator op,  (param), ASFixed)
+   WRAP_MFN_PR(AeonFixed, operator op,  (param), AeonFixed)
 
 #define FIXEDASSIGNOP(op, param) \
-   WRAP_MFN_PR(ASFixed, operator op,  (param), ASFixed &)
+   WRAP_MFN_PR(AeonFixed, operator op,  (param), AeonFixed &)
 
 static aeonfuncreg_t fixedFuncs[] =
 {
-   { "fixed opAdd(const fixed &in)",        FIXEDBINOP(+, const ASFixed &)         },
-   { "fixed opAdd(const int val)",          FIXEDBINOP(+, const int),              },
-   { "fixed opMul(const fixed &in)",        FIXEDBINOP(*, const ASFixed &)         },
-   { "fixed opMul(const int val)",          FIXEDBINOP(*, const int)               },
-   { "fixed opDiv(const fixed &in)",        FIXEDBINOP(/, const ASFixed &)         },
-   { "fixed opDiv(const int val)",          FIXEDBINOP(/, const int)               },
-   { "fixed &opAddAssign(const fixed &in)", FIXEDASSIGNOP(+=, const ASFixed &)     },
-   { "fixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int)           },
-   { "fixed &opMulAssign(const fixed &in)", FIXEDASSIGNOP(*=, const ASFixed &)     },
-   { "fixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int)           },
-   { "fixed &opDivAssign(const fixed &in)", FIXEDASSIGNOP(/=, const ASFixed &)     },
-   { "fixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int)           },
-   { "double opImplConv()",                 WRAP_MFN(ASFixed, operator double)     },
+   { "fixed opAdd(const fixed &in)",        FIXEDBINOP(+, const AeonFixed &)         },
+   { "fixed opAdd(const int val)",          FIXEDBINOP(+, const int),                },
+   { "fixed opMul(const fixed &in)",        FIXEDBINOP(*, const AeonFixed &)         },
+   { "fixed opMul(const int val)",          FIXEDBINOP(*, const int)                 },
+   { "fixed opDiv(const fixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
+   { "fixed opDiv(const int val)",          FIXEDBINOP(/, const int)                 },
+   { "fixed &opAddAssign(const fixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
+   { "fixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int)             },
+   { "fixed &opMulAssign(const fixed &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
+   { "fixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int)             },
+   { "fixed &opDivAssign(const fixed &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },
+   { "fixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int)             },
+   { "double opImplConv() const",           WRAP_MFN(AeonFixed, operator double)     },
 };
 
 void AeonScriptObjFixed::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
-   e->RegisterObjectType("fixed", sizeof(ASFixed),
+   e->RegisterObjectType("fixed", sizeof(AeonFixed),
                          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
    e->RegisterObjectBehaviour("fixed", asBEHAVE_CONSTRUCT, "void f()",
@@ -159,7 +145,7 @@ void AeonScriptObjFixed::Init()
    for(const aeonfuncreg_t &fn : fixedFuncs)
       e->RegisterObjectMethod("fixed", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterGlobalFunction("void print(fixed)", WRAP_FN_PR(ASPrint, (ASFixed), void),
+   e->RegisterGlobalFunction("void print(fixed)", WRAP_FN_PR(ASPrint, (AeonFixed), void),
                              asCALL_GENERIC);
 }
 

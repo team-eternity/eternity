@@ -28,7 +28,7 @@
 #include "angelscript.h"
 #include "aswrappedcall.h"
 
-class ASFixed;
+class AeonFixed;
 class qstring;
 
 struct aeonfuncreg_t

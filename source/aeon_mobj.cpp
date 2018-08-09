@@ -29,6 +29,8 @@
 #include "m_qstr.h"
 #include "p_mobj.h"
 
+#include "p_map.h"
+
 static Mobj *MobjFactory()
 {
    return new Mobj();
@@ -65,6 +67,10 @@ static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
 static aeonfuncreg_t mobjFuncs[]
 {
    { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth) },
+
+   // TODO: Test if WRAP_OBJ_FIRST works. If so use that instead
+   { "bool tryMove(fixed x, fixed y, int dropoff)", // WRAP_OBJ_FIRST(P_TryMove) },
+      WRAP_OBJ_FIRST_PR(P_TryMove, (Mobj *, fixed_t, fixed_t, int), bool) },
 
    // Indexed property accessors (enables [] syntax for counters)
    { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)},
