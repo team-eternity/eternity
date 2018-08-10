@@ -69,7 +69,7 @@ static aeonfuncreg_t mobjFuncs[]
    { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth) },
 
    // TODO: Test if WRAP_OBJ_FIRST works. If so use that instead
-   { "bool tryMove(fixed x, fixed y, int dropoff)", // WRAP_OBJ_FIRST(P_TryMove) },
+   { "bool tryMove(eFixed x, eFixed y, int dropoff)", // WRAP_OBJ_FIRST(P_TryMove) },
       WRAP_OBJ_FIRST_PR(P_TryMove, (Mobj *, fixed_t, fixed_t, int), bool) },
 
    // Indexed property accessors (enables [] syntax for counters)
@@ -79,34 +79,35 @@ static aeonfuncreg_t mobjFuncs[]
 
 #define DECLAREMOBJFLAGS(x) \
    e->RegisterEnum("EnumMobjFlags" #x); \
-   e->RegisterObjectProperty("Mobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
+   e->RegisterObjectProperty("eMobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
 
 void AeonScriptObjMobj::Init()
 {
    extern dehflags_t deh_mobjflags[];
    asIScriptEngine *e = AeonScriptManager::Engine();
 
-   e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
+   e->RegisterObjectType("eMobj", sizeof(Mobj), asOBJ_REF);
 
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
+   e->RegisterObjectBehaviour("eMobj", asBEHAVE_FACTORY, "eMobj @f()",
                               WRAP_FN(MobjFactory), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
+   e->RegisterObjectBehaviour("eMobj", asBEHAVE_FACTORY, "eMobj @f(const eMobj &in)",
                               WRAP_FN_PR(MobjFactoryFromOther, (const Mobj &), Mobj *),
                               asCALL_GENERIC);
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_ADDREF, "void f()",
+   e->RegisterObjectBehaviour("eMobj", asBEHAVE_ADDREF, "void f()",
                               WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
+   e->RegisterObjectBehaviour("eMobj", asBEHAVE_RELEASE, "void f()",
                               WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
 
    for(const aeonfuncreg_t &fn : mobjFuncs)
-      e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("eMobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterObjectProperty("Mobj", "fixed x", asOFFSET(Mobj, x));
-   e->RegisterObjectProperty("Mobj", "fixed y", asOFFSET(Mobj, y));
-   e->RegisterObjectProperty("Mobj", "fixed z", asOFFSET(Mobj, z));
+   e->RegisterObjectProperty("eMobj", "eFixed x", asOFFSET(Mobj, x));
+   e->RegisterObjectProperty("eMobj", "eFixed y", asOFFSET(Mobj, y));
+   e->RegisterObjectProperty("eMobj", "eFixed z", asOFFSET(Mobj, z));
+   e->RegisterObjectProperty("eMobj", "eAngle angle", asOFFSET(Mobj, angle));
 
-   e->RegisterObjectProperty("Mobj", "fixed radius", asOFFSET(Mobj, radius));
-   e->RegisterObjectProperty("Mobj", "fixed height", asOFFSET(Mobj, height));
+   e->RegisterObjectProperty("eMobj", "eFixed radius", asOFFSET(Mobj, radius));
+   e->RegisterObjectProperty("eMobj", "eFixed height", asOFFSET(Mobj, height));
 
    DECLAREMOBJFLAGS();
    DECLAREMOBJFLAGS(2);

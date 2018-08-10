@@ -57,6 +57,7 @@ public:
    AeonFixed &operator /= (const int val);
 
    operator double() const;
+   operator fixed_t() const { return value; }
 };
 
 class AeonScriptObjFixed

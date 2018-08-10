@@ -109,18 +109,18 @@ static void ASPrint(AeonFixed f)
 
 static aeonfuncreg_t fixedFuncs[] =
 {
-   { "fixed opAdd(const fixed &in)",        FIXEDBINOP(+, const AeonFixed &)         },
-   { "fixed opAdd(const int val)",          FIXEDBINOP(+, const int),                },
-   { "fixed opMul(const fixed &in)",        FIXEDBINOP(*, const AeonFixed &)         },
-   { "fixed opMul(const int val)",          FIXEDBINOP(*, const int)                 },
-   { "fixed opDiv(const fixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
-   { "fixed opDiv(const int val)",          FIXEDBINOP(/, const int)                 },
-   { "fixed &opAddAssign(const fixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
-   { "fixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int)             },
-   { "fixed &opMulAssign(const fixed &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
-   { "fixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int)             },
-   { "fixed &opDivAssign(const fixed &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },
-   { "fixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int)             },
+   { "eFixed opAdd(const eFixed &in)",        FIXEDBINOP(+, const AeonFixed &)         },
+   { "eFixed opAdd(const int val)",          FIXEDBINOP(+, const int),                },
+   { "eFixed opMul(const eFixed &in)",        FIXEDBINOP(*, const AeonFixed &)         },
+   { "eFixed opMul(const int val)",          FIXEDBINOP(*, const int)                 },
+   { "eFixed opDiv(const eFixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
+   { "eFixed opDiv(const int val)",          FIXEDBINOP(/, const int)                 },
+   { "eFixed &opAddAssign(const eFixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
+   { "eFixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int)             },
+   { "eFixed &opMulAssign(const eFixed &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
+   { "eFixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int)             },
+   { "eFixed &opDivAssign(const eFixed &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },
+   { "eFixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int)             },
    { "double opImplConv() const",           WRAP_MFN(AeonFixed, operator double)     },
 };
 
@@ -128,24 +128,24 @@ void AeonScriptObjFixed::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
-   e->RegisterObjectType("fixed", sizeof(AeonFixed),
+   e->RegisterObjectType("eFixed", sizeof(AeonFixed),
                          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
-   e->RegisterObjectBehaviour("fixed", asBEHAVE_CONSTRUCT, "void f()",
+   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f()",
                               WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("fixed", asBEHAVE_CONSTRUCT, "void f(const fixed &in)",
+   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const eFixed &in)",
                               WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("fixed", asBEHAVE_CONSTRUCT, "void f(const double)",
+   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const double)",
                               WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("fixed", asBEHAVE_CONSTRUCT, "void f(const int)",
+   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const int)",
                               WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("fixed", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
+   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
                               WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
 
    for(const aeonfuncreg_t &fn : fixedFuncs)
-      e->RegisterObjectMethod("fixed", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("eFixed", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterGlobalFunction("void print(fixed)", WRAP_FN_PR(ASPrint, (AeonFixed), void),
+   e->RegisterGlobalFunction("void print(eFixed)", WRAP_FN_PR(ASPrint, (AeonFixed), void),
                              asCALL_GENERIC);
 }
 

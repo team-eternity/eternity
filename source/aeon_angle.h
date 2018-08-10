@@ -65,6 +65,7 @@ public:
    AeonAngle &operator /= (const int val);
 
    operator AeonFixed() const;
+   operator angle_t() const { return value; }
 };
 
 class AeonScriptObjAngle
