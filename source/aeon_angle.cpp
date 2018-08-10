@@ -99,7 +99,7 @@ AeonAngle &AeonAngle::operator /= (const int val)
    return *this;
 }
 
-AeonAngle::operator fixed_t() const { return AeonFixed(AngleToFixed(value)); }
+AeonAngle::operator AeonFixed() const { return AeonFixed(AngleToFixed(value)); }
 
 #define ANGLEBINOP(op, param) \
    WRAP_MFN_PR(AeonAngle, operator op,  (param), AeonAngle)
@@ -150,7 +150,7 @@ static aeonfuncreg_t angleFuncs[] =
    { "angle &opDivAssign(const angle &in)", ANGLEASSIGNOP(/=, const AeonAngle &)     },
    { "angle &opDivAssign(const fixed &in)", ANGLEASSIGNOP(/=, const AeonFixed &)     },
    { "angle &opDivAssign(const int val)",   ANGLEASSIGNOP(/=, const int)             },
-   { "fixed opImplConv() const",            WRAP_MFN(AeonAngle, operator fixed_t)    },
+   { "fixed opImplConv() const",            WRAP_MFN(AeonAngle, operator AeonFixed)  },
 };
 
 void AeonScriptObjAngle::Init()
@@ -172,7 +172,7 @@ void AeonScriptObjAngle::Init()
    for(const aeonfuncreg_t &fn : angleFuncs)
       e->RegisterObjectMethod("angle", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterGlobalFunction("void print(fixed)", WRAP_FN_PR(ASPrint, (AeonAngle), void),
+   e->RegisterGlobalFunction("void print(angle)", WRAP_FN_PR(ASPrint, (AeonAngle), void),
                              asCALL_GENERIC);
 }
 

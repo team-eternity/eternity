@@ -44,7 +44,6 @@ void AeonScriptManager::RegisterTypedefs()
 {
    engine->RegisterTypedef("char", "int8");
    engine->RegisterTypedef("uchar", "uint8");
-   engine->RegisterTypedef("angle", "uint32");
 }
 
 void AeonScriptManager::RegisterPrimitivePrintFuncs()
