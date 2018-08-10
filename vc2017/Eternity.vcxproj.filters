@@ -1029,6 +1029,9 @@
     <ClCompile Include="..\source\aeon_mobj.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\aeon_angle.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1827,6 +1830,9 @@
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\aeon_mobj.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_angle.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
   </ItemGroup>

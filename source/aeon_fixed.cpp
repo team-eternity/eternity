@@ -29,11 +29,11 @@
 #include "m_fixed.h"
 
 AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
-AeonFixed AeonFixed::operator + (const int val)     { return value + (val << FRACBITS); }
+AeonFixed AeonFixed::operator + (const int val)       { return value + (val << FRACBITS); }
 AeonFixed AeonFixed::operator * (const AeonFixed &in) { return FixedMul(value, in.value); }
-AeonFixed AeonFixed::operator * (const int val)     { return value * val;               }
+AeonFixed AeonFixed::operator * (const int val)       { return value * val;               }
 AeonFixed AeonFixed::operator / (const AeonFixed &in) { return FixedDiv(value, in.value); }
-AeonFixed AeonFixed::operator / (const int val)     { return value / val;               }
+AeonFixed AeonFixed::operator / (const int val)       { return value / val;               }
 
 AeonFixed &AeonFixed::operator += (const AeonFixed &in)
 {

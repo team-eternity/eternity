@@ -23,6 +23,7 @@
 
 #include "scriptarray.h"
 
+#include "aeon_angle.h"
 #include "aeon_common.h"
 #include "aeon_fixed.h"
 #include "aeon_mobj.h"
@@ -34,7 +35,6 @@
 #include "i_system.h"
 #include "m_utils.h"
 #include "w_wad.h"
-
 
 asIScriptEngine  *AeonScriptManager::engine = nullptr;
 asIScriptContext *AeonScriptManager::ctx    = nullptr;
@@ -92,6 +92,7 @@ void AeonScriptManager::Init()
 
    AeonScriptObjString::Init();
    AeonScriptObjFixed::Init();
+   AeonScriptObjAngle::Init();
    AeonScriptObjMobj::Init();
 
    if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
