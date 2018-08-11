@@ -71,9 +71,10 @@ void AeonScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)
 
 void AeonScriptManager::Init()
 {
+   puts("AeonScriptManager::Init: Setting up AngelScript.");
+
    // create AngelScript engine instance
-   engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
-   if(!engine)
+   if(!(engine = asCreateScriptEngine(ANGELSCRIPT_VERSION)))
       I_Error("AeonScriptManager::Init: Could not create AngelScript engine\n");
 
    // set message callback
@@ -97,8 +98,12 @@ void AeonScriptManager::Init()
    if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
       I_Error("AeonScriptManager::Init: Could not create module\n");
 
+   // create execution context
+   if(!(ctx = engine->CreateContext()))
+      I_Error("AeonScriptManager::Init: Could not create execution context\n");
+
    // FIXME: Below is temporary gross hacks
-   DWFILE dwfile;
+   /*DWFILE dwfile;
    dwfile.openFile(M_SafeFilePath(basepath, "test.asc"), "rb");
    char *buf = ecalloc(char *, dwfile.fileLength(), sizeof(char));
    for(char *temp = buf; !dwfile.atEof(); temp++)
@@ -109,10 +114,6 @@ void AeonScriptManager::Init()
 
     if(module->Build() < 0)
       I_Error("AeonScriptManager::Init: Could not build module\n");
-
-   // create execution context
-   if(!(ctx = engine->CreateContext()))
-      I_Error("AeonScriptManager::Init: Could not create execution context\n");
 
    // call main function
    auto func = module->GetFunctionByDecl("void main()");
@@ -129,7 +130,7 @@ void AeonScriptManager::Init()
    {
       if(r == asEXECUTION_EXCEPTION)
          C_Printf("An exception '%s' occurred.\n", ctx->GetExceptionString());
-   }
+   }*/
 
    atexit(Shutdown);
 }

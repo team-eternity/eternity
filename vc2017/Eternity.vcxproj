@@ -523,6 +523,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\ev_sectors.cpp" />
+    <ClCompile Include="..\source\e_actions.cpp" />
     <ClCompile Include="..\source\e_anim.cpp" />
     <ClCompile Include="..\source\e_args.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1928,6 +1929,7 @@
     <ClInclude Include="..\Source\doomtype.h" />
     <ClInclude Include="..\Source\dstrings.h" />
     <ClInclude Include="..\source\ev_sectors.h" />
+    <ClInclude Include="..\source\e_actions.h" />
     <ClInclude Include="..\source\e_anim.h" />
     <ClInclude Include="..\source\e_args.h" />
     <ClInclude Include="..\source\e_dstate.h" />

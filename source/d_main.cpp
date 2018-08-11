@@ -1587,6 +1587,9 @@ static void D_DoomInit()
    // Init bex hash chaining before EDF
    D_BuildBEXHashChains();
 
+   // Init Aeon before EDF
+   AeonScriptManager::Init();
+
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);
 
@@ -1673,9 +1676,6 @@ static void D_DoomInit()
 
    startupmsg("S_Init", "Setting up sound.");
    S_Init(snd_SfxVolume, snd_MusicVolume);
-
-   startupmsg("AeonScriptManager::Init", "Setting up AngelScript.");
-   AeonScriptManager::Init();
 
    //
    // NETCODE_FIXME: Netgame check.
