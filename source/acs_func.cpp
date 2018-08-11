@@ -278,7 +278,6 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
    fixed_t    dist  = argV[2];
    uint32_t   limit = argC > 3 ? argV[3] : 1;
    uint32_t   flags = argC > 4 ? argV[4] : 0;
-   Mobj      *mo    = nullptr;
 
    uint32_t res;
    Mobj    *resMo = nullptr;
@@ -286,7 +285,7 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
 
    uint32_t count = 0;
 
-   while((mo = P_NextThinker(mo)))
+   for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
    {
       // Check type.
       if(type && mo->type != type)
@@ -343,9 +342,9 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
    if(resMo)
    {
       if(flags & CPXF_SETTARGET)
-         P_SetTarget(&mo->target, resMo);
+         P_SetTarget(&orig->target, resMo);
       if(flags & CPXF_SETTRACER)
-         P_SetTarget(&mo->tracer, resMo);
+         P_SetTarget(&orig->tracer, resMo);
    }
 
    if(flags & CPXF_LESSOREQUAL)
