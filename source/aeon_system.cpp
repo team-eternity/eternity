@@ -39,6 +39,7 @@
 asIScriptEngine  *AeonScriptManager::engine = nullptr;
 asIScriptContext *AeonScriptManager::ctx    = nullptr;
 asIScriptModule  *AeonScriptManager::module = nullptr;
+int               AeonScriptManager::state  = asEXECUTION_UNINITIALIZED;
 
 void AeonScriptManager::RegisterTypedefs()
 {
@@ -139,6 +140,56 @@ void AeonScriptManager::Shutdown()
 {
    ctx->Release();
    engine->Release();
+}
+
+void AeonScriptManager::PushState()
+{
+    state = ctx->GetState();
+
+    if(state == asEXECUTION_ACTIVE)
+        ctx->PushState();
+}
+
+void AeonScriptManager::PopState()
+{
+    if(state == asEXECUTION_ACTIVE)
+        ctx->PopState();
+}
+
+bool AeonScriptManager::PrepareFunction(asIScriptFunction *function)
+{
+   if(function == nullptr)
+      return false;
+   if(ctx->GetState() == asEXECUTION_SUSPENDED)
+      return false;
+
+   PushState();
+
+   if(ctx->Prepare(function) != 0)
+   {
+      PopState();
+      return false;
+   }
+
+   return true;
+}
+
+bool AeonScriptManager::PrepareFunction(const char *function)
+{
+    return PrepareFunction(module->GetFunctionByName(function));
+}
+
+bool AeonScriptManager::Execute()
+{
+    if(ctx->Execute() == asEXECUTION_EXCEPTION)
+    {
+        PopState();
+        I_Error("AeonScriptManager::Execute: %s\n", ctx->GetExceptionString());
+        return false;
+    }
+
+    PopState();
+    return true;
 }
 
 // EOF

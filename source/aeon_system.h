@@ -38,6 +38,12 @@ public:
    static asIScriptEngine  *Engine()  { return engine; }
    static asIScriptContext *Context() { return ctx;    }
    static asIScriptModule  *Module()  { return module; }
+
+   static void PushState();
+   static void PopState();
+   static bool PrepareFunction(asIScriptFunction *function);
+   static bool PrepareFunction(const char *function);
+   static bool Execute();
 private:
    static void RegisterTypedefs();
    static void RegisterPrimitivePrintFuncs();
@@ -46,6 +52,8 @@ private:
    static asIScriptEngine  *engine;
    static asIScriptContext *ctx;
    static asIScriptModule  *module;
+
+   static int state;
 };
 
 #endif

@@ -323,8 +323,9 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
          actionargs.actor      = mobj;
          actionargs.args       = st->args;
          actionargs.pspr       = NULL;
+         actionargs.aeonaction = st->action->aeonaction;
 
-         st->action(&actionargs);
+         st->action->codeptr(&actionargs);
       }
 
       // haleyjd 05/20/02: run particle events

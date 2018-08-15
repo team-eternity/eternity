@@ -39,6 +39,7 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomtype.h"
+#include "e_actions.h"
 #include "e_lib.h"
 #include "e_edf.h"
 #include "e_args.h"
@@ -1355,9 +1356,9 @@ static void doAction(pstate_t *ps, const char *fn)
    {
       DLListItem<estatebuf_t> *link = DSP.curbufstate;
       int statenum = DSP.currentstate;
-      deh_bexptr *ptr = D_GetBexPtr(ps->tokenbuffer->constPtr());
+      action_t *action = E_GetAction(ps->tokenbuffer->constPtr());
 
-      if(!ptr)
+      if(!action)
       {
          E_EDFLoggedWarning(2, "%s: unknown action %s\n",
                             fn, ps->tokenbuffer->constPtr());
@@ -1365,11 +1366,11 @@ static void doAction(pstate_t *ps, const char *fn)
          return;
       }
 
-      while(link && (*link)->type == BUF_STATE && 
+      while(link && (*link)->type == BUF_STATE &&
             (*link)->linenum == (*DSP.curbufstate)->linenum)
       {
          if(states[statenum]->flags & STATEF_DECORATE)
-            states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
+            states[statenum]->action = action;
 
          ++statenum;           // move forward one state in states[]
          link = link->dllNext; // move forward one buffered state

@@ -20,13 +20,42 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: EDF Aeon Actions
-// Authors: Max Waine
+// Authors: Samuel Villarreal, Max Waine
 //
 
 #ifndef E_ACTIONS_H__
 #define E_ACTIONS_H__
 
+// Required for EMAXARGS
+#include "e_args.h"
+
+// Required for DLListItem
+#include "m_dllist.h"
+
+// Required for qstring
+#include "m_qstr.h"
+
+struct action_t;
+struct actionargs_t;
 struct cfg_t;
+
+enum actionargtype_e : int
+{
+   AAT_INVALID = -1,
+   AAT_INTEGER =  0,
+   AAT_FIXED,
+   AAT_STRING,
+};
+
+// AngelScript (Aeon) action
+struct actiondef_t
+{
+   const char     *name;               //
+   actionargtype_e argTypes[EMAXARGS]; //
+   int             numArgs;            //
+
+   DLListItem<actiondef_t> links;  // hash by name
+};
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -34,10 +63,13 @@ struct cfg_t;
 
 extern cfg_opt_t edf_action_opts[];
 
+#endif
+
+actiondef_t *E_AeonActionForName(const char *name);
+action_t *E_GetAction(const char *name);
+
 void E_CollectActions(cfg_t *cfg);
 void E_ProcessActions(cfg_t *cfg);
-
-#endif
 
 #endif
 

@@ -110,18 +110,18 @@ static void ASPrint(AeonFixed f)
 static aeonfuncreg_t fixedFuncs[] =
 {
    { "eFixed opAdd(const eFixed &in)",        FIXEDBINOP(+, const AeonFixed &)         },
-   { "eFixed opAdd(const int val)",          FIXEDBINOP(+, const int),                },
+   { "eFixed opAdd(const int val)",           FIXEDBINOP(+, const int),                },
    { "eFixed opMul(const eFixed &in)",        FIXEDBINOP(*, const AeonFixed &)         },
-   { "eFixed opMul(const int val)",          FIXEDBINOP(*, const int)                 },
+   { "eFixed opMul(const int val)",           FIXEDBINOP(*, const int)                 },
    { "eFixed opDiv(const eFixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
-   { "eFixed opDiv(const int val)",          FIXEDBINOP(/, const int)                 },
+   { "eFixed opDiv(const int val)",           FIXEDBINOP(/, const int)                 },
    { "eFixed &opAddAssign(const eFixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
-   { "eFixed &opAddAssign(const int val)",   FIXEDASSIGNOP(+=, const int)             },
+   { "eFixed &opAddAssign(const int val)",    FIXEDASSIGNOP(+=, const int)             },
    { "eFixed &opMulAssign(const eFixed &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
-   { "eFixed &opMulAssign(const int val)",   FIXEDASSIGNOP(*=, const int)             },
+   { "eFixed &opMulAssign(const int val)",    FIXEDASSIGNOP(*=, const int)             },
    { "eFixed &opDivAssign(const eFixed &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },
-   { "eFixed &opDivAssign(const int val)",   FIXEDASSIGNOP(/=, const int)             },
-   { "double opImplConv() const",           WRAP_MFN(AeonFixed, operator double)     },
+   { "eFixed &opDivAssign(const int val)",    FIXEDASSIGNOP(/=, const int)             },
+   { "double opImplConv() const",             WRAP_MFN(AeonFixed, operator double)     },
 };
 
 void AeonScriptObjFixed::Init()

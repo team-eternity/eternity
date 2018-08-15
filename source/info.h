@@ -31,6 +31,7 @@
 #include "m_dllist.h"
 
 struct actionargs_t;
+struct actiondef_t;
 struct arglist_t;
 struct e_pickupfx_t;
 class  MetaTable;
@@ -152,6 +153,17 @@ enum
 
 };
 
+using codeptr_t = void (*)(actionargs_t *);
+
+// Encapsulates action functions, both native and AngelScript
+struct action_t
+{
+   codeptr_t    codeptr;    // code pointer to function for action if any
+   codeptr_t    oldcptr;    // haleyjd: original action, for DeHackEd
+   actiondef_t *aeonaction; // pointer to Aeon action if any
+};
+
+
 typedef int statenum_t;
 
 // state flags
@@ -172,8 +184,7 @@ struct state_t
    spritenum_t  sprite;                       // sprite number to show
    int          frame;                        // which frame/subframe of the sprite is shown
    int          tics;                         // number of gametics this frame should last
-   void         (*action)(actionargs_t *);    // code pointer to function for action if any
-   void         (*oldaction)(actionargs_t *); // haleyjd: original action, for DeHackEd
+   action_t    *action;                       // Old action members & AngelScript encapsulated
    statenum_t   nextstate;                    // index of next state, or -1
    int          misc1, misc2;                 // used for psprite positioning
    int          particle_evt;                 // haleyjd: determines an event to run  

@@ -27,13 +27,17 @@
 
 #include "aeon_system.h"
 
+#include "a_args.h"
 #include "Confuse/confuse.h"
 #include "e_actions.h"
 #include "e_args.h"
 #include "e_edf.h"
+#include "e_hash.h"
 #include "i_system.h"
+#include "info.h"
 #include "m_collection.h"
 #include "m_qstr.h"
+#include "p_mobj.h"
 
 #define ITEM_ACT_PLYRONLY "playeronly"
 #define ITEM_ACT_CODE     "code"
@@ -46,6 +50,151 @@ cfg_opt_t edf_action_opts[] =
    CFG_END()
 };
 
+asIScriptFunction *AeonFuncForMnemonic(const char *&name)
+{
+   asIScriptFunction *func;
+   asIScriptModule *module = AeonScriptManager::Module();
+
+   if(!(func = module->GetFunctionByName(name)))
+   {
+      // Couldn't find the function provided by title
+      if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
+      {
+         // Strip A_
+         name += 2;
+         func = module->GetFunctionByName(name);
+
+      }
+      else if(strncasecmp(name, "A_", 2))
+      {
+         // Check if A_
+         qstring temp = qstring("A_") << name;
+         func = module->GetFunctionByName(temp.constPtr());
+      }
+   }
+   else if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
+      name += 2;
+
+   return func;
+}
+
+//=============================================================================
+//
+// The special shell codepointer
+//
+
+void A_Aeon(actionargs_t *actionargs)
+{
+   if(!actionargs->aeonaction)
+      I_Error("A_Aeon: Something went wrong I guess\n");
+
+   if(!AeonScriptManager::PrepareFunction(AeonFuncForMnemonic(actionargs->aeonaction->name)))
+      return;
+   if(actionargs->actiontype == actionargs_t::MOBJFRAME)
+      AeonScriptManager::Context()->SetArgObject(0, actionargs->actor);
+   else
+   {
+      if(!actionargs->actor->player)
+         return;
+   }
+
+   for(int i = 0; i < actionargs->aeonaction->numArgs; i++)
+   {
+      switch(actionargs->aeonaction->argTypes[i])
+        {
+        case AAT_INTEGER:
+            AeonScriptManager::Context()->SetArgDWord(i+1, E_ArgAsInt(actionargs->args, i, 0));
+            break;
+        case AAT_FIXED:
+           // AEON_FIXME: This is broken
+            AeonScriptManager::Context()->SetArgDWord(i+1, E_ArgAsFixed(actionargs->args, i, 0));
+            break;
+        case AAT_STRING:
+            AeonScriptManager::Context()->SetArgAddress(i+1,
+               const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr)));
+            break;
+        default:
+            AeonScriptManager::PopState();
+            return;
+        }
+   }
+
+   if(!AeonScriptManager::Execute())
+      return;
+}
+
+//=============================================================================
+//
+// Action Definition Hash Table
+//
+
+static
+   EHashTable<actiondef_t, ENCStringHashKey, &actiondef_t::name, &actiondef_t::links>
+   e_ActionDefHash;
+
+actiondef_t *E_AeonActionForName(const char *name)
+{
+   return e_ActionDefHash.objectForKey(name);
+}
+
+action_t *E_GetAction(const char *name)
+{
+   actiondef_t *actiondef;
+   deh_bexptr  *bexptr;
+
+   if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
+      name += 2;
+
+   if((actiondef = E_AeonActionForName(name)))
+   {
+      action_t *action = estructalloc(action_t, 1);
+      action->aeonaction = actiondef;
+      action->codeptr = action->oldcptr = A_Aeon;
+
+      return action;
+   }
+   else if((bexptr = D_GetBexPtr(name)))
+   {
+      action_t *action = estructalloc(action_t, 1);
+      action->codeptr = action->oldcptr = bexptr->cptr;
+
+      return action;
+   }
+   else
+      return nullptr;
+}
+
+static void E_registerScriptAction(const char *name, Collection<qstring> &argTypes,
+                                   const unsigned int numArgs)
+{
+   actiondef_t *info;
+   actionargtype_e args[EMAXARGS];
+   for(actionargtype_e &arg : args)
+      arg = AAT_INVALID;
+
+   for(unsigned int i = 1; i < numArgs; i++)
+   {
+      if(argTypes[i] == "int")
+         args[i - 1] = AAT_INTEGER;
+      else if(argTypes[i] == "eFixed")
+         args[i - 1] = AAT_FIXED;
+      else if(argTypes[i] == "eString" || argTypes[i] == "eString&")
+         args[i - 1] = AAT_STRING;
+      else
+      {
+         E_EDFLoggedWarning(2, "E_registerScriptAction: action '%s' has invalid argument type "
+                               "%s\n", name, argTypes[i].constPtr());
+      }
+   }
+
+   info = estructalloc(actiondef_t, 1);
+   info->name = estrdup(name);
+   memcpy(info->argTypes, args, sizeof(args));
+   info->numArgs = numArgs - 1;
+
+   e_ActionDefHash.addObject(info);
+}
+
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
@@ -57,39 +206,14 @@ static void E_processAction(cfg_t *actionsec)
    if(!code)
       E_EDFLoggedErr(2, "E_processAction: Code block not supplied for action '%s'\n", name);
 
-   module->AddScriptSection(name, code);
+   module->AddScriptSection("section", code);
    module->Build();
 
-   if(!(func = module->GetFunctionByName(name)))
+   if(!(func = AeonFuncForMnemonic(name)))
    {
-      // Couldn't find the function provided by title
-      if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
-      {
-         // Strip A_
-         name += 2;
-         func = module->GetFunctionByName(name);
-         if(!func)
-         {
-            E_EDFLoggedErr(2, "E_processAction: Failed to find function '%s' or '%s' "
-                              "in the code of action '%s'\n", name, name - 2, name);
-         }
-
-      }
-      else if(strncasecmp(name, "A_", 2))
-      {
-         // Check if A_
-         qstring temp = qstring("A_") << name;
-         func = module->GetFunctionByName(temp.constPtr());
-         if(!func)
-         {
-            E_EDFLoggedErr(2, "E_processAction: Failed to find function '%s' or '%s' "
-                              "in the code of action '%s'\n", name, temp.constPtr(), name);
-         }
-
-      }
+      E_EDFLoggedErr(2, "E_processAction: Failed to find function '%s' or '%s' "
+                        "in the code of action '%s'\n", name, name - 2, name);
    }
-   else if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
-      name += 2;
 
    int typeID = 0;
    if(func->GetParam(0, &typeID) < 0)
@@ -101,7 +225,7 @@ static void E_processAction(cfg_t *actionsec)
    }
 
    // paramCount is off-by-one as the first param doesn't matter
-   const int paramCount = func->GetParamCount();
+   const unsigned int paramCount = func->GetParamCount();
    if(paramCount > EMAXARGS)
    {
       E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "
@@ -112,11 +236,11 @@ static void E_processAction(cfg_t *actionsec)
    Collection<qstring> argNameTypes;
    qstring strTemp;
    // This loop is effectively kexScriptManager::GetArgTypesFromFunction from Powerslave EX
-   for(int i = 1; i < paramCount; i++)
+   for(unsigned int i = 0; i < paramCount; i++)
    {
       int idx;
 
-      strTemp = qstring(func->GetVarDecl(i));
+      strTemp = func->GetVarDecl(i);
       idx = strTemp.find("const");
 
       // erase
@@ -128,6 +252,8 @@ static void E_processAction(cfg_t *actionsec)
       // strTemp.Remove(strTemp.find(" "), strTemp.length());
       argNameTypes.add(qstring(strTemp));
    }
+
+   E_registerScriptAction(name, argNameTypes, paramCount);
 }
 
 //

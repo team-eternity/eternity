@@ -30,6 +30,7 @@
 #ifndef A_ARGS_H__
 #define A_ARGS_H__
 
+struct actiondef_t;
 struct arglist_t;
 class  Mobj;
 struct pspdef_t;
@@ -47,6 +48,8 @@ struct actionargs_t
    Mobj      *actor; // Actor for either type of invocation; use mo->player when needed
    pspdef_t  *pspr;  // psprite, only valid if actiontype is WEAPONFRAME
    arglist_t *args;  // EDF arguments list; potentially NULL, but all e_args funcs check.
+
+   actiondef_t *aeonaction; // Aeon action if any
 };
 
 #endif

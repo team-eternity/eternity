@@ -764,7 +764,7 @@ void deh_procBexCodePointers(DWFILE *fpin, char *line)
       else
       {
          // copy codepointer to state
-         states[indexnum]->action = bexptr->cptr;
+         states[indexnum]->action->codeptr = bexptr->cptr;
          deh_LogPrintf("- applied codepointer %p to states[%d]\n", 
                        bexptr->cptr, indexnum);
       }
@@ -1299,9 +1299,9 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 
       if(!strcasecmp(key, deh_state[4])) // Codep frame (not set in Frame deh block)
       {
-         states[indexnum]->action = states[value]->oldaction;
+         states[indexnum]->action->codeptr = states[value]->action->oldcptr;
          deh_LogPrintf(" - applied %p from codeptr[%ld] to states[%d]\n",
-                       states[value]->oldaction, value, indexnum);
+                       states[value]->action->oldcptr, value, indexnum);
          
          // Write BEX-oriented line to match:
          
@@ -1313,7 +1313,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
          
          for(i = 0; i < num_bexptrs; i++)
          {
-            if(deh_bexptrs[i].cptr == states[value]->oldaction)
+            if(deh_bexptrs[i].cptr == states[value]->action->oldcptr)
             {
                // haleyjd 07/05/03: use oldindex for proper #
                deh_LogPrintf("BEX [CODEPTR] -> FRAME %d = %s\n",
@@ -1325,7 +1325,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
       else
       {
          deh_LogPrintf("Invalid frame pointer index for '%s' at %ld, xref %p\n",
-                       key, value, states[value]->oldaction);
+                       key, value, states[value]->action->oldcptr);
       }
    }
 }

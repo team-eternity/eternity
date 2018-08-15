@@ -107,22 +107,23 @@ extern void A_FlameSnd(actionargs_t *);
 //
 static void MN_skinEmulateAction(state_t *state)
 {
-   if(state->action == A_PlaySoundEx)
+   if(state->action->codeptr == A_PlaySoundEx) // AEON_FIXME
    {
       sfxinfo_t *sfx = E_ArgAsSound(state->args, 0);
 
       if(sfx)
          S_StartInterfaceSound(sfx->name);
    }
-   else if(state->action == A_Pain)
+   else if(state->action->codeptr == A_Pain) // AEON_FIXME
    {
       S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_plpain]);
    }
-   else if(state->action == A_Scream)
+   else if(state->action->codeptr == A_Scream) // AEON_FIXME
    {
       S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_pldeth]);
    }
-   else if(state->action == A_PlayerScream || state->action == A_RavenPlayerScream)
+   else if(state->action->codeptr == A_PlayerScream ||
+           state->action->codeptr == A_RavenPlayerScream) // AEON_FIXME
    {
       if(skview_gibbed) // may gib when using Raven player behavior
          S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_slop]);
@@ -155,11 +156,11 @@ static void MN_skinEmulateAction(state_t *state)
              players[consoleplayer].skin->sounds[sk_pdiehi]);
       }
    }
-   else if(state->action == A_XScream)
+   else if(state->action->codeptr == A_XScream) // AEON_FIXME
    {
       S_StartInterfaceSound(players[consoleplayer].skin->sounds[sk_slop]);
    }
-   else if(state->action == A_FlameSnd)
+   else if(state->action->codeptr == A_FlameSnd) // AEON_FIXME
    {
       S_StartInterfaceSound("ht_hedat1");
    }

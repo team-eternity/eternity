@@ -119,9 +119,10 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
          action.actor      = player->mo;
          action.args       = state->args;
          action.pspr       = psp;
+         action.aeonaction = state->action->aeonaction;
 
-         state->action(&action);
-         
+         state->action->codeptr(&action);
+
          if(!psp->state)
             break;
       }
