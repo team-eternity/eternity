@@ -43,6 +43,10 @@ AeonAngle AeonAngle::operator + (const AeonAngle &in)  { return value + in.value
 AeonAngle AeonAngle::operator + (const AeonFixed &in)  { return value + (FixedToAngle(in.value)); }
 AeonAngle AeonAngle::operator + (const int val)        { return value + (val * ANGLE_1); }
 
+AeonAngle AeonAngle::operator - (const AeonAngle &in)  { return value - in.value; }
+AeonAngle AeonAngle::operator - (const AeonFixed &in)  { return value - (FixedToAngle(in.value)); }
+AeonAngle AeonAngle::operator - (const int val)        { return value - (val * ANGLE_1); }
+
 AeonAngle AeonAngle::operator * (const AeonFixed &in)
 {
    return FixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
@@ -69,6 +73,22 @@ AeonAngle &AeonAngle::operator += (const AeonFixed &in)
 AeonAngle &AeonAngle::operator += (const int val)
 {
    value += val * ANGLE_1;
+   return *this;
+}
+
+AeonAngle &AeonAngle::operator -= (const AeonAngle &in)
+{
+   value -= in.value;
+   return *this;
+}
+AeonAngle &AeonAngle::operator -= (const AeonFixed &in)
+{
+   value -= FixedToAngleClamped(in.value);
+   return *this;
+}
+AeonAngle &AeonAngle::operator -= (const int val)
+{
+   value -= val * ANGLE_1;
    return *this;
 }
 
@@ -137,6 +157,9 @@ static aeonfuncreg_t angleFuncs[] =
    { "eAngle opAdd(const eAngle &in)",         ANGLEBINOP(+, const AeonAngle &)         },
    { "eAngle opAdd(const eFixed &in)",         ANGLEBINOP(+, const AeonFixed &)         },
    { "eAngle opAdd(const int val)",            ANGLEBINOP(+, const int),                },
+   { "eAngle opSub(const eAngle &in)",         ANGLEBINOP(-, const AeonAngle &)         },
+   { "eAngle opSub(const eFixed &in)",         ANGLEBINOP(-, const AeonFixed &)         },
+   { "eAngle opSub(const int val)",            ANGLEBINOP(-, const int),                },
    { "eAngle opMul(const eFixed &in)",         ANGLEBINOP(*, const AeonFixed &)         },
    { "eAngle opMul(const int val)",            ANGLEBINOP(*, const int)                 },
    { "eAngle opDiv(const eAngle &in)",         ANGLEBINOP(/, const AeonAngle &)         },
@@ -145,6 +168,9 @@ static aeonfuncreg_t angleFuncs[] =
    { "eAngle &opAddAssign(const eAngle &in)",  ANGLEASSIGNOP(+=, const AeonAngle &)     },
    { "eAngle &opAddAssign(const eFixed &in)",  ANGLEASSIGNOP(+=, const AeonFixed &)     },
    { "eAngle &opAddAssign(const int val)",     ANGLEASSIGNOP(+=, const int)             },
+   { "eAngle &opSubAssign(const eAngle &in)",  ANGLEASSIGNOP(-=, const AeonAngle &)     },
+   { "eAngle &opSubAssign(const eFixed &in)",  ANGLEASSIGNOP(-=, const AeonFixed &)     },
+   { "eAngle &opSubAssign(const int val)",     ANGLEASSIGNOP(-=, const int)             },
    { "eAngle &opMulAssign(const eAngle &in)",  ANGLEASSIGNOP(*=, const AeonFixed &)     },
    { "eAngle &opMulAssign(const int val)",     ANGLEASSIGNOP(*=, const int)             },
    { "eAngle &opDivAssign(const eAngle &in)",  ANGLEASSIGNOP(/=, const AeonAngle &)     },

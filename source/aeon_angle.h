@@ -46,6 +46,10 @@ public:
    AeonAngle operator + (const AeonFixed &in);
    AeonAngle operator + (const int val);
 
+   AeonAngle operator - (const AeonAngle &in);
+   AeonAngle operator - (const AeonFixed &in);
+   AeonAngle operator - (const int val);
+
    AeonAngle operator * (const AeonFixed &in);
    AeonAngle operator * (const int val);
 
@@ -56,6 +60,10 @@ public:
    AeonAngle &operator += (const AeonAngle &in);
    AeonAngle &operator += (const AeonFixed &in);
    AeonAngle &operator += (const int val);
+
+   AeonAngle &operator -= (const AeonAngle &in);
+   AeonAngle &operator -= (const AeonFixed &in);
+   AeonAngle &operator -= (const int val);
 
    AeonAngle &operator *= (const AeonFixed &in);
    AeonAngle &operator *= (const int val);

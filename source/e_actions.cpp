@@ -267,21 +267,17 @@ void E_ProcessActions(cfg_t *cfg)
 {
    int i, numpickups;
 
-   E_EDFLogPuts("\t* Processing pickup items\n");
-
-   // sanity check
-   //if(!pickupfx)
-   //   E_EDFLoggedErr(2, "E_ProcessItems: no sprites defined!?\n");
+   E_EDFLogPuts("\t* Processing Aeon actions\n");
 
    // load pickupfx
    numpickups = cfg_size(cfg, EDF_SEC_ACTION);
-   E_EDFLogPrintf("\t\t%d pickup item(s) defined\n", numpickups);
+   E_EDFLogPrintf("\t\t%d Aeon action(s) defined\n", numpickups);
    for(i = 0; i < numpickups; ++i)
    {
       cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_ACTION, i);
       const char *title = cfg_title(sec);
 
-      E_EDFLogPrintf("\tCreated pickup effect %s\n", title);
+      E_EDFLogPrintf("\tCreated Aeon action %s\n", title);
 
       // process action properties
       E_processAction(sec);

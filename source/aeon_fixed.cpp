@@ -29,9 +29,9 @@
 #include "m_fixed.h"
 
 AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
-AeonFixed AeonFixed::operator + (const int val)       { return value + (val << FRACBITS); }
+AeonFixed AeonFixed::operator + (const int val)       { return value + (val * FRACUNIT);  }
 AeonFixed AeonFixed::operator - (const AeonFixed &in) { return value - in.value;          }
-AeonFixed AeonFixed::operator - (const int val)       { return value - (val << FRACBITS); }
+AeonFixed AeonFixed::operator - (const int val)       { return value - (val * FRACUNIT);  }
 AeonFixed AeonFixed::operator * (const AeonFixed &in) { return FixedMul(value, in.value); }
 AeonFixed AeonFixed::operator * (const int val)       { return value * val;               }
 AeonFixed AeonFixed::operator / (const AeonFixed &in) { return FixedDiv(value, in.value); }
@@ -44,7 +44,7 @@ AeonFixed &AeonFixed::operator += (const AeonFixed &in)
 }
 AeonFixed &AeonFixed::operator += (const int val)
 {
-   value += val << FRACBITS;
+   value += val * FRACUNIT;
    return *this;
 }
 AeonFixed &AeonFixed::operator -= (const AeonFixed &in)
@@ -54,7 +54,7 @@ AeonFixed &AeonFixed::operator -= (const AeonFixed &in)
 }
 AeonFixed &AeonFixed::operator -= (const int val)
 {
-   value -= val << FRACBITS;
+   value -= val * FRACUNIT;
    return *this;
 }
 AeonFixed &AeonFixed::operator *= (const AeonFixed &in)
@@ -98,14 +98,19 @@ void AeonScriptObjFixed::ConstructFromDouble(double other, AeonFixed *thisFixed)
 
 void AeonScriptObjFixed::ConstructFromInt(int other, AeonFixed *thisFixed)
 {
-   thisFixed->value = other << FRACBITS;
+   thisFixed->value = other * FRACUNIT;
 }
 
 void AeonScriptObjFixed::ConstructFromPair(int16_t integer, double frac, AeonFixed *thisFixed)
 {
-   thisFixed->value = static_cast<int32_t>(integer) << FRACBITS;
+   thisFixed->value = static_cast<int32_t>(integer) * FRACUNIT;
    if(frac < 1.0 && frac >= 0.0)
       thisFixed->value |= M_DoubleToFixed(frac);
+}
+
+void AeonScriptObjFixed::ConstructFromBits(int bits, AeonFixed *thisFixed)
+{
+   thisFixed->value = bits;
 }
 
 static void ASPrint(AeonFixed f)
@@ -157,6 +162,11 @@ void AeonScriptObjFixed::Init()
                               WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
    e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
                               WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
+
+   e->SetDefaultNamespace("eFixed");
+   e->RegisterGlobalFunction("eFixed FromBits(const int val)",
+                             WRAP_OBJ_LAST(ConstructFromBits), asCALL_GENERIC);
+   e->SetDefaultNamespace("");
 
    for(const aeonfuncreg_t &fn : fixedFuncs)
       e->RegisterObjectMethod("eFixed", fn.declaration, fn.funcPointer, asCALL_GENERIC);
