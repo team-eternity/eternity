@@ -44,6 +44,8 @@ public:
 
    AeonFixed operator + (const AeonFixed &in);
    AeonFixed operator + (const int val);
+   AeonFixed operator - (const AeonFixed &in);
+   AeonFixed operator - (const int val);
    AeonFixed operator * (const AeonFixed &in);
    AeonFixed operator * (const int val);
    AeonFixed operator / (const AeonFixed &in);
@@ -51,6 +53,8 @@ public:
 
    AeonFixed &operator += (const AeonFixed &in);
    AeonFixed &operator += (const int val);
+   AeonFixed &operator -= (const AeonFixed &in);
+   AeonFixed &operator -= (const int val);
    AeonFixed &operator *= (const AeonFixed &in);
    AeonFixed &operator *= (const int val);
    AeonFixed &operator /= (const AeonFixed &in);

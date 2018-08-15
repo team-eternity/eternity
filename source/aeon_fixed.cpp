@@ -30,6 +30,8 @@
 
 AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
 AeonFixed AeonFixed::operator + (const int val)       { return value + (val << FRACBITS); }
+AeonFixed AeonFixed::operator - (const AeonFixed &in) { return value - in.value;          }
+AeonFixed AeonFixed::operator - (const int val)       { return value - (val << FRACBITS); }
 AeonFixed AeonFixed::operator * (const AeonFixed &in) { return FixedMul(value, in.value); }
 AeonFixed AeonFixed::operator * (const int val)       { return value * val;               }
 AeonFixed AeonFixed::operator / (const AeonFixed &in) { return FixedDiv(value, in.value); }
@@ -43,6 +45,16 @@ AeonFixed &AeonFixed::operator += (const AeonFixed &in)
 AeonFixed &AeonFixed::operator += (const int val)
 {
    value += val << FRACBITS;
+   return *this;
+}
+AeonFixed &AeonFixed::operator -= (const AeonFixed &in)
+{
+   value -= in.value;
+   return *this;
+}
+AeonFixed &AeonFixed::operator -= (const int val)
+{
+   value -= val << FRACBITS;
    return *this;
 }
 AeonFixed &AeonFixed::operator *= (const AeonFixed &in)
@@ -111,12 +123,16 @@ static aeonfuncreg_t fixedFuncs[] =
 {
    { "eFixed opAdd(const eFixed &in)",        FIXEDBINOP(+, const AeonFixed &)         },
    { "eFixed opAdd(const int val)",           FIXEDBINOP(+, const int),                },
+   { "eFixed opSub(const eFixed &in)",        FIXEDBINOP(-, const AeonFixed &)         },
+   { "eFixed opSub(const int val)",           FIXEDBINOP(-, const int),                },
    { "eFixed opMul(const eFixed &in)",        FIXEDBINOP(*, const AeonFixed &)         },
    { "eFixed opMul(const int val)",           FIXEDBINOP(*, const int)                 },
    { "eFixed opDiv(const eFixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
    { "eFixed opDiv(const int val)",           FIXEDBINOP(/, const int)                 },
    { "eFixed &opAddAssign(const eFixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
    { "eFixed &opAddAssign(const int val)",    FIXEDASSIGNOP(+=, const int)             },
+   { "eFixed &opSubAssign(const eFixed &in)", FIXEDASSIGNOP(-=, const AeonFixed &)     },
+   { "eFixed &opSubAssign(const int val)",    FIXEDASSIGNOP(-=, const int)             },
    { "eFixed &opMulAssign(const eFixed &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
    { "eFixed &opMulAssign(const int val)",    FIXEDASSIGNOP(*=, const int)             },
    { "eFixed &opDivAssign(const eFixed &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },

@@ -28,6 +28,7 @@
 #include "aeon_system.h"
 
 #include "a_args.h"
+#include "aeon_fixed.h"
 #include "Confuse/confuse.h"
 #include "e_actions.h"
 #include "e_args.h"
@@ -86,7 +87,7 @@ asIScriptFunction *AeonFuncForMnemonic(const char *&name)
 void A_Aeon(actionargs_t *actionargs)
 {
    if(!actionargs->aeonaction)
-      I_Error("A_Aeon: Something went wrong I guess\n");
+      I_Error("A_Aeon: Not bound to Aeon function (don't call A_Aeon from states directly)\n");
 
    if(!AeonScriptManager::PrepareFunction(AeonFuncForMnemonic(actionargs->aeonaction->name)))
       return;
@@ -100,22 +101,25 @@ void A_Aeon(actionargs_t *actionargs)
 
    for(int i = 0; i < actionargs->aeonaction->numArgs; i++)
    {
+      fixed_t argfixed;
+      char *argstr;
+
       switch(actionargs->aeonaction->argTypes[i])
-        {
-        case AAT_INTEGER:
-            AeonScriptManager::Context()->SetArgDWord(i+1, E_ArgAsInt(actionargs->args, i, 0));
-            break;
-        case AAT_FIXED:
-           // AEON_FIXME: This is broken
-            AeonScriptManager::Context()->SetArgDWord(i+1, E_ArgAsFixed(actionargs->args, i, 0));
-            break;
-        case AAT_STRING:
-            AeonScriptManager::Context()->SetArgAddress(i+1,
-               const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr)));
-            break;
-        default:
-            AeonScriptManager::PopState();
-            return;
+      {
+      case AAT_INTEGER:
+         AeonScriptManager::Context()->SetArgDWord(i+1, E_ArgAsInt(actionargs->args, i, 0));
+         break;
+      case AAT_FIXED:
+         argfixed = E_ArgAsFixed(actionargs->args, i, 0);
+         AeonScriptManager::Context()->SetArgObject(i+1, &AeonFixed(argfixed));
+         break;
+      case AAT_STRING:
+         argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr));
+         AeonScriptManager::Context()->SetArgAddress(i+1, argstr);
+         break;
+      default:
+         AeonScriptManager::PopState();
+         return;
         }
    }
 
