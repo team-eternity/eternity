@@ -515,7 +515,7 @@ static int lexer_state_heredoc(lexerstate_t *ls)
 //
 static int lexer_state_rawstring(lexerstate_t *ls)
 {
-   // check for end of heredoc
+   // check for end of raw string
    if(ls->c == ')' && *bufferpos == '"')
    {
       ++bufferpos; // move forward past @
@@ -542,21 +542,6 @@ static int lexer_state_none(lexerstate_t *ls)
 {
    int ret = -1;
    char la;
-
-   auto default_case = [ls, &ret]()
-   {
-      if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
-      {
-         mytext = ":";
-         ret    = ':';
-      }
-      else
-      {
-         qstr.clear();
-         qstr += ls->c;
-         ls->state = STATE_UNQUOTEDSTRING;
-      }
-   };
 
    switch(ls->c)
    {
@@ -652,7 +637,7 @@ static int lexer_state_none(lexerstate_t *ls)
          ls->state = STATE_HEREDOC;
          break;
       }
-      default_case();
+      goto default_case;
       break;
    case 'R':
       if(*bufferpos == '"' && *(bufferpos + 1) == '(') // look ahead to next two character s
@@ -662,10 +647,21 @@ static int lexer_state_none(lexerstate_t *ls)
          ls->state = STATE_RAWSTRING;
          break;
       }
-      default_case();
+      goto default_case;
       break;
    default:  // anything else is part of an unquoted string
-      default_case();
+default_case:
+      if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
+      {
+         mytext = ":";
+         ret    = ':';
+      }
+      else
+      {
+         qstr.clear();
+         qstr += ls->c;
+         ls->state = STATE_UNQUOTEDSTRING;
+      }
       break;
    }
 
