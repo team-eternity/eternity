@@ -637,7 +637,7 @@ static int lexer_state_none(lexerstate_t *ls)
          ls->state = STATE_HEREDOC;
          break;
       }
-      goto default_case;
+      goto unquoted_string;
       break;
    case 'R':
       if(*bufferpos == '"' && *(bufferpos + 1) == '(') // look ahead to next two character s
@@ -647,10 +647,10 @@ static int lexer_state_none(lexerstate_t *ls)
          ls->state = STATE_RAWSTRING;
          break;
       }
-      goto default_case;
+      goto unquoted_string;
       break;
    default:  // anything else is part of an unquoted string
-default_case:
+unquoted_string:
       if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
       {
          mytext = ":";

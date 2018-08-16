@@ -25,8 +25,6 @@
 #ifndef AEON_STRING_H__
 #define AEON_STRING_H__
 
-class asIScriptEngine;
-
 class AeonScriptObjString
 {
 public:

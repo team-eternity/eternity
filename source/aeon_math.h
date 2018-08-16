@@ -18,16 +18,18 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-// Purpose: Aeon wrapper for fixed_t
+// Purpose: Aeon maths bindings
 // Authors: Max Waine
 //
 
-#ifndef AEON_FIXED_H__
-#define AEON_FIXED_H__
+#ifndef AEON_MATH_H__
+#define AEON_MATH_H__
 
 #include <stdint.h>
 
 #include "m_fixed.h"
+
+#include "tables.h"
 
 class AeonFixed
 {
@@ -64,6 +66,53 @@ public:
    operator fixed_t() const { return value; }
 };
 
+class AeonAngle
+{
+public:
+   angle_t value;
+
+   AeonAngle() : value(0)
+   {
+   }
+
+   AeonAngle(fixed_t value) : value(value)
+   {
+   }
+
+   AeonAngle operator + (const AeonAngle &in);
+   AeonAngle operator + (const AeonFixed &in);
+   AeonAngle operator + (const int val);
+
+   AeonAngle operator - (const AeonAngle &in);
+   AeonAngle operator - (const AeonFixed &in);
+   AeonAngle operator - (const int val);
+
+   AeonAngle operator * (const AeonFixed &in);
+   AeonAngle operator * (const int val);
+
+   AeonAngle operator / (const AeonAngle &in);
+   AeonAngle operator / (const AeonFixed &in);
+   AeonAngle operator / (const int val);
+
+   AeonAngle &operator += (const AeonAngle &in);
+   AeonAngle &operator += (const AeonFixed &in);
+   AeonAngle &operator += (const int val);
+
+   AeonAngle &operator -= (const AeonAngle &in);
+   AeonAngle &operator -= (const AeonFixed &in);
+   AeonAngle &operator -= (const int val);
+
+   AeonAngle &operator *= (const AeonFixed &in);
+   AeonAngle &operator *= (const int val);
+
+   AeonAngle &operator /= (const AeonAngle &in);
+   AeonAngle &operator /= (const AeonFixed &in);
+   AeonAngle &operator /= (const int val);
+
+   operator AeonFixed() const;
+   operator angle_t() const { return value; }
+};
+
 class AeonScriptObjFixed
 {
 public:
@@ -73,6 +122,17 @@ public:
    static void ConstructFromInt(int other, AeonFixed *thisFixed);
    static void ConstructFromPair(int16_t integer, double frac, AeonFixed *thisFixed);
    static AeonFixed ConstructFromBits(int bits);
+
+   static void Init();
+};
+
+class AeonScriptObjAngle
+{
+public:
+   static void Construct(AeonAngle *thisAngle);
+   static void ConstructFromOther(const AeonAngle &other, AeonAngle *thisAngle);
+   static void ConstructFromDouble(double other, AeonAngle *thisAngle);
+   static void ConstructFromInt(int other, AeonAngle *thisAngle);
 
    static void Init();
 };

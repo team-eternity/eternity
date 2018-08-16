@@ -23,9 +23,8 @@
 
 #include "scriptarray.h"
 
-#include "aeon_angle.h"
 #include "aeon_common.h"
-#include "aeon_fixed.h"
+#include "aeon_math.h"
 #include "aeon_mobj.h"
 #include "aeon_string.h"
 #include "aeon_system.h"

@@ -1017,9 +1017,6 @@
     <ClCompile Include="..\source\aeon_common.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_fixed.cpp">
-      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\aeon_string.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
@@ -1029,11 +1026,11 @@
     <ClCompile Include="..\source\aeon_mobj.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_angle.cpp">
-      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\e_actions.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\aeon_math.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1823,9 +1820,6 @@
     <ClInclude Include="..\source\aeon_common.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\aeon_fixed.h">
-      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\aeon_string.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
@@ -1835,11 +1829,11 @@
     <ClInclude Include="..\source\aeon_mobj.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\aeon_angle.h">
-      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\e_actions.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_math.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

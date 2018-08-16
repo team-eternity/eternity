@@ -316,9 +316,8 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_angle.cpp" />
     <ClCompile Include="..\source\aeon_common.cpp" />
-    <ClCompile Include="..\source\aeon_fixed.cpp" />
+    <ClCompile Include="..\source\aeon_math.cpp" />
     <ClCompile Include="..\source\aeon_mobj.cpp" />
     <ClCompile Include="..\source\aeon_system.cpp" />
     <ClCompile Include="..\source\aeon_string.cpp" />
@@ -1886,9 +1885,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h" />
-    <ClInclude Include="..\source\aeon_angle.h" />
     <ClInclude Include="..\source\aeon_common.h" />
-    <ClInclude Include="..\source\aeon_fixed.h" />
+    <ClInclude Include="..\source\aeon_math.h" />
     <ClInclude Include="..\source\aeon_mobj.h" />
     <ClInclude Include="..\source\aeon_system.h" />
     <ClInclude Include="..\source\aeon_string.h" />

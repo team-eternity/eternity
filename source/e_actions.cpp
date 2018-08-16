@@ -28,7 +28,7 @@
 #include "aeon_system.h"
 
 #include "a_args.h"
-#include "aeon_fixed.h"
+#include "aeon_math.h"
 #include "Confuse/confuse.h"
 #include "e_actions.h"
 #include "e_args.h"
