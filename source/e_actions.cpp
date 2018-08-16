@@ -60,49 +60,6 @@ static inline qstring AlternateFuncName(const char *name)
       return qstring("A_") << name; // Add A_
 }
 
-// Fetches a function based on a mnemonic, disregarding the A_
-// The A_ is also stripped if necessary
-static asIScriptFunction *E_aeonFuncForMnemonic(const char *&mnemonic)
-{
-   asIScriptFunction *func;
-   asIScriptModule *module = AeonScriptManager::Module();
-
-   if(strlen(mnemonic) > 2 && !strncasecmp(mnemonic, "A_", 2))
-      mnemonic += 2;
-
-   if(!(func = module->GetFunctionByName(mnemonic)))
-   {
-      if(!(func = module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr())))
-      {
-         E_EDFLoggedErr(2, "E_processAction: Failed to find function '%s' or '%s' "
-                           "in the code of action '%s'\n",
-                        mnemonic, AlternateFuncName(mnemonic).constPtr(), mnemonic);
-      }
-   }
-   else if(module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr()))
-   {
-      E_EDFLoggedErr(2, "E_processAction: Both functions '%s' and '%s' found "
-                        "in the code of action '%s'.\nPlease only define one or the other\n",
-                     mnemonic, AlternateFuncName(mnemonic).constPtr(), mnemonic);
-   }
-
-
-   return func;
-}
-
-// Stripped down version of E_aeonFuncForMnemonic, made for usage at runtime (instead of
-// during initialisation), as by now we know that the name resolves to a valid function
-static asIScriptFunction *E_getAeonFunc(const char *mnemonic)
-{
-   asIScriptFunction *func;
-   asIScriptModule *module = AeonScriptManager::Module();
-
-   if(!(func = module->GetFunctionByName(mnemonic)))
-      return module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr());
-
-   return func;
-}
-
 //=============================================================================
 //
 // The special shell codepointer
@@ -113,7 +70,7 @@ void A_Aeon(actionargs_t *actionargs)
    if(!actionargs->aeonaction)
       I_Error("A_Aeon: Not bound to Aeon function (don't call A_Aeon from states directly)\n");
 
-   if(!AeonScriptManager::PrepareFunction(E_getAeonFunc(actionargs->aeonaction->name)))
+   if(!AeonScriptManager::PrepareFunction(actionargs->aeonaction->name))
       return;
    if(actionargs->actiontype == actionargs_t::MOBJFRAME)
       AeonScriptManager::Context()->SetArgObject(0, actionargs->actor);
@@ -162,7 +119,12 @@ static
 
 actiondef_t *E_AeonActionForName(const char *name)
 {
-   return e_ActionDefHash.objectForKey(name);
+   actiondef_t *ret = e_ActionDefHash.objectForKey(name);
+
+   if(ret)
+      return ret;
+   else
+      return e_ActionDefHash.objectForKey(AlternateFuncName(name).constPtr());
 }
 
 action_t *E_GetAction(const char *name)
@@ -192,8 +154,8 @@ action_t *E_GetAction(const char *name)
       return nullptr;
 }
 
-static void E_registerScriptAction(const char *name, Collection<qstring> &argTypes,
-                                   const unsigned int numArgs)
+static void E_registerScriptAction(const char *name, const char *funcname,
+                                   Collection<qstring> &argTypes, const unsigned int numArgs)
 {
    actiondef_t *info;
    actionargtype_e args[EMAXARGS];
@@ -216,12 +178,39 @@ static void E_registerScriptAction(const char *name, Collection<qstring> &argTyp
    }
 
    info = estructalloc(actiondef_t, 1);
-   info->name = estrdup(name);
+   info->name = estrdup(funcname);
    memcpy(info->argTypes, args, sizeof(args));
    info->numArgs = numArgs - 1;
 
    e_ActionDefHash.addObject(info);
 }
+
+// Fetches a function based on a mnemonic, disregarding the A_
+// The A_ is also stripped if necessary
+static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
+{
+   asIScriptFunction *func;
+   asIScriptModule *module = AeonScriptManager::Module();
+
+   if(!(func = module->GetFunctionByName(mnemonic)))
+   {
+      if(!(func = module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr())))
+      {
+         E_EDFLoggedErr(2, "E_processAction: Failed to find function '%s' or '%s' "
+                           "in the code of action '%s'\n",
+                        mnemonic, AlternateFuncName(mnemonic).constPtr(), mnemonic);
+      }
+   }
+   else if(module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr()))
+   {
+      E_EDFLoggedErr(2, "E_processAction: Both functions '%s' and '%s' found "
+                        "in the code of action '%s'.\nPlease only define one or the other\n",
+                     mnemonic, AlternateFuncName(mnemonic).constPtr(), mnemonic);
+   }
+
+   return func;
+}
+
 
 static void E_processAction(cfg_t *actionsec)
 {
@@ -236,7 +225,7 @@ static void E_processAction(cfg_t *actionsec)
 
    module->AddScriptSection("section", code);
    module->Build();
-   // Verification and normalisation of the name is done in this function
+   // Get the Aeon function for a given mnemonic (like D_GetBexPtr)
    func = E_aeonFuncForMnemonic(name);
 
    // Verify that the first parameter is a Mobj handle
@@ -278,7 +267,7 @@ static void E_processAction(cfg_t *actionsec)
       argNameTypes.add(qstring(strTemp));
    }
 
-   E_registerScriptAction(name, argNameTypes, paramCount);
+   E_registerScriptAction(name, func->GetName(), argNameTypes, paramCount);
 }
 
 //
