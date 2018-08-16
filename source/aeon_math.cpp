@@ -22,13 +22,17 @@
 // Authors: Max Waine
 //
 
-
 #include "aeon_common.h"
 #include "aeon_math.h"
 #include "aeon_system.h"
 #include "c_io.h"
 #include "m_fixed.h"
 #include "tables.h"
+
+//=============================================================================
+//
+// Aeon fixed-point class
+//
 
 AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
 AeonFixed AeonFixed::operator + (const int val)       { return value + (val * FRACUNIT);  }
@@ -179,6 +183,11 @@ void AeonScriptObjFixed::Init()
                              asCALL_GENERIC);
 }
 
+//=============================================================================
+//
+// Aeon angle class
+//
+
 //
 // Clamps a fixed_t to be within the range representable by an angle_t
 // then converts it to an angle_t
@@ -191,7 +200,6 @@ static inline angle_t FixedToAngleClamped(const fixed_t val)
 AeonAngle AeonAngle::operator + (const AeonAngle &in)  { return value + in.value; }
 AeonAngle AeonAngle::operator + (const AeonFixed &in)  { return value + (FixedToAngle(in.value)); }
 AeonAngle AeonAngle::operator + (const int val)        { return value + (val * ANGLE_1); }
-
 AeonAngle AeonAngle::operator - (const AeonAngle &in)  { return value - in.value; }
 AeonAngle AeonAngle::operator - (const AeonFixed &in)  { return value - (FixedToAngle(in.value)); }
 AeonAngle AeonAngle::operator - (const int val)        { return value - (val * ANGLE_1); }
@@ -201,7 +209,6 @@ AeonAngle AeonAngle::operator * (const AeonFixed &in)
    return FixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
 }
 AeonAngle AeonAngle::operator * (const int val)        { return value * val; }
-
 AeonAngle AeonAngle::operator / (const AeonAngle &in)  { return value / in.value; }
 AeonAngle AeonAngle::operator / (const AeonFixed &in)
 {
@@ -224,7 +231,6 @@ AeonAngle &AeonAngle::operator += (const int val)
    value += val * ANGLE_1;
    return *this;
 }
-
 AeonAngle &AeonAngle::operator -= (const AeonAngle &in)
 {
    value -= in.value;
@@ -251,7 +257,6 @@ AeonAngle &AeonAngle::operator *= (const int val)
    value *= val;
    return *this;
 }
-
 AeonAngle &AeonAngle::operator /= (const AeonAngle &in)
 {
    value /= in.value;

@@ -61,10 +61,14 @@ static inline qstring AlternateFuncName(const char *name)
 }
 
 // Fetches a function based on a mnemonic, disregarding the A_
-static asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
+// The A_ is also stripped if necessary
+static asIScriptFunction *E_aeonFuncForMnemonic(const char *&mnemonic)
 {
    asIScriptFunction *func;
    asIScriptModule *module = AeonScriptManager::Module();
+
+   if(strlen(mnemonic) > 2 && !strncasecmp(mnemonic, "A_", 2))
+      mnemonic += 2;
 
    if(!(func = module->GetFunctionByName(mnemonic)))
    {
@@ -88,7 +92,7 @@ static asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
 
 // Stripped down version of E_aeonFuncForMnemonic, made for usage at runtime (instead of
 // during initialisation), as by now we know that the name resolves to a valid function
-static asIScriptFunction *E_aeonFuncForMnemonicRuntime(const char *mnemonic)
+static asIScriptFunction *E_getAeonFunc(const char *mnemonic)
 {
    asIScriptFunction *func;
    asIScriptModule *module = AeonScriptManager::Module();
@@ -109,7 +113,7 @@ void A_Aeon(actionargs_t *actionargs)
    if(!actionargs->aeonaction)
       I_Error("A_Aeon: Not bound to Aeon function (don't call A_Aeon from states directly)\n");
 
-   if(!AeonScriptManager::PrepareFunction(E_aeonFuncForMnemonic(actionargs->aeonaction->name)))
+   if(!AeonScriptManager::PrepareFunction(E_getAeonFunc(actionargs->aeonaction->name)))
       return;
    if(actionargs->actiontype == actionargs_t::MOBJFRAME)
       AeonScriptManager::Context()->SetArgObject(0, actionargs->actor);
@@ -232,9 +236,10 @@ static void E_processAction(cfg_t *actionsec)
 
    module->AddScriptSection("section", code);
    module->Build();
-
+   // Verification and normalisation of the name is done in this function
    func = E_aeonFuncForMnemonic(name);
 
+   // Verify that the first parameter is a Mobj handle
    int typeID = 0;
    if(func->GetParam(0, &typeID) < 0)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
