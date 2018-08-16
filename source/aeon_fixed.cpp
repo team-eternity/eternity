@@ -108,9 +108,11 @@ void AeonScriptObjFixed::ConstructFromPair(int16_t integer, double frac, AeonFix
       thisFixed->value |= M_DoubleToFixed(frac);
 }
 
-void AeonScriptObjFixed::ConstructFromBits(int bits, AeonFixed *thisFixed)
+AeonFixed AeonScriptObjFixed::ConstructFromBits(int bits)
 {
-   thisFixed->value = bits;
+   AeonFixed ret = AeonFixed();
+   ret.value = bits;
+   return ret;
 }
 
 static void ASPrint(AeonFixed f)
@@ -165,7 +167,7 @@ void AeonScriptObjFixed::Init()
 
    e->SetDefaultNamespace("eFixed");
    e->RegisterGlobalFunction("eFixed FromBits(const int val)",
-                             WRAP_OBJ_LAST(ConstructFromBits), asCALL_GENERIC);
+                             WRAP_FN(ConstructFromBits), asCALL_GENERIC);
    e->SetDefaultNamespace("");
 
    for(const aeonfuncreg_t &fn : fixedFuncs)

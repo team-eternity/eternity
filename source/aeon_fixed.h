@@ -72,7 +72,7 @@ public:
    static void ConstructFromDouble(double other, AeonFixed *thisFixed);
    static void ConstructFromInt(int other, AeonFixed *thisFixed);
    static void ConstructFromPair(int16_t integer, double frac, AeonFixed *thisFixed);
-   static void ConstructFromBits(int bits, AeonFixed *thisFixed);
+   static AeonFixed ConstructFromBits(int bits);
 
    static void Init();
 };
