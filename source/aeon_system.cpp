@@ -93,6 +93,7 @@ void AeonScriptManager::Init()
    AeonScriptObjString::Init();
    AeonScriptObjFixed::Init();
    AeonScriptObjAngle::Init();
+   AeonScriptObjVector::Init();
    AeonScriptObjMobj::Init();
 
    if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
@@ -101,36 +102,6 @@ void AeonScriptManager::Init()
    // create execution context
    if(!(ctx = engine->CreateContext()))
       I_Error("AeonScriptManager::Init: Could not create execution context\n");
-
-   // FIXME: Below is temporary gross hacks
-   /*DWFILE dwfile;
-   dwfile.openFile(M_SafeFilePath(basepath, "test.asc"), "rb");
-   char *buf = ecalloc(char *, dwfile.fileLength(), sizeof(char));
-   for(char *temp = buf; !dwfile.atEof(); temp++)
-      *temp = dwfile.getChar();
-
-   if(module->AddScriptSection("section", buf, dwfile.fileLength(), 0) < 0)
-      I_Error("AeonScriptManager::Init: Could not add code to module\n");
-
-    if(module->Build() < 0)
-      I_Error("AeonScriptManager::Init: Could not build module\n");
-
-   // call main function
-   auto func = module->GetFunctionByDecl("void main()");
-   if(!func)
-      I_Error("AeonScriptManager::Init: Could not find main function in script\n");
-
-   // prepare
-   if(ctx->Prepare(func) < 0)
-      I_Error("AeonScriptManager::Init: Prepare failed\n");
-
-   // execute
-   int r = ctx->Execute();
-   if(r != asEXECUTION_FINISHED)
-   {
-      if(r == asEXECUTION_EXCEPTION)
-         C_Printf("An exception '%s' occurred.\n", ctx->GetExceptionString());
-   }*/
 
    atexit(Shutdown);
 }

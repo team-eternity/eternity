@@ -356,5 +356,69 @@ void AeonScriptObjAngle::Init()
                              asCALL_GENERIC);
 }
 
+struct vector_t
+{
+   fixed_t x;
+   fixed_t y;
+   fixed_t z;
+};
+
+class AeonVector
+{
+public:
+   vector_t value;
+
+   AeonVector() : value()
+   {
+   }
+
+   AeonVector(fixed_t x, fixed_t y, fixed_t z) : value({x, y, z})
+   {
+   }
+
+};
+
+void AeonScriptObjVector::Construct(AeonVector *thisVector)
+{
+   *thisVector = AeonVector();
+}
+
+void AeonScriptObjVector::ConstructFromOther(const AeonVector &other, AeonVector *thisVector)
+{
+   *thisVector = AeonVector(other);
+}
+
+void AeonScriptObjVector::ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z,
+                                             AeonVector *thisVector)
+{
+   *thisVector = AeonVector(x, y, z);
+}
+
+void AeonScriptObjVector::Init()
+{
+   asIScriptEngine *e = AeonScriptManager::Engine();
+
+   e->RegisterObjectType("eVector", sizeof(AeonAngle),
+                         asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
+
+   e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT, "void f()",
+                              WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
+   e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT, "void f(const eVector &in)",
+                              WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
+   e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT,
+                              "void f(const eFixed, const eFixed, const eFixed)",
+                              WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC);
+
+   e->RegisterObjectProperty("eVector", "eFixed x", asOFFSET(AeonVector, value.x));
+   e->RegisterObjectProperty("eVector", "eFixed y", asOFFSET(AeonVector, value.y));
+   e->RegisterObjectProperty("eVector", "eFixed z", asOFFSET(AeonVector, value.z));
+
+   //for(const aeonfuncreg_t &fn : angleFuncs)
+   //   e->RegisterObjectMethod("eVector", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
+   //e->RegisterGlobalFunction("void print(eVector)", WRAP_FN_PR(ASPrint, (AeonVector), void),
+   //                          asCALL_GENERIC);
+}
+
 // EOF
 

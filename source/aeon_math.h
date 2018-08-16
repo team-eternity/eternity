@@ -137,6 +137,18 @@ public:
    static void Init();
 };
 
+class AeonVector;
+
+class AeonScriptObjVector
+{
+public:
+   static void Construct(AeonVector *thisVector);
+   static void ConstructFromOther(const AeonVector &other, AeonVector *thisVector);
+   static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, AeonVector *thisVector);
+
+   static void Init();
+};
+
 #endif
 
 // EOF

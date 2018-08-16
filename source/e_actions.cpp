@@ -154,6 +154,11 @@ action_t *E_GetAction(const char *name)
       return nullptr;
 }
 
+//=============================================================================
+//
+// Processing
+//
+
 static void E_registerScriptAction(const char *name, const char *funcname,
                                    Collection<qstring> &argTypes, const unsigned int numArgs)
 {
@@ -210,7 +215,6 @@ static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
 
    return func;
 }
-
 
 static void E_processAction(cfg_t *actionsec)
 {
