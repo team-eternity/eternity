@@ -216,7 +216,8 @@ enum
    STATE_LINECONTINUANCE,
    STATE_STRINGCOALESCE,
    STATE_UNQUOTEDSTRING,
-   STATE_HEREDOC
+   STATE_HEREDOC,
+   STATE_RAWSTRING,
 };
 
 //
@@ -510,12 +511,52 @@ static int lexer_state_heredoc(lexerstate_t *ls)
 }
 
 //
+// lexer_state_rawstring
+//
+static int lexer_state_rawstring(lexerstate_t *ls)
+{
+   // check for end of heredoc
+   if(ls->c == ')' && *bufferpos == '"')
+   {
+      ++bufferpos; // move forward past @
+      mytext = qstr.constPtr();
+
+      return CFGT_STR; // return a string token
+   }
+   else // normal characters -- everything is literal
+   {
+      if(ls->c == '\n')
+         ls->cfg->line++; // still need to track line numbers
+
+      qstr += ls->c;
+
+      return -1; // continue parsing
+   }
+}
+
+
+//
 // lexer_state_none
 //
 static int lexer_state_none(lexerstate_t *ls)
 {
    int ret = -1;
    char la;
+
+   auto default_case = [ls, &ret]()
+   {
+      if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
+      {
+         mytext = ":";
+         ret    = ':';
+      }
+      else
+      {
+         qstr.clear();
+         qstr += ls->c;
+         ls->state = STATE_UNQUOTEDSTRING;
+      }
+   };
 
    switch(ls->c)
    {
@@ -611,19 +652,20 @@ static int lexer_state_none(lexerstate_t *ls)
          ls->state = STATE_HEREDOC;
          break;
       }
-      // fall through, @ is not special unless followed by " or '
-   default:  // anything else is part of an unquoted string
-      if(ls->c == ':' && currentDialect >= CFG_DIALECT_ALFHEIM)
+      default_case();
+      break;
+   case 'R':
+      if(*bufferpos == '"' && *(bufferpos + 1) == '(') // look ahead to next two character s
       {
-         mytext = ":";
-         ret    = ':'; 
-      }
-      else
-      {
+         bufferpos += 2; // move past secondary delimiter characters
          qstr.clear();
-         qstr += ls->c;
-         ls->state = STATE_UNQUOTEDSTRING;
+         ls->state = STATE_RAWSTRING;
+         break;
       }
+      default_case();
+      break;
+   default:  // anything else is part of an unquoted string
+      default_case();
       break;
    }
 
@@ -643,6 +685,7 @@ static lexfunc_t lexerfuncs[] =
    lexer_state_stringcoalesce,
    lexer_state_unquotedstring,
    lexer_state_heredoc,
+   lexer_state_rawstring,
 };
 
 //
