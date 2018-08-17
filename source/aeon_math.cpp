@@ -65,14 +65,15 @@ void AeonScriptObjMath::Init()
 // Aeon Fixed-point Class
 //
 
-AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
-AeonFixed AeonFixed::operator + (const int val)       { return value + (val * FRACUNIT);  }
-AeonFixed AeonFixed::operator - (const AeonFixed &in) { return value - in.value;          }
-AeonFixed AeonFixed::operator - (const int val)       { return value - (val * FRACUNIT);  }
-AeonFixed AeonFixed::operator * (const AeonFixed &in) { return FixedMul(value, in.value); }
-AeonFixed AeonFixed::operator * (const int val)       { return value * val;               }
-AeonFixed AeonFixed::operator / (const AeonFixed &in) { return FixedDiv(value, in.value); }
-AeonFixed AeonFixed::operator / (const int val)       { return value / val;               }
+AeonFixed AeonFixed::operator +  (const AeonFixed &in) { return value + in.value;          }
+AeonFixed AeonFixed::operator +  (const int val)       { return value + (val * FRACUNIT);  }
+AeonFixed AeonFixed::operator -  (const AeonFixed &in) { return value - in.value;          }
+AeonFixed AeonFixed::operator -  (const int val)       { return value - (val * FRACUNIT);  }
+AeonFixed AeonFixed::operator *  (const AeonFixed &in) { return FixedMul(value, in.value); }
+AeonFixed AeonFixed::operator *  (const int val)       { return value * val;               }
+AeonFixed AeonFixed::operator /  (const AeonFixed &in) { return FixedDiv(value, in.value); }
+AeonFixed AeonFixed::operator /  (const int val)       { return value / val;               }
+AeonFixed AeonFixed::operator << (const int val)       { return value << val;              }
 
 AeonFixed &AeonFixed::operator += (const AeonFixed &in)
 {
@@ -173,6 +174,7 @@ static aeonfuncreg_t fixedFuncs[] =
    { "eFixed opMul(const int val)",           FIXEDBINOP(*, const int)                 },
    { "eFixed opDiv(const eFixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
    { "eFixed opDiv(const int val)",           FIXEDBINOP(/, const int)                 },
+   { "eFixed opShl(const int val)",           FIXEDBINOP(<<, const int)                },
    { "eFixed &opAddAssign(const eFixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
    { "eFixed &opAddAssign(const int val)",    FIXEDASSIGNOP(+=, const int)             },
    { "eFixed &opSubAssign(const eFixed &in)", FIXEDASSIGNOP(-=, const AeonFixed &)     },
@@ -228,12 +230,20 @@ static inline angle_t FixedToAngleClamped(const fixed_t val)
    return FixedToAngle(val % (360 << FRACBITS));
 }
 
+static inline angle_t IntToAngle(const int val)
+{
+   if(val % 45)
+      return val * ANGLE_1;
+   else
+      return (val / 45) * ANG45;
+}
+
 AeonAngle AeonAngle::operator + (const AeonAngle &in)  { return value + in.value; }
 AeonAngle AeonAngle::operator + (const AeonFixed &in)  { return value + (FixedToAngle(in.value)); }
-AeonAngle AeonAngle::operator + (const int val)        { return value + (val * ANGLE_1); }
+AeonAngle AeonAngle::operator + (const int val)        { return value + IntToAngle(val); }
 AeonAngle AeonAngle::operator - (const AeonAngle &in)  { return value - in.value; }
 AeonAngle AeonAngle::operator - (const AeonFixed &in)  { return value - (FixedToAngle(in.value)); }
-AeonAngle AeonAngle::operator - (const int val)        { return value - (val * ANGLE_1); }
+AeonAngle AeonAngle::operator - (const int val)        { return value - IntToAngle(val); }
 
 AeonAngle AeonAngle::operator * (const AeonFixed &in)
 {
@@ -259,7 +269,7 @@ AeonAngle &AeonAngle::operator += (const AeonFixed &in)
 }
 AeonAngle &AeonAngle::operator += (const int val)
 {
-   value += val * ANGLE_1;
+   value += IntToAngle(val);
    return *this;
 }
 AeonAngle &AeonAngle::operator -= (const AeonAngle &in)
@@ -274,7 +284,7 @@ AeonAngle &AeonAngle::operator -= (const AeonFixed &in)
 }
 AeonAngle &AeonAngle::operator -= (const int val)
 {
-   value -= val * ANGLE_1;
+   value -= IntToAngle(val);
    return *this;
 }
 
@@ -329,7 +339,7 @@ void AeonScriptObjAngle::ConstructFromDouble(double other, AeonAngle *thisAngle)
 
 void AeonScriptObjAngle::ConstructFromInt(int other, AeonAngle *thisAngle)
 {
-   thisAngle->value = other * ANGLE_1;
+   thisAngle->value = IntToAngle(other);
 }
 
 static void ASPrint(AeonAngle f)
@@ -455,6 +465,9 @@ void AeonScriptObjVector::Init()
    e->RegisterObjectProperty("eVector", "eFixed x", asOFFSET(AeonVector, value.x));
    e->RegisterObjectProperty("eVector", "eFixed y", asOFFSET(AeonVector, value.y));
    e->RegisterObjectProperty("eVector", "eFixed z", asOFFSET(AeonVector, value.z));
+
+   e->RegisterGlobalFunction("void print(eVector)", WRAP_FN_PR(ASPrint, (AeonVector), void),
+                              asCALL_GENERIC);
 }
 
 // EOF

@@ -109,8 +109,7 @@ void AeonScriptObjMobj::Init()
    e->RegisterObjectProperty("eMobj", "eFixed radius", asOFFSET(Mobj, radius));
    e->RegisterObjectProperty("eMobj", "eFixed height", asOFFSET(Mobj, height));
 
-   // FIXME? This is kinda a hack, but it works and I dunno if there's a better
-   // way to do it
+   // FIXME? Change to property accessors
    e->RegisterObjectProperty("eMobj", "eVector mom", asOFFSET(Mobj, momx));
 
    DECLAREMOBJFLAGS();
