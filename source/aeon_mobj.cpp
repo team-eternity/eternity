@@ -23,6 +23,7 @@
 //
 
 #include "aeon_common.h"
+#include "aeon_math.h"
 #include "aeon_mobj.h"
 #include "aeon_system.h"
 #include "d_dehtbl.h"
@@ -62,6 +63,14 @@ static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
    if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
       mo->counters[ctrnum] = val;
    // TODO: else C_Printf warning?
+}
+
+AeonFixed AeonFloatBobOffsets(int in)
+{
+   static constexpr int NUMFLOATBOBOFFSETS = earrlen(FloatBobOffsets);
+   if(in < 0 || in > NUMFLOATBOBOFFSETS)
+      return 0;
+   return FloatBobOffsets[in];
 }
 
 static aeonfuncreg_t mobjFuncs[]
@@ -128,6 +137,11 @@ void AeonScriptObjMobj::Init()
       name << "_" << flag->name;
       e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
    }
+
+   // It's Mobj-related, OK?
+   // TODO: Maybe make it a static Mobj method?
+   e->RegisterGlobalFunction("eFixed FloatBobOffsets(int index)", WRAP_FN(AeonFloatBobOffsets),
+                             asCALL_GENERIC);
 }
 
 
