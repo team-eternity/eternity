@@ -27,6 +27,7 @@
 #include "aeon_system.h"
 #include "c_io.h"
 #include "m_fixed.h"
+#include "p_maputl.h"
 #include "p_mobj.h"
 #include "tables.h"
 
@@ -35,29 +36,78 @@
 // Aeon Math Class
 //
 
-AeonFixed AeonSin(angle_t val)
+class AeonMath
 {
-   return AeonFixed(finesine[val >> ANGLETOFINESHIFT]);
-}
+public:
+   static AeonFixed Sin(AeonAngle val)
+   {
+      return AeonFixed(finesine[val.value >> ANGLETOFINESHIFT]);
+   }
 
-AeonFixed AeonCos(angle_t val)
-{
-   return AeonFixed(finecosine[val >> ANGLETOFINESHIFT]);
-}
+   static AeonFixed Cos(AeonAngle val)
+   {
+      return AeonFixed(finecosine[val.value >> ANGLETOFINESHIFT]);
+   }
 
-AeonFixed AeonTan(angle_t val)
+   static AeonFixed Tan(AeonAngle val)
+   {
+      return AeonFixed(finetangent[val.value >> ANGLETOFINESHIFT]);
+   }
+
+   static AeonFixed Atan2(AeonFixed y, AeonFixed x)
+   {
+      return AeonFixed(P_PointToAngle(0, 0, x, y));
+   }
+
+   static AeonFixed Fabs(AeonFixed val)
+   {
+      return AeonFixed(D_abs(val.value));
+   }
+
+   static AeonFixed Sqrt(AeonFixed val)
+   {
+      return AeonFixed(M_DoubleToFixed(sqrt(M_FixedToDouble(val.value))));
+   }
+
+   static int Abs(int val)
+   {
+      return abs(val);
+   }
+
+   static AeonFixed Ceil(AeonFixed val)
+   {
+      if(val.value & (FRACUNIT - 1))
+         return AeonFixed((val.value & ~(FRACUNIT - 1)) + FRACUNIT);
+      else
+         return val;
+   }
+
+   static AeonFixed Floor(AeonFixed val)
+   {
+      return AeonFixed(val.value & ~(FRACUNIT - 1));
+   }
+};
+
+static aeonfuncreg_t mathFuncs[]
 {
-   return AeonFixed(finetangent[val >> ANGLETOFINESHIFT]);
-}
+   { "eFixed Sin(const eAngle val)",                 WRAP_FN(AeonMath::Sin)   },
+   { "eFixed Cos(const eAngle val)",                 WRAP_FN(AeonMath::Cos)   },
+   { "eFixed Tan(const eAngle val)",                 WRAP_FN(AeonMath::Tan)   },
+   { "eFixed Atan2(const eFixed y, const eFixed x)", WRAP_FN(AeonMath::Atan2) },
+   { "eFixed Fabs(const eFixed val)",                WRAP_FN(AeonMath::Fabs)  },
+   { "eFixed Sqrt(const eFixed val)",                WRAP_FN(AeonMath::Sqrt)  },
+   { "int Abs(const int)",                           WRAP_FN(AeonMath::Abs)   },
+   { "eFixed Ceil(const eFixed val)",                WRAP_FN(AeonMath::Ceil)  },
+   { "eFixed Floor(const eFixed val)",               WRAP_FN(AeonMath::Floor) },
+};
 
 void AeonScriptObjMath::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
    e->SetDefaultNamespace("Math");
-   e->RegisterGlobalFunction("eFixed Sin(const eAngle val)", WRAP_FN(AeonSin), asCALL_GENERIC);
-   e->RegisterGlobalFunction("eFixed Cos(const eAngle val)", WRAP_FN(AeonCos), asCALL_GENERIC);
-   e->RegisterGlobalFunction("eFixed Tan(const eAngle val)", WRAP_FN(AeonTan), asCALL_GENERIC);
+   for(aeonfuncreg_t &fn : mathFuncs)
+      e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
    e->SetDefaultNamespace("");
 }
 
