@@ -27,6 +27,7 @@
 #include "aeon_system.h"
 #include "c_io.h"
 #include "m_fixed.h"
+#include "p_mobj.h"
 #include "tables.h"
 
 //=============================================================================
@@ -401,13 +402,6 @@ void AeonScriptObjAngle::Init()
 //
 // Aeon Vector Class
 //
-
-struct vector_t
-{
-   fixed_t x;
-   fixed_t y;
-   fixed_t z;
-};
 
 class AeonVector
 {

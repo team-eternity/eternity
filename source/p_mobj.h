@@ -178,6 +178,12 @@ struct sprojlast_t
    float xscale;
 };
 
+// TODO: Move this elsewhere?
+struct vector_t
+{
+   fixed_t x, y, z;
+};
+
 //
 // Map Object definition.
 //
@@ -263,9 +269,10 @@ public:
    fixed_t height; 
 
    // Momentums, used to update position.
-   fixed_t momx;
-   fixed_t momy;
-   fixed_t momz;
+   vector_t mom;
+   fixed_t &momx = mom.x;
+   fixed_t &momy = mom.y;
+   fixed_t &momz = mom.z;
 
    // If == validcount, already checked.
    int validcount;
