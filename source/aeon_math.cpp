@@ -31,7 +31,38 @@
 
 //=============================================================================
 //
-// Aeon fixed-point class
+// Aeon Math Class
+//
+
+AeonFixed AeonSin(angle_t val)
+{
+   return AeonFixed(finesine[val >> ANGLETOFINESHIFT]);
+}
+
+AeonFixed AeonCos(angle_t val)
+{
+   return AeonFixed(finecosine[val >> ANGLETOFINESHIFT]);
+}
+
+AeonFixed AeonTan(angle_t val)
+{
+   return AeonFixed(finetangent[val >> ANGLETOFINESHIFT]);
+}
+
+void AeonScriptObjMath::Init()
+{
+   asIScriptEngine *e = AeonScriptManager::Engine();
+
+   e->SetDefaultNamespace("Math");
+   e->RegisterGlobalFunction("eFixed Sin(const eAngle val)", WRAP_FN(AeonSin), asCALL_GENERIC);
+   e->RegisterGlobalFunction("eFixed Cos(const eAngle val)", WRAP_FN(AeonCos), asCALL_GENERIC);
+   e->RegisterGlobalFunction("eFixed Tan(const eAngle val)", WRAP_FN(AeonTan), asCALL_GENERIC);
+   e->SetDefaultNamespace("");
+}
+
+//=============================================================================
+//
+// Aeon Fixed-point Class
 //
 
 AeonFixed AeonFixed::operator + (const AeonFixed &in) { return value + in.value;          }
@@ -185,7 +216,7 @@ void AeonScriptObjFixed::Init()
 
 //=============================================================================
 //
-// Aeon angle class
+// Aeon Angle Class
 //
 
 //
@@ -356,6 +387,11 @@ void AeonScriptObjAngle::Init()
                              asCALL_GENERIC);
 }
 
+//=============================================================================
+//
+// Aeon Vector Class
+//
+
 struct vector_t
 {
    fixed_t x;
@@ -394,6 +430,13 @@ void AeonScriptObjVector::ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z,
    *thisVector = AeonVector(x, y, z);
 }
 
+static void ASPrint(AeonVector f)
+{
+   C_Printf("x: %f, y: %f, z: %f\n", M_FixedToDouble(f.value.x),
+                                     M_FixedToDouble(f.value.y),
+                                     M_FixedToDouble(f.value.z));
+}
+
 void AeonScriptObjVector::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
@@ -412,12 +455,6 @@ void AeonScriptObjVector::Init()
    e->RegisterObjectProperty("eVector", "eFixed x", asOFFSET(AeonVector, value.x));
    e->RegisterObjectProperty("eVector", "eFixed y", asOFFSET(AeonVector, value.y));
    e->RegisterObjectProperty("eVector", "eFixed z", asOFFSET(AeonVector, value.z));
-
-   //for(const aeonfuncreg_t &fn : angleFuncs)
-   //   e->RegisterObjectMethod("eVector", fn.declaration, fn.funcPointer, asCALL_GENERIC);
-
-   //e->RegisterGlobalFunction("void print(eVector)", WRAP_FN_PR(ASPrint, (AeonVector), void),
-   //                          asCALL_GENERIC);
 }
 
 // EOF

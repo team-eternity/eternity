@@ -31,6 +31,12 @@
 
 #include "tables.h"
 
+class AeonScriptObjMath
+{
+public:
+   static void Init();
+};
+
 class AeonFixed
 {
 public:

@@ -91,9 +91,12 @@ void AeonScriptManager::Init()
    RegisterScriptArray(engine, true);
 
    AeonScriptObjString::Init();
+
    AeonScriptObjFixed::Init();
    AeonScriptObjAngle::Init();
    AeonScriptObjVector::Init();
+   AeonScriptObjMath::Init();
+
    AeonScriptObjMobj::Init();
 
    if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
