@@ -216,13 +216,34 @@ static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
    return func;
 }
 
+//
+// Return if a codepointer is not allowed to be overriden by Aeon
+// (currently only A_Aeon is reserved)
+//
+static inline bool E_isReservedCodePointer(const char *name)
+{
+   if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
+      name += 2;
+
+   return !strcasecmp(name, "Aeon");
+}
+
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
+   asIScriptEngine *e =  AeonScriptManager::Engine();
    asIScriptModule *module = AeonScriptManager::Module();
-   static const asITypeInfo *mobjtypeinfo = AeonScriptManager::Engine()->GetTypeInfoByName("eMobj");
+   static const asITypeInfo *mobjtypeinfo = e->GetTypeInfoByName("eMobj");
+   //static const asITypeInfo *playertypeinfo = e->GetTypeInfobyName("ePlayer);
    const char *name = cfg_title(actionsec);
    const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
+
+   if(E_isReservedCodePointer(name))
+   {
+      E_EDFLoggedErr(2, "E_processAction: Action '%s' is reserved and cannot be "
+                        "overriden by EDF\n", name);
+
+   }
 
    if(!code)
       E_EDFLoggedErr(2, "E_processAction: Code block not supplied for action '%s'\n", name);
