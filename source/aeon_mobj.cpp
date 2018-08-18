@@ -78,12 +78,15 @@ static aeonfuncreg_t mobjFuncs[]
    { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth) },
 
    // TODO: Test if WRAP_OBJ_FIRST works. If so use that instead
-   { "bool tryMove(eFixed x, eFixed y, int dropoff)", // WRAP_OBJ_FIRST(P_TryMove) },
+   { "bool tryMove(fixed_t x, fixed_t y, int dropoff)", // WRAP_OBJ_FIRST(P_TryMove) },
       WRAP_OBJ_FIRST_PR(P_TryMove, (Mobj *, fixed_t, fixed_t, int), bool) },
 
    // Indexed property accessors (enables [] syntax for counters)
    { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)},
    { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)},
+
+   // Statics
+   "fixed_t FloatBobOffsets(int index)", WRAP_FN(AeonFloatBobOffsets)
 };
 
 #define DECLAREMOBJFLAGS(x) \
@@ -112,13 +115,13 @@ void AeonScriptObjMobj::Init()
    for(const aeonfuncreg_t &fn : mobjFuncs)
       e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterObjectProperty("Mobj", "eFixed x", asOFFSET(Mobj, x));
-   e->RegisterObjectProperty("Mobj", "eFixed y", asOFFSET(Mobj, y));
-   e->RegisterObjectProperty("Mobj", "eFixed z", asOFFSET(Mobj, z));
-   e->RegisterObjectProperty("Mobj", "eAngle angle", asOFFSET(Mobj, angle));
+   e->RegisterObjectProperty("Mobj", "fixed_t x", asOFFSET(Mobj, x));
+   e->RegisterObjectProperty("Mobj", "fixed_t y", asOFFSET(Mobj, y));
+   e->RegisterObjectProperty("Mobj", "fixed_t z", asOFFSET(Mobj, z));
+   e->RegisterObjectProperty("Mobj", "angle_t angle", asOFFSET(Mobj, angle));
 
-   e->RegisterObjectProperty("Mobj", "eFixed radius", asOFFSET(Mobj, radius));
-   e->RegisterObjectProperty("Mobj", "eFixed height", asOFFSET(Mobj, height));
+   e->RegisterObjectProperty("Mobj", "fixed_t radius", asOFFSET(Mobj, radius));
+   e->RegisterObjectProperty("Mobj", "fixed_t height", asOFFSET(Mobj, height));
 
    e->RegisterObjectProperty("Mobj", "eVector mom", asOFFSET(Mobj, mom));
 
@@ -141,9 +144,10 @@ void AeonScriptObjMobj::Init()
    }
 
    // It's Mobj-related, OK?
-   // TODO: Maybe make it a static Mobj method?
-   e->RegisterGlobalFunction("eFixed FloatBobOffsets(int index)", WRAP_FN(AeonFloatBobOffsets),
-                             asCALL_GENERIC);
+   e->SetDefaultNamespace("EE::Mobj");
+   e->RegisterGlobalFunction("fixed_t FloatBobOffsets(int index)",
+                             WRAP_FN(AeonFloatBobOffsets), asCALL_GENERIC);
+
    e->SetDefaultNamespace("");
 }
 

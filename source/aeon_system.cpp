@@ -42,8 +42,17 @@ int               AeonScriptManager::state  = asEXECUTION_UNINITIALIZED;
 
 void AeonScriptManager::RegisterTypedefs()
 {
-   engine->RegisterTypedef("char", "int8");
-   engine->RegisterTypedef("uchar", "uint8");
+   engine->RegisterTypedef("char",    "int8");
+   engine->RegisterTypedef("uchar",   "uint8");
+
+   engine->RegisterTypedef("int8_t",   "int8");
+   engine->RegisterTypedef("int16_t",  "int16");
+   engine->RegisterTypedef("int32_t",  "int32");
+   engine->RegisterTypedef("int64_t",  "int64");
+   engine->RegisterTypedef("uint8_t",  "uint8");
+   engine->RegisterTypedef("uint16_t", "uint16");
+   engine->RegisterTypedef("uint32_t", "uint32");
+   engine->RegisterTypedef("uint64_t", "uint64");
 }
 
 void AeonScriptManager::RegisterPrimitivePrintFuncs()

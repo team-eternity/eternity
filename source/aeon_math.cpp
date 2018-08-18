@@ -118,25 +118,25 @@ public:
 
 static aeonfuncreg_t mathFuncs[]
 {
-   { "eFixed Sin(const eAngle val)",                 WRAP_FN(AeonMath::Sin)   },
-   { "eFixed Cos(const eAngle val)",                 WRAP_FN(AeonMath::Cos)   },
-   { "eFixed Tan(const eAngle val)",                 WRAP_FN(AeonMath::Tan)   },
-   { "eFixed Atan2(const eFixed y, const eFixed x)", WRAP_FN(AeonMath::Atan2) },
-   { "eFixed Fabs(const eFixed val)",                WRAP_FN(AeonMath::Fabs)  },
-   { "eFixed Sqrt(const eFixed val)",                WRAP_FN(AeonMath::Sqrt)  },
-   { "int Abs(const int)",                           WRAP_FN(AeonMath::Abs)   },
-   { "eFixed Ceil(const eFixed val)",                WRAP_FN(AeonMath::Ceil)  },
-   { "eFixed Floor(const eFixed val)",               WRAP_FN(AeonMath::Floor) },
+   { "fixed_t Sin(const angle_t val)",                  WRAP_FN(AeonMath::Sin)   },
+   { "fixed_t Cos(const angle_t val)",                  WRAP_FN(AeonMath::Cos)   },
+   { "fixed_t Tan(const angle_t val)",                  WRAP_FN(AeonMath::Tan)   },
+   { "fixed_t Atan2(const fixed_t y, const fixed_t x)", WRAP_FN(AeonMath::Atan2) },
+   { "fixed_t Fabs(const fixed_t val)",                 WRAP_FN(AeonMath::Fabs)  },
+   { "fixed_t Sqrt(const fixed_t val)",                 WRAP_FN(AeonMath::Sqrt)  },
+   { "int Abs(const int)",                              WRAP_FN(AeonMath::Abs)   },
+   { "fixed_t Ceil(const fixed_t val)",                 WRAP_FN(AeonMath::Ceil)  },
+   { "fixed_t Floor(const fixed_t val)",                WRAP_FN(AeonMath::Floor) },
 };
 
 static aeonfuncreg_t randFuncs[]
 {
-   { "uint   RandUInt()",                                    WRAP_FN(AeonRand::UInt)   },
-   { "uint8  RandByte()",                                    WRAP_FN(AeonRand::Byte)   },
-   { "uint   RandMax(const uint max)",                       WRAP_FN(AeonRand::UInt)   },
-   { "eFixed RandFixed()",                                   WRAP_FN(AeonRand::Fixed)  },
-   { "eFixed RandCFixed()",                                  WRAP_FN(AeonRand::CFixed) },
-   { "eFixed RandRange(const eFixed min, const eFixed max)", WRAP_FN(AeonRand::Range)  },
+   { "uint   RandUInt()",                                       WRAP_FN(AeonRand::UInt)   },
+   { "uint8  RandByte()",                                       WRAP_FN(AeonRand::Byte)   },
+   { "uint   RandMax(const uint max)",                          WRAP_FN(AeonRand::UInt)   },
+   { "fixed_t RandFixed()",                                     WRAP_FN(AeonRand::Fixed)  },
+   { "fixed_t RandCFixed()",                                    WRAP_FN(AeonRand::CFixed) },
+   { "fixed_t RandRange(const fixed_t min, const fixed_t max)", WRAP_FN(AeonRand::Range)  },
 
 };
 
@@ -258,53 +258,54 @@ static void ASPrint(AeonFixed f)
 
 static aeonfuncreg_t fixedFuncs[] =
 {
-   { "eFixed opAdd(const eFixed &in)",        FIXEDBINOP(+, const AeonFixed &)         },
-   { "eFixed opAdd(const int val)",           FIXEDBINOP(+, const int),                },
-   { "eFixed opSub(const eFixed &in)",        FIXEDBINOP(-, const AeonFixed &)         },
-   { "eFixed opSub(const int val)",           FIXEDBINOP(-, const int),                },
-   { "eFixed opMul(const eFixed &in)",        FIXEDBINOP(*, const AeonFixed &)         },
-   { "eFixed opMul(const int val)",           FIXEDBINOP(*, const int)                 },
-   { "eFixed opDiv(const eFixed &in)",        FIXEDBINOP(/, const AeonFixed &)         },
-   { "eFixed opDiv(const int val)",           FIXEDBINOP(/, const int)                 },
-   { "eFixed opShl(const int val)",           FIXEDBINOP(<<, const int)                },
-   { "eFixed &opAddAssign(const eFixed &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
-   { "eFixed &opAddAssign(const int val)",    FIXEDASSIGNOP(+=, const int)             },
-   { "eFixed &opSubAssign(const eFixed &in)", FIXEDASSIGNOP(-=, const AeonFixed &)     },
-   { "eFixed &opSubAssign(const int val)",    FIXEDASSIGNOP(-=, const int)             },
-   { "eFixed &opMulAssign(const eFixed &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
-   { "eFixed &opMulAssign(const int val)",    FIXEDASSIGNOP(*=, const int)             },
-   { "eFixed &opDivAssign(const eFixed &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },
-   { "eFixed &opDivAssign(const int val)",    FIXEDASSIGNOP(/=, const int)             },
-   { "double opImplConv() const",             WRAP_MFN(AeonFixed, operator double)     },
+   { "fixed_t opAdd(const fixed_t &in)",        FIXEDBINOP(+, const AeonFixed &)         },
+   { "fixed_t opAdd(const int val)",            FIXEDBINOP(+, const int),                },
+   { "fixed_t opSub(const fixed_t &in)",        FIXEDBINOP(-, const AeonFixed &)         },
+   { "fixed_t opSub(const int val)",            FIXEDBINOP(-, const int),                },
+   { "fixed_t opMul(const fixed_t &in)",        FIXEDBINOP(*, const AeonFixed &)         },
+   { "fixed_t opMul(const int val)",            FIXEDBINOP(*, const int)                 },
+   { "fixed_t opDiv(const fixed_t &in)",        FIXEDBINOP(/, const AeonFixed &)         },
+   { "fixed_t opDiv(const int val)",            FIXEDBINOP(/, const int)                 },
+   { "fixed_t opShl(const int val)",            FIXEDBINOP(<<, const int)                },
+   { "fixed_t &opAddAssign(const fixed_t &in)", FIXEDASSIGNOP(+=, const AeonFixed &)     },
+   { "fixed_t &opAddAssign(const int val)",     FIXEDASSIGNOP(+=, const int)             },
+   { "fixed_t &opSubAssign(const fixed_t &in)", FIXEDASSIGNOP(-=, const AeonFixed &)     },
+   { "fixed_t &opSubAssign(const int val)",     FIXEDASSIGNOP(-=, const int)             },
+   { "fixed_t &opMulAssign(const fixed_t &in)", FIXEDASSIGNOP(*=, const AeonFixed &)     },
+   { "fixed_t &opMulAssign(const int val)",     FIXEDASSIGNOP(*=, const int)             },
+   { "fixed_t &opDivAssign(const fixed_t &in)", FIXEDASSIGNOP(/=, const AeonFixed &)     },
+   { "fixed_t &opDivAssign(const int val)",     FIXEDASSIGNOP(/=, const int)             },
+   { "double opImplConv() const",               WRAP_MFN(AeonFixed, operator double)     },
 };
 
 void AeonScriptObjFixed::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
-   e->RegisterObjectType("eFixed", sizeof(AeonFixed),
+   e->RegisterObjectType("fixed_t", sizeof(AeonFixed),
                          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
-   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f()",
+   e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f()",
                               WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const eFixed &in)",
+   e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t &in)",
                               WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const double)",
+   e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const double)",
                               WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const int)",
+   e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const int)",
                               WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eFixed", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
+   e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
                               WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
 
-   e->SetDefaultNamespace("eFixed");
-   e->RegisterGlobalFunction("eFixed FromBits(const int val)",
+   // TODO: Figure if there's a nicer way to do this
+   e->SetDefaultNamespace("fixed_t");
+   e->RegisterGlobalFunction("fixed_t FromBits(const int val)",
                              WRAP_FN(ConstructFromBits), asCALL_GENERIC);
    e->SetDefaultNamespace("");
 
    for(const aeonfuncreg_t &fn : fixedFuncs)
-      e->RegisterObjectMethod("eFixed", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("fixed_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterGlobalFunction("void print(eFixed)", WRAP_FN_PR(ASPrint, (AeonFixed), void),
+   e->RegisterGlobalFunction("void print(fixed_t)", WRAP_FN_PR(ASPrint, (AeonFixed), void),
                              asCALL_GENERIC);
 }
 
@@ -322,6 +323,10 @@ static inline angle_t FixedToAngleClamped(const fixed_t val)
    return FixedToAngle(val % (360 << FRACBITS));
 }
 
+//
+// If the integer value supplied is a multiple of 45 then use ANG45,
+// due to its perfect accuracy (compared to ANGLE_1 which isn't exacly ANG45/45)
+//
 static inline angle_t IntToAngle(const int val)
 {
    if(val % 45)
@@ -441,51 +446,51 @@ static void ASPrint(AeonAngle f)
 
 static aeonfuncreg_t angleFuncs[] =
 {
-   { "eAngle opAdd(const eAngle &in)",         ANGLEBINOP(+, const AeonAngle &)         },
-   { "eAngle opAdd(const eFixed &in)",         ANGLEBINOP(+, const AeonFixed &)         },
-   { "eAngle opAdd(const int val)",            ANGLEBINOP(+, const int),                },
-   { "eAngle opSub(const eAngle &in)",         ANGLEBINOP(-, const AeonAngle &)         },
-   { "eAngle opSub(const eFixed &in)",         ANGLEBINOP(-, const AeonFixed &)         },
-   { "eAngle opSub(const int val)",            ANGLEBINOP(-, const int),                },
-   { "eAngle opMul(const eFixed &in)",         ANGLEBINOP(*, const AeonFixed &)         },
-   { "eAngle opMul(const int val)",            ANGLEBINOP(*, const int)                 },
-   { "eAngle opDiv(const eAngle &in)",         ANGLEBINOP(/, const AeonAngle &)         },
-   { "eAngle opDiv(const eFixed &in)",         ANGLEBINOP(/, const AeonFixed &)         },
-   { "eAngle opDiv(const int val)",            ANGLEBINOP(/, const int)                 },
-   { "eAngle &opAddAssign(const eAngle &in)",  ANGLEASSIGNOP(+=, const AeonAngle &)     },
-   { "eAngle &opAddAssign(const eFixed &in)",  ANGLEASSIGNOP(+=, const AeonFixed &)     },
-   { "eAngle &opAddAssign(const int val)",     ANGLEASSIGNOP(+=, const int)             },
-   { "eAngle &opSubAssign(const eAngle &in)",  ANGLEASSIGNOP(-=, const AeonAngle &)     },
-   { "eAngle &opSubAssign(const eFixed &in)",  ANGLEASSIGNOP(-=, const AeonFixed &)     },
-   { "eAngle &opSubAssign(const int val)",     ANGLEASSIGNOP(-=, const int)             },
-   { "eAngle &opMulAssign(const eAngle &in)",  ANGLEASSIGNOP(*=, const AeonFixed &)     },
-   { "eAngle &opMulAssign(const int val)",     ANGLEASSIGNOP(*=, const int)             },
-   { "eAngle &opDivAssign(const eAngle &in)",  ANGLEASSIGNOP(/=, const AeonAngle &)     },
-   { "eAngle &opDivAssign(const eFixed &in)",  ANGLEASSIGNOP(/=, const AeonFixed &)     },
-   { "eAngle &opDivAssign(const int val)",     ANGLEASSIGNOP(/=, const int)             },
-   { "eFixed opImplConv() const",              WRAP_MFN(AeonAngle, operator AeonFixed)  },
+   { "angle_t opAdd(const angle_t &in)",        ANGLEBINOP(+, const AeonAngle &)         },
+   { "angle_t opAdd(const fixed_t &in)",        ANGLEBINOP(+, const AeonFixed &)         },
+   { "angle_t opAdd(const int val)",            ANGLEBINOP(+, const int),                },
+   { "angle_t opSub(const angle_t &in)",        ANGLEBINOP(-, const AeonAngle &)         },
+   { "angle_t opSub(const fixed_t &in)",        ANGLEBINOP(-, const AeonFixed &)         },
+   { "angle_t opSub(const int val)",            ANGLEBINOP(-, const int),                },
+   { "angle_t opMul(const fixed_t &in)",        ANGLEBINOP(*, const AeonFixed &)         },
+   { "angle_t opMul(const int val)",            ANGLEBINOP(*, const int)                 },
+   { "angle_t opDiv(const angle_t &in)",        ANGLEBINOP(/, const AeonAngle &)         },
+   { "angle_t opDiv(const fixed_t &in)",        ANGLEBINOP(/, const AeonFixed &)         },
+   { "angle_t opDiv(const int val)",            ANGLEBINOP(/, const int)                 },
+   { "angle_t &opAddAssign(const angle_t &in)", ANGLEASSIGNOP(+=, const AeonAngle &)     },
+   { "angle_t &opAddAssign(const fixed_t &in)", ANGLEASSIGNOP(+=, const AeonFixed &)     },
+   { "angle_t &opAddAssign(const int val)",     ANGLEASSIGNOP(+=, const int)             },
+   { "angle_t &opSubAssign(const angle_t &in)", ANGLEASSIGNOP(-=, const AeonAngle &)     },
+   { "angle_t &opSubAssign(const fixed_t &in)", ANGLEASSIGNOP(-=, const AeonFixed &)     },
+   { "angle_t &opSubAssign(const int val)",     ANGLEASSIGNOP(-=, const int)             },
+   { "angle_t &opMulAssign(const angle_t &in)", ANGLEASSIGNOP(*=, const AeonFixed &)     },
+   { "angle_t &opMulAssign(const int val)",     ANGLEASSIGNOP(*=, const int)             },
+   { "angle_t &opDivAssign(const angle_t &in)", ANGLEASSIGNOP(/=, const AeonAngle &)     },
+   { "angle_t &opDivAssign(const fixed_t &in)", ANGLEASSIGNOP(/=, const AeonFixed &)     },
+   { "angle_t &opDivAssign(const int val)",     ANGLEASSIGNOP(/=, const int)             },
+   { "fixed_t opImplConv() const",              WRAP_MFN(AeonAngle, operator AeonFixed)  },
 };
 
 void AeonScriptObjAngle::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
-   e->RegisterObjectType("eAngle", sizeof(AeonAngle),
+   e->RegisterObjectType("angle_t", sizeof(AeonAngle),
                          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
-   e->RegisterObjectBehaviour("eAngle", asBEHAVE_CONSTRUCT, "void f()",
+   e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f()",
                               WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eAngle", asBEHAVE_CONSTRUCT, "void f(const eAngle &in)",
+   e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const angle_t &in)",
                               WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eAngle", asBEHAVE_CONSTRUCT, "void f(const double)",
+   e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const double)",
                               WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eAngle", asBEHAVE_CONSTRUCT, "void f(const int)",
+   e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const int)",
                               WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
 
    for(const aeonfuncreg_t &fn : angleFuncs)
-      e->RegisterObjectMethod("eAngle", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("angle_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterGlobalFunction("void print(eAngle)", WRAP_FN_PR(ASPrint, (AeonAngle), void),
+   e->RegisterGlobalFunction("void print(angle_t)", WRAP_FN_PR(ASPrint, (AeonAngle), void),
                              asCALL_GENERIC);
 }
 
@@ -544,12 +549,12 @@ void AeonScriptObjVector::Init()
    e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT, "void f(const eVector &in)",
                               WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
    e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT,
-                              "void f(const eFixed, const eFixed, const eFixed)",
+                              "void f(const fixed_t, const fixed_t, const fixed_t)",
                               WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC);
 
-   e->RegisterObjectProperty("eVector", "eFixed x", asOFFSET(AeonVector, value.x));
-   e->RegisterObjectProperty("eVector", "eFixed y", asOFFSET(AeonVector, value.y));
-   e->RegisterObjectProperty("eVector", "eFixed z", asOFFSET(AeonVector, value.z));
+   e->RegisterObjectProperty("eVector", "fixed_t x", asOFFSET(AeonVector, value.x));
+   e->RegisterObjectProperty("eVector", "fixed_t y", asOFFSET(AeonVector, value.y));
+   e->RegisterObjectProperty("eVector", "fixed_t z", asOFFSET(AeonVector, value.z));
 
    e->RegisterGlobalFunction("void print(eVector)", WRAP_FN_PR(ASPrint, (AeonVector), void),
                               asCALL_GENERIC);
