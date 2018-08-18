@@ -27,6 +27,7 @@
 #include "aeon_system.h"
 #include "c_io.h"
 #include "m_fixed.h"
+#include "m_random.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "tables.h"
@@ -39,37 +40,37 @@
 class AeonMath
 {
 public:
-   static AeonFixed Sin(AeonAngle val)
+   static AeonFixed Sin(const AeonAngle val)
    {
       return AeonFixed(finesine[val.value >> ANGLETOFINESHIFT]);
    }
 
-   static AeonFixed Cos(AeonAngle val)
+   static AeonFixed Cos(const AeonAngle val)
    {
       return AeonFixed(finecosine[val.value >> ANGLETOFINESHIFT]);
    }
 
-   static AeonFixed Tan(AeonAngle val)
+   static AeonFixed Tan(const AeonAngle val)
    {
       return AeonFixed(finetangent[val.value >> ANGLETOFINESHIFT]);
    }
 
-   static AeonFixed Atan2(AeonFixed y, AeonFixed x)
+   static AeonFixed Atan2(const AeonFixed y, const AeonFixed x)
    {
       return AeonFixed(P_PointToAngle(0, 0, x, y));
    }
 
-   static AeonFixed Fabs(AeonFixed val)
+   static AeonFixed Fabs(const AeonFixed val)
    {
       return AeonFixed(D_abs(val.value));
    }
 
-   static AeonFixed Sqrt(AeonFixed val)
+   static AeonFixed Sqrt(const AeonFixed val)
    {
       return AeonFixed(M_DoubleToFixed(sqrt(M_FixedToDouble(val.value))));
    }
 
-   static int Abs(int val)
+   static int Abs(const int val)
    {
       return abs(val);
    }
@@ -88,6 +89,33 @@ public:
    }
 };
 
+class AeonRand
+{
+public:
+   static unsigned int UInt()             { return P_RandomEx(pr_script); }
+   static uint8_t      Byte()             { return P_Random(pr_script); }
+   static unsigned int Max(const int max) { return P_RangeRandomEx(pr_script, 0, max); }
+   static AeonFixed    Fixed()            { return AeonFixed(P_RandomEx(pr_script)); }
+   static AeonFixed    CFixed()
+   {
+      // TODO: FRACUNIT or FRACUNIT-1?
+      return AeonFixed(P_RangeRandomEx(pr_script, 0, FRACUNIT));
+   }
+   static AeonFixed Range(const AeonFixed min, const AeonFixed max)
+   {
+      if(min.value >= 0)
+         return AeonFixed(P_RangeRandomEx(pr_script, min.value, max.value));
+      return AeonFixed(P_RangeRandomEx(pr_script, min.value - min.value,
+                                       max.value - min.value) + min.value);
+   }
+
+   /*static unsigned int SubUInt(const unsigned int max) { return P_SubRandomEx(pr_script, max); }
+   static AeonFixed SubFixed(const AeonFixed max)
+   {
+      return AeonFixed(P_SubRandomEx(pr_script, max.value));
+   }*/
+};
+
 static aeonfuncreg_t mathFuncs[]
 {
    { "eFixed Sin(const eAngle val)",                 WRAP_FN(AeonMath::Sin)   },
@@ -101,12 +129,25 @@ static aeonfuncreg_t mathFuncs[]
    { "eFixed Floor(const eFixed val)",               WRAP_FN(AeonMath::Floor) },
 };
 
+static aeonfuncreg_t randFuncs[]
+{
+   { "uint   RandUInt()",                                    WRAP_FN(AeonRand::UInt)   },
+   { "uint8  RandByte()",                                    WRAP_FN(AeonRand::Byte)   },
+   { "uint   RandMax(const uint max)",                       WRAP_FN(AeonRand::UInt)   },
+   { "eFixed RandFixed()",                                   WRAP_FN(AeonRand::Fixed)  },
+   { "eFixed RandCFixed()",                                  WRAP_FN(AeonRand::CFixed) },
+   { "eFixed RandRange(const eFixed min, const eFixed max)", WRAP_FN(AeonRand::Range)  },
+
+};
+
 void AeonScriptObjMath::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
    e->SetDefaultNamespace("Math");
-   for(aeonfuncreg_t &fn : mathFuncs)
+   for(const aeonfuncreg_t &fn : mathFuncs)
+      e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
+   for(const aeonfuncreg_t &fn : randFuncs)
       e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
    e->SetDefaultNamespace("");
 }
