@@ -228,13 +228,22 @@ static inline bool E_isReservedCodePointer(const char *name)
    return !strcasecmp(name, "Aeon");
 }
 
+static inline asITypeInfo *GetClassTypeInfo(const char *type)
+{
+   asIScriptEngine *e =  AeonScriptManager::Engine();
+   e->SetDefaultNamespace("EE");
+   asITypeInfo *ret = e->GetTypeInfoByName(type);
+   e->SetDefaultNamespace("");
+   return ret;
+}
+
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
    asIScriptEngine *e =  AeonScriptManager::Engine();
    asIScriptModule *module = AeonScriptManager::Module();
-   static const asITypeInfo *mobjtypeinfo = e->GetTypeInfoByName("eMobj");
-   //static const asITypeInfo *playertypeinfo = e->GetTypeInfobyName("ePlayer);
+   static const asITypeInfo *mobjtypeinfo = GetClassTypeInfo("Mobj");
+   //static const asITypeInfo *playertypeinfo = GetClassTypeInfo("Player");
    const char *name = cfg_title(actionsec);
    const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
 
@@ -260,7 +269,7 @@ static void E_processAction(cfg_t *actionsec)
    if(typeID != (mobjtypeinfo->GetTypeId() | asTYPEID_OBJHANDLE))
    {
       E_EDFLoggedErr(2, "E_processAction: First parameter of action '%s' must be of type "
-                        "'eMobj @'\n", name);
+                        "'EE::Mobj @'\n", name);
    }
 
    // paramCount is off-by-one as the first param doesn't matter

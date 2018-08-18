@@ -88,37 +88,39 @@ static aeonfuncreg_t mobjFuncs[]
 
 #define DECLAREMOBJFLAGS(x) \
    e->RegisterEnum("EnumMobjFlags" #x); \
-   e->RegisterObjectProperty("eMobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
+   e->RegisterObjectProperty("Mobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
 
 void AeonScriptObjMobj::Init()
 {
    extern dehflags_t deh_mobjflags[];
    asIScriptEngine *e = AeonScriptManager::Engine();
 
-   e->RegisterObjectType("eMobj", sizeof(Mobj), asOBJ_REF);
+   e->SetDefaultNamespace("EE");
 
-   e->RegisterObjectBehaviour("eMobj", asBEHAVE_FACTORY, "eMobj @f()",
+   e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
+
+   e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
                               WRAP_FN(MobjFactory), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eMobj", asBEHAVE_FACTORY, "eMobj @f(const eMobj &in)",
+   e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
                               WRAP_FN_PR(MobjFactoryFromOther, (const Mobj &), Mobj *),
                               asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eMobj", asBEHAVE_ADDREF, "void f()",
+   e->RegisterObjectBehaviour("Mobj", asBEHAVE_ADDREF, "void f()",
                               WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eMobj", asBEHAVE_RELEASE, "void f()",
+   e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
                               WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
 
    for(const aeonfuncreg_t &fn : mobjFuncs)
-      e->RegisterObjectMethod("eMobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterObjectProperty("eMobj", "eFixed x", asOFFSET(Mobj, x));
-   e->RegisterObjectProperty("eMobj", "eFixed y", asOFFSET(Mobj, y));
-   e->RegisterObjectProperty("eMobj", "eFixed z", asOFFSET(Mobj, z));
-   e->RegisterObjectProperty("eMobj", "eAngle angle", asOFFSET(Mobj, angle));
+   e->RegisterObjectProperty("Mobj", "eFixed x", asOFFSET(Mobj, x));
+   e->RegisterObjectProperty("Mobj", "eFixed y", asOFFSET(Mobj, y));
+   e->RegisterObjectProperty("Mobj", "eFixed z", asOFFSET(Mobj, z));
+   e->RegisterObjectProperty("Mobj", "eAngle angle", asOFFSET(Mobj, angle));
 
-   e->RegisterObjectProperty("eMobj", "eFixed radius", asOFFSET(Mobj, radius));
-   e->RegisterObjectProperty("eMobj", "eFixed height", asOFFSET(Mobj, height));
+   e->RegisterObjectProperty("Mobj", "eFixed radius", asOFFSET(Mobj, radius));
+   e->RegisterObjectProperty("Mobj", "eFixed height", asOFFSET(Mobj, height));
 
-   e->RegisterObjectProperty("eMobj", "eVector mom", asOFFSET(Mobj, mom));
+   e->RegisterObjectProperty("Mobj", "eVector mom", asOFFSET(Mobj, mom));
 
    DECLAREMOBJFLAGS();
    DECLAREMOBJFLAGS(2);
@@ -142,6 +144,7 @@ void AeonScriptObjMobj::Init()
    // TODO: Maybe make it a static Mobj method?
    e->RegisterGlobalFunction("eFixed FloatBobOffsets(int index)", WRAP_FN(AeonFloatBobOffsets),
                              asCALL_GENERIC);
+   e->SetDefaultNamespace("");
 }
 
 
