@@ -136,21 +136,21 @@ public:
 #define QSTRFMINT(m)  WRAP_MFN_PR(qstring, m, (int),                   qstring &)
 #define QSTRFMDBL(m)  WRAP_MFN_PR(qstring, m, (double),                qstring &)
 
-#define XFORMSIG(name) "eString &" name "(const eString &in)"
-#define QUERYSIG(name) "bool " name "(const eString &in) const"
-#define COMPRSIG(name) "int " name "(const eString &in) const"
-#define MARGSIG(name)  "eString &" name "(eString &inout) const"
+#define XFORMSIG(name) "String &" name "(const String &in)"
+#define QUERYSIG(name) "bool " name "(const String &in) const"
+#define COMPRSIG(name) "int " name "(const String &in) const"
+#define MARGSIG(name)  "String &" name "(String &inout) const"
 
 static aeonfuncreg_t qstringFuncs[] =
 {
    { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos)  },
    { "uint length() const",            QSTRMETHOD(length)           },
    { "bool empty() const",             QSTRMETHOD(empty)            },
-   { "eString &clear()",               QSTRMETHOD(clear)            },
+   { "String &clear()",                QSTRMETHOD(clear)            },
    { "char charAt(uint idx) const",    QSTRMETHOD(charAt)           },
    { "uchar ucharAt(uint idx) const",  QSTRMETHOD(ucharAt)          },
-   { "eString &push(char ch)",         QSTRMETHOD(Putc)             },
-   { "eString &pop()",                 QSTRMETHOD(Delc)             },
+   { "String &push(char ch)",          QSTRMETHOD(Putc)             },
+   { "String &pop()",                  QSTRMETHOD(Delc)             },
    { XFORMSIG("concat"),               QSTRXFORM(concat)            },
    { QUERYSIG("compare"),              QSTRQUERY(compare)           },
    { "uint hashCode() const",          QSTRMETHOD(hashCode)         },
@@ -158,9 +158,9 @@ static aeonfuncreg_t qstringFuncs[] =
    { COMPRSIG("strCmp"),               QSTRCOMPR(strCmp)            },
    { XFORMSIG("copy"),                 QSTRXFORM(copy)              },
    { MARGSIG("copyInto"),              QSTRMARG(copyInto)           },
-   { "void swapWith(eString &inout)",  QSTRMETHOD(swapWith)         },
-   { "eString &toUpper()",             QSTRMETHOD(toUpper)          },
-   { "eString &toLower()",             QSTRMETHOD(toLower)          },
+   { "void swapWith(String &inout)",   QSTRMETHOD(swapWith)         },
+   { "String &toUpper()",              QSTRMETHOD(toUpper)          },
+   { "String &toLower()",              QSTRMETHOD(toLower)          },
    { "int toInt() const",              QSTRMETHOD(toInt)            },
    { "uint findFirstOf(int) const",    QSTRMETHOD(findFirstOf)      },
    { "uint findFirstNotOf(int) const", QSTRMETHOD(findFirstNotOf)   },
@@ -170,41 +170,41 @@ static aeonfuncreg_t qstringFuncs[] =
    { QUERYSIG("opEquals"),             QSTRQUERY(compare)           },
    { COMPRSIG("opCmp"),                QSTRCOMPR(strCmp)            },
    { XFORMSIG("opShl"),                QSTRXFORM(operator <<)       },
-   { "eString &opShl(int)",            QSTRFMINT(operator <<)       },
-   { "eString &opShl(double)",         QSTRFMDBL(operator <<)       },
+   { "String &opShl(int)",             QSTRFMINT(operator <<)       },
+   { "String &opShl(double)",          QSTRFMDBL(operator <<)       },
    { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(QStrGetOpIdx) },
    { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(QStrSetOpIdx) },
 };
 
 //
-// Register eString (qstring) as a reftype and register desired methods
+// Register String (qstring) as a reftype and register desired methods
 //
 void AeonScriptObjString::Init()
 {
    asIScriptEngine *e = AeonScriptManager::Engine();
 
    // register type
-   e->RegisterObjectType("eString", 0, asOBJ_REF);
+   e->RegisterObjectType("String", 0, asOBJ_REF);
 
    // register behaviors
-   e->RegisterObjectBehaviour("eString", asBEHAVE_FACTORY, "eString @f()",
+   e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f()",
                               WRAP_FN(ASRefQString::Factory), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eString", asBEHAVE_FACTORY, "eString @f(const eString &in)",
+   e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f(const String &in)",
                               WRAP_FN(ASRefQString::FactoryFromOther), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eString", asBEHAVE_ADDREF, "void f()",
+   e->RegisterObjectBehaviour("String", asBEHAVE_ADDREF, "void f()",
                               WRAP_OBJ_FIRST(ASRefQString::AddRef), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("eString", asBEHAVE_RELEASE, "void f()",
+   e->RegisterObjectBehaviour("String", asBEHAVE_RELEASE, "void f()",
                               WRAP_OBJ_FIRST(ASRefQString::Release), asCALL_GENERIC);
 
-   // register eString as the string factory
+   // register String as the string factory
    // "qstring @"???
-   e->RegisterStringFactory("eString", &aeonStringFactory);
+   e->RegisterStringFactory("String", &aeonStringFactory);
 
    for(const aeonfuncreg_t &fn : qstringFuncs)
-      e->RegisterObjectMethod("eString", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("String", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
    // register global print func
-   e->RegisterGlobalFunction("void print(const eString &in)",
+   e->RegisterGlobalFunction("void print(const String &in)",
                              WRAP_FN_PR(ASPrint, (const qstring &), void),
                              asCALL_GENERIC);
 }
