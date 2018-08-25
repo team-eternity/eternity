@@ -44,6 +44,7 @@
 #include "../e_inventory.h"
 #include "../e_player.h"
 #include "../e_states.h"
+#include "../e_weapons.h"
 #include "../ev_specials.h"
 #include "../hu_stuff.h"
 #include "../in_lude.h"
@@ -811,44 +812,41 @@ void Bot::pickRandomWeapon(const Target& target)
     if(pl->powers[pw_strength])
         guns[num++] = wp_fist;
 
-#warning Need to rewrite it for the new weapon system
-#if 0
-    if(!pl->weaponowned[wp_supershotgun] && pl->weaponowned[wp_shotgun]
-       && P_WeaponHasAmmo(pl, &weaponinfo[wp_shotgun]))
+   const weaponinfo_t *const ssg = E_WeaponForDEHNum(wp_supershotgun);
+   const weaponinfo_t *const sg = E_WeaponForDEHNum(wp_shotgun);
+
+    if(!E_PlayerOwnsWeapon(pl, ssg) && E_PlayerOwnsWeapon(pl, sg) &&
+       P_WeaponHasAmmo(pl, sg))
     {
         guns[num++] = wp_shotgun;
     }
-    if(pl->weaponowned[wp_chaingun]
-       && P_WeaponHasAmmo(pl, &weaponinfo[wp_chaingun]))
-    {
+
+   const weaponinfo_t *const cg = E_WeaponForDEHNum(wp_chaingun);
+    if(E_PlayerOwnsWeapon(pl, cg) && P_WeaponHasAmmo(pl, cg))
         guns[num++] = wp_chaingun;
-    }
-    if(pl->weaponowned[wp_missile]
-       && P_WeaponHasAmmo(pl, &weaponinfo[wp_missile])
-       && P_AproxDistance(pl->mo->x - target.coord.x,
-                          pl->mo->y - target.coord.y) > 200 * FRACUNIT)
+
+   const weaponinfo_t *const rl = E_WeaponForDEHNum(wp_missile);
+    if(E_PlayerOwnsWeapon(pl, rl) && P_WeaponHasAmmo(pl, rl) &&
+       P_AproxDistance(pl->mo->x - target.coord.x,
+                       pl->mo->y - target.coord.y) > 200 * FRACUNIT)
     {
         guns[num++] = wp_missile;
     }
-    if(pl->weaponowned[wp_plasma]
-       && P_WeaponHasAmmo(pl, &weaponinfo[wp_plasma]))
-    {
+
+   const weaponinfo_t *const pg = E_WeaponForDEHNum(wp_plasma);
+    if(E_PlayerOwnsWeapon(pl, pg) && P_WeaponHasAmmo(pl, pg))
         guns[num++] = wp_plasma;
-    }
-    if(pl->weaponowned[wp_bfg]
-       && P_WeaponHasAmmo(pl, &weaponinfo[wp_bfg]))
-    {
+
+   const weaponinfo_t *const bfg = E_WeaponForDEHNum(wp_bfg);
+    if(E_PlayerOwnsWeapon(pl, bfg) && P_WeaponHasAmmo(pl, bfg))
         guns[num++] = wp_bfg;
-    }
-    if(pl->weaponowned[wp_supershotgun]
-       && P_WeaponHasAmmo(pl, &weaponinfo[wp_supershotgun]))
-    {
-        guns[num++] = wp_supershotgun;
-    }
-    
-    if(num == 0 && P_WeaponHasAmmo(pl, &weaponinfo[wp_pistol]))
+
+   if(E_PlayerOwnsWeapon(pl, ssg) && P_WeaponHasAmmo(pl, ssg))
+      guns[num++] = demo_compatibility ? wp_shotgun : wp_supershotgun;
+
+   const weaponinfo_t *const pistol = E_WeaponForDEHNum(wp_pistol);
+    if(num == 0 && P_WeaponHasAmmo(pl, pistol))
         guns[num++] = wp_pistol;
-#endif
     if(num == 0)
         guns[num++] = wp_fist;
     
