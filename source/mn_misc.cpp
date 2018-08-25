@@ -489,9 +489,14 @@ void MN_DrawCredits()
       y += V_FontStringHeight(menu_font_normal, "");
    }
 
-   V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2017 Team Eternity et al.", 
-                   0, y, &subscreen43);
+   // MaxW: I'm going to hell for this. Automatically update copyright year.
+   static const char *const copyright_text = []() {
+      static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
+      memcpy(temp + 11, __DATE__ + 7, 4); // Overwrite YEAR in temp.
+      return temp;
+   }();
+
+   V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
 }
 
 extern menuwidget_t helpscreen_widget; // actually just below...

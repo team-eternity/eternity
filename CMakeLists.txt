@@ -156,7 +156,7 @@ endif()
 ################################################################################
 ######################### Compiler: Features  ##################################
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-   TRY_CXX_COMPILER_FLAG(-std=c++11 FLAG_CXX_stdcxx11)
+   TRY_CXX_COMPILER_FLAG(-std=c++17 FLAG_CXX_stdcxx17)
 endif()
 
 

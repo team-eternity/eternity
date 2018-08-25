@@ -34,6 +34,7 @@ struct line_t;
 class  Mobj;
 struct mobjinfo_t;
 struct polyobj_s; // ioanch 20160114
+struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128
@@ -79,10 +80,9 @@ struct linetracer_t
    fixed_t     topslope;
    fixed_t     bottomslope;
    Mobj       *thing;
-   uint32_t    aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
+   bool        aimflagsmask; // killough 8/2/98: for more intelligent autoaiming
    fixed_t     sin;
    fixed_t     cos;
-   mobjinfo_t *puff;
 };
 
 struct intercept_t
@@ -96,7 +96,7 @@ struct intercept_t
   } d;
 };
 
-typedef bool (*traverser_t)(intercept_t *in);
+typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
 template<typename T, typename U> inline static fixed_t P_AproxDistance(const T& m, const U& n)
@@ -111,6 +111,8 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
 // ioanch 20160123: for linedef portal clipping.
 v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
+int P_LineIsCrossed(const line_t &line, const divline_t &dl);
+bool P_IsInVoid(fixed_t x, fixed_t y, const subsector_t &ss);
 bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4]);
 int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl);
 
@@ -121,24 +123,35 @@ void    P_LineOpening (const line_t *linedef, const Mobj *mo,
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
-//Mobj* P_BlockThingsIterator(int x, int y, bool func(Mobj *, void*), void* parm);    // IOANCH 20140811
-bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_s *),
-                           int groupid = R_NOGROUP);
-bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *));
-inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *))
+bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_s *, void *),
+                           int groupid = R_NOGROUP, void *context = nullptr);
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
+                           void *context = nullptr);
+inline static bool P_BlockThingsIterator(int x, int y, bool func(Mobj *, void *),
+                                         void *context = nullptr)
 {
    // ioanch 20160108: avoid code duplication
-   return P_BlockThingsIterator(x, y, R_NOGROUP, func);
+   return P_BlockThingsIterator(x, y, R_NOGROUP, func, context);
 }
 bool ThingIsOnLine(const Mobj *t, const line_t *l);  // killough 3/15/98
 bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                    int flags, traverser_t trav);
+                    int flags, traverser_t trav, void *context = nullptr);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 template<typename T, typename U> inline static angle_t P_PointToAngle(const T& vo, const U& v)
 {
     return P_PointToAngle(vo.x, vo.y, v.x, v.y);
 }
+
+bool P_ShootThing(const intercept_t *in,
+                  Mobj *shooter,
+                  fixed_t attackrange_local,
+                  fixed_t sourcez,
+                  fixed_t aimslope,
+                  fixed_t attackrange_total,
+                  const divline_t &dl,
+                  size_t puffidx,
+                  int damage);
 
 extern linetracer_t trace;
 

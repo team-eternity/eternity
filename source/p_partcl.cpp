@@ -326,10 +326,8 @@ static void P_BFGExplosion(Mobj *actor);
 //
 static void P_GenVelocities(void)
 {
-   int i, j;
-
-   for(i = 0; i < NUMVERTEXNORMALS; ++i) for(j = 0; j < 3; ++j)
-      avelocities[i][j] = M_Random() * 0.01f;
+   for(vec3_t &avelocity : avelocities) for(float &component : avelocity)
+      component = M_Random() * 0.01f;
 }
 
 void P_InitParticleEffects(void)
@@ -431,6 +429,11 @@ void P_ParticleThinker(void)
       }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
+      if(P_IsInVoid(particle->x, particle->y, *particle->subsector))
+      {
+         particle->ttl = 1;
+         particle->trans = 0;
+      }
 
       // apply accelerations
       particle->velx += particle->accx;

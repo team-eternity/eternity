@@ -100,8 +100,8 @@ bool XInputGamePadDriver::initialize()
 //
 void XInputGamePadDriver::shutdown()
 {
-   for(auto it = devices.begin(); it != devices.end(); it++)
-      (*it)->getHapticInterface()->clearEffects();
+   for(HALGamePad *&it : devices)
+      it->getHapticInterface()->clearEffects();
 }
 
 //

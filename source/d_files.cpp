@@ -495,7 +495,6 @@ void D_LoadEDF(gfs_t *gfs)
 
    E_ProcessEDF(edfname);
 
-   // haleyjd FIXME: temporary hacks
    D_InitWeaponInfo();
 }
 

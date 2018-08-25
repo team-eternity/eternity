@@ -109,7 +109,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 
    // give double ammo in trainer mode, you'll need in nightmare
    if(gameskill == sk_baby || gameskill == sk_nightmare)
-      num <<= 1;
+      num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
    if(!E_GiveInventoryItem(player, ammo, num))
       return false; // don't need this ammo
@@ -204,6 +204,8 @@ static bool P_giveBackpackAmmo(player_t *player)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
+      if(!giveamount)
+         continue;
       given |= P_GiveAmmo(player, ammoType, giveamount);
    }
 
@@ -1413,7 +1415,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          thrust *= 4;
       }
 
-      P_ThrustMobj(target, ang, thrust);
+      P_ThrustMobj(target, ang,
+                   emod->absolutePush > 0 ? emod->absolutePush : thrust);
+      if(!(target->flags & MF_NOGRAVITY) && emod->absoluteHop > 0)
+         target->momz += emod->absoluteHop;
       
       // killough 11/98: thrust objects hanging off ledges
       if(target->intflags & MIF_FALLING && target->gear >= MAXGEAR)
@@ -1493,6 +1498,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // check for death
    if(target->health <= 0)
    {
+      // There's no need to also check the type or flags of source (vanilla He-
+      // retic pods can't initiate attacks).
+      if(target->flags4 & MF4_SETTARGETONDEATH && source)
+         P_SetTarget(&target->target, source);
+
       // death messages for players
       if(player)
       {
@@ -1677,7 +1687,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
       z = actor->z;
 
       // don't cross "solid" lines
-      if(Check_Sides(actor, x, y))
+      if(Check_Sides(actor, x, y, mo->type))
          return;
 
       // try the teleport

@@ -458,6 +458,8 @@ void S_StartSfxInfo(const soundparams_t &params)
    // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to 
    // other sounds, but we choose one at random.
 
+   sfxinfo_t *aliasinfo = sfx;
+
    while(sfx->alias || sfx->randomsounds)
    {
       if(sfx->alias)
@@ -630,6 +632,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 #endif
 
    channels[cnum].sfxinfo = sfx;
+   channels[cnum].aliasinfo = aliasinfo;
    channels[cnum].origin  = origin;
 
    while(sfx->link)
@@ -985,10 +988,10 @@ bool S_CheckSoundPlaying(const PointThinker *mo, sfxinfo_t *aliasinfo)
    int cnum;
 
    if(mo && aliasinfo)
-   {   
+   {
       for(cnum = 0; cnum < numChannels; cnum++)
       {
-         if(channels[cnum].origin == mo && channels[cnum].sfxinfo == aliasinfo)
+         if(channels[cnum].origin == mo && channels[cnum].aliasinfo == aliasinfo)
          {
             if(I_SoundIsPlaying(channels[cnum].handle))
                return true;

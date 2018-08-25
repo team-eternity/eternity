@@ -379,6 +379,23 @@ inline static double R_PartitionDistance(double x, double y, const fnode_t *node
 #define DS_EPSILON 0.3125
 
 //
+// Checks if seg is on top of a partition line
+//
+static bool R_segIsOnPartition(const seg_t &seg, const subsector_t &frontss)
+{
+   if(seg.backsector)
+      return true;
+   const line_t &line = *seg.linedef;
+   int sign = line.frontsector == seg.frontsector ? 1 : -1;
+   v2float_t midp = {
+      static_cast<float>((seg.v1->fx + seg.v2->fx) / 2 - line.nx * DS_EPSILON * sign),
+      static_cast<float>((seg.v1->fy + seg.v2->fy) / 2 - line.ny * DS_EPSILON * sign)
+   };
+
+   return R_PointInSubsector(M_FloatToFixed(midp.x), M_FloatToFixed(midp.y)) != &frontss;
+}
+
+//
 // Checks the subsector for any wall segs which should cut or totally remove dseg.
 // Necessary to avoid polyobject bleeding. Returns true if entire dynaseg is gone.
 //
@@ -398,6 +415,8 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsecto
    for(int i = 0; i < ss.numlines; ++i)
    {
       const seg_t &wall = segs[ss.firstline + i];
+      if(R_segIsOnPartition(wall, ss))
+         continue;   // only check 1-sided lines
       const vertex_t &v1 = *wall.v1;
       const vertex_t &v2 = *wall.v2;
       const divline_t walldl = { v1.x, v1.y, v2.x - v1.x, v2.y - v1.y };
@@ -632,22 +651,47 @@ void R_AttachPolyObject(polyobj_t *poly)
       dynavertex_t *v1 = R_GetFreeDynaVertex();
       dynavertex_t *v2 = R_GetFreeDynaVertex();
 
+      // NOTE: currently polyobjects with portals won't be interpolated. We need
+      // to implement portal transform interpolation first.
       *static_cast<vertex_t *>(v1) = *line->v1;
-      v1->backup.x = poly->tmpVerts[line->v1->polyindex].x;
-      v1->backup.y = poly->tmpVerts[line->v1->polyindex].y;
-      v1->fbackup.x = poly->tmpVerts[line->v1->polyindex].fx;
-      v1->fbackup.y = poly->tmpVerts[line->v1->polyindex].fy;
+      if(poly->numPortals)
+      {
+         v1->backup.x = v1->x;
+         v1->backup.y = v1->y;
+         v1->fbackup.x = v1->fx;
+         v1->fbackup.y = v1->fy;
+      }
+      else
+      {
+         v1->backup.x = poly->tmpVerts[line->v1->polyindex].x;
+         v1->backup.y = poly->tmpVerts[line->v1->polyindex].y;
+         v1->fbackup.x = poly->tmpVerts[line->v1->polyindex].fx;
+         v1->fbackup.y = poly->tmpVerts[line->v1->polyindex].fy;
+      }
       *static_cast<vertex_t *>(v2) = *line->v2;
-      v2->backup.x = poly->tmpVerts[line->v2->polyindex].x;
-      v2->backup.y = poly->tmpVerts[line->v2->polyindex].y;
-      v2->fbackup.x = poly->tmpVerts[line->v2->polyindex].fx;
-      v2->fbackup.y = poly->tmpVerts[line->v2->polyindex].fy;
+      if(poly->numPortals)
+      {
+         v2->backup.x = v2->x;
+         v2->backup.y = v2->y;
+         v2->fbackup.x = v2->fx;
+         v2->fbackup.y = v2->fy;
+      }
+      else
+      {
+         v2->backup.x = poly->tmpVerts[line->v2->polyindex].x;
+         v2->backup.y = poly->tmpVerts[line->v2->polyindex].y;
+         v2->fbackup.x = poly->tmpVerts[line->v2->polyindex].fx;
+         v2->fbackup.y = poly->tmpVerts[line->v2->polyindex].fy;
+      }
 
       R_SetDynaVertexRef(&idseg->seg.dyv1, v1);
       R_SetDynaVertexRef(&idseg->seg.dyv2, v2);
 
       dynaseg_t *backdseg;
-      if(line->sidenum[1] != -1)
+      // Make sure not to render portal line backsides if they were generated
+      // 1-sided lines turned into 2-sided.
+      if(line->sidenum[1] != -1 && (!(line->intflags & MLI_1SPORTALLINE) ||
+                                    line->sidenum[1] != line->sidenum[0]))
       {
          // create backside dynaseg now
          backdseg = R_GetFreeDynaSeg();

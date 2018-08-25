@@ -53,7 +53,7 @@ struct lineportalcrossing_t
    v2fixed_t *cur;
    v2fixed_t *fin;
    int *group;
-   bool *passed;
+   const line_t **passed;
    // Careful when adding new fields!
 };
 
@@ -97,7 +97,7 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
    if(data.group)
       *data.group = link.toid;
    if(data.passed)
-      *data.passed = true;
+      *data.passed = line;
 
    return false;
 }
@@ -110,7 +110,7 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
 // updating the target position correctly
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group, bool *passed)
+                               int *group, const line_t **passed)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -452,7 +452,8 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 //
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint)
+                                        sector_t *csector, fixed_t midzhint,
+                                        uint8_t *floorceiling)
 {
    if(cgroupid == tgroupid)
       return csector;
@@ -469,6 +470,7 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 
    unsigned sector_t::*pflags[2];
    portal_t *sector_t::*portal[2];
+   uint8_t fcflag[2];
 
    if(midzhint < cmidz)
    {
@@ -476,6 +478,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       pflags[1] = &sector_t::c_pflags;
       portal[0] = &sector_t::f_portal;
       portal[1] = &sector_t::c_portal;
+      fcflag[0] = sector_t::floor;
+      fcflag[1] = sector_t::ceiling;
    }
    else
    {
@@ -483,13 +487,13 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       pflags[1] = &sector_t::f_pflags;
       portal[0] = &sector_t::c_portal;
       portal[1] = &sector_t::f_portal;
+      fcflag[0] = sector_t::ceiling;
+      fcflag[1] = sector_t::floor;
    }
 
    sector_t *sector;
    int groupid;
    fixed_t x, y;
-
-   const linkoffset_t *link;
 
    for(int i = 0; i < 2; ++i)
    {
@@ -500,13 +504,17 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 
       while(sector->*pflags[i] & PS_PASSABLE)
       {
-         link = P_GetLinkOffset(groupid, (sector->*portal[i])->data.link.toid);
-         x += link->x;
-         y += link->y;
+         const linkdata_t &ldata = (sector->*portal[i])->data.link;
+         x += ldata.deltax;
+         y += ldata.deltay;
          sector = R_PointInSubsector(x, y)->sector;
          groupid = sector->groupid;
          if(groupid == tgroupid)
+         {
+            if(floorceiling)
+               *floorceiling = fcflag[i];
             return sector;
+         }
          if(groupVisit[groupid])
             break;
          groupVisit[groupid] = true;

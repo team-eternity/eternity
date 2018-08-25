@@ -526,6 +526,7 @@ public:
    // Double floating-point
    void   addDouble(const char *key, double value);
    double getDouble(const char *key, double defValue) const;
+   double getDouble(size_t keyIndex, double defValue) const;
    void   setDouble(const char *key, double newValue);
    double removeDouble(const char *key);
 
@@ -536,6 +537,7 @@ public:
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
    void        removeStringNR(const char *key);
+   void        removeStringNR(size_t keyIndex);
 
    // Constant shared strings
    void        addConstString(size_t keyIndex, const char *value);

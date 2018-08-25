@@ -27,6 +27,7 @@
 #define P_MAP_H__
 
 #include "tables.h"
+#include "m_collection.h"
 
 struct line_t;
 struct mobjinfo_t;
@@ -71,14 +72,16 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
 bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target);
 
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 
-bool PIT_CheckLine(line_t *ld, polyobj_s *po);  // ioanch: used in the code
+bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context);  // ioanch: used in the code
 
 void P_SlideMove(Mobj *mo);
 
 // ioanch
-void P_CollectSpechits(line_t *ld);
+void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
+
+bool P_BlockedAsMonster(const Mobj &mo);
 
 //=============================================================================
 //
@@ -100,12 +103,12 @@ bool P_CheckSight(const Mobj *t1, const Mobj *t2);
 void P_UseLines(player_t *player);
 
 // killough 8/2/98: add 'mask' argument to prevent friends autoaiming at others
-fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask);
 
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, 
-                  int damage, mobjinfo_t *puff = nullptr);
+                  int damage, const char *pufftype = nullptr);
 
-bool Check_Sides(Mobj *, int, int); // phares
+bool Check_Sides(Mobj *, int, int, mobjtype_t type); // phares
 
 //=============================================================================
 //

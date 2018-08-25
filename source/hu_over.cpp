@@ -498,12 +498,12 @@ static void HU_drawStatus(int x, int y)
 //
 static void HU_overlaySetup()
 {
-   int i, x, y;
+   int x, y;
 
    // decide where to put all the widgets
-   
-   for(i = 0; i < NUMOVERLAY; i++)
-      overlay[i].x = 1;       // turn em all on
+
+   for(overlay_t &curroverlay : overlay)
+      curroverlay.x = 1;       // turn em all on
 
    // turn off status if we aren't using it
    if(hud_hidestatus)
@@ -517,19 +517,19 @@ static void HU_overlaySetup()
       overlay[ol_frag].x = -1;
 
    // now build according to style
-   
+
    switch(hud_overlaystyle)
-   {      
+   {
    case HUD_OFF:       // 'off'
    case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
-      for(i = 0; i < NUMOVERLAY; i++)         
+      for(int i = 0; i < NUMOVERLAY; i++)
          setol(i, -1, -1); // turn it off
       break;
-      
+
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
       y = SCREENHEIGHT - 8;
 
-      for(i = NUMOVERLAY - 1; i >= 0; --i)
+      for(int i = NUMOVERLAY - 1; i >= 0; --i)
       {
          if(overlay[i].x != -1)
          {
@@ -538,13 +538,13 @@ static void HU_overlaySetup()
          }
       }
       break;
-      
+
    case HUD_FLAT: // all at bottom of screen
-      x = 160; 
+      x = 160;
       y = SCREENHEIGHT - 8;
 
       // haleyjd 06/14/06: rewrote to restore a sensible ordering
-      for(i = NUMOVERLAY - 1; i >= 0; --i)
+      for(int i = NUMOVERLAY - 1; i >= 0; --i)
       {
          if(overlay[i].x != -1)
          {
@@ -564,7 +564,7 @@ static void HU_overlaySetup()
       setol(ol_armor,  SCREENWIDTH-138,   8);
       setol(ol_weap,   SCREENWIDTH-138, 184);
       setol(ol_ammo,   SCREENWIDTH-138, 192);
-      
+
       if(GameType == gt_dm)  // if dm, put frags in place of keys
          setol(ol_frag, 0, 192);
       else
@@ -618,15 +618,15 @@ void HU_DisableHUD()
 void HU_OverlayDraw()
 {
    // SoM 2-4-04: ANYRES
-   if(viewwindow.height != video.height || automapactive || !hud_enabled) 
+   if(viewwindow.height != video.height || automapactive || !hud_enabled)
       return;  // fullscreen only
-  
+
    HU_overlaySetup();
-   
-   for(int i = 0; i < NUMOVERLAY; i++)
+
+   for(overlay_t &curroverlay : overlay)
    {
-      if(overlay[i].x != -1)
-         overlay[i].drawer(overlay[i].x, overlay[i].y);
+      if(curroverlay.x != -1)
+         curroverlay.drawer(curroverlay.x, curroverlay.y);
    }
 }
 

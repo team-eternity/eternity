@@ -107,7 +107,7 @@ int help_friends, default_help_friends;
 
 int flashing_hom;     // killough 10/98
 
-int doom_weapon_toggles; // killough 10/98
+int weapon_hotkey_cycling; // killough 10/98
 
 int monkeys, default_monkeys;
 

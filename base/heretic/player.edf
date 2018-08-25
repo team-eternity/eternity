@@ -16,7 +16,7 @@ weaponinfo Staff
 
   sisterweapon StaffPowered
 
-  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   recoil       10
 
@@ -45,6 +45,7 @@ weaponinfo StaffPowered : Staff
 
   readysound   ht_stfcrk
   addflags     READYSNDHALF|POWERED_UP
+  mod          StaffPowered
 
   states
   @"
@@ -357,7 +358,7 @@ weaponinfo Gauntlets
 
   sisterweapon GauntletsPowered
 
-  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   upsound      ht_gntact
 

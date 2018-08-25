@@ -322,14 +322,9 @@ static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 //
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
 {
-   int i;
-   sfxinfo_t *cursfx;
-
    // run down all the mnemonic hash chains
-   for(i = 0; i < NUMSFXCHAINS; ++i)
+   for(sfxinfo_t *cursfx : sfxchains)
    {
-      cursfx = sfxchains[i];
-
       while(cursfx)
       {
          // avoid short prefix erroneous match
@@ -342,7 +337,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
    }
 
    // no match
-   return NULL;
+   return nullptr;
 }
 
 
@@ -458,23 +453,17 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
 //
 // E_PreCacheSounds
 //
-// Runs down the sound mnemonic hash table chains and caches all 
-// sounds. This is improved from the code that was in SMMU, which 
-// only precached entries in the S_sfx array. This is called at 
+// Runs down the sound mnemonic hash table chains and caches all
+// sounds. This is improved from the code that was in SMMU, which
+// only precached entries in the S_sfx array. This is called at
 // startup when sound precaching is enabled.
 //
 void E_PreCacheSounds()
 {
-   int i;
-   sfxinfo_t *cursfx;
-
-   // run down all the mnemonic hash chains so that we precache 
+   // run down all the mnemonic hash chains so that we precache
    // all sounds, not just ones stored in S_sfx
-
-   for(i = 0; i < NUMSFXCHAINS; ++i)
+   for(sfxinfo_t *cursfx : sfxchains)
    {
-      cursfx = sfxchains[i];
-
       while(cursfx)
       {
          I_CacheSound(cursfx);
@@ -491,22 +480,17 @@ void E_PreCacheSounds()
 //
 void E_UpdateSoundCache()
 {
-   int i;
-   sfxinfo_t *cursfx;
-
    // be sure all sounds are stopped
    S_StopSounds(true);
 
-   for(i = 0; i < NUMSFXCHAINS; ++i)
+   for(sfxinfo_t *cursfx : sfxchains)
    {
-      cursfx = sfxchains[i];
-
       while(cursfx)
       {
          if(cursfx->data)
          {
             efree(cursfx->data);
-            cursfx->data = NULL;
+            cursfx->data = nullptr;
          }
          cursfx = cursfx->next;
       }

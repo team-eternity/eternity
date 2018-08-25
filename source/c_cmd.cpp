@@ -120,7 +120,6 @@ CONSOLE_CONST(opt, cmdoptions);
 CONSOLE_COMMAND(cmdlist, 0)
 {
    command_t *current;
-   int i;
    int charnum = 33;
    int maxchar = 'z';
 
@@ -153,11 +152,11 @@ CONSOLE_COMMAND(cmdlist, 0)
 
    for(; charnum <= maxchar; ++charnum) // go thru each char in alphabet
    {
-      for(i = 0; i < CMDCHAINS; ++i)
+      for(command_t *&cmdroot : cmdroots)
       {
-         for(current = cmdroots[i]; current; current = current->next)
+         for(current = cmdroot; current; current = current->next)
          {
-            if(current->name[0] == charnum && 
+            if(current->name[0] == charnum &&
                (!mask || !strncasecmp(current->name, mask, masklen)) &&
                !(current->flags & cf_hidden))
             {

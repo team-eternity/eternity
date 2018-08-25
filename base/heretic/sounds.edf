@@ -451,6 +451,7 @@ sound ht_stnmov
   priority      119
   dehackednum   355
   pitchvariance Heretic
+  subchannel    Body
 }
 
 sound ht_sbtpai
@@ -947,6 +948,13 @@ sound ht_phopow
   pitchvariance Heretic
 }
 
+sound ht_blshit
+{
+  lump          "blshit"
+  priority      64
+  dehackednum   417
+  pitchvariance Heretic
+}
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.

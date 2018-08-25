@@ -66,6 +66,7 @@ enum
 struct columndrawer_t
 {
    void (*DrawColumn)();       // normal
+   void (*DrawNewSkyColumn)(); // double-sky drawing (index 0 = transparent)
    void (*DrawTLColumn)();     // translucent
    void (*DrawTRColumn)();     // translated
    void (*DrawTLTRColumn)();   // translucent/translated

@@ -940,10 +940,10 @@ static void P_InfoDefaultSoundNames()
    else
    {
       // restore defaults
-      for(i = 0; i < NUMMAPINFOSOUNDS; i++)
+      for(sfxinfo_t **soundalias : DefSoundAliases)
       {
-         if(DefSoundAliases[i][0])
-            DefSoundAliases[i][0]->alias = DefSoundAliases[i][1];
+         if(soundalias[0])
+            soundalias[0]->alias = soundalias[1];
       }
    }
 

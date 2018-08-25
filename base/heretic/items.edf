@@ -240,7 +240,7 @@ artifact AmmoMaceSphere
   interhubamount -1
   icon           INAMLOB
 
-  ammo.backpackamount     20
+  ammo.backpackamount      0
   ammo.backpackmaxamount 300
 }
 

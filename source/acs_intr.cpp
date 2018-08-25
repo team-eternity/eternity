@@ -360,6 +360,14 @@ ACSEnvironment::ACSEnvironment() :
  //addFuncDataACS0( 89, addCallFunc(ACS_CF_SetThingRoll));
  //addFuncDataACS0( 90, addCallFunc(ACS_CF_GetThingRoll));
  //addFuncDataACS0( 91, addCallFunc(ACS_CF_QuakeEx));
+ //addFuncDataACS0( 92, addCallFunc(ACS_CF_Warp));
+ //addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
+ //addFuncDataACS0( 94, addCallFunc(ACS_CF_SetSectorDamage));
+ //addFuncDataACS0( 95, addCallFunc(ACS_CF_SetSectorTerrain));
+ //addFuncDataACS0( 96, addCallFunc(ACS_CF_SpawnParticle));
+ //addFuncDataACS0( 97, addCallFunc(ACS_CF_SetMusicVolume));
+   addFuncDataACS0( 98, addCallFunc(ACS_CF_CheckProximity));
+ //addFuncDataACS0( 99, addCallFunc(ACS_CF_CheckActorState));
 
    addFuncDataACS0(300, addCallFunc(ACS_CF_GetLineX));
    addFuncDataACS0(301, addCallFunc(ACS_CF_GetLineY));

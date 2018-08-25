@@ -4022,6 +4022,7 @@ DEFINE_ACTION(EV_ActionChangeSkill)
       return 0;
 
    gameskill = (skill_t)instance->line->args[0];
+   G_SetFastParms(gameskill >= sk_nightmare || fastparm);
    return 1;
 }
 
