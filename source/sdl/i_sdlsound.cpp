@@ -50,10 +50,12 @@ extern bool snd_init;
 
 int audio_buffers;
 
+// haleyjd 12/18/13: size at which mix buffers must be allocated
+static Uint32 mixbuffer_size;
+
 // haleyjd 12/18/13: primary floating point mixing buffers
 static float *mixbuffer[2];
 
-// MaxW: 2018/08/27: ID of the open audio device
 static SDL_AudioDeviceID devid;
 
 // MaxW: 2018/08/27: Desired audiospec and the audiospec we actually have
@@ -412,10 +414,10 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 static inline void I_SDLMixBuffers()
 {
    float *bptr = mixbuffer[0];
-   float *end  = bptr + have.size;
+   float *end  = bptr + mixbuffer_size;
    while(bptr != end)
    {
-      *bptr = *bptr + *(bptr + have.size);
+      *bptr = *bptr + *(bptr + mixbuffer_size);
       ++bptr;
    }
 }
@@ -428,7 +430,7 @@ static inline void I_SDLMixBuffers()
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
-   memset(stream, 0, len);
+   memset(stream, 0 , len);
 
    // convert input samples to floating point
    I_SDLConvertSoundBuffer(stream, len);
@@ -515,7 +517,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    // do reverberation if an effect is active
    if(s_reverbactive)
-      S_ProcessReverb(mixbuffer[1], have.size / 2);
+      S_ProcessReverb(mixbuffer[1], mixbuffer_size/2);
 
    // mix reverberated sound with unreverberated buffer
    I_SDLMixBuffers();
@@ -553,9 +555,9 @@ static void I_SetChannels()
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
    
    // allocate mixing buffers
-   auto buf = ecalloc(float *, 2 * have.size, sizeof(float));
+   auto buf = ecalloc(float *, 2*mixbuffer_size, sizeof(float));
    mixbuffer[0] = buf;
-   mixbuffer[1] = buf + have.size;
+   mixbuffer[1] = buf + mixbuffer_size;
 
    // haleyjd 10/02/08: create semaphores
    for(i = 0; i < MAX_CHANNELS; i++)
@@ -771,6 +773,7 @@ static int I_SDLInitSound()
    want.samples  = audio_buffers;
    want.callback = I_SDLUpdateSoundCB;
    devid = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+   mixbuffer_size = have.size / SAMPLESIZE;
    if(devid < 0)
    {
       printf("Couldn't open audio with desired format: %s.\n", SDL_GetError());
