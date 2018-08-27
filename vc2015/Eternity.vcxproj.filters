@@ -654,9 +654,6 @@
     <ClCompile Include="..\source\sdl\i_sdlgl2d.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\sdl\i_sdlmusic.cpp">
-      <Filter>Source Files\SDL\SDL Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\sdl\i_sdlsound.cpp">
       <Filter>Source Files\SDL\SDL Source</Filter>
     </ClCompile>

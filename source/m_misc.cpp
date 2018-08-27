@@ -96,8 +96,8 @@ extern int  endoomdelay;
 #endif
 
 #ifdef HAVE_SPCLIB
-extern int spc_preamp;
-extern int spc_bass_boost;
+//extern int spc_preamp;
+//extern int spc_bass_boost;
 #endif
 
 // haleyjd 10/09/07: wipe waiting
@@ -824,12 +824,12 @@ default_t defaults[] =
                "0 = none, 1 = melt, 2 = fade"),
    
 #ifdef HAVE_SPCLIB
-   DEFAULT_INT("snd_spcpreamp", &spc_preamp, NULL, 1, 1, 6, default_t::wad_yes,
-               "preamp volume factor for SPC music"),
-   
-   DEFAULT_INT("snd_spcbassboost", &spc_bass_boost, NULL, 8, 1, 31, default_t::wad_yes,
-               "bass boost for SPC music (logarithmic scale, 8 = normal)"),
-   
+   //DEFAULT_INT("snd_spcpreamp", &spc_preamp, NULL, 1, 1, 6, default_t::wad_yes,
+   //            "preamp volume factor for SPC music"),
+   //
+   //DEFAULT_INT("snd_spcbassboost", &spc_bass_boost, NULL, 8, 1, 31, default_t::wad_yes,
+   //            "bass boost for SPC music (logarithmic scale, 8 = normal)"),
+   //
 #endif
 
    // last entry

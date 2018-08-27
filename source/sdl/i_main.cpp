@@ -21,7 +21,6 @@
 
 #include "SDL.h"
 #include "SDL_net.h"
-#include "SDL_mixer.h"
 
 #include "../z_zone.h"
 #include "../doomdef.h"
@@ -106,8 +105,7 @@ int main(int argc, char **argv)
 enum
 {
    ERROR_SDL       = 0x01,
-   ERROR_SDL_MIXER = 0x02,
-   ERROR_SDL_NET   = 0x04,
+   ERROR_SDL_NET   = 0x02,
 };
 
 //
@@ -125,10 +123,9 @@ static void VerifySDLVersions()
 
    // expected versions
    // must update these when SDL is updated.
-   static SDL_version ex_vers[3] =
+   static SDL_version ex_vers[2] =
    {
       { 2, 0, 7 }, // SDL
-      { 2, 0, 2 }, // SDL_mixer
       { 2, 0, 1 }, // SDL_net
    };
 
@@ -158,34 +155,8 @@ static void VerifySDLVersions()
       printf("DEBUG: Using SDL version %d.%d.%d\n",
              lv.major, lv.minor, lv.patch);
 
-   // test SDL_mixer
-   SDL_MIXER_VERSION(&cv);
-   const SDL_version *lv2;
-   lv2 = Mix_Linked_Version();
-
-   if(cv.major != lv2->major || cv.minor != lv2->minor || cv.patch != lv2->patch)
-   {
-      error |= ERROR_SDL_MIXER;
-      printf("WARNING: SDL_mixer linked and compiled versions do not match!\n"
-             "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
-             cv.major, cv.minor, cv.patch, lv2->major, lv2->minor, lv2->patch);
-   }
-
-   if(lv2->major != ex_vers[1].major || lv2->minor != ex_vers[1].minor ||
-      lv2->patch < ex_vers[1].patch)
-   {
-      error |= ERROR_SDL_MIXER;
-      printf("WARNING: SDL_mixer linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n",
-             lv2->major, lv2->minor, lv2->patch,
-             ex_vers[1].major, ex_vers[1].minor, ex_vers[1].patch);
-   }
-
-   if(!(error & ERROR_SDL_MIXER))
-      printf("DEBUG: Using SDL_mixer version %d.%d.%d\n",
-             lv2->major, lv2->minor, lv2->patch);
-
    SDL_NET_VERSION(&cv);
+   const SDL_version *lv2;
    lv2 = SDLNet_Linked_Version();
 
    if(cv.major != lv2->major || cv.minor != lv2->minor || cv.patch != lv2->patch)

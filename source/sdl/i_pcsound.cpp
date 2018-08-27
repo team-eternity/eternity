@@ -28,7 +28,6 @@
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"
-#include "SDL_mixer.h"
 
 #include "../z_zone.h"
 #include "../w_wad.h"
@@ -54,11 +53,11 @@ typedef void (*pcsound_callback_func)(int *duration, int *frequency);
 
 static pcsound_callback_func callback;
 
-// Output sound format
+// MaxW: 2018/08/27: ID of the open audio device
+static SDL_AudioDeviceID devid;
 
-static int mixing_freq;
-static Uint16 mixing_format;
-static int mixing_channels;
+// MaxW: 2018/08/27: Desired audiospec and the audiospec we actually have
+static SDL_AudioSpec want, have;
 
 // Currently playing sound
 // current_remaining is the number of remaining samples that must be played
@@ -118,7 +117,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
             phase_offset = (phase_offset * oldfreq) / current_freq;
          }
          
-         current_remaining = (current_remaining * mixing_freq) / 1000;
+         current_remaining = (current_remaining * have.freq) / 1000;
       }
       
       // Set the value for this sample.      
@@ -135,7 +134,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
          // sound.  Multiply by 2 so that frac % 2 will give 0 or 1 
          // depending on whether we are at a peak or trough.
          
-         frac = (phase_offset * current_freq * 2) / mixing_freq;
+         frac = (phase_offset * current_freq * 2) / have.freq;
          
          if((frac % 2) == 0) 
             this_value =  SQUARE_WAVE_AMP;
@@ -158,7 +157,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
 
 static void PCSound_SDL_Shutdown()
 {
-   Mix_CloseAudio();
+   SDL_CloseAudio();
    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
@@ -169,26 +168,27 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       fprintf(stderr, "Unable to set up sound.\n");
       return 0;
    }
-   
-   if(Mix_OpenAudio(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024) < 0)
+
+   want.freq     = pcsound_sample_rate;
+   want.format   = AUDIO_S16SYS;
+   want.channels = 2;
+   want.samples  = 1024;
+   want.callback = PCSound_Mix_Callback;
+   if (SDL_OpenAudio(&want, &have) < 0)
    {
-      fprintf(stderr, "Error initialising SDL_mixer: %s\n", Mix_GetError());
-      
+      fprintf(stderr, "Error opening SDL audio: %s\n", SDL_GetError());
+
       SDL_QuitSubSystem(SDL_INIT_AUDIO);
       return 0;
    }
-   
+
    SDL_PauseAudio(0);
-
-    // Get the mixer frequency, format and number of channels.
-
-    Mix_QuerySpec(&mixing_freq, &mixing_format, &mixing_channels);
 
     // Only supports AUDIO_S16SYS
 
-    if (mixing_format != AUDIO_S16SYS || mixing_channels != 2)
+    if (have.format != AUDIO_S16SYS || have.channels != 2)
     {
-        fprintf(stderr, 
+        fprintf(stderr,
                 "PCSound_SDL only supports native signed 16-bit LSB, "
                 "stereo format!\n");
 
@@ -199,8 +199,6 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
     callback = callback_func;
     current_freq = 0;
     current_remaining = 0;
-
-    Mix_SetPostMix(PCSound_Mix_Callback, NULL);
 
     return 1;
 }

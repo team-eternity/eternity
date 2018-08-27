@@ -22,7 +22,6 @@
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"
-#include "SDL_mixer.h"
 
 #include "../z_zone.h"
 
@@ -51,11 +50,14 @@ extern bool snd_init;
 
 int audio_buffers;
 
-// haleyjd 12/18/13: size at which mix buffers must be allocated
-static Uint32 mixbuffer_size;
-
 // haleyjd 12/18/13: primary floating point mixing buffers
 static float *mixbuffer[2];
+
+// MaxW: 2018/08/27: ID of the open audio device
+static SDL_AudioDeviceID devid;
+
+// MaxW: 2018/08/27: Desired audiospec and the audiospec we actually have
+static SDL_AudioSpec want, have;
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
@@ -410,10 +412,10 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 static inline void I_SDLMixBuffers()
 {
    float *bptr = mixbuffer[0];
-   float *end  = bptr + mixbuffer_size;
+   float *end  = bptr + have.size;
    while(bptr != end)
    {
-      *bptr = *bptr + *(bptr + mixbuffer_size);
+      *bptr = *bptr + *(bptr + have.size);
       ++bptr;
    }
 }
@@ -426,6 +428,8 @@ static inline void I_SDLMixBuffers()
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
+   memset(stream, 0, len);
+
    // convert input samples to floating point
    I_SDLConvertSoundBuffer(stream, len);
 
@@ -511,7 +515,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    // do reverberation if an effect is active
    if(s_reverbactive)
-      S_ProcessReverb(mixbuffer[1], mixbuffer_size/2);
+      S_ProcessReverb(mixbuffer[1], have.size / 2);
 
    // mix reverberated sound with unreverberated buffer
    I_SDLMixBuffers();
@@ -549,9 +553,9 @@ static void I_SetChannels()
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
    
    // allocate mixing buffers
-   auto buf = ecalloc(float *, 2*mixbuffer_size, sizeof(float));
+   auto buf = ecalloc(float *, 2 * have.size, sizeof(float));
    mixbuffer[0] = buf;
-   mixbuffer[1] = buf + mixbuffer_size;
+   mixbuffer[1] = buf + have.size;
 
    // haleyjd 10/02/08: create semaphores
    for(i = 0; i < MAX_CHANNELS; i++)
@@ -728,7 +732,7 @@ static void I_SDLSubmitSound()
 //
 static void I_SDLShutdownSound()
 {
-   Mix_CloseAudio();
+   SDL_CloseAudioDevice(devid);
 }
 
 //
@@ -740,32 +744,6 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 {
    // 12/23/13: invoke high level lump cacher
    S_CacheDigitalSoundLump(sound);
-}
-
-static void I_SDLDummyCallback(void *, Uint8 *, int) {} 
-
-//
-// I_SDLTestSoundBufferSize
-//
-// This shouldn't be necessary except for really bad API design.
-//
-static Uint32 I_SDLTestSoundBufferSize()
-{
-   Uint32 ret = 0;
-   SDL_AudioSpec want, have;
-   want.freq     = snd_samplerate;
-   want.format   = MIX_DEFAULT_FORMAT;
-   want.channels = 2;
-   want.samples  = audio_buffers;
-   want.callback = I_SDLDummyCallback;
-
-   if(SDL_OpenAudio(&want, &have) >= 0)
-   {
-      ret = have.size;
-      SDL_CloseAudio();
-   }
-
-   return ret;
 }
 
 //
@@ -787,28 +765,25 @@ static int I_SDLInitSound()
    if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
-   // Figure out mix buffer sizes
-   mixbuffer_size = I_SDLTestSoundBufferSize() / SAMPLESIZE;
-   if(!mixbuffer_size)
+   want.freq     = snd_samplerate;
+   want.format   = AUDIO_S16SYS;
+   want.channels = 2;
+   want.samples  = audio_buffers;
+   want.callback = I_SDLUpdateSoundCB;
+   devid = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+   if(devid < 0)
    {
-      printf("Couldn't determine sound mixing buffer size.\n");
+      printf("Couldn't open audio with desired format: %s.\n", SDL_GetError());
       nosfxparm   = true;
       nomusicparm = true;
       return 0;
    }
-   
-   if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
-   {
-      printf("Couldn't open audio with desired format.\n");
-      nosfxparm   = true;
-      nomusicparm = true;
-      return 0;
-   }
-   
+
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
-   Mix_SetPostMix(I_SDLUpdateSoundCB, nullptr);
+   SDL_PauseAudioDevice(devid, 0);
+
    printf("Configured audio device with %d samples/slice.\n", audio_buffers);
 
    return 1;

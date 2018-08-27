@@ -270,9 +270,9 @@ void I_ShutdownMusic(void)
 
 // haleyjd 11/07/08: music drivers
 
-#ifdef _SDL_VER
-extern i_musicdriver_t i_sdlmusicdriver;
-#endif
+//#ifdef _SDL_VER
+//extern i_musicdriver_t i_sdlmusicdriver;
+//#endif
 
 //
 // I_InitMusic
@@ -281,20 +281,20 @@ void I_InitMusic(void)
 {
    switch(mus_card)
    {
-#ifdef _SDL_VER
-   case -1:
-      printf("I_InitMusic: Using SDL_mixer.\n");
-      i_musicdriver = &i_sdlmusicdriver;
-      if(i_musicdriver->InitMusic())
-      {
-         atexit(I_ShutdownMusic);
-         mus_init = true;
-      }
-      break;
-#endif
+//#ifdef _SDL_VER
+//   case -1:
+//      printf("I_InitMusic: Using SDL_mixer.\n");
+//      i_musicdriver = &i_sdlmusicdriver;
+//      if(i_musicdriver->InitMusic())
+//      {
+//         atexit(I_ShutdownMusic);
+//         mus_init = true;
+//      }
+//      break;
+//#endif
    default:
       printf("I_InitMusic: Music is disabled.\n");
-      i_musicdriver = NULL;
+      i_musicdriver = nullptr;
       mus_init = false;
       break;
    }
@@ -393,11 +393,11 @@ VARIABLE_INT(mus_card,       NULL,      -1,  0, muscardstr);
 VARIABLE_INT(detect_voices,  NULL,       0,  1, yesno);
 
 #ifdef HAVE_SPCLIB
-extern int spc_preamp;
-extern int spc_bass_boost;
-
-VARIABLE_INT(spc_preamp,     NULL,       1,  6, NULL);
-VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
+//extern int spc_preamp;
+//extern int spc_bass_boost;
+//
+//VARIABLE_INT(spc_preamp,     NULL,       1,  6, NULL);
+//VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
 #endif
 
 // Equalizer variables
@@ -425,17 +425,17 @@ CONSOLE_VARIABLE(detect_voices, detect_voices, 0) {}
 
 #ifdef _SDL_VER
 #ifdef HAVE_SPCLIB
-CONSOLE_VARIABLE(snd_spcpreamp, spc_preamp, 0) 
-{
-   I_SetMusicVolume(snd_MusicVolume);
-}
-
-extern void I_SDLMusicSetSPCBass(void);
-
-CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0)
-{
-   I_SDLMusicSetSPCBass();
-}
+//CONSOLE_VARIABLE(snd_spcpreamp, spc_preamp, 0) 
+//{
+//   I_SetMusicVolume(snd_MusicVolume);
+//}
+//
+//extern void I_SDLMusicSetSPCBass(void);
+//
+//CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0)
+//{
+//   I_SDLMusicSetSPCBass();
+//}
 #endif
 #endif
 
