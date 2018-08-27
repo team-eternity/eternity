@@ -773,7 +773,7 @@ static int I_SDLInitSound()
    want.samples  = audio_buffers;
    want.callback = I_SDLUpdateSoundCB;
    devid = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
-   mixbuffer_size = have.size / SAMPLESIZE;
+
    if(devid < 0)
    {
       printf("Couldn't open audio with desired format: %s.\n", SDL_GetError());
@@ -781,6 +781,11 @@ static int I_SDLInitSound()
       nomusicparm = true;
       return 0;
    }
+
+   // MaxW: A WARNING TO THOSE WHO LIVE IN THE FUTURE. DO NOT DELETE THE DIVISION,
+   //       LEST YOUR EARS BE DEMOLISHED BY THE SHRILL SOUNDS OF REVERBS CATCHING ON FIRE!
+   mixbuffer_size = have.size / SAMPLESIZE;
+
 
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
