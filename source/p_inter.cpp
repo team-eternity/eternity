@@ -228,7 +228,8 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
+                               bool &staypick)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -268,6 +269,7 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
+      staypick = true;
       return false;
    }
 
@@ -290,10 +292,11 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
+                         bool &staypick)
 {
    if(demo_version < 401)
-      return P_giveWeaponCompat(player, giver, dropped, special);
+      return P_giveWeaponCompat(player, giver, dropped, special, staypick);
 
    bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -362,6 +365,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
             P_consumeSpecial(player, special); // need to handle it here
             dmstay = true;
             firsttime = false;
+            staypick = true;
          }
       }
       else
@@ -725,7 +729,9 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 //
 // P_TouchSpecialThing
 //
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
+// Returns true ONLY when failing to pick it up because it can't be picked.
+//
+bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t       *player;
    const e_pickupfx_t *pickup, *temp;
@@ -737,42 +743,42 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 
    fixed_t delta = special->z - toucher->z;
    if(delta > toucher->height || delta < -8 * FRACUNIT)
-      return; // out of reach
+      return false; // out of reach
 
               // haleyjd: don't crash if a monster gets here.
    if(!(player = toucher->player))
-      return;
+      return false;
 
    // Dead thing touching.
    // Can happen with a sliding player corpse.
    if(toucher->health <= 0)
-      return;
+      return false;
 
    // haleyjd 05/11/03: EDF pickups modifications
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
-      return;
+      return false;
 
    if(special->info->pickupfx)
       pickup = special->info->pickupfx;
    else if((temp = E_PickupFXForSprNum(special->sprite)))
       pickup = temp;
    else
-      return;
+      return false;
 
    if(pickup->flags & PXFX_COMMERCIALONLY &&
       (demo_version < 335 && GameModeInfo->id != commercial))
-      return;
+      return false;
 
    message = P_getSpecialMessage(special, pickup->message);
    sound   = pickup->sound;
 
    if(pickup->numEffects == 0)
-      return;
+      return false;
 
    // set defaults
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
-
+   bool staypick = false;
    for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
       const itemeffect_t *effect = pickup->effects[i];
@@ -796,7 +802,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          pickedup |= P_GivePowerForItem(player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
-         pickedup |= P_giveWeapon(player, effect, dropped, special);
+         pickedup |= P_giveWeapon(player, effect, dropped, special, staypick);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
          pickedup |= E_GiveInventoryItem(player, effect);
@@ -807,7 +813,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    }
 
    if(!hadeffect)
-      return;
+      return false;
 
    if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
       pickedup |= P_giveBackpackAmmo(player);
@@ -862,7 +868,15 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          if(!(pickup->flags & PFXF_NOSCREENFLASH))
             player->bonuscount += BONUSADD;
       }
+
+      // IOANCH 20130815: add item to bot's stack
+      if(botMap)
+         for(int i = 0; i < MAXPLAYERS; ++i)
+            if(playeringame[i])
+               bots[i].addXYEvent(BOT_PICKUP, B_CoordXY(*special));
    }
+
+   return !pickedup && !staypick;   // always return false if staypick got it
 }
 
 //
