@@ -125,6 +125,9 @@ void A_FireSomething(player_t* player, int adder);
 
 fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 
+extern argkeywd_t fcbkwds;
+extern argkeywd_t seekkwds;
+
 #endif
 
 //----------------------------------------------------------------------------
