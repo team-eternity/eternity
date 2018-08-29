@@ -306,7 +306,7 @@ static double rational_tanh(double x)
 // haleyjd 12/19/13: rewritten to loop over the sample buffer and do output
 // directly back to the SDL audio stream.
 //
-static void do_3band(float *stream, float *end, Sint16 *dest)
+static void do_3band(float *stream, float *end, float *dest)
 {
    int esnum = 0;
 
@@ -351,11 +351,11 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
       // Shuffle history buffer
       es->sdm3   = es->sdm2;
       es->sdm2   = es->sdm1;
-      es->sdm1   = sample;                
+      es->sdm1   = sample;
 
       // Return result
       // haleyjd: use rational_tanh for soft clipping
-      *dest++ = (Sint16)(rational_tanh(l + m + h) * 32767.0);
+      *dest++ = static_cast<float>(rational_tanh(l + m + h));
    }
 }
 
@@ -370,7 +370,7 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
 //
 
 // size of a single sample
-#define SAMPLESIZE sizeof(Sint16) 
+#define SAMPLESIZE sizeof(float)
 
 // step to next stereo sample pair (2 samples)
 #define STEP 2
@@ -383,21 +383,21 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
 static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 {
    // Pointers in audio stream, left, right, end.
-   Sint16 *leftout, *leftend;
-   
-   leftout  = (Sint16 *)stream;
-         
+   float *leftout, *leftend;
+
+   leftout  = reinterpret_cast<float *>(stream);
+
    // Determine end, for left channel only
    //  (right channel is implicit).
-   leftend = (Sint16 *)(stream + len);
+   leftend = reinterpret_cast<float *>(stream + len);
 
    // convert input to mixbuffer
    float *bptr0 = mixbuffer[0];
    float *bptr1 = mixbuffer[1];
    while(leftout != leftend)
    {
-      *(bptr0 + 0) = (float)(*(leftout + 0)) * (1.0f/32768.0f); // L
-      *(bptr0 + 1) = (float)(*(leftout + 1)) * (1.0f/32768.0f); // R
+      *(bptr0 + 0) = *(leftout + 0); // L
+      *(bptr0 + 1) = *(leftout + 1); // R
       *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
       leftout += STEP;
       bptr0   += STEP;
@@ -447,7 +447,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
       // fast rejection before semaphore lock
       if(chan->shouldstop || !chan->data)
          continue;
-         
+
       // try to acquire semaphore, but do not block; if the main thread is using
       // this channel we'll just skip it for now - safer and faster.
       if(SDL_SemTryWait(chan->semaphore) != 0)
@@ -465,7 +465,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          leftend = leftend0;
       }
 
-      // Lost before semaphore acquired? (very unlikely, but must check for 
+      // Lost before semaphore acquired? (very unlikely, but must check for
       // safety). BTW, don't move this up or you'll chew major CPU whenever this
       // does happen.
       if(chan->shouldstop || !chan->data)
@@ -476,26 +476,26 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
       while(leftout != leftend)
       {
-         float sample  = *(chan->data);         
+         float sample  = *(chan->data);
          *(leftout + 0) = *(leftout + 0) + sample * chan->leftvol;
          *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol;
-         
+
          // Increment current pointers in stream
          leftout += STEP;
-         
+
          // Increment index
          chan->stepremainder += chan->step;
-         
+
          // MSB is next sample
          chan->data += chan->stepremainder >> 16;
-         
+
          // Limit to LSB
          chan->stepremainder &= 0xffff;
-         
+
          // Check whether we are done
          if(chan->data >= chan->enddata)
          {
-            if(chan->loop && !paused && 
+            if(chan->loop && !paused &&
                ((!menuactive && !consoleactive) || demoplayback || netgame))
             {
                // haleyjd 06/03/06: restart a looping sample if not paused
@@ -505,7 +505,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             else
             {
                // flag the channel to be stopped by the main thread ASAP
-               chan->data = NULL;
+               chan->data = nullptr;
                break;
             }
          }
@@ -523,7 +523,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    I_SDLMixBuffers();
 
    // haleyjd 04/21/10: equalization output pass
-   do_3band(mixbuffer[0], leftend0, (Sint16 *)stream);
+   do_3band(mixbuffer[0], leftend0, reinterpret_cast<float *>(stream));
 }
 
 //
@@ -538,7 +538,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 //
 // Init internal lookups (raw data, mixing buffer, channels).
 // This function sets up internal lookups used during
-//  the mixing process. 
+//  the mixing process.
 //
 static void I_SetChannels()
 {
@@ -768,13 +768,13 @@ static int I_SDLInitSound()
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
    want.freq     = snd_samplerate;
-   want.format   = AUDIO_S16SYS;
+   want.format   = AUDIO_F32SYS;
    want.channels = 2;
    want.samples  = audio_buffers;
    want.callback = I_SDLUpdateSoundCB;
    devid = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
 
-   if(devid < 0)
+   if(devid == 0)
    {
       printf("Couldn't open audio with desired format: %s.\n", SDL_GetError());
       nosfxparm   = true;
