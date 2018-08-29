@@ -133,24 +133,24 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
       channelinfo[channel].data = (float *)sfx->data;
-      
+
       // Set pointer to end of raw data.
       channelinfo[channel].enddata = (float *)sfx->data + sfx->alen - 1;
-      
+
       // haleyjd 06/03/06: keep track of start of sound
       channelinfo[channel].startdata = channelinfo[channel].data;
-      
+
       channelinfo[channel].stepremainder = 0;
-      
+
       // Preserve sound SFX id
       channelinfo[channel].id = sfx;
-      
+
       // Set looping
       channelinfo[channel].loop = loop;
 
       // Set reverb
       channelinfo[channel].reverb = reverb;
-      
+
       // Set instance ID
       channelinfo[channel].idnum = id;
 
@@ -177,7 +177,7 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    int rightvol;
    int leftvol;
    int step = steptable[pitch];
-   
+
    if(!snd_init)
       return;
 
@@ -185,7 +185,7 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    if(handle < 0 || handle >= MAX_CHANNELS)
       I_Error("I_UpdateSoundParams: handle out of range\n");
 #endif
-   
+
    // Separation, that is, orientation/stereo.
    //  range is: 1 - 256
    separation += 1;
@@ -193,14 +193,14 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    // SoM 7/1/02: forceFlipPan accounted for here
    if(forceFlipPan)
       separation = 257 - separation;
-   
+
    // Per left/right channel.
    //  x^2 separation,
    //  adjust volume properly.
 
    leftvol    = volume - ((volume*separation*separation) >> 16);
    separation = separation - 257;
-   rightvol   = volume - ((volume*separation*separation) >> 16);  
+   rightvol   = volume - ((volume*separation*separation) >> 16);
 
    // volume levels are softened slightly by dividing by 191 rather than ideal 127
    channelinfo[slot].leftvol  = (float)(eclamp((double)leftvol  / 191.0, 0.0, 1.0));
@@ -219,7 +219,7 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    if(pitched_sounds)
       channelinfo[slot].step = step;
    else
-      channelinfo[slot].step = 1 << 16;   
+      channelinfo[slot].step = 1 << 16;
 }
 
 //=============================================================================
@@ -235,7 +235,7 @@ struct EQSTATE
 
   double  lf;       // Frequency
   double  f1p0;     // Poles ...
-  double  f1p1;    
+  double  f1p1;
   double  f1p2;
   double  f1p3;
 
@@ -258,8 +258,8 @@ struct EQSTATE
   double  lg;       // low  gain
   double  mg;       // mid  gain
   double  hg;       // high gain
-  
-};  
+
+};
 
 // haleyjd 04/21/10: equalizers for each stereo channel
 static EQSTATE eqstate[2];
@@ -272,11 +272,11 @@ static EQSTATE eqstate[2];
 //
 // Notes :
 // This is a rational function to approximate a tanh-like soft clipper. It is
-// based on the pade-approximation of the tanh function with tweaked 
+// based on the pade-approximation of the tanh function with tweaked
 // coefficients.
 // The function is in the range x=-3..3 and outputs the range y=-1..1. Beyond
 // this range the output must be clamped to -1..1.
-// The first two derivatives of the function vanish at -3 and 3, so the 
+// The first two derivatives of the function vanish at -3 and 3, so the
 // transition to the hard clipped region is C2-continuous.
 //
 static double rational_tanh(double x)
@@ -543,17 +543,17 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 static void I_SetChannels()
 {
    int i;
-   
+
    int *steptablemid = steptable + 128;
-   
+
    // Okay, reset internal mixing channels to zero.
    for(i = 0; i < MAX_CHANNELS; i++)
       memset(&channelinfo[i], 0, sizeof(channel_info_t));
-   
+
    // This table provides step widths for pitch parameters.
    for(i = -128; i < 128; i++)
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
-   
+
    // allocate mixing buffers
    auto buf = ecalloc(float *, 2*mixbuffer_size, sizeof(float));
    mixbuffer[0] = buf;
@@ -570,7 +570,7 @@ static void I_SetChannels()
 
    // haleyjd 04/21/10: initialize equalizers
 
-   // Set Low/Mid/High gains 
+   // Set Low/Mid/High gains
    eqstate[0].lg = eqstate[1].lg = s_lowgain;
    eqstate[0].mg = eqstate[1].mg = s_midgain;
    eqstate[0].hg = eqstate[1].hg = s_highgain;
@@ -584,7 +584,7 @@ static void I_SetChannels()
 }
 
 //=============================================================================
-// 
+//
 // Driver Routines
 //
 
@@ -598,7 +598,7 @@ static void I_SDLUpdateEQParams()
    // flush out state of equalizers
    memset(eqstate, 0, sizeof(eqstate));
 
-   // Set Low/Mid/High gains 
+   // Set Low/Mid/High gains
    eqstate[0].lg = eqstate[1].lg = s_lowgain;
    eqstate[0].mg = eqstate[1].mg = s_midgain;
    eqstate[0].hg = eqstate[1].hg = s_highgain;
@@ -625,7 +625,7 @@ static void I_SDLUpdateSoundParams(int handle, int vol, int sep, int pitch)
 //
 // I_SDLStartSound
 //
-static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep, 
+static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
                            int pitch, int pri, int loop, bool reverb)
 {
    static unsigned int id = 1;
@@ -642,7 +642,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    // than to cut off one already playing, which sounds weird.
    if(handle == numChannels)
       return -1;
- 
+
    if(addsfx(sound, handle, loop, id, reverb))
    {
       updateSoundParams(handle, vol, sep, pitch);
@@ -650,7 +650,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    }
    else
       handle = -1;
-   
+
    return handle;
 }
 
@@ -666,7 +666,7 @@ static void I_SDLStopSound(int handle, int id)
    if(handle < 0 || handle >= MAX_CHANNELS)
       I_Error("I_SDLStopSound: handle out of range\n");
 #endif
-   
+
    if(channelinfo[handle].idnum == (unsigned int)id)
       channelinfo[handle].shouldstop = true;
 }
@@ -711,7 +711,7 @@ static int I_SDLSoundID(int handle)
 // that have expired. The I_SDLUpdateSound function does sound updating, but
 // cannot be allowed to modify the zone heap due to being dispatched from a
 // separate thread.
-// 
+//
 static void I_SDLUpdateSound()
 {
    // 10/30/10: Moved channel stopping logic to I_StartSound to avoid problems
@@ -772,7 +772,7 @@ static int I_SDLInitSound()
    want.channels = 2;
    want.samples  = audio_buffers;
    want.callback = I_SDLUpdateSoundCB;
-   devid = SDL_OpenAudioDevice(nullptr, 0, &want, &have, SDL_AUDIO_ALLOW_FORMAT_CHANGE);
+   devid = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
 
    if(devid == 0)
    {
@@ -790,6 +790,7 @@ static int I_SDLInitSound()
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
+   // MaxW: Audio's good to go, so unpause it (it starts off paused)
    SDL_PauseAudioDevice(devid, 0);
 
    printf("Configured audio device with %d samples/slice.\n", audio_buffers);
