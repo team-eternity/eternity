@@ -90,6 +90,8 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
    int i;
    int nsamples;
    
+   memset(stream, 0 , len);
+
    // Number of samples is quadrupled, because of 16-bit and stereo   
    nsamples = len / 4;
    
