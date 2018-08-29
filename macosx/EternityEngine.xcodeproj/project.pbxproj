@@ -334,6 +334,7 @@
 		4FEB0C891CA52059005737DD /* (null) in Sources */ = {isa = PBXBuildFile; };
 		4FFE847E2131A0B800B721F9 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFE847D2131A0B800B721F9 /* OpenGL.framework */; };
 		4FFE84802131A0DA00B721F9 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FFE847F2131A0DA00B721F9 /* CoreServices.framework */; };
+		4FFE84832136726D00B721F9 /* b_vocabulary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFE84812136726D00B721F9 /* b_vocabulary.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -548,6 +549,8 @@
 		4FFD27371796990400E4E5B1 /* w_iterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w_iterator.h; path = ../source/w_iterator.h; sourceTree = "<group>"; };
 		4FFE847D2131A0B800B721F9 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		4FFE847F2131A0DA00B721F9 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		4FFE84812136726D00B721F9 /* b_vocabulary.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = b_vocabulary.cpp; sourceTree = "<group>"; };
+		4FFE84822136726D00B721F9 /* b_vocabulary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = b_vocabulary.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityEngine-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityEngine-Info.plist"; sourceTree = "<group>"; };
 		FA16D39E15E01B82002318D1 /* d_files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_files.cpp; path = ../source/d_files.cpp; sourceTree = SOURCE_ROOT; };
 		FA16D3BC15E01E96002318D1 /* a_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_common.h; path = ../source/a_common.h; sourceTree = SOURCE_ROOT; };
@@ -1097,6 +1100,8 @@
 				4F43B45A182D9F7A00730C02 /* glbsp */,
 				4F12D7451A1F460E00C71230 /* b_statistics.cpp */,
 				4F12D7461A1F460E00C71230 /* b_statistics.h */,
+				4FFE84812136726D00B721F9 /* b_vocabulary.cpp */,
+				4FFE84822136726D00B721F9 /* b_vocabulary.h */,
 			);
 			name = autodoom;
 			path = ../source/autodoom;
@@ -2350,6 +2355,7 @@
 				4F5F38FF182D9AC00027813A /* p_floor.cpp in Sources */,
 				4F12D7471A1F460E00C71230 /* b_statistics.cpp in Sources */,
 				4F914A111F61163C00968197 /* BinaryIO.cpp in Sources */,
+				4FFE84832136726D00B721F9 /* b_vocabulary.cpp in Sources */,
 				4F5F3900182D9AC00027813A /* p_genlin.cpp in Sources */,
 				4F5F3901182D9AC00027813A /* p_henemy.cpp in Sources */,
 				4F5F3902182D9AC00027813A /* p_hubs.cpp in Sources */,

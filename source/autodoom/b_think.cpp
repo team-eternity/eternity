@@ -35,6 +35,7 @@
 #include "b_think.h"
 #include "b_trace.h"
 #include "b_util.h"
+#include "b_vocabulary.h"
 #include "../cam_sight.h"
 #include "../d_event.h"
 #include "../d_gi.h"
@@ -950,7 +951,11 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
       {
          m_lastHelpCry = gametic;
          qstring message;
-         message << "Help! A " << highestThreat->mobj->info->name << " is killing me!";
+         qstring name(highestThreat->mobj->info->name);
+         VOC_AddSpaces(name);
+
+         message << "Help! " << VOC_IndefiniteArticle(name.constPtr()) << " " <<
+            name << " is killing me!";
          HU_Say(pl, message.constPtr());
       }
 
