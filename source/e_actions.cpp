@@ -67,13 +67,14 @@ static inline qstring AlternateFuncName(const char *name)
 
 void A_Aeon(actionargs_t *actionargs)
 {
+   asIScriptContext *ctx = AeonScriptManager::Context();
    if(!actionargs->aeonaction)
       I_Error("A_Aeon: Not bound to Aeon function (don't call A_Aeon from states directly)\n");
 
    if(!AeonScriptManager::PrepareFunction(actionargs->aeonaction->name))
       return;
    if(actionargs->actiontype == actionargs_t::MOBJFRAME)
-      AeonScriptManager::Context()->SetArgObject(0, actionargs->actor);
+      ctx->SetArgObject(0, actionargs->actor);
    else
    {
       if(!actionargs->actor->player)
@@ -82,21 +83,22 @@ void A_Aeon(actionargs_t *actionargs)
 
    for(int i = 0; i < actionargs->aeonaction->numArgs; i++)
    {
-      fixed_t argfixed;
       char *argstr;
 
       switch(actionargs->aeonaction->argTypes[i])
       {
       case AAT_INTEGER:
-         AeonScriptManager::Context()->SetArgDWord(i+1, E_ArgAsInt(actionargs->args, i, 0));
+         ctx->SetArgDWord(i + 1, E_ArgAsInt(actionargs->args, i, 0));
          break;
       case AAT_FIXED:
-         argfixed = E_ArgAsFixed(actionargs->args, i, 0);
-         AeonScriptManager::Context()->SetArgObject(i+1, &AeonFixed(argfixed));
+         ctx->SetArgObject(i + 1, &AeonFixed(E_ArgAsFixed(actionargs->args, i, 0)));
          break;
       case AAT_STRING:
          argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr));
-         AeonScriptManager::Context()->SetArgAddress(i+1, argstr);
+         ctx->SetArgAddress(i + 1, argstr);
+         break;
+      case AAT_SOUND:
+         ctx->SetArgObject(i + 1, E_ArgAsSound(actionargs->args, i));
          break;
       default:
          AeonScriptManager::PopState();
@@ -171,10 +173,12 @@ static void E_registerScriptAction(const char *name, const char *funcname,
    {
       if(argTypes[i] == "int")
          args[i - 1] = AAT_INTEGER;
-      else if(argTypes[i] == "eFixed")
+      else if(argTypes[i] == "fixed_t")
          args[i - 1] = AAT_FIXED;
-      else if(argTypes[i] == "eString" || argTypes[i] == "eString&")
+      else if(argTypes[i] == "String" || argTypes[i] == "String&")
          args[i - 1] = AAT_STRING;
+      else if(argTypes[i] == "EE::Sound@")
+         args[i - 1] = AAT_SOUND;
       else
       {
          E_EDFLoggedWarning(2, "E_registerScriptAction: action '%s' has invalid argument type "
@@ -228,7 +232,7 @@ static inline bool E_isReservedCodePointer(const char *name)
    return !strcasecmp(name, "Aeon");
 }
 
-static inline asITypeInfo *GetClassTypeInfo(const char *type)
+static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 {
    asIScriptEngine *e =  AeonScriptManager::Engine();
    e->SetDefaultNamespace("EE");
@@ -242,7 +246,7 @@ static void E_processAction(cfg_t *actionsec)
    asIScriptFunction *func;
    asIScriptEngine *e =  AeonScriptManager::Engine();
    asIScriptModule *module = AeonScriptManager::Module();
-   static const asITypeInfo *mobjtypeinfo = GetClassTypeInfo("Mobj");
+   static const asITypeInfo *mobjtypeinfo = E_getClassTypeInfo("Mobj");
    //static const asITypeInfo *playertypeinfo = GetClassTypeInfo("Player");
    const char *name = cfg_title(actionsec);
    const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);

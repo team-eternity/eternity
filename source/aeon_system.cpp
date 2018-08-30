@@ -33,12 +33,26 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_utils.h"
+#include "sounds.h"
 #include "w_wad.h"
 
 asIScriptEngine  *AeonScriptManager::engine = nullptr;
 asIScriptContext *AeonScriptManager::ctx    = nullptr;
 asIScriptModule  *AeonScriptManager::module = nullptr;
 int               AeonScriptManager::state  = asEXECUTION_UNINITIALIZED;
+
+void AeonScriptManager::RegisterPrimitivePrintFuncs()
+{
+   engine->RegisterGlobalFunction("void print(int)",
+                                  WRAP_FN_PR(ASPrint, (int), void),
+                                  asCALL_GENERIC);
+   engine->RegisterGlobalFunction("void print(uint)",
+                                  WRAP_FN_PR(ASPrint, (unsigned int), void),
+                                  asCALL_GENERIC);
+   engine->RegisterGlobalFunction("void print(float)",
+                                  WRAP_FN_PR(ASPrint, (float), void),
+                                  asCALL_GENERIC);
+}
 
 void AeonScriptManager::RegisterTypedefs()
 {
@@ -55,17 +69,11 @@ void AeonScriptManager::RegisterTypedefs()
    engine->RegisterTypedef("uint64_t", "uint64");
 }
 
-void AeonScriptManager::RegisterPrimitivePrintFuncs()
+void AeonScriptManager::RegisterHandleOnlyClasses()
 {
-   engine->RegisterGlobalFunction("void print(int)",
-                                  WRAP_FN_PR(ASPrint, (int), void),
-                                  asCALL_GENERIC);
-   engine->RegisterGlobalFunction("void print(uint)",
-                                  WRAP_FN_PR(ASPrint, (unsigned int), void),
-                                  asCALL_GENERIC);
-   engine->RegisterGlobalFunction("void print(float)",
-                                  WRAP_FN_PR(ASPrint, (float), void),
-                                  asCALL_GENERIC);
+   engine->SetDefaultNamespace("EE");
+   engine->RegisterObjectType("Sound", sizeof(sfxinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
+   engine->SetDefaultNamespace("");
 }
 
 void AeonScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)
@@ -95,8 +103,9 @@ void AeonScriptManager::Init()
    engine->SetEngineProperty(asEP_SCRIPT_SCANNER,         0); // ASCII
    engine->SetEngineProperty(asEP_USE_CHARACTER_LITERALS, 1); // allow 'c' to be a char
 
-   RegisterTypedefs();
    RegisterPrimitivePrintFuncs();
+   RegisterTypedefs();
+   RegisterHandleOnlyClasses();
    RegisterScriptArray(engine, true);
 
    AeonScriptObjString::Init();

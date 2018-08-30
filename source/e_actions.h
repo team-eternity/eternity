@@ -45,6 +45,7 @@ enum actionargtype_e : int
    AAT_INTEGER =  0,
    AAT_FIXED,
    AAT_STRING,
+   AAT_SOUND,
 };
 
 // AngelScript (Aeon) action

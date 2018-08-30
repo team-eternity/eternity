@@ -29,6 +29,7 @@
 #include "d_dehtbl.h"
 #include "m_qstr.h"
 #include "p_mobj.h"
+#include "s_sound.h"
 
 #include "p_map.h"
 
@@ -65,7 +66,7 @@ static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
    // TODO: else C_Printf warning?
 }
 
-AeonFixed AeonFloatBobOffsets(int in)
+AeonFixed AeonFloatBobOffsets(unsigned int in)
 {
    static constexpr int NUMFLOATBOBOFFSETS = earrlen(FloatBobOffsets);
    if(in < 0 || in > NUMFLOATBOBOFFSETS)
@@ -73,20 +74,24 @@ AeonFixed AeonFloatBobOffsets(int in)
    return FloatBobOffsets[in];
 }
 
+static void MobjStartSound(const PointThinker *origin, sfxinfo_t *sfxinfo)
+{
+   if(sfxinfo)
+      S_StartSound(origin, sfxinfo->dehackednum);
+}
+
 static aeonfuncreg_t mobjFuncs[]
 {
-   { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth) },
-
-   // TODO: Test if WRAP_OBJ_FIRST works. If so use that instead
-   { "bool tryMove(fixed_t x, fixed_t y, int dropoff)", // WRAP_OBJ_FIRST(P_TryMove) },
-      WRAP_OBJ_FIRST_PR(P_TryMove, (Mobj *, fixed_t, fixed_t, int), bool) },
+   { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth)          },
+   { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
+   { "void startSound(EE::Sound @sound)",                   WRAP_OBJ_FIRST(MobjStartSound) },
 
    // Indexed property accessors (enables [] syntax for counters)
-   { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)},
-   { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)},
+   { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)  },
+   { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)  },
 
    // Statics
-   "fixed_t FloatBobOffsets(int index)", WRAP_FN(AeonFloatBobOffsets)
+   "fixed_t FloatBobOffsets(uint index)", WRAP_FN(AeonFloatBobOffsets)
 };
 
 #define DECLAREMOBJFLAGS(x) \
@@ -115,15 +120,16 @@ void AeonScriptObjMobj::Init()
    for(const aeonfuncreg_t &fn : mobjFuncs)
       e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-   e->RegisterObjectProperty("Mobj", "fixed_t x", asOFFSET(Mobj, x));
-   e->RegisterObjectProperty("Mobj", "fixed_t y", asOFFSET(Mobj, y));
-   e->RegisterObjectProperty("Mobj", "fixed_t z", asOFFSET(Mobj, z));
-   e->RegisterObjectProperty("Mobj", "angle_t angle", asOFFSET(Mobj, angle));
+   e->RegisterObjectProperty("Mobj", "fixed_t x",      asOFFSET(Mobj, x));
+   e->RegisterObjectProperty("Mobj", "fixed_t y",      asOFFSET(Mobj, y));
+   e->RegisterObjectProperty("Mobj", "fixed_t z",      asOFFSET(Mobj, z));
+   e->RegisterObjectProperty("Mobj", "angle_t angle",  asOFFSET(Mobj, angle));
 
    e->RegisterObjectProperty("Mobj", "fixed_t radius", asOFFSET(Mobj, radius));
    e->RegisterObjectProperty("Mobj", "fixed_t height", asOFFSET(Mobj, height));
+   e->RegisterObjectProperty("Mobj", "eVector mom",    asOFFSET(Mobj, mom));
 
-   e->RegisterObjectProperty("Mobj", "eVector mom", asOFFSET(Mobj, mom));
+   e->RegisterObjectProperty("Mobj", "int health",     asOFFSET(Mobj, health));
 
    DECLAREMOBJFLAGS();
    DECLAREMOBJFLAGS(2);
