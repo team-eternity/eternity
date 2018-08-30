@@ -406,8 +406,12 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
       if (sg.partner && sg.partner->owner)
       {
           if (ssidx == (int)(sg.partner->owner - &botMap->ssectors[0]))
-              B_Log("%g %g %g %g", M_FixedToDouble(sg.v[0]->x), M_FixedToDouble(sg.v[0]->y),
-                    M_FixedToDouble(sg.v[1]->x), M_FixedToDouble(sg.v[1]->y));
+          {
+             B_Log("WARNING: same-subsector neigh at seg %g %g %g %g",
+                   M_FixedToDouble(sg.v[0]->x), M_FixedToDouble(sg.v[0]->y),
+                   M_FixedToDouble(sg.v[1]->x), M_FixedToDouble(sg.v[1]->y));
+             goto dorest;
+          }
           BNeigh n;
           n.dist = 0; // to be updated later
           n.otherss = sg.partner->owner;
@@ -430,6 +434,7 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
 
           neighRefs.add(&sg.partner->owner->neighs.back());
       }
+   dorest:
       // set the metasector if not set already
       if (!ss.msector && sg.ln)
          ss.msector = sg.ln->msec[sg.isback];
