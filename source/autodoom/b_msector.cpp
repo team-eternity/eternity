@@ -102,6 +102,15 @@ bool SimpleMSector::convertIndicesToPointers()
    return B_ConvertPtrToArrayItem(sector, ::sectors, ::numsectors);
 }
 
+//
+// String representation
+//
+qstring SimpleMSector::toString() const
+{
+   qstring result("SimpleMSector(");
+   result << (sector ? eindex(sector - ::sectors) : -1) << ")";
+   return result;
+}
 
 //
 // LineMSector::writeToFile
@@ -129,6 +138,18 @@ bool LineMSector::convertIndicesToPointers()
 }
 
 //
+// String representation
+//
+qstring LineMSector::toString() const
+{
+   qstring result("LineMSector(line=");
+   result << (line ? eindex(line - ::lines) : -1) << " sectors=(";
+   result << (sector[0] ? eindex(sector[0] - ::sectors) : -1) << ", " <<
+   (sector[1] ? eindex(sector[1] - ::sectors) : -1) << "))";
+   return result;
+}
+
+//
 // ThingMSector::writeToFile
 //
 void ThingMSector::writeToFile(OutBuffer& file) const
@@ -148,6 +169,22 @@ bool ThingMSector::convertIndicesToPointers()
 {
    return B_ConvertPtrToArrayItem(sector, ::sectors, ::numsectors)
    && B_ConvertPtrToCollItem(mobj, p_indexMobjMap, ::numthings);
+}
+//
+// String representation
+//
+qstring ThingMSector::toString() const
+{
+   qstring result("ThingMSector(sector=");
+   result << (sector ? eindex(sector - ::sectors) : -1) <<", mobj=";
+   if(mobj)
+   {
+      result << "(name=" << mobj->info->name << " x=" <<
+      M_FixedToDouble(mobj->x) << " y=" << M_FixedToDouble(mobj->y) << "))";
+   }
+   else
+      result << "(null))";
+   return result;
 }
 
 //
@@ -279,6 +316,28 @@ const sector_t *CompoundMSector::getCeilingSector() const
       }
    }
    return smin;
+}
+
+//
+// String representation
+//
+qstring CompoundMSector::toString() const
+{
+   qstring result("CompoundMSector(");
+   if(!msectors)
+   {
+      result << "null)";
+      return result;
+   }
+   for(int i = 0; i < numElem; ++i)
+   {
+      if(!msectors[i])
+         result << "(null) ";
+      else
+         result << msectors[i]->toString() << " ";
+   }
+   result << ")";
+   return result;
 }
 
 // EOF

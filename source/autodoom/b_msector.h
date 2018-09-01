@@ -33,6 +33,7 @@
 #include "../e_rtti.h"
 #include "../m_dllist.h"
 #include "../m_fixed.h"
+#include "../m_qstr.h"
 #include "../p_map3d.h"
 #include "../r_defs.h"
 
@@ -61,6 +62,8 @@ public:
 
    virtual void writeToFile(OutBuffer& file) const = 0;
    virtual bool convertIndicesToPointers() = 0;
+
+   virtual qstring toString() const = 0;
 
    static MetaSector* readFromFile(InBuffer& file);
 };
@@ -102,6 +105,8 @@ public:
 
    virtual void writeToFile(OutBuffer& file) const override;
    virtual bool convertIndicesToPointers() override;
+
+   virtual qstring toString() const override;
 
    static SimpleMSector* readFromFile(InBuffer& file);
 };
@@ -150,6 +155,8 @@ public:
    virtual void writeToFile(OutBuffer& file) const override;
    virtual bool convertIndicesToPointers() override;
 
+   virtual qstring toString() const override;
+
    static ThingMSector* readFromFile(InBuffer& file);
 };
 
@@ -197,6 +204,8 @@ public:
    virtual void writeToFile(OutBuffer& file) const override;
    virtual bool convertIndicesToPointers() override;
 
+   virtual qstring toString() const override;
+
    static LineMSector* readFromFile(InBuffer& file);
 };
 
@@ -231,6 +240,8 @@ public:
 
    virtual void writeToFile(OutBuffer& file) const override;
    virtual bool convertIndicesToPointers() override;
+
+   virtual qstring toString() const override;
 
    static CompoundMSector* readFromFile(InBuffer& file);
 };
