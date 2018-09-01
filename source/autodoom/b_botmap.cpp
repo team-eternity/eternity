@@ -34,6 +34,7 @@
 #include "b_botmaptemp.h"
 #include "b_compression.h"
 #include "b_glbsp.h"
+#include "b_msector.h"
 #include "../c_io.h"
 #include "../d_files.h"
 #include "../doomstat.h"
@@ -60,6 +61,20 @@ const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
 static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP08";
+
+//
+// String representation
+//
+qstring BotMap::Line::toString() const
+{
+   qstring result("BotMapLine(v=(");
+   result << M_FixedToDouble(v[0]->x) << " " << M_FixedToDouble(v[0]->y) << " ";
+   result << M_FixedToDouble(v[1]->x) << " " << M_FixedToDouble(v[1]->y) << ")";
+   result << " specline=" << (specline ? eindex(specline - ::lines) : -1);
+   result << " msec=(" << (msec[0] ? msec[0]->toString().constPtr() : "null");
+   result << " " << (msec[1] ? msec[1]->toString().constPtr() : "null") << ")";
+   return result;
+}
 
 //
 // BotMap::getTouchedBlocks

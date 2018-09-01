@@ -84,6 +84,8 @@ public:
       const Vertex *v[2];  // stard, end
       const MetaSector *msec[2]; // right left
       const line_t* specline;
+
+      qstring toString() const;
    } *lines;
    int numlines;
    
