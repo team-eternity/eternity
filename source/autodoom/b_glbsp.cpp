@@ -83,10 +83,12 @@ inline static void gbSetBarText(int barnum, const char *str)
 }
 inline static void gbSetBarLimit(int barnum, int limit)
 {
+   V_SetLoading(limit, "Bot nodes");
    barLimit[barnum] = limit;
 }
 inline static void gbSetBar(int barnum, int count)
 {
+   V_LoadingUpdateTicked(count);
    if (count == barLimit[barnum])
       C_Puts("Done.");
 }

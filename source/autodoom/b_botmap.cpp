@@ -649,6 +649,13 @@ void BotMap::cacheToFile(const char* path) const
     }
 
     // now we write it
+   int total = static_cast<int>(numverts + metasectors.getLength() * 2 +
+                                numlines + segs.getLength() +
+                                ssectors.getLength() + numnodes +
+                                segBlocks.getLength() + lineBlocks.getLength());
+   int progress = 0;
+
+   V_SetLoading(total, "Saving...");
     
     try
     {
@@ -660,6 +667,7 @@ void BotMap::cacheToFile(const char* path) const
         int i;
         for (i = 0; i < numverts; ++i)
         {
+           V_LoadingUpdateTicked(++progress);
             file.writeSint32(vertices[i].x);
             file.writeSint32(vertices[i].y);
         }
@@ -669,6 +677,7 @@ void BotMap::cacheToFile(const char* path) const
         i = 0;
         for (const auto item : metasectors)
         {
+           V_LoadingUpdateTicked(++progress);
             msecIndexMap[item] = i++;
         }
 
@@ -678,6 +687,7 @@ void BotMap::cacheToFile(const char* path) const
        i = 0;
         for (const auto msec : metasectors)
         {
+           V_LoadingUpdateTicked(++progress);
             msec->writeToFile(file);
            if(msec == nullMSec)
               nullMSecIndex = i;
@@ -689,6 +699,7 @@ void BotMap::cacheToFile(const char* path) const
         file.writeSint32(numlines);
         for (i = 0; i < numlines; ++i)
         {
+           V_LoadingUpdateTicked(++progress);
             file.writeSint32(lines[i].v[0] ? (int32_t)(lines[i].v[0] - vertices) : -1);
             file.writeSint32(lines[i].v[1] ? (int32_t)(lines[i].v[1] - vertices) : -1);
             file.writeSint32(lines[i].msec[0] ? msecIndexMap[lines[i].msec[0]] : -1);
@@ -705,6 +716,7 @@ void BotMap::cacheToFile(const char* path) const
         file.writeUint32((uint32_t)segs.getLength());
         for (const auto& seg : segs)
         {
+           V_LoadingUpdateTicked(++progress);
             file.writeSint32(seg.v[0] ? (int32_t)(seg.v[0] - vertices) : -1);
             file.writeSint32(seg.v[1] ? (int32_t)(seg.v[1] - vertices) : -1);
             file.writeSint32(seg.dx);
@@ -730,6 +742,7 @@ void BotMap::cacheToFile(const char* path) const
         file.writeUint32((uint32_t)ssectors.getLength());
         for (const auto& ssector : ssectors)
         {
+           V_LoadingUpdateTicked(++progress);
             file.writeSint32(ssector.segs ? (int32_t)(ssector.segs - &segs[0]) : -1);
             file.writeSint32(ssector.msector ? msecIndexMap[ssector.msector] : -1);
             file.writeSint32(ssector.nsegs);
@@ -755,6 +768,7 @@ void BotMap::cacheToFile(const char* path) const
         file.writeSint32(numnodes);
         for (i = 0; i < numnodes; ++i)
         {
+           V_LoadingUpdateTicked(++progress);
             file.writeSint32(nodes[i].x);
             file.writeSint32(nodes[i].y);
             file.writeSint32(nodes[i].dx);
@@ -766,6 +780,7 @@ void BotMap::cacheToFile(const char* path) const
         file.writeUint32((uint32_t)segBlocks.getLength());
         for (const auto& coll : segBlocks)
         {
+           V_LoadingUpdateTicked(++progress);
             file.writeUint32((uint32_t)coll.getLength());
             for (const auto pseg : coll)
             {
@@ -777,6 +792,7 @@ void BotMap::cacheToFile(const char* path) const
        file.writeUint32((uint32_t)lineBlocks.getLength());
        for(const auto &coll : lineBlocks)
        {
+          V_LoadingUpdateTicked(++progress);
           file.writeUint32((uint32_t)coll.getLength());
           for(const auto pline : coll)
           {

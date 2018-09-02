@@ -114,6 +114,9 @@ void V_SetLoading(int total, const char *mess);
 void V_LoadingIncrease();
 void V_LoadingSetTo(int amount);
 
+// High-level calls
+void V_LoadingUpdateTicked(int amount);
+
 //=============================================================================
 //
 // FPS ticker

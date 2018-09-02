@@ -96,6 +96,7 @@ private:
    DLList<Vertex, &Vertex::listLink> vertexList;
    DLList<Vertex, &Vertex::blockLink> *vertexBMap;
    DLList<Line, &Line::listLink> lineList;
+   int lineListSize;
    Collection<LinePtrSet > lineBMap;
    DLList<MetaSector, &MetaSector::listLink> msecList;
    

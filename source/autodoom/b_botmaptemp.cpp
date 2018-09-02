@@ -40,6 +40,7 @@
 #include "../p_spec.h"
 #include "../r_main.h"
 #include "../r_state.h"
+#include "../v_misc.h"
 
 TempBotMap *tempBotMap;
 
@@ -384,8 +385,13 @@ void TempBotMapPImpl::getBSPLines()
 void TempBotMapPImpl::getLineMSectors()
 {
    const ev_action_t* action;
+
+   V_SetLoading(numlines, "Map lines");
+
    for (int u = 0; u < numlines; ++u)
    {
+      V_LoadingUpdateTicked(u + 1);
+
       const line_t &line = ::lines[u];
       const fixed_t x[2] = {line.v1->x, line.v2->x},
       y[2] = {line.v1->y, line.v2->y};
@@ -537,8 +543,10 @@ void TempBotMapPImpl::getThingMSectors()
 //
 void TempBotMapPImpl::placeBSPLines()
 {
+   V_SetLoading((int)rawBSPLines.getLength(), "Map BSP");
    for (int i = 0; i < (int)rawBSPLines.getLength(); ++i)
    {
+      V_LoadingUpdateTicked(i + 1);
       const RawLine &rl = rawBSPLines[i];
       TempBotMap::Vertex &v1 = o->placeVertex(rl.v[0].x, rl.v[0].y);
       TempBotMap::Vertex &v2 = o->placeVertex(rl.v[1].x, rl.v[1].y);
@@ -557,8 +565,11 @@ void TempBotMapPImpl::placeMSecLines()
 
    IntOSet simpleSet;
    TempBotMap::Vertex *v = NULL, *oldv = NULL, *firstv = NULL;
+
+   V_SetLoading(numms, "Bot lines");
    for(int i = 0; i < numms; ++i)
    {
+      V_LoadingUpdateTicked(i + 1);
       v = oldv = firstv = NULL;
       simpleSet.clear();
       simpleSet.insert(i);
@@ -587,8 +598,10 @@ void TempBotMapPImpl::fillMSecRefs()
    IntOSet blockSet;
    PODCollection<TempBotMap::Line *> deletedColl;
 
+   V_SetLoading((int)rawMSectors.getLength(), "Fill refs");
    for (int i = 0; i < (int)rawMSectors.getLength(); ++i)
    {
+      V_LoadingUpdateTicked(i + 1);
       visitedSet.clear();
       blockSet.clear();
 
@@ -685,6 +698,7 @@ void TempBotMap::deleteLine(Line *ln, IntOSet *targfront, IntOSet *targback)
    --ln->v1->degree;
    --ln->v2->degree;
    lineList.remove(ln);
+   --lineListSize;
    if(targfront)
       *targfront = std::move(ln->msecIndices[0]);
    if(targback)
@@ -903,6 +917,7 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2, const line_t* as
    lpf.flipped = false;
 
    lineList.insert(ln);
+   lineListSize++;
    
    return *ln;
 }
@@ -1281,8 +1296,10 @@ void TempBotMap::obtainMetaSectors()
    
    // WARNING: each iteration must add an item to 'coll'.
    coll.reserve(pimpl->rawMSectors.getLength());
+   V_SetLoading((int)pimpl->rawMSectors.getLength(), "MSEC RAW");
    for (auto it = pimpl->rawMSectors.begin(); it != pimpl->rawMSectors.end(); ++it)
    {
+      V_LoadingUpdateTicked(eindex(it - pimpl->rawMSectors.begin()) + 1);
       const TempBotMapPImpl::RawMSector &rms = *it;
       if (rms.isFromMobj)
       {
@@ -1385,8 +1402,11 @@ void TempBotMap::obtainMetaSectors()
    
    // Now visit each line and setup its metasector reference
 
+   int lineListIndex = 1;
+   V_SetLoading(lineListSize, "MSEC LINES");
    for (item = lineList.head; item; item = item->dllNext)
    {
+      V_LoadingUpdateTicked(lineListIndex++);
       Line &ln = *item->dllObject;
       for (i = 0; i < 2; ++i)
       {
@@ -1571,7 +1591,8 @@ void TempBotMap::clearUnusedVertices()
 //
 // Constructor
 //
-TempBotMap::TempBotMap() : generated(false), radius(0), vertexBMap(NULL)
+TempBotMap::TempBotMap() : generated(false), radius(0), vertexBMap(NULL),
+lineListSize()
 {
    vertexList.head = nullptr;
    lineList.head = nullptr;

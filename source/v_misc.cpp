@@ -229,6 +229,20 @@ void V_LoadingSetTo(int amount)
       V_DrawLoading();
 }
 
+//
+// Like V_LoadingSetTo, but with a timer to prevent overly frequent updates
+//
+void V_LoadingUpdateTicked(int amount)
+{
+   static unsigned lasttime;
+   unsigned now = i_haltimer.GetTicks();
+   if(now - lasttime > 100)
+   {
+      lasttime = now;
+      V_LoadingSetTo(amount);
+   }
+}
+
 //=============================================================================
 //
 // Framerate Ticker
