@@ -240,6 +240,7 @@ void V_LoadingUpdateTicked(int amount)
    {
       lasttime = now;
       V_LoadingSetTo(amount);
+      I_StartTic();
    }
 }
 
