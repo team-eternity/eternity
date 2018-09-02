@@ -1044,6 +1044,8 @@ static void FindDynamicSectors(bool* dynamicSectors)
    
    int i, j;
    
+   std::unordered_set<const sector_t *> stairSectors;
+
    for(i = 0; i < ::numlines; ++i)
    {
       const line_t &line = lines[i];
@@ -1082,6 +1084,8 @@ static void FindDynamicSectors(bool* dynamicSectors)
          else if(B_LineTriggersStairs(line))
          {
             sector = ::sectors + secnum;
+            stairSectors.clear();
+            stairSectors.insert(sector);
             do
             {
                continueStair = false;
@@ -1095,11 +1099,12 @@ static void FindDynamicSectors(bool* dynamicSectors)
                   }
                   sector2 = sector->lines[j]->backsector;
                   if(!sector2 || sector2->floorpic != sector->floorpic ||
-                     sector2 == sector)
+                     sector2 == sector || stairSectors.count(sector2))
                   {
                      continue;
                   }
                   
+                  stairSectors.insert(sector2);
                   dynamicSectors[sector2 - ::sectors] = true;
                   sector = sector2;
                   continueStair = true;
