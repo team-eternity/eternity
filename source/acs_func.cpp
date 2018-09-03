@@ -248,6 +248,116 @@ bool ACS_CF_ChangeFloor(ACS_CF_ARGS)
    return false;
 }
 
+enum
+{
+   CPXF_ANCESTOR    = 0x00000001, // unimplemented
+   CPXF_LESSOREQUAL = 0x00000002,
+   CPXF_NOZ         = 0x00000004,
+   CPXF_COUNTDEAD   = 0x00000008,
+   CPXF_DEADONLY    = 0x00000010,
+   CPXF_EXACT       = 0x00000020,
+   CPXF_SETTARGET   = 0x00000040,
+   CPXF_SETMASTER   = 0x00000080, // unimplemented
+   CPXF_SETTRACER   = 0x00000100,
+   CPXF_FARTHEST    = 0x00000200,
+   CPXF_CLOSEST     = 0x00000400,
+   CPXF_SETONPTR    = 0x00000800, // unimplemented
+   CPXF_CHECKSIGHT  = 0x00001000,
+};
+
+//
+// ACS_CF_CheckProximity
+//
+// int CheckProximity(int tid, str classname, fixed distance, int limit, int flags)
+//
+bool ACS_CF_CheckProximity(ACS_CF_ARGS)
+{
+   auto       info  = &static_cast<ACSThread *>(thread)->info;
+   Mobj      *orig  = P_FindMobjFromTID(argV[0], nullptr, info->mo);
+   mobjtype_t type  = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
+   fixed_t    dist  = argV[2];
+   uint32_t   limit = argC > 3 ? argV[3] : 1;
+   uint32_t   flags = argC > 4 ? argV[4] : 0;
+
+   uint32_t res;
+   Mobj    *resMo = nullptr;
+   fixed_t  resDist;
+
+   uint32_t count = 0;
+
+   for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
+   {
+      // Check type.
+      if(type && mo->type != type)
+         continue;
+
+      // Check health.
+      if(mo->health > 0)
+      {
+         if(flags & CPXF_DEADONLY)
+            continue;
+      }
+      else
+      {
+         if(!(flags & CPXF_COUNTDEAD))
+            continue;
+      }
+
+      // Check distance.
+      auto    moLink = P_GetLinkOffset(orig->groupid, mo->groupid);
+      fixed_t moDist = P_AproxDistance(orig->x - mo->x + moLink->x, orig->y - mo->y + moLink->y);
+      if(!(flags & CPXF_NOZ))
+         moDist = P_AproxDistance(moDist, orig->z - mo->z + moLink->z);
+
+      if(moDist > dist)
+         continue;
+
+      // Check sight.
+      if((flags & CPXF_CHECKSIGHT) && !P_CheckSight(orig, mo))
+         continue;
+
+      ++count;
+
+      if(!resMo ||
+         ((flags & CPXF_FARTHEST) && moDist > resDist) ||
+         ((flags & CPXF_CLOSEST)  && moDist < resDist))
+      {
+         resDist = moDist;
+         resMo   = mo;
+      }
+
+      // Possibly short-circuit?
+      if(!(flags & (CPXF_FARTHEST | CPXF_CLOSEST)))
+      {
+         if(flags & (CPXF_LESSOREQUAL | CPXF_EXACT))
+         {
+            if(count > limit)
+               break;
+         }
+         else if(count >= limit)
+            break;
+      }
+   }
+
+   if(resMo)
+   {
+      if(flags & CPXF_SETTARGET)
+         P_SetTarget(&orig->target, resMo);
+      if(flags & CPXF_SETTRACER)
+         P_SetTarget(&orig->tracer, resMo);
+   }
+
+   if(flags & CPXF_LESSOREQUAL)
+      res = count <= limit;
+   else if(flags & CPXF_EXACT)
+      res = count == limit;
+   else
+      res = count >= limit;
+
+   thread->dataStk.push(res);
+   return false;
+}
+
 //
 // ACS_CF_CheckSight
 //

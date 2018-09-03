@@ -332,6 +332,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS);
 bool ACS_CF_ATan2(ACS_CF_ARGS);
 bool ACS_CF_ChangeCeil(ACS_CF_ARGS);
 bool ACS_CF_ChangeFloor(ACS_CF_ARGS);
+bool ACS_CF_CheckProximity(ACS_CF_ARGS);
 bool ACS_CF_CheckSight(ACS_CF_ARGS);
 bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS);
 bool ACS_CF_ChkThingFlag(ACS_CF_ARGS);
