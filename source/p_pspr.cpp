@@ -1156,14 +1156,12 @@ void A_Light2(actionargs_t *actionargs)
 //
 void P_SetupPsprites(player_t *player)
 {
-   int i;
-
    // remove all psprites
    for(pspdef_t &psprite : player->psprites)
       psprite.state = nullptr;
 
    // spawn the gun
-   player->pendingweapon = player->readyweapon;
+   player->pendingweapon     = player->readyweapon;
    player->pendingweaponslot = player->readyweaponslot;
    P_BringUpWeapon(player);
 }
@@ -1271,7 +1269,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    dmgmod     = E_ArgAsInt(args, 4, 0);
    
    flashint   = E_ArgAsInt(args, 5, 0);
-   flashstate = E_ArgAsStateNum(args, 5, nullptr, player);
+   flashstate = E_ArgAsStateNum(args, 5, player);
 
    horizontal = E_ArgAsInt(args, 6, 0);
    vertical   = E_ArgAsInt(args, 7, 0);
@@ -1573,7 +1571,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
 
    cptrnum   =   E_ArgAsBexptr(args, 0);
    face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(args, 2, nullptr, player);
+   statenum  =   E_ArgAsStateNumG0(args, 2, player);
    settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
    useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
 
