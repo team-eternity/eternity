@@ -76,7 +76,7 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
    Mobj *actor = actionargs->actor;
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor, nullptr)) < 0)
+   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor)) < 0)
       return;
 
    if(!actor->player)
@@ -167,7 +167,7 @@ void A_Jump(actionargs_t *actionargs)
    // if the state is found, jump to it.
    if(at == actionargs_t::MOBJFRAME && (state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
-   else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabelWpn(player, al, choice)))
+   else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabel(player, al, choice)))
       P_SetPspritePtr(player, actionargs->pspr, state->index);
 
 }
@@ -183,7 +183,7 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
    if(actionargs->pspr)
    {
       player_t *p     = actionargs->actor->player;
-      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, nullptr, p);
+      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, p);
       weaponinfo_t *w = p->readyweapon;
       int ammo;
 
@@ -229,7 +229,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, nullptr, player)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, player)) < 0)
          return;
 
       P_SetPspritePtr(player, pspr, statenum);
@@ -285,7 +285,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, actor, nullptr)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, actor)) < 0)
          return;
       
       P_SetMobjState(actor, statenum);
