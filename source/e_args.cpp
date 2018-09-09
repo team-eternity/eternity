@@ -344,7 +344,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 // the ordinary plain state named by the input string. Otherwise, both the mobjinfo
 // and statename may be redirected.
 //
-state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
+state_t *E_GetJumpInfo(const mobjinfo_t *mi, const char *arg)
 {
    char *temparg = Z_Strdupa(arg);
    char *colon   = strchr(temparg, ':');

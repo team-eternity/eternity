@@ -126,7 +126,7 @@ emod_t       *E_ArgAsDamageType(arglist_t *al, int index, int defvalue);
 int           E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw,
                          int defvalue);
 
-state_t      *E_GetJumpInfo(mobjinfo_t *mi, const char *arg);
+state_t      *E_GetJumpInfo(const mobjinfo_t *mi, const char *arg);
 state_t      *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg);
 
 #endif

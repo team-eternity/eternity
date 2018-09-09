@@ -678,8 +678,8 @@ static void P_RavenRespawn(Mobj *special)
       willrespawn = false;
 
    // get states
-   state_t *respawn = E_GetStateForMobjInfo(special->info, "Pickup.Respawn");
-   state_t *remove  = E_GetStateForMobjInfo(special->info, "Pickup.Remove");
+   const state_t *respawn = E_GetStateForMobjInfo(special->info, "Pickup.Respawn");
+   const state_t *remove  = E_GetStateForMobjInfo(special->info, "Pickup.Remove");
 
    // Want to respawn, and can respawn?
    if(willrespawn && respawn)
