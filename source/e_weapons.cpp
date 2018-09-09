@@ -436,7 +436,7 @@ weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weap
 //
 weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
 {
-   for(const weaponslot_t *const &slot : player->pclass->weaponslots)
+   for(const weaponslot_t *slot : player->pclass->weaponslots)
    {
       weaponslot_t *ret;
       if((ret = E_findEntryForWeaponInSlot(player, wp, slot)) != nullptr)
