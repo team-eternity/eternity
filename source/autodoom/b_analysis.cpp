@@ -37,6 +37,7 @@
 #include "../e_args.h"
 //#include "../e_hash.h"
 #include "../e_inventory.h"
+#include "../e_player.h"
 #include "../e_states.h"
 #include "../e_things.h"
 #include "../e_weapons.h"
@@ -968,7 +969,8 @@ bool B_MobjIsSummoner(const Mobj &mo)
 // Weapon analysis
 //
 
-BotWeaponInfo g_botweapons[NUMWEAPONS];
+std::unordered_map<const playerclass_t *, std::unordered_map<const weaponinfo_t *, BotWeaponInfo>>
+g_botweapons;
 
 static void B_weaponGetBranchingStateSeq(statenum_t sn,
                                          StateQue &alterQueue,
@@ -1240,7 +1242,7 @@ static bool B_analyzeProjectile(statenum_t sn, const mobjinfo_t &mi, void *ctx)
 //
 // Analyzes one weapon, if not set already
 //
-void B_AnalyzeWeapons()
+void B_AnalyzeWeapons(const playerclass_t *pclass)
 {
    // Some assumptions are made for now:
    // - all UP, DOWN and idle states are using standard codepointers
@@ -1248,51 +1250,68 @@ void B_AnalyzeWeapons()
    //   walker from the shooting state)
    // - any damage done after ReFire is ignored
 
+   if(!pclass || !pclass->hasslots || g_botweapons.find(pclass) != g_botweapons.end())
+      return;
+
+   std::unordered_map<const weaponinfo_t *, BotWeaponInfo> &map = g_botweapons[pclass];
+
+   // First collect all weapons
+   for(const weaponslot_t *slot : pclass->weaponslots)
+   {
+      if(!slot)
+         continue;
+      for(const BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
+          !weaponslot->isDummy(); weaponslot = weaponslot->bdNext)
+      {
+         const weaponinfo_t *wi = weaponslot->bdObject->weapon;
+         map[wi] = BotWeaponInfo();
+      }
+   }
+
    struct State
    {
-      int i;   // current weapon index
       bool reachedFire;
       bool reachedRefire;
       int burstTics;
+      BotWeaponInfo *bwi;
    } state;
 
-   for(int i = 0; i < NUMWEAPONS; ++i)
+   // Now setup the information
+   for(auto it = map.begin(); it != map.end(); ++it)
    {
-      const weaponinfo_t *pwi = E_WeaponForDEHNum(i);
-      if(!pwi)
-         return;
+      const weaponinfo_t &wi = *it->first;
+      BotWeaponInfo &bwi = it->second;
+      bwi = BotWeaponInfo();
 
-      const weaponinfo_t &wi = *pwi;
-      memset(g_botweapons + i, 0, sizeof(*g_botweapons));
       memset(&state, 0, sizeof(state));
-      state.i = i;
+      state.bwi = &bwi;
 
       B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
          State &state = *static_cast<State *>(ctx);
-         int i = state.i;
+         BotWeaponInfo &bwi = *state.bwi;
          const state_t &st = *states[sn];
 
          auto increaseBurst = [&state]() {
-            if(g_botweapons[state.i].burstRate < state.burstTics)
+            if(state.bwi->burstRate < state.burstTics)
             {
-               g_botweapons[state.i].burstRate = state.burstTics;
+               state.bwi->burstRate = state.burstTics;
                state.burstTics = 0;
             }
          };
 
          mobjtype_t projectile = -1, projectile2 = -1;
 
-         g_botweapons[i].oneShotRate += st.tics;
+         bwi.oneShotRate += st.tics;
 
          if(st.action == A_ReFire || st.action == A_CloseShotgun2)
          {
             state.reachedRefire = true;
-            state.burstTics += g_botweapons[i].timeToFire;
+            state.burstTics += bwi.timeToFire;
             increaseBurst();
          }
 
          if(!state.reachedRefire)
-            g_botweapons[i].refireRate += st.tics;
+            bwi.refireRate += st.tics;
          else
             return true;
 
@@ -1304,16 +1323,16 @@ void B_AnalyzeWeapons()
             state.reachedFire = true;
             increaseBurst();
 
-            g_botweapons[i].meleeDamage += 11;
-            g_botweapons[i].berserkDamage += 110;
+            bwi.meleeDamage += 11;
+            bwi.berserkDamage += 110;
          }
          else if(st.action == A_Saw)
          {
             state.reachedFire = true;
             increaseBurst();
 
-            g_botweapons[i].meleeDamage += 11;
-            g_botweapons[i].berserkDamage += 11;
+            bwi.meleeDamage += 11;
+            bwi.berserkDamage += 11;
          }
          else if(st.action == A_CustomPlayerMelee)
          {
@@ -1329,29 +1348,29 @@ void B_AnalyzeWeapons()
             int berserkmul = E_ArgAsInt(st.args, 2, 0);
 
             int damage = dmgfactor * (1 + dmgmod) / 2;
-            g_botweapons[i].meleeDamage += damage;
-            g_botweapons[i].berserkDamage += damage * berserkmul;
+            bwi.meleeDamage += damage;
+            bwi.berserkDamage += damage * berserkmul;
          }
          else if(st.action == A_FirePistol || st.action == A_FireCGun)
          {
             state.reachedFire = true;
             increaseBurst();
 
-            g_botweapons[i].firstDamage += 10;
+            bwi.firstDamage += 10;
          }
          else if(st.action == A_FireShotgun)
          {
             state.reachedFire = true;
             increaseBurst();
 
-            g_botweapons[i].neverDamage += 70;
+            bwi.neverDamage += 70;
          }
          else if(st.action == A_FireShotgun2)
          {
             state.reachedFire = true;
             increaseBurst();
 
-            g_botweapons[i].ssgDamage += 200;
+            bwi.ssgDamage += 200;
          }
          else if(st.action == A_FireCustomBullets)
          {
@@ -1373,19 +1392,19 @@ void B_AnalyzeWeapons()
             switch(accurate)
             {
                case 1:  // always
-                  g_botweapons[i].alwaysDamage += calcDamage;
+                  bwi.alwaysDamage += calcDamage;
                   break;
                case 2:  // first
-                  g_botweapons[i].firstDamage += calcDamage;
+                  bwi.firstDamage += calcDamage;
                   break;
                case 3:  // never
-                  g_botweapons[i].neverDamage += calcDamage;
+                  bwi.neverDamage += calcDamage;
                   break;
                case 4:  // ssg
-                  g_botweapons[i].ssgDamage += calcDamage;
+                  bwi.ssgDamage += calcDamage;
                   break;
                case 5:  // monster
-                  g_botweapons[i].monsterDamage += calcDamage;
+                  bwi.monsterDamage += calcDamage;
                   break;
             }
          }
@@ -1408,7 +1427,7 @@ void B_AnalyzeWeapons()
             else
             {
                bool seek = !!E_ArgAsKwd(st.args, 1, &seekkwds, 0);
-               g_botweapons[i].seeking = g_botweapons[i].seeking || seek;
+               bwi.seeking = bwi.seeking || seek;
             }
          }
 
@@ -1418,14 +1437,14 @@ void B_AnalyzeWeapons()
             increaseBurst();
 
             const mobjinfo_t *info = mobjinfo[projectile];
-            g_botweapons[i].projectileDamage += info->damage * 9 / 2;
-            if(info->speed > g_botweapons[i].projectileSpeed)
-               g_botweapons[i].projectileSpeed = info->speed;
-            if(info->radius > g_botweapons[i].projectileRadius)
-               g_botweapons[i].projectileRadius = info->radius;
+            bwi.projectileDamage += info->damage * 9 / 2;
+            if(info->speed > bwi.projectileSpeed)
+               bwi.projectileSpeed = info->speed;
+            if(info->radius > bwi.projectileRadius)
+               bwi.projectileRadius = info->radius;
 
             B_stateEncounters(info->deathstate, nullptr, info,
-                              B_analyzeProjectile, false, &g_botweapons[i]);
+                              B_analyzeProjectile, false, &bwi);
          }
          if(projectile2 >= 0 && projectile2 != UnknownThingType)
          {
@@ -1433,51 +1452,51 @@ void B_AnalyzeWeapons()
             increaseBurst();
 
             const mobjinfo_t *info = mobjinfo[projectile2];
-            g_botweapons[i].projectileDamage += info->damage * 9 / 2;
-            if(info->speed > g_botweapons[i].projectileSpeed)
-               g_botweapons[i].projectileSpeed = info->speed;
-            if(info->radius > g_botweapons[i].projectileRadius)
-               g_botweapons[i].projectileRadius = info->radius;
+            bwi.projectileDamage += info->damage * 9 / 2;
+            if(info->speed > bwi.projectileSpeed)
+               bwi.projectileSpeed = info->speed;
+            if(info->radius > bwi.projectileRadius)
+               bwi.projectileRadius = info->radius;
 
             B_stateEncounters(info->deathstate, nullptr, info,
-                              B_analyzeProjectile, false, &g_botweapons[i]);
+                              B_analyzeProjectile, false, &bwi);
          }
 
          if(!state.reachedFire)
-            g_botweapons[i].timeToFire += st.tics;
+            bwi.timeToFire += st.tics;
          state.burstTics += st.tics;
 
          return false;
       }, &state);
 
       // now set flags
-      if(g_botweapons[i].meleeDamage)
-         g_botweapons[i].flags |= BWI_MELEE;
-      if(g_botweapons[i].berserkDamage > g_botweapons[i].meleeDamage)
-         g_botweapons[i].flags |= BWI_BERSERK;
-      if(g_botweapons[i].alwaysDamage || g_botweapons[i].firstDamage ||
-         g_botweapons[i].neverDamage || g_botweapons[i].monsterDamage ||
-         g_botweapons[i].ssgDamage)
+      if(bwi.meleeDamage)
+         bwi.flags |= BWI_MELEE;
+      if(bwi.berserkDamage > bwi.meleeDamage)
+         bwi.flags |= BWI_BERSERK;
+      if(bwi.alwaysDamage || bwi.firstDamage ||
+         bwi.neverDamage || bwi.monsterDamage ||
+         bwi.ssgDamage)
       {
-         g_botweapons[i].flags |= BWI_HITSCAN;
-         if(g_botweapons[i].alwaysDamage)
-            g_botweapons[i].flags |= BWI_SNIPE;
-         if(g_botweapons[i].firstDamage)
-            g_botweapons[i].flags |= BWI_TAP_SNIPE;
+         bwi.flags |= BWI_HITSCAN;
+         if(bwi.alwaysDamage)
+            bwi.flags |= BWI_SNIPE;
+         if(bwi.firstDamage)
+            bwi.flags |= BWI_TAP_SNIPE;
       }
-      if(g_botweapons[i].projectileDamage || g_botweapons[i].explosionDamage ||
-         g_botweapons[i].bfgCount)
+      if(bwi.projectileDamage || bwi.explosionDamage ||
+         bwi.bfgCount)
       {
-         g_botweapons[i].flags |= BWI_MISSILE;
-         if(g_botweapons[i].unsafeExplosion)
-            g_botweapons[i].flags |= BWI_DANGEROUS;
-         if(g_botweapons[i].bfgCount)
-            g_botweapons[i].flags |= BWI_ULTIMATE;
+         bwi.flags |= BWI_MISSILE;
+         if(bwi.unsafeExplosion)
+            bwi.flags |= BWI_DANGEROUS;
+         if(bwi.bfgCount)
+            bwi.flags |= BWI_ULTIMATE;
       }
-      if(!(g_botweapons[i].flags & (BWI_HITSCAN | BWI_SNIPE | BWI_TAP_SNIPE |
+      if(!(bwi.flags & (BWI_HITSCAN | BWI_SNIPE | BWI_TAP_SNIPE |
                                     BWI_MISSILE | BWI_DANGEROUS | BWI_ULTIMATE)))
       {
-         g_botweapons[i].flags |= BWI_MELEE_ONLY;
+         bwi.flags |= BWI_MELEE_ONLY;
       }
    }
 }

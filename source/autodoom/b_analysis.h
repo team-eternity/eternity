@@ -29,6 +29,7 @@
 #ifndef B_ANALYSIS_H_
 #define B_ANALYSIS_H_
 
+#include <unordered_map>
 #include "../doomdef.h"
 #include "../m_collection.h"
 #include "../m_fixed.h"
@@ -36,8 +37,9 @@
 class Mobj;
 struct actionargs_t;
 struct mobjinfo_t;
-struct player_t;
+struct playerclass_t;
 struct state_t;
+struct weaponinfo_t;
 
 // external dependencies
 extern void A_BossDeath(actionargs_t *actionargs);
@@ -128,9 +130,10 @@ struct BotWeaponInfo
    int calcHitscanDamage(fixed_t dist, fixed_t radius, fixed_t height, bool berserk, bool first) const;  // calculates hitscan damage at given range
 };
 
-extern BotWeaponInfo g_botweapons[NUMWEAPONS];
+extern std::unordered_map<const playerclass_t *, std::unordered_map<const weaponinfo_t *, BotWeaponInfo>>
+g_botweapons;
 
-void B_AnalyzeWeapons();
+void B_AnalyzeWeapons(const playerclass_t *pclass);
 
 #endif 
 

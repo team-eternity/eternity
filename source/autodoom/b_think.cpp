@@ -981,59 +981,63 @@ void Bot::pickBestWeapon(const Target &target)
    if(target.isLine)
       return;
 
-   if(!pl->readyweapon || pl->readyweapon->dehnum < 0 ||
-      pl->readyweapon->dehnum >= earrlen(g_botweapons))
-   {
-      return;
-   }
-
    const Mobj &t = *target.mobj;
    fixed_t dist = target.dist;
 
-   const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon->dehnum];
+   const BotWeaponInfo &bwi = g_botweapons[pl->pclass][pl->readyweapon];
    double currentDmgRate =
    bwi.calcHitscanDamage(dist, t.radius, t.height,
                          !!pl->powers[pw_strength], false) /
    (double)bwi.refireRate;
    double maxDmgRate = currentDmgRate;
    double newDmgRate;
-   int maxI = -1;
+   const weaponinfo_t *maxWI = nullptr;
 
    // check weapons
-   for(int i = 0; i < NUMWEAPONS; ++i)
+   for(auto it = g_botweapons[pl->pclass].begin(); it != g_botweapons[pl->pclass].end(); ++it)
    {
-      const weaponinfo_t *winfo = E_WeaponForDEHNum(i);
+      const weaponinfo_t *winfo = it->first;
+      const BotWeaponInfo &obwi = it->second;
       if(!winfo)
          continue;
       if(!E_PlayerOwnsWeapon(pl, winfo) || pl->readyweapon == winfo ||
-         !E_GetItemOwnedAmount(pl, winfo->ammo) ||
-         g_botweapons[i].flags &
-         (BWI_DANGEROUS | BWI_ULTIMATE))
+         !E_GetItemOwnedAmount(pl, winfo->ammo) || obwi.flags & (BWI_DANGEROUS | BWI_ULTIMATE))
       {
          continue;
       }
-      newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius,
-                                                     t.height,
-                                                     !!pl->powers[pw_strength], false) / (double)g_botweapons[i].refireRate;
+      
+      newDmgRate = obwi.calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength],
+                                          false) / (double)obwi.refireRate;
+
       if(newDmgRate > WEAPONCHANGE_HYST_NUM * maxDmgRate / WEAPONCHANGE_HYST_DEN)
       {
          maxDmgRate = newDmgRate;
-         maxI = i;
+         maxWI = winfo;
       }
-      if(g_botweapons[i].flags & BWI_TAP_SNIPE)
+      if(obwi.flags & BWI_TAP_SNIPE)
       {
-         newDmgRate = g_botweapons[i].calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength], true) / (double)g_botweapons[i].oneShotRate;
+         newDmgRate = obwi.calcHitscanDamage(dist, t.radius, t.height, !!pl->powers[pw_strength],
+                                             true) / (double)obwi.oneShotRate;
          if(newDmgRate > WEAPONCHANGE_HYST_NUM * maxDmgRate / WEAPONCHANGE_HYST_DEN)
          {
             maxDmgRate = newDmgRate;
-            maxI = i;
+            maxWI = winfo;
          }
       }
    }
-   if(maxI >= 0)
+   if(maxWI)
    {
-      cmd->buttons |= BT_CHANGE;
-      cmd->buttons |= maxI << BT_WEAPONSHIFT;
+      if(demo_version >= 401)
+      {
+         cmd->weaponID = maxWI->id + 1;
+         const weaponslot_t *slot = E_FindFirstWeaponSlot(pl, maxWI);
+         cmd->slotIndex = slot->slotindex;
+      }
+      else
+      {
+         cmd->buttons |= BT_CHANGE;
+         cmd->buttons |= maxWI->dehnum << BT_WEAPONSHIFT;
+      }
    }
 }
 
@@ -1085,7 +1089,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
     if (rt.m_clip.linetarget && !rt.m_clip.linetarget->player && pl->readyweapon)
     {
-       const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon->dehnum];
+       const BotWeaponInfo &bwi = g_botweapons[pl->pclass][pl->readyweapon];
        const Mobj &t = *rt.m_clip.linetarget;
        fixed_t dist = B_ExactDistance(t.x - mx, t.y - my);
 
@@ -1814,9 +1818,8 @@ void Bot::InitBots()
    for (int i = 0; i < MAXPLAYERS; ++i)
    {
       bots[i].pl = players + i;
+      B_AnalyzeWeapons(bots[i].pl->pclass);
    }
-
-   B_AnalyzeWeapons();
 }
 
 // EOF
