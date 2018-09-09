@@ -206,7 +206,7 @@ bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum);
 bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot);
 
-state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label);
+state_t *E_GetStateForWeaponInfo(const weaponinfo_t *wi, const char *label);
 
 bool E_WeaponHasAltFire(const weaponinfo_t *wp);
 
