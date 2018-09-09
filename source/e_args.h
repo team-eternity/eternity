@@ -110,13 +110,25 @@ double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
 state_t      *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index);
+state_t      *E_ArgAsStateLabel(const mobjinfo_t *info, const state_t *state,
+                                const arglist_t *al, int index);
 state_t      *E_ArgAsStateLabel(const player_t *player, const arglist_t *al,
                                    int index);
 int           E_ArgAsStateNum(  arglist_t *al, int index, const Mobj     *mo);
+int E_ArgAsStateNum(arglist_t *al, int index, const mobjinfo_t *info,
+                    const state_t *state);
 int           E_ArgAsStateNum(  arglist_t *al, int index, const player_t *player);
+int E_ArgAsStateNum(arglist_t *al, int index, const weaponinfo_t *wi,
+                    const state_t *state);
 int           E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj     *mo);
+int E_ArgAsStateNumNI(arglist_t *al, int index, const mobjinfo_t *info,
+                      const state_t *state);
 int           E_ArgAsStateNumNI(arglist_t *al, int index, const player_t *player);
+int E_ArgAsStateNumNI(arglist_t *al, int index, const weaponinfo_t *wi,
+                      const state_t *state);
 int           E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj     *mo);
+int E_ArgAsStateNumG0(arglist_t *al, int index, const mobjinfo_t *info,
+                      const state_t *state);
 int           E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player);
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);

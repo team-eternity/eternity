@@ -273,13 +273,13 @@ static void B_getBranchingStateSeq(statenum_t sn,
    {
       if (E_ArgAsInt(st.args, 1, 0) > 0 ||
           (mo && mo->flags & MF_FRIEND || !mo && mi->flags & MF_FRIEND))
-         dests.add(E_ArgAsStateNum(st.args, 0, mo, nullptr));
+         dests.add(E_ArgAsStateNum(st.args, 0, mi, &st));
    }
    else if(st.action == A_HealthJump &&
            (mo && mo->flags & MF_SHOOTABLE || !mo && mi->flags & MF_SHOOTABLE) &&
            !(mo && mo->flags2 & MF2_INVULNERABLE || !mo && mi->flags2 & MF2_INVULNERABLE))
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mi, &st);
       int checkhealth = E_ArgAsInt(st.args, 2, 0);
       
       if(statenum >= 0 && checkhealth < NUMMOBJCOUNTERS && checkhealth >= 0)
@@ -289,7 +289,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    {
       // TODO: check if cnum has been touched or will be touched in such a way
       // to reach comparison with value. Only then accept the jump possibility
-      int statenum  = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
+      int statenum  = E_ArgAsStateNumNI(st.args, 0, mi, &st);
       int cnum      = E_ArgAsInt(st.args, 3, 0);
       if(statenum >= 0 && cnum >= 0 && cnum < NUMMOBJCOUNTERS)
          dests.add(statenum);
@@ -297,7 +297,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    else if(st.action == A_CounterSwitch)
    {
       int cnum       = E_ArgAsInt       (st.args, 0,  0);
-      int startstate = E_ArgAsStateNumNI(st.args, 1, mo, nullptr);
+      int startstate = E_ArgAsStateNumNI(st.args, 1, mi, &st);
       int numstates  = E_ArgAsInt       (st.args, 2,  0) - 1;
 
       if (startstate >= 0 && startstate + numstates < NUMSTATES && cnum >= 0 &&
@@ -309,7 +309,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_TargetJump)
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mi, &st);
       if(statenum >= 0)
          dests.add(statenum);
    }
@@ -365,7 +365,7 @@ static void B_getBranchingStateSeq(statenum_t sn,
    }
    else if(st.action == A_JumpIfTargetInLOS || st.action == A_CheckPlayerDone)
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, mo, nullptr);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, mi, &st);
       if(statenum >= 0)
          dests.add(statenum);
    }
@@ -376,17 +376,17 @@ static void B_getBranchingStateSeq(statenum_t sn,
       // FIXME: mobj is needed here
       if(mo && chance && st.args && st.args->numargs >= 2)
       {
-         state_t *state;
+         const state_t *state;
          for(int i = 0; i < st.args->numargs; ++i)
          {
-            state = E_ArgAsStateLabel(mo, st.args, i);
+            state = E_ArgAsStateLabel(mi, &st, st.args, i);
             dests.add(state->index);
          }
       }
    }
    else if(st.action == A_MissileAttack || st.action == A_MissileSpread)
    {
-      int statenum = E_ArgAsStateNumG0(st.args, 4, mo, nullptr);
+      int statenum = E_ArgAsStateNumG0(st.args, 4, mi, &st);
       if(statenum >= 0 && statenum < NUMSTATES)
          dests.add(statenum);
    }
@@ -973,8 +973,7 @@ BotWeaponInfo g_botweapons[NUMWEAPONS];
 static void B_weaponGetBranchingStateSeq(statenum_t sn,
                                          StateQue &alterQueue,
                                          const StateSet &stateSet,
-                                         const weaponinfo_t &wi,
-                                         const player_t &player)
+                                         const weaponinfo_t &wi)
 {
    const state_t &st = *states[sn];
    PODCollection<statenum_t> dests(17);
@@ -998,7 +997,7 @@ static void B_weaponGetBranchingStateSeq(statenum_t sn,
    {
       arglist_t *args = st.args;
       int flashint = E_ArgAsInt(args, 5, 0);
-      int flashstate = E_ArgAsStateNum(args, 5, nullptr, &player);
+      int flashstate = E_ArgAsStateNum(args, 5, &wi, &st);
       if(flashint >= 0 && flashstate != NullStateNum)
          dests.add(flashstate);
       else
@@ -1018,7 +1017,7 @@ static void B_weaponGetBranchingStateSeq(statenum_t sn,
       dests.add(wi.downstate);
    else if(st.action == A_CheckReloadEx || st.action == A_JumpIfNoAmmo)
    {
-      int statenum = E_ArgAsStateNumNI(st.args, 0, nullptr, &player);
+      int statenum = E_ArgAsStateNumNI(st.args, 0, &wi, &st);
       if(statenum >= 0)
          dests.add(statenum);
    }
@@ -1031,7 +1030,7 @@ static void B_weaponGetBranchingStateSeq(statenum_t sn,
    {
       // TODO: check if cnum has been touched or will be touched in such a way
       // to reach comparison with value. Only then accept the jump possibility
-      int statenum  = E_ArgAsStateNumNI(st.args, 0, nullptr, &player);
+      int statenum  = E_ArgAsStateNumNI(st.args, 0, &wi, &st);
       int cnum      = E_ArgAsInt(st.args, 3, 0);
       if(statenum >= 0 && cnum >= 0 && cnum < 3)
          dests.add(statenum);
@@ -1039,7 +1038,7 @@ static void B_weaponGetBranchingStateSeq(statenum_t sn,
    else if(st.action == A_WeaponCtrSwitch)
    {
       int cnum       = E_ArgAsInt       (st.args, 0,  0);
-      int startstate = E_ArgAsStateNumNI(st.args, 1,  nullptr, &player);
+      int startstate = E_ArgAsStateNumNI(st.args, 1,  &wi, &st);
       int numstates  = E_ArgAsInt       (st.args, 2,  0) - 1;
 
       if (startstate >= 0 && startstate + numstates < NUMSTATES && cnum >= 0 &&
@@ -1062,7 +1061,6 @@ static void B_weaponGetBranchingStateSeq(statenum_t sn,
 
 static bool B_weaponStateEncounters(statenum_t firstState,
                                     const weaponinfo_t &wi,
-                                    const player_t &player,
                                     bool(*statecase)(statenum_t sn,
                                                      void* miscData),
                                     void* miscData = nullptr)
@@ -1094,7 +1092,7 @@ static bool B_weaponStateEncounters(statenum_t firstState,
          }
          stateSet.insert(sn);
 
-         B_weaponGetBranchingStateSeq(sn, alterQueue, stateSet, wi, player);
+         B_weaponGetBranchingStateSeq(sn, alterQueue, stateSet, wi);
          if(states[sn]->tics < 0 || sn == NullStateNum)
             break;   // don't go to next state if current has neg. duration
       }
@@ -1266,7 +1264,7 @@ void B_AnalyzeWeapon(int i, const player_t &player)
    memset(&state, 0, sizeof(state));
    state.i = i;
 
-   B_weaponStateEncounters(wi.atkstate, wi, player, [](statenum_t sn, void *ctx) {
+   B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
       State &state = *static_cast<State *>(ctx);
       int i = state.i;
       const state_t &st = *states[sn];

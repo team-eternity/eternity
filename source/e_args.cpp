@@ -425,15 +425,24 @@ state_t *E_GetWpnJumpInfo(const weaponinfo_t *wi, const char *arg)
 }
 
 //
+// Pairs mobjinfo with state. Needed to be this way because of a template
+//
+struct infostatepair_t
+{
+   const mobjinfo_t *info;
+   const state_t *state;
+};
+
+//
 // This evaluator only allows DECORATE state labels or numbers, and will not 
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the mobjinfo, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
+static state_t *E_ArgAsStateLabel(const infostatepair_t *pair,
+                                  const arglist_t *al, int index)
 {
    const char *arg;
    char       *end   = nullptr;
-   const state_t    *state = mo->state;
    long        num;
 
    if(!al || index >= al->numargs)
@@ -445,26 +454,46 @@ state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
 
    // if not a number, this is a state label
    if(estrnonempty(end))
-      return E_GetJumpInfo(mo->info, arg);
+      return E_GetJumpInfo(pair->info, arg);
    else
    {
-      long idx = state->index + num;
+      long idx = pair->state->index + num;
 
       return (idx >= 0 && idx < NUMSTATES) ? states[idx] : nullptr;
    }
 }
+state_t *E_ArgAsStateLabel(const mobjinfo_t *info, const state_t *state,
+                           const arglist_t *al, int index)
+{
+   infostatepair_t pair;
+   pair.info = info;
+   pair.state = state;
+   return E_ArgAsStateLabel(&pair, al, index);
+}
+state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
+{
+   return E_ArgAsStateLabel(mo->info, mo->state, al, index);
+}
+
+//
+// The weapon state variant of above
+//
+struct weaponstatepair_t
+{
+   const weaponinfo_t *wi;
+   const state_t *state;
+};
 
 //
 // This evaluator only allows DECORATE state labels or numbers, and will not
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the player, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int index)
+state_t *E_ArgAsStateLabel(const weaponstatepair_t *pair, const arglist_t *al,
+                           int index)
 {
-   const weaponinfo_t *wi = player->readyweapon;
    const char *arg;
    char       *end   = nullptr;
-   const state_t *state = player->psprites->state;
    long        num;
 
    if(!al || index >= al->numargs)
@@ -476,13 +505,20 @@ state_t *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int inde
 
    // if not a number, this is a state label
    if(estrnonempty(end))
-      return E_GetWpnJumpInfo(wi, arg);
+      return E_GetWpnJumpInfo(pair->wi, arg);
    else
    {
-      long idx = state->index + num;
+      long idx = pair->state->index + num;
 
       return (idx >= 0 && idx < NUMSTATES) ? states[idx] : nullptr;
    }
+}
+state_t *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int index)
+{
+   weaponstatepair_t pair;
+   pair.wi = player->readyweapon;
+   pair.state = player->psprites->state;
+   return E_ArgAsStateLabel(&pair, al, index);
 }
 
 //
@@ -687,9 +723,33 @@ int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo)
 {
    return E_argAsStateNum<Mobj>(al, index, mo);
 }
+int E_ArgAsStateNum(arglist_t *al, int index, const mobjinfo_t *info,
+                    const state_t *state)
+{
+   infostatepair_t pair;
+   pair.info = info;
+   pair.state = state;
+   return E_argAsStateNum(al, index, &pair);
+}
 int E_ArgAsStateNum(arglist_t *al, int index, const player_t *player)
 {
    return E_argAsStateNum<player_t>(al, index, player);
+}
+int E_ArgAsStateNum(arglist_t *al, int index, const weaponinfo_t *wi,
+                    const state_t *state)
+{
+   weaponstatepair_t pair;
+   pair.wi = wi;
+   pair.state = state;
+   return E_argAsStateNum(al, index, &pair);
+}
+int E_ArgAsStateNumNI(arglist_t *al, int index, const mobjinfo_t *info,
+                      const state_t *state)
+{
+   infostatepair_t pair;
+   pair.info = info;
+   pair.state = state;
+   return E_argAsStateNumNI(al, index, &pair);
 }
 int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo)
 {
@@ -699,9 +759,25 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, const player_t *player)
 {
    return E_argAsStateNumNI<player_t>(al, index, player);
 }
+int E_ArgAsStateNumNI(arglist_t *al, int index, const weaponinfo_t *wi,
+                      const state_t *state)
+{
+   weaponstatepair_t pair;
+   pair.wi = wi;
+   pair.state = state;
+   return E_argAsStateNumNI(al, index, &pair);
+}
 int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo)
 {
    return E_argAsStateNumG0<Mobj>(al, index, mo);
+}
+int E_ArgAsStateNumG0(arglist_t *al, int index, const mobjinfo_t *info,
+                      const state_t *state)
+{
+   infostatepair_t pair;
+   pair.info = info;
+   pair.state = state;
+   return E_argAsStateNumG0(al, index, &pair);
 }
 int E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player)
 {
