@@ -510,7 +510,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    {
       // Out of flame
       //P_SetPsprite(player, ps_weapon, player->psprites[ps_weapon].state->nextstate);
-      state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
+      const state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
       if(state != nullptr)
       {
          P_SetPsprite(player, ps_weapon, state->index);

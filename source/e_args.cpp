@@ -387,7 +387,7 @@ state_t *E_GetJumpInfo(const mobjinfo_t *mi, const char *arg)
 // the ordinary plain state named by the input string. Otherwise, both the weaponinfo
 // and statename may be redirected.
 //
-state_t *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg)
+state_t *E_GetWpnJumpInfo(const weaponinfo_t *wi, const char *arg)
 {
    char *temparg = Z_Strdupa(arg);
    char *colon   = strchr(temparg, ':');
@@ -461,10 +461,10 @@ state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
 //
 state_t *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int index)
 {
-   weaponinfo_t *wi = player->readyweapon;
+   const weaponinfo_t *wi = player->readyweapon;
    const char *arg;
    char       *end   = nullptr;
-   state_t    *state = player->psprites->state;
+   const state_t *state = player->psprites->state;
    long        num;
 
    if(!al || index >= al->numargs)
