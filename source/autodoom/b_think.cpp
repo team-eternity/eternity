@@ -990,8 +990,6 @@ void Bot::pickBestWeapon(const Target &target)
    const Mobj &t = *target.mobj;
    fixed_t dist = target.dist;
 
-   B_AnalyzeWeapon(pl->readyweapon->dehnum, *pl);
-
    const BotWeaponInfo &bwi = g_botweapons[pl->readyweapon->dehnum];
    double currentDmgRate =
    bwi.calcHitscanDamage(dist, t.radius, t.height,
@@ -1793,6 +1791,8 @@ void Bot::InitBots()
    {
       bots[i].pl = players + i;
    }
+
+   B_AnalyzeWeapons();
 }
 
 // EOF

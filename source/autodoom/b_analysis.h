@@ -94,9 +94,7 @@ enum
 
    BWI_MISSILE =     0x00000040,
    BWI_DANGEROUS =   0x00000080,
-   BWI_ULTIMATE =    0x00000100,
-
-   BWI_DONE =        0x00000200, // indicates that it's loaded
+   BWI_ULTIMATE =    0x00000100
 };
 
 // There'll be NUMWEAPONS instances of this
@@ -132,7 +130,7 @@ struct BotWeaponInfo
 
 extern BotWeaponInfo g_botweapons[NUMWEAPONS];
 
-void B_AnalyzeWeapon(int i, const player_t &player);
+void B_AnalyzeWeapons();
 
 #endif 
 

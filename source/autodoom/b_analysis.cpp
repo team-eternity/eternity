@@ -1240,16 +1240,13 @@ static bool B_analyzeProjectile(statenum_t sn, const mobjinfo_t &mi, void *ctx)
 //
 // Analyzes one weapon, if not set already
 //
-void B_AnalyzeWeapon(int i, const player_t &player)
+void B_AnalyzeWeapons()
 {
-   if(g_botweapons[i].flags & BWI_DONE || i < 0 || i >= earrlen(g_botweapons))
-      return;
-
-   const weaponinfo_t *pwi = E_WeaponForDEHNum(i);
-   if(!pwi)
-      return;
-
-   g_botweapons[i].flags |= BWI_DONE;
+   // Some assumptions are made for now:
+   // - all UP, DOWN and idle states are using standard codepointers
+   // - the flashing states are purely decorative (but may be hit by the state
+   //   walker from the shooting state)
+   // - any damage done after ReFire is ignored
 
    struct State
    {
@@ -1259,222 +1256,229 @@ void B_AnalyzeWeapon(int i, const player_t &player)
       int burstTics;
    } state;
 
-   const weaponinfo_t &wi = *pwi;
-   memset(g_botweapons + i, 0, sizeof(*g_botweapons));
-   memset(&state, 0, sizeof(state));
-   state.i = i;
+   for(int i = 0; i < NUMWEAPONS; ++i)
+   {
+      const weaponinfo_t *pwi = E_WeaponForDEHNum(i);
+      if(!pwi)
+         return;
 
-   B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
-      State &state = *static_cast<State *>(ctx);
-      int i = state.i;
-      const state_t &st = *states[sn];
+      const weaponinfo_t &wi = *pwi;
+      memset(g_botweapons + i, 0, sizeof(*g_botweapons));
+      memset(&state, 0, sizeof(state));
+      state.i = i;
 
-      auto increaseBurst = [&state]() {
-         if(g_botweapons[state.i].burstRate < state.burstTics)
+      B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
+         State &state = *static_cast<State *>(ctx);
+         int i = state.i;
+         const state_t &st = *states[sn];
+
+         auto increaseBurst = [&state]() {
+            if(g_botweapons[state.i].burstRate < state.burstTics)
+            {
+               g_botweapons[state.i].burstRate = state.burstTics;
+               state.burstTics = 0;
+            }
+         };
+
+         mobjtype_t projectile = -1, projectile2 = -1;
+
+         g_botweapons[i].oneShotRate += st.tics;
+
+         if(st.action == A_ReFire || st.action == A_CloseShotgun2)
          {
-            g_botweapons[state.i].burstRate = state.burstTics;
-            state.burstTics = 0;
+            state.reachedRefire = true;
+            state.burstTics += g_botweapons[i].timeToFire;
+            increaseBurst();
          }
-      };
 
-      mobjtype_t projectile = -1, projectile2 = -1;
-
-      g_botweapons[i].oneShotRate += st.tics;
-
-      if(st.action == A_ReFire || st.action == A_CloseShotgun2)
-      {
-         state.reachedRefire = true;
-         state.burstTics += g_botweapons[i].timeToFire;
-         increaseBurst();
-      }
-
-      if(!state.reachedRefire)
-         g_botweapons[i].refireRate += st.tics;
-      else
-         return true;
-
-      if(st.action == A_WeaponReady)   // we're out
-         return true;
-
-      if(st.action == A_Punch)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         g_botweapons[i].meleeDamage += 11;
-         g_botweapons[i].berserkDamage += 110;
-      }
-      else if(st.action == A_Saw)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         g_botweapons[i].meleeDamage += 11;
-         g_botweapons[i].berserkDamage += 11;
-      }
-      else if(st.action == A_CustomPlayerMelee)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         int dmgfactor = E_ArgAsInt(st.args, 0, 0);
-         int dmgmod = E_ArgAsInt(st.args, 1, 0);
-         if(dmgmod < 1)
-            dmgmod = 1;
-         else if(dmgmod > 256)
-            dmgmod = 256;
-         int berserkmul = E_ArgAsInt(st.args, 2, 0);
-
-         int damage = dmgfactor * (1 + dmgmod) / 2;
-         g_botweapons[i].meleeDamage += damage;
-         g_botweapons[i].berserkDamage += damage * berserkmul;
-      }
-      else if(st.action == A_FirePistol || st.action == A_FireCGun)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         g_botweapons[i].firstDamage += 10;
-      }
-      else if(st.action == A_FireShotgun)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         g_botweapons[i].neverDamage += 70;
-      }
-      else if(st.action == A_FireShotgun2)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         g_botweapons[i].ssgDamage += 200;
-      }
-      else if(st.action == A_FireCustomBullets)
-      {
-         state.reachedFire = true;
-         increaseBurst();
-
-         int accurate = E_ArgAsKwd(st.args, 1, &fcbkwds, 0);
-         int numbullets = E_ArgAsInt(st.args, 2, 0);
-         int damage = E_ArgAsInt(st.args, 3, 0);
-         int dmgmod = E_ArgAsInt(st.args, 4, 0);
-         if(!accurate)
-            accurate = 1;
-         if(dmgmod < 1)
-            dmgmod = 1;
-         else if(dmgmod > 256)
-            dmgmod = 256;
-
-         int calcDamage = numbullets * damage * (1 + dmgmod) / 2;
-         switch(accurate)
-         {
-            case 1:  // always
-               g_botweapons[i].alwaysDamage += calcDamage;
-               break;
-            case 2:  // first
-               g_botweapons[i].firstDamage += calcDamage;
-               break;
-            case 3:  // never
-               g_botweapons[i].neverDamage += calcDamage;
-               break;
-            case 4:  // ssg
-               g_botweapons[i].ssgDamage += calcDamage;
-               break;
-            case 5:  // monster
-               g_botweapons[i].monsterDamage += calcDamage;
-               break;
-         }
-      }
-      else if(st.action == A_FireMissile)
-         projectile = E_SafeThingType(MT_ROCKET);
-      else if(st.action == A_FirePlasma)
-         projectile = E_SafeThingType(MT_PLASMA);
-      else if(st.action == A_FireBFG)
-         projectile = E_SafeThingType(MT_BFG);
-      else if(st.action == A_FireOldBFG)
-      {
-         projectile = E_SafeThingType(MT_PLASMA1);
-         projectile2 = E_SafeThingType(MT_PLASMA2);
-      }
-      else if(st.action == A_FirePlayerMissile)
-      {
-         projectile = E_ArgAsThingNumG0(st.args, 0);
-         if(projectile < 0 || projectile == -1)
-            projectile = UnknownThingType;
+         if(!state.reachedRefire)
+            g_botweapons[i].refireRate += st.tics;
          else
+            return true;
+
+         if(st.action == A_WeaponReady)   // we're out
+            return true;
+
+         if(st.action == A_Punch)
          {
-            bool seek = !!E_ArgAsKwd(st.args, 1, &seekkwds, 0);
-            g_botweapons[i].seeking = g_botweapons[i].seeking || seek;
+            state.reachedFire = true;
+            increaseBurst();
+
+            g_botweapons[i].meleeDamage += 11;
+            g_botweapons[i].berserkDamage += 110;
          }
-      }
+         else if(st.action == A_Saw)
+         {
+            state.reachedFire = true;
+            increaseBurst();
 
-      if(projectile >= 0 && projectile != UnknownThingType)
+            g_botweapons[i].meleeDamage += 11;
+            g_botweapons[i].berserkDamage += 11;
+         }
+         else if(st.action == A_CustomPlayerMelee)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            int dmgfactor = E_ArgAsInt(st.args, 0, 0);
+            int dmgmod = E_ArgAsInt(st.args, 1, 0);
+            if(dmgmod < 1)
+               dmgmod = 1;
+            else if(dmgmod > 256)
+               dmgmod = 256;
+            int berserkmul = E_ArgAsInt(st.args, 2, 0);
+
+            int damage = dmgfactor * (1 + dmgmod) / 2;
+            g_botweapons[i].meleeDamage += damage;
+            g_botweapons[i].berserkDamage += damage * berserkmul;
+         }
+         else if(st.action == A_FirePistol || st.action == A_FireCGun)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            g_botweapons[i].firstDamage += 10;
+         }
+         else if(st.action == A_FireShotgun)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            g_botweapons[i].neverDamage += 70;
+         }
+         else if(st.action == A_FireShotgun2)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            g_botweapons[i].ssgDamage += 200;
+         }
+         else if(st.action == A_FireCustomBullets)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            int accurate = E_ArgAsKwd(st.args, 1, &fcbkwds, 0);
+            int numbullets = E_ArgAsInt(st.args, 2, 0);
+            int damage = E_ArgAsInt(st.args, 3, 0);
+            int dmgmod = E_ArgAsInt(st.args, 4, 0);
+            if(!accurate)
+               accurate = 1;
+            if(dmgmod < 1)
+               dmgmod = 1;
+            else if(dmgmod > 256)
+               dmgmod = 256;
+
+            int calcDamage = numbullets * damage * (1 + dmgmod) / 2;
+            switch(accurate)
+            {
+               case 1:  // always
+                  g_botweapons[i].alwaysDamage += calcDamage;
+                  break;
+               case 2:  // first
+                  g_botweapons[i].firstDamage += calcDamage;
+                  break;
+               case 3:  // never
+                  g_botweapons[i].neverDamage += calcDamage;
+                  break;
+               case 4:  // ssg
+                  g_botweapons[i].ssgDamage += calcDamage;
+                  break;
+               case 5:  // monster
+                  g_botweapons[i].monsterDamage += calcDamage;
+                  break;
+            }
+         }
+         else if(st.action == A_FireMissile)
+            projectile = E_SafeThingType(MT_ROCKET);
+         else if(st.action == A_FirePlasma)
+            projectile = E_SafeThingType(MT_PLASMA);
+         else if(st.action == A_FireBFG)
+            projectile = E_SafeThingType(MT_BFG);
+         else if(st.action == A_FireOldBFG)
+         {
+            projectile = E_SafeThingType(MT_PLASMA1);
+            projectile2 = E_SafeThingType(MT_PLASMA2);
+         }
+         else if(st.action == A_FirePlayerMissile)
+         {
+            projectile = E_ArgAsThingNumG0(st.args, 0);
+            if(projectile < 0 || projectile == -1)
+               projectile = UnknownThingType;
+            else
+            {
+               bool seek = !!E_ArgAsKwd(st.args, 1, &seekkwds, 0);
+               g_botweapons[i].seeking = g_botweapons[i].seeking || seek;
+            }
+         }
+
+         if(projectile >= 0 && projectile != UnknownThingType)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            const mobjinfo_t *info = mobjinfo[projectile];
+            g_botweapons[i].projectileDamage += info->damage * 9 / 2;
+            if(info->speed > g_botweapons[i].projectileSpeed)
+               g_botweapons[i].projectileSpeed = info->speed;
+            if(info->radius > g_botweapons[i].projectileRadius)
+               g_botweapons[i].projectileRadius = info->radius;
+
+            B_stateEncounters(info->deathstate, nullptr, info,
+                              B_analyzeProjectile, false, &g_botweapons[i]);
+         }
+         if(projectile2 >= 0 && projectile2 != UnknownThingType)
+         {
+            state.reachedFire = true;
+            increaseBurst();
+
+            const mobjinfo_t *info = mobjinfo[projectile2];
+            g_botweapons[i].projectileDamage += info->damage * 9 / 2;
+            if(info->speed > g_botweapons[i].projectileSpeed)
+               g_botweapons[i].projectileSpeed = info->speed;
+            if(info->radius > g_botweapons[i].projectileRadius)
+               g_botweapons[i].projectileRadius = info->radius;
+
+            B_stateEncounters(info->deathstate, nullptr, info,
+                              B_analyzeProjectile, false, &g_botweapons[i]);
+         }
+
+         if(!state.reachedFire)
+            g_botweapons[i].timeToFire += st.tics;
+         state.burstTics += st.tics;
+
+         return false;
+      }, &state);
+
+      // now set flags
+      if(g_botweapons[i].meleeDamage)
+         g_botweapons[i].flags |= BWI_MELEE;
+      if(g_botweapons[i].berserkDamage > g_botweapons[i].meleeDamage)
+         g_botweapons[i].flags |= BWI_BERSERK;
+      if(g_botweapons[i].alwaysDamage || g_botweapons[i].firstDamage ||
+         g_botweapons[i].neverDamage || g_botweapons[i].monsterDamage ||
+         g_botweapons[i].ssgDamage)
       {
-         state.reachedFire = true;
-         increaseBurst();
-
-         const mobjinfo_t *info = mobjinfo[projectile];
-         g_botweapons[i].projectileDamage += info->damage * 9 / 2;
-         if(info->speed > g_botweapons[i].projectileSpeed)
-            g_botweapons[i].projectileSpeed = info->speed;
-         if(info->radius > g_botweapons[i].projectileRadius)
-            g_botweapons[i].projectileRadius = info->radius;
-
-         B_stateEncounters(info->deathstate, nullptr, info,
-                           B_analyzeProjectile, false, &g_botweapons[i]);
+         g_botweapons[i].flags |= BWI_HITSCAN;
+         if(g_botweapons[i].alwaysDamage)
+            g_botweapons[i].flags |= BWI_SNIPE;
+         if(g_botweapons[i].firstDamage)
+            g_botweapons[i].flags |= BWI_TAP_SNIPE;
       }
-      if(projectile2 >= 0 && projectile2 != UnknownThingType)
+      if(g_botweapons[i].projectileDamage || g_botweapons[i].explosionDamage ||
+         g_botweapons[i].bfgCount)
       {
-         state.reachedFire = true;
-         increaseBurst();
-
-         const mobjinfo_t *info = mobjinfo[projectile2];
-         g_botweapons[i].projectileDamage += info->damage * 9 / 2;
-         if(info->speed > g_botweapons[i].projectileSpeed)
-            g_botweapons[i].projectileSpeed = info->speed;
-         if(info->radius > g_botweapons[i].projectileRadius)
-            g_botweapons[i].projectileRadius = info->radius;
-
-         B_stateEncounters(info->deathstate, nullptr, info,
-                           B_analyzeProjectile, false, &g_botweapons[i]);
+         g_botweapons[i].flags |= BWI_MISSILE;
+         if(g_botweapons[i].unsafeExplosion)
+            g_botweapons[i].flags |= BWI_DANGEROUS;
+         if(g_botweapons[i].bfgCount)
+            g_botweapons[i].flags |= BWI_ULTIMATE;
       }
-
-      if(!state.reachedFire)
-         g_botweapons[i].timeToFire += st.tics;
-      state.burstTics += st.tics;
-
-      return false;
-   }, &state);
-
-   // now set flags
-   if(g_botweapons[i].meleeDamage)
-      g_botweapons[i].flags |= BWI_MELEE;
-   if(g_botweapons[i].berserkDamage > g_botweapons[i].meleeDamage)
-      g_botweapons[i].flags |= BWI_BERSERK;
-   if(g_botweapons[i].alwaysDamage || g_botweapons[i].firstDamage ||
-      g_botweapons[i].neverDamage || g_botweapons[i].monsterDamage ||
-      g_botweapons[i].ssgDamage)
-   {
-      g_botweapons[i].flags |= BWI_HITSCAN;
-      if(g_botweapons[i].alwaysDamage)
-         g_botweapons[i].flags |= BWI_SNIPE;
-      if(g_botweapons[i].firstDamage)
-         g_botweapons[i].flags |= BWI_TAP_SNIPE;
-   }
-   if(g_botweapons[i].projectileDamage || g_botweapons[i].explosionDamage ||
-      g_botweapons[i].bfgCount)
-   {
-      g_botweapons[i].flags |= BWI_MISSILE;
-      if(g_botweapons[i].unsafeExplosion)
-         g_botweapons[i].flags |= BWI_DANGEROUS;
-      if(g_botweapons[i].bfgCount)
-         g_botweapons[i].flags |= BWI_ULTIMATE;
-   }
-   if(!(g_botweapons[i].flags & (BWI_HITSCAN | BWI_SNIPE | BWI_TAP_SNIPE |
-                                 BWI_MISSILE | BWI_DANGEROUS | BWI_ULTIMATE)))
-   {
-      g_botweapons[i].flags |= BWI_MELEE_ONLY;
+      if(!(g_botweapons[i].flags & (BWI_HITSCAN | BWI_SNIPE | BWI_TAP_SNIPE |
+                                    BWI_MISSILE | BWI_DANGEROUS | BWI_ULTIMATE)))
+      {
+         g_botweapons[i].flags |= BWI_MELEE_ONLY;
+      }
    }
 }
 
