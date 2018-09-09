@@ -2172,7 +2172,7 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
    int32_t     tid       = argV[0];
    const char *statename = thread->scopeMap->getString(argV[1])->str;
    statenum_t  statenum  = E_StateNumForName(statename);
-   state_t    *state;
+   const state_t *state;
    uint32_t    count     = 0;
    Mobj       *mo        = nullptr;
 

@@ -1334,7 +1334,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // by name. Returns null otherwise. Self-identity is *not* considered 
 // inheritance.
 //
-static mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+static mobjinfo_t *E_IsMobjInfoDescendantOf(const mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -1376,14 +1376,14 @@ void E_SplitTypeAndState(char *src, char **type, char **state)
 //
 // Deal with unresolved goto entries in the DECORATE state object.
 //
-static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
+static void E_processDecorateGotos(const mobjinfo_t *mi, edecstateout_t *dso)
 {
    int i;
 
    for(i = 0; i < dso->numgotos; ++i)
    {
-      mobjinfo_t *type = nullptr;
-      state_t *state;
+      const mobjinfo_t *type = nullptr;
+      const state_t *state;
       statenum_t statenum;
       char *statename = nullptr;
 
@@ -3329,11 +3329,11 @@ int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 // Returns null if no such state can be found. Note that the null state is
 // not considered a valid state.
 //
-state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
+state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label)
 {
-   MetaState *ms;
+   const MetaState *ms;
    state_t *ret = nullptr;
-   int *nativefield = nullptr;
+   const int *nativefield = nullptr;
 
    // check metastates
    if((ms = E_GetMetaState(mi, label)))
@@ -3351,7 +3351,7 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 //
 // Convenience routine to call the above given an Mobj.
 //
-state_t *E_GetStateForMobj(Mobj *mo, const char *label)
+state_t *E_GetStateForMobj(const Mobj *mo, const char *label)
 {
    return E_GetStateForMobjInfo(mo->info, label);
 }
