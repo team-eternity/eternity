@@ -1704,7 +1704,31 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 void Bot::simulateBaseTiccmd()
 {
    int newweapon = wp_nochange;
-   if(!demo_compatibility && pl->attackdown & AT_PRIMARY && !P_CheckAmmo(pl))
+   if(demo_version >= 401)
+   {
+      newweapon = -1;
+      if((pl->attackdown && !P_CheckAmmo(pl)))
+      {
+         const weaponinfo_t *temp = E_FindBestWeapon(pl);
+         if(temp)
+         {
+            newweapon = temp->id;
+            pl->cmd.slotIndex = E_FindFirstWeaponSlot(pl, temp)->slotindex;
+         }
+      }
+      if(pl->readyweapon && (pl->readyweapon->id == newweapon ||
+                             E_IsPoweredVariantOf(E_WeaponForID(newweapon),
+                                                  pl->readyweapon)))
+      {
+         newweapon = -1;
+      }
+      pl->cmd.weaponID = newweapon + 1;
+      return;
+   }
+
+   // normal case
+   if(!demo_compatibility && pl->attackdown & AT_PRIMARY &&
+      !P_CheckAmmo(pl))
    {
       newweapon = P_SwitchWeaponOld(pl);
       if(newweapon != wp_nochange)
