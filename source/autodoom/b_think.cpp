@@ -36,6 +36,7 @@
 #include "b_trace.h"
 #include "b_util.h"
 #include "b_vocabulary.h"
+#include "b_weapon.h"
 #include "../cam_sight.h"
 #include "../d_event.h"
 #include "../d_gi.h"
