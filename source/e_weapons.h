@@ -27,6 +27,7 @@
 #define E_WEAPONS_H__
 
 #include "d_keywds.h"
+#include "d_player.h"
 #include "m_avltree.h"
 #include "m_bdlist.h"
 
