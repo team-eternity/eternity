@@ -974,6 +974,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
          highestThreat = closestThreat;
       }
    }
+   cinfo.totalThreat = totalThreat;
    return highestThreat;
 }
 
@@ -1200,26 +1201,29 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
                   if(explodist < 0)
                      explodist = 0;
 
-                   if (cinfo.hasShooters && dist < 384 * FRACUNIT)
+                  fixed_t straferange = 384 * FRACUNIT + M_DoubleToFixed(cinfo.totalThreat * 3);
+                  fixed_t backoffrange = (explosion ? (explosion + 128) * FRACUNIT : MELEERANGE) + M_DoubleToFixed(cinfo.totalThreat * 3);
+
+                  if (dist < backoffrange + targets[0].mobj->radius)
+                  {
+                     cmd->forwardmove = -FixedMul(2 * pl->pclass->forwardmove[1],
+                                                   B_AngleCosine(dangle));
+                     cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+                                               B_AngleSine(dangle));
+
+                     // if in range and too close to die, STOP SHOOTING
+                     if(explosion - explodist > pl->health / 2)
+                     {
+                        cmd->buttons &= ~BT_ATTACK;
+                     }
+                  }
+                   if (cinfo.hasShooters && dist < straferange)
                    {
                       // only circle-strafe if there are blowers
-                       cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
+                       cmd->forwardmove += FixedMul(2 * pl->pclass->forwardmove[1],
                            B_AngleSine(dangle)) * m_combatStrafeState;
-                       cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
+                       cmd->sidemove += FixedMul(2 * pl->pclass->sidemove[1],
                            B_AngleCosine(dangle)) * m_combatStrafeState;
-                   }
-                  if (dist < (explosion ? (explosion + 128) * FRACUNIT : MELEERANGE) + targets[0].mobj->radius)
-                   {
-                       cmd->forwardmove = -FixedMul(2 * pl->pclass->forwardmove[1],
-                           B_AngleCosine(dangle));
-                       cmd->sidemove = FixedMul(2 * pl->pclass->sidemove[1],
-                           B_AngleSine(dangle));
-
-                      // if in range and too close to die, STOP SHOOTING
-                      if(explosion - explodist > pl->health / 2)
-                      {
-                         cmd->buttons &= ~BT_ATTACK;
-                      }
                    }
                }
                else

@@ -125,6 +125,7 @@ class Bot : public ZoneObject
    {
       bool hasShooters;
       bool hasExploders;
+      double totalThreat;
    };
 
    void enemyVisible(PODCollection<Target>& targets);
