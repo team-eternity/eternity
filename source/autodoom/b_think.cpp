@@ -1076,10 +1076,10 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 
     }
 
-    if (angleturn > 1500)
-        angleturn = 1500;
-    if (angleturn < -1500)
-        angleturn = -1500;
+    if (angleturn > 2500)
+        angleturn = 2500;
+    if (angleturn < -2500)
+        angleturn = -2500;
 
     if (!m_intoSwitch)
         cmd->angleturn = angleturn * random.range(1, 2);
@@ -1445,12 +1445,12 @@ void Bot::doNonCombatAI()
         tangle += ANG45 * m_straferunstate;
 
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
-    angleturn >>= 3;
+    angleturn >>= 2;
 
-    if (angleturn > 1500)
-        angleturn = 1500;
-    if (angleturn < -1500)
-        angleturn = -1500;
+    if (angleturn > 2500)
+        angleturn = 2500;
+    if (angleturn < -2500)
+        angleturn = -2500;
 
     if (!dontMove && !(B_ExactDistance(endCoord.x - mx, endCoord.y - my)
                        < 16 * FRACUNIT
