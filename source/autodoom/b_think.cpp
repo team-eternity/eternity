@@ -1402,7 +1402,9 @@ void Bot::doNonCombatAI()
        {
           auto doorTh = thinker_cast<VerticalDoorThinker *>
           (nextsec->ceilingdata);
-          if(!doorTh || doorTh->direction == plat_down)
+          if((!doorTh &&
+              nextsec->ceilingheight < P_FindLowestCeilingSurrounding(nextsec) - 4 * FRACUNIT) ||
+             (doorTh && doorTh->direction == plat_down))
           {
              m_intoSwitch = true;
              if(prevCtr % 2 == 0)
