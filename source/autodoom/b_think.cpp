@@ -753,7 +753,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
                     newt->coord = B_CoordXY(*m);
                     newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
                     newt->dist = dist;
-                    newt->isLine = false;
+                    newt->type = TargetMonster;
                     newt->mobj = m;
                     std::push_heap(targets.begin(), targets.end());
                 }
@@ -762,6 +762,29 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
             ++it;
         }
     }
+
+   if(!botMap->thrownProjectiles.isEmpty())
+   {
+      for(auto it = botMap->thrownProjectiles.begin(); it != botMap->thrownProjectiles.end(); ++it)
+      {
+         const Mobj* m = *it;
+         cam.setTargetMobj(m);
+         if (CAM_CheckSight(cam))
+         {
+            dist = B_ExactDistance(*pl->mo, *m);
+            if (dist < MISSILERANGE / 2)
+            {
+               newt = &targets.addNew();
+               newt->coord = B_CoordXY(*m);
+               newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
+               newt->dist = dist;
+               newt->type = TargetMissile;
+               newt->mobj = m;
+               std::push_heap(targets.begin(), targets.end());
+            }
+         }
+      }
+   }
     
     v2fixed_t lvec;
     angle_t lang;
@@ -798,7 +821,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
                 newt->coord = lvec;
                 newt->dangle = P_PointToAngle(*pl->mo, lvec) - pl->mo->angle;
                 newt->dist = dist;
-                newt->isLine = true;
+                newt->type = TargetLine;
                 newt->gline = line;
                 std::push_heap(targets.begin(), targets.end());
             }
@@ -882,9 +905,13 @@ bool Bot::shouldChat(int intervalSec, int timekeeper) const
 
 const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo)
 {
-   const Target* highestThreat = &targets[0];
    double totalThreat = 0;
-   if (!targets[0].isLine)
+   size_t i = 0;
+   for(; i < targets.getLength(); ++i)
+      if(targets[i].type != TargetMissile)
+         break;
+   const Target* highestThreat = i < targets.getLength() ? &targets[i] : &targets[0];
+   if (i < targets.getLength() && targets[i].type != TargetLine)
    {
       double highestThreatRating = -DBL_MAX, threat;
       fixed_t shortestDist = D_MAXINT;
@@ -900,7 +927,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
 
       for (const Target& target : targets)
       {
-         if (target.isLine)
+         if (target.type != TargetMonster)
             continue;
          if (sentient(target.mobj) && !(target.mobj->flags & MF_FRIEND) &&
             target.mobj->target != pl->mo)
@@ -947,7 +974,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
       }
 
       if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastHelpCry) &&
-         !highestThreat->isLine &&
+         highestThreat->type == TargetMonster &&
          totalThreat >= B_calcPlayerHealth(pl))
       {
          m_lastHelpCry = gametic;
@@ -980,7 +1007,7 @@ const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, Com
 
 void Bot::pickBestWeapon(const Target &target)
 {
-   if(target.isLine)
+   if(target.type != TargetMonster)
       return;
 
    const Mobj &t = *target.mobj;
@@ -1064,7 +1091,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 
     // Save the threat
     P_SetTarget(&m_currentTargetMobj,
-                highestThreat->isLine ? nullptr : highestThreat->mobj);
+                highestThreat->type != TargetMonster ? nullptr : highestThreat->mobj);
 
     angle_t highestTangle = P_PointToAngle(mx, my, highestThreat->coord.x, highestThreat->coord.y);
 
@@ -1084,7 +1111,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     if (!m_intoSwitch)
         cmd->angleturn = angleturn * random.range(1, 2);
 
-   if(!highestThreat->isLine)
+   if(highestThreat->type == TargetMonster)
       pickBestWeapon(*highestThreat);
 
     RTraversal rt;
@@ -1117,13 +1144,11 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
        }
     }
 
-    if(targets[0].isLine && pl->readyweapon)
+    if(targets[0].type == TargetLine && pl->readyweapon)
     {
         angle_t vang[2];
-        vang[0] = P_PointToAngle(mx, my, targets[0].gline->v1->x,
-                                 targets[0].gline->v1->y);
-        vang[1] = P_PointToAngle(mx, my, targets[0].gline->v2->x,
-                                 targets[0].gline->v2->y);
+        vang[0] = P_PointToAngle(mx, my, targets[0].gline->v1->x, targets[0].gline->v1->y);
+        vang[1] = P_PointToAngle(mx, my, targets[0].gline->v2->x, targets[0].gline->v2->y);
         
         if(vang[1] - vang[0] > pl->mo->angle - vang[0] ||
            vang[0] - vang[1] > pl->mo->angle - vang[1])
@@ -1147,7 +1172,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             }
         }
     }
-    else if (pl->readyweapon && pl->readyweapon->dehnum == wp_missile/* && emax(D_abs(mx - nx),
+    else if (targets[0].type == TargetMonster && pl->readyweapon && pl->readyweapon->dehnum == wp_missile/* && emax(D_abs(mx - nx),
                                               D_abs(my - ny)) <= 128 * FRACUNIT*/)
     {
        // avoid using the rocket launcher for now...
@@ -1158,7 +1183,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
 //        pickRandomWeapon(targets[0]);
 //    }
 
-    if(!targets[0].isLine && pl->readyweapon)
+    if(targets[0].type != TargetLine && pl->readyweapon)
     {
 
        int explosion = B_MobjDeathExplosion(*targets[0].mobj);

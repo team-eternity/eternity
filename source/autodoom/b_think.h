@@ -41,6 +41,16 @@ struct ticcmd_t;
 #define BOT_FLOORSECTOR "floorSectorEvent"
 
 //
+// Bot target type
+//
+enum TargetType
+{
+   TargetMonster,
+   TargetLine,
+   TargetMissile
+};
+
+//
 // Bot
 //
 // The main bot class. Handles environment and outputs tic commands
@@ -110,7 +120,7 @@ class Bot : public ZoneObject
       v2fixed_t coord;
       fixed_t dist;
       angle_t dangle;
-      bool isLine;
+      TargetType type;
 
       // for heaping
       bool operator < (const Target& o) const
