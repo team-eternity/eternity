@@ -1014,9 +1014,6 @@
     <ClCompile Include="..\source\e_edfmetatable.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_common.cpp">
-      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\aeon_string.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>

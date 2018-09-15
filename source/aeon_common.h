@@ -28,9 +28,6 @@
 #include "angelscript.h"
 #include "aswrappedcall.h"
 
-class AeonFixed;
-class qstring;
-
 struct aeonfuncreg_t
 {
    const char *declaration;
@@ -39,13 +36,6 @@ struct aeonfuncreg_t
    //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
    // asDWORD     callConv;
 };
-
-//
-// Print function for AngelScript
-//
-void ASPrint(int i);
-void ASPrint(unsigned int u);
-void ASPrint(float f);
 
 #endif
 

@@ -22,7 +22,11 @@
 #ifndef AEON_INIT_H__
 #define AEON_INIT_H__
 
-#include "angelscript.h"
+class  asIScriptContext;
+class  asIScriptEngine;
+class  asIScriptFunction;
+class  asIScriptModule;
+struct asSMessageInfo;
 
 //
 // Adapted from Powerslave EX's kexScriptManager into (effectively) a static class

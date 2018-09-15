@@ -41,6 +41,21 @@ asIScriptContext *AeonScriptManager::ctx    = nullptr;
 asIScriptModule  *AeonScriptManager::module = nullptr;
 int               AeonScriptManager::state  = asEXECUTION_UNINITIALIZED;
 
+void ASPrint(int i)
+{
+   C_Printf("%d\n", i);
+}
+
+void ASPrint(unsigned int u)
+{
+   C_Printf("%u\n", u);
+}
+
+void ASPrint(float f)
+{
+   C_Printf("%f\n", f);
+}
+
 void AeonScriptManager::RegisterPrimitivePrintFuncs()
 {
    engine->RegisterGlobalFunction("void print(int)",

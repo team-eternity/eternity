@@ -316,7 +316,6 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\source\aeon_common.cpp" />
     <ClCompile Include="..\source\aeon_math.cpp" />
     <ClCompile Include="..\source\aeon_mobj.cpp" />
     <ClCompile Include="..\source\aeon_system.cpp" />

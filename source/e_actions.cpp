@@ -25,6 +25,7 @@
 
 #define NEED_EDF_DEFINITIONS
 
+#include "aeon_common.h"
 #include "aeon_system.h"
 
 #include "a_args.h"
