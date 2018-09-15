@@ -25,11 +25,14 @@
 #ifndef AEON_MOBJ_H__
 #define AEON_MOBJ_H__
 
-class AeonScriptObjMobj
+namespace Aeon
 {
-public:
-   static void Init();
-};
+   class ScriptObjMobj
+   {
+   public:
+      static void Init();
+   };
+}
 
 #endif
 

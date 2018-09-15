@@ -25,11 +25,14 @@
 #ifndef AEON_STRING_H__
 #define AEON_STRING_H__
 
-class AeonScriptObjString
+namespace Aeon
 {
-public:
-   static void Init();
-};
+   class ScriptObjString
+   {
+   public:
+      static void Init();
+   };
+}
 
 #endif
 

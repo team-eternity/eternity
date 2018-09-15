@@ -1588,7 +1588,7 @@ static void D_DoomInit()
    D_BuildBEXHashChains();
 
    // Init Aeon before EDF
-   AeonScriptManager::Init();
+   Aeon::ScriptManager::Init();
 
    // Identify root EDF file and process EDF
    D_LoadEDF(gfs);

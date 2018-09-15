@@ -33,128 +33,131 @@
 
 #include "p_map.h"
 
-static Mobj *MobjFactory()
+namespace Aeon
 {
-   return new Mobj();
-}
-
-static Mobj *MobjFactoryFromOther(const Mobj &in)
-{
-   return new Mobj(in);
-}
-
-//
-// Sanity checked getter for mo->counters[ctrnum]
-// Returns 0 on failure
-//
-static int GetMobjCounter(const unsigned int ctrnum, Mobj *mo)
-{
-   if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
-      return mo->counters[ctrnum];
-   else
-      return 0; // TODO: C_Printf warning?
-}
-
-//
-// Sanity checked getter for mo->counters[ctrnum]
-// Doesn't set on failure
-//
-static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
-{
-   if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
-      mo->counters[ctrnum] = val;
-   // TODO: else C_Printf warning?
-}
-
-AeonFixed AeonFloatBobOffsets(unsigned int in)
-{
-   static constexpr int NUMFLOATBOBOFFSETS = earrlen(FloatBobOffsets);
-   if(in < 0 || in > NUMFLOATBOBOFFSETS)
-      return 0;
-   return FloatBobOffsets[in];
-}
-
-static void MobjStartSound(const PointThinker *origin, sfxinfo_t *sfxinfo)
-{
-   if(sfxinfo)
-      S_StartSound(origin, sfxinfo->dehackednum);
-}
-
-static aeonfuncreg_t mobjFuncs[]
-{
-   { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth)          },
-   { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
-   { "void startSound(EE::Sound @sound)",                   WRAP_OBJ_FIRST(MobjStartSound) },
-
-   // Indexed property accessors (enables [] syntax for counters)
-   { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)  },
-   { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)  },
-
-   // Statics
-   "fixed_t FloatBobOffsets(uint index)", WRAP_FN(AeonFloatBobOffsets)
-};
-
-#define DECLAREMOBJFLAGS(x) \
-   e->RegisterEnum("EnumMobjFlags" #x); \
-   e->RegisterObjectProperty("Mobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
-
-void AeonScriptObjMobj::Init()
-{
-   extern dehflags_t deh_mobjflags[];
-   asIScriptEngine *e = AeonScriptManager::Engine();
-
-   e->SetDefaultNamespace("EE");
-
-   e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
-
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
-                              WRAP_FN(MobjFactory), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
-                              WRAP_FN_PR(MobjFactoryFromOther, (const Mobj &), Mobj *),
-                              asCALL_GENERIC);
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_ADDREF, "void f()",
-                              WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
-                              WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
-
-   for(const aeonfuncreg_t &fn : mobjFuncs)
-      e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
-
-   e->RegisterObjectProperty("Mobj", "fixed_t x",      asOFFSET(Mobj, x));
-   e->RegisterObjectProperty("Mobj", "fixed_t y",      asOFFSET(Mobj, y));
-   e->RegisterObjectProperty("Mobj", "fixed_t z",      asOFFSET(Mobj, z));
-   e->RegisterObjectProperty("Mobj", "angle_t angle",  asOFFSET(Mobj, angle));
-
-   e->RegisterObjectProperty("Mobj", "fixed_t radius", asOFFSET(Mobj, radius));
-   e->RegisterObjectProperty("Mobj", "fixed_t height", asOFFSET(Mobj, height));
-   e->RegisterObjectProperty("Mobj", "eVector mom",    asOFFSET(Mobj, mom));
-
-   e->RegisterObjectProperty("Mobj", "int health",     asOFFSET(Mobj, health));
-
-   DECLAREMOBJFLAGS();
-   DECLAREMOBJFLAGS(2);
-   DECLAREMOBJFLAGS(3);
-   DECLAREMOBJFLAGS(4);
-   for(dehflags_t *flag = deh_mobjflags; flag->name != nullptr; flag++)
+   static Mobj *MobjFactory()
    {
-      qstring type("EnumMobjFlags");
-      qstring name = qstring("MF");
-      if(flag->index > 0)
-      {
-         name << (flag->index + 1);
-         type <<  (flag->index + 1);
-      }
-
-      name << "_" << flag->name;
-      e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
+      return new Mobj();
    }
 
-   // It's Mobj-related, OK?
-   e->SetDefaultNamespace("EE::Mobj");
-   e->RegisterGlobalFunction("fixed_t FloatBobOffsets(int index)",
-                             WRAP_FN(AeonFloatBobOffsets), asCALL_GENERIC);
+   static Mobj *MobjFactoryFromOther(const Mobj &in)
+   {
+      return new Mobj(in);
+   }
 
-   e->SetDefaultNamespace("");
+   //
+   // Sanity checked getter for mo->counters[ctrnum]
+   // Returns 0 on failure
+   //
+   static int GetMobjCounter(const unsigned int ctrnum, Mobj *mo)
+   {
+      if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
+         return mo->counters[ctrnum];
+      else
+         return 0; // TODO: C_Printf warning?
+   }
+
+   //
+   // Sanity checked getter for mo->counters[ctrnum]
+   // Doesn't set on failure
+   //
+   static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
+   {
+      if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
+         mo->counters[ctrnum] = val;
+      // TODO: else C_Printf warning?
+   }
+
+   Fixed FloatBobOffsets(unsigned int in)
+   {
+      static constexpr int NUMFLOATBOBOFFSETS = earrlen(::FloatBobOffsets);
+      if(in < 0 || in > NUMFLOATBOBOFFSETS)
+         return 0;
+      return ::FloatBobOffsets[in];
+   }
+
+   static void MobjStartSound(const PointThinker *origin, sfxinfo_t *sfxinfo)
+   {
+      if(sfxinfo)
+         S_StartSound(origin, sfxinfo->dehackednum);
+   }
+
+   static aeonfuncreg_t mobjFuncs[]
+   {
+      { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth)          },
+      { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
+      { "void startSound(EE::Sound @sound)",                   WRAP_OBJ_FIRST(MobjStartSound) },
+
+      // Indexed property accessors (enables [] syntax for counters)
+      { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)  },
+      { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)  },
+
+      // Statics
+      "fixed_t FloatBobOffsets(uint index)", WRAP_FN(FloatBobOffsets)
+   };
+
+   #define DECLAREMOBJFLAGS(x) \
+      e->RegisterEnum("EnumMobjFlags" #x); \
+      e->RegisterObjectProperty("Mobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
+
+   void ScriptObjMobj::Init()
+   {
+      extern dehflags_t deh_mobjflags[];
+      asIScriptEngine *e = ScriptManager::Engine();
+
+      e->SetDefaultNamespace("EE");
+
+      e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
+
+      e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
+                                 WRAP_FN(MobjFactory), asCALL_GENERIC);
+      e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
+                                 WRAP_FN_PR(MobjFactoryFromOther, (const Mobj &), Mobj *),
+                                 asCALL_GENERIC);
+      e->RegisterObjectBehaviour("Mobj", asBEHAVE_ADDREF, "void f()",
+                                 WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
+      e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
+                                 WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
+
+      for(const aeonfuncreg_t &fn : mobjFuncs)
+         e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
+      e->RegisterObjectProperty("Mobj", "fixed_t x",      asOFFSET(Mobj, x));
+      e->RegisterObjectProperty("Mobj", "fixed_t y",      asOFFSET(Mobj, y));
+      e->RegisterObjectProperty("Mobj", "fixed_t z",      asOFFSET(Mobj, z));
+      e->RegisterObjectProperty("Mobj", "angle_t angle",  asOFFSET(Mobj, angle));
+
+      e->RegisterObjectProperty("Mobj", "fixed_t radius", asOFFSET(Mobj, radius));
+      e->RegisterObjectProperty("Mobj", "fixed_t height", asOFFSET(Mobj, height));
+      e->RegisterObjectProperty("Mobj", "eVector mom",    asOFFSET(Mobj, mom));
+
+      e->RegisterObjectProperty("Mobj", "int health",     asOFFSET(Mobj, health));
+
+      DECLAREMOBJFLAGS();
+      DECLAREMOBJFLAGS(2);
+      DECLAREMOBJFLAGS(3);
+      DECLAREMOBJFLAGS(4);
+      for(dehflags_t *flag = deh_mobjflags; flag->name != nullptr; flag++)
+      {
+         qstring type("EnumMobjFlags");
+         qstring name = qstring("MF");
+         if(flag->index > 0)
+         {
+            name << (flag->index + 1);
+            type <<  (flag->index + 1);
+         }
+
+         name << "_" << flag->name;
+         e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
+      }
+
+      // It's Mobj-related, OK?
+      e->SetDefaultNamespace("EE::Mobj");
+      e->RegisterGlobalFunction("fixed_t FloatBobOffsets(int index)",
+                                WRAP_FN(FloatBobOffsets), asCALL_GENERIC);
+
+      e->SetDefaultNamespace("");
+   }
 }
 
 

@@ -28,38 +28,41 @@ class  asIScriptFunction;
 class  asIScriptModule;
 struct asSMessageInfo;
 
-//
-// Adapted from Powerslave EX's kexScriptManager into (effectively) a static class
-//
-class AeonScriptManager
+namespace Aeon
 {
-public:
-   AeonScriptManager() = delete;
+   //
+   // Adapted from Powerslave EX's kexScriptManager into (effectively) a static class
+   //
+   class ScriptManager
+   {
+   public:
+      ScriptManager() = delete;
 
-   static void Init();
-   static void Shutdown();
+      static void Init();
+      static void Shutdown();
 
-   static asIScriptEngine  *Engine()  { return engine; }
-   static asIScriptContext *Context() { return ctx;    }
-   static asIScriptModule  *Module()  { return module; }
+      static asIScriptEngine  *Engine()  { return engine; }
+      static asIScriptContext *Context() { return ctx;    }
+      static asIScriptModule  *Module()  { return module; }
 
-   static void PushState();
-   static void PopState();
-   static bool PrepareFunction(asIScriptFunction *function);
-   static bool PrepareFunction(const char *function);
-   static bool Execute();
-private:
-   static void RegisterPrimitivePrintFuncs();
-   static void RegisterTypedefs();
-   static void RegisterHandleOnlyClasses();
-   static void MessageCallback(const asSMessageInfo *msg, void *param);
+      static void PushState();
+      static void PopState();
+      static bool PrepareFunction(asIScriptFunction *function);
+      static bool PrepareFunction(const char *function);
+      static bool Execute();
+   private:
+      static void RegisterPrimitivePrintFuncs();
+      static void RegisterTypedefs();
+      static void RegisterHandleOnlyClasses();
+      static void MessageCallback(const asSMessageInfo *msg, void *param);
 
-   static asIScriptEngine  *engine;
-   static asIScriptContext *ctx;
-   static asIScriptModule  *module;
+      static asIScriptEngine  *engine;
+      static asIScriptContext *ctx;
+      static asIScriptModule  *module;
 
-   static int state;
-};
+      static int state;
+   };
+}
 
 #endif
 

@@ -27,186 +27,189 @@
 #include "c_io.h"
 #include "m_qstr.h"
 
-class ASRefQString : public qstring
+namespace Aeon
 {
-protected:
-   unsigned int refcount;
-
-public:
-   ASRefQString() : qstring(), refcount(1) {}
-   ASRefQString(const ASRefQString &other) : qstring(other), refcount(1) {}
-
-   // Basic factory
-   static qstring *Factory()
+   class RefQString : public qstring
    {
-      auto qstr = new ASRefQString();
-      return qstr;
+   protected:
+      unsigned int refcount;
+
+   public:
+      RefQString() : qstring(), refcount(1) {}
+      RefQString(const RefQString &other) : qstring(other), refcount(1) {}
+
+      // Basic factory
+      static qstring *Factory()
+      {
+         auto qstr = new RefQString();
+         return qstr;
+      }
+
+      static qstring *FactoryFromOther(const qstring &other)
+      {
+         auto qstr = new RefQString(static_cast<const RefQString &>(other));
+         return qstr;
+      }
+
+      static void AddRef(qstring *qstr)
+      {
+         auto asRefQStr = static_cast<RefQString *>(qstr);
+         ++asRefQStr->refcount;
+      }
+
+      static void Release(qstring *qstr)
+      {
+         auto asRefQStr = static_cast<RefQString *>(qstr);
+         if(--asRefQStr->refcount == 0)
+            delete asRefQStr;
+      }
+   };
+
+   class StringFactory : public asIStringFactory
+   {
+   public:
+      // TODO: Cache
+      const void *GetStringConstant(const char *data, asUINT length) override
+      {
+         auto newStr = RefQString::Factory();
+         newStr->copy(data, length);
+         return static_cast<qstring *>(newStr);
+      }
+
+      int ReleaseStringConstant(const void *str) override
+      {
+         RefQString::Release(static_cast<qstring *>(const_cast<void *>(str)));
+         return 0;
+      }
+
+      int GetRawStringData(const void *str, char *data, asUINT *length) const override
+      {
+         auto qstr = static_cast<const qstring *>(str);
+         if(data == nullptr)
+            *length = qstr->length() + 1;
+         else
+            qstr->copyInto(data, *length);
+         return 0;
+
+      }
+   } static stringFactory;
+
+   //
+   // npos wrapper
+   //
+   static unsigned int QStrGetNpos(qstring *qstr)
+   {
+      return qstring::npos;
    }
 
-   static qstring *FactoryFromOther(const qstring &other)
+   //
+   // Wrappers for operator []
+   //
+   static int QStrGetOpIdx(const qstring *qstr, int idx)
    {
-      auto qstr = new ASRefQString(static_cast<const ASRefQString &>(other));
-      return qstr;
+      return (*qstr)[idx];
    }
 
-   static void AddRef(qstring *qstr)
+   static void QStrSetOpIdx(qstring *qstr, int idx, int value)
    {
-      auto asRefQStr = static_cast<ASRefQString *>(qstr);
-      ++asRefQStr->refcount;
+      (*qstr)[idx] = static_cast<char>(value);
    }
 
-   static void Release(qstring *qstr)
+   //
+   // Print function for AngelScript
+   //
+   static void ASPrint(const qstring &qstr)
    {
-      auto asRefQStr = static_cast<ASRefQString *>(qstr);
-      if(--asRefQStr->refcount == 0)
-         delete asRefQStr;
-   }
-};
-
-class ASStringFactory : public asIStringFactory
-{
-public:
-   // TODO: Cache
-   const void *GetStringConstant(const char *data, asUINT length) override
-   {
-      auto newStr = ASRefQString::Factory();
-      newStr->copy(data, length);
-      return static_cast<qstring *>(newStr);
+      C_Printf("%s\n", qstr.constPtr());
    }
 
-   int ReleaseStringConstant(const void *str) override
+   template<typename T>
+   class sizer
    {
-      ASRefQString::Release(static_cast<qstring *>(const_cast<void *>(str)));
-      return 0;
-   }
+   public:
+      static const size_t size = sizeof(T);
+   };
 
-   int GetRawStringData(const void *str, char *data, asUINT *length) const override
+   #define QSTRMETHOD(m) WRAP_MFN(qstring, m)
+   #define QSTRXFORM(m)  WRAP_MFN_PR(qstring, m, (const qstring &),       qstring &)
+   #define QSTRQUERY(m)  WRAP_MFN_PR(qstring, m, (const qstring &) const, bool)
+   #define QSTRCOMPR(m)  WRAP_MFN_PR(qstring, m, (const qstring &) const, int)
+   #define QSTRMARG(m)   WRAP_MFN_PR(qstring, m, (qstring &) const,       qstring &)
+   #define QSTRFMINT(m)  WRAP_MFN_PR(qstring, m, (int),                   qstring &)
+   #define QSTRFMDBL(m)  WRAP_MFN_PR(qstring, m, (double),                qstring &)
+
+   #define XFORMSIG(name) "String &" name "(const String &in)"
+   #define QUERYSIG(name) "bool " name "(const String &in) const"
+   #define COMPRSIG(name) "int " name "(const String &in) const"
+   #define MARGSIG(name)  "String &" name "(String &inout) const"
+
+   static aeonfuncreg_t qstringFuncs[] =
    {
-      auto qstr = static_cast<const qstring *>(str);
-      if(data == nullptr)
-         *length = qstr->length() + 1;
-      else
-         qstr->copyInto(data, *length);
-      return 0;
+      { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos)  },
+      { "uint length() const",            QSTRMETHOD(length)           },
+      { "bool empty() const",             QSTRMETHOD(empty)            },
+      { "String &clear()",                QSTRMETHOD(clear)            },
+      { "char charAt(uint idx) const",    QSTRMETHOD(charAt)           },
+      { "uchar ucharAt(uint idx) const",  QSTRMETHOD(ucharAt)          },
+      { "String &push(char ch)",          QSTRMETHOD(Putc)             },
+      { "String &pop()",                  QSTRMETHOD(Delc)             },
+      { XFORMSIG("concat"),               QSTRXFORM(concat)            },
+      { QUERYSIG("compare"),              QSTRQUERY(compare)           },
+      { "uint hashCode() const",          QSTRMETHOD(hashCode)         },
+      { "uint hashCodeCase() const",      QSTRMETHOD(hashCodeCase)     },
+      { COMPRSIG("strCmp"),               QSTRCOMPR(strCmp)            },
+      { XFORMSIG("copy"),                 QSTRXFORM(copy)              },
+      { MARGSIG("copyInto"),              QSTRMARG(copyInto)           },
+      { "void swapWith(String &inout)",   QSTRMETHOD(swapWith)         },
+      { "String &toUpper()",              QSTRMETHOD(toUpper)          },
+      { "String &toLower()",              QSTRMETHOD(toLower)          },
+      { "int toInt() const",              QSTRMETHOD(toInt)            },
+      { "uint findFirstOf(int) const",    QSTRMETHOD(findFirstOf)      },
+      { "uint findFirstNotOf(int) const", QSTRMETHOD(findFirstNotOf)   },
+      { "uint findLastOf(int) const",     QSTRMETHOD(findLastOf)       },
+      { XFORMSIG("opAssign"),             QSTRXFORM(operator =)        },
+      { XFORMSIG("opAddAssign"),          QSTRXFORM(operator +=)       },
+      { QUERYSIG("opEquals"),             QSTRQUERY(compare)           },
+      { COMPRSIG("opCmp"),                QSTRCOMPR(strCmp)            },
+      { XFORMSIG("opShl"),                QSTRXFORM(operator <<)       },
+      { "String &opShl(int)",             QSTRFMINT(operator <<)       },
+      { "String &opShl(double)",          QSTRFMDBL(operator <<)       },
+      { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(QStrGetOpIdx) },
+      { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(QStrSetOpIdx) },
+   };
 
+   //
+   // Register String (qstring) as a reftype and register desired methods
+   //
+   void ScriptObjString::Init()
+   {
+      asIScriptEngine *e = ScriptManager::Engine();
+
+      // register type
+      e->RegisterObjectType("String", 0, asOBJ_REF);
+
+      // register behaviors
+      e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f()",
+                                 WRAP_FN(RefQString::Factory), asCALL_GENERIC);
+      e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f(const String &in)",
+                                 WRAP_FN(RefQString::FactoryFromOther), asCALL_GENERIC);
+      e->RegisterObjectBehaviour("String", asBEHAVE_ADDREF, "void f()",
+                                 WRAP_OBJ_FIRST(RefQString::AddRef), asCALL_GENERIC);
+      e->RegisterObjectBehaviour("String", asBEHAVE_RELEASE, "void f()",
+                                 WRAP_OBJ_FIRST(RefQString::Release), asCALL_GENERIC);
+
+      // register String as the string factory
+      // "qstring @"???
+      e->RegisterStringFactory("String", &stringFactory);
+
+      for(const aeonfuncreg_t &fn : qstringFuncs)
+         e->RegisterObjectMethod("String", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
+      // register global print func
+      e->RegisterGlobalFunction("void print(const String &in)",
+                                WRAP_FN_PR(ASPrint, (const qstring &), void),
+                                asCALL_GENERIC);
    }
-} static aeonStringFactory;
-
-//
-// npos wrapper
-//
-static unsigned int QStrGetNpos(qstring *qstr)
-{
-   return qstring::npos;
-}
-
-//
-// Wrappers for operator []
-//
-static int QStrGetOpIdx(const qstring *qstr, int idx)
-{
-   return (*qstr)[idx];
-}
-
-static void QStrSetOpIdx(qstring *qstr, int idx, int value)
-{
-   (*qstr)[idx] = static_cast<char>(value);
-}
-
-//
-// Print function for AngelScript
-//
-static void ASPrint(const qstring &qstr)
-{
-   C_Printf("%s\n", qstr.constPtr());
-}
-
-template<typename T>
-class sizer
-{
-public:
-   static const size_t size = sizeof(T);
-};
-
-#define QSTRMETHOD(m) WRAP_MFN(qstring, m)
-#define QSTRXFORM(m)  WRAP_MFN_PR(qstring, m, (const qstring &),       qstring &)
-#define QSTRQUERY(m)  WRAP_MFN_PR(qstring, m, (const qstring &) const, bool)
-#define QSTRCOMPR(m)  WRAP_MFN_PR(qstring, m, (const qstring &) const, int)
-#define QSTRMARG(m)   WRAP_MFN_PR(qstring, m, (qstring &) const,       qstring &)
-#define QSTRFMINT(m)  WRAP_MFN_PR(qstring, m, (int),                   qstring &)
-#define QSTRFMDBL(m)  WRAP_MFN_PR(qstring, m, (double),                qstring &)
-
-#define XFORMSIG(name) "String &" name "(const String &in)"
-#define QUERYSIG(name) "bool " name "(const String &in) const"
-#define COMPRSIG(name) "int " name "(const String &in) const"
-#define MARGSIG(name)  "String &" name "(String &inout) const"
-
-static aeonfuncreg_t qstringFuncs[] =
-{
-   { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos)  },
-   { "uint length() const",            QSTRMETHOD(length)           },
-   { "bool empty() const",             QSTRMETHOD(empty)            },
-   { "String &clear()",                QSTRMETHOD(clear)            },
-   { "char charAt(uint idx) const",    QSTRMETHOD(charAt)           },
-   { "uchar ucharAt(uint idx) const",  QSTRMETHOD(ucharAt)          },
-   { "String &push(char ch)",          QSTRMETHOD(Putc)             },
-   { "String &pop()",                  QSTRMETHOD(Delc)             },
-   { XFORMSIG("concat"),               QSTRXFORM(concat)            },
-   { QUERYSIG("compare"),              QSTRQUERY(compare)           },
-   { "uint hashCode() const",          QSTRMETHOD(hashCode)         },
-   { "uint hashCodeCase() const",      QSTRMETHOD(hashCodeCase)     },
-   { COMPRSIG("strCmp"),               QSTRCOMPR(strCmp)            },
-   { XFORMSIG("copy"),                 QSTRXFORM(copy)              },
-   { MARGSIG("copyInto"),              QSTRMARG(copyInto)           },
-   { "void swapWith(String &inout)",   QSTRMETHOD(swapWith)         },
-   { "String &toUpper()",              QSTRMETHOD(toUpper)          },
-   { "String &toLower()",              QSTRMETHOD(toLower)          },
-   { "int toInt() const",              QSTRMETHOD(toInt)            },
-   { "uint findFirstOf(int) const",    QSTRMETHOD(findFirstOf)      },
-   { "uint findFirstNotOf(int) const", QSTRMETHOD(findFirstNotOf)   },
-   { "uint findLastOf(int) const",     QSTRMETHOD(findLastOf)       },
-   { XFORMSIG("opAssign"),             QSTRXFORM(operator =)        },
-   { XFORMSIG("opAddAssign"),          QSTRXFORM(operator +=)       },
-   { QUERYSIG("opEquals"),             QSTRQUERY(compare)           },
-   { COMPRSIG("opCmp"),                QSTRCOMPR(strCmp)            },
-   { XFORMSIG("opShl"),                QSTRXFORM(operator <<)       },
-   { "String &opShl(int)",             QSTRFMINT(operator <<)       },
-   { "String &opShl(double)",          QSTRFMDBL(operator <<)       },
-   { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(QStrGetOpIdx) },
-   { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(QStrSetOpIdx) },
-};
-
-//
-// Register String (qstring) as a reftype and register desired methods
-//
-void AeonScriptObjString::Init()
-{
-   asIScriptEngine *e = AeonScriptManager::Engine();
-
-   // register type
-   e->RegisterObjectType("String", 0, asOBJ_REF);
-
-   // register behaviors
-   e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f()",
-                              WRAP_FN(ASRefQString::Factory), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f(const String &in)",
-                              WRAP_FN(ASRefQString::FactoryFromOther), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("String", asBEHAVE_ADDREF, "void f()",
-                              WRAP_OBJ_FIRST(ASRefQString::AddRef), asCALL_GENERIC);
-   e->RegisterObjectBehaviour("String", asBEHAVE_RELEASE, "void f()",
-                              WRAP_OBJ_FIRST(ASRefQString::Release), asCALL_GENERIC);
-
-   // register String as the string factory
-   // "qstring @"???
-   e->RegisterStringFactory("String", &aeonStringFactory);
-
-   for(const aeonfuncreg_t &fn : qstringFuncs)
-      e->RegisterObjectMethod("String", fn.declaration, fn.funcPointer, asCALL_GENERIC);
-
-   // register global print func
-   e->RegisterGlobalFunction("void print(const String &in)",
-                             WRAP_FN_PR(ASPrint, (const qstring &), void),
-                             asCALL_GENERIC);
 }
 
 // EOF

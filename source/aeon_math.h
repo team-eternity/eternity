@@ -31,130 +31,133 @@
 
 #include "tables.h"
 
-class AeonScriptObjMath
+namespace Aeon
 {
-public:
-   static void Init();
-};
-
-class AeonFixed
-{
-public:
-   fixed_t value;
-
-   AeonFixed() : value(0)
+   class ScriptObjMath
    {
-   }
+   public:
+      static void Init();
+   };
 
-   AeonFixed(fixed_t value) : value(value)
+   class Fixed
    {
-   }
+   public:
+      fixed_t value;
 
-   AeonFixed operator +  (const AeonFixed &in);
-   AeonFixed operator +  (const int val);
-   AeonFixed operator -  (const AeonFixed &in);
-   AeonFixed operator -  (const int val);
-   AeonFixed operator *  (const AeonFixed &in);
-   AeonFixed operator *  (const int val);
-   AeonFixed operator /  (const AeonFixed &in);
-   AeonFixed operator /  (const int val);
-   AeonFixed operator << (const int val);
+      Fixed() : value(0)
+      {
+      }
 
-   AeonFixed &operator += (const AeonFixed &in);
-   AeonFixed &operator += (const int val);
-   AeonFixed &operator -= (const AeonFixed &in);
-   AeonFixed &operator -= (const int val);
-   AeonFixed &operator *= (const AeonFixed &in);
-   AeonFixed &operator *= (const int val);
-   AeonFixed &operator /= (const AeonFixed &in);
-   AeonFixed &operator /= (const int val);
+      Fixed(fixed_t value) : value(value)
+      {
+      }
 
-   operator double() const;
-   operator fixed_t() const { return value; }
-};
+      Fixed operator +  (const Fixed &in);
+      Fixed operator +  (const int val);
+      Fixed operator -  (const Fixed &in);
+      Fixed operator -  (const int val);
+      Fixed operator *  (const Fixed &in);
+      Fixed operator *  (const int val);
+      Fixed operator /  (const Fixed &in);
+      Fixed operator /  (const int val);
+      Fixed operator << (const int val);
 
-class AeonAngle
-{
-public:
-   angle_t value;
+      Fixed &operator += (const Fixed &in);
+      Fixed &operator += (const int val);
+      Fixed &operator -= (const Fixed &in);
+      Fixed &operator -= (const int val);
+      Fixed &operator *= (const Fixed &in);
+      Fixed &operator *= (const int val);
+      Fixed &operator /= (const Fixed &in);
+      Fixed &operator /= (const int val);
 
-   AeonAngle() : value(0)
+      operator double() const;
+      operator fixed_t() const { return value; }
+   };
+
+   class Angle
    {
-   }
+   public:
+      angle_t value;
 
-   AeonAngle(fixed_t value) : value(value)
+      Angle() : value(0)
+      {
+      }
+
+      Angle(fixed_t value) : value(value)
+      {
+      }
+
+      Angle operator + (const Angle &in);
+      Angle operator + (const Fixed &in);
+      Angle operator + (const int val);
+
+      Angle operator - (const Angle &in);
+      Angle operator - (const Fixed &in);
+      Angle operator - (const int val);
+
+      Angle operator * (const Fixed &in);
+      Angle operator * (const int val);
+
+      Angle operator / (const Angle &in);
+      Angle operator / (const Fixed &in);
+      Angle operator / (const int val);
+
+      Angle &operator += (const Angle &in);
+      Angle &operator += (const Fixed &in);
+      Angle &operator += (const int val);
+
+      Angle &operator -= (const Angle &in);
+      Angle &operator -= (const Fixed &in);
+      Angle &operator -= (const int val);
+
+      Angle &operator *= (const Fixed &in);
+      Angle &operator *= (const int val);
+
+      Angle &operator /= (const Angle &in);
+      Angle &operator /= (const Fixed &in);
+      Angle &operator /= (const int val);
+
+      operator Fixed() const;
+      operator angle_t() const { return value; }
+   };
+
+   class ScriptObjFixed
    {
-   }
+   public:
+      static void Construct(Fixed *thisFixed);
+      static void ConstructFromOther(const Fixed &other, Fixed *thisFixed);
+      static void ConstructFromDouble(double other, Fixed *thisFixed);
+      static void ConstructFromInt(int other, Fixed *thisFixed);
+      static void ConstructFromPair(int16_t integer, double frac, Fixed *thisFixed);
+      static Fixed ConstructFromBits(int bits);
 
-   AeonAngle operator + (const AeonAngle &in);
-   AeonAngle operator + (const AeonFixed &in);
-   AeonAngle operator + (const int val);
+      static void Init();
+   };
 
-   AeonAngle operator - (const AeonAngle &in);
-   AeonAngle operator - (const AeonFixed &in);
-   AeonAngle operator - (const int val);
+   class ScriptObjAngle
+   {
+   public:
+      static void Construct(Angle *thisAngle);
+      static void ConstructFromOther(const Angle &other, Angle *thisAngle);
+      static void ConstructFromDouble(double other, Angle *thisAngle);
+      static void ConstructFromInt(int other, Angle *thisAngle);
 
-   AeonAngle operator * (const AeonFixed &in);
-   AeonAngle operator * (const int val);
+      static void Init();
+   };
 
-   AeonAngle operator / (const AeonAngle &in);
-   AeonAngle operator / (const AeonFixed &in);
-   AeonAngle operator / (const int val);
+   class Vector;
 
-   AeonAngle &operator += (const AeonAngle &in);
-   AeonAngle &operator += (const AeonFixed &in);
-   AeonAngle &operator += (const int val);
+   class ScriptObjVector
+   {
+   public:
+      static void Construct(Vector *thisVector);
+      static void ConstructFromOther(const Vector &other, Vector *thisVector);
+      static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, Vector *thisVector);
 
-   AeonAngle &operator -= (const AeonAngle &in);
-   AeonAngle &operator -= (const AeonFixed &in);
-   AeonAngle &operator -= (const int val);
-
-   AeonAngle &operator *= (const AeonFixed &in);
-   AeonAngle &operator *= (const int val);
-
-   AeonAngle &operator /= (const AeonAngle &in);
-   AeonAngle &operator /= (const AeonFixed &in);
-   AeonAngle &operator /= (const int val);
-
-   operator AeonFixed() const;
-   operator angle_t() const { return value; }
-};
-
-class AeonScriptObjFixed
-{
-public:
-   static void Construct(AeonFixed *thisFixed);
-   static void ConstructFromOther(const AeonFixed &other, AeonFixed *thisFixed);
-   static void ConstructFromDouble(double other, AeonFixed *thisFixed);
-   static void ConstructFromInt(int other, AeonFixed *thisFixed);
-   static void ConstructFromPair(int16_t integer, double frac, AeonFixed *thisFixed);
-   static AeonFixed ConstructFromBits(int bits);
-
-   static void Init();
-};
-
-class AeonScriptObjAngle
-{
-public:
-   static void Construct(AeonAngle *thisAngle);
-   static void ConstructFromOther(const AeonAngle &other, AeonAngle *thisAngle);
-   static void ConstructFromDouble(double other, AeonAngle *thisAngle);
-   static void ConstructFromInt(int other, AeonAngle *thisAngle);
-
-   static void Init();
-};
-
-class AeonVector;
-
-class AeonScriptObjVector
-{
-public:
-   static void Construct(AeonVector *thisVector);
-   static void ConstructFromOther(const AeonVector &other, AeonVector *thisVector);
-   static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, AeonVector *thisVector);
-
-   static void Init();
-};
+      static void Init();
+   };
+}
 
 #endif
 

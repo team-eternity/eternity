@@ -68,11 +68,11 @@ static inline qstring AlternateFuncName(const char *name)
 
 void A_Aeon(actionargs_t *actionargs)
 {
-   asIScriptContext *ctx = AeonScriptManager::Context();
+   asIScriptContext *ctx = Aeon::ScriptManager::Context();
    if(!actionargs->aeonaction)
       I_Error("A_Aeon: Not bound to Aeon function (don't call A_Aeon from states directly)\n");
 
-   if(!AeonScriptManager::PrepareFunction(actionargs->aeonaction->name))
+   if(!Aeon::ScriptManager::PrepareFunction(actionargs->aeonaction->name))
       return;
    if(actionargs->actiontype == actionargs_t::MOBJFRAME)
       ctx->SetArgObject(0, actionargs->actor);
@@ -92,7 +92,7 @@ void A_Aeon(actionargs_t *actionargs)
          ctx->SetArgDWord(i + 1, E_ArgAsInt(actionargs->args, i, 0));
          break;
       case AAT_FIXED:
-         ctx->SetArgObject(i + 1, &AeonFixed(E_ArgAsFixed(actionargs->args, i, 0)));
+         ctx->SetArgObject(i + 1, &Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, 0)));
          break;
       case AAT_STRING:
          argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr));
@@ -102,12 +102,12 @@ void A_Aeon(actionargs_t *actionargs)
          ctx->SetArgObject(i + 1, E_ArgAsSound(actionargs->args, i));
          break;
       default:
-         AeonScriptManager::PopState();
+         Aeon::ScriptManager::PopState();
          return;
         }
    }
 
-   if(!AeonScriptManager::Execute())
+   if(!Aeon::ScriptManager::Execute())
       return;
 }
 
@@ -200,7 +200,7 @@ static void E_registerScriptAction(const char *name, const char *funcname,
 static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
 {
    asIScriptFunction *func;
-   asIScriptModule *module = AeonScriptManager::Module();
+   asIScriptModule *module = Aeon::ScriptManager::Module();
 
    if(!(func = module->GetFunctionByName(mnemonic)))
    {
@@ -235,7 +235,7 @@ static inline bool E_isReservedCodePointer(const char *name)
 
 static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 {
-   asIScriptEngine *e =  AeonScriptManager::Engine();
+   asIScriptEngine *e =  Aeon::ScriptManager::Engine();
    e->SetDefaultNamespace("EE");
    asITypeInfo *ret = e->GetTypeInfoByName(type);
    e->SetDefaultNamespace("");
@@ -245,8 +245,8 @@ static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
-   asIScriptEngine *e =  AeonScriptManager::Engine();
-   asIScriptModule *module = AeonScriptManager::Module();
+   asIScriptEngine *e      = Aeon::ScriptManager::Engine();
+   asIScriptModule *module = Aeon::ScriptManager::Module();
    static const asITypeInfo *mobjtypeinfo = E_getClassTypeInfo("Mobj");
    //static const asITypeInfo *playertypeinfo = GetClassTypeInfo("Player");
    const char *name = cfg_title(actionsec);
