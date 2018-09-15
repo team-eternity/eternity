@@ -830,9 +830,12 @@ static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node,
 //
 void E_ProcessFinalWeaponSlots()
 {
+   // If the gametype is DOOM and the SSG main shotgun player sprite isn't present
+   // then the SSG needs removal from playerslots
    const bool remove_ssg = GameModeInfo->type == Game_DOOM &&
                            W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) <= 0;
 
+   // Remove the SSG from global weaponslots, if it's in them
    if(remove_ssg)
    {
       weaponinfo_t *ssg_info = E_WeaponForName("SuperShotgun");
@@ -851,7 +854,7 @@ void E_ProcessFinalWeaponSlots()
    {
       while(chain)
       {
-         for(int i = NUMWEAPONSLOTS; i--> 0;)
+         for(int i = NUMWEAPONSLOTS; i --> 0;)
          {
             bool *weaponinslot = ecalloc(bool *, NUMWEAPONTYPES, sizeof(bool));
             WeaponSlotTree *pclassslottree = nullptr;
@@ -860,12 +863,16 @@ void E_ProcessFinalWeaponSlots()
                auto *slotiterator = E_FirstInSlot(chain->weaponslots[i]);
                int weaponnum = 1;
 
+               // If the SSG is the only thing in the slot and isn't allowed
+               // then don't process this slot (deletion handled elsewhere)
                if(!remove_ssg || !slotiterator->bdNext->isDummy() ||
                   strcmp(slotiterator->bdObject->weapon->name, "SuperShotgun"))
                {
                   pclassslottree = new WeaponSlotTree();
                   while(!slotiterator->isDummy())
                   {
+                     // If the SSG is in the slot then skip over it,
+                     // if it's not supposed to be useable
                      if(remove_ssg &&
                         !strcmp(slotiterator->bdObject->weapon->name, "SuperShotgun"))
                      {
