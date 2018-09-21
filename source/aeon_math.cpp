@@ -77,7 +77,7 @@ namespace Aeon
          return abs(val);
       }
 
-      static Fixed Ceil(Fixed val)
+      static Fixed Ceil(const Fixed val)
       {
          if(val.value & (FRACUNIT - 1))
             return Fixed((val.value & ~(FRACUNIT - 1)) + FRACUNIT);
@@ -85,7 +85,7 @@ namespace Aeon
             return val;
       }
 
-      static Fixed Floor(Fixed val)
+      static Fixed Floor(const Fixed val)
       {
          return Fixed(val.value & ~(FRACUNIT - 1));
       }
@@ -223,17 +223,18 @@ namespace Aeon
       *thisFixed = Fixed(other);
    }
 
-   void ScriptObjFixed::ConstructFromDouble(double other, Fixed *thisFixed)
+   void ScriptObjFixed::ConstructFromDouble(const double other, Fixed *thisFixed)
    {
       thisFixed->value = M_DoubleToFixed(other);
    }
 
-   void ScriptObjFixed::ConstructFromInt(int other, Fixed *thisFixed)
+   void ScriptObjFixed::ConstructFromInt(const int other, Fixed *thisFixed)
    {
       thisFixed->value = other * FRACUNIT;
    }
 
-   void ScriptObjFixed::ConstructFromPair(int16_t integer, double frac, Fixed *thisFixed)
+   void ScriptObjFixed::ConstructFromPair(const int16_t integer, const double frac,
+                                          Fixed *thisFixed)
    {
       thisFixed->value = static_cast<int32_t>(integer) * FRACUNIT;
       if(frac < 1.0 && frac >= 0.0)
@@ -431,12 +432,12 @@ namespace Aeon
       *thisAngle = Angle(other);
    }
 
-   void ScriptObjAngle::ConstructFromDouble(double other, Angle *thisAngle)
+   void ScriptObjAngle::ConstructFromDouble(const double other, Angle *thisAngle)
    {
       thisAngle->value = FixedToAngleClamped(M_DoubleToFixed(other));
    }
 
-   void ScriptObjAngle::ConstructFromInt(int other, Angle *thisAngle)
+   void ScriptObjAngle::ConstructFromInt(const int other, Angle *thisAngle)
    {
       thisAngle->value = IntToAngle(other);
    }
@@ -526,8 +527,8 @@ namespace Aeon
       *thisVector = Vector(other);
    }
 
-   void ScriptObjVector::ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z,
-                                            Vector *thisVector)
+   void ScriptObjVector::ConstructFromFixed(const fixed_t x, const fixed_t y,
+                                            const fixed_t z, Vector *thisVector)
    {
       *thisVector = Vector(x, y, z);
    }

@@ -68,7 +68,7 @@ namespace Aeon
       // TODO: else C_Printf warning?
    }
 
-   Fixed FloatBobOffsets(unsigned int in)
+   Fixed FloatBobOffsets(const int in)
    {
       static constexpr int NUMFLOATBOBOFFSETS = earrlen(::FloatBobOffsets);
       if(in < 0 || in > NUMFLOATBOBOFFSETS)
@@ -93,7 +93,7 @@ namespace Aeon
       { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)  },
 
       // Statics
-      "fixed_t FloatBobOffsets(uint index)", WRAP_FN(FloatBobOffsets)
+      "fixed_t FloatBobOffsets(const int index)", WRAP_FN(FloatBobOffsets)
    };
 
    #define DECLAREMOBJFLAGS(x) \
@@ -156,7 +156,7 @@ namespace Aeon
 
       // It's Mobj-related, OK?
       e->SetDefaultNamespace("EE::Mobj");
-      e->RegisterGlobalFunction("fixed_t FloatBobOffsets(int index)",
+      e->RegisterGlobalFunction("fixed_t FloatBobOffsets(const int index)",
                                 WRAP_FN(FloatBobOffsets), asCALL_GENERIC);
 
       e->SetDefaultNamespace("");

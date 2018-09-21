@@ -236,9 +236,11 @@ static inline bool E_isReservedCodePointer(const char *name)
 static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 {
    asIScriptEngine *e =  Aeon::ScriptManager::Engine();
+
+   const char *oldnamespace = e->GetDefaultNamespace();
    e->SetDefaultNamespace("EE");
    asITypeInfo *ret = e->GetTypeInfoByName(type);
-   e->SetDefaultNamespace("");
+   e->SetDefaultNamespace(oldnamespace);
    return ret;
 }
 
