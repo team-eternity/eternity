@@ -129,9 +129,12 @@ namespace Aeon
 
       e->RegisterObjectProperty("Mobj", "fixed_t radius", asOFFSET(Mobj, radius));
       e->RegisterObjectProperty("Mobj", "fixed_t height", asOFFSET(Mobj, height));
-      e->RegisterObjectProperty("Mobj", "eVector mom",    asOFFSET(Mobj, mom));
+      e->RegisterObjectProperty("Mobj", "vector_t mom",   asOFFSET(Mobj, mom));
 
       e->RegisterObjectProperty("Mobj", "int health",     asOFFSET(Mobj, health));
+
+      e->RegisterObjectProperty("Mobj", "Mobj @target",   asOFFSET(Mobj, target));
+      e->RegisterObjectProperty("Mobj", "Mobj @tracer",   asOFFSET(Mobj, target));
 
       DECLAREMOBJFLAGS();
       DECLAREMOBJFLAGS(2);

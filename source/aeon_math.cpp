@@ -543,22 +543,22 @@ namespace Aeon
    {
       asIScriptEngine *e = ScriptManager::Engine();
 
-      e->RegisterObjectType("eVector", sizeof(Angle),
+      e->RegisterObjectType("vector_t", sizeof(Vector),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
-      e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT, "void f()",
+      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f()",
                                  WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT, "void f(const eVector &in)",
+      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f(const vector_t &in)",
                                  WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("eVector", asBEHAVE_CONSTRUCT,
+      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT,
                                  "void f(const fixed_t, const fixed_t, const fixed_t)",
                                  WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC);
 
-      e->RegisterObjectProperty("eVector", "fixed_t x", asOFFSET(Vector, value.x));
-      e->RegisterObjectProperty("eVector", "fixed_t y", asOFFSET(Vector, value.y));
-      e->RegisterObjectProperty("eVector", "fixed_t z", asOFFSET(Vector, value.z));
+      e->RegisterObjectProperty("vector_t", "fixed_t x", asOFFSET(Vector, value.x));
+      e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(Vector, value.y));
+      e->RegisterObjectProperty("vector_t", "fixed_t z", asOFFSET(Vector, value.z));
 
-      e->RegisterGlobalFunction("void print(eVector)", WRAP_FN_PR(ASPrint, (Vector), void),
+      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(ASPrint, (Vector), void),
                                  asCALL_GENERIC);
    }
 }

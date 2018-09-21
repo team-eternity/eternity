@@ -73,8 +73,8 @@ namespace Aeon
 
    void ScriptManager::RegisterTypedefs()
    {
-      engine->RegisterTypedef("char",    "int8");
-      engine->RegisterTypedef("uchar",   "uint8");
+      engine->RegisterTypedef("char",     "int8");
+      engine->RegisterTypedef("uchar",    "uint8");
 
       engine->RegisterTypedef("int8_t",   "int8");
       engine->RegisterTypedef("int16_t",  "int16");
