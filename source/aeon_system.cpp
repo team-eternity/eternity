@@ -23,6 +23,7 @@
 
 #include "scriptarray.h"
 
+#include "acs_intr.h"
 #include "aeon_common.h"
 #include "aeon_math.h"
 #include "aeon_mobj.h"
@@ -33,6 +34,7 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_utils.h"
+#include "m_qstr.h"
 #include "sounds.h"
 #include "w_wad.h"
 
@@ -56,6 +58,158 @@ namespace Aeon
    void ASPrint(float f)
    {
       C_Printf("%f\n", f);
+   }
+
+   static bool StartACSScriptS(Mobj *mo, const qstring &name,
+                               const uint32_t mapnum, const CScriptArray *args)
+   {
+      const uint32_t argc = args ? args->GetSize() : 0;
+      uint32_t *argv = nullptr;
+
+      if(argc > 0)
+      {
+         argv = ecalloc(uint32_t *, argc, sizeof(uint32_t));
+         for(uint32_t i = 0; i < argc; i++)
+            argv[i] = *static_cast<const uint32_t *>(args->At(i));
+      }
+
+      const bool ret = ACS_ExecuteScriptS(name.constPtr(), mapnum, argv, argc, mo,
+                                          nullptr, 0, nullptr);
+      if(argv)
+         efree(argv);
+      return ret;
+   }
+
+   static bool StartACSScriptSAlways(Mobj *mo, const qstring &name,
+                                     const uint32_t mapnum, const CScriptArray *args)
+   {
+      const uint32_t argc = args ? args->GetSize() : 0;
+      uint32_t *argv = nullptr;
+
+      if(argc > 0)
+      {
+         argv = ecalloc(uint32_t *, argc, sizeof(uint32_t));
+         for(uint32_t i = 0; i < argc; i++)
+            argv[i] = *static_cast<const uint32_t *>(args->At(i));
+      }
+
+      const bool ret = ACS_ExecuteScriptSAlways(name.constPtr(), mapnum, argv, argc, mo,
+                                                nullptr, 0, nullptr);
+      if(argv)
+         efree(argv);
+      return ret;
+   }
+
+   static uint32_t StartACSScriptSResult(Mobj *mo, const qstring &name, const CScriptArray *args)
+   {
+      const uint32_t argc = args ? args->GetSize() : 0;
+      uint32_t *argv = nullptr;
+
+      if(argc > 0)
+      {
+         argv = ecalloc(uint32_t *, argc, sizeof(uint32_t));
+         for(uint32_t i = 0; i < argc; i++)
+            argv[i] = *static_cast<const uint32_t *>(args->At(i));
+      }
+
+      const uint32_t ret = ACS_ExecuteScriptSResult(name.constPtr(), argv, argc,
+                                                    mo, nullptr, 0, nullptr);
+      if(argv)
+         efree(argv);
+      return ret;
+   }
+
+   static bool StartACSScriptI(Mobj *mo, const int scriptnum,
+                               const uint32_t mapnum, const CScriptArray *args)
+   {
+      const uint32_t argc = args ? args->GetSize() : 0;
+      uint32_t *argv = nullptr;
+
+      if(argc > 0)
+      {
+         argv = ecalloc(uint32_t *, argc, sizeof(uint32_t));
+         for(uint32_t i = 0; i < argc; i++)
+            argv[i] = *static_cast<const uint32_t *>(args->At(i));
+      }
+
+      const bool ret = ACS_ExecuteScriptI(scriptnum, mapnum, argv, argc, mo,
+                                          nullptr, 0, nullptr);
+      if(argv)
+         efree(argv);
+      return ret;
+   }
+
+   static bool StartACSScriptIAlways(Mobj *mo, const int scriptnum,
+                                     const uint32_t mapnum, const CScriptArray *args)
+   {
+      const uint32_t argc = args ? args->GetSize() : 0;
+      uint32_t *argv = nullptr;
+
+      if(argc > 0)
+      {
+         argv = ecalloc(uint32_t *, argc, sizeof(uint32_t));
+         for(uint32_t i = 0; i < argc; i++)
+            argv[i] = *static_cast<const uint32_t *>(args->At(i));
+      }
+
+      const bool ret = ACS_ExecuteScriptIAlways(scriptnum, mapnum, argv, argc, mo,
+                                                nullptr, 0, nullptr);
+      if(argv)
+         efree(argv);
+      return ret;
+   }
+
+   static uint32_t StartACSScriptIResult(Mobj *mo, const int scriptnum, const CScriptArray *args)
+   {
+      const uint32_t argc = args ? args->GetSize() : 0;
+      uint32_t *argv = nullptr;
+
+      if(argc > 0)
+      {
+         argv = ecalloc(uint32_t *, argc, sizeof(uint32_t));
+         for(uint32_t i = 0; i < argc; i++)
+            argv[i] = *static_cast<const uint32_t *>(args->At(i));
+      }
+
+      const uint32_t ret = ACS_ExecuteScriptIResult(scriptnum, argv, argc, mo,
+                                                    nullptr, 0, nullptr);
+      if(argv)
+         efree(argv);
+      return ret;
+   }
+
+   void ScriptManager::RegisterScriptFuncs()
+   {
+      engine->SetDefaultNamespace("EE::ACS");
+      engine->RegisterGlobalFunction("void StartScript(EE::Mobj @mo, const String &name,"
+                                                      "const uint32 mapnum,"
+                                                      "const array<int> @args = null)",
+                                     WRAP_FN(StartACSScriptS),
+                                     asCALL_GENERIC);
+      engine->RegisterGlobalFunction("void StartScriptAlways(EE::Mobj @mo, const String &name,"
+                                                            "const uint32 mapnum,"
+                                                            "const array<int> @args = null)",
+                                     WRAP_FN(StartACSScriptSAlways),
+                                     asCALL_GENERIC);
+      engine->RegisterGlobalFunction("uint32 StartScriptResult(EE::Mobj @mo, const String &name,"
+                                                              "const array<int> @args = null)",
+                                     WRAP_FN(StartACSScriptSResult),
+                                     asCALL_GENERIC);
+      engine->RegisterGlobalFunction("void StartScript(EE::Mobj @mo, const int scriptnum,"
+                                                      "const uint32 mapnum,"
+                                                      "const array<int> @args = null)",
+                                     WRAP_FN(StartACSScriptI),
+                                     asCALL_GENERIC);
+      engine->RegisterGlobalFunction("void StartScriptAlways(EE::Mobj @mo, const int scriptnum,"
+                                                            "const uint32 mapnum,"
+                                                            "const array<int> @args = null)",
+                                     WRAP_FN(StartACSScriptIAlways),
+                                     asCALL_GENERIC);
+      engine->RegisterGlobalFunction("uint32 StartScriptResult(EE::Mobj @mo, const int scriptnum,"
+                                                              "const array<int> @args = null)",
+                                     WRAP_FN(StartACSScriptIResult),
+                                     asCALL_GENERIC);
+      engine->SetDefaultNamespace("");
    }
 
    void ScriptManager::RegisterPrimitivePrintFuncs()
@@ -133,6 +287,8 @@ namespace Aeon
       ScriptObjMath::Init();
 
       ScriptObjMobj::Init();
+
+      RegisterScriptFuncs();
 
       if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
          I_Error("Aeon::ScriptManager::Init: Could not create module\n");
