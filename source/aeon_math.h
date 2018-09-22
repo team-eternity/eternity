@@ -25,10 +25,8 @@
 #ifndef AEON_MATH_H__
 #define AEON_MATH_H__
 
-#include <stdint.h>
-
+#include "doomtype.h"
 #include "m_fixed.h"
-
 #include "tables.h"
 
 namespace Aeon

@@ -51,7 +51,6 @@ namespace Aeon
       static bool PrepareFunction(const char *function);
       static bool Execute();
    private:
-      static void RegisterScriptFuncs();
       static void RegisterPrimitivePrintFuncs();
       static void RegisterTypedefs();
       static void RegisterHandleOnlyClasses();
