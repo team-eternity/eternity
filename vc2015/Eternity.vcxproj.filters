@@ -1032,6 +1032,9 @@
     <ClCompile Include="..\source\aeon_acs.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\aeon_action.cpp">
+      <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1836,6 +1839,9 @@
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\aeon_acs.h">
+      <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\aeon_action.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>
     </ClInclude>
   </ItemGroup>

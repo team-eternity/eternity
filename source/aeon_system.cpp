@@ -24,6 +24,7 @@
 #include "scriptarray.h"
 
 #include "aeon_acs.h"
+#include "aeon_action.h"
 #include "aeon_common.h"
 #include "aeon_math.h"
 #include "aeon_mobj.h"
@@ -135,6 +136,8 @@ namespace Aeon
       ScriptObjMobj::Init();
 
       ScriptObjACS::Init();
+
+      ScriptObjAction::Init();
 
       if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
          I_Error("Aeon::ScriptManager::Init: Could not create module\n");
