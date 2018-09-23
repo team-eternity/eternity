@@ -25,6 +25,8 @@
 #ifndef AEON_STRING_H__
 #define AEON_STRING_H__
 
+class qstring;
+
 namespace Aeon
 {
    class ScriptObjString
@@ -32,6 +34,9 @@ namespace Aeon
    public:
       static void Init();
    };
+
+
+   qstring *CreateRefQString(const char *str);
 }
 
 #endif

@@ -36,6 +36,7 @@ namespace Aeon
 
    public:
       RefQString() : qstring(), refcount(1) {}
+      RefQString(const char *str) : qstring(str), refcount(1) {}
       RefQString(const RefQString &other) : qstring(other), refcount(1) {}
 
       // Basic factory
@@ -71,9 +72,9 @@ namespace Aeon
       // TODO: Cache
       const void *GetStringConstant(const char *data, asUINT length) override
       {
-         auto newStr = RefQString::Factory();
+         qstring *newStr = RefQString::Factory();
          newStr->copy(data, length);
-         return static_cast<qstring *>(newStr);
+         return static_cast<const void *>(newStr);
       }
 
       int ReleaseStringConstant(const void *str) override
@@ -143,7 +144,7 @@ namespace Aeon
    #define COMPRSIG(name) "int " name "(const String &in) const"
    #define MARGSIG(name)  "String &" name "(String &inout) const"
 
-   static aeonfuncreg_t qstringFuncs[] =
+   static const aeonfuncreg_t qstringFuncs[] =
    {
       { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos)  },
       { "uint length() const",            QSTRMETHOD(length)           },
@@ -209,6 +210,14 @@ namespace Aeon
       e->RegisterGlobalFunction("void print(const String &in)",
                                 WRAP_FN_PR(ASPrint, (const qstring &), void),
                                 asCALL_GENERIC);
+   }
+
+   //
+   // Creates a new reference qstring, for usage elsewhere
+   //
+   qstring *CreateRefQString(const char *str)
+   {
+      return static_cast<qstring *>(new RefQString(str));
    }
 }
 

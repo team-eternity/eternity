@@ -29,6 +29,7 @@
 #include "acs_intr.h"
 #include "aeon_acs.h"
 #include "aeon_common.h"
+#include "aeon_string.h"
 #include "aeon_system.h"
 #include "doomtype.h"
 #include "m_qstr.h"
@@ -38,6 +39,11 @@ namespace Aeon
    static int GetStringIndex(qstring &str)
    {
       return ~ACSenv.getString(str.constPtr())->idx;
+   }
+
+   static const qstring &StringForIndex(uint32_t idx)
+   {
+      return *CreateRefQString(ACSenv.getString(idx)->str);
    }
 
    static bool StartACSScriptS(Mobj *mo, const qstring &name,
@@ -158,22 +164,23 @@ namespace Aeon
       return ret;
    }
 
-   // ACS script starting function that requires map number as a parameter
-   #define MAPSIG(name, idarg) "bool " name " (EE::Mobj @mo, " idarg ","        \
-                                              "const uint32 mapnum,"            \
-                                              "const array<int> @args = null)"
-   // ACS script starting function that returns a result (and has no mapnum parameter)
+   // ACS script-starting function that requires map number as a parameter
+   #define MAPSIG(name, idarg) "bool " name "(EE::Mobj @mo, " idarg ","        \
+                                             "const uint32 mapnum,"            \
+                                             "const array<int> @args = null)"
+   // ACS script-starting function that returns a result (and has no mapnum parameter)
    #define RSLTSIG(name, idarg) "uint32 " name "(EE::Mobj @mo, " idarg ","      \
                                                "const array<int> @args = null)"
 
-   static aeonfuncreg_t acsFuncs[] =
+   static const aeonfuncreg_t acsFuncs[] =
    {
       { "int GetStringIndex(String &str)",                   WRAP_FN(GetStringIndex)        },
-      { MAPSIG("StartScript",       "const String &name"),   WRAP_FN(StartACSScriptS)       },
-      { MAPSIG("StartScriptAlways", "const String &name"),   WRAP_FN(StartACSScriptSAlways) },
-      { MAPSIG("StartScript",       "const int scriptnum"),  WRAP_FN(StartACSScriptI)       },
-      { MAPSIG("StartScriptAlways", "const int scriptnum"),  WRAP_FN(StartACSScriptIAlways) },
+      { "const String &StringForIndex(uint32 idx)",          WRAP_FN(StringForIndex)        },
+      { MAPSIG("StartScript",        "const String &name"),  WRAP_FN(StartACSScriptS)       },
+      { MAPSIG("StartScriptAlways",  "const String &name"),  WRAP_FN(StartACSScriptSAlways) },
       { RSLTSIG("StartScriptResult", "const String &name"),  WRAP_FN(StartACSScriptSResult) },
+      { MAPSIG("StartScript",        "const int scriptnum"), WRAP_FN(StartACSScriptI)       },
+      { MAPSIG("StartScriptAlways",  "const int scriptnum"), WRAP_FN(StartACSScriptIAlways) },
       { RSLTSIG("StartScriptResult", "const int scriptnum"), WRAP_FN(StartACSScriptSResult) },
    };
 

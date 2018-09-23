@@ -82,9 +82,14 @@ namespace Aeon
          S_StartSound(origin, sfxinfo->dehackednum);
    }
 
-   static aeonfuncreg_t mobjFuncs[]
+   static const aeonfuncreg_t mobjFuncs[]
    {
+      // Native Mobj methods
+      { "void backupPosition()",              WRAP_MFN(Mobj, backupPosition)                  },
+      { "void copyPosition(Mobj @other)",     WRAP_MFN(Mobj, copyPosition)                    },
       { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth)          },
+
+      // Non-methods that are used like methods in Aeon
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
       { "void startSound(EE::Sound @sound)",                   WRAP_OBJ_FIRST(MobjStartSound) },
 
@@ -134,7 +139,7 @@ namespace Aeon
       e->RegisterObjectProperty("Mobj", "int health",     asOFFSET(Mobj, health));
 
       e->RegisterObjectProperty("Mobj", "Mobj @target",   asOFFSET(Mobj, target));
-      e->RegisterObjectProperty("Mobj", "Mobj @tracer",   asOFFSET(Mobj, target));
+      e->RegisterObjectProperty("Mobj", "Mobj @tracer",   asOFFSET(Mobj, tracer));
 
       DECLAREMOBJFLAGS();
       DECLAREMOBJFLAGS(2);

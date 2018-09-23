@@ -118,7 +118,7 @@ namespace Aeon
       }*/
    };
 
-   static aeonfuncreg_t mathFuncs[]
+   static const aeonfuncreg_t mathFuncs[]
    {
       { "fixed_t Sin(const angle_t val)",                  WRAP_FN(Math::Sin)   },
       { "fixed_t Cos(const angle_t val)",                  WRAP_FN(Math::Cos)   },
@@ -131,7 +131,7 @@ namespace Aeon
       { "fixed_t Floor(const fixed_t val)",                WRAP_FN(Math::Floor) },
    };
 
-   static aeonfuncreg_t randFuncs[]
+   static const aeonfuncreg_t randFuncs[]
    {
       { "uint   RandUInt()",                                       WRAP_FN(Rand::UInt)   },
       { "uint8  RandByte()",                                       WRAP_FN(Rand::Byte)   },
@@ -259,7 +259,7 @@ namespace Aeon
    #define FIXEDASSIGNOP(op, param) \
       WRAP_MFN_PR(Fixed, operator op,  (param), Fixed &)
 
-   static aeonfuncreg_t fixedFuncs[] =
+   static const aeonfuncreg_t fixedFuncs[] =
    {
       { "fixed_t opAdd(const fixed_t &in)",        FIXEDBINOP(+, const Fixed &)         },
       { "fixed_t opAdd(const int val)",            FIXEDBINOP(+, const int),                },
@@ -447,30 +447,30 @@ namespace Aeon
       C_Printf("%f\n", M_FixedToDouble(AngleToFixed(f.value)));
    }
 
-   static aeonfuncreg_t angleFuncs[] =
+   static const aeonfuncreg_t angleFuncs[] =
    {
-      { "angle_t opAdd(const angle_t &in)",        ANGLEBINOP(+, const Angle &)         },
-      { "angle_t opAdd(const fixed_t &in)",        ANGLEBINOP(+, const Fixed &)         },
-      { "angle_t opAdd(const int val)",            ANGLEBINOP(+, const int),                },
-      { "angle_t opSub(const angle_t &in)",        ANGLEBINOP(-, const Angle &)         },
-      { "angle_t opSub(const fixed_t &in)",        ANGLEBINOP(-, const Fixed &)         },
-      { "angle_t opSub(const int val)",            ANGLEBINOP(-, const int),                },
-      { "angle_t opMul(const fixed_t &in)",        ANGLEBINOP(*, const Fixed &)         },
-      { "angle_t opMul(const int val)",            ANGLEBINOP(*, const int)                 },
-      { "angle_t opDiv(const angle_t &in)",        ANGLEBINOP(/, const Angle &)         },
-      { "angle_t opDiv(const fixed_t &in)",        ANGLEBINOP(/, const Fixed &)         },
-      { "angle_t opDiv(const int val)",            ANGLEBINOP(/, const int)                 },
-      { "angle_t &opAddAssign(const angle_t &in)", ANGLEASSIGNOP(+=, const Angle &)     },
-      { "angle_t &opAddAssign(const fixed_t &in)", ANGLEASSIGNOP(+=, const Fixed &)     },
-      { "angle_t &opAddAssign(const int val)",     ANGLEASSIGNOP(+=, const int)             },
-      { "angle_t &opSubAssign(const angle_t &in)", ANGLEASSIGNOP(-=, const Angle &)     },
-      { "angle_t &opSubAssign(const fixed_t &in)", ANGLEASSIGNOP(-=, const Fixed &)     },
-      { "angle_t &opSubAssign(const int val)",     ANGLEASSIGNOP(-=, const int)             },
-      { "angle_t &opMulAssign(const angle_t &in)", ANGLEASSIGNOP(*=, const Fixed &)     },
-      { "angle_t &opMulAssign(const int val)",     ANGLEASSIGNOP(*=, const int)             },
-      { "angle_t &opDivAssign(const angle_t &in)", ANGLEASSIGNOP(/=, const Angle &)     },
-      { "angle_t &opDivAssign(const fixed_t &in)", ANGLEASSIGNOP(/=, const Fixed &)     },
-      { "angle_t &opDivAssign(const int val)",     ANGLEASSIGNOP(/=, const int)             },
+      { "angle_t opAdd(const angle_t &in)",        ANGLEBINOP(+, const Angle &)     },
+      { "angle_t opAdd(const fixed_t &in)",        ANGLEBINOP(+, const Fixed &)     },
+      { "angle_t opAdd(const int val)",            ANGLEBINOP(+, const int),        },
+      { "angle_t opSub(const angle_t &in)",        ANGLEBINOP(-, const Angle &)     },
+      { "angle_t opSub(const fixed_t &in)",        ANGLEBINOP(-, const Fixed &)     },
+      { "angle_t opSub(const int val)",            ANGLEBINOP(-, const int),        },
+      { "angle_t opMul(const fixed_t &in)",        ANGLEBINOP(*, const Fixed &)     },
+      { "angle_t opMul(const int val)",            ANGLEBINOP(*, const int)         },
+      { "angle_t opDiv(const angle_t &in)",        ANGLEBINOP(/, const Angle &)     },
+      { "angle_t opDiv(const fixed_t &in)",        ANGLEBINOP(/, const Fixed &)     },
+      { "angle_t opDiv(const int val)",            ANGLEBINOP(/, const int)         },
+      { "angle_t &opAddAssign(const angle_t &in)", ANGLEASSIGNOP(+=, const Angle &) },
+      { "angle_t &opAddAssign(const fixed_t &in)", ANGLEASSIGNOP(+=, const Fixed &) },
+      { "angle_t &opAddAssign(const int val)",     ANGLEASSIGNOP(+=, const int)     },
+      { "angle_t &opSubAssign(const angle_t &in)", ANGLEASSIGNOP(-=, const Angle &) },
+      { "angle_t &opSubAssign(const fixed_t &in)", ANGLEASSIGNOP(-=, const Fixed &) },
+      { "angle_t &opSubAssign(const int val)",     ANGLEASSIGNOP(-=, const int)     },
+      { "angle_t &opMulAssign(const angle_t &in)", ANGLEASSIGNOP(*=, const Fixed &) },
+      { "angle_t &opMulAssign(const int val)",     ANGLEASSIGNOP(*=, const int)     },
+      { "angle_t &opDivAssign(const angle_t &in)", ANGLEASSIGNOP(/=, const Angle &) },
+      { "angle_t &opDivAssign(const fixed_t &in)", ANGLEASSIGNOP(/=, const Fixed &) },
+      { "angle_t &opDivAssign(const int val)",     ANGLEASSIGNOP(/=, const int)     },
       { "fixed_t opImplConv() const",              WRAP_MFN(Angle, operator Fixed)  },
    };
 
