@@ -31,29 +31,52 @@
 #include "aeon_system.h"
 #include "a_args.h"
 #include "e_actions.h"
+#include "e_hash.h"
 #include "m_compare.h"
 #include "m_qstr.h"
 #include "m_utils.h"
 #include "p_mobj.h"
 
+#include "g_game.h"
+
 namespace Aeon
 {
-   static void ExecuteActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
+   // This structure provides a record of unfound actions that Aeon has tried to call
+   struct actionrecord_t
    {
-      // FIXME: Sanity check
-      action_t *action = E_GetAction(name.constPtr());
+      const char *name;
+      DLListItem<actionrecord_t> links;
+   };
 
-      actionargs_t args = { actionargs_t::MOBJFRAME, mo };
+   static
+      EHashTable<actionrecord_t, ENCStringHashKey,
+                 &actionrecord_t::name, &actionrecord_t::links> e_InvalidActionHash;
 
-      arglist_t arglist = {};
-      const int argc = argv ? argv->GetSize() : 0;
-      for(int i = 0; i < emin(argc, EMAXARGS); i++)
-         arglist.args[i] = const_cast<qstring *>(static_cast<const qstring *>(argv->At(i)))->getBuffer();
-      arglist.numargs = argc;
+   static void ExecuteActionMobj(Mobj &mo, const qstring &name, const CScriptArray *argv)
+   {
+      action_t *action        = E_GetAction(name.constPtr());
+      const int argc          = argv ? emin(static_cast<int>(argv->GetSize()), EMAXARGS) : 0;
+      arglist_t arglist       = { {}, {}, argc };
+      actionargs_t actionargs = { actionargs_t::MOBJFRAME, &mo, nullptr, &arglist };
 
-      args.args = &arglist;
+      // Log if the provided action is invalid
+      if(!action)
+      {
+         if(!e_InvalidActionHash.objectForKey(name.constPtr()))
+         {
+            doom_printf("Aeon: EE::ExecuteAction: Action '%s' not found\a\n",
+                        name.constPtr());
+            actionrecord_t *record = estructalloc(actionrecord_t, 1);
+            record->name = name.duplicate();
+            e_InvalidActionHash.addObject(record);
+         }
+         return;
+      }
 
-      action->codeptr(&args);
+      for(int i = 0; i < argc; i++)
+         arglist.args[i] = static_cast<qstring *>(const_cast<void *>(argv->At(i)))->getBuffer();
+
+      action->codeptr(&actionargs);
    }
 
    //
@@ -95,8 +118,8 @@ namespace Aeon
                                                   "const array<EE::actionarg_t> @args = null)"
    static const aeonfuncreg_t actionFuncs[] =
    {
-      { EXECSIG("ExecuteAction", "Mobj @mo"),       WRAP_FN(ExecuteActionMobj)   },
-    //{ EXECSIG("ExecuteAction", "Player @player"), WRAP_FN(ExecuteActionPlayer) },
+      { EXECSIG("ExecuteAction", "Mobj &mo"),       WRAP_FN(ExecuteActionMobj)   },
+    //{ EXECSIG("ExecuteAction", "Player &player"), WRAP_FN(ExecuteActionPlayer) },
    };
 
    void ScriptObjAction::Init()
