@@ -22,6 +22,9 @@
 // Authors: Max Waine
 //
 
+#ifndef AEON_ACTION_H__
+#define AEON_ACTION_H__
+
 namespace Aeon
 {
    class ScriptObjAction
@@ -30,6 +33,8 @@ namespace Aeon
       static void Init();
    };
 }
+
+#endif
 
 // EOF
 

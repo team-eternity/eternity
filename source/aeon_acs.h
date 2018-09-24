@@ -22,6 +22,9 @@
 // Authors: Max Waine
 //
 
+#ifndef AEON_ACS_H__
+#define AEON_ACS_H__
+
 namespace Aeon
 {
    class ScriptObjACS
@@ -30,6 +33,8 @@ namespace Aeon
       static void Init();
    };
 }
+
+#endif
 
 // EOF
 

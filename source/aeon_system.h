@@ -19,8 +19,8 @@
 // Authors: Samuel Villarreal, Max Waine
 //
 
-#ifndef AEON_INIT_H__
-#define AEON_INIT_H__
+#ifndef AEON_SYSTEM_H__
+#define AEON_SYSTEM_H__
 
 class  asIScriptContext;
 class  asIScriptEngine;
