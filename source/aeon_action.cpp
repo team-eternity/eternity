@@ -55,11 +55,12 @@ namespace Aeon
    static void ExecuteActionMobj(Mobj &mo, const qstring &name, const CScriptArray *argv)
    {
       action_t *action        = E_GetAction(name.constPtr());
-      const int argc          = argv ? emin(static_cast<int>(argv->GetSize()), EMAXARGS) : 0;
+      const int argc          = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
       arglist_t arglist       = { {}, {}, argc };
-      actionargs_t actionargs = { actionargs_t::MOBJFRAME, &mo, nullptr, &arglist };
+      actionargs_t actionargs = { actionargs_t::MOBJFRAME, &mo, nullptr,
+                                  &arglist, action->aeonaction };
 
-      // Log if the provided action is invalid
+      // Log if the desired action doesn't exist, if not already present in the hash table
       if(!action)
       {
          if(!e_InvalidActionHash.objectForKey(name.constPtr()))
@@ -99,19 +100,33 @@ namespace Aeon
       {
          self->~qstring();
       }
+
+      // Assignment functions
+      static qstring &AssignString(const qstring &in, qstring *self)
+      {
+         return in.copyInto(*self);
+      }
+      static qstring &AssignInt(const int val, qstring *self)
+      {
+         self->clear();
+         *self << val;
+         return *self;
+      }
+      static qstring &AssignDouble(const double val, qstring *self)
+      {
+         self->clear();
+         *self << val;
+         return *self;
+      }
+      static qstring &AssignFixed(const Fixed &val, qstring *self)
+      {
+         char buf[19]; // minus, 5 digits, dot, 11 digits, null terminator
+         psnprintf(buf, sizeof(buf), "%.11f", M_FixedToDouble(val.value));
+
+         *self = buf;
+         return *self;
+      }
    };
-
-   static qstring &AssignStringToActionArg(const qstring &in, qstring *self)
-   {
-      return in.copyInto(*self);
-   }
-
-   static qstring &AssignIntToActionArg(const int val, qstring *self)
-   {
-      self->clear();
-      *self << val;
-      return *self;
-   }
 
    #define EXECSIG(name, activatee) "void " name "(" activatee "," \
                                                   "const String &name,"   \
@@ -122,14 +137,28 @@ namespace Aeon
     //{ EXECSIG("ExecuteAction", "Player &player"), WRAP_FN(ExecuteActionPlayer) },
    };
 
+
+   #define QSTRXFORM(m)  WRAP_MFN_PR(qstring, m, (const qstring &), qstring &)
+
+   #define ASSIGNSIG(arg) "actionarg_t &opAssign(" arg ")"
+
+   static const aeonfuncreg_t actionargFuncs[] =
+   {
+      { ASSIGNSIG("const actionarg_t &in"), QSTRXFORM(operator =)                  },
+      { ASSIGNSIG("const String &in"),      WRAP_OBJ_LAST(ActionArg::AssignString) },
+      { ASSIGNSIG("const int"),             WRAP_OBJ_LAST(ActionArg::AssignInt)    },
+      { ASSIGNSIG("const double"),          WRAP_OBJ_LAST(ActionArg::AssignDouble) },
+      { ASSIGNSIG("const fixed_t &in"),     WRAP_OBJ_LAST(ActionArg::AssignFixed)  }
+   };
+
    void ScriptObjAction::Init()
    {
       asIScriptEngine *e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
 
-      // register type
-      int ret = e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CDAK);
+      // Register actionarg_t, which is just a qstring that stuff automatically converts to
+      e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CDAK);
 
       e->RegisterObjectBehaviour("actionarg_t", asBEHAVE_CONSTRUCT, "void f()",
                                  WRAP_OBJ_LAST(ActionArg::Construct), asCALL_GENERIC);
@@ -138,13 +167,8 @@ namespace Aeon
       e->RegisterObjectBehaviour("actionarg_t", asBEHAVE_DESTRUCT, "void f()",
                                  WRAP_OBJ_LAST(ActionArg::Destruct), asCALL_GENERIC);
 
-      e->RegisterObjectMethod("actionarg_t", "actionarg_t &opAssign(const actionarg_t &in)",
-                              WRAP_MFN_PR(qstring, operator =, (const qstring &), qstring &),
-                              asCALL_GENERIC);
-      e->RegisterObjectMethod("actionarg_t", "actionarg_t &opAssign(const String &in)",
-                              WRAP_OBJ_LAST(AssignStringToActionArg), asCALL_GENERIC);
-      e->RegisterObjectMethod("actionarg_t", "actionarg_t &opAssign(const int)",
-                              WRAP_OBJ_LAST(AssignIntToActionArg), asCALL_GENERIC);
+      for(const aeonfuncreg_t &fn : actionargFuncs)
+         e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
       for(const aeonfuncreg_t  &fn : actionFuncs)
          e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
