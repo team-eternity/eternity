@@ -98,11 +98,6 @@ namespace Aeon
       static uint8_t      Byte()             { return P_Random(pr_script);                }
       static unsigned int Max(const int max) { return P_RangeRandomEx(pr_script, 0, max); }
       static Aeon::Fixed  Fixed()            { return Aeon::Fixed(P_RandomEx(pr_script)); }
-      static Aeon::Fixed  CFixed()
-      {
-         // TODO: FRACUNIT or FRACUNIT-1?
-         return Aeon::Fixed(P_RangeRandomEx(pr_script, 0, FRACUNIT));
-      }
       static Aeon::Fixed Range(const Aeon::Fixed min, const Aeon::Fixed max)
       {
          if(min.value >= 0)
@@ -111,7 +106,7 @@ namespace Aeon
                                             max.value - min.value) + min.value);
       }
 
-      /*static unsigned int SubUInt(const unsigned int max) { return P_SubRandomEx(pr_script, max); }
+      /*static int SubInt(const unsigned int max) { return P_SubRandomEx(pr_script, max); }
       static Fixed SubFixed(const Fixed max)
       {
          return Fixed(P_SubRandomEx(pr_script, max.value));
@@ -133,12 +128,11 @@ namespace Aeon
 
    static const aeonfuncreg_t randFuncs[]
    {
-      { "uint   RandUInt()",                                       WRAP_FN(Rand::UInt)   },
-      { "uint8  RandByte()",                                       WRAP_FN(Rand::Byte)   },
-      { "uint   RandMax(const uint max)",                          WRAP_FN(Rand::UInt)   },
-      { "fixed_t RandFixed()",                                     WRAP_FN(Rand::Fixed)  },
-      { "fixed_t RandCFixed()",                                    WRAP_FN(Rand::CFixed) },
-      { "fixed_t RandRange(const fixed_t min, const fixed_t max)", WRAP_FN(Rand::Range)  },
+      { "uint   RandUInt()",                                       WRAP_FN(Rand::UInt)  },
+      { "uint8  RandByte()",                                       WRAP_FN(Rand::Byte)  },
+      { "uint   RandMax(const uint max)",                          WRAP_FN(Rand::UInt)  },
+      { "fixed_t RandFixed()",                                     WRAP_FN(Rand::Fixed) },
+      { "fixed_t RandRange(const fixed_t min, const fixed_t max)", WRAP_FN(Rand::Range) },
 
    };
 

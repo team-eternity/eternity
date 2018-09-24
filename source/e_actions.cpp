@@ -247,10 +247,10 @@ static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
-   asIScriptEngine *e      = Aeon::ScriptManager::Engine();
-   asIScriptModule *module = Aeon::ScriptManager::Module();
-   static const asITypeInfo *mobjtypeinfo = E_getClassTypeInfo("Mobj");
-   //static const asITypeInfo *playertypeinfo = GetClassTypeInfo("Player");
+   asIScriptEngine *e                       = Aeon::ScriptManager::Engine();
+   asIScriptModule *module                  = Aeon::ScriptManager::Module();
+   static const asITypeInfo *mobjtypeinfo   = E_getClassTypeInfo("Mobj");
+ //static const asITypeInfo *playertypeinfo = E_getClassTypeInfo("Player");
    const char *name = cfg_title(actionsec);
    const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
 

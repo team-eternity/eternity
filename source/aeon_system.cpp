@@ -157,16 +157,16 @@ namespace Aeon
 
    void ScriptManager::PushState()
    {
-       state = ctx->GetState();
+      state = ctx->GetState();
 
-       if(state == asEXECUTION_ACTIVE)
-           ctx->PushState();
+      if(state == asEXECUTION_ACTIVE)
+         ctx->PushState();
    }
 
    void ScriptManager::PopState()
    {
-       if(state == asEXECUTION_ACTIVE)
-           ctx->PopState();
+      if(state == asEXECUTION_ACTIVE)
+         ctx->PopState();
    }
 
    bool ScriptManager::PrepareFunction(asIScriptFunction *function)
@@ -189,20 +189,20 @@ namespace Aeon
 
    bool ScriptManager::PrepareFunction(const char *function)
    {
-       return PrepareFunction(module->GetFunctionByName(function));
+      return PrepareFunction(module->GetFunctionByName(function));
    }
 
    bool ScriptManager::Execute()
    {
-       if(ctx->Execute() == asEXECUTION_EXCEPTION)
-       {
-           PopState();
-           I_Error("AeonScriptManager::Execute: %s\n", ctx->GetExceptionString());
-           return false;
-       }
+      if(ctx->Execute() == asEXECUTION_EXCEPTION)
+      {
+         PopState();
+         I_Error("AeonScriptManager::Execute: %s\n", ctx->GetExceptionString());
+         return false;
+      }
 
-       PopState();
-       return true;
+      PopState();
+      return true;
    }
 }
 

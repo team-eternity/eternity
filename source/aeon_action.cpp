@@ -54,7 +54,7 @@ namespace Aeon
 
    static void ExecuteActionMobj(Mobj &mo, const qstring &name, const CScriptArray *argv)
    {
-      action_t *action        = E_GetAction(name.constPtr());
+      const action_t *action  = E_GetAction(name.constPtr());
       const int argc          = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
       arglist_t arglist       = { {}, {}, argc };
       actionargs_t actionargs = { actionargs_t::MOBJFRAME, &mo, nullptr,
@@ -120,7 +120,7 @@ namespace Aeon
       }
       static qstring &AssignFixed(const Fixed &val, qstring *self)
       {
-         char buf[19]; // minus, 5 digits, dot, 11 digits, null terminator
+         char buf[19]; // minus, 5 digits max, dot, 11 digits max, null terminator
          psnprintf(buf, sizeof(buf), "%.11f", M_FixedToDouble(val.value));
 
          *self = buf;
@@ -166,10 +166,10 @@ namespace Aeon
                                  WRAP_OBJ_LAST(ActionArg::IntConstructor), asCALL_GENERIC);
       e->RegisterObjectBehaviour("actionarg_t", asBEHAVE_DESTRUCT, "void f()",
                                  WRAP_OBJ_LAST(ActionArg::Destruct), asCALL_GENERIC);
-
       for(const aeonfuncreg_t &fn : actionargFuncs)
          e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
+      // The actual functions that call the actions
       for(const aeonfuncreg_t  &fn : actionFuncs)
          e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
