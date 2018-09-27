@@ -52,12 +52,12 @@ namespace Aeon
       EHashTable<actionrecord_t, ENCStringHashKey,
                  &actionrecord_t::name, &actionrecord_t::links> e_InvalidActionHash;
 
-   static void ExecuteActionMobj(Mobj &mo, const qstring &name, const CScriptArray *argv)
+   static void ExecuteActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
    {
       const action_t *action  = E_GetAction(name.constPtr());
       const int argc          = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
       arglist_t arglist       = { {}, {}, argc };
-      actionargs_t actionargs = { actionargs_t::MOBJFRAME, &mo, nullptr,
+      actionargs_t actionargs = { actionargs_t::MOBJFRAME, mo, nullptr,
                                   &arglist, action->aeonaction };
 
       // Log if the desired action doesn't exist, if not already present in the hash table
@@ -128,16 +128,6 @@ namespace Aeon
       }
    };
 
-   #define EXECSIG(name, activatee) "void " name "(" activatee "," \
-                                                  "const String &name,"   \
-                                                  "const array<EE::actionarg_t> @args = null)"
-   static const aeonfuncreg_t actionFuncs[] =
-   {
-      { EXECSIG("ExecuteAction", "Mobj &mo"),       WRAP_FN(ExecuteActionMobj)   },
-    //{ EXECSIG("ExecuteAction", "Player &player"), WRAP_FN(ExecuteActionPlayer) },
-   };
-
-
    #define QSTRXFORM(m)  WRAP_MFN_PR(qstring, m, (const qstring &), qstring &)
 
    #define ASSIGNSIG(arg) "actionarg_t &opAssign(" arg ")"
@@ -150,6 +140,10 @@ namespace Aeon
       { ASSIGNSIG("const double"),          WRAP_OBJ_LAST(ActionArg::AssignDouble) },
       { ASSIGNSIG("const fixed_t &in"),     WRAP_OBJ_LAST(ActionArg::AssignFixed)  }
    };
+
+   #define EXECSIG(name) "void " name "(const String &name," \
+                                       "const array<EE::actionarg_t> @args = null)"
+
 
    void ScriptObjAction::Init()
    {
@@ -169,9 +163,11 @@ namespace Aeon
       for(const aeonfuncreg_t &fn : actionargFuncs)
          e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      // The actual functions that call the actions
-      for(const aeonfuncreg_t  &fn : actionFuncs)
-         e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->RegisterObjectMethod("Mobj", EXECSIG("executeAction"),
+                              WRAP_OBJ_FIRST(ExecuteActionMobj), asCALL_GENERIC);
+
+      //e->RegisterObjectMethod("Player", EXECSIG("executeAction"),
+       //                       WRAP_OBJ_FIRST(ExecuteActionPlayer), asCALL_GENERIC);
 
       e->SetDefaultNamespace("");
    }

@@ -197,7 +197,8 @@ namespace Aeon
       if(ctx->Execute() == asEXECUTION_EXCEPTION)
       {
          PopState();
-         I_Error("AeonScriptManager::Execute: %s\n", ctx->GetExceptionString());
+         I_Error("AeonScriptManager::Execute: Encountered AngelScript exception: %s\n",
+                 ctx->GetExceptionString());
          return false;
       }
 

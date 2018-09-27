@@ -94,15 +94,15 @@ namespace Aeon
    class Rand
    {
    public:
-      static unsigned int UInt()             { return P_RandomEx(pr_script);              }
-      static uint8_t      Byte()             { return P_Random(pr_script);                }
-      static unsigned int Max(const int max) { return P_RangeRandomEx(pr_script, 0, max); }
-      static Aeon::Fixed  Fixed()            { return Aeon::Fixed(P_RandomEx(pr_script)); }
+      static unsigned int UInt()             { return P_RandomEx(pr_aeon);              }
+      static uint8_t      Byte()             { return P_Random(pr_aeon);                }
+      static unsigned int Max(const int max) { return P_RangeRandomEx(pr_aeon, 0, max); }
+      static Aeon::Fixed  Fixed()            { return Aeon::Fixed(P_RandomEx(pr_aeon)); }
       static Aeon::Fixed Range(const Aeon::Fixed min, const Aeon::Fixed max)
       {
          if(min.value >= 0)
-            return Aeon::Fixed(P_RangeRandomEx(pr_script, min.value, max.value));
-         return Aeon::Fixed(P_RangeRandomEx(pr_script, min.value - min.value,
+            return Aeon::Fixed(P_RangeRandomEx(pr_aeon, min.value, max.value));
+         return Aeon::Fixed(P_RangeRandomEx(pr_aeon, min.value - min.value,
                                             max.value - min.value) + min.value);
       }
 
@@ -293,7 +293,7 @@ namespace Aeon
       e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
                                  WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
 
-      // TODO: Figure if there's a nicer way to do this
+      // AEON_TODO: Figure if there's a nicer way to do this
       e->SetDefaultNamespace("fixed_t");
       e->RegisterGlobalFunction("fixed_t FromBits(const int val)",
                                 WRAP_FN(ConstructFromBits), asCALL_GENERIC);
@@ -436,6 +436,13 @@ namespace Aeon
       thisAngle->value = IntToAngle(other);
    }
 
+   Angle ScriptObjAngle::ConstructFromBits(angle_t bits)
+   {
+      Angle ret = Angle();
+      ret.value = bits;
+      return ret;
+   }
+
    static void ASPrint(Angle f)
    {
       C_Printf("%f\n", M_FixedToDouble(AngleToFixed(f.value)));
@@ -483,6 +490,12 @@ namespace Aeon
                                  WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC);
       e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const int)",
                                  WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
+
+      // AEON_TODO: Figure if there's a nicer way to do this
+      e->SetDefaultNamespace("angle_t");
+      e->RegisterGlobalFunction("angle_t FromBits(const uint val)",
+                                WRAP_FN(ConstructFromBits), asCALL_GENERIC);
+      e->SetDefaultNamespace("");
 
       for(const aeonfuncreg_t &fn : angleFuncs)
          e->RegisterObjectMethod("angle_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);

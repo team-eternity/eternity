@@ -123,11 +123,11 @@ namespace Aeon
    class ScriptObjFixed
    {
    public:
-      static void Construct(Fixed *thisFixed);
-      static void ConstructFromOther(const Fixed &other, Fixed *thisFixed);
-      static void ConstructFromDouble(double other, Fixed *thisFixed);
-      static void ConstructFromInt(int other, Fixed *thisFixed);
-      static void ConstructFromPair(int16_t integer, double frac, Fixed *thisFixed);
+      static void  Construct(Fixed *thisFixed);
+      static void  ConstructFromOther(const Fixed &other, Fixed *thisFixed);
+      static void  ConstructFromDouble(double other, Fixed *thisFixed);
+      static void  ConstructFromInt(int other, Fixed *thisFixed);
+      static void  ConstructFromPair(int16_t integer, double frac, Fixed *thisFixed);
       static Fixed ConstructFromBits(int bits);
 
       static void Init();
@@ -136,10 +136,11 @@ namespace Aeon
    class ScriptObjAngle
    {
    public:
-      static void Construct(Angle *thisAngle);
-      static void ConstructFromOther(const Angle &other, Angle *thisAngle);
-      static void ConstructFromDouble(double other, Angle *thisAngle);
-      static void ConstructFromInt(int other, Angle *thisAngle);
+      static void  Construct(Angle *thisAngle);
+      static void  ConstructFromOther(const Angle &other, Angle *thisAngle);
+      static void  ConstructFromDouble(double other, Angle *thisAngle);
+      static void  ConstructFromInt(int other, Angle *thisAngle);
+      static Angle ConstructFromBits(angle_t bits);
 
       static void Init();
    };

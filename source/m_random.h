@@ -240,6 +240,8 @@ typedef enum {
   pr_puffblood,   // P_shootThing draw blood when Heretic-like puff is defined
   pr_nailbombshoot,  // A_Nailbomb random damage
 
+  pr_aeon, // Aeon RNG
+
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 
