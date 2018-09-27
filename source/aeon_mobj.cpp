@@ -82,6 +82,18 @@ namespace Aeon
          S_StartSound(origin, sfxinfo->dehackednum);
    }
 
+   static Fixed MobjAimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
+   {
+      return Fixed(P_AimLineAttack(t1, angle.value, distance.value,
+                                   flags & 1 ? true : false));
+   }
+
+   static void MobjLineAttack(Mobj *t1, Angle angle, Fixed distance, Fixed slope,
+                              int damage, const qstring &pufftype)
+   {
+      P_LineAttack(t1, angle.value, distance.value, slope.value, damage, pufftype.constPtr());
+   }
+
    static const aeonfuncreg_t mobjFuncs[]
    {
       // Native Mobj methods
@@ -92,6 +104,12 @@ namespace Aeon
       // Non-methods that are used like methods in Aeon
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
       { "void startSound(EE::Sound @sound)",                   WRAP_OBJ_FIRST(MobjStartSound) },
+      { "fixed_t aimLineAttack(angle_t angle, fixed_t distance,"
+                              "alaflags_e flags = ALF_NOSKIP)",
+         WRAP_OBJ_FIRST(MobjAimLineAttack)                                                    },
+      { "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope, int damage,"
+                        "const String &pufftype",
+         WRAP_OBJ_FIRST(MobjLineAttack)                                                       },
 
       // Indexed property accessors (enables [] syntax for counters)
       { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)  },
@@ -102,8 +120,8 @@ namespace Aeon
    };
 
    #define DECLAREMOBJFLAGS(x) \
-      e->RegisterEnum("EnumMobjFlags" #x); \
-      e->RegisterObjectProperty("Mobj", "EnumMobjFlags" #x " flags" #x, asOFFSET(Mobj, flags ##x));
+      e->RegisterEnum("mobjflags" #x "_e"); \
+      e->RegisterObjectProperty("Mobj", "mobjflags" #x "_e flags" #x, asOFFSET(Mobj, flags ##x));
 
    void ScriptObjMobj::Init()
    {
@@ -123,9 +141,6 @@ namespace Aeon
                                  WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
       e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
                                  WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
-
-      for(const aeonfuncreg_t &fn : mobjFuncs)
-         e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
       e->RegisterObjectProperty("Mobj", "fixed_t x",      asOFFSET(Mobj, x));
       e->RegisterObjectProperty("Mobj", "fixed_t y",      asOFFSET(Mobj, y));
@@ -147,17 +162,27 @@ namespace Aeon
       DECLAREMOBJFLAGS(4);
       for(dehflags_t *flag = deh_mobjflags; flag->name != nullptr; flag++)
       {
-         qstring type("EnumMobjFlags");
+         qstring type("mobjflags");
          qstring name = qstring("MF");
          if(flag->index > 0)
          {
             name << (flag->index + 1);
             type <<  (flag->index + 1);
          }
+         type << "_e";
 
          name << "_" << flag->name;
          e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
       }
+
+      e->RegisterEnum("alaflags_e");
+      e->RegisterEnumValue("alaflags_e", "ALF_NOSKIP",     0);
+      e->RegisterEnumValue("alaflags_e", "ALF_SKIPFRIEND", 1);
+
+      // Register all Aeon Mobj methods
+      for(const aeonfuncreg_t &fn : mobjFuncs)
+         e->RegisterObjectMethod("Mobj", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
 
       // It's Mobj-related, OK?
       e->SetDefaultNamespace("EE::Mobj");

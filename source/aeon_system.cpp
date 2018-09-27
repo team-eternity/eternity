@@ -134,10 +134,10 @@ namespace Aeon
       ScriptObjMath::Init();
 
       ScriptObjMobj::Init();
+      //ScriptObjPlayer::Init();
+      ScriptObjAction::Init();
 
       ScriptObjACS::Init();
-
-      ScriptObjAction::Init();
 
       if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
          I_Error("Aeon::ScriptManager::Init: Could not create module\n");
