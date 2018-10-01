@@ -30,6 +30,8 @@
 #ifndef A_ARGS_H__
 #define A_ARGS_H__
 
+#include "doomtype.h"
+
 struct arglist_t;
 class  Mobj;
 struct pspdef_t;
@@ -37,7 +39,7 @@ struct pspdef_t;
 struct actionargs_t
 {
    // activation type enumeration
-   enum actiontype_e
+   enum actiontype_e : uint8_t
    {
       MOBJFRAME,   // invoked from P_SetMobjState
       WEAPONFRAME, // invoked from P_SetPsprite
