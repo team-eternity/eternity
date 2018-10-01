@@ -1553,11 +1553,14 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             }
             if(useaction != nullptr)
             {
-               // We ALWAYS update the actor and psprite
+               actionargs_t action = *useaction;
+
+               // Temporarily note down that the called codepointer shouldn't subtract ammo
                player->attackdown = static_cast<attacktype_e>(player->attackdown | AT_ITEM);
-               useaction->actor = player->mo;
-               useaction->pspr = player->psprites;
-               ptr->cptr(useaction);
+               // We ALWAYS update the actor and psprite
+               action.actor = player->mo;
+               action.pspr  = player->psprites;
+               ptr->cptr(&action);
                success = true;
                player->attackdown = static_cast<attacktype_e>(player->attackdown & ~AT_ITEM);
             }
@@ -1587,6 +1590,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             shiftinvleft = true;
          }
 
+         // FIXME: Make this behaviour optional, or remove
          if(shiftinvleft)
          {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);

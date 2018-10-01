@@ -109,9 +109,8 @@ fixed_t       E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue);
 double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
-state_t      *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index);
-state_t      *E_ArgAsStateLabel(const player_t *player, const arglist_t *al,
-                                   int index);
+state_t      *E_ArgAsStateLabel(const Mobj *mo,         const arglist_t *al, int index);
+state_t      *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int index);
 int           E_ArgAsStateNum(  arglist_t *al, int index, const Mobj     *mo);
 int           E_ArgAsStateNum(  arglist_t *al, int index, const player_t *player);
 int           E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj     *mo);
@@ -126,8 +125,8 @@ emod_t       *E_ArgAsDamageType(arglist_t *al, int index, int defvalue);
 int           E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw,
                          int defvalue);
 
-state_t      *E_GetJumpInfo(mobjinfo_t *mi, const char *arg);
-state_t      *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg);
+state_t      *E_GetJumpInfo(const mobjinfo_t *mi, const char *arg);
+state_t      *E_GetWpnJumpInfo(const weaponinfo_t *wi, const char *arg);
 
 #endif
 

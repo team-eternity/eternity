@@ -127,8 +127,8 @@ void A_InitKeyGizmo(actionargs_t *actionargs)
       return;
 
    int         orbType = E_SafeThingName("KeyGizmoOrb");
-   mobjinfo_t *mi      = mobjinfo[orbType];
-   state_t    *state   = E_GetStateForMobjInfo(mi, stateName);
+   const mobjinfo_t *mi = mobjinfo[orbType];
+   const state_t *state = E_GetStateForMobjInfo(mi, stateName);
 
    Mobj *mo = P_SpawnMobj(gizmo->x, gizmo->y, gizmo->z + 60*FRACUNIT, orbType);
    if(state)

@@ -436,7 +436,7 @@ weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weap
 //
 weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
 {
-   for(const weaponslot_t *const &slot : player->pclass->weaponslots)
+   for(const weaponslot_t *slot : player->pclass->weaponslots)
    {
       weaponslot_t *ret;
       if((ret = E_findEntryForWeaponInSlot(player, wp, slot)) != nullptr)
@@ -615,17 +615,22 @@ static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 
    return ret;
 }
+inline static const int *E_getNativeWepStateLoc(const weaponinfo_t *wi,
+                                                const char *label)
+{
+   return E_getNativeWepStateLoc(const_cast<weaponinfo_t *>(wi), label);
+}
 
 //
 // Retrieves any state for an weaponinfo, either native or metastate.
 // Returns null if no such state can be found. Note that the null state is
 // not considered a valid state.
 //
-state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
+state_t *E_GetStateForWeaponInfo(const weaponinfo_t *wi, const char *label)
 {
-   MetaState *ms;
+   const MetaState *ms;
    state_t *ret = nullptr;
-   int *nativefield = nullptr;
+   const int *nativefield = nullptr;
 
    // check metastates
    if((ms = E_GetMetaState(wi, label)))
