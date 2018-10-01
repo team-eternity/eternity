@@ -37,6 +37,12 @@ struct aeonfuncreg_t
    // asDWORD     callConv;
 };
 
+struct aeonpropreg_t
+{
+   const char *declaration;
+   int         byteOffset;
+};
+
 #endif
 
 // EOF

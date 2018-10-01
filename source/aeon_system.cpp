@@ -196,9 +196,16 @@ namespace Aeon
    {
       if(ctx->Execute() == asEXECUTION_EXCEPTION)
       {
+         // Determine the function where the exception occurred
+         const asIScriptFunction *fn = ctx->GetExceptionFunction();
+
          PopState();
-         I_Error("AeonScriptManager::Execute: Encountered AngelScript exception: %s\n",
-                 ctx->GetExceptionString());
+         I_Error("AeonScriptManager::Execute:\n"
+                 "Encountered AngelScript exception: %s\n"
+                 "Function: %s\n"
+                 "Relative line number: %d\n",
+                 ctx->GetExceptionString(), fn->GetDeclaration(),
+                 ctx->GetExceptionLineNumber());
          return false;
       }
 

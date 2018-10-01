@@ -28,6 +28,7 @@
 #include "aeon_system.h"
 #include "d_dehtbl.h"
 #include "m_qstr.h"
+#include "p_enemy.h"
 #include "p_mobj.h"
 #include "s_sound.h"
 
@@ -68,7 +69,7 @@ namespace Aeon
       // TODO: else C_Printf warning?
    }
 
-   Fixed FloatBobOffsets(const int in)
+   static Fixed FloatBobOffsets(const int in)
    {
       static constexpr int NUMFLOATBOBOFFSETS = earrlen(::FloatBobOffsets);
       if(in < 0 || in > NUMFLOATBOBOFFSETS)
@@ -76,25 +77,24 @@ namespace Aeon
       return ::FloatBobOffsets[in];
    }
 
-   static void MobjStartSound(const PointThinker *origin, sfxinfo_t *sfxinfo)
+   static void StartSound(const PointThinker *origin, const sfxinfo_t &sfxinfo)
    {
-      if(sfxinfo)
-         S_StartSound(origin, sfxinfo->dehackednum);
+      S_StartSound(origin, sfxinfo.dehackednum);
    }
 
-   static Fixed MobjAimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
+   static Fixed AimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
    {
       return Fixed(P_AimLineAttack(t1, angle.value, distance.value,
                                    flags & 1 ? true : false));
    }
 
-   static void MobjLineAttack(Mobj *t1, Angle angle, Fixed distance, Fixed slope,
+   static void LineAttack(Mobj *t1, Angle angle, Fixed distance, Fixed slope,
                               int damage, const qstring &pufftype)
    {
       P_LineAttack(t1, angle.value, distance.value, slope.value, damage, pufftype.constPtr());
    }
 
-   static const aeonfuncreg_t mobjFuncs[]
+   static const aeonfuncreg_t mobjFuncs[] =
    {
       // Native Mobj methods
       { "void backupPosition()",              WRAP_MFN(Mobj, backupPosition)                  },
@@ -103,13 +103,12 @@ namespace Aeon
 
       // Non-methods that are used like methods in Aeon
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
-      { "void startSound(EE::Sound @sound)",                   WRAP_OBJ_FIRST(MobjStartSound) },
+      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(StartSound)     },
       { "fixed_t aimLineAttack(angle_t angle, fixed_t distance,"
-                              "alaflags_e flags = ALF_NOSKIP)",
-         WRAP_OBJ_FIRST(MobjAimLineAttack)                                                    },
-      { "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope, int damage,"
-                        "const String &pufftype",
-         WRAP_OBJ_FIRST(MobjLineAttack)                                                       },
+                              "alaflags_e flags = 0)",         WRAP_OBJ_FIRST(AimLineAttack)  },
+      { "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope,"
+                        "int damage, const String &pufftype)", WRAP_OBJ_FIRST(LineAttack)     },
+      { "bool hitFriend()",                                    WRAP_OBJ_FIRST(P_HitFriend)    },
 
       // Indexed property accessors (enables [] syntax for counters)
       { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)  },
@@ -117,6 +116,23 @@ namespace Aeon
 
       // Statics
       "fixed_t FloatBobOffsets(const int index)", WRAP_FN(FloatBobOffsets)
+   };
+
+   static const aeonpropreg_t mobjProps[] =
+   {
+      { "fixed_t x",      asOFFSET(Mobj, x)      },
+      { "fixed_t y",      asOFFSET(Mobj, y)      },
+      { "fixed_t z",      asOFFSET(Mobj, z)      },
+      { "angle_t angle",  asOFFSET(Mobj, angle)  },
+
+      { "fixed_t radius", asOFFSET(Mobj, radius) },
+      { "fixed_t height", asOFFSET(Mobj, height) },
+      { "vector_t mom",   asOFFSET(Mobj, mom)    },
+
+      { "int health",     asOFFSET(Mobj, health) },
+
+      { "Mobj @target",   asOFFSET(Mobj, target) },
+      { "Mobj @tracer",   asOFFSET(Mobj, tracer) },
    };
 
    #define DECLAREMOBJFLAGS(x) \
@@ -142,19 +158,8 @@ namespace Aeon
       e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
                                  WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
 
-      e->RegisterObjectProperty("Mobj", "fixed_t x",      asOFFSET(Mobj, x));
-      e->RegisterObjectProperty("Mobj", "fixed_t y",      asOFFSET(Mobj, y));
-      e->RegisterObjectProperty("Mobj", "fixed_t z",      asOFFSET(Mobj, z));
-      e->RegisterObjectProperty("Mobj", "angle_t angle",  asOFFSET(Mobj, angle));
-
-      e->RegisterObjectProperty("Mobj", "fixed_t radius", asOFFSET(Mobj, radius));
-      e->RegisterObjectProperty("Mobj", "fixed_t height", asOFFSET(Mobj, height));
-      e->RegisterObjectProperty("Mobj", "vector_t mom",   asOFFSET(Mobj, mom));
-
-      e->RegisterObjectProperty("Mobj", "int health",     asOFFSET(Mobj, health));
-
-      e->RegisterObjectProperty("Mobj", "Mobj @target",   asOFFSET(Mobj, target));
-      e->RegisterObjectProperty("Mobj", "Mobj @tracer",   asOFFSET(Mobj, tracer));
+      for(const aeonpropreg_t &prop : mobjProps)
+         e->RegisterObjectProperty("Mobj", prop.declaration, prop.byteOffset);
 
       DECLAREMOBJFLAGS();
       DECLAREMOBJFLAGS(2);
@@ -175,8 +180,8 @@ namespace Aeon
          e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
       }
 
+      // Flags used by EE::Mobj::aimLineAttack
       e->RegisterEnum("alaflags_e");
-      e->RegisterEnumValue("alaflags_e", "ALF_NOSKIP",     0);
       e->RegisterEnumValue("alaflags_e", "ALF_SKIPFRIEND", 1);
 
       // Register all Aeon Mobj methods
