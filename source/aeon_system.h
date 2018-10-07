@@ -54,6 +54,7 @@ namespace Aeon
       static void RegisterPrimitivePrintFuncs();
       static void RegisterTypedefs();
       static void RegisterHandleOnlyClasses();
+      static void RegisterGlobalProperties();
       static void MessageCallback(const asSMessageInfo *msg, void *param);
 
       static asIScriptEngine  *engine;

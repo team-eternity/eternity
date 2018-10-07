@@ -39,7 +39,7 @@ struct action_t;
 struct actionargs_t;
 struct cfg_t;
 
-enum actionargtype_e : int
+enum actionargtype_e : int8_t
 {
    AAT_INVALID = -1,
    AAT_INTEGER =  0,
@@ -48,12 +48,20 @@ enum actionargtype_e : int
    AAT_SOUND,
 };
 
+enum actioncalltype_e : uint8_t
+{
+   ACT_MOBJ,
+   ACT_PLAYER,
+   ACT_PLAYER_W_PSPRITE,
+};
+
 // AngelScript (Aeon) action
 struct actiondef_t
 {
-   const char     *name;               //
-   actionargtype_e argTypes[EMAXARGS]; //
-   int             numArgs;            //
+   const char      *name;
+   actionargtype_e  argTypes[EMAXARGS];
+   int              numArgs;
+   actioncalltype_e callType;
 
    DLListItem<actiondef_t> links;  // hash by name
 };

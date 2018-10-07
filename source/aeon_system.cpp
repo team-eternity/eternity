@@ -34,6 +34,7 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_utils.h"
+#include "p_map.h"
 #include "sounds.h"
 #include "w_wad.h"
 
@@ -94,6 +95,14 @@ namespace Aeon
       engine->SetDefaultNamespace("");
    }
 
+   static Fixed MISSILERANGE_prop(MISSILERANGE);
+
+   void ScriptManager::RegisterGlobalProperties()
+   {
+      engine->RegisterGlobalProperty("const fixed_t MISSILERANGE",
+                                     static_cast<void *>(&MISSILERANGE_prop));
+   }
+
    void ScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)
    {
       const char *type = "ERR ";
@@ -138,6 +147,8 @@ namespace Aeon
       ScriptObjAction::Init();
 
       ScriptObjACS::Init();
+
+      RegisterGlobalProperties();
 
       if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
          I_Error("Aeon::ScriptManager::Init: Could not create module\n");

@@ -74,13 +74,28 @@ void A_Aeon(actionargs_t *actionargs)
 
    if(!Aeon::ScriptManager::PrepareFunction(actionargs->aeonaction->name))
       return;
+
    if(actionargs->actiontype == actionargs_t::MOBJFRAME)
       ctx->SetArgObject(0, actionargs->actor);
-   else
+   else if(actionargs->actiontype == actionargs_t::WEAPONFRAME ||
+           actionargs->actiontype == actionargs_t::ARTIFACT)
    {
-      if(!actionargs->actor->player)
-         return;
+      switch(actionargs->aeonaction->callType)
+      {
+      case ACT_MOBJ:
+         ctx->SetArgObject(0, actionargs->actor);
+      case ACT_PLAYER:
+         ctx->SetArgObject(0, actionargs->actor->player);
+         break;
+      case ACT_PLAYER_W_PSPRITE:
+         ctx->SetArgObject(0, actionargs->actor->player);
+         ctx->SetArgObject(1, actionargs->pspr);
+         // AEON_FIXME: Need to add one below in this case
+         break;
+      }
    }
+   else
+      return;
 
    for(int i = 0; i < actionargs->aeonaction->numArgs; i++)
    {
@@ -163,7 +178,9 @@ action_t *E_GetAction(const char *name)
 //
 
 static void E_registerScriptAction(const char *name, const char *funcname,
-                                   Collection<qstring> &argTypes, const unsigned int numArgs)
+                                   const Collection<qstring> &argTypes,
+                                   const unsigned int numArgs,
+                                   const actioncalltype_e callType)
 {
    actiondef_t *info;
    actionargtype_e args[EMAXARGS];
@@ -191,6 +208,7 @@ static void E_registerScriptAction(const char *name, const char *funcname,
    info->name = estrdup(funcname);
    memcpy(info->argTypes, args, sizeof(args));
    info->numArgs = numArgs - 1;
+   info->callType = callType;
 
    e_ActionDefHash.addObject(info);
 }
@@ -250,9 +268,11 @@ static void E_processAction(cfg_t *actionsec)
    asIScriptEngine *e                       = Aeon::ScriptManager::Engine();
    asIScriptModule *module                  = Aeon::ScriptManager::Module();
    static const asITypeInfo *mobjtypeinfo   = E_getClassTypeInfo("Mobj");
- //static const asITypeInfo *playertypeinfo = E_getClassTypeInfo("Player");
-   const char *name = cfg_title(actionsec);
-   const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
+   //static const asITypeInfo *playertypeinfo = E_getClassTypeInfo("Player");
+   //static const asITypeInfo *psprtypeinfo   = E_getClassTypeInfo("Psprite");
+   const char *name          = cfg_title(actionsec);
+   const char *code          = cfg_getstr(actionsec, ITEM_ACT_CODE);
+   actioncalltype_e callType;
 
    if(E_isReservedCodePointer(name))
    {
@@ -269,11 +289,21 @@ static void E_processAction(cfg_t *actionsec)
    // Get the Aeon function for a given mnemonic (like D_GetBexPtr)
    func = E_aeonFuncForMnemonic(name);
 
-   // Verify that the first parameter is a Mobj handle
+   // Verify that the first parameter is a Mobj or player_t handle
    int typeID = 0;
    if(func->GetParam(0, &typeID) < 0)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
-   if(typeID != (mobjtypeinfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   if(typeID == (mobjtypeinfo->GetTypeId() | asTYPEID_OBJHANDLE))
+      callType = ACT_MOBJ;
+   //else if(typeID == (playertypeinfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   //{
+   //   if(func->GetParam(1, &typeID) >= 0 &&
+   //      typeID == (psprtypeinfo->GetTypeId() | asTYPEID_OBJHANDLE)))
+   //      calltype = ACT_PLAYER_W_PSPRITE;
+   //   else
+   //      callType = ACT_PLAYER;
+   //}
+   else
    {
       E_EDFLoggedErr(2, "E_processAction: First parameter of action '%s' must be of type "
                         "'EE::Mobj @'\n", name);
@@ -308,7 +338,7 @@ static void E_processAction(cfg_t *actionsec)
       argNameTypes.add(qstring(strTemp));
    }
 
-   E_registerScriptAction(name, func->GetName(), argNameTypes, paramCount);
+   E_registerScriptAction(name, func->GetName(), argNameTypes, paramCount, callType);
 }
 
 //
