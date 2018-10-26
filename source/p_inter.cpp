@@ -290,7 +290,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    if(demo_version < 401)
       return P_giveWeaponCompat(player, giver, dropped, special);
 
-   bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
+   bool gaveammo = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
    if(!wp)
    {
@@ -301,36 +301,33 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    }
 
    itemeffect_t *ammogiven = nullptr;
-   while(firsttime || (ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+   while(ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven"))
    {
       itemeffect_t *ammo = nullptr;
       int giveammo = 0, dropammo = 0, dmstayammo = 0, coopstayammo = 0;
 
-      if(ammogiven)
+      if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
       {
-         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
-         {
-            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
-                        giver->getKey());
-            special->remove();
-            return false;
-         }
-         else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
-         {
-            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
-                        "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
-            special->remove();
-            return false;
-         }
-         // Congrats, the user didn't screw up defining their ammogiven
-         // TODO: Automate Doom-style ratios with a flag?
-         if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
-            dropammo = giveammo;
-         if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
-            dmstayammo = giveammo;
-         if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
-            coopstayammo = giveammo;
+         doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
+                     giver->getKey());
+         special->remove();
+         return false;
       }
+      else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
+      {
+         doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                     "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
+         special->remove();
+         return false;
+      }
+      // Congrats, the user didn't screw up defining their ammogiven
+      // TODO: Automate Doom-style ratios with a flag?
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+         dropammo = giveammo;
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+         dmstayammo = giveammo;
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+         coopstayammo = giveammo;
 
       if((dmflags & DM_WEAPONSTAY) && !dropped)
       {
@@ -338,53 +335,44 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
          if(E_PlayerOwnsWeapon(player, wp))
             return false;
 
-         if(ammogiven)
+         if(ammogiven &&
+            ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
          {
-            if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
-            {
-               gaveammo |= P_GiveAmmo(player, ammo,
-                                      (GameType == gt_dm) ? dmstayammo : coopstayammo);
-            }
-         }
-
-         if(firsttime)
-         {
-            player->bonuscount += BONUSADD;
-            E_GiveWeapon(player, wp);
-            player->pendingweapon = wp;
-            player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-            S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
-            P_consumeSpecial(player, special); // need to handle it here
-            dmstay = true;
-            firsttime = false;
+            gaveammo |= P_GiveAmmo(player, ammo,
+                                   (GameType == gt_dm) ? dmstayammo : coopstayammo);
          }
       }
       else
       {
          // give one clip with a dropped weapon, two clips with a found weapon
          const int  amount = dropped ? dropammo : giveammo;
-         gaveammo |= (ammo && (amount ? P_GiveAmmo(player, ammo, amount) : false));
-
-         // haleyjd 10/4/11: de-Killoughized
-         if(firsttime)
-         {
-            if(!E_PlayerOwnsWeapon(player, wp))
-            {
-               weaponinfo_t *sister = wp->sisterWeapon;
-               player->pendingweapon = wp;
-               player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-               if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
-                  player->pendingweapon = sister;
-               E_GiveWeapon(player, wp);
-               gaveweapon = true;
-            }
-            firsttime = false;
-         }
+         gaveammo |= amount ? P_GiveAmmo(player, ammo, amount) : false;
       }
    }
 
+   if((dmflags & DM_WEAPONSTAY) && !dropped)
+   {
+      player->bonuscount += BONUSADD;
+      E_GiveWeapon(player, wp);
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      P_consumeSpecial(player, special); // need to handle it here
+      return false;
+   }
+   else if(!E_PlayerOwnsWeapon(player, wp))
+   {
+      weaponinfo_t *sister = wp->sisterWeapon;
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+         player->pendingweapon = sister;
+      E_GiveWeapon(player, wp);
+      return true;
+   }
+
    // Deathmatch w/ weapons stay always returns false
-   return !dmstay && (gaveweapon || gaveammo);
+   return gaveammo;
 }
 
 //
