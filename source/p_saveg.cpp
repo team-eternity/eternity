@@ -547,6 +547,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          if(arc.isSaving())
          {
             int numCounters, slotIndex;
+            size_t noLen = 0;
 
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
@@ -555,11 +556,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
             if(p.readyweapon)
                arc.writeLString(p.readyweapon->name);
             else
-               arc.writeLString("");
+               arc.archiveSize(noLen);
             if(p.pendingweapon)
                arc.writeLString(p.pendingweapon->name);
             else
-               arc.writeLString("");
+               arc.archiveSize(noLen);
 
             slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
             arc << slotIndex;

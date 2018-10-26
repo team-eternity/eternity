@@ -1128,7 +1128,7 @@ static const char *edf_lumpnames[] =
    "ESNDINFO",
    "EFONTS",
    "EREVERBS",
-   NULL
+   "EWEAPONS",
 };
 
 //
@@ -1139,10 +1139,7 @@ static const char *edf_lumpnames[] =
 //
 static void E_ParseIndividualLumps(cfg_t *cfg)
 {
-   const char *lumpname;
-   int i = 0;
-
-   while((lumpname = edf_lumpnames[i++]))
+   for(const char *lumpname : edf_lumpnames)
    {
       E_EDFLogPrintf("\t* Parsing %s lump", lumpname);
 
