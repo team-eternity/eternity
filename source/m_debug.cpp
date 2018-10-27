@@ -70,6 +70,11 @@ const DebugLogger &DebugLogger::operator << (unsigned number) const
    printf("%u", number);
    return *this;
 }
+const DebugLogger &DebugLogger::operator << (long number) const
+{
+   printf("%ld", number);
+   return *this;
+}
 const DebugLogger &DebugLogger::operator << (double number) const
 {
    printf("%.16g", number);

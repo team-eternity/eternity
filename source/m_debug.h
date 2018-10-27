@@ -41,6 +41,7 @@ public:
    const DebugLogger &operator << (char character) const;
    const DebugLogger &operator << (int number) const;
    const DebugLogger &operator << (unsigned number) const;
+   const DebugLogger &operator << (long number) const;
    const DebugLogger &operator << (double number) const;
 
    // Structural types
