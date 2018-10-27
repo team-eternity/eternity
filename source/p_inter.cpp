@@ -301,7 +301,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    }
 
    itemeffect_t *ammogiven = nullptr;
-   while(ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven"))
+   while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
       itemeffect_t *ammo = nullptr;
       int giveammo = 0, dropammo = 0, dmstayammo = 0, coopstayammo = 0;
