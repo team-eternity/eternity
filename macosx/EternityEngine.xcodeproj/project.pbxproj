@@ -279,6 +279,7 @@
 		4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E341F35C84B000D9DC5 /* SDL2.framework */; };
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
 		4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FE11F4989A7000D9DC5 /* e_switch.cpp */; };
+		4FA56DBB2182E5B500F8115E /* m_debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FA56DB92182E5B500F8115E /* m_debug.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FAD05981F91567E003790C5 /* txt_conditional.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05911F91567D003790C5 /* txt_conditional.c */; };
 		4FAD05991F91567E003790C5 /* txt_fileselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05951F91567E003790C5 /* txt_fileselect.c */; };
@@ -401,6 +402,8 @@
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../source/p_pushers.cpp; sourceTree = "<group>"; };
 		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../source/p_scroll.cpp; sourceTree = "<group>"; };
 		4FA56DB8217B2CD100F8115E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4FA56DB92182E5B500F8115E /* m_debug.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = m_debug.cpp; path = ../source/m_debug.cpp; sourceTree = "<group>"; };
+		4FA56DBA2182E5B500F8115E /* m_debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = m_debug.h; path = ../source/m_debug.h; sourceTree = "<group>"; };
 		4FAAD5921E583052001D7263 /* p_portalcross.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = p_portalcross.h; path = ../source/p_portalcross.h; sourceTree = "<group>"; };
 		4FAAD5931E583113001D7263 /* p_portalcross.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalcross.cpp; path = ../source/p_portalcross.cpp; sourceTree = "<group>"; };
 		4FAD058B1F915635003790C5 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -1441,6 +1444,8 @@
 				FABF5CF9158BF42800C49E93 /* m_cheat.cpp */,
 				FA16D40D15E01E96002318D1 /* m_cheat.h */,
 				FA16D40E15E01E96002318D1 /* m_collection.h */,
+				4FA56DB92182E5B500F8115E /* m_debug.cpp */,
+				4FA56DBA2182E5B500F8115E /* m_debug.h */,
 				FA16D40F15E01E96002318D1 /* m_dllist.h */,
 				FABF5CFA158BF42800C49E93 /* m_fcvt.cpp */,
 				FA16D41015E01E96002318D1 /* m_fcvt.h */,
@@ -2269,6 +2274,7 @@
 				4F42A5CC188B336600E6CACD /* i_timer.cpp in Sources */,
 				4F5F388D182D98E20027813A /* confuse.cpp in Sources */,
 				4F5F388E182D98E20027813A /* lexer.cpp in Sources */,
+				4FA56DBB2182E5B500F8115E /* m_debug.cpp in Sources */,
 				4F5F388F182D98E20027813A /* d_deh.cpp in Sources */,
 				4F5F3890182D98E20027813A /* d_dehtbl.cpp in Sources */,
 				4F5F3891182D98E20027813A /* d_diskfile.cpp in Sources */,
