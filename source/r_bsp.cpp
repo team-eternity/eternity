@@ -1959,7 +1959,6 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    static sector_t tempsec;
 
    float x1, x2;
-   float toffsetx = 0.0f, toffsety = 0.0f;
    float i1, i2, pstep;
    float lclip1, lclip2;
    float nearclip = NEARCLIP;
@@ -2154,8 +2153,8 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
    side = line->sidedef;
    
-   seg.toffsetx = toffsetx + M_FixedToFloat(side->textureoffset) + line->offset; 
-   seg.toffsety = toffsety + M_FixedToFloat(side->rowoffset);
+   seg.toffsetx = M_FixedToFloat(side->textureoffset) + line->offset;
+   seg.toffsety = M_FixedToFloat(side->rowoffset);
 
    if(seg.toffsetx < 0)
    {
