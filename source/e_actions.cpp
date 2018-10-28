@@ -75,7 +75,10 @@ void A_Aeon(actionargs_t *actionargs)
    if(!Aeon::ScriptManager::PrepareFunction(actionargs->aeonaction->name))
       return;
 
-   if(actionargs->actiontype == actionargs_t::MOBJFRAME)
+   int argoffs = 1;
+
+   if(actionargs->actiontype == actionargs_t::MOBJFRAME &&
+      actionargs->aeonaction->callType == ACT_MOBJ)
       ctx->SetArgObject(0, actionargs->actor);
    else if(actionargs->actiontype == actionargs_t::WEAPONFRAME ||
            actionargs->actiontype == actionargs_t::ARTIFACT)
@@ -84,13 +87,14 @@ void A_Aeon(actionargs_t *actionargs)
       {
       case ACT_MOBJ:
          ctx->SetArgObject(0, actionargs->actor);
+         break;
       case ACT_PLAYER:
          ctx->SetArgObject(0, actionargs->actor->player);
          break;
       case ACT_PLAYER_W_PSPRITE:
          ctx->SetArgObject(0, actionargs->actor->player);
          ctx->SetArgObject(1, actionargs->pspr);
-         // AEON_FIXME: Need to add one below in this case
+         argoffs++;
          break;
       }
    }
@@ -104,17 +108,17 @@ void A_Aeon(actionargs_t *actionargs)
       switch(actionargs->aeonaction->argTypes[i])
       {
       case AAT_INTEGER:
-         ctx->SetArgDWord(i + 1, E_ArgAsInt(actionargs->args, i, 0));
+         ctx->SetArgDWord(i + argoffs, E_ArgAsInt(actionargs->args, i, 0));
          break;
       case AAT_FIXED:
-         ctx->SetArgObject(i + 1, &Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, 0)));
+         ctx->SetArgObject(i + argoffs, &Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, 0)));
          break;
       case AAT_STRING:
          argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr));
-         ctx->SetArgAddress(i + 1, argstr);
+         ctx->SetArgAddress(i + argoffs, argstr);
          break;
       case AAT_SOUND:
-         ctx->SetArgObject(i + 1, E_ArgAsSound(actionargs->args, i));
+         ctx->SetArgObject(i + argoffs, E_ArgAsSound(actionargs->args, i));
          break;
       default:
          Aeon::ScriptManager::PopState();
