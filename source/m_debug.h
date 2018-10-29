@@ -24,6 +24,13 @@
 
 #if defined(_DEBUG) && !defined(NDEBUG)
 
+#include <typeinfo>
+#include "m_fixed.h"
+
+struct line_t;
+struct sector_t;
+struct seg_t;
+struct side_t;
 struct vertex_t;
 
 //
@@ -44,8 +51,21 @@ public:
    const DebugLogger &operator << (long number) const;
    const DebugLogger &operator << (double number) const;
 
+   // Convenience
+   const DebugLogger &operator >> (fixed_t number) const;
+
    // Structural types
+   const DebugLogger &operator << (const line_t &line) const;
+   const DebugLogger &operator << (const side_t &side) const;
+   const DebugLogger &operator << (const sector_t &sector) const;
+   const DebugLogger &operator << (const seg_t &seg) const;
    const DebugLogger &operator << (const vertex_t &vertex) const;
+
+   template<typename T>
+   const DebugLogger &operator << (const T *item) const
+   {
+      return item ? *this << *item : *this << "null(" << typeid(T).name() << ')';
+   }
 };
 
 #endif

@@ -25,9 +25,9 @@
 
 #include "doomstat.h"
 #include "m_debug.h"
-#include "m_fixed.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_state.h"
 
 //
 // Constructor shall produce gametic and frameid
@@ -86,9 +86,33 @@ const DebugLogger &DebugLogger::operator << (double number) const
 // DERIVED TYPES
 //
 //==================================================================================================
+const DebugLogger &DebugLogger::operator >> (fixed_t number) const
+{
+   return *this << M_FixedToDouble(number);
+}
+const DebugLogger &DebugLogger::operator << (const line_t &line) const
+{
+   return *this << "line" << (&line - lines) << '(' << line.v1 << ' ' << line.v2 << ')';
+}
+const DebugLogger &DebugLogger::operator << (const sector_t &sector) const
+{
+   return *this << "sector" << (&sector - sectors);
+}
+const DebugLogger &DebugLogger::operator << (const seg_t &seg) const
+{
+   return *this << "seg" << (&seg - segs) << '(' << seg.v1 << ' ' << seg.v2 << ' ' << seg.offset
+   << ' ' << seg.sidedef << ' ' << seg.linedef << ' ' << seg.frontsector << ' ' << seg.backsector
+   << " len(" << seg.len << "))";
+}
+const DebugLogger &DebugLogger::operator << (const side_t &side) const
+{
+   return *this << "side" << (&side - sides) << '(' >> side.textureoffset << ' ' >> side.rowoffset
+   << " top(" << side.toptexture << ") bot(" << side.bottomtexture << ") mid(" << side.midtexture
+   << ") " << side.sector << " spec(" << side.special << "))";
+}
 const DebugLogger &DebugLogger::operator << (const vertex_t &vertex) const
 {
-   return *this << "v(" << M_FixedToDouble(vertex.x) << ' ' << M_FixedToDouble(vertex.y) << ')';
+   return *this << 'v' << (&vertex - vertexes) << '(' >> vertex.x << ' ' >> vertex.y << ')';
 }
 
 #endif
