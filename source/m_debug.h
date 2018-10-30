@@ -43,29 +43,42 @@ public:
    ~DebugLogger();
 
    // Fundamental types
-   const DebugLogger &operator << (const char *text) const;
+   DebugLogger &operator << (const char *text);
 
-   const DebugLogger &operator << (char character) const;
-   const DebugLogger &operator << (int number) const;
-   const DebugLogger &operator << (unsigned number) const;
-   const DebugLogger &operator << (long number) const;
-   const DebugLogger &operator << (double number) const;
+   DebugLogger &operator << (char character);
+   DebugLogger &operator << (int number);
+   DebugLogger &operator << (unsigned number);
+   DebugLogger &operator << (long number);
+   DebugLogger &operator << (double number);
 
    // Convenience
-   const DebugLogger &operator >> (fixed_t number) const;
+   DebugLogger &operator >> (fixed_t number);
 
    // Structural types
-   const DebugLogger &operator << (const line_t &line) const;
-   const DebugLogger &operator << (const side_t &side) const;
-   const DebugLogger &operator << (const sector_t &sector) const;
-   const DebugLogger &operator << (const seg_t &seg) const;
-   const DebugLogger &operator << (const vertex_t &vertex) const;
+   DebugLogger &operator << (const line_t &line);
+   DebugLogger &operator << (const side_t &side);
+   DebugLogger &operator << (const sector_t &sector);
+   DebugLogger &operator << (const seg_t &seg);
+   DebugLogger &operator << (const vertex_t &vertex);
 
    template<typename T>
-   const DebugLogger &operator << (const T *item) const
+   DebugLogger &operator << (const T *item)
    {
       return item ? *this << *item : *this << "null(" << typeid(T).name() << ')';
    }
+
+private:
+   enum lastsym
+   {
+      ls_start,
+      ls_string,
+      ls_char,
+      ls_number
+   };
+
+   void checkspace(lastsym newsym);
+
+   lastsym lsym;
 };
 
 #endif

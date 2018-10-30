@@ -32,9 +32,9 @@
 //
 // Constructor shall produce gametic and frameid
 //
-DebugLogger::DebugLogger()
+DebugLogger::DebugLogger() : lsym(ls_start)
 {
-   *this << gametic << ':' << frameid << ' ';
+   *this << gametic << ':' << frameid;
 }
 
 //
@@ -50,33 +50,39 @@ DebugLogger::~DebugLogger()
 // FUNDAMENTAL TYPES
 //
 //==================================================================================================
-const DebugLogger &DebugLogger::operator << (const char *text) const
+DebugLogger &DebugLogger::operator << (const char *text)
 {
+   checkspace(ls_string);
    fputs(text, stdout);
    return *this;
 }
-const DebugLogger &DebugLogger::operator << (char character) const
+DebugLogger &DebugLogger::operator << (char character)
 {
+   checkspace(ls_char);
    putchar(character);
    return *this;
 }
-const DebugLogger &DebugLogger::operator << (int number) const
+DebugLogger &DebugLogger::operator << (int number)
 {
+   checkspace(ls_number);
    printf("%d", number);
    return *this;
 }
-const DebugLogger &DebugLogger::operator << (unsigned number) const
+DebugLogger &DebugLogger::operator << (unsigned number)
 {
+   checkspace(ls_number);
    printf("%u", number);
    return *this;
 }
-const DebugLogger &DebugLogger::operator << (long number) const
+DebugLogger &DebugLogger::operator << (long number)
 {
+   checkspace(ls_number);
    printf("%ld", number);
    return *this;
 }
-const DebugLogger &DebugLogger::operator << (double number) const
+DebugLogger &DebugLogger::operator << (double number)
 {
+   checkspace(ls_number);
    printf("%.16g", number);
    return *this;
 }
@@ -86,33 +92,65 @@ const DebugLogger &DebugLogger::operator << (double number) const
 // DERIVED TYPES
 //
 //==================================================================================================
-const DebugLogger &DebugLogger::operator >> (fixed_t number) const
+DebugLogger &DebugLogger::operator >> (fixed_t number)
 {
    return *this << M_FixedToDouble(number);
 }
-const DebugLogger &DebugLogger::operator << (const line_t &line) const
+DebugLogger &DebugLogger::operator << (const line_t &line)
 {
-   return *this << "line" << (&line - lines) << '(' << line.v1 << ' ' << line.v2 << ')';
+   return *this << "line" << (&line - lines) << '(' << line.v1 << line.v2 << ')';
 }
-const DebugLogger &DebugLogger::operator << (const sector_t &sector) const
+DebugLogger &DebugLogger::operator << (const sector_t &sector)
 {
    return *this << "sector" << (&sector - sectors);
 }
-const DebugLogger &DebugLogger::operator << (const seg_t &seg) const
+DebugLogger &DebugLogger::operator << (const seg_t &seg)
 {
-   return *this << "seg" << (&seg - segs) << '(' << seg.v1 << ' ' << seg.v2 << ' ' << seg.offset
-   << ' ' << seg.sidedef << ' ' << seg.linedef << ' ' << seg.frontsector << ' ' << seg.backsector
-   << " len(" << seg.len << "))";
+   return *this << "seg" << (&seg - segs) << '(' << seg.v1 << seg.v2 << seg.offset << seg.sidedef
+   << seg.linedef << seg.frontsector << seg.backsector << "len(" << seg.len << "))";
 }
-const DebugLogger &DebugLogger::operator << (const side_t &side) const
+DebugLogger &DebugLogger::operator << (const side_t &side)
 {
-   return *this << "side" << (&side - sides) << '(' >> side.textureoffset << ' ' >> side.rowoffset
-   << " top(" << side.toptexture << ") bot(" << side.bottomtexture << ") mid(" << side.midtexture
-   << ") " << side.sector << " spec(" << side.special << "))";
+   return *this << "side" << (&side - sides) << '(' >> side.textureoffset >> side.rowoffset
+   << "top(" << side.toptexture << ") bot(" << side.bottomtexture << ") mid(" << side.midtexture
+   << ") " << side.sector << "spec(" << side.special << "))";
 }
-const DebugLogger &DebugLogger::operator << (const vertex_t &vertex) const
+DebugLogger &DebugLogger::operator << (const vertex_t &vertex)
 {
-   return *this << 'v' << (&vertex - vertexes) << '(' >> vertex.x << ' ' >> vertex.y << ')';
+   return *this << "v" << (&vertex - vertexes) << '(' >> vertex.x >> vertex.y << ')';
+}
+
+//
+// Checks if to add space
+//
+// SPACING RULE: never at the beginning. Then add it, unless it's:
+// - number after string
+// - number after character
+// - character after string
+// - character after character
+// - character after number
+//
+void DebugLogger::checkspace(lastsym newsym)
+{
+   lastsym sym = lsym;
+   lsym = newsym;
+   switch(sym)
+   {
+      case ls_start:
+         return;  // never add space at beginning
+      case ls_char:
+      case ls_string:
+         if(newsym != ls_number && newsym != ls_char)
+            putchar(' ');
+         return;
+      case ls_number:
+         if(newsym != ls_char)
+            putchar(' ');
+         return;
+      default:
+         putchar(' ');
+         return;
+   }
 }
 
 #endif
