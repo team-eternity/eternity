@@ -76,9 +76,8 @@ void A_Aeon(actionargs_t *actionargs)
       return;
 
    int argoffs = 1;
-
    if(actionargs->actiontype == actionargs_t::MOBJFRAME &&
-      actionargs->aeonaction->callType == ACT_MOBJ)
+           actionargs->aeonaction->callType == ACT_MOBJ)
       ctx->SetArgObject(0, actionargs->actor);
    else if(actionargs->actiontype == actionargs_t::WEAPONFRAME ||
            actionargs->actiontype == actionargs_t::ARTIFACT)
@@ -183,7 +182,8 @@ action_t *E_GetAction(const char *name)
 
 static void E_registerScriptAction(const char *name, const char *funcname,
                                    const Collection<qstring> &argTypes,
-                                   const unsigned int numArgs,
+                                   const unsigned int numParams,
+                                   const unsigned int nonArgParams,
                                    const actioncalltype_e callType)
 {
    actiondef_t *info;
@@ -191,7 +191,7 @@ static void E_registerScriptAction(const char *name, const char *funcname,
    for(actionargtype_e &arg : args)
       arg = AAT_INVALID;
 
-   for(unsigned int i = 1; i < numArgs; i++)
+   for(unsigned int i = nonArgParams; i < numParams; i++)
    {
       if(argTypes[i] == "int")
          args[i - 1] = AAT_INTEGER;
@@ -211,7 +211,7 @@ static void E_registerScriptAction(const char *name, const char *funcname,
    info = estructalloc(actiondef_t, 1);
    info->name = estrdup(funcname);
    memcpy(info->argTypes, args, sizeof(args));
-   info->numArgs = numArgs - 1;
+   info->numArgs = numParams - nonArgParams;
    info->callType = callType;
 
    e_ActionDefHash.addObject(info);
@@ -271,11 +271,12 @@ static void E_processAction(cfg_t *actionsec)
    asIScriptFunction *func;
    asIScriptEngine *e                       = Aeon::ScriptManager::Engine();
    asIScriptModule *module                  = Aeon::ScriptManager::Module();
-   static const asITypeInfo *mobjtypeinfo   = E_getClassTypeInfo("Mobj");
-   //static const asITypeInfo *playertypeinfo = E_getClassTypeInfo("Player");
-   //static const asITypeInfo *psprtypeinfo   = E_getClassTypeInfo("Psprite");
+   static const asITypeInfo *mobjTypeInfo   = E_getClassTypeInfo("Mobj");
+   //static const asITypeInfo *playerTypeInfo = E_getClassTypeInfo("Player");
+   //static const asITypeInfo *psprTypeInfo   = E_getClassTypeInfo("Psprite");
    const char *name          = cfg_title(actionsec);
    const char *code          = cfg_getstr(actionsec, ITEM_ACT_CODE);
+   int        nonArgParams   = 1;
    actioncalltype_e callType;
 
    if(E_isReservedCodePointer(name))
@@ -297,28 +298,32 @@ static void E_processAction(cfg_t *actionsec)
    int typeID = 0;
    if(func->GetParam(0, &typeID) < 0)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
-   if(typeID == (mobjtypeinfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   if(typeID == (mobjTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
       callType = ACT_MOBJ;
-   //else if(typeID == (playertypeinfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   //else if(typeID == (playerTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
    //{
    //   if(func->GetParam(1, &typeID) >= 0 &&
-   //      typeID == (psprtypeinfo->GetTypeId() | asTYPEID_OBJHANDLE)))
+   //      typeID == (psprTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE)))
+   //   {
    //      calltype = ACT_PLAYER_W_PSPRITE;
+   //      nonArgParams++;
+   //   }
    //   else
    //      callType = ACT_PLAYER;
    //}
    else
    {
       E_EDFLoggedErr(2, "E_processAction: First parameter of action '%s' must be of type "
-                        "'EE::Mobj @'\n", name);
+                        "'EE::Mobj @, EE::Player @'\n", name);
    }
 
    // paramCount is off-by-one as the first param doesn't matter
    const unsigned int paramCount = func->GetParamCount();
-   if(paramCount > EMAXARGS)
+   if(paramCount - nonArgParams > EMAXARGS)
    {
       E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "
-                            "Declared: %d, Allowed: %d\n", name, paramCount, EMAXARGS + 1);
+                            "Declared: %d, Allowed: %d\n",
+                         name, paramCount, EMAXARGS + nonArgParams);
       return;
    }
 
@@ -342,7 +347,8 @@ static void E_processAction(cfg_t *actionsec)
       argNameTypes.add(qstring(strTemp));
    }
 
-   E_registerScriptAction(name, func->GetName(), argNameTypes, paramCount, callType);
+   E_registerScriptAction(name, func->GetName(), argNameTypes,
+                          paramCount, nonArgParams, callType);
 }
 
 //
