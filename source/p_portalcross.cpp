@@ -150,6 +150,149 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 }
 
 //==============================================================================
+//
+// Precise portal crossing section
+//
+
+//
+// The data
+//
+struct exacttraverse_t
+{
+   const divline_t *trace;
+   const line_t *closest;
+   fixed_t closestdist;
+};
+
+//
+// The iterator
+//
+static bool PIT_exactTraverse(const line_t &line, void *vdata)
+{
+   // only use wall portals, not edge
+   if(!(line.pflags & PS_PASSABLE))
+      return true;
+   const linkdata_t &link = line.portal->data.link;
+   if(link.fromid == link.toid || (!link.deltax && !link.deltay)) // avoid critical problems
+      return true;
+
+   auto &data = *static_cast<exacttraverse_t *>(vdata);
+
+   int destside = P_PointOnLineSide(data.trace->x + data.trace->dx, data.trace->y + data.trace->dy,
+                                    &line);
+   if(destside != 1 || destside == P_PointOnLineSide(data.trace->x, data.trace->y, &line))
+      return true;   // doesn't get past it
+
+   // Trace must cross this
+   if(P_PointOnDivlineSide(line.v1->x, line.v1->y, data.trace) ==
+      P_PointOnDivlineSide(line.v2->x, line.v2->y, data.trace))
+   {
+      return true;
+   }
+
+   divline_t dl;
+   P_MakeDivline(&line, &dl);
+   fixed_t dist = P_InterceptVector(data.trace, &dl);
+   if(dist < data.closestdist)
+   {
+      data.closestdist = dist;
+      data.closest = &line;
+   }
+
+   return true;
+}
+
+//
+// The operation. Returns the closest traversed linedef
+//
+static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &frac)
+{
+   // Get all map blocks touched by trace's bounding box
+   fixed_t bbox[4];
+   M_ClearBox(bbox);
+   M_AddToBox2(bbox, trace.x, trace.y);
+   M_AddToBox2(bbox, trace.x + trace.dx, trace.y + trace.dy);
+
+   bbox[BOXLEFT] -= bmaporgx;
+   bbox[BOXRIGHT] -= bmaporgx;
+   bbox[BOXBOTTOM] -= bmaporgy;
+   bbox[BOXTOP] -= bmaporgy;
+
+   // If the box edges lie exactly on map block edges, push them a bit to ensure edge linedefs are
+   // captured
+   if(!(bbox[BOXLEFT] & MAPBMASK))
+      --bbox[BOXLEFT];
+   if(!(bbox[BOXRIGHT] & MAPBMASK))
+      ++bbox[BOXRIGHT];
+   if(!(bbox[BOXBOTTOM] & MAPBMASK))
+      --bbox[BOXBOTTOM];
+   if(!(bbox[BOXTOP] & MAPBMASK))
+      ++bbox[BOXTOP];
+
+   // Transform into blockmap bounding box
+   bbox[BOXLEFT] >>= MAPBLOCKSHIFT;
+   bbox[BOXRIGHT] >>= MAPBLOCKSHIFT;
+   bbox[BOXBOTTOM] >>= MAPBLOCKSHIFT;
+   bbox[BOXTOP] >>= MAPBLOCKSHIFT;
+
+   pLPortalMap.newSession();
+
+   edefstructvar(exacttraverse_t, data);
+   data.trace = &trace;
+   data.closestdist = D_MAXINT;
+
+   // Collect all linedefs from this map block
+   for(int y = bbox[BOXBOTTOM]; y <= bbox[BOXTOP]; ++y)
+      for(int x = bbox[BOXLEFT]; x <= bbox[BOXRIGHT]; ++x)
+         pLPortalMap.iterator(x, y, &data, PIT_exactTraverse);
+
+   frac = data.closestdist;
+   return data.closest;
+}
+
+//
+// As above, but focused for line portal crossing by walking things, where it's critical not to miss
+//
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group,
+                                  const line_t **passed)
+{
+   v2fixed_t cur = { x, y };
+   v2fixed_t fin = { x + dx, y + dy };
+   if((!dx && !dy) || full_demo_version < make_full_version(340, 48) ||
+      P_PortalGroupCount() <= 1)
+   {
+      return fin; // quick return in trivial case
+   }
+
+   // number should be as large as possible to prevent accidental exits on valid
+   // hyperdetailed maps, but low enough to release the game on time.
+   int recprotection = SECTOR_PORTAL_LOOP_PROTECTION;
+
+   const line_t *crossed;
+   do
+   {
+      divline_t trace = { cur.x, cur.y, fin.x - cur.x, fin.y - cur.y };
+      fixed_t frac;
+      crossed = P_exactTraverseClosest(trace, frac);
+      if(crossed)
+      {
+         const linkdata_t &ldata = crossed->portal->data.link;
+         cur.x += ldata.deltax + FixedMul(fin.x - cur.x, frac);
+         cur.y += ldata.deltay + FixedMul(fin.y - cur.y, frac);;
+         fin.x += ldata.deltax;
+         fin.y += ldata.deltay;
+         if(group)
+            *group = ldata.toid;
+         if(passed)
+            *passed = crossed;
+      }
+      --recprotection;
+   } while(crossed && recprotection);
+
+   return fin;
+}
+
+//==============================================================================
 
 //
 // P_ExtremeSectorAtPoint

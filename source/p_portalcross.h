@@ -54,6 +54,9 @@ inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr
    return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y, group);
 }
 
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group,
+                                  const line_t **passed);
+
 //
 // P_ExtremeSectorAtPoint
 // ioanch 20160107

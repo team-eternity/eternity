@@ -1596,9 +1596,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
       if(hasportals)
       {
-         v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
-                                               x - oldx, y - oldy, &newgroupid,
-                                               &portalteleport);
+         v2fixed_t dest = P_PrecisePortalCrossing(oldx, oldy,
+                                                  x - oldx, y - oldy, &newgroupid,
+                                                  &portalteleport);
    
    
          // Update position
