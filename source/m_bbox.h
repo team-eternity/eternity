@@ -42,6 +42,7 @@ enum
 void M_ClearBox(fixed_t *box);
 
 void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y);
+void M_AddToBox2(fixed_t *box, fixed_t x, fixed_t y);
 
 inline static bool M_BoxesTouch(const fixed_t bbox1[4], const fixed_t bbox2[4])
 {
