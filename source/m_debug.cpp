@@ -25,6 +25,7 @@
 
 #include "doomstat.h"
 #include "m_debug.h"
+#include "p_maputl.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_state.h"
@@ -95,6 +96,10 @@ DebugLogger &DebugLogger::operator << (double number)
 DebugLogger &DebugLogger::operator >> (fixed_t number)
 {
    return *this << M_FixedToDouble(number);
+}
+DebugLogger &DebugLogger::operator << (const divline_t &line)
+{
+   return *this << "divline(" >> line.x >> line.y >> line.dx >> line.dy << ')';
 }
 DebugLogger &DebugLogger::operator << (const line_t &line)
 {

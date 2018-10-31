@@ -27,6 +27,7 @@
 #include <typeinfo>
 #include "m_fixed.h"
 
+struct divline_t;
 struct line_t;
 struct sector_t;
 struct seg_t;
@@ -55,6 +56,7 @@ public:
    DebugLogger &operator >> (fixed_t number);
 
    // Structural types
+   DebugLogger &operator << (const divline_t &divline);
    DebugLogger &operator << (const line_t &line);
    DebugLogger &operator << (const side_t &side);
    DebugLogger &operator << (const sector_t &sector);
