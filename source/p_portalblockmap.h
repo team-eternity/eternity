@@ -103,11 +103,12 @@ private:
 
 //
 // Line portal blockmap: stores just the portal linedefs (both wall and edge) on the blockmap.
+// Does NOT store the polyportals (yet). Usable ONLY for rendering purposes because of this.
 //
-class LineEdgePortalBlockmap
+class StaticLinedefPortalBlockmap
 {
 public:
-   LineEdgePortalBlockmap() : mValidcount(0), mValids(nullptr)
+   StaticLinedefPortalBlockmap() : mValidcount(0), mValids(nullptr)
    {
    }
 
@@ -128,7 +129,7 @@ private:
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
 extern PortalBlockmap gPortalBlockmap;
-extern LineEdgePortalBlockmap pLPortalMap;
+extern StaticLinedefPortalBlockmap pLPortalMap;
 
 #endif
 
