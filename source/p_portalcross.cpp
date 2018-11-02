@@ -235,8 +235,6 @@ static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &fra
    bbox[BOXBOTTOM] >>= MAPBLOCKSHIFT;
    bbox[BOXTOP] >>= MAPBLOCKSHIFT;
 
-   pLPortalMap.newSession();
-
    edefstructvar(exacttraverse_t, data);
    data.trace = &trace;
    data.closestdist = D_MAXINT;
@@ -244,7 +242,19 @@ static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &fra
    // Collect all linedefs from this map block
    for(int y = bbox[BOXBOTTOM]; y <= bbox[BOXTOP]; ++y)
       for(int x = bbox[BOXLEFT]; x <= bbox[BOXRIGHT]; ++x)
-         pLPortalMap.iterator(x, y, &data, PIT_exactTraverse);
+      {
+         int b = y * bmapwidth + x;
+         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[b];
+         for(const portalblockentry_t &entry : block)
+         {
+            if(entry.type != portalblocktype_e::line)
+               continue;
+            if(!PIT_exactTraverse(*entry.line, &data))
+               goto nextblock;
+         }
+      nextblock:
+         ;
+      }
 
    frac = data.closestdist;
    return data.closest;
