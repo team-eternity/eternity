@@ -76,7 +76,9 @@ void A_Aeon(actionargs_t *actionargs)
       return;
 
    int argoffs = 1;
-   if(actionargs->actiontype == actionargs_t::MOBJFRAME &&
+   if(actionargs->aeonaction->callType == ACT_ACTIONARGS)
+      ctx->SetArgObject(0, actionargs);
+   else if(actionargs->actiontype == actionargs_t::MOBJFRAME &&
            actionargs->aeonaction->callType == ACT_MOBJ)
       ctx->SetArgObject(0, actionargs->actor);
    else if(actionargs->actiontype == actionargs_t::WEAPONFRAME ||
@@ -269,11 +271,12 @@ static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
-   asIScriptEngine *e                       = Aeon::ScriptManager::Engine();
-   asIScriptModule *module                  = Aeon::ScriptManager::Module();
-   static const asITypeInfo *mobjTypeInfo   = E_getClassTypeInfo("Mobj");
-   //static const asITypeInfo *playerTypeInfo = E_getClassTypeInfo("Player");
-   //static const asITypeInfo *psprTypeInfo   = E_getClassTypeInfo("Psprite");
+   asIScriptEngine *e                        = Aeon::ScriptManager::Engine();
+   asIScriptModule *module                   = Aeon::ScriptManager::Module();
+   static const asITypeInfo *mobjTypeInfo    = E_getClassTypeInfo("Mobj");
+   //static const asITypeInfo *playerTypeInfo  = E_getClassTypeInfo("Player");
+   //static const asITypeInfo *psprTypeInfo    = E_getClassTypeInfo("Psprite");
+   //static const asITypeInfo *actArgsTypeInfo = E_getClassTypeInfo("ActionArgs");
    const char *name          = cfg_title(actionsec);
    const char *code          = cfg_getstr(actionsec, ITEM_ACT_CODE);
    int        nonArgParams   = 1;
@@ -298,6 +301,8 @@ static void E_processAction(cfg_t *actionsec)
    int typeID = 0;
    if(func->GetParam(0, &typeID) < 0)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
+
+   const unsigned int paramCount = func->GetParamCount();
    if(typeID == (mobjTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
       callType = ACT_MOBJ;
    //else if(typeID == (playerTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
@@ -311,14 +316,25 @@ static void E_processAction(cfg_t *actionsec)
    //   else
    //      callType = ACT_PLAYER;
    //}
+   //else if(typeID == (actArgsTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   //{
+   //   callType = ACT_ACTIONARGS;
+   //   if(paramCount > 1)
+   //   {
+   //      E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "
+   //                            "No arguments past the first are permitted in functions with
+   //                            "'EE::ActionArgs @' as their first argument.\n", name);
+   //      return;
+   //   }
+   //   E_registerScriptAction(name, func->GetName(), Collection<qstring>(), 1, 1, callType);
+   //   return;
+   //}
    else
    {
       E_EDFLoggedErr(2, "E_processAction: First parameter of action '%s' must be of type "
-                        "'EE::Mobj @, EE::Player @'\n", name);
+                        "'EE::Mobj @', 'EE::Player @', or 'EE::ActionArgs'\n", name);
    }
 
-   // paramCount is off-by-one as the first param doesn't matter
-   const unsigned int paramCount = func->GetParamCount();
    if(paramCount - nonArgParams > EMAXARGS)
    {
       E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "

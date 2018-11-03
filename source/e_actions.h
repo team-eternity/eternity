@@ -50,6 +50,7 @@ enum actionargtype_e : int8_t
 
 enum actioncalltype_e : uint8_t
 {
+   ACT_ACTIONARGS,
    ACT_MOBJ,
    ACT_PLAYER,
    ACT_PLAYER_W_PSPRITE,
