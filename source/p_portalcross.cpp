@@ -263,8 +263,8 @@ static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &fra
 //
 // As above, but focused for line portal crossing by walking things, where it's critical not to miss
 //
-v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, int *group,
-                                  const line_t **passed)
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                                  portalcrossingoutcome_t &outcome)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -279,6 +279,7 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, 
    int recprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    const line_t *crossed;
+   int crosscount = 0;
    do
    {
       divline_t trace = { cur.x, cur.y, fin.x - cur.x, fin.y - cur.y };
@@ -288,13 +289,13 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy, 
       {
          const linkdata_t &ldata = crossed->portal->data.link;
          cur.x += ldata.deltax + FixedMul(fin.x - cur.x, frac);
-         cur.y += ldata.deltay + FixedMul(fin.y - cur.y, frac);;
+         cur.y += ldata.deltay + FixedMul(fin.y - cur.y, frac);
          fin.x += ldata.deltax;
          fin.y += ldata.deltay;
-         if(group)
-            *group = ldata.toid;
-         if(passed)
-            *passed = crossed;
+         outcome.finalgroup = ldata.toid;
+         outcome.lastpassed = crossed;
+         if(++crosscount >= 2)
+            outcome.multipassed = true;
       }
       --recprotection;
    } while(crossed && recprotection);
