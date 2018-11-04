@@ -26,7 +26,7 @@ weaponinfo Fist : DoomWeapon, 0
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   mod          Fist
-  recoil       10
+  recoil       10.0
 
   firstdecoratestate S_PUNCH
   states
@@ -59,7 +59,7 @@ weaponinfo Pistol : DoomWeapon, 1
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
   mod          Pistol
-  recoil       10
+  recoil       10.0
   hapticrecoil 1
   haptictime   1
 
@@ -96,7 +96,7 @@ weaponinfo Shotgun : DoomWeapon, 2
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   mod          Shotgun
-  recoil       30
+  recoil       30.0
   hapticrecoil 3
   haptictime   3
 
@@ -137,7 +137,7 @@ weaponinfo Chaingun : DoomWeapon, 3
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   mod          Chaingun
-  recoil       10
+  recoil       10.0
   hapticrecoil 1
   haptictime   1
 
@@ -172,8 +172,7 @@ weaponinfo MissileLauncher : DoomWeapon, 4
   selectionorder 7000
 
   flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE|HAPTICRECOIL
-  //mod          ""
-  recoil       100
+  recoil       100.0
   hapticrecoil 6
   haptictime   8
 
@@ -210,8 +209,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
   selectionorder 1000
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
-  //mod          ""
-  recoil       20
+  recoil       20.0
   hapticrecoil 2
   haptictime   1
 
@@ -248,8 +246,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
   selectionorder 5000
 
   flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
-  //mod          ""
-  recoil       100
+  recoil       100.0
   hapticrecoil 10
   haptictime   10
 
@@ -281,9 +278,9 @@ weaponinfo BFG9000 : DoomWeapon, 6
 // MBF Old-BFG
 weaponinfo OldBFG : BFG9000
 {
-  ammouse      1  // Only one ammo used per shot
+  ammouse      1    // Only one ammo used per shot
 
-  recoil       20 // Uses plasma's recoil
+  recoil       20.0 // Uses plasma's recoil
 
   firstdecoratestate S_OLDBFG1
   states
@@ -334,7 +331,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
 
   flags        SILENCEABLE|HAPTICRECOIL|DISABLEAPS
   mod          SShotgun
-  recoil       80
+  recoil       80.0
   hapticrecoil 5
   haptictime   5
 

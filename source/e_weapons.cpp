@@ -137,7 +137,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_ADDFLAGS,     "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_REMFLAGS,     "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_MOD,          "",       CFGF_NONE), \
-   CFG_INT(ITEM_WPN_RECOIL,       0,        CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_RECOIL,     0.0,      CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
@@ -1357,7 +1357,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
-      wp.recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
+      wp.recoil = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_RECOIL));
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))
       wp.hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
    if(IS_SET(ITEM_WPN_HAPTICTIME))
