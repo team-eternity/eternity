@@ -2100,6 +2100,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    if(line->linedef->portal)
       nearclip = PNEARCLIP;
 
+   bool clipped = false;
    if(t1.y < nearclip)
    {      
       float move, movey;
@@ -2113,11 +2114,15 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
       lclip1 = (float)sqrt(move * move + movey * movey);
       t1.y = NEARCLIP;
+      clipped = true;
    }
 
    i1 = 1.0f / t1.y;
    x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
+   if(line->linedef->portal && x1 > 0 && clipped)
+      x1 = 0;
 
+   clipped = false;
    if(t2.y < NEARCLIP)
    {
       float move, movey;
@@ -2127,10 +2132,13 @@ static void R_AddLine(seg_t *line, bool dynasegs)
 
       lclip2 -= (float)sqrt(move * move + movey * movey);
       t2.y = NEARCLIP;
+      clipped = true;
    }
 
    i2 = 1.0f / t2.y;
    x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
+   if(line->linedef->portal && x2 < view.width - 1 && clipped)
+      x2 = view.width - 1;
 
    // SoM: Handle the case where a wall is only occupying a single post but 
    // still needs to be rendered to keep groups of single post walls from not
