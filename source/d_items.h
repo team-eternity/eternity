@@ -95,7 +95,7 @@ struct weaponinfo_t
    unsigned int flags;
    uint8_t      intflags;
    int          mod;
-   int          recoil;
+   fixed_t      recoil;
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
    const char  *upsound;      // sound made when weapon is being brought up
