@@ -1086,7 +1086,6 @@ R_ClipSegFunc segclipfuncs[] =
 };
 
 #define NEARCLIP 0.05f
-#define PNEARCLIP 0.001f
 
 static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
                         float texbottom, vertex_t *v1, vertex_t *v2, 
@@ -1961,7 +1960,6 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    float x1, x2;
    float i1, i2, pstep;
    float lclip1, lclip2;
-   float nearclip = NEARCLIP;
    v2float_t t1, t2, temp;
    side_t *side;
    float floorx1, floorx2;
@@ -2097,16 +2095,23 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    // closer to the camera than normal lines can. This closer clipping 
    // distance is used to stave off the flash that can sometimes occur when
    // passing through a linked portal line.
-   if(line->linedef->portal)
-      nearclip = PNEARCLIP;
+
+   if(line->linedef->portal && t1.x && t2.x &&
+      ((t1.y >= 0 && t1.y < NEARCLIP && t2.y / t2.x >= t1.y / t1.x) ||
+       (t2.y >= 0 && t2.y < NEARCLIP && t1.y / t1.x <= t2.y / t2.x)))
+   {
+      // handle the edge case where you're right with the nose on a portal line
+      t1.y = t2.y = NEARCLIP;
+      t1.x = -(t2.x = 10); // some large enough value
+   }
 
    bool clipped = false;
-   if(t1.y < nearclip)
+   if(t1.y < NEARCLIP)
    {      
       float move, movey;
 
       // Simple reject for lines entirely behind the view plane.
-      if(t2.y < nearclip)
+      if(t2.y < NEARCLIP)
          return;
 
       movey = NEARCLIP - t1.y;
