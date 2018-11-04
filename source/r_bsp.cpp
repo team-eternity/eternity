@@ -1962,7 +1962,7 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    float i1, i2, pstep;
    float lclip1, lclip2;
    float nearclip = NEARCLIP;
-   vertex_t  t1, t2, temp;
+   v2float_t t1, t2, temp;
    side_t *side;
    float floorx1, floorx2;
    vertex_t  *v1, *v2;
@@ -2084,14 +2084,14 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    lclip2 = line->len;
    lclip1 = 0.0f;
 
-   temp.fx = v1->fx - view.x;
-   temp.fy = v1->fy - view.y;
-   t1.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t1.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
-   temp.fx = v2->fx - view.x;
-   temp.fy = v2->fy - view.y;
-   t2.fx   = (temp.fx * view.cos) - (temp.fy * view.sin);
-   t2.fy   = (temp.fy * view.cos) + (temp.fx * view.sin);
+   temp.x = v1->fx - view.x;
+   temp.y = v1->fy - view.y;
+   t1.x   = (temp.x * view.cos) - (temp.y * view.sin);
+   t1.y   = (temp.y * view.cos) + (temp.x * view.sin);
+   temp.x = v2->fx - view.x;
+   temp.y = v2->fy - view.y;
+   t2.x   = (temp.x * view.cos) - (temp.y * view.sin);
+   t2.y   = (temp.y * view.cos) + (temp.x * view.sin);
 
    // SoM: Portal lines are not texture and as a result can be clipped MUCH 
    // closer to the camera than normal lines can. This closer clipping 
@@ -2100,37 +2100,37 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    if(line->linedef->portal)
       nearclip = PNEARCLIP;
 
-   if(t1.fy < nearclip)
+   if(t1.y < nearclip)
    {      
       float move, movey;
 
       // Simple reject for lines entirely behind the view plane.
-      if(t2.fy < nearclip)
+      if(t2.y < nearclip)
          return;
 
-      movey = NEARCLIP - t1.fy;
-      t1.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
+      movey = NEARCLIP - t1.y;
+      t1.x += (move = movey * ((t2.x - t1.x) / (t2.y - t1.y)));
 
       lclip1 = (float)sqrt(move * move + movey * movey);
-      t1.fy = NEARCLIP;
+      t1.y = NEARCLIP;
    }
 
-   i1 = 1.0f / t1.fy;
-   x1 = (view.xcenter + (t1.fx * i1 * view.xfoc));
+   i1 = 1.0f / t1.y;
+   x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
 
-   if(t2.fy < NEARCLIP)
+   if(t2.y < NEARCLIP)
    {
       float move, movey;
 
-      movey = NEARCLIP - t2.fy;
-      t2.fx += (move = movey * ((t2.fx - t1.fx) / (t2.fy - t1.fy)));
+      movey = NEARCLIP - t2.y;
+      t2.x += (move = movey * ((t2.x - t1.x) / (t2.y - t1.y)));
 
       lclip2 -= (float)sqrt(move * move + movey * movey);
-      t2.fy = NEARCLIP;
+      t2.y = NEARCLIP;
    }
 
-   i2 = 1.0f / t2.fy;
-   x2 = (view.xcenter + (t2.fx * i2 * view.xfoc));
+   i2 = 1.0f / t2.y;
+   x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
 
    // SoM: Handle the case where a wall is only occupying a single post but 
    // still needs to be rendered to keep groups of single post walls from not
