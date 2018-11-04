@@ -306,7 +306,7 @@ crunch:
 //
 static void R_ClipPassWallSegment(int x1, int x2)
 {
-   cliprange_t *start;
+   const cliprange_t *start;
    
    start = solidsegs;
    
@@ -366,8 +366,7 @@ void R_ClearClipSegs()
 //
 // R_SetupPortalClipsegs
 //
-bool R_SetupPortalClipsegs(int minx, int maxx, 
-   const float *top, const float *bottom)
+bool R_SetupPortalClipsegs(int minx, int maxx, const float *top, const float *bottom)
 {
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
@@ -474,9 +473,8 @@ static int R_DoorClosed(void)
 
 extern camera_t *camera; // haleyjd
 
-sector_t *R_FakeFlat(sector_t *sec, sector_t *tempsec,
-                     int *floorlightlevel, int *ceilinglightlevel,
-                     bool back)
+const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
+                           int *floorlightlevel, int *ceilinglightlevel, bool back)
 {
    if(!sec)
       return NULL;
@@ -789,7 +787,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
    return true;
 }
 
-static void R_ClipSegToFPortal(void)
+static void R_ClipSegToFPortal()
 {
    int i, startx;
    float clipx1, clipx2;
@@ -857,7 +855,7 @@ static void R_ClipSegToFPortal(void)
    }
 }
 
-static void R_ClipSegToCPortal(void)
+static void R_ClipSegToCPortal()
 {
    int i, startx;
    float clipx1, clipx2;
@@ -920,7 +918,7 @@ static void R_ClipSegToCPortal(void)
    }
 }
 
-static void R_ClipSegToLPortal(void)
+static void R_ClipSegToLPortal()
 {
    int i, startx;
    float clipx1, clipx2;
@@ -1089,7 +1087,7 @@ R_ClipSegFunc segclipfuncs[] =
 #define PNEARCLIP 0.001f
 
 static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
-                        float texbottom, vertex_t *v1, vertex_t *v2, 
+                        float texbottom, const vertex_t *v1, const vertex_t *v2, 
                         float lclip1, float lclip2)
 {
    bool mark, markblend; // haleyjd
@@ -1097,8 +1095,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    bool marktheight, blocktheight;
    bool heightchange;
    float texhigh, texlow;
-   side_t *side = seg.side;
-   seg_t  *line = seg.line;
+   const side_t *side = seg.side;
+   const seg_t  *line = seg.line;
 
    int    h, h2, l, l2, t, t2, b, b2;
 
@@ -1410,8 +1408,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    bool marktheight, blocktheight;
    bool uppermissing, lowermissing;
    float texhigh, texlow;
-   side_t *side = seg.side;
-   seg_t  *line = seg.line;
+   const side_t *side = seg.side;
+   const seg_t  *line = seg.line;
    fixed_t frontc, backc;
 
    seg.twosided = true;
@@ -1954,7 +1952,7 @@ static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-static void R_AddLine(seg_t *line, bool dynasegs)
+static void R_AddLine(const seg_t *line, bool dynasegs)
 {
    static sector_t tempsec;
 
@@ -1963,9 +1961,9 @@ static void R_AddLine(seg_t *line, bool dynasegs)
    float lclip1, lclip2;
    float nearclip = NEARCLIP;
    v2float_t t1, t2, temp;
-   side_t *side;
+   const side_t *side;
    float floorx1, floorx2;
-   vertex_t  *v1, *v2;
+   const vertex_t *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
    if(portalrender.w && portalrender.w->portal &&
@@ -2447,13 +2445,13 @@ static const int checkcoord[12][4] = // killough -- static const
 // Checks BSP node/subtree bounding box.
 // Returns true if some part of the bbox might be visible.
 //
-static bool R_CheckBBox(fixed_t *bspcoord) // killough 1/28/98: static
+static bool R_CheckBBox(const fixed_t *bspcoord) // killough 1/28/98: static
 {
    int     boxpos, boxx, boxy;
    fixed_t x1, x2, y1, y2;
    angle_t angle1, angle2, span, tspan;
    int     sx1, sx2;
-   cliprange_t *start;
+   const cliprange_t *start;
 
    // Find the corners of the box
    // that define the edges from current viewpoint.
@@ -2555,7 +2553,7 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 //
 // Recurse through a polynode mini-BSP
 //
-static void R_RenderPolyNode(rpolynode_t *node)
+static void R_RenderPolyNode(const rpolynode_t *node)
 {
    while(node)
    {
@@ -2567,7 +2565,7 @@ static void R_RenderPolyNode(rpolynode_t *node)
       // render partition seg
       v2fixed_t org[2];
       v2float_t forg[2];
-      seg_t *seg = &node->partition->seg;
+      const seg_t *seg = &node->partition->seg;
       R_interpolateVertex(*seg->dyv1, org[0], forg[0]);
       R_interpolateVertex(*seg->dyv2, org[1], forg[1]);
       R_AddLine(seg, true);
@@ -2625,7 +2623,7 @@ static void R_AddDynaSegs(subsector_t *sub)
 static void R_Subsector(int num)
 {
    int         count;
-   seg_t       *line;
+   const seg_t *line;
    subsector_t *sub;
    sector_t    tempsec;              // killough 3/7/98: deep water hack
    int         floorlightlevel;      // killough 3/16/98: set floor lightlevel
@@ -2829,7 +2827,7 @@ void R_RenderBSPNode(int bspnum)
 {
    while(!(bspnum & NF_SUBSECTOR))  // Found a subsector?
    {
-      node_t *bsp = &nodes[bspnum];
+      const node_t *bsp = &nodes[bspnum];
       
       // Decide which side the view point is on.
       int side = R_PointOnSide(viewx, viewy, bsp);

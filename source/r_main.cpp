@@ -89,7 +89,7 @@ fixed_t  viewx, viewy, viewz;
 angle_t  viewangle;
 fixed_t  viewcos, viewsin;
 fixed_t  viewpitch;
-player_t *viewplayer;
+const player_t *viewplayer;
 extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
 camera_t *viewcamera;
@@ -199,9 +199,9 @@ void R_SetSpanEngine(void)
 // FIXME: also check if Linux/GCC are affected by this.
 // MORE INFO: competn/doom/fp2-3655.lmp E2M3 fails here
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
-int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, node_t *node)
+int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, const node_t *node)
 #else
-int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
+int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
 #endif
 {
    if(!node->dx)
@@ -221,7 +221,7 @@ int R_PointOnSide(fixed_t x, fixed_t y, node_t *node)
 
 // killough 5/2/98: reformatted
 
-int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line)
+int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
 {
    fixed_t lx = line->v1->x;
    fixed_t ly = line->v1->y;

@@ -42,7 +42,7 @@ struct rpolybsp_t
    rpolynode_t *root;  // root of tree
 };
 
-rpolybsp_t *R_BuildDynaBSP(subsector_t *subsec);
+rpolybsp_t *R_BuildDynaBSP(const subsector_t *subsec);
 void R_FreeDynaBSP(rpolybsp_t *bsp);
 
 
