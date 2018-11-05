@@ -437,8 +437,8 @@ struct mobjinfo_t
 
    e_pickupfx_t *pickupfx;
 
-   void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
-   
+   action_t *nukespec;  // haleyjd 08/18/09: nukespec made a native property
+
    // haleyjd: fields needed for EDF identification and hashing
    DLListItem<mobjinfo_t> namelinks;  // hashing: by name
    DLListItem<mobjinfo_t> cnamelinks; // hashing: by compatname

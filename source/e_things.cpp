@@ -35,6 +35,7 @@
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_mod.h"
+#include "e_actions.h"
 #include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
@@ -2738,19 +2739,19 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    // 07/13/03: process nukespecial
    if(IS_SET(ITEM_TNG_NUKESPEC))
    {
-      deh_bexptr *dp;
+      action_t *action;
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_NUKESPEC);
-      
-      if(!(dp = D_GetBexPtr(tempstr)))
+
+      if(!(action = E_GetAction(tempstr)))
       {
-         E_EDFLoggedErr(2, 
-            "E_ProcessThing: thing '%s': bad nukespecial '%s'\n",
-            mobjinfo[i]->name, tempstr);
+         E_EDFLoggedErr(2, "E_ProcessThing: thing '%s': bad nukespecial '%s'\n",
+                        mobjinfo[i]->name, tempstr);
       }
-      
-      if(dp->cptr != nullptr)
-         mobjinfo[i]->nukespec = dp->cptr;
+
+      // TODO: Figure out if the if is required, based on how E_GetAction works
+      if(action->codeptr != nullptr)
+         mobjinfo[i]->nukespec = action;
    }
 
    // 07/13/03: process particlefx

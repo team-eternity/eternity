@@ -133,7 +133,7 @@ void A_Aeon(actionargs_t *actionargs)
 
 //=============================================================================
 //
-// Action Definition Hash Table
+// Action Definition (Aeon) and Action (Aeon and codepointer) Hash Tables
 //
 
 static
@@ -156,6 +156,7 @@ actiondef_t *E_AeonActionForName(const char *name)
 
 //
 // Gets an action, Aeon or codepointer, for a given name
+// If it's not already present in the action hash (and should be) then it adds it
 //
 action_t *E_GetAction(const char *name)
 {

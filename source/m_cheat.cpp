@@ -1147,10 +1147,11 @@ static int M_NukeMonsters()
 
                actionargs.actiontype = actionargs_t::MOBJFRAME;
                actionargs.actor      = mo;
-               actionargs.args       = NULL;
-               actionargs.pspr       = NULL;
+               actionargs.args       = nullptr;
+               actionargs.pspr       = nullptr;
+               actionargs.aeonaction = mi->nukespec->aeonaction;
 
-               mi->nukespec(&actionargs);
+               mi->nukespec->codeptr(&actionargs);
             }
          }
       }
