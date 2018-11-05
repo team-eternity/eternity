@@ -158,9 +158,12 @@ using codeptr_t = void (*)(actionargs_t *);
 // Encapsulates action functions, both native and AngelScript
 struct action_t
 {
+   const char  *name;       // name of the action
    codeptr_t    codeptr;    // code pointer to function for action if any
    codeptr_t    oldcptr;    // haleyjd: original action, for DeHackEd
    actiondef_t *aeonaction; // pointer to Aeon action if any
+
+   DLListItem<action_t> links; // hashing by name
 };
 
 

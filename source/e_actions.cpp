@@ -137,8 +137,12 @@ void A_Aeon(actionargs_t *actionargs)
 //
 
 static
-   EHashTable<actiondef_t, ENCStringHashKey, &actiondef_t::name, &actiondef_t::links>
-   e_ActionDefHash;
+   EHashTable<actiondef_t, ENCStringHashKey,
+              &actiondef_t::name, &actiondef_t::links> e_ActionDefHash;
+
+static
+   EHashTable<action_t, ENCStringHashKey,
+              &action_t::name, &action_t::links> e_ActionHash;
 
 actiondef_t *E_AeonActionForName(const char *name)
 {
@@ -150,31 +154,38 @@ actiondef_t *E_AeonActionForName(const char *name)
       return e_ActionDefHash.objectForKey(AlternateFuncName(name).constPtr());
 }
 
+//
+// Gets an action, Aeon or codepointer, for a given name
+//
 action_t *E_GetAction(const char *name)
 {
    actiondef_t *actiondef;
    deh_bexptr  *bexptr;
+   action_t    *action;
 
    if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
       name += 2;
 
+   if((action = e_ActionHash.objectForKey(name)))
+      return action;
    if((actiondef = E_AeonActionForName(name)))
    {
-      action_t *action = estructalloc(action_t, 1);
+      action = estructalloc(action_t, 1);
       action->aeonaction = actiondef;
       action->codeptr = action->oldcptr = A_Aeon;
-
-      return action;
    }
    else if((bexptr = D_GetBexPtr(name)))
    {
-      action_t *action = estructalloc(action_t, 1);
+      action = estructalloc(action_t, 1);
       action->codeptr = action->oldcptr = bexptr->cptr;
-
-      return action;
    }
    else
       return nullptr;
+
+   action->name = estrdup(name);
+   e_ActionHash.addObject(action);
+   return action;
+
 }
 
 //=============================================================================
@@ -182,6 +193,9 @@ action_t *E_GetAction(const char *name)
 // Processing
 //
 
+//
+// Register the script action, creating the actiondef_t and adding it to the hash
+//
 static void E_registerScriptAction(const char *name, const char *funcname,
                                    const Collection<qstring> &argTypes,
                                    const unsigned int numParams,
@@ -219,8 +233,10 @@ static void E_registerScriptAction(const char *name, const char *funcname,
    e_ActionDefHash.addObject(info);
 }
 
+//
 // Fetches a function based on a mnemonic, disregarding the A_
 // The A_ is also stripped if necessary
+//
 static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
 {
    asIScriptFunction *func;
@@ -257,6 +273,9 @@ static inline bool E_isReservedCodePointer(const char *name)
    return !strcasecmp(name, "Aeon");
 }
 
+//
+// Gets an asITypeInfo for a class name in the EE namespace
+//
 static inline asITypeInfo *E_getClassTypeInfo(const char *type)
 {
    asIScriptEngine *e =  Aeon::ScriptManager::Engine();
@@ -268,6 +287,9 @@ static inline asITypeInfo *E_getClassTypeInfo(const char *type)
    return ret;
 }
 
+//
+// Processes a single Aeon action
+//
 static void E_processAction(cfg_t *actionsec)
 {
    asIScriptFunction *func;
@@ -279,7 +301,7 @@ static void E_processAction(cfg_t *actionsec)
    //static const asITypeInfo *actArgsTypeInfo = E_getClassTypeInfo("ActionArgs");
    const char *name          = cfg_title(actionsec);
    const char *code          = cfg_getstr(actionsec, ITEM_ACT_CODE);
-   int        nonArgParams   = 1;
+   int        nonArgParams   = 1; // No. of parameters that aren't provided as EDF args
    actioncalltype_e callType;
 
    if(E_isReservedCodePointer(name))
@@ -311,7 +333,7 @@ static void E_processAction(cfg_t *actionsec)
    //      typeID == (psprTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE)))
    //   {
    //      calltype = ACT_PLAYER_W_PSPRITE;
-   //      nonArgParams++;
+   //      nonArgParams = 2;
    //   }
    //   else
    //      callType = ACT_PLAYER;
@@ -319,6 +341,7 @@ static void E_processAction(cfg_t *actionsec)
    //else if(typeID == (actArgsTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
    //{
    //   callType = ACT_ACTIONARGS;
+   //   // If you're using raw actionargs_t then you don't need any more parameters
    //   if(paramCount > 1)
    //   {
    //      E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "
@@ -368,7 +391,7 @@ static void E_processAction(cfg_t *actionsec)
 }
 
 //
-// Process all actions
+// Process all Aeon actions
 //
 void E_ProcessActions(cfg_t *cfg)
 {
