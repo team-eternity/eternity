@@ -2094,7 +2094,16 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    // distance is used to stave off the flash that can sometimes occur when
    // passing through a linked portal line.
 
-   if(line->linedef->portal && t1.x && t2.x &&
+   bool lineisportal;
+   {
+      const line_t &linedef = *line->linedef;
+      lineisportal = linedef.portal ||
+      (linedef.backsector && line->sidedef == &sides[linedef.sidenum[0]] &&
+       ((linedef.backsector->f_portal && linedef.extflags & EX_ML_LOWERPORTAL) ||
+        (linedef.backsector->c_portal && linedef.extflags & EX_ML_UPPERPORTAL)));
+   }
+
+   if(lineisportal && t1.x && t2.x &&
       ((t1.y >= 0 && t1.y < NEARCLIP && t2.y / t2.x >= t1.y / t1.x) ||
        (t2.y >= 0 && t2.y < NEARCLIP && t1.y / t1.x <= t2.y / t2.x)))
    {
@@ -2103,10 +2112,15 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       t1.x = -(t2.x = 10); // some large enough value
    }
 
+   // Use these to prevent portal lines from being cut off by the viewport
    bool clipped = false;
+   bool markx1cover = false;
+
    if(t1.y < NEARCLIP)
    {      
       float move, movey;
+
+      clipped = true;
 
       // Simple reject for lines entirely behind the view plane.
       if(t2.y < NEARCLIP)
@@ -2117,31 +2131,35 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
 
       lclip1 = (float)sqrt(move * move + movey * movey);
       t1.y = NEARCLIP;
-      clipped = true;
    }
 
    i1 = 1.0f / t1.y;
    x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
-   if(line->linedef->portal && x1 > 0 && clipped)
-      x1 = 0;
+   if(lineisportal && x1 > 0 && clipped)
+      markx1cover = true;
 
    clipped = false;
    if(t2.y < NEARCLIP)
    {
       float move, movey;
 
+      clipped = true;
+
       movey = NEARCLIP - t2.y;
       t2.x += (move = movey * ((t2.x - t1.x) / (t2.y - t1.y)));
 
       lclip2 -= (float)sqrt(move * move + movey * movey);
       t2.y = NEARCLIP;
-      clipped = true;
    }
 
    i2 = 1.0f / t2.y;
    x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
-   if(line->linedef->portal && x2 < view.width - 1 && clipped)
-      x2 = view.width - 1;
+
+   // Fix now any wall or edge portal viewport cutoffs
+   if(lineisportal && x2 < view.width && clipped && x2 >= x1)
+      x2 = view.width;
+   if(markx1cover && x2 >= x1)
+      x1 = 0;
 
    // SoM: Handle the case where a wall is only occupying a single post but 
    // still needs to be rendered to keep groups of single post walls from not
