@@ -1267,42 +1267,61 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       }
    };
 
-   // ioanch 20160109: reference sector
-   const sector_t *sector = mobj->subsector->sector;
+   static const int MAXIMUM_PER_TIC = 8;  // set some limit for maximum portals to cross per tic
+
+   bool movedalready = false;
 
    for(int i = 0; i < earrlen(opsets); ++i)
    {
+      if(movedalready)
+         return true;   // if moved from the previous plane attempt, signal success now
+
       const auto &op = opsets[i];
-      if(!(sector->*op.pflags & PS_PASSABLE))
-         continue;
 
-      fixed_t passheight, prevpassheight;
+      for(int j = 0; j < MAXIMUM_PER_TIC; ++j)  // allow checking if multiple portals were passed
+      {
+         const sector_t *sector = mobj->subsector->sector;
+         if(!(sector->*op.pflags & PS_PASSABLE))
+            break;
+         fixed_t passheight, prevpassheight;
 
-      if(mobj->player)
-      {
-         P_CalcHeight(mobj->player);
-         passheight = mobj->player->viewz;
-         prevpassheight = mobj->player->prevviewz;
-      }
-      else
-      {
-         passheight = mobj->z + (mobj->height >> 1);
-         prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
-      }
+         if(mobj->player)
+         {
+            P_CalcHeight(mobj->player);
+            passheight = mobj->player->viewz;
+            prevpassheight = mobj->player->prevviewz;
+         }
+         else
+         {
+            passheight = mobj->z + (mobj->height >> 1);
+            prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+         }
 
-      // ioanch 20160109: link offset outside
-      fixed_t planez = op.portalzfunc(*sector);
-      if(op.comparison(passheight, planez))
-      {
-         const line_t *crossedge;
-         P_avoidPortalEdges(*mobj, false, crossedge);
-         const linkdata_t *ldata = op.plink(sector);
-         mobj->prevpos.ldata = ldata;
-         if(op.comparison(prevpassheight, planez))
-            mobj->prevpos.portalline = crossedge;
-         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
-                                 ldata->deltaz, ldata->fromid, ldata->toid);
-         return true;
+         // ioanch 20160109: link offset outside
+         fixed_t planez = op.portalzfunc(*sector);
+         if(op.comparison(passheight, planez))
+         {
+            const line_t *crossedge;
+            P_avoidPortalEdges(*mobj, false, crossedge);
+            const linkdata_t *ldata = op.plink(sector);
+            if(!j)
+            {
+               mobj->prevpos.ldata = ldata;
+               if(op.comparison(prevpassheight, planez))
+                  mobj->prevpos.portalline = crossedge;
+            }
+            EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                    ldata->deltaz, ldata->fromid, ldata->toid);
+            if(j)
+            {
+               mobj->backupPosition();
+               if(mobj->player)
+                  mobj->player->prevviewz = mobj->player->viewz;
+            }
+            movedalready = true; // signal not to attempt moving down now
+         }
+         else
+            break;   // break out of the eight-attempt if there's no portal now
       }
    }
 
