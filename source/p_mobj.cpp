@@ -1243,13 +1243,39 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling,
 //
 bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   bool ret = false;
+   struct opset_t
+   {
+      unsigned sector_t::* pflags;
+      fixed_t (*portalzfunc)(const sector_t &);
+      bool (*comparison)(fixed_t, fixed_t);
+      linkdata_t *(*plink)(const sector_t *);
+   };
+
+   static const opset_t opsets[2] =
+   {
+      {
+         &sector_t::f_pflags,
+         P_FloorPortalZ,
+         [](fixed_t a, fixed_t b) { return a < b; },
+         R_FPLink
+      },
+      {
+         &sector_t::c_pflags,
+         P_CeilingPortalZ,
+         [](fixed_t a, fixed_t b) { return a >= b; },
+         R_CPLink
+      }
+   };
 
    // ioanch 20160109: reference sector
    const sector_t *sector = mobj->subsector->sector;
 
-   if(sector->f_pflags & PS_PASSABLE)
+   for(int i = 0; i < earrlen(opsets); ++i)
    {
+      const auto &op = opsets[i];
+      if(!(sector->*op.pflags & PS_PASSABLE))
+         continue;
+
       fixed_t passheight, prevpassheight;
 
       if(mobj->player)
@@ -1265,55 +1291,22 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       }
 
       // ioanch 20160109: link offset outside
-      fixed_t planez = P_FloorPortalZ(*sector);
-      if(passheight < planez)
+      fixed_t planez = op.portalzfunc(*sector);
+      if(op.comparison(passheight, planez))
       {
          const line_t *crossedge;
          P_avoidPortalEdges(*mobj, false, crossedge);
-         const linkdata_t *ldata = R_FPLink(sector);
+         const linkdata_t *ldata = op.plink(sector);
          mobj->prevpos.ldata = ldata;
-         if(prevpassheight < planez)
+         if(op.comparison(prevpassheight, planez))
             mobj->prevpos.portalline = crossedge;
          EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
                                  ldata->deltaz, ldata->fromid, ldata->toid);
-         ret = true;
-      }
-   }
-   
-   if(!ret && sector->c_pflags & PS_PASSABLE)
-   {
-      // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight, prevpassheight;
-
-      if(mobj->player)
-      {
-         P_CalcHeight(mobj->player);
-         passheight = mobj->player->viewz;
-         prevpassheight = mobj->player->prevviewz;
-      }
-      else
-      {
-         passheight = mobj->z + (mobj->height >> 1);
-         prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
-      }
-
-      // ioanch 20160109: link offset outside
-      fixed_t planez = P_CeilingPortalZ(*sector);
-      if(passheight >= planez)
-      {
-         const line_t *crossedge;
-         P_avoidPortalEdges(*mobj, true, crossedge);
-         linkdata_t *ldata = R_CPLink(sector);
-         mobj->prevpos.ldata = ldata;
-         if(prevpassheight >= planez)
-            mobj->prevpos.portalline = crossedge;
-         EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
-                                 ldata->deltaz, ldata->fromid, ldata->toid);
-         ret = true;
+         return true;
       }
    }
 
-   return ret;
+   return false;
 }
 
 //
