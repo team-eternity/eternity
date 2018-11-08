@@ -2103,13 +2103,13 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
         (linedef.backsector->c_portal && linedef.extflags & EX_ML_UPPERPORTAL)));
    }
 
-   if(lineisportal && t1.x && t2.x &&
+   if(lineisportal && t1.x && t2.x && t1.x < t2.x &&
       ((t1.y >= 0 && t1.y < NEARCLIP && t2.y / t2.x >= t1.y / t1.x) ||
        (t2.y >= 0 && t2.y < NEARCLIP && t1.y / t1.x <= t2.y / t2.x)))
    {
       // handle the edge case where you're right with the nose on a portal line
       t1.y = t2.y = NEARCLIP;
-      t1.x = -(t2.x = 10); // some large enough value
+      t1.x = -(t2.x = 10 * FRACUNIT); // some large enough value
    }
 
    // Use these to prevent portal lines from being cut off by the viewport
