@@ -62,7 +62,7 @@ public:
    }
 
    // Parameterised constructor
-   AVLTree(T key, U *object) : root(estructalloc(avlnode_t, 1))
+   AVLTree(const T key, U *object) : root(estructalloc(avlnode_t, 1))
    {
       root->key = key;
       root->object = object;
@@ -74,14 +74,13 @@ public:
    //
    // Insert a new node with a provided key and object into the tree
    //
-   avlnode_t *insert(T key, U *object)
+   avlnode_t *insert(const T key, U *object)
    {
       avlnode_t *toinsert, *next, *prev;
-      prev = next = nullptr;
-      toinsert = estructalloc(avlnode_t, 1);
-      toinsert->key = key;
+      prev             = nullptr;
+      toinsert         = estructalloc(avlnode_t, 1);
+      toinsert->key    = key;
       toinsert->object = object;
-      toinsert->left = toinsert->right = nullptr;
 
       if(root == nullptr)
          root = toinsert;
@@ -100,7 +99,7 @@ public:
          if(key > prev->key)
             prev->right = toinsert;
          if(key < prev->key)
-            prev->left = toinsert;
+            prev->left  = toinsert;
       }
       balance(root);
 
@@ -110,7 +109,7 @@ public:
    //
    // Delete the node with the provided key, then rebalance the tree
    //
-   bool deleteNode(T key, U *object)
+   bool deleteNode(const T key, U *object)
    {
       avlnode_t *prev = nullptr, *node = root;
       bool found = false, onleft = false, removedslot = true;
@@ -144,7 +143,7 @@ public:
                if(node->object == object)
                {
                   if(onleft)
-                     prev->left = node->next;
+                     prev->left  = node->next;
                   else
                      prev->right = node->next;
                }
@@ -154,7 +153,7 @@ public:
                   while(curr != nullptr && curr->object != object)
                   {
                      previnslot = curr;
-                     curr = curr->next;
+                     curr       = curr->next;
                   }
                   previnslot->next = curr->next;
 
@@ -174,7 +173,7 @@ public:
                if(prev)
                {
                   if(onleft)
-                     prev->left = toset;
+                     prev->left  = toset;
                   else
                      prev->right = toset;
                }
@@ -189,12 +188,12 @@ public:
                // Two child nodes
                if(onleft || !prev)
                {
-                  minnode = minimumNode(node, &minparent);
+                  minnode    = minimumNode(node, &minparent);
                   prev->left = minnode;
                }
                else
                {
-                  minnode = minimumNode(node, &minparent);
+                  minnode     = minimumNode(node, &minparent);
                   prev->right = minnode;
                }
 
@@ -202,7 +201,7 @@ public:
                if(minparent != nullptr)
                   minparent->left = nullptr;
 
-               minnode->left = node->left;
+               minnode->left  = node->left;
                minnode->right = node->right;
 
                efree(node);
@@ -218,7 +217,7 @@ public:
    //
    // Return a node with a given key, or nullptr if not found
    //
-   avlnode_t *find(T key) const
+   avlnode_t *find(const T key) const
    {
       for(avlnode_t *node = root; node != nullptr;)
       {
@@ -235,7 +234,7 @@ public:
    //
    // Get the number of nodes in the tree
    //
-   int numNodes(avlnode_t *node = nullptr) const
+   int numNodes(const avlnode_t *node = nullptr) const
    {
       if(node == nullptr && root)
          node = root;
@@ -284,7 +283,7 @@ protected:
    //
    // Get the height of a given tree/sub-tree
    //
-   static int treeHeight(avlnode_t *node)
+   static int treeHeight(const avlnode_t *node)
    {
       int lheight, rheight;
 
@@ -297,7 +296,7 @@ protected:
    //
    // Get the balance factor of a given tree/sub-tree
    //
-   inline static int balanceFactor(avlnode_t *node)
+   inline static int balanceFactor(const avlnode_t *node)
    {
       int bf = 0;
 
@@ -319,7 +318,7 @@ protected:
       *   b   3  ->  1    a
       *  / \    GOTO     / \
       * 1   2           2   3 */
-      a->left = b->right;
+      a->left  = b->right;
       b->right = a;
 
       node = b;
@@ -339,9 +338,9 @@ protected:
       * 1   c        1   2 3   d
       *    / \
       *   2   3                  */
-      a->left = c->right;
+      a->left  = c->right;
       b->right = c->left;
-      c->left = b;
+      c->left  = b;
       c->right = a;
 
       node = c;
@@ -355,9 +354,9 @@ protected:
 
       // This is the opposite of rotateNodeLeftRight
       a->right = c->left;
-      b->left = c->right;
+      b->left  = c->right;
       c->right = b;
-      c->left = a;
+      c->left  = a;
 
       node = c;
    }
@@ -369,7 +368,7 @@ protected:
 
       // This is the opposite of rotateNodeRight
       a->right = b->left;
-      b->left = a;
+      b->left  = a;
 
       node = b;
    }
@@ -414,7 +413,7 @@ private:
       if(node)
       {
          if(node->left)
-            deleteTree(node->left, deleteobjs);
+            deleteTree(node->left,  deleteobjs);
          if(node->right)
             deleteTree(node->right, deleteobjs);
          if(deleteobjs)
