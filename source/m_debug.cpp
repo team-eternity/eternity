@@ -120,6 +120,12 @@ DebugLogger &DebugLogger::operator << (const side_t &side)
    << "top(" << side.toptexture << ") bot(" << side.bottomtexture << ") mid(" << side.midtexture
    << ") " << side.sector << "spec(" << side.special << "))";
 }
+
+DebugLogger &DebugLogger::operator << (const v2fixed_t &vec)
+{
+   return *this << "v2fixed(" >> vec.x >> vec.y << ")";
+}
+
 DebugLogger &DebugLogger::operator << (const vertex_t &vertex)
 {
    return *this << "v" << (&vertex - vertexes) << '(' >> vertex.x >> vertex.y << ')';

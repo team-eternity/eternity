@@ -32,6 +32,7 @@ struct line_t;
 struct sector_t;
 struct seg_t;
 struct side_t;
+struct v2fixed_t;
 struct vertex_t;
 
 //
@@ -61,6 +62,7 @@ public:
    DebugLogger &operator << (const side_t &side);
    DebugLogger &operator << (const sector_t &sector);
    DebugLogger &operator << (const seg_t &seg);
+   DebugLogger &operator << (const v2fixed_t &vec);
    DebugLogger &operator << (const vertex_t &vertex);
 
    template<typename T>
