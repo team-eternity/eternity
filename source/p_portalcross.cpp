@@ -165,6 +165,24 @@ struct exacttraverse_t
 };
 
 //
+// Checks if the two ends of a divline are projected inside the linedef segment
+//
+static bool P_divlineInsideLine(const divline_t &dl, const line_t &line)
+{
+   const v2fixed_t normal = { M_FloatToFixed(line.nx), M_FloatToFixed(line.ny) };
+   divline_t pdir = { dl.x, dl.y, normal.x, normal.y };
+   const v2fixed_t lv1 = { line.v1->x, line.v1->y };
+   const v2fixed_t lv2 = { lv1.x + line.dx, lv1.y + line.dy };
+   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+      return false;
+   pdir.x += dl.dx;
+   pdir.y += dl.dy;
+   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+      return false;
+   return true;
+}
+
+//
 // The iterator
 //
 static bool PIT_exactTraverse(const line_t &line, void *vdata)
@@ -187,7 +205,10 @@ static bool PIT_exactTraverse(const line_t &line, void *vdata)
    if(P_PointOnDivlineSide(line.v1->x, line.v1->y, data.trace) ==
       P_PointOnDivlineSide(line.v2->x, line.v2->y, data.trace))
    {
-      return true;
+      // check against edge cases where the trace crosses validly but the linedef vertices don't
+      // sit on different sides of the divline. Happens with traces (almost) parallel in direction.
+      if(!P_divlineInsideLine(*data.trace, line))
+         return true;
    }
 
    divline_t dl;
