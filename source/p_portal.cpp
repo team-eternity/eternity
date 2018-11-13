@@ -910,6 +910,7 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
       // inertia!
       mo->momx += pvel[0].x - pvel[1].x;
       mo->momy += pvel[0].y - pvel[1].y;
+      mo->backupPosition();   // disable mobj portal interpolation for now here
    }
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
