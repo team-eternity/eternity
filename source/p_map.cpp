@@ -1536,7 +1536,7 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
-   int oldgroupid, newgroupid = thing->groupid;
+   int oldgroupid;
    dropoff_func_t dropofffunc;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
@@ -1553,12 +1553,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    bool groupidchange = false;
-   const line_t *portalteleport = nullptr;
    fixed_t prex, prey;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
       nullptr;
+
+   edefstructvar(portalcrossingoutcome_t, crossoutcome);
+   crossoutcome.finalgroup = thing->groupid;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
@@ -1596,13 +1598,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
       if(hasportals)
       {
-         v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
-                                               x - oldx, y - oldy, &newgroupid,
-                                               &portalteleport);
-   
+         v2fixed_t dest = P_PrecisePortalCrossing(oldx, oldy, x - oldx, y - oldy, crossoutcome);
    
          // Update position
-         groupidchange = newgroupid != thing->groupid;
+         groupidchange = crossoutcome.finalgroup != thing->groupid;
          prex = x;
          prey = y;
 
@@ -1614,7 +1613,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(groupidchange)
       {
          oldgroupid = thing->groupid;
-         thing->groupid = newgroupid;
+         thing->groupid = crossoutcome.finalgroup;
          check = P_CheckPosition3D(thing, x, y, pPushHit);
          thing->groupid = oldgroupid;
       }
@@ -1811,13 +1810,21 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    thing->y = y;
    P_SetThingPosition(thing);
 
-   if(portalteleport)
+   if(crossoutcome.lastpassed)
    {
       // Passed through at least one portal
       // TODO: 3D teleport
-      thing->prevpos.portalline = portalteleport;
-      thing->prevpos.ldata = &portalteleport->portal->data.link;
-      P_PortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid, newgroupid);
+      if(crossoutcome.multipassed)
+      {
+         thing->backupPosition();   // don't bother interpolating if passing through multiple
+                                    // portals at once
+      }
+      else
+      {
+         thing->prevpos.portalline = crossoutcome.lastpassed;
+         thing->prevpos.ldata = &crossoutcome.lastpassed->portal->data.link;
+      }
+      P_PortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid, crossoutcome.finalgroup);
    }
 
    // haleyjd 08/07/04: new footclip system

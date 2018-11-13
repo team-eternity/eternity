@@ -1084,7 +1084,6 @@ R_ClipSegFunc segclipfuncs[] =
 };
 
 #define NEARCLIP 0.05f
-#define PNEARCLIP 0.001f
 
 static void R_2S_Sloped(float pstep, float i1, float i2, float textop, 
                         float texbottom, const vertex_t *v1, const vertex_t *v2, 
@@ -1959,7 +1958,6 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    float x1, x2;
    float i1, i2, pstep;
    float lclip1, lclip2;
-   float nearclip = NEARCLIP;
    v2float_t t1, t2, temp;
    const side_t *side;
    float floorx1, floorx2;
@@ -2095,15 +2093,37 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    // closer to the camera than normal lines can. This closer clipping 
    // distance is used to stave off the flash that can sometimes occur when
    // passing through a linked portal line.
-   if(line->linedef->portal)
-      nearclip = PNEARCLIP;
 
-   if(t1.y < nearclip)
+   bool lineisportal;
+   {
+      const line_t &linedef = *line->linedef;
+      lineisportal = linedef.portal ||
+      (linedef.backsector && line->sidedef == &sides[linedef.sidenum[0]] &&
+       ((linedef.backsector->f_portal && linedef.extflags & EX_ML_LOWERPORTAL) ||
+        (linedef.backsector->c_portal && linedef.extflags & EX_ML_UPPERPORTAL)));
+   }
+
+   if(lineisportal && t1.x && t2.x && t1.x < t2.x &&
+      ((t1.y >= 0 && t1.y < NEARCLIP && t2.y / t2.x >= t1.y / t1.x) ||
+       (t2.y >= 0 && t2.y < NEARCLIP && t1.y / t1.x <= t2.y / t2.x)))
+   {
+      // handle the edge case where you're right with the nose on a portal line
+      t1.y = t2.y = NEARCLIP;
+      t1.x = -(t2.x = 10 * FRACUNIT); // some large enough value
+   }
+
+   // Use these to prevent portal lines from being cut off by the viewport
+   bool clipped = false;
+   bool markx1cover = false;
+
+   if(t1.y < NEARCLIP)
    {      
       float move, movey;
 
+      clipped = true;
+
       // Simple reject for lines entirely behind the view plane.
-      if(t2.y < nearclip)
+      if(t2.y < NEARCLIP)
          return;
 
       movey = NEARCLIP - t1.y;
@@ -2115,10 +2135,15 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
 
    i1 = 1.0f / t1.y;
    x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
+   if(lineisportal && x1 > 0 && clipped)
+      markx1cover = true;
 
+   clipped = false;
    if(t2.y < NEARCLIP)
    {
       float move, movey;
+
+      clipped = true;
 
       movey = NEARCLIP - t2.y;
       t2.x += (move = movey * ((t2.x - t1.x) / (t2.y - t1.y)));
@@ -2129,6 +2154,12 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
 
    i2 = 1.0f / t2.y;
    x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
+
+   // Fix now any wall or edge portal viewport cutoffs
+   if(lineisportal && x2 < view.width && clipped && x2 >= x1)
+      x2 = view.width;
+   if(markx1cover && x2 >= x1)
+      x1 = 0;
 
    // SoM: Handle the case where a wall is only occupying a single post but 
    // still needs to be rendered to keep groups of single post walls from not
