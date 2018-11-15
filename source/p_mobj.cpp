@@ -1249,6 +1249,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       fixed_t (*portalzfunc)(const sector_t &);
       bool (*comparison)(fixed_t, fixed_t);
       linkdata_t *(*plink)(const sector_t *);
+      bool isceiling;
    };
 
    static const opset_t opsets[2] =
@@ -1257,13 +1258,15 @@ bool P_CheckPortalTeleport(Mobj *mobj)
          &sector_t::f_pflags,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; },
-         R_FPLink
+         R_FPLink,
+         false
       },
       {
          &sector_t::c_pflags,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a >= b; },
-         R_CPLink
+         R_CPLink,
+         true
       }
    };
 
@@ -1302,7 +1305,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
          if(op.comparison(passheight, planez))
          {
             const line_t *crossedge;
-            P_avoidPortalEdges(*mobj, false, crossedge);
+            P_avoidPortalEdges(*mobj, op.isceiling, crossedge);
             const linkdata_t *ldata = op.plink(sector);
             if(!j)
             {
