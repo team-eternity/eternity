@@ -63,10 +63,9 @@
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
 		4F015B8A18775CB100ADB3F4 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = AUTHORS; path = ../../AUTHORS; sourceTree = "<group>"; };
 		4F015B8B18775CB100ADB3F4 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = COPYING; path = ../../COPYING; sourceTree = "<group>"; };
+		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
 		4F015B941877636F00ADB3F4 /* ELAboutController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELAboutController.h; sourceTree = "<group>"; };
 		4F015B951877636F00ADB3F4 /* ELAboutController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELAboutController.m; sourceTree = "<group>"; };
-		4F1C35A3219E111500795EA0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Launcher.xib; sourceTree = "<group>"; };
-		4F1C35A4219E111500795EA0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/About.xib; sourceTree = "<group>"; };
 		4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = EternityEngine.xcodeproj; path = ../EternityEngine.xcodeproj; sourceTree = "<group>"; };
 		4F48AAC820E5682B00AD935F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = "../sdl-mac-releases/SDL2.framework"; sourceTree = "<group>"; };
 		4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = "../sdl-mac-releases/SDL2_mixer.framework"; sourceTree = "<group>"; };
@@ -80,6 +79,7 @@
 		FA3011F0168A427B005D25A8 /* ELCommandLineArgument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArgument.m; sourceTree = "<group>"; };
 		FA3011F2168A44DF005D25A8 /* ELCommandLineArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELCommandLineArray.h; sourceTree = "<group>"; };
 		FA3011F3168A44DF005D25A8 /* ELCommandLineArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELCommandLineArray.m; sourceTree = "<group>"; };
+		FA601C7A1696246800046D2D /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/Launcher.xib; sourceTree = "<group>"; };
 		FA82164B1647128900FF998A /* base */ = {isa = PBXFileReference; lastKnownFileType = folder; name = base; path = ../../base; sourceTree = SOURCE_ROOT; };
 		FA8216761647128900FF998A /* docs */ = {isa = PBXFileReference; lastKnownFileType = folder; name = docs; path = ../../docs; sourceTree = SOURCE_ROOT; };
 		FA8216871647128900FF998A /* user */ = {isa = PBXFileReference; lastKnownFileType = folder; name = user; path = ../../user; sourceTree = SOURCE_ROOT; };
@@ -251,7 +251,6 @@
 				French,
 				German,
 				en,
-				Base,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* EternityLaunch */;
 			projectDirPath = "";
@@ -330,7 +329,7 @@
 		4F015B8E1877613100ADB3F4 /* About.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				4F1C35A4219E111500795EA0 /* Base */,
+				4F015B8F1877613100ADB3F4 /* English */,
 			);
 			name = About.xib;
 			sourceTree = "<group>";
@@ -338,7 +337,7 @@
 		FA601C791696246800046D2D /* Launcher.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				4F1C35A3219E111500795EA0 /* Base */,
+				FA601C7A1696246800046D2D /* English */,
 			);
 			name = Launcher.xib;
 			sourceTree = "<group>";
@@ -350,7 +349,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
@@ -368,7 +366,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ENABLE_OBJC_WEAK = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
