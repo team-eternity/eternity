@@ -1150,12 +1150,12 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       for(const portalthing_t &pt : pts)
       {
          // Object was neither teleported by portal nor pushed by solid wall
-         DebugLogger() << "Portalthing" << pt.thing->info->name >> pt.thing->x >> pt.position.x >> pt.thing->y >> pt.position.y >> pt.thing->momx >> pt.velocity.x >> pt.thing->momy >> pt.velocity.y;
          if(pt.thing->x == pt.position.x && pt.thing->y == pt.position.y &&
             pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
          {
             // We got one which we may want to move
-            P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1);
+            if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+               pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
          }
       }
    }
