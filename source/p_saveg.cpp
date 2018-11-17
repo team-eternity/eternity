@@ -375,6 +375,14 @@ SaveArchive &SaveArchive::operator << (v2fixed_t &vec)
    return *this;
 }
 
+// Serialize a z plane reference
+SaveArchive &SaveArchive::operator << (zrefs_t &zref)
+{
+   *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
+         << zref.passfloor << zref.passceil;
+   return *this;
+}
+
 //=============================================================================
 //
 // Thinker Enumeration

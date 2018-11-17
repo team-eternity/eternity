@@ -1678,7 +1678,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
 
          // put the thing into its spawnstate and keep it still
          P_SetMobjState(mo, mo->info->spawnstate);
-         mo->z = mo->floorz;
+         mo->z = mo->zref.floor;
          mo->momx = mo->momy = mo->momz = 0;
          mo->backupPosition();
 

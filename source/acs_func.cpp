@@ -496,9 +496,9 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_Armor:        return mo->player ?
                                     static_cast<uint32_t>(mo->player->armorpoints) == val : false;
    case ACS_TP_CeilTex:      return mo->subsector->sector->ceilingpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->ceilingz) == val;
+   case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
    case ACS_TP_FloorTex:     return mo->subsector->sector->floorpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->floorz) == val;
+   case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
    case ACS_TP_Frags:        return mo->player ?
                                     static_cast<uint32_t>(mo->player->totalfrags) == val : false;
    case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
@@ -1242,9 +1242,9 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_Angle:        return mo->angle >> 16;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints : 0;
    case ACS_TP_CeilTex:      return 0;
-   case ACS_TP_CeilZ:        return mo->ceilingz;
+   case ACS_TP_CeilZ:        return mo->zref.ceiling;
    case ACS_TP_FloorTex:     return 0;
-   case ACS_TP_FloorZ:       return mo->floorz;
+   case ACS_TP_FloorZ:       return mo->zref.floor;
    case ACS_TP_Frags:        return mo->player ? mo->player->totalfrags : 0;
    case ACS_TP_LightLevel:   return mo->subsector->sector->lightlevel;
    case ACS_TP_MomX:         return mo->momx;
@@ -1642,7 +1642,7 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
          if(!mo->player && !(flags & SECDAM_NONPLAYERS))
             continue;
 
-         if(mo->z != mo->floorz && !(flags & SECDAM_IN_AIR))
+         if(mo->z != mo->zref.floor && !(flags & SECDAM_IN_AIR))
             continue;
 
          P_DamageMobj(mo, NULL, NULL, damage, mod);
@@ -2003,10 +2003,10 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
-         mo->floorz = mo->dropoffz = newsubsec->sector->floorheight;
-         mo->ceilingz = newsubsec->sector->ceilingheight;
-         mo->passfloorz = mo->secfloorz = mo->floorz;
-         mo->passceilz = mo->secceilz = mo->ceilingz;
+         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->floorheight;
+         mo->zref.ceiling = newsubsec->sector->ceilingheight;
+         mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
+         mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 
          mo->x = x;
          mo->y = y;

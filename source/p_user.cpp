@@ -198,8 +198,8 @@ void P_CalcHeight(player_t *player)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
       
-      if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
-         player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
+      if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
+         player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
 
       // phares 2/25/98:
       // The following line was in the Id source and appears
@@ -245,13 +245,13 @@ void P_CalcHeight(player_t *player)
 
    // haleyjd 08/07/04: new floorclip system
    if(player->mo->floorclip && player->playerstate != PST_DEAD && 
-      player->mo->z <= player->mo->floorz)
+      player->mo->z <= player->mo->zref.floor)
    {
       player->viewz -= player->mo->floorclip;
    }
    
-   if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
-      player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
+   if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
+      player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
 }
 
 //
@@ -312,7 +312,7 @@ void P_MovePlayer(player_t* player)
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
    onground = 
-      mo->z <= mo->floorz ||
+      mo->z <= mo->zref.floor ||
       (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
       (mo->flags4 & MF4_FLY);
    
@@ -430,7 +430,7 @@ void P_DeathThink(player_t *player)
    }
    else
    {
-      onground = player->mo->z <= player->mo->floorz ||
+      onground = player->mo->z <= player->mo->zref.floor ||
                     (P_Use3DClipping() &&
                      player->mo->intflags & MIF_ONMOBJ);
    }
@@ -473,7 +473,7 @@ void P_DeathThink(player_t *player)
    if(!E_IsPlayerClassThingType(player->mo->type))
    {
       player->prevpitch = player->pitch;
-      if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
+      if(player->mo->z <= player->mo->zref.floor && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }
       
@@ -695,7 +695,7 @@ void P_PlayerThink(player_t *player)
       // accidentally in -vanilla.
       if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
       {
-         if((player->mo->z == player->mo->floorz || 
+         if((player->mo->z == player->mo->zref.floor ||
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
          {
             player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
@@ -967,7 +967,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
    player->mo->flags4 |= MF4_FLY;
    player->mo->flags  |= MF_NOGRAVITY;
 
-   if(thrustup && player->mo->z <= player->mo->floorz)
+   if(thrustup && player->mo->z <= player->mo->zref.floor)
       player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
    // TODO: stop screaming if falling

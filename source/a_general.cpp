@@ -364,7 +364,7 @@ void A_SpawnGlitter(actionargs_t *actionargs)
    x = pos.x;
    y = pos.y;
 
-   z = actor->floorz;
+   z = actor->zref.floor;
 
    glitter = P_SpawnMobj(x, y, z, glitterType);
 
@@ -1518,8 +1518,7 @@ void A_DetonateEx(actionargs_t *actionargs)
 
    // cause a terrain hit
    // ioanch 20160116: portal aware Z
-   if(actor->z <= actor->secfloorz + radius * FRACUNIT)
-      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
+   E_ExplosionHitWater(actor, radius);
 }
 
 // EOF
