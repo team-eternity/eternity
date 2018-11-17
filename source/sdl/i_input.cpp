@@ -89,7 +89,11 @@ void UpdateGrab(SDL_Window *window)
       // example.
 
       SDL_GetWindowSize(window, &window_w, &window_h);
+
+      // Disable handling the mouse during this action
+      SDL_EventState(SDL_MOUSEMOTION, SDL_DISABLE);
       SDL_WarpMouseInWindow(window, window_w - 16, window_h - 16);
+      SDL_EventState(SDL_MOUSEMOTION, SDL_ENABLE);
    }
 
    currently_grabbed = grab;
