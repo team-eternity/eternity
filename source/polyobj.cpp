@@ -1154,8 +1154,17 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
          {
             // We got one which we may want to move
-            if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
-               pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
+            if(pt.thing->z <= pt.thing->zref.floor)
+            {
+               if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+                  pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
+            }
+            else
+            {
+               // Floating things still need zref updating
+               P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
+               pt.thing->zref = clip.zref;
+            }
          }
       }
    }
