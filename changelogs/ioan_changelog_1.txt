@@ -14,6 +14,15 @@ BUGFIX: Interpolate the walkcam while the game is paused. Previously it would
         only interpolate while the game was running, but the walkcam is one of
         the few cameras controllable even while the game is paused.
 
+        Fixed a bug where the walkcam would move a bit backwards when opening
+        the console.
+
+        Fixed objects standing on the outer edges of portal polyobjects not up-
+        dating their floor reference Z, thus floating above ground when the
+        polyobject is gone from below them.
+
+IMPROVEMENT: Console movement is now interpolated.
+
 --------------------------------------------------------------------------------
 13.11.2018
 
