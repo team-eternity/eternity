@@ -30,6 +30,7 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
@@ -255,6 +256,11 @@ static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &fra
    bbox[BOXRIGHT] >>= MAPBLOCKSHIFT;
    bbox[BOXBOTTOM] >>= MAPBLOCKSHIFT;
    bbox[BOXTOP] >>= MAPBLOCKSHIFT;
+
+   bbox[BOXLEFT] = eclamp(bbox[BOXLEFT], 0, bmapwidth - 1);
+   bbox[BOXRIGHT] = eclamp(bbox[BOXRIGHT], 0, bmapwidth - 1);
+   bbox[BOXBOTTOM] = eclamp(bbox[BOXBOTTOM], 0, bmapheight - 1);
+   bbox[BOXTOP] = eclamp(bbox[BOXTOP], 0, bmapheight - 1);
 
    edefstructvar(exacttraverse_t, data);
    data.trace = &trace;
