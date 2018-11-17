@@ -90,6 +90,7 @@ int SlopeDiv(unsigned int num, unsigned int den);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
+fixed_t R_GetLerp(bool ignorepause);
 void R_SectorColormap(const sector_t *s);
 
 // ioanch 20160106: template variants

@@ -901,9 +901,9 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 }
 
 //
-// R_getLerp
+// R_GetLerp
 //
-static fixed_t R_getLerp(bool ignorepause)
+fixed_t R_GetLerp(bool ignorepause)
 {
    // Interpolation must be disabled during pauses to avoid shaking, unless arg is set
    if(d_fastrefresh && d_interpolate &&
@@ -919,7 +919,7 @@ static fixed_t R_getLerp(bool ignorepause)
 static void R_SetupFrame(player_t *player, camera_t *camera)
 {
    fixed_t  viewheightfrac;
-   fixed_t  lerp = R_getLerp(false);
+   fixed_t  lerp = R_GetLerp(false);
    
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
@@ -946,7 +946,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    }
    else
    {
-      R_interpolateViewPoint(camera, walkcam_active ? R_getLerp(true) : lerp);
+      R_interpolateViewPoint(camera, walkcam_active ? R_GetLerp(true) : lerp);
    }
 
    extralight = player->extralight;

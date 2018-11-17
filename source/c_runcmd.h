@@ -336,6 +336,7 @@ public:
 // 
 struct console_t
 {
+   int prev_height;    // previous height for interpolation
    int current_height; // current height of console
    int current_target; // target height of console
    bool showprompt;    // toggles input prompt on or off
