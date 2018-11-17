@@ -903,10 +903,11 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 //
 // R_getLerp
 //
-static fixed_t R_getLerp()
+static fixed_t R_getLerp(bool ignorepause)
 {
+   // Interpolation must be disabled during pauses to avoid shaking, unless arg is set
    if(d_fastrefresh && d_interpolate &&
-      !(paused || ((menuactive || consoleactive) && !demoplayback && !netgame)))
+      (ignorepause || (!paused && ((!menuactive && !consoleactive) || demoplayback || netgame))))
       return i_haltimer.GetFrac();
    else
       return FRACUNIT;
@@ -918,7 +919,7 @@ static fixed_t R_getLerp()
 static void R_SetupFrame(player_t *player, camera_t *camera)
 {
    fixed_t  viewheightfrac;
-   fixed_t  lerp = R_getLerp();
+   fixed_t  lerp = R_getLerp(false);
    
    // haleyjd 09/04/06: set or change column drawing engine
    // haleyjd 09/10/06: set or change span drawing engine
@@ -945,7 +946,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    }
    else
    {
-      R_interpolateViewPoint(camera, lerp);
+      R_interpolateViewPoint(camera, walkcam_active ? R_getLerp(true) : lerp);
    }
 
    extralight = player->extralight;

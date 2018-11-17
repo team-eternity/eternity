@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+17.11.2018
+
+BUGFIX: Interpolate the walkcam while the game is paused. Previously it would
+        only interpolate while the game was running, but the walkcam is one of
+        the few cameras controllable even while the game is paused.
+
+--------------------------------------------------------------------------------
 13.11.2018
 
 BUGFIX: Fixed edge-case situations where line portal teleportation would fail,
