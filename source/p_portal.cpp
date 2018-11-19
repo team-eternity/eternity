@@ -1149,6 +1149,27 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
 }
 
 //
+// Same as above, but generic
+//
+void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
+                           bool (*func)(int groupid, void *context), void *context)
+{
+   const int *row = clusters + ingroup * groupcount;
+   for(int i = 0; i < groupcount; ++i)
+   {
+      if(groupvisit[i])
+         continue;
+      if(i != ingroup && (row[i] == -1 || row[i] == row[outgroup]))
+         continue;
+
+      groupvisit[i] = true;
+
+      if(!func(i, context))
+         return;
+   }
+}
+
+//
 // Returns ceiling portal Z, which depends on whether planez is used or not.
 // Assumes linked portal exists and is active.
 //
