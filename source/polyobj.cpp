@@ -1036,11 +1036,8 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
       {
          // NOSECTOR invisible things will be ignored :)
          // Also don't push back standing and hanging things
-         if(mo->z <= mo->zref.floor || (mo->z + mo->height >= mo->zref.ceiling &&
-                                        mo->flags & MF_SPAWNCEILING && mo->flags & MF_NOGRAVITY))
-         {
+         if(P_mobjOnSurface(*mo))
             continue;
-         }
          moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
       }
    }
@@ -1202,7 +1199,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
          {
             // We got one which we may want to move
-            if(pt.thing->z <= pt.thing->zref.floor)
+            if(P_mobjOnSurface(*pt.thing))
             {
                if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
                   pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references

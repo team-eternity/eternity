@@ -738,6 +738,20 @@ enum
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
 
+//=============================================================================
+//
+// Functions which depend on flags
+//
+
+//
+// True if thing is on floor or hanging from ceiling
+//
+inline static bool P_mobjOnSurface(const Mobj &mobj)
+{
+   return mobj.z <= mobj.zref.floor || (mobj.z + mobj.height >= mobj.zref.ceiling &&
+                                        mobj.flags & MF_SPAWNCEILING && mobj.flags & MF_NOGRAVITY);
+}
+
 #endif
 
 //----------------------------------------------------------------------------
