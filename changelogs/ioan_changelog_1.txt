@@ -20,6 +20,9 @@ IMPROVEMENT: Changed how floating objects move in relation to portal
              It also avoids unrealistic direction changes when the containing
              polyobject changes movement.
 
+             Polyobject portals now show in the map as part of the main area,
+             because indeed they rarely ever overlap anything vertically.
+
 --------------------------------------------------------------------------------
 17.11.2018
 

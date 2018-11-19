@@ -1567,6 +1567,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    Polyobj_InitLevel();
    if(!numPolyObjects)
       P_MarkPortalClusters();
+   P_MarkPolyobjPortalLinks();
    P_BuildSectorGroupMappings();
 
    // haleyjd 06/18/14: spawn level actions

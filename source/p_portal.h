@@ -97,6 +97,7 @@ void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
 //
 bool P_BuildLinkTable();
 void P_MarkPortalClusters();
+void P_MarkPolyobjPortalLinks();
 
 void P_InitPortals();
 
@@ -191,6 +192,7 @@ fixed_t P_FloorPortalZ(const sector_t &sector);
 // Group mappings
 void P_BuildSectorGroupMappings();
 sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 #endif
 
