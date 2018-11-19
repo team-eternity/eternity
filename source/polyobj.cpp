@@ -1043,11 +1043,10 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
          }
          moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
       }
-      for(Mobj *mo : moved)
-         P_TryMove(mo, mo->x + motion.x, mo->y + motion.y, 1);
-      moved.makeEmpty();
    }
-   return false;
+   for(Mobj *mo : moved)
+      P_TryMove(mo, mo->x + motion.x, mo->y + motion.y, 1);
+   return true;
 }
 
 //
