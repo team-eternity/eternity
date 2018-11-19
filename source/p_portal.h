@@ -27,8 +27,6 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-#include "m_collection.h"
-
 struct polyobj_s;
 
 extern bool useportalgroups;
@@ -187,6 +185,10 @@ void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
 
 fixed_t P_CeilingPortalZ(const sector_t &sector);
 fixed_t P_FloorPortalZ(const sector_t &sector);
+
+// Group mappings
+void P_BuildSectorGroupMappings();
+sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
 
 #endif
 

@@ -80,6 +80,7 @@ bool *gGroupVisit;
 const polyobj_t **gGroupPolyobject;
 
 static PODCollection<polycouple_t> gPolyCouples;
+static Collection<PODCollection<sector_t *>> gGroupSectors;
 
 //
 // Adds a unique new poly couple set.
@@ -1166,6 +1167,30 @@ fixed_t P_FloorPortalZ(const sector_t &sector)
    return !sector.f_portal || sector.f_portal->type != R_LINKED ||
    sector.f_pflags & PF_ATTACHEDPORTAL ?
    sector.floorheight : sector.f_portal->data.link.planez;
+}
+
+//
+// Builds the sector group mappings
+//
+void P_BuildSectorGroupMappings()
+{
+   gGroupSectors.clear();
+   if(!useportalgroups)
+      return;
+   for(int i = 0; i < groupcount; ++i)
+      gGroupSectors.add(PODCollection<sector_t *>());
+   for(int i = 0; i < numsectors; ++i)
+      gGroupSectors[sectors[i].groupid].add(&sectors[i]);
+}
+
+//
+// Gets the collection of sectors for given group ID
+//
+sector_t **P_GetSectorsWithGroupId(int groupid, int *count)
+{
+   if(count)
+      *count = static_cast<int>(gGroupSectors[groupid].getLength());
+   return &gGroupSectors[groupid][0];
 }
 
 // EOF
