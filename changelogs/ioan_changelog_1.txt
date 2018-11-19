@@ -8,6 +8,19 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+19.11.2018
+
+IMPROVEMENT: Changed how floating objects move in relation to portal
+             polyobjects. They no longer remain fixed relative to the inner
+             chamber sectors, but are shifted in the opposite direction, so they
+             appear as remaining fixed relative to the main world. This
+             behaviour is more consistent with how thing movement isn't
+             influenced by traditional vertically moving sectors, and more
+             stable as well than just adapting velocity when passing the portal.
+             It also avoids unrealistic direction changes when the containing
+             polyobject changes movement.
+
+--------------------------------------------------------------------------------
 17.11.2018
 
 BUGFIX: Interpolate the walkcam while the game is paused. Previously it would
