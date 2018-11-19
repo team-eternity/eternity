@@ -1022,6 +1022,55 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
 }
 
 //
+// Iterator for the function below
+//
+static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
+{
+   int count;
+   sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
+   v2fixed_t motion = *static_cast<v2fixed_t *>(context);
+   PODCollection<Mobj *> moved;
+   for(int i = 0; i < count; ++i)
+   {
+      for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
+      {
+         // NOSECTOR invisible things will be ignored :)
+         // Also don't push back standing and hanging things
+         if(mo->z <= mo->zref.floor || (mo->z + mo->height >= mo->zref.ceiling &&
+                                        mo->flags & MF_SPAWNCEILING && mo->flags & MF_NOGRAVITY))
+         {
+            continue;
+         }
+         moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
+      }
+      for(Mobj *mo : moved)
+         P_TryMove(mo, mo->x + motion.x, mo->y + motion.y, 1);
+      moved.makeEmpty();
+   }
+   return false;
+}
+
+//
+// Moves all airborne objects inside the poly
+//
+static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t dy)
+{
+   if(!useportalgroups)
+      return;
+   bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
+   v2fixed_t motion = { dx, dy };
+   for(size_t i = 0; i < po.numPortals; ++i)
+   {
+      const portal_t &portal = *po.portals[i];
+      if(portal.type != R_LINKED || groupvisit[portal.data.link.toid])
+         continue;
+      P_ForEachClusterGroup(portal.data.link.fromid, portal.data.link.toid, groupvisit,
+                            PolyobjIT_moveObjectsInside, &motion);
+   }
+   efree(groupvisit);
+}
+
+//
 // Cross any special lines. Uses the centre point as reference, thus allowing
 // both moving and rotating polyobjects 
 //
@@ -1167,6 +1216,8 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             }
          }
       }
+      // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
+      Polyobj_moveObjectsInside(*po, -x, -y);
    }
 
    return !hitthing;

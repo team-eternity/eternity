@@ -874,10 +874,8 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
    // fixed to be real interpolation even for the player (camera)
 
    // Polyobject car enter and exit inertia
-   const polyobj_t *poly[2] = { gGroupPolyobject[fromid],
-      gGroupPolyobject[toid] };
-   v2fixed_t pvel[2] = { };
-   bool phave[2] = { };
+   const polyobj_t *poly[2] = { gGroupPolyobject[fromid], gGroupPolyobject[toid] };
+   bool phave = false;
    for(int i = 0; i < 2; ++i)
    {
       if(poly[i])
@@ -885,34 +883,19 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
          const auto th = thinker_cast<PolyMoveThinker *>(poly[i]->thinker);
          if(th)
          {
-            pvel[i].x = th->momx;
-            pvel[i].y = th->momy;
-            phave[i] = true;
+            phave = true;
+            break;
          }
          else
          {
             const auto th = thinker_cast<PolySlideDoorThinker *>(poly[i]->thinker);
-            if(th && !th->delayCount)
-            {
-               pvel[i].x = th->momx;
-               pvel[i].y = th->momy;
-               phave[i] = true;
-            }
-            else
-            {
-               pvel[i].x = pvel[i].y = 0;
-               phave[i] = false;
-            }
+            if((phave = th && !th->delayCount))
+               break;
          }
       }
    }
-   if(phave[0] || phave[1])
-   {
-      // inertia!
-      mo->momx += pvel[0].x - pvel[1].x;
-      mo->momy += pvel[0].y - pvel[1].y;
+   if(phave)
       mo->backupPosition();   // disable mobj portal interpolation for now here
-   }
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
