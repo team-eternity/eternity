@@ -1028,8 +1028,7 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
 {
    int count;
    sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
-   v2fixed_t motion = *static_cast<v2fixed_t *>(context);
-   PODCollection<Mobj *> moved;
+   auto &moved = *static_cast<PODCollection<Mobj *> *>(context);
    for(int i = 0; i < count; ++i)
    {
       for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
@@ -1041,8 +1040,6 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
          moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
       }
    }
-   for(Mobj *mo : moved)
-      P_TryMove(mo, mo->x + motion.x, mo->y + motion.y, 1);
    return true;
 }
 
@@ -1054,15 +1051,17 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
    if(!useportalgroups)
       return;
    bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
-   v2fixed_t motion = { dx, dy };
+   PODCollection<Mobj *> moved;
    for(size_t i = 0; i < po.numPortals; ++i)
    {
       const portal_t &portal = *po.portals[i];
       if(portal.type != R_LINKED || groupvisit[portal.data.link.toid])
          continue;
       P_ForEachClusterGroup(portal.data.link.fromid, portal.data.link.toid, groupvisit,
-                            PolyobjIT_moveObjectsInside, &motion);
+                            PolyobjIT_moveObjectsInside, &moved);
    }
+   for(Mobj *mo : moved)
+      P_TryMove(mo, mo->x + dx, mo->y + dy, 1);
    efree(groupvisit);
 }
 
