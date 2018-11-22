@@ -275,20 +275,6 @@ static inline bool E_isReservedCodePointer(const char *name)
 }
 
 //
-// Gets an asITypeInfo for a class name in the EE namespace
-//
-static inline asITypeInfo *E_getClassTypeInfo(const char *type)
-{
-   asIScriptEngine *e =  Aeon::ScriptManager::Engine();
-
-   const char *oldnamespace = e->GetDefaultNamespace();
-   e->SetDefaultNamespace("EE");
-   asITypeInfo *ret = e->GetTypeInfoByName(type);
-   e->SetDefaultNamespace(oldnamespace);
-   return ret;
-}
-
-//
 // Processes a single Aeon action
 //
 static void E_processAction(cfg_t *actionsec)
@@ -296,10 +282,10 @@ static void E_processAction(cfg_t *actionsec)
    asIScriptFunction *func;
    asIScriptEngine *e                        = Aeon::ScriptManager::Engine();
    asIScriptModule *module                   = Aeon::ScriptManager::Module();
-   static const asITypeInfo *mobjTypeInfo    = E_getClassTypeInfo("Mobj");
-   //static const asITypeInfo *playerTypeInfo  = E_getClassTypeInfo("Player");
-   //static const asITypeInfo *psprTypeInfo    = E_getClassTypeInfo("Psprite");
-   //static const asITypeInfo *actArgsTypeInfo = E_getClassTypeInfo("ActionArgs");
+   static const asITypeInfo *mobjTypeInfo    = e->GetTypeInfoByDecl("EE::Mobj");
+   //static const asITypeInfo *playerTypeInfo  = e->GetTypeInfoByDecl("EE::Player");
+   //static const asITypeInfo *psprTypeInfo    = e->GetTypeInfoByDecl("EE::Psprite");
+   //static const asITypeInfo *actArgsTypeInfo = e->GetTypeInfoByDecl("EE::ActionArgs");
    const char *name          = cfg_title(actionsec);
    const char *code          = cfg_getstr(actionsec, ITEM_ACT_CODE);
    int        nonArgParams   = 1; // No. of parameters that aren't provided as EDF args
