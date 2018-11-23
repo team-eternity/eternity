@@ -142,7 +142,7 @@ namespace Aeon
    void ScriptObjMobj::Init()
    {
       extern dehflags_t deh_mobjflags[];
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
 

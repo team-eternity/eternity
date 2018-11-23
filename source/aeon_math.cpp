@@ -138,7 +138,7 @@ namespace Aeon
 
    void ScriptObjMath::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("Math");
       for(const aeonfuncreg_t &fn : mathFuncs)
@@ -277,7 +277,7 @@ namespace Aeon
 
    void ScriptObjFixed::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->RegisterObjectType("fixed_t", sizeof(Fixed),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
@@ -477,7 +477,7 @@ namespace Aeon
 
    void ScriptObjAngle::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->RegisterObjectType("angle_t", sizeof(Angle),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
@@ -549,7 +549,7 @@ namespace Aeon
 
    void ScriptObjVector::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->RegisterObjectType("vector_t", sizeof(Vector),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);

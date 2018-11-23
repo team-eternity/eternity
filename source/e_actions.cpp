@@ -279,17 +279,22 @@ static inline bool E_isReservedCodePointer(const char *name)
 //
 static void E_processAction(cfg_t *actionsec)
 {
+   // These are static as E_processAction is called many times
+   static asIScriptEngine *const e      = Aeon::ScriptManager::Engine();
+   static asIScriptModule *const module = Aeon::ScriptManager::Module();
+
+   // The various type infos of permitted first params (or second for EE::Psprite)
+   static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj");
+   //static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player");
+   //static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite");
+   //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs");
+
+   // The function and its constituent components
    asIScriptFunction *func;
-   asIScriptEngine *e                        = Aeon::ScriptManager::Engine();
-   asIScriptModule *module                   = Aeon::ScriptManager::Module();
-   static const asITypeInfo *mobjTypeInfo    = e->GetTypeInfoByDecl("EE::Mobj");
-   //static const asITypeInfo *playerTypeInfo  = e->GetTypeInfoByDecl("EE::Player");
-   //static const asITypeInfo *psprTypeInfo    = e->GetTypeInfoByDecl("EE::Psprite");
-   //static const asITypeInfo *actArgsTypeInfo = e->GetTypeInfoByDecl("EE::ActionArgs");
-   const char *name          = cfg_title(actionsec);
-   const char *code          = cfg_getstr(actionsec, ITEM_ACT_CODE);
-   int        nonArgParams   = 1; // No. of parameters that aren't provided as EDF args
-   actioncalltype_e callType;
+   const char        *name         = cfg_title(actionsec);
+   const char        *code         = cfg_getstr(actionsec, ITEM_ACT_CODE);
+   int                nonArgParams = 1; // No. of parameters that aren't provided as EDF args
+   actioncalltype_e   callType;
 
    if(E_isReservedCodePointer(name))
    {
@@ -312,7 +317,7 @@ static void E_processAction(cfg_t *actionsec)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
 
    const unsigned int paramCount = func->GetParamCount();
-   if(typeID == (mobjTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   if(typeID == (mobjTypeID | asTYPEID_OBJHANDLE))
       callType = ACT_MOBJ;
    //else if(typeID == (playerTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
    //{

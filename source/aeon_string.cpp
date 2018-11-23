@@ -184,7 +184,7 @@ namespace Aeon
    //
    void ScriptObjString::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       // register type
       e->RegisterObjectType("String", 0, asOBJ_REF);

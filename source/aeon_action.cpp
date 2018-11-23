@@ -147,7 +147,7 @@ namespace Aeon
 
    void ScriptObjAction::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
 

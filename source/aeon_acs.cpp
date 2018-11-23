@@ -186,7 +186,7 @@ namespace Aeon
 
    void ScriptObjACS::Init()
    {
-      asIScriptEngine *e = ScriptManager::Engine();
+      asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE::ACS");
 
