@@ -115,7 +115,7 @@ namespace Aeon
       { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)  },
 
       // Statics
-      "fixed_t FloatBobOffsets(const int index)", WRAP_FN(FloatBobOffsets)
+      { "fixed_t FloatBobOffsets(const int index)", WRAP_FN(FloatBobOffsets) },
    };
 
    static const aeonpropreg_t mobjProps[] =
@@ -168,11 +168,11 @@ namespace Aeon
       for(dehflags_t *flag = deh_mobjflags; flag->name != nullptr; flag++)
       {
          qstring type("mobjflags");
-         qstring name = qstring("MF");
+         qstring name("MF");
          if(flag->index > 0)
          {
             name << (flag->index + 1);
-            type <<  (flag->index + 1);
+            type << (flag->index + 1);
          }
          type << "_e";
 
@@ -193,7 +193,6 @@ namespace Aeon
       e->SetDefaultNamespace("EE::Mobj");
       e->RegisterGlobalFunction("fixed_t FloatBobOffsets(const int index)",
                                 WRAP_FN(FloatBobOffsets), asCALL_GENERIC);
-
       e->SetDefaultNamespace("");
    }
 }

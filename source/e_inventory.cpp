@@ -1478,12 +1478,12 @@ static useaction_t *E_useActionForArtifactName(const char *name)
 //
 // Create and add a new useaction_t, then return a pointer it
 //
-static useaction_t *E_addUseAction(itemeffect_t *artifact, action_t *action)
+static useaction_t *E_addUseAction(const itemeffect_t *artifact, const action_t *action)
 {
    useaction_t *toadd = estructalloc(useaction_t, 1);
-   arglist_t *args = estructalloc(arglist_t, 1);
+   arglist_t   *args  = estructalloc(arglist_t,   1);
+   MetaString  *ms    = nullptr;
 
-   MetaString *ms = nullptr;
    while((ms = artifact->getNextKeyAndTypeEx(ms, keyArgs)))
    {
       if(!E_AddArgToList(args, ms->getValue()))
@@ -1506,7 +1506,7 @@ static useaction_t *E_addUseAction(itemeffect_t *artifact, action_t *action)
 void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 {
    invbarstate_t &invbarstate = player->invbarstate;
-   itemeffect_t *artifact = E_EffectForInventoryItemID(ID);
+   itemeffect_t  *artifact    = E_EffectForInventoryItemID(ID);
    if(!artifact)
       return;
    if(E_getItemEffectType(artifact) == ITEMFX_ARTIFACT)
@@ -1514,10 +1514,10 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
       if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
       {
          bool shiftinvleft = false;
-         bool success = false;
+         bool success      = false;
 
-         const char *useeffectstr = artifact->getString(keyUseEffect, "");
-         itemeffect_t *effect = E_ItemEffectForName(useeffectstr);
+         const char   *useeffectstr = artifact->getString(keyUseEffect, nullptr);
+         itemeffect_t *effect       = E_ItemEffectForName(useeffectstr);
          if(effect)
          {
             switch(E_getItemEffectType(effect))
@@ -1539,8 +1539,8 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             }
          }
 
-         const char *useactionstr = artifact->getString(keyUseAction, "");
-         action_t *action = E_GetAction(useactionstr);
+         const char *useactionstr = artifact->getString(keyUseAction, nullptr);
+         action_t   *action       = E_GetAction(useactionstr);
          if(action)
          {
             // Try and get the cached useaction, and if we fail, make one
@@ -1580,10 +1580,11 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
             if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
                shiftinvleft = true;
 
-            sound = artifact->getString(keyUseSound, "");
+            sound = artifact->getString(keyUseSound, nullptr);
             if(estrnonempty(sound))
                S_StartSoundName(player->mo, sound);
 
+            // TODO: Make this not hard-coded
             invbarstate.ArtifactFlash = 5;
          }
          else

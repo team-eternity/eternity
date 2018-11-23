@@ -222,13 +222,14 @@ static void E_registerScriptAction(const char *name, const char *funcname,
       {
          E_EDFLoggedWarning(2, "E_registerScriptAction: action '%s' has invalid argument type "
                                "%s\n", name, argTypes[i].constPtr());
+         return;
       }
    }
 
-   info = estructalloc(actiondef_t, 1);
-   info->name = estrdup(funcname);
-   memcpy(info->argTypes, args, sizeof(args));
-   info->numArgs = numParams - nonArgParams;
+   info           = estructalloc(actiondef_t, 1);
+   info->name     = estrdup(funcname);
+   memcpy(info->argTypes, args, earrlen(args));
+   info->numArgs  = numParams - nonArgParams;
    info->callType = callType;
 
    e_ActionDefHash.addObject(info);
@@ -332,7 +333,6 @@ static void E_processAction(cfg_t *actionsec)
    //}
    //else if(typeID == (actArgsTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
    //{
-   //   callType = ACT_ACTIONARGS;
    //   // If you're using raw actionargs_t then you don't need any more parameters
    //   if(paramCount > 1)
    //   {
@@ -341,7 +341,8 @@ static void E_processAction(cfg_t *actionsec)
    //                            "'EE::ActionArgs @' as their first argument.\n", name);
    //      return;
    //   }
-   //   E_registerScriptAction(name, func->GetName(), Collection<qstring>(), 1, 1, callType);
+   //   E_registerScriptAction(name, func->GetName(), Collection<qstring>(),
+   //                          1, 1, ACT_ACTIONARGS);
    //   return;
    //}
    else
@@ -371,10 +372,8 @@ static void E_processAction(cfg_t *actionsec)
       // erase
       if(idx != -1)
          strTemp.erase(idx, strTemp.find(" ") + 1 - idx);
-      // strTemp.Remove(idx, strTemp.find(" ")+1);
 
       strTemp.erase(strTemp.find(" "), strTemp.length() - strTemp.find(" "));
-      // strTemp.Remove(strTemp.find(" "), strTemp.length());
       argNameTypes.add(qstring(strTemp));
    }
 

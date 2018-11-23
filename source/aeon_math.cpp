@@ -244,7 +244,7 @@ namespace Aeon
 
    static void ASPrint(Fixed f)
    {
-      C_Printf("%f\n", M_FixedToDouble(f.value));
+      C_Printf("%.11f\n", M_FixedToDouble(f.value));
    }
 
    #define FIXEDBINOP(op, param) \
@@ -272,7 +272,7 @@ namespace Aeon
       { "fixed_t &opMulAssign(const int val)",     FIXEDASSIGNOP(*=, const int)     },
       { "fixed_t &opDivAssign(const fixed_t &in)", FIXEDASSIGNOP(/=, const Fixed &) },
       { "fixed_t &opDivAssign(const int val)",     FIXEDASSIGNOP(/=, const int)     },
-      { "double opImplConv() const",               WRAP_MFN(Fixed, operator double) },
+      { "double  opImplConv() const",              WRAP_MFN(Fixed, operator double) },
    };
 
    void ScriptObjFixed::Init()
@@ -293,7 +293,6 @@ namespace Aeon
       e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
                                  WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
 
-      // AEON_TODO: Figure if there's a nicer way to do this
       e->SetDefaultNamespace("fixed_t");
       e->RegisterGlobalFunction("fixed_t FromBits(const int val)",
                                 WRAP_FN(ConstructFromBits), asCALL_GENERIC);
@@ -332,18 +331,18 @@ namespace Aeon
          return (val / 45) * ANG45;
    }
 
-   Angle Angle::operator + (const Angle &in)  { return value + in.value; }
+   Angle Angle::operator + (const Angle &in)  { return value + in.value;                 }
    Angle Angle::operator + (const Fixed &in)  { return value + (FixedToAngle(in.value)); }
-   Angle Angle::operator + (const int val)        { return value + IntToAngle(val); }
-   Angle Angle::operator - (const Angle &in)  { return value - in.value; }
+   Angle Angle::operator + (const int val)    { return value + IntToAngle(val);          }
+   Angle Angle::operator - (const Angle &in)  { return value - in.value;                 }
    Angle Angle::operator - (const Fixed &in)  { return value - (FixedToAngle(in.value)); }
-   Angle Angle::operator - (const int val)        { return value - IntToAngle(val); }
+   Angle Angle::operator - (const int val)    { return value - IntToAngle(val);          }
 
    Angle Angle::operator * (const Fixed &in)
    {
       return FixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
    }
-   Angle Angle::operator * (const int val)        { return value * val; }
+   Angle Angle::operator * (const int val)    { return value * val;      }
    Angle Angle::operator / (const Angle &in)  { return value / in.value; }
    Angle Angle::operator / (const Fixed &in)
    {
