@@ -1523,7 +1523,11 @@ static void P_LoadThings(int lump)
       // haleyjd: removing this for Heretic and DeHackEd
       // IOANCH 20151213: use function
       if(P_CheckThingDoomBan(ft->type))
+      {
+         if(demo_compatibility) // emulate old behaviour where thing processing is totally abandoned
+            break;
          continue;
+      }
       
       // Do spawn all other stuff.
       // ioanch 20151218: fixed point coordinates
