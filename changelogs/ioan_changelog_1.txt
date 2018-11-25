@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+25.11.2018
+
+IMPROVEMENT: Now if an action is bound to more than one key, and two of the keys
+             are being pressed, releasing just one of them will not stop the
+             action. You need to release all of them.
+
+--------------------------------------------------------------------------------
 19.11.2018
 
 IMPROVEMENT: Changed how floating objects move in relation to portal
