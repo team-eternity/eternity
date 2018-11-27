@@ -357,6 +357,12 @@
 				GCC_PREFIX_HEADER = EternityLaunch_Prefix.pch;
 				INFOPLIST_FILE = "EternityLaunch-Info.plist";
 				INSTALL_PATH = /Applications;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-U",
+					"-Xlinker",
+					_objc_readClassPair,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
 			};
@@ -377,6 +383,12 @@
 					"CMAKE_INTDIR=\"Release\"",
 				);
 				INSTALL_PATH = /Applications;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-U",
+					"-Xlinker",
+					_objc_readClassPair,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
 			};
