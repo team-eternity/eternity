@@ -98,7 +98,15 @@ namespace Aeon
       static uint8_t      Byte()             { return P_Random(pr_aeon);                }
       static unsigned int Max(const int max) { return P_RangeRandomEx(pr_aeon, 0, max); }
       static Aeon::Fixed  Fixed()            { return Aeon::Fixed(P_RandomEx(pr_aeon)); }
-      static Aeon::Fixed Range(const Aeon::Fixed min, const Aeon::Fixed max)
+      static int RangeUInt(const int min, const int max)
+      {
+         return P_RangeRandomEx(pr_aeon, min, max);
+      }
+      static int RangeByte(const uint8_t min, const uint8_t max)
+      {
+         return P_RangeRandom(pr_aeon, min, max);
+      }
+      static Aeon::Fixed RangeFixed(const Aeon::Fixed min, const Aeon::Fixed max)
       {
          if(min.value >= 0)
             return Aeon::Fixed(P_RangeRandomEx(pr_aeon, min.value, max.value));
@@ -106,10 +114,10 @@ namespace Aeon
                                             max.value - min.value) + min.value);
       }
 
-      /*static int SubInt(const unsigned int max) { return P_SubRandomEx(pr_script, max); }
-      static Fixed SubFixed(const Fixed max)
+      static int SubInt(const unsigned int max) { return P_SubRandomEx(pr_aeon, max); }
+      /*static Aeon::Fixed SubFixed(const Fixed max)
       {
-         return Fixed(P_SubRandomEx(pr_script, max.value));
+         return Aeon::Fixed(P_SubRandomEx(pr_script, max.value));
       }*/
    };
 
@@ -128,11 +136,14 @@ namespace Aeon
 
    static const aeonfuncreg_t randFuncs[]
    {
-      { "uint   RandUInt()",                                       WRAP_FN(Rand::UInt)  },
-      { "uint8  RandByte()",                                       WRAP_FN(Rand::Byte)  },
-      { "uint   RandMax(const uint max)",                          WRAP_FN(Rand::UInt)  },
-      { "fixed_t RandFixed()",                                     WRAP_FN(Rand::Fixed) },
-      { "fixed_t RandRange(const fixed_t min, const fixed_t max)", WRAP_FN(Rand::Range) },
+      { "uint    UInt()",                                           WRAP_FN(Rand::UInt)       },
+      { "uint8   Byte()",                                           WRAP_FN(Rand::Byte)       },
+      { "uint    Max(const uint max)",                              WRAP_FN(Rand::UInt)       },
+      { "fixed_t Fixed()",                                          WRAP_FN(Rand::Fixed)      },
+      { "uint    RangeUInt(const uint min, const uint max)",        WRAP_FN(Rand::RangeUInt)  },
+      { "uint8   RangeByte(const uint8 min, const uint8 max)",      WRAP_FN(Rand::RangeByte)  },
+      { "fixed_t RangeFixed(const fixed_t min, const fixed_t max)", WRAP_FN(Rand::RangeFixed) },
+      { "int     SubUInt()",                                        WRAP_FN(Rand::SubInt)     },
 
    };
 
@@ -140,7 +151,7 @@ namespace Aeon
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->SetDefaultNamespace("Math");
+      e->SetDefaultNamespace("Math::Rand");
       for(const aeonfuncreg_t &fn : mathFuncs)
          e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
       for(const aeonfuncreg_t &fn : randFuncs)
@@ -154,14 +165,14 @@ namespace Aeon
    //
 
    Fixed Fixed::operator +  (const Fixed &in) { return value + in.value;          }
-   Fixed Fixed::operator +  (const int val)       { return value + (val * FRACUNIT);  }
+   Fixed Fixed::operator +  (const int val)   { return value + (val * FRACUNIT);  }
    Fixed Fixed::operator -  (const Fixed &in) { return value - in.value;          }
-   Fixed Fixed::operator -  (const int val)       { return value - (val * FRACUNIT);  }
+   Fixed Fixed::operator -  (const int val)   { return value - (val * FRACUNIT);  }
    Fixed Fixed::operator *  (const Fixed &in) { return FixedMul(value, in.value); }
-   Fixed Fixed::operator *  (const int val)       { return value * val;               }
+   Fixed Fixed::operator *  (const int val)   { return value * val;               }
    Fixed Fixed::operator /  (const Fixed &in) { return FixedDiv(value, in.value); }
-   Fixed Fixed::operator /  (const int val)       { return value / val;               }
-   Fixed Fixed::operator << (const int val)       { return value << val;              }
+   Fixed Fixed::operator /  (const int val)   { return value / val;               }
+   Fixed Fixed::operator << (const int val)   { return value << val;              }
 
    Fixed &Fixed::operator += (const Fixed &in)
    {
@@ -513,13 +524,9 @@ namespace Aeon
    public:
       vector_t value;
 
-      Vector() : value()
-      {
-      }
+      Vector() : value() { }
 
-      Vector(fixed_t x, fixed_t y, fixed_t z) : value({x, y, z})
-      {
-      }
+      Vector(fixed_t x, fixed_t y, fixed_t z) : value({x, y, z}) { }
 
    };
 
@@ -541,9 +548,9 @@ namespace Aeon
 
    static void ASPrint(Vector f)
    {
-      C_Printf("x: %f, y: %f, z: %f\n", M_FixedToDouble(f.value.x),
-                                        M_FixedToDouble(f.value.y),
-                                        M_FixedToDouble(f.value.z));
+      C_Printf("x: %.11f, y: %.11f, z: %.11f\n", M_FixedToDouble(f.value.x),
+                                                 M_FixedToDouble(f.value.y),
+                                                 M_FixedToDouble(f.value.z));
    }
 
    void ScriptObjVector::Init()

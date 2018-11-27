@@ -108,6 +108,7 @@ namespace Aeon
                               "alaflags_e flags = 0)",         WRAP_OBJ_FIRST(AimLineAttack)  },
       { "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope,"
                         "int damage, const String &pufftype)", WRAP_OBJ_FIRST(LineAttack)     },
+      { "bool checkSight(Mobj @other)",                        WRAP_OBJ_FIRST(P_CheckSight)   },
       { "bool hitFriend()",                                    WRAP_OBJ_FIRST(P_HitFriend)    },
 
       // Indexed property accessors (enables [] syntax for counters)

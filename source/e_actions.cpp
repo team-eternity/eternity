@@ -285,10 +285,10 @@ static void E_processAction(cfg_t *actionsec)
    static asIScriptModule *const module = Aeon::ScriptManager::Module();
 
    // The various type infos of permitted first params (or second for EE::Psprite)
-   static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj");
-   //static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player");
-   //static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite");
-   //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs");
+   static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj @");
+   //static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player @");
+   //static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite @");
+   //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs @");
 
    // The function and its constituent components
    asIScriptFunction *func;
@@ -318,12 +318,12 @@ static void E_processAction(cfg_t *actionsec)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
 
    const unsigned int paramCount = func->GetParamCount();
-   if(typeID == (mobjTypeID | asTYPEID_OBJHANDLE))
+   if(typeID == mobjTypeID)
       callType = ACT_MOBJ;
-   //else if(typeID == (playerTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   //else if(typeID == playerTypeID)
    //{
    //   if(func->GetParam(1, &typeID) >= 0 &&
-   //      typeID == (psprTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE)))
+   //      typeID == psprTypeID)
    //   {
    //      calltype = ACT_PLAYER_W_PSPRITE;
    //      nonArgParams = 2;
@@ -331,7 +331,7 @@ static void E_processAction(cfg_t *actionsec)
    //   else
    //      callType = ACT_PLAYER;
    //}
-   //else if(typeID == (actArgsTypeInfo->GetTypeId() | asTYPEID_OBJHANDLE))
+   //else if(typeID == actArgsTypeID)
    //{
    //   // If you're using raw actionargs_t then you don't need any more parameters
    //   if(paramCount > 1)

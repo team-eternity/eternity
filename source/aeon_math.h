@@ -42,13 +42,9 @@ namespace Aeon
    public:
       fixed_t value;
 
-      Fixed() : value(0)
-      {
-      }
+      Fixed() : value(0) { }
 
-      Fixed(fixed_t value) : value(value)
-      {
-      }
+      Fixed(fixed_t value) : value(value) { }
 
       Fixed operator +  (const Fixed &in);
       Fixed operator +  (const int val);
@@ -78,13 +74,9 @@ namespace Aeon
    public:
       angle_t value;
 
-      Angle() : value(0)
-      {
-      }
+      Angle() : value(0) { }
 
-      Angle(fixed_t value) : value(value)
-      {
-      }
+      Angle(fixed_t value) : value(value) { }
 
       Angle operator + (const Angle &in);
       Angle operator + (const Fixed &in);
