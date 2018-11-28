@@ -330,6 +330,7 @@ public:
    void  close(); // haleyjd 03/09/11
 
    lumpinfo_t *getLumpNameChain(const char *name) const;
+   lumpinfo_t *getLumpLFNChain(const char *name) const;
 
    const char *getLumpName(int lumpnum) const;
    const char *getLumpFileName(int lump) const;

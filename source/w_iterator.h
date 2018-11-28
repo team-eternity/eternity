@@ -43,10 +43,10 @@ protected:
    lumpinfo_t *lump;
 
 public:
-   WadIterator() : lump(NULL) {}
+   WadIterator() : lump(nullptr) {}
 
-   lumpinfo_t *current() const { return lump; }
-   lumpinfo_t *end()     const { return NULL; }
+   lumpinfo_t *current() const { return lump;    }
+   lumpinfo_t *end()     const { return nullptr; }
 
    // virtuals
    virtual lumpinfo_t *begin() = 0;
@@ -82,7 +82,7 @@ public:
    // namespace is empty, NULL will be returned immediately.
    virtual lumpinfo_t *begin()
    {
-      return (lump = (ns.numLumps ? lumpinfo[ns.firstLump] : NULL));
+      return (lump = (ns.numLumps ? lumpinfo[ns.firstLump] : nullptr));
    }
 
    // Step to the next lump in the namespace, if one exists. Returns NULL once
@@ -92,7 +92,7 @@ public:
       if(lump)
       {
          int next = lump->selfindex + 1;
-         lump = ((next < ns.firstLump + ns.numLumps) ? lumpinfo[next] : NULL);
+         lump = ((next < ns.firstLump + ns.numLumps) ? lumpinfo[next] : nullptr);
       }
       return lump;
    }
@@ -111,14 +111,22 @@ class WadChainIterator : public WadIterator
 {
 protected:
    const char  *lumpname;
+   bool         nameislfn;
    lumpinfo_t  *chain;
    lumpinfo_t **lumpinfo;
 
 public:
    WadChainIterator(const WadDirectory &dir, const char *name)
-      : WadIterator(), lumpname(name)
+      : WadIterator(), lumpname(name), nameislfn(false)
    {
       chain    = dir.getLumpNameChain(name);
+      lumpinfo = dir.getLumpInfo();
+   }
+
+   WadChainIterator(const WadDirectory &dir, const char *name, bool lfn)
+      : WadIterator(), lumpname(name), nameislfn(lfn)
+   {
+      chain    = dir.getLumpLFNChain(name);
       lumpinfo = dir.getLumpInfo();
    }
 
@@ -127,8 +135,8 @@ public:
    // if the hash chain is empty.
    virtual lumpinfo_t *begin()
    {
-      int idx = chain->namehash.index;
-      return (lump = (idx >= 0 ? lumpinfo[idx] : NULL));
+      int idx = nameislfn ? chain->lfnhash.index : chain->namehash.index;
+      return (lump = (idx >= 0 ? lumpinfo[idx] : nullptr));
    }
 
    // Step to the next lump on the hash chain. Returns NULL when the
@@ -137,8 +145,8 @@ public:
    {
       if(lump)
       {
-         int next = lump->namehash.next;
-         lump = (next >= 0 ? lumpinfo[next] : NULL);
+         int next = nameislfn ? lump->lfnhash.next : lump->namehash.next;
+         lump = (next >= 0 ? lumpinfo[next] : nullptr);
       }
       return lump;
    }
@@ -149,9 +157,18 @@ public:
    // be considered relevant.
    bool testLump(int li_namespace = -1) const
    {
-      return (lump &&
-              !strcasecmp(lump->name, lumpname) &&
-              (li_namespace == -1 || lump->li_namespace == li_namespace));
+      if(nameislfn)
+      {
+         return (lump &&
+                 !strcasecmp(lump->lfn, lumpname) &&
+                 (li_namespace == -1 || lump->li_namespace == li_namespace));
+      }
+      else
+      {
+         return (lump &&
+                 !strcasecmp(lump->name, lumpname) &&
+                 (li_namespace == -1 || lump->li_namespace == li_namespace));
+      }
    }
 };
 

@@ -897,9 +897,19 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
          {
             // Remove the leading path component
             ArchiveDirFile &adf = paths.addNew();
+
+            // Normalize the path
+            path.toLower();
+            path.replace("\\", '/');
+
             adf.path = path;
             path = subpath;
             path.pathConcatenate(ent->d_name);
+
+            // Normalize the subpath
+            path.toLower();
+            path.replace("\\", '/');
+
             adf.innerpath = path;
             adf.size = sbuf.st_size;
          }
@@ -1396,6 +1406,14 @@ int WadDirectory::checkNumForLFNNSG(const char *name, int ns) const
 lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 {
    return lumpinfo[LumpNameHash(name) % (unsigned int)numlumps];
+}
+
+//
+// As above, but for long file names.
+//
+lumpinfo_t *WadDirectory::getLumpLFNChain(const char *name) const
+{
+   return lumpinfo[D_HashTableKeyCase(name) % (unsigned int)numlumps];
 }
 
 //
