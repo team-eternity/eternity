@@ -78,15 +78,15 @@ public:
       lumpinfo = dir.getLumpInfo();
    }
 
-   // Iteration will begin at the first lump in that namespace. If the
-   // namespace is empty, NULL will be returned immediately.
+   // Iteration will begin at the first lump in that namespace.
+   // If the namespace is empty, nullptr will be returned immediately.
    virtual lumpinfo_t *begin()
    {
       return (lump = (ns.numLumps ? lumpinfo[ns.firstLump] : nullptr));
    }
 
-   // Step to the next lump in the namespace, if one exists. Returns NULL once
-   // the end of the namespace has been reached.
+   // Step to the next lump in the namespace, if one exists.
+   // Returns nullptr once the end of the namespace has been reached.
    virtual lumpinfo_t *next()
    {
       if(lump)
@@ -131,21 +131,29 @@ public:
    }
 
    // Iteration will begin at the first lump on the hash chain for
-   // the name that was passed into the constructor. Returns NULL
+   // the name that was passed into the constructor. Returns nullptr
    // if the hash chain is empty.
    virtual lumpinfo_t *begin()
    {
-      int idx = nameislfn ? chain->lfnhash.index : chain->namehash.index;
+      if(nameislfn)
+      {
+         lump = chain; // I'm not using `return (lump = chain);` as it scans worse
+         return lump;
+      }
+
+      int idx = chain->index;
       return (lump = (idx >= 0 ? lumpinfo[idx] : nullptr));
    }
 
-   // Step to the next lump on the hash chain. Returns NULL when the
+   // Step to the next lump on the hash chain. Returns nullptr when the
    // end of the chain has been reached.
    virtual lumpinfo_t *next()
    {
       if(lump)
       {
-         int next = nameislfn ? lump->lfnhash.next : lump->namehash.next;
+         if(nameislfn)
+            return W_NextInLFNHash(lump);
+         int next = lump->next;
          lump = (next >= 0 ? lumpinfo[next] : nullptr);
       }
       return lump;

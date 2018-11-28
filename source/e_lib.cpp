@@ -179,6 +179,13 @@ static int E_FindFileInclude(cfg_t *src, const char *name)
    // get a pointer to the including lump's lumpinfo
    inclump = lumpinfo[includinglumpnum];
 
+   // If the source of the including file is a raw directory then we have to
+   // prepend the directory path of that, and a '/'. This is safe because
+   // the hashed paths are all lowercase and use '/' instead of '\\'
+   const char *const directorypath = W_PathForSource(inclump->source);
+   if(directorypath)
+      qname = qstring(directorypath) << '/' << qname;
+
    WadChainIterator wci(wGlobalDir, qname.constPtr(), true);
 
    // walk down the hash chain
@@ -401,7 +408,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = lumpinfo[i]->namehash.next) >= 0)
+   while((i = lumpinfo[i]->next) >= 0)
    {
       if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
          !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
