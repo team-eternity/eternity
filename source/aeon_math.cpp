@@ -151,9 +151,10 @@ namespace Aeon
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->SetDefaultNamespace("Math::Rand");
+      e->SetDefaultNamespace("Math");
       for(const aeonfuncreg_t &fn : mathFuncs)
          e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
+      e->SetDefaultNamespace("Math::Rand");
       for(const aeonfuncreg_t &fn : randFuncs)
          e->RegisterGlobalFunction(fn.declaration, fn.funcPointer, asCALL_GENERIC);
       e->SetDefaultNamespace("");
