@@ -98,7 +98,7 @@ namespace Aeon
    //
    // npos wrapper
    //
-   static unsigned int QStrGetNpos(qstring *qstr)
+   static unsigned int qstrGetNpos(qstring *qstr)
    {
       return qstring::npos;
    }
@@ -106,12 +106,12 @@ namespace Aeon
    //
    // Wrappers for operator []
    //
-   static int QStrGetOpIdx(const qstring *qstr, int idx)
+   static int qstrGetOpIdx(const qstring *qstr, int idx)
    {
       return (*qstr)[idx];
    }
 
-   static void QStrSetOpIdx(qstring *qstr, int idx, int value)
+   static void qstrSetOpIdx(qstring *qstr, int idx, int value)
    {
       (*qstr)[idx] = static_cast<char>(value);
    }
@@ -119,7 +119,7 @@ namespace Aeon
    //
    // Print function for AngelScript
    //
-   static void ASPrint(const qstring &qstr)
+   static void asPrint(const qstring &qstr)
    {
       C_Printf("%s\n", qstr.constPtr());
    }
@@ -146,7 +146,7 @@ namespace Aeon
 
    static const aeonfuncreg_t qstringFuncs[] =
    {
-      { "uint npos() const",              WRAP_OBJ_FIRST(QStrGetNpos)  },
+      { "uint npos() const",              WRAP_OBJ_FIRST(qstrGetNpos)  },
       { "uint length() const",            QSTRMETHOD(length)           },
       { "bool empty() const",             QSTRMETHOD(empty)            },
       { "String &clear()",                QSTRMETHOD(clear)            },
@@ -175,8 +175,8 @@ namespace Aeon
       { XFORMSIG("opShl"),                QSTRXFORM(operator <<)       },
       { "String &opShl(int)",             QSTRFMINT(operator <<)       },
       { "String &opShl(double)",          QSTRFMDBL(operator <<)       },
-      { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(QStrGetOpIdx) },
-      { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(QStrSetOpIdx) },
+      { "int get_opIndex(int) const",     WRAP_OBJ_FIRST(qstrGetOpIdx) },
+      { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(qstrSetOpIdx) },
    };
 
    //
@@ -208,7 +208,7 @@ namespace Aeon
 
       // register global print func
       e->RegisterGlobalFunction("void print(const String &in)",
-                                WRAP_FN_PR(ASPrint, (const qstring &), void),
+                                WRAP_FN_PR(asPrint, (const qstring &), void),
                                 asCALL_GENERIC);
    }
 

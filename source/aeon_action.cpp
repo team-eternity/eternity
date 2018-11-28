@@ -52,7 +52,7 @@ namespace Aeon
       EHashTable<actionrecord_t, ENCStringHashKey,
                  &actionrecord_t::name, &actionrecord_t::links> e_InvalidActionHash;
 
-   static void ExecuteActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
+   static void executeActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
    {
       const action_t *action  = E_GetAction(name.constPtr());
       const int argc          = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
@@ -164,7 +164,7 @@ namespace Aeon
          e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
       e->RegisterObjectMethod("Mobj", EXECSIG("executeAction"),
-                              WRAP_OBJ_FIRST(ExecuteActionMobj), asCALL_GENERIC);
+                              WRAP_OBJ_FIRST(executeActionMobj), asCALL_GENERIC);
 
       //e->RegisterObjectMethod("Player", EXECSIG("executeAction"),
        //                       WRAP_OBJ_FIRST(ExecuteActionPlayer), asCALL_GENERIC);

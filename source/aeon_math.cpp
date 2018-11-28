@@ -253,7 +253,7 @@ namespace Aeon
       return ret;
    }
 
-   static void ASPrint(Fixed f)
+   static void asPrint(Fixed f)
    {
       C_Printf("%.11f\n", M_FixedToDouble(f.value));
    }
@@ -312,7 +312,7 @@ namespace Aeon
       for(const aeonfuncreg_t &fn : fixedFuncs)
          e->RegisterObjectMethod("fixed_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      e->RegisterGlobalFunction("void print(fixed_t)", WRAP_FN_PR(ASPrint, (Fixed), void),
+      e->RegisterGlobalFunction("void print(fixed_t)", WRAP_FN_PR(asPrint, (Fixed), void),
                                 asCALL_GENERIC);
    }
 
@@ -325,7 +325,7 @@ namespace Aeon
    // Clamps a fixed_t to be within the range representable by an angle_t
    // then converts it to an angle_t
    //
-   static inline angle_t FixedToAngleClamped(const fixed_t val)
+   static inline angle_t fixedToAngleClamped(const fixed_t val)
    {
       return FixedToAngle(val % (360 << FRACBITS));
    }
@@ -334,7 +334,7 @@ namespace Aeon
    // If the integer value supplied is a multiple of 45 then use ANG45,
    // due to its perfect accuracy (compared to ANGLE_1 which isn't exacly ANG45/45)
    //
-   static inline angle_t IntToAngle(const int val)
+   static inline angle_t intToAngle(const int val)
    {
       if(val % 45)
          return val * ANGLE_1;
@@ -344,20 +344,20 @@ namespace Aeon
 
    Angle Angle::operator + (const Angle &in)  { return value + in.value;                 }
    Angle Angle::operator + (const Fixed &in)  { return value + (FixedToAngle(in.value)); }
-   Angle Angle::operator + (const int val)    { return value + IntToAngle(val);          }
+   Angle Angle::operator + (const int val)    { return value + intToAngle(val);          }
    Angle Angle::operator - (const Angle &in)  { return value - in.value;                 }
    Angle Angle::operator - (const Fixed &in)  { return value - (FixedToAngle(in.value)); }
-   Angle Angle::operator - (const int val)    { return value - IntToAngle(val);          }
+   Angle Angle::operator - (const int val)    { return value - intToAngle(val);          }
 
    Angle Angle::operator * (const Fixed &in)
    {
-      return FixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
+      return fixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
    }
    Angle Angle::operator * (const int val)    { return value * val;      }
    Angle Angle::operator / (const Angle &in)  { return value / in.value; }
    Angle Angle::operator / (const Fixed &in)
    {
-      return FixedToAngleClamped(FixedDiv(AngleToFixed(value), in.value));
+      return fixedToAngleClamped(FixedDiv(AngleToFixed(value), in.value));
    }
    Angle Angle::operator / (const int val) { return value / val; }
 
@@ -368,12 +368,12 @@ namespace Aeon
    }
    Angle &Angle::operator += (const Fixed &in)
    {
-      value += FixedToAngleClamped(in.value);
+      value += fixedToAngleClamped(in.value);
       return *this;
    }
    Angle &Angle::operator += (const int val)
    {
-      value += IntToAngle(val);
+      value += intToAngle(val);
       return *this;
    }
    Angle &Angle::operator -= (const Angle &in)
@@ -383,18 +383,18 @@ namespace Aeon
    }
    Angle &Angle::operator -= (const Fixed &in)
    {
-      value -= FixedToAngleClamped(in.value);
+      value -= fixedToAngleClamped(in.value);
       return *this;
    }
    Angle &Angle::operator -= (const int val)
    {
-      value -= IntToAngle(val);
+      value -= intToAngle(val);
       return *this;
    }
 
    Angle &Angle::operator *= (const Fixed &in)
    {
-      value = FixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
+      value = fixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
       return *this;
    }
    Angle &Angle::operator *= (const int val)
@@ -409,7 +409,7 @@ namespace Aeon
    }
    Angle &Angle::operator /= (const Fixed &in)
    {
-      value = FixedToAngleClamped(FixedDiv(AngleToFixed(value), in.value));
+      value = fixedToAngleClamped(FixedDiv(AngleToFixed(value), in.value));
       return *this;
    }
    Angle &Angle::operator /= (const int val)
@@ -438,12 +438,12 @@ namespace Aeon
 
    void ScriptObjAngle::ConstructFromDouble(const double other, Angle *thisAngle)
    {
-      thisAngle->value = FixedToAngleClamped(M_DoubleToFixed(other));
+      thisAngle->value = fixedToAngleClamped(M_DoubleToFixed(other));
    }
 
    void ScriptObjAngle::ConstructFromInt(const int other, Angle *thisAngle)
    {
-      thisAngle->value = IntToAngle(other);
+      thisAngle->value = intToAngle(other);
    }
 
    Angle ScriptObjAngle::ConstructFromBits(angle_t bits)
@@ -453,7 +453,7 @@ namespace Aeon
       return ret;
    }
 
-   static void ASPrint(Angle f)
+   static void asPrint(Angle f)
    {
       C_Printf("%f\n", M_FixedToDouble(AngleToFixed(f.value)));
    }
@@ -510,7 +510,7 @@ namespace Aeon
       for(const aeonfuncreg_t &fn : angleFuncs)
          e->RegisterObjectMethod("angle_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      e->RegisterGlobalFunction("void print(angle_t)", WRAP_FN_PR(ASPrint, (Angle), void),
+      e->RegisterGlobalFunction("void print(angle_t)", WRAP_FN_PR(asPrint, (Angle), void),
                                 asCALL_GENERIC);
    }
 
@@ -546,7 +546,7 @@ namespace Aeon
       *thisVector = Vector(x, y, z);
    }
 
-   static void ASPrint(Vector f)
+   static void asPrint(Vector f)
    {
       C_Printf("x: %.11f, y: %.11f, z: %.11f\n", M_FixedToDouble(f.value.x),
                                                  M_FixedToDouble(f.value.y),
@@ -572,7 +572,7 @@ namespace Aeon
       e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(Vector, value.y));
       e->RegisterObjectProperty("vector_t", "fixed_t z", asOFFSET(Vector, value.z));
 
-      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(ASPrint, (Vector), void),
+      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(asPrint, (Vector), void),
                                  asCALL_GENERIC);
    }
 }

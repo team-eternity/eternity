@@ -45,17 +45,17 @@ namespace Aeon
    asIScriptModule  *ScriptManager::module = nullptr;
    int               ScriptManager::state  = asEXECUTION_UNINITIALIZED;
 
-   void ASPrint(int i)
+   void asPrint(int i)
    {
       C_Printf("%d\n", i);
    }
 
-   void ASPrint(unsigned int u)
+   void asPrint(unsigned int u)
    {
       C_Printf("%u\n", u);
    }
 
-   void ASPrint(float f)
+   void asPrint(float f)
    {
       C_Printf("%f\n", f);
    }
@@ -63,13 +63,13 @@ namespace Aeon
    void ScriptManager::RegisterPrimitivePrintFuncs()
    {
       engine->RegisterGlobalFunction("void print(int)",
-                                     WRAP_FN_PR(ASPrint, (int), void),
+                                     WRAP_FN_PR(asPrint, (int), void),
                                      asCALL_GENERIC);
       engine->RegisterGlobalFunction("void print(uint)",
-                                     WRAP_FN_PR(ASPrint, (unsigned int), void),
+                                     WRAP_FN_PR(asPrint, (unsigned int), void),
                                      asCALL_GENERIC);
       engine->RegisterGlobalFunction("void print(float)",
-                                     WRAP_FN_PR(ASPrint, (float), void),
+                                     WRAP_FN_PR(asPrint, (float), void),
                                      asCALL_GENERIC);
    }
 

@@ -36,17 +36,17 @@
 
 namespace Aeon
 {
-   static int GetStringIndex(qstring &str)
+   static int getStringIndex(qstring &str)
    {
       return ~ACSenv.getString(str.constPtr())->idx;
    }
 
-   static const qstring &StringForIndex(uint32_t idx)
+   static const qstring &stringForIndex(uint32_t idx)
    {
       return *CreateRefQString(ACSenv.getString(idx)->str);
    }
 
-   static bool StartACSScriptS(Mobj *mo, const qstring &name,
+   static bool startACSScriptS(Mobj *mo, const qstring &name,
                                const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
@@ -66,7 +66,7 @@ namespace Aeon
       return ret;
    }
 
-   static bool StartACSScriptSAlways(Mobj *mo, const qstring &name,
+   static bool startACSScriptSAlways(Mobj *mo, const qstring &name,
                                      const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
@@ -86,7 +86,7 @@ namespace Aeon
       return ret;
    }
 
-   static uint32_t StartACSScriptSResult(Mobj *mo, const qstring &name, const CScriptArray *args)
+   static uint32_t startACSScriptSResult(Mobj *mo, const qstring &name, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
       uint32_t *argv = nullptr;
@@ -105,7 +105,7 @@ namespace Aeon
       return ret;
    }
 
-   static bool StartACSScriptI(Mobj *mo, const int scriptnum,
+   static bool startACSScriptI(Mobj *mo, const int scriptnum,
                                const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
@@ -125,7 +125,7 @@ namespace Aeon
       return ret;
    }
 
-   static bool StartACSScriptIAlways(Mobj *mo, const int scriptnum,
+   static bool startACSScriptIAlways(Mobj *mo, const int scriptnum,
                                      const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
@@ -145,7 +145,7 @@ namespace Aeon
       return ret;
    }
 
-   static uint32_t StartACSScriptIResult(Mobj *mo, const int scriptnum, const CScriptArray *args)
+   static uint32_t startACSScriptIResult(Mobj *mo, const int scriptnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
       uint32_t *argv = nullptr;
@@ -174,14 +174,14 @@ namespace Aeon
 
    static const aeonfuncreg_t acsFuncs[] =
    {
-      { "int GetStringIndex(String &str)",                   WRAP_FN(GetStringIndex)        },
-      { "const String &StringForIndex(uint32 idx)",          WRAP_FN(StringForIndex)        },
-      { MAPSIG("StartScript",        "const String &name"),  WRAP_FN(StartACSScriptS)       },
-      { MAPSIG("StartScriptAlways",  "const String &name"),  WRAP_FN(StartACSScriptSAlways) },
-      { RSLTSIG("StartScriptResult", "const String &name"),  WRAP_FN(StartACSScriptSResult) },
-      { MAPSIG("StartScript",        "const int scriptnum"), WRAP_FN(StartACSScriptI)       },
-      { MAPSIG("StartScriptAlways",  "const int scriptnum"), WRAP_FN(StartACSScriptIAlways) },
-      { RSLTSIG("StartScriptResult", "const int scriptnum"), WRAP_FN(StartACSScriptSResult) },
+      { "int GetStringIndex(String &str)",                   WRAP_FN(getStringIndex)        },
+      { "const String &StringForIndex(uint32 idx)",          WRAP_FN(stringForIndex)        },
+      { MAPSIG("StartScript",        "const String &name"),  WRAP_FN(startACSScriptS)       },
+      { MAPSIG("StartScriptAlways",  "const String &name"),  WRAP_FN(startACSScriptSAlways) },
+      { RSLTSIG("StartScriptResult", "const String &name"),  WRAP_FN(startACSScriptSResult) },
+      { MAPSIG("StartScript",        "const int scriptnum"), WRAP_FN(startACSScriptI)       },
+      { MAPSIG("StartScriptAlways",  "const int scriptnum"), WRAP_FN(startACSScriptIAlways) },
+      { RSLTSIG("StartScriptResult", "const int scriptnum"), WRAP_FN(startACSScriptSResult) },
    };
 
    void ScriptObjACS::Init()

@@ -36,12 +36,12 @@
 
 namespace Aeon
 {
-   static Mobj *MobjFactory()
+   static Mobj *mobjFactory()
    {
       return new Mobj();
    }
 
-   static Mobj *MobjFactoryFromOther(const Mobj &in)
+   static Mobj *mobjFactoryFromOther(const Mobj &in)
    {
       return new Mobj(in);
    }
@@ -50,7 +50,7 @@ namespace Aeon
    // Sanity checked getter for mo->counters[ctrnum]
    // Returns 0 on failure
    //
-   static int GetMobjCounter(const unsigned int ctrnum, Mobj *mo)
+   static int getMobjCounter(const unsigned int ctrnum, Mobj *mo)
    {
       if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
          return mo->counters[ctrnum];
@@ -62,14 +62,14 @@ namespace Aeon
    // Sanity checked getter for mo->counters[ctrnum]
    // Doesn't set on failure
    //
-   static void SetMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
+   static void setMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
    {
       if(ctrnum >= 0 && ctrnum < NUMMOBJCOUNTERS)
          mo->counters[ctrnum] = val;
       // TODO: else C_Printf warning?
    }
 
-   static Fixed FloatBobOffsets(const int in)
+   static Fixed floatBobOffsets(const int in)
    {
       static constexpr int NUMFLOATBOBOFFSETS = earrlen(::FloatBobOffsets);
       if(in < 0 || in > NUMFLOATBOBOFFSETS)
@@ -77,18 +77,18 @@ namespace Aeon
       return ::FloatBobOffsets[in];
    }
 
-   static void StartSound(const PointThinker *origin, const sfxinfo_t &sfxinfo)
+   static void startSound(const PointThinker *origin, const sfxinfo_t &sfxinfo)
    {
       S_StartSound(origin, sfxinfo.dehackednum);
    }
 
-   static Fixed AimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
+   static Fixed aimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
    {
       return Fixed(P_AimLineAttack(t1, angle.value, distance.value,
                                    flags & 1 ? true : false));
    }
 
-   static void LineAttack(Mobj *t1, Angle angle, Fixed distance, Fixed slope,
+   static void lineAttack(Mobj *t1, Angle angle, Fixed distance, Fixed slope,
                               int damage, const qstring &pufftype)
    {
       P_LineAttack(t1, angle.value, distance.value, slope.value, damage, pufftype.constPtr());
@@ -103,20 +103,20 @@ namespace Aeon
 
       // Non-methods that are used like methods in Aeon
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
-      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(StartSound)     },
+      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(startSound)     },
       { "fixed_t aimLineAttack(angle_t angle, fixed_t distance,"
-                              "alaflags_e flags = 0)",         WRAP_OBJ_FIRST(AimLineAttack)  },
+                              "alaflags_e flags = 0)",         WRAP_OBJ_FIRST(aimLineAttack)  },
       { "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope,"
-                        "int damage, const String &pufftype)", WRAP_OBJ_FIRST(LineAttack)     },
+                        "int damage, const String &pufftype)", WRAP_OBJ_FIRST(lineAttack)     },
       { "bool checkSight(Mobj @other)",                        WRAP_OBJ_FIRST(P_CheckSight)   },
       { "bool hitFriend()",                                    WRAP_OBJ_FIRST(P_HitFriend)    },
 
       // Indexed property accessors (enables [] syntax for counters)
-      { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(GetMobjCounter)  },
-      { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(SetMobjCounter)  },
+      { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(getMobjCounter)  },
+      { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setMobjCounter)  },
 
       // Statics
-      { "fixed_t FloatBobOffsets(const int index)", WRAP_FN(FloatBobOffsets) },
+      { "fixed_t FloatBobOffsets(const int index)", WRAP_FN(floatBobOffsets) },
    };
 
    static const aeonpropreg_t mobjProps[] =
@@ -150,9 +150,9 @@ namespace Aeon
       e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
 
       e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
-                                 WRAP_FN(MobjFactory), asCALL_GENERIC);
+                                 WRAP_FN(mobjFactory), asCALL_GENERIC);
       e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
-                                 WRAP_FN_PR(MobjFactoryFromOther, (const Mobj &), Mobj *),
+                                 WRAP_FN_PR(mobjFactoryFromOther, (const Mobj &), Mobj *),
                                  asCALL_GENERIC);
       e->RegisterObjectBehaviour("Mobj", asBEHAVE_ADDREF, "void f()",
                                  WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
@@ -193,7 +193,7 @@ namespace Aeon
       // It's Mobj-related, OK?
       e->SetDefaultNamespace("EE::Mobj");
       e->RegisterGlobalFunction("fixed_t FloatBobOffsets(const int index)",
-                                WRAP_FN(FloatBobOffsets), asCALL_GENERIC);
+                                WRAP_FN(floatBobOffsets), asCALL_GENERIC);
       e->SetDefaultNamespace("");
    }
 }
