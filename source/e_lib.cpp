@@ -169,6 +169,7 @@ static int E_FindFileInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t  *inclump;
    lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
+   qstring      qname     = qstring(name).toLower();
    qstring      parentdir = qstring(src->filename);
    qstring      includepath;
    int          includinglumpnum;
@@ -189,7 +190,19 @@ static int E_FindFileInclude(cfg_t *src, const char *name)
    const char *const directorypath = W_PathForSource(inclump->source);
    if(directorypath)
       includepath = qstring(directorypath) << '/';
-   includepath << parentdir << name;
+
+   qname.replace("\\", '/');
+   if(qname[0] != '/')
+      includepath << parentdir;
+   else
+   {
+      if(qname.length() > 1u)
+         qname.erase(0u, 1u);
+      else
+         return -1;
+   }
+
+   includepath << qname;
    includepath.toLower();
 
    WadChainIterator wci(wGlobalDir, includepath.constPtr(), true);
