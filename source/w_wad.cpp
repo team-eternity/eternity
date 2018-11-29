@@ -926,10 +926,6 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
             // Remove the leading path component
             ArchiveDirFile &adf = paths.addNew();
 
-            // Normalize the path
-            path.toLower();
-            path.replace("\\", '/');
-
             adf.path = path;
             path = subpath;
             path.pathConcatenate(ent->d_name);
@@ -1004,8 +1000,13 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
             continue;
          }
 
+         // Normalize path here, otherwise the display of paths looks ugly
+         qstring normalizedpath(adf.path);
+         normalizedpath.toLower();
+         normalizedpath.replace("\\", '/');
+
          lump_p->type = lumpinfo_t::lump_file;
-         lump_p->lfn = adf.path.duplicate();
+         lump_p->lfn = normalizedpath.duplicate();
          lump_p->size = adf.size;
          lump_p->source = source;
          int li_namespace;
