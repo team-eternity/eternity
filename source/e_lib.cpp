@@ -168,8 +168,9 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 static int E_FindFileInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t  *inclump;
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   qstring      qname    = qstring(name).toLower();
+   lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
+   qstring      parentdir = qstring(src->filename);
+   qstring      includepath;
    int          includinglumpnum;
 
    // this is not for files
@@ -179,14 +180,19 @@ static int E_FindFileInclude(cfg_t *src, const char *name)
    // get a pointer to the including lump's lumpinfo
    inclump = lumpinfo[includinglumpnum];
 
+   size_t lastslashloc = parentdir.findLastOf('/');
+   parentdir.truncate(lastslashloc + 1);
+
    // If the source of the including file is a raw directory then we have to
    // prepend the directory path of that, and a '/'. This is safe because
    // the hashed paths are all lowercase and use '/' instead of '\\'
    const char *const directorypath = W_PathForSource(inclump->source);
    if(directorypath)
-      qname = qstring(directorypath) << '/' << qname;
+      includepath = qstring(directorypath) << '/';
+   includepath << parentdir << name;
+   includepath.toLower();
 
-   WadChainIterator wci(wGlobalDir, qname.constPtr(), true);
+   WadChainIterator wci(wGlobalDir, includepath.constPtr(), true);
 
    // walk down the hash chain
    for(wci.begin(); wci.current(); wci.next())
