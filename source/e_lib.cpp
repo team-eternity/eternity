@@ -162,10 +162,44 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 }
 
 //
+// E_FindLumpInclude
+//
+// Finds a lump from the same data source as the including lump.
+// Returns -1 if no such lump can be found.
+//
+static int E_FindLumpInclude(cfg_t *src, const char *name)
+{
+   lumpinfo_t  *inclump;
+   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
+   int includinglumpnum;
+
+   // this is not for files
+   if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
+      return -1;
+
+   // get a pointer to the including lump's lumpinfo
+   inclump = lumpinfo[includinglumpnum];
+
+   WadChainIterator wci(wGlobalDir, name);
+
+   // walk down the hash chain
+   for(wci.begin(); wci.current(); wci.next())
+   {
+      if(wci.testLump(lumpinfo_t::ns_global) && // name matches, is global
+         (*wci)->source == inclump->source)     // is from same source
+      {
+         return (*wci)->selfindex;
+      }
+   }
+
+   return -1; // not found
+}
+
+//
 // Finds a file from the same data source as the including file.
 // Returns -1 if no such lump can be found.
 //
-static int E_FindFileInclude(cfg_t *src, const char *name)
+static int E_findFileInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t  *inclump;
    lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
@@ -217,41 +251,7 @@ static int E_FindFileInclude(cfg_t *src, const char *name)
       }
    }
 
-   return -1; // not found
-}
-
-//
-// E_FindLumpInclude
-//
-// Finds a lump from the same data source as the including lump.
-// Returns -1 if no such lump can be found.
-//
-static int E_FindLumpInclude(cfg_t *src, const char *name)
-{
-   lumpinfo_t  *inclump;
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-   int includinglumpnum;
-
-   // this is not for files
-   if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
-      return -1;
-
-   // get a pointer to the including lump's lumpinfo
-   inclump = lumpinfo[includinglumpnum];
-
-   WadChainIterator wci(wGlobalDir, name);
-
-   // walk down the hash chain
-   for(wci.begin(); wci.current(); wci.next())
-   {
-      if(wci.testLump(lumpinfo_t::ns_global) && // name matches, is global
-         (*wci)->source == inclump->source)     // is from same source
-      {
-         return (*wci)->selfindex;
-      }
-   }
-
-   return -1; // not found
+   return strlen(name) > 8 ? -1 : E_FindLumpInclude(src, name); // not found
 }
 
 //
@@ -348,7 +348,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    default: // data source
       // haleyjd 03/19/10:
       // find a lump of the requested name in the same data source only
-      if((lumpnum = E_FindFileInclude(cfg, argv[0])) < 0)
+      if((lumpnum = E_findFileInclude(cfg, argv[0])) < 0)
       {
          cfg_error(cfg, "include: %s not found\n", argv[0]);
          return 1;
