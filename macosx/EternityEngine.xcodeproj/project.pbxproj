@@ -279,6 +279,7 @@
 		4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F950E341F35C84B000D9DC5 /* SDL2.framework */; };
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
 		4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FE11F4989A7000D9DC5 /* e_switch.cpp */; };
+		4FA56DBB2182E5B500F8115E /* m_debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FA56DB92182E5B500F8115E /* m_debug.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FAD05981F91567E003790C5 /* txt_conditional.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05911F91567D003790C5 /* txt_conditional.c */; };
 		4FAD05991F91567E003790C5 /* txt_fileselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05951F91567E003790C5 /* txt_fileselect.c */; };
@@ -311,7 +312,6 @@
 
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		1DDD58150DA1D0A300B32029 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
 		4F00D1312042B9E100D775DF /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_formats.cpp; path = ../source/s_formats.cpp; sourceTree = "<group>"; };
@@ -401,6 +401,9 @@
 		4F9F72D016BFB70A00C405AE /* p_scroll.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_scroll.h; path = ../source/p_scroll.h; sourceTree = "<group>"; };
 		4F9F72D116BFB73200C405AE /* p_pushers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_pushers.cpp; path = ../source/p_pushers.cpp; sourceTree = "<group>"; };
 		4F9F72D216BFB73200C405AE /* p_scroll.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_scroll.cpp; path = ../source/p_scroll.cpp; sourceTree = "<group>"; };
+		4FA56DB8217B2CD100F8115E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
+		4FA56DB92182E5B500F8115E /* m_debug.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = m_debug.cpp; path = ../source/m_debug.cpp; sourceTree = "<group>"; };
+		4FA56DBA2182E5B500F8115E /* m_debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = m_debug.h; path = ../source/m_debug.h; sourceTree = "<group>"; };
 		4FAAD5921E583052001D7263 /* p_portalcross.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = p_portalcross.h; path = ../source/p_portalcross.h; sourceTree = "<group>"; };
 		4FAAD5931E583113001D7263 /* p_portalcross.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalcross.cpp; path = ../source/p_portalcross.cpp; sourceTree = "<group>"; };
 		4FAD058B1F915635003790C5 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -666,7 +669,7 @@
 		FA1F574B158BC4ED006F8063 /* dsp.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = dsp.cpp; path = ../snes_spc/dsp.cpp; sourceTree = SOURCE_ROOT; };
 		FA1F574D158BC4ED006F8063 /* SNES_SPC_misc.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = SNES_SPC_misc.cpp; path = ../snes_spc/SNES_SPC_misc.cpp; sourceTree = SOURCE_ROOT; };
 		FA1F574E158BC4ED006F8063 /* SNES_SPC_state.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = SNES_SPC_state.cpp; path = ../snes_spc/SNES_SPC_state.cpp; sourceTree = SOURCE_ROOT; };
-		FA1F574F158BC4ED006F8063 /* SNES_SPC.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = SNES_SPC.cpp; path = ../snes_spc/SNES_SPC.cpp; sourceTree = SOURCE_ROOT; };
+		FA1F574F158BC4ED006F8063 /* SNES_SPC.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = SNES_SPC.cpp; path = ../snes_spc/SNES_SPC.cpp; sourceTree = SOURCE_ROOT; usesTabs = 1; };
 		FA1F5752158BC4ED006F8063 /* SPC_DSP.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = SPC_DSP.cpp; path = ../snes_spc/SPC_DSP.cpp; sourceTree = SOURCE_ROOT; };
 		FA1F5754158BC4ED006F8063 /* SPC_Filter.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = SPC_Filter.cpp; path = ../snes_spc/SPC_Filter.cpp; sourceTree = SOURCE_ROOT; };
 		FA1F5756158BC4ED006F8063 /* spc.cpp */ = {isa = PBXFileReference; fileEncoding = 7; lastKnownFileType = sourcecode.cpp.cpp; name = spc.cpp; path = ../snes_spc/spc.cpp; sourceTree = SOURCE_ROOT; };
@@ -1441,6 +1444,8 @@
 				FABF5CF9158BF42800C49E93 /* m_cheat.cpp */,
 				FA16D40D15E01E96002318D1 /* m_cheat.h */,
 				FA16D40E15E01E96002318D1 /* m_collection.h */,
+				4FA56DB92182E5B500F8115E /* m_debug.cpp */,
+				4FA56DBA2182E5B500F8115E /* m_debug.h */,
 				FA16D40F15E01E96002318D1 /* m_dllist.h */,
 				FABF5CFA158BF42800C49E93 /* m_fcvt.cpp */,
 				FA16D41015E01E96002318D1 /* m_fcvt.h */,
@@ -1946,7 +1951,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1010;
 			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "EternityEngine" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1958,6 +1963,7 @@
 				French,
 				German,
 				en,
+				Base,
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* EternityLaunch */;
 			projectDirPath = "";
@@ -2268,6 +2274,7 @@
 				4F42A5CC188B336600E6CACD /* i_timer.cpp in Sources */,
 				4F5F388D182D98E20027813A /* confuse.cpp in Sources */,
 				4F5F388E182D98E20027813A /* lexer.cpp in Sources */,
+				4FA56DBB2182E5B500F8115E /* m_debug.cpp in Sources */,
 				4F5F388F182D98E20027813A /* d_deh.cpp in Sources */,
 				4F5F3890182D98E20027813A /* d_dehtbl.cpp in Sources */,
 				4F5F3891182D98E20027813A /* d_diskfile.cpp in Sources */,
@@ -2301,7 +2308,7 @@
 		1DDD58140DA1D0A300B32029 /* MainMenu.xib */ = {
 			isa = PBXVariantGroup;
 			children = (
-				1DDD58150DA1D0A300B32029 /* English */,
+				4FA56DB8217B2CD100F8115E /* Base */,
 			);
 			name = MainMenu.xib;
 			sourceTree = "<group>";

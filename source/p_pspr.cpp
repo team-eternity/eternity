@@ -1005,8 +1005,8 @@ void P_WeaponRecoil(player_t *player)
       if(readyweapon->flags & WPF_ALWAYSRECOIL ||
          (weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
-         P_Thrust(player, ANG180 + player->mo->angle, 0,
-                  2048 * readyweapon->recoil); // phares
+         // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
+         P_Thrust(player, ANG180 + player->mo->angle, 0, readyweapon->recoil / 32);
       }
    }
 

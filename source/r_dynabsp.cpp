@@ -550,7 +550,7 @@ static rpolynode_t *R_createNode(dseglist_t *ts)
 // dynasegs linked by their bsplinks. The dynasegs' BSP-related fields will also
 // be initialized. The result is suitable for input to R_BuildDynaBSP.
 //
-static bool R_collapseFragmentsToDSList(subsector_t *subsec, dseglist_t *list)
+static bool R_collapseFragmentsToDSList(const subsector_t *subsec, dseglist_t *list)
 {
    DLListItem<rpolyobj_t> *fragment = subsec->polyList;
 
@@ -654,7 +654,7 @@ static void R_freeTreeRecursive(rpolynode_t *root)
 //
 // Call to build a dynamic BSP sub-tree for sorting of dynasegs.
 //
-rpolybsp_t *R_BuildDynaBSP(subsector_t *subsec)
+rpolybsp_t *R_BuildDynaBSP(const subsector_t *subsec)
 {
    rpolybsp_t *bsp = NULL;
    dseglist_t segs = NULL;

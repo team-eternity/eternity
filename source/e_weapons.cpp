@@ -137,7 +137,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_ADDFLAGS,     "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_REMFLAGS,     "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_MOD,          "",       CFGF_NONE), \
-   CFG_INT(ITEM_WPN_RECOIL,       0,        CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_RECOIL,     0.0,      CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
    CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
@@ -258,7 +258,7 @@ weaponinfo_t *E_WeaponForDEHNum(const int dehnum)
 weapontype_t E_WeaponNumForName(const char *name)
 {
    weaponinfo_t *info = nullptr;
-   weapontype_t ret = -1;
+   weapontype_t ret   = -1;
 
    if((info = e_WeaponNameHash.objectForKey(name)))
       ret = info->id;
@@ -462,11 +462,11 @@ static weaponinfo_t *E_findBestWeapon(const player_t *player,
    if(node == nullptr)
       return nullptr; // This *really* shouldn't happen
 
-   if(node->left && (ret = E_findBestWeapon(player, node->left)))
+   if(node->left  && (ret = E_findBestWeapon(player, node->left)))
       return ret;
    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
       return node->object;
-   if(node->next && (ret = E_findBestWeapon(player, node->next)))
+   if(node->next  && (ret = E_findBestWeapon(player, node->next)))
       return ret;
    if(node->right && (ret = E_findBestWeapon(player, node->right)))
       return ret;
@@ -493,7 +493,7 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
                                                const SelectOrderNode *node)
 {
    bool correctammo;
-   weaponinfo_t *ret = nullptr, *temp = node->object;
+   weaponinfo_t *ret, *temp = node->object;
    if(node == nullptr)
       return nullptr; // This *really* shouldn't happen
 
@@ -502,11 +502,11 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
    else
       correctammo = temp->ammo == nullptr && ammo == nullptr;
 
-   if(node->left && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
+   if(node->left  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
    if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
       return temp;
-   if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
+   if(node->next  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
       return ret;
    if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
       return ret;
@@ -1357,7 +1357,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
-      wp.recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
+      wp.recoil = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_RECOIL));
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))
       wp.hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
    if(IS_SET(ITEM_WPN_HAPTICTIME))

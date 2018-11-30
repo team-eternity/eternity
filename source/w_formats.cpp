@@ -206,11 +206,12 @@ static namespace_matcher_t matchers[] =
    { "acs/",          lumpinfo_t::ns_acs          },
    { "colormaps/",    lumpinfo_t::ns_colormaps    },
    { "demos/",        lumpinfo_t::ns_demos        }, // EE extension
-   { "flats/",        lumpinfo_t::ns_flats        },   
+   { "flats/",        lumpinfo_t::ns_flats        },
    //{ "graphics/",     lumpinfo_t::ns_graphics     }, FIXME - as soon as VImage is done!
-   { "graphics/",     lumpinfo_t::ns_global       }, 
+   { "graphics/",     lumpinfo_t::ns_global       },
+   { "hires/",        lumpinfo_t::ns_hires        }, // TODO: Implement
    { "music/",        lumpinfo_t::ns_global       }, // Treated as global in EE
-   { "sounds/",       lumpinfo_t::ns_sounds       }, 
+   { "sounds/",       lumpinfo_t::ns_sounds       },
    { "sprites/",      lumpinfo_t::ns_sprites      },
    { "translations/", lumpinfo_t::ns_translations }, // EE extension
    { "gamepads/",     lumpinfo_t::ns_pads         }, // EE extension
@@ -220,7 +221,6 @@ static namespace_matcher_t matchers[] =
 
    // TODO ??
    /*
-   { "hires/",        lumpinfo_t::ns_hires        },
    { "patches/",      lumpinfo_t::ns_patches      },
    { "voices/",       lumpinfo_t::ns_voices       },
    { "voxels/",       lumpinfo_t::ns_voxels       },

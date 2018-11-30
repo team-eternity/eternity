@@ -1202,7 +1202,7 @@ void P_PlayerOnSpecialFlat(const player_t *player)
    if(full_demo_version < make_full_version(339, 21))
       floorz = player->mo->subsector->sector->floorheight;
    else
-      floorz = player->mo->floorz; // use more correct floorz
+      floorz = player->mo->zref.floor; // use more correct floorz
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
@@ -1567,6 +1567,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    Polyobj_InitLevel();
    if(!numPolyObjects)
       P_MarkPortalClusters();
+   P_MarkPolyobjPortalLinks();
+   P_BuildSectorGroupMappings();
 
    // haleyjd 06/18/14: spawn level actions
    P_SpawnLevelActions();

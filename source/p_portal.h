@@ -27,8 +27,6 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-#include "m_collection.h"
-
 struct polyobj_s;
 
 extern bool useportalgroups;
@@ -99,6 +97,7 @@ void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
 //
 bool P_BuildLinkTable();
 void P_MarkPortalClusters();
+void P_MarkPolyobjPortalLinks();
 
 void P_InitPortals();
 
@@ -184,9 +183,16 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
 void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
                         fixed_t dy, bool setpolyref, const polyobj_s *po);
+void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
+                           bool (*func)(int groupid, void *context), void *context);
 
 fixed_t P_CeilingPortalZ(const sector_t &sector);
 fixed_t P_FloorPortalZ(const sector_t &sector);
+
+// Group mappings
+void P_BuildSectorGroupMappings();
+sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 #endif
 

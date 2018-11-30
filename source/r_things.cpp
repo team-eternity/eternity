@@ -1216,7 +1216,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 //
 // Draws player gun sprites.
 //
-static void R_DrawPSprite(pspdef_t *psp)
+static void R_DrawPSprite(const pspdef_t *psp)
 {
    float         tx;
    float         x1, x2, w;
@@ -1371,7 +1371,7 @@ static void R_DrawPSprite(pspdef_t *psp)
 static void R_DrawPlayerSprites()
 {
    int i, lightnum;
-   pspdef_t *psp;
+   const pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
    

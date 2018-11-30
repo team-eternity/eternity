@@ -55,6 +55,19 @@ inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr
 }
 
 //
+// Portal crossing outcome
+//
+struct portalcrossingoutcome_t
+{
+   int finalgroup;            // the final reached group ID
+   const line_t *lastpassed;  // the last passed linedef
+   bool multipassed;          // whether multiple lines have been passed
+};
+
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                                  portalcrossingoutcome_t &outcome);
+
+//
 // P_ExtremeSectorAtPoint
 // ioanch 20160107
 //

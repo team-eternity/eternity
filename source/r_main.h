@@ -84,12 +84,13 @@ struct seg_t;
 struct subsector_t;
 struct sector_t;
 
-int R_PointOnSide(fixed_t x, fixed_t y, node_t *node);
-int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
+int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node);
+int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
 int SlopeDiv(unsigned int num, unsigned int den);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
+fixed_t R_GetLerp(bool ignorepause);
 void R_SectorColormap(const sector_t *s);
 
 // ioanch 20160106: template variants
@@ -161,7 +162,7 @@ struct cb_view_t
    float pspriteystep;
 
    fixed_t   lerp;   // haleyjd: linear interpolation factor
-   sector_t *sector; // haleyjd: view sector, because of interpolation
+   const sector_t *sector; // haleyjd: view sector, because of interpolation
 };
 
 // haleyjd 3/11/10: markflags
@@ -215,12 +216,12 @@ struct cb_seg_t
    // 8 bit tables
    lighttable_t **walllights;
 
-   side_t *side;
-   sector_t *frontsec, *backsec;
+   const side_t *side;
+   const sector_t *frontsec, *backsec;
    visplane_t *floorplane, *ceilingplane;
-   seg_t *line;
+   const seg_t *line;
 
-   portal_t  *f_portal, *c_portal;
+   const portal_t *f_portal, *c_portal;
    pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
    // ioanch: added b_window for bottom edge portal
 

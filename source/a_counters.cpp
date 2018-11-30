@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Action Pointer Functions
-//      that are associated with states/frames.
+// Purpose: Action Pointer Functions
+//          that are associated with states/frames.
 //
-//      Counter-based "frame scripting" action functions.
+//           Counter-based "frame scripting" action functions.
 //
-//-----------------------------------------------------------------------------
+// Authors: James Haley, Max Waine
+//
 
 #include "z_zone.h"
 
@@ -74,7 +73,7 @@ enum
    CPC_EQUAL,
    CPC_NOTEQUAL,
    CPC_BITWISEAND,
-   
+
    CPC_CNTR_LESS,           // alternate counter versions
    CPC_CNTR_LESSOREQUAL,
    CPC_CNTR_GREATER,
@@ -151,7 +150,7 @@ void A_HealthJump(actionargs_t *actionargs)
 {
    Mobj      *mo   = actionargs->actor;
    arglist_t *args = actionargs->args;
-   bool branch = false;   
+   bool branch = false;
    int statenum, checktype, checkhealth;
 
    statenum    = E_ArgAsStateNumNI(args, 0, mo);
@@ -161,7 +160,7 @@ void A_HealthJump(actionargs_t *actionargs)
    // validate state
    if(statenum < 0)
       return;
-   
+
    // 08/02/04:
    // support getting check value from a counter
    // if checktype is greater than the last immediate operator,
@@ -225,7 +224,7 @@ void A_CounterJump(actionargs_t *actionargs)
    checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
    value     = E_ArgAsInt(args, 2, 0);
    cnum      = E_ArgAsInt(args, 3, 0);
-   
+
    // validate state
    if(statenum < 0)
       return;
@@ -286,16 +285,16 @@ void A_CounterJump(actionargs_t *actionargs)
 //
 void A_CounterJumpEx(actionargs_t *actionargs)
 {
-   Mobj      *mo = actionargs->actor;
+   Mobj      *mo   = actionargs->actor;
    arglist_t *args = actionargs->args;
    bool branch = false;
    int checktype, value, cnum;
    state_t *state;
 
-   state = E_ArgAsStateLabel(mo, args, 0);
+   state     = E_ArgAsStateLabel(mo, args, 0);
    checktype = E_ArgAsKwd(args, 1, &cpckwds, 0);
-   value = E_ArgAsInt(args, 2, 0);
-   cnum = E_ArgAsInt(args, 3, 0);
+   value     = E_ArgAsInt(args, 2, 0);
+   cnum      = E_ArgAsInt(args, 3, 0);
 
    // validate state
    if(!state)
@@ -401,9 +400,9 @@ void A_CounterSwitch(actionargs_t *actionargs)
 //
 void A_CounterSwitchEx(actionargs_t *actionargs)
 {
-   Mobj      *mo = actionargs->actor;
+   Mobj      *mo   = actionargs->actor;
    arglist_t *args = actionargs->args;
-   int cnum, numstates;   
+   int cnum, numstates;
    state_t *state;
 
    cnum = E_ArgAsInt(args, 0, 0);
@@ -566,7 +565,7 @@ void A_CounterOp(actionargs_t *actionargs)
 
    c_oper1_num = E_ArgAsInt(args, 0, 0);
    c_oper2_num = E_ArgAsInt(args, 1, 0);
-   c_dest_num  = E_ArgAsInt(args, 2, 0);   
+   c_dest_num  = E_ArgAsInt(args, 2, 0);
    specialop   = E_ArgAsKwd(args, 3, &cpopkwds, 0);
 
    if(c_oper1_num < 0 || c_oper1_num >= NUMMOBJCOUNTERS)
@@ -671,16 +670,16 @@ void A_CopyCounter(actionargs_t *actionargs)
 
 static const char *kwds_A_WeaponCtrJump[] =
 {
-   "less",                   // 0 
-   "lessorequal",            // 1 
-   "greater",                // 2 
-   "greaterorequal",         // 3 
-   "equal",                  // 4 
-   "notequal",               // 5 
-   "and",                    // 6 
-   "less_counter",           // 7 
-   "lessorequal_counter",    // 8 
-   "greater_counter",        // 9 
+   "less",                   // 0
+   "lessorequal",            // 1
+   "greater",                // 2
+   "greaterorequal",         // 3
+   "equal",                  // 4
+   "notequal",               // 5
+   "and",                    // 6
+   "less_counter",           // 7
+   "lessorequal_counter",    // 8
+   "greater_counter",        // 9
    "greaterorequal_counter", // 10
    "equal_counter",          // 11
    "notequal_counter",       // 12
@@ -720,14 +719,11 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
    bool branch = false;
    int statenum, checktype, cnum, psprnum;
    int value, *counter;
-   player_t  *player;
-   pspdef_t  *pspr;
-   arglist_t *args = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   arglist_t *args   = actionargs->args;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    statenum  = E_ArgAsStateNumNI(args, 0, player);
@@ -735,7 +731,7 @@ void A_WeaponCtrJump(actionargs_t *actionargs)
    value     = E_ArgAsInt(args, 2, 0);
    cnum      = E_ArgAsInt(args, 3, 0);
    psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
-   
+
    // validate state
    if(statenum < 0)
       return;
@@ -816,16 +812,12 @@ void A_WeaponCtrJumpEx(actionargs_t *actionargs)
    bool branch = false;
    int checktype, cnum, psprnum;
    int value, *counter;
-   player_t  *player;
-   pspdef_t  *pspr;
-   state_t *state;
-   Mobj *mo = actionargs->actor;
-   arglist_t *args = actionargs->args;
+   state_t   *state;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   arglist_t *args   = actionargs->args;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    state     = E_ArgAsStateLabel(player, args, 0);
@@ -833,7 +825,7 @@ void A_WeaponCtrJumpEx(actionargs_t *actionargs)
    value     = E_ArgAsInt(args, 2, 0);
    cnum      = E_ArgAsInt(args, 3, 0);
    psprnum   = E_ArgAsKwd(args, 4, &psprkwds, 0);
-   
+
    // validate state
    if(!state)
       return;
@@ -916,14 +908,11 @@ void A_WeaponCtrSwitch(actionargs_t *actionargs)
 {
    int cnum, startstate, numstates, psprnum;
    int       *counter;
-   player_t  *player;
-   pspdef_t  *pspr;
-   arglist_t *args = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   arglist_t *args   = actionargs->args;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    cnum       = E_ArgAsInt(args, 0, 0);
@@ -1004,14 +993,11 @@ void A_WeaponSetCtr(actionargs_t *actionargs)
    int value;
    int specialop;
    int       *counter;
-   player_t  *player;
-   pspdef_t  *pspr;
-   arglist_t *args = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   arglist_t *args   = actionargs->args;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    cnum      = E_ArgAsInt(args, 0, 0);
@@ -1072,14 +1058,14 @@ void A_WeaponSetCtr(actionargs_t *actionargs)
 static const char *kwds_A_WeaponCtrOp[] =
 {
    "{DUMMY}",           // 0
-   "add",               // 1 
-   "sub",               // 2 
-   "mul",               // 3 
-   "div",               // 4 
-   "mod",               // 5 
+   "add",               // 1
+   "sub",               // 2
+   "mul",               // 3
+   "div",               // 4
+   "mod",               // 5
    "and",               // 6
    "{DUMMY}",           // 7
-   "or",                // 8 
+   "or",                // 8
    "xor",               // 9
    "{DUMMY}",           // 10
    "{DUMMY}",           // 11
@@ -1110,9 +1096,9 @@ static argkeywd_t weapctropkwds =
 //
 void A_WeaponCtrOp(actionargs_t *actionargs)
 {
-   player_t  *player;
-   pspdef_t  *pspr;
-   arglist_t *args = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   arglist_t *args   = actionargs->args;
    int c_oper1_num;
    int c_oper2_num;
    int c_dest_num;
@@ -1120,10 +1106,7 @@ void A_WeaponCtrOp(actionargs_t *actionargs)
 
    int *c_oper1, *c_oper2, *c_dest;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    c_oper1_num = E_ArgAsInt(args, 0, 0);
@@ -1222,14 +1205,11 @@ void A_WeaponCopyCtr(actionargs_t *actionargs)
 {
    int cnum1, cnum2;
    int *src, *dest;
-   player_t  *player;
-   pspdef_t  *pspr;
-   arglist_t *args = actionargs->args;
+   player_t  *player = actionargs->actor->player;
+   pspdef_t  *pspr   = actionargs->pspr;
+   arglist_t *args   = actionargs->args;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    cnum1 = E_ArgAsInt(args, 0, 0);
@@ -1277,15 +1257,12 @@ void A_CheckReloadEx(actionargs_t *actionargs)
 {
    bool branch = false;
    int statenum, checktype, psprnum, value, ammo;
-   player_t        *player;
-   pspdef_t        *pspr;
-   arglist_t       *args = actionargs->args;
+   player_t        *player = actionargs->actor->player;
+   pspdef_t        *pspr   = actionargs->pspr;
+   arglist_t       *args   = actionargs->args;
    weaponinfo_t    *w;
 
-   if(!(player = actionargs->actor->player))
-      return;
-
-   if(!(pspr = actionargs->pspr))
+   if(!player || !pspr)
       return;
 
    w = player->readyweapon;
@@ -1349,7 +1326,7 @@ void A_CheckReloadEx(actionargs_t *actionargs)
    }
 
    if(branch)
-      P_SetPsprite(player, psprnum, statenum);      
+      P_SetPsprite(player, psprnum, statenum);
 }
 
 // EOF

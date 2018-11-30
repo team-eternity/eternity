@@ -708,8 +708,7 @@ void A_Explode(actionargs_t *actionargs)
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
-      E_HitWater(thingy, P_ExtremeSectorAtPoint(thingy, false));
+   E_ExplosionHitWater(thingy, 128);
 }
 
 //
@@ -734,8 +733,8 @@ void A_Nailbomb(actionargs_t *actionargs)
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    // ioanch 20160116: portal aware Z
-   if(demo_version >= 331 && thing->z <= thing->secfloorz + radius*FRACUNIT)
-      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
+   if(demo_version >= 331)
+      E_ExplosionHitWater(thing, radius);
 
    for(i = 0; i < numnails; ++i)
    {
@@ -760,8 +759,8 @@ void A_Detonate(actionargs_t *actionargs)
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    // ioanch 20160116: portal aware Z
-   if(demo_version >= 331 && mo->z <= mo->secfloorz + mo->damage*FRACUNIT)
-      E_HitWater(mo, P_ExtremeSectorAtPoint(mo, false));
+   if(demo_version >= 331)
+      E_ExplosionHitWater(mo, mo->damage);
 }
 
 //=============================================================================

@@ -3910,7 +3910,6 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
 
       cd.direction = 0;
       cd.target_type = CbyParam;
-      cd.speed_type = instance->spac;
       cd.flags = CDF_HAVESPAC;
       cd.speed_type = SpeedParam;
       cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3954,7 +3953,6 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 
       cd.direction = 1;
       cd.target_type = CbyParam;
-      cd.speed_type = instance->spac;
       cd.flags = CDF_HAVESPAC;
       cd.speed_type = SpeedParam;
       cd.speed_value = instance->args[1] * (FRACUNIT / 8);

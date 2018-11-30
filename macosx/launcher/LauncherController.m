@@ -656,7 +656,7 @@ iwadMightBe:
       
       SET_UNDO(iwadPopUp, doRemoveIwadAtIndex:ind, @"Add/Remove Game WAD")
 
-      NSArray<NSMenuItem *> *items = iwadPopUp.menu.itemArray;
+      NSArray *items = iwadPopUp.menu.itemArray;
       if(ind < 0 || ind >= items.count)
          last = items.lastObject;
       else

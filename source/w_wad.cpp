@@ -37,6 +37,7 @@
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_files.h"
+#include "e_hash.h"
 #include "hal/i_directory.h"
 #include "m_argv.h"
 #include "m_collection.h"
@@ -64,6 +65,33 @@ WadDirectory wGlobalDir;
 int WadDirectory::source;            // haleyjd 03/18/10: next source ID# to use
 int WadDirectory::IWADSource   = -1; // sf: the handle of the main iwad
 int WadDirectory::ResWADSource = -1; // haleyjd: track handle of first wad added
+
+//
+// The structure for source path saving and hash table
+//
+struct sourcepath_t
+{
+   int         sourcenum;
+   const char *path;
+   DLListItem<sourcepath_t> links;
+};
+
+static EHashTable<sourcepath_t, EIntHashKey, &sourcepath_t::sourcenum,
+                  &sourcepath_t::links> e_SourceNumHash;
+
+static EHashTable<lumpinfo_t, EStringHashKey, &lumpinfo_t::lfn,
+                  &lumpinfo_t::lfnlinks> e_LFNHash;
+
+const char *W_PathForSource(int sourcenum)
+{
+   sourcepath_t *sourcepath = e_SourceNumHash.objectForKey(sourcenum);
+   return sourcepath ? sourcepath->path : nullptr;
+}
+
+lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo)
+{
+   return e_LFNHash.keyIterator(lumpinfo, lumpinfo->lfn);
+}
 
 //
 // haleyjd 07/12/07: structure for transparently manipulating lumps of
@@ -897,9 +925,15 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
          {
             // Remove the leading path component
             ArchiveDirFile &adf = paths.addNew();
+
             adf.path = path;
             path = subpath;
             path.pathConcatenate(ent->d_name);
+
+            // Normalize the subpath
+            path.toLower();
+            path.replace("\\", '/');
+
             adf.innerpath = path;
             adf.size = sbuf.st_size;
          }
@@ -928,6 +962,14 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
    Collection<ArchiveDirFile> paths;
    ArchiveDirFile proto;
    paths.setPrototype(&proto);
+
+   qstring qtemp(openData.filename);
+   qtemp.replace("\\", '/');
+   qtemp.toLower();
+   sourcepath_t *sourcepath = estructalloc(sourcepath_t, 1);
+   sourcepath->sourcenum = source;
+   sourcepath->path = qtemp.duplicate();
+   e_SourceNumHash.addObject(sourcepath);
 
    Collection<qstring> prevPaths;
    W_recurseFiles(paths, openData.filename, "", prevPaths, 0);
@@ -958,10 +1000,16 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
             continue;
          }
 
-         lump_p->type = lumpinfo_t::lump_file;
-         lump_p->lfn = adf.path.duplicate();
-         lump_p->size = adf.size;
-         lump_p->source = source;
+         // Normalize path here, otherwise the display of paths looks ugly
+         qstring normalizedpath(adf.path);
+         normalizedpath.toLower();
+         normalizedpath.replace("\\", '/');
+
+         lump_p->type     = lumpinfo_t::lump_file;
+         lump_p->lfn      = normalizedpath.duplicate();
+         lump_p->filepath = adf.path.duplicate();
+         lump_p->size     = adf.size;
+         lump_p->source   = source;
          int li_namespace;
          if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
          {
@@ -1242,9 +1290,9 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace) const
 {
    // Hash function maps the name to one of possibly numlump chains.
    // It has been tuned so that the average chain length never exceeds 2.
-   
+
    unsigned int hashkey = LumpNameHash(name) % (unsigned int)numlumps;
-   int i = lumpinfo[hashkey]->namehash.index;
+   int i = lumpinfo[hashkey]->index;
 
    // We search along the chain until end, looking for case-insensitive
    // matches which also match a namespace tag. Separate hash tables are
@@ -1254,9 +1302,9 @@ int WadDirectory::checkNumForName(const char *name, int li_namespace) const
 
    while(i >= 0 && (strncasecmp(lumpinfo[i]->name, name, 8) ||
          lumpinfo[i]->li_namespace != li_namespace))
-      i = lumpinfo[i]->namehash.next;
+      i = lumpinfo[i]->next;
 
-   // Return the matching lump, or -1 if none found.   
+   // Return the matching lump, or -1 if none found.
    return i;
 }
 
@@ -1345,19 +1393,12 @@ int W_GetNumForName(const char *name)
 //
 int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace) const
 {
-   unsigned int hashkey = D_HashTableKeyCase(lfn) % (unsigned int)numlumps;
-   int i = lumpinfo[hashkey]->lfnhash.index;
+   lumpinfo_t *currinfo = e_LFNHash.keyIterator(nullptr, lfn);
 
-   for(; i >= 0; i = lumpinfo[i]->lfnhash.next)
-   {
-      if(lumpinfo[i]->lfn &&
-         !strcmp(lumpinfo[i]->lfn, lfn) &&
-         lumpinfo[i]->li_namespace == li_namespace)
-         break; // found it.
-   }
+   while(currinfo != nullptr && currinfo->li_namespace != li_namespace)
+       currinfo = e_LFNHash.keyIterator(currinfo, lfn);
 
-   // Return the matching lump, or -1 if none found.   
-   return i;
+   return currinfo ? currinfo->index : -1;
 }
 
 //
@@ -1399,6 +1440,14 @@ lumpinfo_t *WadDirectory::getLumpNameChain(const char *name) const
 }
 
 //
+// As above, but for long file names.
+//
+lumpinfo_t *WadDirectory::getLumpLFNChain(const char *name) const
+{
+   return e_LFNHash.objectForKey(name);
+}
+
+//
 // WadDirectory::getLumpName
 //
 // haleyjd 02/04/14: Sometimes we need to go the opposite direction conveniently.
@@ -1430,15 +1479,14 @@ const char *WadDirectory::getLumpFileName(int lump) const
 //
 // killough 1/31/98: Initialize lump hash table
 //
-void WadDirectory::initLumpHash()
+void WadDirectory::initLumpHashes()
 {
    int i;
-   
+
    for(i = 0; i < numlumps; i++)
    {
-      lumpinfo[i]->namehash.index = -1; // mark slots empty
-      lumpinfo[i]->lfnhash.index  = -1;
-      lumpinfo[i]->selfindex      =  i; // haleyjd: record position in array
+      lumpinfo[i]->index     = -1; // mark slots empty
+      lumpinfo[i]->selfindex =  i; // haleyjd: record position in array
    }
 
    // Insert nodes to the beginning of each chain, in first-to-last
@@ -1447,23 +1495,17 @@ void WadDirectory::initLumpHash()
 
    for(i = 0; i < numlumps; i++)
    {                                           // hash function:
-      unsigned int j;
-
       // haleyjd 10/28/12: if lump name is empty, do not add it into the hash.
-      if(!(lumpinfo[i]->name[0]))
-         continue;
-
-      j = LumpNameHash(lumpinfo[i]->name) % (unsigned int)numlumps;
-      lumpinfo[i]->namehash.next = lumpinfo[j]->namehash.index; // Prepend to list
-      lumpinfo[j]->namehash.index = i;
+      if(lumpinfo[i]->name[0])
+      {
+         const unsigned int j = LumpNameHash(lumpinfo[i]->name) % (unsigned int)numlumps;
+         lumpinfo[i]->next    = lumpinfo[j]->index; // Prepend to list
+         lumpinfo[j]->index   = i;
+      }
 
       // haleyjd 04/21/12: add to lfn hash also if has a valid LFN
-      if(!(lumpinfo[i]->lfn && *lumpinfo[i]->lfn))
-         continue;
-
-      j = D_HashTableKeyCase(lumpinfo[i]->lfn) % (unsigned int)numlumps;
-      lumpinfo[i]->lfnhash.next = lumpinfo[j]->lfnhash.index;
-      lumpinfo[j]->lfnhash.index = i;
+      if(lumpinfo[i]->lfn && *lumpinfo[i]->lfn)
+         e_LFNHash.addObject(lumpinfo[i]);
    }
 }
 
@@ -1480,9 +1522,9 @@ void WadDirectory::initResources() // sf
 
    // set up caching
    // sf: caching now done in the lumpinfo_t's
-   
+
    // killough 1/31/98: initialize lump hash table
-   initLumpHash();
+   initLumpHashes();
 }
 
 //
@@ -1562,7 +1604,7 @@ bool WadDirectory::addNewPrivateFile(const char *filename)
 
    // there is no resource coalescence on this particular brand of private
    // wad file, so just call W_InitLumpHash.
-   initLumpHash();
+   initLumpHashes();
 
    return true;
 }
@@ -1875,7 +1917,7 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
    size_t size     = l->size;
    size_t sizeread = 0;
 
-   if((f = fopen(l->lfn, "rb")))
+   if((f = fopen(l->filepath, "rb")))
    {
       sizeread = fread(dest, 1, size, f);
       fclose(f);

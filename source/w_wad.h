@@ -23,6 +23,8 @@
 
 #include "z_zone.h"
 
+#include "m_dllist.h"
+
 class  ZAutoBuffer;
 class  ZipFile;
 struct ZipLump;
@@ -79,11 +81,7 @@ struct lumpinfo_t
    size_t size;
    
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
-   struct hash_t
-   {
-      int index, next;
-   };
-   hash_t namehash, lfnhash;
+   int index, next;
 
    // haleyjd 03/27/11: array index into lumpinfo in the parent wad directory,
    // for fast reverse lookup.
@@ -140,7 +138,9 @@ struct lumpinfo_t
       ziplump_t    zip;
    };
 
-   char *lfn;  // long file name, where relevant   
+   char *lfn;      // long file name, where relevant
+   char *filepath; // file path, where relevant
+   DLListItem<lumpinfo_t> lfnlinks;
 };
 
 // Flags for wfileadd_t
@@ -270,8 +270,7 @@ protected:
    namespace_t m_namespaces[lumpinfo_t::ns_max];
 
    // Protected methods
-   void initLumpHash();
-   void initLFNHash();
+   void initLumpHashes();
    void initResources();
    void addInfoPtr(lumpinfo_t *infoptr);
    void coalesceMarkedResources();
@@ -330,6 +329,7 @@ public:
    void  close(); // haleyjd 03/09/11
 
    lumpinfo_t *getLumpNameChain(const char *name) const;
+   lumpinfo_t *getLumpLFNChain(const char *name) const;
 
    const char *getLumpName(int lumpnum) const;
    const char *getLumpFileName(int lump) const;
@@ -356,6 +356,9 @@ int      W_GetNumForName(const char* name);
 
 int      W_LumpLength(int lump);
 uint32_t W_LumpCheckSum(int lumpnum);
+
+const char *W_PathForSource(int sourcenum);
+lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo);
 
 #endif
 
