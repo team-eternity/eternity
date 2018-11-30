@@ -53,7 +53,7 @@ cfg_opt_t edf_action_opts[] =
 };
 
 // If a string starts with A_ strip it, otherwise add it
-static inline qstring AlternateFuncName(const char *name)
+static inline qstring E_alternateFuncName(const char *name)
 {
    if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
       return qstring(name + 2); // Strip A_
@@ -151,7 +151,7 @@ actiondef_t *E_AeonActionForName(const char *name)
    if(ret)
       return ret;
    else
-      return e_ActionDefHash.objectForKey(AlternateFuncName(name).constPtr());
+      return e_ActionDefHash.objectForKey(E_alternateFuncName(name).constPtr());
 }
 
 //
@@ -246,18 +246,18 @@ static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
 
    if(!(func = module->GetFunctionByName(mnemonic)))
    {
-      if(!(func = module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr())))
+      if(!(func = module->GetFunctionByName(E_alternateFuncName(mnemonic).constPtr())))
       {
          E_EDFLoggedErr(2, "E_processAction: Failed to find function '%s' or '%s' "
                            "in the code of action '%s'\n",
-                        mnemonic, AlternateFuncName(mnemonic).constPtr(), mnemonic);
+                        mnemonic, E_alternateFuncName(mnemonic).constPtr(), mnemonic);
       }
    }
-   else if(module->GetFunctionByName(AlternateFuncName(mnemonic).constPtr()))
+   else if(module->GetFunctionByName(E_alternateFuncName(mnemonic).constPtr()))
    {
       E_EDFLoggedErr(2, "E_processAction: Both functions '%s' and '%s' found "
                         "in the code of action '%s'.\nPlease only define one or the other\n",
-                     mnemonic, AlternateFuncName(mnemonic).constPtr(), mnemonic);
+                     mnemonic, E_alternateFuncName(mnemonic).constPtr(), mnemonic);
    }
 
    return func;
@@ -302,6 +302,15 @@ static void E_processAction(cfg_t *actionsec)
       E_EDFLoggedErr(2, "E_processAction: Action '%s' is reserved and cannot be "
                         "overriden by EDF\n", name);
 
+   }
+
+   qstring altname = E_alternateFuncName(name);
+   if(e_ActionDefHash.objectForKey(altname.constPtr()))
+   {
+      E_EDFLoggedErr(2, "E_processAction: Action '%s' is already defined via an "
+                        "EDF action, so '%s' is not allowed to be. If one is "
+                        "defined then the other is also automatically defined\n",
+                     altname.constPtr(), name);
    }
 
    if(!code)

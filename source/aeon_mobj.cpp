@@ -71,10 +71,10 @@ namespace Aeon
 
    static Fixed floatBobOffsets(const int in)
    {
-      static constexpr int NUMFLOATBOBOFFSETS = earrlen(::FloatBobOffsets);
+      static constexpr int NUMFLOATBOBOFFSETS = earrlen(FloatBobOffsets);
       if(in < 0 || in > NUMFLOATBOBOFFSETS)
          return 0;
-      return ::FloatBobOffsets[in];
+      return FloatBobOffsets[in];
    }
 
    static void startSound(const PointThinker *origin, const sfxinfo_t &sfxinfo)
