@@ -138,7 +138,8 @@ struct lumpinfo_t
       ziplump_t    zip;
    };
 
-   char *lfn;  // long file name, where relevant
+   char *lfn;      // long file name, where relevant
+   char *filepath; // file path, where relevant
    DLListItem<lumpinfo_t> lfnlinks;
 };
 

@@ -1005,10 +1005,11 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
          normalizedpath.toLower();
          normalizedpath.replace("\\", '/');
 
-         lump_p->type = lumpinfo_t::lump_file;
-         lump_p->lfn = normalizedpath.duplicate();
-         lump_p->size = adf.size;
-         lump_p->source = source;
+         lump_p->type     = lumpinfo_t::lump_file;
+         lump_p->lfn      = normalizedpath.duplicate();
+         lump_p->filepath = adf.path.duplicate();
+         lump_p->size     = adf.size;
+         lump_p->source   = source;
          int li_namespace;
          if((li_namespace = W_NamespaceForFilePath(adf.innerpath.constPtr())) != -1)
          {
@@ -1916,7 +1917,7 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
    size_t size     = l->size;
    size_t sizeread = 0;
 
-   if((f = fopen(l->lfn, "rb")))
+   if((f = fopen(l->filepath, "rb")))
    {
       sizeread = fread(dest, 1, size, f);
       fclose(f);
