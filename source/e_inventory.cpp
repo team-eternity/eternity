@@ -34,6 +34,7 @@
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_sprite.h"
+#include "e_string.h"
 
 #include "autopalette.h"
 #include "a_args.h"
@@ -80,7 +81,7 @@ static const char *e_ItemEffectTypeNames[NUMITEMFX] =
 itemeffecttype_t E_EffectTypeForName(const char *name)
 {
    itemeffecttype_t fx;
-   
+
    if((fx = E_StrToNumLinear(e_ItemEffectTypeNames, NUMITEMFX, name)) == NUMITEMFX)
       fx = ITEMFX_NONE;
 
@@ -222,10 +223,10 @@ cfg_opt_t edf_healthfx_opts[] =
    CFG_INT(KEY_AMOUNT,     0,  CFGF_NONE), // amount to recover
    CFG_INT(KEY_MAXAMOUNT,  0,  CFGF_NONE), // max that can be recovered
    CFG_STR(KEY_LOWMESSAGE, "", CFGF_NONE), // message if health < amount
-   
+
    CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), // if +, always pick up
-   CFG_FLAG(KEY_SETHEALTH,    0, CFGF_SIGNPREFIX), // if +, sets health  
-   
+   CFG_FLAG(KEY_SETHEALTH,    0, CFGF_SIGNPREFIX), // if +, sets health
+
    CFG_END()
 };
 
@@ -236,7 +237,7 @@ cfg_opt_t edf_armorfx_opts[] =
    CFG_INT(KEY_SAVEFACTOR,     1,  CFGF_NONE), // numerator of save percentage
    CFG_INT(KEY_SAVEDIVISOR,    3,  CFGF_NONE), // denominator of save percentage
    CFG_INT(KEY_MAXSAVEAMOUNT,  0,  CFGF_NONE), // max save amount, for bonuses
-   
+
    CFG_FLAG(KEY_ALWAYSPICKUP,  0, CFGF_SIGNPREFIX), // if +, always pick up
    CFG_FLAG(KEY_ADDITIVE,      0, CFGF_SIGNPREFIX), // if +, adds to the current amount of armor
    CFG_FLAG(KEY_SETABSORPTION, 0, CFGF_SIGNPREFIX), // if +, sets absorption values
@@ -321,10 +322,10 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
 }
 
 //
-// Callback function for the function-valued string option used to 
-// specify state action functions. This is called during parsing, not 
+// Callback function for the function-valued string option used to
+// specify state action functions. This is called during parsing, not
 // processing, and thus we do not look up/resolve anything at this point.
-// We are only interested in populating the cfg's args values with the 
+// We are only interested in populating the cfg's args values with the
 // strings passed to this callback as parameters. The value of the option has
 // already been set to the name of the codepointer by the libConfuse framework.
 //
@@ -393,7 +394,7 @@ static void E_processItemEffects(cfg_t *cfg)
       const char   *className   = e_ItemEffectTypeNames[i];
       unsigned int  numSections = cfg_size(cfg, cfgSecName);
 
-      E_EDFLogPrintf("\t* Processing %s item effects (%u defined)\n", 
+      E_EDFLogPrintf("\t* Processing %s item effects (%u defined)\n",
                      className, numSections);
 
       // process each section of the current type
@@ -458,7 +459,7 @@ size_t E_GetNumAmmoTypes()
 // E_AmmoTypeForIndex
 //
 // Get an ammo type for its index in the ammotypes lookup table.
-// There is no extra bounds check here, so an illegal request will exit the 
+// There is no extra bounds check here, so an illegal request will exit the
 // game engine. Use E_GetNumAmmoTypes to get the upper array bound.
 //
 itemeffect_t *E_AmmoTypeForIndex(size_t idx)
@@ -488,7 +489,7 @@ static void E_collectAmmoTypes()
 //
 // E_GiveAllAmmo
 //
-// Function to give the player a certain amount of all ammo types; the amount 
+// Function to give the player a certain amount of all ammo types; the amount
 // given can be controlled using enumeration values in e_inventory.h
 //
 void E_GiveAllAmmo(player_t *player, giveallammo_e op, int amount)
@@ -502,7 +503,7 @@ void E_GiveAllAmmo(player_t *player, giveallammo_e op, int amount)
 
       switch(op)
       {
-         // ioanch 20151225: removed GAA_BACKPACKAMOUNT because backpack really 
+         // ioanch 20151225: removed GAA_BACKPACKAMOUNT because backpack really
          // does more than populate the inventory.
       case GAA_MAXAMOUNT:
          giveamount = E_GetMaxAmountForArtifact(player, ammoType);
@@ -543,7 +544,7 @@ size_t E_GetNumKeyItems()
 // E_KeyItemForIndex
 //
 // Get a key type for its index in the ammotypes lookup table.
-// There is no extra bounds check here, so an illegal request will exit the 
+// There is no extra bounds check here, so an illegal request will exit the
 // game engine. Use E_GetNumKeyItems to get the upper array bound.
 //
 itemeffect_t *E_KeyItemForIndex(size_t idx)
@@ -612,7 +613,7 @@ struct lockdef_t
    // Lock color data
    lockdefcolor_e colorType; // either constant or variable
    int  color;               // constant color, if colorType == LOCKDEF_COLOR_CONSTANT
-   int *colorVar;            // cvar color, if colorType == LOCKDEF_COLOR_VARIABLE    
+   int *colorVar;            // cvar color, if colorType == LOCKDEF_COLOR_VARIABLE
 };
 
 // Lockdefs hash, by ID number
@@ -734,7 +735,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
 
    if(!value || !*value)
       return;
-   
+
    AutoPalette pal(wGlobalDir);
    long        lresult = 0;
    command_t  *cmd     = NULL;
@@ -812,7 +813,7 @@ static void E_processLockDef(cfg_t *lock)
    if((lockdef->numRequiredKeys = cfg_size(lock, ITEM_LOCKDEF_REQUIRE)))
    {
       lockdef->requiredKeys = estructalloc(itemeffect_t *, lockdef->numRequiredKeys);
-      E_processKeyList(lockdef->requiredKeys, lockdef->numRequiredKeys, 
+      E_processKeyList(lockdef->requiredKeys, lockdef->numRequiredKeys,
                        lock, ITEM_LOCKDEF_REQUIRE);
    }
 
@@ -828,7 +829,7 @@ static void E_processLockDef(cfg_t *lock)
          if((curAnyKey->numKeys = cfg_size(anySec, ITEM_LOCKDEF_ANY_KEYS)))
          {
             curAnyKey->keys = estructalloc(itemeffect_t *, curAnyKey->numKeys);
-            E_processKeyList(curAnyKey->keys, curAnyKey->numKeys, 
+            E_processKeyList(curAnyKey->keys, curAnyKey->numKeys,
                              anySec, ITEM_LOCKDEF_ANY_KEYS);
             lockdef->numAnyKeys += curAnyKey->numKeys;
          }
@@ -880,14 +881,14 @@ static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
       // if remote and have a remote message, give remote message
       msg = lock->remoteMessage;
       if(msg[0] == '$')
-         msg = DEH_String(msg + 1);
+         msg = E_StringOrDehForName(msg + 1);
    }
    else if(lock->message)
    {
       // otherwise, give normal message
       msg = lock->message;
       if(msg[0] == '$')
-         msg = DEH_String(msg + 1);
+         msg = E_StringOrDehForName(msg + 1);
    }
    if(msg)
       player_printf(player, "%s", msg);
@@ -1041,7 +1042,7 @@ int E_GiveAllKeys(player_t *player)
    return keysGiven;
 }
 
-// 
+//
 // E_TakeAllKeys
 //
 // Take away every artifact a player has that is of "key" type.
@@ -1167,7 +1168,7 @@ e_pickupfx_t *E_PickupFXForSprNum(spritenum_t sprnum)
 //
 // E_processPickupItems
 //
-// Allocates the pickupfx array used in P_TouchSpecialThing, and loads all 
+// Allocates the pickupfx array used in P_TouchSpecialThing, and loads all
 // pickupitem definitions, using the sprite hash table to resolve what sprite
 // owns the specified effect.
 //
@@ -1390,7 +1391,7 @@ static void E_processPickupEffects(cfg_t *cfg)
 //
 // Inventory Items
 //
-// Inventory items represent a holdable item that can take up a slot in an 
+// Inventory items represent a holdable item that can take up a slot in an
 // inventory.
 //
 
@@ -1424,7 +1425,7 @@ bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
       return false;
    if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
       return false;
-   
+
    cursor += amount;
    return true;
 }
@@ -1620,7 +1621,7 @@ static void E_allocateInventoryItemIDs()
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
    {
       itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
-      
+
       // only interested in effects that are recorded in the inventory
       if(fxtype == ITEMFX_ARTIFACT)
       {
@@ -1700,7 +1701,7 @@ itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id)
 itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
                                         inventoryindex_t idx)
 {
-   return (idx >= 0 && idx < e_maxitemid) ? 
+   return (idx >= 0 && idx < e_maxitemid) ?
       E_EffectForInventoryItemID(player->inventory[idx].item) : NULL;
 }
 
@@ -1728,7 +1729,7 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
 // E_InventorySlotForItem
 //
 // Find the slot being used by an item in the player's inventory, by pointer,
-// if one exists. NULL is returned if the item is not in the player's 
+// if one exists. NULL is returned if the item is not in the player's
 // inventory.
 //
 inventoryslot_t *E_InventorySlotForItem(const player_t *player,
@@ -1746,7 +1747,7 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
 // E_InventorySlotForItemName
 //
 // Find the slot being used by an item in the player's inventory, by name,
-// if one exists. NULL is returned if the item is not in the player's 
+// if one exists. NULL is returned if the item is not in the player's
 // inventory.
 //
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
@@ -1852,14 +1853,14 @@ bool E_RemoveBackpack(const player_t *player)
       for(size_t i = 0; i < numAmmo; i++)
       {
          auto ammo      = E_AmmoTypeForIndex(i);
-         int  maxamount = ammo->getInt(keyMaxAmount, 0);         
+         int  maxamount = ammo->getInt(keyMaxAmount, 0);
          auto slot      = E_InventorySlotForItem(player, ammo);
 
          if(slot && slot->amount > maxamount)
             slot->amount = maxamount;
       }
    }
-   
+
    return removed;
 }
 
@@ -2047,7 +2048,7 @@ itemremoved_e E_RemoveInventoryItem(const player_t *player,
       // a zero amount of it.
       if(!artifact->getInt(keyKeepDepleted, 0))
       {
-         // otherwise, we need to remove that item and collapse the player's 
+         // otherwise, we need to remove that item and collapse the player's
          // inventory
          E_removeInventorySlot(player, slot);
          ret = INV_REMOVEDSLOT;
@@ -2060,7 +2061,7 @@ itemremoved_e E_RemoveInventoryItem(const player_t *player,
 //
 // E_InventoryEndHub
 //
-// At the end of a hub (or a level that is not part of a hub), call this 
+// At the end of a hub (or a level that is not part of a hub), call this
 // function to strip all inventory items that are not meant to remain across
 // levels to their max hub amount.
 //
@@ -2074,7 +2075,7 @@ void E_InventoryEndHub(const player_t *player)
       if(item)
       {
          int interHubAmount = item->getInt(keyInterHubAmount, 0);
-         
+
          // an interhubamount less than zero means no stripping occurs
          if(interHubAmount >= 0 && amount > interHubAmount)
          {
@@ -2151,7 +2152,7 @@ void E_ProcessInventory(cfg_t *cfg)
 
    // allocate sort orders to -invbar items
    E_allocateSortOrders();
-   
+
 
    // allocate player inventories
    E_allocatePlayerInventories();

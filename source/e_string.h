@@ -48,6 +48,8 @@ edf_string_t *E_GetStringForName(const char *key);
 edf_string_t *E_StringForNum(int num);
 edf_string_t *E_GetStringForNum(int num);
 
+const char *E_StringOrDehForName(const char *mnemonic);
+
 #ifdef NEED_EDF_DEFINITIONS
 #define EDF_SEC_STRING "string"
 extern cfg_opt_t edf_string_opts[];
