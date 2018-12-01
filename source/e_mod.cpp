@@ -257,7 +257,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
       if(obituary)
       {
-         // determine if obituary string is a BEX string
+         // determine if obituary string is an indirect string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
             ++obituary;
@@ -284,7 +284,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
       if(obituary)
       {
-         // determine if obituary string is a BEX string
+         // determine if obituary string is an indirect string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
             ++obituary;
