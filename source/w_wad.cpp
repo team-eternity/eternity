@@ -66,27 +66,8 @@ int WadDirectory::source;            // haleyjd 03/18/10: next source ID# to use
 int WadDirectory::IWADSource   = -1; // sf: the handle of the main iwad
 int WadDirectory::ResWADSource = -1; // haleyjd: track handle of first wad added
 
-//
-// The structure for source path saving and hash table
-//
-struct sourcepath_t
-{
-   int         sourcenum;
-   const char *path;
-   DLListItem<sourcepath_t> links;
-};
-
-static EHashTable<sourcepath_t, EIntHashKey, &sourcepath_t::sourcenum,
-                  &sourcepath_t::links> e_SourceNumHash;
-
 static EHashTable<lumpinfo_t, EStringHashKey, &lumpinfo_t::lfn,
                   &lumpinfo_t::lfnlinks> e_LFNHash;
-
-const char *W_PathForSource(int sourcenum)
-{
-   sourcepath_t *sourcepath = e_SourceNumHash.objectForKey(sourcenum);
-   return sourcepath ? sourcepath->path : nullptr;
-}
 
 lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo)
 {
@@ -962,14 +943,6 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
    Collection<ArchiveDirFile> paths;
    ArchiveDirFile proto;
    paths.setPrototype(&proto);
-
-   qstring qtemp(openData.filename);
-   qtemp.replace("\\", '/');
-   qtemp.toLower();
-   sourcepath_t *sourcepath = estructalloc(sourcepath_t, 1);
-   sourcepath->sourcenum = source;
-   sourcepath->path = qtemp.duplicate();
-   e_SourceNumHash.addObject(sourcepath);
 
    Collection<qstring> prevPaths;
    W_recurseFiles(paths, openData.filename, "", prevPaths, 0);

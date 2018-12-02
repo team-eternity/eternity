@@ -357,7 +357,6 @@ int      W_GetNumForName(const char* name);
 int      W_LumpLength(int lump);
 uint32_t W_LumpCheckSum(int lumpnum);
 
-const char *W_PathForSource(int sourcenum);
 lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo);
 
 #endif
