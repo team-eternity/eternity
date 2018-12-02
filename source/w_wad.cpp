@@ -1000,13 +1000,8 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
             continue;
          }
 
-         // Normalize path here, otherwise the display of paths looks ugly
-         qstring normalizedpath(adf.path);
-         normalizedpath.toLower();
-         normalizedpath.replace("\\", '/');
-
          lump_p->type     = lumpinfo_t::lump_file;
-         lump_p->lfn      = normalizedpath.duplicate();
+         lump_p->lfn      = adf.innerpath.duplicate();
          lump_p->filepath = adf.path.duplicate();
          lump_p->size     = adf.size;
          lump_p->source   = source;
