@@ -284,6 +284,18 @@ they don't want to (for example, if taking photos).
 Fix ev_text events causing some issues, such as menu navigation occuring when
 inserting specific keys for key bindings on certain menus.
 
+-------------------------------------------------------------------------------
+2018/12/02
+The edf "include" directive can now include files with longer names or using
+paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is
+case-insensitive, and all \s are converted to /s when internally hashed.
+Additionally these includes are relative to the file making the include
+(e.g: if "edf/monsters.edf" does "include("monsters/something.edf")" it will
+include "edf/monsters/something.edf"). Includes can be made non-relative by
+putting a '/' before the rest of the path.
+
+. AND .. ARE NOT SUPPORTED!
+
 ================================================================================
 EOF
 ================================================================================
