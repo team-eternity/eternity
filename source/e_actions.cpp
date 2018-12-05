@@ -110,17 +110,28 @@ void A_Aeon(actionargs_t *actionargs)
       char        *argstr;
       Aeon::Fixed  argfx;
 
+      char        *defaultarg   = nullptr;
+      int          defaultint   = 0;
+      Aeon::Fixed  defaultfixed = Aeon::Fixed(0);
+      char        *defaultstr   = nullptr;
+
       switch(actionargs->aeonaction->argTypes[i])
       {
       case AAT_INTEGER:
-         ctx->SetArgDWord(i + argoffs, E_ArgAsInt(actionargs->args, i, 0));
+         if(actionargs->aeonaction->defaultArgs[i])
+            defaultint = *static_cast<int *>(actionargs->aeonaction->defaultArgs[i]);
+         ctx->SetArgDWord(i + argoffs, E_ArgAsInt(actionargs->args, i, defaultint));
          break;
       case AAT_FIXED:
-         argfx = Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, 0));
+         if(actionargs->aeonaction->defaultArgs[i])
+            defaultfixed = *static_cast<fixed_t *>(actionargs->aeonaction->defaultArgs[i]);
+         argfx = Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, defaultfixed));
          ctx->SetArgObject(i + argoffs, &argfx);
          break;
       case AAT_STRING:
-         argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr));
+         if(actionargs->aeonaction->defaultArgs[i])
+            defaultarg = static_cast<char *>(actionargs->aeonaction->defaultArgs[i]);
+         argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, defaultarg));
          ctx->SetArgAddress(i + argoffs, argstr);
          break;
       case AAT_SOUND:
@@ -204,25 +215,55 @@ action_t *E_GetAction(const char *name)
 //
 static void E_registerScriptAction(const char *name, const char *funcname,
                                    const Collection<qstring> &argTypes,
+                                   const Collection<const char *> &defaultArgs,
                                    const unsigned int numParams,
                                    const unsigned int nonArgParams,
                                    const actioncalltype_e callType)
 {
-   actiondef_t *info;
-   actionargtype_e args[EMAXARGS];
-   for(actionargtype_e &arg : args)
-      arg = AAT_INVALID;
+   actiondef_t     *info;
+   actionargtype_e  args[EMAXARGS];
+   void            *defaults[EMAXARGS];
+
+   for(int i = 0; i < EMAXARGS; i++)
+   {
+      args[i]     = AAT_INVALID;
+      defaults[i] = nullptr;
+   }
 
    for(unsigned int i = nonArgParams; i < numParams; i++)
    {
       if(argTypes[i] == "int")
+      {
          args[i - 1] = AAT_INTEGER;
+         if(estrnonempty(defaultArgs[i]))
+         {
+            int *temp       = emalloc(int *, 1);
+            *temp           = static_cast<int>(strtol(defaultArgs[i], nullptr, 0));
+            defaults[i - 1] = temp;
+         }
+      }
       else if(argTypes[i] == "fixed_t")
+      {
          args[i - 1] = AAT_FIXED;
+         if(estrnonempty(defaultArgs[i]))
+         {
+            fixed_t *temp     = emalloc(fixed_t *, 1);
+            *temp             = M_DoubleToFixed(strtod(defaultArgs[i], nullptr));
+            defaults[i - 1]   = temp;
+         }
+      }
       else if(argTypes[i] == "String" || argTypes[i] == "String&")
+      {
          args[i - 1] = AAT_STRING;
+         if(estrnonempty(defaultArgs[i]))
+            defaults[i - 1] = estrdup(defaultArgs[i]);
+      }
       else if(argTypes[i] == "EE::Sound@")
+      {
          args[i - 1] = AAT_SOUND;
+         if(estrnonempty(defaultArgs[i]))
+            E_EDFLoggedErr(2, "E_registerScriptAction:Bla bla bla TODO \n");
+      }
       else
       {
          E_EDFLoggedWarning(2, "E_registerScriptAction: action '%s' has invalid argument type "
@@ -233,7 +274,8 @@ static void E_registerScriptAction(const char *name, const char *funcname,
 
    info           = estructalloc(actiondef_t, 1);
    info->name     = estrdup(funcname);
-   memcpy(info->argTypes, args, earrlen(args));
+   memcpy(info->argTypes,    args,     sizeof(args));
+   memcpy(info->defaultArgs, defaults, sizeof(defaults));
    info->numArgs  = numParams - nonArgParams;
    info->callType = callType;
 
@@ -327,16 +369,19 @@ static void E_processAction(cfg_t *actionsec)
    func = E_aeonFuncForMnemonic(name);
 
    // Verify that the first parameter is a Mobj or player_t handle
-   int typeID = 0;
-   if(func->GetParam(0, &typeID) < 0)
+   int         typeID     = 0;
+   const char *defaultArg = nullptr;
+   if(func->GetParam(0, &typeID, nullptr, nullptr, &defaultArg) < 0)
       E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
+   else if(estrnonempty(defaultArg))
+      E_EDFLoggedErr(2, "E_processAction: Default argument TODO: Rest of error '%s'\n", name);
 
    const unsigned int paramCount = func->GetParamCount();
    if(typeID == mobjTypeID)
       callType = ACT_MOBJ;
    //else if(typeID == playerTypeID)
    //{
-   //   if(func->GetParam(1, &typeID) >= 0 &&
+   //   if(func->GetParam(1, &typeID, nullptr, nullptr, &defaultArg) >= 0 &&
    //      typeID == psprTypeID)
    //   {
    //      calltype = ACT_PLAYER_W_PSPRITE;
@@ -356,7 +401,7 @@ static void E_processAction(cfg_t *actionsec)
    //      return;
    //   }
    //   E_registerScriptAction(name, func->GetName(), Collection<qstring>(),
-   //                          1, 1, ACT_ACTIONARGS);
+   //                          Collection<const char *>(), 1, 1, ACT_ACTIONARGS);
    //   return;
    //}
    else
@@ -373,8 +418,10 @@ static void E_processAction(cfg_t *actionsec)
       return;
    }
 
-   Collection<qstring> argNameTypes;
-   qstring strTemp;
+   Collection<qstring>      argNameTypes;
+   Collection<const char *> argDefaults;
+   qstring     strTemp;
+   const char *argTemp;
    // This loop is effectively kexScriptManager::GetArgTypesFromFunction from Powerslave EX
    for(unsigned int i = 0; i < paramCount; i++)
    {
@@ -389,10 +436,13 @@ static void E_processAction(cfg_t *actionsec)
 
       strTemp.erase(strTemp.find(" "), strTemp.length() - strTemp.find(" "));
       argNameTypes.add(qstring(strTemp));
+
+      func->GetParam(i, nullptr, nullptr, nullptr, &argTemp);
+      argDefaults.add(argTemp);
    }
 
-   E_registerScriptAction(name, func->GetName(), argNameTypes,
-                          paramCount, nonArgParams, callType);
+   E_registerScriptAction(name, func->GetName(), argNameTypes, argDefaults,
+                          paramCount,  nonArgParams, callType);
 }
 
 //

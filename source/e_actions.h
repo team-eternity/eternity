@@ -61,6 +61,7 @@ struct actiondef_t
 {
    const char      *name;
    actionargtype_e  argTypes[EMAXARGS];
+   void             *defaultArgs[EMAXARGS];
    int              numArgs;
    actioncalltype_e callType;
 
