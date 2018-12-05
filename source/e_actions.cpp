@@ -107,7 +107,8 @@ void A_Aeon(actionargs_t *actionargs)
 
    for(int i = 0; i < actionargs->aeonaction->numArgs; i++)
    {
-      char *argstr;
+      char        *argstr;
+      Aeon::Fixed  argfx;
 
       switch(actionargs->aeonaction->argTypes[i])
       {
@@ -115,7 +116,8 @@ void A_Aeon(actionargs_t *actionargs)
          ctx->SetArgDWord(i + argoffs, E_ArgAsInt(actionargs->args, i, 0));
          break;
       case AAT_FIXED:
-         ctx->SetArgObject(i + argoffs, &Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, 0)));
+         argfx = Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, 0));
+         ctx->SetArgObject(i + argoffs, &argfx);
          break;
       case AAT_STRING:
          argstr = const_cast<char *>(E_ArgAsString(actionargs->args, i, nullptr));
