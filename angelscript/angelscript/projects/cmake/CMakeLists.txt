@@ -56,6 +56,7 @@ set(ANGELSCRIPT_HEADERS
     ../../source/as_tokenizer.h
     ../../source/as_typeinfo.h
     ../../source/as_variablescope.h
+    ../../../add_on/scriptarray/scriptarray.h
 )
 
 set(ANGELSCRIPT_SOURCE
@@ -92,6 +93,7 @@ set(ANGELSCRIPT_SOURCE
     ../../source/as_tokenizer.cpp
     ../../source/as_typeinfo.cpp
     ../../source/as_variablescope.cpp
+    ../../../add_on/scriptarray/scriptarray.cpp
 )
 
 if(MSVC AND CMAKE_CL_64)

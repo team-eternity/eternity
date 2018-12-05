@@ -97,6 +97,9 @@ void A_Aeon(actionargs_t *actionargs)
          ctx->SetArgObject(1, actionargs->pspr);
          argoffs++;
          break;
+      case ACT_ACTIONARGS:
+         ctx->SetArgObject(0, actionargs);
+         break;
       }
    }
    else
@@ -124,7 +127,7 @@ void A_Aeon(actionargs_t *actionargs)
       default:
          Aeon::ScriptManager::PopState();
          return;
-        }
+      }
    }
 
    if(!Aeon::ScriptManager::Execute())
