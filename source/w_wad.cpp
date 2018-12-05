@@ -1366,7 +1366,7 @@ int WadDirectory::checkNumForLFN(const char *lfn, int li_namespace) const
    while(currinfo != nullptr && currinfo->li_namespace != li_namespace)
        currinfo = e_LFNHash.keyIterator(currinfo, lfn);
 
-   return currinfo ? currinfo->index : -1;
+   return currinfo ? currinfo->selfindex : -1;
 }
 
 //
