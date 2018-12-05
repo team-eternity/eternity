@@ -103,13 +103,14 @@ struct soundparams_t
 void S_StartSfxInfo(const soundparams_t &params);
 void S_StartSound(const PointThinker *origin, int sound_id);
 void S_StartSoundName(const PointThinker *origin, const char *name);
-void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id, 
+void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
                           int volume, int attn, int subchannel);
 void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
                               int volume, int attn,
                               int subchannel);
 void S_StartInterfaceSound(int sound_id);
 void S_StartInterfaceSound(const char *name);
+void S_StartInterfaceSound(sfxinfo_t *sfx);
 
 // Stop sound for thing at <origin>
 void S_StopSound(const PointThinker *origin, int subchannel);
