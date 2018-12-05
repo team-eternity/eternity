@@ -204,7 +204,6 @@ static int E_findFileInclude(cfg_t *src, const char *name)
    lumpinfo_t  *inclump;
    lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
    qstring      qname     = qstring(name).toLower();
-   qstring      parentdir = qstring(src->filename);
    qstring      includepath;
    int          includinglumpnum;
 
@@ -215,19 +214,14 @@ static int E_findFileInclude(cfg_t *src, const char *name)
    // get a pointer to the including lump's lumpinfo
    inclump = lumpinfo[includinglumpnum];
 
-   size_t lastslashloc = parentdir.findLastOf('/');
-   parentdir.truncate(lastslashloc + 1);
-
-   // If the source of the including file is a raw directory then we have to
-   // prepend the directory path of that, and a '/'. This is safe because
-   // the hashed paths are all lowercase and use '/' instead of '\\'
-   const char *const directorypath = W_PathForSource(inclump->source);
-   if(directorypath)
-      includepath = qstring(directorypath) << '/';
-
    qname.replace("\\", '/');
    if(qname[0] != '/')
+   {
+      qstring parentdir    = qstring(src->filename);
+      size_t  lastslashloc = parentdir.findLastOf('/');
+      parentdir.truncate(lastslashloc + 1);
       includepath << parentdir;
+   }
    else
    {
       if(qname.length() > 1u)
@@ -340,11 +334,11 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    case -1: // physical file
       len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
       M_GetFilePath(cfg->filename, currentpath, len);
-      
+
       filename = M_SafeFilePath(currentpath, argv[0]);
-      
+
       return E_OpenAndCheckInclude(cfg, filename, -1);
-   
+
    default: // data source
       // haleyjd 03/19/10:
       // find a lump of the requested name in the same data source only

@@ -53,7 +53,7 @@ struct directlump_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    size_t position;  // for direct and memory lumps, offset into file/buffer
 };
-  
+
 // A memory lump is loaded in a buffer in RAM and just needs to be memcpy'd.
 struct memorylump_t
 {
@@ -79,7 +79,7 @@ struct lumpinfo_t
    // haleyjd: logical lump data
    char   name[9];
    size_t size;
-   
+
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
    int index, next;
 
@@ -88,7 +88,7 @@ struct lumpinfo_t
    int selfindex;
 
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
-   enum 
+   enum
    {
       ns_global,
       ns_MIN_LOCAL,
@@ -114,7 +114,7 @@ struct lumpinfo_t
       fmt_patch,   // converted to a patch
       fmt_maxfmts  // number of formats
    } lumpformat;
-   
+
    void *cache[fmt_maxfmts];  //sf
 
    // haleyjd: lump type
@@ -125,11 +125,11 @@ struct lumpinfo_t
       lump_file,    // lump is a directory file; must be opened to use
       lump_zip,     // lump is inside a zip file
       lump_numtypes
-   }; 
+   };
    int type;
 
    int source; // haleyjd: unique id # for source of this lump
-   
+
    // haleyjd: physical lump data (guarded union)
    union
    {
@@ -181,7 +181,7 @@ struct wfileadd_t
 //
 // haleyjd 06/26/11: Wad lump preprocessing and formatting
 //
-// Inherit from this interface class to provide verification and preprocessing 
+// Inherit from this interface class to provide verification and preprocessing
 // code to W_CacheLump* routines.
 //
 class WadLumpLoader
@@ -196,13 +196,13 @@ public:
    } Code;
 
    // verifyData should do format checking and return true if the data is valid,
-   // and false otherwise. If verifyData returns anything other than CODE_OK, 
+   // and false otherwise. If verifyData returns anything other than CODE_OK,
    // formatData is not called under any circumstance.
    virtual Code verifyData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
-   // be done once only and not every time the lump is referenced/used. 
+   // be done once only and not every time the lump is referenced/used.
    virtual Code formatData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatIndex specifies an alternate cache pointer to use for resources
@@ -235,7 +235,7 @@ public:
       ADDSUBFILE, // Add as a subfile wad
       ADDPRIVATE  // Add to a private directory
    };
-   
+
    static int IWADSource;   // source # of the global IWAD file
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
@@ -337,7 +337,7 @@ public:
    // Accessors
    int   getType() const  { return type; }
    void  setType(int i)   { type = i;    }
-   
+
    // Read-only properties
    int          getNumLumps() const { return numlumps; }
    lumpinfo_t **getLumpInfo() const { return lumpinfo; }
@@ -357,7 +357,6 @@ int      W_GetNumForName(const char* name);
 int      W_LumpLength(int lump);
 uint32_t W_LumpCheckSum(int lumpnum);
 
-const char *W_PathForSource(int sourcenum);
 lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo);
 
 #endif
