@@ -19,7 +19,7 @@
 //
 
 #ifdef _MSC_VER
-// for Visual C++: 
+// for Visual C++:
 #include "Win32/i_opndir.h"
 #else
 // for SANE compilers:
@@ -239,7 +239,7 @@ void WadDirectory::handleOpenError(openwad_t &openData,
 //
 // WadDirectory::openFile
 //
-// haleyjd 04/06/11: For normal wad files, the file needs to be found and 
+// haleyjd 04/06/11: For normal wad files, the file needs to be found and
 // opened.
 //
 WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
@@ -247,7 +247,7 @@ WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
    edefstructvar(openwad_t, openData);
    qstring   filename;
    bool      allowInexact = (addInfo.flags & WFA_ALLOWINEXACTFN) == WFA_ALLOWINEXACTFN;
-   
+
    // Try opening the file
    filename = addInfo.filename;
    if(!(openData.handle = W_TryOpenFile(filename, allowInexact)))
@@ -260,7 +260,7 @@ WadDirectory::openwad_t WadDirectory::openFile(const wfileadd_t &addInfo) const
    openData.format = W_DetermineFileFormat(openData.handle, 0);
 
    // Check against format requirements
-   if(addInfo.flags & WFA_REQUIREFORMAT && 
+   if(addInfo.flags & WFA_REQUIREFORMAT &&
       openData.format != addInfo.requiredFmt)
    {
       handleOpenError(openData, addInfo, filename.constPtr());
@@ -347,7 +347,7 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
    // haleyjd 04/07/11
    wadinfo_t    header;
    ZAutoBuffer  fileinfo2free; // killough
-   filelump_t  *fileinfo; 
+   filelump_t  *fileinfo;
    size_t       length;
    size_t       info_offset;
    lumpinfo_t  *lump_p;
@@ -360,7 +360,7 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
 
    // allocate enough fileinfo_t's to hold the wad directory
    length = header.numlumps * sizeof(filelump_t);
-  
+
    fileinfo2free.alloc(length, true);              // killough
    fileinfo = fileinfo2free.getAs<filelump_t *>();
 
@@ -398,7 +398,7 @@ bool WadDirectory::addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
       // setup for memory IO
       lump_p->memory.data     = openData.base;
       lump_p->memory.position = (size_t)(SwapLong(fileinfo->filepos));
-      
+
       lump_p->li_namespace = addInfo.li_namespace;     // killough 4/17/98
 
       strncpy(lump_p->name, fileinfo->name, 8);
@@ -424,7 +424,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
    long         baseoffset = static_cast<long>(addInfo.baseoffset);
    wadinfo_t    header;
    ZAutoBuffer  fileinfo2free; // killough
-   filelump_t  *fileinfo; 
+   filelump_t  *fileinfo;
    size_t       length;
    long         info_offset;
    lumpinfo_t  *lump_p;
@@ -459,7 +459,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
          else
             C_Printf(FC_ERROR "Failed reading header for wad file %s", openData.filename);
 
-         return false;            
+         return false;
       }
    }
 
@@ -472,7 +472,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
 
    // allocate enough fileinfo_t's to hold the wad directory
    length = header.numlumps * sizeof(filelump_t);
-  
+
    fileinfo2free.alloc(length, true);              // killough
    fileinfo = fileinfo2free.getAs<filelump_t *>();
 
@@ -514,7 +514,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
          W_CheckDirectoryHacks(wadHash, fileinfo, header.numlumps);
    }
 
-   // update IWAD handle? 
+   // update IWAD handle?
    // haleyjd: Must be a public wad file.
    if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
    {
@@ -546,7 +546,7 @@ bool WadDirectory::addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
       // for subfiles, add baseoffset to the lump offset
       if(addInfo.flags & WFA_SUBFILE)
          lump_p->direct.position += static_cast<size_t>(baseoffset);
-      
+
       lump_p->li_namespace = addInfo.li_namespace;     // killough 4/17/98
 
       strncpy(lump_p->name, fileinfo->name, 8);
@@ -585,7 +585,7 @@ bool WadDirectory::addZipFile(openwad_t &openData,
       return true;
    }
 
-   // update IWAD handle? 
+   // update IWAD handle?
    if(!(addInfo.flags & WFA_PRIVATE) && this->ispublic)
    {
       if(IWADSource < 0 && (addInfo.flags & WFA_ISIWADFILE))
@@ -636,7 +636,7 @@ bool WadDirectory::addZipFile(openwad_t &openData,
 //
 // WadDirectory::addFile
 //
-// All files are optional, but at least one file must be found (PWAD, if all 
+// All files are optional, but at least one file must be found (PWAD, if all
 // required lumps are present).
 // Files with a .wad extension are wadlink files with multiple lumps.
 // Other files are single lumps with the base filename for the lump name.
@@ -649,7 +649,7 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
    // Directory file addition callback type
    typedef bool (WadDirectory::* AddFileCB)(openwad_t &, const wfileadd_t &,
                                             int);
-   
+
    static AddFileCB fileadders[W_FORMAT_MAX] =
    {
       &WadDirectory::addWadFile,             // W_FORMAT_WAD
@@ -657,17 +657,17 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       &WadDirectory::addSingleFile,          // W_FORMAT_FILE
       &WadDirectory::addDirectoryAsArchive   // W_FORMAT_DIR
    };
-   
+
    edefstructvar(openwad_t, openData);
 
    // When loading a subfile, the physical file is already open.
    if(addInfo.flags & WFA_SUBFILE)
-   {      
+   {
       openData.filename = addInfo.filename;
       openData.handle   = addInfo.f;
 
       // Only WAD files are currently supported as subfiles.
-      if(W_DetermineFileFormat(openData.handle, 
+      if(W_DetermineFileFormat(openData.handle,
             static_cast<long>(addInfo.baseoffset)) != W_FORMAT_WAD)
       {
          addInfo.flags |= WFA_OPENFAILFATAL;
@@ -693,12 +693,12 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       // Open the physical archive file and determine its format
       openData = openFile(addInfo);
       if(openData.error)
-         return false; 
+         return false;
    }
 
-   // Show adding message if at startup and not a private directory or 
+   // Show adding message if at startup and not a private directory or
    // in-memory wad
-   if(!(addInfo.flags & (WFA_PRIVATE|WFA_INMEMORY)) && 
+   if(!(addInfo.flags & (WFA_PRIVATE|WFA_INMEMORY)) &&
       this->ispublic && in_textmode)
    {
       printf(" adding %s\n", openData.filename);   // killough 8/8/98
@@ -715,7 +715,7 @@ bool WadDirectory::addFile(wfileadd_t &addInfo)
       handleOpenError(openData, addInfo, openData.filename);
       return false;
    }
-   
+
    return true; // no error
 }
 
@@ -738,13 +738,13 @@ int WadDirectory::addDirectory(const char *dirpath)
    int     localcount = 0;
    int     totalcount = 0;
    int     startlump;
-   int     usinglump  = 0; 
+   int     usinglump  = 0;
    int     globallump = 0;
    size_t  i, fileslen;
 
    PODCollection<dirfile_t> files;
    lumpinfo_t *newlumps;
-   
+
    if(!(dir = opendir(dirpath)))
       return 0;
 
@@ -756,7 +756,7 @@ int WadDirectory::addDirectory(const char *dirpath)
 
       if(!strcmp(ent->d_name, ".")  || !strcmp(ent->d_name, ".."))
          continue;
-      
+
       newfile.fullfn = M_SafeFilePath(dirpath, ent->d_name);
 
       if(!stat(newfile.fullfn, &sbuf)) // check for existence
@@ -769,11 +769,11 @@ int WadDirectory::addDirectory(const char *dirpath)
             newfile.size  = (size_t)(sbuf.st_size);
             ++localcount;
          }
-      
+
          files.add(newfile);
       }
    }
-   
+
    closedir(dir);
 
    fileslen = files.getLength();
@@ -796,7 +796,7 @@ int WadDirectory::addDirectory(const char *dirpath)
 
    // create lumpinfo_t structures for the files
    newlumps = estructalloc(lumpinfo_t, localcount);
-   
+
    // keep track of this allocation of lumps
    addInfoPtr(newlumps);
 
@@ -805,7 +805,7 @@ int WadDirectory::addDirectory(const char *dirpath)
       if(!files[i].isdir)
       {
          lumpinfo_t *lump = &newlumps[usinglump++];
-         
+
          M_ExtractFileBase(files[i].fullfn, lump->name);
          M_Strupr(lump->name);
          lump->li_namespace = lumpinfo_t::ns_global; // TODO
@@ -1092,7 +1092,7 @@ protected:
    }
 
 public:
-   WadNamespace() 
+   WadNamespace()
       : inMarkers(false), nsdata(nullptr), marked(), numMarked(0)
    {
    }
@@ -1101,9 +1101,9 @@ public:
    void setNSData(nsdata_t *pNsData) { nsdata = pNsData; }
 
    // Add a lump into this namespace
-   void addLump(lumpinfo_t *lump) 
+   void addLump(lumpinfo_t *lump)
    {
-      marked.add(lump); 
+      marked.add(lump);
       lump->li_namespace = nsdata->li_namespace;
       ++numMarked;
    }
@@ -1516,7 +1516,7 @@ void WadDirectory::initMultipleFiles(wfileadd_t *files)
    type     = NORMAL; // Not a managed directory
 
    curfile = files;
-   
+
    // open all the files, load headers, and count lumps
    while(curfile->filename)
    {
@@ -1531,10 +1531,10 @@ void WadDirectory::initMultipleFiles(wfileadd_t *files)
 
       ++curfile;
    }
-   
+
    if(!numlumps)
       I_Error("WadDirectory::InitMultipleFiles: no files found\n");
-   
+
    initResources();
 }
 
@@ -1604,7 +1604,7 @@ void WadDirectory::readLump(int lump, void *dest,
 {
    size_t c;
    lumpinfo_t *lptr;
-   
+
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::ReadLump: %d >= numlumps\n", lump);
 
@@ -1619,7 +1619,7 @@ void WadDirectory::readLump(int lump, void *dest,
    c = LumpHandlers[lptr->type].readLump(lptr, dest);
    if(c < lptr->size)
    {
-      I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n", 
+      I_Error("WadDirectory::readLump: only read %d of %d on lump %d\n",
               (int)c, (int)lptr->size, lump);
    }
 
@@ -1637,9 +1637,9 @@ void WadDirectory::readLump(int lump, void *dest,
       default:
          break;
       }
- 
+
       // Does the formatter want us to bomb out in response to an error?
-      if(code == WadLumpLoader::CODE_FATAL) 
+      if(code == WadLumpLoader::CODE_FATAL)
          I_Error("WadDirectory::readLump: lump %s is malformed\n", lptr->name);
    }
 }
@@ -1660,25 +1660,25 @@ void *WadDirectory::cacheLumpNum(int lump, int tag,
    // haleyjd 08/14/02: again, should not be RANGECHECK only
    if(lump < 0 || lump >= numlumps)
       I_Error("WadDirectory::CacheLumpNum: %i >= numlumps\n", lump);
-   
+
    if(!(lumpinfo[lump]->cache[fmt]))      // read the lump in
    {
-      readLump(lump, 
-               Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache[fmt])), 
+      readLump(lump,
+               Z_Malloc(lumpLength(lump), tag, &(lumpinfo[lump]->cache[fmt])),
                lfmt);
    }
    else
    {
-      // haleyjd: do not lower cache level and cause static users to lose their 
-      // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that 
+      // haleyjd: do not lower cache level and cause static users to lose their
+      // data unexpectedly (ie, do not change PU_STATIC into PU_CACHE -- that
       // must be done using Z_ChangeTag explicitly)
-      
+
       int oldtag = Z_CheckTag(lumpinfo[lump]->cache[fmt]);
 
-      if(tag < oldtag) 
+      if(tag < oldtag)
          Z_ChangeTag(lumpinfo[lump]->cache[fmt], tag);
    }
-   
+
    return lumpinfo[lump]->cache[fmt];
 }
 
@@ -1729,8 +1729,8 @@ bool WadDirectory::writeLump(const char *lumpname, const char *destpath) const
 {
    int    lumpnum;
    size_t size;
-   
-   if((lumpnum = checkNumForName(lumpname)) >= 0 && 
+
+   if((lumpnum = checkNumForName(lumpname)) >= 0 &&
       (size    = lumpinfo[lumpnum]->size  ) >  0)
    {
       ZAutoBuffer lumpData(size, false);
@@ -1763,11 +1763,11 @@ uint32_t W_LumpCheckSum(int lumpnum)
 // haleyjd 06/26/09
 // Frees all the lumps cached in a private directory.
 //
-// Note that it's necessary to use Z_Free and not Z_ChangeTag 
-// on all resources loaded from a private wad directory if the 
+// Note that it's necessary to use Z_Free and not Z_ChangeTag
+// on all resources loaded from a private wad directory if the
 // directory is destroyed. Otherwise the zone heap will maintain
-// dangling pointers into the freed wad directory, and heap 
-// corruption would occur at a seemingly random time after an 
+// dangling pointers into the freed wad directory, and heap
+// corruption would occur at a seemingly random time after an
 // arbitrary Z_Malloc call freed the cached resources.
 //
 void WadDirectory::freeDirectoryLumps()
@@ -1890,7 +1890,7 @@ static size_t W_FileReadLump(lumpinfo_t *l, void *dest)
       sizeread = fread(dest, 1, size, f);
       fclose(f);
    }
-   
+
    return sizeread;
 }
 

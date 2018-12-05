@@ -153,10 +153,10 @@ int blankSpriteNum;
 
 // function prototypes for libConfuse callbacks (aka EDF functions)
 
-static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc, 
+static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                        const char **argv);
 
-static int bex_override(cfg_t *cfg, cfg_opt_t *opt, int argc, 
+static int bex_override(cfg_t *cfg, cfg_opt_t *opt, int argc,
                         const char **argv);
 
 static int edf_ifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -353,7 +353,7 @@ static void E_EDFCloseVerboseLog()
 {
    if(edf_output)
    {
-      E_EDFLogPuts("Closing log file\n");      
+      E_EDFLogPuts("Closing log file\n");
       fclose(edf_output);
    }
 
@@ -381,7 +381,7 @@ void E_EDFLogPrintf(const char *msg, ...)
    if(edf_output)
    {
       va_list v;
-      
+
       va_start(v, msg);
       vfprintf(edf_output, msg, v);
       va_end(v);
@@ -406,7 +406,7 @@ void E_EDFLoggedErr(int lv, const char *msg, ...)
 
       while(lv--)
          putc('\t', edf_output);
-      
+
       va_start(va2, msg);
       vfprintf(edf_output, msg, va2);
       va_end(va2);
@@ -427,7 +427,7 @@ static bool edf_warning_out;
 // E_EDFLoggedWarning
 //
 // Similar to above, but this is just a warning message. The number of warnings
-// that occur will be printed to the system console after EDF processing is 
+// that occur will be printed to the system console after EDF processing is
 // finished, so that users are aware that warnings have occured even if verbose
 // logging is not enabled.
 //
@@ -445,7 +445,7 @@ void E_EDFLoggedWarning(int lv, const char *msg, ...)
       vfprintf(edf_output, msg, va);
       va_end(va);
    }
-   
+
    // allow display of warning messages on the system console too
    if(edf_warning_out)
    {
@@ -524,7 +524,7 @@ static void edf_error(cfg_t *cfg, const char *fmt, va_list ap)
 // integrate BEX features such as string editing into the
 // EDF/BEX superlanguage.
 //
-// This function interprets paths relative to the current 
+// This function interprets paths relative to the current
 // file.
 //
 static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -564,7 +564,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
    return 0;
 }
 
-// 
+//
 // bex_override
 //
 // haleyjd 09/26/10: Setting this flag in an EDF will disable loading of
@@ -596,19 +596,19 @@ static E_Enable_t edf_enables[] =
    // all game modes are enabled by default
    { "DOOM",     1 },
    { "HERETIC",  1 },
-   
+
    // terminator
    { NULL }
 };
 
-// 
+//
 // E_EDFSetEnableValue
 //
-// This function lets the rest of the engine be able to set EDF enable values 
-// before parsing begins. This is used to turn DOOM and HERETIC modes on and 
-// off when loading the default root.edf. This saves time and memory. Note 
-// that they are enabled when user EDFs are loaded, but users can use the 
-// disable function to turn them off explicitly in that case when the 
+// This function lets the rest of the engine be able to set EDF enable values
+// before parsing begins. This is used to turn DOOM and HERETIC modes on and
+// off when loading the default root.edf. This saves time and memory. Note
+// that they are enabled when user EDFs are loaded, but users can use the
+// disable function to turn them off explicitly in that case when the
 // definitions are not needed.
 //
 void E_EDFSetEnableValue(const char *name, int value)
@@ -627,8 +627,8 @@ static void E_EchoEnables()
 
    while(enable->name)
    {
-      E_EDFLogPrintf("\t\t%s is %s\n", 
-                     enable->name, 
+      E_EDFLogPrintf("\t\t%s is %s\n",
+                     enable->name,
                      enable->enabled ? "enabled" : "disabled");
       ++enable;
    }
@@ -637,8 +637,8 @@ static void E_EchoEnables()
 //
 // edf_ifenabled
 //
-// haleyjd 01/14/04: Causes the parser to skip forward, looking 
-// for the next endif function and then calling it, if the 
+// haleyjd 01/14/04: Causes the parser to skip forward, looking
+// for the next endif function and then calling it, if the
 // parameter isn't defined. I hacked the support for this
 // into libConfuse without too much ugliness.
 //
@@ -753,7 +753,7 @@ static int edf_ifdisabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
          return 1;
       }
 
-      // use AND logic: the block will be evalued if ALL 
+      // use AND logic: the block will be evalued if ALL
       // options are disabled.
       if(!(disabled = disabled && !edf_enables[idx].enabled))
          break;
@@ -914,7 +914,7 @@ static int edf_includeifenabled(cfg_t *cfg, cfg_opt_t *opt, int argc,
 // Game Type Functions
 //
 // haleyjd 09/06/05:
-// These are for things which must vary strictly on game type and not 
+// These are for things which must vary strictly on game type and not
 // simply whether or not a given game's definitions are enabled.
 //
 
@@ -1009,7 +1009,7 @@ static int edf_ifngametype(cfg_t *cfg, cfg_opt_t *opt, int argc,
 //
 // E_CreateCfg
 //
-// haleyjd 03/21/10: Separated from E_ParseEDF[File|Lump]. Creates and 
+// haleyjd 03/21/10: Separated from E_ParseEDF[File|Lump]. Creates and
 // initializes a libConfuse cfg_t object for use by EDF. All definitions
 // are now accumulated into this singular cfg_t, as opposed to being
 // merged from separately allocated ones for secondary EDF sources such
@@ -1039,7 +1039,7 @@ static void E_ParseEDFFile(cfg_t *cfg, const char *filename)
 
    if((err = cfg_parse(cfg, filename)))
    {
-      E_EDFLoggedErr(1, 
+      E_EDFLoggedErr(1,
          "E_ParseEDFFile: failed to parse %s (code %d)\n",
          filename, err);
    }
@@ -1069,7 +1069,7 @@ static void E_ParseLumpRecursive(cfg_t *cfg, const char *name, int ln)
          // try to parse it
          if((err = cfg_parselump(cfg, name, ln)))
          {
-            E_EDFLoggedErr(1, 
+            E_EDFLoggedErr(1,
                "E_ParseEDFLump: failed to parse EDF lump %s (#%d, code %d)\n",
                name, ln, err);
          }
@@ -1102,7 +1102,7 @@ static void E_ParseEDFLump(cfg_t *cfg, const char *lumpname)
 // E_ParseEDFLumpOptional
 //
 // Calls the function above, but checks to make sure the lump exists
-// first so that an error will not occur. Returns immediately if the 
+// first so that an error will not occur. Returns immediately if the
 // lump wasn't found.
 //
 static bool E_ParseEDFLumpOptional(cfg_t *cfg, const char *lumpname)
@@ -1179,7 +1179,7 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
    sprnum = E_SpriteNumForName(str);
    if(sprnum == -1)
    {
-      E_EDFLoggedErr(2, 
+      E_EDFLoggedErr(2,
          "E_ProcessSpriteVars: invalid blank sprite name: '%s'\n", str);
    }
    E_EDFLogPrintf("\t\tSet sprite %s(#%d) as blank sprite\n", str, sprnum);
@@ -1200,6 +1200,7 @@ sfxinfo_t NullSound =
    NULL, NULL, NULL, 0,          // link, alias, random sounds
    NULL, 0, 0, 0,                // data, length, alen, usefulness
    { 'n', 'o', 'n', 'e', '\0' }, // mnemomnic
+   NULL, NULL,                   // lfn, pcslfn
    { NULL, NULL, NULL, 0 },      // numlinks
    NULL,                         // next
    0                             // dehackednum
@@ -1221,7 +1222,7 @@ static void E_CollectNames(cfg_t *cfg)
 // E_ProcessStatesAndThings
 //
 // E_ProcessEDF now calls this function to accomplish all state
-// and thing processing. 
+// and thing processing.
 //
 static void E_ProcessStatesAndThings(cfg_t *cfg)
 {
@@ -1266,7 +1267,7 @@ static void E_ProcessCast(cfg_t *cfg)
    cfg_t **ci_order;
 
    E_EDFLogPuts("\t* Processing cast call\n");
-   
+
    // get number of cast sections
    numcastsections = cfg_size(cfg, SEC_CAST);
 
@@ -1309,13 +1310,13 @@ static void E_ProcessCast(cfg_t *cfg)
    {
       for(int i = 0; i < numcastorder; i++)
       {
-         const char *title = cfg_getnstr(cfg, SEC_CASTORDER, i);         
+         const char *title = cfg_getnstr(cfg, SEC_CASTORDER, i);
          cfg_t *section    = cfg_gettsec(cfg, SEC_CAST, title);
 
          if(!section)
          {
-            E_EDFLoggedErr(2, 
-               "E_ProcessCast: unknown cast member '%s' in castorder\n", 
+            E_EDFLoggedErr(2,
+               "E_ProcessCast: unknown cast member '%s' in castorder\n",
                title);
          }
 
@@ -1341,7 +1342,7 @@ static void E_ProcessCast(cfg_t *cfg)
 
       // resolve thing type
       tempstr = cfg_getstr(castsec, ITEM_CAST_TYPE);
-      if(!tempstr || 
+      if(!tempstr ||
          (tempint = E_ThingNumForName(tempstr)) == -1)
       {
          E_EDFLoggedWarning(2, "Warning: cast %d: unknown thing type %s\n",
@@ -1381,7 +1382,7 @@ static void E_ProcessCast(cfg_t *cfg)
 
          // name of sound to play
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDNAME);
-         
+
          // haleyjd 03/22/06: modified to support dehnum auto-allocation
          if((sfx = E_EDFSoundForName(name)) == NULL)
          {
@@ -1418,7 +1419,7 @@ static void E_ProcessCast(cfg_t *cfg)
 // a default probability array for the boss_spawn_probs list,
 // for backward compatibility
 
-static int BossDefaults[11] = 
+static int BossDefaults[11] =
 {
    50, 90, 120, 130, 160, 162, 172, 192, 222, 246, 256
 };
@@ -1453,7 +1454,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
 
    if(useProbs ? numTypes != numProbs : numTypes != 11)
    {
-      E_EDFLoggedErr(2, 
+      E_EDFLoggedErr(2,
          "E_ProcessBossTypes: %d boss types, %d boss probs\n",
          numTypes, useProbs ? numProbs : 11);
    }
@@ -1489,7 +1490,7 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    // check that the probabilities total 256
    if(useProbs && a != 256)
    {
-      E_EDFLoggedErr(2, 
+      E_EDFLoggedErr(2,
          "E_ProcessBossTypes: boss spawn probs do not total 256\n");
    }
 
@@ -1622,10 +1623,10 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    if(firsttime)
       E_EchoEnables();
 
-   // NOTE: The order of most of the following calls is extremely 
-   // important and must be preserved, unless the static routines 
+   // NOTE: The order of most of the following calls is extremely
+   // important and must be preserved, unless the static routines
    // above and in other files are rewritten accordingly.
-   
+
    // process strings
    E_ProcessStrings(cfg);
 
@@ -1649,7 +1650,7 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // process frame and thing definitions (made dynamic 11/06/11)
    E_ProcessStatesAndThings(cfg);
- 
+
    // process sprite-related variables (made dynamic 11/21/11)
    E_ProcessSpriteVars(cfg);
 
@@ -1737,14 +1738,14 @@ static void E_CleanUpEDF(cfg_t *cfg)
 //
 // E_ProcessEDF
 //
-// Public function to parse and process the root EDF file. Called by 
+// Public function to parse and process the root EDF file. Called by
 // D_DoomInit.  Assumes that certain BEX data structures, especially the
 // codepointer hash table, have already been built.
 //
 void E_ProcessEDF(const char *filename)
 {
    cfg_t *cfg;
-   
+
    //
    // Initialization - open log and create a cfg_t
    //
@@ -1780,7 +1781,7 @@ void E_ProcessEDF(const char *filename)
 void E_ProcessNewEDF()
 {
    cfg_t *cfg;
-   
+
    //
    // Initialization - open log and create a cfg_t
    //
