@@ -28,6 +28,7 @@
 #include "c_io.h"
 #include "m_fixed.h"
 #include "m_random.h"
+#include "m_vector.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "tables.h"
@@ -523,7 +524,7 @@ namespace Aeon
    class Vector
    {
    public:
-      vector_t value;
+      v3fixed_t value;
 
       Vector() : value() { }
 
