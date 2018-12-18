@@ -1949,11 +1949,11 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    const inventoryslot_t *initslot = slot;
 
    // If not, make a slot for it
-   if (!slot)
+   if(!slot)
    {
-	   if((newSlot = E_findInventorySlot(player->inventory)) < 0)
-		   return false; // internal error, actually... shouldn't happen
-	   slot = &player->inventory[newSlot];
+      if((newSlot = E_findInventorySlot(player->inventory)) < 0)
+         return false; // internal error, actually... shouldn't happen
+      slot = &player->inventory[newSlot];
    }
    else if (slot->amount == maxAmount)
 	   return false;
