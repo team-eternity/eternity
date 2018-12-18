@@ -690,7 +690,9 @@ static void P_RavenRespawn(Mobj *special)
 //
 static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 {
-   if(!strcasecmp(special->info->name, "WeaponBFG"))
+   if(strcasecmp(special->info->name, "WeaponBFG"))
+	   return def;
+   else
    {
       switch(bfgtype)
       {
@@ -702,8 +704,6 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
       default:           return "You got some kind of BFG";
       }
    }
-   else
-      return def;
 }
 
 //
@@ -713,11 +713,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t       *player;
    const e_pickupfx_t *pickup, *temp;
-   bool            pickedup = false;
-   bool            dropped = false;
+   bool            pickedup  = false;
+   bool            dropped	 = false;
    bool            hadeffect = false;
-   const char     *message = nullptr;
-   const char     *sound = nullptr;
+   const char     *message	 = nullptr;
+   const char     *sound     = nullptr;
 
    fixed_t delta = special->z - toucher->z;
    if(delta > toucher->height || delta < -8 * FRACUNIT)
@@ -743,7 +743,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    else
       return;
 
-   if(pickup->flags & PXFX_COMMERCIALONLY &&
+   if(pickup->flags & PFXF_COMMERCIALONLY &&
       (demo_version < 335 && GameModeInfo->id != commercial))
       return;
 
@@ -824,6 +824,12 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          else
             special->remove();
       }
+
+	  // Picked up items that are left in multiplayer can't be allowed to
+	  // constantly pester the player
+	  // TODO: Is this rigorous enough? Does this cover all cases?
+	  if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI)
+		  return;
 
       // if picked up for benefit, or not silent when picked up without, do
       // all the "noisy" pickup effects
