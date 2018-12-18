@@ -750,19 +750,14 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    message = P_getSpecialMessage(special, pickup->message);
    sound   = pickup->sound;
 
-   if(pickup->numEffects == 0)
-      return;
-
    // set defaults
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
-
 
    for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
       const itemeffect_t *effect = pickup->effects[i];
       if(!effect)
          continue;
-      hadeffect = true;
       switch(effect->getInt("class", ITEMFX_NONE))
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
@@ -789,9 +784,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          break;
       }
    }
-
-   if(!hadeffect)
-      return;
 
    if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
       pickedup |= P_giveBackpackAmmo(player);
