@@ -206,6 +206,8 @@ struct doomkey_t
 };
 
 static doomkey_t keybindings[NUMKEYS];
+// Counts how many keys per class are being pressed
+static int gGameKeyCount[NUMKEYACTIONCLASSES][NUMKEYACTIONS];
 
 static keyaction_t *G_KeyActionForName(const char *name);
 
@@ -350,6 +352,7 @@ void G_ClearKeyStates()
       for(bool &curkey : keybinding.keydown)
          curkey = false;
    }
+   memset(gGameKeyCount, 0, sizeof(gGameKeyCount));
 }
 
 //
@@ -527,10 +530,13 @@ const char *G_FirstBoundKey(const char *action)
 //
 // The main driver function for the entire key binding system
 //
-int G_KeyResponder(const event_t *ev, int bclass)
+int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
 {
    int ret = ka_nothing;
    keyaction_t *action = NULL;
+
+   if(allreleased)
+      *allreleased = false;
 
    // do not index out of bounds
    if(ev->data1 >= NUMKEYS)
@@ -540,6 +546,7 @@ int G_KeyResponder(const event_t *ev, int bclass)
    {
       int key = ectype::toLower(ev->data1);
 
+      bool wasdown = keybindings[key].keydown[bclass];
       keybindings[key].keydown[bclass] = true;
 
       if((action = keybindings[key].bindings[bclass]))
@@ -556,16 +563,25 @@ int G_KeyResponder(const event_t *ev, int bclass)
          }
 
          ret = action->num;
+         if(!wasdown)
+            ++gGameKeyCount[bclass][ret];
       }
    }
    else if(ev->type == ev_keyup)
    {
       int key = ectype::toLower(ev->data1);
 
+      bool wasdown = keybindings[key].keydown[bclass];
       keybindings[key].keydown[bclass] = false;
 
       if((action = keybindings[key].bindings[bclass]))
+      {
          ret = action->num;
+         if(wasdown)
+            --gGameKeyCount[bclass][ret];
+         if(allreleased && !gGameKeyCount[bclass][ret])
+            *allreleased = true;
+      }
    }
 
    return ret;
@@ -645,7 +661,10 @@ static bool G_BindResponder(event_t *ev, int mnaction)
       keybindings[ev->data1].bindings[action->bclass] = NULL;
 
    // haleyjd 10/16/05: clear state of action involved
+   bool wasdown = keybindings[ev->data1].keydown[action->bclass];
    keybindings[ev->data1].keydown[action->bclass] = false;
+   if(wasdown)
+      --gGameKeyCount[action->bclass][action->num];
    
    return true;
 }

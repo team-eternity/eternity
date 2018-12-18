@@ -821,6 +821,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\m_debug.cpp" />
     <ClCompile Include="..\source\m_utils.cpp" />
     <ClCompile Include="..\source\p_portalblockmap.cpp" />
     <ClCompile Include="..\source\p_portalclip.cpp" />
@@ -2018,6 +2019,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\m_debug.h" />
     <ClInclude Include="..\source\m_utils.h" />
     <ClInclude Include="..\source\p_portalblockmap.h" />
     <ClInclude Include="..\source\p_portalclip.h" />

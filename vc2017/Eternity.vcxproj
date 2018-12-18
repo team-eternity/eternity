@@ -120,6 +120,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -176,6 +177,7 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -226,6 +228,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -276,6 +279,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <OmitFramePointers>false</OmitFramePointers>
       <MinimalRebuild>true</MinimalRebuild>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -351,6 +355,8 @@
     <ClCompile Include="..\source\autodoom\b_think.cpp" />
     <ClCompile Include="..\source\autodoom\b_trace.cpp" />
     <ClCompile Include="..\source\autodoom\b_util.cpp" />
+    <ClCompile Include="..\source\autodoom\b_vocabulary.cpp" />
+    <ClCompile Include="..\source\autodoom\b_weapon.cpp" />
     <ClCompile Include="..\source\autodoom\glbsp\analyze.c" />
     <ClCompile Include="..\source\autodoom\glbsp\blockmap.c" />
     <ClCompile Include="..\source\autodoom\glbsp\glbsp.c" />
@@ -361,6 +367,8 @@
     <ClCompile Include="..\source\autodoom\glbsp\system.c" />
     <ClCompile Include="..\source\autodoom\glbsp\util.c" />
     <ClCompile Include="..\source\autodoom\glbsp\wad.c" />
+    <ClCompile Include="..\source\a_weaponsdoom.cpp" />
+    <ClCompile Include="..\source\a_weaponsheretic.cpp" />
     <ClCompile Include="..\source\cam_aim.cpp" />
     <ClCompile Include="..\source\cam_common.cpp" />
     <ClCompile Include="..\source\cam_shoot.cpp" />
@@ -816,6 +824,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\m_debug.cpp" />
     <ClCompile Include="..\source\m_utils.cpp" />
     <ClCompile Include="..\source\p_portalblockmap.cpp" />
     <ClCompile Include="..\source\p_portalclip.cpp" />
@@ -1918,6 +1927,8 @@
     <ClInclude Include="..\source\autodoom\b_think.h" />
     <ClInclude Include="..\source\autodoom\b_trace.h" />
     <ClInclude Include="..\source\autodoom\b_util.h" />
+    <ClInclude Include="..\source\autodoom\b_vocabulary.h" />
+    <ClInclude Include="..\source\autodoom\b_weapon.h" />
     <ClInclude Include="..\source\autodoom\glbsp\analyze.h" />
     <ClInclude Include="..\source\autodoom\glbsp\blockmap.h" />
     <ClInclude Include="..\source\autodoom\glbsp\glbsp.h" />
@@ -2012,6 +2023,7 @@
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
     <ClInclude Include="..\source\m_ctype.h" />
+    <ClInclude Include="..\source\m_debug.h" />
     <ClInclude Include="..\source\m_utils.h" />
     <ClInclude Include="..\source\p_portalblockmap.h" />
     <ClInclude Include="..\source\p_portalclip.h" />

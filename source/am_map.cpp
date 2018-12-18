@@ -1713,8 +1713,11 @@ static void AM_drawWalls()
       {
          const line_t *line = &lines[i];
 
-         if(line->frontsector->groupid == plrgroup)
+         if(line->frontsector->groupid == plrgroup ||
+            P_PortalLayersByPoly(line->frontsector->groupid, plrgroup))
+         {
             continue;
+         }
 
          l.a.x = line->v1->fx;
          l.a.y = line->v1->fy;
@@ -1769,8 +1772,11 @@ static void AM_drawWalls()
 
       if(mapportal_overlay && useportalgroups)
       {
-         if(line->frontsector && line->frontsector->groupid != plrgroup)
+         if(line->frontsector && (line->frontsector->groupid != plrgroup &&
+                                  !P_PortalLayersByPoly(line->frontsector->groupid, plrgroup)))
+         {
             continue;
+         }
 
          if(line->frontsector)
          {

@@ -910,9 +910,13 @@ bool G_Responder(const event_t* ev)
       return true;    // eat key down events
       
    case ev_keyup:
-      action = G_KeyResponder(ev, kac_game);   // haleyjd
-      gameactions[action] = false;
+   {
+      bool allreleased;
+      action = G_KeyResponder(ev, kac_game, &allreleased);   // haleyjd
+      if(allreleased)
+         gameactions[action] = false;
       return false;   // always let key up events filter down
+   }
       
    case ev_mouse:
       mousebuttons[0] = !!(ev->data1 & 1);

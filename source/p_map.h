@@ -28,6 +28,7 @@
 
 #include "tables.h"
 #include "m_collection.h"
+#include "tables.h"
 
 struct line_t;
 struct mobjinfo_t;
@@ -161,6 +162,29 @@ msecnode_t *P_CreateSecNodeList(Mobj *, fixed_t, fixed_t);  // phares 3/14/98
 // reentrantly by pushing and popping an instance of it onto the clip stack.
 //
 
+//
+// All the various Z coordinates carried around when clipping with lines and sectors
+//
+struct zrefs_t
+{
+   // The closest interval over all contacted Sectors.
+   fixed_t floor;
+   fixed_t ceiling;
+   // killough 11/98: the lowest floor over all contacted Sectors.
+   fixed_t dropoff;
+
+   // Strictly sector floor and ceiling z, not counting 3dmidtex
+   fixed_t secfloor;
+   fixed_t secceil;
+
+   // SoM 11/6/02: Yet again! Two more z values that must be stored
+   // in the mobj struct 9_9
+   // These are the floor and ceiling heights given by the first
+   // clipping pass (map architecture + 3d sides).
+   fixed_t passfloor;
+   fixed_t passceil;
+};
+
 struct doom_mapinter_t
 {
    doom_mapinter_t *prev; // SoM: previous entry in stack (for pop)
@@ -182,15 +206,7 @@ struct doom_mapinter_t
    fixed_t    y;         // y position, usually where we want to move
 
    fixed_t    bbox[4];   // bounding box for thing/line intersection checks
-   fixed_t    floorz;    // floor you'd hit if free to fall
-   fixed_t    ceilingz;  // ceiling of sector you're in
-   fixed_t    dropoffz;  // dropoff on other side of line you're crossing
-
-   fixed_t    secfloorz; // SoM: floorz considering only sector heights
-   fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
-   
-   fixed_t    passfloorz; // SoM 11/6/02: UGHAH
-   fixed_t    passceilz;
+   zrefs_t zref;  // keep all various plane Z here
 
    int        floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
 

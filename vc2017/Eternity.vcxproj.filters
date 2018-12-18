@@ -1074,17 +1074,26 @@
     <ClCompile Include="..\source\p_portalblockmap.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\a_weaponsheretic.cpp">
-      <Filter>Source Files\A_\A_ Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\a_weaponsdoom.cpp">
-      <Filter>Source Files\A_\A_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\e_puff.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\source\e_edfmetatable.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\m_debug.cpp">
+      <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_weapon.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_vocabulary.cpp">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsheretic.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1948,6 +1957,15 @@
     </ClInclude>
     <ClInclude Include="..\source\Win32\i_winversion.h">
       <Filter>Source Files\Win32\Win32 Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\m_debug.h">
+      <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_weapon.h">
+      <Filter>Source Files\AutoDoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_vocabulary.h">
+      <Filter>Source Files\AutoDoom</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

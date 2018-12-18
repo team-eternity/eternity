@@ -229,8 +229,6 @@ char *G_GetNameForMap(int episode, int map);
 
 void C_SendNetData()
 {
-  command_t *command;
-
   C_SetConsole();
 
   // display message according to what we're about to do

@@ -234,7 +234,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0940;
+				LastUpgradeCheck = 1010;
 				TargetAttributes = {
 					8D1107260486CEB800E47090 = {
 						DevelopmentTeam = 66L236F264;
@@ -357,8 +357,13 @@
 				GCC_PREFIX_HEADER = EternityLaunch_Prefix.pch;
 				INFOPLIST_FILE = "EternityLaunch-Info.plist";
 				INSTALL_PATH = /Applications;
-				MACH_O_TYPE = mh_execute;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.i-chera.${PRODUCT_NAME:rfc1034identifier}";
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-U",
+					"-Xlinker",
+					_objc_readClassPair,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
 			};
 			name = Debug;
@@ -378,9 +383,13 @@
 					"CMAKE_INTDIR=\"Release\"",
 				);
 				INSTALL_PATH = /Applications;
-				MACH_O_TYPE = mh_execute;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.i-chera.${PRODUCT_NAME:rfc1034identifier}";
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-U",
+					"-Xlinker",
+					_objc_readClassPair,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
 			};
 			name = Release;
@@ -419,7 +428,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
@@ -456,7 +465,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 			};
 			name = Release;
 		};

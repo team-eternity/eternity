@@ -68,6 +68,9 @@
 #include "m_ctype.h"
 #include "psnprntf.h"
 
+// ioanch: added debug headers, enabled only in debug builds
+#include "m_debug.h"
+
 // ZONE MEMORY
 
 // PU - purge tags.

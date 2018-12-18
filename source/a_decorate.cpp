@@ -354,10 +354,12 @@ static const char *kwds_channel_old[] =
    "chan_voice",  // 2 },
    "chan_item",   // 3 },
    "chan_body",   // 4 },
+   "5",           // 5 },
+   "6",           // 6 },
+   "7",           // 7 },
 };
 
-// EDF_FEATURES_FIXME?
-static argkeywd_t channelkwdsold = { kwds_channel_old, earrlen(kwds_channel_old) };
+static argkeywd_t channelkwdsold = { kwds_channel_old, NUMSCHANNELS };
 
 static const char *kwds_attn_old[] =
 {
@@ -378,10 +380,12 @@ static const char *kwds_channel_new[] =
    "voice",  // 2
    "item",   // 3
    "body",   // 4
+   "5",      // 5
+   "6",      // 6
+   "7",      // 7
 };
 
-// EDF_FEATURES_FIXME?
-static argkeywd_t channelkwdsnew = { kwds_channel_new, earrlen(kwds_channel_old) };
+static argkeywd_t channelkwdsnew = { kwds_channel_new, NUMSCHANNELS };
 
 static const char *kwds_attn_new[] =
 {

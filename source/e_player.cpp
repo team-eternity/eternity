@@ -47,6 +47,7 @@
 #include "p_skin.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 //
 // Player Class and Skin Options
@@ -766,7 +767,8 @@ void E_VerifyDefaultPlayerClass()
 //
 // Recursively populate a weapon slot with data from a WeaponSlotTree
 //
-static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node, unsigned int &data)
+static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node,
+                                 unsigned int &data)
 {
    if(node->left)
       E_populateWeaponSlot(slotlist, node->left, data);
@@ -828,27 +830,63 @@ static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node,
 //
 void E_ProcessFinalWeaponSlots()
 {
+   // If the gametype is DOOM and the SSG main shotgun player sprite isn't present
+   // then the SSG needs removal from playerslots
+   const bool remove_ssg = GameModeInfo->type == Game_DOOM &&
+                           W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) <= 0;
+
+   // Remove the SSG from global weaponslots, if it's in them
+   if(remove_ssg)
+   {
+      weaponinfo_t *ssg_info = E_WeaponForName("SuperShotgun");
+      if(ssg_info != nullptr)
+      {
+         for(int i = NUMWEAPONSLOTS; i --> 0;)
+         {
+            if(weaponslots[i] != nullptr)
+               weaponslots[i]->deleteNode(ssg_info->defaultslotrank, ssg_info);
+         }
+      }
+
+   }
+
    for(playerclass_t *chain : edf_player_classes)
    {
       while(chain)
       {
-         for(int i = NUMWEAPONSLOTS; i--> 0;)
+         for(int i = NUMWEAPONSLOTS; i --> 0;)
          {
             bool *weaponinslot = ecalloc(bool *, NUMWEAPONTYPES, sizeof(bool));
             WeaponSlotTree *pclassslottree = nullptr;
             if(chain->weaponslots[i] != nullptr)
             {
-               pclassslottree = new WeaponSlotTree();
                auto *slotiterator = E_FirstInSlot(chain->weaponslots[i]);
                int weaponnum = 1;
 
-               while(!slotiterator->isDummy())
+               // If the SSG is the only thing in the slot and isn't allowed
+               // then don't process this slot (deletion handled elsewhere)
+               if(!remove_ssg || !slotiterator->bdNext->isDummy() ||
+                  strcmp(slotiterator->bdObject->weapon->name, "SuperShotgun"))
                {
-                  pclassslottree->insert(slotiterator->bdData << FRACBITS, slotiterator->bdObject->weapon);
-                  weaponinslot[slotiterator->bdObject->weapon->id] = true;
+                  pclassslottree = new WeaponSlotTree();
+                  while(!slotiterator->isDummy())
+                  {
+                     // If the SSG is in the slot then skip over it,
+                     // if it's not supposed to be useable
+                     if(remove_ssg &&
+                        !strcmp(slotiterator->bdObject->weapon->name, "SuperShotgun"))
+                     {
+                        slotiterator = slotiterator->bdNext;
+                        continue;
+                     }
 
-                  weaponnum++;
-                  slotiterator = slotiterator->bdNext;
+                     pclassslottree->insert(slotiterator->bdData << FRACBITS,
+                                            slotiterator->bdObject->weapon);
+                     weaponinslot[slotiterator->bdObject->weapon->id] = true;
+
+                     weaponnum++;
+                     slotiterator = slotiterator->bdNext;
+                  }
                }
             }
 
@@ -861,6 +899,13 @@ void E_ProcessFinalWeaponSlots()
                E_createWeaponSlotFromTree(chain, i, pclassslottree);
                delete pclassslottree;
             }
+            else if(chain->weaponslots[i] != nullptr &&
+                    chain->weaponslots[i]->weapon == nullptr)
+            {
+               // Necessary due to SSG hacks
+               E_freeWeaponSlot(chain, i);
+            }
+
             efree(weaponinslot);
          }
 

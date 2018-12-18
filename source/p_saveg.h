@@ -39,6 +39,7 @@ struct mapthing_t;
 struct sector_t;
 struct line_t;
 struct v2fixed_t;
+struct zrefs_t;
 
 class SaveArchive
 {
@@ -89,6 +90,7 @@ public:
    SaveArchive &operator << (mapthing_t      &mt);
    SaveArchive &operator << (inventoryslot_t &slot);
    SaveArchive &operator << (v2fixed_t &vec);
+   SaveArchive &operator << (zrefs_t &zref);
 };
 
 // Global template functions for SaveArchive

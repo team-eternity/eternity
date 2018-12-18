@@ -767,8 +767,7 @@ void A_HticExplode(actionargs_t *actionargs)
    P_RadiusAttack(actor, actor->target, damage, damage, actor->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   if(actor->z <= actor->secfloorz + damage * FRACUNIT)
-      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
+   E_ExplosionHitWater(actor, damage);
 }
 
 typedef struct boss_spec_htic_s
@@ -1004,7 +1003,7 @@ void A_VolcBallImpact(actionargs_t *actionargs)
 
    // if the thing hit the floor, move it up so that the little
    // volcano balls don't hit the floor immediately
-   if(actor->z <= actor->floorz)
+   if(actor->z <= actor->zref.floor)
    {
       actor->flags |= MF_NOGRAVITY;
       actor->flags2 &= ~MF2_LOGRAV;
@@ -1236,7 +1235,7 @@ bool P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 //
 inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 {
-   return (target->z == target->floorz && // target on floor?
+   return (target->z == target->zref.floor && // target on floor?
            dist < 576*FRACUNIT &&         // target in range?
            P_Random(pr_mindist) < 220);   // random factor
 }
@@ -1408,7 +1407,7 @@ void A_MntrFloorFire(actionargs_t *actionargs)
    fixed_t  x, y;
 
    // set actor to floor
-   actor->z = actor->floorz;
+   actor->z = actor->zref.floor;
    
    // determine spawn coordinates for small flame
    x = actor->x + (P_SubRandom(pr_mffire) << 10);
@@ -1748,7 +1747,7 @@ void A_ImpDeath(actionargs_t *actionargs)
    actor->flags &= ~MF_SOLID;
    actor->flags2 |= MF2_FOOTCLIP;
    
-   if(actor->z <= actor->floorz && actor->info->crashstate != NullStateNum)
+   if(actor->z <= actor->zref.floor && actor->info->crashstate != NullStateNum)
    {
       actor->intflags |= MIF_CRASHED;
       P_SetMobjState(actor, actor->info->crashstate);
@@ -1784,7 +1783,7 @@ void A_ImpXDeath2(actionargs_t *actionargs)
 
    actor->flags &= ~MF_NOGRAVITY;
 
-   if(actor->z <= actor->floorz && actor->info->crashstate != NullStateNum)
+   if(actor->z <= actor->zref.floor && actor->info->crashstate != NullStateNum)
    {
       actor->intflags |= MIF_CRASHED;
       P_SetMobjState(actor, actor->info->crashstate);

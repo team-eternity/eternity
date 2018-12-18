@@ -35,7 +35,7 @@
 #include "r_state.h"
 
 PortalBlockmap gPortalBlockmap;
-LinePortalRenderBlockmap pLPortalMap;
+StaticLinedefPortalBlockmap pLPortalMap;
 
 //
 // Initializes the portal blockmap at level start, when map blocks are set.
@@ -209,7 +209,7 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
 //
 // Initialization per map. Makes PU_LEVEL allocations
 //
-void LinePortalRenderBlockmap::mapInit()
+void StaticLinedefPortalBlockmap::mapInit()
 {
    mMap.clear();
    int numblocks = bmapwidth * bmapheight;
@@ -256,7 +256,7 @@ void LinePortalRenderBlockmap::mapInit()
 //
 // Does the iteration
 //
-bool LinePortalRenderBlockmap::iterator(int x, int y, void *data,
+bool StaticLinedefPortalBlockmap::iterator(int x, int y, void *data,
    bool(*func)(const line_t &, void *data)) const
 {
    if(x < 0 || x >= bmapwidth || y < 0 || y >= bmapheight)

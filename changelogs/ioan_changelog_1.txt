@@ -8,6 +8,55 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+25.11.2018
+
+IMPROVEMENT: Now if an action is bound to more than one key, and two of the keys
+             are being pressed, releasing just one of them will not stop the
+             action. You need to release all of them.
+
+--------------------------------------------------------------------------------
+19.11.2018
+
+IMPROVEMENT: Changed how floating objects move in relation to portal
+             polyobjects. They no longer remain fixed relative to the inner
+             chamber sectors, but are shifted in the opposite direction, so they
+             appear as remaining fixed relative to the main world. This
+             behaviour is more consistent with how thing movement isn't
+             influenced by traditional vertically moving sectors, and more
+             stable as well than just adapting velocity when passing the portal.
+             It also avoids unrealistic direction changes when the containing
+             polyobject changes movement.
+
+             Polyobject portals now show in the map as part of the main area,
+             because indeed they rarely ever overlap anything vertically.
+
+--------------------------------------------------------------------------------
+17.11.2018
+
+BUGFIX: Interpolate the walkcam while the game is paused. Previously it would
+        only interpolate while the game was running, but the walkcam is one of
+        the few cameras controllable even while the game is paused.
+
+        Fixed a bug where the walkcam would move a bit backwards when opening
+        the console.
+
+        Fixed objects standing on the outer edges of portal polyobjects not up-
+        dating their floor reference Z, thus floating above ground when the
+        polyobject is gone from below them.
+
+IMPROVEMENT: Console movement is now interpolated.
+
+--------------------------------------------------------------------------------
+13.11.2018
+
+BUGFIX: Fixed edge-case situations where line portal teleportation would fail,
+        such as when sliding really slowly along a wall, or almost parallel to
+        one.
+
+        Also fixed several cases where portal interpolation would fail display-
+        ing correctly.
+
+--------------------------------------------------------------------------------
 05.07.2018
 
 BUGFIX: Fixed a problem where particles appeared in the wrong place, because of

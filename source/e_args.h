@@ -109,11 +109,10 @@ fixed_t       E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue);
 double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
-state_t      *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index);
+state_t      *E_ArgAsStateLabel(const Mobj *mo,         const arglist_t *al, int index);
 state_t      *E_ArgAsStateLabel(const mobjinfo_t *info, const state_t *state,
-                                const arglist_t *al, int index);
-state_t      *E_ArgAsStateLabel(const player_t *player, const arglist_t *al,
-                                   int index);
+    const arglist_t *al, int index);
+state_t      *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int index);
 int           E_ArgAsStateNum(  arglist_t *al, int index, const Mobj     *mo);
 int E_ArgAsStateNum(arglist_t *al, int index, const mobjinfo_t *info,
                     const state_t *state);

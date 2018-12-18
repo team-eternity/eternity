@@ -67,8 +67,8 @@ struct sounddata_t
 // S_checkDMXPadded
 //
 // Most canonical DMX samples are padded with 16 lead-in bytes and 16 lead-out
-// bytes. All such samples with this property have the 17th byte (the first 
-// real sample) equal in value to the first 16 bytes (and likewise, the 17th 
+// bytes. All such samples with this property have the 17th byte (the first
+// real sample) equal in value to the first 16 bytes (and likewise, the 17th
 // byte from the end is repeated 16 more times).
 //
 // We'll consider the sample to be in canonical padded form if it passes the
@@ -135,7 +135,7 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
 
 //=============================================================================
 //
-// Wave 
+// Wave
 //
 // There are a billion and one variants of the RIFF WAVE format. We accept only
 // so-called canonical waves in either 8- or 16-bit PCM, mono only.
@@ -309,7 +309,7 @@ static bool S_detectSoundFormat(sounddata_t &sd, byte *data, size_t len)
 //
 // S_alenForSample
 //
-// Calculate the "actual" sample length for a digital sound effect after 
+// Calculate the "actual" sample length for a digital sound effect after
 // conversion from its native samplerate to the samplerate used for output.
 //
 static unsigned int S_alenForSample(const sounddata_t &sd)
@@ -434,9 +434,11 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
 //
 static int S_getSfxLumpNum(sfxinfo_t *sfx)
 {
-   char namebuf[16];
+   char namebuf[16] = { 0 };
 
-   memset(namebuf, 0, sizeof(namebuf));
+   // alison: check long file name
+   if(sfx->lfn)
+      return wGlobalDir.checkNumForLFNNSG(sfx->lfn, lumpinfo_t::ns_sounds);
 
    // haleyjd 09/03/03: determine whether to apply DS prefix to
    // name or not using new prefix flag
@@ -463,11 +465,11 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 {
    bool  res = false;
    int   lump = S_getSfxLumpNum(sfx);
-  
+
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = wGlobalDir.getNumForNameNSG(GameModeInfo->defSoundName, lumpinfo_t::ns_sounds);
-   
+
    size_t lumplen = (size_t)wGlobalDir.lumpLength(lump);
    if(!lumplen)
       return false;
@@ -514,11 +516,11 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 void S_CacheDigitalSoundLump(sfxinfo_t *sfx)
 {
    int lump = S_getSfxLumpNum(sfx);
-   
+
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = wGlobalDir.getNumForNameNSG(GameModeInfo->defSoundName, lumpinfo_t::ns_sounds);
-   
+
    wGlobalDir.cacheLumpNum(lump, PU_CACHE);
 }
 

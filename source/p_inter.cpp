@@ -47,6 +47,7 @@
 #include "e_metastate.h"
 #include "e_mod.h"
 #include "e_states.h"
+#include "e_string.h"
 #include "e_things.h"
 #include "e_weapons.h"
 #include "ev_specials.h"
@@ -113,14 +114,14 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 
    if(!E_GiveInventoryItem(player, ammo, num))
       return false; // don't need this ammo
-   
+
    // If non zero ammo, don't change up weapons, player was lower on purpose.
    if(oldammo)
       return true;
 
    // We were down to zero, so select a new weapon.
    // Preferences are not user selectable.
-   
+
    // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
    // try to do so, otherwise do the legacy ammo switch
    if(demo_version >= 401 &&
@@ -298,7 +299,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    if(demo_version < 401)
       return P_giveWeaponCompat(player, giver, dropped, special, staypick);
 
-   bool gaveweapon = false, gaveammo = false, dmstay = false, firsttime = true;
+   bool gaveammo = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
    if(!wp)
    {
@@ -309,36 +310,33 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    }
 
    itemeffect_t *ammogiven = nullptr;
-   while(firsttime || (ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+   while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
       itemeffect_t *ammo = nullptr;
       int giveammo = 0, dropammo = 0, dmstayammo = 0, coopstayammo = 0;
 
-      if(ammogiven)
+      if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
       {
-         if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
-         {
-            doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
-                        giver->getKey());
-            special->remove();
-            return false;
-         }
-         else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
-         {
-            doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
-                        "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
-            special->remove();
-            return false;
-         }
-         // Congrats, the user didn't screw up defining their ammogiven
-         // TODO: Automate Doom-style ratios with a flag?
-         if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
-            dropammo = giveammo;
-         if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
-            dmstayammo = giveammo;
-         if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
-            coopstayammo = giveammo;
+         doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
+                     giver->getKey());
+         special->remove();
+         return false;
       }
+      else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
+      {
+         doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                     "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
+         special->remove();
+         return false;
+      }
+      // Congrats, the user didn't screw up defining their ammogiven
+      // TODO: Automate Doom-style ratios with a flag?
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+         dropammo = giveammo;
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+         dmstayammo = giveammo;
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+         coopstayammo = giveammo;
 
       if((dmflags & DM_WEAPONSTAY) && !dropped)
       {
@@ -346,54 +344,44 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
          if(E_PlayerOwnsWeapon(player, wp))
             return false;
 
-         if(ammogiven)
+         if(ammogiven &&
+            ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
          {
-            if((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo))
-            {
-               gaveammo |= P_GiveAmmo(player, ammo,
-                                      (GameType == gt_dm) ? dmstayammo : coopstayammo);
-            }
-         }
-
-         if(firsttime)
-         {
-            player->bonuscount += BONUSADD;
-            E_GiveWeapon(player, wp);
-            player->pendingweapon = wp;
-            player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-            S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
-            P_consumeSpecial(player, special); // need to handle it here
-            dmstay = true;
-            firsttime = false;
-            staypick = true;
+            gaveammo |= P_GiveAmmo(player, ammo,
+                                   (GameType == gt_dm) ? dmstayammo : coopstayammo);
          }
       }
       else
       {
          // give one clip with a dropped weapon, two clips with a found weapon
          const int  amount = dropped ? dropammo : giveammo;
-         gaveammo |= (ammo && (amount ? P_GiveAmmo(player, ammo, amount) : false));
-
-         // haleyjd 10/4/11: de-Killoughized
-         if(firsttime)
-         {
-            if(!E_PlayerOwnsWeapon(player, wp))
-            {
-               weaponinfo_t *sister = wp->sisterWeapon;
-               player->pendingweapon = wp;
-               player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-               if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
-                  player->pendingweapon = sister;
-               E_GiveWeapon(player, wp);
-               gaveweapon = true;
-            }
-            firsttime = false;
-         }
+         gaveammo |= amount ? P_GiveAmmo(player, ammo, amount) : false;
       }
    }
 
+   if((dmflags & DM_WEAPONSTAY) && !dropped)
+   {
+      player->bonuscount += BONUSADD;
+      E_GiveWeapon(player, wp);
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      P_consumeSpecial(player, special); // need to handle it here
+      return false;
+   }
+   else if(!E_PlayerOwnsWeapon(player, wp))
+   {
+      weaponinfo_t *sister = wp->sisterWeapon;
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+         player->pendingweapon = sister;
+      E_GiveWeapon(player, wp);
+      return true;
+   }
+
    // Deathmatch w/ weapons stay always returns false
-   return !dmstay && (gaveweapon || gaveammo);
+   return gaveammo;
 }
 
 //
@@ -597,7 +585,7 @@ bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
       break;
    }
 
-   // Unless player has infinite duration cheat, set duration (killough)   
+   // Unless player has infinite duration cheat, set duration (killough)
    if(player->powers[power] >= 0)
       player->powers[power] = additiveTime ? players->powers[power] + duration : duration;
 
@@ -631,7 +619,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
    int powerNum;
    const char *powerStr;
    bool additiveTime = false;
-   
+
    powerStr = power->getString("type", "");
    if(!powerStr || !strcmp(powerStr, ""))
       return false; // There hasn't been a designated power type
@@ -642,7 +630,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
    if(!power->getInt("overridesself", 0) && player->powers[powerNum] >  4 * 32)
       return false;
 
-   // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)   
+   // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
    if(player->powers[powerNum] >= 0)
    {
       int duration = power->getInt("duration", 0);
@@ -657,7 +645,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       return P_GivePower(player, powerNum, duration, additiveTime);
    }
 
-   return true;   
+   return true;
 }
 
 //
@@ -676,7 +664,7 @@ static void P_RavenRespawn(Mobj *special)
 
    // Super items only respawn if so specified
    if(special->flags3 & MF3_SUPERITEM && !(dmflags & DM_RESPAWNSUPER))
-      willrespawn = false; 
+      willrespawn = false;
 
    // NOITEMRESP items never respawn.
    if(special->flags3 & MF3_NOITEMRESP)
@@ -854,9 +842,9 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          // Give message
          if(message)
          {
-            // check for BEX string
+            // check for indirect string
             if(message[0] == '$')
-               message = DEH_String(message + 1);
+               message = E_StringOrDehForName(message + 1);
             player_printf(player, "%s", message);
          }
 
@@ -914,7 +902,7 @@ void P_DropItems(Mobj *actor, bool tossitems)
       fixed_t z = ONFLOORZ;
       if(mdi->toss)
          z = actor->z + (actor->height / 2);
-      
+
       // spawn the object
       Mobj *item = P_SpawnMobj(actor->x, actor->y, z, type);
 
@@ -942,7 +930,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
-   
+
    if(!(target->flags3 & MF3_DEADFLOAT))
       target->flags &= ~MF_NOGRAVITY;
 
@@ -951,7 +939,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    // killough 8/29/98: remove from threaded list
    target->updateThinker();
-   
+
    if(source && source->player)
    {
       // count for intermission
@@ -987,12 +975,12 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
       target->flags  &= ~MF_SOLID;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
-      
+
       G_DemoLog("%d\tdeath player %d ", gametic,
          (int)(target->player - players) + 1);
       G_DemoLogStats();
       G_DemoLog("\n");
-      
+
       target->player->prevpitch = target->player->pitch; // MaxW: Stop interpolation jittering
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
@@ -1021,7 +1009,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    // FIXME: make a flag? Also, probably not done in Heretic/Hexen.
    target->tics -= P_Random(pr_killtics) & 3;
-   
+
    if(target->tics < 1)
       target->tics = 1;
 
@@ -1042,22 +1030,22 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 static const char *P_GetDeathMessageString(emod_t *mod, bool self)
 {
    const char *str;
-   bool isbex;
+   bool indir;
    const char *ret;
 
    if(self)
    {
       str   = mod->selfobituary;
-      isbex = mod->selfObitIsBexString;
+      indir = mod->selfObitIsIndirect;
    }
    else
    {
       str   = mod->obituary;
-      isbex = mod->obitIsBexString;
+      indir = mod->obitIsIndirect;
    }
 
-   if(isbex)
-      ret = DEH_String(str);
+   if(indir)
+      ret = E_StringOrDehForName(str);
    else
       ret = str;
 
@@ -1069,7 +1057,7 @@ static const char *P_GetDeathMessageString(emod_t *mod, bool self)
 //
 // Implements obituaries based on the type of damage which killed a player.
 //
-static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor, 
+static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
                            emod_t *mod)
 {
    bool friendly = false;
@@ -1108,7 +1096,7 @@ static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
             break;
          }
 
-         // if the monster didn't define the proper obit, try the 
+         // if the monster didn't define the proper obit, try the
          // obit defined by the mod of this attack
          if(!message)
             message = P_GetDeathMessageString(mod, false);
@@ -1171,17 +1159,17 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
    {
       angle_t angle;
       fixed_t thrust;
-      
-      // SoM: TODO figure out if linked portals needs to worry about this. It 
+
+      // SoM: TODO figure out if linked portals needs to worry about this. It
       // looks like target might not always be source->target
       angle = P_PointToAngle(source->x, source->y, target->x, target->y);
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 
       P_ThrustMobj(target, angle, thrust);
-      P_DamageMobj(target, NULL, NULL, 
-                   ((P_Random(pr_mincharge) & 7) + 1) * 6, 
+      P_DamageMobj(target, NULL, NULL,
+                   ((P_Random(pr_mincharge) & 7) + 1) * 6,
                    MOD_UNKNOWN);
-      
+
       if(target->player)
          target->reactiontime = 14 + (P_Random(pr_mincharge) & 7);
 
@@ -1200,11 +1188,11 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 {
    Mobj *target = dmgspec->target;
-   
+
    // toss the target around
-   
+
    target->angle += P_SubRandom(pr_whirlwind) << 20;
-   target->momx  += P_SubRandom(pr_whirlwind) << 10;   
+   target->momx  += P_SubRandom(pr_whirlwind) << 10;
    target->momy  += P_SubRandom(pr_whirlwind) << 10;
 
    // z momentum -- Bosses will not be tossed up.
@@ -1215,13 +1203,13 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 
       if(randVal > 160)
          randVal = 160;
-      
+
       target->momz += randVal << 10;
-      
+
       if(target->momz > 12*FRACUNIT)
          target->momz = 12*FRACUNIT;
    }
-   
+
    // do a small amount of damage (it adds up fast)
    if(!(leveltime & 7))
       P_DamageMobj(target, NULL, NULL, 3, MOD_UNKNOWN);
@@ -1235,7 +1223,7 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 // mobjinfo::dmgspecial is an index into this table. The index is checked for
 // validity during EDF processing. If the special returns true, P_DamageMobj
 // returns immediately, assuming that the special did its own damage. If it
-// returns false, P_DamageMobj continues, and the damage field of the 
+// returns false, P_DamageMobj continues, and the damage field of the
 // dmgspecdata_t structure is used to possibly modify the damage that will be
 // done.
 //
@@ -1300,22 +1288,22 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
 //
 // haleyjd 07/13/03: added method of death flag
 //
-void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, 
+void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                   int damage, int mod)
 {
    emod_t *emod;
    player_t *player;
    bool justhit = false;  // killough 11/98
    bool speciesignore;       // haleyjd
-   
+
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
       return; // shouldn't happen...
-   
+
    if(target->health <= 0)
       return;
-   
-   // haleyjd: 
+
+   // haleyjd:
    // Invulnerability -- telestomp can still kill to avoid getting stuck
    // Dormancy -- things are invulnerable until they are awakened
    // No Friend Damage -- some things aren't hurt by friends
@@ -1405,13 +1393,13 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       {
          if(inflictor->groupid == target->groupid)
          {
-            ang = P_PointToAngle (inflictor->x, inflictor->y, 
+            ang = P_PointToAngle (inflictor->x, inflictor->y,
                                    target->x, target->y);
          }
          else
          {
             auto link = P_GetLinkOffset(target->groupid, inflictor->groupid);
-            ang = P_PointToAngle(inflictor->x, inflictor->y, 
+            ang = P_PointToAngle(inflictor->x, inflictor->y,
                                   target->x + link->x, target->y + link->y);
          }
       }
@@ -1433,7 +1421,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                    emod->absolutePush > 0 ? emod->absolutePush : thrust);
       if(!(target->flags & MF_NOGRAVITY) && emod->absoluteHop > 0)
          target->momz += emod->absoluteHop;
-      
+
       // killough 11/98: thrust objects hanging off ledges
       if(target->intflags & MIF_FALLING && target->gear >= MAXGEAR)
          target->gear = 0;
@@ -1465,7 +1453,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->armorfactor && player->armordivisor)
       {
          int saved = damage * player->armorfactor / player->armordivisor;
-         
+
          if(player->armorpoints <= saved)
          {
             // armor is used up
@@ -1479,10 +1467,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       player->health -= damage;       // mirror mobj health here for Dave
       if(player->health < 0)
          player->health = 0;
-      
+
       P_SetPlayerAttacker(player, source);
       player->damagecount += damage;  // add damage after armor / invuln
-      
+
       if(player->damagecount > 100)
          player->damagecount = 100;  // teleport stomp does 10k points...
 
@@ -1492,7 +1480,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // haleyjd 06/08/13: reimplement support for tactile damage feedback :)
       if(player == &players[consoleplayer])
-         I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);      
+         I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);
    }
 
    // IOANCH: add to statistics, BEFORE recalculating player armour
@@ -1555,7 +1543,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // so that a friend can tell who's hurting a player
       if(player)
          P_SetTarget<Mobj>(&target->target, source);
-      
+
       // killough 9/8/98:
       // If target's health is less than 50%, move it to the front of its list.
       // This will slightly increase the chances that enemies will choose to
@@ -1563,8 +1551,8 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       if(target->health * 2 < target->getModifiedSpawnHealth())
       {
-         Thinker *cap = 
-            &thinkerclasscap[target->flags & MF_FRIEND ? 
+         Thinker *cap =
+            &thinkerclasscap[target->flags & MF_FRIEND ?
                              th_friends : th_enemies];
          (target->cprev->cnext = target->cnext)->cprev = target->cprev;
          (target->cnext = cap->cnext)->cprev = target;
@@ -1574,7 +1562,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(P_Random(pr_painchance) < target->info->painchance &&
       !(target->flags & MF_SKULLFLY))
-   { 
+   {
       //killough 11/98: see below
       if(demo_version >= 203)
          justhit = true;
@@ -1590,7 +1578,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       P_SetMobjState(target, st);
    }
-   
+
    target->reactiontime = 0;           // we're awake now...
 
    // killough 9/9/98: cleaned up, made more consistent:
@@ -1618,7 +1606,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // * Things are not both friends while target is not a SUPERFRIEND
 
    // TODO: add fine-grained infighting control as metadata
-   
+
    if(source && source != target                                     // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
       && !speciesignore                                              // species not fighting
@@ -1645,7 +1633,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       P_SetTarget<Mobj>(&target->target, source);       // killough 11/98
       target->threshold = BASETHRESHOLD;
 
-      if(target->state == states[target->info->spawnstate] && 
+      if(target->state == states[target->info->spawnstate] &&
          target->info->seestate != NullStateNum)
       {
          P_SetMobjState(target, target->info->seestate);
@@ -1655,7 +1643,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // haleyjd 01/15/06: Fix for demo comp problem introduced in MBF
    // For MBF and above, set MF_JUSTHIT here
    // killough 11/98: Don't attack a friend, unless hit by that friend.
-   if(!demo_compatibility && justhit && 
+   if(!demo_compatibility && justhit &&
       (target->target == source || !target->target ||
        !(target->flags & target->target->flags & MF_FRIEND)))
    {
@@ -1708,7 +1696,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
       // 06/06/05: use strict teleport now
       if(P_TeleportMoveStrict(mo, x, y, false))
       {
-         Mobj *fog = P_SpawnMobj(prevx, prevy, 
+         Mobj *fog = P_SpawnMobj(prevx, prevy,
                                    prevz + GameModeInfo->teleFogHeight,
                                    E_SafeThingName(GameModeInfo->teleFogType));
          S_StartSound(fog, GameModeInfo->teleSound);
@@ -1719,7 +1707,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
 
          // put the thing into its spawnstate and keep it still
          P_SetMobjState(mo, mo->info->spawnstate);
-         mo->z = mo->floorz;
+         mo->z = mo->zref.floor;
          mo->momx = mo->momy = mo->momz = 0;
          mo->backupPosition();
 
@@ -1741,7 +1729,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
 //
 bool P_ThingIsCorpse(const Mobj *mobj)
 {
-   return mobj->flags & MF_CORPSE && mobj->tics == -1 && 
+   return mobj->flags & MF_CORPSE && mobj->tics == -1 &&
       mobj->info->raisestate != NullStateNum;
 }
 
@@ -1763,7 +1751,7 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
    if(comp[comp_vile])
    {
       corpse->height <<= 2;
-      
+
       // haleyjd 11/11/04: this is also broken by Lee's change to
       // PIT_CheckThing when not in demo_compatibility.
       if(demo_version >= 331)
@@ -1773,13 +1761,13 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 
       if(demo_version >= 331)
          corpse->flags &= ~MF_SOLID;
-      
+
       corpse->height >>= 2;
    }
    else
    {
       int height,radius;
-      
+
       height = corpse->height; // save temporarily
       radius = corpse->radius; // save temporarily
       corpse->height = P_ThingInfoHeight(corpse->info);
@@ -1821,12 +1809,12 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
       corpse->radius = info->radius;
    }                                                  // phares
 
-   // killough 7/18/98: 
+   // killough 7/18/98:
    // friendliness is transferred from AV to raised corpse
    // ioanch 20160221: if there's no raiser, don't change friendliness
    if(raiser)
    {
-      corpse->flags = 
+      corpse->flags =
          (info->flags & ~MF_FRIEND) | (raiser->flags & MF_FRIEND);
    }
    else
@@ -1879,11 +1867,11 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
       return -1;
    }
 
-   while((rover = P_FindMobjFromTID(params[1], rover, 
+   while((rover = P_FindMobjFromTID(params[1], rover,
                                     context->invocationData.trigger)))
    {
       int damage;
-      
+
       switch(params[2])
       {
       case 1: // telefrag damage
@@ -1893,7 +1881,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
          damage = rover->health;
          break;
       }
-      
+
       P_DamageMobj(rover, NULL, NULL, damage, MOD_UNKNOWN);
    }
 
@@ -1920,13 +1908,13 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 
    if(params[4] != 0)
    {
-      inflictor = P_FindMobjFromTID(params[4], inflictor, 
+      inflictor = P_FindMobjFromTID(params[4], inflictor,
                                     context->invocationData.trigger);
    }
 
    if(params[5] != 0)
    {
-      source = P_FindMobjFromTID(params[5], source, 
+      source = P_FindMobjFromTID(params[5], source,
                                  context->invocationData.trigger);
    }
 

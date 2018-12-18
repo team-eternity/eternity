@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright (C) 2013 James Haley et al.
@@ -21,7 +21,7 @@
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    Custom damage types, or "Means of Death" flags.
 //
 //-----------------------------------------------------------------------------
@@ -73,11 +73,11 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static EHashTable<emod_t, ENCStringHashKey, 
+static EHashTable<emod_t, ENCStringHashKey,
                  &emod_t::name, &emod_t::namelinks> e_mod_namehash(NUMMODCHAINS);
 
 // haleyjd 08/02/09: use new generic hash
-static EHashTable<emod_t, EIntHashKey, 
+static EHashTable<emod_t, EIntHashKey,
                   &emod_t::num, &emod_t::numlinks> e_mod_numhash(NUMMODCHAINS);
 
 // default damage type - "Unknown"
@@ -100,7 +100,7 @@ static void E_AddDamageTypeToNameHash(emod_t *mod)
    e_mod_namehash.addObject(*mod);
 
    // cache dfKeyIndex for use in metatables
-   mod->dfKeyIndex = 
+   mod->dfKeyIndex =
       MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
 }
 
@@ -130,7 +130,7 @@ static bool E_AutoAllocModNum(emod_t *mod)
    do
    {
       num = edf_alloc_modnum--;
-   } 
+   }
    while(num > 0 && E_DamageTypeForNum(num) != &unknown_mod);
 
    // ran out while looking for an unused number?
@@ -152,10 +152,10 @@ static bool E_AutoAllocModNum(emod_t *mod)
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
    // Auto-assign a numeric key to all damage types which don't have
-   // a valid one explicitly specified. This avoids some gigantic, 
-   // messy code rewrites by allowing mobjinfo to always store the 
+   // a valid one explicitly specified. This avoids some gigantic,
+   // messy code rewrites by allowing mobjinfo to always store the
    // numeric key.
-   
+
    if(mod->num <= 0)
    {
       E_AutoAllocModNum(mod);
@@ -257,14 +257,14 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
       if(obituary)
       {
-         // determine if obituary string is a BEX string
+         // determine if obituary string is an indirect string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
-            ++obituary;         
-            mod->obitIsBexString = true;
+            ++obituary;
+            mod->obitIsIndirect = true;
          }
          else
-            mod->obitIsBexString = false;
+            mod->obitIsIndirect = false;
 
          mod->obituary = estrdup(obituary);
       }
@@ -284,14 +284,14 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
       if(obituary)
       {
-         // determine if obituary string is a BEX string
+         // determine if obituary string is an indirect string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
-            ++obituary;         
-            mod->selfObitIsBexString = true;
+            ++obituary;
+            mod->selfObitIsIndirect = true;
          }
          else
-            mod->selfObitIsBexString = false;
+            mod->selfObitIsIndirect = false;
 
          mod->selfobituary = estrdup(obituary);
       }
@@ -312,7 +312,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
                                                       ITEM_DAMAGETYPE_ABSHOP));
    }
 
-   E_EDFLogPrintf("\t\t%s damagetype %s\n", 
+   E_EDFLogPrintf("\t\t%s damagetype %s\n",
                   def ? "Defined" : "Modified", mod->name);
 }
 
@@ -339,8 +339,8 @@ static void E_initUnknownMod(void)
       unknown_mod.num  = 0;
       unknown_mod.obituary = obituary;
       unknown_mod.selfobituary = obituary;
-      unknown_mod.obitIsBexString = true;
-      unknown_mod.selfObitIsBexString = true;
+      unknown_mod.obitIsIndirect = true;
+      unknown_mod.selfObitIsIndirect = true;
       unknown_mod.sourceless = false;
    }
 }
@@ -394,7 +394,7 @@ emod_t *E_DamageTypeForName(const char *name)
 emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
-   
+
    if((mod = e_mod_numhash.objectForKey(num)) == NULL)
       mod = &unknown_mod;
 
@@ -409,7 +409,7 @@ emod_t *E_DamageTypeForNum(int num)
 // requested type is not found by name.
 //
 int E_DamageTypeNumForName(const char *name)
-{ 
+{
    emod_t *mod = E_DamageTypeForName(name);
 
    return mod ? mod->num : 0;
