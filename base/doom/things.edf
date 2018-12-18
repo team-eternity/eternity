@@ -3383,7 +3383,6 @@ thingtype MBFBetaPlasma2
 thingtype MBFBetaSceptre : Mobj, 2016, 143
 {
   compatname  EvilSceptre
-  dehackednum 2016
   radius      10.0
   cflags      SPECIAL|COUNTITEM
 
