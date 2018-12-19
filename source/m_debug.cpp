@@ -126,6 +126,11 @@ DebugLogger &DebugLogger::operator << (const v2fixed_t &vec)
    return *this << "v2fixed(" >> vec.x >> vec.y << ")";
 }
 
+DebugLogger &DebugLogger::operator << (const v3fixed_t &vec)
+{
+   return *this << "v3fixed(" >> vec.x >> vec.y >> vec.z << ")";
+}
+
 DebugLogger &DebugLogger::operator << (const vertex_t &vertex)
 {
    return *this << "v" << (&vertex - vertexes) << '(' >> vertex.x >> vertex.y << ')';
