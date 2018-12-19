@@ -825,6 +825,7 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
       viewy     = camera->y;
       viewz     = camera->z;
       viewangle = camera->angle;
+      viewpitch = camera->pitch;
    }
    else
    {
@@ -832,6 +833,7 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
       viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
       viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
       viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+      viewpitch = lerpAngle(lerp, camera->prevpitch, camera->pitch);
    }
 }
 
