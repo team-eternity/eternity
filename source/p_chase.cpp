@@ -90,6 +90,16 @@ static int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 }
 
 //
+// Chase traverse context
+//
+struct chasetraverse_t
+{
+   const linkdata_t *link; // if set, a portal was passed
+   fixed_t startz;         // start Z position
+   v2fixed_t intersection; // intersection position
+};
+
+//
 // PTR_chaseTraverse
 //
 // go til you hit a wall
@@ -101,19 +111,40 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
    if(in->isaline)
    {
       line_t *li = in->d.line;
+
+      auto &traverse = *static_cast<chasetraverse_t *>(context);
       
+      // Keep using trace.attackrange even when passing portals, because dist is only used in ratio
+      // with fractional part. Safer because trace.attackrange is always MELEERANGE here.
       fixed_t dist = FixedMul(trace.attackrange, in->frac);
       fixed_t frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
       
       // hit line
       // position a bit closer
       
-      int x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-      int y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+      fixed_t x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+      fixed_t y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
       // ioanch 20160225: portal lines are currently not crossed
-      if(li->flags & ML_TWOSIDED && !(li->pflags & PS_PASSABLE))
+      if(li->flags & ML_TWOSIDED)
       {  // crosses a two sided line
+         if(li->pflags & PS_PASSABLE)
+         {
+            // Exact target pos
+            v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
+            // Portal stuff. Only count it if truly crossed
+            // TODO: handle edge and sector portals.
+            if(P_PointOnLineSide(targpos.x, targpos.y, li) && 
+               !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
+            {
+               traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, in->frac);
+               traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, in->frac);
+               traverse.link = &li->portal->data.link;
+               traverse.startz += FixedMul(pCamTarget.z - traverse.startz, in->frac);
+
+               return false;
+            }
+         }
 
          // sf: find which side it hit
          
@@ -126,7 +157,7 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
 
          // interpolate, find z at the point of intersection
          
-         int z = zi(dist, trace.attackrange, pCamTarget.z, playermobj->z+28*FRACUNIT);
+         int z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
          
          // found which side, check for intersections
          if((li->flags & ML_BLOCKING) || 
@@ -141,7 +172,7 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
 
       pCamTarget.x = x; // point the new chasecam target at the intersection
       pCamTarget.y = y;
-      pCamTarget.z = zi(dist, trace.attackrange, pCamTarget.z, playermobj->z + 28 * FRACUNIT);
+      pCamTarget.z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
       
       // don't go any farther
       
@@ -178,8 +209,25 @@ static void P_GetChasecamTarget()
    trace.attackrange = MELEERANGE;
    
    // check for intersections
-   P_PathTraverse(playermobj->x, playermobj->y, pCamTarget.x, pCamTarget.y,
-                  PT_ADDLINES, PTR_chaseTraverse);
+   chasetraverse_t traverse;
+   traverse.startz = playermobj->z + 28 * FRACUNIT;
+   v2fixed_t travstart = { playermobj->x, playermobj->y };
+   int repprotection = 0;
+   do
+   {
+      traverse.link = nullptr;
+      P_PathTraverse(travstart.x, travstart.y, pCamTarget.x, pCamTarget.y,
+         PT_ADDLINES, PTR_chaseTraverse, &traverse);
+      if(traverse.link)
+      {
+         travstart.x = traverse.intersection.x + traverse.link->deltax;
+         travstart.y = traverse.intersection.y + traverse.link->deltay;
+         traverse.startz += traverse.link->deltaz;
+         pCamTarget.x += traverse.link->deltax;
+         pCamTarget.y += traverse.link->deltay;
+         pCamTarget.z += traverse.link->deltaz;
+      }
+   } while(traverse.link && repprotection++ < 64);
    trace.attackrange = oldAttackRange;
 
    const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
