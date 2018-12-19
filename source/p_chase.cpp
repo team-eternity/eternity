@@ -64,7 +64,7 @@ camera_t chasecam;
 int chasecam_active = 0;
 static v3fixed_t pCamTarget;
 #ifdef R_LINKEDPORTALS
-static int targetgroupid;
+static int pCamTargetGroupId;
 #endif
 
                 // for simplicity
@@ -153,16 +153,12 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
 
 static void P_GetChasecamTarget()
 {
-   int aimfor;
-   subsector_t *ss;
-   int ceilingheight, floorheight;
-
    // aimfor is the preferred height of the chasecam above
    // the player
    // haleyjd: 1 unit for each degree of pitch works surprisingly well
-   aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT 
-               + FixedDiv(players[displayplayer].pitch, ANGLE_1);
-      
+   fixed_t aimfor = players[displayplayer].viewheight + chasecam_height * FRACUNIT
+      + FixedDiv(players[displayplayer].pitch, ANGLE_1);
+
    trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
    trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
    
@@ -171,7 +167,7 @@ static void P_GetChasecamTarget()
    pCamTarget.z = playermobj->z + aimfor;
 
 #ifdef R_LINKEDPORTALS
-   targetgroupid = playermobj->groupid;
+   pCamTargetGroupId = playermobj->groupid;
 #endif
 
    // the intersections test mucks up the first time, but
@@ -186,10 +182,10 @@ static void P_GetChasecamTarget()
                   PT_ADDLINES, PTR_chaseTraverse);
    trace.attackrange = oldAttackRange;
 
-   ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
+   const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
    
-   floorheight = ss->sector->floorheight;
-   ceilingheight = ss->sector->ceilingheight;
+   fixed_t floorheight = ss->sector->floorheight;
+   fixed_t ceilingheight = ss->sector->ceilingheight;
 
    // don't aim above the ceiling or below the floor
    pCamTarget.z = eclamp(pCamTarget.z, floorheight + 10 * FRACUNIT, ceilingheight - 10 * FRACUNIT);
@@ -286,7 +282,7 @@ void P_ResetChasecam()
    chasecam.z = pCamTarget.z;
    
 #ifdef R_LINKEDPORTALS
-   chasecam.groupid = targetgroupid;
+   chasecam.groupid = pCamTargetGroupId;
 #endif
 
    chasecam.backupPosition();
