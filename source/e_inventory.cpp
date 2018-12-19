@@ -1090,7 +1090,7 @@ static dehflags_t e_PickupFlags[] =
    { "LEAVEINMULTI",      PFXF_LEAVEINMULTI      },
    { "NOSCREENFLASH",     PFXF_NOSCREENFLASH     },
    { "SILENTNOBENEFIT",   PFXF_SILENTNOBENEFIT   },
-   { "COMMERCIALONLY",    PXFX_COMMERCIALONLY    },
+   { "COMMERCIALONLY",    PFXF_COMMERCIALONLY    },
    { "GIVESBACKPACKAMMO", PFXF_GIVESBACKPACKAMMO },
    { NULL,           0 }
 };
@@ -1958,6 +1958,8 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
          return false; // internal error, actually... shouldn't happen
       slot = &player->inventory[newSlot];
    }
+   else if (slot->amount == maxAmount)
+	   return false;
 
    // If must collect full amount, but it won't fit, return now.
    if(artifact->getInt(keyFullAmountOnly, 0) &&

@@ -367,6 +367,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
+      staypick = true;
       return false;
    }
    else if(!E_PlayerOwnsWeapon(player, wp))
@@ -698,7 +699,9 @@ static void P_RavenRespawn(Mobj *special)
 //
 static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 {
-   if(!strcasecmp(special->info->name, "WeaponBFG"))
+   if(strcasecmp(special->info->name, "WeaponBFG"))
+      return def;
+   else
    {
       switch(bfgtype)
       {
@@ -710,8 +713,6 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
       default:           return "You got some kind of BFG";
       }
    }
-   else
-      return def;
 }
 
 //
@@ -723,11 +724,11 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 {
    player_t       *player;
    const e_pickupfx_t *pickup, *temp;
-   bool            pickedup = false;
-   bool            dropped = false;
+   bool            pickedup  = false;
+   bool            dropped  = false;
    bool            hadeffect = false;
-   const char     *message = nullptr;
-   const char     *sound = nullptr;
+   const char     *message  = nullptr;
+   const char     *sound     = nullptr;
 
    fixed_t delta = special->z - toucher->z;
    if(delta > toucher->height || delta < -8 * FRACUNIT)
@@ -753,26 +754,22 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    else
       return false;
 
-   if(pickup->flags & PXFX_COMMERCIALONLY &&
+   if(pickup->flags & PFXF_COMMERCIALONLY &&
       (demo_version < 335 && GameModeInfo->id != commercial))
       return false;
 
    message = P_getSpecialMessage(special, pickup->message);
    sound   = pickup->sound;
 
-   if(pickup->numEffects == 0)
-      return false;
-
    // set defaults
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
-
    bool staypick = false;
+
    for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
       const itemeffect_t *effect = pickup->effects[i];
       if(!effect)
          continue;
-      hadeffect = true;
       switch(effect->getInt("class", ITEMFX_NONE))
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
@@ -799,9 +796,6 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          break;
       }
    }
-
-   if(!hadeffect)
-      return false;
 
    if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
       pickedup |= P_giveBackpackAmmo(player);
@@ -834,6 +828,12 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          else
             special->remove();
       }
+
+      // Picked up items that are left in multiplayer can't be allowed to
+      // constantly pester the player
+      // TODO: Is this rigorous enough? Does this cover all cases?
+      if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI)
+         return false;
 
       // if picked up for benefit, or not silent when picked up without, do
       // all the "noisy" pickup effects

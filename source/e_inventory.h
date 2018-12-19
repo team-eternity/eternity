@@ -106,7 +106,7 @@ extern const char *powerStrings[NUMPOWERS];
 
 //
 // Item Effect
-// 
+//
 // An item effect is a MetaTable. The properties in the table depend on the type
 // of section that instantiated the effect (and therefore what its purpose is).
 //
@@ -123,7 +123,7 @@ enum pickupflags_e : unsigned int
    PFXF_LEAVEINMULTI      = 0x00000002, // item is left in multiplayer games
    PFXF_NOSCREENFLASH     = 0x00000004, // does not cause bonuscount increment
    PFXF_SILENTNOBENEFIT   = 0x00000008, // no pickup effects if picked up without benefit
-   PXFX_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
+   PFXF_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
    PFXF_GIVESBACKPACKAMMO = 0x00000020, // gives backpack ammo
 };
 
@@ -223,7 +223,7 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
 inventoryslot_t *E_InventorySlotForItem(const player_t *player,
                                         const itemeffect_t *effect);
 
-// Get the slot being used for a particular inventory item, by name, if one 
+// Get the slot being used for a particular inventory item, by name, if one
 // exists. Returns NULL if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
                                             const char *name);

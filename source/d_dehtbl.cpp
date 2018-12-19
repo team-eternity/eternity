@@ -120,6 +120,8 @@ static const char *s_GOTLAUNCHER = GOTLAUNCHER;
 static const char *s_GOTPLASMA   = GOTPLASMA;
 static const char *s_GOTSHOTGUN  = GOTSHOTGUN;
 static const char *s_GOTSHOTGUN2 = GOTSHOTGUN2;
+static const char *s_BETA_BONUS3 = BETA_BONUS3;
+static const char *s_BETA_BONUS4 = BETA_BONUS4;
 static const char *s_PD_BLUEO    = PD_BLUEO;
 static const char *s_PD_REDO     = PD_REDO;
 static const char *s_PD_YELLOWO  = PD_YELLOWO;
@@ -601,6 +603,8 @@ dehstr_t deh_strlookup[] =
    { &s_GOTPLASMA,   "GOTPLASMA"   },
    { &s_GOTSHOTGUN,  "GOTSHOTGUN"  },
    { &s_GOTSHOTGUN2, "GOTSHOTGUN2" },
+   { &s_BETA_BONUS3, "BETA_BONUS3" },
+   { &s_BETA_BONUS4, "BETA_BONUS4" },
    { &s_PD_BLUEO,    "PD_BLUEO"    },
    { &s_PD_REDO,     "PD_REDO"     },
    { &s_PD_YELLOWO,  "PD_YELLOWO"  },

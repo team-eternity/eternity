@@ -501,7 +501,7 @@ bool Bot::checkItemType(const Mobj *special) const
 
    const e_pickupfx_t *pickup = special->info->pickupfx ?
    special->info->pickupfx : E_PickupFXForSprNum(sprite);
-   if(!pickup || (pickup->flags & PXFX_COMMERCIALONLY && demo_version < 335 &&
+   if(!pickup || (pickup->flags & PFXF_COMMERCIALONLY && demo_version < 335 &&
                   GameModeInfo->id != commercial) || !pickup->numEffects)
    {
       return false;
