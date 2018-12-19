@@ -38,6 +38,7 @@
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -60,13 +61,11 @@
 //
 
 camera_t chasecam;
-int chaseviewz;
 int chasecam_active = 0;
-int targetx, targety, targetz;
+static v3fixed_t pCamTarget;
 #ifdef R_LINKEDPORTALS
-int targetgroupid;
+static int targetgroupid;
 #endif
-int chasecam_turnoff = 0;
 
                 // for simplicity
 #define playermobj players[displayplayer].mo
@@ -127,7 +126,7 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
 
          // interpolate, find z at the point of intersection
          
-         int z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
+         int z = zi(dist, trace.attackrange, pCamTarget.z, playermobj->z+28*FRACUNIT);
          
          // found which side, check for intersections
          if((li->flags & ML_BLOCKING) || 
@@ -140,9 +139,9 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
          }
       }
 
-      targetx = x;        // point the new chasecam target at the intersection
-      targety = y;
-      targetz = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
+      pCamTarget.x = x; // point the new chasecam target at the intersection
+      pCamTarget.y = y;
+      pCamTarget.z = zi(dist, trace.attackrange, pCamTarget.z, playermobj->z + 28 * FRACUNIT);
       
       // don't go any farther
       
@@ -167,9 +166,9 @@ static void P_GetChasecamTarget()
    trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
    trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
    
-   targetx = playermobj->x - chasecam_dist * trace.cos;
-   targety = playermobj->y - chasecam_dist * trace.sin;
-   targetz = playermobj->z + aimfor;
+   pCamTarget.x = playermobj->x - chasecam_dist * trace.cos;
+   pCamTarget.y = playermobj->y - chasecam_dist * trace.sin;
+   pCamTarget.z = playermobj->z + aimfor;
 
 #ifdef R_LINKEDPORTALS
    targetgroupid = playermobj->groupid;
@@ -183,20 +182,17 @@ static void P_GetChasecamTarget()
    trace.attackrange = MELEERANGE;
    
    // check for intersections
-   P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
+   P_PathTraverse(playermobj->x, playermobj->y, pCamTarget.x, pCamTarget.y,
                   PT_ADDLINES, PTR_chaseTraverse);
    trace.attackrange = oldAttackRange;
 
-   ss = R_PointInSubsector(targetx, targety);
+   ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
    
    floorheight = ss->sector->floorheight;
    ceilingheight = ss->sector->ceilingheight;
 
    // don't aim above the ceiling or below the floor
-   if(targetz > ceilingheight - 10*FRACUNIT)
-      targetz = ceilingheight - 10*FRACUNIT;
-   if(targetz < floorheight + 10*FRACUNIT)
-      targetz = floorheight + 10*FRACUNIT;
+   pCamTarget.z = eclamp(pCamTarget.z, floorheight + 10 * FRACUNIT, ceilingheight - 10 * FRACUNIT);
 }
 
 // the 'speed' of the chasecam: the percentage closer we
@@ -214,9 +210,9 @@ void P_ChaseTicker()
    P_GetChasecamTarget();
    
    // find distance to target..
-   xdist = targetx - chasecam.x;
-   ydist = targety - chasecam.y;
-   zdist = targetz - chasecam.z;
+   xdist = pCamTarget.x - chasecam.x;
+   ydist = pCamTarget.y - chasecam.y;
+   zdist = pCamTarget.z - chasecam.z;
    
    // haleyjd: patched these lines with cph's fix
    //          for overflow occuring in the multiplication
@@ -285,9 +281,9 @@ void P_ResetChasecam()
    // find the chasecam target
    P_GetChasecamTarget();
    
-   chasecam.x = targetx;
-   chasecam.y = targety;
-   chasecam.z = targetz;
+   chasecam.x = pCamTarget.x;
+   chasecam.y = pCamTarget.y;
+   chasecam.z = pCamTarget.z;
    
 #ifdef R_LINKEDPORTALS
    chasecam.groupid = targetgroupid;
