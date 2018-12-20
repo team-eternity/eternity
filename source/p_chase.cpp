@@ -257,11 +257,15 @@ void P_ChaseTicker()
    
    // find distance to target..
 
-   const linkoffset_t *link = P_GetLinkOffset(chasecam.groupid, pCamTargetGroupId);
-   xdist = pCamTarget.x - link->x - chasecam.x;
-   ydist = pCamTarget.y - link->y - chasecam.y;
-   zdist = pCamTarget.z - link->z - chasecam.z;
-   
+   if(chasecam.groupid != pCamTargetGroupId)
+   {
+      P_ResetChasecam();   // FIXME: this causes some twitching, need to improve it.
+      return;
+   }
+
+   xdist = pCamTarget.x - chasecam.x;
+   ydist = pCamTarget.y - chasecam.y;
+   zdist = pCamTarget.z - chasecam.z;
    // haleyjd: patched these lines with cph's fix
    //          for overflow occuring in the multiplication
    // now move chasecam

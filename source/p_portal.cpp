@@ -929,8 +929,6 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if(mo->player && mo->player == players + displayplayer)
-      P_ResetChasecam();
 
    //mo->backupPosition();
    P_AdjustFloorClip(mo);
