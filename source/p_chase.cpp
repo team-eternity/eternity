@@ -43,6 +43,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_portal.h"
 #include "p_portalcross.h"
 #include "p_tick.h"
 #include "r_defs.h"
@@ -101,6 +102,53 @@ struct chasetraverse_t
 };
 
 //
+// Check for a sector portal being hit
+//
+static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector, 
+   chasetraverse_t &traverse)
+{
+   static const struct surfaceset_t
+   {
+      unsigned sector_t::*pflags;
+      portal_t *sector_t::*portal;
+      fixed_t(*pzfunc)(const sector_t &);
+      bool(*compare)(fixed_t, fixed_t);
+   } ssets[2] = {
+      {
+         &sector_t::f_pflags,
+         &sector_t::f_portal,
+         P_FloorPortalZ,
+         [](fixed_t a, fixed_t b) { return a < b; }
+      },
+      {
+         &sector_t::c_pflags,
+         &sector_t::c_portal,
+         P_CeilingPortalZ,
+         [](fixed_t a, fixed_t b) { return a > b; }
+      },
+   };
+   for(int i = 0; i < 2; ++i)
+   {
+      const auto &s = ssets[i];
+      fixed_t pz = s.pzfunc(*sector);
+      if(sector->*s.pflags & PS_PASSABLE && s.compare(z, pz))
+      {
+         if(!s.compare(pz, traverse.startz))
+            pz = traverse.startz;
+         fixed_t zfrac = FixedDiv(pz - traverse.startz, z - traverse.startz);
+         fixed_t hfrac = FixedMul(zfrac, frac);
+         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, hfrac);
+         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, hfrac);
+         traverse.link = &(sector->*s.portal)->data.link;
+         traverse.startz = pz;
+         return true;
+      }
+   }
+
+   return false;
+}
+
+//
 // PTR_chaseTraverse
 //
 // go til you hit a wall
@@ -126,7 +174,6 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
       fixed_t x = trace.dl.x + FixedMul(trace.dl.dx, frac);
       fixed_t y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
-      // ioanch 20160225: portal lines are currently not crossed
       if(li->flags & ML_TWOSIDED)
       {  // crosses a two sided line
          if(li->pflags & PS_PASSABLE)
@@ -151,14 +198,21 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
          
          subsector_t *ss = R_PointInSubsector (x, y);
          
-         sector_t *othersector = li->backsector;
+         const sector_t *othersector = li->backsector;
+         const sector_t *mysector = li->frontsector;
          
-         if(ss->sector==li->backsector)      // other side
+         if(ss->sector == li->backsector)      // other side
+         {
             othersector = li->frontsector;
+            mysector = li->backsector;
+         }
 
          // interpolate, find z at the point of intersection
          
          int z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
+
+         if(mysector && P_checkSectorPortal(z, in->frac, mysector, traverse))
+            return false;
          
          // found which side, check for intersections
          if((li->flags & ML_BLOCKING) || 
@@ -217,8 +271,13 @@ static void P_GetChasecamTarget()
    do
    {
       traverse.link = nullptr;
-      P_PathTraverse(travstart.x, travstart.y, pCamTarget.x, pCamTarget.y,
+      bool clear = P_PathTraverse(travstart.x, travstart.y, pCamTarget.x, pCamTarget.y,
          PT_ADDLINES, PTR_chaseTraverse, &traverse);
+      if(!traverse.link && clear)
+      {
+         const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
+         P_checkSectorPortal(pCamTarget.z, FRACUNIT, ss->sector, traverse);
+      }
       if(traverse.link)
       {
          travstart.x = traverse.intersection.x + traverse.link->deltax;
@@ -238,7 +297,10 @@ static void P_GetChasecamTarget()
    fixed_t ceilingheight = ss->sector->ceilingheight;
 
    // don't aim above the ceiling or below the floor
-   pCamTarget.z = eclamp(pCamTarget.z, floorheight + 10 * FRACUNIT, ceilingheight - 10 * FRACUNIT);
+   if(!(ss->sector->f_pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
+      pCamTarget.z = floorheight + 10 * FRACUNIT;
+   if(!(ss->sector->c_pflags & PS_PASSABLE) && pCamTarget.z > ceilingheight - 10 * FRACUNIT)
+      pCamTarget.z = ceilingheight - 10 * FRACUNIT;
 }
 
 // the 'speed' of the chasecam: the percentage closer we
