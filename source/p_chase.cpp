@@ -259,7 +259,12 @@ void P_ChaseTicker()
 
    if(chasecam.groupid != pCamTargetGroupId)
    {
-      P_ResetChasecam();   // FIXME: this causes some twitching, need to improve it.
+      // FIXME: this causes some twitching, need to improve it.
+      chasecam.x = pCamTarget.x;
+      chasecam.y = pCamTarget.y;
+      chasecam.z = pCamTarget.z;
+      chasecam.groupid = pCamTargetGroupId;
+      chasecam.backupPosition();
       return;
    }
 
