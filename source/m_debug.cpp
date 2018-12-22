@@ -81,6 +81,12 @@ DebugLogger &DebugLogger::operator << (long number)
    printf("%ld", number);
    return *this;
 }
+DebugLogger &DebugLogger::operator << (long long number)
+{
+   checkspace(ls_number);
+   printf("%lld", number);
+   return *this;
+}
 DebugLogger &DebugLogger::operator << (double number)
 {
    checkspace(ls_number);
