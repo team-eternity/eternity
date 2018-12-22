@@ -176,6 +176,12 @@
 #define ST_MAXAMMO3X            314
 #define ST_MAXAMMO3Y            185
 
+// Inventory bar stuff.
+constexpr int ST_INVBARBGWIDTH  = 216;
+constexpr int ST_INVBARBGHEIGHT = 32;
+constexpr int ST_INVBARBGX      = SCREENWIDTH  - ST_INVBARBGWIDTH;
+constexpr int ST_INVBARBGY      = SCREENHEIGHT - ST_INVBARBGHEIGHT;
+
 // killough 2/8/98: weapon info position macros UNUSED, removed here
 
 // main player in game
@@ -233,6 +239,9 @@ static bool st_armson;
 // !deathmatch
 static bool st_fragson;
 
+// plyr->invbarstate.inventory
+static bool st_invbar;
+
 // main bar left
 static patch_t *sbar;
 
@@ -267,6 +276,14 @@ static patch_t *fs_health;
 static patch_t *fs_armorg;
 static patch_t *fs_armorb;
 static patch_t *fs_ammo[4];
+
+// MaxW: inventory bar patches
+static patch_t *inv_bar;
+static patch_t *inv_selectbox;
+static patch_t *inv_lgem1;
+static patch_t *inv_lgem2;
+static patch_t *inv_rgem1;
+static patch_t *inv_rgem2;
 
 // ready-weapon widget
 static st_number_t w_ready;
@@ -311,6 +328,9 @@ static st_number_t   w_ammo[4];
 
 // max ammo widgets
 static st_number_t   w_maxammo[4];
+
+// inventory background
+static st_binicon_t  w_invbarbg;
 
  // number of frags so far in deathmatch
 static int      st_fragscount;
@@ -682,6 +702,9 @@ static void ST_updateWidgets()
 
    st_fragscount = plyr->totalfrags;     // sf 15/10/99 use totalfrags
    w_frags.num   = st_fragscount;
+
+   // used by w_invbarbg widget
+   st_invbar = plyr->invbarstate.inventory;
 }
 
 //
@@ -800,6 +823,48 @@ static void ST_drawCommonWidgets(int alpha)
       STlib_updateMultIcon(&w_keyboxes[i], alpha);
 }
 
+static void ST_drawInventory()
+{
+   itemeffect_t *artifact;
+   const char *patchname;
+   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
+   int leftoffs = invbarstate.inv_ptr >= 7 ? invbarstate.inv_ptr - 6 : 0;
+
+   int i = -1;
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   {
+      // Safety check that the player has an inventory item, then that the effect exists
+      // for the selected item, then that there is an associated patch for that effect.
+      if(plyr->inventory[i + leftoffs].amount > 0)
+      {
+         if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
+         {
+            patchname = artifact->getString("icon", nullptr);
+            if(estrnonempty(patchname))
+            {
+               int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+                           lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+               patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+
+               V_DrawPatch(ST_INVBARBGX + (i * 31), ST_INVBARBGY, &subscreen43, patch);
+               //ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
+            }
+         }
+      }
+   }
+
+   int temp = i + leftoffs - 1;
+   if(leftoffs)
+      V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? inv_lgem1 : inv_lgem2);
+   if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+      V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? inv_rgem1 : inv_rgem2);
+
+   V_DrawPatch(ST_INVBARBGX + (invbarstate.inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+}
+
 static void ST_drawWidgets()
 {
    int i;
@@ -827,6 +892,10 @@ static void ST_drawWidgets()
    STlib_updateMultIcon(&w_faces, FRACUNIT);
 
    STlib_updateNum(&w_frags, NULL, FRACUNIT);
+
+   STlib_updateBinIcon(&w_invbarbg);
+   if(*w_invbarbg.on && *w_invbarbg.val)
+      ST_drawInventory();
 }
 
 static void ST_doRefresh()
@@ -1088,6 +1157,14 @@ static void ST_loadGraphics()
       sprintf(namebuf, "HU_FAMM%d", i);
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
+
+   // MaxW: inventory bar graphics
+   inv_bar       = PatchLoader::CacheName(wGlobalDir, "INVBAR",   PU_STATIC);
+   inv_selectbox = PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_STATIC);
+   inv_lgem1     = PatchLoader::CacheName(wGlobalDir, "INVGEML1", PU_STATIC);
+   inv_lgem2     = PatchLoader::CacheName(wGlobalDir, "INVGEML2", PU_STATIC);
+   inv_rgem1     = PatchLoader::CacheName(wGlobalDir, "INVGEMR1", PU_STATIC);
+   inv_rgem2     = PatchLoader::CacheName(wGlobalDir, "INVGEMR2", PU_STATIC);
 
    ST_CacheFaces(default_faces, "STF");
 }
@@ -1363,6 +1440,14 @@ static void ST_createWidgets()
                  0, 0,
                  &st_statusbaron,
                  ST_MAXAMMO3WIDTH);
+
+   // inventory bar
+   STlib_initBinIcon(&w_invbarbg,
+                     ST_INVBARBGX,
+                     ST_INVBARBGY,
+                     inv_bar,
+                     &st_invbar,
+                     &st_statusbaron);
 }
 
 //

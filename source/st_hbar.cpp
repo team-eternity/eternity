@@ -478,7 +478,7 @@ static void ST_drawStatBar()
 static void ST_drawInvBar()
 {
    itemeffect_t *artifact;
-   const char *patch;
+   const char *patchname;
    invbarstate_t &invbarstate = players[displayplayer].invbarstate;
    int leftoffs = invbarstate.inv_ptr >= 7 ? invbarstate.inv_ptr - 6 : 0;
 
@@ -495,12 +495,14 @@ static void ST_drawInvBar()
       {
          if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
          {
-            patch = artifact->getString("icon", "");
-            if(estrnonempty(patch))
+            patchname = artifact->getString("icon", "");
+            if(estrnonempty(patchname))
             {
-               V_DrawPatch(50 + i * 31, 160, &subscreen43,
-                           PatchLoader::CacheName(wGlobalDir, patch,
-                                                  PU_CACHE, lumpinfo_t::ns_sprites));
+               int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+                           lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+               patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+
+               V_DrawPatch(50 + (i * 31), 160, &subscreen43, patch);
                ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
             }
          }
