@@ -127,6 +127,11 @@ DebugLogger &DebugLogger::operator << (const side_t &side)
    << ") " << side.sector << "spec(" << side.special << "))";
 }
 
+DebugLogger &DebugLogger::operator << (const v2double_t &vec)
+{
+   return *this << "v2double(" << vec.x << vec.y << ")";
+}
+
 DebugLogger &DebugLogger::operator << (const v2fixed_t &vec)
 {
    return *this << "v2fixed(" >> vec.x >> vec.y << ")";
