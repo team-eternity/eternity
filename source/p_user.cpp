@@ -476,14 +476,9 @@ void P_DeathThink(player_t *player)
       if(player->mo->z <= player->mo->zref.floor && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }
-      
-   if(player->cmd.buttons & BT_USE)
-   {
-      if(player == &players[consoleplayer])
-         player->invbarstate.inv_ptr = 0;
 
+   if(player->cmd.buttons & BT_USE)
       player->playerstate = PST_REBORN;
-   }
 }
 
 //

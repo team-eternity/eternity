@@ -1593,10 +1593,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 
          // FIXME: Make this behaviour optional, or remove
          if(shiftinvleft)
-         {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
-            E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-         }
       }
    }
 }
@@ -1646,7 +1643,7 @@ static void E_allocateInventoryItemIDs()
 //
 static void E_allocateSortOrders()
 {
-   itemeffect_t *item = NULL;
+   itemeffect_t *item = nullptr;
 
    // scan the effects table and add artifacts to the table
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
@@ -1968,11 +1965,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    {
       if(artifact->getInt(keySortOrder, 0) <
          E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))
-      {
          player->inv_ptr++;
-         invbarstate_t &invbarstate = player->invbarstate;
-         invbarstate.inv_ptr++;
-      }
    }
 
    // set the item type in case the slot is new, and increment the amount owned
@@ -2105,7 +2098,7 @@ void E_ClearInventory(player_t *player)
    }
 
    player->inv_ptr = 0;
-   invbarstate = { false, 0, 0 };
+   invbarstate     = { false, 0 };
 }
 
 //

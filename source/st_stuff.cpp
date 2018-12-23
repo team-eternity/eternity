@@ -825,10 +825,8 @@ static void ST_drawCommonWidgets(int alpha)
 
 static void ST_drawInventory()
 {
-   itemeffect_t *artifact;
-   const char *patchname;
-   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
-   int leftoffs = invbarstate.inv_ptr >= 7 ? invbarstate.inv_ptr - 6 : 0;
+   const int inv_ptr = players[displayplayer].inv_ptr;
+   const int leftoffs = inv_ptr >= 7 ? inv_ptr - 6 : 0;
 
    int i = -1;
    // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
@@ -839,9 +837,10 @@ static void ST_drawInventory()
       // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
+         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         if(artifact)
          {
-            patchname = artifact->getString("icon", nullptr);
+            const char *patchname = artifact->getString("icon", nullptr);
             if(estrnonempty(patchname))
             {
                int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
@@ -861,7 +860,7 @@ static void ST_drawInventory()
    if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
       V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? inv_rgem1 : inv_rgem2);
 
-   V_DrawPatch(ST_INVBARBGX + (invbarstate.inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
+   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 
