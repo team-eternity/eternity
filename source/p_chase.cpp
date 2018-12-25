@@ -49,6 +49,7 @@
 #include "p_tick.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_pcheck.h"
 #include "r_portal.h"
 #include "r_state.h"
 
@@ -493,6 +494,64 @@ void P_ResetChasecam()
 camera_t walkcamera;
 int walkcam_active = 0;
 
+//
+// Checks walkcam for passing through an interactive portal plane.
+//
+static void P_checkWalkcamSectorPortal(const sector_t *sector)
+{
+   struct opset_t
+   {
+      unsigned sector_t::* pflags;
+      fixed_t(*portalzfunc)(const sector_t &);
+      bool(*comparison)(fixed_t, fixed_t);
+      linkdata_t *(*plink)(const sector_t *);
+      bool isceiling;
+   };
+
+   static const opset_t opsets[2] =
+   {
+      {
+         &sector_t::f_pflags,
+         P_FloorPortalZ,
+         [](fixed_t a, fixed_t b) { return a < b; },
+         R_FPLink,
+         false
+      },
+      {
+         &sector_t::c_pflags,
+         P_CeilingPortalZ,
+         [](fixed_t a, fixed_t b) { return a >= b; },
+         R_CPLink,
+         true
+      }
+   };
+
+   static const int MAXIMUM_PER_TIC = 8;
+   bool movedalready = false;
+   for(int i = 0; i < 2; ++i)
+   {
+      if(movedalready)
+         return;
+      const auto &op = opsets[i];
+      for(int j = 0; j < MAXIMUM_PER_TIC; ++j)
+      {
+         if(!(sector->*op.pflags & PS_PASSABLE))
+            break;
+         fixed_t planez = op.portalzfunc(*sector);
+         if(!op.comparison(walkcamera.z, planez))
+            break;
+         const linkdata_t *ldata = op.plink(sector);
+         walkcamera.x += ldata->deltax;
+         walkcamera.y += ldata->deltay;
+         walkcamera.z += ldata->deltaz;
+         walkcamera.groupid = ldata->toid;
+         sector = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
+         movedalready = true;
+         walkcamera.backupPosition();
+      }
+   }
+}
+
 void P_WalkTicker()
 {
    ticcmd_t *walktic = &netcmds[consoleplayer][(gametic/ticdup)%BACKUPTICS];
@@ -504,6 +563,7 @@ void P_WalkTicker()
    walkcamera.backupPosition();
 
    walkcamera.angle += walktic->angleturn << 16;
+   bool moved = false;
    
    // looking up/down 
    // haleyjd: this is the same as new code in p_user.c, but for walkcam
@@ -527,6 +587,7 @@ void P_WalkTicker()
    else if(fly)
    {
       walkcamera.z += 2 * fly * FRACUNIT;
+      moved = true;
       walkcamera.flying = true;
    }
 
@@ -535,6 +596,7 @@ void P_WalkTicker()
       angle_t an = static_cast<angle_t>(walkcamera.pitch);
       an >>= ANGLETOFINESHIFT;
       walkcamera.z -= FixedMul((ORIG_FRICTION/4)*walktic->forwardmove, finesine[an]);
+      moved = true;
    }
 
    v2fixed_t dest = { walkcamera.x, walkcamera.y };
@@ -566,26 +628,38 @@ void P_WalkTicker()
       walkcamera.y = dest.y;
       if(walkcamera.groupid != oldgroupid)
          walkcamera.backupPosition();
+      moved = true;
    }
 
    // haleyjd: FIXME -- this could be optimized by only
    // doing a traversal when the camera actually moves, rather
    // than every frame, naively
+   if(!moved)
+      return;
+
    subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
+
+   const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, true, 
+      subsec->sector);
+   const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, false,
+      subsec->sector);
 
    if(!walkcamera.flying)
    {
       // keep on the ground
-      walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
+      walkcamera.z = bottomsector->floorheight + 41 * FRACUNIT;
    }
 
-   fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
-   fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
+   fixed_t maxheight = topsector->ceilingheight - 8*FRACUNIT;
+   fixed_t minheight = bottomsector->floorheight + 4*FRACUNIT;
 
    if(walkcamera.z > maxheight)
       walkcamera.z = maxheight;
    if(walkcamera.z < minheight)
       walkcamera.z = minheight;
+
+   // Now check portal teleport
+   P_checkWalkcamSectorPortal(subsec->sector);
 }
 
 void P_ResetWalkcam()
