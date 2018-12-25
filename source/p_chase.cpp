@@ -35,6 +35,7 @@
 #include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
@@ -149,6 +150,77 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
 }
 
 //
+// Check if it's an edge portal
+//
+static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
+{
+   static const struct surfaceset_t
+   {
+      unsigned extflag;
+      unsigned sector_t::*pflags;
+      fixed_t sector_t::*height;
+      portal_t *sector_t::*portal;
+      fixed_t(*pzfunc)(const sector_t &);
+      bool(*compare)(fixed_t, fixed_t);
+   } ssets[2] = {
+      {
+         EX_ML_LOWERPORTAL,
+         &sector_t::f_pflags,
+         &sector_t::floorheight,
+         &sector_t::f_portal,
+         P_FloorPortalZ,
+         [](fixed_t a, fixed_t b) { return a < b; }
+      },
+      {
+         EX_ML_UPPERPORTAL,
+         &sector_t::c_pflags,
+         &sector_t::ceilingheight,
+         &sector_t::c_portal,
+         P_CeilingPortalZ,
+         [](fixed_t a, fixed_t b) { return a > b; }
+      }
+   };
+   for(int i = 0; i < 2; ++i)
+   {
+      const auto &s = ssets[i];
+      if(li->extflags & s.extflag && li->backsector->*s.pflags & PS_PASSABLE &&
+         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, li->frontsector->*s.height))
+      {
+         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+         traverse.link = &(li->backsector->*s.portal)->data.link;
+         traverse.startz = z;
+         return true;
+      }
+   }
+   return false;
+}
+
+//
+// Checks if the line is a line portal and updates traverse
+//
+static bool P_checkLinePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
+{
+   if(li->pflags & PS_PASSABLE)
+   {
+      // Exact target pos
+      v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
+      // Portal stuff. Only count it if truly crossed
+      if(P_PointOnLineSide(targpos.x, targpos.y, li) &&
+         !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
+      {
+         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+         traverse.link = &li->portal->data.link;
+         traverse.startz = z;
+
+         return true;
+      }
+   }
+   return false;
+}
+
+//
 // PTR_chaseTraverse
 //
 // go til you hit a wall
@@ -202,31 +274,20 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
          // NOTE: for portal lines, "othersector" may lapse into the hidden buffer sector.
          // Let's tolerate this for now, even though correctly it should mean the sector
          // behind the portal.
+
+         // Check for edge portals here
+         if(!(li->flags & ML_BLOCKING) && mysector == li->frontsector &&
+            P_checkEdgePortal(li, z, in->frac, traverse))
+         {
+            return false;
+         }
+
          if((li->flags & ML_BLOCKING) || 
             (othersector->floorheight>z) || (othersector->ceilingheight<z)
             || (othersector->ceilingheight-othersector->floorheight
                 < 40*FRACUNIT));          // hit
          else
-         {
-            if(li->pflags & PS_PASSABLE)
-            {
-               // Exact target pos
-               v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
-               // Portal stuff. Only count it if truly crossed
-               // TODO: handle edge portals.
-               if(P_PointOnLineSide(targpos.x, targpos.y, li) &&
-                  !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
-               {
-                  traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, in->frac);
-                  traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, in->frac);
-                  traverse.link = &li->portal->data.link;
-                  traverse.startz += FixedMul(pCamTarget.z - traverse.startz, in->frac);
-
-                  return false;
-               }
-            }
-            return true;    // continue
-         }
+            return !P_checkLinePortal(li, z, in->frac, traverse);
       }
 
       pCamTarget.x = x; // point the new chasecam target at the intersection
