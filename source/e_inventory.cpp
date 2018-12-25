@@ -1407,7 +1407,7 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 // Tries to move the inventory cursor 'amount' right.
 // Returns true if cursor wasn't adjusted (outside of amount being added).
 //
-bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
+bool E_MoveInventoryCursor(const player_t *player, const int amount, int &cursor)
 {
    if(cursor + amount < 0)
    {
@@ -1427,6 +1427,25 @@ bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
       return false;
 
    cursor += amount;
+   return true;
+}
+
+//
+// Checks if cursor can be moved 'amount' right without mutating cursor
+//
+bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const int cursor)
+{
+   if(cursor + amount < 0)
+      return false;
+   if(amount <= 0)
+      return true; // We know that the cursor will succeed in moving left
+
+   itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + amount);
+   if(!effect)
+      return false;
+   if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
+      return false;
+
    return true;
 }
 

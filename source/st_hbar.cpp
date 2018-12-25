@@ -511,8 +511,7 @@ static void ST_drawInvBar()
 
    if(leftoffs)
       V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
-   int temp = i + leftoffs - 1;
-   if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+   if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
       V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
 
    V_DrawPatch(ST_INVSLOTSTARTX + ((inv_ptr - leftoffs) * 31), SCREENHEIGHT - 11,

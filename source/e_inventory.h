@@ -195,8 +195,11 @@ bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote);
 // Get the automap color for a lockdef
 int E_GetLockDefColor(int lockID);
 
-// Tries to move the inventory cursor 'amount' right.
-bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor);
+// Tries to move the inventory cursor 'amount' right
+bool E_MoveInventoryCursor(const player_t *player, const int amount, int &cursor);
+
+// Checks if inventory cursor can be moved 'amount' right without mutating cursor
+bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const int cursor);
 
 // Says if a player possesses at least one item w/ +invbar
 bool E_PlayerHasVisibleInvItem(const player_t *player);

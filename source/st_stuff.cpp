@@ -853,7 +853,18 @@ static void ST_drawCommonWidgets(int alpha)
 static void ST_drawInventory()
 {
    const int inv_ptr = players[displayplayer].inv_ptr;
-   const int leftoffs = inv_ptr >= 7 ? inv_ptr - 6 : 0;
+   int leftoffs;
+   if(inv_ptr >= 4)
+   {
+      leftoffs = inv_ptr - 3;
+      int temp = 1;
+      while(E_CanMoveInventoryCursor(plyr, temp, inv_ptr))
+         temp++;
+      if(temp <= 3)
+         leftoffs -= 4 - temp;
+   }
+   else
+      leftoffs = 0;
 
    int i = -1;
    // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
@@ -882,18 +893,17 @@ static void ST_drawInventory()
       }
    }
 
-   int temp = i + leftoffs - 1;
    if(leftoffs)
    {
-      V_DrawPatchTL(ST_INVBARBGX + 2, SCREENHEIGHT - ((ST_INVBARBGHEIGHT / 2)),
+      V_DrawPatchTL(ST_INVBARBGX + 2, SCREENHEIGHT - (ST_INVBARBGHEIGHT / 2),
                     &subscreen43, !(leveltime & 4) ? inv_lgem1 : inv_lgem2,
-                    nullptr, (FRACUNIT * 2) / 3);
+                    nullptr, (FRACUNIT * 6) / 10);
    }
-   if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+   if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
    {
-      V_DrawPatchTL(SCREENWIDTH - 3, SCREENHEIGHT - ((ST_INVBARBGHEIGHT / 2)),
+      V_DrawPatchTL(SCREENWIDTH - 3, SCREENHEIGHT - (ST_INVBARBGHEIGHT / 2),
                     &subscreen43, !(leveltime & 4) ? inv_rgem1 : inv_rgem2,
-                    nullptr, (FRACUNIT * 2) / 3);
+                    nullptr, (FRACUNIT * 6) / 10);
    }
 
    V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
