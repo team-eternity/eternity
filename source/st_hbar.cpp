@@ -502,7 +502,8 @@ static void ST_drawInvBar()
                patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
 
                V_DrawPatch(ST_INVSLOTSTARTX + (i * 31), 160, &subscreen43, patch);
-               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
+                                  ST_INVSLOTSTARTX + 27 + (i * 31), ST_INVBARBGY + 22);
             }
          }
       }

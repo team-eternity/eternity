@@ -359,6 +359,33 @@ extern byte     **translationtables;
 // STATUS BAR CODE
 //
 
+//
+// Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
+// x is expected to be 8 more than its equivalent Heretic calls.
+//
+static void ST_drawSmallNumber(int val, int x, int y)
+{
+   if(val > 1)
+   {
+      patch_t *patch;
+      char buf[6];
+
+      // If you want more than 99,999 of something then you probably
+      // know enough about coding to change this hard limit.
+      if(val > 99999)
+         val = 99999;
+      sprintf(buf, "%d", val);
+      x -= 4 * (strlen(buf));
+      for(char *rover = buf; *rover; rover++)
+      {
+         int i = *rover - '0';
+         patch = shortnum[i];
+         V_DrawPatch(x, y, &subscreen43, patch);
+         x += 4;
+      }
+   }
+}
+
 static void ST_refreshBackground()
 {
    if(st_statusbaron)
@@ -848,7 +875,8 @@ static void ST_drawInventory()
                patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
 
                V_DrawPatch(ST_INVBARBGX + (i * 31), ST_INVBARBGY, &subscreen43, patch);
-               //ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
+                                  ST_INVBARBGX + 27 + (i * 31), ST_INVBARBGY + 22);
             }
          }
       }
