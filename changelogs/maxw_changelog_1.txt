@@ -300,6 +300,16 @@ putting a '/' before the rest of the path.
 2018/12/18
 Re-implemented the MBF pickups.
 
+-------------------------------------------------------------------------------
+2018/12/25
+Merry Christmas!
+Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
+the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
+layouts have been made to be the new default for overlay-style HUDs.
+Added an inventory bar to Doom. Currently it only works when not using the
+regular Doom HUD, and currently selected items are not renderered outside of
+when the inventory bar is active.
+
 ================================================================================
 EOF
 ================================================================================
