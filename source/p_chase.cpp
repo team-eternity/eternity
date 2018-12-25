@@ -537,17 +537,36 @@ void P_WalkTicker()
       walkcamera.z -= FixedMul((ORIG_FRICTION/4)*walktic->forwardmove, finesine[an]);
    }
 
+   v2fixed_t dest = { walkcamera.x, walkcamera.y };
+
    // moving forward
-   fwan = walkcamera.angle;
-   fwan >>= ANGLETOFINESHIFT;
-   walkcamera.x += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finecosine[fwan]);
-   walkcamera.y += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finesine[fwan]);
+   if(walktic->forwardmove)
+   {
+      fwan = walkcamera.angle;
+      fwan >>= ANGLETOFINESHIFT;
+      dest.x += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finecosine[fwan]);
+      dest.y += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finesine[fwan]);
+   }
 
    // strafing
-   san = walkcamera.angle - ANG90;
-   san >>= ANGLETOFINESHIFT;
-   walkcamera.x += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finecosine[san]);
-   walkcamera.y += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finesine[san]);
+   if(walktic->sidemove)
+   {
+      san = walkcamera.angle - ANG90;
+      san >>= ANGLETOFINESHIFT;
+      dest.x += FixedMul((ORIG_FRICTION / 6) * walktic->sidemove, finecosine[san]);
+      dest.y += FixedMul((ORIG_FRICTION / 6) * walktic->sidemove, finesine[san]);
+   }
+
+   if(dest.x != walkcamera.x || dest.y != walkcamera.y)
+   {
+      int oldgroupid = walkcamera.groupid;
+      dest = P_LinePortalCrossing(walkcamera.x, walkcamera.y, dest.x - walkcamera.x, 
+         dest.y - walkcamera.y, &walkcamera.groupid);
+      walkcamera.x = dest.x;
+      walkcamera.y = dest.y;
+      if(walkcamera.groupid != oldgroupid)
+         walkcamera.backupPosition();
+   }
 
    // haleyjd: FIXME -- this could be optimized by only
    // doing a traversal when the camera actually moves, rather
@@ -585,6 +604,7 @@ void P_ResetWalkcam()
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
    walkcamera.z = sec->floorheight + 41*FRACUNIT;
+   walkcamera.groupid = sec->groupid;
 
    walkcamera.backupPosition();
 }
