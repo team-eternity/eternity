@@ -176,24 +176,6 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
 
       if(li->flags & ML_TWOSIDED)
       {  // crosses a two sided line
-         if(li->pflags & PS_PASSABLE)
-         {
-            // Exact target pos
-            v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
-            // Portal stuff. Only count it if truly crossed
-            // TODO: handle edge and sector portals.
-            if(P_PointOnLineSide(targpos.x, targpos.y, li) && 
-               !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
-            {
-               traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, in->frac);
-               traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, in->frac);
-               traverse.link = &li->portal->data.link;
-               traverse.startz += FixedMul(pCamTarget.z - traverse.startz, in->frac);
-
-               return false;
-            }
-         }
-
          // sf: find which side it hit
          
          subsector_t *ss = R_PointInSubsector (x, y);
@@ -211,16 +193,38 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
          
          int z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
 
+         // First check if the Z went low enough to hit a sector portal
          if(mysector && P_checkSectorPortal(z, in->frac, mysector, traverse))
             return false;
          
          // found which side, check for intersections
+
+         // NOTE: for portal lines, "othersector" may lapse into the hidden buffer sector.
+         // Let's tolerate this for now, even though correctly it should mean the sector
+         // behind the portal.
          if((li->flags & ML_BLOCKING) || 
             (othersector->floorheight>z) || (othersector->ceilingheight<z)
             || (othersector->ceilingheight-othersector->floorheight
                 < 40*FRACUNIT));          // hit
          else
          {
+            if(li->pflags & PS_PASSABLE)
+            {
+               // Exact target pos
+               v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
+               // Portal stuff. Only count it if truly crossed
+               // TODO: handle edge portals.
+               if(P_PointOnLineSide(targpos.x, targpos.y, li) &&
+                  !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
+               {
+                  traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, in->frac);
+                  traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, in->frac);
+                  traverse.link = &li->portal->data.link;
+                  traverse.startz += FixedMul(pCamTarget.z - traverse.startz, in->frac);
+
+                  return false;
+               }
+            }
             return true;    // continue
          }
       }
