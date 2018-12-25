@@ -32,7 +32,6 @@
 #include "r_patch.h"
 #include "v_font.h"
 #include "v_misc.h"
-#include "v_patchfmt.h"
 
 //=============================================================================
 //
@@ -190,8 +189,9 @@ void ModernHUD::DrawArmor(int x, int y)
 void ModernHUD::DrawWeapons(int x, int y)
 {
    qstring tempstr;
+   const bool laligned = hud_overlaylayout != HUD_DISTRIB;
 
-   if(hud_overlaylayout != HUD_DISTRIB)
+   if(laligned)
       tempstr = "ARMS ";
 
    for(int i = 0; i < NUMWEAPONS; i++)
@@ -205,13 +205,13 @@ void ModernHUD::DrawWeapons(int x, int y)
       else
          fontcolor = *FC_CUSTOM2;
 
-      if(hud_overlaylayout != HUD_DISTRIB)
+      if(laligned)
          tempstr << fontcolor << i + 1 << ' ';
       else
          tempstr << ' ' << fontcolor << i + 1;
    }
 
-   if(hud_overlaylayout != HUD_DISTRIB)
+   if(laligned)
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
    else
    {
@@ -225,10 +225,10 @@ void ModernHUD::DrawWeapons(int x, int y)
 //
 void ModernHUD::DrawAmmo(int x, int y)
 {
-   const int displayoffs = hud_overlaylayout != HUD_DISTRIB ?
-                              x + V_FontStringWidth(hud_fssmall, "AMMO") + 1 :
-                              x - (V_FontStringWidth(hud_fssmall, "AMMO") + 1);
-   if(hud_overlaylayout != HUD_DISTRIB)
+   const bool laligned = hud_overlaylayout != HUD_DISTRIB;
+   const int displayoffs = laligned ? x +  V_FontStringWidth(hud_fssmall, "AMMO") + 1 :
+                                      x - (V_FontStringWidth(hud_fssmall, "AMMO") + 1);
+   if(laligned)
       V_FontWriteText(hud_fssmall, "AMMO", x, y, &vbscreen);
    else
       FontWriteTextRAlign(hud_fssmall, "AMMO", x, y, &vbscreen);
@@ -238,7 +238,7 @@ void ModernHUD::DrawAmmo(int x, int y)
       qstring    tempstr;
       const char fontcolor = HU_WeapColor(hu_player.readyweapon);
       tempstr << fontcolor << playerammo << FC_GRAY " / " << fontcolor << playermaxammo;
-      if(hud_overlaylayout != HUD_DISTRIB)
+      if(laligned)
          V_FontWriteText(hud_fsmedium, tempstr.constPtr(), displayoffs, y, &vbscreen);
       else
          FontWriteTextRAlign(hud_fsmedium, tempstr.constPtr(), displayoffs, y, &vbscreen);
