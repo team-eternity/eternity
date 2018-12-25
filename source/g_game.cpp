@@ -275,7 +275,6 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       // FIXME: Handle noartiskip?
       if(invbarstate.inventory)
       {
-         p.inv_ptr = invbarstate.inv_ptr;
          invbarstate.inventory = false;
          usearti = false;
       }
@@ -889,7 +888,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr);
+         E_MoveInventoryCursor(&players[consoleplayer], -1, players[consoleplayer].inv_ptr);
          return true;
       }
       if(gameactions[ka_inventory_right])
@@ -900,7 +899,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr);
+         E_MoveInventoryCursor(&players[consoleplayer], 1, players[consoleplayer].inv_ptr);
          return true;
       }
 
@@ -2285,10 +2284,7 @@ void G_Ticker()
    // turn inventory off after a certain amount of time
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
    if(invbarstate.inventory && !(--inventoryTics))
-   {
-      players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
       invbarstate.inventory = false;
-   }
 
    // do main actions
    
@@ -2352,7 +2348,6 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
-   inventoryindex_t inv_ptr;
 
    p = &players[player];
 
@@ -2368,7 +2363,6 @@ void G_PlayerReborn(int player)
    playerskin   = p->skin;
    playerclass  = p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
-   inv_ptr      = p->inv_ptr;
 
    delete p->weaponctrs;
   
@@ -2388,7 +2382,6 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
-   p->inv_ptr     = inv_ptr;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07

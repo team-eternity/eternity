@@ -171,6 +171,8 @@ MetaTable *E_GetItemEffects()
 #define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
 #define KEY_ICON           "icon"
+#define KEY_ICON_XOFFS     "icon.offset.x"
+#define KEY_ICON_YOFFS     "icon.offset.y"
 #define KEY_IGNORESKILL    "ignoreskill"
 #define KEY_INTERHUBAMOUNT "interhubamount"
 #define KEY_INVBAR         "invbar"
@@ -345,6 +347,8 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_INT(KEY_INTERHUBAMOUNT,  0, CFGF_NONE), // amount carryable between hubs (or levels)
    CFG_INT(KEY_SORTORDER,       0, CFGF_NONE), // relative ordering within inventory
    CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
+   CFG_INT(KEY_ICON_XOFFS,      0, CFGF_NONE), // x offset of icon (+ is left)
+   CFG_INT(KEY_ICON_YOFFS,      0, CFGF_NONE), // y offset of icon (+ is right)
    CFG_STR(KEY_USESOUND,       "", CFGF_NONE), // sound to play when used
    CFG_STR(KEY_USEEFFECT,      "", CFGF_NONE), // effect to activate when used
 
@@ -1407,7 +1411,7 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 // Tries to move the inventory cursor 'amount' right.
 // Returns true if cursor wasn't adjusted (outside of amount being added).
 //
-bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
+bool E_MoveInventoryCursor(const player_t *player, const int amount, int &cursor)
 {
    if(cursor + amount < 0)
    {
@@ -1427,6 +1431,25 @@ bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
       return false;
 
    cursor += amount;
+   return true;
+}
+
+//
+// Checks if cursor can be moved 'amount' right without mutating cursor
+//
+bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const int cursor)
+{
+   if(cursor + amount < 0)
+      return false;
+   if(amount <= 0)
+      return true; // We know that the cursor will succeed in moving left
+
+   itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + amount);
+   if(!effect)
+      return false;
+   if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
+      return false;
+
    return true;
 }
 
@@ -1593,10 +1616,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 
          // FIXME: Make this behaviour optional, or remove
          if(shiftinvleft)
-         {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
-            E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-         }
       }
    }
 }
@@ -1646,7 +1666,7 @@ static void E_allocateInventoryItemIDs()
 //
 static void E_allocateSortOrders()
 {
-   itemeffect_t *item = NULL;
+   itemeffect_t *item = nullptr;
 
    // scan the effects table and add artifacts to the table
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
@@ -1968,11 +1988,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    {
       if(artifact->getInt(keySortOrder, 0) <
          E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))
-      {
          player->inv_ptr++;
-         invbarstate_t &invbarstate = player->invbarstate;
-         invbarstate.inv_ptr++;
-      }
    }
 
    // set the item type in case the slot is new, and increment the amount owned
@@ -2105,7 +2121,7 @@ void E_ClearInventory(player_t *player)
    }
 
    player->inv_ptr = 0;
-   invbarstate = { false, 0, 0 };
+   invbarstate     = { false, 0 };
 }
 
 //
