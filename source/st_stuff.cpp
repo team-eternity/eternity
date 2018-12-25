@@ -856,9 +856,17 @@ static void ST_drawInventory()
 
    int temp = i + leftoffs - 1;
    if(leftoffs)
-      V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? inv_lgem1 : inv_lgem2);
+   {
+      V_DrawPatchTL(ST_INVBARBGX + 2, SCREENHEIGHT - ((ST_INVBARBGHEIGHT / 2)),
+                    &subscreen43, !(leveltime & 4) ? inv_lgem1 : inv_lgem2,
+                    nullptr, (FRACUNIT * 2) / 3);
+   }
    if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
-      V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? inv_rgem1 : inv_rgem2);
+   {
+      V_DrawPatchTL(SCREENWIDTH - 3, SCREENHEIGHT - ((ST_INVBARBGHEIGHT / 2)),
+                    &subscreen43, !(leveltime & 4) ? inv_rgem1 : inv_rgem2,
+                    nullptr, (FRACUNIT * 2) / 3);
+   }
 
    V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
                PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
