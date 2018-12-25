@@ -308,6 +308,8 @@
 		4FC0A93F1E1E2ABC006CEC45 /* cam_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93A1E1E2ABC006CEC45 /* cam_common.cpp */; };
 		4FC0A9401E1E2ABC006CEC45 /* cam_shoot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93C1E1E2ABC006CEC45 /* cam_shoot.cpp */; };
 		4FC0A9411E1E2ABC006CEC45 /* cam_use.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93D1E1E2ABC006CEC45 /* cam_use.cpp */; };
+		4FFDE54921D2817D00836A2D /* hu_modern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54421D2817C00836A2D /* hu_modern.cpp */; };
+		4FFDE54A21D2817D00836A2D /* hu_boom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54521D2817C00836A2D /* hu_boom.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -472,6 +474,12 @@
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
 		4FFD27351796990400E4E5B1 /* p_henemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_henemy.cpp; path = ../source/p_henemy.cpp; sourceTree = "<group>"; };
 		4FFD27371796990400E4E5B1 /* w_iterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w_iterator.h; path = ../source/w_iterator.h; sourceTree = "<group>"; };
+		4FFDE54321D2817C00836A2D /* p_things.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_things.h; path = ../source/p_things.h; sourceTree = "<group>"; };
+		4FFDE54421D2817C00836A2D /* hu_modern.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hu_modern.cpp; path = ../source/hu_modern.cpp; sourceTree = "<group>"; };
+		4FFDE54521D2817C00836A2D /* hu_boom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = hu_boom.cpp; path = ../source/hu_boom.cpp; sourceTree = "<group>"; };
+		4FFDE54621D2817D00836A2D /* hu_modern.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_modern.h; path = ../source/hu_modern.h; sourceTree = "<group>"; };
+		4FFDE54721D2817D00836A2D /* hu_boom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_boom.h; path = ../source/hu_boom.h; sourceTree = "<group>"; };
+		4FFDE54821D2817D00836A2D /* m_avltree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_avltree.h; path = ../source/m_avltree.h; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityEngine-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityEngine-Info.plist"; sourceTree = "<group>"; };
 		FA16D39E15E01B82002318D1 /* d_files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_files.cpp; path = ../source/d_files.cpp; sourceTree = SOURCE_ROOT; };
 		FA16D3BC15E01E96002318D1 /* a_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_common.h; path = ../source/a_common.h; sourceTree = SOURCE_ROOT; };
@@ -1405,8 +1413,12 @@
 		FACACB421652ED8A0091AF2E /* HU_ */ = {
 			isa = PBXGroup;
 			children = (
+				4FFDE54521D2817C00836A2D /* hu_boom.cpp */,
+				4FFDE54721D2817D00836A2D /* hu_boom.h */,
 				FABF5CF1158BF42800C49E93 /* hu_frags.cpp */,
 				FA16D3FC15E01E96002318D1 /* hu_frags.h */,
+				4FFDE54421D2817C00836A2D /* hu_modern.cpp */,
+				4FFDE54621D2817D00836A2D /* hu_modern.h */,
 				FABF5CF2158BF42800C49E93 /* hu_over.cpp */,
 				FA16D3FD15E01E96002318D1 /* hu_over.h */,
 				FABF5CF3158BF42800C49E93 /* hu_stuff.cpp */,
@@ -1431,6 +1443,7 @@
 		FACACB481652EE6D0091AF2E /* M_ */ = {
 			isa = PBXGroup;
 			children = (
+				4FFDE54821D2817D00836A2D /* m_avltree.h */,
 				4F2F32A41867100100EED7DE /* m_binary.h */,
 				4F2F32A51867100100EED7DE /* m_compare.h */,
 				4F2F32A61867100100EED7DE /* m_ctype.h */,
@@ -1565,6 +1578,7 @@
 				FABF5D2A158BF42800C49E93 /* p_switch.cpp */,
 				FABF5D2B158BF42800C49E93 /* p_telept.cpp */,
 				FABF5D2C158BF42800C49E93 /* p_things.cpp */,
+				4FFDE54321D2817C00836A2D /* p_things.h */,
 				FABF5D2D158BF42800C49E93 /* p_tick.cpp */,
 				FA16D43415E01E96002318D1 /* p_tick.h */,
 				FABF5D2E158BF42800C49E93 /* p_trace.cpp */,
@@ -2145,6 +2159,7 @@
 				4F5F38DD182D9AC00027813A /* m_argv.cpp in Sources */,
 				4F5F38DE182D9AC00027813A /* m_bbox.cpp in Sources */,
 				4F5F38DF182D9AC00027813A /* m_buffer.cpp in Sources */,
+				4FFDE54921D2817D00836A2D /* hu_modern.cpp in Sources */,
 				4F5F38E0182D9AC00027813A /* m_cheat.cpp in Sources */,
 				4F5F38E1182D9AC00027813A /* m_fcvt.cpp in Sources */,
 				4F5F38E2182D9AC00027813A /* m_hash.cpp in Sources */,
@@ -2239,6 +2254,7 @@
 				4F5F38AC182D99090027813A /* e_lib.cpp in Sources */,
 				4F5F38AF182D99090027813A /* e_mod.cpp in Sources */,
 				4F5F38B1182D99090027813A /* e_player.cpp in Sources */,
+				4FFDE54A21D2817D00836A2D /* hu_boom.cpp in Sources */,
 				4F5F38B3182D99090027813A /* e_rtti.cpp in Sources */,
 				4F5F38B5182D99090027813A /* e_sound.cpp in Sources */,
 				4F5F38B7182D99090027813A /* e_sprite.cpp in Sources */,
