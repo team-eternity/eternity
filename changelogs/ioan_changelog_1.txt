@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+25.12.2018
+
+IMPROVEMENT: Chasecam and walkcam are now portal-aware. Interpolation is however
+             disabled.
+
+--------------------------------------------------------------------------------
 25.11.2018
 
 IMPROVEMENT: Now if an action is bound to more than one key, and two of the keys
