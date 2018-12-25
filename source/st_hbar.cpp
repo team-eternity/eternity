@@ -501,7 +501,11 @@ static void ST_drawInvBar()
                            lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
                patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
 
-               V_DrawPatch(ST_INVSLOTSTARTX + (i * 31), 160, &subscreen43, patch);
+               const int xoffs = artifact->getInt("icon.offset.x", 0);
+               const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+               V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
+                           &subscreen43, patch);
                ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
                                   ST_INVSLOTSTARTX + 27 + (i * 31), ST_INVBARBGY + 22);
             }

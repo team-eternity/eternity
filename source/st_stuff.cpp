@@ -854,6 +854,9 @@ static void ST_drawInventory()
 {
    const int inv_ptr = players[displayplayer].inv_ptr;
    int leftoffs;
+
+   // This makes is so that leftoffs keeps the box in
+   // the middle unless at either edge of the inventory
    if(inv_ptr >= 4)
    {
       leftoffs = inv_ptr - 3;
@@ -885,7 +888,11 @@ static void ST_drawInventory()
                            lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
                patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
 
-               V_DrawPatch(ST_INVBARBGX + (i * 31), ST_INVBARBGY, &subscreen43, patch);
+               const int xoffs = artifact->getInt("icon.offset.x", 0);
+               const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+               V_DrawPatch(ST_INVBARBGX + (i * 31) - xoffs, ST_INVBARBGY - yoffs,
+                           &subscreen43, patch);
                ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
                                   ST_INVBARBGX + 27 + (i * 31), ST_INVBARBGY + 22);
             }

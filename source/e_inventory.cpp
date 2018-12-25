@@ -171,6 +171,8 @@ MetaTable *E_GetItemEffects()
 #define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
 #define KEY_ICON           "icon"
+#define KEY_ICON_XOFFS     "icon.offset.x"
+#define KEY_ICON_YOFFS     "icon.offset.y"
 #define KEY_IGNORESKILL    "ignoreskill"
 #define KEY_INTERHUBAMOUNT "interhubamount"
 #define KEY_INVBAR         "invbar"
@@ -345,6 +347,8 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_INT(KEY_INTERHUBAMOUNT,  0, CFGF_NONE), // amount carryable between hubs (or levels)
    CFG_INT(KEY_SORTORDER,       0, CFGF_NONE), // relative ordering within inventory
    CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
+   CFG_INT(KEY_ICON_XOFFS,      0, CFGF_NONE), // x offset of icon (+ is left)
+   CFG_INT(KEY_ICON_YOFFS,      0, CFGF_NONE), // y offset of icon (+ is right)
    CFG_STR(KEY_USESOUND,       "", CFGF_NONE), // sound to play when used
    CFG_STR(KEY_USEEFFECT,      "", CFGF_NONE), // effect to activate when used
 
