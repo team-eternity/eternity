@@ -301,6 +301,9 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       return false;
    }
 
+   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
+      return false;
+
    itemeffect_t *ammogiven = nullptr;
    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
@@ -332,10 +335,6 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
 
       if((dmflags & DM_WEAPONSTAY) && !dropped)
       {
-         // leave placed weapons forever on net games
-         if(E_PlayerOwnsWeapon(player, wp))
-            return false;
-
          if(ammogiven &&
             ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
          {
