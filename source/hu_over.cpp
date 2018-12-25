@@ -250,7 +250,7 @@ void HU_LoadFonts()
    if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
       I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
    if(!(hud_fslarge = E_FontForName(hud_fslargename)))
-      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fslarge);
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fslargename);
 
    hud_fontsloaded = true;
 }
