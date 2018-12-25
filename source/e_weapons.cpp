@@ -325,6 +325,26 @@ bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot)
 }
 
 //
+// As above, but returning the number owned in the slot
+//
+int E_NumWeaponsInSlotPlayerOwns(const player_t *player, const int slot)
+{
+   if(!player->pclass->weaponslots[slot])
+      return 0;
+
+   int ret = 0;
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   do
+   {
+      if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+         ret++;
+      weaponslot = weaponslot->bdNext;
+   } while(!weaponslot->isDummy());
+
+   return ret;
+}
+
+//
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
 bool E_WeaponHasAltFire(const weaponinfo_t *wp)

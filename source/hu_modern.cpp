@@ -24,8 +24,10 @@
 //
 
 #include "d_gi.h"
+#include "d_player.h"
 #include "doomstat.h"
 #include "e_inventory.h"
+#include "e_player.h"
 #include "e_weapons.h"
 #include "hu_modern.h"
 #include "m_qstr.h"
@@ -183,6 +185,30 @@ void ModernHUD::DrawArmor(int x, int y)
    }
 }
 
+// HU_WeapColor tuned to work for a weapon slot
+static char HU_weapSlotColor(const int slot)
+{
+   if(!hu_player.pclass->weaponslots[slot])
+      return 0;
+
+   const weaponinfo_t *weapon = nullptr;
+
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
+   do
+   {
+      if(E_PlayerOwnsWeapon(&hu_player, weaponslot->bdObject->weapon))
+      {
+         if(weapon == nullptr)
+            weapon = weaponslot->bdObject->weapon;
+         else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
+            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
+      }
+      weaponslot = weaponslot->bdNext;
+   } while(!weaponslot->isDummy());
+
+   return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+}
+
 //
 // Weapons List
 //
@@ -197,9 +223,16 @@ void ModernHUD::DrawWeapons(int x, int y)
    for(int i = 0; i < NUMWEAPONS; i++)
    {
       char fontcolor;
-      if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
+      if(E_NumWeaponsInSlotPlayerOwns(&hu_player, i) > 1)
+         fontcolor = HU_weapSlotColor(i);
+      else if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
       {
          const weaponinfo_t *weapon = E_WeaponForDEHNum(i);
+         fontcolor = weapon->ammo ? HU_WeapColor(E_WeaponForDEHNum(i)) : *FC_GRAY;
+      }
+      else if(E_PlayerOwnsWeaponInSlot(&hu_player, i))
+      {
+         const weaponinfo_t *weapon = P_GetPlayerWeapon(&hu_player, i);
          fontcolor = weapon->ammo ? HU_WeapColor(E_WeaponForDEHNum(i)) : *FC_GRAY;
       }
       else

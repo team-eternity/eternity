@@ -131,13 +131,13 @@ static hudoverlayitem_t *I_defaultHUDOverlay()
 #define hu_player (players[displayplayer])
 
 // Get the player's ammo for the given weapon, or 0 if am_noammo
-int HU_WC_PlayerAmmo(weaponinfo_t *w)
+int HU_WC_PlayerAmmo(const weaponinfo_t *w)
 {
    return E_GetItemOwnedAmount(&hu_player, w->ammo);
 }
 
 // Determine if the player has enough ammo for one shot with the given weapon
-bool HU_WC_NoAmmo(weaponinfo_t *w)
+bool HU_WC_NoAmmo(const weaponinfo_t *w)
 {
    bool outofammo = false;
    itemeffect_t *ammo = w->ammo;
@@ -154,7 +154,7 @@ bool HU_WC_NoAmmo(weaponinfo_t *w)
 }
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
-int HU_WC_MaxAmmo(weaponinfo_t *w)
+int HU_WC_MaxAmmo(const weaponinfo_t *w)
 {
    int amount = 0;
    itemeffect_t *ammo = w->ammo;
@@ -166,7 +166,7 @@ int HU_WC_MaxAmmo(weaponinfo_t *w)
 }
 
 // Determine the color to use for the given weapon's number and ammo bar/count
-char HU_WeapColor(weaponinfo_t *w)
+char HU_WeapColor(const weaponinfo_t *w)
 {
    int  maxammo = HU_WC_MaxAmmo(w);
    bool noammo  = HU_WC_NoAmmo(w);

@@ -138,10 +138,10 @@ enum hudoverlay_e : unsigned int
    HUO_MAXOVERLAYS
 };
 
-int  HU_WC_PlayerAmmo(weaponinfo_t *w);
-bool HU_WC_NoAmmo(weaponinfo_t *w);
-int  HU_WC_MaxAmmo(weaponinfo_t *w);
-char HU_WeapColor(weaponinfo_t *w);
+int  HU_WC_PlayerAmmo(const weaponinfo_t *w);
+bool HU_WC_NoAmmo(const weaponinfo_t *w);
+int  HU_WC_MaxAmmo(const weaponinfo_t *w);
+char HU_WeapColor(const weaponinfo_t *w);
 
 char HU_HealthColor();
 char HU_ArmorColor();
