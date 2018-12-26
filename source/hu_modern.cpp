@@ -201,7 +201,7 @@ static char HU_weapSlotColor(const int slot)
          if(weapon == nullptr)
             weapon = weaponslot->bdObject->weapon;
          else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
-            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
+            return *FC_ORANGE; // TODO: Change "more than one ammo type in slot" color
       }
       weaponslot = weaponslot->bdNext;
    } while(!weaponslot->isDummy());
@@ -233,7 +233,7 @@ void ModernHUD::DrawWeapons(int x, int y)
       else if(E_PlayerOwnsWeaponInSlot(&hu_player, i))
       {
          const weaponinfo_t *weapon = P_GetPlayerWeapon(&hu_player, i);
-         fontcolor = weapon->ammo ? HU_WeapColor(E_WeaponForDEHNum(i)) : *FC_GRAY;
+         fontcolor = weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
       }
       else
          fontcolor = *FC_CUSTOM2;

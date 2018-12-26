@@ -60,6 +60,83 @@ font ee_hudfont
    }
 }
 
+// Modern HUD overlay small font - arms numbers and kills/items/secrets
+font ee_fshudsmallfont
+{
+   start       '/'
+   end         'Z'
+   colorable   true
+   uppercase   true
+   spacesize   1
+   tallestchar 6
+   defaultcolor gray
+
+   filter { chars { '/' };                mask "NHUD_SLS"  }
+   filter { start 'A'; end = 'Z';         mask "NHUD_%c"   }
+   filter { start '0'; end = '9';         mask "NHUD_DS%c" }
+
+   colortables
+   {
+      gray:   @identity
+      green:  "80=112,95=117"
+      gold:   "80=249,95=163"
+      red:    "80=179,95=184"
+      blue:   "80=194,95=197"
+      custom1: "80=128,95=134"
+      custom2: "80=95,95=102"
+   }
+}
+
+// Modern HUD overlay medium font - ammo numbers
+font ee_fshudmediumfont
+{
+   start       '/'
+   end         '9'
+   colorable   true
+   uppercase   true
+   spacesize   1
+   tallestchar 6
+   defaultcolor gray
+
+   filter { chars { '/' };                mask "NHUD_SLS"  }
+   filter { start '0'; end = '9';         mask "NHUD_DM%c" }
+
+   colortables
+   {
+      gray:   @identity
+      green:  "80=112,95=117"
+      gold:   "80=249,95=163"
+      red:    "80=179,95=184"
+      blue:   "80=194,95=197"
+      custom1: "80=128,95=134"
+      custom2: "80=95,95=102"
+   }
+}
+
+// Modern HUD overlay large font - health/armor numbers
+font ee_fshudslargefont
+{
+   start       '0'
+   end         '9'
+   colorable   true
+   uppercase   true
+   spacesize   10
+   tallestchar 10
+
+   filter { start '0'; end = '9';         mask "NHUD_DL%c" }
+
+   colortables
+   {
+      gray:   @identity
+      green:  "80=112,95=117"
+      gold:   "80=249,95=163"
+      red:    "80=179,95=184"
+      blue:   "80=194,95=197"
+      custom1: "80=128,95=134"
+      custom2: "80=95,95=102"
+   }
+}
+
 // Big font - used by intermission and menus occasionally
 font ee_bigfont
 {

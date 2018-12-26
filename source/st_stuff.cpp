@@ -1125,12 +1125,6 @@ static void ST_unloadOldGraphics(patch_t **faces)
       efree(keys[i]);
       keys[i] = nullptr;
    }
-   efree(nfs_health);
-   nfs_health = nullptr;
-   efree(nfs_armor);
-   nfs_armor = nullptr;
-   efree(nfs_divider);
-   nfs_divider = nullptr;
    efree(armsbg);
    armsbg = nullptr;
    for(int i = 0; i < 6; ++i)
@@ -1187,11 +1181,6 @@ static void ST_loadGraphics()
       sprintf(namebuf, "STKEYS%d", i);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-
-   // new hud patches
-   nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
-   nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
-   nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
 
    // arms background
    armsbg = PatchLoader::CacheName(wGlobalDir, "STARMS", PU_STATIC);
@@ -1582,6 +1571,11 @@ void ST_Init()
    // haleyjd: moved palette initialization here, because all
    // game modes will need it.
    lu_palette = W_GetNumForName("PLAYPAL");
+
+   // new hud patches are required across all game modes
+   nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
+   nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
+   nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
 
    GameModeInfo->StatusBar->Init();
 }

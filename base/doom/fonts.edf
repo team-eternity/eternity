@@ -46,6 +46,7 @@ font ee_hudfont
    }
 }
 
+// Modern HUD overlay small font - arms numbers and kills/items/secrets
 font ee_fshudsmallfont
 {
    start       '/'
@@ -72,6 +73,7 @@ font ee_fshudsmallfont
    }
 }
 
+// Modern HUD overlay medium font - ammo numbers
 font ee_fshudmediumfont
 {
    start       '/'
@@ -97,6 +99,7 @@ font ee_fshudmediumfont
    }
 }
 
+// Modern HUD overlay large font - health/armor numbers
 font ee_fshudslargefont
 {
    start       '0'
