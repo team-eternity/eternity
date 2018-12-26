@@ -201,7 +201,7 @@ static char HU_weapSlotColor(const int slot)
          if(weapon == nullptr)
             weapon = weaponslot->bdObject->weapon;
          else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
-            return *FC_ORANGE; // TODO: Change "more than one ammo type in slot" color
+            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
       }
       weaponslot = weaponslot->bdNext;
    } while(!weaponslot->isDummy());

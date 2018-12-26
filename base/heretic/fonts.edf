@@ -77,13 +77,13 @@ font ee_fshudsmallfont
 
    colortables
    {
-      gray:   @identity
-      green:  "80=112,95=117"
-      gold:   "80=249,95=163"
-      red:    "80=179,95=184"
-      blue:   "80=194,95=197"
-      custom1: "80=128,95=134"
-      custom2: "80=95,95=102"
+      gray:    @identity
+      green:   "33=223,19=218"
+      gold:    "33=143,19=124"
+      red:     "33=160,19=153"
+      blue:    "33=183,19=180"
+      custom1: "33=110,19=104"
+      custom2: "33=16,95=12"
    }
 }
 
@@ -103,13 +103,13 @@ font ee_fshudmediumfont
 
    colortables
    {
-      gray:   @identity
-      green:  "80=112,95=117"
-      gold:   "80=249,95=163"
-      red:    "80=179,95=184"
-      blue:   "80=194,95=197"
-      custom1: "80=128,95=134"
-      custom2: "80=95,95=102"
+      gray:    @identity
+      green:   "33=223,19=218"
+      gold:    "33=143,19=124"
+      red:     "33=160,19=153"
+      blue:    "33=183,19=180"
+      custom1: "33=110,19=104"
+      custom2: "33=16,95=12"
    }
 }
 
@@ -127,13 +127,13 @@ font ee_fshudslargefont
 
    colortables
    {
-      gray:   @identity
-      green:  "80=112,95=117"
-      gold:   "80=249,95=163"
-      red:    "80=179,95=184"
-      blue:   "80=194,95=197"
-      custom1: "80=128,95=134"
-      custom2: "80=95,95=102"
+      gray:    @identity
+      green:   "33=223,19=218"
+      gold:    "33=143,19=124"
+      red:     "33=160,19=153"
+      blue:    "33=183,19=180"
+      custom1: "33=110,19=104"
+      custom2: "33=16,95=12"
    }
 }
 
