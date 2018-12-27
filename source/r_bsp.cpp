@@ -1441,6 +1441,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
+   seg.minbackceil = backc;
+
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
    texhigh = seg.line->backsector->ceilingheightf - view.z;
 
@@ -1647,6 +1649,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    seg.low  = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
    seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
    seg.lowstep = (seg.low2 - seg.low) * pstep;
+   seg.maxbackfloor = seg.backsec->floorheight;
 
    // ioanch: don't render lower textures or portals if they're below the
    // current plane-z window. Necessary for edge portals
