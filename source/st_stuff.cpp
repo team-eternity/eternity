@@ -857,12 +857,12 @@ static void ST_drawCommonWidgets(int alpha)
 
 static void ST_drawInventory()
 {
-   const int inv_ptr = players[displayplayer].inv_ptr;
+   const int inv_ptr = plyr->inv_ptr;
    int leftoffs;
 
    // This makes is so that leftoffs keeps the box in
    // the middle unless at either edge of the inventory
-   if(inv_ptr >= 4)
+   if(inv_ptr >= 4 && E_CanMoveInventoryCursor(plyr, 6, 0))
    {
       leftoffs = inv_ptr - 3;
       int temp = 1;

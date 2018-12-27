@@ -96,31 +96,52 @@ armoreffect IDFAArmor
 
 artifact RedCard
 {
+  sortorder 10
+  maxamount 21
+  +invbar
+  icon STKEYS2
+  icon.offset.x -7
+  icon.offset.y -7
   artifacttype Key
 }
 
 artifact RedSkull
 {
+  sortorder 11
+  +invbar
+  icon STKEYS5
   artifacttype Key
 }
 
 artifact YellowCard
 {
+  sortorder 12
+  +invbar
+  icon STKEYS1
   artifacttype Key
 }
 
 artifact YellowSkull
 {
+  sortorder 13
+  +invbar
+  icon STKEYS4
   artifacttype Key
 }
 
 artifact BlueCard
 {
+  sortorder 14
+  +invbar
+  icon stKEYS0
   artifacttype Key
 }
 
 artifact BlueSkull
 {
+  sortorder 15
+  +invbar
+  icon STKEYS3
   artifacttype Key
 }
 
@@ -312,6 +333,10 @@ artifact AmmoShell
    
   ammo.backpackamount      4
   ammo.backpackmaxamount 100
+
+  icon SHELA0
+  +invbar
+  sortorder 24
 }
 
 artifact AmmoCell
@@ -322,6 +347,10 @@ artifact AmmoCell
    
   ammo.backpackamount     20
   ammo.backpackmaxamount 600
+
+  icon CELLA0
+  +invbar
+  sortorder 20
 }
 
 artifact AmmoMissile
@@ -332,6 +361,9 @@ artifact AmmoMissile
    
   ammo.backpackamount      1
   ammo.backpackmaxamount 100
+  icon ROCKA0
+  +invbar
+  sortorder 22
 }
 
 //=============================================================================

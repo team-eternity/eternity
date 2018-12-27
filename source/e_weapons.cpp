@@ -199,7 +199,7 @@ static dehflags_t e_weaponFlags[] =
    { "HAPTICRECOIL",   WPF_HAPTICRECOIL   },
    { "READYSNDHALF",   WPF_READYSNDHALF   },
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
-   { "POWERED_UP",     WPF_POWEREDUP      },
+   { "POWEREDUP",      WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
    { nullptr,          0                  }
 };

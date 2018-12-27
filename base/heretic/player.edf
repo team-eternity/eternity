@@ -44,7 +44,7 @@ weaponinfo StaffPowered : Staff
   sisterweapon Staff
 
   readysound   ht_stfcrk
-  addflags     READYSNDHALF|POWERED_UP
+  addflags     READYSNDHALF|POWEREDUP
   mod          StaffPowered
 
   states
@@ -105,7 +105,7 @@ weaponinfo GoldWandPowered : GoldWand
 {
   sisterweapon GoldWand
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
   states
   @"
@@ -157,7 +157,7 @@ weaponinfo CrossbowPowered : Crossbow
 {
   sisterweapon Crossbow
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
   states
   @"
@@ -281,7 +281,7 @@ weaponinfo PhoenixRodPowered : PhoenixRod
 {
   sisterweapon PhoenixRod
 
-  addflags POWERED_UP|FLEEMELEE
+  addflags POWEREDUP|FLEEMELEE
 
   states
   @"
@@ -338,7 +338,7 @@ weaponinfo MacePowered : Mace
 
   sisterweapon Mace
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
   states
   @"
@@ -388,7 +388,7 @@ weaponinfo GauntletsPowered : Gauntlets
 {
   sisterweapon Gauntlets
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
   states
   @"

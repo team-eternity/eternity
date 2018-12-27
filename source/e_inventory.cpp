@@ -1667,7 +1667,10 @@ static void E_allocateSortOrders()
    // Scan the effects table and add artifacts to the table
    itemeffect_t *item = nullptr;
 
+   // All +invbar items w/o explicit sort order share the same sort order
+   // They are then ordered at runtime alphabetically
    e_maxvisiblesortorder++;
+
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
    {
       itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
@@ -1678,7 +1681,7 @@ static void E_allocateSortOrders()
          // If the current isn't visible
          if(!item->getInt(keyInvBar, 0))
             item->setInt(keySortOrder, e_maxvisiblesortorder + 1);
-         else if(!item->hasKey(KEY_SORTORDER))
+         else if(item->getObject(keySortOrder) == nullptr)
             item->setInt(keySortOrder, e_maxvisiblesortorder);
 
       }
@@ -1761,7 +1764,7 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
    if(effect && (id = effect->getInt(keyItemID, -1)) >= 0)
       return E_InventorySlotForItemID(player, id);
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -1809,11 +1812,12 @@ static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
 
    for(inventoryindex_t idx = 0; idx < newIndex; idx++)
    {
-      itemeffect_t *effect;
+      const itemeffect_t *effect;
 
       if((effect = E_EffectForInventoryIndex(player, idx)))
       {
-         int thatorder = effect->getInt(keySortOrder, 0);
+         const int thatorder = effect->getInt(keySortOrder, 0);
+         // If sort order is shared then sort them alphabetically (case-insensitive)
          if(thatorder < sortorder ||
             (thatorder == sortorder && strcasecmp(name, effect->getKey()) > 0))
             continue;
@@ -1988,8 +1992,11 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    // Make sure the player's inv_ptr is updated if need be
    if(!initslot && E_PlayerHasVisibleInvItem(player))
    {
-      if(artifact->getInt(keySortOrder, 0) <
-         E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))
+      const itemeffect_t *other = E_EffectForInventoryIndex(player, player->inv_ptr);
+      const int artiorder  = artifact->getInt(keySortOrder, 0);
+      const int otherorder = other->getInt(keySortOrder, 0);
+      if(artiorder < otherorder ||
+         (artiorder == otherorder && strcasecmp(artifact->getKey(), other->getKey()) < 0))
          player->inv_ptr++;
    }
 
