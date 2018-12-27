@@ -351,7 +351,8 @@ VARIABLE_INT(hud_overlayid, NULL, -1, HUO_MAXOVERLAYS - 1, hud_overlaynames);
 CONSOLE_VARIABLE(hu_overlayid, hud_overlayid, 0)
 {
    hudoverlayitem_t *item = I_defaultHUDOverlay();
-   hud_overlayid = item->id;
+   if(hud_overlayid < -1 || hud_overlayid > HUO_MAXOVERLAYS - 1)
+      hud_overlayid = item->id;
    hu_overlay = item->overlay;
 }
 

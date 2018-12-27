@@ -98,14 +98,14 @@ weapontype_t UnknownWeaponInfo;
 // DECORATE state block
 #define ITEM_WPN_STATES        "states"
 
-#define ITEM_WPN_INHERITS     "inherits"
+#define ITEM_WPN_INHERITS      "inherits"
 
 // WeaponInfo Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
 // Title properties
-#define ITEM_WPN_TITLE_SUPER     "superclass"
-#define ITEM_WPN_TITLE_DEHNUM    "dehackednum"
+#define ITEM_WPN_TITLE_SUPER   "superclass"
+#define ITEM_WPN_TITLE_DEHNUM  "dehackednum"
 
 cfg_opt_t wpninfo_tprops[] =
 {
@@ -1207,7 +1207,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          if(!E_checkWeaponInherit(pnum))
          {
             E_EDFLoggedErr(2, "E_processWeapon: cyclic inheritance "
-                               "detected in weaponinfo '%s'\n", wp.name);
+                              "detected in weaponinfo '%s'\n", wp.name);
          }
 
          // add to inheritance stack

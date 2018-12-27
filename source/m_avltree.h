@@ -37,13 +37,13 @@
 // This class serves as a generic way of defining
 // self-balancing AVL trees
 //
-template<typename T, typename U>
+template<typename T, typename U, bool unsafe = false>
 class AVLTree
 {
    // TODO: Change from std::is_standard_layout<T>::value std::is_standard_layout_v<T>
    //       when Raspbian gets C++17-compatible version of GCC.
-   static_assert(std::is_standard_layout<T>::value, "Node key's type must be standard layout");
-   static_assert(std::is_standard_layout<U>::value, "Node object's type must be standard layout");
+   static_assert(unsafe || std::is_standard_layout<T>::value, "Node key's type must be standard layout");
+   static_assert(unsafe || std::is_standard_layout<U>::value, "Node object's type must be standard layout");
 
 public:
    //

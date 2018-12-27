@@ -47,6 +47,7 @@
 #include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
+#include "m_avltree.h"
 #include "m_collection.h"
 #include "metaapi.h"
 #include "p_inter.h"
@@ -1659,16 +1660,47 @@ static void E_allocateInventoryItemIDs()
    }
 }
 
+// This class helps work around a limitation of AVLTree,
+// that being you can't supply custom comparison functions
+class StrCmpWrapper
+{
+   const char *data;
+public:
+   StrCmpWrapper(const char *in) : data(in) { }
+
+   bool operator >  (const StrCmpWrapper &other) const { return strcasecmp(data, other.data) >  0; }
+   bool operator <  (const StrCmpWrapper &other) const { return strcasecmp(data, other.data) <  0; }
+   bool operator == (const StrCmpWrapper &other) const { return strcasecmp(data, other.data) == 0; }
+};
+
+using itemeffecttree_t = AVLTree<StrCmpWrapper, itemeffect_t, true>;
+
 //
-// E_allocateSortOrders
+// Allocates sort orders to +invbar items with no sort order
 //
-// Allocates sort orders to -invbar items
+static void E_allocateInvBarSortOrders(const itemeffecttree_t::avlnode_t *node)
+{
+   if(node == nullptr)
+      return;
+
+   if(node->left)
+      E_allocateInvBarSortOrders(node->left);
+   e_maxvisiblesortorder++;
+   node->object->setInt(keySortOrder, e_maxvisiblesortorder);
+   if(node->right)
+      E_allocateInvBarSortOrders(node->right);
+}
+
+//
+// Collects +invbar items with no sort order and allocates sort orders to -invbar items
 //
 static void E_allocateSortOrders()
 {
-   itemeffect_t *item = nullptr;
+   Collection<itemeffect_t *> nonInvEffects;
+   itemeffecttree_t           unsetInvEffects;
 
    // scan the effects table and add artifacts to the table
+   itemeffect_t *item = nullptr;
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
    {
       itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
@@ -1678,10 +1710,20 @@ static void E_allocateSortOrders()
       {
          // If the current isn't visible
          if(!item->getInt(keyInvBar, 0))
-            item->setInt(keySortOrder, e_maxvisiblesortorder + 1);
+            nonInvEffects.add(item);
+         else if(!item->hasKey(KEY_SORTORDER))
+         {
+            StrCmpWrapper temp(item->getKey());
+            unsetInvEffects.insert(temp, item);
+         }
 
       }
    }
+
+   E_allocateInvBarSortOrders(unsetInvEffects.root);
+
+   for(itemeffect_t *curritem : nonInvEffects)
+      curritem->setInt(keySortOrder, e_maxvisiblesortorder + 1);
 }
 
 //
