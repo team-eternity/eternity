@@ -47,7 +47,6 @@
 #include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
-#include "m_avltree.h"
 #include "m_collection.h"
 #include "metaapi.h"
 #include "p_inter.h"
@@ -1660,70 +1659,30 @@ static void E_allocateInventoryItemIDs()
    }
 }
 
-// This class helps work around a limitation of AVLTree,
-// that being you can't supply custom comparison functions
-class StrCmpWrapper
-{
-   const char *data;
-public:
-   StrCmpWrapper(const char *in) : data(in) { }
-
-   bool operator >  (const StrCmpWrapper &other) const { return strcasecmp(data, other.data) >  0; }
-   bool operator <  (const StrCmpWrapper &other) const { return strcasecmp(data, other.data) <  0; }
-   bool operator == (const StrCmpWrapper &other) const { return strcasecmp(data, other.data) == 0; }
-};
-
-using itemeffecttree_t = AVLTree<StrCmpWrapper, itemeffect_t, true>;
-
 //
-// Allocates sort orders to +invbar items with no sort order
-//
-static void E_allocateInvBarSortOrders(const itemeffecttree_t::avlnode_t *node)
-{
-   if(node == nullptr)
-      return;
-
-   if(node->left)
-      E_allocateInvBarSortOrders(node->left);
-   e_maxvisiblesortorder++;
-   node->object->setInt(keySortOrder, e_maxvisiblesortorder);
-   if(node->right)
-      E_allocateInvBarSortOrders(node->right);
-}
-
-//
-// Collects +invbar items with no sort order and allocates sort orders to -invbar items
+// Allocates sort orders to any artifact that needs one
 //
 static void E_allocateSortOrders()
 {
-   Collection<itemeffect_t *> nonInvEffects;
-   itemeffecttree_t           unsetInvEffects;
-
-   // scan the effects table and add artifacts to the table
+   // Scan the effects table and add artifacts to the table
    itemeffect_t *item = nullptr;
+
+   e_maxvisiblesortorder++;
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
    {
       itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
 
-      // only interested in effects that are recorded in the inventory
+      // Only interested in effects that are recorded in the inventory
       if(fxtype == ITEMFX_ARTIFACT)
       {
          // If the current isn't visible
          if(!item->getInt(keyInvBar, 0))
-            nonInvEffects.add(item);
+            item->setInt(keySortOrder, e_maxvisiblesortorder + 1);
          else if(!item->hasKey(KEY_SORTORDER))
-         {
-            StrCmpWrapper temp(item->getKey());
-            unsetInvEffects.insert(temp, item);
-         }
+            item->setInt(keySortOrder, e_maxvisiblesortorder);
 
       }
    }
-
-   E_allocateInvBarSortOrders(unsetInvEffects.root);
-
-   for(itemeffect_t *curritem : nonInvEffects)
-      curritem->setInt(keySortOrder, e_maxvisiblesortorder + 1);
 }
 
 //
@@ -1843,7 +1802,7 @@ static inventoryindex_t E_findInventorySlot(inventory_t inventory)
 // proper sorted position based on the item effects' sortorder fields.
 //
 static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
-                            int sortorder)
+                            int sortorder, const char *name)
 {
    inventory_t     inventory = player->inventory;
    inventoryslot_t tempSlot  = inventory[newIndex];
@@ -1855,7 +1814,8 @@ static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
       if((effect = E_EffectForInventoryIndex(player, idx)))
       {
          int thatorder = effect->getInt(keySortOrder, 0);
-         if(thatorder < sortorder)
+         if(thatorder < sortorder ||
+            (thatorder == sortorder && strcasecmp(name, effect->getKey()) > 0))
             continue;
          else
          {
@@ -2042,7 +2002,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
 
    // sort if needed
    if(newSlot > 0)
-      E_sortInventory(player, newSlot, artifact->getInt(keySortOrder, 0));
+      E_sortInventory(player, newSlot, artifact->getInt(keySortOrder, 0), artifact->getKey());
 
    return true;
 }
