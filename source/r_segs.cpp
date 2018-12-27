@@ -852,22 +852,22 @@ void R_StoreWallRange(const int start, const int stop)
 
       // SoM: TODO: This can be a bit problematic for slopes because we'll have 
       // to check the line for textures at both ends...
-      if(segclip.frontsec->floorheight > segclip.backsec->floorheight)
+      if(segclip.maxfrontfloor > segclip.maxbackfloor)
       {
          ds_p->silhouette = SIL_BOTTOM;
-         ds_p->bsilheight = segclip.frontsec->floorheight;
+         ds_p->bsilheight = segclip.maxfrontfloor;
       }
-      else if(segclip.backsec->floorheight > viewz)
+      else if(segclip.maxbackfloor > viewz)
       {
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
       }
-      if(segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight)
+      if(segclip.minfrontceil < segclip.minbackceil)
       {
          ds_p->silhouette |= SIL_TOP;
-         ds_p->tsilheight = segclip.frontsec->ceilingheight;
+         ds_p->tsilheight = segclip.minfrontceil;
       }
-      else if(segclip.backsec->ceilingheight < viewz)
+      else if(segclip.minbackceil < viewz)
       {
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;

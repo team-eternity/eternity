@@ -1132,12 +1132,16 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
       seg.high = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
       seg.high2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+
+      seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
    }
    else
    {
       seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
       seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+      seg.minbackceil = seg.backsec->ceilingheight;
    }
+
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
@@ -1155,12 +1159,16 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       z2 -= (seg.line->len - lclip2) * zstep;
       seg.low = view.ycenter - ((z1 - view.z) * i1);
       seg.low2 = view.ycenter - ((z2 - view.z) * i2);
+
+      seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
    }
    else
    {
       seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
       seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+      seg.maxbackfloor = seg.backsec->floorheight;
    }
+
    seg.lowstep = (seg.low2 - seg.low) * pstep;
 
 
@@ -2239,11 +2247,14 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       z2 -= (seg.line->len - lclip2) * zstep;
       seg.top = view.ycenter - ((z1 - view.z) * i1);
       seg.top2 = view.ycenter - ((z2 - view.z) * i2);
+
+      seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
    }
    else
    {
       seg.top = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i1);
       seg.top2 = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i2);
+      seg.minfrontceil = seg.frontsec->ceilingheight;
    }
    seg.topstep = (seg.top2 - seg.top) * pstep;
 
@@ -2260,11 +2271,14 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       z2 -= (seg.line->len - lclip2) * zstep;
       seg.bottom = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
       seg.bottom2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+
+      seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
    }
    else
    {      
       seg.bottom  = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
       seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
+      seg.maxfrontfloor = seg.frontsec->floorheight;
    }
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
