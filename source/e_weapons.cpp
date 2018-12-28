@@ -838,7 +838,7 @@ static void E_processDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
       // for values inside them to be overridden by the DECORATE state block.
       // If this isn't being done, firststate will be null.
       const char *firststate = cfg_getstr(weaponsec, ITEM_WPN_FIRSTDECSTATE);
-      const char *tempstr = cfg_getstr(weaponsec, ITEM_WPN_STATES);
+      const char *tempstr    = cfg_getstr(weaponsec, ITEM_WPN_STATES);
 
       // recursion should process states only if firststate is valid
       if(!recursive || firststate)

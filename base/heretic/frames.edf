@@ -1010,3 +1010,188 @@ frame S_PHOENIXFXI1_6 { +decorate; dehackednum 2823 }
 frame S_PHOENIXFXI1_7 { +decorate; dehackednum 2824 }
 frame S_PHOENIXFXI1_8 { +decorate; dehackednum 2825 }
 
+// Heretic Weapons
+
+// S_HTICLIGHTDONE: Why is this here? I mean it's in the Heretic source but why is it there?
+frame S_HTICLIGHTDONE { cmp = "STFF|0|*|0|Light0" }
+
+// Staff 
+frame S_STAFFREADY  { +decorate }
+frame S_STAFFDOWN   { +decorate }
+frame S_STAFFUP     { +decorate }
+frame S_STAFFATK1_1 { +decorate }
+frame S_STAFFATK1_2 { +decorate }
+frame S_STAFFATK1_3 { +decorate }
+
+// Powered Staff
+frame S_STAFFREADY2_1 { +decorate }
+frame S_STAFFREADY2_2 { +decorate }
+frame S_STAFFREADY2_3 { +decorate }
+frame S_STAFFDOWN2    { +decorate }
+frame S_STAFFUP2      { +decorate }
+frame S_STAFFATK2_1   { +decorate }
+frame S_STAFFATK2_2   { +decorate }
+frame S_STAFFATK2_3   { +decorate }
+
+// Beak
+// frame S_BEAKREADY  { +decorate }
+// frame S_BEAKDOWN   { +decorate }
+// frame S_BEAKUP     { +decorate }
+// frame S_BEAKATK1_1 { +decorate }
+// frame S_BEAKATK1_2 { +decorate }
+
+// Gauntlets
+frame S_GAUNTLETREADY  { +decorate }
+frame S_GAUNTLETDOWN   { +decorate }
+frame S_GAUNTLETUP     { +decorate }
+frame S_GAUNTLETATK1_1 { +decorate }
+frame S_GAUNTLETATK1_2 { +decorate }
+frame S_GAUNTLETATK1_3 { +decorate }
+frame S_GAUNTLETATK1_4 { +decorate }
+frame S_GAUNTLETATK1_5 { +decorate }
+frame S_GAUNTLETATK1_6 { +decorate }
+frame S_GAUNTLETATK1_7 { +decorate }
+
+// Powered Gauntlets
+frame S_GAUNTLETREADY2_1 { +decorate }
+frame S_GAUNTLETREADY2_2 { +decorate }
+frame S_GAUNTLETREADY2_3 { +decorate }
+frame S_GAUNTLETDOWN2    { +decorate }
+frame S_GAUNTLETUP2      { +decorate }
+frame S_GAUNTLETATK2_1   { +decorate }
+frame S_GAUNTLETATK2_2   { +decorate }
+frame S_GAUNTLETATK2_3   { +decorate }
+frame S_GAUNTLETATK2_4   { +decorate }
+frame S_GAUNTLETATK2_5   { +decorate }
+frame S_GAUNTLETATK2_6   { +decorate }
+frame S_GAUNTLETATK2_7   { +decorate }
+
+// Blaster
+frame S_BLASTERREADY  { +decorate }
+frame S_BLASTERDOWN   { +decorate }
+frame S_BLASTERUP     { +decorate }
+frame S_BLASTERATK1_1 { +decorate }
+frame S_BLASTERATK1_2 { +decorate }
+frame S_BLASTERATK1_3 { +decorate }
+frame S_BLASTERATK1_4 { +decorate }
+frame S_BLASTERATK1_5 { +decorate }
+frame S_BLASTERATK1_6 { +decorate }
+
+// Powered Blaster
+// frame S_BLASTERATK2_1 { +decorate }
+// frame S_BLASTERATK2_2 { +decorate }
+// frame S_BLASTERATK2_3 { +decorate }
+// frame S_BLASTERATK2_4 { +decorate }
+// frame S_BLASTERATK2_5 { +decorate }
+// frame S_BLASTERATK2_6 { +decorate }
+
+// Firemace
+frame S_MACEREADY   { +decorate }
+frame S_MACEDOWN    { +decorate }
+frame S_MACEUP      { +decorate }
+frame S_MACEATK1_1  { +decorate }
+frame S_MACEATK1_2  { +decorate }
+frame S_MACEATK1_3  { +decorate }
+frame S_MACEATK1_4  { +decorate }
+frame S_MACEATK1_5  { +decorate }
+frame S_MACEATK1_6  { +decorate }
+frame S_MACEATK1_7  { +decorate }
+frame S_MACEATK1_8  { +decorate }
+frame S_MACEATK1_9  { +decorate }
+frame S_MACEATK1_10 { +decorate }
+
+// Powered Firemace
+frame S_MACEATK2_1 { +decorate }
+frame S_MACEATK2_2 { +decorate }
+frame S_MACEATK2_3 { +decorate }
+frame S_MACEATK2_4 { +decorate }
+
+// Hellstaff
+frame S_HORNRODREADY  { +decorate }
+frame S_HORNRODDOWN   { +decorate }
+frame S_HORNRODUP     { +decorate }
+frame S_HORNRODATK1_1 { +decorate }
+frame S_HORNRODATK1_2 { +decorate }
+frame S_HORNRODATK1_3 { +decorate }
+
+// Powered Hellstaff
+// frame S_HORNRODATK2_1 { +decorate }
+// frame S_HORNRODATK2_2 { +decorate }
+// frame S_HORNRODATK2_3 { +decorate }
+// frame S_HORNRODATK2_4 { +decorate }
+// frame S_HORNRODATK2_5 { +decorate }
+// frame S_HORNRODATK2_6 { +decorate }
+// frame S_HORNRODATK2_7 { +decorate }
+// frame S_HORNRODATK2_8 { +decorate }
+// frame S_HORNRODATK2_9 { +decorate }
+
+// GoldWand
+frame S_GOLDWANDREADY  { +decorate }
+frame S_GOLDWANDDOWN   { +decorate }
+frame S_GOLDWANDUP     { +decorate }
+frame S_GOLDWANDATK1_1 { +decorate }
+frame S_GOLDWANDATK1_2 { +decorate }
+frame S_GOLDWANDATK1_3 { +decorate }
+frame S_GOLDWANDATK1_4 { +decorate }
+
+// Powered GoldWand
+frame S_GOLDWANDATK2_1 { +decorate }
+frame S_GOLDWANDATK2_2 { +decorate }
+frame S_GOLDWANDATK2_3 { +decorate }
+frame S_GOLDWANDATK2_4 { +decorate }
+
+// PhoenixRod
+frame S_PHOENIXREADY  { +decorate }
+frame S_PHOENIXDOWN   { +decorate }
+frame S_PHOENIXUP     { +decorate }
+frame S_PHOENIXATK1_1 { +decorate }
+frame S_PHOENIXATK1_2 { +decorate }
+frame S_PHOENIXATK1_3 { +decorate }
+frame S_PHOENIXATK1_4 { +decorate }
+frame S_PHOENIXATK1_5 { +decorate }
+
+// Powered PhoenixRod
+frame S_PHOENIXATK2_1 { +decorate }
+frame S_PHOENIXATK2_2 { +decorate }
+frame S_PHOENIXATK2_3 { +decorate }
+frame S_PHOENIXATK2_4 { +decorate }
+
+// Crossbow
+frame S_CRBOW1      { +decorate }
+frame S_CRBOW2      { +decorate }
+frame S_CRBOW3      { +decorate }
+frame S_CRBOW4      { +decorate }
+frame S_CRBOW5      { +decorate }
+frame S_CRBOW6      { +decorate }
+frame S_CRBOW7      { +decorate }
+frame S_CRBOW8      { +decorate }
+frame S_CRBOW9      { +decorate }
+frame S_CRBOW10     { +decorate }
+frame S_CRBOW11     { +decorate }
+frame S_CRBOW12     { +decorate }
+frame S_CRBOW13     { +decorate }
+frame S_CRBOW14     { +decorate }
+frame S_CRBOW15     { +decorate }
+frame S_CRBOW16     { +decorate }
+frame S_CRBOW17     { +decorate }
+frame S_CRBOW18     { +decorate }
+frame S_CRBOWDOWN   { +decorate }
+frame S_CRBOWUP     { +decorate }
+frame S_CRBOWATK1_1 { +decorate }
+frame S_CRBOWATK1_2 { +decorate }
+frame S_CRBOWATK1_3 { +decorate }
+frame S_CRBOWATK1_4 { +decorate }
+frame S_CRBOWATK1_5 { +decorate }
+frame S_CRBOWATK1_6 { +decorate }
+frame S_CRBOWATK1_7 { +decorate }
+frame S_CRBOWATK1_8 { +decorate }
+
+// Powered Crossbow
+frame S_CRBOWATK2_1 { +decorate }
+frame S_CRBOWATK2_2 { +decorate }
+frame S_CRBOWATK2_3 { +decorate }
+frame S_CRBOWATK2_4 { +decorate }
+frame S_CRBOWATK2_5 { +decorate }
+frame S_CRBOWATK2_6 { +decorate }
+frame S_CRBOWATK2_7 { +decorate }
+frame S_CRBOWATK2_8 { +decorate }

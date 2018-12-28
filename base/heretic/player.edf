@@ -20,6 +20,7 @@ weaponinfo Staff
   //mod          ""
   recoil       10
 
+  firstdecoratestate S_STAFFREADY
   states
   @"
   Ready:
@@ -81,6 +82,7 @@ weaponinfo GoldWand
   hapticrecoil 1
   haptictime   1
 
+  firstdecoratestate S_GOLDWANDREADY
   states
   @"
   Ready:
@@ -107,6 +109,7 @@ weaponinfo GoldWandPowered : GoldWand
 
   addflags POWEREDUP
 
+  firstdecoratestate S_GOLDWANDATK2_1
   states
   @"
   Fire:
@@ -133,6 +136,7 @@ weaponinfo Crossbow
   hapticrecoil 3
   haptictime   3
 
+  firstdecoratestate S_CRBOW1
   states
   @"
   Ready:
@@ -159,6 +163,7 @@ weaponinfo CrossbowPowered : Crossbow
 
   addflags POWEREDUP
 
+  firstdecoratestate S_CRBOWATK2_1
   states
   @"
   Fire:
@@ -187,11 +192,9 @@ weaponinfo Blaster
   hapticrecoil 1
   haptictime   1
 
+  firstdecoratestate S_BLASTERREADY
   states
   @"
-  Spawn:
-    WBLS A -1
-    stop
   Ready:
     BLSR A 1 A_WeaponReady
     loop
@@ -224,6 +227,7 @@ weaponinfo SkullRod
   hapticrecoil 6
   haptictime   8
 
+  firstdecoratestate S_HORNRODREADY
   states
   @"
   Ready:
@@ -257,6 +261,7 @@ weaponinfo PhoenixRod
   hapticrecoil 2
   haptictime   1
 
+  firstdecoratestate S_PHOENIXREADY
   states
   @"
   Ready:
@@ -283,6 +288,7 @@ weaponinfo PhoenixRodPowered : PhoenixRod
 
   addflags POWEREDUP|FLEEMELEE
 
+  firstdecoratestate S_PHOENIXATK2_1
   states
   @"
   Fire:
@@ -311,6 +317,7 @@ weaponinfo Mace
   hapticrecoil 2
   haptictime   1
 
+  firstdecoratestate S_MACEREADY
   states
   @"
   Ready:
@@ -340,6 +347,7 @@ weaponinfo MacePowered : Mace
 
   addflags POWEREDUP
 
+  firstdecoratestate S_MACEATK2_1
   states
   @"
   Fire:
@@ -362,6 +370,7 @@ weaponinfo Gauntlets
   //mod          ""
   upsound      ht_gntact
 
+  firstdecoratestate S_GAUNTLETREADY
   states
   @"
   Ready:
@@ -390,6 +399,7 @@ weaponinfo GauntletsPowered : Gauntlets
 
   addflags POWEREDUP
 
+  firstdecoratestate S_GAUNTLETREADY2_1
   states
   @"
   Ready:
