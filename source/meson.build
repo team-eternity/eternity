@@ -15,6 +15,14 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
+eternity_args = [
+   '-DR_LINKEDPORTALS',
+   '-D_SDL_VER',
+   '-D_CONSOLE',
+   '-DHAVE_SPCLIB',
+   '-DKATE_MEMORIAL',
+]'
+
 eternity_src = files(
    'acs_func.cpp',
    'acs_intr.cpp',
@@ -138,7 +146,6 @@ eternity_src = files(
    'p_enemy.cpp',
    'p_floor.cpp',
    'p_genlin.cpp',
-   'p_henemy.cpp',
    'p_hubs.cpp',
    'p_info.cpp',
    'p_inter.cpp',
@@ -226,32 +233,48 @@ eternity_src = files(
 )
 
 subdir('Confuse')
-subdir('gl')
 subdir('sdl')
 subdir('textscreen')
 
 eternity_src += [
    confuse_src,
-   gl_src,
    hal_src,
    sdl_src,
    textscreen_src,
 ]
 
-if build_machine.system() == 'linux'
-   eternity_src += files('linux/i_cpu_posix.cpp')
-elif build_machine.system() == 'windows'
-   subdir('Win32')
-   eternity_src += win32_src
+# Library-specfic args & sources
+if dep_opengl.found()
+   subdir('gl')
+   eternity_args += '-DEE_FEATURE_OPENGL'
+   eternity_src  += gl_src
 endif
 
-eternity_deps = 
-executable('eternity', eternity_src
-           dependencies : [
-              dependency('acsvm'),
-              dependency('libpng'),
-              dependency('snes_spc')],
-           install : true)
+# Build-specific args
+if get_option('debug') || get_option('debugoptimized')
+   eternity_args += ['-D_DEBUG', '-DRANGECHECK',
+                     '-DINSTRUMENTED', '-DZONEIDCHECK']
+endif
+
+# System-specific args & sources
+if build_machine.system() == 'linux'
+   eternity_args += '-DLINUX'
+   eternity_src  += files('linux/i_cpu_posix.cpp')
+elif build_machine.system() == 'windows'
+   subdir('Win32')
+   eternity_args += '-DEE_FEATURE_REGISTRYSCAN'
+   eternity_src  += win32_src
+
+   if meson.get_compiler('cpp').get_id() == 'msvc'
+      eternity_args += ['-DEE_FEATURE_MIDIRPC', '-DEE_FEATURE_XINPUT']
+   endif
+endif
+
+eternity_exe = 
+executable('eternity', eternity_src,
+           cpp_args :     eternity_args,
+           dependencies : eternity_deps,
+           install :      true)
 
 ## EOF
 

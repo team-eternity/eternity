@@ -70,11 +70,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
    endif()
 endif()
 
-IF (APPLE)
-        INCLUDE_DIRECTORIES (sdl/macosx/)
-        FILE (GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
-ENDIF (APPLE)
-
 IF (LINUX)
         INCLUDE_DIRECTORIES (linux/)
         FILE (GLOB ARCH_SPECIFIC_SOURCES linux/*.cpp)
