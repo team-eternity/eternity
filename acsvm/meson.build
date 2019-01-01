@@ -15,6 +15,10 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
+project('acsvm', 'cpp'
+   license: 'LGPL-2.1+'
+)
+
 acsvm_inc = include_directories('.')
 
 acsvm_src = files(
@@ -43,8 +47,10 @@ acsvm_src = files(
 
 acsvm_lib = static_library('acsvm', acsvm_src)
 
-dep_acsvm = declare_dependency(link_with : acsvm_lib,
-                               include_directories : acsvm_inc)
+dep_acsvm = declare_dependency(
+   link_with : acsvm_lib,
+   include_directories : acsvm_inc
+)
 
 ## EOF
 

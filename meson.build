@@ -18,6 +18,7 @@
 project('Eternity Engine', 'c', 'cpp',
    license         : ['GPL-2.0+', 'LGPL-2.1+', 'Libpng', 'Zlib'],
    version         : '4.01.00',
+   subproject_dir  : '.', # Maybe one day this can be removed, but not right now
    default_options : ['buildtype=release', 'warning_level=3',
                       'c_std=c11', 'cpp_std=c++17']
 )

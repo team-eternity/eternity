@@ -252,8 +252,12 @@ endif
 
 # Build-specific args
 if get_option('debug') || get_option('debugoptimized')
-   eternity_args += ['-D_DEBUG', '-DRANGECHECK',
-                     '-DINSTRUMENTED', '-DZONEIDCHECK']
+   eternity_args += [
+      '-D_DEBUG',
+      '-DRANGECHECK',
+      '-DINSTRUMENTED',
+      '-DZONEIDCHECK'
+   ]
 endif
 
 # System-specific args & sources
@@ -270,10 +274,9 @@ elif build_machine.system() == 'windows'
    endif
 endif
 
-eternity_exe = 
-executable('eternity', eternity_src,
-           cpp_args :     eternity_args,
-           dependencies : eternity_deps)
+eternity_exe = executable('eternity', eternity_src,
+   cpp_args :     eternity_args,
+   dependencies : eternity_deps)
 
 ## EOF
 
