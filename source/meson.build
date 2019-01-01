@@ -21,7 +21,7 @@ eternity_args = [
    '-D_CONSOLE',
    '-DHAVE_SPCLIB',
    '-DKATE_MEMORIAL',
-]'
+]
 
 eternity_src = files(
    'acs_func.cpp',
@@ -273,8 +273,7 @@ endif
 eternity_exe = 
 executable('eternity', eternity_src,
            cpp_args :     eternity_args,
-           dependencies : eternity_deps,
-           install :      true)
+           dependencies : eternity_deps)
 
 ## EOF
 

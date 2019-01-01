@@ -34,10 +34,10 @@ if get_option('debug') || get_option('debugoptimized')
 endif
 
 # In-tree dependencies
-dep_acsvm    = subproject('acsvm'   ).get_variable('acsvm_dep'   )
-dep_libpng   = subproject('libpng'  ).get_variable('libpng_dep'  )
-dep_snes_spc = subproject('snes_spc').get_variable('snes_spc_dep')
-dep_zlib     = subproject('zlib'    ).get_variable('zlib_dep'    )
+dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',    'dep_acsvm'   ])
+dep_libpng   = dependency('libpng',   fallback : ['libpng',   'dep_libpng'  ])
+dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'dep_snes_spc'])
+dep_zlib     = dependency('zlib,'     fallback : ['zlib',     'dep_zlib'    ])
 
 # External dependencies
 dep_opengl     = dependency('opengl', required : false)

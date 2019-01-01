@@ -16,7 +16,7 @@
 .DS_store
 \#*\#
 
-*build*/
+build*/
 *.kdev4
 SDL2.framework
 SDL2_mixer.framework
