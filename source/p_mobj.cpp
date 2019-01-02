@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Moving object handling. Spawn functions.
+// Purpose: Moving object handling. Spawn functions
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -3284,8 +3282,8 @@ void P_FallingDamage(player_t *player)
 //
 // P_AdjustFloorClip
 //
-// Adapted from zdoom source, see the zdoom license.
-// Thanks to Randy Heit.
+// Adapted from ZDoom source (licenced under GPLv3).
+// Thanks to Marisa Heit.
 //
 void P_AdjustFloorClip(Mobj *thing)
 {
