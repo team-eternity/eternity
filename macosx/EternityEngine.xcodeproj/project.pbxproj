@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F00D1322042B9E100D775DF /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F00D1312042B9E100D775DF /* libz.tbd */; };
 		4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
 		4F21BAF51E9C05C10040B4DF /* s_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */; };
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
@@ -310,6 +309,16 @@
 		4FC0A9411E1E2ABC006CEC45 /* cam_use.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93D1E1E2ABC006CEC45 /* cam_use.cpp */; };
 		4FFDE54921D2817D00836A2D /* hu_modern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54421D2817C00836A2D /* hu_modern.cpp */; };
 		4FFDE54A21D2817D00836A2D /* hu_boom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54521D2817C00836A2D /* hu_boom.cpp */; };
+		4FFDE56021DE891F00836A2D /* inffast.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54D21DE891D00836A2D /* inffast.c */; };
+		4FFDE56121DE891F00836A2D /* inflate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54E21DE891D00836A2D /* inflate.c */; };
+		4FFDE56221DE891F00836A2D /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55021DE891E00836A2D /* zutil.c */; };
+		4FFDE56321DE891F00836A2D /* inftrees.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55121DE891E00836A2D /* inftrees.c */; };
+		4FFDE56421DE891F00836A2D /* deflate.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55221DE891E00836A2D /* deflate.c */; };
+		4FFDE56521DE891F00836A2D /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55421DE891E00836A2D /* crc32.c */; };
+		4FFDE56621DE891F00836A2D /* infback.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55621DE891E00836A2D /* infback.c */; };
+		4FFDE56721DE891F00836A2D /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55721DE891E00836A2D /* uncompr.c */; };
+		4FFDE56821DE891F00836A2D /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55821DE891E00836A2D /* trees.c */; };
+		4FFDE56921DE891F00836A2D /* adler32.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55F21DE891F00836A2D /* adler32.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -480,6 +489,26 @@
 		4FFDE54621D2817D00836A2D /* hu_modern.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_modern.h; path = ../source/hu_modern.h; sourceTree = "<group>"; };
 		4FFDE54721D2817D00836A2D /* hu_boom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hu_boom.h; path = ../source/hu_boom.h; sourceTree = "<group>"; };
 		4FFDE54821D2817D00836A2D /* m_avltree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_avltree.h; path = ../source/m_avltree.h; sourceTree = "<group>"; };
+		4FFDE54C21DE891D00836A2D /* inffixed.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = inffixed.h; path = ../zlib/inffixed.h; sourceTree = "<group>"; };
+		4FFDE54D21DE891D00836A2D /* inffast.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = inffast.c; path = ../zlib/inffast.c; sourceTree = "<group>"; };
+		4FFDE54E21DE891D00836A2D /* inflate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = inflate.c; path = ../zlib/inflate.c; sourceTree = "<group>"; };
+		4FFDE54F21DE891D00836A2D /* inffast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = inffast.h; path = ../zlib/inffast.h; sourceTree = "<group>"; };
+		4FFDE55021DE891E00836A2D /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../zlib/zutil.c; sourceTree = "<group>"; };
+		4FFDE55121DE891E00836A2D /* inftrees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = inftrees.c; path = ../zlib/inftrees.c; sourceTree = "<group>"; };
+		4FFDE55221DE891E00836A2D /* deflate.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = deflate.c; path = ../zlib/deflate.c; sourceTree = "<group>"; };
+		4FFDE55321DE891E00836A2D /* inftrees.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = inftrees.h; path = ../zlib/inftrees.h; sourceTree = "<group>"; };
+		4FFDE55421DE891E00836A2D /* crc32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = crc32.c; path = ../zlib/crc32.c; sourceTree = "<group>"; };
+		4FFDE55521DE891E00836A2D /* trees.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = trees.h; path = ../zlib/trees.h; sourceTree = "<group>"; };
+		4FFDE55621DE891E00836A2D /* infback.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = infback.c; path = ../zlib/infback.c; sourceTree = "<group>"; };
+		4FFDE55721DE891E00836A2D /* uncompr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = uncompr.c; path = ../zlib/uncompr.c; sourceTree = "<group>"; };
+		4FFDE55821DE891E00836A2D /* trees.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = trees.c; path = ../zlib/trees.c; sourceTree = "<group>"; };
+		4FFDE55921DE891E00836A2D /* zconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zconf.h; path = ../zlib/zconf.h; sourceTree = "<group>"; };
+		4FFDE55A21DE891E00836A2D /* deflate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deflate.h; path = ../zlib/deflate.h; sourceTree = "<group>"; };
+		4FFDE55B21DE891F00836A2D /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zlib.h; path = ../zlib/zlib.h; sourceTree = "<group>"; };
+		4FFDE55C21DE891F00836A2D /* inflate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = inflate.h; path = ../zlib/inflate.h; sourceTree = "<group>"; };
+		4FFDE55D21DE891F00836A2D /* crc32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = crc32.h; path = ../zlib/crc32.h; sourceTree = "<group>"; };
+		4FFDE55E21DE891F00836A2D /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zutil.h; path = ../zlib/zutil.h; sourceTree = "<group>"; };
+		4FFDE55F21DE891F00836A2D /* adler32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = adler32.c; path = ../zlib/adler32.c; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityEngine-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityEngine-Info.plist"; sourceTree = "<group>"; };
 		FA16D39E15E01B82002318D1 /* d_files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = d_files.cpp; path = ../source/d_files.cpp; sourceTree = SOURCE_ROOT; };
 		FA16D3BC15E01E96002318D1 /* a_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_common.h; path = ../source/a_common.h; sourceTree = SOURCE_ROOT; };
@@ -927,7 +956,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F00D1322042B9E100D775DF /* libz.tbd in Frameworks */,
 				4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */,
 				4F950E371F35C84B000D9DC5 /* SDL2.framework in Frameworks */,
 				4F950E351F35C84B000D9DC5 /* SDL2_mixer.framework in Frameworks */,
@@ -963,6 +991,7 @@
 		29B97315FDCFA39411CA2CEA /* Code */ = {
 			isa = PBXGroup;
 			children = (
+				4FFDE54B21DE88F300836A2D /* ZLIB */,
 				4FC0A8FA1E1E2A28006CEC45 /* ACSVM */,
 				FA1F5791158BC579006F8063 /* Eternity */,
 				FA1F5746158BC4BD006F8063 /* SNES-SPC */,
@@ -1077,6 +1106,33 @@
 			);
 			name = ACSVM;
 			sourceTree = SOURCE_ROOT;
+		};
+		4FFDE54B21DE88F300836A2D /* ZLIB */ = {
+			isa = PBXGroup;
+			children = (
+				4FFDE55F21DE891F00836A2D /* adler32.c */,
+				4FFDE55421DE891E00836A2D /* crc32.c */,
+				4FFDE55D21DE891F00836A2D /* crc32.h */,
+				4FFDE55221DE891E00836A2D /* deflate.c */,
+				4FFDE55A21DE891E00836A2D /* deflate.h */,
+				4FFDE55621DE891E00836A2D /* infback.c */,
+				4FFDE54D21DE891D00836A2D /* inffast.c */,
+				4FFDE54F21DE891D00836A2D /* inffast.h */,
+				4FFDE54C21DE891D00836A2D /* inffixed.h */,
+				4FFDE54E21DE891D00836A2D /* inflate.c */,
+				4FFDE55C21DE891F00836A2D /* inflate.h */,
+				4FFDE55121DE891E00836A2D /* inftrees.c */,
+				4FFDE55321DE891E00836A2D /* inftrees.h */,
+				4FFDE55821DE891E00836A2D /* trees.c */,
+				4FFDE55521DE891E00836A2D /* trees.h */,
+				4FFDE55721DE891E00836A2D /* uncompr.c */,
+				4FFDE55921DE891E00836A2D /* zconf.h */,
+				4FFDE55B21DE891F00836A2D /* zlib.h */,
+				4FFDE55021DE891E00836A2D /* zutil.c */,
+				4FFDE55E21DE891F00836A2D /* zutil.h */,
+			);
+			name = ZLIB;
+			sourceTree = "<group>";
 		};
 		FA1F5705158BC2FD006F8063 /* Main */ = {
 			isa = PBXGroup;
@@ -2038,6 +2094,7 @@
 				4F5F395C182D9B820027813A /* v_block.cpp in Sources */,
 				4F5F395D182D9B820027813A /* v_buffer.cpp in Sources */,
 				4F5F395E182D9B820027813A /* v_font.cpp in Sources */,
+				4FFDE56121DE891F00836A2D /* inflate.c in Sources */,
 				4F5F395F182D9B820027813A /* v_misc.cpp in Sources */,
 				4F5F3960182D9B820027813A /* v_patch.cpp in Sources */,
 				4F5F3961182D9B820027813A /* v_patchfmt.cpp in Sources */,
@@ -2083,17 +2140,21 @@
 				4F5F3930182D9B0D0027813A /* r_voxels.cpp in Sources */,
 				4F5F3931182D9B0D0027813A /* s_sndseq.cpp in Sources */,
 				4F5F3932182D9B0D0027813A /* s_sound.cpp in Sources */,
+				4FFDE56321DE891F00836A2D /* inftrees.c in Sources */,
 				4F5F3933182D9B0D0027813A /* sounds.cpp in Sources */,
 				4F5F3934182D9B0D0027813A /* i_input.cpp in Sources */,
+				4FFDE56721DE891F00836A2D /* uncompr.c in Sources */,
 				4F5F3935182D9B0D0027813A /* i_main.cpp in Sources */,
 				4F5F3936182D9B0D0027813A /* i_net.cpp in Sources */,
 				4F5F3937182D9B0D0027813A /* i_pcsound.cpp in Sources */,
 				4F5F3938182D9B0D0027813A /* i_picker.cpp in Sources */,
 				4F5F3939182D9B0D0027813A /* i_sdlgamepads.cpp in Sources */,
+				4FFDE56621DE891F00836A2D /* infback.c in Sources */,
 				4F5F393A182D9B0E0027813A /* i_sdlgl2d.cpp in Sources */,
 				4F5F393B182D9B0E0027813A /* i_sdlmusic.cpp in Sources */,
 				4F5F393C182D9B0E0027813A /* i_sdlsound.cpp in Sources */,
 				4F5F393D182D9B0E0027813A /* i_sound.cpp in Sources */,
+				4FFDE56221DE891F00836A2D /* zutil.c in Sources */,
 				4F5F393E182D9B0E0027813A /* i_system.cpp in Sources */,
 				4F5F393F182D9B0E0027813A /* i_sdlvideo.cpp in Sources */,
 				4F5F3940182D9B0E0027813A /* mmus2mid.cpp in Sources */,
@@ -2155,6 +2216,8 @@
 				4F5F38D9182D9AC00027813A /* hu_stuff.cpp in Sources */,
 				4F5F38DA182D9AC00027813A /* hi_stuff.cpp in Sources */,
 				4F5F38DB182D9AC00027813A /* in_lude.cpp in Sources */,
+				4FFDE56921DE891F00836A2D /* adler32.c in Sources */,
+				4FFDE56021DE891F00836A2D /* inffast.c in Sources */,
 				4F5F38DC182D9AC00027813A /* wi_stuff.cpp in Sources */,
 				4F5F38DD182D9AC00027813A /* m_argv.cpp in Sources */,
 				4F5F38DE182D9AC00027813A /* m_bbox.cpp in Sources */,
@@ -2186,6 +2249,8 @@
 				4F5F38F4182D9AC00027813A /* mn_files.cpp in Sources */,
 				4F5F38F5182D9AC00027813A /* mn_htic.cpp in Sources */,
 				4F5F38F6182D9AC00027813A /* mn_menus.cpp in Sources */,
+				4FFDE56521DE891F00836A2D /* crc32.c in Sources */,
+				4FFDE56421DE891F00836A2D /* deflate.c in Sources */,
 				4F5F38F7182D9AC00027813A /* mn_misc.cpp in Sources */,
 				4F36247D18A567CD00B94FA1 /* xl_mapinfo.cpp in Sources */,
 				4F5F38F8182D9AC00027813A /* mn_skinv.cpp in Sources */,
@@ -2233,6 +2298,7 @@
 				4F5F3917182D9AC00027813A /* p_spec.cpp in Sources */,
 				4F5F3918182D9AC00027813A /* p_switch.cpp in Sources */,
 				4F5F3919182D9AC00027813A /* p_telept.cpp in Sources */,
+				4FFDE56821DE891F00836A2D /* trees.c in Sources */,
 				4F5F391A182D9AC00027813A /* p_things.cpp in Sources */,
 				4F5F391B182D9AC00027813A /* p_tick.cpp in Sources */,
 				4F5F391C182D9AC00027813A /* p_trace.cpp in Sources */,
@@ -2467,6 +2533,7 @@
 					../acsvm,
 					"SDL2_mixer.framework/Headers/**",
 					"SDL2_net.framework/Headers/**",
+					../zlib,
 				);
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LLVM_LTO = NO;
@@ -2518,6 +2585,7 @@
 					../acsvm,
 					"SDL2_mixer.framework/Headers/**",
 					"SDL2_net.framework/Headers/**",
+					../zlib,
 				);
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LLVM_LTO = YES;
