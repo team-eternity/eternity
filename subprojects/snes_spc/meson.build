@@ -31,7 +31,7 @@ snes_spc_src = files(
    'SPC_Filter.cpp',
 )
 
-snes_spc_lib = shared_library('snes_spc', snes_spc_src,
+snes_spc_lib = static_library('snes_spc', snes_spc_src,
    cpp_args : '-DSNES_SPC_EXPORTS'
 )
 

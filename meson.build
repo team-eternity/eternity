@@ -18,7 +18,7 @@
 project('Eternity Engine', 'c', 'cpp',
    license         : ['GPL-2.0+', 'LGPL-2.1+', 'Libpng', 'Zlib'],
    version         : '4.01.00',
-   default_options : ['buildtype=release', 'warning_level=3',
+   default_options : ['buildtype=release', 'warning_level=2',
                       'c_std=c11', 'cpp_std=c++17']
 )
 
@@ -41,14 +41,22 @@ dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',    'dep_acsvm'   ])
 dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'dep_snes_spc'])
 
 # External dependencies
-dep_opengl     = dependency('opengl',     required : false)
+dep_opengl     = dependency('gl',         required : false)
 dep_sdl2       = dependency('sdl2',       version  : '>=2.0.7')
 dep_sdl2_mixer = dependency('sdl2_mixer', version  : '>=2.0.2')
 dep_sdl2_net   = dependency('sdl2_net',   version  : '>=2.0.1')
 
 # Wrap dependencies (TODO: Merge with external)
-dep_zlib       = subproject('zlib').get_variable('zlib_dep')
-dep_libpng     = subproject('libpng').get_variable('png_dep')
+dep_zlib       = dependency('zlib',   fallback : ['zlib',   'zlib_dep'], static : true)
+dep_libpng     = dependency('libpng', fallback : ['libpng', 'png_dep'],  static : true)
+
+# Conditional dependencies
+if host_machine.system() == 'windows'
+   dep_opengl32 = meson.get_compiler('cpp').find_library('opengl32', required: dep_opengl.found())
+   if meson.get_compiler('cpp').get_id() == 'msvc'
+      dep_rpcrt4 = meson.get_compiler('cpp').find_library('rpcrt4')
+   endif
+endif
 
 subdir('source')
 

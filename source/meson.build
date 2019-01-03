@@ -277,17 +277,19 @@ if debug_config
    ]
 endif
 
-# System-specific args & sources
-if build_machine.system() == 'linux'
+# System-specific args, sources, and dependencies
+if host_machine.system() == 'linux'
    eternity_args += '-DLINUX'
    eternity_src  += files('linux/i_cpu_posix.cpp')
-elif build_machine.system() == 'windows'
+elif host_machine.system() == 'windows'
    subdir('Win32')
    eternity_args += '-DEE_FEATURE_REGISTRYSCAN'
    eternity_src  += win32_src
+   eternity_deps += dep_opengl32
 
    if meson.get_compiler('cpp').get_id() == 'msvc'
       eternity_args += ['-DEE_FEATURE_MIDIRPC', '-DEE_FEATURE_XINPUT']
+      eternity_deps += dep_rpcrt4
    endif
 endif
 

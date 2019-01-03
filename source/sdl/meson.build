@@ -30,6 +30,8 @@ sdl_src = files(
    'i_sdlvideo.cpp',
    'i_sound.cpp',
    'i_system.cpp',
+   'mmus2mid.cpp',
+   'ser_main.cpp',
 )
 
 ## EOF

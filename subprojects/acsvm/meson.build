@@ -16,7 +16,7 @@
 ##
 
 project('acsvm', 'cpp',
-   license: 'LGPL-2.1+'
+   license: 'LGPL-2.1'
 )
 
 acsvm_inc = include_directories('.')
