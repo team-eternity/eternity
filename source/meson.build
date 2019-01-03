@@ -255,7 +255,7 @@ eternity_deps = [
    dep_sdl2_mixer,
    dep_sdl2_net,
 
-   # Wrap dependencies (TODO: Merge with external)
+   # Wrap dependencies
    dep_zlib,
    dep_libpng,
 ]
@@ -278,16 +278,16 @@ if debug_config
 endif
 
 # System-specific args, sources, and dependencies
-if host_machine.system() == 'linux'
+if host_system == 'linux'
    eternity_args += '-DLINUX'
    eternity_src  += files('linux/i_cpu_posix.cpp')
-elif host_machine.system() == 'windows'
+elif host_system == 'windows'
    subdir('Win32')
    eternity_args += '-DEE_FEATURE_REGISTRYSCAN'
    eternity_src  += win32_src
    eternity_deps += dep_opengl32
 
-   if meson.get_compiler('cpp').get_id() == 'msvc'
+   if cppc.get_id() == 'msvc'
       eternity_args += ['-DEE_FEATURE_MIDIRPC', '-DEE_FEATURE_XINPUT']
       eternity_deps += dep_rpcrt4
    endif
