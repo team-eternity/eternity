@@ -37,15 +37,17 @@ endif
 
 # In-tree dependencies
 dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',    'dep_acsvm'   ])
-dep_libpng   = dependency('libpng',   fallback : ['libpng',   'dep_libpng'  ])
 dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'dep_snes_spc'])
-dep_zlib     = dependency('zlib,'     fallback : ['zlib',     'dep_zlib'    ])
 
 # External dependencies
-dep_opengl     = dependency('opengl', required : false)
-dep_sdl2       = dependency('sdl2',       version : '>=2.0.7')
-dep_sdl2_mixer = dependency('sdl2_mixer', version : '>=2.0.2')
-dep_sdl2_net   = dependency('sdl2_net',   version : '>=2.0.1')
+dep_opengl     = dependency('opengl',     required : false)
+dep_sdl2       = dependency('sdl2',       version  : '>=2.0.7')
+dep_sdl2_mixer = dependency('sdl2_mixer', version  : '>=2.0.2')
+dep_sdl2_net   = dependency('sdl2_net',   version  : '>=2.0.1')
+
+# Wrap dependencies (TODO: Merge with external)
+dep_zlib       = subproject('zlib').get_variable('zlib_dep')
+dep_libpng     = subproject('libpng').get_variable('png_dep')
 
 subdir('source')
 

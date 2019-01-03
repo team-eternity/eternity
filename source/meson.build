@@ -246,15 +246,17 @@ eternity_src += [
 eternity_deps = [
    # In-tree dependencies
    dep_acsvm,
-   dep_libpng,
    dep_snes_spc,
-   dep_zlib,
 
    # External dependencies
    dep_opengl,
    dep_sdl2,
    dep_sdl2_mixer,
    dep_sdl2_net,
+
+   # Wrap dependencies (TODO: Merge with external)
+   dep_zlib,
+   dep_libpng,
 ]
 
 # Library-specfic args & sources
@@ -289,8 +291,9 @@ elif build_machine.system() == 'windows'
 endif
 
 eternity_exe = executable('eternity', eternity_src,
-   cpp_args :     eternity_args,
-   dependencies : eternity_deps)
+   cpp_args     : eternity_args,
+   dependencies : eternity_deps
+)
 
 ## EOF
 
