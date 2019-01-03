@@ -1,0 +1,5 @@
+# Match all directories
+*/
+# Except for the dependencies we bundle in ourselves
+!acsvm/
+!snes_spc/

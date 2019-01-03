@@ -233,6 +233,7 @@ eternity_src = files(
 )
 
 subdir('Confuse')
+subdir('hal')
 subdir('sdl')
 subdir('textscreen')
 
