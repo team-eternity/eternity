@@ -112,7 +112,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\snes_spc\snes_spc.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\subprojects\snes_spc\snes_spc.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -151,7 +151,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\snes_spc\snes_spc.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\subprojects\snes_spc\snes_spc.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -189,7 +189,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\snes_spc\snes_spc.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\subprojects\snes_spc\snes_spc.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -225,7 +225,7 @@
     </ResourceCompile>
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <ModuleDefinitionFile>..\snes_spc\snes_spc.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\subprojects\snes_spc\snes_spc.def</ModuleDefinitionFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -234,43 +234,43 @@
     <Bscmake />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\snes_spc\dsp.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\dsp.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SNES_SPC.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SNES_SPC.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SNES_SPC_misc.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SNES_SPC_misc.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SNES_SPC_state.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SNES_SPC_state.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\spc.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\spc.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SPC_DSP.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SPC_DSP.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SPC_Filter.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SPC_Filter.cpp">
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -278,16 +278,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\snes_spc\blargg_common.h" />
-    <ClInclude Include="..\snes_spc\blargg_config.h" />
-    <ClInclude Include="..\snes_spc\blargg_endian.h" />
-    <ClInclude Include="..\snes_spc\blargg_source.h" />
-    <ClInclude Include="..\snes_spc\dsp.h" />
-    <ClInclude Include="..\snes_spc\SNES_SPC.h" />
-    <ClInclude Include="..\snes_spc\spc.h" />
-    <ClInclude Include="..\snes_spc\SPC_CPU.h" />
-    <ClInclude Include="..\snes_spc\SPC_DSP.h" />
-    <ClInclude Include="..\snes_spc\SPC_Filter.h" />
+    <ClInclude Include="..\subprojects\snes_spc\blargg_common.h" />
+    <ClInclude Include="..\subprojects\snes_spc\blargg_config.h" />
+    <ClInclude Include="..\subprojects\snes_spc\blargg_endian.h" />
+    <ClInclude Include="..\subprojects\snes_spc\blargg_source.h" />
+    <ClInclude Include="..\subprojects\snes_spc\dsp.h" />
+    <ClInclude Include="..\subprojects\snes_spc\SNES_SPC.h" />
+    <ClInclude Include="..\subprojects\snes_spc\spc.h" />
+    <ClInclude Include="..\subprojects\snes_spc\SPC_CPU.h" />
+    <ClInclude Include="..\subprojects\snes_spc\SPC_DSP.h" />
+    <ClInclude Include="..\subprojects\snes_spc\SPC_Filter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

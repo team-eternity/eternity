@@ -267,7 +267,7 @@ if dep_opengl.found()
 endif
 
 # Build-specific args
-if get_option('debug') || get_option('debugoptimized')
+if debug_config
    eternity_args += [
       '-D_DEBUG',
       '-DRANGECHECK',

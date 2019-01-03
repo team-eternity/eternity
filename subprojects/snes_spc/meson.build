@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-project('snes_spc', 'cpp'
+project('snes_spc', 'cpp',
    license: 'LGPL-2.1+'
 )
 
@@ -30,10 +30,6 @@ snes_spc_src = files(
    'SPC_DSP.cpp',
    'SPC_Filter.cpp',
 )
-
-if meson.get_compiler('cpp').get_id() == 'msvc'
-   snes_spc_src += files('snes_spc.def')
-endif
 
 snes_spc_lib = shared_library('snes_spc', snes_spc_src,
    cpp_args : '-DSNES_SPC_EXPORTS'

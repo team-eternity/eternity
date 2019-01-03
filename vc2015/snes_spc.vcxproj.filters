@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -15,57 +15,57 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\snes_spc\dsp.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SPC_Filter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SNES_SPC.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SPC_DSP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SNES_SPC_misc.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\spc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SNES_SPC_state.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SNES_SPC_state.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\spc.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SNES_SPC_misc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SPC_DSP.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\SNES_SPC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\snes_spc\SPC_Filter.cpp">
+    <ClCompile Include="..\subprojects\snes_spc\dsp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\snes_spc\blargg_common.h">
+    <ClInclude Include="..\subprojects\snes_spc\SPC_Filter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\blargg_config.h">
+    <ClInclude Include="..\subprojects\snes_spc\SPC_DSP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\blargg_endian.h">
+    <ClInclude Include="..\subprojects\snes_spc\SPC_CPU.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\blargg_source.h">
+    <ClInclude Include="..\subprojects\snes_spc\spc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\dsp.h">
+    <ClInclude Include="..\subprojects\snes_spc\SNES_SPC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\SNES_SPC.h">
+    <ClInclude Include="..\subprojects\snes_spc\dsp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\spc.h">
+    <ClInclude Include="..\subprojects\snes_spc\blargg_source.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\SPC_CPU.h">
+    <ClInclude Include="..\subprojects\snes_spc\blargg_endian.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\SPC_DSP.h">
+    <ClInclude Include="..\subprojects\snes_spc\blargg_config.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\snes_spc\SPC_Filter.h">
+    <ClInclude Include="..\subprojects\snes_spc\blargg_common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

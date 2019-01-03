@@ -15,153 +15,153 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\acsvm\ACSVM\Action.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Action.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Array.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Array.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\CallFunc.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\BinaryIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\CodeData.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\CallFunc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Environment.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\CodeData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Function.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Environment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Init.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Error.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Jump.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Function.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Module.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Init.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\ModuleACS0.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Jump.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\ModuleACSE.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\PrintBuf.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\ModuleACS0.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Scope.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\ModuleACSE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Script.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\PrintBuf.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\String.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Scope.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Thread.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Script.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\ThreadExec.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Serial.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Tracer.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\String.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\BinaryIO.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Thread.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Error.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\ThreadExec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\acsvm\ACSVM\Serial.cpp">
+    <ClCompile Include="..\subprojects\acsvm\ACSVM\Tracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\acsvm\ACSVM\Action.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Vector.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Array.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Types.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\BinaryIO.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Tracer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\CallFunc.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Thread.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Code.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\String.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\CodeData.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Store.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\CodeList.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Stack.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Environment.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Serial.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Error.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Script.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Function.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\PrintBuf.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\HashMap.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Scope.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\HashMapFixed.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Module.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Init.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\List.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Jump.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Jump.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\List.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Init.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Module.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\ID.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\PrintBuf.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\HashMapFixed.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Scope.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Function.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Script.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\HashMap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Stack.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Error.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Store.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\CodeList.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\String.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Environment.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Thread.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\CodeData.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Tracer.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\CallFunc.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Types.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Code.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Vector.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Array.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\ID.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\BinaryIO.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\acsvm\ACSVM\Serial.hpp">
+    <ClInclude Include="..\subprojects\acsvm\ACSVM\Action.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

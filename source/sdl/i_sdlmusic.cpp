@@ -50,7 +50,7 @@
 #include "../mn_engin.h"
 
 #ifdef HAVE_SPCLIB
-#include "../../snes_spc/spc.h"
+#include "../../subprojects/snes_spc/spc.h"
 #endif
 
 extern int audio_buffers;

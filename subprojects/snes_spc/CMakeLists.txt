@@ -30,5 +30,5 @@ INCLUDE_DIRECTORIES (.)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
-ADD_LIBRARY (snes_spc STATIC ${SNES_SPC_SOURCES} snes_spc.def)
+ADD_LIBRARY (snes_spc STATIC ${SNES_SPC_SOURCES})
 

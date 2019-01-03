@@ -313,17 +313,17 @@ ENDIF (WIN32)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
-INCLUDE_DIRECTORIES(acsvm)
+INCLUDE_DIRECTORIES(subprojects/acsvm)
 INCLUDE_DIRECTORIES(libpng)
 INCLUDE_DIRECTORIES(zlib)
 
 SET(ACSVM_NOFLAGS ON)
 SET(ACSVM_SHARED OFF)
-ADD_SUBDIRECTORY(acsvm)
+ADD_SUBDIRECTORY(subprojects/acsvm)
 
 ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libpng)
-ADD_SUBDIRECTORY(snes_spc)
+ADD_SUBDIRECTORY(subprojects/snes_spc)
 ADD_SUBDIRECTORY(source)
 
 IF (WIN32 AND MSVC)

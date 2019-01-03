@@ -18,7 +18,6 @@
 project('Eternity Engine', 'c', 'cpp',
    license         : ['GPL-2.0+', 'LGPL-2.1+', 'Libpng', 'Zlib'],
    version         : '4.01.00',
-   subproject_dir  : '.', # Maybe one day this can be removed, but not right now
    default_options : ['buildtype=release', 'warning_level=3',
                       'c_std=c11', 'cpp_std=c++17']
 )
@@ -29,8 +28,10 @@ if meson.get_compiler('cpp').get_id() == 'msvc'
                        '-D_CRT_NONSTDC_NO_WARNINGS')
 endif
 
+debug_config = get_option('buildtype') == 'debug' or get_option('buildtype') == 'debugoptimized'
+
 # TODO: Compiler hardening from the CMake? Is it idiomatic?
-if get_option('debug') || get_option('debugoptimized')
+if debug_config
    # has_argument is equivalent to TRY_C_COMPILER_FLAG I think
    # It's a method for the compiler
 endif

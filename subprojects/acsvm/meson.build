@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-project('acsvm', 'cpp'
+project('acsvm', 'cpp',
    license: 'LGPL-2.1+'
 )
 
@@ -35,7 +35,7 @@ acsvm_src = files(
    'ACSVM/Module.cpp',
    'ACSVM/ModuleACS0.cpp',
    'ACSVM/ModuleACSE.cpp',
-   'ACSVM/PrintfBuf.cpp',
+   'ACSVM/PrintBuf.cpp',
    'ACSVM/Scope.cpp',
    'ACSVM/Script.cpp',
    'ACSVM/Serial.cpp',
