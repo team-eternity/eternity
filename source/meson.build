@@ -243,6 +243,20 @@ eternity_src += [
    textscreen_src,
 ]
 
+eternity_deps = [
+   # In-tree dependencies
+   dep_acsvm,
+   dep_libpng,
+   dep_snes_spc,
+   dep_zlib,
+
+   # External dependencies
+   dep_opengl,
+   dep_sdl2,
+   dep_sdl2_mixer,
+   dep_sdl2_net,
+]
+
 # Library-specfic args & sources
 if dep_opengl.found()
    subdir('gl')

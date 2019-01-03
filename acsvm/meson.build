@@ -48,7 +48,7 @@ acsvm_src = files(
 acsvm_lib = static_library('acsvm', acsvm_src)
 
 dep_acsvm = declare_dependency(
-   link_with : acsvm_lib,
+   link_with           : acsvm_lib,
    include_directories : acsvm_inc
 )
 

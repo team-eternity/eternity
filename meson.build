@@ -23,6 +23,7 @@ project('Eternity Engine', 'c', 'cpp',
                       'c_std=c11', 'cpp_std=c++17']
 )
 
+# This is necessary everywhere
 if meson.get_compiler('cpp').get_id() == 'msvc'
   add_global_arguments('-D_CRT_SECURE_NO_WARNINGS',
                        '-D_CRT_NONSTDC_NO_WARNINGS')
@@ -45,20 +46,6 @@ dep_opengl     = dependency('opengl', required : false)
 dep_sdl2       = dependency('sdl2',       version : '>=2.0.7')
 dep_sdl2_mixer = dependency('sdl2_mixer', version : '>=2.0.2')
 dep_sdl2_net   = dependency('sdl2_net',   version : '>=2.0.1')
-
-eternity_deps = [
-   # In-tree dependencies
-   dep_acsvm,
-   dep_libpng,
-   dep_snes_spc,
-   dep_zlib,
-
-   # External dependencies
-   dep_opengl,
-   dep_sdl2,
-   dep_sdl2_mixer,
-   dep_sdl2_net,
-]
 
 subdir('source')
 
