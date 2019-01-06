@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-gl_src = files(
+eternity_src += files(
    'gl_init.cpp',
    'gl_primitives.cpp',
    'gl_projection.cpp',

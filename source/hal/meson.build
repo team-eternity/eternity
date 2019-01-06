@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-hal_src = files(
+eternity_src += files(
    'i_directory.cpp',
    'i_gamepads.cpp',
    'i_platform.cpp',

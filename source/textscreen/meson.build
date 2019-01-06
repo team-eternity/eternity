@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-textscreen_src = files(
+eternity_src += files(
    'txt_button.c',
    'txt_checkbox.c',
    'txt_conditional.c',

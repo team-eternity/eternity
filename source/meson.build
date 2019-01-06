@@ -232,18 +232,6 @@ eternity_src = files(
    'z_native.cpp',
 )
 
-subdir('Confuse')
-subdir('hal')
-subdir('sdl')
-subdir('textscreen')
-
-eternity_src += [
-   confuse_src,
-   hal_src,
-   sdl_src,
-   textscreen_src,
-]
-
 eternity_deps = [
    # In-tree dependencies
    dep_acsvm,
@@ -260,11 +248,16 @@ eternity_deps = [
    dep_libpng,
 ]
 
+# All the subdir meson.build files for the 'eternity' executable add to eternity_src
+subdir('Confuse')
+subdir('hal')
+subdir('sdl')
+subdir('textscreen')
+
 # Library-specfic args & sources
 if dep_opengl.found()
    subdir('gl')
    eternity_args += '-DEE_FEATURE_OPENGL'
-   eternity_src  += gl_src
 endif
 
 # Build-specific args
@@ -284,7 +277,6 @@ if host_system == 'linux'
 elif host_system == 'windows'
    subdir('Win32')
    eternity_args += '-DEE_FEATURE_REGISTRYSCAN'
-   eternity_src  += win32_src
    eternity_deps += dep_opengl32
 
    if cppc.get_id() == 'msvc'

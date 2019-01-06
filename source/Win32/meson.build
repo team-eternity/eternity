@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-win32_src = files(
+eternity_src += files(
    'i_exception.cpp',
    'i_fnames.cpp',
    'i_opndir.cpp',

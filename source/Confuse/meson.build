@@ -15,7 +15,7 @@
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ##
 
-confuse_src = files(
+eternity_src += files(
    'confuse.cpp',
    'lexer.cpp',
 )
