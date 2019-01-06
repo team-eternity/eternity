@@ -43,19 +43,26 @@ if debug_config
    # It's a method for the compiler
 endif
 
+if host_system == 'linux'
+   sdl2_ver = ['>=2.0.7', '!=2.0.9'] # 2.0.9 always crashes when using the GL2D renderer
+else
+   sdl2_ver = '>=2.0.7'
+endif
+
 # In-tree dependencies
-dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',    'dep_acsvm'   ])
-dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'dep_snes_spc'])
+dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',    'acsvm_dep'   ])
+dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'snes_spc_dep'])
 
 # External dependencies
 dep_opengl     = dependency('gl',         required : false)
-dep_sdl2       = dependency('sdl2',       version  : '>=2.0.7')
-dep_sdl2_mixer = dependency('SDL2_mixer', version  : '>=2.0.2')
-dep_sdl2_net   = dependency('SDL2_net',   version  : '>=2.0.1')
 
 # Wrap dependencies
 dep_zlib       = dependency('zlib',   fallback : ['zlib',   'zlib_dep'], static : true)
 dep_libpng     = dependency('libpng', fallback : ['libpng', 'png_dep'],  static : true)
+dep_sdl2       = dependency('sdl2',       version  : sdl2_ver,  fallback : ['sdl2',       'sdl2_dep'      ])
+dep_sdl2_mixer = dependency('SDL2_mixer', version  : '>=2.0.2', fallback : ['SDL2_mixer', 'SDL2_mixer_dep'])
+dep_sdl2_net   = dependency('SDL2_net',   version  : '>=2.0.1', fallback : ['SDL2_net',   'SDL2_net_dep'  ])
+
 
 # Conditional dependencies
 if host_system == 'windows'

@@ -35,7 +35,7 @@ snes_spc_lib = static_library('snes_spc', snes_spc_src,
    cpp_args : '-DSNES_SPC_EXPORTS'
 )
 
-dep_snes_spc = declare_dependency(
+snes_spc_dep = declare_dependency(
    link_with           : snes_spc_lib,
    include_directories : snes_spc_inc
 )
