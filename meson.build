@@ -50,8 +50,8 @@ dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'dep_snes_spc'])
 # External dependencies
 dep_opengl     = dependency('gl',         required : false)
 dep_sdl2       = dependency('sdl2',       version  : '>=2.0.7')
-dep_sdl2_mixer = dependency('sdl2_mixer', version  : '>=2.0.2')
-dep_sdl2_net   = dependency('sdl2_net',   version  : '>=2.0.1')
+dep_sdl2_mixer = dependency('SDL2_mixer', version  : '>=2.0.2')
+dep_sdl2_net   = dependency('SDL2_net',   version  : '>=2.0.1')
 
 # Wrap dependencies
 dep_zlib       = dependency('zlib',   fallback : ['zlib',   'zlib_dep'], static : true)
