@@ -257,7 +257,7 @@ subdir('textscreen')
 # Library-specfic args & sources
 if dep_opengl.found()
    subdir('gl')
-   eternity_args += '-DEE_FEATURE_OPENGL'
+   eternity_args += ['-DEE_FEATURE_OPENGL']
 endif
 
 # Build-specific args
@@ -266,17 +266,17 @@ if debug_config
       '-D_DEBUG',
       '-DRANGECHECK',
       '-DINSTRUMENTED',
-      '-DZONEIDCHECK'
+      '-DZONEIDCHECK',
    ]
 endif
 
 # System-specific args, sources, and dependencies
 if host_system == 'linux'
-   eternity_args += '-DLINUX'
+   eternity_args += ['-DLINUX']
    eternity_src  += files('linux/i_cpu_posix.cpp')
 elif host_system == 'windows'
    subdir('Win32')
-   eternity_args += '-DEE_FEATURE_REGISTRYSCAN'
+   eternity_args += ['-DEE_FEATURE_REGISTRYSCAN']
    eternity_deps += dep_opengl32
 
    if cppc.get_id() == 'msvc'

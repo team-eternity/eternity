@@ -33,7 +33,7 @@ debug_config = get_option('buildtype') == 'debug' or get_option('buildtype') == 
 if cppc.get_id() == 'msvc'
    add_global_arguments('-D_CRT_SECURE_NO_WARNINGS',
                         '-D_CRT_NONSTDC_NO_WARNINGS',
-      language : ['c', 'cpp']                       
+      language : ['c', 'cpp']
    )
 endif
 
@@ -43,25 +43,24 @@ if debug_config
    # It's a method for the compiler
 endif
 
+sdl2_ver = ['>=2.0.3']
 if host_system == 'linux'
-   sdl2_ver = ['>=2.0.7', '!=2.0.9'] # 2.0.9 always crashes when using the GL2D renderer
-else
-   sdl2_ver = '>=2.0.7'
+   sdl2_ver += ['!=2.0.9'] # 2.0.9 always crashes when using the GL2D renderer
 endif
 
 # In-tree dependencies
-dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',    'acsvm_dep'   ])
+dep_acsvm    = dependency('acsvm',    fallback : ['acsvm',       'acsvm_dep'])
 dep_snes_spc = dependency('snes_spc', fallback : ['snes_spc', 'snes_spc_dep'])
 
-# External dependencies
-dep_opengl     = dependency('gl',         required : false)
+# Hi-ho, the derry-o... GL stands alone
+dep_opengl = dependency('gl', required : false)
 
 # Wrap dependencies
-dep_zlib       = dependency('zlib',   fallback : ['zlib',   'zlib_dep'], static : true)
-dep_libpng     = dependency('libpng', fallback : ['libpng', 'png_dep'],  static : true)
-dep_sdl2       = dependency('sdl2',       version  : sdl2_ver,  fallback : ['sdl2',       'sdl2_dep'      ])
-dep_sdl2_mixer = dependency('SDL2_mixer', version  : '>=2.0.2', fallback : ['SDL2_mixer', 'SDL2_mixer_dep'])
-dep_sdl2_net   = dependency('SDL2_net',   version  : '>=2.0.1', fallback : ['SDL2_net',   'SDL2_net_dep'  ])
+dep_zlib       = dependency('zlib',       static  : true,      fallback : ['zlib',             'zlib_dep'])
+dep_libpng     = dependency('libpng',     static  : true,      fallback : ['libpng',            'png_dep'])
+dep_sdl2       = dependency('sdl2',       version : sdl2_ver,  fallback : ['sdl2',             'sdl2_dep'])
+dep_sdl2_mixer = dependency('SDL2_mixer', version : '>=2.0.2', fallback : ['SDL2_mixer', 'SDL2_mixer_dep'])
+dep_sdl2_net   = dependency('SDL2_net',   version : '>=2.0.1', fallback : ['SDL2_net',     'SDL2_net_dep'])
 
 
 # Conditional dependencies
