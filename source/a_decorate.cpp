@@ -237,8 +237,8 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
    else
    {
       Mobj *target = actor->target;
-      int seek = !!E_ArgAsInt(args, 2, 0);
-      int ifov =   E_ArgAsInt(args, 1, 0);
+      bool    seek = !!E_ArgAsInt(args, 2, 0);
+      fixed_t ifov = E_ArgAsFixed(args, 1, 0);
 
       // if a missile, determine what to do from args[2]
       if(actor->flags & MF_MISSILE)
@@ -246,9 +246,9 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          switch(seek)
          {
          default:
-         case 0: // 0 == use originator (mo->target)
+         case false: // false == use originator (mo->target)
             break;
-         case 1: // 1 == use seeker target
+         case true: // true == use seeker target
             target = actor->tracer;
             break;
          }
@@ -264,7 +264,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          angle_t fov  = FixedToAngle(ifov);
          angle_t tang = P_PointToAngle(actor->x, actor->y,
 #ifdef R_LINKEDPORTALS
-                                        getThingX(actor, target), 
+                                        getThingX(actor, target),
                                         getThingY(actor, target));
 #else
                                         target->x, target->y);
@@ -273,21 +273,21 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          angle_t maxang = actor->angle + fov / 2;
 
          // if the angles are backward, compare differently
-         if((minang > maxang) ? tang < minang && tang > maxang 
+         if((minang > maxang) ? tang < minang && tang > maxang
                               : tang < minang || tang > maxang)
          {
             return;
          }
       }
 
-      // check line of sight 
+      // check line of sight
       if(!P_CheckSight(actor, target))
          return;
 
       // prepare to jump!
       if((statenum = E_ArgAsStateNumNI(args, 0, actor)) < 0)
          return;
-      
+
       P_SetMobjState(actor, statenum);
    }
 }

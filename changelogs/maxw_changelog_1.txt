@@ -310,6 +310,12 @@ Added an inventory bar to Doom. Currently it only works when not using the
 regular Doom HUD, and currently selected items are not rendered  outside of
 when the inventory bar is active.
 
+-------------------------------------------------------------------------------
+2019/01/11
+Fixed the FOV parameter for A_JumpIfTargetInLOS, which was read in as an int
+FRACUNIT times smaller than it should have been before being converted to an
+angle. It is now read in as a fixed.
+
 ================================================================================
 EOF
 ================================================================================
