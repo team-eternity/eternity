@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+12.01.2019
+
+BUGFIX: Fixed polyobject doors which rotate more than 180 degrees from
+        malfunctioning when blocked by things when closing.
+
+--------------------------------------------------------------------------------
 25.12.2018
 
 IMPROVEMENT: Chasecam and walkcam are now portal-aware. Interpolation is however
