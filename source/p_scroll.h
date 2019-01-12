@@ -90,6 +90,7 @@ void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly);
 void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly);
 
 void P_TicResetLerpScrolledSides();
+void P_AddScrolledSide(side_t *side, fixed_t dx, fixed_t dy);
 void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset));
 void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fixed_t offset));
 

@@ -127,12 +127,7 @@ void ScrollThinker::Think()
       side = sides + this->affectee;
       side->textureoffset += dx;
       side->rowoffset += dy;
-      {
-         sidelerpinfo_t &info = pScrolledSides.addNew();
-         info.side = side;
-         info.offset.x = dx;
-         info.offset.y = dy;
-      }
+      P_AddScrolledSide(side, dx, dy);
       break;
 
    case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
@@ -819,6 +814,17 @@ void P_TicResetLerpScrolledSides()
 {
    pScrolledSides.makeEmpty();
    pScrolledSectors.makeEmpty();
+}
+
+//
+// Add a scrolled side to the list
+//
+void P_AddScrolledSide(side_t *side, fixed_t dx, fixed_t dy)
+{
+   sidelerpinfo_t &info = pScrolledSides.addNew();
+   info.side = side;
+   info.offset.x = dx;
+   info.offset.y = dy;
 }
 
 //

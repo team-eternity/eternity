@@ -2108,7 +2108,8 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
       sides[line->sidenum[0]].rowoffset += delta;
       sides[line->sidenum[1]].rowoffset += delta;
-
+      P_AddScrolledSide(&sides[line->sidenum[0]], 0, delta);
+      P_AddScrolledSide(&sides[line->sidenum[1]], 0, delta);
    }
 
    for(i = 0; i < numattsectors; ++i)
