@@ -13,6 +13,9 @@ Since v4.00.00 "Völuspá"
 BUGFIX: Fixed polyobject doors which rotate more than 180 degrees from
         malfunctioning when blocked by things when closing.
 
+IMPROVEMENT: Scrolling texture movement (including attached 3dmidtex) is now
+             interpolated.
+
 --------------------------------------------------------------------------------
 25.12.2018
 
