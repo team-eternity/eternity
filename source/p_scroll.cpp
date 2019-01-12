@@ -55,9 +55,20 @@ struct sidelerpinfo_t
    v2fixed_t offset; // how much this is scrolling
 };
 
+//
+// Data for interpolating sector surfaces
+//
+struct seclerpinfo_t
+{
+   sector_t *sector;
+   bool isceiling;
+   v2fixed_t offset;
+};
+
 static scrollerlist_t *scrollers;
 
 static PODCollection<sidelerpinfo_t> pScrolledSides;
+static PODCollection<seclerpinfo_t> pScrolledSectors;
 
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
@@ -128,12 +139,26 @@ void ScrollThinker::Think()
       sec = sectors + this->affectee;
       sec->floor_xoffs += dx;
       sec->floor_yoffs += dy;
+      {
+         seclerpinfo_t &info = pScrolledSectors.addNew();
+         info.sector = sec;
+         info.isceiling = false;
+         info.offset.x = dx;
+         info.offset.y = dy;
+      }
       break;
 
    case ScrollThinker::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
       sec = sectors + this->affectee;
       sec->ceiling_xoffs += dx;
       sec->ceiling_yoffs += dy;
+      {
+         seclerpinfo_t &info = pScrolledSectors.addNew();
+         info.sector = sec;
+         info.isceiling = true;
+         info.offset.x = dx;
+         info.offset.y = dy;
+      }
       break;
 
    case ScrollThinker::sc_carry:
@@ -793,6 +818,7 @@ void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly)
 void P_TicResetLerpScrolledSides()
 {
    pScrolledSides.makeEmpty();
+   pScrolledSectors.makeEmpty();
 }
 
 //
@@ -801,9 +827,13 @@ void P_TicResetLerpScrolledSides()
 void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset))
 {
    for(const sidelerpinfo_t &info : pScrolledSides)
-   {
       func(info.side, info.offset);
-   }
+}
+
+void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fixed_t offset))
+{
+   for(const seclerpinfo_t &info : pScrolledSectors)
+      func(info.sector, info.isceiling, info.offset);
 }
 
 // killough 3/7/98 -- end generalized scroll effects

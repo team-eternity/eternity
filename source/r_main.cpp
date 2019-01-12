@@ -906,7 +906,7 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 //
 // Interpolates sidedef scrolling
 //
-static void R_setSideScrollInterpolationState(secinterpstate_e state)
+static void R_setScrollInterpolationState(secinterpstate_e state)
 {
    switch(state)
    {
@@ -915,11 +915,35 @@ static void R_setSideScrollInterpolationState(secinterpstate_e state)
             side->textureoffset += lerpCoord(view.lerp, -offset.x, 0);
             side->rowoffset += lerpCoord(view.lerp, -offset.y, 0);
          });
+         P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
+            if(isceiling)
+            {
+               sector->ceiling_xoffs += lerpCoord(view.lerp, -offset.x, 0);
+               sector->ceiling_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+            }
+            else
+            {
+               sector->floor_xoffs += lerpCoord(view.lerp, -offset.x, 0);
+               sector->floor_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+            }
+         });
          break;
       case SEC_NORMAL:
          P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
             side->textureoffset -= lerpCoord(view.lerp, -offset.x, 0);
             side->rowoffset -= lerpCoord(view.lerp, -offset.y, 0);
+         });
+         P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
+            if(isceiling)
+            {
+               sector->ceiling_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->ceiling_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+            }
+            else
+            {
+               sector->floor_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->floor_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+            }
          });
          break;
    }
@@ -993,7 +1017,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    if(view.lerp != FRACUNIT)
    {
       R_setSectorInterpolationState(SEC_INTERPOLATE);
-      R_setSideScrollInterpolationState(SEC_INTERPOLATE);
+      R_setScrollInterpolationState(SEC_INTERPOLATE);
    }
 
    // y shearing
@@ -1234,7 +1258,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    if(view.lerp != FRACUNIT)
    {
       R_setSectorInterpolationState(SEC_NORMAL);
-      R_setSideScrollInterpolationState(SEC_NORMAL);
+      R_setScrollInterpolationState(SEC_NORMAL);
    }
    
    // Check for new console commands.
