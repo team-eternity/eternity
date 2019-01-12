@@ -29,7 +29,8 @@
 #include "m_fixed.h" // for fixed_t
 #include "p_tick.h"  // for Thinker
 
-class SaveArchive;
+class  SaveArchive;
+struct side_t;
 
 // killough 3/7/98: Add generalized scroll effects
 

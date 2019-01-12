@@ -269,8 +269,8 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
 #else
                                         target->x, target->y);
 #endif
-         angle_t minang = actor->angle - fov / 2;
-         angle_t maxang = actor->angle + fov / 2;
+         angle_t minang = actor->angle - FixedToAngle(fov) / 2;
+         angle_t maxang = actor->angle + FixedToAngle(fov) / 2;
 
          // if the angles are backward, compare differently
          if((minang > maxang) ? tang < minang && tang > maxang
