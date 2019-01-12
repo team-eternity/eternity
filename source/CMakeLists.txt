@@ -116,7 +116,7 @@ if(MSVC)
    
    target_compile_options(eternity PUBLIC "/utf-8")
 
-   if(MSVC_VERSION GREATER_EQUAL "1914")
+   if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
    endif()
 endif()
