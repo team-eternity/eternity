@@ -46,7 +46,18 @@ struct scrollerlist_t
    scrollerlist_t  **prev;
 };
 
+//
+// Data for interpolating scrolled sidedefs
+//
+struct sidelerpinfo_t
+{
+   side_t *side;     // the affected sidedef
+   v2fixed_t offset; // how much this is scrolling
+};
+
 static scrollerlist_t *scrollers;
+
+static PODCollection<sidelerpinfo_t> pScrolledSides;
 
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
@@ -105,6 +116,12 @@ void ScrollThinker::Think()
       side = sides + this->affectee;
       side->textureoffset += dx;
       side->rowoffset += dy;
+      {
+         sidelerpinfo_t &info = pScrolledSides.addNew();
+         info.side = side;
+         info.offset.x = dx;
+         info.offset.y = dy;
+      }
       break;
 
    case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
@@ -766,6 +783,26 @@ void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly)
       dx = FixedMul(dx, CARRYFACTOR);
       dy = FixedMul(dy, CARRYFACTOR);
       Add_Scroller(ScrollThinker::sc_carry_ceiling, dx, dy, -1, s, false, false);
+   }
+}
+
+//
+// Resets the scrolled sides list used for interpolation.
+// Called at the start of each tic.
+//
+void P_TicResetLerpScrolledSides()
+{
+   pScrolledSides.makeEmpty();
+}
+
+//
+// Iterates the scroll info list
+//
+void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset))
+{
+   for(const sidelerpinfo_t &info : pScrolledSides)
+   {
+      func(info.side, info.offset);
    }
 }
 

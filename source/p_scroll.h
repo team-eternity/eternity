@@ -89,6 +89,9 @@ enum udmfscrolltype_e : int
 void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly);
 void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly);
 
+void P_TicResetLerpScrolledSides();
+void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset));
+
 #endif
 
 // EOF

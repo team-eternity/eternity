@@ -46,6 +46,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_partcl.h"
+#include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
@@ -903,6 +904,28 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 }
 
 //
+// Interpolates sidedef scrolling
+//
+static void R_setSideScrollInterpolationState(secinterpstate_e state)
+{
+   switch(state)
+   {
+      case SEC_INTERPOLATE:
+         P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
+            side->textureoffset += lerpCoord(view.lerp, -offset.x, 0);
+            side->rowoffset += lerpCoord(view.lerp, -offset.y, 0);
+         });
+         break;
+      case SEC_NORMAL:
+         P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
+            side->textureoffset -= lerpCoord(view.lerp, -offset.x, 0);
+            side->rowoffset -= lerpCoord(view.lerp, -offset.y, 0);
+         });
+         break;
+   }
+}
+
+//
 // R_GetLerp
 //
 fixed_t R_GetLerp(bool ignorepause)
@@ -968,7 +991,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
 
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
+   {
       R_setSectorInterpolationState(SEC_INTERPOLATE);
+      R_setSideScrollInterpolationState(SEC_INTERPOLATE);
+   }
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
@@ -1206,7 +1232,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    // haleyjd: remove sector interpolations
    if(view.lerp != FRACUNIT)
+   {
       R_setSectorInterpolationState(SEC_NORMAL);
+      R_setSideScrollInterpolationState(SEC_NORMAL);
+   }
    
    // Check for new console commands.
    NetUpdate();
