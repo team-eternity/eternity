@@ -121,6 +121,10 @@ if(MSVC)
    endif()
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  target_link_libraries(eternity version)
+endif()
+
 INSTALL (TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
