@@ -356,27 +356,46 @@ static bool MidiRPC_InitServer()
    return !status;
 }
 
-// FIXME: When we finally axe XP support we can remove all this Windows 10 nonsense
-// as we can just #include <versionhelper.h>
-#ifndef _WIN32_WINNT_WIN10
-#define _WIN32_WINNT_WIN10 0x0A00
-#endif
-
 //
-// Checks if Windows version is 10 or higher, for audio kludge
+// Checks if Windows version is 10 or higher, for audio kludge.
+// I wish we could use the Win 8.1 API and Versionhelpers.h
 //
-bool I_IsWindows10OrHigher()
+inline bool I_IsWindows10OrHigher()
 {
-   OSVERSIONINFOEXW osvi = { sizeof(osvi) };
-   const DWORDLONG dwlConditionMask =
-      VerSetConditionMask(
-         VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL),
-      VER_MINORVERSION, VER_GREATER_EQUAL);
-   osvi.dwMajorVersion = HIBYTE(_WIN32_WINNT_WIN10);
-   osvi.dwMinorVersion = LOBYTE(_WIN32_WINNT_WIN10);
-   osvi.wServicePackMajor = 1;
+#pragma comment(lib, "version.lib")
 
-   return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION, dwlConditionMask) != FALSE;
+   static const CHAR kernel32[] = "\\kernel32.dll";
+   CHAR *path;
+   void *ver, *block;
+   UINT  dirLength;
+   DWORD versionSize;
+   UINT  blockSize;
+   VS_FIXEDFILEINFO *vInfo;
+   WORD  majorVer;
+
+   path = static_cast<CHAR *>(malloc(sizeof(*path) * MAX_PATH));
+
+   dirLength = GetSystemDirectory(path, MAX_PATH);
+   if(dirLength >= MAX_PATH || dirLength == 0 ||
+      dirLength > MAX_PATH - sizeof(kernel32) / sizeof(*kernel32))
+      abort();
+   memcpy(path + dirLength, kernel32, sizeof(kernel32));
+
+   versionSize = GetFileVersionInfoSize(path, nullptr);
+   if(versionSize == 0)
+      abort();
+   ver = malloc(versionSize);
+   if(!GetFileVersionInfo(path, 0, versionSize, ver))
+      abort();
+   if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
+      abort();
+   vInfo = static_cast<VS_FIXEDFILEINFO *>(block);
+   majorVer = HIWORD(vInfo->dwProductVersionMS);
+   //minorVer = LOWORD(vInfo->dwProductVersionMS);
+   //buildNum = HIWORD(vInfo->dwProductVersionLS);
+   free(path);
+   free(ver);
+   return majorVer >= 10;
 }
 
 //=============================================================================
