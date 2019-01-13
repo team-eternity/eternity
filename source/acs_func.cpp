@@ -222,7 +222,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
 //
 bool ACS_CF_ATan2(ACS_CF_ARGS)
 {
-   thread->dataStk.push(P_PointToAngle(0, 0, argV[0], argV[1]));
+   thread->dataStk.push(AngleToFixed(P_PointToAngle(0, 0, argV[0], argV[1])));
    return false;
 }
 
