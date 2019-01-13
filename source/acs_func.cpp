@@ -45,6 +45,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -384,6 +385,23 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(0);
+   return false;
+}
+
+//
+// int CheckWeapon(str weapon)
+//
+bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
+{
+   const auto info = &static_cast<ACSThread *>(thread)->info;
+   if(!info->mo || !info->mo->player)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+   const char const *readyWeaponStr = info->mo->player->readyweapon->name;
+   const char const *weaponStr      = thread->scopeMap->getString(argV[0])->str;
+   thread->dataStk.push(strcasecmp(readyWeaponStr, weaponStr) == 0 ? 1 : 0);
    return false;
 }
 
@@ -2193,6 +2211,32 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(count);
+   return false;
+}
+
+//
+// int SetWeapon(str weapon)
+//
+bool ACS_CF_SetWeapon(ACS_CF_ARGS)
+{
+   const auto    info   = &static_cast<ACSThread *>(thread)->info;
+   weaponinfo_t *weapon = E_WeaponForName(thread->scopeMap->getString(argV[0])->str);
+   if(!info->mo || !info->mo->player || !weapon)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   player_t *player = info->mo->player;
+   if(E_PlayerOwnsWeapon(player, weapon))
+   {
+      player->pendingweapon     = weapon;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, weapon);
+      thread->dataStk.push(1);
+   }
+   else
+      thread->dataStk.push(0);
+
    return false;
 }
 

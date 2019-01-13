@@ -238,7 +238,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
    {
       Mobj *target = actor->target;
       bool    seek = !!E_ArgAsInt(args, 2, 0);
-      fixed_t ifov = E_ArgAsFixed(args, 1, 0);
+      fixed_t ffov = E_ArgAsFixed(args, 1, 0);
 
       // if a missile, determine what to do from args[2]
       if(actor->flags & MF_MISSILE)
@@ -259,9 +259,9 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // check fov if one is specified
-      if(ifov)
+      if(ffov)
       {
-         angle_t fov  = FixedToAngle(ifov);
+         angle_t fov  = FixedToAngle(ffov);
          angle_t tang = P_PointToAngle(actor->x, actor->y,
 #ifdef R_LINKEDPORTALS
                                         getThingX(actor, target),

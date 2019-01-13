@@ -203,8 +203,8 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0(220, {"",        1, addCallFunc(ACS_CF_Sin)});
    addCodeDataACS0(221, {"",        1, addCallFunc(ACS_CF_Cos)});
    addCodeDataACS0(222, {"",        2, addCallFunc(ACS_CF_ATan2)});
- //addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
- //addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
+   addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
+   addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
    // 225-243: ACSVM internal codes.
  //addCodeDataACS0(244, {"",        2, addCallFunc(ACS_CF_SetMarineWeapon)});
    addCodeDataACS0(245, {"",        3, addCallFunc(ACS_CF_SetThingProp)});
