@@ -374,6 +374,7 @@ bool ACS_CF_GetThingProp(ACS_CF_ARGS);
 bool ACS_CF_GetThingX(ACS_CF_ARGS);
 bool ACS_CF_GetThingY(ACS_CF_ARGS);
 bool ACS_CF_GetThingZ(ACS_CF_ARGS);
+bool ACS_CF_GetWeapon(ACS_CF_ARGS);
 bool ACS_CF_Hypot(ACS_CF_ARGS);
 bool ACS_CF_IsTIDUsed(ACS_CF_ARGS);
 bool ACS_CF_LineOffsetY(ACS_CF_ARGS);
