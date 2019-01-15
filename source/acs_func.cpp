@@ -399,8 +399,8 @@ bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
       thread->dataStk.push(0);
       return false;
    }
-   const char const *readyWeaponStr = info->mo->player->readyweapon->name;
-   const char const *weaponStr      = thread->scopeMap->getString(argV[0])->str;
+   const char *const readyWeaponStr = info->mo->player->readyweapon->name;
+   const char *const weaponStr      = thread->scopeMap->getString(argV[0])->str;
    thread->dataStk.push(strcasecmp(readyWeaponStr, weaponStr) == 0 ? 1 : 0);
    return false;
 }

@@ -243,15 +243,8 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
       // if a missile, determine what to do from args[2]
       if(actor->flags & MF_MISSILE)
       {
-         switch(seek)
-         {
-         default:
-         case false: // false == use originator (mo->target)
-            break;
-         case true: // true == use seeker target
+         if(seek)
             target = actor->tracer;
-            break;
-         }
       }
 
       // no target? nothing else to do
