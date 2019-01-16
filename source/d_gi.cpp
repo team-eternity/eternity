@@ -1321,7 +1321,7 @@ static gamemodeinfo_t giDoomRetail =
 {
    retail,           // id
    Game_DOOM,        // type
-   DOOM_GIFLAGS | GIF_LOSTSOULBOUNCE, // flags
+   DOOM_GIFLAGS | GIF_LOSTSOULBOUNCE | GIF_NOUPPEREPBOUND, // flags
    
    VNAME_DOOM_RET,   // versionName
    FNAME_DOOM_R,     // freeVerName

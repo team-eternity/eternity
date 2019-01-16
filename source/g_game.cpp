@@ -681,7 +681,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 void G_SetGameMap(void)
 {
    gamemap = G_GetMapForName(gamemapname);
-   
+
    if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       gameepisode = gamemap / 10;
@@ -689,17 +689,17 @@ void G_SetGameMap(void)
    }
    else
       gameepisode = 1;
-   
+
    if(gameepisode < 1)
       gameepisode = 1;
 
    // haleyjd: simplified to use gameModeInfo
 
-   // bound to maximum episode for gamemode
+   // bound to maximum episode for gamemode (if the no-upper-episode-bound flag isn't set)
    // (only start episode 1 on shareware, etc)
-   if(gameepisode > GameModeInfo->numEpisodes)
-      gameepisode = GameModeInfo->numEpisodes;   
-   
+   if(gameepisode > GameModeInfo->numEpisodes && !(GameModeInfo->flags & GIF_NOUPPEREPBOUND))
+      gameepisode = GameModeInfo->numEpisodes;
+
    if(gamemap < 0)
       gamemap = 0;
    if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))

@@ -66,7 +66,8 @@ int main(int argc, char **argv)
    myargc = argc;
    myargv = argv;
 
-   // SDL_FIXME: If this is removed then all sound effects are pitched too high. Why?
+   // SDL_FIXME: WASAPI can't currently be enabled, nor can any audio drivers
+   //            that doesn't support MIX_DEFAULT_FORMAT.
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
    if(I_IsWindows10OrHigher())
       SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
