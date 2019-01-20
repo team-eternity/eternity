@@ -114,9 +114,6 @@ namespace Aeon
       // Indexed property accessors (enables [] syntax for counters)
       { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(getMobjCounter)  },
       { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setMobjCounter)  },
-
-      // Statics
-      { "fixed_t FloatBobOffsets(const int index)", WRAP_FN(floatBobOffsets) },
    };
 
    static const aeonpropreg_t mobjProps[] =
