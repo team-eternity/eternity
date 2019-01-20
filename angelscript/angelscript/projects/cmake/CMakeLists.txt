@@ -55,6 +55,7 @@ set(ANGELSCRIPT_HEADERS
     ../../source/as_tokenizer.h
     ../../source/as_typeinfo.h
     ../../source/as_variablescope.h
+    ../../../add_on/scriptarray/scriptarray.h
 )
 
 set(ANGELSCRIPT_SOURCE
@@ -91,6 +92,7 @@ set(ANGELSCRIPT_SOURCE
     ../../source/as_tokenizer.cpp
     ../../source/as_typeinfo.cpp
     ../../source/as_variablescope.cpp
+    ../../../add_on/scriptarray/scriptarray.cpp
 )
 
 if(MSVC AND CMAKE_CL_64)
@@ -132,7 +134,7 @@ if(MSVC)
     target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)    
 endif()
 
-target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DANGELSCRIPT_EXPORT -D_LIB)
+target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DANGELSCRIPT_EXPORT -DAS_MAX_PORTABILITY -D_LIB)
 
 if(AS_NO_EXCEPTIONS)
 	target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE AS_NO_EXCEPTIONS)
