@@ -1,10 +1,9 @@
-cmake_minimum_required(VERSION 2.6)
-set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE)
-cmake_policy(SET CMP0003 NEW)
+cmake_minimum_required(VERSION 3.5)
 
 project(angelscript)
 
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
+option(AS_NO_EXCEPTIONS "Disable exception handling in script context" OFF)
 
 if(APPLE)
     option(BUILD_FRAMEWORK "Build Framework bundle for OSX" OFF)
@@ -56,7 +55,6 @@ set(ANGELSCRIPT_HEADERS
     ../../source/as_tokenizer.h
     ../../source/as_typeinfo.h
     ../../source/as_variablescope.h
-    ../../../add_on/scriptarray/scriptarray.h
 )
 
 set(ANGELSCRIPT_SOURCE
@@ -93,7 +91,6 @@ set(ANGELSCRIPT_SOURCE
     ../../source/as_tokenizer.cpp
     ../../source/as_typeinfo.cpp
     ../../source/as_variablescope.cpp
-    ../../../add_on/scriptarray/scriptarray.cpp
 )
 
 if(MSVC AND CMAKE_CL_64)
@@ -115,18 +112,8 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "^arm")
     endif()
 endif()
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../include)
-
 if(MSVC)
-    set(CMAKE_DEBUG_POSTFIX "d")
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)    
-endif()
-
-add_definitions(-DANGELSCRIPT_EXPORT -DAS_MAX_PORTABILITY -D_LIB)
-
-# Fix x64 issues on Linux
-if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" AND NOT APPLE)
-    add_definitions(-fPIC)
+    set(CMAKE_DEBUG_POSTFIX "d")  
 endif()
 
 if(NOT BUILD_FRAMEWORK)
@@ -138,9 +125,27 @@ endif()
 set(ANGELSCRIPT_LIBRARY_NAME ${ANGELSCRIPT_LIBRARY_NAME} CACHE STRING "" FORCE)
 
 add_library(${ANGELSCRIPT_LIBRARY_NAME} ${ANGELSCRIPT_SOURCE} ${ANGELSCRIPT_HEADERS})
+
+target_include_directories(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+
+if(MSVC)
+    target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -D_CRT_SECURE_NO_WARNINGS)    
+endif()
+
+target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -DANGELSCRIPT_EXPORT -D_LIB)
+
+if(AS_NO_EXCEPTIONS)
+	target_compile_definitions(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE AS_NO_EXCEPTIONS)
+endif()
+
+# Fix x64 issues on Linux
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64" AND UNIX AND NOT APPLE)
+    target_compile_options(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE -fPIC)
+endif()
+
 # Don't override the default library output path to avoid conflicts when building for multiple target platforms
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../../lib)
-target_link_libraries(${ANGELSCRIPT_LIBRARY_NAME} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${ANGELSCRIPT_LIBRARY_NAME} Threads::Threads)
 
 set_target_properties(${ANGELSCRIPT_LIBRARY_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
@@ -163,4 +168,47 @@ endif()
 # Don't override the default runtime output path to avoid conflicts when building for multiple target platforms
 #set(RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/../../bin)
 
+#See https://cmake.org/cmake/help/latest/manual/cmake-packages.7.html#creating-packages for a detailed explanation about this part
+install(TARGETS ${ANGELSCRIPT_LIBRARY_NAME} EXPORT AngelscriptTargets
+	RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	INCLUDES DESTINATION include
+)
+
+install(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/../../include/angelscript.h
+	DESTINATION include
+	COMPONENT Devel
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+	"${CMAKE_CURRENT_BINARY_DIR}/Angelscript/AngelscriptConfigVersion.cmake"
+	VERSION ${PROJECT_VERSION}
+	COMPATIBILITY AnyNewerVersion
+)
+
+export(EXPORT AngelscriptTargets
+	FILE "${CMAKE_CURRENT_BINARY_DIR}/Angelscript/AngelscriptTargets.cmake"
+	NAMESPACE Angelscript::
+)
+configure_file(cmake/AngelscriptConfig.cmake
+	"${CMAKE_CURRENT_BINARY_DIR}/Angelscript/AngelscriptConfig.cmake"
+	COPYONLY
+)
+
+set(ConfigPackageLocation lib/cmake/Angelscript)
+install(EXPORT AngelscriptTargets
+	FILE AngelscriptTargets.cmake
+	NAMESPACE Angelscript::
+	DESTINATION ${ConfigPackageLocation}
+)
+install(
+	FILES
+		cmake/AngelscriptConfig.cmake
+		"${CMAKE_CURRENT_BINARY_DIR}/Angelscript/AngelscriptConfigVersion.cmake"
+	DESTINATION ${ConfigPackageLocation}
+	COMPONENT Devel
+)
 

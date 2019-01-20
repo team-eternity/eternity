@@ -953,4 +953,35 @@ string GetExceptionInfo(asIScriptContext *ctx, bool showStack)
 	return text.str();
 }
 
+void ScriptThrow(const string &msg)
+{
+	asIScriptContext *ctx = asGetActiveContext();
+	if (ctx)
+		ctx->SetException(msg.c_str());
+}
+
+string ScriptGetExceptionInfo()
+{
+	asIScriptContext *ctx = asGetActiveContext();
+	if (!ctx)
+		return "";
+	
+	const char *msg = ctx->GetExceptionString();
+	if (msg == 0)
+		return "";
+
+	return string(msg);
+}
+
+void RegisterExceptionRoutines(asIScriptEngine *engine)
+{
+	int r;
+
+	// The string type must be available
+	assert(engine->GetTypeInfoByDecl("string"));
+
+	r = engine->RegisterGlobalFunction("void throw(const string &in)", asFUNCTION(ScriptThrow), asCALL_CDECL); assert(r >= 0);
+	r = engine->RegisterGlobalFunction("string getExceptionInfo()", asFUNCTION(ScriptGetExceptionInfo), asCALL_CDECL); assert(r >= 0);
+}
+
 END_AS_NAMESPACE
