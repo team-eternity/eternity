@@ -93,6 +93,8 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_UPSOUND      "upsound"
 #define ITEM_WPN_READYSOUND   "readysound"
 
+#define ITEM_WPN_FULLSCREENOFFSET "fullscreenoffset"
+
 #define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
 
 // DECORATE state block
@@ -142,6 +144,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICTIME,      0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,         "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_READYSOUND,      "none",   CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_FULLSCREENOFFSET, 0, CFGF_NONE), \
    CFG_STR(ITEM_WPN_FIRSTDECSTATE,   nullptr, CFGF_NONE), \
    CFG_STR(ITEM_WPN_STATES,          0,       CFGF_NONE), \
    CFG_END()
@@ -1421,6 +1424,9 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       if(tempsfx)
          wp.readysound = estrdup(tempstr);
    }
+
+   if(IS_SET(ITEM_WPN_FULLSCREENOFFSET))
+      wp.fullscreenoffset = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_FULLSCREENOFFSET));
 
    // Process DECORATE state block
    E_processDecorateWepStatesRecursive(weaponsec, i, false);

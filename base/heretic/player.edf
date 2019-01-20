@@ -82,6 +82,8 @@ weaponinfo GoldWand
   hapticrecoil 1
   haptictime   1
 
+  fullscreenoffset 5
+
   firstdecoratestate S_GOLDWANDREADY
   states
   @"
@@ -135,6 +137,8 @@ weaponinfo Crossbow
   recoil       30
   hapticrecoil 3
   haptictime   3
+
+  fullscreenoffset 15
 
   firstdecoratestate S_CRBOW1
   states
@@ -192,6 +196,8 @@ weaponinfo Blaster
   hapticrecoil 1
   haptictime   1
 
+  fullscreenoffset 15
+
   firstdecoratestate S_BLASTERREADY
   states
   @"
@@ -227,6 +233,8 @@ weaponinfo SkullRod
   hapticrecoil 6
   haptictime   8
 
+  fullscreenoffset 15
+
   firstdecoratestate S_HORNRODREADY
   states
   @"
@@ -260,6 +268,8 @@ weaponinfo PhoenixRod
   recoil       20
   hapticrecoil 2
   haptictime   1
+
+  fullscreenoffset 15
 
   firstdecoratestate S_PHOENIXREADY
   states
@@ -317,6 +327,8 @@ weaponinfo Mace
   hapticrecoil 2
   haptictime   1
 
+  fullscreenoffset 15
+
   firstdecoratestate S_MACEREADY
   states
   @"
@@ -369,6 +381,8 @@ weaponinfo Gauntlets
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   //mod          ""
   upsound      ht_gntact
+
+  fullscreenoffset 15
 
   firstdecoratestate S_GAUNTLETREADY
   states

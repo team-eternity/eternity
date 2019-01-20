@@ -1298,6 +1298,9 @@ static void R_DrawPSprite(const pspdef_t *psp)
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
                       (pspos.y - spritetopoffset[lump]);
 
+   if(scaledwindow.height == SCREENHEIGHT)
+      vis->texturemid -= viewplayer->readyweapon->fullscreenoffset;
+
    vis->x1           = x1 < 0.0f ? 0 : (int)x1;
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour       = 0;      // sf: default colourmap

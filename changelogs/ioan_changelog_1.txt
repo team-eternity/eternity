@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+20.01.2019
+
+BUGFIX: Fixed the wrong drawing of Heretic weapons when no status bar is drawn.
+        Added a "fullscreenoffset" floating-point field in weaponinfo for that,
+        because Heretic weapons have different hardcoded offsets.
+
+--------------------------------------------------------------------------------
 12.01.2019
 
 BUGFIX: Fixed polyobject doors which rotate more than 180 degrees from
