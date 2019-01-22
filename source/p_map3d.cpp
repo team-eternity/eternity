@@ -390,7 +390,14 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       }
 
       if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
+      {
+         if(thing->flags & MF_SPECIAL && clip.thing->z >= topz &&
+            clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+         {
+            return P_CheckPickUp(thing);
+         }
          return true;
+      }
    }
 
    // killough 11/98:

@@ -719,7 +719,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    const char     *sound     = nullptr;
 
    fixed_t delta = special->z - toucher->z;
-   if(delta > toucher->height || delta < -8 * FRACUNIT)
+   if(delta > toucher->height || delta < -GameModeInfo->itemHeight)
       return; // out of reach
 
               // haleyjd: don't crash if a monster gets here.

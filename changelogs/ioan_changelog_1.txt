@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+22.01.2019
+
+IMPROVEMENT: Added a "game.itemheight" property to EDF game properties which
+             overrides item pickup height, which is set to 8 in Doom/Strife and
+             to 32 in Heretic/Hexen.
+
+--------------------------------------------------------------------------------
 20.01.2019
 
 BUGFIX: Fixed the wrong drawing of Heretic weapons when no status bar is drawn.

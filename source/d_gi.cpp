@@ -1157,6 +1157,7 @@ static gamemodeinfo_t giDoomSW =
    bloodTypeForActionDOOM, // default behavior for action array
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1278,6 +1279,7 @@ static gamemodeinfo_t giDoomReg =
    bloodTypeForActionDOOM, // default behavior for action array
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1399,6 +1401,7 @@ static gamemodeinfo_t giDoomRetail =
    bloodTypeForActionDOOM, // default behavior for action array
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1520,6 +1523,7 @@ static gamemodeinfo_t giDoomCommercial =
    bloodTypeForActionDOOM, // default behavior for action array
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1641,6 +1645,7 @@ static gamemodeinfo_t giHereticSW =
    bloodTypeForActionHtic, // default blood behavior for action array
    1.5,                // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
+   32 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1766,6 +1771,7 @@ static gamemodeinfo_t giHereticReg =
    bloodTypeForActionHtic, // default blood behavior for action array
    1.5,               // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
+   32 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
