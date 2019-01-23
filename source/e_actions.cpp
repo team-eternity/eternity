@@ -69,8 +69,6 @@ static inline qstring E_alternateFuncName(const char *name)
 void A_Aeon(actionargs_t *actionargs)
 {
    asIScriptContext *ctx = Aeon::ScriptManager::Context();
-   if(!actionargs->aeonaction)
-      I_Error("A_Aeon: Not bound to Aeon function (don't call A_Aeon from states directly)\n");
 
    if(!Aeon::ScriptManager::PrepareFunction(actionargs->aeonaction->name))
       return;

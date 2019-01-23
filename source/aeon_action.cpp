@@ -57,15 +57,14 @@ namespace Aeon
       const action_t *action  = E_GetAction(name.constPtr());
       const int argc          = argv ? emin<int>(argv->GetSize(), EMAXARGS) : 0;
       arglist_t arglist       = { {}, {}, argc };
-      actionargs_t actionargs = { actionargs_t::MOBJFRAME, mo, nullptr,
-                                  &arglist, action->aeonaction };
+      actionargs_t actionargs;
 
       // Log if the desired action doesn't exist, if not already present in the hash table
       if(!action)
       {
          if(!e_InvalidActionHash.objectForKey(name.constPtr()))
          {
-            doom_printf("Aeon: EE::ExecuteAction: Action '%s' not found\a\n",
+            doom_printf("Aeon: EE::Mobj::executeAction: Action '%s' not found\a\n",
                         name.constPtr());
             actionrecord_t *record = estructalloc(actionrecord_t, 1);
             record->name = name.duplicate();
@@ -74,6 +73,8 @@ namespace Aeon
          return;
       }
 
+      // actionargs HAS to be assigned here
+      actionargs = { actionargs_t::MOBJFRAME, mo, nullptr, &arglist, action->aeonaction };
       for(int i = 0; i < argc; i++)
          arglist.args[i] = static_cast<qstring *>(const_cast<void *>(argv->At(i)))->getBuffer();
 
