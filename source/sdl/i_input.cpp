@@ -74,6 +74,9 @@ void UpdateGrab(SDL_Window *window)
       // Relative mode implicitly hides the cursor.
       SDL_SetRelativeMouseMode(SDL_TRUE);
       SDL_SetWindowGrab(window, SDL_TRUE);
+
+      // Do this to prevent mouse-acceleration from moving player when exiting menu.
+      SDL_GetRelativeMouseState(nullptr, nullptr);
    }
    else if(!grab && currently_grabbed)
    {
