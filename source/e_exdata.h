@@ -92,6 +92,8 @@ typedef struct maplinedefext_s
    int   id;
    float alpha;
 
+   int portalid;
+
    // internal fields (used by ExtraData only)
    int recordnum;
    int next;
@@ -151,7 +153,7 @@ typedef struct mapsectorext_s
 
 void    E_LoadExtraData(void);
 Mobj   *E_SpawnMapThingExt(mapthing_t *mt);
-void    E_LoadLineDefExt(line_t *line, bool applySpecial);
+void    E_LoadLineDefExt(line_t *line, bool applySpecial, UDMFSetupSettings &setupSettings);
 void    E_GetEDMapThings(mapthing_t **things, int *numthings);
 void    E_GetEDLines(maplinedefext_t **lines, int *numlines);
 int     E_LineSpecForName(const char *name);

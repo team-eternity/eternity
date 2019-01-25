@@ -101,6 +101,7 @@ static unsigned int sector_chains[NUMSECCHAINS];
 
 // linedef fields:
 #define FIELD_LINE_NUM       "recordnum"
+#define FIELD_LINE_PORTALID  "portalid"
 #define FIELD_LINE_SPECIAL   "special"
 #define FIELD_LINE_TAG       "tag"
 #define FIELD_LINE_EXTFLAGS  "extflags"
@@ -192,6 +193,7 @@ static cfg_opt_t linedef_opts[] =
    CFG_STR(FIELD_LINE_ARGS,        0, CFGF_LIST),
    CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
    CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
+   CFG_INT(FIELD_LINE_PORTALID,    0, CFGF_NONE),
    CFG_END()
 };
 
@@ -1194,6 +1196,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       else if(EDLines[i].alpha > 1.0f)
          EDLines[i].alpha = 1.0f;
 
+      EDLines[i].portalid = cfg_getint(linesec, FIELD_LINE_PORTALID);
       // TODO: any other new fields
    }
 }
@@ -1511,7 +1514,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
 // have been initialized normally. Normal fields will be altered and
 // extended fields will be set in the linedef.
 //
-void E_LoadLineDefExt(line_t *line, bool applySpecial)
+void E_LoadLineDefExt(line_t *line, bool applySpecial, UDMFSetupSettings &setupSettings)
 {
    unsigned int edLineIdx;
    maplinedefext_t *edline;
@@ -1555,6 +1558,8 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 
    // 11/11/10: alpha
    line->alpha = edline->alpha;
+
+   setupSettings.setLinePortal(eindex(line - lines), edline->portalid);
 }
 
 //
