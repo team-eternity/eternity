@@ -133,6 +133,8 @@ typedef struct mapsectorext_s
    unsigned int c_pflags;
    unsigned int f_alpha;
    unsigned int c_alpha;
+   int f_portalid;
+   int c_portalid;
 
    ETerrain *floorterrain;
    ETerrain *ceilingterrain;

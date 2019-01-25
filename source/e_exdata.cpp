@@ -138,6 +138,8 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_PORTALFLAGS_C  "portalflags.ceiling"
 #define FIELD_SECTOR_OVERLAYALPHA_F "overlayalpha.floor"
 #define FIELD_SECTOR_OVERLAYALPHA_C "overlayalpha.ceiling"
+#define FIELD_SECTOR_PORTALID_F     "portalid.floor"
+#define FIELD_SECTOR_PORTALID_C     "portalid.ceiling"
 
 // mapthing options and related data structures
 
@@ -258,6 +260,8 @@ static cfg_opt_t sector_opts[] =
    CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB2),
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB2),
+   CFG_INT(FIELD_SECTOR_PORTALID_F,        0,         CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_PORTALID_C,        0,         CFGF_NONE),
    
    CFG_END()
 };
@@ -1402,6 +1406,9 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       if(tempint > 255)
          tempint = 255;
       sec->c_alpha = (unsigned int)tempint;
+
+      sec->f_portalid = cfg_getint(section, FIELD_SECTOR_PORTALID_F);
+      sec->c_portalid = cfg_getint(section, FIELD_SECTOR_PORTALID_C);
    }
 }
 
@@ -1653,6 +1660,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    if(sector->c_portal)
       P_CheckCPortalState(sector);
    
+   setupSettings.setSectorPortals(eindex(sector - sectors), edsector->c_portalid,
+                                  edsector->f_portalid);
    // TODO: more?
 
    // clear the line tag
