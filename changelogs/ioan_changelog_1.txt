@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+25.01.2019
+
+IMPROVEMENT: Added some UDMF-exclusive fields to ExtraData: linedef portalid and
+             sector portalid.floor and portalid.ceiling, so that Portal_Define
+             doesn't require UDMF any longer.
+
+--------------------------------------------------------------------------------
 22.01.2019
 
 IMPROVEMENT: Added a "game.itemheight" property to EDF game properties which
