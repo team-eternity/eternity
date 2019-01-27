@@ -244,6 +244,16 @@ static void R_RenderSegLoop(void)
    }
 #endif
 
+
+   visplane_t *plane = nullptr;
+   if(segclip.skyflat)
+   {
+      // TODO: also support MBF sky transfer
+      plane = R_FindPlane(viewz + 64 * FRACUNIT, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
+                          255, nullptr);
+      plane = R_CheckPlane(plane, segclip.x1, segclip.x2);
+   }
+
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
    if(fixedcolormap)
@@ -528,6 +538,16 @@ static void R_RenderSegLoop(void)
       else if(segclip.l_window)
       {
          R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+         ceilingclip[i] = view.height - 1.0f;
+         floorclip[i] = 0.0f;
+      }
+      else if(plane)
+      {
+         if(t < b)
+         {
+            plane->top[i] = t;
+            plane->bottom[i] = b;
+         }
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
