@@ -248,8 +248,9 @@ static void R_RenderSegLoop(void)
    visplane_t *plane = nullptr;
    if(segclip.skyflat)
    {
-      // TODO: also support MBF sky transfer
-      plane = R_FindPlane(viewz + 64 * FRACUNIT, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
+      // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
+      // to avoid HOM
+      plane = R_FindPlane(-1, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
                           255, nullptr);
       plane = R_CheckPlane(plane, segclip.x1, segclip.x2);
    }
