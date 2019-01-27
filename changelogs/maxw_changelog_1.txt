@@ -324,6 +324,11 @@ Added SetWeapon and CheckWeapon ACS functions.
 2019/01/14
 Added SetWeapon and CheckWeapon ACS functions.
 
+-------------------------------------------------------------------------------
+2019/01/26
+Greatly improved performance of R_doubleToUint32, which becomes significantly
+noticeable in maps with lots of flats (think central area of Mothership).
+
 ================================================================================
 EOF
 ================================================================================

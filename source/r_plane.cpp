@@ -60,6 +60,10 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+#ifdef _SDL_VER
+#include "SDL_endian.h"
+#endif
+
 #define MAINHASHCHAINS 128    /* must be a power of 2 */
 
 static visplane_t *freetail;                   // killough
@@ -211,8 +215,14 @@ static void R_PlaneLight()
 // * Contributor(s):
 // *   IBM Corp.
 //
-static uint32_t R_doubleToUint32(double d)
+static inline uint32_t R_doubleToUint32(double d)
 {
+#ifdef SDL_BYTEORDER
+   // TODO: Use C++ std::endian when C++20 can be used
+   // This bit (and the ifdef) isn't from SpiderMonkey.
+   // Credit goes to Marrub and David Hill
+   return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+#else
    int32_t i;
    bool    neg;
    double  two32;
@@ -239,6 +249,7 @@ static uint32_t R_doubleToUint32(double d)
    d     = fmod(d, two32);
 
    return (uint32_t)(d >= 0 ? d : d + two32);
+#endif
 }
 
 //
@@ -271,7 +282,8 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
    ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
 
-   // Use Mozilla routine for portable double->uint32 conversion
+   // Use fast hack routine for portable double->uint32 conversion
+   // iff we know host endianness, otherwise use Mozilla routine
    {
       double value;
 
