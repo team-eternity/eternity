@@ -1397,6 +1397,13 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    else
       seg.l_window = NULL;
+   if(R_IsSkyFlat(seg.side->midtexture))
+   {
+      seg.skyflat = seg.side->sector->sky & PL_SKYFLAT ? seg.side->sector->sky : seg.side->midtexture;
+      seg.maskedtex = false;
+   }
+   else
+      seg.skyflat = 0;
 
    if(!toolow && havebportal && (b > l || b2 > l2))
    {
@@ -1689,6 +1696,13 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    }
    else
       seg.l_window = NULL;
+   if(R_IsSkyFlat(seg.side->midtexture))
+   {
+      seg.skyflat = seg.side->sector->sky & PL_SKYFLAT ? seg.side->sector->sky : seg.side->midtexture;
+      seg.maskedtex = false;
+   }
+   else
+      seg.skyflat = 0;
 
    if(!toolow && havebportal &&
       seg.frontsec->floorheight < seg.backsec->floorheight)

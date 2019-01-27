@@ -533,6 +533,16 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
+            else if(plane)
+            {
+               if(ceilingclip[i] < floorclip[i])
+               {
+                  plane->top[i] = static_cast<int>(ceilingclip[i]);
+                  plane->bottom[i] = static_cast<int>(floorclip[i]);
+               }
+               ceilingclip[i] = view.height - 1.0f;
+               floorclip[i] = 0.0f;
+            }
          }
       }
       else if(segclip.l_window)
