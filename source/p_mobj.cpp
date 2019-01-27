@@ -625,7 +625,7 @@ void P_XYMovement(Mobj* mo)
 
             if(demo_version >= 342 && clip.blockline && 
                !clip.blockline->backsector && 
-               R_IsSkyLikePortalWall(*clip.blockline))
+               R_IsSkyWall(*clip.blockline))
             {
                mo->remove();
                return;

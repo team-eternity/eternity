@@ -603,7 +603,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
       // don't shoot portal lines
       if(demo_version >= 342)
       {
-         if(!hitplane && !li->backsector && R_IsSkyLikePortalWall(*li))
+         if(!hitplane && !li->backsector && R_IsSkyWall(*li))
             return false;
       }
       else if(!hitplane && li->portal)

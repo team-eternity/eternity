@@ -43,6 +43,7 @@
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
 #include "v_alloc.h"
@@ -2106,14 +2107,16 @@ bool R_IsSkyLikePortalFloor(const sector_t &sector)
 //
 // True if line is a basic portal
 //
-bool R_IsSkyLikePortalWall(const line_t &line)
+bool R_IsSkyWall(const line_t &line)
 {
    // Just use the same flags, even if they may not be available from UDMF
    // BLOCKALL lines count as solid to everything, so they will just explode
    // stuff.
-   return line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) && 
-      !(line.extflags & EX_ML_BLOCKALL) && (line.portal->type == R_SKYBOX || 
-         line.portal->type == R_HORIZON || line.portal->type == R_PLANE);
+   return R_IsSkyFlat(sides[line.sidenum[0]].midtexture) ||
+   (line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) &&
+    !(line.extflags & EX_ML_BLOCKALL) && (line.portal->type == R_SKYBOX ||
+                                          line.portal->type == R_HORIZON ||
+                                          line.portal->type == R_PLANE));
 }
 
 // EOF
