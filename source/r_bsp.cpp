@@ -1770,7 +1770,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    else
    {
       seg.midtex = 0;
-      seg.skyflat = side->midtexture;
+      seg.skyflat = side->sector->sky & PL_SKYFLAT ? side->sector->sky : side->midtexture;
    }
 
    seg.markflags = beyond ? SEG_MARK1SLPORTAL : 0;
