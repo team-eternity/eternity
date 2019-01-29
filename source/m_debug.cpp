@@ -28,6 +28,7 @@
 #include "p_maputl.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 
 //
@@ -110,6 +111,10 @@ DebugLogger &DebugLogger::operator << (const divline_t &line)
 DebugLogger &DebugLogger::operator << (const line_t &line)
 {
    return *this << "line" << (&line - lines) << '(' << line.v1 << line.v2 << ')';
+}
+DebugLogger &DebugLogger::operator << (const pwindow_t &window)
+{
+   return *this << "pwindow(" << window.line << window.type >> window.planez >> window.vx >> window.vy >> window.vz << ')';
 }
 DebugLogger &DebugLogger::operator << (const sector_t &sector)
 {
