@@ -23,6 +23,8 @@
 // Authors: Max Waine
 //
 
+#include "z_zone.h"
+
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_weapons.h"
