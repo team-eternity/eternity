@@ -17,7 +17,7 @@
 vc2013-autodoom/Eternity.opensdf
 vc2013-autodoom/Eternity.sdf
 \#*\#
-build/
+build*/
 *.lmp
 *.kdev4
 *.cache.gz

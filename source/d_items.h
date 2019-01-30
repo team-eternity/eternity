@@ -101,6 +101,8 @@ struct weaponinfo_t
    const char  *upsound;      // sound made when weapon is being brought up
    const char  *readysound;   // sound made when weapon is ready
 
+   int fullscreenoffset;   // how much to vertically offset a weapon on fullscreen (for Heretic)
+
    itemeffect_t *tracker;     // tracker artifact for weapon
 
    // EDF hashing

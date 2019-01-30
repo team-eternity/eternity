@@ -1977,6 +1977,7 @@ void PolySwingDoorThinker::Think()
       // move was blocked, special handling required -- make it reopen
 
       this->distance = this->initDistance - this->distance;
+      this->hasBeenPositive = this->distance < 0 ? false : true;
       this->speed    = this->initSpeed;
       this->closing  = false;
 

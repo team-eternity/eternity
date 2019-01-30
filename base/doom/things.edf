@@ -3416,7 +3416,7 @@ thingtype MBFBetaBible : Mobj, 2017, 144
 
 thingtype EEBetaPlasma3 
 {
-  dehackednum 144
+  dehackednum 163
   spawnstate  S_PLS1BALL
   deathstate  S_PLS1EXP
   speed       25.0

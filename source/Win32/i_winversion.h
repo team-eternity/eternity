@@ -34,28 +34,45 @@
 
 #include <windows.h>
 
-// MaxW: Necessary for a specific check that seems to help with audio issues
-// FIXME: When we finally axe XP support we can remove all this Windows 10 nonsense
-// as we can just #include <versionhelper.h>
-#ifndef _WIN32_WINNT_WIN10
-#define _WIN32_WINNT_WIN10 0x0A00
-#endif
-
 //
-// Checks if Windows version is 10 or higher, for audio kludge
+// Checks if Windows version is 10 or higher, for audio kludge.
+// I wish we could use the Win 8.1 API and Versionhelpers.h
 //
 inline bool I_IsWindows10OrHigher()
 {
-   OSVERSIONINFOEXW osvi = { sizeof(osvi) };
-   const DWORDLONG dwlConditionMask =
-      VerSetConditionMask(
-         VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL),
-         VER_MINORVERSION, VER_GREATER_EQUAL);
-   osvi.dwMajorVersion = HIBYTE(_WIN32_WINNT_WIN10);
-   osvi.dwMinorVersion = LOBYTE(_WIN32_WINNT_WIN10);
-   osvi.wServicePackMajor = 1;
+#pragma comment(lib, "version.lib")
 
-   return VerifyVersionInfoW(&osvi, VER_MAJORVERSION | VER_MINORVERSION, dwlConditionMask) != FALSE;
+   static const CHAR kernel32[] = "\\kernel32.dll";
+   CHAR *path;
+   void *ver, *block;
+   UINT  dirLength;
+   DWORD versionSize;
+   UINT  blockSize;
+   VS_FIXEDFILEINFO *vInfo;
+   WORD  majorVer;
+
+   path = emalloc(CHAR *, sizeof(*path) * MAX_PATH);
+
+   dirLength = GetSystemDirectory(path, MAX_PATH);
+   if(dirLength >= MAX_PATH || dirLength == 0 || dirLength > MAX_PATH - earrlen(kernel32))
+      I_Error("I_IsWindows10OrHigher: Location of kernel32.dll longer than MAX_PATH.");
+   memcpy(path + dirLength, kernel32, sizeof(kernel32));
+
+   versionSize = GetFileVersionInfoSize(path, nullptr);
+   if(versionSize == 0)
+      abort();
+   ver = emalloc(void *, versionSize);
+   if(!GetFileVersionInfo(path, 0, versionSize, ver))
+      I_Error("I_IsWindows10OrHigher: GetFileVersionInfo failed.");
+   if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
+      I_Error("I_IsWindows10OrHigher: VerQueryValue failed.");
+   vInfo = static_cast<VS_FIXEDFILEINFO *>(block);
+   majorVer = HIWORD(vInfo->dwProductVersionMS);
+   //minorVer = LOWORD(vInfo->dwProductVersionMS);
+   //buildNum = HIWORD(vInfo->dwProductVersionLS);
+   efree(path);
+   efree(ver);
+   return majorVer >= 10;
 }
 
 #endif

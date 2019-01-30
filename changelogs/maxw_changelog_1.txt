@@ -14,7 +14,7 @@ jump to, and the number of states does not need to be specified.
 -------------------------------------------------------------------------------
 2016/09/28
 
-Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
+Altered IWAD detection so that FreeDM and Freedoom 2 are now in the correct
 positions when autodetected.
 
 -------------------------------------------------------------------------------
@@ -73,8 +73,8 @@ Add Plane_Copy. It copies slopes.
 -------------------------------------------------------------------------------
 2017/01/06
 
-Updated the credits screen to include myself, and amend Sarah Mancuso's name.
-The credits now have two names per column, and are separated down the middle.
+The credits screen now includes myself and I amended Sarah Mancuso's name.
+The credits now have two names per column and are separated down the middle.
 
 -------------------------------------------------------------------------------
 2017/01/08
@@ -281,7 +281,7 @@ they don't want to (for example, if taking photos).
 
 -------------------------------------------------------------------------------
 2018/07/23
-Fix ev_text events causing some issues, such as menu navigation occuring when
+Fix ev_text events causing some issues, such as menu navigation occurring when
 inserting specific keys for key bindings on certain menus.
 
 -------------------------------------------------------------------------------
@@ -299,6 +299,35 @@ putting a '/' before the rest of the path.
 -------------------------------------------------------------------------------
 2018/12/18
 Re-implemented the MBF pickups.
+
+-------------------------------------------------------------------------------
+2018/12/25
+Merry Christmas!
+Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
+the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
+layouts have been made to be the new default for overlay-style HUDs.
+Added an inventory bar to Doom. Currently it only works when not using the
+regular Doom HUD, and currently selected items are not rendered  outside of
+when the inventory bar is active.
+
+-------------------------------------------------------------------------------
+2019/01/11
+Fixed the FOV parameter for A_JumpIfTargetInLOS, which was read in as an int
+FRACUNIT times smaller than it should have been before being converted to an
+angle. It is now read in as a fixed.
+
+-------------------------------------------------------------------------------
+2019/01/13
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/14
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/26
+Greatly improved performance of R_doubleToUint32, which becomes significantly
+noticeable in maps with lots of flats (think central area of Mothership).
 
 ================================================================================
 EOF

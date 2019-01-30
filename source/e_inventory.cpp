@@ -171,6 +171,8 @@ MetaTable *E_GetItemEffects()
 #define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
 #define KEY_ICON           "icon"
+#define KEY_ICON_XOFFS     "icon.offset.x"
+#define KEY_ICON_YOFFS     "icon.offset.y"
 #define KEY_IGNORESKILL    "ignoreskill"
 #define KEY_INTERHUBAMOUNT "interhubamount"
 #define KEY_INVBAR         "invbar"
@@ -345,6 +347,8 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_INT(KEY_INTERHUBAMOUNT,  0, CFGF_NONE), // amount carryable between hubs (or levels)
    CFG_INT(KEY_SORTORDER,       0, CFGF_NONE), // relative ordering within inventory
    CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
+   CFG_INT(KEY_ICON_XOFFS,      0, CFGF_NONE), // x offset of icon (+ is left)
+   CFG_INT(KEY_ICON_YOFFS,      0, CFGF_NONE), // y offset of icon (+ is right)
    CFG_STR(KEY_USESOUND,       "", CFGF_NONE), // sound to play when used
    CFG_STR(KEY_USEEFFECT,      "", CFGF_NONE), // effect to activate when used
 
@@ -1410,7 +1414,7 @@ inventoryindex_t e_maxvisiblesortorder = INT_MIN;
 // Tries to move the inventory cursor 'amount' right.
 // Returns true if cursor wasn't adjusted (outside of amount being added).
 //
-bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
+bool E_MoveInventoryCursor(const player_t *player, const int amount, int &cursor)
 {
    if(cursor + amount < 0)
    {
@@ -1430,6 +1434,25 @@ bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor)
       return false;
 
    cursor += amount;
+   return true;
+}
+
+//
+// Checks if cursor can be moved 'amount' right without mutating cursor
+//
+bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const int cursor)
+{
+   if(cursor + amount < 0)
+      return false;
+   if(amount <= 0)
+      return true; // We know that the cursor will succeed in moving left
+
+   itemeffect_t *effect = E_EffectForInventoryIndex(player, cursor + amount);
+   if(!effect)
+      return false;
+   if(effect->getInt(keySortOrder, INT_MAX) > e_maxvisiblesortorder)
+      return false;
+
    return true;
 }
 
@@ -1596,10 +1619,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 
          // FIXME: Make this behaviour optional, or remove
          if(shiftinvleft)
-         {
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
-            E_MoveInventoryCursor(player, -1, invbarstate.inv_ptr);
-         }
       }
    }
 }
@@ -1643,25 +1663,29 @@ static void E_allocateInventoryItemIDs()
 }
 
 //
-// E_allocateSortOrders
-//
-// Allocates sort orders to -invbar items
+// Allocates sort orders to any artifact that needs one
 //
 static void E_allocateSortOrders()
 {
-   itemeffect_t *item = NULL;
+   // Scan the effects table and add artifacts to the table
+   itemeffect_t *item = nullptr;
 
-   // scan the effects table and add artifacts to the table
+   // All +invbar items w/o explicit sort order share the same sort order
+   // They are then ordered at runtime alphabetically
+   e_maxvisiblesortorder++;
+
    while((item = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(item))))
    {
       itemeffecttype_t fxtype = item->getInt(keyClass, ITEMFX_NONE);
 
-      // only interested in effects that are recorded in the inventory
+      // Only interested in effects that are recorded in the inventory
       if(fxtype == ITEMFX_ARTIFACT)
       {
          // If the current isn't visible
          if(!item->getInt(keyInvBar, 0))
             item->setInt(keySortOrder, e_maxvisiblesortorder + 1);
+         else if(item->getObject(keySortOrder) == nullptr)
+            item->setInt(keySortOrder, e_maxvisiblesortorder);
 
       }
    }
@@ -1743,7 +1767,7 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
    if(effect && (id = effect->getInt(keyItemID, -1)) >= 0)
       return E_InventorySlotForItemID(player, id);
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -1784,19 +1808,21 @@ inventoryindex_t E_FindInventorySlot(inventory_t inventory)
 // proper sorted position based on the item effects' sortorder fields.
 //
 static void E_sortInventory(const player_t *player, inventoryindex_t newIndex,
-                            int sortorder)
+                            int sortorder, const char *name)
 {
    inventory_t     inventory = player->inventory;
    inventoryslot_t tempSlot  = inventory[newIndex];
 
    for(inventoryindex_t idx = 0; idx < newIndex; idx++)
    {
-      itemeffect_t *effect;
+      const itemeffect_t *effect;
 
       if((effect = E_EffectForInventoryIndex(player, idx)))
       {
-         int thatorder = effect->getInt(keySortOrder, 0);
-         if(thatorder < sortorder)
+         const int thatorder = effect->getInt(keySortOrder, 0);
+         // If sort order is shared then sort them alphabetically (case-insensitive)
+         if(thatorder < sortorder ||
+            (thatorder == sortorder && strcasecmp(name, effect->getKey()) > 0))
             continue;
          else
          {
@@ -1969,13 +1995,12 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
    // Make sure the player's inv_ptr is updated if need be
    if(!initslot && E_PlayerHasVisibleInvItem(player))
    {
-      if(artifact->getInt(keySortOrder, 0) <
-         E_EffectForInventoryIndex(player, player->inv_ptr)->getInt(keySortOrder, 0))
-      {
+      const itemeffect_t *other = E_EffectForInventoryIndex(player, player->inv_ptr);
+      const int artiorder  = artifact->getInt(keySortOrder, 0);
+      const int otherorder = other->getInt(keySortOrder, 0);
+      if(artiorder < otherorder ||
+         (artiorder == otherorder && strcasecmp(artifact->getKey(), other->getKey()) < 0))
          player->inv_ptr++;
-         invbarstate_t &invbarstate = player->invbarstate;
-         invbarstate.inv_ptr++;
-      }
    }
 
    // set the item type in case the slot is new, and increment the amount owned
@@ -1987,7 +2012,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
 
    // sort if needed
    if(newSlot > 0)
-      E_sortInventory(player, newSlot, artifact->getInt(keySortOrder, 0));
+      E_sortInventory(player, newSlot, artifact->getInt(keySortOrder, 0), artifact->getKey());
 
    return true;
 }
@@ -2130,7 +2155,7 @@ void E_ClearInventory(player_t *player)
    }
 
    player->inv_ptr = 0;
-   invbarstate = { false, 0, 0 };
+   invbarstate     = { false, 0 };
 }
 
 //

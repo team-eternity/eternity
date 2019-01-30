@@ -270,7 +270,7 @@ void HU_Init()
    if(!(hud_font = E_FontForName(hud_fontname)))
       I_Error("HU_Init: bad EDF font name %s\n", hud_fontname);
 
-   HU_LoadFont(); // overlay font
+   HU_LoadFonts(); // overlay font
    HU_InitNativeWidgets();
 }
 
@@ -1916,8 +1916,8 @@ static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)
 {
-   if(hud_enabled && hud_overlaystyle > 0) // Boom HUD enabled, return style
-      return (cell)hud_overlaystyle + 1;
+   if(hud_enabled && hud_overlaylayout > 0) // Boom HUD enabled, return style
+      return (cell)hud_overlaylayout + 1;
    else if(viewwindow.height == video.height)         // Fullscreen (no HUD)
       return 0;			
    else                                    // Vanilla style status bar

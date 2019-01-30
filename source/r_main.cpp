@@ -46,6 +46,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_partcl.h"
+#include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
@@ -825,6 +826,7 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
       viewy     = camera->y;
       viewz     = camera->z;
       viewangle = camera->angle;
+      viewpitch = camera->pitch;
    }
    else
    {
@@ -832,6 +834,7 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
       viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
       viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
       viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+      viewpitch = lerpAngle(lerp, camera->prevpitch, camera->pitch);
    }
 }
 
@@ -901,6 +904,52 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 }
 
 //
+// Interpolates sidedef scrolling
+//
+static void R_setScrollInterpolationState(secinterpstate_e state)
+{
+   switch(state)
+   {
+      case SEC_INTERPOLATE:
+         P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
+            side->textureoffset += lerpCoord(view.lerp, -offset.x, 0);
+            side->rowoffset += lerpCoord(view.lerp, -offset.y, 0);
+         });
+         P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
+            if(isceiling)
+            {
+               sector->ceiling_xoffs += lerpCoord(view.lerp, -offset.x, 0);
+               sector->ceiling_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+            }
+            else
+            {
+               sector->floor_xoffs += lerpCoord(view.lerp, -offset.x, 0);
+               sector->floor_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+            }
+         });
+         break;
+      case SEC_NORMAL:
+         P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
+            side->textureoffset -= lerpCoord(view.lerp, -offset.x, 0);
+            side->rowoffset -= lerpCoord(view.lerp, -offset.y, 0);
+         });
+         P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
+            if(isceiling)
+            {
+               sector->ceiling_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->ceiling_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+            }
+            else
+            {
+               sector->floor_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->floor_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+            }
+         });
+         break;
+   }
+}
+
+//
 // R_GetLerp
 //
 fixed_t R_GetLerp(bool ignorepause)
@@ -966,7 +1015,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
 
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
+   {
       R_setSectorInterpolationState(SEC_INTERPOLATE);
+      R_setScrollInterpolationState(SEC_INTERPOLATE);
+   }
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
@@ -1204,7 +1256,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    // haleyjd: remove sector interpolations
    if(view.lerp != FRACUNIT)
+   {
       R_setSectorInterpolationState(SEC_NORMAL);
+      R_setScrollInterpolationState(SEC_NORMAL);
+   }
    
    // Check for new console commands.
    NetUpdate();

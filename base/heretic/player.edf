@@ -20,6 +20,7 @@ weaponinfo Staff
   //mod          ""
   recoil       10
 
+  firstdecoratestate S_STAFFREADY
   states
   @"
   Ready:
@@ -44,7 +45,7 @@ weaponinfo StaffPowered : Staff
   sisterweapon Staff
 
   readysound   ht_stfcrk
-  addflags     READYSNDHALF|POWERED_UP
+  addflags     READYSNDHALF|POWEREDUP
   mod          StaffPowered
 
   states
@@ -81,6 +82,9 @@ weaponinfo GoldWand
   hapticrecoil 1
   haptictime   1
 
+  fullscreenoffset 5
+
+  firstdecoratestate S_GOLDWANDREADY
   states
   @"
   Ready:
@@ -105,8 +109,9 @@ weaponinfo GoldWandPowered : GoldWand
 {
   sisterweapon GoldWand
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_GOLDWANDATK2_1
   states
   @"
   Fire:
@@ -133,6 +138,9 @@ weaponinfo Crossbow
   hapticrecoil 3
   haptictime   3
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_CRBOW1
   states
   @"
   Ready:
@@ -157,8 +165,9 @@ weaponinfo CrossbowPowered : Crossbow
 {
   sisterweapon Crossbow
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_CRBOWATK2_1
   states
   @"
   Fire:
@@ -187,11 +196,11 @@ weaponinfo Blaster
   hapticrecoil 1
   haptictime   1
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_BLASTERREADY
   states
   @"
-  Spawn:
-    WBLS A -1
-    stop
   Ready:
     BLSR A 1 A_WeaponReady
     loop
@@ -224,6 +233,9 @@ weaponinfo SkullRod
   hapticrecoil 6
   haptictime   8
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_HORNRODREADY
   states
   @"
   Ready:
@@ -257,6 +269,9 @@ weaponinfo PhoenixRod
   hapticrecoil 2
   haptictime   1
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_PHOENIXREADY
   states
   @"
   Ready:
@@ -281,8 +296,9 @@ weaponinfo PhoenixRodPowered : PhoenixRod
 {
   sisterweapon PhoenixRod
 
-  addflags POWERED_UP|FLEEMELEE
+  addflags POWEREDUP|FLEEMELEE
 
+  firstdecoratestate S_PHOENIXATK2_1
   states
   @"
   Fire:
@@ -311,6 +327,9 @@ weaponinfo Mace
   hapticrecoil 2
   haptictime   1
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_MACEREADY
   states
   @"
   Ready:
@@ -338,8 +357,9 @@ weaponinfo MacePowered : Mace
 
   sisterweapon Mace
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_MACEATK2_1
   states
   @"
   Fire:
@@ -362,6 +382,9 @@ weaponinfo Gauntlets
   //mod          ""
   upsound      ht_gntact
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_GAUNTLETREADY
   states
   @"
   Ready:
@@ -388,8 +411,9 @@ weaponinfo GauntletsPowered : Gauntlets
 {
   sisterweapon Gauntlets
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_GAUNTLETREADY2_1
   states
   @"
   Ready:

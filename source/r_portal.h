@@ -264,7 +264,7 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box);
 
 bool R_IsSkyLikePortalCeiling(const sector_t &sector);
 bool R_IsSkyLikePortalFloor(const sector_t &sector);
-bool R_IsSkyLikePortalWall(const line_t &line);
+bool R_IsSkyWall(const line_t &line);
 
 //=============================================================================
 //

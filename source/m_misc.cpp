@@ -659,10 +659,13 @@ default_t defaults[] =
    // killough 11/98
    DEFAULT_INT("message_timer",&message_timer, NULL, 4000, 0, UL, default_t::wad_no,
                "Duration of normal Doom messages (ms)"),
+
+   DEFAULT_INT("hud_overlayid", &hud_overlayid, NULL, -1, -1, VDR_MAXDRIVERS - 1, default_t::wad_no,
+               "Select HUD overlay (-1 = default, 0 = modern, 1 = boom"),
    
    //sf : fullscreen hud style
-   DEFAULT_INT("hud_overlaystyle",&hud_overlaystyle, NULL, 1, 0, 4, default_t::wad_yes,
-               "fullscreen hud style"),
+   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, 2, 0, 4, default_t::wad_yes,
+               "fullscreen hud layout"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,
                "fullscreen hud enabled"),
@@ -849,10 +852,10 @@ default_t defaults[] =
 default_or_t HereticDefaultORs[] =
 {
    // misc
-   { "pitched_sounds",   1 }, // pitched sounds should be on
-   { "allowmlook",       1 }, // mlook defaults to on
-   { "wipetype",         2 }, // use crossfade wipe by default
-   { "hud_overlaystyle", 4 }, // use graphical HUD style
+   { "pitched_sounds",    1 }, // pitched sounds should be on
+   { "allowmlook",        1 }, // mlook defaults to on
+   { "wipetype",          2 }, // use crossfade wipe by default
+   { "hud_overlaylayout", 4 }, // use graphical HUD style
    
    // compatibility
    { "comp_terrain",   0 }, // terrain active

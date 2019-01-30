@@ -203,8 +203,8 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0(220, {"",        1, addCallFunc(ACS_CF_Sin)});
    addCodeDataACS0(221, {"",        1, addCallFunc(ACS_CF_Cos)});
    addCodeDataACS0(222, {"",        2, addCallFunc(ACS_CF_ATan2)});
- //addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
- //addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
+   addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
+   addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
    // 225-243: ACSVM internal codes.
  //addCodeDataACS0(244, {"",        2, addCallFunc(ACS_CF_SetMarineWeapon)});
    addCodeDataACS0(245, {"",        3, addCallFunc(ACS_CF_SetThingProp)});
@@ -272,9 +272,9 @@ ACSEnvironment::ACSEnvironment() :
  //addCodeDataACS0(346, {"",        2, addCallFunc(ACS_CF_UnmorphThing)});
    addCodeDataACS0(347, {"",        2, addCallFunc(ACS_CF_GetPlayerInput)});
    addCodeDataACS0(348, {"",        1, addCallFunc(ACS_CF_ClassifyThing)});
-   // 349-361: ACSVM interanl codes.
+   // 349-361: ACSVM internal codes.
  //addCodeDataACS0(362, {"",        8, addCallFunc(ACS_CF_TransDesat)});
-   // 363-380: ACSVM interanl codes.
+   // 363-380: ACSVM internal codes.
 
    // Add func translations.
 
@@ -337,7 +337,7 @@ ACSEnvironment::ACSEnvironment() :
    addFuncDataACS0( 62, addCallFunc(ACS_CF_StopSound));
    // 63-67: ACSVM internal funcs.
  //addFuncDataACS0( 68, addCallFunc(ACS_CF_GetThingType));
- //addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
+   addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
  //addFuncDataACS0( 70, addCallFunc(ACS_CF_SoundVolume));
    addFuncDataACS0( 71, addCallFunc(ACS_CF_PlayThingSound));
  //addFuncDataACS0( 72, addCallFunc(ACS_CF_SpawnDecal));

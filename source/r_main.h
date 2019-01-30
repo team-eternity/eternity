@@ -225,8 +225,11 @@ struct cb_seg_t
    pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
    // ioanch: added b_window for bottom edge portal
 
-   // SoM: used for portals
-   fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;
+   // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
+   fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+
+   // If nonzero, require f_sky1 rendering
+   int skyflat;
 };
 
 

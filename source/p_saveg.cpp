@@ -539,7 +539,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int j;
          player_t &p = players[i];
 
-         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
+         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn
              << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
@@ -634,9 +634,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.cmd.buttons = 0;       // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
-
-            //if(i == consoleplayer)
-            p.invbarstate.inv_ptr = p.inv_ptr;
          }
       }
    }

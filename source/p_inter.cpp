@@ -309,6 +309,9 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       return false;
    }
 
+   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
+      return false;
+
    itemeffect_t *ammogiven = nullptr;
    while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
    {
@@ -340,10 +343,6 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
 
       if((dmflags & DM_WEAPONSTAY) && !dropped)
       {
-         // leave placed weapons forever on net games
-         if(E_PlayerOwnsWeapon(player, wp))
-            return false;
-
          if(ammogiven &&
             ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
          {
@@ -731,7 +730,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    const char     *sound     = nullptr;
 
    fixed_t delta = special->z - toucher->z;
-   if(delta > toucher->height || delta < -8 * FRACUNIT)
+   if(delta > toucher->height || delta < -GameModeInfo->itemHeight)
       return false; // out of reach
 
               // haleyjd: don't crash if a monster gets here.

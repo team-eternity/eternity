@@ -1877,9 +1877,9 @@ thingtype MaulotaurFloorFlame : MaulotaurFireProto, -1, 374
   states
   @"
   Spawn:
-    FX13 DC   4
-    FX13 BCDE 5
-    FX13 FGH  4
+    FX13 DC   4 bright
+    FX13 BCDE 5 bright
+    FX13 FGH  4 bright
     stop
   "@
 }

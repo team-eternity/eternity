@@ -74,6 +74,11 @@ struct v2fixed_t
    {
       return { D_abs(x), D_abs(y) };
    }
+
+   bool operator ! () const
+   {
+      return !x && !y;
+   }
 };
 
 struct v3float_t

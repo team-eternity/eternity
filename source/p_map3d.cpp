@@ -1,44 +1,32 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
+// ZDoom
+// Copyright (C) 1998-2012 Marisa Heit
 //
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 //
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: 3D Mobj Clipping Code.
+//          Largely from ZDoom, this system seems to be more reliable than our old one.
+//          It is also kept totally separate from the old clipping code to avoid the
+//          entangling problems the earlier code had.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-// 3D Mobj Clipping Code
-//
-// Largely from zdoom, this system seems to be more reliable than our old one.
-// It is also kept totally separate from the old clipping code to avoid the
-// entangling problems the earlier code had.
-//
-//-----------------------------------------------------------------------------
+
 
 #include "z_zone.h"
 
@@ -402,7 +390,14 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       }
 
       if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
+      {
+         if(thing->flags & MF_SPECIAL && clip.thing->z >= topz &&
+            clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+         {
+            return P_CheckPickUp(thing);
+         }
          return true;
+      }
    }
 
    // killough 11/98:

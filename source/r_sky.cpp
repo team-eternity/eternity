@@ -204,7 +204,7 @@ void R_ClearSkyTextures()
 //
 bool R_IsSkyFlat(int picnum)
 {
-   skyflat_t *sky = GameModeInfo->skyFlats;
+   const skyflat_t *sky = GameModeInfo->skyFlats;
 
    while(sky->flatname)
    {

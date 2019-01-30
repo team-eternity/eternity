@@ -1807,7 +1807,7 @@ void P_PostProcessLineFlags(line_t *ld)
 // killough 5/3/98: reformatted, cleaned up
 // haleyjd 2/26/05: ExtraData extensions
 //
-static void P_LoadLineDefs(int lump)
+static void P_LoadLineDefs(int lump, UDMFSetupSettings &setupSettings)
 {
    byte *data;
 
@@ -1846,7 +1846,7 @@ static void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if((edlinespec && ld->special == edlinespec) ||
          EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
-         E_LoadLineDefExt(ld, ld->special == edlinespec);
+         E_LoadLineDefExt(ld, ld->special == edlinespec, setupSettings);
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -3737,7 +3737,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:
-      P_LoadLineDefs(lumpnum + ML_LINEDEFS);
+      P_LoadLineDefs(lumpnum + ML_LINEDEFS, setupSettings);
       break;
    case LEVEL_FORMAT_HEXEN:
       P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);

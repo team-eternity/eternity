@@ -29,10 +29,13 @@
 
 struct divline_t;
 struct line_t;
+struct pwindow_t;
 struct sector_t;
 struct seg_t;
 struct side_t;
+struct v2double_t;
 struct v2fixed_t;
+struct v3fixed_t;
 struct vertex_t;
 
 //
@@ -51,6 +54,7 @@ public:
    DebugLogger &operator << (int number);
    DebugLogger &operator << (unsigned number);
    DebugLogger &operator << (long number);
+   DebugLogger &operator << (long long number);
    DebugLogger &operator << (double number);
 
    // Convenience
@@ -59,10 +63,13 @@ public:
    // Structural types
    DebugLogger &operator << (const divline_t &divline);
    DebugLogger &operator << (const line_t &line);
+   DebugLogger &operator << (const pwindow_t &window);
    DebugLogger &operator << (const side_t &side);
    DebugLogger &operator << (const sector_t &sector);
    DebugLogger &operator << (const seg_t &seg);
+   DebugLogger &operator << (const v2double_t &vec);
    DebugLogger &operator << (const v2fixed_t &vec);
+   DebugLogger &operator << (const v3fixed_t &vec);
    DebugLogger &operator << (const vertex_t &vertex);
 
    template<typename T>
