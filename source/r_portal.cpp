@@ -471,7 +471,7 @@ static portal_t *R_CreatePortal()
       last = ret;
    }
    
-   ret->poverlay  = R_NewPlaneHash(32);
+   ret->poverlay  = R_NewPlaneHash(31);
    ret->globaltex = 1;
 
    return ret;
@@ -1254,7 +1254,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
 
       portal->tainted++;
       C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
-         portal->data.anchor.maker, portal->tainted);
+         portal->data.link.maker, portal->tainted);
       return;
    } 
 

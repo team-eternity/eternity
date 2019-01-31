@@ -64,7 +64,7 @@
 #include "SDL_endian.h"
 #endif
 
-#define MAINHASHCHAINS 128    /* must be a power of 2 */
+#define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
 
 static visplane_t *freetail;                   // killough
 static visplane_t **freehead = &freetail;      // killough
@@ -99,7 +99,7 @@ VALLOCATION(mainhash)
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
 #define visplane_hash(picnum, lightlevel, height, chains) \
-  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & ((chains) - 1))
+  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) % chains)
 
 
 // killough 8/1/98: set static number of openings to be large enough
@@ -680,9 +680,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          yscale == check->yscale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap && 
-         viewx == check->viewx && 
-         viewy == check->viewy && 
+         fixedcolormap == check->fixedcolormap &&
+         viewx == check->viewx &&
+         viewy == check->viewy &&
          viewz == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
@@ -1226,7 +1226,7 @@ planehash_t *R_NewOverlaySet()
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(32);
+      set = R_NewPlaneHash(31);
       return set;
    }
    set = r_overlayfreesets;
