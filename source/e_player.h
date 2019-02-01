@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,27 +19,33 @@
 //
 //----------------------------------------------------------------------------
 //
-// EDF Player Class Module
+// Purpose: EDF Player Class Module
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_PLAYER_H__
 #define E_PLAYER_H__
 
 // macros
 #define NUMEDFSKINCHAINS 17
+#define NUMWEAPONSLOTS   16
 
 struct skin_t;
+struct weaponslot_t;
 
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
+
+enum rebornitemflag_e
+{
+   RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
+};
 
 // default inventory items
 struct reborninventory_t
 {
-   char *itemname; // EDF itemeffect name
-   int   amount;   // amount of item to give when reborn
+   char         *itemname; // EDF itemeffect name
+   int           amount;   // amount of item to give when reborn
+   unsigned int  flags;    // special flags
 };
 
 //
@@ -68,6 +72,10 @@ struct playerclass_t
    unsigned int       numrebornitems;
    reborninventory_t *rebornitems;
 
+   // weaponslots
+   weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+   bool          hasslots;
+
    // hashing data
    char mnemonic[129];
    playerclass_t *next;
@@ -87,10 +95,15 @@ void E_ApplyTurbo(int ts);
 extern cfg_opt_t edf_skin_opts[];
 
 #define EDF_SEC_PCLASS "playerclass"
+#define EDF_SEC_PDELTA "playerdelta"
 extern cfg_opt_t edf_pclass_opts[];
+extern cfg_opt_t edf_pdelta_opts[];
 
 void E_ProcessSkins(cfg_t *cfg);
 void E_ProcessPlayerClasses(cfg_t *cfg);
+void E_ProcessPlayerDeltas(cfg_t *cfg);
+
+void E_ProcessFinalWeaponSlots();
 
 #endif // NEED_EDF_DEFINITIONS
 

@@ -30,6 +30,8 @@
 #include "doomdef.h"
 #include "p_maputl.h"
 
+#define SECTOR_PORTAL_LOOP_PROTECTION 128
+
 struct line_t;
 class  Mobj;
 struct planehash_t;
@@ -60,8 +62,6 @@ typedef enum
    PF_NOPASS             = 0x004,
    // Portal does not allow recursive sound to pass through
    PF_BLOCKSOUND         = 0x008,
-   // Mask for the flags portion
-   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND,
    
    // -- Overlay flags --
    // Only used per-surface and indicate various overlay options for the portal
@@ -87,8 +87,16 @@ typedef enum
    PS_PASSSOUND          = 0x200,
    // Mask for state flags
    PS_STATEMASK          = PS_VISIBLE | PS_PASSABLE | PS_PASSSOUND,
-   
-   // -- Opactiy -- 
+
+   // More flags added along...
+   PF_ATTACHEDPORTAL     = 0x400,
+
+   // Mask for the flags portion
+   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND
+   | PF_ATTACHEDPORTAL,
+
+
+   // -- Opactiy --
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
    PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
@@ -129,10 +137,17 @@ struct portaltransform_t
    double rot[2][2];
    v3double_t move;   // TODO: z offset
    double angle;
+
+   const line_t *sourceline;
+   const line_t *targetline;   // for rotating anchored portals
+   bool flipped;
+   fixed_t zoffset;
    
    void applyTo(fixed_t &x, fixed_t &y,
       float *fx = nullptr, float *fy = nullptr, bool nomove = false) const;
    void applyTo(float &x, float &y, bool nomove = false) const;
+
+   void updateFromLines(bool allowrotate);
 };
 
 // Represents the information needed for an anchored portal
@@ -161,6 +176,8 @@ struct horizondata_t
    fixed_t *ceilingxoff, *ceilingyoff;
    float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
    float   *ceilingbaseangle, *ceilingangle;
+   const float   *floorxscale, *flooryscale;
+   const float   *ceilingxscale, *ceilingyscale;
 };
 
 
@@ -172,6 +189,7 @@ struct skyplanedata_t
    int16_t *lightlevel;
    fixed_t *xoff, *yoff;
    float   *baseangle, *angle; // haleyjd 01/05/08: angles
+   const float *xscale, *yscale;
 };
 
 
@@ -212,6 +230,8 @@ inline static bool R_portalIsAnchored(const portal_t *portal)
       portal->type == R_LINKED;
 }
 
+const portal_t *R_GetPortalHead();
+
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
    bool allowrotate, bool flipped, fixed_t zoffset);
@@ -224,12 +244,15 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
                              fixed_t *floorxoff, fixed_t *flooryoff, 
                              fixed_t *ceilingxoff, fixed_t *ceilingyoff,
                              float *floorbaseangle, float *floorangle,
-                             float *ceilingbaseangle, float *ceilingangle);
+                             float *ceilingbaseangle, float *ceilingangle,
+                             const float *floorxscale, const float *flooryscale,
+                             const float *ceilingxscale, const float *ceilingyscale);
 
 portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
                            fixed_t *xoff, fixed_t *yoff, float *baseangle,
-                           float *angle);
+                           float *angle, const float *xscale, const float *yscale);
 
+void R_MovePortalOverlayToWindow(bool isceiling);
 void R_ClearPortals();
 void R_RenderPortals();
 
@@ -237,6 +260,10 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
                             fixed_t planez, int fromid, int toid);
 
 void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box);
+
+bool R_IsSkyLikePortalCeiling(const sector_t &sector);
+bool R_IsSkyLikePortalFloor(const sector_t &sector);
+bool R_IsSkyWall(const line_t &line);
 
 //=============================================================================
 //
@@ -292,7 +319,6 @@ struct pwindow_t
    pwindowtype_e type;
 
    fixed_t planez;   // if line == nullptr, this is the sector portal plane z
-   bool up;          // if line == nullptr, this is true if portal is upwards
 
    fixed_t  vx, vy, vz;
    angle_t  vangle;
@@ -310,6 +336,8 @@ struct pwindow_t
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
    pwindow_t *head, *child;
+
+   planehash_t *poverlay;  // Portal overlays are now stored per window
 };
 
 // SoM: Cardboard
@@ -330,8 +358,8 @@ struct portalrender_t
    pwindow_t *w;
 
    void (*segClipFunc)();
-   
-   planehash_t *overlay;
+
+//   planehash_t *overlay;
 };
 
 extern portalrender_t  portalrender;

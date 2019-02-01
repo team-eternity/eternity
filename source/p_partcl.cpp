@@ -1,7 +1,9 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
+//
+// ZDoom
+// Copyright (C) 1998-2012 Marisa Heit
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,45 +18,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
-// For portions of code under the ZDoom Source Distribution License:
+// Purpose: Code that ties particle effects to map objects,
+//          adapted from ZDoom. Thanks to Marisa Heit.
+// Authors: James Haley, Ioan Chera
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//----------------------------------------------------------------------------
-//
-// DESCRIPTION:
-//
-//   Code that ties particle effects to map objects, adapted
-//   from zdoom. Thanks to Randy Heit.
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -71,6 +40,8 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -324,10 +295,8 @@ static void P_BFGExplosion(Mobj *actor);
 //
 static void P_GenVelocities(void)
 {
-   int i, j;
-
-   for(i = 0; i < NUMVERTEXNORMALS; ++i) for(j = 0; j < 3; ++j)
-      avelocities[i][j] = M_Random() * 0.01f;
+   for(vec3_t &avelocity : avelocities) for(float &component : avelocity)
+      component = M_Random() * 0.01f;
 }
 
 void P_InitParticleEffects(void)
@@ -378,7 +347,7 @@ void P_ParticleThinker(void)
 {
    int i;
    particle_t *particle, *prev;
-   sector_t *psec;
+   const sector_t *psec;
    fixed_t floorheight;
    
    i = activeParticles;
@@ -408,16 +377,32 @@ void P_ParticleThinker(void)
             else
                activeParticles = i;
             particle->next = inactiveParticles;
-            inactiveParticles = particle - Particles;
+            inactiveParticles = eindex(particle - Particles);
             continue;
          }
       }
 
-      // update and link to new position
-      particle->x += particle->velx;
-      particle->y += particle->vely;
+      // Check for wall portals
+      if(gMapHasLinePortals && particle->velx | particle->vely)
+      {
+         v2fixed_t destination = P_LinePortalCrossing(particle->x, particle->y, 
+            particle->velx, particle->vely);
+         particle->x = destination.x;
+         particle->y = destination.y;
+      }
+      else
+      {
+         // update and link to new position
+         particle->x += particle->velx;
+         particle->y += particle->vely;
+      }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
+      if(P_IsInVoid(particle->x, particle->y, *particle->subsector))
+      {
+         particle->ttl = 1;
+         particle->trans = 0;
+      }
 
       // apply accelerations
       particle->velx += particle->accx;
@@ -443,7 +428,7 @@ void P_ParticleThinker(void)
       // floor clipping
       if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
       {
-         linkdata_t *ldata = R_FPLink(psec);
+         const linkdata_t *ldata = R_FPLink(psec);
 
          P_UnsetParticlePosition(particle);
          particle->x += ldata->deltax;
@@ -469,6 +454,16 @@ void P_ParticleThinker(void)
                E_PtclTerrainHit(particle);
          }
       }
+      else if(particle->z > psec->ceilingheight && psec->c_pflags & PS_PASSABLE)
+      {
+         const linkdata_t *ldata = R_CPLink(psec);
+
+         P_UnsetParticlePosition(particle);
+         particle->x += ldata->deltax;
+         particle->y += ldata->deltay;
+         particle->z += ldata->deltaz;
+         P_SetParticlePosition(particle);
+      }
       
       prev = particle;
    }
@@ -482,12 +477,12 @@ void P_RunEffects(void)
    if(camera)
    {
       subsector_t *ss = R_PointInSubsector(camera->x, camera->y);
-      snum = (ss->sector - sectors) * numsectors;
+      snum = eindex(ss->sector - sectors) * numsectors;
    }
    else
    {
       subsector_t *ss = players[displayplayer].mo->subsector;
-      snum = (ss->sector - sectors) * numsectors;
+      snum = eindex(ss->sector - sectors) * numsectors;
    }
 
    while((th = th->next) != &thinkercap)
@@ -495,7 +490,7 @@ void P_RunEffects(void)
       Mobj *mobj;
       if((mobj = thinker_cast<Mobj *>(th)))
       {
-         int rnum = snum + (mobj->subsector->sector - sectors);
+         int rnum = snum + eindex(mobj->subsector->sector - sectors);
          if(mobj->effects)
          {
             // run only if possibly visible
@@ -769,7 +764,7 @@ static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
 // P_SmokePuff
 //
 // haleyjd 09/10/07: SoM's vastly improved smoke puff effect, improved even
-// more to replace the god-awful Quake 2-wannabe splash from zdoom.
+// more to replace the god-awful Quake 2-wannabe splash from ZDoom.
 // This code is under the GPL.
 //
 void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, 

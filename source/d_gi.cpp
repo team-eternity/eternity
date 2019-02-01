@@ -154,7 +154,7 @@
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
-    GIF_HASMADMELEE | GIF_CENTERHUDMSG)
+    GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST)
 
 #define FINALDOOM_MIFLAGS (MI_DEMOIFDEMO4 | MI_NOTELEPORTZ)
 
@@ -783,6 +783,7 @@ char *gi_path_sosr;
 char *gi_path_fdoom;
 char *gi_path_fdoomu;
 char *gi_path_freedm;
+char *gi_path_rekkr;
 
 //
 // Default Override Objects
@@ -1154,6 +1155,9 @@ static gamemodeinfo_t giDoomSW =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
+   meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1273,6 +1277,9 @@ static gamemodeinfo_t giDoomReg =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
+   meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1316,7 +1323,7 @@ static gamemodeinfo_t giDoomRetail =
 {
    retail,           // id
    Game_DOOM,        // type
-   DOOM_GIFLAGS | GIF_LOSTSOULBOUNCE, // flags
+   DOOM_GIFLAGS | GIF_LOSTSOULBOUNCE | GIF_NOUPPEREPBOUND, // flags
    
    VNAME_DOOM_RET,   // versionName
    FNAME_DOOM_R,     // freeVerName
@@ -1392,6 +1399,9 @@ static gamemodeinfo_t giDoomRetail =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
+   meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1511,6 +1521,9 @@ static gamemodeinfo_t giDoomCommercial =
    "DoomBlood",      // bloodDefaultRIP
    "DoomBlood",      // bloodDefaultCrush
    bloodTypeForActionDOOM, // default behavior for action array
+   2,                // skillAmmoMultiplier
+   meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1630,6 +1643,9 @@ static gamemodeinfo_t giHereticSW =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
+   1.5,                // skillAmmoMultiplier
+   meleecalc_raven,     // monsterMeleeRange
+   32 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1753,6 +1769,9 @@ static gamemodeinfo_t giHereticReg =
    "HereticBlood",         // bloodDefaultRIP
    "HereticBlood",         // bloodDefaultCrush
    bloodTypeForActionHtic, // default blood behavior for action array
+   1.5,               // skillAmmoMultiplier
+   meleecalc_raven,     // monsterMeleeRange
+   32 * FRACUNIT,     // itemHeight
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

@@ -56,7 +56,6 @@
 #include "d_gi.h"
 #include "d_io.h"
 #include "doomstat.h"
-#include "doomdef.h"
 #include "dstrings.h"
 #include "e_lib.h"
 #include "e_hash.h"
@@ -70,7 +69,7 @@
 #include "m_qstr.h"
 #include "m_qstrkeys.h"
 #include "m_utils.h"
-#include "metaapi.h"
+#include "metaqstring.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_setup.h"
@@ -81,6 +80,7 @@
 #include "w_wad.h"
 #include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
+#include "xl_umapinfo.h"
 
 extern char gamemapname[9];
 
@@ -158,6 +158,20 @@ static textvals_t finaleTypeVals =
 {
    finaleTypeStrs,
    FINALE_NUMFINALES,
+   0
+};
+
+static const char *sectorColormapStrs[] =
+{
+   "normal",
+   "Boom",
+   "SMMU"
+};
+
+static textvals_t sectorColormapVals =
+{
+   sectorColormapStrs,
+   earrlen(sectorColormapStrs),
    0
 };
 
@@ -325,7 +339,7 @@ void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
    // Does it exist already?
    if((music = musInfoMusHash.objectForKey(mapname)))
    {
-      int nummaps = music->maps.getLength();
+      int nummaps = static_cast<int>(music->maps.getLength());
       bool foundnum = false;
 
       // Does it have an entry for this number already?
@@ -926,10 +940,10 @@ static void P_InfoDefaultSoundNames()
    else
    {
       // restore defaults
-      for(i = 0; i < NUMMAPINFOSOUNDS; i++)
+      for(sfxinfo_t **soundalias : DefSoundAliases)
       {
-         if(DefSoundAliases[i][0])
-            DefSoundAliases[i][0]->alias = DefSoundAliases[i][1];
+         if(soundalias[0])
+            soundalias[0]->alias = soundalias[1];
       }
    }
 
@@ -1344,6 +1358,7 @@ static void P_ClearLevelVars()
    LevelInfo.levelType = GameModeInfo->levelType;
 
    LevelInfo.levelPic        = NULL;
+   LevelInfo.interLevelName  = nullptr;
    LevelInfo.nextLevelPic    = NULL;
    LevelInfo.nextSecretPic   = NULL;
    LevelInfo.creator         = "unknown";
@@ -1382,6 +1397,11 @@ static void P_ClearLevelVars()
 
    // gameplay
    LevelInfo.disableJump = false;
+
+   // air control
+   // compatibility setting may override this. To completely disable it, use -1
+   LevelInfo.airControl = 0;
+   LevelInfo.airFriction = 0;
 
    // haleyjd: construct defaults
    P_InfoDefaultLevelName();
@@ -1520,6 +1540,9 @@ struct levelvar_t
 #define LI_INTEGR(name, field) \
    { IVT_INT, name, &(LevelInfo . field), nullptr, false }
 
+#define LI_DOUBLE(name, field) \
+   { IVT_DOUBLE, name, &(LevelInfo . field), nullptr, false }
+
 #define LI_BOOLNF(name, field) \
    { IVT_BOOLEAN, name, &(LevelInfo . field), nullptr, false }
 
@@ -1536,6 +1559,8 @@ static levelvar_t levelvars[]=
 {
    LI_BOOLNF("acsopendelay",       acsOpenDelay),
    LI_STRING("acsscript",          acsScriptLump),
+   LI_INTEGR("aircontrol",         airControl),
+   LI_INTEGR("airfriction",        airFriction),
    LI_BOOLNF("allowexittags",      allowExitTags),
    LI_BOOLNF("allowsecrettags",    allowSecretTags),
    LI_STRING("altskyname",         altSkyName),
@@ -1556,6 +1581,7 @@ static levelvar_t levelvars[]=
    LI_BOOLNF("fullbright",         useFullBright),
    LI_INTEGR("gravity",            gravity),
    LI_STRING("inter-backdrop",     backDrop),
+   LI_STRING("inter-levelname",    interLevelName),
    LI_STRING("intermusic",         interMusic),
    LI_STRING("interpic",           interPic),
    LI_STRING("intertext",          interTextLump),
@@ -1574,6 +1600,7 @@ static levelvar_t levelvars[]=
    LI_BOOLNF("noautosequences",    noAutoSequences),
    LI_STRING("outdoorfog",         outdoorFog),
    LI_INTEGR("partime",            partime),
+   LI_STRNUM("sector-colormaps",   sectorColormaps,   sectorColormapVals),
    LI_INTEGR("skydelta",           skyDelta),
    LI_INTEGR("sky2delta",          sky2Delta),
    LI_STRING("skyname",            skyName),
@@ -1610,7 +1637,7 @@ static void P_parseLevelString(levelvar_t *var, const qstring &value)
 //
 static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
 {
-   textvals_t *tv = static_cast<textvals_t *>(var->extra);
+   const textvals_t *tv = static_cast<textvals_t *>(var->extra);
    int val = E_StrToNumLinear(tv->vals, tv->numvals, value.constPtr());
 
    if(val >= tv->numvals)
@@ -1859,6 +1886,51 @@ static void P_processEMapInfo(MetaTable *info)
    }
 }
 
+//
+// Process UMAPINFO obtained data.
+//
+static void P_processUMapInfo(MetaTable *info)
+{
+   MetaMultiString *mms = nullptr;
+   while((mms = info->getNextTypeEx(mms)))
+   {
+      if(mms->value.isEmpty())
+         continue;
+      const char *key = mms->getKey();
+      const qstring &value = mms->value[0];
+      auto applyTo = [&](const char *&info) {
+         info = value.duplicate(PU_LEVEL);
+      };
+      if(!strcasecmp(key, "levelname"))
+      {
+         applyTo(LevelInfo.levelName);
+         applyTo(LevelInfo.interLevelName);  // apply to both
+      }
+      else if(!strcasecmp(key, "levelpic"))
+         applyTo(LevelInfo.levelPic);
+      else if(!strcasecmp(key, "next"))
+         applyTo(LevelInfo.nextLevel);
+      else if(!strcasecmp(key, "nextsecret"))
+         applyTo(LevelInfo.nextSecret);
+      else if(!strcasecmp(key, "skytexture"))
+         applyTo(LevelInfo.skyName);
+      else if(!strcasecmp(key, "music"))
+         applyTo(LevelInfo.musicName);
+      else if(!strcasecmp(key, "exitpic"))
+         applyTo(LevelInfo.interPic);  // NOTE: enterpic not used here
+      else if(!strcasecmp(key, "partime"))
+         LevelInfo.partime = value.toInt();
+      else if(!strcasecmp(key, "endgame"))
+      {
+         if(!value.strCaseCmp("false"))
+            LevelInfo.killFinale = true;
+         // ???
+//         else
+//            forcefinale = true;
+      }
+   }
+}
+
 //=============================================================================
 //
 // LevelInfo External Interface
@@ -1902,26 +1974,36 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    }
 
    foundEEMapInfo = false;
-   
-   // process any global EMAPINFO data
-   if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
+
+   if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
    {
-      P_processEMapInfo(info);
-      foundEEMapInfo = true;
+      // FIXME: this may need finer compatibility check if it materializes
+      if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
+      {
+         P_processUMapInfo(info);
+         // Don't give it higher priority over Hexen MAPINFO
+      }
+
+      // process any global EMAPINFO data
+      if((info = XL_EMapInfoForMapName(dir->getLumpName(lumpnum))))
+      {
+         P_processEMapInfo(info);
+         foundEEMapInfo = true;
+      }
+
+      // additively process any SMMU header information for compatibility
+      if((info = XL_ParseLevelInfo(dir, lumpnum)))
+      {
+         P_processEMapInfo(info);
+         foundEEMapInfo = true;
+      }
+
+      // haleyjd 01/26/14: if no EE map information was specified for this map,
+      // defer to any defined Hexen MAPINFO data now.
+      if(!foundEEMapInfo)
+         P_applyHexenMapInfo();
    }
 
-   // additively process any SMMU header information for compatibility
-   if((info = XL_ParseLevelInfo(dir, lumpnum)))
-   {
-      P_processEMapInfo(info);
-      foundEEMapInfo = true;
-   }
-
-   // haleyjd 01/26/14: if no EE map information was specified for this map,
-   // defer to any defined Hexen MAPINFO data now.
-   if(!foundEEMapInfo)
-      P_applyHexenMapInfo();
-   
    // haleyjd: call post-processing routines
    P_LoadInterTextLumps();
    P_SetSky2Texture();

@@ -88,7 +88,7 @@ void PlatThinker::Think()
    switch(status)
    {
    case up: // plat moving up
-      res = T_MoveFloorUp(sector, speed, high, crush);
+      res = T_MoveFloorUp(sector, speed, high, crush, false);
                                         
       // if a pure raise type, make the plat moving sound
       // haleyjd: now handled through sound sequences
@@ -443,7 +443,7 @@ bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
       if(!line || !line->backsector)
          return false;
       sec    = line->backsector;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_plat;
    }
@@ -643,7 +643,7 @@ bool EV_StopPlatByTag(int tag, bool removeThinker)
          {
             plat->sector->floordata = nullptr;
             S_StopSectorSequence(plat->sector, SEQ_ORIGIN_SECTOR_F);
-            plat->removeThinker();
+            plat->remove();
          }
       }
    }
@@ -680,7 +680,7 @@ void PlatThinker::addActivePlat()
 void PlatThinker::removeActivePlat()
 {
    sector->floordata = NULL; //jff 2/23/98 multiple thinkers
-   removeThinker();
+   remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);

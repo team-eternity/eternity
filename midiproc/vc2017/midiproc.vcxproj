@@ -22,7 +22,7 @@
     <ProjectGuid>{D307F009-3EC2-45DF-98F6-C2DB0C02FF18}</ProjectGuid>
     <RootNamespace>midiproc</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -67,25 +67,27 @@
     <_ProjectFileVersion>11.0.60610.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
-    <IntDir>$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2_0)\include;$(SDLMIXER2_0)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -95,22 +97,28 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SDL1_2)\lib\x86\sdl.lib;$(SDLMIXER1_2)\lib\x86\sdl_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SDL2_0)\lib\x86\sdl2.lib;$(SDLMIXER2_0)\lib\x86\sdl2_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2_0)\include;$(SDLMIXER2_0)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -120,22 +128,28 @@ cd vc2015</Command>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SDL1_2)\lib\x64\sdl.lib;$(SDLMIXER1_2)\lib\x64\sdl_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SDL2_0)\lib\x64\sdl2.lib;$(SDLMIXER2_0)\lib\x64\sdl2_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2_0)\include;$(SDLMIXER2_0)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -144,7 +158,7 @@ cd vc2015</Command>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SDL1_2)\lib\x86\sdl.lib;$(SDLMIXER1_2)\lib\x86\sdl_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SDL2_0)\lib\x86\sdl2.lib;$(SDLMIXER2_0)\lib\x86\sdl2_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -152,16 +166,22 @@ cd vc2015</Command>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SDL1_2)\include;$(SDLMIXER1_2)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SDL2_0)\include;$(SDLMIXER2_0)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -171,17 +191,25 @@ cd vc2015</Command>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(SDL1_2)\lib\x64\sdl.lib;$(SDLMIXER1_2)\lib\x64\sdl_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SDL2_0)\lib\x64\sdl2.lib;$(SDLMIXER2_0)\lib\x64\sdl2_mixer.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..
-genmidiproc$(Platform).bat
-cd vc2015</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
+    <Midl />
+    <Midl />
+    <Midl>
+      <OutputDirectory>..\</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <ApplicationConfigurationMode>true</ApplicationConfigurationMode>
+      <StructMemberAlignment>8</StructMemberAlignment>
+    </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\main.cpp" />
@@ -189,6 +217,9 @@ cd vc2015</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\midiproc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midiproc.idl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

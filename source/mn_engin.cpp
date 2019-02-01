@@ -1,7 +1,7 @@
 // Emacs style mode select -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #include "e_fonts.h"
 #include "g_bind.h"    // haleyjd: dynamic key bindings
 #include "g_game.h"
+#include "hal/i_timer.h"
 #include "hu_over.h"
 #include "i_video.h"
 #include "m_collection.h"
@@ -591,8 +592,9 @@ int hide_menu = 0;      // hide the menu for a duration of time
 int menutime = 0;
 
 // menu widget for alternate drawer + responder
-menuwidget_t *current_menuwidget = NULL;
+menuwidget_t *current_menuwidget  = nullptr;
 static PODCollection<menuwidget_t *> menuwidget_stack;
+static bool widget_consume_text = false; // consume text after widget is closed
 
 int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
 
@@ -625,14 +627,15 @@ void MN_PopWidget()
       menuwidget_stack.pop();
 
    if(current_menuwidget)
-      current_menuwidget->prev = NULL;
+      current_menuwidget->prev = nullptr;
 
    // If there's still an active widget, return to it.
    // Otherwise, cancel out.
    if((len = menuwidget_stack.getLength()) > 0)
       current_menuwidget = menuwidget_stack[len - 1];
    else
-      current_menuwidget = NULL;
+      current_menuwidget = nullptr;
+   widget_consume_text = true;
 }
 
 //
@@ -642,7 +645,7 @@ void MN_PopWidget()
 // been popped before then, since they won't be there when we come back to
 // the menus later.
 //
-void MN_ClearWidgetStack()
+static void MN_ClearWidgetStack()
 {
    menuwidget_stack.clear();
    current_menuwidget = NULL;
@@ -782,11 +785,11 @@ bool MN_Responder(event_t *ev)
 {
    // haleyjd 04/29/02: these need to be unsigned
    unsigned char tempstr[128];
-   unsigned char ch;
    int *menuSounds = GameModeInfo->menuSounds; // haleyjd
    static bool ctrldown = false;
    static bool shiftdown = false;
    static bool altdown = false;
+   static unsigned lastacceptedtime = 0;
 
    memset(tempstr, 0, sizeof(tempstr));
 
@@ -810,6 +813,21 @@ bool MN_Responder(event_t *ev)
    if(ev->type == ev_keyup)
       return false;
 
+   if(widget_consume_text && ev->type == ev_text)
+   {
+      widget_consume_text = false;
+      return true;
+   }
+
+   if(ev->repeat)
+   {
+      const unsigned int currtime = i_haltimer.GetTicks();
+      // only accept repeated input every 120 ms
+      if(currtime < lastacceptedtime + 120)
+         return false;
+      lastacceptedtime = currtime;
+   }
+
    // are we displaying a widget?
    if(current_menuwidget)
    {
@@ -820,9 +838,6 @@ bool MN_Responder(event_t *ev)
    // are we inputting a new value into a variable?
    if(ev->type == ev_keydown && input_command)
    {
-      unsigned char ich = 0;
-      variable_t *var = input_command->variable;
-      
       if(action == ka_menu_toggle) // cancel input
          input_command = NULL;      
       else if(action == ka_menu_confirm)
@@ -851,15 +866,15 @@ bool MN_Responder(event_t *ev)
          return true; // eat key
       }
 
-      // probably just a normal character
-      
-      // only care about valid characters
-      // dont allow too many characters on one command line
-      if(ev->character)
-         ich = (unsigned char)(ev->character);
-      else if(ectype::isPrint(ev->data1))
-         ich = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+      return true;
+   }
+   else if(ev->type == ev_text && input_command)
+   {
+      // just a normal character
+      variable_t *var = input_command->variable;
+      const unsigned char ich = static_cast<unsigned char>(ev->data1);
 
+      // dont allow too many characters on one command line
       size_t maxlen = 20u;
       switch(var->type)
       {
@@ -875,9 +890,9 @@ bool MN_Responder(event_t *ev)
       }
       if(ectype::isPrint(ich) && input_buffer.length() < maxlen)
          input_buffer += static_cast<char>(ich);
-      
-      return true;
-   } 
+
+      return true; // eat key
+   }
 
    if(devparm && ev->data1 == key_help)
    {
@@ -1095,12 +1110,7 @@ bool MN_Responder(event_t *ev)
 
    // search for matching item in menu
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
-      ch = ectype::toLower(ev->data1);
-   
-   if(ev->type == ev_keydown && ectype::isLower(ch))
+   if(ev->type == ev_text && ectype::isLower(ev->data1))
    {  
       // sf: experimented with various algorithms for this
       //     this one seems to work as it should
@@ -1116,7 +1126,7 @@ bool MN_Responder(event_t *ev)
          // ignore unselectables
          if(!is_a_gap(&current_menu->menuitems[n])) 
          {
-            if(ectype::toLower(current_menu->menuitems[n].description[0]) == ch)
+            if(ectype::toLower(current_menu->menuitems[n].description[0]) == ev->data1)
             {
                // found a matching item!
                current_menu->selected = n;

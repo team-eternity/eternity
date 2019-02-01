@@ -32,7 +32,6 @@
 #include "m_qstrkeys.h"
 #include "m_binary.h"
 #include "v_image.h"
-#include "w_wad.h"
 #include "z_auto.h"
 
 // Need libpng
@@ -332,7 +331,7 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
    {
       for(int i = 5; i <= 32; i++)
       {
-         if(i * i * 128 == size)
+         if(static_cast<size_t>(i * i * 128) == size)
          {
             w = i * 16;
             h = i * 8;
@@ -368,7 +367,7 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
          if(!(size % 320)) // covers fullscreen gfx and Heretic AUTOPAGE
          {
             w = 320;
-            h = size / 320;
+            h = static_cast<int>(size / 320);
          }
          else
             V_linearOptimalSize(size, w, h);

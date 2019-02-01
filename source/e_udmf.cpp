@@ -30,11 +30,13 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_lib.h"
 #include "e_mod.h"
 #include "e_sound.h"
 #include "e_ttypes.h"
 #include "e_udmf.h"
 #include "m_compare.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_data.h"
@@ -51,6 +53,14 @@ static const char DEFAULT_flat[] = "@flat";
 
 static const char RENDERSTYLE_translucent[] = "translucent";
 static const char RENDERSTYLE_add[] = "add";
+
+static const char *udmfscrolltypes[NUMSCROLLTYPES] =
+{
+   "none",
+   "visual",
+   "physical",
+   "both"
+};
 
 //
 // Initializes the internal structure with the sector count
@@ -134,6 +144,16 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->ceilingbaseangle = static_cast<float>
             (E_NormalizeFlatAngle(us.rotationceiling) *  PI / 180.0f);
 
+         int scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,
+                                           us.scroll_floor_type.constPtr());
+         if(scrolltype != NUMSCROLLTYPES && (us.scroll_floor_x || us.scroll_floor_y))
+            P_SpawnFloorUDMF(i, scrolltype, us.scroll_floor_x, us.scroll_floor_y);
+
+         scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,
+                                       us.scroll_ceil_type.constPtr());
+         if(scrolltype != NUMSCROLLTYPES && (us.scroll_ceil_x || us.scroll_ceil_y))
+            P_SpawnCeilingUDMF(i, scrolltype, us.scroll_ceil_x, us.scroll_ceil_y);
+
          // Flags
          ss->flags |= us.secret ? SECF_SECRET : 0;
 
@@ -200,17 +220,17 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          if(us.colormaptop.strCaseCmp(DEFAULT_default))
          {
             ss->topmap    = R_ColormapNumForName(us.colormaptop.constPtr());
-            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_TOP);
          }
          if(us.colormapmid.strCaseCmp(DEFAULT_default))
          {
             ss->midmap    = R_ColormapNumForName(us.colormapmid.constPtr());
-            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_MIDDLE);
          }
          if(us.colormapbottom.strCaseCmp(DEFAULT_default))
          {
             ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
-            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLORMAPPED);
+            setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_BOTTOM);
          }
 
          // Portal fields
@@ -228,6 +248,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->f_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->f_pflags |= us.portal_floor_attached ? PF_ATTACHEDPORTAL : 0;
 
          // Ceilings
          balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
@@ -243,6 +264,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          else if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_add))
             ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->c_pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
 
          ss->floor_xscale = static_cast<float>(us.xscalefloor);
          ss->floor_yscale = static_cast<float>(us.yscalefloor);
@@ -351,7 +373,7 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
          if(uld.monsteruse)
             ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
          if(uld.impact)
-            ld->extflags |= EX_ML_MISSILE | EX_ML_IMPACT;
+            ld->extflags |= EX_ML_PLAYER | EX_ML_IMPACT;
          if(uld.playerpush)
             ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
          if(uld.monsterpush)
@@ -616,6 +638,7 @@ enum token_e
    t_polycross,
    t_portal,
    t_portalceiling,
+   t_portal_ceil_attached,
    t_portal_ceil_blocksound,
    t_portal_ceil_disabled,
    t_portal_ceil_nopass,
@@ -623,6 +646,7 @@ enum token_e
    t_portal_ceil_overlaytype,
    t_portal_ceil_useglobaltex,
    t_portalfloor,
+   t_portal_floor_attached,
    t_portal_floor_blocksound,
    t_portal_floor_disabled,
    t_portal_floor_nopass,
@@ -637,6 +661,12 @@ enum token_e
    t_repeatspecial,
    t_rotationceiling,
    t_rotationfloor,
+   t_scroll_ceil_x,
+   t_scroll_ceil_y,
+   t_scroll_ceil_type,
+   t_scroll_floor_x,
+   t_scroll_floor_y,
+   t_scroll_floor_type,
    t_secret,
    t_sector,
    t_sideback,
@@ -759,6 +789,7 @@ static keytoken_t gTokenList[] =
    TOKEN(polycross),
    TOKEN(portal),
    TOKEN(portalceiling),
+   TOKEN(portal_ceil_attached),
    TOKEN(portal_ceil_blocksound),
    TOKEN(portal_ceil_disabled),
    TOKEN(portal_ceil_nopass),
@@ -766,6 +797,7 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_ceil_overlaytype),
    TOKEN(portal_ceil_useglobaltex),
    TOKEN(portalfloor),
+   TOKEN(portal_floor_attached),
    TOKEN(portal_floor_blocksound),
    TOKEN(portal_floor_disabled),
    TOKEN(portal_floor_nopass),
@@ -780,6 +812,12 @@ static keytoken_t gTokenList[] =
    TOKEN(repeatspecial),
    TOKEN(rotationceiling),
    TOKEN(rotationfloor),
+   TOKEN(scroll_ceil_x),
+   TOKEN(scroll_ceil_y),
+   TOKEN(scroll_ceil_type),
+   TOKEN(scroll_floor_x),
+   TOKEN(scroll_floor_y),
+   TOKEN(scroll_floor_type),
    TOKEN(secret),
    TOKEN(sector),
    TOKEN(sideback),
@@ -834,6 +872,55 @@ static void registerAllKeys()
 }
 
 //
+// Looks for "ee_compat = true;" in the TEXTMAP in order to accept unknown name-
+// spaces as Eternity-compatible. Useful to support arbitrary namespaces which
+// look like Eternity but weren't made only for it. The resulting behaviour
+// is like Eternity. Thanks to anotak for this feature.
+//
+bool UDMFParser::checkForCompatibilityFlag(qstring nstext)
+{
+   // ano - read over the file looking for `ee_compat="true"`
+   readresult_e result;
+   bool eecompatfound = false;
+   // nstext needs to be copied, as contents of it gets overwritten before it's used.
+   qstring nstextcopy(nstext);
+
+   while((result = readItem()) != result_Eof)
+   {
+      if(result == result_Error)
+      {
+         mError = "UDMF error while checking unsupported namespace '";
+         mError << nstextcopy;
+         mError << "'";
+         return false;
+      }
+
+      if(result == result_Assignment &&
+         !mInBlock &&
+         mKey.strCaseCmp("ee_compat") == 0 &&
+         mValue.type == Token::type_Keyword &&
+         ectype::toUpper(mValue.text[0]) == 'T')
+      {
+         eecompatfound = true;
+         break; // while ((result = readItem()) != result_Eof)
+      }
+   } // while
+
+   reset(); // make sure to reset the cursor after we find the field
+
+   if(!eecompatfound)
+   {
+      mError = "Unsupported namespace '";
+      mError << nstextcopy;
+      mError << "'";
+      return false;
+   }
+
+   mNamespace = namespace_Eternity;
+   return true;
+}
+
+//
 // Tries to parse a UDMF TEXTMAP document. If it fails, it returns false and
 // you can check the error message with error()
 //
@@ -859,7 +946,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       return false;
    }
 
-   // Set namespace (we'll think later about checking it
+   // Set namespace
    if(!mValue.text.strCaseCmp("eternity"))
       mNamespace = namespace_Eternity;
    else if(!mValue.text.strCaseCmp("heretic"))
@@ -870,13 +957,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       mNamespace = namespace_Strife;
    else if(!mValue.text.strCaseCmp("doom"))
       mNamespace = namespace_Doom;
-   else
-   {
-      mError = "Unsupported namespace '";
-      mError << mValue.text;
-      mError << "'";
+   else if(!checkForCompatibilityFlag(mValue.text))
       return false;
-   }
 
    // Gamestuff. Must be null when out of block and only one be set when in
    // block
@@ -1033,6 +1115,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   REQUIRE_FIXED(vertex, y, yset);
                   READ_FIXED(vertex, zfloor);
                   READ_FIXED(vertex, zceiling);
+                  default:
+                     break;
                }
             }
             else if(sector)
@@ -1079,6 +1163,14 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, rotationfloor);
                      READ_NUMBER(sector, rotationceiling);
 
+                     READ_NUMBER(sector, scroll_ceil_x);
+                     READ_NUMBER(sector, scroll_ceil_y);
+                     READ_STRING(sector, scroll_ceil_type);
+
+                     READ_NUMBER(sector, scroll_floor_x);
+                     READ_NUMBER(sector, scroll_floor_y);
+                     READ_STRING(sector, scroll_floor_type);
+
                      READ_BOOL(sector, secret);
                      READ_NUMBER(sector, friction);
 
@@ -1116,6 +1208,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_floor_nopass);
                      READ_BOOL(sector, portal_floor_norender);
                      READ_BOOL(sector, portal_floor_useglobaltex);
+                     READ_BOOL(sector, portal_floor_attached);
 
                      READ_STRING(sector, portal_ceil_overlaytype);
                      READ_NUMBER(sector, alphaceiling);
@@ -1124,6 +1217,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, portal_ceil_nopass);
                      READ_BOOL(sector, portal_ceil_norender);
                      READ_BOOL(sector, portal_ceil_useglobaltex);
+                     READ_BOOL(sector, portal_ceil_attached);
 
                      READ_NUMBER(sector, portalceiling);
                      READ_NUMBER(sector, portalfloor);
@@ -1287,6 +1381,14 @@ int UDMFParser::getMapFormat() const
 void UDMFParser::setData(const char *data, size_t size)
 {
    mData.copy(data, size);
+   reset();
+}
+
+//
+// Resets variables to defaults
+//
+void UDMFParser::reset()
+{
    mPos = 0;
    mLine = 1;
    mColumn = 1;
@@ -1506,14 +1608,14 @@ bool UDMFParser::next(Token &token)
       if(mData[mPos] == '/' && mPos + 1 < size && mData[mPos + 1] == '*')
       {
          addPos(2);
-         while(mPos + 1 < size && mData[mPos] != '*' && mData[mPos + 1] != '/')
+         while(mPos + 1 < size && (mData[mPos] != '*' || mData[mPos + 1] != '/'))
             addPos(1);
          if(mPos + 1 >= size)
          {
             addPos(1);
             return false;
          }
-         if(mData[mPos] == '*' && mData[mPos] == '/')
+         if(mData[mPos] == '*' && mData[mPos + 1] == '/')
             addPos(2);
          if(mPos == size)
             return false;

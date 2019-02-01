@@ -20,6 +20,9 @@
 ######################### CMake Configuration ##################################
 PROJECT ("Eternity Engine" C CXX)
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
 IF (COMMAND cmake_policy)
         CMAKE_POLICY (SET CMP0003 NEW)
 ENDIF (COMMAND cmake_policy)
@@ -86,14 +89,14 @@ INCLUDE(InstallRequiredSystemLibraries)
 SET (CPACK_GENERATOR "DEB;RPM;STGZ;ZIP")
 SET (CPACK_PACKAGE_VENDOR "Team Eternity")
 SET (CPACK_PACKAGE_CONTACT "Team Eternity <haelyjd@hotmail.com>")
-SET (CPACK_PACKAGE_VERSION_MAJOR "3")
-SET (CPACK_PACKAGE_VERSION_MINOR "42")
-SET (CPACK_PACKAGE_VERSION_PATCH "01")
+SET (CPACK_PACKAGE_VERSION_MAJOR "4")
+SET (CPACK_PACKAGE_VERSION_MINOR "1")
+SET (CPACK_PACKAGE_VERSION_PATCH "0")
 SET (CPACK_PACKAGE_NAME "Eternity Engine")
 SET (CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/COPYING")
 SET (CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Eternity Engine is Team Eternity's flagship product.")
 SET (CPACK_DEBIAN_PACKAGE_SECTION "games")
-SET (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.11.0), libgcc1 (>= 1:4.4.3), libsdl1.2debian (>=1.2.14), libsdl-mixer1.2 (>=1.2.8), libsdl-net1.2 (>=1.2.7), bash")
+SET (CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.11.0), libgcc1 (>= 1:4.4.3), libsdl2-2.0-0 (>=2.0.7), libsdl2-mixer-2.0-0 (>=2.0.2), libsdl2-net-2.0-0 (>=2.0.1), bash")
 SET (CPACK_DEBIAN_PACKAGE_RECOMMENDS "freedoom, game-data-packager")
 SET (BUILD_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
 IF (${CMAKE_SYSTEM_PROCESSOR} MATCHES "i686")
@@ -153,7 +156,7 @@ endif()
 ################################################################################
 ######################### Compiler: Features  ##################################
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-   TRY_CXX_COMPILER_FLAG(-std=c++11 FLAG_CXX_stdcxx11)
+   TRY_CXX_COMPILER_FLAG(-std=c++17 FLAG_CXX_stdcxx17)
 endif()
 
 
@@ -285,27 +288,27 @@ ENDIF (NOT HAVE_STDINT_H)
 ######################### Find Needed Libs #####################################
 FIND_PACKAGE (OpenGL)
 
-FIND_PACKAGE (SDL REQUIRED)
-INCLUDE_DIRECTORIES (${SDL_INCLUDE_DIR})
+FIND_PACKAGE (SDL2 REQUIRED)
+INCLUDE_DIRECTORIES (${SDL2_INCLUDE_DIR})
 
-FIND_PACKAGE (SDL_mixer REQUIRED)
-INCLUDE_DIRECTORIES (${SDLMIXER_INCLUDE_DIR})
+FIND_PACKAGE (SDL2_mixer REQUIRED)
+INCLUDE_DIRECTORIES (${SDL2_MIXER_INCLUDE_DIR})
 
-FIND_PACKAGE (SDL_net REQUIRED)
-INCLUDE_DIRECTORIES (${SDLNET_INCLUDE_DIR})
+FIND_PACKAGE (SDL2_net REQUIRED)
+INCLUDE_DIRECTORIES (${SDL2_NET_INCLUDE_DIR})
 
 ## FIXME: This is an inelegant hack to find, and grab all needed
-## .dll support files on windows. It works by looking for SDL.dll
+## .dll support files on windows. It works by looking for SDL2.dll
 ## then taking every .dll file found in that directory from your SDK.
 ## This ensures you get sdl and all of it's needed .dll files, but may
 ## also grab unneeded .dll files.
 IF (WIN32)
-       FIND_PATH (SDL_SUPPORT_LIBS_DIR SDL.dll
+       FIND_PATH (SDL2_SUPPORT_LIBS_DIR SDL2.dll
                HINTS
-               $ENV{SDLDIR}
+               $ENV{SDL2DIR}
                PATH_SUFFIXES lib64 lib
                PATHS)
-       FILE (GLOB SDL_SUPPORT_LIBS ${SDL_SUPPORT_LIBS_DIR}/*.dll)
+       FILE (GLOB SDL2_SUPPORT_LIBS ${SDL2_SUPPORT_LIBS_DIR}/*.dll)
 ENDIF (WIN32)
 ################################################################################
 ######################### Set Build Targets   ##################################
@@ -330,7 +333,7 @@ ENDIF (WIN32 AND MSVC)
 ## FIXME: This is a continuation of the Windows SDL inelegant hack. This does
 ## the actual installation of those support libraries.
 IF (WIN32)
-        INSTALL (PROGRAMS ${SDL_SUPPORT_LIBS}
+        INSTALL (PROGRAMS ${SDL2_SUPPORT_LIBS}
                 DESTINATION ${LIB_DIR})
 ENDIF (WIN32)
 

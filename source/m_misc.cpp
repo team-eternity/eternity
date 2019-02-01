@@ -192,8 +192,8 @@ default_t defaults[] =
                "0 - right handed, 1 - left handed"),
 
    // killough 10/98
-   DEFAULT_INT("doom_weapon_toggles", &doom_weapon_toggles, NULL, 1, 0, 1, default_t::wad_no,
-               "1 to toggle between SG/SSG and Fist/Chainsaw"),
+   DEFAULT_INT("weapon_hotkey_cycling", &weapon_hotkey_cycling, NULL, 1, 0, 1, default_t::wad_no,
+               "1 to allow in-slot weapon cycling (e.g. SSG to SG)"),
 
    // phares 2/25/98
    DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, default_t::wad_yes,
@@ -274,7 +274,8 @@ default_t defaults[] =
                "adjust vertical (y) mouse sensitivity"),
 
    // SoM
-   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL, 0, 0, 3, default_t::wad_no,
+   DEFAULT_INT("mouse_accel", &mouseAccel_type, NULL,
+               ACCELTYPE_NONE, ACCELTYPE_NONE, ACCELTYPE_MAX, default_t::wad_no,
                "0 for no mouse accel, 1 for linear, 2 for choco-doom, 3 for custom"),
 
    // [CG] 01/20/12
@@ -348,10 +349,10 @@ default_t defaults[] =
    // killough 10/98: compatibility vector:
 
    DEFAULT_INT("comp_zombie", &default_comp[comp_zombie], &comp[comp_zombie], 
-               0, 0, 1, default_t::wad_yes, "Zombie players can exit levels"),
+               1, 0, 1, default_t::wad_yes, "Zombie players can exit levels"),
 
    DEFAULT_INT("comp_infcheat", &default_comp[comp_infcheat], &comp[comp_infcheat],
-               0, 0, 1, default_t::wad_yes, "Powerup cheats are not infinite duration"),
+               1, 0, 1, default_t::wad_yes, "Powerup cheats are not infinite duration"),
 
    DEFAULT_INT("comp_stairs", &default_comp[comp_stairs], &comp[comp_stairs],
                1, 0, 1, default_t::wad_yes, "Build stairs exactly the same way that Doom does"),
@@ -375,13 +376,13 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Monsters don't give up pursuit of targets"),
 
    DEFAULT_INT("comp_vile", &default_comp[comp_vile], &comp[comp_vile],
-               0, 0, 1, default_t::wad_yes, "Arch-Vile resurrects invincible ghosts"),
+               1, 0, 1, default_t::wad_yes, "Arch-Vile resurrects invincible ghosts"),
 
    DEFAULT_INT("comp_pain", &default_comp[comp_pain], &comp[comp_pain],
                0, 0, 1, default_t::wad_yes, "Pain Elemental limited to 20 lost souls"),
 
    DEFAULT_INT("comp_skull", &default_comp[comp_skull], &comp[comp_skull],
-               0, 0, 1, default_t::wad_yes, "Lost souls get stuck behind walls"),
+               1, 0, 1, default_t::wad_yes, "Lost souls get stuck behind walls"),
 
    DEFAULT_INT("comp_blazing", &default_comp[comp_blazing], &comp[comp_blazing],
                0, 0, 1, default_t::wad_yes, "Blazing doors make double closing sounds"),
@@ -390,10 +391,10 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Tagged doors don't trigger special lighting"),
 
    DEFAULT_INT("comp_god", &default_comp[comp_god], &comp[comp_god],
-               0, 0, 1, default_t::wad_yes, "God mode isn't absolute"),
+               1, 0, 1, default_t::wad_yes, "God mode isn't absolute"),
 
    DEFAULT_INT("comp_skymap", &default_comp[comp_skymap], &comp[comp_skymap],
-               0, 0, 1, default_t::wad_yes, "Sky is unaffected by invulnerability"),
+               1, 0, 1, default_t::wad_yes, "Sky is unaffected by invulnerability"),
 
    DEFAULT_INT("comp_floors", &default_comp[comp_floors], &comp[comp_floors],
                0, 0, 1, default_t::wad_yes, "Use exactly Doom's floor motion behavior"),
@@ -658,10 +659,13 @@ default_t defaults[] =
    // killough 11/98
    DEFAULT_INT("message_timer",&message_timer, NULL, 4000, 0, UL, default_t::wad_no,
                "Duration of normal Doom messages (ms)"),
+
+   DEFAULT_INT("hud_overlayid", &hud_overlayid, NULL, -1, -1, VDR_MAXDRIVERS - 1, default_t::wad_no,
+               "Select HUD overlay (-1 = default, 0 = modern, 1 = boom"),
    
    //sf : fullscreen hud style
-   DEFAULT_INT("hud_overlaystyle",&hud_overlaystyle, NULL, 1, 0, 4, default_t::wad_yes,
-               "fullscreen hud style"),
+   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, 2, 0, 4, default_t::wad_yes,
+               "fullscreen hud layout"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,
                "fullscreen hud enabled"),
@@ -848,10 +852,10 @@ default_t defaults[] =
 default_or_t HereticDefaultORs[] =
 {
    // misc
-   { "pitched_sounds",   1 }, // pitched sounds should be on
-   { "allowmlook",       1 }, // mlook defaults to on
-   { "wipetype",         2 }, // use crossfade wipe by default
-   { "hud_overlaystyle", 4 }, // use graphical HUD style
+   { "pitched_sounds",    1 }, // pitched sounds should be on
+   { "allowmlook",        1 }, // mlook defaults to on
+   { "wipetype",          2 }, // use crossfade wipe by default
+   { "hud_overlaylayout", 4 }, // use graphical HUD style
    
    // compatibility
    { "comp_terrain",   0 }, // terrain active
@@ -1006,7 +1010,7 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
 // Read a string option and set it
 static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 {
-   int len = strlen(src) - 1;
+   int len = static_cast<int>(strlen(src) - 1);
 
    while(ectype::isSpace(src[len]))
       len--;
@@ -1406,7 +1410,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 {
    qstring tmpfile; //char *tmpfile = NULL;
    default_t *dp;
-   unsigned int line, blanks;
+   unsigned int blanks;
    FILE *f;
 
    // killough 10/98: for when exiting early
@@ -1444,7 +1448,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
 
    // killough 10/98: output comment lines which were read in during input
 
-   for(blanks = 1, line = 0, dp = df->defaults; ; dp++, blanks = 0)
+   for(blanks = 1, dp = df->defaults; ; dp++, blanks = 0)
    {
       int brackets = 0;
 
@@ -1644,7 +1648,10 @@ void M_LoadDefaultFile(defaultfile_t *df)
                if(skipblanks)      // If we are skipping blanks, skip line
                   continue;
                else            // Skip multiple blanks, but remember this one
-                  skipblanks = 1, p = "\n";
+               {
+                  skipblanks = 1;
+                  p = "\n";
+               }
             }
          }
       }

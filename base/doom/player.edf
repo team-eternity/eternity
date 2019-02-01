@@ -1,0 +1,430 @@
+//
+// EDF for Eternity Engine v3.49.00+
+//
+// DOOM Weapons
+//
+
+//=============================================================================
+//
+// Weapon Info
+//
+
+weaponinfo DoomWeapon
+{
+  firstdecoratestate S_LIGHTDONE
+  states
+  @"
+  LightDone:
+    SHTG E 0 A_Light0
+    stop
+  "@
+}
+
+weaponinfo Fist : DoomWeapon, 0
+{
+  selectionorder 9000
+
+  flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
+  mod          Fist
+  recoil       10.0
+
+  firstdecoratestate S_PUNCH
+  states
+  @"
+  Ready:
+    PUNG A 1 A_WeaponReady
+    loop
+  Deselect:
+    PUNG A 1 A_Lower
+    loop
+  Select:
+    PUNG A 1 A_Raise
+    loop
+  Fire:
+    PUNG B 4
+    PUNG C 4 A_Punch
+    PUNG D 5
+    PUNG C 4
+    PUNG B 5 A_ReFire
+    goto Ready
+  "@
+}
+
+weaponinfo Pistol : DoomWeapon, 1
+{
+  ammotype     AmmoClip
+  ammouse      1
+
+  selectionorder 8000
+
+  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
+  mod          Pistol
+  recoil       10.0
+  hapticrecoil 1
+  haptictime   1
+
+  firstdecoratestate S_PISTOL
+  states
+  @"
+  Ready:
+    PISG A 1 A_WeaponReady
+    loop
+  Deselect:
+    PISG A 1 A_Lower
+    loop
+  Select:
+    PISG A 1 A_Raise
+    loop
+  Fire:
+    PISG A 4
+    PISG B 6 A_FirePistol
+    PISG C 4
+    PISG B 5 A_ReFire
+    goto Ready
+  Flash:
+    PISF A 7 bright A_Light1
+    goto LightDone
+  "@
+}
+
+weaponinfo Shotgun : DoomWeapon, 2
+{
+  ammotype     AmmoShell
+  ammouse      1
+
+  selectionorder 4000
+
+  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  mod          Shotgun
+  recoil       30.0
+  hapticrecoil 3
+  haptictime   3
+
+  firstdecoratestate S_SGUN
+  states
+  @"
+  Ready:
+    SHTG A 1 A_WeaponReady
+    loop
+  Deselect:
+    SHTG A 1 A_Lower
+    loop
+  Select:
+    SHTG A 1 A_Raise
+    loop
+  Fire:
+    SHTG A 3
+    SHTG A 7 A_FireShotgun
+    SHTG BC 5
+    SHTG D 4
+    SHTG CB 5
+    SHTG A 3
+    SHTG A 7 A_ReFire
+    goto Ready
+  Flash:
+    SHTF A 4 bright A_Light1
+    SHTF B 3 bright A_Light2
+    goto LightDone
+  "@
+}
+
+weaponinfo Chaingun : DoomWeapon, 3
+{
+  ammotype     AmmoClip
+  ammouse      1
+
+  selectionorder 3000
+
+  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  mod          Chaingun
+  recoil       10.0
+  hapticrecoil 1
+  haptictime   1
+
+  firstdecoratestate S_CHAIN
+  states
+  @"
+  Ready:
+    CHGG A 1 A_WeaponReady
+    loop
+  Deselect:
+    CHGG A 1 A_Lower
+    loop
+  Select:
+    CHGG A 1 A_Raise
+    loop
+  Fire:
+    CHGG AB 4 A_FireCGun
+    CHGG B 0 A_ReFire
+    goto Ready
+  Flash:
+    CHGF A 5 bright A_Light1
+    CHGF B 5 bright A_Light2
+    goto LightDone
+  "@
+}
+
+weaponinfo MissileLauncher : DoomWeapon, 4
+{
+  ammotype     AmmoMissile
+  ammouse      1
+
+  selectionorder 7000
+
+  flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE|HAPTICRECOIL
+  recoil       100.0
+  hapticrecoil 6
+  haptictime   8
+
+  firstdecoratestate S_MISSILE
+  states
+  @"
+  Ready:
+    MISG A 1 A_WeaponReady
+    loop
+  Deselect:
+    MISG A 1 A_Lower
+    loop
+  Select:
+    MISG A 1 A_Raise
+    loop
+  Fire:
+    MISG B 8 A_GunFlash
+    MISG B 12 A_FireMissile
+    MISG B 0 A_ReFire
+    goto Ready
+  Flash:
+    MISF A 3 bright A_Light1
+    MISF B 4 bright
+    MISF CD 4 bright A_Light2
+    goto LightDone
+  "@
+}
+
+weaponinfo PlasmaRifle : DoomWeapon, 5
+{
+  ammotype     AmmoCell
+  ammouse      1
+
+  selectionorder 1000
+
+  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  recoil       20.0
+  hapticrecoil 2
+  haptictime   1
+
+  firstdecoratestate S_PLASMA
+  states
+  @"
+  Ready:
+    PLSG A 1 A_WeaponReady
+    loop
+  Deselect:
+    PLSG A 1 A_Lower
+    loop
+  Select:
+    PLSG A 1 A_Raise
+    loop
+  Fire:
+    PLSG A 3 A_FirePlasma
+    PLSG B 20 A_ReFire
+    goto Ready
+  Flash:
+    PLSF A 4 bright A_Light1
+    goto LightDone
+  Flash2:
+    PLSF B 4 bright A_Light1
+    goto LightDone
+  "@
+}
+
+weaponinfo BFG9000 : DoomWeapon, 6
+{
+  ammotype     AmmoCell
+  ammouse      40
+
+  selectionorder 5000
+
+  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  recoil       100.0
+  hapticrecoil 10
+  haptictime   10
+
+  firstdecoratestate S_BFG
+  states
+  @"
+  Ready:
+    BFGG A 1 A_WeaponReady
+    loop
+  Deselect:
+    BFGG A 1 A_Lower
+    loop
+  Select:
+    BFGG A 1 A_Raise
+    loop
+  Fire:
+    BFGG A 20 A_BFGSound
+    BFGG B 10 A_GunFlash
+    BFGG B 10 A_FireBFG
+    BFGG B 20 A_ReFire
+    goto Ready
+  Flash:
+    BFGF A 11 bright A_Light1
+    BFGF B 6 bright A_Light2
+    goto LightDone
+  "@
+}
+
+// MBF Old-BFG
+weaponinfo OldBFG : BFG9000
+{
+  ammouse      1    // Only one ammo used per shot
+
+  recoil       20.0 // Uses plasma's recoil
+
+  firstdecoratestate S_OLDBFG1
+  states
+  @"
+  OldFire:
+    BFGG A 10 A_BFGSound
+    BFGG BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB 1 A_FireOldBFG
+    BFGG B 0 A_Light0
+    BFGG B 20 A_ReFire
+    goto Ready
+  "@
+}
+
+weaponinfo Chainsaw : DoomWeapon, 7
+{
+  selectionorder 6000
+
+  flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
+  mod          Chainsaw
+  upsound      sawup
+  readysound   sawidl
+
+  firstdecoratestate S_SAW
+  states
+  @"
+  Ready:
+    SAWG CD 4 A_WeaponReady
+    loop
+  Deselect:
+    SAWG C 1 A_Lower
+    loop
+  Select:
+    SAWG C 1 A_Raise
+    loop
+  Fire:
+    SAWG AB 4 A_Saw
+    SAWG B 0 A_ReFire
+    goto Ready
+  "@
+}
+
+weaponinfo SuperShotgun : DoomWeapon, 8
+{
+  ammotype     AmmoShell
+  ammouse      2
+
+  selectionorder 2000
+
+  flags        SILENCEABLE|HAPTICRECOIL|DISABLEAPS
+  mod          SShotgun
+  recoil       80.0
+  hapticrecoil 5
+  haptictime   5
+
+  firstdecoratestate S_DSGUN
+  states
+  @"
+  Ready:
+    SHT2 A 1 A_WeaponReady
+    loop
+  Deselect:
+    SHT2 A 1 A_Lower
+    loop
+  Select:
+    SHT2 A 1 A_Raise
+    loop
+  Fire:
+    SHT2 A 3
+    SHT2 A 7 A_FireShotgun2
+    SHT2 B 7
+    SHT2 C 7 A_CheckReload
+    SHT2 D 7 A_OpenShotgun2
+    SHT2 E 7
+    SHT2 F 7 A_LoadShotgun2
+    SHT2 G 6
+    SHT2 H 6 A_CloseShotgun2
+    SHT2 A 5 A_ReFire
+    goto Ready
+  Unused:
+    // unused states
+    SHT2 B 7
+    SHT2 A 3
+    goto Deselect
+  Flash:
+    SHT2 I 4 bright A_Light1
+    SHT2 J 4 bright A_Light2
+    goto LightDone
+  "@
+}
+
+//=============================================================================
+//
+// Weapon Givers
+//
+
+weapongiver GiverFist
+{
+  weapon Fist
+}
+
+weapongiver GiverPistol
+{
+  weapon Pistol
+  ammogiven AmmoClip, 20, 10, 50, 20
+}
+
+weapongiver GiverShotgun
+{
+  weapon Shotgun
+  ammogiven AmmoShell, 8, 4, 20, 8
+}
+
+weapongiver GiverChaingun
+{
+  weapon Chaingun
+  ammogiven AmmoClip, 20, 10, 50, 20
+}
+
+weapongiver GiverMissileLauncher
+{
+  weapon MissileLauncher
+  ammogiven AmmoMissile, 2, 1, 5, 2
+}
+
+weapongiver GiverPlasmaRifle
+{
+  weapon PlasmaRifle
+  ammogiven AmmoCell, 40, 20, 100, 40
+}
+
+weapongiver GiverBFG9000
+{
+  weapon BFG9000
+  ammogiven AmmoCell, 40, 20, 100, 40
+}
+
+weapongiver GiverChainsaw
+{
+  weapon Chainsaw
+}
+
+weapongiver GiverSuperShotgun
+{
+  weapon SuperShotgun
+  ammogiven AmmoShell, 8, 4, 20, 8
+}
+

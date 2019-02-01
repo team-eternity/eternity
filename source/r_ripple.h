@@ -20,7 +20,14 @@
 #ifndef __R_RIPPLE_H__
 #define __R_RIPPLE_H__
 
-byte *R_DistortedFlat(int flatnum);
+#include "doomtype.h"
+
+enum
+{
+   SWIRL_TICS = 65536   // the amount to set in definition lumps
+};
+
+byte *R_DistortedFlat(int flatnum, bool usegametic = false);
 extern int r_swirl;
 
 #endif

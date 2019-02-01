@@ -1,0 +1,9 @@
+pufftype BulletPuff
+{
+  thingtype  BulletPuff
+  upspeed    1.0
+  punchhack  S_PUFF3
+  particles  32
+  
+  +RandomTics
+}

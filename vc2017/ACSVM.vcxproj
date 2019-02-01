@@ -21,9 +21,11 @@
   <ItemGroup>
     <ClCompile Include="..\acsvm\ACSVM\Action.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Array.cpp" />
+    <ClCompile Include="..\acsvm\ACSVM\BinaryIO.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\CallFunc.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\CodeData.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Environment.cpp" />
+    <ClCompile Include="..\acsvm\ACSVM\Error.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Function.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Init.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Jump.cpp" />
@@ -33,6 +35,7 @@
     <ClCompile Include="..\acsvm\ACSVM\PrintBuf.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Scope.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Script.cpp" />
+    <ClCompile Include="..\acsvm\ACSVM\Serial.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\String.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\Thread.cpp" />
     <ClCompile Include="..\acsvm\ACSVM\ThreadExec.cpp" />
@@ -51,6 +54,7 @@
     <ClInclude Include="..\acsvm\ACSVM\Function.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\HashMap.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\HashMapFixed.hpp" />
+    <ClInclude Include="..\acsvm\ACSVM\ID.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\Init.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\Jump.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\List.hpp" />
@@ -58,6 +62,7 @@
     <ClInclude Include="..\acsvm\ACSVM\PrintBuf.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\Scope.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\Script.hpp" />
+    <ClInclude Include="..\acsvm\ACSVM\Serial.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\Stack.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\Store.hpp" />
     <ClInclude Include="..\acsvm\ACSVM\String.hpp" />
@@ -69,7 +74,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A3D79066-950D-42E4-8555-D7663BA5E0C7}</ProjectGuid>
     <RootNamespace>ACSVM</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -117,10 +122,18 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -136,6 +149,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -160,6 +174,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>

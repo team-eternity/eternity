@@ -27,9 +27,11 @@
 #include "z_zone.h"
 #include "i_system.h"
 #include "doomstat.h"
+#include "d_dehtbl.h"
 #include "e_inventory.h"
 #include "m_random.h"
 #include "m_swap.h"
+#include "metaapi.h"
 #include "p_mobj.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -47,11 +49,50 @@
 //
 
 // cached patches
-static patch_t *invnums[10];   // inventory numbers
+static patch_t *invnums[10];      // inventory numbers
+static patch_t *smallinvnums[10]; // small inventory numbers
+static patch_t *PatchINVLFGEM1;
+static patch_t *PatchINVLFGEM2;
+static patch_t *PatchINVRTGEM1;
+static patch_t *PatchINVRTGEM2;
+static patch_t *PatchBLACKSQ;
+
+// important patch numbers
+static int spinbooklump;
+static int spinflylump;
 
 // current state variables
 static int chainhealth;        // current position of the gem
 static int chainwiggle;        // small randomized addend for chain y coord.
+
+//
+// ST_drawSmallNumber
+//
+// Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
+// x is expected to be 8 more than its equivalent Heretic calls.
+//
+static void ST_drawSmallNumber(int val, int x, int y)
+{
+   if(val > 1)
+   {
+      patch_t *patch;
+      char buf[6];
+
+      // If you want more than 99,999 of something then you probably
+      // know enough about coding to change this hard limit.
+      if(val > 99999)
+         val = 99999;
+      sprintf(buf, "%d", val);
+      x -= 4 * (strlen(buf));
+      for(char *rover = buf; *rover; rover++)
+      {
+         int i = *rover - '0';
+         patch = smallinvnums[i];
+         V_DrawPatch(x, y, &subscreen43, patch);
+         x += 4;
+      }
+   }
+}
 
 //
 // ST_HticInit
@@ -75,6 +116,23 @@ static void ST_HticInit()
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
+   // load small inventory numbers
+   for(i = 0; i < 10; ++i)
+   {
+      char lumpname[9];
+
+      memset(lumpname, 0, 9);
+      sprintf(lumpname, "SMALLIN%d", i);
+
+      smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+   }
+
+   PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
+   PatchINVLFGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
+   PatchINVRTGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
+   PatchINVRTGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR2"), PU_STATIC);
+   PatchBLACKSQ   = PatchLoader::CacheName(wGlobalDir, DEH_String("BLACKSQ"),  PU_STATIC);
+
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
    {
@@ -85,6 +143,10 @@ static void ST_HticInit()
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
+
+   // load important numbers needed when some arithmetic is done with them
+   spinbooklump = W_GetNumForName(DEH_String("SPINBK0"));
+   spinflylump  = W_GetNumForName(DEH_String("SPFLY0"));
 }
 
 //
@@ -319,6 +381,10 @@ static void ST_drawStatBar()
 {
    int temp;
    patch_t *statbar;
+   const char *patch;
+   itemeffect_t *artifact;
+   static int prevleveltime = 0;
+   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -333,7 +399,35 @@ static void ST_drawStatBar()
 
    V_DrawPatch(34, 160, &subscreen43, statbar);
 
-   // TODO: inventory stuff
+   // ArtifactFlash, it's a gas! Gas! Gas!
+   if(invbarstate.ArtifactFlash)
+   {
+      V_DrawPatch(180, 161, &subscreen43, PatchBLACKSQ);
+
+      temp = W_GetNumForName(DEH_String("useartia")) + invbarstate.ArtifactFlash - 1;
+
+      V_DrawPatch(182, 161, &subscreen43, PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
+      if(leveltime != prevleveltime)
+      {
+         invbarstate.ArtifactFlash--;
+         prevleveltime = leveltime;
+      }
+   }
+   // It's safety checks all the way down!
+   else if(plyr->inventory[plyr->inv_ptr].amount)
+   {
+      if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
+      {
+         patch = artifact->getString("icon", nullptr);
+         if(estrnonempty(patch) && artifact->getInt("invbar", 0))
+         {
+            V_DrawPatch(179, 160, &subscreen43,
+                        PatchLoader::CacheName(wGlobalDir, patch,
+                                               PU_CACHE, lumpinfo_t::ns_sprites));
+            ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
+         }
+      }
+   }
 
    // draw frags or health
    if(GameType == gt_dm)
@@ -361,11 +455,128 @@ static void ST_drawStatBar()
    if(E_GetItemOwnedAmountName(plyr, ARTI_KEYBLUE) > 0)
       V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
-   // TODO: ammo icon stuff
    // draw ammo amount
-   itemeffect_t *ammo = P_GetReadyWeapon(plyr)->ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
+   {
+      V_DrawPatch(108, 161, &subscreen43, PatchBLACKSQ);
+      patch = ammo->getString("icon", "");
+      if(estrnonempty(patch))
+      {
+         V_DrawPatch(111, 172, &subscreen43,
+                     PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+      }
       ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
+   }
+}
+
+static void ST_drawInvBar()
+{
+   constexpr int ST_INVBARBGX = 34; // You'd think it'd be (SCREENWIDTH - 248) / 2 (= 36)? Nope.
+   constexpr int ST_INVBARBGY = SCREENHEIGHT - 40; // 31 high but 9 extra pixels
+   constexpr int ST_INVSLOTSTARTX = ST_INVBARBGX + 16;
+
+   const int inv_ptr  = players[displayplayer].inv_ptr;
+   const int leftoffs = inv_ptr >= 7 ? inv_ptr - 6 : 0;
+
+   V_DrawPatch(ST_INVBARBGX, ST_INVBARBGY, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
+
+   int i = -1;
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   {
+      // Safety check that the player has an inventory item, then that the effect exists
+      // for the selected item, then that there is an associated patch for that effect.
+      if(plyr->inventory[i + leftoffs].amount > 0)
+      {
+         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         if(artifact)
+         {
+            const char *patchname = artifact->getString("icon", nullptr);
+            if(estrnonempty(patchname))
+            {
+               int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+                           lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+               patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+
+               const int xoffs = artifact->getInt("icon.offset.x", 0);
+               const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+               V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
+                           &subscreen43, patch);
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
+                                  ST_INVSLOTSTARTX + 27 + (i * 31), ST_INVBARBGY + 22);
+            }
+         }
+      }
+   }
+
+   if(leftoffs)
+      V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
+   if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
+      V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
+
+   V_DrawPatch(ST_INVSLOTSTARTX + ((inv_ptr - leftoffs) * 31), SCREENHEIGHT - 11,
+               &subscreen43, PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+}
+
+//
+// Draw spinning powerups
+//
+static void ST_drawPowerUps()
+{
+   static bool hitCenterFrame = false;
+   // Display the little rotating wings of wrath
+   if(plyr->powers[pw_flight])
+   {
+      // Blink the wings when the player is almost out
+      if(plyr->powers[pw_flight] > (4 * 32) || !(plyr->powers[pw_flight] & 16))
+      {
+         int frame = (leveltime / 3) & 15;
+         if(plyr->mo->flags4 & MF4_FLY)
+         {
+            if(hitCenterFrame && (frame != 15 && frame != 0))
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
+            }
+            else
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
+               hitCenterFrame = false;
+            }
+         }
+         else
+         {
+            // FIXME: Why would this code trigger?
+            if(!hitCenterFrame && (frame != 15 && frame != 0))
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
+               hitCenterFrame = false;
+            }
+            else
+            {
+               V_DrawPatch(20, 17, &vbscreen,
+                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
+               hitCenterFrame = true;
+            }
+         }
+      }
+   }
+
+   if(plyr->powers[pw_weaponlevel2])
+   {
+      if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
+      {
+         const int frame = (leveltime / 3) & 15;
+         V_DrawPatch(300, 17, &vbscreen,
+                     PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
+      }
+   }
 }
 
 //
@@ -377,10 +588,12 @@ static void ST_HticDrawer()
 {
    ST_drawBackground();
    ST_drawLifeChain();
+   ST_drawPowerUps();
 
-   // TODO: choose whether to draw statbar or inventory bar here
-   // based on whether the inventory is active
-   ST_drawStatBar();
+   if(players[displayplayer].invbarstate.inventory)
+      ST_drawInvBar();
+   else
+      ST_drawStatBar();
 }
 
 //

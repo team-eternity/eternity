@@ -64,7 +64,7 @@ char *DWFILE::getStr(char *buf, size_t n)
 {
    // If this is a real file, return regular fgets
    if(type == DWF_FILE)
-      return fgets(buf, n, (FILE *)inp);
+      return fgets(buf, static_cast<int>(n), (FILE *)inp);
    
    // If no more characters
    if(!n || size <= 0 || !*inp)
@@ -72,13 +72,13 @@ char *DWFILE::getStr(char *buf, size_t n)
   
    if(n == 1)
    {
-      size--, *buf = *inp++;
+      size--;
+      *buf = *inp++;
    }
    else
    {  // copy buffer
       char *p = buf;
-      while(n > 1 && *inp && size &&
-            (n--, size--, *p++ = *inp++) != '\n')
+      while(n > 1 && *inp && size && (n--, size--, *p++ = *inp++) != '\n')
          ;
       *p = 0;
    }
@@ -104,7 +104,7 @@ int DWFILE::atEof() const
 int DWFILE::getChar()
 {
    return (type == DWF_FILE) ? 
-           fgetc((FILE *)inp) : size > 0 ? size--, *inp++ : EOF;
+   fgetc((FILE *)inp) : size > 0 ? size--, *inp++ : EOF;
 }
 
 //
@@ -119,7 +119,7 @@ int DWFILE::getChar()
 int DWFILE::unGetChar(int c)
 {
    return (type == DWF_FILE) ? 
-            ungetc(c, (FILE *)inp) : size < origsize ? size++, *(--inp) : EOF;
+   ungetc(c, (FILE *)inp) : size < origsize ? size++, *(--inp) : EOF;
 }
 
 //

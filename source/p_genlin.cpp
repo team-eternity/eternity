@@ -72,7 +72,7 @@ int EV_DoParamFloor(const line_t *line, int tag, const floordata_t *fd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_floor;
    }
@@ -378,7 +378,7 @@ int EV_DoParamCeiling(const line_t *line, int tag, const ceilingdata_t *cd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_ceiling;
    }
@@ -706,7 +706,7 @@ int EV_DoGenLift(const line_t *line)
    {
       if (!(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_lift;
    }
@@ -851,7 +851,7 @@ int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_stair;
    }
@@ -949,7 +949,7 @@ manual_stair:
       sec->nextsec   = -1;
       sec->prevsec   = -1;
 
-      P_FloorSequence(floor->sector);
+      P_StairSequence(floor->sector);
       
       osecnum = secnum;            // jff 3/4/98 preserve loop index  
       // Find next sector to raise
@@ -964,13 +964,13 @@ manual_stair:
                continue;
             
             tsec = (sec->lines[i])->frontsector;
-            newsecnum = tsec-sectors;
+            newsecnum = eindex(tsec-sectors);
             
             if(secnum != newsecnum)
                continue;
             
             tsec = (sec->lines[i])->backsector;
-            newsecnum = tsec - sectors;
+            newsecnum = eindex(tsec - sectors);
             
             if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->floorpic != texture)
                continue;
@@ -1028,7 +1028,7 @@ manual_stair:
             floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
             floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
-            P_FloorSequence(floor->sector);
+            P_StairSequence(floor->sector);
             
             ok = 1;
             break;
@@ -1111,7 +1111,7 @@ int EV_DoParamCrusher(const line_t *line, int tag, const crusherdata_t *cd)
    {
       if(!(sec = line->backsector))
          return rtn;
-      secnum = sec-sectors;
+      secnum = eindex(sec-sectors);
       manual = true;
       goto manual_crusher;
    }
@@ -1317,7 +1317,7 @@ int EV_DoParamDoor(const line_t *line, int tag, const doordata_t *dd)
    {
       if(!line || !(sec = line->backsector))
          return rtn;
-      secnum = sec - sectors;
+      secnum = eindex(sec - sectors);
       manual = true;
       goto manual_door;
    }

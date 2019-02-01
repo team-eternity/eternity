@@ -20,7 +20,7 @@
 
 # General flags.
 
-add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB)
+add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DKATE_MEMORIAL)
 
 # Library search flags.
 
@@ -105,7 +105,7 @@ FILE (GLOB SDL_SOURCES sdl/*.cpp)
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
 
-target_link_libraries(eternity ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLNET_LIBRARY} acsvm png15_static snes_spc)
+target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
@@ -113,6 +113,16 @@ endif()
 
 if(MSVC)
    target_link_libraries(eternity rpcrt4)
+   
+   target_compile_options(eternity PUBLIC "/utf-8")
+
+   if(NOT MSVC_VERSION LESS  "1914")
+      target_compile_options(eternity PUBLIC "/std:c++17")
+   endif()
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  target_link_libraries(eternity version)
 endif()
 
 INSTALL (TARGETS eternity

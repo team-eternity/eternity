@@ -42,6 +42,7 @@
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
 #include "metaapi.h"
@@ -335,6 +336,16 @@ dehflags_t deh_mobjflags[] =
   {"TOTALINVISIBLE",   0x00020000, 3}, // thing is totally invisible to monsters
   {"DRAWSBLOOD",       0x00040000, 3}, // missile draws blood
   {"SPACPUSHWALL",     0x00080000, 3}, // thing can activate push walls
+  {"NOSPECIESINFIGHT", 0x00100000, 3}, // no infighting in this species, but still damage
+  {"HARMSPECIESMISSILE", 0x00200000, 3}, // harmed even by projectiles of same species
+  {"FRIENDFOEMISSILE",   0x00400000, 3}, // friends and foes of same species hurt each other
+  {"BLOODLESSIMPACT",    0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
+  {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
+  {"MONSTERPASS",        0x02000000, 3},
+  {"LOWAIMPRIO",         0x04000000, 3},
+  {"STICKYCARRY",        0x08000000, 3},
+  {"SETTARGETONDEATH",   0x10000000, 3},
+  {"SLIDEOVERTHINGS",    0x20000000, 3},
 
   { NULL,              0 }             // NULL terminator
 };
@@ -1417,6 +1428,19 @@ static const char *deh_itemsForAmmoNum[NUMAMMO][3] =
    { "AmmoMissile", "RocketAmmo", "RocketBox" },
 };
 
+static const char *deh_giverNames[NUMWEAPONS] =
+{
+   "GiverFist",
+   "GiverPistol",
+   "GiverShotgun",
+   "GiverChaingun",
+   "GiverMissileLauncher",
+   "GiverPlasmaRifle",
+   "GiverBFG9000",
+   "GiverChainsaw",
+   "GiverSuperShotgun"
+};
+
 // ====================================================================
 // deh_procAmmo
 // Purpose: Handle DEH Ammo block
@@ -1496,17 +1520,25 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          if(ammotype)
             ammotype->setInt("ammo.backpackamount", value);
 
-         // INVENTORY_TODO / INVENTORY_FIXME: weapon modifications will need 
-         // adjustment later to loop over all weapons defined via EDF
+         // TODO: This could probably do with being more robust
          for(int wp = 0; wp < NUMWEAPONS; wp++)
          {
-            weaponinfo_t *weapon = &weaponinfo[wp];
-            if(weapon->ammo == ammotype)
+            weaponinfo_t *weapon = E_WeaponForDEHNum(wp);
+            if(weapon == nullptr || weapon->dehnum >= NUMWEAPONS)
+               continue;
+            itemeffect_t *giver = E_ItemEffectForName(deh_giverNames[weapon->dehnum]);
+            itemeffect_t *given = giver->getMetaTable("ammogiven", nullptr);
+            if(given == nullptr)
+               continue;
+            const char *ammostr = given->getString("type", nullptr);
+            if(ammostr == nullptr)
+               continue;
+            if(E_ItemEffectForName(ammostr) == ammotype)
             {
-               weapon->dmstayammo   = value * 5;
-               weapon->coopstayammo = value * 2;
-               weapon->giveammo     = value * 2;
-               weapon->dropammo     = value;
+               given->setInt("ammo.dmstay",   value * 5);
+               given->setInt("ammo.coopstay", value * 2);
+               given->setInt("ammo.give",     value * 2);
+               given->setInt("ammo.dropped",  value);
             }
          }
       }
@@ -1558,29 +1590,30 @@ void deh_procWeapon(DWFILE *fpin, char *line)
          continue;
       }
 
+      weaponinfo_t &weaponinfo = *E_WeaponForDEHNum(indexnum);
       // haleyjd: resolution adjusted for EDF
       if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
       {
          if(value < 0 || value >= NUMAMMO)
-            weaponinfo[indexnum].ammo = NULL; // no ammo
+            weaponinfo.ammo = NULL; // no ammo
          else
-            weaponinfo[indexnum].ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
+            weaponinfo.ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
       }
       else if(!strcasecmp(key, deh_weapon[1]))  // Deselect frame
-         weaponinfo[indexnum].upstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.upstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[2]))  // Select frame
-         weaponinfo[indexnum].downstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.downstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[3]))  // Bobbing frame
-         weaponinfo[indexnum].readystate = E_GetStateNumForDEHNum(value);
+         weaponinfo.readystate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[4]))  // Shooting frame
-         weaponinfo[indexnum].atkstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.atkstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[5]))  // Firing frame
-         weaponinfo[indexnum].flashstate = E_GetStateNumForDEHNum(value);
+         weaponinfo.flashstate = E_GetStateNumForDEHNum(value);
       else if(!strcasecmp(key, deh_weapon[6])) // haleyjd: Ammo per shot
       {
-         weaponinfo[indexnum].ammopershot = value;
+         weaponinfo.ammopershot = value;
          // enable ammo per shot value usage for this weapon
-         weaponinfo[indexnum].flags |= WPF_ENABLEAPS;
+         weaponinfo.flags &= ~WPF_DISABLEAPS;
       }
       else
          deh_LogPrintf("Invalid weapon string index for '%s'\n", key);
@@ -1832,7 +1865,11 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             for(unsigned int i = 0; i < pc->numrebornitems; i++)
             {
                if(!strcasecmp(pc->rebornitems[i].itemname, "AmmoClip"))
+               {
                   pc->rebornitems[i].amount = value;
+                  if(!value)
+                     pc->rebornitems[i].flags |= RBIF_IGNORE;
+               }
             }
          }
       }
@@ -1915,9 +1952,9 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
          ; //idkfa_armor_class = value;
       else if(!strcasecmp(key,deh_misc[14])) // BFG Cells/Shot
       {
-         // WEAPON_FIXME: BFG ammopershot
          // haleyjd 08/10/02: propagate to weapon info
-         bfgcells = weaponinfo[wp_bfg].ammopershot = value;
+         weaponinfo_t &bfginfo = *E_WeaponForDEHNum(wp_bfg);
+         bfgcells = bfginfo.ammopershot = value;
       }
       else if(!strcasecmp(key,deh_misc[15])) // Monsters Infight
          /* No such switch in DOOM - nop */ 
@@ -2139,7 +2176,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
       while(strlen(holdstring) + strlen(inbuffer) > maxstrlen) // Ty03/29/98 - fix stupid error
       {
          // killough 11/98: allocate enough the first time
-         maxstrlen += strlen(holdstring) + strlen(inbuffer) - maxstrlen;
+         maxstrlen += static_cast<unsigned>(strlen(holdstring) + strlen(inbuffer) - maxstrlen);
          
          deh_LogPrintf("* Increased buffer from to %d for buffer size %d\n",
                        maxstrlen, (int)strlen(inbuffer));
@@ -2211,7 +2248,10 @@ bool deh_procStringSub(char *key, char *lookfor, char *newstring)
    for(s=t=copyNewStr; *s; ++s, ++t)
    {
       if (*s == '\\' && (s[1] == 'n' || s[1] == 'N')) //found one
-         ++s, *t = '\n';  // skip one extra for second character
+      {
+         ++s;
+         *t = '\n';  // skip one extra for second character
+      }
       else
          *t = *s;
    }
@@ -2380,7 +2420,7 @@ void deh_procBexSounds(DWFILE *fpin, char *line)
       // do it
       memset(candidate, 0, 9);
       strncpy(candidate, ptr_lstrip(strval), 9);
-      len = strlen(candidate);
+      len = static_cast<int>(strlen(candidate));
       if(len < 1 || len > 8)
       {
          deh_LogPrintf("Bad length for sound name '%s'\n", candidate);
@@ -2436,7 +2476,7 @@ void deh_procBexMusic(DWFILE *fpin, char *line)
       // do it
       memset(candidate, 0, 7);
       strncpy(candidate, ptr_lstrip(strval), 6);
-      len = strlen(candidate);
+      len = static_cast<int>(strlen(candidate));
       if(len < 1 || len > 6)
       {
          deh_LogPrintf("Bad length for music name '%s'\n", candidate);
@@ -2483,7 +2523,13 @@ static char *dehReformatStr(char *string)
    while(*s)
    {
       if(*s == '\n')
-         ++s, *t++ = '\\', *t++ = 'n', *t++ = '\\', *t++='\n'; 
+      {
+         ++s;
+         *t++ = '\\';
+         *t++ = 'n';
+         *t++ = '\\';
+         *t++='\n';
+      }
       else
          *t++ = *s++;
    }
@@ -2572,7 +2618,7 @@ bool deh_GetData(char *s, char *k, int *l, char **strval)
          okrc = false; 
 
       // we've incremented t
-      val = strtol(t, NULL, 0);  // killough 8/9/98: allow hex or octal input
+      val = static_cast<int>(strtol(t, NULL, 0));  // killough 8/9/98: allow hex or octal input
    }
 
    // go put the results in the passed pointers

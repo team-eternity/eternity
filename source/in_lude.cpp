@@ -35,6 +35,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
+#include "e_hash.h"
 #include "e_things.h" 
 #include "g_game.h"
 #include "in_lude.h"
@@ -82,6 +83,12 @@ MobjCollection camerathings;
 Mobj *wi_camera;
 
 //
+// Intermission map info
+//
+static EHashTable<intermapinfo_t, ENCStringHashKey,
+&intermapinfo_t::lumpname, &intermapinfo_t::link> in_mapinfo;
+
+//
 // IN_AddCameras
 //
 // haleyjd: new solution for intermission cameras. Uses
@@ -105,7 +112,7 @@ void IN_AddCameras()
 //
 // Set up the intermissions camera
 //
-void IN_StartCamera()
+static void IN_StartCamera()
 {
    if(!camerathings.isEmpty())
    {
@@ -124,7 +131,7 @@ void IN_StartCamera()
          // even kill it!) even tho it has been removed from the level. I make
          // it unshootable first so they lose interest.
          players[i].mo->flags &= ~MF_SHOOTABLE;
-         players[i].mo->removeThinker();
+         players[i].mo->remove();
       }
 #endif
             
@@ -184,12 +191,12 @@ void IN_checkForAccelerate()
       {
          if(player->cmd.buttons & BT_ATTACK)
          {
-            if(!player->attackdown)
+            if(!(player->attackdown & AT_PRIMARY))
                acceleratestage = 1;
-            player->attackdown = true;
+            player->attackdown = AT_PRIMARY;
          }
          else
-            player->attackdown = false;
+            player->attackdown = AT_NONE;
          
          if (player->cmd.buttons & BT_USE)
          {
@@ -285,6 +292,22 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    InterFuncs = GameModeInfo->interfuncs;
 
    InterFuncs->Start(wbstartstruct);
+}
+
+//
+// Gets the map info based on lump name. If none is there, then create and
+// return it.
+//
+intermapinfo_t &IN_GetMapInfo(const char *lumpname)
+{
+   intermapinfo_t *info;
+   if(!(info = in_mapinfo.objectForKey(lumpname)))
+   {
+      info = estructalloc(intermapinfo_t, 1);
+      info->lumpname = estrdup(lumpname);
+      in_mapinfo.addObject(info);
+   }
+   return *info;
 }
 
 // EOF

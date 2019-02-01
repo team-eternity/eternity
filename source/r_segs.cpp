@@ -154,7 +154,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       column.texmid = column.texmid - viewz;
    }
 
-   column.texmid += segclip.line->sidedef->rowoffset;
+   column.texmid += segclip.line->sidedef->rowoffset - ds->deltaz;
    
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)
@@ -243,6 +243,17 @@ static void R_RenderSegLoop(void)
               static_cast<int>(segclip.line->linedef - lines));
    }
 #endif
+
+
+   visplane_t *plane = nullptr;
+   if(segclip.skyflat)
+   {
+      // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
+      // to avoid HOM
+      plane = R_FindPlane(-1, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
+                          255, nullptr);
+      plane = R_CheckPlane(plane, segclip.x1, segclip.x2);
+   }
 
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
@@ -523,11 +534,31 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
+            else if(plane)
+            {
+               if(ceilingclip[i] < floorclip[i])
+               {
+                  plane->top[i] = static_cast<int>(ceilingclip[i]);
+                  plane->bottom[i] = static_cast<int>(floorclip[i]);
+               }
+               ceilingclip[i] = view.height - 1.0f;
+               floorclip[i] = 0.0f;
+            }
          }
       }
       else if(segclip.l_window)
       {
          R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+         ceilingclip[i] = view.height - 1.0f;
+         floorclip[i] = 0.0f;
+      }
+      else if(plane)
+      {
+         if(t < b)
+         {
+            plane->top[i] = t;
+            plane->bottom[i] = b;
+         }
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
@@ -765,9 +796,9 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.top += clipx1 * segclip.topstep;
       segclip.bottom += clipx1 * segclip.bottomstep;
 
-      if(segclip.toptex)
+      if(segclip.toptex || seg.t_window)
          segclip.high += clipx1 * segclip.highstep;
-      if(segclip.bottomtex)
+      if(segclip.bottomtex || seg.b_window)
          segclip.low += clipx1 * segclip.lowstep;
    }
    if(clipx2)
@@ -778,9 +809,9 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.top2 -= clipx2 * segclip.topstep;
       segclip.bottom2 -= clipx2 * segclip.bottomstep;
 
-      if(segclip.toptex)
+      if(segclip.toptex || seg.t_window)
          segclip.high2 -= clipx2 * segclip.highstep;
-      if(segclip.bottomtex)
+      if(segclip.bottomtex || seg.b_window)
          segclip.low2 -= clipx2 * segclip.lowstep;
    }
 
@@ -797,9 +828,9 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.topstep = (segclip.top2 - segclip.top) * pstep;
       segclip.bottomstep = (segclip.bottom2 - segclip.bottom) * pstep;
 
-      if(segclip.toptex)
+      if(segclip.toptex || seg.t_window)
          segclip.highstep = (segclip.high2 - segclip.high) * pstep;
-      if(segclip.bottomtex)
+      if(segclip.bottomtex || seg.b_window)
          segclip.lowstep = (segclip.low2 - segclip.low) * pstep;
    }
 
@@ -841,6 +872,7 @@ void R_StoreWallRange(const int start, const int stop)
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = scalelight;
+   ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)
       R_CloseDSP();
@@ -851,22 +883,22 @@ void R_StoreWallRange(const int start, const int stop)
 
       // SoM: TODO: This can be a bit problematic for slopes because we'll have 
       // to check the line for textures at both ends...
-      if(segclip.frontsec->floorheight > segclip.backsec->floorheight)
+      if(segclip.maxfrontfloor > segclip.maxbackfloor)
       {
          ds_p->silhouette = SIL_BOTTOM;
-         ds_p->bsilheight = segclip.frontsec->floorheight;
+         ds_p->bsilheight = segclip.maxfrontfloor;
       }
-      else if(segclip.backsec->floorheight > viewz)
+      else if(segclip.maxbackfloor > viewz)
       {
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
       }
-      if(segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight)
+      if(segclip.minfrontceil < segclip.minbackceil)
       {
          ds_p->silhouette |= SIL_TOP;
-         ds_p->tsilheight = segclip.frontsec->ceilingheight;
+         ds_p->tsilheight = segclip.minfrontceil;
       }
-      else if(segclip.backsec->ceilingheight < viewz)
+      else if(segclip.minbackceil < viewz)
       {
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;
@@ -880,6 +912,8 @@ void R_StoreWallRange(const int start, const int stop)
          xlen = segclip.x2 - segclip.x1 + 1;
 
          ds_p->maskedtexturecol = lastopening - segclip.x1;
+         if(portalrender.active)
+            ds_p->deltaz = viewz - portalrender.w->vz;
          
          mtc = lastopening;
 

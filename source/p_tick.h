@@ -93,7 +93,7 @@ public:
 
    // Virtual methods (overridables)
    virtual void updateThinker();
-   virtual void removeThinker();
+   virtual void remove();
 
    // Serialization
    // When using serialize, always call your parent implementation!
@@ -129,6 +129,13 @@ template<typename T> inline T thinker_cast(Thinker *th)
 
    return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
       static_cast<T>(th) : NULL;
+}
+template<typename T> inline T thinker_cast(const Thinker *th)
+{
+   typedef typename std::remove_pointer<T>::type base_type;
+
+   return (th && !th->isRemoved() && th->isDescendantOf(&base_type::StaticType)) ?
+   static_cast<T>(th) : NULL;
 }
 
 
@@ -174,6 +181,13 @@ template<typename T> void P_SetTarget(T **mop, T *targ)
       (*mop)->delReference();
    if((*mop = targ))    // Set new target and if non-NULL, increase its counter
       targ->addReference();
+}
+
+template<typename T> void P_ClearTarget(T *&mop)
+{
+   if(mop)             // If there was a target already, decrease its refcount
+      mop->delReference();
+   mop = nullptr;
 }
 
 // killough 8/29/98: threads of thinkers, for more efficient searches

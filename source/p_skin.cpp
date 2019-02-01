@@ -36,7 +36,6 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "info.h"
 #include "p_info.h"
 #include "p_skin.h"
 #include "r_things.h"
@@ -157,7 +156,7 @@ void P_InitSkins(void)
       if(!skins[i]->edfskin)
       {
          *currentsprite   = skins[i]->spritename;
-         skins[i]->sprite = currentsprite - spritelist;
+         skins[i]->sprite = static_cast<spritenum_t>(currentsprite - spritelist);
          currentsprite++;
       }
       P_ResolveSkinSounds(skins[i]); // haleyjd 10/17/05: resolve sounds
@@ -176,13 +175,9 @@ void P_InitSkins(void)
 //
 static void P_AddEDFSkins(void)
 {
-   int i;
-
    // go down every hash chain
-   for(i = 0; i < NUMEDFSKINCHAINS; ++i)
+   for(skin_t *chain : edf_skins)
    {
-      skin_t *chain = edf_skins[i];
-
       while(chain)
       {
          // add the skin only if one of this name doesn't already exist
@@ -219,7 +214,7 @@ static void P_AddSkin(skin_t *newskin)
 
 static void P_AddSpriteLumps(const char *named)
 {
-   int i, n = strlen(named);
+   int i, n = static_cast<int>(strlen(named));
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    

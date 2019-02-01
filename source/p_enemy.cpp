@@ -45,9 +45,9 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
-#include "m_random.h"
 #include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
@@ -202,6 +202,8 @@ bool P_CheckMeleeRange(Mobj *actor)
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
          return false;
+      // TODO: add support for Strife's z-clipping which doesn't limit vertical
+      // range if target is below attacker!
    }
 
    // ioanch 20151225: make it linked-portal aware
@@ -214,10 +216,12 @@ bool P_CheckMeleeRange(Mobj *actor)
    ty = pl->y;
 #endif
 
+   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
+   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
+
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(tx - actor->x, ty - actor->y) <
-       MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
+      (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
 }
 
@@ -250,7 +254,7 @@ bool P_HitFriend(Mobj *actor)
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
-      P_AimLineAttack(actor, angle, dist, 0);
+      P_AimLineAttack(actor, angle, dist, false);
 
       if(clip.linetarget 
          && clip.linetarget != actor->target 
@@ -372,14 +376,25 @@ static bool P_IsOnLift(const Mobj *actor)
    {
       for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
       {
-         switch(lines[l].special)
+         // FIXME: I'm still keeping the old code because I don't know of any MBF
+         // demos which can verify all of this. If you're confident you found one,
+         // feel free to remove this block.
+         if(demo_version <= 203)
          {
-         case  10: case  14: case  15: case  20: case  21: case  22:
-         case  47: case  53: case  62: case  66: case  67: case  68:
-         case  87: case  88: case  95: case 120: case 121: case 122:
-         case 123: case 143: case 162: case 163: case 181: case 182:
-         case 144: case 148: case 149: case 211: case 227: case 228:
-         case 231: case 232: case 235: case 236:
+            switch(lines[l].special)
+            {
+            case  10: case  14: case  15: case  20: case  21: case  22:
+            case  47: case  53: case  62: case  66: case  67: case  68:
+            case  87: case  88: case  95: case 120: case 121: case 122:
+            case 123: case 143: case 162: case 163: case 181: case 182:
+            case 144: case 148: case 149: case 211: case 227: case 228:
+            case 231: case 232: case 235: case 236:
+               return true;
+            }
+         }
+         else if(EV_CompositeActionFlags(EV_ActionForSpecial(lines[l].special)) &
+            EV_ISMBFLIFT)
+         {
             return true;
          }
       }
@@ -441,13 +456,13 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(P_Use3DClipping())
    {
-      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
+      if(!(actor->flags & MF_FLOAT) && actor->z > actor->zref.floor &&
          !(actor->intflags & MIF_ONMOBJ))
       {
-         if (actor->z > actor->floorz + STEPSIZE)
+         if (actor->z > actor->zref.floor + STEPSIZE)
             return false;
          else
-            actor->z = actor->floorz;
+            actor->z = actor->zref.floor;
       }
    }
 
@@ -481,9 +496,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    {
       fixed_t x = actor->x;
       fixed_t y = actor->y;
-      fixed_t floorz = actor->floorz;
-      fixed_t ceilingz = actor->ceilingz;
-      fixed_t dropoffz = actor->dropoffz;
+      fixed_t floorz = actor->zref.floor;
+      fixed_t ceilingz = actor->zref.ceiling;
+      fixed_t dropoffz = actor->zref.dropoff;
       
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
       
@@ -495,9 +510,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          P_UnsetThingPosition(actor);
          actor->x = x;
          actor->y = y;
-         actor->floorz = floorz;
-         actor->ceilingz = ceilingz;
-         actor->dropoffz = dropoffz;
+         actor->zref.floor = floorz;
+         actor->zref.ceiling = ceilingz;
+         actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
          movefactor *= FRACUNIT / ORIG_FRICTION_FACTOR / 4;
          actor->momx += FixedMul(deltax, movefactor);
@@ -513,7 +528,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       {
          fixed_t savedz = actor->z;
 
-         if(actor->z < clip.floorz)          // must adjust height
+         if(actor->z < clip.zref.floor)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
@@ -522,7 +537,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          // [RH] Check to make sure there's nothing in the way of the float
          if(P_Use3DClipping())
          {
-            if(P_TestMobjZ(actor))
+            if(P_TestMobjZ(actor, clip))
             {
                actor->flags |= MF_INFLOAT;
                return true;
@@ -597,7 +612,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
          fixed_t oldz = actor->z;
-         actor->z = actor->floorz;
+         actor->z = actor->zref.floor;
          
          if(actor->z < oldz)
             E_HitFloor(actor);
@@ -716,7 +731,11 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
    // try other directions
    if(P_Random(pr_newchase) > 200 || D_abs(deltay)>abs(deltax))
-      tdir = xdir, xdir = ydir, ydir = tdir;
+   {
+      tdir = xdir;
+      xdir = ydir;
+      ydir = tdir;
+   }
 
    if((xdir == turnaround ? xdir = DI_NODIR : xdir) != DI_NODIR &&
       (actor->movedir = xdir, P_TryWalk(actor)))
@@ -767,7 +786,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -862,8 +881,8 @@ void P_NewChaseDir(Mobj *actor)
 
    if(demo_version >= 203)
    {
-      if(actor->floorz - actor->dropoffz > STEPSIZE &&
-         actor->z <= actor->floorz &&
+      if(actor->zref.floor - actor->zref.dropoff > STEPSIZE &&
+         actor->z <= actor->zref.floor &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
@@ -888,7 +907,8 @@ void P_NewChaseDir(Mobj *actor)
             distfriend << FRACBITS > dist && 
             !P_IsOnLift(target) && !P_IsUnderDamage(actor))
          {
-            deltax = -deltax, deltay = -deltay;
+            deltax = -deltax;
+            deltay = -deltay;
          }
          else
          {
@@ -901,11 +921,12 @@ void P_NewChaseDir(Mobj *actor)
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
                    (target->player && dist < MELEERANGE*3 &&
-                    P_GetReadyWeapon(target->player)->flags & WPF_FLEEMELEE)))
+                    target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
                   actor->strafecount = P_Random(pr_enemystrafe) & 15;
-                  deltax = -deltax, deltay = -deltay;
+                  deltax = -deltax;
+                  deltay = -deltay;
                }
             }
          }
@@ -987,7 +1008,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static bool PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo, void *context)
 {
    Mobj *actor = current_actor;
 
@@ -1265,7 +1286,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
             }
             else if(th->isInstanceOf(RTTI(Mobj)))
             {
-               if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
+               if(!PIT_FindTarget(static_cast<Mobj *>(th), nullptr)) // If target sighted
                   return true;
             }
          }
@@ -1324,7 +1345,7 @@ bool P_HelpFriend(Mobj *actor)
          if(mo->flags & MF_JUSTHIT &&
             mo->target && 
             mo->target != actor->target &&
-            !PIT_FindTarget(mo->target))
+            !PIT_FindTarget(mo->target, nullptr))
          {
             // Ignore any attacking monsters, while searching for 
             // friend
@@ -1445,7 +1466,7 @@ void P_BossTeleport(bossteleport_t *bt)
          bt->hereThere != BOSSTELE_NONE)
          P_SpawnMobj(boss->x, boss->y, boss->z + bt->zpamt, bt->fxtype);
 
-      boss->z = boss->floorz;
+      boss->z = boss->zref.floor;
       boss->angle = targ->angle;
       boss->momx = boss->momy = boss->momz = 0;
       boss->backupPosition();
@@ -1646,7 +1667,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
       
       fixed_t z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
-      if(Check_Sides(plyr->mo, x, y))
+      if(Check_Sides(plyr->mo, x, y, type))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, type);
@@ -1848,7 +1869,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
 
       // if it wasn't picked up, remove it
       if(!mo->isRemoved())
-         mo->removeThinker();
+         mo->remove();
    }
 }
 
@@ -1882,7 +1903,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
    fixed_t slope;
    int damage = 10000;
 
-   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget
       && !(clip.linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
@@ -1902,7 +1923,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
    {
       angle_t an = (ANG360/60)*i;
       
-      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
+      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,false);
 
       if(clip.linetarget)
          damage = clip.linetarget->health;
@@ -1915,10 +1936,10 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
-   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget)
-      clip.linetarget->removeThinker();
+      clip.linetarget->remove();
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
@@ -1954,7 +1975,7 @@ static void P_ResurrectPlayer()
       mthing.x     = p->mo->x & ~(FRACUNIT - 1);
       mthing.y     = p->mo->y & ~(FRACUNIT - 1);
       mthing.angle = (int16_t)(p->mo->angle / ANGLE_1);
-      mthing.type  = (p - players) + 1;
+      mthing.type  = static_cast<int16_t>(p - players + 1);
 
       p->health = 100;
       P_SpawnPlayer(&mthing);

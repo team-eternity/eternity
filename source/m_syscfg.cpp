@@ -56,7 +56,6 @@ extern int iwad_choice;        // haleyjd 03/19/10
 extern int waitAtExit;
 extern int grabmouse;
 extern int use_vsync;
-extern bool unicodeinput;
 extern int audio_buffers;
 #endif
 
@@ -82,6 +81,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
 #define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
 #define ITEM_IWAD_FREEDM        "iwad_freedm"
+#define ITEM_IWAD_REKKR         "iwad_rekkr"
 #define ITEM_IWAD_CHOICE        "iwad_choice"
 
 // system defaults array
@@ -141,6 +141,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
                "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
+
+   DEFAULT_STR(ITEM_IWAD_REKKR, &gi_path_rekkr, NULL, "", default_t::wad_no,
+               "IWAD path for Rekkr (Ultimate Doom gamemission)"),
 
    DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
@@ -203,9 +206,6 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
-   DEFAULT_INT("i_softbitdepth", &i_softbitdepth, NULL, 8, 8, 32, default_t::wad_no,
-               "Software backend screen bitdepth (8, 16, 24, or 32)"),
-
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 
@@ -221,7 +221,7 @@ static default_t sysdefaults[] =
    DEFAULT_INT("mn_favscreentype", &mn_favscreentype, NULL, 0, 0, MN_NUMSCREENTYPES-1,
                default_t::wad_no, "Favorite screen type for selection in menus"),
 
-   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, true, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
    DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
@@ -229,10 +229,6 @@ static default_t sysdefaults[] =
 
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
                "GL backend screen bitdepth (16, 24, or 32)"),
-
-   DEFAULT_INT("gl_texture_format", &cfg_gl_texture_format, NULL, CFG_GL_RGBA8, 
-               0, CFG_GL_NUMTEXFORMATS-1, default_t::wad_no, 
-               "GL2D internal texture format"),
 
    DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, NULL, CFG_GL_LINEAR,
                0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
@@ -248,8 +244,8 @@ static default_t sysdefaults[] =
                 "1 to enable force feedback through gamepads where supported"),
 
 #ifdef _SDL_VER
-   DEFAULT_BOOL("unicodeinput", &unicodeinput, NULL, true, default_t::wad_no,
-                "1 to use SDL Unicode input mapping (0 = DOS-like behavior)"),
+   DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, UL, default_t::wad_no,
+               "Display number that the window appears on"),
 
    DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),

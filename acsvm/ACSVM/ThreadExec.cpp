@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -209,7 +209,7 @@ namespace ACSVM
    static inline void OpFunc_DivX(Word &lop, Word rop)
    {
       if(rop)
-         lop = (SDWord(SWord(lop)) << 16) / SWord(rop);
+         lop = static_cast<Word>((SDWord(SWord(lop)) << 16) / SWord(rop));
       else
          lop = 0;
    }
@@ -243,7 +243,7 @@ namespace ACSVM
    //
    static inline void OpFunc_MulX(Word &lop, Word rop)
    {
-      lop = DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16;
+      lop = static_cast<Word>(DWord(SDWord(SWord(lop)) * SWord(rop)) >> 16);
    }
 
    //
@@ -268,36 +268,41 @@ namespace ACSVM
    //
    void Thread::exec()
    {
+      if(delay && --delay)
+         return;
+
+      auto branches = env->branchLimit;
+
+   exec_intr:
       switch(state.state)
       {
       case ThreadState::Inactive: return;
-      case ThreadState::Running:  break;
-      case ThreadState::Stopped:  stop(); return;
+      case ThreadState::Stopped:  goto thread_stop;
       case ThreadState::Paused:   return;
+
+      case ThreadState::Running:
+         if(delay)
+            return;
+         break;
 
       case ThreadState::WaitScrI:
          if(scopeMap->isScriptActive(scopeMap->findScript(state.data)))
             return;
+         state = ThreadState::Running;
          break;
 
       case ThreadState::WaitScrS:
          if(scopeMap->isScriptActive(scopeMap->findScript(scopeMap->getString(state.data))))
             return;
+         state = ThreadState::Running;
          break;
 
       case ThreadState::WaitTag:
          if(!module->env->checkTag(state.type, state.data))
             return;
+         state = ThreadState::Running;
          break;
       }
-
-      if(delay)
-      {
-         --delay;
-         return;
-      }
-
-      auto branches = env->branchLimit;
 
       #if ACSVM_DynamicGoto
       static void const *const cases[] =
@@ -562,15 +567,15 @@ namespace ACSVM
       DeclCase(ScrDelay):
          dataStk.drop();
          delay = dataStk[0];
-         goto exec_stop;
+         goto exec_intr;
 
       DeclCase(ScrDelay_Lit):
          delay = *codePtr++;
-         goto exec_stop;
+         goto exec_intr;
 
       DeclCase(ScrHalt):
          state = ThreadState::Paused;
-         goto exec_stop;
+         goto exec_intr;
 
       DeclCase(ScrRestart):
          BranchTo(script->codeIdx);
@@ -582,20 +587,20 @@ namespace ACSVM
       DeclCase(ScrWaitI):
          dataStk.drop();
          state = {ThreadState::WaitScrI, dataStk[0]};
-         goto exec_stop;
+         goto exec_intr;
 
       DeclCase(ScrWaitI_Lit):
          state = {ThreadState::WaitScrI, *codePtr++};
-         goto exec_stop;
+         goto exec_intr;
 
       DeclCase(ScrWaitS):
          dataStk.drop();
          state = {ThreadState::WaitScrS, dataStk[0]};
-         goto exec_stop;
+         goto exec_intr;
 
       DeclCase(ScrWaitS_Lit):
          state = {ThreadState::WaitScrS, *codePtr++};
-         goto exec_stop;
+         goto exec_intr;
 
          //================================================
          // Stack control codes.
@@ -631,25 +636,6 @@ namespace ACSVM
 
    thread_stop:
       stop();
-      goto exec_stop;
-
-   exec_intr:
-      // Execution interrupted, check execution state.
-      switch(state.state)
-      {
-      case ThreadState::Running:
-         if(!delay)
-            NextCase();
-         break;
-
-      case ThreadState::Stopped:
-         goto thread_stop;
-
-      default:
-         break;
-      }
-
-   exec_stop:;
    }
 }
 

@@ -69,6 +69,15 @@
     <ClCompile Include="..\acsvm\ACSVM\Tracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\acsvm\ACSVM\BinaryIO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\acsvm\ACSVM\Error.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\acsvm\ACSVM\Serial.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\acsvm\ACSVM\Action.hpp">
@@ -147,6 +156,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\acsvm\ACSVM\Vector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\acsvm\ACSVM\ID.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\acsvm\ACSVM\Serial.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

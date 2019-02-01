@@ -1012,7 +1012,7 @@ ev_action_t *EV_HexenActionForSpecial(int special)
 //
 // TODO
 //
-ev_action_t *EV_StrifeActionForSpecial(int special)
+static ev_action_t *EV_StrifeActionForSpecial(int special)
 {
    return NULL;
 }
@@ -1024,7 +1024,7 @@ ev_action_t *EV_StrifeActionForSpecial(int special)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_binding_t *EV_PSXBindingForSpecial(int special)
+static ev_binding_t *EV_PSXBindingForSpecial(int special)
 {
    // small set, so simple linear search.
    for(size_t i = 0; i < PSXBindingsLen; i++)
@@ -1042,7 +1042,7 @@ ev_binding_t *EV_PSXBindingForSpecial(int special)
 //
 // Likewise as above but returning the action pointer if the binding exists.
 //
-ev_action_t *EV_PSXActionForSpecial(int special)
+static ev_action_t *EV_PSXActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_PSXBindingForSpecial(special);
 
@@ -1056,7 +1056,7 @@ ev_action_t *EV_PSXActionForSpecial(int special)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
+static ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 {
    ev_binding_t *bind;
 
@@ -1076,7 +1076,7 @@ ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
 // Returns a special binding from the UDMFEternity gamemode's bindings array
 // by name.
 //
-ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
+static ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 {
    ev_binding_t *bind;
 
@@ -1097,7 +1097,7 @@ ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_action_t *EV_UDMFEternityActionForSpecial(int special)
+static ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
 
@@ -1111,7 +1111,7 @@ ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 // regardless of the current gamemode or map format. Returns NULL if
 // the special is not bound to an action.
 //
-ev_binding_t *EV_ACSBindingForSpecial(int special)
+static ev_binding_t *EV_ACSBindingForSpecial(int special)
 {
    ev_binding_t *bind;
 
@@ -1256,12 +1256,46 @@ static ev_action_t *EV_ActionForInstance(ev_instance_t &instance)
    return EV_ActionForSpecial(instance.special);
 }
 
+//
+// Lookup the number to use in the local map's bindings for a special number
+// provided in ACS.
+//
+int EV_ActionForACSAction(int acsActionNum)
+{
+   switch(LevelInfo.mapFormat)
+   {
+   case LEVEL_FORMAT_UDMF_ETERNITY:
+   case LEVEL_FORMAT_HEXEN:
+      // The numbers already match in these formats.
+      return acsActionNum;
+   default:
+      // Find the UDMF binding for this action number, and then return its
+      // ExtraData equivalent if it has one. Otherwise, zero is returned.
+      {
+         // initialize the cross-table pointers
+         EV_InitUDMFToExtraDataLookup();
+
+         ev_binding_t *pBind;
+         if((pBind = EV_UDMFEternityBindingForSpecial(acsActionNum)))
+         {
+            if(pBind->pEDBinding)
+               return pBind->pEDBinding->actionNumber;
+            else
+               return 0;
+         }
+      }
+      break;
+   }
+
+   return 0;
+}
+
 //=============================================================================
 //
 // Lockdef ID Lookups
 //
 
-int EV_DOOMLockDefIDForSpecial(int special)
+static int EV_DOOMLockDefIDForSpecial(int special)
 {
    for(size_t i = 0; i < DOOMLockDefsLen; i++)
    {
@@ -1272,7 +1306,7 @@ int EV_DOOMLockDefIDForSpecial(int special)
    return 0; // nothing was found
 }
 
-int EV_HereticLockDefIDForSpecial(int special)
+static int EV_HereticLockDefIDForSpecial(int special)
 {
    for(size_t i = 0; i < HereticLockDefsLen; i++)
    {
@@ -1371,9 +1405,9 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
    }
    else // activation ability is determined by the linedef's flags
    {
-      Mobj   *thing = instance->actor;
-      line_t *line  = instance->line;
-      int     flags = 0;
+      Mobj        *thing = instance->actor;
+      line_t      *line  = instance->line;
+      unsigned int flags = 0;
 
       REQUIRE_LINE(line);
 
@@ -1387,7 +1421,7 @@ static bool EV_checkSpac(ev_action_t *action, ev_instance_t *instance)
             (line->extflags & flags) == flags;
       }
       REQUIRE_ACTOR(thing);
-      
+
       // check player / monster / missile / push enable flags
       if(thing->player)                    // treat as player?
          flags |= EX_ML_PLAYER;
@@ -1473,7 +1507,7 @@ static int EV_ActivateSpecial(ev_action_t *action, ev_instance_t *instance)
 // special.
 //
 bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
-   polyobj_t *poly, int spac)
+                                    polyobj_t *poly, int spac)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);
@@ -1535,7 +1569,7 @@ bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing)
 // Activate a special for ACS.
 //
 int EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
-   polyobj_t *poly)
+                          polyobj_t *poly)
 {
    ev_action_t *action;
    INIT_STRUCT(ev_instance_t, instance);

@@ -82,7 +82,9 @@ public:
          valid = true;
    }
 
-   // TODO: Add deleted copy constructor and operator = when VC2012 is out of the picture
+   // Disallow copying
+   AutoRegKey(const AutoRegKey &) = delete;
+   AutoRegKey &operator = (const AutoRegKey &) = delete;
 
    // Destructor. Close the key handle, if it is valid.
    ~AutoRegKey()
@@ -212,6 +214,7 @@ enum gogkeys_e
    GOG_KEY_ULTIMATE,
    GOG_KEY_DOOM2,
    GOG_KEY_FINAL,
+   GOG_KEY_DOOM3BFG,
    GOG_KEY_MAX
 };
 
@@ -239,6 +242,13 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
       "PATH"
    },
 
+   // Doom 3: BFG install
+   {
+     HKEY_LOCAL_MACHINE,
+     SOFTWARE_KEY "\\GOG.com\\Games\\1135892318",
+     "PATH"
+   },
+
    // terminating entry
    { nullptr, nullptr, nullptr }
 };
@@ -250,6 +260,7 @@ static const char *gogInstallSubDirs[] =
    "doom2",
    "TNT",
    "Plutonia",
+   "base\\wads",
 };
 
 // Master Levels from GOG.com. These are installed with Doom II
@@ -551,6 +562,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    version.freedoom    = false;
    version.freedm      = false;
    version.bfgedition  = false;
+   version.rekkr       = false;
    version.error       = false;
    version.flags       = IWADF_NOERRORS;
 
@@ -576,6 +588,11 @@ static void D_determineIWADVersion(const qstring &fullpath)
       { 
          if(estrempty(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
+      }
+      else if(version.rekkr)
+      {
+         if(estrempty(gi_path_rekkr)) // Rekkr
+            var = &gi_path_rekkr;
       }
       else if(estrempty(gi_path_doomu)) // Ultimate Doom
          var = &gi_path_doomu;
@@ -794,14 +811,14 @@ void D_FindIWADs()
    D_collectIWADPaths(paths);
 
    // Check all paths that were found for IWADs
-   for(auto i = paths.begin(); i != paths.end(); i++)
-      D_checkPathForIWADs(*i);
+   for(qstring &path : paths)
+      D_checkPathForIWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL
 
    // TODO: DKotDC, when Hexen is supported
-   
+
    // Master Levels detection
    D_findMasterLevels();
 }

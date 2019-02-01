@@ -756,7 +756,7 @@ patch_t *VPNGImage::LoadAsPatch(int lumpnum, int tag, void **user, size_t *size)
       ZAutoBuffer buffer(len, true);
       wGlobalDir.readLump(lumpnum, buffer.get());
       if(png.readImage(buffer.get()))
-         patch = png.getAsPatch(tag, user);
+         patch = png.getAsPatch(tag, user, size);
    }
 
    return patch;

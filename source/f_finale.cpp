@@ -69,10 +69,10 @@ static int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-void F_StartCast();
-void F_CastTicker();
-bool F_CastResponder(event_t *ev);
-void F_CastDrawer();
+static void F_StartCast();
+static void F_CastTicker();
+static bool F_CastResponder(const event_t *ev);
+static void F_CastDrawer();
 
 void IN_checkForAccelerate();    // killough 3/28/98: used to
 extern int acceleratestage;      // accelerate intermission screens
@@ -154,7 +154,7 @@ void F_StartFinale(bool secret)
 //
 // F_Responder
 //
-bool F_Responder(event_t *event)
+bool F_Responder(const event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -179,10 +179,10 @@ bool F_Responder(event_t *event)
 //
 static float Get_TextSpeed()
 {
-   return 
+   return
       (float)(midstage ? NEWTEXTSPEED : 
               (midstage=acceleratestage) ? 
-               acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
+              acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
 }
 
 
@@ -291,7 +291,7 @@ void F_Ticker()
 // text can be increased, and there's still time to read what's     //   |
 // written.                                                         // phares
 //
-void F_TextWrite()
+static void F_TextWrite()
 {
    int     count;
    size_t  len;
@@ -372,7 +372,7 @@ static const char *oldnames[OLDCASTMAX] =
 //
 // haleyjd 07/05/03: rewritten for EDF support
 //
-void F_StartCast()
+static void F_StartCast()
 {
    int i;
 
@@ -404,7 +404,7 @@ void F_StartCast()
 //
 // F_CastTicker
 //
-void F_CastTicker()
+static void F_CastTicker()
 {
    int st;
    int sfx;
@@ -514,7 +514,7 @@ void F_CastTicker()
 //
 // F_CastResponder
 //
-bool F_CastResponder(event_t* ev)
+static bool F_CastResponder(const event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -587,7 +587,7 @@ static void F_CastTitle()
 // methods instead of duplicating that code unnecessarily. It's 
 // about 200 lines shorter now.
 //
-void F_CastPrint(const char *text)
+static void F_CastPrint(const char *text)
 {
    V_FontWriteText(f_font, text, 
                    160 - V_FontStringWidth(f_font, text) / 2, 
@@ -599,7 +599,7 @@ void F_CastPrint(const char *text)
 //
 // F_CastDrawer
 //
-void F_CastDrawer()
+static void F_CastDrawer()
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
@@ -654,7 +654,7 @@ void F_CastDrawer()
 //
 // F_BunnyScroll
 //
-void F_BunnyScroll()
+static void F_BunnyScroll()
 {
    int         scrolled;
    patch_t*    p1;
@@ -705,7 +705,7 @@ void F_BunnyScroll()
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
-void F_DrawUnderwater()
+static void F_DrawUnderwater()
 {
    switch(finalestage)
    {
@@ -783,7 +783,7 @@ static void F_InitDemonScroller()
 //
 // haleyjd: Heretic episode 3 demon scroller
 //
-void F_DemonScroll()
+static void F_DemonScroll()
 {
    static int yval = 0;
    static int nextscroll = 0;

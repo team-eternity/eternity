@@ -479,15 +479,11 @@ void R_HticTextureHacks(texture_t *t)
 // haleyjd: Reads a TEXTUREx lump, which may be in either DOOM or Strife format.
 // TODO: Walk the wad lump hash chains and support additive logic.
 //
-static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
-                             int *errors)
+static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
+                             int nummappatches, int texnum, int *errors)
 {
    int i, j;
    byte *directory = tlump->directory;
-
-   // need a valid patch lookup to proceed
-   if(!patchlookup)
-      return texnum;
 
    for(i = 0; i < tlump->numtextures; i++, texnum++)
    {
@@ -518,8 +514,17 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 
          component->originx = tp.originx;
          component->originy = tp.originy;
-         component->lump    = patchlookup[tp.patch];
          component->type    = TC_PATCH;
+
+         // check range
+         if(tp.patch < 0 || tp.patch >= nummappatches)
+         {
+            C_Printf(FC_ERROR "R_ReadTextureLump: Bad patch %d in texture %.8s\n",
+                     tp.patch, (const char *)(texture->name));
+            component->width = component->height = 0;
+            continue;
+         }
+         component->lump    = patchlookup[tp.patch];
 
          if(component->lump == -1)
          {
@@ -552,7 +557,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup, int texnum,
 // Add lone-patch textures that exist in the TX_START/TX_END or textures/
 // namespace.
 //
-int R_ReadTextureNamespace(int texnum)
+static int R_ReadTextureNamespace(int texnum)
 {
    WadNamespaceIterator wni(wGlobalDir, lumpinfo_t::ns_textures);
 
@@ -632,7 +637,7 @@ struct tempmask_s
 static void AddTexColumn(texture_t *tex, const byte *src, int srcstep, 
                          int ptroff, int len)
 {
-   byte *dest = tex->buffer + ptroff;
+   byte *dest = tex->bufferdata + ptroff;
    
 #ifdef RANGECHECK
    if(ptroff < 0 || ptroff + len > tex->width * tex->height ||
@@ -851,7 +856,8 @@ static void StartTexture(texture_t *tex, bool mask)
    int bufferlen = tex->width * tex->height + 4;
    
    // Static for now
-   tex->buffer = ecalloctag(byte *, 1, bufferlen, PU_STATIC, (void **)&tex->buffer);
+   tex->bufferalloc = ecalloctag(byte *, 1, bufferlen + 8, PU_STATIC, (void **)&tex->bufferalloc);
+   tex->bufferdata = tex->bufferalloc + 8;
    
    if((tempmask.mask = mask))
    {
@@ -902,7 +908,7 @@ static void FinishTexture(texture_t *tex)
    texcol_t   *col, *tcol;
    byte       *maskp;
 
-   Z_ChangeTag(tex->buffer, PU_CACHE);
+   Z_ChangeTag(tex->bufferalloc, PU_CACHE);
    
    if(!tempmask.mask)
       return;
@@ -990,7 +996,7 @@ texture_t *R_CacheTexture(int num)
 #endif
 
    tex = textures[num];
-   if(tex->buffer)
+   if(tex->bufferalloc)
       return tex;
    
    // SoM: This situation would most certainly require an abort.
@@ -1045,7 +1051,8 @@ texture_t *R_CacheTexture(int num)
 static void R_checkerBoardTexture(texture_t *tex)
 {
    // allocate buffer
-   tex->buffer = emalloctag(byte *, 64*64, PU_RENDERER, nullptr);
+   tex->bufferalloc = emalloctag(byte *, 64*64 + 8, PU_RENDERER, nullptr);
+   tex->bufferdata = tex->bufferalloc + 8;
 
    // allocate column pointers
    tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t *), tex->width, 
@@ -1065,7 +1072,7 @@ static void R_checkerBoardTexture(texture_t *tex)
    byte c1 = GameModeInfo->whiteIndex;
    byte c2 = GameModeInfo->blackIndex;
    for(int i = 0; i < 4096; i++)
-      tex->buffer[i] = ((i & 8) == 8) != ((i & 512) == 512) ? c1 : c2;
+      tex->bufferdata[i] = ((i & 8) == 8) != ((i & 512) == 512) ? c1 : c2;
 }
 
 //
@@ -1107,7 +1114,7 @@ static void R_checkInvalidTexture(int num)
 {
    // don't care about leaking; invalid texture memory are reclaimed at
    // PU_RENDER purge time.
-   if(textures[num] && !textures[num]->buffer && !textures[num]->ccount)
+   if(textures[num] && !textures[num]->bufferalloc && !textures[num]->ccount)
       R_MakeMissingTexture(num);
 }
 
@@ -1143,22 +1150,42 @@ static void R_InitLoading()
 //
 // haleyjd 10/27/08: split out of R_InitTextures
 //
-static int *R_LoadPNames()
+static int *R_LoadPNames(int &nummappatches)
 {
    int  i, lumpnum;
-   int  nummappatches;
    int  *patchlookup;
    char name[9];
    char *names;
    char *name_p;
 
    if((lumpnum = wGlobalDir.checkNumForName("PNAMES")) < 0)
+   {
+      nummappatches = 0;
       return nullptr;
+   }
+
+   int lumpsize = wGlobalDir.lumpLength(lumpnum);
+   if(lumpsize < 4)
+   {
+      usermsg("\nError: PNAMES lump too small\n");
+      nummappatches = 0;
+      return nullptr;
+   }
 
    // Load the patch names from pnames.lmp.
    name[8] = 0;
    names = (char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
    nummappatches = SwapLong(*((int *)names));
+
+   if(nummappatches * 8 + 4 > lumpsize)
+   {
+      usermsg("\nError: PNAMES size %d smaller than expected %d\n", lumpsize,
+              nummappatches * 8 + 4);
+      efree(names);
+      nummappatches = 0;
+      return nullptr;
+   }
+
    name_p = names + 4;
    patchlookup = emalloc(int *, nummappatches * sizeof(*patchlookup)); // killough
    
@@ -1356,7 +1383,8 @@ void R_InitTextures()
    texturelump_t *maptex2;
 
    // load PNAMES
-   patchlookup = R_LoadPNames();
+   int nummappatches;
+   patchlookup = R_LoadPNames(nummappatches);
 
    // Load the map texture definitions from textures.lmp.
    // The data is contained in one or two lumps,
@@ -1411,8 +1439,8 @@ void R_InitTextures()
    }
 
    // read texture lumps
-   texnum = R_ReadTextureLump(maptex1, patchlookup, texnum, &errors);
-   texnum = R_ReadTextureLump(maptex2, patchlookup, texnum, &errors);
+   texnum = R_ReadTextureLump(maptex1, patchlookup, nummappatches, texnum, &errors);
+   texnum = R_ReadTextureLump(maptex2, patchlookup, nummappatches, texnum, &errors);
    R_ReadTextureNamespace(texnum);
 
    // done with patch lookup
@@ -1472,8 +1500,8 @@ byte *R_GetRawColumn(int tex, int32_t col)
    // Lee Killough, eat your heart out! ... well this isn't really THAT bad...
    return (t->flags & TF_SWIRLY) ?
           R_DistortedFlat(tex) + col :
-          !t->buffer ? R_GetLinearBuffer(tex) + col :
-          t->buffer + col;
+          !t->bufferalloc ? R_GetLinearBuffer(tex) + col :
+          t->bufferdata + col;
 }
 
 //
@@ -1483,7 +1511,7 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 {
    texture_t *t = textures[tex];
    
-   if(!t->buffer)
+   if(!t->bufferalloc)
       R_CacheTexture(tex);
 
    // haleyjd 05/28/14: support non-power-of-two widths
@@ -1497,10 +1525,10 @@ byte *R_GetLinearBuffer(int tex)
 {
    texture_t *t = textures[tex];
    
-   if(!t->buffer)
+   if(!t->bufferalloc)
       R_CacheTexture(tex);
 
-   return t->buffer;
+   return t->bufferdata;
 }
 
 //

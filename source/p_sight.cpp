@@ -351,7 +351,7 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
 
    const sector_t *s1 = t1->subsector->sector;
    const sector_t *s2 = t2->subsector->sector;
-   int pnum = (s1-sectors)*numsectors + (s2-sectors);
+   int pnum = eindex(s1-sectors)*numsectors + eindex(s2-sectors);
    los_t los;
 
    // First check for trivial rejection.
@@ -399,14 +399,26 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
    los.strace.dy = (los.t2y = t2->y) - (los.strace.y = t1->y);
 
    if(t1->x > t2->x)
-      los.bbox[BOXRIGHT] = t1->x, los.bbox[BOXLEFT] = t2->x;
+   {
+      los.bbox[BOXRIGHT] = t1->x;
+      los.bbox[BOXLEFT] = t2->x;
+   }
    else
-      los.bbox[BOXRIGHT] = t2->x, los.bbox[BOXLEFT] = t1->x;
+   {
+      los.bbox[BOXRIGHT] = t2->x;
+      los.bbox[BOXLEFT] = t1->x;
+   }
 
    if(t1->y > t2->y)
-      los.bbox[BOXTOP] = t1->y, los.bbox[BOXBOTTOM] = t2->y;
+   {
+      los.bbox[BOXTOP] = t1->y;
+      los.bbox[BOXBOTTOM] = t2->y;
+   }
    else
-      los.bbox[BOXTOP] = t2->y, los.bbox[BOXBOTTOM] = t1->y;
+   {
+      los.bbox[BOXTOP] = t2->y;
+      los.bbox[BOXBOTTOM] = t1->y;
+   }
    
    // the head node is the last node output
    return P_CrossBSPNode(numnodes-1, &los);

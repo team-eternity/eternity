@@ -30,6 +30,13 @@
 // Required for: DLListItem
 #include "m_dllist.h"
 
+enum
+{
+    // Flag applied on sector_t topmap/midmap/bottommap when colormap should 
+    // render like in Boom. Remove it to get the real colormap index.
+    COLORMAP_BOOMKIND = 0x80000000, 
+};
+
 // haleyjd 08/30/02: externalized these structures
 
 typedef enum
@@ -104,7 +111,8 @@ struct texture_t
    byte       flatsize;
    
    texcol_t   **columns;     // SoM: width length list of columns
-   byte       *buffer;       // SoM: Linear buffer the texture occupies
+   byte       *bufferalloc;   // ioanch: allocate this one with a leading padding for safety
+   byte       *bufferdata;    // SoM: Linear buffer the texture occupies (ioanch: points to real data)
    
    // New texture system can put either textures or flats (or anything, really)
    // into a texture, so the old patches idea has been scrapped for 'graphics'
@@ -172,8 +180,6 @@ int R_CheckForWall(const char *name);
 void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
 void R_InitSubMap(bool force);
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
-
-void R_InitColormaps(void);   // killough 8/9/98
 
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);

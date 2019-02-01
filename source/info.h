@@ -32,6 +32,7 @@
 
 struct actionargs_t;
 struct arglist_t;
+struct e_pickupfx_t;
 class  MetaTable;
 class  Mobj;
 
@@ -239,8 +240,9 @@ enum
   MT_DOGS,       // killough 7/19/98: Marine's best friend
   MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
   MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
-  MT_CAMERA,
-  MT_PLASMA3,    // haleyjd: for burst bfg
+
+  MT_CAMERA = 162, // SMMU camera spot
+  MT_PLASMA3,      // haleyjd: for burst bfg
 
   // haleyjd 10/08/02: Heretic things
   MT_POD = 305,
@@ -292,6 +294,35 @@ enum
   MT_IMPBALL,
 
   MT_HPLAYERSKULL = 399,
+
+  MT_HFIREBOMB = 409,
+
+  // Heretic weapon-associated things (not actual weapons)
+  MT_STAFFPUFF = 416,
+  MT_STAFFPUFF2,
+  MT_BEAKPUFF,
+  MT_GAUNTLETPUFF1,
+  MT_GAUNTLETPUFF2,
+  MT_BLASTERSMOKE,
+  MT_RIPPER,
+  MT_BLASTERPUFF1,
+  MT_BLASTERPUFF2,
+  MT_HORNRODFX1,
+  MT_GOLDWANDFX1,
+  MT_GOLDWANDFX2,
+  MT_GOLDWANDPUFF1,
+  MT_GOLDWANDPUFF2,
+  MT_PHOENIXFX1,
+
+  MT_CRBOWFX1 = 434,
+  MT_CRBOWFX2,
+  MT_CRBOWFX3,
+  MT_CRBOWFX4,
+  MT_MACEFX1,
+  MT_MACEFX2,
+  MT_MACEFX3,
+  MT_MACEFX4,
+  MT_PHOENIXFX2,
 
 // Start Eternity TC New Things
 
@@ -366,6 +397,7 @@ struct mobjinfo_t
                         //  resurrection.  Zero means it won't come
                         //  back to life.
    int translucency;    // haleyjd 09/01/02: zdoom-style translucency
+   int tranmap;         // ioanch  20170903: Boom-style translucency map
    int bloodcolor;      // haleyjd 05/08/03: particle blood color
    unsigned int particlefx; // haleyjd 07/13/03: particle effects
    int mod;             // haleyjd 07/13/03: method of death
@@ -389,6 +421,8 @@ struct mobjinfo_t
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
+
+   e_pickupfx_t *pickupfx;
 
    void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
    

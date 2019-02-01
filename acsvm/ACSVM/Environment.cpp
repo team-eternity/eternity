@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -23,6 +23,7 @@
 #include "PrintBuf.hpp"
 #include "Scope.hpp"
 #include "Script.hpp"
+#include "Serial.hpp"
 #include "Thread.hpp"
 
 #include <iostream>
@@ -146,7 +147,7 @@ namespace ACSVM
    Word Environment::addCallFunc(CallFunc func)
    {
       pd->tableCallFunc.push_back(func);
-      return pd->tableCallFunc.size() - 1;
+      return static_cast<Word>(pd->tableCallFunc.size() - 1);
    }
 
    //
@@ -198,7 +199,7 @@ namespace ACSVM
       {
          Vector<Word> argTmp{argV, argC};
          for(auto &arg : argTmp) arg &= 0xFF;
-         return callSpecImpl(thread, spec, argTmp.data(), argTmp.size());
+         return callSpecImpl(thread, spec, argTmp.data(), static_cast<Word>(argTmp.size()));
       }
       else
          return callSpecImpl(thread, spec, argV, argC);
@@ -494,7 +495,7 @@ namespace ACSVM
    //
    // Environment::loadFunctions
    //
-   void Environment::loadFunctions(std::istream &in)
+   void Environment::loadFunctions(Serial &in)
    {
       // Function index map.
       pd->functionByName.free();
@@ -530,7 +531,7 @@ namespace ACSVM
    //
    // Environment::loadGlobalScopes
    //
-   void Environment::loadGlobalScopes(std::istream &in)
+   void Environment::loadGlobalScopes(Serial &in)
    {
       // Clear existing scopes.
       pd->scopes.free();
@@ -542,7 +543,7 @@ namespace ACSVM
    //
    // Environment::loadScriptActions
    //
-   void Environment::loadScriptActions(std::istream &in)
+   void Environment::loadScriptActions(Serial &in)
    {
       readScriptActions(in, scriptAction);
    }
@@ -550,18 +551,22 @@ namespace ACSVM
    //
    // Environment::loadState
    //
-   void Environment::loadState(std::istream &in)
+   void Environment::loadState(Serial &in)
    {
+      in.readSign(Signature::Environment);
+
       loadStringTable(in);
       loadFunctions(in);
       loadGlobalScopes(in);
       loadScriptActions(in);
+
+      in.readSign(~Signature::Environment);
    }
 
    //
    // Environment::loadStringTable
    //
-   void Environment::loadStringTable(std::istream &in)
+   void Environment::loadStringTable(Serial &in)
    {
       StringTable oldTable{std::move(stringTable)};
       stringTable.loadState(in);
@@ -588,7 +593,7 @@ namespace ACSVM
    //
    // Environment::readModuleName
    //
-   ModuleName Environment::readModuleName(std::istream &in) const
+   ModuleName Environment::readModuleName(Serial &in) const
    {
       auto s = readString(in);
       auto i = ReadVLN<std::size_t>(in);
@@ -599,7 +604,7 @@ namespace ACSVM
    //
    // Environment::readScript
    //
-   Script *Environment::readScript(std::istream &in) const
+   Script *Environment::readScript(Serial &in) const
    {
       auto idx = ReadVLN<std::size_t>(in);
       return &findModule(readModuleName(in))->scriptV[idx];
@@ -608,7 +613,7 @@ namespace ACSVM
    //
    // Environment::readScriptAction
    //
-   ScriptAction *Environment::readScriptAction(std::istream &in) const
+   ScriptAction *Environment::readScriptAction(Serial &in) const
    {
       auto action = static_cast<ScriptAction::Action>(ReadVLN<int>(in));
 
@@ -630,7 +635,7 @@ namespace ACSVM
    //
    // Environment::readScriptActions
    //
-   void Environment::readScriptActions(std::istream &in, ListLink<ScriptAction> &out) const
+   void Environment::readScriptActions(Serial &in, ListLink<ScriptAction> &out) const
    {
       // Clear existing actions.
       while(out.next->obj)
@@ -643,9 +648,9 @@ namespace ACSVM
    //
    // Environment::readScriptName
    //
-   ScriptName Environment::readScriptName(std::istream &in) const
+   ScriptName Environment::readScriptName(Serial &in) const
    {
-      String *s = in.get() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
+      String *s = in.in->get() ? &stringTable[ReadVLN<Word>(in)] : nullptr;
       Word    i = ReadVLN<Word>(in);
       return {s, i};
    }
@@ -653,10 +658,10 @@ namespace ACSVM
    //
    // Environment::readString
    //
-   String *Environment::readString(std::istream &in) const
+   String *Environment::readString(Serial &in) const
    {
       if(auto idx = ReadVLN<std::size_t>(in))
-         return &stringTable[idx - 1];
+         return &stringTable[static_cast<Word>(idx - 1)];
       else
          return nullptr;
    }
@@ -700,7 +705,7 @@ namespace ACSVM
    //
    // Environment::saveFunctions
    //
-   void Environment::saveFunctions(std::ostream &out) const
+   void Environment::saveFunctions(Serial &out) const
    {
       WriteVLN(out, pd->functionByName.size());
       for(auto &funcIdx : pd->functionByName)
@@ -716,7 +721,7 @@ namespace ACSVM
    //
    // Environment::saveGlobalScopes
    //
-   void Environment::saveGlobalScopes(std::ostream &out) const
+   void Environment::saveGlobalScopes(Serial &out) const
    {
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -729,7 +734,7 @@ namespace ACSVM
    //
    // Environment::saveScriptActions
    //
-   void Environment::saveScriptActions(std::ostream &out) const
+   void Environment::saveScriptActions(Serial &out) const
    {
       writeScriptActions(out, scriptAction);
    }
@@ -737,18 +742,22 @@ namespace ACSVM
    //
    // Environment::saveState
    //
-   void Environment::saveState(std::ostream &out) const
+   void Environment::saveState(Serial &out) const
    {
+      out.writeSign(Signature::Environment);
+
       saveStringTable(out);
       saveFunctions(out);
       saveGlobalScopes(out);
       saveScriptActions(out);
+
+      out.writeSign(~Signature::Environment);
    }
 
    //
    // Environment::saveStringTable
    //
-   void Environment::saveStringTable(std::ostream &out) const
+   void Environment::saveStringTable(Serial &out) const
    {
       stringTable.saveState(out);
    }
@@ -756,7 +765,7 @@ namespace ACSVM
    //
    // Environment::writeModuleName
    //
-   void Environment::writeModuleName(std::ostream &out, ModuleName const &in) const
+   void Environment::writeModuleName(Serial &out, ModuleName const &in) const
    {
       writeString(out, in.s);
       WriteVLN(out, in.i);
@@ -765,7 +774,7 @@ namespace ACSVM
    //
    // Environment::writeScript
    //
-   void Environment::writeScript(std::ostream &out, Script *in) const
+   void Environment::writeScript(Serial &out, Script *in) const
    {
       WriteVLN(out, in - in->module->scriptV.data());
       writeModuleName(out, in->module->name);
@@ -774,7 +783,7 @@ namespace ACSVM
    //
    // Environment::writeScriptAction
    //
-   void Environment::writeScriptAction(std::ostream &out, ScriptAction const *in) const
+   void Environment::writeScriptAction(Serial &out, ScriptAction const *in) const
    {
       WriteVLN<int>(out, in->action);
 
@@ -792,7 +801,7 @@ namespace ACSVM
    //
    // Environment::writeScriptActions
    //
-   void Environment::writeScriptActions(std::ostream &out,
+   void Environment::writeScriptActions(Serial &out,
       ListLink<ScriptAction> const &in) const
    {
       WriteVLN(out, in.size());
@@ -804,15 +813,15 @@ namespace ACSVM
    //
    // Environment::writeScriptName
    //
-   void Environment::writeScriptName(std::ostream &out, ScriptName const &in) const
+   void Environment::writeScriptName(Serial &out, ScriptName const &in) const
    {
       if(in.s)
       {
-         out.put('\1');
+         out.out->put('\1');
          WriteVLN(out, in.s->idx);
       }
       else
-         out.put('\0');
+         out.out->put('\0');
 
       WriteVLN(out, in.i);
    }
@@ -820,7 +829,7 @@ namespace ACSVM
    //
    // Environment::writeString
    //
-   void Environment::writeString(std::ostream &out, String const *in) const
+   void Environment::writeString(Serial &out, String const *in) const
    {
       if(in)
          WriteVLN<std::size_t>(out, in->idx + 1);

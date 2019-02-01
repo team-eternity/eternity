@@ -223,6 +223,22 @@ typedef enum {
   pr_rogueblood,  // Strife blood spawning
   pr_drawblood,   // Missile blood-drawing chance
   pr_hexenteleport,  // ioanch 20160329: used by Hexen teleporters
+  pr_goldwand,    // A_FireGoldWandPL1
+  pr_goldwand2,   // A_FireGoldWandPL2
+  pr_skullrod,    // A_FireSkullRodPL1
+  pr_blaster,     // A_FireBlasterPL1
+  pr_staff,       // A_StaffAttackPL1
+  pr_staff2,      // A_StaffAttackPL2
+  pr_staffangle,
+  pr_gauntlets,   // A_GauntletAttack
+  pr_gauntletsangle,
+  pr_boltspark,   // A_BoltSpark
+  pr_firemace,    // A_FireMacePL1
+  pr_phoenixrod2, // A_FirePhoenixPL2
+
+  pr_hereticartiteleport, // A_ArtiTele
+  pr_puffblood,   // P_shootThing draw blood when Heretic-like puff is defined
+  pr_nailbombshoot,  // A_Nailbomb random damage
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
@@ -255,6 +271,7 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max);
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);
 unsigned int P_RangeRandomEx(pr_class_t, unsigned int, unsigned int);
+int P_SubRandomEx(pr_class_t pr_class, unsigned max);
 
 #define M_RandomEx() P_RandomEx(pr_misc)
 #define M_RangeRandomEx(min, max) P_RangeRandomEx(pr_misc, (min), (max))

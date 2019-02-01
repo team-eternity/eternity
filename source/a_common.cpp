@@ -37,6 +37,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "m_compare.h"
 #include "metaapi.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -266,6 +267,20 @@ void A_Chase(actionargs_t *actionargs)
          actor->threshold--;
    }
 
+   // Support Raven game Heretic actor speedup
+   if(GameModeInfo->flags & GIF_CHASEFAST &&
+      (gameskill >= sk_nightmare || fastparm ||
+       actor->flags3 & MF3_ALWAYSFAST) && actor->tics > 3)
+   {
+      // Unlike vanilla Heretic, don't make frames shorter than 3 tics actually
+      // longer. This shouldn't affect any monster from vanilla Heretic, except
+      // the enraged D'sparil Serpent, which instead gets an extra check in
+      // A_Sor1Chase.
+      actor->tics -= actor->tics / 2;
+      if(actor->tics < 3)
+         actor->tics = 3;
+   }
+
    // turn towards movement direction if not there yet
    // killough 9/7/98: keep facing towards target if strafing or backing out
 
@@ -409,10 +424,10 @@ void A_Chase(actionargs_t *actionargs)
 void A_RandomWalk(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   int i, checkdirs[NUMDIRS];
+   int checkdirs[NUMDIRS];
 
-   for(i = 0; i < NUMDIRS; ++i)
-      checkdirs[i] = 0;
+   for(int &checkdir : checkdirs)
+      checkdir = 0;
 
    // turn toward movement direction
    if(actor->movedir < 8)
@@ -443,8 +458,7 @@ void A_RandomWalk(actionargs_t *actionargs)
 
       // try a completely random direction
       tdir = P_Random(pr_rndwnewdir) & 7;
-      if(tdir != turnaround && 
-         (actor->movedir = tdir, P_Move(actor, 0)))
+      if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
       {
          checkdirs[tdir] = 1;
          dirfound = true;
@@ -461,8 +475,7 @@ void A_RandomWalk(actionargs_t *actionargs)
                if(checkdirs[tdir])
                   continue;
                
-               if(tdir != turnaround && 
-                  (actor->movedir = tdir, P_Move(actor, 0)))
+               if(tdir != turnaround &&  (actor->movedir = tdir, P_Move(actor, 0)))
                {
                   dirfound = true;
                   break;
@@ -476,9 +489,8 @@ void A_RandomWalk(actionargs_t *actionargs)
                // don't try the one we already tried before
                if(checkdirs[tdir])
                   continue;
-               
-               if(tdir != turnaround && 
-                  (actor->movedir = tdir, P_Move(actor, 0)))
+
+               if(tdir != turnaround && (actor->movedir = tdir, P_Move(actor, 0)))
                {
                   dirfound = true;
                   break;
@@ -696,24 +708,41 @@ void A_Explode(actionargs_t *actionargs)
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   if(thingy->z <= thingy->secfloorz + 128*FRACUNIT)
-      E_HitWater(thingy, P_ExtremeSectorAtPoint(thingy, false));
+   E_ExplosionHitWater(thingy, 128);
 }
 
+//
+// SMMU nailbomb.
+// Parameters: (damage, radius, numnails, dmgfactor, dmgmod, pufftype)
+// Defaults:   (128,    128,    30,       10,        1,      (default))
+//
 void A_Nailbomb(actionargs_t *actionargs)
 {
    Mobj *thing = actionargs->actor;
    int i;
+
+   arglist_t *args = actionargs->args;
+   int damage = E_ArgAsInt(args, 0, 128);
+   int radius = E_ArgAsInt(args, 1, 128);
+   int numnails = E_ArgAsInt(args, 2, 30);
+   int dmgfactor = E_ArgAsInt(args, 3, 10);
+   int dmgmod = eclamp(E_ArgAsInt(args, 4, 1), 1, 256);
+   const char *pufftype = E_ArgAsString(args, 5, nullptr);
    
-   P_RadiusAttack(thing, thing->target, 128, 128, thing->info->mod, 0);
+   P_RadiusAttack(thing, thing->target, damage, radius, thing->info->mod, 0);
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    // ioanch 20160116: portal aware Z
-   if(demo_version >= 331 && thing->z <= thing->secfloorz + 128*FRACUNIT)
-      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
+   if(demo_version >= 331)
+      E_ExplosionHitWater(thing, radius);
 
-   for(i = 0; i < 30; ++i)
-      P_LineAttack(thing, i*(ANG180/15), MISSILERANGE, 0, 10);
+   for(i = 0; i < numnails; ++i)
+   {
+      int dmg = dmgfactor;
+      if(dmgmod > 1)
+         dmg *= P_Random(pr_nailbombshoot) % dmgmod + 1;
+      P_LineAttack(thing, i*(ANG180/numnails*2), MISSILERANGE, 0, dmg, pufftype);
+   }
 }
 
 
@@ -730,8 +759,8 @@ void A_Detonate(actionargs_t *actionargs)
 
    // haleyjd: added here as of 3.31b3 -- was overlooked
    // ioanch 20160116: portal aware Z
-   if(demo_version >= 331 && mo->z <= mo->secfloorz + mo->damage*FRACUNIT)
-      E_HitWater(mo, P_ExtremeSectorAtPoint(mo, false));
+   if(demo_version >= 331)
+      E_ExplosionHitWater(mo, mo->damage);
 }
 
 //=============================================================================

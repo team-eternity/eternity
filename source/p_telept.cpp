@@ -54,9 +54,9 @@ static void P_dropToFloor(Mobj *thing, player_t *player)
    {
       // SoM: so yeah... Need this for linked portals.
       if(demo_version >= 333)
-         thing->z = thing->secfloorz;
+         thing->z = thing->zref.secfloor;
       else
-         thing->z = thing->floorz;
+         thing->z = thing->zref.floor;
    }
 
    if(player)
@@ -64,6 +64,76 @@ static void P_dropToFloor(Mobj *thing, player_t *player)
       player->viewz = thing->z + player->viewheight;
       player->prevviewz = player->viewz;
    }
+}
+
+//
+// P_Teleport from Heretic, but made to be more generic and Eternity-ready
+// FIXME: This should be made more generic, so that other stuff can benefit from it
+//
+bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
+{
+   fixed_t oldx, oldy, oldz, aboveFloor, fogDelta;
+   player_t *player;
+   unsigned an;
+
+   oldx = thing->x;
+   oldy = thing->y;
+   oldz = thing->z;
+   aboveFloor = thing->z - thing->zref.floor;
+   if(!P_TeleportMove(thing, x, y, false))
+      return false;
+
+   if((player = thing->player))
+   {
+      if(player->powers[pw_flight] && aboveFloor)
+      {
+         thing->z = thing->zref.floor + aboveFloor;
+         if(thing->z + thing->height > thing->zref.ceiling)
+            thing->z = thing->zref.ceiling - thing->height;
+         player->prevviewz = player->viewz = thing->z + player->viewheight;
+      }
+      else
+      {
+         P_dropToFloor(thing, player);
+         player->prevpitch = player->pitch = 0;
+      }
+   }
+   else if(thing->flags & MF_MISSILE)
+   {
+      thing->z = thing->zref.floor + aboveFloor;
+      if(thing->z + thing->height > thing->zref.ceiling)
+         thing->z = thing->zref.ceiling - thing->height;
+   }
+   else
+      P_dropToFloor(thing, nullptr);
+
+   // Spawn teleport fog at source and destination
+   const int fogNum = E_SafeThingName(GameModeInfo->teleFogType);
+   fogDelta = thing->flags & MF_MISSILE ? 0 : GameModeInfo->teleFogHeight;
+   S_StartSound(P_SpawnMobj(oldx, oldy, oldz + fogDelta, fogNum),
+                GameModeInfo->teleSound);
+   an = angle >> ANGLETOFINESHIFT;
+   S_StartSound(P_SpawnMobj(x + 20 * finecosine[an], y + 20 * finesine[an],
+                           thing->z + fogDelta, fogNum),
+                GameModeInfo->teleSound);
+
+   // Freeze player for ~.5s, but only if they don't have tome active
+   if(thing->player && !thing->player->powers[pw_weaponlevel2])
+      thing->reactiontime = 18;
+   thing->angle = angle;
+   if(thing->flags & MF_MISSILE)
+   {
+      angle >>= ANGLETOFINESHIFT;
+      thing->momx = FixedMul(thing->info->speed, finecosine[angle]);
+      thing->momy = FixedMul(thing->info->speed, finesine[angle]);
+   }
+   else
+      thing->momx = thing->momy = thing->momz = 0;
+
+   thing->backupPosition();
+   P_AdjustFloorClip(thing);
+
+   return true;
 }
 
 //
@@ -133,7 +203,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
                             const Mobj *m, struct teleparms_t parms)
 {
    // Height of thing above ground, in case of mid-air teleports:
-   fixed_t z = thing->z - thing->floorz;
+   fixed_t z = thing->z - thing->zref.floor;
 
    // Get the angle between the exit thing and source linedef.
    // Rotate 90 degrees, so that walking perpendicularly across
@@ -185,7 +255,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
    else
    {
       // Adjust z position to be same height above ground as before
-      thing->z = z + thing->floorz;
+      thing->z = z + thing->zref.floor;
    }
 
    // Hexen (teleangle_keep) behavior doesn't even touch the velocity
@@ -419,7 +489,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
             l->frontsector->floorheight < l->backsector->floorheight;
 
          // Height of thing above ground
-         fixed_t z = thing->z - thing->floorz;
+         fixed_t z = thing->z - thing->zref.floor;
 
          // Side to exit the linedef on positionally.
          //

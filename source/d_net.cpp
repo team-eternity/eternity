@@ -222,7 +222,7 @@ static void GetPackets()
                tflash->flags2 |= MF2_DONTDRAW;
                P_DisconnectEffect(players[netconsole].mo);
             }
-            players[netconsole].mo->removeThinker();
+            players[netconsole].mo->remove();
          }
          if(demorecording)
             G_CheckDemoStatus();
@@ -830,9 +830,14 @@ void TryRunTics()
       for(int i = 0; i < realtics; i++)   // run tics
       {
          // all independent tickers here
-         MN_Ticker();
+         // ioanch: skip some tickers during windowless fast demos. It has been
+         // noticed by profiling that these functions add significant time with-
+         // out being gameplay relevant.
+         if(!D_noWindow() || !fastdemo)
+            MN_Ticker();
          C_Ticker();
-         V_FPSTicker();
+         if(!D_noWindow() || !fastdemo)
+            V_FPSTicker();
       }
 
       // run the game tickers

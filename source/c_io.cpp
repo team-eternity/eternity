@@ -44,6 +44,8 @@
 #include "hu_over.h"
 #include "i_system.h"
 #include "i_video.h"
+#include "m_compare.h"
+#include "r_main.h"
 #include "v_video.h"
 #include "v_font.h"
 #include "doomstat.h"
@@ -198,6 +200,7 @@ void C_Init()
 
 void C_Ticker()
 {
+   Console.prev_height = Console.current_height;
    Console.showprompt = true;
    
    if(gamestate != GS_CONSOLE)
@@ -321,7 +324,7 @@ bool C_Responder(event_t *ev)
    }
   
    // only interested in keypresses
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
   
    //////////////////////////////////
@@ -424,10 +427,8 @@ bool C_Responder(event_t *ev)
    }
     
    // none of these, probably just a normal character
-   if(ev->character)
-      ch = ev->character;
-   else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = (shiftdown ? shiftxform[ev->data1] : ev->data1); // shifted?
+   if(ev->type == ev_text)
+      ch = ev->data1;
 
    // only care about valid characters
    if(ch > 31 && ch < 127)
@@ -438,6 +439,9 @@ bool C_Responder(event_t *ev)
       C_updateInputPoint();   // reset scrolling
       return true;
    }
+
+   if(ev->type == ev_keydown)
+      return true;
    
    return false;   // dont care about this event
 }
@@ -459,7 +463,7 @@ void C_Drawer(void)
    static int oldscreenheight = 0;
    static int oldscreenwidth = 0;
 
-   if(!consoleactive) 
+   if(!consoleactive && !Console.prev_height)
       return;   // dont draw if not active
 
    // Check for change in screen res
@@ -475,9 +479,13 @@ void C_Drawer(void)
    if(gamestate == GS_CONSOLE)
       Console.current_height = cback.scaled ? SCREENHEIGHT : cback.height;
 
+   double lerp = M_FixedToDouble(R_GetLerp(true)); // don't rely on FixedMul and small integers
+   int currentHeight = eclamp(int(round(Console.prev_height +
+                                        lerp * (Console.current_height - Console.prev_height))), 1,
+                              SCREENHEIGHT);
+
    real_height = 
-      cback.scaled ? cback.y2lookup[Console.current_height - 1] + 1 : 
-                     Console.current_height;
+      cback.scaled ? cback.y2lookup[currentHeight - 1] + 1 :currentHeight;
 
    // draw backdrop
    // SoM: use the VBuffer
@@ -489,7 +497,7 @@ void C_Drawer(void)
    
    // offset starting point up by 8 if we are showing input prompt
    
-   y = Console.current_height - 
+   y = currentHeight -
          ((Console.showprompt && message_pos == message_last) ? c_font->absh : 0) - 1;
 
    // start at our position in the message history
@@ -514,7 +522,7 @@ void C_Drawer(void)
   
    // input line on screen, not scrolled back in history?
    
-   if(Console.current_height > c_font->absh && Console.showprompt && 
+   if(currentHeight > c_font->absh && Console.showprompt &&
       message_pos == message_last)
    {
       char tempstr[LINELENGTH];
@@ -533,7 +541,7 @@ void C_Drawer(void)
       }
       
       V_FontWriteText(c_font, tempstr, 1, 
-                      Console.current_height - c_font->absh - 1);
+                      currentHeight - c_font->absh - 1);
    }
 }
 
@@ -684,7 +692,7 @@ static void C_AdjustLineBreaks(char *str)
 
    count = lastspace = 0;
 
-   len = strlen(str);
+   len = static_cast<int>(strlen(str));
 
    for(i = 0; i < len; ++i)
    {
@@ -815,7 +823,7 @@ void C_DumpMessages(qstring *filename)
    {
       // strip color codes from strings
       memset(tmpmessage, 0, LINELENGTH);
-      len = strlen(messages[i]);
+      len = static_cast<int>(strlen(messages[i]));
 
       C_StripColorChars((unsigned char *)messages[i], tmpmessage, len);
 
@@ -873,7 +881,7 @@ static void C_AppendToLog(const char *text)
       const unsigned char *src = (const unsigned char *)text;
 
       memset(tmpmessage, 0, 1024);
-      len = strlen(text);
+      len = static_cast<int>(strlen(text));
 
       C_StripColorChars(src, tmpmessage, len);
 

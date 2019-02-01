@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -14,9 +14,6 @@
 #define ACSVM__Array_H__
 
 #include "Types.hpp"
-
-#include <istream>
-#include <ostream>
 
 
 //----------------------------------------------------------------------------|
@@ -45,13 +42,13 @@ namespace ACSVM
       // If idx is allocated, returns that Word. Otherwise, returns 0.
       Word find(Word idx) const;
 
-      void loadState(std::istream &in);
+      void loadState(Serial &in);
 
       void lockStrings(Environment *env) const;
 
       void refStrings(Environment *env) const;
 
-      void saveState(std::ostream &out) const;
+      void saveState(Serial &out) const;
 
       void unlockStrings(Environment *env) const;
 

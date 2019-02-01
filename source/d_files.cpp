@@ -46,6 +46,7 @@
 #include "doomstat.h"
 #include "e_edf.h"
 #include "e_fonts.h"
+#include "e_weapons.h"
 #include "g_gfs.h"
 #include "i_system.h"
 #include "m_argv.h"
@@ -63,7 +64,7 @@
 #include "xl_scripts.h"
 
 // D_FIXME:
-char *D_CheckGameEDF();
+static char *D_CheckGameEDF();
 
 // haleyjd 11/09/09: wadfiles made a structure.
 // note: needed extern in g_game.c
@@ -493,7 +494,6 @@ void D_LoadEDF(gfs_t *gfs)
 
    E_ProcessEDF(edfname);
 
-   // haleyjd FIXME: temporary hacks
    D_InitWeaponInfo();
 }
 
@@ -1107,7 +1107,7 @@ void D_SetGamePath()
 // former over the latter when it exists. Returns the path of the file to use,
 // or NULL if neither location has that file.
 //
-char *D_CheckGamePathFile(const char *name, bool isDir)
+static char *D_CheckGamePathFile(const char *name, bool isDir)
 {
    struct stat sbuf;   
 
@@ -1138,7 +1138,7 @@ char *D_CheckGamePathFile(const char *name, bool isDir)
 //
 // Looks for an optional root.edf file in base/game
 //
-char *D_CheckGameEDF()
+static char *D_CheckGameEDF()
 {
    return D_CheckGamePathFile("root.edf", false);
 }

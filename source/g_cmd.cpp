@@ -122,7 +122,7 @@ CONSOLE_COMMAND(pause, cf_server)
 //
 // haleyjd: Restoration of original exit behavior
 //
-void G_QuitDoom()
+static void G_QuitDoom()
 {
    // haleyjd: re-added code for playing random sound before exit
    extern int snd_card;
@@ -230,8 +230,8 @@ CONSOLE_VARIABLE(sens_vanilla, mouseSensitivity_vanilla, 0) {}
 VARIABLE_BOOLEAN(player_bobbing, &default_player_bobbing, onoff);
 CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 
-VARIABLE_BOOLEAN(doom_weapon_toggles, NULL, onoff);
-CONSOLE_VARIABLE(doom_weapon_toggles, doom_weapon_toggles, 0) {}
+VARIABLE_BOOLEAN(weapon_hotkey_cycling, NULL, onoff);
+CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
 
 // turbo scale
 
@@ -395,6 +395,13 @@ CONSOLE_NETCMD(map, cf_server, netcmd_map)
       C_Printf(FC_ERROR "%s not found or is not a valid map\n", Console.argv[0]->constPtr());
 }
 
+// restart map (shorthand for doing the map command to the same level)
+
+CONSOLE_NETCMD(restartmap, cf_server, netcmd_restartmap)
+{
+   G_DeferedInitNew(gameskill, gamemapname);
+}
+
         // player name
 VARIABLE_STRING(default_name, NULL,             20);
 CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
@@ -442,10 +449,11 @@ VARIABLE_BOOLEAN(smooth_turning, NULL,          onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
-int default_mouse_accel_type = 0;
+int default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
-VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type, 0, 3, accel_options);
-CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, 0) {}
+VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
+             ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
+CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, ACCELTYPE_NONE) {}
 
 // [CG] 01/20/12: Custom mouse acceleration (threshold & value).
 int default_mouse_accel_threshold = 10;

@@ -42,6 +42,13 @@ enum
 void M_ClearBox(fixed_t *box);
 
 void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y);
+void M_AddToBox2(fixed_t *box, fixed_t x, fixed_t y);
+
+inline static bool M_BoxesTouch(const fixed_t bbox1[4], const fixed_t bbox2[4])
+{
+   return bbox1[BOXTOP] >= bbox2[BOXBOTTOM] && bbox1[BOXBOTTOM] <= bbox2[BOXTOP] &&
+      bbox1[BOXLEFT] <= bbox2[BOXRIGHT] && bbox1[BOXRIGHT] >= bbox2[BOXLEFT];
+}
 
 #endif
 

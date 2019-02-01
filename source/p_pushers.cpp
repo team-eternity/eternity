@@ -124,7 +124,7 @@ static PushThinker *tmpusher; // pusher structure for blockmap searches
 //
 // killough 10/98: allow to affect things besides players
 //
-static bool PIT_PushThing(Mobj* thing)
+static bool PIT_PushThing(Mobj* thing, void *context)
 {
    if(demo_version < 203  ?     // killough 10/98: made more general
       thing->player && !(thing->flags & (MF_NOCLIP | MF_NOGRAVITY)) :
@@ -271,7 +271,7 @@ void PushThinker::Think()
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > thing->floorz) // above ground
+            if(thing->z > thing->zref.floor) // above ground
             {
                xspeed = this->x_mag; // full force
                yspeed = this->y_mag;
@@ -519,7 +519,7 @@ void P_SpawnPushers()
                   if(thing->type == PushType || thing->type == PullType)
                   {
                      Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing,
-                                thing->subsector->sector - sectors);
+                                eindex(thing->subsector->sector - sectors));
                   }
                }
             }

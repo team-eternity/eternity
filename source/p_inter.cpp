@@ -39,11 +39,15 @@
 #include "dstrings.h"
 #include "e_edf.h"
 #include "e_inventory.h"
+#include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
 #include "e_states.h"
+#include "e_string.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_frags.h"
@@ -87,7 +91,7 @@ int bfgcells = 40;      // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
+static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 {
    if(!ammo)
       return false;
@@ -101,47 +105,54 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 
    // give double ammo in trainer mode, you'll need in nightmare
    if(gameskill == sk_baby || gameskill == sk_nightmare)
-      num <<= 1;
+      num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
    if(!E_GiveInventoryItem(player, ammo, num))
       return false; // don't need this ammo
-   
+
    // If non zero ammo, don't change up weapons, player was lower on purpose.
    if(oldammo)
       return true;
 
    // We were down to zero, so select a new weapon.
    // Preferences are not user selectable.
-   
-   // WEAPON_FIXME: ammo reception behaviors
-   // INVENTORY_TODO: hardcoded behaviors for now...
-   if(!strcasecmp(ammo->getKey(), "AmmoClip"))
+
+   // If the player is doing a demo w/ EDF-weapons and the weapon should be switched from,
+   // try to do so, otherwise do the legacy ammo switch
+   if(demo_version >= 401 &&
+      (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
-      if(player->readyweapon == wp_fist)
+      player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
+      if(player->pendingweapon)
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+   }
+   else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
+   {
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
       {
-         if(player->weaponowned[wp_chaingun])
-            player->pendingweapon = wp_chaingun;
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun))
+            player->pendingweapon = E_WeaponForDEHNum(wp_chaingun);
          else
-            player->pendingweapon = wp_pistol;
+            player->pendingweapon = E_WeaponForDEHNum(wp_pistol);
       }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoShell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-         if(player->weaponowned[wp_shotgun])
-            player->pendingweapon = wp_shotgun;
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun))
+            player->pendingweapon = E_WeaponForDEHNum(wp_shotgun);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoCell"))
    {
-      if(player->readyweapon == wp_fist || player->readyweapon == wp_pistol)
-         if(player->weaponowned[wp_plasma])
-            player->pendingweapon = wp_plasma;
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist) || E_WeaponIsCurrentDEHNum(player, wp_pistol))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma))
+            player->pendingweapon = E_WeaponForDEHNum(wp_plasma);
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoMissile"))
    {
-      if(player->readyweapon == wp_fist)
-         if(player->weaponowned[wp_missile])
-            player->pendingweapon = wp_missile;
+      if(E_WeaponIsCurrentDEHNum(player, wp_fist))
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile))
+            player->pendingweapon = E_WeaponForDEHNum(wp_missile);
    }
 
    return true;
@@ -152,7 +163,7 @@ bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
 //
 // Give the player ammo from an ammoeffect pickup.
 //
-bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int dropamount)
+bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped, int dropamount)
 {
    if(!pickup)
       return false;
@@ -179,17 +190,22 @@ bool P_GiveAmmoPickup(player_t *player, itemeffect_t *pickup, bool dropped, int 
 // amount metatable value. It needs to work this way to have all side effects
 // of the called function (double baby/nightmare ammo, weapon switching).
 //
-static void P_giveBackpackAmmo(player_t *player)
+static bool P_giveBackpackAmmo(player_t *player)
 {
    static MetaKeyIndex keyBackpackAmount("ammo.backpackamount");
 
+   bool given = false;
    size_t numAmmo = E_GetNumAmmoTypes();
    for(size_t i = 0; i < numAmmo; ++i)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
-      P_GiveAmmo(player, ammoType, giveamount);
+      if(!giveamount)
+         continue;
+      given |= P_GiveAmmo(player, ammoType, giveamount);
    }
+
+   return given;
 }
 
 //
@@ -206,41 +222,61 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 }
 
 //
-// P_GiveWeapon
+// Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-// The weapon name may have a MF_DROPPED flag ored in.
-//
-static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
-   Mobj *special)
+static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
 {
    bool gaveweapon = false;
-   weaponinfo_t *wp = &weaponinfo[weapon];
+   weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   itemeffect_t *ammogiven = nullptr;
+   itemeffect_t *ammo = nullptr;
+   ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven");
+
+   int giveammo, dropammo, dmstayammo, coopstayammo;
+   if(ammogiven)
+   {
+      ammo = E_ItemEffectForName(ammogiven->getString("type", ""));
+      giveammo = ammogiven->getInt("ammo.give", -1);
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+         dropammo = giveammo;
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+         dmstayammo = giveammo;
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+         coopstayammo = giveammo;
+   }
+   else
+   {
+      ammo = nullptr;
+      giveammo = dropammo = dmstayammo = coopstayammo = 0;
+   }
 
    if((dmflags & DM_WEAPONSTAY) && !dropped)
    {
       // leave placed weapons forever on net games
-      if(player->weaponowned[weapon])
+      if(E_PlayerOwnsWeapon(player, wp))
          return false;
 
       player->bonuscount += BONUSADD;
-      player->weaponowned[weapon] = true;
-      P_GiveAmmo(player, wp->ammo, (GameType == gt_dm) ? wp->dmstayammo : wp->coopstayammo);
-      
-      player->pendingweapon = weapon;
+      E_GiveWeapon(player, wp);
+      P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
+
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
       S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
       P_consumeSpecial(player, special); // need to handle it here
       return false;
    }
 
    // give one clip with a dropped weapon, two clips with a found weapon
-   int  amount   = dropped ? wp->dropammo : wp->giveammo;
-   bool gaveammo = (wp->ammo ? P_GiveAmmo(player, wp->ammo, amount) : false);
-   
+   int  amount = dropped ? dropammo : giveammo;
+   bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount) : false);
+
    // haleyjd 10/4/11: de-Killoughized
-   if(!player->weaponowned[weapon])
+   if(!E_PlayerOwnsWeapon(player, wp))
    {
-      player->pendingweapon = weapon;
-      player->weaponowned[weapon] = 1;
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      E_GiveWeapon(player, wp);
       gaveweapon = true;
    }
 
@@ -248,11 +284,103 @@ static bool P_GiveWeapon(player_t *player, weapontype_t weapon, bool dropped,
 }
 
 //
+// The weapon name may have a MF_DROPPED flag ored in.
+//
+static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
+{
+   if(demo_version < 401)
+      return P_giveWeaponCompat(player, giver, dropped, special);
+
+   bool gaveammo = false;
+   weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
+   if(!wp)
+   {
+      doom_printf(FC_ERROR "Invalid weaponinfo given in weapongiver: '%s'\a\n",
+                  giver->getKey());
+      special->remove();
+      return false;
+   }
+
+   if((dmflags & DM_WEAPONSTAY) && !dropped && E_PlayerOwnsWeapon(player, wp))
+      return false;
+
+   itemeffect_t *ammogiven = nullptr;
+   while((ammogiven = giver->getNextKeyAndTypeEx(ammogiven, "ammogiven")))
+   {
+      itemeffect_t *ammo = nullptr;
+      int giveammo = 0, dropammo = 0, dmstayammo = 0, coopstayammo = 0;
+
+      if(!(ammo = E_ItemEffectForName(ammogiven->getString("type", ""))))
+      {
+         doom_printf(FC_ERROR "Invalid ammo type given in weapongiver: '%s'\a\n",
+                     giver->getKey());
+         special->remove();
+         return false;
+      }
+      else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
+      {
+         doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
+                     "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
+         special->remove();
+         return false;
+      }
+      // Congrats, the user didn't screw up defining their ammogiven
+      // TODO: Automate Doom-style ratios with a flag?
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
+         dropammo = giveammo;
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
+         dmstayammo = giveammo;
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
+         coopstayammo = giveammo;
+
+      if((dmflags & DM_WEAPONSTAY) && !dropped)
+      {
+         if(ammogiven &&
+            ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
+         {
+            gaveammo |= P_GiveAmmo(player, ammo,
+                                   (GameType == gt_dm) ? dmstayammo : coopstayammo);
+         }
+      }
+      else
+      {
+         // give one clip with a dropped weapon, two clips with a found weapon
+         const int  amount = dropped ? dropammo : giveammo;
+         gaveammo |= amount ? P_GiveAmmo(player, ammo, amount) : false;
+      }
+   }
+
+   if((dmflags & DM_WEAPONSTAY) && !dropped)
+   {
+      player->bonuscount += BONUSADD;
+      E_GiveWeapon(player, wp);
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      P_consumeSpecial(player, special); // need to handle it here
+      return false;
+   }
+   else if(!E_PlayerOwnsWeapon(player, wp))
+   {
+      weaponinfo_t *sister = wp->sisterWeapon;
+      player->pendingweapon = wp;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+         player->pendingweapon = sister;
+      E_GiveWeapon(player, wp);
+      return true;
+   }
+
+   // Deathmatch w/ weapons stay always returns false
+   return gaveammo;
+}
+
+//
 // P_GiveBody
 //
 // Returns false if the body isn't needed at all
 //
-bool P_GiveBody(player_t *player, itemeffect_t *effect)
+bool P_GiveBody(player_t *player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
@@ -322,43 +450,43 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 // Returns false if the armor is worse
 // than the current armor.
 //
-bool P_GiveArmor(player_t *player, itemeffect_t *effect)
+bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 {
    if(!effect)
       return false;
 
-   int hits        = effect->getInt("saveamount",  0);
-   int savefactor  = effect->getInt("savefactor",  1);
-   int savedivisor = effect->getInt("savedivisor", 3);
+   int  hits          =   effect->getInt("saveamount",   -1);
+   int  savefactor    =   effect->getInt("savefactor",    1);
+   int  savedivisor   =   effect->getInt("savedivisor",   3);
+   int  maxsaveamount =   effect->getInt("maxsaveamount", 0);
+   bool additive      = !!effect->getInt("additive",      0);
+   bool setabsorption = !!effect->getInt("setabsorption", 0);
 
    // check for validity
-   if(!hits || !savefactor || !savedivisor)
+   if(hits < 0 || !savefactor || !savedivisor)
       return false;
 
    // check if needed
-   if(!(effect->getInt("alwayspickup", 0)) && player->armorpoints >= hits)
-      return false; // don't pick up
-
-   // bonuses add to your armor and preserve your current absorption qualities;
-   // normal pickups set your armor and override any existing qualities
-   if(effect->getInt("bonus", 0))
+   if(!(effect->getInt("alwayspickup", 0)) &&
+      (player->armorpoints >= (additive ? maxsaveamount : hits) ||
+       (hits == 0 && (!player->armorfactor || !setabsorption))))
    {
-      int maxsaveamount = effect->getInt("maxsaveamount", 0);
+      return false; // don't pick up
+   }
+
+   if(additive)
+   {
       player->armorpoints += hits;
       if(player->armorpoints > maxsaveamount)
          player->armorpoints = maxsaveamount;
-
-      // bonuses only change the player's armor absorption quality if the player
-      // currently has no armor
-      if(!player->armorfactor)
-      {
-         player->armorfactor  = savefactor;
-         player->armordivisor = savedivisor;
-      }
    }
    else
+      player->armorpoints = hits;
+
+   // only set armour quality if the armour always sets it,
+   // or if the player had no armour prior to this pickup
+   if((!player->armorfactor || setabsorption))
    {
-      player->armorpoints  = hits;
       player->armorfactor  = savefactor;
       player->armordivisor = savedivisor;
    }
@@ -394,6 +522,7 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
   pw_silencer,    // haleyjd: silencer
   pw_flight,      // haleyjd: flight
   pw_torch,       // haleyjd: infrared w/flicker
+  pw_weaponlevel2 // MaxW: power up weapons (e.g.: tome of power)
   NUMPOWERS
 */
 
@@ -402,23 +531,8 @@ static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
 //
 // Rewritten by Lee Killough
 //
-bool P_GivePower(player_t *player, int power)
+bool P_GivePower(player_t *player, int power, int duration, bool additiveTime)
 {
-   static const int tics[NUMPOWERS] = 
-   {
-      INVULNTICS,
-      1,          // strength 
-      INVISTICS,
-      IRONTICS, 
-      1,          // allmap 
-      INFRATICS,
-      INVISTICS,  // haleyjd: totalinvis
-      INVISTICS,  // haleyjd: ghost 
-      1,          // haleyjd: silencer 
-      FLIGHTTICS, // haleyjd: flight
-      INFRATICS,  // haleyjd: torch
-   };
-
    switch(power)
    {
    case pw_invisibility:
@@ -427,9 +541,6 @@ bool P_GivePower(player_t *player, int power)
    case pw_allmap:
       if(player->powers[pw_allmap])
          return false;
-      break;
-   case pw_strength:
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_BERSERKHEALTH));
       break;
    case pw_totalinvis:   // haleyjd: total invisibility
       player->mo->flags2 |= MF2_DONTDRAW;
@@ -443,15 +554,87 @@ bool P_GivePower(player_t *player, int power)
          return false;
       break;
    case pw_flight:       // haleyjd: flight
-      if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4*32)
+      if(player->powers[pw_flight] < 0 || player->powers[pw_flight] > 4 * 32)
          return false;
       P_PlayerStartFlight(player, true);
       break;
+   case pw_weaponlevel2:
+      if(!E_IsPoweredVariant(player->readyweapon))
+      {
+         weaponinfo_t *sister = player->readyweapon->sisterWeapon;
+         if(E_IsPoweredVariant(sister))
+         {
+            if(sister->readystate != player->readyweapon->readystate ||
+               sister->flags & WPF_FORCETOREADY)
+            {
+               P_SetPsprite(player, ps_weapon, sister->readystate);
+               player->refire = 0;
+            }
+            player->readyweapon = sister;
+         }
+      }
+      break;
    }
 
-   // Unless player has infinite duration cheat, set duration (killough)   
+   // Unless player has infinite duration cheat, set duration (killough)
    if(player->powers[power] >= 0)
-      player->powers[power] = tics[power];
+      player->powers[power] = additiveTime ? players->powers[power] + duration : duration;
+
+   return true;
+}
+
+const char *powerStrings[NUMPOWERS] =
+{
+   POWER_INVULNERABLE,
+   POWER_STRENGTH,
+   POWER_PARTIALINVIS,
+   POWER_IRONFEET,
+   POWER_ALLMAP,
+   POWER_INFRARED,
+   POWER_TOTALINVIS,
+   POWER_GHOST,
+   POWER_SILENT,
+   POWER_FLIGHT,
+   POWER_TORCH,
+   POWER_WEAPONLEVEL2
+};
+
+
+//
+// P_GivePowerForItem
+//
+// Takes a powereffect and applies the power accordingly
+//
+bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
+{
+   int powerNum;
+   const char *powerStr;
+   bool additiveTime = false;
+
+   powerStr = power->getString("type", "");
+   if(!powerStr || !strcmp(powerStr, ""))
+      return false; // There hasn't been a designated power type
+   if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
+      return false; // There's no power for the type provided
+
+   // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
+   if(!power->getInt("overridesself", 0) && player->powers[powerNum] >  4 * 32)
+      return false;
+
+   // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
+   if(player->powers[powerNum] >= 0)
+   {
+      int duration = power->getInt("duration", 0);
+      if(power->getInt("permanent", 0))
+         duration = -1;
+      else
+      {
+         duration = duration * TICRATE; // Duration is given in seconds
+         additiveTime = power->getInt("additivetime", 0) ? true : false;
+      }
+
+      return P_GivePower(player, powerNum, duration, additiveTime);
+   }
 
    return true;
 }
@@ -467,12 +650,12 @@ static void P_RavenRespawn(Mobj *special)
    bool willrespawn = ((dmflags & DM_ITEMRESPAWN) == DM_ITEMRESPAWN);
 
    // Remove special status. Note this exempts the object from the DOOM-style
-   // item respawning code in Mobj::removeThinker.
+   // item respawning code in Mobj::remove.
    special->flags &= ~MF_SPECIAL;
 
    // Super items only respawn if so specified
    if(special->flags3 & MF3_SUPERITEM && !(dmflags & DM_RESPAWNSUPER))
-      willrespawn = false; 
+      willrespawn = false;
 
    // NOITEMRESP items never respawn.
    if(special->flags3 & MF3_NOITEMRESP)
@@ -483,8 +666,8 @@ static void P_RavenRespawn(Mobj *special)
       willrespawn = false;
 
    // get states
-   state_t *respawn = E_GetStateForMobjInfo(special->info, "Pickup.Respawn");
-   state_t *remove  = E_GetStateForMobjInfo(special->info, "Pickup.Remove");
+   const state_t *respawn = E_GetStateForMobjInfo(special->info, "Pickup.Respawn");
+   const state_t *remove  = E_GetStateForMobjInfo(special->info, "Pickup.Remove");
 
    // Want to respawn, and can respawn?
    if(willrespawn && respawn)
@@ -496,31 +679,50 @@ static void P_RavenRespawn(Mobj *special)
       if(remove)
          P_SetMobjState(special, remove->index);
       else
-         special->removeThinker();
+         special->remove();
    }
 }
 
 //
-// P_TouchSpecialThingNew
+// Get the special message for the given pickup.
+// Basically exists to sort out the awful BFG message hack.
 //
-// INVENTORY_FIXME / INVENTORY_TODO: This will become P_TouchSpecialThing
-// when it is finished, replacing the below.
-//
-void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
+static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
 {
-   player_t     *player;
-   e_pickupfx_t *pickup;
-   itemeffect_t *effect;
-   bool          pickedup = false;
-   bool          dropped  = false;
-   const char   *message  = NULL;
-   const char   *sound    = NULL;
+   if(strcasecmp(special->info->name, "WeaponBFG"))
+      return def;
+   else
+   {
+      switch(bfgtype)
+      {
+      case bfg_normal:   return "$GOTBFG9000";
+      case bfg_classic:  return "You got the BFG 2704!";
+      case bfg_11k:      return "You got the BFG 11K!";
+      case bfg_bouncing: return "You got the Bouncing BFG!";
+      case bfg_burst:    return "You got the Plasma Burst BFG!";
+      default:           return "You got some kind of BFG";
+      }
+   }
+}
+
+//
+// P_TouchSpecialThing
+//
+void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
+{
+   player_t       *player;
+   const e_pickupfx_t *pickup, *temp;
+   bool            pickedup  = false;
+   bool            dropped  = false;
+   bool            hadeffect = false;
+   const char     *message  = nullptr;
+   const char     *sound     = nullptr;
 
    fixed_t delta = special->z - toucher->z;
-   if(delta > toucher->height || delta < -8*FRACUNIT)
+   if(delta > toucher->height || delta < -GameModeInfo->itemHeight)
       return; // out of reach
 
-   // haleyjd: don't crash if a monster gets here.
+              // haleyjd: don't crash if a monster gets here.
    if(!(player = toucher->player))
       return;
 
@@ -533,41 +735,71 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
    if(special->sprite < 0 || special->sprite >= NUMSPRITES)
       return;
 
-   pickup = &pickupfx[special->sprite];
-   effect = pickup->effect;
-
-   if(!effect)
+   if(special->info->pickupfx)
+      pickup = special->info->pickupfx;
+   else if((temp = E_PickupFXForSprNum(special->sprite)))
+      pickup = temp;
+   else
       return;
+
+   if(pickup->flags & PFXF_COMMERCIALONLY &&
+      (demo_version < 335 && GameModeInfo->id != commercial))
+      return;
+
+   message = P_getSpecialMessage(special, pickup->message);
+   sound   = pickup->sound;
 
    // set defaults
-   message = pickup->message;
-   sound   = pickup->sound;
    dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
 
-   switch(effect->getInt("class", ITEMFX_NONE))
+   for(unsigned int i = 0; i < pickup->numEffects; i++)
    {
-   case ITEMFX_HEALTH:   // Health - heal up the player automatically
-      pickedup = P_GiveBody(player, effect);
-      if(pickedup && player->health < effect->getInt("amount", 0) * 2)
-         message = effect->getString("lowmessage", message);
-      break;
-   case ITEMFX_ARMOR:    // Armor - give the player some armor
-      pickedup = P_GiveArmor(player, effect);
-      break;
-   case ITEMFX_AMMO:     // Ammo - give the player some ammo
-      pickedup = P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
-      break;
-   case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
-      pickedup = E_GiveInventoryItem(player, effect);
-      break;
-   default:
-      return;
+      const itemeffect_t *effect = pickup->effects[i];
+      if(!effect)
+         continue;
+      switch(effect->getInt("class", ITEMFX_NONE))
+      {
+      case ITEMFX_HEALTH:   // Health - heal up the player automatically
+         pickedup |= P_GiveBody(player, effect);
+         if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+            message = effect->getString("lowmessage", message);
+         break;
+      case ITEMFX_ARMOR:    // Armor - give the player some armor
+         pickedup |= P_GiveArmor(player, effect);
+         break;
+      case ITEMFX_AMMO:     // Ammo - give the player some ammo
+         pickedup |= P_GiveAmmoPickup(player, effect, dropped, special->dropamount);
+         break;
+      case ITEMFX_POWER:
+         pickedup |= P_GivePowerForItem(player, effect);
+         break;
+      case ITEMFX_WEAPONGIVER:
+         pickedup |= P_giveWeapon(player, effect, dropped, special);
+         break;
+      case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
+         pickedup |= E_GiveInventoryItem(player, effect);
+         break;
+      default:
+         break;
+      }
    }
+
+   if(pickup->flags & PFXF_GIVESBACKPACKAMMO)
+      pickedup |= P_giveBackpackAmmo(player);
 
    // perform post-processing if the item was collected beneficially, or if the
    // pickup is flagged to always be picked up even without benefit.
    if(pickedup || (pickup->flags & PFXF_ALWAYSPICKUP))
    {
+      // Set pendingweapon if need be
+      if(pickup->changeweapon != nullptr &&
+         player->readyweapon->id != pickup->changeweapon->id &&
+         E_PlayerOwnsWeapon(player, pickup->changeweapon))
+      {
+         player->pendingweapon = pickup->changeweapon;
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      }
+
       // Remove the object, provided it doesn't stay in multiplayer games
       if(GameType == gt_single || !(pickup->flags & PFXF_LEAVEINMULTI))
       {
@@ -575,12 +807,20 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(special->flags & MF_COUNTITEM)
             player->itemcount++;
 
+         // Execute and zero thing special
+         P_consumeSpecial(player, special);
          // Check for item respawning style: DOOM, or Raven
          if(special->flags4 & MF4_RAVENRESPAWN)
             P_RavenRespawn(special);
          else
-            special->removeThinker();
+            special->remove();
       }
+
+      // Picked up items that are left in multiplayer can't be allowed to
+      // constantly pester the player
+      // TODO: Is this rigorous enough? Does this cover all cases?
+      if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI)
+         return;
 
       // if picked up for benefit, or not silent when picked up without, do
       // all the "noisy" pickup effects
@@ -589,9 +829,9 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          // Give message
          if(message)
          {
-            // check for BEX string
+            // check for indirect string
             if(message[0] == '$')
-               message = DEH_String(message + 1);
+               message = E_StringOrDehForName(message + 1);
             player_printf(player, "%s", message);
          }
 
@@ -603,521 +843,6 @@ void P_TouchSpecialThingNew(Mobj *special, Mobj *toucher)
          if(!(pickup->flags & PFXF_NOSCREENFLASH))
             player->bonuscount += BONUSADD;
       }
-   }
-}
-
-//
-// P_TouchSpecialThing
-//
-void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
-{
-   player_t   *player;
-   int        sound;
-   const char *message = NULL;
-   bool       removeobj = true;
-   bool       pickup_fx = true; // haleyjd 04/14/03
-   bool       dropped   = false;
-   fixed_t    delta = special->z - toucher->z;
-   
-   // INVENTORY_TODO: transitional logic is in place below until this function
-   // can be fully converted to being based on itemeffects
-   itemeffect_t *effect = NULL;
-
-   if(delta > toucher->height || delta < -8*FRACUNIT)
-      return;        // out of reach
-
-   sound = sfx_itemup;
-
-   // haleyjd: don't crash if a monster gets here.
-   if(!(player = toucher->player))
-      return;
-   
-   // Dead thing touching.
-   // Can happen with a sliding player corpse.
-   if(toucher->health <= 0)
-      return;
-
-   // haleyjd 05/11/03: EDF pickups modifications
-   if(special->sprite < 0 || special->sprite >= NUMSPRITES)
-      return;
-
-   dropped = ((special->flags & MF_DROPPED) == MF_DROPPED);
-
-   // Identify by sprite.
-   // INVENTORY_FIXME: apply pickupfx[].effect instead!
-   switch(pickupfx[special->sprite].tempeffect)
-   {
-      // armor
-   case PFX_GREENARMOR:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_GREENARMOR)))
-         return;
-      message = DEH_String("GOTARMOR"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_BLUEARMOR:
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
-         return;
-      message = DEH_String("GOTMEGA"); // Ty 03/22/98 - externalized
-      break;
-
-      // bonus items
-   case PFX_POTION:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_HEALTHBONUS));
-      message = DEH_String("GOTHTHBONUS"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ARMORBONUS:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ARMORBONUS));
-      message = DEH_String("GOTARMBONUS"); // Ty 03/22/98 - externalized
-      break;
-
-      // sf: removed beta items
-      
-   case PFX_SOULSPHERE:
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_SOULSPHERE));
-      message = DEH_String("GOTSUPER"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-
-      break;
-
-   case PFX_MEGASPHERE:
-      if(demo_version < 335 && GameModeInfo->id != commercial)
-         return;
-      // INVENTORY_TODO: hardcoded for now
-      P_GiveBody(player, E_ItemEffectForName(ITEMNAME_MEGASPHERE));
-      P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_BLUEARMOR));
-      message = DEH_String("GOTMSPHERE"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-      // cards
-      // leave cards for everyone
-   case PFX_BLUEKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_BLUECARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTBLUECARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_YELLOWKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_YELLOWCARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTYELWCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_REDKEY:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_REDCARD);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTREDCARD"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-      
-   case PFX_BLUESKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_BLUESKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTBLUESKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-      
-   case PFX_YELLOWSKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_YELLOWSKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTYELWSKUL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   case PFX_REDSKULL:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_REDSKULL);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("GOTREDSKULL"); // Ty 03/22/98 - externalized
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      break;
-
-   // medikits, heals
-   case PFX_STIMPACK:
-      // INVENTORY_FIXME: temp hard-coded
-      if(!P_GiveBody(player, E_ItemEffectForName(ITEMNAME_STIMPACK)))
-         return;
-      message = DEH_String("GOTSTIM"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_MEDIKIT:
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ITEMNAME_MEDIKIT);
-      if(!P_GiveBody(player, effect))
-         return;
-      // sf: fix medineed 
-      // (check for below 25, but medikit gives 25, so always > 25)
-      message = DEH_String(player->health < 50 ? "GOTMEDINEED" : "GOTMEDIKIT");
-      break;
-
-
-      // power ups
-   case PFX_INVULNSPHERE:
-      if(!P_GivePower(player, pw_invulnerability))
-         return;
-      message = DEH_String("GOTINVUL"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-      // WEAPON_FIXME: berserk changes to fist
-   case PFX_BERZERKBOX:
-      if(!P_GivePower(player, pw_strength))
-         return;
-      message = DEH_String("GOTBERSERK"); // Ty 03/22/98 - externalized
-      if(player->readyweapon != wp_fist)
-         // sf: removed beta
-         player->pendingweapon = wp_fist;
-      sound = sfx_getpow;
-      break;
-
-   case PFX_INVISISPHERE:
-      if(!P_GivePower(player, pw_invisibility))
-         return;
-      message = DEH_String("GOTINVIS"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_RADSUIT:
-      if(!P_GivePower(player, pw_ironfeet))
-         return;
-      message = DEH_String("GOTSUIT"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_ALLMAP:
-      if(!P_GivePower(player, pw_allmap))
-         return;
-      message = DEH_String("GOTMAP"); // Ty 03/22/98 - externalized
-      sound = sfx_getpow;
-      break;
-
-   case PFX_LIGHTAMP:
-      if(!P_GivePower(player, pw_infrared))
-         return;
-      sound = sfx_getpow;
-      message = DEH_String("GOTVISOR"); // Ty 03/22/98 - externalized
-      break;
-
-      // ammo
-   case PFX_CLIP:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Clip"), dropped, special->dropamount))
-         return;
-      message = DEH_String("GOTCLIP"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CLIPBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ClipBox"), false, 0))
-         return;
-      message = DEH_String("GOTCLIPBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ROCKET:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketAmmo"), false, 0))
-         return;
-      message = DEH_String("GOTROCKET"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_ROCKETBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("RocketBox"), false, 0))
-         return;
-      message = DEH_String("GOTROCKBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CELL:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Cell"), false, 0))
-         return;
-      message = DEH_String("GOTCELL"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_CELLPACK:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("CellPack"), false, 0))
-         return;
-      message = DEH_String("GOTCELLBOX"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_SHELL:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("Shell"), false, 0))
-         return;
-      message = DEH_String("GOTSHELLS"); // Ty 03/22/98 - externalized
-      break;
-      
-   case PFX_SHELLBOX:
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveAmmoPickup(player, E_ItemEffectForName("ShellBox"), false, 0))
-         return;
-      message = DEH_String("GOTSHELLBOX"); // Ty 03/22/98 - externalized
-      break;
-
-   case PFX_BACKPACK:
-      // INVENTORY_TODO: hardcoded for now
-      if(!E_PlayerHasBackpack(player))
-         E_GiveBackpack(player);
-      // ioanch 20151225: call from here to handle backpack ammo
-      P_giveBackpackAmmo(player);
-      message = DEH_String("GOTBACKPACK"); // Ty 03/22/98 - externalized
-      break;
-
-      // WEAPON_FIXME: Weapon collection
-      // weapons
-   case PFX_BFG:
-      if(!P_GiveWeapon(player, wp_bfg, false, special))
-         return;
-      // FIXME: externalize all BFG pickup strings
-      message = bfgtype==0 ? DEH_String("GOTBFG9000") // sf
-                : bfgtype==1 ? "You got the BFG 2704!"
-                : bfgtype==2 ? "You got the BFG 11K!"
-                : bfgtype==3 ? "You got the Bouncing BFG!"
-                : bfgtype==4 ? "You got the Plasma Burst BFG!"
-                : "You got some kind of BFG";
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_CHAINGUN:
-      if(!P_GiveWeapon(player, wp_chaingun, dropped, special))
-         return;
-      message = DEH_String("GOTCHAINGUN"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_CHAINSAW:
-      if(!P_GiveWeapon(player, wp_chainsaw, false, special))
-         return;
-      message = DEH_String("GOTCHAINSAW"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_LAUNCHER:
-      if(!P_GiveWeapon(player, wp_missile, false, special))
-         return;
-      message = DEH_String("GOTLAUNCHER"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_PLASMA:
-      if(!P_GiveWeapon(player, wp_plasma, false, special))
-         return;
-      message = DEH_String("GOTPLASMA"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_SHOTGUN:
-      if(!P_GiveWeapon(player, wp_shotgun, dropped, special))
-         return;
-      message = DEH_String("GOTSHOTGUN"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-   case PFX_SSG:
-      if(!P_GiveWeapon(player, wp_supershotgun, dropped, special))
-         return;
-      message = DEH_String("GOTSHOTGUN2"); // Ty 03/22/98 - externalized
-      sound = sfx_wpnup;
-      break;
-
-      // haleyjd 10/10/02: Heretic powerups
-
-   case PFX_HGREENKEY: // green key
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_KEYGREEN);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("HGOTGREENKEY");
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      sound = sfx_keyup;
-      break;
-
-   case PFX_HBLUEKEY: // blue key
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_KEYBLUE);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("HGOTBLUEKEY");
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      sound = sfx_keyup;
-      break;
-
-   case PFX_HYELLOWKEY: // yellow key
-      // INVENTORY_TODO: hardcoded for now
-      effect = E_ItemEffectForName(ARTI_KEYYELLOW);
-      if(!E_GetItemOwnedAmount(player, effect))
-         message = DEH_String("HGOTYELLOWKEY");
-      P_GiveCard(player, effect, special);
-      removeobj = pickup_fx = (GameType == gt_single);
-      sound = sfx_keyup;
-      break;
-
-   case PFX_HPOTION: // heretic potion
-      if(!P_GiveBody(player, E_ItemEffectForName("CrystalVial")))
-         return;
-      message = DEH_String("HITEMHEALTH");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_SILVERSHIELD: // heretic shield 1
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_SILVERSHIELD)))
-         return;
-      message = DEH_String("HITEMSHIELD1");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_ENCHANTEDSHIELD: // heretic shield 2
-      // INVENTORY_TODO: hardcoded for now
-      if(!P_GiveArmor(player, E_ItemEffectForName(ITEMNAME_ENCHANTEDSHLD)))
-         return;
-      message = DEH_String("HITEMSHIELD2");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_BAGOFHOLDING: // bag of holding
-      // HTIC_TODO: bag of holding effects
-      message = DEH_String("HITEMBAGOFHOLDING");
-      sound = sfx_hitemup;
-      break;
-
-   case PFX_HMAP: // map scroll
-      if(!P_GivePower(player, pw_allmap))
-         return;
-      message = DEH_String("HITEMSUPERMAP");
-      sound = sfx_hitemup;
-      break;
-   
-      // Heretic Ammo items
-   case PFX_GWNDWIMPY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOGOLDWAND1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_GWNDHEFTY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOGOLDWAND2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_MACEWIMPY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOMACE1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_MACEHEFTY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOMACE2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_CBOWWIMPY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOCROSSBOW1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_CBOWHEFTY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOCROSSBOW2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_BLSRWIMPY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOBLASTER1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_BLSRHEFTY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOBLASTER2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_PHRDWIMPY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOPHOENIXROD1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_PHRDHEFTY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOPHOENIXROD2");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_SKRDWIMPY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOSKULLROD1");
-      sound = sfx_hitemup;
-      break;
-   
-   case PFX_SKRDHEFTY:
-      // HTIC_TODO: give ammo
-      message = DEH_String("HAMMOSKULLROD2");
-      sound = sfx_hitemup;
-      break;
-
-      // start new Eternity power-ups
-   case PFX_TOTALINVIS:
-      if(!P_GivePower(player, pw_totalinvis))
-         return;
-      message = "Total Invisibility!";
-      sound = sfx_getpow;
-      break;
-
-   default:
-      // I_Error("P_SpecialThing: Unknown gettable thing");
-      return;      // killough 12/98: suppress error message
-   }
-
-   // sf: display message using player_printf
-   if(message)
-      player_printf(player, "%s", message);
-
-   // haleyjd 07/08/05: rearranged to avoid removing before
-   // checking for COUNTITEM flag.
-   if(special->flags & MF_COUNTITEM)
-      player->itemcount++;
-
-   if(removeobj)
-   {
-      // this will cover all disappearing items. Non-disappearing ones have
-      // their own special cases.
-      P_consumeSpecial(player, special);
-      if(special->flags4 & MF4_RAVENRESPAWN)
-         P_RavenRespawn(special);
-      else
-         special->removeThinker();
-   }
-
-   // haleyjd 07/08/05: inverted condition
-   if(pickup_fx)
-   {
-      player->bonuscount += BONUSADD;
-      S_StartSound(player->mo, sound);   // killough 4/25/98, 12/98
    }
 }
 
@@ -1156,7 +881,7 @@ void P_DropItems(Mobj *actor, bool tossitems)
       fixed_t z = ONFLOORZ;
       if(mdi->toss)
          z = actor->z + (actor->height / 2);
-      
+
       // spawn the object
       Mobj *item = P_SpawnMobj(actor->x, actor->y, z, type);
 
@@ -1184,7 +909,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
-   
+
    if(!(target->flags3 & MF3_DEADFLOAT))
       target->flags &= ~MF_NOGRAVITY;
 
@@ -1193,7 +918,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    // killough 8/29/98: remove from threaded list
    target->updateThinker();
-   
+
    if(source && source->player)
    {
       // count for intermission
@@ -1229,6 +954,13 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
       target->flags  &= ~MF_SOLID;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
+
+      G_DemoLog("%d\tdeath player %d ", gametic,
+         (int)(target->player - players) + 1);
+      G_DemoLogStats();
+      G_DemoLog("\n");
+
+      target->player->prevpitch = target->player->pitch; // MaxW: Stop interpolation jittering
       target->player->playerstate = PST_DEAD;
       P_DropWeapon(target->player);
 
@@ -1256,7 +988,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 
    // FIXME: make a flag? Also, probably not done in Heretic/Hexen.
    target->tics -= P_Random(pr_killtics) & 3;
-   
+
    if(target->tics < 1)
       target->tics = 1;
 
@@ -1277,22 +1009,22 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 static const char *P_GetDeathMessageString(emod_t *mod, bool self)
 {
    const char *str;
-   bool isbex;
+   bool indir;
    const char *ret;
 
    if(self)
    {
       str   = mod->selfobituary;
-      isbex = mod->selfObitIsBexString;
+      indir = mod->selfObitIsIndirect;
    }
    else
    {
       str   = mod->obituary;
-      isbex = mod->obitIsBexString;
+      indir = mod->obitIsIndirect;
    }
 
-   if(isbex)
-      ret = DEH_String(str);
+   if(indir)
+      ret = E_StringOrDehForName(str);
    else
       ret = str;
 
@@ -1304,7 +1036,7 @@ static const char *P_GetDeathMessageString(emod_t *mod, bool self)
 //
 // Implements obituaries based on the type of damage which killed a player.
 //
-static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor, 
+static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
                            emod_t *mod)
 {
    bool friendly = false;
@@ -1343,7 +1075,7 @@ static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
             break;
          }
 
-         // if the monster didn't define the proper obit, try the 
+         // if the monster didn't define the proper obit, try the
          // obit defined by the mod of this attack
          if(!message)
             message = P_GetDeathMessageString(mod, false);
@@ -1406,17 +1138,17 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
    {
       angle_t angle;
       fixed_t thrust;
-      
-      // SoM: TODO figure out if linked portals needs to worry about this. It 
+
+      // SoM: TODO figure out if linked portals needs to worry about this. It
       // looks like target might not always be source->target
       angle = P_PointToAngle(source->x, source->y, target->x, target->y);
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 
       P_ThrustMobj(target, angle, thrust);
-      P_DamageMobj(target, NULL, NULL, 
-                   ((P_Random(pr_mincharge) & 7) + 1) * 6, 
+      P_DamageMobj(target, NULL, NULL,
+                   ((P_Random(pr_mincharge) & 7) + 1) * 6,
                    MOD_UNKNOWN);
-      
+
       if(target->player)
          target->reactiontime = 14 + (P_Random(pr_mincharge) & 7);
 
@@ -1435,11 +1167,11 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 {
    Mobj *target = dmgspec->target;
-   
+
    // toss the target around
-   
+
    target->angle += P_SubRandom(pr_whirlwind) << 20;
-   target->momx  += P_SubRandom(pr_whirlwind) << 10;   
+   target->momx  += P_SubRandom(pr_whirlwind) << 10;
    target->momy  += P_SubRandom(pr_whirlwind) << 10;
 
    // z momentum -- Bosses will not be tossed up.
@@ -1450,13 +1182,13 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 
       if(randVal > 160)
          randVal = 160;
-      
+
       target->momz += randVal << 10;
-      
+
       if(target->momz > 12*FRACUNIT)
          target->momz = 12*FRACUNIT;
    }
-   
+
    // do a small amount of damage (it adds up fast)
    if(!(leveltime & 7))
       P_DamageMobj(target, NULL, NULL, 3, MOD_UNKNOWN);
@@ -1470,7 +1202,7 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 // mobjinfo::dmgspecial is an index into this table. The index is checked for
 // validity during EDF processing. If the special returns true, P_DamageMobj
 // returns immediately, assuming that the special did its own damage. If it
-// returns false, P_DamageMobj continues, and the damage field of the 
+// returns false, P_DamageMobj continues, and the damage field of the
 // dmgspecdata_t structure is used to possibly modify the damage that will be
 // done.
 //
@@ -1511,7 +1243,7 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
       // players
       if(source->player && mod == MOD_PLAYERMISC)
       {
-         weaponinfo_t *weapon = P_GetReadyWeapon(source->player);
+         weaponinfo_t *weapon = source->player->readyweapon;
 
          // redirect based on weapon mod
          newmod = weapon->mod;
@@ -1535,22 +1267,22 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
 //
 // haleyjd 07/13/03: added method of death flag
 //
-void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source, 
+void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                   int damage, int mod)
 {
    emod_t *emod;
    player_t *player;
    bool justhit = false;  // killough 11/98
-   bool bossignore;       // haleyjd
-   
+   bool speciesignore;       // haleyjd
+
    // killough 8/31/98: allow bouncers to take damage
    if(!(target->flags & (MF_SHOOTABLE | MF_BOUNCES)))
       return; // shouldn't happen...
-   
+
    if(target->health <= 0)
       return;
-   
-   // haleyjd: 
+
+   // haleyjd:
    // Invulnerability -- telestomp can still kill to avoid getting stuck
    // Dormancy -- things are invulnerable until they are awakened
    // No Friend Damage -- some things aren't hurt by friends
@@ -1610,6 +1342,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       MetaTable *meta = target->info->meta;
       int df = meta->getInt(emod->dfKeyIndex, FRACUNIT);
 
+      // Special case: D_MININT is absolute immunity.
+      if(df == D_MININT)
+         return;
+
       // Only apply if not FRACUNIT, due to the chance this might alter
       // the compatibility characteristics of extreme DEH/BEX damage.
       if(df != FRACUNIT)
@@ -1622,7 +1358,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(inflictor && !(target->flags & MF_NOCLIP) &&
       (!source || !source->player ||
-       !(P_GetReadyWeapon(source->player)->flags & WPF_NOTHRUST)) &&
+       !(source->player->readyweapon->flags & WPF_NOTHRUST)) &&
       !(inflictor->flags3 & MF3_NODMGTHRUST)) // haleyjd 11/14/02
    {
       // haleyjd: thrust factor differs for Heretic
@@ -1636,13 +1372,13 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       {
          if(inflictor->groupid == target->groupid)
          {
-            ang = P_PointToAngle (inflictor->x, inflictor->y, 
+            ang = P_PointToAngle (inflictor->x, inflictor->y,
                                    target->x, target->y);
          }
          else
          {
             auto link = P_GetLinkOffset(target->groupid, inflictor->groupid);
-            ang = P_PointToAngle(inflictor->x, inflictor->y, 
+            ang = P_PointToAngle(inflictor->x, inflictor->y,
                                   target->x + link->x, target->y + link->y);
          }
       }
@@ -1660,8 +1396,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          thrust *= 4;
       }
 
-      P_ThrustMobj(target, ang, thrust);
-      
+      P_ThrustMobj(target, ang,
+                   emod->absolutePush > 0 ? emod->absolutePush : thrust);
+      if(!(target->flags & MF_NOGRAVITY) && emod->absoluteHop > 0)
+         target->momz += emod->absoluteHop;
+
       // killough 11/98: thrust objects hanging off ledges
       if(target->intflags & MIF_FALLING && target->gear >= MAXGEAR)
          target->gear = 0;
@@ -1693,7 +1432,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       if(player->armorfactor && player->armordivisor)
       {
          int saved = damage * player->armorfactor / player->armordivisor;
-         
+
          if(player->armorpoints <= saved)
          {
             // armor is used up
@@ -1707,10 +1446,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       player->health -= damage;       // mirror mobj health here for Dave
       if(player->health < 0)
          player->health = 0;
-      
+
       P_SetPlayerAttacker(player, source);
       player->damagecount += damage;  // add damage after armor / invuln
-      
+
       if(player->damagecount > 100)
          player->damagecount = 100;  // teleport stomp does 10k points...
 
@@ -1720,7 +1459,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // haleyjd 06/08/13: reimplement support for tactile damage feedback :)
       if(player == &players[consoleplayer])
-         I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);      
+         I_StartHaptic(HALHapticInterface::EFFECT_DAMAGE, player->damagecount, 300);
    }
 
    // do the damage
@@ -1730,6 +1469,11 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // check for death
    if(target->health <= 0)
    {
+      // There's no need to also check the type or flags of source (vanilla He-
+      // retic pods can't initiate attacks).
+      if(target->flags4 & MF4_SETTARGETONDEATH && source)
+         P_SetTarget(&target->target, source);
+
       // death messages for players
       if(player)
       {
@@ -1768,7 +1512,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // so that a friend can tell who's hurting a player
       if(player)
          P_SetTarget<Mobj>(&target->target, source);
-      
+
       // killough 9/8/98:
       // If target's health is less than 50%, move it to the front of its list.
       // This will slightly increase the chances that enemies will choose to
@@ -1776,8 +1520,8 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       if(target->health * 2 < target->getModifiedSpawnHealth())
       {
-         Thinker *cap = 
-            &thinkerclasscap[target->flags & MF_FRIEND ? 
+         Thinker *cap =
+            &thinkerclasscap[target->flags & MF_FRIEND ?
                              th_friends : th_enemies];
          (target->cprev->cnext = target->cnext)->cprev = target->cprev;
          (target->cnext = cap->cnext)->cprev = target;
@@ -1787,7 +1531,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
    if(P_Random(pr_painchance) < target->info->painchance &&
       !(target->flags & MF_SKULLFLY))
-   { 
+   {
       //killough 11/98: see below
       if(demo_version >= 203)
          justhit = true;
@@ -1803,24 +1547,25 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       P_SetMobjState(target, st);
    }
-   
+
    target->reactiontime = 0;           // we're awake now...
 
    // killough 9/9/98: cleaned up, made more consistent:
    // haleyjd 11/24/02: added MF3_DMGIGNORED and MF3_BOSSIGNORE flags
 
-   // EDF_FIXME: replace BOSSIGNORE with generalized infighting controls.
-   // BOSSIGNORE flag will be made obsolete.
+   // BOSSIGNORE flag is deprecated, use thinggroup with DAMAGEIGNORE instead
 
    // haleyjd: set bossignore
-   if(source && (source->type != target->type) &&
-      (source->flags3 & target->flags3 & MF3_BOSSIGNORE))
+   if(source && ((source->type != target->type &&
+                  (source->flags3 & target->flags3 & MF3_BOSSIGNORE ||
+                   E_ThingPairValid(source->type, target->type, TGF_DAMAGEIGNORE))) ||
+                 (source->type == target->type && source->flags4 & MF4_NOSPECIESINFIGHT)))
    {
       // ignore if friendliness matches
-      bossignore = !((source->flags ^ target->flags) & MF_FRIEND);
+      speciesignore = !((source->flags ^ target->flags) & MF_FRIEND);
    }
    else
-      bossignore = false;
+      speciesignore = false;
 
    // Set target based on the following criteria:
    // * Damage is sourced and source is not self.
@@ -1830,10 +1575,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // * Things are not both friends while target is not a SUPERFRIEND
 
    // TODO: add fine-grained infighting control as metadata
-   
+
    if(source && source != target                                     // source checks
       && !(source->flags3 & MF3_DMGIGNORED)                          // not ignored?
-      && !bossignore                                                 // EDF_FIXME!
+      && !speciesignore                                              // species not fighting
       && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?
       && ((source->flags ^ target->flags) & MF_FRIEND ||             // friendliness?
            monster_infighting || demo_version < 203)
@@ -1857,7 +1602,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       P_SetTarget<Mobj>(&target->target, source);       // killough 11/98
       target->threshold = BASETHRESHOLD;
 
-      if(target->state == states[target->info->spawnstate] && 
+      if(target->state == states[target->info->spawnstate] &&
          target->info->seestate != NullStateNum)
       {
          P_SetMobjState(target, target->info->seestate);
@@ -1867,7 +1612,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // haleyjd 01/15/06: Fix for demo comp problem introduced in MBF
    // For MBF and above, set MF_JUSTHIT here
    // killough 11/98: Don't attack a friend, unless hit by that friend.
-   if(!demo_compatibility && justhit && 
+   if(!demo_compatibility && justhit &&
       (target->target == source || !target->target ||
        !(target->flags & target->target->flags & MF_FRIEND)))
    {
@@ -1913,14 +1658,14 @@ void P_Whistle(Mobj *actor, int mobjtype)
       z = actor->z;
 
       // don't cross "solid" lines
-      if(Check_Sides(actor, x, y))
+      if(Check_Sides(actor, x, y, mo->type))
          return;
 
       // try the teleport
       // 06/06/05: use strict teleport now
       if(P_TeleportMoveStrict(mo, x, y, false))
       {
-         Mobj *fog = P_SpawnMobj(prevx, prevy, 
+         Mobj *fog = P_SpawnMobj(prevx, prevy,
                                    prevz + GameModeInfo->teleFogHeight,
                                    E_SafeThingName(GameModeInfo->teleFogType));
          S_StartSound(fog, GameModeInfo->teleSound);
@@ -1931,7 +1676,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
 
          // put the thing into its spawnstate and keep it still
          P_SetMobjState(mo, mo->info->spawnstate);
-         mo->z = mo->floorz;
+         mo->z = mo->zref.floor;
          mo->momx = mo->momy = mo->momz = 0;
          mo->backupPosition();
 
@@ -1953,7 +1698,7 @@ void P_Whistle(Mobj *actor, int mobjtype)
 //
 bool P_ThingIsCorpse(const Mobj *mobj)
 {
-   return mobj->flags & MF_CORPSE && mobj->tics == -1 && 
+   return mobj->flags & MF_CORPSE && mobj->tics == -1 &&
       mobj->info->raisestate != NullStateNum;
 }
 
@@ -1975,7 +1720,7 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
    if(comp[comp_vile])
    {
       corpse->height <<= 2;
-      
+
       // haleyjd 11/11/04: this is also broken by Lee's change to
       // PIT_CheckThing when not in demo_compatibility.
       if(demo_version >= 331)
@@ -1985,13 +1730,13 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 
       if(demo_version >= 331)
          corpse->flags &= ~MF_SOLID;
-      
+
       corpse->height >>= 2;
    }
    else
    {
       int height,radius;
-      
+
       height = corpse->height; // save temporarily
       radius = corpse->radius; // save temporarily
       corpse->height = P_ThingInfoHeight(corpse->info);
@@ -2033,12 +1778,12 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
       corpse->radius = info->radius;
    }                                                  // phares
 
-   // killough 7/18/98: 
+   // killough 7/18/98:
    // friendliness is transferred from AV to raised corpse
    // ioanch 20160221: if there's no raiser, don't change friendliness
    if(raiser)
    {
-      corpse->flags = 
+      corpse->flags =
          (info->flags & ~MF_FRIEND) | (raiser->flags & MF_FRIEND);
    }
    else
@@ -2084,11 +1829,11 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
       return -1;
    }
 
-   while((rover = P_FindMobjFromTID(params[1], rover, 
+   while((rover = P_FindMobjFromTID(params[1], rover,
                                     context->invocationData.trigger)))
    {
       int damage;
-      
+
       switch(params[2])
       {
       case 1: // telefrag damage
@@ -2098,7 +1843,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
          damage = rover->health;
          break;
       }
-      
+
       P_DamageMobj(rover, NULL, NULL, damage, MOD_UNKNOWN);
    }
 
@@ -2125,13 +1870,13 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 
    if(params[4] != 0)
    {
-      inflictor = P_FindMobjFromTID(params[4], inflictor, 
+      inflictor = P_FindMobjFromTID(params[4], inflictor,
                                     context->invocationData.trigger);
    }
 
    if(params[5] != 0)
    {
-      source = P_FindMobjFromTID(params[5], source, 
+      source = P_FindMobjFromTID(params[5], source,
                                  context->invocationData.trigger);
    }
 

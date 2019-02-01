@@ -38,6 +38,7 @@
 #include "e_dstate.h"
 #include "e_edf.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
@@ -45,10 +46,12 @@
 #include "e_sprite.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_cheat.h"
 #include "m_qstr.h"
+#include "m_qstrkeys.h"
 #include "metaapi.h"
 #include "metaspawn.h"
 #include "p_inter.h"
@@ -57,6 +60,7 @@
 #include "r_defs.h"
 #include "r_draw.h"
 #include "w_wad.h"
+#include "z_auto.h"
 
 // 11/06/11: track generations
 static int edf_thing_generation = 1; 
@@ -158,6 +162,7 @@ int UnknownThingType;
 
 // Graphic Properites
 #define ITEM_TNG_TRANSLUC     "translucency"
+#define ITEM_TNG_TRANMAP      "tranmap"
 #define ITEM_TNG_COLOR        "translation"
 #define ITEM_TNG_SKINSPRITE   "skinsprite"
 #define ITEM_TNG_DEFSPRITE    "defaultsprite"
@@ -205,6 +210,20 @@ int UnknownThingType;
 
 #define ITEM_TNG_BB_ACTION   "action"
 #define ITEM_TNG_BB_BEHAVIOR "behavior"
+
+// Pickup Property
+#define ITEM_TNG_PFX_PICKUPFX  "pickupeffect"
+#define ITEM_TNG_PFX_EFFECTS   "effects"
+#define ITEM_TNG_PFX_CHANGEWPN "changeweapon"
+#define ITEM_TNG_PFX_MSG       "message"
+#define ITEM_TNG_PFX_SOUND     "sound"
+#define ITEM_TNG_PFX_FLAGS     "flags"
+
+//
+// Thing groups
+//
+#define ITEM_TGROUP_FLAGS "flags"
+#define ITEM_TGROUP_TYPES "types"
 
 //
 // Field-Specific Data
@@ -437,11 +456,14 @@ static cfg_opt_t acs_data[] =
    CFG_END()
 };
 
+static int E_damageFactorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, 
+   void *result);
+
 // damage factor multi-value property options
 static cfg_opt_t dmgf_opts[] =
 {
    CFG_STR(  ITEM_TNG_DMGF_MODNAME, "Unknown", CFGF_NONE),
-   CFG_FLOAT(ITEM_TNG_DMGF_FACTOR,  0.0,       CFGF_NONE),
+   CFG_FLOAT_CB(ITEM_TNG_DMGF_FACTOR, 0.0, CFGF_NONE, E_damageFactorCB),
    CFG_END()
 };
 
@@ -475,8 +497,20 @@ static cfg_opt_t bloodbeh_opts[] =
    CFG_END()
 };
 
+static cfg_opt_t tngpfx_opts[] =
+{
+   CFG_STR(ITEM_TNG_PFX_EFFECTS,   0,          CFGF_LIST),
+   CFG_STR(ITEM_TNG_PFX_CHANGEWPN, NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_MSG,       NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_SOUND,     NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_FLAGS,     NULL,       CFGF_NONE),
+
+   CFG_END()
+};
+
 // translation value-parsing callback
 static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
+static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 #define THINGTYPE_FIELDS \
    CFG_INT(ITEM_TNG_DOOMEDNUM,       -1,            CFGF_NONE), \
@@ -552,6 +586,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_FASTSPEED,    0,             CFGF_NONE, E_IntOrFixedCB), \
    CFG_INT_CB(ITEM_TNG_TRANSLUC,     65536,         CFGF_NONE, E_TranslucCB  ), \
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
+   CFG_INT_CB(ITEM_TNG_TRANMAP,     -1,             CFGF_NONE, E_TranMapCB   ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
@@ -561,6 +596,7 @@ static int E_ColorCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODIMPACT,     "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
+   CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -575,6 +611,69 @@ cfg_opt_t edf_tdelta_opts[] =
    CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
    THINGTYPE_FIELDS
 };
+
+
+//==============================================================================
+
+static dehflags_t tgroup_kinds[] =
+{
+   { "PROJECTILEALLIANCE", TGF_PROJECTILEALLIANCE },
+   { "DAMAGEIGNORE",       TGF_DAMAGEIGNORE       },
+   { "INHERITED",          TGF_INHERITED          },
+   { nullptr,              0                      }
+};
+
+//
+// Thinggroup kinds
+//
+static dehflagset_t tgroup_kindset =
+{
+   tgroup_kinds,  // flaglist
+   0              // mode
+};
+
+//
+// Thinggroup options
+//
+cfg_opt_t edf_tgroup_opts[] =
+{
+   CFG_STR(ITEM_TGROUP_FLAGS, "", CFGF_NONE),
+   CFG_STR(ITEM_TGROUP_TYPES, 0, CFGF_LIST),
+   CFG_END()
+};
+
+//
+// The thing group
+//
+class ThingGroup : public ZoneObject
+{
+public:
+   explicit ThingGroup(const char *inname) : name(inname), link(), flags()
+   {
+   }
+
+   qstring name;
+   DLListItem<ThingGroup> link;
+
+   unsigned flags;
+   PODCollection<int> types;
+};
+
+//
+// A projectile alliance definition
+//
+struct thinggrouppair_t
+{
+   union
+   {
+      int types[2];
+      int64_t key;
+   };
+   DLListItem<thinggrouppair_t> link;
+   unsigned flags;   // use flags from ThingGroup
+};
+
+//==============================================================================
 
 //
 // Thing Type Hash Lookup Functions
@@ -599,6 +698,13 @@ static EHashTable<mobjinfo_t, ENCStringHashKey,
 // hash by DeHackEd number
 static EHashTable<mobjinfo_t, EIntHashKey,
                   &mobjinfo_t::dehnum, &mobjinfo_t::numlinks> thing_dehhash(NUMTHINGCHAINS);
+
+// Thing group
+static EHashTable<ThingGroup, ENCQStrHashKey,
+                  &ThingGroup::name, &ThingGroup::link> thinggroup_namehash(53);
+
+static EHashTable<thinggrouppair_t, EInt64HashKey,
+     &thinggrouppair_t::key, &thinggrouppair_t::link> thinggrouppairs(NUMTHINGCHAINS);
 
 //
 // As with states, things need to store their DeHackEd number now.
@@ -983,7 +1089,7 @@ static void E_RemoveMetaState(mobjinfo_t *mi, const char *name)
 // Gets a state that is stored inside an mobjinfo metatable.
 // Returns null if no such object exists.
 //
-static MetaState *E_GetMetaState(mobjinfo_t *mi, const char *name)
+static MetaState *E_GetMetaState(const mobjinfo_t *mi, const char *name)
 {
    return mi->meta->getObjectKeyAndTypeEx<MetaState>(name);
 }
@@ -1036,7 +1142,7 @@ static void E_ThingFrame(const char *data, const char *fieldname,
 // uses a mod name as a suffix.
 // Don't cache the return value.
 //
-const char *E_ModFieldName(const char *base, emod_t *mod)
+const char *E_ModFieldName(const char *base, const emod_t *mod)
 {
    static qstring namebuffer;
 
@@ -1049,10 +1155,11 @@ const char *E_ModFieldName(const char *base, emod_t *mod)
 // Returns the state from the given mobjinfo for the given mod type and
 // base label, if such exists. If not, null is returned.
 //
-state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
+state_t *E_StateForMod(const mobjinfo_t *mi, const char *base,
+                       const emod_t *mod)
 {
    state_t   *ret = nullptr;
-   MetaState *mstate;
+   const MetaState *mstate;
 
    if((mstate = E_GetMetaState(mi, E_ModFieldName(base, mod))))
       ret = mstate->state;
@@ -1064,7 +1171,7 @@ state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod)
 // Convenience wrapper routine to get the state node for a given
 // mod type by number, rather than with a pointer to the damagetype object.
 //
-state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num)
+state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num)
 {
    emod_t  *mod = E_DamageTypeForNum(num);
    state_t *ret = nullptr;
@@ -1224,7 +1331,7 @@ static void E_ProcessDamageTypeStates(cfg_t *cfg, const char *name,
 // by name. Returns null otherwise. Self-identity is *not* considered 
 // inheritance.
 //
-mobjinfo_t *E_IsMobjInfoDescendantOf(mobjinfo_t *mi, const char *type)
+static mobjinfo_t *E_IsMobjInfoDescendantOf(const mobjinfo_t *mi, const char *type)
 {
    mobjinfo_t *curmi = mi->parent;
    int targettype = E_ThingNumForName(type);
@@ -1266,14 +1373,14 @@ void E_SplitTypeAndState(char *src, char **type, char **state)
 //
 // Deal with unresolved goto entries in the DECORATE state object.
 //
-static void E_processDecorateGotos(mobjinfo_t *mi, edecstateout_t *dso)
+static void E_processDecorateGotos(const mobjinfo_t *mi, edecstateout_t *dso)
 {
    int i;
 
    for(i = 0; i < dso->numgotos; ++i)
    {
-      mobjinfo_t *type = nullptr;
-      state_t *state;
+      const mobjinfo_t *type = nullptr;
+      const state_t *state;
       statenum_t statenum;
       char *statename = nullptr;
 
@@ -1472,7 +1579,8 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
       if(mod->num != 0)
       {
          double df  = cfg_getfloat(sec, ITEM_TNG_DMGF_FACTOR);
-         int    dfi = static_cast<int>(M_DoubleToFixed(df));
+         // D_MININT is a special case which makes monster totally ignore damage
+         int    dfi = df == D_MININT ? D_MININT : static_cast<int>(M_DoubleToFixed(df));
 
          info->meta->setInt(E_ModFieldName("damagefactor", mod), dfi);
       }
@@ -1619,7 +1727,7 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 //
 // Proceses a given blood property.
 //
-void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
+static void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
 {
    const char *bloodVal = cfg_getstr(cfg, searchedprop);
 
@@ -1659,7 +1767,7 @@ static const char * gamemodeinfo_t::* defaultForBloodAction[NUMBLOODACTIONS] =
 // Returns -1 if there is not a valid blood type for this action. This may, in the
 // case of an @none indicator, mean that no blood is meant to be spawned.
 //
-int E_BloodTypeForThing(Mobj *mo, bloodaction_e action)
+int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action)
 {
    const char *actionKey   = keyForBloodAction[action];
    const char *defaultType = GameModeInfo->*(defaultForBloodAction[action]);
@@ -1809,6 +1917,71 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
    return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
 }
 
+static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
+{
+   const char *str;
+   cfg_t *pfx_cfg = cfg_getsec(thingsec, ITEM_TNG_PFX_PICKUPFX);
+
+   if(mi.pickupfx == nullptr)
+   {
+      mi.pickupfx = estructalloc(e_pickupfx_t, 1);
+      // TODO: Is setting name reuqired? Maybe this could be eliminated.
+      qstring qname("_");
+      qname += mi.name;
+      mi.pickupfx->name = qname.duplicate();
+   }
+   // EDF_FEATURES_TODO: else efree? i.e. remove all the
+   // internal properties of the CFG_SEC that were set beforehand
+
+   e_pickupfx_t &pfx = *mi.pickupfx;
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
+   {
+      if(pfx.numEffects)
+         efree(pfx.effects);
+
+      if((pfx.numEffects = cfg_size(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
+      {
+         pfx.effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
+         for(unsigned int i = 0; i < pfx.numEffects; i++)
+         {
+            str = cfg_getnstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS, i);
+            if(!(pfx.effects[i] = E_ItemEffectForName(str)))
+            {
+               E_EDFLoggedWarning(2, "Warning: invalid pickup effect: '%s'\n", str);
+               return;
+            }
+         }
+      }
+   }
+   
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_CHANGEWPN)))
+   {
+      if(estrnonempty(str) && !(pfx.changeweapon = E_WeaponForName(str)))
+      {
+         E_EDFLoggedWarning(2, "Warning: invalid changeweapon '%s' for pickup effect in "
+                               "thingtype '%s'\n", str, mi.name);
+      }
+   }
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_MSG)))
+   {
+      if(pfx.message == nullptr)
+         efree(pfx.message);
+      pfx.message = estrdup(str);
+   }
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_SOUND)))
+   {
+      if(pfx.sound == nullptr)
+         efree(pfx.sound);
+      pfx.sound = estrdup(str);
+   }
+
+   if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_FLAGS)))
+      pfx.flags = E_PickupFlagsForStr(str);
+}
+
 //
 // libConfuse value-parsing callback for the thingtype translation
 // field. Can accept an integer value which indicates one of the 14
@@ -1822,7 +1995,7 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    int num;
    char *endptr;
 
-   num = strtol(value, &endptr, 0);
+   num = static_cast<int>(strtol(value, &endptr, 0));
 
    // try lump name
    if(*endptr != '\0')
@@ -1843,6 +2016,45 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       *(int *)result = num % TRANSLATIONCOLOURS;
    }
 
+   return 0;
+}
+
+//
+// Translucency map support
+//
+static int E_TranMapCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                       void *result)
+{
+   int *target = static_cast<int *>(result);
+   if(!strcasecmp(value, "none"))   // accept none
+   {
+      *target = -1;
+      return 0;
+   }
+
+   // try lump name
+   int trnum = W_CheckNumForName(value);
+   if(trnum < 0 || W_LumpLength(trnum) != 65536)
+   {
+      // Do not error out from this
+      E_EDFLoggedWarning(2, "Bad translucency lump '%s'\n", value);
+      *target = -1;
+      return 0;
+   }
+   *target = trnum;
+
+   return 0;
+}
+
+//
+// Damagefactor value callback
+//
+static int E_damageFactorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+   void *result)
+{
+   double *target = static_cast<double *>(result);
+   // D_MININT means immune. Even floating-point is marked with D_MININT.
+   *target = !strcasecmp(value, "immune") ? D_MININT : strtod(value, nullptr);
    return 0;
 }
 
@@ -1992,7 +2204,7 @@ struct thingtitleprops_t
 // Retrieve all the values in the thing's title properties, if such
 // are defined.
 //
-void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
+static void E_getThingTitleProps(cfg_t *thingsec, thingtitleprops_t &props, bool def)
 {
    cfg_t *titleprops;
 
@@ -2405,6 +2617,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_TRANSLUC))
       mobjinfo[i]->translucency = cfg_getint(thingsec, ITEM_TNG_TRANSLUC);
 
+   // process translucency map
+   if(IS_SET(ITEM_TNG_TRANMAP))
+      mobjinfo[i]->tranmap = cfg_getint(thingsec, ITEM_TNG_TRANMAP);
+
    // process bloodcolor
    if(IS_SET(ITEM_TNG_BLOODCOLOR))
       mobjinfo[i]->bloodcolor = cfg_getint(thingsec, ITEM_TNG_BLOODCOLOR);
@@ -2593,7 +2809,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       char *endpos = nullptr;
       tempstr = cfg_getstr(thingsec, ITEM_TNG_MOD);
 
-      tempint = strtol(tempstr, &endpos, 0);
+      tempint = static_cast<int>(strtol(tempstr, &endpos, 0));
       
       if(endpos && *endpos == '\0')
          mod = E_DamageTypeForNum(tempint);  // it is a number
@@ -2818,6 +3034,170 @@ void E_ProcessThings(cfg_t *cfg)
 }
 
 //
+// True if mobjtype low is a descendant of high.
+//
+static bool E_mobjTypeIsDescendantOf(mobjtype_t low, mobjtype_t high)
+{
+   for(const mobjinfo_t *info = mobjinfo[low]; info; info = info->parent)
+      if(info->index == high)
+         return true;
+   return false;
+}
+
+//
+// Process thing group definitions
+//
+void E_ProcessThingGroups(cfg_t *cfg)
+{
+   unsigned numgroups = cfg_size(cfg, EDF_SEC_THINGGROUP);
+   ThingGroup *group;
+
+   // Have a visited list
+   ZAutoBuffer zvisited(NUMMOBJTYPES, true);
+   bool *visited = zvisited.getAs<bool *>();
+
+   for(unsigned i = 0; i < numgroups; ++i)
+   {
+      cfg_t *gsec = cfg_getnsec(cfg, EDF_SEC_THINGGROUP, i);
+      const char *name = cfg_title(gsec);
+
+      group = thinggroup_namehash.objectForKey(name);
+      if(!group)
+      {
+         E_EDFLogPrintf("\t\tCreating thing group '%s'\n", name);
+         group = new ThingGroup(name);
+         thinggroup_namehash.addObject(group);
+      }
+      else
+         E_EDFLogPrintf("\t\tModifying thing group '%s'\n", name);
+
+      const char *tempstr = cfg_getstr(gsec, ITEM_TGROUP_FLAGS);
+      if(estrnonempty(tempstr))
+         group->flags = E_ParseFlags(tempstr, &tgroup_kindset);
+
+      unsigned numtypes = cfg_size(gsec, ITEM_TGROUP_TYPES);
+      if(numtypes)
+      {
+         group->types.clear();   // clear it even if thinggroup redefined.
+         for(unsigned j = 0; j < numtypes; ++j)
+         {
+            tempstr = cfg_getnstr(gsec, ITEM_TGROUP_TYPES, j);
+            int type = E_ThingNumForName(tempstr);
+            if(type != -1 && !visited[type])
+            {
+               visited[type] = true;
+               group->types.add(type);
+               if(group->flags & TGF_INHERITED)
+               {
+                  // Also check children
+                  for(int k = 0; k < NUMMOBJTYPES; ++k)
+                  {
+                     if(visited[k] || !E_mobjTypeIsDescendantOf(k, type))
+                        continue;
+
+                     visited[k] = true;
+                     group->types.add(k);
+                  }
+               }
+            }
+            else if(!visited[type]) // don't scream if visited
+            {
+               E_EDFLoggedWarning(2, "Warning: unknown type '%s' for group '%s'\n",
+                                  tempstr, name);
+            }
+         }
+      }
+   }
+
+   // Now process them
+   thinggrouppair_t *proj;
+   while((proj = thinggrouppairs.tableIterator((thinggrouppair_t*)nullptr)))
+   {
+      thinggrouppairs.removeObject(proj);
+      efree(proj);
+   }
+
+   group = nullptr;
+   static const unsigned operationalFlags = TGF_PROJECTILEALLIANCE | TGF_DAMAGEIGNORE;
+   while((group = thinggroup_namehash.tableIterator(group)))
+   {
+      // Currently only these are supported
+      if(!(group->flags & operationalFlags))
+         continue;
+      // Setup relation
+      for(int entry : group->types)
+      {
+         for(int other : group->types)
+         {
+            if(other <= entry)
+               continue;
+            int64_t key = (int64_t)entry | (int64_t)other << 32;
+            proj = thinggrouppairs.objectForKey(key);
+            if (!proj)
+            {
+               proj = estructalloc(thinggrouppair_t, 1);
+               proj->types[0] = entry;
+               proj->types[1] = other;
+               thinggrouppairs.addObject(proj);
+            }
+            proj->flags |= group->flags & operationalFlags;
+         }
+      }
+   }
+}
+
+//
+// Returns that two monsters are allies
+//
+bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
+{
+   if(t2 < t1)
+   {
+      mobjtype_t aux = t1;
+      t1 = t2;
+      t2 = aux;
+   }
+   const thinggrouppair_t *pair = thinggrouppairs.objectForKey((int64_t)t1 | (int64_t)t2 << 32);
+   return pair && pair->flags & flags;
+}
+
+//
+// Process a single thingtype's or thingdelta's pickupeffect
+// this cannot be done during first pass thingtype processing.
+//
+static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
+{
+   int thingnum = E_ThingNumForName(thingname);
+   if(cfg_size(sec, ITEM_TNG_PFX_PICKUPFX) > 0)
+      E_processThingPickupEffect(*mobjinfo[thingnum], sec);
+
+   // TODO: Delete this if not needed.
+   /*if(cfg_size(sec, ITEM_TNG_PICKUPEFFECT))
+   {
+      const char *tempstr = cfg_getstr(sec, ITEM_TNG_PICKUPEFFECT);
+      if(!(mobjinfo[thingnum]->pickupfx = E_PickupFXForName(tempstr)))
+      {
+         E_EDFLoggedWarning(2, "Invalid pickupeffect '%s' in %s '%s'\n",
+                           tempstr, def ? "thingtype" : "thingdelta", thingname);
+      }
+   }*/
+}
+
+//
+// Process pickupeffects within thingtypes.
+//
+void E_ProcessThingPickups(cfg_t *cfg)
+{
+   unsigned int i, numthings = cfg_size(cfg, EDF_SEC_THING);;
+   for(i = 0; i < numthings; i++)
+   {
+      cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_THING, i);
+      const char *name = cfg_title(thingsec);
+      E_processThingPickup(thingsec, name);
+   }
+}
+
+//
 // Does processing for thingdelta sections, which allow cascading
 // editing of existing things. The thingdelta shares most of its
 // fields and processing code with the thingtype section.
@@ -2846,6 +3226,7 @@ void E_ProcessThingDeltas(cfg_t *cfg)
       mobjType = E_GetThingNumForName(tempstr);
 
       E_ProcessThing(mobjType, deltasec, cfg, false);
+      E_processThingPickup(deltasec, tempstr);
 
       E_EDFLogPrintf("\t\tApplied thingdelta #%d to %s(#%d)\n",
                      i, mobjinfo[mobjType]->name, mobjType);
@@ -2945,11 +3326,11 @@ int *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label)
 // Returns null if no such state can be found. Note that the null state is
 // not considered a valid state.
 //
-state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
+state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label)
 {
-   MetaState *ms;
+   const MetaState *ms;
    state_t *ret = nullptr;
-   int *nativefield = nullptr;
+   const int *nativefield = nullptr;
 
    // check metastates
    if((ms = E_GetMetaState(mi, label)))
@@ -2967,7 +3348,7 @@ state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label)
 //
 // Convenience routine to call the above given an Mobj.
 //
-state_t *E_GetStateForMobj(Mobj *mo, const char *label)
+state_t *E_GetStateForMobj(const Mobj *mo, const char *label)
 {
    return E_GetStateForMobjInfo(mo->info, label);
 }

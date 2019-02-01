@@ -80,7 +80,7 @@ int obcolour = CR_BRICK;       // the colour of death messages
 vfont_t *hud_font;
 char *hud_fontname;
 
-static bool HU_ChatRespond(event_t *ev);
+static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
 //
@@ -177,10 +177,8 @@ bool HUDWidget::AddWidgetToHash(HUDWidget *widget)
 void HUDWidget::StartWidgets()
 {
    // call all widget clear functions
-   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   for(HUDWidget *widget : hu_chains)
    {
-      HUDWidget *widget = hu_chains[i];
-
       while(widget)
       {
          widget->clear();
@@ -197,10 +195,8 @@ void HUDWidget::StartWidgets()
 void HUDWidget::DrawWidgets()
 {
    // call all widget drawer functions
-   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   for(HUDWidget *widget : hu_chains)
    {
-      HUDWidget *widget = hu_chains[i];
-
       while(widget && !widget->disabled)
       {
          widget->drawer();
@@ -217,10 +213,8 @@ void HUDWidget::DrawWidgets()
 void HUDWidget::TickWidgets()
 {
    // call all widget ticker functions
-   for(int i = 0; i < NUMWIDGETCHAINS; i++)
+   for(HUDWidget *widget : hu_chains)
    {
-      HUDWidget *widget = hu_chains[i];
-
       while(widget)
       {
          widget->ticker();
@@ -275,7 +269,7 @@ void HU_Init()
    if(!(hud_font = E_FontForName(hud_fontname)))
       I_Error("HU_Init: bad EDF font name %s\n", hud_fontname);
 
-   HU_LoadFont(); // overlay font
+   HU_LoadFonts(); // overlay font
    HU_InitNativeWidgets();
 }
 
@@ -343,7 +337,7 @@ bool altdown = false;
 // Called from G_Responder. Has priority over any other events
 // intercepted by that function.
 //
-bool HU_Responder(event_t *ev)
+bool HU_Responder(const event_t *ev)
 {
    if(ev->data1 == KEYD_LALT)
       altdown = (ev->type == ev_keydown);
@@ -879,7 +873,7 @@ void HU_CenterMessage(const char *s)
 // haleyjd: timed center message. Originally for FraggleScript,
 // now revived for Small.
 //
-void HU_CenterMessageTimed(const char *s, int tics)
+static void HU_CenterMessageTimed(const char *s, int tics)
 {
    HU_CenterMessage(s);
    centermessage_widget.cleartic = leveltime + tics;
@@ -946,7 +940,7 @@ void HUDCrossHairWidget::ticker()
    fixed_t oldAttackRange = trace.attackrange;
    P_AimLineAttack(players[displayplayer].mo,
                    players[displayplayer].mo->angle, 
-                   16*64*FRACUNIT, 0);
+                   16*64*FRACUNIT, false);
    trace.attackrange = oldAttackRange;
 
    if(clip.linetarget)
@@ -1013,7 +1007,7 @@ void HUDCrossHairWidget::drawer()
 //
 // Sets up the crosshair widget and associated globals.
 //
-void HU_InitCrossHair()
+static void HU_InitCrossHair()
 {
    // haleyjd TODO: support user-added crosshairs
    crosshairs[0] = W_CheckNumForName("CROSS1");
@@ -1255,21 +1249,23 @@ static void HU_InitChat()
 //
 // Responds to chat-related events.
 //
-static bool HU_ChatRespond(event_t *ev)
+static bool HU_ChatRespond(const event_t *ev)
 {
    char ch = 0;
    static bool shiftdown;
+   static bool discardinput = false;
 
    // haleyjd 06/11/08: get HUD actions
    int action = G_KeyResponder(ev, kac_hud);
    
    if(ev->data1 == KEYD_RSHIFT) 
       shiftdown = (ev->type == ev_keydown);
+   (void)shiftdown;
 
    if(action == ka_frags)
       hu_showfrags = (ev->type == ev_keydown);
 
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
 
    if(!chat_active)
@@ -1278,9 +1274,17 @@ static bool HU_ChatRespond(event_t *ev)
       {       
          chat_active = true; // activate chat
          chatinput[0] = 0;   // empty input string
+         if(ectype::isPrint(ev->data1))
+            discardinput = true; // avoid activation key also appearing in input string
          return true;
       }
       return false;
+   }
+
+   if(ev->type == ev_text && discardinput)
+   {
+      discardinput = false;
+      return true;
    }
   
    if(altdown && ev->type == ev_keydown &&
@@ -1316,12 +1320,13 @@ static bool HU_ChatRespond(event_t *ev)
       return true;
    }
 
-   if(ev->character)
-      ch = ev->character;
-   else if(ev->data1 > 31 && ev->data1 < 127)
-      ch = shiftdown ? shiftxform[ev->data1] : ev->data1; // shifted?
+   if(ev->type == ev_keydown && ectype::isPrint(ev->data1))
+      return true; // eat keydown inputs that have text equivalent
+
+   if(ev->type == ev_text)
+      ch = ev->data1;
    
-   if(ch > 31 && ch < 127)
+   if(ectype::isPrint(ch))
    {
       psnprintf(chatinput, sizeof(chatinput), "%s%c", chatinput, ch);
       return true;
@@ -1882,8 +1887,8 @@ static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
 
 static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)
 {
-   if(hud_enabled && hud_overlaystyle > 0) // Boom HUD enabled, return style
-      return (cell)hud_overlaystyle + 1;
+   if(hud_enabled && hud_overlaylayout > 0) // Boom HUD enabled, return style
+      return (cell)hud_overlaylayout + 1;
    else if(viewwindow.height == video.height)         // Fullscreen (no HUD)
       return 0;			
    else                                    // Vanilla style status bar

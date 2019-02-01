@@ -30,6 +30,7 @@ struct line_t;
 struct sector_t;
 struct particle_t;
 struct planehash_t;
+struct pwindow_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -60,7 +61,7 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bool pushmasked, planehash_t *overlay);
+void R_PushPost(bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const float *top, const float *bottom);
@@ -70,8 +71,6 @@ struct texcol_t;
 
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
 void R_AddSprites(sector_t *sec, int); // killough 9/18/98
-void R_AddPSprites(void);
-void R_DrawSprites(void);
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
 void R_DrawPostBSP(void);

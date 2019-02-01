@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright (C) 2013 James Haley et al.
@@ -21,7 +21,7 @@
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    Custom damage types, or "Means of Death" flags.
 //
 //-----------------------------------------------------------------------------
@@ -51,6 +51,8 @@
 #define ITEM_DAMAGETYPE_OBIT       "obituary"
 #define ITEM_DAMAGETYPE_SELFOBIT   "obituaryself"
 #define ITEM_DAMAGETYPE_SOURCELESS "sourceless"
+#define ITEM_DAMAGETYPE_ABSPUSH    "absolute.push"
+#define ITEM_DAMAGETYPE_ABSHOP     "absolute.hop"
 
 cfg_opt_t edf_dmgtype_opts[] =
 {
@@ -58,6 +60,8 @@ cfg_opt_t edf_dmgtype_opts[] =
    CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,  CFGF_NONE),
    CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,  CFGF_NONE),
    CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false, CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,     CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,     CFGF_NONE),
    CFG_END()
 };
 
@@ -69,11 +73,11 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 #define NUMMODCHAINS 67
 
-static EHashTable<emod_t, ENCStringHashKey, 
+static EHashTable<emod_t, ENCStringHashKey,
                  &emod_t::name, &emod_t::namelinks> e_mod_namehash(NUMMODCHAINS);
 
 // haleyjd 08/02/09: use new generic hash
-static EHashTable<emod_t, EIntHashKey, 
+static EHashTable<emod_t, EIntHashKey,
                   &emod_t::num, &emod_t::numlinks> e_mod_numhash(NUMMODCHAINS);
 
 // default damage type - "Unknown"
@@ -96,7 +100,7 @@ static void E_AddDamageTypeToNameHash(emod_t *mod)
    e_mod_namehash.addObject(*mod);
 
    // cache dfKeyIndex for use in metatables
-   mod->dfKeyIndex = 
+   mod->dfKeyIndex =
       MetaTable::IndexForKey(E_ModFieldName("damagefactor", mod));
 }
 
@@ -126,7 +130,7 @@ static bool E_AutoAllocModNum(emod_t *mod)
    do
    {
       num = edf_alloc_modnum--;
-   } 
+   }
    while(num > 0 && E_DamageTypeForNum(num) != &unknown_mod);
 
    // ran out while looking for an unused number?
@@ -148,10 +152,10 @@ static bool E_AutoAllocModNum(emod_t *mod)
 static void E_AddDamageTypeToNumHash(emod_t *mod)
 {
    // Auto-assign a numeric key to all damage types which don't have
-   // a valid one explicitly specified. This avoids some gigantic, 
-   // messy code rewrites by allowing mobjinfo to always store the 
+   // a valid one explicitly specified. This avoids some gigantic,
+   // messy code rewrites by allowing mobjinfo to always store the
    // numeric key.
-   
+
    if(mod->num <= 0)
    {
       E_AutoAllocModNum(mod);
@@ -253,14 +257,14 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
       if(obituary)
       {
-         // determine if obituary string is a BEX string
+         // determine if obituary string is an indirect string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
-            ++obituary;         
-            mod->obitIsBexString = true;
+            ++obituary;
+            mod->obitIsIndirect = true;
          }
          else
-            mod->obitIsBexString = false;
+            mod->obitIsIndirect = false;
 
          mod->obituary = estrdup(obituary);
       }
@@ -280,14 +284,14 @@ static void E_ProcessDamageType(cfg_t *dtsec)
 
       if(obituary)
       {
-         // determine if obituary string is a BEX string
+         // determine if obituary string is an indirect string
          if(obituary[0] == '$' && strlen(obituary) > 1)
          {
-            ++obituary;         
-            mod->selfObitIsBexString = true;
+            ++obituary;
+            mod->selfObitIsIndirect = true;
          }
          else
-            mod->selfObitIsBexString = false;
+            mod->selfObitIsIndirect = false;
 
          mod->selfobituary = estrdup(obituary);
       }
@@ -297,7 +301,18 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
-   E_EDFLogPrintf("\t\t%s damagetype %s\n", 
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSPUSH))
+   {
+      mod->absolutePush = M_DoubleToFixed(cfg_getfloat(dtsec,
+                                                       ITEM_DAMAGETYPE_ABSPUSH));
+   }
+   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSHOP))
+   {
+      mod->absoluteHop = M_DoubleToFixed(cfg_getfloat(dtsec,
+                                                      ITEM_DAMAGETYPE_ABSHOP));
+   }
+
+   E_EDFLogPrintf("\t\t%s damagetype %s\n",
                   def ? "Defined" : "Modified", mod->name);
 }
 
@@ -324,8 +339,8 @@ static void E_initUnknownMod(void)
       unknown_mod.num  = 0;
       unknown_mod.obituary = obituary;
       unknown_mod.selfobituary = obituary;
-      unknown_mod.obitIsBexString = true;
-      unknown_mod.selfObitIsBexString = true;
+      unknown_mod.obitIsIndirect = true;
+      unknown_mod.selfObitIsIndirect = true;
       unknown_mod.sourceless = false;
    }
 }
@@ -379,7 +394,7 @@ emod_t *E_DamageTypeForName(const char *name)
 emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
-   
+
    if((mod = e_mod_numhash.objectForKey(num)) == NULL)
       mod = &unknown_mod;
 
@@ -394,7 +409,7 @@ emod_t *E_DamageTypeForNum(int num)
 // requested type is not found by name.
 //
 int E_DamageTypeNumForName(const char *name)
-{ 
+{
    emod_t *mod = E_DamageTypeForName(name);
 
    return mod ? mod->num : 0;

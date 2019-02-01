@@ -85,7 +85,7 @@ spritespan_t **r_spritespan;
 // so the sprite does not need to be cached completely
 // just for having the header info ready during rendering.
 //
-void R_InitSpriteLumps(void)
+static void R_InitSpriteLumps(void)
 {
    int i;
    patch_t *patch;
@@ -186,7 +186,7 @@ static int r_numglobalmaps;
 //
 // killough 4/4/98: Add support for C_START/C_END markers
 //
-void R_InitColormaps()
+static void R_InitColormaps()
 {
    const WadDirectory::namespace_t &ns =
       wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
@@ -381,7 +381,10 @@ void R_InitTranMap(bool force)
             {
                if((err = tot[color] - pal[0][color]*r
                   - pal[1][color]*g - pal[2][color]*b) < best)
-                  best = err, *tp = color;
+               {
+                  best = err;
+                  *tp = color;
+               }
             }
             while(--color >= 0);
          }
@@ -490,7 +493,10 @@ void R_InitSubMap(bool force)
             {
                if((err = tot[color] - pal[0][color]*r
                   - pal[1][color]*g - pal[2][color]*b) < best)
-                  best = err, *tp = color;
+               {
+                  best = err;
+                  *tp = color;
+               }
             }
             while(--color >= 0);
          }

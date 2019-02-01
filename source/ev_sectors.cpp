@@ -296,7 +296,7 @@ static void EV_SectorHticScrollEastLavaDamage(sector_t *sector)
    sector->hticPushForce = 2048*28;
    
    // scrolls to the east:
-   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) * 8, 0, -1, sector - sectors, 0);
+   Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) * 8, 0, -1, eindex(sector - sectors), 0);
 }
 
 //
@@ -376,7 +376,7 @@ static void EV_setupHereticPusher(sector_t *sector, angle_t angle, int type, int
 static void EV_setupHereticScroller(sector_t *sector, int force)
 {
    Add_Scroller(ScrollThinker::sc_floor, (-FRACUNIT/2) << force,
-                0, -1, sector-sectors, 0);
+                0, -1, eindex(sector-sectors), 0);
 }
 
 //
@@ -766,7 +766,7 @@ static ev_sectorbinding_t *EV_findBinding(ev_sectorbinding_t *bindings,
 //
 // Look up a DOOM sector special binding.
 //
-ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 {
    return EV_findBinding(DoomSectorBindings, earrlen(DoomSectorBindings), special);
 }
@@ -777,7 +777,7 @@ ev_sectorbinding_t *EV_DOOMBindingForSectorSpecial(int special)
 // Look up a PSX sector type. Defers to DOOM's lookup if a PSX type is not
 // found first.
 //
-ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
 {
    ev_sectorbinding_t *binding;
 
@@ -793,7 +793,7 @@ ev_sectorbinding_t *EV_PSXBindingForSectorSpecial(int special)
 //
 // Look up a Heretic sector special binding.
 //
-ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 {
    return EV_findBinding(HticSectorBindings, earrlen(HticSectorBindings), special);
 }
@@ -803,7 +803,7 @@ ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 //
 // Look up a Hexen sector special binding.
 //
-ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
 {
    return EV_findBinding(HexenSectorBindings, earrlen(HexenSectorBindings), special);
 }
@@ -813,7 +813,7 @@ ev_sectorbinding_t *EV_HexenBindingForSectorSpecial(int special)
 //
 // Find the "lighting" special for a generalized sector.
 //
-ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
 {
    return EV_findBinding(GenBindings, earrlen(GenBindings), special & LIGHT_MASK);
 }
@@ -823,7 +823,7 @@ ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special)
 //
 // Look up a UDMF "Eternity" namespace sector special binding.
 //
-ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
 {
    return EV_findBinding(UDMFEternitySectorBindings, earrlen(UDMFEternitySectorBindings), special);
 }
@@ -834,7 +834,7 @@ ev_sectorbinding_t *EV_UDMFEternityBindingForSectorSpecial(int special)
 // Gets the binding for a given special depending on the level format and 
 // gamemode.
 //
-ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
+static ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
 {
    ev_sectorbinding_t *binding = nullptr;
 

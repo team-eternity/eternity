@@ -180,6 +180,35 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
 }
 
 //
+// Utility function which returns true if the divline dl crosses line
+// Returns -1 if there's no crossing, or the starting point's 0 or 1 side.
+//
+int P_LineIsCrossed(const line_t &line, const divline_t &dl)
+{
+   int a;
+   return (a = P_PointOnLineSide(dl.x, dl.y, &line)) !=
+   P_PointOnLineSide(dl.x + dl.dx, dl.y + dl.dy, &line) &&
+   P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl) !=
+   P_PointOnDivlineSide(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
+}
+
+//
+// Checks if a point is behind a subsector's 1-sided seg
+//
+bool P_IsInVoid(fixed_t x, fixed_t y, const subsector_t &ss)
+{
+   for(int i = 0; i < ss.numlines; ++i)
+   {
+      const seg_t &seg = segs[ss.firstline + i];
+      if(seg.backsector)
+         continue;
+      if(P_PointOnLineSide(x, y, seg.linedef))
+         return true;
+   }
+   return false;
+}
+
+//
 // Returns true if two bounding boxes intersect. Assumes they're correctly set.
 //
 bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])
@@ -261,7 +290,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
-   sector_t *beyond = linedef->intflags & MLI_POLYPORTALLINE &&
+   sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
       linedef->beyondportalline ?
       linedef->beyondportalline->frontsector : nullptr;
    if(beyond)
@@ -338,7 +367,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       backfz = clip.openbacksector->floorheight;
    }
 
-   if(linedef->extflags & EX_ML_UPPERPORTAL)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->c_pflags & PS_PASSABLE)
       clip.opentop = frontceilz;
    else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
@@ -346,7 +375,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.opentop = backceilz;
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
-   if(linedef->extflags & EX_ML_LOWERPORTAL)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->f_pflags & PS_PASSABLE)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = frontfloorz;
@@ -481,8 +510,8 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    if(thinglog)
    {
       fprintf(thinglog,
-         "%010d:%s:%p:%20s:%+010d:%+010d:%+010d:%+010d\n",
-         gametic, caller, mo, mo->info->name, mo->x, mo->y, mo->z, mo->flags);
+              "%010d:%s::%+010d:%+010d:%+010d:%+010d:%+010d\n",
+              gametic, caller, (int)(mo->info->dehnum-1), mo->x, mo->y, mo->z, mo->flags & 0x7fffffff);
    }
 }
 #else
@@ -617,7 +646,10 @@ void P_SetThingPosition(Mobj *thing)
          *link = thing;
       }
       else        // thing is off the map
-         thing->bnext = NULL, thing->bprev = NULL;
+      {
+         thing->bnext = NULL;
+         thing->bprev = NULL;
+      }
    }
 }
 
@@ -681,7 +713,8 @@ bool ThingIsOnLine(const Mobj *t, const line_t *l)
 // ioanch 20160111: added groupid
 // ioanch 20160114: enhanced the callback
 //
-bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int groupid)
+bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*, void *), int groupid,
+   void *context)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
@@ -708,7 +741,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
             if(po->lines[i]->validcount == validcount) // line has been checked
                continue;
             po->lines[i]->validcount = validcount;
-            if(!func(po->lines[i], po))
+            if(!func(po->lines[i], po, context))
                return false;
          }
       }
@@ -747,7 +780,7 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
       if(ld->validcount == validcount)
          continue;       // line has already been checked
       ld->validcount = validcount;
-      if(!func(ld, nullptr))
+      if(!func(ld, nullptr, context))
          return false;
    }
    return true;  // everything was checked
@@ -759,7 +792,8 @@ bool P_BlockLinesIterator(int x, int y, bool func(line_t*, polyobj_t*), int grou
 // killough 5/3/98: reformatted, cleaned up
 // ioanch 20160108: variant with groupid
 //
-bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
+bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
+                           void *context)
 {
    if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
    {
@@ -773,7 +807,7 @@ bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *))
          {
             continue;   // ignore objects from wrong groupid
          }
-         if(!func(mobj))
+         if(!func(mobj, context))
             return false;
       }
    }

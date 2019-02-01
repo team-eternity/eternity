@@ -47,6 +47,19 @@ void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y)
       box[BOXTOP] = y;
 }
 
+void M_AddToBox2(fixed_t *box, fixed_t x, fixed_t y)
+{
+   if(x < box[BOXLEFT])
+      box[BOXLEFT] = x;
+   if(x > box[BOXRIGHT])
+      box[BOXRIGHT] = x;
+
+   if(y < box[BOXBOTTOM])
+      box[BOXBOTTOM] = y;
+   if(y > box[BOXTOP])
+      box[BOXTOP] = y;
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: m_bbox.c,v $

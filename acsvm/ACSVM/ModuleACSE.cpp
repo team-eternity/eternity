@@ -99,7 +99,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_AIMP(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("AIMP")) return false;
+      if(chunkName != MakeID("AIMP")) return false;
 
       if(size < 4) throw ReadError();
 
@@ -149,7 +149,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_AINI(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("AINI")) return false;
+      if(chunkName != MakeID("AINI")) return false;
 
       if(size < 4 || size % 4) throw ReadError();
 
@@ -160,7 +160,7 @@ namespace ACSVM
 
       auto &init = arrInitV[idx];
       for(std::size_t iter = 4; iter != size; iter += 4)
-         init.setVal(iter / 4 - 1, ReadLE4(data + iter));
+         init.setVal(static_cast<Word>(iter / 4 - 1), ReadLE4(data + iter));
 
       return false;
    }
@@ -170,7 +170,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_ARAY(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("ARAY")) return false;
+      if(chunkName != MakeID("ARAY")) return false;
 
       if(size % 8) throw ReadError();
 
@@ -208,7 +208,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_ASTR(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("ASTR")) return false;
+      if(chunkName != MakeID("ASTR")) return false;
 
       if(size % 4) throw ReadError();
 
@@ -232,7 +232,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_ATAG(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("ATAG")) return false;
+      if(chunkName != MakeID("ATAG")) return false;
 
       if(size < 5 || data[0]) throw ReadError();
 
@@ -246,9 +246,9 @@ namespace ACSVM
       {
          switch(data[iter])
          {
-         case 0: init.setTag(iter - 5, InitTag::Integer);  break;
-         case 1: init.setTag(iter - 5, InitTag::String);   break;
-         case 2: init.setTag(iter - 5, InitTag::Function); break;
+         case 0: init.setTag(static_cast<Word>(iter - 5), InitTag::Integer);  break;
+         case 1: init.setTag(static_cast<Word>(iter - 5), InitTag::String);   break;
+         case 2: init.setTag(static_cast<Word>(iter - 5), InitTag::Function); break;
          }
       }
 
@@ -260,7 +260,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_FARY(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("FARY")) return false;
+      if(chunkName != MakeID("FARY")) return false;
 
       if(size < 2 || (size - 2) % 4) throw ReadError();
 
@@ -268,7 +268,7 @@ namespace ACSVM
       std::size_t arrC = (size - 2) / 4;
 
       if(idx < functionV.size() && functionV[idx])
-         functionV[idx]->locArrC = arrC;
+         functionV[idx]->locArrC = static_cast<Word>(arrC);
 
       return false;
    }
@@ -278,7 +278,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_FNAM(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("FNAM")) return false;
+      if(chunkName != MakeID("FNAM")) return false;
 
       chunkStrTabACSE(funcNameV, data, size, false);
 
@@ -290,7 +290,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_FUNC(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("FUNC")) return false;
+      if(chunkName != MakeID("FUNC")) return false;
 
       if(size % 8) throw ReadError();
 
@@ -300,7 +300,7 @@ namespace ACSVM
       std::size_t iter = 0;
       for(Function *&func : functionV)
       {
-         Word idx     = iter / 8;
+         Word idx     = static_cast<Word>(iter / 8);
          Word argC    = ReadLE1(data + iter); iter += 1;
          Word locRegC = ReadLE1(data + iter); iter += 1;
          Word flags   = ReadLE2(data + iter); iter += 2;
@@ -328,7 +328,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_JUMP(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("JUMP")) return false;
+      if(chunkName != MakeID("JUMP")) return false;
 
       if(size % 4) throw ReadError();
 
@@ -349,7 +349,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_LOAD(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("LOAD")) return false;
+      if(chunkName != MakeID("LOAD")) return false;
 
       // Count imports.
       std::size_t importC = 0;
@@ -383,7 +383,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_MEXP(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("MEXP")) return false;
+      if(chunkName != MakeID("MEXP")) return false;
 
       chunkStrTabACSE(regNameV, data, size, false);
 
@@ -395,7 +395,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_MIMP(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("MIMP")) return false;
+      if(chunkName != MakeID("MIMP")) return false;
 
       // Determine highest index.
       Word regC = 0;
@@ -438,12 +438,12 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_MINI(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("MINI")) return false;
+      if(chunkName != MakeID("MINI")) return false;
 
       if(size % 4 || size < 4) throw ReadError("bad MINI size");
 
       Word idx  = ReadLE4(data);
-      Word regC = idx + size / 4 - 1;
+      Word regC = static_cast<Word>(idx + size / 4 - 1);
 
       if(regC > regInitV.size())
          regInitV.realloc(regC);
@@ -459,7 +459,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_MSTR(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("MSTR")) return false;
+      if(chunkName != MakeID("MSTR")) return false;
 
       if(size % 4) throw ReadError();
 
@@ -480,7 +480,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_SARY(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("SARY")) return false;
+      if(chunkName != MakeID("SARY")) return false;
 
       if(size < 2 || (size - 2) % 4) throw ReadError();
 
@@ -490,7 +490,7 @@ namespace ACSVM
       if(nameInt & 0x8000) nameInt |= 0xFFFF0000;
 
       for(Script &scr : scriptV)
-         if(scr.name.i == nameInt) scr.locArrC = arrC;
+         if(scr.name.i == nameInt) scr.locArrC = static_cast<Word>(arrC);
 
       return false;
    }
@@ -500,7 +500,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_SFLG(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("SFLG")) return false;
+      if(chunkName != MakeID("SFLG")) return false;
 
       if(size % 4) throw ReadError();
 
@@ -532,7 +532,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_SNAM(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("SNAM")) return false;
+      if(chunkName != MakeID("SNAM")) return false;
 
       chunkStrTabACSE(scrNameV, data, size, false);
 
@@ -546,7 +546,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_SPTR8(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("SPTR")) return false;
+      if(chunkName != MakeID("SPTR")) return false;
 
       if(size % 8) throw ReadError();
 
@@ -575,7 +575,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_SPTR12(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("SPTR")) return false;
+      if(chunkName != MakeID("SPTR")) return false;
 
       if(size % 12) throw ReadError();
 
@@ -602,7 +602,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_STRE(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("STRE")) return false;
+      if(chunkName != MakeID("STRE")) return false;
 
       std::size_t iter = 0;
 
@@ -638,7 +638,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_STRL(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("STRL")) return false;
+      if(chunkName != MakeID("STRL")) return false;
 
       chunkStrTabACSE(stringV, data, size, true);
 
@@ -650,7 +650,7 @@ namespace ACSVM
    //
    bool Module::chunkerACSE_SVCT(Byte const *data, std::size_t size, Word chunkName)
    {
-      if(chunkName != ChunkID("SVCT")) return false;
+      if(chunkName != MakeID("SVCT")) return false;
 
       if(size % 4) throw ReadError();
 
@@ -832,7 +832,7 @@ namespace ACSVM
       std::size_t             /*size*/>
    Module::DecryptStringACSE(Byte const *data, std::size_t size, std::size_t iter)
    {
-      Word const key = iter * 157135;
+      Word const key = static_cast<const Word>(iter * 157135);
 
       // Calculate length. Start at 1 for null terminator.
       std::size_t len = 1;

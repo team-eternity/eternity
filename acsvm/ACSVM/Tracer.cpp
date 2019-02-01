@@ -374,7 +374,7 @@ namespace ACSVM
          }
 
          // Record jump target.
-         codeIndex[iter] = codeItr - module->codeV.data();
+         codeIndex[iter] = static_cast<Word>(codeItr - module->codeV.data());
 
          // Read op.
          Word                opCode;
@@ -431,7 +431,7 @@ namespace ACSVM
          case CodeACS0::CallSpec_5L:
          case CodeACS0::CallSpec_5LB:
             *codeItr++ = static_cast<Word>(opData->transCode);
-            *codeItr++ = opData->argc - 1;
+            *codeItr++ = static_cast<Word>(opData->argc - 1);
             goto trans_args;
 
          case CodeACS0::Jcnd_Tab:
@@ -442,7 +442,7 @@ namespace ACSVM
                count = ReadLE4(data + jumpIter); jumpIter += 4;
 
                *codeItr++ = static_cast<Word>(opData->transCode);
-               *codeItr++ = jumpMapItr - module->jumpMapV.data();
+               *codeItr++ = static_cast<Word>(jumpMapItr - module->jumpMapV.data());
 
                (jumpMapItr++)->loadJumps(data + jumpIter, count);
             }
@@ -460,7 +460,7 @@ namespace ACSVM
          case CodeACS0::Push_Lit4B:
          case CodeACS0::Push_Lit5B:
             *codeItr++ = static_cast<Word>(opData->transCode);
-            *codeItr++ = opData->argc;
+            *codeItr++ = static_cast<Word>(opData->argc);
             goto trans_args;
 
          case CodeACS0::Retn_Nul:
@@ -516,7 +516,7 @@ namespace ACSVM
             }
             else if(opTran->code == Code::CallFunc_Lit)
             {
-               *codeItr++ = opData->argc;
+               *codeItr++ = static_cast<Word>(opData->argc);
                *codeItr++ = opData->transFunc;
             }
 

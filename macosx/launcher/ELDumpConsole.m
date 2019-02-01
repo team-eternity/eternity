@@ -126,6 +126,8 @@
 	[pwindow center];
 
 	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:12]];
+   [textField setTextColor:[NSColor whiteColor]];
+   [textField setBackgroundColor:[NSColor blackColor]];
 	
 	pipe = [NSPipe pipe];
 	
@@ -174,6 +176,17 @@
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleReadCompletionNotification object:[notification object]];
 	}
 }
+
+//
+// Makes the console visible, from a user command
+//
+-(void)makeVisible
+{
+   [self window]; // make sure the window is loaded
+   [pwindow orderFront:self];
+   [pwindow setAsPanel:YES];
+}
+
 @end
 
 // EOF

@@ -41,11 +41,11 @@ class QuakeThinker : public PointThinker
    DECLARE_THINKER_TYPE(QuakeThinker, PointThinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
 
    // Data Members
    int intensity;        // richter scale (hardly realistic)

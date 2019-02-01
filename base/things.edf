@@ -116,7 +116,7 @@ thingtype MBFHelperDog : Mobj, 888, 140
 
 // SMMU Objects ----------------------------------------------------------------
 
-thingtype SMMUCameraSpot : Mobj, 5003, 143
+thingtype SMMUCameraSpot : Mobj, 5003, 162
 {
   spawnstate  S_TNT1
   mass        10

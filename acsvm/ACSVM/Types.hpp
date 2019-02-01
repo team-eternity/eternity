@@ -13,8 +13,8 @@
 #ifndef ACSVM__Types_H__
 #define ACSVM__Types_H__
 
+#include <cinttypes>
 #include <cstddef>
-#include <cstdint>
 
 
 //----------------------------------------------------------------------------|
@@ -46,6 +46,7 @@ namespace ACSVM
    enum class Func;
    enum class FuncACS0;
    enum class InitTag;
+   enum class Signature : std::uint32_t;
    class Array;
    class ArrayInit;
    class CodeData;
@@ -66,6 +67,7 @@ namespace ACSVM
    class Script;
    class ScriptAction;
    class ScriptName;
+   class Serial;
    class String;
    class Thread;
    class ThreadInfo;

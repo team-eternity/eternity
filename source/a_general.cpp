@@ -365,7 +365,7 @@ void A_SpawnGlitter(actionargs_t *actionargs)
    x = pos.x;
    y = pos.y;
 
-   z = actor->floorz;
+   z = actor->zref.floor;
 
    glitter = P_SpawnMobj(x, y, z, glitterType);
 
@@ -919,6 +919,7 @@ static argkeywd_t bulletkwdsnew =
 // args[2] : number of bullets to fire
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
+// args[5] : puff type
 //
 void A_BulletAttack(actionargs_t *actionargs)
 {
@@ -934,6 +935,7 @@ void A_BulletAttack(actionargs_t *actionargs)
    numbullets = E_ArgAsInt(args,   2, 0);
    damage     = E_ArgAsInt(args,   3, 0);
    dmgmod     = E_ArgAsInt(args,   4, 0);
+   const char *pufftype = E_ArgAsString(args, 5, nullptr);
 
    // handle accuracy
 
@@ -958,7 +960,7 @@ void A_BulletAttack(actionargs_t *actionargs)
    A_FaceTarget(actionargs);
    S_StartSfxInfo(params.setNormalDefaults(actor));
 
-   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(actor, actor->angle, MISSILERANGE, false);
 
    // loop on numbullets
    for(i = 0; i < numbullets; i++)
@@ -976,14 +978,14 @@ void A_BulletAttack(actionargs_t *actionargs)
             angle += P_SubRandom(pr_monmisfire) << aimshift;
          }
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg, pufftype);
       }
       else if(accurate == 3) // ssg spread
       {
          angle += P_SubRandom(pr_monmisfire) << 19;         
          slope += P_SubRandom(pr_monmisfire) << 5;
 
-         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(actor, angle, MISSILERANGE, slope, dmg, pufftype);
       }
    }
 }
@@ -1048,7 +1050,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // If it is, then we don't allow the spawn.
    
    // ioanch 20160107: use position directly next to summoner.
-   if(Check_Sides(actor, relpos.x, relpos.y))
+   if(Check_Sides(actor, relpos.x, relpos.y, type))
       return;
 
    newmobj = P_SpawnMobj(x, y, z, type);
@@ -1078,7 +1080,7 @@ void A_ThingSummon(actionargs_t *actionargs)
          A_Die(&dieaction);
          break;
       case 1:
-         newmobj->removeThinker();
+         newmobj->remove();
          break;
       }
       return;
@@ -1109,7 +1111,7 @@ void A_ThingSummon(actionargs_t *actionargs)
          A_Die(&dieaction);
          break;
       case 1:
-         newmobj->removeThinker();
+         newmobj->remove();
          break;
       }
       return;
@@ -1155,7 +1157,7 @@ void A_KillChildren(actionargs_t *actionargs)
             A_Die(&dieaction);
             break;
          case 1:
-            mo->removeThinker();
+            mo->remove();
             break;
          }
       }
@@ -1517,8 +1519,7 @@ void A_DetonateEx(actionargs_t *actionargs)
 
    // cause a terrain hit
    // ioanch 20160116: portal aware Z
-   if(actor->z <= actor->secfloorz + radius * FRACUNIT)
-      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
+   E_ExplosionHitWater(actor, radius);
 }
 
 // EOF

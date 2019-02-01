@@ -39,6 +39,7 @@ armoreffect SilverShield
   saveamount  100
   savefactor  1
   savedivisor 2   // 50% absorption rate (1/2)
+  +setabsorption
 }
 
 armoreffect EnchantedShield
@@ -46,6 +47,7 @@ armoreffect EnchantedShield
   saveamount  200
   savefactor  3
   savedivisor 4   // 75% absorption rate (3/4)
+  +setabsorption
 }
 
 armoreffect RAMBOArmor
@@ -53,6 +55,7 @@ armoreffect RAMBOArmor
   saveamount  200
   savefactor  3
   savedivisor 4
+  +setabsorption
 }
 
 //=============================================================================
@@ -165,4 +168,377 @@ lockdef 101
 }
 
 endif()
+
+//=============================================================================
+//
+// Ammo Types
+//
+// An artifact is defined for each distinct type of ammo the player can own,
+// and ammoeffect definitions actually give ammo of those types when they are
+// picked up.
+//
+
+artifact AmmoWandCrystal
+{
+  artifacttype   Ammo
+  maxamount      100
+  interhubamount  -1
+  icon           INAMGLD
+
+  ammo.backpackamount     10
+  ammo.backpackmaxamount 200
+}
+
+artifact AmmoEtherealArrow
+{
+  artifacttype   Ammo
+  maxamount      50
+  interhubamount -1
+  icon           INAMBOW
+
+  ammo.backpackamount      5
+  ammo.backpackmaxamount 100
+}
+
+artifact AmmoClawOrb
+{
+  artifacttype   Ammo
+  maxamount      200
+  interhubamount  -1
+  icon           INAMBST
+
+  ammo.backpackamount     10
+  ammo.backpackmaxamount 400
+}
+
+artifact AmmoRune
+{
+  artifacttype   Ammo
+  maxamount      200
+  interhubamount -1
+  icon           INAMRAM
+
+  ammo.backpackamount     20
+  ammo.backpackmaxamount 400
+}
+
+artifact AmmoFlameOrb
+{
+  artifacttype   Ammo
+  maxamount      20
+  interhubamount -1
+  icon           INAMPNX
+
+  ammo.backpackamount     1
+  ammo.backpackmaxamount 40
+}
+
+artifact AmmoMaceSphere
+{
+  artifacttype   Ammo
+  maxamount      150
+  interhubamount -1
+  icon           INAMLOB
+
+  ammo.backpackamount      0
+  ammo.backpackmaxamount 300
+}
+
+//=============================================================================
+//
+// Ammo Givers
+//
+
+ammoeffect GoldWandAmmo
+{
+  ammo       AmmoWandCrystal
+  amount     10
+}
+
+ammoeffect GoldWandHefty
+{
+  ammo       AmmoWandCrystal
+  amount     50
+}
+
+ammoeffect CrossbowAmmo
+{
+  ammo       AmmoEtherealArrow
+  amount     5
+}
+
+ammoeffect CrossbowHefty
+{
+  ammo       AmmoEtherealArrow
+  amount     20
+}
+
+ammoeffect BlasterAmmo
+{
+  ammo       AmmoClawOrb
+  amount     10
+}
+
+ammoeffect BlasterHefty
+{
+  ammo       AmmoClawOrb
+  amount     25
+}
+
+ammoeffect SkullRodAmmo
+{
+  ammo       AmmoRune
+  amount     20
+}
+
+ammoeffect SkullRodHefty
+{
+  ammo       AmmoRune
+  amount     100
+}
+
+ammoeffect PhoenixRodAmmo
+{
+  ammo       AmmoFlameOrb
+  amount     1
+}
+
+ammoeffect PhoenixRodHefty
+{
+  ammo       AmmoFlameOrb
+  amount     10
+}
+
+ammoeffect MaceAmmo
+{
+  ammo       AmmoMaceSphere
+  amount     20
+}
+
+ammoeffect MaceHefty
+{
+  ammo       AmmoMaceSphere
+  amount     100
+}
+
+//=============================================================================
+//
+// Power Givers
+//
+powereffect SuperMap
+{
+  duration 1
+  type     PowerAllmap
+
+  -overridesself
+  +permanent
+}
+
+powereffect Shadowsphere
+{
+  duration 60
+  type     PowerGhost
+
+  -overridesself
+}
+
+powereffect WingsOfWrath
+{
+  duration 60
+  type     PowerFlight
+
+  -overridesself
+}
+
+powereffect RingOfInvincibility
+{
+  duration 30
+  type     PowerInvulnerable
+
+  -overridesself
+}
+
+powereffect TomeOfPower
+{
+  duration 30
+  type     PowerWeaponLevel2
+
+  -overridesself
+}
+
+powereffect Torch
+{
+  duration 120
+  type     PowerTorch
+
+  -overridesself
+}
+
+//=============================================================================
+//
+// Artefacts
+//
+
+artifact ArtiInvisibility
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      70
+  icon           ARTIINVS
+  usesound       ht_artiuse
+  useeffect      Shadowsphere
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiHealth
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      10
+  icon           ARTIPTN2
+  usesound       ht_artiuse
+  useeffect      QuartzFlask
+  
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiFly
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      100
+  icon           ARTISOAR
+  usesound       ht_artiuse
+  useeffect      WingsOfWrath
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiInvulnerability
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      60
+  icon           ARTIINVU
+  usesound       ht_artiuse
+  useeffect      RingOfInvincibility
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTomeOfPower
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      30
+  icon           ARTIPWBK
+  usesound       ht_artiuse
+  useeffect      TomeOfPower
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiEgg
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      50
+  icon           ARTIEGGC
+  usesound       ht_artiuse
+  useeffect      MorphOvum
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiSuperHealth
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      20
+  icon           ARTISPHL
+  usesound       ht_artiuse
+  useeffect      MysticUrn
+
+  +invbar
+  +noshareware
+
+  artifacttype   Normal
+}
+
+artifact ArtiTorch
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      90
+  icon           ARTITRCH
+  usesound       ht_artiuse
+  useeffect      Torch
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTimeBomb
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      40
+  icon           ARTIFBMB
+  usesound       ht_artiuse
+  useaction      A_HTicSpawnFireBomb
+
+  +invbar
+
+  artifacttype   Normal
+}
+
+artifact ArtiTeleport
+{
+  amount         1
+  maxamount      16
+  interhubamount 1
+
+  sortorder      80
+  icon           ARTIATLP
+  usesound       ht_artiuse
+  useaction      A_HTicArtiTele
+
+  +invbar
+  +noshareware
+
+  artifacttype   Normal
+}
+
 

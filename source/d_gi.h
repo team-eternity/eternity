@@ -189,6 +189,17 @@ enum
 };
 
 //
+// Monster melee calculation
+//
+enum meleecalc_e
+{
+   meleecalc_doom,
+   meleecalc_raven,
+   // FIXME: how to classify Strife's own z-clipping rule?
+   meleecalc_NUM
+};
+
+//
 // Game Mode Flags
 //
 enum
@@ -211,6 +222,9 @@ enum
    GIF_NODIEHI        = 0x00010000, // never plays PDIEHI sound
    GIF_LOSTSOULBOUNCE = 0x00020000, // gamemode or mission normally fixes Lost Soul bouncing
    GIF_IMPACTBLOOD    = 0x00040000, // blood is spawned when actors are impacted by projectiles
+   GIF_CHEATSOUND     = 0x00080000, // make menu open sound when cheating
+   GIF_CHASEFAST      = 0x00100000, // A_Chase shortens tics like in Raven games
+   GIF_NOUPPEREPBOUND = 0x00200000, // Don't clamp down gameepisode if > numEpisodes
 };
 
 // Game mode handling - identify IWAD version
@@ -423,6 +437,9 @@ struct gamemodeinfo_t
    const char *bloodDefaultRIP;    // thingtype of blood shown when thing is impcated by inflictor with "RIP" flag
    const char *bloodDefaultCrush;  // thingtype of blood shown when thing is crushed
    bloodtype_e *defBloodBehaviors; // default blood behavior for action array
+   double skillAmmoMultiplier;     // how much more ammo to give on baby and nightmare
+   meleecalc_e monsterMeleeRange;  // how monster melee range is calculated
+   fixed_t itemHeight;             // item pick-up height (independent of thing height)
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
@@ -488,6 +505,7 @@ extern char *gi_path_sosr;
 extern char *gi_path_fdoom;
 extern char *gi_path_fdoomu;
 extern char *gi_path_freedm;
+extern char *gi_path_rekkr;
 
 
 void D_SetGameModeInfo(GameMode_t, GameMission_t);

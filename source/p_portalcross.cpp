@@ -30,13 +30,16 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_bbox.h"
+#include "m_compare.h"
 #include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_main.h"
 #include "r_portal.h"
+#include "r_state.h"
 
 //==============================================================================
 //
@@ -51,7 +54,7 @@ struct lineportalcrossing_t
    v2fixed_t *cur;
    v2fixed_t *fin;
    int *group;
-   bool *passed;
+   const line_t **passed;
    // Careful when adding new fields!
 };
 
@@ -95,7 +98,7 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
    if(data.group)
       *data.group = link.toid;
    if(data.passed)
-      *data.passed = true;
+      *data.passed = line;
 
    return false;
 }
@@ -108,7 +111,7 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
 // updating the target position correctly
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group, bool *passed)
+                               int *group, const line_t **passed)
 {
    v2fixed_t cur = { x, y };
    v2fixed_t fin = { x + dx, y + dy };
@@ -123,7 +126,7 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 
    // number should be as large as possible to prevent accidental exits on valid
    // hyperdetailed maps, but low enough to release the game on time.
-   int recprotection = 32768;
+   int recprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    do
    {
@@ -143,6 +146,186 @@ v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 
    if(!recprotection)
       C_Printf("Warning: P_PortalCrossing loop");
+
+   return fin;
+}
+
+//==============================================================================
+//
+// Precise portal crossing section
+//
+
+//
+// The data
+//
+struct exacttraverse_t
+{
+   const divline_t *trace;
+   const line_t *closest;
+   fixed_t closestdist;
+};
+
+//
+// Checks if the two ends of a divline are projected inside the linedef segment
+//
+static bool P_divlineInsideLine(const divline_t &dl, const line_t &line)
+{
+   const v2fixed_t normal = { M_FloatToFixed(line.nx), M_FloatToFixed(line.ny) };
+   divline_t pdir = { dl.x, dl.y, normal.x, normal.y };
+   const v2fixed_t lv1 = { line.v1->x, line.v1->y };
+   const v2fixed_t lv2 = { lv1.x + line.dx, lv1.y + line.dy };
+   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+      return false;
+   pdir.x += dl.dx;
+   pdir.y += dl.dy;
+   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+      return false;
+   return true;
+}
+
+//
+// The iterator
+//
+static bool PIT_exactTraverse(const line_t &line, void *vdata)
+{
+   // only use wall portals, not edge
+   if(!(line.pflags & PS_PASSABLE))
+      return true;
+   const linkdata_t &link = line.portal->data.link;
+   if(link.fromid == link.toid || (!link.deltax && !link.deltay)) // avoid critical problems
+      return true;
+
+   auto &data = *static_cast<exacttraverse_t *>(vdata);
+
+   int destside = P_PointOnLineSide(data.trace->x + data.trace->dx, data.trace->y + data.trace->dy,
+                                    &line);
+   if(destside != 1 || destside == P_PointOnLineSide(data.trace->x, data.trace->y, &line))
+      return true;   // doesn't get past it
+
+   // Trace must cross this
+   if(P_PointOnDivlineSide(line.v1->x, line.v1->y, data.trace) ==
+      P_PointOnDivlineSide(line.v2->x, line.v2->y, data.trace))
+   {
+      // check against edge cases where the trace crosses validly but the linedef vertices don't
+      // sit on different sides of the divline. Happens with traces (almost) parallel in direction.
+      if(!P_divlineInsideLine(*data.trace, line))
+         return true;
+   }
+
+   divline_t dl;
+   P_MakeDivline(&line, &dl);
+   fixed_t dist = P_InterceptVector(data.trace, &dl);
+   if(dist < data.closestdist)
+   {
+      data.closestdist = dist;
+      data.closest = &line;
+   }
+
+   return true;
+}
+
+//
+// The operation. Returns the closest traversed linedef
+//
+static const line_t *P_exactTraverseClosest(const divline_t &trace, fixed_t &frac)
+{
+   // Get all map blocks touched by trace's bounding box
+   fixed_t bbox[4];
+   M_ClearBox(bbox);
+   M_AddToBox2(bbox, trace.x, trace.y);
+   M_AddToBox2(bbox, trace.x + trace.dx, trace.y + trace.dy);
+
+   bbox[BOXLEFT] -= bmaporgx;
+   bbox[BOXRIGHT] -= bmaporgx;
+   bbox[BOXBOTTOM] -= bmaporgy;
+   bbox[BOXTOP] -= bmaporgy;
+
+   // If the box edges lie exactly on map block edges, push them a bit to ensure edge linedefs are
+   // captured
+   if(!(bbox[BOXLEFT] & MAPBMASK))
+      --bbox[BOXLEFT];
+   if(!(bbox[BOXRIGHT] & MAPBMASK))
+      ++bbox[BOXRIGHT];
+   if(!(bbox[BOXBOTTOM] & MAPBMASK))
+      --bbox[BOXBOTTOM];
+   if(!(bbox[BOXTOP] & MAPBMASK))
+      ++bbox[BOXTOP];
+
+   // Transform into blockmap bounding box
+   bbox[BOXLEFT] >>= MAPBLOCKSHIFT;
+   bbox[BOXRIGHT] >>= MAPBLOCKSHIFT;
+   bbox[BOXBOTTOM] >>= MAPBLOCKSHIFT;
+   bbox[BOXTOP] >>= MAPBLOCKSHIFT;
+
+   bbox[BOXLEFT] = eclamp(bbox[BOXLEFT], 0, bmapwidth - 1);
+   bbox[BOXRIGHT] = eclamp(bbox[BOXRIGHT], 0, bmapwidth - 1);
+   bbox[BOXBOTTOM] = eclamp(bbox[BOXBOTTOM], 0, bmapheight - 1);
+   bbox[BOXTOP] = eclamp(bbox[BOXTOP], 0, bmapheight - 1);
+
+   edefstructvar(exacttraverse_t, data);
+   data.trace = &trace;
+   data.closestdist = D_MAXINT;
+
+   // Collect all linedefs from this map block
+   for(int y = bbox[BOXBOTTOM]; y <= bbox[BOXTOP]; ++y)
+      for(int x = bbox[BOXLEFT]; x <= bbox[BOXRIGHT]; ++x)
+      {
+         int b = y * bmapwidth + x;
+         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[b];
+         for(const portalblockentry_t &entry : block)
+         {
+            if(entry.type != portalblocktype_e::line)
+               continue;
+            if(!PIT_exactTraverse(*entry.line, &data))
+               goto nextblock;
+         }
+      nextblock:
+         ;
+      }
+
+   frac = data.closestdist;
+   return data.closest;
+}
+
+//
+// As above, but focused for line portal crossing by walking things, where it's critical not to miss
+//
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                                  portalcrossingoutcome_t &outcome)
+{
+   v2fixed_t cur = { x, y };
+   v2fixed_t fin = { x + dx, y + dy };
+   if((!dx && !dy) || full_demo_version < make_full_version(340, 48) ||
+      P_PortalGroupCount() <= 1)
+   {
+      return fin; // quick return in trivial case
+   }
+
+   // number should be as large as possible to prevent accidental exits on valid
+   // hyperdetailed maps, but low enough to release the game on time.
+   int recprotection = SECTOR_PORTAL_LOOP_PROTECTION;
+
+   const line_t *crossed;
+   int crosscount = 0;
+   do
+   {
+      divline_t trace = { cur.x, cur.y, fin.x - cur.x, fin.y - cur.y };
+      fixed_t frac;
+      crossed = P_exactTraverseClosest(trace, frac);
+      if(crossed)
+      {
+         const linkdata_t &ldata = crossed->portal->data.link;
+         cur.x += ldata.deltax + FixedMul(fin.x - cur.x, frac);
+         cur.y += ldata.deltay + FixedMul(fin.y - cur.y, frac);
+         fin.x += ldata.deltax;
+         fin.y += ldata.deltay;
+         outcome.finalgroup = ldata.toid;
+         outcome.lastpassed = crossed;
+         if(++crosscount >= 2)
+            outcome.multipassed = true;
+      }
+      --recprotection;
+   } while(crossed && recprotection);
 
    return fin;
 }
@@ -171,7 +354,7 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
    auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
    auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
 
-   int loopprotection = 32768;
+   int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    while(sector->*pflags & PS_PASSABLE && loopprotection--)
    {
@@ -179,8 +362,10 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
-      if((ceiling ? sector->ceilingheight < link.planez
-          :   sector->floorheight > link.planez) ||
+      if((ceiling ? !(sector->c_pflags & PF_ATTACHEDPORTAL) &&
+          sector->ceilingheight < link.planez
+          : !(sector->f_pflags & PF_ATTACHEDPORTAL) &&
+          sector->floorheight > link.planez) ||
          (!link.deltax && !link.deltay))
       {
          return sector;
@@ -253,6 +438,35 @@ inline static bool P_simpleBlockWalker(const fixed_t bbox[4], bool xfirst, void 
 }
 
 //
+// Checks if a portal blockmap entry touches a box
+//
+static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed_t bbox[4])
+{
+   auto checkline = [bbox](const line_t &line) {
+      if(!M_BoxesTouch(line.bbox, bbox))
+         return false;
+      return P_BoxOnLineSide(bbox, &line) == -1;
+   };
+
+   if(entry.type == portalblocktype_e::line)
+      return checkline(*entry.line);
+   // Sector
+   // Quick check for location
+   const sector_t &sector = *entry.sector;
+   if(!M_BoxesTouch(pSectorBoxes[&sector - sectors].box, bbox))
+      return false;
+   if(R_PointInSubsector(bbox[BOXLEFT] / 2 + bbox[BOXRIGHT] / 2,
+      bbox[BOXBOTTOM] / 2 + bbox[BOXTOP] / 2)->sector == &sector)
+   {
+      return true;
+   }
+   for(int i = 0; i < sector.linecount; ++i)
+      if(checkline(*sector.lines[i]))
+         return true;
+   return false;
+}
+
+//
 // P_TransPortalBlockWalker
 //
 // ioanch 20160107
@@ -273,7 +487,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
    // OPTIMIZE: if needed, use some global store instead of malloc
    bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
    accessedgroupids[groupid] = true;
-   int *groupqueue = ecalloc(int *, gcount, sizeof(*groupqueue));
+   auto portalqueue = ecalloc(const portalblockentry_t **, gcount, sizeof(portalblockentry_t *));
    int queuehead = 0;
    int queueback = 0;
 
@@ -305,42 +519,28 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
          yh = bmapheight - 1;
 
       // Define a function to use in the 'for' blocks
-      auto operate = [accessedgroupids, groupqueue, &queueback, func,
-                      &groupid, data, gcount] (int x, int y) -> bool
+      auto operate = [accessedgroupids, portalqueue, &queueback, func,
+                      &groupid, data, gcount, &movedBBox] (int x, int y) -> bool
       {
          // Check for portals
-         const int *block = gBlockGroups[y * bmapwidth + x];
-         for(int i = 1; i <= block[0]; ++i)
+         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[y * bmapwidth + x];
+         for(const portalblockentry_t &entry : block)
          {
-#ifdef RANGECHECK
-            if(block[i] < 0 || block[i] >= gcount)
-               I_Error("P_TransPortalBlockWalker: i (%d) out of range (count %d)", block[i], gcount);
-#endif
-            // Add to queue and visitlist
-            if(!accessedgroupids[block[i]])
+            if(accessedgroupids[entry.ldata->toid])
+               continue;
+            if(entry.type == portalblocktype_e::sector &&
+               ((!entry.isceiling && !(entry.sector->f_pflags & PS_PASSABLE)) ||
+                ( entry.isceiling && !(entry.sector->c_pflags & PS_PASSABLE)) ))
             {
-               accessedgroupids[block[i]] = true;
-               groupqueue[queueback++] = block[i];
+               continue;   // be careful to skip concealed portals.
             }
-         }
+            if(!P_boxTouchesBlockPortal(entry, movedBBox))
+               continue;
 
-         // Also check for polyobjects
-         for(const DLListItem<polymaplink_t> *plink
-             = polyblocklinks[y * bmapwidth + x]; plink; plink = plink->dllNext)
-         {
-            const polyobj_t *po = (*plink)->po;
-            for(size_t i = 0; i < po->numPortals; ++i)
-            {
-               if(po->portals[i]->type != R_LINKED)
-                  continue;
-               int groupid = po->portals[i]->data.link.toid;
-               // TODO: use the portal itself, not the group ID
-               if(!accessedgroupids[groupid])
-               {
-                  accessedgroupids[groupid] = true;
-                  groupqueue[queueback++] = groupid;
-               }
-            }
+            accessedgroupids[entry.ldata->toid] = true;
+            portalqueue[queueback++] = &entry;
+            
+            P_FitLinkOffsetsToPortal(*entry.ldata);
          }
 
          // now call the function
@@ -359,7 +559,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             for(y = yl; y <= yh; ++y)
                if(!operate(x, y))
                {
-                  efree(groupqueue);
+                  efree(portalqueue);
                   efree(accessedgroupids);
                   return false;
                }
@@ -369,7 +569,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             for(x = xl; x <= xh; ++x)
                if(!operate(x, y))
                {
-                  efree(groupqueue);
+                  efree(portalqueue);
                   efree(accessedgroupids);
                   return false;
                }
@@ -381,7 +581,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
       {
          do
          {
-            link = P_GetLinkOffset(groupid, groupqueue[queuehead]);
+            link = P_GetLinkOffset(groupid, portalqueue[queuehead]->ldata->toid);
             ++queuehead;
 
             // make sure to reject trivial (zero) links
@@ -389,7 +589,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
          // if a valid link has been found, also update current groupid
          if(link->x || link->y)
-            groupid = groupqueue[queuehead - 1];
+            groupid = portalqueue[queuehead - 1]->ldata->toid;
       }
 
       // if a valid link has been found (and groupid updated) continue
@@ -397,7 +597,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 
    // we now have the list of accessedgroupids
    
-   efree(groupqueue);
+   efree(portalqueue);
    efree(accessedgroupids);
    return true;
 }
@@ -414,16 +614,10 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
    fixed_t topz = mobj->z + mobj->height;
    if(topz < sector->floorheight || mobj->z > sector->ceilingheight)
       return false;
-   if(sector->f_pflags & PS_PASSABLE &&
-      topz < sector->f_portal->data.link.planez)
-   {
+   if(sector->f_pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
       return false;
-   }
-   if(sector->c_pflags & PS_PASSABLE &&
-      mobj->z > sector->c_portal->data.link.planez)
-   {
+   if(sector->c_pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
       return false;
-   }
    return true;
 }
 
@@ -439,7 +633,8 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 //
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint)
+                                        sector_t *csector, fixed_t midzhint,
+                                        uint8_t *floorceiling)
 {
    if(cgroupid == tgroupid)
       return csector;
@@ -456,6 +651,7 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 
    unsigned sector_t::*pflags[2];
    portal_t *sector_t::*portal[2];
+   uint8_t fcflag[2];
 
    if(midzhint < cmidz)
    {
@@ -463,6 +659,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       pflags[1] = &sector_t::c_pflags;
       portal[0] = &sector_t::f_portal;
       portal[1] = &sector_t::c_portal;
+      fcflag[0] = sector_t::floor;
+      fcflag[1] = sector_t::ceiling;
    }
    else
    {
@@ -470,29 +668,34 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       pflags[1] = &sector_t::f_pflags;
       portal[0] = &sector_t::c_portal;
       portal[1] = &sector_t::f_portal;
+      fcflag[0] = sector_t::ceiling;
+      fcflag[1] = sector_t::floor;
    }
 
    sector_t *sector;
    int groupid;
    fixed_t x, y;
 
-   const linkoffset_t *link;
-
    for(int i = 0; i < 2; ++i)
    {
       sector = csector;
       groupid = cgroupid;
-      x = cx, y = cy;
+      x = cx;
+      y = cy;
 
       while(sector->*pflags[i] & PS_PASSABLE)
       {
-         link = P_GetLinkOffset(groupid, (sector->*portal[i])->data.link.toid);
-         x += link->x;
-         y += link->y;
+         const linkdata_t &ldata = (sector->*portal[i])->data.link;
+         x += ldata.deltax;
+         y += ldata.deltay;
          sector = R_PointInSubsector(x, y)->sector;
          groupid = sector->groupid;
          if(groupid == tgroupid)
+         {
+            if(floorceiling)
+               *floorceiling = fcflag[i];
             return sector;
+         }
          if(groupVisit[groupid])
             break;
          groupVisit[groupid] = true;

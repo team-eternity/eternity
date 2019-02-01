@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+// The Eternity Engine
+// Copyright (C) 2017 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: SDL sound system interface
+// Authors: James Haley, Stephen McGranahan, Julian Aubourg
 //
-// DESCRIPTION:
-//      SDL sound system interface
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 #include "SDL_audio.h"
@@ -812,7 +808,7 @@ static int I_SDLInitSound()
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
-   Mix_SetPostMix(I_SDLUpdateSoundCB, NULL);
+   Mix_SetPostMix(I_SDLUpdateSoundCB, nullptr);
    printf("Configured audio device with %d samples/slice.\n", audio_buffers);
 
    return 1;

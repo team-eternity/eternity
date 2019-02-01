@@ -57,9 +57,9 @@ instructions consult and edit projects/openwatcom/pngconfig.dfa
 <<
  $(DELETE) dfn.c dfn1.out dfn2.out
 
-pnglibconf.dfn: ..\..\scripts\pnglibconf.dfa ..\..\scripts\options.awk pngconfig.dfa
+pnglibconf.dfn: ..\..\scripts\pnglibconf.dfa ..\..\scripts\options.awk pngconfig.dfa ..\..\pngconf.h
  $(DELETE) $@ dfn1.out dfn2.out
- $(AWK) -f ..\..\scripts\options.awk out=dfn1.out ..\..\scripts\pnglibconf.dfa pngconfig.dfa $(DFA_XTRA) 1>&2
+ $(AWK) -f ..\..\scripts\options.awk out=dfn1.out version=search ..\..\pngconf.h ..\..\scripts\pnglibconf.dfa pngconfig.dfa $(DFA_XTRA) 1>&2
  $(AWK) -f ..\..\scripts\options.awk out=dfn2.out dfn1.out 1>&2
  $(COPY) dfn2.out $@
  $(DELETE) dfn1.out dfn2.out
@@ -117,7 +117,7 @@ $#   3) Delete this file (config.inf).
 <<
  @$(COPY) << pngconfig.dfa
 $# pngconfig.dfa: this file contains configuration options for libpng.
-$# If emtpy the standard configuration will be built.  For this file to be
+$# If empty the standard configuration will be built.  For this file to be
 $# used a working version of the program 'awk' is required and the program
 $# must be identified in the 'before' rule of the project.
 $#
@@ -126,7 +126,7 @@ $# to work, download Brian Kernighan's awk (Brian Kernighan is the author of
 $# awk.)  You can find source code and a built executable (called awk95.exe)
 $# here:
 $#
-$#     http://www.cs.princeton.edu/~bwk/btl.mirror/
+$#     https://www.cs.princeton.edu/~bwk/btl.mirror/
 $#
 $# The executable works just fine.
 $#
@@ -144,7 +144,7 @@ $# dependency on pnglibconf.h correctly.
 $#
 $# If awk isn't set then this file is bypassed.  If you just want the standard
 $# configuration it is automatically produced from the distributed version
-$# (scripts\pnglibconf.h.prebuilt) by editting PNG_API_RULE to 2 (to force use
+$# (scripts\pnglibconf.h.prebuilt) by editing PNG_API_RULE to 2 (to force use
 $# of the OpenWatcom library calling convention.)
 $#
 <<

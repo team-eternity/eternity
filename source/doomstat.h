@@ -52,6 +52,15 @@ typedef enum
   bfg_burst,    // haleyjd
 } bfg_t;
 
+enum acceltype_e : int
+{
+   ACCELTYPE_NONE,
+   ACCELTYPE_LINEAR,
+   ACCELTYPE_CHOCO,
+   ACCELTYPE_CUSTOM,
+   ACCELTYPE_MAX = ACCELTYPE_CUSTOM
+};
+
 extern int use_doom_config;
 
 // ------------------------
@@ -80,6 +89,7 @@ extern bool modifiedgame;
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 extern int compatibility, default_compatibility;          // killough 1/31/98
+extern bool vanilla_mode;  // ioanch
 
 extern int demo_version;           // killough 7/19/98: Version of demo
 extern int demo_subversion;
@@ -314,7 +324,7 @@ extern  double          mouseSensitivity_vert;
 extern  bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 
 // SoM: 
-extern  int             mouseAccel_type;
+extern  acceltype_e     mouseAccel_type;
 
 // [CG] 01/20/12
 extern  int             mouseAccel_threshold;
@@ -384,7 +394,7 @@ extern int allowmlook, default_allowmlook; // haleyjd
 
 extern int flashing_hom; // killough 10/98
 
-extern int doom_weapon_toggles;   // killough 10/98
+extern int weapon_hotkey_cycling;   // killough 10/98
 
 //=======================================================
 //

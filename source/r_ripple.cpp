@@ -74,7 +74,7 @@ static void R_DrawLines(void)
 // Generates a distorted flat from a normal one using a two-dimensional
 // sine wave pattern.
 //
-byte *R_DistortedFlat(int texnum)
+byte *R_DistortedFlat(int texnum, bool usegametic)
 {
    static int lasttex = -1;
    static int swirltic = -1;
@@ -84,7 +84,8 @@ byte *R_DistortedFlat(int texnum)
    static int lastsize;
 
    int i;
-   int leveltic = gametic;
+   int reftime = usegametic ? gametic : leveltime;
+   int leveltic = reftime;
    texture_t *tex = R_CacheTexture(texnum);
 
    // NOTE: these are transposed because of the swirling formula
@@ -99,47 +100,50 @@ byte *R_DistortedFlat(int texnum)
       distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
    }
    // Already swirled this one?
-   if(gametic == swirltic && lasttex == texnum)
+   if(reftime == swirltic && lasttex == texnum)
       return distortedflat;
       
    lasttex = texnum;
 
    // built this tic?
-   if(gametic != swirltic || cursize != lastsize)
+   if(reftime != swirltic || cursize != lastsize)
    {
       int x, y;
-      
-      for(x = 0; x < w; ++x)
+
+      if(offset)  // just to silence the static analyzer
       {
-         for(y = 0; y < h; ++y)
+         for(x = 0; x < w; ++x)
          {
-            int x1, y1;
-            int sinvalue, sinvalue2;
-            
-            sinvalue = (y * SWIRLFACTOR + leveltic*SPEED*5 + 900) & 8191;
-            sinvalue2 = (x * SWIRLFACTOR2 + leveltic*SPEED*4 + 300) & 8191;
-            x1 = x + 128
-                 + ((finesine[sinvalue]*AMP) >> FRACBITS)
-                 + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
+            for(y = 0; y < h; ++y)
+            {
+               int x1, y1;
+               int sinvalue, sinvalue2;
 
-            sinvalue = (x * SWIRLFACTOR + leveltic*SPEED*3 + 700) & 8191;
-            sinvalue2 = (y * SWIRLFACTOR2 + leveltic*SPEED*4 + 1200) & 8191;
-            y1 = y + 128
-                 + ((finesine[sinvalue]*AMP) >> FRACBITS)
-                 + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
+               sinvalue = (y * SWIRLFACTOR + leveltic*SPEED*5 + 900) & 8191;
+               sinvalue2 = (x * SWIRLFACTOR2 + leveltic*SPEED*4 + 300) & 8191;
+               x1 = x + 128
+                    + ((finesine[sinvalue]*AMP) >> FRACBITS)
+                    + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
 
-            x1 %= w;
-            y1 %= h;
-            
-            offset[(y*w) + x] = (y1*w) + x1;
+               sinvalue = (x * SWIRLFACTOR + leveltic*SPEED*3 + 700) & 8191;
+               sinvalue2 = (y * SWIRLFACTOR2 + leveltic*SPEED*4 + 1200) & 8191;
+               y1 = y + 128
+                    + ((finesine[sinvalue]*AMP) >> FRACBITS)
+                    + ((finesine[sinvalue2]*AMP2) >> FRACBITS);
+
+               x1 %= w;
+               y1 %= h;
+
+               offset[(y*w) + x] = (y1*w) + x1;
+            }
          }
       }
       
-      swirltic = gametic;
+      swirltic = reftime;
       lastsize = cursize;
    }
    
-   normalflat = tex->buffer;
+   normalflat = tex->bufferdata;
    
    for(i = 0; i < cursize; ++i)
       distortedflat[i] = normalflat[offset[i]];

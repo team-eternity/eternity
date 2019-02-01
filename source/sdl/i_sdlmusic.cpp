@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 James Haley, Stephen McGranahan, Julian Aubourg, et al.
+// Copyright(C) 2017 James Haley, Stephen McGranahan, Julian Aubourg, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -546,7 +546,7 @@ static int I_SDLRegisterSong(void *data, int size)
 
    // Try SDL_mixer locally
    rw    = SDL_RWFromMem(data, size);
-   music = Mix_LoadMUS_RW(rw);
+   music = Mix_LoadMUS_RW(rw, true);
 
 #ifdef HAVE_SPCLIB
    if(!music)

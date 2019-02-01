@@ -106,6 +106,8 @@
 #define ITEM_COLOR_CUSTOM3 "custom3"
 #define ITEM_COLOR_CUSTOM4 "custom4"
 
+#define ITEM_DELTA_NAME    "name"
+
 static cfg_opt_t filter_opts[] =
 {
    CFG_STR(ITEM_FILTER_CHARS, 0,  CFGF_LIST),
@@ -152,32 +154,41 @@ static cfg_opt_t color_opts[] =
    CFG_END()
 };
 
+#define FONT_FIELDS \
+   CFG_INT(ITEM_FONT_ID,     -1,          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_START,  "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_END,    "",          CFGF_NONE), \
+   CFG_INT(ITEM_FONT_CY,     0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_SPACE,  0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_DW,     0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE), \
+   CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE), \
+   CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE), \
+   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE), \
+   CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE), \
+   CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE), \
+   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE), \
+   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE), \
+   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE), \
+                                                      \
+   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE), \
+                                                      \
+   CFG_END()
+
 cfg_opt_t edf_font_opts[] =
 {
-   CFG_INT(ITEM_FONT_ID,     -1,          CFGF_NONE),
-   CFG_STR(ITEM_FONT_START,  "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_END,    "",          CFGF_NONE),
-   CFG_INT(ITEM_FONT_CY,     0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_SPACE,  0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_DW,     0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_ABSH,   0,           CFGF_NONE),
-   CFG_INT(ITEM_FONT_CW,     0,           CFGF_NONE),
-   CFG_STR(ITEM_FONT_LFMT,   "linear",    CFGF_NONE),
-   CFG_STR(ITEM_FONT_LLUMP,  "",          CFGF_NONE),
-   CFG_INT(ITEM_FONT_POFFS,  0,           CFGF_NONE),
-   CFG_SEC(ITEM_FONT_FILTER, filter_opts, CFGF_MULTI|CFGF_NOCASE),
-   CFG_SEC(ITEM_FONT_COLORS, color_opts,  CFGF_NOCASE),
-   CFG_STR(ITEM_FONT_COLORD, "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_COLORN, "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_COLORH, "",          CFGF_NONE),
-   CFG_STR(ITEM_FONT_COLORE, "",          CFGF_NONE),
+   FONT_FIELDS
+};
 
-   CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE),
-   CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE),
-   
-   CFG_END()
+cfg_opt_t edf_fntdelta_opts[] =
+{
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
+   FONT_FIELDS
 };
 
 // linear font formats
@@ -599,7 +610,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
          tempstr = cfg_getnstr(sec, ITEM_FILTER_CHARS, i);
 
          if(strlen(tempstr) > 1)
-            tempnum = strtol(tempstr, &pos, 0);
+            tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
          if(pos && *pos == '\0')
             f->chars[i] = tempnum;
@@ -614,7 +625,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       tempstr = cfg_getstr(sec, ITEM_FILTER_START);
       
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // is it a number?
          f->start = tempnum;
@@ -625,7 +636,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
       tempstr = cfg_getstr(sec, ITEM_FILTER_END);
       
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // is it a number?
          f->end = tempnum;
@@ -646,7 +657,7 @@ static void E_ProcessFontFilter(cfg_t *sec, vfontfilter_t *f)
 // Creates the fontgfx array and precaches all patches as determined via
 // execution of the filter objects in the font.
 // 
-void E_LoadPatchFont(vfont_t *font)
+static void E_LoadPatchFont(vfont_t *font)
 {
    unsigned int i, j, k, m;
    char lumpname[9];
@@ -769,17 +780,20 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 //
 // Processes a single EDF font object.
 //
-static void E_ProcessFont(cfg_t *sec)
+static void E_ProcessFont(cfg_t *sec, bool delta)
 {
    vfont_t *font;
    const char *tempstr;
    int tempnum = 0;
 
-   const char *title = cfg_title(sec);
+   const char *title = delta ? cfg_getstr(sec, ITEM_DELTA_NAME) : cfg_title(sec);
 
    // The fonts were already pre-created; retrieve the vfont_t structure for
    // this definition.
    font = E_FontForName(title);
+
+   if(delta && font == nullptr)
+      E_EDFLoggedErr(2, "E_ProcessFont: Invalid delta 'name' value: '%s'\n", title);
 
    // If the font is neither linear nor has any filters, it hasn't been 
    // processed before, or in other words, this is a new font by name.
@@ -794,7 +808,7 @@ static void E_ProcessFont(cfg_t *sec)
       tempstr = cfg_getstr(sec, ITEM_FONT_START);
 
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // it is a number?
          font->start = tempnum; 
@@ -809,7 +823,7 @@ static void E_ProcessFont(cfg_t *sec)
       tempstr = cfg_getstr(sec, ITEM_FONT_END);
 
       if(strlen(tempstr) > 1)
-         tempnum = strtol(tempstr, &pos, 0);
+         tempnum = static_cast<int>(strtol(tempstr, &pos, 0));
 
       if(pos && *pos == '\0') // is it a number?
          font->end = tempnum;
@@ -902,6 +916,12 @@ static void E_ProcessFont(cfg_t *sec)
    // process linear lump - if defined, this is a linear font automatically
    if(cfg_size(sec, ITEM_FONT_LLUMP) > 0)
    {
+      if(delta && font->numfilters)
+      {
+         // handle disposal of pre-existing filters
+         E_FreeFontFilters(font);
+      }
+
       bool requantize = false;
       int format;
       const char *fmtstr;
@@ -928,6 +948,13 @@ static void E_ProcessFont(cfg_t *sec)
    {
       unsigned int curnumfilters = font->numfilters;
       unsigned int numfilters    = cfg_size(sec, ITEM_FONT_FILTER);
+
+      if(delta && font->linear)
+      {
+         // TODO: Make E_UnloadLinearFont one day, we already have E_DisposePatches
+         E_EDFLoggedErr(2, "E_ProcessFont: fontdelta of font '%s' cannot change a linear "
+                           "font to filter-based (currently).\n", font->name);
+      }
 
       // at least one filter is required; if this font is being modified, it 
       // may already possess filters.
@@ -957,7 +984,7 @@ static void E_ProcessFont(cfg_t *sec)
    }
 
    E_EDFLogPrintf("\t\t%s font %s\n", 
-                  def ? "Defined" : "Modified", font->name);
+                  def && !delta ? "Defined" : "Modified", font->name);
 }
 
 //
@@ -970,6 +997,9 @@ static void E_ProcessFontVars(cfg_t *cfg)
    // 02/25/09: set native module font names
    E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
    E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));
+   E_ReplaceString(hud_fssmallname,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSS));
+   E_ReplaceString(hud_fsmediumname,  cfg_getstrdup(cfg, ITEM_FONT_HUDFSM));
+   E_ReplaceString(hud_fslargename,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSL));
    E_ReplaceString(mn_fontname,       cfg_getstrdup(cfg, ITEM_FONT_MENU));
    E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
    E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));
@@ -1047,7 +1077,30 @@ void E_ProcessFonts(cfg_t *cfg)
    E_EDFLogPrintf("\t* Processing fonts\n");
 
    for(unsigned int i = 0; i < numfonts; i++)
-      E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i));
+      E_ProcessFont(cfg_getnsec(cfg, EDF_SEC_FONT, i), false);
+
+   // process global font variables
+   E_ProcessFontVars(cfg);
+}
+
+//
+// Adds all fonts in the given cfg_t.
+//
+void E_ProcessFontDeltas(cfg_t *cfg)
+{
+   unsigned int numfontdeltas = cfg_size(cfg, EDF_SEC_FNTDELTA);
+   
+   // process fonts
+   E_EDFLogPrintf("\t* Processing fontdeltas\n");
+
+   for(unsigned int i = 0; i < numfontdeltas; i++)
+   {
+      cfg_t *deltasec = cfg_getnsec(cfg, EDF_SEC_FNTDELTA, i);
+      if(!cfg_size(deltasec, ITEM_DELTA_NAME))
+         E_EDFLoggedErr(2, "E_ProcessFontDeltas: fontdelta requires name field\n");
+
+      E_ProcessFont(deltasec, true);
+   }
 
    // process global font variables
    E_ProcessFontVars(cfg);

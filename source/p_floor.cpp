@@ -59,6 +59,23 @@ void P_FloorSequence(sector_t *s)
       S_StartSectorSequenceName(s, "EEFloor", SEQ_ORIGIN_SECTOR_F);
 }
 
+//
+// Some games have a dedicated stair sequence
+//
+void P_StairSequence(sector_t *s)
+{
+   if(silentmove(s))
+      return;
+
+   if(s->sndSeqID >= 0)
+      S_StartSectorSequence(s, SEQ_FLOOR);
+   else if(E_SequenceForName("EEFloorStair"))
+      S_StartSectorSequenceName(s, "EEFloorStair", SEQ_ORIGIN_SECTOR_F);
+   else
+      S_StartSectorSequenceName(s, "EEFloor", SEQ_ORIGIN_SECTOR_F);
+}
+
+
 IMPLEMENT_THINKER_TYPE(FloorMoveThinker)
 
 //
@@ -89,7 +106,7 @@ void FloorMoveThinker::Think()
          floordestheight = resetHeight;
          type = genResetStair;
          
-         P_FloorSequence(sector);
+         P_StairSequence(sector);
       }
 
       // While stair is building, the delay timer is counting down
@@ -119,7 +136,7 @@ void FloorMoveThinker::Think()
             delayTimer = stepRaiseTime;
             
             if(sector->floorheight != floordestheight)
-               P_FloorSequence(sector);
+               P_StairSequence(sector);
          }
          return;
       case genWaitStair:
@@ -130,7 +147,8 @@ void FloorMoveThinker::Think()
    }
    
    // move the floor
-   res = T_MoveFloorInDirection(sector, speed, floordestheight, crush, direction);
+   res = T_MoveFloorInDirection(sector, speed, floordestheight, crush, direction,
+                                emulateStairCrush);
 
    // sf: added silentmove
    // haleyjd: moving sound handled by sound sequences now
@@ -190,7 +208,7 @@ void FloorMoveThinker::Think()
       }
       
       sector->floordata = NULL; //jff 2/22/98
-      this->removeThinker(); //remove this floor from list of movers
+      this->remove(); //remove this floor from list of movers
 
       //jff 2/26/98 implement stair retrigger lockout while still building
       // note this only applies to the retriggerable generalized stairs
@@ -298,7 +316,7 @@ void ElevatorThinker::Think()
    else // up
    {
       //jff 4/7/98 reverse order of ceiling/floor
-      res = T_MoveFloorUp(sector, speed, floordestheight, -1);
+      res = T_MoveFloorUp(sector, speed, floordestheight, -1, false);
 
       if(res == ok || res == pastdest) // jff 4/7/98 don't move ceiling if blocked
          T_MoveCeilingUp(sector, speed, ceilingdestheight, -1); 
@@ -312,7 +330,7 @@ void ElevatorThinker::Think()
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
       sector->floordata = NULL;     //jff 2/22/98
       sector->ceilingdata = NULL;   //jff 2/22/98
-      this->removeThinker();               // remove elevator from actives
+      this->remove();               // remove elevator from actives
       
       // make floor stop sound
       // haleyjd: handled through sound sequences
@@ -346,7 +364,7 @@ void PillarThinker::Think()
 {
    result_e resf, resc;
    
-   resf = T_MoveFloorInDirection  (sector, floorSpeed,   floordest,   crush,  direction);
+   resf = T_MoveFloorInDirection  (sector, floorSpeed,   floordest,   crush,  direction, false);
    resc = T_MoveCeilingInDirection(sector, ceilingSpeed, ceilingdest, crush, -direction);
    
    if(resf == pastdest && resc == pastdest)
@@ -354,7 +372,7 @@ void PillarThinker::Think()
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
       sector->floordata = NULL;
       sector->ceilingdata = NULL;      
-      this->removeThinker();
+      this->remove();
    }
 }
 
@@ -397,7 +415,7 @@ int EV_FloorCrushStop(const line_t *line, int tag)
          rtn = 1;
          fmt->sector->floordata = nullptr;
          S_StopSectorSequence(fmt->sector, SEQ_ORIGIN_SECTOR_F);
-         fmt->removeThinker();
+         fmt->remove();
       }
    }
    return rtn;
@@ -628,7 +646,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
 
          //jff 5/23/98 use model subroutine to unify fixes and handling
          sec = P_FindModelFloorSector(floor->floordestheight,
-                                      sec-sectors);
+                                      eindex(sec-sectors));
          if(sec)
          {
             floor->texture = sec->floorpic;
@@ -815,6 +833,10 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          floor->sector = sec;
          floor->type = buildStair;   //jff 3/31/98 do not leave uninited
 
+         // ioanch: vanilla Doom stairs crushing behaviour is undefined! But in
+         // practice the behaviour is similar to Hexen crushers because of how
+         // the undefined values are set. But it's really depending on chance.
+
          // set up the speed and stepsize according to the stairs type
          switch(type)
          {
@@ -822,14 +844,22 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          case build8:
             speed = FLOORSPEED/4;
             stairsize = 8*FRACUNIT;
+
             if(!demo_compatibility)
                floor->crush = -1; //jff 2/27/98 fix uninitialized crush field
+            else
+            {
+               floor->crush = 10;
+               floor->emulateStairCrush = true;
+            }
             break;
          case turbo16:
             speed = FLOORSPEED*4;
             stairsize = 16*FRACUNIT;
-            if(!demo_compatibility)
-               floor->crush = 10;  //jff 2/27/98 fix uninitialized crush field
+            // ioanch: also allow crushing if demo_compatibility is true
+            floor->crush = 10;  //jff 2/27/98 fix uninitialized crush field
+            if(demo_compatibility)
+               floor->emulateStairCrush = true;
             break;
          }
 
@@ -839,7 +869,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          
          texture = sec->floorpic;
 
-         P_FloorSequence(floor->sector);
+         P_StairSequence(floor->sector);
          
          // Find next sector to raise
          //   1. Find 2-sided line with same sector side[0] (lowest numbered)
@@ -857,14 +887,14 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                if(!((sec->lines[i])->flags & ML_TWOSIDED))
                   continue;
 
-               newsecnum = tsec-sectors;
+               newsecnum = eindex(tsec-sectors);
                
                if(secnum != newsecnum)
                   continue;
                
                tsec = (sec->lines[i])->backsector;
                if(!tsec) continue;     //jff 5/7/98 if no backside, continue
-               newsecnum = tsec - sectors;
+               newsecnum = eindex(tsec - sectors);
 
                // if sector's floor is different texture, look for another
                if(tsec->floorpic != texture)
@@ -902,7 +932,12 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                //jff 2/27/98 fix uninitialized crush field
                if(!demo_compatibility)
                   floor->crush = (type == build8 ? -1 : 10);
-               P_FloorSequence(floor->sector);
+               else
+               {
+                  floor->crush = 10;
+                  floor->emulateStairCrush = true;
+               }
+               P_StairSequence(floor->sector);
                ok = 1;
                break;
             } // end for
@@ -1018,7 +1053,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
    {
       if(!line || !(s1 = line->backsector))
          return rtn;
-      secnum = s1 - sectors;
+      secnum = eindex(s1 - sectors);
       manual = true;
       goto manual_donut;
    }
@@ -1233,7 +1268,7 @@ int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
    {
       if(!line || !(sector = line->backsector))
          return returnval;
-      sectornum = sector - sectors;
+      sectornum = eindex(sector - sectors);
       manual = true;
       goto manual_pillar;
    }
@@ -1322,7 +1357,7 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
    {
       if(!line || !(sector = line->backsector))
          return returnval;
-      sectornum = sector - sectors;
+      sectornum = eindex(sector - sectors);
       manual = true;
       goto manual_pillar;
    }
@@ -1439,10 +1474,10 @@ void FloorWaggleThinker::Think()
          dist       = originalHeight - sector->floorheight;
          
          T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
-            destheight >= sector->floorheight ? plat_down : plat_up);
+            destheight >= sector->floorheight ? plat_down : plat_up, false);
 
          sector->floordata = NULL;
-         removeThinker();
+         remove();
          return;
       }
       break;
@@ -1464,7 +1499,7 @@ void FloorWaggleThinker::Think()
    dist = destheight - sector->floorheight;
 
    T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->floorheight ? plat_up : plat_down);
+      destheight >= sector->floorheight ? plat_up : plat_down, false);
 }
 
 //
@@ -1496,7 +1531,7 @@ int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
    {
       if(!line || !(sector = line->backsector))
          return retCode;
-      sectorIndex = sector - sectors;
+      sectorIndex = eindex(sector - sectors);
       manual = true;
       goto manual_waggle;
    }

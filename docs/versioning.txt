@@ -1,0 +1,8 @@
+Eternity version is defined in the following places. Make sure to update these files when incrementing the version:
+
+* CMakeLists.txt
+* macosx/EternityEngine-Info.plist
+* macosx/launcher/EternityLaunch-Info.plist
+* source/version.cpp
+* vc2015/Eternity.rc
+* vc2017/Eternity.rc

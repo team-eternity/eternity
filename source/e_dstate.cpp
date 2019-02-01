@@ -949,7 +949,7 @@ static void doKeyword(pstate_t *ps)
       // if the keyword is "stop" and the previous buffered object is a label, 
       // this is a "kill state"
       if(DSP.neweststate && DSP.neweststate->type == BUF_LABEL &&
-         *ps->tokenbuffer == "stop")
+         !ps->tokenbuffer->strCaseCmp("stop"))
          DSP.numstops++;
 
       // make a keyword object
@@ -1687,7 +1687,7 @@ static psfunc_t pstatefuncs[PSTATE_NUMSTATES] =
 //
 // Gets the next line of DECORATE state input.
 //
-bool E_GetDSLine(const char **src, pstate_t *ps)
+static bool E_GetDSLine(const char **src, pstate_t *ps)
 {
    bool isdone = false;
    const char *srctxt = *src;

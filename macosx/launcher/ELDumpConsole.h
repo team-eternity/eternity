@@ -46,7 +46,7 @@
 
 -(id)initWithWindowNibName:(NSString *)windowNibName;
 -(void)startLogging:(NSTask *)engineTask;
--(void)dataReady:(NSNotification *)notification;
+-(void)makeVisible;
 
 @end
 

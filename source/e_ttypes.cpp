@@ -49,6 +49,7 @@
 #include "p_mobj.h"
 #include "p_partcl.h"
 #include "p_slopes.h"
+#include "p_portalcross.h"
 #include "p_tick.h"
 #include "r_data.h"
 #include "r_defs.h"
@@ -639,7 +640,7 @@ static ETerrain **TerrainTypes = NULL;
 //
 void E_InitTerrainTypes(void)
 {
-   int numf, i;
+   int numf;
 
    // if TerrainTypes already exists, free it
    if(TerrainTypes)
@@ -650,15 +651,13 @@ void E_InitTerrainTypes(void)
    TerrainTypes = ecalloc(ETerrain **, numf, sizeof(ETerrain*));
 
    // initialize all flats to Solid terrain
-   for(i = 0; i < numf; ++i)
+   for(int i = 0; i < numf; ++i)
       TerrainTypes[i] = &solid;
 
    // run down each chain of the Floor hash table and assign each
    // Floor object to the proper TerrainType
-   for(i = 0; i < NUMFLOORCHAINS; ++i)
+   for(EFloor *floor : FloorChains)
    {
-      EFloor *floor = FloorChains[i];
-
       while(floor)
       {
          int tnum = R_CheckForFlat(floor->name);
@@ -690,7 +689,7 @@ ETerrain *E_GetThingFloorType(const Mobj *thing, bool usefloorz)
       // determine what touched sector the thing is standing on
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
-         fixed_t z = usefloorz ? thing->floorz : thing->z;
+         fixed_t z = usefloorz ? thing->zref.floor : thing->z;
          if(z == m->m_sector->floorheight)
             break;
       }
@@ -915,6 +914,15 @@ bool E_HitWater(Mobj *thing, const sector_t *sector)
    E_TerrainHit(terrain, thing, z, sector);
 
    return terrain->liquid;
+}
+
+//
+// If called from an explosion, hit ground water if close enough
+//
+void E_ExplosionHitWater(Mobj *thing, int damage)
+{
+   if(thing->z <= thing->zref.secfloor + damage * FRACUNIT)
+      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
 }
 
 //

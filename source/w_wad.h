@@ -23,6 +23,8 @@
 
 #include "z_zone.h"
 
+#include "m_dllist.h"
+
 class  ZAutoBuffer;
 class  ZipFile;
 struct ZipLump;
@@ -51,7 +53,7 @@ struct directlump_t
    FILE *file;       // for a direct lump, a pointer to the file it is in
    size_t position;  // for direct and memory lumps, offset into file/buffer
 };
-  
+
 // A memory lump is loaded in a buffer in RAM and just needs to be memcpy'd.
 struct memorylump_t
 {
@@ -77,23 +79,20 @@ struct lumpinfo_t
    // haleyjd: logical lump data
    char   name[9];
    size_t size;
-   
+
    // killough 1/31/98: hash table fields, used for ultra-fast hash table lookup
-   struct hash_t
-   {
-      int index, next;
-   };
-   hash_t namehash, lfnhash;
+   int index, next;
 
    // haleyjd 03/27/11: array index into lumpinfo in the parent wad directory,
    // for fast reverse lookup.
    int selfindex;
 
    // killough 4/17/98: namespace tags, to prevent conflicts between resources
-   enum 
+   enum
    {
       ns_global,
-      ns_sprites,
+      ns_MIN_LOCAL,
+      ns_sprites = ns_MIN_LOCAL, // we need a "min" reference for iteration.
       ns_flats,
       ns_colormaps,
       ns_translations,
@@ -103,6 +102,7 @@ struct lumpinfo_t
       ns_textures,
       ns_graphics,
       ns_sounds,
+      ns_hires,
       ns_max           // keep this last.
    };
    int li_namespace;
@@ -114,7 +114,7 @@ struct lumpinfo_t
       fmt_patch,   // converted to a patch
       fmt_maxfmts  // number of formats
    } lumpformat;
-   
+
    void *cache[fmt_maxfmts];  //sf
 
    // haleyjd: lump type
@@ -125,11 +125,11 @@ struct lumpinfo_t
       lump_file,    // lump is a directory file; must be opened to use
       lump_zip,     // lump is inside a zip file
       lump_numtypes
-   }; 
+   };
    int type;
 
    int source; // haleyjd: unique id # for source of this lump
-   
+
    // haleyjd: physical lump data (guarded union)
    union
    {
@@ -138,7 +138,9 @@ struct lumpinfo_t
       ziplump_t    zip;
    };
 
-   char *lfn;  // long file name, where relevant   
+   char *lfn;      // long file name, where relevant
+   char *filepath; // file path, where relevant
+   DLListItem<lumpinfo_t> lfnlinks;
 };
 
 // Flags for wfileadd_t
@@ -179,7 +181,7 @@ struct wfileadd_t
 //
 // haleyjd 06/26/11: Wad lump preprocessing and formatting
 //
-// Inherit from this interface class to provide verification and preprocessing 
+// Inherit from this interface class to provide verification and preprocessing
 // code to W_CacheLump* routines.
 //
 class WadLumpLoader
@@ -194,13 +196,13 @@ public:
    } Code;
 
    // verifyData should do format checking and return true if the data is valid,
-   // and false otherwise. If verifyData returns anything other than CODE_OK, 
+   // and false otherwise. If verifyData returns anything other than CODE_OK,
    // formatData is not called under any circumstance.
    virtual Code verifyData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatData should do preprocessing work on the lump. This work will be
    // retained until the wad lump is freed from cache, so it allows such work to
-   // be done once only and not every time the lump is referenced/used. 
+   // be done once only and not every time the lump is referenced/used.
    virtual Code formatData(lumpinfo_t *lump) const { return CODE_OK; }
 
    // formatIndex specifies an alternate cache pointer to use for resources
@@ -233,7 +235,7 @@ public:
       ADDSUBFILE, // Add as a subfile wad
       ADDPRIVATE  // Add to a private directory
    };
-   
+
    static int IWADSource;   // source # of the global IWAD file
    static int ResWADSource; // source # of the resource wad (ie. eternity.wad)
 
@@ -268,21 +270,23 @@ protected:
    namespace_t m_namespaces[lumpinfo_t::ns_max];
 
    // Protected methods
-   void initLumpHash();
-   void initLFNHash();
+   void initLumpHashes();
    void initResources();
    void addInfoPtr(lumpinfo_t *infoptr);
    void coalesceMarkedResources();
    void incrementSource(const openwad_t &openData);
    void handleOpenError(openwad_t &openData, const wfileadd_t &addInfo,
-                        const char *filename);
-   openwad_t openFile(const wfileadd_t &addInfo);
+                        const char *filename) const;
+   openwad_t openFile(const wfileadd_t &addInfo) const;
    lumpinfo_t *reAllocLumpInfo(int numnew, int startlump);
-   bool addSingleFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
-   bool addMemoryWad(openwad_t &openData, wfileadd_t &addInfo, int startlump);
-   bool addWadFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
-   bool addZipFile(openwad_t &openData, wfileadd_t &addInfo, int startlump);
-   bool addDirectoryAsArchive(openwad_t &openData, wfileadd_t &addInfo,
+   bool addSingleFile(openwad_t &openData, const wfileadd_t &addInfo,
+                      int startlump);
+   bool addMemoryWad(openwad_t &openData, const wfileadd_t &addInfo,
+                     int startlump);
+   bool addWadFile(openwad_t &openData, const wfileadd_t &addInfo,
+                   int startlump);
+   bool addZipFile(openwad_t &openData, const wfileadd_t &addInfo, int startlump);
+   bool addDirectoryAsArchive(openwad_t &openData, const wfileadd_t &addInfo,
                               int startlump);
    bool addFile(wfileadd_t &addInfo);
    void freeDirectoryLumps();  // haleyjd 06/27/09
@@ -297,12 +301,14 @@ public:
 
    // Public methods
    void  initMultipleFiles(wfileadd_t *files);
-   int   checkNumForName(const char *name, int li_namespace = lumpinfo_t::ns_global);
-   int   checkNumForNameNSG(const char *name, int li_namespace);
-   int   getNumForName(const char *name);
-   int   getNumForNameNSG(const char *name, int ns);
-   int   checkNumForLFN(const char *lfn, int li_namespace = lumpinfo_t::ns_global);
-   int   checkNumForLFNNSG(const char *name, int ns);
+   int   checkNumForName(const char *name,
+                         int li_namespace = lumpinfo_t::ns_global) const;
+   int   checkNumForNameNSG(const char *name, int li_namespace) const;
+   int   getNumForName(const char *name) const;
+   int   getNumForNameNSG(const char *name, int ns) const;
+   int   checkNumForLFN(const char *lfn,
+                        int li_namespace = lumpinfo_t::ns_global) const;
+   int   checkNumForLFNNSG(const char *name, int ns) const;
 
    // sf: add a new wad file after the game has already begun
    bool  addNewFile(const char *filename);
@@ -310,24 +316,28 @@ public:
    bool  addNewPrivateFile(const char *filename);
    int   addDirectory(const char *dirpath);
    bool  addInMemoryWad(void *buffer, size_t size);
-   int   lumpLength(int lump);
-   void  readLump(int lump, void *dest, WadLumpLoader *lfmt = nullptr);
-   void *cacheLumpNum(int lump, int tag, WadLumpLoader *lfmt = nullptr);
-   void *cacheLumpName(const char *name, int tag, WadLumpLoader *lfmt = nullptr);
-   void  cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer);
-   void  cacheLumpAuto(const char *name, ZAutoBuffer &buffer);
-   bool  writeLump(const char *lumpname, const char *destpath);
+   int   lumpLength(int lump) const;
+   void  readLump(int lump, void *dest,
+                  const WadLumpLoader *lfmt = nullptr) const;
+   void *cacheLumpNum(int lump, int tag,
+                      const WadLumpLoader *lfmt = nullptr) const;
+   void *cacheLumpName(const char *name, int tag,
+                       const WadLumpLoader *lfmt = nullptr) const;
+   void  cacheLumpAuto(int lumpnum, ZAutoBuffer &buffer) const;
+   void  cacheLumpAuto(const char *name, ZAutoBuffer &buffer) const;
+   bool  writeLump(const char *lumpname, const char *destpath) const;
    void  close(); // haleyjd 03/09/11
 
    lumpinfo_t *getLumpNameChain(const char *name) const;
+   lumpinfo_t *getLumpLFNChain(const char *name) const;
 
-   const char *getLumpName(int lumpnum);
-   const char *getLumpFileName(int lump);
+   const char *getLumpName(int lumpnum) const;
+   const char *getLumpFileName(int lump) const;
 
    // Accessors
    int   getType() const  { return type; }
    void  setType(int i)   { type = i;    }
-   
+
    // Read-only properties
    int          getNumLumps() const { return numlumps; }
    lumpinfo_t **getLumpInfo() const { return lumpinfo; }
@@ -346,6 +356,8 @@ int      W_GetNumForName(const char* name);
 
 int      W_LumpLength(int lump);
 uint32_t W_LumpCheckSum(int lumpnum);
+
+lumpinfo_t *W_NextInLFNHash(lumpinfo_t *lumpinfo);
 
 #endif
 

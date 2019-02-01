@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 // option, the default control scheme for DOOM becomes broken in windowed
 // mode under the default SDL setup.
 //
-void I_DisableSysMenu()
+void I_DisableSysMenu(SDL_Window *window)
 {
    if(disable_sysmenu)
    {
@@ -94,11 +94,11 @@ void I_DisableSysMenu()
       
       SDL_VERSION(&info.version); // this is important!
       
-      if(SDL_GetWMInfo(&info))
+      if(SDL_GetWindowWMInfo(window, &info))
       {
-         LONG window_style = GetWindowLongPtr(info.window, GWL_STYLE);
+         LONG_PTR window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         SetWindowLongPtr(info.window, GWL_STYLE, window_style);
+         SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
       }
    }
 }

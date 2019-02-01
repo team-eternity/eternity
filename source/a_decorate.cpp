@@ -142,8 +142,10 @@ void A_FadeOut(actionargs_t *actionargs)
 void A_Jump(actionargs_t *actionargs)
 {
    int        chance, choice;
-   Mobj      *actor = actionargs->actor;
-   arglist_t *al    = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   player_t  *player = actor->player;
+   arglist_t *al     = actionargs->args;
+   auto       at     = actionargs->actiontype;
    state_t   *state;
 
    // no args?
@@ -163,8 +165,11 @@ void A_Jump(actionargs_t *actionargs)
    choice = (P_Random(pr_decjump2) % (al->numargs - 1)) + 1;
 
    // if the state is found, jump to it.
-   if((state = E_ArgAsStateLabel(actor, al, choice)))
+   if(at == actionargs_t::MOBJFRAME && (state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
+   else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabel(player, al, choice)))
+      P_SetPspritePtr(player, actionargs->pspr, state->index);
+
 }
 
 //
@@ -178,8 +183,8 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
    if(actionargs->pspr)
    {
       player_t *p     = actionargs->actor->player;
-      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, NULL);
-      weaponinfo_t *w = P_GetReadyWeapon(p);
+      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, p);
+      weaponinfo_t *w = p->readyweapon;
       int ammo;
 
       // validate state
@@ -224,7 +229,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, NULL)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, player)) < 0)
          return;
 
       P_SetPspritePtr(player, pspr, statenum);
@@ -232,21 +237,14 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
    else
    {
       Mobj *target = actor->target;
-      int seek = !!E_ArgAsInt(args, 2, 0);
-      int ifov =   E_ArgAsInt(args, 1, 0);
+      bool    seek = !!E_ArgAsInt(args, 2, 0);
+      fixed_t ffov = E_ArgAsFixed(args, 1, 0);
 
       // if a missile, determine what to do from args[2]
       if(actor->flags & MF_MISSILE)
       {
-         switch(seek)
-         {
-         default:
-         case 0: // 0 == use originator (mo->target)
-            break;
-         case 1: // 1 == use seeker target
+         if(seek)
             target = actor->tracer;
-            break;
-         }
       }
 
       // no target? nothing else to do
@@ -254,35 +252,35 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // check fov if one is specified
-      if(ifov)
+      if(ffov)
       {
-         angle_t fov  = FixedToAngle(ifov);
+         angle_t fov  = FixedToAngle(ffov);
          angle_t tang = P_PointToAngle(actor->x, actor->y,
 #ifdef R_LINKEDPORTALS
-                                        getThingX(actor, target), 
+                                        getThingX(actor, target),
                                         getThingY(actor, target));
 #else
                                         target->x, target->y);
 #endif
-         angle_t minang = actor->angle - fov / 2;
-         angle_t maxang = actor->angle + fov / 2;
+         angle_t minang = actor->angle - FixedToAngle(fov) / 2;
+         angle_t maxang = actor->angle + FixedToAngle(fov) / 2;
 
          // if the angles are backward, compare differently
-         if((minang > maxang) ? tang < minang && tang > maxang 
+         if((minang > maxang) ? tang < minang && tang > maxang
                               : tang < minang || tang > maxang)
          {
             return;
          }
       }
 
-      // check line of sight 
+      // check line of sight
       if(!P_CheckSight(actor, target))
          return;
 
       // prepare to jump!
       if((statenum = E_ArgAsStateNumNI(args, 0, actor)) < 0)
          return;
-      
+
       P_SetMobjState(actor, statenum);
    }
 }
@@ -349,6 +347,9 @@ static const char *kwds_channel_old[] =
    "chan_voice",  // 2 },
    "chan_item",   // 3 },
    "chan_body",   // 4 },
+   "5",           // 5 },
+   "6",           // 6 },
+   "7",           // 7 },
 };
 
 static argkeywd_t channelkwdsold = { kwds_channel_old, NUMSCHANNELS };
@@ -372,6 +373,9 @@ static const char *kwds_channel_new[] =
    "voice",  // 2
    "item",   // 3
    "body",   // 4
+   "5",      // 5
+   "6",      // 6
+   "7",      // 7
 };
 
 static argkeywd_t channelkwdsnew = { kwds_channel_new, NUMSCHANNELS };

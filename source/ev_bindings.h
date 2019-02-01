@@ -72,6 +72,8 @@ extern ev_lockdef_t HereticLockDefs[];
 extern const size_t DOOMLockDefsLen;
 extern const size_t HereticLockDefsLen;
 
+void EV_InitUDMFToExtraDataLookup();
+
 #endif
 
 // EOF

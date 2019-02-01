@@ -66,6 +66,7 @@ enum
 struct columndrawer_t
 {
    void (*DrawColumn)();       // normal
+   void (*DrawNewSkyColumn)(); // double-sky drawing (index 0 = transparent)
    void (*DrawTLColumn)();     // translucent
    void (*DrawTRColumn)();     // translated
    void (*DrawTLTRColumn)();   // translucent/translated
@@ -170,11 +171,11 @@ typedef struct cb_column_s
    int texmid;
 
    // 8-bit lighting
-   lighttable_t *colormap;
-   byte *translation;
+   const lighttable_t *colormap;
+   const byte *translation;
    fixed_t translevel; // haleyjd: zdoom style trans level
 
-   void *source;
+   const void *source;
 } cb_column_t;
 
 

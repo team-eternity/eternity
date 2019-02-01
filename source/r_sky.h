@@ -31,11 +31,6 @@
 
 #include "m_fixed.h"
 
-// SKY, store the number for name.
-#define SKYFLATNAME  "F_SKY1"
-// haleyjd: hexen-style skies
-#define SKY2FLATNAME "F_SKY2"
-
 // The sky map is 256*128*4 maps.
 #define ANGLETOSKYSHIFT         22
 

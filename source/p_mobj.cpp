@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Moving object handling. Spawn functions.
+// Purpose: Moving object handling. Spawn functions
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -37,6 +35,7 @@
 #include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_puff.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
@@ -70,6 +69,7 @@
 #include "r_portal.h"
 #include "r_state.h"
 #include "sounds.h"
+#include "s_musinfo.h"
 #include "s_sound.h"
 #include "st_stuff.h"
 #include "v_misc.h"
@@ -141,16 +141,16 @@ void PointThinker::serialize(SaveArchive &arc)
 }
 
 //
-// PointThinker::removeThinker
+// PointThinker::remove
 //
 // Stop any sounds related to this PointThinker instance, and then invoke the
 // parent implementation.
 //
-void PointThinker::removeThinker()
+void PointThinker::remove()
 {
    // stop any playing sound
    S_StopSound(this, CHAN_ALL);
-   Super::removeThinker();
+   Super::remove();
 }
 
 //=============================================================================
@@ -292,7 +292,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       if(state == NullStateNum)
       {
          mobj->state = NULL;
-         mobj->removeThinker();
+         mobj->remove();
          ret = false;
          break;                 // killough 4/9/98
       }
@@ -364,7 +364,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    {
       // remove mobj
       mobj->state = NULL;
-      mobj->removeThinker();
+      mobj->remove();
       return false;
    }
 
@@ -388,7 +388,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 //
 // P_ExplodeMissile
 //
-void P_ExplodeMissile(Mobj *mo)
+void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
 {
    // haleyjd 08/02/04: EXPLOCOUNT flag
    if(mo->flags3 & MF3_EXPLOCOUNT)
@@ -402,10 +402,19 @@ void P_ExplodeMissile(Mobj *mo)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      if(mo->subsector->sector->intflags & SIF_SKY &&
-         mo->z >= mo->subsector->sector->ceilingheight - P_ThingInfoHeight(mo->info))
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
+      if((ceilingsector->intflags & SIF_SKY || 
+         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
       {
-         mo->removeThinker(); // don't explode on the actual sky itself
+         mo->remove(); // don't explode on the actual sky itself
+         return;
+      }
+      if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
+         R_IsSkyLikePortalCeiling(*topedgesec)) && 
+         mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
+      {
+         mo->remove(); // don't explode on the edge
          return;
       }
    }
@@ -516,7 +525,7 @@ void P_XYMovement(Mobj* mo)
          if(!(mo->flags & MF_MISSILE) && demo_version >= 203 &&
             (mo->flags & MF_BOUNCES ||
              (!player && clip.blockline &&
-              variable_friction && mo->z <= mo->floorz &&
+              variable_friction && mo->z <= mo->zref.floor &&
               P_GetFriction(mo, NULL) > ORIG_FRICTION)))
          {
             if (clip.blockline)
@@ -594,7 +603,10 @@ void P_XYMovement(Mobj* mo)
             // explode a missile
 
             if(clip.ceilingline && clip.ceilingline->backsector &&
-               clip.ceilingline->backsector->intflags & SIF_SKY)
+               (clip.ceilingline->backsector->intflags & SIF_SKY || 
+               (demo_version >= 342 && 
+                  clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->ceilingheight)
@@ -606,12 +618,21 @@ void P_XYMovement(Mobj* mo)
                   // this fix is for "sky hack walls" only apparently --
                   // see P_ExplodeMissile for my real sky fix
 
-                  mo->removeThinker();
+                  mo->remove();
                   return;
                }
             }
 
-            P_ExplodeMissile(mo);
+            if(demo_version >= 342 && clip.blockline && 
+               !clip.blockline->backsector && 
+               R_IsSkyWall(*clip.blockline))
+            {
+               mo->remove();
+               return;
+            }
+
+            P_ExplodeMissile(mo, clip.ceilingline ? clip.ceilingline->backsector :
+               nullptr);
          }
          else // whatever else it is, it is now standing still in (x,y)
          {
@@ -640,20 +661,28 @@ void P_XYMovement(Mobj* mo)
    // no friction when airborne
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
-   if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
-      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)))
+   // 2017/09/09: players when air friction is active
+   if(mo->z > mo->zref.floor && !(mo->flags4 & MF4_FLY) &&
+      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
+      (!mo->player || LevelInfo.airFriction == 0))
+   {
       return;
+   }
 
    // killough 8/11/98: add bouncers
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
    // ioanch 20160116: portal aware
-   if(((mo->flags & MF_BOUNCES && mo->z > mo->dropoffz) ||
+   if(((mo->flags & MF_BOUNCES && mo->z > mo->zref.dropoff) ||
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
+      mo->zref.floor != P_ExtremeSectorAtPoint(mo, false)->floorheight)
       return;  // do not stop sliding if halfway off a step with some momentum
+
+   // Some objects never rest on other things
+   if(mo->intflags & MIF_ONMOBJ && mo->flags4 & MF4_SLIDEOVERTHINGS)
+      return;
 
    // killough 11/98:
    // Stop voodoo dolls that have come to rest, despite any
@@ -714,8 +743,11 @@ void P_XYMovement(Mobj* mo)
       {
          fixed_t friction = P_GetFriction(mo, NULL);
 
-         mo->momx = FixedMul(mo->momx, friction);
-         mo->momy = FixedMul(mo->momy, friction);
+         if(friction != FRACUNIT)
+         {
+            mo->momx = FixedMul(mo->momx, friction);
+            mo->momy = FixedMul(mo->momy, friction);
+         }
 
          // killough 10/98: Always decrease player bobbing by ORIG_FRICTION.
          // This prevents problems with bobbing on ice, where it was not being
@@ -775,6 +807,12 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    }
 }
 
+static void P_floorHereticBounceMissile(Mobj * mo)
+{
+   mo->momz = -mo->momz;
+   P_SetMobjState(mo, mobjinfo[mo->type]->deathstate);
+}
+
 //
 // P_ZMovement
 //
@@ -803,9 +841,9 @@ static void P_ZMovement(Mobj* mo)
    {
       mo->z += mo->momz;
 
-      if (mo->z <= mo->floorz)                  // bounce off floors
+      if (mo->z <= mo->zref.floor)                  // bounce off floors
       {
-         mo->z = mo->floorz;
+         mo->z = mo->zref.floor;
          E_HitFloor(mo); // haleyjd
          if (mo->momz < 0)
          {
@@ -832,9 +870,9 @@ static void P_ZMovement(Mobj* mo)
             return;
          }
       }
-      else if(mo->z >= mo->ceilingz - mo->height) // bounce off ceilings
+      else if(mo->z >= mo->zref.ceiling - mo->height) // bounce off ceilings
       {
-         mo->z = mo->ceilingz - mo->height;
+         mo->z = mo->zref.ceiling - mo->height;
          if(mo->momz > 0)
          {
             if(!(mo->subsector->sector->intflags & SIF_SKY))
@@ -843,7 +881,7 @@ static void P_ZMovement(Mobj* mo)
             {
                if(mo->flags & MF_MISSILE)
                {
-                  mo->removeThinker();      // missiles don't bounce off skies
+                  mo->remove();      // missiles don't bounce off skies
                   if(demo_version >= 331)
                      return; // haleyjd: return here for below fix
                }
@@ -883,13 +921,17 @@ static void P_ZMovement(Mobj* mo)
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
             (mo->z > clip.ceilingline->backsector->ceilingheight) &&
-            clip.ceilingline->backsector->intflags & SIF_SKY)
+            (clip.ceilingline->backsector->intflags & SIF_SKY ||
+            (demo_version >= 342 &&
+               clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
+               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
          {
-            mo->removeThinker();  // don't explode on skies
+            mo->remove();  // don't explode on skies
          }
          else
          {
-            P_ExplodeMissile(mo);
+            P_ExplodeMissile(mo, 
+               clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          }
       }
 
@@ -904,9 +946,9 @@ static void P_ZMovement(Mobj* mo)
 
    if(mo->player &&
       mo->player->mo == mo &&  // killough 5/12/98: exclude voodoo dolls
-      mo->z < mo->floorz)
+      mo->z < mo->zref.floor)
    {
-      mo->player->viewheight -= mo->floorz-mo->z;
+      mo->player->viewheight -= mo->zref.floor-mo->z;
       mo->player->deltaviewheight =
          (VIEWHEIGHT - mo->player->viewheight)>>3;
    }
@@ -933,12 +975,12 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
-   if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->floorz)
+   if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
       mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
 
    // clip movement
 
-   if(mo->z <= mo->floorz)
+   if(mo->z <= mo->zref.floor)
    {
       // hit the floor
 
@@ -952,7 +994,7 @@ floater:
       if(correct_lost_soul_bounce && (mo->flags & MF_SKULLFLY))
          mo->momz = -mo->momz; // the skull slammed into something
 
-      if((moving_down = (mo->momz < 0)))
+      if((moving_down = (mo->momz < 0)) && !(mo->flags4 & MF4_HERETICBOUNCES))
       {
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
@@ -967,9 +1009,9 @@ floater:
          mo->momz = 0;
       }
 
-      mo->z = mo->floorz;
+      mo->z = mo->zref.floor;
 
-      if(moving_down && initial_mo_z != mo->floorz)
+      if(moving_down && initial_mo_z != mo->zref.floor)
          E_HitFloor(mo);
 
       /* cph 2001/05/26 -
@@ -984,8 +1026,16 @@ floater:
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
-            P_ExplodeMissile(mo);
+         if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
+         {
+            P_floorHereticBounceMissile(mo);
+            return;
+         }
+         else if(!(mo->flags3 & MF3_FLOORMISSILE)) // haleyjd
+         {
+            P_ExplodeMissile(mo, nullptr);
+            return;
+         }
          return;
       }
    }
@@ -1014,21 +1064,22 @@ floater:
    // new footclip system
    P_AdjustFloorClip(mo);
 
-   if(mo->z + mo->height > mo->ceilingz)
+   if(mo->z + mo->height > mo->zref.ceiling)
    {
       // hit the ceiling
 
       if(mo->momz > 0)
          mo->momz = 0;
 
-      mo->z = mo->ceilingz - mo->height;
+      mo->z = mo->zref.ceiling - mo->height;
 
       if(mo->flags & MF_SKULLFLY)
          mo->momz = -mo->momz; // the skull slammed into something
 
       if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
       {
-         P_ExplodeMissile (mo);
+         P_ExplodeMissile (mo, 
+            clip.ceilingline ? clip.ceilingline->backsector : nullptr);
          return;
       }
    }
@@ -1126,7 +1177,7 @@ void P_NightmareRespawn(Mobj* mobj)
    mo->reactiontime = 18;
 
    // remove the old monster,
-   mobj->removeThinker();
+   mobj->remove();
 }
 
 //
@@ -1135,7 +1186,8 @@ void P_NightmareRespawn(Mobj* mobj)
 //
 // The mobj is already assumed to be sunk into the sector portal.
 //
-static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+static void P_avoidPortalEdges(Mobj &mobj, bool isceiling,
+                               const line_t *&crossedge)
 {
    const sector_t &sector = *mobj.subsector->sector;
    unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
@@ -1148,17 +1200,25 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
    box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
    box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
 
+   crossedge = nullptr;
+
    for(int i = 0; i < sector.linecount; ++i)
    {
       const line_t &line = *sector.lines[i];
 
+      if(line.frontsector == &sector || !(line.extflags & flag))
+         continue;
+
+      divline_t dl = { mobj.prevpos.x, mobj.prevpos.y, mobj.x - mobj.prevpos.x,
+         mobj.y - mobj.prevpos.y };
+
+      if(P_LineIsCrossed(line, dl) == 0)
+         crossedge = &line;  // TODO
+
       // line must be an edge portal with its back towards the sector.
       // The thing's centre must be very close to the line
-      if(line.frontsector == &sector || !(line.extflags & flag) ||
-         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
-      {
+      if(!P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
          continue;
-      }
 
       // Got one. Add to the vector
       angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
@@ -1179,61 +1239,94 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
 //
 // Check for passing through an interactive portal plane.
 //
-static bool P_CheckPortalTeleport(Mobj *mobj)
+bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   bool ret = false;
-
-   // ioanch 20160109: reference sector
-   const sector_t *sector = mobj->subsector->sector;
-
-   if(sector->f_pflags & PS_PASSABLE)
+   struct opset_t
    {
-      fixed_t passheight;
-      const linkdata_t *ldata = R_FPLink(sector);
+      unsigned sector_t::* pflags;
+      fixed_t (*portalzfunc)(const sector_t &);
+      bool (*comparison)(fixed_t, fixed_t);
+      linkdata_t *(*plink)(const sector_t *);
+      bool isceiling;
+   };
 
-      if(mobj->player)
+   static const opset_t opsets[2] =
+   {
       {
-         P_CalcHeight(mobj->player);
-         passheight = mobj->player->viewz;
+         &sector_t::f_pflags,
+         P_FloorPortalZ,
+         [](fixed_t a, fixed_t b) { return a < b; },
+         R_FPLink,
+         false
+      },
+      {
+         &sector_t::c_pflags,
+         P_CeilingPortalZ,
+         [](fixed_t a, fixed_t b) { return a >= b; },
+         R_CPLink,
+         true
       }
-      else
-         passheight = mobj->z + (mobj->height >> 1);
+   };
 
-      // ioanch 20160109: link offset outside
-      if(passheight < ldata->planez)
+   static const int MAXIMUM_PER_TIC = 8;  // set some limit for maximum portals to cross per tic
+
+   bool movedalready = false;
+
+   for(int i = 0; i < earrlen(opsets); ++i)
+   {
+      if(movedalready)
+         return true;   // if moved from the previous plane attempt, signal success now
+
+      const auto &op = opsets[i];
+
+      for(int j = 0; j < MAXIMUM_PER_TIC; ++j)  // allow checking if multiple portals were passed
       {
-         P_avoidPortalEdges(*mobj, false);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
-         ret = true;
+         const sector_t *sector = mobj->subsector->sector;
+         if(!(sector->*op.pflags & PS_PASSABLE))
+            break;
+         fixed_t passheight, prevpassheight;
+
+         if(mobj->player)
+         {
+            P_CalcHeight(mobj->player);
+            passheight = mobj->player->viewz;
+            prevpassheight = mobj->player->prevviewz;
+         }
+         else
+         {
+            passheight = mobj->z + (mobj->height >> 1);
+            prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+         }
+
+         // ioanch 20160109: link offset outside
+         fixed_t planez = op.portalzfunc(*sector);
+         if(op.comparison(passheight, planez))
+         {
+            const line_t *crossedge;
+            P_avoidPortalEdges(*mobj, op.isceiling, crossedge);
+            const linkdata_t *ldata = op.plink(sector);
+            if(!j)
+            {
+               mobj->prevpos.ldata = ldata;
+               if(op.comparison(prevpassheight, planez))
+                  mobj->prevpos.portalline = crossedge;
+            }
+            EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
+                                    ldata->deltaz, ldata->fromid, ldata->toid);
+            if(j)
+            {
+               mobj->backupPosition();
+               if(mobj->player)
+                  mobj->player->prevviewz = mobj->player->viewz;
+            }
+            movedalready = true; // signal not to attempt moving down now
+         }
+         else
+            break;   // break out of the eight-attempt if there's no portal now
       }
    }
-   
-   if(!ret && sector->c_pflags & PS_PASSABLE)
-   {
-      // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight;
-      linkdata_t *ldata = R_CPLink(sector);
 
-      if(mobj->player)
-      {
-         P_CalcHeight(mobj->player);
-         passheight = mobj->player->viewz;
-      }
-      else
-         passheight = mobj->z + (mobj->height >> 1);
-
-      // ioanch 20160109: link offset outside
-      if(passheight >= ldata->planez)
-      {
-         P_avoidPortalEdges(*mobj, true);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
-         ret = true;
-      }
-   }
-
-   return ret;
+   return false;
 }
 
 //
@@ -1251,7 +1344,7 @@ bool Mobj::shouldApplyTorque()
       return false; // flags say no.
    
    // all else considered, only dependent on presence of a dropoff
-   return z > dropoffz;
+   return z > zref.dropoff;
 }
 
 // Mobj RTTI Proxy Type
@@ -1285,6 +1378,12 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 //
 void Mobj::Think()
 {
+   if(intflags & MIF_MUSICCHANGER)
+   {
+      S_MusInfoThink(*this);
+      return;
+   }
+
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
 
@@ -1338,7 +1437,7 @@ void Mobj::Think()
       lz = z - FloatBobOffsets[idx];
    }
 
-   if(momz || clip.BlockingMobj || lz != floorz)
+   if(momz || clip.BlockingMobj || lz != zref.floor)
    {
       if(P_Use3DClipping() && ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
       {
@@ -1368,6 +1467,11 @@ void Mobj::Think()
                momz < -LevelInfo.gravity*8)
             {
                P_PlayerHitFloor(this, true);
+            }
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
             }
             if(onmo->z + onmo->height - z <= STEPSIZE)
             {
@@ -1411,7 +1515,10 @@ void Mobj::Think()
       if(shouldApplyTorque())
          P_ApplyTorque(this);                // Apply torque
       else
-         intflags &= ~MIF_FALLING, gear = 0; // Reset torque
+      {
+         intflags &= ~MIF_FALLING;
+         gear = 0; // Reset torque
+      }
    }
 
    // check if we are passing an interactive portal plane
@@ -1421,7 +1528,7 @@ void Mobj::Think()
    if(info->crashstate != NullStateNum
       && flags & MF_CORPSE
       && !(intflags & MIF_CRASHED)
-      && z <= floorz)
+      && z <= zref.floor)
    {
       intflags |= MIF_CRASHED;
       P_SetMobjState(this, info->crashstate);
@@ -1483,7 +1590,7 @@ void Mobj::Think()
       { 
          // check for nightmare respawn
          if(flags2 & MF2_REMOVEDEAD)
-            this->removeThinker();
+            this->remove();
          else
             P_NightmareRespawn(this);
       }
@@ -1514,8 +1621,7 @@ void Mobj::serialize(SaveArchive &arc)
       // Position
       << angle                                             // Angles
       << momx << momy << momz                              // Momenta
-      << floorz << ceilingz << dropoffz                    // Basic z coords
-      << secfloorz << secceilz << passfloorz << passceilz  // Advanced z coords
+      << zref                                              // Basic and advanced z coords
       << spawnpoint                                        // Spawn info
       << friction << movefactor                            // BOOM 202 friction
       << floatbob                                          // Floatbobbing
@@ -1536,7 +1642,7 @@ void Mobj::serialize(SaveArchive &arc)
       << gear                                              // Lee's torque
       // Appearance
       << colour                                            // Translations
-      << translucency << alphavelocity                     // Alpha blending
+      << translucency << tranmap << alphavelocity          // Alpha blending
       << xscale << yscale                                  // Scaling
       // Inventory related fields
       << dropamount
@@ -1553,7 +1659,7 @@ void Mobj::serialize(SaveArchive &arc)
 
       // Basic serializable pointers (state, player)
       arc << state->index;
-      temp = player ? player - players + 1 : 0;
+      temp = static_cast<unsigned>(player ? player - players + 1 : 0);
       arc << temp;
 
       // Pointers to other mobjs
@@ -1679,6 +1785,8 @@ void Mobj::backupPosition()
    prevpos.y     = y;
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
+   prevpos.portalline = nullptr;
+   prevpos.ldata = nullptr;
 }
 
 //
@@ -1693,13 +1801,7 @@ void Mobj::copyPosition(const Mobj *other)
    z          = other->z;
    angle      = other->angle;
    groupid    = other->groupid;
-   floorz     = other->floorz;
-   ceilingz   = other->ceilingz;
-   dropoffz   = other->dropoffz;
-   passfloorz = other->passfloorz;
-   passceilz  = other->passceilz;
-   secfloorz  = other->secfloorz;
-   secceilz   = other->secceilz;
+   zref       = other->zref;
 
    intflags  &= ~(MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ);
    intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
@@ -1754,6 +1856,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // haleyjd: zdoom-style translucency level
    mobj->translucency  = info->translucency;
+   mobj->tranmap = info->tranmap;
    
    if(info->alphavelocity != 0) // 5/23/08
       P_StartMobjFade(mobj, info->alphavelocity);
@@ -1815,25 +1918,25 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    P_SetThingPosition(mobj);
 
    // killough 11/98: for tracking dropoffs
-   // ioanch 20160201: fix floorz and ceilingz to be portal-aware
-   mobj->dropoffz = mobj->floorz = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
-   mobj->ceilingz = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
+   // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
+   mobj->zref.dropoff = mobj->zref.floor = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
+   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
 
    mobj->z = 
-      (z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ? mobj->ceilingz - mobj->height : z);
+      (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
 
    // floatrand, for Heretic
    if(z == FLOATRANDZ)
    {
-      fixed_t space = (mobj->ceilingz - mobj->height) - mobj->floorz;
+      fixed_t space = (mobj->zref.ceiling - mobj->height) - mobj->zref.floor;
       if(space > 48*FRACUNIT)
       {
          space -= 40*FRACUNIT;
          mobj->z = ((space * P_Random(pr_spawnfloat)) >> 8)
-                     + mobj->floorz + 40*FRACUNIT;
+                     + mobj->zref.floor + 40*FRACUNIT;
       }
       else
-         mobj->z = mobj->floorz;
+         mobj->z = mobj->zref.floor;
    }
 
    // initialize floatbob seed
@@ -1880,7 +1983,7 @@ int iquehead, iquetail;
 //
 // P_RemoveMobj
 //
-void Mobj::removeThinker()
+void Mobj::remove()
 {
    bool respawnitem = false;
 
@@ -1950,7 +2053,7 @@ void Mobj::removeThinker()
    }
 
    // remove from thinker list
-   Super::removeThinker();
+   Super::remove();
 }
 
 //
@@ -2102,7 +2205,10 @@ void P_SpawnPlayer(mapthing_t* mthing)
 
    // sf: wake up chasecam
    if(mthing->type - 1 == displayplayer)
+   {
       P_ResetChasecam();
+      P_ResetWalkcam();
+   }
 }
 
 static PODCollection<mapthing_t> UnknownThings;
@@ -2427,7 +2533,10 @@ spawnit:
 
    // haleyjd: set music number for first 64 types
    if(mthing->type >= 14101 && mthing->type <= 14164)
+   {
+      mobj->intflags |= MIF_MUSICCHANGER;
       mobj->args[0] = mthing->type - 14100;
+   }
 
    mobj->backupPosition();
 
@@ -2441,35 +2550,96 @@ spawnit:
 //
 // P_SpawnPuff
 //
-void P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                 int updown, bool ptcl)
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
+                  int updown, bool ptcl, const MetaTable *pufftype,
+                  const Mobj *hitmobj)
 {
-   Mobj* th;
-
-   // haleyjd 08/05/04: use new function
-   z += P_SubRandom(pr_spawnpuff) << 10;
-
-   th = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFF));
-   th->momz = FRACUNIT;
-   th->tics -= P_Random(pr_spawnpuff) & 3;
-
-   if(th->tics < 1)
-      th->tics = 1;
-
-   // don't make punches spark on the wall
-
-   if(trace.attackrange == MELEERANGE)
-      P_SetMobjState(th, E_SafeState(S_PUFF3));
-
-   // haleyjd: for demo sync etc we still need to do the above, so
-   // here we'll make the puff invisible and draw particles instead
-   if(ptcl && drawparticles && bulletpuff_particle &&
-      trace.attackrange != MELEERANGE)
+   if(!pufftype)
    {
-      if(bulletpuff_particle != 2)
-         th->translucency = 0;
-      P_SmokePuff(32, x, y, z, dir, updown);
+      static const MetaTable *defaulttype;
+      if(!defaulttype)
+         defaulttype = E_PuffForName(GameModeInfo->puffType);
+      pufftype = defaulttype;
+      if(!pufftype)  // may still be null
+         return nullptr;
    }
+   const char *hitsound = pufftype->getString(keyPuffHitSound, nullptr);
+   if(hitsound && !strcasecmp(hitsound, "none"))
+      hitsound = nullptr;
+   if(hitmobj)
+   {
+      const char *altname = nullptr;
+      if(hitmobj->flags & MF_NOBLOOD)
+         altname = pufftype->getString(keyPuffNoBloodPuffType, nullptr);
+      if(estrempty(altname))
+         altname = pufftype->getString(keyPuffHitPuffType, nullptr);
+      if(estrnonempty(altname))
+      {
+         const MetaTable *otable = E_PuffForName(altname);
+         if(otable)
+         {
+            pufftype = otable;
+            // If the alternate puff has its own hitsound, use that.
+            const char *althitsound = pufftype->getString(keyPuffHitSound,
+                                                          nullptr);
+            if(estrnonempty(althitsound) && strcasecmp(althitsound, "none"))
+               hitsound = althitsound;
+         }
+      }
+   }
+
+   Mobj* th = nullptr;
+
+   double zspread = pufftype->getDouble(keyPuffZSpread, puffZSpreadDefault);
+   if(zspread)
+      z += P_SubRandom(pr_spawnpuff) * M_DoubleToFixed(zspread / 256.0);
+
+   // mobjtype already checked to be safe.
+   int mobjtype = pufftype->getInt(keyPuffThingType, D_MININT);
+   if(mobjtype != D_MININT)
+      th = P_SpawnMobj(x, y, z, mobjtype);
+
+   bool punchhack = false;
+   if(th)
+   {
+      if(pufftype->getInt(keyPuffRandomTics, 0))
+      {
+         th->tics -= P_Random(pr_spawnpuff) & 3;
+         if(th->tics < 1)
+            th->tics = 1;
+      }
+      // Input pufftype hitsound has priority over alternate pufftype miss
+      // sound, but less priority than alternate's own hit sound.
+      S_StartSoundName(th, hitmobj && estrnonempty(hitsound) ? hitsound :
+                       pufftype->getString(keyPuffSound, nullptr));
+      th->momz = M_DoubleToFixed(pufftype->getDouble(keyPuffUpSpeed, 0));
+
+      // preserve the Doom hack of melee fist puff
+      if(trace.attackrange == MELEERANGE)
+      {
+         int snum = pufftype->getInt(keyPuffPunchHack, D_MININT);
+         if(snum != D_MININT && snum != NullStateNum)
+         {
+            P_SetMobjState(th, snum);
+            punchhack = true;
+         }
+      }
+   }
+
+   // ioanch: spawn particles even for melee range if nothing is spawned
+   if(ptcl && drawparticles && bulletpuff_particle &&
+      (trace.attackrange != MELEERANGE || !punchhack))
+   {
+      int numparticles = pufftype->getInt(keyPuffParticles, 0);
+      if(numparticles > 0)
+      {
+         if(th && bulletpuff_particle != 2)
+            th->translucency = 0;
+         P_SmokePuff(numparticles, x, y, z, dir, updown);
+      }
+   }
+
+   return th;
 }
 
 //
@@ -2652,6 +2822,9 @@ BloodSpawner::BloodSpawner(Mobj *crushtarget, int pdamage)
 //
 void BloodSpawner::spawn(bloodaction_e action) const
 {
+   if(inflictor && inflictor->flags4 & MF4_BLOODLESSIMPACT)
+      return;
+
    mobjtype_t type = E_BloodTypeForThing(target, action);
    if(type < 0)
       return;
@@ -2758,7 +2931,7 @@ bool P_CheckMissileSpawn(Mobj* th)
    // killough 3/15/98: no dropoff (really = don't care for missiles)
    if(!P_TryMove(th, th->x, th->y, false))
    {
-      P_ExplodeMissile(th);
+      P_ExplodeMissile(th, nullptr);
       ok = false;
    }
 
@@ -2901,7 +3074,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
-      int mask = demo_version < 203 ? 0 : MF_FRIEND;
+      int mask = demo_version < 203 ? false : true;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -2916,7 +3089,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
             slope = P_PlayerPitchSlope(source->player);
          }
       }
-      while(mask && (mask=0, !clip.linetarget));  // killough 8/2/98
+      while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
@@ -2931,7 +3104,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
    th = P_SpawnMobj(x, y, z, type);
 
    if(source->player && source->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(source->player)->flags & WPF_SILENCER)
+      source->player->readyweapon->flags & WPF_SILENCEABLE)
    {
       S_StartSoundAtVolume(th, th->info->seesound, WEAPON_VOLUME_SILENCED, 
                            ATTN_NORMAL, CHAN_AUTO);
@@ -2962,6 +3135,55 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
    missileinfo.z      = z;
    missileinfo.angle  = angle;
    missileinfo.momz   = momz;
+   missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
+
+   return P_SpawnMissileEx(missileinfo);
+}
+
+//
+// Tries to aim at a nearby monster, but with angle parameter
+// Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
+//
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+{
+   fixed_t z, slope = 0;
+   angle_t an = angle;
+
+   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
+   if(autoaim)
+   {
+      // ioanch: reuse killough's code from P_SpawnPlayerMissile
+      int mask = demo_version < 203 ? false : true;
+      do
+      {
+         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         if(!clip.linetarget)
+         {
+            an = angle;
+            // haleyjd: use true slope angle
+            slope = playersightslope;
+         }
+      } while(mask && (mask = false, !clip.linetarget));  // killough 8/2/98
+   }
+   else
+      slope = playersightslope;
+
+   // NOTE: playersightslope is added to z in vanilla Heretic.
+   z = source->z + 4 * 8 * FRACUNIT + playersightslope;
+
+   edefstructvar(missileinfo_t, missileinfo);
+
+   memset(&missileinfo, 0, sizeof(missileinfo));
+
+   missileinfo.source = source;
+   missileinfo.type   = type;
+   missileinfo.z      = z;
+   missileinfo.angle  = an;
+   missileinfo.momz   = FixedMul(mobjinfo[type]->speed, slope);
    missileinfo.flags  = (missileinfo_t::USEANGLE | missileinfo_t::NOFUZZ);
 
    return P_SpawnMissileEx(missileinfo);
@@ -3060,8 +3282,8 @@ void P_FallingDamage(player_t *player)
 //
 // P_AdjustFloorClip
 //
-// Adapted from zdoom source, see the zdoom license.
-// Thanks to Randy Heit.
+// Adapted from ZDoom source (licenced under GPLv3).
+// Thanks to Marisa Heit.
 //
 void P_AdjustFloorClip(Mobj *thing)
 {
@@ -3288,15 +3510,15 @@ void MobjFadeThinker::setTarget(Mobj *pTarget)
 }
 
 //
-// MobjFadeThinker::removeThinker
+// MobjFadeThinker::remove
 //
-// Virtual method, overrides Thinker::removeThinker.
+// Virtual method, overrides Thinker::remove.
 // Clear the counted reference to the parent Mobj before removing self.
 //
-void MobjFadeThinker::removeThinker()
+void MobjFadeThinker::remove()
 {
    P_SetTarget<Mobj>(&target, NULL); // clear reference to parent Mobj
-   Super::removeThinker();           // call parent implementation
+   Super::remove();           // call parent implementation
 }
 
 //
@@ -3309,7 +3531,7 @@ void MobjFadeThinker::Think()
    // If target is being removed, or won't fade, remove self.
    if(target->isRemoved() || !target->alphavelocity)
    {
-      removeThinker();
+      remove();
       return;
    }
 
@@ -3321,7 +3543,7 @@ void MobjFadeThinker::Think()
       if(target->flags3 & MF3_CYCLEALPHA)
          target->alphavelocity = -target->alphavelocity;
       else
-         removeThinker(); // done.
+         remove(); // done.
    }
    else if(target->translucency > FRACUNIT)
    {
@@ -3329,7 +3551,7 @@ void MobjFadeThinker::Think()
       if(target->flags3 & MF3_CYCLEALPHA)
          target->alphavelocity = -target->alphavelocity;
       else
-         removeThinker(); // done.
+         remove(); // done.
    }
 }
 
@@ -3964,9 +4186,9 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
       case TPOS_MOMZ:
          return (cell)mo->momz;
       case TPOS_FLOORZ:
-         return (cell)mo->floorz;
+         return (cell)mo->zref.floor;
       case TPOS_CEILINGZ:
-         return (cell)mo->ceilingz;
+         return (cell)mo->zref.ceiling;
       default:
          return 0;
       }

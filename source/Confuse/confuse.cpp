@@ -536,7 +536,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       else 
       {
          // haleyjd 11/10/08: modified to print invalid values
-         val->number = strtol(value, &endptr, 0);
+         val->number = static_cast<int>(strtol(value, &endptr, 0));
          if(*endptr != '\0')
          {            
             cfg_error(cfg, "invalid integer value '%s' for option '%s'\n",
@@ -1476,6 +1476,9 @@ int cfg_parse(cfg_t *cfg, const char *filename)
 //
 int cfg_parselump(cfg_t *cfg, const char *lumpname, int lumpnum)
 {
+   if(!wGlobalDir.getLumpInfo()[lumpnum]->size)
+      return CFG_SUCCESS;  // just quit as if nothing happened
+
    DWFILE dwfile; // haleyjd
 
    dwfile.openLump(lumpnum);

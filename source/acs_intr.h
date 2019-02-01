@@ -207,9 +207,9 @@ public:
 
    virtual void loadModule(ACSVM::Module *module);
 
-   virtual void loadState(std::istream &in);
+   virtual void loadState(ACSVM::Serial &in);
 
-   virtual ACSVM::ModuleName readModuleName(std::istream &in) const;
+   virtual ACSVM::ModuleName readModuleName(ACSVM::Serial &in) const;
 
    virtual void refStrings();
 
@@ -272,9 +272,9 @@ public:
 
    virtual ACSVM::ThreadInfo const *getInfo() const {return &info;}
 
-   virtual void loadState(std::istream &in);
+   virtual void loadState(ACSVM::Serial &in);
 
-   virtual void saveState(std::ostream &out) const;
+   virtual void saveState(ACSVM::Serial &out) const;
 
    virtual void start(ACSVM::Script *script, ACSVM::MapScope *map,
       const ACSVM::ThreadInfo *info, const ACSVM::Word *argV, ACSVM::Word argC);
@@ -332,7 +332,9 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS);
 bool ACS_CF_ATan2(ACS_CF_ARGS);
 bool ACS_CF_ChangeCeil(ACS_CF_ARGS);
 bool ACS_CF_ChangeFloor(ACS_CF_ARGS);
+bool ACS_CF_CheckProximity(ACS_CF_ARGS);
 bool ACS_CF_CheckSight(ACS_CF_ARGS);
+bool ACS_CF_CheckWeapon(ACS_CF_ARGS);
 bool ACS_CF_ChkThingCeilTex(ACS_CF_ARGS);
 bool ACS_CF_ChkThingFlag(ACS_CF_ARGS);
 bool ACS_CF_ChkThingFloorTex(ACS_CF_ARGS);
@@ -348,6 +350,7 @@ bool ACS_CF_GameSkill(ACS_CF_ARGS);
 bool ACS_CF_GameType(ACS_CF_ARGS);
 bool ACS_CF_GetCVar(ACS_CF_ARGS);
 bool ACS_CF_GetCVarStr(ACS_CF_ARGS);
+bool ACS_CF_GetInventory(ACS_CF_ARGS);
 bool ACS_CF_GetLevelProp(ACS_CF_ARGS);
 bool ACS_CF_GetLineX(ACS_CF_ARGS);
 bool ACS_CF_GetLineY(ACS_CF_ARGS);
@@ -371,6 +374,7 @@ bool ACS_CF_GetThingProp(ACS_CF_ARGS);
 bool ACS_CF_GetThingX(ACS_CF_ARGS);
 bool ACS_CF_GetThingY(ACS_CF_ARGS);
 bool ACS_CF_GetThingZ(ACS_CF_ARGS);
+bool ACS_CF_GetWeapon(ACS_CF_ARGS);
 bool ACS_CF_Hypot(ACS_CF_ARGS);
 bool ACS_CF_IsTIDUsed(ACS_CF_ARGS);
 bool ACS_CF_LineOffsetY(ACS_CF_ARGS);
@@ -387,6 +391,8 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS);
 bool ACS_CF_SectorSound(ACS_CF_ARGS);
 bool ACS_CF_SetActivator(ACS_CF_ARGS);
 bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS);
+bool ACS_CF_SetAirControl(ACS_CF_ARGS);
+bool ACS_CF_SetAirFriction(ACS_CF_ARGS);
 bool ACS_CF_SetGravity(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlock(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS);
@@ -404,6 +410,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS);
 bool ACS_CF_SetThingProp(ACS_CF_ARGS);
 bool ACS_CF_SetThingSpec(ACS_CF_ARGS);
 bool ACS_CF_SetThingState(ACS_CF_ARGS);
+bool ACS_CF_SetWeapon(ACS_CF_ARGS);
 bool ACS_CF_Sin(ACS_CF_ARGS);
 bool ACS_CF_SinglePlayer(ACS_CF_ARGS);
 bool ACS_CF_SoundSeq(ACS_CF_ARGS);
@@ -417,6 +424,7 @@ bool ACS_CF_SpawnSpotAngF(ACS_CF_ARGS);
 bool ACS_CF_Sqrt(ACS_CF_ARGS);
 bool ACS_CF_SqrtFixed(ACS_CF_ARGS);
 bool ACS_CF_StopSound(ACS_CF_ARGS);
+bool ACS_CF_SubInventory(ACS_CF_ARGS);
 bool ACS_CF_ThingCount(ACS_CF_ARGS);
 bool ACS_CF_ThingCountStr(ACS_CF_ARGS);
 bool ACS_CF_ThingCountSec(ACS_CF_ARGS);

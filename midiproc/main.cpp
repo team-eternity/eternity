@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright(C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -89,7 +87,7 @@ static void RegisterSong(void *data, size_t size)
       UnregisterSong();
 
    rw    = SDL_RWFromMem(data, size);
-   music = Mix_LoadMUS_RW(rw);
+   music = Mix_LoadMUS_RW(rw, true);
 }
 
 //
@@ -358,6 +356,48 @@ static bool MidiRPC_InitServer()
    return !status;
 }
 
+//
+// Checks if Windows version is 10 or higher, for audio kludge.
+// I wish we could use the Win 8.1 API and Versionhelpers.h
+//
+inline bool I_IsWindows10OrHigher()
+{
+#pragma comment(lib, "version.lib")
+
+   static const CHAR kernel32[] = "\\kernel32.dll";
+   CHAR *path;
+   void *ver, *block;
+   UINT  dirLength;
+   DWORD versionSize;
+   UINT  blockSize;
+   VS_FIXEDFILEINFO *vInfo;
+   WORD  majorVer;
+
+   path = static_cast<CHAR *>(malloc(sizeof(*path) * MAX_PATH));
+
+   dirLength = GetSystemDirectory(path, MAX_PATH);
+   if(dirLength >= MAX_PATH || dirLength == 0 ||
+      dirLength > MAX_PATH - sizeof(kernel32) / sizeof(*kernel32))
+      abort();
+   memcpy(path + dirLength, kernel32, sizeof(kernel32));
+
+   versionSize = GetFileVersionInfoSize(path, nullptr);
+   if(versionSize == 0)
+      abort();
+   ver = malloc(versionSize);
+   if(!GetFileVersionInfo(path, 0, versionSize, ver))
+      abort();
+   if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
+      abort();
+   vInfo = static_cast<VS_FIXEDFILEINFO *>(block);
+   majorVer = HIWORD(vInfo->dwProductVersionMS);
+   //minorVer = LOWORD(vInfo->dwProductVersionMS);
+   //buildNum = HIWORD(vInfo->dwProductVersionLS);
+   free(path);
+   free(ver);
+   return majorVer >= 10;
+}
+
 //=============================================================================
 //
 // Main Program
@@ -368,12 +408,17 @@ static bool MidiRPC_InitServer()
 //
 // Application entry point.
 //
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      LPSTR lpCmdLine, int nCmdShow)
 {
    // Initialize SDL
    if(!InitSDL())
       return -1;
+
+   if(I_IsWindows10OrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+   else
+      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 
    // Initialize RPC Server
    if(!MidiRPC_InitServer())

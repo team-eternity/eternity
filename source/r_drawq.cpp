@@ -43,6 +43,7 @@ typedef enum
 {
    COL_NONE,
    COL_OPAQUE,
+   COL_NEWSKY,
    COL_TRANS,
    COL_FLEXTRANS,
    COL_FUZZ,
@@ -54,18 +55,24 @@ static int    tempyl[4], tempyh[4];
 static int    startx = 0;
 static int    temptype = COL_NONE;
 static int    commontop, commonbot;
-static byte   *temptranmap = NULL;
+static const byte *temptranmap = NULL;
 static fixed_t temptranslevel;
 // haleyjd 09/12/04: optimization -- precalculate flex tran lookups
-static unsigned int *temp_fg2rgb;
-static unsigned int *temp_bg2rgb;
+static const unsigned int *temp_fg2rgb;
+static const unsigned int *temp_bg2rgb;
 // SoM 7-28-04: Fix the fuzz problem.
-static byte   *tempfuzzmap;
+static const byte *tempfuzzmap;
 static byte   *tempbuf;
+static byte   *newskymask;
 
 VALLOCATION(tempbuf)
 {
    tempbuf = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, NULL);
+}
+
+VALLOCATION(newskymask)
+{
+   newskymask = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, nullptr);
 }
 
 //
@@ -94,7 +101,7 @@ static void R_QuadFlushNil(void)
 //
 static void R_FlushWholeOpaque()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
 
@@ -115,6 +122,35 @@ static void R_FlushWholeOpaque()
 }
 
 //
+// ioanch: doublesky variant
+//
+static void R_FlushWholeNewSky()
+{
+   const byte *source;
+   const byte *mask;
+   byte *dest;
+   int  count, yl;
+
+   while(--temp_x >= 0)
+   {
+      yl     = tempyl[temp_x];
+      source = tempbuf + temp_x + (yl << 2);
+      mask = newskymask + temp_x + (yl << 2);
+      dest   = R_ADDRESS(startx + temp_x, yl);
+      count  = tempyh[temp_x] - yl + 1;
+
+      while(--count >= 0)
+      {
+         if(*mask)
+            *dest = *source;
+         source += 4;
+         mask += 4;
+         dest += linesize;
+      }
+   }
+}
+
+//
 // R_FlushHTOpaque
 //
 // Flushes the head and tail of columns in the buffer in
@@ -123,7 +159,7 @@ static void R_FlushWholeOpaque()
 //
 static void R_FlushHTOpaque(void)
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count, colnum = 0;
    int yl, yh;
@@ -166,9 +202,64 @@ static void R_FlushHTOpaque(void)
    }
 }
 
+//
+// ioanch: doublesky variant
+//
+static void R_FlushHTNewSky()
+{
+   const byte *source;
+   const byte *mask;
+   byte *dest;
+   int count, colnum = 0;
+   int yl, yh;
+
+   while(colnum < 4)
+   {
+      yl = tempyl[colnum];
+      yh = tempyh[colnum];
+
+      // flush column head
+      if(yl < commontop)
+      {
+         source = tempbuf + colnum + (yl << 2);
+         mask = newskymask + colnum + (yl << 2);
+         dest   = R_ADDRESS(startx + colnum, yl);
+         count  = commontop - yl;
+
+         while(--count >= 0)
+         {
+            if(*mask)
+               *dest = *source;
+            source += 4;
+            mask += 4;
+            dest += linesize;
+         }
+      }
+
+      // flush column tail
+      if(yh > commonbot)
+      {
+         source = tempbuf + colnum + ((commonbot + 1) << 2);
+         mask = newskymask + colnum + ((commonbot + 1) << 2);
+         dest   = R_ADDRESS(startx + colnum, commonbot + 1);
+         count  = yh - commonbot;
+
+         while(--count >= 0)
+         {
+            if(*mask)
+               *dest = *source;
+            source += 4;
+            mask += 4;
+            dest += linesize;
+         }
+      }
+      ++colnum;
+   }
+}
+
 static void R_FlushWholeTL()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
 
@@ -191,7 +282,7 @@ static void R_FlushWholeTL()
 
 static void R_FlushHTTL()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count;
    int colnum = 0, yl, yh;
@@ -242,7 +333,7 @@ static void R_FlushHTTL()
 
 static void R_FlushWholeFuzz()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
 
@@ -332,7 +423,7 @@ static void R_FlushHTFuzz()
 
 static void R_FlushWholeFlex()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
    unsigned int fg, bg;
@@ -360,7 +451,7 @@ static void R_FlushWholeFlex()
 
 static void R_FlushHTFlex()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count;
    int colnum = 0, yl, yh;
@@ -417,7 +508,7 @@ static void R_FlushHTFlex()
 
 static void R_FlushWholeFlexAdd()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
    unsigned int a, b;
@@ -451,7 +542,7 @@ static void R_FlushWholeFlexAdd()
 
 static void R_FlushHTFlexAdd()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count;
    int colnum = 0, yl, yh;
@@ -524,8 +615,8 @@ static void (*R_FlushHTColumns)()    = R_FlushHTNil;
 // Begin: Quad column flushing functions.
 static void R_FlushQuadOpaque()
 {
-   int *source = (int *)(tempbuf + (commontop << 2));
-   int *dest   = (int *)(R_ADDRESS(startx, commontop));
+   const int *source = reinterpret_cast<const int *>(tempbuf + (commontop << 2));
+   int *dest = reinterpret_cast<int *>(R_ADDRESS(startx, commontop));
    int count;
    int deststep = linesize / 4;
 
@@ -538,9 +629,28 @@ static void R_FlushQuadOpaque()
    }
 }
 
+// ioanch: doublesky variant
+static void R_FlushQuadNewSky()
+{
+   const int *source = reinterpret_cast<const int *>(tempbuf + (commontop << 2));
+   const int *mask = reinterpret_cast<const int *>(newskymask + (commontop << 2));
+   int *dest = reinterpret_cast<int *>(R_ADDRESS(startx, commontop));
+   int count;
+   int deststep = linesize / 4;
+
+   count = commonbot - commontop + 1;
+
+   while(--count >= 0)
+   {
+      *dest = (*dest & ~*mask) | (*source++ & *mask);
+      ++mask;
+      dest += deststep;
+   }
+}
+
 static void R_FlushQuadTL()
 {
-   byte *source = tempbuf + (commontop << 2);
+   const byte *source = tempbuf + (commontop << 2);
    byte *dest   = R_ADDRESS(startx, commontop);
    int count;
 
@@ -602,7 +712,7 @@ static void R_FlushQuadFuzz()
 
 static void R_FlushQuadFlex()
 {
-   byte *source = tempbuf + (commontop << 2);
+   const byte *source = tempbuf + (commontop << 2);
    byte *dest   = R_ADDRESS(startx, commontop);
    int count;
    unsigned int fg, bg;
@@ -639,7 +749,7 @@ static void R_FlushQuadFlex()
 
 static void R_FlushQuadFlexAdd()
 {
-   byte *source = tempbuf + (commontop << 2);
+   const byte *source = tempbuf + (commontop << 2);
    byte *dest   = R_ADDRESS(startx, commontop);
    int count;
    unsigned int a, b;
@@ -754,6 +864,42 @@ static byte *R_GetBufferOpaque(void)
    if(column.y2 < commonbot)
       commonbot = column.y2;
       
+   return tempbuf + (column.y1 << 2) + temp_x++;
+}
+
+//
+// ioanch: doublesky variant
+//
+static byte *R_GetBufferNewSky(byte *&mask)
+{
+   // haleyjd: reordered predicates
+   if(temp_x == 4 ||
+      (temp_x && (temptype != COL_NEWSKY || temp_x + startx != column.x)))
+      R_FlushColumns();
+
+   if(!temp_x)
+   {
+      ++temp_x;
+      startx = column.x;
+      *tempyl = commontop = column.y1;
+      *tempyh = commonbot = column.y2;
+      temptype = COL_NEWSKY;
+      R_FlushWholeColumns = R_FlushWholeNewSky;
+      R_FlushHTColumns    = R_FlushHTNewSky;
+      R_FlushQuadColumn   = R_FlushQuadNewSky;
+      mask = newskymask + (column.y1 << 2);
+      return tempbuf + (column.y1 << 2);
+   }
+
+   tempyl[temp_x] = column.y1;
+   tempyh[temp_x] = column.y2;
+
+   if(column.y1 > commontop)
+      commontop = column.y1;
+   if(column.y2 < commonbot)
+      commonbot = column.y2;
+
+   mask = newskymask + (column.y1 << 2) + temp_x;
    return tempbuf + (column.y1 << 2) + temp_x++;
 }
 
@@ -986,6 +1132,100 @@ static void R_QDrawColumn()
       }
    }
 } 
+
+//
+// ioanch: Hexen-style double-sky drawer. Like R_QDrawColumn but avoids drawing
+// if source has index 0.
+//
+static void R_QDrawNewSkyColumn()
+{
+   int      count;
+   byte    *dest;            // killough
+   byte    *mask;
+   fixed_t  frac;            // killough
+   fixed_t  fracstep;
+
+   count = column.y2 - column.y1 + 1;
+
+   if(count <= 0)    // Zero length, column does not exceed a pixel.
+      return;
+
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
+      column.y1 < 0 || column.y2 >= video.height)
+      I_Error("R_QDrawColumn: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
+
+   // Framebuffer destination address.
+   // SoM: MAGIC
+   dest = R_GetBufferNewSky(mask);
+
+   // Determine scaling, which is the only mapping to be done.
+
+   fracstep = column.step;
+   frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
+
+   // Inner loop that does the actual texture mapping,
+   //  e.g. a DDA-lile scaling.
+   // This is as fast as it gets.       (Yeah, right!!! -- killough)
+   //
+   // killough 2/1/98: more performance tuning
+
+   {
+      const byte *source = (const byte *)(column.source);
+      const lighttable_t *colormap = column.colormap;
+      int heightmask = column.texheight-1;
+
+      if(column.texheight & heightmask)   // not a power of 2 -- killough
+      {
+         heightmask++;
+         heightmask <<= FRACBITS;
+
+         if (frac < 0)
+            while ((frac += heightmask) <  0);
+         else
+            while (frac >= (int)heightmask)
+               frac -= heightmask;
+
+         do
+         {
+            // Re-map color indices from wall texture column
+            //  using a lighting/special effects LUT.
+
+            // heightmask is the Tutti-Frutti fix -- killough
+
+            *dest = colormap[source[frac>>FRACBITS]];
+            *mask = -!!source[frac>>FRACBITS];
+            dest += 4; //SoM: Oh, Oh it's MAGIC! You know...
+            mask += 4;
+            if((frac += fracstep) >= (int)heightmask)
+               frac -= heightmask;
+         }
+         while(--count);
+      }
+      else
+      {
+         while((count -= 2) >= 0)   // texture height is a power of 2 -- killough
+         {
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            *mask = -!!source[(frac>>FRACBITS) & heightmask];
+            dest += 4; //SoM: MAGIC
+            mask += 4;
+            frac += fracstep;
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            *mask = -!!source[(frac>>FRACBITS) & heightmask];
+            dest += 4;
+            mask += 4;
+            frac += fracstep;
+         }
+         if(count & 1)
+         {
+            *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
+            *mask = -!!source[(frac>>FRACBITS) & heightmask];
+         }
+      }
+   }
+}
 
 static void R_QDrawTLColumn()                                           
 { 
@@ -1547,6 +1787,7 @@ static void R_QDrawAddTRColumn(void)
 columndrawer_t r_quad_drawer =
 {
    R_QDrawColumn,
+   R_QDrawNewSkyColumn,
    R_QDrawTLColumn,
    R_QDrawTRColumn,
    R_QDrawTLTRColumn,

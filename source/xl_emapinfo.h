@@ -37,6 +37,8 @@ MetaTable *XL_EMapInfoForMapNum(int episode, int map);
 void       XL_ParseEMapInfo();
 MetaTable *XL_ParseLevelInfo(WadDirectory *dir, int lumpnum);
 
+void XL_BuildInterEMapInfo();
+
 #endif
 
 // EOF

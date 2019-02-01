@@ -63,6 +63,7 @@
 #include "ACSVM/Module.hpp"
 #include "ACSVM/Scope.hpp"
 #include "ACSVM/Script.hpp"
+#include "ACSVM/Serial.hpp"
 
 
 //
@@ -153,15 +154,15 @@ ACSEnvironment::ACSEnvironment() :
    // 136-137: ACSVM internal codes.
    addCodeDataACS0(138, {"",        1, addCallFunc(ACS_CF_SetGravity)});
    addCodeDataACS0(139, {"W",       0, addCallFunc(ACS_CF_SetGravity)});
- //addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
- //addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
+   addCodeDataACS0(140, {"",        1, addCallFunc(ACS_CF_SetAirControl)});
+   addCodeDataACS0(141, {"W",       0, addCallFunc(ACS_CF_SetAirControl)});
  //addCodeDataACS0(142, {"",        0, addCallFunc(ACS_CF_ClrInventory)});
  //addCodeDataACS0(143, {"",        2, addCallFunc(ACS_CF_AddInventory)});
  //addCodeDataACS0(144, {"WSW",     0, addCallFunc(ACS_CF_AddInventory)});
- //addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_SubInventory)});
- //addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_SubInventory)});
- //addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_GetInventory)});
- //addCodeDataACS0(148, {"WS",      0, addCallFunc(ACS_CF_GetInventory)});
+   addCodeDataACS0(145, {"",        2, addCallFunc(ACS_CF_SubInventory)});
+   addCodeDataACS0(146, {"WSW",     0, addCallFunc(ACS_CF_SubInventory)});
+   addCodeDataACS0(147, {"",        1, addCallFunc(ACS_CF_GetInventory)});
+   addCodeDataACS0(148, {"WS",      0, addCallFunc(ACS_CF_GetInventory)});
    addCodeDataACS0(149, {"",        6, addCallFunc(ACS_CF_SpawnPoint)});
    addCodeDataACS0(150, {"WSWWWWW", 0, addCallFunc(ACS_CF_SpawnPoint)});
    addCodeDataACS0(151, {"",        4, addCallFunc(ACS_CF_SpawnSpot)});
@@ -202,8 +203,8 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0(220, {"",        1, addCallFunc(ACS_CF_Sin)});
    addCodeDataACS0(221, {"",        1, addCallFunc(ACS_CF_Cos)});
    addCodeDataACS0(222, {"",        2, addCallFunc(ACS_CF_ATan2)});
- //addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
- //addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
+   addCodeDataACS0(223, {"",        1, addCallFunc(ACS_CF_CheckWeapon)});
+   addCodeDataACS0(224, {"",        1, addCallFunc(ACS_CF_SetWeapon)});
    // 225-243: ACSVM internal codes.
  //addCodeDataACS0(244, {"",        2, addCallFunc(ACS_CF_SetMarineWeapon)});
    addCodeDataACS0(245, {"",        3, addCallFunc(ACS_CF_SetThingProp)});
@@ -271,9 +272,9 @@ ACSEnvironment::ACSEnvironment() :
  //addCodeDataACS0(346, {"",        2, addCallFunc(ACS_CF_UnmorphThing)});
    addCodeDataACS0(347, {"",        2, addCallFunc(ACS_CF_GetPlayerInput)});
    addCodeDataACS0(348, {"",        1, addCallFunc(ACS_CF_ClassifyThing)});
-   // 349-361: ACSVM interanl codes.
+   // 349-361: ACSVM internal codes.
  //addCodeDataACS0(362, {"",        8, addCallFunc(ACS_CF_TransDesat)});
-   // 363-380: ACSVM interanl codes.
+   // 363-380: ACSVM internal codes.
 
    // Add func translations.
 
@@ -336,7 +337,7 @@ ACSEnvironment::ACSEnvironment() :
    addFuncDataACS0( 62, addCallFunc(ACS_CF_StopSound));
    // 63-67: ACSVM internal funcs.
  //addFuncDataACS0( 68, addCallFunc(ACS_CF_GetThingType));
- //addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
+   addFuncDataACS0( 69, addCallFunc(ACS_CF_GetWeapon));
  //addFuncDataACS0( 70, addCallFunc(ACS_CF_SoundVolume));
    addFuncDataACS0( 71, addCallFunc(ACS_CF_PlayThingSound));
  //addFuncDataACS0( 72, addCallFunc(ACS_CF_SpawnDecal));
@@ -359,9 +360,18 @@ ACSEnvironment::ACSEnvironment() :
  //addFuncDataACS0( 89, addCallFunc(ACS_CF_SetThingRoll));
  //addFuncDataACS0( 90, addCallFunc(ACS_CF_GetThingRoll));
  //addFuncDataACS0( 91, addCallFunc(ACS_CF_QuakeEx));
+ //addFuncDataACS0( 92, addCallFunc(ACS_CF_Warp));
+ //addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
+ //addFuncDataACS0( 94, addCallFunc(ACS_CF_SetSectorDamage));
+ //addFuncDataACS0( 95, addCallFunc(ACS_CF_SetSectorTerrain));
+ //addFuncDataACS0( 96, addCallFunc(ACS_CF_SpawnParticle));
+ //addFuncDataACS0( 97, addCallFunc(ACS_CF_SetMusicVolume));
+   addFuncDataACS0( 98, addCallFunc(ACS_CF_CheckProximity));
+ //addFuncDataACS0( 99, addCallFunc(ACS_CF_CheckActorState));
 
    addFuncDataACS0(300, addCallFunc(ACS_CF_GetLineX));
    addFuncDataACS0(301, addCallFunc(ACS_CF_GetLineY));
+   addFuncDataACS0(302, addCallFunc(ACS_CF_SetAirFriction));
 }
 
 //
@@ -466,8 +476,8 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 
    // Fetch lump data. Use PU_LEVEL so the lump data does not get unexpectedly
    // purged as a result of further allocations.
-   data = (byte *)moduleDir->cacheLumpNum(module->name.i, PU_LEVEL);
-   size = moduleDir->lumpLength(module->name.i);
+   data = (byte *)moduleDir->cacheLumpNum(static_cast<int>(module->name.i), PU_LEVEL);
+   size = moduleDir->lumpLength(static_cast<int>(module->name.i));
 
    try
    {
@@ -484,7 +494,7 @@ void ACSEnvironment::loadModule(ACSVM::Module *module)
 //
 // ACSEnvironment::loadState
 //
-void ACSEnvironment::loadState(std::istream &in)
+void ACSEnvironment::loadState(ACSVM::Serial &in)
 {
    ACSVM::Environment::loadState(in);
 
@@ -496,7 +506,7 @@ void ACSEnvironment::loadState(std::istream &in)
 //
 // ACSEnvironment::readModuleName
 //
-ACSVM::ModuleName ACSEnvironment::readModuleName(std::istream &in) const
+ACSVM::ModuleName ACSEnvironment::readModuleName(ACSVM::Serial &in) const
 {
    auto name = ACSVM::Environment::readModuleName(in);
    name.p = dir;
@@ -514,22 +524,22 @@ void ACSEnvironment::refStrings()
 //
 // ACSThread::loadState
 //
-void ACSThread::loadState(std::istream &in)
+void ACSThread::loadState(ACSVM::Serial &in)
 {
    ACSVM::Thread::loadState(in);
 
-   info.mo = static_cast<Mobj *>(P_ThinkerForNum(ACSVM::ReadVLN<size_t>(in)));
+   info.mo = static_cast<Mobj *>(P_ThinkerForNum(static_cast<unsigned>(ACSVM::ReadVLN<size_t>(in))));
 
    size_t linenum = ACSVM::ReadVLN<size_t>(in);
    info.line = linenum ? &lines[linenum - 1] : nullptr;
 
-   info.side = ACSVM::ReadVLN<size_t>(in);
+   info.side = static_cast<int>(ACSVM::ReadVLN<size_t>(in));
 }
 
 //
 // ACSThread::saveState
 //
-void ACSThread::saveState(std::ostream &out) const
+void ACSThread::saveState(ACSVM::Serial &out) const
 {
    ACSVM::Thread::saveState(out);
 
@@ -876,7 +886,7 @@ protected:
       // Read single byte from source.
       if(!in || in->read(buf, 1) != 1) return EOF;
       setg(buf, buf, buf + 1);
-      return buf[0];
+      return static_cast<unsigned char>(buf[0]);
    }
 
    char buf[1];
@@ -889,17 +899,33 @@ void ACS_Archive(SaveArchive &arc)
 {
    if(arc.isLoading())
    {
-      ACSBuffer    buf{arc.getLoadFile()};
-      std::istream in {&buf};
+      ACSBuffer     buf{arc.getLoadFile()};
+      std::istream  str{&buf};
+      ACSVM::Serial in {str};
 
-      ACSenv.loadState(in);
+      try
+      {
+         in.loadHead();
+         ACSenv.loadState(in);
+         in.loadTail();
+      }
+      catch(ACSVM::SerialError const &e)
+      {
+         I_Error("ACS_Archive: %s\n", e.what());
+      }
    }
    else if(arc.isSaving())
    {
-      ACSBuffer    buf{arc.getSaveFile()};
-      std::ostream out{&buf};
+      ACSBuffer     buf{arc.getSaveFile()};
+      std::ostream  str{&buf};
+      ACSVM::Serial out{str};
 
+      // Enable debug signatures.
+      out.signs = true;
+
+      out.saveHead();
       ACSenv.saveState(out);
+      out.saveTail();
    }
 }
 

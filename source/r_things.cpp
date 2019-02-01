@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,20 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Refresh of things represented by sprites --
-//  i.e. map objects and particles.
+// Purpose: Refresh of things represented by sprites i.e. map objects and particles.
+//          Particle code largely from ZDoom, thanks to Marisa Heit.
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
-//  Particle code largely from zdoom, thanks to Randy Heit.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
 
 #include "c_io.h"
+#include "c_runcmd.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
@@ -44,6 +41,7 @@
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_user.h"
@@ -167,6 +165,7 @@ struct vissprite_t
   int heightsec;
 
   uint16_t translucency; // haleyjd: zdoom-style translucency
+  int tranmaplump;
 
   fixed_t footclip; // haleyjd: foot clipping
 
@@ -231,6 +230,9 @@ static poststack_t   *pstack       = NULL;
 static int            pstacksize   = 0;
 static int            pstackmax    = 0;
 static maskedrange_t *unusedmasked = NULL;
+
+// MaxW: 2018/07/01: Whether or not to draw psprites
+static bool r_drawplayersprites = true;
 
 VALLOCATION(pstack)
 {
@@ -539,7 +541,7 @@ void R_ClearSprites()
 //
 // Pushes a new element on the post-BSP stack. 
 //
-void R_PushPost(bool pushmasked, planehash_t *overlay)
+void R_PushPost(bool pushmasked, pwindow_t *window)
 {
    poststack_t *post;
    
@@ -550,8 +552,14 @@ void R_PushPost(bool pushmasked, planehash_t *overlay)
    }
    
    post = pstack + pstacksize;
-   
-   post->overlay = overlay;
+
+   if(window)
+   {
+      post->overlay = window->poverlay;
+      window->poverlay = nullptr;   // clear reference
+   }
+   else
+      post->overlay = nullptr;
 
    if(pushmasked)
    {
@@ -666,6 +674,8 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
+   const byte *texend = tex->bufferdata + tex->width * tex->height + 1;
+
    while(tcol)
    {
       // calculate unclipped screen coordinates for post
@@ -678,12 +688,27 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
-         column.source = tex->buffer + tcol->ptroff;
+         byte *localstart = tex->bufferdata + tcol->ptroff;
+         column.source = localstart;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
+
+         byte *last = localstart + tcol->len;
+         byte orig;
+         if(last < texend && last > tex->bufferdata)
+         {
+            orig = *last;
+            *last = last[-1];
+         }
+
+         byte origstart = localstart[-1];
+         localstart[-1] = *localstart;
 
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
+         if(last < texend && last > tex->bufferdata)
+            *last = orig;
+         localstart[-1] = origstart;
       }
 
       tcol = tcol->next;
@@ -726,7 +751,12 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    
    column.translevel = vis->translucency;
    column.translevel += 1;
-   if(vis->drawstyle == VS_DRAWSTYLE_SUB)
+   if(vis->tranmaplump >= 0)
+   {
+      tranmap = static_cast<byte *>(wGlobalDir.cacheLumpNum(vis->tranmaplump,
+                                                            PU_CACHE));
+   }
+   else if(vis->drawstyle == VS_DRAWSTYLE_SUB)
       tranmap = main_submap;
    else
       tranmap = main_tranmap; // killough 4/11/98   
@@ -795,7 +825,7 @@ struct spritepos_t
 };
 
 // ioanch 20160109: added offset arguments
-static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
    {
@@ -805,9 +835,36 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
    }
    else
    {
-      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
-      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
-      pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      const linkdata_t *ldata;
+      if((ldata = thing->prevpos.ldata))
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->deltax,
+                           thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata->deltay,
+                           thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata->deltaz,
+                           thing->z);
+      }
+      else
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      }
+   }
+}
+
+static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
+{
+   if(view.lerp == FRACUNIT)
+   {
+      pos.x = pspr.sx;
+      pos.y = pspr.sy;
+   }
+   else
+   {
+      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.sx);
+      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.sy);
    }
 }
 
@@ -869,16 +926,28 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(portalrender.w && portalrender.w->portal &&
       portalrender.w->portal->type != R_SKYBOX)
    {
+      v2fixed_t offsetpos = { thing->x, thing->y };
+      if(delta)
+      {
+         offsetpos.x += delta->x;
+         offsetpos.y += delta->y;
+      }
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line && portalrender.w->line != portalline &&
-         P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
+         P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
       {
          return;
       }
-      if(!portalrender.w->line && 
-         !R_AllowBehindSectorPortal(barrier.bbox, spritepos.x, spritepos.y))
+      if(!portalrender.w->line)
       {
-         return;
+         dlnormal_t dl1, dl2;
+         if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
+            (P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
+               (dl2.dl.x != D_MAXINT && 
+                  P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
+         {
+            return;
+         }
       }
    }
 
@@ -1036,6 +1105,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
 
    // haleyjd 09/01/02
    vis->translucency = uint16_t(thing->translucency - 1);
+   vis->tranmaplump = -1;
 
    // haleyjd 11/14/02: ghost flag
    if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
@@ -1073,8 +1143,13 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(thing->flags & MF_SHADOW)
       vis->drawstyle = VS_DRAWSTYLE_SHADOW;
    else if(general_translucency)
-   {   
-      if(thing->flags3 & MF3_TLSTYLEADD)
+   {
+      if(thing->tranmap >= 0)
+      {
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+         vis->tranmaplump = thing->tranmap;
+      }
+      else if(thing->flags3 & MF3_TLSTYLEADD)
          vis->drawstyle = VS_DRAWSTYLE_ADD;
       else if(thing->flags4 & MF4_TLSTYLESUB)
          vis->drawstyle = VS_DRAWSTYLE_SUB;
@@ -1142,7 +1217,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 //
 // Draws player gun sprites.
 //
-static void R_DrawPSprite(pspdef_t *psp)
+static void R_DrawPSprite(const pspdef_t *psp)
 {
    float         tx;
    float         x1, x2, w;
@@ -1192,7 +1267,10 @@ static void R_DrawPSprite(pspdef_t *psp)
    flip = !!(sprframe->flip[0] ^ lefthanded);
    
    // calculate edges of the shape
-   tx  = M_FixedToFloat(psp->sx) - 160.0f;
+   v2fixed_t pspos;
+   R_interpolatePSpritePosition(*psp, pspos);
+
+   tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
 
       // haleyjd
@@ -1223,12 +1301,16 @@ static void R_DrawPSprite(pspdef_t *psp)
    
    // killough 12/98: fix psprite positioning problem
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
-                      (psp->sy - spritetopoffset[lump]);
+                      (pspos.y - spritetopoffset[lump]);
+
+   if(scaledwindow.height == SCREENHEIGHT)
+      vis->texturemid -= viewplayer->readyweapon->fullscreenoffset;
 
    vis->x1           = x1 < 0.0f ? 0 : (int)x1;
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour       = 0;      // sf: default colourmap
    vis->translucency = FRACUNIT - 1; // haleyjd: default zdoom trans.
+   vis->tranmaplump  = -1;
    vis->footclip     = 0; // haleyjd
    vis->scale        = view.pspriteyscale;
    vis->ytop         = (view.height * 0.5f) - (M_FixedToFloat(vis->texturemid) * vis->scale);
@@ -1293,7 +1375,7 @@ static void R_DrawPSprite(pspdef_t *psp)
 static void R_DrawPlayerSprites()
 {
    int i, lightnum;
-   pspdef_t *psp;
+   const pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
    
@@ -1324,10 +1406,13 @@ static void R_DrawPlayerSprites()
    mfloorclip   = pscreenheightarray;
    mceilingclip = zeroarray;
 
-   // add all active psprites
-   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
-      if(psp->state)
-         R_DrawPSprite(psp);
+   if(r_drawplayersprites)
+   {
+      // add all active psprites
+      for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+         if(psp->state)
+            R_DrawPSprite(psp);
+   }
 }
 
 #define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
@@ -1786,6 +1871,7 @@ void R_DrawPostBSP()
             r_column_engine->ResetBuffer();
             
          R_DrawPlanes(pstack[pstacksize].overlay);
+         R_FreeOverlaySet(pstack[pstacksize].overlay);
       }
    }
 
@@ -1921,7 +2007,8 @@ static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
       line.bbox[BOXRIGHT] <= mpi.bbox[BOXLEFT] ||
       line.bbox[BOXTOP] <= mpi.bbox[BOXBOTTOM] ||
       P_PointOnLineSide(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
-      P_BoxOnLineSide(mpi.bbox, &line) != -1)
+      P_BoxOnLineSide(mpi.bbox, &line) != -1 ||
+      line.intflags & MLI_MOVINGPORTAL)
    {
       return true;
    }
@@ -1991,20 +2078,24 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
-   while(++loopprot < 32768 && sector && sector->f_pflags & PS_PASSABLE && 
-      (data = R_FPLink(sector))->planez > mobj->z + scaledbottom)
+   while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
+         sector->f_pflags & PS_PASSABLE &&
+         P_FloorPortalZ(*sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
    {
       // always accept first sector
+      data = R_FPLink(sector);
       sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
 
    // restart from mobj's group
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
-   while(++loopprot < 32768 && sector && sector->c_pflags & PS_PASSABLE &&
-      (data = R_CPLink(sector))->planez < mobj->z + scaledtop)
+   while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
+         sector->c_pflags & PS_PASSABLE &&
+         P_CeilingPortalZ(*sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
    {
       // always accept first sector
+      data = R_CPLink(sector);
       sector = R_addProjNode(mobj, data, delta, item, tail, nullptr);
    }
 
@@ -2013,10 +2104,20 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    mobjprojinfo_t mpi;
    fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
    mpi.mobj = mobj;
-   mpi.bbox[BOXLEFT] = mobj->x - xspan;
-   mpi.bbox[BOXRIGHT] = mobj->x + xspan;
-   mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
-   mpi.bbox[BOXTOP] = mobj->y + xspan;
+   if(mobj->prevpos.ldata)
+   {
+      mpi.bbox[BOXLEFT] = mobj->x - xspan;
+      mpi.bbox[BOXRIGHT] = mobj->x + xspan;
+      mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
+      mpi.bbox[BOXTOP] = mobj->y + xspan;
+   }
+   else
+   {
+      mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
+      mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
+      mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
+      mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
+   }
    mpi.scaledbottom = scaledbottom;
    mpi.scaledtop = scaledtop;
    mpi.item = &item;
@@ -2044,37 +2145,12 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 // haleyjd 09/30/01
 //
 // Particle Rendering
-// This incorporates itself mostly seamlessly within the vissprite system, 
+// This incorporates itself mostly seamlessly within the vissprite system,
 // incurring only minor changes to the functions above.
 //
-// For code adapted from ZDoom:
+// Code adapted from ZDoom is licenced under the GPLv3.
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright 1998-2012 (C) Marisa Heit
 //
 
 //
@@ -2240,6 +2316,7 @@ static void R_ProjectParticle(particle_t *particle)
    vis->colour = particle->color;
    vis->patch = -1;
    vis->translucency = static_cast<uint16_t>(particle->trans - 1);
+   vis->tranmaplump = -1;
    // Cardboard
    vis->dist = idist;
    vis->xstep = 1.0f / xscale;
@@ -2384,6 +2461,14 @@ static void R_DrawParticle(vissprite_t *vis)
       } // end else [!general_translucency]
    } // end local block
 }
+
+//============================================================================
+//
+// Console Commands
+//
+
+VARIABLE_TOGGLE(r_drawplayersprites, NULL, onoff);
+CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------
 //

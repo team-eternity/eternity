@@ -109,7 +109,7 @@ struct sfxinfo_t
    void *data;        // sound data
    int length;        // lump length
    unsigned int alen; // length of converted sound pointed to by data
-   
+
    // this is checked every second to see if sound
    // can be thrown out (if 0, then decrement, if -1,
    // then throw out, if > 0, then it is in use)
@@ -117,7 +117,10 @@ struct sfxinfo_t
 
    // haleyjd: EDF mnemonic
    char mnemonic[129];
-      
+
+   char *lfn;    // alison: long file name
+   char *pcslfn; // alison: long file name for PC speaker sound
+
    // haleyjd 09/03/03: revised for dynamic EDF sounds
    DLListItem<sfxinfo_t> numlinks; // haleyjd 04/13/08: numeric hash links
    sfxinfo_t *next;                // next in mnemonic hash chain
@@ -135,16 +138,16 @@ struct musicinfo_t
 
    // haleyjd 04/10/11: whether to apply prefix or not
    bool prefix;
-   
+
    // lump number of music
    //  int lumpnum;
-   
+
    // music data
    void *data;
-   
+
    // music handle once registered
    int handle;
-   
+
    // sf: for hashing
    musicinfo_t *next;
 };
@@ -508,6 +511,20 @@ typedef enum {
   sfx_hhrnsht,
   sfx_hphosht,
   sfx_hwpnup,
+  sfx_hrespawn,
+  sfx_artiup,
+  sfx_artiuse,
+  sfx_blssht,
+  sfx_bowsht,
+  sfx_gntful,
+  sfx_gnthit,
+  sfx_gntpow,
+  sfx_gntact,
+  sfx_gntuse,
+  sfx_stfcrk,
+  sfx_lobsht,
+  sfx_bounce,
+  sfx_phopow,
 
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX

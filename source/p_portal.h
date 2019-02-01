@@ -27,8 +27,6 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-#include "m_collection.h"
-
 struct polyobj_s;
 
 extern bool useportalgroups;
@@ -46,6 +44,7 @@ extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
 #define R_NOGROUP -1
 #endif
 
+struct linkdata_t;
 struct portal_t;
 struct sector_t;
 
@@ -71,7 +70,6 @@ enum
    paramPortal_linked = 6,
 };
 
-
 //
 // P_PortalGroupCount
 //
@@ -90,27 +88,27 @@ int P_CreatePortalGroup(sector_t *from);
 //
 void P_GatherSectors(sector_t *from, int groupid);
 
+void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
+
 //
 // R_BuildLinkTable
 // Builds the link table. This should only be called after all the portals for
 // the level have been created.
 //
 bool P_BuildLinkTable();
-
-//
-// P_LinkRejectTable
-// Currently just clears each group for every other group.
-//
-void P_LinkRejectTable();
+void P_MarkPortalClusters();
+void P_MarkPolyobjPortalLinks();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid);
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
                              int fromid, int toid);
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
+                         int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
+
+void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 
 //
 // P_CheckCPortalState
@@ -183,41 +181,18 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 //
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
-void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
-                        bool movebehind);
+void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
+                        fixed_t dy, bool setpolyref, const polyobj_s *po);
+void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
+                           bool (*func)(int groupid, void *context), void *context);
 
-bool P_BlockHasLinkedPortals(int index, bool includesectors);
+fixed_t P_CeilingPortalZ(const sector_t &sector);
+fixed_t P_FloorPortalZ(const sector_t &sector);
 
-//==============================================================================
-//
-// More portal blockmap stuff (besides portalmap and gBlockGroups from p_setup)
-//
-
-//
-// Line portal blockmap: stores just the portal linedefs on the blockmap
-//
-class LinePortalBlockmap
-{
-public:
-   LinePortalBlockmap() : mValidcount(0), mValids(nullptr)
-   {
-   }
-
-   void mapInit();
-   void newSession()
-   {
-      ++mValidcount;
-   }
-   bool iterator(int x, int y, void *data,
-                 bool (*func)(const line_t &, void *data)) const;
-
-private:
-   Collection<PODCollection<const line_t *>> mMap;
-   int mValidcount;
-   int *mValids;
-};
-
-extern LinePortalBlockmap pLPortalMap;
+// Group mappings
+void P_BuildSectorGroupMappings();
+sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 #endif
 

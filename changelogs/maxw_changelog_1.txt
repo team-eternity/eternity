@@ -14,7 +14,7 @@ jump to, and the number of states does not need to be specified.
 -------------------------------------------------------------------------------
 2016/09/28
 
-Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
+Altered IWAD detection so that FreeDM and Freedoom 2 are now in the correct
 positions when autodetected.
 
 -------------------------------------------------------------------------------
@@ -73,8 +73,8 @@ Add Plane_Copy. It copies slopes.
 -------------------------------------------------------------------------------
 2017/01/06
 
-Updated the credits screen to include myself, and amend Sarah Mancuso's name.
-The credits now have two names per column, and are separated down the middle.
+The credits screen now includes myself and I amended Sarah Mancuso's name.
+The credits now have two names per column and are separated down the middle.
 
 -------------------------------------------------------------------------------
 2017/01/08
@@ -129,6 +129,205 @@ by referring to the key (string), or the "num" property (int).
 -------------------------------------------------------------------------------
 2017/03/26
 Added solutions and folders for Visual Studio 2017.
+
+-------------------------------------------------------------------------------
+2017/04/22
+Allowed UDMF->ExtraData special lookup to work, for SetLineSpecial.
+
+-------------------------------------------------------------------------------
+2017/05/21
+Fixed Thing_Remove not cleaning up properly. Thing_Remove'd stuff would still
+be targeted by monsters even after removal.
+
+-------------------------------------------------------------------------------
+2017/06/04
+Added sector scroller UDMF properties, and fixed ACS scroll speeds. Also fixed
+overriding that the ACS specials do.
+
+-------------------------------------------------------------------------------
+2017/07/18
+Tall and transparent PNGs are now supported, though the transparency could do
+with being mask-based, instead of just using a "this is transparent" index.
+
+-------------------------------------------------------------------------------
+2017/08/04
+ALT+F4 now exits the program in a quick and clean fashion. Thanks to anotak for
+bringing this up.
+
+Fixed ACS scrollers again.
+
+-------------------------------------------------------------------------------
+2017/08/26
+The player view no longer vibrates once their decapitated head hits the floor,
+if they have interpolation on.
+
+-------------------------------------------------------------------------------
+2017/08/27
+Console aliases for idk and idfa have been added: "givearsenal" and "givekeys"
+respectively.
+
+-------------------------------------------------------------------------------
+2017/09/06
+Fixed UDMF damageinterval having a default of 0 when it should be 32.
+
+-------------------------------------------------------------------------------
+2017/09/12
+Building with Visual Studio no longer includes any batch files. Both Eternity
+and midiproc both use the "MIDL" section in project properties.
+
+Removed the ability to pick internal texture format.
+
+-------------------------------------------------------------------------------
+2017/11/10
+Merged in SDL2 branch. Changes I can remember:
+ • Moved to SDL 2.0.7, SDL_mixer 2.0.2, and SDL_net 2.0.1
+ • "unicodeinput" is gone. All text input is UTF-8.
+ • -8in32 and the software bitdepth setting are gone.
+ • A new console variable "displaynum" exists, and lets you set what display
+   the window is created on when you run Eternity.
+ • A new console command "maxdisplaynum" has been added (guess what it does).
+ • -directx and -gdi are gone.
+
+Also whilst I was at it I added a fullscreen toggle,
+bound to Alt+Enter on non-Apple, Cmd+f on Apple).
+
+-------------------------------------------------------------------------------
+2018/01/31
+Changed GL extensions and pixelbuffers to be on by default.
+
+-------------------------------------------------------------------------------
+2018/02/05
+Fixed hitscan impact not activating lines that only have impact activation in
+UDMF. This means that players always activate them now (with impact), as do
+monsters with SPAC.
+
+-------------------------------------------------------------------------------
+2018/02/07
+Fix EV_ThingSpawn not assigning tid of spawned mobj.
+
+-------------------------------------------------------------------------------
+2018/02/10
+Fixed lumps in the HI_ markers overriding regular textures. This means that
+wads like Bloody Steel don't have invisible menu options.
+
+-------------------------------------------------------------------------------
+2018/02/14
+Added a "restartmap" command. It's basically the same as using the "map"
+command but to the same level.
+
+================================================================================
+Changes since Eternity Engine v4.00.00
+================================================================================
+-------------------------------------------------------------------------------
+2018/04/01
+Incremented version to 4.01.00.
+
+-------------------------------------------------------------------------------
+2018/04/05
+O-H-S-N-A-P-O-H-S-N-A-P-O-H-S-N-A-P-O-H-S
+|Merged edf-features-branch into master.|
+P-A-N-S-H-O-P-A-N-S-H-O-P-A-N-S-H-O-P-A-N  
+ 
+MAJOR CHANGES:
+ • Introduced EDF weapons:
+  - Users can now define brand new weapons.
+  - All the original Doom weapons are now defined through this system.
+  - Almost all Heretic weapons are now defined through this system (the others
+    aren't defined at all).
+  - Almost all of the Heretic weapon codepointers have been added.
+  - Additionally, weapondeltas have been added.
+ • Introduced EDF pickupeffects:
+  - Users can now define brand new pickups.
+  - These can define either thing-based or sprite-based pickups. They can also
+    be defined externally, or inside a thingtype definition.
+  - They encompass health, armor, ammo, power-ups, weapons, and artefacts.
+  - All the Doom and Heretic pickups now use this system.  
+  - PICKUPITEMS ARE DEPRECATED, PLEASE DO NOT USE THEM.
+ • Introduced support for Heretic-style inventory
+  - Items can only be used in Heretic at the moment, but support will be
+    extended to other IWADs.
+  - All the Heretic artefacts now use this system (except for the egg).
+ • EDF playerclasses now have more options.
+ • Added EDF playerdeltas.
+ 
+There's probably more stuff I'm forgetting but that's the big stuff.
+
+-------------------------------------------------------------------------------
+2018/04/07
+Splitted armor's +bonus into +additive and -setabsorption.
+Added the RAMBO cheat from Heretic, and improved givearsenal to give armor in
+Heretic too.
+
+-------------------------------------------------------------------------------
+2018/05/17
+Added EDF fontdeltas.
+
+-------------------------------------------------------------------------------
+2018/06/13
+Changed version name to "Tyrfing".
+
+-------------------------------------------------------------------------------
+2018/06/16
+Made A_Jump now work for weapons with DECORATE states.
+
+-------------------------------------------------------------------------------
+2018/07/20
+Add support for the Rekkr stand-alone IWAD.
+
+-------------------------------------------------------------------------------
+2018/07/01
+Added r_drawplayersprites, which lets players choose to not render weapons if
+they don't want to (for example, if taking photos).
+
+-------------------------------------------------------------------------------
+2018/07/23
+Fix ev_text events causing some issues, such as menu navigation occurring when
+inserting specific keys for key bindings on certain menus.
+
+-------------------------------------------------------------------------------
+2018/12/02
+The edf "include" directive can now include files with longer names or using
+paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is
+case-insensitive, and all \s are converted to /s when internally hashed.
+Additionally these includes are relative to the file making the include
+(e.g: if "edf/monsters.edf" does "include("monsters/something.edf")" it will
+include "edf/monsters/something.edf"). Includes can be made non-relative by
+putting a '/' before the rest of the path.
+
+. AND .. ARE NOT SUPPORTED!
+
+-------------------------------------------------------------------------------
+2018/12/18
+Re-implemented the MBF pickups.
+
+-------------------------------------------------------------------------------
+2018/12/25
+Merry Christmas!
+Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
+the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
+layouts have been made to be the new default for overlay-style HUDs.
+Added an inventory bar to Doom. Currently it only works when not using the
+regular Doom HUD, and currently selected items are not rendered  outside of
+when the inventory bar is active.
+
+-------------------------------------------------------------------------------
+2019/01/11
+Fixed the FOV parameter for A_JumpIfTargetInLOS, which was read in as an int
+FRACUNIT times smaller than it should have been before being converted to an
+angle. It is now read in as a fixed.
+
+-------------------------------------------------------------------------------
+2019/01/13
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/14
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/26
+Greatly improved performance of R_doubleToUint32, which becomes significantly
+noticeable in maps with lots of flats (think central area of Mothership).
 
 ================================================================================
 EOF

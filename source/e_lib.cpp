@@ -41,7 +41,6 @@
 #include "d_io.h"
 #include "d_main.h"
 #include "doomstat.h"
-#include "doomtype.h"
 #include "m_collection.h"
 #include "m_compare.h"
 #include "m_hash.h"
@@ -167,7 +166,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 //
 // Finds a lump from the same data source as the including lump.
 // Returns -1 if no such lump can be found.
-// 
+//
 static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t  *inclump;
@@ -194,6 +193,59 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    }
 
    return -1; // not found
+}
+
+//
+// Finds a file from the same data source as the including file.
+// Returns -1 if no such lump can be found.
+//
+static int E_findFileInclude(cfg_t *src, const char *name)
+{
+   lumpinfo_t  *inclump;
+   lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
+   qstring      qname     = qstring(name).toLower();
+   qstring      includepath;
+   int          includinglumpnum;
+
+   // this is not for files
+   if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
+      return -1;
+
+   // get a pointer to the including lump's lumpinfo
+   inclump = lumpinfo[includinglumpnum];
+
+   qname.replace("\\", '/');
+   if(qname[0] != '/')
+   {
+      qstring parentdir    = qstring(src->filename);
+      size_t  lastslashloc = parentdir.findLastOf('/');
+      parentdir.truncate(lastslashloc + 1);
+      includepath << parentdir;
+   }
+   else
+   {
+      if(qname.length() > 1u)
+         qname.erase(0u, 1u);
+      else
+         return -1;
+   }
+
+   includepath << qname;
+   includepath.toLower();
+
+   WadChainIterator wci(wGlobalDir, includepath.constPtr(), true);
+
+   // walk down the hash chain
+   for(wci.begin(); wci.current(); wci.next())
+   {
+      if(wci.testLump(lumpinfo_t::ns_global) && // name matches, is global
+         (*wci)->source == inclump->source)     // is from same source
+      {
+         return (*wci)->selfindex;
+      }
+   }
+
+   return strlen(name) > 8 ? -1 : E_FindLumpInclude(src, name); // not found
 }
 
 //
@@ -282,21 +334,15 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    case -1: // physical file
       len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
       M_GetFilePath(cfg->filename, currentpath, len);
-      
-      filename = M_SafeFilePath(currentpath, argv[0]);
-      
-      return E_OpenAndCheckInclude(cfg, filename, -1);
-   
-   default: // data source
-      if(strlen(argv[0]) > 8)
-      {
-         cfg_error(cfg, "include: %s is not a valid lump name\n", argv[0]);
-         return 1;
-      }
 
+      filename = M_SafeFilePath(currentpath, argv[0]);
+
+      return E_OpenAndCheckInclude(cfg, filename, -1);
+
+   default: // data source
       // haleyjd 03/19/10:
       // find a lump of the requested name in the same data source only
-      if((lumpnum = E_FindLumpInclude(cfg, argv[0])) < 0)
+      if((lumpnum = E_findFileInclude(cfg, argv[0])) < 0)
       {
          cfg_error(cfg, "include: %s not found\n", argv[0]);
          return 1;
@@ -375,7 +421,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = lumpinfo[i]->namehash.next) >= 0)
+   while((i = lumpinfo[i]->next) >= 0)
    {
       if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
          !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
@@ -557,7 +603,7 @@ int E_SpriteFrameCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    {
       char *endptr;
 
-      *(int *)result = strtol(value, &endptr, 0);
+      *(int *)result = static_cast<int>(strtol(value, &endptr, 0));
       
       if(*endptr != '\0')
       {
@@ -677,7 +723,7 @@ int E_TranslucCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       int pctvalue;
       
       // get the percentage value (base 10 only)
-      pctvalue = strtol(value, &endptr, 10);
+      pctvalue = static_cast<int>(strtol(value, &endptr, 10));
 
       // strtol should stop at the percentage sign
       if(endptr != pctloc)
@@ -749,7 +795,7 @@ int E_TranslucCB2(cfg_t *cfg, cfg_opt_t *opt, const char *value,
       int pctvalue;
       
       // get the percentage value (base 10 only)
-      pctvalue = strtol(value, &endptr, 10);
+      pctvalue = static_cast<int>(strtol(value, &endptr, 10));
 
       // strtol should stop at the percentage sign
       if(endptr != pctloc)
@@ -919,9 +965,12 @@ void E_ReplaceString(char *&dest, char *newvalue)
 // Adds a MetaString property to the passed-in table with the same name and
 // value as the cfg_t string property.
 //
-void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setString(prop, cfg_getstr(cfg, prop));
+   if(list)
+      meta->addString(prop, cfg_getnstr(cfg, prop, n));
+   else
+      meta->setString(prop, cfg_getstr(cfg, prop));
 }
 
 //
@@ -931,9 +980,24 @@ void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop)
 // Adds a MetaInteger property to the passed-in table with the same name
 // and value as the cfg_t integer property.
 //
-void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setInt(prop, cfg_getint(cfg, prop));
+   if(list && meta->getObjectKeyAndTypeEx<MetaInteger>(prop))
+      meta->addInt(prop, cfg_getnint(cfg, prop, n));
+   else
+      meta->setInt(prop, cfg_getint(cfg, prop));
+}
+
+//
+// Get MetaFloat from cfg float
+//
+static void E_metaDoubleFromCfgFloat(MetaTable *meta, cfg_t *cfg,
+                                     const char *prop, int n, bool list)
+{
+   if(list && meta->getObjectKeyAndTypeEx<MetaDouble>(prop))
+      meta->addDouble(prop, cfg_getnfloat(cfg, prop, n));
+   else
+      meta->setDouble(prop, cfg_getfloat(cfg, prop));
 }
 
 //
@@ -943,9 +1007,12 @@ void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop)
 // Adds a MetaInteger property to the passed-in table with the same name
 // and value as the cfg_t bool property.
 //
-void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setInt(prop, cfg_getbool(cfg, prop));
+   if(list && meta->getObjectKeyAndTypeEx<MetaInteger>(prop))
+      meta->addInt(prop, cfg_getnbool(cfg, prop, n));
+   else
+      meta->setInt(prop, cfg_getbool(cfg, prop));
 }
 
 //
@@ -955,9 +1022,64 @@ void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop)
 // Adds a MetaInteger property to the passed-in table with the same name
 // and value as the cfg_t flag property.
 //
-void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop)
+void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop, int n, bool list)
 {
-   meta->setInt(prop, cfg_getflag(cfg, prop));
+   if(list && meta->getObjectKeyAndTypeEx<MetaInteger>(prop))
+      meta->addInt(prop, cfg_getnflag(cfg, prop, n));
+   else
+      meta->setInt(prop, cfg_getflag(cfg, prop));
+}
+
+static void E_MetaTableFromCfgMvprop(MetaTable *meta, cfg_t *cfg, const char *prop, bool allowmulti)
+{
+   int numprop = cfg_size(cfg, prop);
+
+   for(int i = 0; i < numprop; i++)
+   {
+      cfg_t *currcfg = cfg_getnmvprop(cfg, prop, i);
+
+      MetaTable *table = new MetaTable(prop);
+
+      for(auto opt = currcfg->opts; opt->type != CFGT_NONE; opt++)
+      {
+         int n = cfg_size(currcfg, opt->name);
+         if(n == 0)
+            continue;
+         bool list = opt->flags & CFGF_LIST;
+         if(!list)
+            n = 1;
+
+         for(int j = 0; j < n; j++)
+         {
+            switch(opt->type)
+            {
+            case CFGT_INT:
+               E_MetaIntFromCfgInt(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_STR:
+               E_MetaStringFromCfgString(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_BOOL:
+               E_MetaIntFromCfgBool(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_FLAG:
+               E_MetaIntFromCfgFlag(table, currcfg, opt->name, j, list);
+               break;
+            case CFGT_MVPROP:
+               E_MetaTableFromCfgMvprop(table, currcfg, opt->name, opt->flags & CFGF_MULTI);
+               break;
+            default:
+               break;
+            }
+         }
+      }
+
+      if(allowmulti)
+         meta->addMetaTable(prop, table);
+      else
+         meta->setMetaTable(prop, table);
+   }
+
 }
 
 //
@@ -978,24 +1100,64 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
 
    for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
    {
-      if(cfg_size(cfg, opt->name) == 0)
+      int n = cfg_size(cfg, opt->name);
+      if(n == 0)
          continue;
+      bool list = opt->flags & CFGF_LIST;
+      if(!list)
+         n = 1;
 
-      switch(opt->type)
+      for(int i = n; i --> 0;)
       {
-      case CFGT_INT:
-         E_MetaIntFromCfgInt(table, cfg, opt->name);
-         break;
-      case CFGT_STR:
-         E_MetaStringFromCfgString(table, cfg, opt->name);
-         break;
-      case CFGT_BOOL:
-         E_MetaIntFromCfgBool(table, cfg, opt->name);
-         break;
-      case CFGT_FLAG:
-         E_MetaIntFromCfgFlag(table, cfg, opt->name);
-         break;
-      default:
+         switch(opt->type)
+         {
+         case CFGT_INT:
+            E_MetaIntFromCfgInt(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_FLOAT:
+            E_metaDoubleFromCfgFloat(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_STR:
+            E_MetaStringFromCfgString(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_BOOL:
+            E_MetaIntFromCfgBool(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_FLAG:
+            E_MetaIntFromCfgFlag(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_STRFUNC:
+            E_MetaStringFromCfgString(table, cfg, opt->name, i, list);
+            break;
+         case CFGT_MVPROP:
+            E_MetaTableFromCfgMvprop(table, cfg, opt->name, opt->flags & CFGF_MULTI);
+            break;
+         default:
+            break;
+         }
+      }
+   }
+}
+
+//
+// Sets flags by looking for + and - prefixed values
+//
+void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set)
+{
+   for(auto opt = cfg->opts; opt->type != CFGT_NONE; opt++)
+   {
+      if(!cfg_size(cfg, opt->name) || opt->type != CFGT_FLAG)
+         continue;
+      // Look for the name in the set
+      for(const dehflags_t *item = set; item->name; item++)
+      {
+         if(strcasecmp(opt->name, item->name))
+            continue;
+         int v = cfg_getflag(cfg, opt->name);
+         if(v)
+            flags |= item->value;
+         else
+            flags &= ~item->value;
          break;
       }
    }

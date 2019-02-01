@@ -55,6 +55,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
@@ -251,7 +252,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer()
+static void D_PageDrawer()
 {
    int l;
 
@@ -487,13 +488,13 @@ static void D_showMemStats()
          psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
                    cachelevels[i].name,
                    memorybytag[tag], memorybytag[tag] * s);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+         V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
       else
       {
          psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
                    cachelevels[i].name, total_memory, 100.0f);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+         V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
    }
 }
@@ -566,7 +567,7 @@ void D_DrawWings()
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
-void D_Display()
+static void D_Display()
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
@@ -780,7 +781,7 @@ void D_SetGameName(const char *iwad)
       // joel 10/16/98 Final DOOM fix
       if(GameModeInfo->missionInfo->id == doom2)
       {
-         int i = strlen(iwad);
+         int i = static_cast<int>(strlen(iwad));
          if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
          {
             language = french;
@@ -869,7 +870,7 @@ void D_InitPaths()
 // haleyjd 04/17/03: copied, slightly modified prboom's code to
 // allow quoted LFNs in response files.
 //
-void FindResponseFile()
+static void FindResponseFile()
 {
    int i;
 
@@ -1046,10 +1047,8 @@ static void D_ProcessWadPreincludes()
    // haleyjd 09/30/08: don't do in shareware
    if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; ++i)
-         if((s = wad_files[i]))
+      for(char *s : wad_files)
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1074,11 +1073,9 @@ static void D_ProcessDehPreincludes(void)
 {
    if(!M_CheckParm ("-noload"))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; i++)
+      for(char *s : deh_files)
       {
-         if((s = deh_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1117,10 +1114,9 @@ static void D_AutoExecScripts()
 
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
-      char *s;
-      for(int i = 0; i < MAXLOADFILES; i++)
+      for(char *s : csc_files)
       {
-         if((s = csc_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1160,7 +1156,7 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-      D_ProcessDehInWad(lumpinfo[i]->namehash.next);
+      D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
@@ -1172,7 +1168,7 @@ static void D_ProcessDehInWads()
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
 
-   D_ProcessDehInWad(root->namehash.index);
+   D_ProcessDehInWad(root->index);
 }
 
 //=============================================================================
@@ -1233,7 +1229,7 @@ extern int levelFragLimit;
 static void D_StartupMessage()
 {
    puts("The Eternity Engine\n"
-        "Copyright 2016 James Haley, Stephen McGranahan, et al.\n"
+        "Copyright 2017 James Haley, Stephen McGranahan, et al.\n"
         "http://www.doomworld.com/eternity\n"
         "\n"
         "This program is free software distributed under the terms of\n"
@@ -1412,6 +1408,10 @@ static void D_DoomInit()
          }
       }
    }
+
+   // ioanch 20160313: demo testing
+   if((p = M_CheckParm("-demolog")) && p < myargc - 1)
+      G_DemoLogInit(myargv[p + 1]);
 
    // haleyjd 01/17/11: allow -play also
    const char *playdemoparms[] = { "-playdemo", "-play", NULL };
@@ -1761,6 +1761,15 @@ static void D_DoomInit()
    // haleyjd 08/29/08
    C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
             "Jason 'Amaster' Masihdas 12 Oct 1981 - 14 Jun 2007\n");
+#elif defined(KATE_MEMORIAL)
+   // MaxW: 2017/12/27
+   // Note: FC_CUSTOM1 is temporarily pink/purple
+   C_Printf(FC_CUSTOM1 "Dedicated to team member\n"
+            "and our dear friend:\n"
+            "Kaitlyn Anne Fox\n"
+            "(withheld) - 19 Dec 2017\n"
+            "May her spirit and memory\n"
+            "live on into Eternity\n");
 #endif
 
    // haleyjd: if we didn't do textmode startup, these didn't show up
@@ -1809,6 +1818,11 @@ static void D_DoomInit()
    // Support -loadgame with -record and reimplement -recordfrom.
    if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
       G_RecordDemo(myargv[p]);
+   else if((p = M_CheckParm("-recordfromto")) && p < myargc - 2)
+   {
+      autostart = true;
+      G_RecordDemoContinue(myargv[p + 1], myargv[p + 2]);
+   }
    else
    {
       // haleyjd 01/17/11: allow -recorddemo as well

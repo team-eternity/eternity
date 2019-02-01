@@ -33,8 +33,10 @@
 #include "doomstat.h"
 #include "d_event.h"
 #include "d_gi.h"
+#include "e_inventory.h"
 #include "e_player.h"
 #include "e_states.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -196,8 +198,8 @@ void P_CalcHeight(player_t *player)
    {
       player->viewz = player->mo->z + VIEWHEIGHT;
       
-      if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
-         player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
+      if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
+         player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
 
       // phares 2/25/98:
       // The following line was in the Id source and appears
@@ -243,13 +245,13 @@ void P_CalcHeight(player_t *player)
 
    // haleyjd 08/07/04: new floorclip system
    if(player->mo->floorclip && player->playerstate != PST_DEAD && 
-      player->mo->z <= player->mo->floorz)
+      player->mo->z <= player->mo->zref.floor)
    {
       player->viewz -= player->mo->floorclip;
    }
    
-   if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
-      player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
+   if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
+      player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
 }
 
 //
@@ -310,7 +312,7 @@ void P_MovePlayer(player_t* player)
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
    onground = 
-      mo->z <= mo->floorz ||
+      mo->z <= mo->zref.floor ||
       (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
       (mo->flags4 & MF4_FLY);
    
@@ -324,7 +326,7 @@ void P_MovePlayer(player_t* player)
    if((!demo_compatibility && demo_version < 203) || 
       (cmd->forwardmove | cmd->sidemove)) // killough 10/98
    {
-      if (onground || mo->flags & MF_BOUNCES) // killough 8/9/98
+      if(onground || mo->flags & MF_BOUNCES) // killough 8/9/98
       {
          int friction, movefactor = P_GetMoveFactor(mo, &friction);
 
@@ -341,31 +343,49 @@ void P_MovePlayer(player_t* player)
          if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
             pitch = 0;
 
-         if (cmd->forwardmove)
+         if(cmd->forwardmove)
          {
             P_Bob(player, mo->angle, pitch, cmd->forwardmove*bobfactor);
             P_Thrust(player, mo->angle, pitch, cmd->forwardmove*movefactor);
          }
          
-         if (cmd->sidemove)
+         if(cmd->sidemove)
          {
             P_Bob(player, mo->angle-ANG90, 0, cmd->sidemove*bobfactor);
             P_Thrust(player, mo->angle-ANG90, 0, cmd->sidemove*movefactor);
          }
       }
-      else if(!comp[comp_aircontrol])
+      else if(LevelInfo.airControl > 0 || LevelInfo.airControl < -1)
       {
-         // Do not move player 
+         // Do not move player unless aircontrol
+         // -1 has a special meaning that totally disables air control, even
+         // if the compatibility flag is unset.
+
+         // This is a new EMAPINFO property and doesn't emulate Hexen and
+         // Strife. For those, look below.
+
+         int friction, movefactor = P_GetMoveFactor(mo, &friction);
+
+         movefactor = FixedMul(movefactor, LevelInfo.airControl);
+
          if(cmd->forwardmove)
-         {
-            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
-         }
+            P_Thrust(player, mo->angle, 0, cmd->forwardmove*movefactor);
 
          // TODO: disable this part in Strife
          if(cmd->sidemove)
-         {
+            P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
+      }
+      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      {
+         // Apply legacy Hexen/Strife primitive air control if air control is 0
+         // (default) and the compatibility setting is "NO".
+
+         if(cmd->forwardmove)
             P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
-         }
+
+         // TODO: disable this in Strife
+         if(cmd->sidemove)
+            P_Thrust(player, mo->angle, 0, FRACUNIT >> 8);
       }
 
       if(mo->state == states[mo->info->spawnstate])
@@ -410,7 +430,7 @@ void P_DeathThink(player_t *player)
    }
    else
    {
-      onground = player->mo->z <= player->mo->floorz ||
+      onground = player->mo->z <= player->mo->zref.floor ||
                     (P_Use3DClipping() &&
                      player->mo->intflags & MIF_ONMOBJ);
    }
@@ -452,10 +472,11 @@ void P_DeathThink(player_t *player)
    // and Hexen.
    if(!E_IsPlayerClassThingType(player->mo->type))
    {
-      if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
+      player->prevpitch = player->pitch;
+      if(player->mo->z <= player->mo->zref.floor && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }
-      
+
    if(player->cmd.buttons & BT_USE)
       player->playerstate = PST_REBORN;
 }
@@ -608,6 +629,10 @@ void P_PlayerThink(player_t *player)
    // chain saw run forward
 
    cmd = &player->cmd;
+
+   if(cmd->itemID && demo_version >= 401)
+      E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
+
    if(player->mo->flags & MF_JUSTATTACKED)
    {
       cmd->angleturn = 0;
@@ -665,7 +690,7 @@ void P_PlayerThink(player_t *player)
       // accidentally in -vanilla.
       if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
       {
-         if((player->mo->z == player->mo->floorz || 
+         if((player->mo->z == player->mo->zref.floor ||
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
          {
             player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
@@ -713,7 +738,21 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(cmd->buttons & BT_CHANGE)
+   if(demo_version >= 401)
+   {
+      if(cmd->weaponID)
+      {
+         weaponinfo_t *wp = E_WeaponForID(cmd->weaponID - 1); // weaponID is off by one
+         weaponinfo_t *sister = wp->sisterWeapon;
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+         else
+            player->pendingweapon = wp;
+
+         player->pendingweaponslot = E_FindEntryForWeaponInSlotIndex(player, wp, cmd->slotIndex);
+      }
+   }
+   else if(cmd->buttons & BT_CHANGE)
    {
       // The actual changing of the weapon is done
       //  when the weapon psprite can do it
@@ -734,14 +773,14 @@ void P_PlayerThink(player_t *player)
          //e6y
          newweapon = (cmd->buttons & BT_WEAPONMASK_OLD)>>BT_WEAPONSHIFT;
 
-         if(newweapon == wp_fist && player->weaponowned[wp_chainsaw] &&
-            (player->readyweapon != wp_chainsaw ||
+         if(newweapon == wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
+            (!E_WeaponIsCurrentDEHNum(player, wp_chainsaw) ||
              !player->powers[pw_strength]))
             newweapon = wp_chainsaw;
          if(enable_ssg &&
             newweapon == wp_shotgun &&
-            player->weaponowned[wp_supershotgun] &&
-            player->readyweapon != wp_supershotgun)
+            E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
+            !E_WeaponIsCurrentDEHNum(player, wp_supershotgun))
             newweapon = wp_supershotgun;
       }
 
@@ -749,7 +788,9 @@ void P_PlayerThink(player_t *player)
 
       // WEAPON_FIXME: setting pendingweapon
 
-      if(player->weaponowned[newweapon] && newweapon != player->readyweapon)
+      weaponinfo_t *pendingweapon = E_WeaponForDEHNum(newweapon);
+      if(E_PlayerOwnsWeapon(player, pendingweapon) &&
+         pendingweapon->id != player->readyweapon->id)
       {
          // Do not go to plasma or BFG in shareware, even if cheated.
          // haleyjd 06/28/13: generalized for EDF weapon system
@@ -759,7 +800,7 @@ void P_PlayerThink(player_t *player)
             !(GameModeInfo->flags & GIF_SHAREWARE && 
               pendingweapon->flags & WPF_NOTSHAREWARE))
          {
-            player->pendingweapon = newweapon;
+            player->pendingweapon = pendingweapon;
          }
       }
    }
@@ -828,6 +869,26 @@ void P_PlayerThink(player_t *player)
    {
       if(!--player->powers[pw_flight])
          P_PlayerStopFlight(player);
+   }
+
+   if(player->powers[pw_weaponlevel2] > 0) // MaxW: 2018/01/02
+   {
+      if(!--player->powers[pw_weaponlevel2])
+      {
+         // switch back to normal weapon if need be
+         if(E_IsPoweredVariant(player->readyweapon))
+         {
+            // Note: sisterWeapon is guaranteed to != nullptr elsewhere
+            weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
+            if(unpowered->readystate != player->readyweapon->readystate ||
+               unpowered->flags & WPF_FORCETOREADY)
+            {
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               player->refire = 0;
+            }
+            player->readyweapon = unpowered;
+         }
+      }
    }
 
    if(player->damagecount)
@@ -901,7 +962,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
    player->mo->flags4 |= MF4_FLY;
    player->mo->flags  |= MF_NOGRAVITY;
 
-   if(thrustup && player->mo->z <= player->mo->floorz)
+   if(thrustup && player->mo->z <= player->mo->zref.floor)
       player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
    // TODO: stop screaming if falling

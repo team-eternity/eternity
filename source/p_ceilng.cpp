@@ -678,7 +678,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
          {
             ceiling->sector->ceilingdata = nullptr;
             S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
-            ceiling->removeThinker();
+            ceiling->remove();
             vanilla_activeceilings[i] = nullptr;
             break;
          }
@@ -690,7 +690,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
    ceilinglist_t *list = ceiling->list;
    ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
-   ceiling->removeThinker();
+   ceiling->remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;
    efree(list);

@@ -180,6 +180,8 @@ endif()
 
 // Plat Sequences
 
+ifgametype(DOOM)
+
 // This is used by most plat types, like the ordinary down-wait-up-stay type
 soundsequence EEPlatNormal
 {
@@ -200,6 +202,31 @@ soundsequence EEPlatRaise
   "@
 }
 
+endif()
+
+ifgametype(HERETIC)
+
+soundsequence EEPlatNormal
+{
+  commands
+  @"
+    play EE_PlatStart
+	playloop EE_PlatMove 32
+    stopsound EE_PlatStop
+  "@
+}
+
+soundsequence EEPlatRaise
+{
+  commands
+  @"
+    playloop EE_PlatMove 32
+    stopsound EE_PlatStop
+  "@
+}
+
+endif()
+
 // This may seem pointless, but defining it allows the silent behavior of 
 // instant move plats to be overridden by redefining this sequence.
 soundsequence EEPlatSilent
@@ -214,6 +241,7 @@ soundsequence EECeilingNormal
   commands
   @"
     playloop EE_FCMove 8
+	nostopcutoff
   "@
 }
 
@@ -233,6 +261,8 @@ soundsequence EECeilingSilent
 
 // Floor Sequences
 
+ifgametype(DOOM)
+
 soundsequence EEFloor
 {
   commands
@@ -241,6 +271,30 @@ soundsequence EEFloor
     stopsound EE_PlatStop
   "@
 }
+
+endif()
+
+ifgametype(HERETIC)
+
+soundsequence EEFloor
+{
+  commands
+  @"
+    playloop EE_FCMove 8
+	nostopcutoff
+  "@
+}
+
+soundsequence EEFloorStair
+{
+  commands
+  @"
+    playloop EE_FCMove 8
+    stopsound EE_PlatStop
+  "@
+}
+
+endif()
 
 // Sound Environment Presets ---------------------------------------------------
 

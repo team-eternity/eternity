@@ -60,7 +60,11 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAINHASHCHAINS 128    /* must be a power of 2 */
+#ifdef _SDL_VER
+#include "SDL_endian.h"
+#endif
+
+#define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
 
 static visplane_t *freetail;                   // killough
 static visplane_t **freehead = &freetail;      // killough
@@ -70,7 +74,10 @@ visplane_t *floorplane, *ceilingplane;
 // SoM: New visplane hash
 // This is the main hash object used by the normal scene.
 static visplane_t *mainchains[MAINHASHCHAINS];   // killough
-static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains };
+static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains, nullptr };
+
+// Free list of overlay portals. Used by portal windows and the post-BSP stack.
+static planehash_t *r_overlayfreesets;
 
 //
 // VALLOCATION(mainhash)
@@ -92,7 +99,7 @@ VALLOCATION(mainhash)
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
 #define visplane_hash(picnum, lightlevel, height, chains) \
-  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & ((chains) - 1))
+  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) % chains)
 
 
 // killough 8/1/98: set static number of openings to be large enough
@@ -158,7 +165,7 @@ VALLOCATION(slopespan)
 float slopevis; // SoM: used in slope lighting
 
 // BIG FLATS
-void R_Throw()
+static void R_Throw()
 {
    I_Error("R_Throw called.\n");
 }
@@ -208,8 +215,14 @@ static void R_PlaneLight()
 // * Contributor(s):
 // *   IBM Corp.
 //
-static uint32_t R_doubleToUint32(double d)
+static inline uint32_t R_doubleToUint32(double d)
 {
+#ifdef SDL_BYTEORDER
+   // TODO: Use C++ std::endian when C++20 can be used
+   // This bit (and the ifdef) isn't from SpiderMonkey.
+   // Credit goes to Marrub and David Hill
+   return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+#else
    int32_t i;
    bool    neg;
    double  two32;
@@ -236,6 +249,7 @@ static uint32_t R_doubleToUint32(double d)
    d     = fmod(d, two32);
 
    return (uint32_t)(d >= 0 ? d : d + two32);
+#endif
 }
 
 //
@@ -268,7 +282,8 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
    ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
 
-   // Use Mozilla routine for portable double->uint32 conversion
+   // Use fast hack routine for portable double->uint32 conversion
+   // iff we know host endianness, otherwise use Mozilla routine
    {
       double value;
 
@@ -507,6 +522,7 @@ planehash_t *R_NewPlaneHash(int chaincount)
    ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, NULL));
    ret->chaincount = chaincount;
    ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, NULL));
+   ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
       ret->chains[i] = NULL;
@@ -664,9 +680,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          yscale == check->yscale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap && 
-         viewx == check->viewx && 
-         viewy == check->viewy && 
+         fixedcolormap == check->fixedcolormap &&
+         viewx == check->viewx &&
+         viewy == check->viewy &&
          viewz == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
@@ -747,20 +763,35 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    planehash_t *table = pl->table;
    
    if(start < pl->minx)
-      intrl   = pl->minx, unionl = start;
+   {
+      intrl   = pl->minx;
+      unionl = start;
+   }
    else
-      unionl  = pl->minx,  intrl = start;
+   {
+      unionl  = pl->minx;
+      intrl = start;
+   }
    
    if(stop  > pl->maxx)
-      intrh   = pl->maxx, unionh = stop;
+   {
+      intrh   = pl->maxx;
+      unionh = stop;
+   }
    else
-      unionh  = pl->maxx, intrh  = stop;
+   {
+      unionh  = pl->maxx;
+      intrh  = stop;
+   }
 
    for(x = intrl; x <= intrh && pl->top[x] == 0x7FFFFFFF; ++x)
       ;
 
    if(x > intrh)
-      pl->minx = unionl, pl->maxx = unionh;
+   {
+      pl->minx = unionl;
+      pl->maxx = unionh;
+   }
    else
    {
       unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
@@ -835,10 +866,8 @@ static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
       spanstart[b2--] = x;
 }
 
-extern void R_DrawNewSkyColumn();
-
 // haleyjd: moved here from r_newsky.c
-void do_draw_newsky(visplane_t *pl)
+static void do_draw_newsky(visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
@@ -897,6 +926,7 @@ void do_draw_newsky(visplane_t *pl)
    else
       column.step = M_FloatToFixed(view.pspriteystep);
       
+   colfunc = r_column_engine->DrawNewSkyColumn;
    for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
       if((column.y1 = pl->top[x]) <= (column.y2 = pl->bottom[x]))
@@ -908,6 +938,7 @@ void do_draw_newsky(visplane_t *pl)
          colfunc();
       }
    }
+   colfunc = r_column_engine->DrawColumn;
 }
 
 // Log base 2 LUT
@@ -1045,17 +1076,19 @@ static void do_draw_plane(visplane_t *pl)
       int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
-      if((r_swirl && textures[pl->picnum]->flags & TF_ANIMATED)
+      // ioanch: apply swirly if original (pl->picnum) has the flag. This is so
+      // Hexen animations can control only their own sequence swirling.
+      if((r_swirl && textures[picnum]->flags & TF_ANIMATED)
          || textures[pl->picnum]->flags & TF_SWIRLY)
       {
-         plane.source = R_DistortedFlat(pl->picnum);
-         tex = plane.tex = textures[pl->picnum];
+         plane.source = R_DistortedFlat(picnum);
+         tex = plane.tex = textures[picnum];
       }
       else
       {
          // SoM: Handled outside
          tex = plane.tex = R_CacheTexture(picnum);
-         plane.source = tex->buffer;
+         plane.source = tex->bufferdata;
       }
 
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
@@ -1177,6 +1210,46 @@ void R_DrawPlanes(planehash_t *table)
       for(pl = table->chains[i]; pl; pl = pl->next)
          do_draw_plane(pl);
    }
+}
+
+VALLOCATION(overlaySets)
+{
+   for(planehash_t *set = r_overlayfreesets; set; set = set->next)
+      memset(set->chains, 0, set->chaincount * sizeof(*set->chains));
+}
+
+//
+// Gets a free portal overlay plane set
+//
+planehash_t *R_NewOverlaySet()
+{
+   planehash_t *set;
+   if(!r_overlayfreesets)
+   {
+      set = R_NewPlaneHash(31);
+      return set;
+   }
+   set = r_overlayfreesets;
+   r_overlayfreesets = r_overlayfreesets->next;
+   R_ClearPlaneHash(set);
+   return set;
+}
+
+//
+// Puts the overlay set in the free list
+//
+void R_FreeOverlaySet(planehash_t *set)
+{
+   set->next = r_overlayfreesets;
+   r_overlayfreesets = set;
+}
+
+//
+// Called from P_SetupLevel, considering that overlay sets are PU_LEVEL
+//
+void R_MapInitOverlaySets()
+{
+   r_overlayfreesets = nullptr;
 }
 
 //----------------------------------------------------------------------------

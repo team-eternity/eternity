@@ -42,6 +42,7 @@
 #include "e_ttypes.h"
 #include "e_udmf.h"  // IOANCH 20151206: UDMF
 #include "ev_specials.h"
+#include "g_demolog.h"
 #include "g_game.h"
 #include "hu_frags.h"
 #include "hu_stuff.h"
@@ -59,6 +60,7 @@
 #include "p_mobjcol.h"
 #include "p_partcl.h"
 #include "p_portal.h"
+#include "p_scroll.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
@@ -71,6 +73,7 @@
 #include "r_main.h"
 #include "r_sky.h"
 #include "r_things.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "v_misc.h"
@@ -80,7 +83,7 @@
 #include "z_auto.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *lseg, line_t *line, int side);
+extern void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side);
 
 //
 // Miscellaneous constants
@@ -173,8 +176,6 @@ fixed_t   bmaporgx, bmaporgy;     // origin of block map
 Mobj    **blocklinks;             // for thing chains
 
 byte     *portalmap;              // haleyjd: for portals
-// ioanch 20160106: more detailed info (list of groups for each block)
-int     **gBlockGroups; 
 
 bool      skipblstart;            // MaxW: Skip initial blocklist short
 
@@ -302,7 +303,7 @@ inline static int SafeRealUintIndex(uint16_t input, int limit,
 //
 // haleyjd 12/12/13: Support for console maps' fixed-point vertices.
 //
-void P_LoadConsoleVertexes(int lump)
+static void P_LoadConsoleVertexes(int lump)
 {
    ZAutoBuffer buf;
 
@@ -332,7 +333,7 @@ void P_LoadConsoleVertexes(int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadVertexes(int lump)
+static void P_LoadVertexes(int lump)
 {
    ZAutoBuffer buf;
    
@@ -364,7 +365,7 @@ void P_LoadVertexes(int lump)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSegs(int lump)
+static void P_LoadSegs(int lump)
 {
    int  i;
    byte *data;
@@ -500,7 +501,7 @@ void P_CalcSegLength(seg_t *lseg)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSubsectors(int lump)
+static void P_LoadSubsectors(int lump)
 {
    mapsubsector_t *mss;
    byte *data;
@@ -581,11 +582,11 @@ void P_InitSector(sector_t *ss)
    int tempcolmap = ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
    if(LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY)
    {
-      if(ss->bottommap < 0)
+      if(ss->bottommap == -1)
          ss->bottommap = tempcolmap;
-      if(ss->midmap < 0)
+      if(ss->midmap == -1)
          ss->midmap = tempcolmap;
-      if(ss->topmap < 0)
+      if(ss->topmap == -1)
          ss->topmap = tempcolmap;
    }
    else
@@ -636,7 +637,7 @@ void P_InitSector(sector_t *ss)
 //
 // haleyjd 12/12/13: support for PSX port's sector format.
 //
-void P_LoadPSXSectors(int lumpnum)
+static void P_LoadPSXSectors(int lumpnum)
 {
    ZAutoBuffer buf;
    char namebuf[9];
@@ -678,7 +679,7 @@ void P_LoadPSXSectors(int lumpnum)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadSectors(int lumpnum)
+static void P_LoadSectors(int lumpnum)
 {
    ZAutoBuffer buf;
    char namebuf[9];
@@ -862,7 +863,7 @@ static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadNodes(int lump)
+static void P_LoadNodes(int lump)
 {
    byte *data;
    int  i;
@@ -1499,7 +1500,7 @@ bool P_CheckThingDoomBan(int16_t type)
 //
 // haleyjd: added missing player start detection
 //
-void P_LoadThings(int lump)
+static void P_LoadThings(int lump)
 {
    int  i;
    byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
@@ -1522,7 +1523,11 @@ void P_LoadThings(int lump)
       // haleyjd: removing this for Heretic and DeHackEd
       // IOANCH 20151213: use function
       if(P_CheckThingDoomBan(ft->type))
+      {
+         if(demo_compatibility) // emulate old behaviour where thing processing is totally abandoned
+            break;
          continue;
+      }
       
       // Do spawn all other stuff.
       // ioanch 20151218: fixed point coordinates
@@ -1564,7 +1569,7 @@ void P_LoadThings(int lump)
 //
 // haleyjd: Loads a Hexen-format THINGS lump.
 //
-void P_LoadHexenThings(int lump)
+static void P_LoadHexenThings(int lump)
 {
    int  i;
    byte *data = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
@@ -1721,7 +1726,7 @@ void P_PostProcessLineFlags(line_t *ld)
 // killough 5/3/98: reformatted, cleaned up
 // haleyjd 2/26/05: ExtraData extensions
 //
-void P_LoadLineDefs(int lump)
+static void P_LoadLineDefs(int lump, UDMFSetupSettings &setupSettings)
 {
    byte *data;
 
@@ -1757,7 +1762,7 @@ void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if((edlinespec && ld->special == edlinespec) ||
          EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
-         E_LoadLineDefExt(ld, ld->special == edlinespec);
+         E_LoadLineDefExt(ld, ld->special == edlinespec, setupSettings);
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -1828,7 +1833,7 @@ static void P_ConvertHexenLineFlags(line_t *line)
 //
 // haleyjd: Loads a Hexen-format LINEDEFS lump.
 //
-void P_LoadHexenLineDefs(int lump)
+static void P_LoadHexenLineDefs(int lump)
 {
    byte *data;
    int  i;
@@ -1873,7 +1878,7 @@ void P_LoadHexenLineDefs(int lump)
 // killough 4/4/98: delay using sidedefs until they are loaded
 // killough 5/3/98: reformatted, cleaned up
 //
-void P_LoadLineDefs2()
+static void P_LoadLineDefs2()
 {
    line_t *ld = lines;
 
@@ -1955,7 +1960,7 @@ void P_LoadLineDefs2()
 //
 // killough 4/4/98: split into two functions
 //
-void P_LoadSideDefs(int lump)
+static void P_LoadSideDefs(int lump)
 {
    numsides = setupwad->lumpLength(lump) / sizeof(mapsidedef_t);
    sides    = estructalloctag(side_t, numsides, PU_LEVEL);
@@ -1987,21 +1992,21 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
          sd.bottomtexture = R_FindWall(bottomTexture);
       else
       {
-         sec.bottommap = cmap;
+         sec.bottommap = cmap | COLORMAP_BOOMKIND;
          sd.bottomtexture = 0;
       }
       if((cmap = R_ColormapNumForName(midTexture)) < 0)
          sd.midtexture = R_FindWall(midTexture);
       else
       {
-         sec.midmap = cmap;
+         sec.midmap = cmap | COLORMAP_BOOMKIND;
          sd.midtexture = 0;
       }
       if((cmap = R_ColormapNumForName(topTexture)) < 0)
          sd.toptexture = R_FindWall(topTexture);
       else
       {
-         sec.topmap = cmap;
+         sec.topmap = cmap | COLORMAP_BOOMKIND;
          sd.toptexture = 0;
       }
       break;
@@ -2046,7 +2051,7 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
 // after linedefs are loaded, to allow overloading.
 // killough 5/3/98: reformatted, cleaned up
 
-void P_LoadSideDefs2(int lumpnum)
+static void P_LoadSideDefs2(int lumpnum)
 {
    byte *lump = (byte *)(setupwad->cacheLumpNum(lumpnum, PU_STATIC));
    byte *data = lump;
@@ -2087,6 +2092,310 @@ void P_LoadSideDefs2(int lumpnum)
 typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
 
 //
+// Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not
+// a solution for MBF -complevel however.
+//
+// Code copied from PrBoom+, possibly inherited itself from older ports. Specific stuff kept here.
+//
+static void P_createBlockMapBoom()
+{
+   //
+   // jff 10/6/98
+   // New code added to speed up calculation of internal blockmap
+   // Algorithm is order of nlines*(ncols+nrows) not nlines*ncols*nrows
+   //
+
+   static const int blkshift = 7;               /* places to shift rel position for cell num */
+   static const int blkmask = (1 << blkshift) - 1; /* mask for rel position within cell */
+   // ioanch: blkmargin removed, was 0
+   // jff 10/8/98 use guardband>0
+   // jff 10/12/98 0 ok with + 1 in rows,cols
+
+   struct linelist_t        // type used to list lines in each block
+   {
+      int num;
+      struct linelist_t *next;
+   };
+
+   //
+   // Subroutine to add a line number to a block list
+   // It simply returns if the line is already in the block
+   //
+   int NBlocks;                   // number of cells = nrows*ncols
+
+   int xorg, yorg;                 // blockmap origin (lower left)
+   int nrows, ncols;               // blockmap dimensions
+   linelist_t **blocklists = nullptr;  // array of pointers to lists of lines
+   int *blockcount = nullptr;          // array of counters of line lists
+   int *blockdone = nullptr;           // array keeping track of blocks/line
+   int linetotal = 0;              // total length of all blocklists
+   int map_minx = INT_MAX;          // init for map limits search
+   int map_miny = INT_MAX;
+   int map_maxx = INT_MIN;
+   int map_maxy = INT_MIN;
+
+   // scan for map limits, which the blockmap must enclose
+
+   for(int i = 0; i < numvertexes; i++)
+   {
+      fixed_t t;
+
+      if((t = vertexes[i].x) < map_minx)
+         map_minx = t;
+      else if(t > map_maxx)
+         map_maxx = t;
+      if((t = vertexes[i].y) < map_miny)
+         map_miny = t;
+      else if(t > map_maxy)
+         map_maxy = t;
+   }
+   map_minx >>= FRACBITS;    // work in map coords, not fixed_t
+   map_maxx >>= FRACBITS;
+   map_miny >>= FRACBITS;
+   map_maxy >>= FRACBITS;
+
+   // set up blockmap area to enclose level plus margin
+
+   xorg = map_minx;
+   yorg = map_miny;
+   ncols = (map_maxx - xorg + 1 + blkmask) >> blkshift;  //jff 10/12/98
+   nrows = (map_maxy - yorg + 1 + blkmask) >> blkshift;  //+1 needed for
+   NBlocks = ncols * nrows;                                  //map exactly 1 cell
+
+   // create the array of pointers on NBlocks to blocklists
+   // also create an array of linelist counts on NBlocks
+   // finally make an array in which we can mark blocks done per line
+
+   // CPhipps - calloc's
+   blocklists = ecalloc(linelist_t **, NBlocks, sizeof(linelist_t *));
+   blockcount = ecalloc(int *, NBlocks, sizeof(int));
+   blockdone = emalloc(int *, NBlocks * sizeof(int));
+
+   auto AddBlockLine = [blocklists, blockcount, blockdone](int blockno, int lineno)
+   {
+      linelist_t *l;
+
+      if(blockdone[blockno])
+         return;
+
+      l = emalloc(linelist_t *, sizeof(linelist_t));
+      l->num = lineno;
+      l->next = blocklists[blockno];
+      blocklists[blockno] = l;
+      blockcount[blockno]++;
+      blockdone[blockno] = 1;
+   };
+
+   // initialize each blocklist, and enter the trailing -1 in all blocklists
+   // note the linked list of lines grows backwards
+
+   for(int i = 0; i < NBlocks; i++)
+   {
+      blocklists[i] = emalloc(linelist_t *, sizeof(linelist_t));
+      blocklists[i]->num = -1;
+      blocklists[i]->next = nullptr;
+      blockcount[i]++;
+   }
+
+   // For each linedef in the wad, determine all blockmap blocks it touches,
+   // and add the linedef number to the blocklists for those blocks
+
+   for(int i = 0; i < numlines; i++)
+   {
+      int x1 = lines[i].v1->x >> FRACBITS;         // lines[i] map coords
+      int y1 = lines[i].v1->y >> FRACBITS;
+      int x2 = lines[i].v2->x >> FRACBITS;
+      int y2 = lines[i].v2->y >> FRACBITS;
+      int dx = x2 - x1;
+      int dy = y2 - y1;
+      int vert = !dx;                            // lines[i] slopetype
+      int horiz = !dy;
+      int spos = (dx ^ dy) > 0;
+      int sneg = (dx ^ dy) < 0;
+      int bx, by;                                 // block cell coords
+      int minx = x1 > x2 ? x2 : x1;                 // extremal lines[i] coords
+      int maxx = x1 > x2 ? x1 : x2;
+      int miny = y1 > y2 ? y2 : y1;
+      int maxy = y1 > y2 ? y1 : y2;
+
+      // no blocks done for this linedef yet
+
+      memset(blockdone, 0, NBlocks * sizeof(int));
+
+      // The line always belongs to the blocks containing its endpoints
+
+      bx = (x1 - xorg) >> blkshift;
+      by = (y1 - yorg) >> blkshift;
+      AddBlockLine(by * ncols + bx, i);
+      bx = (x2 - xorg) >> blkshift;
+      by = (y2 - yorg) >> blkshift;
+      AddBlockLine(by * ncols + bx, i);
+
+      // For each column, see where the line along its left edge, which
+      // it contains, intersects the Linedef i. Add i to each corresponding
+      // blocklist.
+
+      if(!vert)    // don't interesect vertical lines with columns
+      {
+         for(int j = 0; j < ncols; j++)
+         {
+            // intersection of Linedef with x=xorg+(j<<blkshift)
+            // (y-y1)*dx = dy*(x-x1)
+            // y = dy*(x-x1)+y1*dx;
+
+            int x = xorg + (j << blkshift);       // (x,y) is intersection
+            int y = dy * (x - x1) / dx + y1;
+            int yb = (y - yorg) >> blkshift;      // block row number
+            int yp = (y - yorg) & blkmask;        // y position within block
+
+            if(yb < 0 || yb > nrows - 1)     // outside blockmap, continue
+               continue;
+
+            if(x < minx || x > maxx)       // line doesn't touch column
+               continue;
+
+            // The cell that contains the intersection point is always added
+
+            AddBlockLine(ncols * yb + j, i);
+
+            // if the intersection is at a corner it depends on the slope
+            // (and whether the line extends past the intersection) which
+            // blocks are hit
+
+            if(yp == 0)        // intersection at a corner
+            {
+               if(sneg)       //   \ - blocks x,y-, x-,y
+               {
+                  if(yb > 0 && miny < y)
+                     AddBlockLine(ncols * (yb - 1) + j, i);
+                  if(j > 0 && minx < x)
+                     AddBlockLine(ncols * yb + j - 1, i);
+               }
+               else if(spos)  //   / - block x-,y-
+               {
+                  if(yb > 0 && j > 0 && minx < x)
+                     AddBlockLine(ncols * (yb - 1) + j - 1, i);
+               }
+               else if(horiz) //   - - block x-,y
+               {
+                  if(j > 0 && minx < x)
+                     AddBlockLine(ncols * yb + j - 1, i);
+               }
+            }
+            else if(j > 0 && minx < x) // else not at corner: x-,y
+               AddBlockLine(ncols * yb + j - 1, i);
+         }
+      }
+
+      // For each row, see where the line along its bottom edge, which
+      // it contains, intersects the Linedef i. Add i to all the corresponding
+      // blocklists.
+
+      if(!horiz)
+      {
+         for(int j = 0; j < nrows; j++)
+         {
+            // intersection of Linedef with y=yorg+(j<<blkshift)
+            // (x,y) on Linedef i satisfies: (y-y1)*dx = dy*(x-x1)
+            // x = dx*(y-y1)/dy+x1;
+
+            int y = yorg + (j << blkshift);       // (x,y) is intersection
+            int x = (dx * (y - y1)) / dy + x1;
+            int xb = (x - xorg) >> blkshift;      // block column number
+            int xp = (x - xorg) & blkmask;        // x position within block
+
+            if (xb < 0 || xb > ncols - 1)   // outside blockmap, continue
+               continue;
+
+            if (y < miny || y > maxy)     // line doesn't touch row
+               continue;
+
+            // The cell that contains the intersection point is always added
+
+            AddBlockLine(ncols * j + xb, i);
+
+            // if the intersection is at a corner it depends on the slope
+            // (and whether the line extends past the intersection) which
+            // blocks are hit
+
+            if(xp==0)        // intersection at a corner
+            {
+               if(sneg)       //   \ - blocks x,y-, x-,y
+               {
+                  if(j > 0 && miny < y)
+                     AddBlockLine(ncols * (j - 1) + xb, i);
+                  if (xb > 0 && minx < x)
+                     AddBlockLine(ncols * j + xb - 1, i);
+               }
+               else if(vert)  //   | - block x,y-
+               {
+                  if(j > 0 && miny < y)
+                     AddBlockLine(ncols * (j - 1) + xb, i);
+               }
+               else if(spos)  //   / - block x-,y-
+               {
+                  if(xb > 0 && j > 0 && miny < y)
+                     AddBlockLine(ncols * (j - 1) + xb - 1, i);
+               }
+            }
+            else if(j > 0 && miny < y) // else not on a corner: x,y-
+               AddBlockLine(ncols * (j - 1) + xb, i);
+         }
+      }
+   }
+
+   // Add initial 0 to all blocklists
+   // count the total number of lines (and 0's and -1's)
+
+   memset(blockdone, 0, NBlocks * sizeof(int));
+   linetotal = 0;
+   for(int i = 0; i < NBlocks; i++)
+   {
+      AddBlockLine(i, 0);
+      linetotal += blockcount[i];
+   }
+
+   // Create the blockmap lump
+
+   blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * (4 + NBlocks + linetotal), PU_LEVEL,
+                             nullptr);
+   // blockmap header
+
+   blockmaplump[0] = bmaporgx = xorg << FRACBITS;
+   blockmaplump[1] = bmaporgy = yorg << FRACBITS;
+   blockmaplump[2] = bmapwidth  = ncols;
+   blockmaplump[3] = bmapheight = nrows;
+
+   // offsets to lists and block lists
+
+   for(int i = 0; i < NBlocks; i++)
+   {
+      linelist_t *bl = blocklists[i];
+
+      int offs = blockmaplump[4 + i] =   // set offset to block's list
+      (i ? blockmaplump[4 + i - 1] : 4 + NBlocks) + (i ? blockcount[i - 1] : 0);
+
+      // add the lines in each block's list to the blockmaplump
+      // delete each list node as we go
+
+      while(bl)
+      {
+         linelist_t *tmp = bl->next;
+         blockmaplump[offs++] = bl->num;
+
+         efree(bl);
+         bl = tmp;
+      }
+   }
+   skipblstart = true;
+
+   // free all temporary storage
+   efree(blocklists);
+   efree(blockcount);
+   efree(blockdone);
+}
+
+//
 // P_CreateBlockMap
 //
 // killough 10/98: Rewritten to use faster algorithm.
@@ -2106,6 +2415,9 @@ static void P_CreateBlockMap()
            maxx = INT_MIN, maxy = INT_MIN;
 
    C_Printf("P_CreateBlockMap: rebuilding blockmap for level\n");
+
+   if(demo_version >= 200 && demo_version < 203)
+      return P_createBlockMapBoom();   // use Boom mode (which is also in PrBoom+)
 
    // First find limits of map
    
@@ -2204,10 +2516,16 @@ static void P_CreateBlockMap()
                break;
 
             // Move in either the x or y direction to the next block
-            if(diff < 0) 
-               diff += ady, b += dx;
+            if(diff < 0)
+            {
+               diff += ady;
+               b += dx;
+            }
             else
-               diff -= adx, b += dy;
+            {
+               diff -= adx;
+               b += dy;
+            }
          }
       }
 
@@ -2261,6 +2579,8 @@ static void P_CreateBlockMap()
          efree(bmap);    // Free uncompressed blockmap
       }
    }
+
+   skipblstart = true;
 }
 
 static const char *bmaperrormsg;
@@ -2351,7 +2671,7 @@ static bool P_VerifyBlockMap(int count)
 //
 // killough 3/30/98: Rewritten to remove blockmap limit
 //
-void P_LoadBlockMap(int lump)
+static void P_LoadBlockMap(int lump)
 {
    // IOANCH 20151215: no lump means no data. So that Eternity will generate.
    int len   = lump >= 0 ? setupwad->lumpLength(lump) : 0;
@@ -2416,9 +2736,6 @@ void P_LoadBlockMap(int lump)
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
    portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
-   // ioanch: what portals are in what blocks
-   gBlockGroups = ecalloctag(decltype(gBlockGroups), sizeof(*gBlockGroups), 
-                             bmapwidth * bmapheight, PU_LEVEL, nullptr);
 }
 
 
@@ -2443,7 +2760,7 @@ static void AddLineToSector(sector_t *s, line_t *l)
 // killough 5/3/98: reformatted, cleaned up
 // killough 8/24/98: rewrote to use faster algorithm
 //
-void P_GroupLines()
+static void P_GroupLines()
 {
    int i, total;
    line_t **linebuffer;
@@ -2582,7 +2899,7 @@ void P_GroupLines()
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
-void P_RemoveSlimeTrails()             // killough 10/98
+static void P_RemoveSlimeTrails()             // killough 10/98
 {
    byte *hit; 
    int i;
@@ -3119,6 +3436,10 @@ static void P_InitNewLevel(int lumpnum, WadDirectory *waddir)
    
    // console message
    P_NewLevelMsg();
+
+   //==============================================
+   // MUSINFO
+   S_MusInfoClear();
 }
 
 //
@@ -3193,6 +3514,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    lumpinfo_t **lumpinfo;
    int lumpnum, acslumpnum = -1;
 
+   G_DemoLog("%d\tSetup %s\n", gametic, mapname);
+   G_DemoLogSetExited(false);
+
    // haleyjd 07/28/10: we are no longer in GS_LEVEL during the execution of
    // this routine.
    gamestate = GS_LOADING;
@@ -3243,6 +3567,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // to allow texture names to be used in special linedefs
 
    level_error = NULL; // reset
+
+   ScrollThinker::RemoveAllScrollers();
 
    // IOANCH 20151206: load UDMF
    UDMFParser udmf;  // prepare UDMF processor
@@ -3309,7 +3635,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:
-      P_LoadLineDefs(lumpnum + ML_LINEDEFS);
+      P_LoadLineDefs(lumpnum + ML_LINEDEFS, setupSettings);
       break;
    case LEVEL_FORMAT_HEXEN:
       P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
@@ -3449,6 +3775,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // haleyjd: keep the chasecam on between levels
    if(camera == &chasecam)
       P_ResetChasecam();
+   else if(camera == &walkcamera)
+      P_ResetWalkcam();
    else
       camera = NULL;        // camera off
 
@@ -3471,6 +3799,7 @@ void P_Init()
    P_InitParticleEffects();  // haleyjd 09/30/01
    P_InitSwitchList();
    P_InitPicAnims();
+   P_InitHexenAnims();
    R_InitSprites(spritelist);
    P_InitHubs();
    E_InitTerrainTypes();     // haleyjd 07/03/99
