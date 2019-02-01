@@ -1644,6 +1644,7 @@ inline static bool AM_isDoorClosed(const line_t *line)
 //
 inline static bool AM_drawAsClosedDoor(const line_t *line)
 {
+   // SLOPE_TODO: sloped (jagged) doors
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&

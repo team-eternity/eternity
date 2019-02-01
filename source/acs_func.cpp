@@ -2036,6 +2036,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
+         // SLOPE_TODO: realistic thing standing
          mo->zref.floor = mo->zref.dropoff = newsubsec->sector->floorheight;
          mo->zref.ceiling = newsubsec->sector->ceilingheight;
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
