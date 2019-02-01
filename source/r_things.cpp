@@ -674,7 +674,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
-   const byte *texend = tex->buffer + tex->width * tex->height + 1;
+   const byte *texend = tex->bufferdata + tex->width * tex->height + 1;
 
    while(tcol)
    {
@@ -688,22 +688,27 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
-         column.source = tex->buffer + tcol->ptroff;
+         byte *localstart = tex->bufferdata + tcol->ptroff;
+         column.source = localstart;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *last = tex->buffer + tcol->ptroff + tcol->len;
+         byte *last = localstart + tcol->len;
          byte orig;
-         if(last < texend && last > tex->buffer)
+         if(last < texend && last > tex->bufferdata)
          {
             orig = *last;
             *last = last[-1];
          }
 
+         byte origstart = localstart[-1];
+         localstart[-1] = *localstart;
+
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
-         if(last < texend && last > tex->buffer)
+         if(last < texend && last > tex->bufferdata)
             *last = orig;
+         localstart[-1] = origstart;
       }
 
       tcol = tcol->next;

@@ -1088,7 +1088,7 @@ static void do_draw_plane(visplane_t *pl)
       {
          // SoM: Handled outside
          tex = plane.tex = R_CacheTexture(picnum);
-         plane.source = tex->buffer;
+         plane.source = tex->bufferdata;
       }
 
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable

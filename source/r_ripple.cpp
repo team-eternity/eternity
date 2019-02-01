@@ -143,7 +143,7 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
       lastsize = cursize;
    }
    
-   normalflat = tex->buffer;
+   normalflat = tex->bufferdata;
    
    for(i = 0; i < cursize; ++i)
       distortedflat[i] = normalflat[offset[i]];
