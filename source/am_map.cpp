@@ -1657,14 +1657,20 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 //
 inline static bool AM_differentFloor(const line_t &line)
 {
-   return line.frontsector->floorheight > line.backsector->floorheight ||
+   if(line.frontsector->f_slope && line.frontsector->f_slope == line.backsector->f_slope)
+      return false;
+   return line.frontsector->f_slope != line.backsector->f_slope ||
+   line.frontsector->floorheight > line.backsector->floorheight ||
    (line.frontsector->floorheight < line.backsector->floorheight &&
     (!(line.extflags & EX_ML_LOWERPORTAL) || 
        !(line.backsector->f_pflags & PS_PASSABLE)));
 }
 inline static bool AM_differentCeiling(const line_t &line)
 {
-   return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
+   if(line.frontsector->c_slope && line.frontsector->c_slope == line.backsector->c_slope)
+      return false;
+   return line.frontsector->c_slope != line.backsector->c_slope ||
+   line.frontsector->ceilingheight < line.backsector->ceilingheight ||
    (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
     (!(line.extflags & EX_ML_UPPERPORTAL) ||
        !(line.backsector->c_pflags & PS_PASSABLE)));
