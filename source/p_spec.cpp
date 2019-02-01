@@ -1409,6 +1409,8 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
    P_SpawnVertexSlopes(setupSettings);
    P_FindPolyobjectSectorCouples();
 
+   P_SlopeMapInit();
+
    for(int i = 0; i < numlines; i++)
    {
       line_t *line = &lines[i];

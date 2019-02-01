@@ -34,6 +34,8 @@ struct pslope_t;
 struct v3float_t;
 class UDMFSetupSettings;
 
+void P_SlopeMapInit();
+
 // P_MakeLineNormal
 // Calculates a 2D normal for the given line and stores it in the line
 void P_MakeLineNormal(line_t *line);

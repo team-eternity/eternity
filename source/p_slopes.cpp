@@ -37,8 +37,11 @@
 #include "p_slopes.h"
 #include "p_spec.h"
 #include "r_defs.h"
+#include "r_plane.h"
 #include "r_state.h"
 #include "v_misc.h"
+
+static PODCollection<pslope_t *> pCached; // list of cached slopes for current level
 
 //
 // P_MakeSlope
@@ -48,8 +51,8 @@
 static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, 
                              const float zdelta, bool isceiling)
 {
-   pslope_t *ret = (pslope_t *)(Z_Malloc(sizeof(pslope_t), PU_LEVEL, NULL));
-   memset(ret, 0, sizeof(*ret));
+   edefstructvar(pslope_t, newslope);
+   pslope_t *ret = &newslope;
 
    ret->o.x = M_FloatToFixed(ret->of.x = o->x);
    ret->o.y = M_FloatToFixed(ret->of.y = o->y);
@@ -98,6 +101,16 @@ static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d,
       ret->normalf.z /= len;
    }
 
+   // Now look in the cached list if already there
+   for(pslope_t *slope : pCached)
+   {
+      if(R_CompareSlopes(ret, slope))
+         return slope;
+   }
+   ret = estructalloctag(pslope_t, 1, PU_LEVEL);
+   *ret = newslope;
+   pCached.add(ret);
+
    return ret;
 }
 
@@ -112,6 +125,14 @@ static pslope_t *P_CopySlope(const pslope_t *src)
    memcpy(ret, src, sizeof(*ret));
 
    return ret;
+}
+
+//
+// Used to reset the cache collection
+//
+void P_SlopeMapInit()
+{
+   pCached.clear();
 }
 
 //
