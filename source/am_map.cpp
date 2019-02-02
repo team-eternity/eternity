@@ -49,6 +49,7 @@
 #include "r_draw.h"
 #include "r_dynseg.h"
 #include "r_main.h"
+#include "r_plane.h"
 #include "r_portal.h"
 #include "r_state.h"
 #include "v_block.h"
@@ -1657,9 +1658,9 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 //
 inline static bool AM_differentFloor(const line_t &line)
 {
-   if(line.frontsector->f_slope && line.frontsector->f_slope == line.backsector->f_slope)
+   if(line.frontsector->f_slope && R_CompareSlopes(line.frontsector->f_slope, line.backsector->f_slope))
       return false;
-   return line.frontsector->f_slope != line.backsector->f_slope ||
+   return (!line.frontsector->f_slope ^ !line.backsector->f_slope) ||
    line.frontsector->floorheight > line.backsector->floorheight ||
    (line.frontsector->floorheight < line.backsector->floorheight &&
     (!(line.extflags & EX_ML_LOWERPORTAL) || 
@@ -1667,9 +1668,9 @@ inline static bool AM_differentFloor(const line_t &line)
 }
 inline static bool AM_differentCeiling(const line_t &line)
 {
-   if(line.frontsector->c_slope && line.frontsector->c_slope == line.backsector->c_slope)
+   if(line.frontsector->c_slope && R_CompareSlopes(line.frontsector->c_slope, line.backsector->c_slope))
       return false;
-   return line.frontsector->c_slope != line.backsector->c_slope ||
+   return (!line.frontsector->c_slope ^ !line.backsector->c_slope) ||
    line.frontsector->ceilingheight < line.backsector->ceilingheight ||
    (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
     (!(line.extflags & EX_ML_UPPERPORTAL) ||
