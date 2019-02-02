@@ -85,7 +85,7 @@ struct lineopening_t
 {
    fixed_t openrange, opentop, openbottom;
 
-   void calculate(const line_t *linedef);
+   void calculate(const line_t *linedef, fixed_t x, fixed_t y);
 };
 
 #endif

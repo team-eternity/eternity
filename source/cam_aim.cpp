@@ -31,6 +31,7 @@
 #include "m_compare.h"
 #include "p_mobj.h"
 #include "p_portal.h"
+#include "p_slopes.h"
 #include "r_defs.h"
 #include "r_main.h"
 #include "r_pcheck.h"
@@ -310,8 +311,13 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
          return false;
 
+      v2fixed_t hitpos = {
+         trace.x + FixedMul(trace.dx, in->frac),
+         trace.y + FixedMul(trace.dy, in->frac)
+      };
+
       lineopening_t lo = { 0 };
-      lo.calculate(li);
+      lo.calculate(li, hitpos.x, hitpos.y);
 
       if(lo.openrange <= 0)
          return false;
@@ -320,18 +326,16 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
          li->backsector : li->frontsector;
       fixed_t slope;
 
-      if(sector->floorheight != osector->floorheight ||
-         (!!(sector->f_pflags & PS_PASSABLE) ^
-            !!(osector->f_pflags & PS_PASSABLE)))
+      if(P_GetFloorHeight(sector, hitpos) != P_GetFloorHeight(osector, hitpos) ||
+         (!(sector->f_pflags & PS_PASSABLE) ^ !(osector->f_pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.openbottom - context.state.cz, totaldist);
          if(slope > context.state.bottomslope)
             context.state.bottomslope = slope;
       }
 
-      if(sector->ceilingheight != osector->ceilingheight ||
-         (!!(sector->c_pflags & PS_PASSABLE) ^
-            !!(osector->c_pflags & PS_PASSABLE)))
+      if(P_GetCeilingHeight(sector, hitpos) != P_GetCeilingHeight(osector, hitpos) ||
+         (!(sector->c_pflags & PS_PASSABLE) ^ !(osector->c_pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.opentop - context.state.cz, totaldist);
          if(slope < context.state.topslope)
@@ -343,13 +347,13 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 
       if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
          li->backsector->f_pflags & PS_PASSABLE &&
-         context.state.bottomslope
-         <= FixedDiv(li->backsector->floorheight - context.state.cz, totaldist)
+         context.state.bottomslope <= FixedDiv(P_GetFloorHeight(li->backsector, hitpos)
+                                               - context.state.cz, totaldist)
          && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
          State newState(context.state);
-         newState.cx = trace.x + FixedMul(trace.dx, in->frac);
-         newState.cy = trace.y + FixedMul(trace.dy, in->frac);
+         newState.cx = hitpos.x;
+         newState.cy = hitpos.y;
          newState.groupid = li->backsector->f_portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = context.state.reclevel + 1;
@@ -371,13 +375,13 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       }
       if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
          li->backsector->c_pflags & PS_PASSABLE &&
-         context.state.topslope
-         >= FixedDiv(li->backsector->ceilingheight - context.state.cz, totaldist)
+         context.state.topslope >= FixedDiv(P_GetCeilingHeight(li->backsector, hitpos) -
+                                            context.state.cz, totaldist)
          && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
          State newState(context.state);
-         newState.cx = trace.x + FixedMul(trace.dx, in->frac);
-         newState.cy = trace.y + FixedMul(trace.dy, in->frac);
+         newState.cx = hitpos.x;
+         newState.cy = hitpos.y;
          newState.groupid = li->backsector->c_portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = context.state.reclevel + 1;
@@ -402,8 +406,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
          in->frac > 0)
       {
          State newState(context.state);
-         newState.cx = trace.x + FixedMul(trace.dx, in->frac);
-         newState.cy = trace.y + FixedMul(trace.dy, in->frac);
+         newState.cx = hitpos.x;
+         newState.cy = hitpos.y;
          newState.groupid = li->portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = context.state.reclevel + 1;

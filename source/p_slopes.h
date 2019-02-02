@@ -28,6 +28,7 @@
 #define P_SLOPES_H__
 
 #include "linkoffs.h"
+#include "m_vector.h"
 
 struct line_t;
 struct pslope_t;
@@ -70,6 +71,16 @@ fixed_t P_GetFloorHeight(const sector_t *sector, fixed_t x, fixed_t y,
 
 fixed_t P_GetCeilingHeight(const sector_t *sector, fixed_t x, fixed_t y,
    int groupid = R_NOGROUP);
+
+inline static fixed_t P_GetFloorHeight(const sector_t *sector, v2fixed_t pos)
+{
+   return P_GetFloorHeight(sector, pos.x, pos.y);
+}
+
+inline static fixed_t P_GetCeilingHeight(const sector_t *sector, v2fixed_t pos)
+{
+   return P_GetCeilingHeight(sector, pos.x, pos.y);
+}
 
 //
 // Use templates to avoid the need of including headers.

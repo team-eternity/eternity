@@ -154,10 +154,14 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
 
    // no special
    lineopening_t lo = { 0 };
+   v2fixed_t curpos = {
+      trace.x + FixedMul(trace.dx, in->frac),
+      trace.y + FixedMul(trace.dy, in->frac)
+   };
    if(li->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
       lo.openrange = 0;
    else
-      lo.calculate(li);
+      lo.calculate(li, curpos.x, curpos.y);
 
    if(lo.openrange <= 0)
    {
@@ -189,8 +193,8 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       newState.attackrange -= FixedMul(newState.attackrange, in->frac);
       newState.groupid = newfromid;
       newState.reclevel++;
-      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + portal->data.link.deltax;
-      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + portal->data.link.deltay;
+      fixed_t x = curpos.x + portal->data.link.deltax;
+      fixed_t y = curpos.y + portal->data.link.deltay;
 
       useLines(context->player, x, y, &newState);
       context->portalhit = true;
@@ -215,7 +219,11 @@ bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext,
    if(ld->flags & ML_BLOCKING) // Always blocking
       return false;
    lineopening_t lo = { 0 };
-   lo.calculate(ld);
+   v2fixed_t curpos = {
+      trace.x + FixedMul(trace.dx, in->frac),
+      trace.y + FixedMul(trace.dy, in->frac)
+   };
+   lo.calculate(ld, curpos.x, curpos.y);
 
    const UseContext *context = static_cast<const UseContext *>(vcontext);
 

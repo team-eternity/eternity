@@ -35,6 +35,7 @@
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "polyobj.h"
 #include "r_portal.h"
 #include "r_state.h"
@@ -521,7 +522,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 //
 // Stores data into a LineOpening struct
 //
-void lineopening_t::calculate(const line_t *linedef)
+void lineopening_t::calculate(const line_t *linedef, fixed_t x, fixed_t y)
 {
    if(linedef->sidenum[1] == -1)
    {
@@ -537,16 +538,21 @@ void lineopening_t::calculate(const line_t *linedef)
    if(beyond)
       back = beyond;
 
-   // no need to apply the portal hack (1024 units) here fortunately
+   fixed_t fh = P_GetCeilingHeight(front, x, y);
+   fixed_t bh = P_GetCeilingHeight(back, x, y);
+
    if(linedef->extflags & EX_ML_UPPERPORTAL && back->c_pflags & PS_PASSABLE)
-      opentop = front->ceilingheight;
+      opentop = fh;
    else
-      opentop = emin(front->ceilingheight, back->ceilingheight);
+      opentop = emin(fh, bh);
+
+   fh = P_GetFloorHeight(front, x, y);
+   bh = P_GetFloorHeight(back, x, y);
 
    if(linedef->extflags & EX_ML_LOWERPORTAL && back->f_pflags & PS_PASSABLE)
-      openbottom = front->floorheight;
+      openbottom = fh;
    else
-      openbottom = emax(front->floorheight, back->floorheight);
+      openbottom = emax(fh, bh);
    openrange = opentop - openbottom;
 }
 

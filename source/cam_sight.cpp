@@ -41,6 +41,7 @@
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "p_skin.h"     // ioanch 20160131: for use
+#include "p_slopes.h"
 #include "p_spec.h"     // ioanch 20160101: for bullet effects
 #include "polyobj.h"
 #include "r_pcheck.h"   // ioanch 20160109: for correct portal plane z
@@ -229,9 +230,15 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 {
    const line_t *li = in->d.line;
    lineopening_t lo = { 0 };
-   lo.calculate(li);
 
    CamContext &context = *static_cast<CamContext *>(vcontext);
+
+   v2fixed_t curpos = {
+      context.params->cx + FixedMul(trace.dx, in->frac),
+      context.params->cy + FixedMul(trace.dy, in->frac),
+   };
+
+   lo.calculate(li, curpos.x, curpos.y);
 
    // avoid round-off errors if possible
    fixed_t totalfrac = context.state.originfrac ? context.state.originfrac +
@@ -256,8 +263,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       li->backsector : li->frontsector;
    fixed_t slope;
 
-   if(sector->floorheight != osector->floorheight ||
-      (!!(sector->f_pflags & PS_PASSABLE) ^ !!(osector->f_pflags & PS_PASSABLE)))
+   if(P_GetFloorHeight(sector, curpos) != P_GetFloorHeight(osector, curpos) ||
+      (!(sector->f_pflags & PS_PASSABLE) ^ !(osector->f_pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.openbottom - context.sightzstart, totalfrac);
       if(slope > context.state.bottomslope)
@@ -265,8 +272,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       
    }
 
-   if(sector->ceilingheight != osector->ceilingheight ||
-      (!!(sector->c_pflags & PS_PASSABLE) ^ !!(osector->c_pflags & PS_PASSABLE)))
+   if(P_GetCeilingHeight(sector, curpos) != P_GetCeilingHeight(osector, curpos) ||
+      (!(sector->c_pflags & PS_PASSABLE) ^ !(osector->c_pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.opentop - context.sightzstart, totalfrac);
       if(slope < context.state.topslope)
@@ -280,16 +287,13 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
       li->backsector->f_pflags & PS_PASSABLE &&
       context.state.bottomslope <=
-      FixedDiv(li->backsector->floorheight - context.sightzstart, totalfrac) &&
+      FixedDiv(P_GetFloorHeight(li->backsector, curpos) - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->f_portal->data.link.toid,
-                         context.params->cx + FixedMul(trace.dx, in->frac),
-                         context.params->cy + FixedMul(trace.dy, in->frac),
-                         state, &context.portalresult,
-                         li->backsector->f_portal->data.link))
+      if(context.recurse(li->backsector->f_portal->data.link.toid, curpos.x, curpos.y, state,
+                         &context.portalresult, li->backsector->f_portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -299,16 +303,13 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
       li->backsector->c_pflags & PS_PASSABLE &&
       context.state.topslope >=
-      FixedDiv(li->backsector->ceilingheight - context.sightzstart, totalfrac) &&
+      FixedDiv(P_GetCeilingHeight(li->backsector, curpos) - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->c_portal->data.link.toid,
-                         context.params->cx + FixedMul(trace.dx, in->frac),
-                         context.params->cy + FixedMul(trace.dy, in->frac),
-                         state, &context.portalresult,
-                         li->backsector->c_portal->data.link))
+      if(context.recurse(li->backsector->c_portal->data.link.toid, curpos.x, curpos.y, state,
+                         &context.portalresult, li->backsector->c_portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -321,11 +322,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    {
       State state(context.state);
       state.originfrac = totalfrac;
-      if(context.recurse(li->portal->data.link.toid, 
-         context.params->cx + FixedMul(trace.dx, in->frac),
-         context.params->cy + FixedMul(trace.dy, in->frac),
-         state,
-         &context.portalresult, li->portal->data.link))
+      if(context.recurse(li->portal->data.link.toid, curpos.x, curpos.y, state,
+                         &context.portalresult, li->portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -522,16 +520,15 @@ bool CamContext::checkSight(const camsightparams_t &params,
    {
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
-          ((params.cz + params.cheight <= sectors[csec->heightsec].floorheight &&
-            params.tz >= sectors[csec->heightsec].floorheight) ||
-           (params.cz >= sectors[csec->heightsec].ceilingheight &&
-            params.tz + params.cheight <= sectors[csec->heightsec].ceilingheight)))
-         ||
+          ((params.cz + params.cheight <= P_GetFloorHeight(&sectors[csec->heightsec], params.cx, params.cy) &&
+            params.tz >= P_GetFloorHeight(&sectors[csec->heightsec], params.tx, params.ty)) ||
+           (params.cz >= P_GetCeilingHeight(&sectors[csec->heightsec], params.cx, params.cy) &&
+            params.tz + params.cheight <= P_GetCeilingHeight(&sectors[csec->heightsec], params.tx, params.ty)))) ||
          (tsec->heightsec != -1 &&
-          ((params.tz + params.theight <= sectors[tsec->heightsec].floorheight &&
-            params.cz >= sectors[tsec->heightsec].floorheight) ||
-           (params.tz >= sectors[tsec->heightsec].ceilingheight &&
-            params.cz + params.theight <= sectors[tsec->heightsec].ceilingheight))))
+          ((params.tz + params.theight <= P_GetFloorHeight(&sectors[tsec->heightsec], params.tx, params.ty) &&
+            params.cz >= P_GetFloorHeight(&sectors[tsec->heightsec], params.cx, params.cy)) ||
+           (params.tz >= P_GetCeilingHeight(&sectors[tsec->heightsec], params.tx, params.ty) &&
+            params.cz + params.theight <= P_GetCeilingHeight(&sectors[tsec->heightsec], params.cx, params.cy)))))
          return false;
 
       //
