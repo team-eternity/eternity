@@ -521,14 +521,14 @@ bool CamContext::checkSight(const camsightparams_t &params,
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
           ((params.cz + params.cheight <= P_GetFloorHeight(&sectors[csec->heightsec], params.cx, params.cy) &&
-            params.tz >= P_GetFloorHeight(&sectors[csec->heightsec], params.tx, params.ty)) ||
+            params.tz >= P_GetFloorHeight(&sectors[csec->heightsec], params.tx, params.ty, params.tgroupid)) ||
            (params.cz >= P_GetCeilingHeight(&sectors[csec->heightsec], params.cx, params.cy) &&
-            params.tz + params.cheight <= P_GetCeilingHeight(&sectors[csec->heightsec], params.tx, params.ty)))) ||
+            params.tz + params.cheight <= P_GetCeilingHeight(&sectors[csec->heightsec], params.tx, params.ty, params.tgroupid)))) ||
          (tsec->heightsec != -1 &&
           ((params.tz + params.theight <= P_GetFloorHeight(&sectors[tsec->heightsec], params.tx, params.ty) &&
-            params.cz >= P_GetFloorHeight(&sectors[tsec->heightsec], params.cx, params.cy)) ||
+            params.cz >= P_GetFloorHeight(&sectors[tsec->heightsec], params.cx, params.cy, params.cgroupid)) ||
            (params.tz >= P_GetCeilingHeight(&sectors[tsec->heightsec], params.tx, params.ty) &&
-            params.cz + params.theight <= P_GetCeilingHeight(&sectors[tsec->heightsec], params.cx, params.cy)))))
+            params.cz + params.theight <= P_GetCeilingHeight(&sectors[tsec->heightsec], params.cx, params.cy, params.cgroupid)))))
          return false;
 
       //
