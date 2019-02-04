@@ -427,11 +427,17 @@ static void E_generateWeaponTrackers()
 
    for(int i = 0; i < NUMWEAPONTYPES; i++)
    {
-      weaponinfo_t *currWeapon = E_WeaponForID(i);
-      itemeffect_t *currTracker = new itemeffect_t(currWeapon->name);
-      e_effectsTable.addObject(currTracker);
-      trackerTemplate->copyTableTo(currTracker);
-      currWeapon->tracker = currTracker;
+      weaponinfo_t *currWeapon  = E_WeaponForID(i);
+      itemeffect_t *currTracker = E_ItemEffectForName(currWeapon->name);
+      if(currTracker != nullptr)
+         currWeapon->tracker = currTracker;
+      else
+      {
+         currTracker = new itemeffect_t(currWeapon->name);
+         e_effectsTable.addObject(currTracker);
+         trackerTemplate->copyTableTo(currTracker);
+         currWeapon->tracker = currTracker;
+      }
    }
 }
 
