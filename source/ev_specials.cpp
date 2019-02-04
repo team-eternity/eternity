@@ -98,6 +98,7 @@ static bool EV_Check3DMidTexSwitch(line_t *line, Mobj *thing, int side)
    {
       fixed_t opentop, openbottom, textop, texbot;
 
+      // SLOPE_NOTE: for sidedef offsets assume the sector heights are flat.
       opentop = line->frontsector->ceilingheight < line->backsector->ceilingheight ?
                 line->frontsector->ceilingheight : line->backsector->ceilingheight;
       

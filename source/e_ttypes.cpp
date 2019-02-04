@@ -689,6 +689,7 @@ ETerrain *E_GetThingFloorType(const Mobj *thing, bool usefloorz)
       // determine what touched sector the thing is standing on
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
+         // SLOPE_TODO: realistic thing standing
          fixed_t z = usefloorz ? thing->zref.floor : thing->z;
          if(z == m->m_sector->floorheight)
             break;
@@ -937,6 +938,7 @@ bool E_HitFloor(Mobj *thing)
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
+      // SLOPE_TODO: realistic thing standing
       if(thing->z == m->m_sector->floorheight)
          break;
    }

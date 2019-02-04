@@ -2587,6 +2587,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
       }
    }
 
+   // SLOPE_TODO: realistic slope standing
    mo = P_SpawnMobj(x + 20 * mtcos, 
                     y + 20 * mtsin,
                     ss->sector->floorheight + 
