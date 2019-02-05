@@ -897,6 +897,35 @@ static texcol_t *NextTempCol(texcol_t *current)
 }
 
 //
+// Appends alpha mask to the buffer (by reallocating it as necessary). Needed for masked texture
+// portal overlays (visplanes)
+//
+static void R_appendAlphaMask(texture_t *tex)
+{
+   int size = tex->width * tex->height;
+   // Add space for the mask
+   tex->bufferalloc = (byte*)Z_Realloc(tex->bufferalloc, 8 + size + (size + 7) / 8 + 4, PU_STATIC,
+                                       (void**)&tex->bufferalloc);
+   tex->bufferdata = tex->bufferalloc + 8;
+
+   const byte *tempmaskp = tempmask.buffer;
+   byte *maskplane = tex->bufferdata + size;
+   memset(maskplane, 0, (size + 7) / 8);
+
+   int pos = 0;
+   for(int x = 0; x < tex->width; ++x)
+      for(int y = 0; y < tex->height; ++y)
+      {
+         if(*tempmaskp)
+            maskplane[pos >> 3] |= 1 << (pos & 7);
+         ++pos;
+         ++tempmaskp;
+      }
+
+   tex->flags |= TF_MASKED;   // Finally used here!
+}
+
+//
 // FinishTexture
 //
 // Called after R_CacheTexture is finished drawing a texture. This function
@@ -906,10 +935,8 @@ static void FinishTexture(texture_t *tex)
 {
    int        x, y, i, colcount;
    texcol_t   *col, *tcol;
-   byte       *maskp;
+   const byte *maskp;
 
-   Z_ChangeTag(tex->bufferalloc, PU_CACHE);
-   
    if(!tempmask.mask)
       return;
       
@@ -925,6 +952,8 @@ static void FinishTexture(texture_t *tex)
    // Build the columns based on mask info
    maskp = tempmask.buffer;
 
+   bool masked = false; // true if texture has holes (more processing needed for portal overlays)
+
    for(x = 0; x < tex->width; x++)
    {
       y = 0;
@@ -938,6 +967,7 @@ static void FinishTexture(texture_t *tex)
          {
             maskp++;
             y++;
+            masked = true;
          }
          
          // Build a column
@@ -978,6 +1008,9 @@ static void FinishTexture(texture_t *tex)
          tcol = tcol->next;
       }
    }
+
+   if(masked)
+      R_appendAlphaMask(tex);
 }
 
 //
@@ -1040,6 +1073,8 @@ texture_t *R_CacheTexture(int num)
 
    // Finish texture
    FinishTexture(tex);
+   Z_ChangeTag(tex->bufferalloc, PU_CACHE);
+
    return tex;
 }
 
