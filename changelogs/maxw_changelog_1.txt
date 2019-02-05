@@ -329,6 +329,11 @@ Added SetWeapon and CheckWeapon ACS functions.
 Greatly improved performance of R_doubleToUint32, which becomes significantly
 noticeable in maps with lots of flats (think central area of Mothership).
 
+-------------------------------------------------------------------------------
+2019/02/05
+Add range parameter to A_CustomPlayerMelee. This displaces the new-ish pufftype
+parameter, punting that to last position.
+
 ================================================================================
 EOF
 ================================================================================

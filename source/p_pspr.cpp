@@ -1250,8 +1250,8 @@ static const char *kwds_A_FireCustomBullets[NUMCUSTOMBULLETACCURACIES] =
 
 static argkeywd_t fcbkwds =
 {
-   kwds_A_FireCustomBullets, 
-   sizeof(kwds_A_FireCustomBullets) / sizeof(const char *)
+   kwds_A_FireCustomBullets,
+   earrlen(kwds_A_FireCustomBullets)
 };
 
 //
@@ -1375,7 +1375,7 @@ static const char *kwds_A_FirePlayerMissile[] =
 static argkeywd_t seekkwds =
 {
    kwds_A_FirePlayerMissile,
-   sizeof(kwds_A_FirePlayerMissile) / sizeof(const char *)
+   earrlen(kwds_A_FirePlayerMissile)
 };
 
 //
@@ -1435,7 +1435,7 @@ const char *kwds_A_CustomPlayerMelee[] =
 static argkeywd_t cpmkwds =
 {
    kwds_A_CustomPlayerMelee,
-   sizeof(kwds_A_CustomPlayerMelee) / sizeof(const char *)
+   earrlen(kwds_A_CustomPlayerMelee)
 };
 
 //
@@ -1448,13 +1448,15 @@ static argkeywd_t cpmkwds =
 // args[2] : berzerk multiplier
 // args[3] : angle deflection type (none, punch, chainsaw)
 // args[4] : sound to make (dehacked number)
-// args[5] : pufftype
+// args[5] : range
+// args[6] : pufftype
 //
 void A_CustomPlayerMelee(actionargs_t *actionargs)
 {
    angle_t angle;
    fixed_t slope;
    int damage, dmgfactor, dmgmod, berzerkmul, deftype;
+   fixed_t range;
    sfxinfo_t *sfx;
    Mobj      *mo = actionargs->actor;
    player_t  *player;
@@ -1472,7 +1474,8 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    berzerkmul = E_ArgAsInt(args, 2, 0);
    deftype    = E_ArgAsKwd(args, 3, &cpmkwds, 0);
    sfx        = E_ArgAsSound(args, 4);
-   const char *pufftype = E_ArgAsString(args, 5, nullptr);
+   range      = E_ArgAsFixed(args, 5, MELEERANGE);
+   const char *pufftype = E_ArgAsString(args, 6, nullptr);
 
    // adjust parameters
 
@@ -1490,19 +1493,19 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
    // decrement ammo if appropriate
    P_SubtractAmmo(player, -1);
-   
+
    angle = player->mo->angle;
-   
+
    if(deftype == 2 || deftype == 3)
       angle += P_SubRandom(pr_custompunch) << 18;
-   
-   slope = P_DoAutoAim(mo, angle, MELEERANGE);
+
+   slope = P_DoAutoAim(mo, angle, range);
 
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
    // WEAPON_FIXME: check ALL new weapon pointers for this problem.
-   
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage, pufftype);
-   
+
+   P_LineAttack(mo, angle, range, slope, damage, pufftype);
+
    if(!clip.linetarget)
    {
       // assume they want sawful on miss if sawhit specified
@@ -1513,8 +1516,8 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
    // start sound
    P_WeaponSoundInfo(mo, sfx);
-   
-   // turn to face target   
+
+   // turn to face target
    player->mo->angle = P_PointToAngle(mo->x, mo->y,
                                        clip.linetarget->x, clip.linetarget->y);
 
@@ -1535,7 +1538,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
          else
             mo->angle += ANG90/20;
       }
-      
+
       mo->flags |= MF_JUSTATTACKED;
    }
 }

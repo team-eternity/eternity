@@ -30,7 +30,7 @@ pufftype HereticGoldWandPuff2 : HereticPuffBase
 pufftype HereticBlasterPuff1 : HereticPuffBase
 {
   thingtype     HereticBlasterPuff1
-  hitpufftype   HereticBlasterPuff2 
+  hitpufftype   HereticBlasterPuff2
 }
 
 pufftype HereticBlasterPuff2 : HereticPuffBase
