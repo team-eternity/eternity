@@ -513,9 +513,9 @@ int lastshottic; // killough 3/22/98
 //
 static void P_FireWeapon(player_t *player)
 {
-   statenum_t newstate;
+   statenum_t    newstate;
    weaponinfo_t *weapon;
-   
+
    if(!P_CheckAmmo(player))
       return;
 
@@ -528,7 +528,7 @@ static void P_FireWeapon(player_t *player)
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
    if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
-      !(weapon->flags & WPF_SILENT)) 
+      !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
    lastshottic = gametic;                       // killough 3/22/98
@@ -539,7 +539,7 @@ static void P_FireWeapon(player_t *player)
 //
 static void P_fireWeaponAlt(player_t *player)
 {
-   statenum_t newstate;
+   statenum_t    newstate;
    weaponinfo_t *weapon = player->readyweapon;
 
    if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
@@ -560,10 +560,23 @@ static void P_fireWeaponAlt(player_t *player)
 }
 
 //
-// Try to fire a weapon if the user inputs that.
-// Returns true if a weapon is fired, and false otherwise.
+// Execute a generic weapon state (Reload/Zoom/User[1-4])
 //
-static bool P_tryFireWeapon(player_t *player)
+static void P_executeWeaponState(player_t *player, const int weaponinfo_t::*state)
+{
+   const int                 statenum = player->readyweapon->*state;
+   if(statenum != E_SafeState(S_NULL))
+      return;
+
+   P_SetMobjState(player->mo, player->mo->info->missilestate);
+   P_SetPsprite(player, ps_weapon, statenum);
+}
+
+//
+// Try to execute a weapon states if the user inputs that.
+// Returns true if a state is executed, and false otherwise.
+//
+static bool p_tryExecuteWeaponState(player_t *player)
 {
    if(player->cmd.buttons & BT_ATTACK)
    {
@@ -585,6 +598,19 @@ static bool P_tryFireWeapon(player_t *player)
    }
    else
       player->attackdown = AT_NONE;
+
+   if(player->cmd.actions & AC_RELOAD)
+      P_executeWeaponState(player, &weaponinfo_t::reloadstate);
+   else if(player->cmd.actions & AC_ZOOM)
+      P_executeWeaponState(player, &weaponinfo_t::zoomstate);
+   else if(player->cmd.actions & AC_USER1)
+      P_executeWeaponState(player, &weaponinfo_t::userstate_1);
+   else if(player->cmd.actions & AC_USER2)
+      P_executeWeaponState(player, &weaponinfo_t::userstate_2);
+   else if(player->cmd.actions & AC_USER3)
+      P_executeWeaponState(player, &weaponinfo_t::userstate_3);
+   else if(player->cmd.actions & AC_USER4)
+      P_executeWeaponState(player, &weaponinfo_t::userstate_4);
 
    return false;
 }
@@ -796,7 +822,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // certain weapons do not auto fire
    if(demo_version >= 401)
    {
-      if(P_tryFireWeapon(player))
+      if(p_tryExecuteWeaponState(player))
          return;
    }
    else if(player->cmd.buttons & BT_ATTACK)
@@ -828,16 +854,15 @@ static void A_reFireNew(actionargs_t *actionargs)
    // check for fire
    //  (if a weaponchange is pending, let it go through instead)
 
-   if((player->cmd.buttons & BT_ATTACK)
-      && player->pendingweapon == nullptr && player->health
-      && !(player->attackdown & AT_SECONDARY))
+   if((player->cmd.buttons & BT_ATTACK) && player->pendingweapon == nullptr &&
+       player->health && !(player->attackdown & AT_SECONDARY))
    {
       player->refire++;
       P_FireWeapon(player);
    }
-   else if((player->cmd.buttons & BTN_ATTACK_ALT)
-           && player->pendingweapon == nullptr && player->health
-           && !(player->attackdown & AT_PRIMARY))
+   else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
+            player->health &&
+            !(player->attackdown & AT_PRIMARY))
    {
       player->refire++;
       P_fireWeaponAlt(player);

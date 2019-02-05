@@ -585,6 +585,12 @@ static const char *nativeWepStateLabels[] =
    "AltFire",  // atkstate_alt
    "AltFlash", // flashstate_alt
    "AltHold",  // holdstate_alt
+   "Reload",   // reloadstate
+   "Zoom",     // zoomstate
+   "User1",    // userstate_1
+   "User2",    // userstate_2
+   "User3",    // userstate_3
+   "User4",    // userstate_4
 };
 
 enum wepstatetypes_e
@@ -597,7 +603,13 @@ enum wepstatetypes_e
    WSTATE_HOLD,
    WSTATE_FIRE_ALT,
    WSTATE_FLASH_ALT,
-   WSTATE_HOLD_ALT
+   WSTATE_HOLD_ALT,
+   WSTATE_RELOAD,
+   WSTATE_ZOOM,
+   WSTATE_USER1,
+   WSTATE_USER2,
+   WSTATE_USER3,
+   WSTATE_USER4,
 };
 
 #define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
@@ -632,6 +644,12 @@ static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
    case WSTATE_FIRE_ALT:  ret = &wi->atkstate_alt;   break;
    case WSTATE_FLASH_ALT: ret = &wi->flashstate_alt; break;
    case WSTATE_HOLD_ALT:  ret = &wi->holdstate_alt;  break;
+   case WSTATE_RELOAD:    ret = &wi->reloadstate;    break;
+   case WSTATE_ZOOM:      ret = &wi->zoomstate;      break;
+   case WSTATE_USER1:     ret = &wi->userstate_1;    break;
+   case WSTATE_USER2:     ret = &wi->userstate_2;    break;
+   case WSTATE_USER3:     ret = &wi->userstate_3;    break;
+   case WSTATE_USER4:     ret = &wi->userstate_4;    break;
    default:
       break;
    }

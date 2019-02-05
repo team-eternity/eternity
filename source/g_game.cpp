@@ -247,7 +247,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    int forward;
    int side;
    int newweapon;            // phares
-   int look = 0; 
+   int look = 0;
    int mlook = 0;
    int flyheight = 0;
    static int prevmlook = 0;
@@ -312,7 +312,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          side += pc->sidemove[speed];
       if(gameactions[ka_left])
          side -= pc->sidemove[speed];
-      
+
       // analog axes: turn becomes stafe if strafe-on is held
       side += (int)(pc->sidemove[speed] * joyaxes[axis_turn]);
    }
@@ -341,10 +341,24 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       side += pc->sidemove[speed];
    if(gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
-   
+
    if(gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
-   
+
+   // MaxW: Non-attack weapon state change keys
+   if(gameactions[ka_reload])
+      cmd->actions |= AC_RELOAD;
+   if(gameactions[ka_zoom])
+      cmd->actions |= AC_ZOOM;
+   if(gameactions[ka_user1])
+      cmd->actions |= AC_USER1;
+   if(gameactions[ka_user2])
+      cmd->actions |= AC_USER2;
+   if(gameactions[ka_user3])
+      cmd->actions |= AC_USER3;
+   if(gameactions[ka_user4])
+      cmd->actions |= AC_USER4;
+
    mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
@@ -458,7 +472,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          //
          // killough 10/98: make SG/SSG and Fist/Chainsaw
          // weapon toggles optional
-      
+
          if(!demo_compatibility && weapon_hotkey_cycling)
          {
             player_t *player = &players[consoleplayer];
@@ -509,12 +523,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // mouse
-  
+
    // forward double click -- haleyjd: still allow double clicks
    if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
    {
       dclickstate = mousebuttons[mouseb_dblc2];
-      
+
       if(dclickstate)
          dclicks++;
 
@@ -540,7 +554,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(dclickstate2)
          dclicks2++;
-      
+
       if(dclicks2 == 2)
       {
          cmd->buttons |= BT_USE;
@@ -556,7 +570,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // sf: smooth out the mouse movement
-   // change to use tmousex, y   
+   // change to use tmousex, y
 
    tmousex = mousex;
    tmousey = mousey;
@@ -600,7 +614,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // analog gamepad look
    look += (int)(pc->lookspeed[1] * joyaxes[axis_look] * (invert_padlook ? -1.0 : 1.0));
-   
+
    if(gameactions[ka_lookup])
       look += pc->lookspeed[speed];
    if(gameactions[ka_lookdown])
@@ -645,7 +659,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       forward = MAXPLMOVE;
    else if(forward < -MAXPLMOVE)
       forward = -MAXPLMOVE;
-   
+
    if(side > MAXPLMOVE)
       side = MAXPLMOVE;
    else if(side < -MAXPLMOVE)
