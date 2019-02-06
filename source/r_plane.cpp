@@ -1098,7 +1098,7 @@ static void do_draw_plane(visplane_t *pl)
                  (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
 
-      if(tex->flags & TF_MASKED)
+      if(tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
       {
          //
          // TODO: ADD SUPPORT FOR DISTORTED FLATS
