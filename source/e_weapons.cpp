@@ -1253,8 +1253,9 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    {
       if((tempfloat = cfg_getfloat(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
-         E_insertSelectOrderNode(M_DoubleToFixed(tempfloat), &wp, !def);
-         wp.sortorder = tempint;
+         const fixed_t tempfixed = M_DoubleToFixed(tempfloat);
+         E_insertSelectOrderNode(tempfixed, &wp, !def);
+         wp.sortorder = tempfixed;
       }
    }
    if(cfg_size(weaponsec, ITEM_WPN_SISTERWEAPON) > 0)
