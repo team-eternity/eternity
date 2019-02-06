@@ -401,9 +401,10 @@ static void R_DrawSpanSolidMasked_8()
    {
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         *dest++ = colormap[source[i]];
+         *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
+      ++dest;
    }
 }
 static void R_DrawSpanSolidMasked_8_GEN()
@@ -452,9 +453,10 @@ static void R_DrawSpanSolidMasked_8_GEN()
    {
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         *dest++ = colormap[source[i]];
+         *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
+      ++dest;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -479,10 +481,11 @@ static void R_DrawSpanTLMasked_8()
       {
          t = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
          t |= 0x01f07c1f;
-         *dest++ = RGB32k[0][0][t & (t >> 15)];
+         *dest = RGB32k[0][0][t & (t >> 15)];
       }
       xf += xs;
       yf += ys;
+      ++dest;
    }
 }
 static void R_DrawSpanTLMasked_8_GEN()
@@ -510,10 +513,11 @@ static void R_DrawSpanTLMasked_8_GEN()
       {
          t = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
          t |= 0x01f07c1f;
-         *dest++ = RGB32k[0][0][t & (t >> 15)];
+         *dest = RGB32k[0][0][t & (t >> 15)];
       }
       xf += xs;
       yf += ys;
+      ++dest;
    }
 }
 
