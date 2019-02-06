@@ -649,7 +649,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    blendflags &= PS_OBLENDFLAGS;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
-   if(!(blendflags & PS_ADDITIVE) && opacity == 255)
+   if(!(blendflags & PS_ADDITIVE) && opacity == 255 && !(textures[picnum]->flags & TF_MASKED))
       blendflags = 0;
       
    // killough 10/98: PL_SKYFLAT
@@ -1095,7 +1095,7 @@ static void do_draw_plane(visplane_t *pl)
       // span drawstyles (ie. translucency)
 
       stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
-                 (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
+                 (pl->opacity < 255)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
 
       if(tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
@@ -1103,16 +1103,18 @@ static void do_draw_plane(visplane_t *pl)
          //
          // TODO: ADD SUPPORT FOR DISTORTED FLATS
          //
-         if(stylenum == SPAN_STYLE_NORMAL)
+         switch(stylenum)
          {
-            stylenum = SPAN_STYLE_NORMAL_MASKED;
-            span.alphamask = tex->bufferdata + tex->width * tex->height;
+            case SPAN_STYLE_TL:
+               stylenum = SPAN_STYLE_TL_MASKED;
+               break;
+            case SPAN_STYLE_ADD:
+               stylenum = SPAN_STYLE_ADD_MASKED;
+               break;
+            default:
+               stylenum = SPAN_STYLE_NORMAL_MASKED;
          }
-         else if(stylenum == SPAN_STYLE_TL)
-         {
-            stylenum = SPAN_STYLE_TL_MASKED;
-            span.alphamask = tex->bufferdata + tex->width * tex->height;
-         }
+         span.alphamask = tex->bufferdata + tex->width * tex->height;
       }
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
@@ -1125,7 +1127,7 @@ static void do_draw_plane(visplane_t *pl)
          span.fg2rgb = Col2RGB8[level];
          span.bg2rgb = Col2RGB8[64 - level];
       }
-      else if(stylenum == SPAN_STYLE_ADD)
+      else if(stylenum == SPAN_STYLE_ADD || stylenum == SPAN_STYLE_ADD_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
