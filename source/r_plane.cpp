@@ -1097,11 +1097,28 @@ static void do_draw_plane(visplane_t *pl)
       stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
                  (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
+
+      if(tex->flags & TF_MASKED)
+      {
+         //
+         // TODO: ADD SUPPORT FOR DISTORTED FLATS
+         //
+         if(stylenum == SPAN_STYLE_NORMAL)
+         {
+            stylenum = SPAN_STYLE_NORMAL_MASKED;
+            span.alphamask = tex->bufferdata + tex->width * tex->height;
+         }
+         else if(stylenum == SPAN_STYLE_TL)
+         {
+            stylenum = SPAN_STYLE_TL_MASKED;
+            span.alphamask = tex->bufferdata + tex->width * tex->height;
+         }
+      }
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
       slopefunc = r_span_engine->DrawSlope[stylenum][tex->flatsize];
       
-      if(stylenum == SPAN_STYLE_TL)
+      if(stylenum == SPAN_STYLE_TL || stylenum == SPAN_STYLE_TL_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
