@@ -10,22 +10,22 @@ Since v4.00.00 "Völuspá"
 --------------------------------------------------------------------------------
 27.01.2019
 
-IMPROVEMENT: F_SKY1 now when applied on middle textures has the same effect as
-             floor and ceiling skies.
+FEATURE: F_SKY1 now when applied on middle textures has the same effect as floor
+         and ceiling skies.
 
 --------------------------------------------------------------------------------
 25.01.2019
 
-IMPROVEMENT: Added some UDMF-exclusive fields to ExtraData: linedef portalid and
-             sector portalid.floor and portalid.ceiling, so that Portal_Define
-             doesn't require UDMF any longer.
+FEATURE: Added some UDMF-exclusive fields to ExtraData: linedef portalid and 
+         sector portalid.floor and portalid.ceiling, so that Portal_Define 
+         doesn't require UDMF any longer.
 
 --------------------------------------------------------------------------------
 22.01.2019
 
-IMPROVEMENT: Added a "game.itemheight" property to EDF game properties which
-             overrides item pickup height, which is set to 8 in Doom/Strife and
-             to 32 in Heretic/Hexen.
+FEATURE: Added a "game.itemheight" property to EDF game properties which
+         overrides item pickup height, which is set to 8 in Doom/Strife and to
+         32 in Heretic/Hexen.
 
 --------------------------------------------------------------------------------
 20.01.2019
