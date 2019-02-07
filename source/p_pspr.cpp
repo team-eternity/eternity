@@ -1519,7 +1519,8 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
    // turn to face target
    player->mo->angle = P_PointToAngle(mo->x, mo->y,
-                                       clip.linetarget->x, clip.linetarget->y);
+                                      getThingX(mo, clip.linetarget),
+                                      getThingY(mo, clip.linetarget));
 
    // apply chainsaw deflection if selected
    if(deftype == 3)
