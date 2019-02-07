@@ -1098,11 +1098,8 @@ static void do_draw_plane(visplane_t *pl)
                  (pl->opacity < 255)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
 
-      if(tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
+      if(plane.tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
       {
-         //
-         // TODO: ADD SUPPORT FOR DISTORTED FLATS
-         //
          switch(stylenum)
          {
             case SPAN_STYLE_TL:
@@ -1114,7 +1111,7 @@ static void do_draw_plane(visplane_t *pl)
             default:
                stylenum = SPAN_STYLE_NORMAL_MASKED;
          }
-         span.alphamask = tex->bufferdata + tex->width * tex->height;
+         span.alphamask = static_cast<const byte *>(plane.source) + tex->width * tex->height;
       }
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
