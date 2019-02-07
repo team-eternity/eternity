@@ -334,6 +334,12 @@ noticeable in maps with lots of flats (think central area of Mothership).
 Add range parameter to A_CustomPlayerMelee. This displaces the new-ish pufftype
 parameter, punting that to last position.
 
+-------------------------------------------------------------------------------
+2019/02/07
+Made A_AlertMonsters work properly for weapons. Now it actually just alerts all
+the things without being contingent on you pointing your gun at an enemy.
+Thanks to Xaser for this.
+
 ================================================================================
 EOF
 ================================================================================
