@@ -62,7 +62,7 @@ playerclass DoomMarine
    weaponslot 7 { weapons : BFG9000 }
    weaponslot 8 { weapons : Chainsaw }
    weaponslot 9 { weapons : SuperShotgun }
-   
+
    rebornitem AmmoClip, 50
    rebornitem Fist
    rebornitem Pistol
@@ -90,7 +90,7 @@ playerclass Corvus
    weaponslot 6 { weapons : PhoenixRod }
    weaponslot 7 { weapons : Mace }
    weaponslot 8 { weapons : Gauntlets }
-   
+
    rebornitem AmmoWandCrystal, 50
    rebornitem Staff
    rebornitem GoldWand

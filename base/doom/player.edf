@@ -22,7 +22,7 @@ weaponinfo DoomWeapon
 
 weaponinfo Fist : DoomWeapon, 0
 {
-  selectionorder 9000
+  selectionorder 9.0
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   mod          Fist
@@ -55,7 +55,7 @@ weaponinfo Pistol : DoomWeapon, 1
   ammotype     AmmoClip
   ammouse      1
 
-  selectionorder 8000
+  selectionorder 8.0
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
   mod          Pistol
@@ -92,7 +92,7 @@ weaponinfo Shotgun : DoomWeapon, 2
   ammotype     AmmoShell
   ammouse      1
 
-  selectionorder 4000
+  selectionorder 4.0
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   mod          Shotgun
@@ -133,7 +133,7 @@ weaponinfo Chaingun : DoomWeapon, 3
   ammotype     AmmoClip
   ammouse      1
 
-  selectionorder 3000
+  selectionorder 3.0
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   mod          Chaingun
@@ -169,7 +169,7 @@ weaponinfo MissileLauncher : DoomWeapon, 4
   ammotype     AmmoMissile
   ammouse      1
 
-  selectionorder 7000
+  selectionorder 7.0
 
   flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE|HAPTICRECOIL
   recoil       100.0
@@ -206,7 +206,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
   ammotype     AmmoCell
   ammouse      1
 
-  selectionorder 1000
+  selectionorder 1.0
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
   recoil       20.0
@@ -243,7 +243,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
   ammotype     AmmoCell
   ammouse      40
 
-  selectionorder 5000
+  selectionorder 5.0
 
   flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
   recoil       100.0
@@ -296,7 +296,7 @@ weaponinfo OldBFG : BFG9000
 
 weaponinfo Chainsaw : DoomWeapon, 7
 {
-  selectionorder 6000
+  selectionorder 6.0
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
   mod          Chainsaw
@@ -327,7 +327,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
   ammotype     AmmoShell
   ammouse      2
 
-  selectionorder 2000
+  selectionorder 2.0
 
   flags        SILENCEABLE|HAPTICRECOIL|DISABLEAPS
   mod          SShotgun

@@ -564,8 +564,8 @@ static void P_fireWeaponAlt(player_t *player)
 //
 static void P_executeWeaponState(player_t *player, const int weaponinfo_t::*state)
 {
-   const int                 statenum = player->readyweapon->*state;
-   if(statenum != E_SafeState(S_NULL))
+   const int statenum = player->readyweapon->*state;
+   if(statenum == E_SafeState(S_NULL))
       return;
 
    P_SetMobjState(player->mo, player->mo->info->missilestate);
@@ -1519,7 +1519,8 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
    // turn to face target
    player->mo->angle = P_PointToAngle(mo->x, mo->y,
-                                       clip.linetarget->x, clip.linetarget->y);
+                                      getThingX(mo, clip.linetarget),
+                                      getThingY(mo, clip.linetarget));
 
    // apply chainsaw deflection if selected
    if(deftype == 3)

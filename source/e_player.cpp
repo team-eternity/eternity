@@ -550,8 +550,8 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
    else
-      E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: playerdelta requires name field\n");
-   
+      E_EDFLoggedErr(2, "E_processPlayerClass: playerdelta requires name field\n");
+
 
    if(!(pc = E_PlayerClassForName(tempstr)))
    {

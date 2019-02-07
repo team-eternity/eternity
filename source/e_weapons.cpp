@@ -131,7 +131,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_FLASHSTATE_ALT,  "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
    CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
-   CFG_INT(ITEM_WPN_SELECTORDER,     -1,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_SELECTORDER,   -1,       CFGF_NONE), \
    CFG_INT(ITEM_WPN_SLOTNUM,         -1,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SLOTRANK,      -1.0,     CFGF_NONE), \
    CFG_STR(ITEM_WPN_SISTERWEAPON,    "",       CFGF_NONE), \
@@ -1155,7 +1155,7 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
    return pnum;
 }
 
-static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
+static void E_insertSelectOrderNode(fixed_t sortorder, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_HASSORTORDER))
       selectordertree->deleteNode(wp->sortorder, wp);
@@ -1251,10 +1251,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
    if(IS_SET(ITEM_WPN_SELECTORDER))
    {
-      if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
+      if((tempfloat = cfg_getfloat(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
-         E_insertSelectOrderNode(tempint, &wp, !def);
-         wp.sortorder = tempint;
+         const fixed_t tempfixed = M_DoubleToFixed(tempfloat);
+         E_insertSelectOrderNode(tempfixed, &wp, !def);
+         wp.sortorder = tempfixed;
       }
    }
    if(cfg_size(weaponsec, ITEM_WPN_SISTERWEAPON) > 0)

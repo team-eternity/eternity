@@ -95,7 +95,7 @@ struct weaponinfo_t
    int           defaultslotindex;
    fixed_t       defaultslotrank;
 
-   int           sortorder;   // sort order (lower is higher priority)
+   fixed_t       sortorder;   // sort order (lower is higher priority)
    weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
 
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons

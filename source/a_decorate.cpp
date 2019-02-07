@@ -56,10 +56,12 @@
 //
 // ZDoom codepointer #3, implemented from scratch using wiki
 // documentation. 100% GPL version.
-// 
+//
 void A_AlertMonsters(actionargs_t *actionargs)
 {
    Mobj *mo = actionargs->actor;
+   if(actionargs->pspr)
+      P_NoiseAlert(mo, mo);
    if(mo->target)
       P_NoiseAlert(mo->target, mo->target);
 }

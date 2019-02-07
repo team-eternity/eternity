@@ -378,6 +378,9 @@ protected:
    //
    static void balance(avlnode_t *&root)
    {
+      if(root == nullptr)
+         return;
+
       // Balance existent children
       if(root->left)
          balance(root->left);
