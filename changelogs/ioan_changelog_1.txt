@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+07.02.2019
+
+IMPROVEMENT: Masked textures (such as mid-grates) can now be applied on portal
+             overlays. They can even use the SMMU rippling animation (unlike the
+             2-sided linedef midtextures).
+
+--------------------------------------------------------------------------------
 27.01.2019
 
 FEATURE: F_SKY1 now when applied on middle textures has the same effect as floor
