@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+09.02.2019
+
+BUGFIX: Fixed a memory leak where things with alphavelocity would never be
+        deallocated and gradually slow the game to a crawl.
+
+--------------------------------------------------------------------------------
 07.02.2019
 
 IMPROVEMENT: Masked textures (such as mid-grates) can now be applied on portal
