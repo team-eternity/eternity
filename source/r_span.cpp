@@ -788,6 +788,198 @@ static void R_DrawSlope_8_GEN()
    }
 }
 
+//
+// Slope span drawers: masked
+//
+
+template<int xshift, int xmask, int ymask>
+static void R_DrawSlopeMasked_8()
+{
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
+
+   byte *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   byte *src  = (byte *)slopespan.source;
+   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count >= SPANJUMP)
+   {
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
+         colormap = slopespan.colormap[mapindex++];
+         if(MASK(alpham, i))
+            *dest = colormap[src[i]];
+         ufrac += ustep;
+         vfrac += vstep;
+         ++dest;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
+         colormap = slopespan.colormap[mapindex++];
+         if(MASK(alpham, i))
+            *dest = colormap[src[i]];
+         ufrac += ustep;
+         vfrac += vstep;
+         ++dest;
+      }
+   }
+}
+
+static void R_DrawSlopeMasked_8_GEN()
+{
+   double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
+   double ius = slopespan.iustep, ivs = slopespan.ivstep;
+   double id  = slopespan.idfrac, ids = slopespan.idstep;
+
+   byte *colormap;
+   int count;
+   fixed_t mapindex = 0;
+
+   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+      return;
+
+   byte *src  = (byte *)slopespan.source;
+   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int ymask  = span.ymask;
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count >= SPANJUMP)
+   {
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * SPANJUMP;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * SPANJUMP;
+      iv += ivs * SPANJUMP;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) * INTERPSTEP);
+      vstep = (int)((vend - vstart) * INTERPSTEP);
+
+      incount = SPANJUMP;
+      while(incount--)
+      {
+         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
+         colormap = slopespan.colormap[mapindex++];
+         if(MASK(alpham, i))
+            *dest = colormap[src[i]];
+         ufrac += ustep;
+         vfrac += vstep;
+         ++dest;
+      }
+
+      count -= SPANJUMP;
+   }
+   if(count > 0)
+   {
+      double ustart, uend;
+      double vstart, vend;
+      double mulstart, mulend;
+      unsigned int ustep, vstep, ufrac, vfrac;
+      int incount;
+
+      mulstart = 65536.0f / id;
+      id += ids * count;
+      mulend = 65536.0f / id;
+
+      ufrac = (int)(ustart = iu * mulstart);
+      vfrac = (int)(vstart = iv * mulstart);
+      iu += ius * count;
+      iv += ivs * count;
+      uend = iu * mulend;
+      vend = iv * mulend;
+
+      ustep = (int)((uend - ustart) / count);
+      vstep = (int)((vend - vstart) / count);
+
+      incount = count;
+      while(incount--)
+      {
+         i = ((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask);
+         colormap = slopespan.colormap[mapindex++];
+         if(MASK(alpham, i))
+            *dest = colormap[src[i]];
+         ufrac += ustep;
+         vfrac += vstep;
+         ++dest;
+      }
+   }
+}
+
+
 #undef SPANJUMP
 #undef INTERPSTEP
 
@@ -878,27 +1070,27 @@ spandrawer_t r_spandrawer =
       },
       // Solid masked - TODO
       {
-         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64
-         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
-         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
-         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
-         R_DrawSlope_8_GEN                   // General
+         R_DrawSlopeMasked_8<10, 0x00FC0, 0x03F>,  // 64x64
+         R_DrawSlopeMasked_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlopeMasked_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlopeMasked_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlopeMasked_8_GEN                   // General
       },
       // Translucent masked - TODO
       {
-         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64
-         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
-         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
-         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
-         R_DrawSlope_8_GEN                   // General
+         R_DrawSlopeMasked_8<10, 0x00FC0, 0x03F>,  // 64x64
+         R_DrawSlopeMasked_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlopeMasked_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlopeMasked_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlopeMasked_8_GEN                   // General
       },
       // Additive masked - TODO
       {
-         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64
-         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
-         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
-         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
-         R_DrawSlope_8_GEN                   // General
+         R_DrawSlopeMasked_8<10, 0x00FC0, 0x03F>,  // 64x64
+         R_DrawSlopeMasked_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlopeMasked_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlopeMasked_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlopeMasked_8_GEN                   // General
       }
    }
 };
