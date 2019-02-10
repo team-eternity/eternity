@@ -1790,9 +1790,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    seg.markflags = beyond ? SEG_MARK1SLPORTAL : 0;
    seg.c_window = seg.f_window = NULL;
 
-   // SoM: these should be treated differently!
-   if(seg.frontsec->c_portal && (seg.frontsec->c_portal->type < R_TWOWAY ||
-                                 (seg.frontsec->c_pflags & PS_VISIBLE && seg.frontsec->ceilingheight > viewz)))
+   if(seg.c_portal)
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal,
@@ -1800,8 +1798,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
       R_MovePortalOverlayToWindow(true);
    }
 
-   if(seg.frontsec->f_portal && (seg.frontsec->f_portal->type < R_TWOWAY ||
-                                 (seg.frontsec->f_pflags & PS_VISIBLE && seg.frontsec->floorheight <= viewz)))
+   if(seg.f_portal)
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal,
