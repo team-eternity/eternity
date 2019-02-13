@@ -341,6 +341,11 @@ the things without being contingent on you pointing your gun at an enemy.
 Thanks to Xaser for this.
 A_CustomPlayerMelee now correctly turns you through portals.
 
+-------------------------------------------------------------------------------
+2019/03/12
+Made it so the Windows close button on the console is re-enabled when Eternity
+is closed.
+
 ================================================================================
 EOF
 ================================================================================
