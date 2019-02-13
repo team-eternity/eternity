@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+13.02.2019
+
+BUGFIX: Fixed wrong drawing of animated textures on slopes when the textures are
+        of different sizes.
+
+--------------------------------------------------------------------------------
 09.02.2019
 
 BUGFIX: Fixed a memory leak where things with alphavelocity would never be

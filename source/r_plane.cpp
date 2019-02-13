@@ -437,7 +437,7 @@ static void R_CalcSlope(visplane_t *pl)
    double         xl, yl, tsin, tcos;
    double         ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
-   texture_t      *tex = textures[pl->picnum];
+   texture_t      *tex = textures[texturetranslation[pl->picnum]];
 
    if(!pl->pslope)
       return;
