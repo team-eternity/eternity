@@ -251,8 +251,8 @@ cfg_opt_t edf_armorfx_opts[] =
 cfg_opt_t edf_ammofx_opts[] =
 {
    CFG_STR(KEY_AMMO,       "", CFGF_NONE), // name of ammo type artifact to give
-   CFG_INT(KEY_AMOUNT,      0, CFGF_NONE), // amount of ammo given
-   CFG_INT(KEY_DROPAMOUNT,  0, CFGF_NONE), // amount of ammo given when item is dropped
+   CFG_INT(KEY_AMOUNT,     0,  CFGF_NONE), // amount of ammo given
+   CFG_INT(KEY_DROPAMOUNT, 0,  CFGF_NONE), // amount of ammo given when item is dropped
 
    CFG_FLAG(KEY_IGNORESKILL, 0, CFGF_SIGNPREFIX), // if +, does not double on skills that double ammo
 
@@ -289,8 +289,8 @@ static cfg_opt_t ammogiven_opts[] =
 // Weapon Giver effect fields
 cfg_opt_t edf_weapgfx_opts[] =
 {
-   CFG_STR(KEY_WEAPON,                   "", CFGF_NONE),  // name of weapon to give
-   CFG_MVPROP(KEY_AMMOGIVEN, ammogiven_opts, CFGF_MULTI), // type and quantities of ammos given
+   CFG_STR(KEY_WEAPON,       "",             CFGF_NONE             ), // name of weapon to give
+   CFG_MVPROP(KEY_AMMOGIVEN, ammogiven_opts, CFGF_MULTI|CFGF_NOCASE), // type and quantities of ammos given
    CFG_END()
 };
 
@@ -342,15 +342,15 @@ static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
 // Artifact fields
 cfg_opt_t edf_artifact_opts[] =
 {
-   CFG_INT(KEY_AMOUNT,          1, CFGF_NONE), // amount gained with one pickup
-   CFG_INT(KEY_MAXAMOUNT,       1, CFGF_NONE), // max amount that can be carried in inventory
-   CFG_INT(KEY_INTERHUBAMOUNT,  0, CFGF_NONE), // amount carryable between hubs (or levels)
-   CFG_INT(KEY_SORTORDER,       0, CFGF_NONE), // relative ordering within inventory
-   CFG_STR(KEY_ICON,           "", CFGF_NONE), // icon used on inventory bars
-   CFG_INT(KEY_ICON_XOFFS,      0, CFGF_NONE), // x offset of icon (+ is left)
-   CFG_INT(KEY_ICON_YOFFS,      0, CFGF_NONE), // y offset of icon (+ is right)
-   CFG_STR(KEY_USESOUND,       "", CFGF_NONE), // sound to play when used
-   CFG_STR(KEY_USEEFFECT,      "", CFGF_NONE), // effect to activate when used
+   CFG_INT(KEY_AMOUNT,          1,  CFGF_NONE), // amount gained with one pickup
+   CFG_INT(KEY_MAXAMOUNT,       1,  CFGF_NONE), // max amount that can be carried in inventory
+   CFG_INT(KEY_INTERHUBAMOUNT,  0,  CFGF_NONE), // amount carryable between hubs (or levels)
+   CFG_INT(KEY_SORTORDER,       0,  CFGF_NONE), // relative ordering within inventory
+   CFG_STR(KEY_ICON,            "", CFGF_NONE), // icon used on inventory bars
+   CFG_INT(KEY_ICON_XOFFS,      0,  CFGF_NONE), // x offset of icon (+ is left)
+   CFG_INT(KEY_ICON_YOFFS,      0,  CFGF_NONE), // y offset of icon (+ is right)
+   CFG_STR(KEY_USESOUND,        "", CFGF_NONE), // sound to play when used
+   CFG_STR(KEY_USEEFFECT,       "", CFGF_NONE), // effect to activate when used
 
    CFG_FLAG(KEY_UNDROPPABLE,    0, CFGF_SIGNPREFIX), // if +, cannot be dropped
    CFG_FLAG(KEY_INVBAR,         0, CFGF_SIGNPREFIX), // if +, appears in inventory bar
@@ -361,7 +361,7 @@ cfg_opt_t edf_artifact_opts[] =
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), // artifact sub-type
 
    CFG_STRFUNC(KEY_USEACTION,  "NULL",                  E_actionFuncCB), // action function
-   CFG_STR(KEY_ARGS,                0,       CFGF_LIST),
+   CFG_STR(KEY_ARGS,           0,            CFGF_LIST),
 
 
    // Sub-Type Specific Fields

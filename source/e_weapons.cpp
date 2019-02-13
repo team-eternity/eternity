@@ -93,7 +93,7 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_UPSOUND      "upsound"
 #define ITEM_WPN_READYSOUND   "readysound"
 
-#define ITEM_WPN_FULLSCREENOFFSET "fullscreenoffset"
+#define ITEM_WPN_FSOFFSET "fullscreenoffset"
 
 #define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
 
@@ -130,7 +130,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_ATKSTATE_ALT,    "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLASHSTATE_ALT,  "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT,  0,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SELECTORDER,   -1,       CFGF_NONE), \
    CFG_INT(ITEM_WPN_SLOTNUM,         -1,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SLOTRANK,      -1.0,     CFGF_NONE), \
@@ -144,9 +144,9 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICTIME,      0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,         "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_READYSOUND,      "none",   CFGF_NONE), \
-   CFG_FLOAT(ITEM_WPN_FULLSCREENOFFSET, 0, CFGF_NONE), \
-   CFG_STR(ITEM_WPN_FIRSTDECSTATE,   nullptr, CFGF_NONE), \
-   CFG_STR(ITEM_WPN_STATES,          0,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_FSOFFSET,      0.0,      CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FIRSTDECSTATE,   nullptr,  CFGF_NONE), \
+   CFG_STR(ITEM_WPN_STATES,          nullptr,  CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_wpninfo_opts[] =
@@ -1444,8 +1444,8 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          wp.readysound = estrdup(tempstr);
    }
 
-   if(IS_SET(ITEM_WPN_FULLSCREENOFFSET))
-      wp.fullscreenoffset = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_FULLSCREENOFFSET));
+   if(IS_SET(ITEM_WPN_FSOFFSET))
+      wp.fullscreenoffset = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_FSOFFSET));
 
    // Process DECORATE state block
    E_processDecorateWepStatesRecursive(weaponsec, i, false);
