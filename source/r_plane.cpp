@@ -437,7 +437,6 @@ static void R_CalcSlope(visplane_t *pl)
    double         xl, yl, tsin, tcos;
    double         ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
-   texture_t      *tex = textures[texturetranslation[pl->picnum]];
 
    if(!pl->pslope)
       return;
@@ -445,9 +444,15 @@ static void R_CalcSlope(visplane_t *pl)
    
    tsin = sin(pl->angle);
    tcos = cos(pl->angle);
-   
-   xl = tex->width;
-   yl = tex->height;
+
+   if(pl->picnum & PL_SKYFLAT)
+      xl = yl = 64;  // just choose a default, it won't matter
+   else
+   {
+      const texture_t *tex = textures[texturetranslation[pl->picnum]];
+      xl = tex->width;
+      yl = tex->height;
+   }
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
