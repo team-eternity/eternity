@@ -46,6 +46,7 @@
 #include "p_mobj.h"
 #include "p_portal.h"
 #include "p_portalcross.h"
+#include "p_slopes.h"
 #include "p_tick.h"
 #include "r_defs.h"
 #include "r_main.h"
@@ -159,7 +160,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
    {
       unsigned extflag;
       unsigned sector_t::*pflags;
-      fixed_t sector_t::*height;
+      fixed_t (*height)(const sector_t *, v2fixed_t);
       portal_t *sector_t::*portal;
       fixed_t(*pzfunc)(const sector_t &);
       bool(*compare)(fixed_t, fixed_t);
@@ -167,7 +168,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
       {
          EX_ML_LOWERPORTAL,
          &sector_t::f_pflags,
-         &sector_t::floorheight,
+         P_GetFloorHeight,
          &sector_t::f_portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
@@ -175,7 +176,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
       {
          EX_ML_UPPERPORTAL,
          &sector_t::c_pflags,
-         &sector_t::ceilingheight,
+         P_GetCeilingHeight,
          &sector_t::c_portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
@@ -184,11 +185,12 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
    for(int i = 0; i < 2; ++i)
    {
       const auto &s = ssets[i];
+      traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+      traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
       if(li->extflags & s.extflag && li->backsector->*s.pflags & PS_PASSABLE &&
-         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, li->frontsector->*s.height))
+         s.compare(z, s.pzfunc(*li->backsector)) &&
+         !s.compare(z, s.height(li->frontsector, traverse.intersection)))
       {
-         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
          traverse.link = &(li->backsector->*s.portal)->data.link;
          traverse.startz = z;
          return true;
