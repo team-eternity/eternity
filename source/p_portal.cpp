@@ -35,6 +35,7 @@
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
+#include "p_slopes.h"
 #include "p_user.h"
 #include "r_main.h"
 #include "r_portal.h"
@@ -1047,15 +1048,14 @@ void P_CheckLPortalState(line_t *line)
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
    // set new value
-   fixed_t ch = sec->floorheight;
    sec->floorheight = h;
-   float chf = sec->floorheightf;
    sec->floorheightf = M_FixedToFloat(sec->floorheight);
 
    if(sec->f_slope)
    {
-      sec->f_slope->o.z += h - ch;
-      sec->f_slope->of.z += sec->floorheightf - chf;
+      const slopeheight_t &slopeheight = pSlopeHeights[sec - sectors];
+      sec->f_slope->o.z = sec->floorheight + slopeheight.flooroffset;
+      sec->f_slope->of.z = sec->floorheightf + slopeheight.flooroffsetf;
    }
 
    // check floor portal state
@@ -1071,15 +1071,14 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
    // set new value
-   fixed_t ch = sec->ceilingheight;
    sec->ceilingheight = h;
-   float chf = sec->ceilingheightf;
    sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
 
    if(sec->c_slope)
    {
-      sec->c_slope->o.z += h - ch;
-      sec->c_slope->of.z += sec->ceilingheightf - chf;
+      const slopeheight_t &slopeheight = pSlopeHeights[sec - sectors];
+      sec->c_slope->o.z = sec->ceilingheight + slopeheight.ceilingoffset;
+      sec->c_slope->of.z = sec->ceilingheightf + slopeheight.ceilingoffsetf;
    }
 
    // check ceiling portal state
