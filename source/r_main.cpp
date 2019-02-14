@@ -47,6 +47,7 @@
 #include "p_info.h"
 #include "p_partcl.h"
 #include "p_scroll.h"
+#include "p_slopes.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
@@ -879,6 +880,19 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             sec.ceilingheight  = lerpCoord(view.lerp, si.prevceilingheight, sec.ceilingheight);
             sec.floorheightf   = M_FixedToFloat(sec.floorheight);
             sec.ceilingheightf = M_FixedToFloat(sec.ceilingheight);
+
+            if(sec.f_slope)
+            {
+               const slopeheight_t &slopeheight = pSlopeHeights[i];
+               sec.f_slope->o.z = sec.floorheight + slopeheight.flooroffset;
+               sec.f_slope->of.z = sec.floorheightf + slopeheight.flooroffsetf;
+            }
+            if(sec.c_slope)
+            {
+               const slopeheight_t &slopeheight = pSlopeHeights[i];
+               sec.c_slope->o.z = sec.ceilingheight + slopeheight.ceilingoffset;
+               sec.c_slope->of.z = sec.ceilingheightf + slopeheight.ceilingoffsetf;
+            }
          }
          else
             si.interpolated = false;
@@ -897,6 +911,18 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
             sec.floorheightf   = si.backfloorheightf;
             sec.ceilingheight  = si.backceilingheight;
             sec.ceilingheightf = si.backceilingheightf;
+            if(sec.f_slope)
+            {
+               const slopeheight_t &slopeheight = pSlopeHeights[i];
+               sec.f_slope->o.z = sec.floorheight + slopeheight.flooroffset;
+               sec.f_slope->of.z = sec.floorheightf + slopeheight.flooroffsetf;
+            }
+            if(sec.c_slope)
+            {
+               const slopeheight_t &slopeheight = pSlopeHeights[i];
+               sec.c_slope->o.z = sec.ceilingheight + slopeheight.ceilingoffset;
+               sec.c_slope->of.z = sec.ceilingheightf + slopeheight.ceilingoffsetf;
+            }
          }
       }
       break;
