@@ -40,6 +40,8 @@
 #include "r_state.h"
 #include "v_misc.h"
 
+slopeheight_t *pSlopeHeights;
+
 //
 // P_MakeSlope
 //
@@ -112,6 +114,72 @@ static pslope_t *P_CopySlope(const pslope_t *src)
    memcpy(ret, src, sizeof(*ret));
 
    return ret;
+}
+
+//
+// Called from P_SpawnSpecials, sets up the slope height list.
+//
+void P_InitSlopeHeights()
+{
+   pSlopeHeights = estructalloctag(slopeheight_t, numsectors, PU_LEVEL);
+   for(int i = 0; i < numsectors; ++i)
+   {
+      const sector_t &sector = sectors[i];
+      if((!sector.f_slope && !sector.c_slope) || !sector.linecount)
+         continue;
+
+      if(sector.f_slope)
+      {
+         fixed_t maxz = D_MININT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t z = P_GetZAt(sector.f_slope, line.v1->x, line.v1->y);
+            if(z > maxz)
+               maxz = z;
+            z = P_GetZAt(sector.f_slope, line.v2->x, line.v2->y);
+            if(z > maxz)
+               maxz = z;
+         }
+         pSlopeHeights[i].floordelta = maxz - sector.floorheight;
+      }
+      if(sector.c_slope)
+      {
+         fixed_t minz = D_MAXINT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t z = P_GetZAt(sector.c_slope, line.v1->x, line.v1->y);
+            if(z < minz)
+               minz = z;
+            z = P_GetZAt(sector.c_slope, line.v2->x, line.v2->y);
+            if(z < minz)
+               minz = z;
+         }
+         pSlopeHeights[i].ceilingdelta = minz - sector.ceilingheight;
+      }
+      if(!sector.c_slope)
+         pSlopeHeights[i].touchheight = pSlopeHeights[i].floordelta;
+      else if(!sector.f_slope)
+         pSlopeHeights[i].touchheight = -pSlopeHeights[i].ceilingdelta;
+      else
+      {
+         fixed_t mindiff = D_MAXINT;
+         for(int j = 0; j < sector.linecount; ++j)
+         {
+            const line_t &line = *sector.lines[j];
+            fixed_t zc = P_GetZAt(sector.c_slope, line.v1->x, line.v1->y);
+            fixed_t zf = P_GetZAt(sector.f_slope, line.v1->x, line.v1->y);
+            if(zc - zf < mindiff)
+               mindiff = zc - zf;
+            zc = P_GetZAt(sector.c_slope, line.v2->x, line.v2->y);
+            zf = P_GetZAt(sector.f_slope, line.v2->x, line.v2->y);
+            if(zc - zf < mindiff)
+               mindiff = zc - zf;
+         }
+         pSlopeHeights[i].touchheight = sector.ceilingheight - sector.floorheight - mindiff;
+      }
+   }
 }
 
 //
