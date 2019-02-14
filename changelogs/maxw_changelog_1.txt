@@ -329,6 +329,23 @@ Added SetWeapon and CheckWeapon ACS functions.
 Greatly improved performance of R_doubleToUint32, which becomes significantly
 noticeable in maps with lots of flats (think central area of Mothership).
 
+-------------------------------------------------------------------------------
+2019/02/05
+Add range parameter to A_CustomPlayerMelee. This displaces the new-ish pufftype
+parameter, punting that to last position.
+
+-------------------------------------------------------------------------------
+2019/02/07
+Made A_AlertMonsters work properly for weapons. Now it actually just alerts all
+the things without being contingent on you pointing your gun at an enemy.
+Thanks to Xaser for this.
+A_CustomPlayerMelee now correctly turns you through portals.
+
+-------------------------------------------------------------------------------
+2019/03/12
+Made it so the Windows close button on the console is re-enabled when Eternity
+is closed.
+
 ================================================================================
 EOF
 ================================================================================

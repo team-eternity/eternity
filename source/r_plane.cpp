@@ -437,7 +437,6 @@ static void R_CalcSlope(visplane_t *pl)
    double         xl, yl, tsin, tcos;
    double         ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
-   texture_t      *tex = textures[pl->picnum];
 
    if(!pl->pslope)
       return;
@@ -445,9 +444,15 @@ static void R_CalcSlope(visplane_t *pl)
    
    tsin = sin(pl->angle);
    tcos = cos(pl->angle);
-   
-   xl = tex->width;
-   yl = tex->height;
+
+   if(pl->picnum & PL_SKYFLAT)
+      xl = yl = 64;  // just choose a default, it won't matter
+   else
+   {
+      const texture_t *tex = textures[texturetranslation[pl->picnum]];
+      xl = tex->width;
+      yl = tex->height;
+   }
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
@@ -649,8 +654,11 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    blendflags &= PS_OBLENDFLAGS;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
-   if(!(blendflags & PS_ADDITIVE) && opacity == 255)
+   if(!(blendflags & PS_ADDITIVE) && opacity == 255 &&
+      (picnum & PL_SKYFLAT || !(textures[texturetranslation[picnum]]->flags & TF_MASKED)))
+   {
       blendflags = 0;
+   }
       
    // killough 10/98: PL_SKYFLAT
    if(R_IsSkyFlat(picnum) || picnum & PL_SKYFLAT)
@@ -1095,20 +1103,36 @@ static void do_draw_plane(visplane_t *pl)
       // span drawstyles (ie. translucency)
 
       stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
-                 (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
+                 (pl->opacity < 255)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
+
+      if(plane.tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
+      {
+         switch(stylenum)
+         {
+            case SPAN_STYLE_TL:
+               stylenum = SPAN_STYLE_TL_MASKED;
+               break;
+            case SPAN_STYLE_ADD:
+               stylenum = SPAN_STYLE_ADD_MASKED;
+               break;
+            default:
+               stylenum = SPAN_STYLE_NORMAL_MASKED;
+         }
+         span.alphamask = static_cast<const byte *>(plane.source) + tex->width * tex->height;
+      }
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
       slopefunc = r_span_engine->DrawSlope[stylenum][tex->flatsize];
       
-      if(stylenum == SPAN_STYLE_TL)
+      if(stylenum == SPAN_STYLE_TL || stylenum == SPAN_STYLE_TL_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
          span.fg2rgb = Col2RGB8[level];
          span.bg2rgb = Col2RGB8[64 - level];
       }
-      else if(stylenum == SPAN_STYLE_ADD)
+      else if(stylenum == SPAN_STYLE_ADD || stylenum == SPAN_STYLE_ADD_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          

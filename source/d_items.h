@@ -85,10 +85,17 @@ struct weaponinfo_t
    int          holdstate_alt;    // Alt hold state
    int          ammopershot_alt;  // Alt ammo per shot
 
+   int          reloadstate; // Reload state
+   int          zoomstate;   // Zoom state
+   int          userstate_1; // The four user states
+   int          userstate_2;
+   int          userstate_3;
+   int          userstate_4;
+
    int           defaultslotindex;
    fixed_t       defaultslotrank;
 
-   int           sortorder;   // sort order (lower is higher priority)
+   fixed_t       sortorder;   // sort order (lower is higher priority)
    weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
 
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons

@@ -80,6 +80,9 @@ struct cb_span_t
 
    // SoM: some values for the generalizede span drawers
    unsigned int xshift, xmask, yshift, ymask;
+
+   // ioanch: more ptrs
+   const void *alphamask;  // pointer to alphamask if applicable
 };
 
 struct cb_plane_t

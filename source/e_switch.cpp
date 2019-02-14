@@ -29,9 +29,9 @@
 #include "e_switch.h"
 #include "m_qstrkeys.h"
 
-#define ITEM_SWITCH_ONPIC "on"
-#define ITEM_SWITCH_ONSOUND "sound"
-#define ITEM_SWITCH_OFFSOUND "offsound"
+#define ITEM_SWITCH_ONPIC     "on"
+#define ITEM_SWITCH_ONSOUND   "sound"
+#define ITEM_SWITCH_OFFSOUND  "offsound"
 #define ITEM_SWITCH_GAMEINDEX "gameindex"
 
 #define NUMSWITCHCHAINS 67
@@ -41,10 +41,10 @@
 //
 cfg_opt_t edf_switch_opts[] =
 {
-   CFG_STR(ITEM_SWITCH_ONPIC, "", CFGF_NONE),
-   CFG_STR(ITEM_SWITCH_ONSOUND, "", CFGF_NONE),
-   CFG_STR(ITEM_SWITCH_OFFSOUND, "", CFGF_NONE),
-   CFG_INT(ITEM_SWITCH_GAMEINDEX, 1, CFGF_NONE),
+   CFG_STR(ITEM_SWITCH_ONPIC,     "", CFGF_NONE),
+   CFG_STR(ITEM_SWITCH_ONSOUND,   "", CFGF_NONE),
+   CFG_STR(ITEM_SWITCH_OFFSOUND,  "", CFGF_NONE),
+   CFG_INT(ITEM_SWITCH_GAMEINDEX, 1,  CFGF_NONE),
    CFG_END()
 };
 
@@ -53,7 +53,7 @@ PODCollection<ESwitchDef *> eswitches;
 
 // Put them in a hash. They'll be stored in a list later.
 static EHashTable<ESwitchDef, ENCQStrHashKey,
-&ESwitchDef::offpic, &ESwitchDef::link> e_switch_namehash(NUMSWITCHCHAINS);
+                  &ESwitchDef::offpic, &ESwitchDef::link> e_switch_namehash(NUMSWITCHCHAINS);
 
 //
 // Resets a switch definition. Doesn't touch lists.
@@ -72,9 +72,9 @@ void ESwitchDef::reset()
 //
 static void E_processSwitch(cfg_t *cfg)
 {
-   const char *title = cfg_title(cfg);
-   ESwitchDef *def = e_switch_namehash.objectForKey(title);
-   bool modified = !!def;
+   const char *title    = cfg_title(cfg);
+   ESwitchDef *def      = e_switch_namehash.objectForKey(title);
+   const bool  modified = !!def;
    if(!def)
    {
       def = new ESwitchDef;
@@ -91,13 +91,13 @@ static void E_processSwitch(cfg_t *cfg)
    };
 
    if(isset(ITEM_SWITCH_ONPIC))
-      def->onpic = cfg_getstr(cfg, ITEM_SWITCH_ONPIC);
+      def->onpic    = cfg_getstr(cfg, ITEM_SWITCH_ONPIC);
    if(isset(ITEM_SWITCH_ONSOUND))
-      def->onsound = cfg_getstr(cfg, ITEM_SWITCH_ONSOUND);
+      def->onsound  = cfg_getstr(cfg, ITEM_SWITCH_ONSOUND);
    if(isset(ITEM_SWITCH_OFFSOUND))
       def->offsound = cfg_getstr(cfg, ITEM_SWITCH_OFFSOUND);
    if(isset(ITEM_SWITCH_GAMEINDEX))
-      def->episode = cfg_getint(cfg, ITEM_SWITCH_GAMEINDEX);
+      def->episode  = cfg_getint(cfg, ITEM_SWITCH_GAMEINDEX);
 }
 
 //
@@ -122,7 +122,7 @@ void E_AddSwitchDef(const ESwitchDef &extdef)
    if(extdef.offpic.empty())
       return;
    const char *title = extdef.offpic.constPtr();
-   ESwitchDef *def = e_switch_namehash.objectForKey(title);
+   ESwitchDef *def   = e_switch_namehash.objectForKey(title);
 
    // NOTE: by external means, switches can't be modified. EDF takes priority.
    if(def)

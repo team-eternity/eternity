@@ -135,8 +135,6 @@ void Thinker::addThinker()
    prev = thinkercap.prev;
    thinkercap.prev = this;
    
-   references = 0;    // killough 11/98: init reference counter to 0
-   
    // killough 8/29/98: set sentinel pointers, and then add to appropriate list
    cnext = cprev = this;
    updateThinker();
