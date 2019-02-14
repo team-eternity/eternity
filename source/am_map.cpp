@@ -1645,12 +1645,14 @@ inline static bool AM_isDoorClosed(const line_t *line)
 //
 inline static bool AM_drawAsClosedDoor(const line_t *line)
 {
-   // SLOPE_TODO: sloped (jagged) doors
-   return (mapcolor_clsd &&  
+   const sector_t &front = *line->frontsector;
+   const sector_t &back = *line->backsector;
+   return (mapcolor_clsd &&
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&
-           (line->backsector->floorheight == line->backsector->ceilingheight ||
-            line->frontsector->floorheight == line->backsector->ceilingheight));
+           (back.floorheight == back.ceilingheight || front.floorheight == front.ceilingheight ||
+            (front.f_slope && R_CompareSlopesFlipped(front.f_slope, front.c_slope)) ||
+            (back.f_slope && R_CompareSlopesFlipped(back.f_slope, back.c_slope))));
 }
 
 //

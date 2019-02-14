@@ -423,6 +423,20 @@ bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
         fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
 }
 
+//
+// Like above, but flips the normal of the second slope (meant to check if a sector is shut tight).
+// Such a slope will never compare true with itself.
+//
+bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2)
+{
+   v3float_t s2normal = -s2->normalf;
+   return s1 && s2 &&                 // both are valid and...
+   CompFloats(s1->normalf.x, s2normal.x) &&  // components are equal and...
+   CompFloats(s1->normalf.y, s2normal.y) &&
+   CompFloats(s1->normalf.z, s2normal.z) &&
+   fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f; // this.
+}
+
 #undef CompFloats
 
 //

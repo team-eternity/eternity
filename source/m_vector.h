@@ -81,6 +81,11 @@ struct v2fixed_t
 struct v3float_t
 {
    float x, y, z;
+
+   v3float_t operator-() const
+   {
+      return { -x, -y, -z };
+   }
 };
 
 struct v2double_t

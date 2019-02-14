@@ -69,6 +69,7 @@ visplane_t *R_FindPlane(fixed_t height,
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
+bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2);
 
 struct cb_span_t
 {
