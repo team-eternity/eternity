@@ -40,6 +40,12 @@ class UDMFSetupSettings;
 //
 struct slopeheight_t
 {
+   // These are the differences from sector height to slope origin
+   fixed_t flooroffset;
+   float flooroffsetf;
+   fixed_t ceilingoffset;
+   float ceilingoffsetf;
+
    fixed_t floordelta;     // difference from bottom slope tip to floorheight
    fixed_t ceilingdelta;   // difference from top slope tip to ceilingheight
    fixed_t touchheight;    // difference from ceilingheight to floorheight when planes touch

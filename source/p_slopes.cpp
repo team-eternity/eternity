@@ -130,6 +130,8 @@ void P_InitSlopeHeights()
 
       if(sector.f_slope)
       {
+         pSlopeHeights[i].flooroffset = sector.f_slope->o.z - sector.floorheight;
+         pSlopeHeights[i].flooroffsetf = sector.f_slope->of.z - sector.floorheightf;
          fixed_t maxz = D_MININT;
          for(int j = 0; j < sector.linecount; ++j)
          {
@@ -145,6 +147,8 @@ void P_InitSlopeHeights()
       }
       if(sector.c_slope)
       {
+         pSlopeHeights[i].ceilingoffset = sector.c_slope->o.z - sector.ceilingheight;
+         pSlopeHeights[i].ceilingoffsetf = sector.c_slope->of.z - sector.ceilingheightf;
          fixed_t minz = D_MAXINT;
          for(int j = 0; j < sector.linecount; ++j)
          {
