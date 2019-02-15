@@ -52,7 +52,7 @@ static void I_untweakConsole()
    if(hwnd)
    {
       HMENU hMenu = GetSystemMenu(hwnd, FALSE);
-      EnableMenuItem(hMenu, SC_CLOSE, MF_BYCOMMAND);
+      EnableMenuItem(hMenu, SC_CLOSE, MF_ENABLED);
    }
 #endif
 }

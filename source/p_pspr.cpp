@@ -562,21 +562,22 @@ static void P_fireWeaponAlt(player_t *player)
 //
 // Execute a generic weapon state (Reload/Zoom/User[1-4])
 //
-static void P_executeWeaponState(player_t *player, const int weaponinfo_t::*state)
+static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*state)
 {
    const int statenum = player->readyweapon->*state;
    if(statenum == E_SafeState(S_NULL))
-      return;
+      return false;
 
    P_SetMobjState(player->mo, player->mo->info->missilestate);
    P_SetPsprite(player, ps_weapon, statenum);
+   return true;
 }
 
 //
 // Try to execute a weapon states if the user inputs that.
 // Returns true if a state is executed, and false otherwise.
 //
-static bool p_tryExecuteWeaponState(player_t *player)
+static bool P_tryExecuteWeaponState(player_t *player)
 {
    if(player->cmd.buttons & BT_ATTACK)
    {
@@ -600,17 +601,17 @@ static bool p_tryExecuteWeaponState(player_t *player)
       player->attackdown = AT_NONE;
 
    if(player->cmd.actions & AC_RELOAD)
-      P_executeWeaponState(player, &weaponinfo_t::reloadstate);
+      return P_executeWeaponState(player, &weaponinfo_t::reloadstate);
    else if(player->cmd.actions & AC_ZOOM)
-      P_executeWeaponState(player, &weaponinfo_t::zoomstate);
+      return P_executeWeaponState(player, &weaponinfo_t::zoomstate);
    else if(player->cmd.actions & AC_USER1)
-      P_executeWeaponState(player, &weaponinfo_t::userstate_1);
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_1);
    else if(player->cmd.actions & AC_USER2)
-      P_executeWeaponState(player, &weaponinfo_t::userstate_2);
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_2);
    else if(player->cmd.actions & AC_USER3)
-      P_executeWeaponState(player, &weaponinfo_t::userstate_3);
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_3);
    else if(player->cmd.actions & AC_USER4)
-      P_executeWeaponState(player, &weaponinfo_t::userstate_4);
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_4);
 
    return false;
 }
@@ -822,7 +823,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // certain weapons do not auto fire
    if(demo_version >= 401)
    {
-      if(p_tryExecuteWeaponState(player))
+      if(P_tryExecuteWeaponState(player))
          return;
    }
    else if(player->cmd.buttons & BT_ATTACK)
