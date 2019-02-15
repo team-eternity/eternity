@@ -1101,6 +1101,7 @@ PARAMLINE(ParamLightFlicker);
 PARAMLINE(ParamLightStrobe);
 PARAMLINE(ParamLightStrobeDoom);
 PARAMLINE(RadiusQuake);
+PARAMLINE(CeilingWaggle);
 PARAMLINE(FloorWaggle);
 PARAMLINE(ThingSpawn);
 PARAMLINE(ThingSpawnNoFog);
@@ -1566,6 +1567,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
    LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
    LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
+   LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1651,6 +1653,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(35,  ParamFloorRaiseByValueTimes8,        "Floor_RaiseByValueTimes8")
    LINESPECNAMED(36,  ParamFloorLowerByValueTimes8,        "Floor_LowerByValueTimes8")
    LINESPECNAMED(37,  ParamFloorMoveToValue,               "Floor_MoveToValue")
+   LINESPECNAMED(38,  CeilingWaggle,                       "Ceiling_Waggle")
    LINESPECNAMED(40,  ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
    LINESPECNAMED(41,  ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
    LINESPECNAMED(42,  ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")

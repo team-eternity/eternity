@@ -220,6 +220,7 @@ DECLARE_ACTION(EV_ActionParamLightFlicker);
 DECLARE_ACTION(EV_ActionParamLightStrobe );
 DECLARE_ACTION(EV_ActionParamLightStrobeDoom);
 DECLARE_ACTION(EV_ActionRadiusQuake);
+DECLARE_ACTION(EV_ActionCeilingWaggle);
 DECLARE_ACTION(EV_ActionFloorWaggle);
 DECLARE_ACTION(EV_ActionThingSpawn);
 DECLARE_ACTION(EV_ActionThingSpawnNoFog);

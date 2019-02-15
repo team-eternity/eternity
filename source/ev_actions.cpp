@@ -3037,6 +3037,16 @@ DEFINE_ACTION(EV_ActionRadiusQuake)
    return P_StartQuake(instance->args, instance->actor);
 }
 
+// Implements Ceiling_Waggle(tag, height, speed, offset, timer)
+// * ExtraData: 500
+// * Hexen:     38
+//
+DEFINE_ACTION(EV_ActionCeilingWaggle)
+{
+   return EV_StartCeilingWaggle(instance->line, instance->tag, instance->args[1],
+                                instance->args[2], instance->args[3], instance->args[4]);
+}
+
 //
 // EV_ActionFloorWaggle
 //
@@ -3047,7 +3057,7 @@ DEFINE_ACTION(EV_ActionRadiusQuake)
 DEFINE_ACTION(EV_ActionFloorWaggle)
 {
    return EV_StartFloorWaggle(instance->line, instance->tag, instance->args[1],
-                                instance->args[2], instance->args[3], instance->args[4]);
+                              instance->args[2], instance->args[3], instance->args[4]);
 }
 
 //
