@@ -348,7 +348,9 @@ is closed.
 
 -------------------------------------------------------------------------------
 2019/02/12
-Added Ceiling_Waggle line special.
+Added Ceiling_Waggle action special.
+Added "speedjump" playerclass property. Its value is a fixed, and is how much
+upwards speed is added to momz when the player successfully jumps.
 
 ================================================================================
 EOF

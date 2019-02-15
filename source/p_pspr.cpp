@@ -1228,7 +1228,7 @@ void P_MovePsprites(player_t *player)
 enum custombulletaccuracy_e : uint8_t
 {
    CBA_NONE,
-   CBA_ALWAYS,
+   CBA_ALWAYS, // MaxW: It me
    CBA_FIRST,
    CBA_NEVER,
    CBA_SSG,
