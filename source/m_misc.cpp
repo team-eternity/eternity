@@ -407,7 +407,7 @@ default_t defaults[] =
 
    // haleyjd
    DEFAULT_INT("comp_terrain", &default_comp[comp_terrain], &comp[comp_terrain], 
-               0, 0, 1, default_t::wad_yes, "Terrain effects not activated on floor contact"),
+               1, 0, 1, default_t::wad_yes, "Terrain effects not activated on floor contact"),
    
    // haleyjd
    DEFAULT_INT("comp_respawnfix", &default_comp[comp_respawnfix], &comp[comp_respawnfix],
@@ -415,7 +415,7 @@ default_t defaults[] =
    
    // haleyjd
    DEFAULT_INT("comp_fallingdmg", &default_comp[comp_fallingdmg], &comp[comp_fallingdmg],
-               0, 0, 1, default_t::wad_yes, "Players do not take falling damage"),
+               1, 0, 1, default_t::wad_yes, "Players do not take falling damage"),
    
    // haleyjd
    DEFAULT_INT("comp_soul", &default_comp[comp_soul], &comp[comp_soul],
