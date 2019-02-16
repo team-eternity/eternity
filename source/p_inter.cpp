@@ -47,6 +47,7 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "ev_specials.h"
+#include "g_compat.h"
 #include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"

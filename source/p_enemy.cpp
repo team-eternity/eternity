@@ -46,6 +46,7 @@
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "ev_specials.h"
+#include "g_compat.h"
 #include "g_game.h"
 #include "m_bbox.h"
 #include "metaapi.h"

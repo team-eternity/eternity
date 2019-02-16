@@ -37,6 +37,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "g_compat.h"
 #include "m_compare.h"
 #include "metaapi.h"
 #include "p_enemy.h"

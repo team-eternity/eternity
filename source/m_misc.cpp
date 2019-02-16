@@ -45,6 +45,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "f_wipe.h"
+#include "g_compat.h"
 #include "g_game.h"
 #include "hu_over.h"
 #include "hu_stuff.h"
@@ -345,6 +346,9 @@ default_t defaults[] =
   
    DEFAULT_INT("use_startmap", &use_startmap, NULL, -1, -1, 1, default_t::wad_yes,
                "use start map instead of menu"),
+
+   // ioanch 20190216: compatibility overhaul
+//   DEFAULT_INT("compat_preset", &compat_preset, nullptr, )
 
    // killough 10/98: compatibility vector:
 
