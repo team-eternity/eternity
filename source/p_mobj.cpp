@@ -39,6 +39,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "g_compat.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "hu_stuff.h"

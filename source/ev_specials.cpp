@@ -41,6 +41,7 @@
 #include "ev_macros.h"
 #include "ev_specials.h"
 #include "ev_bindings.h"
+#include "g_compat.h"
 #include "g_game.h"
 #include "p_info.h"
 #include "p_mobj.h"

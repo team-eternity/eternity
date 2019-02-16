@@ -38,6 +38,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "g_compat.h"
 #include "g_game.h"
 #include "m_bbox.h"  // ioanch 20160108: portal aware block iterator
 #include "p_enemy.h"

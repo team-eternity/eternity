@@ -34,6 +34,7 @@
 #include "e_exdata.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "g_compat.h"
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_compare.h"

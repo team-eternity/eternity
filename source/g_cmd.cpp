@@ -41,6 +41,7 @@
 #include "d_main.h"
 #include "e_player.h" // haleyjd: turbo cmd must alter playerclass info
 #include "f_wipe.h"
+#include "g_compat.h"
 #include "g_game.h"
 #include "hal/i_timer.h"
 #include "hu_stuff.h"

@@ -33,6 +33,7 @@
 #include "e_inventory.h"
 #include "ev_macros.h"
 #include "ev_specials.h"
+#include "g_compat.h"
 #include "g_game.h"
 #include "p_info.h"
 #include "p_scroll.h"

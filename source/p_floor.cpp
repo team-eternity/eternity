@@ -28,6 +28,7 @@
 
 #include "c_io.h"
 #include "doomstat.h"
+#include "g_compat.h"
 #include "m_argv.h"
 #include "p_info.h"
 #include "p_map.h"

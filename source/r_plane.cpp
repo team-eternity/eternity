@@ -43,6 +43,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "ev_specials.h"
+#include "g_compat.h"
 #include "p_anim.h"
 #include "p_info.h"
 #include "p_slopes.h"

@@ -33,6 +33,7 @@
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
+#include "g_compat.h"
 #include "m_random.h"
 #include "p_maputl.h"
 #include "p_mobj.h"

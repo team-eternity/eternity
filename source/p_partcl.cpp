@@ -34,6 +34,7 @@
 #include "doomstat.h"
 #include "doomtype.h"
 #include "e_ttypes.h"
+#include "g_compat.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_info.h"
