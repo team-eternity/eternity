@@ -809,6 +809,10 @@ bool G_Responder(const event_t* ev)
    int action;
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
 
+   // This if is here to ensure the game doesn't crash due to weapon selection inputs
+   if(gamestate == GS_CONSOLE)
+      return true;
+
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
