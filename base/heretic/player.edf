@@ -1,9 +1,35 @@
 //
-// EDF for Eternity Engine v3.49.00+
+// EDF for Eternity Engine v4.01.00+
 //
-// Heretic Weapons
+// Heretic Player-related Definitions
 //
 
+//=============================================================================
+//
+// Corvus Player Class
+//
+
+skin corvus {}
+
+playerclass Corvus
+{
+   defaultskin    corvus
+   thingtype      HereticPlayer
+   altattackstate S_HPLAY_ATK2
+
+   weaponslot 1 { weapons : Gauntlets, Staff }
+   weaponslot 2 { weapons : GoldWand }
+   weaponslot 3 { weapons : Crossbow }
+   weaponslot 4 { weapons : Blaster }
+   weaponslot 5 { weapons : SkullRod }
+   weaponslot 6 { weapons : PhoenixRod }
+   weaponslot 7 { weapons : Mace }
+   weaponslot 8 { weapons : Gauntlets }
+
+   rebornitem AmmoWandCrystal, 50
+   rebornitem Staff
+   rebornitem GoldWand
+}
 
 //=============================================================================
 //

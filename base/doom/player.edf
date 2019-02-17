@@ -1,8 +1,36 @@
 //
-// EDF for Eternity Engine v3.49.00+
+// EDF for Eternity Engine v4.01.00+
 //
-// DOOM Weapons
+// DOOM Player-related Definitions
 //
+
+//=============================================================================
+//
+// Doom Marine Player Class
+//
+
+skin marine {}
+
+playerclass DoomMarine
+{
+   defaultskin    marine
+   thingtype      DoomPlayer
+   altattackstate S_PLAY_ATK2
+
+   weaponslot 1 { weapons : Chainsaw, Fist }
+   weaponslot 2 { weapons : Pistol }
+   weaponslot 3 { weapons : SuperShotgun, Shotgun }
+   weaponslot 4 { weapons : Chaingun }
+   weaponslot 5 { weapons : MissileLauncher }
+   weaponslot 6 { weapons : PlasmaRifle }
+   weaponslot 7 { weapons : BFG9000 }
+   weaponslot 8 { weapons : Chainsaw }
+   weaponslot 9 { weapons : SuperShotgun }
+
+   rebornitem AmmoClip, 50
+   rebornitem Fist
+   rebornitem Pistol
+}
 
 //=============================================================================
 //
