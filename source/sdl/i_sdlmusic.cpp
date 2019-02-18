@@ -171,7 +171,7 @@ volatile bool adlplaying = false;
 int midi_device      = 0;
 // TODO: Remove constexpr and uncomment all external instances of adlmidi_numcards,
 // and snd_numcards. Only do so once playback with > 2 is correct.
-constexpr int adlmidi_numcards = 2;
+constexpr int adlmidi_numcards = 1;
 int adlmidi_bank               = 72;
 
 //
@@ -654,6 +654,7 @@ static int I_SDLRegisterSong(void *data, int size)
       adl_setNumChips(adlmidi_player, adlmidi_numcards);
       adl_setBank(adlmidi_player, adlmidi_bank);
       // ADLMIDI_FIXME: This
+      adl_switchEmulator(adlmidi_player, ADLMIDI_EMU_NUKED);
       adl_setNumFourOpsChn(adlmidi_player, -1);
       if(adl_openData(adlmidi_player, data, long(size)) == 0)
          return 1;
