@@ -644,7 +644,7 @@ static int I_SDLRegisterSong(void *data, int size)
       adl_setNumChips(adlmidi_player, adlmidi_numcards);
       adl_setBank(adlmidi_player, adlmidi_bank);
       // ADLMIDI_FIXME: This
-      adl_setNumFourOpsChn(adlmidi_player, 0);
+      adl_setNumFourOpsChn(adlmidi_player, -1);
       if(adl_openData(adlmidi_player, data, long(size)) == 0)
          return 1;
       // Opening data went wrong
