@@ -182,8 +182,7 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 {
    adlplaying = true;
    // TODO: Remove the exiting check once all atexit calls are erradicated
-   //if(exiting || Mix_PausedMusic())
-   if(Mix_PausedMusic())
+   if(Mix_PausedMusic()) //if(exiting || Mix_PausedMusic())
    {
       adlplaying = false;
       return;
@@ -319,6 +318,14 @@ static void I_SDLPlaySong(int handle, int looping)
       Mix_HookMusic(I_EffectSPC, NULL);
    else
 #endif
+#ifdef HAVE_ADLMIDILIB
+      if(adlmidi_player)
+      {
+         Mix_HookMusic(I_effectADLMIDI, nullptr);
+         adl_setLoopEnabled(adlmidi_player, looping);
+      }
+      else
+#endif
 #ifdef EE_FEATURE_MIDIRPC
    if(serverMidiPlaying)
       I_MidiRPCPlaySong(!!looping);
@@ -370,8 +377,12 @@ static void I_SDLPauseSong(int handle)
 
    if(CHECK_MUSIC(handle))
    {
-      // Not for mids
+      // Not for mids (MaxW: except libADLMIDI!)
+#ifdef HAVE_ADLMIDILIB
+      if(Mix_GetMusicType(music) != MUS_MID || midi_device == 0)
+#else
       if(Mix_GetMusicType(music) != MUS_MID)
+#endif
          Mix_PauseMusic();
       else
       {
@@ -397,8 +408,12 @@ static void I_SDLResumeSong(int handle)
 
    if(CHECK_MUSIC(handle))
    {
-      // Not for mids
+      // Not for mids (MaxW: except libADLMIDI!)
+#ifdef HAVE_ADLMIDILIB
+      if(Mix_GetMusicType(music) != MUS_MID || midi_device == 0)
+#else
       if(Mix_GetMusicType(music) != MUS_MID)
+#endif
          Mix_ResumeMusic();
       else
          Mix_VolumeMusic(paused_midi_volume);
@@ -423,7 +438,12 @@ static void I_SDLStopSong(int handle)
 
 #ifdef HAVE_SPCLIB
    if(snes_spc)
-      Mix_HookMusic(NULL, NULL);
+      Mix_HookMusic(nullptr, nullptr);
+#endif
+
+#ifdef HAVE_ADLMIDILIB
+   if(adlmidi_player)
+      Mix_HookMusic(nullptr, nullptr);
 #endif
 }
 
@@ -437,6 +457,15 @@ static void I_SDLUnRegisterSong(int handle)
    {
       I_MidiRPCStopSong();
       serverMidiPlaying = false;
+   }
+#endif
+
+#ifdef HAVE_ADLMIDILIB
+   if(adlmidi_player)
+   {
+      Mix_HookMusic(nullptr, nullptr);
+      adl_close(adlmidi_player);
+      adlmidi_player = nullptr;
    }
 #endif
 
@@ -574,10 +603,14 @@ static int I_SDLRegisterSong(void *data, int size)
       size   = midlen;
       isMIDI = true;   // now it's a MIDI.
    }
-   
+
 #ifdef EE_FEATURE_MIDIRPC
    // Check for option to invoke RPC server if isMIDI
+#ifdef HAVE_ADLMIDILIB
+   if(isMIDI && haveMidiServer && midi_device == -1)
+#else
    if(isMIDI && haveMidiServer)
+#endif
    {
       // Init client if not yet started
       if(!haveMidiClient)
@@ -604,7 +637,23 @@ static int I_SDLRegisterSong(void *data, int size)
    }
 #endif
 
-   return music != NULL;
+#ifdef HAVE_ADLMIDILIB
+   if(isMIDI && midi_device == 0)
+   {
+      adlmidi_player = adl_init(44100);
+      adl_setNumChips(adlmidi_player, adlmidi_numcards);
+      adl_setBank(adlmidi_player, adlmidi_bank);
+      // ADLMIDI_FIXME: This
+      adl_setNumFourOpsChn(adlmidi_player, 0);
+      if(adl_openData(adlmidi_player, data, long(size)) == 0)
+         return 1;
+      // Opening data went wrong
+      adl_close(adlmidi_player);
+      adlmidi_player = nullptr;
+   }
+#endif
+
+   return music != nullptr;
 }
 
 //
@@ -617,11 +666,14 @@ static int I_SDLQrySongPlaying(int handle)
    // haleyjd: this is never called
    // julian: and is that a reason not to code it?!?
    // haleyjd: ::shrugs::
-#ifdef HAVE_SPCLIB
-   return CHECK_MUSIC(handle) || snes_spc != NULL;
-#else
-   return CHECK_MUSIC(handle);
+   return
+#ifdef HAVE_ADLMIDILIB
+      adlmidi_player != nullptr ||
 #endif
+#ifdef HAVE_SPCLIB
+      snes_spc != nullptr ||
+#endif
+      CHECK_MUSIC(handle);
 }
 
 i_musicdriver_t i_sdlmusicdriver =
