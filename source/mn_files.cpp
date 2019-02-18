@@ -854,17 +854,14 @@ CONSOLE_COMMAND(mn_selectflat, 0)
 CONSOLE_COMMAND(snd_selectbank, 0)
 {
    static const char *const *banknames = adl_getBankNames();
-   int i;
    int curnum;
 
    // clear directory
    MN_ClearDirectory(&mn_diskdir);
 
    // run through banks
-   for(i = 0; i <= BANKS_MAX; i++)
-   {
+   for(int i = 0; i <= BANKS_MAX; i++)
       MN_addFile(&mn_diskdir, banknames[i]);
-   }
 
    if(mn_diskdir.numfiles < 1)
    {
@@ -880,11 +877,11 @@ CONSOLE_COMMAND(snd_selectbank, 0)
    if((curnum = MN_findFile(&mn_diskdir, banknames[adlmidi_bank])) != mn_diskdir.numfiles)
       selected_item = curnum;
 
-   mn_currentdir = &mn_diskdir;
+   mn_currentdir    = &mn_diskdir;
    help_description = "select sound bank:";
-   variable_name = "snd_bank";
-   select_dismiss = true;
-   allow_exit = true;
+   variable_name    = "snd_bank";
+   select_dismiss   = true;
+   allow_exit       = true;
 
    MN_PushWidget(&file_selector);
 }

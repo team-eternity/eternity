@@ -162,6 +162,8 @@ static void I_EffectSPC(void *udata, Uint8 *stream, int len)
 }
 #endif
 
+#define ADLMIDISTEP sizeof(Uint16)
+
 #ifdef HAVE_ADLMIDILIB
 static ADL_MIDIPlayer *adlmidi_player = nullptr;
 volatile bool adlplaying = false;
@@ -176,11 +178,12 @@ int adlmidi_bank               = 72;
 // Play a MIDI via libADLMIDI
 // FIXME: adlmidi_numcards (adlmidi_player->NumCards) > 2 causes playback issues
 //
-/*static void I_EffectADLMIDI(void *udata, Uint8 *stream, int len)
+static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 {
    adlplaying = true;
    // TODO: Remove the exiting check once all atexit calls are erradicated
-   if(exiting || Mix_PausedMusic())
+   //if(exiting || Mix_PausedMusic())
+   if(Mix_PausedMusic())
    {
       adlplaying = false;
       return;
@@ -198,7 +201,7 @@ int adlmidi_bank               = 72;
    }
    efree(outbuff);
    adlplaying = false;
-}*/
+}
 
 #endif
 
