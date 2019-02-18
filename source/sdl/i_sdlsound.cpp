@@ -742,32 +742,6 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
    S_CacheDigitalSoundLump(sound);
 }
 
-static void I_SDLDummyCallback(void *, Uint8 *, int) {} 
-
-//
-// I_SDLTestSoundBufferSize
-//
-// This shouldn't be necessary except for really bad API design.
-//
-static Uint32 I_SDLTestSoundBufferSize()
-{
-   Uint32 ret = 0;
-   SDL_AudioSpec want, have;
-   want.freq     = snd_samplerate;
-   want.format   = MIX_DEFAULT_FORMAT;
-   want.channels = 2;
-   want.samples  = audio_buffers;
-   want.callback = I_SDLDummyCallback;
-
-   if(SDL_OpenAudio(&want, &have) >= 0)
-   {
-      ret = have.size;
-      SDL_CloseAudio();
-   }
-
-   return ret;
-}
-
 //
 // I_SDLInitSound
 //
@@ -787,16 +761,11 @@ static int I_SDLInitSound()
    if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
-   // Figure out mix buffer sizes
-   mixbuffer_size = I_SDLTestSoundBufferSize() / SAMPLESIZE;
-   if(!mixbuffer_size)
-   {
-      printf("Couldn't determine sound mixing buffer size.\n");
-      nosfxparm   = true;
-      nomusicparm = true;
-      return 0;
-   }
-   
+   // Figure out mix buffer sizes by dividing the results of SDL_audio.c's
+   // SDL_CalculateAudioSpec size calculation by SAMPLESIZE. The 2 is number of channels.
+   mixbuffer_size = ((SDL_AUDIO_BITSIZE(MIX_DEFAULT_FORMAT) / 8) * 2 * audio_buffers) /
+                    SAMPLESIZE;
+
    if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
    {
       printf("Couldn't open audio with desired format.\n");
@@ -804,7 +773,7 @@ static int I_SDLInitSound()
       nomusicparm = true;
       return 0;
    }
-   
+
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
