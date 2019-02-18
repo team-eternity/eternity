@@ -69,19 +69,25 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <ConformanceMode>false</ConformanceMode>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\adlmidi\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -91,7 +97,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <ConformanceMode>false</ConformanceMode>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\adlmidi\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -103,7 +108,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <ConformanceMode>false</ConformanceMode>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\adlmidi\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -119,7 +123,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <ConformanceMode>false</ConformanceMode>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\adlmidi\include</AdditionalIncludeDirectories>
     </ClCompile>
@@ -132,9 +135,10 @@
     <ClInclude Include="..\adlmidi\include\adlmidi.h" />
     <ClInclude Include="..\adlmidi\include\adlmidi.hpp" />
     <ClInclude Include="..\adlmidi\src\adldata.hh" />
-    <ClInclude Include="..\adlmidi\src\adlmidi_mus2mid.h" />
+    <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.h" />
+    <ClInclude Include="..\adlmidi\src\adlmidi_cvt.hpp" />
     <ClInclude Include="..\adlmidi\src\adlmidi_private.hpp" />
-    <ClInclude Include="..\adlmidi\src\adlmidi_xmi2mid.h" />
+    <ClInclude Include="..\adlmidi\src\adlmidi_ptr.hpp" />
     <ClInclude Include="..\adlmidi\src\chips\dosbox\dbopl.h" />
     <ClInclude Include="..\adlmidi\src\chips\dosbox_opl3.h" />
     <ClInclude Include="..\adlmidi\src\chips\nuked\nukedopl3.h" />
@@ -142,7 +146,13 @@
     <ClInclude Include="..\adlmidi\src\chips\nuked_opl3.h" />
     <ClInclude Include="..\adlmidi\src\chips\nuked_opl3_v174.h" />
     <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.h" />
+    <ClInclude Include="..\adlmidi\src\cvt_mus2mid.hpp" />
+    <ClInclude Include="..\adlmidi\src\cvt_xmi2mid.hpp" />
+    <ClInclude Include="..\adlmidi\src\file_reader.hpp" />
     <ClInclude Include="..\adlmidi\src\fraction.hpp" />
+    <ClInclude Include="..\adlmidi\src\midi_sequencer.h" />
+    <ClInclude Include="..\adlmidi\src\midi_sequencer.hpp" />
+    <ClInclude Include="..\adlmidi\src\midi_sequencer_impl.hpp" />
     <ClInclude Include="..\adlmidi\src\wopl\wopl_file.h" />
   </ItemGroup>
   <ItemGroup>
@@ -150,18 +160,24 @@
     <ClCompile Include="..\adlmidi\src\adlmidi.cpp" />
     <ClCompile Include="..\adlmidi\src\adlmidi_load.cpp" />
     <ClCompile Include="..\adlmidi\src\adlmidi_midiplay.cpp" />
-    <ClCompile Include="..\adlmidi\src\adlmidi_mus2mid.c" />
     <ClCompile Include="..\adlmidi\src\adlmidi_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\adlmidi_private.cpp" />
-    <ClCompile Include="..\adlmidi\src\adlmidi_xmi2mid.c" />
+    <ClCompile Include="..\adlmidi\src\adlmidi_sequencer.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\dosbox\dbopl.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\dosbox_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\nuked\nukedopl3.c" />
     <ClCompile Include="..\adlmidi\src\chips\nuked\nukedopl3_174.c" />
     <ClCompile Include="..\adlmidi\src\chips\nuked_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\nuked_opl3_v174.cpp" />
-    <ClCompile Include="..\adlmidi\src\chips\opl_chip_base.cpp" />
     <ClCompile Include="..\adlmidi\src\wopl\wopl_file.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.tcc">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.tcc">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
