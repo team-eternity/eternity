@@ -91,9 +91,7 @@ enum cheatnum_e
    CHEAT_HTICPOWERF,
    CHEAT_HTICPOWERR,
    CHEAT_HTICPOWER,
-   CHEAT_HTICGIMME0,
-   CHEAT_HTICGIMME1,
-   CHEAT_HTICGIMME2,
+   CHEAT_HTICGIMME,
    CHEAT_HTICRAMBO,
 
    // Shared Cheats
@@ -133,9 +131,6 @@ extern cheat_s cheat[CHEAT_NUMCHEATS];
 
 bool M_FindCheats(int key);
 void M_DoCheat(char *cheatname);
-
-void M_AddNukeSpec(int mobjType, void (*func)(Mobj *)); // haleyjd
-void M_CopyNukeSpec(int destType, int srcType);
 
 extern int idmusnum;
 

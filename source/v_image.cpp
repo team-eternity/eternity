@@ -32,7 +32,6 @@
 #include "m_qstrkeys.h"
 #include "m_binary.h"
 #include "v_image.h"
-#include "w_wad.h"
 #include "z_auto.h"
 
 // Need libpng

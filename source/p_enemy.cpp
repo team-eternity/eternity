@@ -48,7 +48,6 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
-#include "m_random.h"
 #include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
@@ -203,6 +202,8 @@ bool P_CheckMeleeRange(Mobj *actor)
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
          return false;
+      // TODO: add support for Strife's z-clipping which doesn't limit vertical
+      // range if target is below attacker!
    }
 
    // ioanch 20151225: make it linked-portal aware
@@ -215,10 +216,12 @@ bool P_CheckMeleeRange(Mobj *actor)
    ty = pl->y;
 #endif
 
+   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
+   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
+
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(tx - actor->x, ty - actor->y) <
-       MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
+      (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
 }
 
@@ -453,13 +456,13 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(P_Use3DClipping())
    {
-      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
+      if(!(actor->flags & MF_FLOAT) && actor->z > actor->zref.floor &&
          !(actor->intflags & MIF_ONMOBJ))
       {
-         if (actor->z > actor->floorz + STEPSIZE)
+         if (actor->z > actor->zref.floor + STEPSIZE)
             return false;
          else
-            actor->z = actor->floorz;
+            actor->z = actor->zref.floor;
       }
    }
 
@@ -493,9 +496,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    {
       fixed_t x = actor->x;
       fixed_t y = actor->y;
-      fixed_t floorz = actor->floorz;
-      fixed_t ceilingz = actor->ceilingz;
-      fixed_t dropoffz = actor->dropoffz;
+      fixed_t floorz = actor->zref.floor;
+      fixed_t ceilingz = actor->zref.ceiling;
+      fixed_t dropoffz = actor->zref.dropoff;
       
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
       
@@ -507,9 +510,9 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          P_UnsetThingPosition(actor);
          actor->x = x;
          actor->y = y;
-         actor->floorz = floorz;
-         actor->ceilingz = ceilingz;
-         actor->dropoffz = dropoffz;
+         actor->zref.floor = floorz;
+         actor->zref.ceiling = ceilingz;
+         actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
          movefactor *= FRACUNIT / ORIG_FRICTION_FACTOR / 4;
          actor->momx += FixedMul(deltax, movefactor);
@@ -525,7 +528,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       {
          fixed_t savedz = actor->z;
 
-         if(actor->z < clip.floorz)          // must adjust height
+         if(actor->z < clip.zref.floor)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
@@ -609,7 +612,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
          fixed_t oldz = actor->z;
-         actor->z = actor->floorz;
+         actor->z = actor->zref.floor;
          
          if(actor->z < oldz)
             E_HitFloor(actor);
@@ -878,8 +881,8 @@ void P_NewChaseDir(Mobj *actor)
 
    if(demo_version >= 203)
    {
-      if(actor->floorz - actor->dropoffz > STEPSIZE &&
-         actor->z <= actor->floorz &&
+      if(actor->zref.floor - actor->zref.dropoff > STEPSIZE &&
+         actor->z <= actor->zref.floor &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
@@ -1463,7 +1466,7 @@ void P_BossTeleport(bossteleport_t *bt)
          bt->hereThere != BOSSTELE_NONE)
          P_SpawnMobj(boss->x, boss->y, boss->z + bt->zpamt, bt->fxtype);
 
-      boss->z = boss->floorz;
+      boss->z = boss->zref.floor;
       boss->angle = targ->angle;
       boss->momx = boss->momy = boss->momz = 0;
       boss->backupPosition();

@@ -66,6 +66,7 @@ int NullStateNum;
 #define ITEM_FRAME_ARGS      "args"
 #define ITEM_FRAME_DEHNUM    "dehackednum"
 #define ITEM_FRAME_CMP       "cmp"
+#define ITEM_FRAME_SKILL5FAST "SKILL5FAST"
 
 #define ITEM_DELTA_NAME      "name"
 
@@ -92,6 +93,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
    CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
    CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
+   CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
    CFG_END()
 
 cfg_opt_t edf_frame_opts[] =
@@ -112,6 +114,11 @@ cfg_opt_t edf_fblock_opts[] =
    CFG_STR(ITEM_FRAMEBLOCK_FDS,    nullptr, CFGF_NONE),
    CFG_STR(ITEM_FRAMEBLOCK_STATES, nullptr, CFGF_NONE),
    CFG_END()
+};
+
+static const dehflags_t frameFlagSet[] =
+{
+   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST }
 };
 
 //
@@ -227,7 +234,7 @@ int E_SafeStateName(const char *name)
 // Allows lookup of what may either be an EDF global state name, DECORATE state 
 // label relative to a particular mobjinfo, or a state DeHackEd number.
 //
-int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
+int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name)
 {
    char *pos = nullptr;
    long  num = strtol(name, &pos, 0);
@@ -236,7 +243,7 @@ int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
    if(estrnonempty(pos))
    {
       int      statenum;
-      state_t *state    = nullptr;
+      const state_t *state = nullptr;
       
       // Try global resolution first.
       if((statenum = E_StateNumForName(name)) < 0)
@@ -1086,10 +1093,8 @@ static void E_ProcessCmpState(const char *value, int i)
       while(!early_args_end)
       {
          NEXTTOKEN();
-         
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
@@ -1139,9 +1144,7 @@ static void E_ProcessCmpState(const char *value, int i)
       {
          NEXTTOKEN();
 
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
@@ -1259,6 +1262,9 @@ hitcmp:
          E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
       }
    }
+
+   // Set flags
+   E_SetFlagsFromPrefixCfg(framesec, states[i]->flags, frameFlagSet);
 
    // 01/01/12: the following fields are allowed when processing a 
    // DECORATE-reserved state

@@ -8,6 +8,200 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+13.02.2019
+
+BUGFIX: Fixed a crash happening with slopes having MBF-transferred skies.
+
+        Fixed wrong drawing of animated textures on slopes when the textures are
+        of different sizes.
+
+--------------------------------------------------------------------------------
+09.02.2019
+
+BUGFIX: Fixed a memory leak where things with alphavelocity would never be
+        deallocated and gradually slow the game to a crawl.
+
+--------------------------------------------------------------------------------
+07.02.2019
+
+IMPROVEMENT: Masked textures (such as mid-grates) can now be applied on portal
+             overlays. They can even use the SMMU rippling animation (unlike the
+             2-sided linedef midtextures).
+
+--------------------------------------------------------------------------------
+27.01.2019
+
+FEATURE: F_SKY1 now when applied on middle textures has the same effect as floor
+         and ceiling skies.
+
+--------------------------------------------------------------------------------
+25.01.2019
+
+FEATURE: Added some UDMF-exclusive fields to ExtraData: linedef portalid and 
+         sector portalid.floor and portalid.ceiling, so that Portal_Define 
+         doesn't require UDMF any longer.
+
+--------------------------------------------------------------------------------
+22.01.2019
+
+FEATURE: Added a "game.itemheight" property to EDF game properties which
+         overrides item pickup height, which is set to 8 in Doom/Strife and to
+         32 in Heretic/Hexen.
+
+--------------------------------------------------------------------------------
+20.01.2019
+
+BUGFIX: Fixed the wrong drawing of Heretic weapons when no status bar is drawn.
+        Added a "fullscreenoffset" floating-point field in weaponinfo for that,
+        because Heretic weapons have different hardcoded offsets.
+
+--------------------------------------------------------------------------------
+12.01.2019
+
+BUGFIX: Fixed polyobject doors which rotate more than 180 degrees from
+        malfunctioning when blocked by things when closing.
+
+IMPROVEMENT: Scrolling texture movement (including attached 3dmidtex) is now
+             interpolated.
+
+--------------------------------------------------------------------------------
+25.12.2018
+
+IMPROVEMENT: Chasecam and walkcam are now portal-aware. Interpolation is however
+             disabled.
+
+--------------------------------------------------------------------------------
+25.11.2018
+
+IMPROVEMENT: Now if an action is bound to more than one key, and two of the keys
+             are being pressed, releasing just one of them will not stop the
+             action. You need to release all of them.
+
+--------------------------------------------------------------------------------
+19.11.2018
+
+IMPROVEMENT: Changed how floating objects move in relation to portal
+             polyobjects. They no longer remain fixed relative to the inner
+             chamber sectors, but are shifted in the opposite direction, so they
+             appear as remaining fixed relative to the main world. This
+             behaviour is more consistent with how thing movement isn't
+             influenced by traditional vertically moving sectors, and more
+             stable as well than just adapting velocity when passing the portal.
+             It also avoids unrealistic direction changes when the containing
+             polyobject changes movement.
+
+             Polyobject portals now show in the map as part of the main area,
+             because indeed they rarely ever overlap anything vertically.
+
+--------------------------------------------------------------------------------
+17.11.2018
+
+BUGFIX: Interpolate the walkcam while the game is paused. Previously it would
+        only interpolate while the game was running, but the walkcam is one of
+        the few cameras controllable even while the game is paused.
+
+        Fixed a bug where the walkcam would move a bit backwards when opening
+        the console.
+
+        Fixed objects standing on the outer edges of portal polyobjects not up-
+        dating their floor reference Z, thus floating above ground when the
+        polyobject is gone from below them.
+
+IMPROVEMENT: Console movement is now interpolated.
+
+--------------------------------------------------------------------------------
+13.11.2018
+
+BUGFIX: Fixed edge-case situations where line portal teleportation would fail,
+        such as when sliding really slowly along a wall, or almost parallel to
+        one.
+
+        Also fixed several cases where portal interpolation would fail display-
+        ing correctly.
+
+--------------------------------------------------------------------------------
+05.07.2018
+
+BUGFIX: Fixed a problem where particles appeared in the wrong place, because of
+        nearby portals.
+
+--------------------------------------------------------------------------------
+29.06.2018
+
+IMPROVEMENT: Movement through portals is finally interpolated. No more hops or
+             slight discontinuities.
+
+--------------------------------------------------------------------------------
+27.06.2018
+
+BUGFIX: Fixed a situation where linedefs would still block despite being in
+        different portal layers.
+
+--------------------------------------------------------------------------------
+20.06.2018
+
+BUGFIX: Fixed a rare glitch, which would sometimes even crash the macOS-based
+        launcher app, due to malformed or otherwise bad IWAD file URLs.
+
+        Now building Eternity from macOS is easier, as the dependencies are
+        automatically downloaded.
+
+--------------------------------------------------------------------------------
+06.06.2018
+
+BUGFIX: Fixed a problem with the macOS launcher putting IWADs in the PWAD list
+        when user is alerted when attempting to start game with no IWAD.
+
+--------------------------------------------------------------------------------
+02.06.2018
+
+BUGFIX: Fixed a regression with portal autoaiming. It would sometimes fail when
+        attempting to aim through a sector portal.
+
+--------------------------------------------------------------------------------
+07.05.2018
+
+FEATURE: Added a CHASEFAST EDF game property flag. Needed to support Raven games
+         (Heretic and Hexen) where the monster A_Chase frames are speeded up on
+         -fast and skill 5.
+
+         Added the SKILL5FAST prefix flag for non-Decorate frame and framedelta
+         definitions, which supports halving the frame time on skill 5 and -fast
+         (Doom's demons), same as what Decorate has been having with "fast".
+
+--------------------------------------------------------------------------------
+06.05.2018
+
+BUGFIX: ChangeSkill (linedef special) must also update the fast parameters when
+        switching to or from nightmare or black plague mode.
+
+        Fixed a lockup caused by having an EDF animation block of different tex-
+        ture type than something already defined internally.
+
+--------------------------------------------------------------------------------
+03.05.2018
+
+FEATURE: Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
+         powered staff.
+
+--------------------------------------------------------------------------------
+02.05.2018
+
+BUGFIX: The Heretic skills 1 and 5 now multiply the ammo per item correctly.
+
+FEATURE: Added game.skillammomultiplier EDF gameprop specifier to customize this.
+
+--------------------------------------------------------------------------------
+01.05.2018
+
+BUGFIX: Fixed a buffer reading runaway when a demo has no marker at the end.
+        Thanks to vita for the bug fix.
+
+        Disabled interpolation for polyobjects with portals, until we add inter-
+        polation for portal deltas and transforms. It was suffering from
+        flickering.
+
+--------------------------------------------------------------------------------
 29.04.2018
 
 BUGFIX: Sounds with "alias" or "random" entries didn't work correctly in sound

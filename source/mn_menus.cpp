@@ -139,7 +139,7 @@ void MN_InitMenus()
 // Note: The main menu is modified dynamically to point to
 // the rest of the old menu system when appropriate.
 
-void MN_MainMenuDrawer()
+static void MN_MainMenuDrawer()
 {
    // hack for m_doom compatibility
    V_DrawPatch(94, 2, &subscreen43, 
@@ -1182,7 +1182,7 @@ CONSOLE_COMMAND(mn_chatmacros, 0)
 // Player Setup
 //
 
-void MN_PlayerDrawer(void);
+static void MN_PlayerDrawer(void);
 
 static menuitem_t mn_player_items[] =
 {
@@ -1276,7 +1276,7 @@ CONSOLE_COMMAND(mn_player, 0)
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
 
-void MN_SaveGame()
+static void MN_SaveGame()
 {
    int save_slot = 
       static_cast<int>((char **)(Console.command->variable->variable) - savegamenames);
@@ -1341,7 +1341,7 @@ void MN_CreateSaveCmds()
 //  read the strings from the savegame files
 // based on the mbf sources
 //
-void MN_ReadSaveStrings()
+static void MN_ReadSaveStrings()
 {
    for(int i = 0; i < SAVESLOTS; i++)
    {
@@ -1381,7 +1381,7 @@ void MN_ReadSaveStrings()
    }
 }
 
-void MN_DrawSaveLoadBorder(int x, int y)
+static void MN_DrawSaveLoadBorder(int x, int y)
 {
    patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
    patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
@@ -1403,7 +1403,7 @@ void MN_DrawSaveLoadBorder(int x, int y)
    Z_ChangeTag(patch_right, PU_CACHE);
 }
 
-void MN_LoadGameDrawer();
+static void MN_LoadGameDrawer();
 
 // haleyjd: all saveslot names changed to be consistent
 
@@ -1431,7 +1431,7 @@ menu_t menu_loadgame =
 };
 
 
-void MN_LoadGameDrawer()
+static void MN_LoadGameDrawer()
 {
    static char *emptystr = NULL;
 
@@ -1544,7 +1544,7 @@ CONSOLE_COMMAND(qload, cf_hidden)
 // Save Game
 //
 
-void MN_SaveGameDrawer();
+static void MN_SaveGameDrawer();
 
 // haleyjd: fixes continue here from 8-17 build
 
@@ -1571,7 +1571,7 @@ menu_t menu_savegame =
    MN_SaveGameDrawer,
 };
 
-void MN_SaveGameDrawer()
+static void MN_SaveGameDrawer()
 {
    V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
 
@@ -2021,7 +2021,7 @@ static menu_t *mn_vidpage_menus[] =
    NULL
 };
 
-void MN_VideoModeDrawer();
+static void MN_VideoModeDrawer();
 
 static menuitem_t mn_video_items[] =
 {
@@ -2058,7 +2058,7 @@ menu_t menu_video =
    mn_vidpage_menus
 };
 
-void MN_VideoModeDrawer()
+static void MN_VideoModeDrawer()
 {
    int lump, y;
    patch_t *patch;
@@ -2765,17 +2765,18 @@ static menuitem_t mn_hud_items[] =
    {it_title,      "HUD Settings",         NULL,      "m_hud"},
    {it_gap},
    {it_info,       "Message Options"},
-   {it_toggle,     "Messages",                     "hu_messages"},
-   {it_toggle,     "Message color",                "hu_messagecolor"},
+   {it_toggle,     "Messages",                     "hu_messages"     },
+   {it_toggle,     "Message color",                "hu_messagecolor" },
    {it_toggle,     "Messages scroll",              "hu_messagescroll"},
-   {it_toggle,     "Message lines",                "hu_messagelines"},
-   {it_variable,   "Message time (ms)",            "hu_messagetime"},
-   {it_toggle,     "Obituaries",                   "hu_obituaries"},
-   {it_toggle,     "Obituary color",               "hu_obitcolor"},
+   {it_toggle,     "Message lines",                "hu_messagelines" },
+   {it_variable,   "Message time (ms)",            "hu_messagetime"  },
+   {it_toggle,     "Obituaries",                   "hu_obituaries"   },
+   {it_toggle,     "Obituary color",               "hu_obitcolor"    },
    {it_gap},
-   {it_info,       "BOOM HUD options"},
-   {it_toggle,     "Display type",                 "hu_overlay"},
-   {it_toggle,     "Hide secrets",                 "hu_hidesecrets"},
+   {it_info,       "HUD Overlay options"},
+   {it_toggle,     "Overlay type",                 "hu_overlayid"   },
+   {it_toggle,     "Overlay layout",               "hu_overlaystyle"},
+   {it_toggle,     "Hide secrets",                 "hu_hidesecrets" },
    {it_end}
 };
 
@@ -3094,7 +3095,7 @@ static menuitem_t mn_weapons_items[] =
    {it_toggle,     "Bfg type",                       "bfgtype"},
    {it_toggle,     "Bobbing",                        "bobbing"},
    {it_toggle,     "Recoil",                         "recoil"},
-   {it_toggle,     "Fist/SSG toggle",                "doom_weapon_toggles"},
+   {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
    {it_gap},
    {it_end},
@@ -3339,19 +3340,19 @@ static menuitem_t mn_movekeys_items[] =
    {it_gap},
    {it_info,         "Basic Movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding,      "Move forward",    "forward"},
-   {it_binding,      "Move backward",   "backward"},
-   {it_binding,      "Run",             "speed"},
-   {it_binding,      "Turn left",       "left"},
-   {it_binding,      "Turn right",      "right"},
-   {it_binding,      "Strafe on",       "strafe"},
-   {it_binding,      "Strafe left",     "moveleft"},
+   {it_binding,      "Move forward",    "forward"  },
+   {it_binding,      "Move backward",   "backward" },
+   {it_binding,      "Run",             "speed"    },
+   {it_binding,      "Turn left",       "left"     },
+   {it_binding,      "Turn right",      "right"    },
+   {it_binding,      "Strafe on",       "strafe"   },
+   {it_binding,      "Strafe left",     "moveleft" },
    {it_binding,      "Strafe right",    "moveright"},
-   {it_binding,      "180 degree turn", "flip"},
-   {it_binding,      "Use",             "use"},
-   {it_binding,      "Attack/fire",     "attack"},
+   {it_binding,      "180 degree turn", "flip"     },
+   {it_binding,      "Use",             "use"      },
+   {it_binding,      "Attack/fire",     "attack"   },
    {it_binding,      "Alt-attack/fire", "altattack"},
-   {it_binding,      "Toggle autorun",  "autorun"},
+   {it_binding,      "Toggle autorun",  "autorun"  },
    {it_end}
 };
 
@@ -3361,13 +3362,19 @@ static menuitem_t mn_advkeys_items[] =
    {it_gap},
    {it_info,         "Advanced Movement", NULL, NULL, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding,      "Jump",            "jump"},
-   {it_binding,      "MLook on",        "mlook"},
-   {it_binding,      "Look up",         "lookup"},
-   {it_binding,      "Look down",       "lookdown"},
-   {it_binding,      "Center view",     "center"},
-   {it_binding,      "Fly up",          "flyup"},
-   {it_binding,      "Fly down",        "flydown"},
+   {it_binding,      "Weapon Reload",   "reload"   },
+   {it_binding,      "Weapon Zoom",     "zoom"     },
+   {it_binding,      "Weapon State 1",  "user1"    },
+   {it_binding,      "Weapon State 2",  "user2"    },
+   {it_binding,      "Weapon State 3",  "user3"    },
+   {it_binding,      "Weapon State 4",  "user4"    },
+   {it_binding,      "Jump",            "jump"     },
+   {it_binding,      "MLook on",        "mlook"    },
+   {it_binding,      "Look up",         "lookup"   },
+   {it_binding,      "Look down",       "lookdown" },
+   {it_binding,      "Center view",     "center"   },
+   {it_binding,      "Fly up",          "flyup"    },
+   {it_binding,      "Fly down",        "flydown"  },
    {it_binding,      "Land",            "flycenter"},
    {it_end}
 };
@@ -3517,13 +3524,15 @@ static menuitem_t mn_function_items[] =
    {it_binding, "Save game",            "mn_savegame"}, 
    {it_binding, "Load game",            "mn_loadgame"},
    {it_binding, "Volume",               "mn_sound"},
-   {it_binding, "Toggle hud",           "hu_overlay /"},
+   {it_binding, "Toggle hud",           "hu_overlaystyle /"},
    {it_binding, "Quick save",           "quicksave"},
    {it_binding, "End game",             "mn_endgame"},
    {it_binding, "Toggle messages",      "hu_messages /"},
    {it_binding, "Quick load",           "quickload"},
    {it_binding, "Quit",                 "mn_quit"},
    {it_binding, "Gamma correction",     "gamma /"},
+   {it_gap},
+   {it_binding, "Join (-recordfromto)", "joindemo"},
    {it_end}
 };
 

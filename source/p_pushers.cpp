@@ -271,7 +271,7 @@ void PushThinker::Think()
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > thing->floorz) // above ground
+            if(thing->z > thing->zref.floor) // above ground
             {
                xspeed = this->x_mag; // full force
                yspeed = this->y_mag;

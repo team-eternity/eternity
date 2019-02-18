@@ -71,8 +71,6 @@ struct texcol_t;
 
 void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
 void R_AddSprites(sector_t *sec, int); // killough 9/18/98
-void R_AddPSprites(void);
-void R_DrawSprites(void);
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
 void R_DrawPostBSP(void);

@@ -603,7 +603,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
       // don't shoot portal lines
       if(demo_version >= 342)
       {
-         if(!hitplane && !li->backsector && R_IsSkyLikePortalWall(*li))
+         if(!hitplane && !li->backsector && R_IsSkyWall(*li))
             return false;
       }
       else if(!hitplane && li->portal)
@@ -803,7 +803,7 @@ static void check_intercept()
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po, void *context)
 {
    int       s1;
    int       s2;
@@ -848,7 +848,7 @@ bool PIT_AddLineIntercepts(line_t *ld, polyobj_s *po, void *context)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool PIT_AddThingIntercepts(Mobj *thing, void *context)
+static bool PIT_AddThingIntercepts(Mobj *thing, void *context)
 {
    fixed_t   x1, y1;
    fixed_t   x2, y2;
@@ -906,7 +906,7 @@ bool PIT_AddThingIntercepts(Mobj *thing, void *context)
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
+static bool P_TraverseIntercepts(traverser_t func, fixed_t maxfrac, void *context)
 {
    intercept_t *in = nullptr;
    int count = static_cast<int>(intercept_p - intercepts);

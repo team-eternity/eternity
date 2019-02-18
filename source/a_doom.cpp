@@ -601,7 +601,7 @@ static fixed_t  viletryy;
 //
 // Detect a corpse that could be raised.
 //
-bool PIT_VileCheck(Mobj *thing, void *context)
+static bool PIT_VileCheck(Mobj *thing, void *context)
 {
    int maxdist;
    int vileType = E_SafeThingType(MT_VILE);
@@ -1211,17 +1211,17 @@ void A_BossDeath(actionargs_t *actionargs)
       if(playeringame[i] && players[i].health > 0)
          break;
    }
-   
+
    // no one left alive, so do not end game
    if(i == MAXPLAYERS)
       return;
 
-   for(i = 0; i < NUM_BOSS_SPECS; i++)
+   for(boss_spec_t &boss_spec : boss_specs)
    {
       // to activate a special, the thing must be a boss that triggers
       // it, and the map must have the special enabled.
-      if((mo->flags2 & boss_specs[i].thing_flag) &&
-         (LevelInfo.bossSpecs & boss_specs[i].level_flag))
+      if((mo->flags2 & boss_spec.thing_flag) &&
+         (LevelInfo.bossSpecs & boss_spec.level_flag))
       {
          // scan the remaining thinkers to see if all bosses are dead
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
@@ -1229,15 +1229,15 @@ void A_BossDeath(actionargs_t *actionargs)
             Mobj *mo2;
             if((mo2 = thinker_cast<Mobj *>(th)))
             {
-               if(mo2 != mo && 
-                  (mo2->flags2 & boss_specs[i].thing_flag) && 
+               if(mo2 != mo &&
+                  (mo2->flags2 & boss_spec.thing_flag) &&
                   mo2->health > 0)
                   return;         // other boss not dead
             }
          }
 
          // victory!
-         switch(boss_specs[i].level_flag)
+         switch(boss_spec.level_flag)
          {
          case BSPEC_E1M8:
          case BSPEC_E4M8:

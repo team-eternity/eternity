@@ -103,7 +103,7 @@ void P_ClearHubs(void)
 
 // seperate function: ensure that atexit is not set twice
 
-void P_ClearHubsAtExit(void)
+static void P_ClearHubsAtExit(void)
 {
    static bool atexit_set = false;
    

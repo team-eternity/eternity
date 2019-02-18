@@ -81,6 +81,7 @@ extern int disable_sysmenu;
 #define ITEM_IWAD_FREEDOOM      "iwad_freedoom"
 #define ITEM_IWAD_FREEDOOMU     "iwad_freedoomu"
 #define ITEM_IWAD_FREEDM        "iwad_freedm"
+#define ITEM_IWAD_REKKR         "iwad_rekkr"
 #define ITEM_IWAD_CHOICE        "iwad_choice"
 
 // system defaults array
@@ -140,6 +141,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
                "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
+
+   DEFAULT_STR(ITEM_IWAD_REKKR, &gi_path_rekkr, NULL, "", default_t::wad_no,
+               "IWAD path for Rekkr (Ultimate Doom gamemission)"),
 
    DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
@@ -220,7 +224,7 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, true, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
-   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
                 "1 to enable use of GL ARB pixelbuffer object extension"),
 
    DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,

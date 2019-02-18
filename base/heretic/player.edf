@@ -1,9 +1,35 @@
 //
-// EDF for Eternity Engine v3.49.00+
+// EDF for Eternity Engine v4.01.00+
 //
-// Heretic Weapons
+// Heretic Player-related Definitions
 //
 
+//=============================================================================
+//
+// Corvus Player Class
+//
+
+skin corvus {}
+
+playerclass Corvus
+{
+   defaultskin    corvus
+   thingtype      HereticPlayer
+   altattackstate S_HPLAY_ATK2
+
+   weaponslot 1 { weapons : Gauntlets, Staff }
+   weaponslot 2 { weapons : GoldWand }
+   weaponslot 3 { weapons : Crossbow }
+   weaponslot 4 { weapons : Blaster }
+   weaponslot 5 { weapons : SkullRod }
+   weaponslot 6 { weapons : PhoenixRod }
+   weaponslot 7 { weapons : Mace }
+   weaponslot 8 { weapons : Gauntlets }
+
+   rebornitem AmmoWandCrystal, 50
+   rebornitem Staff
+   rebornitem GoldWand
+}
 
 //=============================================================================
 //
@@ -12,7 +38,7 @@
 
 weaponinfo Staff
 {
-  selectionorder 8000
+  selectionorder 8.0
 
   sisterweapon StaffPowered
 
@@ -20,6 +46,7 @@ weaponinfo Staff
   //mod          ""
   recoil       10
 
+  firstdecoratestate S_STAFFREADY
   states
   @"
   Ready:
@@ -44,7 +71,8 @@ weaponinfo StaffPowered : Staff
   sisterweapon Staff
 
   readysound   ht_stfcrk
-  addflags     READYSNDHALF|POWERED_UP
+  addflags     READYSNDHALF|POWEREDUP
+  mod          StaffPowered
 
   states
   @"
@@ -70,7 +98,7 @@ weaponinfo GoldWand
   ammotype     AmmoWandCrystal
   ammouse      1
 
-  selectionorder 5000
+  selectionorder 5.0
 
   sisterweapon GoldWandPowered
 
@@ -80,6 +108,9 @@ weaponinfo GoldWand
   hapticrecoil 1
   haptictime   1
 
+  fullscreenoffset 5
+
+  firstdecoratestate S_GOLDWANDREADY
   states
   @"
   Ready:
@@ -104,8 +135,9 @@ weaponinfo GoldWandPowered : GoldWand
 {
   sisterweapon GoldWand
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_GOLDWANDATK2_1
   states
   @"
   Fire:
@@ -122,7 +154,7 @@ weaponinfo Crossbow
   ammotype     AmmoEtherealArrow
   ammouse      1
 
-  selectionorder 3000
+  selectionorder 3.0
 
   sisterweapon   CrossbowPowered
 
@@ -132,6 +164,9 @@ weaponinfo Crossbow
   hapticrecoil 3
   haptictime   3
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_CRBOW1
   states
   @"
   Ready:
@@ -156,8 +191,9 @@ weaponinfo CrossbowPowered : Crossbow
 {
   sisterweapon Crossbow
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_CRBOWATK2_1
   states
   @"
   Fire:
@@ -178,7 +214,7 @@ weaponinfo Blaster
   ammotype     AmmoClawOrb
   ammouse      1
 
-  selectionorder 2000
+  selectionorder 2.0
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   //mod          ""
@@ -186,11 +222,11 @@ weaponinfo Blaster
   hapticrecoil 1
   haptictime   1
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_BLASTERREADY
   states
   @"
-  Spawn:
-    WBLS A -1
-    stop
   Ready:
     BLSR A 1 A_WeaponReady
     loop
@@ -215,7 +251,7 @@ weaponinfo SkullRod
   ammotype     AmmoRune
   ammouse      1
 
-  selectionorder 1000
+  selectionorder 1.0
 
   flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
   //mod          ""
@@ -223,6 +259,9 @@ weaponinfo SkullRod
   hapticrecoil 6
   haptictime   8
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_HORNRODREADY
   states
   @"
   Ready:
@@ -246,7 +285,7 @@ weaponinfo PhoenixRod
   ammotype     AmmoFlameOrb
   ammouse      1
 
-  selectionorder 7000
+  selectionorder 7.0
 
   sisterweapon PhoenixRodPowered
 
@@ -256,6 +295,9 @@ weaponinfo PhoenixRod
   hapticrecoil 2
   haptictime   1
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_PHOENIXREADY
   states
   @"
   Ready:
@@ -280,8 +322,9 @@ weaponinfo PhoenixRodPowered : PhoenixRod
 {
   sisterweapon PhoenixRod
 
-  addflags POWERED_UP|FLEEMELEE
+  addflags POWEREDUP|FLEEMELEE
 
+  firstdecoratestate S_PHOENIXATK2_1
   states
   @"
   Fire:
@@ -300,7 +343,7 @@ weaponinfo Mace
   ammotype     AmmoMaceSphere
   ammouse      1
 
-  selectionorder 4000
+  selectionorder 4.0
 
   sisterweapon MacePowered
 
@@ -310,6 +353,9 @@ weaponinfo Mace
   hapticrecoil 2
   haptictime   1
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_MACEREADY
   states
   @"
   Ready:
@@ -337,8 +383,9 @@ weaponinfo MacePowered : Mace
 
   sisterweapon Mace
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_MACEATK2_1
   states
   @"
   Fire:
@@ -353,7 +400,7 @@ weaponinfo MacePowered : Mace
 
 weaponinfo Gauntlets
 {
-  selectionorder 6000
+  selectionorder 6.0
 
   sisterweapon GauntletsPowered
 
@@ -361,6 +408,9 @@ weaponinfo Gauntlets
   //mod          ""
   upsound      ht_gntact
 
+  fullscreenoffset 15
+
+  firstdecoratestate S_GAUNTLETREADY
   states
   @"
   Ready:
@@ -387,8 +437,9 @@ weaponinfo GauntletsPowered : Gauntlets
 {
   sisterweapon Gauntlets
 
-  addflags POWERED_UP
+  addflags POWEREDUP
 
+  firstdecoratestate S_GAUNTLETREADY2_1
   states
   @"
   Ready:

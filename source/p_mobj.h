@@ -38,6 +38,7 @@
 #include "info.h"
 #include "m_fixed.h"
 #include "m_vector.h"   // ioanch 20160109: for portal rendering
+#include "p_map.h"
 #include "r_interpolate.h"
 #include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
@@ -252,11 +253,7 @@ public:
    subsector_t *subsector;
 
    // The closest interval over all contacted Sectors.
-   fixed_t floorz;
-   fixed_t ceilingz;
-
-   // killough 11/98: the lowest floor over all contacted Sectors.
-   fixed_t dropoffz;
+   zrefs_t zref;
 
    // For movement checking.
    fixed_t radius;
@@ -360,16 +357,6 @@ public:
 
    float xscale;      // haleyjd 11/22/09: x scaling
    float yscale;      // haleyjd 11/22/09: y scaling
-
-   fixed_t secfloorz;
-   fixed_t secceilz;
-
-   // SoM 11/6/02: Yet again! Two more z values that must be stored
-   // in the mobj struct 9_9
-   // These are the floor and ceiling heights given by the first
-   // clipping pass (map architecture + 3d sides).
-   fixed_t passfloorz;
-   fixed_t passceilz;
 
    prevpos_t prevpos;   // previous position for interpolation
 
@@ -750,6 +737,20 @@ enum
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
+
+//=============================================================================
+//
+// Functions which depend on flags
+//
+
+//
+// True if thing is on floor or hanging from ceiling
+//
+inline static bool P_mobjOnSurface(const Mobj &mobj)
+{
+   return mobj.z <= mobj.zref.floor || (mobj.z + mobj.height >= mobj.zref.ceiling &&
+                                        mobj.flags & MF_SPAWNCEILING && mobj.flags & MF_NOGRAVITY);
+}
 
 #endif
 

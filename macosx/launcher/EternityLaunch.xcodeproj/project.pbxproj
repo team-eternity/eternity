@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4F015B83187598D500ADB3F4 /* libc++.1.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B7F187598D100ADB3F4 /* libc++.1.dylib */; };
-		4F015B84187598D800ADB3F4 /* libc++abi.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B80187598D100ADB3F4 /* libc++abi.dylib */; };
 		4F015B8C18775CB100ADB3F4 /* AUTHORS in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8A18775CB100ADB3F4 /* AUTHORS */; };
 		4F015B8D18775CB100ADB3F4 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8B18775CB100ADB3F4 /* COPYING */; };
 		4F015B901877613100ADB3F4 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8E1877613100ADB3F4 /* About.xib */; };
@@ -17,6 +15,9 @@
 		4F2F32BB1867111400EED7DE /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		4F2F32BC1867111400EED7DE /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
 		4F2F32BD1867111400EED7DE /* user in Resources */ = {isa = PBXBuildFile; fileRef = FA8216871647128900FF998A /* user */; };
+		4F48AAD020E5684A00AD935F /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F48AAD120E5684A00AD935F /* SDL2_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F48AACB20E5682B00AD935F /* SDL2_net.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F48AAD220E5684A00AD935F /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F48AAC820E5682B00AD935F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4FD651B916B8183500F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */; };
@@ -42,17 +43,33 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		4F48AACF20E5683A00AD935F /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4F48AAD020E5684A00AD935F /* SDL2_mixer.framework in CopyFiles */,
+				4F48AAD120E5684A00AD935F /* SDL2_net.framework in CopyFiles */,
+				4F48AAD220E5684A00AD935F /* SDL2.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
-		4F015B7F187598D100ADB3F4 /* libc++.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++.1.dylib"; path = "../libc++/libc++.1.dylib"; sourceTree = "<group>"; };
-		4F015B80187598D100ADB3F4 /* libc++abi.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libc++abi.dylib"; path = "../libc++/libc++abi.dylib"; sourceTree = "<group>"; };
 		4F015B8A18775CB100ADB3F4 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = AUTHORS; path = ../../AUTHORS; sourceTree = "<group>"; };
 		4F015B8B18775CB100ADB3F4 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = COPYING; path = ../../COPYING; sourceTree = "<group>"; };
 		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
 		4F015B941877636F00ADB3F4 /* ELAboutController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELAboutController.h; sourceTree = "<group>"; };
 		4F015B951877636F00ADB3F4 /* ELAboutController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELAboutController.m; sourceTree = "<group>"; };
 		4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = EternityEngine.xcodeproj; path = ../EternityEngine.xcodeproj; sourceTree = "<group>"; };
+		4F48AAC820E5682B00AD935F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = "../sdl-mac-releases/SDL2.framework"; sourceTree = "<group>"; };
+		4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = "../sdl-mac-releases/SDL2_mixer.framework"; sourceTree = "<group>"; };
+		4F48AACB20E5682B00AD935F /* SDL2_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_net.framework; path = "../sdl-mac-releases/SDL2_net.framework"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELFileViewDataSource.h; sourceTree = "<group>"; };
@@ -125,8 +142,6 @@
 			children = (
 				4F015B8A18775CB100ADB3F4 /* AUTHORS */,
 				4F015B8B18775CB100ADB3F4 /* COPYING */,
-				4F015B7F187598D100ADB3F4 /* libc++.1.dylib */,
-				4F015B80187598D100ADB3F4 /* libc++abi.dylib */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
 				FABF5F00158C710400C49E93 /* Eternity.icns */,
 				8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */,
@@ -142,6 +157,9 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */,
+				4F48AACB20E5682B00AD935F /* SDL2_net.framework */,
+				4F48AAC820E5682B00AD935F /* SDL2.framework */,
 				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 			);
 			name = Frameworks;
@@ -198,6 +216,7 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
+				4F48AACF20E5683A00AD935F /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -215,7 +234,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0900;
+				LastUpgradeCheck = 1010;
 				TargetAttributes = {
 					8D1107260486CEB800E47090 = {
 						DevelopmentTeam = 66L236F264;
@@ -268,8 +287,6 @@
 				FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */,
 				FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */,
 				FA601C7B1696246800046D2D /* Launcher.xib in Resources */,
-				4F015B83187598D500ADB3F4 /* libc++.1.dylib in Resources */,
-				4F015B84187598D800ADB3F4 /* libc++abi.dylib in Resources */,
 				4F2F32BA186710F300EED7DE /* eternity in Resources */,
 				4F2F32BB1867111400EED7DE /* base in Resources */,
 				4F015B8D18775CB100ADB3F4 /* COPYING in Resources */,
@@ -333,7 +350,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -341,7 +357,12 @@
 				GCC_PREFIX_HEADER = EternityLaunch_Prefix.pch;
 				INFOPLIST_FILE = "EternityLaunch-Info.plist";
 				INSTALL_PATH = /Applications;
-				MACH_O_TYPE = mh_execute;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-U",
+					"-Xlinker",
+					_objc_readClassPair,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
 			};
@@ -352,8 +373,6 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -364,8 +383,12 @@
 					"CMAKE_INTDIR=\"Release\"",
 				);
 				INSTALL_PATH = /Applications;
-				MACH_O_TYPE = mh_execute;
-				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = (
+					"-Xlinker",
+					"-U",
+					"-Xlinker",
+					_objc_readClassPair,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
 			};
@@ -379,17 +402,20 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -402,7 +428,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
@@ -415,18 +441,21 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				DEBUG_INFORMATION_FORMAT = dwarf;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -436,7 +465,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 			};
 			name = Release;
 		};

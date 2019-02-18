@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2017 James Haley, Max Waine, et al.
+// Copyright(C) 2018 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 
 #include "p_map.h"
 
-// FIXME: This will probably be defined elsewhere at some point
+// TODO: This will probably be defined elsewhere at some point
 #undef PO2
 #define PO2(x) (1 << x)
 
@@ -56,12 +56,9 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
    fixed_t  slope  = P_DoAutoAim(mo, angle, MELEERANGE);
 
    P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff");
+   // Turn to face the target if necessary
    if(clip.linetarget)
-   {
-      //S_StartSound(player->mo, sfx_stfhit);
-      // turn to face target
       mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
-   }
 }
 
 void A_StaffAttackPL2(actionargs_t *actionargs)
@@ -72,12 +69,9 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
    fixed_t  slope = P_DoAutoAim(mo, angle, MELEERANGE);
 
    P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff2");
+   // Turn to face the target if necessary
    if(clip.linetarget)
-   {
-      //S_StartSound(player->mo, sfx_stfhit);
-      // turn to face target
       mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
-   }
 }
 
 void A_FireGoldWandPL1(actionargs_t *actionargs)
@@ -85,7 +79,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
    angle_t   angle  = mo->angle;
-   const int damage = 7 + (P_Random(pr_goldwand) & 7);;
+   const int damage = 7 + (P_Random(pr_goldwand) & 7);
 
    if(!player)
       return;
@@ -95,8 +89,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) * PO2(18);
 
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
-                "HereticGoldWandPuff1");
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, "HereticGoldWandPuff1");
    P_WeaponSound(mo, sfx_gldhit);
 }
 
@@ -127,8 +120,7 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
    for(i = 0; i < 5; i++)
    {
       damage = 1 + (P_Random(pr_goldwand2) & 7);
-      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
-                   "HereticGoldWandPuff2");
+      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, "HereticGoldWandPuff2");
       angle += ((ANG45 / 8) * 2) / 4;
    }
 
@@ -184,7 +176,7 @@ void A_FireMacePL1(actionargs_t *actionargs)
    }
    if(!P_CheckAmmo(player))
       return;
-   
+
    const int tnum = E_SafeThingType(MT_MACEFX1);
 
    P_SubtractAmmo(player, -1);
@@ -219,12 +211,13 @@ void A_MaceBallImpact(actionargs_t *actionargs)
    constexpr int MAGIC_JUNK = 1234;
 
    Mobj *ball = actionargs->actor;
-   if((ball->z <= ball->floorz) && E_HitFloor(ball))
-   {                           // Landed in some sort of liquid
+   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   {
+      // Landed in some sort of liquid
       ball->remove();
       return;
    }
-   if((ball->health != MAGIC_JUNK) && (ball->z <= ball->floorz)
+   if((ball->health != MAGIC_JUNK) && (ball->z <= ball->zref.floor)
       && ball->momz)
    {                           // Bounce
       ball->health = MAGIC_JUNK;
@@ -234,7 +227,8 @@ void A_MaceBallImpact(actionargs_t *actionargs)
       S_StartSound(ball, sfx_bounce);
    }
    else
-   {                           // Explode
+   {
+      // Explode
       ball->flags |= MF_NOGRAVITY;
       ball->flags2 &= ~MF2_LOGRAV;
       S_StartSound(ball, sfx_lobhit);
@@ -248,19 +242,22 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
    angle_t   angle;
    const int tnum = E_SafeThingType(MT_MACEFX3);
 
-   if((ball->z <= ball->floorz) && E_HitFloor(ball))
-   {                           // Landed in some sort of liquid
+   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   {
+      // Landed in some sort of liquid
       ball->remove();
       return;
    }
-   if((ball->z != ball->floorz) || (ball->momz < 2 * FRACUNIT))
+   if((ball->z != ball->zref.floor) || (ball->momz < 2 * FRACUNIT))
    {                           // Explode
       ball->momx = ball->momy = ball->momz = 0;
       ball->flags |= MF_NOGRAVITY;
-      ball->flags2 &= ~(MF2_LOGRAV | MF4_HERETICBOUNCES);
+      ball->flags2 &= ~MF2_LOGRAV;
+      ball->flags4 &= ~MF4_HERETICBOUNCES;
    }
    else
-   {                           // Bounce
+   {
+      // Bounce
       ball->momz = ball->momz * 192 / PO2(8);
       P_SetMobjState(ball, ball->info->spawnstate);
 
@@ -314,13 +311,13 @@ void A_DeathBallImpact(actionargs_t *actionargs)
    angle_t  angle;
    bool     newAngle;
 
-   if((ball->z <= ball->floorz) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
    {
       // Landed in some sort of liquid
       ball->remove();
       return;
    }
-   if((ball->z <= ball->floorz) && ball->momz)
+   if((ball->z <= ball->zref.floor) && ball->momz)
    {
       // Bounce
       newAngle = false;
@@ -440,8 +437,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_blaster) * PO2(18);
 
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
-                "HereticBlasterPuff1");
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, "HereticBlasterPuff1");
    P_WeaponSound(mo, sfx_blssht);
 }
 
@@ -482,13 +478,13 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
 
 void A_InitPhoenixPL2(actionargs_t *actionargs)
 {
-   constexpr int FLAME_THROWER_TICS = 10 * 35;
-   Mobj          *mo = actionargs->actor;
-   player_t      *player = mo->player;
+   constexpr int  FLAME_THROWER_TICS = 10 * 35;
+   Mobj          *mo                 = actionargs->actor;
+   player_t      *player             = mo->player;
 
    if(!player)
       return;
-   
+
    player->weaponctrs->setCounter(player, 0, FLAME_THROWER_TICS);
 }
 
@@ -509,8 +505,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    if(--flamecount == 0)
    {
       // Out of flame
-      //P_SetPsprite(player, ps_weapon, player->psprites[ps_weapon].state->nextstate);
-      state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
+      const state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
       if(state != nullptr)
       {
          P_SetPsprite(player, ps_weapon, state->index);

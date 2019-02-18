@@ -45,6 +45,7 @@
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
 #include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
@@ -222,7 +223,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
 //
 bool ACS_CF_ATan2(ACS_CF_ARGS)
 {
-   thread->dataStk.push(P_PointToAngle(0, 0, argV[0], argV[1]));
+   thread->dataStk.push(P_PointToAngle(0, 0, argV[0], argV[1]) >> FRACBITS);
    return false;
 }
 
@@ -245,6 +246,116 @@ bool ACS_CF_ChangeCeil(ACS_CF_ARGS)
 bool ACS_CF_ChangeFloor(ACS_CF_ARGS)
 {
    P_ChangeFloorTex(thread->scopeMap->getString(argV[1])->str, argV[0]);
+   return false;
+}
+
+enum
+{
+   CPXF_ANCESTOR    = 0x00000001, // unimplemented
+   CPXF_LESSOREQUAL = 0x00000002,
+   CPXF_NOZ         = 0x00000004,
+   CPXF_COUNTDEAD   = 0x00000008,
+   CPXF_DEADONLY    = 0x00000010,
+   CPXF_EXACT       = 0x00000020,
+   CPXF_SETTARGET   = 0x00000040,
+   CPXF_SETMASTER   = 0x00000080, // unimplemented
+   CPXF_SETTRACER   = 0x00000100,
+   CPXF_FARTHEST    = 0x00000200,
+   CPXF_CLOSEST     = 0x00000400,
+   CPXF_SETONPTR    = 0x00000800, // unimplemented
+   CPXF_CHECKSIGHT  = 0x00001000,
+};
+
+//
+// ACS_CF_CheckProximity
+//
+// int CheckProximity(int tid, str classname, fixed distance, int limit, int flags)
+//
+bool ACS_CF_CheckProximity(ACS_CF_ARGS)
+{
+   auto       info  = &static_cast<ACSThread *>(thread)->info;
+   Mobj      *orig  = P_FindMobjFromTID(argV[0], nullptr, info->mo);
+   mobjtype_t type  = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
+   fixed_t    dist  = argV[2];
+   uint32_t   limit = argC > 3 ? argV[3] : 1;
+   uint32_t   flags = argC > 4 ? argV[4] : 0;
+
+   uint32_t res;
+   Mobj    *resMo = nullptr;
+   fixed_t  resDist;
+
+   uint32_t count = 0;
+
+   for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
+   {
+      // Check type.
+      if(type && mo->type != type)
+         continue;
+
+      // Check health.
+      if(mo->health > 0)
+      {
+         if(flags & CPXF_DEADONLY)
+            continue;
+      }
+      else
+      {
+         if(!(flags & CPXF_COUNTDEAD))
+            continue;
+      }
+
+      // Check distance.
+      auto    moLink = P_GetLinkOffset(orig->groupid, mo->groupid);
+      fixed_t moDist = P_AproxDistance(orig->x - mo->x + moLink->x, orig->y - mo->y + moLink->y);
+      if(!(flags & CPXF_NOZ))
+         moDist = P_AproxDistance(moDist, orig->z - mo->z + moLink->z);
+
+      if(moDist > dist)
+         continue;
+
+      // Check sight.
+      if((flags & CPXF_CHECKSIGHT) && !P_CheckSight(orig, mo))
+         continue;
+
+      ++count;
+
+      if(!resMo ||
+         ((flags & CPXF_FARTHEST) && moDist > resDist) ||
+         ((flags & CPXF_CLOSEST)  && moDist < resDist))
+      {
+         resDist = moDist;
+         resMo   = mo;
+      }
+
+      // Possibly short-circuit?
+      if(!(flags & (CPXF_FARTHEST | CPXF_CLOSEST)))
+      {
+         if(flags & (CPXF_LESSOREQUAL | CPXF_EXACT))
+         {
+            if(count > limit)
+               break;
+         }
+         else if(count >= limit)
+            break;
+      }
+   }
+
+   if(resMo)
+   {
+      if(flags & CPXF_SETTARGET)
+         P_SetTarget(&orig->target, resMo);
+      if(flags & CPXF_SETTRACER)
+         P_SetTarget(&orig->tracer, resMo);
+   }
+
+   if(flags & CPXF_LESSOREQUAL)
+      res = count <= limit;
+   else if(flags & CPXF_EXACT)
+      res = count == limit;
+   else
+      res = count >= limit;
+
+   thread->dataStk.push(res);
    return false;
 }
 
@@ -274,6 +385,23 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(0);
+   return false;
+}
+
+//
+// int CheckWeapon(str weapon)
+//
+bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
+{
+   const auto info = &static_cast<ACSThread *>(thread)->info;
+   if(!info->mo || !info->mo->player)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+   const char *const readyWeaponStr = info->mo->player->readyweapon->name;
+   const char *const weaponStr      = thread->scopeMap->getString(argV[0])->str;
+   thread->dataStk.push(strcasecmp(readyWeaponStr, weaponStr) == 0 ? 1 : 0);
    return false;
 }
 
@@ -386,9 +514,9 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_Armor:        return mo->player ?
                                     static_cast<uint32_t>(mo->player->armorpoints) == val : false;
    case ACS_TP_CeilTex:      return mo->subsector->sector->ceilingpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->ceilingz) == val;
+   case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
    case ACS_TP_FloorTex:     return mo->subsector->sector->floorpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->floorz) == val;
+   case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
    case ACS_TP_Frags:        return mo->player ?
                                     static_cast<uint32_t>(mo->player->totalfrags) == val : false;
    case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
@@ -1132,9 +1260,9 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_Angle:        return mo->angle >> 16;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints : 0;
    case ACS_TP_CeilTex:      return 0;
-   case ACS_TP_CeilZ:        return mo->ceilingz;
+   case ACS_TP_CeilZ:        return mo->zref.ceiling;
    case ACS_TP_FloorTex:     return 0;
-   case ACS_TP_FloorZ:       return mo->floorz;
+   case ACS_TP_FloorZ:       return mo->zref.floor;
    case ACS_TP_Frags:        return mo->player ? mo->player->totalfrags : 0;
    case ACS_TP_LightLevel:   return mo->subsector->sector->lightlevel;
    case ACS_TP_MomX:         return mo->momx;
@@ -1191,6 +1319,20 @@ bool ACS_CF_GetThingY(ACS_CF_ARGS)
 bool ACS_CF_GetThingZ(ACS_CF_ARGS)
 {
    return ACS_GetThingProp(static_cast<ACSThread *>(thread), argV[0], ACS_TP_Z);
+}
+
+
+//
+// str GetWeapon(void);
+//
+bool ACS_CF_GetWeapon(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   if(info->mo && info->mo->player)
+      thread->dataStk.push(~ACSenv.getString(info->mo->player->readyweapon->name)->idx);
+   else
+      thread->dataStk.push(0);
+   return false;
 }
 
 //
@@ -1532,7 +1674,7 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
          if(!mo->player && !(flags & SECDAM_NONPLAYERS))
             continue;
 
-         if(mo->z != mo->floorz && !(flags & SECDAM_IN_AIR))
+         if(mo->z != mo->zref.floor && !(flags & SECDAM_IN_AIR))
             continue;
 
          P_DamageMobj(mo, NULL, NULL, damage, mod);
@@ -1893,10 +2035,10 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
-         mo->floorz = mo->dropoffz = newsubsec->sector->floorheight;
-         mo->ceilingz = newsubsec->sector->ceilingheight;
-         mo->passfloorz = mo->secfloorz = mo->floorz;
-         mo->passceilz = mo->secceilz = mo->ceilingz;
+         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->floorheight;
+         mo->zref.ceiling = newsubsec->sector->ceilingheight;
+         mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
+         mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 
          mo->x = x;
          mo->y = y;
@@ -2062,7 +2204,7 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
    int32_t     tid       = argV[0];
    const char *statename = thread->scopeMap->getString(argV[1])->str;
    statenum_t  statenum  = E_StateNumForName(statename);
-   state_t    *state;
+   const state_t *state;
    uint32_t    count     = 0;
    Mobj       *mo        = nullptr;
 
@@ -2083,6 +2225,32 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(count);
+   return false;
+}
+
+//
+// int SetWeapon(str weapon)
+//
+bool ACS_CF_SetWeapon(ACS_CF_ARGS)
+{
+   const auto    info   = &static_cast<ACSThread *>(thread)->info;
+   weaponinfo_t *weapon = E_WeaponForName(thread->scopeMap->getString(argV[0])->str);
+   if(!info->mo || !info->mo->player || !weapon)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   player_t *player = info->mo->player;
+   if(E_PlayerOwnsWeapon(player, weapon))
+   {
+      player->pendingweapon     = weapon;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, weapon);
+      thread->dataStk.push(1);
+   }
+   else
+      thread->dataStk.push(0);
+
    return false;
 }
 
@@ -2484,7 +2652,7 @@ bool ACS_CF_ThingCountStr(ACS_CF_ARGS)
 //
 // ACS_thingCountSec
 //
-static uint32_t ACS_thingCountSec(int32_t tag, mobjtype_t type, int32_t tid)
+static uint32_t ACS_thingCountSec(mobjtype_t type, int32_t tid, int32_t tag)
 {
    sector_t *sector;
    uint32_t  count  = 0;
@@ -2513,18 +2681,18 @@ static uint32_t ACS_thingCountSec(int32_t tag, mobjtype_t type, int32_t tid)
 //
 // ACS_CF_ThingCountSec
 //
-// int ThingCountSector(int tag, int type, int tid);
+// int ThingCountSector(int type, int tid, int tag);
 //
 bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 {
-   int32_t tag  = argV[0];
-   int32_t type = argV[1];
-   int32_t tid  = argV[2];
+   int32_t type = argV[0];
+   int32_t tid  = argV[1];
+   int32_t tag  = argV[2];
 
    if(type == 0)
-      thread->dataStk.push(ACS_thingCountSec(tag, 0, tid));
+      thread->dataStk.push(ACS_thingCountSec(0, tid, tag));
    else if(type > 0 && type < ACS_NUM_THINGTYPES)
-      thread->dataStk.push(ACS_thingCountSec(tag, ACS_thingtypes[type], tid));
+      thread->dataStk.push(ACS_thingCountSec(ACS_thingtypes[type], tid, tag));
    else
       thread->dataStk.push(0);
 
@@ -2534,15 +2702,15 @@ bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 //
 // ACS_CF_ThingCountSecStr
 //
-// int ThingCountNameSector(int tag, str type, int tid);
+// int ThingCountNameSector(str type, int tid, int tag);
 //
 bool ACS_CF_ThingCountSecStr(ACS_CF_ARGS)
 {
-   int32_t    tag  = argV[0];
-   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
-   int32_t    tid  = argV[2];
+   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
+   int32_t    tid  = argV[1];
+   int32_t    tag  = argV[2];
 
-   thread->dataStk.push(ACS_thingCountSec(tag, type, tid));
+   thread->dataStk.push(ACS_thingCountSec(type, tid, tag));
 
    return false;
 }

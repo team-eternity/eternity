@@ -1,6 +1,10 @@
 //
+//
 // The Eternity Engine
-// Copyright(C) 2016 James Haley, Ioan Chera, et al.
+// Copyright (C) 2018 James Haley, Ioan Chera, et al.
+//
+// ZDoom
+// Copyright (C) 1998-2012 Marisa Heit
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,50 +21,17 @@
 //
 //--------------------------------------------------------------------------
 //
-// For portions of code explicitly marked as being under the 
-// ZDoom Source Distribution License only:
-//
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//--------------------------------------------------------------------------
-//
-// Purpose: reentrant path traversing, used by several new functions
-// Authors: James Haley, Ioan Chera
+// Purpose: Reentrant path traversing, used by several new functions
+// Authors: James Haley, Ioan Chera, Max Waine
 //
 
 #include "z_zone.h"
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "doomstat.h"
 #include "e_exdata.h"
-#include "m_collection.h"
 #include "m_compare.h"
-#include "p_maputl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
@@ -313,7 +284,11 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    list = blockmaplump + offset;
 
    // skip 0 starting delimiter
-   ++list;
+   // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
+   // killough 2/22/98: demo_compatibility check
+   // skip 0 starting delimiter -- phares
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
+      ++list;
 
    for(; *list != -1; list++)
    {
@@ -422,7 +397,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 
    xintercept = (cx >> MAPBTOFRAC) + FixedMul(partialy, xstep);
 
-   // From ZDoom (usable under ZDoom code license):
+   // From ZDoom (usable under the GPLv3):
    // [RH] Fix for traces that pass only through blockmap corners. In that case,
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
@@ -462,7 +437,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          break;
 
 #if 1
-      // From ZDoom (usable under the ZDoom code license):
+      // From ZDoom (usable under the GPLv3):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
       // Doom 1.2, and persisted into Heretic, Hexen, and some versions of 

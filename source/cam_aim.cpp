@@ -28,6 +28,7 @@
 #include "cam_sight.h"
 #include "d_player.h"
 #include "e_exdata.h"
+#include "m_compare.h"
 #include "p_mobj.h"
 #include "p_portal.h"
 #include "r_defs.h"
@@ -138,7 +139,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    fixed_t linehitz, fixedratio;
    int newfromid;
 
-   fixed_t x, y, newslope;
+   fixed_t x, y;
 
    if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
       (newfromid = sector->c_portal->data.link.toid) != state.groupid)
@@ -148,12 +149,6 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       fixed_t planez = P_CeilingPortalZ(*sector);
       if(linehitz > planez)
       {
-         // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(planez - state.cz, totalfrac);
-         // if totalfrac == 0, then it will just be a very big slope
-         if(newslope < state.bottomslope)
-            newslope = state.bottomslope;
-
          // get x and y of position
          if(linehitz == state.cz)
          {
@@ -187,7 +182,8 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             newstate.cy = y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
-            newstate.bottomslope = newslope;
+            // don't allow the bottom slope to keep going down
+            newstate.bottomslope = emax(0, state.bottomslope);
             newstate.reclevel = state.reclevel + 1;
 
             if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
@@ -211,10 +207,6 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       fixed_t planez = P_FloorPortalZ(*sector);
       if(linehitz < planez)
       {
-         newslope = FixedDiv(planez - state.cz, totalfrac);
-         if(newslope > state.topslope)
-            newslope = state.topslope;
-
          if(linehitz == state.cz)
          {
             x = trace.x + FixedMul(trace.dx, partialfrac);
@@ -241,7 +233,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
             newstate.cy = y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
-            newstate.topslope = newslope;
+            newstate.topslope = emin(0, state.topslope);
             newstate.reclevel = state.reclevel + 1;
 
             if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))

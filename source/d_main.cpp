@@ -252,7 +252,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer()
+static void D_PageDrawer()
 {
    int l;
 
@@ -567,7 +567,7 @@ void D_DrawWings()
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
-void D_Display()
+static void D_Display()
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
@@ -870,7 +870,7 @@ void D_InitPaths()
 // haleyjd 04/17/03: copied, slightly modified prboom's code to
 // allow quoted LFNs in response files.
 //
-void FindResponseFile()
+static void FindResponseFile()
 {
    int i;
 
@@ -1047,10 +1047,8 @@ static void D_ProcessWadPreincludes()
    // haleyjd 09/30/08: don't do in shareware
    if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; ++i)
-         if((s = wad_files[i]))
+      for(char *s : wad_files)
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1075,11 +1073,9 @@ static void D_ProcessDehPreincludes(void)
 {
    if(!M_CheckParm ("-noload"))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; i++)
+      for(char *s : deh_files)
       {
-         if((s = deh_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1118,10 +1114,9 @@ static void D_AutoExecScripts()
 
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
-      char *s;
-      for(int i = 0; i < MAXLOADFILES; i++)
+      for(char *s : csc_files)
       {
-         if((s = csc_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1161,7 +1156,7 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-      D_ProcessDehInWad(lumpinfo[i]->namehash.next);
+      D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
@@ -1173,7 +1168,7 @@ static void D_ProcessDehInWads()
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
 
-   D_ProcessDehInWad(root->namehash.index);
+   D_ProcessDehInWad(root->index);
 }
 
 //=============================================================================
@@ -1823,6 +1818,11 @@ static void D_DoomInit()
    // Support -loadgame with -record and reimplement -recordfrom.
    if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
       G_RecordDemo(myargv[p]);
+   else if((p = M_CheckParm("-recordfromto")) && p < myargc - 2)
+   {
+      autostart = true;
+      G_RecordDemoContinue(myargv[p + 1], myargv[p + 2]);
+   }
    else
    {
       // haleyjd 01/17/11: allow -recorddemo as well

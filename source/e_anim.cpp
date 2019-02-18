@@ -31,17 +31,17 @@
 #include "m_qstrkeys.h"
 #include "r_ripple.h"
 
-#define ITEM_ANIM_FLAT "flat"
-#define ITEM_ANIM_WALL "wall"
+#define ITEM_ANIM_FLAT   "flat"
+#define ITEM_ANIM_WALL   "wall"
 #define ITEM_ANIM_ENDPIC "lastpic"
-#define ITEM_ANIM_TICS "tics"
-#define ITEM_ANIM_FLAGS "flags"
+#define ITEM_ANIM_TICS   "tics"
+#define ITEM_ANIM_FLAGS  "flags"
 
-#define ITEM_ANIM_PIC "pic"
+#define ITEM_ANIM_PIC    "pic"
 
-#define ITEM_PIC_NAME "name"
-#define ITEM_PIC_TICS "tics"
-#define ITEM_PIC_RAND "random"
+#define ITEM_PIC_NAME  "name"
+#define ITEM_PIC_TICS  "tics"
+#define ITEM_PIC_RAND  "random"
 #define ITEM_PIC_FLAGS "flags"
 
 #define ITEM_RAND_MIN "min"
@@ -52,7 +52,7 @@
 //
 // Random has two parameters
 //
-static cfg_opt_t edf_random_opts[] =
+static cfg_opt_t random_opts[] =
 {
    CFG_INT("min", 1, CFGF_NONE),
    CFG_INT("max", 1, CFGF_NONE),
@@ -62,12 +62,12 @@ static cfg_opt_t edf_random_opts[] =
 //
 // Hexen-style pic entry options
 //
-static cfg_opt_t edf_picentry_opts[] =
+static cfg_opt_t picentry_opts[] =
 {
-   CFG_STR(ITEM_PIC_NAME, "", CFGF_NONE),
-   CFG_INT(ITEM_PIC_TICS, 0, CFGF_NONE),
-   CFG_MVPROP(ITEM_PIC_RAND, edf_random_opts, CFGF_NOCASE),
-   CFG_STR(ITEM_PIC_FLAGS, "", CFGF_NONE),
+   CFG_STR(ITEM_PIC_NAME,    "",          CFGF_NONE  ),
+   CFG_INT(ITEM_PIC_TICS,    0,           CFGF_NONE  ),
+   CFG_MVPROP(ITEM_PIC_RAND, random_opts, CFGF_NOCASE),
+   CFG_STR(ITEM_PIC_FLAGS,   "",          CFGF_NONE  ),
    CFG_END()
 };
 
@@ -76,12 +76,12 @@ static cfg_opt_t edf_picentry_opts[] =
 //
 cfg_opt_t edf_anim_opts[] =
 {
-   CFG_STR(ITEM_ANIM_FLAT, "", CFGF_NONE),
-   CFG_STR(ITEM_ANIM_WALL, "", CFGF_NONE),
-   CFG_STR(ITEM_ANIM_ENDPIC, "", CFGF_NONE),
-   CFG_INT(ITEM_ANIM_TICS, 8, CFGF_NONE),
-   CFG_STR(ITEM_ANIM_FLAGS, "", CFGF_NONE),
-   CFG_SEC(ITEM_ANIM_PIC, edf_picentry_opts, CFGF_MULTI|CFGF_NOCASE),
+   CFG_STR(ITEM_ANIM_FLAT,   "",            CFGF_NONE),
+   CFG_STR(ITEM_ANIM_WALL,   "",            CFGF_NONE),
+   CFG_STR(ITEM_ANIM_ENDPIC, "",            CFGF_NONE),
+   CFG_INT(ITEM_ANIM_TICS,   8,             CFGF_NONE),
+   CFG_STR(ITEM_ANIM_FLAGS,  "",            CFGF_NONE),
+   CFG_SEC(ITEM_ANIM_PIC,    picentry_opts, CFGF_MULTI|CFGF_NOCASE),
    CFG_END()
 };
 
@@ -108,7 +108,7 @@ PODCollection<EAnimDef *> eanimations;
 
 // The collection, for reusable stuff
 static EHashTable<EAnimDef, ENCQStrHashKey,
-&EAnimDef::startpic, &EAnimDef::link> e_anim_namehash(NUMANIMCHAINS);
+                  &EAnimDef::startpic, &EAnimDef::link> e_anim_namehash(NUMANIMCHAINS);
 
 //
 // Resets a pic
@@ -116,10 +116,10 @@ static EHashTable<EAnimDef, ENCQStrHashKey,
 void EAnimDef::Pic::reset()
 {
    name.clear();
-   offset = 0;
+   offset  = 0;
    ticsmin = 0;
    ticsmax = 0;
-   flags = 0;
+   flags   = 0;
 }
 
 //
@@ -127,21 +127,21 @@ void EAnimDef::Pic::reset()
 //
 void EAnimDef::reset(type_t intype)
 {
-   type = intype;
+   type     = intype;
    startpic = endpic = "";
-   tics = 0;
-   flags = 0;
+   tics     = 0;
+   flags    = 0;
    pics.clear();
 }
 
 //
 // Processes an animation
 //
-void E_processAnimation(cfg_t *cfg)
+static void E_processAnimation(cfg_t *cfg)
 {
    EAnimDef::type_t type;
-   const char *firstpic;
-   bool modified = true;
+   const char      *firstpic;
+   bool             modified = true;
    if(cfg_size(cfg, ITEM_ANIM_FLAT) >= 1)
    {
       type = EAnimDef::type_flat;
@@ -164,9 +164,9 @@ void E_processAnimation(cfg_t *cfg)
    } while(def && def->type != type);
    if(!def)
    {
-      def = new EAnimDef;
+      def           = new EAnimDef;
       def->startpic = firstpic;
-      def->type = type;
+      def->type     = type;
       e_anim_namehash.addObject(def);
       eanimations.add(def);
       modified = false;
@@ -184,7 +184,7 @@ void E_processAnimation(cfg_t *cfg)
       def->pics.clear();   // prepare to overwrite it
       for(unsigned i = 0; i < seqsize; ++i)
       {
-         cfg_t *pic = cfg_getnsec(cfg, ITEM_ANIM_PIC, i);
+         cfg_t      *pic     = cfg_getnsec(cfg, ITEM_ANIM_PIC, i);
          const char *picname = cfg_getstr(pic, ITEM_PIC_NAME);
          if(estrempty(picname))
          {
@@ -192,19 +192,19 @@ void E_processAnimation(cfg_t *cfg)
             continue;   // invalid
          }
          char *endptr = nullptr;
-         long offset = strtol(picname, &endptr, 0);
+         long offset  = strtol(picname, &endptr, 0);
          EAnimDef::Pic &newpic = def->pics.addNew();
          if(*endptr)
          {
             newpic.name = picname;
-            offset = 0;   // offset not valid if it's not a valid number
+            offset      = 0;   // offset not valid if it's not a valid number
          }
          else
             newpic.name = "";
          newpic.offset = static_cast<int>(offset);
          if(cfg_size(pic, ITEM_PIC_RAND) >= 1)
          {
-            cfg_t *rtime = cfg_getmvprop(pic, ITEM_PIC_RAND);
+            cfg_t *rtime   = cfg_getmvprop(pic, ITEM_PIC_RAND);
             newpic.ticsmin = cfg_getint(rtime, ITEM_RAND_MIN);
             newpic.ticsmax = cfg_getint(rtime, ITEM_RAND_MAX);
          }
@@ -251,7 +251,7 @@ void E_AddAnimation(const EAnimDef &extdef)
    if(extdef.startpic.empty())
       return;
    const char *title = extdef.startpic.constPtr();
-   EAnimDef *def = nullptr;
+   EAnimDef   *def   = nullptr;
    do
    {
       def = e_anim_namehash.keyIterator(def, title);
@@ -270,11 +270,11 @@ void E_AddAnimation(const EAnimDef &extdef)
 //
 bool E_IsHexenAnimation(const char *startpic, EAnimDef::type_t type)
 {
-   const EAnimDef *def = nullptr;
+   EAnimDef *def = nullptr;
    do
    {
-      def = e_anim_namehash.objectForKey(startpic);
-   }while(def && def->type != type);
+      def = e_anim_namehash.keyIterator(def, startpic);
+   } while(def && def->type != type);
    return def && def->pics.getLength() >= 1;
 }
 

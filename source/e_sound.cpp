@@ -25,8 +25,8 @@
 //
 // Maintains the globally-used sound hash tables, for lookup by
 // assigned mnemonics and DeHackEd numbers. EDF-defined sounds are
-// processed and linked into the tables first. Any wad lumps with 
-// names starting with DS* are later added as the wads that contain 
+// processed and linked into the tables first. Any wad lumps with
+// names starting with DS* are later added as the wads that contain
 // them are loaded.
 //
 // Note that wad sounds can't be referred to via DeHackEd, which
@@ -61,7 +61,6 @@
 #include "m_utils.h"
 #include "p_mobj.h"
 #include "p_skin.h"
-#include "sounds.h"
 #include "s_sndseq.h"
 #include "s_sound.h"
 #include "w_wad.h"
@@ -323,14 +322,9 @@ static void E_DelSoundFromDEHHash(sfxinfo_t *sfx)
 //
 sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
 {
-   int i;
-   sfxinfo_t *cursfx;
-
    // run down all the mnemonic hash chains
-   for(i = 0; i < NUMSFXCHAINS; ++i)
+   for(sfxinfo_t *cursfx : sfxchains)
    {
-      cursfx = sfxchains[i];
-
       while(cursfx)
       {
          // avoid short prefix erroneous match
@@ -343,7 +337,7 @@ sfxinfo_t *E_FindSoundForDEH(char *inbuffer, unsigned int fromlen)
    }
 
    // no match
-   return NULL;
+   return nullptr;
 }
 
 
@@ -374,7 +368,7 @@ bool E_AutoAllocSoundDEHNum(sfxinfo_t *sfx)
    do
    {
       dehnum = edf_alloc_sound_dehnum--;
-   } 
+   }
    while(dehnum > 0 && E_SoundForDEHNum(dehnum) != NULL);
 
    // ran out while searching for an unused number?
@@ -404,12 +398,12 @@ sfxinfo_t *E_NewWadSound(const char *name)
    strncpy(mnemonic, name+2, 9);
 
    sfx = E_EDFSoundForName(mnemonic);
-   
+
    if(!sfx)
    {
       // create a new one and hook into hashchain
       sfx = ecalloc(sfxinfo_t *, 1, sizeof(sfxinfo_t));
-      
+
       strncpy(sfx->name, name, 9);
       strncpy(sfx->mnemonic, mnemonic, 9);
 
@@ -420,17 +414,17 @@ sfxinfo_t *E_NewWadSound(const char *name)
       sfx->clipping_dist = S_CLIPPING_DIST;
       sfx->close_dist    = S_CLOSE_DIST;
       sfx->dehackednum   = -1;              // not accessible to DeHackEd
-      
+
       E_AddSoundToHash(sfx);
    }
 
    return sfx;
 }
 
-// 
+//
 // E_NewSndInfoSound
 //
-// haleyjd 03/27/11: 
+// haleyjd 03/27/11:
 // Creates a sfxinfo_t for a SNDINFO entry.
 //
 sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
@@ -459,23 +453,17 @@ sfxinfo_t *E_NewSndInfoSound(const char *mnemonic, const char *name)
 //
 // E_PreCacheSounds
 //
-// Runs down the sound mnemonic hash table chains and caches all 
-// sounds. This is improved from the code that was in SMMU, which 
-// only precached entries in the S_sfx array. This is called at 
+// Runs down the sound mnemonic hash table chains and caches all
+// sounds. This is improved from the code that was in SMMU, which
+// only precached entries in the S_sfx array. This is called at
 // startup when sound precaching is enabled.
 //
 void E_PreCacheSounds()
 {
-   int i;
-   sfxinfo_t *cursfx;
-
-   // run down all the mnemonic hash chains so that we precache 
+   // run down all the mnemonic hash chains so that we precache
    // all sounds, not just ones stored in S_sfx
-
-   for(i = 0; i < NUMSFXCHAINS; ++i)
+   for(sfxinfo_t *cursfx : sfxchains)
    {
-      cursfx = sfxchains[i];
-
       while(cursfx)
       {
          I_CacheSound(cursfx);
@@ -492,22 +480,17 @@ void E_PreCacheSounds()
 //
 void E_UpdateSoundCache()
 {
-   int i;
-   sfxinfo_t *cursfx;
-
    // be sure all sounds are stopped
    S_StopSounds(true);
 
-   for(i = 0; i < NUMSFXCHAINS; ++i)
+   for(sfxinfo_t *cursfx : sfxchains)
    {
-      cursfx = sfxchains[i];
-
       while(cursfx)
       {
          if(cursfx->data)
          {
             efree(cursfx->data);
-            cursfx->data = NULL;
+            cursfx->data = nullptr;
          }
          cursfx = cursfx->next;
       }
@@ -535,9 +518,9 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
    bool explicitLumpName = false;
    int tempint;
 
-   // preconditions: 
-   
-   // sfx->mnemonic is valid, and this sfxinfo_t has already been 
+   // preconditions:
+
+   // sfx->mnemonic is valid, and this sfxinfo_t has already been
    // added to the sound hash table earlier by E_ProcessSounds
 
    // process the lump name
@@ -551,7 +534,11 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       {
          const char *lumpname = cfg_getstr(section, ITEM_SND_LUMP);
 
-         strncpy(sfx->name, lumpname, 9);
+         // alison: set the long file name if applicable
+         if(lumpname[0] == '/')
+            E_ReplaceString(sfx->lfn, estrdup(&lumpname[1]));
+         else
+            strncpy(sfx->name, lumpname, 9);
 
          // mark that the lump name has been listed explicitly
          explicitLumpName = true;
@@ -563,7 +550,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
    {
       // haleyjd 09/23/06: When definitions specify a lump name explicitly and
       // do not specify a value for prefix, the value will be false instead of
-      // the normal default of true. This avoids the need to put 
+      // the normal default of true. This avoids the need to put
       // "prefix = false" in every single unprefixed sound.
 
       if(def && explicitLumpName && cfg_size(section, ITEM_SND_PREFIX) == 0)
@@ -611,7 +598,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       // haleyjd 06/03/06: change defaults for linkvol/linkpitch
       setLink = true;
    }
-   
+
    // haleyjd 09/24/06: process alias
    if(IS_SET(ITEM_SND_ALIAS))
    {
@@ -631,7 +618,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
 
       sfx->numrandomsounds = tempint;
 
-      sfx->randomsounds = 
+      sfx->randomsounds =
          ecalloc(sfxinfo_t **, sfx->numrandomsounds, sizeof(sfxinfo_t *));
 
       for(i = 0; i < sfx->numrandomsounds; ++i)
@@ -647,7 +634,7 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
       sfx->randomsounds    = NULL;
       sfx->numrandomsounds = 0;
    }
-   
+
    // process the skin index
    if(IS_SET(ITEM_SND_SKININDEX))
    {
@@ -715,10 +702,16 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
    // haleyjd 11/07/08: process explicit pc speaker lump name
    if(IS_SET(ITEM_SND_PCSLUMP))
    {
-      const char *s = cfg_getstr(section, ITEM_SND_PCSLUMP);
+      const char *lumpname = cfg_getstr(section, ITEM_SND_PCSLUMP);
 
-      if(s != NULL)
-         strncpy(sfx->pcslump, s, 9);
+      if(lumpname != NULL)
+      {
+         // alison: set the long file name if applicable
+         if(lumpname[0] == '/')
+            E_ReplaceString(sfx->pcslfn, estrdup(&lumpname[1]));
+         else
+            strncpy(sfx->pcslump, lumpname, 9);
+      }
    }
 
    // haleyjd 11/08/08: process "nopcsound" flag
@@ -751,14 +744,14 @@ void E_ProcessSounds(cfg_t *cfg)
    XL_ParseSoundInfo();
 
    E_EDFLogPuts("\t\tHashing sounds\n");
-      
+
    // now, let's collect the mnemonics (this must be done ahead of time)
    for(i = 0; i < numsfx; i++)
    {
       const char *mnemonic;
       cfg_t *sndsection = cfg_getnsec(cfg, EDF_SEC_SOUND, i);
       int idnum = cfg_getint(sndsection, ITEM_SND_DEHNUM);
-      
+
       mnemonic = cfg_title(sndsection);
 
       // if one already exists by this name, use it
@@ -783,7 +776,7 @@ void E_ProcessSounds(cfg_t *cfg)
       {
          // create a new sound
          sfx = estructalloc(sfxinfo_t, 1);
-         
+
          // verify the length
          if(strlen(mnemonic) >= sizeof(sfx->mnemonic))
          {
@@ -793,7 +786,7 @@ void E_ProcessSounds(cfg_t *cfg)
 
          // copy mnemonic
          strncpy(sfx->mnemonic, mnemonic, sizeof(sfx->mnemonic));
-         
+
          // add this sound to the hash table
          E_AddSoundToHash(sfx);
 
@@ -806,9 +799,9 @@ void E_ProcessSounds(cfg_t *cfg)
          // possibly add to numeric hash
          if(sfx->dehackednum > 0)
             E_AddSoundToDEHHash(sfx);
-      }            
+      }
    }
-      
+
    E_EDFLogPuts("\t\tProcessing data\n");
 
    // finally, process the individual sounds
@@ -861,7 +854,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 
       if(!sfx)
       {
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_ProcessSoundDeltas: sound '%s' does not exist\n", tempstr);
       }
 
@@ -876,7 +869,7 @@ void E_ProcessSoundDeltas(cfg_t *cfg, bool add)
 // Sound Sequences
 //
 // haleyjd 05/28/06
-// 
+//
 
 #define ITEM_SEQ_ID     "id"
 #define ITEM_SEQ_CMDS   "cmds"
@@ -1018,7 +1011,7 @@ static void E_AddSequenceToNameHash(ESoundSeq_t *seq)
 //
 // E_AddSequenceToNumHash
 //
-// Adds an EDF sound sequence object to the numeric hash table. More than 
+// Adds an EDF sound sequence object to the numeric hash table. More than
 // one object with the same numeric id can exist, but E_SequenceForNum will
 // only ever find the first such object, which is always the last such
 // object added to the hash table.
@@ -1028,11 +1021,11 @@ static void E_AddSequenceToNameHash(ESoundSeq_t *seq)
 static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
 {
    unsigned int idx;
-   
+
    if(seq->type != SEQ_ENVIRONMENT)
    {
       idx = seq->index % NUM_EDFSEQ_CHAINS;
-      
+
       seq->numlinks.insert(seq, &edf_seq_numchains[idx]);
 
       // possibly add to the specific type translation tables
@@ -1062,7 +1055,7 @@ static void E_AddSequenceToNumHash(ESoundSeq_t *seq)
 //
 // E_DelSequenceFromNumHash
 //
-// Removes a specific EDF sound sequence object from the numeric hash 
+// Removes a specific EDF sound sequence object from the numeric hash
 // table. This must be called on an object that's already linked before
 // relinking it.
 //
@@ -1184,7 +1177,7 @@ static int E_SeqGetAttn(const char *attnstr)
 
    if(attnstr)
    {
-      attn = E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, 
+      attn = E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES,
                               attnstr);
       if(attn == NUM_ATTENUATION_TYPES)
          attn = ATTN_NORMAL;
@@ -1200,13 +1193,13 @@ static int E_SeqGetAttn(const char *attnstr)
 //
 // Generate a sound sequence opcode.
 //
-static void E_GenerateSeqOp(ESoundSeq_t *newSeq, tempcmd_t &tempcmd, 
+static void E_GenerateSeqOp(ESoundSeq_t *newSeq, tempcmd_t &tempcmd,
                             seqcmd_t *tempcmdbuf, unsigned int &allocused)
 {
    int cmdindex;
 
    // translate to command index
-   cmdindex = E_StrToNumLinear(sndseq_cmdstrs, SEQ_NUM_TXTCMDS, 
+   cmdindex = E_StrToNumLinear(sndseq_cmdstrs, SEQ_NUM_TXTCMDS,
                                tempcmd.strs[0]);
 
    // generate opcodes and their arguments in the temporary buffer
@@ -1308,8 +1301,8 @@ static void E_GenerateSeqOp(ESoundSeq_t *newSeq, tempcmd_t &tempcmd,
 //
 // Note that the commands are compiled into a temporary buffer that is allocated
 // at the upper bound of the possible code size -- no command compiles to more
-// than four bytecodes (one or two opcodes and two arguments). At the end, the 
-// temporary buffer is copied into one of the actually used size and the temp 
+// than four bytecodes (one or two opcodes and two arguments). At the end, the
+// temporary buffer is copied into one of the actually used size and the temp
 // buffer is destroyed.
 //
 static void E_ParseSeqCmds(cfg_t *cfg, ESoundSeq_t *newSeq)
@@ -1451,11 +1444,11 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
          // If old key is >= 0, must remove from hash first
          if(newSeq->index >= 0)
             E_DelSequenceFromNumHash(newSeq);
-         
+
          // Set new key and type
          newSeq->index = idnum;
          newSeq->type  = type;
-         
+
          // If new key >= 0, add back to hash
          if(newSeq->index >= 0)
             E_AddSequenceToNumHash(newSeq);
@@ -1469,17 +1462,17 @@ static void E_ProcessSndSeq(cfg_t *cfg, unsigned int i)
       // verify length
       if(strlen(name) >= sizeof(newSeq->name))
          E_EDFLoggedErr(2, "E_ProcessSndSeq: invalid mnemonic '%s'\n", name);
-      
+
       // copy keys into sequence object
       strncpy(newSeq->name, name, sizeof(newSeq->name));
-      
+
       newSeq->index = idnum;
       newSeq->type  = type;
-            
+
       // add to hash tables
-      
+
       E_AddSequenceToNameHash(newSeq);
-      
+
       // numeric key is not required
       if(idnum >= 0)
          E_AddSequenceToNumHash(newSeq);
@@ -1562,7 +1555,7 @@ static void E_ResolveNames(cfg_t *cfg, unsigned int i)
 
    if(!seq)
    {
-      E_EDFLoggedErr(2, "E_ResolveNames: internal error: no such sequence %s\n", 
+      E_EDFLoggedErr(2, "E_ResolveNames: internal error: no such sequence %s\n",
                      name);
    }
 
@@ -1621,11 +1614,11 @@ static void E_ProcessEnviroMgr(cfg_t *cfg)
    {
       cfg_t *eseq = cfg_getsec(cfg, EDF_SEC_ENVIROMGR);
 
-      EnviroSeqManager.minStartWait = 
+      EnviroSeqManager.minStartWait =
          cfg_getint(eseq, ITEM_SEQMGR_MINSTARTWAIT);
       EnviroSeqManager.maxStartWait =
          cfg_getint(eseq, ITEM_SEQMGR_MAXSTARTWAIT);
-      
+
       // range check
       if(EnviroSeqManager.minStartWait < 0)
          EnviroSeqManager.minStartWait = 0;
@@ -1727,7 +1720,7 @@ static EAmbience_t *ambience_chains[NUMAMBIENCECHAINS];
 // Returns NULL if no such ambience object exists.
 //
 EAmbience_t *E_AmbienceForNum(int num)
-{   
+{
    int key = num % NUMAMBIENCECHAINS;
    EAmbience_t *cur = ambience_chains[key];
 
@@ -1812,7 +1805,7 @@ static void E_ProcessAmbienceSec(cfg_t *cfg, unsigned int i)
 
    // process attenuation
    tempstr = cfg_getstr(cfg, ITEM_AMB_ATTENUATION);
-   newAmb->attenuation = 
+   newAmb->attenuation =
       E_StrToNumLinear(attenuation_types, NUM_ATTENUATION_TYPES, tempstr);
    if(newAmb->attenuation == NUM_ATTENUATION_TYPES)
    {

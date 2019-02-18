@@ -33,7 +33,8 @@ struct vfont_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_FONT "font"
+#define EDF_SEC_FONT      "font"
+#define EDF_SEC_FNTDELTA  "fontdelta"
 
 #define ITEM_FONT_HUD     "hu_font"
 #define ITEM_FONT_HUDO    "hu_overlayfont"
@@ -47,8 +48,14 @@ struct vfont_t;
 #define ITEM_FONT_INTRBN  "in_font_bignum"
 #define ITEM_FONT_CONS    "c_font"
 
+#define ITEM_FONT_HUDFSS  "hu_fssmallfont"
+#define ITEM_FONT_HUDFSM  "hu_fsmediumfont"
+#define ITEM_FONT_HUDFSL  "hu_fsslargefont"
+
 extern cfg_opt_t edf_font_opts[];
-void    E_ProcessFonts(cfg_t *);
+extern cfg_opt_t edf_fntdelta_opts[];
+void E_ProcessFonts(cfg_t *);
+void E_ProcessFontDeltas(cfg_t *);
 
 #endif
 

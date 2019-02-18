@@ -46,7 +46,29 @@ struct scrollerlist_t
    scrollerlist_t  **prev;
 };
 
+//
+// Data for interpolating scrolled sidedefs
+//
+struct sidelerpinfo_t
+{
+   side_t *side;     // the affected sidedef
+   v2fixed_t offset; // how much this is scrolling
+};
+
+//
+// Data for interpolating sector surfaces
+//
+struct seclerpinfo_t
+{
+   sector_t *sector;
+   bool isceiling;
+   v2fixed_t offset;
+};
+
 static scrollerlist_t *scrollers;
+
+static PODCollection<sidelerpinfo_t> pScrolledSides;
+static PODCollection<seclerpinfo_t> pScrolledSectors;
 
 IMPLEMENT_THINKER_TYPE(ScrollThinker)
 
@@ -105,18 +127,33 @@ void ScrollThinker::Think()
       side = sides + this->affectee;
       side->textureoffset += dx;
       side->rowoffset += dy;
+      P_AddScrolledSide(side, dx, dy);
       break;
 
    case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
       sec = sectors + this->affectee;
       sec->floor_xoffs += dx;
       sec->floor_yoffs += dy;
+      {
+         seclerpinfo_t &info = pScrolledSectors.addNew();
+         info.sector = sec;
+         info.isceiling = false;
+         info.offset.x = dx;
+         info.offset.y = dy;
+      }
       break;
 
    case ScrollThinker::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
       sec = sectors + this->affectee;
       sec->ceiling_xoffs += dx;
       sec->ceiling_yoffs += dy;
+      {
+         seclerpinfo_t &info = pScrolledSectors.addNew();
+         info.sector = sec;
+         info.isceiling = true;
+         info.offset.x = dx;
+         info.offset.y = dy;
+      }
       break;
 
    case ScrollThinker::sc_carry:
@@ -220,7 +257,7 @@ void ScrollThinker::RemoveAllScrollers()
 //
 // Stop a scroller based on sector number
 //
-bool EV_stopFlatScrollerBySecnum(int type, int secnum)
+static bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 {
    if(!scrollers)
       return false;
@@ -256,7 +293,7 @@ bool EV_stopFlatScrollerBySecnum(int type, int secnum)
 // accel: non-zero if this is an accelerative effect
 //
 void Add_Scroller(int type, fixed_t dx, fixed_t dy,
-                  int control, int affectee, int accel, bool acs)
+                  int control, int affectee, int accel, bool overridescroller)
 {
    ScrollThinker *s = new ScrollThinker;
 
@@ -274,7 +311,7 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
 
    if(type != ScrollThinker::sc_side)
    {
-      if(acs)
+      if(overridescroller)
          EV_stopFlatScrollerBySecnum(type, affectee);
       s->addScroller();
    }
@@ -767,6 +804,42 @@ void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly)
       dy = FixedMul(dy, CARRYFACTOR);
       Add_Scroller(ScrollThinker::sc_carry_ceiling, dx, dy, -1, s, false, false);
    }
+}
+
+//
+// Resets the scrolled sides list used for interpolation.
+// Called at the start of each tic.
+//
+void P_TicResetLerpScrolledSides()
+{
+   pScrolledSides.makeEmpty();
+   pScrolledSectors.makeEmpty();
+}
+
+//
+// Add a scrolled side to the list
+//
+void P_AddScrolledSide(side_t *side, fixed_t dx, fixed_t dy)
+{
+   sidelerpinfo_t &info = pScrolledSides.addNew();
+   info.side = side;
+   info.offset.x = dx;
+   info.offset.y = dy;
+}
+
+//
+// Iterates the scroll info list
+//
+void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset))
+{
+   for(const sidelerpinfo_t &info : pScrolledSides)
+      func(info.side, info.offset);
+}
+
+void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fixed_t offset))
+{
+   for(const seclerpinfo_t &info : pScrolledSectors)
+      func(info.sector, info.isceiling, info.offset);
 }
 
 // killough 3/7/98 -- end generalized scroll effects

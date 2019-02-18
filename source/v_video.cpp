@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,29 +15,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Gamma correction LUT stuff.
-//  Color range translation support
-//  Functions to draw patches (by post) directly to screen.
-//  Functions to blit a block to the screen.
+// Purpose: Gamma correction LUT stuff.
+//          Color range translation support.
+//          Functions to draw patches (by post) directly to screen.
+//          Functions to blit a block to the screen.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
+
 
 #include "z_zone.h"
 #include "i_system.h"
 
 #include "c_io.h"
 #include "d_gi.h"
-#include "doomdef.h"
 #include "doomstat.h"
 #include "i_video.h"
 #include "m_bbox.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "v_block.h"
-#include "v_patch.h" // haleyjd
 #include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -721,10 +718,10 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
    }
 }
 
-// 
+//
 // V_FindBestColor
 //
-// Adapted from zdoom -- thanks to Randy Heit.
+// Adapted from ZDoom -- thanks to Marisa Heit.
 //
 // This always assumes a 256-color palette;
 // it's intended for use in startup functions to match hard-coded
@@ -745,7 +742,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
       dr = r - *palette++;
       dg = g - *palette++;
       db = b - *palette++;
-      
+
       distortion = dr*dr + dg*dg + db*db;
 
       if(distortion < bestdistortion)
@@ -753,7 +750,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
          // exact match
          if(!distortion)
             return i;
-         
+
          bestdistortion = distortion;
          bestcolor = i;
       }
@@ -769,37 +766,10 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 // for variable mapthing trans levels, and for screen patches.
 
 // haleyjd: Updated 06/21/08 to use 32k lookup, mainly to fix
-// additive translucency. Note this code is included in Odamex and
-// so it can be considered GPL as used here, rather than BSD. But,
-// I don't care either way. It is effectively dual-licensed I suppose.
-// So, you can use it under this license if you wish:
+// additive translucency.
+// MaxW: As GZDoom is now GPLv3, this code is no longer dual-licenced:
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright 1998-2012 (C) Marisa Heit
 //
 
 bool flexTranInit = false;

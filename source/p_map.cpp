@@ -267,7 +267,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
-   bool onfloor = mo->z <= mo->floorz || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
+   bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
 
    if(mo->flags4 & MF4_FLY)
    {
@@ -427,25 +427,25 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    {
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
             newsubsec->sector);
-      clip.floorz = clip.dropoffz = bottomfloorsector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->floorheight;
    }
    else
 #endif
-      clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
 
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
    {
-      clip.ceilingz = P_ExtremeSectorAtPoint(x, y, true, 
+      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
             newsubsec->sector)->ceilingheight;
    }
    else
 #endif
-      clip.ceilingz = newsubsec->sector->ceilingheight;
+      clip.zref.ceiling = newsubsec->sector->ceilingheight;
 
-   clip.secfloorz = clip.passfloorz = clip.floorz;
-   clip.secceilz = clip.passceilz = clip.ceilingz;
+   clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
+   clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
    // ioanch 20160114: use the final sector below
@@ -483,15 +483,8 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // so unlink from the old position & link into the new position
    
    P_UnsetThingPosition(thing);
-   
-   thing->floorz   = clip.floorz;
-   thing->ceilingz = clip.ceilingz;
-   thing->dropoffz = clip.dropoffz;        // killough 11/98
 
-   thing->passfloorz = clip.passfloorz;
-   thing->passceilz  = clip.passceilz;
-   thing->secfloorz  = clip.secfloorz;
-   thing->secceilz   = clip.secceilz;
+   thing->zref = clip.zref;
    
    thing->x = x;
    thing->y = y;
@@ -520,24 +513,6 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    return res;
 }
-
-
-#ifdef R_LINKEDPORTALS
-//
-// P_PortalTeleportMove
-//
-// SoM: calls P_TeleportMove with the stomp3d flag set to true
-bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y)
-{
-   bool res;
-
-   stomp3d = true;
-   res = P_TeleportMove(thing, x, y, false);
-   stomp3d = false;
-
-   return res;
-}
-#endif
 
 //
 // MOVEMENT ITERATOR FUNCTIONS
@@ -783,39 +758,39 @@ bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
 
    // adjust floor & ceiling heights
    
-   if(clip.opentop < clip.ceilingz)
+   if(clip.opentop < clip.zref.ceiling)
    {
-      clip.ceilingz = clip.opentop;
+      clip.zref.ceiling = clip.opentop;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
 
-   if(clip.openbottom > clip.floorz)
+   if(clip.openbottom > clip.zref.floor)
    {
-      clip.floorz = clip.openbottom;
+      clip.zref.floor = clip.openbottom;
 
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }
 
-   if(clip.lowfloor < clip.dropoffz)
-      clip.dropoffz = clip.lowfloor;
+   if(clip.lowfloor < clip.zref.dropoff)
+      clip.zref.dropoff = clip.lowfloor;
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
    // touching 3DMidTex lines.
    if(demo_version >= 331 && clip.touch3dside)
-      clip.dropoffz = clip.floorz;
+      clip.zref.dropoff = clip.zref.floor;
 
-   if(clip.opensecfloor > clip.secfloorz)
-      clip.secfloorz = clip.opensecfloor;
-   if(clip.opensecceil < clip.secceilz)
-      clip.secceilz = clip.opensecceil;
+   if(clip.opensecfloor > clip.zref.secfloor)
+      clip.zref.secfloor = clip.opensecfloor;
+   if(clip.opensecceil < clip.zref.secceil)
+      clip.zref.secceil = clip.opensecceil;
 
    // SoM 11/6/02: AGHAH
-   if(clip.floorz > clip.passfloorz)
-      clip.passfloorz = clip.floorz;
-   if(clip.ceilingz < clip.passceilz)
-      clip.passceilz = clip.ceilingz;
+   if(clip.zref.floor > clip.zref.passfloor)
+      clip.zref.passfloor = clip.zref.floor;
+   if(clip.zref.ceiling < clip.zref.passceil)
+      clip.zref.passceil = clip.zref.ceiling;
 
    // ioanch 20160113: moved to a special function
    P_CollectSpechits(ld, pushhit);
@@ -1204,8 +1179,8 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 //
 // out:
 //  newsubsec
-//  floorz
-//  ceilingz
+//  zref.floor
+//  zref.ceiling
 //  tmdropoffz
 //   the lowest point contacted
 //   (monsters won't move to a dropoff)
@@ -1244,11 +1219,11 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // Any contacted lines the step closer together
    // will adjust them.
 
-   clip.floorz = clip.dropoffz = newsubsec->sector->floorheight;
-   clip.ceilingz = newsubsec->sector->ceilingheight;
+   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
+   clip.zref.ceiling = newsubsec->sector->ceilingheight;
 
-   clip.secfloorz = clip.passfloorz = clip.floorz;
-   clip.secceilz = clip.passceilz = clip.ceilingz;
+   clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
+   clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
    clip.floorpic = newsubsec->sector->floorpic;
@@ -1311,7 +1286,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
 static bool P_CheckDropOffVanilla(Mobj *thing, int dropoff)
 {
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
-      clip.floorz - clip.dropoffz > STEPSIZE)
+      clip.zref.floor - clip.zref.dropoff > STEPSIZE)
       return false; // don't stand over a dropoff
 
    return true;
@@ -1328,7 +1303,7 @@ static bool P_CheckDropOffBOOM(Mobj *thing, int dropoff)
    if(compatibility || !dropoff)
    {
       if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)) &&
-         clip.floorz - clip.dropoffz > STEPSIZE)
+         clip.zref.floor - clip.zref.dropoff > STEPSIZE)
          return false; // don't stand over a dropoff
    }
 
@@ -1356,25 +1331,25 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       if(comp[comp_dropoff])
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
-         if(clip.floorz - clip.dropoffz > STEPSIZE)
+         if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false;
       }
       else if(!dropoff || (dropoff == 2 &&
-                           (clip.floorz - clip.dropoffz > 128 * FRACUNIT ||
-                            !thing->target || thing->target->z > clip.dropoffz)))
+                           (clip.zref.floor - clip.zref.dropoff > 128 * FRACUNIT ||
+                            !thing->target || thing->target->z > clip.zref.dropoff)))
       {
          // haleyjd: I can't even mentally parse this statement with 
          // any certainty.
          if(!monkeys || demo_version < 203 ?
-            clip.floorz - clip.dropoffz > STEPSIZE :
-            thing->floorz - clip.floorz > STEPSIZE ||
-            thing->dropoffz - clip.dropoffz > STEPSIZE)
+            clip.zref.floor - clip.zref.dropoff > STEPSIZE :
+            thing->zref.floor - clip.zref.floor > STEPSIZE ||
+            thing->zref.dropoff - clip.zref.dropoff > STEPSIZE)
             return false;
       }
       else
       {
          clip.felldown = !(thing->flags & MF_NOGRAVITY) && 
-                         thing->z - clip.floorz > STEPSIZE;
+                         thing->z - clip.zref.floor > STEPSIZE;
       }
    }
 
@@ -1390,14 +1365,14 @@ static bool on3dmidtex;
 //
 static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 {
-   fixed_t floorz = clip.floorz;
+   fixed_t floorz = clip.zref.floor;
 
    // haleyjd: OVER_UNDER:
    // [RH] If the thing is standing on something, use its current z as 
-   // the floorz. This is so that it does not walk off of things onto a 
+   // the zref.floor. This is so that it does not walk off of things onto a
    // drop off.
    if(P_Use3DClipping() && thing->intflags & MIF_ONMOBJ)
-      floorz = thing->z > clip.floorz ? thing->z : clip.floorz;
+      floorz = thing->z > clip.zref.floor ? thing->z : clip.zref.floor;
 
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
    {
@@ -1411,17 +1386,17 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
       {
          // allow appropriate forced dropoff behavior
          if(!dropoff || (dropoff == 2 && 
-                         (thing->z - clip.floorz > 128*FRACUNIT ||
-                          !thing->target || thing->target->z > clip.floorz)))
+                         (thing->z - clip.zref.floor > 128*FRACUNIT ||
+                          !thing->target || thing->target->z > clip.zref.floor)))
          {
             // deny any move resulting in a difference > 24
-            if(thing->z - clip.floorz > STEPSIZE)
+            if(thing->z - clip.zref.floor > STEPSIZE)
                return false;
          }
          else  // dropoff allowed
          {
             clip.felldown = !(thing->flags & MF_NOGRAVITY) &&
-                           thing->z - clip.floorz > STEPSIZE;
+                           thing->z - clip.zref.floor > STEPSIZE;
          }
          
          return true;
@@ -1429,22 +1404,22 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
 
       if(comp[comp_dropoff])
       {
-         if(clip.floorz - clip.dropoffz > STEPSIZE)
+         if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
       }
       else if(!dropoff || 
               (dropoff == 2 &&  // large jump down (e.g. dogs)
-               (floorz - clip.dropoffz > 128*FRACUNIT || 
-                !thing->target || thing->target->z > clip.dropoffz)))
+               (floorz - clip.zref.dropoff > 128*FRACUNIT ||
+                !thing->target || thing->target->z > clip.zref.dropoff)))
       {
          // haleyjd 04/14/10: This is so impossible to read that I have
          // had to restore it, because I cannot be confident that any of 
          // my interpretations of it are correct relative to C grammar.
 
          if(!monkeys || demo_version < 203 ?
-            floorz - clip.dropoffz > STEPSIZE :
-            thing->floorz  - floorz > STEPSIZE ||
-            thing->dropoffz - clip.dropoffz > STEPSIZE)
+            floorz - clip.zref.dropoff > STEPSIZE :
+            thing->zref.floor  - floorz > STEPSIZE ||
+            thing->zref.dropoff - clip.zref.dropoff > STEPSIZE)
             return false;
       }
       else  // dropoff allowed -- check for whether it fell more than 24
@@ -1489,8 +1464,8 @@ static void P_RunPushSpechits(Mobj &thing, PODCollection<line_t *> &pushhit)
 }
 
 //
-// Checks if a thing can carry upper things up from an intended floorz. Assumed
-// floorz > thing.z.
+// Checks if a thing can carry upper things up from an intended zref.floor. Assumed
+// zref.floor > thing.z.
 //
 static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 {
@@ -1554,28 +1529,31 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 {
    fixed_t oldx, oldy, oldz;
-   int oldgroupid, newgroupid = thing->groupid;
+   int oldgroupid;
    dropoff_func_t dropofffunc;
    
    // haleyjd 11/10/04: 3dMidTex: determine if a thing is on a line:
-   // passfloorz is the floor as determined from sectors and 3DMidTex.
-   // secfloorz is the floor as determined only from sectors.
-   // If the two are unequal, passfloorz is the thing's floorz, and
-   // the thing is at its floorz, then it is on a 3DMidTex line.
+   // zref.passfloor is the floor as determined from sectors and 3DMidTex.
+   // zref.secfloor is the floor as determined only from sectors.
+   // If the two are unequal, zref.passfloor is the thing's zref.floor, and
+   // the thing is at its zref.floor, then it is on a 3DMidTex line.
    // Complicated. x_x
 
-   on3dmidtex = (thing->passfloorz == thing->floorz &&
-                 thing->passfloorz != thing->secfloorz &&
-                 thing->z == thing->floorz);
+   on3dmidtex = (thing->zref.passfloor == thing->zref.floor &&
+                 thing->zref.passfloor != thing->zref.secfloor &&
+                 thing->z == thing->zref.floor);
    
    clip.felldown = clip.floatok = false;               // killough 11/98
 
-   bool groupidchange = false, portalteleport = false;
+   bool groupidchange = false;
    fixed_t prex, prey;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
       nullptr;
+
+   edefstructvar(portalcrossingoutcome_t, crossoutcome);
+   crossoutcome.finalgroup = thing->groupid;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
@@ -1613,13 +1591,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       }
       if(hasportals)
       {
-         v2fixed_t dest = P_LinePortalCrossing(oldx, oldy,
-                                               x - oldx, y - oldy, &newgroupid,
-                                               &portalteleport);
-   
+         v2fixed_t dest = P_PrecisePortalCrossing(oldx, oldy, x - oldx, y - oldy, crossoutcome);
    
          // Update position
-         groupidchange = newgroupid != thing->groupid;
+         groupidchange = crossoutcome.finalgroup != thing->groupid;
          prex = x;
          prey = y;
 
@@ -1631,7 +1606,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(groupidchange)
       {
          oldgroupid = thing->groupid;
-         thing->groupid = newgroupid;
+         thing->groupid = crossoutcome.finalgroup;
          check = P_CheckPosition3D(thing, x, y, pPushHit);
          thing->groupid = oldgroupid;
       }
@@ -1658,7 +1633,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit || 
                (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
-               (clip.ceilingz - (clip.BlockingMobj->z + clip.BlockingMobj->height) 
+               (clip.zref.ceiling - (clip.BlockingMobj->z + clip.BlockingMobj->height)
                  < thing->height))
             {
                P_RunPushSpechits(*thing, pushhit);
@@ -1701,7 +1676,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // killough 8/1/98: Possibly allow escape if otherwise stuck
       // haleyjd: OVER_UNDER: broke up impossible-to-understand predicate
 
-      if(clip.ceilingz - clip.floorz < thing->height) // doesn't fit
+      if(clip.zref.ceiling - clip.zref.floor < thing->height) // doesn't fit
       {
          if(!ret)
             P_RunPushSpechits(*thing, pushhit);
@@ -1711,7 +1686,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // mobj must lower to fit
       clip.floatok = true;
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags4 & MF4_FLY) &&
-         clip.ceilingz - thing->z < thing->height)
+         clip.zref.ceiling - thing->z < thing->height)
       {
          if(!ret)
             P_RunPushSpechits(*thing, pushhit);
@@ -1722,15 +1697,15 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // of lines that are contacted when the player presses into them
       if(thing->flags4 & MF4_FLY)
       {
-         if(thing->z + thing->height > clip.ceilingz)
+         if(thing->z + thing->height > clip.zref.ceiling)
          {
             thing->momz = -8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
             P_RunPushSpechits(*thing, pushhit);
             return false;
          }
-         else if(thing->z < clip.floorz && 
-                 clip.floorz - clip.dropoffz > STEPSIZE) // TODO: dropoff max
+         else if(thing->z < clip.zref.floor &&
+                 clip.zref.floor - clip.zref.dropoff > STEPSIZE) // TODO: dropoff max
          {
             thing->momz = 8*FRACUNIT;
             thing->intflags |= MIF_CLEARMOMZ;
@@ -1742,22 +1717,22 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
          // too big a step up
-         if(clip.floorz - thing->z > STEPSIZE)
+         if(clip.zref.floor - thing->z > STEPSIZE)
          {
             if(!ret)
                P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
-         else if(P_Use3DClipping() && thing->z < clip.floorz)
+         else if(P_Use3DClipping() && thing->z < clip.zref.floor)
          { 
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
             fixed_t savedz = thing->z;
             bool good;
-            thing->z = clip.floorz;
+            thing->z = clip.zref.floor;
             good = P_TestMobjZ(thing, clip);
             thing->z = savedz;
-            if(!good && !P_checkCarryUp(*thing, clip.floorz))
+            if(!good && !P_checkCarryUp(*thing, clip.zref.floor))
             {
                P_RunPushSpechits(*thing, pushhit);
                return false;
@@ -1782,14 +1757,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
       if(thing->flags & MF_BOUNCES &&    // killough 8/13/98
          !(thing->flags & (MF_MISSILE|MF_NOGRAVITY)) &&
-         !sentient(thing) && clip.floorz - thing->z > 16*FRACUNIT)
+         !sentient(thing) && clip.zref.floor - thing->z > 16*FRACUNIT)
       {
          P_RunPushSpechits(*thing, pushhit);
          return false; // too big a step up for bouncers under gravity
       }
 
       // killough 11/98: prevent falling objects from going up too many steps
-      if(thing->intflags & MIF_FALLING && clip.floorz - thing->z >
+      if(thing->intflags & MIF_FALLING && clip.zref.floor - thing->z >
          FixedMul(thing->momx,thing->momx)+FixedMul(thing->momy,thing->momy))
       {
          // ioanch: don't push in this case, as the force is presumably too low.
@@ -1800,7 +1775,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
          (clip.floorpic != P_ExtremeSectorAtPoint(thing, false)->floorpic ||
-          clip.floorz - thing->z != 0))
+          clip.zref.floor - thing->z != 0))
       {
          // thing must stay within its current floor type
          // ioanch: don't push
@@ -1817,23 +1792,26 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    oldx = thing->x;
    oldy = thing->y;
    oldgroupid = thing->groupid;
-   thing->floorz = clip.floorz;
-   thing->ceilingz = clip.ceilingz;
-   thing->dropoffz = clip.dropoffz;      // killough 11/98: keep track of dropoffs
-   thing->passfloorz = clip.passfloorz;
-   thing->passceilz = clip.passceilz;
-   thing->secfloorz = clip.secfloorz;
-   thing->secceilz = clip.secceilz;
+   thing->zref = clip.zref;   // killough 11/98: keep track of dropoffs
    thing->x = x;
    thing->y = y;
    P_SetThingPosition(thing);
 
-   if(portalteleport)
+   if(crossoutcome.lastpassed)
    {
       // Passed through at least one portal
       // TODO: 3D teleport
-      P_LinePortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid,
-                              newgroupid);
+      if(crossoutcome.multipassed)
+      {
+         thing->backupPosition();   // don't bother interpolating if passing through multiple
+                                    // portals at once
+      }
+      else
+      {
+         thing->prevpos.portalline = crossoutcome.lastpassed;
+         thing->prevpos.ldata = &crossoutcome.lastpassed->portal->data.link;
+      }
+      P_PortalDidTeleport(thing, x - prex, y - prey, 0, oldgroupid, crossoutcome.finalgroup);
    }
 
    // haleyjd 08/07/04: new footclip system
@@ -2051,8 +2029,8 @@ void P_ApplyTorque(Mobj *mo)
 //
 // P_ThingHeightClip
 //
-// Takes a valid thing and adjusts the thing->floorz,
-// thing->ceilingz, and possibly thing->z.
+// Takes a valid thing and adjusts the thing->zref.floor,
+// thing->zref.ceiling, and possibly thing->z.
 // This is called for all nearby monsters
 // whenever a sector changes height.
 // If the thing doesn't fit,
@@ -2061,45 +2039,38 @@ void P_ApplyTorque(Mobj *mo)
 //
 static bool P_ThingHeightClip(Mobj *thing)
 {
-   bool onfloor = thing->z == thing->floorz;
-   fixed_t oldfloorz = thing->floorz; // haleyjd
+   bool onfloor = thing->z == thing->zref.floor;
+   fixed_t oldfloorz = thing->zref.floor; // haleyjd
 
    P_CheckPosition(thing, thing->x, thing->y);
   
    // what about stranding a monster partially off an edge?
    // killough 11/98: Answer: see below (upset balance if hanging off ledge)
-   
-   thing->floorz = clip.floorz;
-   thing->ceilingz = clip.ceilingz;
-   thing->dropoffz = clip.dropoffz;         // killough 11/98: remember dropoffs
 
-   thing->passfloorz = clip.passfloorz;
-   thing->passceilz = clip.passceilz;
-   thing->secfloorz = clip.secfloorz;
-   thing->secceilz = clip.secceilz;
+   thing->zref = clip.zref;   // killough 11/98: remember dropoffs
 
    // haleyjd 09/19/06: floatbobbers require special treatment here now
    if(thing->flags2 & MF2_FLOATBOB)
    {
-      if(thing->floorz > oldfloorz || !(thing->flags & MF_NOGRAVITY))
-         thing->z = thing->z - oldfloorz + thing->floorz;
+      if(thing->zref.floor > oldfloorz || !(thing->flags & MF_NOGRAVITY))
+         thing->z = thing->z - oldfloorz + thing->zref.floor;
 
-      if(thing->z + thing->height > thing->ceilingz)
-         thing->z = thing->ceilingz - thing->height;
+      if(thing->z + thing->height > thing->zref.ceiling)
+         thing->z = thing->zref.ceiling - thing->height;
    }
    else if(onfloor)  // walking monsters rise and fall with the floor
    {
-      thing->z = thing->floorz;
+      thing->z = thing->zref.floor;
       
       // killough 11/98: Possibly upset balance of objects hanging off ledges
       if(thing->intflags & MIF_FALLING && thing->gear >= MAXGEAR)
          thing->gear = 0;
    }
    else          // don't adjust a floating monster unless forced to
-      if(thing->z + thing->height > thing->ceilingz)
-         thing->z = thing->ceilingz - thing->height;
+      if(thing->z + thing->height > thing->zref.ceiling)
+         thing->z = thing->zref.ceiling - thing->height;
 
-   return thing->ceilingz - thing->floorz >= thing->height;
+   return thing->zref.ceiling - thing->zref.floor >= thing->height;
 }
 
 //
@@ -2147,7 +2118,7 @@ static void P_HitSlideLine(line_t *ld)
       icyfloor =
          P_AproxDistance(tmxmove, tmymove) > 4*FRACUNIT &&
          variable_friction &&  // killough 8/28/98: calc friction on demand
-         slidemo->z <= slidemo->floorz &&
+         slidemo->z <= slidemo->zref.floor &&
          !(slidemo->flags4 & MF4_FLY) && // haleyjd: not when just flying
          P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
    }

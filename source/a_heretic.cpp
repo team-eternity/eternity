@@ -127,8 +127,8 @@ void A_InitKeyGizmo(actionargs_t *actionargs)
       return;
 
    int         orbType = E_SafeThingName("KeyGizmoOrb");
-   mobjinfo_t *mi      = mobjinfo[orbType];
-   state_t    *state   = E_GetStateForMobjInfo(mi, stateName);
+   const mobjinfo_t *mi = mobjinfo[orbType];
+   const state_t *state = E_GetStateForMobjInfo(mi, stateName);
 
    Mobj *mo = P_SpawnMobj(gizmo->x, gizmo->y, gizmo->z + 60*FRACUNIT, orbType);
    if(state)
@@ -202,7 +202,7 @@ void A_HticDrop(actionargs_t *actionargs)
    A_Fall(actionargs);
 }
 
-void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
+static void P_HticTracer(Mobj *actor, angle_t threshold, angle_t maxturn)
 {
    angle_t exact, diff;
    Mobj   *dest;
@@ -403,6 +403,16 @@ void A_Sor1Chase(actionargs_t *actionargs)
       // don't make tics less than 1
       if(actor->tics < 1)
          actor->tics = 1;
+
+      // Make sure to account for the skill5 tic reset in vanilla Heretic
+      // (the tics -> 3 bump was not added in Eternity's A_Chase because that
+      // would prevent very fast custom monsters from working properly).
+      if(GameModeInfo->flags & GIF_CHASEFAST &&
+         (gameskill >= sk_nightmare || fastparm ||
+          actor->flags3 & MF3_ALWAYSFAST) && actor->tics < 3)
+      {
+         actor->tics = 3;
+      }
    }
 
    A_Chase(actionargs);
@@ -757,8 +767,7 @@ void A_HticExplode(actionargs_t *actionargs)
    P_RadiusAttack(actor, actor->target, damage, damage, actor->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   if(actor->z <= actor->secfloorz + damage * FRACUNIT)
-      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
+   E_ExplosionHitWater(actor, damage);
 }
 
 typedef struct boss_spec_htic_s
@@ -790,15 +799,15 @@ void A_HticBossDeath(actionargs_t *actionargs)
    Thinker *th;
    line_t   junk;
 
-   for(int i = 0; i < NUM_HBOSS_SPECS; ++i)
+   for(boss_spec_htic_t &hboss_spec : hboss_specs)
    {
-      unsigned int flags = 
-         hboss_specs[i].flagfield == 2 ? actor->flags2 : actor->flags3;
-      
+      unsigned int flags =
+         hboss_spec.flagfield == 2 ? actor->flags2 : actor->flags3;
+
       // to activate a special, the thing must be a boss that triggers
       // it, and the map must have the special enabled.
-      if((flags & hboss_specs[i].thing_flag) &&
-         (LevelInfo.bossSpecs & hboss_specs[i].level_flag))
+      if((flags & hboss_spec.thing_flag) &&
+         (LevelInfo.bossSpecs & hboss_spec.level_flag))
       {
          for(th = thinkercap.next; th != &thinkercap; th = th->next)
          {
@@ -806,16 +815,16 @@ void A_HticBossDeath(actionargs_t *actionargs)
             if((mo = thinker_cast<Mobj *>(th)))
             {
                unsigned int moflags =
-                  hboss_specs[i].flagfield == 2 ? mo->flags2 : mo->flags3;
-               if(mo != actor && 
-                  (moflags & hboss_specs[i].thing_flag) && 
+                  hboss_spec.flagfield == 2 ? mo->flags2 : mo->flags3;
+               if(mo != actor &&
+                  (moflags & hboss_spec.thing_flag) && 
                   mo->health > 0)
                   return;         // other boss not dead
             }
          }
 
          // victory!
-         switch(hboss_specs[i].level_flag)
+         switch(hboss_spec.level_flag)
          {
          default:
          case BSPEC_E2M8:
@@ -825,7 +834,7 @@ void A_HticBossDeath(actionargs_t *actionargs)
             // if a friendly boss dies, kill only friends
             // if an enemy boss dies, kill only enemies
             P_Massacre((actor->flags & MF_FRIEND) ? 1 : 2);
-            
+
             // fall through
          case BSPEC_E1M8:
             junk.tag = junk.args[0] = 666;
@@ -994,7 +1003,7 @@ void A_VolcBallImpact(actionargs_t *actionargs)
 
    // if the thing hit the floor, move it up so that the little
    // volcano balls don't hit the floor immediately
-   if(actor->z <= actor->floorz)
+   if(actor->z <= actor->zref.floor)
    {
       actor->flags |= MF_NOGRAVITY;
       actor->flags2 &= ~MF2_LOGRAV;
@@ -1226,7 +1235,7 @@ bool P_CheckMntrCharge(fixed_t dist, Mobj *actor, Mobj *target)
 //
 inline static bool P_CheckFloorFire(fixed_t dist, Mobj *target)
 {
-   return (target->z == target->floorz && // target on floor?
+   return (target->z == target->zref.floor && // target on floor?
            dist < 576*FRACUNIT &&         // target in range?
            P_Random(pr_mindist) < 220);   // random factor
 }
@@ -1398,7 +1407,7 @@ void A_MntrFloorFire(actionargs_t *actionargs)
    fixed_t  x, y;
 
    // set actor to floor
-   actor->z = actor->floorz;
+   actor->z = actor->zref.floor;
    
    // determine spawn coordinates for small flame
    x = actor->x + (P_SubRandom(pr_mffire) << 10);
@@ -1738,7 +1747,7 @@ void A_ImpDeath(actionargs_t *actionargs)
    actor->flags &= ~MF_SOLID;
    actor->flags2 |= MF2_FOOTCLIP;
    
-   if(actor->z <= actor->floorz && actor->info->crashstate != NullStateNum)
+   if(actor->z <= actor->zref.floor && actor->info->crashstate != NullStateNum)
    {
       actor->intflags |= MIF_CRASHED;
       P_SetMobjState(actor, actor->info->crashstate);
@@ -1774,7 +1783,7 @@ void A_ImpXDeath2(actionargs_t *actionargs)
 
    actor->flags &= ~MF_NOGRAVITY;
 
-   if(actor->z <= actor->floorz && actor->info->crashstate != NullStateNum)
+   if(actor->z <= actor->zref.floor && actor->info->crashstate != NullStateNum)
    {
       actor->intflags |= MIF_CRASHED;
       P_SetMobjState(actor, actor->info->crashstate);

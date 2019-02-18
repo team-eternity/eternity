@@ -59,10 +59,9 @@ void R_ClearClipSegs();
 void R_ClearDrawSegs();
 
 void R_RenderBSPNode(int bspnum);
-int R_DoorClosed();   // killough 1/17/98
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-sector_t *R_FakeFlat(sector_t *, sector_t *, int *, int *, bool);
+const sector_t *R_FakeFlat(const sector_t *, sector_t *, int *, int *, bool);
 bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
                            dlnormal_t &dl2, slopetype_t *slope = nullptr);
 

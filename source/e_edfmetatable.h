@@ -30,7 +30,6 @@ class MetaTable;
 
 extern cfg_opt_t edf_generic_tprops[];
 
-cfg_opt_t *E_MakeDeltaStructure(const cfg_opt_t *cfgbase, size_t size);
 void E_BuildGlobalMetaTableFromEDF(cfg_t *cfg, const char *secname,
                                    const char *deltaname, MetaTable &table);
 

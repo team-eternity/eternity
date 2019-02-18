@@ -860,25 +860,28 @@ static void registerAllKeys()
 // look like Eternity but weren't made only for it. The resulting behaviour
 // is like Eternity. Thanks to anotak for this feature.
 //
-bool UDMFParser::checkForCompatibilityFlag(const char *nstext)
+bool UDMFParser::checkForCompatibilityFlag(qstring nstext)
 {
    // ano - read over the file looking for `ee_compat="true"`
    readresult_e result;
    bool eecompatfound = false;
+   // nstext needs to be copied, as contents of it gets overwritten before it's used.
+   qstring nstextcopy(nstext);
+
    while((result = readItem()) != result_Eof)
    {
       if(result == result_Error)
       {
          mError = "UDMF error while checking unsupported namespace '";
-         mError << nstext;
+         mError << nstextcopy;
          mError << "'";
          return false;
       }
 
-      if(result == result_Assignment && 
-         !mInBlock && 
-         mKey.strCaseCmp("ee_compat") == 0 && 
-         mValue.type == Token::type_Keyword && 
+      if(result == result_Assignment &&
+         !mInBlock &&
+         mKey.strCaseCmp("ee_compat") == 0 &&
+         mValue.type == Token::type_Keyword &&
          ectype::toUpper(mValue.text[0]) == 'T')
       {
          eecompatfound = true;
@@ -891,7 +894,7 @@ bool UDMFParser::checkForCompatibilityFlag(const char *nstext)
    if(!eecompatfound)
    {
       mError = "Unsupported namespace '";
-      mError << nstext;
+      mError << nstextcopy;
       mError << "'";
       return false;
    }
@@ -937,7 +940,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
       mNamespace = namespace_Strife;
    else if(!mValue.text.strCaseCmp("doom"))
       mNamespace = namespace_Doom;
-   else if(!checkForCompatibilityFlag(mValue.text.constPtr()))
+   else if(!checkForCompatibilityFlag(mValue.text))
       return false;
 
    // Gamestuff. Must be null when out of block and only one be set when in

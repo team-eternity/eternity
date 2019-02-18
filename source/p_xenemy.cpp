@@ -36,7 +36,6 @@
 #include "m_random.h"
 #include "p_inter.h"
 #include "p_maputl.h"
-#include "p_mobj.h"
 #include "p_saveg.h"
 #include "p_tick.h"
 #include "p_xenemy.h"
@@ -102,7 +101,7 @@ void QuakeThinker::Think()
             angle_t  thrustangle;   
             
             // test if in damage radius and on floor
-            if(dst < this->damageRadius && mo->z <= mo->floorz)
+            if(dst < this->damageRadius && mo->z <= mo->zref.floor)
             {
                if(P_Random(pr_quake) < 50)
                {

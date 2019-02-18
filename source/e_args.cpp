@@ -344,7 +344,7 @@ int E_ArgAsThingNumG0(arglist_t *al, int index)
 // the ordinary plain state named by the input string. Otherwise, both the mobjinfo
 // and statename may be redirected.
 //
-state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
+state_t *E_GetJumpInfo(const mobjinfo_t *mi, const char *arg)
 {
    char *temparg = Z_Strdupa(arg);
    char *colon   = strchr(temparg, ':');
@@ -387,7 +387,7 @@ state_t *E_GetJumpInfo(mobjinfo_t *mi, const char *arg)
 // the ordinary plain state named by the input string. Otherwise, both the weaponinfo
 // and statename may be redirected.
 //
-state_t *E_GetWpnJumpInfo(weaponinfo_t *wi, const char *arg)
+state_t *E_GetWpnJumpInfo(const weaponinfo_t *wi, const char *arg)
 {
    char *temparg = Z_Strdupa(arg);
    char *colon   = strchr(temparg, ':');
@@ -455,17 +455,16 @@ state_t *E_ArgAsStateLabel(const Mobj *mo, const arglist_t *al, int index)
 }
 
 //
-// This evaluator only allows DECORATE state labels or numbers, and will not 
+// This evaluator only allows DECORATE state labels or numbers, and will not
 // make reference to global states. Because evaluation of this type of argument
 // is relative to the player, this evaluation is never cached.
 //
-state_t *E_ArgAsStateLabelWpn(const player_t *player, const arglist_t *al,
-                              int index)
+state_t *E_ArgAsStateLabel(const player_t *player, const arglist_t *al, int index)
 {
-   weaponinfo_t *wi = player->readyweapon;
+   const weaponinfo_t *wi = player->readyweapon;
    const char *arg;
    char       *end   = nullptr;
-   state_t    *state = player->psprites->state;
+   const state_t *state = player->psprites->state;
    long        num;
 
    if(!al || index >= al->numargs)
@@ -491,8 +490,7 @@ state_t *E_ArgAsStateLabelWpn(const player_t *player, const arglist_t *al,
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, the null state is returned instead.
 //
-int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo,
-                    const player_t *player)
+template<typename T> inline int E_argAsStateNum(arglist_t *al, int index, const T *mop)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -513,7 +511,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo,
       {
          // it is a name
          int statenum;
-         
+
          // haleyjd 07/18/10: Try EDF state name first; if this turns out as
          // invalid, check to see if it's a DECORATE state label before returning
          // NullStateNum.
@@ -529,9 +527,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo,
             // if it is valid, it is NOT cached, because DECORATE label
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
-            if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
-               return state->index;
-            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+            if(mop && (state = E_ArgAsStateLabel(mop, al, index)))
                return state->index;
             else
             {
@@ -559,8 +555,7 @@ int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo,
 //
 // NI == No Invalid, because invalid states are not converted to the null state.
 //
-int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo,
-                      const player_t *player)
+template<typename T> inline int E_argAsStateNumNI(arglist_t *al, int index, const T *mop)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -581,7 +576,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo,
       {
          // it is a name
          int statenum;
-         
+
          // haleyjd 07/18/10: Try EDF state name first; if this turns out as
          // invalid, check to see if it's a DECORATE state label before returning
          // NullStateNum.
@@ -597,9 +592,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo,
             // if it is valid, it is NOT cached, because DECORATE label
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
-            if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
-               return state->index;
-            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+            if(mop && (state = E_ArgAsStateLabel(mop, al, index)))
                return state->index;
             else
             {
@@ -607,7 +600,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo,
                eval.type = EVALTYPE_STATENUM;
                eval.value.i = -1;
             }
-         }      
+         }
       }
       else
       {
@@ -625,8 +618,7 @@ int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo,
 // equal to zero.
 // G0 == "greater than or equal to zero"
 //
-int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo,
-                      const player_t *player)
+template<typename T> inline int E_argAsStateNumG0(arglist_t *al, int index, const T *mop)
 {
    // if the arglist doesn't exist or doesn't hold this many arguments,
    // return the default value.
@@ -647,7 +639,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo,
       {
          // it is a name
          int statenum;
-       
+
          // haleyjd 07/18/10: Try EDF state name first; if this turns out as
          // invalid, check to see if it's a DECORATE state label before returning
          // NullStateNum.
@@ -663,9 +655,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo,
             // if it is valid, it is NOT cached, because DECORATE label
             // resolution is "virtual" (ie relative to the calling thingtype).
             state_t *state;
-            if(mo && (state = E_ArgAsStateLabel(mo, al, index)))
-               return state->index;
-            else if(player && (state = E_ArgAsStateLabelWpn(player, al, index)))
+            if(mop && (state = E_ArgAsStateLabel(mop, al, index)))
                return state->index;
             else
             {
@@ -673,12 +663,12 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo,
                eval.type = EVALTYPE_STATENUM;
                eval.value.i = -1;
             }
-         }      
+         }
       }
       else
       {
          eval.type = EVALTYPE_STATENUM;
-         
+
          // it is a DeHackEd number if it is >= 0
          if(num >= 0)
             eval.value.i = E_StateNumForDEHNum((int)num);
@@ -688,6 +678,34 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo,
    }
 
    return eval.value.i;
+}
+
+//
+// All the overloads for the various argument-as-state-number functions
+//
+int E_ArgAsStateNum(arglist_t *al, int index, const Mobj *mo)
+{
+   return E_argAsStateNum<Mobj>(al, index, mo);
+}
+int E_ArgAsStateNum(arglist_t *al, int index, const player_t *player)
+{
+   return E_argAsStateNum<player_t>(al, index, player);
+}
+int E_ArgAsStateNumNI(arglist_t *al, int index, const Mobj *mo)
+{
+   return E_argAsStateNumNI<Mobj>(al, index, mo);
+}
+int E_ArgAsStateNumNI(arglist_t *al, int index, const player_t *player)
+{
+   return E_argAsStateNumNI<player_t>(al, index, player);
+}
+int E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj *mo)
+{
+   return E_argAsStateNumG0<Mobj>(al, index, mo);
+}
+int E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player)
+{
+   return E_argAsStateNumG0<player_t>(al, index, player);
 }
 
 //

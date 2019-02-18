@@ -40,8 +40,10 @@
 template<typename T, typename U>
 class AVLTree
 {
-   static_assert(std::is_standard_layout_v<T>, "Node key's type must be standard layout");
-   static_assert(std::is_standard_layout_v<U>, "Node object's type must be standard layout");
+   // TODO: Change from std::is_standard_layout<T>::value std::is_standard_layout_v<T>
+   //       when Raspbian gets C++17-compatible version of GCC.
+   static_assert(std::is_standard_layout<T>::value, "Node key's type must be standard layout");
+   static_assert(std::is_standard_layout<U>::value, "Node object's type must be standard layout");
 
 public:
    //
@@ -51,43 +53,34 @@ public:
    {
       T key;
       U *object;
-      avlnode_t *left, *right;
+      avlnode_t *left, *right, *next;
    } *root;
 
-   //
    // Default constructor
-   //
-   AVLTree()
-      : root(nullptr)
+   AVLTree() : root(nullptr)
    {
    }
 
-   //
    // Parameterised constructor
-   //
-   AVLTree(T key, U *object)
-      : root(estructalloc(avlnode_t, 1))
+   AVLTree(const T key, U *object) : root(estructalloc(avlnode_t, 1))
    {
       root->key = key;
       root->object = object;
    }
 
-   //
    // Destructor. Delete the tree if there is one
-   //
    virtual ~AVLTree() { deleteTree(root, deleteobjects); }
 
    //
    // Insert a new node with a provided key and object into the tree
    //
-   avlnode_t *insert(T key, U *object)
+   avlnode_t *insert(const T key, U *object)
    {
       avlnode_t *toinsert, *next, *prev;
-      prev = next = nullptr;
-      toinsert = estructalloc(avlnode_t, 1); 
-      toinsert->key = key;
+      prev             = nullptr;
+      toinsert         = estructalloc(avlnode_t, 1);
+      toinsert->key    = key;
       toinsert->object = object;
-      toinsert->left = toinsert->right = nullptr;
 
       if(root == nullptr)
          root = toinsert;
@@ -100,16 +93,13 @@ public:
                next = next->left;
             else if(key > next->key)
                next = next->right;
-            else // FIXME: This triggers due to inheritance. That needs sorting out.
-            {
-               efree(toinsert);
-               return nullptr; // Ahh bugger
-            }
+            else
+               return handleCollision(next, toinsert);
          }
          if(key > prev->key)
             prev->right = toinsert;
          if(key < prev->key)
-            prev->left = toinsert;
+            prev->left  = toinsert;
       }
       balance(root);
 
@@ -119,10 +109,10 @@ public:
    //
    // Delete the node with the provided key, then rebalance the tree
    //
-   bool deleteNode(T key)
+   bool deleteNode(const T key, U *object)
    {
       avlnode_t *prev = nullptr, *node = root;
-      bool found = false, onleft = false;
+      bool found = false, onleft = false, removedslot = true;
 
       while(!found)
       {
@@ -144,10 +134,33 @@ public:
          }
          else if(key == node->key)
          {
-            // We found the node
+            // We found the root node
             found = true;
+            removedslot = node->next == nullptr;
 
-            if((node->left == nullptr) || (node->right == nullptr))
+            if(!removedslot)
+            {
+               if(node->object == object)
+               {
+                  if(onleft)
+                     prev->left  = node->next;
+                  else
+                     prev->right = node->next;
+               }
+               else
+               {
+                  avlnode_t *previnslot = node, *curr = node->next;
+                  while(curr != nullptr && curr->object != object)
+                  {
+                     previnslot = curr;
+                     curr       = curr->next;
+                  }
+                  previnslot->next = curr->next;
+
+                  efree(curr);
+               }
+            }
+            else if((node->left == nullptr) || (node->right == nullptr))
             {
                // Either the found node with key has no child or one child.
                // Both share the same logic, just using different values.
@@ -160,7 +173,7 @@ public:
                if(prev)
                {
                   if(onleft)
-                     prev->left = toset;
+                     prev->left  = toset;
                   else
                      prev->right = toset;
                }
@@ -175,12 +188,12 @@ public:
                // Two child nodes
                if(onleft || !prev)
                {
-                  minnode = minimumNode(node, &minparent);
+                  minnode    = minimumNode(node, &minparent);
                   prev->left = minnode;
                }
                else
                {
-                  minnode = minimumNode(node, &minparent);
+                  minnode     = minimumNode(node, &minparent);
                   prev->right = minnode;
                }
 
@@ -188,7 +201,7 @@ public:
                if(minparent != nullptr)
                   minparent->left = nullptr;
 
-               minnode->left = node->left;
+               minnode->left  = node->left;
                minnode->right = node->right;
 
                efree(node);
@@ -196,14 +209,15 @@ public:
          }
       }
 
-      balance(root);
+      if(removedslot)
+         balance(root);
       return true;
    }
 
    //
    // Return a node with a given key, or nullptr if not found
    //
-   avlnode_t *find(T key) const
+   avlnode_t *find(const T key) const
    {
       for(avlnode_t *node = root; node != nullptr;)
       {
@@ -220,7 +234,7 @@ public:
    //
    // Get the number of nodes in the tree
    //
-   int numNodes(avlnode_t *node = nullptr) const
+   int numNodes(const avlnode_t *node = nullptr) const
    {
       if(node == nullptr && root)
          node = root;
@@ -238,6 +252,15 @@ public:
 
 protected:
    bool deleteobjects = false;
+
+   //
+   // Handle a collision (entering a new node with a key of a node already in the tree)
+   //
+   virtual avlnode_t *handleCollision(avlnode_t *listroot, avlnode_t *toinsert)
+   {
+      efree(toinsert);
+      return nullptr; // Ahh bugger
+   }
 
    //
    // Get the node to replace the deleted node, as well as its parent
@@ -260,7 +283,7 @@ protected:
    //
    // Get the height of a given tree/sub-tree
    //
-   static int treeHeight(avlnode_t *node)
+   static int treeHeight(const avlnode_t *node)
    {
       int lheight, rheight;
 
@@ -273,7 +296,7 @@ protected:
    //
    // Get the balance factor of a given tree/sub-tree
    //
-   inline static int balanceFactor(avlnode_t *node)
+   inline static int balanceFactor(const avlnode_t *node)
    {
       int bf = 0;
 
@@ -295,7 +318,7 @@ protected:
       *   b   3  ->  1    a
       *  / \    GOTO     / \
       * 1   2           2   3 */
-      a->left = b->right;
+      a->left  = b->right;
       b->right = a;
 
       node = b;
@@ -315,9 +338,9 @@ protected:
       * 1   c        1   2 3   d
       *    / \
       *   2   3                  */
-      a->left = c->right;
+      a->left  = c->right;
       b->right = c->left;
-      c->left = b;
+      c->left  = b;
       c->right = a;
 
       node = c;
@@ -331,9 +354,9 @@ protected:
 
       // This is the opposite of rotateNodeLeftRight
       a->right = c->left;
-      b->left = c->right;
+      b->left  = c->right;
       c->right = b;
-      c->left = a;
+      c->left  = a;
 
       node = c;
    }
@@ -345,7 +368,7 @@ protected:
 
       // This is the opposite of rotateNodeRight
       a->right = b->left;
-      b->left = a;
+      b->left  = a;
 
       node = b;
    }
@@ -355,6 +378,9 @@ protected:
    //
    static void balance(avlnode_t *&root)
    {
+      if(root == nullptr)
+         return;
+
       // Balance existent children
       if(root->left)
          balance(root->left);
@@ -390,7 +416,7 @@ private:
       if(node)
       {
          if(node->left)
-            deleteTree(node->left, deleteobjs);
+            deleteTree(node->left,  deleteobjs);
          if(node->right)
             deleteTree(node->right, deleteobjs);
          if(deleteobjs)

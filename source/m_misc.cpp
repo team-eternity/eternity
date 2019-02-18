@@ -205,8 +205,8 @@ default_t defaults[] =
                "0 - right handed, 1 - left handed"),
 
    // killough 10/98
-   DEFAULT_INT("doom_weapon_toggles", &doom_weapon_toggles, NULL, 1, 0, 1, default_t::wad_no,
-               "1 to toggle between SG/SSG and Fist/Chainsaw"),
+   DEFAULT_INT("weapon_hotkey_cycling", &weapon_hotkey_cycling, NULL, 1, 0, 1, default_t::wad_no,
+               "1 to allow in-slot weapon cycling (e.g. SSG to SG)"),
 
    // phares 2/25/98
    DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, default_t::wad_yes,
@@ -374,7 +374,7 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Monsters can telefrag on MAP30"),
 
    DEFAULT_INT("comp_dropoff", &default_comp[comp_dropoff], &comp[comp_dropoff],
-               0, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
+               1, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
 
    DEFAULT_INT("comp_falloff", &default_comp[comp_falloff], &comp[comp_falloff],
                0, 0, 1, default_t::wad_yes, "Objects don't fall off ledges under their own weight"),
@@ -436,13 +436,13 @@ default_t defaults[] =
    
    // haleyjd 02/15/02: z checks (includes,supercedes comp_scratch)
    DEFAULT_INT("comp_overunder", &default_comp[comp_overunder], &comp[comp_overunder],
-               1, 0, 1, default_t::wad_yes, "Things not fully clipped with respect to z coord"),
+               0, 0, 1, default_t::wad_yes, "Things not fully clipped with respect to z coord"),
    
    DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
-               1, 0, 1, default_t::wad_yes, "DOOM thingtypes use inaccurate height information"),
+               0, 0, 1, default_t::wad_yes, "DOOM thingtypes use inaccurate height information"),
    
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
-               1, 0, 1, default_t::wad_yes, "Tracer shots cannot hit the floor or ceiling"),
+               0, 0, 1, default_t::wad_yes, "Tracer shots cannot hit the floor or ceiling"),
 
    DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
                0, 0, 1, default_t::wad_yes, "One-time line specials are cleared on failure"),
@@ -672,10 +672,13 @@ default_t defaults[] =
    // killough 11/98
    DEFAULT_INT("message_timer",&message_timer, NULL, 4000, 0, UL, default_t::wad_no,
                "Duration of normal Doom messages (ms)"),
+
+   DEFAULT_INT("hud_overlayid", &hud_overlayid, NULL, -1, -1, VDR_MAXDRIVERS - 1, default_t::wad_no,
+               "Select HUD overlay (-1 = default, 0 = modern, 1 = boom"),
    
    //sf : fullscreen hud style
-   DEFAULT_INT("hud_overlaystyle",&hud_overlaystyle, NULL, 1, 0, 4, default_t::wad_yes,
-               "fullscreen hud style"),
+   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, 2, 0, 4, default_t::wad_yes,
+               "fullscreen hud layout"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,
                "fullscreen hud enabled"),
@@ -874,10 +877,10 @@ default_t defaults[] =
 default_or_t HereticDefaultORs[] =
 {
    // misc
-   { "pitched_sounds",   1 }, // pitched sounds should be on
-   { "allowmlook",       1 }, // mlook defaults to on
-   { "wipetype",         2 }, // use crossfade wipe by default
-   { "hud_overlaystyle", 4 }, // use graphical HUD style
+   { "pitched_sounds",    1 }, // pitched sounds should be on
+   { "allowmlook",        1 }, // mlook defaults to on
+   { "wipetype",          2 }, // use crossfade wipe by default
+   { "hud_overlaylayout", 4 }, // use graphical HUD style
    
    // compatibility
    { "comp_terrain",   0 }, // terrain active

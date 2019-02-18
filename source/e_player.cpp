@@ -47,6 +47,7 @@
 #include "p_skin.h"
 #include "v_misc.h"
 #include "v_video.h"
+#include "w_wad.h"
 
 //
 // Player Class and Skin Options
@@ -108,6 +109,7 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDTURNSLOW  "speedturnslow"
 #define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
 #define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
+#define ITEM_PCLASS_SPEEDJUMP      "speedjump"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
 #define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
 
@@ -119,14 +121,14 @@ cfg_opt_t edf_skin_opts[] =
 
 #define ITEM_DELTA_NAME "name"
 
-static cfg_opt_t edf_wpnslot_opts[] =
+static cfg_opt_t wpnslot_opts[] =
 {
    CFG_STR(ITEM_WPNSLOT_WPNS,   0, CFGF_LIST),
    CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0, CFGF_NONE),
    CFG_END()
 };
 
-static cfg_opt_t edf_reborn_opts[] =
+static cfg_opt_t reborn_opts[] =
 {
    CFG_STR(ITEM_REBORN_NAME,   "", CFGF_NONE),
    CFG_INT(ITEM_REBORN_AMOUNT,  1, CFGF_NONE),
@@ -149,15 +151,16 @@ static cfg_opt_t edf_reborn_opts[] =
    CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0, CFGF_NONE), \
                                                          \
    CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
                                                          \
    /* reborn inventory items */                          \
-   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, edf_reborn_opts, CFGF_MULTI|CFGF_NOCASE), \
-                                                                                \
-    /* weapon slots */                                                          \
-   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,   edf_wpnslot_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE), \
-                                                                                               \
+   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
+                                                                             \
+    /* weapon slots */                                                       \
+   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,    wpnslot_opts, CFGF_MULTI|CFGF_NOCASE|CFGF_TITLE), \
+                                                                                        \
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -345,10 +348,9 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    if(cfg_size(skinsec, ITEM_SKIN_SOUNDS) > 0)
    {
       cfg_t *sndsec = cfg_getsec(skinsec, ITEM_SKIN_SOUNDS);
-      int i;
 
       // get sounds from the sounds section
-      for(i = 0; i < NUMSKINSOUNDS; ++i)
+      for(int i = 0; i < NUMSKINSOUNDS; ++i)
          E_DoSkinSound(sndsec, def, newSkin, i, skin_sound_names[i]);
    }
 }
@@ -465,7 +467,7 @@ static void E_freeWeaponSlot(playerclass_t *pc, int slot)
 //
 static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
 {
-   const qstring titlestr = qstring(cfg_title(slot));
+   const qstring titlestr(cfg_title(slot));
    const int slotindex = titlestr.toInt() - 1;
    const int numweapons = cfg_size(slot, ITEM_WPNSLOT_WPNS);
 
@@ -550,8 +552,8 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
    else
-      E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: playerdelta requires name field\n");
-   
+      E_EDFLoggedErr(2, "E_processPlayerClass: playerdelta requires name field\n");
+
 
    if(!(pc = E_PlayerClassForName(tempstr)))
    {
@@ -665,6 +667,9 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKFAST))
       pc->lookspeed[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKFAST);
 
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDJUMP))
+      pc->jumpspeed = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDJUMP));
+
    // copy speeds to original speeds
    memcpy(pc->oforwardmove, pc->forwardmove, 2 * sizeof(fixed_t));
    memcpy(pc->osidemove,    pc->sidemove,    2 * sizeof(fixed_t));
@@ -767,7 +772,8 @@ void E_VerifyDefaultPlayerClass()
 //
 // Recursively populate a weapon slot with data from a WeaponSlotTree
 //
-static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node, unsigned int &data)
+static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node,
+                                 unsigned int &data)
 {
    if(node->left)
       E_populateWeaponSlot(slotlist, node->left, data);
@@ -778,6 +784,9 @@ static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotN
    curslot->weapon = node->object;
    curslot->links.insert(curslot, slotlist);
    data++;
+
+   if(node->next)
+      E_populateWeaponSlot(slotlist, node->next, data);
 
    if(node->right)
       E_populateWeaponSlot(slotlist, node->right, data);
@@ -826,29 +835,63 @@ static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node,
 //
 void E_ProcessFinalWeaponSlots()
 {
-   for(int i = 0; i < NUMEDFPCLASSCHAINS; ++i)
-   {
-      playerclass_t *chain = edf_player_classes[i];
+   // If the gametype is DOOM and the SSG main shotgun player sprite isn't present
+   // then the SSG needs removal from playerslots
+   const bool remove_ssg = GameModeInfo->type == Game_DOOM &&
+                           W_CheckNumForNameNS("SHT2A0", lumpinfo_t::ns_sprites) <= 0;
 
+   // Remove the SSG from global weaponslots, if it's in them
+   if(remove_ssg)
+   {
+      weaponinfo_t *ssg_info = E_WeaponForName("SuperShotgun");
+      if(ssg_info != nullptr)
+      {
+         for(int i = NUMWEAPONSLOTS; i --> 0;)
+         {
+            if(weaponslots[i] != nullptr)
+               weaponslots[i]->deleteNode(ssg_info->defaultslotrank, ssg_info);
+         }
+      }
+
+   }
+
+   for(playerclass_t *chain : edf_player_classes)
+   {
       while(chain)
       {
-         for(int i = NUMWEAPONSLOTS; i--> 0;)
+         for(int i = NUMWEAPONSLOTS; i --> 0;)
          {
             bool *weaponinslot = ecalloc(bool *, NUMWEAPONTYPES, sizeof(bool));
             WeaponSlotTree *pclassslottree = nullptr;
             if(chain->weaponslots[i] != nullptr)
             {
-               pclassslottree = new WeaponSlotTree();
                auto *slotiterator = E_FirstInSlot(chain->weaponslots[i]);
                int weaponnum = 1;
 
-               while(!slotiterator->isDummy())
+               // If the SSG is the only thing in the slot and isn't allowed
+               // then don't process this slot (deletion handled elsewhere)
+               if(!remove_ssg || !slotiterator->bdNext->isDummy() ||
+                  strcmp(slotiterator->bdObject->weapon->name, "SuperShotgun"))
                {
-                  pclassslottree->insert(slotiterator->bdData << FRACBITS, slotiterator->bdObject->weapon);
-                  weaponinslot[slotiterator->bdObject->weapon->id] = true;
+                  pclassslottree = new WeaponSlotTree();
+                  while(!slotiterator->isDummy())
+                  {
+                     // If the SSG is in the slot then skip over it,
+                     // if it's not supposed to be useable
+                     if(remove_ssg &&
+                        !strcmp(slotiterator->bdObject->weapon->name, "SuperShotgun"))
+                     {
+                        slotiterator = slotiterator->bdNext;
+                        continue;
+                     }
 
-                  weaponnum++;
-                  slotiterator = slotiterator->bdNext;
+                     pclassslottree->insert(slotiterator->bdData << FRACBITS,
+                                            slotiterator->bdObject->weapon);
+                     weaponinslot[slotiterator->bdObject->weapon->id] = true;
+
+                     weaponnum++;
+                     slotiterator = slotiterator->bdNext;
+                  }
                }
             }
 
@@ -861,6 +904,13 @@ void E_ProcessFinalWeaponSlots()
                E_createWeaponSlotFromTree(chain, i, pclassslottree);
                delete pclassslottree;
             }
+            else if(chain->weaponslots[i] != nullptr &&
+                    chain->weaponslots[i]->weapon == nullptr)
+            {
+               // Necessary due to SSG hacks
+               E_freeWeaponSlot(chain, i);
+            }
+
             efree(weaponinslot);
          }
 
@@ -878,13 +928,9 @@ void E_ProcessFinalWeaponSlots()
 //
 bool E_IsPlayerClassThingType(mobjtype_t motype)
 {
-   int i;
-
    // run down all hash chains
-   for(i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   for(playerclass_t *chain : edf_player_classes)
    {
-      playerclass_t *chain = edf_player_classes[i];
-
       while(chain)
       {
          if(chain->type == motype) // found a match
@@ -950,22 +996,17 @@ bool E_PlayerInWalkingState(player_t *player)
 //
 void E_ApplyTurbo(int ts)
 {
-   int i;
-   playerclass_t *pc;
-
    // run down all hash chains
-   for(i = 0; i < NUMEDFPCLASSCHAINS; ++i)
+   for(playerclass_t *pc : edf_player_classes)
    {
-      pc = edf_player_classes[i];
-
       while(pc)
       {
          pc->forwardmove[0] = pc->oforwardmove[0] * ts / 100;
          pc->forwardmove[1] = pc->oforwardmove[1] * ts / 100;
-         
+
          pc->sidemove[0] = pc->osidemove[0] * ts / 100;
          pc->sidemove[1] = pc->osidemove[1] * ts / 100;
-         
+
          pc = pc->next;
       }
    }
