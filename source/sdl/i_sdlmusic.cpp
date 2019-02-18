@@ -180,6 +180,9 @@ int adlmidi_bank               = 72;
 //
 static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 {
+   static Sint16 *adlmidi_buffer = nullptr;
+   static int lastadlmidisamples = 0;
+
    adlplaying = true;
    // TODO: Remove the exiting check once all atexit calls are erradicated
    if(Mix_PausedMusic()) //if(exiting || Mix_PausedMusic())
@@ -189,16 +192,23 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
    }
 
    const int numsamples = len / ADLMIDISTEP;
-   Sint16 *outbuff = ecalloc(Sint16 *, numsamples, sizeof(Sint16));
-   const int gotlen = adl_play(adlmidi_player, numsamples, outbuff);
+
+   // realloc ADLMIDI buffer?
+   if(numsamples != lastadlmidisamples)
+   {
+      // add extra buffer samples at end for filtering safety; stereo channels
+      adlmidi_buffer = (Sint16 *)Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(Sint16));
+      lastadlmidisamples = numsamples;
+   }
+
+   const int gotlen = adl_play(adlmidi_player, numsamples, adlmidi_buffer);
    if(snd_MusicVolume == 15)
-      memcpy(stream, reinterpret_cast<Uint8 *>(outbuff), size_t(gotlen * ADLMIDISTEP));
+      memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen * ADLMIDISTEP));
    else
    {
-      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(outbuff), MIX_DEFAULT_FORMAT,
+      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), MIX_DEFAULT_FORMAT,
                          gotlen * ADLMIDISTEP, (snd_MusicVolume * 128) / 15);
    }
-   efree(outbuff);
    adlplaying = false;
 }
 
