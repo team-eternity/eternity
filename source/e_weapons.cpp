@@ -1115,6 +1115,10 @@ static void E_copyWeapon(weapontype_t num, weapontype_t pnum)
    // tracker inheritance is weird
    //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
    this_wi->tracker = tracker;
+
+   // MaxW: Inheriting weapons have no use for this flag, and I don't want
+   // users to have to unset it when it shouldn't be set in the first place.
+   this_wi->flags &= ~WPF_DISABLEAPS;
 }
 
 struct weapontitleprops_t
@@ -1330,7 +1334,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.holdstate  = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
+   {
+      if(!def)
+         wp.flags &= ~WPF_DISABLEAPS;
       wp.ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
+   }
 
 
    // Alt attack properties
@@ -1352,7 +1360,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.holdstate_alt = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE_ALT));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT_ALT))
+   {
+      if(!def)
+         wp.flags &= ~WPF_DISABLEAPS;
       wp.ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
+   }
 
    if(IS_SET(ITEM_WPN_MOD))
    {
