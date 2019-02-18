@@ -126,7 +126,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)adlmidi.lib;$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
@@ -182,7 +182,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)adlmidi.lib;$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateMapFile>true</GenerateMapFile>
@@ -232,7 +232,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)adlmidi.lib;$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -282,7 +282,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(OutDir)adlmidi.lib;$(OutDir)snes_spc.lib;$(OutDir)libpng.lib;$(OutDir)zlib.lib;$(OutDir)ACSVM.lib;$(SDL2_0)\lib\$(PlatformTarget)\SDL2.lib;$(SDLMIXER2_0)\lib\$(PlatformTarget)\SDL2_mixer.lib;$(SDLNET2_0)\lib\$(PlatformTarget)\SDL2_net.lib;oldnames.lib;opengl32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
