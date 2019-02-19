@@ -36,7 +36,6 @@
 #include "doomstat.h"
 #include "e_states.h"
 #include "e_things.h"
-#include "g_compat.h"
 #include "m_bbox.h"
 #include "p_map.h"
 #include "p_maputl.h"

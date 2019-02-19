@@ -26,7 +26,6 @@
 #include "z_zone.h"
 
 #include "doomstat.h"
-#include "g_compat.h"
 #include "p_map.h"
 #include "p_portal.h"
 #include "p_spec.h"

@@ -29,7 +29,6 @@
 
 #include "doomdef.h"
 #include "doomstat.h" //jff 5/18/98
-#include "g_compat.h"
 #include "m_random.h"
 #include "p_saveg.h"
 #include "p_spec.h"

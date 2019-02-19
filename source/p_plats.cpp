@@ -28,7 +28,6 @@
 
 #include "d_gi.h"
 #include "doomstat.h"
-#include "g_compat.h"
 #include "m_random.h"
 #include "p_info.h"
 #include "p_saveg.h"

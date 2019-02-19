@@ -31,7 +31,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "e_puff.h"
-#include "g_compat.h"
 #include "metaapi.h"
 #include "p_map.h"
 #include "p_maputl.h"

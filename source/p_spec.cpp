@@ -52,7 +52,6 @@
 #include "e_udmf.h"
 #include "ev_sectors.h"
 #include "ev_specials.h"
-#include "g_compat.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "p_info.h"

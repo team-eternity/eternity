@@ -36,7 +36,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "ev_specials.h"
-#include "g_compat.h"
 #include "g_game.h"
 #include "m_compare.h"
 #include "m_random.h"

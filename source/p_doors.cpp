@@ -31,7 +31,6 @@
 #include "doomstat.h"
 #include "dstrings.h"
 #include "e_inventory.h"
-#include "g_compat.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "p_info.h"

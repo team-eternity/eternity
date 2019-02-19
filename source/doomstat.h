@@ -43,6 +43,15 @@ struct doomcom_t;
 struct doomdata_t;
 struct mapthing_t;
 
+typedef enum
+{
+  bfg_normal,
+  bfg_classic,
+  bfg_11k,
+  bfg_bouncing, // haleyjd
+  bfg_burst,    // haleyjd
+} bfg_t;
+
 enum acceltype_e : int
 {
    ACCELTYPE_NONE,
@@ -95,6 +104,10 @@ extern int demo_subversion;
 #define make_full_version(v, sv) ((v << 8) | sv)
 #define full_demo_version        make_full_version(demo_version, demo_subversion)
 
+
+
+extern int monkeys, default_monkeys;
+
 // v1.1-like pitched sounds
 extern int pitched_sounds;
 
@@ -105,6 +118,48 @@ extern int demo_insurance, default_demo_insurance;      // killough 4/5/98
 // haleyjd 04/13/04 -- macro to get a flex tran level roughly
 // equivalent to the current tran_filter_pct value.
 #define FTRANLEVEL ((FRACUNIT * tran_filter_pct) / 100)
+
+// -------------------------------------------
+// killough 10/98: compatibility vector
+
+// IMPORTANT: when searching for usage in the code, do NOT include the comp_
+// prefix. Just search for e.g. "telefrag" or "dropoff".
+
+enum {
+  comp_telefrag,
+  comp_dropoff,
+  comp_vile,
+  comp_pain,
+  comp_skull,
+  comp_blazing,
+  comp_doorlight,
+  comp_model,
+  comp_god,
+  comp_falloff,
+  comp_floors,
+  comp_skymap,
+  comp_pursuit,
+  comp_doorstuck,
+  comp_staylift,
+  comp_zombie,
+  comp_stairs,
+  comp_infcheat,
+  comp_zerotags,
+  comp_terrain,     // haleyjd 07/04/99: TerrainTypes toggle (#19)
+  comp_respawnfix,  // haleyjd 08/09/00: compat. option for nm respawn fix
+  comp_fallingdmg,  //         08/09/00: falling damage
+  comp_soul,        //         03/23/03: lost soul bounce
+  comp_theights,    //         07/06/05: thing heights fix
+  comp_overunder,   //         10/19/02: thing z clipping
+  comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
+  comp_special,     //         08/29/09: special failure behavior
+  comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
+  comp_aircontrol,  // Disable air control
+  COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
+  COMP_TOTAL=32  // Some extra room for additional variables
+};
+
+extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
 
 // -------------------------------------------
 // Language.
@@ -295,10 +350,42 @@ extern Thinker thinkercap;  // Both the head and tail of the thinker list
 // v1.1-like pitched sounds
 extern int pitched_sounds, default_pitched_sounds;     // killough 2/21/98
 
+extern int allow_pushers;         // PUSH Things    // phares 3/10/98
+extern int default_allow_pushers;
+
+extern int variable_friction;  // ice & mud            // phares 3/10/98
+extern int default_variable_friction;
+
+extern int monsters_remember;                          // killough 3/1/98
+extern int default_monsters_remember;
+
+extern int weapon_recoil;          // weapon recoil    // phares
+extern int default_weapon_recoil;
+
 extern int player_bobbing;  // whether player bobs or not   // phares 2/25/98
 extern int default_player_bobbing;  // killough 3/1/98: make local to each game
 
+// killough 7/19/98: Classic Pre-Beta BFG
+extern bfg_t bfgtype, default_bfgtype;
+
 extern int dogs, default_dogs;     // killough 7/19/98: Marine's best friend :)
+extern int dog_jumping, default_dog_jumping;   // killough 10/98
+
+// killough 8/8/98: distance friendly monsters tend to stay from player
+extern int distfriend, default_distfriend;
+
+// killough 9/8/98: whether monsters are allowed to strafe or retreat
+extern int monster_backing, default_monster_backing;
+
+// killough 9/9/98: whether monsters intelligently avoid hazards
+extern int monster_avoid_hazards, default_monster_avoid_hazards;
+
+// killough 10/98: whether monsters are affected by friction
+extern int monster_friction, default_monster_friction;
+
+// killough 9/9/98: whether monsters help friends
+extern int help_friends, default_help_friends;
+
 extern int autoaim, default_autoaim;
 
 extern int allowmlook, default_allowmlook; // haleyjd

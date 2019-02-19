@@ -42,7 +42,6 @@
 #include "d_mod.h"
 #include "e_inventory.h"
 #include "e_weapons.h"
-#include "g_compat.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_enemy.h"

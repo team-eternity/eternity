@@ -43,7 +43,6 @@
 #include "d_dehtbl.h"
 #include "d_mod.h"
 #include "doomstat.h"
-#include "g_compat.h"
 #include "i_system.h"
 #include "m_random.h"
 #include "p_enemy.h"

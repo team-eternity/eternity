@@ -38,7 +38,6 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_weapons.h"
-#include "g_compat.h"
 #include "m_random.h"
 #include "p_mobj.h"
 #include "p_info.h"

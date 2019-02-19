@@ -37,7 +37,6 @@
 #include "e_player.h"
 #include "e_states.h"
 #include "e_weapons.h"
-#include "g_compat.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
