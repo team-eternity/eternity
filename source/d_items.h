@@ -49,7 +49,7 @@ enum wepflags_e : unsigned int
    WPF_ALWAYSRECOIL   = 0x00000100, // weapon always has recoil
    WPF_HAPTICRECOIL   = 0x00000200, // use recoil-style haptic effect
    WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
-   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a wep w/o this is picked up
+   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a better wep is picked up
    WPF_POWEREDUP      = 0x00001000, // powered up weapon (tomed weapons in Heretic)
    WPF_FORCETOREADY   = 0x00002000, // force to readystate on receiving/losing pw_weaponlevel2
 };

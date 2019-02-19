@@ -540,12 +540,18 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
 
 //
 // Initial function to call the function that recursively finds the
-// best weapon the player owns that has the provided primary ammo
+// best weapon the player owns that has the provided primary ammo.
+// If the best weapon found isn't better than the player's readyweapon
+// then nullptr is returned.
 //
-weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
-                                        const itemeffect_t *ammo)
+weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t *player,
+                                              const itemeffect_t *ammo)
 {
-   return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
+   weaponinfo_t *wp = E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
+   if(wp != nullptr && wp->sortorder < player->readyweapon->sortorder)
+      return wp;
+   else
+      return nullptr;
 }
 
 //
