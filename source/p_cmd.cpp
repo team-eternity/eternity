@@ -37,7 +37,6 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "f_wipe.h"
-#include "g_compat.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "mn_engin.h"

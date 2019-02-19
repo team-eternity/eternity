@@ -105,6 +105,8 @@ extern int demo_subversion;
 #define full_demo_version        make_full_version(demo_version, demo_subversion)
 
 
+// killough 7/19/98: whether monsters should fight against each other
+extern int monster_infighting, default_monster_infighting;
 
 extern int monkeys, default_monkeys;
 

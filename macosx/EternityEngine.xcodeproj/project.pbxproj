@@ -12,7 +12,6 @@
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
 		4F2F32AE1867100100EED7DE /* s_reverb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A71867100100EED7DE /* s_reverb.cpp */; };
 		4F2F32B01867100100EED7DE /* v_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A91867100100EED7DE /* v_image.cpp */; };
-		4F32C282221886EB00FAA243 /* g_compat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F32C280221886EB00FAA243 /* g_compat.cpp */; };
 		4F36247B18A567CD00B94FA1 /* xl_emapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247218A567CD00B94FA1 /* xl_emapinfo.cpp */; };
 		4F36247D18A567CD00B94FA1 /* xl_mapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247418A567CD00B94FA1 /* xl_mapinfo.cpp */; };
 		4F36247F18A567CD00B94FA1 /* xl_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247618A567CD00B94FA1 /* xl_musinfo.cpp */; };
@@ -345,8 +344,6 @@
 		4F2F32A81867100100EED7DE /* s_reverb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_reverb.h; path = ../source/s_reverb.h; sourceTree = "<group>"; };
 		4F2F32A91867100100EED7DE /* v_image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_image.cpp; path = ../source/v_image.cpp; sourceTree = "<group>"; };
 		4F2F32AA1867100100EED7DE /* v_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_image.h; path = ../source/v_image.h; sourceTree = "<group>"; };
-		4F32C280221886EB00FAA243 /* g_compat.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = g_compat.cpp; path = ../source/g_compat.cpp; sourceTree = "<group>"; };
-		4F32C281221886EB00FAA243 /* g_compat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = g_compat.h; path = ../source/g_compat.h; sourceTree = "<group>"; };
 		4F36247118A567A500B94FA1 /* r_textur.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_textur.h; path = ../source/r_textur.h; sourceTree = "<group>"; };
 		4F36247218A567CD00B94FA1 /* xl_emapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_emapinfo.cpp; path = ../source/xl_emapinfo.cpp; sourceTree = "<group>"; };
 		4F36247318A567CD00B94FA1 /* xl_emapinfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xl_emapinfo.h; path = ../source/xl_emapinfo.h; sourceTree = "<group>"; };
@@ -1456,8 +1453,6 @@
 			children = (
 				FABF5CEB158BF42800C49E93 /* g_bind.cpp */,
 				FA16D3F215E01E96002318D1 /* g_bind.h */,
-				4F32C280221886EB00FAA243 /* g_compat.cpp */,
-				4F32C281221886EB00FAA243 /* g_compat.h */,
 				4F4515DC1FED801B0017EAD2 /* g_demolog.cpp */,
 				4F4515DB1FED801A0017EAD2 /* g_demolog.h */,
 				FABF5CEC158BF42800C49E93 /* g_cmd.cpp */,
@@ -2070,7 +2065,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F32C282221886EB00FAA243 /* g_compat.cpp in Sources */,
 				4FC0A9401E1E2ABC006CEC45 /* cam_shoot.cpp in Sources */,
 				4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */,
 				4FC0A92F1E1E2A50006CEC45 /* Module.cpp in Sources */,

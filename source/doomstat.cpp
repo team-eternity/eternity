@@ -72,6 +72,9 @@ int default_player_bobbing;
 int monsters_remember=1;        // killough 3/1/98
 int default_monsters_remember=1;
 
+int monster_infighting=1;       // killough 7/19/98: monster<=>monster attacks
+int default_monster_infighting=1;
+
 int monster_friction=1;       // killough 10/98: monsters affected by friction 
 int default_monster_friction=1;
 

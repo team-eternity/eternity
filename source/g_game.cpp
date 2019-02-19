@@ -55,7 +55,6 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
-#include "g_compat.h"
 #include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
