@@ -199,7 +199,7 @@ weapontype_t E_WeaponNumForName(const char *name);
 
 weaponinfo_t *E_FindBestWeapon(const player_t *player);
 weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t *player,
-                                        const itemeffect_t *ammo);
+                                              const itemeffect_t *ammo);
 int *E_GetIndexedWepCtrForPlayer(const player_t *player, int index);
 
 bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);

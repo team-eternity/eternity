@@ -122,7 +122,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
    if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
-      player->pendingweapon = E_FindBestWeaponUsingAmmo(player, ammo);
+      player->pendingweapon = E_FindBestBetterWeaponUsingAmmo(player, ammo);
       if(player->pendingweapon)
          player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
    }
