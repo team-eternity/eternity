@@ -3126,6 +3126,192 @@ extern menu_t menu_compat1;
 extern menu_t menu_compat2;
 extern menu_t menu_compat3;
 
+// Presets
+enum compatpreset_e
+{
+   compatpreset_vanilla,
+   compatpreset_boom,
+   compatpreset_prboom,
+   compatpreset_prboomOptimal,
+   compatpreset_eeModern
+};
+
+static const char *compat_preset_options[] =
+{
+   "vanilla Doom",
+   "Boom",
+   "PrBoom+ default",
+   "PrBoom+ optimal",
+   "Eternity modern"
+};
+
+static int default_compat_preset = compatpreset_eeModern;
+static int compat_preset = compatpreset_eeModern;
+VARIABLE_INT(compat_preset, &default_compat_preset, compatpreset_vanilla, compatpreset_eeModern,
+             compat_preset_options);
+CONSOLE_VARIABLE(compat_preset, compat_preset, cf_server)
+{
+   switch (compat_preset) {
+      case compatpreset_vanilla:
+         C_RunTextCmd("comp_telefrag yes");
+         C_RunTextCmd("comp_dropoff yes");
+         C_RunTextCmd("comp_vile yes");
+         C_RunTextCmd("comp_pain yes");
+         C_RunTextCmd("comp_skull yes");
+         C_RunTextCmd("comp_blazing yes");
+         C_RunTextCmd("comp_doorlight yes");
+         C_RunTextCmd("comp_model yes");
+         C_RunTextCmd("comp_god yes");
+         C_RunTextCmd("comp_falloff yes");
+         C_RunTextCmd("comp_floors yes");
+         C_RunTextCmd("comp_skymap yes");
+         C_RunTextCmd("comp_pursuit yes");
+         C_RunTextCmd("comp_doorstuck yes");
+         C_RunTextCmd("comp_staylift yes");
+         C_RunTextCmd("comp_zombie yes");
+         C_RunTextCmd("comp_stairs yes");
+         C_RunTextCmd("comp_infcheat yes");
+         C_RunTextCmd("comp_zerotags yes");
+         C_RunTextCmd("comp_terrain yes");
+         C_RunTextCmd("comp_respawnfix yes");
+         C_RunTextCmd("comp_fallingdmg yes");
+         C_RunTextCmd("comp_soul no");
+         C_RunTextCmd("comp_theights yes");
+         C_RunTextCmd("comp_overunder yes");
+         C_RunTextCmd("comp_planeshoot yes");
+         C_RunTextCmd("comp_special yes");
+         C_RunTextCmd("comp_ninja yes");
+         C_RunTextCmd("comp_aircontrol yes");
+         break;
+      case compatpreset_boom:
+         C_RunTextCmd("comp_telefrag yes");
+         C_RunTextCmd("comp_dropoff yes");
+         C_RunTextCmd("comp_vile no");
+         C_RunTextCmd("comp_pain no");
+         C_RunTextCmd("comp_skull no");
+         C_RunTextCmd("comp_blazing no");
+         C_RunTextCmd("comp_doorlight no");
+         C_RunTextCmd("comp_model no");
+         C_RunTextCmd("comp_god no");
+         C_RunTextCmd("comp_falloff yes");
+         C_RunTextCmd("comp_floors no");
+         C_RunTextCmd("comp_skymap no");
+         C_RunTextCmd("comp_pursuit yes");
+         C_RunTextCmd("comp_doorstuck no");
+         C_RunTextCmd("comp_staylift yes");
+         C_RunTextCmd("comp_zombie yes");
+         C_RunTextCmd("comp_stairs no");
+         C_RunTextCmd("comp_infcheat yes");
+         C_RunTextCmd("comp_zerotags no");
+         C_RunTextCmd("comp_terrain yes");
+         C_RunTextCmd("comp_respawnfix yes");
+         C_RunTextCmd("comp_fallingdmg yes");
+         C_RunTextCmd("comp_soul no");
+         C_RunTextCmd("comp_theights yes");
+         C_RunTextCmd("comp_overunder yes");
+         C_RunTextCmd("comp_planeshoot yes");
+         C_RunTextCmd("comp_special no");
+         C_RunTextCmd("comp_ninja yes");
+         C_RunTextCmd("comp_aircontrol yes");
+         break;
+      case compatpreset_prboom:
+         C_RunTextCmd("comp_telefrag no");
+         C_RunTextCmd("comp_dropoff no");
+         C_RunTextCmd("comp_vile no");
+         C_RunTextCmd("comp_pain no");
+         C_RunTextCmd("comp_skull no");
+         C_RunTextCmd("comp_blazing no");
+         C_RunTextCmd("comp_doorlight no");
+         C_RunTextCmd("comp_model no");
+         C_RunTextCmd("comp_god no");
+         C_RunTextCmd("comp_falloff no");
+         C_RunTextCmd("comp_floors no");
+         C_RunTextCmd("comp_skymap no");
+         C_RunTextCmd("comp_pursuit no");
+         C_RunTextCmd("comp_doorstuck no");
+         C_RunTextCmd("comp_staylift no");
+         C_RunTextCmd("comp_zombie yes"); // PrBoom+'s fix
+         C_RunTextCmd("comp_stairs yes"); // Killough's change in MBF
+         C_RunTextCmd("comp_infcheat no");
+         C_RunTextCmd("comp_zerotags no");
+         C_RunTextCmd("comp_terrain yes");
+         C_RunTextCmd("comp_respawnfix yes");
+         C_RunTextCmd("comp_fallingdmg yes");
+         C_RunTextCmd("comp_soul no");
+         C_RunTextCmd("comp_theights yes");
+         C_RunTextCmd("comp_overunder yes");
+         C_RunTextCmd("comp_planeshoot yes");
+         C_RunTextCmd("comp_special no");
+         C_RunTextCmd("comp_ninja yes");
+         C_RunTextCmd("comp_aircontrol yes");
+         break;
+      case compatpreset_prboomOptimal:
+         C_RunTextCmd("comp_telefrag no");
+         C_RunTextCmd("comp_dropoff yes");   // don't push monsters into ledges
+         C_RunTextCmd("comp_vile yes");   // let viles raise ghosts
+         C_RunTextCmd("comp_pain no");
+         C_RunTextCmd("comp_skull yes");  // let souls be spawned past obstacles
+         C_RunTextCmd("comp_blazing no");
+         C_RunTextCmd("comp_doorlight no");
+         C_RunTextCmd("comp_model no");
+         C_RunTextCmd("comp_god no");
+         C_RunTextCmd("comp_falloff no");
+         C_RunTextCmd("comp_floors no");
+         C_RunTextCmd("comp_skymap no");
+         C_RunTextCmd("comp_pursuit no");
+         C_RunTextCmd("comp_doorstuck no");
+         C_RunTextCmd("comp_staylift no");
+         C_RunTextCmd("comp_zombie yes");
+         C_RunTextCmd("comp_stairs yes");
+         C_RunTextCmd("comp_infcheat no");
+         C_RunTextCmd("comp_zerotags no");
+         C_RunTextCmd("comp_terrain yes");
+         C_RunTextCmd("comp_respawnfix no"); // bug fix
+         C_RunTextCmd("comp_fallingdmg yes");
+         C_RunTextCmd("comp_soul no");
+         C_RunTextCmd("comp_theights yes");
+         C_RunTextCmd("comp_overunder yes");
+         C_RunTextCmd("comp_planeshoot yes");
+         C_RunTextCmd("comp_special no");
+         C_RunTextCmd("comp_ninja no");   // bug fix
+         C_RunTextCmd("comp_aircontrol yes");
+         break;
+      case compatpreset_eeModern:
+         C_RunTextCmd("comp_telefrag no");
+         C_RunTextCmd("comp_dropoff yes");   // don't push monsters into ledges
+         C_RunTextCmd("comp_vile no");    // once again "no": you can use mods instead.
+         C_RunTextCmd("comp_pain no");
+         C_RunTextCmd("comp_skull yes");  // let souls be spawned past obstacles
+         C_RunTextCmd("comp_blazing no");
+         C_RunTextCmd("comp_doorlight no");
+         C_RunTextCmd("comp_model no");
+         C_RunTextCmd("comp_god no");
+         C_RunTextCmd("comp_falloff no");
+         C_RunTextCmd("comp_floors no");
+         C_RunTextCmd("comp_skymap no");
+         C_RunTextCmd("comp_pursuit no");
+         C_RunTextCmd("comp_doorstuck no");
+         C_RunTextCmd("comp_staylift no");
+         C_RunTextCmd("comp_zombie yes");
+         C_RunTextCmd("comp_stairs yes");
+         C_RunTextCmd("comp_infcheat no");
+         C_RunTextCmd("comp_zerotags no");
+         C_RunTextCmd("comp_terrain no");    // allow terrain effects
+         C_RunTextCmd("comp_respawnfix no"); // bug fix
+         C_RunTextCmd("comp_fallingdmg yes");   // TODO: separate falling damage
+         C_RunTextCmd("comp_soul no");
+         C_RunTextCmd("comp_theights no");
+         C_RunTextCmd("comp_overunder no");
+         C_RunTextCmd("comp_planeshoot no");
+         C_RunTextCmd("comp_special no");
+         C_RunTextCmd("comp_ninja no");   // bug fix
+         C_RunTextCmd("comp_aircontrol yes");   // TODO: replace this with ability to jump.
+         break;
+      default:
+         break;
+   }
+}
+
 // table of contents arrays
 
 static const char *mn_compat_contents[] =
@@ -3148,6 +3334,8 @@ static menu_t *mn_compat_pages[] =
 static menuitem_t mn_compat1_items[] =
 {
    { it_title,  "Compatibility", NULL, "m_compat" },
+   { it_gap },
+   { it_toggle, "Preset", "compat_preset", nullptr, MENUITEM_LALIGNED },
    { it_gap },   
    { it_info,   "Players",                NULL, NULL, MENUITEM_CENTERED },
    { it_toggle, "God mode is not absolute",            "comp_god"       },
