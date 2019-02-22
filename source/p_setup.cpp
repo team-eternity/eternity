@@ -2899,6 +2899,8 @@ static void P_GroupLines()
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
+// ioanch 20190222: rewritten to lighten up the tabs and use floating-point.
+//
 static void P_RemoveSlimeTrails()             // killough 10/98
 {
    byte *hit; 
@@ -2913,46 +2915,48 @@ static void P_RemoveSlimeTrails()             // killough 10/98
    for(i = 0; i < numsegs; i++)            // Go through each seg
    {
       const line_t *l = segs[i].linedef;   // The parent linedef
-      if(l->dx && l->dy)                   // We can ignore orthogonal lines
+      if(!l->dx || !l->dy)                 // We can ignore orthogonal lines
+         continue;
+      vertex_t *v = segs[i].v1;
+
+      do
       {
-         vertex_t *v = segs[i].v1;
+         if(hit[v - vertexes])   // If we haven't processed vertex
+            continue;
+         hit[v - vertexes] = 1;        // Mark this vertex as processed
+         if(v == l->v1 || v == l->v2)  // Exclude endpoints of linedefs
+            continue;
 
-         do
+         // Project the vertex back onto the parent linedef
+         // ioanch: just use doubles
+         double dx2 = pow(M_FixedToDouble(l->dx), 2);
+         double dy2 = pow(M_FixedToDouble(l->dy), 2);
+         double dxy = M_FixedToDouble(l->dx) * M_FixedToDouble(l->dy);
+         double s = dx2 + dy2;
+         float x0 = v->fx;
+         float y0 = v->fy;
+         float x1 = l->v1->fx;
+         float y1 = l->v1->fy;
+         v->fx = (dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s;
+         v->fy = (dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s;
+
+         // ioanch: add linguortal support, from PrBoom+/[crispy]
+         // demo_version check needed, for similar reasons as above
+         static const double threshold = M_FixedToDouble(LINGUORTAL_THRESHOLD);
+         if(demo_version >= 342 && (fabs(x0 - v->fx) > threshold || fabs(y0 - v->fy) > threshold))
          {
-            if(!hit[v - vertexes])           // If we haven't processed vertex
-            {
-               hit[v - vertexes] = 1;        // Mark this vertex as processed
-               if(v != l->v1 && v != l->v2)  // Exclude endpoints of linedefs
-               { 
-                  // Project the vertex back onto the parent linedef
-                  int64_t dx2 = (l->dx >> FRACBITS) * (l->dx >> FRACBITS);
-                  int64_t dy2 = (l->dy >> FRACBITS) * (l->dy >> FRACBITS);
-                  int64_t dxy = (l->dx >> FRACBITS) * (l->dy >> FRACBITS);
-                  int64_t s   = dx2 + dy2;
-                  int     x0  = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
-                  v->x = (fixed_t)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
-                  v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
+            v->fx = x0;  // reset
+            v->fy = y0;
+         }
+         else
+         {
+            // If accepted, update the fixed coordinates too
+            v->x = M_FloatToFixed(v->fx);
+            v->y = M_FloatToFixed(v->fy);
+         }
 
-                  // ioanch: add linguortal support, from PrBoom+/[crispy]
-                  // demo_version check needed, for similar reasons as above
-                  if(demo_version >= 342 &&
-                     (D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD ||
-                      D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD))
-                  {
-                     v->x = x0;  // reset
-                     v->y = y0;
-                  }
-                  else
-                  {
-                     // Cardboard store float versions of vertices.
-                     v->fx = M_FixedToFloat(v->x);
-                     v->fy = M_FixedToFloat(v->y);
-                  }
-               }
-            }  
-         } // Obfuscated C contest entry:   :)
-         while((v != segs[i].v2) && (v = segs[i].v2));
-      }
+      } // Obfuscated C contest entry:   :)
+      while((v != segs[i].v2) && (v = segs[i].v2));
    }
 
    // free hit list

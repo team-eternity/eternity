@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+22.02.2019
+
+BUGFIX: Fixed a crash happening with sub-unit linedef length maps (made in UDMF).
+        Now the slime-trail reduction function uses floating-point.
+
+--------------------------------------------------------------------------------
 13.02.2019
 
 BUGFIX: Fixed a crash happening with slopes having MBF-transferred skies.
