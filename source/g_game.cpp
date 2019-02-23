@@ -3804,6 +3804,30 @@ void doom_printf(const char *s, ...)
 }
 
 //
+// Like above, but uses FC_ERROR and occasional beeping
+//
+void doom_warningf(const char *s, ...)
+{
+   static int lastbeeptic = -1000;
+
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   if(lastbeeptic + 100 < gametic)
+   {
+      lastbeeptic = gametic;
+      C_Printf("%s\a\n", msg);
+   }
+   else
+      C_Puts(msg);
+   HU_PlayerMsg(msg);
+}
+
+//
 // player_printf
 //
 // sf: printf to a particular player only
