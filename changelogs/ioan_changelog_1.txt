@@ -13,6 +13,12 @@ Since v4.00.00 "Völuspá"
 BUGFIX: The scrolling sky scrolling speed, changeable through ACS, wasn't stored
         in save games.
 
+IMPROVEMENT: EMAPINFO skyDelta and sky2Delta now accept fractional values. It
+             was appropriate to add this because an ACS function already
+             supports fixed-point for changing these states.
+
+             Currently legacy Hexen MAPINFO doesn't have it however.
+
 --------------------------------------------------------------------------------
 22.02.2019
 
