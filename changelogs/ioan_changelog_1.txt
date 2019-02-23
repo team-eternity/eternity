@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+23.02.2019
+
+BUGFIX: The scrolling sky scrolling speed, changeable through ACS, wasn't stored
+        in save games.
+
+--------------------------------------------------------------------------------
 22.02.2019
 
 BUGFIX: Fixed a crash happening with sub-unit linedef length maps (made in UDMF).
