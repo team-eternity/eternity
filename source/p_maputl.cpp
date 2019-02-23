@@ -63,7 +63,7 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 // killough 5/3/98: reformatted, cleaned up
 // ioanch 20151228: made line const
 //
-int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
+int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line)
 {
    return
       !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
@@ -71,6 +71,13 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
       FixedMul(y-line->v1->y, line->dx>>FRACBITS) >=
       FixedMul(line->dy>>FRACBITS, x-line->v1->x);
 }
+int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line)
+{
+   return !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
+   !line->dy ? y <= line->v1->y ? line->dx < 0 : line->dx > 0 :
+   ((int64_t)y - line->v1->y) * line->dx >= line->dy * ((int64_t)x - line->v1->x);
+}
+int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line) = P_PointOnLineSideClassic;
 
 //
 // P_BoxOnLineSide

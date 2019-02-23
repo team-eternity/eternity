@@ -3548,6 +3548,17 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
+   if(isUdmf)
+   {
+      P_PointOnLineSide = P_PointOnLineSidePrecise;
+      R_PointOnSegSide = R_PointOnSegSidePrecise;
+   }
+   else
+   {
+      P_PointOnLineSide = P_PointOnLineSideClassic;
+      R_PointOnSegSide = R_PointOnSegSideClassic;
+   }
+
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
    doom1level = false;
@@ -3664,6 +3675,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    P_LoadBlockMap (mgla.blockmap); // killough 3/1/98
    
+   // If it's UDMF, vertices can have extra precision, requiring better geometry calculations.
+   R_PointOnSide = R_PointOnSideClassic;  // set classic function unless otherwise set later
+
    // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
    ZNodeType znodeSignature;
    int actualNodeLump = -1;
@@ -3671,6 +3685,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       &actualNodeLump, isUdmf)) != ZNodeType_Invalid && actualNodeLump >= 0)
    {
       P_LoadZNodes(actualNodeLump, znodeSignature);
+      if(znodeSignature == ZNodeType_GL3)
+         R_PointOnSide = R_PointOnSidePrecise;
+      R_PointOnSegSide = R_PointOnSegSidePrecise;  // 100% use the advanced function now
 
       CHECK_ERROR();
    }
