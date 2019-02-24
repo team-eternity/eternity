@@ -178,7 +178,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->flags |=
          (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
          (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0) |
-         (us.phasedlight ? SECF_PHASEDLIGHT : 0);
+         (us.phasedlight ? SECF_PHASEDLIGHT : 0) |
+         (us.lightsequence ? SECF_LIGHTSEQUENCE : 0) |
+         (us.lightseqalt ? SECF_LIGHTSEQALT : 0);
 
          // sector colormaps
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
@@ -615,6 +617,8 @@ enum token_e
    t_lightfloor,
    t_lightfloorabsolute,
    t_lightlevel,
+   t_lightseqalt,
+   t_lightsequence,
    t_lowerportal,
    t_mapped,
    t_midtex3d,
@@ -766,6 +770,8 @@ static keytoken_t gTokenList[] =
    TOKEN(lightfloor),
    TOKEN(lightfloorabsolute),
    TOKEN(lightlevel),
+   TOKEN(lightseqalt),
+   TOKEN(lightsequence),
    TOKEN(lowerportal),
    TOKEN(mapped),
    TOKEN(midtex3d),
@@ -1161,6 +1167,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_BOOL(sector, lightfloorabsolute);
                      READ_BOOL(sector, lightceilingabsolute);
                      READ_BOOL(sector, phasedlight);
+                     READ_BOOL(sector, lightsequence);
+                     READ_BOOL(sector, lightseqalt);
 
                      READ_STRING(sector, colormaptop);
                      READ_STRING(sector, colormapmid);

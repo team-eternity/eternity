@@ -17,9 +17,9 @@ FEATURE: Added UDMF linedef "monstershoot" boolean field. Needed because the
          (such as GR: Open Door) which are triggerable by both monsters and
          players, while others (the rising platforms) only by players.
 
-         Added UDMF sector "phasedlight" boolean field, because ExtraData
-         supports adding it individually, without resorting to the "special"
-         field.
+         Added UDMF sector "phasedlight", "lightsequence" and "lightseqalt"
+         boolean fields, because ExtraData supports adding them individually,
+         without resorting to the "special" field.
 
 --------------------------------------------------------------------------------
 23.02.2019

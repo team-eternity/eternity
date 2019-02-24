@@ -362,6 +362,8 @@ private:
       bool lightfloorabsolute;
       bool lightceilingabsolute;
       bool phasedlight;
+      bool lightsequence;
+      bool lightseqalt;
 
       qstring colormaptop;
       qstring colormapmid;
