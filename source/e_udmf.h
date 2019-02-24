@@ -361,6 +361,7 @@ private:
       int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
+      bool phasedlight;
 
       qstring colormaptop;
       qstring colormapmid;

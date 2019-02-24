@@ -177,7 +177,8 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->ceilinglightdelta = static_cast<int16_t>(us.lightceiling);
          ss->flags |=
          (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
-         (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
+         (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0) |
+         (us.phasedlight ? SECF_PHASEDLIGHT : 0);
 
          // sector colormaps
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
@@ -625,6 +626,7 @@ enum token_e
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_phasedlight,
    t_polycross,
    t_portal,
    t_portalceiling,
@@ -794,6 +796,7 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_floor_overlaytype),
    TOKEN(portal_floor_useglobaltex),
    TOKEN(passuse),
+   TOKEN(phasedlight),
    TOKEN(playercross),
    TOKEN(playerpush),
    TOKEN(playeruse),
@@ -1157,6 +1160,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, lightceiling);
                      READ_BOOL(sector, lightfloorabsolute);
                      READ_BOOL(sector, lightceilingabsolute);
+                     READ_BOOL(sector, phasedlight);
 
                      READ_STRING(sector, colormaptop);
                      READ_STRING(sector, colormapmid);
