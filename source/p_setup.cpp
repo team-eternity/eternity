@@ -3549,15 +3549,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    }
 
    if(isUdmf)
-   {
       P_PointOnLineSide = P_PointOnLineSidePrecise;
-      R_PointOnSegSide = R_PointOnSegSidePrecise;
-   }
    else
-   {
       P_PointOnLineSide = P_PointOnLineSideClassic;
-      R_PointOnSegSide = R_PointOnSegSideClassic;
-   }
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
@@ -3687,7 +3681,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_LoadZNodes(actualNodeLump, znodeSignature);
       if(znodeSignature == ZNodeType_GL3)
          R_PointOnSide = R_PointOnSidePrecise;
-      R_PointOnSegSide = R_PointOnSegSidePrecise;  // 100% use the advanced function now
 
       CHECK_ERROR();
    }

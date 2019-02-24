@@ -88,9 +88,7 @@ int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
 int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);
 extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
 
-int R_PointOnSegSideClassic(fixed_t x, fixed_t y, const seg_t *line);
-int R_PointOnSegSidePrecise(fixed_t x, fixed_t y, const seg_t *line);
-extern int (*R_PointOnSegSide)(fixed_t, fixed_t, const seg_t *);
+int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
 
 int SlopeDiv(unsigned int num, unsigned int den);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);

@@ -245,28 +245,7 @@ int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *) = R_PointOnSideClassic;
 
 // killough 5/2/98: reformatted
 
-int R_PointOnSegSideClassic(fixed_t x, fixed_t y, const seg_t *line)
-{
-   fixed_t lx = line->v1->x;
-   fixed_t ly = line->v1->y;
-   fixed_t ldx = line->v2->x - lx;
-   fixed_t ldy = line->v2->y - ly;
-
-   if(!ldx)
-      return x <= lx ? ldy > 0 : ldy < 0;
-   
-   if(!ldy)
-      return y <= ly ? ldx < 0 : ldx > 0;
-  
-   x -= lx;
-   y -= ly;
-        
-   // Try to quickly decide by looking at sign bits.
-   if((ldy ^ ldx ^ x ^ y) < 0)
-      return (ldy ^ x) < 0;          // (left is negative)
-   return FixedMul(y, ldx>>FRACBITS) >= FixedMul(ldy>>FRACBITS, x);
-}
-int R_PointOnSegSidePrecise(fixed_t x, fixed_t y, const seg_t *line)
+int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
 {
    fixed_t lx = line->v1->x;
    fixed_t ly = line->v1->y;
@@ -287,7 +266,6 @@ int R_PointOnSegSidePrecise(fixed_t x, fixed_t y, const seg_t *line)
       return (ldy ^ x) < 0;          // (left is negative)
    return (int64_t)y * ldx >= (int64_t)ldy * x;
 }
-int (*R_PointOnSegSide)(fixed_t, fixed_t, const seg_t *) = R_PointOnSegSideClassic;
 
 //
 // SlopeDiv
