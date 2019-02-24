@@ -8,6 +8,16 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+24.02.2019
+
+FEATURE: Added UDMF linedef "monstershoot" boolean field. Needed because the
+         ill-named "impact" field only allows players to shoot the linedef.
+         This one allows monsters too. The ones who wrote the original UDMF
+         specs must have been unaware that vanilla Doom has some specials
+         (such as GR: Open Door) which are triggerable by both monsters and
+         players, while others (the rising platforms) only by players.
+
+--------------------------------------------------------------------------------
 23.02.2019
 
 BUGFIX: The scrolling sky scrolling speed, changeable through ACS, wasn't stored

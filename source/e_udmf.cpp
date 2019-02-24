@@ -361,6 +361,8 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
             ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
          if(uld.impact)
             ld->extflags |= EX_ML_PLAYER | EX_ML_IMPACT;
+         if(uld.monstershoot)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_IMPACT;
          if(uld.playerpush)
             ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
          if(uld.monsterpush)
@@ -619,6 +621,7 @@ enum token_e
    t_missilecross,
    t_monstercross,
    t_monsterpush,
+   t_monstershoot,
    t_monsteruse,
    t_offsetx,
    t_offsety,
@@ -768,6 +771,7 @@ static keytoken_t gTokenList[] =
    TOKEN(missilecross),
    TOKEN(monstercross),
    TOKEN(monsterpush),
+   TOKEN(monstershoot),
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
@@ -1039,6 +1043,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, monstercross);
                   READ_BOOL(linedef, monsteruse);
                   READ_BOOL(linedef, impact);
+                  READ_BOOL(linedef, monstershoot);
                   READ_BOOL(linedef, playerpush);
                   READ_BOOL(linedef, monsterpush);
                   READ_BOOL(linedef, missilecross);
