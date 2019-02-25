@@ -360,9 +360,8 @@ with effect, and append delta to the end of the others to get the name of the
 appropriate delta structure. weapongiverdelta also has clearammogiven, which
 does what it says on the tin.
 
-NOTE: useaction isn't delta-friendly yet, as I've yet to decide how I want to
-handle args. Because of this, attempting to delta either property will cause
-Eternity to error out.
+The artifact's args are implicitly cleared if a delta specifies a useaction
+or args in a delta structure targetting said artifact.
 
 ================================================================================
 EOF

@@ -457,6 +457,7 @@ public:
    const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
+   char       *removeString(size_t keyIndex);
    void        removeStringNR(const char *key);
    void        removeStringNR(size_t keyIndex);
 

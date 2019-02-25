@@ -1440,19 +1440,19 @@ void MetaTable::setString(const char *key, const char *newValue)
 // exists, you would need to call this routine until metaerrno is
 // set to META_ERR_NOSUCHOBJECT.
 //
-// When calling this routine, the value of the object is returned 
-// in case it is needed, and you will need to then free it yourself 
+// When calling this routine, the value of the object is returned
+// in case it is needed, and you will need to then free it yourself
 // using free(). If the return value is not needed, call
 // MetaTable::removeStringNR instead and the string value will be destroyed.
 //
-char *MetaTable::removeString(const char *key)
+char *MetaTable::removeString(size_t keyIndex)
 {
    MetaString *str;
    char *value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(str = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(str = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return nullptr;
@@ -1462,16 +1462,21 @@ char *MetaTable::removeString(const char *key)
 
    // Destroying the MetaString will destroy the value inside it too, unless we
    // get and then nullify its value manually. This is one reason why MetaTable
-   // is a friend to these basic types, as it makes some simple management 
-   // chores like this more efficient. Otherwise I'd have to estrdup the string 
+   // is a friend to these basic types, as it makes some simple management
+   // chores like this more efficient. Otherwise I'd have to estrdup the string
    // and that's stupid.
- 
+
    value = str->value;
    str->value = nullptr; // destructor does nothing if this is cleared first
 
    delete str;
 
    return value;
+}
+
+char *MetaTable::removeString(const char *key)
+{
+   return removeString(MetaKey(key).index);
 }
 
 //

@@ -383,7 +383,12 @@ static int E_artiTypeCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *res
 //
 static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   if(argc > 0)
+   if(argc > EMAXARGS)
+   {
+      E_EDFLoggedWarning(2, "E_actionFuncCB: More than 16 args specified for artifact '%s'\n",
+                         cfg->title);
+   }
+   else if(argc > 0)
       cfg_setlistptr(cfg, KEY_ARGS, argc, static_cast<const void *>(argv));
 
    return 0; // everything is good
@@ -472,13 +477,10 @@ static void E_handleSpecialItemDeltaProperties(const int i, cfg_t *sec, MetaTabl
    else if(i == ITEMFX_ARTIFACT &&
            (cfg_size(sec, KEY_USEACTION) > 0 || cfg_size(sec, KEY_ARGS) > 0))
    {
-      // TODO: MaxW: Deal with this when a user complains at me. Have a discussion about
-      //             sane behaviour, and if a "clearargs" property is necessary, or "addargs".
-      E_EDFLoggedErr(2, "E_handleSpecialItemDeltaProperties: useaction or args specific in "
-                        "artifactdelta for artifact '%s'. This is currently not permitted."
-                        "If this is an issue please contact Altazimuth via Doomworld forums, "
-                        "or file an issue on the Eternity Engine GitHub issue tracker.",
-                     name);
+      do
+      {
+         table->removeString(keyArgs);
+      } while(metaerrno == META_ERR_NOERR);
    }
 }
 
