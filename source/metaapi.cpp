@@ -1693,6 +1693,28 @@ void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
 }
 
 //
+// Removes a meta table from the table with the given key. If no such
+// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and NULL is returned.
+// Otherwise, metaerrno is META_ERR_NOERR.
+//
+void MetaTable::removeMetaTableNR(size_t keyIndex)
+{
+   MetaTable *table;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(table = getObjectKeyAndTypeEx<MetaTable>(keyIndex)))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      return;
+   }
+
+   removeObject(table);
+
+   delete table;
+}
+
+//
 // Adds copies of all objects in the source table to the destination table.
 //
 void MetaTable::copyTableTo(MetaTable *dest) const

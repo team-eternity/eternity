@@ -167,6 +167,7 @@ MetaTable *E_GetItemEffects()
 #define KEY_AMMOGIVE       "ammo.give"
 #define KEY_CLASS          "class"
 #define KEY_CLASSNAME      "classname"
+#define KEY_CLRAMMOGIVEN   "clearammogiven"
 #define KEY_DROPAMOUNT     "dropamount"
 #define KEY_DURATION       "duration"
 #define KEY_FULLAMOUNTONLY "fullamountonly"
@@ -217,6 +218,7 @@ static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
 static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
 static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
 static MetaKeyIndex keyArgs          (KEY_ARGS          );
+static MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -337,7 +339,8 @@ cfg_opt_t edf_weapgfx_opts[] =
 
 cfg_opt_t edf_weapgfx_delta_opts[] =
 {
-   CFG_STR(KEY_DELTA_NAME, nullptr, CFGF_NONE),
+   CFG_STR(KEY_DELTA_NAME,    nullptr, CFGF_NONE),
+   CFG_FLAG(KEY_CLRAMMOGIVEN, 0,       CFGF_NONE),
    WEAPONFX_FIELDS
 };
 
@@ -454,6 +457,20 @@ static const char *e_ItemDeltaSectionNames[NUMITEMFX] =
 };
 
 //
+// Some delta properties need special handling, so that's done here
+//
+static void E_handleSpecialItemDeltaProperties(int i, cfg_t *sec, MetaTable *table)
+{
+   if(i == ITEMFX_WEAPONGIVER && cfg_size(sec, KEY_CLRAMMOGIVEN) > 0)
+   {
+      do
+      {
+         table->removeMetaTableNR(keyAmmoGiven);
+      } while(metaerrno == META_ERR_NOERR);
+   }
+}
+
+//
 // E_processItemEffects
 //
 static void E_processItemEffects(cfg_t *cfg)
@@ -479,6 +496,35 @@ static void E_processItemEffects(cfg_t *cfg)
 
          E_EDFLogPrintf("\t\t* Processed item '%s'\n", newEffect->getKey());
       }
+
+
+      cfgSecName  = e_ItemDeltaSectionNames[i];
+      numSections = cfg_size(cfg, cfgSecName);
+
+      E_EDFLogPrintf("\t* Processing %s item effect deltas (%u defined)\n",
+                     className, numSections);
+
+      // process each section of the current delta type
+      for(unsigned int secNum = 0; secNum < numSections; secNum++)
+      {
+         cfg_t      *sec  = cfg_getnsec(cfg, cfgSecName, secNum);
+         const char *name = cfg_getstr(sec, KEY_DELTA_NAME);
+         if(estrempty(name))  // invalid name?
+            continue;
+         auto table = e_effectsTable.getObjectKeyAndTypeEx<MetaTable>(name);
+         if(!table)  // nothing to delta
+            continue;
+
+         E_handleSpecialItemDeltaProperties(i, sec, table);
+
+         MetaTable base(*table); // store the base entries in a copy
+
+         // Update table
+         E_MetaTableFromCfg(sec, table, &base);
+
+         E_EDFLogPrintf("\t\t* Processed item delta %u to '%s'\n", secNum, name);
+      }
+
    }
 }
 
