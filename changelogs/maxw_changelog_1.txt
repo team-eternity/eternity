@@ -352,6 +352,18 @@ Added Ceiling_Waggle action special.
 Added "speedjump" playerclass property. Its value is a fixed, and is how much
 upwards speed is added to momz when the player successfully jumps.
 
+-------------------------------------------------------------------------------
+2019/02/25
+Implemented deltas for itemeffects (healtheffect, armoreffect, ammoeffect,
+powereffect, weapongiver, artifact). Replace effect with delta for those ending
+with effect, and append delta to the end of the others to get the name of the
+appropriate delta structure. weapongiverdelta also has clearammogiven, which
+does what it says on the tin.
+
+NOTE: useaction isn't delta-friendly yet, as I've yet to decide how I want to
+handle args. Because of this, attempting to delta either property will cause
+Eternity to error out.
+
 ================================================================================
 EOF
 ================================================================================

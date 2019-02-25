@@ -459,7 +459,8 @@ static const char *e_ItemDeltaSectionNames[NUMITEMFX] =
 //
 // Some delta properties need special handling, so that's done here
 //
-static void E_handleSpecialItemDeltaProperties(int i, cfg_t *sec, MetaTable *table)
+static void E_handleSpecialItemDeltaProperties(const int i, cfg_t *sec, MetaTable *table,
+                                               const char *const name)
 {
    if(i == ITEMFX_WEAPONGIVER && cfg_size(sec, KEY_CLRAMMOGIVEN) > 0)
    {
@@ -467,6 +468,17 @@ static void E_handleSpecialItemDeltaProperties(int i, cfg_t *sec, MetaTable *tab
       {
          table->removeMetaTableNR(keyAmmoGiven);
       } while(metaerrno == META_ERR_NOERR);
+   }
+   else if(i == ITEMFX_ARTIFACT &&
+           (cfg_size(sec, KEY_USEACTION) > 0 || cfg_size(sec, KEY_ARGS) > 0))
+   {
+      // TODO: MaxW: Deal with this when a user complains at me. Have a discussion about
+      //             sane behaviour, and if a "clearargs" property is necessary, or "addargs".
+      E_EDFLoggedErr(2, "E_handleSpecialItemDeltaProperties: useaction or args specific in "
+                        "artifactdelta for artifact '%s'. This is currently not permitted."
+                        "If this is an issue please contact Altazimuth via Doomworld forums, "
+                        "or file an issue on the Eternity Engine GitHub issue tracker.",
+                     name);
    }
 }
 
@@ -515,7 +527,7 @@ static void E_processItemEffects(cfg_t *cfg)
          if(!table)  // nothing to delta
             continue;
 
-         E_handleSpecialItemDeltaProperties(i, sec, table);
+         E_handleSpecialItemDeltaProperties(i, sec, table, name);
 
          MetaTable base(*table); // store the base entries in a copy
 
