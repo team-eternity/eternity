@@ -943,12 +943,12 @@ static void P_ArchiveMap(SaveArchive &arc)
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints,
+            markpoints = erealloc(markpoint_t *, markpoints,
                sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
       }
    }
 }
