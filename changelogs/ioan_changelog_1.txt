@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+09.03.2019
+
+BUGFIX: Fixed PointPush_SetForce not using argument for magnitude when tagging
+        sectors.
+
+--------------------------------------------------------------------------------
 24.02.2019
 
 FEATURE: Added UDMF linedef "monstershoot" boolean field. Needed because the

@@ -503,10 +503,7 @@ void P_SpawnPushers()
                {
                   Mobj *thing = P_GetPushThing(s);
                   if(thing) // No P* means no effect
-                  {
-                     Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing,
-                                s);
-                  }
+                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing, s);
                }
             }
             else
