@@ -250,6 +250,7 @@ DECLARE_ACTION(EV_ActionParamPlatUpByValue);
 DECLARE_ACTION(EV_ActionParamPlatRaiseNearestChange);
 DECLARE_ACTION(EV_ActionParamPlatRaiseChange);
 DECLARE_ACTION(EV_ActionParamPlatToggleCeiling);
+DECLARE_ACTION(EV_ActionParamPlatGeneric);
 DECLARE_ACTION(EV_ActionParamDonut);
 DECLARE_ACTION(EV_ActionParamTeleport);
 DECLARE_ACTION(EV_ActionParamTeleportNoFog);
