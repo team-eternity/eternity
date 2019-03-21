@@ -8,6 +8,14 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+21.03.2019
+
+BUGFIX: Fixed a crash happening when seeing for the first time progressively
+        larger swirling textures.
+
+        Fixed a crash happening when loading a game with alpha-cycling sprites.
+
+--------------------------------------------------------------------------------
 18.03.2019
 
 FEATURE: Added the Generic_Lift special, which ZDoom had added, because there
