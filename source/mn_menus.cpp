@@ -3336,7 +3336,7 @@ static menuitem_t menu_bindings_items[] =
    {it_runcmd, "Weapons",                   "mn_weaponkeys"  },
    {it_runcmd, "Inventory and Environment", "mn_envkeys"     },
    {it_gap},
-   {it_info,   "Not-gameplay (find name for this)"},
+   {it_info,   "System"},
    {it_runcmd, "Functions",                 "mn_gamefuncs"   },
    {it_runcmd, "Menus",                     "mn_menukeys"    },
    {it_runcmd, "Maps",                      "mn_automapkeys" },
