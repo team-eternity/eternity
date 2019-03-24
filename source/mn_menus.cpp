@@ -1661,7 +1661,7 @@ static menuitem_t mn_options_items[] =
    {it_title,  "Options",               NULL,             "M_OPTION"},
    {it_gap},
    {it_info,   "Input/Output"},
-   {it_runcmd, "Key bindings",          "mn_movekeys" },
+   {it_runcmd, "Key bindings",          "mn_bindings" },
    {it_runcmd, "Mouse / Gamepad",       "mn_mouse"    },
    {it_runcmd, "Video Options",         "mn_video"    },
    {it_runcmd, "Sound Options",         "mn_sound"    },
@@ -2034,13 +2034,13 @@ static menuitem_t mn_video_items[] =
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
    {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
-   {it_slider,       "Gamma correction",        "gamma"                },   
+   {it_slider,       "Gamma correction",        "gamma"                },
    {it_gap},
    {it_info,         "Rendering"                                       },
    {it_slider,       "Screen size",             "screensize"           },
    {it_toggle,       "HOM detector flashes",    "r_homflash"           },
    {it_toggle,       "Translucency",            "r_trans"              },
-   {it_variable,     "Translucency percentage", "r_tranpct"            },
+   {it_variable,     "Opacity percentage",      "r_tranpct"            },
    {it_end}
 };
 
@@ -3325,6 +3325,43 @@ static menu_t *mn_binding_contentpages[] =
    &menu_consolekeys,
    NULL
 };
+
+static menuitem_t menu_bindings_items[] =
+{
+   {it_title,  "Key Bindings"},
+   {it_gap},
+   {it_info,   "Gameplay"},
+   {it_runcmd, "Basic Movement",    "mn_movekeys"    },
+   {it_runcmd, "Advanced Movement", "mn_advkeys"     },
+   {it_runcmd, "Weapons",           "mn_weaponkeys"  },
+   {it_runcmd, "Inventory",         "mn_envkeys"     },
+   {it_gap},
+   {it_info,   "Not-gameplay (find name for this)"},
+   {it_runcmd, "Functions",         "mn_gamefuncs"   },
+   {it_runcmd, "Menus",             "mn_menukeys"    },
+   {it_runcmd, "Maps",              "mn_automapkeys" },
+   {it_runcmd, "Console",           "mn_consolekeys" },
+   {it_end}
+};
+
+menu_t menu_bindings =
+{
+   menu_bindings_items,
+   nullptr,
+   nullptr,                        // next page
+   &menu_weapons,                  // rootpage
+   160, 15,                        // x,y offset
+   3,                              // starting item
+   mf_background|mf_centeraligned, // full screen and centred
+   nullptr,                        // no drawer
+   nullptr,                        // TOC stuff
+   nullptr,
+};
+
+CONSOLE_COMMAND(mn_bindings, 0)
+{
+    MN_StartMenu(&menu_bindings);
+}
 
 //------------------------------------------------------------------------
 //
