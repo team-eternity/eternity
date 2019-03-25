@@ -363,6 +363,10 @@ does what it says on the tin.
 The artifact's args are implicitly cleared if a delta specifies a useaction
 or args in a delta structure targetting said artifact.
 
+-------------------------------------------------------------------------------
+2019/03/23
+Change the key bindings menus.
+
 ================================================================================
 EOF
 ================================================================================
