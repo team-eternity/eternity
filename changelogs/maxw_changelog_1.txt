@@ -366,6 +366,7 @@ or args in a delta structure targetting said artifact.
 -------------------------------------------------------------------------------
 2019/03/23
 Change the key bindings menus.
+Fix an issue with window grabbing not working.
 
 ================================================================================
 EOF
