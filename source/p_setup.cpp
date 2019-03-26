@@ -2937,8 +2937,8 @@ static void P_RemoveSlimeTrails()             // killough 10/98
          float y0 = v->fy;
          float x1 = l->v1->fx;
          float y1 = l->v1->fy;
-         v->fx = (dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s;
-         v->fy = (dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s;
+         v->fx = static_cast<float>((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
+         v->fy = static_cast<float>((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
 
          // ioanch: add linguortal support, from PrBoom+/[crispy]
          // demo_version check needed, for similar reasons as above
