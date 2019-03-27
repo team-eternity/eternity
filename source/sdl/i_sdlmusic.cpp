@@ -520,6 +520,8 @@ static int I_SDLRegisterSong(void *data, int size)
       // Hurrah! Let's make it a mid and give it to SDL_mixer
       MIDIToMidi(&mididata, &mid, &midlen);
 
+      FreeMIDIData(&mididata);
+
       // save memory block to free when unregistering
       music_block = mid;
 
