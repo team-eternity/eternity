@@ -600,10 +600,6 @@ static void R_returnOwnedList(rpolynode_t *node)
       dseglink_t *next =  dsl->dllNext;
       dynaseg_t  *ds   = *dsl;
 
-      // free dynamic vertices
-      R_FreeDynaVertex(&ds->seg.dyv1);
-      R_FreeDynaVertex(&ds->seg.dyv2);
-
       R_FreeDynaSeg(ds);
 
       dsl = next;

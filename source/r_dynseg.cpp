@@ -201,6 +201,9 @@ static dynaseg_t *R_GetFreeDynaSeg()
 //
 void R_FreeDynaSeg(dynaseg_t *dseg)
 {
+   R_FreeDynaVertex(&dseg->seg.dyv1);
+   R_FreeDynaVertex(&dseg->seg.dyv2);
+
    dseg->alterlink.remove();  // remove it from alterable list
    dseg->freenext = dynaSegFreeList;
    dynaSegFreeList = dseg;
@@ -765,9 +768,6 @@ void R_DetachPolyObject(polyobj_t *poly)
                dynaseg_t *nextds = ds->subnext;
                
                // free dynamic vertices
-               R_FreeDynaVertex(&ds->seg.dyv1);
-               R_FreeDynaVertex(&ds->seg.dyv2);
-               
                // put this dynaseg on the free list
                R_FreeDynaSeg(ds);
                
