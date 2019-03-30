@@ -17,6 +17,9 @@
 		4F36247F18A567CD00B94FA1 /* xl_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247618A567CD00B94FA1 /* xl_musinfo.cpp */; };
 		4F36248118A567CD00B94FA1 /* xl_sndinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */; };
 		4F3EC9C51C1C12D400AA43C2 /* e_udmf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F3EC9C31C1C12D400AA43C2 /* e_udmf.cpp */; };
+		4F3F3B4F224F910000E25DCB /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F950E321F35C84B000D9DC5 /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F3F3B50224F910000E25DCB /* SDL2_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F950E331F35C84B000D9DC5 /* SDL2_net.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F3F3B51224F910000E25DCB /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F950E341F35C84B000D9DC5 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4F42A5CC188B336600E6CACD /* i_timer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5C9188B336600E6CACD /* i_timer.cpp */; };
 		4F42A5D0188B338600E6CACD /* i_sdltimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F42A5CD188B338600E6CACD /* i_sdltimer.cpp */; };
 		4F4515DD1FED801B0017EAD2 /* g_demolog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F4515DC1FED801B0017EAD2 /* g_demolog.cpp */; };
@@ -320,6 +323,21 @@
 		4FFDE56821DE891F00836A2D /* trees.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55821DE891E00836A2D /* trees.c */; };
 		4FFDE56921DE891F00836A2D /* adler32.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE55F21DE891F00836A2D /* adler32.c */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4F3F3B4E224F90E500E25DCB /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				4F3F3B4F224F910000E25DCB /* SDL2_mixer.framework in CopyFiles */,
+				4F3F3B50224F910000E25DCB /* SDL2_net.framework in CopyFiles */,
+				4F3F3B51224F910000E25DCB /* SDL2.framework in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
@@ -2005,6 +2023,7 @@
 				4F4D96C620DAE7A20023C3A9 /* ShellScript */,
 				4F5F3867182D97A10027813A /* Sources */,
 				4F5F3868182D97A10027813A /* Frameworks */,
+				4F3F3B4E224F90E500E25DCB /* CopyFiles */,
 			);
 			buildRules = (
 			);
