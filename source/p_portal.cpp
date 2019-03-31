@@ -551,10 +551,11 @@ static void P_GlobalPortalStateCheck()
 static void P_buildPortalMap()
 {
    size_t pcount = P_PortalGroupCount();
-   gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
+   gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL,
+                            reinterpret_cast<void**>(&gGroupVisit));
    // ioanch 20160227: prepare other groups too
    gGroupPolyobject = ecalloctag(decltype(gGroupPolyobject),
-      sizeof(*gGroupPolyobject), pcount, PU_LEVEL, nullptr);
+      sizeof(*gGroupPolyobject), pcount, PU_LEVEL, reinterpret_cast<void **>(&gGroupPolyobject));
 
    gMapHasSectorPortals = false; // init with false
    gMapHasLinePortals = false;

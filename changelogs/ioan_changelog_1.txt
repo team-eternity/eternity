@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+31.03.2019
+
+BUGFIX: Fixed a serious crash happening when having 3D clipping on, going first
+        to a map with linked portals, then going to a map without portals. The
+        crash would occur randomly and not always.
+
+--------------------------------------------------------------------------------
 21.03.2019
 
 BUGFIX: Fixed a crash happening when seeing for the first time progressively
