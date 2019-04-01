@@ -39,7 +39,8 @@
 // haleyjd 07/23/09:
 // For Visual Studio only, in release mode, rename this function to common_main
 // and use the main defined in i_w32main.c, which contains an exception handler.
-#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
+// IOANCH 20190401: always replace it with common_main, to have the UTF8 strings here.
+#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC)
 #define main common_main
 #endif
 
@@ -58,8 +59,6 @@
 #ifdef _DEBUG
 static void VerifySDLVersions();
 #endif
-
-int SDLIsInit;
 
 int main(int argc, char **argv)
 {
@@ -88,8 +87,6 @@ int main(int argc, char **argv)
       printf("Failed to initialize SDL library: %s\n", SDL_GetError());
       return -1;
    }
-
-   SDLIsInit = 1;
 
 #ifdef _DEBUG
    // in debug builds, verify SDL versions are the same

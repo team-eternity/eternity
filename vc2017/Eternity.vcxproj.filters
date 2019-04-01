@@ -1014,6 +1014,9 @@
     <ClCompile Include="..\source\m_debug.cpp">
       <Filter>Source Files\M_\M_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Win32\i_winstrings.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1807,6 +1810,9 @@
     </ClInclude>
     <ClInclude Include="..\source\m_debug.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\Win32\i_winstrings.h">
+      <Filter>Source Files\Win32\Win32 Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

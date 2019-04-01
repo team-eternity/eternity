@@ -33,6 +33,7 @@
 #ifdef _MSC_VER
 
 #include <windows.h>
+#include "i_winstrings.h"
 #include "SDL_syswm.h"
 
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
@@ -75,13 +76,30 @@ static void I_tweakConsole()
 #endif
 }
 
+//
+// Convert the Windows-provided wide args into UTF8 args for Eternity to process uniformly.
+//
+static char **I_createUTF8Args(int argc, wchar_t **argv)
+{
+   char **cargv = emalloc(char **, argc * sizeof(char *));
+
+   qstring arg;
+   for(int i = 0; i < argc; ++i)
+   {
+      arg = I_WideToUTF8(argv[i]);
+      cargv[i] = arg.duplicate();
+   }
+
+   return cargv;
+}
+
 #if !defined(_DEBUG)
-int main(int argc, char **argv)
+int wmain(int argc, wchar_t **argv)
 {
    __try
    {
       I_tweakConsole();
-      common_main(argc, argv);
+      common_main(argc, I_createUTF8Args(argc, argv));
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))
    {
@@ -89,6 +107,11 @@ int main(int argc, char **argv)
    }
 
    return 0;
+}
+#else
+int wmain(int argc, wchar_t **argv)
+{
+   return common_main(argc, I_createUTF8Args(argc, argv));
 }
 #endif
 

@@ -830,6 +830,7 @@
     <ClCompile Include="..\source\textscreen\txt_window.c" />
     <ClCompile Include="..\source\textscreen\txt_window_action.c" />
     <ClCompile Include="..\source\v_image.cpp" />
+    <ClCompile Include="..\source\Win32\i_winstrings.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2009,6 +2010,7 @@
     <ClInclude Include="..\source\textscreen\txt_window.h" />
     <ClInclude Include="..\source\textscreen\txt_window_action.h" />
     <ClInclude Include="..\source\v_image.h" />
+    <ClInclude Include="..\source\Win32\i_winstrings.h" />
     <ClInclude Include="..\source\Win32\i_winversion.h" />
     <ClInclude Include="..\Source\wi_stuff.h" />
     <ClInclude Include="..\Source\m_argv.h" />
