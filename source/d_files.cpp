@@ -601,7 +601,7 @@ static int D_CheckBasePath(const qstring &qpath)
 
    path = str.constPtr();
 
-   if(!stat(path, &sbuf)) // check for existence
+   if(!I_utf8_stat(path, &sbuf)) // check for existence
    {
       if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
       {
