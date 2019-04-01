@@ -849,6 +849,9 @@ void R_ClearDynaSegs()
 {
    int i;
 
+   gTicDynasegs.clear();
+   gTicDynavertices.clear();
+
    for(i = 0; i < numPolyObjects; i++)
       R_DetachPolyObject(&PolyObjects[i]);
 
