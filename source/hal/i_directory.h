@@ -35,6 +35,9 @@ const char *I_PlatformInstallDirectory();
 
 void I_GetRealPath(const char *path, qstring &real);
 
+FILE *I_utf8_fopen(const char *path, const char *mode);
+int I_utf8_stat(const char *path, struct stat *stat);
+
 #endif
 
 // EOF

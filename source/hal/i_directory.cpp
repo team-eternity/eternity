@@ -48,6 +48,7 @@
 #include <limits.h>
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
 #include <windows.h>
+#include "../Win32/i_winstrings.h"
 #endif
 
 //=============================================================================
@@ -128,6 +129,50 @@ void I_GetRealPath(const char *path, qstring &real)
 #else
 #warning Unknown platform; this will merely copy "path" to "real"
    real = path;
+#endif
+}
+
+//
+// Open UTF-8 file
+//
+FILE *I_utf8_fopen(const char *path, const char *mode)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+   WideString wpath = path;
+   WideString wmode = mode;
+   return _wfopen(wpath.getBuffer(), wmode.getBuffer());
+#else
+   return fopen(path, mode);
+#endif
+}
+
+//
+// Stat here
+//
+int I_utf8_stat(const char *path, struct stat *stat)
+{
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+   WideString wpath = path;
+
+   struct _stat winstat = {};
+   int result = _wstat(wpath.getBuffer(), &winstat);
+   if(stat)
+   {
+      stat->st_dev = winstat.st_dev;
+      stat->st_ino = winstat.st_ino;
+      stat->st_mode = winstat.st_mode;
+      stat->st_nlink = winstat.st_nlink;
+      stat->st_uid = winstat.st_uid;
+      stat->st_gid = winstat.st_gid;
+      stat->st_rdev = winstat.st_rdev;
+      stat->st_size = winstat.st_size;
+      stat->st_atime = winstat.st_atime;
+      stat->st_mtime = winstat.st_mtime;
+      stat->st_ctime = winstat.st_ctime;
+   }
+   return result;
+#else
+   return stat(path, stat);
 #endif
 }
 
