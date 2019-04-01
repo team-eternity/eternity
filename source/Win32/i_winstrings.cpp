@@ -51,6 +51,10 @@ static WideString I_asciiToWide(const char *text)
    return result;
 }
 
+WideString::WideString(const char *text) : WideString(I_UTF8ToWide(text))
+{
+}
+
 //
 // Tries to convert wide char string to utf8. If failing, it will just use ASCII.
 //

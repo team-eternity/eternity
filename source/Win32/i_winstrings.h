@@ -43,9 +43,7 @@ public:
       other.buffer = nullptr;
       other.bufferSize = 0;
    }
-   WideString(const char *text) : WideString(I_UTF8ToWide(text))
-   {
-   }
+   WideString(const char *text);
    ~WideString()
    {
       efree(buffer);
