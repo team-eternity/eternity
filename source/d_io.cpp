@@ -34,6 +34,7 @@
 #include "doomtype.h"
 #include "d_io.h"
 #include "d_dwfile.h"
+#include "hal/i_directory.h"
 #include "m_utils.h"
 #include "w_wad.h"
 
@@ -132,7 +133,7 @@ void DWFILE::openFile(const char *filename, const char *mode)
    if(isOpen())
       close();
 
-   inp     = (byte *)fopen(filename, mode);
+   inp     = (byte *)I_utf8_fopen(filename, mode);
    lumpnum = -1;
    type    = DWF_FILE;
 
