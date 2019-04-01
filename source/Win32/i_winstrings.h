@@ -27,7 +27,42 @@
 
 #include "../m_qstr.h"
 
+//
+// Quick wide-string RAII class just to have safe wide-string returns
+//
+class WideString : public ZoneObject
+{
+public:
+   explicit WideString(int size) : bufferSize(size)
+   {
+      buffer = ecalloc(wchar_t *, size + 1, sizeof(wchar_t));
+   }
+   WideString(const WideString &other) = delete;
+   WideString(WideString &&other) : buffer(other.buffer), bufferSize(other.bufferSize)
+   {
+      other.buffer = nullptr;
+      other.bufferSize = 0;
+   }
+   WideString(const char *text) : WideString(I_UTF8ToWide(text))
+   {
+   }
+   ~WideString()
+   {
+      efree(buffer);
+   }
+
+   wchar_t *getBuffer()
+   {
+      return buffer;
+   }
+
+private:
+   wchar_t *buffer;
+   int bufferSize;
+};
+
 qstring I_WideToUTF8(const wchar_t *text);
+WideString I_UTF8ToWide(const char *text);
 
 #endif
 

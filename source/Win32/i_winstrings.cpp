@@ -42,6 +42,15 @@ static qstring I_wideToASCII(const wchar_t *text)
    return result;
 }
 
+static WideString I_asciiToWide(const char *text)
+{
+   WideString result(strlen(text) + 1);
+   int i = 0;
+   for(const char *c = text; *c; ++c)
+      result.getBuffer()[i++] = *c;
+   return result;
+}
+
 //
 // Tries to convert wide char string to utf8. If failing, it will just use ASCII.
 //
@@ -59,6 +68,22 @@ qstring I_WideToUTF8(const wchar_t *text)
       return I_wideToASCII(text);
 
    return result.Delc(); // reduce the last null terminator
+}
+
+//
+// Converts UTF8 back to wide string
+//
+WideString I_UTF8ToWide(const char *text)
+{
+   int count = MultiByteToWideChar(CP_UTF8, 0, text, -1, nullptr, 0);
+   if(!count)
+      return I_asciiToWide(text);
+
+   WideString result(count);
+   if(!MultiByteToWideChar(CP_UTF8, 0, text, -1, result.getBuffer(), count))
+      return I_asciiToWide(text);
+
+   return result;
 }
 
 // EOF
