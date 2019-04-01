@@ -50,6 +50,8 @@
 // haleyjd: this should be the only DOOM header needed.
 #include "../d_io.h"
 #include "i_opndir.h"
+#include "i_winstrings.h"
+#include "../m_qstr.h"
 
 //
 // opendir
@@ -57,11 +59,11 @@
 // Returns a pointer to a DIR structure appropriately filled in to begin
 // searching a directory.
 //
-DIR *opendir(const _TCHAR *szPath)
+DIR *opendir(const char *szPath)
 {
    DIR *nd;
    unsigned int rc;
-   _TCHAR szFullPath[MAX_PATH];
+   wchar_t szFullPath[MAX_PATH];
 	
    errno = 0;
    
@@ -71,14 +73,16 @@ DIR *opendir(const _TCHAR *szPath)
       return (DIR *)0;
    }
    
-   if(szPath[0] == _T('\0'))
+   if(szPath[0] == '\0')
    {
       errno = ENOTDIR;
       return (DIR *)0;
    }
 
+   WideString wpath = szPath;
+
    /* Attempt to determine if the given path really is a directory. */
-   rc = GetFileAttributes(szPath);
+   rc = GetFileAttributesW(wpath.getBuffer());
    if(rc == (unsigned int)-1)
    {
       /* call GetLastError for more error info */
@@ -93,14 +97,16 @@ DIR *opendir(const _TCHAR *szPath)
    }
 
    /* Make an absolute pathname.  */
-   _tfullpath(szFullPath, szPath, MAX_PATH);
+   _wfullpath(szFullPath, wpath.getBuffer(), MAX_PATH);
+
+   qstring cFullPath = I_WideToUTF8(szFullPath);
 
    /* Allocate enough space to store DIR structure and the complete
    * directory path given. */
-   nd = (DIR *)(malloc(sizeof(DIR) + (_tcslen(szFullPath)
-                                       + _tcslen(SLASH)
-                                       + _tcslen(SUFFIX) + 1)
-                                     * sizeof(_TCHAR)));
+   nd = (DIR *)(malloc(sizeof(DIR) + (cFullPath.length()
+                                      + strlen(SLASH)
+                                      + strlen(SUFFIX) + 1)
+                                     * sizeof(char)));
 
    if(!nd)
    {
@@ -110,20 +116,20 @@ DIR *opendir(const _TCHAR *szPath)
    }
 
    /* Create the search expression. */
-   _tcscpy(nd->dd_name, szFullPath);
+   strcpy(nd->dd_name, cFullPath.constPtr());
 
    /* Add on a slash if the path does not end with one. */
-   if(nd->dd_name[0] != _T('\0')
-      && _tcsrchr(nd->dd_name, _T('/'))  != nd->dd_name
-					    + _tcslen(nd->dd_name) - 1
-      && _tcsrchr(nd->dd_name, _T('\\')) != nd->dd_name
-      					    + _tcslen(nd->dd_name) - 1)
+   if(nd->dd_name[0] != '\0'
+      && strrchr(nd->dd_name, '/') != nd->dd_name
+					    + strlen(nd->dd_name) - 1
+      && strrchr(nd->dd_name, _T('\\')) != nd->dd_name
+      					    + strlen(nd->dd_name) - 1)
    {
-      _tcscat(nd->dd_name, SLASH);
+      strcat(nd->dd_name, SLASH);
    }
 
    /* Add on the search pattern */
-   _tcscat(nd->dd_name, SUFFIX);
+   strcat(nd->dd_name, SUFFIX);
    
    /* Initialize handle to -1 so that a premature closedir doesn't try
    * to call _findclose on it. */
@@ -141,6 +147,40 @@ DIR *opendir(const _TCHAR *szPath)
    memset(nd->dd_dir.d_name, 0, FILENAME_MAX);
   
    return nd;
+}
+
+//
+// Size conversions for find-data
+//
+static _wfinddata_t I_utf8ToWideFindData(const _finddata_t &data)
+{
+   _wfinddata_t wfd = {};
+   wfd.attrib = data.attrib;
+   wfd.time_create = data.time_create;
+   wfd.time_access = data.time_access;
+   wfd.time_write = data.time_write;
+   wfd.size = data.size;
+
+   WideString wname = data.name;
+   wcsncpy(wfd.name, wname.getBuffer(), _countof(wfd.name));
+   wfd.name[_countof(wfd.name) - 1] = 0;
+
+   return wfd;
+}
+static _finddata_t I_wideToUTF8FindData(const _wfinddata_t &data)
+{
+   _finddata_t fd = {};
+   fd.attrib = data.attrib;
+   fd.time_create = data.time_create;
+   fd.time_access = data.time_access;
+   fd.time_write = data.time_write;
+   fd.size = data.size;
+
+   qstring cname = I_WideToUTF8(data.name);
+   strncpy(fd.name, cname.constPtr(), sizeof(fd.name));
+   fd.name[_countof(fd.name) - 1] = 0;
+
+   return fd;
 }
 
 //
@@ -170,7 +210,11 @@ struct dirent *readdir(DIR *dirp)
    {
       /* We haven't started the search yet. */
       /* Start the search */
-      dirp->dd_handle = _tfindfirst(dirp->dd_name, &(dirp->dd_dta));
+      WideString wname(dirp->dd_name);
+
+      _wfinddata_t wfd = I_utf8ToWideFindData(dirp->dd_dta);
+      dirp->dd_handle = _wfindfirst(wname.getBuffer(), &wfd);
+      dirp->dd_dta = I_wideToUTF8FindData(wfd);
 
       if(dirp->dd_handle == -1)
       {
@@ -186,7 +230,11 @@ struct dirent *readdir(DIR *dirp)
    else
    {
       /* Get the next search entry. */
-      if(_tfindnext(dirp->dd_handle, &(dirp->dd_dta)))
+      _wfinddata_t wfd = I_utf8ToWideFindData(dirp->dd_dta);
+      int res = _wfindnext(dirp->dd_handle, &wfd);
+      dirp->dd_dta = I_wideToUTF8FindData(wfd);
+
+      if(res)
       {
          /* We are off the end or otherwise error.	
             _findnext sets errno to ENOENT if no more file
@@ -211,8 +259,8 @@ struct dirent *readdir(DIR *dirp)
       /* Successfully got an entry. Everything about the file is
        * already appropriately filled in except the length of the
        * file name. */
-      dirp->dd_dir.d_namlen = static_cast<unsigned short>(_tcslen(dirp->dd_dta.name));
-      _tcscpy(dirp->dd_dir.d_name, dirp->dd_dta.name);
+      dirp->dd_dir.d_namlen = static_cast<unsigned short>(strlen(dirp->dd_dta.name));
+      strcpy(dirp->dd_dir.d_name, dirp->dd_dta.name);
       return &dirp->dd_dir;
    }
 
