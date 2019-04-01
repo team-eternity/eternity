@@ -519,7 +519,6 @@ struct seg_t
 
   // SoM: Precached seg length in float format
   float  len;
-  float  prevlen;   // For polyobject interpolation
 };
 
 //

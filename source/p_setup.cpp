@@ -83,7 +83,6 @@
 #include "z_auto.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side);
 
 //
 // Miscellaneous constants
@@ -360,6 +359,16 @@ static void P_LoadVertexes(int lump)
    }
 }
 
+// SoM 5/13/09: calculate seg length
+static void P_CalcSegLength(seg_t *lseg)
+{
+   float dx, dy;
+
+   dx = lseg->v2->fx - lseg->v1->fx;
+   dy = lseg->v2->fy - lseg->v1->fy;
+   lseg->len = sqrtf(dx * dx + dy * dy);
+}
+
 //
 // P_LoadSegs
 //
@@ -484,29 +493,6 @@ static void P_LoadSegs_V4(int lump)
       P_CalcSegLength(li);
    }
    Z_Free(data);
-}
-
-// SoM 5/13/09: calculate seg length
-void P_CalcSegLength(seg_t *lseg)
-{
-   float dx, dy;
-
-   dx = lseg->v2->fx - lseg->v1->fx;
-   dy = lseg->v2->fy - lseg->v1->fy;
-   lseg->prevlen = lseg->len = (float)sqrt(dx * dx + dy * dy);
-}
-void P_CalcDynaSegLength(seg_t *lseg)
-{
-   float dx = lseg->v2->fx - lseg->v1->fx;
-   float dy = lseg->v2->fy - lseg->v1->fy;
-   lseg->len = (float)sqrt(dx * dx + dy * dy);
-
-   dx = lseg->dyv2->fbackup.x - lseg->dyv1->fbackup.x;
-   dy = lseg->dyv2->fbackup.y - lseg->dyv1->fbackup.y;
-   lseg->prevlen = (float)sqrt(dx * dx + dy * dy);
-
-   if(lseg->len != lseg->prevlen)
-      R_AddTicDynaSeg(*lseg);
 }
 
 //
@@ -1140,6 +1126,25 @@ typedef struct mapnode_znod_s
 } mapnode_znod_t;
 
 //
+// R_DynaSegOffset
+//
+// Computes the offset value of the seg relative to its parent linedef.
+// Not terribly fast.
+// Derived from BSP 5.2 SplitDist routine.
+//
+// haleyjd 06/14/10: made global for map loading in p_setup.c and added
+//                   side parameter.
+// ioanch: made it local again, because dynasegs will use different coordinates for interpolation.
+//
+static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
+{
+   float dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
+   float dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
+
+   lseg->offset = sqrtf(dx * dx + dy * dy);
+}
+
+//
 // P_LoadZSegs
 //
 // Loads segs from ZDoom uncompressed nodes
@@ -1257,7 +1262,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 
       if(li->v2)  // IOANCH: only count if v2 is available.
          P_CalcSegLength(li);
-      R_DynaSegOffset(li, ldef, side);
+      R_calcSegOffset(li, ldef, side);
    }
    
    // IOANCH: update the seg count

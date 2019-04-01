@@ -383,16 +383,6 @@ static int R_classifyDynaSeg(const dynaseg_t *part, const dynaseg_t *seg, double
 }
 
 //
-// Quick way to calculate previous length
-//
-inline static float R_calcPrevLen(seg_t &seg)
-{
-   float dx = seg.dyv2->fbackup.x - seg.dyv1->fbackup.x;
-   float dy = seg.dyv2->fbackup.y - seg.dyv1->fbackup.y;
-   return sqrtf(dy * dy + dx * dx);
-}
-
-//
 // R_divideSegs
 //
 // Split the input list of segs into left and right lists using one of the segs
@@ -454,9 +444,9 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          nds->seg.frontsector = seg->seg.frontsector;
          nds->seg.backsector  = seg->seg.backsector;
          nds->seg.len         = static_cast<float>(nds->len);
-         nds->seg.prevlen = R_calcPrevLen(nds->seg);
-         if(nds->seg.prevlen != nds->seg.len)
-            R_AddTicDynaSeg(nds->seg);
+         nds->prevlen = R_calcPrevLen(nds->seg);
+         if(nds->prevlen != nds->seg.len)
+            R_AddTicDynaSeg(*nds);
 
          // modify original seg to run from v1 to nv
          bool notmarked = !seg->originalv2;
@@ -465,9 +455,9 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
          seg->seg.len = static_cast<float>(seg->len);
-         seg->seg.prevlen = R_calcPrevLen(seg->seg);
-         if(seg->seg.prevlen != seg->seg.len)
-            R_AddTicDynaSeg(seg->seg);
+         seg->prevlen = R_calcPrevLen(seg->seg);
+         if(seg->prevlen != seg->seg.len)
+            R_AddTicDynaSeg(*seg);
 
          // add the new seg to the current node's ownership list,
          // so it can get freed later
@@ -629,7 +619,7 @@ static void R_returnOwnedList(rpolynode_t *node)
       dynaseg_t *ds = dsl->dllObject;
       R_SetDynaVertexRef(&ds->seg.dyv2, ds->originalv2);
       R_FreeDynaVertex(&ds->originalv2);
-      P_CalcDynaSegLength(&ds->seg);
+      P_CalcDynaSegLength(ds);
       dsl->remove();
       dsl = next;
    }

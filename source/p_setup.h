@@ -124,8 +124,6 @@ extern int olo_loaded;
 #endif
 
 struct seg_t;
-void P_CalcSegLength(seg_t *lseg);
-void P_CalcDynaSegLength(seg_t *lseg);
 
 #endif
 
