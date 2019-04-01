@@ -54,6 +54,11 @@ inline fixed_t lerpCoord(fixed_t lerp, fixed_t oldpos, fixed_t newpos)
 {
    return oldpos + FixedMul(lerp, newpos - oldpos);
 }
+// Intentionally give a different name to prevent accidental overloads
+inline float lerpCoordf(fixed_t lerp, float oldpos, float newpos)
+{
+   return oldpos + lerp / FPFRACUNIT * (newpos - oldpos);
+}
 
 #define LLANG360 4294967296LL
 

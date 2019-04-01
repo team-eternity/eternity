@@ -36,7 +36,7 @@
 #include "r_dynabsp.h"
 #include "r_state.h"
 
-extern void P_CalcSegLength(seg_t *);
+extern void P_CalcDynaSegLength(seg_t *);
 
 //
 // dynaseg free list
@@ -59,6 +59,15 @@ static rpolyobj_t *freePolyFragments;
 // Dynavertices added this tic.
 //
 static PODCollection<dynavertex_t *> gTicDynavertices;
+static PODCollection<seg_t *> gTicDynasegs;
+
+//
+// External interface
+//
+void R_AddTicDynaSeg(seg_t &seg)
+{
+   gTicDynasegs.add(&seg);
+}
 
 //
 // R_AddDynaSubsec
@@ -154,6 +163,10 @@ void R_SaveDynasegPositions()
       vertex->fbackup.y = vertex->fy;
    }
    gTicDynavertices.makeEmpty();
+
+   for(seg_t *seg : gTicDynasegs)
+      seg->prevlen = seg->len;
+   gTicDynasegs.makeEmpty();
 }
 
 //
@@ -602,9 +615,14 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
    dseg->subnext = backdseg;
 
    // 05/13/09: calculate seg length for SoM
-   P_CalcSegLength(&dseg->seg);
+   P_CalcDynaSegLength(&dseg->seg);
    if(backdseg)
+   {
       backdseg->seg.len = dseg->seg.len;
+      backdseg->seg.prevlen = dseg->seg.prevlen;
+      if(backdseg->seg.prevlen != backdseg->seg.len)
+         R_AddTicDynaSeg(backdseg->seg);
+   }
 
    // 07/15/09: rendering consistency - set frontsector/backsector here
    dseg->seg.frontsector = subsectors[num].sector;

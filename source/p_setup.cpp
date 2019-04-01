@@ -493,7 +493,20 @@ void P_CalcSegLength(seg_t *lseg)
 
    dx = lseg->v2->fx - lseg->v1->fx;
    dy = lseg->v2->fy - lseg->v1->fy;
+   lseg->prevlen = lseg->len = (float)sqrt(dx * dx + dy * dy);
+}
+void P_CalcDynaSegLength(seg_t *lseg)
+{
+   float dx = lseg->v2->fx - lseg->v1->fx;
+   float dy = lseg->v2->fy - lseg->v1->fy;
    lseg->len = (float)sqrt(dx * dx + dy * dy);
+
+   dx = lseg->dyv2->fbackup.x - lseg->dyv1->fbackup.x;
+   dy = lseg->dyv2->fbackup.y - lseg->dyv1->fbackup.y;
+   lseg->prevlen = (float)sqrt(dx * dx + dy * dy);
+
+   if(lseg->len != lseg->prevlen)
+      R_AddTicDynaSeg(*lseg);
 }
 
 //

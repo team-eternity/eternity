@@ -88,6 +88,8 @@ struct dynavertex_t : vertex_t
    v2float_t fbackup;
 };
 
+void R_AddTicDynaSeg(seg_t &seg);
+
 dynavertex_t  *R_GetFreeDynaVertex();
 void       R_FreeDynaVertex(dynavertex_t **vtx);
 void       R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx);

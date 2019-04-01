@@ -2648,10 +2648,15 @@ static void R_RenderPolyNode(const rpolynode_t *node)
       // render partition seg
       v2fixed_t org[2];
       v2float_t forg[2];
-      const seg_t *seg = &node->partition->seg;
+      seg_t *seg = &node->partition->seg;
       R_interpolateVertex(*seg->dyv1, org[0], forg[0]);
       R_interpolateVertex(*seg->dyv2, org[1], forg[1]);
+
+      float orglen = seg->len;
+      if(view.lerp != FRACUNIT)
+         seg->len = lerpCoordf(view.lerp, seg->prevlen, seg->len);
       R_AddLine(seg, true);
+      seg->len = orglen;
       seg->v1->x = org[0].x;
       seg->v1->y = org[0].y;
       seg->v2->x = org[1].x;
