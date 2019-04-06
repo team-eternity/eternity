@@ -422,7 +422,7 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
    if(sec->groupid != ldata.fromid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to the "
-               "the portal's fromid\nLinked portals are disabled.\a\n", i);
+               "portal's fromid\nLinked portals are disabled.\a\n", i);
       return false;
    }
 
