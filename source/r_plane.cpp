@@ -373,14 +373,16 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width *
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
                       static_cast<double>(plane.yscale);
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height *
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * static_cast<double>(plane.tex->height) *
                       static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (double)plane.tex->width * plane.yscale;
-   slopespan.ivstep = slope->B.x * (double)plane.tex->height * plane.xscale;
+   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
+                      static_cast<double>(plane.yscale);
+   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
+                      static_cast<double>(plane.xscale);
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -400,7 +402,7 @@ static void R_MapSlope(int y, int x1, int x2)
       map2 = map1;
 
    R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
- 
+
    slopefunc();
 }
 

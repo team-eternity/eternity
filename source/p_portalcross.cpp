@@ -679,7 +679,6 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
    for(int i = 0; i < 2; ++i)
    {
       sector = csector;
-      groupid = cgroupid;
       x = cx;
       y = cy;
 

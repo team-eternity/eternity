@@ -1918,8 +1918,11 @@ bool ACS_CF_SetSkyDelta(ACS_CF_ARGS)
 {
    switch(argV[0])
    {
-   case 1: LevelInfo.skyDelta  = argV[1] >> FRACBITS; break;
-   case 2: LevelInfo.sky2Delta = argV[1] >> FRACBITS; break;
+   case 1: LevelInfo.skyDelta  = argV[1]; break;
+   case 2: LevelInfo.sky2Delta = argV[1]; break;
+   default:
+         doom_warningf("SetSkyScrollSpeed: unknown sky %d", argV[0]);
+         break;
    }
 
    thread->dataStk.push(0);

@@ -295,7 +295,7 @@ private:
       bool translucent, jumpover, blockfloaters;   // Strife
 
       // Activation specials
-      bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
+      bool playercross, playeruse, monstercross, monsteruse, impact, monstershoot, playerpush,
       monsterpush, missilecross, repeatspecial, polycross;
 
       int special, arg[5];       // linedef special and args
@@ -398,6 +398,9 @@ private:
       int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
+      bool phasedlight;
+      bool lightsequence;
+      bool lightseqalt;
 
       qstring colormaptop;
       qstring colormapmid;

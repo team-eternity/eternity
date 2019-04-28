@@ -3037,6 +3037,16 @@ DEFINE_ACTION(EV_ActionRadiusQuake)
    return P_StartQuake(instance->args, instance->actor);
 }
 
+// Implements Ceiling_Waggle(tag, height, speed, offset, timer)
+// * ExtraData: 500
+// * Hexen:     38
+//
+DEFINE_ACTION(EV_ActionCeilingWaggle)
+{
+   return EV_StartCeilingWaggle(instance->line, instance->tag, instance->args[1],
+                                instance->args[2], instance->args[3], instance->args[4]);
+}
+
 //
 // EV_ActionFloorWaggle
 //
@@ -3047,7 +3057,7 @@ DEFINE_ACTION(EV_ActionRadiusQuake)
 DEFINE_ACTION(EV_ActionFloorWaggle)
 {
    return EV_StartFloorWaggle(instance->line, instance->tag, instance->args[1],
-                                instance->args[2], instance->args[3], instance->args[4]);
+                              instance->args[2], instance->args[3], instance->args[4]);
 }
 
 //
@@ -4297,6 +4307,45 @@ DEFINE_ACTION(EV_ActionThingRemove)
 DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
+}
+
+//
+// Implements Generic_Lift(tag, speed, delay, type, height)
+//
+// * ExtraData: 501
+// * UDMF:      203
+//
+DEFINE_ACTION(EV_ActionParamPlatGeneric)
+{
+   fixed_t speed = instance->args[1] * (FRACUNIT / 8);
+   int delay = instance->args[2] * 35 / 8;   // OCTICS
+
+   int target;
+   fixed_t height = 0;
+   switch (instance->args[3])
+   {
+      case 0:
+         target = lifttarget_upValue;
+         height = 8 * instance->args[4] * FRACUNIT;
+         break;
+      case 1:
+         target = F2LnF;
+         break;
+      case 2:
+         target = F2NnF;
+         break;
+      case 3:
+         target = F2LnC;
+         break;
+      case 4:
+         target = LnF2HnF;
+         break;
+      default:
+         doom_warningf("Generic_Lift: illegal target %d", instance->args[3]);
+         return 0;
+   }
+
+   return EV_DoGenLiftByParameters(!instance->tag, *instance->line, speed, delay, target, height);
 }
 
 //

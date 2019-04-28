@@ -444,6 +444,9 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          nds->seg.frontsector = seg->seg.frontsector;
          nds->seg.backsector  = seg->seg.backsector;
          nds->seg.len         = static_cast<float>(nds->len);
+         nds->prevlen = R_calcPrevLen(nds->seg);
+         if(nds->prevlen != nds->seg.len)
+            R_AddTicDynaSeg(*nds);
 
          // modify original seg to run from v1 to nv
          bool notmarked = !seg->originalv2;
@@ -452,6 +455,9 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
          R_SetDynaVertexRef(&seg->seg.dyv2, nv);
          R_setupDSForBSP(*seg);
          seg->seg.len = static_cast<float>(seg->len);
+         seg->prevlen = R_calcPrevLen(seg->seg);
+         if(seg->prevlen != seg->seg.len)
+            R_AddTicDynaSeg(*seg);
 
          // add the new seg to the current node's ownership list,
          // so it can get freed later
@@ -600,10 +606,6 @@ static void R_returnOwnedList(rpolynode_t *node)
       dseglink_t *next =  dsl->dllNext;
       dynaseg_t  *ds   = *dsl;
 
-      // free dynamic vertices
-      R_FreeDynaVertex(&ds->seg.dyv1);
-      R_FreeDynaVertex(&ds->seg.dyv2);
-
       R_FreeDynaSeg(ds);
 
       dsl = next;
@@ -617,7 +619,7 @@ static void R_returnOwnedList(rpolynode_t *node)
       dynaseg_t *ds = dsl->dllObject;
       R_SetDynaVertexRef(&ds->seg.dyv2, ds->originalv2);
       R_FreeDynaVertex(&ds->originalv2);
-      P_CalcSegLength(&ds->seg);
+      P_CalcDynaSegLength(ds);
       dsl->remove();
       dsl = next;
    }

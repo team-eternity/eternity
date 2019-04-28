@@ -201,9 +201,9 @@ void R_SetSpanEngine(void)
 // FIXME: also check if Linux/GCC are affected by this.
 // MORE INFO: competn/doom/fp2-3655.lmp E2M3 fails here
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
-int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, const node_t *node)
+int R_PointOnSideClassic(volatile fixed_t x, volatile fixed_t y, const node_t *node)
 #else
-int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
+int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node)
 #endif
 {
    if(!node->dx)
@@ -221,6 +221,29 @@ int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
    return FixedMul(y, node->dx>>FRACBITS) >= FixedMul(node->dy>>FRACBITS, x);
 }
 
+//
+// Variant when nodes have non-integer coordinates
+// FIXME: do I need volatile here? How can I even test it?
+//
+int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node)
+{
+   if(!node->dx)
+      return x <= node->x ? node->dy > 0 : node->dy < 0;
+
+   if(!node->dy)
+      return y <= node->y ? node->dx < 0 : node->dx > 0;
+
+   x -= node->x;
+   y -= node->y;
+
+   // Try to quickly decide by looking at sign bits.
+   if((node->dy ^ node->dx ^ x ^ y) < 0)
+      return (node->dy ^ x) < 0;  // (left is negative)
+   return (int64_t)y * node->dx >= (int64_t)node->dy * x;
+}
+
+int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *) = R_PointOnSideClassic;
+
 // killough 5/2/98: reformatted
 
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
@@ -232,17 +255,17 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
 
    if(!ldx)
       return x <= lx ? ldy > 0 : ldy < 0;
-   
+
    if(!ldy)
       return y <= ly ? ldx < 0 : ldx > 0;
-  
+
    x -= lx;
    y -= ly;
-        
+
    // Try to quickly decide by looking at sign bits.
    if((ldy ^ ldx ^ x ^ y) < 0)
       return (ldy ^ x) < 0;          // (left is negative)
-   return FixedMul(y, ldx>>FRACBITS) >= FixedMul(ldy>>FRACBITS, x);
+   return (int64_t)y * ldx >= (int64_t)ldy * x;
 }
 
 //

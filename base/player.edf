@@ -38,63 +38,16 @@ weaponinfo Unknown
 
 //=============================================================================
 //
-// Game Includes and Playerclass Definition
+// Game Includes
 //
+
+// DOOM Player and Weapons ----------------------------------------------------
 
 includeifenabled("doom/player.edf", "DOOM");
 
-ifenabled(DOOM)
-
-skin marine {}
-
-playerclass DoomMarine
-{
-   defaultskin    marine
-   thingtype      DoomPlayer
-   altattackstate S_PLAY_ATK2
-
-   weaponslot 1 { weapons : Chainsaw, Fist }
-   weaponslot 2 { weapons : Pistol }
-   weaponslot 3 { weapons : SuperShotgun, Shotgun }
-   weaponslot 4 { weapons : Chaingun }
-   weaponslot 5 { weapons : MissileLauncher }
-   weaponslot 6 { weapons : PlasmaRifle }
-   weaponslot 7 { weapons : BFG9000 }
-   weaponslot 8 { weapons : Chainsaw }
-   weaponslot 9 { weapons : SuperShotgun }
-
-   rebornitem AmmoClip, 50
-   rebornitem Fist
-   rebornitem Pistol
-}
-
-endif()
+// Heretic Player and Weapons -------------------------------------------------
 
 includeifenabled("heretic/player.edf", "HERETIC");
-
-ifenabled(HERETIC)
-
-skin corvus {}
-
-playerclass Corvus
-{
-   defaultskin    corvus
-   thingtype      HereticPlayer
-   altattackstate S_HPLAY_ATK2
-
-   weaponslot 1 { weapons : Gauntlets, Staff }
-   weaponslot 2 { weapons : GoldWand }
-   weaponslot 3 { weapons : Crossbow }
-   weaponslot 4 { weapons : Blaster }
-   weaponslot 5 { weapons : SkullRod }
-   weaponslot 6 { weapons : PhoenixRod }
-   weaponslot 7 { weapons : Mace }
-   weaponslot 8 { weapons : Gauntlets }
-
-   rebornitem AmmoWandCrystal, 50
-   rebornitem Staff
-   rebornitem GoldWand
-}
 
 endif()
 

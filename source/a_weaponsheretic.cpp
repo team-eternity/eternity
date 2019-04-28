@@ -252,7 +252,8 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
    {                           // Explode
       ball->momx = ball->momy = ball->momz = 0;
       ball->flags |= MF_NOGRAVITY;
-      ball->flags2 &= ~(MF2_LOGRAV | MF4_HERETICBOUNCES);
+      ball->flags2 &= ~MF2_LOGRAV;
+      ball->flags4 &= ~MF4_HERETICBOUNCES;
    }
    else
    {

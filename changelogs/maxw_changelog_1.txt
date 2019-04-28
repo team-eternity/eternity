@@ -342,9 +342,31 @@ Thanks to Xaser for this.
 A_CustomPlayerMelee now correctly turns you through portals.
 
 -------------------------------------------------------------------------------
-2019/03/12
+2019/0//12
 Made it so the Windows close button on the console is re-enabled when Eternity
 is closed.
+
+-------------------------------------------------------------------------------
+2019/02/12
+Added Ceiling_Waggle action special.
+Added "speedjump" playerclass property. Its value is a fixed, and is how much
+upwards speed is added to momz when the player successfully jumps.
+
+-------------------------------------------------------------------------------
+2019/02/25
+Implemented deltas for itemeffects (healtheffect, armoreffect, ammoeffect,
+powereffect, weapongiver, artifact). Replace effect with delta for those ending
+with effect, and append delta to the end of the others to get the name of the
+appropriate delta structure. weapongiverdelta also has clearammogiven, which
+does what it says on the tin.
+
+The artifact's args are implicitly cleared if a delta specifies a useaction
+or args in a delta structure targetting said artifact.
+
+-------------------------------------------------------------------------------
+2019/03/23
+Change the key bindings menus.
+Fix an issue with window grabbing not working.
 
 ================================================================================
 EOF

@@ -809,6 +809,10 @@ bool G_Responder(const event_t* ev)
    int action;
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
 
+   // This if is here to ensure the game doesn't crash due to weapon selection inputs
+   if(gamestate == GS_CONSOLE)
+      return true;
+
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -3797,6 +3801,30 @@ void doom_printf(const char *s, ...)
    va_end(v);
    
    C_Puts(msg);  // set new message
+   HU_PlayerMsg(msg);
+}
+
+//
+// Like above, but uses FC_ERROR and occasional beeping
+//
+void doom_warningf(const char *s, ...)
+{
+   static int lastbeeptic = -1000;
+
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   if(lastbeeptic + 100 < gametic)
+   {
+      lastbeeptic = gametic;
+      C_Printf("%s\a\n", msg);
+   }
+   else
+      C_Puts(msg);
    HU_PlayerMsg(msg);
 }
 

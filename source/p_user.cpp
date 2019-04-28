@@ -693,7 +693,7 @@ void P_PlayerThink(player_t *player)
          if((player->mo->z == player->mo->zref.floor ||
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
          {
-            player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
+            player->mo->momz += player->pclass->jumpspeed;
             player->mo->intflags &= ~MIF_ONMOBJ;
             player->jumptime = 18;
          }

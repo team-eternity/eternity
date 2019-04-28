@@ -361,7 +361,7 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Monsters can telefrag on MAP30"),
 
    DEFAULT_INT("comp_dropoff", &default_comp[comp_dropoff], &comp[comp_dropoff],
-               0, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
+               1, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
 
    DEFAULT_INT("comp_falloff", &default_comp[comp_falloff], &comp[comp_falloff],
                0, 0, 1, default_t::wad_yes, "Objects don't fall off ledges under their own weight"),
@@ -423,13 +423,13 @@ default_t defaults[] =
    
    // haleyjd 02/15/02: z checks (includes,supercedes comp_scratch)
    DEFAULT_INT("comp_overunder", &default_comp[comp_overunder], &comp[comp_overunder],
-               1, 0, 1, default_t::wad_yes, "Things not fully clipped with respect to z coord"),
+               0, 0, 1, default_t::wad_yes, "Things not fully clipped with respect to z coord"),
    
    DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
-               1, 0, 1, default_t::wad_yes, "DOOM thingtypes use inaccurate height information"),
+               0, 0, 1, default_t::wad_yes, "DOOM thingtypes use inaccurate height information"),
    
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
-               1, 0, 1, default_t::wad_yes, "Tracer shots cannot hit the floor or ceiling"),
+               0, 0, 1, default_t::wad_yes, "Tracer shots cannot hit the floor or ceiling"),
 
    DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
                0, 0, 1, default_t::wad_yes, "One-time line specials are cleared on failure"),

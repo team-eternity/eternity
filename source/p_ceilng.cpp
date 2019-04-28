@@ -741,6 +741,137 @@ void P_ChangeCeilingTex(const char *name, int tag)
       P_SetSectorCeilingPic(&sectors[secnum], flatnum);
 }
 
+//=============================================================================
+//
+// Waggle Ceilings
+//
+
+IMPLEMENT_THINKER_TYPE(CeilingWaggleThinker)
+
+#define WGLSTATE_EXPAND 1
+#define WGLSTATE_STABLE 2
+#define WGLSTATE_REDUCE 3
+
+//
+// Thinker for ceiling waggle action.
+//
+void CeilingWaggleThinker::Think()
+{
+   fixed_t destheight;
+   fixed_t dist;
+   extern fixed_t FloatBobOffsets[64];
+
+   switch(state)
+   {
+   case WGLSTATE_EXPAND:
+      if((scale += scaleDelta) >= targetScale)
+      {
+         scale = targetScale;
+         state = WGLSTATE_STABLE;
+      }
+      break;
+
+   case WGLSTATE_REDUCE:
+      if((scale -= scaleDelta) <= 0)
+      {
+         // Remove
+         destheight = originalHeight;
+         dist       = originalHeight - sector->ceilingheight;
+
+         T_MoveCeilingInDirection(sector, abs(dist),
+            destheight, 8, destheight >= sector->floorheight ? plat_up : plat_down);
+
+         sector->ceilingdata = nullptr;
+         remove();
+         return;
+      }
+      break;
+
+   case WGLSTATE_STABLE:
+      if(ticker != -1)
+      {
+         if(!--ticker)
+            state = WGLSTATE_REDUCE;
+      }
+      break;
+   }
+
+   accumulator += accDelta;
+
+   destheight = originalHeight +
+                FixedMul(FloatBobOffsets[(accumulator >> FRACBITS) & 63], scale);
+   dist = destheight - sector->ceilingheight;
+
+   T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
+      destheight >= sector->floorheight ? plat_up : plat_down);
+}
+
+//
+// Saves/loads a CeilingWaggleThinker thinker.
+//
+void CeilingWaggleThinker::serialize(SaveArchive &arc)
+{
+   Super::serialize(arc);
+
+   arc << originalHeight << accumulator << accDelta << targetScale
+       << scale << scaleDelta << ticker << state;
+}
+
+int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed,
+                         int offset, int timer)
+{
+   int       sectorIndex = -1;
+   int       retCode = 0;
+   bool      manual = false;
+   sector_t *sector;
+   CeilingWaggleThinker *waggle;
+
+   if(tag == 0)
+   {
+      if(!line || !(sector = line->backsector))
+         return retCode;
+      sectorIndex = eindex(sector - sectors);
+      manual = true;
+      goto manual_waggle;
+   }
+
+   while((sectorIndex = P_FindSectorFromTag(tag, sectorIndex)) >= 0)
+   {
+      sector = &sectors[sectorIndex];
+
+manual_waggle:
+      // Already busy with another thinker
+      if(sector->ceilingdata)
+      {
+         if(manual)
+            return retCode;
+         else
+            continue;
+      }
+
+      retCode = 1;
+      waggle = new CeilingWaggleThinker;
+      sector->ceilingdata = waggle;
+      waggle->addThinker();
+
+      waggle->sector         = sector;
+      waggle->originalHeight = sector->ceilingheight;
+      waggle->accumulator    = offset * FRACUNIT;
+      waggle->accDelta       = speed << 10;
+      waggle->scale          = 0;
+      waggle->targetScale    = height << 10;
+      waggle->scaleDelta     = waggle->targetScale / (35+((3*35)*height)/255);
+      waggle->ticker         = timer ? timer * 35 : -1;
+      waggle->state          = WGLSTATE_EXPAND;
+
+      if(manual)
+         return retCode;
+   }
+
+   return retCode;
+}
+
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_ceilng.c,v $

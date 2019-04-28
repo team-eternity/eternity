@@ -740,7 +740,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
 
    // ioanch 20160121: reset portalhits and thing-visited groups
    clip.numportalhit = 0;
-   if(gGroupVisit)
+   if(useportalgroups && gGroupVisit)
    {
       memset(gGroupVisit, 0, sizeof(bool) * P_PortalGroupCount());
       gGroupVisit[clip.thing->groupid] = true;

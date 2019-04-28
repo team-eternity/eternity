@@ -8,6 +8,66 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+31.03.2019
+
+BUGFIX: Fixed a serious crash happening when having 3D clipping on, going first
+        to a map with linked portals, then going to a map without portals. The
+        crash would occur randomly and not always.
+
+--------------------------------------------------------------------------------
+21.03.2019
+
+BUGFIX: Fixed a crash happening when seeing for the first time progressively
+        larger swirling textures.
+
+        Fixed a crash happening when loading a game with alpha-cycling sprites.
+
+--------------------------------------------------------------------------------
+18.03.2019
+
+FEATURE: Added the Generic_Lift special, which ZDoom had added, because there
+         are a few Boom generalized specials which can't be represented by other
+         parameterized lift specials.
+
+--------------------------------------------------------------------------------
+09.03.2019
+
+BUGFIX: Fixed PointPush_SetForce not using argument for magnitude when tagging
+        sectors.
+
+--------------------------------------------------------------------------------
+24.02.2019
+
+FEATURE: Added UDMF linedef "monstershoot" boolean field. Needed because the
+         ill-named "impact" field only allows players to shoot the linedef.
+         This one allows monsters too. The ones who wrote the original UDMF
+         specs must have been unaware that vanilla Doom has some specials
+         (such as GR: Open Door) which are triggerable by both monsters and
+         players, while others (the rising platforms) only by players.
+
+         Added UDMF sector "phasedlight", "lightsequence" and "lightseqalt"
+         boolean fields, because ExtraData supports adding them individually,
+         without resorting to the "special" field.
+
+--------------------------------------------------------------------------------
+23.02.2019
+
+BUGFIX: The scrolling sky scrolling speed, changeable through ACS, wasn't stored
+        in save games.
+
+IMPROVEMENT: EMAPINFO skyDelta and sky2Delta now accept fractional values. It
+             was appropriate to add this because an ACS function already
+             supports fixed-point for changing these states.
+
+             Currently legacy Hexen MAPINFO doesn't have it however.
+
+--------------------------------------------------------------------------------
+22.02.2019
+
+BUGFIX: Fixed a crash happening with sub-unit linedef length maps (made in UDMF).
+        Now the slime-trail reduction function uses floating-point.
+
+--------------------------------------------------------------------------------
 13.02.2019
 
 BUGFIX: Fixed a crash happening with slopes having MBF-transferred skies.

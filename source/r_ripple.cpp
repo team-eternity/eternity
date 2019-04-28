@@ -95,9 +95,10 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
    int16_t w = tex->height;
    int cursize = w*h;
 
-   if(cursize > offsetSize)
+
+   if(cursize * 2 > offsetSize)
    {
-      offsetSize = cursize * 2;
+      offsetSize = cursize * 4;
       offset = erealloc(int *, offset, offsetSize * sizeof(*offset));
       distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
    }
