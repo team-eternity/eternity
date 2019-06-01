@@ -136,7 +136,7 @@ using an older cmake release folder, you will need to create a new one.
  cmake .. -DCMAKE_BUILD_TYPE=Release
  make
 
-Building with Visual Studio (2015 and up)
+Building with Visual Studio (2017 and up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These instructions are written with the assumption that the user has
@@ -150,7 +150,7 @@ already set up Visual Studio.
 
 . Extract them to a folder of your choosing, eg. `C:\Libs`.
 
-. Open `Eternity.sln` from the `vc2015` (or higher) folder.
+. Open `Eternity.sln` from the `vc2017` (or higher) folder.
 
 . Select 'View -> Property Manager' (if it is not there you will need to enable it from Tools -> Customize -> Commands:
 Menu bar -> View -> Add Command -> View -> Property Manager).
