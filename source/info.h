@@ -254,8 +254,9 @@ enum
   MT_DOGS,       // killough 7/19/98: Marine's best friend
   MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
   MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
-  MT_CAMERA,
-  MT_PLASMA3,    // haleyjd: for burst bfg
+
+  MT_CAMERA = 162, // SMMU camera spot
+  MT_PLASMA3,      // haleyjd: for burst bfg
 
   // haleyjd 10/08/02: Heretic things
   MT_POD = 305,

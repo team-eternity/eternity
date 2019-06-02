@@ -198,7 +198,7 @@ public:
    // Numeric Conversions
    int    toInt() const;
    long   toLong(char **endptr, int radix) const;
-   double toDouble(char **endptr);
+   double toDouble(char **endptr) const;
 
    // Searching/Substring Finding Routines
    const char *strChr(char c) const;

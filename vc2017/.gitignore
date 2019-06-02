@@ -11,5 +11,5 @@ AS_DEBUG/
 # Visual Studio 2017 options/cache directory
 .vs/
 # Build result folders
-Debug/
-Release/
+Win32/
+x64/

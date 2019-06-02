@@ -538,7 +538,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int j;
          player_t &p = players[i];
 
-         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
+         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn
              << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
@@ -633,9 +633,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.cmd.buttons = 0;       // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
-
-            //if(i == consoleplayer)
-            p.invbarstate.inv_ptr = p.inv_ptr;
          }
       }
    }
@@ -733,7 +730,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
 //
 static void P_ArchiveLevelInfo(SaveArchive &arc)
 {
-   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity;
+   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity <<
+          LevelInfo.skyDelta << LevelInfo.sky2Delta;
 }
 
 //
@@ -945,12 +943,12 @@ static void P_ArchiveMap(SaveArchive &arc)
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints,
+            markpoints = erealloc(markpoint_t *, markpoints,
                sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
       }
    }
 }

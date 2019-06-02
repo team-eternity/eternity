@@ -486,7 +486,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    }
    
    row_pointers = ecalloc(byte **, height, sizeof(byte *));
-   pngPalette   = ecalloc(png_colorp, 256, png_sizeof(png_color));
+   pngPalette   = ecalloc(png_colorp, 256, sizeof(png_color));
 
    try
    {

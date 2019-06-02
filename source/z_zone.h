@@ -176,6 +176,7 @@ void  Z_SysFree(void *p);
 
 // Doom-style printf
 void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
+void doom_warningf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
 #ifdef INSTRUMENTED
 extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11

@@ -30,6 +30,7 @@
 #include "d_player.h"
 #include "m_avltree.h"
 #include "m_bdlist.h"
+#include "m_fixed.h"
 
 struct weaponinfo_t;
 struct cfg_t;
@@ -54,7 +55,7 @@ extern cfg_opt_t edf_wdelta_opts[];
 
 // Classes
 
-using SelectOrderTreeBase = AVLTree<int, weaponinfo_t>;
+using SelectOrderTreeBase = AVLTree<fixed_t, weaponinfo_t>;
 using SelectOrderNode = SelectOrderTreeBase::avlnode_t;
 
 // The class that overrides parts of the base AVL tree used for
@@ -69,7 +70,7 @@ public:
    }
 
    // Parameterized constructor
-   SelectOrderTree(int key, weaponinfo_t *object) : SelectOrderTreeBase(key, object)
+   SelectOrderTree(fixed_t key, weaponinfo_t *object) : SelectOrderTreeBase(key, object)
    {
    }
 
@@ -197,8 +198,8 @@ weaponinfo_t *E_WeaponForDEHNum(const int dehnum);
 weapontype_t E_WeaponNumForName(const char *name);
 
 weaponinfo_t *E_FindBestWeapon(const player_t *player);
-weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
-                                        const itemeffect_t *ammo);
+weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t *player,
+                                              const itemeffect_t *ammo);
 int *E_GetIndexedWepCtrForPlayer(const player_t *player, int index);
 
 bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);
@@ -206,6 +207,7 @@ bool E_WeaponIsCurrentDEHNum(const player_t *player, const int dehnum);
 bool E_PlayerOwnsWeapon(const player_t *player, const weaponinfo_t *weapon);
 bool E_PlayerOwnsWeaponForDEHNum(const player_t *player, const int dehnum);
 bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot);
+int E_NumWeaponsInSlotPlayerOwns(const player_t *player, const int slot);
 
 state_t *E_GetStateForWeaponInfo(const weaponinfo_t *wi, const char *label);
 

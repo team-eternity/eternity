@@ -46,6 +46,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_partcl.h"
+#include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
@@ -199,9 +200,9 @@ void R_SetSpanEngine(void)
 // FIXME: also check if Linux/GCC are affected by this.
 // MORE INFO: competn/doom/fp2-3655.lmp E2M3 fails here
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX && defined(__clang__)
-int R_PointOnSide(volatile fixed_t x, volatile fixed_t y, const node_t *node)
+int R_PointOnSideClassic(volatile fixed_t x, volatile fixed_t y, const node_t *node)
 #else
-int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
+int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node)
 #endif
 {
    if(!node->dx)
@@ -219,6 +220,29 @@ int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node)
    return FixedMul(y, node->dx>>FRACBITS) >= FixedMul(node->dy>>FRACBITS, x);
 }
 
+//
+// Variant when nodes have non-integer coordinates
+// FIXME: do I need volatile here? How can I even test it?
+//
+int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node)
+{
+   if(!node->dx)
+      return x <= node->x ? node->dy > 0 : node->dy < 0;
+
+   if(!node->dy)
+      return y <= node->y ? node->dx < 0 : node->dx > 0;
+
+   x -= node->x;
+   y -= node->y;
+
+   // Try to quickly decide by looking at sign bits.
+   if((node->dy ^ node->dx ^ x ^ y) < 0)
+      return (node->dy ^ x) < 0;  // (left is negative)
+   return (int64_t)y * node->dx >= (int64_t)node->dy * x;
+}
+
+int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *) = R_PointOnSideClassic;
+
 // killough 5/2/98: reformatted
 
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
@@ -230,17 +254,17 @@ int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
 
    if(!ldx)
       return x <= lx ? ldy > 0 : ldy < 0;
-   
+
    if(!ldy)
       return y <= ly ? ldx < 0 : ldx > 0;
-  
+
    x -= lx;
    y -= ly;
-        
+
    // Try to quickly decide by looking at sign bits.
    if((ldy ^ ldx ^ x ^ y) < 0)
       return (ldy ^ x) < 0;          // (left is negative)
-   return FixedMul(y, ldx>>FRACBITS) >= FixedMul(ldy>>FRACBITS, x);
+   return (int64_t)y * ldx >= (int64_t)ldy * x;
 }
 
 //
@@ -825,6 +849,7 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
       viewy     = camera->y;
       viewz     = camera->z;
       viewangle = camera->angle;
+      viewpitch = camera->pitch;
    }
    else
    {
@@ -832,6 +857,7 @@ static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
       viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
       viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
       viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+      viewpitch = lerpAngle(lerp, camera->prevpitch, camera->pitch);
    }
 }
 
@@ -901,6 +927,52 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 }
 
 //
+// Interpolates sidedef scrolling
+//
+static void R_setScrollInterpolationState(secinterpstate_e state)
+{
+   switch(state)
+   {
+      case SEC_INTERPOLATE:
+         P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
+            side->textureoffset += lerpCoord(view.lerp, -offset.x, 0);
+            side->rowoffset += lerpCoord(view.lerp, -offset.y, 0);
+         });
+         P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
+            if(isceiling)
+            {
+               sector->ceiling_xoffs += lerpCoord(view.lerp, -offset.x, 0);
+               sector->ceiling_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+            }
+            else
+            {
+               sector->floor_xoffs += lerpCoord(view.lerp, -offset.x, 0);
+               sector->floor_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+            }
+         });
+         break;
+      case SEC_NORMAL:
+         P_ForEachScrolledSide([](side_t *side, v2fixed_t offset) {
+            side->textureoffset -= lerpCoord(view.lerp, -offset.x, 0);
+            side->rowoffset -= lerpCoord(view.lerp, -offset.y, 0);
+         });
+         P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
+            if(isceiling)
+            {
+               sector->ceiling_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->ceiling_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+            }
+            else
+            {
+               sector->floor_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->floor_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+            }
+         });
+         break;
+   }
+}
+
+//
 // R_GetLerp
 //
 fixed_t R_GetLerp(bool ignorepause)
@@ -966,7 +1038,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
 
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
+   {
       R_setSectorInterpolationState(SEC_INTERPOLATE);
+      R_setScrollInterpolationState(SEC_INTERPOLATE);
+   }
 
    // y shearing
    // haleyjd 04/03/05: perform calculation for true pitch angle
@@ -1204,7 +1279,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
    // haleyjd: remove sector interpolations
    if(view.lerp != FRACUNIT)
+   {
       R_setSectorInterpolationState(SEC_NORMAL);
+      R_setScrollInterpolationState(SEC_NORMAL);
+   }
    
    // Check for new console commands.
    NetUpdate();

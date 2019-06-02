@@ -1016,7 +1016,7 @@ long qstring::toLong(char **endptr, int radix) const
 //
 // Calls strtod on the qstring.
 
-double qstring::toDouble(char **endptr)
+double qstring::toDouble(char **endptr) const
 {
    return strtod(buffer, endptr);
 }

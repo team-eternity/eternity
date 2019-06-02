@@ -28,6 +28,7 @@
 #include "p_maputl.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_portal.h"
 #include "r_state.h"
 
 //
@@ -81,6 +82,18 @@ DebugLogger &DebugLogger::operator << (long number)
    printf("%ld", number);
    return *this;
 }
+DebugLogger &DebugLogger::operator << (unsigned long number)
+{
+   checkspace(ls_number);
+   printf("%lu", number);
+   return *this;
+}
+DebugLogger &DebugLogger::operator << (long long number)
+{
+   checkspace(ls_number);
+   printf("%lld", number);
+   return *this;
+}
 DebugLogger &DebugLogger::operator << (double number)
 {
    checkspace(ls_number);
@@ -105,6 +118,10 @@ DebugLogger &DebugLogger::operator << (const line_t &line)
 {
    return *this << "line" << (&line - lines) << '(' << line.v1 << line.v2 << ')';
 }
+DebugLogger &DebugLogger::operator << (const pwindow_t &window)
+{
+   return *this << "pwindow(" << window.line << window.type >> window.planez >> window.vx >> window.vy >> window.vz << ')';
+}
 DebugLogger &DebugLogger::operator << (const sector_t &sector)
 {
    return *this << "sector" << (&sector - sectors);
@@ -121,9 +138,19 @@ DebugLogger &DebugLogger::operator << (const side_t &side)
    << ") " << side.sector << "spec(" << side.special << "))";
 }
 
+DebugLogger &DebugLogger::operator << (const v2double_t &vec)
+{
+   return *this << "v2double(" << vec.x << vec.y << ")";
+}
+
 DebugLogger &DebugLogger::operator << (const v2fixed_t &vec)
 {
    return *this << "v2fixed(" >> vec.x >> vec.y << ")";
+}
+
+DebugLogger &DebugLogger::operator << (const v3fixed_t &vec)
+{
+   return *this << "v3fixed(" >> vec.x >> vec.y >> vec.z << ")";
 }
 
 DebugLogger &DebugLogger::operator << (const vertex_t &vertex)

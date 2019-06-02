@@ -997,6 +997,9 @@ static void E_ProcessFontVars(cfg_t *cfg)
    // 02/25/09: set native module font names
    E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
    E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));
+   E_ReplaceString(hud_fssmallname,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSS));
+   E_ReplaceString(hud_fsmediumname,  cfg_getstrdup(cfg, ITEM_FONT_HUDFSM));
+   E_ReplaceString(hud_fslargename,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSL));
    E_ReplaceString(mn_fontname,       cfg_getstrdup(cfg, ITEM_FONT_MENU));
    E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
    E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));

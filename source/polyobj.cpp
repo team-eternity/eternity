@@ -512,9 +512,6 @@ static void Polyobj_setCenterPt(polyobj_t *po);
 //
 static void Polyobj_collectPortals(polyobj_t *po)
 {
-   if(!useportalgroups)
-      return;  // if portals don't exist or were invalidated, skip this.
-
    // Collect them in an easy collection
    PODCollection<portal_t *> portals;
    bool hasLinked = false;
@@ -535,7 +532,7 @@ static void Polyobj_collectPortals(polyobj_t *po)
             goto nextLine;
       }
 
-      if(line.pflags & PS_PASSABLE)
+      if(line.pflags & PS_PASSABLE && useportalgroups)
          hasLinked = true;
 
       portals.add(portal);
@@ -561,8 +558,9 @@ static void Polyobj_collectPortals(polyobj_t *po)
 //
 static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t dy, bool cancel)
 {
-   bool *groupvisit = useportalgroups ? 
-      ecalloc(bool *, P_PortalGroupCount(), sizeof(bool)) : nullptr;
+   if(!useportalgroups)
+      return;
+   bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
    for(size_t i = 0; i < po->numPortals; ++i)
    {
       portal_t *portal = po->portals[i];
@@ -601,6 +599,18 @@ static void Polyobj_updateAnchoredPortals(const polyobj_t &po)
       portal_t *partner = adata.polyportalpartner;
       if(partner)
          partner->data.anchor.transform.updateFromLines(true);
+   }
+}
+
+//
+// If linked portals exist, updats a line's portalmap position
+//
+static void Polyobj_relinkLine(const line_t &line)
+{
+   if(line.portal && line.portal->type == R_LINKED && useportalgroups)
+   {
+      gPortalBlockmap.unlinkLine(line);
+      gPortalBlockmap.linkLine(line);
    }
 }
 
@@ -674,11 +684,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       line.soundorg.x = line.v1->x + line.dx / 2;
       line.soundorg.y = line.v1->y + line.dy / 2;
 
-      if(line.portal && line.portal->type == R_LINKED)
-      {
-         gPortalBlockmap.unlinkLine(line);
-         gPortalBlockmap.linkLine(line);
-      }
+      Polyobj_relinkLine(line);
    }
 
    Polyobj_setCenterPt(po);
@@ -1129,13 +1135,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
    for(i = 0; i < po->numLines; ++i)
    {
       Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
-
-      // This must be here because things may collide.
-      if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-      {
-         gPortalBlockmap.unlinkLine(*po->lines[i]);
-         gPortalBlockmap.linkLine(*po->lines[i]);
-      }
+      Polyobj_relinkLine(*po->lines[i]);
    }
 
    // check for blocking things (yes, it needs to be done separately)
@@ -1154,11 +1154,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       for(i = 0; i < po->numLines; ++i)
       {
          Polyobj_bboxSub(po->lines[i]->bbox, &vec);
-         if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-         {
-            gPortalBlockmap.unlinkLine(*po->lines[i]);
-            gPortalBlockmap.linkLine(*po->lines[i]);
-         }
+         Polyobj_relinkLine(*po->lines[i]);
       }
 
       // ioanch 20160226: update portal position
@@ -1329,11 +1325,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
    for(i = 0; i < po->numLines; ++i)
    {
       Polyobj_rotateLine(po->lines[i]);
-      if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-      {
-         gPortalBlockmap.unlinkLine(*po->lines[i]);
-         gPortalBlockmap.linkLine(*po->lines[i]);
-      }
+      Polyobj_relinkLine(*po->lines[i]);
    }
 
    // check for blocking things
@@ -1352,11 +1344,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       for(i = 0; i < po->numLines; ++i)
       {
          Polyobj_rotateLine(po->lines[i]);
-         if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-         {
-            gPortalBlockmap.unlinkLine(*po->lines[i]);
-            gPortalBlockmap.linkLine(*po->lines[i]);
-         }
+         Polyobj_relinkLine(*po->lines[i]);
       }
    }
    else
@@ -1977,6 +1965,7 @@ void PolySwingDoorThinker::Think()
       // move was blocked, special handling required -- make it reopen
 
       this->distance = this->initDistance - this->distance;
+      this->hasBeenPositive = this->distance < 0 ? false : true;
       this->speed    = this->initSpeed;
       this->closing  = false;
 

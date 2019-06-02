@@ -84,8 +84,12 @@ struct seg_t;
 struct subsector_t;
 struct sector_t;
 
-int R_PointOnSide(fixed_t x, fixed_t y, const node_t *node);
+int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
+int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);
+extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
+
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
+
 int SlopeDiv(unsigned int num, unsigned int den);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
@@ -225,8 +229,11 @@ struct cb_seg_t
    pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
    // ioanch: added b_window for bottom edge portal
 
-   // SoM: used for portals
-   fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;
+   // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
+   fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+
+   // If nonzero, require f_sky1 rendering
+   int skyflat;
 };
 
 

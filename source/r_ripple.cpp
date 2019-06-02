@@ -87,15 +87,18 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
    int reftime = usegametic ? gametic : leveltime;
    int leveltic = reftime;
    texture_t *tex = R_CacheTexture(texnum);
+   const byte *flatmask = tex->flags & TF_MASKED ?
+         tex->bufferdata + tex->width * tex->height : nullptr; // also change the trailing mask
 
    // NOTE: these are transposed because of the swirling formula
    int16_t h = tex->width;
    int16_t w = tex->height;
    int cursize = w*h;
 
-   if(cursize > offsetSize)
+
+   if(cursize * 2 > offsetSize)
    {
-      offsetSize = cursize * 2;
+      offsetSize = cursize * 4;
       offset = erealloc(int *, offset, offsetSize * sizeof(*offset));
       distortedflat = erealloc(byte *, distortedflat, offsetSize * sizeof(*distortedflat));
    }
@@ -143,10 +146,20 @@ byte *R_DistortedFlat(int texnum, bool usegametic)
       lastsize = cursize;
    }
    
-   normalflat = tex->buffer;
+   normalflat = tex->bufferdata;
    
+   byte *distortedmask = distortedflat + cursize;
    for(i = 0; i < cursize; ++i)
+   {
       distortedflat[i] = normalflat[offset[i]];
+      if(flatmask)
+      {
+         byte v = !!(flatmask[offset[i] >> 3] & 1 << (offset[i] & 7));
+
+         // https://stackoverflow.com/a/47990
+         distortedmask[i >> 3] ^= (-v ^ distortedmask[i >> 3]) & 1 << (i & 7);
+      }
+   }
    
    return distortedflat;
 }

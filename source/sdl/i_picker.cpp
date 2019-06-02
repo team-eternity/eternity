@@ -560,6 +560,9 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
    if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
       return -1;
 
+   // bring the window to the front
+   SDL_RaiseWindow(pickwindow);
+
    // open startup.wad (private to this module)
    if(!I_Pick_OpenWad())
    {

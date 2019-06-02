@@ -422,7 +422,7 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
    if(sec->groupid != ldata.fromid)
    {
       C_Printf(FC_ERROR "P_BuildLinkTable: sector %i does not belong to the "
-               "the portal's fromid\nLinked portals are disabled.\a\n", i);
+               "portal's fromid\nLinked portals are disabled.\a\n", i);
       return false;
    }
 
@@ -551,10 +551,11 @@ static void P_GlobalPortalStateCheck()
 static void P_buildPortalMap()
 {
    size_t pcount = P_PortalGroupCount();
-   gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL, nullptr);
+   gGroupVisit = ecalloctag(bool *, sizeof(bool), pcount, PU_LEVEL,
+                            reinterpret_cast<void**>(&gGroupVisit));
    // ioanch 20160227: prepare other groups too
    gGroupPolyobject = ecalloctag(decltype(gGroupPolyobject),
-      sizeof(*gGroupPolyobject), pcount, PU_LEVEL, nullptr);
+      sizeof(*gGroupPolyobject), pcount, PU_LEVEL, reinterpret_cast<void **>(&gGroupPolyobject));
 
    gMapHasSectorPortals = false; // init with false
    gMapHasLinePortals = false;
@@ -929,8 +930,6 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 
    // SoM: Boom's code for silent teleports. Fixes view bob jerk.
    // Adjust a player's view, in case there has been a height change
-   if(mo->player && mo->player == players + displayplayer)
-      P_ResetChasecam();
 
    //mo->backupPosition();
    P_AdjustFloorClip(mo);

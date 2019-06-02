@@ -1215,9 +1215,9 @@ frame S_PLS2BALLX1 { cmp "PLS2|C|T|6|*|@next"; dehackednum 1051 }
 frame S_PLS2BALLX2 { cmp "PLS2|D|T|6|*|@next"; dehackednum 1052 }
 frame S_PLS2BALLX3 { cmp "PLS2|E|T|6";         dehackednum 1053 }
 
-// Dummy frames -- there used to be beta emulation items here; now they are free for use.
-frame S_DUMMY1  { cmp = "TNT1|*|*|0"; dehackednum = 1054 }
-frame S_DUMMY2  { cmp = "TNT1|*|*|0"; dehackednum = 1055 }
+// Beta bonus items
+frame S_BON3 { +decorate; dehackednum 1054 }
+frame S_BON4 { +decorate; dehackednum 1055 }
 
 // Dummy Beta Lost Soul frames -- these ones are only for Dehacked compatibility.
 // The real EEBetaLostSoul uses its own separate states.
