@@ -168,7 +168,7 @@ namespace Aeon
                               WRAP_OBJ_FIRST(executeActionMobj), asCALL_GENERIC);
 
       //e->RegisterObjectMethod("Player", EXECSIG("executeAction"),
-       //                       WRAP_OBJ_FIRST(ExecuteActionPlayer), asCALL_GENERIC);
+       //                       WRAP_OBJ_FIRST(executeActionPlayer), asCALL_GENERIC);
 
       e->SetDefaultNamespace("");
    }

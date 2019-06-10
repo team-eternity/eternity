@@ -131,11 +131,24 @@ namespace Aeon
 
       { "Mobj @target",   asOFFSET(Mobj, target) },
       { "Mobj @tracer",   asOFFSET(Mobj, tracer) },
+
+      { "Player @player", asOFFSET(Mobj, player) },
    };
 
    #define DECLAREMOBJFLAGS(x) \
       e->RegisterEnum("mobjflags" #x "_e"); \
       e->RegisterObjectProperty("Mobj", "mobjflags" #x "_e flags" #x, asOFFSET(Mobj, flags ##x));
+
+   void ScriptObjMobj::PreInit()
+   {
+      asIScriptEngine *const e = ScriptManager::Engine();
+
+      e->SetDefaultNamespace("EE");
+
+      e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
+
+      e->SetDefaultNamespace("");
+   }
 
    void ScriptObjMobj::Init()
    {
@@ -143,8 +156,6 @@ namespace Aeon
       asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
-
-      e->RegisterObjectType("Mobj", sizeof(Mobj), asOBJ_REF);
 
       e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
                                  WRAP_FN(mobjFactory), asCALL_GENERIC);

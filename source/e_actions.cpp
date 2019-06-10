@@ -331,7 +331,7 @@ static void E_processAction(cfg_t *actionsec)
 
    // The various type infos of permitted first params (or second for EE::Psprite)
    static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj @");
-   //static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player @");
+   static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player @");
    //static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite @");
    //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs @");
 
@@ -377,8 +377,8 @@ static void E_processAction(cfg_t *actionsec)
    const unsigned int paramCount = func->GetParamCount();
    if(typeID == mobjTypeID)
       callType = ACT_MOBJ;
-   //else if(typeID == playerTypeID)
-   //{
+   else if(typeID == playerTypeID)
+   {
    //   if(func->GetParam(1, &typeID, nullptr, nullptr, &defaultArg) >= 0 &&
    //      typeID == psprTypeID)
    //   {
@@ -386,8 +386,8 @@ static void E_processAction(cfg_t *actionsec)
    //      nonArgParams = 2;
    //   }
    //   else
-   //      callType = ACT_PLAYER;
-   //}
+         callType = ACT_PLAYER;
+   }
    //else if(typeID == actArgsTypeID)
    //{
    //   // If you're using raw actionargs_t then you don't need any more parameters

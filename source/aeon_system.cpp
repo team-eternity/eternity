@@ -28,6 +28,7 @@
 #include "aeon_common.h"
 #include "aeon_math.h"
 #include "aeon_mobj.h"
+#include "aeon_player.h"
 #include "aeon_string.h"
 #include "aeon_system.h"
 #include "c_io.h"
@@ -95,6 +96,25 @@ namespace Aeon
       engine->SetDefaultNamespace("");
    }
 
+   void ScriptManager::RegisterScriptObjs()
+   {
+      ScriptObjMobj::PreInit();
+      ScriptObjPlayer::PreInit();
+
+      ScriptObjString::Init();
+
+      ScriptObjFixed::Init();
+      ScriptObjAngle::Init();
+      ScriptObjVector::Init();
+      ScriptObjMath::Init();
+
+      ScriptObjMobj::Init();
+      ScriptObjPlayer::Init();
+      ScriptObjAction::Init();
+
+      ScriptObjACS::Init();
+   }
+
    static Fixed MISSILERANGE_prop(MISSILERANGE);
 
    void ScriptManager::RegisterGlobalProperties()
@@ -130,24 +150,12 @@ namespace Aeon
       engine->SetEngineProperty(asEP_SCRIPT_SCANNER,         0); // ASCII
       engine->SetEngineProperty(asEP_USE_CHARACTER_LITERALS, 1); // allow 'c' to be a char
 
+      ::RegisterScriptArray(engine, true);
+
       RegisterPrimitivePrintFuncs();
       RegisterTypedefs();
       RegisterHandleOnlyClasses();
-      RegisterScriptArray(engine, true);
-
-      ScriptObjString::Init();
-
-      ScriptObjFixed::Init();
-      ScriptObjAngle::Init();
-      ScriptObjVector::Init();
-      ScriptObjMath::Init();
-
-      ScriptObjMobj::Init();
-      //ScriptObjPlayer::Init();
-      ScriptObjAction::Init();
-
-      ScriptObjACS::Init();
-
+      RegisterScriptObjs();
       RegisterGlobalProperties();
 
       if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
