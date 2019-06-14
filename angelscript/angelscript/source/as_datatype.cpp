@@ -322,6 +322,14 @@ int asCDataType::MakeReadOnly(bool b)
 	return 0;
 }
 
+int asCDataType::MakeHandleReadOnly(bool b)
+{
+	if( !isObjectHandle ) return -1;
+
+	isConstHandle = b;
+	return 0;
+}
+
 int asCDataType::MakeHandleToConst(bool b)
 {
 	if( !isObjectHandle ) return -1;

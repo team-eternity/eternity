@@ -444,7 +444,7 @@ asCScriptNode *asCParser::ParseTypeMod(bool isParam)
 	return node;
 }
 
-// BNF:4: TYPE          ::= ['const'] SCOPE DATATYPE ['<' TYPE {',' TYPE} '>'] { ('[' ']') | '@' }
+// BNF:4: TYPE          ::= ['const'] SCOPE DATATYPE ['<' TYPE {',' TYPE} '>'] { ('[' ']') | ('@' ['const']) }
 asCScriptNode *asCParser::ParseType(bool allowConst, bool allowVariableType, bool allowAuto)
 {
 	asCScriptNode *node = CreateNode(snDataType);
@@ -503,6 +503,14 @@ asCScriptNode *asCParser::ParseType(bool allowConst, bool allowVariableType, boo
 		{
 			node->AddChildLast(ParseToken(ttHandle));
 			if( isSyntaxError ) return node;
+
+			GetToken(&t);
+			RewindTo(&t);
+			if( t.type == ttConst )
+			{
+				node->AddChildLast(ParseToken(ttConst));
+				if( isSyntaxError ) return node;
+			}
 		}
 
 		GetToken(&t);

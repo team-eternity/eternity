@@ -5765,13 +5765,26 @@ asCDataType asCBuilder::CreateDataTypeFromNode(asCScriptNode *node, asCScriptCod
 					*isValid = false;
 				break;
 			}
-			else if( dt.MakeHandle(true, acceptHandleForScope) < 0 )
+			else
 			{
-				if( reportError )
-					WriteError(TXT_OBJECT_HANDLE_NOT_SUPPORTED, file, n);
-				if (isValid)
-					*isValid = false;
-				break;
+				if( dt.MakeHandle(true, acceptHandleForScope ) < 0)
+				{
+					if( reportError )
+						WriteError(TXT_OBJECT_HANDLE_NOT_SUPPORTED, file, n);
+					if( isValid )
+						*isValid = false;
+					break;
+
+				}
+
+				if( n && n->next && n->next->tokenType == ttConst && dt.MakeHandleReadOnly(true) < 0 )
+				{
+					if( reportError )
+						WriteError("I think this means type is an asOBJ_ASHANDLE but I have no idea how to deal with that here.", file, n);
+					if( isValid )
+						*isValid = false;
+					break;
+				}
 			}
 		}
 		n = n->next;
