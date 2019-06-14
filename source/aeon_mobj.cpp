@@ -118,21 +118,21 @@ namespace Aeon
 
    static const aeonpropreg_t mobjProps[] =
    {
-      { "fixed_t x",      asOFFSET(Mobj, x)      },
-      { "fixed_t y",      asOFFSET(Mobj, y)      },
-      { "fixed_t z",      asOFFSET(Mobj, z)      },
-      { "angle_t angle",  asOFFSET(Mobj, angle)  },
+      { "fixed_t x",            asOFFSET(Mobj, x)      },
+      { "fixed_t y",            asOFFSET(Mobj, y)      },
+      { "fixed_t z",            asOFFSET(Mobj, z)      },
+      { "angle_t angle",        asOFFSET(Mobj, angle)  },
 
-      { "fixed_t radius", asOFFSET(Mobj, radius) },
-      { "fixed_t height", asOFFSET(Mobj, height) },
-      { "vector_t mom",   asOFFSET(Mobj, mom)    },
+      { "fixed_t radius",       asOFFSET(Mobj, radius) },
+      { "fixed_t height",       asOFFSET(Mobj, height) },
+      { "vector_t mom",         asOFFSET(Mobj, mom)    },
 
-      { "int health",     asOFFSET(Mobj, health) },
+      { "int health",           asOFFSET(Mobj, health) },
 
-      { "Mobj @target",   asOFFSET(Mobj, target) },
-      { "Mobj @tracer",   asOFFSET(Mobj, tracer) },
+      { "Mobj @target",         asOFFSET(Mobj, target) },
+      { "Mobj @tracer",         asOFFSET(Mobj, tracer) },
 
-      { "Player @player", asOFFSET(Mobj, player) },
+      { "Player @const player", asOFFSET(Mobj, player) },
    };
 
    #define DECLAREMOBJFLAGS(x) \
