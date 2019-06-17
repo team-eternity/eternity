@@ -59,7 +59,7 @@ namespace Aeon
    }
 
    //
-   // Sanity checked getter for mo->counters[ctrnum]
+   // Sanity checked setter for mo->counters[ctrnum]
    // Doesn't set on failure
    //
    static void setMobjCounter(const unsigned int ctrnum, const int val, Mobj *mo)
