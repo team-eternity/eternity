@@ -78,7 +78,6 @@ public:
 	int MakeArray(asCScriptEngine *engine, asCModule *requestingModule);
 	int MakeReference(bool b);
 	int MakeReadOnly(bool b);
-	int MakeHandleReadOnly(bool b);
 	int MakeHandleToConst(bool b);
 	void SetIfHandleThenConst(bool b) { ifHandleThenConst = b; }
 	bool HasIfHandleThenConst() const { return ifHandleThenConst; }

@@ -1258,7 +1258,7 @@ bool asCParser::IsType(sToken &nextToken)
 		if (t1.type == ttScope)
 			GetToken(&t1);
 
-		// The type may be preceeded with a multilevel scope
+        // The type may be preceded with a multilevel scope
 		GetToken(&t2);
 		while (t1.type == ttIdentifier)
 		{
@@ -1312,7 +1312,15 @@ bool asCParser::IsType(sToken &nextToken)
 	GetToken(&t2);
 	while (t2.type == ttHandle || t2.type == ttAmp || t2.type == ttOpenBracket)
 	{
-		if (t2.type == ttOpenBracket)
+		if( t2.type == ttHandle )
+		{
+			// A handle can optionally be read-only
+			sToken t3;
+			GetToken(&t3);
+			if(t3.type != ttConst )
+				RewindTo(&t3);
+		}
+		else if (t2.type == ttOpenBracket)
 		{
 			GetToken(&t2);
 			if (t2.type != ttCloseBracket)
