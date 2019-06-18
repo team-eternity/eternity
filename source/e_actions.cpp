@@ -374,6 +374,8 @@ static void E_processAction(cfg_t *actionsec)
    else if(estrnonempty(defaultArg))
       E_EDFLoggedErr(2, "E_processAction: Default argument TODO: Rest of error '%s'\n", name);
 
+   typeID &= ~asTYPEID_HANDLETOCONST;
+
    const unsigned int paramCount = func->GetParamCount();
    if(typeID == mobjTypeID)
       callType = ACT_MOBJ;
@@ -426,13 +428,15 @@ static void E_processAction(cfg_t *actionsec)
       int idx;
 
       strTemp = func->GetVarDecl(i);
-      idx = strTemp.find("const");
 
-      // erase
-      if(idx != -1)
+      // Remove everything except for the type: no identifier,
+      // no const, just the type (and if it's a handle)
+      if((idx = strTemp.find("@const")) != -1)
+          strTemp.erase(idx + 1, 4 + 1);
+      if((idx = strTemp.find("const")) != -1)
          strTemp.erase(idx, strTemp.find(" ") + 1 - idx);
-
       strTemp.erase(strTemp.find(" "), strTemp.length() - strTemp.find(" "));
+
       argNameTypes.add(qstring(strTemp));
 
       func->GetParam(i, nullptr, nullptr, nullptr, &argTemp);
