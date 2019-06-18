@@ -26,11 +26,20 @@
 #include "aeon_player.h"
 #include "aeon_system.h"
 #include "d_player.h"
+#include "e_things.h"
 #include "e_weapons.h"
+#include "m_qstr.h"
 #include "p_mobj.h"
 
 namespace Aeon
 {
+    static Mobj *spawnPlayerMissile(Mobj *source, const qstring &name)
+    {
+        const mobjtype_t thingnum = E_GetThingNumForName(name.constPtr());
+
+        return P_SpawnPlayerMissile(source, thingnum);
+    }
+
    //
    // Sanity checked getter for plyr->weaponctrs->getIndexedCounterForPlayer(plyr, ctrnum)
    // Returns 0 on failure
@@ -56,10 +65,11 @@ namespace Aeon
 
    static const aeonfuncreg_t playerFuncs[] =
    {
+      { "Mobj @spawnMissile(const String &missileType) const",       WRAP_OBJ_FIRST(spawnPlayerMissile) },
 
       // Indexed property accessors (enables [] syntax for counters)
-      { "int get_weaponcounters(const uint ctrnum) const",           WRAP_OBJ_LAST(getWeaponCounter)  },
-      { "void set_weaponcounters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setWeaponCounter)  },
+      { "int get_weaponcounters(const uint ctrnum) const",           WRAP_OBJ_LAST(getWeaponCounter)    },
+      { "void set_weaponcounters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setWeaponCounter)    },
    };
 
    static const aeonpropreg_t playerProps[] =

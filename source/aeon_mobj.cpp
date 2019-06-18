@@ -102,14 +102,18 @@ namespace Aeon
       { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth)          },
 
       // Non-methods that are used like methods in Aeon
-      { "bool tryMove(fixed_t x, fixed_t y, int dropoff)",     WRAP_OBJ_FIRST(P_TryMove)      },
-      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(startSound)     },
-      { "fixed_t aimLineAttack(angle_t angle, fixed_t distance,"
-                              "alaflags_e flags = 0)",         WRAP_OBJ_FIRST(aimLineAttack)  },
-      { "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope,"
-                        "int damage, const String &pufftype)", WRAP_OBJ_FIRST(lineAttack)     },
       { "bool checkSight(Mobj @other)",                        WRAP_OBJ_FIRST(P_CheckSight)   },
       { "bool hitFriend()",                                    WRAP_OBJ_FIRST(P_HitFriend)    },
+      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(startSound)     },
+      { "bool tryMove(fixed_t x, fixed_t y, int dropoff = 0)", WRAP_OBJ_FIRST(P_TryMove)      },
+      {
+         "fixed_t aimLineAttack(angle_t angle, fixed_t distance, alaflags_e flags = 0)",
+         WRAP_OBJ_FIRST(aimLineAttack)
+      },
+      {
+         "void lineAttack(angle_t angle, fixed_t distance, fixed_t slope, int damage, const String &pufftype)",
+         WRAP_OBJ_FIRST(lineAttack)
+      },
 
       // Indexed property accessors (enables [] syntax for counters)
       { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(getMobjCounter)  },

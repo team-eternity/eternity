@@ -48,9 +48,8 @@ namespace Aeon
       DLListItem<actionrecord_t> links;
    };
 
-   static
-      EHashTable<actionrecord_t, ENCStringHashKey,
-                 &actionrecord_t::name, &actionrecord_t::links> e_InvalidActionHash;
+   static EHashTable<actionrecord_t, ENCStringHashKey,
+                     &actionrecord_t::name, &actionrecord_t::links> e_InvalidActionHash;
 
    static void executeActionMobj(Mobj *mo, const qstring &name, const CScriptArray *argv)
    {
