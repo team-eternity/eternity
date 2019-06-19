@@ -275,6 +275,13 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
 {
    auto       info  = &static_cast<ACSThread *>(thread)->info;
    Mobj      *orig  = P_FindMobjFromTID(argV[0], nullptr, info->mo);
+
+   if(!orig)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
    mobjtype_t type  = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    fixed_t    dist  = argV[2];
    uint32_t   limit = argC > 3 ? argV[3] : 1;
