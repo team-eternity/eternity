@@ -8,6 +8,11 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+20.06.2019
+
+BUGFIX: Fixed ACS function CheckProximity failing to work when counting players.
+
+--------------------------------------------------------------------------------
 31.03.2019
 
 BUGFIX: Fixed a serious crash happening when having 3D clipping on, going first

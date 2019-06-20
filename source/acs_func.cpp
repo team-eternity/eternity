@@ -296,7 +296,7 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
    for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
    {
       // Check type.
-      if(type && mo->type != type)
+      if(type >= 0 && mo->type != type)
          continue;
 
       // Check health.
