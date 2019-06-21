@@ -1471,6 +1471,9 @@ bool ACS_CF_PlayThingSound(ACS_CF_ARGS)
    int        snd  = argV[1];
    sfxinfo_t *sfx;
 
+   if(!mo)
+      return false;  // prevent crash
+
    switch(snd)
    {
    case SOUND_See:    sfx = E_SoundForDEHNum(mo->info->seesound);    break;
