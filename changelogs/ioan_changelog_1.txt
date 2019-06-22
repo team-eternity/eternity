@@ -10,6 +10,8 @@ Since v4.00.00 "Völuspá"
 --------------------------------------------------------------------------------
 22.06.2019
 
+FEATURE: Added CPXF_ANCESTOR to CheckProximity.
+
 IMPROVEMENT: You can now use level lump names with -warp at the command line.
 
 --------------------------------------------------------------------------------
