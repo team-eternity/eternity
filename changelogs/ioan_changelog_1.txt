@@ -8,6 +8,11 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+22.06.2019
+
+IMPROVEMENT: You can now use level lump names with -warp at the command line.
+
+--------------------------------------------------------------------------------
 20.06.2019
 
 BUGFIX: Fixed ACS function CheckProximity failing to work when counting players.
