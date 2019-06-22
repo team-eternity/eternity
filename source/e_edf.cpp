@@ -115,6 +115,7 @@
 #include "e_switch.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "e_umapinfo.h"
 #include "e_weapons.h"
 #include "mn_emenu.h"
 
@@ -262,6 +263,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PUFFTYPE,    edf_puff_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PUFFDELTA,   edf_puff_delta_opts, EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_UMAPINFO,    edf_umapinfo_opts, EDF_TSEC_FLAGS),
    CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
    CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
@@ -1714,6 +1716,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
+
+   // UMAPINFO
+   E_ProcessUmapinfo(cfg);
 
    // post-processing routines
    E_SetThingDefaultSprites();

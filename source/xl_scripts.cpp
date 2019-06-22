@@ -34,13 +34,13 @@
 #include "z_zone.h"
 
 #include "e_lib.h"
+#include "e_umapinfo.h"
 #include "w_wad.h"
 #include "xl_animdefs.h"
 #include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
 #include "xl_musinfo.h"
 #include "xl_scripts.h"
-#include "xl_umapinfo.h"
 
 //=============================================================================
 //
@@ -465,7 +465,7 @@ void XLParser::parseNew(WadDirectory &dir)
 static void XL_buildInterMapInfo()
 {
    // First, visit UMAPINFO
-   XL_BuildInterUMapInfo();
+   E_BuildInterUmapinfo();
    // Then, override with EMAPINFO
    XL_BuildInterEMapInfo();
 

@@ -1103,7 +1103,7 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
       int n = cfg_size(cfg, opt->name);
       if(n == 0)
          continue;
-      bool list = opt->flags & CFGF_LIST;
+      bool list = opt->flags & (CFGF_LIST | CFGF_MULTI);
       if(!list)
          n = 1;
 

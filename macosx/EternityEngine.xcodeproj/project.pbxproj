@@ -26,6 +26,7 @@
 		4F5076BD2068B6AE000226F6 /* p_portalblockmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BB2068B6AE000226F6 /* p_portalblockmap.cpp */; };
 		4F5076C020754959000226F6 /* a_weaponsheretic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BE20754958000226F6 /* a_weaponsheretic.cpp */; };
 		4F5076C120754959000226F6 /* a_weaponsdoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */; };
+		4F5E10FC22BE9E78005A605C /* e_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5E10FA22BE9E78005A605C /* e_umapinfo.cpp */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
 		4F5F387A182D98E10027813A /* a_decorate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB6158BF42800C49E93 /* a_decorate.cpp */; };
@@ -272,7 +273,6 @@
 		4F914A111F61163C00968197 /* BinaryIO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A101F61163C00968197 /* BinaryIO.cpp */; };
 		4F914A131F61164E00968197 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A121F61164E00968197 /* Error.cpp */; };
 		4F914A171F61166F00968197 /* Serial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A151F61166F00968197 /* Serial.cpp */; };
-		4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F917D771F29243500131BE5 /* xl_umapinfo.cpp */; };
 		4F920FF01F642143008F105C /* e_anim.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F920FEF1F642143008F105C /* e_anim.cpp */; };
 		4F93B8B6207BEE3F0040A0B8 /* e_puff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F93B8B4207BEE3F0040A0B8 /* e_puff.cpp */; };
 		4F93B8B9207E96800040A0B8 /* e_edfmetatable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F93B8B7207E96800040A0B8 /* e_edfmetatable.cpp */; };
@@ -387,6 +387,8 @@
 		4F50E3FE173770EC00878167 /* r_dynabsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynabsp.cpp; path = ../source/r_dynabsp.cpp; sourceTree = "<group>"; };
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
 		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
+		4F5E10FA22BE9E78005A605C /* e_umapinfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = e_umapinfo.cpp; path = ../source/e_umapinfo.cpp; sourceTree = "<group>"; };
+		4F5E10FB22BE9E78005A605C /* e_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_umapinfo.h; path = ../source/e_umapinfo.h; sourceTree = "<group>"; };
 		4F5F3864182D97860027813A /* mn_items.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mn_items.cpp; path = ../source/mn_items.cpp; sourceTree = "<group>"; };
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
 		4F5F386B182D97A10027813A /* eternity */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = eternity; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -408,8 +410,6 @@
 		4F914A141F61165B00968197 /* ID.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ID.hpp; path = ../acsvm/ACSVM/ID.hpp; sourceTree = "<group>"; };
 		4F914A151F61166F00968197 /* Serial.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Serial.cpp; path = ../acsvm/ACSVM/Serial.cpp; sourceTree = "<group>"; };
 		4F914A161F61166F00968197 /* Serial.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Serial.hpp; path = ../acsvm/ACSVM/Serial.hpp; sourceTree = "<group>"; };
-		4F917D771F29243500131BE5 /* xl_umapinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = xl_umapinfo.cpp; path = ../source/xl_umapinfo.cpp; sourceTree = "<group>"; };
-		4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_umapinfo.h; path = ../source/xl_umapinfo.h; sourceTree = "<group>"; };
 		4F920FEE1F641F7A008F105C /* e_anim.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_anim.h; path = ../source/e_anim.h; sourceTree = "<group>"; };
 		4F920FEF1F642143008F105C /* e_anim.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_anim.cpp; path = ../source/e_anim.cpp; sourceTree = "<group>"; };
 		4F93B8B4207BEE3F0040A0B8 /* e_puff.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = e_puff.cpp; path = ../source/e_puff.cpp; sourceTree = "<group>"; };
@@ -1449,6 +1449,8 @@
 				FA16D3F015E01E96002318D1 /* e_ttypes.h */,
 				4F3EC9C31C1C12D400AA43C2 /* e_udmf.cpp */,
 				4F3EC9C41C1C12D400AA43C2 /* e_udmf.h */,
+				4F5E10FA22BE9E78005A605C /* e_umapinfo.cpp */,
+				4F5E10FB22BE9E78005A605C /* e_umapinfo.h */,
 				4F0165DC178375EF00D04FAE /* e_weapons.cpp */,
 				4F0165DD178375EF00D04FAE /* e_weapons.h */,
 			);
@@ -1928,8 +1930,6 @@
 				FABF5D57158BF42800C49E93 /* xl_scripts.cpp */,
 				4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */,
 				4F36247918A567CD00B94FA1 /* xl_sndinfo.h */,
-				4F917D771F29243500131BE5 /* xl_umapinfo.cpp */,
-				4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */,
 			);
 			name = XL_;
 			sourceTree = "<group>";
@@ -2244,6 +2244,7 @@
 				4F5F38E0182D9AC00027813A /* m_cheat.cpp in Sources */,
 				4F5F38E1182D9AC00027813A /* m_fcvt.cpp in Sources */,
 				4F5F38E2182D9AC00027813A /* m_hash.cpp in Sources */,
+				4F5E10FC22BE9E78005A605C /* e_umapinfo.cpp in Sources */,
 				4F5F38E3182D9AC00027813A /* m_misc.cpp in Sources */,
 				4F5F38E4182D9AC00027813A /* m_qstr.cpp in Sources */,
 				4F5F38E5182D9AC00027813A /* m_queue.cpp in Sources */,
@@ -2307,7 +2308,6 @@
 				4F5F3911182D9AC00027813A /* p_scroll.cpp in Sources */,
 				4F5F3912182D9AC00027813A /* p_sector.cpp in Sources */,
 				4FC0A9341E1E2A50006CEC45 /* Script.cpp in Sources */,
-				4F917D781F29243500131BE5 /* xl_umapinfo.cpp in Sources */,
 				4F5F3913182D9AC00027813A /* p_setup.cpp in Sources */,
 				4F5F3914182D9AC00027813A /* p_sight.cpp in Sources */,
 				4F5F3915182D9AC00027813A /* p_skin.cpp in Sources */,

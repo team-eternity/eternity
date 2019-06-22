@@ -61,6 +61,7 @@
 #include "e_hash.h"
 #include "e_sound.h"
 #include "e_things.h"
+#include "e_umapinfo.h"
 #include "ev_specials.h"
 #include "f_finale.h"
 #include "g_game.h"
@@ -80,7 +81,6 @@
 #include "w_wad.h"
 #include "xl_emapinfo.h"
 #include "xl_mapinfo.h"
-#include "xl_umapinfo.h"
 
 extern char gamemapname[9];
 
@@ -1884,7 +1884,7 @@ static varparserfn_t infoVarParsers[IVT_END] =
 // Call the proper processing routine for every MetaString object in the 
 // MapInfo MetaTable.
 //
-static void P_processEMapInfo(MetaTable *info)
+static void P_processEMapInfo(const MetaTable *info)
 {
    for(size_t i = 0; i < earrlen(levelvars); i++)
    {
@@ -1903,8 +1903,48 @@ static void P_processEMapInfo(MetaTable *info)
 //
 // Process UMAPINFO obtained data.
 //
-static void P_processUMapInfo(MetaTable *info)
+static void P_processUMapInfo(const MetaTable *info)
 {
+   qstring valstr;
+   valstr = info->getString(keyUmapinfoLevelName, "");
+   if(!valstr.empty())
+   {
+      LevelInfo.levelName = valstr.duplicate(PU_LEVEL);
+      LevelInfo.interLevelName = valstr.duplicate(PU_LEVEL);
+   }
+
+   valstr = info->getString(keyUmapinfoLevelPic, "");
+   if(!valstr.empty())
+      LevelInfo.levelPic = valstr.duplicate(PU_LEVEL);
+
+   valstr = info->getString(keyUmapinfoNext, "");
+   if(!valstr.empty())
+      LevelInfo.nextLevel = valstr.duplicate(PU_LEVEL);
+
+   valstr = info->getString(keyUmapinfoNextSecret, "");
+   if(!valstr.empty())
+      LevelInfo.nextSecret = valstr.duplicate(PU_LEVEL);
+
+   valstr = info->getString(keyUmapinfoNextSecret, "");
+   if(!valstr.empty())
+      LevelInfo.skyName = valstr.duplicate(PU_LEVEL);
+
+   valstr = info->getString(keyUmapinfoMusic, "");
+   if(!valstr.empty())
+      LevelInfo.musicName = valstr.duplicate(PU_LEVEL);
+
+   valstr = info->getString(keyUmapinfoExitPic, "");
+   if(!valstr.empty())
+      LevelInfo.interPic = valstr.duplicate(PU_LEVEL);
+
+   // NOTE: enterpic not used here
+
+   int par = info->getInt(keyUmapinfoParTime, -1);
+   if(par != -1)
+      LevelInfo.partime = par;
+
+   // TODO: finale stuff
+
    MetaMultiString *mms = nullptr;
    while((mms = info->getNextTypeEx(mms)))
    {
@@ -1963,7 +2003,7 @@ static void P_processUMapInfo(MetaTable *info)
 //
 void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
 {
-   MetaTable *info = NULL;
+   const MetaTable *info = NULL;
    
    // set all the level defaults
    P_ClearLevelVars();
@@ -1992,7 +2032,7 @@ void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
    if(demo_version > 203)  // do NOT read any MapInfo in MBF or less
    {
       // FIXME: this may need finer compatibility check if it materializes
-      if((info = XL_UMapInfoForMapName(dir->getLumpName(lumpnum))))
+      if((info = E_UmapinfoForName(dir->getLumpName(lumpnum))))
       {
          P_processUMapInfo(info);
          // Don't give it higher priority over Hexen MAPINFO

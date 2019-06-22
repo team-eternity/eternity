@@ -345,7 +345,7 @@ bool XLEMapInfoParser::doStateSkipSection(XLTokenizer &tokenizer)
 //
 // Retrieve an EMAPINFO definition by map name.
 //
-MetaTable *XL_EMapInfoForMapName(const char *mapname)
+const MetaTable *XL_EMapInfoForMapName(const char *mapname)
 {
    return emapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname);
 }
@@ -443,7 +443,7 @@ CONSOLE_COMMAND(xl_dumpemapinfo, 0)
       return;
    }
 
-   MetaTable *mapInfo = NULL;
+   const MetaTable *mapInfo = NULL;
    if((mapInfo = XL_EMapInfoForMapName(Console.argv[0]->constPtr())))
    {
       const MetaObject *obj = NULL;
