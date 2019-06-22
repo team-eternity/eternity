@@ -360,7 +360,7 @@ powereffect RingOfInvincibility
 
 powereffect TomeOfPower
 {
-  duration 30
+  duration 40
   type     PowerWeaponLevel2
 
   -overridesself
