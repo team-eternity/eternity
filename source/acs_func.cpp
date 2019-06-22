@@ -251,7 +251,7 @@ bool ACS_CF_ChangeFloor(ACS_CF_ARGS)
 
 enum
 {
-   CPXF_ANCESTOR    = 0x00000001, // unimplemented
+   CPXF_ANCESTOR    = 0x00000001,
    CPXF_LESSOREQUAL = 0x00000002,
    CPXF_NOZ         = 0x00000004,
    CPXF_COUNTDEAD   = 0x00000008,
@@ -296,8 +296,22 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
    for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
    {
       // Check type.
-      if(type >= 0 && mo->type != type)
-         continue;
+
+      if(type >= 0)
+      {
+         if(flags & CPXF_ANCESTOR)
+         {
+            for(const mobjinfo_t *info = mo->info; info; info = info->parent)
+               if(info->index == type)
+                  goto typeok;
+            continue;
+         }
+         else if(mo->type != type)
+            continue;
+      }
+      else
+         continue;   // reject invalid things, don't accept them
+   typeok:
 
       // Check health.
       if(mo->health > 0)
