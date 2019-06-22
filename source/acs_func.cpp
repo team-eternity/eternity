@@ -1472,7 +1472,10 @@ bool ACS_CF_PlayThingSound(ACS_CF_ARGS)
    sfxinfo_t *sfx;
 
    if(!mo)
+   {
+      thread->dataStk.push(0);
       return false;  // prevent crash
+   }
 
    switch(snd)
    {
