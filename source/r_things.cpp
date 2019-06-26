@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,20 +15,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Refresh of things represented by sprites --
-//  i.e. map objects and particles.
+// Purpose: Refresh of things represented by sprites i.e. map objects and particles.
+//          Particle code largely from ZDoom, thanks to Marisa Heit.
+// Authors: Stephen McGranahan, James Haley, Ioan Chera, Max Waine
 //
-//  Particle code largely from zdoom, thanks to Randy Heit.
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
 
 #include "c_io.h"
+#include "c_runcmd.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "e_edf.h"
@@ -233,6 +230,9 @@ static poststack_t   *pstack       = NULL;
 static int            pstacksize   = 0;
 static int            pstackmax    = 0;
 static maskedrange_t *unusedmasked = NULL;
+
+// MaxW: 2018/07/01: Whether or not to draw psprites
+static bool r_drawplayersprites = true;
 
 VALLOCATION(pstack)
 {
@@ -674,7 +674,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
-   const byte *texend = tex->buffer + tex->width * tex->height + 1;
+   const byte *texend = tex->bufferdata + tex->width * tex->height + 1;
 
    while(tcol)
    {
@@ -688,22 +688,27 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
-         column.source = tex->buffer + tcol->ptroff;
+         byte *localstart = tex->bufferdata + tcol->ptroff;
+         column.source = localstart;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *last = tex->buffer + tcol->ptroff + tcol->len;
+         byte *last = localstart + tcol->len;
          byte orig;
-         if(last < texend && last > tex->buffer)
+         if(last < texend && last > tex->bufferdata)
          {
             orig = *last;
             *last = last[-1];
          }
 
+         byte origstart = localstart[-1];
+         localstart[-1] = *localstart;
+
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
-         if(last < texend && last > tex->buffer)
+         if(last < texend && last > tex->bufferdata)
             *last = orig;
+         localstart[-1] = origstart;
       }
 
       tcol = tcol->next;
@@ -820,7 +825,7 @@ struct spritepos_t
 };
 
 // ioanch 20160109: added offset arguments
-static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
+static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
 {
    if(view.lerp == FRACUNIT)
    {
@@ -830,9 +835,22 @@ static void R_interpolateThingPosition(const Mobj *thing, spritepos_t &pos)
    }
    else
    {
-      pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
-      pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
-      pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      const linkdata_t *ldata;
+      if((ldata = thing->prevpos.ldata))
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->deltax,
+                           thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata->deltay,
+                           thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata->deltaz,
+                           thing->z);
+      }
+      else
+      {
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x, thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y, thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z, thing->z);
+      }
    }
 }
 
@@ -908,9 +926,15 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(portalrender.w && portalrender.w->portal &&
       portalrender.w->portal->type != R_SKYBOX)
    {
+      v2fixed_t offsetpos = { thing->x, thing->y };
+      if(delta)
+      {
+         offsetpos.x += delta->x;
+         offsetpos.y += delta->y;
+      }
       const renderbarrier_t &barrier = portalrender.w->barrier;
       if(portalrender.w->line && portalrender.w->line != portalline &&
-         P_PointOnDivlineSide(spritepos.x, spritepos.y, &barrier.dln.dl) == 0)
+         P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
       {
          return;
       }
@@ -918,9 +942,9 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
       {
          dlnormal_t dl1, dl2;
          if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
-            (P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl1.dl) == 0 ||
+            (P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
                (dl2.dl.x != D_MAXINT && 
-                  P_PointOnDivlineSide(spritepos.x, spritepos.y, &dl2.dl) == 0)))
+                  P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
          {
             return;
          }
@@ -1193,7 +1217,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 //
 // Draws player gun sprites.
 //
-static void R_DrawPSprite(pspdef_t *psp)
+static void R_DrawPSprite(const pspdef_t *psp)
 {
    float         tx;
    float         x1, x2, w;
@@ -1279,6 +1303,9 @@ static void R_DrawPSprite(pspdef_t *psp)
    vis->texturemid = (BASEYCENTER<<FRACBITS) /* + FRACUNIT/2 */ -
                       (pspos.y - spritetopoffset[lump]);
 
+   if(scaledwindow.height == SCREENHEIGHT)
+      vis->texturemid -= viewplayer->readyweapon->fullscreenoffset;
+
    vis->x1           = x1 < 0.0f ? 0 : (int)x1;
    vis->x2           = x2 >= view.width ? viewwindow.width - 1 : (int)x2;
    vis->colour       = 0;      // sf: default colourmap
@@ -1348,7 +1375,7 @@ static void R_DrawPSprite(pspdef_t *psp)
 static void R_DrawPlayerSprites()
 {
    int i, lightnum;
-   pspdef_t *psp;
+   const pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
    
@@ -1379,10 +1406,13 @@ static void R_DrawPlayerSprites()
    mfloorclip   = pscreenheightarray;
    mceilingclip = zeroarray;
 
-   // add all active psprites
-   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
-      if(psp->state)
-         R_DrawPSprite(psp);
+   if(r_drawplayersprites)
+   {
+      // add all active psprites
+      for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+         if(psp->state)
+            R_DrawPSprite(psp);
+   }
 }
 
 #define bcopyp(d, s, n) memcpy(d, s, (n) * sizeof(void *))
@@ -1518,14 +1548,42 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
    // e6y: optimization
    if(drawsegs_xrange_count)
    {
+      
+
       drawsegs_xrange_t *dsx = drawsegs_xrange;
 
-      // drawsegs_xrange is sorted by ::x1
+      {
+         // ano (apr 2018) - we will binary search the
+         // presorted drawsegs_xrange
+         // in order to (hopefully) greatly reduce the
+         // # of segs we have to check
+         int lower = 0;
+         int upper = drawsegs_xrange_count;
+
+         while (upper - lower > 1)
+         {
+            int midpoint = (upper + lower) / 2;
+
+            if (drawsegs_xrange[midpoint].x2 < spr->x1)
+            {
+               lower = midpoint;
+            }
+            else
+            {
+               upper = midpoint;
+            }
+         } // while
+         dsx += lower;
+      } // end binary search
+
       // haleyjd: way faster to use a pointer here
       while((ds = dsx->user))
       {
          // determine if the drawseg obscures the sprite
-         if(dsx->x1 > spr->x2 || dsx->x2 < spr->x1)
+         // ano (apr 2018) -- previously this included a check for
+         // || dsx->x2 < spr->x1
+         // however due to the binary search we no longer need it
+         if(dsx->x1 > spr->x2)
          {
             ++dsx;
             continue;      // does not cover sprite
@@ -1566,7 +1624,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(clipbot[x] == CLIP_UNDEF)
+               if (clipbot[x] == CLIP_UNDEF || clipbot[x] > ds->sprbottomclip[x])
                   clipbot[x] = ds->sprbottomclip[x];
             }
          }
@@ -1576,7 +1634,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(cliptop[x] == CLIP_UNDEF)
+               if(cliptop[x] == CLIP_UNDEF || cliptop[x] < ds->sprtopclip[x])
                   cliptop[x] = ds->sprtopclip[x];
             }
          }
@@ -1752,6 +1810,19 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 }
 
 //
+// R_DrawsegsXRangeCompare
+//
+// qsort callback to compare drawsegs_xrange_t by x2
+//
+static int R_DrawsegsXRangeCompare(const void *arga, const void *argb)
+{
+   drawsegs_xrange_t *arg1 = (drawsegs_xrange_t*)arga;
+   drawsegs_xrange_t *arg2 = (drawsegs_xrange_t*)argb;
+
+   return arg1->x2 - arg2->x2;
+}
+
+//
 // R_DrawPostBSP
 //
 // Draws the items in the Post-BSP stack.
@@ -1803,12 +1874,18 @@ void R_DrawPostBSP()
                      drawsegs_xrange_count++;
                   }
                }
+               
+               // ano (apr-2018) -- sort our drawsegs by x2 in order to later
+               // do a binary search on the list for speed
+               qsort(drawsegs_xrange, drawsegs_xrange_count, sizeof(drawsegs_xrange_t), R_DrawsegsXRangeCompare);
+
                // haleyjd: terminate with a NULL user for faster loop - adds ~3 FPS
                drawsegs_xrange[drawsegs_xrange_count].user = NULL;
             }
 
             ptop    = masked->ceilingclip;
             pbottom = masked->floorclip;
+
 
             for(int i = lastsprite - firstsprite; --i >= 0; )
                R_DrawSpriteInDSRange(vissprite_ptrs[i], firstds, lastds);         // killough
@@ -2050,7 +2127,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    int loopprot = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->f_pflags & PS_PASSABLE &&
-         P_FloorPortalZ(*sector) > mobj->z + scaledbottom)
+         P_FloorPortalZ(*sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
    {
       // always accept first sector
       data = R_FPLink(sector);
@@ -2062,7 +2139,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->c_pflags & PS_PASSABLE &&
-         P_CeilingPortalZ(*sector) < mobj->z + scaledtop)
+         P_CeilingPortalZ(*sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
    {
       // always accept first sector
       data = R_CPLink(sector);
@@ -2074,10 +2151,20 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    mobjprojinfo_t mpi;
    fixed_t xspan = M_FloatToFixed(span.side * mobj->xscale);
    mpi.mobj = mobj;
-   mpi.bbox[BOXLEFT] = mobj->x - xspan;
-   mpi.bbox[BOXRIGHT] = mobj->x + xspan;
-   mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
-   mpi.bbox[BOXTOP] = mobj->y + xspan;
+   if(mobj->prevpos.ldata)
+   {
+      mpi.bbox[BOXLEFT] = mobj->x - xspan;
+      mpi.bbox[BOXRIGHT] = mobj->x + xspan;
+      mpi.bbox[BOXBOTTOM] = mobj->y - xspan;
+      mpi.bbox[BOXTOP] = mobj->y + xspan;
+   }
+   else
+   {
+      mpi.bbox[BOXLEFT] = emin(mobj->x, mobj->prevpos.x) - xspan;
+      mpi.bbox[BOXRIGHT] = emax(mobj->x, mobj->prevpos.x) + xspan;
+      mpi.bbox[BOXBOTTOM] = emin(mobj->y, mobj->prevpos.y) - xspan;
+      mpi.bbox[BOXTOP] = emax(mobj->y, mobj->prevpos.y) + xspan;
+   }
    mpi.scaledbottom = scaledbottom;
    mpi.scaledtop = scaledtop;
    mpi.item = &item;
@@ -2105,37 +2192,12 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 // haleyjd 09/30/01
 //
 // Particle Rendering
-// This incorporates itself mostly seamlessly within the vissprite system, 
+// This incorporates itself mostly seamlessly within the vissprite system,
 // incurring only minor changes to the functions above.
 //
-// For code adapted from ZDoom:
+// Code adapted from ZDoom is licenced under the GPLv3.
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright 1998-2012 (C) Marisa Heit
 //
 
 //
@@ -2446,6 +2508,14 @@ static void R_DrawParticle(vissprite_t *vis)
       } // end else [!general_translucency]
    } // end local block
 }
+
+//============================================================================
+//
+// Console Commands
+//
+
+VARIABLE_TOGGLE(r_drawplayersprites, NULL, onoff);
+CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------
 //

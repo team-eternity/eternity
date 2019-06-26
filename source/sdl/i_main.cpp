@@ -43,6 +43,9 @@
 #define main common_main
 #endif
 
+// MaxW: Necessary for a specific check that seems to help with audio issues
+#include "../Win32/i_winversion.h"
+
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
 // SoM 3/11/2002: Disable the parachute for debugging.
@@ -63,9 +66,13 @@ int main(int argc, char **argv)
    myargc = argc;
    myargv = argv;
 
-   // SDL_FIXME: If this is removed then all sound effects are pitched too high. Why?
+   // SDL_FIXME: WASAPI can't currently be enabled, nor can any audio drivers
+   //            that doesn't support MIX_DEFAULT_FORMAT.
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
-   SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+   if(I_IsWindows10OrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+   else
+      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
    // MaxW: 2017/09/16: Now prints the error on failure

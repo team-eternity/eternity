@@ -34,6 +34,7 @@ struct line_t;
 class  Mobj;
 struct mobjinfo_t;
 struct polyobj_s; // ioanch 20160114
+struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
 #define MAPBLOCKUNITS   128
@@ -98,13 +99,19 @@ struct intercept_t
 typedef bool (*traverser_t)(intercept_t *in, void *context);
 
 fixed_t P_AproxDistance(fixed_t dx, fixed_t dy);
-int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
+
+int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line);
+int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line);
+extern int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line);
+
 int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);
 // ioanch 20160123: for linedef portal clipping.
 v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld);
+int P_LineIsCrossed(const line_t &line, const divline_t &dl);
+bool P_IsInVoid(fixed_t x, fixed_t y, const subsector_t &ss);
 bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4]);
 int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl);
 

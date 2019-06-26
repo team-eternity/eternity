@@ -63,7 +63,7 @@ fixed_t P_AproxDistance(fixed_t dx, fixed_t dy)
 // killough 5/3/98: reformatted, cleaned up
 // ioanch 20151228: made line const
 //
-int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
+int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line)
 {
    return
       !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
@@ -71,6 +71,13 @@ int P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line)
       FixedMul(y-line->v1->y, line->dx>>FRACBITS) >=
       FixedMul(line->dy>>FRACBITS, x-line->v1->x);
 }
+int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line)
+{
+   return !line->dx ? x <= line->v1->x ? line->dy > 0 : line->dy < 0 :
+   !line->dy ? y <= line->v1->y ? line->dx < 0 : line->dx > 0 :
+   ((int64_t)y - line->v1->y) * line->dx >= line->dy * ((int64_t)x - line->v1->x);
+}
+int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line) = P_PointOnLineSideClassic;
 
 //
 // P_BoxOnLineSide
@@ -177,6 +184,35 @@ v2fixed_t P_BoxLinePoint(const fixed_t bbox[4], const line_t *ld)
       break;
    }
    return ret;
+}
+
+//
+// Utility function which returns true if the divline dl crosses line
+// Returns -1 if there's no crossing, or the starting point's 0 or 1 side.
+//
+int P_LineIsCrossed(const line_t &line, const divline_t &dl)
+{
+   int a;
+   return (a = P_PointOnLineSide(dl.x, dl.y, &line)) !=
+   P_PointOnLineSide(dl.x + dl.dx, dl.y + dl.dy, &line) &&
+   P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl) !=
+   P_PointOnDivlineSide(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
+}
+
+//
+// Checks if a point is behind a subsector's 1-sided seg
+//
+bool P_IsInVoid(fixed_t x, fixed_t y, const subsector_t &ss)
+{
+   for(int i = 0; i < ss.numlines; ++i)
+   {
+      const seg_t &seg = segs[ss.firstline + i];
+      if(seg.backsector)
+         continue;
+      if(P_PointOnLineSide(x, y, seg.linedef))
+         return true;
+   }
+   return false;
 }
 
 //

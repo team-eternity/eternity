@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright (C) 2013 James Haley et al.
@@ -21,7 +21,7 @@
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    Custom damage types, or "Means of Death" flags.
 //
 //-----------------------------------------------------------------------------
@@ -46,8 +46,8 @@ struct emod_t
 
    char *obituary;
    char *selfobituary;
-   bool obitIsBexString;
-   bool selfObitIsBexString;
+   bool obitIsIndirect;
+   bool selfObitIsIndirect;
    bool sourceless;
 
    fixed_t absolutePush;   // if set, push things by this amount

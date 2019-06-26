@@ -39,7 +39,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
 struct drawseg_t
 {
-   seg_t *curline;
+   const seg_t *curline;
    int x1, x2;
    float dist1, dist2, diststep;
    fixed_t bsilheight;                   // do not clip sprites above this

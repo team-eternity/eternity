@@ -30,88 +30,97 @@
 #include "i_system.h"
 
 #include "c_runcmd.h"
-#include "d_deh.h"
-#include "d_event.h"
-#include "d_gi.h"
-#include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_inventory.h"
-#include "e_weapons.h"
 #include "g_game.h"
-#include "hu_frags.h"
+#include "hu_boom.h"
+#include "hu_modern.h"
 #include "hu_over.h"
-#include "hu_stuff.h"
-#include "m_qstr.h"
-#include "p_info.h"
-#include "p_map.h"
 #include "p_setup.h"
 #include "r_draw.h"
-#include "s_sound.h"
 #include "st_stuff.h"
 #include "v_font.h"
 #include "v_misc.h"
-#include "v_video.h"
-#include "w_wad.h"
 
 //=============================================================================
 //
-// Statics
+// HUD Overlay Object Pointer
 //
 
-// Overlay drawer callback prototype
-typedef void (*OverlayDrawer)(int, int);
+HUDOverlay *hu_overlay = nullptr;
 
-// overlay structure
-struct overlay_t
+//=============================================================================
+//
+// HUD Overlay Table
+//
+
+// Config variable to select HUD overlay
+int hud_overlayid = -1;
+
+struct hudoverlayitem_t
 {
-   int x, y;
-   OverlayDrawer drawer;
+   int id;              // unique ID #
+   const char *name;    // descriptive name of this HUD
+   HUDOverlay *overlay; // overlay object
 };
 
-// overlay enumeration
-enum
+// Driver table
+static hudoverlayitem_t hudOverlayItemTable[HUO_MAXOVERLAYS] =
 {
-   ol_status,
-   ol_health,
-   ol_armor,
-   ol_weap,
-   ol_ammo,
-   ol_key,
-   ol_frag,
-   NUMOVERLAY
+   // Modern HUD Overlay
+   {
+      HUO_MODERN,
+      "Modern Overlay",
+      &modern_overlay
+   },
+
+   // BOOM HUD Overlay
+   {
+      HUO_BOOM,
+      "BOOM Overlay",
+      &boom_overlay
+   }
 };
 
-static void HU_drawStatus (int x, int y);
-static void HU_drawHealth (int x, int y);
-static void HU_drawArmor  (int x, int y);
-static void HU_drawWeapons(int x, int y);
-static void HU_drawAmmo   (int x, int y);
-static void HU_drawKeys   (int x, int y);
-static void HU_drawFrags  (int x, int y);
-
-// all overlay modules
-static overlay_t overlay[NUMOVERLAY] =
+//
+// Find the currently selected video driver by ID
+//
+static hudoverlayitem_t *I_findHUDOverlayByID(int id)
 {
-   { 0, 0, HU_drawStatus  }, // ol_status
-   { 0, 0, HU_drawHealth  }, // ol_health
-   { 0, 0, HU_drawArmor   }, // ol_armor
-   { 0, 0, HU_drawWeapons }, // ol_weap
-   { 0, 0, HU_drawAmmo    }, // ol_ammo
-   { 0, 0, HU_drawKeys    }, // ol_key
-   { 0, 0, HU_drawFrags   }, // ol_frag
-};
+   for(unsigned int i = 0; i < HUO_MAXOVERLAYS; i++)
+   {
+      if(hudOverlayItemTable[i].id == id && hudOverlayItemTable[i].overlay)
+         return &hudOverlayItemTable[i];
+   }
 
-// HUD styles
-enum
+   return nullptr;
+}
+
+//
+// Chooses the default video driver based on user specifications, or on preset
+// platform-specific defaults when there is no user specification.
+//
+static hudoverlayitem_t *I_defaultHUDOverlay()
 {
-   HUD_OFF,
-   HUD_BOOM,
-   HUD_FLAT,
-   HUD_DISTRIB,
-   HUD_GRAPHICAL,
-   HUD_NUMHUDS
-};
+   hudoverlayitem_t *item;
+
+   if(!(item = I_findHUDOverlayByID(hud_overlayid)))
+   {
+      // Default or plain invalid setting.
+      // Find the lowest-numbered valid driver and use it.
+      for(unsigned int i = 0; i < HUO_MAXOVERLAYS; i++)
+      {
+         if(hudOverlayItemTable[i].overlay)
+         {
+            item = &hudOverlayItemTable[i];
+            break;
+         }
+      }
+   }
+
+   return item;
+}
 
 //=============================================================================
 //
@@ -122,13 +131,13 @@ enum
 #define hu_player (players[displayplayer])
 
 // Get the player's ammo for the given weapon, or 0 if am_noammo
-static int wc_pammo(weaponinfo_t *w)
+int HU_WC_PlayerAmmo(const weaponinfo_t *w)
 {
    return E_GetItemOwnedAmount(&hu_player, w->ammo);
 }
 
 // Determine if the player has enough ammo for one shot with the given weapon
-static bool wc_noammo(weaponinfo_t *w)
+bool HU_WC_NoAmmo(const weaponinfo_t *w)
 {
    bool outofammo = false;
    itemeffect_t *ammo = w->ammo;
@@ -145,7 +154,7 @@ static bool wc_noammo(weaponinfo_t *w)
 }
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
-static int wc_mammo(weaponinfo_t *w)
+int HU_WC_MaxAmmo(const weaponinfo_t *w)
 {
    int amount = 0;
    itemeffect_t *ammo = w->ammo;
@@ -157,42 +166,52 @@ static int wc_mammo(weaponinfo_t *w)
 }
 
 // Determine the color to use for the given weapon's number and ammo bar/count
-static char weapcolor(weaponinfo_t *w)
+char HU_WeapColor(const weaponinfo_t *w)
 {
-   int  maxammo = wc_mammo(w);
-   bool noammo  = wc_noammo(w);
-   int  pammo   = wc_pammo(w);
+   int  maxammo = HU_WC_MaxAmmo(w);
+   bool noammo  = HU_WC_NoAmmo(w);
+   int  pammo   = HU_WC_PlayerAmmo(w);
 
    return
-      (!maxammo ? *FC_GRAY :
-       noammo   ? *FC_CUSTOM1 :
-       pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED  :
-       pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD :
-       *FC_GREEN);
+      (!maxammo                                ? *FC_GRAY    :
+       noammo                                  ? *FC_CUSTOM1 :
+       pammo == maxammo                        ? *FC_BLUE    :
+       pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED     :
+       pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD    :
+                                                 *FC_GREEN);
 }
 
-// Get the amount of ammo the displayplayer has left in his/her readyweapon
-#define playerammo    wc_pammo(hu_player.readyweapon)
-
-// Get the maximum amount the player could have for his/her readyweapon
-#define playermaxammo wc_mammo(hu_player.readyweapon)
-
-//
-// setol
-//
-// Set up an overlay_t
-//
-static inline void setol(int o, int x, int y)
+// Determine the color to use for a given player's health
+char HU_HealthColor()
 {
-   overlay[o].x = x;
-   overlay[o].y = y;
+   return hu_player.health  < health_red    ? *FC_RED   :
+          hu_player.health  < health_yellow ? *FC_GOLD  :
+          hu_player.health <= health_green  ? *FC_GREEN :
+                                              *FC_BLUE;
 }
 
-// Color of neutral informational components
-#define HUDCOLOR FC_GRAY
+// Determine the color to use for a given player's armor
+char HU_ArmorColor()
+{
+   if(hu_player.armorpoints < armor_red)
+      return *FC_RED;
+   else if(hu_player.armorpoints < armor_yellow)
+      return *FC_GOLD;
+   else if(armor_byclass)
+   {
+      fixed_t armorclass = 0;
+      if(hu_player.armordivisor)
+         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
+      return (armorclass > FRACUNIT / 3 ? *FC_BLUE : *FC_GREEN);
+   }
+   else if(hu_player.armorpoints <= armor_green)
+      return *FC_GREEN;
+   else
+      return *FC_BLUE;
+}
 
 // Globals
-int hud_overlaystyle = 1;
+int hud_overlaylayout = 1;
 int hud_enabled      = 1;
 int hud_hidestatus   = 0;
 
@@ -207,33 +226,33 @@ int hud_hidestatus   = 0;
 
 // haleyjd 02/25/09: hud font set by EDF:
 char    *hud_overfontname;
+char    *hud_fssmallname;
+char    *hud_fsmediumname;
+char    *hud_fslargename;
 vfont_t *hud_overfont;
-static bool hu_fontloaded = false;
+vfont_t *hud_fssmall;
+vfont_t *hud_fsmedium;
+vfont_t *hud_fslarge;
+bool     hud_fontsloaded = false;
 
 //
-// HU_LoadFont
+// HU_LoadFonts
 //
 // Loads the heads-up font. The naming scheme for the lumps is
 // not very consistent, so this is relatively complicated.
 //
-void HU_LoadFont()
+void HU_LoadFonts()
 {
    if(!(hud_overfont = E_FontForName(hud_overfontname)))
-      I_Error("HU_LoadFont: bad EDF hu_font name %s\n", hud_overfontname);
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_overfontname);
+   if(!(hud_fssmall = E_FontForName(hud_fssmallname)))
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fssmallname);
+   if(!(hud_fsmedium = E_FontForName(hud_fsmediumname)))
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fsmediumname);
+   if(!(hud_fslarge = E_FontForName(hud_fslargename)))
+      I_Error("HU_LoadFonts: bad EDF hu_font name %s\n", hud_fslargename);
 
-   hu_fontloaded = true;
-}
-
-//
-// HU_WriteText
-//
-// sf: write a text line to x, y
-// haleyjd 01/14/05: now uses vfont engine
-//
-static void HU_WriteText(const char *s, int x, int y)
-{
-   if(hu_fontloaded)
-      V_FontWriteText(hud_overfont, s, x, y, &subscreen43);
+   hud_fontsloaded = true;
 }
 
 //
@@ -258,325 +277,19 @@ int HU_StringHeight(const char *s)
    return V_FontStringHeight(hud_overfont, s);
 }
 
-#define BARSIZE 15
-
-//
-// HU_textBar
-//
-// Create a string containing the text 'bar' which graphically show percentage
-// of ammo/health/armor/etc. left.
-//
-static void HU_textBar(qstring &s, int pct)
-{
-   if(pct > 100)
-      pct = 100;
-  
-   // build the string, decide how many blocks
-   while(pct)
-   {
-      int addchar = 0;
-      
-      if(pct >= BARSIZE)
-      {
-         addchar = 123;  // full pct: 4 blocks
-         pct -= BARSIZE;
-      }
-      else
-      {
-         addchar = 127 - (pct * 5) / BARSIZE;
-         pct = 0;
-      }
-      s << static_cast<char>(addchar);
-   }
-}
-
-//=============================================================================
-//
-// Drawer
-//
-// The actual drawer is the heart of the overlay code. It is split into 
-// individual functions, each of which draws a different part.
-//
-
-// The offset of percentage bars from the starting text
-#define GAP 40
-
-//
-// HU_drawHealth
-//
-static void HU_drawHealth(int x, int y)
-{
-   qstring tempstr;
-   int fontcolor;
-   
-   HU_WriteText(HUDCOLOR "Health", x, y);
-   x += GAP; // leave a gap between name and bar
-   
-   // decide on the colour first
-   fontcolor =
-      hu_player.health < health_red    ? *FC_RED   :
-      hu_player.health < health_yellow ? *FC_GOLD  :
-      hu_player.health <= health_green ? *FC_GREEN :
-      *FC_BLUE;
-  
-   //psnprintf(tempstr, sizeof(tempstr), "%c", fontcolor);
-   tempstr << static_cast<char>(fontcolor);
-
-   // now make the actual bar
-   HU_textBar(tempstr, hu_player.health);
-   
-   // append the percentage itself
-   tempstr << " " << hu_player.health;
-   
-   // write it
-   HU_WriteText(tempstr.constPtr(), x, y);
-}
-
-
-//
-// HU_drawArmor
-//
-// Very similar to drawhealth.
-//
-static void HU_drawArmor(int x, int y)
-{
-   qstring tempstr;
-   int fontcolor;
-
-   // title first
-   HU_WriteText(HUDCOLOR "Armor", x, y);
-   x += GAP; // leave a gap between name and bar
-
-   // decide on colour
-   if(hu_player.armorpoints < armor_red)
-      fontcolor = *FC_RED;
-   else if(hu_player.armorpoints < armor_yellow)
-      fontcolor = *FC_GOLD;
-   else if(armor_byclass)
-   {
-      fixed_t armorclass = 0;
-      if(hu_player.armordivisor)
-         armorclass = (hu_player.armorfactor * FRACUNIT) / hu_player.armordivisor;
-      fontcolor = (armorclass > FRACUNIT/3 ? *FC_BLUE : *FC_GREEN);
-   }
-   else if(hu_player.armorpoints <= armor_green)
-      fontcolor = *FC_GREEN;
-   else
-      fontcolor = *FC_BLUE;
-
-   tempstr << static_cast<char>(fontcolor);
-
-   // make the bar
-   HU_textBar(tempstr, hu_player.armorpoints);
-
-   // append the percentage itself
-   tempstr << ' ' << hu_player.armorpoints;
-
-   HU_WriteText(tempstr.constPtr(), x, y);
-}
-
-//
-// HU_drawAmmo
-//
-// Drawing Ammo
-//
-static void HU_drawAmmo(int x, int y)
-{
-   qstring tempstr;
-   int fontcolor;
-   int lmaxammo;
-   
-   HU_WriteText(HUDCOLOR "Ammo", x, y);
-   x += GAP;
-   
-   fontcolor = weapcolor(hu_player.readyweapon);
-   
-   tempstr << static_cast<char>(fontcolor);
-   
-   lmaxammo = playermaxammo;
-
-   if(lmaxammo)
-   {
-      HU_textBar(tempstr, (100 * playerammo) / lmaxammo);
-      tempstr << ' ' << playerammo << '/' << playermaxammo;
-   }
-   else // fist or chainsaw
-      tempstr << "N/A";
-   
-   HU_WriteText(tempstr.constPtr(), x, y);
-}
-
-//
-// HU_drawWeapons
-// 
-// Weapons List
-//
-static void HU_drawWeapons(int x, int y)
-{
-   qstring tempstr;
-   int fontcolor;
-   
-   HU_WriteText(HUDCOLOR "Weapons", x, y);  // draw then leave a gap
-   x += GAP;
-  
-   for(int i = 0; i < NUMWEAPONS; i++)
-   {
-      if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
-      {
-         // got it
-         fontcolor = weapcolor(E_WeaponForDEHNum(i));
-         tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
-      }
-   }
-   
-   HU_WriteText(tempstr.constPtr(), x, y);  // draw it
-}
-
-extern patch_t *keys[NUMCARDS+3];
-
-//
-// HU_drawKeys
-//
-// Draw the keys
-//
-static void HU_drawKeys(int x, int y)
-{
-   HU_WriteText(HUDCOLOR "Keys", x, y);    // draw then leave a gap
-   x += GAP;
-   
-   // haleyjd 10/09/05: don't show double keys in Heretic
-   for(int i = 0; i < GameModeInfo->numHUDKeys; i++)
-   {
-      if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
-      {
-         // got that key
-         V_DrawPatch(x, y, &subscreen43, keys[i]);
-         x += 11;
-      }
-   }
-}
-
-//
-// HU_drawFrags
-//
-// Draw the Frags
-//
-static void HU_drawFrags(int x, int y)
-{
-   qstring tempstr;
-
-   HU_WriteText(HUDCOLOR "Frags", x, y); // draw then leave a gap
-   x += GAP;
-
-   tempstr << HUDCOLOR << hu_player.totalfrags;
-   HU_WriteText(tempstr.constPtr(), x, y);
-}
-
-//
-// HU_drawStatus
-//
-// Draw the status (number of kills etc)
-//
-static void HU_drawStatus(int x, int y)
-{
-   qstring tempstr;
-   
-   HU_WriteText(HUDCOLOR "Status", x, y); // draw, leave a gap
-   x += GAP;
-  
-   // haleyjd 06/14/06: restored original colors to K/I/S
-   tempstr 
-      << FC_RED  "K " FC_GREEN << hu_player.killcount   << '/' << totalkills << ' ' 
-      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << '/' << totalitems << ' ' 
-      << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
-  
-   HU_WriteText(tempstr.constPtr(), x, y);
-}
-
 //
 // HU_overlaySetup
 //
-static void HU_overlaySetup()
+static inline void HU_overlaySetup()
 {
-   int i, x, y;
-
-   // decide where to put all the widgets
-   
-   for(i = 0; i < NUMOVERLAY; i++)
-      overlay[i].x = 1;       // turn em all on
-
-   // turn off status if we aren't using it
-   if(hud_hidestatus)
-      overlay[ol_status].x = -1;
-
-   // turn off frag counter or key display,
-   // according to if we're in a deathmatch game or not
-   if(GameType == gt_dm)
-      overlay[ol_key].x = -1;
-   else
-      overlay[ol_frag].x = -1;
-
-   // now build according to style
-   
-   switch(hud_overlaystyle)
-   {      
-   case HUD_OFF:       // 'off'
-   case HUD_GRAPHICAL: // 'graphical' -- haleyjd 01/11/05: this is handled by status bar
-      for(i = 0; i < NUMOVERLAY; i++)         
-         setol(i, -1, -1); // turn it off
-      break;
-      
-   case HUD_BOOM: // 'bottom left' / 'BOOM' style
-      y = SCREENHEIGHT - 8;
-
-      for(i = NUMOVERLAY - 1; i >= 0; --i)
-      {
-         if(overlay[i].x != -1)
-         {
-            setol(i, 0, y);
-            y -= 8;
-         }
-      }
-      break;
-      
-   case HUD_FLAT: // all at bottom of screen
-      x = 160; 
-      y = SCREENHEIGHT - 8;
-
-      // haleyjd 06/14/06: rewrote to restore a sensible ordering
-      for(i = NUMOVERLAY - 1; i >= 0; --i)
-      {
-         if(overlay[i].x != -1)
-         {
-            setol(i, x, y);
-            y -= 8;
-         }
-         if(i == ol_weap)
-         {
-            x = 0;
-            y = SCREENHEIGHT - 8;
-         }
-      }
-      break;
-
-   case HUD_DISTRIB: // similar to boom 'distributed' style
-      setol(ol_health, SCREENWIDTH-138,   0);
-      setol(ol_armor,  SCREENWIDTH-138,   8);
-      setol(ol_weap,   SCREENWIDTH-138, 184);
-      setol(ol_ammo,   SCREENWIDTH-138, 192);
-      
-      if(GameType == gt_dm)  // if dm, put frags in place of keys
-         setol(ol_frag, 0, 192);
-      else
-         setol(ol_key, 0, 192);
-
-      if(!hud_hidestatus)
-         setol(ol_status, 0, 184);
-      break;
-
-   default:
-      break;
+   if(!hu_overlay)
+   {
+      hudoverlayitem_t *item = I_defaultHUDOverlay();
+      hud_overlayid = item->id;
+      hu_overlay = item->overlay;
    }
+
+   hu_overlay->Setup();
 }
 
 //=============================================================================
@@ -618,17 +331,31 @@ void HU_DisableHUD()
 void HU_OverlayDraw()
 {
    // SoM 2-4-04: ANYRES
-   if(viewwindow.height != video.height || automapactive || !hud_enabled) 
+   if(viewwindow.height != video.height || automapactive || !hud_enabled)
       return;  // fullscreen only
-  
+
    HU_overlaySetup();
-   
-   for(int i = 0; i < NUMOVERLAY; i++)
-   {
-      if(overlay[i].x != -1)
-         overlay[i].drawer(overlay[i].x, overlay[i].y);
-   }
+
+   for(unsigned int i = 0; i < NUMOVERLAY; i++)
+      hu_overlay->DrawOverlay(static_cast<overlay_e>(i));
 }
+
+static const char *hud_overlaynames[] =
+{
+   "default",
+   "Modern HUD",
+   "Boom HUD",
+};
+
+VARIABLE_INT(hud_overlayid, NULL, -1, HUO_MAXOVERLAYS - 1, hud_overlaynames);
+CONSOLE_VARIABLE(hu_overlayid, hud_overlayid, 0)
+{
+   hudoverlayitem_t *item = I_defaultHUDOverlay();
+   if(hud_overlayid < -1 || hud_overlayid > HUO_MAXOVERLAYS - 1)
+      hud_overlayid = item->id;
+   hu_overlay = item->overlay;
+}
+
 
 // HUD type names
 const char *str_style[HUD_NUMHUDS] =
@@ -640,8 +367,8 @@ const char *str_style[HUD_NUMHUDS] =
    "graphical",   // haleyjd 01/11/05
 };
 
-VARIABLE_INT(hud_overlaystyle, NULL, HUD_OFF, HUD_GRAPHICAL, str_style);
-CONSOLE_VARIABLE(hu_overlay, hud_overlaystyle, 0) {}
+VARIABLE_INT(hud_overlaylayout, NULL, HUD_OFF, HUD_GRAPHICAL, str_style);
+CONSOLE_VARIABLE(hu_overlaystyle, hud_overlaylayout, 0) {}
 
 VARIABLE_BOOLEAN(hud_hidestatus, NULL, yesno);
 CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}

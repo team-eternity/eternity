@@ -43,6 +43,7 @@
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
+#include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
 #include "v_alloc.h"
@@ -470,7 +471,7 @@ static portal_t *R_CreatePortal()
       last = ret;
    }
    
-   ret->poverlay  = R_NewPlaneHash(32);
+   ret->poverlay  = R_NewPlaneHash(31);
    ret->globaltex = 1;
 
    return ret;
@@ -1144,8 +1145,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
-      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
-         portal->data.anchor.maker, portal->tainted);
+      doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.anchor.maker,
+                    portal->tainted);
       return;
    } 
 
@@ -1252,8 +1253,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       R_ShowTainted(window);         
 
       portal->tainted++;
-      C_Printf(FC_ERROR "Refused to draw portal (line=%i) (t=%d)\n",
-         portal->data.anchor.maker, portal->tainted);
+      doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.link.maker,
+                    portal->tainted);
       return;
    } 
 
@@ -1736,12 +1737,13 @@ void R_SpawnQuickLinePortal(line_t &line)
 {
    if(!line.tag)
    {
-      C_Printf(FC_ERROR "Line_QuickPortal can't use tag 0\a\n");
+      C_Printf(FC_ERROR "Line_QuickPortal can't use tag 0 (line=%d)\a\n", eindex(&line - lines));
       return;
    }
    if(line.args[0] != 0 && line.args[0] != 1)
    {
-      C_Printf(FC_ERROR "Line_QuickPortal first argument must be 0 or 1\a\n");
+      C_Printf(FC_ERROR "Line_QuickPortal first argument must be 0 or 1 (line=%d)\a\n",
+               eindex(&line - lines));
       return;
    }
    int searchPosition = -1;
@@ -1757,16 +1759,16 @@ void R_SpawnQuickLinePortal(line_t &line)
    }
    if(!otherline)
    {
-      C_Printf(FC_ERROR "Line_QuickPortal couldn't find the other like-tagged "
-         "line\a\n");
+      C_Printf(FC_ERROR "Line_QuickPortal couldn't find the other like-tagged line (line=%d)\a\n",
+               eindex(&line - lines));
       return;
    }
    bool linked = line.args[0] == 0;
    // Strict requirement for angle equality for linked portals
    if(linked && otherline->dx != -line.dx && otherline->dy != -line.dy)
    {
-      C_Printf(FC_ERROR "Line_QuickPortal linked portal changing angle not "
-         "currently supported\a\n");
+      C_Printf(FC_ERROR "Line_QuickPortal linked portal changing angle not currently supported "
+               "(line=%d other=%d)\a\n", eindex(&line - lines), eindex(otherline - lines));
       return;
    }
 
@@ -1844,14 +1846,13 @@ void R_DefinePortal(const line_t &line)
 
    if(int_type < 0 || int_type >= static_cast<int>(portaltype_MAX))
    {
-      C_Printf(FC_ERROR "Wrong portal type %d for line %d\a\n", int_type, 
-         static_cast<int>(&line - lines));
+      C_Printf(FC_ERROR "Wrong portal type %d for line %d\a\n", int_type, eindex(&line - lines));
       return;
    }
 
    if(portalid <= 0)
    {
-      C_Printf(FC_ERROR "Portal id 0 or negative not allowed\a\n");
+      C_Printf(FC_ERROR "Portal id 0 or negative not allowed (line=%d)\a\n", eindex(&line - lines));
       return;
    }
 
@@ -1906,7 +1907,7 @@ void R_DefinePortal(const line_t &line)
       }
       if(!skycam)
       {
-         C_Printf(FC_ERROR "Skybox found with no camera\a\n");
+         C_Printf(FC_ERROR "Skybox found with no camera (line=%d)\a\n", eindex(&line - lines));
          return;
       }
       portal = R_GetSkyBoxPortal(skycam);
@@ -1916,7 +1917,8 @@ void R_DefinePortal(const line_t &line)
    case portaltype_linked:
       if(!anchorid)
       {
-         C_Printf(FC_ERROR "Anchored portal must have anchor line id\a\n");
+         C_Printf(FC_ERROR "Anchored portal must have anchor line id (line=%d)\a\n",
+                  eindex(&line - lines));
          return;
       }
       for(destlinenum = -1; 
@@ -1928,7 +1930,8 @@ void R_DefinePortal(const line_t &line)
       }
       if(destlinenum == -1)
       {
-         C_Printf(FC_ERROR "No anchor line found\a\n");
+         C_Printf(FC_ERROR "No anchor line found (tag=%d, line=%d)\a\n", anchorid,
+                  eindex(&line - ::lines));
          return;
       }
       if(type == portaltype_anchor)
@@ -1966,6 +1969,7 @@ void R_DefinePortal(const line_t &line)
       }
       break;
    default:
+      C_Printf(FC_ERROR "Unknown portal type (type=%d, line=%d)\a\n", type, eindex(&line - ::lines));
       return;
    }
    
@@ -2106,14 +2110,16 @@ bool R_IsSkyLikePortalFloor(const sector_t &sector)
 //
 // True if line is a basic portal
 //
-bool R_IsSkyLikePortalWall(const line_t &line)
+bool R_IsSkyWall(const line_t &line)
 {
    // Just use the same flags, even if they may not be available from UDMF
    // BLOCKALL lines count as solid to everything, so they will just explode
    // stuff.
-   return line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) && 
-      !(line.extflags & EX_ML_BLOCKALL) && (line.portal->type == R_SKYBOX || 
-         line.portal->type == R_HORIZON || line.portal->type == R_PLANE);
+   return R_IsSkyFlat(sides[line.sidenum[0]].midtexture) ||
+   (line.portal && !(line.pflags & (PF_DISABLED | PF_NOPASS)) &&
+    !(line.extflags & EX_ML_BLOCKALL) && (line.portal->type == R_SKYBOX ||
+                                          line.portal->type == R_HORIZON ||
+                                          line.portal->type == R_PLANE));
 }
 
 // EOF

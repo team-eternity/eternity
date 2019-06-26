@@ -100,6 +100,9 @@ enum
    SPAN_STYLE_NORMAL,
    SPAN_STYLE_TL,
    SPAN_STYLE_ADD,
+   SPAN_STYLE_NORMAL_MASKED,
+   SPAN_STYLE_TL_MASKED,
+   SPAN_STYLE_ADD_MASKED,
    SPAN_NUMSTYLES
 };
 
@@ -171,11 +174,11 @@ typedef struct cb_column_s
    int texmid;
 
    // 8-bit lighting
-   lighttable_t *colormap;
-   byte *translation;
+   const lighttable_t *colormap;
+   const byte *translation;
    fixed_t translevel; // haleyjd: zdoom style trans level
 
-   void *source;
+   const void *source;
 } cb_column_t;
 
 

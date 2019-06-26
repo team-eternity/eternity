@@ -390,7 +390,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return false;
       }
 
-      if(!hitplane && !li->backsector && R_IsSkyLikePortalWall(*li))
+      if(!hitplane && !li->backsector && R_IsSkyWall(*li))
          return false;
 
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,

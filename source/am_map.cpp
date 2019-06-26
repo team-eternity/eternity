@@ -285,7 +285,7 @@ static patch_t *marknums[10];   // numbers used for marking by the automap
 // killough 2/22/98: Remove limit on automap marks,
 // and make variables external for use in savegames.
 
-mpoint_t *markpoints = NULL;    // where the points are
+markpoint_t *markpoints = NULL;    // where the points are
 int markpointnum = 0; // next point to be assigned (also number of points now)
 int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
@@ -408,12 +408,13 @@ static void AM_addMark()
    // remove limit on automap marks
    
    if(markpointnum >= markpointnum_max)
-      markpoints = erealloc(mpoint_t *, markpoints,
+      markpoints = erealloc(markpoint_t *, markpoints,
                             (markpointnum_max = markpointnum_max ? 
                              markpointnum_max*2 : 16) * sizeof(*markpoints));
 
    markpoints[markpointnum].x = m_x + m_w/2;
    markpoints[markpointnum].y = m_y + m_h/2;
+   markpoints[markpointnum].groupid = plr->mo->groupid;
    markpointnum++;
 }
 
@@ -1705,8 +1706,11 @@ static void AM_drawWalls()
       {
          const line_t *line = &lines[i];
 
-         if(line->frontsector->groupid == plrgroup)
+         if(line->frontsector->groupid == plrgroup ||
+            P_PortalLayersByPoly(line->frontsector->groupid, plrgroup))
+         {
             continue;
+         }
 
          l.a.x = line->v1->fx;
          l.a.y = line->v1->fy;
@@ -1761,8 +1765,11 @@ static void AM_drawWalls()
 
       if(mapportal_overlay && useportalgroups)
       {
-         if(line->frontsector && line->frontsector->groupid != plrgroup)
+         if(line->frontsector && (line->frontsector->groupid != plrgroup &&
+                                  !P_PortalLayersByPoly(line->frontsector->groupid, plrgroup)))
+         {
             continue;
+         }
 
          if(line->frontsector)
          {
@@ -2252,8 +2259,18 @@ static void AM_drawMarks()
       {
          int w  = (5 * video.xscale) >> FRACBITS;
          int h  = (6 * video.yscale) >> FRACBITS;
-         int fx = CXMTOF(markpoints[i].x);
-         int fy = CYMTOF(markpoints[i].y);
+         double mx = markpoints[i].x;
+         double my = markpoints[i].y;
+         bool trans = false;
+         if(markpoints[i].groupid != plr->mo->groupid)
+         {
+            trans = true;
+            const linkoffset_t *link = P_GetLinkOffset(markpoints[i].groupid, plr->mo->groupid);
+            mx += M_FixedToDouble(link->x);
+            my += M_FixedToDouble(link->y);
+         }
+         int fx = CXMTOF(mx);
+         int fy = CYMTOF(my);
          int j  = i;
          
          do
@@ -2265,10 +2282,20 @@ static void AM_drawMarks()
             
             if(fx >= f_x && fx < f_w - w && fy >= f_y && fy < f_h - h)
             {
-               V_DrawPatch((fx<<FRACBITS)/video.xscale, 
-                           (fy<<FRACBITS)/video.yscale, 
-                           &vbscreen, 
-                           marknums[d]);
+               if(trans)
+               {
+                  V_DrawPatchTL((fx<<FRACBITS)/video.xscale,
+                                (fy<<FRACBITS)/video.yscale,
+                                &vbscreen,
+                                marknums[d], nullptr, FRACUNIT >> 1);
+               }
+               else
+               {
+                  V_DrawPatch((fx<<FRACBITS)/video.xscale,
+                              (fy<<FRACBITS)/video.yscale,
+                              &vbscreen,
+                              marknums[d]);
+               }
             }
             
             fx -= w - (video.xscale >> FRACBITS); // killough 2/22/98: 1 space backwards

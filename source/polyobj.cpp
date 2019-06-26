@@ -512,9 +512,6 @@ static void Polyobj_setCenterPt(polyobj_t *po);
 //
 static void Polyobj_collectPortals(polyobj_t *po)
 {
-   if(!useportalgroups)
-      return;  // if portals don't exist or were invalidated, skip this.
-
    // Collect them in an easy collection
    PODCollection<portal_t *> portals;
    bool hasLinked = false;
@@ -535,7 +532,7 @@ static void Polyobj_collectPortals(polyobj_t *po)
             goto nextLine;
       }
 
-      if(line.pflags & PS_PASSABLE)
+      if(line.pflags & PS_PASSABLE && useportalgroups)
          hasLinked = true;
 
       portals.add(portal);
@@ -561,8 +558,9 @@ static void Polyobj_collectPortals(polyobj_t *po)
 //
 static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t dy, bool cancel)
 {
-   bool *groupvisit = useportalgroups ? 
-      ecalloc(bool *, P_PortalGroupCount(), sizeof(bool)) : nullptr;
+   if(!useportalgroups)
+      return;
+   bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
    for(size_t i = 0; i < po->numPortals; ++i)
    {
       portal_t *portal = po->portals[i];
@@ -601,6 +599,18 @@ static void Polyobj_updateAnchoredPortals(const polyobj_t &po)
       portal_t *partner = adata.polyportalpartner;
       if(partner)
          partner->data.anchor.transform.updateFromLines(true);
+   }
+}
+
+//
+// If linked portals exist, updats a line's portalmap position
+//
+static void Polyobj_relinkLine(const line_t &line)
+{
+   if(line.portal && line.portal->type == R_LINKED && useportalgroups)
+   {
+      gPortalBlockmap.unlinkLine(line);
+      gPortalBlockmap.linkLine(line);
    }
 }
 
@@ -674,11 +684,7 @@ static void Polyobj_moveToSpawnSpot(mapthing_t *anchor)
       line.soundorg.x = line.v1->x + line.dx / 2;
       line.soundorg.y = line.v1->y + line.dy / 2;
 
-      if(line.portal && line.portal->type == R_LINKED)
-      {
-         gPortalBlockmap.unlinkLine(line);
-         gPortalBlockmap.linkLine(line);
-      }
+      Polyobj_relinkLine(line);
    }
 
    Polyobj_setCenterPt(po);
@@ -842,7 +848,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
 // argument instead of using tmthing. Returns true if the line isn't contacted
 // and false otherwise.
 //
-inline static bool Polyobj_untouched(line_t *ld, Mobj *mo)
+inline static bool Polyobj_untouched(const line_t *ld, const Mobj *mo)
 {
    fixed_t x, y, tmbbox[4];
 
@@ -852,6 +858,14 @@ inline static bool Polyobj_untouched(line_t *ld, Mobj *mo)
       (tmbbox[BOXTOP]    = (y = mo->y) + mo->radius) <= ld->bbox[BOXBOTTOM] ||
       (tmbbox[BOXBOTTOM] =           y - mo->radius) >= ld->bbox[BOXTOP]    ||
       P_BoxOnLineSide(tmbbox, ld) != -1;
+}
+
+//
+// About things which can be pushed
+//
+inline static bool Polyobj_canPushThing(const Mobj &mo)
+{
+   return mo.flags & MF_SOLID || mo.player;
 }
 
 //
@@ -928,8 +942,7 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
                Mobj *next = mo->bnext;
 
                // always push players even if not solid
-               if(((mo->flags & MF_SOLID) || mo->player) && 
-                  !Polyobj_untouched(line, mo))
+               if(Polyobj_canPushThing(*mo) && !Polyobj_untouched(line, mo))
                {
                   // ioanch 20160226: in case of portal lines, just make sure
                   // the mobj budges a bit just to detect the specline
@@ -965,6 +978,97 @@ static bool Polyobj_clipThings(polyobj_t *po, line_t *line,
    } // end for(y)
 
    return hitthing;
+}
+
+//
+// Keeps track of portal-polyobject touched things. If position and velocity don't change, then it
+// means the thing may need to be dropped from a departing polyobject
+//
+struct portalthing_t
+{
+   Mobj *thing;   // the touched thing
+   v2fixed_t position;  // the position when touched
+   v2fixed_t velocity;  // the velocity when touched
+};
+
+//
+// If this is a portal polyobject, collect all things on the edge: they may be dropped after moving.
+// Must be called before moving, hence not at the same time as clipThings.
+// Line must be PS_PASSABLE.
+//
+static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
+                                        PODCollection<portalthing_t> &things)
+{
+   fixed_t linebox[4];
+   // adjust linedef bounding box to blockmap, extend by MAXRADIUS
+   linebox[BOXLEFT]   = (line.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
+   linebox[BOXRIGHT]  = (line.bbox[BOXRIGHT]  - bmaporgx + MAXRADIUS) >> MAPBLOCKSHIFT;
+   linebox[BOXBOTTOM] = (line.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
+   linebox[BOXTOP]    = (line.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
+
+   // check all mobj blockmap cells the line contacts
+   for(int y = linebox[BOXBOTTOM]; y <= linebox[BOXTOP]; ++y)
+      for(int x = linebox[BOXLEFT]; x <= linebox[BOXRIGHT]; ++x)
+      {
+         if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
+            continue;
+
+         Mobj *next;
+         for(Mobj *mo = blocklinks[y * bmapwidth + x]; mo; mo = next)
+         {
+            next = mo->bnext;
+            if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&line, mo))
+               continue;
+            portalthing_t &pt = things.addNew();
+            pt.thing = mo;
+            pt.position = { mo->x, mo->y };
+            pt.velocity = { mo->momx, mo->momy };
+         }
+      }
+}
+
+//
+// Iterator for the function below
+//
+static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
+{
+   int count;
+   sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
+   auto &moved = *static_cast<PODCollection<Mobj *> *>(context);
+   for(int i = 0; i < count; ++i)
+   {
+      for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
+      {
+         // NOSECTOR invisible things will be ignored :)
+         // Also don't push back standing and hanging things
+         if(P_mobjOnSurface(*mo))
+            continue;
+         moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
+      }
+   }
+   return true;
+}
+
+//
+// Moves all airborne objects inside the poly
+//
+static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t dy)
+{
+   if(!useportalgroups)
+      return;
+   bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
+   PODCollection<Mobj *> moved;
+   for(size_t i = 0; i < po.numPortals; ++i)
+   {
+      const portal_t &portal = *po.portals[i];
+      if(portal.type != R_LINKED || groupvisit[portal.data.link.toid])
+         continue;
+      P_ForEachClusterGroup(portal.data.link.fromid, portal.data.link.toid, groupvisit,
+                            PolyobjIT_moveObjectsInside, &moved);
+   }
+   for(Mobj *mo : moved)
+      P_TryMove(mo, mo->x + dx, mo->y + dy, 1);
+   efree(groupvisit);
 }
 
 //
@@ -1008,6 +1112,12 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
    if(po->flags & POF_ISBAD)
       return false;
 
+   PODCollection<portalthing_t> pts;
+   if(po->numPortals)
+      for(i = 0; i < po->numLines; ++i)
+         if(po->lines[i]->pflags & PS_PASSABLE)
+            Polyobj_collectPortalThings(*po, *po->lines[i], pts);
+
    // ioanch 20160226: update portal position
    Polyobj_moveLinkedPortals(po, x, y, false);
 
@@ -1025,13 +1135,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
    for(i = 0; i < po->numLines; ++i)
    {
       Polyobj_bboxAdd(po->lines[i]->bbox, &vec);
-
-      // This must be here because things may collide.
-      if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-      {
-         gPortalBlockmap.unlinkLine(*po->lines[i]);
-         gPortalBlockmap.linkLine(*po->lines[i]);
-      }
+      Polyobj_relinkLine(*po->lines[i]);
    }
 
    // check for blocking things (yes, it needs to be done separately)
@@ -1050,11 +1154,7 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       for(i = 0; i < po->numLines; ++i)
       {
          Polyobj_bboxSub(po->lines[i]->bbox, &vec);
-         if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-         {
-            gPortalBlockmap.unlinkLine(*po->lines[i]);
-            gPortalBlockmap.linkLine(*po->lines[i]);
-         }
+         Polyobj_relinkLine(*po->lines[i]);
       }
 
       // ioanch 20160226: update portal position
@@ -1086,6 +1186,29 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       R_AttachPolyObject(po);
 
       Polyobj_updateAnchoredPortals(*po);
+
+      for(const portalthing_t &pt : pts)
+      {
+         // Object was neither teleported by portal nor pushed by solid wall
+         if(pt.thing->x == pt.position.x && pt.thing->y == pt.position.y &&
+            pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
+         {
+            // We got one which we may want to move
+            if(P_mobjOnSurface(*pt.thing))
+            {
+               if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+                  pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
+            }
+            else
+            {
+               // Floating things still need zref updating
+               P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
+               pt.thing->zref = clip.zref;
+            }
+         }
+      }
+      // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
+      Polyobj_moveObjectsInside(*po, -x, -y);
    }
 
    return !hitthing;
@@ -1202,11 +1325,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
    for(i = 0; i < po->numLines; ++i)
    {
       Polyobj_rotateLine(po->lines[i]);
-      if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-      {
-         gPortalBlockmap.unlinkLine(*po->lines[i]);
-         gPortalBlockmap.linkLine(*po->lines[i]);
-      }
+      Polyobj_relinkLine(*po->lines[i]);
    }
 
    // check for blocking things
@@ -1225,11 +1344,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
       for(i = 0; i < po->numLines; ++i)
       {
          Polyobj_rotateLine(po->lines[i]);
-         if(po->lines[i]->portal && po->lines[i]->portal->type == R_LINKED)
-         {
-            gPortalBlockmap.unlinkLine(*po->lines[i]);
-            gPortalBlockmap.linkLine(*po->lines[i]);
-         }
+         Polyobj_relinkLine(*po->lines[i]);
       }
    }
    else
@@ -1850,6 +1965,7 @@ void PolySwingDoorThinker::Think()
       // move was blocked, special handling required -- make it reopen
 
       this->distance = this->initDistance - this->distance;
+      this->hasBeenPositive = this->distance < 0 ? false : true;
       this->speed    = this->initSpeed;
       this->closing  = false;
 

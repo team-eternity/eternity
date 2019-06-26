@@ -318,7 +318,7 @@ void A_SpawnAbove(actionargs_t *actionargs)
    Mobj *mo;
 
    thingtype = E_ArgAsThingNum(args, 0);
-   statenum  = E_ArgAsStateNumG0(args, 1, actor, nullptr);
+   statenum  = E_ArgAsStateNumG0(args, 1, actor);
    zamt      = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
 
    mo = P_SpawnMobj(actor->x, actor->y, actor->z + zamt, thingtype);
@@ -364,7 +364,7 @@ void A_SpawnGlitter(actionargs_t *actionargs)
    x = pos.x;
    y = pos.y;
 
-   z = actor->floorz;
+   z = actor->zref.floor;
 
    glitter = P_SpawnMobj(x, y, z, glitterType);
 
@@ -579,7 +579,7 @@ void A_GenRefire(actionargs_t *actionargs)
    int statenum;
    int chance;
 
-   statenum = E_ArgAsStateNum(args, 0, actor, nullptr);
+   statenum = E_ArgAsStateNum(args, 0, actor);
    chance   = E_ArgAsInt(args, 1, 0);
 
    A_FaceTarget(actionargs);
@@ -747,7 +747,7 @@ void A_MissileAttack(actionargs_t *actionargs)
    homing   = !!E_ArgAsKwd(args, 1, &missileatkkwds, 0);   
    z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
    a        = E_ArgAsInt(args, 3, 0);
-   statenum = E_ArgAsStateNumG0(args, 4, actor, nullptr);
+   statenum = E_ArgAsStateNumG0(args, 4, actor);
 
    if(hastarget)
    {
@@ -826,7 +826,7 @@ void A_MissileSpread(actionargs_t *actionargs)
    num      = E_ArgAsInt(args,           1, 0);
    z        = (fixed_t)(E_ArgAsInt(args, 2, 0) * FRACUNIT);
    a        = E_ArgAsInt(args,           3, 0);
-   statenum = E_ArgAsStateNumG0(args,    4, actor, nullptr);
+   statenum = E_ArgAsStateNumG0(args,    4, actor);
 
    if(num < 2)
       return;
@@ -1369,7 +1369,7 @@ void A_TargetJump(actionargs_t *actionargs)
    arglist_t *args = actionargs->args;
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(args, 0, mo, nullptr)) < 0)
+   if((statenum = E_ArgAsStateNumNI(args, 0, mo)) < 0)
       return;
    
    // 1) must be valid
@@ -1518,8 +1518,7 @@ void A_DetonateEx(actionargs_t *actionargs)
 
    // cause a terrain hit
    // ioanch 20160116: portal aware Z
-   if(actor->z <= actor->secfloorz + radius * FRACUNIT)
-      E_HitWater(actor, P_ExtremeSectorAtPoint(actor, false));
+   E_ExplosionHitWater(actor, radius);
 }
 
 // EOF

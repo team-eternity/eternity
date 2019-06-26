@@ -102,13 +102,13 @@ private:
 };
 
 //
-// Line portal blockmap: stores just the portal linedefs on the blockmap.
-// Only used by rendering facilities (e.g. sprite projections) right now.
+// Line portal blockmap: stores just the portal linedefs (both wall and edge) on the blockmap.
+// Does NOT store the polyportals (yet). Usable ONLY for rendering purposes because of this.
 //
-class LinePortalRenderBlockmap
+class StaticLinedefPortalBlockmap
 {
 public:
-   LinePortalRenderBlockmap() : mValidcount(0), mValids(nullptr)
+   StaticLinedefPortalBlockmap() : mValidcount(0), mValids(nullptr)
    {
    }
 
@@ -129,7 +129,7 @@ private:
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
 extern PortalBlockmap gPortalBlockmap;
-extern LinePortalRenderBlockmap pLPortalMap;
+extern StaticLinedefPortalBlockmap pLPortalMap;
 
 #endif
 

@@ -40,7 +40,7 @@ int E_SafeStateName(const char *name);      //    fallback by name
 int E_StateNumForName(const char *name);    // mnemonic lookup
 int E_GetStateNumForName(const char *name); //    fatal error version
 
-int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name);
+int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name);
 
 extern int NullStateNum;
 

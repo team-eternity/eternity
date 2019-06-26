@@ -22,6 +22,7 @@
 // Authors: Ioan Chera
 //
 
+#include "z_zone.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "g_demolog.h"

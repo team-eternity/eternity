@@ -25,6 +25,7 @@
 #define NEED_EDF_DEFINITIONS
 
 #include "z_zone.h"
+
 #include "Confuse/confuse.h"
 #include "d_gi.h"
 #include "e_edfmetatable.h"
@@ -44,50 +45,51 @@
 // particle support? How many?
 
 // metakey vocabulary
-#define ITEM_PUFF_THINGTYPE "thingtype"
-#define ITEM_PUFF_SOUND "sound"
-#define ITEM_PUFF_HITSOUND "hitsound"
-#define ITEM_PUFF_HITPUFFTYPE "hitpufftype"
+#define ITEM_PUFF_THINGTYPE       "thingtype"
+#define ITEM_PUFF_SOUND           "sound"
+#define ITEM_PUFF_HITSOUND        "hitsound"
+#define ITEM_PUFF_HITPUFFTYPE     "hitpufftype"
 #define ITEM_PUFF_NOBLOODPUFFTYPE "nobloodpufftype"
-#define ITEM_PUFF_UPSPEED "upspeed"
-#define ITEM_PUFF_ZSPREAD "zspread"
-#define ITEM_PUFF_PUNCHHACK "punchhack"
-#define ITEM_PUFF_PARTICLES "particles"
+#define ITEM_PUFF_UPSPEED         "upspeed"
+#define ITEM_PUFF_ZSPREAD         "zspread"
+#define ITEM_PUFF_PUNCHHACK       "punchhack"
+#define ITEM_PUFF_PARTICLES       "particles"
 
-#define ITEM_PUFF_ALWAYSPUFF "ALWAYSPUFF"
-#define ITEM_PUFF_BLOODLESS "BLOODLESS"
+#define ITEM_PUFF_ALWAYSPUFF  "ALWAYSPUFF"
+#define ITEM_PUFF_BLOODLESS   "BLOODLESS"
 #define ITEM_PUFF_LOCALTHRUST "LOCALTHRUST"
-#define ITEM_PUFF_RANDOMTICS "RANDOMTICS"
+#define ITEM_PUFF_RANDOMTICS  "RANDOMTICS"
 
 // Interned metatable keys
-MetaKeyIndex keyPuffThingType(ITEM_PUFF_THINGTYPE);
-MetaKeyIndex keyPuffSound(ITEM_PUFF_SOUND);
-MetaKeyIndex keyPuffHitSound(ITEM_PUFF_HITSOUND);
-MetaKeyIndex keyPuffHitPuffType(ITEM_PUFF_HITPUFFTYPE);
+MetaKeyIndex keyPuffThingType      (ITEM_PUFF_THINGTYPE      );
+MetaKeyIndex keyPuffSound          (ITEM_PUFF_SOUND          );
+MetaKeyIndex keyPuffHitSound       (ITEM_PUFF_HITSOUND       );
+MetaKeyIndex keyPuffHitPuffType    (ITEM_PUFF_HITPUFFTYPE    );
 MetaKeyIndex keyPuffNoBloodPuffType(ITEM_PUFF_NOBLOODPUFFTYPE);
-MetaKeyIndex keyPuffUpSpeed(ITEM_PUFF_UPSPEED);
-MetaKeyIndex keyPuffZSpread(ITEM_PUFF_ZSPREAD);
-MetaKeyIndex keyPuffPunchHack(ITEM_PUFF_PUNCHHACK);
-MetaKeyIndex keyPuffParticles(ITEM_PUFF_PARTICLES);
-MetaKeyIndex keyPuffAlwaysPuff(ITEM_PUFF_ALWAYSPUFF);
-MetaKeyIndex keyPuffBloodless(ITEM_PUFF_BLOODLESS);
-MetaKeyIndex keyPuffLocalThrust(ITEM_PUFF_LOCALTHRUST);
-MetaKeyIndex keyPuffRandomTics(ITEM_PUFF_RANDOMTICS);
+MetaKeyIndex keyPuffUpSpeed        (ITEM_PUFF_UPSPEED        );
+MetaKeyIndex keyPuffZSpread        (ITEM_PUFF_ZSPREAD        );
+MetaKeyIndex keyPuffPunchHack      (ITEM_PUFF_PUNCHHACK      );
+MetaKeyIndex keyPuffParticles      (ITEM_PUFF_PARTICLES      );
+MetaKeyIndex keyPuffAlwaysPuff     (ITEM_PUFF_ALWAYSPUFF     );
+MetaKeyIndex keyPuffBloodless      (ITEM_PUFF_BLOODLESS      );
+MetaKeyIndex keyPuffLocalThrust    (ITEM_PUFF_LOCALTHRUST    );
+MetaKeyIndex keyPuffRandomTics     (ITEM_PUFF_RANDOMTICS     );
 
 #define PUFF_CONFIGS \
-CFG_STR(ITEM_PUFF_THINGTYPE, "", CFGF_NONE),                 \
-CFG_STR(ITEM_PUFF_SOUND, "none", CFGF_NONE),                 \
-CFG_STR(ITEM_PUFF_HITSOUND, "none", CFGF_NONE),              \
-CFG_STR(ITEM_PUFF_HITPUFFTYPE, "", CFGF_NONE),               \
-CFG_STR(ITEM_PUFF_NOBLOODPUFFTYPE, "", CFGF_NONE),           \
-CFG_FLOAT(ITEM_PUFF_UPSPEED, 0, CFGF_NONE),                  \
-CFG_FLOAT(ITEM_PUFF_ZSPREAD, puffZSpreadDefault, CFGF_NONE), \
-CFG_STR(ITEM_PUFF_PUNCHHACK, "", CFGF_NONE),                 \
-CFG_INT(ITEM_PUFF_PARTICLES, 0, CFGF_NONE),                  \
-CFG_FLAG(ITEM_PUFF_ALWAYSPUFF, 0, CFGF_SIGNPREFIX),          \
-CFG_FLAG(ITEM_PUFF_BLOODLESS, 0, CFGF_SIGNPREFIX),           \
-CFG_FLAG(ITEM_PUFF_LOCALTHRUST, 0, CFGF_SIGNPREFIX),         \
-CFG_FLAG(ITEM_PUFF_RANDOMTICS, 0, CFGF_SIGNPREFIX),          \
+   CFG_STR(ITEM_PUFF_THINGTYPE,       "",                 CFGF_NONE),       \
+   CFG_STR(ITEM_PUFF_SOUND,           "none",             CFGF_NONE),       \
+   CFG_STR(ITEM_PUFF_HITSOUND,        "none",             CFGF_NONE),       \
+   CFG_STR(ITEM_PUFF_HITPUFFTYPE,     "",                 CFGF_NONE),       \
+   CFG_STR(ITEM_PUFF_NOBLOODPUFFTYPE, "",                 CFGF_NONE),       \
+   CFG_FLOAT(ITEM_PUFF_UPSPEED,       0,                  CFGF_NONE),       \
+   CFG_FLOAT(ITEM_PUFF_ZSPREAD,       puffZSpreadDefault, CFGF_NONE),       \
+   CFG_STR(ITEM_PUFF_PUNCHHACK,       "",                 CFGF_NONE),       \
+   CFG_INT(ITEM_PUFF_PARTICLES,       0,                  CFGF_NONE),       \
+   CFG_FLAG(ITEM_PUFF_ALWAYSPUFF,     0,                  CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_PUFF_BLOODLESS,      0,                  CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_PUFF_LOCALTHRUST,    0,                  CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_PUFF_RANDOMTICS,     0,                  CFGF_SIGNPREFIX), \
+   CFG_END()
 
 //
 // EDF puff options
@@ -96,14 +98,12 @@ cfg_opt_t edf_puff_opts[] =
 {
    CFG_TPROPS(edf_generic_tprops, CFGF_NOCASE),
    PUFF_CONFIGS
-   CFG_END()
 };
 
 cfg_opt_t edf_puff_delta_opts[] =
 {
    CFG_STR("name", 0, CFGF_NONE),
    PUFF_CONFIGS
-   CFG_END()
 };
 
 static MetaTable e_puffTable; // the pufftype metatable

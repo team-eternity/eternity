@@ -247,7 +247,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    int forward;
    int side;
    int newweapon;            // phares
-   int look = 0; 
+   int look = 0;
    int mlook = 0;
    int flyheight = 0;
    static int prevmlook = 0;
@@ -275,7 +275,6 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       // FIXME: Handle noartiskip?
       if(invbarstate.inventory)
       {
-         p.inv_ptr = invbarstate.inv_ptr;
          invbarstate.inventory = false;
          usearti = false;
       }
@@ -313,7 +312,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          side += pc->sidemove[speed];
       if(gameactions[ka_left])
          side -= pc->sidemove[speed];
-      
+
       // analog axes: turn becomes stafe if strafe-on is held
       side += (int)(pc->sidemove[speed] * joyaxes[axis_turn]);
    }
@@ -342,10 +341,24 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       side += pc->sidemove[speed];
    if(gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
-   
+
    if(gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
-   
+
+   // MaxW: Non-attack weapon state change keys
+   if(gameactions[ka_reload])
+      cmd->actions |= AC_RELOAD;
+   if(gameactions[ka_zoom])
+      cmd->actions |= AC_ZOOM;
+   if(gameactions[ka_user1])
+      cmd->actions |= AC_USER1;
+   if(gameactions[ka_user2])
+      cmd->actions |= AC_USER2;
+   if(gameactions[ka_user3])
+      cmd->actions |= AC_USER3;
+   if(gameactions[ka_user4])
+      cmd->actions |= AC_USER4;
+
    mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
@@ -388,8 +401,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             weaponinfo_t *weapon = P_GetPlayerWeapon(&players[consoleplayer], i - ka_weapon1);
             if(weapon)
             {
-               const auto slot = E_FindEntryForWeaponInSlot(&players[consoleplayer],
-                                                            weapon, i - ka_weapon1);
+               const auto slot = E_FindEntryForWeaponInSlotIndex(&players[consoleplayer],
+                                                                 weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
                break;
@@ -459,7 +472,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          //
          // killough 10/98: make SG/SSG and Fist/Chainsaw
          // weapon toggles optional
-      
+
          if(!demo_compatibility && weapon_hotkey_cycling)
          {
             player_t *player = &players[consoleplayer];
@@ -510,12 +523,12 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // mouse
-  
+
    // forward double click -- haleyjd: still allow double clicks
    if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
    {
       dclickstate = mousebuttons[mouseb_dblc2];
-      
+
       if(dclickstate)
          dclicks++;
 
@@ -541,7 +554,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(dclickstate2)
          dclicks2++;
-      
+
       if(dclicks2 == 2)
       {
          cmd->buttons |= BT_USE;
@@ -557,7 +570,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // sf: smooth out the mouse movement
-   // change to use tmousex, y   
+   // change to use tmousex, y
 
    tmousex = mousex;
    tmousey = mousey;
@@ -601,7 +614,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // analog gamepad look
    look += (int)(pc->lookspeed[1] * joyaxes[axis_look] * (invert_padlook ? -1.0 : 1.0));
-   
+
    if(gameactions[ka_lookup])
       look += pc->lookspeed[speed];
    if(gameactions[ka_lookdown])
@@ -646,7 +659,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       forward = MAXPLMOVE;
    else if(forward < -MAXPLMOVE)
       forward = -MAXPLMOVE;
-   
+
    if(side > MAXPLMOVE)
       side = MAXPLMOVE;
    else if(side < -MAXPLMOVE)
@@ -682,7 +695,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 void G_SetGameMap(void)
 {
    gamemap = G_GetMapForName(gamemapname);
-   
+
    if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       gameepisode = gamemap / 10;
@@ -690,17 +703,17 @@ void G_SetGameMap(void)
    }
    else
       gameepisode = 1;
-   
+
    if(gameepisode < 1)
       gameepisode = 1;
 
    // haleyjd: simplified to use gameModeInfo
 
-   // bound to maximum episode for gamemode
+   // bound to maximum episode for gamemode (if the no-upper-episode-bound flag isn't set)
    // (only start episode 1 on shareware, etc)
-   if(gameepisode > GameModeInfo->numEpisodes)
-      gameepisode = GameModeInfo->numEpisodes;   
-   
+   if(gameepisode > GameModeInfo->numEpisodes && !(GameModeInfo->flags & GIF_NOUPPEREPBOUND))
+      gameepisode = GameModeInfo->numEpisodes;
+
    if(gamemap < 0)
       gamemap = 0;
    if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))
@@ -796,6 +809,10 @@ bool G_Responder(const event_t* ev)
    int action;
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
 
+   // This if is here to ensure the game doesn't crash due to weapon selection inputs
+   if(gamestate == GS_CONSOLE)
+      return true;
+
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -889,7 +906,7 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr);
+         E_MoveInventoryCursor(&players[consoleplayer], -1, players[consoleplayer].inv_ptr);
          return true;
       }
       if(gameactions[ka_inventory_right])
@@ -900,16 +917,20 @@ bool G_Responder(const event_t* ev)
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr);
+         E_MoveInventoryCursor(&players[consoleplayer], 1, players[consoleplayer].inv_ptr);
          return true;
       }
 
       return true;    // eat key down events
       
    case ev_keyup:
-      action = G_KeyResponder(ev, kac_game);   // haleyjd
-      gameactions[action] = false;
+   {
+      bool allreleased;
+      action = G_KeyResponder(ev, kac_game, &allreleased);   // haleyjd
+      if(allreleased)
+         gameactions[action] = false;
       return false;   // always let key up events filter down
+   }
       
    case ev_mouse:
       mousebuttons[0] = !!(ev->data1 & 1);
@@ -2281,10 +2302,7 @@ void G_Ticker()
    // turn inventory off after a certain amount of time
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
    if(invbarstate.inventory && !(--inventoryTics))
-   {
-      players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
       invbarstate.inventory = false;
-   }
 
    // do main actions
    
@@ -2348,7 +2366,6 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
-   inventoryindex_t inv_ptr;
 
    p = &players[player];
 
@@ -2364,7 +2381,6 @@ void G_PlayerReborn(int player)
    playerskin   = p->skin;
    playerclass  = p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
-   inv_ptr      = p->inv_ptr;
 
    delete p->weaponctrs;
   
@@ -2384,7 +2400,6 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
-   p->inv_ptr     = inv_ptr;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
@@ -2467,10 +2482,10 @@ static void G_queuePlayerCorpse(Mobj *mo)
 //
 void G_DeQueuePlayerCorpse(const Mobj *mo)
 {
-   for(auto itr = bodyque.begin(); itr != bodyque.end(); itr++)
+   for(Mobj *&body : bodyque)
    {
-      if(mo == *itr)
-         *itr = NULL;
+      if(mo == body)
+         body = nullptr;
    }
 }
 
@@ -3785,6 +3800,30 @@ void doom_printf(const char *s, ...)
    va_end(v);
    
    C_Puts(msg);  // set new message
+   HU_PlayerMsg(msg);
+}
+
+//
+// Like above, but uses FC_ERROR and occasional beeping
+//
+void doom_warningf(const char *s, ...)
+{
+   static int lastbeeptic = -1000;
+
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   if(lastbeeptic + 100 < gametic)
+   {
+      lastbeeptic = gametic;
+      C_Printf("%s\a\n", msg);
+   }
+   else
+      C_Puts(msg);
    HU_PlayerMsg(msg);
 }
 

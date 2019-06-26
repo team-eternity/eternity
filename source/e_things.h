@@ -97,8 +97,13 @@ state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num);
 
 void     E_SplitTypeAndState(char *src, char **type, char **state);
 int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
-state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
-state_t *E_GetStateForMobj(Mobj *mo, const char *label);
+inline static const int *E_GetNativeStateLoc(const mobjinfo_t *mi,
+                                             const char *label)
+{
+   return E_GetNativeStateLoc(const_cast<mobjinfo_t *>(mi), label);
+}
+state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label);
+state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
 
 // Thing groups
 bool E_ThingPairValid(int t1, int t2, unsigned flags);

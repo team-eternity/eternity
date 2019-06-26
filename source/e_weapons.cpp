@@ -93,19 +93,21 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_UPSOUND      "upsound"
 #define ITEM_WPN_READYSOUND   "readysound"
 
+#define ITEM_WPN_FSOFFSET "fullscreenoffset"
+
 #define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
 
 // DECORATE state block
 #define ITEM_WPN_STATES        "states"
 
-#define ITEM_WPN_INHERITS     "inherits"
+#define ITEM_WPN_INHERITS      "inherits"
 
 // WeaponInfo Delta Keywords
 #define ITEM_DELTA_NAME "name"
 
 // Title properties
-#define ITEM_WPN_TITLE_SUPER     "superclass"
-#define ITEM_WPN_TITLE_DEHNUM    "dehackednum"
+#define ITEM_WPN_TITLE_SUPER   "superclass"
+#define ITEM_WPN_TITLE_DEHNUM  "dehackednum"
 
 cfg_opt_t wpninfo_tprops[] =
 {
@@ -115,35 +117,36 @@ cfg_opt_t wpninfo_tprops[] =
 };
 
 #define WEAPONINFO_FIELDS \
-   CFG_INT(ITEM_WPN_DEHNUM,       -1,       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_AMMO,         "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_UPSTATE,      "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_WPN_DOWNSTATE,    "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_WPN_READYSTATE,   "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_WPN_ATKSTATE,     "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_WPN_FLASHSTATE,   "S_NULL", CFGF_NONE), \
-   CFG_STR(ITEM_WPN_HOLDSTATE,    "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_WPN_AMMOPERSHOT,  0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_DEHNUM,          -1,       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_AMMO,            "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_UPSTATE,         "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_DOWNSTATE,       "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_READYSTATE,      "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_ATKSTATE,        "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FLASHSTATE,      "S_NULL", CFGF_NONE), \
+   CFG_STR(ITEM_WPN_HOLDSTATE,       "S_NULL", CFGF_NONE), \
+   CFG_INT(ITEM_WPN_AMMOPERSHOT,     0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_AMMO_ALT,        "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_ATKSTATE_ALT,    "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLASHSTATE_ALT,  "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
-   CFG_INT(ITEM_WPN_SELECTORDER,  -1,       CFGF_NONE), \
-   CFG_INT(ITEM_WPN_SLOTNUM,      -1,       CFGF_NONE), \
-   CFG_FLOAT(ITEM_WPN_SLOTRANK,   -1.0,     CFGF_NONE), \
-   CFG_STR(ITEM_WPN_SISTERWEAPON, "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_FLAGS,        "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_ADDFLAGS,     "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_REMFLAGS,     "",       CFGF_NONE), \
-   CFG_STR(ITEM_WPN_MOD,          "",       CFGF_NONE), \
-   CFG_INT(ITEM_WPN_RECOIL,       0,        CFGF_NONE), \
-   CFG_INT(ITEM_WPN_HAPTICRECOIL, 0,        CFGF_NONE), \
-   CFG_INT(ITEM_WPN_HAPTICTIME,   0,        CFGF_NONE), \
-   CFG_STR(ITEM_WPN_UPSOUND,      "none",   CFGF_NONE), \
-   CFG_STR(ITEM_WPN_READYSOUND,   "none",   CFGF_NONE), \
-   CFG_STR(ITEM_WPN_FIRSTDECSTATE, nullptr, CFGF_NONE), \
-   CFG_STR(ITEM_WPN_STATES,        0,       CFGF_NONE), \
+   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT,  0,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_SELECTORDER,   -1,       CFGF_NONE), \
+   CFG_INT(ITEM_WPN_SLOTNUM,         -1,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_SLOTRANK,      -1.0,     CFGF_NONE), \
+   CFG_STR(ITEM_WPN_SISTERWEAPON,    "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FLAGS,           "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_ADDFLAGS,        "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_REMFLAGS,        "",       CFGF_NONE), \
+   CFG_STR(ITEM_WPN_MOD,             "",       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_RECOIL,        0.0,      CFGF_NONE), \
+   CFG_INT(ITEM_WPN_HAPTICRECOIL,    0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_HAPTICTIME,      0,        CFGF_NONE), \
+   CFG_STR(ITEM_WPN_UPSOUND,         "none",   CFGF_NONE), \
+   CFG_STR(ITEM_WPN_READYSOUND,      "none",   CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_FSOFFSET,      0.0,      CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FIRSTDECSTATE,   nullptr,  CFGF_NONE), \
+   CFG_STR(ITEM_WPN_STATES,          nullptr,  CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_wpninfo_opts[] =
@@ -199,7 +202,7 @@ static dehflags_t e_weaponFlags[] =
    { "HAPTICRECOIL",   WPF_HAPTICRECOIL   },
    { "READYSNDHALF",   WPF_READYSNDHALF   },
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
-   { "POWERED_UP",     WPF_POWEREDUP      },
+   { "POWEREDUP",      WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
    { nullptr,          0                  }
 };
@@ -258,7 +261,7 @@ weaponinfo_t *E_WeaponForDEHNum(const int dehnum)
 weapontype_t E_WeaponNumForName(const char *name)
 {
    weaponinfo_t *info = nullptr;
-   weapontype_t ret = -1;
+   weapontype_t ret   = -1;
 
    if((info = e_WeaponNameHash.objectForKey(name)))
       ret = info->id;
@@ -325,6 +328,26 @@ bool E_PlayerOwnsWeaponInSlot(const player_t *player, const int slot)
 }
 
 //
+// As above, but returning the number owned in the slot
+//
+int E_NumWeaponsInSlotPlayerOwns(const player_t *player, const int slot)
+{
+   if(!player->pclass->weaponslots[slot])
+      return 0;
+
+   int ret = 0;
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   do
+   {
+      if(E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+         ret++;
+      weaponslot = weaponslot->bdNext;
+   } while(!weaponslot->isDummy());
+
+   return ret;
+}
+
+//
 // If it doesn't have an alt atkstate, it can't have an alt fire
 //
 bool E_WeaponHasAltFire(const weaponinfo_t *wp)
@@ -346,12 +369,12 @@ void E_GiveWeapon(player_t *player, const weaponinfo_t *weapon)
 //
 void E_GiveAllClassWeapons(player_t *player)
 {
-   for(auto &currslot : player->pclass->weaponslots)
+   for(weaponslot_t *&slot : player->pclass->weaponslots)
    {
-      if(!currslot)
+      if(!slot)
          continue;
 
-      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(currslot);
+      BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(slot);
       do
       {
          E_GiveWeapon(player, weaponslot->bdObject->weapon);
@@ -405,13 +428,13 @@ BDListItem<weaponslot_t> *E_LastInSlot(const weaponslot_t *dummyslot)
 //
 // Looks for the given weapon  in an indexed slot
 //
-weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
-                                         const int slot)
+static weaponslot_t *E_findEntryForWeaponInSlot(const player_t *player, const weaponinfo_t *wp,
+                                                const weaponslot_t *slot)
 {
-   if(player->pclass->weaponslots[slot] == nullptr)
+   if(slot == nullptr)
       return nullptr;
 
-   auto baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+   auto baseslot = E_FirstInSlot(slot);
 
    // Try finding the player's currently-equipped weapon.
    while(!baseslot->isDummy())
@@ -426,15 +449,20 @@ weaponslot_t *E_FindEntryForWeaponInSlot(const player_t *player, const weaponinf
    return nullptr;
 }
 
+weaponslot_t *E_FindEntryForWeaponInSlotIndex(const player_t *player, const weaponinfo_t *wp,
+                                              const int slotindex)
+{
+   return E_findEntryForWeaponInSlot(player, wp, player->pclass->weaponslots[slotindex]);
+}
 //
 // Finds the first instance of a weapon in a player's weaponslots
 //
 weaponslot_t *E_FindFirstWeaponSlot(const player_t *player, const weaponinfo_t *wp)
 {
-   for(int i = 0; i < NUMWEAPONSLOTS; i++)
+   for(const weaponslot_t *slot : player->pclass->weaponslots)
    {
       weaponslot_t *ret;
-      if((ret = E_FindEntryForWeaponInSlot(player, wp, i)) != nullptr)
+      if((ret = E_findEntryForWeaponInSlot(player, wp, slot)) != nullptr)
          return ret;
    }
    return nullptr;
@@ -457,11 +485,11 @@ static weaponinfo_t *E_findBestWeapon(const player_t *player,
    if(node == nullptr)
       return nullptr; // This *really* shouldn't happen
 
-   if(node->left && (ret = E_findBestWeapon(player, node->left)))
+   if(node->left  && (ret = E_findBestWeapon(player, node->left)))
       return ret;
    if(E_PlayerOwnsWeapon(player, node->object) && P_WeaponHasAmmo(player, node->object))
       return node->object;
-   if(node->next && (ret = E_findBestWeapon(player, node->next)))
+   if(node->next  && (ret = E_findBestWeapon(player, node->next)))
       return ret;
    if(node->right && (ret = E_findBestWeapon(player, node->right)))
       return ret;
@@ -488,7 +516,7 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
                                                const SelectOrderNode *node)
 {
    bool correctammo;
-   weaponinfo_t *ret = nullptr, *temp = node->object;
+   weaponinfo_t *ret, *temp = node->object;
    if(node == nullptr)
       return nullptr; // This *really* shouldn't happen
 
@@ -497,11 +525,11 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
    else
       correctammo = temp->ammo == nullptr && ammo == nullptr;
 
-   if(node->left && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
+   if(node->left  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->left)))
       return ret;
    if(E_PlayerOwnsWeapon(player, temp) && correctammo && P_WeaponHasAmmo(player, temp))
       return temp;
-   if(node->next && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
+   if(node->next  && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->next)))
       return ret;
    if(node->right && (ret = E_findBestWeaponUsingAmmo(player, ammo, node->right)))
       return ret;
@@ -512,12 +540,18 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
 
 //
 // Initial function to call the function that recursively finds the
-// best weapon the player owns that has the provided primary ammo
+// best weapon the player owns that has the provided primary ammo.
+// If the best weapon found isn't better than the player's readyweapon
+// then nullptr is returned.
 //
-weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
-                                        const itemeffect_t *ammo)
+weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t *player,
+                                              const itemeffect_t *ammo)
 {
-   return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
+   weaponinfo_t *wp = E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
+   if(wp != nullptr && wp->sortorder < player->readyweapon->sortorder)
+      return wp;
+   else
+      return nullptr;
 }
 
 //
@@ -557,6 +591,12 @@ static const char *nativeWepStateLabels[] =
    "AltFire",  // atkstate_alt
    "AltFlash", // flashstate_alt
    "AltHold",  // holdstate_alt
+   "Reload",   // reloadstate
+   "Zoom",     // zoomstate
+   "User1",    // userstate_1
+   "User2",    // userstate_2
+   "User3",    // userstate_3
+   "User4",    // userstate_4
 };
 
 enum wepstatetypes_e
@@ -569,7 +609,13 @@ enum wepstatetypes_e
    WSTATE_HOLD,
    WSTATE_FIRE_ALT,
    WSTATE_FLASH_ALT,
-   WSTATE_HOLD_ALT
+   WSTATE_HOLD_ALT,
+   WSTATE_RELOAD,
+   WSTATE_ZOOM,
+   WSTATE_USER1,
+   WSTATE_USER2,
+   WSTATE_USER3,
+   WSTATE_USER4,
 };
 
 #define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
@@ -595,20 +641,31 @@ static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 
    switch(nativenum)
    {
-   case WSTATE_SELECT:    ret = &wi->upstate;    break;
-   case WSTATE_DESELECT:  ret = &wi->downstate;  break;
-   case WSTATE_READY:     ret = &wi->readystate; break;
-   case WSTATE_FIRE:      ret = &wi->atkstate;   break;
-   case WSTATE_FLASH:     ret = &wi->flashstate; break;
-   case WSTATE_HOLD:      ret = &wi->holdstate;  break;
+   case WSTATE_SELECT:    ret = &wi->upstate;        break;
+   case WSTATE_DESELECT:  ret = &wi->downstate;      break;
+   case WSTATE_READY:     ret = &wi->readystate;     break;
+   case WSTATE_FIRE:      ret = &wi->atkstate;       break;
+   case WSTATE_FLASH:     ret = &wi->flashstate;     break;
+   case WSTATE_HOLD:      ret = &wi->holdstate;      break;
    case WSTATE_FIRE_ALT:  ret = &wi->atkstate_alt;   break;
    case WSTATE_FLASH_ALT: ret = &wi->flashstate_alt; break;
    case WSTATE_HOLD_ALT:  ret = &wi->holdstate_alt;  break;
+   case WSTATE_RELOAD:    ret = &wi->reloadstate;    break;
+   case WSTATE_ZOOM:      ret = &wi->zoomstate;      break;
+   case WSTATE_USER1:     ret = &wi->userstate_1;    break;
+   case WSTATE_USER2:     ret = &wi->userstate_2;    break;
+   case WSTATE_USER3:     ret = &wi->userstate_3;    break;
+   case WSTATE_USER4:     ret = &wi->userstate_4;    break;
    default:
       break;
    }
 
    return ret;
+}
+inline static const int *E_getNativeWepStateLoc(const weaponinfo_t *wi,
+                                                const char *label)
+{
+   return E_getNativeWepStateLoc(const_cast<weaponinfo_t *>(wi), label);
 }
 
 //
@@ -616,11 +673,11 @@ static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
 // Returns null if no such state can be found. Note that the null state is
 // not considered a valid state.
 //
-state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
+state_t *E_GetStateForWeaponInfo(const weaponinfo_t *wi, const char *label)
 {
-   MetaState *ms;
-   state_t *ret = nullptr;
-   int *nativefield = nullptr;
+   const MetaState *ms;
+   state_t   *ret         = nullptr;
+   const int *nativefield = nullptr;
 
    // check metastates
    if((ms = E_GetMetaState(wi, label)))
@@ -642,8 +699,8 @@ state_t *E_GetStateForWeaponInfo(weaponinfo_t *wi, const char *label)
 //
 static weaponinfo_t *E_isWeaponInfoDescendantOf(const weaponinfo_t *wi, const char *type)
 {
-   weaponinfo_t *curwi = wi->parent;
-   weapontype_t targettype = E_WeaponNumForName(type);
+   weaponinfo_t *curwi      = wi->parent;
+   weapontype_t  targettype = E_WeaponNumForName(type);
 
    while(curwi)
    {
@@ -667,9 +724,9 @@ static void E_processDecorateWepGotos(weaponinfo_t *wi, const edecstateout_t *ds
    for(i = 0; i < dso->numgotos; ++i)
    {
       weaponinfo_t *type = nullptr;
-      state_t *state;
-      statenum_t statenum;
-      char *statename = nullptr;
+      state_t      *state;
+      statenum_t    statenum;
+      char         *statename = nullptr;
 
       // see if the label contains a colon, and if so, it may be an
       // access to an inherited state
@@ -808,7 +865,7 @@ static void E_processDecorateWepStatesRecursive(cfg_t *weaponsec, int wnum, bool
       // for values inside them to be overridden by the DECORATE state block.
       // If this isn't being done, firststate will be null.
       const char *firststate = cfg_getstr(weaponsec, ITEM_WPN_FIRSTDECSTATE);
-      const char *tempstr = cfg_getstr(weaponsec, ITEM_WPN_STATES);
+      const char *tempstr    = cfg_getstr(weaponsec, ITEM_WPN_STATES);
 
       // recursion should process states only if firststate is valid
       if(!recursive || firststate)
@@ -844,8 +901,8 @@ static void E_reallocWeapons(unsigned int numnewweapons)
          numweaponsalloc += numnewweapons;
 
       // reallocate weaponinfo[]
-      weaponinfo = erealloc(weaponinfo_t **, weaponinfo, numweaponsalloc *
-                            sizeof(weaponinfo_t *));
+      weaponinfo = erealloc(weaponinfo_t **, weaponinfo,
+                            numweaponsalloc * sizeof(weaponinfo_t *));
 
       for(i = NUMWEAPONTYPES; i < numweaponsalloc; i++)
          weaponinfo[i] = nullptr;
@@ -860,11 +917,11 @@ static void E_reallocWeapons(unsigned int numnewweapons)
 //
 void E_CollectWeapons(cfg_t *cfg)
 {
-   weapontype_t i;
-   unsigned int numweapons;        // number of weaponinfo defined by the cfg
-   unsigned int curnewweapon = 0;  // index of current new weaponinfo being used
-   weaponinfo_t *newWeapon = nullptr;
-   static bool firsttime = true;
+   weapontype_t  i;
+   unsigned int  numweapons;        // number of weaponinfo defined by the cfg
+   unsigned int  curnewweapon = 0;  // index of current new weaponinfo being used
+   weaponinfo_t *newWeapon    = nullptr;
+   static bool   firsttime    = true;
 
    // get number of weaponinfo defined by the cfg
    numweapons = cfg_size(cfg, EDF_SEC_WEAPONINFO);
@@ -900,10 +957,9 @@ void E_CollectWeapons(cfg_t *cfg)
    // cycle through the weaponinfo defined in the cfg
    for(i = 0; static_cast<unsigned>(i) < numweapons; i++)
    {
-      cfg_t *weaponcfg  = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
-      const char *name  = cfg_title(weaponcfg);
-      cfg_t *titleprops = nullptr;
-      int dehnum = -1;
+      cfg_t      *weaponcfg = cfg_getnsec(cfg, EDF_SEC_WEAPONINFO, i);
+      const char *name      = cfg_title(weaponcfg);
+      int         dehnum    = -1;
 
       // This is a new weaponinfo, whether or not one already exists by this name
       // in the hash table. For subsequent addition of EDF weaponinfo at runtime,
@@ -922,7 +978,7 @@ void E_CollectWeapons(cfg_t *cfg)
       // check for titleprops definition first
       if(cfg_size(weaponcfg, "#title") > 0)
       {
-         titleprops = cfg_gettitleprops(weaponcfg);
+         cfg_t *titleprops = cfg_gettitleprops(weaponcfg);
          if(titleprops)
             dehnum = cfg_getint(titleprops, ITEM_WPN_TITLE_DEHNUM);
       }
@@ -1065,12 +1121,16 @@ static void E_copyWeapon(weapontype_t num, weapontype_t pnum)
    // tracker inheritance is weird
    //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
    this_wi->tracker = tracker;
+
+   // MaxW: Inheriting weapons have no use for this flag, and I don't want
+   // users to have to unset it when it shouldn't be set in the first place.
+   this_wi->flags &= ~WPF_DISABLEAPS;
 }
 
 struct weapontitleprops_t
 {
    const char *superclass;
-   int dehackednum;
+   int         dehackednum;
 };
 
 static void E_getWeaponTitleProps(cfg_t *weaponsec, weapontitleprops_t &props, bool def)
@@ -1105,7 +1165,7 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
    return pnum;
 }
 
-static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
+static void E_insertSelectOrderNode(fixed_t sortorder, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_HASSORTORDER))
       selectordertree->deleteNode(wp->sortorder, wp);
@@ -1171,13 +1231,13 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       if(pnum >= 0)
       {
          cfg_t *parent_tngsec;
-         weapontype_t pnum = E_resolveParentWeapon(weaponsec, titleprops); // Why's this here?
+         weapontype_t pnum = E_resolveParentWeapon(weaponsec, titleprops); // FIXME: Is this required?
 
          // check against cyclic inheritance
          if(!E_checkWeaponInherit(pnum))
          {
             E_EDFLoggedErr(2, "E_processWeapon: cyclic inheritance "
-                               "detected in weaponinfo '%s'\n", wp.name);
+                              "detected in weaponinfo '%s'\n", wp.name);
          }
 
          // add to inheritance stack
@@ -1201,10 +1261,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
    if(IS_SET(ITEM_WPN_SELECTORDER))
    {
-      if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
+      if((tempfloat = cfg_getfloat(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
-         E_insertSelectOrderNode(tempint, &wp, !def);
-         wp.sortorder = tempint;
+         const fixed_t tempfixed = M_DoubleToFixed(tempfloat);
+         E_insertSelectOrderNode(tempfixed, &wp, !def);
+         wp.sortorder = tempfixed;
       }
    }
    if(cfg_size(weaponsec, ITEM_WPN_SISTERWEAPON) > 0)
@@ -1256,28 +1317,46 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
    // Attack properties
    if(IS_SET(ITEM_WPN_AMMO))
-      wp.ammo = E_ItemEffectForName(cfg_getstr(weaponsec, ITEM_WPN_AMMO));
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO);
+      if((wp.ammo = E_ItemEffectForName(tempstr)) == nullptr && estrnonempty(tempstr))
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: bad ammotype '%s' in weaponinfo '%s'\n",
+                        tempstr, wp.name);
+      }
+   }
 
    if(IS_SET(ITEM_WPN_UPSTATE))
-      wp.upstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_UPSTATE));
+      wp.upstate    = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_UPSTATE));
    if(IS_SET(ITEM_WPN_DOWNSTATE))
-      wp.downstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_DOWNSTATE));
+      wp.downstate  = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_DOWNSTATE));
    if(IS_SET(ITEM_WPN_READYSTATE))
       wp.readystate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_READYSTATE));
    if(IS_SET(ITEM_WPN_ATKSTATE))
-      wp.atkstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE));
+      wp.atkstate   = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE));
    if(IS_SET(ITEM_WPN_FLASHSTATE))
       wp.flashstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_FLASHSTATE));
    if(IS_SET(ITEM_WPN_HOLDSTATE))
-      wp.holdstate = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE));
+      wp.holdstate  = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
+   {
+      if(!def)
+         wp.flags &= ~WPF_DISABLEAPS;
       wp.ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
+   }
 
 
    // Alt attack properties
    if(IS_SET(ITEM_WPN_AMMO_ALT))
-      wp.ammo_alt = E_ItemEffectForName(cfg_getstr(weaponsec, ITEM_WPN_AMMO_ALT));
+   {
+      tempstr = cfg_getstr(weaponsec, ITEM_WPN_AMMO_ALT);
+      if((wp.ammo_alt = E_ItemEffectForName(tempstr)) == nullptr && estrnonempty(tempstr))
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: bad ammotype2 '%s' in weaponinfo '%s'\n",
+                        tempstr, wp.name);
+      }
+   }
 
    if(IS_SET(ITEM_WPN_ATKSTATE_ALT))
       wp.atkstate_alt = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_ATKSTATE_ALT));
@@ -1287,7 +1366,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.holdstate_alt = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE_ALT));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT_ALT))
+   {
+      if(!def)
+         wp.flags &= ~WPF_DISABLEAPS;
       wp.ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
+   }
 
    if(IS_SET(ITEM_WPN_MOD))
    {
@@ -1347,7 +1430,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    }
 
    if(IS_SET(ITEM_WPN_RECOIL))
-      wp.recoil = cfg_getint(weaponsec, ITEM_WPN_RECOIL);
+      wp.recoil = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_RECOIL));
    if(IS_SET(ITEM_WPN_HAPTICRECOIL))
       wp.hapticrecoil = cfg_getint(weaponsec, ITEM_WPN_HAPTICRECOIL);
    if(IS_SET(ITEM_WPN_HAPTICTIME))
@@ -1378,6 +1461,9 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       if(tempsfx)
          wp.readysound = estrdup(tempstr);
    }
+
+   if(IS_SET(ITEM_WPN_FSOFFSET))
+      wp.fullscreenoffset = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_FSOFFSET));
 
    // Process DECORATE state block
    E_processDecorateWepStatesRecursive(weaponsec, i, false);

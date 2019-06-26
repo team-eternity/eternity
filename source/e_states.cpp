@@ -234,7 +234,7 @@ int E_SafeStateName(const char *name)
 // Allows lookup of what may either be an EDF global state name, DECORATE state 
 // label relative to a particular mobjinfo, or a state DeHackEd number.
 //
-int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
+int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name)
 {
    char *pos = nullptr;
    long  num = strtol(name, &pos, 0);
@@ -243,7 +243,7 @@ int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
    if(estrnonempty(pos))
    {
       int      statenum;
-      state_t *state    = nullptr;
+      const state_t *state = nullptr;
       
       // Try global resolution first.
       if((statenum = E_StateNumForName(name)) < 0)
@@ -1093,10 +1093,8 @@ static void E_ProcessCmpState(const char *value, int i)
       while(!early_args_end)
       {
          NEXTTOKEN();
-         
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
@@ -1146,9 +1144,7 @@ static void E_ProcessCmpState(const char *value, int i)
       {
          NEXTTOKEN();
 
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }

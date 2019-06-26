@@ -81,9 +81,9 @@ namespace ACSVM
 
          // Allocate and initialize new array.
          T *stackNew = static_cast<T *>(::operator new(idxEnd * sizeof(T)));
-         for(T *itrNew = stackNew, *itr = stkPtr, *end = stack; itr != end;)
+         for(T *itrNew = stackNew, *itr = stack, *end = stkPtr; itr != end;)
          {
-            new(itrNew++) T(std::move(*--itr));
+            new(itrNew++) T(std::move(*itr++));
             itr->~T();
          }
 

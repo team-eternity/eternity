@@ -120,8 +120,7 @@ bool nomusicparm;
 extern bool inhelpscreens;
 
 skill_t startskill;
-int     startepisode;
-int     startmap;
+startlevel_t d_startlevel;
 char    *startlevel;
 bool autostart;
 
@@ -1047,10 +1046,8 @@ static void D_ProcessWadPreincludes()
    // haleyjd 09/30/08: don't do in shareware
    if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; ++i)
-         if((s = wad_files[i]))
+      for(char *s : wad_files)
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1075,11 +1072,9 @@ static void D_ProcessDehPreincludes(void)
 {
    if(!M_CheckParm ("-noload"))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; i++)
+      for(char *s : deh_files)
       {
-         if((s = deh_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1118,10 +1113,9 @@ static void D_AutoExecScripts()
 
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
-      char *s;
-      for(int i = 0; i < MAXLOADFILES; i++)
+      for(char *s : csc_files)
       {
-         if((s = csc_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1161,7 +1155,7 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-      D_ProcessDehInWad(lumpinfo[i]->namehash.next);
+      D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
          D_QueueDEH(NULL, i); // haleyjd: queue it
@@ -1173,7 +1167,7 @@ static void D_ProcessDehInWads()
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
 
-   D_ProcessDehInWad(root->namehash.index);
+   D_ProcessDehInWad(root->index);
 }
 
 //=============================================================================
@@ -1450,8 +1444,7 @@ static void D_DoomInit()
 
    // jff 3/24/98 was sk_medium, just note not picked
    startskill = sk_none;
-   startepisode = 1;
-   startmap = 1;
+   d_startlevel = { 1, 1 };
    autostart = false;
 
    if((p = M_CheckParm("-skill")) && p < myargc - 1)
@@ -1462,8 +1455,8 @@ static void D_DoomInit()
 
    if((p = M_CheckParm("-episode")) && p < myargc - 1)
    {
-      startepisode = myargv[p+1][0]-'0';
-      startmap = 1;
+      d_startlevel.episode = myargv[p+1][0]-'0';
+      d_startlevel.map = 1;
       autostart = true;
    }
 
@@ -1500,16 +1493,23 @@ static void D_DoomInit()
    if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
        (p = M_CheckParm("-wart"))) && p < myargc - 1)
    {
-      // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-      if(GameModeInfo->flags & GIF_MAPXY)
+      char *endptr = nullptr;
+      strtol(myargv[p + 1], &endptr, 10);
+      if(*endptr) // if not a number, use map name
       {
-         startmap = atoi(myargv[p + 1]);
+         d_startlevel.mapname = myargv[p + 1];
+         autostart = true;
+      }
+      else if(GameModeInfo->flags & GIF_MAPXY)
+      {
+         // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
+         d_startlevel.map = atoi(myargv[p + 1]);
          autostart = true;
       }
       else if(p < myargc - 2)
       {
-         startepisode = atoi(myargv[++p]);
-         startmap = atoi(myargv[p + 1]);
+         d_startlevel.episode = atoi(myargv[++p]);
+         d_startlevel.map = atoi(myargv[p + 1]);
          autostart = true;
       }
    }
@@ -1868,7 +1868,8 @@ static void D_DoomInit()
       singledemo = true;
    }
 
-   startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
+   startlevel = estrdup(d_startlevel.mapname ? d_startlevel.mapname :
+                        G_GetNameForMap(d_startlevel.episode, d_startlevel.map));
 
    if(slot && ++slot < myargc)
    {
@@ -1886,7 +1887,11 @@ static void D_DoomInit()
          if(M_CheckParm("-vanilla") > 0)
             G_SetOldDemoOptions();
 
-         G_InitNewNum(startskill, startepisode, startmap);
+         if(d_startlevel.mapname)
+            G_InitNew(startskill, d_startlevel.mapname);
+         else
+            G_InitNewNum(startskill, d_startlevel.episode, d_startlevel.map);
+
          if(demorecording)
             G_BeginRecording();
       }

@@ -56,6 +56,7 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "FREEDOOM",
    "ULTFD",
    "FREEDM",
+   "REKKR",
 };
 
 // IWAD game names
@@ -75,6 +76,7 @@ static const char *titles[NUMPICKIWADS] =
    "Freedoom Phase 2",
    "Freedoom Phase 1",
    "FreeDM",
+   "Rekkr",
 };
 
 static byte *bgframe;                // background graphics
@@ -557,6 +559,9 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
    // create the renderer
    if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
       return -1;
+
+   // bring the window to the front
+   SDL_RaiseWindow(pickwindow);
 
    // open startup.wad (private to this module)
    if(!I_Pick_OpenWad())

@@ -101,7 +101,7 @@ void QuakeThinker::Think()
             angle_t  thrustangle;   
             
             // test if in damage radius and on floor
-            if(dst < this->damageRadius && mo->z <= mo->floorz)
+            if(dst < this->damageRadius && mo->z <= mo->zref.floor)
             {
                if(P_Random(pr_quake) < 50)
                {

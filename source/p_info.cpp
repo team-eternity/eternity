@@ -853,12 +853,13 @@ static void P_applyHexenMapInfo()
    if((s = xlmi->getString("sky1", NULL)))
    {
       LevelInfo.skyName  = s;
-      LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0);
+      // FIXME: currently legacy MAPINFO is still integer-only
+      LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0) * FRACUNIT;
    }
    if((s = xlmi->getString("sky2", NULL)))
    {
       LevelInfo.sky2Name  = s;
-      LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0);
+      LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0) * FRACUNIT;
    }
 
    // double skies
@@ -940,10 +941,10 @@ static void P_InfoDefaultSoundNames()
    else
    {
       // restore defaults
-      for(i = 0; i < NUMMAPINFOSOUNDS; i++)
+      for(sfxinfo_t **soundalias : DefSoundAliases)
       {
-         if(DefSoundAliases[i][0])
-            DefSoundAliases[i][0]->alias = DefSoundAliases[i][1];
+         if(soundalias[0])
+            soundalias[0]->alias = soundalias[1];
       }
    }
 
@@ -1512,6 +1513,7 @@ enum
    IVT_FLAGS,       // data is a BEX-style flags string
    IVT_ENVIRONMENT, // data is a pair of sound environment ID numbers
    IVT_LEVELACTION, // data is a level action string
+   IVT_DOUBLEFIXED, // data is floating-point and is loaded as fixed_t
    IVT_END
 };
 
@@ -1554,6 +1556,9 @@ struct levelvar_t
 
 #define LI_ACTION(name, field) \
    { IVT_LEVELACTION, name, &(LevelInfo . field), nullptr, true }
+
+#define LI_DBLFIX(name, field) \
+   { IVT_DOUBLEFIXED, name, &(LevelInfo . field), nullptr, false }
 
 static levelvar_t levelvars[]=
 {
@@ -1601,8 +1606,8 @@ static levelvar_t levelvars[]=
    LI_STRING("outdoorfog",         outdoorFog),
    LI_INTEGR("partime",            partime),
    LI_STRNUM("sector-colormaps",   sectorColormaps,   sectorColormapVals),
-   LI_INTEGR("skydelta",           skyDelta),
-   LI_INTEGR("sky2delta",          sky2Delta),
+   LI_DBLFIX("skydelta",           skyDelta),
+   LI_DBLFIX("sky2delta",          sky2Delta),
    LI_STRING("skyname",            skyName),
    LI_STRING("sky2name",           sky2Name),
    LI_STRING("sound-swtchn",       sound_swtchn),
@@ -1654,6 +1659,14 @@ static void P_parseLevelStrNum(levelvar_t *var, const qstring &value)
 static void P_parseLevelInt(levelvar_t *var, const qstring &value)
 {
    *(int*)var->variable = value.toInt();
+}
+
+//
+// Parses a double-precision value and converts it to fixed-point internally
+//
+static void P_parseLevelDoubleFixed(levelvar_t *var, const qstring &value)
+{
+   *static_cast<fixed_t *>(var->variable) = M_DoubleToFixed(value.toDouble(nullptr));
 }
 
 //
@@ -1861,7 +1874,8 @@ static varparserfn_t infoVarParsers[IVT_END] =
    P_parseLevelBool,
    P_parseLevelFlags,
    P_parseLevelEnvironment,
-   P_parseLevelAction
+   P_parseLevelAction,
+   P_parseLevelDoubleFixed
 };
 
 //

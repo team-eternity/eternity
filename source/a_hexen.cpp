@@ -151,7 +151,7 @@ void A_PigPain(Mobj *actor)
 {
    A_Pain(actor);
 
-   if(actor->z <= actor->floorz)
+   if(actor->z <= actor->zref.floor)
       actor->momz = 7 * FRACUNIT / 2;
 }
 
@@ -943,7 +943,7 @@ void A_AffritRocks(Mobj *actor)
 void A_SmBounce(Mobj *actor)
 {
    // give some more momentum (x,y,&z)
-   actor->z    = actor->floorz + FRACUNIT;
+   actor->z    = actor->zref.floor + FRACUNIT;
    actor->momz = 2*FRACUNIT + (P_Random(pr_smbounce) << 10);
    actor->momx = P_Random(pr_smbounce) % 3 << FRACBITS;
    actor->momy = P_Random(pr_smbounce) % 3 << FRACBITS;
@@ -1079,9 +1079,9 @@ void A_IceGuyMissileExplode(Mobj *actor)
 //
 void A_CheckFloor(Mobj *actor)
 {
-   if(actor->z <= actor->floorz)
+   if(actor->z <= actor->zref.floor)
    {
-      actor->z = actor->floorz;
+      actor->z = actor->zref.floor;
       actor->flags2 &= ~MF2_LOGRAV;
       P_SetMobjState(actor, actor->info->deathstate);
    }

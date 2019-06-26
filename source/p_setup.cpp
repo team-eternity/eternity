@@ -83,7 +83,6 @@
 #include "z_auto.h"
 
 extern const char *level_error;
-extern void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side);
 
 //
 // Miscellaneous constants
@@ -360,6 +359,16 @@ static void P_LoadVertexes(int lump)
    }
 }
 
+// SoM 5/13/09: calculate seg length
+static void P_CalcSegLength(seg_t *lseg)
+{
+   float dx, dy;
+
+   dx = lseg->v2->fx - lseg->v1->fx;
+   dy = lseg->v2->fy - lseg->v1->fy;
+   lseg->len = sqrtf(dx * dx + dy * dy);
+}
+
 //
 // P_LoadSegs
 //
@@ -484,16 +493,6 @@ static void P_LoadSegs_V4(int lump)
       P_CalcSegLength(li);
    }
    Z_Free(data);
-}
-
-// SoM 5/13/09: calculate seg length
-void P_CalcSegLength(seg_t *lseg)
-{
-   float dx, dy;
-
-   dx = lseg->v2->fx - lseg->v1->fx;
-   dy = lseg->v2->fy - lseg->v1->fy;
-   lseg->len = (float)sqrt(dx * dx + dy * dy);
 }
 
 //
@@ -1127,6 +1126,25 @@ typedef struct mapnode_znod_s
 } mapnode_znod_t;
 
 //
+// R_DynaSegOffset
+//
+// Computes the offset value of the seg relative to its parent linedef.
+// Not terribly fast.
+// Derived from BSP 5.2 SplitDist routine.
+//
+// haleyjd 06/14/10: made global for map loading in p_setup.c and added
+//                   side parameter.
+// ioanch: made it local again, because dynasegs will use different coordinates for interpolation.
+//
+static void R_calcSegOffset(seg_t *lseg, const line_t *line, int side)
+{
+   float dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
+   float dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
+
+   lseg->offset = sqrtf(dx * dx + dy * dy);
+}
+
+//
 // P_LoadZSegs
 //
 // Loads segs from ZDoom uncompressed nodes
@@ -1244,7 +1262,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
 
       if(li->v2)  // IOANCH: only count if v2 is available.
          P_CalcSegLength(li);
-      R_DynaSegOffset(li, ldef, side);
+      R_calcSegOffset(li, ldef, side);
    }
    
    // IOANCH: update the seg count
@@ -1523,7 +1541,11 @@ static void P_LoadThings(int lump)
       // haleyjd: removing this for Heretic and DeHackEd
       // IOANCH 20151213: use function
       if(P_CheckThingDoomBan(ft->type))
+      {
+         if(demo_compatibility) // emulate old behaviour where thing processing is totally abandoned
+            break;
          continue;
+      }
       
       // Do spawn all other stuff.
       // ioanch 20151218: fixed point coordinates
@@ -1722,7 +1744,7 @@ void P_PostProcessLineFlags(line_t *ld)
 // killough 5/3/98: reformatted, cleaned up
 // haleyjd 2/26/05: ExtraData extensions
 //
-static void P_LoadLineDefs(int lump)
+static void P_LoadLineDefs(int lump, UDMFSetupSettings &setupSettings)
 {
    byte *data;
 
@@ -1758,7 +1780,7 @@ static void P_LoadLineDefs(int lump)
       // haleyjd 04/20/08: Implicit ExtraData lines
       if((edlinespec && ld->special == edlinespec) ||
          EV_IsParamLineSpec(ld->special) || EV_IsParamStaticInit(ld->special))
-         E_LoadLineDefExt(ld, ld->special == edlinespec);
+         E_LoadLineDefExt(ld, ld->special == edlinespec, setupSettings);
 
       // haleyjd 04/30/11: Do some post-ExtraData line flag adjustments
       P_PostProcessLineFlags(ld);
@@ -2088,6 +2110,310 @@ static void P_LoadSideDefs2(int lumpnum)
 typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
 
 //
+// Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not
+// a solution for MBF -complevel however.
+//
+// Code copied from PrBoom+, possibly inherited itself from older ports. Specific stuff kept here.
+//
+static void P_createBlockMapBoom()
+{
+   //
+   // jff 10/6/98
+   // New code added to speed up calculation of internal blockmap
+   // Algorithm is order of nlines*(ncols+nrows) not nlines*ncols*nrows
+   //
+
+   static const int blkshift = 7;               /* places to shift rel position for cell num */
+   static const int blkmask = (1 << blkshift) - 1; /* mask for rel position within cell */
+   // ioanch: blkmargin removed, was 0
+   // jff 10/8/98 use guardband>0
+   // jff 10/12/98 0 ok with + 1 in rows,cols
+
+   struct linelist_t        // type used to list lines in each block
+   {
+      int num;
+      struct linelist_t *next;
+   };
+
+   //
+   // Subroutine to add a line number to a block list
+   // It simply returns if the line is already in the block
+   //
+   int NBlocks;                   // number of cells = nrows*ncols
+
+   int xorg, yorg;                 // blockmap origin (lower left)
+   int nrows, ncols;               // blockmap dimensions
+   linelist_t **blocklists = nullptr;  // array of pointers to lists of lines
+   int *blockcount = nullptr;          // array of counters of line lists
+   int *blockdone = nullptr;           // array keeping track of blocks/line
+   int linetotal = 0;              // total length of all blocklists
+   int map_minx = INT_MAX;          // init for map limits search
+   int map_miny = INT_MAX;
+   int map_maxx = INT_MIN;
+   int map_maxy = INT_MIN;
+
+   // scan for map limits, which the blockmap must enclose
+
+   for(int i = 0; i < numvertexes; i++)
+   {
+      fixed_t t;
+
+      if((t = vertexes[i].x) < map_minx)
+         map_minx = t;
+      else if(t > map_maxx)
+         map_maxx = t;
+      if((t = vertexes[i].y) < map_miny)
+         map_miny = t;
+      else if(t > map_maxy)
+         map_maxy = t;
+   }
+   map_minx >>= FRACBITS;    // work in map coords, not fixed_t
+   map_maxx >>= FRACBITS;
+   map_miny >>= FRACBITS;
+   map_maxy >>= FRACBITS;
+
+   // set up blockmap area to enclose level plus margin
+
+   xorg = map_minx;
+   yorg = map_miny;
+   ncols = (map_maxx - xorg + 1 + blkmask) >> blkshift;  //jff 10/12/98
+   nrows = (map_maxy - yorg + 1 + blkmask) >> blkshift;  //+1 needed for
+   NBlocks = ncols * nrows;                                  //map exactly 1 cell
+
+   // create the array of pointers on NBlocks to blocklists
+   // also create an array of linelist counts on NBlocks
+   // finally make an array in which we can mark blocks done per line
+
+   // CPhipps - calloc's
+   blocklists = ecalloc(linelist_t **, NBlocks, sizeof(linelist_t *));
+   blockcount = ecalloc(int *, NBlocks, sizeof(int));
+   blockdone = emalloc(int *, NBlocks * sizeof(int));
+
+   auto AddBlockLine = [blocklists, blockcount, blockdone](int blockno, int lineno)
+   {
+      linelist_t *l;
+
+      if(blockdone[blockno])
+         return;
+
+      l = emalloc(linelist_t *, sizeof(linelist_t));
+      l->num = lineno;
+      l->next = blocklists[blockno];
+      blocklists[blockno] = l;
+      blockcount[blockno]++;
+      blockdone[blockno] = 1;
+   };
+
+   // initialize each blocklist, and enter the trailing -1 in all blocklists
+   // note the linked list of lines grows backwards
+
+   for(int i = 0; i < NBlocks; i++)
+   {
+      blocklists[i] = emalloc(linelist_t *, sizeof(linelist_t));
+      blocklists[i]->num = -1;
+      blocklists[i]->next = nullptr;
+      blockcount[i]++;
+   }
+
+   // For each linedef in the wad, determine all blockmap blocks it touches,
+   // and add the linedef number to the blocklists for those blocks
+
+   for(int i = 0; i < numlines; i++)
+   {
+      int x1 = lines[i].v1->x >> FRACBITS;         // lines[i] map coords
+      int y1 = lines[i].v1->y >> FRACBITS;
+      int x2 = lines[i].v2->x >> FRACBITS;
+      int y2 = lines[i].v2->y >> FRACBITS;
+      int dx = x2 - x1;
+      int dy = y2 - y1;
+      int vert = !dx;                            // lines[i] slopetype
+      int horiz = !dy;
+      int spos = (dx ^ dy) > 0;
+      int sneg = (dx ^ dy) < 0;
+      int bx, by;                                 // block cell coords
+      int minx = x1 > x2 ? x2 : x1;                 // extremal lines[i] coords
+      int maxx = x1 > x2 ? x1 : x2;
+      int miny = y1 > y2 ? y2 : y1;
+      int maxy = y1 > y2 ? y1 : y2;
+
+      // no blocks done for this linedef yet
+
+      memset(blockdone, 0, NBlocks * sizeof(int));
+
+      // The line always belongs to the blocks containing its endpoints
+
+      bx = (x1 - xorg) >> blkshift;
+      by = (y1 - yorg) >> blkshift;
+      AddBlockLine(by * ncols + bx, i);
+      bx = (x2 - xorg) >> blkshift;
+      by = (y2 - yorg) >> blkshift;
+      AddBlockLine(by * ncols + bx, i);
+
+      // For each column, see where the line along its left edge, which
+      // it contains, intersects the Linedef i. Add i to each corresponding
+      // blocklist.
+
+      if(!vert)    // don't interesect vertical lines with columns
+      {
+         for(int j = 0; j < ncols; j++)
+         {
+            // intersection of Linedef with x=xorg+(j<<blkshift)
+            // (y-y1)*dx = dy*(x-x1)
+            // y = dy*(x-x1)+y1*dx;
+
+            int x = xorg + (j << blkshift);       // (x,y) is intersection
+            int y = dy * (x - x1) / dx + y1;
+            int yb = (y - yorg) >> blkshift;      // block row number
+            int yp = (y - yorg) & blkmask;        // y position within block
+
+            if(yb < 0 || yb > nrows - 1)     // outside blockmap, continue
+               continue;
+
+            if(x < minx || x > maxx)       // line doesn't touch column
+               continue;
+
+            // The cell that contains the intersection point is always added
+
+            AddBlockLine(ncols * yb + j, i);
+
+            // if the intersection is at a corner it depends on the slope
+            // (and whether the line extends past the intersection) which
+            // blocks are hit
+
+            if(yp == 0)        // intersection at a corner
+            {
+               if(sneg)       //   \ - blocks x,y-, x-,y
+               {
+                  if(yb > 0 && miny < y)
+                     AddBlockLine(ncols * (yb - 1) + j, i);
+                  if(j > 0 && minx < x)
+                     AddBlockLine(ncols * yb + j - 1, i);
+               }
+               else if(spos)  //   / - block x-,y-
+               {
+                  if(yb > 0 && j > 0 && minx < x)
+                     AddBlockLine(ncols * (yb - 1) + j - 1, i);
+               }
+               else if(horiz) //   - - block x-,y
+               {
+                  if(j > 0 && minx < x)
+                     AddBlockLine(ncols * yb + j - 1, i);
+               }
+            }
+            else if(j > 0 && minx < x) // else not at corner: x-,y
+               AddBlockLine(ncols * yb + j - 1, i);
+         }
+      }
+
+      // For each row, see where the line along its bottom edge, which
+      // it contains, intersects the Linedef i. Add i to all the corresponding
+      // blocklists.
+
+      if(!horiz)
+      {
+         for(int j = 0; j < nrows; j++)
+         {
+            // intersection of Linedef with y=yorg+(j<<blkshift)
+            // (x,y) on Linedef i satisfies: (y-y1)*dx = dy*(x-x1)
+            // x = dx*(y-y1)/dy+x1;
+
+            int y = yorg + (j << blkshift);       // (x,y) is intersection
+            int x = (dx * (y - y1)) / dy + x1;
+            int xb = (x - xorg) >> blkshift;      // block column number
+            int xp = (x - xorg) & blkmask;        // x position within block
+
+            if (xb < 0 || xb > ncols - 1)   // outside blockmap, continue
+               continue;
+
+            if (y < miny || y > maxy)     // line doesn't touch row
+               continue;
+
+            // The cell that contains the intersection point is always added
+
+            AddBlockLine(ncols * j + xb, i);
+
+            // if the intersection is at a corner it depends on the slope
+            // (and whether the line extends past the intersection) which
+            // blocks are hit
+
+            if(xp==0)        // intersection at a corner
+            {
+               if(sneg)       //   \ - blocks x,y-, x-,y
+               {
+                  if(j > 0 && miny < y)
+                     AddBlockLine(ncols * (j - 1) + xb, i);
+                  if (xb > 0 && minx < x)
+                     AddBlockLine(ncols * j + xb - 1, i);
+               }
+               else if(vert)  //   | - block x,y-
+               {
+                  if(j > 0 && miny < y)
+                     AddBlockLine(ncols * (j - 1) + xb, i);
+               }
+               else if(spos)  //   / - block x-,y-
+               {
+                  if(xb > 0 && j > 0 && miny < y)
+                     AddBlockLine(ncols * (j - 1) + xb - 1, i);
+               }
+            }
+            else if(j > 0 && miny < y) // else not on a corner: x,y-
+               AddBlockLine(ncols * (j - 1) + xb, i);
+         }
+      }
+   }
+
+   // Add initial 0 to all blocklists
+   // count the total number of lines (and 0's and -1's)
+
+   memset(blockdone, 0, NBlocks * sizeof(int));
+   linetotal = 0;
+   for(int i = 0; i < NBlocks; i++)
+   {
+      AddBlockLine(i, 0);
+      linetotal += blockcount[i];
+   }
+
+   // Create the blockmap lump
+
+   blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * (4 + NBlocks + linetotal), PU_LEVEL,
+                             nullptr);
+   // blockmap header
+
+   blockmaplump[0] = bmaporgx = xorg << FRACBITS;
+   blockmaplump[1] = bmaporgy = yorg << FRACBITS;
+   blockmaplump[2] = bmapwidth  = ncols;
+   blockmaplump[3] = bmapheight = nrows;
+
+   // offsets to lists and block lists
+
+   for(int i = 0; i < NBlocks; i++)
+   {
+      linelist_t *bl = blocklists[i];
+
+      int offs = blockmaplump[4 + i] =   // set offset to block's list
+      (i ? blockmaplump[4 + i - 1] : 4 + NBlocks) + (i ? blockcount[i - 1] : 0);
+
+      // add the lines in each block's list to the blockmaplump
+      // delete each list node as we go
+
+      while(bl)
+      {
+         linelist_t *tmp = bl->next;
+         blockmaplump[offs++] = bl->num;
+
+         efree(bl);
+         bl = tmp;
+      }
+   }
+   skipblstart = true;
+
+   // free all temporary storage
+   efree(blocklists);
+   efree(blockcount);
+   efree(blockdone);
+}
+
+//
 // P_CreateBlockMap
 //
 // killough 10/98: Rewritten to use faster algorithm.
@@ -2107,6 +2433,9 @@ static void P_CreateBlockMap()
            maxx = INT_MIN, maxy = INT_MIN;
 
    C_Printf("P_CreateBlockMap: rebuilding blockmap for level\n");
+
+   if(demo_version >= 200 && demo_version < 203)
+      return P_createBlockMapBoom();   // use Boom mode (which is also in PrBoom+)
 
    // First find limits of map
    
@@ -2588,6 +2917,8 @@ static void P_GroupLines()
 //
 // Firelines (TM) is a Rezistered Trademark of MBF Productions
 //
+// ioanch 20190222: rewritten to lighten up the tabs and use floating-point.
+//
 static void P_RemoveSlimeTrails()             // killough 10/98
 {
    byte *hit; 
@@ -2602,46 +2933,48 @@ static void P_RemoveSlimeTrails()             // killough 10/98
    for(i = 0; i < numsegs; i++)            // Go through each seg
    {
       const line_t *l = segs[i].linedef;   // The parent linedef
-      if(l->dx && l->dy)                   // We can ignore orthogonal lines
+      if(!l->dx || !l->dy)                 // We can ignore orthogonal lines
+         continue;
+      vertex_t *v = segs[i].v1;
+
+      do
       {
-         vertex_t *v = segs[i].v1;
+         if(hit[v - vertexes])   // If we haven't processed vertex
+            continue;
+         hit[v - vertexes] = 1;        // Mark this vertex as processed
+         if(v == l->v1 || v == l->v2)  // Exclude endpoints of linedefs
+            continue;
 
-         do
+         // Project the vertex back onto the parent linedef
+         // ioanch: just use doubles
+         double dx2 = pow(M_FixedToDouble(l->dx), 2);
+         double dy2 = pow(M_FixedToDouble(l->dy), 2);
+         double dxy = M_FixedToDouble(l->dx) * M_FixedToDouble(l->dy);
+         double s = dx2 + dy2;
+         float x0 = v->fx;
+         float y0 = v->fy;
+         float x1 = l->v1->fx;
+         float y1 = l->v1->fy;
+         v->fx = static_cast<float>((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
+         v->fy = static_cast<float>((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
+
+         // ioanch: add linguortal support, from PrBoom+/[crispy]
+         // demo_version check needed, for similar reasons as above
+         static const double threshold = M_FixedToDouble(LINGUORTAL_THRESHOLD);
+         if(demo_version >= 342 && (fabs(x0 - v->fx) > threshold || fabs(y0 - v->fy) > threshold))
          {
-            if(!hit[v - vertexes])           // If we haven't processed vertex
-            {
-               hit[v - vertexes] = 1;        // Mark this vertex as processed
-               if(v != l->v1 && v != l->v2)  // Exclude endpoints of linedefs
-               { 
-                  // Project the vertex back onto the parent linedef
-                  int64_t dx2 = (l->dx >> FRACBITS) * (l->dx >> FRACBITS);
-                  int64_t dy2 = (l->dy >> FRACBITS) * (l->dy >> FRACBITS);
-                  int64_t dxy = (l->dx >> FRACBITS) * (l->dy >> FRACBITS);
-                  int64_t s   = dx2 + dy2;
-                  int     x0  = v->x, y0 = v->y, x1 = l->v1->x, y1 = l->v1->y;
-                  v->x = (fixed_t)((dx2 * x0 + dy2 * x1 + dxy * (y0 - y1)) / s);
-                  v->y = (fixed_t)((dy2 * y0 + dx2 * y1 + dxy * (x0 - x1)) / s);
+            v->fx = x0;  // reset
+            v->fy = y0;
+         }
+         else
+         {
+            // If accepted, update the fixed coordinates too
+            v->x = M_FloatToFixed(v->fx);
+            v->y = M_FloatToFixed(v->fy);
+         }
 
-                  // ioanch: add linguortal support, from PrBoom+/[crispy]
-                  // demo_version check needed, for similar reasons as above
-                  if(demo_version >= 342 &&
-                     (D_abs(x0 - v->x) > LINGUORTAL_THRESHOLD ||
-                      D_abs(y0 - v->y) > LINGUORTAL_THRESHOLD))
-                  {
-                     v->x = x0;  // reset
-                     v->y = y0;
-                  }
-                  else
-                  {
-                     // Cardboard store float versions of vertices.
-                     v->fx = M_FixedToFloat(v->x);
-                     v->fy = M_FixedToFloat(v->y);
-                  }
-               }
-            }  
-         } // Obfuscated C contest entry:   :)
-         while((v != segs[i].v2) && (v = segs[i].v2));
-      }
+      } // Obfuscated C contest entry:   :)
+      while((v != segs[i].v2) && (v = segs[i].v2));
    }
 
    // free hit list
@@ -3233,6 +3566,11 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
+   if(isUdmf)
+      P_PointOnLineSide = P_PointOnLineSidePrecise;
+   else
+      P_PointOnLineSide = P_PointOnLineSideClassic;
+
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
    doom1level = false;
@@ -3324,7 +3662,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    {
    case LEVEL_FORMAT_DOOM:
    case LEVEL_FORMAT_PSX:
-      P_LoadLineDefs(lumpnum + ML_LINEDEFS);
+      P_LoadLineDefs(lumpnum + ML_LINEDEFS, setupSettings);
       break;
    case LEVEL_FORMAT_HEXEN:
       P_LoadHexenLineDefs(lumpnum + ML_LINEDEFS);
@@ -3349,6 +3687,9 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    
    P_LoadBlockMap (mgla.blockmap); // killough 3/1/98
    
+   // If it's UDMF, vertices can have extra precision, requiring better geometry calculations.
+   R_PointOnSide = R_PointOnSideClassic;  // set classic function unless otherwise set later
+
    // IOANCH: at this point, mgla.nodes is valid. Check ZDoom node signature too
    ZNodeType znodeSignature;
    int actualNodeLump = -1;
@@ -3356,6 +3697,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       &actualNodeLump, isUdmf)) != ZNodeType_Invalid && actualNodeLump >= 0)
    {
       P_LoadZNodes(actualNodeLump, znodeSignature);
+      if(znodeSignature == ZNodeType_GL3)
+         R_PointOnSide = R_PointOnSidePrecise;
 
       CHECK_ERROR();
    }

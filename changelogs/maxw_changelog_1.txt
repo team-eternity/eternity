@@ -14,7 +14,7 @@ jump to, and the number of states does not need to be specified.
 -------------------------------------------------------------------------------
 2016/09/28
 
-Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
+Altered IWAD detection so that FreeDM and Freedoom 2 are now in the correct
 positions when autodetected.
 
 -------------------------------------------------------------------------------
@@ -73,8 +73,8 @@ Add Plane_Copy. It copies slopes.
 -------------------------------------------------------------------------------
 2017/01/06
 
-Updated the credits screen to include myself, and amend Sarah Mancuso's name.
-The credits now have two names per column, and are separated down the middle.
+The credits screen now includes myself and I amended Sarah Mancuso's name.
+The credits now have two names per column and are separated down the middle.
 
 -------------------------------------------------------------------------------
 2017/01/08
@@ -270,6 +270,103 @@ Changed version name to "Tyrfing".
 2018/06/16
 Made A_Jump now work for weapons with DECORATE states.
 
+-------------------------------------------------------------------------------
+2018/07/20
+Add support for the Rekkr stand-alone IWAD.
+
+-------------------------------------------------------------------------------
+2018/07/01
+Added r_drawplayersprites, which lets players choose to not render weapons if
+they don't want to (for example, if taking photos).
+
+-------------------------------------------------------------------------------
+2018/07/23
+Fix ev_text events causing some issues, such as menu navigation occurring when
+inserting specific keys for key bindings on certain menus.
+
+-------------------------------------------------------------------------------
+2018/12/02
+The edf "include" directive can now include files with longer names or using
+paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is
+case-insensitive, and all \s are converted to /s when internally hashed.
+Additionally these includes are relative to the file making the include
+(e.g: if "edf/monsters.edf" does "include("monsters/something.edf")" it will
+include "edf/monsters/something.edf"). Includes can be made non-relative by
+putting a '/' before the rest of the path.
+
+. AND .. ARE NOT SUPPORTED!
+
+-------------------------------------------------------------------------------
+2018/12/18
+Re-implemented the MBF pickups.
+
+-------------------------------------------------------------------------------
+2018/12/25
+Merry Christmas!
+Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
+the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
+layouts have been made to be the new default for overlay-style HUDs.
+Added an inventory bar to Doom. Currently it only works when not using the
+regular Doom HUD, and currently selected items are not rendered  outside of
+when the inventory bar is active.
+
+-------------------------------------------------------------------------------
+2019/01/11
+Fixed the FOV parameter for A_JumpIfTargetInLOS, which was read in as an int
+FRACUNIT times smaller than it should have been before being converted to an
+angle. It is now read in as a fixed.
+
+-------------------------------------------------------------------------------
+2019/01/13
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/14
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/26
+Greatly improved performance of R_doubleToUint32, which becomes significantly
+noticeable in maps with lots of flats (think central area of Mothership).
+
+-------------------------------------------------------------------------------
+2019/02/05
+Add range parameter to A_CustomPlayerMelee. This displaces the new-ish pufftype
+parameter, punting that to last position.
+
+-------------------------------------------------------------------------------
+2019/02/07
+Made A_AlertMonsters work properly for weapons. Now it actually just alerts all
+the things without being contingent on you pointing your gun at an enemy.
+Thanks to Xaser for this.
+A_CustomPlayerMelee now correctly turns you through portals.
+
+-------------------------------------------------------------------------------
+2019/0//12
+Made it so the Windows close button on the console is re-enabled when Eternity
+is closed.
+
+-------------------------------------------------------------------------------
+2019/02/12
+Added Ceiling_Waggle action special.
+Added "speedjump" playerclass property. Its value is a fixed, and is how much
+upwards speed is added to momz when the player successfully jumps.
+
+-------------------------------------------------------------------------------
+2019/02/25
+Implemented deltas for itemeffects (healtheffect, armoreffect, ammoeffect,
+powereffect, weapongiver, artifact). Replace effect with delta for those ending
+with effect, and append delta to the end of the others to get the name of the
+appropriate delta structure. weapongiverdelta also has clearammogiven, which
+does what it says on the tin.
+
+The artifact's args are implicitly cleared if a delta specifies a useaction
+or args in a delta structure targetting said artifact.
+
+-------------------------------------------------------------------------------
+2019/03/23
+Change the key bindings menus.
+Fix an issue with window grabbing not working.
 
 ================================================================================
 EOF

@@ -3378,13 +3378,45 @@ thingtype MBFBetaPlasma2
   mod         BetaBFG
 }
 
+// Pre-Beta bonus items
+
+thingtype MBFBetaSceptre : Mobj, 2016, 143
+{
+  compatname  EvilSceptre
+  radius      10.0
+  cflags      SPECIAL|COUNTITEM
+
+  firstdecoratestate S_BON3
+  states
+  @"
+  Spawn:
+    BON3 A 6
+    loop
+  "@
+}
+
+thingtype MBFBetaBible : Mobj, 2017, 144
+{
+  compatname  UnholyBible
+  radius      10.0
+  cflags      SPECIAL|COUNTITEM
+
+  firstdecoratestate S_BON4
+  states
+  @"
+  Spawn:
+    BON4 A 6
+    loop
+  "@
+}
+
 // EE DOOM-Specific Objects ---------------------------------------------------
 
 // Sub-Fireball for Cephaler's Plasma Burst BFG
 
 thingtype EEBetaPlasma3 
 {
-  dehackednum 144
+  dehackednum 163
   spawnstate  S_PLS1BALL
   deathstate  S_PLS1EXP
   speed       25.0
