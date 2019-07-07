@@ -130,7 +130,7 @@ struct cheat_s
 extern cheat_s cheat[CHEAT_NUMCHEATS];
 
 bool M_FindCheats(int key);
-void M_DoCheat(char *cheatname);
+void M_DoCheat(const char *cheatname);
 
 extern int idmusnum;
 

@@ -252,7 +252,7 @@ bool ACS_CF_ChangeFloor(ACS_CF_ARGS)
 
 enum
 {
-   CPXF_ANCESTOR    = 0x00000001, // unimplemented
+   CPXF_ANCESTOR    = 0x00000001,
    CPXF_LESSOREQUAL = 0x00000002,
    CPXF_NOZ         = 0x00000004,
    CPXF_COUNTDEAD   = 0x00000008,
@@ -276,6 +276,13 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
 {
    auto       info  = &static_cast<ACSThread *>(thread)->info;
    Mobj      *orig  = P_FindMobjFromTID(argV[0], nullptr, info->mo);
+
+   if(!orig)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
    mobjtype_t type  = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    fixed_t    dist  = argV[2];
    uint32_t   limit = argC > 3 ? argV[3] : 1;
@@ -290,8 +297,22 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
    for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
    {
       // Check type.
-      if(type && mo->type != type)
-         continue;
+
+      if(type >= 0)
+      {
+         if(flags & CPXF_ANCESTOR)
+         {
+            for(const mobjinfo_t *info = mo->info; info; info = info->parent)
+               if(info->index == type)
+                  goto typeok;
+            continue;
+         }
+         else if(mo->type != type)
+            continue;
+      }
+      else
+         continue;   // reject invalid things, don't accept them
+   typeok:
 
       // Check health.
       if(mo->health > 0)
@@ -1464,6 +1485,12 @@ bool ACS_CF_PlayThingSound(ACS_CF_ARGS)
    Mobj      *mo   = P_FindMobjFromTID(argV[0], nullptr, info->mo);
    int        snd  = argV[1];
    sfxinfo_t *sfx;
+
+   if(!mo)
+   {
+      thread->dataStk.push(0);
+      return false;  // prevent crash
+   }
 
    switch(snd)
    {
