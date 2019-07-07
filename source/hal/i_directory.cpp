@@ -93,7 +93,6 @@ const char *I_PlatformInstallDirectory()
 void I_GetRealPath(const char *path, qstring &real)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-#if _MSC_VER >= 1914
    std::filesystem::path pathobj(path);
    pathobj = std::filesystem::canonical(pathobj);
 
@@ -109,10 +108,6 @@ void I_GetRealPath(const char *path, qstring &real)
    //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
    //std::string spath(convertor.to_bytes(wpath));
    //real = spath.c_str();
-#else
-   // MaxW: I cannot be assed to make this work without std::filesystem
-   real = path;
-#endif
 
 
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
