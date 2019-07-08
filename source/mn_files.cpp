@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//---------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Simon Howard, James Haley, et al.
+// Copyright(C) 2019 Simon Howard, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,24 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+// Purpose: Menu file selector
+//  eg. For selecting a wad to load or demo to play
+//  Revisions by James Haley taken from SMMU v3.30 8/11/00 build
 //
-// Menu file selector
+// Authors: Simon Howard, James Haley, Max Waine
 //
-// eg. For selecting a wad to load or demo to play
-//
-// By Simon Howard
-// Revisions by James Haley (taken from SMMU v3.30 8/11/00 build)
-//
-//---------------------------------------------------------------------------
 
-#ifdef _MSC_VER
-// for Visual C++:
-#include "Win32/i_opndir.h"
-#else
-// for SANE compilers:
-#include <dirent.h>
-#endif
+#include <filesystem>
 
 #include "z_zone.h"
 
@@ -256,60 +244,55 @@ static void MN_sortFiles(mndir_t *dir)
 //
 // MN_ReadDirectory
 //
-// Uses POSIX opendir to read the indicated directory and saves off all file
+// Uses C++17 filesystem to read the indicated directory and saves off all file
 // names within it that match the provided wildcard string.
-//
-// Note: for Visual C++, customized versions of MinGW's opendir functions
-// are used, which are implemented in i_opndir.c.
 //
 // haleyjd 06/15/10: made global
 //
-int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
+int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
                      const char *const *read_wildcards,
                      size_t numwildcards, bool allowsubdirs)
 {
-   DIR *directory;
    struct dirent *direntry;
 
    // clear directory
    MN_ClearDirectory(dir);
-  
-   // open directory and read filenames  
+
+   // open directory and read filenames
    dir->dirpath = read_dir;
-   directory = opendir(dir->dirpath);
 
    // test for failure
-   if(!directory)
-      return errno;
-  
-   while((direntry = readdir(directory)))
+   if(!std::filesystem::is_directory(dir->dirpath))
+      return -1;
+
+   const std::filesystem::directory_iterator itr(dir->dirpath);
+   for(const std::filesystem::directory_entry ent : itr)
    {
+      qstring filename(ent.path().filename().generic_u8string().c_str());
       if(allowsubdirs)
       {
          qstring path(read_dir);
-         struct stat sbuf;
-         path.pathConcatenate(direntry->d_name);
 
-         if(!strcmp(direntry->d_name, "."))
-            continue;
-         else if(!strcmp(direntry->d_name, ".."))
-            MN_addFile(dir, "..");
-         else if(!stat(path.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+         path.pathConcatenate(filename.constPtr());
+
+         // "." and ".." are explicitly skipped by std::filesystem::directory_entry
+         if(ent.is_directory())
          {
             path = "/";
-            path += direntry->d_name;
+            path += filename.constPtr();
             MN_addFile(dir, path.constPtr());
          }
       }
       for(size_t i = 0; i < numwildcards; i++)
       {
-         if(filecmp(direntry->d_name, read_wildcards[i]))
-            MN_addFile(dir, direntry->d_name); // add file to list
+         if(filecmp(filename.constPtr(), read_wildcards[i]))
+            MN_addFile(dir, filename.constPtr()); // add file to list
       }
    }
 
-   // done with directory listing
-   closedir(directory);
+   // If there's a parent directory then add it
+   if(std::filesystem::exists(std::filesystem::path(dir->dirpath) / ".."))
+      MN_addFile(dir, "..");
 
    // sort the list
    MN_sortFiles(dir);

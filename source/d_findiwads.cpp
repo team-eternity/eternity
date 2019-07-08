@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,18 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Code for automated location of users' IWAD files and important 
-//  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used 
+// Purpose: Code for automated location of users' IWAD files and important
+//  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used
 //  under terms of the GPLv2.
 //
 // Authors: Simon Howard, James Haley, David Hill
 //
 
-#ifdef _MSC_VER
-#include "Win32/i_opndir.h"
-#else
-#include <dirent.h>
-#endif
+#include <filesystem>
 
 #include "z_zone.h"
 #include "z_auto.h"
@@ -460,27 +456,18 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
 //
 // Add all subdirectories of an open directory
 //
-static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
-                                const char *base)
+static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 {
-   dirent *ent;
-
-   while((ent = readdir(dir)))
+   const std::filesystem::directory_iterator itr(base);
+   for(const std::filesystem::directory_entry ent : itr)
    {
-      if(!strcmp(ent->d_name, ".") ||
-         !strcmp(ent->d_name, ".."))
-         continue;
-      
-      struct stat sbuf;
-      qstring fullpath;
-      fullpath = base;
-      fullpath.pathConcatenate(ent->d_name);
+      std::string filename = ent.path().filename().generic_u8string();
 
-      if(!stat(fullpath.constPtr(), &sbuf))
-      {
-         if(S_ISDIR(sbuf.st_mode))
-            paths.add(fullpath);
-      }
+      if(filename == "." || filename == "..")
+         continue;
+
+      if(ent.exists() && ent.is_directory())
+         paths.add(qstring(ent.path().filename().generic_u8string().c_str()));
    }
 }
 
@@ -489,8 +476,6 @@ static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
 //
 static void D_addDefaultDirectories(Collection<qstring> &paths)
 {
-   DIR *dir;
-
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    // Default Linux locations
    paths.addNew() = "/usr/local/share/games/doom";
@@ -500,18 +485,12 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 #endif
 
    // add base/game paths
-   if((dir = opendir(basepath)))
-   {
-      D_addSubDirectories(paths, dir, basepath);
-      closedir(dir);
-   }
+   if(std::filesystem::is_directory(basepath))
+      D_addSubDirectories(paths, basepath);
 
    // add user/game paths, if userpath != basepath
-   if(strcmp(basepath, userpath) && (dir = opendir(userpath)))
-   {
-      D_addSubDirectories(paths, dir, userpath);
-      closedir(dir);
-   }
+   if(strcmp(basepath, userpath) && std::filesystem::is_directory(userpath))
+      D_addSubDirectories(paths, userpath);
 
    paths.addNew() = D_DoomExeDir(); // executable directory
    paths.addNew() = ".";            // current directory
@@ -670,10 +649,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 static void D_checkPathForIWADs(const qstring &path)
 {
-   DIR    *dir;
-   dirent *ent;
-
-   if(!(dir = opendir(path.constPtr())))
+   if(!std::filesystem::is_directory(path.constPtr()))
    {
       // check to see if this is just a regular .wad file
       const char *dot = path.findSubStrNoCase(".wad");
@@ -682,25 +658,22 @@ static void D_checkPathForIWADs(const qstring &path)
       return;
    }
 
-   while((ent = readdir(dir)))
+   const std::filesystem::directory_iterator itr(path.constPtr());
+   for(const std::filesystem::directory_entry ent : itr)
    {
+      const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
       for(int i = 0; i < nstandard_iwads; i++)
       {
-         if(!strcasecmp(ent->d_name, standard_iwads[i] + 1))
+         if(filename == standard_iwads[i] + 1)
          {
             // found one.
-            qstring fullpath = path;
-            fullpath.pathConcatenate(ent->d_name);
-
             // determine if we want to store this path.
-            D_determineIWADVersion(fullpath);
+            D_determineIWADVersion(qstring(ent.path().generic_u8string().c_str()));
 
             break; // break inner loop
          }
       }
    }
-
-   closedir(dir);
 }
 
 //
@@ -717,27 +690,24 @@ static void D_checkForNoRest()
    if(estrnonempty(w_norestpath))
       return;
 
-   DIR    *dir;
    qstring nrvpath;
 
    nrvpath = gi_path_bfgdoom2;
    nrvpath.removeFileSpec();
 
-   if((dir = opendir(nrvpath.constPtr())))
+   if(std::filesystem::is_directory(nrvpath.constPtr()))
    {
-      dirent *ent;
-
-      while((ent = readdir(dir)))
+      const std::filesystem::directory_iterator itr(nrvpath.constPtr());
+      for(const std::filesystem::directory_entry ent : itr)
       {
-         if(!strcasecmp(ent->d_name, "nerve.wad"))
+         const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+         if(filename == "nerve.wad")
          {
-            nrvpath.pathConcatenate(ent->d_name);
+            nrvpath.pathConcatenate(filename.constPtr());
             w_norestpath = nrvpath.duplicate();
             break;
          }
       }
-
-      closedir(dir);
    }
 }
 
