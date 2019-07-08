@@ -262,8 +262,8 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
    dir->dirpath = read_dir;
 
    // test for failure
-   if(!std::filesystem::is_directory(dir->dirpath))
-      return -1;
+   if(std::error_code ec; !std::filesystem::is_directory(dir->dirpath, ec))
+      return ec.value;
 
    const std::filesystem::directory_iterator itr(dir->dirpath);
    for(const std::filesystem::directory_entry ent : itr)
@@ -597,7 +597,7 @@ static void MN_doSelectWad(const char *path)
    // check for standard errors
    if(ret)
    {
-      MN_ErrorMsg("Failed to open directory %s.", wad_cur_directory.constPtr());
+      MN_ErrorMsg("Failed to open directory %s: errno %d", wad_cur_directory.constPtr(), ret);
       return;
    }
 

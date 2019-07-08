@@ -473,6 +473,7 @@ static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 //
 static void D_addDefaultDirectories(Collection<qstring> &paths)
 {
+   std::error_code ec;
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    // Default Linux locations
    paths.addNew() = "/usr/local/share/games/doom";
@@ -482,11 +483,11 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 #endif
 
    // add base/game paths
-   if(std::filesystem::is_directory(basepath))
+   if(std::filesystem::is_directory(basepath, ec))
       D_addSubDirectories(paths, basepath);
 
    // add user/game paths, if userpath != basepath
-   if(strcmp(basepath, userpath) && std::filesystem::is_directory(userpath))
+   if(strcmp(basepath, userpath) && std::filesystem::is_directory(userpath, ec))
       D_addSubDirectories(paths, userpath);
 
    paths.addNew() = D_DoomExeDir(); // executable directory
@@ -646,7 +647,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 static void D_checkPathForIWADs(const qstring &path)
 {
-   if(!std::filesystem::is_directory(path.constPtr()))
+   if(std::error_code ec; !std::filesystem::is_directory(path.constPtr(), ec))
    {
       // check to see if this is just a regular .wad file
       const char *dot = path.findSubStrNoCase(".wad");
@@ -692,7 +693,7 @@ static void D_checkForNoRest()
    nrvpath = gi_path_bfgdoom2;
    nrvpath.removeFileSpec();
 
-   if(std::filesystem::is_directory(nrvpath.constPtr()))
+   if(std::error_code ec; std::filesystem::is_directory(nrvpath.constPtr(), ec))
    {
       const std::filesystem::directory_iterator itr(nrvpath.constPtr());
       for(const std::filesystem::directory_entry ent : itr)

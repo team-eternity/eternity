@@ -925,8 +925,7 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
                                          int startlump)
 {
    // Check if it's a directory
-   struct stat sbuf;
-   if(stat(openData.filename, &sbuf) || !S_ISDIR(sbuf.st_mode))
+   if(std::error_code ec; !std::filesystem::is_directory(openData.filename, ec))
    {
       handleOpenError(openData, addInfo, openData.filename);
       return false;
