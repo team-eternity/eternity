@@ -253,8 +253,6 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
                      const char *const *read_wildcards,
                      size_t numwildcards, bool allowsubdirs)
 {
-   struct dirent *direntry;
-
    // clear directory
    MN_ClearDirectory(dir);
 
@@ -263,7 +261,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
 
    // test for failure
    if(std::error_code ec; !std::filesystem::is_directory(dir->dirpath, ec))
-      return ec.value;
+      return ec.value();
 
    const std::filesystem::directory_iterator itr(dir->dirpath);
    for(const std::filesystem::directory_entry ent : itr)
