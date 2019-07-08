@@ -591,13 +591,13 @@ static void MN_doSelectWad(const char *path)
    if(path)
       wad_cur_directory = path;
 
-   int ret = MN_ReadDirectory(&mn_diskdir, wad_cur_directory.constPtr(), 
+   int ret = MN_ReadDirectory(&mn_diskdir, wad_cur_directory.constPtr(),
                               exts, earrlen(exts), true);
 
    // check for standard errors
    if(ret)
    {
-      MN_ErrorMsg("opendir error: %d (%s)", ret, strerror(ret));
+      MN_ErrorMsg("Failed to open directory %s.", wad_cur_directory.constPtr());
       return;
    }
 

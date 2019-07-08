@@ -463,9 +463,6 @@ static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
    {
       std::string filename = ent.path().filename().generic_u8string();
 
-      if(filename == "." || filename == "..")
-         continue;
-
       if(ent.exists() && ent.is_directory())
          paths.add(qstring(ent.path().filename().generic_u8string().c_str()));
    }

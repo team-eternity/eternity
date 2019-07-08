@@ -751,9 +751,6 @@ int WadDirectory::addDirectory(const char *dirpath)
       edefstructvar(dirfile_t, newfile);
       const std::string filename = ent.path().filename().generic_u8string();
 
-      if(filename == "."  || filename == "..")
-         continue;
-
       newfile.fullfn = M_SafeFilePath(dirpath, filename.c_str());
 
       if(ent.exists()) // check for existence
