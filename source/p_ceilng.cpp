@@ -399,7 +399,6 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
       ceiling->crushflags = 0;   // ioanch 20160305
   
       // setup ceiling structure according to type of function
-      // SLOPE_TODO: handle sloped crushers and their floors
       switch(type)
       {
       case fastCrushAndRaise:
