@@ -104,6 +104,12 @@ FILE (GLOB SDL_SOURCES sdl/*.cpp)
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
+                
+set_target_properties(eternity
+   PROPERTIES
+   CXX_STANDARD          17
+   CXX_STANDARD_REQUIRED ON
+)
 
 target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc)
 
