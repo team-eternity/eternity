@@ -21,8 +21,14 @@
 //
 
 #include <algorithm> // ioanch: for sort
-#include <filesystem>
 #include <memory>
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -728,7 +734,7 @@ struct dirfile_t
 //
 int WadDirectory::addDirectory(const char *dirpath)
 {
-   std::filesystem::path dir;
+   fs::path dir;
    int     localcount = 0;
    int     totalcount = 0;
    int     startlump;
@@ -739,14 +745,14 @@ int WadDirectory::addDirectory(const char *dirpath)
    PODCollection<dirfile_t> files;
    lumpinfo_t *newlumps;
 
-   dir = std::filesystem::path(dirpath);
-   if(!std::filesystem::exists(dir))
+   dir = fs::path(dirpath);
+   if(!fs::exists(dir))
       return 0;
 
-   const std::filesystem::directory_iterator itr(dir);
+   const fs::directory_iterator itr(dir);
 
    // count the files in the directory
-   for(const std::filesystem::directory_entry ent : itr)
+   for(const fs::directory_entry ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
       const std::string filename = ent.path().filename().generic_u8string();
@@ -856,8 +862,8 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    qstring path(base);
    path.pathConcatenate(subpath);
 
-   std::filesystem::path dir(path.constPtr());
-   if(!std::filesystem::exists(dir))
+   fs::path dir(path.constPtr());
+   if(!fs::exists(dir))
       return;
 
    // Prevent repeated visits to the same paths due to symbolic links and the
@@ -872,8 +878,8 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 
    prevPaths.add(real);
 
-   const std::filesystem::directory_iterator itr(dir);
-   for(const std::filesystem::directory_entry ent : itr)
+   const fs::directory_iterator itr(dir);
+   for(const fs::directory_entry ent : itr)
    {
        std::string filename = ent.path().filename().generic_u8string();
 
@@ -925,7 +931,7 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
                                          int startlump)
 {
    // Check if it's a directory
-   if(std::error_code ec; !std::filesystem::is_directory(openData.filename, ec))
+   if(std::error_code ec; !fs::is_directory(openData.filename, ec))
    {
       handleOpenError(openData, addInfo, openData.filename);
       return false;

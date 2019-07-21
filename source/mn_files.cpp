@@ -21,8 +21,13 @@
 // Authors: Simon Howard, James Haley, Max Waine
 //
 
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include <filesystem>
-
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 #include "z_zone.h"
 
 #include "c_io.h"
@@ -260,11 +265,11 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
    dir->dirpath = read_dir;
 
    // test for failure
-   if(std::error_code ec; !std::filesystem::is_directory(dir->dirpath, ec))
+   if(std::error_code ec; !fs::is_directory(dir->dirpath, ec))
       return ec.value();
 
-   const std::filesystem::directory_iterator itr(dir->dirpath);
-   for(const std::filesystem::directory_entry ent : itr)
+   const fs::directory_iterator itr(dir->dirpath);
+   for(const fs::directory_entry ent : itr)
    {
       qstring filename(ent.path().filename().generic_u8string().c_str());
       if(allowsubdirs)
@@ -273,7 +278,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
 
          path.pathConcatenate(filename.constPtr());
 
-         // "." and ".." are explicitly skipped by std::filesystem::directory_entry
+         // "." and ".." are explicitly skipped by fs::directory_entry
          if(ent.is_directory())
          {
             path = "/";
@@ -289,7 +294,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
    }
 
    // If there's a parent directory then add it
-   if(std::filesystem::exists(std::filesystem::path(dir->dirpath) / ".."))
+   if(fs::exists(fs::path(dir->dirpath) / ".."))
       MN_addFile(dir, "..");
 
    // sort the list

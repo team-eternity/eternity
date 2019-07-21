@@ -23,8 +23,13 @@
 
 // MaxW: 2019/07/07: Moved over to C++17 filesystem
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include <filesystem>
-
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 #include "z_zone.h"
 
 #include "hal/i_directory.h"
@@ -584,7 +589,7 @@ static int D_CheckBasePath(const qstring &qpath)
 {
    int ret = -1;
    qstring str;
-   std::filesystem::directory_entry path;
+   fs::directory_entry path;
 
    str = qpath;
 
@@ -593,7 +598,7 @@ static int D_CheckBasePath(const qstring &qpath)
    str.rstrip('/');
 
 
-   path = std::filesystem::directory_entry(str.constPtr());
+   path = fs::directory_entry(str.constPtr());
 
    if(path.exists()) // check for existence
    {
@@ -601,8 +606,8 @@ static int D_CheckBasePath(const qstring &qpath)
       {
          int score = 0;
 
-         const std::filesystem::directory_iterator itr(path);
-         for(const std::filesystem::directory_entry ent : itr)
+         const fs::directory_iterator itr(path);
+         for(const fs::directory_entry ent : itr)
          {
             const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
 
@@ -772,7 +777,7 @@ static int D_CheckUserPath(const qstring &qpath)
    int ret = -1;
    struct stat sbuf;
    qstring str;
-   std::filesystem::directory_entry path;
+   fs::directory_entry path;
 
    str = qpath;
 
@@ -780,7 +785,7 @@ static int D_CheckUserPath(const qstring &qpath)
    str.rstrip('\\');
    str.rstrip('/');
 
-   path = std::filesystem::directory_entry(str.constPtr());
+   path = fs::directory_entry(str.constPtr());
 
    if(path.exists()) // check for existence
    {
@@ -788,8 +793,8 @@ static int D_CheckUserPath(const qstring &qpath)
       {
          int score = 0;
 
-         const std::filesystem::directory_iterator itr(path);
-         for(const std::filesystem::directory_entry ent : itr)
+         const fs::directory_iterator itr(path);
+         for(const fs::directory_entry ent : itr)
          {
             const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
 
@@ -1147,7 +1152,7 @@ void D_CheckGameMusic()
 //
 
 // haleyjd 08/20/07: gamepath autload directory structure
-static std::filesystem::path autoloads;
+static fs::path autoloads;
 static qstring               autoload_dirname;
 
 //
@@ -1164,7 +1169,7 @@ void D_EnumerateAutoloadDir()
       if((autoDir = D_CheckGamePathFile("autoload", true)))
       {
          autoload_dirname = autoDir;
-         autoloads = std::filesystem::path(autoload_dirname.constPtr());
+         autoloads = fs::path(autoload_dirname.constPtr());
       }
    }
 }
@@ -1188,8 +1193,8 @@ void D_GameAutoloadWads()
          return;
       }
 
-      const std::filesystem::directory_iterator itr(autoloads);
-      for(const std::filesystem::directory_entry ent : itr)
+      const fs::directory_iterator itr(autoloads);
+      for(const fs::directory_entry ent : itr)
       {
          if(ent.path().extension() == ".wad")
          {
@@ -1212,11 +1217,11 @@ void D_GameAutoloadDEH()
 
    if(!autoloads.empty())
    {
-      const std::filesystem::directory_iterator itr(autoloads);
-      for(const std::filesystem::directory_entry ent : itr)
+      const fs::directory_iterator itr(autoloads);
+      for(const fs::directory_entry ent : itr)
       {
 
-         if(const std::filesystem::path extension = ent.path().extension();
+         if(const fs::path extension = ent.path().extension();
             extension == ".deh" || extension == ".bex")
          {
             fn = M_SafeFilePath(autoload_dirname.constPtr(),
@@ -1238,8 +1243,8 @@ void D_GameAutoloadCSC()
 
    if(!autoloads.empty())
    {
-      const std::filesystem::directory_iterator itr(autoloads);
-      for(const std::filesystem::directory_entry ent : itr)
+      const fs::directory_iterator itr(autoloads);
+      for(const fs::directory_entry ent : itr)
       {
          if(ent.path().extension() == ".csc")
          {
@@ -1259,7 +1264,7 @@ void D_GameAutoloadCSC()
 void D_CloseAutoloadDir()
 {
    if(!autoloads.empty())
-       autoloads = std::filesystem::path();
+       autoloads = fs::path();
    autoload_dirname.freeBuffer();
 }
 

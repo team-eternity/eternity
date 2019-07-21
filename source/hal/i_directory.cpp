@@ -93,8 +93,8 @@ const char *I_PlatformInstallDirectory()
 void I_GetRealPath(const char *path, qstring &real)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   std::filesystem::path pathobj(path);
-   pathobj = std::filesystem::canonical(pathobj);
+   fs::path pathobj(path);
+   pathobj = fs::canonical(pathobj);
 
    // Has to be converted since fs::value_type is wchar_t on Windows
    std::wstring wpath(pathobj.c_str());

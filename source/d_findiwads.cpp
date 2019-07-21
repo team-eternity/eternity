@@ -22,7 +22,13 @@
 // Authors: Simon Howard, James Haley, David Hill
 //
 
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include <filesystem>
+namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 #include "z_zone.h"
 #include "z_auto.h"
@@ -458,8 +464,8 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
 //
 static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 {
-   const std::filesystem::directory_iterator itr(base);
-   for(const std::filesystem::directory_entry ent : itr)
+   const fs::directory_iterator itr(base);
+   for(const fs::directory_entry ent : itr)
    {
       std::string filename = ent.path().filename().generic_u8string();
 
@@ -483,11 +489,11 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 #endif
 
    // add base/game paths
-   if(std::filesystem::is_directory(basepath, ec))
+   if(fs::is_directory(basepath, ec))
       D_addSubDirectories(paths, basepath);
 
    // add user/game paths, if userpath != basepath
-   if(strcmp(basepath, userpath) && std::filesystem::is_directory(userpath, ec))
+   if(strcmp(basepath, userpath) && fs::is_directory(userpath, ec))
       D_addSubDirectories(paths, userpath);
 
    paths.addNew() = D_DoomExeDir(); // executable directory
@@ -647,7 +653,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 static void D_checkPathForIWADs(const qstring &path)
 {
-   if(std::error_code ec; !std::filesystem::is_directory(path.constPtr(), ec))
+   if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
       // check to see if this is just a regular .wad file
       const char *dot = path.findSubStrNoCase(".wad");
@@ -656,8 +662,8 @@ static void D_checkPathForIWADs(const qstring &path)
       return;
    }
 
-   const std::filesystem::directory_iterator itr(path.constPtr());
-   for(const std::filesystem::directory_entry ent : itr)
+   const fs::directory_iterator itr(path.constPtr());
+   for(const fs::directory_entry ent : itr)
    {
       const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
       for(int i = 0; i < nstandard_iwads; i++)
@@ -693,10 +699,10 @@ static void D_checkForNoRest()
    nrvpath = gi_path_bfgdoom2;
    nrvpath.removeFileSpec();
 
-   if(std::error_code ec; std::filesystem::is_directory(nrvpath.constPtr(), ec))
+   if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
    {
-      const std::filesystem::directory_iterator itr(nrvpath.constPtr());
-      for(const std::filesystem::directory_entry ent : itr)
+      const fs::directory_iterator itr(nrvpath.constPtr());
+      for(const fs::directory_entry ent : itr)
       {
          const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
          if(filename == "nerve.wad")
