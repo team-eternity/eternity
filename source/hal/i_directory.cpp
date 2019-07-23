@@ -29,6 +29,7 @@
 #if _MSC_VER >= 1914
 #include <locale>
 #include <filesystem>
+namespace fs = std::filesystem;
 #include <string>
 #endif
 
