@@ -22,3 +22,4 @@ SDL2.framework
 SDL2_mixer.framework
 SDL2_net.framework
 .vscode
+*.VC.db
