@@ -2785,6 +2785,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_DROPTYPE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DROPTYPE);
+      E_clearDropItems(mobjinfo[i]);
       if(strcasecmp(tempstr, "NONE"))
          E_addDropItem(mobjinfo[i], tempstr, 255, 0, false);
    }

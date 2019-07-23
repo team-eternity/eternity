@@ -8,6 +8,11 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+23.07.2019
+
+BUGFIX: Fixed EDF thingtype droptype to actually remove inherited object's item.
+
+--------------------------------------------------------------------------------
 22.06.2019
 
 FEATURE: Added CPXF_ANCESTOR to CheckProximity.
