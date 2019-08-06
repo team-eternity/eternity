@@ -63,6 +63,22 @@ namespace fsStopgap
    private:
       qstring mPath; // the indicated path
    };
+
+   //
+   // Used for iterating inside
+   //
+   class directory_iterator
+   {
+   public:
+      directory_iterator(const directory_entry &entry) : mEntry(entry)
+      {
+      }
+
+      directory_entry begin() const;
+      directory_entry end() const;
+   private:
+      const directory_entry mEntry; // the directory through which to iterate
+   };
 }
 
 #endif
