@@ -26,6 +26,9 @@
 #ifndef I_DIRECTORY_H__
 #define I_DIRECTORY_H__
 
+#include "i_platform.h"
+#include "../m_qstr.h"
+
 class qstring;
 
 
@@ -34,6 +37,35 @@ bool I_CreateDirectory(qstring const &path);
 const char *I_PlatformInstallDirectory();
 
 void I_GetRealPath(const char *path, qstring &real);
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+// TEMPORARY until we have std::filesystem in macos
+
+//
+// Filesystem
+//
+namespace fsStopgap
+{
+   //
+   // Directory path info
+   //
+   class directory_entry
+   {
+   public:
+      directory_entry() = default;
+      directory_entry(const char *path) : mPath(path)
+      {
+      }
+
+      bool exists() const;
+      bool is_directory() const;
+
+   private:
+      qstring mPath; // the indicated path
+   };
+}
+
+#endif
 
 #endif
 
