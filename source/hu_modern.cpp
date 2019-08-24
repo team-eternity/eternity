@@ -42,6 +42,7 @@
 extern patch_t *nfs_health;
 extern patch_t *nfs_divider;
 extern patch_t *nfs_armor;
+extern patch_t *nfs_inf;
 
 //=============================================================================
 //
@@ -276,6 +277,8 @@ void ModernHUD::DrawAmmo(int x, int y)
       else
          FontWriteTextRAlign(hud_fsmedium, tempstr.constPtr(), displayoffs, y, &vbscreen);
    }
+   else
+      V_DrawPatch(displayoffs, y, &vbscreen, nfs_inf);
 }
 
 extern patch_t *keys[NUMCARDS + 3];
