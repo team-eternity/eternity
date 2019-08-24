@@ -64,6 +64,9 @@ static SDL_AudioSpec have;
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static const int snd_samplerate = 44100;
 
+// MaxW: 2019/08/24: float audio if true else Sint16
+static bool float_samples;
+
 typedef struct channel_info_s
 {
   // SFX id of the playing sound effect.
@@ -305,7 +308,7 @@ static double rational_tanh(double x)
 // haleyjd 12/19/13: rewritten to loop over the sample buffer and do output
 // directly back to the SDL audio stream.
 //
-static void do_3band(float *stream, float *end, Sint16 *dest)
+static void do_3band(float *stream, float *end, void *dest)
 {
    int esnum = 0;
 
@@ -354,7 +357,19 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
 
       // Return result
       // haleyjd: use rational_tanh for soft clipping
-      *dest++ = (Sint16)(rational_tanh(l + m + h) * 32767.0);
+      if(float_samples)
+      {
+         float *tmpdest = static_cast<float *>(dest);
+         *tmpdest++ = static_cast<float>(rational_tanh(l + m + h));
+         dest = static_cast<void *>(tmpdest);
+
+      }
+      else
+      {
+         Sint16 *tmpdest = static_cast<Sint16 *>(dest);
+         *tmpdest++ = static_cast<Sint16>(rational_tanh(l + m + h) * 32767.0);
+         dest = static_cast<void *>(tmpdest);
+      }
    }
 }
 
@@ -379,7 +394,7 @@ static int step;
 //
 // Convert the input buffer to floating point
 //
-static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
+static void inline I_SDLConvertSoundBufferSint16(Uint8 *stream, int len)
 {
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *leftend;
@@ -401,6 +416,34 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
       leftout += step;
       bptr0   += step;
       bptr1   += step;
+   }
+}
+
+//
+// Do something with input but I dunno exactly what outside of stop nasty echoes
+//
+static void inline I_SDLConvertSoundBufferFloat(Uint8 *stream, int len)
+{
+   // Pointers in audio stream, left, right, end.
+   float *leftout, *leftend;
+
+   leftout = reinterpret_cast<float *>(stream);
+
+   // Determine end, for left channel only
+   //  (right channel is implicit).
+   leftend = reinterpret_cast<float *>(stream + len);
+
+   // convert input to mixbuffer
+   float *bptr0 = mixbuffer[0];
+   float *bptr1 = mixbuffer[1];
+   while(leftout != leftend)
+   {
+      *(bptr0 + 0) = *(leftout + 0); // L
+      *(bptr0 + 1) = *(leftout + 1); // R
+      *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
+      leftout += step;
+      bptr0 += step;
+      bptr1 += step;
    }
 }
 
@@ -433,7 +476,10 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    //memset(stream, 0, len);
 
    // convert input samples to floating point
-   I_SDLConvertSoundBuffer(stream, len);
+   if(float_samples)
+      I_SDLConvertSoundBufferFloat(stream, len);
+   else
+      I_SDLConvertSoundBufferSint16(stream, len);
 
    float *leftout;
    // Pointer to end of mixbuffer
@@ -523,7 +569,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    I_SDLMixBuffers();
 
    // haleyjd 04/21/10: equalization output pass
-   do_3band(mixbuffer[0], leftend0, (Sint16 *)stream);
+   do_3band(mixbuffer[0], leftend0, static_cast<void *>(stream));
 }
 
 //
@@ -777,8 +823,6 @@ static bool I_getSDLAudioSpec()
 //
 static int I_SDLInitSound()
 {
-   bool float_sample;
-
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
    {
@@ -800,11 +844,11 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   sample_size  = SDL_AUDIO_BITSIZE(have.format) / 8; // bits to bytes
-   float_sample = SDL_AUDIO_ISFLOAT(have.format);
-   step         = have.channels;
+   sample_size   = SDL_AUDIO_BITSIZE(have.format) / 8; // bits to bytes
+   float_samples = SDL_AUDIO_ISFLOAT(have.format);
+   step          = have.channels;
 
-   if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
+   if(Mix_OpenAudio(have.freq, have.format, have.channels, have.samples) < 0)
    {
       printf("Couldn't open audio with desired format.\n");
       nosfxparm   = true;
