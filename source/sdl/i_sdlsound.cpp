@@ -57,6 +57,9 @@ static Uint32 mixbuffer_size;
 // haleyjd 12/18/13: primary floating point mixing buffers
 static float *mixbuffer[2];
 
+// MaxW: 2019/08/24: Audiospec we actually got
+static SDL_AudioSpec have;
+
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static const int snd_samplerate = 44100;
@@ -366,10 +369,10 @@ static void do_3band(float *stream, float *end, Sint16 *dest)
 //
 
 // size of a single sample
-#define SAMPLESIZE sizeof(Sint16) 
+static int sample_size;
 
-// step to next stereo sample pair (2 samples)
-#define STEP 2
+// step to next stereo sample pair (prooobably 2 samples)
+static int step;
 
 //
 // I_SDLConvertSoundBuffer
@@ -395,9 +398,9 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
       *(bptr0 + 0) = (float)(*(leftout + 0)) * (1.0f/32768.0f); // L
       *(bptr0 + 1) = (float)(*(leftout + 1)) * (1.0f/32768.0f); // R
       *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
-      leftout += STEP;
-      bptr0   += STEP;
-      bptr1   += STEP;
+      leftout += step;
+      bptr0   += step;
+      bptr1   += step;
    }
 }
 
@@ -426,13 +429,16 @@ static inline void I_SDLMixBuffers()
 //
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
+   // TODO: Figure out if this is required
+   //memset(stream, 0, len);
+
    // convert input samples to floating point
    I_SDLConvertSoundBuffer(stream, len);
 
    float *leftout;
    // Pointer to end of mixbuffer
-   float *leftend0 = mixbuffer[0] + (len/SAMPLESIZE);
-   float *leftend1 = mixbuffer[1] + (len/SAMPLESIZE);
+   float *leftend0 = mixbuffer[0] + (len/sample_size);
+   float *leftend1 = mixbuffer[1] + (len/sample_size);
    float *leftend;
 
    // Mix audio channels
@@ -475,7 +481,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          *(leftout + 1) = *(leftout + 1) + sample * chan->rightvol;
          
          // Increment current pointers in stream
-         leftout += STEP;
+         leftout += step;
          
          // Increment index
          chan->stepremainder += chan->step;
@@ -511,7 +517,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    // do reverberation if an effect is active
    if(s_reverbactive)
-      S_ProcessReverb(mixbuffer[1], mixbuffer_size/2);
+      S_ProcessReverb(mixbuffer[1], mixbuffer_size / 2);
 
    // mix reverberated sound with unreverberated buffer
    I_SDLMixBuffers();
@@ -549,7 +555,7 @@ static void I_SetChannels()
       steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
    
    // allocate mixing buffers
-   auto buf = ecalloc(float *, 2*mixbuffer_size, sizeof(float));
+   auto buf = ecalloc(float *, 2 * mixbuffer_size, sizeof(float));
    mixbuffer[0] = buf;
    mixbuffer[1] = buf + mixbuffer_size;
 
@@ -742,6 +748,28 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
    S_CacheDigitalSoundLump(sound);
 }
 
+static void I_SDLDummyCallback(void *, Uint8 *, int) {}
+
+static bool I_getSDLAudioSpec()
+{
+   SDL_AudioSpec want;
+   have = {};
+
+   want.freq = snd_samplerate;
+   want.format = MIX_DEFAULT_FORMAT;
+   want.channels = 2;
+   want.samples = audio_buffers;
+   want.callback = I_SDLDummyCallback;
+
+   if(SDL_OpenAudio(&want, &have) >= 0)
+   {
+      SDL_CloseAudio();
+      return true;
+   }
+
+   return false;
+}
+
 //
 // I_SDLInitSound
 //
@@ -749,6 +777,8 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 //
 static int I_SDLInitSound()
 {
+   bool float_sample;
+
    // haleyjd: the docs say we should do this
    if(SDL_InitSubSystem(SDL_INIT_AUDIO))
    {
@@ -761,10 +791,18 @@ static int I_SDLInitSound()
    if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
-   // Figure out mix buffer sizes by dividing the results of SDL_audio.c's
-   // SDL_CalculateAudioSpec size calculation by SAMPLESIZE. The 2 is number of channels.
-   mixbuffer_size = ((SDL_AUDIO_BITSIZE(MIX_DEFAULT_FORMAT) / 8) * 2 * audio_buffers) /
-                    SAMPLESIZE;
+   // Figure out mix buffer sizes
+   if(!I_getSDLAudioSpec())
+   {
+      printf("Couldn't determine sound mixing buffer size.\n");
+      nosfxparm   = true;
+      nomusicparm = true;
+      return 0;
+   }
+
+   sample_size  = SDL_AUDIO_BITSIZE(have.format) / 8; // bits to bytes
+   float_sample = SDL_AUDIO_ISFLOAT(have.format);
+   step         = have.channels;
 
    if(Mix_OpenAudio(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
    {
@@ -773,6 +811,8 @@ static int I_SDLInitSound()
       nomusicparm = true;
       return 0;
    }
+
+   mixbuffer_size = have.size / sample_size;
 
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
