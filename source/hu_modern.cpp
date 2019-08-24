@@ -219,7 +219,7 @@ void ModernHUD::DrawWeapons(int x, int y)
    const bool laligned = hud_overlaylayout != HUD_DISTRIB;
 
    if(laligned)
-      tempstr = "ARMS ";
+      tempstr = "ARMS  ";
 
    for(int i = 0; i < NUMWEAPONS; i++)
    {
@@ -260,8 +260,8 @@ void ModernHUD::DrawWeapons(int x, int y)
 void ModernHUD::DrawAmmo(int x, int y)
 {
    const bool laligned = hud_overlaylayout != HUD_DISTRIB;
-   const int displayoffs = laligned ? x +  V_FontStringWidth(hud_fssmall, "AMMO") + 1 :
-                                      x - (V_FontStringWidth(hud_fssmall, "AMMO") + 1);
+   const int displayoffs = laligned ? x +  V_FontStringWidth(hud_fssmall, "AMMO") + 2 :
+                                      x - (V_FontStringWidth(hud_fssmall, "AMMO") + 2);
    if(laligned)
       V_FontWriteText(hud_fssmall, "AMMO", x, y, &vbscreen);
    else
@@ -288,7 +288,7 @@ extern patch_t *keys[NUMCARDS + 3];
 //
 void ModernHUD::DrawKeys(int x, int y)
 {
-   const int displayoffs = x + V_FontStringWidth(hud_fssmall, "KEYS") + 1;
+   const int displayoffs = x + V_FontStringWidth(hud_fssmall, "KEYS") + 2;
    V_FontWriteText(hud_fssmall, "KEYS", x, y, &vbscreen);
    for(int i = 0, xoffs = displayoffs; i < GameModeInfo->numHUDKeys; i++)
    {
