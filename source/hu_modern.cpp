@@ -144,16 +144,16 @@ void ModernHUD::DrawHealth(int x, int y)
    {
       V_DrawPatch(x - nfs_health->width, y, &vbscreen, nfs_health);
       tempstr << HU_HealthColor() << hu_player.health;
-      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (4 + nfs_health->width), y,
+      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (2 + nfs_health->width), y,
                           &vbscreen);
    }
    else
    {
       V_DrawPatch(x, y, &vbscreen, nfs_health);
       tempstr << HU_HealthColor() << hu_player.health;
-      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 4 + nfs_health->width, y, &vbscreen);
+      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 2 + nfs_health->width, y, &vbscreen);
       if(hud_overlaylayout == HUD_FLAT)
-         V_DrawPatch(x + 37, y + 1, &vbscreen, nfs_divider);
+         V_DrawPatch(x + 35, y + 1, &vbscreen, nfs_divider);
    }
 }
 
@@ -175,14 +175,14 @@ void ModernHUD::DrawArmor(int x, int y)
    {
       V_DrawPatch(x - nfs_armor->width, y, &vbscreen, nfs_armor);
       tempstr << HU_ArmorColor() << hu_player.armorpoints;
-      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (4 + nfs_armor->width), y,
+      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (2 + nfs_armor->width), y,
                           &vbscreen);
    }
    else
    {
       V_DrawPatch(x, y, &vbscreen, nfs_armor);
       tempstr << HU_ArmorColor() << hu_player.armorpoints;
-      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 4 + nfs_armor->width, y, &vbscreen);
+      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 2 + nfs_armor->width, y, &vbscreen);
    }
 }
 
@@ -360,10 +360,10 @@ void ModernHUD::Setup()
       SetupOverlay(ol_status, SCREENWIDTH - 3, SCREENHEIGHT - 24);
       SetupOverlay(ol_health, 3,  SCREENHEIGHT - 24);
       SetupOverlay(ol_armor,  3,  SCREENHEIGHT - 12);
-      SetupOverlay(ol_weap,   44, SCREENHEIGHT - 24);
-      SetupOverlay(ol_ammo,   44, SCREENHEIGHT - 16);
-      SetupOverlay(ol_key,    44, SCREENHEIGHT - 8);
-      SetupOverlay(ol_frag,   44, SCREENHEIGHT - 8);
+      SetupOverlay(ol_weap,   42, SCREENHEIGHT - 24);
+      SetupOverlay(ol_ammo,   42, SCREENHEIGHT - 16);
+      SetupOverlay(ol_key,    42, SCREENHEIGHT - 8);
+      SetupOverlay(ol_frag,   42, SCREENHEIGHT - 8);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
