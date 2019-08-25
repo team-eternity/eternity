@@ -457,6 +457,7 @@ public:
    const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
+   char       *removeString(size_t keyIndex);
    void        removeStringNR(const char *key);
    void        removeStringNR(size_t keyIndex);
 
@@ -475,6 +476,7 @@ public:
    MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
    void       setMetaTable(size_t keyIndex, MetaTable *value);
    void       setMetaTable(const char *key, MetaTable *value);
+   void       removeMetaTableNR(size_t keyIndex);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
+VisualStudioVersion = 15.0.28307.757
 # Visual Studio 15
-VisualStudioVersion = 15.0.27428.2043
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Eternity", "Eternity.vcxproj", "{233045E2-53A6-4579-A272-3D3CF6D97405}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -17,6 +17,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ACSVM", "ACSVM.vcxproj", "{A3D79066-950D-42E4-8555-D7663BA5E0C7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "adlmidi", "adlmidi.vcxproj", "{06F7C536-AB34-4054-ACE1-EF74F07A533C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A643AF2F-B33C-465D-BDA1-79C302E1BADB}"
+	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

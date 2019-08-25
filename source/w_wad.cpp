@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2016 James Haley et al.
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,17 +17,24 @@
 //
 // Purpose: Handles WAD file header, directory, lump I/O.
 //
-
-#ifdef _MSC_VER
-// for Visual C++:
-#include "Win32/i_opndir.h"
-#else
-// for SANE compilers:
-#include <dirent.h>
-#endif
+// Authors: James Haley, Max Waine
+//
 
 #include <algorithm> // ioanch: for sort
 #include <memory>
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#include "hal/i_platform.h"
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#include "hal/i_directory.h"
+namespace fs = fsStopgap;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -733,8 +740,7 @@ struct dirfile_t
 //
 int WadDirectory::addDirectory(const char *dirpath)
 {
-   DIR    *dir;
-   dirent *ent;
+   fs::path dir;
    int     localcount = 0;
    int     totalcount = 0;
    int     startlump;
@@ -745,36 +751,34 @@ int WadDirectory::addDirectory(const char *dirpath)
    PODCollection<dirfile_t> files;
    lumpinfo_t *newlumps;
 
-   if(!(dir = opendir(dirpath)))
+   dir = fs::path(dirpath);
+   if(!fs::exists(dir))
       return 0;
 
+   const fs::directory_iterator itr(dir);
+
    // count the files in the directory
-   while((ent = readdir(dir)))
+   for(const fs::directory_entry ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
-      struct stat sbuf;
+      const std::string filename = ent.path().filename().generic_u8string();
 
-      if(!strcmp(ent->d_name, ".")  || !strcmp(ent->d_name, ".."))
-         continue;
+      newfile.fullfn = M_SafeFilePath(dirpath, filename.c_str());
 
-      newfile.fullfn = M_SafeFilePath(dirpath, ent->d_name);
-
-      if(!stat(newfile.fullfn, &sbuf)) // check for existence
+      if(ent.exists()) // check for existence
       {
-         if(S_ISDIR(sbuf.st_mode)) // if it's a directory, mark it
+         if(ent.is_directory()) // if it's a directory, mark it
             newfile.isdir = true;
          else
          {
             newfile.isdir = false;
-            newfile.size  = (size_t)(sbuf.st_size);
+            newfile.size  = static_cast<size_t>(ent.file_size());
             ++localcount;
          }
 
          files.add(newfile);
       }
    }
-
-   closedir(dir);
 
    fileslen = files.getLength();
 
@@ -811,6 +815,7 @@ int WadDirectory::addDirectory(const char *dirpath)
          lump->li_namespace = lumpinfo_t::ns_global; // TODO
          lump->type         = lumpinfo_t::lump_file;
          lump->lfn          = estrdup(files[i].fullfn);
+         lump->filepath     = estrdup(files[i].fullfn);
          lump->source       = source;
          lump->size         = files[i].size;
 
@@ -851,8 +856,6 @@ public:
    }
 };
 
-#define MAX_DEPTH 10 // I seriously doubt anybody needs more than a depth of 10
-
 //
 // Helper function to add a path to a collection, from a base.
 //
@@ -860,11 +863,13 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
                            const char *subpath, Collection<qstring> &prevPaths,
                            int depth)
 {
+    static constexpr int MAX_DEPTH = 10; // I seriously doubt anybody needs more than a depth of 10
+
    qstring path(base);
    path.pathConcatenate(subpath);
 
-   DIR *dir = opendir(path.constPtr());
-   if(!dir)
+   fs::path dir(path.constPtr());
+   if(!fs::exists(dir))
       return;
 
    // Prevent repeated visits to the same paths due to symbolic links and the
@@ -879,26 +884,27 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 
    prevPaths.add(real);
 
-   dirent *ent;
-   while((ent = readdir(dir)))
+   const fs::directory_iterator itr(dir);
+   for(const fs::directory_entry ent : itr)
    {
+       std::string filename = ent.path().filename().generic_u8string();
+
       // Skip UNIX hidden files and directory tree entries
-      if(ent->d_name[0] == '.')
+      if(filename[0] == '.')
          continue;
 
       path = base;
-      path.pathConcatenate(subpath).pathConcatenate(ent->d_name);
+      path.pathConcatenate(subpath).pathConcatenate(filename.c_str());
 
-      struct stat sbuf;
-      if(!stat(path.constPtr(), &sbuf)) // check for existence
+      if(ent.exists()) // check for existence
       {
-         if(S_ISDIR(sbuf.st_mode)) // if it's a directory, recurse in it
+         if(ent.is_directory()) // if it's a directory, recurse in it
          {
             if(depth < MAX_DEPTH)
             {
                // we need to go deeper.
                path = subpath;
-               path.pathConcatenate(ent->d_name);
+               path.pathConcatenate(filename.c_str());
                W_recurseFiles(paths, base, path.constPtr(), prevPaths, depth + 1);
             }
          }
@@ -909,18 +915,17 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
 
             adf.path = path;
             path = subpath;
-            path.pathConcatenate(ent->d_name);
+            path.pathConcatenate(filename.c_str());
 
             // Normalize the subpath
             path.toLower();
             path.replace("\\", '/');
 
             adf.innerpath = path;
-            adf.size = sbuf.st_size;
+            adf.size = ent.file_size();
          }
       }
    }
-   closedir(dir);
 }
 
 //
@@ -932,8 +937,7 @@ bool WadDirectory::addDirectoryAsArchive(openwad_t &openData,
                                          int startlump)
 {
    // Check if it's a directory
-   struct stat sbuf;
-   if(stat(openData.filename, &sbuf) || !S_ISDIR(sbuf.st_mode))
+   if(std::error_code ec; !fs::is_directory(openData.filename, ec))
    {
       handleOpenError(openData, addInfo, openData.filename);
       return false;

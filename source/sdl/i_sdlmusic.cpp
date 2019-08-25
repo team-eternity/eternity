@@ -58,14 +58,15 @@
 #endif
 
 extern int audio_buffers;
+extern bool float_samples;
 
-#define STEP sizeof(Sint16)
+#define STEP 2
 #define STEPSHIFT 1
 
 #ifdef HAVE_SPCLIB
 // haleyjd 05/02/08: SPC support
-static SNES_SPC   *snes_spc   = NULL;
-static SPC_Filter *spc_filter = NULL;
+static SNES_SPC   *snes_spc   = nullptr;
+static SPC_Filter *spc_filter = nullptr;
 
 int spc_preamp     = 1;
 int spc_bass_boost = 8;
@@ -82,8 +83,10 @@ void I_SDLMusicSetSPCBass(void)
 // SDL_mixer effect processor; mixes SPC data into the postmix stream.
 //
 //static void I_EffectSPC(int chan, void *stream, int len, void *udata)
-static void I_EffectSPC(void *udata, Uint8 *stream, int len)
+static void I_EffectSPCSint16(void *udata, Uint8 *stream, int len)
 {
+   static constexpr int SAMPLESIZE = sizeof(Sint16);
+
    Sint16 *leftout, *rightout, *leftend, *datal, *datar;
    int numsamples, spcsamples;
    int stepremainder = 0, i = 0;
@@ -157,6 +160,91 @@ static void I_EffectSPC(void *udata, Uint8 *stream, int len)
 
       // step to next sample in mixer buffer
       leftout  += STEP;
+      rightout += STEP;
+   }
+}
+
+//
+// Yeah this is a copy of the above with minor changes for floats. And what?
+//
+static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
+{
+   static constexpr int SAMPLESIZE = sizeof(float);
+
+   float *leftout, *rightout, *leftend;
+   Sint16 *datal, *datar;
+   int numsamples, spcsamples;
+   int stepremainder = 0, i = 0;
+   float dl, dr;
+
+   static Sint16 *spc_buffer = nullptr;
+   static int lastspcsamples = 0;
+
+   leftout = reinterpret_cast<float *>(stream);
+   rightout = reinterpret_cast<float *>(stream) + 1;
+
+   numsamples = len / SAMPLESIZE;
+   leftend = leftout + numsamples;
+
+   // round samples up to higher even number
+   spcsamples = (static_cast<int>(numsamples * 320.0 / 441.0) & ~1) + 2;
+
+   // realloc spc buffer?
+   if(spcsamples != lastspcsamples)
+   {
+      // add extra buffer samples at end for filtering safety; stereo channels
+      spc_buffer = (Sint16 *)(Z_SysRealloc(spc_buffer,
+         (spcsamples + 2) * 2 * sizeof(Sint16)));
+      lastspcsamples = spcsamples;
+   }
+
+   // get spc samples
+   if(spc_play(snes_spc, spcsamples, (short *)spc_buffer))
+      return;
+
+   // filter samples. Why the final arg is * 2 is beyond me
+   spc_filter_run(spc_filter, (short *)spc_buffer, spcsamples * 2);
+
+   datal = spc_buffer;
+   datar = spc_buffer + 1;
+
+   while(leftout != leftend)
+   {
+      // linear filter spc samples to the output buffer, since the
+      // sample rate is higher (44.1 kHz vs. 32 kHz).
+
+      dl = *leftout + ((static_cast<int>(datal[0]) * (0x10000 - stepremainder) +
+         static_cast<int>(datal[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
+
+      dr = *rightout + ((static_cast<int>(datar[0]) * (0x10000 - stepremainder) +
+         static_cast<int>(datar[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
+
+      if(dl >= 1.0f)
+         *leftout = 1.0f;
+      else if(dl < -1.0f)
+         *leftout = -1.0f;
+      else
+         *leftout = static_cast<float>(dl);
+
+      if(dr > 1.0f)
+         *rightout = 1.0f;
+      else if(dr < -1.0f)
+         *rightout = -1.0f;
+      else
+         *rightout = static_cast<float>(dr);
+
+      stepremainder += ((32000 << 16) / 44100);
+
+      i += (stepremainder >> 16);
+
+      datal = spc_buffer + (i << STEPSHIFT);
+      datar = datal + 1;
+
+      // trim remainder to decimal portion
+      stepremainder &= 0xffff;
+
+      // step to next sample in mixer buffer
+      leftout += STEP;
       rightout += STEP;
    }
 }
@@ -325,7 +413,7 @@ static void I_SDLPlaySong(int handle, int looping)
 #ifdef HAVE_SPCLIB
    // if a SPC is set up, play it.
    if(snes_spc)
-      Mix_HookMusic(I_EffectSPC, NULL);
+      Mix_HookMusic(float_samples ? I_EffectSPCFloat : I_EffectSPCSint16, NULL);
    else
 #endif
 #ifdef HAVE_ADLMIDILIB
@@ -605,6 +693,8 @@ static int I_SDLRegisterSong(void *data, int size)
 
       // Hurrah! Let's make it a mid and give it to SDL_mixer
       MIDIToMidi(&mididata, &mid, &midlen);
+
+      FreeMIDIData(&mididata);
 
       // save memory block to free when unregistering
       music_block = mid;

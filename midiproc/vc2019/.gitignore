@@ -9,5 +9,6 @@
 # Visual Studio 2017 options/cache directory
 .vs/
 # Build result folders
-Win32/
-x64/
+Debug/
+Release/
+

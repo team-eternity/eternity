@@ -153,7 +153,8 @@ void UpdateFocus(SDL_Window *window)
    screenvisible = ((state & SDL_WINDOW_SHOWN) && !(state & SDL_WINDOW_MINIMIZED));
 
    window_focused = (screenvisible &&
-                     ((state & (SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS)) != 0));
+                     ((state & (SDL_WINDOW_INPUT_GRABBED | SDL_WINDOW_INPUT_FOCUS |
+                                SDL_WINDOW_MOUSE_FOCUS)) != 0));
 }
 
 //=============================================================================

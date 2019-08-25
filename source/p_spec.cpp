@@ -315,8 +315,14 @@ static void P_applyEDFAnim(const EAnimDef &ead)
 //
 void P_InitPicAnims(void)
 {
-   animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
-   
+   animdef_t               *animdefs; //jff 3/23/98 pointer to animation lump
+   const lumpinfo_t *const *lumpinfo = wGlobalDir.getLumpInfo();
+   const int                animatednum  = wGlobalDir.getNumForName("ANIMATED");
+   const size_t             animatedsize = lumpinfo[animatednum]->size;
+
+   if(lumpinfo[animatednum]->size == 0)
+      I_Error("P_InitPicAnims: ANIMATED lump has size 0\n");
+
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
    animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));

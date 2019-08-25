@@ -266,6 +266,7 @@ patch_t *default_faces[ST_NUMFACES];
 patch_t *nfs_health;
 patch_t *nfs_divider;
 patch_t *nfs_armor;
+patch_t *nfs_inf;
 
 // face background
 static patch_t *faceback; // sf: change to use one and colormap
@@ -1576,6 +1577,7 @@ void ST_Init()
    nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
    nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
    nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
+   nfs_inf     = PatchLoader::CacheName(wGlobalDir, "nhud_inf", PU_STATIC);
 
    GameModeInfo->StatusBar->Init();
 }

@@ -334,7 +334,9 @@ typedef enum
    F2LnF,
    F2NnF,
    F2LnC,
-   LnF2HnF
+   LnF2HnF,
+
+   lifttarget_upValue
 } lifttarget_e;
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
@@ -1532,6 +1534,8 @@ int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
                          const ceilingdata_t &cd);
 
 int EV_DoGenLift(const line_t *line);
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+                             int target, fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);

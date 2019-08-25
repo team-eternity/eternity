@@ -486,7 +486,12 @@ void P_SpawnPushers()
          {
             int tag = line->args[0];
             int x_mag, y_mag;
-            if(line->args[3])
+            if(line->args[3] & ~1)
+            {
+               doom_warningf("PointPush_SetForce line %d: invalid arg4 %d", i, line->args[3]);
+               break;   // kill it quickly
+            }
+            if(line->args[3] & 1)
             {
                x_mag = line->dx;
                y_mag = line->dy;
@@ -503,10 +508,7 @@ void P_SpawnPushers()
                {
                   Mobj *thing = P_GetPushThing(s);
                   if(thing) // No P* means no effect
-                  {
-                     Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing,
-                                s);
-                  }
+                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing, s);
                }
             }
             else

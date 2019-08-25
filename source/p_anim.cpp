@@ -189,9 +189,9 @@ void P_AnimateSurfaces()
    skyflat_t *sky2 = R_SkyFlatForIndex(1);
 
    if(sky1)
-      sky1->columnoffset += LevelInfo.skyDelta  << 8;
+      sky1->columnoffset += LevelInfo.skyDelta  >> (FRACBITS / 2);
    if(sky2)
-      sky2->columnoffset += LevelInfo.sky2Delta << 8;
+      sky2->columnoffset += LevelInfo.sky2Delta >> (FRACBITS / 2);
    
    if(LevelInfo.hasLightning)
    {

@@ -54,6 +54,7 @@ public:
    DebugLogger &operator << (int number);
    DebugLogger &operator << (unsigned number);
    DebugLogger &operator << (long number);
+   DebugLogger &operator << (unsigned long number);
    DebugLogger &operator << (long long number);
    DebugLogger &operator << (double number);
 

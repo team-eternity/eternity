@@ -509,16 +509,21 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // killough 2/8/98, 3/22/98 -- end of weapon selection changes
       }
 
-      // haleyjd 03/06/09: next/prev weapon actions
-      if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&players[consoleplayer]);
-      else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&players[consoleplayer]);
-
-      if(newweapon != wp_nochange)
+      if(GameModeInfo->type == Game_DOOM)
       {
-         cmd->buttons |= BT_CHANGE;
-         cmd->buttons |= newweapon << BT_WEAPONSHIFT;
+          // haleyjd 03/06/09: next/prev weapon actions
+          if(gameactions[ka_weaponup])
+              newweapon = P_NextWeapon(&players[consoleplayer]);
+          else if(gameactions[ka_weapondown])
+              newweapon = P_PrevWeapon(&players[consoleplayer]);
+
+          const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
+
+          if(newweapon != -1 && wp && wp->dehnum >= wp_fist && wp->dehnum <= wp_supershotgun)
+          {
+              cmd->buttons |= BT_CHANGE;
+              cmd->buttons |= wp->dehnum << BT_WEAPONSHIFT;
+          }
       }
    }
 
@@ -3800,6 +3805,30 @@ void doom_printf(const char *s, ...)
    va_end(v);
    
    C_Puts(msg);  // set new message
+   HU_PlayerMsg(msg);
+}
+
+//
+// Like above, but uses FC_ERROR and occasional beeping
+//
+void doom_warningf(const char *s, ...)
+{
+   static int lastbeeptic = -1000;
+
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   if(lastbeeptic + 100 < gametic)
+   {
+      lastbeeptic = gametic;
+      C_Printf("%s\a\n", msg);
+   }
+   else
+      C_Puts(msg);
    HU_PlayerMsg(msg);
 }
 

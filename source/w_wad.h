@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2016 James Haley et al.
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
 // Purpose: WAD I/O functions
+//
+// Authors: James Haley
 //
 
 #ifndef W_WAD_H__

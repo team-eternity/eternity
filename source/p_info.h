@@ -129,8 +129,8 @@ struct LevelInfo_t
    const char *sky2Name;      // secondary sky (F_SKY2 or bottom of double)
    bool doubleSky;            // use hexen-style double skies?
    bool hasLightning;         // map has lightning flashes?
-   int  skyDelta;             // double-sky scroll speeds (units/tic)
-   int  sky2Delta;
+   fixed_t skyDelta;          // double-sky scroll speeds (units/tic)
+   fixed_t sky2Delta;
 
    // gameplay options
    bool disableJump;          // if true, jumping is disabled

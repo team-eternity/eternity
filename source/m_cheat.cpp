@@ -857,7 +857,7 @@ static void cheat_rambo(const void *arg)
 
 #define CHEAT_ARGS_MAX 8  /* Maximum number of args at end of cheats */
 
-void M_DoCheat(char *s)
+void M_DoCheat(const char *s)
 {
    while(*s)
    {

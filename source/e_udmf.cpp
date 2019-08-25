@@ -177,7 +177,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->ceilinglightdelta = static_cast<int16_t>(us.lightceiling);
          ss->flags |=
          (us.lightfloorabsolute ? SECF_FLOORLIGHTABSOLUTE : 0) |
-         (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0);
+         (us.lightceilingabsolute ? SECF_CEILLIGHTABSOLUTE : 0) |
+         (us.phasedlight ? SECF_PHASEDLIGHT : 0) |
+         (us.lightsequence ? SECF_LIGHTSEQUENCE : 0) |
+         (us.lightseqalt ? SECF_LIGHTSEQALT : 0);
 
          // sector colormaps
          ss->topmap = ss->midmap = ss->bottommap = -1; // mark as not specified
@@ -361,6 +364,8 @@ bool UDMFParser::loadLinedefs(UDMFSetupSettings &setupSettings)
             ld->extflags |= EX_ML_MONSTER | EX_ML_USE;
          if(uld.impact)
             ld->extflags |= EX_ML_PLAYER | EX_ML_IMPACT;
+         if(uld.monstershoot)
+            ld->extflags |= EX_ML_MONSTER | EX_ML_IMPACT;
          if(uld.playerpush)
             ld->extflags |= EX_ML_PLAYER | EX_ML_PUSH;
          if(uld.monsterpush)
@@ -612,6 +617,8 @@ enum token_e
    t_lightfloor,
    t_lightfloorabsolute,
    t_lightlevel,
+   t_lightseqalt,
+   t_lightsequence,
    t_lowerportal,
    t_mapped,
    t_midtex3d,
@@ -619,9 +626,11 @@ enum token_e
    t_missilecross,
    t_monstercross,
    t_monsterpush,
+   t_monstershoot,
    t_monsteruse,
    t_offsetx,
    t_offsety,
+   t_phasedlight,
    t_polycross,
    t_portal,
    t_portalceiling,
@@ -761,6 +770,8 @@ static keytoken_t gTokenList[] =
    TOKEN(lightfloor),
    TOKEN(lightfloorabsolute),
    TOKEN(lightlevel),
+   TOKEN(lightseqalt),
+   TOKEN(lightsequence),
    TOKEN(lowerportal),
    TOKEN(mapped),
    TOKEN(midtex3d),
@@ -768,6 +779,7 @@ static keytoken_t gTokenList[] =
    TOKEN(missilecross),
    TOKEN(monstercross),
    TOKEN(monsterpush),
+   TOKEN(monstershoot),
    TOKEN(monsteruse),
    TOKEN(offsetx),
    TOKEN(offsety),
@@ -790,6 +802,7 @@ static keytoken_t gTokenList[] =
    TOKEN(portal_floor_overlaytype),
    TOKEN(portal_floor_useglobaltex),
    TOKEN(passuse),
+   TOKEN(phasedlight),
    TOKEN(playercross),
    TOKEN(playerpush),
    TOKEN(playeruse),
@@ -1039,6 +1052,7 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_BOOL(linedef, monstercross);
                   READ_BOOL(linedef, monsteruse);
                   READ_BOOL(linedef, impact);
+                  READ_BOOL(linedef, monstershoot);
                   READ_BOOL(linedef, playerpush);
                   READ_BOOL(linedef, monsterpush);
                   READ_BOOL(linedef, missilecross);
@@ -1152,6 +1166,9 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                      READ_NUMBER(sector, lightceiling);
                      READ_BOOL(sector, lightfloorabsolute);
                      READ_BOOL(sector, lightceilingabsolute);
+                     READ_BOOL(sector, phasedlight);
+                     READ_BOOL(sector, lightsequence);
+                     READ_BOOL(sector, lightseqalt);
 
                      READ_STRING(sector, colormaptop);
                      READ_STRING(sector, colormapmid);

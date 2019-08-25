@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -387,13 +387,13 @@
     <ClCompile Include="..\Source\g_gfs.cpp">
       <Filter>Source Files\G_\G_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\hu_frags.cpp">
+    <ClCompile Include="..\source\hu_frags.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\hu_over.cpp">
+    <ClCompile Include="..\source\hu_over.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\Source\hu_stuff.cpp">
+    <ClCompile Include="..\source\hu_stuff.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\Source\hi_stuff.cpp">
@@ -837,9 +837,6 @@
     <ClCompile Include="..\Source\Win32\i_fnames.cpp">
       <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_opndir.cpp">
-      <Filter>Source Files\Win32\Win32 Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\v_image.cpp">
       <Filter>Source Files\V_\V_ Source</Filter>
     </ClCompile>
@@ -981,10 +978,10 @@
     <ClCompile Include="..\source\textscreen\txt_window_action.c">
       <Filter>Source Files\TXT_\TXT Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\e_switch.cpp">
+    <ClCompile Include="..\source\e_anim.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\e_anim.cpp">
+    <ClCompile Include="..\source\e_switch.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
     <ClCompile Include="..\source\g_demolog.cpp">
@@ -1616,9 +1613,6 @@
     <ClInclude Include="..\Source\Win32\i_fnames.h">
       <Filter>Source Files\Win32\Win32 Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\Win32\i_opndir.h">
-      <Filter>Source Files\Win32\Win32 Headers</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\m_ctype.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
     </ClInclude>
@@ -1775,10 +1769,10 @@
     <ClInclude Include="..\source\textscreen\txt_window_action.h">
       <Filter>Source Files\TXT_\TXT Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\e_switch.h">
+    <ClInclude Include="..\source\e_anim.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\e_anim.h">
+    <ClInclude Include="..\source\e_switch.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\g_demolog.h">
