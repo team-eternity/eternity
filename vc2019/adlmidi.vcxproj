@@ -137,14 +137,20 @@
     <ClInclude Include="..\adlmidi\src\adldata.hh" />
     <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.h" />
     <ClInclude Include="..\adlmidi\src\adlmidi_cvt.hpp" />
+    <ClInclude Include="..\adlmidi\src\adlmidi_midiplay.hpp" />
+    <ClInclude Include="..\adlmidi\src\adlmidi_opl3.hpp" />
     <ClInclude Include="..\adlmidi\src\adlmidi_private.hpp" />
     <ClInclude Include="..\adlmidi\src\adlmidi_ptr.hpp" />
     <ClInclude Include="..\adlmidi\src\chips\dosbox\dbopl.h" />
     <ClInclude Include="..\adlmidi\src\chips\dosbox_opl3.h" />
+    <ClInclude Include="..\adlmidi\src\chips\java\JavaOPL3.hpp" />
+    <ClInclude Include="..\adlmidi\src\chips\java_opl3.h" />
     <ClInclude Include="..\adlmidi\src\chips\nuked\nukedopl3.h" />
     <ClInclude Include="..\adlmidi\src\chips\nuked\nukedopl3_174.h" />
     <ClInclude Include="..\adlmidi\src\chips\nuked_opl3.h" />
     <ClInclude Include="..\adlmidi\src\chips\nuked_opl3_v174.h" />
+    <ClInclude Include="..\adlmidi\src\chips\opal\opal.hpp" />
+    <ClInclude Include="..\adlmidi\src\chips\opal_opl3.h" />
     <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.h" />
     <ClInclude Include="..\adlmidi\src\cvt_mus2mid.hpp" />
     <ClInclude Include="..\adlmidi\src\cvt_xmi2mid.hpp" />
@@ -153,6 +159,7 @@
     <ClInclude Include="..\adlmidi\src\midi_sequencer.h" />
     <ClInclude Include="..\adlmidi\src\midi_sequencer.hpp" />
     <ClInclude Include="..\adlmidi\src\midi_sequencer_impl.hpp" />
+    <ClInclude Include="..\adlmidi\src\structures\pl_list.hpp" />
     <ClInclude Include="..\adlmidi\src\wopl\wopl_file.h" />
   </ItemGroup>
   <ItemGroup>
@@ -165,10 +172,12 @@
     <ClCompile Include="..\adlmidi\src\adlmidi_sequencer.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\dosbox\dbopl.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\dosbox_opl3.cpp" />
+    <ClCompile Include="..\adlmidi\src\chips\java_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\nuked\nukedopl3.c" />
     <ClCompile Include="..\adlmidi\src\chips\nuked\nukedopl3_174.c" />
     <ClCompile Include="..\adlmidi\src\chips\nuked_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\nuked_opl3_v174.cpp" />
+    <ClCompile Include="..\adlmidi\src\chips\opal_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\wopl\wopl_file.c" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +185,11 @@
       <FileType>CppHeader</FileType>
     </ClInclude>
     <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.tcc">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\adlmidi\src\structures\pl_list.tcc">
       <FileType>CppHeader</FileType>
     </ClInclude>
   </ItemGroup>

@@ -43,6 +43,18 @@
     <Filter Include="Header Files\src\chips\nuked">
       <UniqueIdentifier>{ea76083a-6a8f-49a8-b857-c69e9bd745be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\structures">
+      <UniqueIdentifier>{47eedb42-6d8b-48d8-862a-49241c72430b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\structures">
+      <UniqueIdentifier>{4cc55536-828b-4183-a540-c0844bfd3db5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\chips\java">
+      <UniqueIdentifier>{3c74b706-b456-4a8a-a1a3-5d090209fc24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\chips\opal">
+      <UniqueIdentifier>{8560ebc3-d408-4b79-b496-3ade4b60f9e5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\adlmidi\include\adlmidi.h">
@@ -117,6 +129,30 @@
     <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.tcc">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\adlmidi\src\structures\pl_list.hpp">
+      <Filter>Header Files\src\structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_midiplay.hpp">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_opl3.hpp">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\java_opl3.h">
+      <Filter>Header Files\src\chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\opal_opl3.h">
+      <Filter>Header Files\src\chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\java\JavaOPL3.hpp">
+      <Filter>Header Files\src\chips\java</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\opal\opal.hpp">
+      <Filter>Header Files\src\chips\opal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\structures\pl_list.tcc">
+      <Filter>Source Files\structures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\adlmidi\src\adldata.cpp">
@@ -160,6 +196,12 @@
     </ClCompile>
     <ClCompile Include="..\adlmidi\src\wopl\wopl_file.c">
       <Filter>Source Files\wopl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\opal_opl3.cpp">
+      <Filter>Source Files\chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\java_opl3.cpp">
+      <Filter>Source Files\chips</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
