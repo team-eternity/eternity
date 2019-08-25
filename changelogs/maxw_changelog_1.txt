@@ -368,6 +368,26 @@ or args in a delta structure targetting said artifact.
 Change the key bindings menus.
 Fix an issue with window grabbing not working.
 
+-------------------------------------------------------------------------------
+2019/07/07
+Fix crashes when using music packs (I think this only impacted devbuilds).
+
+-------------------------------------------------------------------------------
+2019/08/10
+Fix next and previous weapon (weapon scrolling) in vanilla recordings.
+
+-------------------------------------------------------------------------------
+2019/08/14
+Fix a crash caused by ANIMATED lumps of size 0. It hard errors now.
+
+-------------------------------------------------------------------------------
+2019/08/25-2019/08/26
+Working past midnight so yeah.
+Fixed crashes due to not being able to handle floating 32-bit audio samples.
+Made Eternity use WASAPI on Windows Vista and later.
+
+
+
 ================================================================================
 EOF
 ================================================================================
