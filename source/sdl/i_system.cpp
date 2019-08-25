@@ -28,6 +28,7 @@
 
 // HAL modules
 #include "../hal/i_gamepads.h"
+#include "../hal/i_platform.h"
 #include "../hal/i_timer.h"
 
 #include "../z_zone.h"
