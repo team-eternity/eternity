@@ -43,9 +43,6 @@
     <Filter Include="Header Files\src\chips\nuked">
       <UniqueIdentifier>{ea76083a-6a8f-49a8-b857-c69e9bd745be}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\structures">
-      <UniqueIdentifier>{47eedb42-6d8b-48d8-862a-49241c72430b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\src\structures">
       <UniqueIdentifier>{4cc55536-828b-4183-a540-c0844bfd3db5}</UniqueIdentifier>
     </Filter>
@@ -123,12 +120,6 @@
     <ClInclude Include="..\adlmidi\src\chips\dosbox\dbopl.h">
       <Filter>Header Files\src\chips\dosbox</Filter>
     </ClInclude>
-    <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.tcc">
-      <Filter>Source Files\chips</Filter>
-    </ClInclude>
-    <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.tcc">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\adlmidi\src\structures\pl_list.hpp">
       <Filter>Header Files\src\structures</Filter>
     </ClInclude>
@@ -150,8 +141,14 @@
     <ClInclude Include="..\adlmidi\src\chips\opal\opal.hpp">
       <Filter>Header Files\src\chips\opal</Filter>
     </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.tcc">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
     <ClInclude Include="..\adlmidi\src\structures\pl_list.tcc">
-      <Filter>Source Files\structures</Filter>
+      <Filter>Header Files\src\structures</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.tcc">
+      <Filter>Header Files\src\chips</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
