@@ -24,6 +24,30 @@
 		4F02C38723126DB3004DBBA7 /* nukedopl3_174.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C38523126DB2004DBBA7 /* nukedopl3_174.c */; };
 		4F02C38823126DB3004DBBA7 /* nukedopl3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C38623126DB3004DBBA7 /* nukedopl3.c */; };
 		4F02C38A23126DD0004DBBA7 /* wopl_file.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C38923126DD0004DBBA7 /* wopl_file.c */; };
+		4F02C398231300D7004DBBA7 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C397231300D7004DBBA7 /* main.cpp */; };
+		4F02C39C2313034D004DBBA7 /* txt_conditional.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05911F91567D003790C5 /* txt_conditional.c */; };
+		4F02C39D2313034D004DBBA7 /* txt_fileselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05951F91567E003790C5 /* txt_fileselect.c */; };
+		4F02C39E2313034D004DBBA7 /* txt_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05971F91567E003790C5 /* txt_utf8.c */; };
+		4F02C39F2313034D004DBBA7 /* txt_button.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D5C158BF42800C49E93 /* txt_button.c */; };
+		4F02C3A02313034D004DBBA7 /* txt_checkbox.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D5D158BF42800C49E93 /* txt_checkbox.c */; };
+		4F02C3A12313034D004DBBA7 /* txt_desktop.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D5E158BF42800C49E93 /* txt_desktop.c */; };
+		4F02C3A22313034D004DBBA7 /* txt_dropdown.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D5F158BF42800C49E93 /* txt_dropdown.c */; };
+		4F02C3A32313034D004DBBA7 /* txt_gui.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D60158BF42800C49E93 /* txt_gui.c */; };
+		4F02C3A42313034D004DBBA7 /* txt_inputbox.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D61158BF42800C49E93 /* txt_inputbox.c */; };
+		4F02C3A52313034D004DBBA7 /* txt_io.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D62158BF42800C49E93 /* txt_io.c */; };
+		4F02C3A62313034D004DBBA7 /* txt_label.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D63158BF42800C49E93 /* txt_label.c */; };
+		4F02C3A72313034D004DBBA7 /* txt_radiobutton.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D64158BF42800C49E93 /* txt_radiobutton.c */; };
+		4F02C3A82313034D004DBBA7 /* txt_scrollpane.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D65158BF42800C49E93 /* txt_scrollpane.c */; };
+		4F02C3A92313034D004DBBA7 /* txt_sdl.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D66158BF42800C49E93 /* txt_sdl.c */; };
+		4F02C3AA2313034D004DBBA7 /* txt_separator.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D67158BF42800C49E93 /* txt_separator.c */; };
+		4F02C3AB2313034D004DBBA7 /* txt_spinctrl.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D68158BF42800C49E93 /* txt_spinctrl.c */; };
+		4F02C3AC2313034D004DBBA7 /* txt_strut.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D69158BF42800C49E93 /* txt_strut.c */; };
+		4F02C3AD2313034D004DBBA7 /* txt_table.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D6A158BF42800C49E93 /* txt_table.c */; };
+		4F02C3AE2313034D004DBBA7 /* txt_widget.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D6B158BF42800C49E93 /* txt_widget.c */; };
+		4F02C3AF2313034D004DBBA7 /* txt_window.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D6C158BF42800C49E93 /* txt_window.c */; };
+		4F02C3B02313034D004DBBA7 /* txt_window_action.c in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D6D158BF42800C49E93 /* txt_window_action.c */; };
+		4F02C3B1231303DA004DBBA7 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D4F22C6BBAD00E7E702 /* libSDL2-2.0.0.dylib */; };
+		4F02C3B22313075C004DBBA7 /* show-endoom in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F02C395231300D7004DBBA7 /* show-endoom */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F21BAF51E9C05C10040B4DF /* s_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */; };
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
 		4F2F32AE1867100100EED7DE /* s_reverb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A71867100100EED7DE /* s_reverb.cpp */; };
@@ -357,6 +381,15 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		4F02C393231300D7004DBBA7 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		4F3F3B4E224F90E500E25DCB /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -374,6 +407,7 @@
 				4F769D6622C6BBC800E7E702 /* libSDL2-2.0.0.dylib in CopyFiles */,
 				4F769D6722C6BBC800E7E702 /* libvorbis.0.dylib in CopyFiles */,
 				4F769D6822C6BBC800E7E702 /* libvorbisfile.3.dylib in CopyFiles */,
+				4F02C3B22313075C004DBBA7 /* show-endoom in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +465,8 @@
 		4F02C38523126DB2004DBBA7 /* nukedopl3_174.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = nukedopl3_174.c; path = ../adlmidi/src/chips/nuked/nukedopl3_174.c; sourceTree = "<group>"; };
 		4F02C38623126DB3004DBBA7 /* nukedopl3.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = nukedopl3.c; path = ../adlmidi/src/chips/nuked/nukedopl3.c; sourceTree = "<group>"; };
 		4F02C38923126DD0004DBBA7 /* wopl_file.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = wopl_file.c; path = ../adlmidi/src/wopl/wopl_file.c; sourceTree = "<group>"; };
+		4F02C395231300D7004DBBA7 /* show-endoom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "show-endoom"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F02C397231300D7004DBBA7 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4F0A2C7416ED36E500400F41 /* i_gamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_gamepads.cpp; path = ../source/hal/i_gamepads.cpp; sourceTree = "<group>"; };
 		4F0A2C7516ED36E500400F41 /* i_gamepads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_gamepads.h; path = ../source/hal/i_gamepads.h; sourceTree = "<group>"; };
 		4F0A2C7716ED36FD00400F41 /* i_sdlgamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_sdlgamepads.cpp; path = ../source/sdl/i_sdlgamepads.cpp; sourceTree = "<group>"; };
@@ -1063,6 +1099,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4F02C392231300D7004DBBA7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F02C3B1231303DA004DBBA7 /* libSDL2-2.0.0.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F5F3868182D97A10027813A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -1089,6 +1133,7 @@
 			isa = PBXGroup;
 			children = (
 				4F5F386B182D97A10027813A /* eternity */,
+				4F02C395231300D7004DBBA7 /* show-endoom */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1099,6 +1144,7 @@
 				29B97315FDCFA39411CA2CEA /* Code */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				4F5F386E182D97A20027813A /* eternity */,
+				4F02C396231300D7004DBBA7 /* show-endoom */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
@@ -1268,6 +1314,14 @@
 				4F02C36A23126D4B004DBBA7 /* wopl_file.h */,
 			);
 			name = wopl;
+			sourceTree = "<group>";
+		};
+		4F02C396231300D7004DBBA7 /* show-endoom */ = {
+			isa = PBXGroup;
+			children = (
+				4F02C397231300D7004DBBA7 /* main.cpp */,
+			);
+			path = "show-endoom";
 			sourceTree = "<group>";
 		};
 		4F5F386E182D97A20027813A /* eternity */ = {
@@ -2242,6 +2296,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4F02C394231300D7004DBBA7 /* show-endoom */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4F02C39B231300E0004DBBA7 /* Build configuration list for PBXNativeTarget "show-endoom" */;
+			buildPhases = (
+				4F02C391231300D7004DBBA7 /* Sources */,
+				4F02C392231300D7004DBBA7 /* Frameworks */,
+				4F02C393231300D7004DBBA7 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "show-endoom";
+			productName = "show-endoom";
+			productReference = 4F02C395231300D7004DBBA7 /* show-endoom */;
+			productType = "com.apple.product-type.tool";
+		};
 		4F5F386A182D97A10027813A /* eternity */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "eternity" */;
@@ -2268,6 +2339,11 @@
 			attributes = {
 				LastUpgradeCheck = 1030;
 				TargetAttributes = {
+					4F02C394231300D7004DBBA7 = {
+						CreatedOnToolsVersion = 10.3;
+						DevelopmentTeam = 66L236F264;
+						ProvisioningStyle = Automatic;
+					};
 					4F5F386A182D97A10027813A = {
 						DevelopmentTeam = 66L236F264;
 						ProvisioningStyle = Automatic;
@@ -2290,6 +2366,7 @@
 			projectRoot = "";
 			targets = (
 				4F5F386A182D97A10027813A /* eternity */,
+				4F02C394231300D7004DBBA7 /* show-endoom */,
 			);
 		};
 /* End PBXProject section */
@@ -2311,6 +2388,35 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4F02C391231300D7004DBBA7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F02C398231300D7004DBBA7 /* main.cpp in Sources */,
+				4F02C39C2313034D004DBBA7 /* txt_conditional.c in Sources */,
+				4F02C39D2313034D004DBBA7 /* txt_fileselect.c in Sources */,
+				4F02C39E2313034D004DBBA7 /* txt_utf8.c in Sources */,
+				4F02C39F2313034D004DBBA7 /* txt_button.c in Sources */,
+				4F02C3A02313034D004DBBA7 /* txt_checkbox.c in Sources */,
+				4F02C3A12313034D004DBBA7 /* txt_desktop.c in Sources */,
+				4F02C3A22313034D004DBBA7 /* txt_dropdown.c in Sources */,
+				4F02C3A32313034D004DBBA7 /* txt_gui.c in Sources */,
+				4F02C3A42313034D004DBBA7 /* txt_inputbox.c in Sources */,
+				4F02C3A52313034D004DBBA7 /* txt_io.c in Sources */,
+				4F02C3A62313034D004DBBA7 /* txt_label.c in Sources */,
+				4F02C3A72313034D004DBBA7 /* txt_radiobutton.c in Sources */,
+				4F02C3A82313034D004DBBA7 /* txt_scrollpane.c in Sources */,
+				4F02C3A92313034D004DBBA7 /* txt_sdl.c in Sources */,
+				4F02C3AA2313034D004DBBA7 /* txt_separator.c in Sources */,
+				4F02C3AB2313034D004DBBA7 /* txt_spinctrl.c in Sources */,
+				4F02C3AC2313034D004DBBA7 /* txt_strut.c in Sources */,
+				4F02C3AD2313034D004DBBA7 /* txt_table.c in Sources */,
+				4F02C3AE2313034D004DBBA7 /* txt_widget.c in Sources */,
+				4F02C3AF2313034D004DBBA7 /* txt_window.c in Sources */,
+				4F02C3B02313034D004DBBA7 /* txt_window_action.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4F5F3867182D97A10027813A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2664,6 +2770,79 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		4F02C399231300D8004DBBA7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = 66L236F264;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/sdl-mac-releases",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4F02C39A231300D8004DBBA7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 66L236F264;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/sdl-mac-releases",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		4F5F3876182D97A20027813A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2876,6 +3055,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4F02C39B231300E0004DBBA7 /* Build configuration list for PBXNativeTarget "show-endoom" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4F02C399231300D8004DBBA7 /* Debug */,
+				4F02C39A231300D8004DBBA7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "eternity" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

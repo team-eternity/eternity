@@ -143,10 +143,8 @@ void I_Quit(void)
 
    // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
    // affecting functions. MUST FIX.
-#if EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
-#endif
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
    // haleyjd 10/09/05: moved down here
@@ -306,6 +304,51 @@ void I_ErrorVA(const char *error, va_list args)
 int showendoom;
 int endoomdelay;
 
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+// https://stackoverflow.com/a/6782480/11738219
+// For ENDOOM workaround
+static char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+   'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+   'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+   'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+   'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+   'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+   'w', 'x', 'y', 'z', '0', '1', '2', '3',
+   '4', '5', '6', '7', '8', '9', '+', '/'};
+static char *decoding_table = NULL;
+static int mod_table[] = {0, 2, 1};
+
+
+static char *base64_encode(const unsigned char *data,
+                    size_t input_length,
+                    size_t *output_length) {
+
+   *output_length = 4 * ((input_length + 2) / 3);
+
+   char *encoded_data = (char*)malloc(*output_length);
+   if (encoded_data == NULL) return NULL;
+
+   for (int i = 0, j = 0; i < input_length;) {
+
+      uint32_t octet_a = i < input_length ? (unsigned char)data[i++] : 0;
+      uint32_t octet_b = i < input_length ? (unsigned char)data[i++] : 0;
+      uint32_t octet_c = i < input_length ? (unsigned char)data[i++] : 0;
+
+      uint32_t triple = (octet_a << 0x10) + (octet_b << 0x08) + octet_c;
+
+      encoded_data[j++] = encoding_table[(triple >> 3 * 6) & 0x3F];
+      encoded_data[j++] = encoding_table[(triple >> 2 * 6) & 0x3F];
+      encoded_data[j++] = encoding_table[(triple >> 1 * 6) & 0x3F];
+      encoded_data[j++] = encoding_table[(triple >> 0 * 6) & 0x3F];
+   }
+
+   for (int i = 0; i < mod_table[input_length % 3]; i++)
+      encoded_data[*output_length - 1 - i] = '=';
+
+   return encoded_data;
+}
+#endif
+
 //
 // I_EndDoom
 //
@@ -316,21 +359,51 @@ int endoomdelay;
 //
 void I_EndDoom()
 {
-   unsigned char *endoom_data;
-   unsigned char *screendata;
-   int start_ms;
-   int lumpnum;
-   
    // haleyjd: it's possible to have quit before we even initialized
    // GameModeInfo, so be sure it's valid before using it here. Also,
    // allow ENDOOM disable in configuration.
    if(!GameModeInfo || !showendoom)
       return;
    
+   int lumpnum;
    if((lumpnum = wGlobalDir.checkNumForName(GameModeInfo->endTextName)) < 0)
       return;
 
-   endoom_data = (unsigned char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
+   auto endoom_data = (unsigned char *)wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
+   auto endoom_length = wGlobalDir.lumpLength(lumpnum);
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   // Currently in-process ENDOOM is very unstable on macOS, so we'll start
+   // another process to show it.
+   // https://stackoverflow.com/a/12839498/11738219
+
+   if(strlen(myargv[0]) < 8)
+      return;
+   const char *last8 = myargv[0] + strlen(myargv[0]) - 8;
+   if(strcasecmp(last8, "eternity"))
+      return;
+   qstring apppath = qstring(myargv[0]);
+   apppath.truncate(last8 - myargv[0]);
+   apppath += "show-endoom";
+
+   size_t len = 0;
+   char *base64 = base64_encode(endoom_data, endoom_length, &len);
+   if(!base64)
+      return;
+
+   apppath.concat(" ");
+   apppath.concat(base64);
+   apppath.concat(" ");
+
+   char dragon[20];
+   snprintf(dragon, 20, "%d", endoomdelay);
+
+   apppath.concat(dragon);
+
+   system(apppath.constPtr());
+#else
+   unsigned char *screendata;
+   int start_ms;
    
    // Set up text mode screen   
    if(!TXT_Init())
@@ -359,6 +432,7 @@ void I_EndDoom()
    
    // Shut down text mode screen   
    TXT_Shutdown();
+#endif
 }
 
 // check for ESC button pressed, regardless of keyboard handler
