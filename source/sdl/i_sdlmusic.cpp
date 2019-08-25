@@ -59,6 +59,7 @@
 
 extern int audio_buffers;
 extern bool float_samples;
+extern SDL_AudioSpec audio_spec;
 
 #define STEP 2
 #define STEPSHIFT 1
@@ -98,7 +99,7 @@ static void I_EffectSPCSint16(void *udata, Uint8 *stream, int len)
    leftout  =  (Sint16 *)stream;
    rightout = ((Sint16 *)stream) + 1;
 
-   numsamples = len / STEP;
+   numsamples = len / SAMPLESIZE;
    leftend = leftout + numsamples;
 
    // round samples up to higher even number
@@ -282,7 +283,7 @@ static void I_effectADLMIDISint16(void *udata, Uint8 *stream, int len)
    if(numsamples != lastadlmidisamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      adlmidi_buffer = (Sint16 *)Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(Sint16));
+      adlmidi_buffer = static_cast<Sint16 *>(Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(Sint16)));
       lastadlmidisamples = numsamples;
    }
 
@@ -317,7 +318,7 @@ static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
    if(numsamples != lastadlmidisamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      adlmidi_buffer = (float *)Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(float));
+      adlmidi_buffer = static_cast<float *>(Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(float)));
       lastadlmidisamples = numsamples;
    }
 
@@ -392,6 +393,8 @@ static void I_SDLShutdownSoundForMusic(void)
    Mix_CloseAudio();
 }
 
+extern bool I_GenSDLAudioSpec();
+
 //
 // I_SDLInitSoundForMusic
 //
@@ -405,9 +408,19 @@ static int I_SDLInitSoundForMusic(void)
 
    if(!I_IsSoundBufferSizePowerOf2(audio_buffers))
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
-   
-   if(Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, audio_buffers) < 0)
+
+   // Figure out mix buffer sizes
+   if(!I_GenSDLAudioSpec())
+   {
+      printf("Couldn't determine sound mixing buffer size.\n");
+      nomusicparm = true;
       return 0;
+   }
+
+   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) < 0)
+      return 0;
+
+   float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
 
    return 1;
 }
@@ -775,7 +788,7 @@ static int I_SDLRegisterSong(void *data, int size)
 #ifdef HAVE_ADLMIDILIB
    if(isMIDI && midi_device == 0)
    {
-      adlmidi_player = adl_init(44100);
+      adlmidi_player = adl_init(audio_spec.freq);
       adl_setNumChips(adlmidi_player, adlmidi_numchips);
       adl_setBank(adlmidi_player, adlmidi_bank);
       adl_switchEmulator(adlmidi_player, adlmidi_emulator);

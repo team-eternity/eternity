@@ -66,8 +66,6 @@ int main(int argc, char **argv)
    myargc = argc;
    myargv = argv;
 
-   // SDL_FIXME: WASAPI can't currently be enabled, nor can any audio drivers
-   //            that doesn't support MIX_DEFAULT_FORMAT.
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
    if(I_IsWindowsVistaOrHigher())
       SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);

@@ -61,7 +61,7 @@ static Uint32 mixbuffer_size;
 static float *mixbuffer[2];
 
 // MaxW: 2019/08/24: Audiospec we actually got
-static SDL_AudioSpec have;
+SDL_AudioSpec audio_spec = {};
 
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
@@ -796,10 +796,10 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 
 static void I_SDLDummyCallback(void *, Uint8 *, int) {}
 
-static bool I_getSDLAudioSpec()
+bool I_GenSDLAudioSpec()
 {
    SDL_AudioSpec want;
-   have = {};
+   audio_spec = {};
 
    want.freq = snd_samplerate;
    want.format = MIX_DEFAULT_FORMAT;
@@ -807,7 +807,7 @@ static bool I_getSDLAudioSpec()
    want.samples = audio_buffers;
    want.callback = I_SDLDummyCallback;
 
-   if(SDL_OpenAudio(&want, &have) >= 0)
+   if(SDL_OpenAudio(&want, &audio_spec) >= 0)
    {
       SDL_CloseAudio();
       return true;
@@ -836,7 +836,7 @@ static int I_SDLInitSound()
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
    // Figure out mix buffer sizes
-   if(!I_getSDLAudioSpec())
+   if(!I_GenSDLAudioSpec())
    {
       printf("Couldn't determine sound mixing buffer size.\n");
       nosfxparm   = true;
@@ -844,11 +844,11 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   sample_size   = SDL_AUDIO_BITSIZE(have.format) / 8; // bits to bytes
-   float_samples = SDL_AUDIO_ISFLOAT(have.format);
-   step          = have.channels;
+   sample_size   = SDL_AUDIO_BITSIZE(audio_spec.format) / 8; // bits to bytes
+   float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
+   step          = audio_spec.channels;
 
-   if(Mix_OpenAudio(have.freq, have.format, have.channels, have.samples) < 0)
+   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) < 0)
    {
       printf("Couldn't open audio with desired format.\n");
       nosfxparm   = true;
@@ -856,7 +856,7 @@ static int I_SDLInitSound()
       return 0;
    }
 
-   mixbuffer_size = have.size / sample_size;
+   mixbuffer_size = audio_spec.size / sample_size;
 
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
