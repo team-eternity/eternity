@@ -107,8 +107,9 @@ extern int spc_bass_boost;
 
 #ifdef HAVE_ADLMIDILIB
 extern int midi_device;
-//extern int adlmidi_numcards;
+extern int adlmidi_numcards;
 extern int adlmidi_bank;
+extern int adlmidi_emulator;
 
 const int BANKS_MAX = (adl_getBanksCount() - 1);
 #endif
@@ -852,8 +853,11 @@ default_t defaults[] =
    DEFAULT_INT("snd_mididevice", &midi_device, NULL, -1, -1, 0, default_t::wad_yes,
                "device used for MIDI playback"),
 
-   //DEFAULT_INT("snd_numcards", &adlmidi_numcards, NULL, 2, 1, 100, default_t::wad_yes,
-   //            "TODO: adlmidi_numcards description"),
+   DEFAULT_INT("snd_oplemulator", &adlmidi_bank, NULL, 0, 0, ADLMIDI_EMU_end, default_t::wad_no,
+               "TODO: adlmidi_bank description"),
+
+   DEFAULT_INT("snd_numcards", &adlmidi_numcards, NULL, 2, 1, 100, default_t::wad_yes,
+               "TODO: adlmidi_numcards description"),
 
    DEFAULT_INT("snd_bank", &adlmidi_bank, NULL, 72, 0, BANKS_MAX, default_t::wad_yes,
                "TODO: adlmidi_bank description"),

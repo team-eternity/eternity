@@ -255,14 +255,12 @@ static ADL_MIDIPlayer *adlmidi_player = nullptr;
 volatile bool adlplaying = false;
 
 int midi_device      = 0;
-// TODO: Remove constexpr and uncomment all external instances of adlmidi_numcards,
-// and snd_numcards. Only do so once playback with > 2 is correct.
-constexpr int adlmidi_numcards = 2;
-int adlmidi_bank               = 72;
+int adlmidi_numcards = 2;
+int adlmidi_bank     = 72;
+int adlmidi_emulator = 0;
 
 //
 // Play a MIDI via libADLMIDI
-// FIXME: adlmidi_numcards (adlmidi_player->NumCards) > 2 causes playback issues
 //
 static void I_effectADLMIDISint16(void *udata, Uint8 *stream, int len)
 {
@@ -780,8 +778,7 @@ static int I_SDLRegisterSong(void *data, int size)
       adlmidi_player = adl_init(44100);
       adl_setNumChips(adlmidi_player, adlmidi_numcards);
       adl_setBank(adlmidi_player, adlmidi_bank);
-      // ADLMIDI_FIXME: This
-      adl_switchEmulator(adlmidi_player, ADLMIDI_EMU_NUKED);
+      adl_switchEmulator(adlmidi_player, adlmidi_emulator);
       adl_setNumFourOpsChn(adlmidi_player, -1);
       if(adl_openData(adlmidi_player, data, long(size)) == 0)
          return 1;
