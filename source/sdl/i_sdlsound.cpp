@@ -51,6 +51,9 @@ extern bool snd_init;
 
 int audio_buffers;
 
+// MaxW: 2019/08/24: float audio if true else Sint16
+bool float_samples = false;
+
 // haleyjd 12/18/13: size at which mix buffers must be allocated
 static Uint32 mixbuffer_size;
 
@@ -63,9 +66,6 @@ static SDL_AudioSpec have;
 // MWM 2000-01-08: Sample rate in samples/second
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static const int snd_samplerate = 44100;
-
-// MaxW: 2019/08/24: float audio if true else Sint16
-static bool float_samples;
 
 typedef struct channel_info_s
 {
