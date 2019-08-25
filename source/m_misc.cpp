@@ -67,6 +67,11 @@
 #include "st_stuff.h"
 #include "v_video.h"
 
+#ifdef HAVE_ADLMIDILIB
+#include "adlmidi.h"
+#endif
+
+
 //
 // DEFAULTS
 //
@@ -98,6 +103,15 @@ extern int  endoomdelay;
 #ifdef HAVE_SPCLIB
 extern int spc_preamp;
 extern int spc_bass_boost;
+#endif
+
+#ifdef HAVE_ADLMIDILIB
+extern int midi_device;
+extern int adlmidi_numchips;
+extern int adlmidi_bank;
+extern int adlmidi_emulator;
+
+const int BANKS_MAX = (adl_getBanksCount() - 1);
 #endif
 
 // haleyjd 10/09/07: wipe waiting
@@ -834,6 +848,21 @@ default_t defaults[] =
                "bass boost for SPC music (logarithmic scale, 8 = normal)"),
    
 #endif
+
+#ifdef HAVE_ADLMIDILIB
+   DEFAULT_INT("snd_mididevice", &midi_device, NULL, -1, -1, 0, default_t::wad_yes,
+               "device used for MIDI playback"),
+
+   DEFAULT_INT("snd_oplemulator", &adlmidi_bank, NULL, ADLMIDI_EMU_NUKED, 0, ADLMIDI_EMU_end, default_t::wad_no,
+               "TODO: adlmidi_bank description"),
+
+   DEFAULT_INT("snd_numchips", &adlmidi_numchips, NULL, 2, 1, 8, default_t::wad_yes,
+               "TODO: adlmidi_numcards description"),
+
+   DEFAULT_INT("snd_bank", &adlmidi_bank, NULL, 72, 0, BANKS_MAX, default_t::wad_yes,
+               "TODO: adlmidi_bank description"),
+#endif
+
 
    // last entry
    DEFAULT_END()

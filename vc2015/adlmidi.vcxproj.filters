@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\include">
+      <UniqueIdentifier>{44705ca0-7abe-410d-bd41-64cb3d64fe41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src">
+      <UniqueIdentifier>{7dc1b133-0185-4dca-aea1-b87832da8971}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\chips">
+      <UniqueIdentifier>{cebcfe53-6ac4-4537-a526-a7e311a48e28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\chips\dosbox">
+      <UniqueIdentifier>{a31d3ac6-0f2a-497a-bb31-ef5783f92270}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\chips\nuked">
+      <UniqueIdentifier>{5da6800f-ee6a-4fbb-bcdc-52b0e0339983}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\src\wopl">
+      <UniqueIdentifier>{bcba5988-272f-4ecf-b588-e6e993d8ae03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\chips">
+      <UniqueIdentifier>{093b31a5-eca9-41ef-bc8c-479d834112e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\chips\dosbox">
+      <UniqueIdentifier>{18041aaf-27a5-4850-99ee-e526481a7bee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\chips\nuked">
+      <UniqueIdentifier>{93c9c990-e5d2-44f5-9b84-a002426255ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\wopl">
+      <UniqueIdentifier>{9900d3de-87eb-4b40-b503-8f512d827012}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\adlmidi\include\adlmidi.h">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\include\adlmidi.hpp">
+      <Filter>Header Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\fraction.hpp">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_xmi2mid.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_private.hpp">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_mus2mid.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adldata.hh">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\wopl\wopl_file.h">
+      <Filter>Header Files\src\wopl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.h">
+      <Filter>Header Files\src\chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\nuked_opl3_v174.h">
+      <Filter>Header Files\src\chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\nuked_opl3.h">
+      <Filter>Header Files\src\chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\dosbox_opl3.h">
+      <Filter>Header Files\src\chips</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\dosbox\dbopl.h">
+      <Filter>Header Files\src\chips\dosbox</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\nuked\nukedopl3.h">
+      <Filter>Header Files\src\chips\nuked</Filter>
+    </ClInclude>
+    <ClInclude Include="..\adlmidi\src\chips\nuked\nukedopl3_174.h">
+      <Filter>Header Files\src\chips\nuked</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\adlmidi\src\adlmidi_xmi2mid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adlmidi_private.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adlmidi_opl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adlmidi_mus2mid.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adlmidi_midiplay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adlmidi_load.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adlmidi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\adldata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\wopl\wopl_file.c">
+      <Filter>Source Files\wopl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\opl_chip_base.cpp">
+      <Filter>Source Files\chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\nuked_opl3_v174.cpp">
+      <Filter>Source Files\chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\nuked_opl3.cpp">
+      <Filter>Source Files\chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\dosbox_opl3.cpp">
+      <Filter>Source Files\chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\nuked\nukedopl3_174.c">
+      <Filter>Source Files\chips\nuked</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\nuked\nukedopl3.c">
+      <Filter>Source Files\chips\nuked</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\chips\dosbox\dbopl.cpp">
+      <Filter>Source Files\chips\dosbox</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

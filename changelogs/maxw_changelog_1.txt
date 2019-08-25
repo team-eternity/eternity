@@ -385,6 +385,8 @@ Fix a crash caused by ANIMATED lumps of size 0. It hard errors now.
 Working past midnight so yeah.
 Fixed crashes due to not being able to handle floating 32-bit audio samples.
 Made Eternity use WASAPI on Windows Vista and later.
+Added libADLMIDI support, which enables OPL3 MIDI playback. The default
+emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
 
 
