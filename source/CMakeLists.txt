@@ -20,7 +20,7 @@
 
 # General flags.
 
-add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DKATE_MEMORIAL)
+add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DHAVE_ADLMIDILIB -DKATE_MEMORIAL)
 
 # Library search flags.
 
@@ -111,7 +111,7 @@ set_target_properties(eternity
    CXX_STANDARD_REQUIRED ON
 )
 
-target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc)
+target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
