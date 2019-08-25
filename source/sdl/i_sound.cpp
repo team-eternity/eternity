@@ -410,12 +410,12 @@ static const char **adlbankstr = const_cast<const char **>(adl_getBankNames());
 static const char *adlemustr[] = { "Nuked 1.8", "Nuked 1.7.4", "Dosbox", "Opal", "Java" };
 
 extern int midi_device;
-extern int adlmidi_numcards;
+extern int adlmidi_numchips;
 extern int adlmidi_bank;
 extern int adlmidi_emulator;
 
 VARIABLE_INT(midi_device, NULL, -1, 0, mididevicestr);
-VARIABLE_INT(adlmidi_numcards, NULL, 1, 100, NULL);
+VARIABLE_INT(adlmidi_numchips, NULL, 1, 8, NULL);
 VARIABLE_INT(adlmidi_bank, NULL, 0, BANKS_MAX, adlbankstr);
 VARIABLE_INT(adlmidi_emulator, NULL, 0, ADLMIDI_EMU_end - 1, adlemustr);
 #endif
@@ -460,7 +460,7 @@ CONSOLE_VARIABLE(snd_spcbassboost, spc_bass_boost, 0)
 
 #ifdef HAVE_ADLMIDILIB
 CONSOLE_VARIABLE(snd_mididevice, midi_device, 0) {}
-CONSOLE_VARIABLE(snd_numcards, adlmidi_numcards, 0) {}
+CONSOLE_VARIABLE(snd_numchips, adlmidi_numchips, 0) {}
 CONSOLE_VARIABLE(snd_bank, adlmidi_bank, 0) {}
 CONSOLE_VARIABLE(snd_oplemulator, adlmidi_emulator, 0) {}
 #endif

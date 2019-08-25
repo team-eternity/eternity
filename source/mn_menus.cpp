@@ -2264,7 +2264,7 @@ static menuitem_t mn_sound_items[] =
    {it_toggle,     "Max sound channels",           "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
    {it_toggle,     "OPL3 Emulator",                "snd_oplemulator"},
-   {it_toggle,     "OPL3 Chip Count",              "snd_numcards"},
+   {it_toggle,     "OPL3 Chip Count",              "snd_numchips"},
    {it_runcmd,     "Set OPL3 Bank...",             "snd_selectbank"},
    {it_gap},
    {it_info,       "Misc"},

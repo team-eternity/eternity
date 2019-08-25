@@ -255,7 +255,7 @@ static ADL_MIDIPlayer *adlmidi_player = nullptr;
 volatile bool adlplaying = false;
 
 int midi_device      = 0;
-int adlmidi_numcards = 2;
+int adlmidi_numchips = 2;
 int adlmidi_bank     = 72;
 int adlmidi_emulator = 0;
 
@@ -776,7 +776,7 @@ static int I_SDLRegisterSong(void *data, int size)
    if(isMIDI && midi_device == 0)
    {
       adlmidi_player = adl_init(44100);
-      adl_setNumChips(adlmidi_player, adlmidi_numcards);
+      adl_setNumChips(adlmidi_player, adlmidi_numchips);
       adl_setBank(adlmidi_player, adlmidi_bank);
       adl_switchEmulator(adlmidi_player, adlmidi_emulator);
       adl_setNumFourOpsChn(adlmidi_player, -1);
