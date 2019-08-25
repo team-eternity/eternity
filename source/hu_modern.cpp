@@ -100,31 +100,31 @@ void ModernHUD::DrawStatus(int x, int y)
 
    if(hud_overlaylayout == HUD_BOOM)
    {
-      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << " / " << totalkills <<
-                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << " / " << totalitems <<
-                 FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << " / " << totalsecret;
+      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << "/" << totalkills <<
+                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << "/" << totalitems <<
+                 FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
    }
    else if(hud_overlaylayout == HUD_DISTRIB)
    {
-      tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.killcount << " / " << totalkills;
+      tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.killcount << "/" << totalkills;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 16, &vbscreen);
       tempstr.clear();
-      tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << " / " << totalitems;
+      tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << "/" << totalitems;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 8, &vbscreen);
       tempstr.clear();
-      tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << " / " << totalsecret;
+      tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
    }
    else
    {
-      tempstr << hu_player.killcount << " / " << totalkills << "  " FC_RED "KILLS";
+      tempstr << hu_player.killcount << "/" << totalkills << "  " FC_RED "KILLS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
       tempstr.clear();
-      tempstr << hu_player.itemcount << " / " << totalitems << "  " FC_BLUE "ITEMS";
+      tempstr << hu_player.itemcount << "/" << totalitems << "  " FC_BLUE "ITEMS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 8, &vbscreen);
       tempstr.clear();
-      tempstr << hu_player.secretcount << " / " << totalsecret << "  " FC_GOLD "SCRTS";
+      tempstr << hu_player.secretcount << "/" << totalsecret << "  " FC_GOLD "SCRTS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 16, &vbscreen);
    }
 }
