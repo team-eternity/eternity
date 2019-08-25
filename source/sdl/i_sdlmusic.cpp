@@ -250,8 +250,6 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
 }
 #endif
 
-#define ADLMIDISTEP sizeof(Uint16)
-
 #ifdef HAVE_ADLMIDILIB
 static ADL_MIDIPlayer *adlmidi_player = nullptr;
 volatile bool adlplaying = false;
@@ -259,15 +257,16 @@ volatile bool adlplaying = false;
 int midi_device      = 0;
 // TODO: Remove constexpr and uncomment all external instances of adlmidi_numcards,
 // and snd_numcards. Only do so once playback with > 2 is correct.
-constexpr int adlmidi_numcards = 1;
+constexpr int adlmidi_numcards = 2;
 int adlmidi_bank               = 72;
 
 //
 // Play a MIDI via libADLMIDI
 // FIXME: adlmidi_numcards (adlmidi_player->NumCards) > 2 causes playback issues
 //
-static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
+static void I_effectADLMIDISint16(void *udata, Uint8 *stream, int len)
 {
+   static constexpr int ADLMIDISTEP = sizeof(Sint16);
    static Sint16 *adlmidi_buffer = nullptr;
    static int lastadlmidisamples = 0;
 
@@ -295,6 +294,44 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
    else
    {
       SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), MIX_DEFAULT_FORMAT,
+                         gotlen * ADLMIDISTEP, (snd_MusicVolume * 128) / 15);
+   }
+   adlplaying = false;
+}
+
+static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
+{
+   static constexpr int ADLMIDISTEP = sizeof(float);
+   static float *adlmidi_buffer = nullptr;
+   static int lastadlmidisamples = 0;
+
+   adlplaying = true;
+   // TODO: Remove the exiting check once all atexit calls are erradicated
+   if(Mix_PausedMusic()) //if(exiting || Mix_PausedMusic())
+   {
+      adlplaying = false;
+      return;
+   }
+
+   const int numsamples = len / ADLMIDISTEP;
+
+   // realloc ADLMIDI buffer?
+   if(numsamples != lastadlmidisamples)
+   {
+      // add extra buffer samples at end for filtering safety; stereo channels
+      adlmidi_buffer = (float *)Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(float));
+      lastadlmidisamples = numsamples;
+   }
+
+   ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, 4, 8 };
+   const int gotlen = adl_playFormat(adlmidi_player, numsamples,
+                                     reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer), reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1),
+                                     &fmt);
+   if(snd_MusicVolume == 15)
+      memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen * ADLMIDISTEP));
+   else
+   {
+      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), AUDIO_F32SYS,
                          gotlen * ADLMIDISTEP, (snd_MusicVolume * 128) / 15);
    }
    adlplaying = false;
@@ -419,7 +456,7 @@ static void I_SDLPlaySong(int handle, int looping)
 #ifdef HAVE_ADLMIDILIB
       if(adlmidi_player)
       {
-         Mix_HookMusic(I_effectADLMIDI, nullptr);
+         Mix_HookMusic(float_samples ? I_effectADLMIDIFloat : I_effectADLMIDISint16, nullptr);
          adl_setLoopEnabled(adlmidi_player, looping);
       }
       else
