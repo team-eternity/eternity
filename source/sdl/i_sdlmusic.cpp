@@ -793,7 +793,7 @@ static int I_SDLRegisterSong(void *data, int size)
       adl_setBank(adlmidi_player, adlmidi_bank);
       adl_switchEmulator(adlmidi_player, adlmidi_emulator);
       adl_setNumFourOpsChn(adlmidi_player, -1);
-      if(adl_openData(adlmidi_player, data, long(size)) == 0)
+      if(adl_openData(adlmidi_player, data, static_cast<unsigned long>(size)) == 0)
          return 1;
       // Opening data went wrong
       adl_close(adlmidi_player);
