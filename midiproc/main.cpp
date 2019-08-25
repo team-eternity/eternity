@@ -360,7 +360,7 @@ static bool MidiRPC_InitServer()
 // Checks if Windows version is 10 or higher, for audio kludge.
 // I wish we could use the Win 8.1 API and Versionhelpers.h
 //
-inline bool I_IsWindows10OrHigher()
+inline bool I_IsWindowsVistaOrHigher()
 {
 #pragma comment(lib, "version.lib")
 
@@ -395,7 +395,7 @@ inline bool I_IsWindows10OrHigher()
    //buildNum = HIWORD(vInfo->dwProductVersionLS);
    free(path);
    free(ver);
-   return majorVer >= 10;
+   return majorVer >= 6; // Vista is NT 6.0
 }
 
 //=============================================================================
@@ -415,8 +415,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    if(!InitSDL())
       return -1;
 
-   if(I_IsWindows10OrHigher())
-      SDL_setenv("SDL_AUDIODRIVER", "directsound", true);
+   if(I_IsWindowsVistaOrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
    else
       SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 
