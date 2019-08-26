@@ -312,7 +312,9 @@ static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
       return;
    }
 
-   const int numsamples = len / ADLMIDISTEP;
+   const ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, ADLMIDISTEP, ADLMIDISTEP * audio_spec.channels };
+
+   const int numsamples = (len * 2) / fmt.sampleOffset;
 
    // realloc ADLMIDI buffer?
    if(numsamples != lastadlmidisamples)
@@ -322,10 +324,9 @@ static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
       lastadlmidisamples = numsamples;
    }
 
-   const ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, ADLMIDISTEP, ADLMIDISTEP * 2 };
    const int gotlen = adl_playFormat(adlmidi_player, numsamples,
                                      reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer), reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1),
-                                     &fmt) * ADLMIDISTEP;
+                                     &fmt) * fmt.sampleOffset / 2;
    if(snd_MusicVolume == 15)
       memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen));
    else
