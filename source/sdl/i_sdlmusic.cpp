@@ -318,20 +318,20 @@ static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
    if(numsamples != lastadlmidisamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      adlmidi_buffer = static_cast<float *>(Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(float)));
+      adlmidi_buffer = static_cast<float *>(Z_SysRealloc(adlmidi_buffer, len));
       lastadlmidisamples = numsamples;
    }
 
-   ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, 4, 8 };
+   const ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, ADLMIDISTEP, ADLMIDISTEP * 2 };
    const int gotlen = adl_playFormat(adlmidi_player, numsamples,
                                      reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer), reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1),
-                                     &fmt);
+                                     &fmt) * ADLMIDISTEP;
    if(snd_MusicVolume == 15)
-      memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen * ADLMIDISTEP));
+      memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen));
    else
    {
       SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), AUDIO_F32SYS,
-                         gotlen * ADLMIDISTEP, (snd_MusicVolume * 128) / 15);
+                         gotlen, (snd_MusicVolume * 128) / 15);
    }
    adlplaying = false;
 }
