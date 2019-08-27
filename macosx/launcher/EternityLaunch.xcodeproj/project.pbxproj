@@ -11,6 +11,7 @@
 		4F015B8D18775CB100ADB3F4 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8B18775CB100ADB3F4 /* COPYING */; };
 		4F015B901877613100ADB3F4 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8E1877613100ADB3F4 /* About.xib */; };
 		4F015B961877636F00ADB3F4 /* ELAboutController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B951877636F00ADB3F4 /* ELAboutController.m */; };
+		4F02C3B423131BC2004DBBA7 /* show-endoom in Resources */ = {isa = PBXBuildFile; fileRef = 4F02C3B323131BC2004DBBA7 /* show-endoom */; };
 		4F2F32BB1867111400EED7DE /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		4F2F32BC1867111400EED7DE /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
 		4F2F32BD1867111400EED7DE /* user in Resources */ = {isa = PBXBuildFile; fileRef = FA8216871647128900FF998A /* user */; };
@@ -49,6 +50,7 @@
 		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
 		4F015B941877636F00ADB3F4 /* ELAboutController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELAboutController.h; sourceTree = "<group>"; };
 		4F015B951877636F00ADB3F4 /* ELAboutController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELAboutController.m; sourceTree = "<group>"; };
+		4F02C3B323131BC2004DBBA7 /* show-endoom */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "show-endoom"; path = "../builds/show-endoom"; sourceTree = "<group>"; };
 		4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_net-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2_net-2.0.0.dylib"; sourceTree = "<group>"; };
 		4F769D6B22C6BE7F00E7E702 /* libogg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libogg.0.dylib; path = "../sdl-mac-releases/libogg.0.dylib"; sourceTree = "<group>"; };
@@ -130,6 +132,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4F02C3B323131BC2004DBBA7 /* show-endoom */,
 				4F769D7022C6BE7F00E7E702 /* libFLAC.8.dylib */,
 				4F769D7122C6BE8000E7E702 /* libmodplug.1.dylib */,
 				4F769D7222C6BE8000E7E702 /* libmpg123.0.dylib */,
@@ -276,6 +279,7 @@
 				4F769D8322C6BE9700E7E702 /* libopus.0.dylib in Resources */,
 				4F769D8422C6BE9700E7E702 /* libopusfile.0.dylib in Resources */,
 				4F769D8522C6BE9700E7E702 /* libSDL2_mixer-2.0.0.dylib in Resources */,
+				4F02C3B423131BC2004DBBA7 /* show-endoom in Resources */,
 				4F769D8622C6BE9700E7E702 /* libSDL2_net-2.0.0.dylib in Resources */,
 				4F769D8722C6BE9700E7E702 /* libSDL2-2.0.0.dylib in Resources */,
 				4F769D8822C6BE9700E7E702 /* libvorbis.0.dylib in Resources */,
