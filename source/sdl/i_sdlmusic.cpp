@@ -300,7 +300,7 @@ static void I_effectADLMIDISint16(void *udata, Uint8 *stream, int len)
 
 static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
 {
-   static constexpr int ADLMIDISTEP = sizeof(float);
+   static constexpr unsigned int ADLMIDISTEP = sizeof(float);
    static float *adlmidi_buffer = nullptr;
    static int lastadlmidisamples = 0;
 
@@ -312,8 +312,7 @@ static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
       return;
    }
 
-   const ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, ADLMIDISTEP,
-      static_cast<unsigned int>(ADLMIDISTEP * audio_spec.channels) };
+   const ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, ADLMIDISTEP, ADLMIDISTEP * audio_spec.channels };
 
    const int numsamples = (len * 2) / fmt.sampleOffset;
 

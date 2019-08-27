@@ -853,7 +853,7 @@ default_t defaults[] =
    DEFAULT_INT("snd_mididevice", &midi_device, NULL, -1, -1, 0, default_t::wad_yes,
                "device used for MIDI playback"),
 
-   DEFAULT_INT("snd_oplemulator", &adlmidi_bank, NULL, ADLMIDI_EMU_DOSBOX, 0, ADLMIDI_EMU_end - 1, default_t::wad_no,
+   DEFAULT_INT("snd_oplemulator", &adlmidi_emulator, NULL, ADLMIDI_EMU_DOSBOX, 0, ADLMIDI_EMU_end - 1, default_t::wad_no,
                "TODO: adlmidi_bank description"),
 
    DEFAULT_INT("snd_numchips", &adlmidi_numchips, NULL, 2, 1, 8, default_t::wad_yes,
