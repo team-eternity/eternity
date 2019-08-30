@@ -181,20 +181,20 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
    static Sint16 *spc_buffer = nullptr;
    static int lastspcsamples = 0;
 
-   leftout = reinterpret_cast<float *>(stream);
+   leftout  = reinterpret_cast<float *>(stream);
    rightout = reinterpret_cast<float *>(stream) + 1;
 
    numsamples = len / SAMPLESIZE;
    leftend = leftout + numsamples;
 
    // round samples up to higher even number
-   spcsamples = (static_cast<int>(numsamples * 320.0 / 441.0) & ~1) + 2;
+   spcsamples = ((static_cast<int>(numsamples * 320.0 / 441.0) & ~1) + 2) * 2 / audio_spec.channels;
 
    // realloc spc buffer?
    if(spcsamples != lastspcsamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      spc_buffer = (Sint16 *)(Z_SysRealloc(spc_buffer,
+      spc_buffer = static_cast<Sint16 *>(Z_SysRealloc(spc_buffer,
          (spcsamples + 2) * 2 * sizeof(Sint16)));
       lastspcsamples = spcsamples;
    }
@@ -245,8 +245,8 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
       stepremainder &= 0xffff;
 
       // step to next sample in mixer buffer
-      leftout += STEP;
-      rightout += STEP;
+      leftout += audio_spec.channels;
+      rightout += audio_spec.channels;
    }
 }
 #endif
