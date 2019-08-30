@@ -74,7 +74,6 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A3D79066-950D-42E4-8555-D7663BA5E0C7}</ProjectGuid>
     <RootNamespace>ACSVM</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

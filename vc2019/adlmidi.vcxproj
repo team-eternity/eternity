@@ -22,7 +22,6 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{06F7C536-AB34-4054-ACE1-EF74F07A533C}</ProjectGuid>
     <RootNamespace>adlmidi</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

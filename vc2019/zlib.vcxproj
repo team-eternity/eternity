@@ -22,7 +22,6 @@
     <ProjectGuid>{EA0188E0-1F4E-490D-BD2C-C85D12B0F1E2}</ProjectGuid>
     <RootNamespace>zlib</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
