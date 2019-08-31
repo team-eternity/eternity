@@ -1668,7 +1668,6 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
    {
       if(artifact->getInt(keyArtifactType, -1) == ARTI_NORMAL)
       {
-         bool shiftinvleft = false;
          bool success = false;
 
          const char *useeffectstr = artifact->getString(keyUseEffect, "");
@@ -1732,8 +1731,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          if(success)
          {
             const char *sound;
-            if(E_RemoveInventoryItem(player, artifact, 1) == INV_REMOVEDSLOT)
-               shiftinvleft = true;
+            E_RemoveInventoryItem(player, artifact, 1);
 
             sound = artifact->getString(keyUseSound, "");
             if(estrnonempty(sound))
@@ -1744,12 +1742,9 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
          else
          {
             // Heretic shifts inventory one left if you fail to use your selected item.
-            shiftinvleft = true;
-         }
-
-         // FIXME: Make this behaviour optional, or remove
-         if(shiftinvleft)
+            // FIXME: Make this behaviour optional, or remove
             E_MoveInventoryCursor(player, -1, player->inv_ptr);
+         }
       }
    }
 }
@@ -2167,6 +2162,8 @@ static void E_removeInventorySlot(const player_t *player, inventoryslot_t *slot)
          // clear the top slot
          inventory[e_maxitemid - 1].item   = -1;
          inventory[e_maxitemid - 1].amount =  0;
+
+         E_MoveInventoryCursor(player, -1, const_cast<int &>(player->inv_ptr));
 
          return;
       }
