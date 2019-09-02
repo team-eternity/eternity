@@ -456,11 +456,8 @@ static void cheat_clev(const void *arg)
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
 static void cheat_mypos(const void *arg)
 {
-   player_printf(plyr, "Position (%d,%d,%d)\tAngle %-.0f", 
-                 plyr->mo->x / FRACUNIT,
-                 plyr->mo->y / FRACUNIT,
-                 plyr->mo->z / FRACUNIT,
-                 (double)plyr->mo->angle / ANGLE_1);
+   extern bool showposition;
+   showposition = !showposition;
 }
 
 // compatibility cheat
