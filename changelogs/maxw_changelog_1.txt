@@ -391,7 +391,7 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 -------------------------------------------------------------------------------
 2019/09/02
 Made the "idmypos" cheat toggle location display. Additionally, a new console
-variable "showposition" has been introduced to control the same thing.
+variable "hu_alwaysshowcoords" has been introduced to control the same thing.
 
 ================================================================================
 EOF

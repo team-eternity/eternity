@@ -420,7 +420,6 @@ extern bool setsizeneeded;
 int         wipewait;        // haleyjd 10/09/07
 
 bool        d_drawfps;       // haleyjd 09/07/10: show drawn fps
-bool        showposition = false;
 
 //
 // D_showFPS
@@ -601,15 +600,6 @@ static void D_Display()
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
 
-         if(showposition)
-         {
-            player_printf(&players[displayplayer], "Position (%d,%d,%d) Angle %-.0f",
-                          players[displayplayer].mo->x / FRACUNIT,
-                          players[displayplayer].mo->y / FRACUNIT,
-                          players[displayplayer].mo->z / FRACUNIT,
-                          static_cast<double>(players[displayplayer].mo->angle) / ANGLE_1);
-
-         }
          if(automapactive)
          {
             AM_Drawer();
@@ -1977,9 +1967,6 @@ void D_DoomMain()
 
 VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
 CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
-
-VARIABLE_TOGGLE(showposition, NULL, onoff);
-CONSOLE_VARIABLE(showposition, showposition, 0) {}
 
 //----------------------------------------------------------------------------
 //

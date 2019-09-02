@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_weapons.h"
 #include "g_game.h"
+#include "hu_stuff.h"
 #include "metaapi.h"
 #include "m_argv.h"
 #include "m_cheat.h"
@@ -456,8 +457,7 @@ static void cheat_clev(const void *arg)
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
 static void cheat_mypos(const void *arg)
 {
-   extern bool showposition;
-   showposition = !showposition;
+   hu_alwaysshowcoords = !hu_alwaysshowcoords;
 }
 
 // compatibility cheat

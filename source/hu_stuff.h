@@ -55,6 +55,7 @@ extern bool crosshair_hilite;
 // haleyjd 02/12/06: lost and new options
 extern bool hu_showtime;
 extern bool hu_showcoords;
+extern bool hu_alwaysshowcoords;
 extern int  hu_timecolor;
 extern int  hu_levelnamecolor;
 extern int  hu_coordscolor;
