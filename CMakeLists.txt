@@ -50,6 +50,10 @@ if(NOT DEFINED SKIP_INSTALL_ALL)
    set(SKIP_INSTALL_ALL ON)
 endif()
 
+if(NOT DEFINED WITH_CPP_EXTRAS)
+   SET(WITH_CPP_EXTRAS ON CACHE BOOL)
+endif()
+
 INCLUDE(CheckIncludeFiles)
 INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckCXXCompilerFlag)
