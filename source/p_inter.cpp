@@ -953,6 +953,8 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
       }
 
       target->flags  &= ~MF_SOLID;
+      target->player->powers[pw_flight]       = 0;
+      target->player->powers[pw_weaponlevel2] = 0;
       P_PlayerStopFlight(target->player);  // haleyjd: stop flying
 
       G_DemoLog("%d\tdeath player %d ", gametic,

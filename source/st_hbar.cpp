@@ -539,12 +539,12 @@ static void ST_drawPowerUps()
          {
             if(hitCenterFrame && (frame != 15 && frame != 0))
             {
-               V_DrawPatch(20, 17, &vbscreen,
+               V_DrawPatch(20, 17, &vbscreenyscaled,
                            PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
             }
             else
             {
-               V_DrawPatch(20, 17, &vbscreen,
+               V_DrawPatch(20, 17, &vbscreenyscaled,
                            PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
                hitCenterFrame = false;
             }
@@ -554,13 +554,13 @@ static void ST_drawPowerUps()
             // FIXME: Why would this code trigger?
             if(!hitCenterFrame && (frame != 15 && frame != 0))
             {
-               V_DrawPatch(20, 17, &vbscreen,
+               V_DrawPatch(20, 17, &vbscreenyscaled,
                            PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
                hitCenterFrame = false;
             }
             else
             {
-               V_DrawPatch(20, 17, &vbscreen,
+               V_DrawPatch(20, 17, &vbscreenyscaled,
                            PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
                hitCenterFrame = true;
             }
@@ -573,7 +573,7 @@ static void ST_drawPowerUps()
       if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
       {
          const int frame = (leveltime / 3) & 15;
-         V_DrawPatch(300, 17, &vbscreen,
+         V_DrawPatch(vbscreenyscaled.unscaledw - 20, 17, &vbscreenyscaled,
                      PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
       }
    }
