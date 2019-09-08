@@ -1124,11 +1124,9 @@ typedef struct dmgspecdata_s
 } dmgspecdata_t;
 
 //
-// P_MinotaurChargeHit
-//
 // Special damage action for Maulotaurs slamming into things.
 //
-static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
+static bool P_minotaurChargeHit(dmgspecdata_t *dmgspec)
 {
    Mobj *source = dmgspec->source;
    Mobj *target = dmgspec->target;
@@ -1159,12 +1157,10 @@ static bool P_MinotaurChargeHit(dmgspecdata_t *dmgspec)
 }
 
 //
-// P_TouchWhirlwind
-//
 // Called when an Iron Lich whirlwind hits something. Does damage
 // and may toss the target around violently.
 //
-static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
+static bool P_touchWhirlwind(dmgspecdata_t *dmgspec)
 {
    Mobj *target = dmgspec->target;
 
@@ -1197,6 +1193,41 @@ static bool P_TouchWhirlwind(dmgspecdata_t *dmgspec)
 }
 
 //
+// Called when an powered up giant mace ball hits something.
+// Instantly kills most enemies.
+// This code is adapted from the MT_MACEFX4 case in
+// Chocolate Heretic's P_DamageMobj under the GPLv2+.
+//
+static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
+{
+   Mobj     *target = dmgspec->target;
+   player_t *player = target->player;
+
+   if((target->flags2 & MF2_BOSS) || target->type == E_SafeThingType(MT_LICH))
+      return false;
+   else if(player)
+   {
+      if(player->powers[pw_invulnerability])
+         return false;
+
+      // HACK ALERT: Attempt to automatically use chaos device
+      const itemeffect_t *const chaosdevice = E_ItemEffectForName("ArtiTeleport");
+      if(chaosdevice)
+      {
+         const int itemid = chaosdevice->getInt("itemid", -1);
+         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) > 1)
+         {
+            E_TryUseItem(target->player, itemid);
+            player->health = player->mo->health = (player->health + 1) / 2;
+            return true;
+         }
+      }
+   }
+   P_DamageMobj(target, nullptr, nullptr, 10000, MOD_UNKNOWN);
+   return true;
+}
+
+//
 // haleyjd: Damage Special codepointer lookup table
 //
 // mobjinfo::dmgspecial is an index into this table. The index is checked for
@@ -1211,9 +1242,10 @@ typedef bool (*dmgspecial_t)(dmgspecdata_t *);
 
 static dmgspecial_t DamageSpecials[INFLICTOR_NUMTYPES] =
 {
-   NULL,                // none
-   P_MinotaurChargeHit, // MinotaurCharge
-   P_TouchWhirlwind,    // Whirlwind
+   nullptr,                // none
+   P_minotaurChargeHit,    // MinotaurCharge
+   P_touchWhirlwind,       // Whirlwind
+   P_touchPoweredMaceBall, // PoweredMaceBall
 };
 
 //

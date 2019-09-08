@@ -287,6 +287,7 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
    "none",
    "MinotaurCharge",
    "Whirlwind",
+   "PoweredMaceBall",
 };
 
 //
