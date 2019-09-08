@@ -208,6 +208,7 @@ extern VBuffer backscreen1;
 extern VBuffer backscreen2;
 extern VBuffer backscreen3;
 extern VBuffer subscreen43;
+extern VBuffer vbscreenyscaled;
 
 #endif
 
