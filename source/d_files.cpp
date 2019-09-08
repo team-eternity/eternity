@@ -781,7 +781,6 @@ static const char *const userdirs[] =
 static int D_CheckUserPath(const qstring &qpath)
 {
    int ret = -1;
-   struct stat sbuf;
    qstring str;
    fs::directory_entry path;
 
