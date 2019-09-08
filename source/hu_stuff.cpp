@@ -377,6 +377,7 @@ int hud_msg_lines;        // number of message lines in window up to 16
 int hud_msg_scrollup;     // whether message list scrolls up
 int message_timer;        // timer used for normal messages
 int showMessages;         // Show messages has default, 0 = off, 1 = on
+int mess_align;           // whether or not messages are default, left, or centre aligned
 int mess_colour = CR_RED; // the colour of normal messages
 
 //
@@ -415,7 +416,7 @@ void HUDMessageWidget::drawer()
    edefstructvar(vtextdraw_t, vtd);
 
    vtd.font        = hud_font;
-   vtd.screen      = &subscreen43;
+   vtd.screen      = &vbscreenyscaled;
    vtd.flags       = VTXT_FIXEDCOLOR;
    vtd.fixedColNum = mess_colour;
    
@@ -428,10 +429,12 @@ void HUDMessageWidget::drawer()
       
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
-      if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
-         vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
+      // MaxW: 2019/09/08: Respect user's alignment setting
+      if(mess_align == MSGALIGN_CENTRE ||
+         (mess_align == MSGALIGN_DEFAULT && (GameModeInfo->flags & GIF_CENTERHUDMSG ||
+          vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)))
       {
-         vtd.x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) / 2;
+         vtd.x = (vtd.screen->unscaledw - V_FontStringWidth(hud_font, msg)) / 2;
          vtd.flags |= VTXT_ABSCENTER;
       }
       else
@@ -1554,7 +1557,10 @@ const char english_shiftxform[] =
 // Console Commands
 //
 
+const char *align_str[] = { "default", "left", "centered" };
+
 VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
+VARIABLE_INT(mess_align,        NULL, 0, 2,             align_str);
 VARIABLE_INT(mess_colour,       NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
@@ -1579,6 +1585,7 @@ CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
+CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {

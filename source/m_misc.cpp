@@ -83,6 +83,7 @@ extern double mouseSensitivity_horiz,mouseSensitivity_vert;  // killough
 extern bool mouseSensitivity_vanilla; // [CG] 01/20/12
 extern int leds_always_off;            // killough 3/6/98
 extern int showMessages;
+extern int mess_align;
 extern int screenSize;
 
 extern char *chat_macros[], *wad_files[], *deh_files[];  // killough 10/98
@@ -317,6 +318,9 @@ default_t defaults[] =
 
    DEFAULT_INT("show_messages", &showMessages, NULL, 1, 0, 1, default_t::wad_no,
                "1 to enable message display"),
+
+   DEFAULT_INT("message_alignment", &mess_align, NULL, 0, 0, 2, default_t::wad_no,
+               "0 for default, 1 for left-aligned, 2 for centered"),
 
    DEFAULT_INT("mess_colour", &mess_colour, NULL, CR_RED, 0, CR_BUILTIN, default_t::wad_no,
                "messages colour"),

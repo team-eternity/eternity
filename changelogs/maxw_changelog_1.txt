@@ -393,6 +393,11 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 Made the "idmypos" cheat toggle location display. Additionally, a new console
 variable "hu_alwaysshowcoords" has been introduced to control the same thing.
 
+-------------------------------------------------------------------------------
+2019/09/08
+Added an option that allows you to set message alignment to either default,
+left, or centred.
+
 ================================================================================
 EOF
 ================================================================================

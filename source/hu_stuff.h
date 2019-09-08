@@ -30,10 +30,18 @@ enum
    WIDGET_TEXT,
 };
 
+enum
+{
+   MSGALIGN_DEFAULT,
+   MSGALIGN_LEFT,
+   MSGALIGN_CENTRE,
+};
+
 extern bool chat_on;
 extern int obituaries;
 extern int obcolour;       // the colour of death messages
 extern int showMessages;   // Show messages has default, 0 = off, 1 = on
+extern int mess_align;     // the alignment of normal messages
 extern int mess_colour;    // the colour of normal messages
 extern char *chat_macros[10];
 
