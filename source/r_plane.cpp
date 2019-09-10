@@ -846,9 +846,11 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->maxx = stop;
       {
          int *p = pl->top;
-         unsigned i = 0;
-         while(i < pl->max_width)
-            p[i++] = 0x7FFFFFFF;
+         const int *const p_end  = p + pl->max_width - 8;
+         // Unrolling this loop makes performance WORSE for optimised MSVC builds.
+         // Nothing makes sense any more.
+         while(p < p_end)
+            *(p++) = 0x7FFFFFFF;
       }
    }
    
