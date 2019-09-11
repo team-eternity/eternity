@@ -153,14 +153,29 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
 {
-   Uint32 *fb = static_cast<Uint32 *>(buffer);
+   Uint32   *fb          = static_cast<Uint32 *>(buffer);
+   const int d_end       = (screen->w - bump) & ~7;
+   const int d_remainder = (screen->w - bump) & 7;
 
    for(int y = 0; y < screen->h; y++)
    {
       byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
       Uint32 *dest = fb + y * destwidth;
 
-      for(int x = 0; x < screen->w - bump; x++)
+      for(int x = d_end; x; x -= 8)
+      {
+         *dest   = RGB8to32[*src];
+         dest[1] = RGB8to32[src[1]];
+         dest[2] = RGB8to32[src[2]];
+         dest[3] = RGB8to32[src[3]];
+         dest[4] = RGB8to32[src[4]];
+         dest[5] = RGB8to32[src[5]];
+         dest[6] = RGB8to32[src[6]];
+         dest[7] = RGB8to32[src[7]];
+         src  += 8;
+         dest += 8;
+      }
+      for(int i = d_remainder; i; i--)
       {
          *dest = RGB8to32[*src];
          ++src;
