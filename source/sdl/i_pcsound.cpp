@@ -54,6 +54,9 @@ typedef void (*pcsound_callback_func)(int *duration, int *frequency);
 
 static pcsound_callback_func callback;
 
+// Externs
+extern SDL_AudioSpec audio_spec;
+
 // Output sound format
 
 static int mixing_freq;
@@ -195,6 +198,10 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
         PCSound_SDL_Shutdown();
         return 0;
     }
+
+    audio_spec.freq     = mixing_freq;
+    audio_spec.format   = AUDIO_S16SYS;
+    audio_spec.channels = 2;
 
     callback = callback_func;
     current_freq = 0;
