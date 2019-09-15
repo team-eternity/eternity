@@ -796,15 +796,15 @@ static void I_SDLCacheSound(sfxinfo_t *sound)
 
 static void I_SDLDummyCallback(void *, Uint8 *, int) {}
 
-bool I_GenSDLAudioSpec()
+bool I_GenSDLAudioSpec(int samplerate, SDL_AudioFormat fmt, int channels, int samples)
 {
    SDL_AudioSpec want;
    audio_spec = {};
 
-   want.freq = snd_samplerate;
-   want.format = MIX_DEFAULT_FORMAT;
-   want.channels = 2;
-   want.samples = audio_buffers;
+   want.freq     = samplerate;
+   want.format   = fmt;
+   want.channels = channels;
+   want.samples  = samples;
    want.callback = I_SDLDummyCallback;
 
    if(SDL_OpenAudio(&want, &audio_spec) >= 0)
@@ -836,7 +836,7 @@ static int I_SDLInitSound()
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
    // Figure out mix buffer sizes
-   if(!I_GenSDLAudioSpec())
+   if(!I_GenSDLAudioSpec(snd_samplerate, MIX_DEFAULT_FORMAT, 2, audio_buffers))
    {
       printf("Couldn't determine sound mixing buffer size.\n");
       nosfxparm   = true;

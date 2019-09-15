@@ -394,7 +394,7 @@ static void I_SDLShutdownSoundForMusic(void)
    Mix_CloseAudio();
 }
 
-extern bool I_GenSDLAudioSpec();
+extern bool I_GenSDLAudioSpec(int, SDL_AudioFormat, int, int);
 
 //
 // I_SDLInitSoundForMusic
@@ -411,7 +411,7 @@ static int I_SDLInitSoundForMusic(void)
       audio_buffers = I_MakeSoundBufferSize(audio_buffers);
 
    // Figure out mix buffer sizes
-   if(!I_GenSDLAudioSpec())
+   if(!I_GenSDLAudioSpec(44100, MIX_DEFAULT_FORMAT, 2, audio_buffers))
    {
       printf("Couldn't determine sound mixing buffer size.\n");
       nomusicparm = true;
