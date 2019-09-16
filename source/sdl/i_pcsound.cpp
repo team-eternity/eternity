@@ -274,7 +274,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 
    Mix_SetPostMix(float_samples ? PCSound_Mix_CallbackFloat : PCSound_Mix_CallbackSint16, nullptr);
 
-    return 1;
+   return 1;
 }
 
 
