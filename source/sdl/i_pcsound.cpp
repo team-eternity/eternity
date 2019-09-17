@@ -84,6 +84,8 @@ static void PCSound_Mix_CallbackSint16(void *udata, Uint8 *stream, int len)
    constexpr int SAMPLESIZE = sizeof(Uint16);
    Sint16 *leftptr;
    Sint16 *rightptr;
+   Sint32 dl;
+   Sint32 dr;
    Sint16 this_value;
    int oldfreq;
    int i;
@@ -146,8 +148,22 @@ static void PCSound_Mix_CallbackSint16(void *udata, Uint8 *stream, int len)
       --current_remaining;
 
       // Use the same value for the left and right channels.
-      *leftptr  += this_value;
-      *rightptr += this_value;
+      dl  = static_cast<Sint32>(*leftptr) + static_cast<Sint32>(this_value);
+      dr = static_cast<Sint32>(*rightptr) + static_cast<Sint32>(this_value);
+
+      if(dl > SHRT_MAX)
+         *leftptr = SHRT_MAX;
+      else if(dl < SHRT_MIN)
+         *leftptr = SHRT_MIN;
+      else
+         *leftptr = static_cast<Sint16>(dl);
+
+      if(dr > SHRT_MAX)
+         *rightptr = SHRT_MAX;
+      else if(dr < SHRT_MIN)
+         *rightptr = SHRT_MIN;
+      else
+         *rightptr = static_cast<Sint16>(dr);
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;
@@ -226,6 +242,16 @@ static void PCSound_Mix_CallbackFloat(void *udata, Uint8 *stream, int len)
       // Use the same value for the left and right channels.
       *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
       *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
+
+      if(*leftptr > 1.0f)
+         *leftptr = 1.0f;
+      else if(*leftptr < -1.0f)
+         *leftptr = -1.0f;
+
+      if(*rightptr > 1.0f)
+         *rightptr = 1.0f;
+      else if(*rightptr < -1.0f)
+         *rightptr = -1.0f;
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;
