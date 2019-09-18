@@ -30,7 +30,7 @@ IF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
         MESSAGE( FATAL_ERROR "In-tree Builds are NOT supported.")
 ENDIF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 
-if(NOT EXISTS adlmidi)
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/adlmidi/CMakeLists.txt)
    message(FATAL_ERROR "adlmidi not found. Please install adlmidi submodule.")
 endif()
 
