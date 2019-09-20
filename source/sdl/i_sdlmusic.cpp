@@ -242,11 +242,12 @@ int adlmidi_emulator = 0;
 //
 // Play a MIDI via libADLMIDI
 //
-static void I_effectADLMIDISint16(void *udata, Uint8 *stream, int len)
+template<typename T>
+static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 {
-   static constexpr int ADLMIDISTEP = sizeof(Sint16);
-   static Sint16 *adlmidi_buffer = nullptr;
-   static int lastadlmidisamples = 0;
+   static constexpr unsigned int ADLMIDISTEP = sizeof(T);
+   static T   *adlmidi_buffer     = nullptr;
+   static int  lastadlmidisamples = 0;
 
    adlplaying = true;
    // TODO: Remove the exiting check once all atexit calls are erradicated
@@ -256,42 +257,13 @@ static void I_effectADLMIDISint16(void *udata, Uint8 *stream, int len)
       return;
    }
 
-   const int numsamples = len / ADLMIDISTEP;
-
-   // realloc ADLMIDI buffer?
-   if(numsamples != lastadlmidisamples)
-   {
-      // add extra buffer samples at end for filtering safety; stereo channels
-      adlmidi_buffer = static_cast<Sint16 *>(Z_SysRealloc(adlmidi_buffer, numsamples * sizeof(Sint16)));
-      lastadlmidisamples = numsamples;
-   }
-
-   const int gotlen = adl_play(adlmidi_player, numsamples, adlmidi_buffer);
-   if(snd_MusicVolume == 15)
-      memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen * ADLMIDISTEP));
+   ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_S16, ADLMIDISTEP, ADLMIDISTEP * audio_spec.channels };
+   if constexpr(std::is_same_v<T, Sint16>)
+      fmt.type = ADLMIDI_SampleType_S16;
+   else if constexpr(std::is_same_v<T, float>)
+      fmt.type = ADLMIDI_SampleType_F32;
    else
-   {
-      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), MIX_DEFAULT_FORMAT,
-                         gotlen * ADLMIDISTEP, (snd_MusicVolume * 128) / 15);
-   }
-   adlplaying = false;
-}
-
-static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
-{
-   static constexpr unsigned int ADLMIDISTEP = sizeof(float);
-   static float *adlmidi_buffer = nullptr;
-   static int lastadlmidisamples = 0;
-
-   adlplaying = true;
-   // TODO: Remove the exiting check once all atexit calls are erradicated
-   if(Mix_PausedMusic()) //if(exiting || Mix_PausedMusic())
-   {
-      adlplaying = false;
-      return;
-   }
-
-   const ADLMIDI_AudioFormat fmt = { ADLMIDI_SampleType_F32, ADLMIDISTEP, ADLMIDISTEP * audio_spec.channels };
+      static_assert(false, "I_effectADLMIDI called with incompatible parameter");
 
    const int numsamples = (len * 2) / fmt.sampleOffset;
 
@@ -299,18 +271,19 @@ static void I_effectADLMIDIFloat(void *udata, Uint8 *stream, int len)
    if(numsamples != lastadlmidisamples)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
-      adlmidi_buffer = static_cast<float *>(Z_SysRealloc(adlmidi_buffer, len));
+      adlmidi_buffer = static_cast<T *>(Z_SysRealloc(adlmidi_buffer, len));
       lastadlmidisamples = numsamples;
    }
 
-   const int gotlen = adl_playFormat(adlmidi_player, numsamples,
-                                     reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer), reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1),
-                                     &fmt) * fmt.sampleOffset / 2;
+   ADL_UInt8 *const l_out = reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer);
+   ADL_UInt8 *const r_out = reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1);
+   const int gotlen = adl_playFormat(adlmidi_player, numsamples, l_out, r_out, &fmt) *
+                      fmt.sampleOffset / 2;
    if(snd_MusicVolume == 15)
       memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen));
    else
    {
-      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), AUDIO_F32SYS,
+      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), audio_spec.format,
                          gotlen, (snd_MusicVolume * 128) / 15);
    }
    adlplaying = false;
@@ -447,7 +420,7 @@ static void I_SDLPlaySong(int handle, int looping)
 #ifdef HAVE_ADLMIDILIB
       if(adlmidi_player)
       {
-         Mix_HookMusic(float_samples ? I_effectADLMIDIFloat : I_effectADLMIDISint16, nullptr);
+         Mix_HookMusic(float_samples ? I_effectADLMIDI<float> : I_effectADLMIDI<Sint16>, nullptr);
          adl_setLoopEnabled(adlmidi_player, looping);
       }
       else

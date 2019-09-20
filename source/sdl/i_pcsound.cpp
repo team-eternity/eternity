@@ -76,17 +76,15 @@ static void PCSound_SetSampleRate(int rate)
     pcsound_sample_rate = rate;
 }
 
-
 //
 // Mixer function that does the PC speaker emulation
 //
-static void PCSound_Mix_CallbackSint16(void *udata, Uint8 *stream, int len)
+template<typename T>
+static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
 {
-   constexpr int SAMPLESIZE = sizeof(Uint16);
-   Sint16 *leftptr;
-   Sint16 *rightptr;
-   Sint32 dl;
-   Sint32 dr;
+   static constexpr int SAMPLESIZE = sizeof(T);
+   T *leftptr;
+   T *rightptr;
    Sint16 this_value;
    int oldfreq;
    int i;
@@ -95,8 +93,8 @@ static void PCSound_Mix_CallbackSint16(void *udata, Uint8 *stream, int len)
    // Number of samples is quadrupled, because of 16-bit and stereo
    nsamples = len / (audio_spec.channels * SAMPLESIZE);
 
-   leftptr  = reinterpret_cast<Sint16 *>(stream);
-   rightptr = reinterpret_cast<Sint16 *>(stream) + 1;
+   leftptr  = reinterpret_cast<T *>(stream);
+   rightptr = reinterpret_cast<T *>(stream) + 1;
 
    // Fill the output buffer
    for(i = 0; i < nsamples; i++)
@@ -148,91 +146,23 @@ static void PCSound_Mix_CallbackSint16(void *udata, Uint8 *stream, int len)
 
       --current_remaining;
 
-      // Use the same value for the left and right channels.
-      dl = static_cast<Sint32>(*leftptr)  + static_cast<Sint32>(this_value);
-      dr = static_cast<Sint32>(*rightptr) + static_cast<Sint32>(this_value);
-      *leftptr  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
-      *rightptr = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
-
-      leftptr  += audio_spec.channels;
-      rightptr += audio_spec.channels;
-   }
-}
-
-//
-// Mixer function that does the PC speaker emulation
-//
-static void PCSound_Mix_CallbackFloat(void *udata, Uint8 *stream, int len)
-{
-   constexpr int SAMPLESIZE = sizeof(float);
-   float *leftptr;
-   float *rightptr;
-   Sint16 this_value;
-   int oldfreq;
-   int i;
-   int nsamples;
-
-   // Number of samples is quadrupled, because of 16-bit and stereo
-   nsamples = len / (audio_spec.channels * SAMPLESIZE);
-
-   leftptr  = reinterpret_cast<float *>(stream);
-   rightptr = reinterpret_cast<float *>(stream) + 1;
-
-   // Fill the output buffer
-   for(i = 0; i < nsamples; i++)
-   {
-      // Has this sound expired? If so, invoke the callback to get
-      // the next frequency.
-      while(current_remaining == 0)
+      if constexpr(std::is_same_v<T, Sint16>)
       {
-         oldfreq = current_freq;
-
-         // Get the next frequency to play
-
-         callback(&current_remaining, &current_freq);
-
-         if(current_freq != 0)
-         {
-            // Adjust phase to match to the new frequency.
-            // This gives us a smooth transition between different tones,
-            // with no impulse changes.
-            phase_offset = (phase_offset * oldfreq) / current_freq;
-         }
-
-         current_remaining = (current_remaining * audio_spec.freq) / 1000;
+         const Sint32 dl = static_cast<Sint32>(*leftptr)  + static_cast<Sint32>(this_value);
+         const Sint32 dr = static_cast<Sint32>(*rightptr) + static_cast<Sint32>(this_value);
+         *leftptr  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
+         *rightptr = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
       }
-
-      // Set the value for this sample.
-      if(current_freq == 0)
+      else if constexpr(std::is_same_v<T, float>)
       {
-         // Silence
-         this_value = 0;
+         // Use the same value for the left and right channels.
+         *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
+         *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
+         *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
+         *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
       }
       else
-      {
-         int frac;
-
-         // Determine whether we are at a peak or trough in the current
-         // sound.  Multiply by 2 so that frac % 2 will give 0 or 1
-         // depending on whether we are at a peak or trough.
-
-         frac = (phase_offset * current_freq * 2) / audio_spec.freq;
-
-         if((frac % 2) == 0)
-            this_value =  SQUARE_WAVE_AMP;
-         else
-            this_value = -SQUARE_WAVE_AMP;
-
-         ++phase_offset;
-      }
-
-      --current_remaining;
-
-      // Use the same value for the left and right channels.
-      *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
-      *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
-      *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
-      *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
+         static_assert(false, "PCSound_Mix_Callback called with incompatible parameter");
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;
@@ -279,7 +209,7 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
    current_freq      = 0;
    current_remaining = 0;
 
-   Mix_SetPostMix(float_samples ? PCSound_Mix_CallbackFloat : PCSound_Mix_CallbackSint16, nullptr);
+   Mix_SetPostMix(float_samples ? PCSound_Mix_Callback<float> : PCSound_Mix_Callback<Sint16>, nullptr);
 
    return 1;
 }
