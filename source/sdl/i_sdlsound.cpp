@@ -134,10 +134,10 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
    // haleyjd 10/02/08: critical section
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
-      channelinfo[channel].data = (float *)sfx->data;
+      channelinfo[channel].data = static_cast<float *>(sfx->data);
       
       // Set pointer to end of raw data.
-      channelinfo[channel].enddata = (float *)sfx->data + sfx->alen - 1;
+      channelinfo[channel].enddata = static_cast<float *>(sfx->data) + sfx->alen - 1;
       
       // haleyjd 06/03/06: keep track of start of sound
       channelinfo[channel].startdata = channelinfo[channel].data;
@@ -205,8 +205,8 @@ static void updateSoundParams(int handle, int volume, int separation, int pitch)
    rightvol   = volume - ((volume*separation*separation) >> 16);  
 
    // volume levels are softened slightly by dividing by 191 rather than ideal 127
-   channelinfo[slot].leftvol  = (float)(eclamp((double)leftvol  / 191.0, 0.0, 1.0));
-   channelinfo[slot].rightvol = (float)(eclamp((double)rightvol / 191.0, 0.0, 1.0));
+   channelinfo[slot].leftvol  = static_cast<float>(eclamp(static_cast<double>(leftvol)  / 191.0, 0.0, 1.0));
+   channelinfo[slot].rightvol = static_cast<float>(eclamp(static_cast<double>(rightvol) / 191.0, 0.0, 1.0));
 
    // haleyjd 06/07/09: critical section is not needed here because this data
    // can be out of sync without affecting the sound update loop. This may cause
@@ -399,19 +399,19 @@ static void inline I_SDLConvertSoundBufferSint16(Uint8 *stream, int len)
    // Pointers in audio stream, left, right, end.
    Sint16 *leftout, *leftend;
    
-   leftout  = (Sint16 *)stream;
+   leftout = reinterpret_cast<Sint16 *>(stream);
          
    // Determine end, for left channel only
    //  (right channel is implicit).
-   leftend = (Sint16 *)(stream + len);
+   leftend = reinterpret_cast<Sint16 *>(stream + len);
 
    // convert input to mixbuffer
    float *bptr0 = mixbuffer[0];
    float *bptr1 = mixbuffer[1];
    while(leftout != leftend)
    {
-      *(bptr0 + 0) = (float)(*(leftout + 0)) * (1.0f/32768.0f); // L
-      *(bptr0 + 1) = (float)(*(leftout + 1)) * (1.0f/32768.0f); // R
+      *(bptr0 + 0) = static_cast<float>(*(leftout + 0)) * (1.0f/32768.0f); // L
+      *(bptr0 + 1) = static_cast<float>(*(leftout + 1)) * (1.0f/32768.0f); // R
       *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
       leftout += step;
       bptr0   += step;
@@ -442,8 +442,8 @@ static void inline I_SDLConvertSoundBufferFloat(Uint8 *stream, int len)
       *(bptr0 + 1) = *(leftout + 1); // R
       *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
       leftout += step;
-      bptr0 += step;
-      bptr1 += step;
+      bptr0   += step;
+      bptr1   += step;
    }
 }
 
@@ -551,7 +551,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
             else
             {
                // flag the channel to be stopped by the main thread ASAP
-               chan->data = NULL;
+               chan->data = nullptr;
                break;
             }
          }
@@ -598,7 +598,7 @@ static void I_SetChannels()
    
    // This table provides step widths for pitch parameters.
    for(i = -128; i < 128; i++)
-      steptablemid[i] = (int)(pow(1.2, ((double)i/(64.0)))*FPFRACUNIT);
+      steptablemid[i] = static_cast<int>(pow(1.2, (static_cast<double>(i)/64.0))*FPFRACUNIT);
    
    // allocate mixing buffers
    auto buf = ecalloc(float *, 2 * mixbuffer_size, sizeof(float));
@@ -622,8 +622,8 @@ static void I_SetChannels()
    eqstate[0].hg = eqstate[1].hg = s_highgain;
 
    // Calculate filter cutoff frequencies
-   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
-   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / static_cast<double>(snd_samplerate)));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / static_cast<double>(snd_samplerate)));
 
    // Calculate preamplification factor
    preampmul = s_eqpreamp;
@@ -650,8 +650,8 @@ static void I_SDLUpdateEQParams()
    eqstate[0].hg = eqstate[1].hg = s_highgain;
 
    // Calculate filter cutoff frequencies
-   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / (double)snd_samplerate));
-   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / (double)snd_samplerate));
+   eqstate[0].lf = eqstate[1].lf = 2 * sin(SND_PI * (s_lowfreq  / static_cast<double>(snd_samplerate)));
+   eqstate[0].hf = eqstate[1].hf = 2 * sin(SND_PI * (s_highfreq / static_cast<double>(snd_samplerate)));
 
    // Calculate preamp factor
    preampmul = s_eqpreamp;
@@ -680,7 +680,7 @@ static int I_SDLStartSound(sfxinfo_t *sound, int cnum, int vol, int sep,
    // haleyjd 06/03/06: look for an unused hardware channel
    for(handle = 0; handle < numChannels; handle++)
    {
-      if(channelinfo[handle].data == NULL || channelinfo[handle].shouldstop)
+      if(channelinfo[handle].data == nullptr || channelinfo[handle].shouldstop)
          break;
    }
 
@@ -713,7 +713,7 @@ static void I_SDLStopSound(int handle, int id)
       I_Error("I_SDLStopSound: handle out of range\n");
 #endif
    
-   if(channelinfo[handle].idnum == (unsigned int)id)
+   if(channelinfo[handle].idnum == static_cast<unsigned int>(id))
       channelinfo[handle].shouldstop = true;
 }
 

@@ -146,6 +146,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
 
       --current_remaining;
 
+      // Use the same value for the left and right channels.
       if constexpr(std::is_same_v<T, Sint16>)
       {
          const Sint32 dl = static_cast<Sint32>(*leftptr)  + static_cast<Sint32>(this_value);
@@ -155,7 +156,6 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
       }
       else if constexpr(std::is_same_v<T, float>)
       {
-         // Use the same value for the left and right channels.
          *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
          *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
          *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
