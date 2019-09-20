@@ -78,101 +78,24 @@ void I_SDLMusicSetSPCBass(void)
    if(snes_spc)
       spc_filter_set_bass(spc_filter, spc_bass_boost);
 }
-
-//
-// I_EffectSPC
 //
 // SDL_mixer effect processor; mixes SPC data into the postmix stream.
 //
-//static void I_EffectSPC(int chan, void *stream, int len, void *udata)
-static void I_EffectSPCSint16(void *udata, Uint8 *stream, int len)
+template<typename T>
+static void I_effectSPC(void *udata, Uint8 *stream, int len)
 {
-   static constexpr int SAMPLESIZE = sizeof(Sint16);
+   static constexpr int SAMPLESIZE = sizeof(T);
 
-   Sint16 *leftout, *rightout, *leftend, *datal, *datar;
-   int numsamples, spcsamples;
-   int stepremainder = 0, i = 0;
-   int dl, dr;
-
-   static Sint16 *spc_buffer = NULL;
-   static int lastspcsamples = 0;
-
-   leftout  =  (Sint16 *)stream;
-   rightout = ((Sint16 *)stream) + 1;
-
-   numsamples = len / SAMPLESIZE;
-   leftend = leftout + numsamples;
-
-   // round samples up to higher even number
-   spcsamples = ((int)(numsamples * 320.0 / 441.0) & ~1) + 2;
-
-   // realloc spc buffer?
-   if(spcsamples != lastspcsamples)
-   {
-      // add extra buffer samples at end for filtering safety; stereo channels
-      spc_buffer = (Sint16 *)(Z_SysRealloc(spc_buffer, 
-                                          (spcsamples + 2) * 2 * sizeof(Sint16)));
-      lastspcsamples = spcsamples;
-   }
-
-   // get spc samples
-   if(spc_play(snes_spc, spcsamples, (short *)spc_buffer))
-      return;
-
-   // filter samples
-   spc_filter_run(spc_filter, (short *)spc_buffer, spcsamples);
-
-   datal = spc_buffer;
-   datar = spc_buffer + 1;
-
-   while(leftout != leftend)
-   {
-      // linear filter spc samples to the output buffer, since the
-      // sample rate is higher (44.1 kHz vs. 32 kHz).
-
-      dl = *leftout + (((int)datal[0] * (0x10000 - stepremainder) +
-                        (int)datal[2] * stepremainder) >> 16);
-
-      dr = *rightout + (((int)datar[0] * (0x10000 - stepremainder) +
-                         (int)datar[2] * stepremainder) >> 16);
-
-      *leftout  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
-      *rightout = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
-
-      stepremainder += ((32000 << 16) / 44100);
-
-      i += (stepremainder >> 16);
-      
-      datal = spc_buffer + (i << STEPSHIFT);
-      datar = datal + 1;
-
-      // trim remainder to decimal portion
-      stepremainder &= 0xffff;
-
-      // step to next sample in mixer buffer
-      leftout  += STEP;
-      rightout += STEP;
-   }
-}
-
-//
-// Yeah this is a copy of the above with minor changes for floats. And what?
-//
-static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
-{
-   static constexpr int SAMPLESIZE = sizeof(float);
-
-   float *leftout, *rightout, *leftend;
+   T *leftout, *rightout, *leftend;
    Sint16 *datal, *datar;
    int numsamples, spcsamples;
    int stepremainder = 0, i = 0;
-   float dl, dr;
 
    static Sint16 *spc_buffer = nullptr;
    static int lastspcsamples = 0;
 
-   leftout  = reinterpret_cast<float *>(stream);
-   rightout = reinterpret_cast<float *>(stream) + 1;
+   leftout  = reinterpret_cast<T *>(stream);
+   rightout = reinterpret_cast<T *>(stream) + 1;
 
    numsamples = len / SAMPLESIZE;
    leftend = leftout + numsamples;
@@ -185,16 +108,15 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
    {
       // add extra buffer samples at end for filtering safety; stereo channels
       spc_buffer = static_cast<Sint16 *>(Z_SysRealloc(spc_buffer,
-         (spcsamples + 2) * 2 * sizeof(Sint16)));
+                                                      (spcsamples + 2) * 2 * sizeof(Sint16)));
       lastspcsamples = spcsamples;
    }
 
    // get spc samples
-   if(spc_play(snes_spc, spcsamples, (short *)spc_buffer))
+   if(spc_play(snes_spc, spcsamples, static_cast<short *>(spc_buffer)))
       return;
 
-   // filter samples. Why the final arg is * 2 is beyond me
-   spc_filter_run(spc_filter, (short *)spc_buffer, spcsamples * 2);
+   spc_filter_run(spc_filter, static_cast<short *>(spc_buffer), spcsamples);
 
    datal = spc_buffer;
    datar = spc_buffer + 1;
@@ -204,14 +126,27 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
       // linear filter spc samples to the output buffer, since the
       // sample rate is higher (44.1 kHz vs. 32 kHz).
 
-      dl = *leftout + ((static_cast<int>(datal[0]) * (0x10000 - stepremainder) +
-         static_cast<int>(datal[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
+      if constexpr(std::is_same_v<T, Sint16>)
+      {
+         const Sint32 dl = *leftout  + ((static_cast<Sint32>(datal[0]) * (0x10000 - stepremainder) +
+            static_cast<Sint32>(datal[2]) * stepremainder) >> 16);
+         const Sint32 dr = *rightout + ((static_cast<Sint32>(datar[0]) * (0x10000 - stepremainder) +
+            static_cast<Sint32>(datar[2]) * stepremainder) >> 16);
+         *leftout  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
+         *rightout = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
 
-      dr = *rightout + ((static_cast<int>(datar[0]) * (0x10000 - stepremainder) +
-         static_cast<int>(datar[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
-
-      *leftout  = eclamp(dl, -1.0f, 1.0f);
-      *rightout = eclamp(dr, -1.0f, 1.0f);
+      }
+      else if constexpr(std::is_same_v<T, float>)
+      {
+         const float dl = *leftout  + ((static_cast<Sint32>(datal[0]) * (0x10000 - stepremainder) +
+            static_cast<Sint32>(datal[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
+         const float dr = *rightout + ((static_cast<Sint32>(datar[0]) * (0x10000 - stepremainder) +
+            static_cast<Sint32>(datar[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
+         *leftout  = eclamp(dl, -1.0f, 1.0f);
+         *rightout = eclamp(dr, -1.0f, 1.0f);
+      }
+      else
+         static_assert(false, "I_effectSPC called with incompatible template parameter");
 
       stepremainder += ((32000 << 16) / 44100);
 
@@ -224,7 +159,7 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
       stepremainder &= 0xffff;
 
       // step to next sample in mixer buffer
-      leftout += audio_spec.channels;
+      leftout  += audio_spec.channels;
       rightout += audio_spec.channels;
    }
 }
@@ -263,7 +198,7 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
    else if constexpr(std::is_same_v<T, float>)
       fmt.type = ADLMIDI_SampleType_F32;
    else
-      static_assert(false, "I_effectADLMIDI called with incompatible parameter");
+      static_assert(false, "I_effectADLMIDI called with incompatible template parameter");
 
    const int numsamples = (len * 2) / fmt.sampleOffset;
 
@@ -414,7 +349,7 @@ static void I_SDLPlaySong(int handle, int looping)
 #ifdef HAVE_SPCLIB
    // if a SPC is set up, play it.
    if(snes_spc)
-      Mix_HookMusic(float_samples ? I_EffectSPCFloat : I_EffectSPCSint16, NULL);
+      Mix_HookMusic(float_samples ? I_effectSPC<float> : I_effectSPC<Sint16>, nullptr);
    else
 #endif
 #ifdef HAVE_ADLMIDILIB

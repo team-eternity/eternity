@@ -162,7 +162,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
          *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
       }
       else
-         static_assert(false, "PCSound_Mix_Callback called with incompatible parameter");
+         static_assert(false, "PCSound_Mix_Callback called with incompatible template parameter");
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;
