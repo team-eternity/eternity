@@ -308,7 +308,8 @@ static double rational_tanh(double x)
 // haleyjd 12/19/13: rewritten to loop over the sample buffer and do output
 // directly back to the SDL audio stream.
 //
-static void do_3band(float *stream, float *end, void *dest)
+template<typename T>
+static void do_3band(float *stream, float *end, T *dest)
 {
    int esnum = 0;
 
@@ -357,19 +358,13 @@ static void do_3band(float *stream, float *end, void *dest)
 
       // Return result
       // haleyjd: use rational_tanh for soft clipping
-      if(float_samples)
-      {
-         float *tmpdest = static_cast<float *>(dest);
-         *tmpdest++ = static_cast<float>(rational_tanh(l + m + h));
-         dest = static_cast<void *>(tmpdest);
-
-      }
+      if constexpr(std::is_same_v<T, Sint16>)
+         *dest = static_cast<Sint16>(rational_tanh(l + m + h) * 32767.0);
+      else if constexpr(std::is_same_v<T, float>)
+         *dest = static_cast<float>(rational_tanh(l + m + h));
       else
-      {
-         Sint16 *tmpdest = static_cast<Sint16 *>(dest);
-         *tmpdest++ = static_cast<Sint16>(rational_tanh(l + m + h) * 32767.0);
-         dest = static_cast<void *>(tmpdest);
-      }
+         static_assert(false, "do_3band called with incompatible template parameter");
+      dest++;
    }
 }
 
@@ -390,56 +385,37 @@ static int sample_size;
 static int step;
 
 //
-// I_SDLConvertSoundBuffer
-//
 // Convert the input buffer to floating point
 //
-static void inline I_SDLConvertSoundBufferSint16(Uint8 *stream, int len)
+template<typename T>
+static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
 {
    // Pointers in audio stream, left, right, end.
-   Sint16 *leftout, *leftend;
-   
-   leftout = reinterpret_cast<Sint16 *>(stream);
-         
+   T *leftout, *leftend;
+
+   leftout = reinterpret_cast<T *>(stream);
+
    // Determine end, for left channel only
    //  (right channel is implicit).
-   leftend = reinterpret_cast<Sint16 *>(stream + len);
+   leftend = reinterpret_cast<T *>(stream + len);
 
    // convert input to mixbuffer
    float *bptr0 = mixbuffer[0];
    float *bptr1 = mixbuffer[1];
    while(leftout != leftend)
    {
-      *(bptr0 + 0) = static_cast<float>(*(leftout + 0)) * (1.0f/32768.0f); // L
-      *(bptr0 + 1) = static_cast<float>(*(leftout + 1)) * (1.0f/32768.0f); // R
-      *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
-      leftout += step;
-      bptr0   += step;
-      bptr1   += step;
-   }
-}
-
-//
-// Do something with input but I dunno exactly what outside of stop nasty echoes
-//
-static void inline I_SDLConvertSoundBufferFloat(Uint8 *stream, int len)
-{
-   // Pointers in audio stream, left, right, end.
-   float *leftout, *leftend;
-
-   leftout = reinterpret_cast<float *>(stream);
-
-   // Determine end, for left channel only
-   //  (right channel is implicit).
-   leftend = reinterpret_cast<float *>(stream + len);
-
-   // convert input to mixbuffer
-   float *bptr0 = mixbuffer[0];
-   float *bptr1 = mixbuffer[1];
-   while(leftout != leftend)
-   {
-      *(bptr0 + 0) = *(leftout + 0); // L
-      *(bptr0 + 1) = *(leftout + 1); // R
+      if constexpr(std::is_same_v<T, Sint16>)
+      {
+         *(bptr0 + 0) = static_cast<float>(*(leftout + 0)) * (1.0f / 32768.0f); // L
+         *(bptr0 + 1) = static_cast<float>(*(leftout + 1)) * (1.0f / 32768.0f); // R
+      }
+      else if constexpr(std::is_same_v<T, float>)
+      {
+         *(bptr0 + 0) = *(leftout + 0); // L
+         *(bptr0 + 1) = *(leftout + 1); // R
+      }
+      else
+         static_assert(false, "I_SDLConvertSoundBuffer called with incompatible template parameter");
       *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
       leftout += step;
       bptr0   += step;
@@ -470,16 +446,19 @@ static inline void I_SDLMixBuffers()
 // SDL_mixer postmix callback routine. Possibly dispatched asynchronously.
 // We do our own mixing on up to 32 digital sound channels.
 //
+template<typename T>
 static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 {
    // TODO: Figure out if this is required
    //memset(stream, 0, len);
 
    // convert input samples to floating point
-   if(float_samples)
-      I_SDLConvertSoundBufferFloat(stream, len);
+   if constexpr(std::is_same_v<T, Sint16>)
+      I_SDLConvertSoundBuffer<Sint16>(stream, len);
+   else if constexpr(std::is_same_v<T, float>)
+      I_SDLConvertSoundBuffer<float>(stream, len);
    else
-      I_SDLConvertSoundBufferSint16(stream, len);
+      static_assert(false, "I_SDLUpdateSoundCB called with incompatible template parameter");
 
    float *leftout;
    // Pointer to end of mixbuffer
@@ -569,7 +548,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    I_SDLMixBuffers();
 
    // haleyjd 04/21/10: equalization output pass
-   do_3band(mixbuffer[0], leftend0, static_cast<void *>(stream));
+   do_3band(mixbuffer[0], leftend0, reinterpret_cast<T *>(stream));
 }
 
 //
@@ -861,7 +840,7 @@ static int I_SDLInitSound()
    // haleyjd 10/02/08: this must be done as early as possible.
    I_SetChannels();
 
-   Mix_SetPostMix(I_SDLUpdateSoundCB, nullptr);
+   Mix_SetPostMix(float_samples ? I_SDLUpdateSoundCB<float> : I_SDLUpdateSoundCB<Sint16>, nullptr);
    printf("Configured audio device with %d samples/slice.\n", audio_buffers);
 
    return 1;
