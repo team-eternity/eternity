@@ -31,11 +31,12 @@
 #include "SDL_mixer.h"
 
 #include "../z_zone.h"
-#include "..//d_main.h"
+#include "../d_main.h"
 #include "../w_wad.h"
 #include "../sounds.h"
 #include "../i_sound.h"
 #include "../psnprntf.h"
+#include "../m_compare.h"
 
 //=============================================================================
 //
@@ -148,22 +149,10 @@ static void PCSound_Mix_CallbackSint16(void *udata, Uint8 *stream, int len)
       --current_remaining;
 
       // Use the same value for the left and right channels.
-      dl  = static_cast<Sint32>(*leftptr) + static_cast<Sint32>(this_value);
+      dl = static_cast<Sint32>(*leftptr)  + static_cast<Sint32>(this_value);
       dr = static_cast<Sint32>(*rightptr) + static_cast<Sint32>(this_value);
-
-      if(dl > SHRT_MAX)
-         *leftptr = SHRT_MAX;
-      else if(dl < SHRT_MIN)
-         *leftptr = SHRT_MIN;
-      else
-         *leftptr = static_cast<Sint16>(dl);
-
-      if(dr > SHRT_MAX)
-         *rightptr = SHRT_MAX;
-      else if(dr < SHRT_MIN)
-         *rightptr = SHRT_MIN;
-      else
-         *rightptr = static_cast<Sint16>(dr);
+      *leftptr  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
+      *rightptr = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;
@@ -242,16 +231,8 @@ static void PCSound_Mix_CallbackFloat(void *udata, Uint8 *stream, int len)
       // Use the same value for the left and right channels.
       *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
       *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
-
-      if(*leftptr > 1.0f)
-         *leftptr = 1.0f;
-      else if(*leftptr < -1.0f)
-         *leftptr = -1.0f;
-
-      if(*rightptr > 1.0f)
-         *rightptr = 1.0f;
-      else if(*rightptr < -1.0f)
-         *rightptr = -1.0f;
+      *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
+      *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;

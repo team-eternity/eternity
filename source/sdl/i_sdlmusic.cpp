@@ -45,6 +45,7 @@
 #include "../d_main.h"
 #include "../v_misc.h"
 #include "../m_argv.h"
+#include "../m_compare.h"
 #include "../d_gi.h"
 #include "../s_sound.h"
 #include "../mn_engin.h"
@@ -135,19 +136,8 @@ static void I_EffectSPCSint16(void *udata, Uint8 *stream, int len)
       dr = *rightout + (((int)datar[0] * (0x10000 - stepremainder) +
                          (int)datar[2] * stepremainder) >> 16);
 
-      if(dl > SHRT_MAX)
-         *leftout = SHRT_MAX;
-      else if(dl < SHRT_MIN)
-         *leftout = SHRT_MIN;
-      else
-         *leftout = (Sint16)dl;
-
-      if(dr > SHRT_MAX)
-         *rightout = SHRT_MAX;
-      else if(dr < SHRT_MIN)
-         *rightout = SHRT_MIN;
-      else
-         *rightout = (Sint16)dr;
+      *leftout  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
+      *rightout = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
 
       stepremainder += ((32000 << 16) / 44100);
 
@@ -220,19 +210,8 @@ static void I_EffectSPCFloat(void *udata, Uint8 *stream, int len)
       dr = *rightout + ((static_cast<int>(datar[0]) * (0x10000 - stepremainder) +
          static_cast<int>(datar[2]) * stepremainder) >> 16) * (1.0f / 32768.0f);
 
-      if(dl >= 1.0f)
-         *leftout = 1.0f;
-      else if(dl < -1.0f)
-         *leftout = -1.0f;
-      else
-         *leftout = static_cast<float>(dl);
-
-      if(dr > 1.0f)
-         *rightout = 1.0f;
-      else if(dr < -1.0f)
-         *rightout = -1.0f;
-      else
-         *rightout = static_cast<float>(dr);
+      *leftout  = eclamp(dl, -1.0f, 1.0f);
+      *rightout = eclamp(dr, -1.0f, 1.0f);
 
       stepremainder += ((32000 << 16) / 44100);
 
