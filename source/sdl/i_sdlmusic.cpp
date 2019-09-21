@@ -145,8 +145,8 @@ static void I_effectSPC(void *udata, Uint8 *stream, int len)
          *leftout  = eclamp(dl, -1.0f, 1.0f);
          *rightout = eclamp(dr, -1.0f, 1.0f);
       }
-      else
-         static_assert(false, "I_effectSPC called with incompatible template parameter");
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "I_effectSPC called with incompatible template parameter");
 
       stepremainder += ((32000 << 16) / 44100);
 
@@ -197,8 +197,8 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
       fmt.type = ADLMIDI_SampleType_S16;
    else if constexpr(std::is_same_v<T, float>)
       fmt.type = ADLMIDI_SampleType_F32;
-   else
-      static_assert(false, "I_effectADLMIDI called with incompatible template parameter");
+   static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                 "I_effectADLMIDI called with incompatible template parameter");
 
    const int numsamples = (len * 2) / fmt.sampleOffset;
 

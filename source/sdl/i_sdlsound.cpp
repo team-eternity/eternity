@@ -362,8 +362,8 @@ static void do_3band(float *stream, float *end, T *dest)
          *dest = static_cast<Sint16>(rational_tanh(l + m + h) * 32767.0);
       else if constexpr(std::is_same_v<T, float>)
          *dest = static_cast<float>(rational_tanh(l + m + h));
-      else
-         static_assert(false, "do_3band called with incompatible template parameter");
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "do_3band called with incompatible template parameter");
       dest++;
    }
 }
@@ -414,8 +414,9 @@ static void inline I_SDLConvertSoundBuffer(Uint8 *stream, int len)
          *(bptr0 + 0) = *(leftout + 0); // L
          *(bptr0 + 1) = *(leftout + 1); // R
       }
-      else
-         static_assert(false, "I_SDLConvertSoundBuffer called with incompatible template parameter");
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "I_SDLConvertSoundBuffer called with incompatible template parameter");
+
       *bptr1 = *(bptr1 + 1) = 0.0f; // clear secondary reverb buffer
       leftout += step;
       bptr0   += step;
@@ -453,12 +454,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    //memset(stream, 0, len);
 
    // convert input samples to floating point
-   if constexpr(std::is_same_v<T, Sint16>)
-      I_SDLConvertSoundBuffer<Sint16>(stream, len);
-   else if constexpr(std::is_same_v<T, float>)
-      I_SDLConvertSoundBuffer<float>(stream, len);
-   else
-      static_assert(false, "I_SDLUpdateSoundCB called with incompatible template parameter");
+   I_SDLConvertSoundBuffer<T>(stream, len);
 
    float *leftout;
    // Pointer to end of mixbuffer

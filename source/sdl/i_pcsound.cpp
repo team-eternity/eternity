@@ -161,8 +161,8 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
          *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
          *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
       }
-      else
-         static_assert(false, "PCSound_Mix_Callback called with incompatible template parameter");
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "PCSound_Mix_Callback called with incompatible template parameter");
 
       leftptr  += audio_spec.channels;
       rightptr += audio_spec.channels;
