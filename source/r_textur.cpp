@@ -207,9 +207,6 @@ static texture_t *R_AllocTexStruct(const char *name, int16_t width,
 // haleyjd 10/27/08: new texture reading code
 //
 
-static mappatch_t   tp; // temporary patch
-static maptexture_t tt; // temporary texture
-
 enum
 {
    texture_unknown, // not determined yet
@@ -248,7 +245,7 @@ typedef struct texturelump_s
     (((int32_t)*((x) + 2)) << 16) | \
     (((int32_t)*((x) + 3)) << 24)); (x) += 4
 
-static byte *R_ReadDoomPatch(byte *rawpatch)
+static byte *R_ReadDoomPatch(byte *rawpatch, mappatch_t &tp)
 {
    byte *rover = rawpatch;
 
@@ -260,7 +257,7 @@ static byte *R_ReadDoomPatch(byte *rawpatch)
    return rover; // positioned at next patch
 }
 
-static byte *R_ReadStrifePatch(byte *rawpatch)
+static byte *R_ReadStrifePatch(byte *rawpatch, mappatch_t &tp)
 {
    byte *rover = rawpatch;
 
@@ -273,14 +270,14 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
    return rover; // positioned at next patch
 }
 
-static byte *R_ReadUnknownPatch(byte *rawpatch)
+static byte *R_ReadUnknownPatch(byte *rawpatch, mappatch_t &tp)
 {
    I_Error("R_ReadUnknownPatch called\n");
 
    return NULL;
 }
 
-static byte *R_ReadDoomTexture(byte *rawtexture)
+static byte *R_ReadDoomTexture(byte *rawtexture, maptexture_t &tt)
 {
    byte *rover = rawtexture;
    int i;
@@ -298,7 +295,7 @@ static byte *R_ReadDoomTexture(byte *rawtexture)
    return rover; // positioned for patch reading
 }
 
-static byte *R_ReadStrifeTexture(byte *rawtexture)
+static byte *R_ReadStrifeTexture(byte *rawtexture, maptexture_t &tt)
 {
    byte *rover = rawtexture;
    int i;
@@ -317,7 +314,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
    return rover; // positioned for patch reading
 }
 
-static byte *R_ReadUnknownTexture(byte *rawtexture)
+static byte *R_ReadUnknownTexture(byte *rawtexture, maptexture_t &tt)
 {
    I_Error("R_ReadUnknownTexture called\n");
 
@@ -326,8 +323,8 @@ static byte *R_ReadUnknownTexture(byte *rawtexture)
 
 typedef struct texturehandler_s
 {
-   byte *(*ReadTexture)(byte *);
-   byte *(*ReadPatch)(byte *);
+   byte *(*ReadTexture)(byte *, maptexture_t &tt);
+   byte *(*ReadPatch)(byte *, mappatch_t &tp);
 } texturehandler_t;
 
 static texturehandler_t TextureHandlers[] =
@@ -484,6 +481,8 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
 {
    int i, j;
    byte *directory = tlump->directory;
+   edefstructvar(maptexture_t, tt);
+   edefstructvar(mappatch_t, tp);
 
    for(i = 0; i < tlump->numtextures; i++, texnum++)
    {
@@ -499,7 +498,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
 
       rawtex = tlump->data + offset;
 
-      rawpatch = TextureHandlers[tlump->format].ReadTexture(rawtex);
+      rawpatch = TextureHandlers[tlump->format].ReadTexture(rawtex, tt);
 
       texture = textures[texnum] = 
          R_AllocTexStruct(tt.name, tt.width, tt.height, tt.patchcount);
@@ -510,7 +509,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
 
       for(j = 0; j < texture->ccount; j++, component++)
       {
-         rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
+         rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch, tp);
 
          component->originx = tp.originx;
          component->originy = tp.originy;
