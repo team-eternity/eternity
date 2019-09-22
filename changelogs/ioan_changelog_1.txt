@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+22.09.2019
+
+BUGFIX: If there are multiple textures with the same name in TEXTURE1+TEXTURE2,
+        the first one should be loaded, not the last. This fixes mods such as
+        Army of Darkness DOOM, which looked wrong in Eternity.
+
+--------------------------------------------------------------------------------
 23.07.2019
 
 BUGFIX: Fixed EDF thingtype droptype to actually remove inherited object's item.
