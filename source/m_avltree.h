@@ -40,10 +40,8 @@
 template<typename T, typename U>
 class AVLTree
 {
-   // TODO: Change from std::is_standard_layout<T>::value std::is_standard_layout_v<T>
-   //       when Raspbian gets C++17-compatible version of GCC.
-   static_assert(std::is_standard_layout<T>::value, "Node key's type must be standard layout");
-   static_assert(std::is_standard_layout<U>::value, "Node object's type must be standard layout");
+   static_assert(std::is_standard_layout_v<T>, "Node key's type must be standard layout");
+   static_assert(std::is_standard_layout_v<U>, "Node object's type must be standard layout");
 
 public:
    //
@@ -378,6 +376,9 @@ protected:
    //
    static void balance(avlnode_t *&root)
    {
+      if(root == nullptr)
+         return;
+
       // Balance existent children
       if(root->left)
          balance(root->left);

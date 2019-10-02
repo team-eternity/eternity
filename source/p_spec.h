@@ -334,7 +334,9 @@ typedef enum
    F2LnF,
    F2NnF,
    F2LnC,
-   LnF2HnF
+   LnF2HnF,
+
+   lifttarget_upValue
 } lifttarget_e;
 
 // haleyjd 10/06/05: defines for generalized stair step sizes
@@ -1250,7 +1252,32 @@ protected:
 public:
    // Methods
    virtual void serialize(SaveArchive &arc) override;
-   
+
+   // Data Members
+   fixed_t originalHeight;
+   fixed_t accumulator;
+   fixed_t accDelta;
+   fixed_t targetScale;
+   fixed_t scale;
+   fixed_t scaleDelta;
+   int ticker;
+   int state;
+};
+
+// MaxW: 2019/02/15: waggle ceilings
+class CeilingWaggleThinker : public SectorThinker
+{
+   DECLARE_THINKER_TYPE(CeilingWaggleThinker, SectorThinker)
+
+protected:
+   void Think() override;
+
+   virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
+
+public:
+   // Methods
+   virtual void serialize(SaveArchive &arc) override;
+
    // Data Members
    fixed_t originalHeight;
    fixed_t accumulator;
@@ -1497,6 +1524,9 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd);
 int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
                         int offset, int timer);
 
+int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed,
+                         int offset, int timer);
+
 void P_ChangeFloorTex(const char *name, int tag);
 
 // p_plats
@@ -1517,6 +1547,8 @@ int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
                          const ceilingdata_t &cd);
 
 int EV_DoGenLift(const line_t *line);
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+                             int target, fixed_t height);
 
 int EV_DoParamStairs(const line_t *line, int tag, const stairdata_t *sd);
 int EV_DoGenStairs(line_t *line);

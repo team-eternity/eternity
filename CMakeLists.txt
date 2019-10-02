@@ -30,6 +30,10 @@ IF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
         MESSAGE( FATAL_ERROR "In-tree Builds are NOT supported.")
 ENDIF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/adlmidi/CMakeLists.txt)
+   message(FATAL_ERROR "adlmidi not found. Please install adlmidi submodule.")
+endif()
+
 # Supported Build Types are:
 #    * Debug (CMAKE_C_FLAGS_DEBUG)
 #    * Release (CMAKE_C_FLAGS_RELEASE)
@@ -316,10 +320,14 @@ ENDIF (WIN32)
 INCLUDE_DIRECTORIES(acsvm)
 INCLUDE_DIRECTORIES(libpng)
 INCLUDE_DIRECTORIES(zlib)
+INCLUDE_DIRECTORIES(adlmidi/include)
 
 SET(ACSVM_NOFLAGS ON)
 SET(ACSVM_SHARED OFF)
 ADD_SUBDIRECTORY(acsvm)
+
+SET(WITH_CPP_EXTRAS ON)
+ADD_SUBDIRECTORY(adlmidi)
 
 ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libpng)

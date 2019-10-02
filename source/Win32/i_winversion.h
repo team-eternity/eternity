@@ -38,7 +38,7 @@
 // Checks if Windows version is 10 or higher, for audio kludge.
 // I wish we could use the Win 8.1 API and Versionhelpers.h
 //
-inline bool I_IsWindows10OrHigher()
+inline bool I_IsWindowsVistaOrHigher()
 {
 #pragma comment(lib, "version.lib")
 
@@ -72,7 +72,7 @@ inline bool I_IsWindows10OrHigher()
    //buildNum = HIWORD(vInfo->dwProductVersionLS);
    efree(path);
    efree(ver);
-   return majorVer >= 10;
+   return majorVer >= 6; // Vista is NT 6.0
 }
 
 #endif

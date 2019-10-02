@@ -104,7 +104,10 @@ template<typename T, typename U> inline static fixed_t P_AproxDistance(const T& 
     return P_AproxDistance(n.x - m.x, n.y - m.y);
 }
 
-int     P_PointOnLineSide(fixed_t x, fixed_t y, const line_t *line);
+int P_PointOnLineSideClassic(fixed_t x, fixed_t y, const line_t *line);
+int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line);
+extern int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line);
+
 int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);

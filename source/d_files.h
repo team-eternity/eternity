@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+// Purpose: Code for loading data files, particularly PWADs.
+//  Base, user, and game path determination and file-finding functions.
 //
-// DESCRIPTION:
-//    Code for loading data files, particularly PWADs.
+// Authors: James Haley
 //
-//-----------------------------------------------------------------------------
 
 #ifndef D_FILES_H__
 #define D_FILES_H__

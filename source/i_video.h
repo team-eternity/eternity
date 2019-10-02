@@ -95,7 +95,7 @@ extern int   displaynum;
 // Driver enumeration
 enum halvdr_e
 {
-   VDR_SDLSOFT,
+   VDR_SDLDEFAULT,
    VDR_SDLGL2D,
    VDR_MAXDRIVERS
 };

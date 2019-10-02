@@ -109,6 +109,7 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDTURNSLOW  "speedturnslow"
 #define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
 #define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
+#define ITEM_PCLASS_SPEEDJUMP      "speedjump"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
 #define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
 
@@ -120,14 +121,14 @@ cfg_opt_t edf_skin_opts[] =
 
 #define ITEM_DELTA_NAME "name"
 
-static cfg_opt_t edf_wpnslot_opts[] =
+static cfg_opt_t wpnslot_opts[] =
 {
    CFG_STR(ITEM_WPNSLOT_WPNS,   0, CFGF_LIST),
    CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0, CFGF_NONE),
    CFG_END()
 };
 
-static cfg_opt_t edf_reborn_opts[] =
+static cfg_opt_t reborn_opts[] =
 {
    CFG_STR(ITEM_REBORN_NAME,   "", CFGF_NONE),
    CFG_INT(ITEM_REBORN_AMOUNT,  1, CFGF_NONE),
@@ -150,15 +151,16 @@ static cfg_opt_t edf_reborn_opts[] =
    CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE), \
    CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0, CFGF_NONE), \
                                                          \
    CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
                                                          \
    /* reborn inventory items */                          \
-   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, edf_reborn_opts, CFGF_MULTI|CFGF_NOCASE), \
-                                                                                \
-    /* weapon slots */                                                          \
-   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,   edf_wpnslot_opts, CFGF_MULTI | CFGF_TITLE | CFGF_NOCASE), \
-                                                                                               \
+   CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
+                                                                             \
+    /* weapon slots */                                                       \
+   CFG_SEC(ITEM_PCLASS_WEAPONSLOT,    wpnslot_opts, CFGF_MULTI|CFGF_NOCASE|CFGF_TITLE), \
+                                                                                        \
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -550,8 +552,8 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
    else
-      E_EDFLoggedErr(2, "E_ProcessWeaponDeltas: playerdelta requires name field\n");
-   
+      E_EDFLoggedErr(2, "E_processPlayerClass: playerdelta requires name field\n");
+
 
    if(!(pc = E_PlayerClassForName(tempstr)))
    {
@@ -664,6 +666,9 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
 
    if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKFAST))
       pc->lookspeed[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKFAST);
+
+   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDJUMP))
+      pc->jumpspeed = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDJUMP));
 
    // copy speeds to original speeds
    memcpy(pc->oforwardmove, pc->forwardmove, 2 * sizeof(fixed_t));

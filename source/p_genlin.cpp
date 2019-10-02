@@ -693,11 +693,6 @@ int EV_DoGenCeiling(const line_t *line)
 //
 int EV_DoGenLift(const line_t *line)
 {
-   PlatThinker *plat;
-   sector_t    *sec;
-   int  secnum;
-   int  rtn;
-   bool manual;
    int  value = line->special - GenLiftBase;
 
    // parse the bit fields in the line's special type
@@ -707,19 +702,80 @@ int EV_DoGenLift(const line_t *line)
    int Sped = (value & LiftSpeed  ) >> LiftSpeedShift;
    int Trig = (value & TriggerType) >> TriggerTypeShift;
 
+   // setup the delay time before the floor returns
+   int delay;
+   switch(Dely)
+   {
+      case 0:
+         delay = 1*35;
+         break;
+      case 1:
+         delay = PLATWAIT*35;
+         break;
+      case 2:
+         delay = 5*35;
+         break;
+      case 3:
+         delay = 10*35;
+         break;
+      default:
+         delay = 0;
+         break;
+   }
+
+   // setup the speed of motion
+   fixed_t speed;
+   switch(Sped)
+   {
+      case SpeedSlow:
+         speed = PLATSPEED * 2;
+         break;
+      case SpeedNormal:
+         speed = PLATSPEED * 4;
+         break;
+      case SpeedFast:
+         speed = PLATSPEED * 8;
+         break;
+      case SpeedTurbo:
+         speed = PLATSPEED * 16;
+         break;
+      default:
+         speed = 0;
+         break;
+   }
+
+   return EV_DoGenLiftByParameters(Trig == PushOnce || Trig == PushMany, *line, speed, delay, Targ,
+                                   0);
+}
+
+//
+// Do generic lift using direct parameters. Meant to be called both from Boom generalized actions
+// and the parameterized special Generic_Lift.
+//
+int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed, int delay,
+                             int target, fixed_t height)
+{
+   PlatThinker *plat;
+   sector_t    *sec;
+   int  secnum;
+   int  rtn;
+   bool manual;
+
+   // parse the bit fields in the line's special type
+
    secnum = -1;
    rtn = 0;
-   
+
    // Activate all <type> plats that are in_stasis
-   
-   if(Targ == LnF2HnF)
-      PlatThinker::ActivateInStasis(line->args[0]);
-        
+
+   if(target == LnF2HnF)
+      PlatThinker::ActivateInStasis(line.args[0]);
+
    // check if a manual trigger, if so do just the sector on the backside
    manual = false;
-   if(Trig == PushOnce || Trig == PushMany)
+   if(manualtrig)
    {
-      if (!(sec = line->backsector))
+      if (!(sec = line.backsector))
          return rtn;
       secnum = eindex(sec - sectors);
       manual = true;
@@ -727,11 +783,11 @@ int EV_DoGenLift(const line_t *line)
    }
 
    // if not manual do all sectors tagged the same as the line
-   while((secnum = P_FindSectorFromLineArg0(line,secnum)) >= 0)
+   while((secnum = P_FindSectorFromLineArg0(&line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
-manual_lift:
+
+   manual_lift:
       // Do not start another function if floor already moving
       if(P_SectorActive(floor_special, sec))
       {
@@ -740,14 +796,14 @@ manual_lift:
          else
             return rtn;
       }
-      
+
       // Setup the plat thinker
       rtn = 1;
       plat = new PlatThinker;
       plat->addThinker();
-      
+
       plat->crush  = -1;
-      plat->tag    = line->args[0];
+      plat->tag    = line.args[0];
       plat->type   = genLift;
       plat->high   = sec->floorheight;
       plat->status = PlatThinker::down;
@@ -755,74 +811,54 @@ manual_lift:
       plat->sector->floordata = plat;
 
       // setup the target destination height
-      switch(Targ)
+      switch(target)
       {
-      case F2LnF:
-         plat->low = P_FindLowestFloorSurrounding(sec);
-         if(plat->low > sec->floorheight)
+         case F2LnF:
+            plat->low = P_FindLowestFloorSurrounding(sec);
+            if(plat->low > sec->floorheight)
+               plat->low = sec->floorheight;
+            break;
+         case F2NnF:
+            plat->low = P_FindNextLowestFloor(sec,sec->floorheight);
+            break;
+         case F2LnC:
+            plat->low = P_FindLowestCeilingSurrounding(sec);
+            if(plat->low > sec->floorheight)
+               plat->low = sec->floorheight;
+            break;
+         case LnF2HnF:
+            plat->type = genPerpetual;
+            plat->low = P_FindLowestFloorSurrounding(sec);
+            if(plat->low > sec->floorheight)
+               plat->low = sec->floorheight;
+            plat->high = P_FindHighestFloorSurrounding(sec);
+            if(plat->high < sec->floorheight)
+               plat->high = sec->floorheight;
+            plat->status = (P_Random(pr_genlift)&1) ? PlatThinker::down : PlatThinker::up;
+            break;
+         case lifttarget_upValue:
+            // just use the parameterized equivalent, this is a ZDoom extension imposed on
+            // Generic_Lift anyway.
+            plat->type = upWaitDownStay;
+            plat->status = PlatThinker::up;
             plat->low = sec->floorheight;
-         break;
-      case F2NnF:
-         plat->low = P_FindNextLowestFloor(sec,sec->floorheight);
-         break;
-      case F2LnC:
-         plat->low = P_FindLowestCeilingSurrounding(sec);
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         break;
-      case LnF2HnF:
-         plat->type = genPerpetual;
-         plat->low = P_FindLowestFloorSurrounding(sec);
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         plat->high = P_FindHighestFloorSurrounding(sec);
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
-         plat->status = (P_Random(pr_genlift)&1) ? PlatThinker::down : PlatThinker::up;
-         break;
-      default:
-         break;
+            plat->high = plat->low + height;
+            if(plat->high < sec->floorheight)
+               plat->high = sec->floorheight;
+            break;
+         default:
+            break;
       }
 
       // setup the speed of motion
-      switch(Sped)
-      {
-      case SpeedSlow:
-         plat->speed = PLATSPEED * 2;
-         break;
-      case SpeedNormal:
-         plat->speed = PLATSPEED * 4;
-         break;
-      case SpeedFast:
-         plat->speed = PLATSPEED * 8;
-         break;
-      case SpeedTurbo:
-         plat->speed = PLATSPEED * 16;
-         break;
-      default:
-         break;
-      }
+      plat->speed = speed;
 
       // setup the delay time before the floor returns
-      switch(Dely)
-      {
-      case 0:
-         plat->wait = 1*35;
-         break;
-      case 1:
-         plat->wait = PLATWAIT*35;
-         break;
-      case 2:
-         plat->wait = 5*35;
-         break;
-      case 3:
-         plat->wait = 10*35;
-         break;
-      }
+      plat->wait = delay;
 
       P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
       plat->addActivePlat(); // add this plat to the list of active plats
-      
+
       if(manual)
          return rtn;
    }

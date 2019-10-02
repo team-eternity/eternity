@@ -81,7 +81,7 @@ struct haldriveritem_t
 const char *const i_videohelpstr = 
   "Select video backend (-1 = default"
 #ifdef _SDL_VER
-  ", 0 = SDL Software"
+  ", 0 = SDL Default"
 #ifdef EE_FEATURE_OPENGL
   ", 1 = SDL GL2D"
 #endif
@@ -102,10 +102,10 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #endif
    },
 
-   // SDL Software Driver
+   // SDL Whatever-it-chooses Driver
    {
-      VDR_SDLSOFT,
-      "SDL Software",
+      VDR_SDLDEFAULT,
+      "SDL Default",
 #ifdef _SDL_VER
       &i_sdlvideodriver
 #else

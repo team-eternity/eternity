@@ -304,6 +304,14 @@ bool E_GetInventoryItemDetails(const player_t *player,
 #define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_WEAPGFX  "weapongiver"
 #define EDF_SEC_ARTIFACT "artifact"
+
+#define EDF_SEC_HEALTHFXDELTA "healthdelta"
+#define EDF_SEC_ARMORFXDELTA  "armordelta"
+#define EDF_SEC_AMMOFXDELTA   "ammodelta"
+#define EDF_SEC_POWERFXDELTA  "powerdelta"
+#define EDF_SEC_WEAPGFXDELTA  "weapongiverdelta"
+#define EDF_SEC_ARTIFACTDELTA "artifactdelta"
+
 #define EDF_SEC_SPRPKUP  "pickupitem"
 #define EDF_SEC_PICKUPFX "pickupeffect"
 #define EDF_SEC_LOCKDEF  "lockdef"
@@ -315,6 +323,14 @@ extern cfg_opt_t edf_ammofx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
 extern cfg_opt_t edf_weapgfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
+
+extern cfg_opt_t edf_healthfx_delta_opts[];
+extern cfg_opt_t edf_armorfx_delta_opts[];
+extern cfg_opt_t edf_ammofx_delta_opts[];
+extern cfg_opt_t edf_powerfx_delta_opts[];
+extern cfg_opt_t edf_weapgfx_delta_opts[];
+extern cfg_opt_t edf_artifact_delta_opts[];
+
 extern cfg_opt_t edf_sprpkup_opts[];
 extern cfg_opt_t edf_pkupfx_opts[];
 extern cfg_opt_t edf_lockdef_opts[];

@@ -93,7 +93,7 @@ weapontype_t UnknownWeaponInfo;
 #define ITEM_WPN_UPSOUND      "upsound"
 #define ITEM_WPN_READYSOUND   "readysound"
 
-#define ITEM_WPN_FULLSCREENOFFSET "fullscreenoffset"
+#define ITEM_WPN_FSOFFSET "fullscreenoffset"
 
 #define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
 
@@ -130,8 +130,8 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_ATKSTATE_ALT,    "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_FLASHSTATE_ALT,  "S_NULL", CFGF_NONE), \
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
-   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT, 0,        CFGF_NONE), \
-   CFG_INT(ITEM_WPN_SELECTORDER,     -1,       CFGF_NONE), \
+   CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT,  0,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_SELECTORDER,   -1,       CFGF_NONE), \
    CFG_INT(ITEM_WPN_SLOTNUM,         -1,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SLOTRANK,      -1.0,     CFGF_NONE), \
    CFG_STR(ITEM_WPN_SISTERWEAPON,    "",       CFGF_NONE), \
@@ -144,9 +144,9 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_INT(ITEM_WPN_HAPTICTIME,      0,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,         "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_READYSOUND,      "none",   CFGF_NONE), \
-   CFG_FLOAT(ITEM_WPN_FULLSCREENOFFSET, 0, CFGF_NONE), \
-   CFG_STR(ITEM_WPN_FIRSTDECSTATE,   nullptr, CFGF_NONE), \
-   CFG_STR(ITEM_WPN_STATES,          0,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_FSOFFSET,      0.0,      CFGF_NONE), \
+   CFG_STR(ITEM_WPN_FIRSTDECSTATE,   nullptr,  CFGF_NONE), \
+   CFG_STR(ITEM_WPN_STATES,          nullptr,  CFGF_NONE), \
    CFG_END()
 
 cfg_opt_t edf_wpninfo_opts[] =
@@ -540,12 +540,18 @@ static weaponinfo_t *E_findBestWeaponUsingAmmo(const player_t *player,
 
 //
 // Initial function to call the function that recursively finds the
-// best weapon the player owns that has the provided primary ammo
+// best weapon the player owns that has the provided primary ammo.
+// If the best weapon found isn't better than the player's readyweapon
+// then nullptr is returned.
 //
-weaponinfo_t *E_FindBestWeaponUsingAmmo(const player_t *player,
-                                        const itemeffect_t *ammo)
+weaponinfo_t *E_FindBestBetterWeaponUsingAmmo(const player_t *player,
+                                              const itemeffect_t *ammo)
 {
-   return E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
+   weaponinfo_t *wp = E_findBestWeaponUsingAmmo(player, ammo, selectordertree->root);
+   if(wp != nullptr && wp->sortorder < player->readyweapon->sortorder)
+      return wp;
+   else
+      return nullptr;
 }
 
 //
@@ -585,6 +591,12 @@ static const char *nativeWepStateLabels[] =
    "AltFire",  // atkstate_alt
    "AltFlash", // flashstate_alt
    "AltHold",  // holdstate_alt
+   "Reload",   // reloadstate
+   "Zoom",     // zoomstate
+   "User1",    // userstate_1
+   "User2",    // userstate_2
+   "User3",    // userstate_3
+   "User4",    // userstate_4
 };
 
 enum wepstatetypes_e
@@ -597,7 +609,13 @@ enum wepstatetypes_e
    WSTATE_HOLD,
    WSTATE_FIRE_ALT,
    WSTATE_FLASH_ALT,
-   WSTATE_HOLD_ALT
+   WSTATE_HOLD_ALT,
+   WSTATE_RELOAD,
+   WSTATE_ZOOM,
+   WSTATE_USER1,
+   WSTATE_USER2,
+   WSTATE_USER3,
+   WSTATE_USER4,
 };
 
 #define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
@@ -632,6 +650,12 @@ static int *E_getNativeWepStateLoc(weaponinfo_t *wi, const char *label)
    case WSTATE_FIRE_ALT:  ret = &wi->atkstate_alt;   break;
    case WSTATE_FLASH_ALT: ret = &wi->flashstate_alt; break;
    case WSTATE_HOLD_ALT:  ret = &wi->holdstate_alt;  break;
+   case WSTATE_RELOAD:    ret = &wi->reloadstate;    break;
+   case WSTATE_ZOOM:      ret = &wi->zoomstate;      break;
+   case WSTATE_USER1:     ret = &wi->userstate_1;    break;
+   case WSTATE_USER2:     ret = &wi->userstate_2;    break;
+   case WSTATE_USER3:     ret = &wi->userstate_3;    break;
+   case WSTATE_USER4:     ret = &wi->userstate_4;    break;
    default:
       break;
    }
@@ -1097,6 +1121,10 @@ static void E_copyWeapon(weapontype_t num, weapontype_t pnum)
    // tracker inheritance is weird
    //if(!(this_wi->flags & WPF_[TomedVersionOfWeapon]))
    this_wi->tracker = tracker;
+
+   // MaxW: Inheriting weapons have no use for this flag, and I don't want
+   // users to have to unset it when it shouldn't be set in the first place.
+   this_wi->flags &= ~WPF_DISABLEAPS;
 }
 
 struct weapontitleprops_t
@@ -1137,7 +1165,7 @@ static weapontype_t E_resolveParentWeapon(cfg_t *weaponsec, const weapontitlepro
    return pnum;
 }
 
-static void E_insertSelectOrderNode(int sortorder, weaponinfo_t *wp, bool modify)
+static void E_insertSelectOrderNode(fixed_t sortorder, weaponinfo_t *wp, bool modify)
 {
    if(modify && (wp->intflags & WIF_HASSORTORDER))
       selectordertree->deleteNode(wp->sortorder, wp);
@@ -1233,10 +1261,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
    if(IS_SET(ITEM_WPN_SELECTORDER))
    {
-      if((tempint = cfg_getint(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
+      if((tempfloat = cfg_getfloat(weaponsec, ITEM_WPN_SELECTORDER)) >= 0)
       {
-         E_insertSelectOrderNode(tempint, &wp, !def);
-         wp.sortorder = tempint;
+         const fixed_t tempfixed = M_DoubleToFixed(tempfloat);
+         E_insertSelectOrderNode(tempfixed, &wp, !def);
+         wp.sortorder = tempfixed;
       }
    }
    if(cfg_size(weaponsec, ITEM_WPN_SISTERWEAPON) > 0)
@@ -1311,7 +1340,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.holdstate  = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT))
+   {
+      if(!def)
+         wp.flags &= ~WPF_DISABLEAPS;
       wp.ammopershot = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT);
+   }
 
 
    // Alt attack properties
@@ -1333,7 +1366,11 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       wp.holdstate_alt = E_GetStateNumForName(cfg_getstr(weaponsec, ITEM_WPN_HOLDSTATE_ALT));
 
    if(IS_SET(ITEM_WPN_AMMOPERSHOT_ALT))
+   {
+      if(!def)
+         wp.flags &= ~WPF_DISABLEAPS;
       wp.ammopershot_alt = cfg_getint(weaponsec, ITEM_WPN_AMMOPERSHOT_ALT);
+   }
 
    if(IS_SET(ITEM_WPN_MOD))
    {
@@ -1425,8 +1462,8 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          wp.readysound = estrdup(tempstr);
    }
 
-   if(IS_SET(ITEM_WPN_FULLSCREENOFFSET))
-      wp.fullscreenoffset = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_FULLSCREENOFFSET));
+   if(IS_SET(ITEM_WPN_FSOFFSET))
+      wp.fullscreenoffset = M_DoubleToFixed(cfg_getfloat(weaponsec, ITEM_WPN_FSOFFSET));
 
    // Process DECORATE state block
    E_processDecorateWepStatesRecursive(weaponsec, i, false);

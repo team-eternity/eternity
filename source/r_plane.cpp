@@ -64,7 +64,7 @@
 #include "SDL_endian.h"
 #endif
 
-#define MAINHASHCHAINS 128    /* must be a power of 2 */
+#define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
 
 static visplane_t *freetail;                   // killough
 static visplane_t **freehead = &freetail;      // killough
@@ -99,7 +99,7 @@ VALLOCATION(mainhash)
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
 #define visplane_hash(picnum, lightlevel, height, chains) \
-  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & ((chains) - 1))
+  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) % chains)
 
 
 // killough 8/1/98: set static number of openings to be large enough
@@ -373,14 +373,16 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width *
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
                       static_cast<double>(plane.yscale);
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height *
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * static_cast<double>(plane.tex->height) *
                       static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (double)plane.tex->width * plane.yscale;
-   slopespan.ivstep = slope->B.x * (double)plane.tex->height * plane.xscale;
+   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
+                      static_cast<double>(plane.yscale);
+   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
+                      static_cast<double>(plane.xscale);
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -400,7 +402,7 @@ static void R_MapSlope(int y, int x1, int x2)
       map2 = map1;
 
    R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
- 
+
    slopefunc();
 }
 
@@ -437,7 +439,6 @@ static void R_CalcSlope(visplane_t *pl)
    double         xl, yl, tsin, tcos;
    double         ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
-   texture_t      *tex = textures[pl->picnum];
 
    if(!pl->pslope)
       return;
@@ -445,9 +446,15 @@ static void R_CalcSlope(visplane_t *pl)
    
    tsin = sin(pl->angle);
    tcos = cos(pl->angle);
-   
-   xl = tex->width;
-   yl = tex->height;
+
+   if(pl->picnum & PL_SKYFLAT)
+      xl = yl = 64;  // just choose a default, it won't matter
+   else
+   {
+      const texture_t *tex = textures[texturetranslation[pl->picnum]];
+      xl = tex->width;
+      yl = tex->height;
+   }
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
@@ -649,8 +656,11 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    blendflags &= PS_OBLENDFLAGS;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
-   if(!(blendflags & PS_ADDITIVE) && opacity == 255)
+   if(!(blendflags & PS_ADDITIVE) && opacity == 255 &&
+      (picnum & PL_SKYFLAT || !(textures[texturetranslation[picnum]]->flags & TF_MASKED)))
+   {
       blendflags = 0;
+   }
       
    // killough 10/98: PL_SKYFLAT
    if(R_IsSkyFlat(picnum) || picnum & PL_SKYFLAT)
@@ -680,9 +690,9 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
          yscale == check->yscale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap && 
-         viewx == check->viewx && 
-         viewy == check->viewy && 
+         fixedcolormap == check->fixedcolormap &&
+         viewx == check->viewx &&
+         viewy == check->viewy &&
          viewz == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
@@ -836,9 +846,11 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->maxx = stop;
       {
          int *p = pl->top;
-         unsigned i = 0;
-         while(i < pl->max_width)
-            p[i++] = 0x7FFFFFFF;
+         const int *const p_end  = p + pl->max_width;
+         // Unrolling this loop makes performance WORSE for optimised MSVC builds.
+         // Nothing makes sense any more.
+         while(p < p_end)
+            *(p++) = 0x7FFFFFFF;
       }
    }
    
@@ -1088,27 +1100,43 @@ static void do_draw_plane(visplane_t *pl)
       {
          // SoM: Handled outside
          tex = plane.tex = R_CacheTexture(picnum);
-         plane.source = tex->buffer;
+         plane.source = tex->bufferdata;
       }
 
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
       stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
-                 (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
+                 (pl->opacity < 255)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
+
+      if(plane.tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
+      {
+         switch(stylenum)
+         {
+            case SPAN_STYLE_TL:
+               stylenum = SPAN_STYLE_TL_MASKED;
+               break;
+            case SPAN_STYLE_ADD:
+               stylenum = SPAN_STYLE_ADD_MASKED;
+               break;
+            default:
+               stylenum = SPAN_STYLE_NORMAL_MASKED;
+         }
+         span.alphamask = static_cast<const byte *>(plane.source) + tex->width * tex->height;
+      }
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
       slopefunc = r_span_engine->DrawSlope[stylenum][tex->flatsize];
       
-      if(stylenum == SPAN_STYLE_TL)
+      if(stylenum == SPAN_STYLE_TL || stylenum == SPAN_STYLE_TL_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
          span.fg2rgb = Col2RGB8[level];
          span.bg2rgb = Col2RGB8[64 - level];
       }
-      else if(stylenum == SPAN_STYLE_ADD)
+      else if(stylenum == SPAN_STYLE_ADD || stylenum == SPAN_STYLE_ADD_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
@@ -1226,7 +1254,7 @@ planehash_t *R_NewOverlaySet()
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(32);
+      set = R_NewPlaneHash(31);
       return set;
    }
    set = r_overlayfreesets;

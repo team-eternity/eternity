@@ -3547,7 +3547,9 @@ void MobjFadeThinker::remove()
 void MobjFadeThinker::Think()
 {
    // If target is being removed, or won't fade, remove self.
-   if(target->isRemoved() || !target->alphavelocity)
+   // ioanch: also fix if no target, which can happen after loading a game saved
+   // during this transition.
+   if(!target || target->isRemoved() || !target->alphavelocity)
    {
       remove();
       return;

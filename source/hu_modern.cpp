@@ -44,6 +44,7 @@
 extern patch_t *nfs_health;
 extern patch_t *nfs_divider;
 extern patch_t *nfs_armor;
+extern patch_t *nfs_inf;
 
 //=============================================================================
 //
@@ -101,31 +102,31 @@ void ModernHUD::DrawStatus(int x, int y)
 
    if(hud_overlaylayout == HUD_BOOM)
    {
-      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << " / " << totalkills <<
-                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << " / " << totalitems <<
-                 FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << " / " << totalsecret;
+      tempstr << FC_RED   "K" FC_GRAY "  " << hu_player.killcount   << "/" << totalkills <<
+                 FC_BLUE " I" FC_GRAY "  " << hu_player.itemcount   << "/" << totalitems <<
+                 FC_GOLD " S" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
    }
    else if(hud_overlaylayout == HUD_DISTRIB)
    {
-      tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.killcount << " / " << totalkills;
+      tempstr << FC_RED "KILLS" FC_GRAY "  " << hu_player.killcount << "/" << totalkills;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 16, &vbscreen);
       tempstr.clear();
-      tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << " / " << totalitems;
+      tempstr << FC_BLUE "ITEMS" FC_GRAY "  " << hu_player.itemcount << "/" << totalitems;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y - 8, &vbscreen);
       tempstr.clear();
-      tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << " / " << totalsecret;
+      tempstr << FC_GOLD "SCRTS" FC_GRAY "  " << hu_player.secretcount << "/" << totalsecret;
       V_FontWriteText(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
    }
    else
    {
-      tempstr << hu_player.killcount << " / " << totalkills << "  " FC_RED "KILLS";
+      tempstr << hu_player.killcount << "/" << totalkills << "  " FC_RED "KILLS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y, &vbscreen);
       tempstr.clear();
-      tempstr << hu_player.itemcount << " / " << totalitems << "  " FC_BLUE "ITEMS";
+      tempstr << hu_player.itemcount << "/" << totalitems << "  " FC_BLUE "ITEMS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 8, &vbscreen);
       tempstr.clear();
-      tempstr << hu_player.secretcount << " / " << totalsecret << "  " FC_GOLD "SCRTS";
+      tempstr << hu_player.secretcount << "/" << totalsecret << "  " FC_GOLD "SCRTS";
       FontWriteTextRAlign(hud_fssmall, tempstr.constPtr(), x, y + 16, &vbscreen);
    }
 }
@@ -145,16 +146,16 @@ void ModernHUD::DrawHealth(int x, int y)
    {
       V_DrawPatch(x - nfs_health->width, y, &vbscreen, nfs_health);
       tempstr << HU_HealthColor() << hu_player.health;
-      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (4 + nfs_health->width), y,
+      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (2 + nfs_health->width), y,
                           &vbscreen);
    }
    else
    {
       V_DrawPatch(x, y, &vbscreen, nfs_health);
       tempstr << HU_HealthColor() << hu_player.health;
-      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 4 + nfs_health->width, y, &vbscreen);
+      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 2 + nfs_health->width, y, &vbscreen);
       if(hud_overlaylayout == HUD_FLAT)
-         V_DrawPatch(x + 37, y + 1, &vbscreen, nfs_divider);
+         V_DrawPatch(x + 35, y + 1, &vbscreen, nfs_divider);
    }
 }
 
@@ -176,14 +177,14 @@ void ModernHUD::DrawArmor(int x, int y)
    {
       V_DrawPatch(x - nfs_armor->width, y, &vbscreen, nfs_armor);
       tempstr << HU_ArmorColor() << hu_player.armorpoints;
-      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (4 + nfs_armor->width), y,
+      FontWriteTextRAlign(hud_fslarge, tempstr.constPtr(), x - (2 + nfs_armor->width), y,
                           &vbscreen);
    }
    else
    {
       V_DrawPatch(x, y, &vbscreen, nfs_armor);
       tempstr << HU_ArmorColor() << hu_player.armorpoints;
-      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 4 + nfs_armor->width, y, &vbscreen);
+      FontWriteTextRJustify(hud_fslarge, tempstr, 3, x + 2 + nfs_armor->width, y, &vbscreen);
    }
 }
 
@@ -220,7 +221,7 @@ void ModernHUD::DrawWeapons(int x, int y)
    const bool laligned = hud_overlaylayout != HUD_DISTRIB;
 
    if(laligned)
-      tempstr = "ARMS ";
+      tempstr = "ARMS  ";
 
    for(int i = 0; i < NUMWEAPONS; i++)
    {
@@ -261,8 +262,8 @@ void ModernHUD::DrawWeapons(int x, int y)
 void ModernHUD::DrawAmmo(int x, int y)
 {
    const bool laligned = hud_overlaylayout != HUD_DISTRIB;
-   const int displayoffs = laligned ? x +  V_FontStringWidth(hud_fssmall, "AMMO") + 1 :
-                                      x - (V_FontStringWidth(hud_fssmall, "AMMO") + 1);
+   const int displayoffs = laligned ? x +  V_FontStringWidth(hud_fssmall, "AMMO") + 2 :
+                                      x - (V_FontStringWidth(hud_fssmall, "AMMO") + 2);
    if(laligned)
       V_FontWriteText(hud_fssmall, "AMMO", x, y, &vbscreen);
    else
@@ -278,6 +279,8 @@ void ModernHUD::DrawAmmo(int x, int y)
       else
          FontWriteTextRAlign(hud_fsmedium, tempstr.constPtr(), displayoffs, y, &vbscreen);
    }
+   else
+      V_DrawPatch(displayoffs, y, &vbscreen, nfs_inf);
 }
 
 extern patch_t *keys[NUMCARDS + 3];
@@ -287,7 +290,7 @@ extern patch_t *keys[NUMCARDS + 3];
 //
 void ModernHUD::DrawKeys(int x, int y)
 {
-   const int displayoffs = x + V_FontStringWidth(hud_fssmall, "KEYS") + 1;
+   const int displayoffs = x + V_FontStringWidth(hud_fssmall, "KEYS") + 2;
    V_FontWriteText(hud_fssmall, "KEYS", x, y, &vbscreen);
    for(int i = 0, xoffs = displayoffs; i < GameModeInfo->numHUDKeys; i++)
    {
@@ -359,10 +362,10 @@ void ModernHUD::Setup()
       SetupOverlay(ol_status, SCREENWIDTH - 3, SCREENHEIGHT - 24);
       SetupOverlay(ol_health, 3,  SCREENHEIGHT - 24);
       SetupOverlay(ol_armor,  3,  SCREENHEIGHT - 12);
-      SetupOverlay(ol_weap,   44, SCREENHEIGHT - 24);
-      SetupOverlay(ol_ammo,   44, SCREENHEIGHT - 16);
-      SetupOverlay(ol_key,    44, SCREENHEIGHT - 8);
-      SetupOverlay(ol_frag,   44, SCREENHEIGHT - 8);
+      SetupOverlay(ol_weap,   42, SCREENHEIGHT - 24);
+      SetupOverlay(ol_ammo,   42, SCREENHEIGHT - 16);
+      SetupOverlay(ol_key,    42, SCREENHEIGHT - 8);
+      SetupOverlay(ol_frag,   42, SCREENHEIGHT - 8);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style

@@ -360,7 +360,7 @@ powereffect RingOfInvincibility
 
 powereffect TomeOfPower
 {
-  duration 30
+  duration 40
   type     PowerWeaponLevel2
 
   -overridesself
@@ -415,7 +415,7 @@ artifact ArtiFly
 {
   amount         1
   maxamount      16
-  interhubamount 1
+  interhubamount 0 // The only one of its kind
 
   sortorder      100
   icon           ARTISOAR

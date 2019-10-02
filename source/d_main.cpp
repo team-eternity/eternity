@@ -123,8 +123,7 @@ bool nomusicparm;
 extern bool inhelpscreens;
 
 skill_t startskill;
-int     startepisode;
-int     startmap;
+startlevel_t d_startlevel;
 char    *startlevel;
 bool autostart;
 
@@ -605,7 +604,7 @@ static void D_Display()
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
-         
+
          if(automapactive)
          {
             AM_Drawer();
@@ -1464,8 +1463,7 @@ static void D_DoomInit()
 
    // jff 3/24/98 was sk_medium, just note not picked
    startskill = sk_none;
-   startepisode = 1;
-   startmap = 1;
+   d_startlevel = { 1, 1 };
    autostart = false;
 
    if((p = M_CheckParm("-skill")) && p < myargc - 1)
@@ -1476,8 +1474,8 @@ static void D_DoomInit()
 
    if((p = M_CheckParm("-episode")) && p < myargc - 1)
    {
-      startepisode = myargv[p+1][0]-'0';
-      startmap = 1;
+      d_startlevel.episode = myargv[p+1][0]-'0';
+      d_startlevel.map = 1;
       autostart = true;
    }
 
@@ -1514,16 +1512,23 @@ static void D_DoomInit()
    if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
        (p = M_CheckParm("-wart"))) && p < myargc - 1)
    {
-      // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-      if(GameModeInfo->flags & GIF_MAPXY)
+      char *endptr = nullptr;
+      strtol(myargv[p + 1], &endptr, 10);
+      if(*endptr) // if not a number, use map name
       {
-         startmap = atoi(myargv[p + 1]);
+         d_startlevel.mapname = myargv[p + 1];
+         autostart = true;
+      }
+      else if(GameModeInfo->flags & GIF_MAPXY)
+      {
+         // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
+         d_startlevel.map = atoi(myargv[p + 1]);
          autostart = true;
       }
       else if(p < myargc - 2)
       {
-         startepisode = atoi(myargv[++p]);
-         startmap = atoi(myargv[p + 1]);
+         d_startlevel.episode = atoi(myargv[++p]);
+         d_startlevel.map = atoi(myargv[p + 1]);
          autostart = true;
       }
    }
@@ -1911,7 +1916,8 @@ static void D_DoomInit()
    Bot::InitBots();
    PlayerObserver::initObservers();
 
-   startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
+   startlevel = estrdup(d_startlevel.mapname ? d_startlevel.mapname :
+                        G_GetNameForMap(d_startlevel.episode, d_startlevel.map));
 
    if(slot && ++slot < myargc)
    {
@@ -1929,7 +1935,11 @@ static void D_DoomInit()
          if(M_CheckParm("-vanilla") > 0)
             G_SetOldDemoOptions();
 
-         G_InitNewNum(startskill, startepisode, startmap);
+         if(d_startlevel.mapname)
+            G_InitNew(startskill, d_startlevel.mapname);
+         else
+            G_InitNewNum(startskill, d_startlevel.episode, d_startlevel.map);
+
          if(demorecording)
             G_BeginRecording();
       }

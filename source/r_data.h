@@ -111,7 +111,8 @@ struct texture_t
    byte       flatsize;
    
    texcol_t   **columns;     // SoM: width length list of columns
-   byte       *buffer;       // SoM: Linear buffer the texture occupies
+   byte       *bufferalloc;   // ioanch: allocate this one with a leading padding for safety
+   byte       *bufferdata;    // SoM: Linear buffer the texture occupies (ioanch: points to real data)
    
    // New texture system can put either textures or flats (or anything, really)
    // into a texture, so the old patches idea has been scrapped for 'graphics'

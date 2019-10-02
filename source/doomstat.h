@@ -173,8 +173,18 @@ extern  Language_t   language;
 
 // Defaults for menu, methinks.
 extern  skill_t startskill;
-extern  int     startepisode;
-extern  int     startmap;
+
+//
+// Startup structure to be able to warp to named map
+//
+struct startlevel_t
+{
+   int episode;
+   int map;
+   const char *mapname;
+};
+
+extern startlevel_t d_startlevel;
 
 extern  bool    autostart;
 

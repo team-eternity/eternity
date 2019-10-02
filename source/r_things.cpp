@@ -674,7 +674,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
    
    column.texheight = 0; // killough 11/98
 
-   const byte *texend = tex->buffer + tex->width * tex->height + 1;
+   const byte *texend = tex->bufferdata + tex->width * tex->height + 1;
 
    while(tcol)
    {
@@ -688,22 +688,27 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
       // killough 3/2/98, 3/27/98: Failsafe against overflow/crash:
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
-         column.source = tex->buffer + tcol->ptroff;
+         byte *localstart = tex->bufferdata + tcol->ptroff;
+         column.source = localstart;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *last = tex->buffer + tcol->ptroff + tcol->len;
+         byte *last = localstart + tcol->len;
          byte orig;
-         if(last < texend && last > tex->buffer)
+         if(last < texend && last > tex->bufferdata)
          {
             orig = *last;
             *last = last[-1];
          }
 
+         byte origstart = localstart[-1];
+         localstart[-1] = *localstart;
+
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
          colfunc();
-         if(last < texend && last > tex->buffer)
+         if(last < texend && last > tex->bufferdata)
             *last = orig;
+         localstart[-1] = origstart;
       }
 
       tcol = tcol->next;
@@ -1543,14 +1548,42 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
    // e6y: optimization
    if(drawsegs_xrange_count)
    {
+      
+
       drawsegs_xrange_t *dsx = drawsegs_xrange;
 
-      // drawsegs_xrange is sorted by ::x1
+      {
+         // ano (apr 2018) - we will binary search the
+         // presorted drawsegs_xrange
+         // in order to (hopefully) greatly reduce the
+         // # of segs we have to check
+         int lower = 0;
+         int upper = drawsegs_xrange_count;
+
+         while (upper - lower > 1)
+         {
+            int midpoint = (upper + lower) / 2;
+
+            if (drawsegs_xrange[midpoint].x2 < spr->x1)
+            {
+               lower = midpoint;
+            }
+            else
+            {
+               upper = midpoint;
+            }
+         } // while
+         dsx += lower;
+      } // end binary search
+
       // haleyjd: way faster to use a pointer here
       while((ds = dsx->user))
       {
          // determine if the drawseg obscures the sprite
-         if(dsx->x1 > spr->x2 || dsx->x2 < spr->x1)
+         // ano (apr 2018) -- previously this included a check for
+         // || dsx->x2 < spr->x1
+         // however due to the binary search we no longer need it
+         if(dsx->x1 > spr->x2)
          {
             ++dsx;
             continue;      // does not cover sprite
@@ -1591,7 +1624,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(clipbot[x] == CLIP_UNDEF)
+               if (clipbot[x] == CLIP_UNDEF || clipbot[x] > ds->sprbottomclip[x])
                   clipbot[x] = ds->sprbottomclip[x];
             }
          }
@@ -1601,7 +1634,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          {
             for(x = r1; x <= r2; x++)
             {
-               if(cliptop[x] == CLIP_UNDEF)
+               if(cliptop[x] == CLIP_UNDEF || cliptop[x] < ds->sprtopclip[x])
                   cliptop[x] = ds->sprtopclip[x];
             }
          }
@@ -1777,6 +1810,19 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 }
 
 //
+// R_DrawsegsXRangeCompare
+//
+// qsort callback to compare drawsegs_xrange_t by x2
+//
+static int R_DrawsegsXRangeCompare(const void *arga, const void *argb)
+{
+   drawsegs_xrange_t *arg1 = (drawsegs_xrange_t*)arga;
+   drawsegs_xrange_t *arg2 = (drawsegs_xrange_t*)argb;
+
+   return arg1->x2 - arg2->x2;
+}
+
+//
 // R_DrawPostBSP
 //
 // Draws the items in the Post-BSP stack.
@@ -1828,12 +1874,18 @@ void R_DrawPostBSP()
                      drawsegs_xrange_count++;
                   }
                }
+               
+               // ano (apr-2018) -- sort our drawsegs by x2 in order to later
+               // do a binary search on the list for speed
+               qsort(drawsegs_xrange, drawsegs_xrange_count, sizeof(drawsegs_xrange_t), R_DrawsegsXRangeCompare);
+
                // haleyjd: terminate with a NULL user for faster loop - adds ~3 FPS
                drawsegs_xrange[drawsegs_xrange_count].user = NULL;
             }
 
             ptop    = masked->ceilingclip;
             pbottom = masked->floorclip;
+
 
             for(int i = lastsprite - firstsprite; --i >= 0; )
                R_DrawSpriteInDSRange(vissprite_ptrs[i], firstds, lastds);         // killough

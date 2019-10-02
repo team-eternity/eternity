@@ -843,9 +843,6 @@
     <ClCompile Include="..\Source\Win32\i_fnames.cpp">
       <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\Win32\i_opndir.cpp">
-      <Filter>Source Files\Win32\Win32 Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\v_image.cpp">
       <Filter>Source Files\V_\V_ Source</Filter>
     </ClCompile>
@@ -1701,9 +1698,6 @@
       <Filter>Source Files\Mn_\Mn_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\Win32\i_fnames.h">
-      <Filter>Source Files\Win32\Win32 Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\Win32\i_opndir.h">
       <Filter>Source Files\Win32\Win32 Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\m_ctype.h">

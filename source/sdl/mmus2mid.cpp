@@ -698,6 +698,16 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
    return 0;
 }
 
+//
+// Frees all midi data allocated
+//
+void FreeMIDIData(MIDI *mididata)
+{
+   for(int i = 0; i < earrlen(mididata->track); ++i)
+      efree(mididata->track[i].data);
+   memset(mididata, 0, sizeof(*mididata));
+}
+
 //#ifdef STANDALONE /* this code unused by BOOM provided for future portability */
 //                  /* it also provides a MUS to MID file converter*/
 // proff: I moved this down, because I need MIDItoMidi
@@ -753,7 +763,7 @@ static void TWriteLength(UBYTE **midiptr, size_t length)
 // a buffer containing midi data, and a pointer to a length return.
 // Returns 0 if successful, MEMALLOC if a memory allocation error occurs
 //
-int MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen)
+int MIDIToMidi(const MIDI *mididata, UBYTE **mid, int *midlen)
 {
    size_t total;
    int i,ntrks;

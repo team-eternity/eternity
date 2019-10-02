@@ -63,6 +63,7 @@ struct playerclass_t
    fixed_t sidemove[2];
    fixed_t angleturn[3]; // + slow turn
    fixed_t lookspeed[2]; // haleyjd: look speeds (from zdoom)
+   fixed_t jumpspeed;
 
    // original speeds - before turbo is applied.
    fixed_t oforwardmove[2];

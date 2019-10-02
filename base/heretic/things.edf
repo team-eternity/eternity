@@ -3095,7 +3095,8 @@ thingtype CrossbowFX4 : Mobj, -1, 437
   cflags NOBLOCKMAP|LOGRAV
 
   //firstdecoratestate S_CRBOWFX4_1
-  states @"
+  states
+  @"
   Spawn:
     FX03 FG 8 bright
     stop
@@ -3107,7 +3108,8 @@ thingtype MaceShotProto
   cflags NOBLOCKMAP|MISSILE|DROPOFF|HERETICBOUNCES|THRUGHOST|NOTELEPORT
 
   //firstdecoratestate S_MACEFX1_1
-  states @"
+  states
+  @"
   Death:
     FX02 F 4 bright A_MaceBallImpact
     FX02 GHIJ 4 bright
@@ -3126,7 +3128,8 @@ thingtype MaceFX1 : MaceShotProto, -1, 438
   addflags   NOGRAVITY
 
   //firstdecoratestate S_MACEFX1_1
-  states @"
+  states
+  @"
   Spawn:
     FX02 AB 4 A_MacePL1Check
     loop
@@ -3143,7 +3146,8 @@ thingtype MaceFX2 : MaceShotProto, -1, 439
   addflags   LOGRAV
 
   //firstdecoratestate S_MACEFX2_1
-  states @"
+  states
+  @"
   Spawn:
     FX02 CD 4
     loop
@@ -3163,7 +3167,8 @@ thingtype MaceFX3 : MaceShotProto, -1, 440
   addflags   LOGRAV
 
   //firstdecoratestate S_MACEFX2_1
-  states @"
+  states
+  @"
   Spawn:
     FX02 AB 4
     loop
@@ -3177,10 +3182,12 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
   radius     8.0
   height     6.0
   damage     18
+  dmgspecial PoweredMaceBall
   remflags   NOTELEPORT
   addflags   LOGRAV|TELESTOMP
 
-  states @"
+  states
+  @"
   Spawn:
     FX02 E 99
     loop

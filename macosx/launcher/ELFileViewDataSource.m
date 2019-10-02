@@ -58,7 +58,7 @@
 //
 -(id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
 {
-	return [array objectAtIndex:rowIndex];
+	return [[array objectAtIndex:rowIndex] path];
 }
 
 //
@@ -66,14 +66,14 @@
 //
 // Allow renaming -file entries
 //
--(void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
-{
-   // set value to pwadArray element (currently only offline files are loaded
-   NSURL *URLCandidate = [NSURL fileURLWithPath:[anObject stringByExpandingTildeInPath]];
-   
-   [array replaceObjectAtIndex:rowIndex withObject:URLCandidate];
-   [mOwner updateParameters:aTableView];
-}
+//-(void)tableView:(NSTableView *)aTableView setObjectValue:(id)anObject forTableColumn:(NSTableColumn *)aTableColumn row:(NSInteger)rowIndex
+//{
+//   // set value to pwadArray element (currently only offline files are loaded
+//   NSURL *URLCandidate = [NSURL fileURLWithPath:[anObject stringByExpandingTildeInPath]];
+//
+//   [array replaceObjectAtIndex:rowIndex withObject:URLCandidate];
+//   [mOwner updateParameters:aTableView];
+//}
 
 @end
 

@@ -31,10 +31,12 @@
 #include "SDL_mixer.h"
 
 #include "../z_zone.h"
+#include "../d_main.h"
 #include "../w_wad.h"
 #include "../sounds.h"
 #include "../i_sound.h"
 #include "../psnprntf.h"
+#include "../m_compare.h"
 
 //=============================================================================
 //
@@ -54,11 +56,9 @@ typedef void (*pcsound_callback_func)(int *duration, int *frequency);
 
 static pcsound_callback_func callback;
 
-// Output sound format
-
-static int mixing_freq;
-static Uint16 mixing_format;
-static int mixing_channels;
+// Externs
+extern SDL_AudioSpec audio_spec;
+extern bool float_samples;
 
 // Currently playing sound
 // current_remaining is the number of remaining samples that must be played
@@ -76,26 +76,25 @@ static void PCSound_SetSampleRate(int rate)
     pcsound_sample_rate = rate;
 }
 
-
-//
-// PCSound_Mix_Callback
 //
 // Mixer function that does the PC speaker emulation
 //
+template<typename T>
 static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
 {
-   Sint16 *leftptr;
-   Sint16 *rightptr;
+   static constexpr int SAMPLESIZE = sizeof(T);
+   T *leftptr;
+   T *rightptr;
    Sint16 this_value;
    int oldfreq;
    int i;
    int nsamples;
 
    // Number of samples is quadrupled, because of 16-bit and stereo
-   nsamples = len / 4;
+   nsamples = len / (audio_spec.channels * SAMPLESIZE);
 
-   leftptr = (Sint16 *) stream;
-   rightptr = ((Sint16 *) stream) + 1;
+   leftptr  = reinterpret_cast<T *>(stream);
+   rightptr = reinterpret_cast<T *>(stream) + 1;
 
    // Fill the output buffer
    for(i = 0; i < nsamples; i++)
@@ -118,7 +117,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
             phase_offset = (phase_offset * oldfreq) / current_freq;
          }
 
-         current_remaining = (current_remaining * mixing_freq) / 1000;
+         current_remaining = (current_remaining * audio_spec.freq) / 1000;
       }
 
       // Set the value for this sample.
@@ -135,7 +134,7 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
          // sound.  Multiply by 2 so that frac % 2 will give 0 or 1
          // depending on whether we are at a peak or trough.
 
-         frac = (phase_offset * current_freq * 2) / mixing_freq;
+         frac = (phase_offset * current_freq * 2) / audio_spec.freq;
 
          if((frac % 2) == 0)
             this_value =  SQUARE_WAVE_AMP;
@@ -148,11 +147,25 @@ static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
       --current_remaining;
 
       // Use the same value for the left and right channels.
-      *leftptr  += this_value;
-      *rightptr += this_value;
+      if constexpr(std::is_same_v<T, Sint16>)
+      {
+         const Sint32 dl = static_cast<Sint32>(*leftptr)  + static_cast<Sint32>(this_value);
+         const Sint32 dr = static_cast<Sint32>(*rightptr) + static_cast<Sint32>(this_value);
+         *leftptr  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
+         *rightptr = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
+      }
+      else if constexpr(std::is_same_v<T, float>)
+      {
+         *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
+         *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
+         *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
+         *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
+      }
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "PCSound_Mix_Callback called with incompatible template parameter");
 
-      leftptr  += 2;
-      rightptr += 2;
+      leftptr  += audio_spec.channels;
+      rightptr += audio_spec.channels;
    }
 }
 
@@ -162,6 +175,8 @@ static void PCSound_SDL_Shutdown()
    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
+extern bool I_GenSDLAudioSpec(int, SDL_AudioFormat, int, int);
+
 static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 {
    if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
@@ -170,7 +185,15 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       return 0;
    }
 
-   if(Mix_OpenAudio(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024) < 0)
+   // Figure out mix buffer sizes
+   if(!I_GenSDLAudioSpec(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024))
+   {
+      printf("Couldn't determine sound mixing buffer size.\n");
+      nomusicparm = true;
+      return 0;
+   }
+
+   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) < 0)
    {
       fprintf(stderr, "Error initialising SDL_mixer: %s\n", Mix_GetError());
 
@@ -178,31 +201,17 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       return 0;
    }
 
+   float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
+
    SDL_PauseAudio(0);
 
-    // Get the mixer frequency, format and number of channels.
+   callback          = callback_func;
+   current_freq      = 0;
+   current_remaining = 0;
 
-    Mix_QuerySpec(&mixing_freq, &mixing_format, &mixing_channels);
+   Mix_SetPostMix(float_samples ? PCSound_Mix_Callback<float> : PCSound_Mix_Callback<Sint16>, nullptr);
 
-    // Only supports AUDIO_S16SYS
-
-    if (mixing_format != AUDIO_S16SYS || mixing_channels != 2)
-    {
-        fprintf(stderr,
-                "PCSound_SDL only supports native signed 16-bit LSB, "
-                "stereo format!\n");
-
-        PCSound_SDL_Shutdown();
-        return 0;
-    }
-
-    callback = callback_func;
-    current_freq = 0;
-    current_remaining = 0;
-
-    Mix_SetPostMix(PCSound_Mix_Callback, NULL);
-
-    return 1;
+   return 1;
 }
 
 

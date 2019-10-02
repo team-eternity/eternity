@@ -1014,7 +1014,7 @@ long qstring::toLong(char **endptr, int radix) const
 //
 // Calls strtod on the qstring.
 
-double qstring::toDouble(char **endptr)
+double qstring::toDouble(char **endptr) const
 {
    return strtod(buffer, endptr);
 }
@@ -1231,7 +1231,7 @@ qstring &qstring::removeFileSpec()
 // This one is not limited to 8 character file names, and will include any
 // file extension, however, so it is not strictly equivalent.
 //
-void qstring::extractFileBase(qstring &dest)
+void qstring::extractFileBase(qstring &dest) const
 {
    const char *src = buffer + index - 1;
    dest = "";

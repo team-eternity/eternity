@@ -48,6 +48,7 @@
 #include "e_states.h"
 #include "e_weapons.h"
 #include "g_game.h"
+#include "hu_stuff.h"
 #include "metaapi.h"
 #include "m_argv.h"
 #include "m_cheat.h"
@@ -456,11 +457,7 @@ static void cheat_clev(const void *arg)
 // killough 2/7/98: simplified using doom_printf and made output more user-friendly
 static void cheat_mypos(const void *arg)
 {
-   player_printf(plyr, "Position (%d,%d,%d)\tAngle %-.0f", 
-                 plyr->mo->x / FRACUNIT,
-                 plyr->mo->y / FRACUNIT,
-                 plyr->mo->z / FRACUNIT,
-                 (double)plyr->mo->angle / ANGLE_1);
+   hu_alwaysshowcoords = !hu_alwaysshowcoords;
 }
 
 // compatibility cheat
@@ -857,7 +854,7 @@ static void cheat_rambo(const void *arg)
 
 #define CHEAT_ARGS_MAX 8  /* Maximum number of args at end of cheats */
 
-void M_DoCheat(char *s)
+void M_DoCheat(const char *s)
 {
    while(*s)
    {

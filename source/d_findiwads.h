@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,15 +17,12 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//----------------------------------------------------------------------------
+// Purpose: Code for automated location of users' IWAD files and important
+//  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used
+//  under terms of the GPLv2.
 //
-// Code for automated location of users' IWAD files and important PWADs.
-// Some code is derived from Chocolate Doom, by Simon Howard, used under
-// terms of the GPLv2.
+// Authors: James Haley
 //
-// James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef D_FINDIWADS_H__
 #define D_FINDIWADS_H__

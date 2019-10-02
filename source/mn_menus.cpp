@@ -1661,7 +1661,7 @@ static menuitem_t mn_options_items[] =
    {it_title,  "Options",               NULL,             "M_OPTION"},
    {it_gap},
    {it_info,   "Input/Output"},
-   {it_runcmd, "Key bindings",          "mn_movekeys" },
+   {it_runcmd, "Key bindings",          "mn_bindings" },
    {it_runcmd, "Mouse / Gamepad",       "mn_mouse"    },
    {it_runcmd, "Video Options",         "mn_video"    },
    {it_runcmd, "Sound Options",         "mn_sound"    },
@@ -2034,13 +2034,13 @@ static menuitem_t mn_video_items[] =
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
    {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
-   {it_slider,       "Gamma correction",        "gamma"                },   
+   {it_slider,       "Gamma correction",        "gamma"                },
    {it_gap},
    {it_info,         "Rendering"                                       },
    {it_slider,       "Screen size",             "screensize"           },
    {it_toggle,       "HOM detector flashes",    "r_homflash"           },
    {it_toggle,       "Translucency",            "r_trans"              },
-   {it_variable,     "Translucency percentage", "r_tranpct"            },
+   {it_variable,     "Opacity percentage",      "r_tranpct"            },
    {it_end}
 };
 
@@ -2260,8 +2260,12 @@ static menuitem_t mn_sound_items[] =
    {it_info,       "Setup"},
    {it_toggle,     "Sound driver",                 "snd_card"},
    {it_toggle,     "Music driver",                 "mus_card"},
+   {it_toggle,     "MIDI device",                  "snd_mididevice"},
    {it_toggle,     "Max sound channels",           "snd_channels"},
    {it_toggle,     "Force reverse stereo",         "s_flippan"},
+   {it_toggle,     "OPL3 Emulator",                "snd_oplemulator"},
+   {it_toggle,     "OPL3 Chip Count",              "snd_numchips"},
+   {it_runcmd,     "Set OPL3 Bank...",             "snd_selectbank"},
    {it_gap},
    {it_info,       "Misc"},
    {it_toggle,     "Precache sounds",              "s_precache"},
@@ -2762,13 +2766,14 @@ static menuitem_t mn_hud_items[] =
    {it_title,      "HUD Settings",         NULL,      "m_hud"},
    {it_gap},
    {it_info,       "Message Options"},
-   {it_toggle,     "Messages",                     "hu_messages"     },
-   {it_toggle,     "Message color",                "hu_messagecolor" },
-   {it_toggle,     "Messages scroll",              "hu_messagescroll"},
-   {it_toggle,     "Message lines",                "hu_messagelines" },
-   {it_variable,   "Message time (ms)",            "hu_messagetime"  },
-   {it_toggle,     "Obituaries",                   "hu_obituaries"   },
-   {it_toggle,     "Obituary color",               "hu_obitcolor"    },
+   {it_toggle,     "Messages",                     "hu_messages"         },
+   {it_toggle,     "Message alignment",            "hu_messagealignment" },
+   {it_toggle,     "Message color",                "hu_messagecolor"     },
+   {it_toggle,     "Messages scroll",              "hu_messagescroll"    },
+   {it_toggle,     "Message lines",                "hu_messagelines"     },
+   {it_variable,   "Message time (ms)",            "hu_messagetime"      },
+   {it_toggle,     "Obituaries",                   "hu_obituaries"       },
+   {it_toggle,     "Obituary color",               "hu_obitcolor"        },
    {it_gap},
    {it_info,       "HUD Overlay options"},
    {it_toggle,     "Overlay type",                 "hu_overlayid"   },
@@ -3326,6 +3331,43 @@ static menu_t *mn_binding_contentpages[] =
    NULL
 };
 
+static menuitem_t menu_bindings_items[] =
+{
+   {it_title,  "Key Bindings",              nullptr, "M_KEYBND"},
+   {it_gap},
+   {it_info,   "Gameplay"},
+   {it_runcmd, "Basic Movement",            "mn_movekeys"    },
+   {it_runcmd, "Advanced Movement",         "mn_advkeys"     },
+   {it_runcmd, "Weapons",                   "mn_weaponkeys"  },
+   {it_runcmd, "Inventory and Environment", "mn_envkeys"     },
+   {it_gap},
+   {it_info,   "System"},
+   {it_runcmd, "Functions",                 "mn_gamefuncs"   },
+   {it_runcmd, "Menus",                     "mn_menukeys"    },
+   {it_runcmd, "Maps",                      "mn_automapkeys" },
+   {it_runcmd, "Console",                   "mn_consolekeys" },
+   {it_end}
+};
+
+menu_t menu_bindings =
+{
+   menu_bindings_items,
+   nullptr,
+   nullptr,                        // next page
+   &menu_bindings,                 // rootpage
+   160, 15,                        // x,y offset
+   3,                              // starting item
+   mf_background|mf_centeraligned, // full screen and centred
+   nullptr,                        // no drawer
+   mn_binding_contentnames,        // TOC stuff
+   mn_binding_contentpages,
+};
+
+CONSOLE_COMMAND(mn_bindings, 0)
+{
+    MN_StartMenu(&menu_bindings);
+}
+
 //------------------------------------------------------------------------
 //
 // Key Bindings: basic movement keys
@@ -3333,39 +3375,41 @@ static menu_t *mn_binding_contentpages[] =
 
 static menuitem_t mn_movekeys_items[] =
 {
-   {it_title,        "Key Bindings",   NULL, "M_KEYBND"},
+   {it_title,        "Basic Movement"},
    {it_gap},
-   {it_info,         "Basic Movement", NULL, NULL, MENUITEM_CENTERED},
-   {it_gap},
-   {it_binding,      "Move forward",    "forward"},
-   {it_binding,      "Move backward",   "backward"},
-   {it_binding,      "Run",             "speed"},
-   {it_binding,      "Turn left",       "left"},
-   {it_binding,      "Turn right",      "right"},
-   {it_binding,      "Strafe on",       "strafe"},
-   {it_binding,      "Strafe left",     "moveleft"},
+   {it_binding,      "Move forward",    "forward"  },
+   {it_binding,      "Move backward",   "backward" },
+   {it_binding,      "Run",             "speed"    },
+   {it_binding,      "Turn left",       "left"     },
+   {it_binding,      "Turn right",      "right"    },
+   {it_binding,      "Strafe on",       "strafe"   },
+   {it_binding,      "Strafe left",     "moveleft" },
    {it_binding,      "Strafe right",    "moveright"},
-   {it_binding,      "180 degree turn", "flip"},
-   {it_binding,      "Use",             "use"},
-   {it_binding,      "Attack/fire",     "attack"},
+   {it_binding,      "180 degree turn", "flip"     },
+   {it_binding,      "Use",             "use"      },
+   {it_binding,      "Attack/fire",     "attack"   },
    {it_binding,      "Alt-attack/fire", "altattack"},
-   {it_binding,      "Toggle autorun",  "autorun"},
+   {it_binding,      "Toggle autorun",  "autorun"  },
    {it_end}
 };
 
 static menuitem_t mn_advkeys_items[] =
 {
-   {it_title,        "Key Bindings",      NULL, "M_KEYBND"},
+   {it_title,        "Advanced Movement"},
    {it_gap},
-   {it_info,         "Advanced Movement", NULL, NULL, MENUITEM_CENTERED},
-   {it_gap},
-   {it_binding,      "Jump",            "jump"},
-   {it_binding,      "MLook on",        "mlook"},
-   {it_binding,      "Look up",         "lookup"},
-   {it_binding,      "Look down",       "lookdown"},
-   {it_binding,      "Center view",     "center"},
-   {it_binding,      "Fly up",          "flyup"},
-   {it_binding,      "Fly down",        "flydown"},
+   {it_binding,      "Weapon Reload",   "reload"   },
+   {it_binding,      "Weapon Zoom",     "zoom"     },
+   {it_binding,      "Weapon State 1",  "user1"    },
+   {it_binding,      "Weapon State 2",  "user2"    },
+   {it_binding,      "Weapon State 3",  "user3"    },
+   {it_binding,      "Weapon State 4",  "user4"    },
+   {it_binding,      "Jump",            "jump"     },
+   {it_binding,      "MLook on",        "mlook"    },
+   {it_binding,      "Look up",         "lookup"   },
+   {it_binding,      "Look down",       "lookdown" },
+   {it_binding,      "Center view",     "center"   },
+   {it_binding,      "Fly up",          "flyup"    },
+   {it_binding,      "Fly down",        "flydown"  },
    {it_binding,      "Land",            "flycenter"},
    {it_end}
 };
@@ -3375,9 +3419,9 @@ menu_t menu_movekeys =
    mn_movekeys_items,
    NULL,                    // previous page
    &menu_advkeys,           // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
@@ -3389,9 +3433,9 @@ menu_t menu_advkeys =
    mn_advkeys_items,
    &menu_movekeys,          // previous page
    &menu_weaponbindings,    // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
@@ -3415,9 +3459,7 @@ CONSOLE_COMMAND(mn_advkeys, 0)
 
 static menuitem_t mn_weaponbindings_items[] =
 {
-   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
-   {it_gap},
-   {it_info,    "Weapon Keys",  NULL, NULL, MENUITEM_CENTERED},
+   {it_title,   "Weapon Keys"},
    {it_gap},
    {it_binding, "Weapon 1",             "weapon1"},
    {it_binding, "Weapon 2",             "weapon2"},
@@ -3439,9 +3481,9 @@ menu_t menu_weaponbindings =
    mn_weaponbindings_items,
    &menu_advkeys,           // previous page
    &menu_envinvbindings,       // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
@@ -3462,23 +3504,23 @@ CONSOLE_COMMAND(mn_weaponkeys, 0)
 
 static menuitem_t mn_envinvbindings_items[] =
 {
-   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
+   {it_title,   "Inventory/Environment"},
    {it_gap},
-   {it_info,    "Environment",  NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Inventory Bindings", nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Screen size up",       "screensize +"},
-   {it_binding, "Screen size down",     "screensize -"},
-   {it_binding, "Take screenshot",      "screenshot"},
-   {it_binding, "Spectate prev",        "spectate_prev"},
-   {it_binding, "Spectate next",        "spectate_next"},
-   {it_binding, "Spectate self",        "spectate_self"},
+   {it_binding, "Inventory left",     "inventory_left"  },
+   {it_binding, "Inventory right",    "inventory_right" },
+   {it_binding, "Use inventory",      "inventory_use"   },
+   {it_binding, "Drop inventory",     "inventory_drop"  },
    {it_gap},
-   {it_info,    "Inventory Bindings", NULL, NULL, MENUITEM_CENTERED},
+   {it_info,    "Environment",        nullptr, nullptr, MENUITEM_CENTERED},
    {it_gap},
-   {it_binding, "Inventory left",  "inventory_left"},
-   {it_binding, "Inventory right", "inventory_right"},
-   {it_binding, "Use inventory",   "inventory_use"},
-   {it_binding, "Drop inventory",  "inventory_drop"},
+   {it_binding, "Screen size up",     "screensize +"    },
+   {it_binding, "Screen size down",   "screensize -"    },
+   {it_binding, "Take screenshot",    "screenshot"      },
+   {it_binding, "Spectate prev",      "spectate_prev"   },
+   {it_binding, "Spectate next",      "spectate_next"   },
+   {it_binding, "Spectate self",      "spectate_self"   },
    {it_end}
 };
 
@@ -3487,7 +3529,7 @@ menu_t menu_envinvbindings =
    mn_envinvbindings_items,
    &menu_weaponbindings,    // previous page
    &menu_funcbindings,      // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
    4,
    mf_background,           // draw background: not a skull menu
@@ -3508,9 +3550,7 @@ CONSOLE_COMMAND(mn_envkeys, 0)
 
 static menuitem_t mn_function_items[] =
 {
-   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
-   {it_gap},
-   {it_info,    "Game Functions",  NULL, NULL, MENUITEM_CENTERED},
+   {it_title,   "Game Functions"},
    {it_gap},
    {it_binding, "Save game",            "mn_savegame"}, 
    {it_binding, "Load game",            "mn_loadgame"},
@@ -3532,9 +3572,9 @@ menu_t menu_funcbindings =
    mn_function_items,
    &menu_envinvbindings,       // previous page
    &menu_menukeys,          // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
@@ -3553,9 +3593,7 @@ CONSOLE_COMMAND(mn_gamefuncs, 0)
 
 static menuitem_t mn_menukeys_items[] =
 {
-   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
-   {it_gap},
-   {it_info,    "Menu Keys", NULL, NULL, MENUITEM_CENTERED},
+   {it_title,   "Menu Keys"},
    {it_gap},
    {it_binding, "Toggle menus",         "menu_toggle"},
    {it_binding, "Previous menu",        "menu_previous"},
@@ -3577,9 +3615,9 @@ menu_t menu_menukeys =
    mn_menukeys_items,
    &menu_funcbindings,      // previous page
    &menu_automapkeys,       // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
@@ -3598,9 +3636,7 @@ CONSOLE_COMMAND(mn_menukeys, 0)
 
 static menuitem_t mn_automapkeys_items[] =
 {
-   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
-   {it_gap},
-   {it_info,    "Automap",      NULL, NULL, MENUITEM_CENTERED},
+   {it_title,   "Automap"},
    {it_gap},
    {it_binding, "Toggle map",           "map_toggle"},
    {it_binding, "Move up",              "map_up"},
@@ -3622,9 +3658,9 @@ menu_t menu_automapkeys =
    mn_automapkeys_items,
    &menu_menukeys,          // previous page
    &menu_consolekeys,       // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
@@ -3643,9 +3679,7 @@ CONSOLE_COMMAND(mn_automapkeys, 0)
 
 static menuitem_t mn_consolekeys_items[] =
 {
-   {it_title,   "Key Bindings", NULL, "M_KEYBND"},
-   {it_gap},
-   {it_info,    "Console",      NULL, NULL, MENUITEM_CENTERED},
+   {it_title,   "Console"},
    {it_gap},
    {it_binding, "Toggle",               "console_toggle"},
    {it_binding, "Enter command",        "console_enter"},
@@ -3663,9 +3697,9 @@ menu_t menu_consolekeys =
    mn_consolekeys_items,
    &menu_automapkeys,       // previous page
    NULL,                    // next page
-   &menu_movekeys,          // rootpage
+   nullptr,                 // rootpage
    150, 15,                 // x,y offsets
-   4,
+   2,
    mf_background,           // draw background: not a skull menu
    NULL,                    // no drawer
    mn_binding_contentnames, // table of contents arrays
