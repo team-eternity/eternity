@@ -780,41 +780,32 @@ static const char *const userdirs[] =
 //
 static int D_CheckMiscellaneousPath(const qstring &qpath)
 {
-	int ret = -1;
-	struct stat sbuf;
-	qstring str;
-	const char *path;
+   int ret = -1;
+   qstring str;
+   fs::directory_entry path;
 
-	str = qpath;
+   str = qpath;
 
-	// Rub out any ending slashes; stat does not like them.
-	str.rstrip('\\');
-	str.rstrip('/');
+   // Rub out any ending slashes; stat does not like them.
+   str.rstrip('\\');
+   str.rstrip('/');
 
-	path = str.constPtr();
+   path = fs::directory_entry(str.constPtr());
 
-	if (!stat(path, &sbuf)) // check for existence
-	{
-		if (S_ISDIR(sbuf.st_mode)) // check that it's a directory
-		{
-			DIR *dir;
-//			int score = 0;
+   if(path.exists()) // check for existence
+   {
+      if(path.is_directory()) // check that it's a directory
+      {
+//         int score = 0;
+         ret = BASE_ISGOOD;    // Got it.
+      }
+      else
+         ret = BASE_NOTDIR; // S_ISDIR failed
+   }
+   else
+      ret = BASE_NOTEXIST; // stat failed
 
-			if ((dir = opendir(path)))
-			{
-				closedir(dir);
-				ret = BASE_ISGOOD;    // Got it.	
-			}
-			else
-				ret = BASE_CANTOPEN; // opendir failed
-		}
-		else
-			ret = BASE_NOTDIR; // S_ISDIR failed
-	}
-	else
-		ret = BASE_NOTEXIST; // stat failed
-
-	return ret;
+   return ret;
 }
 
 //
