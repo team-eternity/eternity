@@ -3294,6 +3294,8 @@ void G_InitNew(skill_t skill, const char *name)
          playeringame[2] = true;
       if(netbot >= 3)
          playeringame[3] = true;
+      if(netbot >= 4)
+         bots[0].active = true;
       netgame = true;
    }
 

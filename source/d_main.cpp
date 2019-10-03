@@ -1726,6 +1726,8 @@ static void D_DoomInit()
             playeringame[2] = true;
          if(netbot >= 3)
             playeringame[3] = true;
+         if(netbot >= 4)
+            bots[0].active = true;
          netgame = true;
       }
       GameType = DefaultGameType = gt_coop;
