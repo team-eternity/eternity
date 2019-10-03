@@ -556,6 +556,23 @@ bool Bot::checkItemType(const Mobj *special) const
 }
 
 //
+// Check if other bots already found the same goal
+//
+bool Bot::otherBotsHaveGoal(const char *key, v2fixed_t coord) const
+{
+   if(m_searchstage > SearchStage_PitItems)
+      return false;
+   for(Bot &bot : bots)
+   {
+      if(&bot == this || !bot.active)
+         continue;
+      if(bot.goalTable.getV2Fixed(key, v2fixed_t{ D_MININT, D_MININT }) == coord)
+         return true;
+   }
+   return false;
+}
+
+//
 // Returns true if there's an object of interest (item, switch or anything else
 // which can be a goal) in given subsector. Outputs the object's exact
 // coordinates.
@@ -582,13 +599,13 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
     if(self.m_searchstage >= SearchStage_ExitNormal)
     {
        const sector_t &floorsector = *ss.msector->getFloorSector();
-       if(floorsector.damageflags & SDMG_EXITLEVEL)
+       auto goaltag = v2fixed_t{(int)(&floorsector - ::sectors), 0};
+       if(floorsector.damageflags & SDMG_EXITLEVEL &&
+          !self.otherBotsHaveGoal(BOT_FLOORSECTOR, goaltag))
        {
           coord.kind = BotPathEnd::KindCoord;
           coord.coord = ss.mid;
-          self.goalTable.setV2Fixed(BOT_FLOORSECTOR,
-                                    v2fixed_t{(int)(&floorsector - ::sectors),
-                                       0});
+          self.goalTable.setV2Fixed(BOT_FLOORSECTOR, goaltag);
           return true;
        }
     }
@@ -610,13 +627,14 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         }
         if (item->flags & MF_SPECIAL)
         {
-           if(self.checkItemType(item))
+           auto goaltag = B_CoordXY(*item);
+           if(self.checkItemType(item) && !self.otherBotsHaveGoal(BOT_PICKUP, goaltag))
            {
               if (self.m_deepSearchMode == DeepNormal)
               {
                  coord.kind = BotPathEnd::KindCoord;
-                 coord.coord = B_CoordXY(*item);
-                 self.goalTable.setV2Fixed(BOT_PICKUP, coord.coord);
+                 coord.coord = goaltag;
+                 self.goalTable.setV2Fixed(BOT_PICKUP, goaltag);
               }
               return self.checkDeadEndTrap(ss);
            }
@@ -701,15 +719,18 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
             }
             //return false;
         }
-        else if (shouldUseSpecial(line, ss))
+        else
         {
-            coord.kind = BotPathEnd::KindWalkLine;
-            coord.walkLine = &line;
-            v2fixed_t crd = B_CoordXY(*line.v1);
-            //crd.x += self.random.range(-16, 16) * FRACUNIT;
-            //crd.y += self.random.range(-16, 16) * FRACUNIT;
-            goalTable.setV2Fixed(BOT_WALKTRIG,crd);
-            return true;
+           auto goaltag = B_CoordXY(*line.v1);
+           if (shouldUseSpecial(line, ss) && !otherBotsHaveGoal(BOT_WALKTRIG, goaltag))
+           {
+               coord.kind = BotPathEnd::KindWalkLine;
+               coord.walkLine = &line;
+               //crd.x += self.random.range(-16, 16) * FRACUNIT;
+               //crd.y += self.random.range(-16, 16) * FRACUNIT;
+               goalTable.setV2Fixed(BOT_WALKTRIG,goaltag);
+               return true;
+           }
         }
     }
     return false;

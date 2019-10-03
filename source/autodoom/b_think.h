@@ -163,6 +163,7 @@ class Bot : public ZoneObject
    bool checkDeadEndTrap(const BSubsec& targss);
    bool shouldUseSpecial(const line_t& line, const BSubsec& liness);
    bool checkItemType(const Mobj *special) const;
+   bool otherBotsHaveGoal(const char *key, v2fixed_t coord) const;
    static bool objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v);
    bool handleLineGoal(const BSubsec& ss, BotPathEnd& coord, const line_t& line);
    static PathResult reachableItem(const BSubsec& ss, void* v);
