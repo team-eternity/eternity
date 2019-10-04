@@ -134,19 +134,6 @@ struct LineEq
 #define B_Frac2Int(x) ((x)>>FRACBITS)
 
 //
-// B_MakeV2Fixed
-//
-// Returns a v2fixed_t value
-//
-inline static v2fixed_t B_MakeV2Fixed(fixed_t x, fixed_t y)
-{
-   v2fixed_t ret;
-   ret.x = x;
-   ret.y = y;
-   return ret;
-}
-
-//
 // operator == on v2fixed_t
 //
 inline static bool operator == (const v2fixed_t &v1, const v2fixed_t &v2)

@@ -163,7 +163,7 @@ bool Bot::goalAchieved()
    
    while ((metaob = goalEvents.getNextTypeEx<MetaV2Fixed>(nullptr)))
    {
-      goalcoord = goalTable.getV2Fixed(metaob->getKey(), B_MakeV2Fixed(D_MAXINT, D_MAXINT));
+      goalcoord = goalTable.getV2Fixed(metaob->getKey(), { D_MAXINT, D_MAXINT });
 
       if(goalcoord == metaob->getValue())
       {

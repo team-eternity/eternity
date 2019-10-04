@@ -259,16 +259,16 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
    // got them
    if (imin1 >= 0)
    {
-      splitcoll[imin1].add(B_MakeV2Fixed(fx1, fy1));
+      splitcoll[imin1].add({ fx1, fy1 });
    }
    if (imin2 >= 0)
    {
-      splitcoll[imin2].add(B_MakeV2Fixed(fx2, fy2));
+      splitcoll[imin2].add({ fx2, fy2 });
    }
    
    PODCollection<v2fixed_t> &sle = splitcoll.addNew();
-   sle.add(B_MakeV2Fixed(fx1, fy1));
-   sle.add(B_MakeV2Fixed(fx2, fy2));
+   sle.add({ fx1, fy1 });
+   sle.add({ fx2, fy2 });
    
    linestack.add(MakeIndLineEq((int)splitcoll.getLength() - 1, le));
    recursiveGetLines(nodes[nodenum].children[0]);
