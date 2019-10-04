@@ -58,7 +58,6 @@ BotMap *botMap;
 bool BotMap::demoPlayingFlag;
 
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
-enum { SUBSEC_GRID_STEP = 64 * FRACUNIT };
 
 static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP09";
 

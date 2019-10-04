@@ -134,14 +134,6 @@ struct LineEq
 #define B_Frac2Int(x) ((x)>>FRACBITS)
 
 //
-// operator == on v2fixed_t
-//
-inline static bool operator == (const v2fixed_t &v1, const v2fixed_t &v2)
-{
-   return v1.x == v2.x && v1.y == v2.y;
-}
-
-//
 // B_Sign
 //
 // Utility signum function
