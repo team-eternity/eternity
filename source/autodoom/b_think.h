@@ -59,11 +59,11 @@ class Bot : public ZoneObject
 {
 //   friend void AM_drawNodeLines();
    
-   player_t *pl; // the controlled player. He'll likely receive the tic
+   player_t *pl = nullptr; // the controlled player. He'll likely receive the tic
                      // commands
-   ticcmd_t *cmd;    // my commands to output
-   const BSubsec *ss;  // subsector reference
-   const BSubsec* m_lastPathSS;  // last subsector when on path
+   ticcmd_t *cmd = nullptr;    // my commands to output
+   const BSubsec *ss = nullptr;  // subsector reference
+   const BSubsec* m_lastPathSS = nullptr;  // last subsector when on path
    std::unordered_set<const BSubsec*> m_dropSS;
 
    MetaTable goalTable;  // objectives to get (typically one object)
@@ -79,35 +79,34 @@ class Bot : public ZoneObject
    };
    
    RandomGenerator          random;       // random generator for bot
-   int                      m_straferunstate;
-   int m_combatStrafeState; // -1 or 1
+   int                      m_straferunstate = 0;
+   int m_combatStrafeState = -1; // -1 or 1
    PathFinder               m_finder;
 
    friend void AM_drawBotPath();    // let the automap have access to the path here
    BotPath                  m_path;
-   bool                     m_runfast;
-   bool                     m_hasPath;
+   bool                     m_runfast = false;
+   bool                     m_hasPath = false;
    v2fixed_t                m_realVelocity; // real momentum, i.e. difference from last tic
    v2fixed_t                m_lastPosition;
 
-   DeepSearch               m_deepSearchMode;
+   DeepSearch               m_deepSearchMode = DeepNormal;
    std::unordered_set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
-   const BSubsec*           m_deepRepeat;
-   bool                     m_justGotLost;
-   bool                     m_intoSwitch;
-   int                      m_goalTimer;
-   const Mobj*              m_currentTargetMobj;
-   int                     m_exitDelay;
+   const BSubsec*           m_deepRepeat = nullptr;
+   bool                     m_justGotLost = false;
+   bool                     m_intoSwitch = false;
+   const Mobj*              m_currentTargetMobj = nullptr;
+   int                     m_exitDelay = 0;
 
    // Chat time keepers
-   int                      m_lastHelpCry;
-   int                     m_lastExitMessage;
-   int                     m_lastDunnoMessage;
+   int                      m_lastHelpCry = 0;
+   int                     m_lastExitMessage = 0;
+   int                     m_lastDunnoMessage = 0;
    
    // internal states
-   unsigned prevCtr;
-   unsigned m_searchstage;
+   unsigned prevCtr = 0;
+   unsigned m_searchstage = 0;
 
    struct Target
    {
@@ -174,36 +173,14 @@ class Bot : public ZoneObject
    
 public:
    
-   bool active;      // whether active (Can be turned off)
-   int justPunched;
+   bool active = true;      // whether active (Can be turned off)
+   int justPunched = 0;
    
    //
    // Constructor
    //
     Bot() : ZoneObject(),
-   pl(nullptr),
-   cmd(nullptr),
-   ss(nullptr),
-   m_lastPathSS(nullptr),
-   m_straferunstate(0),
-   m_combatStrafeState(-1),
-   m_finder(nullptr),
-   m_runfast(false),
-   m_hasPath(false),
-   m_deepSearchMode(DeepNormal),
-   m_deepRepeat(nullptr),
-   m_justGotLost(false),
-   m_intoSwitch(false),
-   m_goalTimer(0),
-   m_currentTargetMobj(nullptr),
-   m_exitDelay(0),
-   m_lastHelpCry(0),
-   m_lastExitMessage(0),
-   m_lastDunnoMessage(0),
-   prevCtr(0),
-   m_searchstage(0),
-   active(true),
-   justPunched(0)
+   m_finder(nullptr)
    {
       random.initialize((unsigned)time(nullptr));
    }

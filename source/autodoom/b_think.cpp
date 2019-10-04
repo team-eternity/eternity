@@ -108,7 +108,6 @@ void Bot::mapInit()
    m_deepRepeat = nullptr;
     m_justGotLost = false;
     m_intoSwitch = false;
-    m_goalTimer = 0;
     m_dropSS.clear();
     
     justPunched = 0;
@@ -1834,7 +1833,6 @@ void Bot::doCommand()
    
    // Get current values
    ss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
-   cmd = &pl->cmd;
 
     if(pl->health <= 0)
     {
@@ -1871,6 +1869,7 @@ void Bot::InitBots()
    for (int i = 0; i < MAXPLAYERS; ++i)
    {
       bots[i].pl = players + i;
+      bots[i].cmd = &bots[i].pl->cmd;
       B_AnalyzeWeapons(bots[i].pl->pclass);
    }
 }
