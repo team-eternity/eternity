@@ -1718,18 +1718,7 @@ static void D_DoomInit()
    if((netgame || M_CheckParm("-solo-net") || netbot) &&
       GameType == gt_single)
    {
-      if(netbot)
-      {
-         bots[0].active = false;
-         playeringame[1] = true;
-         if(netbot >= 2)
-            playeringame[2] = true;
-         if(netbot >= 3)
-            playeringame[3] = true;
-         if(netbot >= 4)
-            bots[0].active = true;
-         netgame = true;
-      }
+      G_AdjustNetBotSettings();
       GameType = DefaultGameType = gt_coop;
       G_SetDefaultDMFlags(0, true);
    }

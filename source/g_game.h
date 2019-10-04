@@ -71,6 +71,7 @@ byte *G_ReadOptions(byte *demoptr);         // killough 3/1/98
 byte *G_WriteOptions(byte *demoptr);        // killough 3/1/98
 void G_PlayerReborn(int player);
 void G_InitNewNum(skill_t skill, int episode, int map);
+void G_AdjustNetBotSettings();
 void G_InitNew(skill_t skill, const char*);
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SetGameMap();

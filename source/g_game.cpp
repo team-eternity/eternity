@@ -3239,6 +3239,25 @@ void G_InitNewNum(skill_t skill, int episode, int map)
 }
 
 //
+// Based on the netbot setting, enables bots and fake players
+//
+void G_AdjustNetBotSettings()
+{
+   if(netbot)
+   {
+      bots[0].active = false;
+      playeringame[1] = true;
+      if(netbot >= 2)
+         playeringame[2] = true;
+      if(netbot >= 3)
+         playeringame[3] = true;
+      if(netbot >= 4)
+         bots[0].active = true;
+      netgame = true;
+   }
+}
+
+//
 // G_InitNew
 //
 // Can be called by the startup code or the menu task,
@@ -3286,18 +3305,7 @@ void G_InitNew(skill_t skill, const char *name)
       P_ResetChasecam();      // sf: displayplayer changed
    }
 
-   if(netbot)
-   {
-      bots[0].active = false;
-      playeringame[1] = true;
-      if(netbot >= 2)
-         playeringame[2] = true;
-      if(netbot >= 3)
-         playeringame[3] = true;
-      if(netbot >= 4)
-         bots[0].active = true;
-      netgame = true;
-   }
+   G_AdjustNetBotSettings();
 
    demoplayback = false;
    
