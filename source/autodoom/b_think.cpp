@@ -774,7 +774,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
                     newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
                     newt->dist = dist;
                     newt->type = TargetMonster;
-                    newt->mobj = m;
+                   P_SetTarget(&newt->mobj, m);
                     std::push_heap(targets.begin(), targets.end());
                 }
             }
@@ -799,7 +799,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
                newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
                newt->dist = dist;
                newt->type = TargetMissile;
-               newt->mobj = m;
+               P_SetTarget(&newt->mobj, m);
                std::push_heap(targets.begin(), targets.end());
             }
          }
@@ -1849,6 +1849,10 @@ void Bot::doCommand()
     if (!targets.isEmpty())
    {
        doCombatAI(targets);
+      // TODO: replace Target with a nonPOD class
+      for(Target &target : targets)
+         if(target.type != TargetLine)
+            P_ClearTarget(target.mobj);
    }
     else
         justPunched = 0;
