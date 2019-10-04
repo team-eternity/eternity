@@ -34,6 +34,7 @@
 #include "../a_doom.h"
 #include "../ev_specials.h"
 #include "../m_buffer.h"
+#include "../m_compare.h"
 #include "../p_info.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"
@@ -393,14 +394,13 @@ void TempBotMapPImpl::getLineMSectors()
       V_LoadingUpdateTicked(u + 1);
 
       const line_t &line = ::lines[u];
-      const fixed_t x[2] = {line.v1->x, line.v2->x},
-      y[2] = {line.v1->y, line.v2->y};
+      const fixed_t x[2] = {line.v1->x, line.v2->x}, y[2] = {line.v1->y, line.v2->y};
 
       action = EV_ActionForSpecial(line.special);
       if (action && (action->type == &W1ActionType || action->type == &WRActionType))
       {
           RawLine& rl = rawBSPLines.addNew();
-         angle_t fineAngle = P_PointToAngle(line.v1->x, line.v1->y, line.v2->x, line.v2->y) >> ANGLETOFINESHIFT;
+         angle_t fineAngle = P_PointToAngle(x[0], y[0], x[1], y[1]) >> ANGLETOFINESHIFT;
          LineEq le, axle[2];
          le = LineEq::MakeFixed(*line.v1, *line.v2);
          
@@ -468,36 +468,72 @@ void TempBotMapPImpl::getLineMSectors()
       rlms.lineGen = &line;
       rlms.isFromMobj = false;
 
-      if(line.v1->x == line.v2->x || line.v1->y == line.v2->y)
+      const fixed_t minx = emin(x[0], x[1]);
+      const fixed_t maxx = emax(x[0], x[1]);
+      const fixed_t miny = emin(y[0], y[1]);
+      const fixed_t maxy = emax(y[0], y[1]);
+
+      switch(line.slopetype)
       {
-         const angle_t ang = P_PointToAngle(x[0], y[0], x[1], y[1]) + ANG180 +
-         ANG45;
-         rlms.nvertices = 4;
-         for (byte i = 0; i < rlms.nvertices; ++i)
+         case ST_VERTICAL:
          {
-            rlms.v[i].x = x[i >> 1] +
-            B_Sign(B_AngleCosine(ang - ANG90 * i)) * o->radius;
-            
-            rlms.v[i].y = y[i >> 1] +
-            B_Sign(B_AngleSine(ang - ANG90 * i)) * o->radius;
-            
-//            printf("[%d %d]", rlms.v[i].x >> 16, rlms.v[i].y >> 16);
+            rlms.nvertices = 4;
+            rlms.v[0].x = x[0] - o->radius;
+            rlms.v[0].y = miny - o->radius;
+            rlms.v[1].x = x[0] - o->radius;
+            rlms.v[1].y = maxy + o->radius;
+            rlms.v[2].x = x[0] + o->radius;
+            rlms.v[2].y = maxy + o->radius;
+            rlms.v[3].x = x[0] + o->radius;
+            rlms.v[3].y = miny - o->radius;
+            break;
          }
-      }
-      else
-      {
-         const angle_t ang = P_PointToAngle(x[0], y[0], x[1], y[1]) / ANG90 *
-         ANG90 - ANG45;
-         static const byte tmp[] = {0, 1, 2, 2, 3, 0};
-         rlms.nvertices = 6;
-         for (byte i = 0; i < rlms.nvertices; ++i)
+         case ST_HORIZONTAL:
          {
-            rlms.v[i].x = x[i / 3] +
-            B_Sign(B_AngleCosine(ang - ANG90 * tmp[i])) * o->radius;
-            
-            rlms.v[i].y = y[i / 3] +
-            B_Sign(B_AngleSine(ang - ANG90 * tmp[i])) * o->radius;
-//            printf("<%d %d>", rlms.v[i].x >> 16, rlms.v[i].y >> 16);
+            rlms.nvertices = 4;
+            rlms.v[0].x = minx - o->radius;
+            rlms.v[0].y = y[0] - o->radius;
+            rlms.v[1].x = minx - o->radius;
+            rlms.v[1].y = y[0] + o->radius;
+            rlms.v[2].x = maxx + o->radius;
+            rlms.v[2].y = y[0] + o->radius;
+            rlms.v[3].x = maxx + o->radius;
+            rlms.v[3].y = y[0] - o->radius;
+            break;
+         }
+         case ST_POSITIVE:
+         {
+            rlms.nvertices = 6;
+            rlms.v[0].x = minx - o->radius;
+            rlms.v[0].y = miny - o->radius;
+            rlms.v[1].x = minx - o->radius;
+            rlms.v[1].y = miny + o->radius;
+            rlms.v[2].x = maxx - o->radius;
+            rlms.v[2].y = maxy + o->radius;
+            rlms.v[3].x = maxx + o->radius;
+            rlms.v[3].y = maxy + o->radius;
+            rlms.v[4].x = maxx + o->radius;
+            rlms.v[4].y = maxy - o->radius;
+            rlms.v[5].x = minx + o->radius;
+            rlms.v[5].y = miny - o->radius;
+            break;
+         }
+         case ST_NEGATIVE:
+         {
+            rlms.nvertices = 6;
+            rlms.v[0].x = minx - o->radius;
+            rlms.v[0].y = maxy + o->radius;
+            rlms.v[1].x = minx + o->radius;
+            rlms.v[1].y = maxy + o->radius;
+            rlms.v[2].x = maxx + o->radius;
+            rlms.v[2].y = miny + o->radius;
+            rlms.v[3].x = maxx + o->radius;
+            rlms.v[3].y = miny - o->radius;
+            rlms.v[4].x = maxx - o->radius;
+            rlms.v[4].y = miny - o->radius;
+            rlms.v[5].x = minx - o->radius;
+            rlms.v[5].y = maxy - o->radius;
+            break;
          }
       }
    }

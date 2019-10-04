@@ -59,7 +59,7 @@ bool BotMap::demoPlayingFlag;
 
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP09";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP10";
 
 //
 // String representation
