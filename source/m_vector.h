@@ -37,6 +37,16 @@ struct v3fixed_t
 struct v2fixed_t
 {
    fixed_t x, y;
+
+   v2fixed_t() = default;
+   v2fixed_t(fixed_t x, fixed_t y) : x(x), y(y)
+   {
+   }
+
+   template<typename T>
+   explicit v2fixed_t(const T &misc) : x(misc.x), y(misc.y)
+   {
+   }
    
    // ioanch 20160106: added operators as needed
    template<typename T>

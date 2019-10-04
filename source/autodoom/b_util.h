@@ -134,19 +134,6 @@ struct LineEq
 #define B_Frac2Int(x) ((x)>>FRACBITS)
 
 //
-// B_CoordXY
-//
-// Gets the .x and .y coordinates of generic class into v2fixed_t
-//
-template <typename T> inline static v2fixed_t B_CoordXY(const T &misc)
-{
-   v2fixed_t ret;
-   ret.x = misc.x;
-   ret.y = misc.y;
-   return ret;
-}
-
-//
 // B_MakeV2Fixed
 //
 // Returns a v2fixed_t value

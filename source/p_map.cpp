@@ -850,7 +850,7 @@ bool P_CheckPickUp(Mobj *thing)
    {
       // IOANCH 20131007: pickup item bot control
 
-      v2fixed_t coord = B_CoordXY(*thing);
+      v2fixed_t coord = v2fixed_t(*thing);
       bool nopick = P_TouchSpecialThing(thing, clip.thing); // can remove thing
       player_t *player = clip.thing->player;
       if(botMap && nopick && player)

@@ -1541,7 +1541,7 @@ bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
    {
       for(int i = 0; i < MAXPLAYERS; ++i)
          if(playeringame[i])
-            bots[i].addXYEvent(BOT_WALKTRIG, B_CoordXY(*line->v1));
+            bots[i].addXYEvent(BOT_WALKTRIG, v2fixed_t(*line->v1));
    }
 
    return !!EV_ActivateSpecial(action, &instance);

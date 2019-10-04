@@ -626,7 +626,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         }
         if (item->flags & MF_SPECIAL)
         {
-           auto goaltag = B_CoordXY(*item);
+           auto goaltag = v2fixed_t(*item);
            if(self.checkItemType(item) && !self.otherBotsHaveGoal(BOT_PICKUP, goaltag))
            {
               if (self.m_deepSearchMode == DeepNormal)
@@ -720,7 +720,7 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
         }
         else
         {
-           auto goaltag = B_CoordXY(*line.v1);
+           auto goaltag = v2fixed_t(*line.v1);
            if (shouldUseSpecial(line, ss) && !otherBotsHaveGoal(BOT_WALKTRIG, goaltag))
            {
                coord.kind = BotPathEnd::KindWalkLine;
@@ -770,7 +770,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
                 if (dist < MISSILERANGE / 2)
                 {
                     newt = &targets.addNew();
-                    newt->coord = B_CoordXY(*m);
+                    newt->coord = v2fixed_t(*m);
                     newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
                     newt->dist = dist;
                     newt->type = TargetMonster;
@@ -795,7 +795,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
             if (dist < MISSILERANGE / 2)
             {
                newt = &targets.addNew();
-               newt->coord = B_CoordXY(*m);
+               newt->coord = v2fixed_t(*m);
                newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
                newt->dist = dist;
                newt->type = TargetMissile;

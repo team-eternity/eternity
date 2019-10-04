@@ -860,7 +860,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       if(botMap)
          for(int i = 0; i < MAXPLAYERS; ++i)
             if(playeringame[i])
-               bots[i].addXYEvent(BOT_PICKUP, B_CoordXY(*special));
+               bots[i].addXYEvent(BOT_PICKUP, v2fixed_t(*special));
    }
 
    return !pickedup && !staypick;   // always return false if staypick got it
