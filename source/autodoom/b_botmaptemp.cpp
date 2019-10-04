@@ -139,27 +139,18 @@ private:
    //
    class BSPLineGen : public ZoneObject
    {
-      struct IndexedLineEq
+      struct IndexedLineEq : LineEq
       {
-         LineEq le;
          int ind;
+
+         IndexedLineEq(double a, double b, double c, int ind) : LineEq(a, b, c), ind(ind)
+         {
+         }
+         IndexedLineEq(const LineEq &le, int ind) : LineEq(le), ind(ind)
+         {
+         }
       };
-      static IndexedLineEq MakeIndLineEq(int ind, double a, double b, double c)
-      {
-         IndexedLineEq ret;
-         ret.ind = ind;
-         ret.le.a = a;
-         ret.le.b = b;
-         ret.le.c = c;
-         return ret;
-      }
-      static IndexedLineEq MakeIndLineEq(int ind, const LineEq &le)
-      {
-         IndexedLineEq ret;
-         ret.ind = ind;
-         ret.le = le;
-         return ret;
-      }
+
       PODCollection<IndexedLineEq> linestack;    // stack of visited lines
       static PODCollection<v2fixed_t> proto;     // lists of colinear vertices
       Collection<PODCollection<v2fixed_t> > splitcoll;
@@ -209,7 +200,7 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
    if(nodenum & NF_SUBSECTOR)
       return;  // leaf, ignore
    const fnode_t &fnode = fnodes[nodenum];
-   LineEq le = LineEq::MakeFloat(fnode);
+   LineEq le(fnode);
 
    if(!le.a && !le.b)
       return;  // avoid degenerate nodes
@@ -221,7 +212,7 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
    
    for (IndexedLineEq *it = linestack.begin(); it != linestack.end(); ++it)
    {
-      const LineEq &le2 = it->le;
+      const LineEq &le2 = *it;
       if (!B_IntersectionPoint(le, le2, ix, iy))
          continue;
       
@@ -271,7 +262,7 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
    sle.add({ fx1, fy1 });
    sle.add({ fx2, fy2 });
    
-   linestack.add(MakeIndLineEq((int)splitcoll.getLength() - 1, le));
+   linestack.add({ le, (int)splitcoll.getLength() - 1 });
    recursiveGetLines(nodes[nodenum].children[0]);
    recursiveGetLines(nodes[nodenum].children[1]);
    linestack.pop();
@@ -295,10 +286,10 @@ void TempBotMapPImpl::BSPLineGen::startGetLines()
    B_GetMapBounds(minx, miny, maxx, maxy);
    
    // add square bounds first
-   linestack.add(MakeIndLineEq(-1, 1, 0, -M_FixedToDouble(minx)));  // x = minx
-   linestack.add(MakeIndLineEq(-1, 0, 1, -M_FixedToDouble(maxy)));  // y = maxy
-   linestack.add(MakeIndLineEq(-1, 1, 0, -M_FixedToDouble(maxx)));  // x = maxx
-   linestack.add(MakeIndLineEq(-1, 0, 1, -M_FixedToDouble(miny)));  // y = miny
+   linestack.add({ 1, 0, -M_FixedToDouble(minx), -1 });  // x = minx
+   linestack.add({ 0, 1, -M_FixedToDouble(maxy), -1 });  // y = maxy
+   linestack.add({ 1, 0, -M_FixedToDouble(maxx), -1 });  // x = maxx
+   linestack.add({ 0, 1, -M_FixedToDouble(miny), -1 });  // y = miny
 
    // Do the work
    recursiveGetLines(numnodes - 1);
@@ -401,8 +392,7 @@ void TempBotMapPImpl::getLineMSectors()
       {
           RawLine& rl = rawBSPLines.addNew();
          angle_t fineAngle = P_PointToAngle(x[0], y[0], x[1], y[1]) >> ANGLETOFINESHIFT;
-         LineEq le, axle[2];
-         le = LineEq::MakeFixed(*line.v1, *line.v2);
+         LineEq le(v2fixed_t(*line.v1), v2fixed_t(*line.v1)), axle[2];
          
          // No risk of dividing by zero, given the fine arrays
 
@@ -417,26 +407,26 @@ void TempBotMapPImpl::getLineMSectors()
          if(fineAngle >= FINEANGLES - SLOPERANGE / 2 || fineAngle < SLOPERANGE / 2)
          {
             // left->right             
-             axle[0] = LineEq::MakeDouble(1, 0, -(line.v1->fx - dradius));
-             axle[1] = LineEq::MakeDouble(1, 0, -(line.v2->fx + dradius));
+             axle[0] = LineEq(1, 0, -(line.v1->fx - dradius));
+             axle[1] = LineEq(1, 0, -(line.v2->fx + dradius));
          }
          else if(fineAngle >= SLOPERANGE / 2 && fineAngle < 3 * SLOPERANGE / 2)
          {
              // bottom->up
-             axle[0] = LineEq::MakeDouble(0, 1, -(line.v1->fy - dradius));
-             axle[1] = LineEq::MakeDouble(0, 1, -(line.v2->fy + dradius));
+             axle[0] = LineEq(0, 1, -(line.v1->fy - dradius));
+             axle[1] = LineEq(0, 1, -(line.v2->fy + dradius));
          }
          else if(fineAngle >= 3 * SLOPERANGE / 2 && fineAngle < 5 * SLOPERANGE / 2)
          {
              // right->left
-             axle[0] = LineEq::MakeDouble(1, 0, -(line.v1->fx + dradius));
-             axle[1] = LineEq::MakeDouble(1, 0, -(line.v2->fx - dradius));
+             axle[0] = LineEq(1, 0, -(line.v1->fx + dradius));
+             axle[1] = LineEq(1, 0, -(line.v2->fx - dradius));
          }
          else
          {
              // top->down
-             axle[0] = LineEq::MakeDouble(0, 1, -(line.v1->fy + dradius));
-             axle[1] = LineEq::MakeDouble(0, 1, -(line.v2->fy - dradius));
+             axle[0] = LineEq(0, 1, -(line.v1->fy + dradius));
+             axle[1] = LineEq(0, 1, -(line.v2->fy - dradius));
          }
          double ix[2], iy[2];
          if (!B_IntersectionPoint(le, axle[0], ix[0], iy[0]))
@@ -858,8 +848,8 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2, const line_t* as
       for (auto it = lineBMap[b].begin(); it != lineBMap[b].end(); ++it)
       {
          Line &ln = **it;
-         isInt = B_IntersectionPoint(LineEq::MakeFixed(v1, v2),
-                                          LineEq::MakeFixed(*ln.v1, *ln.v2),
+         isInt = B_IntersectionPoint(LineEq(v2fixed_t(v1), v2fixed_t(v2)),
+                                          LineEq(v2fixed_t(*ln.v1), v2fixed_t(*ln.v2)),
                                           ix, iy);
          // bounds checking
          if(isInt && fabs(ix) < 32767 && fabs(iy) < 32767)

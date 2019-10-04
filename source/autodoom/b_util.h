@@ -86,62 +86,24 @@ struct v2double_t;
 struct LineEq
 {
    double a, b, c;
-   static LineEq MakeDouble(double inA, double inB, double inC)
+   LineEq() = default;
+   LineEq(double a, double b, double c) : a(a), b(b), c(c)
    {
-      LineEq ret;
-      ret.a = inA;
-      ret.b = inB;
-      ret.c = inC;
-      return ret;
    }
-   static LineEq MakeFixed(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
+   template <typename T>
+   LineEq(const T &obj) : a(obj.a), b(obj.b), c(obj.c)
    {
-      LineEq ret;
-      ret.a = M_FixedToDouble(y1 - y2);
-      ret.b = M_FixedToDouble(x2 - x1);
-      ret.c = M_FixedToDouble(FixedMul64(x1, y2) -
-                              FixedMul64(x2, y1));
-      return ret;
    }
-   template <typename T> static LineEq MakeFloat(const T &obj)
+
+   LineEq(v2fixed_t crd1, v2fixed_t crd2) :
+   a(M_FixedToDouble(crd1.y - crd2.y)),
+   b(M_FixedToDouble(crd2.x - crd1.x)),
+   c(M_FixedToDouble(FixedMul64(crd1.x, crd2.y) - FixedMul64(crd2.x, crd1.y)))
    {
-      LineEq ret;
-      ret.a = obj.a;
-      ret.b = obj.b;
-      ret.c = obj.c;
-      return ret;
-   }
-   template <typename T> static LineEq MakeFloat(const T &crd1, const T &crd2)
-   {
-      LineEq ret;
-      ret.a = crd1.y - crd2.y;
-      ret.b = crd2.x - crd1.x;
-      ret.c = crd1.x * crd2.y - crd2.x * crd1.y;
-      return ret;
-   }
-   template <typename T, typename U> static LineEq MakeFixed(const T &crd1,
-                                                             const U &crd2)
-   {
-      LineEq ret;
-      ret.a = M_FixedToDouble(crd1.y - crd2.y);
-      ret.b = M_FixedToDouble(crd2.x - crd1.x);
-      ret.c = M_FixedToDouble(FixedMul64(crd1.x, crd2.y) -
-                              FixedMul64(crd2.x, crd1.y));
-      return ret;
    }
 };
 
 #define B_Frac2Int(x) ((x)>>FRACBITS)
-
-//
-// B_Sign
-//
-// Utility signum function
-//
-inline static fixed_t B_Sign(fixed_t value)
-{
-   return value / D_abs(value);
-}
 
 //
 // B_ExactDistance
