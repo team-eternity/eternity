@@ -167,11 +167,11 @@ void BotMap::getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
 
 
 
-BotMap::Subsec &BotMap::pointInSubsector(fixed_t x, fixed_t y) const
+BotMap::Subsec &BotMap::pointInSubsector(v2fixed_t pos) const
 {
    int nodenum = this->numnodes - 1;
    while(!(nodenum & NF_SUBSECTOR))
-      nodenum = this->nodes[nodenum].child[pointOnSide(v2fixed_t(x, y), this->nodes[nodenum])];
+      nodenum = this->nodes[nodenum].child[pointOnSide(pos, this->nodes[nodenum])];
    return ssectors[nodenum & ~NF_SUBSECTOR];
 }
 
@@ -288,7 +288,7 @@ void BotMap::setThingPosition(const Mobj *thing)
    if(!foundlines)
    {
       // not found any intersections, now it's time to set the pointInSubsector
-      Subsec &thingSec = pointInSubsector(thing->x, thing->y);
+      Subsec &thingSec = pointInSubsector(v2fixed_t(*thing));
       thingSec.mobjlist.insert(thing);
       mobjSecMap[thing].add(&thingSec);
    }
@@ -438,13 +438,13 @@ static void B_setSpecLinePositions()
             mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
             mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
             
-            ss = &botMap->pointInSubsector(mid.x, mid.y);
+            ss = &botMap->pointInSubsector(mid);
             ss->linelist[&line] = USERANGE / 2;
 
             mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
             mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
 
-            ss = &botMap->pointInSubsector(mid.x, mid.y);
+            ss = &botMap->pointInSubsector(mid);
             if(!ss->linelist.count(&line))
                ss->linelist[&line] = USERANGE;
          }

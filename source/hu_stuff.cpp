@@ -1477,7 +1477,7 @@ void HUDCoordWidget::ticker()
    }
    else if(botMap && coordType == COORDTYPE_SUBSECTOR)
    {
-      BSubsec& bss = botMap->pointInSubsector(x, y);
+      BSubsec& bss = botMap->pointInSubsector({ x, y });
       sprintf(coordsstr, "%cS: %-5d", hu_coordscolor + 128, (int)(&bss - &botMap->ssectors[0]));
       message = coordsstr;
    }

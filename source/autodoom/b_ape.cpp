@@ -114,11 +114,10 @@ void PlayerObserver::observeJumping()
       {
          if(mJump.success)
          {
-            mJump.destss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
+            mJump.destss = &botMap->pointInSubsector(v2fixed_t(*pl->mo));
             // We now have a jump point at startpos, facing vel, reaching ss
             // now when bot does pathfinding, use this as option
-            const BSubsec &startss = botMap->pointInSubsector(mJump.start1.x,
-                                                              mJump.start1.y);
+            const BSubsec &startss = botMap->pointInSubsector(mJump.start1);
             bool found = false;
             for(auto &jump : ssJumps[&startss])
             {

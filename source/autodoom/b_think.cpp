@@ -1843,7 +1843,7 @@ void Bot::doCommand()
    m_lastPosition.y = pl->mo->y;
    
    // Get current values
-   ss = &botMap->pointInSubsector(pl->mo->x, pl->mo->y);
+   ss = &botMap->pointInSubsector(v2fixed_t(*pl->mo));
 
     if(pl->health <= 0)
     {

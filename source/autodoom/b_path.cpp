@@ -64,7 +64,7 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     
     db[1].IncrementValidcount();
 
-    const BSubsec& source = m_map->pointInSubsector(x, y);
+   const BSubsec& source = m_map->pointInSubsector({ x, y });
 
     path.start.x = x;
     path.start.y = y;
@@ -295,7 +295,7 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
                     TeleItem ti;
                     ti.v.x = m->x;
                     ti.v.y = m->y;
-                    ti.ss = &botMap->pointInSubsector(ti.v.x, ti.v.y);
+                    ti.ss = &botMap->pointInSubsector(ti.v);
                     m_teleCache[line] = ti;
                     return &m_teleCache[line];
                 }
