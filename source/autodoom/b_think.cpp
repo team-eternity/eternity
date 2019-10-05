@@ -1328,8 +1328,8 @@ void Bot::doNonCombatAI()
     }
 
     // found path to exit
-   v2fixed_t mpos;
-    fixed_t nx, ny;
+   v2fixed_t mpos = v2fixed_t(*pl->mo);
+   v2fixed_t npos;
     bool dontMove = false;
     const BSubsec* nextss = nullptr;
 
@@ -1342,18 +1342,15 @@ void Bot::doNonCombatAI()
     else if (m_path.end.kind == BotPathEnd::KindWalkLine)
     {
         swline = m_path.end.walkLine;
-        endCoord = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
-                                         swline->v1->x, swline->v1->y,
-                                         swline->dx, swline->dy,
-                                         pl->mo->radius);
+        endCoord = B_ProjectionOnSegment(mpos, v2fixed_t(*swline->v1),
+                                         v2fixed_t(swline->dx, swline->dy), pl->mo->radius);
     }
     else
         endCoord = { 0, 0 };
 
     if (ss == m_path.last)
     {
-        nx = endCoord.x;
-        ny = endCoord.y;
+       npos = endCoord;
         m_lastPathSS = ss;
     }
     else
@@ -1363,9 +1360,7 @@ void Bot::doNonCombatAI()
         for (const BNeigh* neigh : m_path.inv)
         {
             if (!botMap->canPass(*neigh->myss, *neigh->otherss, pl->mo->height))
-            {
                 break;
-            }
             if(!m_runfast)
             {
                 const PlatThinker* pt = thinker_cast<const PlatThinker*>
@@ -1379,29 +1374,24 @@ void Bot::doNonCombatAI()
             }
             if (neigh->myss == ss)
             {
-                v2fixed_t nn = B_ProjectionOnSegment(pl->mo->x, pl->mo->y,
-                                                     neigh->v.x, neigh->v.y,
-                                                     neigh->d.x, neigh->d.y, pl->mo->radius);
-                nx = nn.x;
-                ny = nn.y;
+                npos = B_ProjectionOnSegment(mpos, neigh->v, neigh->d, pl->mo->radius);
+
                 if (!botMap->canPassNow(*neigh->myss, *neigh->otherss, pl->mo->height))
-                {
                     dontMove = true;
-                }
-                {
+
+               {
                     const sector_t* nsector = neigh->otherss->msector->getCeilingSector();
                     const sector_t* msector = ss->msector->getCeilingSector();
                     
                     if(nsector != msector)
                     {
-                        const CeilingThinker* ct = thinker_cast
-                        <const CeilingThinker*>
-                        (nsector->ceilingdata);
-                        
+                        const CeilingThinker* ct = thinker_cast<const CeilingThinker*>
+                       (nsector->ceilingdata);
+
+                       // TODO: actually try to stop asap
                         if(ct && ct->crush > 0 && ct->direction == plat_down)
-                        {
                             dontMove = true;
-                        }
+
                     }
                 }
                 m_lastPathSS = ss;
@@ -1422,14 +1412,13 @@ void Bot::doNonCombatAI()
             // not on path, so reset
             if (m_lastPathSS)
             {
-                if (!botMap->canPassNow(*ss, *m_lastPathSS,
-                    pl->mo->height))
+                if (!botMap->canPassNow(*ss, *m_lastPathSS, pl->mo->height))
                 {
-                    B_Log("Inserted goner %d",
-                        (int)(m_lastPathSS - &botMap->ssectors[0]));
+                    B_Log("Inserted goner %d", eindex(m_lastPathSS - &botMap->ssectors[0]));
                     m_dropSS.insert(m_lastPathSS);
                     for (const BNeigh& n : m_lastPathSS->neighs)
                     {
+                       // Also add nearby subsectors to increase the slowdown area
                         if ((n.otherss->mid - m_lastPathSS->mid).sqrtabs() < 128 * FRACUNIT)
                             m_dropSS.insert(n.otherss);
                     }
@@ -1444,7 +1433,6 @@ void Bot::doNonCombatAI()
         }
     }
 
-   mpos = v2fixed_t(*pl->mo);
     m_intoSwitch = false;
     if (goalTable.hasKey(BOT_WALKTRIG) && B_checkSwitchReach(mpos.x, mpos.y, endCoord, *swline))
     {
@@ -1460,8 +1448,7 @@ void Bot::doNonCombatAI()
 
        if(botMap->sectorFlags[nextsec - ::sectors].isDoor)
        {
-          auto doorTh = thinker_cast<VerticalDoorThinker *>
-          (nextsec->ceilingdata);
+          auto doorTh = thinker_cast<VerticalDoorThinker *>(nextsec->ceilingdata);
           if((!doorTh &&
               nextsec->ceilingheight < P_FindLowestCeilingSurrounding(nextsec) - 4 * FRACUNIT) ||
              (doorTh && doorTh->direction == plat_down))
@@ -1490,7 +1477,7 @@ void Bot::doNonCombatAI()
     }
     moveslow |= m_dropSS.count(ss) ? true : false;
     
-    angle_t tangle = P_PointToAngle(mpos.x, mpos.y, nx, ny);
+    angle_t tangle = (npos - mpos).angle();
     angle_t dangle = tangle - pl->mo->angle;
 
     if (random() % 128 == 0)
@@ -1520,7 +1507,7 @@ void Bot::doNonCombatAI()
         else
         {
             if(!m_runfast)
-                cruiseControl(nx, ny, moveslow);
+                cruiseControl(npos.x, npos.y, moveslow);
             else
                 cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
                                           * pl->pclass->sidemove[moveslow ? 0 : 1],

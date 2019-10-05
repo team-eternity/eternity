@@ -86,52 +86,34 @@ v2fixed_t B_ProjectionOnLine(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
    return ret;
 }
 
-v2fixed_t B_ProjectionOnSegment(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
-    fixed_t dx, fixed_t dy, fixed_t padding)
+v2fixed_t B_ProjectionOnSegment(v2fixed_t v, v2fixed_t v1, v2fixed_t dv, fixed_t padding)
 {
-   angle_t angle = P_PointToAngle(x1, y1, x1 + dx, y1 + dy) >> ANGLETOFINESHIFT;
+   angle_t angle = dv.angle();
 
    if(padding)
    {
-      v2fixed_t olddiff = { dx, dy };
-      x1 += FixedMul(padding, finecosine[angle]);
-      y1 += FixedMul(padding, finesine[angle]);
-      dx -= FixedMul(2 * padding, finecosine[angle]);
-      dy -= FixedMul(2 * padding, finesine[angle]);
+      v2fixed_t olddiff = dv;
+      v1 += v2fixed_t::polar(padding, angle);
+      dv -= v2fixed_t::polar(2 * padding, angle);
 
-      if((olddiff.x ^ dx) <= 0 && (olddiff.y ^ dy) <= 0)
-      {
-         v2fixed_t proj = { x1 + dx / 2, y1 + dy / 2 };
-         return proj;
-      }
+      if((olddiff.x ^ dv.x) <= 0 && (olddiff.y ^ dv.y) <= 0)
+         return v1 + dv / 2;
    }
 
-    v2fixed_t proj = B_ProjectionOnLine(x, y, x1, y1, dx, dy);
-    if (dx)
+    v2fixed_t proj = B_ProjectionOnLine(v.x, v.y, v1.x, v1.y, dv.x, dv.y);
+    if (dv.x)
     {
-        if (((proj.x - x1) ^ dx) < 0)
-        {
-            proj.x = x1;
-            proj.y = y1;
-        }
-        else if (((proj.x - x1 - dx) ^ -dx) < 0)
-        {
-            proj.x = x1 + dx;
-            proj.y = y1 + dy;
-        }
+        if (((proj.x - v1.x) ^ dv.x) < 0)
+           return v1;
+        if (((proj.x - v1.x - dv.x) ^ -dv.x) < 0)
+           return v1 + dv;
     }
     else
     {
-        if (((proj.y - y1) ^ dy) < 0)
-        {
-            proj.x = x1;
-            proj.y = y1;
-        }
-        else if (((proj.y - y1 - dy) ^ -dy) < 0)
-        {
-            proj.x = x1 + dx;
-            proj.y = y1 + dy;
-        }
+        if (((proj.y - v1.y) ^ dv.y) < 0)
+           return v1;
+        if (((proj.y - v1.y - dv.y) ^ -dv.y) < 0)
+           return v1 + dv;
     }
 
     return proj;
