@@ -103,8 +103,6 @@ struct LineEq
    }
 };
 
-#define B_Frac2Int(x) ((x)>>FRACBITS)
-
 //
 // B_AngleSine
 // B_AngleCosine
