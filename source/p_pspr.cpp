@@ -667,7 +667,7 @@ weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
    const auto *wp = E_IsPoweredVariant(player->readyweapon) ?
                     player->readyweapon->sisterWeapon : player->readyweapon;
 
-   if(!weapon_hotkey_cycling)
+   if(!g_input.weapon_hotkey_cycling)
    {
       weaponslot = E_LastInSlot(player->pclass->weaponslots[slot]);
       if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))

@@ -23,11 +23,48 @@
 
 // Required for byte
 #include "doomtype.h"
+#include "g_bind.h"
 
 struct event_t;
 struct player_t;
 class  Mobj;
 class  WadDirectory;
+
+//
+// Local player (user) input to be transformed into tic commands
+//
+struct playerinput_t
+{
+   // Direct input
+   int dclicks;
+   int dclicks2;
+   bool dclickstate;
+   bool dclickstate2;
+   int dclicktime;
+   int dclicktime2;
+   bool gameactions[NUMKEYACTIONS];
+   double joyaxes[axis_max];  // joystick values are repeated
+   bool mousebuttons[3];
+   double mousex; // mouse values are used once
+   double mousey;
+   int prevmlook;
+   bool sendpause;     // send a pause event next tic
+   bool sendsave;      // send a save event next tic
+   int turnheld;       // for accelerative turning
+   bool usearti = true;
+
+   // User options
+   int automlook;
+   int autorun;   // always running?          // phares
+   int invert_mouse;
+   int invert_padlook;
+   int mouseb_dblc1;  // double-clicking either of these buttons
+   int mouseb_dblc2;  // causes a use action, however
+   int novert; // haleyjd
+   int runiswalk; // haleyjd 08/23/09
+   int smooth_turning;  // sf
+   int weapon_hotkey_cycling; // killough 10/98
+};
 
 //
 // GAME
@@ -94,6 +131,7 @@ void player_printf(const player_t *player, const char *s, ...);
 bool G_RealNetGame();
 
 // killough 5/2/98: moved from m_misc.c:
+extern playerinput_t g_input;
 
 extern int  key_escape;                                             // phares
 extern int  key_autorun;
@@ -101,13 +139,6 @@ extern int  key_chat;
 extern int  key_help;
 extern int  key_pause;
 extern int  destination_keys[MAXPLAYERS];
-extern int  autorun;           // always running?                   // phares
-extern int  runiswalk;
-extern int  automlook;
-extern int  invert_mouse;
-extern int  invert_padlook;
-extern int mouseb_dblc1;  // double-clicking either of these buttons
-extern int mouseb_dblc2;  // causes a use action
 
 //extern angle_t consoleangle;
 
@@ -125,11 +156,6 @@ extern int cooldemo;
 extern bool hub_changelevel;
 
 extern bool scriptSecret;   // haleyjd
-
-extern bool sendpause;
-
-extern int novert; // haleyjd
-extern int smooth_turning;
 
 #define VERSIONSIZE   16
 

@@ -113,6 +113,8 @@ static int      g_destmap;
 
 WadDirectory *g_dir = &wGlobalDir;
 
+playerinput_t g_input;  // local input
+
 gameaction_t    gameaction;
 gamestate_t     gamestate;
 skill_t         gameskill;
@@ -122,8 +124,6 @@ int             gamemap;
 // haleyjd: changed to an array
 char            gamemapname[9] = { 0,0,0,0,0,0,0,0,0 }; 
 int             paused;
-bool            sendpause;     // send a pause event next tic
-bool            sendsave;      // send a save event next tic
 bool            usergame;      // ok to save / end game
 bool            timingdemo;    // if true, exit with report on completion
 bool            fastdemo;      // if true, run at full speed -- killough
@@ -149,18 +149,11 @@ bool            precache = true;      // if true, load all graphics at start
 wbstartstruct_t wminfo;               // parms for world map / intermission
 bool            haswolflevels = false;// jff 4/18/98 wolf levels present
 byte            *savebuffer;
-int             autorun = false;      // always running?          // phares
-int             runiswalk = false;    // haleyjd 08/23/09
-int             automlook = false;
-int             smooth_turning = 0;   // sf
-int             novert;               // haleyjd
 
 // sf: moved sensitivity here
 double          mouseSensitivity_horiz;   // has default   //  killough
 double          mouseSensitivity_vert;    // has default
 bool            mouseSensitivity_vanilla; // [CG] 01/20/12
-int             invert_mouse = false;
-int             invert_padlook = false;
 int             animscreenshot = 0;       // animated screenshots
 acceltype_e     mouseAccel_type = ACCELTYPE_NONE;
 int             mouseAccel_threshold = 10; // [CG] 01/20/12
@@ -179,8 +172,6 @@ int key_pause;
 int destination_keys[MAXPLAYERS];
 
 // haleyjd: mousebfire is now unused -- removed
-int mouseb_dblc1;  // double-clicking either of these buttons
-int mouseb_dblc2;  // causes a use action, however
 
 // haleyjd: joyb variables are obsolete -- removed
 
@@ -188,24 +179,6 @@ int mouseb_dblc2;  // causes a use action, however
 #define TURBOTHRESHOLD (pc->oforwardmove[1])
 #define SLOWTURNTICS   6
 #define QUICKREVERSE   32768 // 180 degree reverse                    // phares
-
-int  turnheld;       // for accelerative turning
-
-bool mousearray[4];
-bool *mousebuttons = &mousearray[1];    // allow [-1]
-
-// mouse values are used once
-double  mousex;
-double  mousey;
-int     dclicktime;
-bool    dclickstate;
-int     dclicks;
-int     dclicktime2;
-bool    dclickstate2;
-int     dclicks2;
-
-// joystick values are repeated
-double joyaxes[axis_max];
 
 int  savegameslot;
 char savedescription[32];
@@ -227,10 +200,7 @@ int cooldemo_tics;      // number of tics until changing view
 
 static void G_CoolViewPoint();
 
-static bool gameactions[NUMKEYACTIONS];
-
 int inventoryTics;
-bool usearti = true;
 
 //
 // G_BuildTiccmd
@@ -242,7 +212,7 @@ bool usearti = true;
 // NETCODE_FIXME: The ticcmd_t structure will probably need to be
 // altered to better support command packing.
 //
-void G_BuildTiccmd(ticcmd_t *cmd)
+void G_BuildTiccmd(ticcmd_t *cmd, playerinput_t &input, bool handlechatchar)
 {
    player_t &p = players[consoleplayer]; // used to pretty-up code
    playerclass_t *pc = p.pclass;
@@ -253,125 +223,126 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
    int speed;
-   if(autorun)
-      speed = !(runiswalk && gameactions[ka_speed]);
+   if(input.autorun)
+      speed = !(input.runiswalk && input.gameactions[ka_speed]);
    else
-      speed = gameactions[ka_speed];
+      speed = input.gameactions[ka_speed];
 
    cmd->itemID = 0; // Nothing to see here
-   if(gameactions[ka_inventory_use] && demo_version >= 401)
+   if(input.gameactions[ka_inventory_use] && demo_version >= 401)
    {
       // FIXME: Handle noartiskip?
       if(invbarstate.inventory)
       {
          invbarstate.inventory = false;
-         usearti = false;
+         input.usearti = false;
       }
-      else if(usearti)
+      else if(input.usearti)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
-         usearti = false;
+         input.usearti = false;
       }
-      gameactions[ka_inventory_use] = false;
+      input.gameactions[ka_inventory_use] = false;
    }
 
    // use two stage accelerative turning on the keyboard and joystick
-   if(gameactions[ka_right] || gameactions[ka_left])
-      turnheld += ticdup;
+   if(input.gameactions[ka_right] || input.gameactions[ka_left])
+      input.turnheld += ticdup;
    else
-      turnheld = 0;
+      input.turnheld = 0;
 
    int tspeed;
-   if(turnheld < SLOWTURNTICS)
+   if(input.turnheld < SLOWTURNTICS)
       tspeed = 2;             // slow turn
    else
       tspeed = speed;
 
    // turn 180 degrees in one keystroke? -- phares
-   if(gameactions[ka_flip])
+   if(input.gameactions[ka_flip])
    {
       cmd->angleturn += (int16_t)QUICKREVERSE;
-      gameactions[ka_flip] = false;
+      input.gameactions[ka_flip] = false;
    }
 
    // let movement keys cancel each other out
    int side = 0;
-   if(gameactions[ka_strafe])
+   if(input.gameactions[ka_strafe])
    {
-      if(gameactions[ka_right])
+      if(input.gameactions[ka_right])
          side += pc->sidemove[speed];
-      if(gameactions[ka_left])
+      if(input.gameactions[ka_left])
          side -= pc->sidemove[speed];
 
       // analog axes: turn becomes stafe if strafe-on is held
-      side += (int)(pc->sidemove[speed] * joyaxes[axis_turn]);
+      side += (int)(pc->sidemove[speed] * input.joyaxes[axis_turn]);
    }
    else
    {
-      if(gameactions[ka_right])
+      if(input.gameactions[ka_right])
          cmd->angleturn -= (int16_t)pc->angleturn[tspeed];
-      if(gameactions[ka_left])
+      if(input.gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
 
-      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * input.joyaxes[axis_turn]);
    }
 
    // gamepad dedicated analog strafe axis applies regardless
-   side += (int)(pc->sidemove[speed] * joyaxes[axis_strafe]);
+   side += (int)(pc->sidemove[speed] * input.joyaxes[axis_strafe]);
 
    int forward = 0;
-   if(gameactions[ka_forward])
+   if(input.gameactions[ka_forward])
       forward += pc->forwardmove[speed];
-   if(gameactions[ka_backward])
+   if(input.gameactions[ka_backward])
       forward -= pc->forwardmove[speed];
 
    // analog movement axis
-   forward += (int)(pc->forwardmove[speed] * joyaxes[axis_move]);
+   forward += (int)(pc->forwardmove[speed] * input.joyaxes[axis_move]);
 
-   if(gameactions[ka_moveright])
+   if(input.gameactions[ka_moveright])
       side += pc->sidemove[speed];
-   if(gameactions[ka_moveleft])
+   if(input.gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
 
-   if(gameactions[ka_jump])                // -- joek 12/22/07
+   if(input.gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
 
    // MaxW: Non-attack weapon state change keys
-   if(gameactions[ka_reload])
+   if(input.gameactions[ka_reload])
       cmd->actions |= AC_RELOAD;
-   if(gameactions[ka_zoom])
+   if(input.gameactions[ka_zoom])
       cmd->actions |= AC_ZOOM;
-   if(gameactions[ka_user1])
+   if(input.gameactions[ka_user1])
       cmd->actions |= AC_USER1;
-   if(gameactions[ka_user2])
+   if(input.gameactions[ka_user2])
       cmd->actions |= AC_USER2;
-   if(gameactions[ka_user3])
+   if(input.gameactions[ka_user3])
       cmd->actions |= AC_USER3;
-   if(gameactions[ka_user4])
+   if(input.gameactions[ka_user4])
       cmd->actions |= AC_USER4;
 
-   int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
+   int mlook = allowmlook && (input.gameactions[ka_mlook] || input.automlook);
 
    // console commands
-   cmd->chatchar = C_dequeueChatChar();
+   if(handlechatchar)
+      cmd->chatchar = C_dequeueChatChar();
 
-   if(gameactions[ka_attack])
+   if(input.gameactions[ka_attack])
       cmd->buttons |= BT_ATTACK;
 
-   if(gameactions[ka_use])
+   if(input.gameactions[ka_use])
       cmd->buttons |= BT_USE;
 
    // only put BTN codes in here
    int newweapon; // phares
    if(demo_version >= 401)
    {
-      if(gameactions[ka_attack_alt])
+      if(input.gameactions[ka_attack_alt])
          cmd->buttons |= BTN_ATTACK_ALT;
 
       newweapon = -1;
 
-      if((p.attackdown && !P_CheckAmmo(&p)) || gameactions[ka_nextweapon])
+      if((p.attackdown && !P_CheckAmmo(&p)) || input.gameactions[ka_nextweapon])
       {
          weaponinfo_t *temp = E_FindBestWeapon(&p);
          if(temp == nullptr)
@@ -388,7 +359,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       for(int i = ka_weapon1; i <= ka_weapon9; i++)
       {
-         if(gameactions[i])
+         if(input.gameactions[i])
          {
             weaponinfo_t *weapon = P_GetPlayerWeapon(&p, i - ka_weapon1);
             if(weapon)
@@ -402,9 +373,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       }
 
       //next / prev weapon actions
-      if(gameactions[ka_weaponup])
+      if(input.gameactions[ka_weaponup])
          newweapon = P_NextWeapon(&p, &cmd->slotIndex);
-      else if(gameactions[ka_weapondown])
+      else if(input.gameactions[ka_weapondown])
          newweapon = P_PrevWeapon(&p, &cmd->slotIndex);
 
       if(p.readyweapon)
@@ -431,22 +402,22 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
       if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
-         gameactions[ka_nextweapon])
+         input.gameactions[ka_nextweapon])
       {
          newweapon = P_SwitchWeaponOld(&p); // phares
       }
       else
       {                                 // phares 02/26/98: Added gamemode checks
          newweapon =
-           gameactions[ka_weapon1] ? wp_fist :    // killough 5/2/98: reformatted
-           gameactions[ka_weapon2] ? wp_pistol :
-           gameactions[ka_weapon3] ? wp_shotgun :
-           gameactions[ka_weapon4] ? wp_chaingun :
-           gameactions[ka_weapon5] ? wp_missile :
-           gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
-           gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
-           gameactions[ka_weapon8] ? wp_chainsaw :
-           (!demo_compatibility && gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
+           input.gameactions[ka_weapon1] ? wp_fist :    // killough 5/2/98: reformatted
+           input.gameactions[ka_weapon2] ? wp_pistol :
+           input.gameactions[ka_weapon3] ? wp_shotgun :
+           input.gameactions[ka_weapon4] ? wp_chaingun :
+           input.gameactions[ka_weapon5] ? wp_missile :
+           input.gameactions[ka_weapon6] && GameModeInfo->id != shareware ? wp_plasma :
+           input.gameactions[ka_weapon7] && GameModeInfo->id != shareware ? wp_bfg :
+           input.gameactions[ka_weapon8] ? wp_chainsaw :
+           (!demo_compatibility && input.gameactions[ka_weapon9] &&  // MaxW: Adopted from PRBoom
            enable_ssg) ? wp_supershotgun :
            wp_nochange;
 
@@ -464,7 +435,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // killough 10/98: make SG/SSG and Fist/Chainsaw
          // weapon toggles optional
 
-         if(!demo_compatibility && weapon_hotkey_cycling)
+         if(!demo_compatibility && input.weapon_hotkey_cycling)
          {
             // only select chainsaw from '1' if it's owned, it's
             // not already in use, and the player prefers it or
@@ -501,9 +472,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(GameModeInfo->type == Game_DOOM)
       {
           // haleyjd 03/06/09: next/prev weapon actions
-          if(gameactions[ka_weaponup])
+          if(input.gameactions[ka_weaponup])
               newweapon = P_NextWeapon(&p);
-          else if(gameactions[ka_weapondown])
+          else if(input.gameactions[ka_weapondown])
               newweapon = P_PrevWeapon(&p);
 
           const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
@@ -519,60 +490,62 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // mouse
 
    // forward double click -- haleyjd: still allow double clicks
-   if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
+   if(input.mouseb_dblc2 >= 0 && input.mousebuttons[input.mouseb_dblc2] != input.dclickstate &&
+      input.dclicktime > 1)
    {
-      dclickstate = mousebuttons[mouseb_dblc2];
+      input.dclickstate = input.mousebuttons[input.mouseb_dblc2];
 
-      if(dclickstate)
-         dclicks++;
+      if(input.dclickstate)
+         input.dclicks++;
 
-      if(dclicks == 2)
+      if(input.dclicks == 2)
       {
          cmd->buttons |= BT_USE;
-         dclicks = 0;
+         input.dclicks = 0;
       }
       else
-         dclicktime = 0;
+         input.dclicktime = 0;
    }
-   else if((dclicktime += ticdup) > 20)
+   else if((input.dclicktime += ticdup) > 20)
    {
-      dclicks = 0;
-      dclickstate = false;
+      input.dclicks = 0;
+      input.dclickstate = false;
    }
 
    // strafe double click
 
-   if(mouseb_dblc1 >= 0 && mousebuttons[mouseb_dblc1] != dclickstate2 && dclicktime2 > 1)
+   if(input.mouseb_dblc1 >= 0 && input.mousebuttons[input.mouseb_dblc1] != input.dclickstate2 &&
+      input.dclicktime2 > 1)
    {
-      dclickstate2 = mousebuttons[mouseb_dblc1];
+      input.dclickstate2 = input.mousebuttons[input.mouseb_dblc1];
 
-      if(dclickstate2)
-         dclicks2++;
+      if(input.dclickstate2)
+         input.dclicks2++;
 
-      if(dclicks2 == 2)
+      if(input.dclicks2 == 2)
       {
          cmd->buttons |= BT_USE;
-         dclicks2 = 0;
+         input.dclicks2 = 0;
       }
       else
-         dclicktime2 = 0;
+         input.dclicktime2 = 0;
    }
-   else if((dclicktime2 += ticdup) > 20)
+   else if((input.dclicktime2 += ticdup) > 20)
    {
-      dclicks2 = 0;
-      dclickstate2 = false;
+      input.dclicks2 = 0;
+      input.dclickstate2 = false;
    }
 
    // sf: smooth out the mouse movement
    // change to use tmousex, y
 
    // local mousex, mousey
-   double tmousex = mousex;
-   double tmousey = mousey;
+   double tmousex = input.mousex;
+   double tmousey = input.mousey;
 
    // we average the mouse movement as well
    // this is most important in smoothing movement
-   if(smooth_turning)
+   if(input.smooth_turning)
    {
       static double oldmousex=0.0, mousex2;
       static double oldmousey=0.0, mousey2;
@@ -587,12 +560,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // YSHEAR_FIXME: add arrow keylook?
    bool sendcenterview = false;
    int look = 0;
-   static int prevmlook;
    if(mlook)
    {
       // YSHEAR_FIXME: provide separate mlook speed setting?
       int lookval = (int)(tmousey * 16.0 / ((double)ticdup));
-      if(invert_mouse)
+      if(input.invert_mouse)
          look -= lookval;
       else
          look += lookval;
@@ -600,23 +572,23 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else
    {                // just stopped mlooking?
       // YSHEAR_FIXME: make lookspring configurable
-      if(prevmlook)
+      if(input.prevmlook)
          sendcenterview = true;
 
       // haleyjd 10/24/08: novert support
-      if(!novert)
+      if(!input.novert)
          forward += (int)tmousey;
    }
-   prevmlook = mlook;
+   input.prevmlook = mlook;
 
    // analog gamepad look
-   look += (int)(pc->lookspeed[1] * joyaxes[axis_look] * (invert_padlook ? -1.0 : 1.0));
+   look += (int)(pc->lookspeed[1] * input.joyaxes[axis_look] * (input.invert_padlook ? -1.0 : 1.0));
 
-   if(gameactions[ka_lookup])
+   if(input.gameactions[ka_lookup])
       look += pc->lookspeed[speed];
-   if(gameactions[ka_lookdown])
+   if(input.gameactions[ka_lookdown])
       look -= pc->lookspeed[speed];
-   if(gameactions[ka_center])
+   if(input.gameactions[ka_center])
       sendcenterview = true;
 
    // haleyjd: special value for view centering
@@ -632,23 +604,23 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // haleyjd 06/05/12: flight
    int flyheight = 0;
-   if(gameactions[ka_flyup])
+   if(input.gameactions[ka_flyup])
       flyheight = FLIGHT_IMPULSE_AMT;
-   if(gameactions[ka_flydown])
+   if(input.gameactions[ka_flydown])
       flyheight = -FLIGHT_IMPULSE_AMT;
 
    // haleyjd 05/19/13: analog fly axis
    if(flyheight == 0)
-      flyheight = (int)(joyaxes[axis_fly] * FLIGHT_IMPULSE_AMT);
+      flyheight = (int)(input.joyaxes[axis_fly] * FLIGHT_IMPULSE_AMT);
 
-   if(gameactions[ka_flycenter])
+   if(input.gameactions[ka_flycenter])
    {
       flyheight = FLIGHT_CENTER;
       look = -32768;
    }
 
 
-   if(gameactions[ka_strafe])
+   if(input.gameactions[ka_strafe])
       side += (int)(tmousex * 2.0);
    else
       cmd->angleturn -= (int)(tmousex * 8.0);
@@ -669,20 +641,20 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->fly = flyheight;
 
    // special buttons
-   if(sendpause)
+   if(input.sendpause)
    {
-      sendpause = false;
+      input.sendpause = false;
       cmd->buttons = BT_SPECIAL | BTS_PAUSE;
    }
 
    // killough 10/6/98: suppress savegames in demos
-   if(sendsave && !demoplayback)
+   if(input.sendsave && !demoplayback)
    {
-      sendsave = false;
+      input.sendsave = false;
       cmd->buttons = BT_SPECIAL | BTS_SAVEGAME | (savegameslot << BTS_SAVESHIFT);
    }
 
-   mousex = mousey = 0.0;
+   input.mousex = input.mousey = 0.0;
 }
 
 //
@@ -767,12 +739,12 @@ void G_DoLoadLevel()
 
    // clear cmd building stuff
    for(int i = 0; i < axis_max; i++)
-      joyaxes[i] = 0.0;
-   mousex = mousey = 0.0;
-   sendpause = sendsave = false;
+      g_input.joyaxes[i] = 0.0;
+   g_input.mousex = g_input.mousey = 0.0;
+   g_input.sendpause = g_input.sendsave = false;
    paused = 0;
-   memset(mousearray,  0, sizeof(mousearray));
-   memset(gameactions, 0, sizeof(gameactions)); // haleyjd 05/20/05: all bindings off
+   memset(g_input.mousebuttons, 0, sizeof(g_input.mousebuttons));
+   memset(g_input.gameactions, 0, sizeof(g_input.gameactions)); // haleyjd 05/20/05: all bindings off
    G_ClearKeyStates(); 
 
    // killough: make -timedemo work on multilevel demos
@@ -828,7 +800,7 @@ bool G_Responder(const event_t* ev)
    if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
       && players[consoleplayer].playerstate != PST_DEAD)
    {
-      usearti = true;
+      g_input.usearti = true;
    }
 
    // any other key pops up menu if in demos
@@ -887,16 +859,16 @@ bool G_Responder(const event_t* ev)
       else
       {
          action = G_KeyResponder(ev, kac_game); // haleyjd
-         gameactions[action] = true;
+         g_input.gameactions[action] = true;
       }
 
-      if(gameactions[ka_autorun])
+      if(g_input.gameactions[ka_autorun])
       {
-         gameactions[ka_autorun] = 0;
-         autorun = !autorun;
+         g_input.gameactions[ka_autorun] = 0;
+         g_input.autorun = !g_input.autorun;
       }
 
-      if(gameactions[ka_inventory_left])
+      if(g_input.gameactions[ka_inventory_left])
       {
          inventoryTics = 5 * TICRATE;
          if(!invbarstate.inventory)
@@ -907,7 +879,7 @@ bool G_Responder(const event_t* ev)
          E_MoveInventoryCursor(&players[consoleplayer], -1, players[consoleplayer].inv_ptr);
          return true;
       }
-      if(gameactions[ka_inventory_right])
+      if(g_input.gameactions[ka_inventory_right])
       {
          inventoryTics = 5 * TICRATE;
          if(!invbarstate.inventory)
@@ -926,32 +898,32 @@ bool G_Responder(const event_t* ev)
       bool allreleased;
       action = G_KeyResponder(ev, kac_game, &allreleased);   // haleyjd
       if(allreleased)
-         gameactions[action] = false;
+         g_input.gameactions[action] = false;
       return false;   // always let key up events filter down
    }
       
    case ev_mouse:
-      mousebuttons[0] = !!(ev->data1 & 1);
-      mousebuttons[1] = !!(ev->data1 & 2);
-      mousebuttons[2] = !!(ev->data1 & 4);
+      g_input.mousebuttons[0] = !!(ev->data1 & 1);
+      g_input.mousebuttons[1] = !!(ev->data1 & 2);
+      g_input.mousebuttons[2] = !!(ev->data1 & 4);
 
       // SoM: this mimics the doom2 behavior better. 
       if(mouseSensitivity_vanilla)
       {
-          mousex += (ev->data2 * (mouseSensitivity_horiz + 5.0) / 10.0);
-          mousey += (ev->data3 * (mouseSensitivity_vert + 5.0) / 10.0);
+          g_input.mousex += (ev->data2 * (mouseSensitivity_horiz + 5.0) / 10.0);
+          g_input.mousey += (ev->data3 * (mouseSensitivity_vert + 5.0) / 10.0);
       }
       else
       {
           // [CG] 01/20/12: raw sensitivity
-          mousex += (ev->data2 * mouseSensitivity_horiz / 10.0);
-          mousey += (ev->data3 * mouseSensitivity_vert / 10.0);
+          g_input.mousex += (ev->data2 * mouseSensitivity_horiz / 10.0);
+          g_input.mousey += (ev->data3 * mouseSensitivity_vert / 10.0);
       }
 
       return true;    // eat events
       
    case ev_joystick:
-      joyaxes[axisActions[ev->data1]] = ev->data2;
+      g_input.joyaxes[axisActions[ev->data1]] = ev->data2;
       return true;    // eat events
       
    default:
@@ -1520,7 +1492,7 @@ static void G_ReadDemoContinueTiccmd(ticcmd_t *cmd)
       return;
 
    if(demo_continue_p < demobuffer + demolength && *demo_continue_p != DEMOMARKER &&
-      !gameactions[ka_join_demo])
+      !g_input.gameactions[ka_join_demo])
       demo_continue_p = G_ReadTic(cmd, demo_continue_p);
    else
    {
@@ -2005,7 +1977,7 @@ void G_SaveGame(int slot, const char *description)
 {
    savegameslot = slot;
    strcpy(savedescription, description);
-   sendsave = true;
+   g_input.sendsave = true;
    hub_changelevel = false;
 }
 
@@ -2271,9 +2243,9 @@ void G_Ticker()
    // killough 10/6/98: allow games to be saved during demo
    // playback, by the playback user (not by demo itself)
    
-   if (demoplayback && sendsave)
+   if (demoplayback && g_input.sendsave)
    {
-      sendsave = false;
+      g_input.sendsave = false;
       G_DoSaveGame();
    }
 

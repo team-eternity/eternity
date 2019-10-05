@@ -144,7 +144,7 @@ char	*g_autoDoomPath;			// IOANCH 20131229: autodoom path
 
 void D_CheckNetGame(void);
 void D_ProcessEvents(void);
-void G_BuildTiccmd(ticcmd_t* cmd);
+void G_BuildTiccmd(ticcmd_t* cmd, playerinput_t &input, bool handlechatchar);
 void D_DoAdvanceDemo(void);
 
 void usermsg(const char *s, ...)

@@ -144,6 +144,9 @@ struct variable_t;
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_int, min, max, strings, 0, 0, NULL, NULL };
+#define VARIABLE_INT2(name, addr, defaultvar, min, max, strings)    \
+        variable_t var_ ## name = { addr, defaultvar,               \
+                vt_int, min, max, strings, 0, 0, NULL, NULL };
 
 //
 // VARIABLE_STRING
@@ -172,6 +175,9 @@ struct variable_t;
 //
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
+                  vt_int, 0, 1, strings, 0, 0, NULL, NULL };
+#define VARIABLE_BOOLEAN2(name, addr, defaultvar, strings)   \
+        variable_t var_ ## name = { addr, defaultvar,        \
                   vt_int, 0, 1, strings, 0, 0, NULL, NULL };
 
 //

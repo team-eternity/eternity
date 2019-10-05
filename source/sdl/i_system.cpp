@@ -65,7 +65,6 @@ ticcmd_t *I_BaseTiccmd()
 
 int mousepresent;
 
-extern int autorun;          // Autorun state
 static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 
 //

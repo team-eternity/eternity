@@ -65,8 +65,6 @@
 #include "w_levels.h"
 #include "w_wad.h"
 
-extern int automlook;
-extern int invert_mouse;
 extern int keylookspeed;
 
 ////////////////////////////////////////////////////////////////////////
@@ -116,7 +114,7 @@ CONSOLE_COMMAND(endgame, cf_notnet)
 
 CONSOLE_COMMAND(pause, cf_server)
 {
-   sendpause = true;
+   g_input.sendpause = true;
 }
 
 //
@@ -189,15 +187,15 @@ CONSOLE_VARIABLE(bfg_cloud, drawbfgcloud, 0) {}
 
 // always mlook
 
-VARIABLE_BOOLEAN(automlook, NULL,           onoff);
+VARIABLE_BOOLEAN2(automlook, &g_input.automlook, NULL,           onoff);
 CONSOLE_VARIABLE(alwaysmlook, automlook, 0) {}
 
 // invert mouse
 
-VARIABLE_BOOLEAN(invert_mouse, NULL,        onoff);
+VARIABLE_BOOLEAN2(invert_mouse, &g_input.invert_mouse, NULL,        onoff);
 CONSOLE_VARIABLE(invertmouse, invert_mouse, 0) {}
 
-VARIABLE_BOOLEAN(invert_padlook, NULL, onoff);
+VARIABLE_BOOLEAN2(invert_padlook, &g_input.invert_padlook, NULL, onoff);
 CONSOLE_VARIABLE(invert_padlook, invert_padlook, 0) {}
 
 // horizontal mouse sensitivity
@@ -230,7 +228,7 @@ CONSOLE_VARIABLE(sens_vanilla, mouseSensitivity_vanilla, 0) {}
 VARIABLE_BOOLEAN(player_bobbing, &default_player_bobbing, onoff);
 CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 
-VARIABLE_BOOLEAN(weapon_hotkey_cycling, NULL, onoff);
+VARIABLE_BOOLEAN2(weapon_hotkey_cycling, &g_input.weapon_hotkey_cycling, NULL, onoff);
 CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
 
 // turbo scale
@@ -444,8 +442,7 @@ const char *insure_str[]={"off", "on", "when recording"};
 VARIABLE_INT(demo_insurance, &default_demo_insurance, 0, 2, insure_str);
 CONSOLE_VARIABLE(demo_insurance, demo_insurance, cf_notnet) {}
 
-extern int smooth_turning;
-VARIABLE_BOOLEAN(smooth_turning, NULL,          onoff);
+VARIABLE_BOOLEAN2(smooth_turning, &g_input.smooth_turning, NULL,          onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
@@ -465,13 +462,13 @@ double default_mouse_accel_value = 2.0;
 VARIABLE_FLOAT(mouseAccel_value, &default_mouse_accel_value, 0.0, 100.0);
 CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 
-VARIABLE_BOOLEAN(novert, NULL, onoff);
+VARIABLE_BOOLEAN2(novert, &g_input.novert, NULL, onoff);
 CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
 
-VARIABLE_INT(mouseb_dblc1, NULL, -1, 2, NULL);
+VARIABLE_INT2(mouseb_dblc1, &g_input.mouseb_dblc1, NULL, -1, 2, NULL);
 CONSOLE_VARIABLE(mouseb_dblc1, mouseb_dblc1, 0) {}
 
-VARIABLE_INT(mouseb_dblc2, NULL, -1, 2, NULL);
+VARIABLE_INT2(mouseb_dblc2, &g_input.mouseb_dblc2, NULL, -1, 2, NULL);
 CONSOLE_VARIABLE(mouseb_dblc2, mouseb_dblc2, 0) {}
 
 // haleyjd: new stuff
@@ -490,10 +487,10 @@ CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
 VARIABLE_BOOLEAN(dog_jumping, &default_dog_jumping, onoff);
 CONSOLE_NETVAR(dogjumping, dog_jumping, cf_server, netcmd_dogjumping) {}
 
-VARIABLE_BOOLEAN(autorun, NULL, onoff);
+VARIABLE_BOOLEAN2(autorun, &g_input.autorun, NULL, onoff);
 CONSOLE_VARIABLE(autorun, autorun, 0) {}
 
-VARIABLE_BOOLEAN(runiswalk, NULL, onoff);
+VARIABLE_BOOLEAN2(runiswalk, &g_input.runiswalk, NULL, onoff);
 CONSOLE_VARIABLE(runiswalk, runiswalk, 0) {}
 
 // haleyjd 03/22/09: iwad cvars

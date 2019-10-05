@@ -207,7 +207,7 @@ default_t defaults[] =
                "0 - right handed, 1 - left handed"),
 
    // killough 10/98
-   DEFAULT_INT("weapon_hotkey_cycling", &weapon_hotkey_cycling, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("weapon_hotkey_cycling", &g_input.weapon_hotkey_cycling, NULL, 1, 0, 1, default_t::wad_no,
                "1 to allow in-slot weapon cycling (e.g. SSG to SG)"),
 
    // phares 2/25/98
@@ -304,10 +304,10 @@ default_t defaults[] =
                  "amount of mouse acceleration to apply (custom acceleration mode only)"),
 
    // haleyjd 10/24/08
-   DEFAULT_INT("mouse_novert", &novert, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("mouse_novert", &g_input.novert, NULL, 0, 0, 1, default_t::wad_no,
                "0 for normal mouse, 1 for no vertical movement"),
 
-   DEFAULT_INT("smooth_turning", &smooth_turning, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("smooth_turning", &g_input.smooth_turning, NULL, 0, 0, 1, default_t::wad_no,
                "average mouse input when turning player"),
 
    DEFAULT_INT("sfx_volume", &snd_SfxVolume, NULL, 8, 0, 15, default_t::wad_no,
@@ -326,10 +326,10 @@ default_t defaults[] =
                "messages colour"),
 
    // killough 3/6/98: preserve autorun across games
-   DEFAULT_INT("autorun", &autorun, NULL, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
+   DEFAULT_INT("autorun", &g_input.autorun, NULL, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
 
    // haleyjd 08/23/09: allow shift to cancel autorun
-   DEFAULT_INT("runiswalk", &runiswalk, NULL, 0, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("runiswalk", &g_input.runiswalk, NULL, 0, 0, 1, default_t::wad_no,
                "1 to walk with shift when autorun is enabled"),
 
    // killough 2/21/98: default to 10
@@ -493,13 +493,13 @@ default_t defaults[] =
    DEFAULT_INT("key_chatplayer4", &destination_keys[3], NULL, 'r', 0, 255, default_t::wad_no,
                "key to chat with player 4"),
    
-   DEFAULT_INT("automlook", &automlook, NULL, 0, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("automlook", &g_input.automlook, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to always mouselook"),
    
-   DEFAULT_INT("invert_mouse", &invert_mouse, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("invert_mouse", &g_input.invert_mouse, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to invert mouse during mouselooking"),
 
-   DEFAULT_INT("invert_padlook", &invert_padlook, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("invert_padlook", &g_input.invert_padlook, NULL, 0, 0, 1, default_t::wad_no,
                "set to 1 to invert gamepad looking"),
       
    DEFAULT_INT("use_mouse", &usemouse, NULL, 1, 0, 1, default_t::wad_no,
@@ -507,10 +507,10 @@ default_t defaults[] =
    
    //jff 3/8/98 end of lower range change for -1 allowed in mouse binding
    // haleyjd: rename these buttons on the user-side to prevent confusion
-   DEFAULT_INT("mouseb_dblc1", &mouseb_dblc1, NULL, 1, -1, 2, default_t::wad_no,
+   DEFAULT_INT("mouseb_dblc1", &g_input.mouseb_dblc1, NULL, 1, -1, 2, default_t::wad_no,
                "1st mouse button to enable for double-click use action (-1 = disable)"),
    
-   DEFAULT_INT("mouseb_dblc2", &mouseb_dblc2, NULL, 2, -1, 2, default_t::wad_no,
+   DEFAULT_INT("mouseb_dblc2", &g_input.mouseb_dblc2, NULL, 2, -1, 2, default_t::wad_no,
                "2nd mouse button to enable for double-click use action (-1 = disable)"),
    
    DEFAULT_STR("chatmacro0", &chat_macros[0], NULL, HUSTR_CHATMACRO0, default_t::wad_yes,
