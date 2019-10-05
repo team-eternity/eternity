@@ -171,8 +171,7 @@ BotMap::Subsec &BotMap::pointInSubsector(fixed_t x, fixed_t y) const
 {
    int nodenum = this->numnodes - 1;
    while(!(nodenum & NF_SUBSECTOR))
-      nodenum = this->nodes[nodenum].child[pointOnSide(x, y,
-                                                       this->nodes[nodenum])];
+      nodenum = this->nodes[nodenum].child[pointOnSide(v2fixed_t(x, y), this->nodes[nodenum])];
    return ssectors[nodenum & ~NF_SUBSECTOR];
 }
 
@@ -202,23 +201,22 @@ v2fixed_t BotMap::Subsec::farthestCorner(v2fixed_t fsource) const
    return ret;
 }
 
-int BotMap::pointOnSide(fixed_t x, fixed_t y, const Node &node) const
+int BotMap::pointOnSide(v2fixed_t pos, const Node &node) const
 {
    if(!node.dx)
-      return x <= node.x ? node.dy > 0 : node.dy < 0;
+      return pos.x <= node.x ? node.dy > 0 : node.dy < 0;
    
    if(!node.dy)
-      return y <= node.y ? node.dx < 0 : node.dx > 0;
-   
-   x -= node.x;
-   y -= node.y;
+      return pos.y <= node.y ? node.dx < 0 : node.dx > 0;
+
+   pos -= node;
    
    // Try to quickly decide by looking at sign bits.
-   if((node.dy ^ node.dx ^ x ^ y) < 0)
-      return (node.dy ^ x) < 0;  // (left is negative)
+   if((node.dy ^ node.dx ^ pos.x ^ pos.y) < 0)
+      return (node.dy ^ pos.x) < 0;  // (left is negative)
    // IOANCH: fixed an underflow problem happening when it was FixedMul with
    // >>FRACBITS on a factor
-   return FixedMul64(y, node.dx) >= FixedMul64(node.dy, x);
+   return FixedMul64(pos.y, node.dx) >= FixedMul64(node.dy, pos.x);
 }
 
 //

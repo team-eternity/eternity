@@ -237,7 +237,7 @@ public:
 
    void createBlockMap();
    
-   int pointOnSide(fixed_t x, fixed_t y, const Node &node) const;
+   int pointOnSide(v2fixed_t pos, const Node &node) const;
    Subsec &pointInSubsector(fixed_t x, fixed_t y) const;
    void getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                          const std::function<void(int)> &func) const;
