@@ -1837,13 +1837,11 @@ void Bot::doCommand()
    ++prevCtr;
 
    // Update the velocity
-   m_realVelocity.x = pl->mo->x - m_lastPosition.x;
-   m_realVelocity.y = pl->mo->y - m_lastPosition.y;
-   m_lastPosition.x = pl->mo->x;
-   m_lastPosition.y = pl->mo->y;
+   m_realVelocity = v2fixed_t(*pl->mo) - m_lastPosition;
+   m_lastPosition = v2fixed_t(*pl->mo);
    
    // Get current values
-   ss = &botMap->pointInSubsector(v2fixed_t(*pl->mo));
+   ss = &botMap->pointInSubsector(m_lastPosition);
 
     if(pl->health <= 0)
     {

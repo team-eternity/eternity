@@ -293,8 +293,7 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
                     m->subsector->sector - ::sectors == i)
                 {
                     TeleItem ti;
-                    ti.v.x = m->x;
-                    ti.v.y = m->y;
+                    ti.v = v2fixed_t(*m);
                     ti.ss = &botMap->pointInSubsector(ti.v);
                     m_teleCache[line] = ti;
                     return &m_teleCache[line];
