@@ -27,6 +27,7 @@
 #ifndef M_VECTOR_H__
 #define M_VECTOR_H__
 
+#include "m_compare.h"
 #include "m_fixed.h"
 #include "tables.h"
 
@@ -57,11 +58,9 @@ struct v2fixed_t
    
    // ioanch 20160106: added operators as needed
    template<typename T>
-   bool operator == (T &&other) const { return x == other.x && 
-                                               y == other.y; }
+   bool operator == (T &&other) const { return x == other.x && y == other.y; }
    template<typename T>
-   bool operator != (T &&other) const { return x != other.x ||
-      y != other.y; }
+   bool operator != (T &&other) const { return x != other.x || y != other.y; }
 
    template<typename T>
    v2fixed_t &operator += (T &&other) { x += other.x; 
@@ -96,6 +95,11 @@ struct v2fixed_t
       return { -x, -y };
    }
 
+   v2fixed_t fixedmul(fixed_t factor) const
+   {
+      return { FixedMul(x, factor), FixedMul(y, factor) };
+   }
+
    v2fixed_t elemabs() const
    {
       return { D_abs(x), D_abs(y) };
@@ -113,6 +117,14 @@ struct v2fixed_t
    fixed_t sqrtabs() const
    {
       return (fixed_t)sqrt((double)x * x + (double)y * y);
+   }
+
+   //
+   // Chebyshev distance, like the DOOM explosions
+   //
+   fixed_t chebabs() const
+   {
+      return emax(D_abs(x), D_abs(y));
    }
 
    //

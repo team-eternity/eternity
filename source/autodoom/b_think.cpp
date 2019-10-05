@@ -1245,11 +1245,9 @@ void Bot::doCombatAI(const Collection<Target>& targets)
         }
         else
         {
-           if (random() % 128 == 0 ||
-              (D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT))
-           {
+           // FIXME: detect bot being stuck a bit better
+           if (random() % 128 == 0 || m_realVelocity.chebabs() < FRACUNIT)
               toggleStrafeState();
-           }
 
            // Check ledges!
             if (random() % 8 != 0)
@@ -1316,7 +1314,8 @@ void Bot::doNonCombatAI()
                 pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
                 pl->pclass->forwardmove[0]);
-           if(m_searchstage > DUNNO_CONCESSION_SEC * TICRATE && shouldChat(IDLE_CHAT_INTERVAL_SEC, m_lastDunnoMessage))
+           if(m_searchstage > DUNNO_CONCESSION_SEC * TICRATE &&
+              shouldChat(IDLE_CHAT_INTERVAL_SEC, m_lastDunnoMessage))
            {
               m_lastDunnoMessage = gametic;
               HU_Say(pl, "Dunno where to go now...");
@@ -1329,7 +1328,8 @@ void Bot::doNonCombatAI()
     }
 
     // found path to exit
-    fixed_t mx, my, nx, ny;
+   v2fixed_t mpos;
+    fixed_t nx, ny;
     bool dontMove = false;
     const BSubsec* nextss = nullptr;
 
@@ -1444,11 +1444,9 @@ void Bot::doNonCombatAI()
         }
     }
 
-    mx = pl->mo->x;
-    my = pl->mo->y;
+   mpos = v2fixed_t(*pl->mo);
     m_intoSwitch = false;
-    if (goalTable.hasKey(BOT_WALKTRIG) &&
-        B_checkSwitchReach(mx, my, endCoord, *swline))
+    if (goalTable.hasKey(BOT_WALKTRIG) && B_checkSwitchReach(mpos.x, mpos.y, endCoord, *swline))
     {
         m_intoSwitch = true;
         if(gametic % 2 == 0)
@@ -1485,15 +1483,14 @@ void Bot::doNonCombatAI()
     bool moveslow = false;
     if(m_justGotLost)
     {
-        moveslow = (m_justGotLost &&
-                    (v2fixed_t(mx, my) - m_path.start).sqrtabs() < pl->mo->radius * 2);
+        moveslow = m_justGotLost && (mpos - m_path.start).sqrtabs() < pl->mo->radius * 2;
         
         if(!moveslow)
             m_justGotLost = false;
     }
     moveslow |= m_dropSS.count(ss) ? true : false;
     
-    angle_t tangle = P_PointToAngle(mx, my, nx, ny);
+    angle_t tangle = P_PointToAngle(mpos.x, mpos.y, nx, ny);
     angle_t dangle = tangle - pl->mo->angle;
 
     if (random() % 128 == 0)
@@ -1509,8 +1506,7 @@ void Bot::doNonCombatAI()
     if (angleturn < -2500)
         angleturn = -2500;
 
-    if (!dontMove && !((endCoord - v2fixed_t(mx, my)).sqrtabs() < 16 * FRACUNIT &&
-                       D_abs(angleturn) > 300))
+    if (!dontMove && ((endCoord - mpos).sqrtabs() >= 16 * FRACUNIT || D_abs(angleturn) <= 300))
     {
         if(m_runfast)
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
@@ -1536,7 +1532,7 @@ void Bot::doNonCombatAI()
        cmd->angleturn += angleturn;
 
     // If not moving while trying to, budge a bit to avoid stuck moments
-    if ((cmd->sidemove || cmd->forwardmove) && D_abs(m_realVelocity.x) < FRACUNIT && D_abs(m_realVelocity.y) < FRACUNIT)
+    if ((cmd->sidemove || cmd->forwardmove) && m_realVelocity.chebabs() < FRACUNIT)
     {
         cmd->sidemove += random.range(-pl->pclass->sidemove[1],
             pl->pclass->sidemove[1]);
@@ -1553,15 +1549,12 @@ void Bot::doNonCombatAI()
 //
 bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
 {
-    fixed_t mx = pl->mo->x;
-    fixed_t my = pl->mo->y;
+   auto mpos = v2fixed_t(*pl->mo);
 
-    v2fixed_t landing;
-    landing.x = mx + FixedMul(m_realVelocity.x, DRIFT_TIME);
-    landing.y = my + FixedMul(m_realVelocity.y, DRIFT_TIME);
+    v2fixed_t landing = mpos + m_realVelocity.fixedmul(DRIFT_TIME);
 
-   return (landing.x != mx || landing.y != my) &&
-   !botMap->pathTraverse(mx, my, landing.x, landing.y, [this, mx, my, avoid, nx, ny](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
+   return landing != mpos &&
+   !botMap->pathTraverse(mpos.x, mpos.y, landing.x, landing.y, [this, mpos, avoid, nx, ny](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
 
         divline_t mdl;
         mdl.x = line.v[0]->x;
@@ -1576,8 +1569,8 @@ bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
             v2fixed_t targvel;
            if(!avoid)
            {
-              targvel.x = FixedMul(nx - mx, DRIFT_TIME_INV) - m_realVelocity.x;
-              targvel.y = FixedMul(ny - my, DRIFT_TIME_INV) - m_realVelocity.y;
+              targvel.x = FixedMul(nx - mpos.x, DRIFT_TIME_INV) - m_realVelocity.x;
+              targvel.y = FixedMul(ny - mpos.y, DRIFT_TIME_INV) - m_realVelocity.y;
            }
            else
            {
@@ -1593,8 +1586,7 @@ bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
               dest.x -= (pl->mo->radius >> FRACBITS) * finecosine[fang];
               dest.y -= (pl->mo->radius >> FRACBITS) * finesine[fang];
 
-              targvel.x = FixedMul(dest.x - mx, DRIFT_TIME_INV) - m_realVelocity.x;
-              targvel.y = FixedMul(dest.y - my, DRIFT_TIME_INV) - m_realVelocity.y;
+              targvel = (dest - mpos).fixedmul(DRIFT_TIME_INV) - m_realVelocity;
            }
 
             if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
