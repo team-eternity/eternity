@@ -85,7 +85,7 @@ struct v2fixed_t
       return { -x, -y };
    }
 
-   v2fixed_t abs() const
+   v2fixed_t elemabs() const
    {
       return { D_abs(x), D_abs(y) };
    }

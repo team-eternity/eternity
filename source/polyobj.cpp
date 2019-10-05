@@ -1726,7 +1726,7 @@ void PolyMoveXYThinker::Think()
 
    if(Polyobj_moveXY(po, velocity.x, velocity.y))
    {
-      v2fixed_t avel = velocity.abs();
+      v2fixed_t avel = velocity.elemabs();
       distance -= avel;
       if(distance.x <= 0 && distance.y <= 0)
       {
@@ -2231,7 +2231,7 @@ int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
    distance -= po->spawnSpot;
 
    th->polyObjNum = pmdata.polyObjNum;
-   th->distance = distance.abs();
+   th->distance = distance.elemabs();
    th->speed = pmdata.speed;
 
    Polyobj_componentSpeed(th->speed, 
@@ -2253,7 +2253,7 @@ int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
       po->thinker = th;
 
       th->polyObjNum = po->id;
-      th->distance = distance.abs();  // mirror vector
+      th->distance = distance.elemabs();  // mirror vector
       th->speed = pmdata.speed;
 
       Polyobj_componentSpeed(th->speed, mirrorfineangle, &th->velocity.x, &th->velocity.y);
