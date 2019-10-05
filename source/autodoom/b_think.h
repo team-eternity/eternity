@@ -108,18 +108,41 @@ class Bot : public ZoneObject
    unsigned prevCtr = 0;
    unsigned m_searchstage = 0;
 
-   struct Target
+   //
+   // Bot combat target
+   //
+   class Target : public ZoneObject
    {
+   public:
+      Target() : type(TargetMonster), mobj(), coord(), dist(), dangle()
+      {
+      }
+
+      Target(const Mobj &mobj, const Mobj &source, bool ismissile);
+      Target(const line_t &line, const Mobj &source);
+      Target(const Target &other) = delete;
+      Target &operator = (const Target &other) = delete;
+      Target(Target &&other)
+      {
+         *this = std::move(other);
+      }
+      Target &operator = (Target &&other);
+      ~Target()
+      {
+         if(type != TargetLine)
+            P_ClearTarget(mobj);
+      }
+
+      TargetType type;
+
       union
       {
-         const Mobj*    mobj;
-         const line_t*  gline;
-         const void*    exists;
+         const Mobj*    mobj; // monster, missile
+         const line_t*  gline;   // line
       };
       v2fixed_t coord;
       fixed_t dist;
       angle_t dangle;
-      TargetType type;
 
       // for heaping
       bool operator < (const Target& o) const
@@ -137,15 +160,15 @@ class Bot : public ZoneObject
       double totalThreat;
    };
 
-   void enemyVisible(PODCollection<Target>& targets);
+   void enemyVisible(Collection<Target>& targets);
 
    
    bool goalAchieved();
    
    void pickRandomWeapon(const Target& target);
    void pickBestWeapon(const Target& target);
-   const Target *pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo);
-   void doCombatAI(const PODCollection<Target>& targets);
+   const Target *pickBestTarget(const Collection<Target>& targets, CombatInfo &cinfo);
+   void doCombatAI(const Collection<Target>& targets);
 
    void doNonCombatAI();
 

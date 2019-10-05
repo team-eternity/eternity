@@ -63,8 +63,12 @@ struct v2fixed_t
    template<typename T>
    v2fixed_t operator - (T &&other) const 
    { 
-      v2fixed_t ret = { x - other.x, y - other.y };
-      return ret;
+      return { x - other.x, y - other.y };
+   }
+   template<typename T>
+   v2fixed_t operator + (T &&other) const
+   {
+      return { x + other.x, y + other.y };
    }
 
    template<typename T>
@@ -102,6 +106,15 @@ struct v2fixed_t
    fixed_t sqrtabs() const
    {
       return (fixed_t)sqrt((double)x * x + (double)y * y);
+   }
+
+   //
+   // Gets the angle from vector
+   //
+   angle_t angle() const
+   {
+      extern angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
+      return P_PointToAngle(0, 0, x, y);
    }
 };
 

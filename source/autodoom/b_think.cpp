@@ -736,115 +736,132 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
 }
 
 //
-// Bot::enemyVisible()
+// Constructs a target from a Mobj
 //
-// Returns true if an enemy is visible now
-// Code inspired from P_LookForMonsters
-//
-void Bot::enemyVisible(PODCollection<Target>& targets)
+Bot::Target::Target(const Mobj &mobj, const Mobj &source, bool ismissile) :
+type(ismissile ? TargetMissile : TargetMonster),
+mobj(),  // vital to zero-init before setting target
+coord(mobj)
 {
-    // P_BlockThingsIterator is safe to use outside of demo correctness
+   P_SetTarget(&this->mobj, &mobj);
+   v2fixed_t delta = coord - source;
+   dist = delta.sqrtabs();
+   dangle = delta.angle() - source.angle;
+}
+
+//
+// Constructs a target from a shootable line
+//
+Bot::Target::Target(const line_t &line, const Mobj &source) :
+type(TargetLine),
+gline(&line)
+{
+   coord = (v2fixed_t(*line.v1) + *line.v2) / 2;
+   angle_t lang = v2fixed_t(line.dx, line.dy).angle();
+   lang -= ANG90;
+   lang >>= ANGLETOFINESHIFT;
+   coord.x += FixedMul(FRACUNIT, finecosine[lang]);
+   coord.y += FixedMul(FRACUNIT, finesine[lang]);
+   v2fixed_t delta = coord - source;
+   dist = delta.sqrtabs();
+   dangle = delta.angle() - source.angle;
+}
+
+//
+// Move assignment
+//
+Bot::Target &Bot::Target::operator = (Bot::Target &&other)
+{
+   type = other.type;
+   other.type = TargetMonster;
+   switch(type)
+   {
+      case TargetMonster:
+      case TargetMissile:
+         mobj = other.mobj;
+         other.mobj = nullptr;
+         break;
+      case TargetLine:
+         gline = other.gline;
+         other.gline = nullptr;
+         break;
+   }
+   coord = other.coord;
+   dist = other.dist;
+   dangle = other.dangle;
+   return *this;
+}
+
+//
+// Populates the target list for combat situations
+//
+void Bot::enemyVisible(Collection<Target>& targets)
+{
     camsightparams_t cam;
     cam.setLookerMobj(pl->mo);
 
-    fixed_t dist;
-    Target* newt;
-    if (!botMap->livingMonsters.isEmpty())
-    {
-
-        auto it = botMap->livingMonsters.begin();
-//        auto bit = botMap->livingMonsters.before_begin();
-        while(it != botMap->livingMonsters.end())
-        {
-            const Mobj* m = *it;
-            if (m->health <= 0 || !m->isBotTargettable())
-            {
-//                ++it;
-                botMap->livingMonsters.erase(it);
-                continue;
-            }
-            cam.setTargetMobj(m);
-            if (CAM_CheckSight(cam))
-            {
-                dist = (v2fixed_t(*m) - *pl->mo).sqrtabs();
-                if (dist < MISSILERANGE / 2)
-                {
-                    newt = &targets.addNew();
-                    newt->coord = v2fixed_t(*m);
-                    newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
-                    newt->dist = dist;
-                    newt->type = TargetMonster;
-                   P_SetTarget(&newt->mobj, m);
-                    std::push_heap(targets.begin(), targets.end());
-                }
-            }
-            
-            ++it;
-        }
-    }
-
-   if(!botMap->thrownProjectiles.isEmpty())
-   {
-      for(auto it = botMap->thrownProjectiles.begin(); it != botMap->thrownProjectiles.end(); ++it)
-      {
+   // list gets modified during iteration, so don't use for looping
+     auto it = botMap->livingMonsters.begin();
+     while(it != botMap->livingMonsters.end())
+     {
          const Mobj* m = *it;
-         cam.setTargetMobj(m);
-         if (CAM_CheckSight(cam))
+         if (m->health <= 0 || !m->isBotTargettable())
          {
-            dist = (v2fixed_t(*m) - *pl->mo).sqrtabs();
-            if (dist < MISSILERANGE / 2)
+             botMap->livingMonsters.erase(it);
+             continue;
+         }
+
+        Target target(*m, *pl->mo, false);
+         if (target.dist < MISSILERANGE / 2)
+         {
+            cam.setTargetMobj(m);
+            if(CAM_CheckSight(cam))
             {
-               newt = &targets.addNew();
-               newt->coord = v2fixed_t(*m);
-               newt->dangle = P_PointToAngle(*pl->mo, *m) - pl->mo->angle;
-               newt->dist = dist;
-               newt->type = TargetMissile;
-               P_SetTarget(&newt->mobj, m);
+               targets.add(std::move(target));
                std::push_heap(targets.begin(), targets.end());
             }
          }
+
+         ++it;
+     }
+
+   for(auto it = botMap->thrownProjectiles.begin(); it != botMap->thrownProjectiles.end(); ++it)
+   {
+      const Mobj* m = *it;
+      Target target(*m, *pl->mo, true);
+
+      if (target.dist < MISSILERANGE / 2)
+      {
+         cam.setTargetMobj(m);
+         if (CAM_CheckSight(cam))
+         {
+            targets.add(std::move(target));
+            std::push_heap(targets.begin(), targets.end());
+         }
       }
    }
-    
-    v2fixed_t lvec;
-    angle_t lang;
-    const sector_t* sector;
+
     fixed_t bulletheight = pl->mo->z + 33 * FRACUNIT;   // FIXME: don't hard-code
     for(const line_t* line : botMap->gunLines)
     {
-        sector = line->frontsector;
-        if(!sector || sector->floorheight > bulletheight
-           || sector->ceilingheight < bulletheight)
-        {
+        const sector_t *sector = line->frontsector;
+        if(!sector || sector->floorheight > bulletheight || sector->ceilingheight < bulletheight)
             continue;
-        }
-        lvec.x = (line->v1->x + line->v2->x) / 2;
-        lvec.y = (line->v1->y + line->v2->y) / 2;
-        lang = P_PointToAngle(*line->v1, *line->v2);
-        lang -= ANG90;
-        lang >>= ANGLETOFINESHIFT;
-        lvec.x += FixedMul(FRACUNIT, finecosine[lang]);
-        lvec.y += FixedMul(FRACUNIT, finesine[lang]);
+
+        Target target(*line, *pl->mo);
+
         cam.tgroupid = line->frontsector->groupid;
-        cam.tx = lvec.x;
-        cam.ty = lvec.y;
+        cam.tx = target.coord.x;
+        cam.ty = target.coord.y;
         cam.tz = sector->floorheight;
         cam.theight = sector->ceilingheight - sector->floorheight;
         
-        if(CAM_CheckSight(cam) && LevelStateStack::Push(*line, *pl))
+        if(target.dist < MISSILERANGE / 2 && CAM_CheckSight(cam) &&
+           LevelStateStack::Push(*line, *pl))
         {
-            LevelStateStack::Pop();
-            dist = (lvec - *pl->mo).sqrtabs();
-            if (dist < MISSILERANGE / 2)
-            {
-                newt = &targets.addNew();
-                newt->coord = lvec;
-                newt->dangle = P_PointToAngle(*pl->mo, lvec) - pl->mo->angle;
-                newt->dist = dist;
-                newt->type = TargetLine;
-                newt->gline = line;
-                std::push_heap(targets.begin(), targets.end());
-            }
+           LevelStateStack::Pop();
+           targets.add(std::move(target));
+           std::push_heap(targets.begin(), targets.end());
         }
     }
 }
@@ -923,7 +940,7 @@ bool Bot::shouldChat(int intervalSec, int timekeeper) const
                                timekeeper + intervalSec * TICRATE < gametic);
 }
 
-const Bot::Target *Bot::pickBestTarget(const PODCollection<Target>& targets, CombatInfo &cinfo)
+const Bot::Target *Bot::pickBestTarget(const Collection<Target>& targets, CombatInfo &cinfo)
 {
    double totalThreat = 0;
    size_t i = 0;
@@ -1090,7 +1107,7 @@ void Bot::pickBestWeapon(const Target &target)
    }
 }
 
-void Bot::doCombatAI(const PODCollection<Target>& targets)
+void Bot::doCombatAI(const Collection<Target>& targets)
 {
     fixed_t mx, my, nx, ny;
     mx = pl->mo->x;
@@ -1838,16 +1855,10 @@ void Bot::doCommand()
    // Do non-combat for now
 
    doNonCombatAI();
-   PODCollection<Target> targets;
+   Collection<Target> targets;
     enemyVisible(targets);
     if (!targets.isEmpty())
-   {
        doCombatAI(targets);
-      // TODO: replace Target with a nonPOD class
-      for(Target &target : targets)
-         if(target.type != TargetLine)
-            P_ClearTarget(target.mobj);
-   }
     else
         justPunched = 0;
     

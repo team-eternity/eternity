@@ -37,6 +37,9 @@
 
 typedef int32_t fixed_t;
 
+// PORTABILITY WARNING: angle_t depends on 32-bit math overflow
+typedef uint32_t angle_t;
+
 //
 // Absolute Value
 //
