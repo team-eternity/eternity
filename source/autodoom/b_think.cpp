@@ -94,7 +94,6 @@ void Bot::mapInit()
 {
    B_EmptyTableAndDelete(goalTable);   // remove all objectives
    B_EmptyTableAndDelete(goalEvents);  // remove all previously listed events
-   prevCtr = 0;
    m_searchstage = SearchStage_Normal;
 
    m_finder.SetMap(botMap);
@@ -1452,7 +1451,7 @@ void Bot::doNonCombatAI()
         B_checkSwitchReach(mx, my, endCoord, *swline))
     {
         m_intoSwitch = true;
-        if(prevCtr % 2 == 0)
+        if(gametic % 2 == 0)
             cmd->buttons |= BT_USE;
     }
     else if(nextss)
@@ -1470,7 +1469,7 @@ void Bot::doNonCombatAI()
              (doorTh && doorTh->direction == plat_down))
           {
              m_intoSwitch = true;
-             if(prevCtr % 2 == 0)
+             if(gametic % 2 == 0)
                 cmd->buttons |= BT_USE;
           }
        }
@@ -1798,8 +1797,6 @@ void Bot::doCommand()
    if(gamestate != GS_LEVEL)
       return;
 
-   ++prevCtr;
-
    // Update the velocity
    m_realVelocity = v2fixed_t(*pl->mo) - m_lastPosition;
    m_lastPosition = v2fixed_t(*pl->mo);
@@ -1809,7 +1806,7 @@ void Bot::doCommand()
 
     if(pl->health <= 0)
     {
-       if(prevCtr % DEATH_REVIVE_INTERVAL == 0)
+       if(gametic % DEATH_REVIVE_INTERVAL == 0)
           cmd->buttons |= BT_USE; // respawn
        return; // don't try anything else in this case
     }

@@ -105,7 +105,6 @@ class Bot : public ZoneObject
    int                     m_lastDunnoMessage = 0;
    
    // internal states
-   unsigned prevCtr = 0;
    unsigned m_searchstage = 0;
 
    //
