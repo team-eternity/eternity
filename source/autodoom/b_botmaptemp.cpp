@@ -392,7 +392,7 @@ void TempBotMapPImpl::getLineMSectors()
       {
           RawLine& rl = rawBSPLines.addNew();
          angle_t fineAngle = P_PointToAngle(x[0], y[0], x[1], y[1]) >> ANGLETOFINESHIFT;
-         LineEq le(v2fixed_t(*line.v1), v2fixed_t(*line.v1)), axle[2];
+         LineEq le(v2fixed_t(*line.v1), v2fixed_t(*line.v2)), axle[2];
          
          // No risk of dividing by zero, given the fine arrays
 
