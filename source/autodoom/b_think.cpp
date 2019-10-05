@@ -48,6 +48,7 @@
 #include "../e_states.h"
 #include "../e_weapons.h"
 #include "../ev_specials.h"
+#include "../g_game.h"
 #include "../hu_stuff.h"
 #include "../in_lude.h"
 #include "../m_compare.h"
@@ -1765,48 +1766,6 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 }
 
 //
-// Assuming bot's player is not the console player, reproduce key behaviour from
-// G_BuildTiccmd that's not necessarily user input activated.
-//
-void Bot::simulateBaseTiccmd()
-{
-   int newweapon = wp_nochange;
-   if(demo_version >= 401)
-   {
-      newweapon = -1;
-      if((pl->attackdown && !P_CheckAmmo(pl)))
-      {
-         const weaponinfo_t *temp = E_FindBestWeapon(pl);
-         if(temp)
-         {
-            newweapon = temp->id;
-            pl->cmd.slotIndex = E_FindFirstWeaponSlot(pl, temp)->slotindex;
-         }
-      }
-      if(pl->readyweapon && (pl->readyweapon->id == newweapon ||
-                             E_IsPoweredVariantOf(E_WeaponForID(newweapon),
-                                                  pl->readyweapon)))
-      {
-         newweapon = -1;
-      }
-      pl->cmd.weaponID = newweapon + 1;
-      return;
-   }
-
-   // normal case
-   if(!demo_compatibility && pl->attackdown & AT_PRIMARY &&
-      !P_CheckAmmo(pl))
-   {
-      newweapon = P_SwitchWeaponOld(pl);
-      if(newweapon != wp_nochange)
-      {
-         pl->cmd.buttons |= BT_CHANGE;
-         pl->cmd.buttons |= newweapon << BT_WEAPONSHIFT;
-      }
-   }
-}
-
-//
 // Bot::doCommand
 //
 // Called from G_Ticker right before ticcmd is passed into the player. Gets the
@@ -1819,7 +1778,12 @@ void Bot::doCommand()
    if(!active)
       return;  // do nothing if out of game
    if(pl - players != consoleplayer)
-      simulateBaseTiccmd();
+   {
+      // If bot isn't the console player but is controlled from this computer, then it's not a real
+      // multiplayer peer, so we need to initialize its ticcmd here.
+      static playerinput_t zeroinput;
+      G_BuildTiccmd(cmd, *pl, zeroinput, false);
+   }
    if(gamestate == GS_INTERMISSION)
    {
       if(GameModeInfo->interfuncs->TallyDone())

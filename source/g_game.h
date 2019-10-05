@@ -73,6 +73,8 @@ struct playerinput_t
 char *G_GetNameForMap(int episode, int map);
 int   G_GetMapForName(const char *name);
 
+void G_BuildTiccmd(ticcmd_t *cmd, player_t &p, playerinput_t &input, bool handlechatchar);
+
 bool G_Responder(const event_t *ev);
 bool G_CheckDemoStatus();
 void G_DeathMatchSpawnPlayer(int playernum);

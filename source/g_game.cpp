@@ -212,9 +212,8 @@ int inventoryTics;
 // NETCODE_FIXME: The ticcmd_t structure will probably need to be
 // altered to better support command packing.
 //
-void G_BuildTiccmd(ticcmd_t *cmd, playerinput_t &input, bool handlechatchar)
+void G_BuildTiccmd(ticcmd_t *cmd, player_t &p, playerinput_t &input, bool handlechatchar)
 {
-   player_t &p = players[consoleplayer]; // used to pretty-up code
    playerclass_t *pc = p.pclass;
    invbarstate_t &invbarstate = p.invbarstate;
 

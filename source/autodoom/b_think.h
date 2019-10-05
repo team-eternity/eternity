@@ -190,8 +190,6 @@ class Bot : public ZoneObject
    bool handleLineGoal(const BSubsec& ss, BotPathEnd& coord, const line_t& line);
    static PathResult reachableItem(const BSubsec& ss, void* v);
 
-   void simulateBaseTiccmd();
-
    bool shouldChat(int intervalSec = 0, int timekeeper = 0) const;
    
 public:
