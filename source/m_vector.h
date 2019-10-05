@@ -28,6 +28,7 @@
 #define M_VECTOR_H__
 
 #include "m_fixed.h"
+#include "tables.h"
 
 struct v3fixed_t
 {
@@ -41,6 +42,12 @@ struct v2fixed_t
    v2fixed_t() = default;
    v2fixed_t(fixed_t x, fixed_t y) : x(x), y(y)
    {
+   }
+
+   static v2fixed_t polar(fixed_t dist, angle_t ang)
+   {
+      return { FixedMul(dist, finecosine[ang >> ANGLETOFINESHIFT]),
+         FixedMul(dist, finesine[ang >> ANGLETOFINESHIFT]) };
    }
 
    template<typename T>

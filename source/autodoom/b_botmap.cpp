@@ -430,19 +430,15 @@ static void B_setSpecLinePositions()
          if(action->type == &S1ActionType || action->type == &SRActionType
                  || action->type == &DRActionType)
          {
-            v2fixed_t mid = {(line.v1->x + line.v2->x) / 2,
-               (line.v1->y + line.v2->y) / 2};
-            angle_t ang = P_PointToAngle(line.v1->x, line.v1->y,
-                                         line.v2->x, line.v2->y) - ANG90;
+            v2fixed_t mid = (v2fixed_t(*line.v1) + *line.v2) / 2;
+            angle_t ang = v2fixed_t(line.dx, line.dy).angle() - ANG90;
 
-            mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
-            mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
-            
+            mid += v2fixed_t::polar(USERANGE / 2, ang);
+
             ss = &botMap->pointInSubsector(mid);
             ss->linelist[&line] = USERANGE / 2;
 
-            mid.x += FixedMul(USERANGE / 2, B_AngleCosine(ang));
-            mid.y += FixedMul(USERANGE / 2, B_AngleSine(ang));
+            mid += v2fixed_t::polar(USERANGE / 2, ang);
 
             ss = &botMap->pointInSubsector(mid);
             if(!ss->linelist.count(&line))
