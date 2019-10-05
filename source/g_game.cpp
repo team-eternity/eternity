@@ -241,33 +241,19 @@ bool usearti = true;
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   bool sendcenterview = false;
-   int speed;
-   int tspeed;
-   int forward;
-   int side;
-   int newweapon;            // phares
-   int look = 0;
-   int mlook = 0;
-   int flyheight = 0;
-   static int prevmlook = 0;
-   ticcmd_t *base;
-   double tmousex, tmousey;     // local mousex, mousey
-   playerclass_t *pc = players[consoleplayer].pclass;
-   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
    player_t &p = players[consoleplayer]; // used to pretty-up code
+   playerclass_t *pc = p.pclass;
+   invbarstate_t &invbarstate = p.invbarstate;
 
-   base = I_BaseTiccmd();    // empty, or external driver
-   memcpy(cmd, base, sizeof(*cmd));
+   *cmd = *I_BaseTiccmd();    // empty, or external driver
 
    cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
+   int speed;
    if(autorun)
       speed = !(runiswalk && gameactions[ka_speed]);
    else
       speed = gameactions[ka_speed];
-
-   forward = side = 0;
 
    cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use] && demo_version >= 401)
@@ -293,6 +279,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else
       turnheld = 0;
 
+   int tspeed;
    if(turnheld < SLOWTURNTICS)
       tspeed = 2;             // slow turn
    else
@@ -306,6 +293,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // let movement keys cancel each other out
+   int side = 0;
    if(gameactions[ka_strafe])
    {
       if(gameactions[ka_right])
@@ -329,6 +317,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // gamepad dedicated analog strafe axis applies regardless
    side += (int)(pc->sidemove[speed] * joyaxes[axis_strafe]);
 
+   int forward = 0;
    if(gameactions[ka_forward])
       forward += pc->forwardmove[speed];
    if(gameactions[ka_backward])
@@ -359,7 +348,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(gameactions[ka_user4])
       cmd->actions |= AC_USER4;
 
-   mlook = allowmlook && (gameactions[ka_mlook] || automlook);
+   int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
    cmd->chatchar = C_dequeueChatChar();
@@ -371,6 +360,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= BT_USE;
 
    // only put BTN codes in here
+   int newweapon; // phares
    if(demo_version >= 401)
    {
       if(gameactions[ka_attack_alt])
@@ -378,19 +368,18 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       newweapon = -1;
 
-      if((players[consoleplayer].attackdown && !P_CheckAmmo(&players[consoleplayer]))
-         || gameactions[ka_nextweapon])
+      if((p.attackdown && !P_CheckAmmo(&p)) || gameactions[ka_nextweapon])
       {
-         weaponinfo_t *temp = E_FindBestWeapon(&players[consoleplayer]);
+         weaponinfo_t *temp = E_FindBestWeapon(&p);
          if(temp == nullptr)
          {
-            players[consoleplayer].attackdown = AT_NONE;
+            p.attackdown = AT_NONE;
             newweapon = -1;
          }
          else
          {
             newweapon = temp->id; // phares
-            cmd->slotIndex = E_FindFirstWeaponSlot(&players[consoleplayer], temp)->slotindex;
+            cmd->slotIndex = E_FindFirstWeaponSlot(&p, temp)->slotindex;
          }
       }
 
@@ -398,11 +387,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
          if(gameactions[i])
          {
-            weaponinfo_t *weapon = P_GetPlayerWeapon(&players[consoleplayer], i - ka_weapon1);
+            weaponinfo_t *weapon = P_GetPlayerWeapon(&p, i - ka_weapon1);
             if(weapon)
             {
-               const auto slot = E_FindEntryForWeaponInSlotIndex(&players[consoleplayer],
-                                                                 weapon, i - ka_weapon1);
+               const auto slot = E_FindEntryForWeaponInSlotIndex(&p, weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
                break;
@@ -412,14 +400,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       //next / prev weapon actions
       if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&players[consoleplayer], &cmd->slotIndex);
+         newweapon = P_NextWeapon(&p, &cmd->slotIndex);
       else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&players[consoleplayer], &cmd->slotIndex);
+         newweapon = P_PrevWeapon(&p, &cmd->slotIndex);
 
-      if(players[consoleplayer].readyweapon)
+      if(p.readyweapon)
       {
-         if(players[consoleplayer].readyweapon->id == newweapon ||
-            E_IsPoweredVariantOf(E_WeaponForID(newweapon), players[consoleplayer].readyweapon))
+         if(p.readyweapon->id == newweapon ||
+            E_IsPoweredVariantOf(E_WeaponForID(newweapon), p.readyweapon))
             newweapon = -1;
       }
 
@@ -439,10 +427,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
-      if((!demo_compatibility && (players[consoleplayer].attackdown & AT_PRIMARY) &&
-          !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
+      if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
+         gameactions[ka_nextweapon])
       {
-         newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
+         newweapon = P_SwitchWeaponOld(&p); // phares
       }
       else
       {                                 // phares 02/26/98: Added gamemode checks
@@ -475,17 +463,15 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
          if(!demo_compatibility && weapon_hotkey_cycling)
          {
-            player_t *player = &players[consoleplayer];
-
             // only select chainsaw from '1' if it's owned, it's
             // not already in use, and the player prefers it or
             // the fist is already in use, or the player does not
             // have the berserker strength.
 
-            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
-               !E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
-               (E_WeaponIsCurrentDEHNum(player, wp_fist) ||
-                !player->powers[pw_strength] ||
+            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(&p, wp_chainsaw) &&
+               !E_WeaponIsCurrentDEHNum(&p, wp_chainsaw) &&
+               (E_WeaponIsCurrentDEHNum(&p, wp_fist) ||
+                !p.powers[pw_strength] ||
                 P_WeaponPreferred(wp_chainsaw, wp_fist)))
             {
                newweapon = wp_chainsaw;
@@ -497,10 +483,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             // player prefers it.
 
             if(newweapon == wp_shotgun && enable_ssg &&
-               E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
-               (!E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) ||
-                E_WeaponIsCurrentDEHNum(player, wp_shotgun) ||
-                !(E_WeaponIsCurrentDEHNum(player, wp_supershotgun) &&
+               E_PlayerOwnsWeaponForDEHNum(&p, wp_supershotgun) &&
+               (!E_PlayerOwnsWeaponForDEHNum(&p, wp_shotgun) ||
+                E_WeaponIsCurrentDEHNum(&p, wp_shotgun) ||
+                !(E_WeaponIsCurrentDEHNum(&p, wp_supershotgun) &&
                  P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
             {
                newweapon = wp_supershotgun;
@@ -513,9 +499,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
           // haleyjd 03/06/09: next/prev weapon actions
           if(gameactions[ka_weaponup])
-              newweapon = P_NextWeapon(&players[consoleplayer]);
+              newweapon = P_NextWeapon(&p);
           else if(gameactions[ka_weapondown])
-              newweapon = P_PrevWeapon(&players[consoleplayer]);
+              newweapon = P_PrevWeapon(&p);
 
           const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
 
@@ -577,8 +563,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    // sf: smooth out the mouse movement
    // change to use tmousex, y
 
-   tmousex = mousex;
-   tmousey = mousey;
+   // local mousex, mousey
+   double tmousex = mousex;
+   double tmousey = mousey;
 
    // we average the mouse movement as well
    // this is most important in smoothing movement
@@ -595,7 +582,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // YSHEAR_FIXME: add arrow keylook?
-
+   bool sendcenterview = false;
+   int look = 0;
+   static int prevmlook;
    if(mlook)
    {
       // YSHEAR_FIXME: provide separate mlook speed setting?
@@ -639,6 +628,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 06/05/12: flight
+   int flyheight = 0;
    if(gameactions[ka_flyup])
       flyheight = FLIGHT_IMPULSE_AMT;
    if(gameactions[ka_flydown])
