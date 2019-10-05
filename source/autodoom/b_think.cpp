@@ -463,7 +463,7 @@ static bool BTR_switchReachTraverse(intercept_t *in, void *parm)
 static bool B_checkSwitchReach(fixed_t mox, fixed_t moy, const v2fixed_t &coord,
                                const line_t &swline)
 {
-   if(B_ExactDistance(mox - coord.x, moy - coord.y) >= USERANGE)
+   if((v2fixed_t(mox, moy) - coord).sqrtabs() >= USERANGE)
       return false;
    RTraversal trav;
 
@@ -766,7 +766,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
             cam.setTargetMobj(m);
             if (CAM_CheckSight(cam))
             {
-                dist = B_ExactDistance(*pl->mo, *m);
+                dist = (v2fixed_t(*m) - *pl->mo).sqrtabs();
                 if (dist < MISSILERANGE / 2)
                 {
                     newt = &targets.addNew();
@@ -791,7 +791,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
          cam.setTargetMobj(m);
          if (CAM_CheckSight(cam))
          {
-            dist = B_ExactDistance(*pl->mo, *m);
+            dist = (v2fixed_t(*m) - *pl->mo).sqrtabs();
             if (dist < MISSILERANGE / 2)
             {
                newt = &targets.addNew();
@@ -834,7 +834,7 @@ void Bot::enemyVisible(PODCollection<Target>& targets)
         if(CAM_CheckSight(cam) && LevelStateStack::Push(*line, *pl))
         {
             LevelStateStack::Pop();
-            dist = B_ExactDistance(*pl->mo, lvec);
+            dist = (lvec - *pl->mo).sqrtabs();
             if (dist < MISSILERANGE / 2)
             {
                 newt = &targets.addNew();
@@ -1140,7 +1140,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
     {
        const BotWeaponInfo &bwi = g_botweapons[pl->pclass][pl->readyweapon];
        const Mobj &t = *rt.m_clip.linetarget;
-       fixed_t dist = B_ExactDistance(t.x - mx, t.y - my);
+       fixed_t dist = (v2fixed_t(t) - v2fixed_t(mx, my)).sqrtabs();
 
        const double currentDmgRate =
        bwi.calcHitscanDamage(dist, t.radius, t.height,
@@ -1239,7 +1239,7 @@ void Bot::doCombatAI(const PODCollection<Target>& targets)
             {
                if(!stepLedges(true, 0, 0))
                {
-                   fixed_t dist = B_ExactDistance(nx - mx, ny - my);
+                   fixed_t dist = (v2fixed_t(nx, ny) - v2fixed_t(mx, my)).sqrtabs();
 
                   // TODO: portal-aware
                   int explodist = (emax(D_abs(nx - mx), D_abs(ny - my)) - pl->mo->radius) >> FRACBITS;
@@ -1413,12 +1413,8 @@ void Bot::doNonCombatAI()
                     m_dropSS.insert(m_lastPathSS);
                     for (const BNeigh& n : m_lastPathSS->neighs)
                     {
-                        if (B_ExactDistance(n.otherss->mid.x - m_lastPathSS->mid.x,
-                            n.otherss->mid.y - m_lastPathSS->mid.y)
-                            < 128 * FRACUNIT)
-                        {
+                        if ((n.otherss->mid - m_lastPathSS->mid).sqrtabs() < 128 * FRACUNIT)
                             m_dropSS.insert(n.otherss);
-                        }
                     }
                 }
                 m_lastPathSS = nullptr;
@@ -1472,9 +1468,8 @@ void Bot::doNonCombatAI()
     bool moveslow = false;
     if(m_justGotLost)
     {
-        moveslow = (m_justGotLost && B_ExactDistance(mx - m_path.start.x,
-                                                         my - m_path.start.y)
-                                        < pl->mo->radius * 2);
+        moveslow = (m_justGotLost &&
+                    (v2fixed_t(mx, my) - m_path.start).sqrtabs() < pl->mo->radius * 2);
         
         if(!moveslow)
             m_justGotLost = false;
@@ -1497,9 +1492,8 @@ void Bot::doNonCombatAI()
     if (angleturn < -2500)
         angleturn = -2500;
 
-    if (!dontMove && !(B_ExactDistance(endCoord.x - mx, endCoord.y - my)
-                       < 16 * FRACUNIT
-          && D_abs(angleturn) > 300))
+    if (!dontMove && !((endCoord - v2fixed_t(mx, my)).sqrtabs() < 16 * FRACUNIT &&
+                       D_abs(angleturn) > 300))
     {
         if(m_runfast)
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)

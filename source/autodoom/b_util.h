@@ -106,21 +106,6 @@ struct LineEq
 #define B_Frac2Int(x) ((x)>>FRACBITS)
 
 //
-// B_ExactDistance
-//
-// Better than P_AproxDistance and no slower!
-//
-inline static fixed_t B_ExactDistance(fixed_t dx, fixed_t dy)
-{
-   return (fixed_t)sqrt((double)dx * dx + (double)dy * dy);
-}
-template <typename T, typename U>
-inline static fixed_t B_ExactDistance(const T& m, const U& n)
-{
-   return B_ExactDistance(n.x - m.x, n.y - m.y);
-}
-
-//
 // B_AngleSine
 // B_AngleCosine
 //

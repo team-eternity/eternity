@@ -75,6 +75,11 @@ struct v2fixed_t
       return *this;
    }
 
+   v2fixed_t operator / (int n) const
+   {
+      return { x / n, y / n };
+   }
+
    v2fixed_t operator-() const
    {
       return { -x, -y };
@@ -88,6 +93,15 @@ struct v2fixed_t
    bool operator ! () const
    {
       return !x && !y;
+   }
+
+   //
+   // Returns the exact absolute value. MUST NOT BE USED IN DEMO CRITICAL CODE because it relies on
+   // floating point
+   //
+   fixed_t sqrtabs() const
+   {
+      return (fixed_t)sqrt((double)x * x + (double)y * y);
    }
 };
 

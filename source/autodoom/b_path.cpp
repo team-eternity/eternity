@@ -128,7 +128,8 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
             {
                 index = (int)(bytele->ss - first);
                 
-               tentative = getAdjustedDistance(db[1].ssdist[t - first], B_ExactDistance(t->mid.x - neigh.v.x - neigh.d.x / 2,                                                                                    t->mid.y - neigh.v.y - neigh.d.y / 2), t);
+               tentative = getAdjustedDistance(db[1].ssdist[t - first],
+                                               (t->mid - neigh.v - neigh.d / 2).sqrtabs(), t);
                 
                 if (db[1].ssvisit[index] != db[1].validcount
                     || tentative < db[1].ssdist[index])

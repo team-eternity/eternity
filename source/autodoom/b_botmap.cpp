@@ -1196,7 +1196,7 @@ void BotMap::addCornerNeighs()
                     n.myss = *it;
                     n.v.x = v->x;
                     n.v.y = v->y;
-                    n.dist = B_ExactDistance((*it)->mid, (*jt)->mid);
+                    n.dist = ((*jt)->mid - (*it)->mid).sqrtabs();
                     (*it)->neighs.add(n);
                 }
                 if (!ssVisitedMap[*jt].count(*it))
@@ -1207,7 +1207,7 @@ void BotMap::addCornerNeighs()
                     n.myss = *jt;
                     n.v.x = v->x;
                     n.v.y = v->y;
-                    n.dist = B_ExactDistance((*it)->mid, (*jt)->mid);
+                    n.dist = ((*jt)->mid - (*it)->mid).sqrtabs();
                     (*jt)->neighs.add(n);
                 }
             }
