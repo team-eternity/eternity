@@ -1309,7 +1309,7 @@ void Bot::doNonCombatAI()
     {
         // TODO: object of interest
         LevelStateStack::SetKeyPlayer(pl);
-        if(!m_finder.FindNextGoal(pl->mo->x, pl->mo->y, m_path, objOfInterest, this))
+        if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, objOfInterest, this))
         {
             ++m_searchstage;
             cmd->sidemove += random.range(-pl->pclass->sidemove[0],

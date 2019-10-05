@@ -92,7 +92,8 @@ public:
         Clear();
     }
 
-    bool FindNextGoal(fixed_t x, fixed_t y, BotPath& path, bool(*isGoal)(const BSubsec&, BotPathEnd&, void*), void* parm = nullptr);
+    bool FindNextGoal(v2fixed_t pos, BotPath& path,
+                      bool(*isGoal)(const BSubsec&, BotPathEnd&, void*), void* parm = nullptr);
     bool AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
 
     void SetPlayer(const player_t *player)

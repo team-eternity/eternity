@@ -50,7 +50,7 @@
 // Uses a search for the nearest goal (not knowing where to go)
 // It uses Dijkstra graph search, needed because of varying subsector sizes.
 //
-bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
+bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path,
                               bool(*isGoal)(const BSubsec&, BotPathEnd&, void*),
                               void* parm)
 {
@@ -64,10 +64,9 @@ bool PathFinder::FindNextGoal(fixed_t x, fixed_t y, BotPath& path,
     
     db[1].IncrementValidcount();
 
-   const BSubsec& source = m_map->pointInSubsector({ x, y });
+   const BSubsec& source = m_map->pointInSubsector(pos);
 
-    path.start.x = x;
-    path.start.y = y;
+    path.start = pos;
 
     //const BSubsec** front = db[1].ssqueue;
     //const BSubsec** back = db[1].ssqueue;
