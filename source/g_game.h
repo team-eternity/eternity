@@ -27,6 +27,7 @@
 
 struct event_t;
 struct player_t;
+struct ticcmd_t;
 class  Mobj;
 class  WadDirectory;
 
