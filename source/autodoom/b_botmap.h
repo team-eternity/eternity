@@ -223,7 +223,7 @@ public:
       efree(lines);
       efree(nodes);
 
-      efree(sectorFlags);
+      delete[] sectorFlags;
 
       VALID_FREE(validLines);
     
@@ -270,10 +270,19 @@ public:
    PODCollection<const Mobj*> livingMonsters;    // list of shootable objects
    PODCollection<const Mobj*> thrownProjectiles;
 
-   struct SectorTrait
+   //
+   // Holds static info about a sector
+   //
+   class SectorTrait : public ZoneObject
    {
-       int lockID;
-       bool isDoor;
+   public:
+      struct DoorInfo
+      {
+         int lock;
+         bool valid;
+      };
+      DoorInfo door = {};
+      PODCollection<const line_t *> doorlines;  // if a door, then it's list of the door lines
    };
    SectorTrait* sectorFlags;
    
@@ -287,7 +296,7 @@ private:
     // Post-processing
     void getAllLivingMonsters();
     void getDoorSectors();
-    static void SpecialIsDoor(int n, SectorTrait& st, const line_t* line);
+    static void SpecialIsDoor(int n, SectorTrait::DoorInfo& door, const line_t* line);
 
     void addCornerNeighs();
 

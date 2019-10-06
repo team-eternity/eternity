@@ -990,6 +990,10 @@ void *ZoneObject::operator new (size_t size)
 {
    return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
 }
+void *ZoneObject::operator new[] (size_t size)
+{
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+}
 
 //
 // ZoneObject::operator new
@@ -1093,6 +1097,10 @@ ZoneObject::~ZoneObject()
 // Calls Z_Free
 //
 void ZoneObject::operator delete (void *p)
+{
+   Z_Free(p);
+}
+void ZoneObject::operator delete[] (void *p)
 {
    Z_Free(p);
 }

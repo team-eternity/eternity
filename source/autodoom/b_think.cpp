@@ -99,8 +99,8 @@ void Bot::mapInit()
    m_finder.SetMap(botMap);
    m_finder.SetPlayer(pl);
    m_hasPath = false;
-    
-    m_lastPathSS = nullptr;
+
+   m_lostPathInfo = {};
 
    m_deepTriedLines.clear();
    m_deepSearchMode = DeepNormal;
@@ -460,14 +460,13 @@ static bool BTR_switchReachTraverse(intercept_t *in, void *parm)
    return true;
 }
 
-static bool B_checkSwitchReach(fixed_t mox, fixed_t moy, const v2fixed_t &coord,
-                               const line_t &swline)
+static bool B_checkSwitchReach(v2fixed_t mopos, v2fixed_t coord, const line_t &swline)
 {
-   if((v2fixed_t(mox, moy) - coord).sqrtabs() >= USERANGE)
+   if((mopos - coord).sqrtabs() >= USERANGE)
       return false;
    RTraversal trav;
 
-   return trav.Execute(mox, moy, coord.x, coord.y, PT_ADDLINES,
+   return trav.Execute(mopos.x, mopos.y, coord.x, coord.y, PT_ADDLINES,
                        BTR_switchReachTraverse, const_cast<line_t *>(&swline));
 }
 
@@ -1297,6 +1296,39 @@ void Bot::doCombatAI(const Collection<Target>& targets)
 }
 
 //
+// True if given neigh goes into a sector that will open up soon, or if it's an incoming crusher.
+//
+bool Bot::shouldWaitSector(const BNeigh &neigh) const
+{
+   if (!botMap->canPassNow(*ss, *neigh.otherss, pl->mo->height))
+       return true;
+
+    const sector_t* nsector = neigh.otherss->msector->getCeilingSector();
+    const sector_t* msector = ss->msector->getCeilingSector();
+
+    if(nsector != msector)
+    {
+        const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(nsector->ceilingdata);
+
+       // TODO: actually try to stop asap
+        if(ct && ct->crush > 0 && ct->direction == plat_down)
+            return true;
+    }
+   return false;
+}
+
+//
+// True if bot would like to open the door
+//
+static bool B_wantOpenDoor(const sector_t &sector)
+{
+   auto doorTh = thinker_cast<VerticalDoorThinker *>(sector.ceilingdata);
+   return (!doorTh &&
+           sector.ceilingheight < P_FindLowestCeilingSurrounding(&sector) - 4 * FRACUNIT) ||
+   (doorTh && doorTh->direction == plat_down);
+}
+
+//
 // Bot::doNonCombatAI
 //
 // Does whatever needs to be done when not fighting
@@ -1310,10 +1342,8 @@ void Bot::doNonCombatAI()
         if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, objOfInterest, this))
         {
             ++m_searchstage;
-            cmd->sidemove += random.range(-pl->pclass->sidemove[0],
-                pl->pclass->sidemove[0]);
-            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0],
-                pl->pclass->forwardmove[0]);
+            cmd->sidemove += random.range(-pl->pclass->sidemove[0], pl->pclass->sidemove[0]);
+            cmd->forwardmove += random.range(-pl->pclass->forwardmove[0], pl->pclass->forwardmove[0]);
            if(m_searchstage > DUNNO_CONCESSION_SEC * TICRATE &&
               shouldChat(IDLE_CHAT_INTERVAL_SEC, m_lastDunnoMessage))
            {
@@ -1331,14 +1361,12 @@ void Bot::doNonCombatAI()
    v2fixed_t mpos = v2fixed_t(*pl->mo);
    v2fixed_t npos;
     bool dontMove = false;
-    const BSubsec* nextss = nullptr;
+    const BSubsec* doorss = nullptr;
 
     v2fixed_t endCoord;
    const line_t *swline = nullptr;
     if (m_path.end.kind == BotPathEnd::KindCoord)
-    {
         endCoord = m_path.end.coord;
-    }
     else if (m_path.end.kind == BotPathEnd::KindWalkLine)
     {
         swline = m_path.end.walkLine;
@@ -1351,7 +1379,8 @@ void Bot::doNonCombatAI()
     if (ss == m_path.last)
     {
        npos = endCoord;
-        m_lastPathSS = ss;
+
+       m_lostPathInfo.setEndCoord(*ss, npos);
     }
     else
     {
@@ -1372,90 +1401,101 @@ void Bot::doNonCombatAI()
                     m_runfast = true;
                 }
             }
-            if (neigh->myss == ss)
-            {
-                npos = B_ProjectionOnSegment(mpos, neigh->v, neigh->d, pl->mo->radius);
 
-                if (!botMap->canPassNow(*neigh->myss, *neigh->otherss, pl->mo->height))
-                    dontMove = true;
+           const sector_t &sector = *neigh->otherss->msector->getCeilingSector();
+           if(botMap->sectorFlags[&sector - ::sectors].door.valid && B_wantOpenDoor(sector))
+              doorss = neigh->otherss;
+           if(neigh->myss != ss)
+              continue;
 
-               {
-                    const sector_t* nsector = neigh->otherss->msector->getCeilingSector();
-                    const sector_t* msector = ss->msector->getCeilingSector();
-                    
-                    if(nsector != msector)
-                    {
-                        const CeilingThinker* ct = thinker_cast<const CeilingThinker*>
-                       (nsector->ceilingdata);
+           npos = B_ProjectionOnSegment(mpos, neigh->v, neigh->d, pl->mo->radius);
+           dontMove = shouldWaitSector(*neigh);
 
-                       // TODO: actually try to stop asap
-                        if(ct && ct->crush > 0 && ct->direction == plat_down)
-                            dontMove = true;
+           m_lostPathInfo.setMidSS(*ss, *neigh);
 
-                    }
-                }
-                m_lastPathSS = ss;
-                if(random() % 64 == 0 && m_dropSS.count(ss))
-                {
-                    B_Log("Removed goner %d",
-                          (int)(ss - &botMap->ssectors[0]));
-                    m_dropSS.erase(ss);
-                }
-                nextss = neigh->otherss;
-                onPath = true;
-                break;
-            }
+             if(random() % 64 == 0 && m_dropSS.count(ss))
+             {
+                 B_Log("Removed goner %d", (int)(ss - &botMap->ssectors[0]));
+                 m_dropSS.erase(ss);
+             }
+             onPath = true;
+             break;
+
         }
         
         if (!onPath)
         {
             // not on path, so reset
-            if (m_lastPathSS)
+           bool recovering = false;
+            if (m_lostPathInfo.ss)
             {
-                if (!botMap->canPassNow(*ss, *m_lastPathSS, pl->mo->height))
+                if (!botMap->canPassNow(*ss, *m_lostPathInfo.ss, pl->mo->height))
                 {
-                    B_Log("Inserted goner %d", eindex(m_lastPathSS - &botMap->ssectors[0]));
-                    m_dropSS.insert(m_lastPathSS);
-                    for (const BNeigh& n : m_lastPathSS->neighs)
+                    B_Log("Inserted goner %d", eindex(m_lostPathInfo.ss - &botMap->ssectors[0]));
+                    m_dropSS.insert(m_lostPathInfo.ss);
+                    for (const BNeigh& n : m_lostPathInfo.ss->neighs)
                     {
                        // Also add nearby subsectors to increase the slowdown area
-                        if ((n.otherss->mid - m_lastPathSS->mid).sqrtabs() < 128 * FRACUNIT)
+                        if ((n.otherss->mid - m_lostPathInfo.ss->mid).sqrtabs() < 128 * FRACUNIT)
                             m_dropSS.insert(n.otherss);
                     }
                 }
-                m_lastPathSS = nullptr;
+               else if(m_lostPathInfo.timeToRecover())
+               {
+                  if(m_lostPathInfo.islast)
+                     npos = m_lostPathInfo.coord;
+                  else
+                  {
+                     npos = B_ProjectionOnSegment(mpos, m_lostPathInfo.neigh->v,
+                                                  m_lostPathInfo.neigh->d, pl->mo->radius);
+                     dontMove = shouldWaitSector(*m_lostPathInfo.neigh);
+                     if(dontMove)
+                        m_lostPathInfo.counter--;
+                  }
+                  recovering = true;
+               }
             }
-            m_searchstage = SearchStage_Normal;
-            m_hasPath = false;
-            if (random() % 3 == 0)
-                m_justGotLost = true;
-            return;
+           if(!recovering)
+           {
+              B_Log("Lost path");
+              m_lostPathInfo = {};
+               m_searchstage = SearchStage_Normal;
+               m_hasPath = false;
+               if (random() % 3 == 0)
+                   m_justGotLost = true;
+               return;
+           }
         }
     }
 
     m_intoSwitch = false;
-    if (goalTable.hasKey(BOT_WALKTRIG) && B_checkSwitchReach(mpos.x, mpos.y, endCoord, *swline))
+    if (goalTable.hasKey(BOT_WALKTRIG) && B_checkSwitchReach(mpos, endCoord, *swline))
     {
         m_intoSwitch = true;
         if(gametic % 2 == 0)
             cmd->buttons |= BT_USE;
     }
-    else if(nextss)
+    else if(doorss)
     {
         LevelStateStack::UseRealHeights(true);
-        const sector_t* nextsec = nextss->msector->getCeilingSector();
+        const sector_t& doorsec = *doorss->msector->getCeilingSector();
         LevelStateStack::UseRealHeights(false);
 
-       if(botMap->sectorFlags[nextsec - ::sectors].isDoor)
+       const BotMap::SectorTrait &trait = botMap->sectorFlags[&doorsec - ::sectors];
+
+       if(trait.door.valid && B_wantOpenDoor(doorsec))
        {
-          auto doorTh = thinker_cast<VerticalDoorThinker *>(nextsec->ceilingdata);
-          if((!doorTh &&
-              nextsec->ceilingheight < P_FindLowestCeilingSurrounding(nextsec) - 4 * FRACUNIT) ||
-             (doorTh && doorTh->direction == plat_down))
+          for(const line_t *line : trait.doorlines)
           {
-             m_intoSwitch = true;
-             if(gametic % 2 == 0)
-                cmd->buttons |= BT_USE;
+             v2fixed_t point = B_ProjectionOnSegment(mpos, v2fixed_t(*line->v1),
+                                                     v2fixed_t(line->dx, line->dy), 0);
+             if((point - mpos).sqrtabs() < USERANGE)
+             {
+                m_intoSwitch = true;
+                if(gametic % 2 == 0)
+                   cmd->buttons |= BT_USE;
+                break;
+             }
           }
        }
     }
@@ -1480,13 +1520,15 @@ void Bot::doNonCombatAI()
     angle_t tangle = (npos - mpos).angle();
     angle_t dangle = tangle - pl->mo->angle;
 
+//   bool runfast = m_runfast || (/*dangle > ANG90 && dangle < ANG270 && */(npos - mpos).sqrtabs() < 32 * FRACUNIT);
+
     if (random() % 128 == 0)
-        m_straferunstate = random.range(-1, 1);
+        m_straferunstate = random.range(-2, 2) / 2;
     if (!m_intoSwitch)
         tangle += ANG45 * m_straferunstate;
 
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
-    angleturn >>= 2;
+    angleturn >>= 3;
 
     if (angleturn > 2500)
         angleturn = 2500;
@@ -1495,14 +1537,13 @@ void Bot::doNonCombatAI()
 
     if (!dontMove && ((endCoord - mpos).sqrtabs() >= 16 * FRACUNIT || D_abs(angleturn) <= 300))
     {
-        if(m_runfast)
+        if(m_runfast && !m_intoSwitch)
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
                                          * pl->pclass->forwardmove[moveslow ? 0 : 1],
                                          B_AngleCosine(dangle));
-        if (m_intoSwitch && ss == m_path.last/* && cmd->forwardmove < 0*/)
+        if (m_intoSwitch /*&& ss == m_path.last && cmd->forwardmove < 0*/)
         {
-            cmd->forwardmove += FixedMul(pl->pclass->forwardmove[0] / 4,
-                                        B_AngleCosine(dangle));
+            cmd->forwardmove += FixedMul(pl->pclass->forwardmove[0] / 4, B_AngleCosine(dangle));
         }
         else
         {

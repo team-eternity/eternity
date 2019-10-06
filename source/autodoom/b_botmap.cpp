@@ -530,11 +530,11 @@ void BotMap::getAllLivingMonsters()
     }
 }
 
-void BotMap::SpecialIsDoor(int n, SectorTrait& st, const line_t* line)
+void BotMap::SpecialIsDoor(int n, SectorTrait::DoorInfo& door, const line_t* line)
 {
     VanillaLineSpecial vls = (VanillaLineSpecial)n;
-    st.lockID = EV_LockDefIDForSpecial(n);
-    st.isDoor = false;
+    door.lock = EV_LockDefIDForSpecial(n);
+    door.valid = false;
     switch (vls)
     {
        case VLS_D1DoorBlazeOpen:
@@ -547,7 +547,7 @@ void BotMap::SpecialIsDoor(int n, SectorTrait& st, const line_t* line)
        case VLS_DRRaiseDoorBlue:
        case VLS_DRRaiseDoorRed:
        case VLS_DRRaiseDoorYellow:
-           st.isDoor = true;
+           door.valid = true;
            break;
        case VLS_SRDoorBlazeOpen:
        case VLS_SROpenDoor:
@@ -557,24 +557,18 @@ void BotMap::SpecialIsDoor(int n, SectorTrait& st, const line_t* line)
        case VLS_SRDoorBlazeOpenRed:
        case VLS_SRDoorBlazeOpenYellow:
           if(line->backsector && line->args[0] == line->backsector->tag)
-             st.isDoor = true;
+             door.valid = true;
           break;
        default:
-           st.isDoor = false;
+           door.valid = false;
            break;
     }
 }
 
 void BotMap::getDoorSectors()
 {
-    efree(sectorFlags);
-    sectorFlags = ecalloc(SectorTrait*, ::numsectors, sizeof(*sectorFlags));
-
-    const sector_t* sec;
-    const line_t* line;
-    int i, j;
-    SectorTrait st, defst;
-    bool typeset;
+   delete[] sectorFlags;
+   sectorFlags = new SectorTrait[::numsectors];
 
     // A sector is a door if:
     // - it has at least two two-sided lines
@@ -582,42 +576,46 @@ void BotMap::getDoorSectors()
     // - they all are DR type
     // - they all have the same lockID
 
-    int numtwosided;
-
    // Check for doors
-    for (i = 0; i < ::numsectors; ++i)
+   PODCollection<const line_t *> doorlines;
+    for (int i = 0; i < ::numsectors; ++i)
     {
-        sec = ::sectors + i;
-        numtwosided = 0;
-        memset(&st, 0, sizeof(st));
-        typeset = false;
-        for (j = 0; j < sec->linecount; ++j)
+       const sector_t &sec = ::sectors[i];
+       doorlines.makeEmpty();
+
+       SectorTrait::DoorInfo door = {}, defdoor = {};
+
+        bool typeset = false;
+        for (int j = 0; j < sec.linecount; ++j)
         {
-            line = sec->lines[j];
-            if (!line->backsector)
+            const line_t &line = *sec.lines[j];
+            if (!line.backsector)
                 continue;
-            ++numtwosided;
             
-            if (line->backsector != sec)
+            if (line.backsector != &sec)
             {
                 // fail
                 goto notDoor;
             }
-            SpecialIsDoor(line->special, st, line);
+            SpecialIsDoor(line.special, door, &line);
             if (!typeset)
             {
-                if (!st.isDoor)
+                if (!door.valid)
                     goto notDoor;
                 typeset = true;
-                defst = st;
+                defdoor = door;
             }
-            else if (memcmp(&defst, &st, sizeof(st)))
+            else if (memcmp(&defdoor, &door, sizeof(door)))
             {
                 goto notDoor;
             }
+
+           // line seems valid
+           doorlines.add(&line);
         }
         // okay
-        sectorFlags[i] = st;
+        sectorFlags[i].door = door;
+       sectorFlags[i].doorlines = std::move(doorlines);
     notDoor:
         ;
     }

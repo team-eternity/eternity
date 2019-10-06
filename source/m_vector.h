@@ -28,7 +28,6 @@
 #define M_VECTOR_H__
 
 #include "m_compare.h"
-#include "m_fixed.h"
 #include "tables.h"
 
 struct v3fixed_t

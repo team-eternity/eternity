@@ -94,9 +94,9 @@ static fixed_t applyDoorCorrection(const sector_t& sector)
    
    
    size_t secnum = &sector - ::sectors;
-   if(botMap && botMap->sectorFlags && botMap->sectorFlags[secnum].isDoor)
+   if(botMap && botMap->sectorFlags && botMap->sectorFlags[secnum].door.valid)
    {
-      int lockID = botMap->sectorFlags[secnum].lockID;
+      int lockID = botMap->sectorFlags[secnum].door.lock;
       if(lockID && g_keyPlayer)
       {
          if(E_PlayerCanUnlock(g_keyPlayer, lockID, false, true))

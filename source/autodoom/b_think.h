@@ -63,7 +63,48 @@ class Bot : public ZoneObject
                      // commands
    ticcmd_t *cmd = nullptr;    // my commands to output
    const BSubsec *ss = nullptr;  // subsector reference
-   const BSubsec* m_lastPathSS = nullptr;  // last subsector when on path
+
+   //
+   // Keep track in case bot gets off path but can recover
+   //
+   struct LostPathInfo
+   {
+      enum
+      {
+         RECOVER_TIME = 1 * TICRATE,
+      };
+
+      const BSubsec *ss;
+      bool islast;
+      union
+      {
+         const BNeigh *neigh; // if not the last, also remember the neigh
+         v2fixed_t coord;  // if last, then the exact destination
+      };
+      int counter;   // limit time it should recover
+
+      void setEndCoord(const BSubsec &ss, v2fixed_t coord)
+      {
+         this->ss = &ss;
+         islast = true;
+         this->coord = coord;
+         counter = 0;
+      }
+
+      void setMidSS(const BSubsec &ss, const BNeigh &neigh)
+      {
+         this->ss = &ss;
+         islast = false;
+         this->neigh = &neigh;
+         counter = 0;
+      }
+
+      bool timeToRecover()
+      {
+         return counter++ < RECOVER_TIME;
+      }
+   } m_lostPathInfo = {};
+
    std::unordered_set<const BSubsec*> m_dropSS;
 
    MetaTable goalTable;  // objectives to get (typically one object)
@@ -169,6 +210,7 @@ class Bot : public ZoneObject
    const Target *pickBestTarget(const Collection<Target>& targets, CombatInfo &cinfo);
    void doCombatAI(const Collection<Target>& targets);
 
+   bool shouldWaitSector(const BNeigh &neigh) const;
    void doNonCombatAI();
 
    // Movement control

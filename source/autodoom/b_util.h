@@ -154,7 +154,7 @@ v2double_t B_ProjectionOnLine(double x, double y, double x1, double y1,
                               double dx, double dy);
 v2fixed_t B_ProjectionOnLine(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
                              fixed_t dx, fixed_t dy);
-v2fixed_t B_ProjectionOnSegment(v2fixed_t v, v2fixed_t v1, v2fixed_t dv, fixed_t padding = 0);
+v2fixed_t B_ProjectionOnSegment(v2fixed_t v, v2fixed_t v1, v2fixed_t dv, fixed_t padding);
 v2fixed_t B_ProjectionOnLine_f(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
    fixed_t dx, fixed_t dy);
 void B_GetMapBounds(fixed_t &minx, fixed_t &miny, fixed_t &maxx, fixed_t &maxy);

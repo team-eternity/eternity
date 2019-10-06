@@ -216,8 +216,10 @@ public:
    virtual ~ZoneObject();
    void *operator new (size_t size);
    void *operator new (size_t size, int tag, void **user = nullptr);
+   void *operator new[] (size_t size);
    void  operator delete (void *p);
    void  operator delete (void *p, int, void **);
+   void  operator delete[] (void *p);
    void  changeTag(int tag);
 
    // zone memblock reflection
