@@ -38,7 +38,9 @@
 #include "../c_io.h"
 #include "../d_files.h"
 #include "../doomstat.h"
+#include "../e_exdata.h"
 #include "../e_player.h"
+#include "../ev_actions.h"
 #include "../ev_specials.h"
 #include "../m_bbox.h"
 #include "../m_buffer.h"
@@ -48,6 +50,7 @@
 #include "../p_map.h"
 #include "../p_maputl.h"
 #include "../p_setup.h"
+#include "../p_spec.h"
 #include "../r_defs.h"
 #include "../r_main.h"
 #include "../r_state.h"
@@ -530,39 +533,46 @@ void BotMap::getAllLivingMonsters()
     }
 }
 
-void BotMap::SpecialIsDoor(int n, SectorTrait::DoorInfo& door, const line_t* line)
+void BotMap::SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line)
 {
-    VanillaLineSpecial vls = (VanillaLineSpecial)n;
-    door.lock = EV_LockDefIDForSpecial(n);
-    door.valid = false;
-    switch (vls)
-    {
-       case VLS_D1DoorBlazeOpen:
-       case VLS_D1OpenDoor:
-       case VLS_DRDoorBlazeRaise:
-       case VLS_DRRaiseDoor:
-       case VLS_D1OpenDoorBlue:
-       case VLS_D1OpenDoorRed:
-       case VLS_D1OpenDoorYellow:
-       case VLS_DRRaiseDoorBlue:
-       case VLS_DRRaiseDoorRed:
-       case VLS_DRRaiseDoorYellow:
-           door.valid = true;
-           break;
-       case VLS_SRDoorBlazeOpen:
-       case VLS_SROpenDoor:
-       case VLS_SRDoorBlazeRaise:
-       case VLS_SRRaiseDoor:
-       case VLS_SRDoorBlazeOpenBlue:
-       case VLS_SRDoorBlazeOpenRed:
-       case VLS_SRDoorBlazeOpenYellow:
-          if(line->backsector && line->args[0] == line->backsector->tag)
-             door.valid = true;
-          break;
-       default:
-           door.valid = false;
-           break;
-    }
+   int n = line->special;
+   door.lock = EV_LockDefIDForSpecial(n); // TODO: param specials
+   door.valid = false;
+
+   const ev_action_t *action = EV_ActionForSpecial(n);
+   if(!action)
+      return;
+
+   static const std::unordered_set<EVActionFunc> basicRemoteDoors = {
+      EV_ActionDoorBlazeOpen,
+      EV_ActionDoorBlazeRaise,
+      EV_ActionOpenDoor,
+      EV_ActionRaiseDoor,
+      EV_ActionDoLockedDoor
+   };
+
+   static const std::unordered_set<EVActionFunc> paramDoors = {
+      EV_ActionParamDoorRaise,
+      EV_ActionParamDoorOpen,
+      EV_ActionParamDoorWaitRaise,
+      EV_ActionParamDoorLockedRaise,
+   };
+
+   bool tagsback = line->backsector && line->args[0] == line->backsector->tag;
+   int gentype;
+   int kind;
+
+   door.valid = action->action == EV_ActionVerticalDoor ||
+   (basicRemoteDoors.count(action->action) && action->type == &SRActionType && tagsback) ||
+   (EV_GenTypeForSpecial(n) == GenTypeDoor &&
+   ((kind = (n - GenDoorBase & DoorKind) >> DoorKindShift) == OdCDoor || kind == ODoor) &&
+    ((gentype = EV_GenActivationType(n)) == PushMany || (gentype == SwitchMany && tagsback))) ||
+   (paramDoors.count(action->action) &&
+    (line->extflags & (EX_ML_PLAYER | EX_ML_USE | EX_ML_REPEAT)) ==
+    (EX_ML_PLAYER | EX_ML_USE | EX_ML_REPEAT) && (!line->args[0] || tagsback));
+
+   // TODO: add support for pushable doors, but those need a differeny handling in the non-combat
+   // TODO: add non-door ceilings. But for that we need to provide info about destination height.
 }
 
 void BotMap::getDoorSectors()
@@ -597,7 +607,7 @@ void BotMap::getDoorSectors()
                 // fail
                 goto notDoor;
             }
-            SpecialIsDoor(line.special, door, &line);
+            SpecialIsDoor(door, &line);
             if (!typeset)
             {
                 if (!door.valid)

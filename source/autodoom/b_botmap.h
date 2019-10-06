@@ -296,7 +296,7 @@ private:
     // Post-processing
     void getAllLivingMonsters();
     void getDoorSectors();
-    static void SpecialIsDoor(int n, SectorTrait::DoorInfo& door, const line_t* line);
+    static void SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line);
 
     void addCornerNeighs();
 
