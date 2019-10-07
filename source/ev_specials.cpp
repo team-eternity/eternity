@@ -1635,6 +1635,67 @@ bool EV_IsParamLineSpec(int special)
    return ((EV_CompositeActionFlags(action) & EV_PARAMLINESPEC) == EV_PARAMLINESPEC);
 }
 
+//
+// True if it's a usable special
+//
+bool EV_IsSwitchSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   // basic
+   if(action->type == &S1ActionType || action->type == &SRActionType ||
+      action->type == &DRActionType)
+   {
+      return true;
+   }
+
+   // generalized
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == SwitchOnce || genspac == SwitchMany || genspac == PushOnce ||
+      genspac == PushMany;
+   }
+
+   // Reject anything else with specified activation
+   if(action->type->activation >= 0)
+      return false;
+
+   // parameterized
+   return !!(line.extflags & EX_ML_USE);
+}
+
+//
+// True if it's a walkable special
+//
+bool EV_IsWalkSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   // basic
+   if(action->type == &W1ActionType || action->type == &WRActionType)
+      return true;
+
+   // generalized
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == WalkOnce || genspac == WalkMany;
+   }
+
+   // Reject anything else with specified activation
+   if(action->type->activation >= 0)
+      return false;
+
+   // parameterized
+   return !!(line.extflags & EX_ML_CROSS);
+}
+
+
 //=============================================================================
 //
 // Development Commands

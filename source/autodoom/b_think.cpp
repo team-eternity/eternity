@@ -223,6 +223,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
       return false;
 
    auto exitcondition = [this](unsigned stage, const char *announcement) {
+      // FIXME: consider going immediately if the usual case is doomed to fail for any reason
         if(m_searchstage >= stage)
         {
            if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
@@ -625,53 +626,50 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 //
 bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& line)
 {
-    const ev_action_t* action = EV_ActionForSpecial(line.special);
-    if (action && (action->type == &S1ActionType
-                   || action->type == &SRActionType
-                   || action->type == &W1ActionType
-                   || action->type == &WRActionType
-                   || action->type == &DRActionType))
-    {
-        // OK, this might be viable. But check.
-        // DeepCheckLosses not reached here
-        if (m_deepSearchMode == DeepAvail)
+   // TODO: add support for the other activation types
+   if(!EV_IsWalkSpecial(line) && !EV_IsSwitchSpecial(line))
+      return false;
+
+     // OK, this might be viable. But check.
+     // DeepCheckLosses not reached here
+     if (m_deepSearchMode == DeepAvail)
+     {
+         m_deepTriedLines.insert(&line);
+         return true;
+     }
+     else if (m_deepSearchMode == DeepBeyond)
+     {
+         if (!m_deepTriedLines.count(&line))
+         {
+             if (shouldUseSpecial(line, ss))
+                 return true;
+             m_deepTriedLines.insert(&line);
+
+             // ONLY return true if pushing was useful.
+
+             if(LevelStateStack::Push(line, *pl,
+                                      ss.msector->getFloorSector()))
+             {
+                 m_deepRepeat = &ss;
+                 return true;
+             }
+         }
+         //return false;
+     }
+     else
+     {
+        auto goaltag = v2fixed_t(*line.v1);
+        if (shouldUseSpecial(line, ss) && !otherBotsHaveGoal(BOT_WALKTRIG, goaltag))
         {
-            m_deepTriedLines.insert(&line);
+            coord.kind = BotPathEnd::KindWalkLine;
+            coord.walkLine = &line;
+            //crd.x += self.random.range(-16, 16) * FRACUNIT;
+            //crd.y += self.random.range(-16, 16) * FRACUNIT;
+            goalTable.setV2Fixed(BOT_WALKTRIG,goaltag);
             return true;
         }
-        else if (m_deepSearchMode == DeepBeyond)
-        {
-            if (!m_deepTriedLines.count(&line))
-            {
-                if (shouldUseSpecial(line, ss))
-                    return true;
-                m_deepTriedLines.insert(&line);
+     }
 
-                // ONLY return true if pushing was useful.
-
-                if(LevelStateStack::Push(line, *pl,
-                                         ss.msector->getFloorSector()))
-                {
-                    m_deepRepeat = &ss;
-                    return true;
-                }
-            }
-            //return false;
-        }
-        else
-        {
-           auto goaltag = v2fixed_t(*line.v1);
-           if (shouldUseSpecial(line, ss) && !otherBotsHaveGoal(BOT_WALKTRIG, goaltag))
-           {
-               coord.kind = BotPathEnd::KindWalkLine;
-               coord.walkLine = &line;
-               //crd.x += self.random.range(-16, 16) * FRACUNIT;
-               //crd.y += self.random.range(-16, 16) * FRACUNIT;
-               goalTable.setV2Fixed(BOT_WALKTRIG,goaltag);
-               return true;
-           }
-        }
-    }
     return false;
 }
 
