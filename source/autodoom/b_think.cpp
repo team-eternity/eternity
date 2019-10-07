@@ -1231,7 +1231,7 @@ void Bot::doCombatAI(const Collection<Target>& targets)
             {
                 pickRandomWeapon(targets[0]);
             }
-           if(!stepLedges(true, 0, 0))
+           if(!stepLedges(true, {}))
            {
             cmd->forwardmove = FixedMul(2 * pl->pclass->forwardmove[1],
                 B_AngleCosine(dangle));
@@ -1251,7 +1251,7 @@ void Bot::doCombatAI(const Collection<Target>& targets)
            // Check ledges!
             if (random() % 8 != 0)
             {
-               if(!stepLedges(true, 0, 0))
+               if(!stepLedges(true, {}))
                {
                    fixed_t dist = (v2fixed_t(nx, ny) - v2fixed_t(mx, my)).sqrtabs();
 
@@ -1337,7 +1337,6 @@ void Bot::doNonCombatAI()
 {
     if (!m_hasPath)
     {
-        // TODO: object of interest
         LevelStateStack::SetKeyPlayer(pl);
         if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, objOfInterest, this))
         {
@@ -1548,7 +1547,7 @@ void Bot::doNonCombatAI()
         else
         {
             if(!m_runfast)
-                cruiseControl(npos.x, npos.y, moveslow);
+                cruiseControl(npos, moveslow);
             else
                 cmd->sidemove -= FixedMul((moveslow ? 1 : 2)
                                           * pl->pclass->sidemove[moveslow ? 0 : 1],
@@ -1575,14 +1574,14 @@ void Bot::doNonCombatAI()
 // nx and ny are the intended destination coordinates. Returns true if it hit
 // a ledge.
 //
-bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
+bool Bot::stepLedges(bool avoid, v2fixed_t npos)
 {
    auto mpos = v2fixed_t(*pl->mo);
 
     v2fixed_t landing = mpos + m_realVelocity.fixedmul(DRIFT_TIME);
 
    return landing != mpos &&
-   !botMap->pathTraverse(mpos.x, mpos.y, landing.x, landing.y, [this, mpos, avoid, nx, ny](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
+   !botMap->pathTraverse(mpos.x, mpos.y, landing.x, landing.y, [this, mpos, avoid, npos](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
 
         divline_t mdl;
         mdl.x = line.v[0]->x;
@@ -1596,10 +1595,7 @@ bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
         {
             v2fixed_t targvel;
            if(!avoid)
-           {
-              targvel.x = FixedMul(nx - mpos.x, DRIFT_TIME_INV) - m_realVelocity.x;
-              targvel.y = FixedMul(ny - mpos.y, DRIFT_TIME_INV) - m_realVelocity.y;
-           }
+              targvel = (npos - mpos).fixedmul(DRIFT_TIME_INV) - m_realVelocity;
            else
            {
               // try to avoid the ledge instead
@@ -1639,10 +1635,10 @@ bool Bot::stepLedges(bool avoid, fixed_t nx, fixed_t ny)
    });
 }
 
-void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
+void Bot::cruiseControl(v2fixed_t npos, bool moveslow)
 {
 
-   if(stepLedges(false, nx, ny))
+   if(stepLedges(false, npos))
       return;
 
 //    const fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT
@@ -1671,11 +1667,11 @@ void Bot::cruiseControl(fixed_t nx, fixed_t ny, bool moveslow)
 #endif
 //#if 0
 
-    // Suggested speed: 15.5
+    // FIXME: instead of hardcoding, calculate speed from friction and acceleration
     fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
     if(m_straferunstate)
         runSpeed = runSpeed * 64 / 50;
-    angle_t tangle = P_PointToAngle(pl->mo->x, pl->mo->y, nx, ny);
+    angle_t tangle = (npos - *pl->mo).angle();
     angle_t dangle = tangle - pl->mo->angle;
 
     // Intended speed: forwardly, V*cos(dangle)

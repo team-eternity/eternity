@@ -218,8 +218,8 @@ class Bot : public ZoneObject
    {
       m_combatStrafeState = random.range(0, 1) * 2 - 1;
    }
-   bool stepLedges(bool avoid, fixed_t nx, fixed_t ny);
-   void cruiseControl(fixed_t nx, fixed_t ny, bool moveslow);
+   bool stepLedges(bool avoid, v2fixed_t npos);
+   void cruiseControl(v2fixed_t npos, bool moveslow);
 
    void capCommands();
 
