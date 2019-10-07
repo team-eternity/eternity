@@ -49,10 +49,42 @@ struct subsector_t;
 
 struct divline_t
 {
-   fixed_t     x;
-   fixed_t     y;
-   fixed_t     dx;
-   fixed_t     dy;
+   union
+   {
+      struct
+      {
+         fixed_t     x;
+         fixed_t     y;
+      };
+      v2fixed_t v;
+   };
+   union
+   {
+      struct
+      {
+         fixed_t     dx;
+         fixed_t     dy;
+      };
+      v2fixed_t dv;
+   };
+
+   divline_t() = default;
+   divline_t(v2fixed_t v, v2fixed_t dv) : v(v), dv(dv)
+   {
+   }
+   divline_t(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy) : x(x), y(y), dx(dx), dy(dy)
+   {
+   }
+
+   static divline_t points(v2fixed_t v1, v2fixed_t v2)
+   {
+      return { v1, v2 - v1 };
+   }
+
+   angle_t angle() const
+   {
+      return dv.angle();
+   }
 };
 
 //
@@ -109,6 +141,7 @@ int P_PointOnLineSidePrecise(fixed_t x, fixed_t y, const line_t *line);
 extern int (*P_PointOnLineSide)(fixed_t x, fixed_t y, const line_t *line);
 
 int     P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line);
+int P_PointOnDivlineSide(v2fixed_t v, const divline_t &line);
 void    P_MakeDivline(const line_t *li, divline_t *dl);
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1);
 int     P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld);

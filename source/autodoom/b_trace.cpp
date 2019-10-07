@@ -832,11 +832,7 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       int s2 = P_PointOnDivlineSide(line.v[1]->x, line.v[1]->y, ctx->trace);
       if(s1 == s2)
          return true;   // seg not crossed
-      divline_t dl;
-      dl.x = line.v[0]->x;
-      dl.y = line.v[0]->y;
-      dl.dx = line.v[1]->x - dl.x;
-      dl.dy = line.v[1]->y - dl.y;
+      divline_t dl = divline_t::points(*line.v[0], *line.v[1]);
       s1 = P_PointOnDivlineSide(ctx->trace->x, ctx->trace->y, &dl);
       s2 = P_PointOnDivlineSide(ctx->trace->x + ctx->trace->dx,
                                 ctx->trace->y + ctx->trace->dy, &dl);
@@ -908,13 +904,9 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    count = ctx.intercepts.getLength();
    end = ctx.intercepts.end();
 
-   divline_t mdl;
    for(scan = ctx.intercepts.begin(); scan < end; ++scan)
    {
-      mdl.x = scan->line->v[0]->x;
-      mdl.y = scan->line->v[0]->y;
-      mdl.dx = scan->line->v[1]->x - mdl.x;
-      mdl.dy = scan->line->v[1]->y - mdl.y;
+      divline_t mdl = divline_t::points(*scan->line->v[0], *scan->line->v[1]);
       scan->frac = P_InterceptVector(&dl, &mdl);
    }
 

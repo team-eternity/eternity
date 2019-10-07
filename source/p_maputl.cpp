@@ -240,6 +240,14 @@ int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
       (line->dy^line->dx^(x -= line->x)^(y -= line->y)) < 0 ? (line->dy^x) < 0 :
       FixedMul(y>>8, line->dx>>8) >= FixedMul(line->dy>>8, x>>8);
 }
+int P_PointOnDivlineSide(v2fixed_t v, const divline_t &line)
+{
+   return
+   !line.dx ? v.x <= line.x ? line.dy > 0 : line.dy < 0 :
+   !line.dy ? v.y <= line.y ? line.dx < 0 : line.dx > 0 :
+   (line.dy ^ line.dx ^ (v.x -= line.x) ^ (v.y -= line.y)) < 0 ? (line.dy ^ v.x) < 0 :
+   FixedMul(v.y >> 8, line.dx >> 8) >= FixedMul(line.dy >> 8, v.x >> 8);
+}
 
 //
 // P_MakeDivline

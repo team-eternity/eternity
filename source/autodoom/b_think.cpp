@@ -1583,12 +1583,7 @@ bool Bot::stepLedges(bool avoid, v2fixed_t npos)
    return landing != mpos &&
    !botMap->pathTraverse(mpos.x, mpos.y, landing.x, landing.y, [this, mpos, avoid, npos](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
 
-        divline_t mdl;
-        mdl.x = line.v[0]->x;
-        mdl.y = line.v[0]->y;
-        mdl.dx = line.v[1]->x - mdl.x;
-        mdl.dy = line.v[1]->y - mdl.y;
-        int s = P_PointOnDivlineSide(dl.x, dl.y, &mdl);
+        int s = P_PointOnDivlineSide(dl.v, divline_t::points(*line.v[0], *line.v[1]));
 
         if(botMap->canPassNow(line.msec[s], line.msec[s ^ 1], pl->mo->height) &&
            !botMap->canPassNow(line.msec[s ^ 1], line.msec[s], pl->mo->height))
@@ -1603,30 +1598,22 @@ bool Bot::stepLedges(bool avoid, v2fixed_t npos)
               // we have our direction divline and the crossed line
               // we must try to get back
               // get the intersection vector. We have frac
-              v2fixed_t dest;
-              dest.x = dl.x + FixedMul(dl.dx, frac);
-              dest.y = dl.y + FixedMul(dl.dy, frac);
-              angle_t fang = P_PointToAngle(dl.x, dl.y, dl.x + dl.dx, dl.y + dl.dy) >> ANGLETOFINESHIFT;
-              dest.x -= (pl->mo->radius >> FRACBITS) * finecosine[fang];
-              dest.y -= (pl->mo->radius >> FRACBITS) * finesine[fang];
+              v2fixed_t dest = dl.v + dl.dv.fixedmul(frac);
+              dest -= v2fixed_t::polar(pl->mo->radius, dl.angle());
 
               targvel = (dest - mpos).fixedmul(DRIFT_TIME_INV) - m_realVelocity;
            }
 
-            if(D_abs(targvel.x) <= FRACUNIT && D_abs(targvel.y) <= FRACUNIT)
+            if(targvel.chebabs() <= FRACUNIT)
             {
                 cmd->forwardmove += pl->pclass->forwardmove[0]; // hack
                 return false;
             }
 
-            angle_t tangle = P_PointToAngle(0, 0, targvel.x, targvel.y);
-            angle_t dangle = tangle - pl->mo->angle;
-            fixed_t finedangle = dangle >> ANGLETOFINESHIFT;
+            fixed_t finedangle = (targvel.angle() - pl->mo->angle) >> ANGLETOFINESHIFT;
 
-            cmd->forwardmove += FixedMul(pl->pclass->forwardmove[1],
-                                         finecosine[finedangle]);
+            cmd->forwardmove += FixedMul(pl->pclass->forwardmove[1], finecosine[finedangle]);
             cmd->sidemove -= FixedMul(pl->pclass->sidemove[1], finesine[finedangle]);
-
 
          return false;
       }

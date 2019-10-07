@@ -89,12 +89,7 @@ void PlayerObserver::observeJumping()
 
          if(!frac)
             return true;
-         divline_t linedl;
-         linedl.x = line.v[0]->x;
-         linedl.y = line.v[0]->y;
-         linedl.dx = line.v[1]->x - linedl.x;
-         linedl.dy = line.v[1]->y - linedl.y;
-         int side = P_PointOnDivlineSide(dl.x, dl.y, &linedl);
+         int side = P_PointOnDivlineSide(dl.v, divline_t::points(*line.v[0], *line.v[1]));
          const MetaSector *ms1 = line.msec[side];
          const MetaSector *ms2 = line.msec[side ^ 1];
          if(!ms1 || !ms2)

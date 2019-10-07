@@ -68,10 +68,8 @@ public:
    //
    // Simple 2D coordinate
    //
-   struct Vertex
-   {
-      fixed_t x, y;
-   } *vertices;
+   typedef v2fixed_t Vertex;
+   Vertex *vertices;
    int numverts;
    
    //
