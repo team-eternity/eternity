@@ -1711,6 +1711,77 @@ bool EV_IsNonPlayerSpecial(const line_t &line)
    return EV_IsParamAction(*action) && !(line.extflags & EX_ML_PLAYER);
 }
 
+//
+// True if it's a special which can only lower the ceiling (never helpful unless a push special
+// depends on it, but DOOM natively lacks that)
+//
+bool EV_IsCeilingLoweringSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return true;
+
+   static const std::unordered_set<EVActionFunc> types = {
+      EV_ActionCeilingLowerAndCrush,
+      EV_ActionCeilingLowerToFloor,
+      EV_ActionCloseDoor,
+      EV_ActionCloseDoor30,
+      EV_ActionDoorBlazeClose,
+
+      EV_ActionParamCeilingLowerAndCrushDist,
+      EV_ActionParamCeilingLowerAndCrush,
+      EV_ActionParamCeilingLowerByTexture,
+      EV_ActionParamCeilingLowerByValue,  // FIXME: negative values
+      EV_ActionParamCeilingLowerByValueTimes8,
+      EV_ActionParamCeilingLowerInstant,
+      EV_ActionParamCeilingLowerToFloor,
+      EV_ActionParamCeilingLowerToHighestFloor,
+      EV_ActionParamCeilingLowerToLowest,
+      EV_ActionParamCeilingLowerToNearest,
+      EV_ActionParamCeilingRaiseToLowest,
+      EV_ActionParamCeilingToFloorInstant,
+      EV_ActionParamDoorClose,
+      EV_ActionParamDoorCloseWaitOpen,
+      EV_ActionParamDoorWaitClose,
+   };
+   if(types.count(action->action))
+      return true;
+   int gentype = EV_GenTypeForSpecial(line.special);
+   auto genceilingcheck = [](int target, int up) {
+      return target == CtoLnC || target == CtoF || (!up && (target == CtoNnC || target == CbyST ||
+                                                            target == Cby24 || target == Cby32));
+   };
+   if(gentype == GenTypeDoor)
+   {
+      int value = line.special - GenDoorBase;
+      int kind = (value & DoorKind) >> DoorKindShift;
+      if(kind == CDoor || kind == CdODoor)
+         return true;
+   }
+   else if(gentype == GenTypeCeiling)
+   {
+      int value = line.special - GenCeilingBase;
+      int target = (value & CeilingTarget) >> CeilingTargetShift;
+      int up = (value & CeilingDirection) >> CeilingDirectionShift;
+      if(!genceilingcheck(target, up))
+         return true;
+   }
+   if(action->action == EV_ActionParamCeilingGeneric)
+   {
+      int up = !!(line.args[4] & 8);
+      int target = line.args[3];
+      if(!target)
+      {
+         if(!up ^ line.args[2] < 0)
+            return true;
+      }
+      target = eclamp(target - 1, (int)CtoHnC, (int)CbyST);
+      if(!genceilingcheck(target, up))
+         return true;
+   }
+   return false;
+}
+
 //=============================================================================
 //
 // Development Commands

@@ -257,67 +257,13 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    // TODO: attached surface support. Without them, none of the ceiling lowering specials are useful
    // for the bot, except for rare combat or puzzle situations.
 
-   // These would only block or cause harm
-   static const std::unordered_set<EVActionFunc> bad = {
-      EV_ActionCeilingLowerAndCrush,
-      EV_ActionCeilingLowerToFloor,
-      EV_ActionCloseDoor,
-      EV_ActionCloseDoor30,
-      EV_ActionDoorBlazeClose,
-
-      EV_ActionDamageThing,
-      EV_ActionParamCeilingLowerAndCrushDist,
-      EV_ActionParamCeilingLowerAndCrush,
-      EV_ActionParamCeilingLowerByTexture,
-      EV_ActionParamCeilingLowerByValue,  // FIXME: negative values
-      EV_ActionParamCeilingLowerByValueTimes8,
-      EV_ActionParamCeilingLowerInstant,
-      EV_ActionParamCeilingLowerToFloor,
-      EV_ActionParamCeilingLowerToHighestFloor,
-      EV_ActionParamCeilingLowerToLowest,
-      EV_ActionParamCeilingLowerToNearest,
-      EV_ActionParamCeilingRaiseToLowest,
-      EV_ActionParamCeilingToFloorInstant,
-      EV_ActionParamDoorClose,
-      EV_ActionParamDoorCloseWaitOpen,
-      EV_ActionParamDoorWaitClose,
-      EV_ActionRadiusQuake,
-   };
-   if(bad.count(func))
+   // TODO: these might yet be useful if a pushable linedef surface depends on lowering ceiling
+   if(EV_IsCeilingLoweringSpecial(line))
       return false;
-   int gentype = EV_GenTypeForSpecial(line.special);
-   auto genceilingcheck = [](int target, int up) {
-      return target == CtoLnC || target == CtoF || (!up && (target == CtoNnC || target == CbyST ||
-                                                            target == Cby24 || target == Cby32));
-   };
-   if(gentype == GenTypeDoor)
-   {
-      int value = line.special - GenDoorBase;
-      int kind = (value & DoorKind) >> DoorKindShift;
-      if(kind == CDoor || kind == CdODoor)
-         return false;
-   }
-   else if(gentype == GenTypeCeiling)
-   {
-      int value = line.special - GenCeilingBase;
-      int target = (value & CeilingTarget) >> CeilingTargetShift;
-      int up = (value & CeilingDirection) >> CeilingDirectionShift;
-      if(!genceilingcheck(target, up))
-         return false;
-   }
-   if(func == EV_ActionParamCeilingGeneric)
-   {
-      int up = !!(line.args[4] & 8);
-      int target = line.args[3];
-      if(!target)
-      {
-         if(!up ^ line.args[2] < 0)
-            return false;
-      }
-      target = eclamp(target - 1, (int)CtoHnC, (int)CbyST);
-      if(!genceilingcheck(target, up))
-         return false;
-   }
+
+   // These are always bad for the activator
+   if(func == EV_ActionDamageThing || func == EV_ActionRadiusQuake)
+      return false;
 
    // TODO: generalized and parameterized
    // These are more complex, so let's ignore them for now
