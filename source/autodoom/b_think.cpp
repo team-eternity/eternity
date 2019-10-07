@@ -47,6 +47,7 @@
 #include "../e_player.h"
 #include "../e_states.h"
 #include "../e_weapons.h"
+#include "../ev_actions.h"
 #include "../ev_specials.h"
 #include "../g_game.h"
 #include "../hu_stuff.h"
@@ -214,155 +215,95 @@ bool Bot::checkDeadEndTrap(const BSubsec& targss)
 
 bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 {
-    VanillaLineSpecial vls = static_cast<VanillaLineSpecial>(line.special);
-    switch (vls)
-    {
-        // sure goals
-    case VLS_S1ExitLevel:
-    case VLS_WRExitLevel:
-          if(m_searchstage >= SearchStage_ExitNormal)
-          {
-             if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
-             {
-                m_lastExitMessage = gametic;
-                HU_Say(pl, "I'm going to the exit now!");
-             }
-             return true;
-          }
-        return false;
-    case VLS_S1SecretExit:
-    case VLS_WRSecretExit:
-          if(m_searchstage >= SearchStage_ExitSecret)
-          {
-             if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
-             {
-                m_lastExitMessage = gametic;
-                HU_Say(pl, "Let's take the secret exit!");
-             }
-             return true;
-          }
-        return false;
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+   unsigned flags = EV_CompositeActionFlags(action);
+   if(flags & EV_PREMONSTERSONLY)
+      return false;
 
-        // would only block or cause harm
-    case VLS_W1CloseDoor:
-//    case VLS_W1FastCeilCrushRaise:
-    case VLS_W1CloseDoor30:
-//    case VLS_W1CeilingCrushAndRaise:
-    case VLS_SRCloseDoor:
-    case VLS_SRCeilingLowerToFloor:
-    case VLS_W1CeilingLowerAndCrush:
-//    case VLS_S1CeilingCrushAndRaise:
-    case VLS_S1CloseDoor:
-    case VLS_WRCeilingLowerAndCrush:
-//    case VLS_WRCeilingCrushAndRaise:
-    case VLS_WRCloseDoor:
-    case VLS_WRCloseDoor30:
-//    case VLS_WRFastCeilCrushRaise:
-    case VLS_WRDoorBlazeClose:
-    case VLS_W1DoorBlazeClose:
-    case VLS_S1DoorBlazeClose:
-    case VLS_SRDoorBlazeClose:
-//    case VLS_W1SilentCrushAndRaise:
-    case VLS_W1CeilingLowerToFloor:
-//    case VLS_WRSilentCrushAndRaise:
-    case VLS_WRCeilingLowerToFloor:
-//    case VLS_S1FastCeilCrushRaise:
-//    case VLS_S1SilentCrushAndRaise:
-    case VLS_S1CeilingLowerAndCrush:
-    case VLS_S1CloseDoor30:
-//    case VLS_SRFastCeilCrushRaise:
-//    case VLS_SRCeilingCrushAndRaise:
-//    case VLS_SRSilentCrushAndRaise:
-    case VLS_SRCeilingLowerAndCrush:
-    case VLS_SRCloseDoor30:
-        return false;
+   auto exitcondition = [this](unsigned stage, const char *announcement) {
+        if(m_searchstage >= stage)
+        {
+           if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
+           {
+              m_lastExitMessage = gametic;
+              HU_Say(pl, announcement);
+           }
+           return true;
+        }
+      return false;
+   };
 
-        // more complex, so for now they aren't targetted
-    case VLS_W1PlatStop:
-    case VLS_W1CeilingCrushStop:
-    case VLS_WRCeilingCrushStop:
-    case VLS_SRChangeOnlyNumeric:
-    case VLS_WRPlatStop:
-    case VLS_W1ChangeOnly:
-    case VLS_WRChangeOnly:
-    case VLS_S1PlatStop:
-    case VLS_S1CeilingCrushStop:
-    case VLS_SRCeilingCrushStop:
-    case VLS_S1ChangeOnly:
-    case VLS_SRChangeOnly:
-    case VLS_W1ChangeOnlyNumeric:
-    case VLS_WRChangeOnlyNumeric:
-    case VLS_S1ChangeOnlyNumeric:
-    case VLS_WRStartLineScript1S:
-    case VLS_W1StartLineScript:
-    case VLS_W1StartLineScript1S:
-    case VLS_SRStartLineScript:
-    case VLS_S1StartLineScript:
-    case VLS_GRStartLineScript:
-    case VLS_G1StartLineScript:
-    case VLS_WRStartLineScript:
-        return false;
+   EVActionFunc func = action->action;
+   // TODO: also support the gunshot kind, but that needs a better searching for shootable goals
+   // TODO: also the parameterized kind
+   if(func == EV_ActionSwitchExitLevel || func == EV_ActionExitLevel)
+      return exitcondition(SearchStage_ExitNormal, "I'm going to the exit now!");
+   if(func == EV_ActionSwitchSecretExit || func == EV_ActionSecretExit)
+      return exitcondition(SearchStage_ExitSecret, "Let's take the secret exit!");
 
-        // useless
-    case VLS_W1LightTurnOn: 
-    case VLS_W1LightTurnOn255:
-    case VLS_W1StartLightStrobing:
-    case VLS_W1LightsVeryDark:
-    case VLS_WRLightsVeryDark:
-    case VLS_WRLightTurnOn:
-    case VLS_WRLightTurnOn255:
-    case VLS_W1TurnTagLightsOff:
-    case VLS_SRLightTurnOn255:
-    case VLS_SRLightsVeryDark:
-    case VLS_WRStartLightStrobing:
-    case VLS_WRTurnTagLightsOff:
-    case VLS_S1LightTurnOn:
-    case VLS_S1LightsVeryDark:
-    case VLS_S1LightTurnOn255:
-    case VLS_S1StartLightStrobing:
-    case VLS_S1TurnTagLightsOff:
-    case VLS_SRLightTurnOn:
-    case VLS_SRStartLightStrobing:
-    case VLS_SRTurnTagLightsOff:
-    case VLS_W1TeleportMonsters:
-    case VLS_WRTeleportMonsters:
-    case VLS_W1SilentLineTRMonsters:
-    case VLS_WRSilentLineTRMonsters:
-    case VLS_W1SilentLineTeleMonsters:
-    case VLS_WRSilentLineTeleMonsters:
-    case VLS_W1SilentTeleportMonsters:
-    case VLS_WRSilentTeleportMonsters:
-        return false;
+   // TODO: attached surface support. Without them, none of the ceiling lowering specials are useful
+   // for the bot, except for rare combat or puzzle situations.
 
-        // personnel teleportation: already handled in the path finder
-    case VLS_W1Teleport:
-    case VLS_WRTeleport:
-    case VLS_S1Teleport:
-    case VLS_SRTeleport:
-    case VLS_W1SilentTeleport:
-    case VLS_WRSilentTeleport:
-    case VLS_S1SilentTeleport:
-    case VLS_SRSilentTeleport:
-        return false;
+   // These would only block or cause harm
+   // TODO: generalized and parameterized
+   static const std::unordered_set<EVActionFunc> doorclosers = {
+      EV_ActionCeilingLowerAndCrush,
+      EV_ActionCeilingLowerToFloor,
+      EV_ActionCloseDoor,
+      EV_ActionCloseDoor30,
+      EV_ActionDoorBlazeClose,
+   };
+   if(doorclosers.count(func))
+      return false;
 
-    case VLS_W1SilentLineTeleport:
-    case VLS_WRSilentLineTeleport:
-    case VLS_W1SilentLineTeleportReverse:
-    case VLS_WRSilentLineTeleportReverse:
-        return false;
+   // These are more complex, so let's ignore them for now
+   static const std::unordered_set<EVActionFunc> complex = {
+      EV_ActionCeilingCrushStop,
+      EV_ActionChangeOnly,
+      EV_ActionChangeOnlyNumeric,
+      EV_ActionPlatStop,
+      EV_ActionStartLineScript,
+   };
 
-    default:
-        break;
-    }
+   // TODO: ceiling crush stop may be desired if it's permanent and can avoid blocking the player in
+   // the future. For switches the timing is exact too.
+   // TODO: change may be good if it removes slime (or harmful if it adds)
+   // TODO: plat stop can be harmful if it's permanent
+   // TODO: scripting is ultra complex. Maybe learn by trial and error?
+
+   if(complex.count(func))
+      return false;
+
+   // The following are inconsequential to the computer. Maybe we should later add support if we
+   // want better chance of passing the Turing test.
+   static const std::unordered_set<EVActionFunc> inconsequential = {
+      EV_ActionLightsVeryDark,
+      EV_ActionLightTurnOn,
+      EV_ActionLightTurnOn255,
+      EV_ActionStartLightStrobing,
+      EV_ActionTurnTagLightsOff,
+   };
+   if(inconsequential.count(func))
+      return false;
+
+   // Teleportation is handled by the pathfinder
+   static const std::unordered_set<EVActionFunc> teleports = {
+      EV_ActionSilentLineTeleport,
+      EV_ActionSilentLineTeleportReverse,
+      EV_ActionSilentTeleport,
+      EV_ActionTeleport,
+   };
+   if(teleports.count(func))
+      return false;
     
     // now that we got some lines out of the way, decide quickly to use once-
     // only types
-    const ev_action_t* action = EV_ActionForSpecial(line.special);
-    if(action && (action->type == &S1ActionType
-                  || action->type == &W1ActionType))
+   // TODO: also detect generalized specials
+    if(action->type == &S1ActionType || action->type == &W1ActionType)
     {
-        if(m_deepSearchMode == DeepNormal
-           && m_searchstage < SearchStage_PitItems)
+        if(m_deepSearchMode == DeepNormal && m_searchstage < SearchStage_PitItems)
         {
 			LevelStateStack::Clear();
 			m_deepTriedLines.clear();
