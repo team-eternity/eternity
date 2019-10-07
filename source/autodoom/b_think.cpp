@@ -218,17 +218,16 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
       return false;
-   unsigned flags = EV_CompositeActionFlags(action);
-   if(flags & EV_PREMONSTERSONLY)
-      return false;
 
-   auto exitcondition = [this](unsigned stage, const char *announcement) {
-      // FIXME: consider going immediately if the usual case is doomed to fail for any reason
+   auto exitcondition = [this, action, &line](unsigned stage, const char *announcement) {
+
+        // FIXME: consider going immediately if the usual case is doomed to fail for any reason
         if(m_searchstage >= stage)
         {
            if(shouldChat(URGENT_CHAT_INTERVAL_SEC, m_lastExitMessage))
            {
               m_lastExitMessage = gametic;
+              // FIXME: do not send it now, but when bot actually goes there
               HU_Say(pl, announcement);
            }
            return true;
@@ -237,28 +236,90 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    };
 
    EVActionFunc func = action->action;
-   // TODO: also support the gunshot kind, but that needs a better searching for shootable goals
-   // TODO: also the parameterized kind
-   if(func == EV_ActionSwitchExitLevel || func == EV_ActionExitLevel)
+   // TODO: also support the gun and push kinds, but those needs a better searching for goals
+   if(func == EV_ActionSwitchExitLevel || func == EV_ActionExitLevel ||
+      func == EV_ActionGunExitLevel || func == EV_ActionParamExitNormal)
+   {
       return exitcondition(SearchStage_ExitNormal, "I'm going to the exit now!");
-   if(func == EV_ActionSwitchSecretExit || func == EV_ActionSecretExit)
+   }
+   if(func == EV_ActionSwitchSecretExit || func == EV_ActionSecretExit ||
+      func == EV_ActionGunExitLevel || func == EV_ActionParamExitSecret)
+   {
       return exitcondition(SearchStage_ExitSecret, "Let's take the secret exit!");
+   }
+   if(func == EV_ActionTeleportNewMap)
+      return exitcondition(SearchStage_ExitNormal, "I've found an exit, let's go!");
+   if(func == EV_ActionTeleportEndGame)
+      return exitcondition(SearchStage_ExitNormal, "Let's finish this!");
+
+   // TODO: break this into subfunctions
 
    // TODO: attached surface support. Without them, none of the ceiling lowering specials are useful
    // for the bot, except for rare combat or puzzle situations.
 
    // These would only block or cause harm
-   // TODO: generalized and parameterized
-   static const std::unordered_set<EVActionFunc> doorclosers = {
+   static const std::unordered_set<EVActionFunc> bad = {
       EV_ActionCeilingLowerAndCrush,
       EV_ActionCeilingLowerToFloor,
       EV_ActionCloseDoor,
       EV_ActionCloseDoor30,
       EV_ActionDoorBlazeClose,
-   };
-   if(doorclosers.count(func))
-      return false;
 
+      EV_ActionDamageThing,
+      EV_ActionParamCeilingLowerAndCrushDist,
+      EV_ActionParamCeilingLowerAndCrush,
+      EV_ActionParamCeilingLowerByTexture,
+      EV_ActionParamCeilingLowerByValue,  // FIXME: negative values
+      EV_ActionParamCeilingLowerByValueTimes8,
+      EV_ActionParamCeilingLowerInstant,
+      EV_ActionParamCeilingLowerToFloor,
+      EV_ActionParamCeilingLowerToHighestFloor,
+      EV_ActionParamCeilingLowerToLowest,
+      EV_ActionParamCeilingLowerToNearest,
+      EV_ActionParamCeilingRaiseToLowest,
+      EV_ActionParamCeilingToFloorInstant,
+      EV_ActionParamDoorClose,
+      EV_ActionParamDoorCloseWaitOpen,
+      EV_ActionParamDoorWaitClose,
+      EV_ActionRadiusQuake,
+   };
+   if(bad.count(func))
+      return false;
+   int gentype = EV_GenTypeForSpecial(line.special);
+   auto genceilingcheck = [](int target, int up) {
+      return target == CtoLnC || target == CtoF || (!up && (target == CtoNnC || target == CbyST ||
+                                                            target == Cby24 || target == Cby32));
+   };
+   if(gentype == GenTypeDoor)
+   {
+      int value = line.special - GenDoorBase;
+      int kind = (value & DoorKind) >> DoorKindShift;
+      if(kind == CDoor || kind == CdODoor)
+         return false;
+   }
+   else if(gentype == GenTypeCeiling)
+   {
+      int value = line.special - GenCeilingBase;
+      int target = (value & CeilingTarget) >> CeilingTargetShift;
+      int up = (value & CeilingDirection) >> CeilingDirectionShift;
+      if(!genceilingcheck(target, up))
+         return false;
+   }
+   if(func == EV_ActionParamCeilingGeneric)
+   {
+      int up = !!(line.args[4] & 8);
+      int target = line.args[3];
+      if(!target)
+      {
+         if(!up ^ line.args[2] < 0)
+            return false;
+      }
+      target = eclamp(target - 1, (int)CtoHnC, (int)CbyST);
+      if(!genceilingcheck(target, up))
+         return false;
+   }
+
+   // TODO: generalized and parameterized
    // These are more complex, so let's ignore them for now
    static const std::unordered_set<EVActionFunc> complex = {
       EV_ActionCeilingCrushStop,
@@ -629,6 +690,8 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
    // TODO: add support for the other activation types
    if(!EV_IsWalkSpecial(line) && !EV_IsSwitchSpecial(line))
       return false;
+   if(EV_IsNonPlayerSpecial(line))
+      return false;
 
      // OK, this might be viable. But check.
      // DeepCheckLosses not reached here
@@ -637,7 +700,7 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
          m_deepTriedLines.insert(&line);
          return true;
      }
-     else if (m_deepSearchMode == DeepBeyond)
+     if (m_deepSearchMode == DeepBeyond)
      {
          if (!m_deepTriedLines.count(&line))
          {

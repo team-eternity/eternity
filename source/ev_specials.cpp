@@ -1695,6 +1695,21 @@ bool EV_IsWalkSpecial(const line_t &line)
    return !!(line.extflags & EX_ML_CROSS);
 }
 
+//
+// True if it's not for players
+//
+bool EV_IsNonPlayerSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   if(EV_CompositeActionFlags(action) & EV_PREMONSTERSONLY)
+      return true;
+
+   // FIXME: debatable if missile activation won't still count as for-players
+   return EV_IsParamAction(*action) && !(line.extflags & EX_ML_PLAYER);
+}
 
 //=============================================================================
 //
