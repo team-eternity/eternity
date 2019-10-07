@@ -536,12 +536,13 @@ void BotMap::getAllLivingMonsters()
 void BotMap::SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line)
 {
    int n = line->special;
-   door.lock = EV_LockDefIDForSpecial(n); // TODO: param specials
    door.valid = false;
 
    const ev_action_t *action = EV_ActionForSpecial(n);
    if(!action)
       return;
+
+   door.lock = EV_LockDefIDForSpecial(n); // NOTE: parameterized specials are handled below
 
    static const std::unordered_set<EVActionFunc> basicRemoteDoors = {
       EV_ActionDoorBlazeOpen,
@@ -571,7 +572,11 @@ void BotMap::SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line)
     (line->extflags & (EX_ML_PLAYER | EX_ML_USE | EX_ML_REPEAT)) ==
     (EX_ML_PLAYER | EX_ML_USE | EX_ML_REPEAT) && (!line->args[0] || tagsback));
 
-   // TODO: add support for pushable doors, but those need a differeny handling in the non-combat
+   // If it's a parameterized locked door, check lockid from there
+   if(action->action == EV_ActionParamDoorLockedRaise)
+      door.lock = line->args[3];
+
+   // TODO: add support for pushable doors, but those need a different handling in the non-combat
    // TODO: add non-door ceilings. But for that we need to provide info about destination height.
 }
 
