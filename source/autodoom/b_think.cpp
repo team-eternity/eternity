@@ -292,12 +292,28 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
       EV_ActionLightTurnOn255,
       EV_ActionStartLightStrobing,
       EV_ActionTurnTagLightsOff,
+
+      EV_ActionParamLightChangeToValue,
+      EV_ActionParamLightFade,
+      EV_ActionParamLightFlicker,
+      EV_ActionParamLightGlow,
+      EV_ActionParamLightLowerByValue,
+      EV_ActionParamLightRaiseByValue,
+      EV_ActionParamLightStrobe,
+      EV_ActionParamLightStrobeDoom,
+      EV_ActionParamSectorSetRotation,
+      EV_ActionParamSectorSetFloorPanning,
+      EV_ActionParamSectorSetCeilingPanning,
+      EV_ActionParamSectorChangeSound,
    };
    if(inconsequential.count(func))
       return false;
 
    // Teleportation is handled by the pathfinder
    static const std::unordered_set<EVActionFunc> teleports = {
+      EV_ActionParamTeleport,
+      EV_ActionParamTeleportLine,
+      EV_ActionParamTeleportNoFog,
       EV_ActionSilentLineTeleport,
       EV_ActionSilentLineTeleportReverse,
       EV_ActionSilentTeleport,
