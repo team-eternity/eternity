@@ -252,8 +252,6 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    if(func == EV_ActionTeleportEndGame)
       return exitcondition(SearchStage_ExitNormal, "Let's finish this!");
 
-   // TODO: break this into subfunctions
-
    // TODO: attached surface support. Without them, none of the ceiling lowering specials are useful
    // for the bot, except for rare combat or puzzle situations.
 
@@ -268,6 +266,8 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    // TODO: generalized and parameterized
    // These are more complex, so let's ignore them for now
    static const std::unordered_set<EVActionFunc> complex = {
+      EV_ActionParamCeilingCrushStop,
+      EV_ActionParamPlatStop,
       EV_ActionCeilingCrushStop,
       EV_ActionChangeOnly,
       EV_ActionChangeOnlyNumeric,
