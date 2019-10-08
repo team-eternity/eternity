@@ -81,6 +81,7 @@ enum
     SearchStage_ExitSecret,
     SearchStage_ExitNormal,
     SearchStage_PitItems,
+   SearchStage_NUM
 };
 
 // The commands that the bots will send to the players to be added in G_Ticker
@@ -510,7 +511,7 @@ bool Bot::checkItemType(const Mobj *special) const
 //
 bool Bot::otherBotsHaveGoal(const char *key, v2fixed_t coord) const
 {
-   if(m_searchstage > SearchStage_PitItems)
+   if(m_searchstage > SearchStage_NUM)
       return false;
    for(Bot &bot : bots)
    {
