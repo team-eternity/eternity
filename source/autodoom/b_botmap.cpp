@@ -472,7 +472,8 @@ static void B_setSpecLinePositions()
          }
 
          // also add the end point
-         if(!intersects.back().hitwall)
+         // FIXME: this actually must not be empty! Instead it should point in other directions!
+         if(!intersects.isEmpty() && !intersects.back().hitwall)
          {
             BSubsec &ss = botMap->pointInSubsector(trace.v + trace.dv);
             if(!ss.linelist.count(&line))

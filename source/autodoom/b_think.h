@@ -135,6 +135,7 @@ class Bot : public ZoneObject
    std::unordered_set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
    const BSubsec*           m_deepRepeat = nullptr;
+   const BSubsec*           m_deepPromisedSS = nullptr;
    bool                     m_justGotLost = false;
    bool                     m_intoSwitch = false;
    const Mobj*              m_currentTargetMobj = nullptr;

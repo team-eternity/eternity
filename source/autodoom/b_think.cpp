@@ -108,6 +108,7 @@ void Bot::mapInit()
    m_deepSearchMode = DeepNormal;
    m_deepAvailSsectors.clear();
    m_deepRepeat = nullptr;
+   m_deepPromisedSS = nullptr;
     m_justGotLost = false;
     m_intoSwitch = false;
     m_dropSS.clear();
@@ -188,8 +189,14 @@ PathResult Bot::reachableItem(const BSubsec& ss, void* v)
 
     bool result = objOfInterest(ss, dummy, &self);
 
+   if(result && self.m_deepSearchMode == DeepBeyond && !self.m_deepPromisedSS)
+   {
+      self.m_deepPromisedSS = &ss;
+      B_Log("Made a promise for %g %g", ss.mid.x/65536., ss.mid.y/65536.);
+   }
+
 	// for DeepCheckLosses objOfInterest will always return false
-    return result ? (self.m_deepSearchMode == DeepBeyond ? PathDone : PathAdd) : PathNo;
+   return result ? (self.m_deepSearchMode == DeepBeyond ? PathDone : PathAdd) : PathNo;
 }
 
 bool Bot::checkDeadEndTrap(const BSubsec& targss)
@@ -539,6 +546,15 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 	if(self.m_deepSearchMode == DeepCheckLosses)
 		return false;
 	
+   if(self.m_deepSearchMode == DeepNormal)
+   {
+      if(self.m_deepPromisedSS && self.m_deepPromisedSS != &ss)
+         return false;
+      if(self.m_deepPromisedSS)
+         B_Log("Go to promise %g %g", self.m_deepPromisedSS->mid.x/65536., self.m_deepPromisedSS->mid.y/65536.);
+      self.m_deepPromisedSS = nullptr;
+   }
+
     if(self.m_searchstage >= SearchStage_ExitNormal)
     {
        const sector_t &floorsector = *ss.msector->getFloorSector();
@@ -1286,6 +1302,8 @@ void Bot::doNonCombatAI()
         if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, objOfInterest, this))
         {
             ++m_searchstage;
+           m_deepPromisedSS = nullptr;
+           B_Log("Lose promise");
             cmd->sidemove += random.range(-pl->pclass->sidemove[0], pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0], pl->pclass->forwardmove[0]);
            if(m_searchstage > DUNNO_CONCESSION_SEC * TICRATE &&
@@ -1392,7 +1410,7 @@ void Bot::doNonCombatAI()
                   {
                      npos = B_ProjectionOnSegment(mpos, m_lostPathInfo.neigh->v,
                                                   m_lostPathInfo.neigh->d, pl->mo->radius);
-                     dontMove = shouldWaitSector(*m_lostPathInfo.neigh);
+                     dontMove = botMap->canPass(*ss, *m_lostPathInfo.neigh->otherss, pl->mo->height) && shouldWaitSector(*m_lostPathInfo.neigh);
                      if(dontMove)
                         m_lostPathInfo.counter--;
                   }
@@ -1481,8 +1499,7 @@ void Bot::doNonCombatAI()
         angleturn = -2500;
 
     if (!dontMove && ((endCoord - mpos).sqrtabs() >= 16 * FRACUNIT || D_abs(angleturn) <= 300 ||
-                      m_path.end.kind != BotPathEnd::KindWalkLine ||
-                      !EV_IsSwitchSpecial(*m_path.end.walkLine)))
+                      !m_realVelocity))
     {
         if(m_runfast && !m_intoSwitch)
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
