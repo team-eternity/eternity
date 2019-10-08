@@ -420,7 +420,6 @@ static void B_setSpecLinePositions()
 //   int n, j;
 //   fixed_t lenx, leny;
    
-   BSubsec *ss;
    botMap->gunLines.makeEmpty();
    
    for (int i = 0; i < numlines; ++i)
@@ -430,15 +429,14 @@ static void B_setSpecLinePositions()
       if(action)
       {
          // TODO: also take into account generalized actions
-         if(action->type == &S1ActionType || action->type == &SRActionType
-                 || action->type == &DRActionType)
+         if(EV_IsSwitchSpecial(line))
          {
             v2fixed_t mid = (v2fixed_t(*line.v1) + *line.v2) / 2;
             angle_t ang = v2fixed_t(line.dx, line.dy).angle() - ANG90;
 
             mid += v2fixed_t::polar(USERANGE / 2, ang);
 
-            ss = &botMap->pointInSubsector(mid);
+            BSubsec *ss = &botMap->pointInSubsector(mid);
             ss->linelist[&line] = USERANGE / 2;
 
             mid += v2fixed_t::polar(USERANGE / 2, ang);
@@ -447,7 +445,7 @@ static void B_setSpecLinePositions()
             if(!ss->linelist.count(&line))
                ss->linelist[&line] = USERANGE;
          }
-         else if(action->type == &G1ActionType || action->type == &GRActionType)
+         else if(EV_IsGunSpecial(line))
             botMap->gunLines.add(&line);
       }
       

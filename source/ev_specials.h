@@ -402,6 +402,7 @@ int  EV_GenActivationType(int special);
 int EV_GenTypeForSpecial(int special);
 
 bool EV_IsSwitchSpecial(const line_t &line);
+bool EV_IsGunSpecial(const line_t &line);
 bool EV_IsWalkSpecial(const line_t &line);
 bool EV_IsNonPlayerSpecial(const line_t &line);
 bool EV_IsCeilingLoweringSpecial(const line_t &line);

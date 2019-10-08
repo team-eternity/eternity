@@ -1668,6 +1668,34 @@ bool EV_IsSwitchSpecial(const line_t &line)
 }
 
 //
+// True if it's a shootable special
+//
+bool EV_IsGunSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+
+   // basic
+   if(action->type == &G1ActionType || action->type == &GRActionType)
+      return true;
+
+   // generalized
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == GunOnce || genspac == GunMany;
+   }
+
+   // Reject anything else with specified activation
+   if(action->type->activation >= 0)
+      return false;
+
+   // parameterized
+   return !!(line.extflags & EX_ML_IMPACT);
+}
+
+//
 // True if it's a walkable special
 //
 bool EV_IsWalkSpecial(const line_t &line)
