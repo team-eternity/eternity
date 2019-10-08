@@ -273,6 +273,8 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
         return nullptr;
     }
    const line_t &line = *bline->specline;
+   if(EV_IsNonPlayerSpecial(line))
+      return nullptr;
    TeleportSpecInfo info = EV_IsTeleportationSpecial(line);
 
    if(!info)
