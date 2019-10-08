@@ -405,6 +405,7 @@ bool EV_IsSwitchSpecial(const line_t &line);
 bool EV_IsGunSpecial(const line_t &line);
 bool EV_IsWalkSpecial(const line_t &line);
 bool EV_IsNonPlayerSpecial(const line_t &line);
+bool EV_IsRepeatableSpecial(const line_t &line);
 bool EV_IsCeilingLoweringSpecial(const line_t &line);
 
 //

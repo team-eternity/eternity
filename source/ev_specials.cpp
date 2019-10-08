@@ -1659,12 +1659,8 @@ bool EV_IsSwitchSpecial(const line_t &line)
       genspac == PushMany;
    }
 
-   // Reject anything else with specified activation
-   if(action->type->activation >= 0)
-      return false;
-
    // parameterized
-   return !!(line.extflags & EX_ML_USE);
+   return EV_IsParamAction(*action) && line.extflags & EX_ML_USE;
 }
 
 //
@@ -1687,12 +1683,8 @@ bool EV_IsGunSpecial(const line_t &line)
       return genspac == GunOnce || genspac == GunMany;
    }
 
-   // Reject anything else with specified activation
-   if(action->type->activation >= 0)
-      return false;
-
    // parameterized
-   return !!(line.extflags & EX_ML_IMPACT);
+   return EV_IsParamAction(*action) && line.extflags & EX_ML_IMPACT;
 }
 
 //
@@ -1715,12 +1707,8 @@ bool EV_IsWalkSpecial(const line_t &line)
       return genspac == WalkOnce || genspac == WalkMany;
    }
 
-   // Reject anything else with specified activation
-   if(action->type->activation >= 0)
-      return false;
-
    // parameterized
-   return !!(line.extflags & EX_ML_CROSS);
+   return EV_IsParamAction(*action) && line.extflags & EX_ML_CROSS;
 }
 
 //
@@ -1737,6 +1725,29 @@ bool EV_IsNonPlayerSpecial(const line_t &line)
 
    // FIXME: debatable if missile activation won't still count as for-players
    return EV_IsParamAction(*action) && !(line.extflags & EX_ML_PLAYER);
+}
+
+//
+// True if reusable
+//
+bool EV_IsRepeatableSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return false;
+   if(action->type == &WRActionType || action->type == &SRActionType ||
+      action->type == &GRActionType || action->type == &DRActionType)
+   {
+      return true;
+   }
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == WalkMany || genspac == PushMany || genspac == GunMany ||
+      genspac == SwitchMany;
+   }
+
+   return EV_IsParamAction(*action) && line.extflags & EX_ML_REPEAT;
 }
 
 //

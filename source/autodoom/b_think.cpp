@@ -313,7 +313,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     // now that we got some lines out of the way, decide quickly to use once-
     // only types
    // TODO: also detect generalized specials
-    if(action->type == &S1ActionType || action->type == &W1ActionType)
+    if(!EV_IsRepeatableSpecial(line))
     {
         if(m_deepSearchMode == DeepNormal && m_searchstage < SearchStage_PitItems)
         {
