@@ -45,95 +45,86 @@
 //
 // Code copied from p_trace/P_PathTraverse, adapted for class-local state
 //
-bool RTraversal::Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, bool (*trav)(intercept_t*, void*), void* parm)
+bool RTraversal::Execute(divline_t trace, int flags, bool (*trav)(intercept_t*, void*), void* parm)
 {
-   fixed_t xt1, yt1;
-   fixed_t xt2, yt2;
-   fixed_t xstep, ystep;
-   fixed_t partial;
-   fixed_t xintercept, yintercept;
-   int     mapx, mapy;
-   int     mapxstep, mapystep;
-   int     count;
-   
    ++m_validcount;
    m_intercept_p = m_intercepts;
    
-   if(!((x1-bmaporgx)&(MAPBLOCKSIZE-1)))
-      x1 += FRACUNIT;     // don't side exactly on a line
-   
-   if(!((y1-bmaporgy)&(MAPBLOCKSIZE-1)))
-      y1 += FRACUNIT;     // don't side exactly on a line
-   
-   m_trace.dl.x = x1;
-   m_trace.dl.y = y1;
-   m_trace.dl.dx = x2 - x1;
-   m_trace.dl.dy = y2 - y1;
-   
-   x1 -= bmaporgx;
-   y1 -= bmaporgy;
-   xt1 = x1 >> MAPBLOCKSHIFT;
-   yt1 = y1 >> MAPBLOCKSHIFT;
-   
-   x2 -= bmaporgx;
-   y2 -= bmaporgy;
-   xt2 = x2 >> MAPBLOCKSHIFT;
-   yt2 = y2 >> MAPBLOCKSHIFT;
-   
-   if(xt2 > xt1)
+   if(!(trace.x - bmaporgx & MAPBLOCKSIZE - 1))
    {
-      mapxstep = 1;
-      partial = FRACUNIT - ((x1 >> MAPBTOFRAC) & (FRACUNIT-1));
-      ystep = FixedDiv(y2 - y1, D_abs(x2 - x1));
-   }
-   else if(xt2 < xt1)
-   {
-      mapxstep = -1;
-      partial = (x1 >> MAPBTOFRAC) & (FRACUNIT - 1);
-      ystep = FixedDiv(y2 - y1, D_abs(x2 - x1));
-   }
-   else
-   {
-      mapxstep = 0;
-      partial = FRACUNIT;
-      ystep = 256 * FRACUNIT;
+      trace.x += FRACUNIT;     // don't side exactly on a line
+      trace.dx -= FRACUNIT;
    }
    
-   yintercept = (y1 >> MAPBTOFRAC) + FixedMul(partial, ystep);
-   
-   if(yt2 > yt1)
+   if(!(trace.y - bmaporgy & MAPBLOCKSIZE - 1))
    {
-      mapystep = 1;
-      partial = FRACUNIT - ((y1 >> MAPBTOFRAC) & (FRACUNIT - 1));
-      xstep = FixedDiv(x2 - x1, D_abs(y2 - y1));
+      trace.y += FRACUNIT;     // don't side exactly on a line
+      trace.dy -= FRACUNIT;
    }
-   else if(yt2 < yt1)
+
+   m_trace.dl = trace;
+   
+   trace.x -= bmaporgx;
+   trace.y -= bmaporgy;
+   v2int_t vt1 = trace.v >> MAPBLOCKSHIFT;
+   v2int_t vt2 = (trace.v + trace.dv) >> MAPBLOCKSHIFT;
+
+   v2int_t mapstep;
+   fixed_t partial;
+   v2fixed_t step;
+   if(vt2.x > vt1.x)
    {
-      mapystep = -1;
-      partial = (y1 >> MAPBTOFRAC) & (FRACUNIT - 1);
-      xstep = FixedDiv(x2 - x1, D_abs(y2 - y1));
+      mapstep.x = 1;
+      partial = FRACUNIT - ((trace.x >> MAPBTOFRAC) & (FRACUNIT-1));
+      step.y = FixedDiv(trace.dy, D_abs(trace.dx));
+   }
+   else if(vt2.x < vt1.x)
+   {
+      mapstep.x = -1;
+      partial = (trace.x >> MAPBTOFRAC) & (FRACUNIT - 1);
+      step.y = FixedDiv(trace.dy, D_abs(trace.dx));
    }
    else
    {
-      mapystep = 0;
+      mapstep.x = 0;
       partial = FRACUNIT;
-      xstep = 256 * FRACUNIT;
+      step.y = 256 * FRACUNIT;
+   }
+
+   v2fixed_t intercept;
+   intercept.y = (trace.y >> MAPBTOFRAC) + FixedMul(partial, step.y);
+   
+   if(vt2.y > vt1.y)
+   {
+      mapstep.y = 1;
+      partial = FRACUNIT - ((trace.y >> MAPBTOFRAC) & (FRACUNIT - 1));
+      step.x = FixedDiv(trace.dx, D_abs(trace.dy));
+   }
+   else if(vt2.y < vt1.y)
+   {
+      mapstep.y = -1;
+      partial = (trace.y >> MAPBTOFRAC) & (FRACUNIT - 1);
+      step.x = FixedDiv(trace.dx, D_abs(trace.dy));
+   }
+   else
+   {
+      mapstep.y = 0;
+      partial = FRACUNIT;
+      step.x = 256 * FRACUNIT;
    }
    
-   xintercept = (x1 >> MAPBTOFRAC) + FixedMul(partial, xstep);
+   intercept.x = (trace.x >> MAPBTOFRAC) + FixedMul(partial, step.x);
    
    // Step through map blocks.
    // Count is present to prevent a round off error
    // from skipping the break.
-   
-   mapx = xt1;
-   mapy = yt1;
+   v2int_t map = vt1;
 
-   for(count = 0; count < 64; count++)
+   for(int count = 0; count < 64; count++)
    {
       if(flags & PT_ADDLINES)
       {
-         if(!blockLinesIterator(mapx, mapy, [this](line_t* ld){
+         if(!blockLinesIterator(map, [this](line_t* ld){
             return addLineIntercepts(ld);
          }))
             return false; // early out
@@ -141,24 +132,24 @@ bool RTraversal::Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int fla
       
       if(flags & PT_ADDTHINGS)
       {
-         if(!blockThingsIterator(mapx, mapy, [this](Mobj* thing){
+         if(!blockThingsIterator(map, [this](Mobj* thing){
             return addThingIntercepts(thing);
          }))
             return false; // early out
       }
       
-      if(mapx == xt2 && mapy == yt2)
+      if(map == vt2)
          break;
       
-      if((yintercept >> FRACBITS) == mapy)
+      if((intercept.y >> FRACBITS) == map.y)
       {
-         yintercept += ystep;
-         mapx += mapxstep;
+         intercept.y += step.y;
+         map.x += mapstep.x;
       }
-      else if((xintercept >> FRACBITS) == mapx)
+      else if((intercept.x >> FRACBITS) == map.x)
       {
-         xintercept += xstep;
-         mapy += mapystep;
+         intercept.x += step.x;
+         map.y += mapstep.y;
       }
    }
    
@@ -197,15 +188,15 @@ bool RTraversal::traverseIntercepts(bool(*func)(intercept_t*, void*), fixed_t ma
 //
 // Pretty much from P_Trace, except with safe calls
 //
-bool RTraversal::blockLinesIterator(int x, int y, const std::function<bool(line_t*)>& func)
+bool RTraversal::blockLinesIterator(v2int_t v, const std::function<bool(line_t*)>& func)
 {
    int        offset;
    const int  *list;     // killough 3/1/98: for removal of blockmap limit
    const DLListItem<polymaplink_t> *plink; // haleyjd 02/22/06
    
-   if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
+   if(v.x < 0 || v.y < 0 || v.x >= bmapwidth || v.y >= bmapheight)
       return true;
-   offset = y * bmapwidth + x;
+   offset = v.y * bmapwidth + v.x;
    
    // haleyjd 02/22/06: consider polyobject lines
    plink = polyblocklinks[offset];
@@ -267,11 +258,11 @@ bool RTraversal::blockLinesIterator(int x, int y, const std::function<bool(line_
 //
 // This really doesn't look different from P_BlockThingsIterator
 //
-bool RTraversal::blockThingsIterator(int x, int y, const std::function<bool(Mobj*)>& func)
+bool RTraversal::blockThingsIterator(v2int_t v, const std::function<bool(Mobj*)>& func)
 {
-   if(!(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight))
+   if(!(v.x < 0 || v.y < 0 || v.x >= bmapwidth || v.y >= bmapheight))
    {
-      Mobj *mobj = blocklinks[y * bmapwidth + x];
+      Mobj *mobj = blocklinks[v.y * bmapwidth + v.x];
       
       for(; mobj; mobj = mobj->bnext)
          if(!func(mobj))
@@ -625,15 +616,14 @@ bool RTraversal::TRaimTraverse(intercept_t* in, void* v)
 // LARGELY TAKEN FROM P_AimLineAttack
 fixed_t RTraversal::SafeAimLineAttack(Mobj* t1, angle_t angle, fixed_t distance, int mask)
 {
-    fixed_t x2, y2;
     fixed_t lookslope = 0;
     fixed_t pitch = 0;
 
-    angle >>= ANGLETOFINESHIFT;
     m_trace.thing = t1;
+   m_trace.cos = finecosine[angle >> ANGLETOFINESHIFT];
+   m_trace.sin = finesine[angle >> ANGLETOFINESHIFT];
 
-    x2 = t1->x + (distance >> FRACBITS) * (m_trace.cos = finecosine[angle]);
-    y2 = t1->y + (distance >> FRACBITS)*(m_trace.sin = finesine[angle]);
+   v2fixed_t v2 = v2fixed_t(*t1) + v2fixed_t::polar(distance, angle);
     m_trace.z = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
 
     if (t1->player)
@@ -662,7 +652,8 @@ fixed_t RTraversal::SafeAimLineAttack(Mobj* t1, angle_t angle, fixed_t distance,
 
     m_trace.aimflagsmask = mask;
 
-    Execute(t1->x, t1->y, x2, y2, PT_ADDLINES | PT_ADDTHINGS, RTraversal::TRaimTraverse, this);
+    Execute(divline_t::points(v2fixed_t(*t1), v2), PT_ADDLINES | PT_ADDTHINGS,
+            RTraversal::TRaimTraverse, this);
     return m_clip.linetarget ? m_trace.aimslope : lookslope;
 }
 

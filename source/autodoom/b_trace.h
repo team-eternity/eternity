@@ -52,7 +52,7 @@ public:
    intercept_t*   m_intercept_p;
    doom_mapinter_t m_clip;
    
-   bool Execute(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2, int flags, bool (*trav)(intercept_t*, void*), void* parm);
+   bool Execute(divline_t trace, int flags, bool (*trav)(intercept_t*, void*), void* parm);
    
    RTraversal();
    
@@ -73,8 +73,8 @@ private:
    int*                                      m_lineValidcount;
    size_t         m_num_intercepts;
    
-   bool blockLinesIterator(int x, int y, const std::function<bool(line_t*)> &func);
-   bool blockThingsIterator(int x, int y, const std::function<bool(Mobj*)> &func);
+   bool blockLinesIterator(v2int_t v, const std::function<bool(line_t*)> &func);
+   bool blockThingsIterator(v2int_t v, const std::function<bool(Mobj*)> &func);
    
    bool addLineIntercepts(line_t* ld);
    bool addThingIntercepts(Mobj* thing);

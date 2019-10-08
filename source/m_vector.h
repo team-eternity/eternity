@@ -89,6 +89,11 @@ struct v2fixed_t
       return { x / n, y / n };
    }
 
+   v2fixed_t operator >> (int n) const
+   {
+      return { x >> n, y >> n };
+   }
+
    v2fixed_t operator-() const
    {
       return { -x, -y };
@@ -135,6 +140,7 @@ struct v2fixed_t
       return P_PointToAngle(0, 0, x, y);
    }
 };
+typedef v2fixed_t v2int_t;
 
 struct v3float_t
 {

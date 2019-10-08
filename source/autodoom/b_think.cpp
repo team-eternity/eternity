@@ -419,8 +419,8 @@ static bool B_checkSwitchReach(v2fixed_t mopos, v2fixed_t coord, const line_t &s
       return false;
    RTraversal trav;
 
-   return trav.Execute(mopos.x, mopos.y, coord.x, coord.y, PT_ADDLINES,
-                       BTR_switchReachTraverse, const_cast<line_t *>(&swline));
+   return trav.Execute(divline_t::points(mopos, coord), PT_ADDLINES, BTR_switchReachTraverse,
+                       const_cast<line_t *>(&swline));
 }
 
 // This version checks if a line is by itself reachable, without assuming a user
@@ -428,15 +428,9 @@ static bool B_checkSwitchReach(fixed_t range, const line_t &swline)
 {
    RTraversal trav;
 
-   angle_t ang = P_PointToAngle(swline.v1->x, swline.v1->y,
-                                swline.v2->x, swline.v2->y) - ANG90;
-   unsigned fang = ang >> ANGLETOFINESHIFT;
-
-   fixed_t mx, my;
-   mx = swline.v1->x + swline.dx / 2;
-   my = swline.v1->y + swline.dy / 2;
-   return trav.Execute(mx + FixedMul(range, finecosine[fang]),
-                       my + FixedMul(range, finesine[fang]), mx, my,
+   angle_t ang = P_PointToAngle(swline.v1->x, swline.v1->y, swline.v2->x, swline.v2->y) - ANG90;
+   v2fixed_t mpos = v2fixed_t(*swline.v1) + v2fixed_t(swline.dx, swline.dy) / 2;
+   return trav.Execute(divline_t::points(mpos + v2fixed_t::polar(range, ang), mpos),
                        PT_ADDLINES, BTR_switchReachTraverse,
                        const_cast<line_t *>(&swline));
 }
