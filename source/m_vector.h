@@ -94,6 +94,11 @@ struct v2fixed_t
       return { x >> n, y >> n };
    }
 
+   v2fixed_t operator << (int n) const
+   {
+      return { x << n, y << n };
+   }
+
    v2fixed_t operator-() const
    {
       return { -x, -y };

@@ -33,7 +33,6 @@
 #include "b_itemlearn.h"
 #include "b_statistics.h"
 #include "b_think.h"
-#include "b_trace.h"
 #include "b_util.h"
 #include "b_vocabulary.h"
 #include "b_weapon.h"
@@ -54,6 +53,7 @@
 #include "../in_lude.h"
 #include "../m_compare.h"
 #include "../m_qstr.h"
+#include "../p_maputl.h"
 #include "../p_spec.h"
 #include "../r_state.h"
 
@@ -391,7 +391,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
     return false;
 }
 
-static bool BTR_switchReachTraverse(intercept_t *in, void *parm)
+static bool BTR_switchReachTraverse(const intercept_t *in, void *parm, const divline_t &trace)
 {
    const line_t &l = *in->d.line;
    if(&l == parm)
@@ -417,22 +417,20 @@ static bool B_checkSwitchReach(v2fixed_t mopos, v2fixed_t coord, const line_t &s
 {
    if((mopos - coord).sqrtabs() >= USERANGE)
       return false;
-   RTraversal trav;
-
-   return trav.Execute(divline_t::points(mopos, coord), PT_ADDLINES, BTR_switchReachTraverse,
-                       const_cast<line_t *>(&swline));
+   return CAM_PathTraverse(mopos.x, mopos.y, coord.x, coord.y, CAM_ADDLINES,
+                           const_cast<line_t *>(&swline), BTR_switchReachTraverse);
 }
 
 // This version checks if a line is by itself reachable, without assuming a user
 static bool B_checkSwitchReach(fixed_t range, const line_t &swline)
 {
-   RTraversal trav;
-
    angle_t ang = P_PointToAngle(swline.v1->x, swline.v1->y, swline.v2->x, swline.v2->y) - ANG90;
    v2fixed_t mpos = v2fixed_t(*swline.v1) + v2fixed_t(swline.dx, swline.dy) / 2;
-   return trav.Execute(divline_t::points(mpos + v2fixed_t::polar(range, ang), mpos),
-                       PT_ADDLINES, BTR_switchReachTraverse,
-                       const_cast<line_t *>(&swline));
+
+   v2fixed_t mposofs = mpos + v2fixed_t::polar(range, ang);
+
+   return CAM_PathTraverse(mposofs.x, mposofs.y, mpos.x, mpos.y, CAM_ADDLINES,
+                           const_cast<line_t *>(&swline), BTR_switchReachTraverse);
 }
 
 //
@@ -1093,12 +1091,13 @@ void Bot::doCombatAI(const Collection<Target>& targets)
    if(highestThreat->type == TargetMonster)
       pickBestWeapon(*highestThreat);
 
-    RTraversal rt;
-    rt.SafeAimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, 0);
-    if (rt.m_clip.linetarget && !rt.m_clip.linetarget->player && pl->readyweapon)
+   Mobj *linetarget = 0;
+   CAM_AimLineAttack(pl->mo, pl->mo->angle, MISSILERANGE / 2, true, &linetarget);
+
+    if (linetarget && !linetarget->player && !(linetarget->flags & MF_FRIEND) && pl->readyweapon)
     {
        const BotWeaponInfo &bwi = g_botweapons[pl->pclass][pl->readyweapon];
-       const Mobj &t = *rt.m_clip.linetarget;
+       const Mobj &t = *linetarget;
        fixed_t dist = (v2fixed_t(t) - v2fixed_t(mx, my)).sqrtabs();
 
        const double currentDmgRate =
