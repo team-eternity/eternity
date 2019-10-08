@@ -32,6 +32,7 @@
 #include "b_botmaptemp.h"
 #include "b_util.h"
 #include "../a_doom.h"
+#include "../ev_sectors.h"
 #include "../ev_specials.h"
 #include "../m_buffer.h"
 #include "../m_compare.h"
@@ -1060,19 +1061,9 @@ void TempBotMap::createBlockMap()
 
 static void FindDynamicSectors(bool* dynamicSectors)
 {
-   // 1. Find all lines with effects
-   VanillaSectorSpecial vss;
-   
    // tagged sectors
-   int secnum = -1;
-   const sector_t* sector, *sector2;
-   bool continueStair;
-   
-   int i, j;
-   
-   std::unordered_set<const sector_t *> stairSectors;
 
-   for(i = 0; i < ::numlines; ++i)
+   for(int i = 0; i < ::numlines; ++i)
    {
       const line_t &line = lines[i];
       
@@ -1096,36 +1087,34 @@ static void FindDynamicSectors(bool* dynamicSectors)
          continue;
       
       // Not a door  type
-      while((secnum = P_FindSectorFromTag(line.args[0], secnum)) >= 0)
+      for(int secnum = -1; (secnum = P_FindSectorFromTag(line.args[0], secnum)) >= 0;)
       {
          dynamicSectors[secnum] = true;
          // Also do it for secondary sectors: from stairs or donuts
-         if(B_LineTriggersDonut(line))
+         const sector_t *sector = ::sectors + secnum;
+         if(B_LineTriggersDonut(line) && sector->linecount)
          {
-            sector = ::sectors + secnum;
-            sector2 = getNextSector(sector->lines[0], sector);
+            const sector_t *sector2 = getNextSector(sector->lines[0], sector);
             if(sector2)
                dynamicSectors[sector2 - ::sectors] = true;
          }
          else if(B_LineTriggersStairs(line))
          {
-            sector = ::sectors + secnum;
-            stairSectors.clear();
+            std::unordered_set<const sector_t *> stairSectors;
             stairSectors.insert(sector);
+            bool continueStair;
             do
             {
                continueStair = false;
-               for(j = 0; j < sector->linecount; ++j)
+               for(int j = 0; j < sector->linecount; ++j)
                {
-                  sector2 = sector->lines[j]->frontsector;
-                  if(sector2 != sector ||
-                     !(sector->lines[j]->flags & ML_TWOSIDED))
-                  {
+                  const sector_t *sector2 = sector->lines[j]->frontsector;
+                  if(sector2 != sector || !(sector->lines[j]->flags & ML_TWOSIDED))
                      continue;
-                  }
+
                   sector2 = sector->lines[j]->backsector;
-                  if(!sector2 || sector2->floorpic != sector->floorpic ||
-                     sector2 == sector || stairSectors.count(sector2))
+                  if(!sector2 || sector2->floorpic != sector->floorpic || sector2 == sector ||
+                     stairSectors.count(sector2))
                   {
                      continue;
                   }
@@ -1141,16 +1130,18 @@ static void FindDynamicSectors(bool* dynamicSectors)
    }
    
    // 2. Find all sectors with timed effects
-   for(i = 0; i < ::numsectors; ++i)
+   for(int i = 0; i < ::numsectors; ++i)
    {
-      sector = ::sectors + i;
-      if(sector->tag == 666)  // any level can have KeenDie
+      const sector_t &sector = ::sectors[i];
+      if(sector.tag == 666)  // any level can have KeenDie
       {
          dynamicSectors[i] = true;
          continue;
       }
 
-      if(sector->tag == 667)
+      EVSectorSpecialFunc func;
+
+      if(sector.tag == 667)
          for(int j = 0; j < NUM_BOSS_SPECS; ++j)
          {
             if(LevelInfo.bossSpecs & boss_specs[j].level_flag &&
@@ -1161,12 +1152,11 @@ static void FindDynamicSectors(bool* dynamicSectors)
             }
          }
 
-      if(!sector->special)
+      if(!sector.special)
          continue;
-      
-      vss = (VanillaSectorSpecial)sector->special;
-      
-      if(vss == VSS_DoorCloseIn30 || vss == VSS_DoorRaiseIn5Mins)
+
+      func = EV_GetSectorSpecial(sector);
+      if(func == EV_SectorDoorRaiseIn5Mins || func == EV_SectorDoorCloseIn30)
          dynamicSectors[i] = true;
    nextSector:
       ;
