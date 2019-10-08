@@ -114,9 +114,9 @@ struct v2fixed_t
       return { D_abs(x), D_abs(y) };
    }
 
-   bool operator ! () const
+   operator bool() const
    {
-      return !x && !y;
+      return x || y;
    }
 
    //

@@ -287,8 +287,8 @@ public:
    PODCollection<const line_t*> gunLines;
 
    // Defined in b_trace.cpp
-   bool pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                     std::function<bool(const Line&, const divline_t &, fixed_t)> &&lineHit) const;
+   bool pathTraverse(divline_t trace,
+                     const std::function<bool(const Line&, const divline_t &, fixed_t)> &lineHit) const;
 
 private:
     // Post-processing

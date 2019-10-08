@@ -1520,10 +1520,10 @@ bool Bot::stepLedges(bool avoid, v2fixed_t npos)
 {
    auto mpos = v2fixed_t(*pl->mo);
 
-    v2fixed_t landing = mpos + m_realVelocity.fixedmul(DRIFT_TIME);
+   v2fixed_t movement = m_realVelocity.fixedmul(DRIFT_TIME);
 
-   return landing != mpos &&
-   !botMap->pathTraverse(mpos.x, mpos.y, landing.x, landing.y, [this, mpos, avoid, npos](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
+   return movement &&
+   !botMap->pathTraverse({ mpos, movement }, [this, mpos, avoid, npos](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
 
         int s = P_PointOnDivlineSide(dl.v, divline_t::points(*line.v[0], *line.v[1]));
 

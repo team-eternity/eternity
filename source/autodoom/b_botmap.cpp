@@ -426,22 +426,58 @@ static void B_setSpecLinePositions()
    {
       const line_t &line = lines[i];
 
-      // TODO: also take into account generalized actions
       if(EV_IsSwitchSpecial(line))
       {
          v2fixed_t mid = (v2fixed_t(*line.v1) + *line.v2) / 2;
          angle_t ang = v2fixed_t(line.dx, line.dy).angle() - ANG90;
 
-         mid += v2fixed_t::polar(USERANGE / 2, ang);
+         struct Intersect
+         {
+            v2fixed_t v;
+            fixed_t frac;
+            bool hitwall;
+         };
+         PODCollection<Intersect> intersects;
+//         intersects.add({mid, 0 });
+         divline_t trace = { mid, v2fixed_t::polar(USERANGE, ang) };
+         botMap->pathTraverse(trace, [&intersects](const BotMap::Line &line, const divline_t &dl,
+                                                   fixed_t frac)
+         {
+            Intersect intersect = {};
+            intersect.v = dl.v + dl.dv.fixedmul(frac);
+            intersect.frac = frac;
 
-         BSubsec *ss = &botMap->pointInSubsector(mid);
-         ss->linelist[&line] = USERANGE / 2;
+            divline_t wall = divline_t::points(*line.v[0], *line.v[1]);
+            int side = P_PointOnDivlineSide(dl.v, wall);
+            if((line.msec[1] == botMap->nullMSec && side == 0) ||
+               (line.msec[0] == botMap->nullMSec && side == 1))
+            {
+               intersect.hitwall = true;
+            }
 
-         mid += v2fixed_t::polar(USERANGE / 2, ang);
+            intersects.add(intersect);
+            return true;
+         });
 
-         ss = &botMap->pointInSubsector(mid);
-         if(!ss->linelist.count(&line))
-            ss->linelist[&line] = USERANGE;
+         for(auto it = intersects.begin() + 1; it < intersects.end(); ++it)
+         {
+            auto jt = it - 1;
+            if(jt->hitwall)
+               continue;
+
+            v2fixed_t midp = it->v / 2 + jt->v / 2;
+            BSubsec &ss = botMap->pointInSubsector(midp);
+            if(!ss.linelist.count(&line))
+               ss.linelist[&line] = FixedMul(USERANGE, it->frac / 2 + jt->frac / 2);
+         }
+
+         // also add the end point
+         if(!intersects.back().hitwall)
+         {
+            BSubsec &ss = botMap->pointInSubsector(trace.v + trace.dv);
+            if(!ss.linelist.count(&line))
+               ss.linelist[&line] = USERANGE;
+         }
       }
       else if(EV_IsGunSpecial(line))
          botMap->gunLines.add(&line);

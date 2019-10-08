@@ -85,7 +85,7 @@ void PlayerObserver::observeJumping()
    }
    if(mInAir)
    {
-      botMap->pathTraverse(prevpos.x, prevpos.y, pl->mo->x, pl->mo->y, [this](const BotMap::Line &line, const divline_t &dl, fixed_t frac) -> bool {
+      botMap->pathTraverse(divline_t::points(v2fixed_t(prevpos), v2fixed_t(*pl->mo)), [this](const BotMap::Line &line, const divline_t &dl, fixed_t frac) -> bool {
 
          if(!frac)
             return true;

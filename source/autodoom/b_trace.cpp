@@ -81,108 +81,95 @@ bool BotMap::blockLinesIterator(int x, int y,
 //                                                     //
 //                                                     //
 
-bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                          std::function<bool(const Line&, const divline_t &, fixed_t)>
-                          &&lineHit) const
+bool BotMap::pathTraverse(divline_t trace,
+                          const std::function<bool(const Line&, const divline_t &, fixed_t)> &lineHit) const
 {
    // Gotta copy all the code from other traversers
 
    VALID_CLEAR(validLines, numlines);
 
    // don't side exactly on a line
-   if(!((x1 - bMapOrgX) & (BOTMAPBLOCKSIZE - 1)))
-      x1 += FRACUNIT;
-   if(!((y1 - bMapOrgY) & (BOTMAPBLOCKSIZE - 1)))
-      y1 += FRACUNIT;
-
-   divline_t dl;
-   dl.x = x1;
-   dl.y = y1;
-   dl.dx = x2 - x1;
-   dl.dy = y2 - y1;
-
-   x1 -= bMapOrgX;
-   y1 -= bMapOrgY;
-   fixed_t xt1 = x1 >> BOTMAPBLOCKSHIFT;
-   fixed_t yt1 = y1 >> BOTMAPBLOCKSHIFT;
-
-   x2 -= bMapOrgX;
-   y2 -= bMapOrgY;
-   fixed_t xt2 = x2 >> BOTMAPBLOCKSHIFT;
-   fixed_t yt2 = y2 >> BOTMAPBLOCKSHIFT;
-
-   fixed_t mapxstep;
-   fixed_t mapystep;
-   fixed_t partialx;
-   fixed_t partialy;
-   fixed_t xstep;
-   fixed_t ystep;
-   fixed_t xintercept;
-   fixed_t yintercept;
-   if(xt2 > xt1)
+   if(!((trace.x - bMapOrgX) & (BOTMAPBLOCKSIZE - 1)))
    {
-      mapxstep = 1;
-      partialx = FRACUNIT - ((x1 >> BOTMAPBTOFRAC) & (FRACUNIT - 1));
-      ystep = FixedDiv(y2 - y1, D_abs(x2 - x1));
+      trace.x += FRACUNIT;
+      trace.dx -= FRACUNIT;
    }
-   else if(xt2 < xt1)
+   if(!((trace.y - bMapOrgY) & (BOTMAPBLOCKSIZE - 1)))
    {
-      mapxstep = -1;
-      partialx = (x1 >> BOTMAPBTOFRAC) & (FRACUNIT - 1);
-      ystep = FixedDiv(y2 - y1, D_abs(x2 - x1));
+      trace.y += FRACUNIT;
+      trace.dy -= FRACUNIT;
+   }
+
+   divline_t orgtrace = trace;
+
+   trace.v -= v2fixed_t{ bMapOrgX, bMapOrgY };
+   v2fixed_t vt1 = trace.v >> BOTMAPBLOCKSHIFT;
+   v2fixed_t vt2 = (trace.v + trace.dv) >> BOTMAPBLOCKSHIFT;
+
+   v2fixed_t mapstep;
+   v2fixed_t partial;
+   v2fixed_t step;
+   v2fixed_t intercept;
+   if(vt2.x > vt1.x)
+   {
+      mapstep.x = 1;
+      partial.x = FRACUNIT - ((trace.x >> BOTMAPBTOFRAC) & (FRACUNIT - 1));
+      step.y = FixedDiv(trace.dy, D_abs(trace.dx));
+   }
+   else if(vt2.x < vt1.x)
+   {
+      mapstep.x = -1;
+      partial.x = (trace.x >> BOTMAPBTOFRAC) & (FRACUNIT - 1);
+      step.y = FixedDiv(trace.dy, D_abs(trace.dx));
    }
    else
    {
-      mapxstep = 0;
-      partialx = FRACUNIT;
-      ystep = 256 * FRACUNIT;
+      mapstep.x = 0;
+      partial.x = FRACUNIT;
+      step.y = 256 * FRACUNIT;
    }
 
-   yintercept = (y1 >> BOTMAPBTOFRAC) + FixedMul(partialx, ystep);
+   intercept.y = (trace.y >> BOTMAPBTOFRAC) + FixedMul(partial.x, step.y);
 
-   if(yt2 > yt1)
+   if(vt2.y > vt1.y)
    {
-      mapystep = 1;
-      partialy = FRACUNIT - ((y1 >> BOTMAPBTOFRAC) & (FRACUNIT - 1));
-      xstep = FixedDiv(x2 - x1, D_abs(y2 - y1));
+      mapstep.y = 1;
+      partial.y = FRACUNIT - ((trace.y >> BOTMAPBTOFRAC) & (FRACUNIT - 1));
+      step.x = FixedDiv(trace.dx, D_abs(trace.dy));
    }
-   else if(yt2 < yt1)
+   else if(vt2.y < vt1.y)
    {
-      mapystep = -1;
-      partialy = (y1 >> BOTMAPBTOFRAC) & (FRACUNIT - 1);
-      xstep = FixedDiv(x2 - x1, D_abs(y2 - y1));
+      mapstep.y = -1;
+      partial.y = (trace.y >> BOTMAPBTOFRAC) & (FRACUNIT - 1);
+      step.x = FixedDiv(trace.dx, D_abs(trace.dy));
    }
    else
    {
-      mapystep = 0;
-      partialy = FRACUNIT;
-      xstep = 256 * FRACUNIT;
+      mapstep.y = 0;
+      partial.y = FRACUNIT;
+      step.x = 256 * FRACUNIT;
    }
 
-   xintercept = (x1 >> BOTMAPBTOFRAC) + FixedMul(partialy, xstep);
+   intercept.x = (trace.x >> BOTMAPBTOFRAC) + FixedMul(partial.y, step.x);
 
    // From ZDoom (usable under ZDoom code license):
    // [RH] Fix for traces that pass only through blockmap corners. In that case,
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
 
-   if(D_abs(xstep) == FRACUNIT && D_abs(ystep) == FRACUNIT)
+   if(step.elemabs() == v2fixed_t(FRACUNIT, FRACUNIT))
    {
-      if(ystep < 0)
-         partialx = FRACUNIT - partialx;
-      if(ystep < 0)
-         partialy = FRACUNIT - partialy;
-      if(partialx == partialy)
-      {
-         xintercept = xt1 << FRACBITS;
-         yintercept = yt1 << FRACBITS;
-      }
+      if(step.y < 0)
+         partial.x = FRACUNIT - partial.x;
+      if(step.x < 0)
+         partial.y = FRACUNIT - partial.y;
+      if(partial.x == partial.y)
+         intercept = vt1 << FRACBITS;
    }
 
    // step through map blocks
    // Count is present to prevent a round off error from skipping the break
-   fixed_t mapx = xt1;
-   fixed_t mapy = yt1;
+   v2fixed_t map = vt1;
 
    struct Intercept
    {
@@ -195,7 +182,7 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
       divline_t *trace;
       PODCollection<Intercept> intercepts;
    } ctx;
-   ctx.trace = &dl;
+   ctx.trace = &orgtrace;
 
    static auto lineHitFunc = [](const Line &line, void *vcontext) {
       auto ctx = (Context *)vcontext;
@@ -217,16 +204,16 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 
    for(int count = 0; count < 100; ++count)
    {
-      blockLinesIterator(mapx, mapy, lineHitFunc, &ctx);
-      if((mapxstep | mapystep) == 0)
+      blockLinesIterator(map.x, map.y, lineHitFunc, &ctx);
+      if((mapstep.x | mapstep.y) == 0)
          break;
       // From ZDoom (usable under the ZDoom code license):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
       // Doom 1.2, and persisted into Heretic, Hexen, and some versions of
       // ZDoom.
-      switch((((yintercept >> FRACBITS) == mapy) << 1) |
-             ((xintercept >> FRACBITS) == mapx))
+      switch((((intercept.y >> FRACBITS) == map.y) << 1) |
+             ((intercept.x >> FRACBITS) == map.x))
       {
          case 0:
             // Neither xintercept nor yintercept match!
@@ -235,17 +222,17 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
             break;
          case 1:
             // xintercept matches
-            xintercept += xstep;
-            mapy += mapystep;
-            if(mapy == yt2)
-               mapystep = 0;
+            intercept.x += step.x;
+            map.y += mapstep.y;
+            if(map.y == vt2.y)
+               mapstep.y = 0;
             break;
          case 2:
             // yintercept matches
-            yintercept += ystep;
-            mapx += mapxstep;
-            if(mapx == xt2)
-               mapxstep = 0;
+            intercept.y += step.y;
+            map.x += mapstep.x;
+            if(map.x == vt2.x)
+               mapstep.x = 0;
             break;
          case 3:
             // xintercept and yintercept both match
@@ -253,39 +240,35 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
             // block being entered need to be checked (which will happen when this
             // loop continues), but the other two blocks adjacent to the corner
             // also need to be checked.
-            blockLinesIterator(mapx + mapxstep, mapy, lineHitFunc, &ctx);
-            blockLinesIterator(mapx, mapy + mapystep, lineHitFunc, &ctx);
-            xintercept += xstep;
-            yintercept += ystep;
-            mapx += mapxstep;
-            mapy += mapystep;
-            if(mapx == xt2)
-               mapxstep = 0;
-            if(mapy == yt2)
-               mapystep = 0;
+            blockLinesIterator(map.x + mapstep.x, map.y, lineHitFunc, &ctx);
+            blockLinesIterator(map.x, map.y + mapstep.y, lineHitFunc, &ctx);
+            intercept += step;
+            map += mapstep;
+            if(map.x == vt2.x)
+               mapstep.x = 0;
+            if(map.y == vt2.y)
+               mapstep.y = 0;
             break;
       }
    }
 
    // traverse intercepts
-   size_t count;
-   fixed_t dist;
    PODCollection<Intercept>::iterator scan, end, in;
 
-   count = ctx.intercepts.getLength();
+   size_t count = ctx.intercepts.getLength();
    end = ctx.intercepts.end();
 
    for(scan = ctx.intercepts.begin(); scan < end; ++scan)
    {
       divline_t mdl = divline_t::points(*scan->line->v[0], *scan->line->v[1]);
-      scan->frac = P_InterceptVector(&dl, &mdl);
+      scan->frac = P_InterceptVector(&orgtrace, &mdl);
    }
 
    in = nullptr;
 
    while(count--)
    {
-      dist = D_MAXINT;
+      fixed_t dist = D_MAXINT;
       for(scan = ctx.intercepts.begin(); scan < end; ++scan)
       {
          if(scan->frac < dist)
@@ -297,7 +280,7 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 
       if(in)
       {
-         if(!lineHit(*in->line, dl, in->frac))
+         if(!lineHit(*in->line, orgtrace, in->frac))
             return false;
          in->frac = D_MAXINT;
       }
