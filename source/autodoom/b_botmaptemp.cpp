@@ -377,8 +377,6 @@ void TempBotMapPImpl::getBSPLines()
 //
 void TempBotMapPImpl::getLineMSectors()
 {
-   const ev_action_t* action;
-
    V_SetLoading(numlines, "Map lines");
 
    for (int u = 0; u < numlines; ++u)
@@ -388,8 +386,7 @@ void TempBotMapPImpl::getLineMSectors()
       const line_t &line = ::lines[u];
       const fixed_t x[2] = {line.v1->x, line.v2->x}, y[2] = {line.v1->y, line.v2->y};
 
-      action = EV_ActionForSpecial(line.special);
-      if (action && (action->type == &W1ActionType || action->type == &WRActionType))
+      if (EV_IsWalkSpecial(line))
       {
           RawLine& rl = rawBSPLines.addNew();
          angle_t fineAngle = P_PointToAngle(x[0], y[0], x[1], y[1]) >> ANGLETOFINESHIFT;

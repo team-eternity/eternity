@@ -465,7 +465,6 @@
 		4F0A2C7716ED36FD00400F41 /* i_sdlgamepads.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = i_sdlgamepads.cpp; path = ../source/sdl/i_sdlgamepads.cpp; sourceTree = "<group>"; };
 		4F0A2C7816ED36FD00400F41 /* i_sdlgamepads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_sdlgamepads.h; path = ../source/sdl/i_sdlgamepads.h; sourceTree = "<group>"; };
 		4F0EB7C21973253B00A067F7 /* b_trace.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_trace.cpp; sourceTree = "<group>"; };
-		4F0EB7C31973253B00A067F7 /* b_trace.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_trace.h; sourceTree = "<group>"; };
 		4F12D7451A1F460E00C71230 /* b_statistics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_statistics.cpp; sourceTree = "<group>"; };
 		4F12D7461A1F460E00C71230 /* b_statistics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_statistics.h; sourceTree = "<group>"; };
 		4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_musinfo.cpp; path = ../source/s_musinfo.cpp; sourceTree = "<group>"; };
@@ -1379,7 +1378,6 @@
 				4F43B456182D9F7A00730C02 /* b_think.cpp */,
 				4F43B457182D9F7A00730C02 /* b_think.h */,
 				4F0EB7C21973253B00A067F7 /* b_trace.cpp */,
-				4F0EB7C31973253B00A067F7 /* b_trace.h */,
 				4F43B458182D9F7A00730C02 /* b_util.cpp */,
 				4F43B459182D9F7A00730C02 /* b_util.h */,
 				4F43B45A182D9F7A00730C02 /* glbsp */,

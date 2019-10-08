@@ -59,7 +59,6 @@ bool BotMap::blockLinesIterator(int x, int y,
    for(const Line *line : coll)
    {
       // TODO: linked portals
-      // TODO: validcount
       size_t index = line - lines;
       if(VALID_ISSET(validLines, index))
          continue;
@@ -88,7 +87,6 @@ bool BotMap::pathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 {
    // Gotta copy all the code from other traversers
 
-   // TODO: validcount for lines
    VALID_CLEAR(validLines, numlines);
 
    // don't side exactly on a line

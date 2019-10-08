@@ -62,7 +62,7 @@ bool BotMap::demoPlayingFlag;
 
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP10";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP11";
 
 //
 // String representation
@@ -425,30 +425,27 @@ static void B_setSpecLinePositions()
    for (int i = 0; i < numlines; ++i)
    {
       const line_t &line = lines[i];
-      const ev_action_t *action = EV_ActionForSpecial(line.special);
-      if(action)
+
+      // TODO: also take into account generalized actions
+      if(EV_IsSwitchSpecial(line))
       {
-         // TODO: also take into account generalized actions
-         if(EV_IsSwitchSpecial(line))
-         {
-            v2fixed_t mid = (v2fixed_t(*line.v1) + *line.v2) / 2;
-            angle_t ang = v2fixed_t(line.dx, line.dy).angle() - ANG90;
+         v2fixed_t mid = (v2fixed_t(*line.v1) + *line.v2) / 2;
+         angle_t ang = v2fixed_t(line.dx, line.dy).angle() - ANG90;
 
-            mid += v2fixed_t::polar(USERANGE / 2, ang);
+         mid += v2fixed_t::polar(USERANGE / 2, ang);
 
-            BSubsec *ss = &botMap->pointInSubsector(mid);
-            ss->linelist[&line] = USERANGE / 2;
+         BSubsec *ss = &botMap->pointInSubsector(mid);
+         ss->linelist[&line] = USERANGE / 2;
 
-            mid += v2fixed_t::polar(USERANGE / 2, ang);
+         mid += v2fixed_t::polar(USERANGE / 2, ang);
 
-            ss = &botMap->pointInSubsector(mid);
-            if(!ss->linelist.count(&line))
-               ss->linelist[&line] = USERANGE;
-         }
-         else if(EV_IsGunSpecial(line))
-            botMap->gunLines.add(&line);
+         ss = &botMap->pointInSubsector(mid);
+         if(!ss->linelist.count(&line))
+            ss->linelist[&line] = USERANGE;
       }
-      
+      else if(EV_IsGunSpecial(line))
+         botMap->gunLines.add(&line);
+
    }
 }
 
