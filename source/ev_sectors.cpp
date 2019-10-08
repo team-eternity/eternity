@@ -867,6 +867,29 @@ ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
    return binding;
 }
 
+//
+// Returns the sector special if applicable
+//
+EVSectorSpecialFunc EV_GetSectorSpecial(const sector_t &sector)
+{
+   if(!sector.special)
+      return nullptr;
+   bool isgen = EV_IsGenSectorSpecial(sector.special);
+   if(isgen)
+   {
+      if(demo_version < 200)
+         return nullptr;
+
+      const ev_sectorbinding_t *binding = LevelInfo.mapFormat == LEVEL_FORMAT_UDMF_ETERNITY ?
+      EV_UDMFEternityBindingForSectorSpecial(sector.special & UDMF_SEC_MASK) :
+      EV_GenBindingForSectorSpecial(sector.special);
+      return binding ? binding->apply : nullptr;
+   }
+
+   const ev_sectorbinding_t *binding = EV_BindingForSectorSpecial(sector.special);
+   return binding ? binding->apply : nullptr;
+}
+
 //=============================================================================
 //
 // BOOM Generalized Sectors

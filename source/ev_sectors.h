@@ -43,6 +43,8 @@ struct ev_sectorbinding_t
 ev_sectorbinding_t *EV_GenBindingForSectorSpecial(int special);
 ev_sectorbinding_t *EV_BindingForSectorSpecial(int special);
 
+EVSectorSpecialFunc EV_GetSectorSpecial(const sector_t &sector);
+
 bool EV_IsGenSectorSpecial(int special);
 
 void EV_SpawnSectorSpecials();

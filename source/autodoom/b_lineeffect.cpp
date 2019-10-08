@@ -1372,24 +1372,6 @@ bool B_SectorTypeIsHarmless(int16_t special)
 }
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool B_sectorIs30sClosingDoor(int special)
-{
-   const ev_sectorbinding_t *binding = EV_IsGenSectorSpecial(special) ?
-   EV_GenBindingForSectorSpecial(special) :
-   EV_BindingForSectorSpecial(special);
-
-   return binding && binding->apply == EV_SectorDoorCloseIn30;
-}
-
-static bool B_sectorIs5minRisingDoor(int special)
-{
-   const ev_sectorbinding_t *binding = EV_IsGenSectorSpecial(special) ?
-   EV_GenBindingForSectorSpecial(special) :
-   EV_BindingForSectorSpecial(special);
-
-   return binding && binding->apply == EV_SectorDoorRaiseIn5Mins;
-}
-
 //! Inserts stairs from source sector into set
 static void B_insertStairs(const sector_t *sector, bool ignoreTextures, 
    std::unordered_set<const sector_t *> &set)
@@ -1764,11 +1746,11 @@ static void B_collectForLine(const line_t *line, bool fromLineEffect,
 static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
 {
    // 1. Find time-based doors (or boss-based)
-   bool tag666used = false, tag667used = false;
    for(int i = 0; i < numsectors; ++i)
    {
       const sector_t *sector = sectors + i;
-      if (B_sectorIs30sClosingDoor(sector->special) || B_sectorIs5minRisingDoor(sector->special))
+      EVSectorSpecialFunc func = EV_GetSectorSpecial(*sector);
+      if (func == EV_SectorDoorCloseIn30 || func == EV_SectorDoorRaiseIn5Mins)
       {
          set.insert(sector);
          continue;
