@@ -406,6 +406,35 @@ bool EV_IsWalkSpecial(const line_t &line);
 bool EV_IsNonPlayerSpecial(const line_t &line);
 bool EV_IsCeilingLoweringSpecial(const line_t &line);
 
+//
+// Teleport special info
+//
+struct TeleportSpecInfo
+{
+   enum: unsigned
+   {
+      flip = 1,
+      keepheight = 2
+   };
+
+   enum Type
+   {
+      none,
+      spot,
+      line
+   } type;
+   int tag;
+   int tid;
+   unsigned flags;
+
+   operator bool() const
+   {
+      return type != none;
+   }
+};
+
+TeleportSpecInfo EV_IsTeleportationSpecial(const line_t &line);
+
 #endif
 
 // EOF

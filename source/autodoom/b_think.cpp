@@ -308,19 +308,6 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    };
    if(inconsequential.count(func))
       return false;
-
-   // Teleportation is handled by the pathfinder
-   static const std::unordered_set<EVActionFunc> teleports = {
-      EV_ActionParamTeleport,
-      EV_ActionParamTeleportLine,
-      EV_ActionParamTeleportNoFog,
-      EV_ActionSilentLineTeleport,
-      EV_ActionSilentLineTeleportReverse,
-      EV_ActionSilentTeleport,
-      EV_ActionTeleport,
-   };
-   if(teleports.count(func))
-      return false;
     
     // now that we got some lines out of the way, decide quickly to use once-
     // only types
@@ -614,10 +601,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
     {
         bline = neigh.line;
 
-        // Don't handle teleporters here as goals. They're handled in b_path.
-        // And unlike teleporters, we don't care about the way we enter them.
         if(bline && bline->specline
-           && !B_IsWalkTeleportation(bline->specline->special)
            && botMap->canPass(*neigh.myss, *neigh.otherss, self.pl->mo->height)
            && self.handleLineGoal(ss, coord, *bline->specline))
         {
@@ -652,7 +636,7 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
    // TODO: add support for the other activation types
    if(!EV_IsWalkSpecial(line) && !EV_IsSwitchSpecial(line))
       return false;
-   if(EV_IsNonPlayerSpecial(line))
+   if(EV_IsNonPlayerSpecial(line) || EV_IsTeleportationSpecial(line))
       return false;
 
      // OK, this might be viable. But check.

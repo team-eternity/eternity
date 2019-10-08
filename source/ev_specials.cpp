@@ -1782,6 +1782,34 @@ bool EV_IsCeilingLoweringSpecial(const line_t &line)
    return false;
 }
 
+//
+// If it's a tele special
+//
+TeleportSpecInfo EV_IsTeleportationSpecial(const line_t &line)
+{
+   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   if(!action)
+      return { TeleportSpecInfo::none };
+
+   const int *args = line.args;
+   auto func = action->action;
+
+   if(func == EV_ActionParamTeleport)
+      return { TeleportSpecInfo::spot, args[1], args[0] };
+   if(func == EV_ActionParamTeleportLine)
+      return { TeleportSpecInfo::line, args[1], 0, args[2] ? TeleportSpecInfo::flip : 0 };
+   if(func == EV_ActionParamTeleportNoFog)
+      return { TeleportSpecInfo::spot, args[2], args[0], args[3] ? TeleportSpecInfo::keepheight : 0};
+   if(func == EV_ActionSilentLineTeleport)
+      return { TeleportSpecInfo::line, args[0], 0, 0 };
+   if(func == EV_ActionSilentLineTeleportReverse)
+      return { TeleportSpecInfo::line, args[0], 0, TeleportSpecInfo::flip };
+   if(func == EV_ActionSilentTeleport || func == EV_ActionTeleport)
+      return { TeleportSpecInfo::spot, args[0], 0 };
+
+   return{ TeleportSpecInfo::none };
+}
+
 //=============================================================================
 //
 // Development Commands

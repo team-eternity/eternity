@@ -34,6 +34,7 @@
 #include "b_path.h"
 #include "../d_player.h"
 #include "../e_things.h"
+#include "../ev_specials.h"
 #include "../p_maputl.h"
 #include "../p_spec.h"
 #include "../r_state.h"
@@ -265,27 +266,32 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
     const BotMap::Line* bline = neigh.line;
     if (!bline 
         || !bline->specline 
-        || !B_IsWalkTeleportation(bline->specline->special) 
         || (neigh.d.x ^ bline->specline->dx) < 0 
         || (neigh.d.y ^ bline->specline->dy) < 0
         || !m_map->canPass(*neigh.myss, *neigh.otherss, m_player->mo->height))
     {
         return nullptr;
     }
+   const line_t &line = *bline->specline;
+   TeleportSpecInfo info = EV_IsTeleportationSpecial(line);
+
+   if(!info)
+        return nullptr;
+
+   // TODO: add support for advanced teles
+   if(info.type != TeleportSpecInfo::spot || info.tid)
+      return nullptr;
 
     // Now we have our ways
-    const line_t* line = bline->specline;
-    int i;
-    Thinker* thinker;
-    const Mobj* m;
-    if (!m_teleCache.count(line))
+
+    if (!m_teleCache.count(&line))
     {
         // CODE LARGELY COPIED FROM EV_Teleport
-        for (i = -1; (i = P_FindSectorFromLineArg0(line, i)) >= 0;)
+        for (int i = -1; (i = P_FindSectorFromTag(info.tag, i)) >= 0;)
         {
-            for (thinker = thinkercap.next; thinker != &thinkercap;
-                 thinker = thinker->next)
+            for (Thinker *thinker = thinkercap.next; thinker != &thinkercap; thinker = thinker->next)
             {
+               const Mobj *m;
                 if (!(m = thinker_cast<Mobj *>(thinker)))
                     continue;
                 if (m->type == E_ThingNumForDEHNum(MT_TELEPORTMAN) &&
@@ -294,15 +300,15 @@ const PathFinder::TeleItem* PathFinder::checkTeleportation(const BNeigh& neigh)
                     TeleItem ti;
                     ti.v = v2fixed_t(*m);
                     ti.ss = &botMap->pointInSubsector(ti.v);
-                    m_teleCache[line] = ti;
-                    return &m_teleCache[line];
+                    m_teleCache[&line] = ti;
+                    return &m_teleCache[&line];
                 }
             }
         }
     }
     else
     {
-        return &m_teleCache[line];
+        return &m_teleCache[&line];
     }
 
     return nullptr;

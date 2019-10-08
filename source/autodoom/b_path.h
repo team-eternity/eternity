@@ -178,7 +178,7 @@ private:
     // OPTIM NOTE: please measure whether short or int is better
    const player_t *m_player;
 
-    std::map<const line_t*, TeleItem> m_teleCache; // teleporter cache
+    std::unordered_map<const line_t*, TeleItem> m_teleCache; // teleporter cache
 };
 
 bool B_FindBreadthFirst(const BSubsec &first,

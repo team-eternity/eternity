@@ -263,22 +263,6 @@ public:
    }
 };
 
-inline static bool B_IsWalkTeleportation(int special)
-{
-    VanillaLineSpecial vls = (VanillaLineSpecial)special;
-    switch (vls)
-    {
-    case VLS_W1Teleport:
-    case VLS_WRTeleport:
-    case VLS_W1SilentTeleport:
-    case VLS_WRSilentTeleport:
-        return true;
-    default:
-        break;
-    }
-    return false;
-}
-
 #ifdef _DEBUG
 void B_Log(const char *output, ...);
 #else
