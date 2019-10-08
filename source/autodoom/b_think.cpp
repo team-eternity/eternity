@@ -1410,7 +1410,8 @@ void Bot::doNonCombatAI()
     }
 
     m_intoSwitch = false;
-    if (goalTable.hasKey(BOT_WALKTRIG) && B_checkSwitchReach(mpos, endCoord, *swline))
+    if (goalTable.hasKey(BOT_WALKTRIG) && m_path.end.walkLine &&
+        EV_IsSwitchSpecial(*m_path.end.walkLine) && B_checkSwitchReach(mpos, endCoord, *swline))
     {
         m_intoSwitch = true;
         if(gametic % 2 == 0)
