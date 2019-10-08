@@ -52,33 +52,9 @@ namespace LevelStateStack
    void UseRealHeights(bool value);
 }
 
-//
-// VanillaSectorSpecial
-//
-enum VanillaSectorSpecial
-{
-   VSS_LightRandomOff = 1,
-   VSS_LightStrobeFast = 2,
-   VSS_LightStrobeSlow = 3,
-   VSS_LightStrobeHurt = 4,
-   VSS_DamageHellSlime = 5,
-   VSS_DamageNukage = 7,
-   VSS_LightGlow = 8,
-   VSS_Secret = 9,
-   VSS_DoorCloseIn30 = 10,
-   VSS_ExitSuperDamage = 11,
-   VSS_LightStrobeSlowSync = 12,
-   VSS_LightStrobeFastSync = 13,
-   VSS_DoorRaiseIn5Mins = 14,
-   VSS_DamageSuperHellSlime = 16,
-   VSS_LightFireFlicker = 17,
-};
-
 bool B_LineTriggersBackSector(const line_t &line);
 bool B_LineTriggersDonut(const line_t &line);
 bool B_LineTriggersStairs(const line_t &line);
-
-bool B_SectorTypeIsHarmless(int16_t special);
 
 void B_LogActiveSectors();
 

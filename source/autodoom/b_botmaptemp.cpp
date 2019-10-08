@@ -1290,8 +1290,8 @@ void TempBotMap::obtainMetaSectors()
    {
       uint64_t comboHeight = FLOORCEILING_HEIGHT(::sectors[i].floorheight,
                                                  ::sectors[i].ceilingheight);
-      bool isStatic = !dynamicSectors[i]
-      && B_SectorTypeIsHarmless(::sectors[i].special);
+      // TODO: the other specials may count too
+      bool isStatic = !dynamicSectors[i] && !::sectors[i].damage;
       
       if(isStatic && simpleRepeatSet.count(comboHeight))
       {

@@ -1353,23 +1353,6 @@ bool B_LineTriggersStairs(const line_t &line)
    return !!funcs.count(action->action);
 }
 
-bool B_SectorTypeIsHarmless(int16_t special)
-{
-   auto vss = static_cast<VanillaSectorSpecial>(special);
-   switch (vss)
-   {
-      case VSS_DamageHellSlime:
-      case VSS_DamageNukage:
-      case VSS_DoorCloseIn30:
-      case VSS_ExitSuperDamage:
-      case VSS_DoorRaiseIn5Mins:
-      case VSS_DamageSuperHellSlime:
-         return false;
-      default:
-         break;
-   }
-   return true;
-}
 ////////////////////////////////////////////////////////////////////////////////
 
 //! Inserts stairs from source sector into set
