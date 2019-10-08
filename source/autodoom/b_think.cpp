@@ -546,9 +546,12 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
        if(floorsector.damageflags & SDMG_EXITLEVEL &&
           !self.otherBotsHaveGoal(BOT_FLOORSECTOR, goaltag))
        {
-          coord.kind = BotPathEnd::KindCoord;
-          coord.coord = ss.mid;
-          self.goalTable.setV2Fixed(BOT_FLOORSECTOR, goaltag);
+          if (self.m_deepSearchMode == DeepNormal)
+          {
+             coord.kind = BotPathEnd::KindCoord;
+             coord.coord = ss.mid;
+             self.goalTable.setV2Fixed(BOT_FLOORSECTOR, goaltag);
+          }
           return true;
        }
     }
@@ -1410,7 +1413,7 @@ void Bot::doNonCombatAI()
     }
 
     m_intoSwitch = false;
-    if (goalTable.hasKey(BOT_WALKTRIG) && m_path.end.walkLine &&
+    if (goalTable.hasKey(BOT_WALKTRIG) && m_path.end.kind == BotPathEnd::KindWalkLine &&
         EV_IsSwitchSpecial(*m_path.end.walkLine) && B_checkSwitchReach(mpos, endCoord, *swline))
     {
         m_intoSwitch = true;
@@ -1477,7 +1480,9 @@ void Bot::doNonCombatAI()
     if (angleturn < -2500)
         angleturn = -2500;
 
-    if (!dontMove && ((endCoord - mpos).sqrtabs() >= 16 * FRACUNIT || D_abs(angleturn) <= 300))
+    if (!dontMove && ((endCoord - mpos).sqrtabs() >= 16 * FRACUNIT || D_abs(angleturn) <= 300 ||
+                      m_path.end.kind != BotPathEnd::KindWalkLine ||
+                      !EV_IsSwitchSpecial(*m_path.end.walkLine)))
     {
         if(m_runfast && !m_intoSwitch)
             cmd->forwardmove += FixedMul((moveslow ? 1 : 2)
