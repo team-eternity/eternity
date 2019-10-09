@@ -1362,27 +1362,34 @@ void Bot::doNonCombatAI()
     {
         // from end to path to beginning
         bool onPath = false;
+       bool haveplat = false;
         for (const BNeigh* neigh : m_path.inv)
         {
             if (!botMap->canPass(*neigh->myss, *neigh->otherss, pl->mo->height))
                 break;
-            if(!m_runfast)
-            {
-                const PlatThinker* pt = thinker_cast<const PlatThinker*>
-                    (neigh->otherss->msector->getFloorSector()->floordata);
-                
-                if(pt && pt->wait > 0)
-                {
-                    B_Log("Run fast");
-                    m_runfast = true;
-                }
-            }
+
+           const PlatThinker* pt = thinker_cast<const PlatThinker*>
+                 (neigh->otherss->msector->getFloorSector()->floordata);
+
+             if(pt && pt->wait > 0)
+             {
+                if(!m_runfast)
+                   B_Log("Run fast");
+                 m_runfast = true;
+                haveplat = true;
+             }
 
            const sector_t &sector = *neigh->otherss->msector->getCeilingSector();
            if(botMap->sectorFlags[&sector - ::sectors].door.valid && B_wantOpenDoor(sector))
               doorss = neigh->otherss;
            if(neigh->myss != ss)
               continue;
+
+           if(!haveplat && m_runfast)
+           {
+              m_runfast = false;
+              B_Log("stop running fast");
+           }
 
            npos = B_ProjectionOnSegment(mpos, neigh->v, neigh->d, pl->mo->radius);
            dontMove = shouldWaitSector(*neigh);
