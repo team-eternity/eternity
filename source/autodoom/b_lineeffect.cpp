@@ -242,10 +242,7 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player,
    if(B_LineTriggersBackSector(line))
    {
       if(line.backsector)
-      {
-         B_pushSectorHeights((int)(line.backsector - sectors), line, coll,
-                             player);
-      }
+         B_pushSectorHeights((int)(line.backsector - sectors), line, coll, player);
    }
    else
    {
@@ -253,8 +250,7 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player,
       {
          // For each successful state push, add an index to the collection
 
-         if(::sectors + secnum == excludeSector
-            && g_affectedSectors[secnum].stack.getLength())
+         if(::sectors + secnum == excludeSector && g_affectedSectors[secnum].stack.getLength())
          {
             B_Log("Exclude %d", secnum);
             continue;
@@ -668,8 +664,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    {
       if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
          return;
-      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-      * FRACUNIT;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
    }
    else if(func == EV_ActionVerticalDoor)
    {
@@ -678,8 +673,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       lockID = EV_LockDefIDForSpecial(line.special);
       if(lockID && !E_PlayerCanUnlock(&player, lockID, false, true))
          return;
-      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-      * FRACUNIT;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
       switch(line.special)
       {
          case 1:
@@ -698,19 +692,17 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       lockID = EV_LockDefIDForSpecial(line.special);
       if(lockID && !E_PlayerCanUnlock(&player, lockID, true, true))
          return;
-      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-      * FRACUNIT;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
    }
-   else if(func == EV_ActionDoorBlazeRaise || func == EV_ActionRaiseDoor)
+   else if(func == EV_ActionDoorBlazeRaise || func == EV_ActionRaiseDoor ||
+           func == EV_ActionHereticDoorRaise3x)
    {
       if(ceilingBlocked)
          return;
-      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-      * FRACUNIT;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
       sae.ceilingTerminal = true;
    }
-   else if(func == EV_ActionCloseDoor ||
-           func == EV_ActionCeilingLowerToFloor ||
+   else if(func == EV_ActionCloseDoor || func == EV_ActionCeilingLowerToFloor ||
            func == EV_ActionDoorBlazeClose)
    {
       if(ceilingBlocked)
@@ -752,8 +744,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    {
       if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
          return;
-      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4
-      * FRACUNIT;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
       sae.ceilingTerminal = true;
    }
    else if(func == EV_ActionLowerFloor)
@@ -770,6 +761,12 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       if(sae.floorHeight != lastFloorHeight)
          sae.floorHeight += 8 * FRACUNIT;
    }
+   else if(func == EV_ActionLowerFloorTurboA)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true) + 8 * FRACUNIT;
+   }
    else if(func == EV_ActionFloorLowerAndChange ||
            func == EV_ActionFloorLowerToLowest)
    {
@@ -777,8 +774,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
    }
-   else if(func == EV_ActionRaiseFloor24 ||
-           func == EV_ActionPlatRaise24Change ||
+   else if(func == EV_ActionRaiseFloor24 || func == EV_ActionPlatRaise24Change ||
            func == EV_ActionRaiseFloor24Change)
    {
       if(floorBlocked)
@@ -828,14 +824,12 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.floorHeight = sector.ceilingheight;
       sae.floorTerminal = true;
    }
-   else if(func == EV_ActionPlatRaiseNearestChange ||
-           func == EV_ActionFloorRaiseToNearest ||
+   else if(func == EV_ActionPlatRaiseNearestChange || func == EV_ActionFloorRaiseToNearest ||
            func == EV_ActionRaiseFloorTurbo)
    {
       if(floorBlocked)
          return;
-      sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight,
-                                               true);
+      sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight, true);
    }
    else if(func == EV_ActionRaiseFloor)
    {
@@ -887,15 +881,13 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          sae.floorHeight += minsize;
       else
       {
-         sae.floorHeight = (sae.floorHeight >> FRACBITS)
-         + (minsize >> FRACBITS);
+         sae.floorHeight = (sae.floorHeight >> FRACBITS) + (minsize >> FRACBITS);
          if(sae.floorHeight > 32000)
             sae.floorHeight = 32000;
          sae.floorHeight <<= FRACBITS;
       }
    }
-   else if(func == EV_ActionCeilingCrushAndRaise ||
-           func == EV_ActionFastCeilCrushRaise ||
+   else if(func == EV_ActionCeilingCrushAndRaise || func == EV_ActionFastCeilCrushRaise ||
            func == EV_ActionSilentCrushAndRaise)
    {
       const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
@@ -912,13 +904,12 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          //              sae.ceilingTerminal = true;
       }
    }
-   else if(func == EV_ActionBuildStairsUp8 ||
-           func == EV_ActionBuildStairsTurbo16)
+   else if(func == EV_ActionBuildStairsUp8 || func == EV_ActionBuildStairsTurbo16 ||
+           func == EV_ActionHereticStairsBuildUp8FS || func == EV_ActionHereticStairsBuildUp16FS)
    {
       if(floorBlocked)
          return;
-      othersAffected = B_fillInStairs(&sector, sae, func, line.special,
-                                      indexList);
+      othersAffected = B_fillInStairs(&sector, sae, func, line.special, indexList);
    }
    else if(func == EV_ActionDoDonut)
    {
@@ -949,8 +940,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.floorHeight = front.getFloorHeight();
       sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
    }
-   else if(func == EV_ActionPlatDownWaitUpStay ||
-           func == EV_ActionPlatBlazeDWUS)
+   else if(func == EV_ActionPlatDownWaitUpStay || func == EV_ActionPlatBlazeDWUS)
    {
       if(floorBlocked)
          return;
@@ -963,8 +953,9 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    else
       return;  // unknown or useless/irrelevant actions (e.g. lights) are ignored
    
-   if(!othersAffected && sae.floorHeight == lastFloorHeight
-      && sae.ceilingHeight == lastCeilingHeight && (!sae.floorTerminal || sae.altFloorHeight == lastFloorHeight))
+   if(!othersAffected && sae.floorHeight == lastFloorHeight &&
+      sae.ceilingHeight == lastCeilingHeight && (!sae.floorTerminal ||
+                                                 sae.altFloorHeight == lastFloorHeight))
    {
       return;  // nothing changed; do not register.
    }
@@ -980,7 +971,7 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
 {
    fixed_t stairIncrement;
 
-   if(func == EV_ActionBuildStairsTurbo16)
+   if(func == EV_ActionBuildStairsTurbo16 || func == EV_ActionHereticStairsBuildUp16FS)
       stairIncrement = 16 * FRACUNIT;
    else
       stairIncrement = 8 * FRACUNIT;

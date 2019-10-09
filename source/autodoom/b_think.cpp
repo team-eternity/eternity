@@ -338,7 +338,7 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
 			m_deepSearchMode = DeepNormal;
 					
 			// Now apply the change
-			if (!LevelStateStack::Push(line, *pl))
+			if (!LevelStateStack::Push(line, *pl, nullptr))
 				return SpecialChoice_no;
 				
 			// Now search again: see if anything is lost.
@@ -352,7 +352,7 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
 			return m_deepAvailSsectors.empty() ? SpecialChoice_worth : SpecialChoice_no;
 		}
 		
-		bool result = LevelStateStack::Push(line, *pl);
+		bool result = LevelStateStack::Push(line, *pl, nullptr);
         LevelStateStack::Clear();       
         return result ? SpecialChoice_worth : SpecialChoice_no;
         // just push them, as long as they're not the blocking type and have any
@@ -372,7 +372,7 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
         m_deepSearchMode = DeepNormal;
 
         // Now apply the change
-        if (!LevelStateStack::Push(line, *pl))
+        if (!LevelStateStack::Push(line, *pl, nullptr))
             return SpecialChoice_no;
 
         m_deepSearchMode = DeepBeyond;
@@ -682,8 +682,7 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
 
              // ONLY return true if pushing was useful.
 
-             if(LevelStateStack::Push(line, *pl,
-                                      ss.msector->getFloorSector()))
+             if(LevelStateStack::Push(line, *pl, ss.msector->getFloorSector()))
              {
                  m_deepRepeat = &ss;
                  return true;

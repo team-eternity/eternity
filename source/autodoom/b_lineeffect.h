@@ -39,8 +39,7 @@ struct player_t;
 namespace LevelStateStack
 {
    void     InitLevel();
-   bool     Push(const line_t& line, const player_t& player,
-                 const sector_t *excludeSector = nullptr);
+   bool     Push(const line_t& line, const player_t& player, const sector_t *excludeSector);
    void     Pop();
    void     Clear();
    fixed_t  Floor(const sector_t& sector);
