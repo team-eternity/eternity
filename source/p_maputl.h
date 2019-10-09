@@ -85,6 +85,11 @@ struct divline_t
    {
       return dv.angle();
    }
+
+   v2fixed_t endpoint() const
+   {
+      return v + dv;
+   }
 };
 
 //

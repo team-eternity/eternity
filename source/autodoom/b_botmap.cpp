@@ -36,6 +36,7 @@
 #include "b_glbsp.h"
 #include "b_msector.h"
 #include "../c_io.h"
+#include "../cam_sight.h"
 #include "../d_files.h"
 #include "../doomstat.h"
 #include "../e_exdata.h"
@@ -440,6 +441,10 @@ static void B_setSpecLinePositions()
          PODCollection<Intersect> intersects;
 //         intersects.add({mid, 0 });
          divline_t trace = { mid, v2fixed_t::polar(USERANGE, ang) };
+
+         // FIXME: uncertainty if trace starts on top of a botmap line. It can or cannot add a
+         // nearby push point, useful for activating switches from the top.
+
          botMap->pathTraverse(trace, [&intersects](const BotMap::Line &line, const divline_t &dl,
                                                    fixed_t frac)
          {
@@ -455,9 +460,39 @@ static void B_setSpecLinePositions()
                intersect.hitwall = true;
             }
 
+//            B_Log("intersect %g %g frac %g hit %d", intersect.v.x/65536., intersect.v.y/65536.,
+//                  FixedMul(USERANGE, frac)/65536., intersect.hitwall);
+
             intersects.add(intersect);
             return true;
          });
+
+         auto addpoint = [&line, mid](v2fixed_t point, fixed_t frac)
+         {
+            BSubsec &ss = botMap->pointInSubsector(point);
+            if(!ss.linelist.count(&line))
+            {
+               // now check that there's no occlusion
+               // TODO: polyobjects may move away
+               bool pass = CAM_PathTraverse(point.x, point.y, mid.x, mid.y, CAM_ADDLINES,
+                                            const_cast<line_t *>(&line), [](const intercept_t *in,
+                                                                            void *parm,
+                                                                            const divline_t &trace)
+               {
+                  const line_t &line = *in->d.line;
+                  if(&line == parm)
+                     return true;
+
+                  return !(line.special & EX_ML_BLOCKALL) && line.sidenum[1] >= 0;
+               });
+               if(pass)
+               {
+//                  B_Log("Line %d added %g %g at %g", eindex(&line - lines), point.x/65536.,
+//                        point.y/65536., FixedMul(USERANGE, frac)/65536.);
+                  ss.linelist[&line] = FixedMul(USERANGE, frac);
+               }
+            }
+         };
 
          for(auto it = intersects.begin() + 1; it < intersects.end(); ++it)
          {
@@ -466,19 +501,15 @@ static void B_setSpecLinePositions()
                continue;
 
             v2fixed_t midp = it->v / 2 + jt->v / 2;
-            BSubsec &ss = botMap->pointInSubsector(midp);
-            if(!ss.linelist.count(&line))
-               ss.linelist[&line] = FixedMul(USERANGE, it->frac / 2 + jt->frac / 2);
+            fixed_t frac = it->frac / 2 + jt->frac / 2;
+
+            addpoint(midp, frac);
          }
 
          // also add the end point
          // FIXME: this actually must not be empty! Instead it should point in other directions!
          if(!intersects.isEmpty() && !intersects.back().hitwall)
-         {
-            BSubsec &ss = botMap->pointInSubsector(trace.v + trace.dv);
-            if(!ss.linelist.count(&line))
-               ss.linelist[&line] = USERANGE;
-         }
+            addpoint(trace.endpoint(), FRACUNIT);
       }
       else if(EV_IsGunSpecial(line))
          botMap->gunLines.add(&line);
