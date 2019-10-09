@@ -1373,10 +1373,10 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t *sec,
 fixed_t P_FindHighestCeilingSurrounding(const sector_t *sec,
                                         bool useStates = false); // jff 2/04/98
 
-fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight);
+fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight, bool useStates = false);
    // jff 2/04/98
 
-fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight);
+fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight, bool useStates = false);
    // jff 2/04/98
 
 fixed_t P_FindShortestTextureAround(int secnum); // jff 2/04/98

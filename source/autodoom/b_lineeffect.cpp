@@ -326,304 +326,6 @@ static bool doorBusy(const sector_t& sector)
     return secThinker != nullptr;
 }
 
-//
-// True if special opens unlocked door behind linedef that won't close
-//
-static bool B_isManualDoorOpen(const line_t *line)
-{
-   int special = line->special;
-
-   // Generalized special
-   if(special >= GenDoorBase && special < GenCeilingBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if(genspac == PushOnce || genspac == PushMany)
-      {
-         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         return kind == ODoor;
-      }
-   }
-
-   // Classic special
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if(!action)
-      return false;
-
-   if (action->action == EV_ActionVerticalDoor)
-      return special == 31 || special == 118;
-
-   // Parameterized special ("Door_Open")
-   if(action->action == EV_ActionParamDoorOpen)
-   {
-      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      return !line->args[0] && (line->extflags & flags) == flags;
-   }
-   return false;
-}
-
-//
-// True if special opens a locked door behind linedef, that won't close
-//
-static bool B_isManualDoorOpenLocked(const line_t *line, int *lockid)
-{
-   int special = line->special;
-
-   // Generalized
-   if(special >= GenLockedBase && special < GenDoorBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if(genspac == PushOnce || genspac == PushMany)
-      {
-         int kind = ((special - GenLockedBase) & LockedKind) >> LockedKindShift;
-         if(kind == ODoor)
-         {
-            *lockid = EV_LockDefIDForSpecial(special);
-            return true;
-         }
-         return false;
-      }
-   }
-
-   // Classic
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if(!action)
-      return false;
-
-   if (action->action == EV_ActionVerticalDoor)
-   {
-      if (special >= 32 && special <= 34)
-      {
-         *lockid = EV_LockDefIDForSpecial(special);
-         return true;
-      }
-      return false;
-   }
-
-   // no parameterized special
-
-   return false;
-}
-
-//
-// True if the special means a tagged open-only (no close) door
-//
-static bool B_isRemoteDoorOpen(const line_t *line)
-{
-   int special = line->special;
-
-   // generalized
-   if(special >= GenDoorBase && special < GenCeilingBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if(genspac != PushOnce && genspac != PushMany)
-      {
-         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         return kind == ODoor;
-      }
-   }
-
-   // classic special
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if(!action)
-      return false;
-
-   if(action->action == EV_ActionOpenDoor ||
-      action->action == EV_ActionDoorBlazeOpen)
-   {
-      return true;
-   }
-
-   // param special
-   if(action->action == EV_ActionParamDoorOpen)
-   {
-      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      return line->args[0] && (line->extflags & flags) == flags;
-   }
-   return false;
-}
-
-//
-// Check if special is a remote locked door that doesn't close
-//
-static bool B_isRemoteDoorOpenLocked(const line_t *line, int *lockid)
-{
-   int special = line->special;
-
-   // generalized
-   if (special >= GenLockedBase && special < GenDoorBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if (genspac != PushOnce && genspac != PushMany)
-      {
-         int kind = ((special - GenLockedBase) & LockedKind) >> LockedKindShift;
-         if (kind == ODoor)
-         {
-            *lockid = EV_LockDefIDForSpecial(special);
-            return true;
-         }
-         return false;
-      }
-   }
-
-   // classic special
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if (!action)
-      return false;
-
-   if (action->action == EV_ActionDoLockedDoor)
-      return true;
-
-   // no param specials
-   return false;
-}
-
-//
-// Check that it's a manual standard lockless door
-//
-static bool B_isManualDoorRaise(const line_t *line)
-{
-   int special = line->special;
-
-   // generalized
-   if (special >= GenDoorBase && special < GenCeilingBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if (genspac == PushOnce || genspac == PushMany)
-      {
-         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         return kind == OdCDoor || pDOdCDoor;
-      }
-   }
-
-   // classic special
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if (!action)
-      return false;
-
-   if (action->action == EV_ActionVerticalDoor)
-      return special == 1 || special == 117;
-   
-   // param special
-   if (action->action == EV_ActionParamDoorRaise ||
-      action->action == EV_ActionParamDoorWaitRaise)
-   {
-      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      return !line->args[0] && (line->extflags & flags) == flags;
-   }
-
-   return false;
-}
-
-//
-// Check that it's a manual standard locked door
-//
-static bool B_isManualDoorRaiseLocked(const line_t *line, int *lockid)
-{
-   int special = line->special;
-
-   // Generalized
-   if (special >= GenLockedBase && special < GenDoorBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if (genspac == PushOnce || genspac == PushMany)
-      {
-         int kind = ((special - GenLockedBase) & LockedKind) >> LockedKindShift;
-         if (kind == ODoor)
-         {
-            *lockid = EV_LockDefIDForSpecial(special);
-            return true;
-         }
-         return false;
-      }
-   }
-
-   // classic special
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if (!action)
-      return false;
-
-   if (action->action == EV_ActionVerticalDoor)
-   {
-      if (special >= 26 && special <= 28)
-      {
-         *lockid = EV_LockDefIDForSpecial(special);
-         return true;
-      }
-      return false;
-   }
-
-   // param special
-   if (action->action == EV_ActionParamDoorLockedRaise)
-   {
-      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      if (!line->args[0] && (line->extflags & flags) == flags)
-      {
-         *lockid = line->args[3];
-         return true;
-      }
-      return false;
-   }
-
-   return false;
-}
-
-//
-// Check that it's a remote standard lockless door
-//
-static bool B_isRemoteDoorRaise(const line_t *line)
-{
-   int special = line->special;
-
-   // generalized
-   if (special >= GenDoorBase && special < GenCeilingBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if (genspac != PushOnce && genspac != PushMany)
-      {
-         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         return kind == OdCDoor || pDOdCDoor;
-      }
-   }
-
-   // classic special
-   const ev_action_t *action = EV_ActionForSpecial(special);
-   if (!action)
-      return false;
-
-   if (action->action == EV_ActionRaiseDoor || 
-      action->action == EV_ActionDoorBlazeRaise)
-   {
-      return true;
-   }
-
-   // param special
-   if (action->action == EV_ActionParamDoorRaise ||
-      action->action == EV_ActionParamDoorWaitRaise)
-   {
-      static const uint32_t flags = EX_ML_PLAYER | EX_ML_USE;
-      return line->args[0] && (line->extflags & flags) == flags;
-   }
-
-   return false;
-}
-
-static bool B_isCeilingToFloor(const line_t *line)
-{
-   int special = line->special;
-
-   // generalized
-   if (special >= GenCeilingBase && special < GenFloorBase)
-   {
-      int genspac = EV_GenActivationType(special);
-      if (genspac != PushOnce && genspac != PushMany)
-      {
-         int kind = ((special - GenDoorBase) & DoorKind) >> DoorKindShift;
-         return kind == OdCDoor || pDOdCDoor;
-      }
-   }
-   return false;
-}
-
 // ce poate face actiunea
 // poate schimba pozitii de sectoare. Lista de sectoare.
 
@@ -632,7 +334,223 @@ struct LineEffect
 
 };
 
+//
+// Does the highly specific texture effect
+//
+static void B_applyShortestTexture(SectorStateEntry &sae, const sector_t &sector)
+{
+   fixed_t minsize = getMinTextureSize(sector);
 
+   if(comp[comp_model])
+      sae.floorHeight += minsize;
+   else
+   {
+      sae.floorHeight = (sae.floorHeight >> FRACBITS) + (minsize >> FRACBITS);
+      if(sae.floorHeight > 32000)
+         sae.floorHeight = 32000;
+      sae.floorHeight <<= FRACBITS;
+   }
+}
+
+//
+// generalized special routine. returns false if blocked
+//
+static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t &sector,
+                              const line_t &line, bool &othersAffected, bool floorBlocked,
+                              bool ceilingBlocked, fixed_t lastFloorHeight,
+                              fixed_t lastCeilingHeight, const player_t &player)
+{
+   int gentype = EV_GenTypeForSpecial(special);
+   int value;
+   switch(gentype)
+   {
+      case GenTypeFloor:
+      {
+         if(floorBlocked)
+            return false;
+         value = special - GenFloorBase;
+         int target = (value & FloorTarget   ) >> FloorTargetShift;
+         int dir = ((value & FloorDirection) >> FloorDirectionShift) ? plat_up : plat_down;
+         switch (target)
+         {
+            case FtoHnF:
+               sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+               break;
+            case FtoLnF:
+               sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+               break;
+            case FtoNnF:
+               sae.floorHeight = dir ? P_FindNextHighestFloor(&sector, lastFloorHeight, true) :
+               P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+               break;
+            case FtoLnC:
+               sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+               break;
+            case FtoC:
+               sae.floorHeight = lastCeilingHeight;
+               break;
+            case FbyST:
+               sae.floorHeight = (lastFloorHeight >> FRACBITS) +
+                     dir * (P_FindShortestTextureAround(eindex(&sector - sectors)) >> FRACBITS);
+
+               if(sae.floorHeight > 32000)  //jff 3/13/98 prevent overflow
+                  sae.floorHeight = 32000;    // wraparound in floor height
+               if(sae.floorHeight < -32000)
+                  sae.floorHeight = -32000;
+               sae.floorHeight<<=FRACBITS;
+
+               break;
+            case Fby24:
+               sae.floorHeight = lastFloorHeight + dir * 24 * FRACUNIT;
+               break;
+            case Fby32:
+               sae.floorHeight = lastFloorHeight + dir * 32 * FRACUNIT;
+               break;
+         }
+         break;
+      }
+      case GenTypeCeiling:
+      {
+         if(ceilingBlocked)
+            return false;
+         value = special - GenCeilingBase;
+         int target = (value & CeilingTarget   ) >> CeilingTargetShift;
+         int dir = (value & CeilingDirection) >> CeilingDirectionShift ? plat_up : plat_down;
+         switch (target)
+         {
+            case CtoHnC:
+               sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+               break;
+            case CtoLnC:
+               sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
+               break;
+            case CtoNnC:
+               sae.ceilingHeight = dir ? P_FindNextHighestCeiling(&sector, lastCeilingHeight, true)
+               : P_FindNextLowestCeiling(&sector, lastCeilingHeight, true);
+               break;
+            case CtoHnF:
+               sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
+               break;
+            case CtoF:
+               sae.ceilingHeight = lastFloorHeight;
+               break;
+            case CbyST:
+               sae.ceilingHeight = (lastCeilingHeight >> FRACBITS) +
+                     dir * (P_FindShortestUpperAround(eindex(&sector - sectors)) >> FRACBITS);
+               if(sae.ceilingHeight > 32000)  // jff 3/13/98 prevent overflow
+                  sae.ceilingHeight = 32000;  // wraparound in ceiling height
+               if(sae.ceilingHeight < -32000)
+                  sae.ceilingHeight = -32000;
+               sae.ceilingHeight <<= FRACBITS;
+               break;
+            case Cby24:
+               sae.ceilingHeight = lastCeilingHeight + dir * 24 * FRACUNIT;
+               break;
+            case Cby32:
+               sae.ceilingHeight = lastCeilingHeight + dir * 32 * FRACUNIT;
+               break;
+         }
+         break;
+      }
+      case GenTypeDoor:
+      {
+         if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
+            return false;
+         value = special - GenDoorBase;
+         int kind = (value & DoorKind) >> DoorKindShift;
+         switch (kind)
+         {
+            case OdCDoor:
+               sae.ceilingTerminal = true;
+            case ODoor:
+               sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
+               break;
+            case CdODoor:
+               sae.ceilingTerminal = true;
+            case CDoor:
+               sae.ceilingHeight = lastFloorHeight;
+               break;
+         }
+         break;
+      }
+      case GenTypeLocked:
+      {
+         if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
+            return false;
+         value = special - GenLockedBase;
+         int lockID = EV_LockDefIDForSpecial(line.special);
+         if(lockID && !E_PlayerCanUnlock(&player, lockID, false, true))
+            return false;
+         sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
+         int kind = (value & LockedKind) >> LockedKindShift;
+         if(kind == OdCDoor)
+            sae.ceilingTerminal = true;
+         break;
+      }
+      case GenTypeLift:
+      {
+         if(floorBlocked)
+            return false;
+         value = line.special - GenLiftBase;
+         int target = (value & LiftTarget ) >> LiftTargetShift;
+         sae.floorTerminal = true;
+         sae.altFloorHeight = lastFloorHeight;
+         switch (target)
+         {
+            case F2LnF:
+               sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+               if(sae.floorHeight > lastFloorHeight)
+                  sae.floorHeight = lastFloorHeight;
+               break;
+            case F2NnF:
+               sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+               break;
+            case F2LnC:
+               sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+               if(sae.floorHeight > lastFloorHeight)
+                  sae.floorHeight = lastFloorHeight;
+               break;
+            case LnF2HnF:
+               sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+               if(sae.floorHeight > lastFloorHeight)
+                  sae.floorHeight = lastFloorHeight;
+               sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
+               if(sae.altFloorHeight < lastFloorHeight)
+                  sae.altFloorHeight = lastFloorHeight;
+               break;
+            default:
+               break;
+         }
+         break;
+      }
+      case GenTypeStairs:
+      {
+         int dir = (value & StairDirection) >> StairDirectionShift;
+         int step = (value & StairStep) >> StairStepShift;
+         bool ignoretex = !!((value & StairIgnore) >> StairIgnoreShift);
+         fixed_t ssize;
+         switch (step)
+         {
+            default:
+            case StepSize4:
+               ssize = 4 * FRACUNIT;
+               break;
+            case StepSize8:
+               ssize = 8 * FRACUNIT;
+               break;
+            case StepSize16:
+               ssize = 16 * FRACUNIT;
+               break;
+            case StepSize24:
+               ssize = 24 * FRACUNIT;
+               break;
+         }
+         // TODO: this and the other specials
+         break;
+      }
+   }
+   return true;
+}
 
 //
 // Updare heights from state
@@ -665,7 +583,15 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    EVActionFunc func = action->action;
    int lockID;
 
-   if(func == EV_ActionDoorBlazeOpen || func == EV_ActionOpenDoor)
+   if(func == EV_ActionBoomGen)
+   {
+      if(!B_pushGeneralized(line.special, sae, sector, line, othersAffected, floorBlocked,
+                            ceilingBlocked, lastFloorHeight, lastCeilingHeight, player))
+      {
+         return;
+      }
+   }
+   else if(func == EV_ActionDoorBlazeOpen || func == EV_ActionOpenDoor)
    {
       if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
          return;
@@ -881,16 +807,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    {
       if(floorBlocked)
          return;
-      fixed_t minsize = getMinTextureSize(sector);
-      if(comp[comp_model])
-         sae.floorHeight += minsize;
-      else
-      {
-         sae.floorHeight = (sae.floorHeight >> FRACBITS) + (minsize >> FRACBITS);
-         if(sae.floorHeight > 32000)
-            sae.floorHeight = 32000;
-         sae.floorHeight <<= FRACBITS;
-      }
+      B_applyShortestTexture(sae, sector);
    }
    else if(func == EV_ActionCeilingCrushAndRaise || func == EV_ActionFastCeilCrushRaise ||
            func == EV_ActionSilentCrushAndRaise)
@@ -985,16 +902,15 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
    fixed_t height = sae.floorHeight + stairIncrement;
    sae.floorHeight = height;
    bool ok;
-   const sector_t* tsec;
+
    bool othersAffected = false;
-   SectorHeightStack* otherAffSector;
-   int i;
    do
    {
       // CODE LARGELY TAKEN FROM EV_BuildStairs
-      ok = false;
-      for(i = 0; i < sector->linecount; ++i)
+      bool ok = false;
+      for(int i = 0; i < sector->linecount; ++i)
       {
+         const sector_t* tsec;
          tsec = sector->lines[i]->frontsector;
          if(tsec != sector || !(sector->lines[i]->flags & ML_TWOSIDED))
             continue;
@@ -1004,7 +920,7 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
          if(comp[comp_stairs] || demo_version == 203)
             height += stairIncrement;
          
-         otherAffSector = &g_affectedSectors[tsec - sectors];
+         SectorHeightStack* otherAffSector = &g_affectedSectors[tsec - sectors];
          if(otherAffSector->isFloorTerminal())
             continue;
          if(!comp[comp_stairs] && demo_version != 203)
@@ -1030,6 +946,8 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
    }while(ok);
    return othersAffected;
 }
+
+// TODO: add generalized equivalent
 
 // CODE LARGELY TAKEN FROM EV_DoDonut
 static bool B_fillInDonut(const sector_t& sector, SectorStateEntry& sae,
@@ -1101,13 +1019,13 @@ static fixed_t getMinTextureSize(const sector_t& sector)
    fixed_t minsize = D_MAXINT;
    if(!comp[comp_model])
       minsize = 32000 << FRACBITS;
-   int secnum;
-   const side_t* side;
+
    for(int i = 0; i < sector.linecount; ++i)
    {
-      secnum = static_cast<int>(&sector - sectors);
+      int secnum = eindex(&sector - sectors);
       if(twoSided(secnum, i))
       {
+         const side_t* side;
          side = getSide(secnum, i, 0);
          if(side->bottomtexture >= 0
             && (side->bottomtexture || comp[comp_model]))

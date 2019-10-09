@@ -596,25 +596,31 @@ fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight, bool useSt
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
 //
-fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
+fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight, bool useStates)
 {
    sector_t *other;
    int i;
-   
+
+   fixed_t newHeight;
    for(i=0 ;i < sec->linecount ; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight < currentheight)
+      if((other = getNextSector(sec->lines[i],sec)))
       {
-         int height = other->ceilingheight;
-         while (++i < sec->linecount)
+         newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+         if(newHeight < currentheight)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->ceilingheight > height &&
-               other->ceilingheight < currentheight)
-               height = other->ceilingheight;
+            int height = newHeight;
+            while (++i < sec->linecount)
+            {
+               if((other = getNextSector(sec->lines[i],sec)))
+               {
+                  newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+                  if(newHeight > height && newHeight < currentheight)
+                     height = newHeight;
+               }
+            }
+           return height;
          }
-        return height;
       }
    }
    return currentheight;
@@ -630,25 +636,31 @@ fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
 //
 // jff 02/03/98 Twiddled Lee's P_FindNextHighestFloor to make this
 //
-fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
+fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight, bool useStates)
 {
    sector_t *other;
    int i;
-   
+
+   fixed_t newHeight;
    for(i=0; i < sec->linecount; i++)
    {
-      if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight > currentheight)
+      if((other = getNextSector(sec->lines[i],sec)))
       {
-         int height = other->ceilingheight;
-         while (++i < sec->linecount)
+         newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+         if(newHeight > currentheight)
          {
-            if((other = getNextSector(sec->lines[i],sec)) &&
-               other->ceilingheight < height &&
-               other->ceilingheight > currentheight)
-               height = other->ceilingheight;
+            int height = newHeight;
+            while (++i < sec->linecount)
+            {
+               if((other = getNextSector(sec->lines[i],sec)))
+               {
+                  newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->ceilingheight;
+                  if(newHeight < height && newHeight > currentheight)
+                     height = newHeight;
+               }
+            }
+            return height;
          }
-         return height;
       }
    }
    return currentheight;
