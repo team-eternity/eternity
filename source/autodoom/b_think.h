@@ -135,7 +135,20 @@ class Bot : public ZoneObject
    std::unordered_set<const line_t*>  m_deepTriedLines;
    std::unordered_set<const BSubsec*> m_deepAvailSsectors;
    const BSubsec*           m_deepRepeat = nullptr;
-   const BSubsec*           m_deepPromisedSS = nullptr;
+
+   // Holds info of potential visits behind a door or lift, to focus on them
+   struct DeepPromise
+   {
+      std::unordered_set<const BSubsec *> sss;
+      bool hasbenefits = false;
+
+      void clear()
+      {
+         sss.clear();
+         hasbenefits = false;
+      }
+   } m_deepPromise;
+
    bool                     m_justGotLost = false;
    bool                     m_intoSwitch = false;
    const Mobj*              m_currentTargetMobj = nullptr;
@@ -225,7 +238,13 @@ class Bot : public ZoneObject
    void capCommands();
 
    bool checkDeadEndTrap(const BSubsec& targss);
-   bool shouldUseSpecial(const line_t& line, const BSubsec& liness);
+   enum SpecialChoice   // to what degree to use a special from the path
+   {
+      SpecialChoice_no,          // not useful
+      SpecialChoice_worth,       // worth trying but not directly beneficial to user
+      SpecialChoice_favourable   // also helps user (e.g. exits the level, heals etc.)
+   };
+   SpecialChoice shouldUseSpecial(const line_t& line, const BSubsec& liness);
    bool checkItemType(const Mobj *special) const;
    bool otherBotsHaveGoal(const char *key, v2fixed_t coord) const;
    static bool objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v);

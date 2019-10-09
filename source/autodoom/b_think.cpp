@@ -108,7 +108,7 @@ void Bot::mapInit()
    m_deepSearchMode = DeepNormal;
    m_deepAvailSsectors.clear();
    m_deepRepeat = nullptr;
-   m_deepPromisedSS = nullptr;
+   m_deepPromise.clear();
     m_justGotLost = false;
     m_intoSwitch = false;
     m_dropSS.clear();
@@ -189,9 +189,9 @@ PathResult Bot::reachableItem(const BSubsec& ss, void* v)
 
     bool result = objOfInterest(ss, dummy, &self);
 
-   if(result && self.m_deepSearchMode == DeepBeyond && !self.m_deepPromisedSS)
+   if(result && self.m_deepSearchMode == DeepBeyond)
    {
-      self.m_deepPromisedSS = &ss;
+      self.m_deepPromise.sss.insert(&ss);
       B_Log("Made a promise for %g %g", ss.mid.x/65536., ss.mid.y/65536.);
    }
 
@@ -218,14 +218,17 @@ bool Bot::checkDeadEndTrap(const BSubsec& targss)
 
     LevelStateStack::Clear();
 
-    return m_deepAvailSsectors.empty();
+    bool result = m_deepAvailSsectors.empty();
+   if(!result)
+      DebugLogger() << "rejected ss " << targss.mid << " because of pit";
+   return result;
 }
 
-bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
+Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 {
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
-      return false;
+      return SpecialChoice_no;
 
    auto exitcondition = [this, action, &line](unsigned stage, const char *announcement) {
 
@@ -238,9 +241,9 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
               // FIXME: do not send it now, but when bot actually goes there
               HU_Say(pl, announcement);
            }
-           return true;
+           return SpecialChoice_favourable;
         }
-      return false;
+      return SpecialChoice_no;
    };
 
    EVActionFunc func = action->action;
@@ -265,11 +268,11 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 
    // TODO: these might yet be useful if a pushable linedef surface depends on lowering ceiling
    if(EV_IsCeilingLoweringSpecial(line))
-      return false;
+      return SpecialChoice_no;
 
    // These are always bad for the activator
    if(func == EV_ActionDamageThing || func == EV_ActionRadiusQuake)
-      return false;
+      return SpecialChoice_no;
 
    // TODO: generalized and parameterized
    // These are more complex, so let's ignore them for now
@@ -290,7 +293,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
    // TODO: scripting is ultra complex. Maybe learn by trial and error?
 
    if(complex.count(func))
-      return false;
+      return SpecialChoice_no;
 
    // The following are inconsequential to the computer. Maybe we should later add support if we
    // want better chance of passing the Turing test.
@@ -315,7 +318,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
       EV_ActionParamSectorChangeSound,
    };
    if(inconsequential.count(func))
-      return false;
+      return SpecialChoice_no;
     
     // now that we got some lines out of the way, decide quickly to use once-
     // only types
@@ -336,7 +339,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 					
 			// Now apply the change
 			if (!LevelStateStack::Push(line, *pl))
-				return false;
+				return SpecialChoice_no;
 				
 			// Now search again: see if anything is lost.
 			m_deepSearchMode = DeepCheckLosses;
@@ -346,12 +349,12 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 			LevelStateStack::Clear();
 			
 			// Return true if all available ssectors have been checked
-			return m_deepAvailSsectors.empty();
+			return m_deepAvailSsectors.empty() ? SpecialChoice_worth : SpecialChoice_no;
 		}
 		
 		bool result = LevelStateStack::Push(line, *pl);
         LevelStateStack::Clear();       
-        return result;
+        return result ? SpecialChoice_worth : SpecialChoice_no;
         // just push them, as long as they're not the blocking type and have any
         // effect
     }
@@ -370,7 +373,7 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 
         // Now apply the change
         if (!LevelStateStack::Push(line, *pl))
-            return false;
+            return SpecialChoice_no;
 
         m_deepSearchMode = DeepBeyond;
 
@@ -392,10 +395,10 @@ bool Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
         m_deepSearchMode = DeepNormal;
 
         LevelStateStack::Clear();
-        return result;
+        return result ? SpecialChoice_worth : SpecialChoice_no;
     }
 
-    return false;
+    return SpecialChoice_no;
 }
 
 static bool BTR_switchReachTraverse(const intercept_t *in, void *parm, const divline_t &trace)
@@ -548,11 +551,11 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 	
    if(self.m_deepSearchMode == DeepNormal)
    {
-      if(self.m_deepPromisedSS && self.m_deepPromisedSS != &ss)
+      if(self.m_deepPromise.hasbenefits && !self.m_deepPromise.sss.count(&ss))
          return false;
-      if(self.m_deepPromisedSS)
-         B_Log("Go to promise %g %g", self.m_deepPromisedSS->mid.x/65536., self.m_deepPromisedSS->mid.y/65536.);
-      self.m_deepPromisedSS = nullptr;
+      if(self.m_deepPromise.sss.count(&ss))
+         B_Log("Go to promise %g %g", ss.mid.x/65536., ss.mid.y/65536.);
+      self.m_deepPromise.clear();
    }
 
     if(self.m_searchstage >= SearchStage_ExitNormal)
@@ -568,6 +571,8 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
              coord.coord = ss.mid;
              self.goalTable.setV2Fixed(BOT_FLOORSECTOR, goaltag);
           }
+          else if(self.m_deepSearchMode == DeepBeyond)
+             self.m_deepPromise.hasbenefits = true;
           return true;
        }
     }
@@ -581,24 +586,30 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
         if (item == &plmo)
             continue;
         fh = ss.msector->getFloorHeight();
-        if (self.m_deepSearchMode == DeepNormal && (fh + plmo.height <= item->z
-                                                    || fh >= item->z
-                                                    + item->height))
-        {
+       auto fitheight = [fh, item, &plmo](fixed_t plheight)
+       {
+          return fh + plheight > item->z && fh < item->z + item->height;
+       };
+        if (self.m_deepSearchMode == DeepNormal && !fitheight(plmo.height))
             continue;
-        }
         if (item->flags & MF_SPECIAL)
         {
            auto goaltag = v2fixed_t(*item);
            if(self.checkItemType(item) && !self.otherBotsHaveGoal(BOT_PICKUP, goaltag))
            {
-              if (self.m_deepSearchMode == DeepNormal)
+              bool result = self.checkDeadEndTrap(ss);
+              if(result)
               {
-                 coord.kind = BotPathEnd::KindCoord;
-                 coord.coord = goaltag;
-                 self.goalTable.setV2Fixed(BOT_PICKUP, goaltag);
+                 if (self.m_deepSearchMode == DeepNormal)
+                 {
+                    coord.kind = BotPathEnd::KindCoord;
+                    coord.coord = goaltag;
+                    self.goalTable.setV2Fixed(BOT_PICKUP, goaltag);
+                 }
+                 else if(self.m_deepSearchMode == DeepBeyond)
+                    self.m_deepPromise.hasbenefits = true;
               }
-              return self.checkDeadEndTrap(ss);
+              return result;
            }
         }
        else
@@ -662,7 +673,10 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
      {
          if (!m_deepTriedLines.count(&line))
          {
-             if (shouldUseSpecial(line, ss))
+            SpecialChoice choice = shouldUseSpecial(line, ss);
+            if(choice == SpecialChoice_favourable)
+               m_deepPromise.hasbenefits = true;
+             if (choice)
                  return true;
              m_deepTriedLines.insert(&line);
 
@@ -1302,7 +1316,7 @@ void Bot::doNonCombatAI()
         if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, objOfInterest, this))
         {
             ++m_searchstage;
-           m_deepPromisedSS = nullptr;
+           m_deepPromise.clear();
            B_Log("Lose promise");
             cmd->sidemove += random.range(-pl->pclass->sidemove[0], pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0], pl->pclass->forwardmove[0]);
