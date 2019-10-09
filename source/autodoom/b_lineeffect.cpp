@@ -632,20 +632,25 @@ struct LineEffect
 
 };
 
+
+
+//
+// Updare heights from state
+//
 static void B_pushSectorHeights(int secnum, const line_t& line,
                                 PODCollection<int>& indexList, const player_t& player)
 {
    SectorHeightStack& affSector = g_affectedSectors[secnum];
-   bool floorBlocked = affSector.isFloorTerminal();
-   bool ceilingBlocked = affSector.isCeilingTerminal();
+   const bool floorBlocked = affSector.isFloorTerminal();
+   const bool ceilingBlocked = affSector.isCeilingTerminal();
    if(floorBlocked && ceilingBlocked)  // all blocked: impossible
       return;
    
    const sector_t& sector = sectors[secnum];
    SectorStateEntry sae;
    sae.actionNumber = line.special;
-   fixed_t lastFloorHeight = affSector.getFloorHeight();
-   fixed_t lastCeilingHeight = affSector.getCeilingHeight();
+   const fixed_t lastFloorHeight = affSector.getFloorHeight();
+   const fixed_t lastCeilingHeight = affSector.getCeilingHeight();
    sae.floorHeight = lastFloorHeight;
    sae.ceilingHeight = lastCeilingHeight;
    sae.floorTerminal = floorBlocked;

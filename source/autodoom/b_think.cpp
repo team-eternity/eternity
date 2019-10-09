@@ -829,7 +829,7 @@ void Bot::enemyVisible(Collection<Target>& targets)
         cam.theight = sector->ceilingheight - sector->floorheight;
         
         if(target.dist < MISSILERANGE / 2 && CAM_CheckSight(cam) &&
-           LevelStateStack::Push(*line, *pl))
+           LevelStateStack::Push(*line, *pl, nullptr))
         {
            LevelStateStack::Pop();
            targets.add(std::move(target));
