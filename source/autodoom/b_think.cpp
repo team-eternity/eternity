@@ -218,10 +218,7 @@ bool Bot::checkDeadEndTrap(const BSubsec& targss)
 
     LevelStateStack::Clear();
 
-    bool result = m_deepAvailSsectors.empty();
-   if(!result)
-      DebugLogger() << "rejected ss " << targss.mid << " because of pit";
-   return result;
+    return m_deepAvailSsectors.empty();
 }
 
 Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)

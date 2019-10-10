@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
-	<string>Eternity Engine</string>
+	<string>AutoDoom</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -45,7 +45,7 @@
 	<key>CFBundleVersion</key>
 	<string>4.1.0</string>
 	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.action-games</string>
+	<string>public.app-category.entertainment</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 	<key>NSMainNibFile</key>
