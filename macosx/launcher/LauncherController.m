@@ -343,6 +343,8 @@ BOOL tryCreateDir(NSString* basePath, NSString* name, NSWindow* window)
    
   	NSString *usrPath = [appDataPath stringByAppendingPathComponent:@"user"];
    
+   if(!tryCreateDir(usrPath, @"autodoom", self.window))
+      return;
    if(!tryCreateDir(usrPath, @"doom", self.window))
       return;
    if(!tryCreateDir(usrPath, @"doom2", self.window))
