@@ -306,6 +306,9 @@ void LevelStateStack::Clear()
 static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
                            EVActionFunc func, int special,
                            PODCollection<int>& coll);
+static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry &sae, int special,
+                              fixed_t lastFloorHeight, fixed_t stairsize, int dir, bool ignoretex,
+                              PODCollection<int>& coll);
 static bool B_fillInDonut(const sector_t& sector, SectorStateEntry& sae,
                           int special, PODCollection<int>& coll);
 static fixed_t getMinTextureSize(const sector_t& sector);
@@ -358,7 +361,8 @@ static void B_applyShortestTexture(SectorStateEntry &sae, const sector_t &sector
 static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t &sector,
                               const line_t &line, bool &othersAffected, bool floorBlocked,
                               bool ceilingBlocked, fixed_t lastFloorHeight,
-                              fixed_t lastCeilingHeight, const player_t &player)
+                              fixed_t lastCeilingHeight, const player_t &player,
+                              PODCollection<int> &coll)
 {
    int gentype = EV_GenTypeForSpecial(special);
    int value;
@@ -525,6 +529,9 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
       }
       case GenTypeStairs:
       {
+         if(floorBlocked)
+            return false;
+         value = line.special - GenStairsBase;
          int dir = (value & StairDirection) >> StairDirectionShift;
          int step = (value & StairStep) >> StairStepShift;
          bool ignoretex = !!((value & StairIgnore) >> StairIgnoreShift);
@@ -545,9 +552,11 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
                ssize = 24 * FRACUNIT;
                break;
          }
-         // TODO: this and the other specials
+         othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight, ssize,
+                                            dir ? plat_up : plat_down, ignoretex, coll);
          break;
       }
+         // TODO: add crusher
    }
    return true;
 }
@@ -586,7 +595,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    if(func == EV_ActionBoomGen)
    {
       if(!B_pushGeneralized(line.special, sae, sector, line, othersAffected, floorBlocked,
-                            ceilingBlocked, lastFloorHeight, lastCeilingHeight, player))
+                            ceilingBlocked, lastFloorHeight, lastCeilingHeight, player, indexList))
       {
          return;
       }
@@ -887,6 +896,9 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    affSector.stack.add(sae);
 }
 
+//
+// for classic doom specials
+//
 static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
                            EVActionFunc func, int special,
                            PODCollection<int>& coll)
@@ -907,7 +919,7 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
    do
    {
       // CODE LARGELY TAKEN FROM EV_BuildStairs
-      bool ok = false;
+      ok = false;
       for(int i = 0; i < sector->linecount; ++i)
       {
          const sector_t* tsec;
@@ -944,6 +956,61 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
          ok = true;
       }
    }while(ok);
+   return othersAffected;
+}
+
+//
+// the more complex boom stairs
+//
+static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry &sae, int special,
+                              fixed_t lastFloorHeight, fixed_t stairsize, int dir, bool ignoretex,
+                              PODCollection<int>& coll)
+{
+   fixed_t height = lastFloorHeight + dir * stairsize;
+   int texture = sec->floorpic;
+   bool ok;
+   bool othersAffected = false;
+   do
+   {
+      ok = false;
+      for(int i = 0; i < sec->linecount; ++i)
+      {
+         if(!sec->lines[i]->backsector)
+            continue;
+         const sector_t *tsec = sec->lines[i]->frontsector;
+         if(tsec != sec)
+            continue;
+         tsec = sec->lines[i]->backsector;
+         if(!ignoretex && tsec->floorpic != texture)
+            continue;
+
+         if(demo_version < 202)
+            height += dir * stairsize;
+
+         SectorHeightStack &otherAffSector = g_affectedSectors[tsec - sectors];
+         if(otherAffSector.isFloorTerminal())
+            continue;
+         if(demo_version >= 202)
+            height += dir * stairsize;
+
+         // FIXME: is there anything about stairlock I may be concerned about?
+
+         sec = tsec;
+         // Now create the new entry
+         if(!othersAffected && height != otherAffSector.getFloorHeight())
+            othersAffected = true;
+
+         SectorStateEntry tsae;
+         tsae.actionNumber = special;
+         tsae.floorHeight = height;
+         tsae.ceilingHeight = otherAffSector.getCeilingHeight();
+         tsae.floorTerminal = false;
+         tsae.ceilingTerminal = otherAffSector.isCeilingTerminal();
+         otherAffSector.stack.add(tsae);
+         coll.add(eindex(tsec - sectors));
+         ok = true;
+      }
+   } while(ok);
    return othersAffected;
 }
 
