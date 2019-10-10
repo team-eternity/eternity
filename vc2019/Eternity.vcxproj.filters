@@ -912,9 +912,6 @@
     <ClCompile Include="..\source\autodoom\b_glbsp.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\autodoom\b_intset.cpp">
-      <Filter>Source Files\autodoom</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\autodoom\b_itemlearn.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
@@ -1074,12 +1071,6 @@
     <ClCompile Include="..\source\p_portalblockmap.cpp">
       <Filter>Source Files\P_\P_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\a_weaponsheretic.cpp">
-      <Filter>Source Files\A_\A_ Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\source\a_weaponsdoom.cpp">
-      <Filter>Source Files\A_\A_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\e_puff.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
@@ -1094,6 +1085,18 @@
     </ClCompile>
     <ClCompile Include="..\source\m_debug.cpp">
       <Filter>Source Files\M_\M_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_vocabulary.cpp">
+      <Filter>Source Files\autodoom</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsdoom.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\a_weaponsheretic.cpp">
+      <Filter>Source Files\A_\A_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\autodoom\b_weapon.cpp">
+      <Filter>Source Files\autodoom</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1784,9 +1787,6 @@
     <ClInclude Include="..\source\autodoom\b_glbsp.h">
       <Filter>Source Files\autodoom</Filter>
     </ClInclude>
-    <ClInclude Include="..\source\autodoom\b_intset.h">
-      <Filter>Source Files\autodoom</Filter>
-    </ClInclude>
     <ClInclude Include="..\source\autodoom\b_itemlearn.h">
       <Filter>Source Files\autodoom</Filter>
     </ClInclude>
@@ -1966,6 +1966,12 @@
     </ClInclude>
     <ClInclude Include="..\source\m_debug.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_vocabulary.h">
+      <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\autodoom\b_weapon.h">
+      <Filter>Source Files\autodoom</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

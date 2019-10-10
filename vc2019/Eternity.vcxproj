@@ -29,6 +29,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{233045E2-53A6-4579-A272-3D3CF6D97405}</ProjectGuid>
     <RootNamespace>Eternity</RootNamespace>
+    <ProjectName>AutoDoom</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -519,7 +520,6 @@
     <ClCompile Include="..\source\autodoom\b_botmaptemp.cpp" />
     <ClCompile Include="..\source\autodoom\b_compression.cpp" />
     <ClCompile Include="..\source\autodoom\b_glbsp.cpp" />
-    <ClCompile Include="..\source\autodoom\b_intset.cpp" />
     <ClCompile Include="..\source\autodoom\b_itemlearn.cpp" />
     <ClCompile Include="..\source\autodoom\b_lineeffect.cpp" />
     <ClCompile Include="..\source\autodoom\b_msector.cpp" />
@@ -528,6 +528,8 @@
     <ClCompile Include="..\source\autodoom\b_think.cpp" />
     <ClCompile Include="..\source\autodoom\b_trace.cpp" />
     <ClCompile Include="..\source\autodoom\b_util.cpp" />
+    <ClCompile Include="..\source\autodoom\b_vocabulary.cpp" />
+    <ClCompile Include="..\source\autodoom\b_weapon.cpp" />
     <ClCompile Include="..\source\autodoom\glbsp\analyze.c" />
     <ClCompile Include="..\source\autodoom\glbsp\blockmap.c" />
     <ClCompile Include="..\source\autodoom\glbsp\glbsp.c" />
@@ -538,6 +540,8 @@
     <ClCompile Include="..\source\autodoom\glbsp\system.c" />
     <ClCompile Include="..\source\autodoom\glbsp\util.c" />
     <ClCompile Include="..\source\autodoom\glbsp\wad.c" />
+    <ClCompile Include="..\source\a_weaponsdoom.cpp" />
+    <ClCompile Include="..\source\a_weaponsheretic.cpp" />
     <ClCompile Include="..\source\cam_aim.cpp" />
     <ClCompile Include="..\source\cam_common.cpp" />
     <ClCompile Include="..\source\cam_shoot.cpp" />
@@ -2650,7 +2654,6 @@
     <ClInclude Include="..\source\autodoom\b_botmaptemp.h" />
     <ClInclude Include="..\source\autodoom\b_compression.h" />
     <ClInclude Include="..\source\autodoom\b_glbsp.h" />
-    <ClInclude Include="..\source\autodoom\b_intset.h" />
     <ClInclude Include="..\source\autodoom\b_itemlearn.h" />
     <ClInclude Include="..\source\autodoom\b_lineeffect.h" />
     <ClInclude Include="..\source\autodoom\b_msector.h" />
@@ -2659,6 +2662,8 @@
     <ClInclude Include="..\source\autodoom\b_think.h" />
     <ClInclude Include="..\source\autodoom\b_trace.h" />
     <ClInclude Include="..\source\autodoom\b_util.h" />
+    <ClInclude Include="..\source\autodoom\b_vocabulary.h" />
+    <ClInclude Include="..\source\autodoom\b_weapon.h" />
     <ClInclude Include="..\source\autodoom\glbsp\analyze.h" />
     <ClInclude Include="..\source\autodoom\glbsp\blockmap.h" />
     <ClInclude Include="..\source\autodoom\glbsp\glbsp.h" />

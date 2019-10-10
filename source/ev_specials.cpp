@@ -1811,7 +1811,7 @@ bool EV_IsCeilingLoweringSpecial(const line_t &line)
       int target = line.args[3];
       if(!target)
       {
-         if(!up ^ line.args[2] < 0)
+         if(!up ^ (line.args[2] < 0))
             return true;
       }
       target = eclamp(target - 1, (int)CtoHnC, (int)CbyST);
