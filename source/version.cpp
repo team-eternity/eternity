@@ -40,7 +40,7 @@ const char version_name[] = "Tyrfing";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = u8"Eternity Engine v4.01.00 \"Tyrfing\"";
+const char ee_wmCaption[] = u8"AutoDoom - Eternity Engine v4.01.00 \"Tyrfing\"";
 #endif
 
 // haleyjd: Eternity release history

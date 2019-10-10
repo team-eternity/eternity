@@ -1696,7 +1696,7 @@ static menuitem_t mn_optionsp2_items[] =
    {it_runcmd, "Custom Menu",            "mn_dynamenu _MN_Custom" },
    {it_gap},
    {it_info,   "Information"},
-   {it_runcmd, "About Eternity",         "credits"    },
+   {it_runcmd, "About AutoDoom",         "credits"    },
    {it_end}
 };
 

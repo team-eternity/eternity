@@ -482,7 +482,7 @@ static void E_EDFPrintWarningCount()
       printf(" %d warnings occured during EDF processing.\n", edf_warning_count);
 
       if(!edf_warning_out)
-         printf(" To see warnings, run Eternity with the -edf-show-warnings parameter.\n");
+         printf(" To see warnings, run AutoDoom with the -edf-show-warnings parameter.\n");
    }
 }
 

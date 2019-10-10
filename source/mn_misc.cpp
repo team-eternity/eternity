@@ -385,7 +385,7 @@ enum
 static const char *cat_strs[NUMCATS] =
 {
    FC_ABSCENTER FC_HI "Programming",
-   FC_ABSCENTER FC_HI "Based On",
+   FC_ABSCENTER FC_HI "Based On Eternity Engine",
    FC_ABSCENTER FC_HI "Graphics",
    FC_ABSCENTER FC_HI "Special Thanks",
 };
@@ -401,15 +401,15 @@ struct val_str_t
 
 static const val_str_t val_programmers[] =
 {
-   { "James Haley", nullptr,     "David Hill"                  },
-   { "Ioan Chera",  nullptr,     "Max Waine"                   },
-   { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr },
+   { nullptr,       FC_ABSCENTER "Ioan Chera", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
 static const val_str_t val_basedon[] =
 {
-   { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
+   { "James Haley", nullptr,     "David Hill"                  },
+   { "Ioan Chera",  nullptr,     "Max Waine"                   },
+   { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
@@ -451,7 +451,7 @@ void MN_DrawCredits()
    V_DrawDistortedBackground(GameModeInfo->creditBackground, &vbscreen);
 
    y = GameModeInfo->creditY;
-   str = FC_ABSCENTER FC_HI "The Eternity Engine";
+   str = FC_ABSCENTER FC_HI "AutoDoom";
    V_FontWriteTextShadowed(menu_font_big, str, 0, y, &subscreen43);
    y += V_FontStringHeight(menu_font_big, str) + GameModeInfo->creditTitleStep;
 
@@ -491,7 +491,7 @@ void MN_DrawCredits()
 
    // MaxW: I'm going to hell for this. Automatically update copyright year.
    static const char *const copyright_text = []() {
-      static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
+      static char temp[] = FC_ABSCENTER "Copyright YEAR Ioan Chera et al.";
       memcpy(temp + 11, __DATE__ + 7, 4); // Overwrite YEAR in temp.
       return temp;
    }();

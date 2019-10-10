@@ -177,7 +177,7 @@ void I_Quit(void)
 //
 void I_QuitFast()
 {
-   puts("Eternity quit quickly.");
+   puts("AutoDoom quit quickly.");
    speedyexit = true;
    exit(0);
 }
@@ -336,7 +336,7 @@ void I_EndDoom()
       return;
    
    // Make sure the new window has the right title and icon
-   TXT_SetWindowTitle("Thanks for using the Eternity Engine!");
+   TXT_SetWindowTitle("Thanks for using AutoDoom!");
    
    // Write the data to the screen memory   
    screendata = TXT_GetScreenData();
