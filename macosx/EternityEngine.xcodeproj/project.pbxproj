@@ -545,7 +545,7 @@
 		4F5E98C0234534EF00AB2810 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		4F5F3864182D97860027813A /* mn_items.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mn_items.cpp; path = ../source/mn_items.cpp; sourceTree = "<group>"; };
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
-		4F5F386B182D97A10027813A /* eternity */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = eternity; sourceTree = BUILT_PRODUCTS_DIR; };
+		4F5F386B182D97A10027813A /* autodoom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = autodoom; sourceTree = BUILT_PRODUCTS_DIR; };
 		4F5F3872182D97A20027813A /* eternity-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "eternity-Prefix.pch"; sourceTree = "<group>"; };
 		4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ev_sectors.cpp; path = ../source/ev_sectors.cpp; sourceTree = "<group>"; };
 		4F68CE8C1963D88100E7B8BE /* ev_sectors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ev_sectors.h; path = ../source/ev_sectors.h; sourceTree = "<group>"; };
@@ -1171,7 +1171,7 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4F5F386B182D97A10027813A /* eternity */,
+				4F5F386B182D97A10027813A /* autodoom */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2395,9 +2395,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4F5F386A182D97A10027813A /* eternity */ = {
+		4F5F386A182D97A10027813A /* autodoom */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "eternity" */;
+			buildConfigurationList = 4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "autodoom" */;
 			buildPhases = (
 				4F4D96C620DAE7A20023C3A9 /* ShellScript */,
 				4F3F3B4E224F90E500E25DCB /* CopyFiles */,
@@ -2408,9 +2408,9 @@
 			);
 			dependencies = (
 			);
-			name = eternity;
+			name = autodoom;
 			productName = eternity;
-			productReference = 4F5F386B182D97A10027813A /* eternity */;
+			productReference = 4F5F386B182D97A10027813A /* autodoom */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -2442,7 +2442,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4F5F386A182D97A10027813A /* eternity */,
+				4F5F386A182D97A10027813A /* autodoom */,
 			);
 		};
 /* End PBXProject section */
@@ -3059,7 +3059,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "eternity" */ = {
+		4F5F3875182D97A20027813A /* Build configuration list for PBXNativeTarget "autodoom" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4F5F3876182D97A20027813A /* Debug */,
