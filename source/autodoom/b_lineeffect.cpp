@@ -356,6 +356,25 @@ static void B_applyShortestTexture(SectorStateEntry &sae, const sector_t &sector
 }
 
 //
+// Handles a crusher. Only push state when resuming a crusher, because it can be used to regain
+// access. Otherwise let other parts of the AI treat the crusher as a hazard.
+//
+static bool B_handleCrusher(const sector_t &sector, SectorStateEntry &sae)
+{
+   const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
+   if (ct && ct->inStasis)
+   {
+      sae.ceilingHeight = ct->topheight;
+      sae.ceilingTerminal = true;
+      return true;
+   }
+   //              if (ceilingBlocked)
+   return false;
+   //              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
+   //              sae.ceilingTerminal = true;
+}
+
+//
 // generalized special routine. returns false if blocked
 //
 static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t &sector,
@@ -556,7 +575,14 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
                                             dir ? plat_up : plat_down, ignoretex, coll);
          break;
       }
-         // TODO: add crusher
+      case GenTypeCrusher:
+      {
+         if(!B_handleCrusher(sector, sae))
+            return false;
+         break;
+      }
+      default:
+         return false;  // shouldn't really get here
    }
    return true;
 }
@@ -821,19 +847,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    else if(func == EV_ActionCeilingCrushAndRaise || func == EV_ActionFastCeilCrushRaise ||
            func == EV_ActionSilentCrushAndRaise)
    {
-      const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
-      if (ct && ct->inStasis)
-      {
-         sae.ceilingHeight = ct->topheight;
-         sae.ceilingTerminal = true;
-      }
-      else
-      {
-         //              if (ceilingBlocked)
+      if(!B_handleCrusher(sector, sae))
          return;
-         //              sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
-         //              sae.ceilingTerminal = true;
-      }
    }
    else if(func == EV_ActionBuildStairsUp8 || func == EV_ActionBuildStairsTurbo16 ||
            func == EV_ActionHereticStairsBuildUp8FS || func == EV_ActionHereticStairsBuildUp16FS)
