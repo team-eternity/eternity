@@ -375,6 +375,33 @@ static bool B_handleCrusher(const sector_t &sector, SectorStateEntry &sae)
 }
 
 //
+// Common routine for generalized and parameterized
+//
+static void B_handleParamShortestTexture(SectorStateEntry & sae, fixed_t lastFloorHeight, int dir,
+                                         const sector_t &sector)
+{
+   sae.floorHeight = (lastFloorHeight >> FRACBITS) +
+         dir * (P_FindShortestTextureAround(eindex(&sector - sectors)) >> FRACBITS);
+
+   if(sae.floorHeight > 32000)  //jff 3/13/98 prevent overflow
+      sae.floorHeight = 32000;    // wraparound in floor height
+   if(sae.floorHeight < -32000)
+      sae.floorHeight = -32000;
+   sae.floorHeight<<=FRACBITS;
+}
+static void B_handleParamShortestUpper(SectorStateEntry & sae, fixed_t lastCeilingHeight, int dir,
+                                       const sector_t &sector)
+{
+   sae.ceilingHeight = (lastCeilingHeight >> FRACBITS) +
+         dir * (P_FindShortestUpperAround(eindex(&sector - sectors)) >> FRACBITS);
+   if(sae.ceilingHeight > 32000)  // jff 3/13/98 prevent overflow
+      sae.ceilingHeight = 32000;  // wraparound in ceiling height
+   if(sae.ceilingHeight < -32000)
+      sae.ceilingHeight = -32000;
+   sae.ceilingHeight <<= FRACBITS;
+}
+
+//
 // generalized special routine. returns false if blocked
 //
 static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t &sector,
@@ -413,15 +440,7 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
                sae.floorHeight = lastCeilingHeight;
                break;
             case FbyST:
-               sae.floorHeight = (lastFloorHeight >> FRACBITS) +
-                     dir * (P_FindShortestTextureAround(eindex(&sector - sectors)) >> FRACBITS);
-
-               if(sae.floorHeight > 32000)  //jff 3/13/98 prevent overflow
-                  sae.floorHeight = 32000;    // wraparound in floor height
-               if(sae.floorHeight < -32000)
-                  sae.floorHeight = -32000;
-               sae.floorHeight<<=FRACBITS;
-
+               B_handleParamShortestTexture(sae, lastFloorHeight, dir, sector);
                break;
             case Fby24:
                sae.floorHeight = lastFloorHeight + dir * 24 * FRACUNIT;
@@ -458,13 +477,7 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
                sae.ceilingHeight = lastFloorHeight;
                break;
             case CbyST:
-               sae.ceilingHeight = (lastCeilingHeight >> FRACBITS) +
-                     dir * (P_FindShortestUpperAround(eindex(&sector - sectors)) >> FRACBITS);
-               if(sae.ceilingHeight > 32000)  // jff 3/13/98 prevent overflow
-                  sae.ceilingHeight = 32000;  // wraparound in ceiling height
-               if(sae.ceilingHeight < -32000)
-                  sae.ceilingHeight = -32000;
-               sae.ceilingHeight <<= FRACBITS;
+               B_handleParamShortestUpper(sae, lastCeilingHeight, dir, sector);
                break;
             case Cby24:
                sae.ceilingHeight = lastCeilingHeight + dir * 24 * FRACUNIT;
@@ -617,6 +630,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       return;
    EVActionFunc func = action->action;
    int lockID;
+   bool hexen = P_LevelIsVanillaHexen();
 
    if(func == EV_ActionBoomGen)
    {
@@ -626,7 +640,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       }
    }
-   else if(func == EV_ActionDoorBlazeOpen || func == EV_ActionOpenDoor)
+   else if(func == EV_ActionDoorBlazeOpen || func == EV_ActionOpenDoor ||
+           func == EV_ActionParamDoorOpen)
    {
       if(ceilingBlocked || B_LineTriggersBackSector(line) && doorBusy(sector))
          return;
@@ -661,7 +676,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
    }
    else if(func == EV_ActionDoorBlazeRaise || func == EV_ActionRaiseDoor ||
-           func == EV_ActionHereticDoorRaise3x)
+           func == EV_ActionHereticDoorRaise3x || func == EV_ActionParamDoorRaise ||
+           func == EV_ActionParamDoorWaitRaise)
    {
       if(ceilingBlocked)
          return;
@@ -669,7 +685,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.ceilingTerminal = true;
    }
    else if(func == EV_ActionCloseDoor || func == EV_ActionCeilingLowerToFloor ||
-           func == EV_ActionDoorBlazeClose)
+           func == EV_ActionDoorBlazeClose || func == EV_ActionParamDoorClose ||
+           func == EV_ActionParamDoorWaitClose)
    {
       if(ceilingBlocked)
          return;
@@ -681,26 +698,107 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
    }
-   else if(func == EV_ActionCloseDoor30)
+   else if(func == EV_ActionCloseDoor30 || func == EV_ActionParamDoorCloseWaitOpen)
    {
       if(ceilingBlocked)
          return;
       sae.ceilingHeight = sae.floorHeight;
       sae.ceilingTerminal = true;
    }
-   else if(func == EV_ActionCeilingLowerToLowest)
+   else if(func == EV_ActionCeilingLowerToLowest || func == EV_ActionParamCeilingRaiseToLowest)
    {
       if (ceilingBlocked)
          return;
       sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
    }
-   else if(func == EV_ActionCeilingLowerToMaxFloor)
+   else if(func == EV_ActionCeilingLowerToMaxFloor || func == EV_ActionParamCeilingRaiseToHighestFloor)
    {
       if (ceilingBlocked)
          return;
       sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
    }
-   else if(func == EV_ActionFloorLowerToNearest)
+   else if(func == EV_ActionParamCeilingLowerToHighestFloor)
+   {
+      if (ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
+      fixed_t gap = line.args[4] * FRACUNIT;
+      if(gap)
+      {
+         if(sae.ceilingHeight < lastFloorHeight)
+            sae.ceilingHeight = lastFloorHeight;
+         sae.ceilingHeight += gap;
+      }
+   }
+   else if(func == EV_ActionParamCeilingToFloorInstant)
+   {
+      if (ceilingBlocked)
+         return;
+      fixed_t gap = line.args[3] * FRACUNIT;
+      sae.ceilingHeight = lastFloorHeight + gap;
+   }
+   else if(func == EV_ActionParamCeilingLowerToFloor)
+   {
+      if (ceilingBlocked)
+         return;
+      fixed_t gap = line.args[4] * FRACUNIT;
+      sae.ceilingHeight = lastFloorHeight + gap;
+   }
+   else if(func == EV_ActionParamCeilingRaiseByTexture)
+   {
+      if(ceilingBlocked)
+         return;
+      B_handleParamShortestUpper(sae, lastCeilingHeight, 1, sector);
+   }
+   else if(func == EV_ActionParamCeilingLowerByTexture)
+   {
+      if(ceilingBlocked)
+         return;
+      B_handleParamShortestUpper(sae, lastCeilingHeight, -1, sector);
+   }
+   else if(func == EV_ActionParamCeilingRaiseByValue || func == EV_ActionParamCeilingRaiseInstant)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight += line.args[2] * FRACUNIT;
+   }
+   else if(func == EV_ActionParamCeilingRaiseByValueTimes8)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight += line.args[2] * FRACUNIT * 8;
+   }
+   else if(func == EV_ActionParamCeilingLowerByValue || func == EV_ActionParamCeilingLowerInstant)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight -= line.args[2] * FRACUNIT;
+   }
+   else if(func == EV_ActionParamCeilingLowerByValueTimes8)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight -= line.args[2] * FRACUNIT * 8;
+   }
+   else if(func == EV_ActionParamCeilingMoveToValue)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = line.args[2] * FRACUNIT;
+      if(line.args[3])
+         sae.ceilingHeight = -sae.ceilingHeight;
+   }
+   else if(func == EV_ActionParamCeilingMoveToValueTimes8)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = line.args[2] * FRACUNIT * 8;
+      if(line.args[3])
+         sae.ceilingHeight = -sae.ceilingHeight;
+   }
+   // TODO: param stairs
+   else if(func == EV_ActionFloorLowerToNearest || (func == EV_ActionParamFloorLowerToNearest &&
+                                                    !hexen))
    {
       if (floorBlocked)
          return;
@@ -713,11 +811,24 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
       sae.ceilingTerminal = true;
    }
-   else if(func == EV_ActionLowerFloor)
+   else if(func == EV_ActionLowerFloor || (func == EV_ActionParamFloorRaiseToHighest && !hexen) ||
+           func == EV_ActionParamEEFloorLowerToHighest ||
+           (func == EV_ActionParamFloorLowerToNearest && hexen))
    {
       if(floorBlocked)
          return;
       sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionParamFloorLowerToHighest)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+      int adjust = line.args[2];
+      int forceadjust = line.args[3];
+      fixed_t amt = (adjust - 128) * FRACUNIT;
+      if(forceadjust == 1 || sae.floorHeight != lastFloorHeight)
+         sae.floorHeight += amt;
    }
    else if(func == EV_ActionLowerFloorTurbo)
    {
@@ -733,8 +844,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true) + 8 * FRACUNIT;
    }
-   else if(func == EV_ActionFloorLowerAndChange ||
-           func == EV_ActionFloorLowerToLowest)
+   else if(func == EV_ActionFloorLowerAndChange || func == EV_ActionFloorLowerToLowest ||
+           func == EV_ActionParamFloorRaiseToLowest || func == EV_ActionParamFloorLowerToLowest)
    {
       if(floorBlocked)
          return;
@@ -791,19 +902,26 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.floorTerminal = true;
    }
    else if(func == EV_ActionPlatRaiseNearestChange || func == EV_ActionFloorRaiseToNearest ||
-           func == EV_ActionRaiseFloorTurbo)
+           func == EV_ActionRaiseFloorTurbo || func == EV_ActionParamFloorRaiseToNearest)
    {
       if(floorBlocked)
          return;
       sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight, true);
    }
-   else if(func == EV_ActionRaiseFloor)
+   else if(func == EV_ActionRaiseFloor || (func == EV_ActionParamFloorRaiseToHighest && hexen))
    {
       if(floorBlocked)
          return;
       sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
       if(sae.floorHeight > sae.ceilingHeight)
          sae.floorHeight = sae.ceilingHeight;
+   }
+   else if(func == EV_ActionParamFloorRaiseToLowestCeiling)
+   {
+      if(floorBlocked)
+         return;
+      fixed_t gap = -line.args[4] * FRACUNIT;
+      sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true) + gap;
    }
    else if(func == EV_ActionFloorRaiseCrush)
    {
@@ -814,11 +932,42 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          sae.floorHeight = sae.ceilingHeight;
       sae.floorHeight -= 8 * FRACUNIT;
    }
-   else if(func == EV_ActionRaiseCeilingLowerFloor)
+   else if(func == EV_ActionParamFloorLowerToLowestCeiling)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionParamFloorRaiseToCeiling)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastCeilingHeight - line.args[4] * FRACUNIT;
+   }
+   else if(func == EV_ActionParamFloorToCeilingInstant)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastCeilingHeight - line.args[3] * FRACUNIT;
+   }
+   else if(func == EV_ActionRaiseCeilingLowerFloor || func == EV_ActionParamCeilingRaiseToHighest ||
+           func == EV_ActionParamCeilingToHighestInstant)
    {
       if(ceilingBlocked)
          return;
       sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionParamCeilingRaiseToNearest)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindNextHighestCeiling(&sector, lastCeilingHeight, true);
+   }
+   else if(func == EV_ActionParamCeilingLowerToNearest)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = P_FindNextLowestCeiling(&sector, lastCeilingHeight, true);
    }
    else if(func == EV_ActionBOOMRaiseCeilingOrLowerFloor)
    {
@@ -843,6 +992,58 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       if(floorBlocked)
          return;
       B_applyShortestTexture(sae, sector);
+   }
+   else if(func == EV_ActionParamFloorRaiseByTexture)
+   {
+      if(floorBlocked)
+         return;
+      B_handleParamShortestTexture(sae, lastFloorHeight, 1, sector);
+   }
+   else if(func == EV_ActionParamFloorLowerByTexture)
+   {
+      if(floorBlocked)
+         return;
+      B_handleParamShortestTexture(sae, lastFloorHeight, -1, sector);
+   }
+   else if(func == EV_ActionParamFloorRaiseByValue || func == EV_ActionParamFloorRaiseInstant)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastFloorHeight + line.args[2] * FRACUNIT;
+   }
+   else if(func == EV_ActionParamFloorRaiseByValueTimes8)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastFloorHeight + line.args[2] * FRACUNIT * 8;
+   }
+   else if(func == EV_ActionParamFloorLowerByValue || func == EV_ActionParamFloorLowerInstant)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastFloorHeight - line.args[2] * FRACUNIT;
+   }
+   else if(func == EV_ActionParamFloorLowerByValueTimes8)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastFloorHeight - line.args[2] * FRACUNIT * 8;
+   }
+   else if(func == EV_ActionParamFloorMoveToValue)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = line.args[2] * FRACUNIT;
+      if(line.args[3])
+         sae.floorHeight = -sae.floorHeight;
+   }
+   else if(func == EV_ActionParamFloorMoveToValueTimes8)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = line.args[2] * FRACUNIT * 8;
+      if(line.args[3])
+         sae.floorHeight = -sae.floorHeight;
    }
    else if(func == EV_ActionCeilingCrushAndRaise || func == EV_ActionFastCeilCrushRaise ||
            func == EV_ActionSilentCrushAndRaise)
