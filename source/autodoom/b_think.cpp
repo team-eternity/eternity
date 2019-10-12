@@ -223,7 +223,7 @@ bool Bot::checkDeadEndTrap(const BSubsec& targss)
 
 Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& liness)
 {
-   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   const ev_action_t *action = EV_ActionForSpecialOrGen(line.special);
    if(!action)
       return SpecialChoice_no;
 
@@ -1559,10 +1559,8 @@ void Bot::doNonCombatAI()
     // If not moving while trying to, budge a bit to avoid stuck moments
     if ((cmd->sidemove || cmd->forwardmove) && m_realVelocity.chebabs() < FRACUNIT)
     {
-        cmd->sidemove += random.range(-pl->pclass->sidemove[1],
-            pl->pclass->sidemove[1]);
-        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1],
-            pl->pclass->forwardmove[1]);
+        cmd->sidemove += random.range(-pl->pclass->sidemove[1], pl->pclass->sidemove[1]);
+        cmd->forwardmove += random.range(-pl->pclass->forwardmove[1], pl->pclass->forwardmove[1]);
     }
 //   printf("%d\n", angleturn);
 }

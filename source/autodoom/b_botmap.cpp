@@ -601,7 +601,7 @@ void BotMap::SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line)
    int n = line->special;
    door.valid = false;
 
-   const ev_action_t *action = EV_ActionForSpecial(n);
+   const ev_action_t *action = EV_ActionForSpecialOrGen(n);
    if(!action)
       return;
 

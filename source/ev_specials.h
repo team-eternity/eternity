@@ -193,6 +193,7 @@ ev_action_t  *EV_HereticActionForSpecial(int special);
 ev_action_t  *EV_HexenActionForSpecial(int special);
 ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
+const ev_action_t *EV_ActionForSpecialOrGen(int special);
 
 // Get map-specific action number for an ACS action
 int EV_ActionForACSAction(int acsActionNum);

@@ -29,6 +29,8 @@
 #ifndef EV_BINDINGS_H__
 #define EV_BINDINGS_H__
 
+#include "ev_specials.h"
+
 struct ev_lockdef_t
 {
    int special; // special number

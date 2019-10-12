@@ -806,7 +806,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
 
    // FIXME: figure out how to support polyobj specials.
 
-   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   const ev_action_t *action = EV_ActionForSpecialOrGen(line.special);
    if(!action)
       return;
    EVActionFunc func = action->action;
@@ -1911,7 +1911,7 @@ bool B_LineTriggersBackSector(const line_t &line)
       return genspac == PushOnce || genspac == PushMany;
    }
 
-   const ev_action_t *action = EV_ActionForSpecial(line.special);
+   const ev_action_t *action = EV_ActionForSpecialOrGen(line.special);
    if(!action)
       return false;
 

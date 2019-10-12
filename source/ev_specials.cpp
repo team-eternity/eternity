@@ -1234,6 +1234,13 @@ ev_action_t *EV_ActionForSpecial(int special)
    }
 }
 
+const ev_action_t *EV_ActionForSpecialOrGen(int special)
+{
+   if(EV_GenTypeForSpecial(special) >= GenTypeFloor)
+      return &BoomGenAction;
+   return EV_ActionForSpecial(special);
+}
+
 //
 // EV_ActionForInstance
 //
@@ -1640,6 +1647,14 @@ bool EV_IsParamLineSpec(int special)
 //
 bool EV_IsSwitchSpecial(const line_t &line)
 {
+   // generalized
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == SwitchOnce || genspac == SwitchMany || genspac == PushOnce ||
+      genspac == PushMany;
+   }
+
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
       return false;
@@ -1651,14 +1666,6 @@ bool EV_IsSwitchSpecial(const line_t &line)
       return true;
    }
 
-   // generalized
-   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
-   {
-      int genspac = EV_GenActivationType(line.special);
-      return genspac == SwitchOnce || genspac == SwitchMany || genspac == PushOnce ||
-      genspac == PushMany;
-   }
-
    // parameterized
    return EV_IsParamAction(*action) && line.extflags & EX_ML_USE;
 }
@@ -1668,6 +1675,13 @@ bool EV_IsSwitchSpecial(const line_t &line)
 //
 bool EV_IsGunSpecial(const line_t &line)
 {
+   // generalized
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == GunOnce || genspac == GunMany;
+   }
+
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
       return false;
@@ -1675,13 +1689,6 @@ bool EV_IsGunSpecial(const line_t &line)
    // basic
    if(action->type == &G1ActionType || action->type == &GRActionType)
       return true;
-
-   // generalized
-   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
-   {
-      int genspac = EV_GenActivationType(line.special);
-      return genspac == GunOnce || genspac == GunMany;
-   }
 
    // parameterized
    return EV_IsParamAction(*action) && line.extflags & EX_ML_IMPACT;
@@ -1692,6 +1699,13 @@ bool EV_IsGunSpecial(const line_t &line)
 //
 bool EV_IsWalkSpecial(const line_t &line)
 {
+   // generalized
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == WalkOnce || genspac == WalkMany;
+   }
+
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
       return false;
@@ -1699,13 +1713,6 @@ bool EV_IsWalkSpecial(const line_t &line)
    // basic
    if(action->type == &W1ActionType || action->type == &WRActionType)
       return true;
-
-   // generalized
-   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
-   {
-      int genspac = EV_GenActivationType(line.special);
-      return genspac == WalkOnce || genspac == WalkMany;
-   }
 
    // parameterized
    return EV_IsParamAction(*action) && line.extflags & EX_ML_CROSS;
@@ -1732,6 +1739,13 @@ bool EV_IsNonPlayerSpecial(const line_t &line)
 //
 bool EV_IsRepeatableSpecial(const line_t &line)
 {
+   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
+   {
+      int genspac = EV_GenActivationType(line.special);
+      return genspac == WalkMany || genspac == PushMany || genspac == GunMany ||
+      genspac == SwitchMany;
+   }
+
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
       return false;
@@ -1739,12 +1753,6 @@ bool EV_IsRepeatableSpecial(const line_t &line)
       action->type == &GRActionType || action->type == &DRActionType)
    {
       return true;
-   }
-   if(EV_GenTypeForSpecial(line.special) >= GenTypeFloor)
-   {
-      int genspac = EV_GenActivationType(line.special);
-      return genspac == WalkMany || genspac == PushMany || genspac == GunMany ||
-      genspac == SwitchMany;
    }
 
    return EV_IsParamAction(*action) && line.extflags & EX_ML_REPEAT;
@@ -1756,9 +1764,30 @@ bool EV_IsRepeatableSpecial(const line_t &line)
 //
 bool EV_IsCeilingLoweringSpecial(const line_t &line)
 {
+   int gentype = EV_GenTypeForSpecial(line.special);
+   auto genceilingcheck = [](int target, int up) {
+      return target == CtoLnC || target == CtoF || (!up && (target == CtoNnC || target == CbyST ||
+                                                            target == Cby24 || target == Cby32));
+   };
+   if(gentype == GenTypeDoor)
+   {
+      int value = line.special - GenDoorBase;
+      int kind = (value & DoorKind) >> DoorKindShift;
+      if(kind == CDoor || kind == CdODoor)
+         return true;
+   }
+   else if(gentype == GenTypeCeiling)
+   {
+      int value = line.special - GenCeilingBase;
+      int target = (value & CeilingTarget) >> CeilingTargetShift;
+      int up = (value & CeilingDirection) >> CeilingDirectionShift;
+      if(!genceilingcheck(target, up))
+         return true;
+   }
+
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
-      return true;
+      return false;
 
    static const std::unordered_set<EVActionFunc> types = {
       EV_ActionCeilingLowerAndCrush,
@@ -1785,26 +1814,7 @@ bool EV_IsCeilingLoweringSpecial(const line_t &line)
    };
    if(types.count(action->action))
       return true;
-   int gentype = EV_GenTypeForSpecial(line.special);
-   auto genceilingcheck = [](int target, int up) {
-      return target == CtoLnC || target == CtoF || (!up && (target == CtoNnC || target == CbyST ||
-                                                            target == Cby24 || target == Cby32));
-   };
-   if(gentype == GenTypeDoor)
-   {
-      int value = line.special - GenDoorBase;
-      int kind = (value & DoorKind) >> DoorKindShift;
-      if(kind == CDoor || kind == CdODoor)
-         return true;
-   }
-   else if(gentype == GenTypeCeiling)
-   {
-      int value = line.special - GenCeilingBase;
-      int target = (value & CeilingTarget) >> CeilingTargetShift;
-      int up = (value & CeilingDirection) >> CeilingDirectionShift;
-      if(!genceilingcheck(target, up))
-         return true;
-   }
+
    if(action->action == EV_ActionParamCeilingGeneric)
    {
       int up = !!(line.args[4] & 8);
