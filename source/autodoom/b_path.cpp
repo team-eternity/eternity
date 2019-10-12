@@ -51,7 +51,7 @@
 // Uses a search for the nearest goal (not knowing where to go)
 // It uses Dijkstra graph search, needed because of varying subsector sizes.
 //
-bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path,
+bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
                               bool(*isGoal)(const BSubsec&, BotPathEnd&, void*),
                               void* parm)
 {
@@ -90,6 +90,8 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path,
    path.sss.clear();
     const TeleItem* bytele;
     fixed_t tentative;
+
+   m_ignoreslime = ignoreslime;
 
 //    std::make_heap(front, back, compare);
     fixed_t founddist;
@@ -238,9 +240,8 @@ fixed_t PathFinder::getAdjustedDistance(fixed_t base, fixed_t add, const BSubsec
    int factor = 1;
 
    const sector_t *sector = t->msector->getFloorSector();
-   if(enable_nuke && sector->damage > 0 &&
-      (!m_player->powers[pw_ironfeet] ||
-       sector->damageflags & SDMG_IGNORESUIT))
+   if(enable_nuke && !m_ignoreslime && sector->damage > 0 &&
+      (!m_player->powers[pw_ironfeet] || sector->damageflags & SDMG_IGNORESUIT))
    {
       if(sector->damagemask <= 0)
          factor = sector->damage * 32;

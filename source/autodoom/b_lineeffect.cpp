@@ -230,14 +230,15 @@ void LevelStateStack::InitLevel()
 //
 static void B_pushSectorHeights(int, const line_t& line, PODCollection<int>&, const player_t& player);
 
-bool LevelStateStack::Push(const line_t& line, const player_t& player,
-                           const sector_t *excludeSector)
+LevelStateStack::PushResult LevelStateStack::Push(const line_t& line, const player_t& player,
+                                                  const sector_t *excludeSector)
 {
    int secnum = -1;
    
    // Prepare the new list of indices to the global stack
    PODCollection<int>& coll = g_indexListStack.addNew();
    
+   bool timed = false;
    if(B_LineTriggersBackSector(line))
    {
       if(line.backsector)
@@ -254,7 +255,17 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player,
             B_Log("Exclude %d", secnum);
             continue;
          }
+         auto &shs = g_affectedSectors[secnum];
+         bool ceilterm, floorterm;
+         if(!timed)
+         {
+            ceilterm = shs.isCeilingTerminal();
+            floorterm = shs.isFloorTerminal();
+         }
          B_pushSectorHeights(secnum, line, coll, player);
+         // Only update status for remote sectors
+         if(!timed && (shs.isFloorTerminal() != floorterm || shs.isCeilingTerminal() != ceilterm))
+            timed = true;
       }
    }
    
@@ -262,11 +273,12 @@ bool LevelStateStack::Push(const line_t& line, const player_t& player,
    {
        // No valid state change, so cancel all this and return false
        g_indexListStack.pop();
-       return false;
+       return PushResult_none;
    }
    
    // okay
-   return true;
+   // NOTE: only checking the tagged sector
+   return timed ? PushResult_timed : PushResult_permanent;
 }
 
 void LevelStateStack::Pop()
@@ -1701,6 +1713,8 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry& sae, int sp
 
    sae.floorHeight = height;
    sae.floorTerminal = terminal;
+   if(terminal)
+      sae.altFloorHeight = lastFloorHeight;
 
    do
    {
@@ -1729,7 +1743,8 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry& sae, int sp
 
          sec = tsec;
          // Now create the new entry
-         if(!othersAffected && height != otherAffSector.getFloorHeight())
+         fixed_t otherHeight = otherAffSector.getFloorHeight();
+         if(!othersAffected && height != otherHeight)
             othersAffected = true;
 
          SectorStateEntry tsae;
@@ -1737,6 +1752,8 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry& sae, int sp
          tsae.floorHeight = height;
          tsae.ceilingHeight = otherAffSector.getCeilingHeight();
          tsae.floorTerminal = terminal;
+         if(terminal)
+            tsae.altFloorHeight = otherHeight;
          tsae.ceilingTerminal = otherAffSector.isCeilingTerminal();
          otherAffSector.stack.add(tsae);
          coll.add(eindex(tsec - sectors));

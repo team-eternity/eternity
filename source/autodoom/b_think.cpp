@@ -353,7 +353,7 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
 			return m_deepAvailSsectors.empty() ? SpecialChoice_worth : SpecialChoice_no;
 		}
 		
-		bool result = LevelStateStack::Push(line, *pl, nullptr);
+		auto result = LevelStateStack::Push(line, *pl, nullptr);
         LevelStateStack::Clear();       
         return result ? SpecialChoice_worth : SpecialChoice_no;
         // just push them, as long as they're not the blocking type and have any
@@ -372,8 +372,9 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
         m_finder.AvailableGoals(*ss, &m_deepAvailSsectors, reachableItem, this);
         m_deepSearchMode = DeepNormal;
 
+       auto pushresult = LevelStateStack::Push(line, *pl, nullptr);
         // Now apply the change
-        if (!LevelStateStack::Push(line, *pl, nullptr))
+        if (!pushresult)
             return SpecialChoice_no;
 
         m_deepSearchMode = DeepBeyond;
@@ -396,6 +397,8 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
         m_deepSearchMode = DeepNormal;
 
         LevelStateStack::Clear();
+       if(result && pushresult == LevelStateStack::PushResult_timed)
+          m_deepPromise.flags |= DeepPromise::URGENT;
         return result ? SpecialChoice_worth : SpecialChoice_no;
     }
 
@@ -552,7 +555,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 	
    if(self.m_deepSearchMode == DeepNormal)
    {
-      if(self.m_deepPromise.hasbenefits && !self.m_deepPromise.sss.count(&ss))
+      if(self.m_deepPromise.flags & DeepPromise::BENEFICIAL && !self.m_deepPromise.sss.count(&ss))
          return false;
       if(self.m_deepPromise.sss.count(&ss))
       {
@@ -575,7 +578,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
              self.goalTable.setV2Fixed(BOT_FLOORSECTOR, goaltag);
           }
           else if(self.m_deepSearchMode == DeepBeyond)
-             self.m_deepPromise.hasbenefits = true;
+             self.m_deepPromise.flags |= DeepPromise::BENEFICIAL;
           return true;
        }
     }
@@ -610,7 +613,7 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
                     self.goalTable.setV2Fixed(BOT_PICKUP, goaltag);
                  }
                  else if(self.m_deepSearchMode == DeepBeyond)
-                    self.m_deepPromise.hasbenefits = true;
+                    self.m_deepPromise.flags |= DeepPromise::BENEFICIAL;
               }
               return result;
            }
@@ -678,7 +681,7 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
          {
             SpecialChoice choice = shouldUseSpecial(line, ss);
             if(choice == SpecialChoice_favourable)
-               m_deepPromise.hasbenefits = true;
+               m_deepPromise.flags |= DeepPromise::BENEFICIAL;
              if (choice)
                  return true;
              m_deepTriedLines.insert(&line);
@@ -1315,7 +1318,8 @@ void Bot::doNonCombatAI()
     if (!m_hasPath)
     {
         LevelStateStack::SetKeyPlayer(pl);
-        if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, objOfInterest, this))
+        if(!m_finder.FindNextGoal(v2fixed_t(*pl->mo), m_path, m_deepPromise.isUrgent(),
+                                  objOfInterest, this))
         {
             ++m_searchstage;
            m_deepPromise.clear();

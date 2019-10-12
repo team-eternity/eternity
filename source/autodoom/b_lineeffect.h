@@ -39,7 +39,15 @@ struct player_t;
 namespace LevelStateStack
 {
    void     InitLevel();
-   bool     Push(const line_t& line, const player_t& player, const sector_t *excludeSector);
+
+enum PushResult
+{
+   PushResult_none,        // no effect
+   PushResult_permanent,   // permanent effect
+   PushResult_timed,       // timed effect: bot must hurry
+};
+
+   PushResult Push(const line_t& line, const player_t& player, const sector_t *excludeSector);
    void     Pop();
    void     Clear();
    fixed_t  Floor(const sector_t& sector);

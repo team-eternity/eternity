@@ -139,13 +139,24 @@ class Bot : public ZoneObject
    // Holds info of potential visits behind a door or lift, to focus on them
    struct DeepPromise
    {
+      enum: unsigned
+      {
+         BENEFICIAL = 1,
+         URGENT = 2,
+      };
+
       std::unordered_set<const BSubsec *> sss;
-      bool hasbenefits = false;
+      unsigned flags = 0;
+
+      bool isUrgent() const
+      {
+         return (flags & (BENEFICIAL | URGENT)) == (BENEFICIAL | URGENT);
+      }
 
       void clear()
       {
          sss.clear();
-         hasbenefits = false;
+         flags = 0;
       }
    } m_deepPromise;
 
