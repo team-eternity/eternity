@@ -54,8 +54,6 @@
 // SectorHeightPair
 //
 // Just a pair of values, under a meaningful name
-// FIXME: currently it's for vanilla only, with lots of duplicated functionality
-// from the core EV_ and P_ code.
 //
 // On terminal kinds:
 // - it is set if the effect is momentary: disallow and further pushes
@@ -309,7 +307,7 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
                            PODCollection<int>& coll);
 static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry &sae, int special,
                               fixed_t lastFloorHeight, fixed_t stairsize, int dir, bool ignoretex,
-                              PODCollection<int>& coll);
+                              PODCollection<int>& coll, bool terminal);
 static bool B_fillInDonut(const sector_t& sector, SectorStateEntry& sae,
                           int special, PODCollection<int>& coll);
 static fixed_t getMinTextureSize(const sector_t& sector);
@@ -403,6 +401,123 @@ static void B_handleParamShortestUpper(SectorStateEntry & sae, fixed_t lastCeili
 }
 
 //
+// Handler for both BOOM generalized floors and Generic_Floor
+//
+static void B_handleGenericFloor(int target, int dir, SectorStateEntry &sae, const sector_t &sector,
+                                 fixed_t lastFloorHeight, fixed_t lastCeilingHeight, fixed_t param)
+{
+   switch (target)
+   {
+      case FtoHnF:
+         sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+         break;
+      case FtoLnF:
+         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+         break;
+      case FtoNnF:
+         sae.floorHeight = dir == plat_up ? P_FindNextHighestFloor(&sector, lastFloorHeight, true) :
+         P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+         break;
+      case FtoLnC:
+         sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+         break;
+      case FtoC:
+         sae.floorHeight = lastCeilingHeight;
+         break;
+      case FbyST:
+         B_handleParamShortestTexture(sae, lastFloorHeight, dir, sector);
+         break;
+      case Fby24:
+         sae.floorHeight = lastFloorHeight + dir * 24 * FRACUNIT;
+         break;
+      case Fby32:
+         sae.floorHeight = lastFloorHeight + dir * 32 * FRACUNIT;
+         break;
+      case FbyParam:
+         sae.floorHeight = lastFloorHeight + dir * param;
+         break;
+   }
+}
+
+//
+// Common ceiling
+//
+static void B_handleGenericCeiling(int target, int dir, SectorStateEntry &sae,
+                                   const sector_t &sector, fixed_t lastFloorHeight,
+                                   fixed_t lastCeilingHeight, fixed_t param)
+{
+   switch (target)
+   {
+      case CtoHnC:
+         sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+         break;
+      case CtoLnC:
+         sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
+         break;
+      case CtoNnC:
+         sae.ceilingHeight = dir ? P_FindNextHighestCeiling(&sector, lastCeilingHeight, true)
+         : P_FindNextLowestCeiling(&sector, lastCeilingHeight, true);
+         break;
+      case CtoHnF:
+         sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
+         break;
+      case CtoF:
+         sae.ceilingHeight = lastFloorHeight;
+         break;
+      case CbyST:
+         B_handleParamShortestUpper(sae, lastCeilingHeight, dir, sector);
+         break;
+      case Cby24:
+         sae.ceilingHeight = lastCeilingHeight + dir * 24 * FRACUNIT;
+         break;
+      case Cby32:
+         sae.ceilingHeight = lastCeilingHeight + dir * 32 * FRACUNIT;
+         break;
+      case CbyParam:
+         sae.ceilingHeight = lastCeilingHeight + dir * param;
+         break;
+   }
+}
+
+static void B_handleGenericLift(int target, SectorStateEntry &sae, const sector_t &sector,
+                                fixed_t lastFloorHeight, fixed_t param)
+{
+   sae.floorTerminal = true;
+   sae.altFloorHeight = lastFloorHeight;
+   switch (target)
+   {
+      case F2LnF:
+         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+         if(sae.floorHeight > lastFloorHeight)
+            sae.floorHeight = lastFloorHeight;
+         break;
+      case F2NnF:
+         sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
+         break;
+      case F2LnC:
+         sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
+         if(sae.floorHeight > lastFloorHeight)
+            sae.floorHeight = lastFloorHeight;
+         break;
+      case LnF2HnF:
+         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+         if(sae.floorHeight > lastFloorHeight)
+            sae.floorHeight = lastFloorHeight;
+         sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
+         if(sae.altFloorHeight < lastFloorHeight)
+            sae.altFloorHeight = lastFloorHeight;
+         break;
+      case lifttarget_upValue:
+         sae.floorHeight = lastFloorHeight + param;
+         if(sae.floorHeight < lastFloorHeight)
+            sae.floorHeight = lastFloorHeight;
+         break;
+      default:
+         break;
+   }
+}
+
+//
 // generalized special routine. returns false if blocked
 //
 static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t &sector,
@@ -420,36 +535,9 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
          if(floorBlocked)
             return false;
          value = special - GenFloorBase;
-         int target = (value & FloorTarget   ) >> FloorTargetShift;
+         int target = (value & FloorTarget) >> FloorTargetShift;
          int dir = ((value & FloorDirection) >> FloorDirectionShift) ? plat_up : plat_down;
-         switch (target)
-         {
-            case FtoHnF:
-               sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
-               break;
-            case FtoLnF:
-               sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
-               break;
-            case FtoNnF:
-               sae.floorHeight = dir ? P_FindNextHighestFloor(&sector, lastFloorHeight, true) :
-               P_FindNextLowestFloor(&sector, lastFloorHeight, true);
-               break;
-            case FtoLnC:
-               sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
-               break;
-            case FtoC:
-               sae.floorHeight = lastCeilingHeight;
-               break;
-            case FbyST:
-               B_handleParamShortestTexture(sae, lastFloorHeight, dir, sector);
-               break;
-            case Fby24:
-               sae.floorHeight = lastFloorHeight + dir * 24 * FRACUNIT;
-               break;
-            case Fby32:
-               sae.floorHeight = lastFloorHeight + dir * 32 * FRACUNIT;
-               break;
-         }
+         B_handleGenericFloor(target, dir, sae, sector, lastFloorHeight, lastCeilingHeight, 0);
          break;
       }
       case GenTypeCeiling:
@@ -459,34 +547,7 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
          value = special - GenCeilingBase;
          int target = (value & CeilingTarget   ) >> CeilingTargetShift;
          int dir = (value & CeilingDirection) >> CeilingDirectionShift ? plat_up : plat_down;
-         switch (target)
-         {
-            case CtoHnC:
-               sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
-               break;
-            case CtoLnC:
-               sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true);
-               break;
-            case CtoNnC:
-               sae.ceilingHeight = dir ? P_FindNextHighestCeiling(&sector, lastCeilingHeight, true)
-               : P_FindNextLowestCeiling(&sector, lastCeilingHeight, true);
-               break;
-            case CtoHnF:
-               sae.ceilingHeight = P_FindHighestFloorSurrounding(&sector, true);
-               break;
-            case CtoF:
-               sae.ceilingHeight = lastFloorHeight;
-               break;
-            case CbyST:
-               B_handleParamShortestUpper(sae, lastCeilingHeight, dir, sector);
-               break;
-            case Cby24:
-               sae.ceilingHeight = lastCeilingHeight + dir * 24 * FRACUNIT;
-               break;
-            case Cby32:
-               sae.ceilingHeight = lastCeilingHeight + dir * 32 * FRACUNIT;
-               break;
-         }
+         B_handleGenericCeiling(target, dir, sae, sector, lastFloorHeight, lastCeilingHeight, 0);
          break;
       }
       case GenTypeDoor:
@@ -530,34 +591,7 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
             return false;
          value = line.special - GenLiftBase;
          int target = (value & LiftTarget ) >> LiftTargetShift;
-         sae.floorTerminal = true;
-         sae.altFloorHeight = lastFloorHeight;
-         switch (target)
-         {
-            case F2LnF:
-               sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
-               if(sae.floorHeight > lastFloorHeight)
-                  sae.floorHeight = lastFloorHeight;
-               break;
-            case F2NnF:
-               sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
-               break;
-            case F2LnC:
-               sae.floorHeight = P_FindLowestCeilingSurrounding(&sector, true);
-               if(sae.floorHeight > lastFloorHeight)
-                  sae.floorHeight = lastFloorHeight;
-               break;
-            case LnF2HnF:
-               sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
-               if(sae.floorHeight > lastFloorHeight)
-                  sae.floorHeight = lastFloorHeight;
-               sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
-               if(sae.altFloorHeight < lastFloorHeight)
-                  sae.altFloorHeight = lastFloorHeight;
-               break;
-            default:
-               break;
-         }
+         B_handleGenericLift(target, sae, sector, lastFloorHeight, 0);
          break;
       }
       case GenTypeStairs:
@@ -586,7 +620,7 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
                break;
          }
          othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight, ssize,
-                                            dir ? plat_up : plat_down, ignoretex, coll);
+                                            dir ? plat_up : plat_down, ignoretex, coll, false);
          break;
       }
       case GenTypeCrusher:
@@ -767,7 +801,6 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    int lockID;
    bool hexen = P_LevelIsVanillaHexen();
 
-   // TODO: EV_ActionParamFloorGeneric
    if(func == EV_ActionBoomGen)
    {
       if(!B_pushGeneralized(line.special, sae, sector, line, othersAffected, floorBlocked,
@@ -1064,7 +1097,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
 
       sae.floorTerminal = true;
    }
-   else if(func == EV_ActionPlatToggleUpDown)
+   else if(func == EV_ActionPlatToggleUpDown || func == EV_ActionParamPlatToggleCeiling)
    {
       if(floorBlocked)
       {
@@ -1274,20 +1307,37 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       othersAffected = B_fillInStairs(&sector, sae, func, line.special, indexList);
    }
-   else if(func == EV_ActionParamStairsBuildUpDoom || func == EV_ActionParamStairsBuildUpDoomSync)
+   else if(func == EV_ActionParamStairsBuildUpDoom || func == EV_ActionParamStairsBuildUpDoomCrush)
    {
       if(floorBlocked)
          return;
       othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
-                                         line.args[2] * FRACUNIT, plat_up, false, indexList);
+                                         line.args[2] * FRACUNIT, plat_up, false, indexList,
+                                         !!line.args[4]);
    }
-   else if(func == EV_ActionParamStairsBuildDownDoom ||
-           func == EV_ActionParamStairsBuildDownDoomSync)
+   else if(func == EV_ActionParamStairsBuildUpDoomSync)
    {
       if(floorBlocked)
          return;
       othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
-                                         line.args[2] * FRACUNIT, plat_down, false, indexList);
+                                         line.args[2] * FRACUNIT, plat_up, false, indexList,
+                                         !!line.args[3]);
+   }
+   else if(func == EV_ActionParamStairsBuildDownDoom)
+   {
+      if(floorBlocked)
+         return;
+      othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
+                                         line.args[2] * FRACUNIT, plat_down, false, indexList,
+                                         !!line.args[4]);
+   }
+   else if(func == EV_ActionParamStairsBuildDownDoomSync)
+   {
+      if(floorBlocked)
+         return;
+      othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
+                                         line.args[2] * FRACUNIT, plat_down, false, indexList,
+                                         !!line.args[3]);
    }
    else if(func == EV_ActionDoDonut || func == EV_ActionParamDonut)
    {
@@ -1376,12 +1426,34 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       if(sae.altFloorHeight < lastFloorHeight)
          sae.altFloorHeight = lastFloorHeight;
    }
+   else if(func == EV_ActionParamPlatPerpetualRaiseLip)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true) + line.args[3] * FRACUNIT;
+      sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
+      if(sae.floorHeight > lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+      if(sae.altFloorHeight < lastFloorHeight)
+         sae.altFloorHeight = lastFloorHeight;
+   }
    else if(func == EV_ActionParamPlatDWUS)
    {
       if(floorBlocked)
          return;
       sae.floorTerminal = true;
       sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true) + 8 * FRACUNIT;
+      if(sae.floorHeight > lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+      sae.altFloorHeight = lastFloorHeight;
+   }
+   else if(func == EV_ActionParamPlatDWUSLip)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true) + line.args[3] * FRACUNIT;
       if(sae.floorHeight > lastFloorHeight)
          sae.floorHeight = lastFloorHeight;
       sae.altFloorHeight = lastFloorHeight;
@@ -1463,6 +1535,81 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.floorHeight = lastFloorHeight + lower;
       sae.altFloorHeight = lastFloorHeight + raise;
    }
+   else if(func == EV_ActionParamFloorGeneric)
+   {
+      if(floorBlocked)
+         return;
+      int target = line.args[3];
+      fixed_t param = 0;
+      if(!target)
+      {
+         target = FbyParam;
+         param = line.args[2] * FRACUNIT;
+      }
+      else
+         target = eclamp(target - 1, (int)FtoHnF, (int)FbyST);
+      int dir = line.args[4] & 8 ? plat_up : plat_down;
+
+      B_handleGenericFloor(target, dir, sae, sector, lastFloorHeight, lastCeilingHeight, param);
+   }
+   else if(func == EV_ActionParamCeilingGeneric)
+   {
+      if(ceilingBlocked)
+         return;
+      int target = line.args[3];
+      fixed_t param = 0;
+      if(!target)
+      {
+         target = CbyParam;
+         param = line.args[2] * FRACUNIT;
+      }
+      else
+         target = eclamp(target - 1, (int)CtoHnC, (int)CbyST);
+      int dir = line.args[4] & 8 ? plat_up : plat_down;
+
+      B_handleGenericCeiling(target, dir, sae, sector, lastFloorHeight, lastCeilingHeight, param);
+   }
+   else if(func == EV_ActionParamFloorCeilingLowerRaise)
+   {
+      bool ceilingMoved = false;
+      if(!ceilingBlocked)
+      {
+         sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+         ceilingMoved = true;
+      }
+      if(line.args[3] != 1998 || !ceilingMoved)
+         if(!floorBlocked)
+            sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+   }
+   else if(func == EV_ActionParamPlatGeneric)
+   {
+      if(floorBlocked)
+         return;
+      int target;
+      fixed_t param = 0;
+      switch (line.args[3])
+      {
+         case 0:
+            target = lifttarget_upValue;
+            param = 8 * line.args[4] * FRACUNIT;
+            break;
+         case 1:
+            target = F2LnF;
+            break;
+         case 2:
+            target = F2NnF;
+            break;
+         case 3:
+            target = F2LnC;
+            break;
+         case 4:
+            target = LnF2HnF;
+            break;
+         default:
+            return;
+      }
+      B_handleGenericLift(target, sae, sector, lastFloorHeight, param);
+   }
    else
       return;  // unknown or useless/irrelevant actions (e.g. lights) are ignored
    
@@ -1491,7 +1638,6 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
       stairIncrement = 16 * FRACUNIT;
    else
       stairIncrement = 8 * FRACUNIT;
-   // TODO: other specials
 
    fixed_t height = sae.floorHeight + stairIncrement;
    sae.floorHeight = height;
@@ -1544,14 +1690,18 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
 //
 // the more complex boom stairs
 //
-static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry &sae, int special,
+static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry& sae, int special,
                               fixed_t lastFloorHeight, fixed_t stairsize, int dir, bool ignoretex,
-                              PODCollection<int>& coll)
+                              PODCollection<int>& coll, bool terminal)
 {
    fixed_t height = lastFloorHeight + dir * stairsize;
    int texture = sec->floorpic;
    bool ok;
    bool othersAffected = false;
+
+   sae.floorHeight = height;
+   sae.floorTerminal = terminal;
+
    do
    {
       ok = false;
@@ -1586,7 +1736,7 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry &sae, int sp
          tsae.actionNumber = special;
          tsae.floorHeight = height;
          tsae.ceilingHeight = otherAffSector.getCeilingHeight();
-         tsae.floorTerminal = false;
+         tsae.floorTerminal = terminal;
          tsae.ceilingTerminal = otherAffSector.isCeilingTerminal();
          otherAffSector.stack.add(tsae);
          coll.add(eindex(tsec - sectors));
@@ -1595,8 +1745,6 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry &sae, int sp
    } while(ok);
    return othersAffected;
 }
-
-// TODO: add generalized equivalent
 
 // CODE LARGELY TAKEN FROM EV_DoDonut
 static bool B_fillInDonut(const sector_t& sector, SectorStateEntry& sae,
@@ -1914,470 +2062,4 @@ bool B_LineTriggersStairs(const line_t &line)
    };
 
    return !!funcs.count(action->action);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-//! Inserts stairs from source sector into set
-static void B_insertStairs(const sector_t *sector, bool ignoreTextures, 
-   std::unordered_set<const sector_t *> &set)
-{
-   set.insert(sector);
-   int ok;
-   int secnum = static_cast<int>(sector - sectors);
-
-   std::unordered_set<const sector_t *> visited;
-   visited.insert(sector); // equivalent of putting a thinker over it
-
-   do
-   {
-      ok = 0;
-      for (int i = 0; i < sector->linecount; ++i)
-      {
-         if (!(sector->lines[i])->backsector)
-            continue;
-
-         const sector_t *tsec = sector->lines[i]->frontsector;
-         int newsecnum = static_cast<int>(tsec - sectors);
-
-         if (secnum != newsecnum)
-            continue;
-
-         tsec = sector->lines[i]->backsector;
-         newsecnum = static_cast<int>(tsec - sectors);
-
-         if (!ignoreTextures && tsec->floorpic != sector->floorpic)
-            continue;
-
-         if (visited.count(tsec))
-            continue;
-
-         sector = tsec;
-         secnum = newsecnum;
-
-         set.insert(sector);
-         visited.insert(sector);
-
-         ok = 1;
-         break;
-      }
-   } while (ok);
-}
-
-static void B_insertDonut(const sector_t *s1, std::unordered_set<const sector_t *> &set)
-{
-   const sector_t *s2 = getNextSector(s1->lines[0], s1);
-   const sector_t *s3;
-   if (!s2)
-      return;
-
-   fixed_t s3_floorheight;
-   int16_t s3_floorpic;
-
-   for (int i = 0; i < s2->linecount; ++i)
-   {
-      if (comp[comp_model])
-      {
-         if (s2->lines[i]->backsector == s1)
-            continue;
-      }
-      else if (!s2->lines[i]->backsector || s2->lines[i]->backsector == s1)
-         continue;
-
-      s3 = s2->lines[i]->backsector;
-      if (!s3)
-      {
-         if (!DonutOverflow(&s3_floorheight, &s3_floorpic))
-            return;
-      }
-
-      set.insert(s1);
-      set.insert(s2);
-      break;
-   }
- 
-}
-
-//! Handles generalized types thereof
-static void B_collectGeneralizedTargetSectors(const line_t *line, bool noshoot,
-   std::unordered_set<const sector_t *> &set)
-{
-   bool isStair = line->special >= GenStairsBase && line->special < GenLiftBase;
-   bool stairIgnoreTextures = false;
-   if (isStair)   // stairs are more complex
-      stairIgnoreTextures = !!((line->special - GenStairsBase & StairIgnore) >> StairIgnoreShift);
-
-   int trigger_type = (line->special & TriggerType) >> TriggerTypeShift;
-   if (noshoot && (trigger_type == GunOnce || trigger_type == GunMany))
-      return;
-   if (trigger_type == PushOnce || trigger_type == PushMany)
-   {
-      if (!line->backsector)
-         return;  // dubious situation
-      if (isStair)
-         B_insertStairs(line->backsector, stairIgnoreTextures, set);
-      else
-         set.insert(line->backsector);
-      return;
-   }
-
-   int secnum = -1;
-   while ((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
-   {
-      if(isStair)
-         B_insertStairs(&sectors[secnum], stairIgnoreTextures, set);
-      else
-         set.insert(&sectors[secnum]);
-   }
-}
-
-//! True if it targets sectors and not other objects
-static bool B_paramActionTargetsSectors(const ev_action_t *action)
-{
-   static std::unordered_set<EVActionFunc> set;
-   if (set.empty())
-   {
-      set.insert(EV_ActionParamDoorRaise);
-      set.insert(EV_ActionParamDoorOpen);
-      set.insert(EV_ActionParamDoorClose);
-      set.insert(EV_ActionParamDoorCloseWaitOpen);
-      set.insert(EV_ActionParamDoorWaitRaise);
-      set.insert(EV_ActionParamDoorWaitClose);
-      set.insert(EV_ActionParamDoorLockedRaise);
-      set.insert(EV_ActionParamFloorRaiseToHighest);
-      set.insert(EV_ActionParamEEFloorLowerToHighest);
-      set.insert(EV_ActionParamFloorLowerToHighest);
-      set.insert(EV_ActionParamFloorRaiseToLowest);
-      set.insert(EV_ActionParamFloorLowerToLowest);
-      set.insert(EV_ActionParamFloorRaiseToNearest);
-      set.insert(EV_ActionParamFloorLowerToNearest);
-      set.insert(EV_ActionParamFloorRaiseToLowestCeiling);
-      set.insert(EV_ActionParamFloorLowerToLowestCeiling);
-      set.insert(EV_ActionParamFloorRaiseToCeiling);
-      set.insert(EV_ActionParamFloorRaiseByTexture);
-      set.insert(EV_ActionParamFloorLowerByTexture);
-      set.insert(EV_ActionParamFloorRaiseByValue);
-      set.insert(EV_ActionParamFloorRaiseByValueTimes8);
-      set.insert(EV_ActionParamFloorLowerByValue);
-      set.insert(EV_ActionParamFloorLowerByValueTimes8);
-      set.insert(EV_ActionParamFloorMoveToValue);
-      set.insert(EV_ActionParamFloorMoveToValueTimes8);
-      set.insert(EV_ActionParamFloorRaiseInstant);
-      set.insert(EV_ActionParamFloorLowerInstant);
-      set.insert(EV_ActionParamFloorToCeilingInstant);
-      set.insert(EV_ActionParamCeilingRaiseToHighest);
-      set.insert(EV_ActionParamCeilingToHighestInstant);
-      set.insert(EV_ActionParamCeilingRaiseToNearest);
-      set.insert(EV_ActionParamCeilingLowerToNearest);
-      set.insert(EV_ActionParamCeilingRaiseToLowest);
-      set.insert(EV_ActionParamCeilingLowerToLowest);
-      set.insert(EV_ActionParamCeilingRaiseToHighestFloor);
-      set.insert(EV_ActionParamCeilingLowerToHighestFloor);
-      set.insert(EV_ActionParamCeilingToFloorInstant);
-      set.insert(EV_ActionParamCeilingLowerToFloor);
-      set.insert(EV_ActionParamCeilingRaiseByTexture);
-      set.insert(EV_ActionParamCeilingLowerByTexture);
-      set.insert(EV_ActionParamCeilingRaiseByValue);
-      set.insert(EV_ActionParamCeilingLowerByValue);
-      set.insert(EV_ActionParamCeilingRaiseByValueTimes8);
-      set.insert(EV_ActionParamCeilingLowerByValueTimes8);
-      set.insert(EV_ActionParamCeilingMoveToValue);
-      set.insert(EV_ActionParamCeilingMoveToValueTimes8);
-      set.insert(EV_ActionParamCeilingRaiseInstant);
-      set.insert(EV_ActionParamCeilingLowerInstant);
-      set.insert(EV_ActionParamCeilingCrushAndRaise);
-      set.insert(EV_ActionParamCeilingCrushAndRaiseA);
-      set.insert(EV_ActionParamCeilingCrushAndRaiseSilentA);
-      set.insert(EV_ActionParamCeilingCrushAndRaiseDist);
-      set.insert(EV_ActionParamCeilingCrushAndRaiseSilentDist);
-      set.insert(EV_ActionParamCeilingCrushStop);
-      set.insert(EV_ActionParamCeilingCrushRaiseAndStay);
-      set.insert(EV_ActionParamCeilingCrushRaiseAndStayA);
-      set.insert(EV_ActionParamCeilingCrushRaiseAndStaySilA);
-      set.insert(EV_ActionParamCeilingLowerAndCrush);
-      set.insert(EV_ActionParamCeilingLowerAndCrushDist);
-      set.insert(EV_ActionParamGenCrusher);
-      set.insert(EV_ActionParamStairsBuildUpDoom);
-      set.insert(EV_ActionParamStairsBuildDownDoom);
-      set.insert(EV_ActionParamStairsBuildUpDoomSync);
-      set.insert(EV_ActionParamStairsBuildDownDoomSync);
-      set.insert(EV_ActionPillarBuild);
-      set.insert(EV_ActionPillarBuildAndCrush);
-      set.insert(EV_ActionPillarOpen);
-      set.insert(EV_ActionFloorWaggle);
-      set.insert(EV_ActionParamPlatPerpetualRaise);
-      set.insert(EV_ActionParamPlatStop);
-      set.insert(EV_ActionParamPlatDWUS);
-      set.insert(EV_ActionParamPlatDownByValue);
-      set.insert(EV_ActionParamPlatUWDS);
-      set.insert(EV_ActionParamPlatUpByValue);
-      set.insert(EV_ActionParamDonut);
-      // lights are ignored because they have no gameplay effect
-      // exits have no purpose here
-   }
-
-   return !!set.count(action->action);
-}
-
-static bool B_classicActionTargetsSectors(const ev_action_t *action)
-{
-   static std::unordered_set<EVActionFunc> set;
-   if (set.empty())
-   {
-      set.insert(EV_ActionOpenDoor);
-      set.insert(EV_ActionCloseDoor);
-      set.insert(EV_ActionRaiseDoor);
-      set.insert(EV_ActionRaiseFloor);
-      set.insert(EV_ActionFastCeilCrushRaise);
-      set.insert(EV_ActionBuildStairsUp8);
-      set.insert(EV_ActionPlatDownWaitUpStay);
-      set.insert(EV_ActionCloseDoor30);
-      set.insert(EV_ActionLowerFloor);
-      set.insert(EV_ActionPlatRaiseNearestChange);
-      set.insert(EV_ActionCeilingCrushAndRaise);
-      set.insert(EV_ActionFloorRaiseToTexture);
-      set.insert(EV_ActionLowerFloorTurbo);
-      set.insert(EV_ActionFloorLowerAndChange);
-      set.insert(EV_ActionFloorLowerToLowest);
-      set.insert(EV_ActionRaiseCeilingLowerFloor);
-      set.insert(EV_ActionBOOMRaiseCeilingLowerFloor);
-      set.insert(EV_ActionBOOMRaiseCeilingOrLowerFloor);
-      set.insert(EV_ActionCeilingLowerAndCrush);
-      set.insert(EV_ActionPlatPerpetualRaise);
-      set.insert(EV_ActionFloorRaiseCrush);
-      set.insert(EV_ActionRaiseFloor24);
-      set.insert(EV_ActionRaiseFloor24Change);
-      set.insert(EV_ActionBuildStairsTurbo16);
-      set.insert(EV_ActionDoorBlazeRaise);
-      set.insert(EV_ActionDoorBlazeOpen);
-      set.insert(EV_ActionDoorBlazeClose);
-      set.insert(EV_ActionFloorRaiseToNearest);
-      set.insert(EV_ActionPlatBlazeDWUS);
-      set.insert(EV_ActionRaiseFloorTurbo);
-      set.insert(EV_ActionSilentCrushAndRaise);
-      set.insert(EV_ActionRaiseFloor512);
-      set.insert(EV_ActionPlatRaise24Change);
-      set.insert(EV_ActionPlatRaise32Change);
-      set.insert(EV_ActionCeilingLowerToFloor);
-      set.insert(EV_ActionDoDonut);
-      set.insert(EV_ActionCeilingLowerToLowest);
-      set.insert(EV_ActionCeilingLowerToMaxFloor);
-      set.insert(EV_ActionFloorLowerToNearest);
-      set.insert(EV_ActionElevatorUp);
-      set.insert(EV_ActionElevatorDown);
-      set.insert(EV_ActionElevatorCurrent);
-      set.insert(EV_ActionPlatToggleUpDown);
-      set.insert(EV_ActionVerticalDoor);
-      set.insert(EV_ActionDoLockedDoor);
-      set.insert(EV_ActionLowerFloorTurboA);
-      set.insert(EV_ActionHereticDoorRaise3x);
-      set.insert(EV_ActionHereticStairsBuildUp8FS);
-      set.insert(EV_ActionHereticStairsBuildUp16FS);
-   }
-
-   return !!set.count(action->action);
-}
-
-static void B_collectParameterizedTargetSectors(const line_t *line, const ev_action_t *action, 
-   std::unordered_set<const sector_t *> &set)
-{
-   // TODO: also check more combos
-   if (!(line->extflags & (EX_ML_PLAYER | EX_ML_MONSTER | EX_ML_MISSILE)) ||
-      !(line->extflags & (EX_ML_CROSS | EX_ML_IMPACT | EX_ML_PUSH | EX_ML_USE)))
-   {
-      return;  // inaccessible
-   }
-
-
-   if (!B_paramActionTargetsSectors(action))
-      return;
-
-   static std::unordered_set<EVActionFunc> stairset;
-   if (stairset.empty())
-   {
-      stairset.insert(EV_ActionParamStairsBuildUpDoom);
-      stairset.insert(EV_ActionParamStairsBuildDownDoom);
-      stairset.insert(EV_ActionParamStairsBuildUpDoomSync);
-      stairset.insert(EV_ActionParamStairsBuildDownDoomSync);
-   }
-
-   auto solve = [line, action, &set](const sector_t *sector) {
-      if (stairset.count(action->action))
-         B_insertStairs(sector, false, set);
-      else if (action->action == EV_ActionParamDonut)
-         B_insertDonut(sector, set);
-      else
-         set.insert(sector);
-   };
-   
-   if (!line->args[0])
-   {
-      if (!line->backsector)
-         return;
-
-      solve(line->backsector);
-      return;
-   }
-
-   int secnum = -1;
-   while ((secnum = P_FindSectorFromTag(line->args[0], secnum)) >= 0)
-      solve(&sectors[secnum]);
-}
-
-static void B_collectClassicTargetSectors(const line_t *line, const ev_action_t *action,
-   std::unordered_set<const sector_t *> &set)
-{
-   if (!B_classicActionTargetsSectors(action))
-      return;
-
-   if (action->type == &DRActionType)
-   {
-      // for the record, all DR action types are simple doors
-      if (!line->backsector)
-         return;
-      set.insert(line->backsector);
-      return;
-   }
-
-   static std::unordered_set<EVActionFunc> stairset;
-   if (stairset.empty())
-   {
-      stairset.insert(EV_ActionBuildStairsUp8);
-      stairset.insert(EV_ActionBuildStairsTurbo16);
-      stairset.insert(EV_ActionHereticStairsBuildUp8FS);
-      stairset.insert(EV_ActionHereticStairsBuildUp16FS);
-   }
-
-   int secnum = -1;
-   while ((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
-   {
-      const sector_t *sector = sectors + secnum;
-      if (stairset.count(action->action))
-         B_insertStairs(sector, false, set);
-      else if (action->action == EV_ActionDoDonut)
-         B_insertDonut(sector, set);
-      else
-         set.insert(sector);
-   }
-}
-
-//! Subroutine for linedefs targetting sectors
-static void B_collectForLine(const line_t *line, bool fromLineEffect, 
-   std::unordered_set<const sector_t *> &set)
-{
-   if (line->special >= GenCrusherBase)
-   {
-      B_collectGeneralizedTargetSectors(line, fromLineEffect, set);
-      return;
-   }
-
-   const ev_action_t *action = EV_ActionForSpecial(line->special);
-   if (!action)
-      return;
-
-   if (EV_CompositeActionFlags(action) & EV_PARAMLINESPEC)
-   {
-      if (fromLineEffect)   // ignore ALL param specials
-         return;
-      B_collectParameterizedTargetSectors(line, action, set);
-      return;
-   }
-
-   if (fromLineEffect && action->type->activation == SPAC_IMPACT)
-      return;
-   B_collectClassicTargetSectors(line, action, set);
-}
-
-//! Looks in the map for moving sectors
-static void B_collectActiveSectors(std::unordered_set<const sector_t *> &set)
-{
-   // 1. Find time-based doors (or boss-based)
-   for(int i = 0; i < numsectors; ++i)
-   {
-      const sector_t *sector = sectors + i;
-      EVSectorSpecialFunc func = EV_GetSectorSpecial(*sector);
-      if (func == EV_SectorDoorCloseIn30 || func == EV_SectorDoorRaiseIn5Mins)
-      {
-         set.insert(sector);
-         continue;
-      }
-   }
-
-   // 2. Find special linedefs
-   for (int i = 0; i < numlines; ++i)
-   {
-      const line_t *line = lines + i;
-      if (!line->special)
-         continue;
-      B_collectForLine(line, false, set);
-   }
-
-   // 3. Look for things with sector targets
-   SectorAffectingStates sas;
-   bool tag666added = false, tag667added = false;
-   for (Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
-   {
-      const Mobj *mo;
-      if (!(mo = thinker_cast<const Mobj *>(th)))
-         continue;
-
-      sas.clear();
-      B_GetMobjSectorTargetActions(*mo, sas);
-
-      if (sas.bossDeath)
-      {
-         if (!tag666added &&
-            (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
-               LevelInfo.bossSpecs & BSPEC_E4M6 && mo->flags2 & MF2_E4M6BOSS ||
-               LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
-               LevelInfo.bossSpecs & BSPEC_MAP07_1 && mo->flags2 & MF2_MAP07BOSS1))
-         {
-            tag666added = true;
-            int secnum = -1;
-            while ((secnum = P_FindSectorFromTag(666, secnum)) >= 0)
-               set.insert(sectors + secnum);
-         }
-         if (!tag667added && LevelInfo.bossSpecs & BSPEC_MAP07_2 && mo->flags2 & MF2_MAP07BOSS2)
-         {
-            tag667added = true;
-            int secnum = -1;
-            while ((secnum = P_FindSectorFromTag(667, secnum)) >= 0)
-               set.insert(sectors + secnum);
-         }
-      }
-      if (!tag666added && (sas.keenDie || sas.hticBossDeath &&
-         (LevelInfo.bossSpecs & BSPEC_E1M8 && mo->flags2 & MF2_E1M8BOSS ||
-            LevelInfo.bossSpecs & BSPEC_E2M8 && mo->flags2 & MF2_E2M8BOSS ||
-            LevelInfo.bossSpecs & BSPEC_E3M8 && mo->flags2 & MF2_E3M8BOSS ||
-            LevelInfo.bossSpecs & BSPEC_E4M8 && mo->flags2 & MF2_E4M8BOSS ||
-            LevelInfo.bossSpecs & BSPEC_E5M8 && mo->flags3 & MF3_E5M8BOSS)))
-      {
-         tag666added = true;
-         int secnum = -1;
-         while ((secnum = P_FindSectorFromTag(666, secnum)) >= 0)
-            set.insert(sectors + secnum);
-      }
-      for (const state_t *state : sas.lineEffects)
-      {
-         // same devious semantics as A_LineEffect
-         static line_t s;
-         s = *lines;
-         if ((s.special = state->misc1))
-         {
-            s.tag = state->misc2;
-            B_collectForLine(&s, true, set);
-         }
-      }
-   }
-}
-
-void B_LogActiveSectors()
-{
-   std::unordered_set<const sector_t *> set;
-   B_collectActiveSectors(set);
-
-   for (const sector_t *sector : set)
-   {
-      B_Log("Active: %d", static_cast<int>(sector - sectors));
-   }
 }

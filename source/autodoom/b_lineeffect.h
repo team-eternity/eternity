@@ -55,6 +55,4 @@ bool B_LineTriggersBackSector(const line_t &line);
 bool B_LineTriggersDonut(const line_t &line);
 bool B_LineTriggersStairs(const line_t &line);
 
-void B_LogActiveSectors();
-
 #endif /* defined(__EternityEngine__b_lineeffect__) */
