@@ -316,6 +316,10 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
    };
    if(inconsequential.count(func))
       return SpecialChoice_no;
+
+   // Also avoid pillar builders
+   if(func == EV_ActionPillarBuild || func == EV_ActionPillarBuildAndCrush)
+      return SpecialChoice_no;
     
     // now that we got some lines out of the way, decide quickly to use once-
     // only types

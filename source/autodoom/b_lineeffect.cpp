@@ -625,6 +625,8 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    
    bool othersAffected = false;
 
+   // FIXME: figure out how to support polyobj specials.
+
    const ev_action_t *action = EV_ActionForSpecial(line.special);
    if(!action)
       return;
@@ -796,7 +798,6 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       if(line.args[3])
          sae.ceilingHeight = -sae.ceilingHeight;
    }
-   // TODO: param stairs
    else if(func == EV_ActionFloorLowerToNearest || (func == EV_ActionParamFloorLowerToNearest &&
                                                     !hexen))
    {
@@ -1058,6 +1059,21 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       othersAffected = B_fillInStairs(&sector, sae, func, line.special, indexList);
    }
+   else if(func == EV_ActionParamStairsBuildUpDoom || func == EV_ActionParamStairsBuildUpDoomSync)
+   {
+      if(floorBlocked)
+         return;
+      othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
+                                         line.args[2] * FRACUNIT, plat_up, false, indexList);
+   }
+   else if(func == EV_ActionParamStairsBuildDownDoom ||
+           func == EV_ActionParamStairsBuildDownDoomSync)
+   {
+      if(floorBlocked)
+         return;
+      othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
+                                         line.args[2] * FRACUNIT, plat_down, false, indexList);
+   }
    else if(func == EV_ActionDoDonut)
    {
       if(floorBlocked)
@@ -1097,6 +1113,35 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.floorTerminal = true;
       sae.altFloorHeight = lastFloorHeight;
    }
+   else if(func == EV_ActionPillarBuild || func == EV_ActionPillarBuildAndCrush)
+   {
+      if(floorBlocked || ceilingBlocked || lastCeilingHeight <= lastFloorHeight)
+         return;
+      fixed_t height = line.args[2] * FRACUNIT;
+      fixed_t destheight;
+      if(!height)
+         destheight = lastFloorHeight + (lastCeilingHeight - lastFloorHeight) / 2;
+      else
+         destheight = lastFloorHeight + height;
+
+      sae.floorHeight = sae.ceilingHeight = destheight;
+   }
+   else if(func == EV_ActionPillarOpen)
+   {
+      fixed_t fdist = line.args[2] * FRACUNIT;
+      fixed_t cdist = line.args[3] * FRACUNIT;
+      if(floorBlocked || ceilingBlocked || lastFloorHeight != lastCeilingHeight)
+         return;
+      if(!fdist)
+         sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
+      else
+         sae.floorHeight = lastFloorHeight - fdist;
+      if(!cdist)
+         sae.ceilingHeight = P_FindHighestCeilingSurrounding(&sector, true);
+      else
+         sae.ceilingHeight = lastCeilingHeight + cdist;
+   }
+   // TODO: waggle
    else
       return;  // unknown or useless/irrelevant actions (e.g. lights) are ignored
    
