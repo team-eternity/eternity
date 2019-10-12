@@ -601,6 +601,118 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
 }
 
 //
+// Computes the target ceiling height
+//
+static void B_handleCeilingWaggle(SectorStateEntry &sae, const line_t &line,
+                                  fixed_t lastCeilingHeight)
+{
+   struct hashkey_t
+   {
+      int height;
+      int speed;
+      int offset;
+      int timer;
+
+      hashkey_t() = default;
+      hashkey_t(const line_t &line) : height(line.args[1]), speed(line.args[2]),
+            offset(line.args[3]), timer(line.args[4])
+      {
+      }
+
+      struct hash_t
+      {
+         size_t operator()(const hashkey_t &key) const
+         {
+            size_t result = key.height;
+            result = 37 * result + key.speed;
+            result = 37 * result + key.offset;
+            result = 37 * result + key.timer;
+            return result;
+         }
+      };
+
+      bool operator==(const hashkey_t &other) const
+      {
+         return height == other.height && speed == other.speed && offset == other.offset &&
+               timer == other.timer;
+      }
+   };
+
+   static std::unordered_map<hashkey_t, fixed_t, hashkey_t::hash_t> cache;
+
+   sae.ceilingTerminal = true;
+
+   int height = line.args[1];
+   int speed = line.args[2];
+   int offset = line.args[3];
+   int timer = line.args[4];
+   fixed_t accumulator = offset * FRACUNIT;
+   fixed_t accDelta = speed << 10;
+   fixed_t targetScale = height << 10;
+   fixed_t scaleDelta = targetScale / (35+((3*35)*height)/255);
+   int ticker = timer ? timer * 35 : -1;
+   // calculate dampened amplitude if it's not infinite
+   if(ticker == -1)
+   {
+      sae.ceilingHeight = lastCeilingHeight + height * (FRACUNIT / 8) - 1;
+      return;
+   }
+   auto hash = hashkey_t(line);
+   auto it = cache.find(hash);
+   if(it != cache.end())
+   {
+      sae.ceilingHeight = lastCeilingHeight + it->second;
+      return;
+   }
+   // complicated calculation incoming
+   fixed_t scale = 0;
+   int state = CeilingWaggleThinker::WGLSTATE_EXPAND;
+   fixed_t maxceil = D_MININT;
+   for(bool finish = false; !finish; )
+   {
+      switch(state)
+      {
+         case CeilingWaggleThinker::WGLSTATE_EXPAND:
+            scale += scaleDelta;
+            if(scale >= targetScale)
+            {
+               scale = targetScale;
+               state = CeilingWaggleThinker::WGLSTATE_STABLE;
+            }
+            break;
+         case CeilingWaggleThinker::WGLSTATE_REDUCE:
+            scale -= scaleDelta;
+            if(scale <= 0)
+            {
+               if(maxceil == D_MININT)
+                  maxceil = lastCeilingHeight;
+               finish = true;
+            }
+            break;
+         case CeilingWaggleThinker::WGLSTATE_STABLE:
+            --ticker;
+            if(!ticker)
+               state = CeilingWaggleThinker::WGLSTATE_STABLE;
+            break;
+      }
+      accumulator += accDelta;
+      int index = accumulator >> FRACBITS & 63;
+      if(index == 16 && scale == targetScale)
+      {
+         // We hit the maximum possible
+         maxceil = lastCeilingHeight + height * (FRACUNIT / 8) - 1;
+         break;
+      }
+      fixed_t curceil = lastCeilingHeight + FixedMul(FloatBobOffsets[index], scale);
+      if(curceil > maxceil)
+         maxceil = curceil;
+   }
+
+   cache[hash] = maxceil - lastCeilingHeight;
+   sae.ceilingHeight = maxceil;
+}
+
+//
 // Updare heights from state
 //
 static void B_pushSectorHeights(int secnum, const line_t& line,
@@ -1128,10 +1240,10 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    }
    else if(func == EV_ActionPillarOpen)
    {
-      fixed_t fdist = line.args[2] * FRACUNIT;
-      fixed_t cdist = line.args[3] * FRACUNIT;
       if(floorBlocked || ceilingBlocked || lastFloorHeight != lastCeilingHeight)
          return;
+      fixed_t fdist = line.args[2] * FRACUNIT;
+      fixed_t cdist = line.args[3] * FRACUNIT;
       if(!fdist)
          sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
       else
@@ -1141,7 +1253,13 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       else
          sae.ceilingHeight = lastCeilingHeight + cdist;
    }
-   // TODO: waggle
+   else if(func == EV_ActionCeilingWaggle)
+   {
+      if(ceilingBlocked)
+         return;
+      B_handleCeilingWaggle(sae, line, lastCeilingHeight);
+
+   }
    else
       return;  // unknown or useless/irrelevant actions (e.g. lights) are ignored
    

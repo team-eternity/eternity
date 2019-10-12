@@ -746,10 +746,6 @@ void P_ChangeCeilingTex(const char *name, int tag)
 
 IMPLEMENT_THINKER_TYPE(CeilingWaggleThinker)
 
-#define WGLSTATE_EXPAND 1
-#define WGLSTATE_STABLE 2
-#define WGLSTATE_REDUCE 3
-
 //
 // Thinker for ceiling waggle action.
 //
@@ -860,7 +856,7 @@ manual_waggle:
       waggle->targetScale    = height << 10;
       waggle->scaleDelta     = waggle->targetScale / (35+((3*35)*height)/255);
       waggle->ticker         = timer ? timer * 35 : -1;
-      waggle->state          = WGLSTATE_EXPAND;
+      waggle->state          = CeilingWaggleThinker::WGLSTATE_EXPAND;
 
       if(manual)
          return retCode;

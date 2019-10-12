@@ -1275,6 +1275,13 @@ protected:
    virtual attachpoint_e getAttachPoint() const override { return ATTACH_CEILING; }
 
 public:
+   enum
+   {
+      WGLSTATE_EXPAND = 1,
+      WGLSTATE_STABLE = 2,
+      WGLSTATE_REDUCE = 3,
+   };
+
    // Methods
    virtual void serialize(SaveArchive &arc) override;
 
