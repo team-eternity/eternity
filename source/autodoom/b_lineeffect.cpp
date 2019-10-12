@@ -603,8 +603,7 @@ static bool B_pushGeneralized(int special, SectorStateEntry &sae, const sector_t
 //
 // Computes the target ceiling height
 //
-static void B_handleCeilingWaggle(SectorStateEntry &sae, const line_t &line,
-                                  fixed_t lastCeilingHeight)
+static void B_handleWaggle(const line_t &line, fixed_t &maxRaise, fixed_t *minLower)
 {
    struct hashkey_t
    {
@@ -638,9 +637,12 @@ static void B_handleCeilingWaggle(SectorStateEntry &sae, const line_t &line,
       }
    };
 
-   static std::unordered_map<hashkey_t, fixed_t, hashkey_t::hash_t> cache;
+   struct amps_t
+   {
+      fixed_t raise, lower;
+   };
 
-   sae.ceilingTerminal = true;
+   static std::unordered_map<hashkey_t, amps_t, hashkey_t::hash_t> cache;
 
    int height = line.args[1];
    int speed = line.args[2];
@@ -652,22 +654,28 @@ static void B_handleCeilingWaggle(SectorStateEntry &sae, const line_t &line,
    fixed_t scaleDelta = targetScale / (35+((3*35)*height)/255);
    int ticker = timer ? timer * 35 : -1;
    // calculate dampened amplitude if it's not infinite
+   fixed_t amplitude = height * (FRACUNIT / 8) - 1;
    if(ticker == -1)
    {
-      sae.ceilingHeight = lastCeilingHeight + height * (FRACUNIT / 8) - 1;
+      maxRaise = amplitude;
+      if(minLower)
+         *minLower = -maxRaise;
       return;
    }
    auto hash = hashkey_t(line);
    auto it = cache.find(hash);
    if(it != cache.end())
    {
-      sae.ceilingHeight = lastCeilingHeight + it->second;
+      maxRaise = it->second.raise;
+      if(minLower)
+         *minLower = it->second.lower;
       return;
    }
    // complicated calculation incoming
    fixed_t scale = 0;
    int state = CeilingWaggleThinker::WGLSTATE_EXPAND;
-   fixed_t maxceil = D_MININT;
+   fixed_t maxmove = D_MININT;
+   fixed_t minmove = D_MAXINT;
    for(bool finish = false; !finish; )
    {
       switch(state)
@@ -684,8 +692,10 @@ static void B_handleCeilingWaggle(SectorStateEntry &sae, const line_t &line,
             scale -= scaleDelta;
             if(scale <= 0)
             {
-               if(maxceil == D_MININT)
-                  maxceil = lastCeilingHeight;
+               if(maxmove == D_MININT)
+                  maxmove = 0;
+               if(minmove == D_MAXINT)
+                  minmove = 0;
                finish = true;
             }
             break;
@@ -697,19 +707,29 @@ static void B_handleCeilingWaggle(SectorStateEntry &sae, const line_t &line,
       }
       accumulator += accDelta;
       int index = accumulator >> FRACBITS & 63;
-      if(index == 16 && scale == targetScale)
+      if(scale == targetScale)
       {
-         // We hit the maximum possible
-         maxceil = lastCeilingHeight + height * (FRACUNIT / 8) - 1;
-         break;
+         // We may hit the maximum possible
+         if(index == 16)
+            maxmove = amplitude;
+         else if(index == 48)
+            minmove = -amplitude;
       }
-      fixed_t curceil = lastCeilingHeight + FixedMul(FloatBobOffsets[index], scale);
-      if(curceil > maxceil)
-         maxceil = curceil;
+      if(maxmove >= amplitude && minmove <= -amplitude)
+         break;
+      fixed_t curmove = FixedMul(FloatBobOffsets[index], scale);
+      if(curmove > maxmove)
+         maxmove = curmove;
+      if(curmove < minmove)
+         minmove = curmove;
    }
 
-   cache[hash] = maxceil - lastCeilingHeight;
-   sae.ceilingHeight = maxceil;
+   cache[hash].raise = maxmove;
+   cache[hash].lower = minmove;
+
+   maxRaise = maxmove;
+   if(minLower)
+      *minLower = minmove;
 }
 
 //
@@ -1257,8 +1277,20 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    {
       if(ceilingBlocked)
          return;
-      B_handleCeilingWaggle(sae, line, lastCeilingHeight);
-
+      sae.ceilingTerminal = true;
+      fixed_t raise = 0;
+      B_handleWaggle(line, raise, nullptr);
+      sae.ceilingHeight = lastCeilingHeight + raise;
+   }
+   else if(func == EV_ActionFloorWaggle)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      fixed_t raise = 0, lower = 0;
+      B_handleWaggle(line, raise, &lower);
+      sae.floorHeight = lastFloorHeight + lower;
+      sae.altFloorHeight = lastFloorHeight + raise;
    }
    else
       return;  // unknown or useless/irrelevant actions (e.g. lights) are ignored
