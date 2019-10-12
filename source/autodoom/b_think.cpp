@@ -1512,6 +1512,10 @@ void Bot::doNonCombatAI()
     angle_t tangle = (npos - mpos).angle();
     angle_t dangle = tangle - pl->mo->angle;
 
+   bool avoidturn = dangle > ANG45 && dangle < ANG270 + ANG45 &&
+         (npos - mpos).sqrtabs() < 32 * FRACUNIT;
+
+
 //   bool runfast = m_runfast || (/*dangle > ANG90 && dangle < ANG270 && */(npos - mpos).sqrtabs() < 32 * FRACUNIT);
 
     if (random() % 128 == 0)
@@ -1520,7 +1524,7 @@ void Bot::doNonCombatAI()
         tangle += ANG45 * m_straferunstate;
 
     int16_t angleturn = (int16_t)(tangle >> 16) - (int16_t)(pl->mo->angle >> 16);
-    angleturn >>= 3;
+    angleturn >>= 2;
 
     if (angleturn > 2500)
         angleturn = 2500;
@@ -1549,7 +1553,7 @@ void Bot::doNonCombatAI()
         }
     }
 
-    if (!m_runfast || m_intoSwitch)
+    if ((!m_runfast && !avoidturn) || m_intoSwitch)
        cmd->angleturn += angleturn;
 
     // If not moving while trying to, budge a bit to avoid stuck moments
