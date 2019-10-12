@@ -33,6 +33,7 @@
 #include "b_analysis.h"
 #include "b_botmap.h"
 #include "b_lineeffect.h"
+#include "../d_gi.h"
 #include "../doomstat.h"
 #include "../e_exdata.h"
 #include "../e_inventory.h"
@@ -766,6 +767,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    int lockID;
    bool hexen = P_LevelIsVanillaHexen();
 
+   // TODO: EV_ActionParamFloorGeneric
    if(func == EV_ActionBoomGen)
    {
       if(!B_pushGeneralized(line.special, sae, sector, line, othersAffected, floorBlocked,
@@ -809,6 +811,17 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
    }
+   else if(func == EV_ActionParamDoorLockedRaise)
+   {
+      if(ceilingBlocked)
+         return;
+      lockID = line.args[3];
+      if(lockID && !E_PlayerCanUnlock(&player, lockID, false, true))
+         return;
+      sae.ceilingHeight = P_FindLowestCeilingSurrounding(&sector, true) - 4 * FRACUNIT;
+      if(line.args[2] || P_LevelIsVanillaHexen())
+         sae.ceilingTerminal = true;
+   }
    else if(func == EV_ActionDoorBlazeRaise || func == EV_ActionRaiseDoor ||
            func == EV_ActionHereticDoorRaise3x || func == EV_ActionParamDoorRaise ||
            func == EV_ActionParamDoorWaitRaise)
@@ -826,11 +839,17 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       sae.ceilingHeight = sae.floorHeight;
    }
-   else if(func == EV_ActionCeilingLowerAndCrush)
+   else if(func == EV_ActionCeilingLowerAndCrush || func == EV_ActionParamCeilingLowerAndCrush)
    {
       if(ceilingBlocked)
          return;
       sae.ceilingHeight = sae.floorHeight + 8 * FRACUNIT;
+   }
+   else if(func == EV_ActionParamCeilingLowerAndCrushDist)
+   {
+      if(ceilingBlocked)
+         return;
+      sae.ceilingHeight = sae.floorHeight + line.args[4] * FRACUNIT;
    }
    else if(func == EV_ActionCloseDoor30 || func == EV_ActionParamDoorCloseWaitOpen)
    {
@@ -984,18 +1003,46 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          return;
       sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true);
    }
-   else if(func == EV_ActionRaiseFloor24 || func == EV_ActionPlatRaise24Change ||
-           func == EV_ActionRaiseFloor24Change)
+   else if(func == EV_ActionRaiseFloor24 || func == EV_ActionRaiseFloor24Change)
    {
       if(floorBlocked)
          return;
       sae.floorHeight += 24 * FRACUNIT;
+   }
+   else if(func == EV_ActionPlatRaise24Change)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight += 24 * FRACUNIT;
+      if(GameModeInfo->type == Game_Heretic)
+      {
+         sae.floorTerminal = true;
+         sae.altFloorHeight = sae.floorHeight;
+      }
    }
    else if(func == EV_ActionPlatRaise32Change)
    {
       if(floorBlocked)
          return;
       sae.floorHeight += 32 * FRACUNIT;
+      if(GameModeInfo->type == Game_Heretic)
+      {
+         sae.floorTerminal = true;
+         sae.altFloorHeight = sae.floorHeight;
+      }
+   }
+   else if(func == EV_ActionParamPlatRaiseChange)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight += line.args[2] * 8 * FRACUNIT;
+      if(sae.floorHeight < lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+      if(GameModeInfo->type == Game_Heretic)
+      {
+         sae.floorTerminal = true;
+         sae.altFloorHeight = sae.floorHeight;
+      }
    }
    else if(func == EV_ActionRaiseFloor512)
    {
@@ -1034,12 +1081,35 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       sae.floorHeight = sector.ceilingheight;
       sae.floorTerminal = true;
    }
-   else if(func == EV_ActionPlatRaiseNearestChange || func == EV_ActionFloorRaiseToNearest ||
-           func == EV_ActionRaiseFloorTurbo || func == EV_ActionParamFloorRaiseToNearest)
+   else if(func == EV_ActionFloorRaiseToNearest || func == EV_ActionRaiseFloorTurbo ||
+           func == EV_ActionParamFloorRaiseToNearest)
    {
       if(floorBlocked)
          return;
       sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight, true);
+   }
+   else if(func == EV_ActionPlatRaiseNearestChange)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight, true);
+      if(GameModeInfo->type == Game_Heretic)
+      {
+         sae.floorTerminal = true;
+         sae.altFloorHeight = sae.floorHeight;
+      }
+   }
+   else if(func == EV_ActionParamPlatRaiseNearestChange)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = P_FindNextHighestFloor(&sector, sae.floorHeight, true);
+      if((GameModeInfo->type == Game_Heretic && line.args[2] == PlatThinker::PRNC_DEFAULT) ||
+         line.args[2] == PlatThinker::PRNC_HERETIC)
+      {
+         sae.floorTerminal = true;
+         sae.altFloorHeight = sae.floorHeight;
+      }
    }
    else if(func == EV_ActionRaiseFloor || (func == EV_ActionParamFloorRaiseToHighest && hexen))
    {
@@ -1076,6 +1146,12 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       if(floorBlocked)
          return;
       sae.floorHeight = lastCeilingHeight - line.args[4] * FRACUNIT;
+   }
+   else if(func == EV_ActionParamFloorRaiseAndCrush)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorHeight = lastCeilingHeight - 8 * FRACUNIT;
    }
    else if(func == EV_ActionParamFloorToCeilingInstant)
    {
@@ -1179,7 +1255,14 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          sae.floorHeight = -sae.floorHeight;
    }
    else if(func == EV_ActionCeilingCrushAndRaise || func == EV_ActionFastCeilCrushRaise ||
-           func == EV_ActionSilentCrushAndRaise)
+           func == EV_ActionSilentCrushAndRaise || func == EV_ActionParamCeilingCrushAndRaise ||
+           func == EV_ActionParamCeilingCrushRaiseAndStay ||
+           func == EV_ActionParamCeilingCrushAndRaiseDist ||
+           func == EV_ActionParamCeilingCrushRaiseAndStayA ||
+           func == EV_ActionParamCeilingCrushAndRaiseA ||
+           func == EV_ActionParamCeilingCrushAndRaiseSilentA ||
+           func == EV_ActionParamCeilingCrushAndRaiseSilentDist ||
+           func == EV_ActionParamCeilingCrushRaiseAndStaySilA || func == EV_ActionParamGenCrusher)
    {
       if(!B_handleCrusher(sector, sae))
          return;
@@ -1206,27 +1289,27 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
       othersAffected = B_fillInGenStairs(&sector, sae, line.special, lastFloorHeight,
                                          line.args[2] * FRACUNIT, plat_down, false, indexList);
    }
-   else if(func == EV_ActionDoDonut)
+   else if(func == EV_ActionDoDonut || func == EV_ActionParamDonut)
    {
       if(floorBlocked)
          return;
       othersAffected = B_fillInDonut(sector, sae, line.special, indexList);
    }
-   else if(func == EV_ActionElevatorUp)
+   else if(func == EV_ActionElevatorUp || func == EV_ActionParamElevatorUp)
    {
       if (floorBlocked || ceilingBlocked)
          return;
       sae.floorHeight = P_FindNextHighestFloor(&sector, lastFloorHeight, true);
       sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
    }
-   else if(func == EV_ActionElevatorDown)
+   else if(func == EV_ActionElevatorDown || func == EV_ActionParamElevatorDown)
    {
       if (floorBlocked || ceilingBlocked)
          return;
       sae.floorHeight = P_FindNextLowestFloor(&sector, lastFloorHeight, true);
       sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
    }
-   else if(func == EV_ActionElevatorCurrent)
+   else if(func == EV_ActionElevatorCurrent || func == EV_ActionParamElevatorCurrent)
    {
       if (floorBlocked || ceilingBlocked)
          return;
@@ -1234,6 +1317,42 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
 
       sae.floorHeight = front.getFloorHeight();
       sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+   }
+   else if(func == EV_ActionParamFloorCeilingLowerByValue)
+   {
+      fixed_t height = line.args[2] * FRACUNIT;
+      if(P_LevelIsVanillaHexen())
+      {
+         if(!floorBlocked)
+            sae.floorHeight = lastFloorHeight - height;
+         if(!ceilingBlocked)
+            sae.ceilingHeight = lastCeilingHeight - height;
+      }
+      else
+      {
+         if(floorBlocked || ceilingBlocked)
+            return;
+         sae.floorHeight = lastFloorHeight - height;
+         sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+      }
+   }
+   else if(func == EV_ActionParamFloorCeilingRaiseByValue)
+   {
+      fixed_t height = line.args[2] * FRACUNIT;
+      if(P_LevelIsVanillaHexen())
+      {
+         if(!floorBlocked)
+            sae.floorHeight = lastFloorHeight + height;
+         if(!ceilingBlocked)
+            sae.ceilingHeight = lastCeilingHeight + height;
+      }
+      else
+      {
+         if(floorBlocked || ceilingBlocked)
+            return;
+         sae.floorHeight = lastFloorHeight + height;
+         sae.ceilingHeight = sae.floorHeight + lastCeilingHeight - lastFloorHeight;
+      }
    }
    else if(func == EV_ActionPlatDownWaitUpStay || func == EV_ActionPlatBlazeDWUS)
    {
@@ -1244,6 +1363,58 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          sae.floorHeight = newheight;
       sae.floorTerminal = true;
       sae.altFloorHeight = lastFloorHeight;
+   }
+   else if(func == EV_ActionParamPlatPerpetualRaise)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true) + 8 * FRACUNIT;
+      sae.altFloorHeight = P_FindHighestFloorSurrounding(&sector, true);
+      if(sae.floorHeight > lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+      if(sae.altFloorHeight < lastFloorHeight)
+         sae.altFloorHeight = lastFloorHeight;
+   }
+   else if(func == EV_ActionParamPlatDWUS)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.floorHeight = P_FindLowestFloorSurrounding(&sector, true) + 8 * FRACUNIT;
+      if(sae.floorHeight > lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+      sae.altFloorHeight = lastFloorHeight;
+   }
+   else if(func == EV_ActionParamPlatDownByValue)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.altFloorHeight = lastFloorHeight;
+      sae.floorHeight = lastFloorHeight - line.args[3] * 8 * FRACUNIT;
+      if(sae.floorHeight > lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+   }
+   else if(func == EV_ActionParamPlatUWDS)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.altFloorHeight = lastFloorHeight;
+      sae.floorHeight = P_FindHighestFloorSurrounding(&sector, true);
+      if(sae.floorHeight < lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
+   }
+   else if(func == EV_ActionParamPlatUpByValue)
+   {
+      if(floorBlocked)
+         return;
+      sae.floorTerminal = true;
+      sae.altFloorHeight = lastFloorHeight;
+      sae.floorHeight = lastFloorHeight + line.args[3] * 8 * FRACUNIT;
+      if(sae.floorHeight < lastFloorHeight)
+         sae.floorHeight = lastFloorHeight;
    }
    else if(func == EV_ActionPillarBuild || func == EV_ActionPillarBuildAndCrush)
    {
