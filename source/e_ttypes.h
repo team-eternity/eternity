@@ -101,7 +101,7 @@ void      E_InitTerrainTypes(void);
 ETerrain *E_TerrainForName(const char *name);
 ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz);
 ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int pos);
-fixed_t   E_SectorFloorClip(sector_t *sector);
+fixed_t   E_SectorFloorClip(const sector_t *sector);
 bool      E_HitWater(Mobj *thing, sector_t *sector);
 void      E_ExplosionHitWater(Mobj *thing, int damage);
 bool      E_HitFloor(Mobj *thing);

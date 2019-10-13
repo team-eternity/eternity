@@ -30,13 +30,13 @@
 #define CAM_SIGHT_H__
 
 #include "m_fixed.h"
+#include "p_mobj.h"
 #include "tables.h"
 
 struct camera_t;
 struct divline_t;
 struct intercept_t;
 struct player_t;  // ioanch 20160131: for use
-class  Mobj;
 
 struct camsightparams_t
 {
@@ -68,6 +68,15 @@ void CAM_LineAttack(Mobj *source, angle_t angle, fixed_t distance,
 
 // ioanch 20160131: use lines
 void CAM_UseLines(const player_t *player);
+
+inline static fixed_t CAM_getShootHeight(const Mobj &shooter)
+{
+   return shooter.z - shooter.floorclip + shooter.height / 2 + 8 * FRACUNIT;
+}
+inline static fixed_t CAM_getShootHeight(fixed_t z, const mobjinfo_t &info)
+{
+   return z + info.height / 2 + 8 * FRACUNIT;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //

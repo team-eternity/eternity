@@ -1893,7 +1893,7 @@ static void AM_drawWalls()
 // aid or for the interest of the curious.
 //
 
-static void AM_drawBotMapSegs()
+void AM_drawBotMapSegs()
 {
    mline_t l;
    size_t ns = botMap->segs.getLength();
@@ -1904,21 +1904,22 @@ static void AM_drawBotMapSegs()
       l.a.y = M_FixedToDouble(sg.v[0]->y);
       l.b.x = M_FixedToDouble(sg.v[1]->x);
       l.b.y = M_FixedToDouble(sg.v[1]->y);
-      AM_drawMline(&l, mapcolor_prtl);
+      int colour = bots[displayplayer].m_deepPromise.sss.count(sg.owner) ? bots[displayplayer].m_deepPromise.isActive() ? mapcolor_clsd : mapcolor_frnd : mapcolor_prtl;
+      AM_drawMline(&l, colour);
    }
 }
 void AM_drawBotPath()   // not static (friend to Bot)
 {
    mline_t l;
-   if(bots[0].m_hasPath)
+   if(bots[displayplayer].m_hasPath)
    {
-      for (const BNeigh* neigh : bots[0].m_path.inv)
+      for (const BNeigh* neigh : bots[displayplayer].m_path.inv)
       {
          l.a.x = M_FixedToDouble(neigh->v.x);
          l.a.y = M_FixedToDouble(neigh->v.y);
          l.b.x = M_FixedToDouble(neigh->v.x + neigh->d.x);
          l.b.y = M_FixedToDouble(neigh->v.y + neigh->d.y);
-         AM_drawMline(&l, mapcolor_frnd);
+         AM_drawMline(&l, mapcolor_sprt);
       }
    }
 }

@@ -45,6 +45,7 @@
 #include "../e_inventory.h"
 #include "../e_player.h"
 #include "../e_states.h"
+#include "../e_ttypes.h"
 #include "../e_weapons.h"
 #include "../ev_actions.h"
 #include "../ev_specials.h"
@@ -174,6 +175,8 @@ bool Bot::goalAchieved()
          // now do a case-by-case test
          B_EmptyTableAndDelete(goalEvents);
          B_EmptyTableAndDelete(goalTable);
+         if(goalcoord == m_deepPromise.prereqcoord)
+            m_deepPromise.prereqcoord.x = D_MININT;
          return true;
       }
       goalEvents.removeObject(metaob);
@@ -244,7 +247,7 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
    };
 
    EVActionFunc func = action->action;
-   // TODO: also support the gun and push kinds, but those needs a better searching for goals
+   // TODO: also support the push kinds, but those needs a better searching for goals
    if(func == EV_ActionSwitchExitLevel || func == EV_ActionExitLevel ||
       func == EV_ActionGunExitLevel || func == EV_ActionParamExitNormal)
    {
@@ -397,8 +400,11 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
         m_deepSearchMode = DeepNormal;
 
         LevelStateStack::Clear();
-       if(result && pushresult == LevelStateStack::PushResult_timed)
-          m_deepPromise.flags |= DeepPromise::URGENT;
+       if(result)
+       {
+          if(pushresult == LevelStateStack::PushResult_timed)
+             m_deepPromise.flags |= DeepPromise::URGENT;
+       }
         return result ? SpecialChoice_worth : SpecialChoice_no;
     }
 
@@ -436,15 +442,57 @@ static bool B_checkSwitchReach(v2fixed_t mopos, v2fixed_t coord, const line_t &s
 }
 
 // This version checks if a line is by itself reachable, without assuming a user
-static bool B_checkSwitchReach(fixed_t range, const line_t &swline)
+static bool B_checkSwitchReach(v2fixed_t point, const line_t &swline)
 {
-   angle_t ang = P_PointToAngle(swline.v1->x, swline.v1->y, swline.v2->x, swline.v2->y) - ANG90;
    v2fixed_t mpos = v2fixed_t(*swline.v1) + v2fixed_t(swline.dx, swline.dy) / 2;
 
-   v2fixed_t mposofs = mpos + v2fixed_t::polar(range, ang);
-
-   return CAM_PathTraverse(mposofs.x, mposofs.y, mpos.x, mpos.y, CAM_ADDLINES,
+   return CAM_PathTraverse(point.x, point.y, mpos.x, mpos.y, CAM_ADDLINES,
                            const_cast<line_t *>(&swline), BTR_switchReachTraverse);
+}
+
+// This version checks if a line is by itself reachable, without assuming a user
+bool Bot::checkGunSwitchReach(v2fixed_t point, const line_t &swline) const
+{
+   int side = P_PointOnLineSide(point.x, point.y, &swline);
+   const sector_t *sector = side ? swline.backsector : swline.frontsector;
+   if(!sector)
+      return false;
+
+   const BSubsec &ss = botMap->pointInSubsector(point);
+   const MetaSector &msector = *ss.msector;
+   fixed_t floorclip = msector.isInstanceOf(RTTI(ThingMSector)) ? 0 :
+         E_SectorFloorClip(msector.getFloorSector());
+   fixed_t z = CAM_getShootHeight(msector.getFloorHeight() + floorclip, *pl->mo->info);
+
+   // FIXME: SSG reach, lookpitch reach
+   if(z < sector->floorheight || z > sector->ceilingheight)
+      return false;
+
+   v2fixed_t mpos = v2fixed_t(*swline.v1) + v2fixed_t(swline.dx, swline.dy) / 2;
+
+   struct Context
+   {
+      v2fixed_t point;
+      const line_t &swline;
+      const Bot &bot;
+      fixed_t z;
+   } context = { point, swline, *this, z };
+
+   return CAM_PathTraverse(point.x, point.y, mpos.x, mpos.y, CAM_ADDLINES, &context,
+                           [](const intercept_t *in, void *parm, const divline_t &trace)
+   {
+      const line_t &l = *in->d.line;
+      const Context &context = *static_cast<Context *>(parm);
+
+      // gun special
+
+      if(&l == &context.swline)
+         return true;
+
+      int side = P_PointOnLineSide(context.point.x, context.point.y, &l);
+      const sector_t *osector = side ? l.frontsector : l.backsector;
+      return osector && context.z >= osector->floorheight && context.z < osector->ceilingheight;
+   });
 }
 
 //
@@ -553,15 +601,12 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 	if(self.m_deepSearchMode == DeepCheckLosses)
 		return false;
 	
-   if(self.m_deepSearchMode == DeepNormal)
+   if(self.m_deepSearchMode == DeepNormal && self.m_deepPromise.isActive())
    {
-      if(self.m_deepPromise.flags & DeepPromise::BENEFICIAL && !self.m_deepPromise.sss.count(&ss))
+      if(!self.m_deepPromise.sss.count(&ss))
          return false;
-      if(self.m_deepPromise.sss.count(&ss))
-      {
-         B_Log("Go to promise %g %g", ss.mid.x / 65536., ss.mid.y / 65536.);
-      }
-      self.m_deepPromise.clear();
+
+      B_Log("Go to promise %g %g", ss.mid.x / 65536., ss.mid.y / 65536.);
    }
 
     if(self.m_searchstage >= SearchStage_ExitNormal)
@@ -645,8 +690,15 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
        if(line.frontsector->isShut())  // quick out
           continue;
        // Check if it's really accessible
-       if(!B_checkSwitchReach(it->second, line))
+       if(EV_IsSwitchSpecial(line) && !B_checkSwitchReach(it->second, line))
           continue;
+       v2fixed_t margin = { FRACUNIT, FRACUNIT };  // weed off edge cases
+       if(EV_IsGunSpecial(line) && (!self.checkGunSwitchReach(it->second, line) ||
+                                    !self.checkGunSwitchReach(it->second - margin, line) ||
+                                    !self.checkGunSwitchReach(it->second + margin, line)))
+       {
+          continue;
+       }
 
        if(self.handleLineGoal(ss, coord, line))
           return true;
@@ -663,8 +715,6 @@ bool Bot::objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v)
 bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& line)
 {
    // TODO: add support for the other activation types
-   if(!EV_IsWalkSpecial(line) && !EV_IsSwitchSpecial(line))
-      return false;
    if(EV_IsNonPlayerSpecial(line) || EV_IsTeleportationSpecial(line))
       return false;
 
@@ -706,6 +756,8 @@ bool Bot::handleLineGoal(const BSubsec &ss, BotPathEnd &coord, const line_t& lin
             //crd.x += self.random.range(-16, 16) * FRACUNIT;
             //crd.y += self.random.range(-16, 16) * FRACUNIT;
             goalTable.setV2Fixed(BOT_WALKTRIG,goaltag);
+           if(m_deepPromise.flags & DeepPromise::BENEFICIAL)
+              m_deepPromise.prereqcoord = goaltag;
             return true;
         }
      }
@@ -819,29 +871,40 @@ void Bot::enemyVisible(Collection<Target>& targets)
       }
    }
 
-    fixed_t bulletheight = pl->mo->z + 33 * FRACUNIT;   // FIXME: don't hard-code
-    for(const line_t* line : botMap->gunLines)
-    {
-        const sector_t *sector = line->frontsector;
-        if(!sector || sector->floorheight > bulletheight || sector->ceilingheight < bulletheight)
-            continue;
+   if(m_path.end.kind == BotPathEnd::KindWalkLine && EV_IsGunSpecial(*m_path.end.walkLine) &&
+      ss->linelist.count(m_path.end.walkLine) &&
+      checkGunSwitchReach(v2fixed_t(*pl->mo), *m_path.end.walkLine) &&
+      LevelStateStack::Push(*m_path.end.walkLine, *pl, nullptr))
+   {
+      // Check if accessible
+      LevelStateStack::Pop();
+      targets.add({ *m_path.end.walkLine, *pl->mo });
+      std::push_heap(targets.begin(), targets.end());
+   }
 
-        Target target(*line, *pl->mo);
-
-        cam.tgroupid = line->frontsector->groupid;
-        cam.tx = target.coord.x;
-        cam.ty = target.coord.y;
-        cam.tz = sector->floorheight;
-        cam.theight = sector->ceilingheight - sector->floorheight;
-        
-        if(target.dist < MISSILERANGE / 2 && CAM_CheckSight(cam) &&
-           LevelStateStack::Push(*line, *pl, nullptr))
-        {
-           LevelStateStack::Pop();
-           targets.add(std::move(target));
-           std::push_heap(targets.begin(), targets.end());
-        }
-    }
+//    fixed_t bulletheight = CAM_getShootHeight(*pl->mo);
+//    for(const line_t* line : botMap->gunLines)
+//    {
+//        const sector_t *sector = line->frontsector;
+//        if(!sector || sector->floorheight > bulletheight || sector->ceilingheight < bulletheight)
+//            continue;
+//
+//
+//       Target target(*m_path.end.walkLine, *pl->mo);
+//        cam.tgroupid = line->frontsector->groupid;
+//        cam.tx = target.coord.x;
+//        cam.ty = target.coord.y;
+//        cam.tz = sector->floorheight;
+//        cam.theight = sector->ceilingheight - sector->floorheight;
+//
+//        if(target.dist < MISSILERANGE / 2 && CAM_CheckSight(cam) &&
+//           LevelStateStack::Push(*line, *pl, nullptr))
+//        {
+//           LevelStateStack::Pop();
+//           targets.add(std::move(target));
+//           std::push_heap(targets.begin(), targets.end());
+//        }
+//    }
 }
 
 void Bot::pickRandomWeapon(const Target& target)
@@ -1101,7 +1164,7 @@ void Bot::doCombatAI(const Collection<Target>& targets)
     CombatInfo cinfo = {};
     const Target *highestThreat = pickBestTarget(targets, cinfo);
 
-    if (!cinfo.hasShooters && targets[0].dist > 5 * MELEERANGE)
+    if (!cinfo.hasShooters && targets[0].dist > 5 * MELEERANGE && highestThreat->type != TargetLine)
        return; // if no shooters, don't attack monsters who are too far
 
     // Save the threat
@@ -1170,8 +1233,7 @@ void Bot::doCombatAI(const Collection<Target>& targets)
            vang[0] - vang[1] > pl->mo->angle - vang[1])
         {
             cmd->buttons |= BT_ATTACK;
-            static const int hitscans[] = {wp_pistol, wp_shotgun, wp_chaingun,
-                wp_supershotgun};
+            static const int hitscans[] = {wp_pistol, wp_shotgun, wp_chaingun, wp_supershotgun};
             switch (pl->readyweapon->dehnum)
             {
                 case wp_fist:
@@ -1322,7 +1384,7 @@ void Bot::doNonCombatAI()
                                   objOfInterest, this))
         {
             ++m_searchstage;
-           if(m_searchstage >= SearchStage_NUM)
+           if(m_searchstage >= SearchStage_NUM && m_deepPromise.isActive())
            {
               m_deepPromise.clear();
               B_Log("Lose promise");
@@ -1438,6 +1500,9 @@ void Bot::doNonCombatAI()
             return;
         }
     }
+
+   if(swline && ss->linelist.count(swline) && EV_IsGunSpecial(*swline))
+      npos = ss->linelist.find(swline)->second;
 
     m_intoSwitch = false;
     if (goalTable.hasKey(BOT_WALKTRIG) && m_path.end.kind == BotPathEnd::KindWalkLine &&
@@ -1782,6 +1847,7 @@ void Bot::doCommand()
    
    // Get current values
    ss = &botMap->pointInSubsector(m_lastPosition);
+   m_deepPromise.sss.erase(ss);
 
     if(pl->health <= 0)
     {

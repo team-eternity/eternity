@@ -57,7 +57,7 @@ enum TargetType
 //
 class Bot : public ZoneObject
 {
-//   friend void AM_drawNodeLines();
+   friend void AM_drawBotMapSegs();
    
    player_t *pl = nullptr; // the controlled player. He'll likely receive the tic
                      // commands
@@ -108,16 +108,23 @@ class Bot : public ZoneObject
 
       std::unordered_set<const BSubsec *> sss;
       unsigned flags = 0;
+      v2fixed_t prereqcoord = { D_MININT, D_MININT };
 
       bool isUrgent() const
       {
-         return (flags & (BENEFICIAL | URGENT)) == (BENEFICIAL | URGENT);
+         return isActive() && flags & URGENT;
+      }
+
+      bool isActive() const
+      {
+         return flags & BENEFICIAL && prereqcoord.x == D_MININT && !sss.empty();
       }
 
       void clear()
       {
          sss.clear();
          flags = 0;
+         prereqcoord.x = D_MININT;
       }
    } m_deepPromise;
 
@@ -217,6 +224,7 @@ class Bot : public ZoneObject
       SpecialChoice_favourable   // also helps user (e.g. exits the level, heals etc.)
    };
    SpecialChoice shouldUseSpecial(const line_t& line, const BSubsec& liness);
+   bool checkGunSwitchReach(v2fixed_t point, const line_t &swline) const;
    bool checkItemType(const Mobj *special) const;
    bool otherBotsHaveGoal(const char *key, v2fixed_t coord) const;
    static bool objOfInterest(const BSubsec& ss, BotPathEnd& coord, void* v);

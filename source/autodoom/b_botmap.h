@@ -143,7 +143,7 @@ public:
       const MetaSector *msector;
       int nsegs;
       std::unordered_set<const Mobj *> mobjlist;
-      std::unordered_map<const line_t *, fixed_t> linelist;
+      std::unordered_map<const line_t *, v2fixed_t> linelist;
       v2fixed_t mid;
       // Fast neighbour lookup
       PODCollection<Neigh> neighs;

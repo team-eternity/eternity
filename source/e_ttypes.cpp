@@ -751,7 +751,7 @@ ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
 // Returns the amount of floorclip a sector should impart upon
 // objects standing inside it.
 //
-fixed_t E_SectorFloorClip(sector_t *sector)
+fixed_t E_SectorFloorClip(const sector_t *sector)
 {
    ETerrain *terrain = NULL;
    

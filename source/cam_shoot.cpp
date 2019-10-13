@@ -424,8 +424,7 @@ ShootContext::ShootContext(const params_t &params, const State *instate) :
    {
       state.x = params.thing->x;
       state.y = params.thing->y;
-      state.z = params.thing->z - params.thing->floorclip +
-      (params.thing->height >> 1) + 8 * FRACUNIT;
+      state.z = CAM_getShootHeight(*params.thing);
       state.groupid = params.thing->groupid;
       state.prev = nullptr;
       state.origindist = 0;
