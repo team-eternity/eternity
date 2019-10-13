@@ -460,7 +460,8 @@ void B_GLBSP_PutSubsector(int first, int num, int ssidx)
    int i = 0;
    for(BNeigh& n : ss.neighs)
    {
-       dist = (ss.mid - n.otherss->mid).sqrtabs();
+      v2fixed_t neighmid = n.v + n.d / 2;
+       dist = (ss.mid - neighmid).sqrtabs() + (neighmid - n.otherss->mid).sqrtabs();
       n.dist = dist;
       neighRefs[i++]->dist = dist;
    }

@@ -63,7 +63,7 @@ bool BotMap::demoPlayingFlag;
 
 const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
 
-static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP11";
+static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP12";
 
 //
 // String representation
@@ -1266,7 +1266,7 @@ void BotMap::addCornerNeighs()
                     n.myss = *it;
                     n.v.x = v->x;
                     n.v.y = v->y;
-                    n.dist = ((*jt)->mid - (*it)->mid).sqrtabs();
+                    n.dist = ((*jt)->mid - n.v).sqrtabs() + (n.v - (*it)->mid).sqrtabs();
                     (*it)->neighs.add(n);
                 }
                 if (!ssVisitedMap[*jt].count(*it))
@@ -1277,7 +1277,7 @@ void BotMap::addCornerNeighs()
                     n.myss = *jt;
                     n.v.x = v->x;
                     n.v.y = v->y;
-                    n.dist = ((*jt)->mid - (*it)->mid).sqrtabs();
+                    n.dist = ((*jt)->mid - n.v).sqrtabs() + (n.v - (*it)->mid).sqrtabs();
                     (*jt)->neighs.add(n);
                 }
             }
