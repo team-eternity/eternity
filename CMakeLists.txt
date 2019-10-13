@@ -163,6 +163,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
    TRY_CXX_COMPILER_FLAG(-std=c++17 FLAG_CXX_stdcxx17)
 endif()
 
+# Crappy hack for GCC because it's a bad compiler
+if(CMAKE_CXX_COMPILER_ID STREQUEL "GNU")
+   TRY_CXX_COMPILER_FLAG(-lstdc++fs, FLAG_CXX_lstdcxxfs)
+endif()
+
 
 ################################################################################
 ######################### Compiler: Warnings  ##################################
