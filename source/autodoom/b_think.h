@@ -64,46 +64,7 @@ class Bot : public ZoneObject
    ticcmd_t *cmd = nullptr;    // my commands to output
    const BSubsec *ss = nullptr;  // subsector reference
 
-   //
-   // Keep track in case bot gets off path but can recover
-   //
-   struct LostPathInfo
-   {
-      enum
-      {
-         RECOVER_TIME = 1 * TICRATE,
-      };
-
-      const BSubsec *ss;
-      bool islast;
-      union
-      {
-         const BNeigh *neigh; // if not the last, also remember the neigh
-         v2fixed_t coord;  // if last, then the exact destination
-      };
-      int counter;   // limit time it should recover
-
-      void setEndCoord(const BSubsec &ss, v2fixed_t coord)
-      {
-         this->ss = &ss;
-         islast = true;
-         this->coord = coord;
-         counter = 0;
-      }
-
-      void setMidSS(const BSubsec &ss, const BNeigh &neigh)
-      {
-         this->ss = &ss;
-         islast = false;
-         this->neigh = &neigh;
-         counter = 0;
-      }
-
-      bool timeToRecover()
-      {
-         return counter++ < RECOVER_TIME;
-      }
-   } m_lostPathInfo = {};
+   const BSubsec *m_lostPathSS;
 
    std::unordered_set<const BSubsec*> m_dropSS;
 

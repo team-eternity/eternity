@@ -102,7 +102,7 @@ void Bot::mapInit()
    m_finder.SetPlayer(pl);
    m_hasPath = false;
 
-   m_lostPathInfo = {};
+   m_lostPathSS = nullptr;
 
    m_deepTriedLines.clear();
    m_deepSearchMode = DeepNormal;
@@ -1322,8 +1322,11 @@ void Bot::doNonCombatAI()
                                   objOfInterest, this))
         {
             ++m_searchstage;
-           m_deepPromise.clear();
-           B_Log("Lose promise");
+           if(m_searchstage >= SearchStage_NUM)
+           {
+              m_deepPromise.clear();
+              B_Log("Lose promise");
+           }
             cmd->sidemove += random.range(-pl->pclass->sidemove[0], pl->pclass->sidemove[0]);
             cmd->forwardmove += random.range(-pl->pclass->forwardmove[0], pl->pclass->forwardmove[0]);
            if(m_searchstage > DUNNO_CONCESSION_SEC * TICRATE &&
@@ -1361,8 +1364,7 @@ void Bot::doNonCombatAI()
     if (ss == m_path.last)
     {
        npos = endCoord;
-
-       m_lostPathInfo.setEndCoord(*ss, npos);
+       m_lostPathSS = ss;
     }
     else
     {
@@ -1402,7 +1404,7 @@ void Bot::doNonCombatAI()
            npos = B_ProjectionOnSegment(mpos, neigh->v, neigh->d, pl->mo->radius);
            dontMove = shouldWaitSector(*neigh);
 
-           m_lostPathInfo.setMidSS(*ss, *neigh);
+           m_lostPathSS = ss;
 
              if(random() % 64 == 0 && m_dropSS.count(ss))
              {
@@ -1417,45 +1419,23 @@ void Bot::doNonCombatAI()
         if (!onPath)
         {
             // not on path, so reset
-           bool recovering = false;
-            if (m_lostPathInfo.ss)
+            if (m_lostPathSS && !botMap->canPassNow(*ss, *m_lostPathSS, pl->mo->height))
             {
-                if (!botMap->canPassNow(*ss, *m_lostPathInfo.ss, pl->mo->height))
-                {
-                    B_Log("Inserted goner %d", eindex(m_lostPathInfo.ss - &botMap->ssectors[0]));
-                    m_dropSS.insert(m_lostPathInfo.ss);
-                    for (const BNeigh& n : m_lostPathInfo.ss->neighs)
-                    {
-                       // Also add nearby subsectors to increase the slowdown area
-                        if ((n.otherss->mid - m_lostPathInfo.ss->mid).sqrtabs() < 128 * FRACUNIT)
-                            m_dropSS.insert(n.otherss);
-                    }
-                }
-               else if(m_lostPathInfo.timeToRecover())
-               {
-                  if(m_lostPathInfo.islast)
-                     npos = m_lostPathInfo.coord;
-                  else
-                  {
-                     npos = B_ProjectionOnSegment(mpos, m_lostPathInfo.neigh->v,
-                                                  m_lostPathInfo.neigh->d, pl->mo->radius);
-                     dontMove = botMap->canPass(*ss, *m_lostPathInfo.neigh->otherss, pl->mo->height) && shouldWaitSector(*m_lostPathInfo.neigh);
-                     if(dontMove)
-                        m_lostPathInfo.counter--;
-                  }
-                  recovering = true;
-               }
+                 B_Log("Inserted goner %d", eindex(m_lostPathSS - &botMap->ssectors[0]));
+                 m_dropSS.insert(m_lostPathSS);
+                 for (const BNeigh& n : m_lostPathSS->neighs)
+                 {
+                    // Also add nearby subsectors to increase the slowdown area
+                     if ((n.otherss->mid - m_lostPathSS->mid).sqrtabs() < 128 * FRACUNIT)
+                         m_dropSS.insert(n.otherss);
+                 }
             }
-           if(!recovering)
-           {
-              B_Log("Lost path");
-              m_lostPathInfo = {};
-               m_searchstage = SearchStage_Normal;
-               m_hasPath = false;
-               if (random() % 3 == 0)
-                   m_justGotLost = true;
-               return;
-           }
+           m_lostPathSS = nullptr;
+            m_searchstage = SearchStage_Normal;
+            m_hasPath = false;
+            if (random() % 3 == 0)
+                m_justGotLost = true;
+            return;
         }
     }
 

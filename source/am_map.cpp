@@ -1949,7 +1949,7 @@ static void AM_drawNodeLines()
    if(!botMap)
       return;
    AM_drawBotMapSegs();
-   AM_drawSteepLines();
+   AM_drawBotPath();
 }
 
 //
