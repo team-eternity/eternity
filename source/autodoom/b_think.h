@@ -109,6 +109,7 @@ class Bot : public ZoneObject
       std::unordered_set<const BSubsec *> sss;
       unsigned flags = 0;
       v2fixed_t prereqcoord = { D_MININT, D_MININT };
+      bool confirmed = false;
 
       bool isUrgent() const
       {
@@ -117,7 +118,7 @@ class Bot : public ZoneObject
 
       bool isActive() const
       {
-         return flags & BENEFICIAL && prereqcoord.x == D_MININT && !sss.empty();
+         return flags & BENEFICIAL && confirmed && !sss.empty();
       }
 
       void clear()
@@ -125,6 +126,7 @@ class Bot : public ZoneObject
          sss.clear();
          flags = 0;
          prereqcoord.x = D_MININT;
+         confirmed = false;
       }
    } m_deepPromise;
 

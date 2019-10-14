@@ -177,6 +177,7 @@ bool Bot::goalAchieved()
          B_EmptyTableAndDelete(goalTable);
          if(goalcoord == m_deepPromise.prereqcoord)
             m_deepPromise.prereqcoord.x = D_MININT;
+            m_deepPromise.confirmed = true;
          return true;
       }
       goalEvents.removeObject(metaob);
