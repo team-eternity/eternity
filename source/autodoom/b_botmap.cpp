@@ -507,6 +507,8 @@ static void B_setSpecLinePositions()
 //   fixed_t addx, addy, len;
 //   int n, j;
 //   fixed_t lenx, leny;
+
+   static const angle_t angles[] = { ANG90 / 10, ANG45 + ANG45 / 3 };
    
    botMap->gunLines.makeEmpty();
    
@@ -520,13 +522,19 @@ static void B_setSpecLinePositions()
       {
          botMap->gunLines.add(&line);
          B_traceTriggerPoints(line, MISSILERANGE / 2, true, 0);
-         B_traceTriggerPoints(line, MISSILERANGE / 2, true, ANG45 + ANG45 / 3);
-         B_traceTriggerPoints(line, MISSILERANGE / 2, true, -ANG45 - ANG45 / 3);
+         for(angle_t ang: angles)
+         {
+            B_traceTriggerPoints(line, MISSILERANGE / 2, true, ang);
+            B_traceTriggerPoints(line, MISSILERANGE / 2, true, -ang);
+         }
          if(line.backsector && line.flags & ML_TWOSIDED)
          {
             B_traceTriggerPoints(line, MISSILERANGE / 2, true, ANG180);
-            B_traceTriggerPoints(line, MISSILERANGE / 2, true, ANG180 + ANG45 + ANG45 / 3);
-            B_traceTriggerPoints(line, MISSILERANGE / 2, true, ANG180 - ANG45 - ANG45 / 3);
+            for(angle_t ang: angles)
+            {
+               B_traceTriggerPoints(line, MISSILERANGE / 2, true, ANG180 + ang);
+               B_traceTriggerPoints(line, MISSILERANGE / 2, true, ANG180 - ang);
+            }
          }
       }
    }

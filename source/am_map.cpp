@@ -1904,7 +1904,8 @@ void AM_drawBotMapSegs()
       l.a.y = M_FixedToDouble(sg.v[0]->y);
       l.b.x = M_FixedToDouble(sg.v[1]->x);
       l.b.y = M_FixedToDouble(sg.v[1]->y);
-      int colour = bots[displayplayer].m_deepPromise.sss.count(sg.owner) ? bots[displayplayer].m_deepPromise.isActive() ? mapcolor_clsd : mapcolor_frnd : mapcolor_prtl;
+      int colour = bots[displayplayer].m_deepPromise.sss.count(sg.owner) ?
+      bots[displayplayer].m_deepPromise.isActive() ? mapcolor_clsd : mapcolor_frnd : mapcolor_prtl;
       AM_drawMline(&l, colour);
    }
 }

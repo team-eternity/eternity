@@ -196,7 +196,7 @@ PathResult Bot::reachableItem(const BSubsec& ss, void* v)
    if(result && self.m_deepSearchMode == DeepBeyond)
    {
       self.m_deepPromise.sss.insert(&ss);
-      B_Log("Made a promise for %g %g", ss.mid.x/65536., ss.mid.y/65536.);
+//      B_Log("Made a promise for %g %g", ss.mid.x/65536., ss.mid.y/65536.);
    }
 
 	// for DeepCheckLosses objOfInterest will always return false
@@ -328,7 +328,16 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
     // now that we got some lines out of the way, decide quickly to use once-
     // only types
    // TODO: also detect generalized specials
-    if(!EV_IsRepeatableSpecial(line))
+   bool stable = !EV_IsRepeatableSpecial(line);
+   if(!stable)
+   {
+      auto attempt = LevelStateStack::Push(line, *pl, nullptr);
+      if(attempt != LevelStateStack::PushResult_none)
+         LevelStateStack::Pop();
+      stable = attempt == LevelStateStack::PushResult_permanent;
+   }
+
+    if(stable)
     {
         if(m_deepSearchMode == DeepNormal && m_searchstage < SearchStage_PitItems)
         {
@@ -1849,6 +1858,8 @@ void Bot::doCommand()
    // Get current values
    ss = &botMap->pointInSubsector(m_lastPosition);
    m_deepPromise.sss.erase(ss);
+   if(m_deepPromise.sss.empty())
+      m_deepPromise.confirmed = false;
 
     if(pl->health <= 0)
     {
