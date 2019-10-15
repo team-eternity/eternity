@@ -54,6 +54,15 @@ enum PushResult
    fixed_t  AltFloor(const sector_t& sector);
    fixed_t  Ceiling(const sector_t& sector);
    bool     IsClear();
+
+inline static PushResult Peek(const line_t& line, const player_t& player,
+                              const sector_t *excludeSector)
+{
+   PushResult result = Push(line, player, excludeSector);
+   if(result)
+      Pop();
+   return result;
+}
    
    void SetKeyPlayer(const player_t* player);
    void UseRealHeights(bool value);

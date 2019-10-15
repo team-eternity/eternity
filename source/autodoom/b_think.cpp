@@ -330,12 +330,7 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
    // TODO: also detect generalized specials
    bool stable = !EV_IsRepeatableSpecial(line);
    if(!stable)
-   {
-      auto attempt = LevelStateStack::Push(line, *pl, nullptr);
-      if(attempt != LevelStateStack::PushResult_none)
-         LevelStateStack::Pop();
-      stable = attempt == LevelStateStack::PushResult_permanent;
-   }
+      stable = LevelStateStack::Peek(line, *pl, nullptr) == LevelStateStack::PushResult_permanent;
 
     if(stable)
     {
@@ -365,10 +360,9 @@ Bot::SpecialChoice Bot::shouldUseSpecial(const line_t& line, const BSubsec& line
 			// Return true if all available ssectors have been checked
 			return m_deepAvailSsectors.empty() ? SpecialChoice_worth : SpecialChoice_no;
 		}
-		
-		auto result = LevelStateStack::Push(line, *pl, nullptr);
-        LevelStateStack::Clear();       
-        return result ? SpecialChoice_worth : SpecialChoice_no;
+
+       // FIXME: do not repeat this
+        return LevelStateStack::Peek(line, *pl, nullptr) ? SpecialChoice_worth : SpecialChoice_no;
         // just push them, as long as they're not the blocking type and have any
         // effect
     }
@@ -884,10 +878,9 @@ void Bot::enemyVisible(Collection<Target>& targets)
    if(m_path.end.kind == BotPathEnd::KindWalkLine && EV_IsGunSpecial(*m_path.end.walkLine) &&
       ss->linelist.count(m_path.end.walkLine) &&
       checkGunSwitchReach(v2fixed_t(*pl->mo), *m_path.end.walkLine) &&
-      LevelStateStack::Push(*m_path.end.walkLine, *pl, nullptr))
+      LevelStateStack::Peek(*m_path.end.walkLine, *pl, nullptr))
    {
       // Check if accessible
-      LevelStateStack::Pop();
       targets.add({ *m_path.end.walkLine, *pl->mo });
       std::push_heap(targets.begin(), targets.end());
    }
