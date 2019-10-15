@@ -74,10 +74,10 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
     BotPathEnd coord;
 
     int index = (int)(&source - first);
-   
-    db[1].ssvisit[index] = db[1].validcount;
-    db[1].ssprev[index] = nullptr;
-    db[1].ssdist[index] = 0;
+
+   db[1].items[index].visit = db[1].validcount;
+   db[1].items[index].prev = nullptr;
+   db[1].items[index].dist = 0;
 
     nhe.ss = &source;
     nhe.dist = 0;
@@ -100,7 +100,7 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
         std::pop_heap(m_dijkHeap.begin(), m_dijkHeap.end());
         t = m_dijkHeap.back().ss;    // get the extracted one
         founddist = m_dijkHeap.pop().dist;
-        if (founddist != db[1].ssdist[t - first])
+        if (founddist != db[1].items[t - first].dist)
             continue;
         
         if (isGoal(*t, coord, parm))
@@ -110,7 +110,7 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
            path.sss.insert(t);
             for (;;)
             {
-                n = db[1].ssprev[t - first];
+                n = db[1].items[t - first].prev;
                 if (!n)
                     break;
                 path.inv.add(n);
@@ -130,14 +130,11 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
             {
                 index = (int)(bytele->ss - first);
                 
-               tentative = getAdjustedDistance(db[1].ssdist[t - first],
+               tentative = getAdjustedDistance(db[1].items[t - first].dist,
                                                (t->mid - neigh.v - neigh.d / 2).sqrtabs(), t);
                 
-                if (db[1].ssvisit[index] != db[1].validcount
-                    || tentative < db[1].ssdist[index])
-                {
+                if (db[1].items[index].visit != db[1].validcount || tentative < db[1].items[index].dist)
                     pushSubsectorToHeap(neigh, index, *bytele->ss, tentative);
-                }
             }
             else
             {
@@ -151,11 +148,10 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
 //                }
 //                else
 
-               tentative = getAdjustedDistance(db[1].ssdist[t - first], neigh.dist, t);
+               tentative = getAdjustedDistance(db[1].items[t - first].dist, neigh.dist, t);
                 
-                if ((db[1].ssvisit[index] != db[1].validcount
-                     || tentative < db[1].ssdist[index])
-                     && m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
+                if((db[1].items[index].visit != db[1].validcount || tentative < db[1].items[index].dist) &&
+                   m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
                 {
                     pushSubsectorToHeap(neigh, index, *neigh.otherss, tentative);
                 }
@@ -167,9 +163,9 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
 
 void PathFinder::pushSubsectorToHeap(const BNeigh& neigh, int index, const BSubsec& ss, fixed_t tentative)
 {
-    db[1].ssvisit[index] = db[1].validcount;
-    db[1].ssprev[index] = &neigh;
-    db[1].ssdist[index] = tentative;
+    db[1].items[index].visit = db[1].validcount;
+    db[1].items[index].prev = &neigh;
+    db[1].items[index].dist = tentative;
 
     HeapEntry &nhe = m_dijkHeap.addNew();
     nhe.dist = tentative;
@@ -195,7 +191,7 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
     const BSubsec** back = db[0].ssqueue;
 
     const BSubsec* first = &m_map->ssectors[0];
-    db[0].ssvisit[&source - first] = db[0].validcount;
+    db[0].items[&source - first].visit = db[0].validcount;
     *back++ = &source;
     const BSubsec* t;
     PathResult res;
@@ -213,16 +209,16 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
             bytele = checkTeleportation(neigh);
             if (bytele)
             {
-                if (db[0].ssvisit[bytele->ss - first] != db[0].validcount)
+                if (db[0].items[bytele->ss - first].visit != db[0].validcount)
                 {
-                    db[0].ssvisit[bytele->ss - first] = db[0].validcount;
+                    db[0].items[bytele->ss - first].visit = db[0].validcount;
                     *back++ = bytele->ss;
                 }
             }
-            else if (db[0].ssvisit[neigh.otherss - first] != db[0].validcount
+            else if (db[0].items[neigh.otherss - first].visit != db[0].validcount
                 && m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
             {
-                db[0].ssvisit[neigh.otherss - first] = db[0].validcount;
+                db[0].items[neigh.otherss - first].visit = db[0].validcount;
                 *back++ = neigh.otherss;
             }
         }
@@ -326,24 +322,18 @@ void PathFinder::DataBox::IncrementValidcount()
 {   
     if (sscount != o->m_map->ssectors.getLength())
     {
-        size_t s = (sscount = (unsigned)o->m_map->ssectors.getLength())
-        * sizeof(*ssvisit);
-        
-        ssvisit = erealloc(decltype(ssvisit), ssvisit, s);
-        memset(ssvisit, 0, s);
+       sscount = (unsigned)o->m_map->ssectors.getLength();
+       size_t s = sscount * sizeof(*items);
+       items = erealloc(decltype(items), items, s);
+       memset(items, 0, s);
         validcount = 0;
 
-        ssqueue = erealloc(decltype(ssqueue), ssqueue,
-                           sscount * sizeof(*ssqueue));
-
-        ssprev = erealloc(decltype(ssprev), ssprev, sscount * sizeof(*ssprev));
-        
-        ssdist = erealloc(decltype(ssdist), ssdist, sscount * sizeof(*ssdist));
+        ssqueue = erealloc(decltype(ssqueue), ssqueue, sscount * sizeof(*ssqueue));
     }
     ++validcount;
     if (!validcount)  // wrap around: reset former validcounts!
-        memset(ssvisit, 0xff, sscount * sizeof(*ssvisit));
-
+       for(unsigned i = 0; i < sscount; ++i)
+          items[i].visit = -1;
 }
 
 //

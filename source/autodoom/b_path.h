@@ -125,25 +125,27 @@ private:
 
     struct DataBox
     {
+       struct Item
+       {
+          short visit;
+          const BNeigh *prev;
+          fixed_t dist;
+       };
+
+       Item *items;
+
         unsigned short  validcount;
-        unsigned short* ssvisit;
         unsigned        sscount;
-        const BNeigh**  ssprev;
         const BSubsec** ssqueue;
-        fixed_t*        ssdist;  // used by dijkstra
 
         const PathFinder* o;
 
         void Clear()
         {
-            efree(ssvisit);
-            ssvisit = nullptr;
-            efree(ssprev);
-            ssprev = nullptr;
+           efree(items);
+           items = nullptr;
             efree(ssqueue);
             ssqueue = nullptr;
-            efree(ssdist);
-            ssdist = nullptr;
             sscount = 0;
             validcount = 0;
         }
