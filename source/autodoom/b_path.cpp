@@ -51,7 +51,7 @@
 // Uses a search for the nearest goal (not knowing where to go)
 // It uses Dijkstra graph search, needed because of varying subsector sizes.
 //
-bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
+bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool urgent,
                               bool(*isGoal)(const BSubsec&, BotPathEnd&, void*),
                               void* parm)
 {
@@ -78,6 +78,7 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
    db[1].items[index].visit = db[1].validcount;
    db[1].items[index].prev = nullptr;
    db[1].items[index].dist = 0;
+   db[1].items[index].pos = pos;
 
     nhe.ss = &source;
     nhe.dist = 0;
@@ -91,7 +92,7 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
     const TeleItem* bytele;
     fixed_t tentative;
 
-   m_ignoreslime = ignoreslime;
+   m_urgent = urgent;
 
 //    std::make_heap(front, back, compare);
     fixed_t founddist;
@@ -129,12 +130,24 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
             if (bytele)
             {
                 index = (int)(bytele->ss - first);
+
+               fixed_t newdist;
+//               if(m_urgent)
+               {
+                  v2fixed_t org = db[1].items[t - first].pos;
+                  v2fixed_t proj = B_ProjectionOnSegment(org, neigh.v, neigh.d, 0);
+                  newdist = (proj - org).sqrtabs();
+               }
+//               else
+//                  newdist = (t->mid - neigh.v - neigh.d / 2).sqrtabs();
+
+               tentative = getAdjustedDistance(db[1].items[t - first].dist, newdist, t);
                 
-               tentative = getAdjustedDistance(db[1].items[t - first].dist,
-                                               (t->mid - neigh.v - neigh.d / 2).sqrtabs(), t);
-                
-                if (db[1].items[index].visit != db[1].validcount || tentative < db[1].items[index].dist)
-                    pushSubsectorToHeap(neigh, index, *bytele->ss, tentative);
+                if (db[1].items[index].visit != db[1].validcount ||
+                    tentative < db[1].items[index].dist)
+                {
+                    pushSubsectorToHeap(neigh, index, *bytele->ss, tentative, bytele->v);
+                }
             }
             else
             {
@@ -148,12 +161,26 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
 //                }
 //                else
 
-               tentative = getAdjustedDistance(db[1].items[t - first].dist, neigh.dist, t);
+               fixed_t newdist;
+               v2fixed_t proj;
+//               if(m_urgent)
+               {
+                  v2fixed_t org = db[1].items[t - first].pos;
+                  proj = B_ProjectionOnSegment(org, neigh.v, neigh.d, 0);
+                  newdist = (proj - org).sqrtabs();
+               }
+//               else
+//               {
+//                  newdist = neigh.dist;
+//                  proj = neigh.otherss->mid;
+//               }
+               tentative = getAdjustedDistance(db[1].items[t - first].dist, newdist, t);
                 
-                if((db[1].items[index].visit != db[1].validcount || tentative < db[1].items[index].dist) &&
+                if((db[1].items[index].visit != db[1].validcount ||
+                    tentative < db[1].items[index].dist) &&
                    m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
                 {
-                    pushSubsectorToHeap(neigh, index, *neigh.otherss, tentative);
+                    pushSubsectorToHeap(neigh, index, *neigh.otherss, tentative, proj);
                 }
             }
         }
@@ -161,11 +188,13 @@ bool PathFinder::FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
     return false;
 }
 
-void PathFinder::pushSubsectorToHeap(const BNeigh& neigh, int index, const BSubsec& ss, fixed_t tentative)
+void PathFinder::pushSubsectorToHeap(const BNeigh& neigh, int index, const BSubsec& ss,
+                                     fixed_t tentative, v2fixed_t pos)
 {
     db[1].items[index].visit = db[1].validcount;
     db[1].items[index].prev = &neigh;
     db[1].items[index].dist = tentative;
+   db[1].items[index].pos = pos;
 
     HeapEntry &nhe = m_dijkHeap.addNew();
     nhe.dist = tentative;
@@ -236,7 +265,7 @@ fixed_t PathFinder::getAdjustedDistance(fixed_t base, fixed_t add, const BSubsec
    int factor = 1;
 
    const sector_t *sector = t->msector->getFloorSector();
-   if(enable_nuke && !m_ignoreslime && sector->damage > 0 &&
+   if(enable_nuke && !m_urgent && sector->damage > 0 &&
       (!m_player->powers[pw_ironfeet] || sector->damageflags & SDMG_IGNORESUIT))
    {
       if(sector->damagemask <= 0)

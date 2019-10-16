@@ -92,7 +92,7 @@ public:
         Clear();
     }
 
-    bool FindNextGoal(v2fixed_t pos, BotPath& path, bool ignoreslime,
+    bool FindNextGoal(v2fixed_t pos, BotPath& path, bool urgent,
                       bool(*isGoal)(const BSubsec&, BotPathEnd&, void*), void* parm = nullptr);
     bool AvailableGoals(const BSubsec& source, std::unordered_set<const BSubsec*>* dests, PathResult(*isGoal)(const BSubsec&, void*), void* parm = nullptr);
 
@@ -113,7 +113,7 @@ public:
         db[1].Clear();
         m_teleCache.clear();
         m_dijkHeap.clear();
-       m_ignoreslime = false;
+       m_urgent = false;
     }
 
 private:
@@ -130,6 +130,7 @@ private:
           short visit;
           const BNeigh *prev;
           fixed_t dist;
+          v2fixed_t pos;
        };
 
        Item *items;
@@ -171,7 +172,7 @@ private:
     PODCollection<HeapEntry>    m_dijkHeap;
     
     void            pushSubsectorToHeap(const BNeigh& neigh, int index, 
-                                        const BSubsec& ss, fixed_t tentative);
+                                        const BSubsec& ss, fixed_t tentative, v2fixed_t pos);
     const TeleItem* checkTeleportation(const BNeigh& neigh);
    fixed_t getAdjustedDistance(fixed_t base, fixed_t add, const BSubsec *t) const;
 
@@ -180,7 +181,7 @@ private:
 
     // OPTIM NOTE: please measure whether short or int is better
    const player_t *m_player;
-   bool m_ignoreslime = false;
+   bool m_urgent = false;
 
     std::unordered_map<const line_t*, TeleItem> m_teleCache; // teleporter cache
 };
