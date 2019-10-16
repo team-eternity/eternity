@@ -237,12 +237,35 @@ LevelStateStack::PushResult LevelStateStack::Push(const line_t& line, const play
    
    // Prepare the new list of indices to the global stack
    PODCollection<int>& coll = g_indexListStack.addNew();
-   
+
+   // Before/after checking
+   SectorHeightStack *shs;
+   bool ceilterm, floorterm;
    bool timed = false;
+   auto preset = [&ceilterm, &floorterm, &shs, &timed](int secnum)
+   {
+      if(!timed)
+      {
+         shs = &g_affectedSectors[secnum];
+         ceilterm = shs->isCeilingTerminal();
+         floorterm = shs->isFloorTerminal();
+      }
+   };
+   auto checkchange = [&ceilterm, &floorterm, &shs, &timed]()
+   {
+      if(!timed && (shs->isFloorTerminal() != floorterm || shs->isCeilingTerminal() != ceilterm))
+         timed = true;
+   };
+   
    if(B_LineTriggersBackSector(line))
    {
       if(line.backsector)
+      {
+         int secnum = eindex(line.backsector - sectors);
+         preset(secnum);
          B_pushSectorHeights((int)(line.backsector - sectors), line, coll, player);
+         checkchange();
+      }
    }
    else
    {
@@ -255,17 +278,10 @@ LevelStateStack::PushResult LevelStateStack::Push(const line_t& line, const play
             B_Log("Exclude %d", secnum);
             continue;
          }
-         auto &shs = g_affectedSectors[secnum];
-         bool ceilterm, floorterm;
-         if(!timed)
-         {
-            ceilterm = shs.isCeilingTerminal();
-            floorterm = shs.isFloorTerminal();
-         }
+
+         preset(secnum);
          B_pushSectorHeights(secnum, line, coll, player);
-         // Only update status for remote sectors
-         if(!timed && (shs.isFloorTerminal() != floorterm || shs.isCeilingTerminal() != ceilterm))
-            timed = true;
+         checkchange();
       }
    }
    
