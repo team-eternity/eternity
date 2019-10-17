@@ -123,6 +123,8 @@ void Bot::mapInit()
    m_lastHelpCry = 0;
    m_lastDunnoMessage = 0;
    m_lastExitMessage = 0;
+
+   m_userInputTimeout = 0;
 }
 
 //
@@ -1812,6 +1814,53 @@ void Bot::cruiseControl(v2fixed_t npos, bool moveslow)
 }
 
 //
+// Check if user has input
+//
+static bool B_userHasInput()
+{
+   static const int actions[] =
+   {
+      ka_forward,
+      ka_backward,
+      ka_left,
+      ka_right,
+      ka_moveleft,
+      ka_moveright,
+      ka_use,
+      ka_strafe,
+      ka_attack,
+      ka_attack_alt,
+      ka_reload,
+      ka_zoom,
+      ka_user1,
+      ka_user2,
+      ka_user3,
+      ka_user4,
+      ka_flip,
+      ka_jump,
+      ka_flyup,
+      ka_flydown,
+      ka_flycenter,
+      ka_weapon1,
+      ka_weapon2,
+      ka_weapon3,
+      ka_weapon4,
+      ka_weapon5,
+      ka_weapon6,
+      ka_weapon7,
+      ka_weapon8,
+      ka_weapon9,
+      ka_nextweapon,
+      ka_weaponup,
+      ka_weapondown,
+   };
+   for(int action: actions)
+      if(g_input.gameactions[action])
+         return true;
+   return false;
+}
+
+//
 // Bot::doCommand
 //
 // Called from G_Ticker right before ticcmd is passed into the player. Gets the
@@ -1823,7 +1872,17 @@ void Bot::doCommand()
 {
    if(!active)
       return;  // do nothing if out of game
-   if(pl - players != consoleplayer)
+   if(pl == &players[consoleplayer])
+   {
+      if(gamestate == GS_LEVEL)
+      {
+         if(B_userHasInput())
+            m_userInputTimeout = gametic + 35;
+         if(gametic < m_userInputTimeout)
+            return;
+      }
+   }
+   else
    {
       // If bot isn't the console player but is controlled from this computer, then it's not a real
       // multiplayer peer, so we need to initialize its ticcmd here.

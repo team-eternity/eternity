@@ -134,6 +134,7 @@ class Bot : public ZoneObject
    bool                     m_intoSwitch = false;
    const Mobj*              m_currentTargetMobj = nullptr;
    int                     m_exitDelay = 0;
+   int m_userInputTimeout = 0;
 
    // Chat time keepers
    int                      m_lastHelpCry = 0;
