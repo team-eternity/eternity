@@ -264,10 +264,6 @@ public:
    static bool demoPlayingFlag;
    // if playing, this flag will be true during P_SetupLevel
 
-   // Common affairs
-   PODCollection<const Mobj*> livingMonsters;    // list of shootable objects
-   PODCollection<const Mobj*> thrownProjectiles;
-
    //
    // Holds static info about a sector
    //
@@ -284,15 +280,12 @@ public:
    };
    SectorTrait* sectorFlags;
    
-   PODCollection<const line_t*> gunLines;
-
    // Defined in b_trace.cpp
    bool pathTraverse(divline_t trace,
                      const std::function<bool(const Line&, const divline_t &, fixed_t)> &lineHit) const;
 
 private:
     // Post-processing
-    void getAllLivingMonsters();
     void getDoorSectors();
     static void SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line);
 

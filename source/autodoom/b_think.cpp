@@ -836,44 +836,41 @@ void Bot::enemyVisible(Collection<Target>& targets)
     camsightparams_t cam;
     cam.setLookerMobj(pl->mo);
 
-   // list gets modified during iteration, so don't use for looping
-     auto it = botMap->livingMonsters.begin();
-     while(it != botMap->livingMonsters.end())
-     {
-         const Mobj* m = *it;
-         if (m->health <= 0 || !m->isBotTargettable())
-         {
-             botMap->livingMonsters.erase(it);
-             continue;
-         }
-
-        Target target(*m, *pl->mo, false);
+   for(const Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+   {
+      const Mobj *mo = thinker_cast<const Mobj *>(th);
+      if(!mo)
+         continue;
+      if(mo->flags & MF_SHOOTABLE && !(mo->flags & (MF_NOBLOCKMAP | MF_FRIEND)) && mo->health > 0 &&
+         (!mo->player || deathmatch))
+      {
+         Target target(*mo, *pl->mo, false);
          if (target.dist < MISSILERANGE / 2)
          {
-            cam.setTargetMobj(m);
+            cam.setTargetMobj(mo);
             if(CAM_CheckSight(cam))
             {
                targets.add(std::move(target));
                std::push_heap(targets.begin(), targets.end());
             }
          }
-
-         ++it;
-     }
-
-   for(auto it = botMap->thrownProjectiles.begin(); it != botMap->thrownProjectiles.end(); ++it)
-   {
-      const Mobj* m = *it;
-      Target target(*m, *pl->mo, true);
-
-      if (target.dist < MISSILERANGE / 2)
+         continue;
+      }
+      if(mo->flags & MF_MISSILE && mo->flags & MF_NOBLOCKMAP && mo->momx | mo->momy && mo->damage &&
+         mo->target != pl->mo)
       {
-         cam.setTargetMobj(m);
-         if (CAM_CheckSight(cam))
+         Target target(*mo, *pl->mo, true);
+
+         if (target.dist < MISSILERANGE / 2)
          {
-            targets.add(std::move(target));
-            std::push_heap(targets.begin(), targets.end());
+            cam.setTargetMobj(mo);
+            if (CAM_CheckSight(cam))
+            {
+               targets.add(std::move(target));
+               std::push_heap(targets.begin(), targets.end());
+            }
          }
+         continue;
       }
    }
 
@@ -886,30 +883,6 @@ void Bot::enemyVisible(Collection<Target>& targets)
       targets.add({ *m_path.end.walkLine, *pl->mo });
       std::push_heap(targets.begin(), targets.end());
    }
-
-//    fixed_t bulletheight = CAM_getShootHeight(*pl->mo);
-//    for(const line_t* line : botMap->gunLines)
-//    {
-//        const sector_t *sector = line->frontsector;
-//        if(!sector || sector->floorheight > bulletheight || sector->ceilingheight < bulletheight)
-//            continue;
-//
-//
-//       Target target(*m_path.end.walkLine, *pl->mo);
-//        cam.tgroupid = line->frontsector->groupid;
-//        cam.tx = target.coord.x;
-//        cam.ty = target.coord.y;
-//        cam.tz = sector->floorheight;
-//        cam.theight = sector->ceilingheight - sector->floorheight;
-//
-//        if(target.dist < MISSILERANGE / 2 && CAM_CheckSight(cam) &&
-//           LevelStateStack::Push(*line, *pl, nullptr))
-//        {
-//           LevelStateStack::Pop();
-//           targets.add(std::move(target));
-//           std::push_heap(targets.begin(), targets.end());
-//        }
-//    }
 }
 
 void Bot::pickRandomWeapon(const Target& target)

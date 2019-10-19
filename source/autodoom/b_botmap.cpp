@@ -510,8 +510,6 @@ static void B_setSpecLinePositions()
 
    static const angle_t angles[] = { ANG90 / 10, ANG45 + ANG45 / 3 };
    
-   botMap->gunLines.makeEmpty();
-   
    for (int i = 0; i < numlines; ++i)
    {
       const line_t &line = lines[i];
@@ -520,7 +518,6 @@ static void B_setSpecLinePositions()
          B_traceTriggerPoints(line, USERANGE, false, 0);
       else if(EV_IsGunSpecial(line))
       {
-         botMap->gunLines.add(&line);
          B_traceTriggerPoints(line, MISSILERANGE / 2, true, 0);
          for(angle_t ang: angles)
          {
@@ -602,21 +599,6 @@ static void B_buildTempBotMapFromScratch(fixed_t radius, const char *digest)
 	delete tempBotMap;
 	B_MEASURE_CLOCK(deleteTempBotMap)
 
-}
-
-void BotMap::getAllLivingMonsters()
-{
-    Thinker* th;
-    const Mobj* mo;
-    livingMonsters.makeEmpty();
-    for (th = thinkercap.next; th != &thinkercap; th = th->next)
-    {
-        mo = thinker_cast<const Mobj*>(th);
-        if (mo && mo->isBotTargettable())
-        {
-            livingMonsters.add(mo);
-        }
-    }
 }
 
 void BotMap::SpecialIsDoor(SectorTrait::DoorInfo& door, const line_t* line)
@@ -1376,9 +1358,6 @@ void BotMap::Build()
    
    // Place all special lines on it
    B_setSpecLinePositions();
-
-   // Find all living monsters
-   botMap->getAllLivingMonsters();
 
    // Find all doors
    botMap->getDoorSectors();

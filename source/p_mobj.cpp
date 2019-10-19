@@ -397,11 +397,6 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
       if(++mo->counters[1] < mo->counters[2])
          return;
    }
-   
-   if(botMap && (!mo->target || !mo->target->player))
-   {
-      botMap->thrownProjectiles.eraseItem(mo);
-   }
 
    mo->momx = mo->momy = mo->momz = 0;
 
@@ -1979,12 +1974,6 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
          mobj->colour = (info->flags & MF_TRANSLATION) >> MF_TRANSSHIFT;
    }
 
-   // IOANCH 20140812: add to bot list
-   if (botMap && mobj->isBotTargettable())
-   {
-       botMap->livingMonsters.add(mobj);
-   }
-
    return mobj;
 }
 
@@ -3028,12 +3017,6 @@ Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo)
 
    P_CheckMissileSpawn(mo);
 
-   // IOANCH: register missile as thrown, if by monster
-   if(botMap && (!mo->target || !mo->target->player))
-   {
-      botMap->thrownProjectiles.add(mo);
-   }
-   
    return mo;
 }
 

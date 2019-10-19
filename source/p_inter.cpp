@@ -1861,12 +1861,6 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
 
    corpse->health = corpse->getModifiedSpawnHealth();
 
-   // ioanch 20160612: restore into bot map
-   if(botMap && corpse->isBotTargettable())
-   {
-      botMap->livingMonsters.add(corpse);
-   }
-
    P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98
 
    if(demo_version >= 203)
