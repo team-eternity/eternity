@@ -841,36 +841,25 @@ void Bot::enemyVisible(Collection<Target>& targets)
       const Mobj *mo = thinker_cast<const Mobj *>(th);
       if(!mo)
          continue;
+      Target target;
       if(mo->flags & MF_SHOOTABLE && !(mo->flags & (MF_NOBLOCKMAP | MF_FRIEND)) && mo->health > 0 &&
          (!mo->player || deathmatch))
       {
-         Target target(*mo, *pl->mo, false);
-         if (target.dist < MISSILERANGE / 2)
-         {
-            cam.setTargetMobj(mo);
-            if(CAM_CheckSight(cam))
-            {
-               targets.add(std::move(target));
-               std::push_heap(targets.begin(), targets.end());
-            }
-         }
-         continue;
+         target = Target(*mo, *pl->mo, false);
       }
-      if(mo->flags & MF_MISSILE && mo->flags & MF_NOBLOCKMAP && mo->momx | mo->momy && mo->damage &&
-         mo->target != pl->mo)
+      else if(mo->flags & MF_MISSILE && mo->flags & MF_NOBLOCKMAP && mo->momx | mo->momy &&
+              mo->damage && mo->target != pl->mo)
       {
-         Target target(*mo, *pl->mo, true);
-
-         if (target.dist < MISSILERANGE / 2)
+         target = Target(*mo, *pl->mo, true);
+      }
+      if (target.mobj && target.dist < MISSILERANGE / 2)
+      {
+         cam.setTargetMobj(mo);
+         if (CAM_CheckSight(cam))
          {
-            cam.setTargetMobj(mo);
-            if (CAM_CheckSight(cam))
-            {
-               targets.add(std::move(target));
-               std::push_heap(targets.begin(), targets.end());
-            }
+            targets.add(std::move(target));
+            std::push_heap(targets.begin(), targets.end());
          }
-         continue;
       }
    }
 
@@ -1128,13 +1117,11 @@ void Bot::pickBestWeapon(const Target &target)
 
 void Bot::doCombatAI(const Collection<Target>& targets)
 {
-    fixed_t mx, my, nx, ny;
-    mx = pl->mo->x;
-    my = pl->mo->y;
-    nx = targets[0].coord.x;
-    ny = targets[0].coord.y;
+   v2fixed_t mpos, npos;
+   mpos = v2fixed_t(*pl->mo);
+   npos = targets[0].coord;
     angle_t dangle, tangle;
-    tangle = P_PointToAngle(mx, my, nx, ny);
+   tangle = (npos - mpos).angle();
     dangle = tangle - pl->mo->angle;
 
     // Find the most threatening monster enemy, if the first target is not a line
@@ -1149,7 +1136,7 @@ void Bot::doCombatAI(const Collection<Target>& targets)
     P_SetTarget(&m_currentTargetMobj,
                 highestThreat->type != TargetMonster ? nullptr : highestThreat->mobj);
 
-    angle_t highestTangle = P_PointToAngle(mx, my, highestThreat->coord.x, highestThreat->coord.y);
+    angle_t highestTangle = (highestThreat->coord - mpos).angle();
 
     int16_t angleturn = (int16_t)(highestTangle >> 16) - (int16_t)(pl->mo->angle >> 16);
     angleturn >>= 2;
@@ -1177,7 +1164,7 @@ void Bot::doCombatAI(const Collection<Target>& targets)
     {
        const BotWeaponInfo &bwi = g_botweapons[pl->pclass][pl->readyweapon];
        const Mobj &t = *linetarget;
-       fixed_t dist = (v2fixed_t(t) - v2fixed_t(mx, my)).sqrtabs();
+       fixed_t dist = (v2fixed_t(t) - mpos).sqrtabs();
 
        const double currentDmgRate =
        bwi.calcHitscanDamage(dist, t.radius, t.height,
@@ -1204,8 +1191,8 @@ void Bot::doCombatAI(const Collection<Target>& targets)
     if(targets[0].type == TargetLine && pl->readyweapon)
     {
         angle_t vang[2];
-        vang[0] = P_PointToAngle(mx, my, targets[0].gline->v1->x, targets[0].gline->v1->y);
-        vang[1] = P_PointToAngle(mx, my, targets[0].gline->v2->x, targets[0].gline->v2->y);
+        vang[0] = (v2fixed_t(*targets[0].gline->v1) - mpos).angle();
+        vang[1] = (v2fixed_t(*targets[0].gline->v2) - mpos).angle();
         
         if(vang[1] - vang[0] > pl->mo->angle - vang[0] ||
            vang[0] - vang[1] > pl->mo->angle - vang[1])
@@ -1273,10 +1260,10 @@ void Bot::doCombatAI(const Collection<Target>& targets)
             {
                if(!stepLedges(true, {}))
                {
-                   fixed_t dist = (v2fixed_t(nx, ny) - v2fixed_t(mx, my)).sqrtabs();
+                   fixed_t dist = (npos - mpos).sqrtabs();
 
                   // TODO: portal-aware
-                  int explodist = (emax(D_abs(nx - mx), D_abs(ny - my)) - pl->mo->radius) >> FRACBITS;
+                  int explodist = ((npos - mpos).chebabs() - pl->mo->radius) >> FRACBITS;
                   if(explodist < 0)
                      explodist = 0;
 
