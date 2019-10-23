@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+23.10.2019
+
+FEATURE: Added the Generic_Stairs special. Needed for proper support of BOOM ge-
+         neralized stairs, which the current parameterized specials aren't
+         capable of.
+
+--------------------------------------------------------------------------------
 22.09.2019
 
 BUGFIX: If there are multiple textures with the same name in TEXTURE1+TEXTURE2,
