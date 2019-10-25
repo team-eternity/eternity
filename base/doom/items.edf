@@ -431,7 +431,7 @@ powereffect Allmap
   duration 1
   type     PowerAllmap
 
-  +overridesself
+  -overridesself
   +permanent
 }
 

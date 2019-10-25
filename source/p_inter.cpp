@@ -618,7 +618,8 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       return false; // There's no power for the type provided
 
    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
-   if(!power->getInt("overridesself", 0) && player->powers[powerNum] >  4 * 32)
+   if(!power->getInt("overridesself", 0) &&
+      (player->powers[powerNum] >  4 * 32 || player->powers[powerNum] < 0))
       return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
