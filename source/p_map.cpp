@@ -910,9 +910,9 @@ int P_MissileBlockHeight(Mobj *mo)
 //
 // True if missile damage should be allowed
 //
-bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
+inline static bool P_allowMissileDamage(const Mobj &shooter, const Mobj &target)
 {
-   return target.player || (shooter.type == target.type &&
+   return target.player || deh_species_infighting || (shooter.type == target.type &&
                             (shooter.flags4 & MF4_HARMSPECIESMISSILE ||
                              (shooter.flags4 & MF4_FRIENDFOEMISSILE &&
                               (shooter.flags ^ target.flags) & MF_FRIEND))) ||
@@ -959,7 +959,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
       {
          if(thing == clip.thing->target)
             return ItemCheck_pass;   // Don't hit originator.
-         if(!P_AllowMissileDamage(*clip.thing->target, *thing))
+         if(!P_allowMissileDamage(*clip.thing->target, *thing))
             return ItemCheck_hit;
       }
       

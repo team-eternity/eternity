@@ -14,6 +14,8 @@ BUGFIX: For macOS, fixed the failure to start Eternity from Terminal if its
         locale was set to non-English settings. This may apply to other
         UNIX-like systems too.
 
+Feature: Finally added support for Dehacked "Monsters Infight" misc setting.
+
 --------------------------------------------------------------------------------
 23.10.2019
 

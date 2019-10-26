@@ -108,6 +108,8 @@ extern int demo_subversion;
 // killough 7/19/98: whether monsters should fight against each other
 extern int monster_infighting, default_monster_infighting;
 
+extern bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
+
 extern int monkeys, default_monkeys;
 
 // v1.1-like pitched sounds

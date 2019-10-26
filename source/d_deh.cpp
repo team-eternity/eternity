@@ -1935,11 +1935,25 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
          bfgcells = bfginfo.ammopershot = value;
       }
       else if(!strcasecmp(key, "Monsters Infight"))
-         // Unknown--not a specific number it seems, but
-         // the logic has to be here somewhere or
-         // it'd happen always
-         /* No such switch in DOOM - nop */ 
-         ;
+      {
+         // FROM CHOCOLATE-DOOM
+         // Dehacked: "Monsters infight"
+         // This controls whether monsters can harm other monsters of the same species. For example,
+         // whether an imp fireball will damage other imps. The value of this in dehacked patches is
+         // weird - '202' means off, while '221' means on.
+         switch(value)
+         {
+            case 202:
+               deh_species_infighting = false;
+               break;
+            case 221:
+               deh_species_infighting = true;
+               break;
+            default:
+               deh_LogPrintf("Invalid value for 'Monsters Infight': %d\n", value);
+               break;
+         }
+      }
       else
          deh_LogPrintf("Invalid misc item string index for '%s'\n", key);
    }
