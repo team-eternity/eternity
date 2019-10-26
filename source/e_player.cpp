@@ -432,7 +432,7 @@ static void E_freeRebornItems(playerclass_t *pc)
 //
 // Process a single rebornitem for the player's default inventory.
 //
-static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int index)
+static void E_processRebornItem(cfg_t *item, const playerclass_t *pc, unsigned int index)
 {
    reborninventory_t *ri = &pc->rebornitems[index];
 
