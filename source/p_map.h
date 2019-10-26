@@ -81,6 +81,17 @@ void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
 
 bool P_BlockedAsMonster(const Mobj &mo);
 
+//
+// Various results
+//
+enum ItemCheckResult
+{
+   ItemCheck_furtherNeeded,
+   ItemCheck_pass,
+   ItemCheck_hit
+};
+ItemCheckResult P_CheckThingCommon(Mobj *thing);
+
 //=============================================================================
 //
 // Teleportation
