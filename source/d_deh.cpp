@@ -449,28 +449,6 @@ const char *deh_weapon[] =
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
 
-const char *deh_misc[] =
-{
-  "Initial Health",    // initial_health
-  "Initial Bullets",   // initial_bullets
-  "Max Health",        // maxhealth
-  "Max Armor",         // max_armor
-  "Green Armor Class", // green_armor_class
-  "Blue Armor Class",  // blue_armor_class
-  "Max Soulsphere",    // max_soul
-  "Soulsphere Health", // soul_health
-  "Megasphere Health", // mega_health
-  "God Mode Health",   // god_health
-  "IDFA Armor",        // idfa_armor
-  "IDFA Armor Class",  // idfa_armor_class
-  "IDKFA Armor",       // idkfa_armor
-  "IDKFA Armor Class", // idkfa_armor_class
-  "BFG Cells/Shot",    // BFGCELLS
-  "Monsters Infight"   // Unknown--not a specific number it seems, but
-                       // the logic has to be here somewhere or
-                       // it'd happen always
-};
-
 // CHEATS - Dehacked block name = "Cheat"
 // Usage: Cheat 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
@@ -1851,13 +1829,13 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       // Otherwise it's ok
       deh_LogPrintf("Processing Misc item '%s'\n", key);
       
-      if(!strcasecmp(key,deh_misc[0]))       // Initial Health
+      if(!strcasecmp(key, "Initial Health"))
       {
          playerclass_t *pc;
          if((pc = E_PlayerClassForName("DoomMarine")))
             pc->initialhealth = value;
       }
-      else if(!strcasecmp(key,deh_misc[1]))  // Initial Bullets
+      else if(!strcasecmp(key, "Initial Bullets"))
       {
          playerclass_t *pc;
          if((pc = E_PlayerClassForName("DoomMarine")))
@@ -1873,7 +1851,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             }
          }
       }
-      else if(!strcasecmp(key,deh_misc[2]))  // Max Health
+      else if(!strcasecmp(key, "Max Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
             fx->setInt("maxamount", value * 2);
@@ -1882,12 +1860,12 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
          if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
             fx->setInt("compatmaxamount", value);
       }
-      else if(!strcasecmp(key,deh_misc[3]))  // Max Armor
+      else if(!strcasecmp(key, "Max Armor"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
             fx->setInt("maxsaveamount", value);
       }
-      else if(!strcasecmp(key,deh_misc[4]))  // Green Armor Class
+      else if(!strcasecmp(key, "Green Armor Class"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_GREENARMOR)))
          {
@@ -1899,7 +1877,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             }
          }
       }
-      else if(!strcasecmp(key,deh_misc[5]))  // Blue Armor Class
+      else if(!strcasecmp(key, "Blue Armor Class"))  // Blue Armor Class
       {
          if((fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
          {
@@ -1911,17 +1889,17 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             }
          }
       }
-      else if(!strcasecmp(key,deh_misc[6]))  // Max Soulsphere
+      else if(!strcasecmp(key, "Max Soulsphere"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
             fx->setInt("maxamount", value);
       }
-      else if(!strcasecmp(key,deh_misc[7]))  // Soulsphere Health
+      else if(!strcasecmp(key, "Soulsphere Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
             fx->setInt("amount", value);
       }
-      else if(!strcasecmp(key,deh_misc[8]))  // Megasphere Health
+      else if(!strcasecmp(key, "Megasphere Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
          {
@@ -1929,16 +1907,16 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             fx->setInt("maxamount", value);
          }
       }
-      else if(!strcasecmp(key,deh_misc[9]))  // God Mode Health
+      else if(!strcasecmp(key, "God Mode Health"))
       {
          god_health = value;
       }
-      else if(!strcasecmp(key,deh_misc[10])) // IDFA Armor
+      else if(!strcasecmp(key, "IDFA Armor"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
             fx->setInt("saveamount", value);
       }
-      else if(!strcasecmp(key,deh_misc[11])) // IDFA Armor Class
+      else if(!strcasecmp(key, "IDFA Armor Class"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
          {
@@ -1946,17 +1924,20 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
             fx->setInt("savedivisor", value > 1 ? 2 : 3);
          }
       }
-      else if(!strcasecmp(key,deh_misc[12])) // IDKFA Armor
+      else if(!strcasecmp(key, "IDKFA Armor"))
          ; //idkfa_armor = value;
-      else if(!strcasecmp(key,deh_misc[13])) // IDKFA Armor Class
+      else if(!strcasecmp(key, "IDKFA Armor Class"))
          ; //idkfa_armor_class = value;
-      else if(!strcasecmp(key,deh_misc[14])) // BFG Cells/Shot
+      else if(!strcasecmp(key, "BFG Cells/Shot"))
       {
          // haleyjd 08/10/02: propagate to weapon info
          weaponinfo_t &bfginfo = *E_WeaponForDEHNum(wp_bfg);
          bfgcells = bfginfo.ammopershot = value;
       }
-      else if(!strcasecmp(key,deh_misc[15])) // Monsters Infight
+      else if(!strcasecmp(key, "Monsters Infight"))
+         // Unknown--not a specific number it seems, but
+         // the logic has to be here somewhere or
+         // it'd happen always
          /* No such switch in DOOM - nop */ 
          ;
       else
