@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+26.10.2019
+
+BUGFIX: For macOS, fixed the failure to start Eternity from Terminal if its
+        locale was set to non-English settings. This may apply to other
+        UNIX-like systems too.
+
+--------------------------------------------------------------------------------
 23.10.2019
 
 FEATURE: Added the Generic_Stairs special. Needed for proper support of BOOM ge-
