@@ -715,7 +715,6 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    const e_pickupfx_t *pickup, *temp;
    bool            pickedup  = false;
    bool            dropped  = false;
-   bool            hadeffect = false;
    const char     *message  = nullptr;
    const char     *sound     = nullptr;
 
