@@ -1248,23 +1248,23 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    {
       for(int j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
-         sprintf(namebuf, "%sST%d%d", facename, i, j);
+         snprintf(namebuf, sizeof(namebuf), "%sST%d%d", facename, i, j);
          faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       }
-      sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
+      snprintf(namebuf, sizeof(namebuf), "%sTR%d0", facename, i);        // turn right
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sTL%d0", facename, i);        // turn left
+      snprintf(namebuf, sizeof(namebuf), "%sTL%d0", facename, i);        // turn left
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sOUCH%d", facename, i);       // ouch!
+      snprintf(namebuf, sizeof(namebuf), "%sOUCH%d", facename, i);       // ouch!
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sEVL%d", facename, i);        // evil grin ;)
+      snprintf(namebuf, sizeof(namebuf), "%sEVL%d", facename, i);        // evil grin ;)
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sKILL%d", facename, i);       // pissed off
+      snprintf(namebuf, sizeof(namebuf), "%sKILL%d", facename, i);       // pissed off
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-   sprintf(namebuf, "%sGOD0",facename);
+   snprintf(namebuf, sizeof(namebuf), "%sGOD0",facename);
    faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-   sprintf(namebuf, "%sDEAD0",facename);
+   snprintf(namebuf, sizeof(namebuf), "%sDEAD0",facename);
    faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 
