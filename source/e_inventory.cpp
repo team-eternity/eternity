@@ -44,6 +44,7 @@
 #include "d_gi.h"
 #include "doomstat.h"
 #include "e_args.h"
+#include "e_player.h"
 #include "e_weapons.h"
 #include "g_game.h"
 #include "info.h"
@@ -98,6 +99,8 @@ itemeffecttype_t E_EffectTypeForName(const char *name)
 // The effects table contains as properties metatables for each effect.
 static MetaTable e_effectsTable;
 
+static void E_makePickupMetatable(cfg_t *cfg, MetaTable *table, MetaTable *prototype);
+
 //
 // E_addItemEffect
 //
@@ -111,7 +114,7 @@ static itemeffect_t *E_addItemEffect(cfg_t *cfg)
    if(!(table = E_ItemEffectForName(name)))
       e_effectsTable.addObject((table = new itemeffect_t(name)));
 
-   E_MetaTableFromCfg(cfg, table);
+   E_makePickupMetatable(cfg, table, nullptr);
 
    return table;
 }
@@ -225,8 +228,8 @@ static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
 
 // Health fields
 #define HEALTHFX_FIELDS \
-   CFG_INT(KEY_AMOUNT,     0,  CFGF_NONE), /* amount to recover          */   \
-   CFG_INT(KEY_MAXAMOUNT,  0,  CFGF_NONE), /* max that can be recovered  */   \
+   CFG_STR(KEY_AMOUNT,   "0",  CFGF_LIST), /* amount to recover          */   \
+   CFG_STR(KEY_MAXAMOUNT,"0",  CFGF_LIST), /* max that can be recovered  */   \
    CFG_STR(KEY_LOWMESSAGE, "", CFGF_NONE), /* message if health < amount */   \
                                                                               \
    CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), /* if +, always pick up */ \
@@ -247,10 +250,10 @@ cfg_opt_t edf_healthfx_delta_opts[] =
 
 // Armor fields
 #define ARMORFX_FIELDS \
-   CFG_INT(KEY_SAVEAMOUNT,    -1,  CFGF_NONE), /* amount of armor given          */                 \
-   CFG_INT(KEY_SAVEFACTOR,     1,  CFGF_NONE), /* numerator of save percentage   */                 \
-   CFG_INT(KEY_SAVEDIVISOR,    3,  CFGF_NONE), /* denominator of save percentage */                 \
-   CFG_INT(KEY_MAXSAVEAMOUNT,  0,  CFGF_NONE), /* max save amount, for bonuses   */                 \
+   CFG_STR(KEY_SAVEAMOUNT,    "-1",  CFGF_LIST), /* amount of armor given          */                 \
+   CFG_STR(KEY_SAVEFACTOR,     "1",  CFGF_LIST), /* numerator of save percentage   */                 \
+   CFG_STR(KEY_SAVEDIVISOR,    "3",  CFGF_LIST), /* denominator of save percentage */                 \
+   CFG_STR(KEY_MAXSAVEAMOUNT,  "0",  CFGF_LIST), /* max save amount, for bonuses   */                 \
                                                                                                     \
    CFG_FLAG(KEY_ALWAYSPICKUP,  0, CFGF_SIGNPREFIX), /* if +, always pick up                      */ \
    CFG_FLAG(KEY_ADDITIVE,      0, CFGF_SIGNPREFIX), /* if +, adds to the current amount of armor */ \
@@ -272,8 +275,8 @@ cfg_opt_t edf_armorfx_delta_opts[] =
 // Ammo giver fields
 #define AMMOFX_FIELDS \
    CFG_STR(KEY_AMMO,       "", CFGF_NONE), /* name of ammo type artifact to give        */               \
-   CFG_INT(KEY_AMOUNT,     0,  CFGF_NONE), /* amount of ammo given                      */               \
-   CFG_INT(KEY_DROPAMOUNT, 0,  CFGF_NONE), /* amount of ammo given when item is dropped */               \
+   CFG_STR(KEY_AMOUNT,   "0",  CFGF_LIST), /* amount of ammo given                      */               \
+   CFG_STR(KEY_DROPAMOUNT, "0",  CFGF_LIST), /* amount of ammo given when item is dropped */               \
                                                                                                          \
    CFG_FLAG(KEY_IGNORESKILL, 0, CFGF_SIGNPREFIX), /* if +, does not double on skills that double ammo */ \
                                                                                                          \
@@ -292,7 +295,7 @@ cfg_opt_t edf_ammofx_delta_opts[] =
 
 // Powerup effect fields
 #define POWERFX_FIELDS \
-   CFG_INT(KEY_DURATION,  -1, CFGF_NONE), /* length of time to last         */                       \
+   CFG_STR(KEY_DURATION,  "-1", CFGF_LIST), /* length of time to last         */                       \
    CFG_STR(KEY_TYPE,      "", CFGF_NONE), /* name of powerup effect to give */                       \
                                                                                                      \
    CFG_FLAG(KEY_ADDITIVETIME,  0, CFGF_SIGNPREFIX), /* if +, adds to current duration */             \
@@ -318,6 +321,7 @@ cfg_opt_t edf_powerfx_delta_opts[] =
 // NOTE TO SELF: Ratio in DOOMs is 2N, N, 5N, N
 static cfg_opt_t ammogiven_opts[] =
 {
+   // FIXME: not sure how to do lists in MVPROPS
    CFG_STR(KEY_TYPE,         "", CFGF_NONE), // type of ammo given
    CFG_INT(KEY_AMMOGIVE,     -1, CFGF_NONE), // amount of ammo given normally
    CFG_INT(KEY_AMMODROPPED,  -1, CFGF_NONE), // amount of ammo given when dropped
@@ -396,9 +400,9 @@ static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
 
 // Artifact fields
 #define ARTIFACT_FIELDS \
-   CFG_INT(KEY_AMOUNT,          1,  CFGF_NONE), /* amount gained with one pickup               */    \
-   CFG_INT(KEY_MAXAMOUNT,       1,  CFGF_NONE), /* max amount that can be carried in inventory */    \
-   CFG_INT(KEY_INTERHUBAMOUNT,  0,  CFGF_NONE), /* amount carryable between hubs (or levels)   */    \
+   CFG_STR(KEY_AMOUNT,        "1",  CFGF_LIST), /* amount gained with one pickup               */    \
+   CFG_STR(KEY_MAXAMOUNT,     "1",  CFGF_LIST), /* max amount that can be carried in inventory */    \
+   CFG_STR(KEY_INTERHUBAMOUNT, "0", CFGF_LIST), /* amount carryable between hubs (or levels)   */    \
    CFG_INT(KEY_SORTORDER,       0,  CFGF_NONE), /* relative ordering within inventory          */    \
    CFG_STR(KEY_ICON,            "", CFGF_NONE), /* icon used on inventory bars                 */    \
    CFG_INT(KEY_ICON_XOFFS,      0,  CFGF_NONE), /* x offset of icon (+ is left)                */    \
@@ -423,8 +427,8 @@ static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
    /* You can set the keys on other artifacts, but they'll have no effect. */                        \
                                                                                                      \
    /* Ammo sub-type */                                                                               \
-   CFG_INT(KEY_BACKPACKAMOUNT, 0, CFGF_NONE),                                                        \
-   CFG_INT(KEY_BACKPACKMAXAMT, 0, CFGF_NONE),                                                        \
+   CFG_STR(KEY_BACKPACKAMOUNT, "0", CFGF_LIST),                                                        \
+   CFG_STR(KEY_BACKPACKMAXAMT, "0", CFGF_LIST),                                                        \
                                                                                                      \
    CFG_END()
 
@@ -460,6 +464,61 @@ static const char *e_ItemDeltaSectionNames[NUMITEMFX] =
    EDF_SEC_WEAPGFXDELTA,
    EDF_SEC_ARTIFACTDELTA
 };
+
+//
+// Recursive call
+//
+static void EREC_makePickupMetatable(MetaTable *table)
+{
+   MetaString *mstring = nullptr;
+   static const size_t keys[] =
+   {
+      keyAmount,
+      keyBackpackAmount,
+      keyBackpackMaxAmt,
+      keyMaxAmount,
+      keyInterHubAmount,
+      MetaKeyIndex(KEY_AMMOCOOPSTAY),
+      MetaKeyIndex(KEY_AMMODMSTAY),
+      MetaKeyIndex(KEY_AMMODROPPED),
+      MetaKeyIndex(KEY_AMMOGIVE),
+      MetaKeyIndex(KEY_DROPAMOUNT),
+      MetaKeyIndex(KEY_DURATION),
+      MetaKeyIndex(KEY_MAXSAVEAMOUNT),
+      MetaKeyIndex(KEY_SAVEAMOUNT),
+      MetaKeyIndex(KEY_SAVEDIVISOR),
+      MetaKeyIndex(KEY_SAVEFACTOR),
+   };
+   for(auto key : keys)
+   {
+      while((mstring = table->getNextKeyAndTypeEx(mstring, key)))
+      {
+         char *endptr = nullptr;
+         long val = strtol(mstring->getValue(), &endptr, 0);
+         if(!*endptr)
+         {
+            // we have a valid long
+            table->setInt(key, int(val));
+            table->removeObject(mstring);
+            delete mstring;
+            mstring = nullptr;   // restart searching
+         }
+      }
+   }
+   // Also look in nested tables
+   MetaTable *subtable = nullptr;
+   while((subtable = table->getNextTypeEx(subtable)))
+      EREC_makePickupMetatable(subtable);
+}
+
+//
+// Makes a metatable from an EDF configuration and modifies it to fit the int/str duality
+//
+static void E_makePickupMetatable(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
+{
+   E_MetaTableFromCfg(cfg, table, prototype);
+   EREC_makePickupMetatable(table);
+}
 
 //
 // Some delta properties need special handling, so that's done here
@@ -534,7 +593,7 @@ static void E_processItemEffects(cfg_t *cfg)
          MetaTable base(*table); // store the base entries in a copy
 
          // Update table
-         E_MetaTableFromCfg(sec, table, &base);
+         E_makePickupMetatable(sec, table, &base);
 
          E_EDFLogPrintf("\t\t* Processed item delta %u to '%s'\n", secNum, name);
       }
@@ -2007,7 +2066,7 @@ bool E_RemoveBackpack(const player_t *player)
       for(size_t i = 0; i < numAmmo; i++)
       {
          auto ammo      = E_AmmoTypeForIndex(i);
-         int  maxamount = ammo->getInt(keyMaxAmount, 0);
+         int  maxamount = E_FindPClassAmount(*ammo, keyMaxAmount, *player->pclass, 0);
          auto slot      = E_InventorySlotForItem(player, ammo);
 
          if(slot && slot->amount > maxamount)
@@ -2037,14 +2096,14 @@ int E_GetMaxAmountForArtifact(const player_t *player,
    case ARTI_AMMO:
       // ammo may increase the max amount if the player is carrying a backpack
       if(E_PlayerHasBackpack(player))
-         return artifact->getInt(keyBackpackMaxAmt, 0);
+         return E_FindPClassAmount(*artifact, keyBackpackMaxAmt, *player->pclass, 0);
       break;
    default:
       break;
    }
 
    // The default case is to return the ordinary max amount.
-   return artifact->getInt(keyMaxAmount, 1);
+   return E_FindPClassAmount(*artifact, keyMaxAmount, *player->pclass, 1);
 }
 
 //
@@ -2072,6 +2131,27 @@ int E_GetItemOwnedAmountName(const player_t *player, const char *name)
    return (slot ? slot->amount : 0);
 }
 
+//
+// Looks through the player class to find the amount to actually give
+//
+int E_FindPClassAmount(const itemeffect_t &effect, size_t mkey, const playerclass_t &pclass, int def)
+{
+   const MetaString *mstring = nullptr;
+   while((mstring = effect.getNextKeyAndTypeEx(mstring, mkey)))
+   {
+      int classval = pclass.meta->getInt(mstring->getValue(), D_MININT);
+      if(classval == D_MININT)
+         continue;
+      // Found one
+      return classval;
+   }
+   return effect.getInt(mkey, def);
+}
+int E_FindPClassAmount(const itemeffect_t &effect, const char *key, const playerclass_t &pclass, int def)
+{
+   auto mkey = MetaKeyIndex(key);
+   return E_FindPClassAmount(effect, mkey, pclass, def);
+}
 
 //
 // E_GiveInventoryItem
@@ -2091,7 +2171,7 @@ bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amo
       return false;
 
    inventoryindex_t newSlot = -1;
-   int amountToGive = artifact->getInt(keyAmount, 1);
+   int amountToGive = E_FindPClassAmount(*artifact, keyAmount, *player->pclass, 1);
    int maxAmount    = E_GetMaxAmountForArtifact(player, artifact);
 
    // may override amount to give via parameter "amount", if > 0
@@ -2231,7 +2311,7 @@ void E_InventoryEndHub(const player_t *player)
 
       if(item)
       {
-         int interHubAmount = item->getInt(keyInterHubAmount, 0);
+         int interHubAmount = E_FindPClassAmount(*item, keyInterHubAmount, *player->pclass, 0);
 
          // an interhubamount less than zero means no stripping occurs
          if(interHubAmount >= 0 && amount > interHubAmount)
