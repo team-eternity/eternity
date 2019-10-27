@@ -367,6 +367,10 @@ public:
    void addObject(MetaObject &object);
    void removeObject(MetaObject *object);
    void removeObject(MetaObject &object);
+   void removeAndDeleteAllObjects(size_t keyIndex);
+   void removeAndDeleteAllObjects(const char *key);
+   void removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type);
+   void removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type);
 
    // Find objects in the table:
    // * By Key

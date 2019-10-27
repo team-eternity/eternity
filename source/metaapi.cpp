@@ -767,6 +767,36 @@ void MetaTable::removeObject(MetaObject &object)
 }
 
 //
+// Removes and deletes all objects of the given key and (optionally) type
+//
+void MetaTable::removeAndDeleteAllObjects(size_t keyIndex)
+{
+   MetaObject *obj;
+   while((obj = getNextObject(nullptr, keyIndex)))
+   {
+      removeObject(obj);
+      delete obj;
+   }
+}
+void MetaTable::removeAndDeleteAllObjects(const char *key)
+{
+   removeAndDeleteAllObjects(MetaKey(key).index);
+}
+void MetaTable::removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type)
+{
+   MetaObject *obj;
+   while((obj = getObjectKeyAndType(nullptr, type)))
+   {
+      removeObject(obj);
+      delete obj;
+   }
+}
+void MetaTable::removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type)
+{
+   removeAndDeleteAllObjects(MetaKey(key).index, type);
+}
+
+//
 // MetaTable::getObject
 //
 // Returns the first object found in the metatable with the given key, 
