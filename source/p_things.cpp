@@ -405,7 +405,7 @@ int EV_ThingDestroy(int tid, int sectortag)
 //
 int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 {
-   if(!actor)
+   if(!actor || actor->health <= 0)
       return 0;
 
    if(!maxhealth || !actor->player)
