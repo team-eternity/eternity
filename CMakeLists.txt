@@ -293,6 +293,11 @@ IF (NOT HAVE_STDINT_H)
         ENDIF (MSVC)
 ENDIF (NOT HAVE_STDINT_H)
 
+CHECK_INCLUDE_FILES (xlocale.h HAVE_XLOCALE_H)
+IF (HAVE_XLOCALE_H)
+        add_definitions(-DHAVE_XLOCALE_H)
+ENDIF()
+
 ################################################################################
 ######################### Find Needed Libs #####################################
 FIND_PACKAGE (OpenGL)

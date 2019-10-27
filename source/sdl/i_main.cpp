@@ -30,7 +30,7 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
-#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS)
+#ifdef HAVE_XLOCALE_H
 #include <xlocale.h>
 #endif
 
@@ -75,7 +75,9 @@ int main(int argc, char **argv)
       SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
    else
       SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
-#else
+#endif
+
+#ifdef HAVE_XLOCALE_H
    // We need to prevent any calling terminal from changing Eternity's locale
    // Unconfirmed if needed in Windows. If so, it should be added there too.
    uselocale(newlocale(LC_ALL_MASK, "C", NULL));
