@@ -424,12 +424,6 @@ const char *deh_sprite[] =
 // usage = Ammo n (name)
 // Ammo information for the few types of ammo
 
-const char *deh_ammo[] =
-{
-  "Max ammo",   // maxammo[]
-  "Per ammo"    // clipammo[]
-};
-
 // WEAPONS - Dehacked block name = "Weapon"
 // Usage: Weapon nn (name)
 // Basically a list of frames and what kind of ammo (see above)it uses.
@@ -1466,7 +1460,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          continue;
       }
       
-      if(!strcasecmp(key, deh_ammo[0]))  // Max ammo
+      if(!strcasecmp(key, "Max ammo"))
       {
          // max ammo is now stored in the ammotype effect
          if(ammotype)
@@ -1475,7 +1469,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
             ammotype->setInt("ammo.backpackmaxamount", value*2);
          }
       }
-      else if(!strcasecmp(key, deh_ammo[1]))  // Per ammo
+      else if(!strcasecmp(key, "Per ammo"))
       {
          // modify the small pickup item
          if(smallitem)
