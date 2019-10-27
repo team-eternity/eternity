@@ -12,21 +12,21 @@
 healtheffect HealthBonus
 {
   amount    1
-  maxamount healthmaxsuper, 200
+  maxamount 200
   +alwayspickup
 }
 
 healtheffect Medikit
 {
   amount     25
-  maxamount  healthmax, 100
+  maxamount  100
   lowmessage "$GOTMEDINEED"
 }
 
 healtheffect MegasphereHealth
 {
-  amount    healthmaxsuper, 200
-  maxamount healthmaxsuper, 200
+  amount    200
+  maxamount 200
   +alwayspickup
   +sethealth
 }
@@ -34,14 +34,14 @@ healtheffect MegasphereHealth
 healtheffect Soulsphere
 {
   amount    100
-  maxamount healthmaxsuper, 200
+  maxamount 200
   +alwayspickup
 }
 
 healtheffect Stimpack
 {
   amount    10
-  maxamount healthmax, 100
+  maxamount 100
 }
 
 //=============================================================================

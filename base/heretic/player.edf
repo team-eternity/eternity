@@ -29,8 +29,6 @@ playerclass Corvus
    rebornitem AmmoWandCrystal, 50
    rebornitem Staff
    rebornitem GoldWand
-
-   attrib healthmax, 100
 }
 
 //=============================================================================

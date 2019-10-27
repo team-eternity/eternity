@@ -12,21 +12,21 @@
 healtheffect CrystalVial
 {
   amount    10
-  maxamount healthmax, 100
+  maxamount 100
 }
 
 // Use effect for ArtiHealth
 healtheffect QuartzFlask
 {
   amount    25
-  maxamount healthmax, 100
+  maxamount 100
 }
 
 // Use effect for ArtiSuperHealth
 healtheffect MysticUrn
 {
-  amount    healthmax, 100
-  maxamount healthmax, 100
+  amount    100
+  maxamount 100
 }
 
 //=============================================================================

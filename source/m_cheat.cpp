@@ -302,9 +302,9 @@ static void cheat_fa(const void *arg)
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_IDFAARMOR);
    if(armor)
    {
-      plyr->armorpoints = E_FindPClassAmount(*armor, "saveamount", *plyr->pclass, 0);
-      plyr->armorfactor = E_FindPClassAmount(*armor, "savefactor", *plyr->pclass, 1);
-      plyr->armordivisor = E_FindPClassAmount(*armor, "savedivisor", *plyr->pclass, 3);
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
    }
 
    E_GiveAllClassWeapons(plyr);
@@ -834,9 +834,9 @@ static void cheat_rambo(const void *arg)
    itemeffect_t *armor = E_ItemEffectForName(ITEMNAME_RAMBOARMOR);
    if(armor)
    {
-      plyr->armorpoints  = E_FindPClassAmount(*armor, "saveamount", *plyr->pclass, 0);
-      plyr->armorfactor = E_FindPClassAmount(*armor, "savefactor", *plyr->pclass, 1);
-      plyr->armordivisor = E_FindPClassAmount(*armor, "savedivisor", *plyr->pclass, 3);
+      plyr->armorpoints  = armor->getInt("saveamount",  0);
+      plyr->armorfactor  = armor->getInt("savefactor",  1);
+      plyr->armordivisor = armor->getInt("savedivisor", 3);
    }
 
    E_GiveAllClassWeapons(plyr);

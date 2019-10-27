@@ -30,9 +30,6 @@ playerclass DoomMarine
    rebornitem AmmoClip, 50
    rebornitem Fist
    rebornitem Pistol
-
-   attrib healthmax, 100
-   attrib healthmaxsuper, 200
 }
 
 //=============================================================================

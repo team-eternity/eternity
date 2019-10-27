@@ -169,7 +169,7 @@ bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped
       return false;
 
    itemeffect_t *give = E_ItemEffectForName(pickup->getString("ammo", ""));
-   int giveamount     = E_FindPClassAmount(*pickup, "amount", *player->pclass, 0);
+   int giveamount     = pickup->getInt("amount", 0);
 
    if(dropped)
    {
@@ -177,7 +177,7 @@ bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped
       if(dropamount)
          giveamount = dropamount;
       else
-         giveamount = E_FindPClassAmount(*pickup, "dropamount", *player->pclass, giveamount);
+         giveamount = pickup->getInt("dropamount", giveamount);
    }
 
    return P_GiveAmmo(player, give, giveamount);
@@ -199,7 +199,7 @@ static bool P_giveBackpackAmmo(player_t *player)
    for(size_t i = 0; i < numAmmo; ++i)
    {
       auto ammoType = E_AmmoTypeForIndex(i);
-      int giveamount = E_FindPClassAmount(*ammoType, keyBackpackAmount, *player->pclass, 0);
+      int giveamount = ammoType->getInt(keyBackpackAmount, 0);
       if(!giveamount)
          continue;
       given |= P_GiveAmmo(player, ammoType, giveamount);
@@ -236,12 +236,12 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
    if(ammogiven)
    {
       ammo = E_ItemEffectForName(ammogiven->getString("type", ""));
-      giveammo = E_FindPClassAmount(*ammogiven, "ammo.give", *player->pclass, -1);
-      if((dropammo = E_FindPClassAmount(*ammogiven, "ammo.dropped", *player->pclass, -1)) < 0)
+      giveammo = ammogiven->getInt("ammo.give", -1);
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
          dropammo = giveammo;
-      if((dmstayammo = E_FindPClassAmount(*ammogiven, "ammo.dmstay", *player->pclass, -1)) < 0)
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
          dmstayammo = giveammo;
-      if((coopstayammo = E_FindPClassAmount(*ammogiven, "ammo.coopstay", *player->pclass, -1)) < 0)
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
          coopstayammo = giveammo;
    }
    else
@@ -317,7 +317,7 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
          special->remove();
          return false;
       }
-      else if((giveammo = E_FindPClassAmount(*ammogiven, "ammo.give", *player->pclass, -1)) < 0)
+      else if((giveammo = ammogiven->getInt("ammo.give", -1)) < 0)
       {
          doom_printf(FC_ERROR "Negative/unspecified ammo amount given for weapongiver: "
                      "'%s', ammo: '%s'\a\n", giver->getKey(), ammo->getKey());
@@ -326,11 +326,11 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       }
       // Congrats, the user didn't screw up defining their ammogiven
       // TODO: Automate Doom-style ratios with a flag?
-      if((dropammo = E_FindPClassAmount(*ammogiven, "ammo.dropped", *player->pclass, -1)) < 0)
+      if((dropammo = ammogiven->getInt("ammo.dropped", -1)) < 0)
          dropammo = giveammo;
-      if((dmstayammo = E_FindPClassAmount(*ammogiven, "ammo.dmstay", *player->pclass, -1)) < 0)
+      if((dmstayammo = ammogiven->getInt("ammo.dmstay", -1)) < 0)
          dmstayammo = giveammo;
-      if((coopstayammo = E_FindPClassAmount(*ammogiven, "ammo.coopstay", *player->pclass, -1)) < 0)
+      if((coopstayammo = ammogiven->getInt("ammo.coopstay", -1)) < 0)
          coopstayammo = giveammo;
 
       if((dmflags & DM_WEAPONSTAY) && !dropped)
@@ -385,8 +385,8 @@ bool P_GiveBody(player_t *player, const itemeffect_t *effect)
    if(!effect)
       return false;
 
-   int amount    = E_FindPClassAmount(*effect, "amount", *player->pclass, 0);
-   int maxamount = E_FindPClassAmount(*effect, "maxamount", *player->pclass, 0);
+   int amount    = effect->getInt("amount",       0);
+   int maxamount = effect->getInt("maxamount",    0);
 
    // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
    // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
@@ -455,10 +455,10 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
    if(!effect)
       return false;
 
-   int hits = E_FindPClassAmount(*effect, "saveamount", *player->pclass, -1);
-   int  savefactor = E_FindPClassAmount(*effect, "savefactor", *player->pclass, 1);
-   int  savedivisor = E_FindPClassAmount(*effect, "savedivisor", *player->pclass, 3);
-   int  maxsaveamount = E_FindPClassAmount(*effect, "maxsaveamount", *player->pclass, 0);
+   int  hits          =   effect->getInt("saveamount",   -1);
+   int  savefactor    =   effect->getInt("savefactor",    1);
+   int  savedivisor   =   effect->getInt("savedivisor",   3);
+   int  maxsaveamount =   effect->getInt("maxsaveamount", 0);
    bool additive      = !!effect->getInt("additive",      0);
    bool setabsorption = !!effect->getInt("setabsorption", 0);
 
@@ -625,7 +625,7 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
    if(player->powers[powerNum] >= 0)
    {
-      int duration = E_FindPClassAmount(*power, "duration", *player->pclass, 0);
+      int duration = power->getInt("duration", 0);
       if(power->getInt("permanent", 0))
          duration = -1;
       else
@@ -761,7 +761,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
          pickedup |= P_GiveBody(player, effect);
-         if(pickedup && player->health < E_FindPClassAmount(*effect, "amount", *player->pclass, 0) * 2)
+         if(pickedup && player->health < effect->getInt("amount", 0) * 2)
             message = effect->getString("lowmessage", message);
          break;
       case ITEMFX_ARMOR:    // Armor - give the player some armor

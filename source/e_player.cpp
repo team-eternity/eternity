@@ -43,7 +43,6 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "m_qstr.h"
-#include "metaapi.h"
 #include "p_mobj.h"
 #include "p_skin.h"
 #include "v_misc.h"
@@ -113,16 +112,12 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDJUMP      "speedjump"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
 #define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
-#define ITEM_PCLASS_ATTRIBUTE      "attrib"
 
 #define ITEM_REBORN_NAME   "name"
 #define ITEM_REBORN_AMOUNT "amount"
 
 #define ITEM_WPNSLOT_WPNS  "weapons"
 #define ITEM_WPNSLOT_CLEAR "clear"
-
-#define ITEM_ATTRIB_NAME "name"
-#define ITEM_ATTRIB_VALUE "value"
 
 #define ITEM_DELTA_NAME "name"
 
@@ -137,13 +132,6 @@ static cfg_opt_t reborn_opts[] =
 {
    CFG_STR(ITEM_REBORN_NAME,   "", CFGF_NONE),
    CFG_INT(ITEM_REBORN_AMOUNT,  1, CFGF_NONE),
-   CFG_END()
-};
-
-static cfg_opt_t attrib_opts[] =
-{
-   CFG_STR(ITEM_ATTRIB_NAME, "", CFGF_NONE),
-   CFG_INT(ITEM_ATTRIB_VALUE, 0, CFGF_NONE),
    CFG_END()
 };
 
@@ -173,7 +161,6 @@ static cfg_opt_t attrib_opts[] =
     /* weapon slots */                                                       \
    CFG_SEC(ITEM_PCLASS_WEAPONSLOT,    wpnslot_opts, CFGF_MULTI|CFGF_NOCASE|CFGF_TITLE), \
                                                                                         \
-   CFG_MVPROP(ITEM_PCLASS_ATTRIBUTE,  attrib_opts,  CFGF_MULTI|CFGF_NOCASE), \
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -572,7 +559,6 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    {
       // create a new player class
       pc = estructalloc(playerclass_t, 1);
-      pc->meta = new MetaTable;
 
       // verify mnemonic
       if(strlen(tempstr) >= sizeof(pc->mnemonic))
@@ -720,17 +706,6 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
    else
       pc->hasslots = false;
-
-   unsigned numattrs = cfg_size(pcsec, ITEM_PCLASS_ATTRIBUTE);
-   for(unsigned i = 0; i < numattrs; ++i)
-   {
-      cfg_t *attrib = cfg_getnmvprop(pcsec, ITEM_PCLASS_ATTRIBUTE, i);
-      const char *name = cfg_getstr(attrib, ITEM_ATTRIB_NAME);
-      if(estrempty(name))
-         continue;
-      int value = cfg_getint(attrib, ITEM_ATTRIB_VALUE);
-      pc->meta->setInt(name, value);   // replace the value here
-   }
 }
 
 //

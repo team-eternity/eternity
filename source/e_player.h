@@ -80,8 +80,6 @@ struct playerclass_t
    // hashing data
    char mnemonic[129];
    playerclass_t *next;
-
-   MetaTable *meta;  // Extra EDF-defined attributes, for item effect dynamics
 };
 
 playerclass_t *E_PlayerClassForName(const char *);

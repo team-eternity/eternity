@@ -1465,9 +1465,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          // max ammo is now stored in the ammotype effect
          if(ammotype)
          {
-            ammotype->removeAndDeleteAllObjects("maxamount", RTTI(MetaString));
             ammotype->setInt("maxamount", value);
-            ammotype->removeAndDeleteAllObjects("ammo.backpackmaxamount", RTTI(MetaString));
             ammotype->setInt("ammo.backpackmaxamount", value*2);
          }
       }
@@ -1476,33 +1474,23 @@ void deh_procAmmo(DWFILE *fpin, char *line)
          // modify the small pickup item
          if(smallitem)
          {
-            smallitem->removeAndDeleteAllObjects("amount", RTTI(MetaString)); // clear all pclass
             smallitem->setInt("amount", value);
             
             // may also modify dropped amount; original is 1/2 clip, but
             // only bullet clips originally obeyed this
-            if(indexnum == am_clip)
-            {
-               smallitem->removeAndDeleteAllObjects("dropamount", RTTI(MetaString));
+            if(indexnum == am_clip) 
                smallitem->setInt("dropamount", value / 2);
-            }
          }
 
          // modify the large pickup item; original behavior was 5 clips of
          // the small item amount
          if(largeitem)
-         {
-            smallitem->removeAndDeleteAllObjects("amount", RTTI(MetaString)); // clear all pclass
             largeitem->setInt("amount", value*5);
-         }
 
          // modify the ammotype's backpack amount; original behavior was 1 clip
          // of the small item amount
          if(ammotype)
-         {
-            ammotype->removeAndDeleteAllObjects("ammo.backpackamount", RTTI(MetaString));
             ammotype->setInt("ammo.backpackamount", value);
-         }
 
          // TODO: This could probably do with being more robust
          for(int wp = 0; wp < NUMWEAPONS; wp++)
@@ -1519,13 +1507,9 @@ void deh_procAmmo(DWFILE *fpin, char *line)
                continue;
             if(E_ItemEffectForName(ammostr) == ammotype)
             {
-               given->removeAndDeleteAllObjects("ammo.dmstay", RTTI(MetaString));
                given->setInt("ammo.dmstay",   value * 5);
-               given->removeAndDeleteAllObjects("ammo.coopstay", RTTI(MetaString));
                given->setInt("ammo.coopstay", value * 2);
-               given->removeAndDeleteAllObjects("ammo.give", RTTI(MetaString));
                given->setInt("ammo.give",     value * 2);
-               given->removeAndDeleteAllObjects("ammo.dropped", RTTI(MetaString));
                given->setInt("ammo.dropped",  value);
             }
          }
@@ -1864,10 +1848,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key, "Max Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
-         {
-            fx->removeAndDeleteAllObjects("maxamount", RTTI(MetaString));
             fx->setInt("maxamount", value * 2);
-         }
          if((fx = E_ItemEffectForName(ITEMNAME_MEDIKIT)))
             fx->setInt("compatmaxamount", value);
          if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
@@ -1876,22 +1857,16 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key, "Max Armor"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_ARMORBONUS)))
-         {
-            fx->removeAndDeleteAllObjects("maxsaveamount", RTTI(MetaString));
             fx->setInt("maxsaveamount", value);
-         }
       }
       else if(!strcasecmp(key, "Green Armor Class"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_GREENARMOR)))
          {
-            fx->removeAndDeleteAllObjects("saveamount", RTTI(MetaString));
             fx->setInt("saveamount", value * 100);
             if(value > 1)
             {
-               fx->removeAndDeleteAllObjects("savefactor", RTTI(MetaString));
                fx->setInt("savefactor",  1);
-               fx->removeAndDeleteAllObjects("savedivisor", RTTI(MetaString));
                fx->setInt("savedivisor", 2);
             }
          }
@@ -1900,13 +1875,10 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       {
          if((fx = E_ItemEffectForName(ITEMNAME_BLUEARMOR)))
          {
-            fx->removeAndDeleteAllObjects("saveamount", RTTI(MetaString));
             fx->setInt("saveamount", value * 100);
             if(value <= 1)
             {
-               fx->removeAndDeleteAllObjects("savefactor", RTTI(MetaString));
                fx->setInt("savefactor",  1);
-               fx->removeAndDeleteAllObjects("savedivisor", RTTI(MetaString));
                fx->setInt("savedivisor", 3);
             }
          }
@@ -1914,26 +1886,18 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key, "Max Soulsphere"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
-         {
-            fx->removeAndDeleteAllObjects("maxamount", RTTI(MetaString));
             fx->setInt("maxamount", value);
-         }
       }
       else if(!strcasecmp(key, "Soulsphere Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
-         {
-            fx->removeAndDeleteAllObjects("amount", RTTI(MetaString)); // clear all pclass
             fx->setInt("amount", value);
-         }
       }
       else if(!strcasecmp(key, "Megasphere Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
          {
-            fx->removeAndDeleteAllObjects("amount", RTTI(MetaString)); // clear all pclass
             fx->setInt("amount",    value);
-            fx->removeAndDeleteAllObjects("maxamount", RTTI(MetaString));
             fx->setInt("maxamount", value);
          }
       }
@@ -1944,18 +1908,13 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key, "IDFA Armor"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
-         {
-            fx->removeAndDeleteAllObjects("saveamount", RTTI(MetaString));
             fx->setInt("saveamount", value);
-         }
       }
       else if(!strcasecmp(key, "IDFA Armor Class"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_IDFAARMOR)))
          {
-            fx->removeAndDeleteAllObjects("savefactor", RTTI(MetaString));
             fx->setInt("savefactor", 1);
-            fx->removeAndDeleteAllObjects("savedivisor", RTTI(MetaString));
             fx->setInt("savedivisor", value > 1 ? 2 : 3);
          }
       }
