@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+27.10.2019
+
+BUGFIX: Stop HealThing from attempting to heal dead bodies. Crazy stuff would
+        happen, such as the view getting garbled and Eternity crashing.
+
+--------------------------------------------------------------------------------
 26.10.2019
 
 BUGFIX: For macOS, fixed the failure to start Eternity from Terminal if its

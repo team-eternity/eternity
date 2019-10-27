@@ -502,7 +502,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_MAX)
    {
       // dead
-      if(!plyr->health)
+      if(plyr->health <= 0)
       {
          priority = ST_PRIORITY_DEAD;
          st_faceindex = ST_DEADFACE;
