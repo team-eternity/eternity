@@ -785,7 +785,7 @@ void MetaTable::removeAndDeleteAllObjects(const char *key)
 void MetaTable::removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type)
 {
    MetaObject *obj;
-   while((obj = getObjectKeyAndType(nullptr, type)))
+   while((obj = getObjectKeyAndType(keyIndex, type)))
    {
       removeObject(obj);
       delete obj;
