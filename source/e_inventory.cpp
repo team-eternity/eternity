@@ -547,6 +547,8 @@ static void E_convertKeywordEnumsToStrings(MetaTable &table)
    MetaInteger *mint = nullptr;
    while((mint = table.getNextTypeEx(mint)))
    {
+      // Remove any prior const string for any scanned metaint
+      table.removeConstString(mint->getKeyIdx());
       for(int i = 0; i < E_NUM_SPECIAL_KEYWORDS; ++i)
       {
          if(mint->getValue() != INT_MIN + 1 + i)

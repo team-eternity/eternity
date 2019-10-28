@@ -1624,14 +1624,14 @@ void MetaTable::setConstString(const char *key, const char *newValue)
 // Otherwise, metaerrno is META_ERR_NOERR and the shared string value that 
 // was in the MetaConstString instance is returned.
 //
-const char *MetaTable::removeConstString(const char *key)
+const char *MetaTable::removeConstString(size_t keyIndex)
 {
    MetaConstString *str;
    const char *value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(str = getObjectKeyAndTypeEx<MetaConstString>(key)))
+   if(!(str = getObjectKeyAndTypeEx<MetaConstString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return nullptr;
@@ -1643,6 +1643,10 @@ const char *MetaTable::removeConstString(const char *key)
    delete str;
 
    return value;
+}
+const char *MetaTable::removeConstString(const char *key)
+{
+   return removeConstString(MetaKey(key).index);
 }
 
 //

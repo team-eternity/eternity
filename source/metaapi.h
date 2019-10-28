@@ -473,6 +473,7 @@ public:
    void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);
+   const char *removeConstString(size_t keyIndex);
 
    // Nested MetaTable
    void       addMetaTable(size_t keyIndex, MetaTable *value);
