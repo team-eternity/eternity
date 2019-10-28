@@ -19,6 +19,9 @@ FEATURE: Now playerclass has two new fields: maxhealth (default 100) and
          current playerclass values. They're safely replaceable by Dehacked and
          healthdelta structures.
 
+FEATURE: New optional "jump" ("dsjump") player skin sound, as needed by some
+         skin mods.
+
 --------------------------------------------------------------------------------
 27.10.2019
 

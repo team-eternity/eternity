@@ -693,6 +693,8 @@ void P_PlayerThink(player_t *player)
          if((player->mo->z == player->mo->zref.floor ||
              (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
          {
+            if(strcasecmp(player->skin->sounds[sk_jump], "none"))
+               S_StartSound(player->mo, GameModeInfo->playerSounds[sk_jump]);
             player->mo->momz += player->pclass->jumpspeed;
             player->mo->intflags &= ~MIF_ONMOBJ;
             player->jumptime = 18;

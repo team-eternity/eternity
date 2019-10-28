@@ -65,6 +65,7 @@
 #define ITEM_SKINSND_FALLHIT "fallhit"
 #define ITEM_SKINSND_PLWDTH  "plwdth"
 #define ITEM_SKINSND_NOWAY   "noway"
+#define ITEM_SKINSND_JUMP    "jump"
 
 static cfg_opt_t pc_skin_sound_opts[] =
 {
@@ -80,6 +81,7 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_STR(ITEM_SKINSND_FALLHIT, "fallht", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_PLWDTH,  "plwdth", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_NOWAY,   "noway",  CFGF_NONE),
+   CFG_STR(ITEM_SKINSND_JUMP,    "jump",   CFGF_NONE),
    CFG_END()
 };
 
@@ -272,6 +274,7 @@ static const char *skin_sound_names[NUMSKINSOUNDS] =
    ITEM_SKINSND_FALLHIT,
    ITEM_SKINSND_PLWDTH,
    ITEM_SKINSND_NOWAY,
+   ITEM_SKINSND_JUMP,
 };
 
 //

@@ -75,6 +75,7 @@ static const char *skinsoundnames[NUMSKINSOUNDS] =
    "dsfallht",
    "dsplwdth",
    "dsnoway",
+   "dsjump",
 };
 
 // forward prototypes

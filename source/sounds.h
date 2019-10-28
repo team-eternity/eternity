@@ -406,6 +406,7 @@ typedef enum {
   sfx_eedrip, // drip
   sfx_quake2, // earthquake
   sfx_plwdth, // player wimpy death
+  sfx_jump,
 
   // haleyjd 10/08/02: heretic sounds
   sfx_gldhit = 300,

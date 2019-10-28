@@ -134,6 +134,7 @@ static const char *skinindices[NUMSKINSOUNDS + 1] =
    "sk_fallht",
    "sk_plwdth",
    "sk_noway",
+   "sk_jump",
 };
 
 #define NUM_SKININDICES (sizeof(skinindices) / sizeof(const char *))
