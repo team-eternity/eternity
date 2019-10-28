@@ -8,6 +8,18 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+28.10.2019
+
+FEATURE: Now playerclass has two new fields: maxhealth (default 100) and
+         superhealth (default = maxhealth). They're needed for some built-in
+         effects, mainly the HealThing special and the powered A_GauntletAttack.
+
+         Also updated the EDF healtheffect items to use the new @maxhealth and
+         @superhealth keywords instead of absolute values to refer to the
+         current playerclass values. They're safely replaceable by Dehacked and
+         healthdelta structures.
+
+--------------------------------------------------------------------------------
 27.10.2019
 
 BUGFIX: Stop HealThing from attempting to heal dead bodies. Crazy stuff would
