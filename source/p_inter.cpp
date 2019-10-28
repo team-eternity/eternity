@@ -385,8 +385,8 @@ bool P_GiveBody(player_t *player, const itemeffect_t *effect)
    if(!effect)
       return false;
 
-   int amount    = effect->getInt("amount",       0);
-   int maxamount = effect->getInt("maxamount",    0);
+   int amount = E_GetPClassHealth(*effect, "amount", *player->pclass, 0);
+   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player->pclass, 0);
 
    // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
    // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
@@ -761,8 +761,11 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
          pickedup |= P_GiveBody(player, effect);
-         if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+         if(pickedup && player->health < E_GetPClassHealth(*effect, "amount", *player->pclass,
+                                                           0) * 2)
+         {
             message = effect->getString("lowmessage", message);
+         }
          break;
       case ITEMFX_ARMOR:    // Armor - give the player some armor
          pickedup |= P_GiveArmor(player, effect);

@@ -57,6 +57,8 @@ struct playerclass_t
    mobjtype_t type;      // index of mobj type used
    statenum_t altattack; // index of alternate attack state for weapon code
    int initialhealth;    // initial health when reborn
+   int maxhealth;        // max health for regular items, HealThing and Gauntlets
+   int superhealth;      // max health for superchargers and HealThing
 
    // speeds
    fixed_t forwardmove[2];

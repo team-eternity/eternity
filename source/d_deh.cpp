@@ -1848,7 +1848,10 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key, "Max Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_HEALTHBONUS)))
+         {
+            fx->removeConstString("maxamount");
             fx->setInt("maxamount", value * 2);
+         }
          if((fx = E_ItemEffectForName(ITEMNAME_MEDIKIT)))
             fx->setInt("compatmaxamount", value);
          if((fx = E_ItemEffectForName(ITEMNAME_STIMPACK)))
@@ -1886,18 +1889,26 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       else if(!strcasecmp(key, "Max Soulsphere"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
+         {
+            fx->removeConstString("maxamount");
             fx->setInt("maxamount", value);
+         }
       }
       else if(!strcasecmp(key, "Soulsphere Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_SOULSPHERE)))
+         {
+            fx->removeConstString("amount");
             fx->setInt("amount", value);
+         }
       }
       else if(!strcasecmp(key, "Megasphere Health"))
       {
          if((fx = E_ItemEffectForName(ITEMNAME_MEGASPHERE)))
          {
+            fx->removeConstString("amount");
             fx->setInt("amount",    value);
+            fx->removeConstString("maxamount");
             fx->setInt("maxamount", value);
          }
       }

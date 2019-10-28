@@ -33,6 +33,7 @@
 #include "e_hash.h"
 #include "e_inventory.h"
 #include "e_lib.h"
+#include "e_player.h"
 #include "e_sprite.h"
 #include "e_string.h"
 
@@ -103,6 +104,7 @@ static MetaTable e_effectsTable;
 //
 // Add an item effect from a cfg_t definition.
 //
+static void E_convertKeywordEnumsToStrings(MetaTable &table);
 static itemeffect_t *E_addItemEffect(cfg_t *cfg)
 {
    itemeffect_t *table;
@@ -112,6 +114,7 @@ static itemeffect_t *E_addItemEffect(cfg_t *cfg)
       e_effectsTable.addObject((table = new itemeffect_t(name)));
 
    E_MetaTableFromCfg(cfg, table);
+   E_convertKeywordEnumsToStrings(*table);
 
    return table;
 }
@@ -223,10 +226,56 @@ static MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
 
+//
+// Temporary special values, starting from exceedingly remote negatives. They will be transformed
+// back to special strings, to prevent mistakenly using them accidentally.
+//
+enum
+{
+   E_SPECIAL_KEYWORD_MAXHEALTH,
+   E_SPECIAL_KEYWORD_SUPERHEALTH,
+   E_NUM_SPECIAL_KEYWORDS             // used when iterating
+};
+
+//
+// These must be in sync with the above enum's meaningful values
+//
+static const char *eSpecialKeyword[] =
+{
+   "@maxhealth",
+   "@superhealth",
+};
+
+//
+// Health special keyword support. The returned values will then be postprocessed and replaced with
+// actual metastrings
+//
+static int E_keywordCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, void *result)
+{
+   for(int i = 0; i < E_NUM_SPECIAL_KEYWORDS; ++i)
+   {
+      if(!strcasecmp(value, eSpecialKeyword[i]))
+      {
+         *static_cast<int *>(result) = INT_MIN + 1 + i;
+         return 0;
+      }
+   }
+   char *endptr = nullptr;
+   long val = strtol(value, &endptr, 0);
+   if(*endptr)
+   {
+      if(cfg)
+         cfg_error(cfg, "invalid health value '%s' for option '%s'\n", value, opt->name);
+      return -1;
+   }
+   *static_cast<int *>(result) = static_cast<int>(val);
+   return 0;
+}
+
 // Health fields
 #define HEALTHFX_FIELDS \
-   CFG_INT(KEY_AMOUNT,     0,  CFGF_NONE), /* amount to recover          */   \
-   CFG_INT(KEY_MAXAMOUNT,  0,  CFGF_NONE), /* max that can be recovered  */   \
+   CFG_INT_CB(KEY_AMOUNT,    0, CFGF_NONE, E_keywordCB), /* amount to recover          */   \
+   CFG_INT_CB(KEY_MAXAMOUNT, 0, CFGF_NONE, E_keywordCB), /* max that can be recovered  */   \
    CFG_STR(KEY_LOWMESSAGE, "", CFGF_NONE), /* message if health < amount */   \
                                                                               \
    CFG_FLAG(KEY_ALWAYSPICKUP, 0, CFGF_SIGNPREFIX), /* if +, always pick up */ \
@@ -485,6 +534,39 @@ static void E_handleSpecialItemDeltaProperties(const int i, cfg_t *sec, MetaTabl
 }
 
 //
+// Converts any ultra-negative special values back to metastrings, for safety in case they leak
+// elsewhere.
+//
+static void E_convertKeywordEnumsToStrings(MetaTable &table)
+{
+   // basic recursion defense
+   if(table.getInt(__func__, 0))
+      return;
+   table.setInt(__func__, 1);
+
+   MetaInteger *mint = nullptr;
+   while((mint = table.getNextTypeEx(mint)))
+   {
+      for(int i = 0; i < E_NUM_SPECIAL_KEYWORDS; ++i)
+      {
+         if(mint->getValue() != INT_MIN + 1 + i)
+            continue;
+         table.setConstString(mint->getKeyIdx(), eSpecialKeyword[i]);
+         table.removeObject(mint);
+         delete mint;
+         mint = nullptr;   // restart search when deleting stuff
+         break;
+      }
+   }
+
+   MetaTable *subtable = nullptr;
+   while((subtable = table.getNextTypeEx(subtable)))  // also go recursively
+      E_convertKeywordEnumsToStrings(*subtable);
+
+   table.removeInt(__func__);
+}
+
+//
 // E_processItemEffects
 //
 static void E_processItemEffects(cfg_t *cfg)
@@ -535,6 +617,7 @@ static void E_processItemEffects(cfg_t *cfg)
 
          // Update table
          E_MetaTableFromCfg(sec, table, &base);
+         E_convertKeywordEnumsToStrings(*table);
 
          E_EDFLogPrintf("\t\t* Processed item delta %u to '%s'\n", secNum, name);
       }
@@ -2272,6 +2355,25 @@ void E_ClearInventory(player_t *player)
 int E_GetInventoryAllocSize()
 {
    return e_maxitemid;
+}
+
+//
+// Gets the actual health if special
+//
+int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerclass_t &pclass,
+                      int def)
+{
+   const char *keyword = effect.getConstString(keyIndex, nullptr);
+   if(keyword == eSpecialKeyword[E_SPECIAL_KEYWORD_MAXHEALTH])
+      return pclass.maxhealth;
+   if(keyword == eSpecialKeyword[E_SPECIAL_KEYWORD_SUPERHEALTH])
+      return pclass.superhealth;
+   return effect.getInt(keyIndex, def);
+}
+int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass,
+                      int def)
+{
+   return E_GetPClassHealth(effect, MetaKeyIndex(key), pclass, def);
 }
 
 //=============================================================================

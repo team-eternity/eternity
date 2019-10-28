@@ -100,6 +100,8 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_THINGTYPE      "thingtype"
 #define ITEM_PCLASS_ALTATTACK      "altattackstate"
 #define ITEM_PCLASS_INITIALHEALTH  "initialhealth"
+#define ITEM_PCLASS_MAXHEALTH      "maxhealth"
+#define ITEM_PCLASS_SUPERHEALTH    "superhealth"
 #define ITEM_PCLASS_SPEEDWALK      "speedwalk"
 #define ITEM_PCLASS_SPEEDRUN       "speedrun"
 #define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
@@ -140,6 +142,8 @@ static cfg_opt_t reborn_opts[] =
    CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),  \
    CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),  \
    CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,  CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,  CFGF_NONE),  \
                                                          \
    /* speeds */                                          \
    CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
@@ -637,6 +641,18 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    // initial health
    if(IS_SET(pcsec, ITEM_PCLASS_INITIALHEALTH))
       pc->initialhealth = cfg_getint(pcsec, ITEM_PCLASS_INITIALHEALTH);
+   // max health
+   if(IS_SET(pcsec, ITEM_PCLASS_MAXHEALTH))
+      pc->maxhealth = cfg_getint(pcsec, ITEM_PCLASS_MAXHEALTH);
+   // supercharge health
+   if(IS_SET(pcsec, ITEM_PCLASS_SUPERHEALTH))
+   {
+      // Use max health if newly defined but unspecified
+      if(def && !cfg_size(pcsec, ITEM_PCLASS_SUPERHEALTH))
+         pc->superhealth = pc->maxhealth;
+      else  // either new and specified or old and specified
+         pc->superhealth = cfg_getint(pcsec, ITEM_PCLASS_SUPERHEALTH);
+   }
 
    // process player speed fields
 

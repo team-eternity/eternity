@@ -16,6 +16,7 @@ playerclass DoomMarine
    defaultskin    marine
    thingtype      DoomPlayer
    altattackstate S_PLAY_ATK2
+   superhealth    200
 
    weaponslot 1 { weapons : Chainsaw, Fist }
    weaponslot 2 { weapons : Pistol }
