@@ -30,6 +30,7 @@
 #include "doomstat.h"
 #include "d_player.h"
 #include "e_args.h"
+#include "e_player.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
@@ -602,8 +603,14 @@ void A_GauntletAttack(actionargs_t *actionargs)
 
    if(powered)
    {
-      // FIXME: This needs to do damage vamp
-      //P_GiveBody(player, damage >> 1);
+      if(mo->health > 0 && player->health < player->pclass->maxhealth)
+      {
+         player->health += damage >> 1;
+         if(player->health > player->pclass->maxhealth)
+            player->health = player->pclass->maxhealth;
+         mo->health = player->health;
+      }
+
       P_WeaponSound(mo, sfx_gntpow);
    }
    else
