@@ -254,6 +254,10 @@ static void P_ParseSkinCmd(const char *line)
       while(*spritename == ' ')
          spritename++;
       strncpy(newskin->spritename, spritename, 4);
+      newskin->spritename[0] = ectype::toUpper(newskin->spritename[0]);
+      newskin->spritename[1] = ectype::toUpper(newskin->spritename[1]);
+      newskin->spritename[2] = ectype::toUpper(newskin->spritename[2]);
+      newskin->spritename[3] = ectype::toUpper(newskin->spritename[3]);
       newskin->spritename[4] = 0;
    }
    else if(!strncasecmp(line, "face", 4))
