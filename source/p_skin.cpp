@@ -264,8 +264,9 @@ static void P_ParseSkinCmd(const char *line)
          skinname++;
       efree(newskin->skinname);
       newskin->skinname = estrdup(skinname);
+      return;
    }
-   else if(!strncasecmp(line, "sprite", 6))
+   if(!strncasecmp(line, "sprite", 6))
    {
       const char *spritename = line+6;
       while(*spritename == ' ')
@@ -276,8 +277,9 @@ static void P_ParseSkinCmd(const char *line)
       newskin->spritename[2] = ectype::toUpper(newskin->spritename[2]);
       newskin->spritename[3] = ectype::toUpper(newskin->spritename[3]);
       newskin->spritename[4] = 0;
+      return;
    }
-   else if(!strncasecmp(line, "face", 4))
+   if(!strncasecmp(line, "face", 4))
    {
       const char *facename = line+4;
       while(*facename == ' ')
@@ -286,12 +288,11 @@ static void P_ParseSkinCmd(const char *line)
       newskin->facename = estrdup(facename);
       if(strlen(newskin->facename) > 3)
          newskin->facename[3] = 0;
+      return;
    }
-
-   // is it a sound?
-   
    for(i = 0; i < NUMSKINSOUNDS; i++)
    {
+      // is it a sound?
       if(!strncasecmp(line, skinsoundnames[i], strlen(skinsoundnames[i])))
       {                    // yes!
          const char *newsoundname = line + strlen(skinsoundnames[i]);
@@ -302,6 +303,7 @@ static void P_ParseSkinCmd(const char *line)
             newsoundname += 2;        // ds
          
          newskin->sounds[i] = estrdup(newsoundname);
+         return;
       }
    }
 }
