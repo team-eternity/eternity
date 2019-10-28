@@ -1567,14 +1567,14 @@ void MetaTable::addConstString(const char *key, const char *value)
 // META_ERR_NOSUCHOBJECT. Otherwise, the string constant value is returned and
 // metaerrno is META_ERR_NOERR.
 //
-const char *MetaTable::getConstString(const char *key, const char *defValue) const
+const char *MetaTable::getConstString(size_t keyIndex, const char *defValue) const
 {
    const char *retval;
    const MetaConstString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaConstString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaConstString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval    = defValue;
@@ -1583,6 +1583,10 @@ const char *MetaTable::getConstString(const char *key, const char *defValue) con
       retval = obj->value;
 
    return retval;
+}
+const char *MetaTable::getConstString(const char *key, const char *defValue) const
+{
+   return getConstString(MetaKey(key).index, defValue);
 }
 
 //
