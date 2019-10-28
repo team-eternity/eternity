@@ -1914,7 +1914,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
       }
       else if(!strcasecmp(key, "God Mode Health"))
       {
-         god_health = value;
+         god_health_override = value;
       }
       else if(!strcasecmp(key, "IDFA Armor"))
       {

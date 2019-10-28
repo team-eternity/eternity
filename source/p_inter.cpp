@@ -77,7 +77,9 @@
 // dehacked support (and future flexibility).  Most var names came from the key
 // strings used in dehacked.
 
-int god_health = 100;   // these are used in cheats (see st_stuff.c)
+// ioanch: start it with 0, so by default pclass->maxhealth takes precedence. On any Dehacked, this
+// one will become nonzero and will prevail.
+int god_health_override = 0;   // these are used in cheats (see st_stuff.c)
 
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
