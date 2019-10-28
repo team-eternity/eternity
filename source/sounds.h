@@ -525,6 +525,8 @@ typedef enum {
   sfx_lobsht,
   sfx_bounce,
   sfx_phopow,
+  sfx_blshit,
+  sfx_hnoway,
 
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX

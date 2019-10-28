@@ -319,7 +319,7 @@ static const char *htic_skindefs[NUMSKINSOUNDS] =
    "plfeet",
    "fallht",
    "ht_plrwdth",
-   "ht_plroof",
+   "none",
 };
 
 static int htic_soundnums[NUMSKINSOUNDS] =
@@ -335,7 +335,7 @@ static int htic_soundnums[NUMSKINSOUNDS] =
    sfx_plfeet,
    sfx_fallht,
    sfx_hplrwdth,
-   sfx_hplroof,
+   sfx_hnoway,
 };
 
 //
