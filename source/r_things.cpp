@@ -77,8 +77,6 @@ extern int global_cmap_index; // haleyjd: NGCS
 #define MINZ        (FRACUNIT*4)
 #define BASEYCENTER 100
 
-#define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
-
 #define IS_FULLBRIGHT(actor) \
    (((actor)->frame & FF_FULLBRIGHT) || ((actor)->flags4 & MF4_BRIGHT))
 

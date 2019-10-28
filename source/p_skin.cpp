@@ -212,6 +212,21 @@ static void P_AddSkin(skin_t *newskin)
    numskins++;
 }
 
+//
+// Checks if it's a valid sprite name, to mitigate false finds
+//
+static bool P_isValidSpriteName(const char *name)
+{
+   size_t len = strlen(name);
+   if(len != 6 && len != 8)
+      return false;
+   if(name[4] - 'A' >= MAX_SPRITE_FRAMES || name[5] - '0' > 8)
+      return false;
+   if(len == 8 && (name[6] - 'A' >= MAX_SPRITE_FRAMES || name[7] - '0' > 8))
+      return false;
+   return true;
+}
+
 static void P_AddSpriteLumps(const char *named)
 {
    int i, n = static_cast<int>(strlen(named));
@@ -220,7 +235,9 @@ static void P_AddSpriteLumps(const char *named)
    
    for(i = 0; i < numlumps; i++)
    {
-      if(!strncasecmp(lumpinfo[i]->name, named, n))
+      if(!strncasecmp(lumpinfo[i]->name, named, n) &&
+         lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
+         P_isValidSpriteName(lumpinfo[i]->name))
       {
          // mark as sprites so that W_CoalesceMarkedResource
          // will group them as sprites
