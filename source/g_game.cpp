@@ -1039,7 +1039,7 @@ struct complevel_s
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
-   { 340, 340 }, // comp_aircontrol
+   { 340, 340 }, // comp_jump
    { 0,   0   }
 };
 

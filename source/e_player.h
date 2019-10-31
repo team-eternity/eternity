@@ -40,6 +40,14 @@ enum rebornitemflag_e
    RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
 };
 
+//
+// Player class flags
+//
+enum
+{
+   PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
+};
+
 // default inventory items
 struct reborninventory_t
 {
@@ -79,6 +87,9 @@ struct playerclass_t
    weaponslot_t *weaponslots[NUMWEAPONSLOTS];
    bool          hasslots;
 
+   // flags
+   unsigned flags;
+
    // hashing data
    char mnemonic[129];
    playerclass_t *next;
@@ -90,6 +101,9 @@ void E_VerifyDefaultPlayerClass(void);
 bool E_IsPlayerClassThingType(mobjtype_t);
 bool E_PlayerInWalkingState(player_t *);
 void E_ApplyTurbo(int ts);
+
+bool E_CanJump(const playerclass_t &pclass);
+bool E_MayJumpIfOverriden(const playerclass_t &pclass);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

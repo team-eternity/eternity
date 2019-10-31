@@ -35,6 +35,7 @@
 #include "d_io.h"
 #include "d_items.h"
 #include "d_player.h"
+#include "doomstat.h"
 #include "e_lib.h"
 #include "e_edf.h"
 #include "e_player.h"
@@ -43,8 +44,10 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "m_qstr.h"
+#include "p_info.h"
 #include "p_mobj.h"
 #include "p_skin.h"
+#include "r_pcheck.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -116,6 +119,7 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDJUMP      "speedjump"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
 #define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
+#define ITEM_PCLASS_ALWAYSJUMP     "alwaysjump"
 
 #define ITEM_REBORN_NAME   "name"
 #define ITEM_REBORN_AMOUNT "amount"
@@ -166,7 +170,8 @@ static cfg_opt_t reborn_opts[] =
                                                                              \
     /* weapon slots */                                                       \
    CFG_SEC(ITEM_PCLASS_WEAPONSLOT,    wpnslot_opts, CFGF_MULTI|CFGF_NOCASE|CFGF_TITLE), \
-                                                                                        \
+   /* flags */                                          \
+   CFG_FLAG(ITEM_PCLASS_ALWAYSJUMP, 0, CFGF_SIGNPREFIX),\
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -608,6 +613,14 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
 
+   if(IS_SET(pcsec, ITEM_PCLASS_ALWAYSJUMP))
+   {
+      if(cfg_getflag(pcsec, ITEM_PCLASS_ALWAYSJUMP))
+         pc->flags |= PCF_ALWAYSJUMP;
+      else
+         pc->flags &= ~PCF_ALWAYSJUMP;
+   }
+
    // mobj type
    if(IS_SET(pcsec, ITEM_PCLASS_THINGTYPE))
    {
@@ -1029,6 +1042,19 @@ void E_ApplyTurbo(int ts)
          pc = pc->next;
       }
    }
+}
+
+//
+// True if pclass is allowed to jump on this level
+//
+bool E_CanJump(const playerclass_t &pclass)
+{
+   return demo_version >= 335 && pclass.jumpspeed > 0 &&
+   (pclass.flags & PCF_ALWAYSJUMP || (!comp[comp_jump] && !LevelInfo.disableJump));
+}
+bool E_MayJumpIfOverriden(const playerclass_t &pclass)
+{
+   return demo_version >= 355 && pclass.jumpspeed > 0 && !LevelInfo.disableJump;
 }
 
 // EOF

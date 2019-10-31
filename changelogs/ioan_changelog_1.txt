@@ -8,6 +8,18 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+01.11.2019
+
+IMPROVEMENT: Jumping is now a compatibility setting. By default it's disabled.
+             If player attempts to jump anyway, a message will be shown that it
+             needs to be explicitly enabled in settings.
+
+             EDF player classes now support an "+AlwaysJump" option, which will
+             enable jumping regardless of compatibility setting or EMAPINFO
+             disable-jump. Also, setting "speedjump" to 0 will completely
+             disable jumping for that class.
+
+--------------------------------------------------------------------------------
 28.10.2019
 
 FEATURE: Now playerclass has two new fields: maxhealth (default 100) and

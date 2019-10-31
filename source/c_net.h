@@ -94,7 +94,8 @@ enum
   netcmd_comp_planeshoot,  //          plane shooting
   netcmd_comp_special,     //          special failure
   netcmd_comp_ninja,       //          ninja spawn
-  netcmd_comp_aircontrol,  // ioanch:  air control for jumping
+  netcmd_comp_jump,        // ioanch:  air control for jumping
+  netcmd_comp_aircontrol = netcmd_comp_jump,
   NUMNETCMDS
 };
 
