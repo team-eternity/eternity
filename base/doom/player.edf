@@ -188,6 +188,7 @@ weaponinfo Chaingun : DoomWeapon, 3
     goto Ready
   Flash:
     CHGF A 5 bright A_Light1
+    goto LightDone
     CHGF B 5 bright A_Light2
     goto LightDone
   "@
