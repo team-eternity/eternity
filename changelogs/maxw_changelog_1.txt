@@ -398,6 +398,10 @@ variable "hu_alwaysshowcoords" has been introduced to control the same thing.
 Added an option that allows you to set message alignment to either default,
 left, or centred.
 
+-------------------------------------------------------------------------------
+2019/11/03
+Make FoV save in configs.
+
 ================================================================================
 EOF
 ================================================================================
