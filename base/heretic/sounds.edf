@@ -956,6 +956,13 @@ sound ht_blshit
   pitchvariance Heretic
 }
 
+sound ht_noway
+{
+  link        ht_plroof
+  skinindex   sk_noway
+  dehackednum 418
+}
+
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
 // Use these names in sound sequences to refer to the MapInfo-defined defaults.

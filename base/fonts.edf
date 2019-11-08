@@ -9,33 +9,40 @@ includeifenabled("heretic/fonts.edf", "HERETIC");
 // Common Fonts
 //
 
-// TODO: After the next release, remove the colortable
-// and merge back into a single definition of ee_consolefont
-
 // Console font
-ifenabled(DOOM)
 font ee_consolefont
 {
    id = 4;
    linearlump = "CONCHARS";
 
-   colortables
-   {
-      custom1 "176:191=250:254,44=253,45=253,47=253,67=254"
-   }
 }
-endif()
 
-ifenabled(HERETIC)
-font ee_consolefont
-{
-   id = 4;
-   linearlump = "CONCHARS";
+// Commented out from when the Kate memorial was active
+//// Console font
+//ifenabled(DOOM)
+//font ee_consolefont
+//{
+//   id = 4;
+//   linearlump = "CONCHARS";
+//
+//   colortables
+//   {
+//      custom1 "176:191=250:254,44=253,45=253,47=253,67=254"
+//   }
+//}
+//endif()
+//
+//ifenabled(HERETIC)
+//font ee_consolefont
+//{
+//   id = 4;
+//   linearlump = "CONCHARS";
+//
+//   colortables
+//   {
+//      custom1 "16:31=169:176,32:35=173:175,36:4=169:176,64:67=173:175"
+//   }
+//}
+//endif()
 
-   colortables
-   {
-      custom1 "16:31=169:176,32:35=173:175,36:4=169:176,64:67=173:175"
-   }
-}
-endif()
 

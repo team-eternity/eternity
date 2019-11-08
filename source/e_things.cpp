@@ -288,6 +288,7 @@ static const char *inflictorTypes[INFLICTOR_NUMTYPES] =
    "none",
    "MinotaurCharge",
    "Whirlwind",
+   "PoweredMaceBall",
 };
 
 //
@@ -1943,7 +1944,7 @@ static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
 
       if((pfx.numEffects = cfg_size(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
       {
-         pfx.effects = ecalloc(itemeffect_t **, 1, sizeof(itemeffect_t **));
+         pfx.effects = ecalloc(itemeffect_t **, pfx.numEffects, sizeof(itemeffect_t *));
          for(unsigned int i = 0; i < pfx.numEffects; i++)
          {
             str = cfg_getnstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS, i);
@@ -2786,6 +2787,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    if(IS_SET(ITEM_TNG_DROPTYPE))
    {
       tempstr = cfg_getstr(thingsec, ITEM_TNG_DROPTYPE);
+      E_clearDropItems(mobjinfo[i]);
       if(strcasecmp(tempstr, "NONE"))
          E_addDropItem(mobjinfo[i], tempstr, 255, 0, false);
    }

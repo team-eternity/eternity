@@ -46,6 +46,9 @@
 #include "w_wad.h"
 #include "w_iterator.h"
 
+// Texture hash table, used in several places here
+typedef EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> texturehash_t;
+
 //
 // Texture definition.
 // Each texture is composed of one or more patches,
@@ -207,9 +210,6 @@ static texture_t *R_AllocTexStruct(const char *name, int16_t width,
 // haleyjd 10/27/08: new texture reading code
 //
 
-static mappatch_t   tp; // temporary patch
-static maptexture_t tt; // temporary texture
-
 enum
 {
    texture_unknown, // not determined yet
@@ -248,7 +248,7 @@ typedef struct texturelump_s
     (((int32_t)*((x) + 2)) << 16) | \
     (((int32_t)*((x) + 3)) << 24)); (x) += 4
 
-static byte *R_ReadDoomPatch(byte *rawpatch)
+static byte *R_ReadDoomPatch(byte *rawpatch, mappatch_t &tp)
 {
    byte *rover = rawpatch;
 
@@ -260,7 +260,7 @@ static byte *R_ReadDoomPatch(byte *rawpatch)
    return rover; // positioned at next patch
 }
 
-static byte *R_ReadStrifePatch(byte *rawpatch)
+static byte *R_ReadStrifePatch(byte *rawpatch, mappatch_t &tp)
 {
    byte *rover = rawpatch;
 
@@ -273,14 +273,14 @@ static byte *R_ReadStrifePatch(byte *rawpatch)
    return rover; // positioned at next patch
 }
 
-static byte *R_ReadUnknownPatch(byte *rawpatch)
+static byte *R_ReadUnknownPatch(byte *rawpatch, mappatch_t &tp)
 {
    I_Error("R_ReadUnknownPatch called\n");
 
    return NULL;
 }
 
-static byte *R_ReadDoomTexture(byte *rawtexture)
+static byte *R_ReadDoomTexture(byte *rawtexture, maptexture_t &tt)
 {
    byte *rover = rawtexture;
    int i;
@@ -298,7 +298,7 @@ static byte *R_ReadDoomTexture(byte *rawtexture)
    return rover; // positioned for patch reading
 }
 
-static byte *R_ReadStrifeTexture(byte *rawtexture)
+static byte *R_ReadStrifeTexture(byte *rawtexture, maptexture_t &tt)
 {
    byte *rover = rawtexture;
    int i;
@@ -317,7 +317,7 @@ static byte *R_ReadStrifeTexture(byte *rawtexture)
    return rover; // positioned for patch reading
 }
 
-static byte *R_ReadUnknownTexture(byte *rawtexture)
+static byte *R_ReadUnknownTexture(byte *rawtexture, maptexture_t &tt)
 {
    I_Error("R_ReadUnknownTexture called\n");
 
@@ -326,8 +326,8 @@ static byte *R_ReadUnknownTexture(byte *rawtexture)
 
 typedef struct texturehandler_s
 {
-   byte *(*ReadTexture)(byte *);
-   byte *(*ReadPatch)(byte *);
+   byte *(*ReadTexture)(byte *, maptexture_t &tt);
+   byte *(*ReadPatch)(byte *, mappatch_t &tp);
 } texturehandler_t;
 
 static texturehandler_t TextureHandlers[] =
@@ -480,10 +480,12 @@ void R_HticTextureHacks(texture_t *t)
 // TODO: Walk the wad lump hash chains and support additive logic.
 //
 static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
-                             int nummappatches, int texnum, int *errors)
+                             int nummappatches, int texnum, int *errors, texturehash_t &duptable)
 {
    int i, j;
    byte *directory = tlump->directory;
+   edefstructvar(maptexture_t, tt);
+   edefstructvar(mappatch_t, tp);
 
    for(i = 0; i < tlump->numtextures; i++, texnum++)
    {
@@ -499,10 +501,13 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
 
       rawtex = tlump->data + offset;
 
-      rawpatch = TextureHandlers[tlump->format].ReadTexture(rawtex);
+      rawpatch = TextureHandlers[tlump->format].ReadTexture(rawtex, tt);
+
+      // Like vanilla DOOM, make sure to only keep the first texture from the TEXTURE1/TEXTURE2 lump
 
       texture = textures[texnum] = 
          R_AllocTexStruct(tt.name, tt.width, tt.height, tt.patchcount);
+      duptable.addObject(texture);  // add to the duplicate list for later detection
          
       texture->index = texnum;
          
@@ -510,7 +515,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
 
       for(j = 0; j < texture->ccount; j++, component++)
       {
-         rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch);
+         rawpatch = TextureHandlers[tlump->format].ReadPatch(rawpatch, tp);
 
          component->originx = tp.originx;
          component->originy = tp.originy;
@@ -1276,16 +1281,32 @@ static void R_InitTranslationLUT()
 // Texture Hashing
 //
 
-static EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> walltable;
-static EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> flattable;
+static texturehash_t walltable;
+static texturehash_t flattable;
+
+//
+// Returns true if this is marked as a TEXTURE1/TEXTURE2 duplicate. Needed to work like vanilla.
+//
+static bool R_checkTexLumpDup(const texture_t *srctexture, const texturehash_t &texlumpdups)
+{
+   const texture_t *next;
+   for(const texture_t *texture = texlumpdups.keyIterator(nullptr, srctexture->name); texture;
+       texture = next)
+   {
+      next = texlumpdups.keyIterator(texture, srctexture->name);
+      if(texture == srctexture)
+         return !!next; // the last one in the chain is the first found from TEXTUREx
+   }
+   return false;  // if it's outside TEXTURE1/TEXTURE2, it's not in the control hash table.
+}
 
 //
 // R_InitTextureHash
 //
 // This function now inits the two ehash tables and inserts the loaded textures
-// into them.
+// into them. Also avoids the TEXTURE1/TEXTURE2 lump duplicates like vanilla.
 //
-static void R_InitTextureHash()
+static void R_InitTextureHash(const texturehash_t &texlumpdups)
 {
    int i;
    
@@ -1297,8 +1318,11 @@ static void R_InitTextureHash()
    walltable.initialize(wallstop - wallstart + 31);
    flattable.initialize(flatstop - flatstart + 31);
    
+   // NOTE: vanilla DOOM rules that if there are duplicate texture names in the TEXTURE* lumps, only
+   // the first texture is used. So don't add more textures if one is already there.
    for(i = wallstart; i < wallstop; i++)
-      walltable.addObject(textures[i]);
+      if(!R_checkTexLumpDup(textures[i], texlumpdups))
+         walltable.addObject(textures[i]);
       
    for(i = flatstart; i < flatstop; i++)
       flattable.addObject(textures[i]);
@@ -1473,9 +1497,13 @@ void R_InitTextures()
       ++texnum;
    }
 
+   // Keep track of duplicate textures
+   texturehash_t duptable;
+   duptable.initialize(wallstop - wallstart + 31);
+
    // read texture lumps
-   texnum = R_ReadTextureLump(maptex1, patchlookup, nummappatches, texnum, &errors);
-   texnum = R_ReadTextureLump(maptex2, patchlookup, nummappatches, texnum, &errors);
+   texnum = R_ReadTextureLump(maptex1, patchlookup, nummappatches, texnum, &errors, duptable);
+   texnum = R_ReadTextureLump(maptex2, patchlookup, nummappatches, texnum, &errors, duptable);
    R_ReadTextureNamespace(texnum);
 
    // done with patch lookup
@@ -1508,7 +1536,8 @@ void R_InitTextures()
    R_MakeMissingTexture(texturecount - 1);
    
    // initialize texture hashing
-   R_InitTextureHash();
+   R_InitTextureHash(duptable);
+   duptable.destroy();
 }
 
 //=============================================================================

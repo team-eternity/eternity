@@ -2526,6 +2526,33 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoomSync)
 }
 
 //
+// EV_ActionParamGenStairs
+//
+// Implements Generic_Stairs(tag, speed, height, flags, reset)
+// * ExtraData: 502
+// * UDMF:      204
+//
+DEFINE_ACTION(EV_ActionParamGenStairs)
+{
+   edefstructvar(stairdata_t, sd);
+
+   int flags = instance->args[3];
+   sd.flags = SDF_HAVESPAC;
+   sd.direction = flags & 1;
+   sd.stepsize_type = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;
+   sd.speed_type = SpeedParam;
+   sd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   if(flags & 2)
+      sd.flags |= SDF_IGNORETEXTURES;
+   sd.reset_value = instance->args[4];
+   int rtn = EV_DoParamStairs(instance->line, instance->tag, &sd);
+   if(rtn && instance->line)
+      instance->line->args[3] ^= 1;
+   return rtn;
+}
+
+//
 // EV_ActionPolyobjDoorSlide
 //
 // Implements Polyobj_DoorSlide(id, speed, angle, distance, delay)

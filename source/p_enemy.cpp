@@ -1977,7 +1977,7 @@ static void P_ResurrectPlayer()
       mthing.angle = (int16_t)(p->mo->angle / ANGLE_1);
       mthing.type  = static_cast<int16_t>(p - players + 1);
 
-      p->health = 100;
+      p->health = p->pclass->initialhealth;
       P_SpawnPlayer(&mthing);
       oldmo->player = NULL;
       P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);

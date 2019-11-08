@@ -377,6 +377,7 @@ int hud_msg_lines;        // number of message lines in window up to 16
 int hud_msg_scrollup;     // whether message list scrolls up
 int message_timer;        // timer used for normal messages
 int showMessages;         // Show messages has default, 0 = off, 1 = on
+int mess_align;           // whether or not messages are default, left, or centre aligned
 int mess_colour = CR_RED; // the colour of normal messages
 
 //
@@ -415,7 +416,7 @@ void HUDMessageWidget::drawer()
    edefstructvar(vtextdraw_t, vtd);
 
    vtd.font        = hud_font;
-   vtd.screen      = &subscreen43;
+   vtd.screen      = &vbscreenyscaled;
    vtd.flags       = VTXT_FIXEDCOLOR;
    vtd.fixedColNum = mess_colour;
    
@@ -428,10 +429,12 @@ void HUDMessageWidget::drawer()
       
       // haleyjd 12/26/02: center messages in proper gamemodes
       // haleyjd 08/26/12: center also if in widescreen modes
-      if(GameModeInfo->flags & GIF_CENTERHUDMSG || 
-         vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)
+      // MaxW: 2019/09/08: Respect user's alignment setting
+      if(mess_align == MSGALIGN_CENTRE ||
+         (mess_align == MSGALIGN_DEFAULT && (GameModeInfo->flags & GIF_CENTERHUDMSG ||
+          vbscreen.getVirtualAspectRatio() > 4 * FRACUNIT / 3)))
       {
-         vtd.x = (SCREENWIDTH - V_FontStringWidth(hud_font, msg)) / 2;
+         vtd.x = (vtd.screen->unscaledw - V_FontStringWidth(hud_font, msg)) / 2;
          vtd.flags |= VTXT_ABSCENTER;
       }
       else
@@ -1342,14 +1345,15 @@ static bool HU_ChatRespond(const event_t *ev)
 //   Restored by Quasar (tm)
 //
 
-class HUDAutomapCoordWidget : public HUDTextWidget
+class HUDCoordWidget : public HUDTextWidget
 {
 public:
    enum
    {
       COORDTYPE_X,
       COORDTYPE_Y,
-      COORDTYPE_Z
+      COORDTYPE_Z,
+      COORDTYPE_A
    };
 
 protected:
@@ -1377,6 +1381,9 @@ public:
          case COORDTYPE_Z:
             y = 28;
             break;
+         case COORDTYPE_A:
+            y = 37;
+            break;
          default:
             break;
          }
@@ -1395,22 +1402,26 @@ public:
          case COORDTYPE_Z:
             y = 25;
             break;
+         case COORDTYPE_A:
+            y = 33;
+            break;
          default:
             break;
          }
       }
-      message  = NULL;
+      message  = nullptr;
       font     = hud_font;
       cleartic = 0;
-      flags    = TW_AUTOMAP_ONLY;
    }
 };
 
-static HUDAutomapCoordWidget coordx_widget;
-static HUDAutomapCoordWidget coordy_widget;
-static HUDAutomapCoordWidget coordz_widget;
+static HUDCoordWidget coordx_widget;
+static HUDCoordWidget coordy_widget;
+static HUDCoordWidget coordz_widget;
+static HUDCoordWidget coorda_widget;
 
 // haleyjd 02/12/06: configuration variables
+bool hu_alwaysshowcoords;
 bool hu_showcoords;
 int  hu_coordscolor;
 
@@ -1419,7 +1430,7 @@ int  hu_coordscolor;
 //
 // Updates automap coordinate widgets.
 //
-void HUDAutomapCoordWidget::ticker()
+void HUDCoordWidget::ticker()
 {
    player_t *plyr;
    fixed_t x, y, z;
@@ -1427,10 +1438,11 @@ void HUDAutomapCoordWidget::ticker()
    static char coordxstr[16];
    static char coordystr[16];
    static char coordzstr[16];
+   static char coordastr[16];
 
-   if(!automapactive || !hu_showcoords)
+   if(!hu_alwaysshowcoords && (!automapactive || !hu_showcoords))
    {
-      message = NULL;
+      message = nullptr;
       return;
    }
    plyr = &players[displayplayer];
@@ -1447,10 +1459,16 @@ void HUDAutomapCoordWidget::ticker()
       sprintf(coordystr, "%cY: %-5d", hu_coordscolor + 128, y >> FRACBITS);
       message = coordystr;
    }
-   else
+   else if(coordType == COORDTYPE_Z)
    {
       sprintf(coordzstr, "%cZ: %-5d", hu_coordscolor + 128, z >> FRACBITS);
       message = coordzstr;
+   }
+   else
+   {
+      sprintf(coordastr, "%cA: %-.0f", hu_coordscolor + 128,
+              static_cast<double>(plyr->mo->angle) / ANGLE_1);
+      message = coordastr;
    }
 }
 
@@ -1458,28 +1476,32 @@ void HUDAutomapCoordWidget::ticker()
 // HU_InitCoords
 //
 // Initializes the automap coordinate widgets.
-//   
+//
 static void HU_InitCoords()
 {
    // set ids
    coordx_widget.setName("_HU_CoordXWidget");
    coordy_widget.setName("_HU_CoordYWidget");
    coordz_widget.setName("_HU_CoordZWidget");
+   coorda_widget.setName("_HU_CoordAWidget");
 
    // set types
    coordx_widget.setType(WIDGET_TEXT);
    coordy_widget.setType(WIDGET_TEXT);
    coordz_widget.setType(WIDGET_TEXT);
+   coorda_widget.setType(WIDGET_TEXT);
 
    // add to hash
    HUDWidget::AddWidgetToHash(&coordx_widget);
    HUDWidget::AddWidgetToHash(&coordy_widget);
    HUDWidget::AddWidgetToHash(&coordz_widget);
+   HUDWidget::AddWidgetToHash(&coorda_widget);
 
    // set data
-   coordx_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_X);
-   coordy_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_Y);
-   coordz_widget.initProps(HUDAutomapCoordWidget::COORDTYPE_Z);
+   coordx_widget.initProps(HUDCoordWidget::COORDTYPE_X);
+   coordy_widget.initProps(HUDCoordWidget::COORDTYPE_Y);
+   coordz_widget.initProps(HUDCoordWidget::COORDTYPE_Z);
+   coorda_widget.initProps(HUDCoordWidget::COORDTYPE_A);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1535,7 +1557,10 @@ const char english_shiftxform[] =
 // Console Commands
 //
 
+const char *align_str[] = { "default", "left", "centered" };
+
 VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
+VARIABLE_INT(mess_align,        NULL, 0, 2,             align_str);
 VARIABLE_INT(mess_colour,       NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
@@ -1545,11 +1570,12 @@ VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
 VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
 
 // haleyjd 02/12/06: lost/new hud options
-VARIABLE_TOGGLE(hu_showtime,    NULL,                   yesno);
-VARIABLE_TOGGLE(hu_showcoords,  NULL,                   yesno);
-VARIABLE_INT(hu_timecolor,      NULL, 0, CR_BUILTIN,    textcolours);
-VARIABLE_INT(hu_levelnamecolor, NULL, 0, CR_BUILTIN,    textcolours);
-VARIABLE_INT(hu_coordscolor,    NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_TOGGLE(hu_showtime,         NULL,                   yesno);
+VARIABLE_TOGGLE(hu_showcoords,       NULL,                   yesno);
+VARIABLE_TOGGLE(hu_alwaysshowcoords, NULL,                   yesno);
+VARIABLE_INT(hu_timecolor,           NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_levelnamecolor,      NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_coordscolor,         NULL, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);
@@ -1559,6 +1585,7 @@ CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
+CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
 CONSOLE_NETCMD(say, cf_netvar, netcmd_chat)
 {
@@ -1574,6 +1601,7 @@ CONSOLE_VARIABLE(hu_messagetime, message_timer, 0) {}
 // haleyjd 02/12/06: lost/new hud options
 CONSOLE_VARIABLE(hu_showtime, hu_showtime, 0) {}
 CONSOLE_VARIABLE(hu_showcoords, hu_showcoords, 0) {}
+CONSOLE_VARIABLE(hu_alwaysshowcoords, hu_alwaysshowcoords, 0) {}
 CONSOLE_VARIABLE(hu_timecolor, hu_timecolor, 0) {}
 CONSOLE_VARIABLE(hu_levelnamecolor, hu_levelnamecolor, 0) {}
 CONSOLE_VARIABLE(hu_coordscolor, hu_coordscolor, 0) {}

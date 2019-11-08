@@ -40,6 +40,7 @@ enum
    sk_fallht,
    sk_plwdth, // haleyjd: wimpy death
    sk_noway,  // haleyjd: noway sound, separate from oof
+   sk_jump,
    NUMSKINSOUNDS
 };
 

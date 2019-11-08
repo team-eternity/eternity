@@ -268,6 +268,19 @@ static bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 }
 
 //
+// Sets sprite by checking skin
+//
+inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
+{
+   // sf: skins
+   // haleyjd 06/11/08: only replace if st->sprite == default sprite
+   if(mobj.skin && st.sprite == mobj.info->defsprite)
+      mobj.sprite = mobj.skin->sprite;
+   else
+      mobj.sprite = st.sprite;
+}
+
+//
 // P_SetMobjState
 //
 // Returns true if the mobj is still present.
@@ -301,12 +314,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       mobj->state = st;
       mobj->tics = st->tics;
 
-      // sf: skins
-      // haleyjd 06/11/08: only replace if st->sprite == default sprite
-      if(mobj->skin && st->sprite == mobj->info->defsprite)
-         mobj->sprite = mobj->skin->sprite;
-      else
-         mobj->sprite = st->sprite;
+      P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
 
@@ -374,11 +382,8 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 
    // don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
-   
-   if(mobj->skin && st->sprite == mobj->info->defsprite)
-      mobj->sprite = mobj->skin->sprite;
-   else
-      mobj->sprite = st->sprite;
+
+   P_setSpriteBySkin(*mobj, *st);
 
    mobj->frame = st->frame;
 
@@ -1902,10 +1907,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    mobj->state  = st;
    mobj->tics   = st->tics;
-   if(mobj->skin && st->sprite == mobj->info->defsprite)
-      mobj->sprite = mobj->skin->sprite;
-   else
-      mobj->sprite = st->sprite;
+
+   P_setSpriteBySkin(*mobj, *st);
    mobj->frame  = st->frame;
 
    // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 

@@ -11,13 +11,21 @@
 		4F015B8D18775CB100ADB3F4 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8B18775CB100ADB3F4 /* COPYING */; };
 		4F015B901877613100ADB3F4 /* About.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4F015B8E1877613100ADB3F4 /* About.xib */; };
 		4F015B961877636F00ADB3F4 /* ELAboutController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B951877636F00ADB3F4 /* ELAboutController.m */; };
-		4F2F32BA186710F300EED7DE /* eternity in Resources */ = {isa = PBXBuildFile; fileRef = 4F2F32B9186710B200EED7DE /* eternity */; };
 		4F2F32BB1867111400EED7DE /* base in Resources */ = {isa = PBXBuildFile; fileRef = FA82164B1647128900FF998A /* base */; };
 		4F2F32BC1867111400EED7DE /* docs in Resources */ = {isa = PBXBuildFile; fileRef = FA8216761647128900FF998A /* docs */; };
 		4F2F32BD1867111400EED7DE /* user in Resources */ = {isa = PBXBuildFile; fileRef = FA8216871647128900FF998A /* user */; };
-		4F48AAD020E5684A00AD935F /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		4F48AAD120E5684A00AD935F /* SDL2_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F48AACB20E5682B00AD935F /* SDL2_net.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		4F48AAD220E5684A00AD935F /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F48AAC820E5682B00AD935F /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		4F769D7F22C6BE9700E7E702 /* libFLAC.8.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D7022C6BE7F00E7E702 /* libFLAC.8.dylib */; };
+		4F769D8022C6BE9700E7E702 /* libmodplug.1.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D7122C6BE8000E7E702 /* libmodplug.1.dylib */; };
+		4F769D8122C6BE9700E7E702 /* libmpg123.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D7222C6BE8000E7E702 /* libmpg123.0.dylib */; };
+		4F769D8222C6BE9700E7E702 /* libogg.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6B22C6BE7F00E7E702 /* libogg.0.dylib */; };
+		4F769D8322C6BE9700E7E702 /* libopus.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6C22C6BE7F00E7E702 /* libopus.0.dylib */; };
+		4F769D8422C6BE9700E7E702 /* libopusfile.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D7322C6BE8000E7E702 /* libopusfile.0.dylib */; };
+		4F769D8522C6BE9700E7E702 /* libSDL2_mixer-2.0.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6E22C6BE7F00E7E702 /* libSDL2_mixer-2.0.0.dylib */; };
+		4F769D8622C6BE9700E7E702 /* libSDL2_net-2.0.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */; };
+		4F769D8722C6BE9700E7E702 /* libSDL2-2.0.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */; };
+		4F769D8822C6BE9700E7E702 /* libvorbis.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6D22C6BE7F00E7E702 /* libvorbis.0.dylib */; };
+		4F769D8922C6BE9700E7E702 /* libvorbisfile.3.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6F22C6BE7F00E7E702 /* libvorbisfile.3.dylib */; };
+		4F9E46C81EC7576E00F9C6B3 /* eternity in Resources */ = {isa = PBXBuildFile; fileRef = 4F9E46C71EC7576E00F9C6B3 /* eternity */; };
 		4FD651B916B8183500F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		FA062C0A16503EFF005A65FF /* ELFileViewDataSource.m in Sources */ = {isa = PBXBuildFile; fileRef = FA062C0916503EFF005A65FF /* ELFileViewDataSource.m */; };
@@ -33,31 +41,6 @@
 		FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = FABF5FFF158C8F6300C49E93 /* Credits.rtf */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		4F2F32B8186710B200EED7DE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4F5F386B182D97A10027813A;
-			remoteInfo = eternity;
-		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		4F48AACF20E5683A00AD935F /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				4F48AAD020E5684A00AD935F /* SDL2_mixer.framework in CopyFiles */,
-				4F48AAD120E5684A00AD935F /* SDL2_net.framework in CopyFiles */,
-				4F48AAD220E5684A00AD935F /* SDL2.framework in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		256AC3F00F4B6AF500CF3369 /* EternityLaunch_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EternityLaunch_Prefix.pch; sourceTree = "<group>"; };
@@ -66,10 +49,18 @@
 		4F015B8F1877613100ADB3F4 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/About.xib; sourceTree = "<group>"; };
 		4F015B941877636F00ADB3F4 /* ELAboutController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELAboutController.h; sourceTree = "<group>"; };
 		4F015B951877636F00ADB3F4 /* ELAboutController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ELAboutController.m; sourceTree = "<group>"; };
-		4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = EternityEngine.xcodeproj; path = ../EternityEngine.xcodeproj; sourceTree = "<group>"; };
-		4F48AAC820E5682B00AD935F /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = "../sdl-mac-releases/SDL2.framework"; sourceTree = "<group>"; };
-		4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = "../sdl-mac-releases/SDL2_mixer.framework"; sourceTree = "<group>"; };
-		4F48AACB20E5682B00AD935F /* SDL2_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_net.framework; path = "../sdl-mac-releases/SDL2_net.framework"; sourceTree = "<group>"; };
+		4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
+		4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_net-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2_net-2.0.0.dylib"; sourceTree = "<group>"; };
+		4F769D6B22C6BE7F00E7E702 /* libogg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libogg.0.dylib; path = "../sdl-mac-releases/libogg.0.dylib"; sourceTree = "<group>"; };
+		4F769D6C22C6BE7F00E7E702 /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = "../sdl-mac-releases/libopus.0.dylib"; sourceTree = "<group>"; };
+		4F769D6D22C6BE7F00E7E702 /* libvorbis.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvorbis.0.dylib; path = "../sdl-mac-releases/libvorbis.0.dylib"; sourceTree = "<group>"; };
+		4F769D6E22C6BE7F00E7E702 /* libSDL2_mixer-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_mixer-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2_mixer-2.0.0.dylib"; sourceTree = "<group>"; };
+		4F769D6F22C6BE7F00E7E702 /* libvorbisfile.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvorbisfile.3.dylib; path = "../sdl-mac-releases/libvorbisfile.3.dylib"; sourceTree = "<group>"; };
+		4F769D7022C6BE7F00E7E702 /* libFLAC.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libFLAC.8.dylib; path = "../sdl-mac-releases/libFLAC.8.dylib"; sourceTree = "<group>"; };
+		4F769D7122C6BE8000E7E702 /* libmodplug.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmodplug.1.dylib; path = "../sdl-mac-releases/libmodplug.1.dylib"; sourceTree = "<group>"; };
+		4F769D7222C6BE8000E7E702 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = "../sdl-mac-releases/libmpg123.0.dylib"; sourceTree = "<group>"; };
+		4F769D7322C6BE8000E7E702 /* libopusfile.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopusfile.0.dylib; path = "../sdl-mac-releases/libopusfile.0.dylib"; sourceTree = "<group>"; };
+		4F9E46C71EC7576E00F9C6B3 /* eternity */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = eternity; path = ../builds/eternity; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Eternity Engine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Eternity Engine.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELFileViewDataSource.h; sourceTree = "<group>"; };
@@ -118,7 +109,6 @@
 		29B97314FDCFA39411CA2CEA /* EternityLaunch */ = {
 			isa = PBXGroup;
 			children = (
-				4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */,
 				29B97315FDCFA39411CA2CEA /* Code */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -140,6 +130,18 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4F769D7022C6BE7F00E7E702 /* libFLAC.8.dylib */,
+				4F769D7122C6BE8000E7E702 /* libmodplug.1.dylib */,
+				4F769D7222C6BE8000E7E702 /* libmpg123.0.dylib */,
+				4F769D6B22C6BE7F00E7E702 /* libogg.0.dylib */,
+				4F769D6C22C6BE7F00E7E702 /* libopus.0.dylib */,
+				4F769D7322C6BE8000E7E702 /* libopusfile.0.dylib */,
+				4F769D6E22C6BE7F00E7E702 /* libSDL2_mixer-2.0.0.dylib */,
+				4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */,
+				4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */,
+				4F769D6D22C6BE7F00E7E702 /* libvorbis.0.dylib */,
+				4F769D6F22C6BE7F00E7E702 /* libvorbisfile.3.dylib */,
+				4F9E46C71EC7576E00F9C6B3 /* eternity */,
 				4F015B8A18775CB100ADB3F4 /* AUTHORS */,
 				4F015B8B18775CB100ADB3F4 /* COPYING */,
 				FA8216B2164712B100FF998A /* Eternity companions */,
@@ -157,20 +159,9 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				4F48AACA20E5682B00AD935F /* SDL2_mixer.framework */,
-				4F48AACB20E5682B00AD935F /* SDL2_net.framework */,
-				4F48AAC820E5682B00AD935F /* SDL2.framework */,
 				FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		4F2F32B2186710B100EED7DE /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4F2F32B9186710B200EED7DE /* eternity */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		FA1F5705158BC2FD006F8063 /* Main */ = {
@@ -216,7 +207,6 @@
 				8D1107290486CEB800E47090 /* Resources */,
 				8D11072C0486CEB800E47090 /* Sources */,
 				8D11072E0486CEB800E47090 /* Frameworks */,
-				4F48AACF20E5683A00AD935F /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -234,10 +224,11 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1010;
+				LastUpgradeCheck = 1020;
 				TargetAttributes = {
 					8D1107260486CEB800E47090 = {
 						DevelopmentTeam = 66L236F264;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -254,28 +245,12 @@
 			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* EternityLaunch */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 4F2F32B2186710B100EED7DE /* Products */;
-					ProjectRef = 4F2F32B1186710B100EED7DE /* EternityEngine.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* Eternity Engine */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		4F2F32B9186710B200EED7DE /* eternity */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = eternity;
-			remoteRef = 4F2F32B8186710B200EED7DE /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		8D1107290486CEB800E47090 /* Resources */ = {
@@ -286,14 +261,25 @@
 				FABF5F01158C710400C49E93 /* Eternity.icns in Resources */,
 				FABF6000158C8F6300C49E93 /* Credits.rtf in Resources */,
 				FAB103DC15911F4E00393DE3 /* DumpConsole.xib in Resources */,
+				4F9E46C81EC7576E00F9C6B3 /* eternity in Resources */,
 				FA601C7B1696246800046D2D /* Launcher.xib in Resources */,
-				4F2F32BA186710F300EED7DE /* eternity in Resources */,
 				4F2F32BB1867111400EED7DE /* base in Resources */,
 				4F015B8D18775CB100ADB3F4 /* COPYING in Resources */,
 				4F015B8C18775CB100ADB3F4 /* AUTHORS in Resources */,
 				4F2F32BC1867111400EED7DE /* docs in Resources */,
 				4F2F32BD1867111400EED7DE /* user in Resources */,
 				4F015B901877613100ADB3F4 /* About.xib in Resources */,
+				4F769D7F22C6BE9700E7E702 /* libFLAC.8.dylib in Resources */,
+				4F769D8022C6BE9700E7E702 /* libmodplug.1.dylib in Resources */,
+				4F769D8122C6BE9700E7E702 /* libmpg123.0.dylib in Resources */,
+				4F769D8222C6BE9700E7E702 /* libogg.0.dylib in Resources */,
+				4F769D8322C6BE9700E7E702 /* libopus.0.dylib in Resources */,
+				4F769D8422C6BE9700E7E702 /* libopusfile.0.dylib in Resources */,
+				4F769D8522C6BE9700E7E702 /* libSDL2_mixer-2.0.0.dylib in Resources */,
+				4F769D8622C6BE9700E7E702 /* libSDL2_net-2.0.0.dylib in Resources */,
+				4F769D8722C6BE9700E7E702 /* libSDL2-2.0.0.dylib in Resources */,
+				4F769D8822C6BE9700E7E702 /* libvorbis.0.dylib in Resources */,
+				4F769D8922C6BE9700E7E702 /* libvorbisfile.3.dylib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -349,7 +335,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEVELOPMENT_TEAM = "";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -365,6 +355,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Debug;
 		};
@@ -372,7 +363,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -391,6 +387,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "net.mancubus.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "Eternity Engine";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Release;
 		};

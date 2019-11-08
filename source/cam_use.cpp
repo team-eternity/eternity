@@ -100,7 +100,7 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y,
          def.flags = CAM_ADDLINES;
          def.trav = noWayTraverse;
          PathTraverser traverser(def, &context);
-         if(!traverser.traverse(x, y, x2, y2))
+         if(!traverser.traverse(x, y, x2, y2) && strcasecmp(player->skin->sounds[sk_noway], "none"))
             S_StartSound(context.thing, GameModeInfo->playerSounds[sk_noway]);
       }
    }
@@ -162,7 +162,8 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    if(lo.openrange <= 0)
    {
       // can't use through a wall
-      S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
+      if(strcasecmp(context->thing->player->skin->sounds[sk_noway], "none"))
+         S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
       return false;
    }
 

@@ -385,11 +385,12 @@ static void V_TextFPSDrawer()
 // automatic scaling.
 //
 
-VBuffer vbscreen;    // vbscreen encapsulates the primary video surface
-VBuffer backscreen1; // backscreen1 is a temporary buffer for in_lude, border
-VBuffer backscreen2; // backscreen2 is a temporary buffer for screenshots
-VBuffer backscreen3; // backscreen3 is a temporary buffer for f_wipe
-VBuffer subscreen43; // provides a 4:3 sub-surface on vbscreen
+VBuffer vbscreen;        // vbscreen encapsulates the primary video surface
+VBuffer backscreen1;     // backscreen1 is a temporary buffer for in_lude, border
+VBuffer backscreen2;     // backscreen2 is a temporary buffer for screenshots
+VBuffer backscreen3;     // backscreen3 is a temporary buffer for f_wipe
+VBuffer subscreen43;     // provides a 4:3 sub-surface on vbscreen
+VBuffer vbscreenyscaled; // fits whole vbscreen but stretches pixels vertically by 20%
 
 static bool vbscreenneedsfree = false;
 
@@ -402,16 +403,22 @@ static void V_initSubScreen43()
 {
    int subwidth;
    int offset;
+   int unscaledw;
 
    if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
    {
-      subwidth = vbscreen.width;
-      offset   = 0;
+      subwidth  = vbscreen.width;
+      offset    = 0;
+      unscaledw = SCREENWIDTH;
    }
    else
    {
       subwidth = vbscreen.height * 4 / 3;
       offset   = (vbscreen.width - subwidth) / 2;
+
+      const double scaleaspect = 1.2 * static_cast<double>(vbscreen.width) /
+                                 static_cast<double>(vbscreen.height);
+      unscaledw = static_cast<int>(round(SCREENHEIGHT * scaleaspect));
 
       // FIXME(?): our scaling code cannot handle a subscreen smaller than 320x200
       if(subwidth < SCREENWIDTH)
@@ -423,6 +430,9 @@ static void V_initSubScreen43()
 
    V_InitSubVBuffer(&subscreen43, &vbscreen, offset, 0, subwidth, vbscreen.height);
    V_SetScaling(&subscreen43, SCREENWIDTH, SCREENHEIGHT);
+
+   V_InitSubVBuffer(&vbscreenyscaled, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
+   V_SetScaling(&vbscreenyscaled, unscaledw, SCREENHEIGHT);
 }
 
 //
@@ -437,6 +447,7 @@ static void V_InitScreenVBuffer()
       V_FreeVBuffer(&backscreen2);
       V_FreeVBuffer(&backscreen3);
       V_FreeVBuffer(&subscreen43);
+      V_FreeVBuffer(&vbscreenyscaled);
    }
    else
       vbscreenneedsfree = true;

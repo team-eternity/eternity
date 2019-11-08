@@ -214,6 +214,10 @@ static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
 //
 static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
 {
+   // Don't ask
+   if(demo_version < 401)
+      return E_FindFirstWeaponSlot(player, player->readyweapon);
+
    for(weaponslot_t *&weaponslot : player->pclass->weaponslots)
    {
       if(weaponslot != nullptr)

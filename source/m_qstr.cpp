@@ -1233,7 +1233,7 @@ qstring &qstring::removeFileSpec()
 // This one is not limited to 8 character file names, and will include any
 // file extension, however, so it is not strictly equivalent.
 //
-void qstring::extractFileBase(qstring &dest)
+void qstring::extractFileBase(qstring &dest) const
 {
    const char *src = buffer + index - 1;
    dest = "";
