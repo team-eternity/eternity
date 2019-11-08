@@ -567,7 +567,7 @@ int CScriptBuilder::Build()
 			int typeId = module->GetTypeIdByDecl(decl->declaration.c_str());
 			assert( typeId >= 0 );
 			if( typeId >= 0 )
-				typeMetadataMap.insert(map<int, vector<string>>::value_type(typeId, decl->metadata));
+				typeMetadataMap.insert(map<int, vector<string> >::value_type(typeId, decl->metadata));
 		}
 		else if( decl->type == MDT_FUNC )
 		{
@@ -577,7 +577,7 @@ int CScriptBuilder::Build()
 				asIScriptFunction *func = module->GetFunctionByDecl(decl->declaration.c_str());
 				assert( func );
 				if( func )
-					funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+					funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 			}
 			else
 			{
@@ -595,7 +595,7 @@ int CScriptBuilder::Build()
 				asIScriptFunction *func = type->GetMethodByDecl(decl->declaration.c_str());
 				assert( func );
 				if( func )
-					it->second.funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+					it->second.funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 			}
 		}
 		else if( decl->type == MDT_VIRTPROP )
@@ -605,10 +605,10 @@ int CScriptBuilder::Build()
 				// Find the global virtual property accessors
 				asIScriptFunction *func = module->GetFunctionByName(("get_" + decl->declaration).c_str());
 				if( func )
-					funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+					funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 				func = module->GetFunctionByName(("set_" + decl->declaration).c_str());
 				if( func )
-					funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+					funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 			}
 			else
 			{
@@ -625,10 +625,10 @@ int CScriptBuilder::Build()
 				asITypeInfo *type = engine->GetTypeInfoById(typeId);
 				asIScriptFunction *func = type->GetMethodByName(("get_" + decl->declaration).c_str());
 				if( func )
-					it->second.funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+					it->second.funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 				func = type->GetMethodByName(("set_" + decl->declaration).c_str());
 				if( func )
-					it->second.funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+					it->second.funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 			}
 		}
 		else if( decl->type == MDT_VAR )
@@ -639,7 +639,7 @@ int CScriptBuilder::Build()
 				int varIdx = module->GetGlobalVarIndexByName(decl->declaration.c_str());
 				assert( varIdx >= 0 );
 				if( varIdx >= 0 )
-					varMetadataMap.insert(map<int, vector<string>>::value_type(varIdx, decl->metadata));
+					varMetadataMap.insert(map<int, vector<string> >::value_type(varIdx, decl->metadata));
 			}
 			else
 			{
@@ -672,7 +672,7 @@ int CScriptBuilder::Build()
 
 				// If found, add it
 				assert( idx >= 0 );
-				if( idx >= 0 ) it->second.varMetadataMap.insert(map<int, vector<string>>::value_type(idx, decl->metadata));
+				if( idx >= 0 ) it->second.varMetadataMap.insert(map<int, vector<string> >::value_type(idx, decl->metadata));
 			}
 		}
 		else if (decl->type == MDT_FUNC_OR_VAR)
@@ -682,13 +682,13 @@ int CScriptBuilder::Build()
 				// Find the global variable index
 				int varIdx = module->GetGlobalVarIndexByName(decl->name.c_str());
 				if (varIdx >= 0)
-					varMetadataMap.insert(map<int, vector<string>>::value_type(varIdx, decl->metadata));
+					varMetadataMap.insert(map<int, vector<string> >::value_type(varIdx, decl->metadata));
 				else
 				{
 					asIScriptFunction *func = module->GetFunctionByDecl(decl->declaration.c_str());
 					assert(func);
 					if (func)
-						funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+						funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 				}
 			}
 			else
@@ -722,7 +722,7 @@ int CScriptBuilder::Build()
 
 				// If found, add it
 				if (idx >= 0) 
-					it->second.varMetadataMap.insert(map<int, vector<string>>::value_type(idx, decl->metadata));
+					it->second.varMetadataMap.insert(map<int, vector<string> >::value_type(idx, decl->metadata));
 				else
 				{
 					// Look for the matching method instead
@@ -730,7 +730,7 @@ int CScriptBuilder::Build()
 					asIScriptFunction *func = type->GetMethodByDecl(decl->declaration.c_str());
 					assert(func);
 					if (func)
-						it->second.funcMetadataMap.insert(map<int, vector<string>>::value_type(func->GetId(), decl->metadata));
+						it->second.funcMetadataMap.insert(map<int, vector<string> >::value_type(func->GetId(), decl->metadata));
 				}
 			}
 		}
@@ -1015,7 +1015,7 @@ int CScriptBuilder::ExtractDeclaration(int pos, string &name, string &declaratio
 
 vector<string> CScriptBuilder::GetMetadataForType(int typeId)
 {
-	map<int,vector<string>>::iterator it = typeMetadataMap.find(typeId);
+	map<int,vector<string> >::iterator it = typeMetadataMap.find(typeId);
 	if( it != typeMetadataMap.end() )
 		return it->second;
 
@@ -1026,7 +1026,7 @@ vector<string> CScriptBuilder::GetMetadataForFunc(asIScriptFunction *func)
 {
 	if( func )
 	{
-		map<int,vector<string>>::iterator it = funcMetadataMap.find(func->GetId());
+		map<int,vector<string> >::iterator it = funcMetadataMap.find(func->GetId());
 		if( it != funcMetadataMap.end() )
 			return it->second;
 	}
@@ -1036,7 +1036,7 @@ vector<string> CScriptBuilder::GetMetadataForFunc(asIScriptFunction *func)
 
 vector<string> CScriptBuilder::GetMetadataForVar(int varIdx)
 {
-	map<int,vector<string>>::iterator it = varMetadataMap.find(varIdx);
+	map<int,vector<string> >::iterator it = varMetadataMap.find(varIdx);
 	if( it != varMetadataMap.end() )
 		return it->second;
 
@@ -1048,7 +1048,7 @@ vector<string> CScriptBuilder::GetMetadataForTypeProperty(int typeId, int varIdx
 	map<int, SClassMetadata>::iterator typeIt = classMetadataMap.find(typeId);
 	if(typeIt == classMetadataMap.end()) return vector<string>();
 
-	map<int, vector<string>>::iterator propIt = typeIt->second.varMetadataMap.find(varIdx);
+	map<int, vector<string> >::iterator propIt = typeIt->second.varMetadataMap.find(varIdx);
 	if(propIt == typeIt->second.varMetadataMap.end()) return vector<string>();
 
 	return propIt->second;
@@ -1061,7 +1061,7 @@ vector<string> CScriptBuilder::GetMetadataForTypeMethod(int typeId, asIScriptFun
 		map<int, SClassMetadata>::iterator typeIt = classMetadataMap.find(typeId);
 		if (typeIt == classMetadataMap.end()) return vector<string>();
 
-		map<int, vector<string>>::iterator methodIt = typeIt->second.funcMetadataMap.find(method->GetId());
+		map<int, vector<string> >::iterator methodIt = typeIt->second.funcMetadataMap.find(method->GetId());
 		if(methodIt == typeIt->second.funcMetadataMap.end()) return vector<string>();
 
 		return methodIt->second;

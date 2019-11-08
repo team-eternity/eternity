@@ -327,23 +327,13 @@ bool CDebugger::InterpretCommand(const string &cmd, asIScriptContext *ctx)
 		break;
 
 	case 'n':
-		if( ctx == 0 )
-		{
-			Output("No script is running\n");
-			return false;
-		}
 		m_action = STEP_OVER;
-		m_lastCommandAtStackLevel = ctx->GetCallstackSize();
+		m_lastCommandAtStackLevel = ctx ? ctx->GetCallstackSize() : 1;
 		break;
 
 	case 'o':
-		if( ctx == 0 )
-		{
-			Output("No script is running\n");
-			return false;
-		}
 		m_action = STEP_OUT;
-		m_lastCommandAtStackLevel = ctx->GetCallstackSize();
+		m_lastCommandAtStackLevel = ctx ? ctx->GetCallstackSize() : 0;
 		break;
 
 	case 'b':
@@ -638,6 +628,10 @@ void CDebugger::PrintValue(const std::string &expr, asIScriptContext *ctx)
 			// Expand members by default to 3 recursive levels only
 			s << ToString(ptr, typeId, 3, engine) << endl;
 			Output(s.str());
+		}
+		else
+		{
+			Output("Invalid expression. No matching symbol\n");
 		}
 	}
 	else

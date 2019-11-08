@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2018 Andreas Jonsson
+   Copyright (c) 2003-2019 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -355,7 +355,7 @@ int asCScriptEngine::SetEngineProperty(asEEngineProp property, asPWORD value)
 		break;
 
 	case asEP_PROPERTY_ACCESSOR_MODE:
-		if( value <= 2 )
+		if( value <= 3 )
 			ep.propertyAccessorMode = (int)value;
 		else
 			return asINVALID_ARG;
@@ -596,7 +596,7 @@ asCScriptEngine::asCScriptEngine()
 		ep.scanner                       = 1;         // utf8. 0 = ascii
 		ep.includeJitInstructions        = false;
 		ep.stringEncoding                = 0;         // utf8. 1 = utf16
-		ep.propertyAccessorMode          = 2;         // 0 = disable, 1 = app registered only, 2 = app and script created
+		ep.propertyAccessorMode          = 3;         // 0 = disable, 1 = app registered only, 2 = app and script created, 3 = flag with 'property'
 		ep.expandDefaultArrayToTemplate  = false;
 		ep.autoGarbageCollect            = true;
 		ep.disallowGlobalVars            = false;
@@ -738,10 +738,10 @@ asCScriptEngine::~asCScriptEngine()
 	}
 
 	// Delete the functions for generated template types that may references object types
-	for( asUINT n = 0; n < templateInstanceTypes.GetLength(); n++ )
+	for( asUINT n = 0; n < generatedTemplateTypes.GetLength(); n++ )
 	{
-		asCObjectType *templateType = templateInstanceTypes[n];
-		if( templateInstanceTypes[n] )
+		asCObjectType *templateType = generatedTemplateTypes[n];
+		if( templateType )
 			templateType->DestroyInternal();
 	}
 	for( asUINT n = 0; n < listPatternTypes.GetLength(); n++ )
@@ -1541,7 +1541,7 @@ int asCScriptEngine::RegisterInterface(const char *name)
 	if( token != ttIdentifier || strlen(name) != tokenLen )
 		return ConfigError(asINVALID_NAME, "RegisterInterface", name, 0);
 
-	r = bld.CheckNameConflict(name, 0, 0, defaultNamespace, true);
+	r = bld.CheckNameConflict(name, 0, 0, defaultNamespace, true, false);
 	if( r < 0 )
 		return ConfigError(asNAME_TAKEN, "RegisterInterface", name, 0);
 
@@ -1603,7 +1603,7 @@ int asCScriptEngine::RegisterInterfaceMethod(const char *intf, const char *decla
 	}
 
 	// Check name conflicts
-	r = bld.CheckNameConflictMember(dt.GetTypeInfo(), func->name.AddressOf(), 0, 0, false);
+	r = bld.CheckNameConflictMember(dt.GetTypeInfo(), func->name.AddressOf(), 0, 0, false, false);
 	if( r < 0 )
 	{
 		func->funcType = asFUNC_DUMMY;
@@ -1824,7 +1824,7 @@ int asCScriptEngine::RegisterObjectType(const char *name, int byteSize, asDWORD 
 			if( token != ttIdentifier || typeName.GetLength() != tokenLen )
 				return ConfigError(asINVALID_NAME, "RegisterObjectType", name, 0);
 
-			r = bld.CheckNameConflict(name, 0, 0, defaultNamespace, true);
+			r = bld.CheckNameConflict(name, 0, 0, defaultNamespace, true, false);
 			if( r < 0 )
 				return ConfigError(asNAME_TAKEN, "RegisterObjectType", name, 0);
 
@@ -2793,7 +2793,7 @@ int asCScriptEngine::RegisterMethodToObjectType(asCObjectType *objectType, const
 	}
 
 	// Check name conflicts
-	r = bld.CheckNameConflictMember(objectType, func->name.AddressOf(), 0, 0, false);
+	r = bld.CheckNameConflictMember(objectType, func->name.AddressOf(), 0, 0, false, false);
 	if( r < 0 )
 	{
 		func->funcType = asFUNC_DUMMY;
@@ -2801,6 +2801,18 @@ int asCScriptEngine::RegisterMethodToObjectType(asCObjectType *objectType, const
 		return ConfigError(asNAME_TAKEN, "RegisterObjectMethod", objectType->name.AddressOf(), declaration);
 	}
 
+	// Validate property signature
+	if( func->IsProperty() && (r = bld.ValidateVirtualProperty(func)) < 0 )
+	{
+		// Set as dummy function before deleting
+		func->funcType = asFUNC_DUMMY;
+		asDELETE(func,asCScriptFunction);
+		if( r == -5 )
+			return ConfigError(asNAME_TAKEN, "RegisterObjectMethod", objectType->name.AddressOf(), declaration);
+		else
+			return ConfigError(asINVALID_DECLARATION, "RegisterObjectMethod", objectType->name.AddressOf(), declaration);
+	}
+	
 	// Check against duplicate methods
 	if( func->name == "opConv" || func->name == "opImplConv" || func->name == "opCast" || func->name == "opImplCast" )
 	{
@@ -2907,13 +2919,25 @@ int asCScriptEngine::RegisterGlobalFunction(const char *declaration, const asSFu
 	func->nameSpace = defaultNamespace;
 
 	// Check name conflicts
-	r = bld.CheckNameConflict(func->name.AddressOf(), 0, 0, defaultNamespace, false);
+	r = bld.CheckNameConflict(func->name.AddressOf(), 0, 0, defaultNamespace, false, false);
 	if( r < 0 )
 	{
 		// Set as dummy function before deleting
 		func->funcType = asFUNC_DUMMY;
 		asDELETE(func,asCScriptFunction);
 		return ConfigError(asNAME_TAKEN, "RegisterGlobalFunction", declaration, 0);
+	}
+	
+	// Validate property signature
+	if( func->IsProperty() && (r = bld.ValidateVirtualProperty(func)) < 0 )
+	{
+		// Set as dummy function before deleting
+		func->funcType = asFUNC_DUMMY;
+		asDELETE(func,asCScriptFunction);
+		if( r == -5 )
+			return ConfigError(asNAME_TAKEN, "RegisterGlobalFunction", declaration, 0);
+		else
+			return ConfigError(asINVALID_DECLARATION, "RegisterGlobalFunction", declaration, 0);
 	}
 
 	// Make sure the function is not identical to a previously registered function
@@ -5659,7 +5683,7 @@ int asCScriptEngine::RegisterFuncdef(const char *decl)
 	}
 
 	// Check name conflicts
-	r = bld.CheckNameConflict(func->name.AddressOf(), 0, 0, defaultNamespace, true);
+	r = bld.CheckNameConflict(func->name.AddressOf(), 0, 0, defaultNamespace, true, false);
 	if( r < 0 )
 	{
 		asDELETE(func,asCScriptFunction);
@@ -5830,7 +5854,7 @@ int asCScriptEngine::RegisterTypedef(const char *type, const char *decl)
 		return ConfigError(asINVALID_NAME, "RegisterTypedef", type, decl);
 
 	asCBuilder bld(this, 0);
-	int r = bld.CheckNameConflict(type, 0, 0, defaultNamespace, true);
+	int r = bld.CheckNameConflict(type, 0, 0, defaultNamespace, true, false);
 	if( r < 0 )
 		return ConfigError(asNAME_TAKEN, "RegisterTypedef", type, decl);
 
@@ -5902,7 +5926,7 @@ int asCScriptEngine::RegisterEnum(const char *name)
 	if( token != ttIdentifier || strlen(name) != tokenLen )
 		return ConfigError(asINVALID_NAME, "RegisterEnum", name, 0);
 
-	r = bld.CheckNameConflict(name, 0, 0, defaultNamespace, true);
+	r = bld.CheckNameConflict(name, 0, 0, defaultNamespace, true, false);
 	if( r < 0 )
 		return ConfigError(asNAME_TAKEN, "RegisterEnum", name, 0);
 

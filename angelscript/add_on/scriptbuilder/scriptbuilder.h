@@ -167,17 +167,17 @@ protected:
 	std::string currentNamespace;
 
 	// Storage of metadata for global declarations
-	std::map<int, std::vector<std::string>> typeMetadataMap;
-	std::map<int, std::vector<std::string>> funcMetadataMap;
-	std::map<int, std::vector<std::string>> varMetadataMap;
+	std::map<int, std::vector<std::string> > typeMetadataMap;
+	std::map<int, std::vector<std::string> > funcMetadataMap;
+	std::map<int, std::vector<std::string> > varMetadataMap;
 
 	// Storage of metadata for class member declarations
 	struct SClassMetadata
 	{
 		SClassMetadata(const std::string& aName) : className(aName) {}
 		std::string className;
-		std::map<int, std::vector<std::string>> funcMetadataMap;
-		std::map<int, std::vector<std::string>> varMetadataMap;
+		std::map<int, std::vector<std::string> > funcMetadataMap;
+		std::map<int, std::vector<std::string> > varMetadataMap;
 	};
 	std::map<int, SClassMetadata> classMetadataMap;
 

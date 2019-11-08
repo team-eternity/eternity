@@ -325,8 +325,8 @@ static void RegisterScriptArray_Native(asIScriptEngine *engine)
 
 #if AS_USE_STLNAMES != 1 && AS_USE_ACCESSORS == 1
 	// Register virtual properties
-	r = engine->RegisterObjectMethod("array<T>", "uint get_length() const", asMETHOD(CScriptArray, GetSize), asCALL_THISCALL); assert( r >= 0 );
-	r = engine->RegisterObjectMethod("array<T>", "void set_length(uint)", asMETHODPR(CScriptArray, Resize, (asUINT), void), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("array<T>", "uint get_length() const property", asMETHOD(CScriptArray, GetSize), asCALL_THISCALL); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("array<T>", "void set_length(uint) property", asMETHODPR(CScriptArray, Resize, (asUINT), void), asCALL_THISCALL); assert( r >= 0 );
 #endif
 
 	// Register GC behaviours in case the array needs to be garbage collected
@@ -1692,6 +1692,14 @@ void CScriptArray::Precache()
 
 	// Create the cache
 	cache = reinterpret_cast<SArrayCache*>(userAlloc(sizeof(SArrayCache)));
+	if( !cache )
+	{
+		asIScriptContext *ctx = asGetActiveContext();
+		if( ctx )
+			ctx->SetException("Out of memory");
+		asReleaseExclusiveLock();
+		return;
+	}
 	memset(cache, 0, sizeof(SArrayCache));
 
 	// If the sub type is a handle to const, then the methods must be const too
@@ -2156,8 +2164,8 @@ static void RegisterScriptArray_Generic(asIScriptEngine *engine)
 	r = engine->RegisterFuncdef("bool array<T>::less(const T&in a, const T&in b)");
 	r = engine->RegisterObjectMethod("array<T>", "void sort(const less &in, uint startAt = 0, uint count = uint(-1))", asFUNCTION(ScriptArraySortCallback_Generic), asCALL_GENERIC); assert(r >= 0);
 #if AS_USE_STLNAMES != 1 && AS_USE_ACCESSORS == 1
-	r = engine->RegisterObjectMethod("array<T>", "uint get_length() const", asFUNCTION(ScriptArrayLength_Generic), asCALL_GENERIC); assert( r >= 0 );
-	r = engine->RegisterObjectMethod("array<T>", "void set_length(uint)", asFUNCTION(ScriptArrayResize_Generic), asCALL_GENERIC); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("array<T>", "uint get_length() const property", asFUNCTION(ScriptArrayLength_Generic), asCALL_GENERIC); assert( r >= 0 );
+	r = engine->RegisterObjectMethod("array<T>", "void set_length(uint) property", asFUNCTION(ScriptArrayResize_Generic), asCALL_GENERIC); assert( r >= 0 );
 #endif
 	r = engine->RegisterObjectBehaviour("array<T>", asBEHAVE_GETREFCOUNT, "int f()", asFUNCTION(ScriptArrayGetRefCount_Generic), asCALL_GENERIC); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("array<T>", asBEHAVE_SETGCFLAG, "void f()", asFUNCTION(ScriptArraySetFlag_Generic), asCALL_GENERIC); assert( r >= 0 );
