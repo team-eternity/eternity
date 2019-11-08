@@ -1458,7 +1458,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
    //M_NormalizeSlashes(tmpfile);
 
    errno = 0;
-   if(!(f = fopen(tmpfile.constPtr(), "w")))  // killough 9/21/98
+   if(!(f = fopen(tmpfile.constPtr(), "w+")))  // killough 9/21/98
    {
       M_defaultFileWriteError(df, tmpfile.constPtr());
       return;
@@ -1530,20 +1530,26 @@ void M_SaveDefaultFile(defaultfile_t *df)
       }
    }
 
-   if(fclose(f) == EOF)
+   rewind(f);
+
+   FILE *destf;
+   if(!(destf = fopen(df->fileName, "w")))
    {
-      M_defaultFileWriteError(df, tmpfile.constPtr());
+      M_defaultFileWriteError(df, df->fileName);
       return;
    }
 
-   remove(df->fileName);
+   for(char ch = fgetc(f); ch != EOF; ch = fgetc(f))
+      fputc(ch, destf);
 
-   if(rename(tmpfile.constPtr(), df->fileName))
-   {
-      // haleyjd 01/29/11: No error here, just print the message
-      printf("Warning: could not write defaults to %s: %s\n", df->fileName,
-              errno ? strerror(errno) : "(Unknown Error)");
-   }
+   // We don't care about errors at this stage
+   if(fclose(f) == EOF)
+      M_defaultFileWriteError(df, tmpfile.constPtr());
+
+   if(fclose(destf) == EOF)
+      M_defaultFileWriteError(df, df->fileName);
+
+   remove(tmpfile.constPtr());
 }
 
 //
