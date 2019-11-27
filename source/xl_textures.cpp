@@ -32,28 +32,6 @@
 #include "xl_textures.h"
 
 //
-// TEXTURES top item
-//
-struct TopItem
-{
-   //
-   // Texture patch
-   //
-   struct Patch
-   {
-      qstring name;
-      int x;
-      int y;
-   };
-
-   bool optional;
-   qstring name;
-   int width;
-   int height;
-   Collection<Patch> patches;
-};
-
-//
 // The parser
 //
 class XLTextureParser final : public XLParser
@@ -90,18 +68,18 @@ class XLTextureParser final : public XLParser
    int mLumpIndex = 0;
    qstring mError;
 
-   TopItem mCurItem;
-   TopItem::Patch mPatch;
+   XLTexture mCurItem;
+   XLTexture::Patch mPatch;
 
 public:
    XLTextureParser() : XLParser("TEXTURES"), state(STATE_EXPECTTOPITEM)
    {
    }
 
-   Collection<TopItem> mTopItems;
+   Collection<XLTexture> mTopItems;
 };
 
-Collection<TopItem> xlTopItems;
+Collection<XLTexture> xlTextures;
 
 //
 // State table
@@ -130,7 +108,7 @@ bool XLTextureParser::doStateExpectTopItem()
          // NOTE: currently only these identifiers are supported
          if(!tokens.back().strCaseCmp("texture") || !tokens.back().strCaseCmp("walltexture"))
          {
-            mCurItem = TopItem();
+            mCurItem = XLTexture();
             return true;
          }
          mError = "Unexpected top level item of type '";
@@ -208,7 +186,7 @@ bool XLTextureParser::doStateExpectProperty()
       case 1:
          if(!tokens.back().strCaseCmp("patch"))
          {
-            mPatch = TopItem::Patch();
+            mPatch = XLTexture::Patch();
             return true;
          }
          if(tokens.back() == "}")
@@ -283,7 +261,7 @@ bool XLTextureParser::doToken(XLTokenizer &token)
 void XLTextureParser::startLump()
 {
    state = STATE_EXPECTTOPITEM;
-   mCurItem = TopItem();
+   mCurItem = XLTexture();
    mLine = 1;
    mLumpIndex++;
 }
@@ -317,7 +295,15 @@ void XL_ParseTextures()
 {
    XLTextureParser parser;
    parser.parseAll(wGlobalDir);
-   xlTopItems = std::move(parser.mTopItems);
+   xlTextures = std::move(parser.mTopItems);
+}
+
+//
+// Get number of textures
+//
+int XL_GetNumTextures()
+{
+   return (int)xlTextures.getLength();
 }
 
 // EOF

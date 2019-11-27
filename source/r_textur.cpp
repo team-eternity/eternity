@@ -45,6 +45,7 @@
 #include "v_video.h"
 #include "w_wad.h"
 #include "w_iterator.h"
+#include "xl_textures.h"
 
 // Texture hash table, used in several places here
 typedef EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::link> texturehash_t;
@@ -591,6 +592,53 @@ static int R_ReadTextureNamespace(int texnum)
       ++texnum;
    }
 
+   return texnum;
+}
+
+//
+// Reads the TEXTURES extracted data
+//
+static int R_ReadXLTextures(int texnum)
+{
+   for(const XLTexture &xltex : xlTextures)
+   {
+      if(!(texnum & 127))
+         V_LoadingIncrease();
+
+      if(xltex.patches.isEmpty())
+      {
+         textures[texnum++] = estructalloc(texture_t, 1);   // make invalid
+         continue;
+      }
+      texture_t *texture = textures[texnum] = R_AllocTexStruct(xltex.name.constPtr(), xltex.width,
+                                                               xltex.height,
+                                                               xltex.patches.getLength());
+      texture->index = texnum++;
+      tcomponent_t *component = texture->components;
+      for(int i = 0; i < texture->ccount; ++i, ++component)
+      {
+         component->originx = xltex.patches[i].x;
+         component->originy = xltex.patches[i].y;
+         component->type = TC_PATCH;
+         // Use W_CheckNumForName, then try W_CheckNumForNameNS.
+         const char *patchname = xltex.patches[i].name.constPtr();
+         component->lump = W_CheckNumForName(patchname);
+         if(component->lump == -1)
+            component->lump = W_CheckNumForNameNS(patchname, lumpinfo_t::ns_sprites);
+         if(component->lump == -1)
+         {
+            C_Printf(FC_ERROR "R_ReadXLTextures: Unknown patch %s in texture %.8s\n",
+                     patchname, (const char *)(texture->name));
+            component->width = component->height = 0;
+         }
+         else
+         {
+            const patch_t *p = PatchLoader::CacheNum(wGlobalDir, component->lump, PU_CACHE);
+            component->width = p->width;
+            component->height = p->height;
+         }
+      }
+   }
    return texnum;
 }
 
@@ -1463,6 +1511,7 @@ void R_InitTextures()
 
    // add in ns_textures namespace
    numwalls += tns.numLumps;
+   numwalls += xlTextures.getLength();
 
    wallstart = 0;
    wallstop  = wallstart + numwalls;
@@ -1504,7 +1553,8 @@ void R_InitTextures()
    // read texture lumps
    texnum = R_ReadTextureLump(maptex1, patchlookup, nummappatches, texnum, &errors, duptable);
    texnum = R_ReadTextureLump(maptex2, patchlookup, nummappatches, texnum, &errors, duptable);
-   R_ReadTextureNamespace(texnum);
+   texnum = R_ReadTextureNamespace(texnum);
+   R_ReadXLTextures(texnum);
 
    // done with patch lookup
    if(patchlookup)

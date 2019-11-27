@@ -25,6 +25,33 @@
 #ifndef XL_TEXTURES_H_
 #define XL_TEXTURES_H_
 
+#include "m_collection.h"
+#include "m_qstr.h"
+
+//
+// TEXTURES top item
+//
+struct XLTexture
+{
+   //
+   // Texture patch
+   //
+   struct Patch
+   {
+      qstring name;
+      int x;
+      int y;
+   };
+
+   bool optional;
+   qstring name;
+   int width;
+   int height;
+   Collection<Patch> patches;
+};
+
+extern Collection<XLTexture> xlTextures;
+
 void XL_ParseTextures();
 
 #endif
