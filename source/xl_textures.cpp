@@ -23,6 +23,7 @@
 //
 
 #include "z_zone.h"
+#include "d_main.h"
 #include "m_collection.h"
 #include "m_qstr.h"
 #include "m_vector.h"
@@ -85,6 +86,10 @@ class XLTextureParser final : public XLParser
    void initTokenizer(XLTokenizer &tokenizer) override;
    void onEOF(bool early) override;
 
+   int mLine;
+   int mLumpIndex = 0;
+   qstring mError;
+
    TopItem mCurItem;
    TopItem::Patch mPatch;
 
@@ -128,6 +133,9 @@ bool XLTextureParser::doStateExpectTopItem()
             mCurItem = TopItem();
             return true;
          }
+         mError = "Unexpected top level item of type '";
+         mError << tokens.back();
+         mError << "'.";
          return false;
       case 2:
          // At 2 it's not clear yet if we have optional
@@ -136,7 +144,10 @@ bool XLTextureParser::doStateExpectTopItem()
          if(tokens.back() != ",")
          {
             if(tokens[count - 2].strCaseCmp("optional"))
+            {
+               mError = "Only the 'optional' modifier can be added before the name.";
                return false;
+            }
             mCurItem.optional = true;
             mCurItem.name = tokens.back();
          }
@@ -149,7 +160,12 @@ bool XLTextureParser::doStateExpectTopItem()
    {
       case 4:
       case 6:
-         return tokens.back() == ",";
+         if(tokens.back() != ",")
+         {
+            mError = "Missing ',' in definition.";
+            return false;
+         }
+         return true;
       case 5:
          mCurItem.width = tokens.back().toInt();
          return true;
@@ -202,13 +218,21 @@ bool XLTextureParser::doStateExpectProperty()
             tokens.makeEmpty();
             return true;
          }
+         mError = "Unsupported property '";
+         mError << tokens.back();
+         mError << "'.";
          return false;
       case 2:
          mPatch.name = tokens.back();
          return true;
       case 3:
       case 5:
-         return tokens.back() == ",";
+         if(tokens.back() != ",")
+         {
+            mError = "Missing ',' in definition.";
+            return false;
+         }
+         return true;
       case 4:
          mPatch.x = tokens.back().toInt();
          return true;
@@ -244,6 +268,11 @@ bool XLTextureParser::doStateExpectPatchProperty()
 //
 bool XLTextureParser::doToken(XLTokenizer &token)
 {
+   if(token.getTokenType() == XLTokenizer::TOKEN_LINEBREAK)
+   {
+      ++mLine;
+      return true;
+   }
    tokens.add(token.getToken());
    return (this->*States[state])();
 }
@@ -255,6 +284,8 @@ void XLTextureParser::startLump()
 {
    state = STATE_EXPECTTOPITEM;
    mCurItem = TopItem();
+   mLine = 1;
+   mLumpIndex++;
 }
 
 //
@@ -262,7 +293,9 @@ void XLTextureParser::startLump()
 //
 void XLTextureParser::initTokenizer(XLTokenizer &tokenizer)
 {
-   tokenizer.setTokenFlags(XLTokenizer::TF_OPERATORS | XLTokenizer::TF_SLASHCOMMENTS);
+   tokenizer.setTokenFlags(XLTokenizer::TF_LINEBREAKS |
+                           XLTokenizer::TF_OPERATORS |
+                           XLTokenizer::TF_SLASHCOMMENTS);  // use linebreaks to count lines
 }
 
 //
@@ -270,6 +303,11 @@ void XLTextureParser::initTokenizer(XLTokenizer &tokenizer)
 //
 void XLTextureParser::onEOF(bool early)
 {
+   if(early)
+   {
+      usermsg("XL_ParseTextures: Error in TEXTURES (lump number %d) at line %d: %s", mLumpIndex, mLine,
+              mError.constPtr());
+   }
 }
 
 //

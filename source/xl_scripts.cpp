@@ -40,6 +40,7 @@
 #include "xl_mapinfo.h"
 #include "xl_musinfo.h"
 #include "xl_scripts.h"
+#include "xl_textures.h"
 #include "xl_umapinfo.h"
 
 //=============================================================================
@@ -492,6 +493,8 @@ void XL_ParseHexenScripts()
 
    // FIXME: do this when it's time, not now yet.
 // XL_ParseUMapInfo();  // Universal MAPINFO new format
+
+   XL_ParseTextures();
 
    XL_buildInterMapInfo();
 }
