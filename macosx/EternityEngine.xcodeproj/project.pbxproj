@@ -314,6 +314,7 @@
 		4F950FDF1F3CDAB4000D9DC5 /* xl_animdefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FDE1F3CDAB4000D9DC5 /* xl_animdefs.cpp */; };
 		4F950FE21F4989A7000D9DC5 /* e_switch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F950FE11F4989A7000D9DC5 /* e_switch.cpp */; };
 		4FA56DBB2182E5B500F8115E /* m_debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FA56DB92182E5B500F8115E /* m_debug.cpp */; };
+		4FA8AAF4238C70D000F9A6F1 /* xl_textures.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FA8AAF2238C70D000F9A6F1 /* xl_textures.cpp */; };
 		4FAAD5941E583113001D7263 /* p_portalcross.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FAAD5931E583113001D7263 /* p_portalcross.cpp */; };
 		4FAD05981F91567E003790C5 /* txt_conditional.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05911F91567D003790C5 /* txt_conditional.c */; };
 		4FAD05991F91567E003790C5 /* txt_fileselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05951F91567E003790C5 /* txt_fileselect.c */; };
@@ -525,6 +526,8 @@
 		4FA56DB8217B2CD100F8115E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4FA56DB92182E5B500F8115E /* m_debug.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = m_debug.cpp; path = ../source/m_debug.cpp; sourceTree = "<group>"; };
 		4FA56DBA2182E5B500F8115E /* m_debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = m_debug.h; path = ../source/m_debug.h; sourceTree = "<group>"; };
+		4FA8AAF2238C70D000F9A6F1 /* xl_textures.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = xl_textures.cpp; path = ../source/xl_textures.cpp; sourceTree = "<group>"; };
+		4FA8AAF3238C70D000F9A6F1 /* xl_textures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = xl_textures.h; path = ../source/xl_textures.h; sourceTree = "<group>"; };
 		4FAAD5921E583052001D7263 /* p_portalcross.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = p_portalcross.h; path = ../source/p_portalcross.h; sourceTree = "<group>"; };
 		4FAAD5931E583113001D7263 /* p_portalcross.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalcross.cpp; path = ../source/p_portalcross.cpp; sourceTree = "<group>"; };
 		4FAD058B1F915635003790C5 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -2154,6 +2157,8 @@
 				FABF5D57158BF42800C49E93 /* xl_scripts.cpp */,
 				4F36247818A567CD00B94FA1 /* xl_sndinfo.cpp */,
 				4F36247918A567CD00B94FA1 /* xl_sndinfo.h */,
+				4FA8AAF2238C70D000F9A6F1 /* xl_textures.cpp */,
+				4FA8AAF3238C70D000F9A6F1 /* xl_textures.h */,
 				4F917D771F29243500131BE5 /* xl_umapinfo.cpp */,
 				4F917D791F2A5FD600131BE5 /* xl_umapinfo.h */,
 			);
@@ -2329,6 +2334,7 @@
 				4F5F3980182D9B9A0027813A /* pngtrans.c in Sources */,
 				4F5F3981182D9B9A0027813A /* png.c in Sources */,
 				4F5F3982182D9B9A0027813A /* pngerror.c in Sources */,
+				4FA8AAF4238C70D000F9A6F1 /* xl_textures.cpp in Sources */,
 				4F5F3983182D9B9A0027813A /* pngget.c in Sources */,
 				4F02C38423126DA0004DBBA7 /* dosbox_opl3.cpp in Sources */,
 				4FC0A9311E1E2A50006CEC45 /* ModuleACSE.cpp in Sources */,

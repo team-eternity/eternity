@@ -148,6 +148,13 @@ public:
       return ptrArray[index];
    }
 
+   T &back() const
+   {
+      if(!length)
+         I_Error("BaseCollection::back: called on empty collection\n");
+      return ptrArray[length - 1];
+   }
+
    // STL-compatible iterator semantics
    typedef T *iterator;
 
