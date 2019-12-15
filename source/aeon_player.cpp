@@ -108,14 +108,14 @@ namespace Aeon
       { "bool checkAmmo() const",                                    WRAP_OBJ_FIRST(P_CheckAmmo)        },
 
       // Indexed property accessors (enables [] syntax for counters)
-      { "int get_weaponcounters(const uint ctrnum) const",           WRAP_OBJ_LAST(getWeaponCounter)    },
-      { "void set_weaponcounters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setWeaponCounter)    },
+      { "int get_weaponcounters(const uint ctrnum) const property",           WRAP_OBJ_LAST(getWeaponCounter)    },
+      { "void set_weaponcounters(const uint ctrnum, const int val) property", WRAP_OBJ_LAST(setWeaponCounter)    },
 
       // Getters and settings for ready and pending weapon
-      { "Weapon @get_readyweapon() const",                           WRAP_OBJ_LAST(getReadyWeapon)      },
-      { "void set_readyweapon(Weapon @wp)",                          WRAP_OBJ_LAST(setReadyWeapon)      },
-      { "Weapon @get_pendingweapon() const",                         WRAP_OBJ_LAST(getPendingWeapon)    },
-      { "void set_pendingweapon(Weapon @wp)",                        WRAP_OBJ_LAST(setPendingWeapon)    },
+      { "Weapon @get_readyweapon() const property",                  WRAP_OBJ_LAST(getReadyWeapon)      },
+      { "void set_readyweapon(Weapon @wp) property",                 WRAP_OBJ_LAST(setReadyWeapon)      },
+      { "Weapon @get_pendingweapon() const property",                WRAP_OBJ_LAST(getPendingWeapon)    },
+      { "void set_pendingweapon(Weapon @wp) property",               WRAP_OBJ_LAST(setPendingWeapon)    },
    };
 
    static const aeonpropreg_t playerProps[] =

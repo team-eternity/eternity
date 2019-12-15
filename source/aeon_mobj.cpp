@@ -116,8 +116,8 @@ namespace Aeon
       },
 
       // Indexed property accessors (enables [] syntax for counters)
-      { "int get_counters(const uint ctrnum) const",           WRAP_OBJ_LAST(getMobjCounter)  },
-      { "void set_counters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setMobjCounter)  },
+      { "int get_counters(const uint ctrnum) const property",           WRAP_OBJ_LAST(getMobjCounter)  },
+      { "void set_counters(const uint ctrnum, const int val) property", WRAP_OBJ_LAST(setMobjCounter)  },
    };
 
    static const aeonpropreg_t mobjProps[] =
