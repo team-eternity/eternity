@@ -40,6 +40,13 @@ namespace Aeon
         return P_SpawnPlayerMissile(source, thingnum);
     }
 
+    static bool playerOwnsWeapon(player_t *plyr, const qstring &name)
+    {
+       weaponinfo_t *wp = E_WeaponForName(name.constPtr());
+
+       return wp ? E_PlayerOwnsWeapon(plyr, wp) : false;
+    }
+
    //
    // Sanity checked getter for plyr->weaponctrs->getIndexedCounterForPlayer(plyr, ctrnum)
    // Returns 0 on failure
@@ -63,17 +70,58 @@ namespace Aeon
       // TODO: else C_Printf warning?
    }
 
+   static weaponinfo_t *getReadyWeapon(player_t *player)
+   {
+      return player->readyweapon;
+   }
+
+   static void setReadyWeapon(weaponinfo_t *wp, player_t *player)
+   {
+      if(wp == nullptr)
+         return;
+
+      player->readyweapon = wp;
+      if(wp == player->pendingweapon)
+         player->readyweaponslot = player->pendingweaponslot; // I dunno how else to do this
+      else
+         player->readyweaponslot = E_FindFirstWeaponSlot(player, wp);
+   }
+
+   static weaponinfo_t *getPendingWeapon(player_t *player)
+   {
+      return player->pendingweapon;
+   }
+
+   static void setPendingWeapon(const weaponinfo_t *wp, player_t *player)
+   {
+      if(!E_PlayerOwnsWeapon(player, player->readyweapon) && player->readyweapon->id != UnknownWeaponInfo)
+      {
+         player->pendingweapon     = E_FindBestWeapon(player);
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      }
+   }
+
    static const aeonfuncreg_t playerFuncs[] =
    {
       { "Mobj @spawnMissile(const String &missileType) const",       WRAP_OBJ_FIRST(spawnPlayerMissile) },
+      { "bool ownsWeapon(const String &weaponName) const",           WRAP_OBJ_FIRST(playerOwnsWeapon)   },
+      { "bool checkAmmo() const",                                    WRAP_OBJ_FIRST(P_CheckAmmo)        },
 
       // Indexed property accessors (enables [] syntax for counters)
       { "int get_weaponcounters(const uint ctrnum) const",           WRAP_OBJ_LAST(getWeaponCounter)    },
       { "void set_weaponcounters(const uint ctrnum, const int val)", WRAP_OBJ_LAST(setWeaponCounter)    },
+
+      // Getters and settings for ready and pending weapon
+      { "Weapon @get_readyweapon() const",                           WRAP_OBJ_LAST(getReadyWeapon)      },
+      { "void set_readyweapon(Weapon @wp)",                          WRAP_OBJ_LAST(setReadyWeapon)      },
+      { "Weapon @get_pendingweapon() const",                         WRAP_OBJ_LAST(getPendingWeapon)    },
+      { "void set_pendingweapon(Weapon @wp)",                        WRAP_OBJ_LAST(setPendingWeapon)    },
    };
 
    static const aeonpropreg_t playerProps[] =
    {
+      { "int health",     asOFFSET(player_t, health) },
+
       { "int refire",     asOFFSET(player_t, refire) },
 
       { "Mobj @const mo", asOFFSET(player_t, mo)     },
