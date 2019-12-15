@@ -127,13 +127,23 @@ namespace Aeon
       { "Mobj @const mo", asOFFSET(player_t, mo)     },
    };
 
+   static const aeonpropreg_t pspriteProps[] =
+   {
+      // I don't think state is required
+      { "int tics",   asOFFSET(pspdef_t, tics) },
+      { "fixed_t sx", asOFFSET(pspdef_t, sx)   },
+      { "fixed_t sy", asOFFSET(pspdef_t, sy)   },
+      // trans is never set anywhere, seemingly. The hell?
+   };
+
    void ScriptObjPlayer::PreInit()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
 
-      e->RegisterObjectType("Player", sizeof(player_t), asOBJ_REF | asOBJ_NOCOUNT);
+      e->RegisterObjectType("Player",  sizeof(player_t), asOBJ_REF | asOBJ_NOCOUNT);
+      e->RegisterObjectType("Psprite", sizeof(pspdef_t), asOBJ_REF | asOBJ_NOCOUNT);
 
       e->SetDefaultNamespace("");
    }
@@ -151,6 +161,9 @@ namespace Aeon
       // Register all Aeon Player methods
       for(const aeonfuncreg_t &fn : playerFuncs)
          e->RegisterObjectMethod("Player", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
+      for(const aeonpropreg_t &prop : pspriteProps)
+         e->RegisterObjectProperty("Psprite", prop.declaration, prop.byteOffset);
 
       e->SetDefaultNamespace("");
    }

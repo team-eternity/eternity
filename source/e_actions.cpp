@@ -332,7 +332,7 @@ static void E_processAction(cfg_t *actionsec)
    // The various type infos of permitted first params (or second for EE::Psprite)
    static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj @");
    static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player @");
-   //static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite @");
+   static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite @");
    //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs @");
 
    // The function and its constituent components
@@ -381,13 +381,13 @@ static void E_processAction(cfg_t *actionsec)
       callType = ACT_MOBJ;
    else if(typeID == playerTypeID)
    {
-   //   if(func->GetParam(1, &typeID, nullptr, nullptr, &defaultArg) >= 0 &&
-   //      typeID == psprTypeID)
-   //   {
-   //      calltype = ACT_PLAYER_W_PSPRITE;
-   //      nonArgParams = 2;
-   //   }
-   //   else
+      if(func->GetParam(1, &typeID, nullptr, nullptr, &defaultArg) >= 0 &&
+         typeID == psprTypeID)
+      {
+         callType = ACT_PLAYER_W_PSPRITE;
+         nonArgParams = 2;
+      }
+      else
          callType = ACT_PLAYER;
    }
    //else if(typeID == actArgsTypeID)
