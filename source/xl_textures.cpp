@@ -106,7 +106,7 @@ bool XLTextureParser::doStateExpectTopItem()
    {
       case 1:
          // NOTE: currently only these identifiers are supported
-         if(!tokens.back().strCaseCmp("texture") || !tokens.back().strCaseCmp("walltexture"))
+         if(!tokens.back().strCaseCmp("walltexture"))
          {
             mCurItem = XLTexture();
             return true;
