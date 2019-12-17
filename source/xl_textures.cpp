@@ -271,9 +271,10 @@ void XLTextureParser::startLump()
 //
 void XLTextureParser::initTokenizer(XLTokenizer &tokenizer)
 {
-   tokenizer.setTokenFlags(XLTokenizer::TF_LINEBREAKS |
+   tokenizer.setTokenFlags(XLTokenizer::TF_LINEBREAKS |  // use linebreaks to count lines
                            XLTokenizer::TF_OPERATORS |
-                           XLTokenizer::TF_SLASHCOMMENTS);  // use linebreaks to count lines
+                           XLTokenizer::TF_SLASHCOMMENTS |
+                           XLTokenizer::TF_SLASHSTARCOMM);
 }
 
 //

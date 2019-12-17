@@ -53,6 +53,7 @@ public:
       STATE_INBRACKETS, // in a bracketed token
       STATE_QUOTED,     // in a quoted string
       STATE_COMMENT,    // reading out a comment (eat rest of line)
+      STATE_MLCOMMENT,  // multiline comment
       STATE_DONE        // finished the current token
    };
 
@@ -78,6 +79,7 @@ public:
       TF_SLASHCOMMENTS = 0x00000008, // supports double-slash comments
       TF_OPERATORS     = 0x00000010, // C-style identifiers, no space operators
       TF_ESCAPESTRINGS = 0x00000020, // Add support for escaping strings
+      TF_SLASHSTARCOMM = 0x00000040, // slash-asterisk comments
    };
 
 protected:
@@ -87,12 +89,14 @@ protected:
    int tokentype;      // type of current token
    qstring token;      // current token value
    unsigned int flags; // parser flags
+   bool newlineInComment;  // true if the last newline was found in a comment
 
    void doStateScan();
    void doStateInToken();
    void doStateInBrackets();
    void doStateQuoted();
    void doStateComment();
+   void doStateMultiLineComment();
 
    // State table declaration
    static void (XLTokenizer::*States[])();
@@ -101,7 +105,7 @@ public:
    // Constructor / Destructor
    explicit XLTokenizer(const char *str) 
       : state(STATE_SCAN), input(str), idx(0), tokentype(TOKEN_NONE), token(32),
-        flags(TF_DEFAULT)
+        flags(TF_DEFAULT), newlineInComment()
    { 
    }
 

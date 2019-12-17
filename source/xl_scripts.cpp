@@ -93,18 +93,24 @@ void XLTokenizer::doStateScan()
          state = STATE_COMMENT;
          break;
       }
-      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
+      if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
       {
          state = STATE_COMMENT;
          break;
       }
-      else if(c == '[' && (flags & TF_BRACKETS))
+      if(c == '/' && input[idx + 1] == '*' && (flags & TF_SLASHSTARCOMM))
+      {
+         state = STATE_MLCOMMENT;
+         newlineInComment = false;
+         break;
+      }
+      if(c == '[' && (flags & TF_BRACKETS))
       {
          tokentype = TOKEN_BRACKETSTR;
          state     = STATE_INBRACKETS;
          break;
       }
-      else if(c == '$') // detect $ keywords
+      if(c == '$') // detect $ keywords
          tokentype = TOKEN_KEYWORD;
       else
          tokentype = TOKEN_STRING;
@@ -152,14 +158,20 @@ void XLTokenizer::doStateInToken()
          state = STATE_DONE;
          break;
       }
-      else if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
+      if(c == '/' && input[idx+1] == '/' && (flags & TF_SLASHCOMMENTS))
       {
          // double slashes may conditionally be supported as comments
          --idx;
          state = STATE_DONE;
          break;
       }
-      else if(flags & TF_OPERATORS && !token.empty() &&
+      if(c == '/' && input[idx + 1] == '*' && (flags & TF_SLASHSTARCOMM))
+      {
+         --idx;
+         state = STATE_DONE;
+         break;
+      }
+      if(flags & TF_OPERATORS && !token.empty() &&
               XL_isIdentifierChar(c) != XL_isIdentifierChar(token[0]))
       {
          // operators and identifiers are separate
@@ -321,6 +333,33 @@ void XLTokenizer::doStateComment()
    }
 }
 
+//
+// Reading out a multi-line comment
+//
+void XLTokenizer::doStateMultiLineComment()
+{
+   if(input[idx] == '\n' && flags & TF_LINEBREAKS)
+   {
+      newlineInComment = true;
+      tokentype = TOKEN_LINEBREAK;
+      state = STATE_DONE;
+      return;
+   }
+
+   if(input[idx] == '*' && input[idx + 1] == '/')
+   {
+      state = STATE_SCAN;
+      ++idx;
+      return;
+   }
+
+   if(input[idx] == '\0')
+   {
+      tokentype = TOKEN_EOF;
+      state = STATE_DONE;
+   }
+}
+
 // State table for the tokenizer - static array of method pointers :)
 void (XLTokenizer::* XLTokenizer::States[])() =
 {
@@ -328,7 +367,8 @@ void (XLTokenizer::* XLTokenizer::States[])() =
    &XLTokenizer::doStateInToken,
    &XLTokenizer::doStateInBrackets,
    &XLTokenizer::doStateQuoted,
-   &XLTokenizer::doStateComment
+   &XLTokenizer::doStateComment,
+   &XLTokenizer::doStateMultiLineComment
 };
 
 //
@@ -341,7 +381,13 @@ void (XLTokenizer::* XLTokenizer::States[])() =
 int XLTokenizer::getNextToken()
 {
    token.clear();
-   state     = STATE_SCAN; // always start out scanning for a new token
+   if(newlineInComment)
+   {
+      state = STATE_MLCOMMENT;   // continue the multiline comment
+      newlineInComment = false;
+   }
+   else
+      state = STATE_SCAN; // always start out scanning for a new token
    tokentype = TOKEN_NONE; // nothing has been determined yet
 
    // already at end of input?
