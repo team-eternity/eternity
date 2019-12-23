@@ -93,6 +93,12 @@ sound Earthquake
 
 // NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
 
+// Placeholder for jumping
+sound jump
+{
+  dehackednum 126
+  skinindex sk_jump
+}
 
 // Default Sector Sound Sequences ----------------------------------------------
 

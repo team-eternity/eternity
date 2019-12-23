@@ -68,8 +68,6 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
-bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target);
-
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 
 bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context);  // ioanch: used in the code
@@ -80,6 +78,17 @@ void P_SlideMove(Mobj *mo);
 void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
 
 bool P_BlockedAsMonster(const Mobj &mo);
+
+//
+// Various results
+//
+enum ItemCheckResult
+{
+   ItemCheck_furtherNeeded,
+   ItemCheck_pass,
+   ItemCheck_hit
+};
+ItemCheckResult P_CheckThingCommon(Mobj *thing);
 
 //=============================================================================
 //

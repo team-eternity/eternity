@@ -1671,7 +1671,7 @@ void P_CeilingSequence(sector_t *s, int noiseLevel);
 // SoM 9/19/02: 3dside movement. :)
 void P_AttachLines(const line_t *cline, bool ceiling);
 bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
-                    int crush);
+                    int crush, bool nointerp);
 void P_AttachSectors(const line_t *line, int staticFn);
 
 bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,

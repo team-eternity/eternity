@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,21 +15,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+// Purpose: Code for loading data files, particularly PWADs.
+//  Base, user, and game path determination and file-finding functions.
 //
-// DESCRIPTION:
-//    Code for loading data files, particularly PWADs.
-//    Base, user, and game path determination and file-finding functions.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
+// MaxW: 2019/07/07: Moved over to C++17 filesystem
 // haleyjd 08/20/07: POSIX opendir needed for autoload functionality
-#ifdef _MSC_VER
-#include "Win32/i_opndir.h"
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#include "hal/i_platform.h"
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#include "hal/i_directory.h"
+namespace fs = fsStopgap;
 #else
-#include <dirent.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 #endif
-
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 #include "z_zone.h"
 
 #include "hal/i_directory.h"
@@ -589,54 +594,48 @@ enum
 static int D_CheckBasePath(const qstring &qpath)
 {
    int ret = -1;
-   struct stat sbuf;
    qstring str;
-   const char *path;
+   fs::directory_entry path;
 
    str = qpath;
-   
+
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
    str.rstrip('/');
 
-   path = str.constPtr();
 
-   if(!stat(path, &sbuf)) // check for existence
+   path = fs::directory_entry(str.constPtr());
+
+   if(path.exists()) // check for existence
    {
-      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      if(path.is_directory()) // check that it's a directory
       {
-         DIR *dir;
-         
-         if((dir = opendir(path)))
-         {
-            int score = 0;
-            // directory should contain at least startup.wad, root.edf, and /doom
-            dirent *ent;
-            while((ent = readdir(dir)))
-            {
-               if(!strcasecmp(ent->d_name, "startup.wad"))
-                  ++score;
-               else if(!strcasecmp(ent->d_name, "root.edf"))
-                  ++score;
-               else if(!strcasecmp(ent->d_name, "doom"))
-                  ++score;
-            }
-            closedir(dir);
+         int score = 0;
 
-            if(score >= 3)
-               ret = BASE_ISGOOD;    // Got it.
-            else
-               ret = BASE_NOTEEBASE; // Doesn't look like EE's base folder.
+         const fs::directory_iterator itr(path);
+         for(const fs::directory_entry ent : itr)
+         {
+            const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+
+            if(filename == "startup.wad")
+               ++score;
+            else if(filename == "root.edf")
+               ++score;
+            else if(filename == "doom")
+               ++score;
          }
+
+         if(score >= 3)
+            ret = BASE_ISGOOD;    // Got it.
          else
-            ret = BASE_CANTOPEN; // opendir failed
+            ret = BASE_NOTEEBASE; // Doesn't look like EE's base folder.
       }
       else
          ret = BASE_NOTDIR; // S_ISDIR failed
    }
    else
       ret = BASE_NOTEXIST; // stat failed
-   
+
    return ret;
 }
 
@@ -782,52 +781,45 @@ static const char *const userdirs[] =
 static int D_CheckUserPath(const qstring &qpath)
 {
    int ret = -1;
-   struct stat sbuf;
    qstring str;
-   const char *path;
+   fs::directory_entry path;
 
    str = qpath;
-   
+
    // Rub out any ending slashes; stat does not like them.
    str.rstrip('\\');
    str.rstrip('/');
 
-   path = str.constPtr();
+   path = fs::directory_entry(str.constPtr());
 
-   if(!stat(path, &sbuf)) // check for existence
+   if(path.exists()) // check for existence
    {
-      if(S_ISDIR(sbuf.st_mode)) // check that it's a directory
+      if(path.is_directory()) // check that it's a directory
       {
-         DIR *dir;
-         
-         if((dir = opendir(path)))
-         {
-            int score = 0;
-            // directory should contain at least a /doom and /shots folder
-            dirent *ent;
-            while((ent = readdir(dir)))
-            {
-               if(!strcasecmp(ent->d_name, "doom"))
-                  ++score;
-               else if(!strcasecmp(ent->d_name, "shots"))
-                  ++score;
-            }
-            closedir(dir);
+         int score = 0;
 
-            if(score >= 2)
-               ret = BASE_ISGOOD;    // Got it.
-            else
-               ret = BASE_NOTEEBASE; // Doesn't look like EE's user folder.
+         const fs::directory_iterator itr(path);
+         for(const fs::directory_entry ent : itr)
+         {
+            const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+
+            if(filename == "doom")
+               ++score;
+            else if(filename == "shots")
+               ++score;
          }
+
+         if(score >= 2)
+            ret = BASE_ISGOOD;    // Got it.
          else
-            ret = BASE_CANTOPEN; // opendir failed
+            ret = BASE_NOTEEBASE; // Doesn't look like EE's base folder.
       }
       else
          ret = BASE_NOTDIR; // S_ISDIR failed
    }
    else
       ret = BASE_NOTEXIST; // stat failed
-   
+
    return ret;
 }
 
@@ -1165,8 +1157,8 @@ void D_CheckGameMusic()
 //
 
 // haleyjd 08/20/07: gamepath autload directory structure
-static DIR     *autoloads;
-static qstring  autoload_dirname;
+static fs::path autoloads;
+static qstring               autoload_dirname;
 
 //
 // D_EnumerateAutoloadDir
@@ -1175,14 +1167,14 @@ static qstring  autoload_dirname;
 //
 void D_EnumerateAutoloadDir()
 {
-   if(!autoloads && !M_CheckParm("-noload")) // don't do if -noload is used
+   if(autoloads.empty() && !M_CheckParm("-noload")) // don't do if -noload is used
    {
       char *autoDir;
 
       if((autoDir = D_CheckGamePathFile("autoload", true)))
       {
          autoload_dirname = autoDir;
-         autoloads = opendir(autoload_dirname.constPtr());
+         autoloads = fs::path(autoload_dirname.constPtr());
       }
    }
 }
@@ -1194,9 +1186,9 @@ void D_EnumerateAutoloadDir()
 //
 void D_GameAutoloadWads()
 {
-   char *fn = NULL;
+   char *fn = nullptr;
 
-   if(autoloads)
+   if(!autoloads.empty())
    {
       // haleyjd 09/30/08: not in shareware gamemodes, otherwise having any wads
       // in your base/game/autoload directory will make shareware unplayable
@@ -1206,18 +1198,16 @@ void D_GameAutoloadWads()
          return;
       }
 
-      struct dirent *direntry;
-      
-      while((direntry = readdir(autoloads)))
+      const fs::directory_iterator itr(autoloads);
+      for(const fs::directory_entry ent : itr)
       {
-         if(strstr(direntry->d_name, ".wad"))
+         if(ent.path().extension() == ".wad")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
-            D_AddFile(fn, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(),
+                                ent.path().filename().generic_u8string().c_str());
+            D_AddFile(fn, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
          }
       }
-      
-      rewinddir(autoloads);
    }
 }
 
@@ -1228,23 +1218,22 @@ void D_GameAutoloadWads()
 //
 void D_GameAutoloadDEH()
 {
-   char *fn = NULL;
+   char *fn = nullptr;
 
-   if(autoloads)
+   if(!autoloads.empty())
    {
-      struct dirent *direntry;
-
-      while((direntry = readdir(autoloads)))
+      const fs::directory_iterator itr(autoloads);
+      for(const fs::directory_entry ent : itr)
       {
-         if(strstr(direntry->d_name, ".deh") || 
-            strstr(direntry->d_name, ".bex"))
+
+         if(const fs::path extension = ent.path().extension();
+            extension == ".deh" || extension == ".bex")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(),
+                                ent.path().filename().generic_u8string().c_str());
             D_QueueDEH(fn, 0);
          }
       }
-
-      rewinddir(autoloads);
    }
 }
 
@@ -1255,22 +1244,20 @@ void D_GameAutoloadDEH()
 //
 void D_GameAutoloadCSC()
 {
-   char *fn = NULL;
+   char *fn = nullptr;
 
-   if(autoloads)
+   if(!autoloads.empty())
    {
-      struct dirent *direntry;
-
-      while((direntry = readdir(autoloads)))
+      const fs::directory_iterator itr(autoloads);
+      for(const fs::directory_entry ent : itr)
       {
-         if(strstr(direntry->d_name, ".csc"))
+         if(ent.path().extension() == ".csc")
          {
-            fn = M_SafeFilePath(autoload_dirname.constPtr(), direntry->d_name);
+            fn = M_SafeFilePath(autoload_dirname.constPtr(),
+                                ent.path().filename().generic_u8string().c_str());
             C_RunScriptFromFile(fn);
          }
       }
-
-      rewinddir(autoloads);
    }
 }
 
@@ -1281,11 +1268,8 @@ void D_GameAutoloadCSC()
 //
 void D_CloseAutoloadDir()
 {
-   if(autoloads)
-   {
-      closedir(autoloads);
-      autoloads = NULL;
-   }
+   if(!autoloads.empty())
+       autoloads = fs::path();
    autoload_dirname.freeBuffer();
 }
 

@@ -210,7 +210,6 @@ pickupeffect ComputerMap
   effects Allmap
   message $GOTMAP
   sound   getpow
-  flags   ALWAYSPICKUP
 
   sprite  PMAP
   pfxname PFX_ALLMAP

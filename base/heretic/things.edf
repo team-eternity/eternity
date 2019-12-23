@@ -3182,6 +3182,7 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
   radius     8.0
   height     6.0
   damage     18
+  dmgspecial PoweredMaceBall
   remflags   NOTELEPORT
   addflags   LOGRAV|TELESTOMP
 

@@ -8,6 +8,67 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+01.11.2019
+
+IMPROVEMENT: Jumping is now a compatibility setting. By default it's disabled.
+             If player attempts to jump anyway, a message will be shown that it
+             needs to be explicitly enabled in settings.
+
+             EDF player classes now support an "+AlwaysJump" option, which will
+             enable jumping regardless of compatibility setting or EMAPINFO
+             disable-jump. Also, setting "speedjump" to 0 will completely
+             disable jumping for that class.
+
+--------------------------------------------------------------------------------
+28.10.2019
+
+FEATURE: Now playerclass has two new fields: maxhealth (default 100) and
+         superhealth (default = maxhealth). They're needed for some built-in
+         effects, mainly the HealThing special and the powered A_GauntletAttack.
+
+         Also updated the EDF healtheffect items to use the new @maxhealth and
+         @superhealth keywords instead of absolute values to refer to the
+         current playerclass values. They're safely replaceable by Dehacked and
+         healthdelta structures.
+
+FEATURE: New optional "jump" ("dsjump") player skin sound, as needed by some
+         skin mods.
+
+--------------------------------------------------------------------------------
+27.10.2019
+
+BUGFIX: Stop HealThing from attempting to heal dead bodies. Crazy stuff would
+        happen, such as the view getting garbled and Eternity crashing.
+
+--------------------------------------------------------------------------------
+26.10.2019
+
+BUGFIX: For macOS, fixed the failure to start Eternity from Terminal if its
+        locale was set to non-English settings. This may apply to other
+        UNIX-like systems too.
+
+Feature: Finally added support for Dehacked "Monsters Infight" misc setting.
+
+--------------------------------------------------------------------------------
+23.10.2019
+
+FEATURE: Added the Generic_Stairs special. Needed for proper support of BOOM ge-
+         neralized stairs, which the current parameterized specials aren't
+         capable of.
+
+--------------------------------------------------------------------------------
+22.09.2019
+
+BUGFIX: If there are multiple textures with the same name in TEXTURE1+TEXTURE2,
+        the first one should be loaded, not the last. This fixes mods such as
+        Army of Darkness DOOM, which looked wrong in Eternity.
+
+--------------------------------------------------------------------------------
+23.07.2019
+
+BUGFIX: Fixed EDF thingtype droptype to actually remove inherited object's item.
+
+--------------------------------------------------------------------------------
 22.06.2019
 
 FEATURE: Added CPXF_ANCESTOR to CheckProximity.

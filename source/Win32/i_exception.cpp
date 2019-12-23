@@ -203,8 +203,8 @@ static void LogPrintf(LPCTSTR fmt, ...)
 
 typedef struct exceptiondata_s
 {
-   DWORD  code;
-   TCHAR *name;
+   DWORD        code;
+   const TCHAR *name;
 } exceptiondata_t;
 
 static exceptiondata_t ExceptionData[] =
@@ -269,7 +269,7 @@ static const TCHAR *PhraseForException(DWORD code)
 //
 static void PrintHeader(void)
 {
-   TCHAR *crashModuleFn = _T("Unknown");
+   const TCHAR *crashModuleFn = _T("Unknown");
    
    ZeroMemory(crashModulePath, sizeof(crashModulePath));
 

@@ -63,6 +63,7 @@
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
+#include "p_sector.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
@@ -315,8 +316,14 @@ static void P_applyEDFAnim(const EAnimDef &ead)
 //
 void P_InitPicAnims(void)
 {
-   animdef_t   *animdefs; //jff 3/23/98 pointer to animation lump
-   
+   animdef_t               *animdefs; //jff 3/23/98 pointer to animation lump
+   const lumpinfo_t *const *lumpinfo = wGlobalDir.getLumpInfo();
+   const int                animatednum  = wGlobalDir.getNumForName("ANIMATED");
+   const size_t             animatedsize = lumpinfo[animatednum]->size;
+
+   if(lumpinfo[animatednum]->size == 0)
+      I_Error("P_InitPicAnims: ANIMATED lump has size 0\n");
+
    //  Init animation
    //jff 3/23/98 read from predefined or wad lump instead of table
    animdefs = static_cast<animdef_t *>(wGlobalDir.cacheLumpName("ANIMATED", PU_STATIC));
@@ -2362,12 +2369,12 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 // Moves all attached surfaces.
 //
 bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
-                    int crush)
+                    int crush, bool nointerp)
 {
    int i;
 
    int count;
-   attachedsurface_t *list;
+   const attachedsurface_t *list;
 
    bool ok = true;
    
@@ -2389,12 +2396,16 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
          P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
          P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
 
       if(list[i].type & AS_FLOOR)
@@ -2402,12 +2413,16 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
          P_SetFloorHeight(list[i].sector, list[i].sector->floorheight + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
          P_SetFloorHeight(list[i].sector, list[i].sector->floorheight - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
    }
 

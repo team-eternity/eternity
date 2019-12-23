@@ -29,6 +29,7 @@
 #if _MSC_VER >= 1914
 #include <locale>
 #include <filesystem>
+namespace fs = std::filesystem;
 #include <string>
 #endif
 
@@ -93,8 +94,8 @@ const char *I_PlatformInstallDirectory()
 void I_GetRealPath(const char *path, qstring &real)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   std::filesystem::path pathobj(path);
-   pathobj = std::filesystem::canonical(pathobj);
+   fs::path pathobj(path);
+   pathobj = fs::canonical(pathobj);
 
    // Has to be converted since fs::value_type is wchar_t on Windows
    std::wstring wpath(pathobj.c_str());
@@ -125,6 +126,98 @@ void I_GetRealPath(const char *path, qstring &real)
    real = path;
 #endif
 }
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+//==============================================================================
+//
+// MacOS FileSystem stopgap
+//
+
+#include <dirent.h>
+#include <sys/types.h>
+
+//
+// Get the last file component
+//
+fsStopgap::path fsStopgap::path::filename() const
+{
+   qstring basename;
+   mValue.extractFileBase(basename);
+   return path(basename.constPtr());
+}
+
+fsStopgap::path fsStopgap::path::extension() const
+{
+   const char *start = strrchr(mValue.constPtr(), '.');
+   return start ? path(start) : path();
+}
+
+//
+// Fancy path concatenation
+//
+fsStopgap::path fsStopgap::path::operator / (const char *sub) const
+{
+   qstring newpath(mValue);
+   newpath += '/';
+   newpath += sub;
+   return path(newpath.constPtr());
+}
+
+//
+// True if path exists
+//
+bool fsStopgap::directory_entry::exists() const
+{
+   struct stat st = {};
+   return !stat(mPath.mValue.constPtr(), &st);
+}
+
+//
+// True if it's a directory
+//
+bool fsStopgap::directory_entry::is_directory() const
+{
+   struct stat st = {};
+   int n = stat(mPath.mValue.constPtr(), &st);
+   if(n)
+      return false;
+   return S_ISDIR(st.st_mode);
+}
+
+//
+// Return file size
+//
+off_t fsStopgap::directory_entry::file_size() const
+{
+   struct stat st = {};
+   int n = stat(mPath.mValue.constPtr(), &st);
+   if(n)
+      return 0;
+   return st.st_size;
+}
+
+//
+// Explores all items from folder
+//
+void fsStopgap::directory_iterator::construct(const directory_entry &entry)
+{
+   DIR *dir = opendir(entry.mPath.mValue.constPtr());
+   if(!dir)
+      return;  // failed
+   dirent *en;
+   while((en = readdir(dir)))
+   {
+      if(!strcmp(en->d_name, ".") || !strcmp(en->d_name, ".."))
+         continue;
+      qstring fullPath = entry.mPath.mValue;
+      fullPath += '/';
+      fullPath += en->d_name;
+      mEntries.add(fullPath.constPtr());
+   }
+   closedir(dir);
+}
+
+#endif
 
 // EOF
 

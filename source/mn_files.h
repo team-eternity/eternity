@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//---------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Simon Howard, James Haley, et al.
+// Copyright(C) 2019 Simon Howard, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,16 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+// Purpose: Menu file selector
+//  eg. For selecting a wad to load or demo to play
 //
-// Menu file selector
+// Authors: Simon Howard, James Haley
 //
-// eg. For selecting a wad to load or demo to play
-//
-// By Simon Howard
-// Revisions by James Haley
-//
-//---------------------------------------------------------------------------
 
 #ifndef MN_FILES_H__
 #define MN_FILES_H__

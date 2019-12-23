@@ -288,6 +288,7 @@ static const char *doom_skindefs[NUMSKINSOUNDS] =
    "fallht",
    "none",
    "noway",
+   "none",
 };
 
 static int doom_soundnums[NUMSKINSOUNDS] =
@@ -304,6 +305,7 @@ static int doom_soundnums[NUMSKINSOUNDS] =
    sfx_fallht,
    sfx_plwdth,
    sfx_noway,
+   sfx_jump,
 };
 
 static const char *htic_skindefs[NUMSKINSOUNDS] =
@@ -319,7 +321,8 @@ static const char *htic_skindefs[NUMSKINSOUNDS] =
    "plfeet",
    "fallht",
    "ht_plrwdth",
-   "ht_plroof",
+   "none",
+   "none",
 };
 
 static int htic_soundnums[NUMSKINSOUNDS] =
@@ -335,7 +338,8 @@ static int htic_soundnums[NUMSKINSOUNDS] =
    sfx_plfeet,
    sfx_fallht,
    sfx_hplrwdth,
-   sfx_hplroof,
+   sfx_hnoway,
+   sfx_jump,
 };
 
 //

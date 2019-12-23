@@ -186,6 +186,7 @@ DECLARE_ACTION(EV_ActionParamStairsBuildUpDoomCrush);
 DECLARE_ACTION(EV_ActionParamStairsBuildDownDoom);
 DECLARE_ACTION(EV_ActionParamStairsBuildUpDoomSync);
 DECLARE_ACTION(EV_ActionParamStairsBuildDownDoomSync);
+DECLARE_ACTION(EV_ActionParamGenStairs);
 DECLARE_ACTION(EV_ActionPolyobjDoorSlide);
 DECLARE_ACTION(EV_ActionPolyobjDoorSwing);
 DECLARE_ACTION(EV_ActionPolyobjMove);

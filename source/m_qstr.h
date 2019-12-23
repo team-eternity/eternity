@@ -188,7 +188,7 @@ public:
    qstring &pathConcatenate(const char *addend);
    qstring &addDefaultExtension(const char *ext);
    qstring &removeFileSpec();
-   void     extractFileBase(qstring &dest);
+   void     extractFileBase(qstring &dest) const;
 
    // Zone strdup wrappers
    char *duplicate(int tag = PU_STATIC) const;

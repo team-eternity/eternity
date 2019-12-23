@@ -172,6 +172,10 @@ default_t *M_FindDefaultForCVar(variable_t *var);
   #define MUS_DESCR    "no midi driver available for this platform"
 #endif
 
+#ifdef HAVE_ADLMIDILIB
+extern const int BANKS_MAX;
+#endif
+
 #endif
 
 //----------------------------------------------------------------------------

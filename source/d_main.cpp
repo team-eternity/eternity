@@ -599,7 +599,7 @@ static void D_Display()
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
-         
+
          if(automapactive)
          {
             AM_Drawer();

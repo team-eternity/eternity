@@ -778,7 +778,7 @@ void CeilingWaggleThinker::Think()
          dist       = originalHeight - sector->ceilingheight;
 
          T_MoveCeilingInDirection(sector, abs(dist),
-            destheight, 8, destheight >= sector->floorheight ? plat_up : plat_down);
+            destheight, 8, destheight >= sector->ceilingheight ? plat_up : plat_down);
 
          sector->ceilingdata = nullptr;
          remove();
@@ -802,7 +802,7 @@ void CeilingWaggleThinker::Think()
    dist = destheight - sector->ceilingheight;
 
    T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->floorheight ? plat_up : plat_down);
+      destheight >= sector->ceilingheight ? plat_up : plat_down);
 }
 
 //

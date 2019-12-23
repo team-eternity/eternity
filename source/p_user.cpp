@@ -375,7 +375,7 @@ void P_MovePlayer(player_t* player)
          if(cmd->sidemove)
             P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
       }
-      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      else if(LevelInfo.airControl == 0 && E_CanJump(*player->pclass))
       {
          // Apply legacy Hexen/Strife primitive air control if air control is 0
          // (default) and the compatibility setting is "NO".
@@ -688,14 +688,31 @@ void P_PlayerThink(player_t *player)
       // Handle actions   -- joek 12/22/07
       // ioanch: not on demo_version lower than some amount. Was happening
       // accidentally in -vanilla.
-      if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
+      if(cmd->actions & AC_JUMP)
       {
-         if((player->mo->z == player->mo->zref.floor ||
-             (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+         if(E_CanJump(*player->pclass))
          {
-            player->mo->momz += player->pclass->jumpspeed;
-            player->mo->intflags &= ~MIF_ONMOBJ;
-            player->jumptime = 18;
+            if((player->mo->z == player->mo->zref.floor ||
+                (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+            {
+               if(strcasecmp(player->skin->sounds[sk_jump], "none"))
+                  S_StartSound(player->mo, GameModeInfo->playerSounds[sk_jump]);
+               player->mo->momz += player->pclass->jumpspeed;
+               player->mo->intflags &= ~MIF_ONMOBJ;
+               player->jumptime = 18;
+            }
+         }
+         else
+         {
+            static int printtic = -3 * TICRATE;
+            if(gametic >= printtic + 3 * TICRATE && player == &players[consoleplayer])
+            {
+               printtic = gametic;
+               if(E_MayJumpIfOverriden(*player->pclass))
+                  doom_printf("Jumping needs to be allowed in the settings.");
+               else
+                  doom_printf("Jumping not possible.");
+            }
          }
       }
    }
