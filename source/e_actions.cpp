@@ -211,7 +211,7 @@ action_t *E_GetAction(const char *name)
 //
 // Register the script action, creating the actiondef_t and adding it to the hash
 //
-static void E_registerScriptAction(const char *name, const char *funcname,
+static void E_registerScriptAction(actiondef_t &action, const char *funcname,
                                    const Collection<qstring> &argTypes,
                                    const Collection<const char *> &defaultArgs,
                                    const unsigned int numParams,
@@ -264,16 +264,24 @@ static void E_registerScriptAction(const char *name, const char *funcname,
       else
       {
          E_EDFLoggedWarning(2, "E_registerScriptAction: action '%s' has invalid argument type "
-                               "%s\n", name, argTypes[i].constPtr());
+                               "%s\n", action.name, argTypes[i].constPtr());
          return;
       }
    }
 
-   actiondef_t *info = E_AeonActionForName(funcname);
-   memcpy(info->argTypes,    args,     sizeof(args));
-   memcpy(info->defaultArgs, defaults, sizeof(defaults));
-   info->numArgs  = numParams - nonArgParams;
-   info->callType = callType;
+   // Populate properties
+   memcpy(action.argTypes,    args,     sizeof(args));
+   memcpy(action.defaultArgs, defaults, sizeof(defaults));
+   action.numArgs  = numParams - nonArgParams;
+   action.callType = callType;
+
+   // Rename the action to be the name of the function in AngelScript
+   // TODO: Is this necessary?
+   e_ActionDefHash.removeObject(action);
+   efree(const_cast<char *>(action.name));
+   action.name = estrdup(funcname);
+   e_ActionDefHash.addObject(action);
+
 }
 
 //
@@ -380,7 +388,7 @@ void E_CreateActions(cfg_t *cfg)
 //
 // Populates a single Aeon action
 //
-static void E_populateAction(const char *const name)
+static void E_populateAction(actiondef_t &action)
 {
    // This is static as E_whatever is called many times
    static asIScriptEngine *const e = Aeon::ScriptManager::Engine();
@@ -396,15 +404,15 @@ static void E_populateAction(const char *const name)
    actioncalltype_e   callType;
 
    // Get the Aeon function for a given mnemonic (like D_GetBexPtr)
-   func = E_aeonFuncForMnemonic(name);
+   func = E_aeonFuncForMnemonic(action.name);
 
    // Verify that the first parameter is a Mobj or player_t handle
    int         typeID     = 0;
    const char *defaultArg = nullptr;
    if(func->GetParam(0, &typeID, nullptr, nullptr, &defaultArg) < 0)
-      E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", name);
+      E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", action.name);
    else if(estrnonempty(defaultArg))
-      E_EDFLoggedErr(2, "E_processAction: Default argument TODO: Rest of error '%s'\n", name);
+      E_EDFLoggedErr(2, "E_processAction: Default argument TODO: Rest of error '%s'\n", action.name);
 
    typeID &= ~asTYPEID_HANDLETOCONST;
 
@@ -439,14 +447,14 @@ static void E_populateAction(const char *const name)
    else
    {
       E_EDFLoggedErr(2, "E_processAction: First parameter of action '%s' must be of type "
-                        "'EE::Mobj @', 'EE::Player @', or 'EE::ActionArgs'\n", name);
+                        "'EE::Mobj @', 'EE::Player @', or 'EE::ActionArgs'\n", action.name);
    }
 
    if(paramCount - nonArgParams > EMAXARGS)
    {
       E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "
                             "Declared: %d, Allowed: %d\n",
-                         name, paramCount, EMAXARGS + nonArgParams);
+                         action.name, paramCount, EMAXARGS + nonArgParams);
       return;
    }
 
@@ -475,7 +483,7 @@ static void E_populateAction(const char *const name)
       argDefaults.add(argTemp);
    }
 
-   E_registerScriptAction(name, func->GetName(), argNameTypes, argDefaults,
+   E_registerScriptAction(action, func->GetName(), argNameTypes, argDefaults,
                           paramCount,  nonArgParams, callType);
 }
 
@@ -486,13 +494,13 @@ void E_PopulateActions()
 {
    E_EDFLogPuts("\t* Populating Aeon actions\n");
 
-   actiondef_t *def = nullptr;
-   while((def = e_ActionDefHash.tableIterator(def)))
+   actiondef_t *action = nullptr;
+   while((action = e_ActionDefHash.tableIterator(action)))
    {
-      E_EDFLogPrintf("\Populated Aeon action %s\n", def->name);
+      E_EDFLogPrintf("\Populated Aeon action %s\n", action->name);
 
       // populate action properties
-      E_populateAction(def->name);
+      E_populateAction(*action);
    }
 }
 
