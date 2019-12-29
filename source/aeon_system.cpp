@@ -169,6 +169,11 @@ namespace Aeon
       atexit(Shutdown);
    }
 
+   void ScriptManager::Build()
+   {
+      module->Build();
+   }
+
    void ScriptManager::Shutdown()
    {
       ctx->Release();

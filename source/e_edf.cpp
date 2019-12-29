@@ -80,6 +80,7 @@
 #include "Confuse/confuse.h"
 #include "Confuse/lexer.h"
 
+#include "aeon_system.h"
 #include "w_wad.h"
 #include "i_system.h"
 #include "d_main.h"
@@ -1659,8 +1660,18 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // process damage types
    E_ProcessDamageTypes(cfg);
 
-   // process actions (codepointers)
-   E_ProcessActions(cfg);
+
+   // -- AEON START --
+
+   // create actions (codepointers)
+   E_CreateActions(cfg);
+
+   Aeon::ScriptManager::Build();
+
+   E_PopulateActions();
+
+   // -- AEON END --
+
 
    // process frame and thing definitions (made dynamic 11/06/11)
    E_ProcessStatesAndThings(cfg);

@@ -218,7 +218,6 @@ static void E_registerScriptAction(const char *name, const char *funcname,
                                    const unsigned int nonArgParams,
                                    const actioncalltype_e callType)
 {
-   actiondef_t     *info;
    actionargtype_e  args[EMAXARGS];
    void            *defaults[EMAXARGS];
 
@@ -270,14 +269,11 @@ static void E_registerScriptAction(const char *name, const char *funcname,
       }
    }
 
-   info           = estructalloc(actiondef_t, 1);
-   info->name     = estrdup(funcname);
+   actiondef_t *info = E_AeonActionForName(funcname);
    memcpy(info->argTypes,    args,     sizeof(args));
    memcpy(info->defaultArgs, defaults, sizeof(defaults));
    info->numArgs  = numParams - nonArgParams;
    info->callType = callType;
-
-   e_ActionDefHash.addObject(info);
 }
 
 //
@@ -321,32 +317,21 @@ static inline bool E_isReservedCodePointer(const char *name)
 }
 
 //
-// Processes a single Aeon action
+// Creates a single Aeon action
 //
-static void E_processAction(cfg_t *actionsec)
+static void E_createAction(cfg_t *actionsec)
 {
-   // These are static as E_processAction is called many times
-   static asIScriptEngine *const e      = Aeon::ScriptManager::Engine();
+   // This is static as E_processAction is called many times
    static asIScriptModule *const module = Aeon::ScriptManager::Module();
 
-   // The various type infos of permitted first params (or second for EE::Psprite)
-   static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj @");
-   static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player @");
-   static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite @");
-   //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs @");
-
    // The function and its constituent components
-   asIScriptFunction *func;
-   const char        *name         = cfg_title(actionsec);
-   const char        *code         = cfg_getstr(actionsec, ITEM_ACT_CODE);
-   int                nonArgParams = 1; // No. of parameters that aren't provided as EDF args
-   actioncalltype_e   callType;
+   const char *name = cfg_title(actionsec);
+   const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
 
    if(E_isReservedCodePointer(name))
    {
       E_EDFLoggedErr(2, "E_processAction: Action '%s' is reserved and cannot be "
                         "overriden by EDF\n", name);
-
    }
 
    qstring altname = E_alternateFuncName(name);
@@ -361,8 +346,55 @@ static void E_processAction(cfg_t *actionsec)
    if(!code)
       E_EDFLoggedErr(2, "E_processAction: Code block not supplied for action '%s'\n", name);
 
-   module->AddScriptSection("section", code);
-   module->Build();
+   module->AddScriptSection(name, code);
+
+   actiondef_t *info = estructalloc(actiondef_t, 1);
+   info->name = estrdup(name);
+
+   e_ActionDefHash.addObject(info);
+}
+
+//
+// Create all Aeon actions
+//
+void E_CreateActions(cfg_t *cfg)
+{
+   int i, numactions;
+
+   E_EDFLogPuts("\t* Preparing Aeon actions\n");
+
+   numactions = cfg_size(cfg, EDF_SEC_ACTION);
+   E_EDFLogPrintf("\t\t%d Aeon action(s) created\n", numactions);
+   for(i = 0; i < numactions; ++i)
+   {
+      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_ACTION, i);
+      const char *title = cfg_title(sec);
+
+      E_EDFLogPrintf("\tCreated Aeon action %s\n", title);
+
+      // create action
+      E_createAction(sec);
+   }
+}
+
+//
+// Populates a single Aeon action
+//
+static void E_populateAction(const char *const name)
+{
+   // This is static as E_whatever is called many times
+   static asIScriptEngine *const e = Aeon::ScriptManager::Engine();
+
+   // The various type infos of permitted first params (or second for EE::Psprite)
+   static const int mobjTypeID    = e->GetTypeIdByDecl("EE::Mobj @");
+   static const int playerTypeID  = e->GetTypeIdByDecl("EE::Player @");
+   static const int psprTypeID    = e->GetTypeIdByDecl("EE::Psprite @");
+   //static const int actArgsTypeID = e->GetTypeIdByDecl("EE::ActionArgs @");
+
+   asIScriptFunction *func;
+   int                nonArgParams = 1; // No. of parameters that aren't provided as EDF args
+   actioncalltype_e   callType;
+
    // Get the Aeon function for a given mnemonic (like D_GetBexPtr)
    func = E_aeonFuncForMnemonic(name);
 
@@ -448,26 +480,19 @@ static void E_processAction(cfg_t *actionsec)
 }
 
 //
-// Process all Aeon actions
+// Populate all Aeon actions
 //
-void E_ProcessActions(cfg_t *cfg)
+void E_PopulateActions()
 {
-   int i, numpickups;
+   E_EDFLogPuts("\t* Populating Aeon actions\n");
 
-   E_EDFLogPuts("\t* Processing Aeon actions\n");
-
-   // load pickupfx
-   numpickups = cfg_size(cfg, EDF_SEC_ACTION);
-   E_EDFLogPrintf("\t\t%d Aeon action(s) defined\n", numpickups);
-   for(i = 0; i < numpickups; ++i)
+   actiondef_t *def = nullptr;
+   while((def = e_ActionDefHash.tableIterator(def)))
    {
-      cfg_t *sec = cfg_getnsec(cfg, EDF_SEC_ACTION, i);
-      const char *title = cfg_title(sec);
+      E_EDFLogPrintf("\Populated Aeon action %s\n", def->name);
 
-      E_EDFLogPrintf("\tCreated Aeon action %s\n", title);
-
-      // process action properties
-      E_processAction(sec);
+      // populate action properties
+      E_populateAction(def->name);
    }
 }
 

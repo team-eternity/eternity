@@ -79,8 +79,8 @@ extern cfg_opt_t edf_action_opts[];
 actiondef_t *E_AeonActionForName(const char *name);
 action_t *E_GetAction(const char *name);
 
-void E_CollectActions(cfg_t *cfg);
-void E_ProcessActions(cfg_t *cfg);
+void E_CreateActions(cfg_t *cfg);
+void E_PopulateActions();
 
 #endif
 

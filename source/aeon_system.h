@@ -39,6 +39,7 @@ namespace Aeon
       ScriptManager() = delete;
 
       static void Init();
+      static void Build();
       static void Shutdown();
 
       static asIScriptEngine  *Engine()  { return engine; }
