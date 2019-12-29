@@ -497,7 +497,7 @@ void E_PopulateActions()
    actiondef_t *action = nullptr;
    while((action = e_ActionDefHash.tableIterator(action)))
    {
-      E_EDFLogPrintf("\Populated Aeon action %s\n", action->name);
+      E_EDFLogPrintf("\tPopulated Aeon action %s\n", action->name);
 
       // populate action properties
       E_populateAction(*action);
