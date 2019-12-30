@@ -253,9 +253,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\source\as_callfunc_x64_msvc_asm.asm">
-      <Filter>Source Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\source\as_callfunc_arm_msvc.asm">
       <Filter>Source Files</Filter>
     </CustomBuild>
@@ -270,5 +267,10 @@
     <None Include="..\..\source\as_callfunc_arm_vita.S">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="..\..\source\as_callfunc_x64_msvc_asm.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
 </Project>
