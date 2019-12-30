@@ -14,10 +14,12 @@ static tm time_point_to_tm(const std::chrono::time_point<std::chrono::system_clo
 {
 	time_t t = system_clock::to_time_t(tp);
 	tm local;
+	
+	// Use the universal timezone
 #ifdef _MSC_VER
-	localtime_s(&local, &t);
+	gmtime_s(&local, &t);
 #else
-	local = *localtime(&t);
+	local = *gmtime(&t);
 #endif
 	return local;
 }
@@ -26,11 +28,17 @@ static tm time_point_to_tm(const std::chrono::time_point<std::chrono::system_clo
 static bool tm_to_time_point(const tm &_tm, std::chrono::time_point<std::chrono::system_clock> &tp)
 {
 	tm localTm = _tm;
-	localTm.tm_isdst = -1; // Always use current settings, so mktime doesn't modify the time for daylight savings
 
+	// Do not rely on timezone, as it is not portable
+	// ref: https://stackoverflow.com/questions/38298261/why-there-is-no-inverse-function-for-gmtime-in-libc
+	// ref: https://stackoverflow.com/questions/8558919/mktime-and-tm-isdst
+	localTm.tm_isdst = -1; // Always use current settings, so mktime doesn't modify the time for daylight savings
 	time_t t = mktime(&localTm);
 	if (t == -1)
 		return false;
+	
+	// Adjust the time_t since epoch with the difference of the local timezone to the universal timezone
+	t += (mktime(localtime(&t)) - mktime(gmtime(&t)));
 
 	// Verify if the members were modified, indicating an out-of-range value in input
 	if (localTm.tm_year != _tm.tm_year ||
@@ -117,18 +125,9 @@ bool CDateTime::setTime(asUINT hour, asUINT minute, asUINT second)
 
 CDateTime::CDateTime(asUINT year, asUINT month, asUINT day, asUINT hour, asUINT minute, asUINT second)
 {
-	tm local;
-	local.tm_year = int(year) - 1900;
-	local.tm_mon = month - 1;
-	local.tm_mday = day;
-	local.tm_hour = hour;
-	local.tm_min = minute;
-	local.tm_sec = second;
-	if (!tm_to_time_point(local, tp))
-	{
-		// TODO: How should the user know the input was wrong? Throw exception or have a flag? Set to epoch?
-		tp = std::chrono::system_clock::now();
-	}
+	tp = std::chrono::system_clock::now();
+	setDate(year, month, day);
+	setTime(hour, minute, second);
 }
 
 asINT64 CDateTime::operator-(const CDateTime &dt) const

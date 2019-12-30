@@ -352,7 +352,9 @@ int asCCompiler::SetupParametersAndReturnVariable(asCArray<asCString> &parameter
 
 	// Is the return type allowed?
 	if( returnType != asCDataType::CreatePrimitive(ttVoid, false) &&
-		!returnType.CanBeInstantiated() )
+		!returnType.CanBeInstantiated() &&
+		!returnType.IsReference() &&
+		!returnType.IsObjectHandle() )
 	{
 		// TODO: Hasn't this been validated by the builder already?
 		asCString str;

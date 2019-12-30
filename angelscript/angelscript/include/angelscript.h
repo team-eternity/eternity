@@ -58,8 +58,8 @@ BEGIN_AS_NAMESPACE
 
 // AngelScript version
 
-#define ANGELSCRIPT_VERSION        23400
-#define ANGELSCRIPT_VERSION_STRING "2.34.0"
+#define ANGELSCRIPT_VERSION        23500
+#define ANGELSCRIPT_VERSION_STRING "2.35.0 WIP"
 
 // Data types
 
@@ -1015,7 +1015,7 @@ public:
 
 	// Miscellaneous
 	virtual asIScriptEngine *GetEngine() const = 0;
-	virtual int              CopyFrom(asIScriptObject *other) = 0;
+	virtual int              CopyFrom(const asIScriptObject *other) = 0;
 
 	// User data
 	virtual void *SetUserData(void *data, asPWORD type = 0) = 0;

@@ -30,6 +30,10 @@ void RegisterScriptFileSystem_Native(asIScriptEngine *engine)
 {
 	int r;
 
+	assert( engine->GetTypeInfoByName("string") );
+	assert( engine->GetTypeInfoByDecl("array<string>") );
+	assert( engine->GetTypeInfoByName("datetime") );
+
 	r = engine->RegisterObjectType("filesystem", 0, asOBJ_REF); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("filesystem", asBEHAVE_FACTORY, "filesystem @f()", asFUNCTION(ScriptFileSystem_Factory), asCALL_CDECL); assert( r >= 0 );
 	r = engine->RegisterObjectBehaviour("filesystem", asBEHAVE_ADDREF, "void f()", asMETHOD(CScriptFileSystem,AddRef), asCALL_THISCALL); assert( r >= 0 );
@@ -47,6 +51,8 @@ void RegisterScriptFileSystem_Native(asIScriptEngine *engine)
 	r = engine->RegisterObjectMethod("filesystem", "int deleteFile(const string &in)", asMETHOD(CScriptFileSystem, DeleteFile), asCALL_THISCALL); assert(r >= 0);
 	r = engine->RegisterObjectMethod("filesystem", "int copyFile(const string &in, const string &in)", asMETHOD(CScriptFileSystem, CopyFile), asCALL_THISCALL); assert(r >= 0);
 	r = engine->RegisterObjectMethod("filesystem", "int move(const string &in, const string &in)", asMETHOD(CScriptFileSystem, Move), asCALL_THISCALL); assert(r >= 0);
+	r = engine->RegisterObjectMethod("filesystem", "datetime getCreateDateTime(const string &in) const", asMETHOD(CScriptFileSystem, GetCreateDateTime), asCALL_THISCALL); assert(r >= 0);
+	r = engine->RegisterObjectMethod("filesystem", "datetime getModifyDateTime(const string &in) const", asMETHOD(CScriptFileSystem, GetModifyDateTime), asCALL_THISCALL); assert(r >= 0);
 }
 
 void RegisterScriptFileSystem(asIScriptEngine *engine)
@@ -504,5 +510,78 @@ string CScriptFileSystem::GetCurrentPath() const
 	return currentPath;
 }
 
+CDateTime CScriptFileSystem::GetCreateDateTime(const string &path) const
+{
+	string search;
+	if (path.find(":") != string::npos || path.find("/") == 0 || path.find("\\") == 0)
+		search = path;
+	else
+		search = currentPath + "/" + path;
+
+#if defined(_WIN32)
+	// Windows uses UTF16 so it is necessary to convert the string
+	wchar_t bufUTF16[10000];
+	MultiByteToWideChar(CP_UTF8, 0, search.c_str(), -1, bufUTF16, 10000);
+
+	// Get the size of the file
+	FILETIME createTm;
+	HANDLE file = CreateFileW(bufUTF16, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	BOOL success = GetFileTime(file, &createTm, 0, 0);
+	CloseHandle(file);
+	if( !success )
+	{
+		asIScriptContext *ctx = asGetActiveContext();
+		if( ctx )
+			ctx->SetException("Failed to get file creation date/time");
+		return CDateTime();
+	}
+	SYSTEMTIME tm;
+	FileTimeToSystemTime(&createTm, &tm);
+	return CDateTime(tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+#else
+	// TODO: Add support for POSIX systems with a call to stat
+	asIScriptContext *ctx = asGetActiveContext();
+	if( ctx )
+		ctx->SetException("GetCreateDateTime is not yet implemented on this platform");
+	return CDateTime();
+#endif
+}
+
+CDateTime CScriptFileSystem::GetModifyDateTime(const string &path) const
+{
+	string search;
+	if (path.find(":") != string::npos || path.find("/") == 0 || path.find("\\") == 0)
+		search = path;
+	else
+		search = currentPath + "/" + path;
+
+#if defined(_WIN32)
+	// Windows uses UTF16 so it is necessary to convert the string
+	wchar_t bufUTF16[10000];
+	MultiByteToWideChar(CP_UTF8, 0, search.c_str(), -1, bufUTF16, 10000);
+
+	// Get the size of the file
+	FILETIME modifyTm;
+	HANDLE file = CreateFileW(bufUTF16, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	BOOL success = GetFileTime(file, 0, &modifyTm, 0);
+	CloseHandle(file);
+	if( !success )
+	{
+		asIScriptContext *ctx = asGetActiveContext();
+		if( ctx )
+			ctx->SetException("Failed to get file modify date/time");
+		return CDateTime();
+	}
+	SYSTEMTIME tm;
+	FileTimeToSystemTime(&modifyTm, &tm);
+	return CDateTime(tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+#else
+	// TODO: Add support for POSIX systems with a call to stat
+	asIScriptContext *ctx = asGetActiveContext();
+	if( ctx )
+		ctx->SetException("GetModifyDateTime is not yet implemented on this platform");
+	return CDateTime();
+#endif
+}
 
 END_AS_NAMESPACE

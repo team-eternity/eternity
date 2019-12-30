@@ -2650,10 +2650,13 @@ int asCScriptEngine::GetGlobalPropertyByIndex(asUINT index, const char **name, c
 }
 
 // interface
-int asCScriptEngine::GetGlobalPropertyIndexByName(const char *name) const
+int asCScriptEngine::GetGlobalPropertyIndexByName(const char *in_name) const
 {
-	asSNameSpace *ns = defaultNamespace;
-
+	asCString name;
+	asSNameSpace *ns = 0;
+	if( DetermineNameAndNamespace(in_name, defaultNamespace, name, ns) < 0 )
+		return asINVALID_ARG;
+			
 	// Find the global var id
 	while( ns )
 	{
@@ -6026,9 +6029,13 @@ asITypeInfo *asCScriptEngine::GetObjectTypeByIndex(asUINT index) const
 }
 
 // interface
-asITypeInfo *asCScriptEngine::GetTypeInfoByName(const char *name) const
+asITypeInfo *asCScriptEngine::GetTypeInfoByName(const char *in_name) const
 {
-	asSNameSpace *ns = defaultNamespace;
+	asCString name;
+	asSNameSpace *ns = 0;
+	if( DetermineNameAndNamespace(in_name, defaultNamespace, name, ns) < 0 )
+		return 0;
+			
 	while (ns)
 	{
 		// Check the object types
@@ -6070,6 +6077,49 @@ asITypeInfo *asCScriptEngine::GetTypeInfoByName(const char *name) const
 
 	return 0;
 }
+
+// internal
+int asCScriptEngine::DetermineNameAndNamespace(const char *in_name, asSNameSpace *implicitNs, asCString &out_name, asSNameSpace *&out_ns) const
+{
+	if( in_name == 0 )
+		return asINVALID_ARG;
+	
+	asCString name = in_name;
+	asCString scope;
+	asSNameSpace *ns = implicitNs;
+	
+	// Check if the given name contains a scope
+	int pos = name.FindLast("::");
+	if( pos >= 0 )
+	{
+		scope = name.SubString(0, pos);
+		name = name.SubString(pos+2);
+		if( pos == 0 )
+		{
+			// The scope is '::' so the search must start in the global namespace
+			ns = nameSpaces[0];
+		}
+		else if( scope.SubString(0, 2) == "::" )
+		{
+			// The scope starts with '::' so the given scope is fully qualified
+			ns = FindNameSpace(scope.SubString(2).AddressOf());
+		}
+		else
+		{
+			// The scope doesn't start with '::' so it is relative to the current namespace
+			if( implicitNs->name == "" )
+				ns = FindNameSpace(scope.AddressOf());
+			else
+				ns = FindNameSpace((implicitNs->name + "::" + scope).AddressOf());
+		}
+	}
+	
+	out_name = name;
+	out_ns = ns;
+	
+	return 0;
+}
+
 
 // interface
 asITypeInfo *asCScriptEngine::GetTypeInfoById(int typeId) const

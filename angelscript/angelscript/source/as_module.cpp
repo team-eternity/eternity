@@ -817,10 +817,15 @@ void asCModule::InternalReset()
 // interface
 asIScriptFunction *asCModule::GetFunctionByName(const char *in_name) const
 {
-	asSNameSpace *ns = defaultNamespace;
+	asCString name;
+	asSNameSpace *ns = 0;
+	if( engine->DetermineNameAndNamespace(in_name, defaultNamespace, name, ns) < 0 )
+		return 0;
+	
+	// Search recursively in the given namespace, moving up to parent namespace until the function is found
 	while( ns )
 	{
-		const asCArray<unsigned int> &idxs = globalFunctions.GetIndexes(ns, in_name);
+		const asCArray<unsigned int> &idxs = globalFunctions.GetIndexes(ns, name);
 		if( idxs.GetLength() != 1 )
 			return 0;
 
@@ -967,12 +972,15 @@ asUINT asCModule::GetGlobalVarCount() const
 // interface
 int asCModule::GetGlobalVarIndexByName(const char *in_name) const
 {
-	asSNameSpace *ns = defaultNamespace;
-
+	asCString name;
+	asSNameSpace *ns = 0;
+	if( engine->DetermineNameAndNamespace(in_name, defaultNamespace, name, ns) < 0 )
+		return asINVALID_ARG;
+	
 	// Find the global var id
 	while( ns )
 	{
-		int id = scriptGlobals.GetFirstIndex(ns, in_name);
+		int id = scriptGlobals.GetFirstIndex(ns, name);
 		if( id >= 0 ) return id;
 
 		// Recursively search parent namespaces
@@ -1073,7 +1081,7 @@ const char *asCModule::GetGlobalVarDeclaration(asUINT index, bool includeNamespa
 int asCModule::GetGlobalVar(asUINT index, const char **out_name, const char **out_nameSpace, int *out_typeId, bool *out_isConst) const
 {
 	const asCGlobalProperty *prop = scriptGlobals.Get(index);
-	if (!prop) return 0;
+	if (!prop) return asINVALID_ARG;
 
 	if( out_name )
 		*out_name = prop->name.AddressOf();
@@ -1105,13 +1113,17 @@ asITypeInfo *asCModule::GetObjectTypeByIndex(asUINT index) const
 // interface
 asITypeInfo *asCModule::GetTypeInfoByName(const char *in_name) const
 {
-	asSNameSpace *ns = defaultNamespace;
+	asCString name;
+	asSNameSpace *ns = 0;
+	if( engine->DetermineNameAndNamespace(in_name, defaultNamespace, name, ns) < 0 )
+		return 0;
+		
 	while (ns)
 	{
 		for (asUINT n = 0; n < classTypes.GetLength(); n++)
 		{
 			if (classTypes[n] &&
-				classTypes[n]->name == in_name &&
+				classTypes[n]->name == name &&
 				classTypes[n]->nameSpace == ns)
 				return classTypes[n];
 		}
@@ -1119,7 +1131,7 @@ asITypeInfo *asCModule::GetTypeInfoByName(const char *in_name) const
 		for (asUINT n = 0; n < enumTypes.GetLength(); n++)
 		{
 			if (enumTypes[n] &&
-				enumTypes[n]->name == in_name &&
+				enumTypes[n]->name == name &&
 				enumTypes[n]->nameSpace == ns)
 				return enumTypes[n];
 		}
@@ -1127,7 +1139,7 @@ asITypeInfo *asCModule::GetTypeInfoByName(const char *in_name) const
 		for (asUINT n = 0; n < typeDefs.GetLength(); n++)
 		{
 			if (typeDefs[n] &&
-				typeDefs[n]->name == in_name &&
+				typeDefs[n]->name == name &&
 				typeDefs[n]->nameSpace == ns)
 				return typeDefs[n];
 		}
