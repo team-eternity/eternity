@@ -55,10 +55,29 @@ cfg_opt_t edf_action_opts[] =
 // If a string starts with A_ strip it, otherwise add it
 static inline qstring E_alternateFuncName(const char *name)
 {
-   if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
-      return qstring(name + 2); // Strip A_
+   qstring qname(name);
+   qstring qnamespace;
+   const size_t sepPos = qname.find("::");
+
+   if(sepPos != qstring::npos)
+   {
+      // Set qnamespace to be everything before the ::
+      qname.copyInto(qnamespace);
+      qnamespace.truncate(sepPos);
+
+      // Set qname to be everything after the ::
+      qname.erase(0, sepPos + 2);
+   }
+
+   if(qname.length() > 2 && !qname.strNCaseCmp("A_", 2))
+      qname.erase(0, 2); // Strip A_
    else
-      return qstring("A_") << name; // Add A_
+      qname = qstring("A_").concat(qname);// Add A_
+
+   if(sepPos != qstring::npos)
+      return qnamespace << "::" << qname;
+   else
+      return qname;
 }
 
 //=============================================================================
@@ -150,13 +169,11 @@ void A_Aeon(actionargs_t *actionargs)
 // Action Definition (Aeon) and Action (Aeon and codepointer) Hash Tables
 //
 
-static
-   EHashTable<actiondef_t, ENCStringHashKey,
-              &actiondef_t::name, &actiondef_t::links> e_ActionDefHash;
+static EHashTable<actiondef_t, ENCStringHashKey,
+                  &actiondef_t::name, &actiondef_t::links> e_ActionDefHash;
 
-static
-   EHashTable<action_t, ENCStringHashKey,
-              &action_t::name, &action_t::links> e_ActionHash;
+static EHashTable<action_t, ENCStringHashKey,
+                  &action_t::name, &action_t::links> e_ActionHash;
 
 actiondef_t *E_AeonActionForName(const char *name)
 {
@@ -178,6 +195,7 @@ action_t *E_GetAction(const char *name)
    deh_bexptr  *bexptr;
    action_t    *action;
 
+   // FIXME: Is this not correct any more?
    if(strlen(name) > 2 && !strncasecmp(name, "A_", 2))
       name += 2;
 
@@ -211,13 +229,17 @@ action_t *E_GetAction(const char *name)
 //
 // Register the script action, creating the actiondef_t and adding it to the hash
 //
-static void E_registerScriptAction(actiondef_t &action, const char *funcname,
+static void E_registerScriptAction(actiondef_t *action,
+                                   PODCollection<actiondef_t *> &renamedActions,
+                                   const char *funcname,
                                    const Collection<qstring> &argTypes,
                                    const Collection<const char *> &defaultArgs,
                                    const unsigned int numParams,
                                    const unsigned int nonArgParams,
                                    const actioncalltype_e callType)
 {
+   asIScriptModule *module = Aeon::ScriptManager::Module();
+
    actionargtype_e  args[EMAXARGS];
    void            *defaults[EMAXARGS];
 
@@ -264,24 +286,19 @@ static void E_registerScriptAction(actiondef_t &action, const char *funcname,
       else
       {
          E_EDFLoggedWarning(2, "E_registerScriptAction: action '%s' has invalid argument type "
-                               "%s\n", action.name, argTypes[i].constPtr());
+                               "%s\n", action->name, argTypes[i].constPtr());
          return;
       }
    }
 
    // Populate properties
-   memcpy(action.argTypes,    args,     sizeof(args));
-   memcpy(action.defaultArgs, defaults, sizeof(defaults));
-   action.numArgs  = numParams - nonArgParams;
-   action.callType = callType;
+   memcpy(action->argTypes,    args,     sizeof(args));
+   memcpy(action->defaultArgs, defaults, sizeof(defaults));
+   action->numArgs  = numParams - nonArgParams;
+   action->callType = callType;
 
-   // Rename the action to be the name of the function in AngelScript
-   // TODO: Is this necessary?
-   e_ActionDefHash.removeObject(action);
-   efree(const_cast<char *>(action.name));
-   action.name = estrdup(funcname);
-   e_ActionDefHash.addObject(action);
-
+   if(!module->GetFunctionByName(action->name))
+      renamedActions.add(action);
 }
 
 //
@@ -342,6 +359,23 @@ static void E_createAction(cfg_t *actionsec)
                         "overriden by EDF\n", name);
    }
 
+   qstring qname(name);
+   const size_t sepPos = qname.find("::");
+   if(sepPos == 0)
+      E_EDFLoggedErr(2, "E_processAction: Action '%s' has no namespace before the '::'\n", name);
+   else if(sepPos != qstring::npos)
+   {
+      if(sepPos + 2 >= qname.length())
+         E_EDFLoggedErr(2, "E_processAction: Action '%s' has no action name after the '::'\n", name);
+
+      qname.erase(0, sepPos + 2);
+      if(qname.length() == 2 && !qname.strCaseCmp("A_"))
+      {
+         E_EDFLoggedErr(2, "E_processAction: Action '%s' doesn't have a valid "
+                           " action name after the '::'.\n", name);
+      }
+   }
+
    qstring altname = E_alternateFuncName(name);
    if(e_ActionDefHash.objectForKey(altname.constPtr()))
    {
@@ -388,7 +422,7 @@ void E_CreateActions(cfg_t *cfg)
 //
 // Populates a single Aeon action
 //
-static void E_populateAction(actiondef_t &action)
+static void E_populateAction(actiondef_t *action, PODCollection<actiondef_t *> &renamedActions)
 {
    // This is static as E_whatever is called many times
    static asIScriptEngine *const e = Aeon::ScriptManager::Engine();
@@ -404,15 +438,15 @@ static void E_populateAction(actiondef_t &action)
    actioncalltype_e   callType;
 
    // Get the Aeon function for a given mnemonic (like D_GetBexPtr)
-   func = E_aeonFuncForMnemonic(action.name);
+   func = E_aeonFuncForMnemonic(action->name);
 
    // Verify that the first parameter is a Mobj or player_t handle
    int         typeID     = 0;
    const char *defaultArg = nullptr;
    if(func->GetParam(0, &typeID, nullptr, nullptr, &defaultArg) < 0)
-      E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", action.name);
+      E_EDFLoggedErr(2, "E_processAction: No parameters defined for action '%s'\n", action->name);
    else if(estrnonempty(defaultArg))
-      E_EDFLoggedErr(2, "E_processAction: Default argument TODO: Rest of error '%s'\n", action.name);
+      E_EDFLoggedErr(2, "E_processAction: Default argument TODO: Rest of error '%s'\n", action->name);
 
    typeID &= ~asTYPEID_HANDLETOCONST;
 
@@ -447,14 +481,14 @@ static void E_populateAction(actiondef_t &action)
    else
    {
       E_EDFLoggedErr(2, "E_processAction: First parameter of action '%s' must be of type "
-                        "'EE::Mobj @', 'EE::Player @', or 'EE::ActionArgs'\n", action.name);
+                        "'EE::Mobj @', 'EE::Player @', or 'EE::ActionArgs'\n", action->name);
    }
 
    if(paramCount - nonArgParams > EMAXARGS)
    {
       E_EDFLoggedWarning(2, "E_processAction: Too many arguments declared in action '%s'. "
                             "Declared: %d, Allowed: %d\n",
-                         action.name, paramCount, EMAXARGS + nonArgParams);
+                         action->name, paramCount, EMAXARGS + nonArgParams);
       return;
    }
 
@@ -483,8 +517,8 @@ static void E_populateAction(actiondef_t &action)
       argDefaults.add(argTemp);
    }
 
-   E_registerScriptAction(action, func->GetName(), argNameTypes, argDefaults,
-                          paramCount,  nonArgParams, callType);
+   E_registerScriptAction(action, renamedActions, func->GetName(), argNameTypes,
+                          argDefaults,paramCount,  nonArgParams, callType);
 }
 
 //
@@ -494,13 +528,24 @@ void E_PopulateActions()
 {
    E_EDFLogPuts("\t* Populating Aeon actions\n");
 
+   PODCollection<actiondef_t *> renamedActions;
+
    actiondef_t *action = nullptr;
    while((action = e_ActionDefHash.tableIterator(action)))
    {
       E_EDFLogPrintf("\tPopulated Aeon action %s\n", action->name);
 
       // populate action properties
-      E_populateAction(*action);
+      E_populateAction(action, renamedActions);
+   }
+
+   for(actiondef_t *renamedAction : renamedActions)
+   {
+      e_ActionDefHash.removeObject(renamedAction);
+      const char *temp = E_alternateFuncName(renamedAction->name).duplicate();
+      efree(const_cast<char *>(renamedAction->name));
+      renamedAction->name = temp;
+      e_ActionDefHash.addObject(renamedAction);
    }
 }
 
