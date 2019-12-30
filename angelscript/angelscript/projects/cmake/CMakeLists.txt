@@ -5,6 +5,10 @@ project(angelscript)
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 option(AS_NO_EXCEPTIONS "Disable exception handling in script context" OFF)
 
+if(MSVC)
+    option(MSVC_COMPILE_FLAGS "Compiler flags to use with MSVC" "/MP")
+endif()
+
 if(APPLE)
     option(BUILD_FRAMEWORK "Build Framework bundle for OSX" OFF)
 endif()
@@ -164,7 +168,7 @@ if(BUILD_FRAMEWORK)
 endif()
 
 if(MSVC)
-    set_target_properties(${ANGELSCRIPT_LIBRARY_NAME} PROPERTIES COMPILE_FLAGS "/MP")
+    set_target_properties(${ANGELSCRIPT_LIBRARY_NAME} PROPERTIES COMPILE_FLAGS "${MSVC_COMPILE_FLAGS}")
 endif()
 
 # Don't override the default runtime output path to avoid conflicts when building for multiple target platforms
