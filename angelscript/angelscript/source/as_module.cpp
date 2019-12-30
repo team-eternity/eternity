@@ -47,6 +47,7 @@
 BEGIN_AS_NAMESPACE
 
 
+#pragma warning( disable : 4458 )
 // internal
 asCModule::asCModule(const char *name, asCScriptEngine *engine)
 {
