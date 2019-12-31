@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Additional terms and conditions compatible with the GPLv3 apply. See the
-// file COPYING-EE for details.
+//----------------------------------------------------------------------------
 //
 // Purpose: Aeon wrapper for player_t
 // Authors: Max Waine
 //
 
 #include "aeon_common.h"
+#include "aeon_math.h"
 #include "aeon_player.h"
 #include "aeon_system.h"
 #include "d_player.h"
@@ -30,14 +30,25 @@
 #include "e_weapons.h"
 #include "m_qstr.h"
 #include "p_mobj.h"
+#include "p_user.h"
 
 namespace Aeon
 {
-    static Mobj *spawnPlayerMissile(Mobj *source, const qstring &name)
+   static void thrust(player_t *plyr, Angle angle, Angle pitch, Fixed move)
+   {
+      P_Thrust(plyr, angle.value, pitch.value, move.value);
+   }
+
+   static void subtractAmmo(player_t *plyr, int amount = 0)
+   {
+      P_SubtractAmmo(plyr, amount);
+   }
+
+    static Mobj *spawnPlayerMissile(player_t *plyr, const qstring &name)
     {
         const mobjtype_t thingnum = E_GetThingNumForName(name.constPtr());
 
-        return P_SpawnPlayerMissile(source, thingnum);
+        return P_SpawnPlayerMissile(plyr->mo, thingnum);
     }
 
     static bool playerOwnsWeapon(player_t *plyr, const qstring &name)
@@ -103,6 +114,8 @@ namespace Aeon
 
    static const aeonfuncreg_t playerFuncs[] =
    {
+      { "void thrust(angle_t angle, angle_t pitch, fixed_t move)",   WRAP_OBJ_FIRST(thrust)             },
+      { "void subtractAmmo(int amount = 0)",                         WRAP_OBJ_FIRST(subtractAmmo)       },
       { "Mobj @spawnMissile(const String &missileType) const",       WRAP_OBJ_FIRST(spawnPlayerMissile) },
       { "bool ownsWeapon(const String &weaponName) const",           WRAP_OBJ_FIRST(playerOwnsWeapon)   },
       { "bool checkAmmo() const",                                    WRAP_OBJ_FIRST(P_CheckAmmo)        },

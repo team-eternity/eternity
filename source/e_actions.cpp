@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2018 James Haley, Max Waine, et al.
+// Copyright (C) 2019 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,9 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
-//
-// Additional terms and conditions compatible with the GPLv3 apply. See the
-// file COPYING-EE for details.
 //
 //----------------------------------------------------------------------------
 //
@@ -52,7 +49,7 @@ cfg_opt_t edf_action_opts[] =
    CFG_END()
 };
 
-// If a string starts with A_ strip it, otherwise add it
+// If an action starts with A_ strip it, otherwise add it
 static inline qstring E_alternateFuncName(const char *name)
 {
    qstring qname(name);
@@ -281,7 +278,7 @@ static void E_registerScriptAction(actiondef_t *action,
       {
          args[i - 1] = AAT_SOUND;
          if(estrnonempty(defaultArgs[i]))
-            E_EDFLoggedErr(2, "E_registerScriptAction:Bla bla bla TODO \n");
+            E_EDFLoggedErr(2, "E_registerScriptAction: Bla bla bla TODO \n");
       }
       else
       {
@@ -302,8 +299,8 @@ static void E_registerScriptAction(actiondef_t *action,
 }
 
 //
-// Fetches a function based on a mnemonic, disregarding the A_
-// The A_ is also stripped if necessary
+// Fetches a function based on a mnemonic,working
+// regardless of whether or not A_ prefixes are or aren't present
 //
 static inline asIScriptFunction *E_aeonFuncForMnemonic(const char *mnemonic)
 {
@@ -346,7 +343,7 @@ static inline bool E_isReservedCodePointer(const char *name)
 //
 static void E_createAction(cfg_t *actionsec)
 {
-   // This is static as E_processAction is called many times
+   // This is static as E_createAction is called many times
    static asIScriptModule *const module = Aeon::ScriptManager::Module();
 
    // The function and its constituent components
@@ -359,6 +356,8 @@ static void E_createAction(cfg_t *actionsec)
                         "overriden by EDF\n", name);
    }
 
+   // Doing "::Foo" is an acceptable error,
+   // but if users do "Foo::" or "Foo::A_" they deserve what they get
    qstring qname(name);
    const size_t sepPos = qname.find("::");
    if(sepPos == 0)
@@ -424,7 +423,7 @@ void E_CreateActions(cfg_t *cfg)
 //
 static void E_populateAction(actiondef_t *action, PODCollection<actiondef_t *> &renamedActions)
 {
-   // This is static as E_whatever is called many times
+   // This is static as E_populateAction is called many times
    static asIScriptEngine *const e = Aeon::ScriptManager::Engine();
 
    // The various type infos of permitted first params (or second for EE::Psprite)
@@ -499,7 +498,7 @@ static void E_populateAction(actiondef_t *action, PODCollection<actiondef_t *> &
    // This loop is effectively kexScriptManager::GetArgTypesFromFunction from Powerslave EX
    for(unsigned int i = 0; i < paramCount; i++)
    {
-      int idx;
+      size_t idx;
 
       strTemp = func->GetVarDecl(i);
 

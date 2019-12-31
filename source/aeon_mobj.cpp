@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2019 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,8 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Additional terms and conditions compatible with the GPLv3 apply. See the
-// file COPYING-EE for details.
+//----------------------------------------------------------------------------
 //
 // Purpose: Aeon wrapper for Mobj
 // Authors: Max Waine
@@ -30,6 +29,7 @@
 #include "m_qstr.h"
 #include "p_enemy.h"
 #include "p_mobj.h"
+#include "p_pspr.h"
 #include "s_sound.h"
 
 #include "p_map.h"
@@ -82,6 +82,16 @@ namespace Aeon
       S_StartSound(origin, sfxinfo.dehackednum);
    }
 
+   static void weaponSound(Mobj *t1, const sfxinfo_t &sfxinfo)
+   {
+      P_WeaponSound(t1, sfxinfo.dehackednum);
+   }
+
+   static Fixed doAutoAim(Mobj *t1, Angle angle, Fixed distance)
+   {
+      return Fixed(P_DoAutoAim(t1, angle.value, distance.value));
+   }
+
    static Fixed aimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
    {
       return Fixed(P_AimLineAttack(t1, angle.value, distance.value,
@@ -100,12 +110,18 @@ namespace Aeon
       { "void backupPosition()",              WRAP_MFN(Mobj, backupPosition)                  },
       { "void copyPosition(Mobj @other)",     WRAP_MFN(Mobj, copyPosition)                    },
       { "int getModifiedSpawnHealth() const", WRAP_MFN(Mobj, getModifiedSpawnHealth)          },
+      { "void remove()",                      WRAP_MFN(Mobj, remove)                          },
 
       // Non-methods that are used like methods in Aeon
-      { "bool checkSight(Mobj @other)",                        WRAP_OBJ_FIRST(P_CheckSight)   },
-      { "bool hitFriend()",                                    WRAP_OBJ_FIRST(P_HitFriend)    },
-      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(startSound)     },
-      { "bool tryMove(fixed_t x, fixed_t y, int dropoff = 0)", WRAP_OBJ_FIRST(P_TryMove)      },
+      { "void setTarget(EE::Mobj @target)",                    WRAP_OBJ_FIRST(P_SetTarget<Mobj>)   },
+      { "bool checkMissileRange()",                            WRAP_OBJ_FIRST(P_CheckMissileRange) },
+      { "bool checkMissileSpawn()",                            WRAP_OBJ_FIRST(P_CheckMissileSpawn) },
+      { "bool checkSight(Mobj @other)",                        WRAP_OBJ_FIRST(P_CheckSight)        },
+      { "bool hitFriend()",                                    WRAP_OBJ_FIRST(P_HitFriend)         },
+      { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(startSound)          },
+      { "void weaponSound(const EE::Sound &in)",               WRAP_OBJ_FIRST(weaponSound)         },
+      { "bool tryMove(fixed_t x, fixed_t y, int dropoff = 0)", WRAP_OBJ_FIRST(P_TryMove)           },
+      { "fixed_t doAutoAim(angle_t angle, fixed_t distance)",  WRAP_OBJ_FIRST(doAutoAim)           },
       {
          "fixed_t aimLineAttack(angle_t angle, fixed_t distance, alaflags_e flags = 0)",
          WRAP_OBJ_FIRST(aimLineAttack)
