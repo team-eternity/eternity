@@ -26,6 +26,7 @@
 #include "aeon_mobj.h"
 #include "aeon_system.h"
 #include "d_dehtbl.h"
+#include "e_things.h"
 #include "m_qstr.h"
 #include "p_enemy.h"
 #include "p_mobj.h"
@@ -77,6 +78,22 @@ namespace Aeon
       return FloatBobOffsets[in];
    }
 
+   static Mobj *spawnMobj(Fixed x, Fixed y, Fixed z, const qstring &name)
+   {
+      return P_SpawnMobj(x.value, y.value, z.value, E_SafeThingName(name.constPtr()));
+   }
+
+   static Mobj *spawnMissile(Mobj *source, Mobj *dest, const qstring &type, Fixed z)
+   {
+      return P_SpawnMissile(source, dest, E_SafeThingName(type.constPtr()), z.value);
+   }
+
+   static Mobj *spawnMissileAngle(Mobj *source, const qstring &type, Angle angle, Fixed momz, Fixed z)
+   {
+      return P_SpawnMissileAngle(source, E_SafeThingName(type.constPtr()),
+                                 angle.value, momz.value, z.value);
+   }
+
    static void startSound(const PointThinker *origin, const sfxinfo_t &sfxinfo)
    {
       S_StartSound(origin, sfxinfo.dehackednum);
@@ -122,6 +139,14 @@ namespace Aeon
       { "void weaponSound(const EE::Sound &in)",               WRAP_OBJ_FIRST(weaponSound)         },
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff = 0)", WRAP_OBJ_FIRST(P_TryMove)           },
       { "fixed_t doAutoAim(angle_t angle, fixed_t distance)",  WRAP_OBJ_FIRST(doAutoAim)           },
+      {
+         "EE::Mobj @spawnMissile(EE::Mobj @dest, const String &type, fixed_t z)",
+         WRAP_OBJ_FIRST(spawnMissile),
+      },
+      {
+         "EE::Mobj @spawnMissileAngle(const String &type, angle_t angle, fixed_t momz, fixed_t z)",
+         WRAP_OBJ_FIRST(spawnMissileAngle)
+      },
       {
          "fixed_t aimLineAttack(angle_t angle, fixed_t distance, alaflags_e flags = 0)",
          WRAP_OBJ_FIRST(aimLineAttack)
@@ -222,6 +247,8 @@ namespace Aeon
       e->SetDefaultNamespace("EE::Mobj");
       e->RegisterGlobalFunction("fixed_t FloatBobOffsets(const int index)",
                                 WRAP_FN(floatBobOffsets), asCALL_GENERIC);
+      e->RegisterGlobalFunction("EE::Mobj @Spawn(fixed_t x, fixed_t y, fixed_t z, const String &type",
+                                WRAP_FN(spawnMobj), asCALL_GENERIC);
       e->SetDefaultNamespace("");
    }
 }

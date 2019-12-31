@@ -39,7 +39,7 @@ namespace Aeon
       P_Thrust(plyr, angle.value, pitch.value, move.value);
    }
 
-   static void subtractAmmo(player_t *plyr, int amount = 0)
+   static void subtractAmmo(player_t *plyr, int amount = -1)
    {
       P_SubtractAmmo(plyr, amount);
    }
@@ -115,7 +115,7 @@ namespace Aeon
    static const aeonfuncreg_t playerFuncs[] =
    {
       { "void thrust(angle_t angle, angle_t pitch, fixed_t move)",   WRAP_OBJ_FIRST(thrust)             },
-      { "void subtractAmmo(int amount = 0)",                         WRAP_OBJ_FIRST(subtractAmmo)       },
+      { "void subtractAmmo(int amount = -1)",                        WRAP_OBJ_FIRST(subtractAmmo)       },
       { "Mobj @spawnMissile(const String &missileType) const",       WRAP_OBJ_FIRST(spawnPlayerMissile) },
       { "bool ownsWeapon(const String &weaponName) const",           WRAP_OBJ_FIRST(playerOwnsWeapon)   },
       { "bool checkAmmo() const",                                    WRAP_OBJ_FIRST(P_CheckAmmo)        },
