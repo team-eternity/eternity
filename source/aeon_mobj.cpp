@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2019 James Haley, Max Waine, et al.
+// Copyright(C) 2020 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -130,7 +130,6 @@ namespace Aeon
       { "void remove()",                      WRAP_MFN(Mobj, remove)                          },
 
       // Non-methods that are used like methods in Aeon
-      { "void setTarget(EE::Mobj @target)",                    WRAP_OBJ_FIRST(P_SetTarget<Mobj>)   },
       { "bool checkMissileRange()",                            WRAP_OBJ_FIRST(P_CheckMissileRange) },
       { "bool checkMissileSpawn()",                            WRAP_OBJ_FIRST(P_CheckMissileSpawn) },
       { "bool checkSight(Mobj @other)",                        WRAP_OBJ_FIRST(P_CheckSight)        },
@@ -247,7 +246,7 @@ namespace Aeon
       e->SetDefaultNamespace("EE::Mobj");
       e->RegisterGlobalFunction("fixed_t FloatBobOffsets(const int index)",
                                 WRAP_FN(floatBobOffsets), asCALL_GENERIC);
-      e->RegisterGlobalFunction("EE::Mobj @Spawn(fixed_t x, fixed_t y, fixed_t z, const String &type",
+      e->RegisterGlobalFunction("EE::Mobj @Spawn(fixed_t x, fixed_t y, fixed_t z, const String &type)",
                                 WRAP_FN(spawnMobj), asCALL_GENERIC);
       e->SetDefaultNamespace("");
    }

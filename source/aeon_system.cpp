@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2018 James Haley, Max Waine, et al.
+// Copyright(C) 2020 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
 // A lot of this code is based on Quasar's astest.
+//
+//----------------------------------------------------------------------------
 //
 // Purpose: Aeon system
 // Authors: Samuel Villarreal, James Haley, Max Waine
