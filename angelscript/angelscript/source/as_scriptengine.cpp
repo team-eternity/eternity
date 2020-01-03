@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2019 Andreas Jonsson
+   Copyright (c) 2003-2020 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -919,15 +919,15 @@ asCModule *asCScriptEngine::FindNewOwnerForSharedType(asCTypeInfo *in_type, asCM
 		asCModule *mod = scriptModules[n];
 		if( mod == in_type->module ) continue;
 		if( in_type->flags & asOBJ_ENUM )
-			foundIdx = mod->enumTypes.IndexOf(CastToEnumType(in_type));
+			foundIdx = mod->m_enumTypes.IndexOf(CastToEnumType(in_type));
 		else if (in_type->flags & asOBJ_TYPEDEF)
-			foundIdx = mod->typeDefs.IndexOf(CastToTypedefType(in_type));
+			foundIdx = mod->m_typeDefs.IndexOf(CastToTypedefType(in_type));
 		else if (in_type->flags & asOBJ_FUNCDEF)
-			foundIdx = mod->funcDefs.IndexOf(CastToFuncdefType(in_type));
+			foundIdx = mod->m_funcDefs.IndexOf(CastToFuncdefType(in_type));
 		else if (in_type->flags & asOBJ_TEMPLATE)
-			foundIdx = mod->templateInstances.IndexOf(CastToObjectType(in_type));
+			foundIdx = mod->m_templateInstances.IndexOf(CastToObjectType(in_type));
 		else
-			foundIdx = mod->classTypes.IndexOf(CastToObjectType(in_type));
+			foundIdx = mod->m_classTypes.IndexOf(CastToObjectType(in_type));
 
 		if( foundIdx >= 0 )
 		{
@@ -954,7 +954,7 @@ asCModule *asCScriptEngine::FindNewOwnerForSharedFunc(asCScriptFunction *in_func
 		int foundIdx = -1;
 		asCModule *mod = scriptModules[n];
 		if( mod == in_func->module ) continue;
-		foundIdx = mod->scriptFunctions.IndexOf(in_func);
+		foundIdx = mod->m_scriptFunctions.IndexOf(in_func);
 
 		if( foundIdx >= 0 )
 		{
@@ -3257,13 +3257,13 @@ asCModule *asCScriptEngine::GetModule(const char *name, bool create)
 	asCModule *retModule = 0;
 
 	ACQUIRESHARED(engineRWLock);
-	if( lastModule && lastModule->name == name )
+	if( lastModule && lastModule->m_name == name )
 		retModule = lastModule;
 	else
 	{
 		// TODO: optimize: Improve linear search
 		for( asUINT n = 0; n < scriptModules.GetLength(); ++n )
-			if( scriptModules[n] && scriptModules[n]->name == name )
+			if( scriptModules[n] && scriptModules[n]->m_name == name )
 			{
 				retModule = scriptModules[n];
 				break;
@@ -3379,9 +3379,9 @@ asCObjectType *asCScriptEngine::GetTemplateInstanceType(asCObjectType *templateT
 					// It may be without ownership if it was previously created from application with for example GetTypeInfoByDecl
 					type->module = requestingModule;
 				}
-				if( !requestingModule->templateInstances.Exists(type) )
+				if( !requestingModule->m_templateInstances.Exists(type) )
 				{
-					requestingModule->templateInstances.PushLast(type);
+					requestingModule->m_templateInstances.PushLast(type);
 					type->AddRefInternal();
 				}
 			}
@@ -3421,7 +3421,7 @@ asCObjectType *asCScriptEngine::GetTemplateInstanceType(asCObjectType *templateT
 	{
 		// Set the ownership of this template type
 		ot->module = requestingModule;
-		requestingModule->templateInstances.PushLast(ot);
+		requestingModule->m_templateInstances.PushLast(ot);
 		ot->AddRefInternal();
 	}
 	else
@@ -3437,7 +3437,7 @@ asCObjectType *asCScriptEngine::GetTemplateInstanceType(asCObjectType *templateT
 				ot->module = subTypes[n].GetTypeInfo()->module;
 				if( ot->module )
 				{
-					ot->module->templateInstances.PushLast(ot);
+					ot->module->m_templateInstances.PushLast(ot);
 					ot->AddRefInternal();
 					break;
 				}
@@ -3461,7 +3461,7 @@ asCObjectType *asCScriptEngine::GetTemplateInstanceType(asCObjectType *templateT
 				ot->templateSubTypes.SetLength(0);
 				if( ot->module )
 				{
-					ot->module->templateInstances.RemoveValue(ot);
+					ot->module->m_templateInstances.RemoveValue(ot);
 					ot->ReleaseInternal();
 				}
 				ot->ReleaseInternal();
@@ -5781,7 +5781,7 @@ asCFuncdefType *asCScriptEngine::FindMatchingFuncdef(asCScriptFunction *func, as
 			// Add the new funcdef to the module so it will
 			// be available when saving the bytecode
 			funcDef->module = module;
-			module->funcDefs.PushLast(funcDef); // the refCount was already accounted for in the constructor
+			module->m_funcDefs.PushLast(funcDef); // the refCount was already accounted for in the constructor
 		}
 
 		// Observe, if the funcdef is created without informing a module a reference will be stored in the
@@ -5793,9 +5793,9 @@ asCFuncdefType *asCScriptEngine::FindMatchingFuncdef(asCScriptFunction *func, as
 	{
 		// Unless this is a registered funcDef the returned funcDef must
 		// be stored as part of the module for saving/loading bytecode
-		if (!module->funcDefs.Exists(funcDef))
+		if (!module->m_funcDefs.Exists(funcDef))
 		{
-			module->funcDefs.PushLast(funcDef);
+			module->m_funcDefs.PushLast(funcDef);
 			funcDef->AddRefInternal();
 		}
 		else

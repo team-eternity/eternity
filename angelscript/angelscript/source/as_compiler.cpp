@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2019 Andreas Jonsson
+   Copyright (c) 2003-2020 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -9255,7 +9255,7 @@ asCCompiler::SYMBOLTYPE asCCompiler::SymbolLookupMember(const asCString &name, a
 	{
 		asCScriptFunction *f = engine->scriptFunctions[ot->methods[n]];
 		if (f->name == name &&
-			(builder->module->accessMask & f->accessMask))
+			(builder->module->m_accessMask & f->accessMask))
 		{
 			outResult->type.dataType.SetTypeInfo(objType);
 			return SL_CLASSMETHOD;
@@ -9837,7 +9837,7 @@ int asCCompiler::CompileVariableAccess(const asCString &name, const asCString &s
 			{
 				asCScriptFunction *f = engine->scriptFunctions[ot->methods[n]];
 				if (f->name == name &&
-					(builder->module->accessMask & f->accessMask))
+					(builder->module->m_accessMask & f->accessMask))
 				{
 					func = f;
 					break;
@@ -13603,7 +13603,7 @@ int asCCompiler::CompileOverloadedDualOperator2(asCScriptNode *node, const char 
 				(!isConst || func->IsReadOnly()) )
 			{
 				// Make sure the method is accessible by the module
-				if( builder->module->accessMask & func->accessMask )
+				if( builder->module->m_accessMask & func->accessMask )
 				{
 					funcs.PushLast(func->id);
 				}

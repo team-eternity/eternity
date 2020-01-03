@@ -1,6 +1,6 @@
 /*
    AngelCode Scripting Library
-   Copyright (c) 2003-2019 Andreas Jonsson
+   Copyright (c) 2003-2020 Andreas Jonsson
 
    This software is provided 'as-is', without any express or implied
    warranty. In no event will the authors be held liable for any
@@ -199,42 +199,41 @@ public:
 	asCGlobalProperty *AllocateGlobalProperty(const char *name, const asCDataType &dt, asSNameSpace *ns);
 	void               UninitializeGlobalProp(asCGlobalProperty *prop);
 
-	asCString name;
-
-	asCScriptEngine  *engine;
-	asCBuilder       *builder;
-	asCArray<asPWORD> userData;
-	asDWORD           accessMask;
-	asSNameSpace     *defaultNamespace;
+	asCString         m_name;
+	asCScriptEngine  *m_engine;
+	asCBuilder       *m_builder;
+	asCArray<asPWORD> m_userData;
+	asDWORD           m_accessMask;
+	asSNameSpace     *m_defaultNamespace;
 
 	// This array holds all functions, class members, factories, etc that were compiled with the module.
 	// These references hold an internal reference to the function object.
-	asCArray<asCScriptFunction *>     scriptFunctions; // increases ref count
+	asCArray<asCScriptFunction *>     m_scriptFunctions; // increases ref count
 	// This array holds global functions declared in the module. These references are not counted,
 	// as the same pointer is always present in the scriptFunctions array too.
-	asCSymbolTable<asCScriptFunction> globalFunctions; // doesn't increase ref count
+	asCSymbolTable<asCScriptFunction> m_globalFunctions; // doesn't increase ref count
 	// This array holds imported functions in the module.
-	asCArray<sBindInfo *>             bindInformations; // increases ref count
+	asCArray<sBindInfo *>             m_bindInformations; // increases ref count
 	// This array holds template instance types created for the module's object types
-	asCArray<asCObjectType*>          templateInstances; // increases ref count
+	asCArray<asCObjectType*>          m_templateInstances; // increases ref count
 
 	// This array holds the global variables declared in the script
-	asCSymbolTable<asCGlobalProperty> scriptGlobals; // increases ref count
-	bool                              isGlobalVarInitialized;
+	asCSymbolTable<asCGlobalProperty> m_scriptGlobals; // increases ref count
+	bool                              m_isGlobalVarInitialized;
 
 	// This array holds class and interface types
-	asCArray<asCObjectType*>       classTypes; // increases ref count
+	asCArray<asCObjectType*>       m_classTypes; // increases ref count
 	// This array holds enum types
-	asCArray<asCEnumType*>         enumTypes; // increases ref count
+	asCArray<asCEnumType*>         m_enumTypes; // increases ref count
 	// This array holds typedefs
-	asCArray<asCTypedefType*>      typeDefs; // increases ref count
+	asCArray<asCTypedefType*>      m_typeDefs; // increases ref count
 	// This array holds the funcdefs declared in the module
-	asCArray<asCFuncdefType*>      funcDefs; // increases ref count
+	asCArray<asCFuncdefType*>      m_funcDefs; // increases ref count
 
 	// This array holds types that have been explicitly declared with 'external'
-	asCArray<asCTypeInfo*>       externalTypes; // doesn't increase ref count
+	asCArray<asCTypeInfo*>       m_externalTypes; // doesn't increase ref count
 	// This array holds functions that have been explicitly declared with 'external'
-	asCArray<asCScriptFunction*> externalFunctions; // doesn't increase ref count
+	asCArray<asCScriptFunction*> m_externalFunctions; // doesn't increase ref count
 };
 
 END_AS_NAMESPACE
