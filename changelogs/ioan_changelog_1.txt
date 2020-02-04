@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+05.02.2020
+
+FEATURE: New weapon flag DEPOWERSWITCH. Intended for powered-up Heretic weapons,
+         mainly the staff and the gauntlets, it makes them visually switch to
+         the basic weapons when the power runs out.
+
+--------------------------------------------------------------------------------
 01.11.2019
 
 IMPROVEMENT: Jumping is now a compatibility setting. By default it's disabled.

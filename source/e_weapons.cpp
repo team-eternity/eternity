@@ -204,6 +204,7 @@ static dehflags_t e_weaponFlags[] =
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { "POWEREDUP",      WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
+   { "DEPOWERSWITCH",  WPF_DEPOWERSWITCH  },
    { nullptr,          0                  }
 };
 
