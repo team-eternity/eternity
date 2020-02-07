@@ -8,11 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
-05.02.2020
+08.02.2020
 
-FEATURE: New weapon flag DEPOWERSWITCH. Intended for powered-up Heretic weapons,
-         mainly the staff and the gauntlets, it makes them visually switch to
-         the basic weapons when the power runs out.
+FEATURE: New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
+         resetting the Phoenix Rod from the powered state. Its drawback is that
+         sometimes it can consume more ammo than intended. You can still use
+         FORCETOREADY as a more general-purpose counterpart.
 
 --------------------------------------------------------------------------------
 01.11.2019
