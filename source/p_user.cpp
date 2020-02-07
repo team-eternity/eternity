@@ -897,13 +897,20 @@ void P_PlayerThink(player_t *player)
          {
             // Note: sisterWeapon is guaranteed to != nullptr elsewhere
             weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
-            if(unpowered->readystate != player->readyweapon->readystate ||
-               unpowered->flags & WPF_FORCETOREADY)
+            if(player->readyweapon->flags & WPF_PHOENIXRESET &&
+               player->psprites[ps_weapon].state->index != player->readyweapon->readystate &&
+               player->psprites[ps_weapon].state->index != player->readyweapon->upstate)
+            {
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               P_SubtractAmmo(player, -1);
+               player->refire = 0;
+            }
+            else if(unpowered->flags & WPF_FORCETOREADY)
             {
                P_SetPsprite(player, ps_weapon, unpowered->readystate);
                player->refire = 0;
             }
-            if(player->readyweapon->flags & WPF_DEPOWERSWITCH)
+            else if(unpowered->readystate != player->readyweapon->readystate)
                player->pendingweapon = unpowered;
 
             player->readyweapon = unpowered;
