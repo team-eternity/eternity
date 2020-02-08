@@ -623,7 +623,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
       firsttime = false;
    }
 
-   V_DrawPatchTL(x + 2, y + 2, buffer, patch, blackmap, FRACUNIT*2/3);
+   V_DrawPatchTL(x + 2, y + 2, buffer, patch, blackmap, HTIC_GHOST_TRANS);
    V_DrawPatchTL(x,     y,     buffer, patch, outr,     tl);
 }
 
