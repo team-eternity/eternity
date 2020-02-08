@@ -52,7 +52,7 @@
 // cached patches
 static patch_t *invnums[10];      // inventory numbers
 static patch_t *smallinvnums[10]; // small inventory numbers
-static patch_t *biginvnums[10];  // large fullscreen numbers
+static patch_t *bigfsnums[10];    // large fullscreen numbers
 static patch_t *PatchINVLFGEM1;
 static patch_t *PatchINVLFGEM2;
 static patch_t *PatchINVRTGEM1;
@@ -108,19 +108,19 @@ static void ST_drawBigNumber(int val, int x, int y)
    patch_t *patch;
    if(val > 99)
    {
-      patch = biginvnums[val / 100 % 10];
+      patch = bigfsnums[val / 100 % 10];
       V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
    }
    val %= 100;
    xpos += 12;
    if(val > 9 || oldval > 99)
    {
-      patch = biginvnums[val / 10 % 10];
+      patch = bigfsnums[val / 10 % 10];
       V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
    }
    val %= 10;
    xpos += 12;
-   patch = biginvnums[val % 10];
+   patch = bigfsnums[val % 10];
    V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
 }
 
@@ -157,7 +157,7 @@ static void ST_HticInit()
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
 
       snprintf(lumpname, sizeof(lumpname), "FONTB%d", 16 + i); // FONTB16-FONTB25
-      biginvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+      bigfsnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
    PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
