@@ -73,7 +73,7 @@ static int chainwiggle;        // small randomized addend for chain y coord.
 // Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
 // x is expected to be 8 more than its equivalent Heretic calls.
 //
-static void ST_drawSmallNumber(int val, int x, int y)
+static void ST_drawSmallNumber(int val, int x, int y, bool fullscreen = false)
 {
    if(val > 1)
    {
@@ -90,7 +90,7 @@ static void ST_drawSmallNumber(int val, int x, int y)
       {
          int i = *rover - '0';
          patch = smallinvnums[i];
-         V_DrawPatch(x, y, &subscreen43, patch);
+         V_DrawPatch(x, y, fullscreen ? &vbscreenyscaled : &subscreen43, patch);
          x += 4;
       }
    }
@@ -637,6 +637,34 @@ static void ST_HticDrawer()
 static void ST_HticFSDrawer()
 {
    ST_drawBigNumber(plyr->health, 5, 180);
+   if(GameType == gt_dm)
+      ST_drawInvNum(plyr->totalfrags, 45, 185);
+   if(!plyr->invbarstate.inventory)
+   {
+      if(plyr->inventory[plyr->inv_ptr].amount)
+      {
+         const itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr);
+         if(artifact)
+         {
+            const char *patch = artifact->getString("icon", nullptr);
+            if(estrnonempty(patch) && artifact->getInt("invbar", 0))
+            {
+               patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
+               int x = vbscreenyscaled.unscaledw - (320 - 286);
+               V_DrawPatchTL(x, 170, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
+               patch_t *icon = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE,
+                                                      lumpinfo_t::ns_sprites);
+               V_DrawPatch(x, 170, &vbscreenyscaled, icon);
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
+                                  vbscreenyscaled.unscaledw - (320 - 307) + 8, 192, true);
+            }
+         }
+      }
+   }
+   else
+   {
+      // TODO: inventory selector
+   }
    ST_drawPowerUps();
 }
 
