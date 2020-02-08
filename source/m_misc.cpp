@@ -682,7 +682,7 @@ default_t defaults[] =
                "Select HUD overlay (-1 = default, 0 = modern, 1 = boom"),
    
    //sf : fullscreen hud style
-   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, 2, 0, 4, default_t::wad_yes,
+   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, HUD_FLAT, HUD_OFF, HUD_NUMHUDS - 1, default_t::wad_yes,
                "fullscreen hud layout"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,

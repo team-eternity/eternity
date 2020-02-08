@@ -211,7 +211,7 @@ char HU_ArmorColor()
 }
 
 // Globals
-int hud_overlaylayout = 1;
+int hud_overlaylayout = HUD_BOOM;
 int hud_enabled      = 1;
 int hud_hidestatus   = 0;
 
