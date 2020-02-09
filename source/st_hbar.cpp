@@ -663,7 +663,37 @@ static void ST_HticFSDrawer()
    }
    else
    {
-      // TODO: inventory selector
+      patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
+      for(int i = 0; i < 7; ++i)
+         V_DrawPatchTL(50 + i * 31, 168, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
+      const int inv_ptr = plyr->inv_ptr;
+      const int leftoffs = inv_ptr >= 7 ? inv_ptr - 6 : 0;
+      int i = -1;
+      while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+      {
+         if(plyr->inventory[i + leftoffs].amount <= 0)
+            continue;
+         const itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         if(!artifact)
+            continue;
+         const char *patchname = artifact->getString("icon", nullptr);
+         if(estrempty(patchname))
+            continue;
+         int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+            lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+         patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+         const int xoffs = artifact->getInt("icon.offset.x", 0);
+         const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+         V_DrawPatch(50 + i * 31 - xoffs, 168 - yoffs, &vbscreenyscaled, patch);
+         ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 69 + i * 31 + 8, 190, true);
+      }
+      patch_t *selectbox = PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE);
+      V_DrawPatch(50 + (inv_ptr - leftoffs) * 31, 197, &vbscreenyscaled, selectbox);
+      if(leftoffs)
+         V_DrawPatch(38, 167, &vbscreenyscaled, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
+      if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
+         V_DrawPatch(269, 167, &vbscreenyscaled, !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
    }
    ST_drawPowerUps();
 }
