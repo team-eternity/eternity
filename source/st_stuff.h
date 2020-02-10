@@ -62,6 +62,9 @@ void ST_Init(void);
 
 void ST_CacheFaces(patch_t **faces, const char *facename);
 
+// Others
+void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen);
+
 // haleyjd 10/12/03: structure for gamemode-independent status bar interface
 
 struct stbarfns_t

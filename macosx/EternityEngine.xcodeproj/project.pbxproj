@@ -320,6 +320,7 @@
 		4FAD059A1F91567E003790C5 /* txt_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05971F91567E003790C5 /* txt_utf8.c */; };
 		4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058F1F915653003790C5 /* OpenGL.framework */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
+		4FB8211623F1DCD80044B1C3 /* hu_inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
 		4FC0A9281E1E2A50006CEC45 /* Array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */; };
 		4FC0A9291E1E2A50006CEC45 /* CallFunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A9001E1E2A50006CEC45 /* CallFunc.cpp */; };
@@ -540,6 +541,8 @@
 		4FAE27BB224A77FF00F5E1F0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalclip.cpp; path = ../source/p_portalclip.cpp; sourceTree = "<group>"; };
 		4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
+		4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = hu_inventory.cpp; path = ../source/hu_inventory.cpp; sourceTree = "<group>"; };
+		4FB8211523F1DCD80044B1C3 /* hu_inventory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = hu_inventory.h; path = ../source/hu_inventory.h; sourceTree = "<group>"; };
 		4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Action.cpp; path = ../acsvm/ACSVM/Action.cpp; sourceTree = SOURCE_ROOT; };
 		4FC0A8FC1E1E2A50006CEC45 /* Action.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Action.hpp; path = ../acsvm/ACSVM/Action.hpp; sourceTree = SOURCE_ROOT; };
 		4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Array.cpp; path = ../acsvm/ACSVM/Array.cpp; sourceTree = SOURCE_ROOT; };
@@ -1717,6 +1720,8 @@
 				4FFDE54721D2817D00836A2D /* hu_boom.h */,
 				FABF5CF1158BF42800C49E93 /* hu_frags.cpp */,
 				FA16D3FC15E01E96002318D1 /* hu_frags.h */,
+				4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */,
+				4FB8211523F1DCD80044B1C3 /* hu_inventory.h */,
 				4FFDE54421D2817C00836A2D /* hu_modern.cpp */,
 				4FFDE54621D2817D00836A2D /* hu_modern.h */,
 				FABF5CF2158BF42800C49E93 /* hu_over.cpp */,
@@ -2576,6 +2581,7 @@
 				4F5F389A182D99090027813A /* e_args.cpp in Sources */,
 				4FC0A92C1E1E2A50006CEC45 /* Function.cpp in Sources */,
 				4F5F389C182D99090027813A /* e_cmd.cpp in Sources */,
+				4FB8211623F1DCD80044B1C3 /* hu_inventory.cpp in Sources */,
 				4F5F389D182D99090027813A /* e_dstate.cpp in Sources */,
 				4F5F389F182D99090027813A /* e_edf.cpp in Sources */,
 				4F5F38A1182D99090027813A /* e_exdata.cpp in Sources */,

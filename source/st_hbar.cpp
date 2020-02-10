@@ -25,14 +25,10 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "e_inventory.h"
-#include "m_random.h"
-#include "m_swap.h"
 #include "metaapi.h"
-#include "p_mobj.h"
 #include "r_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
@@ -73,7 +69,7 @@ static int chainwiggle;        // small randomized addend for chain y coord.
 // Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
 // x is expected to be 8 more than its equivalent Heretic calls.
 //
-static void ST_drawSmallNumber(int val, int x, int y, bool fullscreen = false)
+void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen)
 {
    if(val > 1)
    {
@@ -457,7 +453,7 @@ static void ST_drawStatBar()
             V_DrawPatch(179, 160, &subscreen43,
                         PatchLoader::CacheName(wGlobalDir, patch,
                                                PU_CACHE, lumpinfo_t::ns_sprites));
-            ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
+            ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182, false);
          }
       }
    }
@@ -539,8 +535,8 @@ static void ST_drawInvBar()
 
                V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
                            &subscreen43, patch);
-               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
-                                  ST_INVSLOTSTARTX + 27 + (i * 31), ST_INVBARBGY + 22);
+               ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), ST_INVSLOTSTARTX +
+                                         27 + (i * 31), ST_INVBARBGY + 22, false);
             }
          }
       }
@@ -639,72 +635,6 @@ static void ST_HticFSDrawer()
    ST_drawBigNumber(plyr->health, 5, 180);
    if(GameType == gt_dm)
       ST_drawInvNum(plyr->totalfrags, 45, 185);
-   if(!plyr->invbarstate.inventory)
-   {
-      if(plyr->inventory[plyr->inv_ptr].amount)
-      {
-         const itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr);
-         if(artifact)
-         {
-            const char *patch = artifact->getString("icon", nullptr);
-            if(estrnonempty(patch) && artifact->getInt("invbar", 0))
-            {
-               patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
-               int x = vbscreenyscaled.unscaledw - (320 - 286);
-               V_DrawPatchTL(x, 170, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
-               patch_t *icon = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE,
-                                                      lumpinfo_t::ns_sprites);
-               V_DrawPatch(x, 170, &vbscreenyscaled, icon);
-               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
-                                  vbscreenyscaled.unscaledw - (320 - 307) + 8, 192, true);
-            }
-         }
-      }
-   }
-   else
-   {
-      int count = 7 + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 31;
-      int origin = 50 + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 2 - (count - 7) * 31 / 2;
-
-      patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
-      for(int i = 0; i < count; ++i)
-         V_DrawPatchTL(origin + i * 31, 168, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
-      const int inv_ptr = plyr->inv_ptr;
-      const int leftoffs = inv_ptr >= count ? inv_ptr - count + 1 : 0;
-      int i = -1;
-      while(E_MoveInventoryCursor(plyr, 1, i) && i < count)
-      {
-         if(plyr->inventory[i + leftoffs].amount <= 0)
-            continue;
-         const itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
-         if(!artifact)
-            continue;
-         const char *patchname = artifact->getString("icon", nullptr);
-         if(estrempty(patchname))
-            continue;
-         int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
-            lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
-         patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
-         const int xoffs = artifact->getInt("icon.offset.x", 0);
-         const int yoffs = artifact->getInt("icon.offset.y", 0);
-
-         V_DrawPatch(origin + i * 31 - xoffs, 168 - yoffs, &vbscreenyscaled, patch);
-         ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), origin + 19 + i * 31 + 8, 190,
-                            true);
-      }
-      patch_t *selectbox = PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE);
-      V_DrawPatch(origin + (inv_ptr - leftoffs) * 31, 197, &vbscreenyscaled, selectbox);
-      if(leftoffs)
-      {
-         V_DrawPatch(origin - 12, 167, &vbscreenyscaled,
-                     !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
-      }
-      if(i == count && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
-      {
-         V_DrawPatch(origin + count * 31 + 2, 167, &vbscreenyscaled,
-                     !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
-      }
-   }
    ST_drawPowerUps();
 }
 
