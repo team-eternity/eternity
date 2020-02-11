@@ -1107,6 +1107,14 @@ void ST_Drawer(bool fullscreen)
 }
 
 //
+// Check if status bar will be fullscreen or disabled
+//
+bool ST_IsHUDLike()
+{
+   return !st_backgroundon;
+}
+
+//
 // Frees old graphics resources, in case they were previously loaded. Needed for
 // runtime wad with status bar loading
 //

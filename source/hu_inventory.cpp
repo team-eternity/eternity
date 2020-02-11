@@ -26,6 +26,7 @@
 #include "z_zone.h"
 
 #include "d_dehtbl.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "d_player.h"
 #include "e_inventory.h"
@@ -59,6 +60,12 @@ static HUDInventoryWidget huInventory;
 //
 void HUDInventoryWidget::clear()
 {
+   // Currently, limit to Heretic. Later it should be game-agnostic and pick the appropriate GFX.
+   disabled = GameModeInfo->type != Game_Heretic;
+
+   if(disabled)
+      return;  // don't continue
+
    leftarrows[0] = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
    leftarrows[1] = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
    rightarrows[0] = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
@@ -70,7 +77,6 @@ void HUDInventoryWidget::clear()
 //
 void HUDInventoryWidget::ticker()
 {
-   disabled = scaledwindow.height != SCREENHEIGHT;
 }
 
 //
@@ -78,6 +84,10 @@ void HUDInventoryWidget::ticker()
 //
 void HUDInventoryWidget::drawer()
 {
+   // Check if should draw. NOTE: this is Heretic specific. Adapt it to fit all new games, even DOOM
+   if(!ST_IsHUDLike())  // do not draw inventory if status bar is active.
+      return;
+
    const player_t &plyr = players[displayplayer];
    if(!plyr.invbarstate.inventory)
    {
