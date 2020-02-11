@@ -21,6 +21,7 @@
 #ifndef HU_OVER_H__
 #define HU_OVER_H__
 
+struct player_t;
 struct vfont_t;
 struct weaponinfo_t;
 
@@ -142,6 +143,7 @@ int  HU_WC_PlayerAmmo(const weaponinfo_t *w);
 bool HU_WC_NoAmmo(const weaponinfo_t *w);
 int  HU_WC_MaxAmmo(const weaponinfo_t *w);
 char HU_WeapColor(const weaponinfo_t *w);
+char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had);
 
 char HU_HealthColor();
 char HU_ArmorColor();

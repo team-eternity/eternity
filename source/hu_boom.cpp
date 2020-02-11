@@ -202,19 +202,16 @@ void BoomHUD::DrawAmmo(int x, int y)
 void BoomHUD::DrawWeapons(int x, int y)
 {
    qstring tempstr;
-   int fontcolor;
 
    HU_WriteText(HUDCOLOR "Weapons", x, y);  // draw then leave a gap
    x += GAP;
 
    for(int i = 0; i < NUMWEAPONS; i++)
    {
-      if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
-      {
-         // got it
-         fontcolor = HU_WeapColor(E_WeaponForDEHNum(i));
-         tempstr << static_cast<char>(fontcolor) << (i + 1) << ' ';
-      }
+      bool had;
+      char fontcolor = HU_WeaponColourGeneralized(hu_player, i, &had);
+      if(had)  // got it
+         tempstr << fontcolor << (i + 1) << ' ';
    }
 
    HU_WriteText(tempstr.constPtr(), x, y);  // draw it
