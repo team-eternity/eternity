@@ -31,6 +31,7 @@
 #include "d_player.h"
 #include "e_inventory.h"
 #include "hu_inventory.h"
+#include "hu_over.h"
 #include "hu_stuff.h"
 #include "metaapi.h"
 #include "r_draw.h"
@@ -99,14 +100,27 @@ void HUDInventoryWidget::drawer()
             const char *patch = artifact->getString("icon", nullptr);
             if(estrnonempty(patch) && artifact->getInt("invbar", 0))
             {
+               // FIXME: this just assumes hardcoded constants in the overlay types
+               int ybase = 170;
+               if(hud_enabled)
+               {
+                  if(hud_overlaylayout == HUD_FLAT && (hud_overlayid != HUO_BOOM ||
+                                                       vbscreenyscaled.unscaledw < 330) &&
+                     (hud_overlayid != HUO_MODERN || !hud_hidestatus))
+                  {
+                     ybase -= 24;
+                  }
+                  else if(hud_overlaylayout == HUD_DISTRIB)
+                     ybase -= 16;
+               }
                patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
                int x = vbscreenyscaled.unscaledw - (320 - 286);
-               V_DrawPatchTL(x, 170, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
+               V_DrawPatchTL(x, ybase, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
                patch_t *icon = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE,
                                                       lumpinfo_t::ns_sprites);
-               V_DrawPatch(x, 170, &vbscreenyscaled, icon);
+               V_DrawPatch(x, ybase, &vbscreenyscaled, icon);
                ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(&plyr, artifact),
-                                         vbscreenyscaled.unscaledw - (320 - 307) + 8, 192, true);
+                                         vbscreenyscaled.unscaledw - (320 - 307) + 8, ybase + 22, true);
             }
          }
       }
@@ -115,10 +129,26 @@ void HUDInventoryWidget::drawer()
    {
       int count = 7 + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 31;
       int origin = 50 + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 2 - (count - 7) * 31 / 2;
+      int ybase = 168;
+      if(hud_enabled)
+      {
+         switch(hud_overlaylayout)
+         {
+            case HUD_BOOM:
+               ybase -= 48;
+               break;
+            case HUD_FLAT:
+               ybase -= 24;
+               break;
+            case HUD_DISTRIB:
+               ybase -= 16;
+               break;
+         }
+      }
 
       patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
       for(int i = 0; i < count; ++i)
-         V_DrawPatchTL(origin + i * 31, 168, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
+         V_DrawPatchTL(origin + i * 31, ybase, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
       const int inv_ptr = plyr.inv_ptr;
       const int leftoffs = inv_ptr >= count ? inv_ptr - count + 1 : 0;
       int i = -1;
@@ -138,20 +168,20 @@ void HUDInventoryWidget::drawer()
          const int xoffs = artifact->getInt("icon.offset.x", 0);
          const int yoffs = artifact->getInt("icon.offset.y", 0);
 
-         V_DrawPatch(origin + i * 31 - xoffs, 168 - yoffs, &vbscreenyscaled, patch);
+         V_DrawPatch(origin + i * 31 - xoffs, ybase - yoffs, &vbscreenyscaled, patch);
          ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(&plyr, artifact), origin + 19 + i * 31 + 8,
-                                   190, true);
+                                   ybase + 22, true);
       }
       patch_t *selectbox = PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE);
-      V_DrawPatch(origin + (inv_ptr - leftoffs) * 31, 197, &vbscreenyscaled, selectbox);
+      V_DrawPatch(origin + (inv_ptr - leftoffs) * 31, ybase + 29, &vbscreenyscaled, selectbox);
       if(leftoffs)
       {
-         V_DrawPatch(origin - 12, 167, &vbscreenyscaled,
+         V_DrawPatch(origin - 12, ybase - 1, &vbscreenyscaled,
                      !(leveltime & 4) ? leftarrows[0] : leftarrows[1]);
       }
       if(i == count && E_CanMoveInventoryCursor(&plyr, 1, i + leftoffs - 1))
       {
-         V_DrawPatch(origin + count * 31 + 2, 167, &vbscreenyscaled,
+         V_DrawPatch(origin + count * 31 + 2, ybase - 1, &vbscreenyscaled,
                      !(leveltime & 4) ? rightarrows[0] : rightarrows[1]);
       }
    }
