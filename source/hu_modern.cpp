@@ -302,6 +302,9 @@ void ModernHUD::Setup()
 
    // now build according to style
 
+   int boxx, boxy;
+   HU_InventoryGetCurrentBoxHints(boxx, boxy);
+
    switch(hud_overlaylayout)
    {
    case HUD_OFF:       // 'off'
@@ -313,7 +316,7 @@ void ModernHUD::Setup()
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
       y = SCREENHEIGHT - 8;
 
-      for(int i = NUMOVERLAY - 1; i >= 0; --i)
+      for(int i = NUMOVERLAY - 2; i >= 0; --i)
       {
          if(drawerdata[i].enabled)
          {
@@ -321,6 +324,7 @@ void ModernHUD::Setup()
             y -= 8;
          }
       }
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_FLAT: // all at bottom of screen
@@ -331,6 +335,9 @@ void ModernHUD::Setup()
       SetupOverlay(ol_ammo,   42, SCREENHEIGHT - 16);
       SetupOverlay(ol_key,    42, SCREENHEIGHT - 8);
       SetupOverlay(ol_frag,   42, SCREENHEIGHT - 8);
+      if(!hud_hidestatus)
+         boxy -= 24;
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
@@ -346,6 +353,8 @@ void ModernHUD::Setup()
 
       if(!hud_hidestatus)
          SetupOverlay(ol_status, 3, SCREENHEIGHT - 16);
+      boxy -= 16;
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    default:

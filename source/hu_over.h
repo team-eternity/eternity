@@ -21,6 +21,8 @@
 #ifndef HU_OVER_H__
 #define HU_OVER_H__
 
+#include "hu_inventory.h"
+
 struct player_t;
 struct vfont_t;
 struct weaponinfo_t;
@@ -46,6 +48,7 @@ enum overlay_e : unsigned int
    ol_ammo,
    ol_key,
    ol_frag,
+   ol_invcurr,
    NUMOVERLAY
 };
 
@@ -108,6 +111,9 @@ public:
          break;
       case ol_frag:
          DrawFrags(x, y);
+         break;
+      case ol_invcurr:
+         HU_InventoryDrawCurrentBox(x, y);
          break;
       default:
          break;

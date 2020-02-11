@@ -102,17 +102,7 @@ void HUDInventoryWidget::drawer()
             {
                // FIXME: this just assumes hardcoded constants in the overlay types
                int ybase = 170;
-               if(hud_enabled)
-               {
-                  if(hud_overlaylayout == HUD_FLAT && (hud_overlayid != HUO_BOOM ||
-                                                       vbscreenyscaled.unscaledw < 330) &&
-                     (hud_overlayid != HUO_MODERN || !hud_hidestatus))
-                  {
-                     ybase -= 24;
-                  }
-                  else if(hud_overlaylayout == HUD_DISTRIB)
-                     ybase -= 16;
-               }
+
                patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
                int x = vbscreenyscaled.unscaledw - (320 - 286);
                V_DrawPatchTL(x, ybase, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
@@ -189,7 +179,40 @@ void HUDInventoryWidget::drawer()
 
 void HU_InitInventory()
 {
-   HUDWidget::AddWidgetToHash(&huInventory);
+//   HUDWidget::AddWidgetToHash(&huInventory);
+}
+
+//
+// Draws the current-item inventory display
+//
+void HU_InventoryDrawCurrentBox(int x, int y)
+{
+   if(GameModeInfo->type != Game_Heretic)
+      return;  // currently only enabled for Heretic. Other games will need it too
+   const player_t &plyr = players[displayplayer];
+   if(plyr.invbarstate.inventory || !plyr.inventory[plyr.inv_ptr].amount)
+      return;  // do not display it if selector is active or in case of no item
+   const itemeffect_t *artifact = E_EffectForInventoryIndex(&plyr, plyr.inv_ptr);
+   if(!artifact)
+      return;
+   const char *patch = artifact->getString("icon", nullptr);
+   if(estrempty(patch) || !artifact->getInt("invbar", 0))
+      return;
+
+   patch_t *box = PatchLoader::CacheName(wGlobalDir, DEH_String("ARTIBOX"), PU_CACHE);
+   V_DrawPatchTL(x, y, &vbscreenyscaled, box, nullptr, HTIC_GHOST_TRANS);
+   patch_t *icon = PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE, lumpinfo_t::ns_sprites);
+   V_DrawPatch(x, y, &vbscreenyscaled, icon);
+   ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(&plyr, artifact), x + 29, y + 22, true);
+}
+
+//
+// Gets suggested coordinates, free for customization later
+//
+void HU_InventoryGetCurrentBoxHints(int &x, int &y)
+{
+   x = vbscreenyscaled.unscaledw - (320 - 286);
+   y = 170;
 }
 
 // EOF

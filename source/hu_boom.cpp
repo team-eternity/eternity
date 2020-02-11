@@ -278,6 +278,9 @@ void BoomHUD::Setup()
 
    // now build according to style
 
+   int boxx, boxy;
+   HU_InventoryGetCurrentBoxHints(boxx, boxy);
+
    switch(hud_overlaylayout)
    {
    case HUD_OFF:       // 'off'
@@ -289,7 +292,7 @@ void BoomHUD::Setup()
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
       y = vbscreenyscaled.unscaledh - 8;
 
-      for(int i = NUMOVERLAY - 1; i >= 0; --i)
+      for(int i = NUMOVERLAY - 2; i >= 0; --i)
       {
          if(drawerdata[i].enabled)
          {
@@ -297,14 +300,15 @@ void BoomHUD::Setup()
             y -= 8;
          }
       }
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_FLAT: // all at bottom of screen
-      x = 160;
+      x = vbscreenyscaled.unscaledw / 2;
       y = vbscreenyscaled.unscaledh - 8;
 
       // haleyjd 06/14/06: rewrote to restore a sensible ordering
-      for(int i = NUMOVERLAY - 1; i >= 0; --i)
+      for(int i = NUMOVERLAY - 2; i >= 0; --i)
       {
          if(drawerdata[i].enabled)
          {
@@ -317,6 +321,7 @@ void BoomHUD::Setup()
             y = vbscreenyscaled.unscaledh - 8;
          }
       }
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
@@ -332,6 +337,8 @@ void BoomHUD::Setup()
 
       if(!hud_hidestatus)
          SetupOverlay(ol_status, 0, vbscreenyscaled.unscaledh - 16);
+      boxy -= 16;
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    default:
