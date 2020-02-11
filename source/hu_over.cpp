@@ -33,6 +33,8 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_inventory.h"
+#include "e_player.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_boom.h"
 #include "hu_modern.h"
@@ -179,6 +181,62 @@ char HU_WeapColor(const weaponinfo_t *w)
        pammo < ((maxammo * ammo_red   ) / 100) ? *FC_RED     :
        pammo < ((maxammo * ammo_yellow) / 100) ? *FC_GOLD    :
                                                  *FC_GREEN);
+}
+
+//
+// HU_WeapColor tuned to work for a weapon slot
+//
+static char HU_weapSlotColor(const int slot)
+{
+   if(!hu_player.pclass->weaponslots[slot])
+      return 0;
+
+   const weaponinfo_t *weapon = nullptr;
+
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
+   do
+   {
+      if(E_PlayerOwnsWeapon(&hu_player, weaponslot->bdObject->weapon))
+      {
+         if(weapon == nullptr)
+            weapon = weaponslot->bdObject->weapon;
+         else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
+            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
+      }
+      weaponslot = weaponslot->bdNext;
+   } while(!weaponslot->isDummy());
+
+   return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+}
+
+//
+// Generalized version of above for any HUD (BOOM or modern)
+//
+char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had)
+{
+   if(E_NumWeaponsInSlotPlayerOwns(&player, index))
+   {
+      if(had)
+         *had = true;
+      return HU_weapSlotColor(index);
+   }
+   if(E_PlayerOwnsWeaponForDEHNum(&player, index))
+   {
+      if(had)
+         *had = true;
+      const weaponinfo_t *weapon = E_WeaponForDEHNum(index);
+      return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+   }
+   if(E_PlayerOwnsWeaponInSlot(&player, index))
+   {
+      if(had)
+         *had = true;
+      const weaponinfo_t *weapon = P_GetPlayerWeapon(&player, index);
+      return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+   }
+   if(had)
+      *had = false;
+   return *FC_CUSTOM2;
 }
 
 // Determine the color to use for a given player's health
