@@ -61,7 +61,7 @@
 static void HU_WriteText(const char *s, int x, int y)
 {
    if(hud_fontsloaded)
-      V_FontWriteText(hud_overfont, s, x, y, &subscreen43);
+      V_FontWriteText(hud_overfont, s, x, y, &vbscreenyscaled);
 }
 
 #define BARSIZE 15
@@ -236,7 +236,7 @@ void BoomHUD::DrawKeys(int x, int y)
       if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
-         V_DrawPatch(x, y, &subscreen43, keys[i]);
+         V_DrawPatch(x, y, &vbscreenyscaled, keys[i]);
          x += 11;
       }
    }
@@ -290,7 +290,7 @@ void BoomHUD::Setup()
       break;
 
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
-      y = SCREENHEIGHT - 8;
+      y = vbscreenyscaled.unscaledh - 8;
 
       for(int i = NUMOVERLAY - 1; i >= 0; --i)
       {
@@ -304,7 +304,7 @@ void BoomHUD::Setup()
 
    case HUD_FLAT: // all at bottom of screen
       x = 160;
-      y = SCREENHEIGHT - 8;
+      y = vbscreenyscaled.unscaledh - 8;
 
       // haleyjd 06/14/06: rewrote to restore a sensible ordering
       for(int i = NUMOVERLAY - 1; i >= 0; --i)
@@ -317,24 +317,24 @@ void BoomHUD::Setup()
          if(i == ol_weap)
          {
             x = 0;
-            y = SCREENHEIGHT - 8;
+            y = vbscreenyscaled.unscaledh - 8;
          }
       }
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
-      SetupOverlay(ol_health, SCREENWIDTH - 138,   0);
-      SetupOverlay(ol_armor,  SCREENWIDTH - 138,   8);
-      SetupOverlay(ol_weap,   SCREENWIDTH - 138, 184);
-      SetupOverlay(ol_ammo,   SCREENWIDTH - 138, 192);
+      SetupOverlay(ol_health, vbscreenyscaled.unscaledw - 138,   0);
+      SetupOverlay(ol_armor,  vbscreenyscaled.unscaledw - 138,   8);
+      SetupOverlay(ol_weap,   vbscreenyscaled.unscaledw - 138, vbscreenyscaled.unscaledh - 16);
+      SetupOverlay(ol_ammo,   vbscreenyscaled.unscaledw - 138, vbscreenyscaled.unscaledh - 8);
 
       if(GameType == gt_dm)  // if dm, put frags in place of keys
-         SetupOverlay(ol_frag, 0, 192);
+         SetupOverlay(ol_frag, 0, vbscreenyscaled.unscaledh - 8);
       else
-         SetupOverlay(ol_key,  0, 192);
+         SetupOverlay(ol_key,  0, vbscreenyscaled.unscaledh - 8);
 
       if(!hud_hidestatus)
-         SetupOverlay(ol_status, 0, 184);
+         SetupOverlay(ol_status, 0, vbscreenyscaled.unscaledh - 16);
       break;
 
    default:
