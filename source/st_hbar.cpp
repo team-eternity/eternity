@@ -28,6 +28,7 @@
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "e_inventory.h"
+#include "hu_inventory.h"
 #include "metaapi.h"
 #include "r_patch.h"
 #include "v_patchfmt.h"
@@ -636,6 +637,10 @@ static void ST_HticFSDrawer()
    if(GameType == gt_dm)
       ST_drawInvNum(plyr->totalfrags, 45, 185);
    ST_drawPowerUps();
+
+   int posx, posy;
+   HU_InventoryGetCurrentBoxHints(posx, posy);
+   HU_InventoryDrawCurrentBox(posx, posy);
 }
 
 //
