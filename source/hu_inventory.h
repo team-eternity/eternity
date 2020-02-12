@@ -26,9 +26,9 @@
 #ifndef HU_INVENTORY_H_
 #define HU_INVENTORY_H_
 
-void HU_InitInventory();
 void HU_InventoryDrawCurrentBox(int x, int y);
 void HU_InventoryGetCurrentBoxHints(int &x, int &y);
+void HU_InventoryDrawSelector();
 
 #endif
 // EOF

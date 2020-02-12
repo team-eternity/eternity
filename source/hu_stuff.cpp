@@ -218,8 +218,6 @@ static void HU_InitNativeWidgets()
 
    // HUD_FIXME: generalize?
    HU_FragsInit();
-
-   HU_InitInventory();
 }
 
 //
@@ -280,6 +278,9 @@ void HU_Drawer()
    // draw different modules
    HU_FragsDrawer();
    HU_OverlayDraw();
+
+   // Temporary on-top overlays
+   HU_InventoryDrawSelector();
 }
 
 //
