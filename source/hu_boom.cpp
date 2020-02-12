@@ -281,6 +281,8 @@ void BoomHUD::Setup()
    int boxx, boxy;
    HU_InventoryGetCurrentBoxHints(boxx, boxy);
 
+   rightoffset = 0;  // initially be 0
+
    switch(hud_overlaylayout)
    {
    case HUD_OFF:       // 'off'
@@ -327,6 +329,7 @@ void BoomHUD::Setup()
    case HUD_DISTRIB: // similar to boom 'distributed' style
       SetupOverlay(ol_health, vbscreenyscaled.unscaledw - 138,   0);
       SetupOverlay(ol_armor,  vbscreenyscaled.unscaledw - 138,   8);
+      rightoffset = 16;
       SetupOverlay(ol_weap,   vbscreenyscaled.unscaledw - 138, vbscreenyscaled.unscaledh - 16);
       SetupOverlay(ol_ammo,   vbscreenyscaled.unscaledw - 138, vbscreenyscaled.unscaledh - 8);
 

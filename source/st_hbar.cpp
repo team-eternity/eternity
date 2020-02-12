@@ -33,7 +33,6 @@
 #include "r_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
-#include "w_wad.h"
 #include "st_stuff.h"
 
 //
@@ -55,10 +54,6 @@ static patch_t *PatchINVLFGEM2;
 static patch_t *PatchINVRTGEM1;
 static patch_t *PatchINVRTGEM2;
 static patch_t *PatchBLACKSQ;
-
-// important patch numbers
-static int spinbooklump;
-static int spinflylump;
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -173,10 +168,6 @@ static void ST_HticInit()
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-
-   // load important numbers needed when some arithmetic is done with them
-   spinbooklump = W_GetNumForName(DEH_String("SPINBK0"));
-   spinflylump  = W_GetNumForName(DEH_String("SPFLY0"));
 }
 
 //
@@ -553,63 +544,6 @@ static void ST_drawInvBar()
 }
 
 //
-// Draw spinning powerups
-//
-static void ST_drawPowerUps()
-{
-   static bool hitCenterFrame = false;
-   // Display the little rotating wings of wrath
-   if(plyr->powers[pw_flight])
-   {
-      // Blink the wings when the player is almost out
-      if(plyr->powers[pw_flight] > (4 * 32) || !(plyr->powers[pw_flight] & 16))
-      {
-         int frame = (leveltime / 3) & 15;
-         if(plyr->mo->flags4 & MF4_FLY)
-         {
-            if(hitCenterFrame && (frame != 15 && frame != 0))
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
-            }
-            else
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
-               hitCenterFrame = false;
-            }
-         }
-         else
-         {
-            // FIXME: Why would this code trigger?
-            if(!hitCenterFrame && (frame != 15 && frame != 0))
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
-               hitCenterFrame = false;
-            }
-            else
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
-               hitCenterFrame = true;
-            }
-         }
-      }
-   }
-
-   if(plyr->powers[pw_weaponlevel2])
-   {
-      if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
-      {
-         const int frame = (leveltime / 3) & 15;
-         V_DrawPatch(vbscreenyscaled.unscaledw - 20, 17, &vbscreenyscaled,
-                     PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
-      }
-   }
-}
-
-//
 // ST_HticDrawer
 //
 // Draws the Heretic status bar
@@ -618,7 +552,6 @@ static void ST_HticDrawer()
 {
    ST_drawBackground();
    ST_drawLifeChain();
-   ST_drawPowerUps();
 
    if(players[displayplayer].invbarstate.inventory)
       ST_drawInvBar();
@@ -636,7 +569,6 @@ static void ST_HticFSDrawer()
    ST_drawBigNumber(plyr->health, 5, 180);
    if(GameType == gt_dm)
       ST_drawInvNum(plyr->totalfrags, 45, 185);
-   ST_drawPowerUps();
 
    int posx, posy;
    HU_InventoryGetCurrentBoxHints(posx, posy);

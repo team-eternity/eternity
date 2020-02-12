@@ -276,8 +276,11 @@ void HU_Drawer()
 
    // HUD_FIXME: generalize?
    // draw different modules
+   int leftoffset, rightoffset;
    HU_FragsDrawer();
-   HU_OverlayDraw();
+   HU_OverlayDraw(leftoffset, rightoffset);
+
+   HU_BuffsDraw(leftoffset, rightoffset);
 
    // Temporary on-top overlays
    HU_InventoryDrawSelector();

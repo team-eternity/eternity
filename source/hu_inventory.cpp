@@ -84,7 +84,7 @@ void HU_InventoryDrawSelector()
    if(!plyr.invbarstate.inventory)  // must be in inventory mode, otherwise don't draw
       return;
 
-   int count = 7 + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 31;
+   int count = 7 /*+ (vbscreenyscaled.unscaledw - SCREENWIDTH) / 31*/;
    int origin = 50 + (vbscreenyscaled.unscaledw - SCREENWIDTH) / 2 - (count - 7) * 31 / 2;
    int ybase = 168;
 
@@ -137,6 +137,76 @@ void HU_InventoryDrawSelector()
    {
       V_DrawPatch(origin + count * 31 + 2, ybase - 1, &vbscreenyscaled,
                   !(leveltime & 4) ? rightarrows[0] : rightarrows[1]);
+   }
+}
+
+//
+// Draws the buff effects
+//
+void HU_BuffsDraw(int leftoffset, int rightoffset)
+{
+   static bool hitCenterFrame;
+   static const char *const spinbooklumps[] =
+   {
+      "SPINBK0", "SPINBK1", "SPINBK2", "SPINBK3", "SPINBK4", "SPINBK5", "SPINBK6", "SPINBK7",
+      "SPINBK8", "SPINBK9", "SPINBK10", "SPINBK11", "SPINBK12", "SPINBK13", "SPINBK14", "SPINBK15",
+   };
+   static const char *const spinflylumps[] =
+   {
+      "SPFLY0", "SPFLY1", "SPFLY2", "SPFLY3", "SPFLY4", "SPFLY5", "SPFLY6", "SPFLY7", "SPFLY8",
+      "SPFLY9", "SPFLY10", "SPFLY11", "SPFLY12", "SPFLY13", "SPFLY14", "SPFLY15",
+   };
+
+   if(GameModeInfo->type != Game_Heretic)
+      return;  // currently only enabled for Heretic. Other games will need it too
+   const player_t &plyr = players[displayplayer];
+   if(plyr.powers[pw_flight])
+   {
+      // Blink the wings when the player is almost out
+      if(plyr.powers[pw_flight] > (4 * 32) || !(plyr.powers[pw_flight] & 16))
+      {
+         int frame = (leveltime / 3) & 15;
+         if(plyr.mo->flags4 & MF4_FLY)
+         {
+            if(hitCenterFrame && (frame != 15 && frame != 0))
+            {
+               V_DrawPatch(20, 17 + leftoffset, &vbscreenyscaled,
+                           PatchLoader::CacheName(wGlobalDir, spinflylumps[15], PU_CACHE));
+            }
+            else
+            {
+               V_DrawPatch(20, 17 + leftoffset, &vbscreenyscaled,
+                           PatchLoader::CacheName(wGlobalDir, spinflylumps[frame], PU_CACHE));
+               hitCenterFrame = false;
+            }
+         }
+         else
+         {
+            // FIXME: Why would this code trigger?
+            if(!hitCenterFrame && (frame != 15 && frame != 0))
+            {
+               V_DrawPatch(20, 17 + leftoffset, &vbscreenyscaled,
+                           PatchLoader::CacheName(wGlobalDir, spinflylumps[frame], PU_CACHE));
+               hitCenterFrame = false;
+            }
+            else
+            {
+               V_DrawPatch(20, 17 + leftoffset, &vbscreenyscaled,
+                           PatchLoader::CacheName(wGlobalDir, spinflylumps[15], PU_CACHE));
+               hitCenterFrame = true;
+            }
+         }
+      }
+   }
+
+   if(plyr.powers[pw_weaponlevel2])
+   {
+      if(plyr.powers[pw_weaponlevel2] > (4 * 32) || !(plyr.powers[pw_weaponlevel2] & 16))
+      {
+         const int frame = (leveltime / 3) & 15;
+         V_DrawPatch(vbscreenyscaled.unscaledw - 20, 17 + rightoffset, &vbscreenyscaled,
+                     PatchLoader::CacheName(wGlobalDir, spinbooklumps[frame], PU_CACHE));
+      }
    }
 }
 

@@ -19,7 +19,7 @@
 //
 //----------------------------------------------------------------------------
 //
-// Purpose: inventory HUD widget
+// Purpose: inventory and non-display buffs HUD widget
 // Authors: Ioan Chera
 //
 
@@ -29,6 +29,8 @@
 void HU_InventoryDrawCurrentBox(int x, int y);
 void HU_InventoryGetCurrentBoxHints(int &x, int &y);
 void HU_InventoryDrawSelector();
+
+void HU_BuffsDraw(int leftoffset, int rightoffset);
 
 #endif
 // EOF

@@ -386,9 +386,11 @@ void HU_DisableHUD()
 //
 // HU_OverlayDraw
 //
-void HU_OverlayDraw()
+void HU_OverlayDraw(int &leftoffset, int &rightoffset)
 {
    // SoM 2-4-04: ANYRES
+   leftoffset = 0;
+   rightoffset = 0;
    if(viewwindow.height != video.height || automapactive || !hud_enabled)
       return;  // fullscreen only
 
@@ -396,6 +398,9 @@ void HU_OverlayDraw()
 
    for(unsigned int i = 0; i < NUMOVERLAY; i++)
       hu_overlay->DrawOverlay(static_cast<overlay_e>(i));
+
+   leftoffset = hu_overlay->leftoffset;   // set output parameters only if HUD gets drawn at all.
+   rightoffset = hu_overlay->rightoffset;
 }
 
 static const char *hud_overlaynames[] =

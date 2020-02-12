@@ -305,6 +305,8 @@ void ModernHUD::Setup()
    int boxx, boxy;
    HU_InventoryGetCurrentBoxHints(boxx, boxy);
 
+   rightoffset = 0;
+
    switch(hud_overlaylayout)
    {
    case HUD_OFF:       // 'off'
@@ -343,6 +345,7 @@ void ModernHUD::Setup()
    case HUD_DISTRIB: // similar to boom 'distributed' style
       SetupOverlay(ol_health, SCREENWIDTH - 3, 3);
       SetupOverlay(ol_armor,  SCREENWIDTH - 3, 15);
+      rightoffset = 27;
       SetupOverlay(ol_weap,   SCREENWIDTH - 3, SCREENHEIGHT - 16);
       SetupOverlay(ol_ammo,   SCREENWIDTH - 3, SCREENHEIGHT - 8);
 

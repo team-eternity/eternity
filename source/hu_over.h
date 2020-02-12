@@ -132,9 +132,11 @@ public:
    //
    // Default constructor
    //
-   HUDOverlay() : drawerdata{}
+   HUDOverlay() : drawerdata{}, leftoffset{}, rightoffset{}
    {
    }
+
+   int leftoffset, rightoffset;
 };
 
 // Overlays enumeration
@@ -172,7 +174,7 @@ extern vfont_t *hud_fsmedium;
 extern vfont_t *hud_fslarge;
 
 // overlay interface
-void HU_OverlayDraw();
+void HU_OverlayDraw(int &leftoffset, int &rightoffset);
 void HU_ToggleHUD();
 void HU_DisableHUD();
 
