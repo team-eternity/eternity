@@ -71,7 +71,7 @@ weaponinfo StaffPowered : Staff
   sisterweapon Staff
 
   readysound   ht_stfcrk
-  addflags     READYSNDHALF|POWEREDUP
+  addflags     READYSNDHALF|POWEREDUP|DEPOWERSWITCH
   mod          StaffPowered
 
   states
@@ -437,7 +437,7 @@ weaponinfo GauntletsPowered : Gauntlets
 {
   sisterweapon Gauntlets
 
-  addflags POWEREDUP
+  addflags POWEREDUP|DEPOWERSWITCH
 
   firstdecoratestate S_GAUNTLETREADY2_1
   states

@@ -910,7 +910,7 @@ void P_PlayerThink(player_t *player)
                P_SetPsprite(player, ps_weapon, unpowered->readystate);
                player->refire = 0;
             }
-            else if(unpowered->readystate != player->readyweapon->readystate)
+            else if(player->readyweapon->flags & WPF_DEPOWERSWITCH)
                player->pendingweapon = unpowered;
 
             player->readyweapon = unpowered;

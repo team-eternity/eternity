@@ -205,6 +205,7 @@ static dehflags_t e_weaponFlags[] =
    { "POWEREDUP",      WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
    { "PHOENIXRESET",   WPF_PHOENIXRESET   },
+   { "DEPOWERSWITCH",  WPF_DEPOWERSWITCH  },
    { nullptr,          0                  }
 };
 
