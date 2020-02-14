@@ -458,7 +458,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
          {
             // TODO: extremely inefficient
             dest[y * width + x] =
-               V_FindBestColor(outpal, *dest, *(dest+1), *(dest+2));
+               V_FindBestColor(outpal, *src, *(src+1), *(src+2));
             src += channels;
          }
       }
