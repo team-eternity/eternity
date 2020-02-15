@@ -905,8 +905,9 @@ void P_PlayerThink(player_t *player)
                P_SubtractAmmo(player, -1);
                player->refire = 0;
             }
-            else if(unpowered->flags & WPF_FORCETOREADY)
+            else if(unpowered->flags & WPF_FORCETOREADY || player->attackdown == AT_NONE)
             {
+               // TODO: Figure out if should be || (player->attackdown == AT_NONE && current-state-isireadystate)
                P_SetPsprite(player, ps_weapon, unpowered->readystate);
                player->refire = 0;
             }
