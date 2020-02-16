@@ -52,7 +52,7 @@ class  BloodSpawner;
 
 // Defines
 
-#define VIEWHEIGHT      (41*FRACUNIT)
+// [XA] VIEWHEIGHT is now a playerclass property
 
 // sf: gravity >>> defaultgravity
 #define DEFAULTGRAVITY  FRACUNIT

@@ -107,6 +107,7 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_INITIALHEALTH  "initialhealth"
 #define ITEM_PCLASS_MAXHEALTH      "maxhealth"
 #define ITEM_PCLASS_SUPERHEALTH    "superhealth"
+#define ITEM_PCLASS_VIEWHEIGHT     "viewheight"
 #define ITEM_PCLASS_SPEEDWALK      "speedwalk"
 #define ITEM_PCLASS_SPEEDRUN       "speedrun"
 #define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
@@ -150,6 +151,7 @@ static cfg_opt_t reborn_opts[] =
    CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
    CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,  CFGF_NONE),  \
    CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,  CFGF_NONE),  \
+   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0, CFGF_NONE),  \
                                                          \
    /* speeds */                                          \
    CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
@@ -669,6 +671,9 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       else  // either new and specified or old and specified
          pc->superhealth = cfg_getint(pcsec, ITEM_PCLASS_SUPERHEALTH);
    }
+   // view height
+   if (IS_SET(pcsec, ITEM_PCLASS_VIEWHEIGHT))
+      pc->viewheight = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_VIEWHEIGHT));
 
    // process player speed fields
 
