@@ -851,25 +851,6 @@ unsigned int *deh_ParseFlagsCombined(const char *strval)
    return dehacked_flags.results;
 }
 
-unsigned int *deh_ParseFlagsCustom(dehflagset_t *flagset, const char *strval)
-{
-   char *buffer;
-   char *bufferptr;
-
-   if(flagset == nullptr)
-      return 0;
-
-   bufferptr = buffer = estrdup(strval);
-
-   flagset->mode = DEHFLAGS_MODE_ALL;
-
-   deh_ParseFlags(flagset, &bufferptr);
-
-   efree(buffer);
-
-   return flagset->results;
-}
-
 #define MOBJFLAGSINDEX  21
 #define MOBJFLAGS2INDEX 22
 #define MOBJTRANSINDEX  24

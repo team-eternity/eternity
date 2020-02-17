@@ -758,20 +758,15 @@ unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
    if(eval.type != EVALTYPE_THINGFLAG)
    {
       eval.type = EVALTYPE_THINGFLAG;
+      memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
 
       // empty string is zero
       if(*(al->args[index]) != '\0')
       {
-         unsigned int *flagvals = deh_ParseFlagsCustom(flagset, al->args[index]);
-
-         memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
+         eval.value.flags[0] = E_ParseFlags(al->args[index], flagset);
       }
-      else
-         memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
    }
 
-   // [XA] since arg flags aren't expected to be mega-huge, just return the
-   // first result index rather than make every action function care about this.
    return eval.value.flags[0];
 }
 
