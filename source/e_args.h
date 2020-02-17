@@ -118,6 +118,7 @@ int           E_ArgAsStateNumNI(arglist_t *al, int index, const player_t *player
 int           E_ArgAsStateNumG0(arglist_t *al, int index, const Mobj     *mo);
 int           E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player);
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index);
+unsigned int  E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset);
 sfxinfo_t    *E_ArgAsSound(arglist_t *al, int index);
 int           E_ArgAsBexptr(arglist_t *al, int index);
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index);
