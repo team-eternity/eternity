@@ -741,6 +741,41 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 }
 
 //
+// Gets the arg value at index i as a flag mask, if such argument  exists,
+// using the specified flagset. The evaluated value will be cached
+// so that it can be returned on subsequent calls. If the arg does not
+// exist, NULL is returned.
+//
+unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
+{
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return 0;
+
+   evalcache_t &eval = al->values[index];
+
+   if(eval.type != EVALTYPE_THINGFLAG)
+   {
+      eval.type = EVALTYPE_THINGFLAG;
+
+      // empty string is zero
+      if(*(al->args[index]) != '\0')
+      {
+         unsigned int *flagvals = deh_ParseFlagsCustom(flagset, al->args[index]);
+
+         memcpy(eval.value.flags, flagvals, MAXFLAGFIELDS * sizeof(unsigned int));
+      }
+      else
+         memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
+   }
+
+   // [XA] since arg flags aren't expected to be mega-huge, just return the
+   // first result index rather than make every action function care about this.
+   return eval.value.flags[0];
+}
+
+//
 // Gets the arg value at index i as a sound, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
 // calls. If the arg does not exist, NULL is returned.

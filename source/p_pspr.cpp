@@ -1371,16 +1371,24 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    }
 }
 
-static const char *kwds_A_FirePlayerMissile[] =
+enum fireplayermissile_flags : unsigned int
 {
-   "normal",           //  0
-   "homing",           //  1
+   FIREPLAYERMISSILE_HOMING = 0x00000001,
+   FIREPLAYERMISSILE_NOAMMO = 0x00000002
 };
 
-static argkeywd_t seekkwds =
+static dehflags_t fireplayermissile_flaglist[] =
 {
-   kwds_A_FirePlayerMissile,
-   earrlen(kwds_A_FirePlayerMissile)
+   { "normal",    0x00000000               }, // [XA] explicit no-op. :P
+   { "homing",    FIREPLAYERMISSILE_HOMING },
+   { "noammo",    FIREPLAYERMISSILE_NOAMMO },
+   { NULL,        0 }
+};
+
+static dehflagset_t fireplayermissile_flagset =
+{
+   fireplayermissile_flaglist, // flaglist
+   0,                          // mode
 };
 
 //
@@ -1389,15 +1397,17 @@ static argkeywd_t seekkwds =
 // A parameterized code pointer function for custom missiles
 // Parameters:
 // args[0] : thing type to shoot
-// args[1] : whether or not to home at current autoaim target
-//           (missile requires homing maintenance pointers, however)
+// args[1] : flags:
+//           1: whether or not to home at current autoaim target
+//             (missile requires homing maintenance pointers, however)
+//           2: don't consume ammo when firing
 //
 void A_FirePlayerMissile(actionargs_t *actionargs)
 {
    int thingnum;
    Mobj *actor = actionargs->actor;
    Mobj *mo;
-   bool seek;
+   unsigned int flags;
    player_t  *player;
    pspdef_t  *psp;
    arglist_t *args = actionargs->args;
@@ -1409,18 +1419,19 @@ void A_FirePlayerMissile(actionargs_t *actionargs)
       return;
 
    thingnum = E_ArgAsThingNumG0(args, 0);
-   seek     = !!E_ArgAsKwd(args, 1, &seekkwds, 0);
+   flags    = E_ArgAsFlags(args, 1, &fireplayermissile_flagset);
 
    // validate thingtype
    if(thingnum < 0/* || thingnum == -1*/)
       return;
 
    // decrement ammo if appropriate
-   P_SubtractAmmo(player, -1);
+   if(!(flags & FIREPLAYERMISSILE_NOAMMO))
+      P_SubtractAmmo(player, -1);
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
 
-   if(mo && seek)
+   if(mo && (flags & FIREPLAYERMISSILE_HOMING))
    {
       P_BulletSlope(actor);
 
