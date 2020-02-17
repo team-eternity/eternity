@@ -672,7 +672,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          pc->superhealth = cfg_getint(pcsec, ITEM_PCLASS_SUPERHEALTH);
    }
    // view height
-   if (IS_SET(pcsec, ITEM_PCLASS_VIEWHEIGHT))
+   if(IS_SET(pcsec, ITEM_PCLASS_VIEWHEIGHT))
       pc->viewheight = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_VIEWHEIGHT));
 
    // process player speed fields
