@@ -32,6 +32,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "m_argv.h"
@@ -1524,7 +1525,7 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
       {
          other->player->viewheight += *orgzit - other->z;
          other->player->deltaviewheight =
-         (VIEWHEIGHT - other->player->viewheight) >> 3;
+         (other->player->pclass->viewheight - other->player->viewheight) >> 3;
       }
       ++orgzit;
    }

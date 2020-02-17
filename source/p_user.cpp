@@ -196,7 +196,7 @@ void P_CalcHeight(player_t *player)
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
-      player->viewz = player->mo->z + VIEWHEIGHT;
+      player->viewz = player->mo->z + player->pclass->viewheight;
       
       if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
          player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
@@ -220,15 +220,15 @@ void P_CalcHeight(player_t *player)
    {
       player->viewheight += player->deltaviewheight;
       
-      if(player->viewheight > VIEWHEIGHT)
+      if(player->viewheight > player->pclass->viewheight)
       {
-         player->viewheight = VIEWHEIGHT;
+         player->viewheight = player->pclass->viewheight;
          player->deltaviewheight = 0;
       }
 
-      if(player->viewheight < VIEWHEIGHT / 2)
+      if(player->viewheight < player->pclass->viewheight / 2)
       {
-         player->viewheight = VIEWHEIGHT / 2;
+         player->viewheight = player->pclass->viewheight / 2;
          if(player->deltaviewheight <= 0)
             player->deltaviewheight = 1;
       }

@@ -955,7 +955,7 @@ static void P_ZMovement(Mobj* mo)
    {
       mo->player->viewheight -= mo->zref.floor-mo->z;
       mo->player->deltaviewheight =
-         (VIEWHEIGHT - mo->player->viewheight)>>3;
+         (mo->player->pclass->viewheight - mo->player->viewheight)>>3;
    }
 
    // adjust altitude
@@ -1484,7 +1484,7 @@ void Mobj::Think()
                {
                   fixed_t deltaview;
                   player->viewheight -= onmo->z + onmo->height - z;
-                  deltaview = (VIEWHEIGHT - player->viewheight)>>3;
+                  deltaview = (player->pclass->viewheight - player->viewheight)>>3;
                   if(deltaview > player->deltaviewheight)
                   {
                      player->deltaviewheight = deltaview;
@@ -2186,8 +2186,8 @@ void P_SpawnPlayer(mapthing_t* mthing)
    p->bonuscount    = 0;
    p->extralight    = 0;
    p->fixedcolormap = 0;
-   p->viewheight    = VIEWHEIGHT;
-   p->viewz         = mobj->z + VIEWHEIGHT;
+   p->viewheight    = p->pclass->viewheight;
+   p->viewz         = mobj->z + p->pclass->viewheight;
    p->prevviewz     = p->viewz;
 
    p->momx = p->momy = 0;   // killough 10/98: initialize bobbing to 0.
@@ -3326,7 +3326,7 @@ void P_AdjustFloorClip(Mobj *thing)
       player_t *p = thing->player;
 
       p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
    }
 }
 
