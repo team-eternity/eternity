@@ -279,7 +279,11 @@ static void D_SetPageName(const char *name)
 
 static void D_DrawTitle(const char *name)
 {
-   S_StartMusic(GameModeInfo->titleMusNum);
+   if (GameModeInfo->titleMusName != NULL)
+      S_ChangeMusicName(GameModeInfo->titleMusName, false);
+   else
+      S_StartMusic(GameModeInfo->titleMusNum);
+
    pagetic = GameModeInfo->titleTics;
 
    if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)

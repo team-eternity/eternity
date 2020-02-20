@@ -1185,6 +1185,7 @@ static gamemodeinfo_t giDoomSW =
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
+   NULL,              // titleMusName
 
    1,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1307,6 +1308,7 @@ static gamemodeinfo_t giDoomReg =
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
+   NULL,              // titleMusName
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1429,6 +1431,7 @@ static gamemodeinfo_t giDoomRetail =
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
+   NULL,              // titleMusName
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1551,6 +1554,7 @@ static gamemodeinfo_t giDoomCommercial =
    DOOMDEFSOUND,       // defSoundName
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
+   NULL,               // titleMusName
 
    3,              // switchEpisode
    &Doom2SkyData,  // skyData
@@ -1673,6 +1677,7 @@ static gamemodeinfo_t giHereticSW =
    HTICDEFSOUND,        // defSoundName
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
+   NULL,                // titleMusName
 
    1,                  // switchEpisode
    &HereticSkyData,    // skyData
@@ -1799,6 +1804,7 @@ static gamemodeinfo_t giHereticReg =
    HTICDEFSOUND,        // defSoundName
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
+   NULL,                // titleMusName
 
    2,                  // switchEpisode
    &HereticSkyData,    // skyData
