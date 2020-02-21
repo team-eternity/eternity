@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+21.02.2020
+
+FEATURE: Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
+         the ghost effect.
+
+--------------------------------------------------------------------------------
 08.02.2020
 
 FEATURE: New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
