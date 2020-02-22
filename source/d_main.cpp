@@ -279,7 +279,7 @@ static void D_SetPageName(const char *name)
 
 static void D_DrawTitle(const char *name)
 {
-   if (GameModeInfo->titleMusName != NULL)
+   if(GameModeInfo->titleMusName != nullptr && *GameModeInfo->titleMusName)
       S_ChangeMusicName(GameModeInfo->titleMusName, false);
    else
       S_StartMusic(GameModeInfo->titleMusNum);
