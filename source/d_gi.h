@@ -466,6 +466,7 @@ struct gamemodeinfo_t
    const char *defSoundName;      // default sound if one is missing
    const char **skinSounds;       // default skin sound mnemonics array
    int *playerSounds;             // player sound dehnum indirection
+   const char *titleMusName;      // [XA] title music override, for EDF
 
    // Renderer stuff
    int switchEpisode;             // "episode" number for switch texture defs
