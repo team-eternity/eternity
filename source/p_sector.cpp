@@ -93,8 +93,7 @@ void P_NewSectorActionFromMobj(Mobj *actor)
 {
    sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
 
-   newAction->special = actor->special;
-   memcpy(newAction->args, actor->args, sizeof(int) * NUMLINEARGS);
+   newAction->mo = actor;
    if(actor->type == E_ThingNumForName("EESectorActionExit"))
       newAction->actionflags = SEC_ACTION_EXIT;
    else if(actor->type == E_ThingNumForName("EESectorActionEnter"))
@@ -117,6 +116,8 @@ void P_NewSectorActionFromMobj(Mobj *actor)
 
    sector_t *sec = actor->subsector->sector;
    newAction->links.insert(newAction, &(sec->actions));
+   if(sec->actions->dllNext)
+      sec->actions->dllData = sec->actions->dllNext->dllData + 1;
 }
 
 //

@@ -201,9 +201,8 @@ struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int special;
-   int args[NUMLINEARGS];
-   int actionflags;
+   Mobj *mo;
+   int   actionflags;
 };
 
 // sector interpolation values

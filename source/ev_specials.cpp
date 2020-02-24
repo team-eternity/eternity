@@ -642,7 +642,7 @@ static int EV_ParamPostActivate(ev_action_t *action, int result,
    else if(result && instance->sectoraction)
    {
       if(instance->sectoraction->actionflags & SEC_ACTION_NOTREPEAT)
-         instance->sectoraction->special = 0;
+         instance->sectoraction->mo->special = 0;
    }
 
    return result;
@@ -1677,13 +1677,13 @@ int EV_ActivateSectorAction(sector_t *sector, Mobj *thing, int seac)
 
       // setup instance
       instance.actor        = thing;
-      instance.args         = sectoraction->args;
+      instance.args         = sectoraction->mo->args;
       instance.sectoraction = sectoraction;
       instance.poly         = nullptr;
-      instance.special      = sectoraction->special;
+      instance.special      = sectoraction->mo->special;
       instance.side         = 0;
       instance.seac         = seac;
-      instance.tag          = sectoraction->args[0];
+      instance.tag          = sectoraction->mo->args[0];
 
       // get action
       if(!(action = EV_ActionForInstance(instance)))
