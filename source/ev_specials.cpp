@@ -639,6 +639,11 @@ static int EV_ParamPostActivate(ev_action_t *action, int result,
       if(instance->spac == SPAC_USE || instance->spac == SPAC_IMPACT)
          P_ChangeSwitchTexture(instance->line, reuse, instance->side);
    }
+   else if(result && instance->sectoraction)
+   {
+      if(instance->sectoraction->actionflags & SEC_ACTION_NOTREPEAT)
+         instance->sectoraction->special = 0;
+   }
 
    return result;
 }

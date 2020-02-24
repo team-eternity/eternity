@@ -138,6 +138,9 @@ enum
    // will appear on skill 5 if MTF_HARD is not set
    // will not appear on skill 5 if MTF_HARD is set
    MTF_EX_NIGHTMARE_TOGGLE = 2,
+
+   // Strife standing monster
+   MTF_EX_STAND = 4,
 };
 
 // sf: sector flags, not me =)

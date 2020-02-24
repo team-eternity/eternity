@@ -112,8 +112,8 @@ void P_NewSectorActionFromMobj(Mobj *actor)
       newAction->actionflags |= SEC_ACTION_PROJECTILE;
    if(actor->spawnpoint.options & MTF_FRIEND)
       newAction->actionflags |= SEC_ACTION_NOPLAYER;
-   //if(actor->spawnpoint.options & MTF_STAND)
-   //   newAction->actionflags |= SEC_ACTION_NOTREPEAT;
+   if(actor->spawnpoint.extOptions & MTF_EX_STAND)
+      newAction->actionflags |= SEC_ACTION_NOTREPEAT;
 
    sector_t *sec = actor->subsector->sector;
    newAction->links.insert(newAction, &(sec->actions));
