@@ -87,8 +87,6 @@ void SectorThinker::serialize(SaveArchive &arc)
 //
 
 //
-// P_NewSectorActionFromMobj
-//
 // Adds the Mobj's special to the sector
 //
 void P_NewSectorActionFromMobj(Mobj *actor)
@@ -107,10 +105,15 @@ void P_NewSectorActionFromMobj(Mobj *actor)
       return;
    }
 
-   if(actor->flags & MF_AMBUSH)
+   // TODO: Gate off for certain actions that this doesn't apply to if/when they get added
+   if(actor->spawnpoint.options & MTF_AMBUSH)
       newAction->actionflags |= SEC_ACTION_MONSTER;
-   if(actor->flags2 & MF2_DORMANT)
+   if(actor->spawnpoint.options & MTF_DORMANT)
       newAction->actionflags |= SEC_ACTION_PROJECTILE;
+   if(actor->spawnpoint.options & MTF_FRIEND)
+      newAction->actionflags |= SEC_ACTION_NOPLAYER;
+   //if(actor->spawnpoint.options & MTF_STAND)
+   //   newAction->actionflags |= SEC_ACTION_NOTREPEAT;
 
    sector_t *sec = actor->subsector->sector;
    newAction->links.insert(newAction, &(sec->actions));

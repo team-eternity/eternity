@@ -120,6 +120,12 @@ typedef enum {
 #define MTF_PSX_NIGHTMARE (32|128)
 #define MTF_PSX_SPECTRE   (32|64|128)
 
+// Strife flags
+#define MTF_STRIFE_STAND       32
+#define MTF_STRIFE_FRIEND      64
+#define MTF_STRIFE_TRANSLUCENT 256
+#define MTF_STRIFE_MVCIS       512
+
 //
 // ioanch 20151218: mapthing_t::extOptions (extended) flags: needed by UDMF
 //

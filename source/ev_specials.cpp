@@ -1642,7 +1642,8 @@ static bool EV_checkSectorActionSpac(ev_action_t *action, ev_instance_t *instanc
       if(thing->flags3 & MF3_SPACMONSTER)  // treat as monster?
          flags |= SEC_ACTION_MONSTER;
 
-      if(!thing->player && !(sectoraction->actionflags & flags))
+      if((thing->player && !!(sectoraction->actionflags & SEC_ACTION_NOPLAYER)) ||
+         (!thing->player && !(sectoraction->actionflags & flags)))
          return false;
 
       switch(instance->seac)
