@@ -1636,7 +1636,7 @@ void Mobj::ThinkFast()
    Mobj *mo;
 
    // backup previous position for interpolation
-   if (!player || player->mo != this)
+   if(!player || player->mo != this)
       backupPosition();
 
    // Handle movement

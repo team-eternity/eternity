@@ -1733,11 +1733,11 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
 //
 static void E_processTrailType(mobjinfo_t *mi, const char *name)
 {
-   if (*name)
+   if(*name)
    {
       mi->trailthingnum = E_ThingNumForName(name);
 
-      if (mi->trailthingnum < 0)
+      if(mi->trailthingnum < 0)
       {
          E_EDFLoggedWarning(2,
             "Warning: Unknown thingtype '%s' specified as trail.type for '%s'\n",
@@ -3006,19 +3006,19 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
 
    // [XA] 02-22-2020: process projectile trail fields
-   if (IS_SET(ITEM_TNG_TRAILTYPE))
+   if(IS_SET(ITEM_TNG_TRAILTYPE))
       E_processTrailType(mobjinfo[i], cfg_getstr(thingsec, ITEM_TNG_TRAILTYPE));
 
-   if (IS_SET(ITEM_TNG_TRAILZOFFSET))
+   if(IS_SET(ITEM_TNG_TRAILZOFFSET))
    {
       tempfloat = cfg_getfloat(thingsec, ITEM_TNG_TRAILZOFFSET);
       mobjinfo[i]->trailzoffset = (int)(tempfloat * FRACUNIT);
    }
 
-   if (IS_SET(ITEM_TNG_TRAILCHANCE))
+   if(IS_SET(ITEM_TNG_TRAILCHANCE))
       mobjinfo[i]->trailchance = cfg_getint(thingsec, ITEM_TNG_TRAILCHANCE);
 
-   if (IS_SET(ITEM_TNG_TRAILSPARSITY))
+   if(IS_SET(ITEM_TNG_TRAILSPARSITY))
       mobjinfo[i]->trailsparsity = cfg_getint(thingsec, ITEM_TNG_TRAILSPARSITY);
 
    // Process DECORATE state block
