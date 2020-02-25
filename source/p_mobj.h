@@ -214,6 +214,7 @@ protected:
 
    // Methods
    void Think() override;
+   void ThinkFast();
 
    bool shouldApplyTorque();
 
@@ -700,7 +701,8 @@ enum mobjflags4_e : unsigned int
    MF4_LOWAIMPRIO         = 0x04000000, // can't be autoaimed.
    MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it.
    MF4_SETTARGETONDEATH   = 0x10000000, // target is updated even when one-shot
-   MF4_SLIDEOVERTHINGS    = 0x20000000  // thing will keep sliding when on top of things
+   MF4_SLIDEOVERTHINGS    = 0x20000000, // thing will keep sliding when on top of things
+   MF4_FASTMISSILE        = 0x40000000  // [XA] use Hexen's fast-projectile physics
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

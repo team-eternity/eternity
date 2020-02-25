@@ -422,6 +422,10 @@ struct mobjinfo_t
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
+   int trailthingnum;   // [XA] 02/22/2020: projectile trail thing number
+   int trailzoffset;    // [XA] 02/22/2020: projectile trail z offset (fixed point)
+   int trailchance;     // [XA] 02/22/2020: projectile trail spawn chance (out of 255)
+   int trailsparsity;   // [XA] 02/22/2020: projectile trail sparsity
 
    e_pickupfx_t *pickupfx;
 

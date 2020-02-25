@@ -219,6 +219,12 @@ int UnknownThingType;
 #define ITEM_TNG_PFX_SOUND     "sound"
 #define ITEM_TNG_PFX_FLAGS     "flags"
 
+// Projectile Trail Properties
+#define ITEM_TNG_TRAILTYPE     "trail.type"
+#define ITEM_TNG_TRAILZOFFSET  "trail.zoffset"
+#define ITEM_TNG_TRAILCHANCE   "trail.spawnchance"
+#define ITEM_TNG_TRAILSPARSITY "trail.sparsity"
+
 //
 // Thing groups
 //
@@ -598,6 +604,10 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
+   CFG_STR(ITEM_TNG_TRAILTYPE,       "",            CFGF_NONE                ), \
+   CFG_FLOAT(ITEM_TNG_TRAILZOFFSET, -8.0f,          CFGF_NONE                ), \
+   CFG_INT(ITEM_TNG_TRAILCHANCE,     256,           CFGF_NONE                ), \
+   CFG_INT(ITEM_TNG_TRAILSPARSITY,   0,             CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1716,6 +1726,26 @@ static void E_processItemRespawnAt(mobjinfo_t *mi, const char *name)
    }
    else
       mi->meta->removeStringNR("itemrespawnat");
+}
+
+//
+// Projectile Trail
+//
+static void E_processTrailType(mobjinfo_t *mi, const char *name)
+{
+   if (*name)
+   {
+      mi->trailthingnum = E_ThingNumForName(name);
+
+      if (mi->trailthingnum < 0)
+      {
+         E_EDFLoggedWarning(2,
+            "Warning: Unknown thingtype '%s' specified as trail.type for '%s'\n",
+            name, mi->name);
+      }
+   }
+   else
+      mi->trailthingnum = -1;
 }
 
 //
@@ -2974,6 +3004,22 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
             ACS_thingtypes[tempint] = i;
       }
    }
+
+   // [XA] 02-22-2020: process projectile trail fields
+   if (IS_SET(ITEM_TNG_TRAILTYPE))
+      E_processTrailType(mobjinfo[i], cfg_getstr(thingsec, ITEM_TNG_TRAILTYPE));
+
+   if (IS_SET(ITEM_TNG_TRAILZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_TRAILZOFFSET);
+      mobjinfo[i]->trailzoffset = (int)(tempfloat * FRACUNIT);
+   }
+
+   if (IS_SET(ITEM_TNG_TRAILCHANCE))
+      mobjinfo[i]->trailchance = cfg_getint(thingsec, ITEM_TNG_TRAILCHANCE);
+
+   if (IS_SET(ITEM_TNG_TRAILSPARSITY))
+      mobjinfo[i]->trailsparsity = cfg_getint(thingsec, ITEM_TNG_TRAILSPARSITY);
 
    // Process DECORATE state block
    E_ProcessDecorateStatesRecursive(thingsec, i, false);

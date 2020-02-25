@@ -346,6 +346,7 @@ dehflags_t deh_mobjflags[] =
   {"STICKYCARRY",        0x08000000, 3},
   {"SETTARGETONDEATH",   0x10000000, 3},
   {"SLIDEOVERTHINGS",    0x20000000, 3},
+  {"FASTMISSILE",        0x40000000, 3}, // [XA] use Hexen's fast-projectile physics
 
   { NULL,              0 }             // NULL terminator
 };
