@@ -23,3 +23,4 @@ SDL2_mixer.framework
 SDL2_net.framework
 .vscode
 *.VC.db
+vc2017/Debug/
