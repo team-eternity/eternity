@@ -3070,10 +3070,10 @@ thingtype CrossbowFX2 : CrossbowFX1, -1, 435
 thingtype CrossbowFX3 : Mobj, -1, 436
 {
   compatname CrossbowFX3
-  speed      32.0
+  speed      20.0
   radius     11.0
   height     8.0
-  damage     6
+  damage     2
   deathsound ht_hrnhit
   cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|THRUGHOST|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
 
