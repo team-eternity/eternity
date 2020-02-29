@@ -1152,10 +1152,10 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
 
 static dehflags_t painattack_flaglist[] =
 {
-   { "PAF_NOSKULLATTACK", PAF_NOSKULLATTACK },
-   { "PAF_AIMFACING",     PAF_AIMFACING     },
-   { "PAF_NOTARGET",      PAF_NOTARGET      },
-   { nullptr,             0                 }
+   { "NOSKULLATTACK", PAF_NOSKULLATTACK },
+   { "AIMFACING",     PAF_AIMFACING     },
+   { "NOTARGET",      PAF_NOTARGET      },
+   { nullptr,         0                 }
 };
 
 static dehflagset_t painattack_flagset =
