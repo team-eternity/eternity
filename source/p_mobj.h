@@ -495,11 +495,21 @@ struct missileinfo_t
    uint32_t    flags;  // flags to affect firing (use enum values)
 };
 
+//
+// Game specific particularities
+//
+enum class playermissilemode_e
+{
+   normal,
+   heretic
+};
+
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
 // Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type,
+                           playermissilemode_e mode = playermissilemode_e::normal);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
 Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
