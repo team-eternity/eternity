@@ -410,6 +410,10 @@ Fixed cfg saving ignoring symlinks (and just overwriting the link).
 2019/11/23
 Fixed crashing if the CONSOLE lump isn't a valid graphic.
 
+-------------------------------------------------------------------------------
+2020/02/29
+Extended A_PainAttack to have ZDoom's parameters.
+
 ================================================================================
 EOF
 ================================================================================

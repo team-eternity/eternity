@@ -1023,12 +1023,17 @@ void A_Stop(actionargs_t *actionargs)
    actor->momx = actor->momy = actor->momz = 0;
 }
 
-//
-// A_PainShootSkull
+enum painattackflags_e : unsigned int
+{
+   PAF_NOSKULLATTACK = 0x00000001,
+   PAF_AIMFACING     = 0x00000002,
+   PAF_NOTARGET      = 0x00000004,
+};
+
 //
 // Spawn a lost soul and launch it at the target
 //
-void A_PainShootSkull(Mobj *actor, angle_t angle)
+static void A_painShootSkull(Mobj *actor, const angle_t angle, const unsigned int flags = 0, int count = -1)
 {
    fixed_t  x, y, z;
    Mobj    *newmobj;
@@ -1040,10 +1045,14 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
    // and wouldn't spit another one if there were. If not in   // phares
    // compatibility mode, we remove the limit.                 // phares
 
-   if(comp[comp_pain])  // killough 10/98: compatibility-optioned
+   if(comp[comp_pain] || count != 0)  // killough 10/98: compatibility-optioned
    {
       // count total number of skulls currently on the level
-      int count = 20;
+      if(count < 0)
+         count = 20;
+      else
+         count--;
+
       Thinker *th;
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
@@ -1125,30 +1134,59 @@ void A_PainShootSkull(Mobj *actor, angle_t angle)
       return;
    }
    
-   P_SetTarget<Mobj>(&newmobj->target, actor->target);
+   if(!(flags & PAF_NOTARGET))
+      P_SetTarget<Mobj>(&newmobj->target, actor->target);
 
-   actionargs_t skullaction;
+   if(!(flags & PAF_NOSKULLATTACK))
+   {
+      actionargs_t skullaction;
 
-   skullaction.actiontype = actionargs_t::MOBJFRAME;
-   skullaction.actor      = newmobj;
-   skullaction.args       = ESAFEARGS(newmobj);
-   skullaction.pspr       = NULL;
+      skullaction.actiontype = actionargs_t::MOBJFRAME;
+      skullaction.actor      = newmobj;
+      skullaction.args       = ESAFEARGS(newmobj);
+      skullaction.pspr       = nullptr;
 
-   A_SkullAttack(&skullaction);
+      A_SkullAttack(&skullaction);
+   }
 }
 
-//
-// A_PainAttack
+static dehflags_t painattack_flaglist[] =
+{
+   { "PAF_NOSKULLATTACK", PAF_NOSKULLATTACK },
+   { "PAF_AIMFACING",     PAF_AIMFACING     },
+   { "PAF_NOTARGET",      PAF_NOTARGET      },
+   { nullptr,             0                 }
+};
+
+static dehflagset_t painattack_flagset =
+{
+   painattack_flaglist, // flaglist
+   0,                   // mode
+};
+
 //
 // Spawn a lost soul and launch it at the target
+// * args[0] = type to spawn
+// * args[1] = angle to add to spawned thing
+// * args[2] = flags
+// * args[3] = maximum amount allowed on map (infinite if 0, 21 if negative)
 //
 void A_PainAttack(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    if(!actor->target)
       return;
-   A_FaceTarget(actionargs);
-   A_PainShootSkull(actor, actor->angle);
+
+   int thingnum = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingnum < 0)
+      thingnum = E_SafeThingType(MT_SKULL);
+   const angle_t      angle = FixedToAngle(E_ArgAsFixed(actionargs->args, 1, 0));
+   const unsigned int flags = E_ArgAsFlags(actionargs->args, 2, &painattack_flagset);
+   const int          count = E_ArgAsInt(actionargs->args, 3, -1);
+
+   if(!(flags & PAF_NOTARGET))
+      A_FaceTarget(actionargs);
+   A_painShootSkull(actor, actor->angle + angle, flags, count);
 }
 
 //
@@ -1160,9 +1198,9 @@ void A_PainDie(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    A_Fall(actionargs);
-   A_PainShootSkull(actor, actor->angle + ANG90 );
-   A_PainShootSkull(actor, actor->angle + ANG180);
-   A_PainShootSkull(actor, actor->angle + ANG270);
+   A_painShootSkull(actor, actor->angle + ANG90 );
+   A_painShootSkull(actor, actor->angle + ANG180);
+   A_painShootSkull(actor, actor->angle + ANG270);
 }
 
 //=============================================================================
