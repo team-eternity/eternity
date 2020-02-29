@@ -1033,13 +1033,13 @@ enum painattackflags_e : unsigned int
 //
 // Spawn a lost soul and launch it at the target
 //
-static void A_painShootSkull(Mobj *actor, const angle_t angle, const unsigned int flags = 0, int count = -1)
+static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
+                             const unsigned int flags = 0, int count = -1)
 {
    fixed_t  x, y, z;
    Mobj    *newmobj;
    angle_t  an;
    int      prestep;
-   int      skullType = E_SafeThingType(MT_SKULL);
 
    // The original code checked for 20 skulls on the level,    // phares
    // and wouldn't spit another one if there were. If not in   // phares
@@ -1057,7 +1057,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, const unsigned in
       for(th = thinkercap.next; th != &thinkercap; th = th->next)
       {
          Mobj *mo;
-         if((mo = thinker_cast<Mobj *>(th)) && mo->type == skullType)
+         if((mo = thinker_cast<Mobj *>(th)) && mo->type == thingType)
          {
             if(--count < 0)         // killough 8/29/98: early exit
                return;
@@ -1069,7 +1069,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, const unsigned in
    
    an = angle >> ANGLETOFINESHIFT;
    
-   prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[skullType]->radius)/2;
+   prestep = 4*FRACUNIT + 3*(actor->info->radius + mobjinfo[thingType]->radius)/2;
 
    // ioanch 20160107: spawn at the correct position if there's a line portal
    // between monster and intended position.
@@ -1083,7 +1083,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, const unsigned in
    z = actor->z + 8*FRACUNIT;
    
    if(comp[comp_skull])   // killough 10/98: compatibility-optioned
-      newmobj = P_SpawnMobj(x, y, z, skullType);                    // phares
+      newmobj = P_SpawnMobj(x, y, z, thingType);                    // phares
    else                                                             //   V
    {
       // Check whether the Lost Soul is being fired through a 1-sided
@@ -1095,10 +1095,10 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, const unsigned in
       // ioanch 20160107: check sides against the non-translated position. This 
       // way the two coordinates will be in valid range and it will only check
       // sides against the passable portal line
-      if (Check_Sides(actor, relpos.x, relpos.y, skullType))
+      if(Check_Sides(actor, relpos.x, relpos.y, thingType))
          return;
       
-      newmobj = P_SpawnMobj(x, y, z, skullType);
+      newmobj = P_SpawnMobj(x, y, z, thingType);
       
       // Check to see if the new Lost Soul's z value is above the
       // ceiling of its new sector, or below the floor. If so, kill it.
@@ -1177,16 +1177,16 @@ void A_PainAttack(actionargs_t *actionargs)
    if(!actor->target)
       return;
 
-   int thingnum = E_ArgAsThingNumG0(actionargs->args, 0);
-   if(thingnum < 0)
-      thingnum = E_SafeThingType(MT_SKULL);
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_SKULL);
    const angle_t      angle = FixedToAngle(E_ArgAsFixed(actionargs->args, 1, 0));
    const unsigned int flags = E_ArgAsFlags(actionargs->args, 2, &painattack_flagset);
    const int          count = E_ArgAsInt(actionargs->args, 3, -1);
 
    if(!(flags & PAF_NOTARGET))
       A_FaceTarget(actionargs);
-   A_painShootSkull(actor, actor->angle + angle, flags, count);
+   A_painShootSkull(actor, actor->angle + angle, thingType, flags, count);
 }
 
 //
@@ -1196,11 +1196,12 @@ void A_PainAttack(actionargs_t *actionargs)
 //
 void A_PainDie(actionargs_t *actionargs)
 {
-   Mobj *actor = actionargs->actor;
+   Mobj     *actor     = actionargs->actor;
+   const int skullType = E_SafeThingType(MT_SKULL);
    A_Fall(actionargs);
-   A_painShootSkull(actor, actor->angle + ANG90 );
-   A_painShootSkull(actor, actor->angle + ANG180);
-   A_painShootSkull(actor, actor->angle + ANG270);
+   A_painShootSkull(actor, actor->angle + ANG90,  skullType);
+   A_painShootSkull(actor, actor->angle + ANG180, skullType);
+   A_painShootSkull(actor, actor->angle + ANG270, skullType);
 }
 
 //=============================================================================
