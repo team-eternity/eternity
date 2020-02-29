@@ -142,11 +142,11 @@ void A_FireMacePL1B(actionargs_t *actionargs)
 
    const int   tnum = E_SafeThingType(MT_MACEFX2);
 
-   ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT) - pmo->floorclip, tnum);
+   ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT), tnum);
 
    const fixed_t slope = P_PlayerPitchSlope(player);
-   // Use Heretic's weird formula.
-   ball->momz = 2 * FRACUNIT + slope * 173 / 32;
+   // NOTE: the 'magic' number came from computing Heretic's formula.
+   ball->momz = 2 * FRACUNIT + FixedMul(ball->info->speed, FixedMul(slope, 35430));
 
    angle = pmo->angle;
    P_SetTarget(&ball->target, pmo);
