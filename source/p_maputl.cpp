@@ -925,7 +925,7 @@ angle_t P_DoubleToAngle(double a)
 {
    // normalize the angle to [0, 360)
    a = fmod(a, 360.0);
-   if (a < 0)
+   if(a < 0)
       a += 360.0;
 
    // convert dat shit

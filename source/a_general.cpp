@@ -458,10 +458,10 @@ void A_SpawnEx(actionargs_t *actionargs)
       P_RotatePoint(xvel, yvel, angle);
 
    mo = P_SpawnMobj(xpos, ypos, zpos, thingtype);
-   if (mo == nullptr)
+   if(mo == nullptr)
       return;
 
-   if ((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
+   if((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       mo->remove();
    else {
       mo->angle = angle;
