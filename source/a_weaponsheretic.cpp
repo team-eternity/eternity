@@ -298,7 +298,9 @@ void A_FireMacePL2(actionargs_t *actionargs)
 
       mo->momx += player->mo->momx;
       mo->momy += player->mo->momy;
-      mo->momz = FixedMul(fx->speed, slope) + (2 * FRACUNIT);
+      // NOTE: the 'magic' number came from computing how Heretic's constant slope calculation fits
+      // with a super mace projectile's forward speed.
+      mo->momz = FixedMul(fx->speed, FixedMul(slope, 50615)) + (2 * FRACUNIT);
       if(clip.linetarget)
          P_SetTarget(&mo->tracer, clip.linetarget);
    }
