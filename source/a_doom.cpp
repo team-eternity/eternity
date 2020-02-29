@@ -1165,7 +1165,7 @@ static dehflagset_t painattack_flagset =
 };
 
 //
-// Spawn a lost soul and launch it at the target
+// Spawn a thing and launch it at the target
 // * args[0] = type to spawn
 // * args[1] = angle to add to spawned thing
 // * args[2] = flags
@@ -1190,18 +1190,19 @@ void A_PainAttack(actionargs_t *actionargs)
 }
 
 //
-// A_PainDie
-//
-// Normal fall logic plus 3 Lost Souls spawn.
+// Normal fall logic plus 3 things spawn.
+// * args[0] = type to spawn
 //
 void A_PainDie(actionargs_t *actionargs)
 {
-   Mobj     *actor     = actionargs->actor;
-   const int skullType = E_SafeThingType(MT_SKULL);
+   Mobj *actor     = actionargs->actor;
+   int   thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_SKULL);
    A_Fall(actionargs);
-   A_painShootSkull(actor, actor->angle + ANG90,  skullType);
-   A_painShootSkull(actor, actor->angle + ANG180, skullType);
-   A_painShootSkull(actor, actor->angle + ANG270, skullType);
+   A_painShootSkull(actor, actor->angle + ANG90,  thingType);
+   A_painShootSkull(actor, actor->angle + ANG180, thingType);
+   A_painShootSkull(actor, actor->angle + ANG270, thingType);
 }
 
 //=============================================================================
