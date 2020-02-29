@@ -913,6 +913,40 @@ angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y)
    return 0;
 }
 
+//
+// [XA] 02/29/20:
+//
+// double --> angle conversion, mainly for EDF usage.
+// presumes 'a' is in degrees, like the rest of
+// the various to-angle conversion functions. Negative
+// angles are supported.
+//
+angle_t P_DoubleToAngle(double a)
+{
+   // normalize the angle to [0, 360)
+   a = fmod(a, 360.0);
+   if (a < 0)
+      a += 360.0;
+
+   // convert dat shit
+   return FixedToAngle(M_DoubleToFixed(a));
+}
+
+//
+// [XA] 02/29/20:
+//
+// Rotates a point by the specified angle. 'Nuff said.
+//
+void P_RotatePoint(fixed_t & x, fixed_t & y, const angle_t angle)
+{
+   fixed_t tmp;
+   fixed_t sin = finesine[angle >> ANGLETOFINESHIFT];
+   fixed_t cos = finecosine[angle >> ANGLETOFINESHIFT];
+   tmp = FixedMul(x, cos) - FixedMul(y, sin);
+   y = FixedMul(x, sin) + FixedMul(y, cos);
+   x = tmp;
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_maputl.c,v $

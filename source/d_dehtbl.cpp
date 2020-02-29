@@ -1329,6 +1329,7 @@ void A_Nailbomb(actionargs_t *);
 // haleyjd: start new eternity action functions
 void A_SpawnAbove(actionargs_t *);
 void A_SpawnGlitter(actionargs_t *);
+void A_SpawnEx(actionargs_t *);
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
 void A_BetaSkullAttack(actionargs_t *);
@@ -1679,6 +1680,7 @@ deh_bexptr deh_bexptrs[] =
    // haleyjd: start new eternity codeptrs
    POINTER(SpawnAbove),
    POINTER(SpawnGlitter),
+   POINTER(SpawnEx),
    POINTER(StartScript),
    POINTER(StartScriptNamed),
    POINTER(PlayerStartScript),

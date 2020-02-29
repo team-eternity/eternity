@@ -33,6 +33,7 @@
 // needed for MAXFLAGFIELDS:
 #include "d_dehtbl.h"
 #include "m_fixed.h"
+#include "tables.h"
 
 struct edf_string_t;
 struct emod_t;
@@ -56,6 +57,7 @@ typedef enum
    EVALTYPE_INT,       // evaluated to an integer
    EVALTYPE_FIXED,     // evaluated to a fixed_t
    EVALTYPE_DOUBLE,    // evaluated to a double
+   EVALTYPE_ANGLE,     // evaluated to an angle_t
    EVALTYPE_THINGNUM,  // evaluated to a thing number
    EVALTYPE_STATENUM,  // evaluated to a state number
    EVALTYPE_THINGFLAG, // evaluated to a thing flag bitmask
@@ -75,6 +77,7 @@ typedef struct evalcache_s
       int           i;
       fixed_t       x;
       double        d;
+      angle_t       a;
       sfxinfo_t    *s;
       edf_string_t *estr;
       emod_t       *mod;
@@ -107,6 +110,7 @@ const char   *E_ArgAsString(const arglist_t *al, int index, const char *defvalue
 int           E_ArgAsInt(arglist_t *al, int index, int defvalue);
 fixed_t       E_ArgAsFixed(arglist_t *al, int index, fixed_t defvalue);
 double        E_ArgAsDouble(arglist_t *al, int index, double defvalue);
+angle_t       E_ArgAsAngle(arglist_t *al, int index, angle_t defvalue);
 int           E_ArgAsThingNum(arglist_t *al, int index);
 int           E_ArgAsThingNumG0(arglist_t *al, int index);
 state_t      *E_ArgAsStateLabel(const Mobj *mo,         const arglist_t *al, int index);

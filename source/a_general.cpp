@@ -47,6 +47,7 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_portalcross.h"
@@ -370,6 +371,104 @@ void A_SpawnGlitter(actionargs_t *actionargs)
 
    // give it some upward momentum
    glitter->momz = initMomentum;
+}
+
+enum spawnex_flags : unsigned int
+{
+   SPAWNEX_ABSOLUTEANGLE    = 0x00000001,
+   SPAWNEX_ABSOLUTEVELOCITY = 0x00000002,
+   SPAWNEX_ABSOLUTEPOSITION = 0x00000004,
+   SPAWNEX_CHECKPOSITION    = 0x00000008
+};
+
+static dehflags_t spawnex_flaglist[] =
+{
+   { "normal",           0x00000000               },
+   { "absoluteangle",    SPAWNEX_ABSOLUTEANGLE    },
+   { "absolutevelocity", SPAWNEX_ABSOLUTEVELOCITY },
+   { "absoluteposition", SPAWNEX_ABSOLUTEPOSITION },
+   { "checkposition"   , SPAWNEX_CHECKPOSITION    },
+   { NULL,        0 }
+};
+
+static dehflagset_t spawnex_flagset =
+{
+   spawnex_flaglist, // flaglist
+   0,                // mode
+};
+
+//
+// A_SpawnEx
+//
+// Super-flexible parameterized pointer to spawn an object
+// with varying position, velocity, and all that jazz.
+//
+// args[0] -- thing type (DeHackEd num)
+// args[1] -- flags (see above)
+// args[2] -- x-offset (forwards/backwards)
+// args[3] -- y-offset (right/left)
+// args[4] -- z-offset (up/down)
+// args[5] -- x-velocity
+// args[6] -- y-velocity
+// args[7] -- z-velocity
+// args[8] -- angle
+// args[9] -- chance (out of 255) for the object to spawn; default is 255.
+//
+void A_SpawnEx(actionargs_t *actionargs)
+{
+   Mobj     *actor = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int thingtype;
+   unsigned int flags;
+   angle_t angle;
+   fixed_t xpos, ypos, zpos;
+   fixed_t xvel, yvel, zvel;
+   v2fixed_t tempvec;
+   int spawnchance;
+   Mobj *mo;
+
+   // [XA] check spawnchance first since there's no point in
+   // even grabbing the rest of the args if we're doing nothing.
+   spawnchance = E_ArgAsInt(args, 9, 255);
+   if(P_Random(pr_spawnexchance) > spawnchance)
+      return; // look, ma, it's nothing!
+
+   thingtype = E_ArgAsThingNumG0(args, 0);
+   flags = E_ArgAsFlags(args, 1, &spawnex_flagset);
+   xpos = E_ArgAsFixed(args, 2, 0);
+   ypos = E_ArgAsFixed(args, 3, 0);
+   zpos = E_ArgAsFixed(args, 4, 0);
+   xvel = E_ArgAsFixed(args, 5, 0);
+   yvel = E_ArgAsFixed(args, 6, 0);
+   zvel = E_ArgAsFixed(args, 7, 0);
+   angle = E_ArgAsAngle(args, 8, 0);
+
+   if(!(flags & SPAWNEX_ABSOLUTEANGLE))
+      angle += actor->angle;
+   P_RotatePoint(xpos, ypos, angle);
+
+   if(!(flags & SPAWNEX_ABSOLUTEPOSITION)) {
+      tempvec = P_LinePortalCrossing(*actor, xpos, ypos);
+      xpos = tempvec.x;
+      ypos = tempvec.y;
+      zpos += actor->z;
+   }
+
+   if(!(flags & SPAWNEX_ABSOLUTEVELOCITY))
+      P_RotatePoint(xvel, yvel, angle);
+
+   mo = P_SpawnMobj(xpos, ypos, zpos, thingtype);
+   if (mo == nullptr)
+      return;
+
+   if ((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
+      mo->remove();
+   else {
+      mo->angle = angle;
+      mo->momx = xvel;
+      mo->momy = yvel;
+      mo->momz = zvel;
+   }
 }
 
 //
