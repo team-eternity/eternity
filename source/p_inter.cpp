@@ -226,7 +226,8 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 //
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
-static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped,
+                               Mobj *special, const char *sound)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -264,7 +265,9 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 
       player->pendingweapon = wp;
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      // killough 4/25/98, 12/98
+      if(sound)
+         S_StartSoundName(player->mo, sound);
       P_consumeSpecial(player, special); // need to handle it here
       return false;
    }
@@ -288,10 +291,11 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 //
 // The weapon name may have a MF_DROPPED flag ored in.
 //
-static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special)
+static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
+                         const char *sound)
 {
    if(demo_version < 401)
-      return P_giveWeaponCompat(player, giver, dropped, special);
+      return P_giveWeaponCompat(player, giver, dropped, special, sound);
 
    bool gaveammo = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -358,7 +362,9 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       E_GiveWeapon(player, wp);
       player->pendingweapon = wp;
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      // killough 4/25/98, 12/98
+      if(sound)
+         S_StartSoundName(player->mo, sound);
       P_consumeSpecial(player, special); // need to handle it here
       return false;
    }
@@ -779,7 +785,7 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          pickedup |= P_GivePowerForItem(player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
-         pickedup |= P_giveWeapon(player, effect, dropped, special);
+         pickedup |= P_giveWeapon(player, effect, dropped, special, sound);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
          pickedup |= E_GiveInventoryItem(player, effect);
