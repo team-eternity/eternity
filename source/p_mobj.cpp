@@ -3085,7 +3085,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, playermissilefire_t *p
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!mask && shouldtryfriends)
+         if(mask || shouldtryfriends)
          {
             if(!clip.linetarget)
                slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
