@@ -37,6 +37,7 @@
 #include "info.h"
 #include "m_utils.h"
 #include "p_mobj.h"
+#include "p_maputl.h"
 
 // haleyjd 05/21/10: a static empty string, to avoid allocating tons of memory 
 // for single-byte strings.
@@ -241,6 +242,32 @@ double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
    }
 
    return eval.value.d;
+}
+
+//
+// Gets the arg value at index i as an angle_t, if such argument exists.
+// The evaluated value will be cached so that it can be returned on
+// subsequent calls. If the argument does not exist, the value passed in
+// the "defvalue" argument will be returned.
+//
+angle_t E_ArgAsAngle(arglist_t *al, int index, angle_t defvalue)
+{
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return defvalue;
+
+   evalcache_t &eval = al->values[index];
+
+   // if the value is cached, return the cached value
+   if(eval.type != EVALTYPE_ANGLE)
+   {
+      // calculate the value and cache it
+      eval.type    = EVALTYPE_ANGLE;
+      eval.value.a = P_DoubleToAngle(strtod(al->args[index], nullptr));
+   }
+
+   return eval.value.a;
 }
 
 //
