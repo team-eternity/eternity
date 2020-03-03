@@ -275,7 +275,7 @@ bool P_ShootThing(const intercept_t *in,
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, shooter, pufftype, th);
    }
    else
    {
@@ -284,7 +284,7 @@ bool P_ShootThing(const intercept_t *in,
       bool showpuff = false;
       if(pufftype && pufftype->getInt(keyPuffAlwaysPuff, 0))
       {
-         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, shooter, pufftype, th);
          showpuff = true;
       }
 
@@ -389,7 +389,7 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true,
-                  E_PuffForIndex(puffidx));
+                  trace.thing, E_PuffForIndex(puffidx));
 
       // don't go any further
       return false;
@@ -611,7 +611,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true, E_PuffForIndex(puffidx));
+                  updown, true, trace.thing, E_PuffForIndex(puffidx));
       
       // don't go any further     
       return false;
