@@ -2609,7 +2609,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       mobjinfo[i]->damage = cfg_getint(thingsec, ITEM_TNG_DAMAGE);
 
    // [XA] 02/29/20: process damagemod
-   if (IS_SET(ITEM_TNG_DAMAGEMOD))
+   if(IS_SET(ITEM_TNG_DAMAGEMOD))
       mobjinfo[i]->damagemod = cfg_getint(thingsec, ITEM_TNG_DAMAGEMOD);
 
    // 09/22/06: process topdamage 
