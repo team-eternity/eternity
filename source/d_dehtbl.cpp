@@ -1379,6 +1379,7 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_MushroomEx(actionargs_t *);
 void A_HideThing(actionargs_t *);
 void A_UnHideThing(actionargs_t *);
 void A_RestoreArtifact(actionargs_t *);
@@ -1730,6 +1731,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(MushroomEx),
    POINTER(HideThing),
    POINTER(UnHideThing),
    POINTER(RestoreArtifact),

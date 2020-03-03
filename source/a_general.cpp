@@ -60,33 +60,22 @@
 #include "s_sound.h"
 
 //
-// killough 9/98: a mushroom explosion effect, sorta :)
-// Original idea: Linguica
+// [XA] 03/02/20: Common A_Mushroom* stuff.
 //
-void A_Mushroom(actionargs_t *actionargs)
+void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc1, const fixed_t misc2, const int damage, const int radius)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int i, j, n = actor->damage;
-   int ShotType;
-   
-   // Mushroom parameters are part of code pointer's state
-   fixed_t misc1 = 
-      actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
-   fixed_t misc2 = 
-      actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
+   int i, j;
 
-   // haleyjd: extended parameter support requested by Mordeth:
-   // allow specification of thing type in args[0]
+   if(actor == nullptr) {
+      return;
+   }
 
-   ShotType = E_ArgAsThingNumG0(args, 0);
+   // make normal explosion
+   P_RadiusAttack(actor, actor->target, damage, radius, actor->info->mod, 0);
+   E_ExplosionHitWater(actor, radius);
 
-   if(ShotType < 0/* || ShotType == -1*/)
-      ShotType = E_SafeThingType(MT_FATSHOT);
-   
-   A_Explode(actionargs);         // make normal explosion
-
-   for(i = -n; i <= n; i += 8)    // launch mushroom cloud
+   // launch mushroom cloud
+   for(i = -n; i <= n; i += 8)
    {
       for(j = -n; j <= n; j += 8)
       {
@@ -111,6 +100,65 @@ void A_Mushroom(actionargs_t *actionargs)
          mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
       }
    }
+}
+
+//
+// killough 9/98: a mushroom explosion effect, sorta :)
+// Original idea: Linguica
+//
+void A_Mushroom(actionargs_t *actionargs)
+{
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int n = actor->damage;
+   int ShotType;
+   
+   // Mushroom parameters are part of code pointer's state
+   fixed_t misc1 = 
+      actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
+   fixed_t misc2 = 
+      actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
+
+   // haleyjd: extended parameter support requested by Mordeth:
+   // allow specification of thing type in args[0]
+
+   ShotType = E_ArgAsThingNumG0(args, 0);
+
+   if(ShotType < 0/* || ShotType == -1*/)
+      ShotType = E_SafeThingType(MT_FATSHOT);
+
+   P_Mushroom(actor, ShotType, n, misc1, misc2, 128, 128);
+}
+
+//
+// A_MushroomEx
+//
+// Extended A_Mushroom, with proper args for everything.
+//
+// args[0] -- thing type (DeHackEd num)
+// args[1] -- thing count
+// args[2] -- vertical range
+// args[3] -- horizontal range
+// args[4] -- splash damage
+// args[5] -- splash radius
+//
+void A_MushroomEx(actionargs_t *actionargs)
+{
+   Mobj     *actor = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int thingtype;
+   int thingcount;
+   fixed_t vrange, hrange;
+   int damage, radius;
+
+   thingtype  = E_ArgAsThingNumG0(args, 0);
+   thingcount = E_ArgAsInt       (args, 1, actor->damage);
+   vrange     = E_ArgAsFixed     (args, 2, 4 * FRACUNIT);
+   hrange     = E_ArgAsFixed     (args, 3, 1 * FRACUNIT / 2);
+   damage     = E_ArgAsInt       (args, 4, 128);
+   radius     = E_ArgAsInt       (args, 5, 128);
+
+   P_Mushroom(actor, thingtype, thingcount, vrange, hrange, damage, radius);
 }
 
 //
