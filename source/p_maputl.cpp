@@ -937,7 +937,7 @@ angle_t P_DoubleToAngle(double a)
 //
 // Rotates a point by the specified angle. 'Nuff said.
 //
-void P_RotatePoint(fixed_t & x, fixed_t & y, const angle_t angle)
+void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle)
 {
    fixed_t tmp;
    fixed_t sin = finesine[angle >> ANGLETOFINESHIFT];

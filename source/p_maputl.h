@@ -139,7 +139,7 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
 angle_t P_DoubleToAngle(double a);
 
-void P_RotatePoint(fixed_t & x, fixed_t & y, const angle_t angle);
+void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle);
 
 bool P_ShootThing(const intercept_t *in,
                   Mobj *shooter,
