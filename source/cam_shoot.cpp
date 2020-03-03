@@ -394,7 +394,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          return false;
 
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-         updown, true, E_PuffForIndex(context.params.puffidx));
+         updown, true, context.params.thing, E_PuffForIndex(context.params.puffidx));
 
       return false;
    }

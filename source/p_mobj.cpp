@@ -2554,8 +2554,8 @@ spawnit:
 // P_SpawnPuff
 //
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                  int updown, bool ptcl, const MetaTable *pufftype,
-                  const Mobj *hitmobj)
+                  int updown, bool ptcl, Mobj *shooter,
+                  const MetaTable *pufftype, const Mobj *hitmobj)
 {
    if(!pufftype)
    {
@@ -2626,6 +2626,16 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
             P_SetMobjState(th, snum);
             punchhack = true;
          }
+      }
+
+      // [XA] 03/02/20: new flag that sets target to the shooter.
+      // This is useful for doing things like setting A_DetonateEx's
+      // hurt_self field on a puff, and other projectile-esque
+      // behaviors that rely on a valid 'target' field. Basically
+      // GZD's "PUFFGETSOWNER" flag but with a less crappy name. :P
+      if(pufftype->getInt(keyPuffTargetShooter, 0))
+      {
+         th->target = shooter;
       }
    }
 
