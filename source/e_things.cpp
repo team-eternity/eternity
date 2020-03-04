@@ -220,6 +220,10 @@ int UnknownThingType;
 #define ITEM_TNG_PFX_SOUND     "sound"
 #define ITEM_TNG_PFX_FLAGS     "flags"
 
+// Attack Z offset properties (there's two in reality)
+#define ITEM_TNG_MISSILEZOFFSET "missilezoffset"
+#define ITEM_TNG_BULLETZOFFSET  "bulletzoffset"
+
 //
 // Thing groups
 //
@@ -600,6 +604,8 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
+   CFG_FLOAT(ITEM_TNG_MISSILEZOFFSET,32.0f,         CFGF_NONE                ), \
+   CFG_FLOAT(ITEM_TNG_BULLETZOFFSET, 8.0f,          CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -2979,6 +2985,18 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          if(flags & gameTypeToACSFlags[GameModeInfo->type])
             ACS_thingtypes[tempint] = i;
       }
+   }
+
+   // [XA] 03-03-2020: process attack z offsets
+   if(IS_SET(ITEM_TNG_MISSILEZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_MISSILEZOFFSET);
+      mobjinfo[i]->missilezoffset = (int)(tempfloat * FRACUNIT);
+   }
+   if(IS_SET(ITEM_TNG_BULLETZOFFSET))
+   {
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_BULLETZOFFSET);
+      mobjinfo[i]->bulletzoffset = (int)(tempfloat * FRACUNIT);
    }
 
    // Process DECORATE state block

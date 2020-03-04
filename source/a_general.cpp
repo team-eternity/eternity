@@ -91,7 +91,7 @@ void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc
        
          mo = P_SpawnMissileWithDest(actor, actor, 
                                      ShotType,          // Launch fireball
-                                     actor->z + DEFAULTMISSILEZ,
+                                     actor->z + actor->info->missilezoffset,
                                      x, y, z);
          
          mo->momx = FixedMul(mo->momx, misc2);
@@ -919,7 +919,7 @@ void A_MissileAttack(actionargs_t *actionargs)
    ang = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
-   z = actor->z + DEFAULTMISSILEZ + z;
+   z = actor->z + actor->info->missilezoffset + z;
 
    if(!hastarget)
    {
@@ -998,7 +998,7 @@ void A_MissileSpread(actionargs_t *actionargs)
    angsweep = (angle_t)(((uint64_t)a << 32) / 360);
 
    // adjust z coordinate
-   z = actor->z + DEFAULTMISSILEZ + z;
+   z = actor->z + actor->info->missilezoffset + z;
 
    ang = actor->angle - angsweep / 2;
    astep = angsweep / (num - 1);

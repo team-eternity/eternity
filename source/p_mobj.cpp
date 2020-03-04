@@ -3113,7 +3113,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, playermissilemode_e mo
 
    x = source->x;
    y = source->y;
-   z = source->z + 4*8*FRACUNIT - source->floorclip +
+   z = source->z + source->info->missilezoffset - source->floorclip +
          (mode == playermissilemode_e::heretic ? playersightslope : 0);
 
    th = P_SpawnMobj(x, y, z, type);
