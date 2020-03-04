@@ -75,7 +75,7 @@ class  BloodSpawner;
 #define OVERDRIVE 6
 #define MAXGEAR (OVERDRIVE+16)
 
-// [XA] DEFAULTMISSILEZ is now a mobjinfo property (missilezoffset)
+// [XA] DEFAULTMISSILEZ is now a mobjinfo property (missileheight)
 
 #define NUMMOBJCOUNTERS 8
 

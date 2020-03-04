@@ -177,7 +177,7 @@ void A_MummyAttack2(actionargs_t *actionargs)
    
    mo = P_SpawnMissile(actor, actor->target, 
                        E_SafeThingType(MT_MUMMYFX1),
-                       actor->z + actor->info->missilezoffset);
+                       actor->z + actor->info->missileheight);
 
    P_SetTarget<Mobj>(&mo->tracer, actor->target);
 }
@@ -363,7 +363,7 @@ void A_WizardAtk3(actionargs_t *actionargs)
    Mobj *mo;
    angle_t angle;
    fixed_t momz;
-   fixed_t z = actor->z + actor->info->missilezoffset;
+   fixed_t z = actor->z + actor->info->missileheight;
    int wizfxType = E_SafeThingType(MT_WIZFX1);
    
    actor->flags3 &= ~MF3_GHOST;
@@ -594,7 +594,7 @@ void A_Srcr2Attack(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    int chance;
-   fixed_t z = actor->z + actor->info->missilezoffset;
+   fixed_t z = actor->z + actor->info->missileheight;
    int sor2fx1Type = E_SafeThingType(MT_SOR2FX1);
    int sor2fx2Type = E_SafeThingType(MT_SOR2FX2);
    
@@ -1121,7 +1121,7 @@ void A_BeastAttack(actionargs_t *actionargs)
    }
    else
       P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_BEASTBALL),
-                     actor->z + actor->info->missilezoffset);
+                     actor->z + actor->info->missileheight);
 }
 
 void A_BeastPuff(actionargs_t *actionargs)
@@ -1163,7 +1163,7 @@ void A_SnakeAttack(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
    A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_SNAKEPRO_A),
-                  actor->z + actor->info->missilezoffset);
+                  actor->z + actor->info->missileheight);
 }
 
 void A_SnakeAttack2(actionargs_t *actionargs)
@@ -1180,7 +1180,7 @@ void A_SnakeAttack2(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
    A_FaceTarget(actionargs);
    P_SpawnMissile(actor, actor->target, E_SafeThingType(MT_SNAKEPRO_B),
-                  actor->z + actor->info->missilezoffset);
+                  actor->z + actor->info->missileheight);
 }
 
 //=============================================================================
@@ -1450,7 +1450,7 @@ void A_LichFire(actionargs_t *actionargs)
 
    // spawn the parent fireball
    baseFire = P_SpawnMissile(actor, target, headfxType, 
-                             actor->z + actor->info->missilezoffset);
+                             actor->z + actor->info->missileheight);
    
    // set it to S_HEADFX3_4 so that it doesn't grow
    P_SetMobjState(baseFire, frameNum);
@@ -1555,7 +1555,7 @@ void A_LichAttack(actionargs_t *actionargs)
    if(randAttack < (dist ? 150 : 50))
    {
       // ice attack
-      P_SpawnMissile(actor, target, fxType, actor->z + actor->info->missilezoffset);
+      P_SpawnMissile(actor, target, fxType, actor->z + actor->info->missileheight);
       S_StartSound(actor, sfx_hedat2);	
    }
    else if(randAttack < (dist ? 200 : 150))
@@ -1732,7 +1732,7 @@ void A_ImpMissileAtk(actionargs_t *actionargs)
                    5 + (P_Random(pr_impmelee2) & 7), MOD_HIT);
    }
    else
-      P_SpawnMissile(actor, actor->target, fxType, actor->z + actor->info->missilezoffset);
+      P_SpawnMissile(actor, actor->target, fxType, actor->z + actor->info->missileheight);
 }
 
 //

@@ -423,7 +423,7 @@ struct mobjinfo_t
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
-   int missilezoffset;  // [XA] 03/03/2020: Z offset (from bottom) for missile attacks
+   int missileheight;  // [XA] 03/03/2020: Z offset (from bottom) for missile attacks
    int bulletzoffset;   // [XA] 03/03/2020: Z offset (from center) for bullet attacks
 
    e_pickupfx_t *pickupfx;

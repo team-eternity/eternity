@@ -221,8 +221,8 @@ int UnknownThingType;
 #define ITEM_TNG_PFX_FLAGS     "flags"
 
 // Attack Z offset properties (there's two in reality)
-#define ITEM_TNG_MISSILEZOFFSET "missilezoffset"
-#define ITEM_TNG_BULLETZOFFSET  "bulletzoffset"
+#define ITEM_TNG_MISSILEHEIGHT "missileheight"
+#define ITEM_TNG_BULLETZOFFSET "bulletzoffset"
 
 //
 // Thing groups
@@ -604,7 +604,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
-   CFG_FLOAT(ITEM_TNG_MISSILEZOFFSET,32.0f,         CFGF_NONE                ), \
+   CFG_FLOAT(ITEM_TNG_MISSILEHEIGHT, 32.0f,         CFGF_NONE                ), \
    CFG_FLOAT(ITEM_TNG_BULLETZOFFSET, 8.0f,          CFGF_NONE                ), \
    CFG_END()
 
@@ -2988,10 +2988,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    }
 
    // [XA] 03-03-2020: process attack z offsets
-   if(IS_SET(ITEM_TNG_MISSILEZOFFSET))
+   if(IS_SET(ITEM_TNG_MISSILEHEIGHT))
    {
-      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_MISSILEZOFFSET);
-      mobjinfo[i]->missilezoffset = (int)(tempfloat * FRACUNIT);
+      tempfloat = cfg_getfloat(thingsec, ITEM_TNG_MISSILEHEIGHT);
+      mobjinfo[i]->missileheight = (int)(tempfloat * FRACUNIT);
    }
    if(IS_SET(ITEM_TNG_BULLETZOFFSET))
    {
