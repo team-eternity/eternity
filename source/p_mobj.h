@@ -496,34 +496,35 @@ struct missileinfo_t
 };
 
 //
-// Game specific particularities
+// Feedback from targetting
 //
-enum class playermissilemode_e
+struct playertargetinfo_t
 {
-   normal,
-   heretic
+   bool isfriend;
+   fixed_t slope;
 };
 
-struct playermissilefire_t
+//
+// SpawnPlayerMissile flags
+//
+enum
 {
-   playermissilefire_t(playermissilemode_e mode) : mode(mode), friendlyfiresloped(),
-   friendlyfireslope()
-   {
-   }
+   SPM_ADDSLOPETOZ = 1,
 
-   playermissilemode_e mode;
-   bool friendlyfiresloped;
-   fixed_t friendlyfireslope;
+   SPMAH_FOLLOWTARGETFRIENDSLOPE = 1,
+   SPMAH_AIMFRIENDSTOO = 2,
 };
 
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
 // Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type, playermissilefire_t *pmfire = nullptr);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type, unsigned flags = 0,
+                           playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
 Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle,
-                                       const playermissilefire_t *pmfire = nullptr);
+                                       unsigned flags = 0,
+                                       const playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 

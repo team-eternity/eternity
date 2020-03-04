@@ -3063,7 +3063,8 @@ fixed_t P_PlayerPitchSlope(player_t *player)
 //
 // Tries to aim at a nearby monster
 //
-Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, playermissilefire_t *pmfire)
+Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
+                           playertargetinfo_t *targetinfo)
 {
    Mobj *th;
    fixed_t x, y, z, slope = 0;
@@ -3079,13 +3080,15 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, playermissilefire_t *p
    {
       // killough 8/2/98: prefer autoaiming at enemies
       int mask = demo_version < 203 ? false : true;
+      bool hadmask = !!mask;
       // Aspiratory Heretic demo support
       bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
-      bool shouldtryfriends = demo_version < 401 && !hereticdemo;
+
+      bool avoidfriendsideaim = demo_version >= 401 || hereticdemo;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(mask || shouldtryfriends)
+         if(mask || (hadmask && !avoidfriendsideaim))
          {
             if(!clip.linetarget)
                slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
@@ -3098,11 +3101,8 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, playermissilefire_t *p
             // haleyjd: use true slope angle
             slope = playersightslope;
          }
-         if(!mask && !shouldtryfriends && pmfire)
-         {
-            pmfire->friendlyfireslope = slope;
-            pmfire->friendlyfiresloped = true;
-         }
+         else if(targetinfo)
+            targetinfo->isfriend = !mask && hadmask;
       }
       while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
@@ -3111,11 +3111,14 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, playermissilefire_t *p
       // haleyjd: use true slope angle
       slope = playersightslope;
    }
+   if(targetinfo)
+      targetinfo->slope = slope;
 
    x = source->x;
    y = source->y;
-   z = source->z + 4*8*FRACUNIT - source->floorclip +
-         (pmfire && pmfire->mode == playermissilemode_e::heretic ? playersightslope : 0);
+   z = source->z + 4*8*FRACUNIT - source->floorclip;
+   if(flags & SPM_ADDSLOPETOZ)
+      z += playersightslope;
 
    th = P_SpawnMobj(x, y, z, type);
 
@@ -3160,29 +3163,41 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
 // Tries to aim at a nearby monster, but with angle parameter
 // Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
 //
-Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle,
-                                       const playermissilefire_t *pmfire)
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle, unsigned flags,
+                                       const playertargetinfo_t *targetinfo)
 {
    fixed_t z, slope = 0;
    angle_t an = angle;
 
    // If the main fire hit pods, point towards them.
-   fixed_t playersightslope = pmfire && pmfire->friendlyfiresloped ? pmfire->friendlyfireslope :
-         P_PlayerPitchSlope(source->player);
+   fixed_t playersightslope;
+   if(flags & SPMAH_FOLLOWTARGETFRIENDSLOPE && targetinfo && targetinfo->isfriend)
+      playersightslope = targetinfo->slope;
+   else
+      playersightslope = P_PlayerPitchSlope(source->player);
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      int mask = demo_version < 203 ? false : true;
+      // Aspiratory Heretic demo support
+      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
+      int mask = demo_version < 203 && !hereticdemo ? false : true;
+      bool wasmask = !!mask;  // mark if the mask was set initially
       do
       {
-         if(mask) // don't autoaim pods with the side projectiles in Heretic
+         // don't autoaim pods with the side projectiles in Heretic (unless flagged otherwise)
+         if(mask || !wasmask || flags & SPMAH_AIMFRIENDSTOO)
          {
             slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+            if(mask || !wasmask) // never try to side-aim friends
+            {
+               if(!clip.linetarget)
+                  slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+               if(!clip.linetarget)
+                  slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+            }
          }
+         else
+            clip.linetarget = nullptr;
          if(!clip.linetarget)
          {
             an = angle;

@@ -184,7 +184,8 @@ void A_FireMacePL1(actionargs_t *actionargs)
    psp->sx = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
    psp->sy = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
    ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
-                                               ((P_Random(pr_firemace) & 7) - 4) * PO2(24));
+                                           ((P_Random(pr_firemace) & 7) - 4) * PO2(24),
+                                           SPMAH_AIMFRIENDSTOO);
    if(ball)
       ball->counters[0] = 16;    // tics till dropoff
 }
@@ -290,8 +291,8 @@ void A_FireMacePL2(actionargs_t *actionargs)
    // FIXME: This needs to do the above behaviour:
    // to wit, fire the wimpy version's amount of ammo if in deathmatch
    P_SubtractAmmo(player, -1);
-   playermissilefire_t pmfire = playermissilemode_e::heretic;
-   mo = P_SpawnPlayerMissile(player->mo, tnum, &pmfire);
+
+   mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
    if(mo)
    {
       mobjinfo_t *fx = mobjinfo[tnum];
@@ -387,10 +388,13 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
       return;
 
    P_SubtractAmmo(player, -1);
-   playermissilefire_t pmfire = playermissilemode_e::heretic;
-   P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1), &pmfire);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10), &pmfire);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10), &pmfire);
+
+   edefstructvar(playertargetinfo_t, targetinfo);
+   P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1), SPM_ADDSLOPETOZ, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
 }
 
 void A_FireCrossbowPL2(actionargs_t *actionargs)
@@ -404,12 +408,17 @@ void A_FireCrossbowPL2(actionargs_t *actionargs)
       return;
 
    P_SubtractAmmo(player, -1);
-   playermissilefire_t pmfire = playermissilemode_e::heretic;
-   P_SpawnPlayerMissile(pmo, tnum2, &pmfire);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10), &pmfire);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10), &pmfire);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5), &pmfire);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5), &pmfire);
+
+   edefstructvar(playertargetinfo_t, targetinfo);
+   P_SpawnPlayerMissile(pmo, tnum2, SPM_ADDSLOPETOZ, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
 }
 
 void A_BoltSpark(actionargs_t *actionargs)
@@ -456,8 +465,8 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
 
    P_SubtractAmmo(player, -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX1);
-   playermissilefire_t pmfire = playermissilemode_e::heretic;
-   Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum, &pmfire);
+
+   Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
    // Randomize the first frame
    if(mo && P_Random(pr_skullrod) > 128)
       P_SetMobjState(mo, mo->state->nextstate);
@@ -474,8 +483,8 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
       return;
 
    P_SubtractAmmo(player, -1);
-   playermissilefire_t pmfire = playermissilemode_e::heretic;
-   P_SpawnPlayerMissile(mo, tnum, &pmfire);
+
+   P_SpawnPlayerMissile(mo, tnum, SPM_ADDSLOPETOZ);
    // Commented out fire-trail functionality
    //P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_MNTRFX2));
    angle = mo->angle + ANG180;
