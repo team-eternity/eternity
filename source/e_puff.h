@@ -50,6 +50,7 @@ extern MetaKeyIndex keyPuffAlwaysPuff;
 extern MetaKeyIndex keyPuffBloodless;
 extern MetaKeyIndex keyPuffLocalThrust;
 extern MetaKeyIndex keyPuffRandomTics;
+extern MetaKeyIndex keyPuffTargetShooter;
 
 extern cfg_opt_t edf_puff_opts[];
 extern cfg_opt_t edf_puff_delta_opts[];

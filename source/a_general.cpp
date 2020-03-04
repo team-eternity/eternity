@@ -47,6 +47,7 @@
 #include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
+#include "p_map3d.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_portalcross.h"
@@ -59,33 +60,22 @@
 #include "s_sound.h"
 
 //
-// killough 9/98: a mushroom explosion effect, sorta :)
-// Original idea: Linguica
+// [XA] 03/02/20: Common A_Mushroom* stuff.
 //
-void A_Mushroom(actionargs_t *actionargs)
+void P_Mushroom(Mobj *actor, const int ShotType, const int n, const fixed_t misc1, const fixed_t misc2, const int damage, const int radius)
 {
-   Mobj      *actor = actionargs->actor;
-   arglist_t *args  = actionargs->args;
-   int i, j, n = actor->damage;
-   int ShotType;
-   
-   // Mushroom parameters are part of code pointer's state
-   fixed_t misc1 = 
-      actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
-   fixed_t misc2 = 
-      actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
+   int i, j;
 
-   // haleyjd: extended parameter support requested by Mordeth:
-   // allow specification of thing type in args[0]
+   if(actor == nullptr) {
+      return;
+   }
 
-   ShotType = E_ArgAsThingNumG0(args, 0);
+   // make normal explosion
+   P_RadiusAttack(actor, actor->target, damage, radius, actor->info->mod, 0);
+   E_ExplosionHitWater(actor, radius);
 
-   if(ShotType < 0/* || ShotType == -1*/)
-      ShotType = E_SafeThingType(MT_FATSHOT);
-   
-   A_Explode(actionargs);         // make normal explosion
-
-   for(i = -n; i <= n; i += 8)    // launch mushroom cloud
+   // launch mushroom cloud
+   for(i = -n; i <= n; i += 8)
    {
       for(j = -n; j <= n; j += 8)
       {
@@ -110,6 +100,65 @@ void A_Mushroom(actionargs_t *actionargs)
          mo->flags &= ~MF_NOGRAVITY;   // Make debris fall under gravity
       }
    }
+}
+
+//
+// killough 9/98: a mushroom explosion effect, sorta :)
+// Original idea: Linguica
+//
+void A_Mushroom(actionargs_t *actionargs)
+{
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+   int n = actor->damage;
+   int ShotType;
+   
+   // Mushroom parameters are part of code pointer's state
+   fixed_t misc1 = 
+      actor->state->misc1 ? actor->state->misc1 : FRACUNIT*4;
+   fixed_t misc2 = 
+      actor->state->misc2 ? actor->state->misc2 : FRACUNIT/2;
+
+   // haleyjd: extended parameter support requested by Mordeth:
+   // allow specification of thing type in args[0]
+
+   ShotType = E_ArgAsThingNumG0(args, 0);
+
+   if(ShotType < 0/* || ShotType == -1*/)
+      ShotType = E_SafeThingType(MT_FATSHOT);
+
+   P_Mushroom(actor, ShotType, n, misc1, misc2, 128, 128);
+}
+
+//
+// A_MushroomEx
+//
+// Extended A_Mushroom, with proper args for everything.
+//
+// args[0] -- thing type (DeHackEd num)
+// args[1] -- thing count
+// args[2] -- vertical range
+// args[3] -- horizontal range
+// args[4] -- splash damage
+// args[5] -- splash radius
+//
+void A_MushroomEx(actionargs_t *actionargs)
+{
+   Mobj     *actor = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int thingtype;
+   int thingcount;
+   fixed_t vrange, hrange;
+   int damage, radius;
+
+   thingtype  = E_ArgAsThingNumG0(args, 0);
+   thingcount = E_ArgAsInt       (args, 1, actor->damage);
+   vrange     = E_ArgAsFixed     (args, 2, 4 * FRACUNIT);
+   hrange     = E_ArgAsFixed     (args, 3, 1 * FRACUNIT / 2);
+   damage     = E_ArgAsInt       (args, 4, 128);
+   radius     = E_ArgAsInt       (args, 5, 128);
+
+   P_Mushroom(actor, thingtype, thingcount, vrange, hrange, damage, radius);
 }
 
 //
@@ -370,6 +419,104 @@ void A_SpawnGlitter(actionargs_t *actionargs)
 
    // give it some upward momentum
    glitter->momz = initMomentum;
+}
+
+enum spawnex_flags : unsigned int
+{
+   SPAWNEX_ABSOLUTEANGLE    = 0x00000001,
+   SPAWNEX_ABSOLUTEVELOCITY = 0x00000002,
+   SPAWNEX_ABSOLUTEPOSITION = 0x00000004,
+   SPAWNEX_CHECKPOSITION    = 0x00000008
+};
+
+static dehflags_t spawnex_flaglist[] =
+{
+   { "normal",           0x00000000               },
+   { "absoluteangle",    SPAWNEX_ABSOLUTEANGLE    },
+   { "absolutevelocity", SPAWNEX_ABSOLUTEVELOCITY },
+   { "absoluteposition", SPAWNEX_ABSOLUTEPOSITION },
+   { "checkposition"   , SPAWNEX_CHECKPOSITION    },
+   { NULL,        0 }
+};
+
+static dehflagset_t spawnex_flagset =
+{
+   spawnex_flaglist, // flaglist
+   0,                // mode
+};
+
+//
+// A_SpawnEx
+//
+// Super-flexible parameterized pointer to spawn an object
+// with varying position, velocity, and all that jazz.
+//
+// args[0] -- thing type (DeHackEd num)
+// args[1] -- flags (see above)
+// args[2] -- x-offset (forwards/backwards)
+// args[3] -- y-offset (right/left)
+// args[4] -- z-offset (up/down)
+// args[5] -- x-velocity
+// args[6] -- y-velocity
+// args[7] -- z-velocity
+// args[8] -- angle
+// args[9] -- chance (out of 255) for the object to spawn; default is 255.
+//
+void A_SpawnEx(actionargs_t *actionargs)
+{
+   Mobj     *actor = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int thingtype;
+   unsigned int flags;
+   angle_t angle;
+   fixed_t xpos, ypos, zpos;
+   fixed_t xvel, yvel, zvel;
+   v2fixed_t tempvec;
+   int spawnchance;
+   Mobj *mo;
+
+   // [XA] check spawnchance first since there's no point in
+   // even grabbing the rest of the args if we're doing nothing.
+   spawnchance = E_ArgAsInt(args, 9, 255);
+   if(P_Random(pr_spawnexchance) > spawnchance)
+      return; // look, ma, it's nothing!
+
+   thingtype = E_ArgAsThingNumG0(args, 0);
+   flags = E_ArgAsFlags(args, 1, &spawnex_flagset);
+   xpos = E_ArgAsFixed(args, 2, 0);
+   ypos = E_ArgAsFixed(args, 3, 0);
+   zpos = E_ArgAsFixed(args, 4, 0);
+   xvel = E_ArgAsFixed(args, 5, 0);
+   yvel = E_ArgAsFixed(args, 6, 0);
+   zvel = E_ArgAsFixed(args, 7, 0);
+   angle = E_ArgAsAngle(args, 8, 0);
+
+   if(!(flags & SPAWNEX_ABSOLUTEANGLE))
+      angle += actor->angle;
+   P_RotatePoint(xpos, ypos, angle);
+
+   if(!(flags & SPAWNEX_ABSOLUTEPOSITION)) {
+      tempvec = P_LinePortalCrossing(*actor, xpos, ypos);
+      xpos = tempvec.x;
+      ypos = tempvec.y;
+      zpos += actor->z;
+   }
+
+   if(!(flags & SPAWNEX_ABSOLUTEVELOCITY))
+      P_RotatePoint(xvel, yvel, angle);
+
+   mo = P_SpawnMobj(xpos, ypos, zpos, thingtype);
+   if(mo == nullptr)
+      return;
+
+   if((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
+      mo->remove();
+   else {
+      mo->angle = angle;
+      mo->momx = xvel;
+      mo->momy = yvel;
+      mo->momz = zvel;
+   }
 }
 
 //

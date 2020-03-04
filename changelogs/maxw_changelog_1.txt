@@ -415,6 +415,10 @@ Fixed crashing if the CONSOLE lump isn't a valid graphic.
 Extended A_PainAttack to have ZDoom's parameters.
 Extended A_PainDie to have thingtype arg.
 
+-------------------------------------------------------------------------------
+2020/03/04
+Extended -file to search DOOMWADPATH directories if required.
+
 ================================================================================
 EOF
 ================================================================================

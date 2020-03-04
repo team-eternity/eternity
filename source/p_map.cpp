@@ -1020,7 +1020,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
 
       // damage / explode
       
-      damage = ((P_Random(pr_damage)%8)+1)*clip.thing->damage;
+      damage = ((P_Random(pr_damage)%clip.thing->info->damagemod)+1)*clip.thing->damage;
       
       // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
       if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
