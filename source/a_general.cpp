@@ -1668,5 +1668,22 @@ void A_DetonateEx(actionargs_t *actionargs)
    E_ExplosionHitWater(actor, radius);
 }
 
+//
+// A_SelfDestruct
+//
+// Detonates a missile mid-flight.
+// If actor is not a missile, A_Die
+// is called instead. 'Nuff said.
+//
+void A_SelfDestruct(actionargs_t *actionargs)
+{
+   Mobj *actor = actionargs->actor;
+
+   if(clip.thing->flags & (MF_MISSILE | MF_BOUNCES))
+      P_ExplodeMissile(actor, nullptr);
+   else
+      A_Die(actionargs);
+}
+
 // EOF
 
