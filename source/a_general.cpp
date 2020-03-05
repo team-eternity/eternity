@@ -1679,7 +1679,7 @@ void A_SelfDestruct(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
 
-   if(clip.thing->flags & (MF_MISSILE | MF_BOUNCES))
+   if(actor->flags & (MF_MISSILE | MF_BOUNCES))
       P_ExplodeMissile(actor, nullptr);
    else
       A_Die(actionargs);
