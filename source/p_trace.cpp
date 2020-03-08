@@ -651,7 +651,7 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    x2 = t1->x + (distance >> FRACBITS) * (trace.cos = finecosine[angle]);
    y2 = t1->y + (distance >> FRACBITS) * (trace.sin = finesine[angle]);
    
-   trace.z = t1->z - t1->floorclip + (t1->height>>1) + 8*FRACUNIT;
+   trace.z = t1->z - t1->floorclip + (t1->height>>1) + (t1->info->bulletzoffset);
    trace.attackrange = distance;
    trace.aimslope = slope;
 
