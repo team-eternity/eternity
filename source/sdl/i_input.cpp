@@ -645,6 +645,15 @@ static void I_GetEvent(SDL_Window *window)
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
             break;
+         case SDL_BUTTON_X2 + 1:
+            d_event.data1 = KEYD_MOUSE6;
+            break;
+         case SDL_BUTTON_X2 + 2:
+            d_event.data1 = KEYD_MOUSE7;
+            break;
+         case SDL_BUTTON_X2 + 3:
+            d_event.data1 = KEYD_MOUSE8;
+            break;
          }
 
          D_PostEvent(&d_event);
