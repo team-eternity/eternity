@@ -3098,7 +3098,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(mask || (hadmask && !avoidfriendsideaim))
+         if(mask || !hadmask || !avoidfriendsideaim)
          {
             if(!clip.linetarget)
                slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
@@ -3191,14 +3191,14 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
       // Aspiratory Heretic demo support
       bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
       int mask = demo_version < 203 && !hereticdemo ? false : true;
-      bool wasmask = !!mask;  // mark if the mask was set initially
+      bool hadmask = !!mask;  // mark if the mask was set initially
       do
       {
          // don't autoaim pods with the side projectiles in Heretic (unless flagged otherwise)
-         if(mask || !wasmask || flags & SPMAH_AIMFRIENDSTOO)
+         if(mask || !hadmask || flags & SPMAH_AIMFRIENDSTOO)
          {
             slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-            if(mask || !wasmask) // never try to side-aim friends
+            if(mask || !hadmask) // never try to side-aim friends
             {
                if(!clip.linetarget)
                   slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
