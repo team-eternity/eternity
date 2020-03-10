@@ -118,6 +118,7 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
 #define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
 #define ITEM_PCLASS_SPEEDJUMP      "speedjump"
+#define ITEM_PCLASS_CLRREBORNITEMS "clearrebornitems"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
 #define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
 #define ITEM_PCLASS_ALWAYSJUMP     "alwaysjump"
@@ -168,6 +169,7 @@ static cfg_opt_t reborn_opts[] =
    CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
                                                          \
    /* reborn inventory items */                          \
+   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE), \
    CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
                                                                              \
     /* weapon slots */                                                       \
@@ -422,8 +424,6 @@ playerclass_t *E_PlayerClassForName(const char *name)
 }
 
 //
-// E_freeRebornItems
-//
 // Free a player class's default inventory when recreating it.
 //
 static void E_freeRebornItems(playerclass_t *pc)
@@ -436,13 +436,11 @@ static void E_freeRebornItems(playerclass_t *pc)
             efree(pc->rebornitems[i].itemname);
       }
       efree(pc->rebornitems);
-      pc->rebornitems    = NULL;
+      pc->rebornitems    = nullptr;
       pc->numrebornitems = 0;
    }
 }
 
-//
-// E_processRebornItem
 //
 // Process a single rebornitem for the player's default inventory.
 //
@@ -722,12 +720,17 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          GameModeInfo->defPClassName = pc->mnemonic;
    }
 
-   unsigned int numitems;
-   if((numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM)) > 0)
-   {
+   if(IS_SET(pcsec, ITEM_PCLASS_CLRREBORNITEMS) && cfg_getflag(pcsec, ITEM_PCLASS_CLRREBORNITEMS))
       E_freeRebornItems(pc);
-      pc->numrebornitems = numitems;
-      pc->rebornitems    = estructalloc(reborninventory_t, numitems);
+
+   if(const unsigned int numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM); numitems > 0)
+   {
+      pc->numrebornitems += numitems;
+      pc->rebornitems = erealloc(
+         reborninventory_t *,
+         pc->rebornitems,
+         pc->numrebornitems * sizeof(reborninventory_t)
+      );
 
       for(unsigned int i = 0; i < numitems; i++)
          E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
