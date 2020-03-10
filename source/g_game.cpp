@@ -1626,7 +1626,10 @@ static void G_PlayerFinishLevel(int player)
    player_t *p = &players[player];
 
    // INVENTORY_TODO: convert powers to inventory
+   if(p->powers[pw_weaponlevel2] && E_IsPoweredVariant(p->readyweapon))
+      p->readyweapon = p->readyweapon->sisterWeapon;
    memset(p->powers, 0, sizeof p->powers);
+
    p->mo->flags  &= ~MF_SHADOW;             // cancel invisibility
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
