@@ -1593,6 +1593,8 @@ void G_ExitLevel(int destmap)
    G_DemoLogStats();
    G_DemoLog("\n");
    G_DemoLogSetExited(true);
+   if(players[0].mo)
+      M_RandomLog("Exit (pos %g %g ang %08x)\n", players[0].mo->x / 65536., players[0].mo->y / 65536., players[0].mo->angle);
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
