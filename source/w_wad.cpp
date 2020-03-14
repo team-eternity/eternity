@@ -922,7 +922,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
             path.replace("\\", '/');
 
             adf.innerpath = path;
-            adf.size = ent.file_size();
+            adf.size = static_cast<off_t>(ent.file_size());
          }
       }
    }

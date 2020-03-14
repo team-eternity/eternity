@@ -94,7 +94,9 @@ int P_Random(pr_class_t pr_class)
    // it's like playing with explosives :) Lee
 
    if(pr_class != pr_misc)
+   {
       M_RandomLog("%d\n", pr_class);
+   }
 
    int compat; 
 
