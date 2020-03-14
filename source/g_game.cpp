@@ -1009,27 +1009,28 @@ struct complevel_s
 {
    int fix; // first version that contained a fix
    int opt; // first version that made the fix an option
+   bool boomcomp; // affected by the BOOM "compatibility" flag
 } complevels[] =
 {
-   { 203, 203 }, // comp_telefrag
-   { 203, 203 }, // comp_dropoff
-   { 201, 203 }, // comp_vile
-   { 201, 203 }, // comp_pain
-   { 201, 203 }, // comp_skull
-   { 201, 203 }, // comp_blazing
-   { 201, 203 }, // comp_doorlight
-   { 201, 203 }, // comp_model
-   { 201, 203 }, // comp_god
-   { 203, 203 }, // comp_falloff
+   { 203, 203, true }, // comp_telefrag
+   { 203, 203, true }, // comp_dropoff
+   { 201, 203, true }, // comp_vile
+   { 201, 203, true }, // comp_pain
+   { 201, 203, true }, // comp_skull
+   { 201, 203, true }, // comp_blazing
+   { 201, 203, true }, // comp_doorlight
+   { 201, 203, true }, // comp_model
+   { 201, 203, true }, // comp_god
+   { 203, 203, true }, // comp_falloff
    { 200, 203 }, // comp_floors - FIXME
-   { 201, 203 }, // comp_skymap
-   { 203, 203 }, // comp_pursuit
-   { 202, 203 }, // comp_doorstuck
-   { 203, 203 }, // comp_staylift
-   { 203, 203 }, // comp_zombie
-   { 202, 203 }, // comp_stairs
-   { 203, 203 }, // comp_infcheat
-   { 201, 203 }, // comp_zerotags
+   { 201, 203, true }, // comp_skymap
+   { 203, 203, true }, // comp_pursuit
+   { 202, 203, true }, // comp_doorstuck
+   { 203, 203, true }, // comp_staylift
+   { 203, 203, true }, // comp_zombie
+   { 202, 203, true }, // comp_stairs
+   { 203, 203, true }, // comp_infcheat
+   { 201, 203, true }, // comp_zerotags
    { 329, 329 }, // comp_terrain
    { 329, 329 }, // comp_respawnfix
    { 329, 329 }, // comp_fallingdmg
@@ -1055,8 +1056,12 @@ static void G_SetCompatibility(void)
    while(complevels[i].fix > 0)
    {
       if(demo_version < complevels[i].opt)
-         comp[i] = (demo_version < complevels[i].fix);
-
+      {
+         if(complevels[i].boomcomp && compatibility)
+            comp[i] = true;
+         else
+            comp[i] = (demo_version < complevels[i].fix);
+      }
       ++i;
    }
 }
@@ -1593,6 +1598,10 @@ void G_ExitLevel(int destmap)
    G_DemoLogStats();
    G_DemoLog("\n");
    G_DemoLogSetExited(true);
+   if(players[0].mo)
+   {
+      M_RandomLog("Exit (pos %g %g ang %08x)\n", players[0].mo->x / 65536., players[0].mo->y / 65536., players[0].mo->angle);
+   }
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1626,7 +1635,10 @@ static void G_PlayerFinishLevel(int player)
    player_t *p = &players[player];
 
    // INVENTORY_TODO: convert powers to inventory
+   if(p->powers[pw_weaponlevel2] && E_IsPoweredVariant(p->readyweapon))
+      p->readyweapon = p->readyweapon->sisterWeapon;
    memset(p->powers, 0, sizeof p->powers);
+
    p->mo->flags  &= ~MF_SHADOW;             // cancel invisibility
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
@@ -3451,10 +3463,6 @@ byte *G_ReadOptions(byte *demoptr)
    }
    else  // defaults for versions <= 2.02
    {
-      int i;  // killough 10/98: a compatibility vector now
-      for(i = 0; i <= comp_zerotags; ++i)
-         comp[i] = compatibility;
-
       G_SetCompatibility();
       
       monster_infighting = 1;           // killough 7/19/98

@@ -498,13 +498,14 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 // haleyjd 04/15/2010: thing position logging for debugging demo problems.
 // Pass a NULL mobj to close the log.
 //
+//#define THING_LOGGING
 #ifdef THING_LOGGING
 void P_LogThingPosition(Mobj *mo, const char *caller)
 {
    static FILE *thinglog;
 
    if(!thinglog)
-      thinglog = fopen("thinglog.txt", "w");
+      thinglog = fopen("thinglog.txt", "wt");
 
    if(!mo)
    {
@@ -517,8 +518,9 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    if(thinglog)
    {
       fprintf(thinglog,
-              "%010d:%s::%+010d:%+010d:%+010d:%+010d:%+010d\n",
-              gametic, caller, (int)(mo->info->dehnum-1), mo->x, mo->y, mo->z, mo->flags & 0x7fffffff);
+              "%010d:%s::%+010d:(%g:%g:%g):(%g:%g:%g):%08x\n",
+              gametic, caller, (int)(mo->info->dehnum-1), mo->x / 65536., mo->y / 65536., mo->z / 65536.,
+                           mo->momx / 65536., mo->momy / 65536., mo->momz / 65536., mo->flags & 0x7fffffff);
    }
 }
 #else
