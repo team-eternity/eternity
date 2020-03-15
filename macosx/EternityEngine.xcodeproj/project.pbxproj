@@ -288,7 +288,6 @@
 		4F769D5722C6BBAE00E7E702 /* libvorbisfile.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */; };
 		4F769D5822C6BBAE00E7E702 /* libFLAC.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D4D22C6BBAD00E7E702 /* libFLAC.8.dylib */; };
 		4F769D5922C6BBAE00E7E702 /* libSDL2_mixer-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D4E22C6BBAD00E7E702 /* libSDL2_mixer-2.0.0.dylib */; };
-		4F769D5A22C6BBAE00E7E702 /* libSDL2-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D4F22C6BBAD00E7E702 /* libSDL2-2.0.0.dylib */; };
 		4F769D5B22C6BBAE00E7E702 /* libmodplug.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D5022C6BBAD00E7E702 /* libmodplug.1.dylib */; };
 		4F769D5C22C6BBAE00E7E702 /* libogg.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D5122C6BBAD00E7E702 /* libogg.0.dylib */; };
 		4F769D5D22C6BBAE00E7E702 /* libopus.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F769D5222C6BBAE00E7E702 /* libopus.0.dylib */; };
@@ -300,7 +299,6 @@
 		4F769D6322C6BBC800E7E702 /* libopusfile.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4A22C6BBAD00E7E702 /* libopusfile.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F769D6422C6BBC800E7E702 /* libSDL2_mixer-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4E22C6BBAD00E7E702 /* libSDL2_mixer-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F769D6522C6BBC800E7E702 /* libSDL2_net-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4B22C6BBAD00E7E702 /* libSDL2_net-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		4F769D6622C6BBC800E7E702 /* libSDL2-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4F22C6BBAD00E7E702 /* libSDL2-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F769D6722C6BBC800E7E702 /* libvorbis.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4822C6BBAC00E7E702 /* libvorbis.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F769D6822C6BBC800E7E702 /* libvorbisfile.3.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
@@ -321,6 +319,7 @@
 		4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058F1F915653003790C5 /* OpenGL.framework */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FB8211623F1DCD80044B1C3 /* hu_inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */; };
+		4FBFB0BA241EB0F50000C87A /* libSDL2-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
 		4FC0A9281E1E2A50006CEC45 /* Array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */; };
 		4FC0A9291E1E2A50006CEC45 /* CallFunc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A9001E1E2A50006CEC45 /* CallFunc.cpp */; };
@@ -372,7 +371,6 @@
 				4F769D6322C6BBC800E7E702 /* libopusfile.0.dylib in CopyFiles */,
 				4F769D6422C6BBC800E7E702 /* libSDL2_mixer-2.0.0.dylib in CopyFiles */,
 				4F769D6522C6BBC800E7E702 /* libSDL2_net-2.0.0.dylib in CopyFiles */,
-				4F769D6622C6BBC800E7E702 /* libSDL2-2.0.0.dylib in CopyFiles */,
 				4F769D6722C6BBC800E7E702 /* libvorbis.0.dylib in CopyFiles */,
 				4F769D6822C6BBC800E7E702 /* libvorbisfile.3.dylib in CopyFiles */,
 			);
@@ -492,7 +490,6 @@
 		4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvorbisfile.3.dylib; path = "sdl-mac-releases/libvorbisfile.3.dylib"; sourceTree = "<group>"; };
 		4F769D4D22C6BBAD00E7E702 /* libFLAC.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libFLAC.8.dylib; path = "sdl-mac-releases/libFLAC.8.dylib"; sourceTree = "<group>"; };
 		4F769D4E22C6BBAD00E7E702 /* libSDL2_mixer-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_mixer-2.0.0.dylib"; path = "sdl-mac-releases/libSDL2_mixer-2.0.0.dylib"; sourceTree = "<group>"; };
-		4F769D4F22C6BBAD00E7E702 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "sdl-mac-releases/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		4F769D5022C6BBAD00E7E702 /* libmodplug.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmodplug.1.dylib; path = "sdl-mac-releases/libmodplug.1.dylib"; sourceTree = "<group>"; };
 		4F769D5122C6BBAD00E7E702 /* libogg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libogg.0.dylib; path = "sdl-mac-releases/libogg.0.dylib"; sourceTree = "<group>"; };
 		4F769D5222C6BBAE00E7E702 /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = "sdl-mac-releases/libopus.0.dylib"; sourceTree = "<group>"; };
@@ -543,6 +540,7 @@
 		4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
 		4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = hu_inventory.cpp; path = ../source/hu_inventory.cpp; sourceTree = "<group>"; };
 		4FB8211523F1DCD80044B1C3 /* hu_inventory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = hu_inventory.h; path = ../source/hu_inventory.h; sourceTree = "<group>"; };
+		4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.dylib"; path = "sdl-mac-releases/libSDL2-2.0.dylib"; sourceTree = "<group>"; };
 		4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Action.cpp; path = ../acsvm/ACSVM/Action.cpp; sourceTree = SOURCE_ROOT; };
 		4FC0A8FC1E1E2A50006CEC45 /* Action.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = Action.hpp; path = ../acsvm/ACSVM/Action.hpp; sourceTree = SOURCE_ROOT; };
 		4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Array.cpp; path = ../acsvm/ACSVM/Array.cpp; sourceTree = SOURCE_ROOT; };
@@ -1074,10 +1072,10 @@
 				4F769D5422C6BBAE00E7E702 /* libmpg123.0.dylib in Frameworks */,
 				4F769D5522C6BBAE00E7E702 /* libopusfile.0.dylib in Frameworks */,
 				4F769D5622C6BBAE00E7E702 /* libSDL2_net-2.0.0.dylib in Frameworks */,
+				4FBFB0BA241EB0F50000C87A /* libSDL2-2.0.dylib in Frameworks */,
 				4F769D5722C6BBAE00E7E702 /* libvorbisfile.3.dylib in Frameworks */,
 				4F769D5822C6BBAE00E7E702 /* libFLAC.8.dylib in Frameworks */,
 				4F769D5922C6BBAE00E7E702 /* libSDL2_mixer-2.0.0.dylib in Frameworks */,
-				4F769D5A22C6BBAE00E7E702 /* libSDL2-2.0.0.dylib in Frameworks */,
 				4F769D5B22C6BBAE00E7E702 /* libmodplug.1.dylib in Frameworks */,
 				4F769D5C22C6BBAE00E7E702 /* libogg.0.dylib in Frameworks */,
 				4F769D5D22C6BBAE00E7E702 /* libopus.0.dylib in Frameworks */,
@@ -1138,6 +1136,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */,
 				4F769D4D22C6BBAD00E7E702 /* libFLAC.8.dylib */,
 				4F769D5022C6BBAD00E7E702 /* libmodplug.1.dylib */,
 				4F769D4922C6BBAC00E7E702 /* libmpg123.0.dylib */,
@@ -1146,7 +1145,6 @@
 				4F769D4A22C6BBAD00E7E702 /* libopusfile.0.dylib */,
 				4F769D4E22C6BBAD00E7E702 /* libSDL2_mixer-2.0.0.dylib */,
 				4F769D4B22C6BBAD00E7E702 /* libSDL2_net-2.0.0.dylib */,
-				4F769D4F22C6BBAD00E7E702 /* libSDL2-2.0.0.dylib */,
 				4F769D4822C6BBAC00E7E702 /* libvorbis.0.dylib */,
 				4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */,
 				4F00D1312042B9E100D775DF /* libz.tbd */,
