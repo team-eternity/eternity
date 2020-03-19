@@ -23,7 +23,6 @@
 		4F769D8422C6BE9700E7E702 /* libopusfile.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D7322C6BE8000E7E702 /* libopusfile.0.dylib */; };
 		4F769D8522C6BE9700E7E702 /* libSDL2_mixer-2.0.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6E22C6BE7F00E7E702 /* libSDL2_mixer-2.0.0.dylib */; };
 		4F769D8622C6BE9700E7E702 /* libSDL2_net-2.0.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */; };
-		4F769D8722C6BE9700E7E702 /* libSDL2-2.0.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */; };
 		4F769D8822C6BE9700E7E702 /* libvorbis.0.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6D22C6BE7F00E7E702 /* libvorbis.0.dylib */; };
 		4F769D8922C6BE9700E7E702 /* libvorbisfile.3.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 4F769D6F22C6BE7F00E7E702 /* libvorbisfile.3.dylib */; };
 		4FD651B916B8183500F9BE74 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAF6A06C1691A0D2009EBD3C /* Cocoa.framework */; };
@@ -51,7 +50,6 @@
 		4F39DDCA234FB9CF00EF52C8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/Launcher.xib; sourceTree = "<group>"; };
 		4F39DDCB234FB9CF00EF52C8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/About.xib; sourceTree = "<group>"; };
 		4F4F7823234FBBE5007C9CA6 /* autodoom */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = autodoom; path = ../builds/autodoom; sourceTree = "<group>"; };
-		4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2_net-2.0.0.dylib"; path = "../sdl-mac-releases/libSDL2_net-2.0.0.dylib"; sourceTree = "<group>"; };
 		4F769D6B22C6BE7F00E7E702 /* libogg.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libogg.0.dylib; path = "../sdl-mac-releases/libogg.0.dylib"; sourceTree = "<group>"; };
 		4F769D6C22C6BE7F00E7E702 /* libopus.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopus.0.dylib; path = "../sdl-mac-releases/libopus.0.dylib"; sourceTree = "<group>"; };
@@ -62,6 +60,7 @@
 		4F769D7122C6BE8000E7E702 /* libmodplug.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmodplug.1.dylib; path = "../sdl-mac-releases/libmodplug.1.dylib"; sourceTree = "<group>"; };
 		4F769D7222C6BE8000E7E702 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = "../sdl-mac-releases/libmpg123.0.dylib"; sourceTree = "<group>"; };
 		4F769D7322C6BE8000E7E702 /* libopusfile.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libopusfile.0.dylib; path = "../sdl-mac-releases/libopusfile.0.dylib"; sourceTree = "<group>"; };
+		4FF3D93D24240E4D00AC3679 /* libSDL2-2.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libSDL2-2.0.dylib"; path = "../sdl-mac-releases/libSDL2-2.0.dylib"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* EternityLaunch-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "EternityLaunch-Info.plist"; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* AutoDoom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoDoom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA062C0816503EFF005A65FF /* ELFileViewDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ELFileViewDataSource.h; sourceTree = "<group>"; };
@@ -130,6 +129,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				4FF3D93D24240E4D00AC3679 /* libSDL2-2.0.dylib */,
 				4F4F7823234FBBE5007C9CA6 /* autodoom */,
 				4F769D7022C6BE7F00E7E702 /* libFLAC.8.dylib */,
 				4F769D7122C6BE8000E7E702 /* libmodplug.1.dylib */,
@@ -139,7 +139,6 @@
 				4F769D7322C6BE8000E7E702 /* libopusfile.0.dylib */,
 				4F769D6E22C6BE7F00E7E702 /* libSDL2_mixer-2.0.0.dylib */,
 				4F769D6A22C6BE7F00E7E702 /* libSDL2_net-2.0.0.dylib */,
-				4F769D6922C6BE7F00E7E702 /* libSDL2-2.0.0.dylib */,
 				4F769D6D22C6BE7F00E7E702 /* libvorbis.0.dylib */,
 				4F769D6F22C6BE7F00E7E702 /* libvorbisfile.3.dylib */,
 				4F015B8A18775CB100ADB3F4 /* AUTHORS */,
@@ -277,7 +276,6 @@
 				4F769D8422C6BE9700E7E702 /* libopusfile.0.dylib in Resources */,
 				4F769D8522C6BE9700E7E702 /* libSDL2_mixer-2.0.0.dylib in Resources */,
 				4F769D8622C6BE9700E7E702 /* libSDL2_net-2.0.0.dylib in Resources */,
-				4F769D8722C6BE9700E7E702 /* libSDL2-2.0.0.dylib in Resources */,
 				4F769D8822C6BE9700E7E702 /* libvorbis.0.dylib in Resources */,
 				4F769D8922C6BE9700E7E702 /* libvorbisfile.3.dylib in Resources */,
 			);
