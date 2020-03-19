@@ -72,6 +72,8 @@ byte *tranmap;          // translucency filter maps 256x256   // phares
 byte *main_tranmap;     // killough 4/11/98
 byte *main_submap;      // haleyjd 11/30/13
 
+int rTintTableIndex;
+
 //
 // R_DrawColumn
 // Source is the top of the column to scale.
@@ -488,8 +490,8 @@ void CB_DrawFuzzColumn_8(void)
 byte **translationtables = NULL;
 
 // haleyjd: new stuff
-int firsttranslationlump;
-int numtranslations = 0;
+static int firsttranslationlump;
+static int numtranslations = 0;
 
 #define SRCPIXEL \
    colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
@@ -1114,6 +1116,11 @@ void R_InitTranslationTables()
    // read in the lumps, if any
    for(wni.begin(); wni.current(); wni.next(), i++)
       translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum((*wni)->selfindex, PU_RENDERER));
+
+   // Check if TINTTAB exists for MF3_GHOST
+   rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
+   if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
+      rTintTableIndex = -1;   // bad length
 }
 
 //

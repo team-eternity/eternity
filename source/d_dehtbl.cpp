@@ -1329,6 +1329,7 @@ void A_Nailbomb(actionargs_t *);
 // haleyjd: start new eternity action functions
 void A_SpawnAbove(actionargs_t *);
 void A_SpawnGlitter(actionargs_t *);
+void A_SpawnEx(actionargs_t *);
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
 void A_BetaSkullAttack(actionargs_t *);
@@ -1378,12 +1379,14 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_MushroomEx(actionargs_t *);
 void A_HideThing(actionargs_t *);
 void A_UnHideThing(actionargs_t *);
 void A_RestoreArtifact(actionargs_t *);
 void A_RestoreSpecialThing1(actionargs_t *);
 void A_RestoreSpecialThing2(actionargs_t *);
 void A_SargAttack12(actionargs_t *actionargs);
+void A_SelfDestruct(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1679,6 +1682,7 @@ deh_bexptr deh_bexptrs[] =
    // haleyjd: start new eternity codeptrs
    POINTER(SpawnAbove),
    POINTER(SpawnGlitter),
+   POINTER(SpawnEx),
    POINTER(StartScript),
    POINTER(StartScriptNamed),
    POINTER(PlayerStartScript),
@@ -1728,12 +1732,14 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(MushroomEx),
    POINTER(HideThing),
    POINTER(UnHideThing),
    POINTER(RestoreArtifact),
    POINTER(RestoreSpecialThing1),
    POINTER(RestoreSpecialThing2),
    POINTER(SargAttack12),
+   POINTER(SelfDestruct),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),

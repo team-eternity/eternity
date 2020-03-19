@@ -1106,6 +1106,16 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
       bool list = opt->flags & CFGF_LIST;
       if(!list)
          n = 1;
+      else if(prototype)
+      {
+         // If we have a prototype to inherit and we use a list, clear all old stuff
+         MetaObject *ob;
+         while((ob = table->getNextObject(nullptr, opt->name)))
+         {
+            table->removeObject(ob);
+            delete ob;
+         }
+      }
 
       for(int i = n; i --> 0;)
       {

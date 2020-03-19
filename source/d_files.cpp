@@ -623,7 +623,7 @@ static int D_CheckBasePath(const qstring &qpath)
             else if(filename == "root.edf")
                ++score;
             else if(filename == "doom")
-                 ++score;
+               ++score;
          }
 
          if(score >= 3)

@@ -33,6 +33,7 @@
 #include "autopalette.h"
 #include "c_io.h"
 #include "doomtype.h"
+#include "e_hash.h"
 #include "m_swap.h"
 #include "v_misc.h"
 #include "v_png.h"
@@ -407,6 +408,20 @@ byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
    return newpal;
 }
 
+struct rgbto8bit_t
+{
+   int key;
+   byte index;
+   DLListItem<rgbto8bit_t> links;
+};
+
+//
+// Colours are likely to be re-used, both within themselves and across multiple images,
+// so this hash table exists to caches RGB colours and the index they map to
+// TODO: Figure out if and when the contents of this hash should be disposed
+//
+static EHashTable<rgbto8bit_t, EIntHashKey, &rgbto8bit_t::key, &rgbto8bit_t::links> v_rgbto8bithash;
+
 //
 // VPNGImagePimpl::getAs8Bit
 //
@@ -414,14 +429,13 @@ byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
 //
 byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
 {
-   if(color_type == PNG_COLOR_TYPE_GRAY || 
-      color_type == PNG_COLOR_TYPE_PALETTE)
+   if(color_type == PNG_COLOR_TYPE_GRAY ||  color_type == PNG_COLOR_TYPE_PALETTE)
    {
       if(!outpal)
       {
          // Pure copy, no requantization
          byte *output = ecalloc(byte *, height, pitch);
-         return (byte *)(memcpy(output, surface, height * pitch));
+         return static_cast<byte *>(memcpy(output, surface, height * pitch));
       }
       else
       {
@@ -447,7 +461,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
    else
    {
       if(!outpal) // a palette is required for this conversion
-         return NULL;
+         return nullptr;
 
       byte *src  = surface;
       byte *dest = ecalloc(byte *, width, height);
@@ -456,9 +470,19 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
       {
          for(png_uint_32 x = 0; x < width; x++)
          {
-            // TODO: extremely inefficient
-            dest[y * width + x] =
-               V_FindBestColor(outpal, *dest, *(dest+1), *(dest+2));
+            // TODO: figure out if this is still extremely inefficient
+            const int col = ((*src) << 16) + (*(src+1) << 8) + *(src+2);
+            rgbto8bit_t *cached_entry = v_rgbto8bithash.objectForKey(col);
+
+            if(cached_entry)
+               dest[y * width + x] = cached_entry->key;
+            else
+            {
+               cached_entry = estructalloc(rgbto8bit_t, 1);
+               cached_entry->key = col;
+               cached_entry->index = dest[y * width + x] = V_FindBestColor(outpal, *src, *(src+1), *(src+2));
+               v_rgbto8bithash.addObject(cached_entry);
+            }
             src += channels;
          }
       }

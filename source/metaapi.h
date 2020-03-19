@@ -440,6 +440,10 @@ public:
    void addObject(MetaObject &object);
    void removeObject(MetaObject *object);
    void removeObject(MetaObject &object);
+   void removeAndDeleteAllObjects(size_t keyIndex);
+   void removeAndDeleteAllObjects(const char *key);
+   void removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type);
+   void removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type);
 
    // Find objects in the table:
    // * By Key
@@ -544,9 +548,11 @@ public:
    void        addConstString(size_t keyIndex, const char *value);
    void        addConstString(const char *key, const char *value);
    const char *getConstString(const char *key, const char *defValue) const;
+   const char *getConstString(size_t keyIndex, const char *defValue) const;
    void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);
+   const char *removeConstString(size_t keyIndex);
 
    // Nested MetaTable
    void       addMetaTable(size_t keyIndex, MetaTable *value);

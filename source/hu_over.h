@@ -21,6 +21,9 @@
 #ifndef HU_OVER_H__
 #define HU_OVER_H__
 
+#include "hu_inventory.h"
+
+struct player_t;
 struct vfont_t;
 struct weaponinfo_t;
 
@@ -45,6 +48,7 @@ enum overlay_e : unsigned int
    ol_ammo,
    ol_key,
    ol_frag,
+   ol_invcurr,
    NUMOVERLAY
 };
 
@@ -108,6 +112,9 @@ public:
       case ol_frag:
          DrawFrags(x, y);
          break;
+      case ol_invcurr:
+         HU_InventoryDrawCurrentBox(x, y);
+         break;
       default:
          break;
       }
@@ -125,9 +132,11 @@ public:
    //
    // Default constructor
    //
-   HUDOverlay() : drawerdata{}
+   HUDOverlay() : drawerdata{}, leftoffset{}, rightoffset{}
    {
    }
+
+   int leftoffset, rightoffset;
 };
 
 // Overlays enumeration
@@ -142,6 +151,7 @@ int  HU_WC_PlayerAmmo(const weaponinfo_t *w);
 bool HU_WC_NoAmmo(const weaponinfo_t *w);
 int  HU_WC_MaxAmmo(const weaponinfo_t *w);
 char HU_WeapColor(const weaponinfo_t *w);
+char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had);
 
 char HU_HealthColor();
 char HU_ArmorColor();
@@ -164,7 +174,7 @@ extern vfont_t *hud_fsmedium;
 extern vfont_t *hud_fslarge;
 
 // overlay interface
-void HU_OverlayDraw();
+void HU_OverlayDraw(int &leftoffset, int &rightoffset);
 void HU_ToggleHUD();
 void HU_DisableHUD();
 

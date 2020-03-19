@@ -51,6 +51,7 @@
 extern int textmode_startup;
 extern int realtic_clock_rate; // killough 4/13/98: adjustable timer
 extern int iwad_choice;        // haleyjd 03/19/10
+extern int fov;
 
 #ifdef _SDL_VER
 extern int waitAtExit;
@@ -242,6 +243,9 @@ static default_t sysdefaults[] =
 
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, NULL, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
+
+   DEFAULT_INT("r_fov", &fov, NULL, 90, 20, 179, default_t::wad_no,
+               "The renderer's field of view angle (in degrees)"),
 
 #ifdef _SDL_VER
    DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, UL, default_t::wad_no,

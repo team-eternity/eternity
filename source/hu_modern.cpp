@@ -188,30 +188,6 @@ void ModernHUD::DrawArmor(int x, int y)
    }
 }
 
-// HU_WeapColor tuned to work for a weapon slot
-static char HU_weapSlotColor(const int slot)
-{
-   if(!hu_player.pclass->weaponslots[slot])
-      return 0;
-
-   const weaponinfo_t *weapon = nullptr;
-
-   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
-   do
-   {
-      if(E_PlayerOwnsWeapon(&hu_player, weaponslot->bdObject->weapon))
-      {
-         if(weapon == nullptr)
-            weapon = weaponslot->bdObject->weapon;
-         else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
-            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
-      }
-      weaponslot = weaponslot->bdNext;
-   } while(!weaponslot->isDummy());
-
-   return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
-}
-
 //
 // Weapons List
 //
@@ -225,21 +201,7 @@ void ModernHUD::DrawWeapons(int x, int y)
 
    for(int i = 0; i < NUMWEAPONS; i++)
    {
-      char fontcolor;
-      if(E_NumWeaponsInSlotPlayerOwns(&hu_player, i) > 1)
-         fontcolor = HU_weapSlotColor(i);
-      else if(E_PlayerOwnsWeaponForDEHNum(&hu_player, i))
-      {
-         const weaponinfo_t *weapon = E_WeaponForDEHNum(i);
-         fontcolor = weapon->ammo ? HU_WeapColor(E_WeaponForDEHNum(i)) : *FC_GRAY;
-      }
-      else if(E_PlayerOwnsWeaponInSlot(&hu_player, i))
-      {
-         const weaponinfo_t *weapon = P_GetPlayerWeapon(&hu_player, i);
-         fontcolor = weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
-      }
-      else
-         fontcolor = *FC_CUSTOM2;
+      char fontcolor = HU_WeaponColourGeneralized(hu_player, i, nullptr);
 
       if(laligned)
          tempstr << fontcolor << i + 1 << ' ';
@@ -280,7 +242,12 @@ void ModernHUD::DrawAmmo(int x, int y)
          FontWriteTextRAlign(hud_fsmedium, tempstr.constPtr(), displayoffs, y, &vbscreen);
    }
    else
-      V_DrawPatch(displayoffs, y, &vbscreen, nfs_inf);
+   {
+      if(laligned)
+         V_DrawPatch(displayoffs, y, &vbscreen, nfs_inf);
+      else
+         V_DrawPatch(displayoffs - nfs_inf->width, y, &vbscreen, nfs_inf);
+   }
 }
 
 extern patch_t *keys[NUMCARDS + 3];
@@ -337,6 +304,11 @@ void ModernHUD::Setup()
 
    // now build according to style
 
+   int boxx, boxy;
+   HU_InventoryGetCurrentBoxHints(boxx, boxy);
+
+   rightoffset = 0;
+
    switch(hud_overlaylayout)
    {
    case HUD_OFF:       // 'off'
@@ -348,7 +320,7 @@ void ModernHUD::Setup()
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
       y = SCREENHEIGHT - 8;
 
-      for(int i = NUMOVERLAY - 1; i >= 0; --i)
+      for(int i = NUMOVERLAY - 2; i >= 0; --i)
       {
          if(drawerdata[i].enabled)
          {
@@ -356,6 +328,7 @@ void ModernHUD::Setup()
             y -= 8;
          }
       }
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_FLAT: // all at bottom of screen
@@ -366,11 +339,15 @@ void ModernHUD::Setup()
       SetupOverlay(ol_ammo,   42, SCREENHEIGHT - 16);
       SetupOverlay(ol_key,    42, SCREENHEIGHT - 8);
       SetupOverlay(ol_frag,   42, SCREENHEIGHT - 8);
+      if(!hud_hidestatus)
+         boxy -= 24;
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
       SetupOverlay(ol_health, SCREENWIDTH - 3, 3);
       SetupOverlay(ol_armor,  SCREENWIDTH - 3, 15);
+      rightoffset = 27;
       SetupOverlay(ol_weap,   SCREENWIDTH - 3, SCREENHEIGHT - 16);
       SetupOverlay(ol_ammo,   SCREENWIDTH - 3, SCREENHEIGHT - 8);
 
@@ -381,6 +358,8 @@ void ModernHUD::Setup()
 
       if(!hud_hidestatus)
          SetupOverlay(ol_status, 3, SCREENHEIGHT - 16);
+      boxy -= 16;
+      SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    default:

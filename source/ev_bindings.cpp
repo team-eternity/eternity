@@ -1067,6 +1067,7 @@ PARAMLINE(ParamStairsBuildUpDoomCrush);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
 PARAMLINE(ParamStairsBuildDownDoomSync);
+PARAMLINE(ParamGenStairs);
 PARAMLINE(PolyobjDoorSlide);
 PARAMLINE(PolyobjDoorSwing);
 PARAMLINE(PolyobjMove);
@@ -1570,6 +1571,7 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
    LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
    LINESPECNAMED(501, ParamPlatGeneric,                    "Generic_Lift")
+   LINESPECNAMED(502, ParamGenStairs,                      "Generic_Stairs")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1739,6 +1741,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(200, ParamFloorGeneric,                   "Generic_Floor")
    LINESPECNAMED(201, ParamCeilingGeneric,                 "Generic_Ceiling")
    LINESPECNAMED(203, ParamPlatGeneric,                    "Generic_Lift")
+   LINESPECNAMED(204, ParamGenStairs,                      "Generic_Stairs")
    LINESPECNAMED(205, ParamGenCrusher,                     "Generic_Crusher")
    LINESPECNAMED(206, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
    LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")

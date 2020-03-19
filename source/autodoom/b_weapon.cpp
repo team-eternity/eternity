@@ -538,12 +538,13 @@ void B_AnalyzeWeapons(const playerclass_t *pclass)
          else if(st.action == A_FirePlayerMissile)
          {
             projectile = E_ArgAsThingNumG0(st.args, 0);
-            if(projectile < 0 || projectile == -1)
+            if(projectile < 0 /*|| projectile == -1*/)
                projectile = UnknownThingType;
             else
             {
-               bool seek = !!E_ArgAsKwd(st.args, 1, &seekkwds, 0);
-               bwi.seeking = bwi.seeking || seek;
+               unsigned flags = E_ArgAsFlags(st.args, 1, &fireplayermissile_flagset);
+               if(flags & FIREPLAYERMISSILE_HOMING)
+                  bwi.seeking = true;
             }
          }
 

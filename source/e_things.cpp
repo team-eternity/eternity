@@ -135,6 +135,7 @@ int UnknownThingType;
 
 // Damage Properties
 #define ITEM_TNG_DAMAGE       "damage"
+#define ITEM_TNG_DAMAGEMOD    "damagemod"
 #define ITEM_TNG_DMGSPECIAL   "dmgspecial"
 #define ITEM_TNG_DAMAGEFACTOR "damagefactor"
 #define ITEM_TNG_TOPDAMAGE    "topdamage"
@@ -555,6 +556,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT(ITEM_TNG_RESPCHANCE,      4,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_AIMSHIFT,        -1,            CFGF_NONE), \
    CFG_INT(ITEM_TNG_DAMAGE,          0,             CFGF_NONE), \
+   CFG_INT(ITEM_TNG_DAMAGEMOD,       8,             CFGF_NONE), \
    CFG_STR(ITEM_TNG_DMGSPECIAL,      "NONE",        CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDAMAGE,       0,             CFGF_NONE), \
    CFG_INT(ITEM_TNG_TOPDMGMASK,      0,             CFGF_NONE), \
@@ -2608,6 +2610,10 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    // process damage
    if(IS_SET(ITEM_TNG_DAMAGE))
       mobjinfo[i]->damage = cfg_getint(thingsec, ITEM_TNG_DAMAGE);
+
+   // [XA] 02/29/20: process damagemod
+   if(IS_SET(ITEM_TNG_DAMAGEMOD))
+      mobjinfo[i]->damagemod = cfg_getint(thingsec, ITEM_TNG_DAMAGEMOD);
 
    // 09/22/06: process topdamage 
    if(IS_SET(ITEM_TNG_TOPDAMAGE))

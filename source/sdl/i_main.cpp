@@ -30,6 +30,10 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
+#ifdef HAVE_XLOCALE_H
+#include <xlocale.h>
+#endif
+
 // main Tweaks for Windows Platforms
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) && !defined(_WIN32_WCE)
 
@@ -71,6 +75,12 @@ int main(int argc, char **argv)
       SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
    else
       SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+#endif
+
+#ifdef HAVE_XLOCALE_H
+   // We need to prevent any calling terminal from changing Eternity's locale
+   // Unconfirmed if needed in Windows. If so, it should be added there too.
+   uselocale(newlocale(LC_ALL_MASK, "C", NULL));
 #endif
 
    // MaxW: 2017/09/16: Now prints the error on failure

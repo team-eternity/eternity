@@ -456,7 +456,7 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
    DEFAULT_INT("comp_aircontrol", &default_comp[comp_aircontrol], &comp[comp_aircontrol],
-               1, 0, 1, default_t::wad_yes, "Disable air control for jumping"),
+               1, 0, 1, default_t::wad_yes, "Disable jumping for DOOM/Heretic"),
 
    // For key bindings, the values stored in the key_* variables       // phares
    // are the internal Doom Codes. The values stored in the default.cfg
@@ -682,7 +682,7 @@ default_t defaults[] =
                "Select HUD overlay (-1 = default, 0 = modern, 1 = boom"),
    
    //sf : fullscreen hud style
-   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, 2, 0, 4, default_t::wad_yes,
+   DEFAULT_INT("hud_overlaylayout", &hud_overlaylayout, NULL, HUD_FLAT, HUD_OFF, HUD_NUMHUDS - 1, default_t::wad_yes,
                "fullscreen hud layout"),
 
    DEFAULT_INT("hud_enabled",&hud_enabled, NULL, 1, 0, 1, default_t::wad_yes,
@@ -1458,7 +1458,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
    //M_NormalizeSlashes(tmpfile);
 
    errno = 0;
-   if(!(f = fopen(tmpfile.constPtr(), "w")))  // killough 9/21/98
+   if(!(f = fopen(tmpfile.constPtr(), "w+")))  // killough 9/21/98
    {
       M_defaultFileWriteError(df, tmpfile.constPtr());
       return;
@@ -1530,20 +1530,26 @@ void M_SaveDefaultFile(defaultfile_t *df)
       }
    }
 
-   if(fclose(f) == EOF)
+   rewind(f);
+
+   FILE *destf;
+   if(!(destf = fopen(df->fileName, "w")))
    {
-      M_defaultFileWriteError(df, tmpfile.constPtr());
+      M_defaultFileWriteError(df, df->fileName);
       return;
    }
 
-   remove(df->fileName);
+   for(char ch = fgetc(f); ch != EOF; ch = fgetc(f))
+      fputc(ch, destf);
 
-   if(rename(tmpfile.constPtr(), df->fileName))
-   {
-      // haleyjd 01/29/11: No error here, just print the message
-      printf("Warning: could not write defaults to %s: %s\n", df->fileName,
-              errno ? strerror(errno) : "(Unknown Error)");
-   }
+   // We don't care about errors at this stage
+   if(fclose(f) == EOF)
+      M_defaultFileWriteError(df, tmpfile.constPtr());
+
+   if(fclose(destf) == EOF)
+      M_defaultFileWriteError(df, df->fileName);
+
+   remove(tmpfile.constPtr());
 }
 
 //

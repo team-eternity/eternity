@@ -34,6 +34,7 @@
 #include "m_fixed.h"
 #include "p_mobj.h"
 #include "p_saveg.h"
+#include "p_sector.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_main.h" // For PI
@@ -258,6 +259,25 @@ void P_SaveSectorPosition(const sector_t &sec)
    si.prevfloorheightf = sec.floorheightf;
    si.prevceilingheight = sec.ceilingheight;
    si.prevceilingheightf = sec.ceilingheightf;
+}
+
+//
+// Saves but for a single surface
+//
+void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf)
+{
+   auto &si = sectorinterps[&sec - sectors];
+   switch(surf)
+   {
+      case ssurf_floor:
+         si.prevfloorheight = sec.floorheight;
+         si.prevfloorheightf = sec.floorheightf;
+         break;
+      case ssurf_ceiling:
+         si.prevceilingheight = sec.ceilingheight;
+         si.prevceilingheightf = sec.ceilingheightf;
+         break;
+   }
 }
 
 //=============================================================================

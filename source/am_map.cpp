@@ -1093,14 +1093,18 @@ static void AM_clearFB(int color)
          offy -= screenheight;
 
       // SoM 2-4-04: ANYRES
-      V_DrawBlock(offx, offy, &vbscreen, SCREENWIDTH, screenheight,
-                  am_backdrop);
-      V_DrawBlock(offx + SCREENWIDTH, offy, &vbscreen, SCREENWIDTH,
-                  screenheight, am_backdrop);
-      V_DrawBlock(offx, offy + screenheight, &vbscreen, SCREENWIDTH,
-                  screenheight, am_backdrop);
-      V_DrawBlock(offx + SCREENWIDTH, offy + screenheight, &vbscreen,
-                  SCREENWIDTH, screenheight, am_backdrop);
+      V_DrawBlock(offx, offy, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
+      if(offx)
+         V_DrawBlock(offx + SCREENWIDTH, offy, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
+      if(offy)
+      {
+         V_DrawBlock(offx, offy + screenheight, &vbscreen, SCREENWIDTH, -offy, am_backdrop);
+         if(offx)
+         {
+            V_DrawBlock(offx + SCREENWIDTH, offy + screenheight, &vbscreen, SCREENWIDTH, -offy,
+                        am_backdrop);
+         }
+      }
 
 //      V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
    }

@@ -502,7 +502,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_MAX)
    {
       // dead
-      if(!plyr->health)
+      if(plyr->health <= 0)
       {
          priority = ST_PRIORITY_DEAD;
          st_faceindex = ST_DEADFACE;
@@ -1085,7 +1085,7 @@ void ST_Drawer(bool fullscreen)
    stbarfns_t *StatusBar = GameModeInfo->StatusBar;
 
    // haleyjd: test whether fullscreen graphical hud is enabled
-   bool fshud = hud_enabled && hud_overlaylayout == 4;
+   bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
    st_statusbaron  = !fullscreen || automapactive || fshud;
    st_backgroundon = !fullscreen || automapactive;
@@ -1104,6 +1104,14 @@ void ST_Drawer(bool fullscreen)
    }
    else
       StatusBar->Drawer();
+}
+
+//
+// Check if status bar will be fullscreen or disabled
+//
+bool ST_IsHUDLike()
+{
+   return !st_backgroundon;
 }
 
 //
@@ -1248,23 +1256,23 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    {
       for(int j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
-         sprintf(namebuf, "%sST%d%d", facename, i, j);
+         snprintf(namebuf, sizeof(namebuf), "%sST%d%d", facename, i, j);
          faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       }
-      sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
+      snprintf(namebuf, sizeof(namebuf), "%sTR%d0", facename, i);        // turn right
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sTL%d0", facename, i);        // turn left
+      snprintf(namebuf, sizeof(namebuf), "%sTL%d0", facename, i);        // turn left
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sOUCH%d", facename, i);       // ouch!
+      snprintf(namebuf, sizeof(namebuf), "%sOUCH%d", facename, i);       // ouch!
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sEVL%d", facename, i);        // evil grin ;)
+      snprintf(namebuf, sizeof(namebuf), "%sEVL%d", facename, i);        // evil grin ;)
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sKILL%d", facename, i);       // pissed off
+      snprintf(namebuf, sizeof(namebuf), "%sKILL%d", facename, i);       // pissed off
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-   sprintf(namebuf, "%sGOD0",facename);
+   snprintf(namebuf, sizeof(namebuf), "%sGOD0",facename);
    faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-   sprintf(namebuf, "%sDEAD0",facename);
+   snprintf(namebuf, sizeof(namebuf), "%sDEAD0",facename);
    faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 

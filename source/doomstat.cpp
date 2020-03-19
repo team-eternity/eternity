@@ -75,6 +75,8 @@ int default_monsters_remember=1;
 int monster_infighting=1;       // killough 7/19/98: monster<=>monster attacks
 int default_monster_infighting=1;
 
+bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
+
 int monster_friction=1;       // killough 10/98: monsters affected by friction 
 int default_monster_friction=1;
 

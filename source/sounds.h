@@ -406,6 +406,7 @@ typedef enum {
   sfx_eedrip, // drip
   sfx_quake2, // earthquake
   sfx_plwdth, // player wimpy death
+  sfx_jump,
 
   // haleyjd 10/08/02: heretic sounds
   sfx_gldhit = 300,
@@ -525,6 +526,8 @@ typedef enum {
   sfx_lobsht,
   sfx_bounce,
   sfx_phopow,
+  sfx_blshit,
+  sfx_hnoway,
 
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX

@@ -35,6 +35,7 @@
 #include "d_io.h"
 #include "d_items.h"
 #include "d_player.h"
+#include "doomstat.h"
 #include "e_lib.h"
 #include "e_edf.h"
 #include "e_player.h"
@@ -43,8 +44,10 @@
 #include "e_things.h"
 #include "e_weapons.h"
 #include "m_qstr.h"
+#include "p_info.h"
 #include "p_mobj.h"
 #include "p_skin.h"
+#include "r_pcheck.h"
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
@@ -65,6 +68,7 @@
 #define ITEM_SKINSND_FALLHIT "fallhit"
 #define ITEM_SKINSND_PLWDTH  "plwdth"
 #define ITEM_SKINSND_NOWAY   "noway"
+#define ITEM_SKINSND_JUMP    "jump"
 
 static cfg_opt_t pc_skin_sound_opts[] =
 {
@@ -80,6 +84,7 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_STR(ITEM_SKINSND_FALLHIT, "fallht", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_PLWDTH,  "plwdth", CFGF_NONE),
    CFG_STR(ITEM_SKINSND_NOWAY,   "noway",  CFGF_NONE),
+   CFG_STR(ITEM_SKINSND_JUMP,    "jump",   CFGF_NONE),
    CFG_END()
 };
 
@@ -100,6 +105,9 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_THINGTYPE      "thingtype"
 #define ITEM_PCLASS_ALTATTACK      "altattackstate"
 #define ITEM_PCLASS_INITIALHEALTH  "initialhealth"
+#define ITEM_PCLASS_MAXHEALTH      "maxhealth"
+#define ITEM_PCLASS_SUPERHEALTH    "superhealth"
+#define ITEM_PCLASS_VIEWHEIGHT     "viewheight"
 #define ITEM_PCLASS_SPEEDWALK      "speedwalk"
 #define ITEM_PCLASS_SPEEDRUN       "speedrun"
 #define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
@@ -110,8 +118,10 @@ cfg_opt_t edf_skin_opts[] =
 #define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
 #define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
 #define ITEM_PCLASS_SPEEDJUMP      "speedjump"
+#define ITEM_PCLASS_CLRREBORNITEMS "clearrebornitems"
 #define ITEM_PCLASS_REBORNITEM     "rebornitem"
 #define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
+#define ITEM_PCLASS_ALWAYSJUMP     "alwaysjump"
 
 #define ITEM_REBORN_NAME   "name"
 #define ITEM_REBORN_AMOUNT "amount"
@@ -140,6 +150,9 @@ static cfg_opt_t reborn_opts[] =
    CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),  \
    CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),  \
    CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,  CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,  CFGF_NONE),  \
+   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0, CFGF_NONE),  \
                                                          \
    /* speeds */                                          \
    CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
@@ -156,11 +169,13 @@ static cfg_opt_t reborn_opts[] =
    CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
                                                          \
    /* reborn inventory items */                          \
+   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE), \
    CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
                                                                              \
     /* weapon slots */                                                       \
    CFG_SEC(ITEM_PCLASS_WEAPONSLOT,    wpnslot_opts, CFGF_MULTI|CFGF_NOCASE|CFGF_TITLE), \
-                                                                                        \
+   /* flags */                                          \
+   CFG_FLAG(ITEM_PCLASS_ALWAYSJUMP, 0, CFGF_SIGNPREFIX),\
    CFG_END()
 
 cfg_opt_t edf_pclass_opts[] =
@@ -268,6 +283,7 @@ static const char *skin_sound_names[NUMSKINSOUNDS] =
    ITEM_SKINSND_FALLHIT,
    ITEM_SKINSND_PLWDTH,
    ITEM_SKINSND_NOWAY,
+   ITEM_SKINSND_JUMP,
 };
 
 //
@@ -408,8 +424,6 @@ playerclass_t *E_PlayerClassForName(const char *name)
 }
 
 //
-// E_freeRebornItems
-//
 // Free a player class's default inventory when recreating it.
 //
 static void E_freeRebornItems(playerclass_t *pc)
@@ -422,17 +436,15 @@ static void E_freeRebornItems(playerclass_t *pc)
             efree(pc->rebornitems[i].itemname);
       }
       efree(pc->rebornitems);
-      pc->rebornitems    = NULL;
+      pc->rebornitems    = nullptr;
       pc->numrebornitems = 0;
    }
 }
 
 //
-// E_processRebornItem
-//
 // Process a single rebornitem for the player's default inventory.
 //
-static void E_processRebornItem(cfg_t *item, playerclass_t *pc, unsigned int index)
+static void E_processRebornItem(cfg_t *item, const playerclass_t *pc, unsigned int index)
 {
    reborninventory_t *ri = &pc->rebornitems[index];
 
@@ -601,6 +613,14 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
 
+   if(IS_SET(pcsec, ITEM_PCLASS_ALWAYSJUMP))
+   {
+      if(cfg_getflag(pcsec, ITEM_PCLASS_ALWAYSJUMP))
+         pc->flags |= PCF_ALWAYSJUMP;
+      else
+         pc->flags &= ~PCF_ALWAYSJUMP;
+   }
+
    // mobj type
    if(IS_SET(pcsec, ITEM_PCLASS_THINGTYPE))
    {
@@ -637,6 +657,21 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    // initial health
    if(IS_SET(pcsec, ITEM_PCLASS_INITIALHEALTH))
       pc->initialhealth = cfg_getint(pcsec, ITEM_PCLASS_INITIALHEALTH);
+   // max health
+   if(IS_SET(pcsec, ITEM_PCLASS_MAXHEALTH))
+      pc->maxhealth = cfg_getint(pcsec, ITEM_PCLASS_MAXHEALTH);
+   // supercharge health
+   if(IS_SET(pcsec, ITEM_PCLASS_SUPERHEALTH))
+   {
+      // Use max health if newly defined but unspecified
+      if(def && !cfg_size(pcsec, ITEM_PCLASS_SUPERHEALTH))
+         pc->superhealth = pc->maxhealth;
+      else  // either new and specified or old and specified
+         pc->superhealth = cfg_getint(pcsec, ITEM_PCLASS_SUPERHEALTH);
+   }
+   // view height
+   if(IS_SET(pcsec, ITEM_PCLASS_VIEWHEIGHT))
+      pc->viewheight = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_VIEWHEIGHT));
 
    // process player speed fields
 
@@ -685,12 +720,17 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          GameModeInfo->defPClassName = pc->mnemonic;
    }
 
-   unsigned int numitems;
-   if((numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM)) > 0)
-   {
+   if(IS_SET(pcsec, ITEM_PCLASS_CLRREBORNITEMS) && cfg_getflag(pcsec, ITEM_PCLASS_CLRREBORNITEMS))
       E_freeRebornItems(pc);
-      pc->numrebornitems = numitems;
-      pc->rebornitems    = estructalloc(reborninventory_t, numitems);
+
+   if(const unsigned int numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM); numitems > 0)
+   {
+      pc->numrebornitems += numitems;
+      pc->rebornitems = erealloc(
+         reborninventory_t *,
+         pc->rebornitems,
+         pc->numrebornitems * sizeof(reborninventory_t)
+      );
 
       for(unsigned int i = 0; i < numitems; i++)
          E_processRebornItem(cfg_getnmvprop(pcsec, ITEM_PCLASS_REBORNITEM, i), pc, i);
@@ -1010,6 +1050,19 @@ void E_ApplyTurbo(int ts)
          pc = pc->next;
       }
    }
+}
+
+//
+// True if pclass is allowed to jump on this level
+//
+bool E_CanJump(const playerclass_t &pclass)
+{
+   return demo_version >= 335 && pclass.jumpspeed > 0 &&
+   (pclass.flags & PCF_ALWAYSJUMP || (!comp[comp_jump] && !LevelInfo.disableJump));
+}
+bool E_MayJumpIfOverriden(const playerclass_t &pclass)
+{
+   return demo_version >= 355 && pclass.jumpspeed > 0 && !LevelInfo.disableJump;
 }
 
 // EOF

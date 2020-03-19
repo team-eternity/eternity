@@ -183,6 +183,9 @@ template<typename T, typename U> inline static angle_t P_PointToAngle(const T& v
 {
     return P_PointToAngle(vo.x, vo.y, v.x, v.y);
 }
+angle_t P_DoubleToAngle(double a);
+
+void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle);
 
 bool P_ShootThing(const intercept_t *in,
                   Mobj *shooter,

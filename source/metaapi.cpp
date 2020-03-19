@@ -927,6 +927,36 @@ void MetaTable::removeObject(MetaObject &object)
 }
 
 //
+// Removes and deletes all objects of the given key and (optionally) type
+//
+void MetaTable::removeAndDeleteAllObjects(size_t keyIndex)
+{
+   MetaObject *obj;
+   while((obj = getNextObject(nullptr, keyIndex)))
+   {
+      removeObject(obj);
+      delete obj;
+   }
+}
+void MetaTable::removeAndDeleteAllObjects(const char *key)
+{
+   removeAndDeleteAllObjects(MetaKey(key).index);
+}
+void MetaTable::removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type)
+{
+   MetaObject *obj;
+   while((obj = getObjectKeyAndType(keyIndex, type)))
+   {
+      removeObject(obj);
+      delete obj;
+   }
+}
+void MetaTable::removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type)
+{
+   removeAndDeleteAllObjects(MetaKey(key).index, type);
+}
+
+//
 // MetaTable::getObject
 //
 // Returns the first object found in the metatable with the given key, 
@@ -1766,14 +1796,14 @@ void MetaTable::addConstString(const char *key, const char *value)
 // META_ERR_NOSUCHOBJECT. Otherwise, the string constant value is returned and
 // metaerrno is META_ERR_NOERR.
 //
-const char *MetaTable::getConstString(const char *key, const char *defValue) const
+const char *MetaTable::getConstString(size_t keyIndex, const char *defValue) const
 {
    const char *retval;
    const MetaConstString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaConstString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaConstString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval    = defValue;
@@ -1782,6 +1812,10 @@ const char *MetaTable::getConstString(const char *key, const char *defValue) con
       retval = obj->value;
 
    return retval;
+}
+const char *MetaTable::getConstString(const char *key, const char *defValue) const
+{
+   return getConstString(MetaKey(key).index, defValue);
 }
 
 //
@@ -1819,14 +1853,14 @@ void MetaTable::setConstString(const char *key, const char *newValue)
 // Otherwise, metaerrno is META_ERR_NOERR and the shared string value that 
 // was in the MetaConstString instance is returned.
 //
-const char *MetaTable::removeConstString(const char *key)
+const char *MetaTable::removeConstString(size_t keyIndex)
 {
    MetaConstString *str;
    const char *value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(str = getObjectKeyAndTypeEx<MetaConstString>(key)))
+   if(!(str = getObjectKeyAndTypeEx<MetaConstString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return nullptr;
@@ -1838,6 +1872,10 @@ const char *MetaTable::removeConstString(const char *key)
    delete str;
 
    return value;
+}
+const char *MetaTable::removeConstString(const char *key)
+{
+   return removeConstString(MetaKey(key).index);
 }
 
 //

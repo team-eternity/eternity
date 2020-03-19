@@ -288,6 +288,7 @@ static const char *doom_skindefs[NUMSKINSOUNDS] =
    "fallht",
    "none",
    "noway",
+   "none",
 };
 
 static int doom_soundnums[NUMSKINSOUNDS] =
@@ -304,6 +305,7 @@ static int doom_soundnums[NUMSKINSOUNDS] =
    sfx_fallht,
    sfx_plwdth,
    sfx_noway,
+   sfx_jump,
 };
 
 static const char *htic_skindefs[NUMSKINSOUNDS] =
@@ -319,7 +321,8 @@ static const char *htic_skindefs[NUMSKINSOUNDS] =
    "plfeet",
    "fallht",
    "ht_plrwdth",
-   "ht_plroof",
+   "none",
+   "none",
 };
 
 static int htic_soundnums[NUMSKINSOUNDS] =
@@ -335,7 +338,8 @@ static int htic_soundnums[NUMSKINSOUNDS] =
    sfx_plfeet,
    sfx_fallht,
    sfx_hplrwdth,
-   sfx_hplroof,
+   sfx_hnoway,
+   sfx_jump,
 };
 
 //
@@ -1181,6 +1185,7 @@ static gamemodeinfo_t giDoomSW =
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
+   nullptr,           // titleMusName
 
    1,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1303,6 +1308,7 @@ static gamemodeinfo_t giDoomReg =
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
+   nullptr,           // titleMusName
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1425,6 +1431,7 @@ static gamemodeinfo_t giDoomRetail =
    DOOMDEFSOUND,      // defSoundName
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
+   nullptr,           // titleMusName
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1547,6 +1554,7 @@ static gamemodeinfo_t giDoomCommercial =
    DOOMDEFSOUND,       // defSoundName
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
+   nullptr,            // titleMusName
 
    3,              // switchEpisode
    &Doom2SkyData,  // skyData
@@ -1669,6 +1677,7 @@ static gamemodeinfo_t giHereticSW =
    HTICDEFSOUND,        // defSoundName
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
+   nullptr,             // titleMusName
 
    1,                  // switchEpisode
    &HereticSkyData,    // skyData
@@ -1795,6 +1804,7 @@ static gamemodeinfo_t giHereticReg =
    HTICDEFSOUND,        // defSoundName
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
+   nullptr,             // titleMusName
 
    2,                  // switchEpisode
    &HereticSkyData,    // skyData

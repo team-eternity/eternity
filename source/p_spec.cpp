@@ -66,6 +66,7 @@
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
+#include "p_sector.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
@@ -2419,12 +2420,12 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 // Moves all attached surfaces.
 //
 bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
-                    int crush)
+                    int crush, bool nointerp)
 {
    int i;
 
    int count;
-   attachedsurface_t *list;
+   const attachedsurface_t *list;
 
    bool ok = true;
    
@@ -2446,12 +2447,16 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
          P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
          P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
 
       if(list[i].type & AS_FLOOR)
@@ -2459,12 +2464,16 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
          P_SetFloorHeight(list[i].sector, list[i].sector->floorheight + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
          P_SetFloorHeight(list[i].sector, list[i].sector->floorheight - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
    }
 

@@ -25,17 +25,14 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "e_inventory.h"
-#include "m_random.h"
-#include "m_swap.h"
+#include "hu_inventory.h"
 #include "metaapi.h"
-#include "p_mobj.h"
+#include "r_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
-#include "w_wad.h"
 #include "st_stuff.h"
 
 //
@@ -51,15 +48,12 @@
 // cached patches
 static patch_t *invnums[10];      // inventory numbers
 static patch_t *smallinvnums[10]; // small inventory numbers
+static patch_t *bigfsnums[10];    // large fullscreen numbers
 static patch_t *PatchINVLFGEM1;
 static patch_t *PatchINVLFGEM2;
 static patch_t *PatchINVRTGEM1;
 static patch_t *PatchINVRTGEM2;
 static patch_t *PatchBLACKSQ;
-
-// important patch numbers
-static int spinbooklump;
-static int spinflylump;
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -71,7 +65,7 @@ static int chainwiggle;        // small randomized addend for chain y coord.
 // Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
 // x is expected to be 8 more than its equivalent Heretic calls.
 //
-static void ST_drawSmallNumber(int val, int x, int y)
+void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen)
 {
    if(val > 1)
    {
@@ -88,10 +82,38 @@ static void ST_drawSmallNumber(int val, int x, int y)
       {
          int i = *rover - '0';
          patch = smallinvnums[i];
-         V_DrawPatch(x, y, &subscreen43, patch);
+         V_DrawPatch(x, y, fullscreen ? &vbscreenyscaled : &subscreen43, patch);
          x += 4;
       }
    }
+}
+
+//
+// Big green numbers for fullscreen graphical HUD
+//
+static void ST_drawBigNumber(int val, int x, int y)
+{
+   int oldval = val;
+   int xpos = x;
+   if(val < 0)
+      val = 0;
+   patch_t *patch;
+   if(val > 99)
+   {
+      patch = bigfsnums[val / 100 % 10];
+      V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+   }
+   val %= 100;
+   xpos += 12;
+   if(val > 9 || oldval > 99)
+   {
+      patch = bigfsnums[val / 10 % 10];
+      V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+   }
+   val %= 10;
+   xpos += 12;
+   patch = bigfsnums[val % 10];
+   V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
 }
 
 //
@@ -125,6 +147,9 @@ static void ST_HticInit()
       sprintf(lumpname, "SMALLIN%d", i);
 
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+
+      snprintf(lumpname, sizeof(lumpname), "FONTB%d", 16 + i); // FONTB16-FONTB25
+      bigfsnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
    PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
@@ -143,10 +168,6 @@ static void ST_HticInit()
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-
-   // load important numbers needed when some arithmetic is done with them
-   spinbooklump = W_GetNumForName(DEH_String("SPINBK0"));
-   spinflylump  = W_GetNumForName(DEH_String("SPFLY0"));
 }
 
 //
@@ -424,7 +445,7 @@ static void ST_drawStatBar()
             V_DrawPatch(179, 160, &subscreen43,
                         PatchLoader::CacheName(wGlobalDir, patch,
                                                PU_CACHE, lumpinfo_t::ns_sprites));
-            ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
+            ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182, false);
          }
       }
    }
@@ -506,8 +527,8 @@ static void ST_drawInvBar()
 
                V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
                            &subscreen43, patch);
-               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
-                                  ST_INVSLOTSTARTX + 27 + (i * 31), ST_INVBARBGY + 22);
+               ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), ST_INVSLOTSTARTX +
+                                         27 + (i * 31), ST_INVBARBGY + 22, false);
             }
          }
       }
@@ -523,63 +544,6 @@ static void ST_drawInvBar()
 }
 
 //
-// Draw spinning powerups
-//
-static void ST_drawPowerUps()
-{
-   static bool hitCenterFrame = false;
-   // Display the little rotating wings of wrath
-   if(plyr->powers[pw_flight])
-   {
-      // Blink the wings when the player is almost out
-      if(plyr->powers[pw_flight] > (4 * 32) || !(plyr->powers[pw_flight] & 16))
-      {
-         int frame = (leveltime / 3) & 15;
-         if(plyr->mo->flags4 & MF4_FLY)
-         {
-            if(hitCenterFrame && (frame != 15 && frame != 0))
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
-            }
-            else
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
-               hitCenterFrame = false;
-            }
-         }
-         else
-         {
-            // FIXME: Why would this code trigger?
-            if(!hitCenterFrame && (frame != 15 && frame != 0))
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
-               hitCenterFrame = false;
-            }
-            else
-            {
-               V_DrawPatch(20, 17, &vbscreenyscaled,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
-               hitCenterFrame = true;
-            }
-         }
-      }
-   }
-
-   if(plyr->powers[pw_weaponlevel2])
-   {
-      if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
-      {
-         const int frame = (leveltime / 3) & 15;
-         V_DrawPatch(vbscreenyscaled.unscaledw - 20, 17, &vbscreenyscaled,
-                     PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
-      }
-   }
-}
-
-//
 // ST_HticDrawer
 //
 // Draws the Heretic status bar
@@ -588,7 +552,6 @@ static void ST_HticDrawer()
 {
    ST_drawBackground();
    ST_drawLifeChain();
-   ST_drawPowerUps();
 
    if(players[displayplayer].invbarstate.inventory)
       ST_drawInvBar();
@@ -603,6 +566,13 @@ static void ST_HticDrawer()
 //
 static void ST_HticFSDrawer()
 {
+   ST_drawBigNumber(plyr->health, 5, 180);
+   if(GameType == gt_dm)
+      ST_drawInvNum(plyr->totalfrags, 45, 185);
+
+   int posx, posy;
+   HU_InventoryGetCurrentBoxHints(posx, posy);
+   HU_InventoryDrawCurrentBox(posx, posy);
 }
 
 //

@@ -507,13 +507,14 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 // haleyjd 04/15/2010: thing position logging for debugging demo problems.
 // Pass a NULL mobj to close the log.
 //
+//#define THING_LOGGING
 #ifdef THING_LOGGING
 void P_LogThingPosition(Mobj *mo, const char *caller)
 {
    static FILE *thinglog;
 
    if(!thinglog)
-      thinglog = fopen("thinglog.txt", "w");
+      thinglog = fopen("thinglog.txt", "wt");
 
    if(!mo)
    {
@@ -526,8 +527,9 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    if(thinglog)
    {
       fprintf(thinglog,
-              "%010d:%s::%+010d:%+010d:%+010d:%+010d:%+010d\n",
-              gametic, caller, (int)(mo->info->dehnum-1), mo->x, mo->y, mo->z, mo->flags & 0x7fffffff);
+              "%010d:%s::%+010d:(%g:%g:%g):(%g:%g:%g):%08x\n",
+              gametic, caller, (int)(mo->info->dehnum-1), mo->x / 65536., mo->y / 65536., mo->z / 65536.,
+                           mo->momx / 65536., mo->momy / 65536., mo->momz / 65536., mo->flags & 0x7fffffff);
    }
 }
 #else
@@ -950,6 +952,40 @@ angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y)
    }
 
    return 0;
+}
+
+//
+// [XA] 02/29/20:
+//
+// double --> angle conversion, mainly for EDF usage.
+// presumes 'a' is in degrees, like the rest of
+// the various to-angle conversion functions. Negative
+// angles are supported.
+//
+angle_t P_DoubleToAngle(double a)
+{
+   // normalize the angle to [0, 360)
+   a = fmod(a, 360.0);
+   if(a < 0)
+      a += 360.0;
+
+   // convert dat shit
+   return FixedToAngle(M_DoubleToFixed(a));
+}
+
+//
+// [XA] 02/29/20:
+//
+// Rotates a point by the specified angle. 'Nuff said.
+//
+void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle)
+{
+   fixed_t tmp;
+   fixed_t sin = finesine[angle >> ANGLETOFINESHIFT];
+   fixed_t cos = finecosine[angle >> ANGLETOFINESHIFT];
+   tmp = FixedMul(x, cos) - FixedMul(y, sin);
+   y = FixedMul(x, sin) + FixedMul(y, cos);
+   x = tmp;
 }
 
 //----------------------------------------------------------------------------

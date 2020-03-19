@@ -196,7 +196,7 @@ void P_CalcHeight(player_t *player)
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
-      player->viewz = player->mo->z + VIEWHEIGHT;
+      player->viewz = player->mo->z + player->pclass->viewheight;
       
       if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
          player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
@@ -220,15 +220,15 @@ void P_CalcHeight(player_t *player)
    {
       player->viewheight += player->deltaviewheight;
       
-      if(player->viewheight > VIEWHEIGHT)
+      if(player->viewheight > player->pclass->viewheight)
       {
-         player->viewheight = VIEWHEIGHT;
+         player->viewheight = player->pclass->viewheight;
          player->deltaviewheight = 0;
       }
 
-      if(player->viewheight < VIEWHEIGHT / 2)
+      if(player->viewheight < player->pclass->viewheight / 2)
       {
-         player->viewheight = VIEWHEIGHT / 2;
+         player->viewheight = player->pclass->viewheight / 2;
          if(player->deltaviewheight <= 0)
             player->deltaviewheight = 1;
       }
@@ -375,7 +375,7 @@ void P_MovePlayer(player_t* player)
          if(cmd->sidemove)
             P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
       }
-      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      else if(LevelInfo.airControl == 0 && E_CanJump(*player->pclass))
       {
          // Apply legacy Hexen/Strife primitive air control if air control is 0
          // (default) and the compatibility setting is "NO".
@@ -688,14 +688,31 @@ void P_PlayerThink(player_t *player)
       // Handle actions   -- joek 12/22/07
       // ioanch: not on demo_version lower than some amount. Was happening
       // accidentally in -vanilla.
-      if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
+      if(cmd->actions & AC_JUMP)
       {
-         if((player->mo->z == player->mo->zref.floor ||
-             (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+         if(E_CanJump(*player->pclass))
          {
-            player->mo->momz += player->pclass->jumpspeed;
-            player->mo->intflags &= ~MIF_ONMOBJ;
-            player->jumptime = 18;
+            if((player->mo->z == player->mo->zref.floor ||
+                (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+            {
+               if(strcasecmp(player->skin->sounds[sk_jump], "none"))
+                  S_StartSound(player->mo, GameModeInfo->playerSounds[sk_jump]);
+               player->mo->momz += player->pclass->jumpspeed;
+               player->mo->intflags &= ~MIF_ONMOBJ;
+               player->jumptime = 18;
+            }
+         }
+         else
+         {
+            static int printtic = -3 * TICRATE;
+            if(gametic >= printtic + 3 * TICRATE && player == &players[consoleplayer])
+            {
+               printtic = gametic;
+               if(E_MayJumpIfOverriden(*player->pclass))
+                  doom_printf("Jumping needs to be allowed in the settings.");
+               else
+                  doom_printf("Jumping not possible.");
+            }
          }
       }
    }
@@ -880,12 +897,23 @@ void P_PlayerThink(player_t *player)
          {
             // Note: sisterWeapon is guaranteed to != nullptr elsewhere
             weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
-            if(unpowered->readystate != player->readyweapon->readystate ||
-               unpowered->flags & WPF_FORCETOREADY)
+            if(player->readyweapon->flags & WPF_PHOENIXRESET &&
+               player->psprites[ps_weapon].state->index != player->readyweapon->readystate &&
+               player->psprites[ps_weapon].state->index != player->readyweapon->upstate)
             {
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               P_SubtractAmmo(player, -1);
+               player->refire = 0;
+            }
+            else if(unpowered->flags & WPF_FORCETOREADY || player->attackdown == AT_NONE)
+            {
+               // TODO: Figure out if should be || (player->attackdown == AT_NONE && current-state-isireadystate)
                P_SetPsprite(player, ps_weapon, unpowered->readystate);
                player->refire = 0;
             }
+            else if(player->readyweapon->flags & WPF_DEPOWERSWITCH)
+               player->pendingweapon = unpowered;
+
             player->readyweapon = unpowered;
          }
       }

@@ -108,6 +108,8 @@ extern int demo_subversion;
 // killough 7/19/98: whether monsters should fight against each other
 extern int monster_infighting, default_monster_infighting;
 
+extern bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
+
 extern int monkeys, default_monkeys;
 
 // v1.1-like pitched sounds
@@ -156,7 +158,8 @@ enum {
   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   comp_special,     //         08/29/09: special failure behavior
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
-  comp_aircontrol,  // Disable air control
+  comp_jump,        // Disable jumping and air control
+  comp_aircontrol = comp_jump,
   COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
   COMP_TOTAL=32  // Some extra room for additional variables
 };

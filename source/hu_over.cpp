@@ -33,6 +33,8 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "e_inventory.h"
+#include "e_player.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "hu_boom.h"
 #include "hu_modern.h"
@@ -181,6 +183,62 @@ char HU_WeapColor(const weaponinfo_t *w)
                                                  *FC_GREEN);
 }
 
+//
+// HU_WeapColor tuned to work for a weapon slot
+//
+static char HU_weapSlotColor(const int slot)
+{
+   if(!hu_player.pclass->weaponslots[slot])
+      return 0;
+
+   const weaponinfo_t *weapon = nullptr;
+
+   BDListItem<weaponslot_t> *weaponslot = E_FirstInSlot(hu_player.pclass->weaponslots[slot]);
+   do
+   {
+      if(E_PlayerOwnsWeapon(&hu_player, weaponslot->bdObject->weapon))
+      {
+         if(weapon == nullptr)
+            weapon = weaponslot->bdObject->weapon;
+         else if(weapon->ammo != weaponslot->bdObject->weapon->ammo)
+            return *FC_GRAY; // TODO: Change "more than one ammo type in slot" color
+      }
+      weaponslot = weaponslot->bdNext;
+   } while(!weaponslot->isDummy());
+
+   return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+}
+
+//
+// Generalized version of above for any HUD (BOOM or modern)
+//
+char HU_WeaponColourGeneralized(const player_t &player, int index, bool *had)
+{
+   if(E_NumWeaponsInSlotPlayerOwns(&player, index))
+   {
+      if(had)
+         *had = true;
+      return HU_weapSlotColor(index);
+   }
+   if(E_PlayerOwnsWeaponForDEHNum(&player, index))
+   {
+      if(had)
+         *had = true;
+      const weaponinfo_t *weapon = E_WeaponForDEHNum(index);
+      return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+   }
+   if(E_PlayerOwnsWeaponInSlot(&player, index))
+   {
+      if(had)
+         *had = true;
+      const weaponinfo_t *weapon = P_GetPlayerWeapon(&player, index);
+      return weapon->ammo ? HU_WeapColor(weapon) : *FC_GRAY;
+   }
+   if(had)
+      *had = false;
+   return *FC_CUSTOM2;
+}
+
 // Determine the color to use for a given player's health
 char HU_HealthColor()
 {
@@ -211,7 +269,7 @@ char HU_ArmorColor()
 }
 
 // Globals
-int hud_overlaylayout = 1;
+int hud_overlaylayout = HUD_BOOM;
 int hud_enabled      = 1;
 int hud_hidestatus   = 0;
 
@@ -328,9 +386,11 @@ void HU_DisableHUD()
 //
 // HU_OverlayDraw
 //
-void HU_OverlayDraw()
+void HU_OverlayDraw(int &leftoffset, int &rightoffset)
 {
    // SoM 2-4-04: ANYRES
+   leftoffset = 0;
+   rightoffset = 0;
    if(viewwindow.height != video.height || automapactive || !hud_enabled)
       return;  // fullscreen only
 
@@ -338,6 +398,9 @@ void HU_OverlayDraw()
 
    for(unsigned int i = 0; i < NUMOVERLAY; i++)
       hu_overlay->DrawOverlay(static_cast<overlay_e>(i));
+
+   leftoffset = hu_overlay->leftoffset;   // set output parameters only if HUD gets drawn at all.
+   rightoffset = hu_overlay->rightoffset;
 }
 
 static const char *hud_overlaynames[] =

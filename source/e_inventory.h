@@ -290,6 +290,10 @@ bool E_GetInventoryItemDetails(const player_t *player,
                                int &amountToGive,
                                int &maxAmount,
                                int &fullAmount);
+int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerclass_t &pclass,
+                      int def);
+int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass,
+                      int def);
 
 //
 // EDF-Only Definitions

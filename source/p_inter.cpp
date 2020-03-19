@@ -82,7 +82,9 @@
 // dehacked support (and future flexibility).  Most var names came from the key
 // strings used in dehacked.
 
-int god_health = 100;   // these are used in cheats (see st_stuff.c)
+// ioanch: start it with 0, so by default pclass->maxhealth takes precedence. On any Dehacked, this
+// one will become nonzero and will prevail.
+int god_health_override = 0;   // these are used in cheats (see st_stuff.c)
 
 int bfgcells = 40;      // used in p_pspr.c
 // Ty 03/07/98 - end deh externals
@@ -230,7 +232,7 @@ static void P_consumeSpecial(player_t *activator, Mobj *special)
 // Compat P_giveWeapon, to stop demos catching on fire for some reason
 //
 static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
-                               bool &staypick)
+                               bool &staypick, const char *sound)
 {
    bool gaveweapon = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -268,7 +270,9 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 
       player->pendingweapon = wp;
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      // killough 4/25/98, 12/98
+      if(sound)
+         S_StartSoundName(player->mo, sound);
       P_consumeSpecial(player, special); // need to handle it here
       staypick = true;
       return false;
@@ -294,10 +298,10 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 // The weapon name may have a MF_DROPPED flag ored in.
 //
 static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
-                         bool &staypick)
+                         bool &staypick, const char *sound)
 {
    if(demo_version < 401)
-      return P_giveWeaponCompat(player, giver, dropped, special, staypick);
+      return P_giveWeaponCompat(player, giver, dropped, special, staypick, sound);
 
    bool gaveammo = false;
    weaponinfo_t *wp = E_WeaponForName(giver->getString("weapon", ""));
@@ -364,7 +368,9 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
       E_GiveWeapon(player, wp);
       player->pendingweapon = wp;
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      S_StartSound(player->mo, sfx_wpnup); // killough 4/25/98, 12/98
+      // killough 4/25/98, 12/98
+      if(sound)
+         S_StartSoundName(player->mo, sound);
       P_consumeSpecial(player, special); // need to handle it here
       staypick = true;
       return false;
@@ -394,8 +400,8 @@ bool P_GiveBody(player_t *player, const itemeffect_t *effect)
    if(!effect)
       return false;
 
-   int amount    = effect->getInt("amount",       0);
-   int maxamount = effect->getInt("maxamount",    0);
+   int amount = E_GetPClassHealth(*effect, "amount", *player->pclass, 0);
+   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player->pclass, 0);
 
    // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
    // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
@@ -627,7 +633,8 @@ bool P_GivePowerForItem(player_t *player, const itemeffect_t *power)
       return false; // There's no power for the type provided
 
    // EDF_FEATURES_FIXME: Strength counts up. Also should additivetime imply overridesself?
-   if(!power->getInt("overridesself", 0) && player->powers[powerNum] >  4 * 32)
+   if(!power->getInt("overridesself", 0) &&
+      (player->powers[powerNum] >  4 * 32 || player->powers[powerNum] < 0))
       return false;
 
    // Unless player has infinite duration cheat, set duration (MaxW stolen from killough)
@@ -725,7 +732,6 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
    const e_pickupfx_t *pickup, *temp;
    bool            pickedup  = false;
    bool            dropped  = false;
-   bool            hadeffect = false;
    const char     *message  = nullptr;
    const char     *sound     = nullptr;
 
@@ -773,8 +779,11 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
       {
       case ITEMFX_HEALTH:   // Health - heal up the player automatically
          pickedup |= P_GiveBody(player, effect);
-         if(pickedup && player->health < effect->getInt("amount", 0) * 2)
+         if(pickedup && player->health < E_GetPClassHealth(*effect, "amount", *player->pclass,
+                                                           0) * 2)
+         {
             message = effect->getString("lowmessage", message);
+         }
          break;
       case ITEMFX_ARMOR:    // Armor - give the player some armor
          pickedup |= P_GiveArmor(player, effect);
@@ -786,7 +795,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          pickedup |= P_GivePowerForItem(player, effect);
          break;
       case ITEMFX_WEAPONGIVER:
-         pickedup |= P_giveWeapon(player, effect, dropped, special, staypick);
+         pickedup |= P_giveWeapon(player, effect, dropped, special, staypick, sound);
          break;
       case ITEMFX_ARTIFACT: // Artifacts - items which go into the inventory
          pickedup |= E_GiveInventoryItem(player, effect);

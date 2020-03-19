@@ -1032,10 +1032,12 @@ CONSOLE_COMMAND(god, cf_notnet|cf_level)
    
    if(players[consoleplayer].cheats & CF_GODMODE)
    {
+      int sethealth = god_health_override > 0 ? god_health_override :
+            players[consoleplayer].pclass->maxhealth;
       if (players[consoleplayer].mo)
-         players[consoleplayer].mo->health = god_health;  // Ty 03/09/98 - deh
+         players[consoleplayer].mo->health = sethealth;  // Ty 03/09/98 - deh
       
-      players[consoleplayer].health = god_health;
+      players[consoleplayer].health = sethealth;
       doom_printf("%s", DEH_String("STSTR_DQDON")); // Ty 03/27/98 - externalized
    }
    else 

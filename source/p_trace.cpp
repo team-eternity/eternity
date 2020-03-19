@@ -275,7 +275,7 @@ bool P_ShootThing(const intercept_t *in,
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, shooter, pufftype, th);
    }
    else
    {
@@ -284,7 +284,7 @@ bool P_ShootThing(const intercept_t *in,
       bool showpuff = false;
       if(pufftype && pufftype->getInt(keyPuffAlwaysPuff, 0))
       {
-         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, shooter, pufftype, th);
          showpuff = true;
       }
 
@@ -389,7 +389,7 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true,
-                  E_PuffForIndex(puffidx));
+                  trace.thing, E_PuffForIndex(puffidx));
 
       // don't go any further
       return false;
@@ -611,7 +611,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true, E_PuffForIndex(puffidx));
+                  updown, true, trace.thing, E_PuffForIndex(puffidx));
       
       // don't go any further     
       return false;
@@ -690,7 +690,8 @@ static bool PTR_UseTraverse(intercept_t *in, void *context)
       if(clip.openrange <= 0)
       {
          // can't use through a wall
-         S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
+         if(strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
+            S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
          return false;
       }
 
@@ -766,8 +767,11 @@ void P_UseLines(player_t *player)
    // This added test makes the "oof" sound work on 2s lines -- killough:
    
    if(P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_UseTraverse))
-      if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse))
+      if(!P_PathTraverse(x1, y1, x2, y2, PT_ADDLINES, PTR_NoWayTraverse) &&
+         strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
+      {
          S_StartSound(trace.thing, GameModeInfo->playerSounds[sk_noway]);
+      }
 }
 
 //=============================================================================

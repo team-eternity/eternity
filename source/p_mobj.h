@@ -52,7 +52,7 @@ class  BloodSpawner;
 
 // Defines
 
-#define VIEWHEIGHT      (41*FRACUNIT)
+// [XA] VIEWHEIGHT is now a playerclass property
 
 // sf: gravity >>> defaultgravity
 #define DEFAULTGRAVITY  FRACUNIT
@@ -432,7 +432,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
-                  bool ptcl, const MetaTable *pufftype = nullptr,
+                  bool ptcl, Mobj *shooter, const MetaTable *pufftype = nullptr,
                   const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
@@ -502,13 +502,36 @@ struct missileinfo_t
    uint32_t    flags;  // flags to affect firing (use enum values)
 };
 
+//
+// Feedback from targetting
+//
+struct playertargetinfo_t
+{
+   bool isfriend;
+   fixed_t slope;
+};
+
+//
+// SpawnPlayerMissile flags
+//
+enum
+{
+   SPM_ADDSLOPETOZ = 1,
+
+   SPMAH_FOLLOWTARGETFRIENDSLOPE = 1,
+   SPMAH_AIMFRIENDSTOO = 2,
+};
+
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
 // Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type, unsigned flags = 0,
+                           playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
-Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle,
+                                       unsigned flags = 0,
+                                       const playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 

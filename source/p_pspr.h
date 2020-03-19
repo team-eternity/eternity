@@ -76,6 +76,12 @@ typedef enum
   NUMPSPRITES
 } psprnum_t;
 
+enum fireplayermissile_flags : unsigned int
+{
+   FIREPLAYERMISSILE_HOMING = 0x00000001,
+   FIREPLAYERMISSILE_NOAMMO = 0x00000002
+};
+
 struct pspdef_t
 {
   state_t *state;       // a NULL state means not active
@@ -126,7 +132,7 @@ void A_FireSomething(player_t* player, int adder);
 fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance);
 
 extern argkeywd_t fcbkwds;
-extern argkeywd_t seekkwds;
+extern dehflagset_t fireplayermissile_flagset;
 
 #endif
 

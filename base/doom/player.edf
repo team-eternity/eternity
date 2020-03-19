@@ -16,6 +16,7 @@ playerclass DoomMarine
    defaultskin    marine
    thingtype      DoomPlayer
    altattackstate S_PLAY_ATK2
+   superhealth    200
 
    weaponslot 1 { weapons : Chainsaw, Fist }
    weaponslot 2 { weapons : Pistol }
@@ -187,6 +188,8 @@ weaponinfo Chaingun : DoomWeapon, 3
     goto Ready
   Flash:
     CHGF A 5 bright A_Light1
+    goto LightDone
+  Flash2:
     CHGF B 5 bright A_Light2
     goto LightDone
   "@

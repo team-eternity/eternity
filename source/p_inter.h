@@ -62,9 +62,8 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max);
 
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 
-extern int god_health;   // Ty 03/09/98 - deh support, see also p_inter.c
+extern int god_health_override;   // Ty 03/09/98 - deh support, see also p_inter.c
 // Ty 03/13/98 - externalized initial settings for respawned player
-extern int god_health;
 extern int bfgcells;
 
 // haleyjd 08/01/04: special inflictor types

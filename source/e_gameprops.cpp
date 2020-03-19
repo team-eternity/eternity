@@ -95,6 +95,7 @@
 #define ITEM_GPROP_INTERPIC    "intermission.pic"
 #define ITEM_GPROP_DEFMUSNAME  "sound.defaultmusname"
 #define ITEM_GPROP_DEFSNDNAME  "sound.defaultsndname"
+#define ITEM_GPROP_TITLEMUSNAME "sound.titlemusic"
 #define ITEM_GPROP_CREDITBKGND "credit.background"
 #define ITEM_GPROP_CREDITY     "credit.y"
 #define ITEM_GPROP_CREDITTSTEP "credit.titlestep"
@@ -126,6 +127,7 @@ enum
    GI_STR_INTERPIC,
    GI_STR_DEFMUSNAME,
    GI_STR_DEFSNDNAME,
+   GI_STR_TITLEMUSNAME,
    GI_STR_CREDITBKGND,
    GI_STR_ENDTEXTNAME,
    GI_STR_BLOODNORM,
@@ -256,6 +258,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_INTERPIC,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFMUSNAME,  "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFSNDNAME,  "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_TITLEMUSNAME,"",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_CREDITBKGND, "",   CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITTSTEP, 0,    CFGF_NONE),
@@ -572,6 +575,12 @@ static void E_processGamePropsBlock(cfg_t *props)
                          cfg_getstr(props, ITEM_GPROP_DEFSNDNAME));
    }
    
+   if(IS_SET(ITEM_GPROP_TITLEMUSNAME))
+   {
+      E_setDynamicString(GameModeInfo->titleMusName, GI_STR_TITLEMUSNAME,
+                         cfg_getstr(props, ITEM_GPROP_TITLEMUSNAME));
+   }
+
    // Credit Screen Properties
 
    if(IS_SET(ITEM_GPROP_CREDITBKGND))

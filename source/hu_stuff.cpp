@@ -48,6 +48,7 @@
 #include "g_bind.h"
 #include "g_game.h"
 #include "hu_frags.h"
+#include "hu_inventory.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
 #include "m_qstr.h"
@@ -84,44 +85,6 @@ char *hud_fontname;
 static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
-//
-// Widget Superclass Functionality
-//
-// haleyjd 06/04/05: Complete HUD rewrite.
-//
-
-class HUDWidget : public ZoneObject
-{
-protected:
-   int  type;         // widget type
-   char name[33];     // name of this widget
-   HUDWidget *next;   // next in hash chain
-   bool disabled;     // disable flag
-
-   enum { NUMWIDGETCHAINS = 17 };
-
-   static HUDWidget *hu_chains[NUMWIDGETCHAINS];
-
-public:
-   void setName(const char *widgetName)
-   {
-      strncpy(name, widgetName, sizeof(name));
-   }
-
-   void setType(int widgetType) { type = widgetType; }
-   
-   // overridable functions (virtuals in a sense)
-   virtual void ticker() {} // ticker: called each gametic
-   virtual void drawer() {} // drawer: called when drawn
-   virtual void eraser() {} // eraser: called when erased
-   virtual void clear()  {} // clear : called on reinit
-
-   static HUDWidget *WidgetForName(const char *name);
-   static bool       AddWidgetToHash(HUDWidget *widget);
-   static void       StartWidgets();
-   static void       DrawWidgets();
-   static void       TickWidgets();
-};
 
 // widget hash table
 HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
@@ -314,8 +277,14 @@ void HU_Drawer()
 
    // HUD_FIXME: generalize?
    // draw different modules
+   int leftoffset, rightoffset;
    HU_FragsDrawer();
-   HU_OverlayDraw();
+   HU_OverlayDraw(leftoffset, rightoffset);
+
+   HU_BuffsDraw(leftoffset, rightoffset);
+
+   // Temporary on-top overlays
+   HU_InventoryDrawSelector();
 }
 
 //

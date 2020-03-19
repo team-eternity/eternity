@@ -1098,6 +1098,9 @@
     <ClCompile Include="..\source\autodoom\b_weapon.cpp">
       <Filter>Source Files\autodoom</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\hu_inventory.cpp">
+      <Filter>Source Files\HU_\HU_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1972,6 +1975,9 @@
     </ClInclude>
     <ClInclude Include="..\source\autodoom\b_weapon.h">
       <Filter>Source Files\autodoom</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hu_inventory.h">
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

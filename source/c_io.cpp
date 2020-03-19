@@ -58,6 +58,7 @@
 #include "v_block.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
+#include "z_auto.h"
 
 #define MESSAGES 512
 // keep the last 32 typed commands
@@ -121,8 +122,17 @@ void C_InitBackdrop()
    // allow for custom console background graphic
    if(W_CheckNumForName("CONSOLE") >= 0)
    {
-      lumpname = "CONSOLE";
-      darken = false; // I assume it is already suitable for use.
+      ZAutoBuffer  patch;
+      byte        *data;
+
+      wGlobalDir.cacheLumpAuto("CONSOLE", patch);
+      data = patch.getAs<byte *>();
+
+      if(data && PatchLoader::VerifyAndFormat(data, patch.getSize()))
+      {
+         lumpname = "CONSOLE";
+         darken = false; // I assume it is already suitable for use.
+      }
    }
    
    if(cbackneedfree)

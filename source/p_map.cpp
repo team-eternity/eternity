@@ -33,6 +33,7 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "m_argv.h"
@@ -921,14 +922,151 @@ int P_MissileBlockHeight(Mobj *mo)
 //
 // True if missile damage should be allowed
 //
-bool P_AllowMissileDamage(const Mobj &shooter, const Mobj &target)
+inline static bool P_allowMissileDamage(const Mobj &shooter, const Mobj &target)
 {
-   return target.player || (shooter.type == target.type &&
+   return target.player || deh_species_infighting || (shooter.type == target.type &&
                             (shooter.flags4 & MF4_HARMSPECIESMISSILE ||
                              (shooter.flags4 & MF4_FRIENDFOEMISSILE &&
                               (shooter.flags ^ target.flags) & MF_FRIEND))) ||
    (shooter.type != target.type &&
     !E_ThingPairValid(shooter.type, target.type, TGF_PROJECTILEALLIANCE));
+}
+
+//
+// Common stuff between PIT_CheckThing and PIT_CheckThing3D
+//
+ItemCheckResult P_CheckThingCommon(Mobj *thing)
+{
+   // check for skulls slamming into things
+
+   if(P_SkullHit(thing))
+      return ItemCheck_hit;
+
+   // missiles can hit other things
+   // killough 8/10/98: bouncing non-solid things can hit other things too
+
+   if(clip.thing->flags & MF_MISSILE ||
+      (clip.thing->flags & MF_BOUNCES && !(clip.thing->flags & MF_SOLID)))
+   {
+      int damage;
+      // haleyjd 07/06/05: some objects may use info->height instead
+      // of their current height value in this situation, to avoid
+      // altering the playability of maps when 3D object clipping
+      // with corrected thing heights is enabled.
+      int height = P_MissileBlockHeight(thing);
+
+      // haleyjd: some missiles can go through ghosts
+      if(thing->flags3 & MF3_GHOST && clip.thing->flags3 & MF3_THRUGHOST)
+         return ItemCheck_pass;
+
+      // see if it went over / under
+      
+      if(clip.thing->z > thing->z + height) // haleyjd 07/06/05
+         return ItemCheck_pass;    // overhead
+
+      if(clip.thing->z + clip.thing->height < thing->z)
+         return ItemCheck_pass;    // underneath
+
+      if(clip.thing->target)
+      {
+         if(thing == clip.thing->target)
+            return ItemCheck_pass;   // Don't hit originator.
+         if(!P_allowMissileDamage(*clip.thing->target, *thing))
+            return ItemCheck_hit;
+      }
+      
+      // haleyjd 10/15/08: rippers
+      if(clip.thing->flags3 & MF3_RIP)
+      {
+         damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
+
+         if(!(thing->flags & MF_NOBLOOD) &&
+            !(thing->flags2 & MF2_REFLECTIVE) &&
+            !(thing->flags2 & MF2_INVULNERABLE))
+         {
+            BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
+         }
+         
+         // TODO: ripper sound - gamemode dependent? thing dependent?
+         //S_StartSound(clip.thing, sfx_ripslop);
+
+         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
+                      clip.thing->info->mod);
+         
+         if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
+         { 
+            // Push thing
+            thing->momx += clip.thing->momx >> 2;
+            thing->momy += clip.thing->momy >> 2;
+         }
+         
+         // TODO: huh?
+         //numspechit = 0;
+         return ItemCheck_pass;
+      }
+
+      // killough 8/10/98: if moving thing is not a missile, no damage
+      // is inflicted, and momentum is reduced if object hit is solid.
+
+      if(!(clip.thing->flags & MF_MISSILE))
+      {
+         if(!(thing->flags & MF_SOLID))
+            return ItemCheck_pass;
+         else
+         {
+            clip.thing->momx = -clip.thing->momx;
+            clip.thing->momy = -clip.thing->momy;
+            if(!(clip.thing->flags & MF_NOGRAVITY))
+            {
+               clip.thing->momx >>= 2;
+               clip.thing->momy >>= 2;
+            }
+
+            return ItemCheck_hit;
+         }
+      }
+
+      if(!(thing->flags & MF_SHOOTABLE))
+         return !(thing->flags & MF_SOLID) ? ItemCheck_pass : ItemCheck_hit; // didn't do any damage
+
+      // damage / explode
+      
+      damage = ((P_Random(pr_damage)%clip.thing->info->damagemod)+1)*clip.thing->damage;
+      
+      // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
+      if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
+      {
+         // 20160312: ability for missiles to draw blood
+         if(clip.thing->flags4 & MF4_DRAWSBLOOD &&
+            !(thing->flags & MF_NOBLOOD) &&
+            !(thing->flags2 & MF2_REFLECTIVE) &&
+            !(thing->flags2 & MF2_INVULNERABLE))
+         {
+            if(P_Random(pr_drawblood) < 192)
+            {
+               BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_IMPACT);
+            }
+         }
+
+         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
+                      clip.thing->info->mod);
+      }
+
+      // don't traverse any more
+      return ItemCheck_hit;
+   }
+
+   // haleyjd 1/16/00: Pushable objects -- at last!
+   //   This is remarkably simpler than I had anticipated!
+   
+   if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
+   {
+      // transfer one-fourth momentum along the x and y axes
+      thing->momx += clip.thing->momx / 4;
+      thing->momy += clip.thing->momy / 4;
+   }
+
+   return ItemCheck_furtherNeeded;
 }
 
 //
@@ -972,133 +1110,9 @@ static bool PIT_CheckThing(Mobj *thing, void *context) // killough 3/26/98: make
    if(P_Touched(thing))
       return true;
 
-   // check for skulls slamming into things
-
-   if(P_SkullHit(thing))
-      return false;
-   
-   // missiles can hit other things
-   // killough 8/10/98: bouncing non-solid things can hit other things too
-   
-   if(clip.thing->flags & MF_MISSILE || 
-      (clip.thing->flags & MF_BOUNCES && !(clip.thing->flags & MF_SOLID)))
-   {
-      int damage;
-      // haleyjd 07/06/05: some objects may use info->height instead
-      // of their current height value in this situation, to avoid
-      // altering the playability of maps when 3D object clipping
-      // with corrected thing heights is enabled.
-      int height = P_MissileBlockHeight(thing);
-
-      // haleyjd: some missiles can go through ghosts
-      if(thing->flags3 & MF3_GHOST && clip.thing->flags3 & MF3_THRUGHOST)
-         return true;
-
-      // see if it went over / under
-      
-      if(clip.thing->z > thing->z + height) // haleyjd 07/06/05
-         return true;    // overhead
-      
-      if(clip.thing->z + clip.thing->height < thing->z)
-         return true;    // underneath
-
-      if(clip.thing->target)
-      {
-         if(thing == clip.thing->target)
-            return true;   // Don't hit originator.
-         if(!P_AllowMissileDamage(*clip.thing->target, *thing))
-            return false;
-      }
-      
-      // haleyjd 10/15/08: rippers
-      if(clip.thing->flags3 & MF3_RIP)
-      {
-         damage = ((P_Random(pr_rip) & 3) + 2) * clip.thing->damage;
-
-         if(!(thing->flags & MF_NOBLOOD) &&
-            !(thing->flags2 & MF2_REFLECTIVE) &&
-            !(thing->flags2 & MF2_INVULNERABLE))
-         {
-            BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_RIP);
-         }
-         
-         // TODO: ripper sound - gamemode dependent? thing dependent?
-         //S_StartSound(clip.thing, sfx_ripslop);
-        
-         P_DamageMobj(thing, clip.thing, clip.thing->target, damage, 
-                      clip.thing->info->mod);
-         
-         if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
-         { 
-            // Push thing
-            thing->momx += clip.thing->momx >> 2;
-            thing->momy += clip.thing->momy >> 2;
-         }
-         
-         // TODO: huh?
-         //numspechit = 0;
-         return true;
-      }
-
-      // killough 8/10/98: if moving thing is not a missile, no damage
-      // is inflicted, and momentum is reduced if object hit is solid.
-
-      if(!(clip.thing->flags & MF_MISSILE))
-      {
-         if(!(thing->flags & MF_SOLID))
-            return true;
-         else
-         {
-            clip.thing->momx = -clip.thing->momx;
-            clip.thing->momy = -clip.thing->momy;
-            if(!(clip.thing->flags & MF_NOGRAVITY))
-            {
-               clip.thing->momx >>= 2;
-               clip.thing->momy >>= 2;
-            }
-            return false;
-         }
-      }
-
-      if(!(thing->flags & MF_SHOOTABLE))
-         return !(thing->flags & MF_SOLID); // didn't do any damage
-
-      // damage / explode
-      
-      damage = ((P_Random(pr_damage)%8)+1)*clip.thing->damage;
-      
-      // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
-      if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
-      {
-         // 20160312: ability for missiles to draw blood
-         if(clip.thing->flags4 & MF4_DRAWSBLOOD &&
-            !(thing->flags & MF_NOBLOOD) &&
-            !(thing->flags2 & MF2_REFLECTIVE) &&
-            !(thing->flags2 & MF2_INVULNERABLE))
-         {
-            if(P_Random(pr_drawblood) < 192)
-            {
-               BloodSpawner(thing, clip.thing, damage, clip.thing).spawn(BLOOD_IMPACT);
-            }
-         }
-
-         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
-                      clip.thing->info->mod);
-      }
-
-      // don't traverse any more
-      return false;
-   }
-
-   // haleyjd 1/16/00: Pushable objects -- at last!
-   //   This is remarkably simpler than I had anticipated!
-   
-   if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
-   {
-      // transfer one-fourth momentum along the x and y axes
-      thing->momx += clip.thing->momx / 4;
-      thing->momy += clip.thing->momy / 4;
-   }
+   ItemCheckResult result = P_CheckThingCommon(thing);
+   if(result != ItemCheck_furtherNeeded)
+      return result == ItemCheck_pass;
 
    // check for special pickup
    
@@ -1522,7 +1536,7 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
       {
          other->player->viewheight += *orgzit - other->z;
          other->player->deltaviewheight =
-         (VIEWHEIGHT - other->player->viewheight) >> 3;
+         (other->player->pclass->viewheight - other->player->viewheight) >> 3;
       }
       ++orgzit;
    }

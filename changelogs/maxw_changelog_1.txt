@@ -398,6 +398,31 @@ variable "hu_alwaysshowcoords" has been introduced to control the same thing.
 Added an option that allows you to set message alignment to either default,
 left, or centred.
 
+-------------------------------------------------------------------------------
+2019/11/03
+Made FoV save in configs.
+
+-------------------------------------------------------------------------------
+2019/11/03
+Fixed cfg saving ignoring symlinks (and just overwriting the link).
+
+-------------------------------------------------------------------------------
+2019/11/23
+Fixed crashing if the CONSOLE lump isn't a valid graphic.
+
+-------------------------------------------------------------------------------
+2020/02/29
+Extended A_PainAttack to have ZDoom's parameters.
+Extended A_PainDie to have thingtype arg.
+
+-------------------------------------------------------------------------------
+2020/03/04
+Extended -file to search DOOMWADPATH directories if required.
+
+-------------------------------------------------------------------------------
+2020/03/10
+Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
+
 ================================================================================
 EOF
 ================================================================================

@@ -28,6 +28,7 @@
 #include "doomstat.h"
 #include "p_map.h"
 #include "p_portal.h"
+#include "p_sector.h"
 #include "p_spec.h"
 #include "r_defs.h"
 #include "r_state.h"
@@ -72,6 +73,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
    if(sector->floorheight - speed < dest)
    {
       lastpos = sector->floorheight;
+      bool instant = lastpos < dest;
 
       // SoM 9/19/02: If we are go, move 3d sides first.
       if(move3dsides)
@@ -85,9 +87,9 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
       }
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, false, dest - lastpos, crush))
+         if(!P_MoveAttached(sector, false, dest - lastpos, crush, instant))
          {
-            P_MoveAttached(sector, false, lastpos - dest, crush);
+            P_MoveAttached(sector, false, lastpos - dest, crush, instant);
             return crushed;
          }
       }            
@@ -103,11 +105,13 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
          if(move3dsides)
             P_Scroll3DSides(sector, false, lastpos - dest, crush);
          if(moveattached)
-            P_MoveAttached(sector, false, lastpos - dest, crush);
+            P_MoveAttached(sector, false, lastpos - dest, crush, instant);
 
          // Note from SoM: Shouldn't we return crushed if the
          // last move was rejected?
       }
+      if(instant)
+         P_SaveSectorPosition(*sector, ssurf_floor);
       return pastdest;
    }
    else
@@ -124,9 +128,9 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
       }
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, false, -speed, crush))
+         if(!P_MoveAttached(sector, false, -speed, crush, false))
          {
-            P_MoveAttached(sector, false, speed, crush);
+            P_MoveAttached(sector, false, speed, crush, false);
             return crushed;
          }
       }            
@@ -147,7 +151,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
          if(move3dsides)
             P_Scroll3DSides(sector, false, speed, crush);
          if(moveattached)
-            P_MoveAttached(sector, false, speed, crush);
+            P_MoveAttached(sector, false, speed, crush, false);
 
          return crushed;
       }
@@ -177,7 +181,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
    // Moving a floor up
    // jff 02/04/98 keep floor from moving thru ceilings
    // jff 2/22/98 weaken check to demo_compatibility
-   if(demo_version < 203 || comp[comp_floors] || dest < sector->ceilingheight)
+   if(comp[comp_floors] || dest < sector->ceilingheight)
       destheight = dest;
    else
       destheight = sector->ceilingheight;
@@ -185,6 +189,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
    if(sector->floorheight + speed > destheight)
    {
       lastpos = sector->floorheight;
+      bool instant = lastpos > destheight;
 
       // SoM 9/19/02: If we are go, move 3d sides first.
       if(move3dsides)
@@ -198,9 +203,9 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
       }
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, false, destheight-lastpos, crush))
+         if(!P_MoveAttached(sector, false, destheight-lastpos, crush, instant))
          {
-            P_MoveAttached(sector, false, lastpos-destheight, crush);
+            P_MoveAttached(sector, false, lastpos-destheight, crush, instant);
             return crushed;
          }
       }            
@@ -215,8 +220,10 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
          if(move3dsides)
             P_Scroll3DSides(sector, false, lastpos-destheight, crush);
          if(moveattached)
-            P_MoveAttached(sector, false, lastpos-destheight, crush);
+            P_MoveAttached(sector, false, lastpos-destheight, crush, instant);
       }
+      if(instant)
+         P_SaveSectorPosition(*sector, ssurf_floor);
       return pastdest;
    }
    else
@@ -233,9 +240,9 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
       }
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, false, speed, crush))
+         if(!P_MoveAttached(sector, false, speed, crush, false))
          {
-            P_MoveAttached(sector, false, -speed, crush);
+            P_MoveAttached(sector, false, -speed, crush, false);
             return crushed;
          }
       }            
@@ -259,7 +266,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
          if(move3dsides)
             P_Scroll3DSides(sector, false, -speed, crush);
          if(moveattached)
-            P_MoveAttached(sector, false, -speed, crush);
+            P_MoveAttached(sector, false, -speed, crush, false);
 
          return crushed;
       }
@@ -299,6 +306,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
    if(sector->ceilingheight - speed < destheight)
    {
       lastpos = sector->ceilingheight;
+      bool instant = lastpos < destheight;
 
       // SoM 9/19/02: If we are go, move 3d sides first.
       if(move3dsides)
@@ -312,9 +320,9 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
       }
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, true, destheight-lastpos, crush))
+         if(!P_MoveAttached(sector, true, destheight-lastpos, crush, instant))
          {
-            P_MoveAttached(sector, true, lastpos-destheight, crush);
+            P_MoveAttached(sector, true, lastpos-destheight, crush, instant);
             return crushed;
          }
       }            
@@ -330,9 +338,11 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
          if(move3dsides)
             P_Scroll3DSides(sector, true, lastpos-destheight, crush);
          if(moveattached)
-            P_MoveAttached(sector, true, lastpos-destheight, crush);
+            P_MoveAttached(sector, true, lastpos-destheight, crush, instant);
       }
 
+      if(instant)
+         P_SaveSectorPosition(*sector, ssurf_ceiling);
       return pastdest;
    }
    else
@@ -349,9 +359,9 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
       }
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, true, -speed, crush))
+         if(!P_MoveAttached(sector, true, -speed, crush, false))
          {
-            P_MoveAttached(sector, true, speed, crush);
+            P_MoveAttached(sector, true, speed, crush, false);
             return crushed;
          }
       }            
@@ -376,7 +386,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
          if(move3dsides)
             P_Scroll3DSides(sector, true, speed, crush);
          if(moveattached)
-            P_MoveAttached(sector, true, speed, crush);
+            P_MoveAttached(sector, true, speed, crush, false);
 
          return crushed;
       }
@@ -405,6 +415,8 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
    if(sector->ceilingheight + speed > dest)
    {
       lastpos = sector->ceilingheight;
+      bool instant = lastpos > dest;
+
 
       // SoM 9/19/02: If we are go, move 3d sides first.
       if(move3dsides)
@@ -419,9 +431,9 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, true, dest - lastpos, crush))
+         if(!P_MoveAttached(sector, true, dest - lastpos, crush, instant))
          {
-            P_MoveAttached(sector, true, lastpos - dest, crush);
+            P_MoveAttached(sector, true, lastpos - dest, crush, instant);
             return crushed;
          }
       }            
@@ -436,8 +448,10 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
          if(move3dsides)
             P_Scroll3DSides(sector, true, lastpos-dest, crush);
          if(moveattached)
-            P_MoveAttached(sector, true, lastpos - dest, crush);
+            P_MoveAttached(sector, true, lastpos - dest, crush, instant);
       }
+      if(instant)
+         P_SaveSectorPosition(*sector, ssurf_ceiling);
       return pastdest;
    }
    else
@@ -454,9 +468,9 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
 
       if(moveattached)
       {
-         if(!P_MoveAttached(sector, true, speed, crush))
+         if(!P_MoveAttached(sector, true, speed, crush, false))
          {
-            P_MoveAttached(sector, true, -speed, crush);
+            P_MoveAttached(sector, true, -speed, crush, false);
             return crushed;
          }
       }

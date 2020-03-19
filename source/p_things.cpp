@@ -41,6 +41,7 @@
 #include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "p_info.h"
@@ -405,29 +406,18 @@ int EV_ThingDestroy(int tid, int sectortag)
 //
 int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 {
-   if(!actor)
+   if(!actor || actor->health <= 0)
       return 0;
 
    if(!maxhealth || !actor->player)
    {
       // If second arg is 0, or the activator isn't a player
-      // then set the maxhealth to the activator's spawning health.
-      maxhealth = actor->getModifiedSpawnHealth();
+      // then set the maxhealth to the activator's spawning health or pclass maxhealth.
+      maxhealth = actor->player ? actor->player->pclass->maxhealth :
+            actor->getModifiedSpawnHealth();
    }
    else if(maxhealth == 1)
-   {
-      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
-      // then set maxhealth to the maximum health provided by a SoulSphere.
-      itemeffect_t *soulsphereeffect = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
-
-      if(soulsphereeffect)
-         maxhealth = soulsphereeffect->getInt("maxamount", 0);
-      else
-      {
-         // FIXME: Handle this with a bit more finesse.
-         maxhealth = actor->getModifiedSpawnHealth() + 100;
-      }
-   }
+      maxhealth = actor->player->pclass->superhealth;
 
    // If the activator can be given health then activate the switch
    return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
