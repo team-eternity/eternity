@@ -158,8 +158,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)
    //   column.colormap = fixedcolormap;
-   if(fixedcolormap)
-      column.colormap = fixedcolormap;
+   if(ds->fixedcolormap)
+      column.colormap = ds->fixedcolormap;
 
    // SoM: performance tuning (tm Lee Killough 1998)
    scale     = dist * view.yfoc;
@@ -171,7 +171,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       if(maskedtexturecol[column.x] != FLT_MAX)
       {
-         if(!fixedcolormap)
+         if(!ds->fixedcolormap)
          {                             // killough 11/98:
             // SoM: ANYRES
             int index = (int)(dist * 2560.0f);
@@ -876,6 +876,7 @@ void R_StoreWallRange(const int start, const int stop)
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = scalelight;
+   ds_p->fixedcolormap = fixedcolormap;
    ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)

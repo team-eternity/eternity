@@ -17,6 +17,9 @@ BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
 
 BUGFIX: Fixed EDF thingtype translation 14 (white) not having any effect.
 
+BUGFIX: Fixed buggy rendering of masked middle textures when mixing sector
+        colormaps with player invulnerability or light amplification.
+
 --------------------------------------------------------------------------------
 21.02.2020
 
