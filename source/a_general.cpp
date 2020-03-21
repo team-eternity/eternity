@@ -258,6 +258,20 @@ void A_Turn(actionargs_t *actionargs)
    mo->angle += angle;
 }
 
+//
+// Same as A_Turn but updates momx and momy.
+//
+void A_TurnProjectile(actionargs_t *actionargs)
+{
+   Mobj *mo = actionargs->actor;
+
+   A_Turn(actionargs);
+
+   const angle_t an = mo->angle >> ANGLETOFINESHIFT;
+   mo->momx = FixedMul(mo->info->speed, finecosine[an]);
+   mo->momy = FixedMul(mo->info->speed, finesine[an]);
+}
+
 void A_Face(actionargs_t *actionargs)
 {
    Mobj *mo = actionargs->actor;

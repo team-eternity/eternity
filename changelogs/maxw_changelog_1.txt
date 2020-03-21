@@ -427,6 +427,7 @@ Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
 2020/03/21
 Parameterise A_Turn to be able to take a constant value, or using a counter
 as either a BAM or degrees.
+Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
 
 ================================================================================
 EOF
