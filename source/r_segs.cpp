@@ -783,7 +783,26 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
 
    if(segclip.ceilingplane)
-      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+   {
+      // From PrBoom
+      /* cph 2003/04/18  - ceilingplane and floorplane might be the same
+       * visplane (e.g. if both skies); R_CheckPlane doesn't know about
+       * modifications to the plane that might happen in parallel with the check
+       * being made, so we have to override it and split them anyway if that is
+       * a possibility, otherwise the floor marking would overwrite the ceiling
+       * marking, resulting in HOM. */
+
+      // ioanch: needed to fix GitHub issue #380 on maps such as sargasso.wad MAP02 coordinates
+      // (5953, 10109) where the sky wall shows HOM in Eternity.
+
+      // NOTE: PrBoom sets the floorplane AFTER the ceilingplane, unlike Eternity. So it does this
+      // duplication when it encounters the floorplane, not the ceilingplane like here.
+
+      if(segclip.ceilingplane == segclip.floorplane)
+         segclip.ceilingplane = R_DupPlane(segclip.ceilingplane, start, stop);
+      else
+         segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+   }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
       segclip.line->linedef->flags |= ML_MAPPED;

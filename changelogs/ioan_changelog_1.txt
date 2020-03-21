@@ -8,6 +8,14 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+21.03.2020
+
+BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
+        any place where both floor and ceiling of a zero-height sector have
+        F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
+        whereas both Chocolate-Doom and PrBoom would render the sky properly.
+
+--------------------------------------------------------------------------------
 21.02.2020
 
 FEATURE: Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
