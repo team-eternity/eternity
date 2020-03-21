@@ -200,8 +200,8 @@ static const char *kwds_A_Turn[] =
 
 static argkeywd_t turnkwds =
 {
-   kwds_A_Scratch,
-   sizeof(kwds_A_Scratch) / sizeof(const char *)
+   kwds_A_Turn,
+   sizeof(kwds_A_Turn) / sizeof(const char *)
 };
 
 //
@@ -223,7 +223,7 @@ void A_Turn(actionargs_t *actionargs)
    int mode;
    angle_t angle;
 
-   mode = E_ArgAsKwd(args, 0, &scratchkwds, 0);
+   mode = E_ArgAsKwd(args, 0, &turnkwds, 0);
 
    switch(mode)
    {
