@@ -2016,7 +2016,9 @@ static int E_ColorCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
    }
    else
    {
-      *(int *)result = num % TRANSLATIONCOLOURS;
+      if(num < 0 || num > TRANSLATIONCOLOURS)
+         cfg_error(cfg, "bad translation index %d\n", num);
+      *(int *)result = num;
    }
 
    return 0;

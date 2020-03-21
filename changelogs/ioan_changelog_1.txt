@@ -15,6 +15,8 @@ BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
         F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
         whereas both Chocolate-Doom and PrBoom would render the sky properly.
 
+BUGFIX: Fixed EDF thingtype translation 14 (white) not having any effect.
+
 --------------------------------------------------------------------------------
 21.02.2020
 
