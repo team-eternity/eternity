@@ -301,6 +301,7 @@
 		4F769D6522C6BBC800E7E702 /* libSDL2_net-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4B22C6BBAD00E7E702 /* libSDL2_net-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F769D6722C6BBC800E7E702 /* libvorbis.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4822C6BBAC00E7E702 /* libvorbis.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F769D6822C6BBC800E7E702 /* libvorbisfile.3.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		4F79D95F242609BD009A7817 /* libSDL2-2.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
 		4F914A111F61163C00968197 /* BinaryIO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A101F61163C00968197 /* BinaryIO.cpp */; };
 		4F914A131F61164E00968197 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A121F61164E00968197 /* Error.cpp */; };
@@ -371,6 +372,7 @@
 				4F769D6322C6BBC800E7E702 /* libopusfile.0.dylib in CopyFiles */,
 				4F769D6422C6BBC800E7E702 /* libSDL2_mixer-2.0.0.dylib in CopyFiles */,
 				4F769D6522C6BBC800E7E702 /* libSDL2_net-2.0.0.dylib in CopyFiles */,
+				4F79D95F242609BD009A7817 /* libSDL2-2.0.dylib in CopyFiles */,
 				4F769D6722C6BBC800E7E702 /* libvorbis.0.dylib in CopyFiles */,
 				4F769D6822C6BBC800E7E702 /* libvorbisfile.3.dylib in CopyFiles */,
 			);
@@ -2801,6 +2803,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
@@ -2852,6 +2855,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_NO_COMMON_BLOCKS = YES;
