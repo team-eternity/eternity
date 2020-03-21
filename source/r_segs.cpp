@@ -51,7 +51,6 @@ cb_seg_t    seg;
 cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
-lighttable_t **walllights;
 static float  *maskedtexturecol;
 
 //
@@ -160,14 +159,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    //if (fixedcolormap)
    //   column.colormap = fixedcolormap;
    if(fixedcolormap)
-   {
-      // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap == 
-         fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-         column.colormap = fixedcolormap;
-      else
-         column.colormap = walllights[MAXLIGHTSCALE-1];
-   }
+      column.colormap = fixedcolormap;
 
    // SoM: performance tuning (tm Lee Killough 1998)
    scale     = dist * view.yfoc;
@@ -258,14 +250,7 @@ static void R_RenderSegLoop(void)
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
    if(fixedcolormap)
-   {
-      // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap == 
-         fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-         column.colormap = fixedcolormap;
-      else
-         column.colormap = walllights[MAXLIGHTSCALE-1];
-   }
+      column.colormap = fixedcolormap;
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
