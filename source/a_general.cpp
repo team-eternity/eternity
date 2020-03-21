@@ -190,10 +190,72 @@ void A_Spawn(actionargs_t *actionargs)
    }
 }
 
+static const char *kwds_A_Turn[] =
+{
+   "usemisc1",
+   "usecounterasdeg",
+   "usecounterasbam",
+   "useconstant"
+};
+
+static argkeywd_t turnkwds =
+{
+   kwds_A_Scratch,
+   sizeof(kwds_A_Scratch) / sizeof(const char *)
+};
+
+//
+// Parameterized turn.
+// * misc1 == constant turn amount
+//
+// * args[0] == special mode select
+//              * 0 == compatibility (use misc1 like normal)
+//              * 1 == use counter specified in args[1] as degrees
+//              * 2 == use counter specified in args[1] as angle_t
+//              * 3 == use constant value in args[1]
+// * args[1] == counter number for mode 2; constant for mode 3
+//
 void A_Turn(actionargs_t *actionargs)
 {
-   Mobj *mo = actionargs->actor;
-   mo->angle += (angle_t)(((uint64_t) mo->state->misc1 << 32) / 360);
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
+   int cnum;
+   int mode;
+   angle_t angle;
+
+   mode = E_ArgAsKwd(args, 0, &scratchkwds, 0);
+
+   switch(mode)
+   {
+   default:
+   case 0: // default, compatibility mode
+      angle = static_cast<angle_t>(static_cast<uint64_t>(mo->state->misc1) << 32) / 360;
+      break;
+   case 1: // use a counter as degrees
+      cnum = E_ArgAsInt(args, 1, 0);
+
+      if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+         return; // invalid
+
+      if(const int degs = mo->counters[cnum]; degs % 45)
+         angle = static_cast<angle_t>(ANGLE_1 * degs);
+      else
+         angle = static_cast<angle_t>(ANG45 * (degs / 45));
+      break;
+   case 2: // use a counter as angle_t
+      cnum = E_ArgAsInt(args, 1, 0);
+
+      if(cnum < 0 || cnum >= NUMMOBJCOUNTERS)
+         return; // invalid
+
+      angle = static_cast<angle_t>(mo->counters[cnum]);
+      break;
+   case 3: // use constant ("immediate operand" mode)
+      angle = E_ArgAsAngle(args, 1, 0);
+      break;
+   }
+
+   mo->angle += angle;
 }
 
 void A_Face(actionargs_t *actionargs)
@@ -216,8 +278,6 @@ static argkeywd_t scratchkwds =
    sizeof(kwds_A_Scratch) / sizeof(const char *)
 };
 
-//
-// A_Scratch
 //
 // Parameterized melee attack.
 // * misc1 == constant damage amount

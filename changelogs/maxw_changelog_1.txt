@@ -423,6 +423,11 @@ Extended -file to search DOOMWADPATH directories if required.
 2020/03/10
 Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
 
+-------------------------------------------------------------------------------
+2020/03/21
+Parameterise A_Turn to be able to take a constant value, or using a counter
+as either a BAM or degrees.
+
 ================================================================================
 EOF
 ================================================================================
