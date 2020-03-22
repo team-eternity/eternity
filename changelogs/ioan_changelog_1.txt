@@ -12,6 +12,9 @@ Since v4.00.00 "Völuspá"
 
 BUGFIX: Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
 
+BUGFIX: Fixed 1-sided linedef wall portals showing HOM if their middle texture
+        isn't set.
+
 --------------------------------------------------------------------------------
 21.03.2020
 
