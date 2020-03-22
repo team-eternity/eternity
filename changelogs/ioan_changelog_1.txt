@@ -8,6 +8,11 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+22.03.2020
+
+BUGFIX: Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
+
+--------------------------------------------------------------------------------
 21.03.2020
 
 BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
