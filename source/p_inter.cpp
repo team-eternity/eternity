@@ -835,11 +835,13 @@ void P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          else
             special->remove();
       }
+      else if(pickedup) // not physically picked up but effectively picked up (multiplayer keys)
+         P_consumeSpecial(player, special);
 
       // Picked up items that are left in multiplayer can't be allowed to
       // constantly pester the player
       // TODO: Is this rigorous enough? Does this cover all cases?
-      if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI)
+      if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI && GameType != gt_single)
          return;
 
       // if picked up for benefit, or not silent when picked up without, do
