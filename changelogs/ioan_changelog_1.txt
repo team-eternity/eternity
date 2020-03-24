@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+24.03.2020
+
+IMPROVEMENT: Now ExtraData mapthings also support names in the "special" field,
+             just like linedefs. It was badly missing.
+
+--------------------------------------------------------------------------------
 22.03.2020
 
 BUGFIX: Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.

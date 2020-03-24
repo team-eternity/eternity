@@ -144,6 +144,10 @@ static unsigned int sector_chains[NUMSECCHAINS];
 
 // mapthing options and related data structures
 
+// line special callback
+static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                        void *result);
+
 static cfg_opt_t mapthing_opts[] =
 {
    CFG_INT(FIELD_NUM,     0,  CFGF_NONE),
@@ -152,7 +156,7 @@ static cfg_opt_t mapthing_opts[] =
    CFG_STR(FIELD_OPTIONS, "", CFGF_NONE),
    CFG_STR(FIELD_ARGS,    0,  CFGF_LIST),
    CFG_INT(FIELD_HEIGHT,  0,  CFGF_NONE),
-   CFG_INT(FIELD_SPECIAL, 0,  CFGF_NONE),
+   CFG_INT_CB(FIELD_SPECIAL, 0,  CFGF_NONE, E_LineSpecCB),
    CFG_END()
 };
 
@@ -179,10 +183,6 @@ static dehflagset_t mt_flagset =
 };
 
 // linedef options and related data structures
-
-// line special callback
-static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
-                        void *result);
 
 static cfg_opt_t linedef_opts[] =
 {
