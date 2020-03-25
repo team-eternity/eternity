@@ -400,17 +400,14 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
 }
 
 //
-// P_GiveBody
+// True if health item would be given
 //
-// Returns false if the body isn't needed at all
-//
-bool P_GiveBody(player_t *player, const itemeffect_t *effect)
+bool P_WouldGiveBody(const player_t *player, const itemeffect_t *effect, int &maxamount)
 {
    if(!effect)
       return false;
 
-   int amount = E_GetPClassHealth(*effect, "amount", *player->pclass, 0);
-   int maxamount = E_GetPClassHealth(*effect, "maxamount", *player->pclass, 0);
+   maxamount = E_GetPClassHealth(*effect, "maxamount", *player->pclass, 0);
 
    // haleyjd 11/14/09: compatibility fix - the DeHackEd maxhealth setting was
    // only supposed to affect health potions, but when Ty replaced the MAXHEALTH
@@ -427,6 +424,22 @@ bool P_GiveBody(player_t *player, const itemeffect_t *effect)
    // if not alwayspickup, and have more health than the max, don't pick it up
    if(!effect->getInt("alwayspickup", 0) && player->health >= maxamount)
       return false;
+
+   return true;
+}
+
+//
+// P_GiveBody
+//
+// Returns false if the body isn't needed at all
+//
+bool P_GiveBody(player_t *player, const itemeffect_t *effect)
+{
+   int maxamount;
+   if(!P_WouldGiveBody(player, effect, maxamount))
+      return false;
+
+   int amount = E_GetPClassHealth(*effect, "amount", *player->pclass, 0);
 
    // give the health
    if(effect->getInt("sethealth", 0))
@@ -469,6 +482,36 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 }
 
 //
+// True if armor is to be taken
+//
+bool P_WouldGiveArmor(const player_t *player, const itemeffect_t *effect, ArmorInfo &info)
+{
+   if(!effect)
+      return false;
+
+   info.hits          =   effect->getInt("saveamount",   -1);
+   info.savefactor    =   effect->getInt("savefactor",    1);
+   info.savedivisor   =   effect->getInt("savedivisor",   3);
+   info.maxsaveamount =   effect->getInt("maxsaveamount", 0);
+   info.additive      = !!effect->getInt("additive",      0);
+   info.setabsorption = !!effect->getInt("setabsorption", 0);
+
+   // check for validity
+   if(info.hits < 0 || !info.savefactor || !info.savedivisor)
+      return false;
+
+   // check if needed
+   if(!(effect->getInt("alwayspickup", 0)) &&
+      (player->armorpoints >= (info.additive ? info.maxsaveamount : info.hits) ||
+       (info.hits == 0 && (!player->armorfactor || !info.setabsorption))))
+   {
+      return false; // don't pick up
+   }
+
+   return true;
+}
+
+//
 // P_GiveArmor
 //
 // Returns false if the armor is worse
@@ -476,43 +519,25 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max)
 //
 bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
 {
-   if(!effect)
+   ArmorInfo info;
+   if(!P_WouldGiveArmor(player, effect, info))
       return false;
 
-   int  hits          =   effect->getInt("saveamount",   -1);
-   int  savefactor    =   effect->getInt("savefactor",    1);
-   int  savedivisor   =   effect->getInt("savedivisor",   3);
-   int  maxsaveamount =   effect->getInt("maxsaveamount", 0);
-   bool additive      = !!effect->getInt("additive",      0);
-   bool setabsorption = !!effect->getInt("setabsorption", 0);
-
-   // check for validity
-   if(hits < 0 || !savefactor || !savedivisor)
-      return false;
-
-   // check if needed
-   if(!(effect->getInt("alwayspickup", 0)) &&
-      (player->armorpoints >= (additive ? maxsaveamount : hits) ||
-       (hits == 0 && (!player->armorfactor || !setabsorption))))
+   if(info.additive)
    {
-      return false; // don't pick up
-   }
-
-   if(additive)
-   {
-      player->armorpoints += hits;
-      if(player->armorpoints > maxsaveamount)
-         player->armorpoints = maxsaveamount;
+      player->armorpoints += info.hits;
+      if(player->armorpoints > info.maxsaveamount)
+         player->armorpoints = info.maxsaveamount;
    }
    else
-      player->armorpoints = hits;
+      player->armorpoints = info.hits;
 
    // only set armour quality if the armour always sets it,
    // or if the player had no armour prior to this pickup
-   if((!player->armorfactor || setabsorption))
+   if((!player->armorfactor || info.setabsorption))
    {
-      player->armorfactor  = savefactor;
-      player->armordivisor = savedivisor;
+      player->armorfactor  = info.savefactor;
+      player->armordivisor = info.savedivisor;
    }
 
    return true;

@@ -35,8 +35,23 @@ typedef MetaTable itemeffect_t;
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
+//
+// Armor info when picking up
+//
+struct ArmorInfo
+{
+   int hits;
+   int savefactor;
+   int savedivisor;
+   int maxsaveamount;
+   bool additive;
+   bool setabsorption;
+};
+
 bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
+bool P_WouldGiveBody(const player_t *player, const itemeffect_t *effect, int &maxamount);
 bool P_GiveBody(player_t *, const itemeffect_t *);
+bool P_WouldGiveArmor(const player_t *player, const itemeffect_t *effect, ArmorInfo &info);
 bool P_GiveArmor(player_t *, const itemeffect_t *);
 // MaxW 2016/07/23: P_GivePower is no longer required for external use;
 // previously it was used in m_cheats, but the CheatX powereffects mean

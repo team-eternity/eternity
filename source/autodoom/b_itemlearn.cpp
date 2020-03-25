@@ -33,6 +33,7 @@
 #include "../e_inventory.h"
 #include "../e_lib.h"
 #include "../e_weapons.h"
+#include "../p_inter.h"
 #include "../metaapi.h"
 
 inline static bool B_checkWasted(int current, int added, int max)
@@ -42,49 +43,26 @@ inline static bool B_checkWasted(int current, int added, int max)
 
 bool B_CheckArmour(const player_t *pl, const itemeffect_t *effect)
 {
-   if(!effect)
+   ArmorInfo info;
+   if(!P_WouldGiveArmor(pl, effect, info))
       return false;
 
-   int hits = effect->getInt("saveamount", -1);
-   int savefactor = effect->getInt("savefactor", 1);
-   int savedivisor = effect->getInt("savedivisor", 3);
-   int maxsaveamount = effect->getInt("maxsaveamount", 0);
-   bool additive = !!effect->getInt("additive", 0);
-   bool setabsorption = !!effect->getInt("setabsorption", 0);
-
-   if(hits < 0 || !savefactor || !savedivisor)
-      return false;
-
-   if(!effect->getInt("alwayspickup", 0) &&
-      (pl->armorpoints >= (additive ? maxsaveamount : hits) ||
-       (!hits && (!pl->armorfactor || !setabsorption))))
-   {
-      return false;
-   }
-
-   if(additive)
-      return B_checkWasted(pl->armorpoints, hits, maxsaveamount);
+   if(info.additive)
+      return B_checkWasted(pl->armorpoints, info.hits, info.maxsaveamount);
 
    // FIXME: potential overflow in insane mods
-   return (savedivisor ? hits * savefactor / savedivisor : 0) >
+   return (info.savedivisor ? info.hits * info.savefactor / info.savedivisor : 0) >
    (pl->armordivisor ?
     pl->armorpoints * pl->armorfactor / pl->armordivisor : 0);
 }
 
 bool B_CheckBody(const player_t *pl, const itemeffect_t *effect)
 {
-   if(!effect)
+   int maxamount;
+   if(!P_WouldGiveBody(pl, effect, maxamount))
       return false;
 
    int amount = effect->getInt("amount", 0);
-   int maxamount = effect->getInt("maxamount", 0);
-   if(demo_version >= 200 && demo_version < 335)
-   {
-      if(effect->hasKey("compatmaxamount"))
-         maxamount = effect->getInt("compatmaxamount", 0);
-   }
-   if(!effect->getInt("alwayspickup", 0) && pl->health >= maxamount)
-      return false;
 
    if(effect->getInt("sethealth", 0))
       return pl->health < amount;
@@ -110,11 +88,8 @@ bool B_CheckPowerForItem(const player_t *pl, const itemeffect_t *power)
    if(estrempty(powerStr))
       return false;
    int powerNum;
-   if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) ==
-      NUMPOWERS)
-   {
+   if((powerNum = E_StrToNumLinear(powerStrings, NUMPOWERS, powerStr)) == NUMPOWERS)
       return false;
-   }
    if(!power->getInt("overridesself", 0) && pl->powers[powerNum] > 4 * 32)
       return false;
 
@@ -144,11 +119,8 @@ bool B_CheckInventoryItem(const player_t *pl, const itemeffect_t *artifact,
    int maxAmount;
    int fullAmount;
 
-   if(!E_GetInventoryItemDetails(pl, artifact, fxtype, itemid, amountToGive,
-                                 maxAmount, fullAmount))
-   {
+   if(!E_GetInventoryItemDetails(pl, artifact, fxtype, itemid, amountToGive, maxAmount, fullAmount))
       return false;
-   }
 
    if(fxtype != ITEMFX_ARTIFACT || itemid < 0)
       return false;
