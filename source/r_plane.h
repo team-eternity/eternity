@@ -66,6 +66,7 @@ visplane_t *R_FindPlane(fixed_t height,
                         byte opacity,        // SoM: Opacity for translucent planes
                         planehash_t *table); // SoM: Table. Can be NULL
 
+visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop);
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);

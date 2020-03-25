@@ -8,6 +8,33 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+24.03.2020
+
+IMPROVEMENT: Now ExtraData mapthings also support names in the "special" field,
+             just like linedefs. It was badly missing.
+
+--------------------------------------------------------------------------------
+22.03.2020
+
+BUGFIX: Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
+
+BUGFIX: Fixed 1-sided linedef wall portals showing HOM if their middle texture
+        isn't set.
+
+--------------------------------------------------------------------------------
+21.03.2020
+
+BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
+        any place where both floor and ceiling of a zero-height sector have
+        F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
+        whereas both Chocolate-Doom and PrBoom would render the sky properly.
+
+BUGFIX: Fixed EDF thingtype translation 14 (white) not having any effect.
+
+BUGFIX: Fixed buggy rendering of masked middle textures when mixing sector
+        colormaps with player invulnerability or light amplification.
+
+--------------------------------------------------------------------------------
 21.02.2020
 
 FEATURE: Now the TINTTAB Heretic lump works as a BOOM-like translucency map for

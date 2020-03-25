@@ -98,7 +98,7 @@ int bfgcells = 40;      // used in p_pspr.c
 //
 // Returns false if the ammo can't be picked up at all
 //
-static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
+static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignoreskill)
 {
    if(!ammo)
       return false;
@@ -111,7 +111,7 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num)
       return false;
 
    // give double ammo in trainer mode, you'll need in nightmare
-   if(gameskill == sk_baby || gameskill == sk_nightmare)
+   if(!ignoreskill && (gameskill == sk_baby || gameskill == sk_nightmare))
       num = static_cast<int>(floor(num * GameModeInfo->skillAmmoMultiplier));
 
    if(!E_GiveInventoryItem(player, ammo, num))
@@ -187,7 +187,9 @@ bool P_GiveAmmoPickup(player_t *player, const itemeffect_t *pickup, bool dropped
          giveamount = pickup->getInt("dropamount", giveamount);
    }
 
-   return P_GiveAmmo(player, give, giveamount);
+   bool ignoreskill = !!pickup->getInt("ignoreskill", 0);
+
+   return P_GiveAmmo(player, give, giveamount, ignoreskill);
 }
 
 //
@@ -209,7 +211,8 @@ static bool P_giveBackpackAmmo(player_t *player)
       int giveamount = ammoType->getInt(keyBackpackAmount, 0);
       if(!giveamount)
          continue;
-      given |= P_GiveAmmo(player, ammoType, giveamount);
+      // FIXME: no way to ignoreskill for backpack?
+      given |= P_GiveAmmo(player, ammoType, giveamount, false);
    }
 
    return given;
@@ -266,7 +269,9 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 
       player->bonuscount += BONUSADD;
       E_GiveWeapon(player, wp);
-      P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo);
+
+      // FIXME: no way to ignoreskill?
+      P_GiveAmmo(player, ammo, (GameType == gt_dm) ? dmstayammo : coopstayammo, false);
 
       player->pendingweapon = wp;
       player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
@@ -280,7 +285,9 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 
    // give one clip with a dropped weapon, two clips with a found weapon
    int  amount = dropped ? dropammo : giveammo;
-   bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount) : false);
+
+   // FIXME: no way to ignoreskill?
+   bool gaveammo = (ammo ? P_GiveAmmo(player, ammo, amount, false) : false);
 
    // haleyjd 10/4/11: de-Killoughized
    if(!E_PlayerOwnsWeapon(player, wp))
@@ -350,15 +357,17 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
          if(ammogiven &&
             ((GameType == gt_dm && dmstayammo) || (GameType == gt_coop && coopstayammo)))
          {
+            // FIXME: no way to ignoreskill?
             gaveammo |= P_GiveAmmo(player, ammo,
-                                   (GameType == gt_dm) ? dmstayammo : coopstayammo);
+                                   (GameType == gt_dm) ? dmstayammo : coopstayammo, false);
          }
       }
       else
       {
          // give one clip with a dropped weapon, two clips with a found weapon
          const int  amount = dropped ? dropammo : giveammo;
-         gaveammo |= amount ? P_GiveAmmo(player, ammo, amount) : false;
+         // FIXME: no way to ignoreskill?
+         gaveammo |= amount ? P_GiveAmmo(player, ammo, amount, false) : false;
       }
    }
 
@@ -836,11 +845,13 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
          else
             special->remove();
       }
+      else if(pickedup) // not physically picked up but effectively picked up (multiplayer keys)
+         P_consumeSpecial(player, special);
 
       // Picked up items that are left in multiplayer can't be allowed to
       // constantly pester the player
       // TODO: Is this rigorous enough? Does this cover all cases?
-      if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI)
+      if(!pickedup && pickup->flags & PFXF_LEAVEINMULTI && GameType != gt_single)
          return false;
 
       // if picked up for benefit, or not silent when picked up without, do

@@ -1815,7 +1815,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
       seg.markflags |= seg.frontsec->f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
 
    seg.clipsolid   = true;
-   seg.segtextured = seg.midtex != 0;
+   seg.segtextured = seg.midtex || seg.toptex || seg.bottomtex;
    seg.l_window    = line->linedef->portal ?
    R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 

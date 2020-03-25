@@ -91,7 +91,6 @@ angle_t  viewangle;
 fixed_t  viewcos, viewsin;
 fixed_t  viewpitch;
 const player_t *viewplayer;
-extern lighttable_t **walllights;
 bool     showpsprites = 1; //sf
 camera_t *viewcamera;
 
@@ -1178,15 +1177,8 @@ void R_SectorColormap(const sector_t *s)
    if(viewplayer->fixedcolormap)
    {
       // killough 3/20/98: localize scalelightfixed (readability/optimization)
-      static lighttable_t *scalelightfixed[MAXLIGHTSCALE];
-
       fixedcolormap = fullcolormap   // killough 3/20/98: use fullcolormap
         + viewplayer->fixedcolormap*256*sizeof(lighttable_t);
-        
-      walllights = scalelightfixed;
-
-      for(int i = 0; i < MAXLIGHTSCALE; i++)
-         scalelightfixed[i] = fixedcolormap;
    }
    else
       fixedcolormap = NULL;   

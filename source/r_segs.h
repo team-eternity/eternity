@@ -48,6 +48,7 @@ struct drawseg_t
    // sf: colormap to be used when drawing the drawseg
    // for coloured lighting
    lighttable_t *(*colormap)[MAXLIGHTSCALE];
+   lighttable_t *fixedcolormap;
 
    // Pointers to lists for sprite clipping,
    // all three adjusted so [x1] is first value.

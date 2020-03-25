@@ -379,7 +379,7 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_yes, "Monsters can telefrag on MAP30"),
 
    DEFAULT_INT("comp_dropoff", &default_comp[comp_dropoff], &comp[comp_dropoff],
-               1, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
+               0, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
 
    DEFAULT_INT("comp_falloff", &default_comp[comp_falloff], &comp[comp_falloff],
                0, 0, 1, default_t::wad_yes, "Objects don't fall off ledges under their own weight"),

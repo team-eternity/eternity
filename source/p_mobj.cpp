@@ -288,6 +288,16 @@ inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
 //
 bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
+   static int recursion;
+   ++recursion;
+
+   if(recursion >= 10000)
+   {
+      doom_printf(FC_ERROR "Warning: State Recursion Detected from %s", mobj->info->name);
+      --recursion;
+      return true;
+   }
+
    state_t *st;
 
    // haleyjd 03/27/10: new state cycle detection
@@ -351,6 +361,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    if(seenstates)
       P_FreeSeenStates(seenstates);
 
+   --recursion;
    return ret;
 }
 

@@ -764,13 +764,69 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 }
 
 //
+// From PrBoom+
+// cph 2003/04/18 - create duplicate of existing visplane and set initial range
+//
+visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
+{
+   planehash_t *table = pl->table;
+   unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
+   visplane_t *new_pl = new_visplane(hash, table);
+
+   new_pl->height = pl->height;
+   new_pl->picnum = pl->picnum;
+   new_pl->lightlevel = pl->lightlevel;
+   new_pl->colormap = pl->colormap;
+   new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
+   new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
+   new_pl->yoffs = pl->yoffs;
+   new_pl->angle = pl->angle;                 // haleyjd 01/05/08
+
+   new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
+   new_pl->viewcos = pl->viewcos;
+
+   new_pl->viewx = pl->viewx;
+   new_pl->viewy = pl->viewy;
+   new_pl->viewz = pl->viewz;
+
+   new_pl->viewxf = pl->viewxf;
+   new_pl->viewyf = pl->viewyf;
+   new_pl->viewzf = pl->viewzf;
+
+   // SoM: copy converted stuffs too
+   new_pl->heightf = pl->heightf;
+   new_pl->yscale = pl->yscale;
+   new_pl->xscale = pl->xscale;
+   new_pl->xoffsf = pl->xoffsf;
+   new_pl->yoffsf = pl->yoffsf;
+
+   new_pl->bflags = pl->bflags;
+   new_pl->opacity = pl->opacity;
+
+   new_pl->pslope = pl->pslope;
+   memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
+   new_pl->fullcolormap = pl->fullcolormap;
+
+   visplane_t *retpl = new_pl;
+   retpl->minx = start;
+   retpl->maxx = stop;
+   {
+      int *p = retpl->top;
+      const int *const p_end  = p + retpl->max_width;
+      // Unrolling this loop makes performance WORSE for optimised MSVC builds.
+      // Nothing makes sense any more.
+      while(p < p_end)
+         *(p++) = 0x7FFFFFFF;
+   }
+   return retpl;
+}
+
+//
 // R_CheckPlane
 //
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
-   
-   planehash_t *table = pl->table;
    
    if(start < pl->minx)
    {
@@ -803,57 +859,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->maxx = unionh;
    }
    else
-   {
-      unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-      visplane_t *new_pl = new_visplane(hash, table);
-      
-      new_pl->height = pl->height;
-      new_pl->picnum = pl->picnum;
-      new_pl->lightlevel = pl->lightlevel;
-      new_pl->colormap = pl->colormap;
-      new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
-      new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
-      new_pl->yoffs = pl->yoffs;
-      new_pl->angle = pl->angle;                 // haleyjd 01/05/08
-      
-      new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
-      new_pl->viewcos = pl->viewcos;
+      pl = R_DupPlane(pl, start, stop);
 
-      new_pl->viewx = pl->viewx;
-      new_pl->viewy = pl->viewy;
-      new_pl->viewz = pl->viewz;
-
-      new_pl->viewxf = pl->viewxf;
-      new_pl->viewyf = pl->viewyf;
-      new_pl->viewzf = pl->viewzf;
-
-      // SoM: copy converted stuffs too
-      new_pl->heightf = pl->heightf;
-      new_pl->yscale = pl->yscale;
-      new_pl->xscale = pl->xscale;
-      new_pl->xoffsf = pl->xoffsf;
-      new_pl->yoffsf = pl->yoffsf;
-      
-      new_pl->bflags = pl->bflags;
-      new_pl->opacity = pl->opacity;
-
-      new_pl->pslope = pl->pslope;
-      memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
-      new_pl->fullcolormap = pl->fullcolormap;
-
-      pl = new_pl;
-      pl->minx = start;
-      pl->maxx = stop;
-      {
-         int *p = pl->top;
-         const int *const p_end  = p + pl->max_width;
-         // Unrolling this loop makes performance WORSE for optimised MSVC builds.
-         // Nothing makes sense any more.
-         while(p < p_end)
-            *(p++) = 0x7FFFFFFF;
-      }
-   }
-   
    return pl;
 }
 
