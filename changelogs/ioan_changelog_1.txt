@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+27.03.2020
+
+IMPROVEMENT: Added damagefactor.remove and cleardamagefactors to thingtype and
+             thingdelta to be able to remove them from the list.
+
+--------------------------------------------------------------------------------
 24.03.2020
 
 IMPROVEMENT: Now ExtraData mapthings also support names in the "special" field,

@@ -137,6 +137,7 @@ int UnknownThingType;
 #define ITEM_TNG_DAMAGEMOD    "damagemod"
 #define ITEM_TNG_DMGSPECIAL   "dmgspecial"
 #define ITEM_TNG_DAMAGEFACTOR "damagefactor"
+#define ITEM_TNG_REMDMGFACTOR "damagefactor.remove"
 #define ITEM_TNG_CLRDMGFACTOR "cleardamagefactors"
 #define ITEM_TNG_TOPDAMAGE    "topdamage"
 #define ITEM_TNG_TOPDMGMASK   "topdamagemask"
@@ -592,6 +593,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
    CFG_INT_CB(ITEM_TNG_TRANMAP,     -1,             CFGF_NONE, E_TranMapCB   ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_STR(ITEM_TNG_REMDMGFACTOR,    "",            CFGF_MULTI               ), \
    CFG_FLAG(ITEM_TNG_CLRDMGFACTOR,   0,             CFGF_NONE                ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
@@ -1595,6 +1597,7 @@ void E_clearDamageFactors(mobjinfo_t *info)
       if(!E_isModFieldName(mint->getKey(), "damagefactor"))
          continue;
       info->meta->removeInt(mint->getKey());
+      mint = nullptr;
    }
 }
 
@@ -1605,6 +1608,14 @@ static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 {
    if(cfg_size(cfg, ITEM_TNG_CLRDMGFACTOR))
       E_clearDamageFactors(info);
+
+   unsigned numremove = cfg_size(cfg, ITEM_TNG_REMDMGFACTOR);
+   for(unsigned i = 0; i < numremove; ++i)
+   {
+      emod_t *mod = E_DamageTypeForName(cfg_getnstr(cfg, ITEM_TNG_REMDMGFACTOR, i));
+      if(mod->num)   // avoid the unknown one, just like below
+         info->meta->removeInt(E_ModFieldName("damagefactor", mod));
+   }
 
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
 
