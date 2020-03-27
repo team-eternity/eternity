@@ -2015,15 +2015,13 @@ static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
 
    if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_MSG)))
    {
-      if(pfx.message == nullptr)
-         efree(pfx.message);
+      efree(pfx.message);
       pfx.message = estrdup(str);
    }
 
    if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_SOUND)))
    {
-      if(pfx.sound == nullptr)
-         efree(pfx.sound);
+      efree(pfx.sound);
       pfx.sound = estrdup(str);
    }
 
@@ -3244,7 +3242,7 @@ static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
 //
 void E_ProcessThingPickups(cfg_t *cfg)
 {
-   unsigned int i, numthings = cfg_size(cfg, EDF_SEC_THING);;
+   unsigned int i, numthings = cfg_size(cfg, EDF_SEC_THING);
    for(i = 0; i < numthings; i++)
    {
       cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_THING, i);
