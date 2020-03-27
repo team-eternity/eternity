@@ -137,6 +137,7 @@ int UnknownThingType;
 #define ITEM_TNG_DAMAGEMOD    "damagemod"
 #define ITEM_TNG_DMGSPECIAL   "dmgspecial"
 #define ITEM_TNG_DAMAGEFACTOR "damagefactor"
+#define ITEM_TNG_CLRDMGFACTOR "cleardamagefactors"
 #define ITEM_TNG_TOPDAMAGE    "topdamage"
 #define ITEM_TNG_TOPDMGMASK   "topdamagemask"
 #define ITEM_TNG_MOD          "mod"
@@ -591,6 +592,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_INT_CB(ITEM_TNG_COLOR,        0,             CFGF_NONE, E_ColorCB     ), \
    CFG_INT_CB(ITEM_TNG_TRANMAP,     -1,             CFGF_NONE, E_TranMapCB   ), \
    CFG_MVPROP(ITEM_TNG_DAMAGEFACTOR, dmgf_opts,     CFGF_MULTI|CFGF_NOCASE   ), \
+   CFG_FLAG(ITEM_TNG_CLRDMGFACTOR,   0,             CFGF_NONE                ), \
    CFG_MVPROP(ITEM_TNG_DROPITEM,     dropitem_opts, CFGF_MULTI|CFGF_NOCASE   ), \
    CFG_MVPROP(ITEM_TNG_COLSPAWN,     colspawn_opts, CFGF_NOCASE              ), \
    CFG_MVPROP(ITEM_TNG_BLOODBEHAV,   bloodbeh_opts, CFGF_MULTI|CFGF_NOCASE   ), \
@@ -1155,6 +1157,22 @@ const char *E_ModFieldName(const char *base, const emod_t *mod)
 }
 
 //
+// True if mod field name is correct
+//
+static bool E_isModFieldName(const char *key, const char *base)
+{
+   size_t keylen = strlen(key);
+   size_t baselen = strlen(base);
+   if(keylen <= baselen)
+      return false;
+   if(strncasecmp(key, base, baselen))
+      return false;
+   if(key[baselen] != '.')
+      return false;
+   return !!E_DamageTypeForName(key + baselen + 1);
+}
+
+//
 // Returns the state from the given mobjinfo for the given mod type and
 // base label, if such exists. If not, null is returned.
 //
@@ -1567,10 +1585,27 @@ static void E_ProcessDecorateStatesRecursive(cfg_t *thingsec, int thingnum, bool
 //
 
 //
+// Clears all damage factors from a mobjinfo
+//
+void E_clearDamageFactors(mobjinfo_t *info)
+{
+   MetaInteger *mint = nullptr;
+   while((mint = info->meta->getNextTypeEx(mint)))
+   {
+      if(!E_isModFieldName(mint->getKey(), "damagefactor"))
+         continue;
+      info->meta->removeInt(mint->getKey());
+   }
+}
+
+//
 // Processes the damage factor objects for a thingtype definition.
 //
 static void E_ProcessDamageFactors(mobjinfo_t *info, cfg_t *cfg)
 {
+   if(cfg_size(cfg, ITEM_TNG_CLRDMGFACTOR))
+      E_clearDamageFactors(info);
+
    unsigned int numfactors = cfg_size(cfg, ITEM_TNG_DAMAGEFACTOR);
 
    for(unsigned int i = 0; i < numfactors; i++)
