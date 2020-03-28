@@ -227,6 +227,8 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
     const TeleItem* bytele;
     while (front < back)
     {
+       I_Assert(front - db[0].ssqueue < db[0].sscount, "Front sscoount error: %d >= %u!\n",
+                eindex(front - db[0].ssqueue), db[0].sscount);
         t = *front++;
         res = isGoal(*t, parm);
         if (res == PathAdd && dests)
@@ -241,6 +243,9 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                 if (db[0].items[bytele->ss - first].visit != db[0].validcount)
                 {
                     db[0].items[bytele->ss - first].visit = db[0].validcount;
+                   I_Assert(back - db[0].ssqueue < db[0].sscount,
+                            "Back sscoount tele error: %d >= %u!\n", eindex(back - db[0].ssqueue),
+                            db[0].sscount);
                     *back++ = bytele->ss;
                 }
             }
@@ -248,6 +253,8 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                 && m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
             {
                 db[0].items[neigh.otherss - first].visit = db[0].validcount;
+               I_Assert(back - db[0].ssqueue < db[0].sscount, "Back sscoount error: %d >= %u!\n",
+                        eindex(back - db[0].ssqueue), db[0].sscount);
                 *back++ = neigh.otherss;
             }
         }
@@ -362,7 +369,7 @@ void PathFinder::DataBox::IncrementValidcount()
     ++validcount;
     if (!validcount)  // wrap around: reset former validcounts!
        for(unsigned i = 0; i < sscount; ++i)
-          items[i].visit = -1;
+          items[i].visit = static_cast<unsigned short>(-1);
 }
 
 //

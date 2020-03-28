@@ -127,7 +127,7 @@ private:
     {
        struct Item
        {
-          short visit;
+          unsigned short visit;
           const BNeigh *prev;
           fixed_t dist;
           v2fixed_t pos;
