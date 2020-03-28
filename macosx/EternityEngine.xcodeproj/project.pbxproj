@@ -61,7 +61,6 @@
 		4F5076C020754959000226F6 /* a_weaponsheretic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BE20754958000226F6 /* a_weaponsheretic.cpp */; };
 		4F5076C120754959000226F6 /* a_weaponsdoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */; };
 		4F5E98BF234534E900AB2810 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5E98BE234534E900AB2810 /* CoreServices.framework */; };
-		4F5E98C1234534EF00AB2810 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5E98C0234534EF00AB2810 /* OpenGL.framework */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
 		4F5F387A182D98E10027813A /* a_decorate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB6158BF42800C49E93 /* a_decorate.cpp */; };
@@ -543,7 +542,6 @@
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
 		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
 		4F5E98BE234534E900AB2810 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		4F5E98C0234534EF00AB2810 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		4F5F3864182D97860027813A /* mn_items.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mn_items.cpp; path = ../source/mn_items.cpp; sourceTree = "<group>"; };
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
 		4F5F386B182D97A10027813A /* autodoom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = autodoom; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -604,6 +602,8 @@
 		4FAAD5931E583113001D7263 /* p_portalcross.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalcross.cpp; path = ../source/p_portalcross.cpp; sourceTree = "<group>"; };
 		4FAC15D21BFDA06B003FA3A4 /* b_compression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = b_compression.cpp; sourceTree = "<group>"; };
 		4FAC15D31BFDA06B003FA3A4 /* b_compression.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = b_compression.h; sourceTree = "<group>"; };
+		4FAD058B1F915635003790C5 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		4FAD058D1F915642003790C5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		4FAD05911F91567D003790C5 /* txt_conditional.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = txt_conditional.c; path = ../source/textscreen/txt_conditional.c; sourceTree = "<group>"; };
 		4FAD05921F91567D003790C5 /* txt_utf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = txt_utf8.h; path = ../source/textscreen/txt_utf8.h; sourceTree = "<group>"; };
 		4FAD05931F91567D003790C5 /* doomkeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomkeys.h; path = ../source/textscreen/doomkeys.h; sourceTree = "<group>"; };
@@ -1152,7 +1152,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4F5E98C1234534EF00AB2810 /* OpenGL.framework in Frameworks */,
 				4F5E98BF234534E900AB2810 /* CoreServices.framework in Frameworks */,
 				4F769D5322C6BBAE00E7E702 /* libvorbis.0.dylib in Frameworks */,
 				4F769D5422C6BBAE00E7E702 /* libmpg123.0.dylib in Frameworks */,
@@ -1221,7 +1220,6 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				4F5E98C0234534EF00AB2810 /* OpenGL.framework */,
 				4F5E98BE234534E900AB2810 /* CoreServices.framework */,
 				4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */,
 				4F769D4D22C6BBAD00E7E702 /* libFLAC.8.dylib */,
@@ -1235,6 +1233,8 @@
 				4F769D4822C6BBAC00E7E702 /* libvorbis.0.dylib */,
 				4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */,
 				4F00D1312042B9E100D775DF /* libz.tbd */,
+				4FAD058D1F915642003790C5 /* AppKit.framework */,
+				4FAD058B1F915635003790C5 /* Carbon.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -2885,7 +2885,6 @@
 					_DEBUG,
 					_SDL_VER,
 					HAVE_SPCLIB,
-					EE_FEATURE_OPENGL,
 					HAVE_STDINT_H,
 					RANGECHECK,
 					INSTRUMENTED,
@@ -2939,7 +2938,6 @@
 				GCC_PREFIX_HEADER = "eternity/eternity-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					HAVE_STDINT_H,
-					EE_FEATURE_OPENGL,
 					HAVE_SPCLIB,
 					_SDL_VER,
 					_CONSOLE,
