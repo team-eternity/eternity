@@ -317,7 +317,6 @@
 		4FAD05981F91567E003790C5 /* txt_conditional.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05911F91567D003790C5 /* txt_conditional.c */; };
 		4FAD05991F91567E003790C5 /* txt_fileselect.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05951F91567E003790C5 /* txt_fileselect.c */; };
 		4FAD059A1F91567E003790C5 /* txt_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FAD05971F91567E003790C5 /* txt_utf8.c */; };
-		4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FAD058F1F915653003790C5 /* OpenGL.framework */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FB8211623F1DCD80044B1C3 /* hu_inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */; };
 		4FBFB0BA241EB0F50000C87A /* libSDL2-2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */; };
@@ -529,7 +528,6 @@
 		4FAAD5931E583113001D7263 /* p_portalcross.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalcross.cpp; path = ../source/p_portalcross.cpp; sourceTree = "<group>"; };
 		4FAD058B1F915635003790C5 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		4FAD058D1F915642003790C5 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
-		4FAD058F1F915653003790C5 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		4FAD05911F91567D003790C5 /* txt_conditional.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = txt_conditional.c; path = ../source/textscreen/txt_conditional.c; sourceTree = "<group>"; };
 		4FAD05921F91567D003790C5 /* txt_utf8.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = txt_utf8.h; path = ../source/textscreen/txt_utf8.h; sourceTree = "<group>"; };
 		4FAD05931F91567D003790C5 /* doomkeys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = doomkeys.h; path = ../source/textscreen/doomkeys.h; sourceTree = "<group>"; };
@@ -1081,7 +1079,6 @@
 				4F769D5B22C6BBAE00E7E702 /* libmodplug.1.dylib in Frameworks */,
 				4F769D5C22C6BBAE00E7E702 /* libogg.0.dylib in Frameworks */,
 				4F769D5D22C6BBAE00E7E702 /* libopus.0.dylib in Frameworks */,
-				4FAD059B1F9163A6003790C5 /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1150,7 +1147,6 @@
 				4F769D4822C6BBAC00E7E702 /* libvorbis.0.dylib */,
 				4F769D4C22C6BBAD00E7E702 /* libvorbisfile.3.dylib */,
 				4F00D1312042B9E100D775DF /* libz.tbd */,
-				4FAD058F1F915653003790C5 /* OpenGL.framework */,
 				4FAD058D1F915642003790C5 /* AppKit.framework */,
 				4FAD058B1F915635003790C5 /* Carbon.framework */,
 			);
@@ -2703,7 +2699,6 @@
 					_DEBUG,
 					_SDL_VER,
 					HAVE_SPCLIB,
-					EE_FEATURE_OPENGL,
 					HAVE_STDINT_H,
 					RANGECHECK,
 					INSTRUMENTED,
@@ -2756,7 +2751,6 @@
 				GCC_PREFIX_HEADER = "eternity/eternity-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					HAVE_STDINT_H,
-					EE_FEATURE_OPENGL,
 					HAVE_SPCLIB,
 					_SDL_VER,
 					_CONSOLE,
