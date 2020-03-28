@@ -370,7 +370,6 @@
 		4FE91CD6196FDFC600FB6336 /* b_itemlearn.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD4196FDFC600FB6336 /* b_itemlearn.cpp */; };
 		4FE91CD91970399A00FB6336 /* b_lineeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FE91CD71970399900FB6336 /* b_lineeffect.cpp */; };
 		4FEB0C891CA52059005737DD /* (null) in Sources */ = {isa = PBXBuildFile; };
-		4FF3D93F2424109A00AC3679 /* libSDL2-2.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FBFB0B9241EB0F50000C87A /* libSDL2-2.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4FFDE54921D2817D00836A2D /* hu_modern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54421D2817C00836A2D /* hu_modern.cpp */; };
 		4FFDE54A21D2817D00836A2D /* hu_boom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54521D2817C00836A2D /* hu_boom.cpp */; };
 		4FFDE56021DE891F00836A2D /* inffast.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54D21DE891D00836A2D /* inffast.c */; };
@@ -2425,7 +2424,7 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1110;
+				LastUpgradeCheck = 1140;
 				TargetAttributes = {
 					4F5F386A182D97A10027813A = {
 						DevelopmentTeam = 66L236F264;
