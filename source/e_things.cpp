@@ -216,6 +216,7 @@ int UnknownThingType;
 
 // Pickup Property
 #define ITEM_TNG_PFX_PICKUPFX  "pickupeffect"
+#define ITEM_TNG_PFX_CLRPICKFX "clearpickupeffect"
 #define ITEM_TNG_PFX_EFFECTS   "effects"
 #define ITEM_TNG_PFX_CHANGEWPN "changeweapon"
 #define ITEM_TNG_PFX_MSG       "message"
@@ -604,6 +605,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
+   CFG_FLAG(ITEM_TNG_PFX_CLRPICKFX,  0,             CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -3230,12 +3232,31 @@ bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
 }
 
 //
+// Clear thing pickup effect
+//
+static void E_destroyThingPickupEffect(mobjinfo_t *mi)
+{
+   if(!mi->pickupfx)
+      return;
+
+   e_pickupfx_t *pfx = mi->pickupfx;
+   efree(pfx->sound);
+   efree(pfx->message);
+   efree(pfx->effects);
+   efree(pfx);
+   mi->pickupfx = nullptr;
+}
+
+//
 // Process a single thingtype's or thingdelta's pickupeffect
 // this cannot be done during first pass thingtype processing.
 //
 static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
 {
    int thingnum = E_ThingNumForName(thingname);
+   if(cfg_size(sec, ITEM_TNG_PFX_CLRPICKFX))
+      E_destroyThingPickupEffect(mobjinfo[thingnum]);
+
    if(cfg_size(sec, ITEM_TNG_PFX_PICKUPFX) > 0)
       E_processThingPickupEffect(*mobjinfo[thingnum], sec);
 
