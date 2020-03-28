@@ -91,6 +91,12 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 [[noreturn]] void I_Error(E_FORMAT_STRING(const char *error), ...) E_PRINTF(1, 2);
 [[noreturn]] void I_ErrorVA(const char *error, va_list args);
 
+#ifdef RANGECHECK
+#define I_Assert(condition, ...) if(!(condition)) I_Error(__VA_ARGS__)
+#else
+#define I_Assert(condition, ...)
+#endif
+
 extern int mousepresent;                // killough
 
 void I_EndDoom();         // killough 2/22/98: endgame screen
