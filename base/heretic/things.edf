@@ -2986,7 +2986,7 @@ thingtype HereticPhoenixFX1 : Mobj, -1, 430
   damage     20
   seesound   ht_phosht
   deathsound ht_phohit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
 
   firstdecoratestate S_PHOENIXFX1_1
   states
