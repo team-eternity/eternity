@@ -1987,7 +1987,10 @@ static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
    if((str = cfg_getstr(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
    {
       if(pfx.numEffects)
+      {
          efree(pfx.effects);
+         pfx.effects = nullptr;
+      }
 
       if((pfx.numEffects = cfg_size(pfx_cfg, ITEM_TNG_PFX_EFFECTS)))
       {
