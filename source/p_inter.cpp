@@ -543,22 +543,6 @@ bool P_GiveArmor(player_t *player, const itemeffect_t *effect)
    return true;
 }
 
-//
-// P_GiveCard
-//
-static void P_GiveCard(player_t *player, itemeffect_t *card, Mobj *special)
-{
-   if(E_GetItemOwnedAmount(player, card))
-      return;
-
-   player->bonuscount = BONUSADD; // INVENTORY_TODO: hard-coded for now
-   E_GiveInventoryItem(player, card);
-
-   // Make sure to consume its special if the player needed it, even if it
-   // may or may not be removed later.
-   P_consumeSpecial(player, special);
-}
-
 /*
   pw_invulnerability,
   pw_strength,

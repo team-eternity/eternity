@@ -322,7 +322,6 @@ void P_InitPicAnims(void)
    animdef_t               *animdefs; //jff 3/23/98 pointer to animation lump
    const lumpinfo_t *const *lumpinfo = wGlobalDir.getLumpInfo();
    const int                animatednum  = wGlobalDir.getNumForName("ANIMATED");
-   const size_t             animatedsize = lumpinfo[animatednum]->size;
 
    if(lumpinfo[animatednum]->size == 0)
       I_Error("P_InitPicAnims: ANIMATED lump has size 0\n");
