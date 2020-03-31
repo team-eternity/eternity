@@ -1064,6 +1064,8 @@ void Bot::pickBestWeapon(const Target &target)
                          !!pl->powers[pw_strength], false) /
    (double)bwi.refireRate;
    double maxDmgRate = currentDmgRate;
+   if(bwi.flags & BWI_DANGEROUS)
+      maxDmgRate = -1;   // avoid dangerous guns for now
    double newDmgRate;
    const weaponinfo_t *maxWI = nullptr;
 
