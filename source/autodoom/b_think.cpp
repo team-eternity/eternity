@@ -447,7 +447,9 @@ static bool B_checkSwitchReach(v2fixed_t mopos, v2fixed_t coord, const line_t &s
                            const_cast<line_t *>(&swline), BTR_switchReachTraverse);
 }
 
+//
 // This version checks if a line is by itself reachable, without assuming a user
+//
 static bool B_checkSwitchReach(v2fixed_t point, const line_t &swline)
 {
    v2fixed_t mpos = v2fixed_t(*swline.v1) + v2fixed_t(swline.dx, swline.dy) / 2;
@@ -456,7 +458,9 @@ static bool B_checkSwitchReach(v2fixed_t point, const line_t &swline)
                            const_cast<line_t *>(&swline), BTR_switchReachTraverse);
 }
 
+//
 // This version checks if a line is by itself reachable, without assuming a user
+//
 bool Bot::checkGunSwitchReach(v2fixed_t point, const line_t &swline) const
 {
    int side = P_PointOnLineSide(point.x, point.y, &swline);

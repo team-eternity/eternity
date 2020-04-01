@@ -402,12 +402,14 @@ void B_AnalyzeWeapons(const playerclass_t *pclass)
       memset(&state, 0, sizeof(state));
       state.bwi = &bwi;
 
-      B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx) {
+      B_weaponStateEncounters(wi.atkstate, wi, [](statenum_t sn, void *ctx)
+      {
          State &state = *static_cast<State *>(ctx);
          BotWeaponInfo &bwi = *state.bwi;
          const state_t &st = *states[sn];
 
-         auto increaseBurst = [&state]() {
+         auto increaseBurst = [&state]()
+         {
             if(state.bwi->burstRate < state.burstTics)
             {
                state.bwi->burstRate = state.burstTics;
