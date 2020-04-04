@@ -96,6 +96,7 @@ enum
   netcmd_comp_ninja,       //          ninja spawn
   netcmd_comp_jump,        // ioanch:  air control for jumping
   netcmd_comp_aircontrol = netcmd_comp_jump,
+  netcmd_comp_passuse,
   NUMNETCMDS
 };
 

@@ -799,7 +799,8 @@ const char *comp_strings[] =
   "planeshoot", //          09/22/07: plane shooting
   "special",    //          08/29/09: special failure behavior
   "ninja",      //          04/18/10: ninja spawn
-  "aircontrol"
+  "aircontrol",
+  "passuse"
 };
 
 static void Handler_CompTHeights()

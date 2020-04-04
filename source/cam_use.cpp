@@ -28,6 +28,7 @@
 #include "cam_sight.h"
 #include "d_gi.h"
 #include "d_player.h"
+#include "doomstat.h"
 #include "e_exdata.h"
 #include "p_map.h"
 #include "p_mobj.h"
@@ -149,7 +150,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
-      return !!(li->flags & ML_PASSUSE);
+      return !!((li->flags & ML_PASSUSE) || comp[comp_passuse]);
    }
 
    // no special

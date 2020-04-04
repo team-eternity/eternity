@@ -3203,6 +3203,7 @@ static menuitem_t mn_compat3_items[] =
    { it_toggle, "Use DOOM linedef trigger model",       "comp_model"     },
    { it_toggle, "Line effects work on sector tag 0",    "comp_zerotags"  },
    { it_toggle, "One-time line effects can break",      "comp_special"   },
+   { it_toggle, "Use key can activate multiple lines",  "comp_passuse"   },
    { it_end }
 };
 

@@ -160,6 +160,7 @@ enum {
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
   comp_jump,        // Disable jumping and air control
   comp_aircontrol = comp_jump,
+  comp_passuse,
   COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
   COMP_TOTAL=32  // Some extra room for additional variables
 };
