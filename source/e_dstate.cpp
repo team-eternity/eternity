@@ -223,8 +223,8 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
    NEEDSTATEFRAMES:
       <text> : NEEDSTATETICS
    NEEDSTATETICS:
-      <number> : NEEDSTATEBRIGHTORACTION
-   NEEDSTATEFLAGORACTION:
+      <number> : NEEDFLAGORACTION
+   NEEDFLAGORACTION:
       "bright" : NEEDSTATEFLAGORACTION
       "fast"   : NEEDSTATEFLAGORACTION
       <text>   : NEEDSTATEEOLORPAREN
@@ -1482,7 +1482,7 @@ static void DoPSNeedFlagOrAction(pstate_t *ps)
       // stay in the current state
    }
    else
-      doAction(ps, "DoPSNeedBrightOrAction"); // otherwise verify & assign action
+      doAction(ps, "DoPSNeedFlagOrAction"); // otherwise verify & assign action
 }
 
 //
