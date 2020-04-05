@@ -225,8 +225,8 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
    NEEDSTATETICS:
       <number> : NEEDFLAGORACTION
    NEEDFLAGORACTION:
-      "bright" : NEEDSTATEFLAGORACTION
-      "fast"   : NEEDSTATEFLAGORACTION
+      "bright" : NEEDFLAGORACTION
+      "fast"   : NEEDFLAGORACTION
       <text>   : NEEDSTATEEOLORPAREN
       EOL      : NEEDLABELORKWORSTATE
    NEEDSTATEEOLORPAREN:
