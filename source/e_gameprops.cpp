@@ -175,6 +175,7 @@ static dehflags_t gmi_flags[] =
    { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
    { "CHEATSOUND",     GIF_CHEATSOUND     },
    { "CHASEFAST",      GIF_CHASEFAST      },
+   { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
    { NULL,             0                  }
 };
 

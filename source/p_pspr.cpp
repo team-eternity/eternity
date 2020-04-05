@@ -102,11 +102,21 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
       psp->state = state;
       psp->tics = state->tics;        // could be 0
 
-      if(state->misc1)
+      if(GameModeInfo->flags & GIF_DOOMWEAPONOFFSET)
       {
-         // coordinate set
-         psp->sx = state->misc1 << FRACBITS;
-         psp->sy = state->misc2 << FRACBITS;
+         if(state->misc1)
+         {
+            // coordinate set
+            psp->sx = state->misc1 << FRACBITS;
+            psp->sy = state->misc2 << FRACBITS;
+         }
+      }
+      else
+      {
+         if(state->misc1)
+            psp->sx = state->misc1 << FRACBITS;
+         if(state->misc2)
+            psp->sy = state->misc2 << FRACBITS;
       }
 
       // Call action routine.

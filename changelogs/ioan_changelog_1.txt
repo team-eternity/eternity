@@ -8,6 +8,18 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+5.04.2020
+
+FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
+         is used to set the misc1 and misc2 flags, which are also capable of
+         setting weapon coordinates.
+
+         Added the DOOMWEAPONOFFSET gameproperties flag which is already defined
+         for DOOM (solely for Dehacked and past EDF mod compatibility) and
+         enables the less intuitive DOOM rule on when offsets have effect.
+         Otherwise the better Hexen rule applies.
+
+--------------------------------------------------------------------------------
 27.03.2020
 
 IMPROVEMENT: Added damagefactor.remove and cleardamagefactors to thingtype and
