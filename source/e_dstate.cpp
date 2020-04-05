@@ -681,10 +681,8 @@ static int E_GetDSToken(pstate_t *ps)
 
    while(tks.state != TSTATE_DONE)
    {
-#ifdef RANGECHECK
-      if(tks.state < 0 || tks.state >= TSTATE_DONE)
-         I_Error("E_GetDSToken: Internal error: undefined state\n");
-#endif
+      I_Assert(tks.state >= 0 && tks.state < TSTATE_DONE,
+               "E_GetDSToken: Internal error: undefined state\n");
 
       tstatefuncs[tks.state](&tks);
 
@@ -1763,10 +1761,8 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
          ps.needline = false;
       }
 
-#ifdef RANGECHECK
-      if(ps.state < 0 || ps.state >= PSTATE_NUMSTATES)
-         I_Error("E_parseDecorateInternal: internal error - undefined state\n");
-#endif
+      I_Assert(ps.state >= 0 && ps.state < PSTATE_NUMSTATES,
+               "E_parseDecorateInternal: internal error - undefined state\n");
 
       pstatefuncs[ps.state](&ps);
 
