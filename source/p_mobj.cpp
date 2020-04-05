@@ -2649,9 +2649,7 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
       // behaviors that rely on a valid 'target' field. Basically
       // GZD's "PUFFGETSOWNER" flag but with a less crappy name. :P
       if(pufftype->getInt(keyPuffTargetShooter, 0))
-      {
-         th->target = shooter;
-      }
+         P_SetTarget(&th->target, shooter);
    }
 
    // ioanch: spawn particles even for melee range if nothing is spawned
