@@ -642,7 +642,17 @@ static void E_generateWeaponTrackers()
       weaponinfo_t *currWeapon  = E_WeaponForID(i);
       itemeffect_t *currTracker = E_ItemEffectForName(currWeapon->name);
       if(currTracker != nullptr)
+      {
+         if(currTracker->getInt(keyClass, ITEMFX_NONE) != ITEMFX_ARTIFACT)
+         {
+            E_EDFLoggedErr(
+               2,
+               "E_generateWeaponTrackers: Non-artifact item effect sharing name of weaponinfo '%s' found\n",
+               currWeapon->name
+            );
+         }
          currWeapon->tracker = currTracker;
+      }
       else
       {
          currTracker = new itemeffect_t(currWeapon->name);
