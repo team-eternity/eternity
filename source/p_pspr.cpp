@@ -1290,7 +1290,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    arglist_t *args = actionargs->args;
    int i, numbullets, damage, dmgmod;
    int flashint, flashstate;
-   int horizontal, vertical;
+   angle_t horizontal, vertical;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1311,8 +1311,8 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    flashint   = E_ArgAsInt(args, 5, 0);
    flashstate = E_ArgAsStateNum(args, 5, player);
 
-   horizontal = E_ArgAsInt(args, 6, 0);
-   vertical   = E_ArgAsInt(args, 7, 0);
+   horizontal = E_ArgAsAngle(args, 6, 0);
+   vertical   = E_ArgAsAngle(args, 7, 0);
 
    const char *pufftype = E_ArgAsString(args, 8, nullptr);
 
@@ -1350,9 +1350,11 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       
       if(accurate == CBA_CUSTOM)
       {
-         angle += P_SubRandomEx(pr_custommisfire, ANGLE_1) / 2 * horizontal;
-         const angle_t pitch = (P_SubRandomEx(pr_custommisfire, ANGLE_1) / 2) *
-                                vertical;
+         constexpr unsigned int ANG_VALS = ANGLE_1;
+         angle += (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * horizontal) /
+                  (ANG_VALS * 2);
+         const angle_t pitch = (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) /
+                               (ANG_VALS * 2);
          // convert pitch to the same "unit" as slope, then add it on
          slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
