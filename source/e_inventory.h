@@ -285,22 +285,13 @@ int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerc
                       int def);
 
 extern MetaKeyIndex keyAmount;
-extern MetaKeyIndex keyArtifactType;
 extern MetaKeyIndex keyBackpackAmount;
 extern MetaKeyIndex keyClass;
 extern MetaKeyIndex keyClassName;
-extern MetaKeyIndex keyFullAmountOnly;
-extern MetaKeyIndex keyInterHubAmount;
 extern MetaKeyIndex keyItemID;
-extern MetaKeyIndex keyKeepDepleted;
 extern MetaKeyIndex keyMaxAmount;
 extern MetaKeyIndex keyBackpackMaxAmt;
-extern MetaKeyIndex keySortOrder;
 extern MetaKeyIndex keyInvBar;
-extern MetaKeyIndex keyUseEffect;
-extern MetaKeyIndex keyUseAction;
-extern MetaKeyIndex keyUseSound;
-extern MetaKeyIndex keyArgs;
 extern MetaKeyIndex keyAmmoGiven;
 
 //

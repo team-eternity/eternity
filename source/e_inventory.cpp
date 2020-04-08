@@ -216,23 +216,25 @@ MetaTable *E_GetItemEffects()
 
 // Interned metatable keys
 MetaKeyIndex keyAmount        (KEY_AMOUNT        );
-MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
 MetaKeyIndex keyBackpackAmount(KEY_BACKPACKAMOUNT);
 MetaKeyIndex keyClass         (KEY_CLASS         );
 MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
-MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
-MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
 MetaKeyIndex keyItemID        (KEY_ITEMID        );
-MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
 MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
 MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
-MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
 MetaKeyIndex keyInvBar        (KEY_INVBAR        );
-MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
-MetaKeyIndex keyUseAction     (KEY_USEACTION     );
-MetaKeyIndex keyUseSound      (KEY_USESOUND      );
-MetaKeyIndex keyArgs          (KEY_ARGS          );
 MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
+
+// Static interened metatable keys
+static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
+static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
+static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
+static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
+static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
+static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
+static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
+static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
+static MetaKeyIndex keyArgs          (KEY_ARGS          );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
