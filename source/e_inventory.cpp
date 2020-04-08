@@ -105,13 +105,24 @@ static MetaTable e_effectsTable;
 // Add an item effect from a cfg_t definition.
 //
 static void E_convertKeywordEnumsToStrings(MetaTable &table);
-static itemeffect_t *E_addItemEffect(cfg_t *cfg)
+static itemeffect_t *E_addItemEffect(cfg_t *cfg, const char *const cfgSecName, const int secNum)
 {
    itemeffect_t *table;
    const char   *name = cfg_title(cfg);
 
    if(!(table = E_ItemEffectForName(name)))
       e_effectsTable.addObject((table = new itemeffect_t(name)));
+   else if(table->getInt(keyClass, ITEMFX_NONE) != secNum)
+   {
+      E_EDFLoggedWarning(
+         2,
+         "E_addItemEffect: Multiple item effects with same name "
+         "'%s' but different types '%s' and '%s' defined\n",
+         name,
+         cfgSecName,
+         table->getConstString(keyClassName, "")
+      );
+   }
 
    E_MetaTableFromCfg(cfg, table);
    E_convertKeywordEnumsToStrings(*table);
@@ -204,24 +215,24 @@ MetaTable *E_GetItemEffects()
 #define KEY_DELTA_NAME     "name"
 
 // Interned metatable keys
-static MetaKeyIndex keyAmount        (KEY_AMOUNT        );
-static MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
-static MetaKeyIndex keyBackpackAmount(KEY_BACKPACKAMOUNT);
-static MetaKeyIndex keyClass         (KEY_CLASS         );
-static MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
-static MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
-static MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
-static MetaKeyIndex keyItemID        (KEY_ITEMID        );
-static MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
-static MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
-static MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
-static MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
-static MetaKeyIndex keyInvBar        (KEY_INVBAR        );
-static MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
-static MetaKeyIndex keyUseAction     (KEY_USEACTION     );
-static MetaKeyIndex keyUseSound      (KEY_USESOUND      );
-static MetaKeyIndex keyArgs          (KEY_ARGS          );
-static MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
+MetaKeyIndex keyAmount        (KEY_AMOUNT        );
+MetaKeyIndex keyArtifactType  (KEY_ARTIFACTTYPE  );
+MetaKeyIndex keyBackpackAmount(KEY_BACKPACKAMOUNT);
+MetaKeyIndex keyClass         (KEY_CLASS         );
+MetaKeyIndex keyClassName     (KEY_CLASSNAME     );
+MetaKeyIndex keyFullAmountOnly(KEY_FULLAMOUNTONLY);
+MetaKeyIndex keyInterHubAmount(KEY_INTERHUBAMOUNT);
+MetaKeyIndex keyItemID        (KEY_ITEMID        );
+MetaKeyIndex keyKeepDepleted  (KEY_KEEPDEPLETED  );
+MetaKeyIndex keyMaxAmount     (KEY_MAXAMOUNT     );
+MetaKeyIndex keyBackpackMaxAmt(KEY_BACKPACKMAXAMT);
+MetaKeyIndex keySortOrder     (KEY_SORTORDER     );
+MetaKeyIndex keyInvBar        (KEY_INVBAR        );
+MetaKeyIndex keyUseEffect     (KEY_USEEFFECT     );
+MetaKeyIndex keyUseAction     (KEY_USEACTION     );
+MetaKeyIndex keyUseSound      (KEY_USESOUND      );
+MetaKeyIndex keyArgs          (KEY_ARGS          );
+MetaKeyIndex keyAmmoGiven     (KEY_AMMOGIVEN     );
 
 // Keys for specially treated artifact types
 static MetaKeyIndex keyBackpackItem  (ARTI_BACKPACKITEM );
@@ -586,7 +597,7 @@ static void E_processItemEffects(cfg_t *cfg)
       // process each section of the current type
       for(unsigned int secNum = 0; secNum < numSections; secNum++)
       {
-         auto newEffect = E_addItemEffect(cfg_getnsec(cfg, cfgSecName, secNum));
+         auto newEffect = E_addItemEffect(cfg_getnsec(cfg, cfgSecName, secNum), cfgSecName, secNum);
 
          // add the item effect type and name as properties
          newEffect->setInt(keyClass, i);
