@@ -144,7 +144,7 @@ already set up Visual Studio.
 
 . Acquire the following libraries:
 +
- SDL-2.0.9
+ SDL-2.0.12
  SDL2_mixer-2.0.4
  SDL2_net-2.0.1
 
