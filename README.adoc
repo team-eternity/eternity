@@ -162,7 +162,7 @@ Do this for both if you plan on building both.
 
 . Under the 'User Macros' section, click 'Add Macro'.
 
-. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.9`.
+. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.12`.
 
 . Tick 'Set this macro as an environment variable in the build environment' and click OK.
 
