@@ -1406,7 +1406,7 @@ static const char *deh_giverNames[NUMWEAPONS] =
    "GiverPistol",
    "GiverShotgun",
    "GiverChaingun",
-   "GiverMissileLauncher",
+   "GiverRocketLauncher",
    "GiverPlasmaRifle",
    "GiverBFG9000",
    "GiverChainsaw",
