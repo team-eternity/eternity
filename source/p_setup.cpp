@@ -319,8 +319,8 @@ static void P_LoadConsoleVertexes(int lump)
    // Copy and convert vertex coordinates
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetBinaryDWord(&data);
-      vertexes[i].y = GetBinaryDWord(&data);
+      vertexes[i].x = GetBinaryDWord(data);
+      vertexes[i].y = GetBinaryDWord(data);
 
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
@@ -350,8 +350,8 @@ static void P_LoadVertexes(int lump)
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetBinaryWord(&data) << FRACBITS;
-      vertexes[i].y = GetBinaryWord(&data) << FRACBITS;
+      vertexes[i].x = GetBinaryWord(data) << FRACBITS;
+      vertexes[i].y = GetBinaryWord(data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
@@ -654,16 +654,16 @@ static void P_LoadPSXSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
-      GetBinaryString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(data) << FRACBITS;
+      GetBinaryString(data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
-      GetBinaryString(&data, namebuf, 8);
+      GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
       ++data;                // skip color ID for now
-      ss->special            = GetBinaryWord(&data);
-      ss->tag                = GetBinaryWord(&data);
+      ss->special            = GetBinaryWord(data);
+      ss->tag                = GetBinaryWord(data);
       data += 2;             // skip flags field for now
 
       // scale up light levels (experimental)
@@ -696,16 +696,16 @@ static void P_LoadSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
-      GetBinaryString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(data) << FRACBITS;
+      GetBinaryString(data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      GetBinaryString(&data, namebuf, 8);
+      GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
-      ss->lightlevel         = GetBinaryWord(&data);
-      ss->special            = GetBinaryWord(&data);
-      ss->tag                = GetBinaryWord(&data);
+      ss->lightlevel         = GetBinaryWord(data);
+      ss->special            = GetBinaryWord(data);
+      ss->tag                = GetBinaryWord(data);
     
       P_InitSector(ss);
    }
@@ -1184,9 +1184,9 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       }
 
       // haleyjd: FIXME - see no verification of vertex indices
-      v1 = ml.v1 = GetBinaryUDWord(&data);
+      v1 = ml.v1 = GetBinaryUDWord(data);
       if(signature == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
-         v2 = ml.v2 = GetBinaryUDWord(&data);
+         v2 = ml.v2 = GetBinaryUDWord(data);
       else
       {
          if(actualSegIndex == ss->firstline && !firstV1) // only set it once
@@ -1199,14 +1199,14 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
             prevSegToSet = nullptr;   // consume it
          }
          
-         ml.partner = GetBinaryUDWord(&data);   // IOANCH: not used in EE
+         ml.partner = GetBinaryUDWord(data);   // IOANCH: not used in EE
       }
       
       // IOANCH
       if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
-         ml.linedef = GetBinaryUWord(&data);
+         ml.linedef = GetBinaryUWord(data);
       else
-         ml.linedef = GetBinaryUDWord(&data);
+         ml.linedef = GetBinaryUDWord(data);
       ml.side    = *data++;
       
       if((signature == ZNodeType_GL && ml.linedef == 0xffff)
@@ -1306,10 +1306,10 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
-   orgVerts = GetBinaryUDWord(&data);
+   orgVerts = GetBinaryUDWord(data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
-   newVerts = GetBinaryUDWord(&data);
+   newVerts = GetBinaryUDWord(data);
 
    // ioanch: moved before the potential allocation
    CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
@@ -1328,8 +1328,8 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    {
       int vindex = i + orgVerts;
 
-      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(&data);
-      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(&data);
+      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(data);
+      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(data);
 
       // SoM: Cardboard stores float versions of vertices.
       newvertarray[vindex].fx = M_FixedToFloat(newvertarray[vindex].x);
@@ -1351,7 +1351,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // Read the subsectors
    CheckZNodesOverflow(len, sizeof(numSubs));
-   numSubs = GetBinaryUDWord(&data);
+   numSubs = GetBinaryUDWord(data);
 
    numsubsectors = (int)numSubs;
    if(numsubsectors <= 0)
@@ -1367,13 +1367,13 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
-      subsectors[i].numlines  = (int)(GetBinaryUDWord(&data));
+      subsectors[i].numlines  = (int)(GetBinaryUDWord(data));
       currSeg += subsectors[i].numlines;
    }
 
    // Read the segs
    CheckZNodesOverflow(len, sizeof(numSegs));
-   numSegs = GetBinaryUDWord(&data);
+   numSegs = GetBinaryUDWord(data);
 
    // The number of segs stored should match the number of
    // segs used by subsectors.
@@ -1401,7 +1401,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
-   numNodes = GetBinaryUDWord(&data);
+   numNodes = GetBinaryUDWord(data);
 
    numnodes = numNodes;
    CheckZNodesOverflow(len, numNodes * 32);
@@ -1416,25 +1416,25 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
       if(signature == ZNodeType_GL3)
       {
-         mn.x32  = GetBinaryDWord(&data);
-         mn.y32  = GetBinaryDWord(&data);
-         mn.dx32 = GetBinaryDWord(&data);
-         mn.dy32 = GetBinaryDWord(&data);
+         mn.x32  = GetBinaryDWord(data);
+         mn.y32  = GetBinaryDWord(data);
+         mn.dx32 = GetBinaryDWord(data);
+         mn.dy32 = GetBinaryDWord(data);
       }
       else
       {
-         mn.x  = GetBinaryWord(&data);
-         mn.y  = GetBinaryWord(&data);
-         mn.dx = GetBinaryWord(&data);
-         mn.dy = GetBinaryWord(&data);
+         mn.x  = GetBinaryWord(data);
+         mn.y  = GetBinaryWord(data);
+         mn.dx = GetBinaryWord(data);
+         mn.dy = GetBinaryWord(data);
       }
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
-            mn.bbox[j][k] = GetBinaryWord(&data);
+            mn.bbox[j][k] = GetBinaryWord(data);
 
       for(j = 0; j < 2; j++)
-         mn.children[j] = GetBinaryDWord(&data);
+         mn.children[j] = GetBinaryDWord(data);
 
       if(signature == ZNodeType_GL3)
       {
@@ -2086,16 +2086,16 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
-      sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
-      sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
+      sd->textureoffset = GetBinaryWord(data) << FRACBITS;
+      sd->rowoffset     = GetBinaryWord(data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
-      GetBinaryString(&data, toptexture,    8);
-      GetBinaryString(&data, bottomtexture, 8);
-      GetBinaryString(&data, midtexture,    8);
+      GetBinaryString(data, toptexture,    8);
+      GetBinaryString(data, bottomtexture, 8);
+      GetBinaryString(data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
+      secnum = SafeUintIndex(GetBinaryWord(data), numsectors, "side", i, "sector");
       sd->sector = &sectors[secnum];
 
       // IOANCH 20151213: this will be in a separate function, because UDMF

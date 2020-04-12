@@ -105,8 +105,8 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    byte *r = data + 2;
-   sd.samplerate  = GetBinaryUWord(&r);
-   sd.samplecount = GetBinaryUDWord(&r);
+   sd.samplerate  = GetBinaryUWord(r);
+   sd.samplecount = GetBinaryUDWord(r);
 
    if(!sd.samplerate)
       return false;
@@ -168,12 +168,12 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    byte *r = data + 4;
-   size_t chunksize = GetBinaryUDWord(&r);
+   size_t chunksize = GetBinaryUDWord(r);
    if(chunksize < len - 8) // need correct chunk size; will tolerate overage
       return false;
 
    r = data + 16;
-   int headerSize = GetBinaryDWord(&r);
+   int headerSize = GetBinaryDWord(r);
    switch(headerSize)
    {
    case 16: // normal PCM header
@@ -200,18 +200,18 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    if(len <= minLength)
       return false;
 
-   uint16_t fmt = GetBinaryUWord(&r);
+   uint16_t fmt = GetBinaryUWord(r);
    if(fmt != 0x0001 && fmt != 0xFFFE) // PCM or EXTENSIBLE formats only
       return false;
-   if(GetBinaryWord(&r) != 1)    // mono only
+   if(GetBinaryWord(r) != 1)    // mono only
       return false;
 
-   sd.samplerate = GetBinaryUDWord(&r);
+   sd.samplerate = GetBinaryUDWord(r);
    if(!sd.samplerate)
       return false;
 
    r = data + 34;
-   int bps = GetBinaryWord(&r);
+   int bps = GetBinaryWord(r);
    if(bps != 8 && bps != 16) // 8- or 16-bit only
       return false;
 
@@ -230,7 +230,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    // check for extended format information in larger headers
    if(headerSize > 16)
    {
-      int cbSize = GetBinaryWord(&r);
+      int cbSize = GetBinaryWord(r);
       if(cbSize != 0 && cbSize != 22)
          return false; // unknown cbSize
       if(cbSize == 22) // check for EXTENSIBLE subformat
@@ -238,7 +238,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
          if(headerSize != 40)
             return false; // illegal combination.
          r = data + 44;
-         if(GetBinaryWord(&r) != 1) // must be PCM
+         if(GetBinaryWord(r) != 1) // must be PCM
             return false;
       }
    }
@@ -263,7 +263,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false; // no data marker
 
    r += 4;
-   size_t bytes = GetBinaryUDWord(&r);
+   size_t bytes = GetBinaryUDWord(r);
    if(!bytes) // empty sample stream
       return false;
 
