@@ -47,6 +47,7 @@ enum sampleformat_e
 
 struct sounddata_t
 {
+   unsigned int    channels;
    unsigned int    samplerate;
    size_t          samplecount;
    byte           *samplestart;
@@ -127,8 +128,9 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
       sd.samplestart += 16;
    }
 
-   // always 8-bit unsigned samples
-   sd.fmt = S_FMT_U8;
+   // always 8-bit unsigned mono samples
+   sd.fmt      = S_FMT_U8;
+   sd.channels = 1;
 
    return true;
 }
@@ -168,9 +170,12 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    byte *r = data + 4;
-   size_t chunksize = GetBinaryUDWord(r);
-   if(chunksize < len - 8) // need correct chunk size; will tolerate overage
-      return false;
+   // MaxW: Note: This check is unnecessary, and causes many waves
+   // that would otherwise play to not be considered a wave sample
+   r += 4;
+   //size_t chunksize = GetBinaryUDWord(r);
+   //if(chunksize < len - 8) // need correct chunk size; will tolerate overage
+   //   return false;
 
    r = data + 16;
    int headerSize = GetBinaryDWord(r);
@@ -200,18 +205,18 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    if(len <= minLength)
       return false;
 
-   uint16_t fmt = GetBinaryUWord(r);
-   if(fmt != 0x0001 && fmt != 0xFFFE) // PCM or EXTENSIBLE formats only
+   // PCM or EXTENSIBLE formats only
+   if(const uint16_t fmt = GetBinaryUWord(r);  fmt != 0x0001 && fmt != 0xFFFE)
       return false;
-   if(GetBinaryWord(r) != 1)    // mono only
-      return false;
+
+   sd.channels = GetBinaryWord(r); // MaxW: WE GOT STEREO!
 
    sd.samplerate = GetBinaryUDWord(r);
    if(!sd.samplerate)
       return false;
 
    r = data + 34;
-   int bps = GetBinaryWord(r);
+   const int bps = GetBinaryWord(r);
    if(bps != 8 && bps != 16) // 8- or 16-bit only
       return false;
 
@@ -268,9 +273,9 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    if(bytes + totalMDSize > len) // truncated sample stream
-      sd.samplecount = (len - totalMDSize) / (bps / 8);
+      sd.samplecount = (len - totalMDSize) / ((bps * sd.channels) / 8);
    else
-      sd.samplecount = bytes / (bps / 8);
+      sd.samplecount = bytes / ((bps * sd.channels) / 8);
 
    sd.samplestart = data + sampleOffset;
 
@@ -341,10 +346,16 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       // do linear filtering operation
       for(i = 0; i < sfx->alen && j < sd.samplecount - 1; i++)
       {
-         double d = (((unsigned int)src[j  ] * (0x10000 - stepremainder)) +
-                     ((unsigned int)src[j+1] * stepremainder));
-         d /= 65536.0;
-         dest[i] = static_cast<float>(eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+         {
+            double d = (((unsigned int)src[(j * sd.channels) + k  ] * (0x10000 - stepremainder)) +
+                        ((unsigned int)src[(j * sd.channels) + k+1] * stepremainder));
+            d /= 65536.0;
+            dest[i] = static_cast<float>(eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
 
          stepremainder += step;
          j += (stepremainder >> 16);
@@ -353,7 +364,13 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       }
       // fill remainder (if any) with final sample byte
       for(; i < sfx->alen; i++)
-         dest[i] = static_cast<float>(eclamp(src[j] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+      {
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+            dest[i] += static_cast<float>(eclamp(src[(j * sd.channels) + k] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
+      }
    }
    else
    {
@@ -362,7 +379,13 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       byte  *src  = sd.samplestart;
 
       for(unsigned int i = 0; i < sfx->alen; i++)
-         dest[i] = static_cast<float>(eclamp(src[i] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+      {
+         dest[i] = 0.0f;
+         for(unsigned int j = 0; j < sd.channels; j++)
+            dest[i] += static_cast<float>(eclamp(src[(i * sd.channels) + j] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
+      }
    }
 }
 
@@ -390,11 +413,17 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
       // do linear filtering operation
       for(i = 0; i < sfx->alen && j < sd.samplecount - 1; i++)
       {
-         double s1 = SwapShort(src[j]);
-         double s2 = SwapShort(src[j+1]);
-         double d  = (s1 * (0x10000 - stepremainder)) + (s2 * stepremainder);
-         d /= 65536.0;
-         dest[i] = static_cast<float>(eclamp((d + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+         {
+            const double s1 = SwapShort(src[(j * sd.channels) + k  ]);
+            const double s2 = SwapShort(src[(j * sd.channels) + k+1]);
+            double d  = (s1 * (0x10000 - stepremainder)) + (s2 * stepremainder);
+            d /= 65536.0;
+            dest[i] += static_cast<float>(eclamp((d + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
 
          stepremainder += step;
          j += (stepremainder >> 16);
@@ -404,8 +433,14 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
       // fill remainder (if any) with final sample byte
       for(; i < sfx->alen; i++)
       {
-         double s = SwapShort(src[j]);
-         dest[i] = static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+         {
+            const double s = SwapShort(src[(j * sd.channels) + k]);
+            dest[i] += static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
       }
    }
    else
@@ -416,8 +451,14 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
 
       for(unsigned int i = 0; i < sfx->alen; i++)
       {
-         double s = SwapShort(src[i]);
-         dest[i] = static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int j = 0; j < sd.channels; j++)
+         {
+            const double s = SwapShort(src[(i * sd.channels) + j]);
+            dest[i] += static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
       }
    }
 }

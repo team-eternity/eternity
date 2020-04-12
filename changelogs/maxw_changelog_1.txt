@@ -429,6 +429,11 @@ Parameterise A_Turn to be able to take a constant value, or using a counter
 as either a BAM or degrees.
 Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
 
+-------------------------------------------------------------------------------
+2020/04/12
+Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV loading,
+so that WAVs with incorret chunk size will successfully load.
+
 ================================================================================
 EOF
 ================================================================================
