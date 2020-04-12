@@ -872,9 +872,13 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
    case 0: 
       mi->doomednum = value;
       break;
-   case 1: 
-      mi->spawnstate = E_GetStateNumForDEHNum(value); 
+   case 1:
+   {
+      const int statenum = E_GetStateNumForDEHNum(value);
+      mi->spawnstate = statenum;
+      states[statenum]->flags |= STATEF_VANILLA0TIC;
       break;
+   }
    case 2: 
       mi->spawnhealth = value;
       E_ThingDefaultGibHealth(mi); // haleyjd 01/02/15: reset gibhealth
@@ -1149,6 +1153,7 @@ void deh_procFrame(DWFILE *fpin, char *line)
       {
          deh_LogPrintf(" - tics = %ld\n", value);
          states[indexnum]->tics = value;
+         states[indexnum]->flags |= STATEF_VANILLA0TIC;
       }
       else if(!strcasecmp(key,deh_state[3]))  // Next frame
       {

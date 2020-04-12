@@ -433,6 +433,8 @@ Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
 2020/04/12
 Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV loading,
 so that WAVs with incorret chunk size will successfully load.
+Allowed 0-tic initial states if the states are DECORATE, and don't have their
+duration modified—or aren't made the spawnstate of a thing—by dehacked.
 
 ================================================================================
 EOF
