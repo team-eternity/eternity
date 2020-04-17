@@ -1040,7 +1040,7 @@ floater:
          mo->momz = -mo->momz;
 
 
-      if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
+      if(mo->flags & MF_MISSILE && !(mo->flags & MF_NOCLIP))
       {
          if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
          {
