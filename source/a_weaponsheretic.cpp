@@ -303,8 +303,16 @@ void A_FireMacePL2(actionargs_t *actionargs)
       // NOTE: the 'magic' number came from computing how Heretic's constant slope calculation fits
       // with a super mace projectile's forward speed.
       mo->momz = FixedMul(fx->speed, FixedMul(slope, 50615)) + (2 * FRACUNIT);
-      if(clip.linetarget)
+      if(autoaim && clip.linetarget)
          P_SetTarget(&mo->tracer, clip.linetarget);
+      else if(!autoaim)
+      {
+         fixed_t oldBulletSlope = bulletslope;
+         P_BulletSlope(player->mo);    // use the same routine as in A_FirePlayerMissile
+         bulletslope = oldBulletSlope; // don't tamper with it
+         if(clip.linetarget)
+            P_SetTarget(&mo->tracer, clip.linetarget);
+      }
    }
    S_StartSound(player->mo, sfx_lobsht);
 }
