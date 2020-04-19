@@ -496,7 +496,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
          traverser.trace))
       {
          if(outTarget)
-            *outTarget = context.linetarget;
+            P_SetTarget(outTarget, context.linetarget);
          if(outDist)
             *outDist = context.targetdist;
 
@@ -505,7 +505,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
    }
 
    if(outTarget)
-      *outTarget = context.linetarget;
+      P_SetTarget(outTarget, context.linetarget);
    if(outDist)
       *outDist = context.targetdist;
 

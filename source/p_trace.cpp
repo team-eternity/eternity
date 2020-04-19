@@ -136,7 +136,7 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
          thingbottomslope = trace.bottomslope;
 
       trace.aimslope  = (thingtopslope + thingbottomslope) / 2;
-      clip.linetarget = th;
+      P_SetTarget(&clip.linetarget, th);
 
       return false; // don't go any further
    }
@@ -154,7 +154,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
    if(full_demo_version >= make_full_version(340, 47) &&
       useportalgroups)
    {
-      clip.linetarget = nullptr;
+      P_ClearTarget(clip.linetarget);
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
       return CAM_AimLineAttack(t1, angle, distance, mask, &clip.linetarget);
@@ -199,7 +199,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
    }
    
    trace.attackrange = distance;
-   clip.linetarget = NULL;
+   P_ClearTarget(clip.linetarget);
 
    // killough 8/2/98: prevent friends from aiming at friends
    trace.aimflagsmask = mask;

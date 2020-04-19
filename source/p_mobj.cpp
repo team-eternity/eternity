@@ -3221,7 +3221,8 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
             }
          }
          else
-            clip.linetarget = nullptr;
+            P_ClearTarget(clip.linetarget);
+
          if(!clip.linetarget)
          {
             an = angle;
