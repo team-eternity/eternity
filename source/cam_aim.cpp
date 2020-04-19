@@ -349,24 +349,24 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
 {
    auto &context = *static_cast<AimContext *>(vdata);
 
-   fixed_t totaldist;
+   fixed_t totaldist = context.state.origindist + FixedMul(context.attackrange, in->frac);
+   const sector_t *sector;
+   const line_t *li = in->d.line;
+   Mobj *th = in->d.thing;
+   if(in->isaline)
+      sector = P_PointOnLineSide(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+   else
+      sector = th->subsector->sector;
+   if(sector && totaldist > 0)
+   {
+      context.checkPortalSector(sector, totaldist, in->frac, trace);
+      // if a closer target than how we already are has been found, then exit
+      if(context.linetarget && context.targetdist <= totaldist)
+         return false;
+   }
+
    if(in->isaline)
    {
-      const line_t *li = in->d.line;
-      totaldist = context.state.origindist + FixedMul(context.attackrange, in->frac);
-      const sector_t *sector = P_PointOnLineSide(trace.x, trace.y, li) == 0 ? li->frontsector
-                                                                            : li->backsector;
-      if(sector && totaldist > 0)
-      {
-         // Don't care about return value; data will be collected in cam's fields
-
-         context.checkPortalSector(sector, totaldist, in->frac, trace);
-
-         // if a closer target than how we already are has been found, then exit
-         if(context.linetarget && context.targetdist <= totaldist)
-            return false;
-      }
-
       if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
          return false;
 
@@ -418,54 +418,20 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
    }
    else
    {
-      Mobj *th = in->d.thing;
-      fixed_t thingtopslope, thingbottomslope;
-      if(!(th->flags & MF_SHOOTABLE) || th == context.thing)
+      if(!P_CheckThingAimAvailability(th, context.thing, context.aimflagsmask))
          return true;
-      if(context.aimflagsmask && ((th->flags & context.thing->flags & MF_FRIEND &&
-                                   !th->player) || th->flags4 & MF4_LOWAIMPRIO))
-      {
+
+      edefstructvar(linetracer_t, atrace);
+      atrace.attackrange = context.attackrange;
+      atrace.z = context.state.cz;
+      atrace.bottomslope = context.state.bottomslope;
+      atrace.topslope = context.state.topslope;
+      if(!P_CheckThingAimSlopes(th, context.state.origindist, in->frac, atrace))
          return true;
-      }
 
-      totaldist = context.state.origindist + FixedMul(context.attackrange,
-         in->frac);
-
-      // check ceiling and floor
-      const sector_t *sector = th->subsector->sector;
-      if(sector && totaldist > 0)
-      {
-         context.checkPortalSector(sector, totaldist, in->frac, trace);
-         // if a closer target than how we already are has been found, then exit
-         if(context.linetarget && context.targetdist <= totaldist)
-            return false;
-      }
-
-      thingtopslope = FixedDiv(th->z + th->height - context.state.cz,
-         totaldist);
-
-      if(thingtopslope < context.state.bottomslope)
-         return true; // shot over the thing
-
-      thingbottomslope = FixedDiv(th->z - context.state.cz, totaldist);
-      if(thingbottomslope > context.state.topslope)
-         return true; // shot under the thing
-
-                      // this thing can be hit!
-      if(thingtopslope > context.state.topslope)
-         thingtopslope = context.state.topslope;
-
-      if(thingbottomslope < context.state.bottomslope)
-         thingbottomslope = context.state.bottomslope;
-
-      // check if this thing is closer than potentially others found beyond
-      // flat portals
-      if(!context.linetarget || totaldist < context.targetdist)
-      {
-         context.aimslope = (thingtopslope + thingbottomslope) / 2;
-         context.targetdist = totaldist;
-         context.linetarget = th;
-      }
+      context.aimslope = atrace.aimslope;
+      context.targetdist = totaldist;
+      context.linetarget = th;
       return false;
    }
 }

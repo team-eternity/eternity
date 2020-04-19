@@ -150,6 +150,8 @@ bool P_ShootThing(const intercept_t *in,
                   const divline_t &dl,
                   size_t puffidx,
                   int damage);
+bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimflagsmask);
+bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace);
 
 extern linetracer_t trace;
 
