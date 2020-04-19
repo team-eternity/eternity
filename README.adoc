@@ -163,6 +163,8 @@ already set up Visual Studio.
 . Select 'View -> Property Manager' (if it is not there you will need to enable it from Tools -> Customize -> Commands:
 Menu bar -> View -> Add Command -> View -> Property Manager).
 
+. If using Visual Studio 2019 then copy "EternityTemplate.props" in the "vc2019" folder to the same folder, and rename it to "Eternity.props". After doing this you'll need to reload the Eternity solution if it's already open.
+
 . If using Visual Studio 2019 then open `Release | Win32` or `Debug | Win32` and double click `Eternity`, then skip to the next step.
 If you wish to build for 32-bit then open `Release | Win32` or `Debug | Win32` and double click `Microsoft.Cpp.Win32.user`.
 If you wish to build for 64-bit then open `Release | x64` or `Debug | x64` and double click `Microsoft.Cpp.x64.user`.
