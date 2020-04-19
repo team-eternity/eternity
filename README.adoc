@@ -49,6 +49,14 @@ There are four ways available for building Eternity: CMake, Visual
 Studio, Xcode files, and Homebrew, for Unix, Windows, and both
 Mac OS X respectively.
 
+Git submodule
+~~~~~~~~~~~~~
+The project contains the ADLMIDI submodule. You need to load it after you've just cloned Eternity, by using this command:
+
+----
+git submodule update --init
+----
+
 Building with CMake
 ~~~~~~~~~~~~~~~~~~~
 CMake should be capable of generating build files for all platforms,
