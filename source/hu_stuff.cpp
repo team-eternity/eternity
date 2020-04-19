@@ -910,6 +910,7 @@ void HUDCrossHairWidget::ticker()
    
    // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
    fixed_t oldAttackRange = trace.attackrange;
+   Mobj *oldLineTarget = clip.linetarget;
    P_AimLineAttack(players[displayplayer].mo,
                    players[displayplayer].mo->angle, 
                    16*64*FRACUNIT, false);
@@ -931,6 +932,10 @@ void HUDCrossHairWidget::ticker()
          color = notargetcolour;
       }
    }
+
+   // Restore previous reference on exit
+   if(clip.linetarget != oldLineTarget)
+      P_SetTarget(&clip.linetarget, oldLineTarget);
 }
 
 //
