@@ -157,7 +157,10 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
       P_ClearTarget(clip.linetarget);
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      return CAM_AimLineAttack(t1, angle, distance, mask, &clip.linetarget);
+      Mobj *linetarget = clip.linetarget;
+      fixed_t result = CAM_AimLineAttack(t1, angle, distance, mask, &linetarget);
+      P_SetTarget(&clip.linetarget, linetarget);
+      return result;
    }
 
    fixed_t x2, y2;
