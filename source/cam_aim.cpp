@@ -68,12 +68,11 @@ private:
       fixed_t distance, 
       bool mask,
       const State *state);
-   static bool aimTraverse(const intercept_t *in, void *data,
-      const divline_t &trace);
-   bool checkPortalSector(const sector_t *sector, fixed_t totalfrac,
-      fixed_t partialfrac, const divline_t &trace);
-   fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope,
-      Mobj **outTarget, fixed_t *outDist, const linkdata_t &data) const;
+   static bool aimTraverse(const intercept_t *in, void *data, const divline_t &trace);
+   bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
+                          const divline_t &trace);
+   fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope, Mobj **outTarget,
+                   fixed_t *outDist, const linkdata_t &data) const;
 
    const Mobj *thing;
    fixed_t attackrange;
@@ -133,8 +132,8 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
 //
 // AimContext::checkPortalSector
 //
-bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
-   fixed_t partialfrac, const divline_t &trace)
+bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
+                                   const divline_t &trace)
 {
    fixed_t linehitz, fixedratio;
    int newfromid;
@@ -281,8 +280,7 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
 //
 // Called when hitting a line or object
 //
-bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
-   const divline_t &trace)
+bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t &trace)
 {
    auto &context = *static_cast<AimContext *>(vdata);
 
@@ -290,15 +288,12 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
    if(in->isaline)
    {
       const line_t *li = in->d.line;
-      totaldist = context.state.origindist +
-         FixedMul(context.attackrange, in->frac);
-      const sector_t *sector =
-         P_PointOnLineSide(trace.x, trace.y, li) == 0 ? li->frontsector
-         : li->backsector;
+      totaldist = context.state.origindist + FixedMul(context.attackrange, in->frac);
+      const sector_t *sector = P_PointOnLineSide(trace.x, trace.y, li) == 0 ? li->frontsector
+                                                                            : li->backsector;
       if(sector && totaldist > 0)
       {
-         // Don't care about return value; data will be collected in cam's
-         // fields
+         // Don't care about return value; data will be collected in cam's fields
 
          context.checkPortalSector(sector, totaldist, in->frac, trace);
 
@@ -316,22 +311,19 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
       if(lo.openrange <= 0)
          return false;
 
-      const sector_t *osector = sector == li->frontsector ?
-         li->backsector : li->frontsector;
+      const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
       fixed_t slope;
 
-      if(sector->floorheight != osector->floorheight ||
-         (!!(sector->f_pflags & PS_PASSABLE) ^
-            !!(osector->f_pflags & PS_PASSABLE)))
+      if(sector->floorheight != osector->floorheight || (!!(sector->f_pflags & PS_PASSABLE) ^
+                                                         !!(osector->f_pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.openbottom - context.state.cz, totaldist);
          if(slope > context.state.bottomslope)
             context.state.bottomslope = slope;
       }
 
-      if(sector->ceilingheight != osector->ceilingheight ||
-         (!!(sector->c_pflags & PS_PASSABLE) ^
-            !!(osector->c_pflags & PS_PASSABLE)))
+      if(sector->ceilingheight != osector->ceilingheight || (!!(sector->c_pflags & PS_PASSABLE) ^
+                                                             !!(osector->c_pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.opentop - context.state.cz, totaldist);
          if(slope < context.state.topslope)
@@ -407,9 +399,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
          newState.groupid = li->portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = context.state.reclevel + 1;
-         return !context.recurse(newState, in->frac, &context.aimslope,
-            &context.linetarget, nullptr,
-            li->portal->data.link);
+         return !context.recurse(newState, in->frac, &context.aimslope, &context.linetarget,
+                                 nullptr, li->portal->data.link);
       }
 
       return true;
@@ -471,10 +462,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata,
 //
 // Starts aiming
 //
-fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
-   fixed_t distance, bool mask,
-   const State *state, Mobj **outTarget,
-   fixed_t *outDist)
+fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance, bool mask,
+                                  const State *state, Mobj **outTarget, fixed_t *outDist)
 {
    AimContext context(t1, angle, distance, mask, state);
 
@@ -484,16 +473,13 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
    def.trav = aimTraverse;
    PathTraverser traverser(def, &context);
 
-   fixed_t tx = context.state.cx + (distance >> FRACBITS) *
-      finecosine[angle >> ANGLETOFINESHIFT];
-   fixed_t ty = context.state.cy + (distance >> FRACBITS) *
-      finesine[angle >> ANGLETOFINESHIFT];
+   fixed_t tx = context.state.cx + (distance >> FRACBITS) * finecosine[angle >> ANGLETOFINESHIFT];
+   fixed_t ty = context.state.cy + (distance >> FRACBITS) * finesine[angle >> ANGLETOFINESHIFT];
 
    if(traverser.traverse(context.state.cx, context.state.cy, tx, ty))
    {
       const sector_t *endsector = R_PointInSubsector(tx, ty)->sector;
-      if(context.checkPortalSector(endsector, distance, FRACUNIT,
-         traverser.trace))
+      if(context.checkPortalSector(endsector, distance, FRACUNIT, traverser.trace))
       {
          if(outTarget)
             *outTarget = context.linetarget;
@@ -520,8 +506,7 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle,
 fixed_t CAM_AimLineAttack(const Mobj *t1, angle_t angle, fixed_t distance,
    bool mask, Mobj **outTarget)
 {
-   return AimContext::aimLineAttack(t1, angle, distance, mask, nullptr,
-      outTarget, nullptr);
+   return AimContext::aimLineAttack(t1, angle, distance, mask, nullptr, outTarget, nullptr);
 }
 
 // EOF
