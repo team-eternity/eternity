@@ -1,0 +1,48 @@
+//
+// EDF for Eternity Engine v3.40.50
+//
+// Thing type definitions for Hexen gamemode.
+//
+
+// NOTE: this is EXTREMELY UNFINISHED.
+// At present, this only serves to pre-populate some
+// de-hardcoded values so we get accurate behavior
+// in the future.
+
+thingtype MageWandSmoke
+{
+  // TODO: everything
+}
+
+thingtype MageWandMissile
+{
+  cflags FASTMISSILE
+
+  // TODO: rest of flags & properties
+
+  trail.type        MageWandSmoke
+  trail.zoffset     -8.0
+  trail.spawnchance 127
+  trail.sparsity    1
+
+  // TODO: states
+}
+
+thingtype CFlameFloor
+{
+  // TODO: everything
+}
+
+thingtype CFlameMissile 
+{
+  cflags FASTMISSILE
+
+  // TODO: rest of flags & properties
+
+  trail.type        CFlameFloor
+  trail.zoffset     -12.0
+  trail.spawnchance 255
+  trail.sparsity    4
+
+  // TODO: states
+}

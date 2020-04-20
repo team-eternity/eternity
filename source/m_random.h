@@ -247,6 +247,7 @@ typedef enum {
   pr_hereticartiteleport, // A_ArtiTele
   pr_puffblood,   // P_shootThing draw blood when Heretic-like puff is defined
   pr_nailbombshoot,  // A_Nailbomb random damage
+  pr_fasttrailchance,         // [XA] 02/22/2020: Fast projectile trail spawn-chance
 
   pr_spawnexchance,           // [XA] 02/28/2020: A_SpawnEx spawnchance
 
