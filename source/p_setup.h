@@ -96,7 +96,6 @@ enum
 };
 
 extern bool     newlevel;
-extern int      doom1level;
 extern char     levelmapname[10];
 
 #if 0

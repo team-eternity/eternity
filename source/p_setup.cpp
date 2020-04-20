@@ -115,7 +115,6 @@ enum ZNodeType
 //
 
 bool     newlevel = false;
-int      doom1level = false;    // doom 1 level running under doom 2
 char     levelmapname[10];
 
 int      numvertexes;
@@ -3405,6 +3404,9 @@ static void P_PreZoneFreeLevel()
 
    // sf: free the psecnode_t linked list in p_map.c
    P_FreeSecNodeList(); 
+
+   // Clear all global reference-counted mobj references
+   P_ClearGlobalMobjReferences();
 }
 
 //
@@ -3573,7 +3575,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
-   doom1level = false;
 
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;
