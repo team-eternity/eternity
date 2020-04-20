@@ -1435,7 +1435,13 @@ static void MN_LoadGameDrawer()
 {
    static char *emptystr = NULL;
 
-   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE));
+   int lumpnum = W_CheckNumForName("M_LGTTL");
+
+   if(mn_classic_menus || lumpnum == -1)
+      lumpnum = W_CheckNumForName("M_LOADG");
+
+   V_DrawPatch(72, 18, &subscreen43,
+               PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
 
    if(!emptystr)
       emptystr = estrdup(DEH_String("EMPTYSTRING"));
@@ -1573,7 +1579,13 @@ menu_t menu_savegame =
 
 static void MN_SaveGameDrawer()
 {
-   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE));
+   int lumpnum = W_CheckNumForName("M_SGTTL");
+
+   if(mn_classic_menus || lumpnum == -1)
+      lumpnum = W_CheckNumForName("M_SAVEG");
+
+   V_DrawPatch(72, 18, &subscreen43,
+               PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
 
    for(int i = 0; i < SAVESLOTS; i++)
       MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);
