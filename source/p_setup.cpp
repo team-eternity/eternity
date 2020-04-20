@@ -50,6 +50,7 @@
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_binary.h"
+#include "m_hash.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -3474,6 +3475,51 @@ void P_InitThingLists()
 }
 
 //
+// Computes the compatibility hash. Use the same content as in GZDoom:
+// github.com/coelckers/gzdoom: src/p_openmap.cpp#MapData::GetChecksum
+//
+static void P_computeCompatibilityHash(const WadDirectory& dir, int lumpnum, bool isUdmf, 
+   bool hasBehavior)
+{
+   HashData md5(HashData::MD5);
+   if(isUdmf)
+   {
+      // TODO: currently not implemented, not needed
+   }
+   else
+   {
+      ZAutoBuffer buf;
+
+      dir.cacheLumpAuto(lumpnum, buf); // level marker
+      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+
+      dir.cacheLumpAuto(lumpnum + ML_THINGS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+
+      dir.cacheLumpAuto(lumpnum + ML_LINEDEFS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+
+      dir.cacheLumpAuto(lumpnum + ML_SIDEDEFS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+
+      dir.cacheLumpAuto(lumpnum + ML_SECTORS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+
+      if(hasBehavior)
+      {
+         dir.cacheLumpAuto(lumpnum + ML_BEHAVIOR, buf);
+         md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+      }
+
+      md5.wrapUp();
+
+      char *digest = md5.digestToString();
+      printf("My digest is %s\n", digest);
+      efree(digest);
+   }
+}
+
+//
 // CHECK_ERROR
 //
 // Checks to see if level_error has been set to a valid error message.
@@ -3529,6 +3575,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_SetupLevelError("Not a valid level", mapname);
       return;
    }
+
+   P_computeCompatibilityHash(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
 
    if(isUdmf)
       P_PointOnLineSide = P_PointOnLineSidePrecise;
