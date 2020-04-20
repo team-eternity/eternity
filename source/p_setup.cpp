@@ -3119,7 +3119,7 @@ static const char *consolelumps[] =
 //
 // haleyjd 12/12/13: Check for supported console map formats
 //
-static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
+static int P_checkConsoleFormat(const WadDirectory *dir, int lumpnum)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
@@ -3148,8 +3148,7 @@ static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
 // the MAPxy or ExMy standard previously imposed.
 // IOANCH 20151213: added MGLA, optional parameter to assign values to.
 //
-int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
-                 bool *udmf)
+int P_CheckLevel(const WadDirectory *dir, int lumpnum, maplumpindex_t *mgla, bool *udmf)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
@@ -3160,8 +3159,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
       *udmf = false;
 
    // IOANCH 20151206: check for UDMF lumps structure
-   if(lumpnum + 1 < numlumps 
-      && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
+   if(lumpnum + 1 < numlumps && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
    {
       // found a TEXTMAP. Look for ENDMAP
       bool foundEndMap = false;
@@ -3199,8 +3197,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
    for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
    {
       int ln = lumpnum + i;
-      if(ln >= numlumps ||     // past the last lump?
-         strncmp(lumpinfo[ln]->name, levellumps[i], 8))
+      if(ln >= numlumps || strncmp(lumpinfo[ln]->name, levellumps[i], 8))     // past the last lump?
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
          // a DOOM-format map, and it is not an error; any other missing
@@ -3246,41 +3243,6 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
 
    // if we got here, we're dealing with a Hexen-format map
    return LEVEL_FORMAT_HEXEN;
-}
-
-//
-// P_CheckLevelName
-//
-// haleyjd 01/21/14: Check for a level's existence and format by lump name.
-//
-int P_CheckLevelName(WadDirectory *dir, const char *mapname)
-{
-   int lumpnum;
-   return ((lumpnum = dir->checkNumForName(mapname)) >= 0 ? 
-      P_CheckLevel(dir, lumpnum) : LEVEL_FORMAT_INVALID);
-}
-
-//
-// P_CheckLevelMapNum
-//
-// haleyjd 01/21/14: Check for a level's existence and format from a map
-// number. Note behavior here for ExMy levels is ZDoom-compatible (episode
-// is base 0, not base 1).
-//
-int P_CheckLevelMapNum(WadDirectory *dir, int mapnum)
-{
-   qstring mapname;
-
-   if(GameModeInfo->flags & GIF_MAPXY)
-      mapname.Printf(9, "MAP%02d", mapnum);
-   else
-   {
-      int episode = mapnum / 10 + 1;
-      int map     = mapnum % 10;
-      mapname.Printf(9, "E%dM%d", episode, map);
-   }
-
-   return P_CheckLevelName(dir, mapname.constPtr());
 }
 
 void P_InitThingLists(); // haleyjd
