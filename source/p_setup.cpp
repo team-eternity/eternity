@@ -37,6 +37,7 @@
 #include "d_main.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_compatibility.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_reverbs.h"
 #include "e_ttypes.h"
@@ -3478,9 +3479,10 @@ void P_InitThingLists()
 // Computes the compatibility hash. Use the same content as in GZDoom:
 // github.com/coelckers/gzdoom: src/p_openmap.cpp#MapData::GetChecksum
 //
-static void P_computeCompatibilityHash(const WadDirectory& dir, int lumpnum, bool isUdmf, 
+static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool isUdmf,
    bool hasBehavior)
 {
+   E_RestoreCompatibilities();
    HashData md5(HashData::MD5);
    if(isUdmf)
    {
@@ -3514,7 +3516,7 @@ static void P_computeCompatibilityHash(const WadDirectory& dir, int lumpnum, boo
       md5.wrapUp();
 
       char *digest = md5.digestToString();
-      printf("My digest is %s\n", digest);
+      E_ApplyCompatibility(digest);
       efree(digest);
    }
 }
@@ -3576,7 +3578,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   P_computeCompatibilityHash(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
 
    if(isUdmf)
       P_PointOnLineSide = P_PointOnLineSidePrecise;

@@ -72,3 +72,24 @@ string _IN_NAME_E5M8 { val = "FIELD OF JUDGEMENT" }
 string _IN_NAME_E5M9 { val = "SKEIN OF D'SPARIL" }
 
 endif()
+
+#
+# Force wad compatibility for long released maps
+# Thanks to ZDoom for compiling the list of hashes over the time
+#
+compatibility
+{
+  hashes
+  0EECBF37B328C9CAAF20DED4949A4157, // Sudtic e2m6
+  4ACE0644883BDA0CBA254FA02C9ACF83, // Teutic e3m4
+  9F2BE080A33F775294BD78822456924E, // Nukemine e1m4
+  CD31793D3A4B00231B124C0C23649644, // Strain map02
+  19094AEB53D12EFC8E0568424F659F11, // Strain map31
+  60733BDD1AA3F4B2262ADC79B2E1B5AB, // Memento Mori map29
+  F84AB4557464A383E93F37CD3A82AC48, // MM2 map03
+  1497894956B3C8EBE8A240B7FDD99C6A, // MM2 map25
+  941E4CB56EE4184E0B1ED43486AB0BBF, // AV map07
+  6D4156EE0D12B77AD143A37C4D3DCF98  // dmonfear.wad map22
+
+  settings @"comp_model 1"@
+}
