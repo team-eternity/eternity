@@ -3150,6 +3150,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    return list;
 }
 
+//
+// Clears all remaining Mobj references to avoid dangling references on next PU_LEVEL session.
+//
+void P_ClearGlobalMobjReferences()
+{
+   P_ClearTarget(clip.linetarget);
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: p_map.c,v $
