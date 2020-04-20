@@ -1849,7 +1849,6 @@ static int R_Doom1Texture(const char *name)
    {
       if(!strncasecmp(name, txtrconv[i].doom1, 8))   // found it
       {
-         doom1level = true;
          return R_CheckForWall(txtrconv[i].doom2);
       }
    }
