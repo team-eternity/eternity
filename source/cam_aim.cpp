@@ -52,7 +52,7 @@ public:
       fixed_t origindist;     // distance travelled so far
       fixed_t bottomslope;    // bottom sight slope (gets narrowed by obstacles)
       fixed_t topslope;       // top sight slope
-      fixed_t cx, cy, cz;     // source coordinates (FIXME: surely?)
+      fixed_t cx, cy, cz;     // source coordinates
       int groupid;            // current group ID
       const AimContext *prev; // reference to previous aim context in recursion
       int reclevel;           // recursion level (for safety)
