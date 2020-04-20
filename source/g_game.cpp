@@ -742,6 +742,7 @@ void G_DoLoadLevel()
    // haleyjd 07/28/10: Waaaay too early for this.
    //gamestate = GS_LEVEL;
 
+   M_RestoreHackedOptions();
    P_SetupLevel(g_dir, gamemapname, 0, gameskill);
 
    if(gamestate != GS_LEVEL)       // level load error
@@ -3206,6 +3207,8 @@ void G_InitNew(skill_t skill, const char *name)
 
    G_SetGameMap();  // sf
   
+   // Erase any level settings when time to load OPTIONS (will also do it at SetupLevel)
+   M_RestoreHackedOptions();
    if(demo_version >= 203)
       M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
   

@@ -52,6 +52,7 @@
 #include "m_bbox.h"
 #include "m_binary.h"
 #include "m_hash.h"
+#include "m_misc.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -3480,45 +3481,48 @@ void P_InitThingLists()
 // github.com/coelckers/gzdoom: src/p_openmap.cpp#MapData::GetChecksum
 //
 static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool isUdmf,
-   bool hasBehavior)
+   int behaviorIndex)
 {
-   E_RestoreCompatibilities();
+   // Don't do anything if demo version is changed!
+   if(full_demo_version < make_full_version(401, 1))
+      return;
+
    HashData md5(HashData::MD5);
+   ZAutoBuffer buf;
    if(isUdmf)
    {
-      // TODO: currently not implemented, not needed
+      dir.cacheLumpAuto(lumpnum + 1, buf); // TEXTMAP
+      md5.addData(buf.getAs<const uint8_t *>(), buf.getSize());
    }
    else
    {
-      ZAutoBuffer buf;
-
       dir.cacheLumpAuto(lumpnum, buf); // level marker
-      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+      md5.addData(buf.getAs<const uint8_t *>(), buf.getSize());
 
       dir.cacheLumpAuto(lumpnum + ML_THINGS, buf);
-      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+      md5.addData(buf.getAs<const uint8_t *>(), buf.getSize());
 
       dir.cacheLumpAuto(lumpnum + ML_LINEDEFS, buf);
-      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+      md5.addData(buf.getAs<const uint8_t *>(), buf.getSize());
 
       dir.cacheLumpAuto(lumpnum + ML_SIDEDEFS, buf);
-      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+      md5.addData(buf.getAs<const uint8_t *>(), buf.getSize());
 
       dir.cacheLumpAuto(lumpnum + ML_SECTORS, buf);
-      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
-
-      if(hasBehavior)
-      {
-         dir.cacheLumpAuto(lumpnum + ML_BEHAVIOR, buf);
-         md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
-      }
-
-      md5.wrapUp();
-
-      char *digest = md5.digestToString();
-      E_ApplyCompatibility(digest);
-      efree(digest);
+      md5.addData(buf.getAs<const uint8_t *>(), buf.getSize());
    }
+
+   if(behaviorIndex != -1)
+   {
+      dir.cacheLumpAuto(behaviorIndex, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), buf.getSize());
+   }
+
+   md5.wrapUp();
+
+   char *digest = md5.digestToString();
+   E_ApplyCompatibility(digest);
+   efree(digest);
 }
 
 //
@@ -3578,7 +3582,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior);
 
    if(isUdmf)
       P_PointOnLineSide = P_PointOnLineSidePrecise;

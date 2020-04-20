@@ -75,9 +75,9 @@ endif()
 
 #
 # Force wad compatibility for long released maps
-# Thanks to ZDoom for compiling the list of hashes over the time
+# Thanks to ZDoom for collecting the list of hashes over the time
 #
-compatibility
+compatibilityhacks
 {
   hashes
   0EECBF37B328C9CAAF20DED4949A4157, // Sudtic e2m6

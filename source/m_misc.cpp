@@ -1019,13 +1019,19 @@ static bool M_writeDefaultString(default_t *dp, FILE *f)
 }
 
 // Set the value of a string option
-static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
+static void M_setDefaultValueString(default_t *dp, void *value, defaultoverride_e over)
 {
+   if(over == defaultoverride_wadhack)
+   {
+      // NO SUPPORT FOR WADHACKING STRINGS (RAW C STRING HANDLING IS TOO MESSY)
+      return;
+   }
+
    const char *strparm = (const char *)value;
 
-   if(wad && !dp->modified)                        // Modified by wad
+   if(over && !dp->modified)                       // Modified by wad
    {                                               // First time modified
-      dp->modified = 1;                            // Mark it as modified
+      dp->modified = over;                         // Mark it as modified
       dp->orig_default_s = *(char **)dp->location; // Save original default
    }
    else
@@ -1041,7 +1047,7 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
 }
 
 // Read a string option and set it
-static bool M_readDefaultString(default_t *dp, char *src, bool wad)
+static bool M_readDefaultString(default_t *dp, char *src, defaultoverride_e over)
 {
    int len = static_cast<int>(strlen(src) - 1);
 
@@ -1053,7 +1059,7 @@ static bool M_readDefaultString(default_t *dp, char *src, bool wad)
 
    src[len+1] = 0;
 
-   dp->methods->setValue(dp, src+1, wad);
+   dp->methods->setValue(dp, src+1, over);
 
    return false;
 }
@@ -1087,6 +1093,14 @@ static bool M_checkCVarString(default_t *dp, variable_t *var)
 static void M_getDefaultString(default_t *dp, void *dest)
 {
    *(const char **)dest = dp->defaultvalue_s;
+}
+
+static void M_restoreHackedString(default_t *dp)
+{
+   if(dp->modified == defaultoverride_wadhack)
+   {
+      // NO SUPPORT FOR WADHACKING STRINGS (RAW C STRING HANDLING IS TOO MESSY)
+   }
 }
 
 //
@@ -1133,18 +1147,18 @@ static bool M_writeDefaultInt(default_t *dp, FILE *f)
 }
 
 // Set the value of an integer option
-static void M_setDefaultValueInt(default_t *dp, void *value, bool wad)
+static void M_setDefaultValueInt(default_t *dp, void *value, defaultoverride_e over)
 {
    int parm = *(int *)value;
 
    if((dp->limit.min == UL || dp->limit.min <= parm) &&
       (dp->limit.max == UL || dp->limit.max >= parm))
    {
-      if(wad)
+      if(over)
       {
          if(!dp->modified) // First time it's modified by wad
          {
-            dp->modified = 1;                           // Mark it as modified
+            dp->modified = over;                           // Mark it as modified
             dp->orig_default_i = *(int *)dp->location;  // Save original default
          }
          if(dp->current)            // Change current value
@@ -1155,7 +1169,7 @@ static void M_setDefaultValueInt(default_t *dp, void *value, bool wad)
 }
 
 // Read the value of an integer option and set it to the default
-static bool M_readDefaultInt(default_t *dp, char *src, bool wad)
+static bool M_readDefaultInt(default_t *dp, char *src, defaultoverride_e over)
 {
    int parm = 0;
 
@@ -1167,7 +1181,7 @@ static bool M_readDefaultInt(default_t *dp, char *src, bool wad)
 
    // call setValue method through method table rather than directly
    // (could allow redirection in the future)
-   dp->methods->setValue(dp, &parm, wad);
+   dp->methods->setValue(dp, &parm, over);
 
    return false;
 }
@@ -1190,6 +1204,15 @@ static bool M_checkCVarInt(default_t *dp, variable_t *var)
 static void M_getDefaultInt(default_t *dp, void *dest)
 {
    *(int *)dest = dp->defaultvalue_i;
+}
+
+static void M_restoreHackedInt(default_t *dp)
+{
+   if(dp->modified == defaultoverride_wadhack)
+   {
+      dp->modified = defaultoverride_none;   // it was NEVER options previously
+      *static_cast<int *>(dp->location) = *static_cast<int *>(dp->current) = dp->orig_default_i;
+   }
 }
 
 //
@@ -1236,7 +1259,7 @@ static bool M_writeDefaultFloat(default_t *dp, FILE *f)
 }
 
 // Set the value of a float option
-static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
+static void M_setDefaultValueFloat(default_t *dp, void *value, defaultoverride_e over)
 {
    double tmp = *(double *)value;
 
@@ -1244,11 +1267,11 @@ static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
    if((dp->limit.min == UL || (double)dp->limit.min / 100.0 <= tmp) &&
       (dp->limit.max == UL || (double)dp->limit.max / 100.0 >= tmp))
    {
-      if(wad)
+      if(over)
       {
          if(!dp->modified) // First time it's modified by wad
          {
-            dp->modified = 1;                             // Mark it as modified
+            dp->modified = over;                          // Mark it as modified
             dp->orig_default_f = *(double *)dp->location; // Save original default
          }
          if(dp->current)              // Change current value
@@ -1259,14 +1282,14 @@ static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
 }
 
 // Read the value of a float option from a string and set it
-static bool M_readDefaultFloat(default_t *dp, char *src, bool wad)
+static bool M_readDefaultFloat(default_t *dp, char *src, defaultoverride_e over)
 {
    double tmp;
 
    if(sscanf(src, "%lg", &tmp) != 1)
       return true;                       // Not A Number
 
-   dp->methods->setValue(dp, &tmp, wad);
+   dp->methods->setValue(dp, &tmp, over);
 
    return false;
 }
@@ -1291,6 +1314,15 @@ static void M_getDefaultFloat(default_t *dp, void *dest)
    *(double *)dest = dp->defaultvalue_f;
 }
 
+static void M_restoreHackedFloat(default_t *dp)
+{
+   if(dp->modified == defaultoverride_wadhack)
+   {
+      dp->modified = defaultoverride_none;   // it was NEVER options previously
+      *static_cast<double *>(dp->location) = *static_cast<double *>(dp->current) = dp->orig_default_f;
+   }
+}
+
 //
 // Booleans
 //
@@ -1310,14 +1342,14 @@ static bool M_writeDefaultBool(default_t *dp, FILE *f)
 }
 
 // Sets the value of a bool option
-static void M_setDefaultValueBool(default_t *dp, void *value, bool wad)
+static void M_setDefaultValueBool(default_t *dp, void *value, defaultoverride_e over)
 {
    bool parm = *(bool *)value;
-   if(wad)
+   if(over)
    {
       if(!dp->modified) // First time it's modified by wad
       {
-         dp->modified = 1;                               // Mark it as modified
+         dp->modified = over;                               // Mark it as modified
          dp->orig_default_b = *(bool *)dp->location;  // Save original default
       }
       if(dp->current)            // Change current value
@@ -1327,14 +1359,14 @@ static void M_setDefaultValueBool(default_t *dp, void *value, bool wad)
 }
 
 // Reads the value of a bool option from a string and sets it
-static bool M_readDefaultBool(default_t *dp, char *src, bool wad)
+static bool M_readDefaultBool(default_t *dp, char *src, defaultoverride_e over)
 {
    int parm;
 
    if(sscanf(src, "%i", &parm) != 1)
       return true;                       // Not A Number
 
-   dp->methods->setValue(dp, &parm, wad);
+   dp->methods->setValue(dp, &parm, over);
 
    return false;
 }
@@ -1359,6 +1391,15 @@ static void M_getDefaultBool(default_t *dp, void *dest)
    *(bool *)dest = dp->defaultvalue_b;
 }
 
+static void M_restoreHackedBool(default_t *dp)
+{
+   if(dp->modified == defaultoverride_wadhack)
+   {
+      dp->modified = defaultoverride_none;   // it was NEVER options previously
+      *static_cast<bool *>(dp->location) = *static_cast<bool *>(dp->current) = dp->orig_default_b;
+   }
+}
+
 //
 // Interface objects for defaults
 //
@@ -1372,7 +1413,8 @@ static default_i defaultInterfaces[] =
       M_readDefaultInt,
       M_setDefaultInt,
       M_checkCVarInt,
-      M_getDefaultInt
+      M_getDefaultInt,
+      M_restoreHackedInt,
    },
    // dt_string
    { 
@@ -1382,7 +1424,8 @@ static default_i defaultInterfaces[] =
       M_readDefaultString,
       M_setDefaultString,
       M_checkCVarString,
-      M_getDefaultString
+      M_getDefaultString,
+      M_restoreHackedString,
    },
    // dt_float
    { 
@@ -1392,7 +1435,8 @@ static default_i defaultInterfaces[] =
       M_readDefaultFloat,
       M_setDefaultFloat,
       M_checkCVarFloat,
-      M_getDefaultFloat
+      M_getDefaultFloat,
+      M_restoreHackedFloat,
    },
    // dt_boolean
    { 
@@ -1402,7 +1446,8 @@ static default_i defaultInterfaces[] =
       M_readDefaultBool,
       M_setDefaultBool,
       M_checkCVarBool,
-      M_getDefaultBool
+      M_getDefaultBool,
+      M_restoreHackedBool,
    },
 };
 
@@ -1569,7 +1614,7 @@ void M_SaveDefaults(void)
 //
 // This function parses .cfg file lines, or lines in OPTIONS lumps
 //
-bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
+static bool M_ParseOption(defaultfile_t *df, const char *p, defaultoverride_e over)
 {
    char name[80], strparm[100];
    default_t *dp;
@@ -1583,12 +1628,12 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !ectype::isAlnum(*name) ||
       !(dp = M_LookupDefault(df, name)) || 
       (*strparm == '"') == (dp->type != dt_string) ||
-      (wad && !dp->wad_allowed))
+      (over && !dp->wad_allowed))
    {
       return true;
    }
 
-   return dp->methods->readOpt(dp, strparm, wad); // Success (false) or failure (true)
+   return dp->methods->readOpt(dp, strparm, over); // Success (false) or failure (true)
 }
 
 //
@@ -1604,23 +1649,11 @@ void M_LoadOptions()
    
    if((lump = W_CheckNumForName("OPTIONS")) != -1)
    {
-      int size = W_LumpLength(lump), buflen = 0;
-      char *buf = NULL, *p, *options = p = (char *)(wGlobalDir.cacheLumpNum(lump, PU_STATIC));
-      while (size > 0)
-      {
-         int len = 0;
-         while(len < size && p[len++] && p[len-1] != '\n');
-         if(len >= buflen)
-         {
-            buflen = len + 1;
-            buf = erealloc(char *, buf, buflen);
-         }
-         strncpy(buf, p, len)[len] = 0;
-         p += len;
-         size -= len;
-         M_ParseOption(&maindefaults, buf, true);
-      }
-      efree(buf);
+      int size = W_LumpLength(lump);
+      char *options = (char *)(wGlobalDir.cacheLumpNum(lump, PU_STATIC));
+
+      M_LoadOptionsFromString(options, size, defaultoverride_options);
+
       Z_ChangeTag(options, PU_CACHE);
    }
 
@@ -1637,6 +1670,47 @@ void M_LoadOptions()
    // FIXME: This is not extensible and should be considered a temporary hack!
    // Instead there should be a generalized post-update action for options.
    R_ResetTrans();
+}
+
+//
+// Loads OPTIONS by reading a string
+//
+void M_LoadOptionsFromString(const char *options, int size, defaultoverride_e over)
+{
+   I_Assert(options, "NULL options!\n");
+
+   if(size < 0)
+      size = static_cast<int>(strlen(options));
+
+   const char *p = options;
+   char *buf = nullptr;
+   int buflen = 0;
+   while(size > 0)
+   {
+      int len = 0;
+      while(len < size && p[len++] && p[len - 1] != '\n')
+         ;
+      if(len >= buflen)
+      {
+         buflen = len + 1;
+         buf = erealloc(char *, buf, buflen);
+      }
+      strncpy(buf, p, len)[len] = 0;
+      p += len;
+      size -= len;
+      M_ParseOption(&maindefaults, buf, over);
+   }
+   efree(buf);
+}
+
+//
+// Restores any options hacked by compatibilityhacks
+//
+void M_RestoreHackedOptions()
+{
+   defaultfile_t *df = &maindefaults;
+   for(default_t *dp = df->defaults; dp->name; dp++)
+      dp->methods->restoreHacked(dp);
 }
 
 //
@@ -1669,7 +1743,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
 
       while(fgets(s, sizeof s, f))
       {
-         if(!M_ParseOption(df, s, false))
+         if(!M_ParseOption(df, s, defaultoverride_none))
             line++;       // Line numbers
          else
          {             // Remember comment lines

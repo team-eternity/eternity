@@ -26,7 +26,7 @@
 #ifndef E_COMPATIBILITY_H_
 #define E_COMPATIBILITY_H_
 
-#define EDF_SEC_COMPATIBILITY "compatibility"
+#define EDF_SEC_COMPATIBILITY "compatibilityhacks"
 
 struct cfg_opt_t;
 struct cfg_t;
@@ -34,7 +34,6 @@ struct cfg_t;
 extern cfg_opt_t edf_compatibility_opts[];
 
 void E_ProcessCompatibilities(cfg_t *cfg);
-void E_RestoreCompatibilities();
 void E_ApplyCompatibility(const char *digest);
 
 #endif

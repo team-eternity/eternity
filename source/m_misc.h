@@ -48,6 +48,20 @@ typedef enum
    dt_numtypes
 } defaulttype_e;
 
+//
+// Defaults override
+//
+enum defaultoverride_e
+{
+   defaultoverride_none,
+   defaultoverride_options,   // OPTIONS lump. Overrides everything.
+   defaultoverride_wadhack    // EDF wad hack. Can override none, can't options
+};
+
+// ioanch 2020-04-20
+void M_LoadOptionsFromString(const char *text, int length, defaultoverride_e over);
+void M_RestoreHackedOptions();
+
 // phares 4/21/98:
 // Moved from m_misc.c so m_menu.c could see it.
 //
@@ -62,11 +76,12 @@ struct default_i
 {
    bool (*writeHelp) (default_t *, FILE *);       // write help message
    bool (*writeOpt)  (default_t *, FILE *);       // write option key and value
-   void (*setValue)  (default_t *, void *, bool); // set value
-   bool (*readOpt)   (default_t *, char *, bool); // read option from string
+   void (*setValue)  (default_t *, void *, defaultoverride_e); // set value
+   bool (*readOpt)   (default_t *, char *, defaultoverride_e); // read option from string
    void (*setDefault)(default_t *);               // set to hardcoded default
    bool (*checkCVar) (default_t *, variable_t *); // check against a cvar
    void (*getDefault)(default_t *, void *);       // get the default externally
+   void (*restoreHacked)(default_t *);
 };
 
 struct default_t
@@ -90,7 +105,7 @@ struct default_t
    // internal fields (initialized implicitly to 0) follow
    
    default_t *first, *next;                  // hash table pointers
-   int modified;                             // Whether it's been modified
+   defaultoverride_e modified;               // Whether it's been modified
    
    int         orig_default_i;               // Original default, if modified
    const char *orig_default_s;
@@ -106,23 +121,23 @@ struct default_t
 
 #define DEFAULT_END() \
    { NULL, dt_integer, NULL, NULL, 0, NULL, 0.0, false, { 0, 0 }, default_t::wad_no, NULL, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
    { name, dt_integer, loc, cur, def, NULL, 0.0, false, { min, max }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_STR(name, loc, cur, def, wad, help) \
    { name, dt_string, loc, cur, 0, def, 0.0, false, { 0, 0 }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
    { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
 
 #define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
    { name, dt_boolean, loc, cur, 0, NULL, 0.0, def, { 0, 1 }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
 
 // haleyjd 03/14/09: defaultfile_t structure
 struct defaultfile_t
@@ -142,7 +157,6 @@ struct default_or_t
 };
 
 // killough 11/98:
-bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
 void       M_LoadDefaults(void);

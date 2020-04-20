@@ -30,20 +30,11 @@
 #include "doomstat.h"
 #include "e_compatibility.h"
 #include "m_collection.h"
+#include "m_misc.h"
 #include "metaapi.h"
 
 #define ITEM_COMPATIBILITY_HASHES "hashes"
 #define ITEM_COMPATIBILITY_SETTINGS "settings"
-
-//
-// A setting's effect
-//
-struct settingeffect_t
-{
-   const char *name;
-   int *target;
-   int value;
-};
 
 //
 // When a setting is changed, store its previous value
@@ -52,14 +43,6 @@ struct changedsetting_t
 {
    int *target;
    int previousValue;
-};
-
-//
-// Effect definitions
-//
-static const settingeffect_t effects[] =
-{
-   { "comp_model", &comp[comp_model], 1 }
 };
 
 // The EDF-set table
@@ -96,24 +79,9 @@ static void E_processCompatibility(cfg_t *cfg, cfg_t* compatibility)
       {
          const char *setting = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_SETTINGS, 
             settingIndex);
-         // Validate setting
-         bool found = false;
-         for(const settingeffect_t &effect : effects)
-         {
-            if(!strcasecmp(effect.name, setting))
-            {
-               found = true;
-               break;
-            }
-         }
-         if(!found)
-         {
-            cfg_error(cfg, "Invalid compatibility setting '%s'\n", setting);
-            continue;   // may fail
-         }
 
          MetaString *metaSetting = nullptr;
-         found = false;
+         bool found = false;
          while((metaSetting = table.getNextKeyAndTypeEx(metaSetting, hash)))
          {
             if(!strcasecmp(metaSetting->getValue(), setting))
@@ -143,34 +111,13 @@ void E_ProcessCompatibilities(cfg_t* cfg)
 }
 
 //
-// Restore any pushed compatibilities
-//
-void E_RestoreCompatibilities()
-{
-   while(!changedSettings.isEmpty())
-   {
-      const changedsetting_t &setting = changedSettings.pop();
-      *setting.target = setting.previousValue;
-   }
-}
-
-//
 // Apply compatibility given a digest
 //
 void E_ApplyCompatibility(const char *digest)
 {
    MetaString *metaSetting = nullptr;
    while((metaSetting = table.getNextKeyAndTypeEx(metaSetting, digest)))
-      for(const settingeffect_t &effect : effects)
-         if(!strcasecmp(effect.name, metaSetting->getValue()))
-         {
-            // Store value before changing it
-            changedSettings.add({ effect.target, *effect.target });
-
-            *effect.target = effect.value;
-
-            C_Printf("Level flagged as %s\n", effect.name);
-         }
+      M_LoadOptionsFromString(metaSetting->getValue(), -1, defaultoverride_wadhack);
 }
 
 // EOF
