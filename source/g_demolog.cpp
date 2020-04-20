@@ -27,6 +27,7 @@
 #include "doomstat.h"
 #include "g_demolog.h"
 #include "m_argv.h"
+#include "m_qstr.h"
 
 FILE *demoLogFile;
 
@@ -54,7 +55,11 @@ void G_DemoLogInit(const char *path)
    fprintf(demoLogFile, "\n");
    // write arguments into it
    for(int i = 1; i < myargc; ++i)
-      fprintf(demoLogFile, "%s ", myargv[i]);
+   {
+      qstring argstring(myargv[i]);
+      argstring.normalizeSlashes();
+      fprintf(demoLogFile, "%s ", argstring.constPtr());
+   }
    fprintf(demoLogFile, "\n");
    atexit(G_demoLogAtExit);
 }
