@@ -205,6 +205,9 @@ mapthing_t playerstarts[MAXPLAYERS];
 // haleyjd 06/14/10: level wad directory
 static WadDirectory *setupwad;
 
+// Current level's hash digest, for showing on console
+static qstring p_currentLevelHashDigest;
+
 //
 // ShortToLong
 //
@@ -3484,6 +3487,7 @@ static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool 
    int behaviorIndex)
 {
    // Don't do anything if demo version is changed!
+   p_currentLevelHashDigest.clear();
    if(full_demo_version < make_full_version(401, 1))
       return;
 
@@ -3522,7 +3526,19 @@ static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool 
 
    char *digest = md5.digestToString();
    E_ApplyCompatibility(digest);
+   p_currentLevelHashDigest = digest;
    efree(digest);
+}
+
+//
+// Console command to get the currently obtained MD5 checksum (if available)
+//
+CONSOLE_COMMAND(mapchecksum, 0)
+{
+   if(p_currentLevelHashDigest.empty())
+      C_Puts("Current map MD5 checksum not available.");
+   else
+      C_Printf("Current map MD5: %s\n", p_currentLevelHashDigest.constPtr());
 }
 
 //
