@@ -178,17 +178,17 @@ default_t defaults[] =
                "1 to enable flashing HOM indicator"),
 
    // killough 3/31/98
-   DEFAULT_INT("demo_insurance", &default_demo_insurance, NULL, 2, 0, 2, default_t::wad_no,
+   DEFAULT_INT("demo_insurance", &g_default_opts.demo_insurance, NULL, 2, 0, 2, default_t::wad_no,
                "1=take special steps ensuring demo sync, 2=only during recordings"),
    
    // phares
-   DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("weapon_recoil", &g_default_opts.weapon_recoil, &g_opts.weapon_recoil, 0, 0, 1, default_t::wad_yes,
                "1 to enable recoil from weapon fire"),
 
    // killough 7/19/98
    // sf:changed to bfgtype
    // haleyjd: FIXME - variable is of enum type, non-portable
-   DEFAULT_INT("bfgtype", &default_bfgtype, &bfgtype, 0, 0, 4, default_t::wad_yes,
+   DEFAULT_INT("bfgtype", &g_default_opts.bfgtype, &g_opts.bfgtype, 0, 0, 4, default_t::wad_yes,
                "0 - normal, 1 - classic, 2 - 11k, 3 - bouncing!, 4 - burst"),
 
    //sf
@@ -211,49 +211,49 @@ default_t defaults[] =
                "1 to allow in-slot weapon cycling (e.g. SSG to SG)"),
 
    // phares 2/25/98
-   DEFAULT_INT("player_bobbing", &default_player_bobbing, &player_bobbing, 1, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("player_bobbing", &g_default_opts.player_bobbing, &g_opts.player_bobbing, 1, 0, 1, default_t::wad_yes,
                "1 to enable player bobbing (view moving up/down slightly)"),
 
    // killough 3/1/98
-   DEFAULT_INT("monsters_remember", &default_monsters_remember, &monsters_remember,
+   DEFAULT_INT("monsters_remember", &g_default_opts.monsters_remember, &g_opts.monsters_remember,
                1, 0, 1, default_t::wad_yes,
                "1 to enable monsters remembering enemies after killing others"),
 
    // killough 7/19/98
-   DEFAULT_INT("monster_infighting", &default_monster_infighting, &monster_infighting,
+   DEFAULT_INT("monster_infighting", &g_default_opts.monster_infighting, &g_opts.monster_infighting,
                1, 0, 1, default_t::wad_yes,
                "1 to enable monsters fighting against each other when provoked"),
 
    // killough 9/8/98
-   DEFAULT_INT("monster_backing", &default_monster_backing, &monster_backing, 
+   DEFAULT_INT("monster_backing", &g_default_opts.monster_backing, &g_opts.monster_backing,
                0, 0, 1, default_t::wad_yes, "1 to enable monsters backing away from targets"),
 
    //killough 9/9/98:
-   DEFAULT_INT("monster_avoid_hazards", &default_monster_avoid_hazards, &monster_avoid_hazards,
+   DEFAULT_INT("monster_avoid_hazards", &g_default_opts.monster_avoid_hazards, &g_opts.monster_avoid_hazards,
                1, 0, 1, default_t::wad_yes, "1 to enable monsters to intelligently avoid hazards"),
    
-   DEFAULT_INT("monkeys", &default_monkeys, &monkeys, 0, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("monkeys", &g_default_opts.monkeys, &g_opts.monkeys, 0, 0, 1, default_t::wad_yes,
                "1 to enable monsters to move up/down steep stairs"),
    
    //killough 9/9/98:
-   DEFAULT_INT("monster_friction", &default_monster_friction, &monster_friction,
+   DEFAULT_INT("monster_friction", &g_default_opts.monster_friction, &g_opts.monster_friction,
                1, 0, 1, default_t::wad_yes, "1 to enable monsters to be affected by friction"),
    
    //killough 9/9/98:
-   DEFAULT_INT("help_friends", &default_help_friends, &help_friends, 1, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("help_friends", &g_default_opts.help_friends, &g_opts.help_friends, 1, 0, 1, default_t::wad_yes,
                "1 to enable monsters to help dying friends"),
    
    // killough 7/19/98
-   DEFAULT_INT("player_helpers", &default_dogs, &dogs, 0, 0, 3, default_t::wad_yes,
+   DEFAULT_INT("player_helpers", &g_default_opts.dogs, &g_opts.dogs, 0, 0, 3, default_t::wad_yes,
                "number of single-player helpers"),
    
    // CONFIG_FIXME: 999?
    // killough 8/8/98
-   DEFAULT_INT("friend_distance", &default_distfriend, &distfriend, 128, 0, 999, default_t::wad_yes,
+   DEFAULT_INT("friend_distance", &g_default_opts.distfriend, &g_opts.distfriend, 128, 0, 999, default_t::wad_yes,
                "distance friends stay away"),
    
    // killough 10/98
-   DEFAULT_INT("dog_jumping", &default_dog_jumping, &dog_jumping, 1, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("dog_jumping", &g_default_opts.dog_jumping, &g_opts.dog_jumping, 1, 0, 1, default_t::wad_yes,
                "1 to enable dogs to jump"),
 
    DEFAULT_INT("p_lastenemyroar", &p_lastenemyroar, NULL, 1, 0, 1, default_t::wad_yes,
@@ -262,7 +262,7 @@ default_t defaults[] =
    DEFAULT_INT("p_markunknowns", &p_markunknowns, NULL, 1, 0, 1, default_t::wad_no,
                "1 to mark unknown thingtype locations"),
 
-   DEFAULT_BOOL("p_pitchedflight", &default_pitchedflight, &pitchedflight, true, default_t::wad_yes, 
+   DEFAULT_BOOL("p_pitchedflight", &g_default_opts.pitchedflight, &g_opts.pitchedflight, true, default_t::wad_yes,
                 "1 to enable flying in the direction you are looking"),
    
    // no color changes on status bar
@@ -366,96 +366,96 @@ default_t defaults[] =
 
    // killough 10/98: compatibility vector:
 
-   DEFAULT_INT("comp_zombie", &default_comp[comp_zombie], &comp[comp_zombie], 
+   DEFAULT_INT("comp_zombie", &g_default_opts.comp[comp_zombie], &g_opts.comp[comp_zombie],
                1, 0, 1, default_t::wad_yes, "Zombie players can exit levels"),
 
-   DEFAULT_INT("comp_infcheat", &default_comp[comp_infcheat], &comp[comp_infcheat],
+   DEFAULT_INT("comp_infcheat", &g_default_opts.comp[comp_infcheat], &g_opts.comp[comp_infcheat],
                1, 0, 1, default_t::wad_yes, "Powerup cheats are not infinite duration"),
 
-   DEFAULT_INT("comp_stairs", &default_comp[comp_stairs], &comp[comp_stairs],
+   DEFAULT_INT("comp_stairs", &g_default_opts.comp[comp_stairs], &g_opts.comp[comp_stairs],
                1, 0, 1, default_t::wad_yes, "Build stairs exactly the same way that Doom does"),
 
-   DEFAULT_INT("comp_telefrag", &default_comp[comp_telefrag], &comp[comp_telefrag],
+   DEFAULT_INT("comp_telefrag", &g_default_opts.comp[comp_telefrag], &g_opts.comp[comp_telefrag],
                0, 0, 1, default_t::wad_yes, "Monsters can telefrag on MAP30"),
 
-   DEFAULT_INT("comp_dropoff", &default_comp[comp_dropoff], &comp[comp_dropoff],
+   DEFAULT_INT("comp_dropoff", &g_default_opts.comp[comp_dropoff], &g_opts.comp[comp_dropoff],
                0, 0, 1, default_t::wad_yes, "Some objects never move over tall ledges"),
 
-   DEFAULT_INT("comp_falloff", &default_comp[comp_falloff], &comp[comp_falloff],
+   DEFAULT_INT("comp_falloff", &g_default_opts.comp[comp_falloff], &g_opts.comp[comp_falloff],
                0, 0, 1, default_t::wad_yes, "Objects don't fall off ledges under their own weight"),
 
-   DEFAULT_INT("comp_staylift", &default_comp[comp_staylift], &comp[comp_staylift],
+   DEFAULT_INT("comp_staylift", &g_default_opts.comp[comp_staylift], &g_opts.comp[comp_staylift],
                0, 0, 1, default_t::wad_yes, "Monsters randomly walk off of moving lifts"),
 
-   DEFAULT_INT("comp_doorstuck", &default_comp[comp_doorstuck], &comp[comp_doorstuck],
+   DEFAULT_INT("comp_doorstuck", &g_default_opts.comp[comp_doorstuck], &g_opts.comp[comp_doorstuck],
                0, 0, 1, default_t::wad_yes, "Monsters get stuck on doortracks"),
 
-   DEFAULT_INT("comp_pursuit", &default_comp[comp_pursuit], &comp[comp_pursuit],
+   DEFAULT_INT("comp_pursuit", &g_default_opts.comp[comp_pursuit], &g_opts.comp[comp_pursuit],
                0, 0, 1, default_t::wad_yes, "Monsters don't give up pursuit of targets"),
 
-   DEFAULT_INT("comp_vile", &default_comp[comp_vile], &comp[comp_vile],
+   DEFAULT_INT("comp_vile", &g_default_opts.comp[comp_vile], &g_opts.comp[comp_vile],
                1, 0, 1, default_t::wad_yes, "Arch-Vile resurrects invincible ghosts"),
 
-   DEFAULT_INT("comp_pain", &default_comp[comp_pain], &comp[comp_pain],
+   DEFAULT_INT("comp_pain", &g_default_opts.comp[comp_pain], &g_opts.comp[comp_pain],
                0, 0, 1, default_t::wad_yes, "Pain Elemental limited to 20 lost souls"),
 
-   DEFAULT_INT("comp_skull", &default_comp[comp_skull], &comp[comp_skull],
+   DEFAULT_INT("comp_skull", &g_default_opts.comp[comp_skull], &g_opts.comp[comp_skull],
                1, 0, 1, default_t::wad_yes, "Lost souls get stuck behind walls"),
 
-   DEFAULT_INT("comp_blazing", &default_comp[comp_blazing], &comp[comp_blazing],
+   DEFAULT_INT("comp_blazing", &g_default_opts.comp[comp_blazing], &g_opts.comp[comp_blazing],
                0, 0, 1, default_t::wad_yes, "Blazing doors make double closing sounds"),
 
-   DEFAULT_INT("comp_doorlight", &default_comp[comp_doorlight], &comp[comp_doorlight],
+   DEFAULT_INT("comp_doorlight", &g_default_opts.comp[comp_doorlight], &g_opts.comp[comp_doorlight],
                0, 0, 1, default_t::wad_yes, "Tagged doors don't trigger special lighting"),
 
-   DEFAULT_INT("comp_god", &default_comp[comp_god], &comp[comp_god],
+   DEFAULT_INT("comp_god", &g_default_opts.comp[comp_god], &g_opts.comp[comp_god],
                1, 0, 1, default_t::wad_yes, "God mode isn't absolute"),
 
-   DEFAULT_INT("comp_skymap", &default_comp[comp_skymap], &comp[comp_skymap],
+   DEFAULT_INT("comp_skymap", &g_default_opts.comp[comp_skymap], &g_opts.comp[comp_skymap],
                1, 0, 1, default_t::wad_yes, "Sky is unaffected by invulnerability"),
 
-   DEFAULT_INT("comp_floors", &default_comp[comp_floors], &comp[comp_floors],
+   DEFAULT_INT("comp_floors", &g_default_opts.comp[comp_floors], &g_opts.comp[comp_floors],
                0, 0, 1, default_t::wad_yes, "Use exactly Doom's floor motion behavior"),
 
-   DEFAULT_INT("comp_model", &default_comp[comp_model], &comp[comp_model],
+   DEFAULT_INT("comp_model", &g_default_opts.comp[comp_model], &g_opts.comp[comp_model],
                0, 0, 1, default_t::wad_yes, "Use exactly Doom's linedef trigger model"),
 
-   DEFAULT_INT("comp_zerotags", &default_comp[comp_zerotags], &comp[comp_zerotags],
+   DEFAULT_INT("comp_zerotags", &g_default_opts.comp[comp_zerotags], &g_opts.comp[comp_zerotags],
                0, 0, 1, default_t::wad_yes, "Linedef effects work with sector tag = 0"),
 
    // haleyjd
-   DEFAULT_INT("comp_terrain", &default_comp[comp_terrain], &comp[comp_terrain], 
+   DEFAULT_INT("comp_terrain", &g_default_opts.comp[comp_terrain], &g_opts.comp[comp_terrain],
                1, 0, 1, default_t::wad_yes, "Terrain effects not activated on floor contact"),
    
    // haleyjd
-   DEFAULT_INT("comp_respawnfix", &default_comp[comp_respawnfix], &comp[comp_respawnfix],
+   DEFAULT_INT("comp_respawnfix", &g_default_opts.comp[comp_respawnfix], &g_opts.comp[comp_respawnfix],
                0, 0, 1, default_t::wad_yes, "Creatures with no spawnpoint respawn at (0,0)"),
    
    // haleyjd
-   DEFAULT_INT("comp_fallingdmg", &default_comp[comp_fallingdmg], &comp[comp_fallingdmg],
+   DEFAULT_INT("comp_fallingdmg", &g_default_opts.comp[comp_fallingdmg], &g_opts.comp[comp_fallingdmg],
                1, 0, 1, default_t::wad_yes, "Players do not take falling damage"),
    
    // haleyjd
-   DEFAULT_INT("comp_soul", &default_comp[comp_soul], &comp[comp_soul],
+   DEFAULT_INT("comp_soul", &g_default_opts.comp[comp_soul], &g_opts.comp[comp_soul],
                0, 0, 1, default_t::wad_yes, "Lost souls do not bounce on floors"),
    
    // haleyjd 02/15/02: z checks (includes,supercedes comp_scratch)
-   DEFAULT_INT("comp_overunder", &default_comp[comp_overunder], &comp[comp_overunder],
+   DEFAULT_INT("comp_overunder", &g_default_opts.comp[comp_overunder], &g_opts.comp[comp_overunder],
                0, 0, 1, default_t::wad_yes, "Things not fully clipped with respect to z coord"),
    
-   DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
+   DEFAULT_INT("comp_theights", &g_default_opts.comp[comp_theights], &g_opts.comp[comp_theights],
                0, 0, 1, default_t::wad_yes, "DOOM thingtypes use inaccurate height information"),
    
-   DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
+   DEFAULT_INT("comp_planeshoot", &g_default_opts.comp[comp_planeshoot], &g_opts.comp[comp_planeshoot],
                0, 0, 1, default_t::wad_yes, "Tracer shots cannot hit the floor or ceiling"),
 
-   DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
+   DEFAULT_INT("comp_special", &g_default_opts.comp[comp_special], &g_opts.comp[comp_special],
                0, 0, 1, default_t::wad_yes, "One-time line specials are cleared on failure"),
 
-   DEFAULT_INT("comp_ninja", &default_comp[comp_ninja], &comp[comp_ninja],
+   DEFAULT_INT("comp_ninja", &g_default_opts.comp[comp_ninja], &g_opts.comp[comp_ninja],
                0, 0, 1, default_t::wad_yes, "Silent spawns at W/SW/S-facing DM spots"),
    
-   DEFAULT_INT("comp_aircontrol", &default_comp[comp_aircontrol], &comp[comp_aircontrol],
+   DEFAULT_INT("comp_aircontrol", &g_default_opts.comp[comp_aircontrol], &g_opts.comp[comp_aircontrol],
                1, 0, 1, default_t::wad_yes, "Disable jumping for DOOM/Heretic"),
 
    // For key bindings, the values stored in the key_* variables       // phares
@@ -794,7 +794,7 @@ default_t defaults[] =
                "Amount of time to display ENDOOM when shown"),
 #endif
 
-   DEFAULT_INT("autoaim", &default_autoaim, &autoaim, 1, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("autoaim", &g_default_opts.autoaim, &g_opts.autoaim, 1, 0, 1, default_t::wad_yes,
                "1 to enable autoaiming"),
    
    DEFAULT_INT("chasecam_height", &chasecam_height, NULL, 15, -31, 100, default_t::wad_no,
@@ -806,7 +806,7 @@ default_t defaults[] =
    DEFAULT_INT("chasecam_dist", &chasecam_dist, NULL, 112, 10, 1024, default_t::wad_no,
                "preferred distance from chasecam to player"),
    
-   DEFAULT_INT("allowmlook", &default_allowmlook, &allowmlook, 0, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("allowmlook", &g_default_opts.allowmlook, &g_opts.allowmlook, 0, 0, 1, default_t::wad_yes,
                "1 to allow players to look up/down"),
    
    DEFAULT_BOOL("menu_toggleisback", &menu_toggleisback, NULL, false, default_t::wad_no,

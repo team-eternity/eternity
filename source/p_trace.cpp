@@ -447,7 +447,7 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    sector_t *fs = li->frontsector;
    sector_t *bs = li->backsector;
 
-   bool becomp      = (demo_version < 333 || comp[comp_planeshoot]);
+   bool becomp      = (demo_version < 333 || g_opts.comp[comp_planeshoot]);
    bool floorsame   = (fs->floorheight   == bs->floorheight   && becomp);
    bool ceilingsame = (fs->ceilingheight == bs->ceilingheight && becomp);
 
@@ -513,7 +513,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // SoM: Shouldn't be called until A: we know the bullet passed or
       // B: We know it didn't hit a plane first
-      //if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
+      //if(li->special && (demo_version < 329 || g_opts.comp[comp_planeshoot]))
       //   P_ShootSpecialLine(shootthing, li, lineside);
 
       if(P_ShotCheck2SLine(in, li, lineside))
@@ -533,7 +533,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // SoM: If we are in no-clip and are shooting on the backside of a
       // 1s line, don't crash!
-      if(sidesector && !comp[comp_planeshoot])
+      if(sidesector && !g_opts.comp[comp_planeshoot])
       {
          if(z < sidesector->floorheight)
          {

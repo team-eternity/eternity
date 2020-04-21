@@ -111,7 +111,7 @@ int P_Random(pr_class_t pr_class)
       (rng.prndindex = (rng.prndindex + 1) & 255) :
       (rng.rndindex  = (rng.rndindex  + 1) & 255);
 
-   if(pr_class != pr_misc && !demo_insurance)      // killough 3/31/98
+   if(pr_class != pr_misc && !g_opts.demo_insurance)      // killough 3/31/98
       pr_class = pr_all_in_one;
 
    boom = rng.seed[pr_class];
@@ -130,7 +130,7 @@ int P_Random(pr_class_t pr_class)
    // since it's unnecessary for random shuffling otherwise
    // killough 9/29/98: but use basetic now instead of levelstarttic
 
-   if(demo_insurance)
+   if(g_opts.demo_insurance)
       boom += (gametic-basetic)*7;
 
    return boom & 255;
@@ -148,7 +148,7 @@ unsigned int P_RandomEx(pr_class_t pr_class)
 {
    unsigned int boom;
    
-   if(pr_class != pr_misc && !demo_insurance)
+   if(pr_class != pr_misc && !g_opts.demo_insurance)
       pr_class = pr_all_in_one;
 
    boom = rng.seed[pr_class];

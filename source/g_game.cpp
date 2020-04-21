@@ -348,7 +348,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    if(gameactions[ka_user4])
       cmd->actions |= AC_USER4;
 
-   int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
+   int mlook = g_opts.allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
    cmd->chatchar = C_dequeueChatChar();
@@ -1059,9 +1059,9 @@ static void G_SetCompatibility(void)
       if(demo_version < complevels[i].opt)
       {
          if(complevels[i].boomcomp && compatibility)
-            comp[i] = true;
+            g_opts.comp[i] = true;
          else
-            comp[i] = (demo_version < complevels[i].fix);
+            g_opts.comp[i] = (demo_version < complevels[i].fix);
       }
       ++i;
    }
@@ -1140,42 +1140,42 @@ static byte *G_ReadDemoHeader(byte *demo_p)
       // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
       {
-         comp[comp_terrain]   = 0; // terrain on
-         comp[comp_overunder] = 0; // 3D clipping on
+         g_opts.comp[comp_terrain]   = 0; // terrain on
+         g_opts.comp[comp_overunder] = 0; // 3D clipping on
       }
 
       // killough 3/2/98: force these variables to be 0 in demo_compatibility
 
-      variable_friction = 0;
+      g_opts.variable_friction = 0;
 
-      weapon_recoil = 0;
+      g_opts.weapon_recoil = 0;
 
-      allow_pushers = 0;
+      g_opts.allow_pushers = 0;
 
-      monster_infighting = 1;           // killough 7/19/98
+      g_opts.monster_infighting = 1;           // killough 7/19/98
 
-      bfgtype = bfg_normal;                  // killough 7/19/98
+      g_opts.bfgtype = bfg_normal;                  // killough 7/19/98
 
-      dogs = 0;                         // killough 7/19/98
-      dog_jumping = 0;                  // killough 10/98
+      g_opts.dogs = 0;                         // killough 7/19/98
+      g_opts.dog_jumping = 0;                  // killough 10/98
 
-      monster_backing = 0;              // killough 9/8/98
+      g_opts.monster_backing = 0;              // killough 9/8/98
       
-      monster_avoid_hazards = 0;        // killough 9/9/98
+      g_opts.monster_avoid_hazards = 0;        // killough 9/9/98
 
-      monster_friction = 0;             // killough 10/98
-      help_friends = 0;                 // killough 9/9/98
-      monkeys = 0;
+      g_opts.monster_friction = 0;             // killough 10/98
+      g_opts.help_friends = 0;                 // killough 9/9/98
+      g_opts.monkeys = 0;
 
       // haleyjd 05/23/04: autoaim is sync-critical
-      default_autoaim = autoaim;
-      autoaim = 1;
+      g_default_opts.autoaim = g_opts.autoaim;
+      g_opts.autoaim = 1;
 
-      default_allowmlook = allowmlook;
-      allowmlook = 0;
+      g_default_opts.allowmlook = g_opts.allowmlook;
+      g_opts.allowmlook = 0;
 
       // for the sake of Heretic/Hexen demos only
-      pitchedflight = false;
+      g_opts.pitchedflight = false;
 
       // killough 3/6/98: rearrange to fix savegame bugs (moved fastparm,
       // respawnparm, nomonsters flags to G_LoadOptions()/G_SaveOptions())
@@ -2575,7 +2575,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // which is missing the fog and sound, as it spawns somewhere out in the
    // far reaches of the void.
 
-   if(!comp[comp_ninja])
+   if(!g_opts.comp[comp_ninja])
    {
       an = ANG45 * (angle_t)(mthing->angle / 45);
       mtcos = finecosine[an >> ANGLETOFINESHIFT];
@@ -2898,7 +2898,7 @@ static int G_GetHelpers()
    if(!j)
       j = M_CheckParm ("-dogs");
 
-   return j ? ((j+1 < myargc) ? atoi(myargv[j+1]) : 1) : default_dogs;
+   return j ? ((j+1 < myargc) ? atoi(myargv[j+1]) : 1) : g_default_opts.dogs;
 }
 
 // killough 3/1/98: function to reload all the default parameter
@@ -2910,41 +2910,41 @@ void G_ReloadDefaults()
    // (allows functions above to load different values for demos
    // and savegames without messing up defaults).
    
-   weapon_recoil = default_weapon_recoil;    // weapon recoil
+   g_opts.weapon_recoil = g_default_opts.weapon_recoil;    // weapon recoil
    
-   player_bobbing = default_player_bobbing;  // haleyjd: readded
+   g_opts.player_bobbing = g_default_opts.player_bobbing;  // haleyjd: readded
    
-   variable_friction = allow_pushers = true;
+   g_opts.variable_friction = g_opts.allow_pushers = true;
    
-   monsters_remember = default_monsters_remember;   // remember former enemies
+   g_opts.monsters_remember = g_default_opts.monsters_remember;   // remember former enemies
    
-   monster_infighting = default_monster_infighting; // killough 7/19/98
+   g_opts.monster_infighting = g_default_opts.monster_infighting; // killough 7/19/98
    
    // dogs = netgame ? 0 : G_GetHelpers();             // killough 7/19/98
    if(GameType == gt_single) // haleyjd 04/10/03
-      dogs = G_GetHelpers();
+      g_opts.dogs = G_GetHelpers();
    else
-      dogs = 0;
+      g_opts.dogs = 0;
    
-   dog_jumping = default_dog_jumping;
+   g_opts.dog_jumping = g_default_opts.dog_jumping;
    
-   distfriend = default_distfriend;                 // killough 8/8/98
+   g_opts.distfriend = g_default_opts.distfriend;                 // killough 8/8/98
    
-   monster_backing = default_monster_backing;     // killough 9/8/98
+   g_opts.monster_backing = g_default_opts.monster_backing;     // killough 9/8/98
    
-   monster_avoid_hazards = default_monster_avoid_hazards; // killough 9/9/98
+   g_opts.monster_avoid_hazards = g_default_opts.monster_avoid_hazards; // killough 9/9/98
    
-   monster_friction = default_monster_friction;     // killough 10/98
+   g_opts.monster_friction = g_default_opts.monster_friction;     // killough 10/98
    
-   help_friends = default_help_friends;             // killough 9/9/98
+   g_opts.help_friends = g_default_opts.help_friends;             // killough 9/9/98
    
-   autoaim = default_autoaim;
+   g_opts.autoaim = g_default_opts.autoaim;
    
-   allowmlook = default_allowmlook;
+   g_opts.allowmlook = g_default_opts.allowmlook;
    
-   monkeys = default_monkeys;
+   g_opts.monkeys = g_default_opts.monkeys;
    
-   bfgtype = default_bfgtype;               // killough 7/19/98
+   g_opts.bfgtype = g_default_opts.bfgtype;               // killough 7/19/98
    
    // jff 1/24/98 reset play mode to command line spec'd version
    // killough 3/1/98: moved to here
@@ -2967,17 +2967,17 @@ void G_ReloadDefaults()
    consoleplayer = 0;
    
    compatibility = false;     // killough 10/98: replaced by comp[] vector
-   memcpy(comp, default_comp, sizeof comp);
+   memcpy(g_opts.comp, g_default_opts.comp, sizeof g_opts.comp);
    
    vanilla_mode = false;
    demo_version = version;       // killough 7/19/98: use this version's id
    demo_subversion = subversion; // haleyjd 06/17/01
    
    // killough 3/31/98, 4/5/98: demo sync insurance
-   demo_insurance = default_demo_insurance == 1;
+   g_opts.demo_insurance = g_default_opts.demo_insurance == 1;
 
    // haleyjd 06/07/12: pitchedflight has default
-   pitchedflight = default_pitchedflight;
+   g_opts.pitchedflight = g_default_opts.pitchedflight;
    
    G_ScrambleRand();
 }
@@ -3240,7 +3240,7 @@ void G_RecordDemo(const char *name)
       return;
    }
 
-   demo_insurance = (default_demo_insurance != 0); // killough 12/98
+   g_opts.demo_insurance = (g_default_opts.demo_insurance != 0); // killough 12/98
    
    usergame = false;
 
@@ -3296,24 +3296,24 @@ byte *G_WriteOptions(byte *demoptr)
 {
    byte *target = demoptr + GAME_OPTION_SIZE;
    
-   *demoptr++ = monsters_remember;  // part of monster AI -- byte 1
+   *demoptr++ = g_opts.monsters_remember;  // part of monster AI -- byte 1
    
-   *demoptr++ = variable_friction;  // ice & mud -- byte 2
+   *demoptr++ = g_opts.variable_friction;  // ice & mud -- byte 2
    
-   *demoptr++ = weapon_recoil;      // weapon recoil -- byte 3
+   *demoptr++ = g_opts.weapon_recoil;      // weapon recoil -- byte 3
    
-   *demoptr++ = allow_pushers;      // PUSH Things -- byte 4
+   *demoptr++ = g_opts.allow_pushers;      // PUSH Things -- byte 4
    
    *demoptr++ = 0;                  // ??? unused -- byte 5
    
-   *demoptr++ = player_bobbing;     // whether player bobs or not -- byte 6
+   *demoptr++ = g_opts.player_bobbing;     // whether player bobs or not -- byte 6
    
    // killough 3/6/98: add parameters to savegame, move around some in demos
    *demoptr++ = respawnparm; // byte 7
    *demoptr++ = fastparm;    // byte 8
    *demoptr++ = nomonsters;  // byte 9
    
-   *demoptr++ = demo_insurance;        // killough 3/31/98 -- byte 10
+   *demoptr++ = g_opts.demo_insurance;        // killough 3/31/98 -- byte 10
    
    // killough 3/26/98: Added rngseed. 3/31/98: moved here
    *demoptr++ = (byte)((rngseed >> 24) & 0xff); // byte 11
@@ -3322,41 +3322,41 @@ byte *G_WriteOptions(byte *demoptr)
    *demoptr++ = (byte)( rngseed        & 0xff); // byte 14
    
    // Options new to v2.03 begin here
-   *demoptr++ = monster_infighting;        // killough 7/19/98 -- byte 15
+   *demoptr++ = g_opts.monster_infighting;        // killough 7/19/98 -- byte 15
    
-   *demoptr++ = dogs;                      // killough 7/19/98 -- byte 16
+   *demoptr++ = g_opts.dogs;                      // killough 7/19/98 -- byte 16
    
-   *demoptr++ = bfgtype;                   // killough 7/19/98 -- byte 17
+   *demoptr++ = g_opts.bfgtype;                   // killough 7/19/98 -- byte 17
    
    *demoptr++ = 0;                         // unused - (beta mode) -- byte 18
    
-   *demoptr++ = (distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
-   *demoptr++ =  distfriend       & 0xff;  // killough 8/8/98 -- byte 20
+   *demoptr++ = (g_opts.distfriend >> 8) & 0xff;  // killough 8/8/98 -- byte 19  
+   *demoptr++ = g_opts.distfriend       & 0xff;  // killough 8/8/98 -- byte 20
    
-   *demoptr++ = monster_backing;           // killough 9/8/98 -- byte 21
+   *demoptr++ = g_opts.monster_backing;           // killough 9/8/98 -- byte 21
    
-   *demoptr++ = monster_avoid_hazards;     // killough 9/9/98 -- byte 22
+   *demoptr++ = g_opts.monster_avoid_hazards;     // killough 9/9/98 -- byte 22
    
-   *demoptr++ = monster_friction;          // killough 10/98  -- byte 23
+   *demoptr++ = g_opts.monster_friction;          // killough 10/98  -- byte 23
    
-   *demoptr++ = help_friends;              // killough 9/9/98 -- byte 24
+   *demoptr++ = g_opts.help_friends;              // killough 9/9/98 -- byte 24
    
-   *demoptr++ = dog_jumping;               // byte 25
+   *demoptr++ = g_opts.dog_jumping;               // byte 25
    
-   *demoptr++ = monkeys;                   // byte 26
+   *demoptr++ = g_opts.monkeys;                   // byte 26
    
    // killough 10/98: a compatibility vector now
    for(int i = 0; i < COMP_TOTAL; i++)
-      *demoptr++ = comp[i] != 0;           // bytes 27 - 58 : comp   
+      *demoptr++ = g_opts.comp[i] != 0;           // bytes 27 - 58 : comp   
    
    // haleyjd 05/23/04: autoaim is sync critical
-   *demoptr++ = autoaim;                   // byte 59
+   *demoptr++ = g_opts.autoaim;                   // byte 59
 
    // haleyjd 04/06/05: allowmlook is sync critical
-   *demoptr++ = allowmlook;                // byte 60
+   *demoptr++ = g_opts.allowmlook;                // byte 60
 
    // haleyjd 06/07/12: pitchedflight
-   *demoptr++ = pitchedflight;             // byte 61
+   *demoptr++ = g_opts.pitchedflight;             // byte 61
    
    // CURRENT BYTES LEFT: 3
 
@@ -3378,21 +3378,21 @@ byte *G_ReadOptions(byte *demoptr)
 {
    byte *target = demoptr + GAME_OPTION_SIZE;
 
-   monsters_remember = *demoptr++;
+   g_opts.monsters_remember = *demoptr++;
 
-   variable_friction = *demoptr;  // ice & mud
+   g_opts.variable_friction = *demoptr;  // ice & mud
    demoptr++;
 
-   weapon_recoil = *demoptr;      // weapon recoil
+   g_opts.weapon_recoil = *demoptr;      // weapon recoil
    demoptr++;
 
-   allow_pushers = *demoptr;      // PUSH Things
+   g_opts.allow_pushers = *demoptr;      // PUSH Things
    demoptr++;
 
    demoptr++;
 
    // haleyjd: restored bobbing to proper sync critical status
-   player_bobbing = *demoptr;     // whether player bobs or not
+   g_opts.player_bobbing = *demoptr;     // whether player bobs or not
    demoptr++;
 
    // killough 3/6/98: add parameters to savegame, move from demo
@@ -3400,7 +3400,7 @@ byte *G_ReadOptions(byte *demoptr)
    fastparm    = !!(*demoptr++);
    nomonsters  = !!(*demoptr++);
 
-   demo_insurance = *demoptr++;              // killough 3/31/98
+   g_opts.demo_insurance = *demoptr++;              // killough 3/31/98
 
    // killough 3/26/98: Added rngseed to demos; 3/31/98: moved here
 
@@ -3415,32 +3415,32 @@ byte *G_ReadOptions(byte *demoptr)
    // Options new to v2.03
    if(demo_version >= 203)
    {
-      monster_infighting = *demoptr++;   // killough 7/19/98
+      g_opts.monster_infighting = *demoptr++;   // killough 7/19/98
       
-      dogs = *demoptr++;                 // killough 7/19/98
+      g_opts.dogs = *demoptr++;                 // killough 7/19/98
       
-      bfgtype = (bfg_t)(*demoptr++);     // killough 7/19/98
+      g_opts.bfgtype = (bfg_t)(*demoptr++);     // killough 7/19/98
       demoptr++;                         // sf: where beta was
       
-      distfriend = *demoptr++ << 8;      // killough 8/8/98
-      distfriend+= *demoptr++;
+      g_opts.distfriend = *demoptr++ << 8;      // killough 8/8/98
+      g_opts.distfriend+= *demoptr++;
       
-      monster_backing = *demoptr++;      // killough 9/8/98
+      g_opts.monster_backing = *demoptr++;      // killough 9/8/98
       
-      monster_avoid_hazards = *demoptr++; // killough 9/9/98
+      g_opts.monster_avoid_hazards = *demoptr++; // killough 9/9/98
       
-      monster_friction = *demoptr++;     // killough 10/98
+      g_opts.monster_friction = *demoptr++;     // killough 10/98
       
-      help_friends = *demoptr++;         // killough 9/9/98
+      g_opts.help_friends = *demoptr++;         // killough 9/9/98
       
-      dog_jumping = *demoptr++;          // killough 10/98
+      g_opts.dog_jumping = *demoptr++;          // killough 10/98
       
-      monkeys = *demoptr++;
+      g_opts.monkeys = *demoptr++;
       
       {   // killough 10/98: a compatibility vector now
          int i;
          for(i = 0; i < COMP_TOTAL; ++i)
-            comp[i] = *demoptr++;
+            g_opts.comp[i] = *demoptr++;
       }
 
       G_SetCompatibility();
@@ -3449,18 +3449,18 @@ byte *G_ReadOptions(byte *demoptr)
 
       // haleyjd 05/23/04: autoaim is sync-critical
       if(full_demo_version >= make_full_version(331, 8))
-         autoaim = *demoptr++;
+         g_opts.autoaim = *demoptr++;
 
       if(demo_version >= 333)
       {
          // haleyjd 04/06/05: allowmlook is sync-critical
-         allowmlook = *demoptr++; 
+         g_opts.allowmlook = *demoptr++; 
       }
 
       if(full_demo_version >= make_full_version(340, 23))
       {
          // haleyjd 06/07/12: pitchedflight
-         pitchedflight = (*demoptr ? true : false); 
+         g_opts.pitchedflight = (*demoptr ? true : false); 
          // Remember: ADD INCREMENT :)
       }
    }
@@ -3468,29 +3468,29 @@ byte *G_ReadOptions(byte *demoptr)
    {
       G_SetCompatibility();
       
-      monster_infighting = 1;           // killough 7/19/98
+      g_opts.monster_infighting = 1;           // killough 7/19/98
       
-      monster_backing = 0;              // killough 9/8/98
+      g_opts.monster_backing = 0;              // killough 9/8/98
       
-      monster_avoid_hazards = 0;        // killough 9/9/98
+      g_opts.monster_avoid_hazards = 0;        // killough 9/9/98
       
-      monster_friction = 0;             // killough 10/98
+      g_opts.monster_friction = 0;             // killough 10/98
       
-      help_friends = 0;                 // killough 9/9/98
+      g_opts.help_friends = 0;                 // killough 9/9/98
       
-      bfgtype = bfg_normal;             // killough 7/19/98
+      g_opts.bfgtype = bfg_normal;             // killough 7/19/98
       
-      dogs = 0;                         // killough 7/19/98
-      dog_jumping = 0;                  // killough 10/98
-      monkeys = 0;
+      g_opts.dogs = 0;                         // killough 7/19/98
+      g_opts.dog_jumping = 0;                  // killough 10/98
+      g_opts.monkeys = 0;
       
-      default_autoaim = autoaim; // FIXME: err?
-      autoaim = 1;
+      g_default_opts.autoaim = g_opts.autoaim; // FIXME: err?
+      g_opts.autoaim = 1;
 
-      default_allowmlook = allowmlook; // FIXME: err??
-      allowmlook = 0;
+      g_default_opts.allowmlook = g_opts.allowmlook; // FIXME: err??
+      g_opts.allowmlook = 0;
 
-      pitchedflight = false;
+      g_opts.pitchedflight = false;
    }
   
    return target;
@@ -3521,28 +3521,28 @@ void G_SetOldDemoOptions()
    compatibility = 1;
 
    for(i = 0; i < COMP_TOTAL; ++i)
-      comp[i] = 1;
+      g_opts.comp[i] = 1;
       
-   monsters_remember     = 0;
-   variable_friction     = 0;
-   weapon_recoil         = 0;
-   allow_pushers         = 0;
-   player_bobbing        = 1;
-   demo_insurance        = 0;
-   monster_infighting    = 1;
-   monster_backing       = 0;
-   monster_avoid_hazards = 0;
-   monster_friction      = 0;
-   help_friends          = 0;
-   bfgtype               = bfg_normal;
-   dogs                  = 0;
-   dog_jumping           = 0;
-   monkeys               = 0;
-   default_autoaim       = autoaim;
-   autoaim               = 1;
-   default_allowmlook    = allowmlook;
-   allowmlook            = 0;
-   pitchedflight         = false; // haleyjd 06/07/12
+   g_opts.monsters_remember     = 0;
+   g_opts.variable_friction     = 0;
+   g_opts.weapon_recoil         = 0;
+   g_opts.allow_pushers  = 0;
+   g_opts.player_bobbing        = 1;
+   g_opts.demo_insurance        = 0;
+   g_opts.monster_infighting    = 1;
+   g_opts.monster_backing       = 0;
+   g_opts.monster_avoid_hazards = 0;
+   g_opts.monster_friction      = 0;
+   g_opts.help_friends          = 0;
+   g_opts.bfgtype               = bfg_normal;
+   g_opts.dogs                  = 0;
+   g_opts.dog_jumping           = 0;
+   g_opts.monkeys               = 0;
+   g_default_opts.autoaim       = g_opts.autoaim;
+   g_opts.autoaim               = 1;
+   g_default_opts.allowmlook    = g_opts.allowmlook;
+   g_opts.allowmlook            = 0;
+   g_opts.pitchedflight         = false; // haleyjd 06/07/12
 }
 
 //

@@ -496,7 +496,7 @@ DEFINE_ACTION(EV_ActionCeilingLowerAndCrush)
 inline static bool EV_isZombiePlayer(const Mobj *thing)
 {
    return thing && thing->player && thing->player->health <= 0 &&
-      !comp[comp_zombie];
+      !g_opts.comp[comp_zombie];
 }
 
 //

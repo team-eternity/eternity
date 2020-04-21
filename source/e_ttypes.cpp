@@ -709,7 +709,7 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
          terrain = TerrainTypes[thing->subsector->sector->floorpic];
    }
    
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   if(demo_version < terrain->minversion || g_opts.comp[comp_terrain])
       terrain = &solid;
 
    return terrain;
@@ -776,7 +776,7 @@ void E_PtclTerrainHit(particle_t *p)
    sector_t *sector = NULL;
 
    // particles could never hit terrain before v3.33
-   if(demo_version < 333 || comp[comp_terrain])
+   if(demo_version < 333 || g_opts.comp[comp_terrain])
       return;
 
    // no particle hits during netgames or demos;
@@ -893,7 +893,7 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
       terrain = TerrainTypes[sector->floorpic];
 
    // no TerrainTypes in old demos or if comp enabled
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   if(demo_version < terrain->minversion || g_opts.comp[comp_terrain])
       terrain = &solid;
 
    // some things don't cause splashes

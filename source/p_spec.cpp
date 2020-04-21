@@ -126,9 +126,6 @@ static size_t maxanims;
 // killough 3/7/98: Initialize generalized scrolling
 static void P_SpawnFriction();    // phares 3/16/98
 
-extern int allow_pushers;
-extern int variable_friction;     // phares 3/20/98
-
 // haleyjd 01/24/04: portals
 typedef enum
 {
@@ -402,7 +399,7 @@ int twoSided(int sector, int line)
    //has two sidedefs, rather than whether the 2S flag is set
    
    return 
-      comp[comp_model] ? 
+      g_opts.comp[comp_model] ?
          sectors[sector].lines[line]->flags & ML_TWOSIDED :
          sectors[sector].lines[line]->sidenum[1] != -1;
 }
@@ -427,10 +424,10 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
    // like floor->highest floor
 
    return 
-      comp[comp_model] && !(line->flags & ML_TWOSIDED) ? 
+      g_opts.comp[comp_model] && !(line->flags & ML_TWOSIDED) ?
          NULL :
          line->frontsector == sec ? 
-            comp[comp_model] || line->backsector != sec ?
+      g_opts.comp[comp_model] || line->backsector != sec ?
                line->backsector : 
                NULL : 
             line->frontsector;
@@ -480,7 +477,7 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
    //jff 1/26/98 Fix initial value for floor to not act differently
    //in sections of wad that are below -500 units
    
-   if(!comp[comp_model])          //jff 3/12/98 avoid ovf
+   if(!g_opts.comp[comp_model])          //jff 3/12/98 avoid ovf
       floor = -32000*FRACUNIT;      // in height calculations
 
    for(i = 0; i < sec->linecount; i++)
@@ -646,7 +643,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
    fixed_t height = D_MAXINT;
    int i;
 
-   if(!comp[comp_model])
+   if(!g_opts.comp[comp_model])
       height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in height calculations
 
    if(demo_version >= 333)
@@ -700,7 +697,7 @@ fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
    //jff 1/26/98 Fix initial value for floor to not act differently
    //in sections of wad that are below 0 units
 
-   if(!comp[comp_model])
+   if(!g_opts.comp[comp_model])
       height = -32000*FRACUNIT; //jff 3/12/98 avoid ovf in
    
    // height calculations
@@ -736,7 +733,7 @@ fixed_t P_FindShortestTextureAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if(!comp[comp_model])
+   if(!g_opts.comp[comp_model])
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
    
    for(i = 0; i < sec->linecount; i++)
@@ -780,7 +777,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if(!comp[comp_model])
+   if(!g_opts.comp[comp_model])
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
 
    for(i = 0; i < sec->linecount; i++)
@@ -1165,7 +1162,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
          // disables god mode?
          // killough 2/21/98: add compatibility switch on godmode cheat clearing;
          //                   does not affect invulnerability
-         if(sector->damageflags & SDMG_ENDGODMODE && comp[comp_god])
+         if(sector->damageflags & SDMG_ENDGODMODE && g_opts.comp[comp_god])
             player->cheats &= ~CF_GODMODE;
 
          // check time
@@ -1673,7 +1670,7 @@ void FrictionThinker::Think()
    Mobj     *thing;
    msecnode_t *node;
 
-   if(compatibility || !variable_friction)
+   if(compatibility || !g_opts.variable_friction)
       return;
 
    sec = sectors + this->affectee;

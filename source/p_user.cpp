@@ -65,9 +65,6 @@
 
 bool onground; // whether player is on ground or in air
 
-bool pitchedflight = true;
-bool default_pitchedflight = true;
-
 //
 // P_SetDisplayPlayer
 //
@@ -162,7 +159,7 @@ void P_CalcHeight(player_t *player)
    player->bob = 0;
    if(demo_version >= 203)
    {
-      if(player_bobbing)
+      if(g_opts.player_bobbing)
       {
          player->bob = (FixedMul(player->momx, player->momx) +
                         FixedMul(player->momy, player->momy)) >> 2;
@@ -170,7 +167,7 @@ void P_CalcHeight(player_t *player)
    }
    else
    {
-      if(demo_compatibility || player_bobbing)
+      if(demo_compatibility || g_opts.player_bobbing)
       {
          player->bob = (FixedMul(player->mo->momx, player->mo->momx) +
                         FixedMul(player->mo->momy, player->mo->momy)) >> 2;
@@ -340,7 +337,7 @@ void P_MovePlayer(player_t* player)
          // davidph 06/06/12: pitch-to-fly
          fixed_t pitch = player->pitch;
 
-         if(!(mo->flags4 & MF4_FLY) || !pitchedflight)
+         if(!(mo->flags4 & MF4_FLY) || !g_opts.pitchedflight)
             pitch = 0;
 
          if(cmd->forwardmove)
@@ -648,7 +645,7 @@ void P_PlayerThink(player_t *player)
    }
 
    // haleyjd 04/03/05: new yshear code
-   if(!allowmlook)
+   if(!g_opts.allowmlook)
       player->prevpitch = player->pitch = 0;
    else
    {
@@ -720,7 +717,7 @@ void P_PlayerThink(player_t *player)
    P_CalcHeight(player); // Determines view height and bobbing
    
    // haleyjd: are we falling? might need to scream :->
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!g_opts.comp[comp_fallingdmg] && demo_version >= 329)
    {  
       if(player->mo->momz >= 0)
          player->mo->intflags &= ~MIF_SCREAMED;

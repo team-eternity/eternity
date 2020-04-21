@@ -252,7 +252,7 @@ void C_SendNetData()
      }
   }
 
-  demo_insurance = 1;      // always use 1 in multiplayer
+  g_opts.demo_insurance = 1;      // always use 1 in multiplayer
 
   if(consoleplayer == 0)      // if server, send command to warp to map
   {

@@ -46,9 +46,6 @@ void P_SetDisplayPlayer(int new_displayplayer);
 void P_PlayerStartFlight(player_t *player, bool thrustup);
 void P_PlayerStopFlight(player_t *player);
 
-extern bool pitchedflight;
-extern bool default_pitchedflight;
-
 #endif // P_USER_H__
 
 //----------------------------------------------------------------------------

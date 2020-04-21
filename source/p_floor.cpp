@@ -589,7 +589,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
             int minsize = D_MAXINT;
             side_t*     side;
                       
-            if(!comp[comp_model])  // killough 10/98
+            if(!g_opts.comp[comp_model])  // killough 10/98
                minsize = 32000<<FRACBITS; //jff 3/13/98 no ovf
             floor->direction = plat_up;
             floor->sector = sec;
@@ -600,21 +600,21 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
                {
                   side = getSide(secnum,i,0);
                   if(side->bottomtexture >= 0      //killough 10/98
-                     && (side->bottomtexture || comp[comp_model]))
+                     && (side->bottomtexture || g_opts.comp[comp_model]))
                   {
                      if(textures[side->bottomtexture]->heightfrac < minsize)
                         minsize = textures[side->bottomtexture]->heightfrac;
                   }
                   side = getSide(secnum,i,1);
                   if(side->bottomtexture >= 0      //killough 10/98
-                     && (side->bottomtexture || comp[comp_model]))
+                     && (side->bottomtexture || g_opts.comp[comp_model]))
                   {
                      if(textures[side->bottomtexture]->heightfrac < minsize)
                         minsize = textures[side->bottomtexture]->heightfrac;
                   }
                }
             }
-            if(comp[comp_model])
+            if(g_opts.comp[comp_model])
             {
                floor->floordestheight =
                   floor->sector->floorheight + minsize;
@@ -905,7 +905,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                   * cph 2001/02/06: stair bug fix should be controlled by comp_stairs,
                   *  except if we're emulating MBF which perversly reverted the fix
                   */
-               if(comp[comp_stairs] || demo_version == 203)
+               if(g_opts.comp[comp_stairs] || demo_version == 203)
                   height += stairsize; // jff 6/28/98 change demo compatibility
 
                // if sector's floor already moving, look for another
@@ -913,7 +913,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                   continue;
 
                /* cph - see comment above - do this iff we didn't do so above */
-               if(!comp[comp_stairs] && demo_version != 203)
+               if(!g_opts.comp[comp_stairs] && demo_version != 203)
                   height += stairsize;
 
                sec = tsec;
@@ -947,7 +947,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
       } // end if(!P_SectorActive())
 
       /* killough 10/98: compatibility option */
-      if(comp[comp_stairs])
+      if(g_opts.comp[comp_stairs])
       {
          // cph 2001/09/22 - emulate buggy MBF comp_stairs for demos, 
          // with logic reversed since we now have a separate outer loop 
@@ -1075,14 +1075,14 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
                                   // pillar must be two-sided 
 
       // do not start the donut if the pool is already moving
-      if(!comp[comp_floors] && P_SectorActive(floor_special, s2))
+      if(!g_opts.comp[comp_floors] && P_SectorActive(floor_special, s2))
          continue;                           //jff 5/7/98
                       
       // find a two sided line around the pool whose other side isn't the pillar
       for (i = 0;i < s2->linecount;i++)
       {
          //jff 3/29/98 use true two-sidedness, not the flag
-         if(comp[comp_model])
+         if(g_opts.comp[comp_model])
          {
             // haleyjd 10/12/10: The first check here, which has a typo that
             // goes all the way back to vanilla DOOM, is inconsequential 

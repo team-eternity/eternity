@@ -144,6 +144,9 @@ struct variable_t;
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { &name, defaultvar,       \
                         vt_int, min, max, strings, 0, 0, NULL, NULL };
+#define VARIABLE_INT_DIFFNAME(varname, name, defaultvar, min, max, strings)    \
+        variable_t var_ ## varname = { &name, defaultvar,       \
+                        vt_int, min, max, strings, 0, 0, NULL, NULL };
 
 //
 // VARIABLE_STRING
@@ -173,6 +176,9 @@ struct variable_t;
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
                   vt_int, 0, 1, strings, 0, 0, NULL, NULL };
+#define VARIABLE_BOOLEAN_DIFFNAME(varname, name, defaultvar, strings) \
+        variable_t var_ ## varname = { &name, defaultvar,             \
+                  vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
 
 //
 // VARIABLE_TOGGLE
@@ -182,7 +188,9 @@ struct variable_t;
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
         variable_t var_ ## name = { &name, defaultvar,       \
                    vt_toggle, 0, 1, strings, 0, 0, NULL, NULL };
-
+#define VARIABLE_TOGGLE_DIFFNAME(varname, name, defaultvar, strings)      \
+        variable_t var_ ## varname = { &name, defaultvar,       \
+                   vt_toggle, 0, 1, strings, 0, 0, NULL, NULL };
 //
 // VARIABLE_FLOAT
 //

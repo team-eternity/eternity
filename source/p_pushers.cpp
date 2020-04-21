@@ -190,7 +190,7 @@ void PushThinker::Think()
    int radius;
    int ht = 0;
    
-   if(!allow_pushers)
+   if(!g_opts.allow_pushers)
       return;
 
    sec = sectors + this->affectee;

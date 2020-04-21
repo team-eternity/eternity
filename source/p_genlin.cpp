@@ -1398,7 +1398,7 @@ manual_door:
       if(dd->flags & DDF_USEALTLIGHTTAG)
          door->lighttag = dd->altlighttag;
       else
-         door->lighttag = !comp[comp_doorlight] && line && 
+         door->lighttag = !g_opts.comp[comp_doorlight] && line &&
             (line->special&6) == 6 && 
             line->special > GenLockedBase ? line->args[0] : 0;
       

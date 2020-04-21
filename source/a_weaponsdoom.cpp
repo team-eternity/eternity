@@ -193,7 +193,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
 
    // FIXME: This is ugly and bad, but I can't figure out how to
    // dynamically have the player switch different versions of the BFG
-   wp = player->readyweapon->dehnum == wp_bfg && bfgtype == bfg_classic ?
+   wp = player->readyweapon->dehnum == wp_bfg && g_opts.bfgtype == bfg_classic ?
                                        E_WeaponForName("OldBFG") : player->readyweapon;
 
    if(!wp)
@@ -209,7 +209,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
    
    // WEAPON_FIXME: recoil for classic BFG
 
-   if(weapon_recoil && !(mo->flags & MF_NOCLIP))
+   if(g_opts.weapon_recoil && !(mo->flags & MF_NOCLIP))
       P_Thrust(player, ANG180 + mo->angle, 0, 512 * wp->recoil);
 
    auto weapon   = player->readyweapon;
@@ -226,10 +226,9 @@ void A_FireOldBFG(actionargs_t *actionargs)
       angle_t an = mo->angle;
       angle_t an1 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 768) + an;
       angle_t an2 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 640) + ANG90;
-      extern int autoaim;
       fixed_t slope;
 
-      if(autoaim)
+      if(g_opts.autoaim)
       {
          // killough 8/2/98: make autoaiming prefer enemies
          bool mask = true;
@@ -467,7 +466,7 @@ void A_BFGBurst(actionargs_t *actionargs); // haleyjd
 void A_BFGSpray(actionargs_t *actionargs)
 {
    // WEAPON_FIXME: BFG type stuff
-   switch(bfgtype)
+   switch(g_opts.bfgtype)
    {
    case bfg_11k:
       A_BFG11KHit(actionargs);

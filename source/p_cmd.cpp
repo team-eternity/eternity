@@ -177,7 +177,7 @@ CONSOLE_NETVAR(skill, gameskill, cf_server, netcmd_skill)
 
 // allow mlook
 
-VARIABLE_BOOLEAN(allowmlook, &default_allowmlook, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(allowmlook, g_opts.allowmlook, &g_default_opts.allowmlook, onoff);
 CONSOLE_NETVAR(allowmlook, allowmlook, cf_server, netcmd_allowmlook) {}
 
 // bfg type
@@ -188,7 +188,7 @@ CONSOLE_NETVAR(allowmlook, allowmlook, cf_server, netcmd_allowmlook) {}
 // weapon system.
 //
 
-VARIABLE_INT(bfgtype, &default_bfgtype,         0, 4, bfgtypestr);
+VARIABLE_INT_DIFFNAME(bfgtype, g_opts.bfgtype, &g_default_opts.bfgtype,         0, 4, bfgtypestr);
 CONSOLE_NETVAR(bfgtype, bfgtype, cf_server, netcmd_bfgtype) {}
 
 // autoaiming 
@@ -199,22 +199,23 @@ CONSOLE_NETVAR(bfgtype, bfgtype, cf_server, netcmd_bfgtype) {}
 // the weapon system.
 //
 
-VARIABLE_BOOLEAN(autoaim, &default_autoaim,         onoff);
+VARIABLE_BOOLEAN_DIFFNAME(autoaim, g_opts.autoaim, &g_default_opts.autoaim,         onoff);
 CONSOLE_NETVAR(autoaim, autoaim, cf_server, netcmd_autoaim) {}
 
 // weapons recoil 
 
-VARIABLE_BOOLEAN(weapon_recoil, &default_weapon_recoil, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(weapon_recoil, g_opts.weapon_recoil, &g_default_opts.weapon_recoil, onoff);
 CONSOLE_NETVAR(recoil, weapon_recoil, cf_server, netcmd_recoil) {}
 
 // allow pushers
 
-VARIABLE_BOOLEAN(allow_pushers, &default_allow_pushers, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(allow_pushers, g_opts.allow_pushers, &g_default_opts.allow_pushers, 
+   onoff);
 CONSOLE_NETVAR(pushers, allow_pushers, cf_server, netcmd_pushers) {}
 
 // varying friction
 
-VARIABLE_BOOLEAN(variable_friction, &default_variable_friction, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(variable_friction, g_opts.variable_friction, &g_default_opts.variable_friction, onoff);
 CONSOLE_NETVAR(varfriction, variable_friction, cf_server, netcmd_varfriction){}
 
 // enable nukage
@@ -226,7 +227,7 @@ CONSOLE_NETVAR(nukage, enable_nuke, cf_server, netcmd_nukage) {}
 // allow mlook with bfg
 
 // davidph 06/06/12 -- haleyjd 06/07/12: promoted to netvar since sync-critical
-VARIABLE_TOGGLE(pitchedflight, &default_pitchedflight, onoff)
+VARIABLE_TOGGLE_DIFFNAME(pitchedflight, g_opts.pitchedflight, &g_default_opts.pitchedflight, onoff)
 CONSOLE_NETVAR(p_pitchedflight, pitchedflight, cf_server, netcmd_pitchedflight) {}
 
 // 'auto exit' variables
@@ -272,42 +273,42 @@ CONSOLE_NETVAR(respawn, respawnparm, cf_server, netcmd_respawn)
 
 // monsters remember
 
-VARIABLE_BOOLEAN(monsters_remember, &default_monsters_remember, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(monsters_remember, g_opts.monsters_remember, &g_default_opts.monsters_remember, onoff);
 CONSOLE_NETVAR(mon_remember, monsters_remember, cf_server, netcmd_monremember) {}
 
 // infighting among monsters
 
-VARIABLE_BOOLEAN(monster_infighting, &default_monster_infighting, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(monster_infighting, g_opts.monster_infighting, &g_default_opts.monster_infighting, onoff);
 CONSOLE_NETVAR(mon_infight, monster_infighting, cf_server, netcmd_moninfight) {}
 
 // monsters backing out
 
-VARIABLE_BOOLEAN(monster_backing, &default_monster_backing, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(monster_backing, g_opts.monster_backing, &g_default_opts.monster_backing, onoff);
 CONSOLE_NETVAR(mon_backing, monster_backing, cf_server, netcmd_monbacking) {}
 
 // monsters avoid hazards
 
-VARIABLE_BOOLEAN(monster_avoid_hazards, &default_monster_avoid_hazards, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(monster_avoid_hazards, g_opts.monster_avoid_hazards, &g_default_opts.monster_avoid_hazards, onoff);
 CONSOLE_NETVAR(mon_avoid, monster_avoid_hazards, cf_server, netcmd_monavoid) {}
 
 // monsters affected by friction
 
-VARIABLE_BOOLEAN(monster_friction, &default_monster_friction, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(monster_friction, g_opts.monster_friction, &g_default_opts.monster_friction, onoff);
 CONSOLE_NETVAR(mon_friction, monster_friction, cf_server, netcmd_monfriction) {}
 
 // monsters climb tall steps
 
-VARIABLE_BOOLEAN(monkeys, &default_monkeys,         onoff);
+VARIABLE_BOOLEAN_DIFFNAME(monkeys, g_opts.monkeys, &g_default_opts.monkeys,         onoff);
 CONSOLE_NETVAR(mon_climb, monkeys, cf_server, netcmd_monclimb) {}
 
 // help dying friends
 
-VARIABLE_BOOLEAN(help_friends, &default_help_friends, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(help_friends, g_opts.help_friends, &g_default_opts.help_friends, onoff);
 CONSOLE_NETVAR(mon_helpfriends, help_friends, cf_server, netcmd_monhelpfriends) {}
 
 // distance friends keep from player
 
-VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, NULL);
+VARIABLE_INT_DIFFNAME(distfriend, g_opts.distfriend, &g_default_opts.distfriend,   0, 1024, NULL);
 CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 
 static const char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };

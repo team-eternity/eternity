@@ -270,7 +270,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    }   
    else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) && 
            (demo_version >= 203 || (mo->player && !compatibility)) &&
-           variable_friction)
+      g_opts.variable_friction)
    {
       for (m = mo->touching_sectorlist; m; m = m->m_tnext)
       {
@@ -313,7 +313,7 @@ int P_GetMoveFactor(Mobj *mo, int *frictionp)
    {
       movefactor = ORIG_FRICTION_FACTOR;
 
-      if(!compatibility && variable_friction && 
+      if(!compatibility && g_opts.variable_friction &&
          !(mo->flags & (MF_NOGRAVITY | MF_NOCLIP)))
       {
          friction = mo->friction;
@@ -387,7 +387,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
    telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!comp[comp_telefrag] ? boss : (gamemap == 30));
+              (!g_opts.comp[comp_telefrag] ? boss : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -893,7 +893,7 @@ bool P_SkullHit(Mobj *thing)
 //
 int P_MissileBlockHeight(Mobj *mo)
 {
-   return (demo_version >= 333 && !comp[comp_theights] &&
+   return (demo_version >= 333 && !g_opts.comp[comp_theights] &&
            mo->flags3 & MF3_3DDECORATION) ? mo->info->height : mo->height;
 }
 
@@ -1331,7 +1331,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
 
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
    {
-      if(comp[comp_dropoff])
+      if(g_opts.comp[comp_dropoff])
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
@@ -1343,7 +1343,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
       {
          // haleyjd: I can't even mentally parse this statement with 
          // any certainty.
-         if(!monkeys || demo_version < 203 ?
+         if(!g_opts.monkeys || demo_version < 203 ?
             clip.zref.floor - clip.zref.dropoff > STEPSIZE :
             thing->zref.floor - clip.zref.floor > STEPSIZE ||
             thing->zref.dropoff - clip.zref.dropoff > STEPSIZE)
@@ -1405,7 +1405,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          return true;
       }
 
-      if(comp[comp_dropoff])
+      if(g_opts.comp[comp_dropoff])
       {
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
@@ -1419,7 +1419,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          // had to restore it, because I cannot be confident that any of 
          // my interpretations of it are correct relative to C grammar.
 
-         if(!monkeys || demo_version < 203 ?
+         if(!g_opts.monkeys || demo_version < 203 ?
             floorz - clip.zref.dropoff > STEPSIZE :
             thing->zref.floor  - floorz > STEPSIZE ||
             thing->zref.dropoff - clip.zref.dropoff > STEPSIZE)
@@ -2120,7 +2120,7 @@ static void P_HitSlideLine(line_t *ld)
       // killough 10/98: only bounce if hit hard (prevents wobbling)
       icyfloor =
          P_AproxDistance(tmxmove, tmymove) > 4*FRACUNIT &&
-         variable_friction &&  // killough 8/28/98: calc friction on demand
+         g_opts.variable_friction &&  // killough 8/28/98: calc friction on demand
          slidemo->z <= slidemo->zref.floor &&
          !(slidemo->flags4 & MF4_FLY) && // haleyjd: not when just flying
          P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
@@ -2129,7 +2129,7 @@ static void P_HitSlideLine(line_t *ld)
    {
       extern bool onground;
       icyfloor = !compatibility &&
-         variable_friction &&
+         g_opts.variable_friction &&
          slidemo->player &&
          onground && 
          slidemo->friction > ORIG_FRICTION;
@@ -2694,7 +2694,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    msecnode_t *n;
    
    // killough 10/98: sometimes use Doom's method
-   if(comp[comp_floors] && (demo_version >= 203 || demo_compatibility))
+   if(g_opts.comp[comp_floors] && (demo_version >= 203 || demo_compatibility))
       return P_ChangeSector(sector, crunch);
 
    // haleyjd: call down to P_ChangeSector3D instead.

@@ -227,7 +227,7 @@ CONSOLE_VARIABLE(sens_vanilla, mouseSensitivity_vanilla, 0) {}
 
 // player bobbing -- haleyjd: altered to read default, use netcmd
 
-VARIABLE_BOOLEAN(player_bobbing, &default_player_bobbing, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(player_bobbing, g_opts.player_bobbing, &g_default_opts.player_bobbing, onoff);
 CONSOLE_NETVAR(bobbing, player_bobbing, cf_server, netcmd_bobbing) {}
 
 VARIABLE_BOOLEAN(weapon_hotkey_cycling, NULL, onoff);
@@ -248,7 +248,7 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
 
-   if((player->health > 0) || comp[comp_zombie])
+   if((player->health > 0) || g_opts.comp[comp_zombie])
       G_ExitLevel();
 }
 
@@ -439,9 +439,9 @@ CONSOLE_VARIABLE(textmode_startup, textmode_startup, 0) {}
 
 // demo insurance
 
-extern int demo_insurance;
 const char *insure_str[]={"off", "on", "when recording"};
-VARIABLE_INT(demo_insurance, &default_demo_insurance, 0, 2, insure_str);
+VARIABLE_INT_DIFFNAME(demo_insurance, g_opts.demo_insurance, &g_default_opts.demo_insurance, 
+   0, 2, insure_str);
 CONSOLE_VARIABLE(demo_insurance, demo_insurance, cf_notnet) {}
 
 extern int smooth_turning;
@@ -484,10 +484,10 @@ extern int map_secret_after;
 VARIABLE_BOOLEAN(map_secret_after, NULL, yesno);
 CONSOLE_VARIABLE(map_secret_after, map_secret_after, 0) {}
 
-VARIABLE_INT(dogs, &default_dogs, 0, 3, NULL);
+VARIABLE_INT_DIFFNAME(dogs, g_opts.dogs, &g_default_opts.dogs, 0, 3, NULL);
 CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
 
-VARIABLE_BOOLEAN(dog_jumping, &default_dog_jumping, onoff);
+VARIABLE_BOOLEAN_DIFFNAME(dog_jumping, g_opts.dog_jumping, &g_default_opts.dog_jumping, onoff);
 CONSOLE_NETVAR(dogjumping, dog_jumping, cf_server, netcmd_dogjumping) {}
 
 VARIABLE_BOOLEAN(autorun, NULL, onoff);
@@ -817,8 +817,8 @@ void G_AddCompat()
 
       // create the variable first
       variable = estructalloc(variable_t, 1);
-      variable->variable  = &comp[i];
-      variable->v_default = &default_comp[i];
+      variable->variable  = &g_opts.comp[i];
+      variable->v_default = &g_default_opts.comp[i];
       variable->type      = vt_int;
       variable->min       = 0;
       variable->max       = 1;

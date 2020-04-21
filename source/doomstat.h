@@ -104,20 +104,13 @@ extern int demo_subversion;
 #define make_full_version(v, sv) ((v << 8) | sv)
 #define full_demo_version        make_full_version(demo_version, demo_subversion)
 
-
-// killough 7/19/98: whether monsters should fight against each other
-extern int monster_infighting, default_monster_infighting;
-
 extern bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
-
-extern int monkeys, default_monkeys;
 
 // v1.1-like pitched sounds
 extern int pitched_sounds;
 
 extern int general_translucency;
 extern int tran_filter_pct;
-extern int demo_insurance, default_demo_insurance;      // killough 4/5/98
 
 // haleyjd 04/13/04 -- macro to get a flex tran level roughly
 // equivalent to the current tran_filter_pct value.
@@ -163,8 +156,6 @@ enum {
   COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
   COMP_TOTAL=32  // Some extra room for additional variables
 };
-
-extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
 
 // -------------------------------------------
 // Language.
@@ -362,48 +353,40 @@ extern Thinker thinkercap;  // Both the head and tail of the thinker list
 
 //-----------------------------------------------------------------------------
 
+//
+// User-settable (defaultable) gameplay options go here
+//
+struct gameplayopts_t
+{
+   int allow_pushers;   
+   int allowmlook;   // haleyjd: moved here from c_net.c (????)
+   int autoaim;   
+   bfg_t bfgtype; // killough 7/19/98: classic Doom BFG
+   int comp[COMP_TOTAL];   // killough 10/98
+   int demo_insurance;  // killough 1/16/98
+   int distfriend;   // killough 8/8/98: distance friends tend to move towards players
+   int dog_jumping;  // killough 10/98
+   int dogs;   // killough 7/19/98: Marine's best friend :)
+   int help_friends;    // killough 9/9/98: whether monsters help friends
+   int monkeys;
+   int monster_avoid_hazards; // killough 9/9/98: whether monsters are able to avoid hazards (e.g. crushers)
+   int monster_backing; // killough 9/8/98: whether monsters are allowed to strafe or retreat
+   int monster_friction;   // killough 10/98: monsters affected by friction 
+   int monster_infighting; // killough 7/19/98: monster<=>monster attacks
+   int monsters_remember;  // killough 3/1/98
+   bool pitchedflight; 
+   int player_bobbing;  // whether player bobs or not          // phares 2/25/98
+   int variable_friction;  // ice & mud               // phares 3/10/98
+   int weapon_recoil;   // weapon recoil                   // phares
+
+   static gameplayopts_t InitialCurrent();
+   static gameplayopts_t InitialDefault();
+};
+
+extern gameplayopts_t g_opts, g_default_opts;
+
 // v1.1-like pitched sounds
-extern int pitched_sounds, default_pitched_sounds;     // killough 2/21/98
-
-extern int allow_pushers;         // PUSH Things    // phares 3/10/98
-extern int default_allow_pushers;
-
-extern int variable_friction;  // ice & mud            // phares 3/10/98
-extern int default_variable_friction;
-
-extern int monsters_remember;                          // killough 3/1/98
-extern int default_monsters_remember;
-
-extern int weapon_recoil;          // weapon recoil    // phares
-extern int default_weapon_recoil;
-
-extern int player_bobbing;  // whether player bobs or not   // phares 2/25/98
-extern int default_player_bobbing;  // killough 3/1/98: make local to each game
-
-// killough 7/19/98: Classic Pre-Beta BFG
-extern bfg_t bfgtype, default_bfgtype;
-
-extern int dogs, default_dogs;     // killough 7/19/98: Marine's best friend :)
-extern int dog_jumping, default_dog_jumping;   // killough 10/98
-
-// killough 8/8/98: distance friendly monsters tend to stay from player
-extern int distfriend, default_distfriend;
-
-// killough 9/8/98: whether monsters are allowed to strafe or retreat
-extern int monster_backing, default_monster_backing;
-
-// killough 9/9/98: whether monsters intelligently avoid hazards
-extern int monster_avoid_hazards, default_monster_avoid_hazards;
-
-// killough 10/98: whether monsters are affected by friction
-extern int monster_friction, default_monster_friction;
-
-// killough 9/9/98: whether monsters help friends
-extern int help_friends, default_help_friends;
-
-extern int autoaim, default_autoaim;
-
-extern int allowmlook, default_allowmlook; // haleyjd
+extern int pitched_sounds;     // killough 2/21/98
 
 extern int flashing_hom; // killough 10/98
 

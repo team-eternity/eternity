@@ -360,7 +360,7 @@ static void cheat_pw(const void *arg)
          INFRATICS,  // haleyjd: torch
       };
       P_GivePower(plyr, pw, tics[pw], false);
-      if(pw != pw_strength && !comp[comp_infcheat])
+      if(pw != pw_strength && !g_opts.comp[comp_infcheat])
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
 
@@ -471,7 +471,7 @@ static void cheat_comp(const void *arg)
                                                   : "STSTR_COMPOFF"));
 
    for(i = 0; i < COMP_TOTAL; i++) // killough 10/98: reset entire vector
-      comp[i] = compatibility;
+      g_opts.comp[i] = compatibility;
 }
 
 // variable friction cheat
@@ -480,7 +480,7 @@ static void cheat_friction(const void *arg)
    C_RunTextCmd("varfriction /");        //sf
    
    // FIXME: externalize strings
-   doom_printf(variable_friction ? "Variable Friction enabled" : 
+   doom_printf(g_opts.variable_friction ? "Variable Friction enabled" :
                                    "Variable Friction disabled" );
 }
 
@@ -491,7 +491,7 @@ static void cheat_pushers(const void *arg)
    C_RunTextCmd("pushers /");
    
    // FIXME: externalize strings
-   doom_printf(allow_pushers ? "pushers enabled" : "pushers disabled");
+   doom_printf(g_opts.allow_pushers ? "pushers enabled" : "pushers disabled");
 }
 
 // translucency cheat

@@ -180,7 +180,7 @@ void PlatThinker::Think()
          {
          case raiseAndChange:
          case raiseToNearestAndChange:
-            if(demo_version < 203 ? !demo_compatibility : !comp[comp_floors])
+            if(demo_version < 203 ? !demo_compatibility : !g_opts.comp[comp_floors])
                removeActivePlat();
             break;
          case upWaitDownStay: // haleyjd 02/18/13: Hexen/Strife reverse plats

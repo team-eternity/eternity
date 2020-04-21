@@ -360,7 +360,7 @@ void A_Chase(actionargs_t *actionargs)
       }
       else  // killough 7/18/98, 9/9/98: new monster AI
       {
-         if(help_friends && P_HelpFriend(actor))
+         if(g_opts.help_friends && P_HelpFriend(actor))
          {
             return;      // killough 9/8/98: Help friends in need
          }
@@ -375,9 +375,9 @@ void A_Chase(actionargs_t *actionargs)
                // If current target is bad and a new one is found, return:
 
                if(!(actor->target && actor->target->health > 0 &&
-                   ((comp[comp_pursuit] && !netgame) || 
+                   ((g_opts.comp[comp_pursuit] && !netgame) || 
                     (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
-                      (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
+                      (!(actor->flags & MF_FRIEND) && g_opts.monster_infighting)) &&
                     P_CheckSight(actor, actor->target)))) &&
                     P_LookForTargets(actor, true))
                {
@@ -574,7 +574,7 @@ void A_PlayerScream(actionargs_t *actionargs)
    }
 
    // if died falling, gross falling death sound
-   if(!comp[comp_fallingdmg] && demo_version >= 329 &&
+   if(!g_opts.comp[comp_fallingdmg] && demo_version >= 329 &&
       mo->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
@@ -615,7 +615,7 @@ void A_RavenPlayerScream(actionargs_t *actionargs)
    }
 
    // if died falling, gross falling death sound
-   if(!comp[comp_fallingdmg] && actor->intflags & MIF_DIEDFALLING)
+   if(!g_opts.comp[comp_fallingdmg] && actor->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
    S_StartSound(actor, GameModeInfo->playerSounds[sound]);
@@ -668,7 +668,7 @@ void A_XScream(actionargs_t *actionargs)
    int sound   = GameModeInfo->playerSounds[sk_slop];
    
    // haleyjd: falling damage
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!g_opts.comp[comp_fallingdmg] && demo_version >= 329)
    {
       if(actor->player && actor->intflags & MIF_DIEDFALLING)
          sound = GameModeInfo->playerSounds[sk_fallht];

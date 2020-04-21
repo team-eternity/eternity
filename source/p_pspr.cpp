@@ -95,7 +95,7 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
       // WEAPON_FIXME: pre-beta bfg must become an alternate weapon under EDF
 
       // killough 7/19/98: Pre-Beta BFG
-      if(stnum == E_StateNumForDEHNum(S_BFG1) && bfgtype == bfg_classic)
+      if(stnum == E_StateNumForDEHNum(S_BFG1) && g_opts.bfgtype == bfg_classic)
          stnum = E_SafeState(S_OLDBFG1); // Skip to alternative weapon frame
 
       state = states[stnum];
@@ -1042,7 +1042,7 @@ void P_WeaponRecoil(player_t *player)
    {
       // haleyjd 08/18/08: added ALWAYSRECOIL weapon flag; recoil in weaponinfo
       if(readyweapon->flags & WPF_ALWAYSRECOIL ||
-         (weapon_recoil && (demo_version >= 203 || !compatibility)))
+         (g_opts.weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
          // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
          P_Thrust(player, ANG180 + player->mo->angle, 0, readyweapon->recoil / 32);
@@ -1108,7 +1108,7 @@ fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
       fixed_t slope = P_AimLineAttack(mo, angle, distance, true);
 
       // autoaiming is disabled?
-      if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
+      if(full_demo_version > make_full_version(340, 15) && !g_opts.autoaim && mo->player)
          return P_PlayerPitchSlope(mo->player);
 
       if(clip.linetarget)
@@ -1139,7 +1139,7 @@ void P_BulletSlope(Mobj *mo)
    int mask = demo_version < 203 ? false : true;
 
    // haleyjd 08/09/11: allow autoaim disable
-   if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
+   if(full_demo_version > make_full_version(340, 15) && !g_opts.autoaim && mo->player)
    {
       P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
       bulletslope = P_PlayerPitchSlope(mo->player);

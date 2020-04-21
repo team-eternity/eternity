@@ -695,7 +695,7 @@ static inline const char *P_getSpecialMessage(Mobj *special, const char *def)
       return def;
    else
    {
-      switch(bfgtype)
+      switch(g_opts.bfgtype)
       {
       case bfg_normal:   return "$GOTBFG9000";
       case bfg_classic:  return "You got the BFG 2704!";
@@ -1465,7 +1465,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // ignore damage in GOD mode, or with INVUL power.
       // killough 3/26/98: make god mode 100% god mode in non-compat mode
 
-      if((damage < 1000 || (!comp[comp_god] && player->cheats&CF_GODMODE)) &&
+      if((damage < 1000 || (!g_opts.comp[comp_god] && player->cheats&CF_GODMODE)) &&
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
@@ -1621,7 +1621,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       && !speciesignore                                              // species not fighting
       && (!target->threshold || (target->flags3 & MF3_NOTHRESHOLD))  // threshold?
       && ((source->flags ^ target->flags) & MF_FRIEND ||             // friendliness?
-           monster_infighting || demo_version < 203)
+         g_opts.monster_infighting || demo_version < 203)
       && !(source->flags & target->flags & MF_FRIEND &&              // superfriend?
            target->flags3 & MF3_SUPERFRIEND))
    {
@@ -1757,7 +1757,7 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 {
    corpse->momx = corpse->momy = 0;
    bool check;
-   if(comp[comp_vile])
+   if(g_opts.comp[comp_vile])
    {
       corpse->height <<= 2;
 
@@ -1809,7 +1809,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
 
    P_SetMobjState(corpse, info->raisestate);
 
-   if(comp[comp_vile])
+   if(g_opts.comp[comp_vile])
       corpse->height <<= 2;                        // phares
    else                                               //   V
    {

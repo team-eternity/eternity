@@ -303,9 +303,9 @@ void A_FireMacePL2(actionargs_t *actionargs)
       // NOTE: the 'magic' number came from computing how Heretic's constant slope calculation fits
       // with a super mace projectile's forward speed.
       mo->momz = FixedMul(fx->speed, FixedMul(slope, 50615)) + (2 * FRACUNIT);
-      if(autoaim && clip.linetarget)
+      if(g_opts.autoaim && clip.linetarget)
          P_SetTarget(&mo->tracer, clip.linetarget);
-      else if(!autoaim)
+      else if(!g_opts.autoaim)
       {
          fixed_t oldBulletSlope = bulletslope;
          P_BulletSlope(player->mo);    // use the same routine as in A_FirePlayerMissile
@@ -704,7 +704,7 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
    // The footclip check turns into:
    //   (mo->flags2 & 1)
    // due to C operator precedence and a lack of parens/brackets.
-   const fixed_t z = comp[comp_terrain] || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
+   const fixed_t z = g_opts.comp[comp_terrain] || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
                      mo->z : mo->z - (15 * FRACUNIT);
    bomb = P_SpawnMobj(mo->x + (24 * finecosine[angle]),
                       mo->y + (24 * finesine[angle]),

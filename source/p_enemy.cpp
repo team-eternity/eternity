@@ -290,7 +290,7 @@ bool P_CheckMissileRange(Mobj *actor)
          (actor->target->health > 0 &&
           (!(actor->target->flags & MF_FRIEND) ||
           (actor->target->player ? 
-           monster_infighting || P_Random(pr_defect) >128 :
+             g_opts.monster_infighting || P_Random(pr_defect) >128 :
            !(actor->target->flags & MF_JUSTHIT) && P_Random(pr_defect) >128)));
    }
 
@@ -473,7 +473,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    
    // killough 10/98: make monsters get affected by ice and sludge too:
 
-   if(monster_friction)
+   if(g_opts.monster_friction)
       movefactor = P_GetMoveFactor(actor, &friction);
 
    speed = actor->info->speed;
@@ -588,7 +588,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       clip.numspechit = 0;
 
       // haleyjd 04/11/10: wider compatibility range
-      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+      if(!good || g_opts.comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
          return good;
       else if(demo_version == 202) // BOOM 2.02
          return (P_Random(pr_trywalk) & 3);
@@ -596,7 +596,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          return ((P_Random(pr_opendoor) >= 230) ^ (good & 1));
 
       /*
-      return good && (demo_version < 203 || comp[comp_doorstuck] ||
+      return good && (demo_version < 203 || g_opts.comp[comp_doorstuck] ||
                       (P_Random(pr_opendoor) >= 230) ^ (good & 1));
       */
    }
@@ -632,11 +632,11 @@ bool P_SmartMove(Mobj *actor)
    int on_lift, dropoff = 0, under_damage;
 
    // killough 9/12/98: Stay on a lift if target is on one
-   on_lift = !comp[comp_staylift] && target && target->health > 0 &&
+   on_lift = !g_opts.comp[comp_staylift] && target && target->health > 0 &&
       target->subsector->sector->tag==actor->subsector->sector->tag &&
       P_IsOnLift(actor);
 
-   under_damage = monster_avoid_hazards && P_IsUnderDamage(actor);
+   under_damage = g_opts.monster_avoid_hazards && P_IsUnderDamage(actor);
    
    // killough 10/98: allow dogs to drop off of taller ledges sometimes.
    // dropoff==1 means always allow it, dropoff==2 means only up to 128 high,
@@ -647,7 +647,7 @@ bool P_SmartMove(Mobj *actor)
    // (includes DOGS)
 
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
-      target && dog_jumping &&
+      target && g_opts.dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
 #ifdef R_LINKEDPORTALS
       P_AproxDistance(actor->x - getTargetX(actor),
@@ -669,7 +669,7 @@ bool P_SmartMove(Mobj *actor)
       (on_lift && P_Random(pr_stayonlift) < 230 &&      // Stay on lift
        !P_IsOnLift(actor))
       ||
-      (monster_avoid_hazards && !under_damage &&  // Get away from damage
+      (g_opts.monster_avoid_hazards && !under_damage &&  // Get away from damage
        (under_damage = P_IsUnderDamage(actor)) &&
        (under_damage < 0 || P_Random(pr_avoidcrush) < 200))
      )
@@ -886,7 +886,7 @@ void P_NewChaseDir(Mobj *actor)
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
-         !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
+         !g_opts.comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
          
@@ -904,7 +904,7 @@ void P_NewChaseDir(Mobj *actor)
          // in certain situations (e.g. a crowded lift)
          
          if(actor->flags & target->flags & MF_FRIEND &&
-            distfriend << FRACBITS > dist && 
+            g_opts.distfriend << FRACBITS > dist &&
             !P_IsOnLift(target) && !P_IsUnderDamage(actor))
          {
             deltax = -deltax;
@@ -916,7 +916,7 @@ void P_NewChaseDir(Mobj *actor)
                (actor->flags ^ target->flags) & MF_FRIEND)
             {   
                // Live enemy target
-               if(monster_backing &&
+               if(g_opts.monster_backing &&
                   actor->info->missilestate != NullStateNum && 
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
@@ -1150,7 +1150,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
 
    c = 0;
 
-   stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
+   stopc = demo_version < 203 && !demo_compatibility && g_opts.monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
 
    for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
@@ -1164,7 +1164,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
          // e6y
          // Fixed Boom incompatibilities. The following code was missed.
          // There are no more desyncs on Donce's demos on horror.wad
-         if(demo_version < 203 && !demo_compatibility && monsters_remember)
+         if(demo_version < 203 && !demo_compatibility && g_opts.monsters_remember)
          {
             if(actor->lastenemy && actor->lastenemy->health > 0)
             {
@@ -1195,7 +1195,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
 
       // killough 9/9/98: give monsters a threshold towards getting players
       // (we don't want it to be too easy for a player with dogs :)
-      if(demo_version >= 203 && !comp[comp_pursuit])
+      if(demo_version >= 203 && !g_opts.comp[comp_pursuit])
          actor->threshold = 60;
       
       return true;
@@ -1218,7 +1218,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
    if(demo_compatibility)
       return false;
 
-   if(actor->lastenemy && actor->lastenemy->health > 0 && monsters_remember &&
+   if(actor->lastenemy && actor->lastenemy->health > 0 && g_opts.monsters_remember &&
       !(actor->lastenemy->flags & actor->flags & MF_FRIEND)) // not friends
    {
       if(actor->target != actor->lastenemy)

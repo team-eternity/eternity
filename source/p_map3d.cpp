@@ -61,7 +61,7 @@ extern fixed_t FloatBobOffsets[64];
 //
 bool P_Use3DClipping()
 {
-   return (!comp[comp_overunder] || useportalgroups);
+   return (!g_opts.comp[comp_overunder] || useportalgroups);
 }
 
 //

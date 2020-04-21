@@ -72,7 +72,7 @@ void P_DoorSequence(bool raise, bool turbo, bool bounced, sector_t *s)
       {
          if(turbo)
          {
-            if(GameModeInfo->type == Game_DOOM && comp[comp_blazing])
+            if(GameModeInfo->type == Game_DOOM && g_opts.comp[comp_blazing])
                seqName = "EEDoorCloseBlazingComp";
             else
                seqName = "EEDoorCloseBlazing";
@@ -513,7 +513,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    door->topwait   = VDOORWAIT;
 
    // killough 10/98: use gradual lighting changes if nonzero tag given
-   door->lighttag = comp[comp_doorlight] ? 0 : line->args[0]; // killough 10/98
+   door->lighttag = g_opts.comp[comp_doorlight] ? 0 : line->args[0]; // killough 10/98
    
    // set the type of door from the activating linedef type
    switch(line->special)
