@@ -999,6 +999,21 @@ static void M_ApplyGameModeDefaults(defaultfile_t *df)
 // Methods for different types of default items
 //
 
+//
+// COMMON
+//
+inline static bool M_checkOverrides(default_t *dp, defaultoverride_e over)
+{
+   // Don't allow OPTIONS and compatibility hack to override each other
+   // OPTIONS must work on a clean base
+   // compatibility hack must NOT change OPTIONS
+   I_Assert(dp && !(over == defaultoverride_options && dp->modified == defaultoverride_wadhack),
+      "Unexpected OPTIONS override on wadhack");
+   if(dp->modified && over && dp->modified != over)
+      return false;
+   return true;
+}
+
 // 
 // Strings
 //
@@ -1149,6 +1164,9 @@ static bool M_writeDefaultInt(default_t *dp, FILE *f)
 // Set the value of an integer option
 static void M_setDefaultValueInt(default_t *dp, void *value, defaultoverride_e over)
 {
+   if(!M_checkOverrides(dp, over))
+      return;
+
    int parm = *(int *)value;
 
    if((dp->limit.min == UL || dp->limit.min <= parm) &&
@@ -1261,6 +1279,9 @@ static bool M_writeDefaultFloat(default_t *dp, FILE *f)
 // Set the value of a float option
 static void M_setDefaultValueFloat(default_t *dp, void *value, defaultoverride_e over)
 {
+   if(!M_checkOverrides(dp, over))
+      return;
+
    double tmp = *(double *)value;
 
    //jff 3/4/98 range check numeric parameters
@@ -1344,6 +1365,9 @@ static bool M_writeDefaultBool(default_t *dp, FILE *f)
 // Sets the value of a bool option
 static void M_setDefaultValueBool(default_t *dp, void *value, defaultoverride_e over)
 {
+   if(!M_checkOverrides(dp, over))
+      return;
+
    bool parm = *(bool *)value;
    if(over)
    {
