@@ -64,7 +64,7 @@ gameplayopts_t gameplayopts_t::InitialDefault()
 }
 
 gameplayopts_t g_opts = gameplayopts_t::InitialCurrent();
-gameplayopts_t g_default_ops = gameplayopts_t::InitialDefault();
+gameplayopts_t g_default_opts = gameplayopts_t::InitialDefault();
 
 bool in_textmode = true;        // game in graphics mode yet?
 
