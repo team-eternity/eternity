@@ -489,11 +489,8 @@ static void D_ArbitrateNetStart()
             netbuffer->starttic = (d_startlevel.episode - 1) * 64 + d_startlevel.map;
             netbuffer->player = version;
 
-#ifdef RANGECHECK
-            if(GAME_OPTION_SIZE > sizeof(netbuffer->d.data))
-               I_Error("D_ArbitrateNetStart: GAME_OPTION_SIZE"
-                       " too large w.r.t. BACKUPTICS\n");
-#endif
+            I_Assert(GAME_OPTION_SIZE <= sizeof(netbuffer->d.data),
+               "D_ArbitrateNetStart: GAME_OPTION_SIZE too large w.r.t. BACKUPTICS\n");
 
             G_WriteOptions(netbuffer->d.data);    // killough 12/98
             
