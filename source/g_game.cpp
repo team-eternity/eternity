@@ -1001,57 +1001,57 @@ static void G_DemoStartMessage(const char *basename)
 }
 
 //
-// complevels
-//
-// haleyjd 04/10/10: compatibility matrix for properly setting comp vars based
-// on the current demoversion. Derived from PrBoom.
-//
-struct complevel_s
-{
-   int fix; // first version that contained a fix
-   int opt; // first version that made the fix an option
-   bool boomcomp; // affected by the BOOM "compatibility" flag
-} complevels[] =
-{
-   { 203, 203, true }, // comp_telefrag
-   { 203, 203, true }, // comp_dropoff
-   { 201, 203, true }, // comp_vile
-   { 201, 203, true }, // comp_pain
-   { 201, 203, true }, // comp_skull
-   { 201, 203, true }, // comp_blazing
-   { 201, 203, true }, // comp_doorlight
-   { 201, 203, true }, // comp_model
-   { 201, 203, true }, // comp_god
-   { 203, 203, true }, // comp_falloff
-   { 200, 203 }, // comp_floors - FIXME
-   { 201, 203, true }, // comp_skymap
-   { 203, 203, true }, // comp_pursuit
-   { 202, 203, true }, // comp_doorstuck
-   { 203, 203, true }, // comp_staylift
-   { 203, 203, true }, // comp_zombie
-   { 202, 203, true }, // comp_stairs
-   { 203, 203, true }, // comp_infcheat
-   { 201, 203, true }, // comp_zerotags
-   { 329, 329 }, // comp_terrain
-   { 329, 329 }, // comp_respawnfix
-   { 329, 329 }, // comp_fallingdmg
-   { 329, 329 }, // comp_soul
-   { 329, 329 }, // comp_theights
-   { 329, 329 }, // comp_overunder
-   { 329, 329 }, // comp_planeshoot
-   { 335, 335 }, // comp_special
-   { 337, 337 }, // comp_ninja
-   { 340, 340 }, // comp_jump
-   { 0,   0   }
-};
-
-//
 // G_SetCompatibility
 //
 // haleyjd 04/10/10
 //
-static void G_SetCompatibility(void)
+static void G_SetCompatibility(gameplayopts_t &opts)
 {
+   //
+   // complevels
+   //
+   // haleyjd 04/10/10: compatibility matrix for properly setting comp vars based
+   // on the current demoversion. Derived from PrBoom.
+   //
+   static const struct complevel_s
+   {
+      int fix; // first version that contained a fix
+      int opt; // first version that made the fix an option
+      bool boomcomp; // affected by the BOOM "compatibility" flag
+   } complevels[] =
+   {
+      { 203, 203, true }, // comp_telefrag
+      { 203, 203, true }, // comp_dropoff
+      { 201, 203, true }, // comp_vile
+      { 201, 203, true }, // comp_pain
+      { 201, 203, true }, // comp_skull
+      { 201, 203, true }, // comp_blazing
+      { 201, 203, true }, // comp_doorlight
+      { 201, 203, true }, // comp_model
+      { 201, 203, true }, // comp_god
+      { 203, 203, true }, // comp_falloff
+      { 200, 203 }, // comp_floors - FIXME
+      { 201, 203, true }, // comp_skymap
+      { 203, 203, true }, // comp_pursuit
+      { 202, 203, true }, // comp_doorstuck
+      { 203, 203, true }, // comp_staylift
+      { 203, 203, true }, // comp_zombie
+      { 202, 203, true }, // comp_stairs
+      { 203, 203, true }, // comp_infcheat
+      { 201, 203, true }, // comp_zerotags
+      { 329, 329 }, // comp_terrain
+      { 329, 329 }, // comp_respawnfix
+      { 329, 329 }, // comp_fallingdmg
+      { 329, 329 }, // comp_soul
+      { 329, 329 }, // comp_theights
+      { 329, 329 }, // comp_overunder
+      { 329, 329 }, // comp_planeshoot
+      { 335, 335 }, // comp_special
+      { 337, 337 }, // comp_ninja
+      { 340, 340 }, // comp_jump
+      { 0,   0   }
+   };
+
    int i = 0;
 
    while(complevels[i].fix > 0)
@@ -1059,9 +1059,9 @@ static void G_SetCompatibility(void)
       if(demo_version < complevels[i].opt)
       {
          if(complevels[i].boomcomp && compatibility)
-            g_opts.comp[i] = true;
+            opts.comp[i] = true;
          else
-            g_opts.comp[i] = (demo_version < complevels[i].fix);
+            opts.comp[i] = (demo_version < complevels[i].fix);
       }
       ++i;
    }
@@ -1135,7 +1135,7 @@ static byte *G_ReadDemoHeader(byte *demo_p)
 
       demo_subversion = 0; // haleyjd: always 0 for old demos
 
-      G_SetCompatibility();
+      G_SetCompatibility(g_opts);
 
       // haleyjd 03/17/09: in old Heretic demos, some should be false
       if(GameModeInfo->type == Game_Heretic)
@@ -1147,22 +1147,14 @@ static byte *G_ReadDemoHeader(byte *demo_p)
       // killough 3/2/98: force these variables to be 0 in demo_compatibility
 
       g_opts.variable_friction = 0;
-
       g_opts.weapon_recoil = 0;
-
       g_opts.allow_pushers = 0;
-
       g_opts.monster_infighting = 1;           // killough 7/19/98
-
       g_opts.bfgtype = bfg_normal;                  // killough 7/19/98
-
       g_opts.dogs = 0;                         // killough 7/19/98
       g_opts.dog_jumping = 0;                  // killough 10/98
-
       g_opts.monster_backing = 0;              // killough 9/8/98
-      
       g_opts.monster_avoid_hazards = 0;        // killough 9/9/98
-
       g_opts.monster_friction = 0;             // killough 10/98
       g_opts.help_friends = 0;                 // killough 9/9/98
       g_opts.monkeys = 0;
@@ -3443,7 +3435,7 @@ byte *G_ReadOptions(byte *demoptr)
             g_opts.comp[i] = *demoptr++;
       }
 
-      G_SetCompatibility();
+      G_SetCompatibility(g_opts);
      
       // Options new to v2.04, etc.
 
@@ -3466,7 +3458,7 @@ byte *G_ReadOptions(byte *demoptr)
    }
    else  // defaults for versions <= 2.02
    {
-      G_SetCompatibility();
+      G_SetCompatibility(g_opts);
       
       g_opts.monster_infighting = 1;           // killough 7/19/98
       

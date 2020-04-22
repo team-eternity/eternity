@@ -358,27 +358,38 @@ extern Thinker thinkercap;  // Both the head and tail of the thinker list
 //
 struct gameplayopts_t
 {
-   int allow_pushers;   
-   int allowmlook;   // haleyjd: moved here from c_net.c (????)
-   int autoaim;   
-   bfg_t bfgtype; // killough 7/19/98: classic Doom BFG
-   int comp[COMP_TOTAL];   // killough 10/98
-   int demo_insurance;  // killough 1/16/98
-   int distfriend;   // killough 8/8/98: distance friends tend to move towards players
-   int dog_jumping;  // killough 10/98
-   int dogs;   // killough 7/19/98: Marine's best friend :)
-   int help_friends;    // killough 9/9/98: whether monsters help friends
-   int monkeys;
-   int monster_avoid_hazards; // killough 9/9/98: whether monsters are able to avoid hazards (e.g. crushers)
-   int monster_backing; // killough 9/8/98: whether monsters are allowed to strafe or retreat
-   int monster_friction;   // killough 10/98: monsters affected by friction 
-   int monster_infighting; // killough 7/19/98: monster<=>monster attacks
+   // BOOM options
    int monsters_remember;  // killough 3/1/98
-   bool pitchedflight; 
-   int player_bobbing;  // whether player bobs or not          // phares 2/25/98
    int variable_friction;  // ice & mud               // phares 3/10/98
    int weapon_recoil;   // weapon recoil                   // phares
+   int allow_pushers;   
+   int player_bobbing;  // whether player bobs or not          // phares 2/25/98
+   int demo_insurance;  // killough 1/16/98
 
+   // MBF options
+   int monster_infighting; // killough 7/19/98: monster<=>monster attacks
+   int monster_backing; // killough 9/8/98: whether monsters are allowed to strafe or retreat
+   int monster_avoid_hazards; // killough 9/9/98: whether monsters are able to avoid hazards (e.g. crushers)
+   int monster_friction;   // killough 10/98: monsters affected by friction 
+   int help_friends;    // killough 9/9/98: whether monsters help friends
+   bfg_t bfgtype; // killough 7/19/98: classic Doom BFG
+   int distfriend;   // killough 8/8/98: distance friends tend to move towards players
+   int dogs;   // killough 7/19/98: Marine's best friend :)
+   int dog_jumping;  // killough 10/98
+   int monkeys;
+
+   // EE 3.31.08
+   int autoaim;
+
+   // EE 3.33.00
+   int allowmlook;   // haleyjd: moved here from c_net.c (????)
+
+   // EE 3.40.23
+   bool pitchedflight;
+   
+   // General compatibility vector
+   int comp[COMP_TOTAL];   // killough 10/98   
+   
    static gameplayopts_t InitialCurrent();
    static gameplayopts_t InitialDefault();
 };
