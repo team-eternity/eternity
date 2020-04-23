@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+23.04.2020
+
+BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
+        called from ACS, and crashing when such a script is triggered from the
+        console.
+
+--------------------------------------------------------------------------------
 5.04.2020
 
 FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
