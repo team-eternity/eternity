@@ -44,6 +44,7 @@
 #include "r_main.h" // Needed for PI
 #include "r_portal.h" // Needed for portalflags
 #include "r_state.h"
+#include "v_misc.h"
 #include "w_wad.h"
 #include "z_auto.h"
 
@@ -222,6 +223,19 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             ss->bottommap = R_ColormapNumForName(us.colormapbottom.constPtr());
             setupSettings.setSectorFlag(i, UDMF_SECTOR_INIT_COLOR_BOTTOM);
          }
+
+         auto checkBadCMap = [ss](int *cmap)
+         {
+            if(*cmap < 0)
+            {
+               *cmap = 0;
+               doom_printf(FC_ERROR "Invalid colormap for sector %d\n", eindex(ss - ::sectors));
+            }
+         };
+
+         checkBadCMap(&ss->topmap);
+         checkBadCMap(&ss->midmap);
+         checkBadCMap(&ss->bottommap);
 
          // Portal fields
          // Floors

@@ -62,6 +62,7 @@
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
+#include "v_misc.h"
 #include "w_wad.h"
 
 // statics
@@ -1367,6 +1368,15 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       // sector colormaps
       sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
 
+      auto checkBadCMap = [sec](int *cmap)
+      {
+         if(*cmap < 0)
+         {
+            *cmap = 0;
+            doom_printf(FC_ERROR "Invalid colormap for ExtraData sector %d\n", sec->recordnum);
+         }
+      };
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
       if(strcasecmp(tempstr, "@default"))
          sec->topmap = R_ColormapNumForName(tempstr);
@@ -1378,6 +1388,10 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempstr = cfg_getstr(section, FIELD_SECTOR_BOTTOMMAP);
       if(strcasecmp(tempstr, "@default"))
          sec->bottommap = R_ColormapNumForName(tempstr);
+
+      checkBadCMap(&sec->topmap);
+      checkBadCMap(&sec->midmap);
+      checkBadCMap(&sec->bottommap);
 
       // terrain type overrides
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);
