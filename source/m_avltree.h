@@ -242,6 +242,8 @@ public:
       int ret = 1;
       if(node->left != nullptr)
          ret += numNodes(node->left);
+      if(node->next != nullptr)
+         ret += numNodes(node->next);
       if(node->right != nullptr)
          ret += numNodes(node->right);
 
