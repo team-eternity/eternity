@@ -918,7 +918,7 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
+   return EV_DoParamDonut(instance->line, instance->tag, false, 
                           FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
@@ -4056,7 +4056,7 @@ DEFINE_ACTION(EV_ActionChangeSkill)
    if(instance->args[0] < sk_baby || instance->args[0] > sk_nightmare)
       return 0;
 
-   gameskill = (skill_t)instance->line->args[0];
+   gameskill = static_cast<skill_t>(instance->args[0]);
    G_SetFastParms(gameskill >= sk_nightmare || fastparm);
    return 1;
 }
