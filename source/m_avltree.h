@@ -234,10 +234,13 @@ public:
    //
    int numNodes(const avlnode_t *node = nullptr) const
    {
-      if(root == nullptr)
-         return 0;
-      else if(node == nullptr)
-         node = root;
+      if(node == nullptr)
+      {
+         if(root == nullptr)
+            return 0;
+         else
+            node = root;
+      }
 
       int ret = 1;
       if(node->left != nullptr)
