@@ -13,6 +13,9 @@ Since v4.00.00 "Völuspá"
 BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
         called from ACS, and crashing when such a script is triggered from the
         console.
+        
+        Fixed a crash happening when entering a sector with an invalid colormap
+        specified in the UDMF editor or ExtraData.
 
 --------------------------------------------------------------------------------
 5.04.2020
