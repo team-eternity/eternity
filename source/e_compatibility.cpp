@@ -34,14 +34,15 @@
 #include "metaapi.h"
 
 #define ITEM_COMPATIBILITY_HASHES "hashes"
-#define ITEM_COMPATIBILITY_SETTINGS "settings"
+
+extern const char *comp_strings[];
 
 //
 // When a setting is changed, store its previous value
 //
 struct changedsetting_t
 {
-   int *target;
+   int index;
    int previousValue;
 };
 
@@ -51,15 +52,27 @@ static MetaTable table;
 static PODCollection<changedsetting_t> changedSettings;
 
 //
+// Dynamically produces the compatibility options
+//
+static cfg_opt_t *E_buildCompatibilityOpts()
+{
+   static PODCollection<cfg_opt_t> opts;
+   opts.add(CFG_STR(ITEM_COMPATIBILITY_HASHES, 0, CFGF_LIST));
+   for(int i = 0; i < COMP_NUM_USED; ++i)
+   {
+      char tempstr[32];
+      snprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
+      opts.add(CFG_BOOL(tempstr, false, CFGF_NONE));
+      opts.add(CFG_END());
+   }
+
+   return &opts[0];
+}
+
+//
 // The fields
 //
-cfg_opt_t edf_compatibility_opts[] =
-{
-   CFG_STR(ITEM_COMPATIBILITY_HASHES, 0, CFGF_LIST),
-   CFG_STR(ITEM_COMPATIBILITY_SETTINGS, 0, CFGF_LIST),
-
-   CFG_END()
-};
+cfg_opt_t *edf_compatibility_opts = E_buildCompatibilityOpts();
 
 //
 // Processes a compatibility item
@@ -67,32 +80,27 @@ cfg_opt_t edf_compatibility_opts[] =
 static void E_processCompatibility(cfg_t *cfg, cfg_t* compatibility)
 {
    unsigned hashCount = cfg_size(compatibility, ITEM_COMPATIBILITY_HASHES);
-   unsigned settingCount = cfg_size(compatibility, ITEM_COMPATIBILITY_SETTINGS);
 
-   if(!hashCount || !settingCount)
+   if(!hashCount)
       return;
 
    for(unsigned hashIndex = 0; hashIndex < hashCount; ++hashIndex)
    {
       const char *hash = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_HASHES, hashIndex);
-      for(unsigned settingIndex = 0; settingIndex < settingCount; ++settingIndex)
+
+      MetaTable *complist = new MetaTable(hash);
+      table.addObject(complist);
+
+      for(int i = 0; i < COMP_NUM_USED; ++i)
       {
-         const char *setting = cfg_getnstr(compatibility, ITEM_COMPATIBILITY_SETTINGS, 
-            settingIndex);
+         char tempstr[32];
+         snprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
 
-         MetaString *metaSetting = nullptr;
-         bool found = false;
-         while((metaSetting = table.getNextKeyAndTypeEx(metaSetting, hash)))
+         if(cfg_size(compatibility, tempstr))
          {
-            if(!strcasecmp(metaSetting->getValue(), setting))
-            {
-               found = true;
-               break;
-            }
+            bool value = cfg_getbool(compatibility, tempstr);
+            complist->setInt(tempstr, value ? 1 : 0);
          }
-
-         if(!found)
-            table.addString(hash, setting);
       }
    }
 }
@@ -115,9 +123,22 @@ void E_ProcessCompatibilities(cfg_t* cfg)
 //
 void E_ApplyCompatibility(const char *digest)
 {
-   MetaString *metaSetting = nullptr;
-   while((metaSetting = table.getNextKeyAndTypeEx(metaSetting, digest)))
-      M_LoadOptionsFromString(metaSetting->getValue(), -1, defaultoverride_wadhack);
+   MetaString *comp = nullptr;
+   MetaTable *complist = table.getMetaTable(digest, nullptr);
+   if(!complist)
+      return;
+
+   for(int i = 0; i < COMP_NUM_USED; ++i)
+   {
+      char tempstr[32];
+      snprintf(tempstr, sizeof(tempstr), "comp_%s", comp_strings[i]);
+
+      int value = complist->getInt(tempstr, -1);
+      if(value == -1)
+         continue;
+      changedSettings.add(changedsetting_t { i, g_opts.comp[i] } );
+      g_opts.comp[i] = !!value;
+   }
 }
 
 // EOF

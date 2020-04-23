@@ -31,7 +31,7 @@
 struct cfg_opt_t;
 struct cfg_t;
 
-extern cfg_opt_t edf_compatibility_opts[];
+extern cfg_opt_t *edf_compatibility_opts;
 
 void E_ProcessCompatibilities(cfg_t *cfg);
 void E_ApplyCompatibility(const char *digest);

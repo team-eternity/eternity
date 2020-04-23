@@ -58,6 +58,7 @@
 #include "p_enemy.h"
 #include "p_map.h"
 #include "p_partcl.h"
+#include "p_saveg.h"
 #include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -1178,6 +1179,7 @@ static void M_setDefaultValueInt(default_t *dp, void *value, defaultoverride_e o
          {
             dp->modified = over;                           // Mark it as modified
             dp->orig_default_i = *(int *)dp->location;  // Save original default
+            dp->orig_current_i = *(int *)dp->current;
          }
          if(dp->current)            // Change current value
             *(int *)dp->current = parm;
@@ -1229,7 +1231,8 @@ static void M_restoreHackedInt(default_t *dp)
    if(dp->modified == defaultoverride_wadhack)
    {
       dp->modified = defaultoverride_none;   // it was NEVER options previously
-      *static_cast<int *>(dp->location) = *static_cast<int *>(dp->current) = dp->orig_default_i;
+      *static_cast<int *>(dp->location) = dp->orig_default_i;
+      *static_cast<int *>(dp->current) = dp->orig_current_i;
    }
 }
 
@@ -1294,6 +1297,7 @@ static void M_setDefaultValueFloat(default_t *dp, void *value, defaultoverride_e
          {
             dp->modified = over;                          // Mark it as modified
             dp->orig_default_f = *(double *)dp->location; // Save original default
+            dp->orig_current_f = *(double *)dp->current;
          }
          if(dp->current)              // Change current value
             *(double *)dp->current = tmp;
@@ -1340,7 +1344,8 @@ static void M_restoreHackedFloat(default_t *dp)
    if(dp->modified == defaultoverride_wadhack)
    {
       dp->modified = defaultoverride_none;   // it was NEVER options previously
-      *static_cast<double *>(dp->location) = *static_cast<double *>(dp->current) = dp->orig_default_f;
+      *static_cast<double *>(dp->location) = dp->orig_default_f;
+      *static_cast<double *>(dp->current) = dp->orig_current_f;
    }
 }
 
@@ -1375,6 +1380,7 @@ static void M_setDefaultValueBool(default_t *dp, void *value, defaultoverride_e 
       {
          dp->modified = over;                               // Mark it as modified
          dp->orig_default_b = *(bool *)dp->location;  // Save original default
+         dp->orig_current_b = *(bool *)dp->current;
       }
       if(dp->current)            // Change current value
          *(bool *)dp->current = !!parm;
@@ -1420,7 +1426,8 @@ static void M_restoreHackedBool(default_t *dp)
    if(dp->modified == defaultoverride_wadhack)
    {
       dp->modified = defaultoverride_none;   // it was NEVER options previously
-      *static_cast<bool *>(dp->location) = *static_cast<bool *>(dp->current) = dp->orig_default_b;
+      *static_cast<bool *>(dp->location) = dp->orig_default_b;
+      *static_cast<bool *>(dp->current) = dp->orig_current_b;
    }
 }
 
@@ -1735,6 +1742,64 @@ void M_RestoreHackedOptions()
    defaultfile_t *df = &maindefaults;
    for(default_t *dp = df->defaults; dp->name; dp++)
       dp->methods->restoreHacked(dp);
+}
+
+//
+// Stores any currently hacked options into a save
+//
+void M_ArchiveHackRestoreOptions(SaveArchive &arc)
+{
+   struct serialized_t
+   {
+      const char *name;
+      defaulttype_e type;
+      union
+      {
+         int ivalue;
+         double fvalue;
+         bool bvalue;
+      };
+   };
+
+   if(arc.isSaving())
+   {
+      PODCollection<int> indices;
+
+      const defaultfile_t *df = &maindefaults;
+      for(const default_t *dp = df->defaults; dp->name; dp++)
+         if(dp->modified == defaultoverride_wadhack)
+            indices.add(static_cast<int>(dp - df->defaults));
+   
+      int32_t length = static_cast<int32_t>(indices.getLength());
+      arc << length;
+
+      for(int index : indices)
+      {
+         const default_t *dp = &df->defaults[index];
+         arc.writeLString(dp->name);
+
+         int32_t ival = dp->orig_current_i;
+         arc << ival;
+
+         double fval = dp->orig_current_f;
+         arc << fval;
+
+         bool bval = dp->orig_current_b;
+         arc << bval;
+      }
+   }
+   else // loading
+   {
+      int32_t length = 0;
+      arc << length;
+      for(int32_t i = 0; i < length; ++i)
+      {
+         char *name = nullptr;
+         size_t len = 0;
+         arc.archiveLString(name, len);
+      }
+   }
+
 }
 
 //

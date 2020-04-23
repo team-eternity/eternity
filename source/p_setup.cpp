@@ -3488,7 +3488,7 @@ static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool 
 {
    // Don't do anything if demo version is changed!
    p_currentLevelHashDigest.clear();
-   if(full_demo_version < make_full_version(401, 1))
+   if(full_demo_version < EEVER_COMPATIBILITY_HACK)
       return;
 
    HashData md5(HashData::MD5);

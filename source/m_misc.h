@@ -61,6 +61,7 @@ enum defaultoverride_e
 // ioanch 2020-04-20
 void M_LoadOptionsFromString(const char *text, int length, defaultoverride_e over);
 void M_RestoreHackedOptions();
+void M_ArchiveHackRestoreOptions(SaveArchive &arc);
 
 // phares 4/21/98:
 // Moved from m_misc.c so m_menu.c could see it.
@@ -115,29 +116,32 @@ struct default_t
    default_i  *methods;
    
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
+   int orig_current_i;
+   double orig_current_f;
+   bool orig_current_b;
 };
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
 #define DEFAULT_END() \
    { NULL, dt_integer, NULL, NULL, 0, NULL, 0.0, false, { 0, 0 }, default_t::wad_no, NULL, \
-     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL, 0, 0.0, false }
 
 #define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
    { name, dt_integer, loc, cur, def, NULL, 0.0, false, { min, max }, wad, help, \
-     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL, 0, 0.0, false }
 
 #define DEFAULT_STR(name, loc, cur, def, wad, help) \
    { name, dt_string, loc, cur, 0, def, 0.0, false, { 0, 0 }, wad, help, \
-     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL, 0, 0.0, false }
 
 #define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
    { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help, \
-     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL, 0, 0.0, false }
 
 #define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
    { name, dt_boolean, loc, cur, 0, NULL, 0.0, def, { 0, 1 }, wad, help, \
-     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL }
+     NULL, NULL, defaultoverride_none, 0, NULL, 0.0, false, NULL, 0, 0.0, false }
 
 // haleyjd 03/14/09: defaultfile_t structure
 struct defaultfile_t

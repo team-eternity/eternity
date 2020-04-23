@@ -91,6 +91,10 @@ public:
    SaveArchive &operator << (inventoryslot_t &slot);
    SaveArchive &operator << (v2fixed_t &vec);
    SaveArchive &operator << (zrefs_t &zref);
+
+   // Save version
+   int version;
+   unsigned char subversion;
 };
 
 // Global template functions for SaveArchive

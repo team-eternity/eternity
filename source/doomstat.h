@@ -116,6 +116,14 @@ extern int tran_filter_pct;
 // equivalent to the current tran_filter_pct value.
 #define FTRANLEVEL ((FRACUNIT * tran_filter_pct) / 100)
 
+//
+// Eternity version definition for demo and savegame support
+//
+enum
+{
+   EEVER_COMPATIBILITY_HACK = make_full_version(401, 1),
+};
+
 // -------------------------------------------
 // killough 10/98: compatibility vector
 

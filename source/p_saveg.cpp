@@ -44,6 +44,7 @@
 #include "g_game.h"
 #include "m_argv.h"
 #include "m_buffer.h"
+#include "m_misc.h"
 #include "m_random.h"
 #include "p_info.h"
 #include "p_maputl.h"
@@ -1263,7 +1264,6 @@ static void P_ArchiveACS(SaveArchive &arc)
 void P_SaveCurrentLevel(char *filename, char *description)
 {
    int i;
-   char name2[VERSIONSIZE];
    const char *fn;
    OutBuffer savefile;
    SaveArchive arc(&savefile);
@@ -1283,11 +1283,13 @@ void P_SaveCurrentLevel(char *filename, char *description)
    {
       arc.archiveCString(description, SAVESTRINGSIZE);
       
-      // killough 2/22/98: "proprietary" version string :-)
-      memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID, version);
-   
-      arc.archiveCString(name2, VERSIONSIZE);
+      // ioanch 2020-04-22: just store Eternity version and subversion.
+      // Remember to increment at least subversion when adding stuff
+
+      // Sidestep const int errors in <<
+      arc.version = version;
+      arc.subversion = subversion;
+      arc << arc.version << arc.subversion;
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
@@ -1351,6 +1353,8 @@ void P_SaveCurrentLevel(char *filename, char *description)
       byte options[GAME_OPTION_SIZE];
       G_WriteOptions(options);    // killough 3/1/98: save game options
       savefile.write(options, sizeof(options));
+
+      M_ArchiveHackRestoreOptions(arc);
    
       //killough 11/98: save entire word
       arc << leveltime;
@@ -1414,7 +1418,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
 void P_LoadGame(const char *filename)
 {
    int i;
-   char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
    //uint64_t checksum, rchecksum;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
@@ -1435,16 +1438,24 @@ void P_LoadGame(const char *filename)
       char throwaway[SAVESTRINGSIZE];
 
       arc.archiveCString(throwaway, SAVESTRINGSIZE);
-      
-      // killough 2/22/98: "proprietary" version string :-)
-      sprintf(vcheck, VERSIONID, version);
 
-      arc.archiveCString(vread, VERSIONSIZE);
-   
+      arc << arc.version << arc.subversion;
+         
       // killough 2/22/98: Friendly savegame version difference message
       // FIXME/TODO: restore proper version verification
-      if(strncmp(vread, vcheck, VERSIONSIZE))
-         C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
+      int fullloadversion = make_full_version(arc.version, arc.subversion);
+      int fullversion = make_full_version(version, subversion);
+      if(fullloadversion < fullversion)
+      {
+         C_Printf("Loading from an older version: %d.%d.%u\n",
+            arc.version % 100, arc.version / 100, arc.subversion);
+      }
+      else if(fullloadversion > fullversion)
+      {
+         C_Printf(FC_ERROR "Error: can't load game from newer Eternity version: %d.%d.%d\n",
+            arc.version % 100, arc.version / 100, arc.subversion);
+         return;
+      }
 
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
