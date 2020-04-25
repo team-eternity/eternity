@@ -55,7 +55,7 @@
 #define ITEM_PUFF_PUNCHHACK       "punchhack"
 #define ITEM_PUFF_PARTICLES       "particles"
 
-#define ITEM_PUFF_ALWAYSPUFF      "ALWAYSPUFF"
+#define ITEM_PUFF_PUFFONACTORS    "PUFFONACTORS"
 #define ITEM_PUFF_BLOODLESS       "BLOODLESS"
 #define ITEM_PUFF_LOCALTHRUST     "LOCALTHRUST"
 #define ITEM_PUFF_RANDOMTICS      "RANDOMTICS"
@@ -71,7 +71,7 @@ MetaKeyIndex keyPuffUpSpeed        (ITEM_PUFF_UPSPEED        );
 MetaKeyIndex keyPuffZSpread        (ITEM_PUFF_ZSPREAD        );
 MetaKeyIndex keyPuffPunchHack      (ITEM_PUFF_PUNCHHACK      );
 MetaKeyIndex keyPuffParticles      (ITEM_PUFF_PARTICLES      );
-MetaKeyIndex keyPuffAlwaysPuff     (ITEM_PUFF_ALWAYSPUFF     );
+MetaKeyIndex keyPuffPuffOnActors   (ITEM_PUFF_PUFFONACTORS   );
 MetaKeyIndex keyPuffBloodless      (ITEM_PUFF_BLOODLESS      );
 MetaKeyIndex keyPuffLocalThrust    (ITEM_PUFF_LOCALTHRUST    );
 MetaKeyIndex keyPuffRandomTics     (ITEM_PUFF_RANDOMTICS     );
@@ -87,7 +87,7 @@ MetaKeyIndex keyPuffTargetShooter  (ITEM_PUFF_TARGETSHOOTER  );
    CFG_FLOAT(ITEM_PUFF_ZSPREAD,       puffZSpreadDefault, CFGF_NONE),       \
    CFG_STR(ITEM_PUFF_PUNCHHACK,       "",                 CFGF_NONE),       \
    CFG_INT(ITEM_PUFF_PARTICLES,       0,                  CFGF_NONE),       \
-   CFG_FLAG(ITEM_PUFF_ALWAYSPUFF,     0,                  CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_PUFF_PUFFONACTORS,   0,                  CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_PUFF_BLOODLESS,      0,                  CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_PUFF_LOCALTHRUST,    0,                  CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_PUFF_RANDOMTICS,     0,                  CFGF_SIGNPREFIX), \
