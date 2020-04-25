@@ -469,7 +469,7 @@ void A_SetSpecial(actionargs_t *actionargs)
    
    actor->special = E_ArgAsInt(args, 0, 0);
 
-   for(int i = 1; i >= 5; i++)
+   for(int i = 1; i <= 5; i++)
       actor->args[i - 1] = E_ArgAsInt(args, i, 0);
 }
 
