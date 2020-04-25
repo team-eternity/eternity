@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2020 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,14 +17,10 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+// Purpose: Freeverb algorithm implementation
+//          Based on original public domain implementation by Jezar at Dreampoint
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//
-//  Freeverb algorithm implementation
-//  Based on original public domain implementation by Jezar at Dreampoint
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -729,13 +723,11 @@ void S_ReverbSetState(ereverb_t *ereverb)
 }
 
 //
-// S_ProcessReverb
-//
 // Mix the reverb engine's output into the input sound stream.
 //
-void S_ProcessReverb(float *stream, int samples)
+void S_ProcessReverb(float *stream, const int samples, const int skip)
 {
-   reverb.processMix(stream, stream+1, stream, stream+1, samples, 2);
+   reverb.processMix(stream, stream+1, stream, stream+1, samples, skip);
 }
 
 //
