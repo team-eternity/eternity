@@ -32,6 +32,7 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"
+#include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
@@ -467,7 +468,11 @@ void A_SetSpecial(actionargs_t *actionargs)
    Mobj *actor = actionargs->actor;
    arglist_t *args = actionargs->args;
    
-   actor->special = E_ArgAsInt(args, 0, 0);
+   const char *specname = E_ArgAsString(args, 0, nullptr);
+   if(estrempty(specname))
+      return;
+
+   actor->special = E_LineSpecForName(specname);
 
    for(int i = 1; i <= 5; i++)
       actor->args[i - 1] = E_ArgAsInt(args, i, 0);
