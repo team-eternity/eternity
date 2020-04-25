@@ -38,6 +38,7 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -51,6 +52,7 @@
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
+#include "v_misc.h"
 
 //
 // A_AlertMonsters
@@ -467,12 +469,33 @@ void A_SetSpecial(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    arglist_t *args = actionargs->args;
-   
-   const char *specname = E_ArgAsString(args, 0, nullptr);
-   if(estrempty(specname))
-      return;
 
-   actor->special = E_LineSpecForName(specname);
+   int specnum = E_ArgAsInt(args, 0, 0);
+   const char *specname = E_ArgAsString(args, 0, "");
+
+   int special = 0;
+   if(specnum)
+      special = EV_ActionForACSAction(specnum);
+   else
+   {
+      if(estrempty(specname))
+         return;
+      special = E_LineSpecForName(specname);
+   }
+
+   if(!special)
+   {
+      // Check for deliberate '0' value
+      char *endptr = nullptr;
+      strtol(specname, &endptr, 0);
+      if(*endptr) // not just '0'
+      {
+         doom_printf(FC_ERROR "A_SetSpecial: unknown special '%s'\n", specname);
+         return;
+      }  // otherwise we have special 0 coming from value "0"
+   }
+
+   actor->special = special;
 
    for(int i = 1; i <= 5; i++)
       actor->args[i - 1] = E_ArgAsInt(args, i, 0);
