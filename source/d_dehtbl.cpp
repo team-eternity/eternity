@@ -1570,9 +1570,10 @@ void A_AlertMonsters(actionargs_t *);
 void A_CheckPlayerDone(actionargs_t *);
 void A_FadeIn(actionargs_t *);
 void A_FadeOut(actionargs_t *);
-void A_PlaySoundEx(actionargs_t *mo);
+void A_PlaySoundEx(actionargs_t *);
 void A_SetSpecial(actionargs_t *);
-void A_Jump(actionargs_t *actor);
+void A_Jump(actionargs_t *);
+void A_SeekerMissile(actionargs_t *);
 
 // eternity tc ptrs: TODO: remove these?
 void A_FogSpawn(actionargs_t *);
@@ -1931,6 +1932,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetSpecial),
    POINTER(SetTranslucent),
    POINTER(Jump),
+   POINTER(SeekerMissile),
 
    // ETERNITY TC ptrs -- TODO: eliminate these
    POINTER(FogSpawn),

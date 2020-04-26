@@ -249,6 +249,7 @@ typedef enum {
   pr_nailbombshoot,  // A_Nailbomb random damage
 
   pr_spawnexchance,           // [XA] 02/28/2020: A_SpawnEx spawnchance
+  pr_seekermissile,           // A_SeekerMissile
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;

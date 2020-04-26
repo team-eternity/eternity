@@ -436,6 +436,10 @@ so that WAVs with incorret chunk size will successfully load.
 Allowed 0-tic initial states if the states are DECORATE, and don't have their
 duration modified—or aren't made the spawnstate of a thing—by dehacked.
 
+-------------------------------------------------------------------------------
+2020/04/26
+Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
+
 ================================================================================
 EOF
 ================================================================================
