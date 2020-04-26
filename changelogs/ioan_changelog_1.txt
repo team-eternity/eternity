@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+26.04.2020
+
+FEATURE: New console command: warp, which, like in ZDoom, teleports player to
+         given coordinates.
+
+--------------------------------------------------------------------------------
 23.04.2020
 
 BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when

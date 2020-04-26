@@ -34,6 +34,7 @@
 #include "z_zone.h"
 
 #include "a_args.h"
+#include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -1191,6 +1192,38 @@ CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)
 {
    cheat_k(nullptr);
+}
+
+//
+// Teleports player to coordinates
+//
+// warp <x> <y>
+//
+CONSOLE_COMMAND(warp, cf_notnet | cf_level)
+{
+   if(!plyr->mo)
+      return;
+   if(Console.argc <= 1)
+   {
+      C_Puts("Usage: warp x y\nTeleports player to given coordinates.");
+      return;
+   }
+   char *endptr;
+   fixed_t x = static_cast<fixed_t>(Console.argv[0]->toLong(&endptr, 0)) << FRACBITS;
+   // Don't teleport player to 0 in case of bad input
+   if(*endptr) 
+   {
+      C_Puts("Wrong x argument.");
+      return;
+   }
+   fixed_t y = static_cast<fixed_t>(Console.argv[1]->toLong(&endptr, 0)) << FRACBITS;
+   if(*endptr)
+   {
+      C_Puts("Wrong y argument.");
+      return;
+   }
+
+   P_TeleportMove(plyr->mo, x, y, false);
 }
 
 //----------------------------------------------------------------------------
