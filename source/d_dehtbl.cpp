@@ -1359,6 +1359,7 @@ void A_CounterSwitchEx(actionargs_t *);
 void A_SetCounter(actionargs_t *);
 void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
+void A_CounterDiceRoll(actionargs_t *);
 void A_SetTics(actionargs_t *);
 void A_AproxDistance(actionargs_t *);
 void A_ShowMessage(actionargs_t *);
@@ -1714,6 +1715,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetCounter),
    POINTER(CopyCounter),
    POINTER(CounterOp),
+   POINTER(CounterDiceRoll),
    POINTER(SetTics),
    POINTER(AproxDistance),
    POINTER(ShowMessage),

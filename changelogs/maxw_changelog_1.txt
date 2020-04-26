@@ -439,6 +439,7 @@ duration modified—or aren't made the spawnstate of a thing—by dehacked.
 -------------------------------------------------------------------------------
 2020/04/26
 Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
+Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
 
 ================================================================================
 EOF
