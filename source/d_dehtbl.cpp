@@ -1388,6 +1388,7 @@ void A_RestoreSpecialThing2(actionargs_t *);
 void A_SargAttack12(actionargs_t *actionargs);
 void A_SelfDestruct(actionargs_t *);
 void A_TurnProjectile(actionargs_t *);
+void A_SubtractAmmo(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1481,7 +1482,6 @@ void A_FireBlasterPL1(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
-void A_ShutdownPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
@@ -1743,6 +1743,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SargAttack12),
    POINTER(SelfDestruct),
    POINTER(TurnProjectile),
+   POINTER(SubtractAmmo),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
@@ -1841,7 +1842,6 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
-   POINTER(ShutdownPhoenixPL2),
    POINTER(GauntletAttack),
 
    // MaxW: 2018/01/02: Heretic artifact use pointers

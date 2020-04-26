@@ -563,7 +563,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    P_CheckMissileSpawn(mo);
 }
 
-void A_ShutdownPhoenixPL2(actionargs_t *actionargs)
+void A_SubtractAmmo(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
    if(!player)
