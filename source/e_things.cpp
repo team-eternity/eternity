@@ -216,6 +216,7 @@ int UnknownThingType;
 
 // Pickup Property
 #define ITEM_TNG_PFX_PICKUPFX  "pickupeffect"
+#define ITEM_TNG_PFX_CLRPICKFX "clearpickupeffect"
 #define ITEM_TNG_PFX_EFFECTS   "effects"
 #define ITEM_TNG_PFX_CHANGEWPN "changeweapon"
 #define ITEM_TNG_PFX_MSG       "message"
@@ -604,6 +605,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_BLOODRIP,        "",            CFGF_NONE                ), \
    CFG_STR(ITEM_TNG_BLOODCRUSH,      "",            CFGF_NONE                ), \
    CFG_SEC(ITEM_TNG_PFX_PICKUPFX,    tngpfx_opts,   CFGF_NOCASE              ), \
+   CFG_FLAG(ITEM_TNG_PFX_CLRPICKFX,  0,             CFGF_NONE                ), \
    CFG_END()
 
 cfg_opt_t edf_thing_opts[] =
@@ -1966,19 +1968,30 @@ bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action)
    return mbb ? mbb->behavior : GameModeInfo->defBloodBehaviors[action];
 }
 
+//
+// Creates a thing pickup effect if not already
+//
+void E_createThingPickupEffect(mobjinfo_t &mi)
+{
+   I_Assert(!mi.pickupfx, "Unexpected mi.pickupfx");
+   mi.pickupfx = estructalloc(e_pickupfx_t, 1);
+   // TODO: Is setting name required? Maybe this could be eliminated.
+   qstring qname("_");
+   qname += mi.name;
+   mi.pickupfx->name = qname.duplicate();
+}
+
+//
+// Process a pickup effect
+//
 static inline void E_processThingPickupEffect(mobjinfo_t &mi, cfg_t *thingsec)
 {
    const char *str;
    cfg_t *pfx_cfg = cfg_getsec(thingsec, ITEM_TNG_PFX_PICKUPFX);
 
    if(mi.pickupfx == nullptr)
-   {
-      mi.pickupfx = estructalloc(e_pickupfx_t, 1);
-      // TODO: Is setting name reuqired? Maybe this could be eliminated.
-      qstring qname("_");
-      qname += mi.name;
-      mi.pickupfx->name = qname.duplicate();
-   }
+      E_createThingPickupEffect(mi);
+
    // EDF_FEATURES_TODO: else efree? i.e. remove all the
    // internal properties of the CFG_SEC that were set beforehand
 
@@ -3219,12 +3232,31 @@ bool E_ThingPairValid(mobjtype_t t1, mobjtype_t t2, unsigned flags)
 }
 
 //
+// Clear thing pickup effect
+//
+static void E_destroyThingPickupEffect(mobjinfo_t *mi)
+{
+   if(!mi->pickupfx)
+      return;
+
+   e_pickupfx_t *pfx = mi->pickupfx;
+   efree(pfx->sound);
+   efree(pfx->message);
+   efree(pfx->effects);
+   efree(pfx);
+   mi->pickupfx = nullptr;
+}
+
+//
 // Process a single thingtype's or thingdelta's pickupeffect
 // this cannot be done during first pass thingtype processing.
 //
 static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
 {
    int thingnum = E_ThingNumForName(thingname);
+   if(cfg_size(sec, ITEM_TNG_PFX_CLRPICKFX))
+      E_destroyThingPickupEffect(mobjinfo[thingnum]);
+
    if(cfg_size(sec, ITEM_TNG_PFX_PICKUPFX) > 0)
       E_processThingPickupEffect(*mobjinfo[thingnum], sec);
 
@@ -3241,17 +3273,86 @@ static inline void E_processThingPickup(cfg_t *sec, const char *thingname)
 }
 
 //
+// Copies a thingtype pickupeffect definition. Assumes dest has null data
+//
+static void E_copyThingPickupEffect(const e_pickupfx_t &source, e_pickupfx_t &dest)
+{
+   // Effects
+   if((dest.numEffects = source.numEffects))
+   {
+      I_Assert(!dest.effects, "Unexpected effects in inheriting pickupeffect");
+      dest.effects = ecalloc(itemeffect_t **, dest.numEffects, sizeof(itemeffect_t *));
+      memcpy(dest.effects, source.effects, dest.numEffects * sizeof(*dest.effects));
+   }
+
+   // Changeweapon
+   dest.changeweapon = source.changeweapon;
+
+   I_Assert(!dest.message, "Unexpected message in inheriting pickupeffect");
+   dest.message = estrdup(source.message);
+
+   I_Assert(!dest.sound, "Unexpected sound in inheriting pickupeffect");
+   dest.sound = estrdup(source.sound);
+
+   dest.flags = source.flags;
+}
+
+//
+// Checks thing individually for pickup
+//
+static void E_checkThingForPickup(int num, cfg_t *thingsec, cfg_t *pcfg, byte *hitlist)
+{
+   const char *name = cfg_title(thingsec);
+   I_Assert(num >= 0 && num < NUMMOBJTYPES, "Caught num %d thingtype for name '%s'!\n", num, name);
+   if(hitlist[num])
+      return;
+
+   thingtitleprops_t titleprops;
+   E_getThingTitleProps(thingsec, titleprops, true);
+
+   int pnum = -1;
+   if(titleprops.superclass || cfg_size(thingsec, ITEM_TNG_INHERITS))
+      pnum = E_resolveParentThingType(thingsec, titleprops);
+
+   if(pnum >= 0)
+   {
+      I_Assert(pnum < NUMMOBJTYPES, "Caught pnum %d thingtype parent of '%s'!\n", pnum, name);
+      // We are sure we don't have cyclic inheritance, as it has been checked by E_ProcessThing
+      cfg_t *parent_tngsec = cfg_gettsec(pcfg, EDF_SEC_THING, mobjinfo[pnum]->name);
+      E_checkThingForPickup(pnum, parent_tngsec, pcfg, hitlist);
+
+      const mobjinfo_t *pinfo = mobjinfo[pnum];
+      if(pinfo->pickupfx)
+      {
+         mobjinfo_t *myinfo = mobjinfo[num];
+         I_Assert(!myinfo->pickupfx, "Unexpected definition of pickupfx for %d, '%s'!\n",
+                  num, name);
+         E_createThingPickupEffect(*myinfo);
+         E_copyThingPickupEffect(*pinfo->pickupfx, *myinfo->pickupfx);
+      }
+   }
+
+   hitlist[num] = 1;
+
+   E_processThingPickup(thingsec, name);
+}
+
+//
 // Process pickupeffects within thingtypes.
 //
 void E_ProcessThingPickups(cfg_t *cfg)
 {
    unsigned int i, numthings = cfg_size(cfg, EDF_SEC_THING);
+
+   byte *hitlist = ecalloc(byte *, NUMMOBJTYPES, sizeof(byte));
+
    for(i = 0; i < numthings; i++)
    {
       cfg_t *thingsec = cfg_getnsec(cfg, EDF_SEC_THING, i);
-      const char *name = cfg_title(thingsec);
-      E_processThingPickup(thingsec, name);
+      E_checkThingForPickup(E_ThingNumForName(cfg_title(thingsec)), thingsec, cfg, hitlist);
    }
+
+   efree(hitlist);
 }
 
 //
