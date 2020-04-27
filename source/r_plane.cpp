@@ -658,9 +658,14 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       
    blendflags &= PS_OBLENDFLAGS;
 
+   // NOTE: this works because we still are limited to PO2 flats.
+   const texture_t *texture = textures[texturetranslation[picnum]];
+   xoffs &= (texture->width << FRACBITS) - 1;
+   yoffs &= texture->heightfrac - 1;
+
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
    if(!(blendflags & PS_ADDITIVE) && opacity == 255 &&
-      (picnum & PL_SKYFLAT || !(textures[texturetranslation[picnum]]->flags & TF_MASKED)))
+      (picnum & PL_SKYFLAT || !(texture->flags & TF_MASKED)))
    {
       blendflags = 0;
    }
