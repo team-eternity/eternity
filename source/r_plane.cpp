@@ -458,28 +458,31 @@ static void R_CalcSlope(visplane_t *pl)
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
-   rslope->P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
-   rslope->P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
-   rslope->P.y = P_GetZAtf(pl->pslope, (float)rslope->P.x, (float)rslope->P.z);
+   v3double_t P;
+   P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
+   P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
+   P.y = P_GetZAtf(pl->pslope, (float)P.x, (float)P.z);
 
-   rslope->M.x = rslope->P.x - xl * tsin;
-   rslope->M.z = rslope->P.z + xl * tcos;
-   rslope->M.y = P_GetZAtf(pl->pslope, (float)rslope->M.x, (float)rslope->M.z);
+   v3double_t M;
+   M.x = P.x - xl * tsin;
+   M.z = P.z + xl * tcos;
+   M.y = P_GetZAtf(pl->pslope, (float)M.x, (float)M.z);
 
-   rslope->N.x = rslope->P.x + yl * tcos;
-   rslope->N.z = rslope->P.z + yl * tsin;
-   rslope->N.y = P_GetZAtf(pl->pslope, (float)rslope->N.x, (float)rslope->N.z);
+   v3double_t N;
+   N.x = P.x + yl * tcos;
+   N.z = P.z + yl * tsin;
+   N.y = P_GetZAtf(pl->pslope, (float)N.x, (float)N.z);
 
-   M_TranslateVec3(&rslope->P);
-   M_TranslateVec3(&rslope->M);
-   M_TranslateVec3(&rslope->N);
+   M_TranslateVec3(&P);
+   M_TranslateVec3(&M);
+   M_TranslateVec3(&N);
 
-   M_SubVec3(&rslope->M, &rslope->M, &rslope->P);
-   M_SubVec3(&rslope->N, &rslope->N, &rslope->P);
+   M_SubVec3(&M, &M, &P);
+   M_SubVec3(&N, &N, &P);
    
-   M_CrossProduct3(&rslope->A, &rslope->P, &rslope->N);
-   M_CrossProduct3(&rslope->B, &rslope->P, &rslope->M);
-   M_CrossProduct3(&rslope->C, &rslope->M, &rslope->N);
+   M_CrossProduct3(&rslope->A, &P, &N);
+   M_CrossProduct3(&rslope->B, &P, &M);
+   M_CrossProduct3(&rslope->C, &M, &N);
 
    // This is helpful for removing some of the muls when calculating light.
 

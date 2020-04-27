@@ -596,7 +596,6 @@ struct spritedef_t
 // SoM: Information used in texture mapping sloped planes
 struct rslope_t
 {
-   v3double_t P, M, N;
    v3double_t A, B, C;
    double     zat, plight, shade;
 };
