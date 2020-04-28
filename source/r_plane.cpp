@@ -458,9 +458,14 @@ static void R_CalcSlope(visplane_t *pl)
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
+
+   // Need to reduce them to the visible range, because otherwise it may overflow
+   double xoffsf = fmod(pl->xoffsf, xl / pl->xscale);
+   double yoffsf = fmod(pl->yoffsf, xl / pl->yscale);
+
    v3double_t P;
-   P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
-   P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
+   P.x = -xoffsf * tcos - yoffsf * tsin;
+   P.z = -xoffsf * tsin + yoffsf * tcos;
    P.y = P_GetZAtf(pl->pslope, (float)P.x, (float)P.z);
 
    v3double_t M;
@@ -660,8 +665,6 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 
    // NOTE: this works because we still are limited to PO2 flats.
    const texture_t *texture = textures[texturetranslation[picnum]];
-   xoffs &= (texture->width << FRACBITS) - 1;
-   yoffs &= texture->heightfrac - 1;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
    if(!(blendflags & PS_ADDITIVE) && opacity == 255 &&
