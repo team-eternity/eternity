@@ -58,6 +58,8 @@
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_data.h"
+#include "r_defs.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_levels.h"
@@ -1223,7 +1225,11 @@ CONSOLE_COMMAND(warp, cf_notnet | cf_level)
       return;
    }
 
+   const sector_t *sector = R_PointInSubsector(x, y)->sector;
+   fixed_t z = sector->ceilingheight / 2 + sector->floorheight / 2 - plyr->mo->height / 2;
+
    P_TeleportMove(plyr->mo, x, y, false);
+   plyr->mo->z = z;
 }
 
 //----------------------------------------------------------------------------
