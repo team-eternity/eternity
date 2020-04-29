@@ -461,7 +461,7 @@ static void R_CalcSlope(visplane_t *pl)
 
    // Need to reduce them to the visible range, because otherwise it may overflow
    double xoffsf = fmod(pl->xoffsf, xl / pl->xscale);
-   double yoffsf = fmod(pl->yoffsf, xl / pl->yscale);
+   double yoffsf = fmod(pl->yoffsf, yl / pl->yscale);
 
    v3double_t P;
    P.x = -xoffsf * tcos - yoffsf * tsin;
