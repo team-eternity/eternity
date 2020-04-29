@@ -551,8 +551,8 @@ void A_SpawnEx(actionargs_t *actionargs)
 
    // [XA] check spawnchance first since there's no point in
    // even grabbing the rest of the args if we're doing nothing.
-   spawnchance = E_ArgAsInt(args, 9, 255);
-   if(P_Random(pr_spawnexchance) > spawnchance)
+   spawnchance = E_ArgAsInt(args, 9, 256);
+   if(P_Random(pr_spawnexchance) >= spawnchance)
       return; // look, ma, it's nothing!
 
    thingtype = E_ArgAsThingNumG0(args, 0);
