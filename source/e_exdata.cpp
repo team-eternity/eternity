@@ -1368,30 +1368,37 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       // sector colormaps
       sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
 
-      auto checkBadCMap = [sec](int *cmap)
+      auto checkBadCMap = [sec](int cmap)
       {
-         if(*cmap < 0)
+         if(cmap < 0)
          {
-            *cmap = 0;
-            doom_printf(FC_ERROR "Invalid colormap for ExtraData sector %d\n", sec->recordnum);
+            doom_printf(FC_ERROR "Invalid colormap for sector %d in ExtraData '%s'",
+                        sec->recordnum, LevelInfo.extraData);
+            // Do not correct it. It already started as -1, so keep it -1 in case of error. But warn
+            // user.
          }
       };
 
       tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
       if(strcasecmp(tempstr, "@default"))
+      {
          sec->topmap = R_ColormapNumForName(tempstr);
+         checkBadCMap(sec->topmap);
+      }
 
       tempstr = cfg_getstr(section, FIELD_SECTOR_MIDMAP);
       if(strcasecmp(tempstr, "@default"))
+      {
          sec->midmap = R_ColormapNumForName(tempstr);
+         checkBadCMap(sec->midmap);
+      }
 
       tempstr = cfg_getstr(section, FIELD_SECTOR_BOTTOMMAP);
       if(strcasecmp(tempstr, "@default"))
+      {
          sec->bottommap = R_ColormapNumForName(tempstr);
-
-      checkBadCMap(&sec->topmap);
-      checkBadCMap(&sec->midmap);
-      checkBadCMap(&sec->bottommap);
+         checkBadCMap(sec->bottommap);
+      }
 
       // terrain type overrides
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);

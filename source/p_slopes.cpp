@@ -250,7 +250,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 
    if(!line->backsector)
    {
-      C_Printf(FC_ERROR "P_SpawnSlope_Line: used on one-sided line.");
+      C_Printf(FC_ERROR "P_SpawnSlope_Line: used on one-sided line %d.", linenum);
       return;
    }
 

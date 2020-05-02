@@ -229,7 +229,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
             if(*cmap < 0)
             {
                *cmap = 0;
-               doom_printf(FC_ERROR "Invalid colormap for sector %d\n", eindex(ss - ::sectors));
+               doom_printf(FC_ERROR "Invalid colormap for sector %d", eindex(ss - ::sectors));
             }
          };
 
