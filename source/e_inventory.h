@@ -30,6 +30,7 @@
 // doesn't rebuild if you modify this header.
 #include "d_player.h"
 
+class MetaKeyIndex;
 class MetaTable;
 
 extern inventoryindex_t e_maxvisiblesortorder;
@@ -282,6 +283,16 @@ int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerc
                       int def);
 int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass,
                       int def);
+
+extern MetaKeyIndex keyAmount;
+extern MetaKeyIndex keyBackpackAmount;
+extern MetaKeyIndex keyClass;
+extern MetaKeyIndex keyClassName;
+extern MetaKeyIndex keyItemID;
+extern MetaKeyIndex keyMaxAmount;
+extern MetaKeyIndex keyBackpackMaxAmt;
+extern MetaKeyIndex keyInvBar;
+extern MetaKeyIndex keyAmmoGiven;
 
 //
 // EDF-Only Definitions

@@ -287,6 +287,16 @@ inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
 //
 bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
+   static int recursion;
+   ++recursion;
+
+   if(recursion >= 10000)
+   {
+      doom_printf(FC_ERROR "Warning: State Recursion Detected from %s", mobj->info->name);
+      --recursion;
+      return true;
+   }
+
    state_t *st;
 
    // haleyjd 03/27/10: new state cycle detection
@@ -350,6 +360,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    if(seenstates)
       P_FreeSeenStates(seenstates);
 
+   --recursion;
    return ret;
 }
 
@@ -955,7 +966,7 @@ static void P_ZMovement(Mobj* mo)
    {
       mo->player->viewheight -= mo->zref.floor-mo->z;
       mo->player->deltaviewheight =
-         (VIEWHEIGHT - mo->player->viewheight)>>3;
+         (mo->player->pclass->viewheight - mo->player->viewheight)>>3;
    }
 
    // adjust altitude
@@ -1029,7 +1040,7 @@ floater:
          mo->momz = -mo->momz;
 
 
-      if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
+      if(mo->flags & MF_MISSILE && !(mo->flags & MF_NOCLIP))
       {
          if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
          {
@@ -1484,7 +1495,7 @@ void Mobj::Think()
                {
                   fixed_t deltaview;
                   player->viewheight -= onmo->z + onmo->height - z;
-                  deltaview = (VIEWHEIGHT - player->viewheight)>>3;
+                  deltaview = (player->pclass->viewheight - player->viewheight)>>3;
                   if(deltaview > player->deltaviewheight)
                   {
                      player->deltaviewheight = deltaview;
@@ -1568,7 +1579,8 @@ void Mobj::Think()
 
    if(tics != -1) // you can cycle through multiple states in a tic
    {
-      if(!--tics)
+      if(((tics == 0) && (state->flags & STATEF_DECORATE) &&
+          !(state->flags & STATEF_VANILLA0TIC)) || !--tics)
          P_SetMobjState(this, state->nextstate);
    }
    else
@@ -1898,6 +1910,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
       mobj->reactiontime = info->reactiontime;
 
    mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
+   M_RandomLog("type=%d\n", info->dehnum - 1);
 
    // do not set the state with P_SetMobjState,
    // because action routines can not be called yet
@@ -2186,8 +2199,8 @@ void P_SpawnPlayer(mapthing_t* mthing)
    p->bonuscount    = 0;
    p->extralight    = 0;
    p->fixedcolormap = 0;
-   p->viewheight    = VIEWHEIGHT;
-   p->viewz         = mobj->z + VIEWHEIGHT;
+   p->viewheight    = p->pclass->viewheight;
+   p->viewz         = mobj->z + p->pclass->viewheight;
    p->prevviewz     = p->viewz;
 
    p->momx = p->momy = 0;   // killough 10/98: initialize bobbing to 0.
@@ -2475,7 +2488,10 @@ spawnit:
    mobj->health = mobj->getModifiedSpawnHealth();
 
    if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
+   {
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);
+      M_RandomLog("type=%d\n", mthing->type);
+   }
 
    if(!(mobj->flags & MF_FRIEND) &&
       mthing->options & MTF_FRIEND &&
@@ -2554,8 +2570,8 @@ spawnit:
 // P_SpawnPuff
 //
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                  int updown, bool ptcl, const MetaTable *pufftype,
-                  const Mobj *hitmobj)
+                  int updown, bool ptcl, Mobj *shooter,
+                  const MetaTable *pufftype, const Mobj *hitmobj)
 {
    if(!pufftype)
    {
@@ -2627,6 +2643,14 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
             punchhack = true;
          }
       }
+
+      // [XA] 03/02/20: new flag that sets target to the shooter.
+      // This is useful for doing things like setting A_DetonateEx's
+      // hurt_self field on a puff, and other projectile-esque
+      // behaviors that rely on a valid 'target' field. Basically
+      // GZD's "PUFFGETSOWNER" flag but with a less crappy name. :P
+      if(pufftype->getInt(keyPuffTargetShooter, 0))
+         P_SetTarget(&th->target, shooter);
    }
 
    // ioanch: spawn particles even for melee range if nothing is spawned
@@ -3063,7 +3087,8 @@ fixed_t P_PlayerPitchSlope(player_t *player)
 //
 // Tries to aim at a nearby monster
 //
-Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
+Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
+                           playertargetinfo_t *targetinfo)
 {
    Mobj *th;
    fixed_t x, y, z, slope = 0;
@@ -3074,35 +3099,50 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
 
    // killough 7/19/98: autoaiming was not in original beta
    // sf: made a multiplayer option
+   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
       int mask = demo_version < 203 ? false : true;
+      bool hadmask = !!mask;
+      // Aspiratory Heretic demo support
+      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
+
+      bool avoidfriendsideaim = demo_version >= 401 || hereticdemo;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         if(mask || !hadmask || !avoidfriendsideaim)
+         {
+            if(!clip.linetarget)
+               slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+            if(!clip.linetarget)
+               slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         }
          if(!clip.linetarget)
          {
             an = source->angle;
             // haleyjd: use true slope angle
-            slope = P_PlayerPitchSlope(source->player);
+            slope = playersightslope;
          }
+         else if(targetinfo)
+            targetinfo->isfriend = !mask && hadmask;
       }
       while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
       // haleyjd: use true slope angle
-      slope = P_PlayerPitchSlope(source->player);
+      slope = playersightslope;
    }
+   if(targetinfo)
+      targetinfo->slope = slope;
 
    x = source->x;
    y = source->y;
    z = source->z + 4*8*FRACUNIT - source->floorclip;
+   if(flags & SPM_ADDSLOPETOZ)
+      z += playersightslope;
 
    th = P_SpawnMobj(x, y, z, type);
 
@@ -3147,23 +3187,42 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
 // Tries to aim at a nearby monster, but with angle parameter
 // Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
 //
-Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle, unsigned flags,
+                                       const playertargetinfo_t *targetinfo)
 {
    fixed_t z, slope = 0;
    angle_t an = angle;
 
-   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
+   // If the main fire hit pods, point towards them.
+   fixed_t playersightslope;
+   if(flags & SPMAH_FOLLOWTARGETFRIENDSLOPE && targetinfo && targetinfo->isfriend)
+      playersightslope = targetinfo->slope;
+   else
+      playersightslope = P_PlayerPitchSlope(source->player);
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      int mask = demo_version < 203 ? false : true;
+      // Aspiratory Heretic demo support
+      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
+      int mask = demo_version < 203 && !hereticdemo ? false : true;
+      bool hadmask = !!mask;  // mark if the mask was set initially
       do
       {
-         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         // don't autoaim pods with the side projectiles in Heretic (unless flagged otherwise)
+         if(mask || !hadmask || flags & SPMAH_AIMFRIENDSTOO)
+         {
+            slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
+            if(mask || !hadmask) // never try to side-aim friends
+            {
+               if(!clip.linetarget)
+                  slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+               if(!clip.linetarget)
+                  slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+            }
+         }
+         else
+            P_ClearTarget(clip.linetarget);
+
          if(!clip.linetarget)
          {
             an = angle;
@@ -3326,7 +3385,7 @@ void P_AdjustFloorClip(Mobj *thing)
       player_t *p = thing->player;
 
       p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
    }
 }
 

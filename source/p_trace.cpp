@@ -55,6 +55,60 @@ linetracer_t trace;
 // Aiming
 //
 
+//
+// Check if available for shooting at all
+//
+bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimflagsmask)
+{
+   if(th == source)
+      return false; // can't shoot self
+
+   if(!(th->flags & MF_SHOOTABLE))
+      return false; // corpse or something
+
+   // killough 7/19/98, 8/2/98:
+   // friends don't aim at friends (except players), at least not first
+   // ioanch: also avoid aiming for LOWAIMPRIO things
+   if(aimflagsmask && ((th->flags & source->flags & MF_FRIEND && !th->player) ||
+                       th->flags4 & MF4_LOWAIMPRIO))
+   {
+      return false;
+   }
+   return true;
+}
+
+//
+// Check if a thing can be aimed, based on slopes
+//
+bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace)
+{
+   // check angles to see if the thing can be aimed at
+   fixed_t dist = origindist + FixedMul(atrace.attackrange, infrac);
+   fixed_t thingtopslope = FixedDiv(th->z + th->height - atrace.z, dist);
+
+   if(thingtopslope < atrace.bottomslope)
+      return false; // shot over the thing
+
+   fixed_t thingbottomslope = FixedDiv(th->z - atrace.z, dist);
+
+   if(thingbottomslope > atrace.topslope)
+      return false; // shot under the thing
+
+   // this thing can be hit!
+   if(thingtopslope > atrace.topslope)
+      thingtopslope = atrace.topslope;
+
+   if(thingbottomslope < atrace.bottomslope)
+      thingbottomslope = atrace.bottomslope;
+
+   atrace.aimslope = (thingtopslope + thingbottomslope) / 2;
+
+   return true; // don't go any further
+}
+
+//
+// Aim traverse
+//
 static bool PTR_AimTraverse(intercept_t *in, void *context)
 {
    fixed_t slope, dist;
@@ -99,45 +153,13 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
    {
       // shoot a thing
       Mobj *th = in->d.thing;
-      fixed_t thingtopslope, thingbottomslope;
 
-      if(th == trace.thing)
-         return true; // can't shoot self
-
-      if(!(th->flags & MF_SHOOTABLE))
-         return true; // corpse or something
-
-      // killough 7/19/98, 8/2/98:
-      // friends don't aim at friends (except players), at least not first
-      // ioanch: also avoid aiming for LOWAIMPRIO things
-      if(trace.aimflagsmask && ((th->flags & trace.thing->flags & MF_FRIEND &&
-                                 !th->player) || th->flags4 & MF4_LOWAIMPRIO))
-      {
+      if(!P_CheckThingAimAvailability(th, trace.thing, trace.aimflagsmask))
          return true;
-      }
+      if(!P_CheckThingAimSlopes(th, 0, in->frac, trace))
+         return true;
 
-      // check angles to see if the thing can be aimed at
-      dist = FixedMul(trace.attackrange, in->frac);
-      thingtopslope = FixedDiv(th->z + th->height - trace.z, dist);
-
-      if(thingtopslope < trace.bottomslope)
-         return true; // shot over the thing
-
-      thingbottomslope = FixedDiv(th->z - trace.z, dist);
-
-      if(thingbottomslope > trace.topslope)
-         return true; // shot under the thing
-
-      // this thing can be hit!
-      if(thingtopslope > trace.topslope)
-         thingtopslope = trace.topslope;
-
-      if(thingbottomslope < trace.bottomslope)
-         thingbottomslope = trace.bottomslope;
-
-      trace.aimslope  = (thingtopslope + thingbottomslope) / 2;
-      clip.linetarget = th;
-
+      P_SetTarget(&clip.linetarget, th);
       return false; // don't go any further
    }
 }
@@ -154,10 +176,13 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
    if(full_demo_version >= make_full_version(340, 47) &&
       useportalgroups)
    {
-      clip.linetarget = nullptr;
+      P_ClearTarget(clip.linetarget);
       trace.attackrange = distance; // this needs to be set because P_SpawnPuff
                                     // depends on it
-      return CAM_AimLineAttack(t1, angle, distance, mask, &clip.linetarget);
+      Mobj *linetarget = clip.linetarget;
+      fixed_t result = CAM_AimLineAttack(t1, angle, distance, mask, &linetarget);
+      P_SetTarget(&clip.linetarget, linetarget);
+      return result;
    }
 
    fixed_t x2, y2;
@@ -199,7 +224,7 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
    }
    
    trace.attackrange = distance;
-   clip.linetarget = NULL;
+   P_ClearTarget(clip.linetarget);
 
    // killough 8/2/98: prevent friends from aiming at friends
    trace.aimflagsmask = mask;
@@ -275,16 +300,16 @@ bool P_ShootThing(const intercept_t *in,
    if(th->flags & MF_NOBLOOD ||
       th->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
    {
-      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+      puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, shooter, pufftype, th);
    }
    else
    {
       // Need to have a separate bool for checking, if puff is only particles,
       // but no mobj.
       bool showpuff = false;
-      if(pufftype && pufftype->getInt(keyPuffAlwaysPuff, 0))
+      if(pufftype && pufftype->getInt(keyPuffPuffOnActors, 0))
       {
-         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, pufftype, th);
+         puffmobj = P_SpawnPuff(x, y, z, puffangle, 2, true, shooter, pufftype, th);
          showpuff = true;
       }
 
@@ -389,7 +414,7 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90, 2, true,
-                  E_PuffForIndex(puffidx));
+                  trace.thing, E_PuffForIndex(puffidx));
 
       // don't go any further
       return false;
@@ -611,7 +636,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // Spawn bullet puffs.
       P_SpawnPuff(x, y, z, P_PointToAngle(0, 0, li->dx, li->dy) - ANG90,
-                  updown, true, E_PuffForIndex(puffidx));
+                  updown, true, trace.thing, E_PuffForIndex(puffidx));
       
       // don't go any further     
       return false;

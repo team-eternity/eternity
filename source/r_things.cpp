@@ -1106,7 +1106,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    vis->tranmaplump = -1;
 
    // haleyjd 11/14/02: ghost flag
-   if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1)
+   if(thing->flags3 & MF3_GHOST && vis->translucency == FRACUNIT - 1 && rTintTableIndex == -1)
       vis->translucency = HTIC_GHOST_TRANS - 1;
 
    // haleyjd 10/12/02: foot clipping
@@ -1155,6 +1155,11 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          vis->drawstyle = VS_DRAWSTYLE_ALPHA;
       else if(thing->flags & MF_TRANSLUCENT)
          vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+      else if(rTintTableIndex != -1 && thing->flags3 & MF3_GHOST)
+      {
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+         vis->tranmaplump = rTintTableIndex;
+      }
    }
 }
 
@@ -1345,8 +1350,16 @@ static void R_DrawPSprite(const pspdef_t *psp)
             viewplayer->powers[pw_ghost] & 8) &&
            general_translucency)
    {
-      vis->drawstyle    = VS_DRAWSTYLE_ALPHA;
-      vis->translucency = HTIC_GHOST_TRANS - 1;
+      if(rTintTableIndex != -1)
+      {
+         vis->drawstyle = VS_DRAWSTYLE_TRANMAP;
+         vis->tranmaplump = rTintTableIndex;
+      }
+      else
+      {
+         vis->drawstyle    = VS_DRAWSTYLE_ALPHA;
+         vis->translucency = HTIC_GHOST_TRANS - 1;
+      }
       vis->colormap     = spritelights[MAXLIGHTSCALE-1];
    }
    else if(fixedcolormap)

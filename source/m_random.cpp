@@ -34,6 +34,23 @@
 #include "m_random.h"
 #include "a_small.h"
 
+#ifdef RANDOM_LOG
+void M_RandomLog(const char *format, ...)
+{
+   static FILE *f;
+   if(!f)
+      f = fopen("randomlog.txt", "wt");
+   if(f)
+   {
+     fprintf(f, "%d:", gametic);
+     va_list ap;
+     va_start(ap, format);
+     vfprintf(f, format, ap);
+     fflush(f);
+   }
+}
+#endif
+
 //
 // M_Random
 // Returns a 0-255 number
@@ -75,6 +92,11 @@ int P_Random(pr_class_t pr_class)
    //
    // All of this RNG stuff is tricky as far as demo sync goes --
    // it's like playing with explosives :) Lee
+
+   if(pr_class != pr_misc)
+   {
+      M_RandomLog("%d\n", pr_class);
+   }
 
    int compat; 
 
@@ -181,7 +203,8 @@ unsigned int P_RangeRandomEx(pr_class_t pr_class,
 //
 int P_SubRandomEx(pr_class_t pr_class, unsigned max)
 {
-   int temp = P_RandomEx(pr_class) % max;
+   max++; // max has to be 1 more than the supplied arg to function as expected
+   const int temp = P_RandomEx(pr_class) % max;
    return temp - static_cast<int>(P_RandomEx(pr_class) % max);
 }
 

@@ -34,6 +34,7 @@
 #include "z_zone.h"
 
 #include "a_args.h"
+#include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -57,6 +58,8 @@
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_data.h"
+#include "r_defs.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_levels.h"
@@ -1191,6 +1194,42 @@ CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)
 {
    cheat_k(nullptr);
+}
+
+//
+// Teleports player to coordinates
+//
+// warp <x> <y>
+//
+CONSOLE_COMMAND(warp, cf_notnet | cf_level)
+{
+   if(!plyr->mo)
+      return;
+   if(Console.argc <= 1)
+   {
+      C_Puts("Usage: warp x y\nTeleports player to given coordinates.");
+      return;
+   }
+   char *endptr;
+   fixed_t x = static_cast<fixed_t>(Console.argv[0]->toLong(&endptr, 0)) << FRACBITS;
+   // Don't teleport player to 0 in case of bad input
+   if(*endptr) 
+   {
+      C_Puts("Wrong x argument.");
+      return;
+   }
+   fixed_t y = static_cast<fixed_t>(Console.argv[1]->toLong(&endptr, 0)) << FRACBITS;
+   if(*endptr)
+   {
+      C_Puts("Wrong y argument.");
+      return;
+   }
+
+   const sector_t *sector = R_PointInSubsector(x, y)->sector;
+   fixed_t z = sector->ceilingheight / 2 + sector->floorheight / 2 - plyr->mo->height / 2;
+
+   P_TeleportMove(plyr->mo, x, y, false);
+   plyr->mo->z = z;
 }
 
 //----------------------------------------------------------------------------

@@ -115,7 +115,6 @@ enum ZNodeType
 //
 
 bool     newlevel = false;
-int      doom1level = false;    // doom 1 level running under doom 2
 char     levelmapname[10];
 
 int      numvertexes;
@@ -319,8 +318,8 @@ static void P_LoadConsoleVertexes(int lump)
    // Copy and convert vertex coordinates
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetBinaryDWord(&data);
-      vertexes[i].y = GetBinaryDWord(&data);
+      vertexes[i].x = GetBinaryDWord(data);
+      vertexes[i].y = GetBinaryDWord(data);
 
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
       vertexes[i].fy = M_FixedToFloat(vertexes[i].y);
@@ -350,8 +349,8 @@ static void P_LoadVertexes(int lump)
    // Copy and convert vertex coordinates, internal representation as fixed.
    for(int i = 0; i < numvertexes; i++)
    {
-      vertexes[i].x = GetBinaryWord(&data) << FRACBITS;
-      vertexes[i].y = GetBinaryWord(&data) << FRACBITS;
+      vertexes[i].x = GetBinaryWord(data) << FRACBITS;
+      vertexes[i].y = GetBinaryWord(data) << FRACBITS;
       
       // SoM: Cardboard stores float versions of vertices.
       vertexes[i].fx = M_FixedToFloat(vertexes[i].x);
@@ -654,16 +653,16 @@ static void P_LoadPSXSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
-      GetBinaryString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(data) << FRACBITS;
+      GetBinaryString(data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
-      GetBinaryString(&data, namebuf, 8);
+      GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
       ++data;                // skip color ID for now
-      ss->special            = GetBinaryWord(&data);
-      ss->tag                = GetBinaryWord(&data);
+      ss->special            = GetBinaryWord(data);
+      ss->tag                = GetBinaryWord(data);
       data += 2;             // skip flags field for now
 
       // scale up light levels (experimental)
@@ -696,16 +695,16 @@ static void P_LoadSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(&data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(&data) << FRACBITS;
-      GetBinaryString(&data, namebuf, 8);
+      ss->floorheight        = GetBinaryWord(data) << FRACBITS;
+      ss->ceilingheight      = GetBinaryWord(data) << FRACBITS;
+      GetBinaryString(data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
-      GetBinaryString(&data, namebuf, 8);
+      GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
-      ss->lightlevel         = GetBinaryWord(&data);
-      ss->special            = GetBinaryWord(&data);
-      ss->tag                = GetBinaryWord(&data);
+      ss->lightlevel         = GetBinaryWord(data);
+      ss->special            = GetBinaryWord(data);
+      ss->tag                = GetBinaryWord(data);
     
       P_InitSector(ss);
    }
@@ -1184,9 +1183,9 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       }
 
       // haleyjd: FIXME - see no verification of vertex indices
-      v1 = ml.v1 = GetBinaryUDWord(&data);
+      v1 = ml.v1 = GetBinaryUDWord(data);
       if(signature == ZNodeType_Normal)   // IOANCH: only set directly for nonGL
-         v2 = ml.v2 = GetBinaryUDWord(&data);
+         v2 = ml.v2 = GetBinaryUDWord(data);
       else
       {
          if(actualSegIndex == ss->firstline && !firstV1) // only set it once
@@ -1199,14 +1198,14 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
             prevSegToSet = nullptr;   // consume it
          }
          
-         ml.partner = GetBinaryUDWord(&data);   // IOANCH: not used in EE
+         ml.partner = GetBinaryUDWord(data);   // IOANCH: not used in EE
       }
       
       // IOANCH
       if(signature == ZNodeType_Normal || signature == ZNodeType_GL)
-         ml.linedef = GetBinaryUWord(&data);
+         ml.linedef = GetBinaryUWord(data);
       else
-         ml.linedef = GetBinaryUDWord(&data);
+         ml.linedef = GetBinaryUDWord(data);
       ml.side    = *data++;
       
       if((signature == ZNodeType_GL && ml.linedef == 0xffff)
@@ -1306,10 +1305,10 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // Read extra vertices added during node building
    CheckZNodesOverflow(len, sizeof(orgVerts));  
-   orgVerts = GetBinaryUDWord(&data);
+   orgVerts = GetBinaryUDWord(data);
 
    CheckZNodesOverflow(len, sizeof(newVerts));
-   newVerts = GetBinaryUDWord(&data);
+   newVerts = GetBinaryUDWord(data);
 
    // ioanch: moved before the potential allocation
    CheckZNodesOverflow(len, newVerts * 2 * sizeof(int32_t));
@@ -1328,8 +1327,8 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    {
       int vindex = i + orgVerts;
 
-      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(&data);
-      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(&data);
+      newvertarray[vindex].x = (fixed_t)GetBinaryDWord(data);
+      newvertarray[vindex].y = (fixed_t)GetBinaryDWord(data);
 
       // SoM: Cardboard stores float versions of vertices.
       newvertarray[vindex].fx = M_FixedToFloat(newvertarray[vindex].x);
@@ -1351,7 +1350,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
    // Read the subsectors
    CheckZNodesOverflow(len, sizeof(numSubs));
-   numSubs = GetBinaryUDWord(&data);
+   numSubs = GetBinaryUDWord(data);
 
    numsubsectors = (int)numSubs;
    if(numsubsectors <= 0)
@@ -1367,13 +1366,13 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    for(i = currSeg = 0; i < numSubs; i++)
    {
       subsectors[i].firstline = (int)currSeg;
-      subsectors[i].numlines  = (int)(GetBinaryUDWord(&data));
+      subsectors[i].numlines  = (int)(GetBinaryUDWord(data));
       currSeg += subsectors[i].numlines;
    }
 
    // Read the segs
    CheckZNodesOverflow(len, sizeof(numSegs));
-   numSegs = GetBinaryUDWord(&data);
+   numSegs = GetBinaryUDWord(data);
 
    // The number of segs stored should match the number of
    // segs used by subsectors.
@@ -1401,7 +1400,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    
    // Read nodes
    CheckZNodesOverflow(len, sizeof(numNodes));
-   numNodes = GetBinaryUDWord(&data);
+   numNodes = GetBinaryUDWord(data);
 
    numnodes = numNodes;
    CheckZNodesOverflow(len, numNodes * 32);
@@ -1416,25 +1415,25 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
 
       if(signature == ZNodeType_GL3)
       {
-         mn.x32  = GetBinaryDWord(&data);
-         mn.y32  = GetBinaryDWord(&data);
-         mn.dx32 = GetBinaryDWord(&data);
-         mn.dy32 = GetBinaryDWord(&data);
+         mn.x32  = GetBinaryDWord(data);
+         mn.y32  = GetBinaryDWord(data);
+         mn.dx32 = GetBinaryDWord(data);
+         mn.dy32 = GetBinaryDWord(data);
       }
       else
       {
-         mn.x  = GetBinaryWord(&data);
-         mn.y  = GetBinaryWord(&data);
-         mn.dx = GetBinaryWord(&data);
-         mn.dy = GetBinaryWord(&data);
+         mn.x  = GetBinaryWord(data);
+         mn.y  = GetBinaryWord(data);
+         mn.dx = GetBinaryWord(data);
+         mn.dy = GetBinaryWord(data);
       }
 
       for(j = 0; j < 2; j++)
          for(k = 0; k < 4; k++)
-            mn.bbox[j][k] = GetBinaryWord(&data);
+            mn.bbox[j][k] = GetBinaryWord(data);
 
       for(j = 0; j < 2; j++)
-         mn.children[j] = GetBinaryDWord(&data);
+         mn.children[j] = GetBinaryDWord(data);
 
       if(signature == ZNodeType_GL3)
       {
@@ -2086,16 +2085,16 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
-      sd->textureoffset = GetBinaryWord(&data) << FRACBITS;
-      sd->rowoffset     = GetBinaryWord(&data) << FRACBITS; 
+      sd->textureoffset = GetBinaryWord(data) << FRACBITS;
+      sd->rowoffset     = GetBinaryWord(data) << FRACBITS; 
 
       // haleyjd 05/26/10: read texture names into buffers
-      GetBinaryString(&data, toptexture,    8);
-      GetBinaryString(&data, bottomtexture, 8);
-      GetBinaryString(&data, midtexture,    8);
+      GetBinaryString(data, toptexture,    8);
+      GetBinaryString(data, bottomtexture, 8);
+      GetBinaryString(data, midtexture,    8);
 
       // haleyjd 06/19/06: convert indices to unsigned
-      secnum = SafeUintIndex(GetBinaryWord(&data), numsectors, "side", i, "sector");
+      secnum = SafeUintIndex(GetBinaryWord(data), numsectors, "side", i, "sector");
       sd->sector = &sectors[secnum];
 
       // IOANCH 20151213: this will be in a separate function, because UDMF
@@ -3120,7 +3119,7 @@ static const char *consolelumps[] =
 //
 // haleyjd 12/12/13: Check for supported console map formats
 //
-static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
+static int P_checkConsoleFormat(const WadDirectory *dir, int lumpnum)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
@@ -3149,8 +3148,7 @@ static int P_checkConsoleFormat(WadDirectory *dir, int lumpnum)
 // the MAPxy or ExMy standard previously imposed.
 // IOANCH 20151213: added MGLA, optional parameter to assign values to.
 //
-int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
-                 bool *udmf)
+int P_CheckLevel(const WadDirectory *dir, int lumpnum, maplumpindex_t *mgla, bool *udmf)
 {
    int          numlumps = dir->getNumLumps();
    lumpinfo_t **lumpinfo = dir->getLumpInfo();
@@ -3161,8 +3159,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
       *udmf = false;
 
    // IOANCH 20151206: check for UDMF lumps structure
-   if(lumpnum + 1 < numlumps 
-      && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
+   if(lumpnum + 1 < numlumps && !strncmp(lumpinfo[lumpnum + 1]->name, "TEXTMAP", 8))
    {
       // found a TEXTMAP. Look for ENDMAP
       bool foundEndMap = false;
@@ -3200,8 +3197,7 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
    for(int i = ML_THINGS; i <= ML_BEHAVIOR; i++)
    {
       int ln = lumpnum + i;
-      if(ln >= numlumps ||     // past the last lump?
-         strncmp(lumpinfo[ln]->name, levellumps[i], 8))
+      if(ln >= numlumps || strncmp(lumpinfo[ln]->name, levellumps[i], 8))     // past the last lump?
       {
          // If "BEHAVIOR" wasn't found, we assume we are dealing with
          // a DOOM-format map, and it is not an error; any other missing
@@ -3247,41 +3243,6 @@ int P_CheckLevel(WadDirectory *dir, int lumpnum, maplumpindex_t *mgla,
 
    // if we got here, we're dealing with a Hexen-format map
    return LEVEL_FORMAT_HEXEN;
-}
-
-//
-// P_CheckLevelName
-//
-// haleyjd 01/21/14: Check for a level's existence and format by lump name.
-//
-int P_CheckLevelName(WadDirectory *dir, const char *mapname)
-{
-   int lumpnum;
-   return ((lumpnum = dir->checkNumForName(mapname)) >= 0 ? 
-      P_CheckLevel(dir, lumpnum) : LEVEL_FORMAT_INVALID);
-}
-
-//
-// P_CheckLevelMapNum
-//
-// haleyjd 01/21/14: Check for a level's existence and format from a map
-// number. Note behavior here for ExMy levels is ZDoom-compatible (episode
-// is base 0, not base 1).
-//
-int P_CheckLevelMapNum(WadDirectory *dir, int mapnum)
-{
-   qstring mapname;
-
-   if(GameModeInfo->flags & GIF_MAPXY)
-      mapname.Printf(9, "MAP%02d", mapnum);
-   else
-   {
-      int episode = mapnum / 10 + 1;
-      int map     = mapnum % 10;
-      mapname.Printf(9, "E%dM%d", episode, map);
-   }
-
-   return P_CheckLevelName(dir, mapname.constPtr());
 }
 
 void P_InitThingLists(); // haleyjd
@@ -3405,6 +3366,9 @@ static void P_PreZoneFreeLevel()
 
    // sf: free the psecnode_t linked list in p_map.c
    P_FreeSecNodeList(); 
+
+   // Clear all global reference-counted mobj references
+   P_ClearGlobalMobjReferences();
 }
 
 //
@@ -3573,7 +3537,6 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);
-   doom1level = false;
 
    strncpy(levelmapname, mapname, 8);
    leveltime = 0;

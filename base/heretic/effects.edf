@@ -1,6 +1,6 @@
 pufftype HereticPuffBase
 {
-  +AlwaysPuff
+  +PuffOnActors
 }
 
 pufftype HereticStaffPuff : HereticPuffBase

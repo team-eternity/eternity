@@ -37,6 +37,7 @@
 #include "info.h"
 #include "m_utils.h"
 #include "p_mobj.h"
+#include "p_maputl.h"
 
 // haleyjd 05/21/10: a static empty string, to avoid allocating tons of memory 
 // for single-byte strings.
@@ -241,6 +242,32 @@ double E_ArgAsDouble(arglist_t *al, int index, double defvalue)
    }
 
    return eval.value.d;
+}
+
+//
+// Gets the arg value at index i as an angle_t, if such argument exists.
+// The evaluated value will be cached so that it can be returned on
+// subsequent calls. If the argument does not exist, the value passed in
+// the "defvalue" argument will be returned.
+//
+angle_t E_ArgAsAngle(arglist_t *al, int index, angle_t defvalue)
+{
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return defvalue;
+
+   evalcache_t &eval = al->values[index];
+
+   // if the value is cached, return the cached value
+   if(eval.type != EVALTYPE_ANGLE)
+   {
+      // calculate the value and cache it
+      eval.type    = EVALTYPE_ANGLE;
+      eval.value.a = P_DoubleToAngle(strtod(al->args[index], nullptr));
+   }
+
+   return eval.value.a;
 }
 
 //
@@ -738,6 +765,36 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
    }
 
    return eval.value.flags;
+}
+
+//
+// Gets the arg value at index i as a flag mask, if such argument  exists,
+// using the specified flagset. The evaluated value will be cached
+// so that it can be returned on subsequent calls. If the arg does not
+// exist, NULL is returned.
+//
+unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
+{
+   // if the arglist doesn't exist or doesn't hold this many arguments,
+   // return the default value.
+   if(!al || index >= al->numargs)
+      return 0;
+
+   evalcache_t &eval = al->values[index];
+
+   if(eval.type != EVALTYPE_THINGFLAG)
+   {
+      eval.type = EVALTYPE_THINGFLAG;
+      memset(eval.value.flags, 0, MAXFLAGFIELDS * sizeof(unsigned int));
+
+      // empty string is zero
+      if(*(al->args[index]) != '\0')
+      {
+         eval.value.flags[0] = E_ParseFlags(al->args[index], flagset);
+      }
+   }
+
+   return eval.value.flags[0];
 }
 
 //

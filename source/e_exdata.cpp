@@ -62,6 +62,7 @@
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
+#include "v_misc.h"
 #include "w_wad.h"
 
 // statics
@@ -144,6 +145,10 @@ static unsigned int sector_chains[NUMSECCHAINS];
 
 // mapthing options and related data structures
 
+// line special callback
+static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                        void *result);
+
 static cfg_opt_t mapthing_opts[] =
 {
    CFG_INT(FIELD_NUM,     0,  CFGF_NONE),
@@ -152,7 +157,7 @@ static cfg_opt_t mapthing_opts[] =
    CFG_STR(FIELD_OPTIONS, "", CFGF_NONE),
    CFG_STR(FIELD_ARGS,    0,  CFGF_LIST),
    CFG_INT(FIELD_HEIGHT,  0,  CFGF_NONE),
-   CFG_INT(FIELD_SPECIAL, 0,  CFGF_NONE),
+   CFG_INT_CB(FIELD_SPECIAL, 0,  CFGF_NONE, E_LineSpecCB),
    CFG_END()
 };
 
@@ -179,10 +184,6 @@ static dehflagset_t mt_flagset =
 };
 
 // linedef options and related data structures
-
-// line special callback
-static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
-                        void *result);
 
 static cfg_opt_t linedef_opts[] =
 {
@@ -1367,6 +1368,15 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       // sector colormaps
       sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
 
+      auto checkBadCMap = [sec](int *cmap)
+      {
+         if(*cmap < 0)
+         {
+            *cmap = 0;
+            doom_printf(FC_ERROR "Invalid colormap for ExtraData sector %d\n", sec->recordnum);
+         }
+      };
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
       if(strcasecmp(tempstr, "@default"))
          sec->topmap = R_ColormapNumForName(tempstr);
@@ -1378,6 +1388,10 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       tempstr = cfg_getstr(section, FIELD_SECTOR_BOTTOMMAP);
       if(strcasecmp(tempstr, "@default"))
          sec->bottommap = R_ColormapNumForName(tempstr);
+
+      checkBadCMap(&sec->topmap);
+      checkBadCMap(&sec->midmap);
+      checkBadCMap(&sec->bottommap);
 
       // terrain type overrides
       tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);

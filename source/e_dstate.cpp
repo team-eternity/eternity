@@ -190,7 +190,7 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
           <frameletters> := [A-Z\[\\\]]+
           <tics> := [0-9]+
           <flagslist> := <flag><flagslist>
-            <flag> := "bright" | "fast" | nil
+            <flag> := "bright" | "fast" | "offset" '(' <x> ',' <y> ')' | nil
           <action> := <name>
                     | <name> '(' <arglist> ')'
                     | nil
@@ -223,10 +223,11 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
    NEEDSTATEFRAMES:
       <text> : NEEDSTATETICS
    NEEDSTATETICS:
-      <number> : NEEDSTATEBRIGHTORACTION
-   NEEDSTATEFLAGORACTION:
-      "bright" : NEEDSTATEFLAGORACTION
-      "fast"   : NEEDSTATEFLAGORACTION
+      <number> : NEEDFLAGORACTION
+   NEEDFLAGORACTION:
+      "bright" : NEEDFLAGORACTION
+      "fast"   : NEEDFLAGORACTION
+      "offset" '(' <number> ',' <number> ')' : NEEDFLAGORACTION
       <text>   : NEEDSTATEEOLORPAREN
       EOL      : NEEDLABELORKWORSTATE
    NEEDSTATEEOLORPAREN:
@@ -681,10 +682,8 @@ static int E_GetDSToken(pstate_t *ps)
 
    while(tks.state != TSTATE_DONE)
    {
-#ifdef RANGECHECK
-      if(tks.state < 0 || tks.state >= TSTATE_DONE)
-         I_Error("E_GetDSToken: Internal error: undefined state\n");
-#endif
+      I_Assert(tks.state >= 0 && tks.state < TSTATE_DONE,
+               "E_GetDSToken: Internal error: undefined state\n");
 
       tstatefuncs[tks.state](&tks);
 
@@ -1382,13 +1381,15 @@ enum
 {
    DSFK_BRIGHT,
    DSFK_FAST,
+   DSFK_OFFSET,
    DSFK_NUMFLAGS
 };
 
 static const char *decStateFlagKeywords[DSFK_NUMFLAGS] =
 {
    "bright",
-   "fast"
+   "fast",
+   "offset"
 };
 
 //
@@ -1436,6 +1437,76 @@ static void applyStateFlag(unsigned int flag)
 }
 
 //
+// Apply a state offset (misc1 and misc2)
+//
+static void applyStateOffset(pstate_t *ps)
+{
+   E_GetDSToken(ps);
+   if(ps->tokentype != TOKEN_LPAREN)
+   {
+      PSExpectedErr(ps, "'('");
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
+
+   E_GetDSToken(ps);
+   if(ps->tokentype != TOKEN_TEXT)
+   {
+      PSExpectedErr(ps, "x value");
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
+
+   int x = ps->tokenbuffer->toInt();
+
+   E_GetDSToken(ps);
+   if(ps->tokentype != TOKEN_COMMA)
+   {
+      PSExpectedErr(ps, "','");
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
+
+   E_GetDSToken(ps);
+   if(ps->tokentype != TOKEN_TEXT)
+   {
+      PSExpectedErr(ps, "y value");
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
+
+   int y = ps->tokenbuffer->toInt();
+
+   E_GetDSToken(ps);
+   if(ps->tokentype != TOKEN_RPAREN)
+   {
+      PSExpectedErr(ps, "')'");
+      ps->state = PSTATE_NEEDLABELORKWORSTATE;
+      return;
+   }
+
+   if(ps->principals)
+      return;  // Principals only needs to check syntax here
+
+   // Now apply the miscs
+   DLListItem<estatebuf_t> *link = DSP.curbufstate;
+   int statenum = DSP.currentstate;
+
+   // Apply flag to all states in the current range
+   while(link && (*link)->type == BUF_STATE && (*link)->linenum == (*DSP.curbufstate)->linenum)
+   {
+      if(states[statenum]->flags & STATEF_DECORATE)
+      {
+         states[statenum]->misc1 = x;
+         states[statenum]->misc2 = y;
+      }
+
+      ++statenum;
+      link = link->dllNext;
+   }
+}
+
+//
 // DoPSNeedFlagOrAction
 //
 // Expecting either one or more state flag keywords or the action name.
@@ -1467,24 +1538,26 @@ static void DoPSNeedFlagOrAction(pstate_t *ps)
 
    if(flagnum != DSFK_NUMFLAGS)
    {
-      if(!ps->principals)
+      switch(flagnum)
       {
-         switch(flagnum)
-         {
-         case DSFK_BRIGHT:
+      case DSFK_BRIGHT:
+         if(!ps->principals)
             applyStateBright();
-            break;
-         case DSFK_FAST:
+         break;
+      case DSFK_FAST:
+         if(!ps->principals)
             applyStateFlag(STATEF_SKILL5FAST);
-            break;
-         default:
-            break;
-         }
+         break;
+      case DSFK_OFFSET:
+         applyStateOffset(ps);
+         break;
+      default:
+         break;
       }
       // stay in the current state
    }
    else
-      doAction(ps, "DoPSNeedBrightOrAction"); // otherwise verify & assign action
+      doAction(ps, "DoPSNeedFlagOrAction"); // otherwise verify & assign action
 }
 
 //
@@ -1763,10 +1836,8 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
          ps.needline = false;
       }
 
-#ifdef RANGECHECK
-      if(ps.state < 0 || ps.state >= PSTATE_NUMSTATES)
-         I_Error("E_parseDecorateInternal: internal error - undefined state\n");
-#endif
+      I_Assert(ps.state >= 0 && ps.state < PSTATE_NUMSTATES,
+               "E_parseDecorateInternal: internal error - undefined state\n");
 
       pstatefuncs[ps.state](&ps);
 

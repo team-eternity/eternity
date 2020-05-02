@@ -137,6 +137,9 @@ bool P_PathTraverse(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
                     int flags, traverser_t trav, void *context = nullptr);
 
 angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
+angle_t P_DoubleToAngle(double a);
+
+void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle);
 
 bool P_ShootThing(const intercept_t *in,
                   Mobj *shooter,
@@ -147,6 +150,8 @@ bool P_ShootThing(const intercept_t *in,
                   const divline_t &dl,
                   size_t puffidx,
                   int damage);
+bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimflagsmask);
+bool P_CheckThingAimSlopes(const Mobj *th, fixed_t origindist, fixed_t infrac, linetracer_t &atrace);
 
 extern linetracer_t trace;
 

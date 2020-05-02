@@ -538,7 +538,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    // do reverberation if an effect is active
    if(s_reverbactive)
-      S_ProcessReverb(mixbuffer[1], mixbuffer_size / 2);
+      S_ProcessReverb(mixbuffer[1], mixbuffer_size / step, step);
 
    // mix reverberated sound with unreverberated buffer
    I_SDLMixBuffers();

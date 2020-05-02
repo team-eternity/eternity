@@ -472,28 +472,36 @@ static void R_CalcSlope(visplane_t *pl)
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
-   rslope->P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
-   rslope->P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
-   rslope->P.y = P_GetZAtf(pl->pslope, (float)rslope->P.x, (float)rslope->P.z);
 
-   rslope->M.x = rslope->P.x - xl * tsin;
-   rslope->M.z = rslope->P.z + xl * tcos;
-   rslope->M.y = P_GetZAtf(pl->pslope, (float)rslope->M.x, (float)rslope->M.z);
+   // Need to reduce them to the visible range, because otherwise it may overflow
+   double xoffsf = fmod(pl->xoffsf, xl / pl->xscale);
+   double yoffsf = fmod(pl->yoffsf, yl / pl->yscale);
 
-   rslope->N.x = rslope->P.x + yl * tcos;
-   rslope->N.z = rslope->P.z + yl * tsin;
-   rslope->N.y = P_GetZAtf(pl->pslope, (float)rslope->N.x, (float)rslope->N.z);
+   v3double_t P;
+   P.x = -xoffsf * tcos - yoffsf * tsin;
+   P.z = -xoffsf * tsin + yoffsf * tcos;
+   P.y = P_GetZAtf(pl->pslope, (float)P.x, (float)P.z);
 
-   M_TranslateVec3(&rslope->P);
-   M_TranslateVec3(&rslope->M);
-   M_TranslateVec3(&rslope->N);
+   v3double_t M;
+   M.x = P.x - xl * tsin;
+   M.z = P.z + xl * tcos;
+   M.y = P_GetZAtf(pl->pslope, (float)M.x, (float)M.z);
 
-   M_SubVec3(&rslope->M, &rslope->M, &rslope->P);
-   M_SubVec3(&rslope->N, &rslope->N, &rslope->P);
+   v3double_t N;
+   N.x = P.x + yl * tcos;
+   N.z = P.z + yl * tsin;
+   N.y = P_GetZAtf(pl->pslope, (float)N.x, (float)N.z);
+
+   M_TranslateVec3(&P);
+   M_TranslateVec3(&M);
+   M_TranslateVec3(&N);
+
+   M_SubVec3(&M, &M, &P);
+   M_SubVec3(&N, &N, &P);
    
-   M_CrossProduct3(&rslope->A, &rslope->P, &rslope->N);
-   M_CrossProduct3(&rslope->B, &rslope->P, &rslope->M);
-   M_CrossProduct3(&rslope->C, &rslope->M, &rslope->N);
+   M_CrossProduct3(&rslope->A, &P, &N);
+   M_CrossProduct3(&rslope->B, &P, &M);
+   M_CrossProduct3(&rslope->C, &M, &N);
 
    // This is helpful for removing some of the muls when calculating light.
 
@@ -669,9 +677,12 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       
    blendflags &= PS_OBLENDFLAGS;
 
+   // NOTE: this works because we still are limited to PO2 flats.
+   const texture_t *texture = textures[texturetranslation[picnum]];
+
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
    if(!(blendflags & PS_ADDITIVE) && opacity == 255 &&
-      (picnum & PL_SKYFLAT || !(textures[texturetranslation[picnum]]->flags & TF_MASKED)))
+      (picnum & PL_SKYFLAT || !(texture->flags & TF_MASKED)))
    {
       blendflags = 0;
    }
@@ -778,13 +789,69 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 }
 
 //
+// From PrBoom+
+// cph 2003/04/18 - create duplicate of existing visplane and set initial range
+//
+visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
+{
+   planehash_t *table = pl->table;
+   unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
+   visplane_t *new_pl = new_visplane(hash, table);
+
+   new_pl->height = pl->height;
+   new_pl->picnum = pl->picnum;
+   new_pl->lightlevel = pl->lightlevel;
+   new_pl->colormap = pl->colormap;
+   new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
+   new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
+   new_pl->yoffs = pl->yoffs;
+   new_pl->angle = pl->angle;                 // haleyjd 01/05/08
+
+   new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
+   new_pl->viewcos = pl->viewcos;
+
+   new_pl->viewx = pl->viewx;
+   new_pl->viewy = pl->viewy;
+   new_pl->viewz = pl->viewz;
+
+   new_pl->viewxf = pl->viewxf;
+   new_pl->viewyf = pl->viewyf;
+   new_pl->viewzf = pl->viewzf;
+
+   // SoM: copy converted stuffs too
+   new_pl->heightf = pl->heightf;
+   new_pl->yscale = pl->yscale;
+   new_pl->xscale = pl->xscale;
+   new_pl->xoffsf = pl->xoffsf;
+   new_pl->yoffsf = pl->yoffsf;
+
+   new_pl->bflags = pl->bflags;
+   new_pl->opacity = pl->opacity;
+
+   new_pl->pslope = pl->pslope;
+   memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
+   new_pl->fullcolormap = pl->fullcolormap;
+
+   visplane_t *retpl = new_pl;
+   retpl->minx = start;
+   retpl->maxx = stop;
+   {
+      int *p = retpl->top;
+      const int *const p_end  = p + retpl->max_width;
+      // Unrolling this loop makes performance WORSE for optimised MSVC builds.
+      // Nothing makes sense any more.
+      while(p < p_end)
+         *(p++) = 0x7FFFFFFF;
+   }
+   return retpl;
+}
+
+//
 // R_CheckPlane
 //
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
-   
-   planehash_t *table = pl->table;
    
    if(start < pl->minx)
    {
@@ -817,57 +884,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->maxx = unionh;
    }
    else
-   {
-      unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-      visplane_t *new_pl = new_visplane(hash, table);
-      
-      new_pl->height = pl->height;
-      new_pl->picnum = pl->picnum;
-      new_pl->lightlevel = pl->lightlevel;
-      new_pl->colormap = pl->colormap;
-      new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
-      new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
-      new_pl->yoffs = pl->yoffs;
-      new_pl->angle = pl->angle;                 // haleyjd 01/05/08
-      
-      new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
-      new_pl->viewcos = pl->viewcos;
+      pl = R_DupPlane(pl, start, stop);
 
-      new_pl->viewx = pl->viewx;
-      new_pl->viewy = pl->viewy;
-      new_pl->viewz = pl->viewz;
-
-      new_pl->viewxf = pl->viewxf;
-      new_pl->viewyf = pl->viewyf;
-      new_pl->viewzf = pl->viewzf;
-
-      // SoM: copy converted stuffs too
-      new_pl->heightf = pl->heightf;
-      new_pl->yscale = pl->yscale;
-      new_pl->xscale = pl->xscale;
-      new_pl->xoffsf = pl->xoffsf;
-      new_pl->yoffsf = pl->yoffsf;
-      
-      new_pl->bflags = pl->bflags;
-      new_pl->opacity = pl->opacity;
-
-      new_pl->pslope = pl->pslope;
-      memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
-      new_pl->fullcolormap = pl->fullcolormap;
-
-      pl = new_pl;
-      pl->minx = start;
-      pl->maxx = stop;
-      {
-         int *p = pl->top;
-         const int *const p_end  = p + pl->max_width;
-         // Unrolling this loop makes performance WORSE for optimised MSVC builds.
-         // Nothing makes sense any more.
-         while(p < p_end)
-            *(p++) = 0x7FFFFFFF;
-      }
-   }
-   
    return pl;
 }
 

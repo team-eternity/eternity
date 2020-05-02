@@ -1085,7 +1085,7 @@ void ST_Drawer(bool fullscreen)
    stbarfns_t *StatusBar = GameModeInfo->StatusBar;
 
    // haleyjd: test whether fullscreen graphical hud is enabled
-   bool fshud = hud_enabled && hud_overlaylayout == 4;
+   bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
    st_statusbaron  = !fullscreen || automapactive || fshud;
    st_backgroundon = !fullscreen || automapactive;
@@ -1104,6 +1104,14 @@ void ST_Drawer(bool fullscreen)
    }
    else
       StatusBar->Drawer();
+}
+
+//
+// Check if status bar will be fullscreen or disabled
+//
+bool ST_IsHUDLike()
+{
+   return !st_backgroundon;
 }
 
 //

@@ -51,7 +51,6 @@ cb_seg_t    seg;
 cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
-lighttable_t **walllights;
 static float  *maskedtexturecol;
 
 //
@@ -159,15 +158,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // SoM 10/19/02: deep water colormap fixes
    //if (fixedcolormap)
    //   column.colormap = fixedcolormap;
-   if(fixedcolormap)
-   {
-      // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap == 
-         fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-         column.colormap = fixedcolormap;
-      else
-         column.colormap = walllights[MAXLIGHTSCALE-1];
-   }
+   if(ds->fixedcolormap)
+      column.colormap = ds->fixedcolormap;
 
    // SoM: performance tuning (tm Lee Killough 1998)
    scale     = dist * view.yfoc;
@@ -179,7 +171,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       if(maskedtexturecol[column.x] != FLT_MAX)
       {
-         if(!fixedcolormap)
+         if(!ds->fixedcolormap)
          {                             // killough 11/98:
             // SoM: ANYRES
             int index = (int)(dist * 2560.0f);
@@ -250,7 +242,7 @@ static void R_RenderSegLoop(void)
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      plane = R_FindPlane(-1, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
+      plane = R_FindPlane(viewz - 1, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
                           255, nullptr);
       plane = R_CheckPlane(plane, segclip.x1, segclip.x2);
    }
@@ -258,14 +250,7 @@ static void R_RenderSegLoop(void)
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
    if(fixedcolormap)
-   {
-      // haleyjd 10/31/02: invuln fix
-      if(fixedcolormap == 
-         fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
-         column.colormap = fixedcolormap;
-      else
-         column.colormap = walllights[MAXLIGHTSCALE-1];
-   }
+      column.colormap = fixedcolormap;
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
@@ -783,7 +768,26 @@ void R_StoreWallRange(const int start, const int stop)
       segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
 
    if(segclip.ceilingplane)
-      segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+   {
+      // From PrBoom
+      /* cph 2003/04/18  - ceilingplane and floorplane might be the same
+       * visplane (e.g. if both skies); R_CheckPlane doesn't know about
+       * modifications to the plane that might happen in parallel with the check
+       * being made, so we have to override it and split them anyway if that is
+       * a possibility, otherwise the floor marking would overwrite the ceiling
+       * marking, resulting in HOM. */
+
+      // ioanch: needed to fix GitHub issue #380 on maps such as sargasso.wad MAP02 coordinates
+      // (5953, 10109) where the sky wall shows HOM in Eternity.
+
+      // NOTE: PrBoom sets the floorplane AFTER the ceilingplane, unlike Eternity. So it does this
+      // duplication when it encounters the floorplane, not the ceilingplane like here.
+
+      if(segclip.ceilingplane == segclip.floorplane)
+         segclip.ceilingplane = R_DupPlane(segclip.ceilingplane, start, stop);
+      else
+         segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+   }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
       segclip.line->linedef->flags |= ML_MAPPED;
@@ -872,6 +876,7 @@ void R_StoreWallRange(const int start, const int stop)
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
    ds_p->colormap = scalelight;
+   ds_p->fixedcolormap = fixedcolormap;
    ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)

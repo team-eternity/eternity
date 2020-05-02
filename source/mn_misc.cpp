@@ -492,7 +492,7 @@ void MN_DrawCredits()
    // MaxW: I'm going to hell for this. Automatically update copyright year.
    static const char *const copyright_text = []() {
       static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
-      memcpy(temp + 11, __DATE__ + 7, 4); // Overwrite YEAR in temp.
+      memcpy(temp + 11, &__DATE__[7], 4); // Overwrite YEAR in temp.
       return temp;
    }();
 

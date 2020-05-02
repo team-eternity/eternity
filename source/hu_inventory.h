@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2020 James Haley, Ioan Chera et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,27 +17,20 @@
 // Additional terms and conditions compatible with the GPLv3 apply. See the
 // file COPYING-EE for details.
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
+// Purpose: inventory and non-display buffs HUD widget
+// Authors: Ioan Chera
 //
-//  Freeverb algorithm implementation
-//  Based on original public domain implementation by Jezar at Dreampoint
-//
-//-----------------------------------------------------------------------------
 
-#ifndef S_REVERB_H__
-#define S_REVERB_H__
+#ifndef HU_INVENTORY_H_
+#define HU_INVENTORY_H_
 
-struct ereverb_t;
+void HU_InventoryDrawCurrentBox(int x, int y);
+void HU_InventoryGetCurrentBoxHints(int &x, int &y);
+void HU_InventoryDrawSelector();
 
-void S_SuspendReverb();
-void S_ResumeReverb();
-void S_ReverbSetState(ereverb_t *ereverb);
-void S_ProcessReverb(float *stream, const int samples, const int skip);
-void S_ProcessReverbReplace(float *stream, int samples);
+void HU_BuffsDraw(int leftoffset, int rightoffset);
 
 #endif
-
 // EOF
-

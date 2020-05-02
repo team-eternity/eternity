@@ -931,7 +931,7 @@ static void P_ArchiveMap(SaveArchive &arc)
    {
       if(markpointnum)
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
    }
    else
    {

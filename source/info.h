@@ -157,8 +157,9 @@ typedef int statenum_t;
 // state flags
 enum stateflags_e
 {
-   STATEF_DECORATE   = 0x00000001, // 01/01/12: reserved for DECORATE definition
-   STATEF_SKILL5FAST = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEF_DECORATE    = 0x00000001, // 01/01/12: reserved for DECORATE definition
+   STATEF_SKILL5FAST  = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEF_VANILLA0TIC = 0x00000004, // always use old 0-tic behaviour (when spawnstate)
 };
 
 // ********************************************************************
@@ -388,6 +389,7 @@ struct mobjinfo_t
                         //  seem to retreat when shot because they have
                         //  very little mass and are moved by impact
    int damage;          // If this is a missile, how much does it hurt?
+   int damagemod;       // [XA] damage modulus (i.e. the 8 in '1d8')
    int activesound;     // What sound it makes wandering around, once
                         //  in a while.  Chance is 3/256 it will.
    unsigned int flags;  // Bit masks for lots of things.  See p_mobj.h

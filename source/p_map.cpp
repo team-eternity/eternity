@@ -32,37 +32,27 @@
 #include "d_mod.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_compare.h"
-#include "m_random.h"
 #include "p_info.h"
 #include "p_inter.h"
-#include "p_mobj.h"
-#include "p_maputl.h"
-#include "p_map.h"
 #include "p_map3d.h"
 #include "p_mobjcol.h"
-#include "p_partcl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "p_user.h"
-#include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
-#include "r_segs.h"
 #include "r_state.h"
 #include "s_sound.h"
-#include "sounds.h"
 #include "v_misc.h"
-#include "v_video.h"
 
 
 // SoM: This should be ok left out of the globals struct.
@@ -1019,7 +1009,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
 
       // damage / explode
       
-      damage = ((P_Random(pr_damage)%8)+1)*clip.thing->damage;
+      damage = ((P_Random(pr_damage)%clip.thing->info->damagemod)+1)*clip.thing->damage;
       
       // haleyjd: in Heretic & Hexen, zero-damage missiles don't make this call
       if(damage || !(clip.thing->flags4 & MF4_NOZERODAMAGE))
@@ -1524,7 +1514,7 @@ static bool P_checkCarryUp(Mobj &thing, fixed_t floorz)
       {
          other->player->viewheight += *orgzit - other->z;
          other->player->deltaviewheight =
-         (VIEWHEIGHT - other->player->viewheight) >> 3;
+         (other->player->pclass->viewheight - other->player->viewheight) >> 3;
       }
       ++orgzit;
    }
@@ -3147,6 +3137,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       P_PopClipStack();
 
    return list;
+}
+
+//
+// Clears all remaining Mobj references to avoid dangling references on next PU_LEVEL session.
+//
+void P_ClearGlobalMobjReferences()
+{
+   P_ClearTarget(clip.linetarget);
 }
 
 //----------------------------------------------------------------------------

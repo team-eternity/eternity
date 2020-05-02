@@ -10,7 +10,7 @@ spritenames
   TROO, SHTG, PUNG, PISG, PISF, SHTF, SHT2, CHGG, CHGF, MISG, MISF, SAWG, PLSG,
   PLSF, BFGG, BFGF, BLUD, PUFF, BAL1, BAL2, PLSS, PLSE, MISL, BFS1, BFE1, BFE2,
   TFOG, IFOG, PLAY, POSS, SPOS, VILE, FIRE, FATB, FBXP, SKEL, MANF, FATT, CPOS,
-  SARG, HEAD, BAL7, BOSS, BOS2, SKUL, SPID, BSPI, APLS, APBX, CYBR, PAIN, SSWV, 
+  SARG, HEAD, BAL7, BOSS, BOS2, SKUL, SPID, BSPI, APLS, APBX, CYBR, PAIN, SSWV,
   KEEN, BBRN, BOSF, ARM1, ARM2, BAR1, BEXP, FCAN, BON1, BON2, BKEY, RKEY, YKEY,
   BSKU, RSKU, YSKU, STIM, MEDI, SOUL, PINV, PSTR, PINS, MEGA, SUIT, PMAP, PVIS,
   CLIP, AMMO, ROCK, BROK, CELL, CELP, SHEL, SBOX, BPAK, BFUG, MGUN, CSAW, LAUN,
@@ -340,7 +340,7 @@ pickupeffect WeaponChainsaw
 }
 pickupeffect WeaponRocketLauncher
 {
-  effects GiverMissileLauncher
+  effects GiverRocketLauncher
   message $GOTLAUNCHER
   sound   wpnup
 
@@ -368,7 +368,7 @@ pickupeffect WeaponShotgun
 pickupeffect WeaponSSG
 {
   effects GiverSuperShotgun
-  message $GOTSHOTGUN
+  message $GOTSHOTGUN2
   sound   wpnup
 
   sprite  SGN2
@@ -390,6 +390,6 @@ pickupeffect MBFBetaBible
   message $BETA_BONUS4
   sound   itemup
   flags   ALWAYSPICKUP
-  
+
   sprite BON4
 }

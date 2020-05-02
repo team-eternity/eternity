@@ -71,7 +71,7 @@ weaponinfo StaffPowered : Staff
   sisterweapon Staff
 
   readysound   ht_stfcrk
-  addflags     READYSNDHALF|POWEREDUP
+  addflags     READYSNDHALF|POWEREDUP|DEPOWERSWITCH
   mod          StaffPowered
 
   states
@@ -289,7 +289,7 @@ weaponinfo PhoenixRod
 
   sisterweapon PhoenixRodPowered
 
-  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE|FORCETOREADY
+  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
   //mod          ""
   recoil       20
   hapticrecoil 2
@@ -322,7 +322,7 @@ weaponinfo PhoenixRodPowered : PhoenixRod
 {
   sisterweapon PhoenixRod
 
-  addflags POWEREDUP|FLEEMELEE
+  addflags POWEREDUP|FLEEMELEE|PHOENIXRESET
 
   firstdecoratestate S_PHOENIXATK2_1
   states
@@ -333,7 +333,7 @@ weaponinfo PhoenixRodPowered : PhoenixRod
     PHNX C 1 bright A_FirePhoenixPL2
     PHNX B 4 A_ReFire
   Powerdown:
-    PHNX B 4 A_ShutdownPhoenixPL2
+    PHNX B 4 A_SubtractAmmo
     goto Ready
   "@
 }
@@ -437,7 +437,7 @@ weaponinfo GauntletsPowered : Gauntlets
 {
   sisterweapon Gauntlets
 
-  addflags POWEREDUP
+  addflags POWEREDUP|DEPOWERSWITCH
 
   firstdecoratestate S_GAUNTLETREADY2_1
   states

@@ -208,10 +208,10 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
 
    auto    base   = static_cast<uint8_t *>(data);
    auto    header = base;
-   int16_t width  = GetBinaryWord(&header);
-   int16_t height = GetBinaryWord(&header);
-   int16_t left   = GetBinaryWord(&header);
-   int16_t top    = GetBinaryWord(&header);
+   int16_t width  = GetBinaryWord(header);
+   int16_t height = GetBinaryWord(header);
+   int16_t left   = GetBinaryWord(header);
+   int16_t top    = GetBinaryWord(header);
 
    // Check for sane header values
    if(width < 0     || width > 4096 || height < 0     || height > 4096 ||
@@ -226,7 +226,7 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
    // Verify all columns
    for(int i = 0; i < width; i++)
    {
-      size_t offset = static_cast<size_t>(GetBinaryUDWord(&header));
+      size_t offset = static_cast<size_t>(GetBinaryUDWord(header));
 
       if(offset < 12 || offset >= size)
          return false; // offset lies outside the data

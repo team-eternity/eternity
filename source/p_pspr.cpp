@@ -102,11 +102,21 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
       psp->state = state;
       psp->tics = state->tics;        // could be 0
 
-      if(state->misc1)
+      if(GameModeInfo->flags & GIF_DOOMWEAPONOFFSET)
       {
-         // coordinate set
-         psp->sx = state->misc1 << FRACBITS;
-         psp->sy = state->misc2 << FRACBITS;
+         if(state->misc1)
+         {
+            // coordinate set
+            psp->sx = state->misc1 << FRACBITS;
+            psp->sy = state->misc2 << FRACBITS;
+         }
+      }
+      else
+      {
+         if(state->misc1)
+            psp->sx = state->misc1 << FRACBITS;
+         if(state->misc2)
+            psp->sy = state->misc2 << FRACBITS;
       }
 
       // Call action routine.
@@ -1280,7 +1290,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    arglist_t *args = actionargs->args;
    int i, numbullets, damage, dmgmod;
    int flashint, flashstate;
-   int horizontal, vertical;
+   angle_t horizontal, vertical;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
@@ -1301,8 +1311,8 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    flashint   = E_ArgAsInt(args, 5, 0);
    flashstate = E_ArgAsStateNum(args, 5, player);
 
-   horizontal = E_ArgAsInt(args, 6, 0);
-   vertical   = E_ArgAsInt(args, 7, 0);
+   horizontal = E_ArgAsAngle(args, 6, 0);
+   vertical   = E_ArgAsAngle(args, 7, 0);
 
    const char *pufftype = E_ArgAsString(args, 8, nullptr);
 
@@ -1340,9 +1350,11 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       
       if(accurate == CBA_CUSTOM)
       {
-         angle += P_SubRandomEx(pr_custommisfire, ANGLE_1) / 2 * horizontal;
-         const angle_t pitch = (P_SubRandomEx(pr_custommisfire, ANGLE_1) / 2) *
-                                vertical;
+         constexpr unsigned int ANG_VALS = ANGLE_1;
+         angle += (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * horizontal) /
+                  (ANG_VALS * 2);
+         const angle_t pitch = (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) /
+                               (ANG_VALS * 2);
          // convert pitch to the same "unit" as slope, then add it on
          slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
@@ -1371,16 +1383,24 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    }
 }
 
-static const char *kwds_A_FirePlayerMissile[] =
+enum fireplayermissile_flags : unsigned int
 {
-   "normal",           //  0
-   "homing",           //  1
+   FIREPLAYERMISSILE_HOMING = 0x00000001,
+   FIREPLAYERMISSILE_NOAMMO = 0x00000002
 };
 
-static argkeywd_t seekkwds =
+static dehflags_t fireplayermissile_flaglist[] =
 {
-   kwds_A_FirePlayerMissile,
-   earrlen(kwds_A_FirePlayerMissile)
+   { "normal",    0x00000000               }, // [XA] explicit no-op. :P
+   { "homing",    FIREPLAYERMISSILE_HOMING },
+   { "noammo",    FIREPLAYERMISSILE_NOAMMO },
+   { NULL,        0 }
+};
+
+static dehflagset_t fireplayermissile_flagset =
+{
+   fireplayermissile_flaglist, // flaglist
+   0,                          // mode
 };
 
 //
@@ -1389,15 +1409,17 @@ static argkeywd_t seekkwds =
 // A parameterized code pointer function for custom missiles
 // Parameters:
 // args[0] : thing type to shoot
-// args[1] : whether or not to home at current autoaim target
-//           (missile requires homing maintenance pointers, however)
+// args[1] : flags:
+//           1: whether or not to home at current autoaim target
+//             (missile requires homing maintenance pointers, however)
+//           2: don't consume ammo when firing
 //
 void A_FirePlayerMissile(actionargs_t *actionargs)
 {
    int thingnum;
    Mobj *actor = actionargs->actor;
    Mobj *mo;
-   bool seek;
+   unsigned int flags;
    player_t  *player;
    pspdef_t  *psp;
    arglist_t *args = actionargs->args;
@@ -1409,18 +1431,19 @@ void A_FirePlayerMissile(actionargs_t *actionargs)
       return;
 
    thingnum = E_ArgAsThingNumG0(args, 0);
-   seek     = !!E_ArgAsKwd(args, 1, &seekkwds, 0);
+   flags    = E_ArgAsFlags(args, 1, &fireplayermissile_flagset);
 
    // validate thingtype
    if(thingnum < 0/* || thingnum == -1*/)
       return;
 
    // decrement ammo if appropriate
-   P_SubtractAmmo(player, -1);
+   if(!(flags & FIREPLAYERMISSILE_NOAMMO))
+      P_SubtractAmmo(player, -1);
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
 
-   if(mo && seek)
+   if(mo && (flags & FIREPLAYERMISSILE_HOMING))
    {
       P_BulletSlope(actor);
 

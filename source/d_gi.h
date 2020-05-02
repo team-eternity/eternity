@@ -225,6 +225,9 @@ enum
    GIF_CHEATSOUND     = 0x00080000, // make menu open sound when cheating
    GIF_CHASEFAST      = 0x00100000, // A_Chase shortens tics like in Raven games
    GIF_NOUPPEREPBOUND = 0x00200000, // Don't clamp down gameepisode if > numEpisodes
+   // Weapon frame X offset must be nonzero for both XY offsets to be enabled. Needed for DeHackEd
+   // compatibility.
+   GIF_DOOMWEAPONOFFSET = 0x00400000,
 };
 
 // Game mode handling - identify IWAD version
@@ -466,6 +469,7 @@ struct gamemodeinfo_t
    const char *defSoundName;      // default sound if one is missing
    const char **skinSounds;       // default skin sound mnemonics array
    int *playerSounds;             // player sound dehnum indirection
+   const char *titleMusName;      // [XA] title music override, for EDF
 
    // Renderer stuff
    int switchEpisode;             // "episode" number for switch texture defs

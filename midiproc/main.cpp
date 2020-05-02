@@ -31,7 +31,13 @@
 //-----------------------------------------------------------------------------
 
 #include <windows.h>
+#include <Psapi.h>
+
 #include <stdlib.h>
+
+#include <thread>
+#include <vector>
+
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "midiproc.h"
@@ -41,6 +47,110 @@ static Mix_Music *music = NULL;
 static SDL_RWops *rw    = NULL;
 
 static void UnregisterSong();
+
+//=============================================================================
+//
+// Sentinel That Checks Eternity Is Actually Running
+//
+
+class AutoHandle
+{
+public:
+   HANDLE handle;
+   AutoHandle(HANDLE h) : handle(h) {}
+   ~AutoHandle()
+   {
+      if(handle != nullptr)
+      {
+         CloseHandle(handle);
+      }
+   }
+};
+
+static bool Sentinel_EnumerateProcesses(std::vector<DWORD> &ndwPIDs, size_t &numValidPIDs)
+{
+#pragma comment(lib, "psapi.lib")
+
+   while(1)
+   {
+      DWORD cb = static_cast<DWORD>(ndwPIDs.size() * sizeof(DWORD));
+      DWORD cbNeeded = 0;
+
+      if(!EnumProcesses(&ndwPIDs[0], cb, &cbNeeded))
+         return false;
+      if(cb == cbNeeded)
+      {
+         // try again with a larger array
+         ndwPIDs.resize(ndwPIDs.size() * 2);
+      }
+      else
+      {
+         // successful
+         numValidPIDs = cbNeeded / sizeof(DWORD);
+         return true;
+      }
+   }
+}
+
+static bool Sentinel_FindEternityPID(const std::vector<DWORD> &ndwPIDs,
+                                     HANDLE &pHandle, size_t numValidPIDs)
+{
+#pragma comment(lib, "psapi.lib")
+
+   for(size_t i = 0; i < numValidPIDs; i++)
+   {
+      AutoHandle chProcess(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ndwPIDs[i]));
+      if(chProcess.handle != nullptr)
+      {
+         char szProcessImage[MAX_PATH];
+         ZeroMemory(szProcessImage, sizeof(szProcessImage));
+         if(GetProcessImageFileNameA(chProcess.handle, szProcessImage, sizeof(szProcessImage)))
+         {
+            const size_t imageLength = strlen(szProcessImage);
+            if(imageLength < 12)
+               continue;
+
+            // Lop off the start of szProcessImage
+            if(!strnicmp(szProcessImage + imageLength - 12, "Eternity.exe", 12))
+            {
+               pHandle = chProcess.handle;
+               chProcess.handle = nullptr; // Abuse AutoHandle's destructor behaviour
+               return true;
+            }
+         }
+      }
+   }
+
+   return false;
+}
+
+void Sentinel_Main()
+{
+   constexpr size_t initMaxNumPIDs = 1024;
+   std::vector<DWORD> ndwPIDs(initMaxNumPIDs, 0);
+   HANDLE pEternityHandle;
+   size_t numValidPIDs;
+
+   if(!Sentinel_EnumerateProcesses(ndwPIDs, numValidPIDs))
+      exit(-1);
+   if(!Sentinel_FindEternityPID(ndwPIDs, pEternityHandle, numValidPIDs))
+   {
+      MessageBox(
+         NULL, TEXT("eternity.exe not currently running"), TEXT("midiproc: Error"), MB_ICONERROR
+      );
+      exit(-1);
+   }
+
+   DWORD dwExitCode;
+   do
+   {
+      if(GetExitCodeProcess(pEternityHandle, &dwExitCode) == 0)
+         exit(-1);
+      Sleep(100);
+   } while(dwExitCode == STILL_ACTIVE);
+
+   exit(-1);
+}
 
 //=============================================================================
 //
@@ -419,6 +529,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
    else
       SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+
+   std::thread watcher(Sentinel_Main);
 
    // Initialize RPC Server
    if(!MidiRPC_InitServer())

@@ -1329,6 +1329,7 @@ void A_Nailbomb(actionargs_t *);
 // haleyjd: start new eternity action functions
 void A_SpawnAbove(actionargs_t *);
 void A_SpawnGlitter(actionargs_t *);
+void A_SpawnEx(actionargs_t *);
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
 void A_BetaSkullAttack(actionargs_t *);
@@ -1358,6 +1359,7 @@ void A_CounterSwitchEx(actionargs_t *);
 void A_SetCounter(actionargs_t *);
 void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
+void A_CounterDiceRoll(actionargs_t *);
 void A_SetTics(actionargs_t *);
 void A_AproxDistance(actionargs_t *);
 void A_ShowMessage(actionargs_t *);
@@ -1378,12 +1380,16 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_MushroomEx(actionargs_t *);
 void A_HideThing(actionargs_t *);
 void A_UnHideThing(actionargs_t *);
 void A_RestoreArtifact(actionargs_t *);
 void A_RestoreSpecialThing1(actionargs_t *);
 void A_RestoreSpecialThing2(actionargs_t *);
 void A_SargAttack12(actionargs_t *actionargs);
+void A_SelfDestruct(actionargs_t *);
+void A_TurnProjectile(actionargs_t *);
+void A_SubtractAmmo(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1477,7 +1483,6 @@ void A_FireBlasterPL1(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
-void A_ShutdownPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
@@ -1566,9 +1571,10 @@ void A_AlertMonsters(actionargs_t *);
 void A_CheckPlayerDone(actionargs_t *);
 void A_FadeIn(actionargs_t *);
 void A_FadeOut(actionargs_t *);
-void A_PlaySoundEx(actionargs_t *mo);
+void A_PlaySoundEx(actionargs_t *);
 void A_SetSpecial(actionargs_t *);
-void A_Jump(actionargs_t *actor);
+void A_Jump(actionargs_t *);
+void A_SeekerMissile(actionargs_t *);
 
 // eternity tc ptrs: TODO: remove these?
 void A_FogSpawn(actionargs_t *);
@@ -1679,6 +1685,7 @@ deh_bexptr deh_bexptrs[] =
    // haleyjd: start new eternity codeptrs
    POINTER(SpawnAbove),
    POINTER(SpawnGlitter),
+   POINTER(SpawnEx),
    POINTER(StartScript),
    POINTER(StartScriptNamed),
    POINTER(PlayerStartScript),
@@ -1708,6 +1715,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetCounter),
    POINTER(CopyCounter),
    POINTER(CounterOp),
+   POINTER(CounterDiceRoll),
    POINTER(SetTics),
    POINTER(AproxDistance),
    POINTER(ShowMessage),
@@ -1728,12 +1736,16 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(MushroomEx),
    POINTER(HideThing),
    POINTER(UnHideThing),
    POINTER(RestoreArtifact),
    POINTER(RestoreSpecialThing1),
    POINTER(RestoreSpecialThing2),
    POINTER(SargAttack12),
+   POINTER(SelfDestruct),
+   POINTER(TurnProjectile),
+   POINTER(SubtractAmmo),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
@@ -1832,7 +1844,6 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
-   POINTER(ShutdownPhoenixPL2),
    POINTER(GauntletAttack),
 
    // MaxW: 2018/01/02: Heretic artifact use pointers
@@ -1923,6 +1934,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetSpecial),
    POINTER(SetTranslucent),
    POINTER(Jump),
+   POINTER(SeekerMissile),
 
    // ETERNITY TC ptrs -- TODO: eliminate these
    POINTER(FogSpawn),

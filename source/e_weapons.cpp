@@ -204,6 +204,8 @@ static dehflags_t e_weaponFlags[] =
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { "POWEREDUP",      WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
+   { "PHOENIXRESET",   WPF_PHOENIXRESET   },
+   { "DEPOWERSWITCH",  WPF_DEPOWERSWITCH  },
    { nullptr,          0                  }
 };
 
@@ -1422,6 +1424,13 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
       {
          E_EDFLoggedErr(2, "E_processWeapon: weaponinfo '%s' has flag 'POWERED_UP', "
                            "when its sisterweapon also has this flag\n", wp.name);
+      }
+
+      if(IS_SET(ITEM_WPN_SELECTORDER))
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: weaponinfo '%s' has flag 'POWERED_UP' as well "
+                           "as an explicit selectionorder.\nPowered weapons use the same "
+                           "selectionorder as their unpowered sisterweapon\n", wp.name);
       }
 
       E_RemoveItemEffect(wp.tracker);

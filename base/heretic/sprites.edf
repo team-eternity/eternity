@@ -10,7 +10,7 @@ pickupeffect HereticGreenKey
   effects KeyGreen
   message $HGOTGREENKEY
   sound   ht_keyup
-  flags   LEAVEINMULTI
+  flags   ALWAYSPICKUP|LEAVEINMULTI
 
   sprite  AKYY
   pfxname PFX_HGREENKEY
@@ -20,7 +20,7 @@ pickupeffect HereticBlueKey
   effects KeyBlue
   message $HGOTBLUEKEY
   sound   ht_keyup
-  flags   LEAVEINMULTI
+  flags   ALWAYSPICKUP|LEAVEINMULTI
 
   sprite  BKYY
   pfxname PFX_HBLUEKEY
@@ -30,7 +30,7 @@ pickupeffect HereticYellowKey
   effects KeyYellow
   message $HGOTYELLOWKEY
   sound   ht_keyup
-  flags   LEAVEINMULTI
+  flags   ALWAYSPICKUP|LEAVEINMULTI
 
   sprite  CKYY
   pfxname PFX_HYELLOWKEY

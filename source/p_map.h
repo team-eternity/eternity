@@ -275,6 +275,8 @@ void P_PushClipStack();
 // Pops the tm stack, storing the discarded element for later re-insertion.
 void P_PopClipStack();
 
+void P_ClearGlobalMobjReferences();
+
 extern doom_mapinter_t  clip;  // haleyjd 04/16/10: made global, renamed
 extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
 

@@ -430,35 +430,6 @@ endclosed:
 }
 
 //
-// R_DoorClosed
-//
-// killough 1/18/98 -- This function is used to fix the automap bug which
-// showed lines behind closed doors simply because the door had a dropoff.
-//
-// It assumes that Doom has already ruled out a door being closed because
-// of front-back closure (e.g. front floor is taller than back ceiling).
-//
-// FIXME: no longer used or needed in Eternity?
-//
-static int R_DoorClosed(void)
-{
-   return
-
-     // if door is closed because back is shut:
-     seg.backsec->ceilingheight <= seg.backsec->floorheight
-
-     // preserve a kind of transparent door/lift special effect:
-     && (seg.backsec->ceilingheight >= seg.frontsec->ceilingheight ||
-         seg.line->sidedef->toptexture)
-
-     && (seg.backsec->floorheight <= seg.frontsec->floorheight ||
-         seg.line->sidedef->bottomtexture)
-
-     // properly render skies (consider door "open" if both ceilings are sky):
-     && (!(seg.backsec->intflags & SIF_SKY) || !(seg.frontsec->intflags & SIF_SKY));
-}
-
-//
 // killough 3/7/98: Hack floor/ceiling heights for deep water etc.
 //
 // If player's view height is underneath fake floor, lower the
@@ -1815,7 +1786,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
       seg.markflags |= seg.frontsec->f_portal ? SEG_MARKFOVERLAY : SEG_MARKFLOOR;
 
    seg.clipsolid   = true;
-   seg.segtextured = seg.midtex != 0;
+   seg.segtextured = seg.midtex || seg.toptex || seg.bottomtex;
    seg.l_window    = line->linedef->portal ?
    R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
 
