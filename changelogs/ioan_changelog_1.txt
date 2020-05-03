@@ -13,6 +13,8 @@ Since v4.00.00 "Völuspá"
 BUGFIX: Odd-duration frames now restore correctly when returning to nightmare
         mode to normal.
 
+        Fixed the CLIPMIDTEX linedef flag not working over portals.
+
 --------------------------------------------------------------------------------
 26.04.2020
 
