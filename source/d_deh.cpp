@@ -876,7 +876,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
    {
       const int statenum = E_GetStateNumForDEHNum(value);
       mi->spawnstate = statenum;
-      states[statenum]->flags |= STATEF_VANILLA0TIC;
+      states[statenum]->flags |= STATEFI_VANILLA0TIC;
       break;
    }
    case 2: 
@@ -1153,7 +1153,7 @@ void deh_procFrame(DWFILE *fpin, char *line)
       {
          deh_LogPrintf(" - tics = %ld\n", value);
          states[indexnum]->tics = value;
-         states[indexnum]->flags |= STATEF_VANILLA0TIC;
+         states[indexnum]->flags |= STATEFI_VANILLA0TIC;
       }
       else if(!strcasecmp(key,deh_state[3]))  // Next frame
       {

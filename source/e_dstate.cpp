@@ -963,7 +963,7 @@ static void doKeyword(pstate_t *ps)
       switch(kwdcode)
       {
       case KWD_WAIT:
-         if(state->flags & STATEF_DECORATE)
+         if(state->flags & STATEFI_DECORATE)
          {
             state->nextstate = DSP.currentstate - 1; // self-referential
             if(state->tics == 0)
@@ -971,7 +971,7 @@ static void doKeyword(pstate_t *ps)
          }
          break;
       case KWD_LOOP:
-         if(state->flags & STATEF_DECORATE)
+         if(state->flags & STATEFI_DECORATE)
             state->nextstate = DSP.lastlabelstate;
          break;
       case KWD_STOP:
@@ -993,7 +993,7 @@ static void doKeyword(pstate_t *ps)
             }
             DSP.curbufstate = link;
          }
-         else if(state->flags & STATEF_DECORATE)
+         else if(state->flags & STATEFI_DECORATE)
             state->nextstate = NullStateNum; // next state is null state
          break;
       default:
@@ -1067,7 +1067,7 @@ static void doText(pstate_t *ps)
             (*link)->linenum == (*DSP.curbufstate)->linenum &&
             (*link)->type == BUF_STATE)
       {
-         if(states[statenum]->flags & STATEF_DECORATE)
+         if(states[statenum]->flags & STATEFI_DECORATE)
             states[statenum]->sprite = sprnum;
          link = link->dllNext;
          ++statenum;
@@ -1272,7 +1272,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          {
             char c = ectype::toUpper(ps->tokenbuffer->charAt(stridx));
 
-            if(states[statenum]->flags & STATEF_DECORATE)
+            if(states[statenum]->flags & STATEFI_DECORATE)
             {
                states[statenum]->frame = c - 'A';
 
@@ -1324,7 +1324,7 @@ static void DoPSNeedStateTics(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->flags & STATEF_DECORATE)
+            if(states[statenum]->flags & STATEFI_DECORATE)
             {
                states[statenum]->tics = tics;
 
@@ -1367,7 +1367,7 @@ static void doAction(pstate_t *ps, const char *fn)
       while(link && (*link)->type == BUF_STATE && 
             (*link)->linenum == (*DSP.curbufstate)->linenum)
       {
-         if(states[statenum]->flags & STATEF_DECORATE)
+         if(states[statenum]->flags & STATEFI_DECORATE)
             states[statenum]->action = states[statenum]->oldaction = ptr->cptr;
 
          ++statenum;           // move forward one state in states[]
@@ -1406,7 +1406,7 @@ static void applyStateBright()
    while(link && (*link)->type == BUF_STATE && 
       (*link)->linenum == (*DSP.curbufstate)->linenum)
    {
-      if(states[statenum]->flags & STATEF_DECORATE)
+      if(states[statenum]->flags & STATEFI_DECORATE)
          states[statenum]->frame |= FF_FULLBRIGHT;
 
       ++statenum;           // move forward one state in states[]
@@ -1428,7 +1428,7 @@ static void applyStateFlag(unsigned int flag)
    while(link && (*link)->type == BUF_STATE &&
       (*link)->linenum == (*DSP.curbufstate)->linenum)
    {
-      if(states[statenum]->flags & STATEF_DECORATE)
+      if(states[statenum]->flags & STATEFI_DECORATE)
          states[statenum]->flags |= flag;
 
       ++statenum;
@@ -1495,7 +1495,7 @@ static void applyStateOffset(pstate_t *ps)
    // Apply flag to all states in the current range
    while(link && (*link)->type == BUF_STATE && (*link)->linenum == (*DSP.curbufstate)->linenum)
    {
-      if(states[statenum]->flags & STATEF_DECORATE)
+      if(states[statenum]->flags & STATEFI_DECORATE)
       {
          states[statenum]->misc1 = x;
          states[statenum]->misc2 = y;
@@ -1586,7 +1586,7 @@ static void DoPSNeedStateEOLOrParen(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->flags & STATEF_DECORATE)
+            if(states[statenum]->flags & STATEFI_DECORATE)
                E_CreateArgList(states[statenum]);
 
             ++statenum;           // move forward one state in states[]
@@ -1625,7 +1625,7 @@ static void DoPSNeedStateArgOrParen(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->flags & STATEF_DECORATE)
+            if(states[statenum]->flags & STATEFI_DECORATE)
                E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
@@ -1696,7 +1696,7 @@ static void DoPSNeedStateArg(pstate_t *ps)
          while(link && (*link)->type == BUF_STATE && 
                (*link)->linenum == (*DSP.curbufstate)->linenum)
          {
-            if(states[statenum]->flags & STATEF_DECORATE)
+            if(states[statenum]->flags & STATEFI_DECORATE)
                E_AddArgToList(states[statenum]->args, ps->tokenbuffer->constPtr());
 
             ++statenum;           // move forward one state in states[]
@@ -2010,7 +2010,7 @@ static edecstateout_t *E_DecoratePrincipals(const char *input, const char *first
             states[i]->dehnum = -1;
             states[i]->sprite = blankSpriteNum;
             states[i]->nextstate = NullStateNum;
-            states[i]->flags |= STATEF_DECORATE;
+            states[i]->flags |= STATEFI_DECORATE;
          }
       }
    }
@@ -2089,7 +2089,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
          {
             foundmatch = true;
 
-            if(!(states[igt->state]->flags & STATEF_DECORATE))
+            if(!(states[igt->state]->flags & STATEFI_DECORATE))
                continue;
 
             states[igt->state]->nextstate = ds->state->index;
@@ -2114,7 +2114,7 @@ static bool E_resolveGotos(edecstateout_t *dso)
       } // end for
 
       // no match? generate a goto in the DSO
-      if(!foundmatch && states[igt->state]->flags & STATEF_DECORATE)
+      if(!foundmatch && states[igt->state]->flags & STATEFI_DECORATE)
       {
          egoto_t *egoto   = &(dso->gotos[dso->numgotos]);
          egoto->label     = estrdup(gotoInfo->gotodest);

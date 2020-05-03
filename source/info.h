@@ -155,11 +155,12 @@ enum
 typedef int statenum_t;
 
 // state flags
+// NOTE: STATEFI = internal flag, not meant for user consumption
 enum stateflags_e
 {
-   STATEF_DECORATE    = 0x00000001, // 01/01/12: reserved for DECORATE definition
-   STATEF_SKILL5FAST  = 0x00000002, // 08/02/13: tics halve on nightmare skill
-   STATEF_VANILLA0TIC = 0x00000004, // always use old 0-tic behaviour (when spawnstate)
+   STATEFI_DECORATE    = 0x00000001, // 01/01/12: reserved for DECORATE definition
+   STATEF_SKILL5FAST   = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEFI_VANILLA0TIC = 0x00000004, // always use old 0-tic behaviour (when spawnstate)
 };
 
 // ********************************************************************

@@ -1579,8 +1579,8 @@ void Mobj::Think()
 
    if(tics != -1) // you can cycle through multiple states in a tic
    {
-      if(((tics == 0) && (state->flags & STATEF_DECORATE) &&
-          !(state->flags & STATEF_VANILLA0TIC)) || !--tics)
+      if(((tics == 0) && (state->flags & STATEFI_DECORATE) &&
+          !(state->flags & STATEFI_VANILLA0TIC)) || !--tics)
          P_SetMobjState(this, state->nextstate);
    }
    else
