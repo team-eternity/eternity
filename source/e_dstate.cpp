@@ -190,7 +190,7 @@ static void E_AddBufferedState(int type, const char *name, int linenum)
           <frameletters> := [A-Z\[\\\]]+
           <tics> := [0-9]+
           <flagslist> := <flag><flagslist>
-            <flag> := "bright" | "fast" | "offset" '(' <x> ',' <y> ')' | nil
+            <flag> := "bright" | "fast" | "offset" '(' <x> ',' <y> [',' "interpolate"] ')' | nil
           <action> := <name>
                     | <name> '(' <arglist> ')'
                     | nil
@@ -1476,8 +1476,25 @@ static void applyStateOffset(pstate_t *ps)
    }
 
    int y = ps->tokenbuffer->toInt();
+   bool interpolate = false;
 
    E_GetDSToken(ps);
+
+   if(ps->tokentype == TOKEN_COMMA)
+   {
+      E_GetDSToken(ps);
+      if(ps->tokentype != TOKEN_TEXT || ps->tokenbuffer->strCaseCmp("interpolate"))
+      {
+         PSExpectedErr(ps, "interpolate");
+         ps->state = PSTATE_NEEDLABELORKWORSTATE;
+         return;
+      }
+      interpolate = true;
+
+      E_GetDSToken(ps);
+      // fall through
+   }
+
    if(ps->tokentype != TOKEN_RPAREN)
    {
       PSExpectedErr(ps, "')'");
@@ -1499,6 +1516,10 @@ static void applyStateOffset(pstate_t *ps)
       {
          states[statenum]->misc1 = x;
          states[statenum]->misc2 = y;
+         if(interpolate)
+            states[statenum]->flags |= STATEF_INTERPOLATE;
+         else
+            states[statenum]->flags &= ~STATEF_INTERPOLATE;
       }
 
       ++statenum;

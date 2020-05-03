@@ -35,8 +35,17 @@ BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
 FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
          is used to set the misc1 and misc2 flags, which are also capable of
          setting weapon coordinates.
+         
+         Eternity is also capable of interpolation when using offset(). By
+         default it's disabled, but you can enable it by using the "interpolate"
+         specifier as a third argument, for example: offset(1, 32, interpolate).
+         When inheriting via the Decorate syntax and reapplying offset(),
+         interpolation will be disabled again unless you specify it again.
+         
+         For the standard "frame" EDF section, you can use the +|-interpolate 
+         specifier to add or remove the flag.
 
-         Added the DOOMWEAPONOFFSET gameproperties flag which is already defined
+         Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
          for DOOM (solely for Dehacked and past EDF mod compatibility) and
          enables the less intuitive DOOM rule on when offsets have effect.
          Otherwise the better Hexen rule applies.
