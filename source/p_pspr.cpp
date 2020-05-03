@@ -109,7 +109,8 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
             // coordinate set
             psp->sx = state->misc1 << FRACBITS;
             psp->sy = state->misc2 << FRACBITS;
-            psp->backupPosition();
+            if(!(state->flags & STATEF_INTERPOLATE))
+               psp->backupPosition();
          }
       }
       else
@@ -117,12 +118,14 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
          if(state->misc1)
          {
             psp->sx = state->misc1 << FRACBITS;
-            psp->prevpos.x = psp->sx;
+            if(!(state->flags & STATEF_INTERPOLATE))
+               psp->prevpos.x = psp->sx;
          }
          if(state->misc2)
          {
             psp->sy = state->misc2 << FRACBITS;
-            psp->prevpos.y = psp->sy;
+            if(!(state->flags & STATEF_INTERPOLATE))
+               psp->prevpos.y = psp->sy;
          }
       }
 

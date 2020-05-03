@@ -67,6 +67,7 @@ int NullStateNum;
 #define ITEM_FRAME_DEHNUM    "dehackednum"
 #define ITEM_FRAME_CMP       "cmp"
 #define ITEM_FRAME_SKILL5FAST "SKILL5FAST"
+#define ITEM_FRAME_INTERPOLATE "INTERPOLATE"
 
 #define ITEM_DELTA_NAME      "name"
 
@@ -94,6 +95,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
    CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
    CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_FRAME_INTERPOLATE, 0,          CFGF_SIGNPREFIX), \
    CFG_END()
 
 cfg_opt_t edf_frame_opts[] =
@@ -118,7 +120,9 @@ cfg_opt_t edf_fblock_opts[] =
 
 static const dehflags_t frameFlagSet[] =
 {
-   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST }
+   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST },
+   { ITEM_FRAME_INTERPOLATE, STATEF_INTERPOLATE },
+   { nullptr },
 };
 
 //
