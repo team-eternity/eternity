@@ -109,14 +109,21 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
             // coordinate set
             psp->sx = state->misc1 << FRACBITS;
             psp->sy = state->misc2 << FRACBITS;
+            psp->backupPosition();
          }
       }
       else
       {
          if(state->misc1)
+         {
             psp->sx = state->misc1 << FRACBITS;
+            psp->prevpos.x = psp->sx;
+         }
          if(state->misc2)
+         {
             psp->sy = state->misc2 << FRACBITS;
+            psp->prevpos.y = psp->sy;
+         }
       }
 
       // Call action routine.
@@ -1231,6 +1238,8 @@ void P_MovePsprites(player_t *player)
    
    player->psprites[ps_flash].sx = player->psprites[ps_weapon].sx;
    player->psprites[ps_flash].sy = player->psprites[ps_weapon].sy;
+   // also preserve interpolation
+   player->psprites[ps_flash].prevpos = player->psprites[ps_weapon].prevpos;
 }
 
 //===============================
