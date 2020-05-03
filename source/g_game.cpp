@@ -3097,16 +3097,19 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
+   static PODCollection<int> originalStateTics;
    MetaSpeedSet *mss;
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
+         originalStateTics.resize(NUMSTATES);
          for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
             {
+               originalStateTics[i] = states[i]->tics;
                // killough 4/10/98
                // don't change 1->0 since it causes cycles
                if(states[i]->tics != 1 || demo_compatibility)
@@ -3126,7 +3129,7 @@ void G_SetFastParms(int fast_pending)
          for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
-               states[i]->tics <<= 1;
+               states[i]->tics = originalStateTics[i];
          }
 
          for(int i = 0; i < NUMMOBJTYPES; i++)

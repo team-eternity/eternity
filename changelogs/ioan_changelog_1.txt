@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+3.05.2020
+
+BUGFIX: Odd-duration frames now restore correctly when returning to nightmare
+        mode to normal.
+
+--------------------------------------------------------------------------------
 26.04.2020
 
 FEATURE: New console command: warp, which, like in ZDoom, teleports player to
