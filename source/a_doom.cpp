@@ -58,6 +58,7 @@
 #include "r_state.h"
 #include "s_sound.h"
 #include "sounds.h"
+#include "v_misc.h"
 
 //
 // A_PosAttack
@@ -1477,6 +1478,12 @@ void A_BrainSpit(actionargs_t *actionargs)
    // spawn brain missile
    newmobj = P_SpawnMissile(mo, targ, SpawnShotType, mo->z + DEFAULTMISSILEZ);
    P_SetTarget<Mobj>(&newmobj->target, targ);
+   if(!newmobj->state->tics)
+   {
+      newmobj->remove();
+      doom_printf(FC_ERROR "BrainSpit: invalid 0 tic spawn state");
+      return;
+   }
    newmobj->reactiontime = (int16_t)(((targ->y-mo->y)/newmobj->momy)/newmobj->state->tics);
 
    // killough 7/18/98: brain friendliness is transferred
