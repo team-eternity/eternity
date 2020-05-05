@@ -106,12 +106,15 @@ static bool Sentinel_FindEternityPID(const std::vector<DWORD> &ndwPIDs,
          ZeroMemory(szProcessImage, sizeof(szProcessImage));
          if(GetProcessImageFileNameA(chProcess.handle, szProcessImage, sizeof(szProcessImage)))
          {
+            constexpr char   szProcessName[]   = "Eternity.exe"; // Case-insensitive
+            constexpr size_t processNameLength = sizeof(szProcessName) - 1; // -1 to remove ending '\0'
+
             const size_t imageLength = strlen(szProcessImage);
-            if(imageLength < 12)
+            if(imageLength < processNameLength)
                continue;
 
             // Lop off the start of szProcessImage
-            if(!strnicmp(szProcessImage + imageLength - 12, "Eternity.exe", 12))
+            if(!strnicmp(szProcessImage + imageLength - processNameLength, szProcessName, processNameLength))
             {
                pHandle = chProcess.handle;
                chProcess.handle = nullptr; // Abuse AutoHandle's destructor behaviour
