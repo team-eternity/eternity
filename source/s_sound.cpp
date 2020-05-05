@@ -1643,6 +1643,11 @@ CONSOLE_COMMAND(s_playmusic, 0)
    S_ChangeMusic(music, true);
 }
 
+CONSOLE_COMMAND(s_stopmusic, 0)
+{
+   S_StopMusic();
+}
+
 #if 0
 //
 // Small native functions

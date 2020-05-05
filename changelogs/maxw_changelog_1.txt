@@ -442,6 +442,10 @@ Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
 Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
 Made midiproc shut down if Eternity isn't running.
 
+-------------------------------------------------------------------------------
+2020/05/05
+Added console command "s_stopmusic" as well as the alias "stopmus".
+
 ================================================================================
 EOF
 ================================================================================

@@ -199,6 +199,9 @@ void C_Init()
    
    // sf: stupid american spellings =)
    C_NewAlias("color", "colour %opt");
+
+   // MaxW: Aliases for benefit of ZDoom users familiar w/ its ccmds
+   C_NewAlias("stopmus", "s_stopmusic %opt");
    
    C_updateInputPoint();
    
