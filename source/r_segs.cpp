@@ -953,9 +953,18 @@ void R_StoreWallRange(const int start, const int stop)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
 
-      const float *silclip = segclip.markflags & SEG_MARKCOVERLAY ? overlaycclip : ceilingclip;
+      if(segclip.markflags & SEG_MARKCOVERLAY)
+      {
+         for(int i = xlen; i --> 0;)
+         {
+            float over = overlaycclip[segclip.x1 + i];
+            float solid = ceilingclip[segclip.x1 + i];
+            lastopening[i] = over > solid ? over : solid;
+         }
+      }
+      else
+         memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
 
-      memcpy(lastopening, silclip + segclip.x1, sizeof(float) * xlen);
       ds_p->sprtopclip = lastopening - segclip.x1;
       lastopening += xlen;
    }
@@ -963,9 +972,18 @@ void R_StoreWallRange(const int start, const int stop)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
 
-      const float *silclip = segclip.markflags & SEG_MARKFOVERLAY ? overlayfclip : floorclip;
+      if(segclip.markflags & SEG_MARKFOVERLAY)
+      {
+         for(int i = xlen; i-- > 0;)
+         {
+            float over = overlayfclip[segclip.x1 + i];
+            float solid = floorclip[segclip.x1 + i];
+            lastopening[i] = over < solid ? over : solid;
+         }
+      }
+      else
+         memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
 
-      memcpy(lastopening, silclip + segclip.x1, sizeof(float) * xlen);
       ds_p->sprbottomclip = lastopening - segclip.x1;
       lastopening += xlen;
    }
