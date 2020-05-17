@@ -1812,7 +1812,8 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1 &&
+      (type = E_ThingNumForCompatName(Console.argv[0]->constPtr())) == 1)
    {
       C_Printf("unknown thing type\n");
       return;

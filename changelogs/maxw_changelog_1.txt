@@ -446,6 +446,11 @@ Made midiproc shut down if Eternity isn't running.
 2020/05/05
 Added console command "s_stopmusic" as well as the alias "stopmus".
 
+-------------------------------------------------------------------------------
+2020/05/17
+Made "summon" console command check thing num for compat name if no thing is
+found for the regular name.
+
 ================================================================================
 EOF
 ================================================================================
