@@ -643,7 +643,7 @@ CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 static const char *i_videodrivernames[] = 
 {
    "default",
-   "SDL Software",
+   "SDL Default",
    "SDL GL2D"
 };
 
