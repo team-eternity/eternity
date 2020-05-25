@@ -2084,6 +2084,10 @@ int P_FindDoomedNum(int type)
    static struct dnumhash_s { int first, next; } *hash;
    int i;
 
+   // Negative type would crash otherwise.
+   if(type < 0)
+      return -1;
+
    if(!hash)
    {
       hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
@@ -2316,6 +2320,11 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    if(mthing->type == 5003 && demo_version < 331)
       return nullptr;
 
+   // if vanilla, do it like Chocolate-Doom which deems it safe to silently ignore negative
+   // doomednums
+   if(demo_compatibility && mthing->type <= 0)
+      return nullptr;
+
    // check for players specially
 
    if(mthing->type <= 4 && mthing->type > 0) // killough 2/26/98 -- fix crashes
@@ -2426,7 +2435,14 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
                      M_FixedToDouble(mthing->y));
       }
       else
+      {
+         // Still print the error, but only at console
+         C_Printf(FC_ERROR "Unknown thing type %d at (%.2f, %.2f)",
+            mthing->type,
+            M_FixedToDouble(mthing->x),
+            M_FixedToDouble(mthing->y));
          UnknownThings.add(*mthing);
+      }
 
        return nullptr;
    }

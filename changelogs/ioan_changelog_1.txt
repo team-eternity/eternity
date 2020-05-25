@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+25.05.2020
+
+BUGFIX: Fixed an occasional crash happening when starting maps with things with
+        negative doomednums.
+
+--------------------------------------------------------------------------------
 3.05.2020
 
 BUGFIX: Odd-duration frames now restore correctly when returning to nightmare
