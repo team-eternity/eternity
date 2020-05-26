@@ -2342,18 +2342,21 @@ static const char *mn_mousejoy_names[] =
    "Mouse Settings",
    "Acceleration / Mouselook",
    "Gamepad Settings",
+   "Gamepad Axis Settings",
    NULL
 };
 
 extern menu_t menu_mouse;
 extern menu_t menu_mouse_accel_and_mlook;
 extern menu_t menu_joystick;
+extern menu_t menu_joystick_axes;
 
 static menu_t *mn_mousejoy_pages[] =
 {
    &menu_mouse,
    &menu_mouse_accel_and_mlook,
    &menu_joystick,
+   &menu_joystick_axes,
    NULL
 };
 
@@ -2578,7 +2581,7 @@ menu_t menu_joystick =
 {
    mn_joystick_items,
    &menu_mouse_accel_and_mlook,    // previous page
-   NULL,                           // next page
+   &menu_joystick_axes,            // next page
    &menu_mouse,                    // rootpage
    200, 15,                        // x,y offset
    2,                              // start on first selectable
@@ -2747,6 +2750,53 @@ CONSOLE_COMMAND(mn_padtest, 0)
    }
 
    MN_PushWidget(&padtest_widget);
+}
+
+//------------------------------------------------------------------------
+//
+// Joystick Axis Configuration Menu
+//
+
+static menuitem_t mn_joystick_axes_items[] =
+{
+   { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
+   { it_gap                                                          },
+   { it_toggle,       "Axis 1 action",             "g_axisaction1"   },
+   { it_toggle,       "Axis 2 action",             "g_axisaction2"   },
+   { it_toggle,       "Axis 3 action",             "g_axisaction3"   },
+   { it_toggle,       "Axis 4 action",             "g_axisaction4"   },
+   { it_toggle,       "Axis 5 action",             "g_axisaction5"   },
+   { it_toggle,       "Axis 6 action",             "g_axisaction6"   },
+   { it_toggle,       "Axis 7 action",             "g_axisaction7"   },
+   { it_toggle,       "Axis 8 action",             "g_axisaction8"   },
+   { it_toggle,       "Axis 1 orientation",        "g_axisorientation1" },
+   { it_toggle,       "Axis 2 orientation",        "g_axisorientation2" },
+   { it_toggle,       "Axis 3 orientation",        "g_axisorientation3" },
+   { it_toggle,       "Axis 4 orientation",        "g_axisorientation4" },
+   { it_toggle,       "Axis 5 orientation",        "g_axisorientation5" },
+   { it_toggle,       "Axis 6 orientation",        "g_axisorientation6" },
+   { it_toggle,       "Axis 7 orientation",        "g_axisorientation7" },
+   { it_toggle,       "Axis 8 orientation",        "g_axisorientation8" },
+   { it_end                                                          },
+};
+
+menu_t menu_joystick_axes =
+{
+   mn_joystick_axes_items,
+   &menu_joystick,                 // previous page
+   nullptr,                        // next page
+   &menu_mouse,                    // rootpage
+   200, 15,                        // x,y offset
+   2,                              // start on first selectable
+   mf_background,                  // full-screen menu
+   nullptr,                        // no drawer
+   mn_mousejoy_names,              // TOC stuff
+   mn_mousejoy_pages,
+};
+
+CONSOLE_COMMAND(mn_joyaxes, 0)
+{
+   MN_StartMenu(&menu_joystick_axes);
 }
 
 //=============================================================================

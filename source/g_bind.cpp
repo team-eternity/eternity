@@ -748,6 +748,8 @@ void G_CreateAxisActionVars()
       variable->type      = vt_int;
       variable->min       = -1;
       variable->max       =  1;
+      static const char *orientationDefines[] = { "reversed", "default", "normal" };
+      variable->defines = orientationDefines;
 
       command = estructalloc(command_t, 1);
       name.clear() << "g_axisorientation" << i+1;
