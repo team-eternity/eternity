@@ -2570,7 +2570,7 @@ static menuitem_t mn_joystick_items[] =
    { it_info,         "Settings"                                     },
    { it_runcmd,       "Load profile...",           "mn_profiles"     },
    { it_variable,     "SDL sensitivity",           "i_joysticksens"  },
-   { it_variable,     "Force feedback",            "i_forcefeedback" },
+   { it_toggle,       "Force feedback",            "i_forcefeedback" },
    { it_end                                                          }
 };
 
