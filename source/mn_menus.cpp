@@ -2757,6 +2757,10 @@ CONSOLE_COMMAND(mn_padtest, 0)
 // Joystick Axis Configuration Menu
 //
 
+//
+// The menu content. NOTE: this is only for show and keeping content; otherwise it gets dynamically
+// updated
+//
 static menuitem_t mn_joystick_axes_items[] =
 {
    { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
@@ -2779,6 +2783,7 @@ static menuitem_t mn_joystick_axes_items[] =
    { it_toggle,       "Axis 8 orientation",        "g_axisorientation8" },
    { it_end                                                          },
 };
+static_assert(earrlen(mn_joystick_axes_items) == 3 + 2 * HALGamePad::MAXAXES);
 
 menu_t menu_joystick_axes =
 {
@@ -2794,8 +2799,65 @@ menu_t menu_joystick_axes =
    mn_mousejoy_pages,
 };
 
+//
+// Updates the joystick axis menu count according to current gamepad
+//
+static void MN_adjustAxisCount()
+{
+   HALGamePad *pad = I_GetActivePad();
+   if(!pad || !pad->numAxes)
+   {
+      mn_joystick_axes_items[2] =
+      {
+         it_info, "No gamepad connected.", nullptr, nullptr, MENUITEM_CENTERED
+      };
+      mn_joystick_axes_items[3] = { it_end };
+      return;
+   }
+
+   static const char *const actionStrings[] =
+   {
+      "Axis 1 action", "Axis 2 action", "Axis 3 action", "Axis 4 action",
+      "Axis 5 action", "Axis 6 action", "Axis 7 action", "Axis 8 action",
+   };
+   static const char *const actionCommands[] =
+   {
+      "g_axisaction1", "g_axisaction2", "g_axisaction3", "g_axisaction4",
+      "g_axisaction5", "g_axisaction6", "g_axisaction7", "g_axisaction8",
+   };
+   static const char *const orientStrings[] =
+   {
+      "Axis 1 orientation", "Axis 2 orientation", "Axis 3 orientation", "Axis 4 orientation",
+      "Axis 5 orientation", "Axis 6 orientation", "Axis 7 orientation", "Axis 8 orientation",
+   };
+   static const char *const orientCommands[] =
+   {
+      "g_axisorientation1", "g_axisorientation2", "g_axisorientation3", "g_axisorientation4",
+      "g_axisorientation5", "g_axisorientation6", "g_axisorientation7", "g_axisorientation8",
+   };
+   static_assert(earrlen(actionStrings) == HALGamePad::MAXAXES);
+   static_assert(earrlen(actionCommands) == HALGamePad::MAXAXES);
+   static_assert(earrlen(orientStrings) == HALGamePad::MAXAXES);
+   static_assert(earrlen(orientCommands) == HALGamePad::MAXAXES);
+
+   int axes = pad->numAxes;
+   for(int i = 0; i < axes; ++i)
+   {
+      mn_joystick_axes_items[i + 2] =
+      {
+         it_toggle, actionStrings[i], actionCommands[i]
+      };
+      mn_joystick_axes_items[2 + axes + i] =
+      {
+         it_toggle, orientStrings[i], orientCommands[i]
+      };
+   }
+   mn_joystick_axes_items[2 + 2 * axes] = { it_end };
+}
+
 CONSOLE_COMMAND(mn_joyaxes, 0)
 {
+   MN_adjustAxisCount();
    MN_StartMenu(&menu_joystick_axes);
 }
 
