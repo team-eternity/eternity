@@ -125,6 +125,7 @@ bool SDLGamePad::select()
    {
       numAxes    = SDL_JoystickNumAxes(joystick);
       numButtons = SDL_JoystickNumButtons(joystick);
+      numHats    = SDL_JoystickNumHats(joystick);
       return true;
    }
    else
@@ -164,6 +165,19 @@ void SDLGamePad::poll()
    // get button states
    for(int i = 0; i < numButtons && i < MAXBUTTONS; i++)
       state.buttons[i] = !!SDL_JoystickGetButton(joystick, i);
+   for(int i = 0; i < numHats && i < MAXHATS; i++)
+   {
+      Uint8 sdlhat = SDL_JoystickGetHat(joystick, i);
+      state.hats[i] = 0;
+      if(sdlhat & SDL_HAT_RIGHT)
+         state.hats[i] |= HAT_RIGHT;
+      if(sdlhat & SDL_HAT_UP)
+         state.hats[i] |= HAT_UP;
+      if(sdlhat & SDL_HAT_LEFT)
+         state.hats[i] |= HAT_LEFT;
+      if(sdlhat & SDL_HAT_DOWN)
+         state.hats[i] |= HAT_DOWN;
+   }
 
    // get axis states
    for(int i = 0; i < numAxes && i < MAXAXES; i++)

@@ -309,6 +309,22 @@ struct keyname_t
    { KEYD_JOY14,      "joy14"      },
    { KEYD_JOY15,      "joy15"      },
    { KEYD_JOY16,      "joy16"      },
+   { KEYD_HAT1RIGHT,  "hat1right"  },
+   { KEYD_HAT1UP,     "hat1up"     },
+   { KEYD_HAT1LEFT,   "hat1left"   },
+   { KEYD_HAT1DOWN,   "hat1down"   },
+   { KEYD_HAT2RIGHT,  "hat2right"  },
+   { KEYD_HAT2UP,     "hat2up"     },
+   { KEYD_HAT2LEFT,   "hat2left"   },
+   { KEYD_HAT2DOWN,   "hat2down"   },
+   { KEYD_HAT3RIGHT,  "hat3right"  },
+   { KEYD_HAT3UP,     "hat3up"     },
+   { KEYD_HAT3LEFT,   "hat3left"   },
+   { KEYD_HAT3DOWN,   "hat3down"   },
+   { KEYD_HAT4RIGHT,  "hat4right"  },
+   { KEYD_HAT4UP,     "hat4up"     },
+   { KEYD_HAT4LEFT,   "hat4left"   },
+   { KEYD_HAT4DOWN,   "hat4down"   },
    { KEYD_AXISON01,   "axis1"      },
    { KEYD_AXISON02,   "axis2"      },
    { KEYD_AXISON03,   "axis3"      },
@@ -781,6 +797,15 @@ static void G_clearGamepadBindings()
 
       for(keyaction_t *&binding : keybindings[vkc].bindings)
          binding = nullptr;
+   }
+
+   // clear hats
+   for(int hat = 0; hat < HALGamePad::MAXHATS; hat++)
+   {
+      int vkc = KEYD_HAT1RIGHT + 4 * hat;
+      for(int i = 0; i < 4; ++i)
+         for(keyaction_t *&binding : keybindings[vkc + i].bindings)
+            binding = nullptr;
    }
 
    // clear axis actions, orientations, and trigger bindings
