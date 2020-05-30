@@ -2763,7 +2763,7 @@ CONSOLE_COMMAND(mn_padtest, 0)
 //
 static menuitem_t mn_joystick_axes_items[] =
 {
-   { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
+   { it_title,        "Joystick Axis Settings",     nullptr, nullptr  },
    { it_gap                                                          },
    { it_toggle,       "Axis 1 action",             "g_axisaction1"   },
    { it_toggle,       "Axis 2 action",             "g_axisaction2"   },
@@ -2809,7 +2809,7 @@ static void MN_adjustAxisCount()
    {
       mn_joystick_axes_items[2] =
       {
-         it_info, "No gamepad connected.", nullptr, nullptr, MENUITEM_CENTERED
+         it_info, "No joystick connected.", nullptr, nullptr, MENUITEM_CENTERED
       };
       mn_joystick_axes_items[3] = { it_end };
       return;
