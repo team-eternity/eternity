@@ -49,6 +49,8 @@ static PODCollection<HALGamePad *> masterGamePadList;
 // Currently selected and active gamepad object, if any.
 static HALGamePad *activePad;
 
+static gamePadChangeCallback_t gamePadChangeCallback;
+
 // Generic sensitivity values, for drivers that need them
 int i_joysticksens;
 
@@ -196,6 +198,9 @@ bool I_SelectDefaultGamePad()
          activePad = pad;
    }
 
+   if(gamePadChangeCallback)
+      gamePadChangeCallback();
+
    return (activePad != NULL);
 }
 
@@ -240,10 +245,11 @@ void I_EnumerateGamePads()
 // implementing gamepad drivers in the current build will be initialized in
 // turn and the master list of available devices will be built.
 //
-void I_InitGamePads()
+void I_InitGamePads(gamePadChangeCallback_t callback)
 {
    // Initialize all supported gamepad drivers
    halpaddriveritem_t *item = halPadDriverTable;
+   gamePadChangeCallback = callback;
 
    while(item->name)
    {

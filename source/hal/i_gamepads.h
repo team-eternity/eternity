@@ -148,8 +148,10 @@ public:
 
 // Global interface
 
+typedef void (*gamePadChangeCallback_t)();
+
 bool I_SelectDefaultGamePad();
-void I_InitGamePads();
+void I_InitGamePads(gamePadChangeCallback_t callback);
 void I_ShutdownGamePads();
 HALGamePad::padstate_t *I_PollActiveGamePad();
 

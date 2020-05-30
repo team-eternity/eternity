@@ -42,6 +42,7 @@
 #include "../doomstat.h"
 #include "../m_misc.h"
 #include "../m_syscfg.h"
+#include "../mn_menus.h"
 #include "../g_demolog.h"
 #include "../g_game.h"
 #include "../w_wad.h"
@@ -90,7 +91,7 @@ void I_Init()
    I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads();
+   I_InitGamePads(MN_UpdateJoystickMenus);
  
    atexit(I_Shutdown);
    

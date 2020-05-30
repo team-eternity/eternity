@@ -2857,8 +2857,15 @@ static void MN_adjustAxisCount()
 
 CONSOLE_COMMAND(mn_joyaxes, 0)
 {
-   MN_adjustAxisCount();
    MN_StartMenu(&menu_joystick_axes);
+}
+
+//
+// Called when the current joystick is changed
+//
+void MN_UpdateJoystickMenus()
+{
+   MN_adjustAxisCount();
 }
 
 //=============================================================================
