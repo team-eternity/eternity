@@ -2652,7 +2652,7 @@ static void MN_padTestDrawer()
          mn_padtestdata.axisStates[i] < 0 ? GameModeInfo->unselectColor :
          GameModeInfo->infoColor;
 
-      qstr.clear() << "A" << (i + 1);
+      qstr.Printf(16, "A%d=%.2f", i + 1, mn_padtestdata.axisStates[i]);
       MN_WriteTextColored(qstr.constPtr(), color, x, y);
       x += MN_StringWidth(qstr.constPtr()) + 8;
 
