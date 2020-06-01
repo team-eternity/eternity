@@ -2822,6 +2822,7 @@ void MN_UpdateJoystickMenus()
 {
    struct menuentry_t
    {
+      int type;
       char label[32];
       char variable[32];
    };
@@ -2864,14 +2865,23 @@ void MN_UpdateJoystickMenus()
    for(int i = 0; i < pad->numAxes; ++i)
    {
       menuentry_t &entry = entries.addNew();
+      entry.type = it_toggle;
       snprintf(entry.label, sizeof(entry.label), "Axis %d action", i + 1);
       snprintf(entry.variable, sizeof(entry.variable), "g_axisaction%d", i + 1);
    }
    for(int i = 0; i < pad->numAxes; ++i)
    {
       menuentry_t &entry = entries.addNew();
+      entry.type = it_toggle;
       snprintf(entry.label, sizeof(entry.label), "Axis %d orientation", i + 1);
       snprintf(entry.variable, sizeof(entry.variable), "g_axisorientation%d", i + 1);
+   }
+   for(int i = 0; i < pad->numAxes; ++i)
+   {
+      menuentry_t &entry = entries.addNew();
+      entry.type = it_slider;
+      snprintf(entry.label, sizeof(entry.label), "Axis %d dead zone", i + 1);
+      snprintf(entry.variable, sizeof(entry.variable), "g_axisdeadzone%d", i + 1);
    }
    // TODO: add the options from Descent Rebirth
 
@@ -2905,7 +2915,7 @@ void MN_UpdateJoystickMenus()
             break;
          content.items[2 + j] =
          {
-            it_toggle,
+            entries[entryindex].type,
             entries[entryindex].label,
             entries[entryindex].variable
          };

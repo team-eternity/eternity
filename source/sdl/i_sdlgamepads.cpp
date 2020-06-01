@@ -27,6 +27,7 @@
 
 #include "../z_zone.h"
 
+#include "../g_bind.h"
 #include "i_sdlgamepads.h"
 
 // Module-private globals
@@ -183,8 +184,9 @@ void SDLGamePad::poll()
    for(int i = 0; i < numAxes && i < MAXAXES; i++)
    {
       Sint16 val = SDL_JoystickGetAxis(joystick, i);
+      int threshold = int(round(axisDeadZone[i] * 32767));
 
-      if(val > i_joysticksens || val < -i_joysticksens)
+      if(val > threshold || val < -threshold)
       {
          // unbias on the low end, so that +32767 means 1.0
          if(val == -32768)

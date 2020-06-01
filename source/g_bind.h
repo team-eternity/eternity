@@ -159,6 +159,8 @@ extern int axisActions[];
 // Axis orientations
 extern int axisOrientation[];
 
+extern double axisDeadZone[];
+
 bool G_ExecuteGamepadProfile(const char *name);
 
 #endif

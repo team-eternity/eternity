@@ -718,6 +718,9 @@ int axisActions[HALGamePad::MAXAXES];
 // Axis orientations. This should SO not be necessary.
 int axisOrientation[HALGamePad::MAXAXES];
 
+// Axis deadzone
+double axisDeadZone[HALGamePad::MAXAXES];
+
 // Names for axis actions
 static const char *axisActionNames[axis_max] =
 {
@@ -774,6 +777,19 @@ void G_CreateAxisActionVars()
       command->variable = variable;
 
       C_AddCommand(command);
+
+      // Add the dead zones
+      variable = estructalloc(variable_t, 1);
+      variable->variable = &axisDeadZone[i];
+      variable->type = vt_float;
+      variable->dmin = 0;
+      variable->dmax = 1;
+
+      command = estructalloc(command_t, 1);
+      name.clear() << "g_axisdeadzone" << (i + 1);
+      command->name = name.duplicate();
+      command->type = ct_variable;
+      command->variable = variable;
    }
 }
 
@@ -813,6 +829,7 @@ static void G_clearGamepadBindings()
    {
       axisActions[axis] = axis_none;
       axisOrientation[axis] = 0;     // zero is agnostic
+      axisDeadZone[axis] = 7849.0 / 32767.0; // same value as i_joysticksens default
 
       int vkc = KEYD_AXISON01 + axis;
 
@@ -972,6 +989,7 @@ void G_SaveDefaults()
          fprintf(file, "g_axisorientation%d %d\n",
                  i+1, axisOrientation[i]);
       }
+      fprintf(file, "g_axisdeadzone%d %f\n", i + 1, axisDeadZone[i]);
    }
 
    fclose(file);
