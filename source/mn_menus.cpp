@@ -2887,11 +2887,6 @@ static void MN_adjustAxisCount()
    mn_joystick_axes_items[2 + 2 * axes] = { it_end };
 }
 
-CONSOLE_COMMAND(mn_joyaxes, 0)
-{
-   MN_StartMenu(&menu_joystick_axes);
-}
-
 //
 // Called when the current joystick is changed
 //
