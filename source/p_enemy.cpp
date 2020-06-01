@@ -1813,7 +1813,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
    }
 
    if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1 &&
-      (type = E_ThingNumForCompatName(Console.argv[0]->constPtr())) == 1)
+      (type = E_ThingNumForCompatName(Console.argv[0]->constPtr())) == -1)
    {
       C_Printf("unknown thing type\n");
       return;
