@@ -1592,7 +1592,7 @@ static box_widget_t menu_box_widget =
 // Sets up the menu_box_widget object above to show specific information.
 //
 void MN_SetupBoxWidget(const char *title, const char **item_names,
-                       int type, menu_t **pages, const char **cmds)
+                       boxwidget_e type, menu_t **pages, const char **cmds)
 {
    menu_box_widget.title = title;
    menu_box_widget.item_names = item_names;
@@ -1600,11 +1600,11 @@ void MN_SetupBoxWidget(const char *title, const char **item_names,
    
    switch(type)
    {
-   case 0: // menu page widget
+   case boxwidget_menupage: // menu page widget
       menu_box_widget.pages = pages;
       menu_box_widget.cmds  = NULL;
       break;
-   case 1: // command widget
+   case boxwidget_command: // command widget
       menu_box_widget.pages = NULL;
       menu_box_widget.cmds  = cmds;
       break;
@@ -1643,7 +1643,7 @@ static void MN_ShowContents(void)
    if(!menuactive)
       return;
 
-   MN_SetupBoxWidget("contents", current_menu->content_names, 0,
+   MN_SetupBoxWidget("contents", current_menu->content_names, boxwidget_menupage,
                      current_menu->content_pages, NULL);
 
    // haleyjd 05/02/10: try to find the current menu in the list of pages

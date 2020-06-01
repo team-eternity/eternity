@@ -228,8 +228,13 @@ int  MN_StringHeight(const char *s);
 
 void MN_ErrorMsg(const char *s, ...);
 
+enum boxwidget_e
+{
+   boxwidget_menupage,
+   boxwidget_command
+};
 void MN_SetupBoxWidget(const char *title, const char **item_names,
-                       int type, menu_t **pages, const char **cmds);
+                       boxwidget_e type, menu_t **pages, const char **cmds);
 void MN_ShowBoxWidget();
 
 void MN_DrawSmallPtr(int x, int y); // haleyjd 03/13/06

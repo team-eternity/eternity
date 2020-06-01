@@ -1997,7 +1997,7 @@ CONSOLE_COMMAND(mn_vidmode, cf_hidden)
    MN_BuildVidmodeTables();
 
    MN_SetupBoxWidget("Choose a Video Mode", 
-                     (const char **)mn_vidmode_desc, 1, NULL, 
+                     (const char **)mn_vidmode_desc, boxwidget_command, NULL,
                      (const char **)mn_vidmode_cmds);
    MN_ShowBoxWidget();
 }
@@ -2491,7 +2491,7 @@ CONSOLE_COMMAND(mn_joysticks, cf_hidden)
              "Choose a Gamepad\n\nCurrent device:\n  %s",
              drv_name);
 
-   MN_SetupBoxWidget(title, mn_js_desc, 1, NULL, mn_js_cmds);
+   MN_SetupBoxWidget(title, mn_js_desc, boxwidget_command, NULL, mn_js_cmds);
    MN_ShowBoxWidget();
 }
 
@@ -2558,7 +2558,7 @@ CONSOLE_COMMAND(mn_profiles, cf_hidden)
       return;
    }
 
-   MN_SetupBoxWidget("Choose a Profile: ", mn_prof_desc, 1, NULL, mn_prof_cmds);
+   MN_SetupBoxWidget("Choose a Profile: ", mn_prof_desc, boxwidget_command, NULL, mn_prof_cmds);
    MN_ShowBoxWidget();
 }
 
