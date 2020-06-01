@@ -2793,33 +2793,17 @@ CONSOLE_COMMAND(mn_padtest, 0)
 // The menu content. NOTE: this is only for show and keeping content; otherwise it gets dynamically
 // updated
 //
-static menuitem_t mn_joystick_axes_items[] =
+static menuitem_t mn_joystick_axes_placeholder[] =
 {
-   { it_title,        "Joystick Axis Settings",     nullptr, nullptr  },
+   { it_title,        "Gamepad Axis Settings",     nullptr, nullptr  },
    { it_gap                                                          },
-   { it_toggle,       "Axis 1 action",             "g_axisaction1"   },
-   { it_toggle,       "Axis 2 action",             "g_axisaction2"   },
-   { it_toggle,       "Axis 3 action",             "g_axisaction3"   },
-   { it_toggle,       "Axis 4 action",             "g_axisaction4"   },
-   { it_toggle,       "Axis 5 action",             "g_axisaction5"   },
-   { it_toggle,       "Axis 6 action",             "g_axisaction6"   },
-   { it_toggle,       "Axis 7 action",             "g_axisaction7"   },
-   { it_toggle,       "Axis 8 action",             "g_axisaction8"   },
-   { it_toggle,       "Axis 1 orientation",        "g_axisorientation1" },
-   { it_toggle,       "Axis 2 orientation",        "g_axisorientation2" },
-   { it_toggle,       "Axis 3 orientation",        "g_axisorientation3" },
-   { it_toggle,       "Axis 4 orientation",        "g_axisorientation4" },
-   { it_toggle,       "Axis 5 orientation",        "g_axisorientation5" },
-   { it_toggle,       "Axis 6 orientation",        "g_axisorientation6" },
-   { it_toggle,       "Axis 7 orientation",        "g_axisorientation7" },
-   { it_toggle,       "Axis 8 orientation",        "g_axisorientation8" },
+   { it_info,         "Not configured", nullptr, nullptr, MENUITEM_CENTERED }, // DUMMY
    { it_end                                                          },
 };
-static_assert(earrlen(mn_joystick_axes_items) == 3 + 2 * HALGamePad::MAXAXES);
 
 menu_t menu_joystick_axes =
 {
-   mn_joystick_axes_items,
+   mn_joystick_axes_placeholder,
    &menu_joystick,                 // previous page
    nullptr,                        // next page
    &menu_mouse,                    // rootpage
@@ -2832,67 +2816,117 @@ menu_t menu_joystick_axes =
 };
 
 //
-// Updates the joystick axis menu count according to current gamepad
-//
-static void MN_adjustAxisCount()
-{
-   HALGamePad *pad = I_GetActivePad();
-   if(!pad || !pad->numAxes)
-   {
-      mn_joystick_axes_items[2] =
-      {
-         it_info, "No joystick connected.", nullptr, nullptr, MENUITEM_CENTERED
-      };
-      mn_joystick_axes_items[3] = { it_end };
-      return;
-   }
-
-   static const char *const actionStrings[] =
-   {
-      "Axis 1 action", "Axis 2 action", "Axis 3 action", "Axis 4 action",
-      "Axis 5 action", "Axis 6 action", "Axis 7 action", "Axis 8 action",
-   };
-   static const char *const actionCommands[] =
-   {
-      "g_axisaction1", "g_axisaction2", "g_axisaction3", "g_axisaction4",
-      "g_axisaction5", "g_axisaction6", "g_axisaction7", "g_axisaction8",
-   };
-   static const char *const orientStrings[] =
-   {
-      "Axis 1 orientation", "Axis 2 orientation", "Axis 3 orientation", "Axis 4 orientation",
-      "Axis 5 orientation", "Axis 6 orientation", "Axis 7 orientation", "Axis 8 orientation",
-   };
-   static const char *const orientCommands[] =
-   {
-      "g_axisorientation1", "g_axisorientation2", "g_axisorientation3", "g_axisorientation4",
-      "g_axisorientation5", "g_axisorientation6", "g_axisorientation7", "g_axisorientation8",
-   };
-   static_assert(earrlen(actionStrings) == HALGamePad::MAXAXES);
-   static_assert(earrlen(actionCommands) == HALGamePad::MAXAXES);
-   static_assert(earrlen(orientStrings) == HALGamePad::MAXAXES);
-   static_assert(earrlen(orientCommands) == HALGamePad::MAXAXES);
-
-   int axes = pad->numAxes;
-   for(int i = 0; i < axes; ++i)
-   {
-      mn_joystick_axes_items[i + 2] =
-      {
-         it_toggle, actionStrings[i], actionCommands[i]
-      };
-      mn_joystick_axes_items[2 + axes + i] =
-      {
-         it_toggle, orientStrings[i], orientCommands[i]
-      };
-   }
-   mn_joystick_axes_items[2 + 2 * axes] = { it_end };
-}
-
-//
 // Called when the current joystick is changed
 //
 void MN_UpdateJoystickMenus()
 {
-   MN_adjustAxisCount();
+   struct menuentry_t
+   {
+      char label[32];
+      char variable[32];
+   };
+
+   static const menuitem_t title = { it_title, "Gamepad Axis Settings" };
+   static const menu_t basemenu =
+   {
+      nullptr,
+      &menu_joystick,
+      nullptr,
+      &menu_mouse,
+      200, 15,
+      2,
+      mf_background,
+      nullptr,
+      mn_mousejoy_names,
+      mn_mousejoy_pages
+   };
+
+   HALGamePad *pad = I_GetActivePad();
+   if(!pad || !pad->numAxes)
+   {
+      static menuitem_t noitems[] =
+      {
+         title,
+         { it_gap },
+         { it_info, "No gamepad selected.", nullptr, nullptr, MENUITEM_CENTERED },
+         { it_end }
+      };
+
+      menu_joystick_axes = basemenu;
+      menu_joystick_axes.menuitems = noitems;
+      return;
+   }
+
+   // All collections need to be static
+   static PODCollection<menuentry_t> entries;
+   entries.makeEmpty();
+
+   for(int i = 0; i < pad->numAxes; ++i)
+   {
+      menuentry_t &entry = entries.addNew();
+      snprintf(entry.label, sizeof(entry.label), "Axis %d action", i + 1);
+      snprintf(entry.variable, sizeof(entry.variable), "g_axisaction%d", i + 1);
+   }
+   for(int i = 0; i < pad->numAxes; ++i)
+   {
+      menuentry_t &entry = entries.addNew();
+      snprintf(entry.label, sizeof(entry.label), "Axis %d orientation", i + 1);
+      snprintf(entry.variable, sizeof(entry.variable), "g_axisorientation%d", i + 1);
+   }
+   // TODO: add the options from Descent Rebirth
+
+   enum
+   {
+      PER_PAGE = 16
+   };
+
+   struct menuitemtable_t
+   {
+      menuitem_t items[PER_PAGE + 3];
+   };
+
+   static PODCollection<menu_t> pages;
+   static PODCollection<menuitemtable_t> pageitems;
+   pages.clear();
+   pageitems.clear();
+
+   int numpages = (static_cast<int>(entries.getLength()) - 1) / PER_PAGE + 1;
+   for(int i = 0; i < numpages; ++i)
+   {
+      menu_t &page = pages.addNew();
+      menuitemtable_t &content = pageitems.addNew();
+
+      content.items[0] = title;
+      content.items[1] = { it_gap };
+      for(int j = 0; j < PER_PAGE; ++j)
+      {
+         int entryindex = i * PER_PAGE + j;
+         if(entryindex >= static_cast<int>(entries.getLength()))
+            break;
+         content.items[2 + j] =
+         {
+            it_toggle,
+            entries[entryindex].label,
+            entries[entryindex].variable
+         };
+      }
+      content.items[PER_PAGE + 2] = { it_end };
+
+      // Defer menuitems/prevpage/nextpage for after collection finish
+      page = basemenu;
+   }
+   for(int i = 0; i < numpages; ++i)
+      pages[i].menuitems = pageitems[i].items;
+   pages[0].prevpage = &menu_joystick;
+   for(int i = 1; i < numpages; ++i)
+      pages[i].prevpage = &pages[i - 1];
+   for(int i = 0; i < numpages - 1; ++i)
+      pages[i].nextpage = &pages[i + 1];
+
+   // HACK: just copy the first page into menu_joystick_axes. It will be a duplicate, yes, but
+   // the TOC looks for this global object, and we don't want to mess with the C-like TOC structure
+   // here
+   menu_joystick_axes = pages[0];
 }
 
 //=============================================================================
