@@ -1365,8 +1365,8 @@ void A_FireCustomBullets(actionargs_t *actionargs)
          constexpr unsigned int ANG_VALS = ANGLE_1;
          angle += (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * horizontal) /
                   (ANG_VALS * 2);
-         const angle_t pitch = (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) /
-                               (ANG_VALS * 2);
+         const angle_t pitch = static_cast<angle_t>((static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) /
+                                                    (ANG_VALS * 2));
          // convert pitch to the same "unit" as slope, then add it on
          slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
