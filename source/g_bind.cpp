@@ -790,6 +790,8 @@ void G_CreateAxisActionVars()
       command->name = name.duplicate();
       command->type = ct_variable;
       command->variable = variable;
+
+      C_AddCommand(command);
    }
 }
 
