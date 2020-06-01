@@ -1391,7 +1391,7 @@ typedef struct box_widget_s
 
    const char **item_names;  // item strings for box
 
-   int        type;          // type: either contents or cmds
+   boxwidget_e type;          // type: either contents or cmds
 
    menu_t     **pages;       // menu pages array for contents box
    const char **cmds;        // commands for command box
@@ -1549,11 +1549,11 @@ static bool MN_BoxWidgetResponder(event_t *ev, int action)
 
       switch(box->type)
       {
-      case 0: // menu page widget
+      case boxwidget_menupage:
          if(box->pages)
             MN_PageMenu(box->pages[box->selection_idx]);
          break;
-      case 1: // command widget
+      case boxwidget_command:
          if(box->cmds)
             C_RunTextCmd(box->cmds[box->selection_idx]);
          break;
