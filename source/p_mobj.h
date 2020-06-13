@@ -757,6 +757,8 @@ enum
    // A substitute for calling E_SafeThingName every tic for every Mobj
    MIF_MUSICCHANGER = 0x00020000,
 
+   MIF_MAYPLAYPARTICLESOUNDS = 0x00040000,   // Hint that it may be playing particle sounds
+
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };

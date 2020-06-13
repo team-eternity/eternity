@@ -33,6 +33,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "doomtype.h"
+#include "e_sound.h"
 #include "e_ttypes.h"
 #include "m_random.h"
 #include "p_chase.h"
@@ -469,6 +470,49 @@ void P_ParticleThinker(void)
    }
 }
 
+//
+// Various hardcoded particle sounds
+//
+enum particlesound_e
+{
+   particlesound_flies,
+   particlesound_MAX
+};
+static const int particlesounds[particlesound_MAX] =
+{
+   sfx_eefly
+};
+
+//
+// Maintains a particle's associated ambient sound
+//
+static void P_maintainParticleAmbientSound(Mobj *actor, particlesound_e psoundid)
+{
+   int dehnum = particlesounds[psoundid];
+   if(S_CheckSoundPlaying(actor, dehnum))
+      return;
+   S_StartSoundLooped(actor, dehnum);
+   actor->intflags |= MIF_MAYPLAYPARTICLESOUNDS;
+}
+
+//
+// Stops a particle's associated ambient sound. Special psoundid MAX disables ALL sounds.
+//
+static void P_stopParticleAmbientSounds(Mobj *actor, particlesound_e psoundid)
+{
+   if(!(actor->intflags & MIF_MAYPLAYPARTICLESOUNDS)) // early out
+      return;
+   if(psoundid == particlesound_MAX)
+   {
+      for(int i = 0; i < particlesound_MAX; ++i)
+         S_StopSoundId(actor, particlesounds[i]);
+      actor->intflags &= ~MIF_MAYPLAYPARTICLESOUNDS;  // guaranteed not to be making noise now
+      return;
+   }
+   S_StopSoundId(actor, particlesounds[psoundid]);
+   // Do not clear the flag; other sounds might be playing.
+}
+
 void P_RunEffects(void)
 {
    int snum = 0;
@@ -494,9 +538,13 @@ void P_RunEffects(void)
          if(mobj->effects)
          {
             // run only if possibly visible
-            if(!(rejectmatrix[rnum>>3] & (1<<(rnum&7))))
+            if(!(rejectmatrix[rnum >> 3] & (1 << (rnum & 7))))
                P_RunEffect(mobj, mobj->effects);
+            else
+               P_stopParticleAmbientSounds(mobj, particlesound_MAX);
          }
+         else
+            P_stopParticleAmbientSounds(mobj, particlesound_MAX);
       }
    }
 }
@@ -583,9 +631,10 @@ static void P_RunEffect(Mobj *actor, unsigned int effects)
        actor->movecount >= 4*TICRATE))
    {       
       P_FlyEffect(actor);
-      if(!(actor->movecount % (2*TICRATE)))
-         S_StartSound(actor, sfx_eefly);
+      P_maintainParticleAmbientSound(actor, particlesound_flies);
    }
+   else
+      P_stopParticleAmbientSounds(actor, particlesound_flies);
    
    if((effects & FX_ROCKET) && drawrockettrails)
    {

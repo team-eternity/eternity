@@ -692,6 +692,25 @@ void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
       S_StartSfxInfo(params);
    }
 }
+static void S_StartSoundAtVolumeLooped(const PointThinker *origin, int sfx_id,
+   int volume, int attn, int subchannel)
+{
+   soundparams_t params;
+
+   // haleyjd: changed to use EDF DeHackEd number hashing,
+   // to enable full use of dynamically defined sounds ^_^
+   if((params.sfx = E_SoundForDEHNum(sfx_id)))
+   {
+      params.origin = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop = true;
+      params.subchannel = subchannel;
+      params.reverb = true;
+
+      S_StartSfxInfo(params);
+   }
+}
 
 //
 // S_StartSound
@@ -704,6 +723,10 @@ void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
 void S_StartSound(const PointThinker *origin, int sfx_id)
 {
    S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
+}
+void S_StartSoundLooped(const PointThinker *origin, int sfx_id)
+{
+   S_StartSoundAtVolumeLooped(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
 
 //
@@ -743,33 +766,6 @@ void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
 void S_StartSoundName(const PointThinker *origin, const char *name)
 {
    S_StartSoundNameAtVolume(origin, name, 127, ATTN_NORMAL, CHAN_AUTO);
-}
-
-//
-// S_StartSoundLooped
-//
-// haleyjd 06/03/06: support playing looped sounds.
-//
-// FIXME: unused?
-//
-static void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
-                               int attn, int subchannel)
-{
-   soundparams_t params;
-
-   if(!name)
-      return;
-
-   if((params.sfx = S_SfxInfoForName(name)))
-   {
-      params.origin      = origin;
-      params.volumeScale = volume;
-      params.attenuation = attn;
-      params.loop        = true;
-      params.subchannel  = subchannel;
-      params.reverb      = true;
-      S_StartSfxInfo(params);
-   }
 }
 
 //
@@ -839,6 +835,28 @@ void S_StopSound(const PointThinker *origin, int subchannel)
       if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
          channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
          (subchannel == CHAN_ALL || channels[cnum].subchannel == subchannel))
+      {
+         S_StopChannel(cnum);
+      }
+   }
+}
+
+//
+// Stops a sound from an origin if it has the given dehackednum
+//
+void S_StopSoundId(const PointThinker *origin, int sound_id)
+{
+   int cnum;
+
+   //jff 1/22/98 return if sound is not enabled
+   if(!snd_card || nosfxparm)
+      return;
+
+   for(cnum = 0; cnum < numChannels; cnum++)
+   {
+      if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
+         channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
+         channels[cnum].aliasinfo && channels[cnum].aliasinfo->dehackednum == sound_id)
       {
          S_StopChannel(cnum);
       }
@@ -1016,6 +1034,21 @@ bool S_CheckSoundPlaying(const PointThinker *mo, sfxinfo_t *aliasinfo)
       }
    }
 
+   return false;
+}
+// Dehackednum variant
+bool S_CheckSoundPlaying(const PointThinker *mo, int sound_id)
+{
+   if(!mo || !sound_id)
+      return false;
+   for(int cnum = 0; cnum < numChannels; cnum++)
+   {
+      const channel_t &channel = channels[cnum];
+      if(channel.origin != mo || !channel.aliasinfo || channel.aliasinfo->dehackednum != sound_id)
+         continue;
+      if(I_SoundIsPlaying(channels[cnum].handle))
+         return true;
+   }
    return false;
 }
 
