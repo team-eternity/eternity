@@ -795,8 +795,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
       clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
       P_BoxOnLineSide(clip.bbox, line) == -1)
    {
-      fixed_t front = line->frontsector->floorheight;
-      fixed_t back  = line->backsector->floorheight;
+      fixed_t front = line->frontsector->srf.floor.height;
+      fixed_t back  = line->backsector->srf.floor.height;
       angle_t angle;
 
       // The monster must contact one of the two floors,

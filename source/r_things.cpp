@@ -1057,27 +1057,27 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    sec = (view.lerp == FRACUNIT && !delta ? thing->subsector->sector :
           R_PointInSubsector(spritepos.x, spritepos.y)->sector);
    heightsec = sec->heightsec;
-   
+
    if(heightsec != -1) // only clip things which are in special sectors
    {
       auto &hsec = sectors[heightsec];
       int   phs  = view.sector->heightsec;
-      
-      if(phs != -1 && viewz < sectors[phs].floorheight ?
-         thing->z >= hsec.floorheight : gzt < hsec.floorheight)
+
+      if(phs != -1 && viewz < sectors[phs].srf.floor.height ?
+         thing->z >= hsec.srf.floor.height : gzt < hsec.srf.floor.height)
          return;
-      if(phs != -1 && viewz > sectors[phs].ceilingheight ?
-         gzt < hsec.ceilingheight && viewz >= hsec.ceilingheight :
-         thing->z >= hsec.ceilingheight)
+      if(phs != -1 && viewz > sectors[phs].srf.ceiling.height ?
+         gzt < hsec.srf.ceiling.height && viewz >= hsec.srf.ceiling.height :
+         thing->z >= hsec.srf.ceiling.height)
          return;
    }
 
    // store information in a vissprite
    vis = R_NewVisSprite();
-   
-   // killough 3/27/98: save sector for special clipping later   
+
+   // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
-   
+
    vis->colour = thing->colour;
    vis->gx     = spritepos.x;
    vis->gy     = spritepos.y;
@@ -1690,12 +1690,12 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
       
       int phs = view.sector->heightsec;
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].floorheight) - view.z;
-      if(sectors[spr->heightsec].floorheight > spr->gz &&
+      mh = M_FixedToFloat(sectors[spr->heightsec].srf.floor.height) - view.z;
+      if(sectors[spr->heightsec].srf.floor.height > spr->gz &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(mh <= 0.0 || (phs != -1 && viewz > sectors[phs].floorheight))
+         if(mh <= 0.0 || (phs != -1 && viewz > sectors[phs].srf.floor.height))
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -1706,7 +1706,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          }
          else  // clip top
          {
-            if(phs != -1 && viewz <= sectors[phs].floorheight) // killough 11/98
+            if(phs != -1 && viewz <= sectors[phs].srf.floor.height) // killough 11/98
             {
                for(x = spr->x1; x <= spr->x2; x++)
                {
@@ -1717,12 +1717,12 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          }
       }
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].ceilingheight) - view.z;
-      if(sectors[spr->heightsec].ceilingheight < spr->gzt &&
+      mh = M_FixedToFloat(sectors[spr->heightsec].srf.ceiling.height) - view.z;
+      if(sectors[spr->heightsec].srf.ceiling.height < spr->gzt &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(phs != -1 && viewz >= sectors[phs].ceilingheight)
+         if(phs != -1 && viewz >= sectors[phs].srf.ceiling.height)
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -1750,8 +1750,8 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 
       sector_t *sector = sectors + spr->sector;
 
-      mh = M_FixedToFloat(sector->floorheight) - view.z;
-      if(sector->f_pflags & PS_PASSABLE && sector->floorheight > spr->gz)
+      mh = M_FixedToFloat(sector->srf.floor.height) - view.z;
+      if(sector->f_pflags & PS_PASSABLE && sector->srf.floor.height > spr->gz)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
@@ -1762,8 +1762,8 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
          }
       }
 
-      mh = M_FixedToFloat(sector->ceilingheight) - view.z;
-      if(sector->c_pflags & PS_PASSABLE && sector->ceilingheight < spr->gzt)
+      mh = M_FixedToFloat(sector->srf.ceiling.height) - view.z;
+      if(sector->c_pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
@@ -2032,13 +2032,13 @@ static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
    {
       if(line.extflags & EX_ML_LOWERPORTAL &&
          line.backsector->f_pflags & PS_PASSABLE &&
-         mpi.mobj->z + mpi.scaledbottom < line.backsector->floorheight)
+         mpi.mobj->z + mpi.scaledbottom < line.backsector->srf.floor.height)
       {
          data = &line.backsector->f_portal->data.link;
       }
       if(line.extflags & EX_ML_UPPERPORTAL &&
          line.backsector->c_pflags & PS_PASSABLE &&
-         mpi.mobj->z + mpi.scaledtop > line.backsector->ceilingheight)
+         mpi.mobj->z + mpi.scaledtop > line.backsector->srf.ceiling.height)
       {
          data2 = &line.backsector->c_portal->data.link;
       }
@@ -2259,13 +2259,13 @@ static void R_ProjectParticle(particle_t *particle)
    idist = 1.0f / ty1;
    xscale = idist * view.xfoc;
    yscale = idist * view.yfoc;
-   
+
    // calculate edges of the shape
    x1 = (int)(view.xcenter + (tx1 * xscale));
    x2 = (int)(view.xcenter + (tx2 * xscale));
 
    if(x2 < x1) x2 = x1;
-   
+
    // off either side?
    if(x1 >= viewwindow.width || x2 < 0)
       return;
@@ -2274,46 +2274,46 @@ static void R_ProjectParticle(particle_t *particle)
 
    y1 = (view.ycenter - (tz * yscale));
    y2 = (view.ycenter - ((tz - 1.0f) * yscale));
-   
+
    if(y2 < 0.0f || y1 >= view.height)
       return;
-   
+
    gzt = particle->z + 1;
-   
+
    // killough 3/27/98: exclude things totally separated
    // from the viewer, by either water or fake ceilings
    // killough 4/11/98: improve sprite clipping for underwater/fake ceilings
-   
+
    {
       // haleyjd 02/20/04: use subsector now stored in particle
       subsector_t *subsector = particle->subsector;
       sector = subsector->sector;
       heightsec = sector->heightsec;
 
-      if(particle->z < sector->floorheight || 
-	 particle->z > sector->ceilingheight)
+      if(particle->z < sector->srf.floor.height ||
+	 particle->z > sector->srf.ceiling.height)
 	 return;
    }
-   
+
    // only clip particles which are in special sectors
    if(heightsec != -1)
    {
       int phs = view.sector->heightsec;
-      
-      if(phs != -1 && 
-	 viewz < sectors[phs].floorheight ?
-	 particle->z >= sectors[heightsec].floorheight :
-         gzt < sectors[heightsec].floorheight)
+
+      if(phs != -1 &&
+	 viewz < sectors[phs].srf.floor.height ?
+	 particle->z >= sectors[heightsec].srf.floor.height :
+         gzt < sectors[heightsec].srf.floor.height)
          return;
 
-      if(phs != -1 && 
-	 viewz > sectors[phs].ceilingheight ?
-	 gzt < sectors[heightsec].ceilingheight &&
-	 viewz >= sectors[heightsec].ceilingheight :
-         particle->z >= sectors[heightsec].ceilingheight)
+      if(phs != -1 &&
+	 viewz > sectors[phs].srf.ceiling.height ?
+	 gzt < sectors[heightsec].srf.ceiling.height &&
+	 viewz >= sectors[heightsec].srf.ceiling.height :
+         particle->z >= sectors[heightsec].srf.ceiling.height)
          return;
    }
-   
+
    // store information in a vissprite
    vis = R_NewVisSprite();
    vis->heightsec = heightsec;

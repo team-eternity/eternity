@@ -119,8 +119,8 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
       if(mNamespace == namespace_Eternity)
       {
          // These two pass the fixed_t value now
-         ss->floorheight = us.heightfloor;
-         ss->ceilingheight = us.heightceiling;
+         ss->srf.floor.height = us.heightfloor;
+         ss->srf.ceiling.height = us.heightceiling;
 
          // New to Eternity
          ss->srf.floor.offset = { us.xpanningfloor, us.ypanningfloor };
@@ -190,8 +190,8 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
       }
       else
       {
-         ss->floorheight = us.heightfloor << FRACBITS;
-         ss->ceilingheight = us.heightceiling << FRACBITS;
+         ss->srf.floor.height = us.heightfloor << FRACBITS;
+         ss->srf.ceiling.height = us.heightceiling << FRACBITS;
       }
       ss->floorpic = R_FindFlat(us.texturefloor.constPtr());
       P_SetSectorCeilingPic(ss,

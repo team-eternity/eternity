@@ -261,6 +261,8 @@ struct Surfaces
 //
 struct surface_t
 {
+   fixed_t height;
+
    // killough 3/7/98: floor and ceiling texture offsets
    v2fixed_t offset;
 
@@ -283,8 +285,6 @@ struct sector_t
    // Keep name short because it's very frequently used.
    Surfaces<surface_t> srf;
 
-   fixed_t floorheight;
-   fixed_t ceilingheight;
    int     floorpic;
    int     ceilingpic;
    int16_t lightlevel;

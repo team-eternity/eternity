@@ -501,7 +501,7 @@ static void P_HereticCurrent(player_t *player)
    // determine what touched sector the player is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->floorheight)
+      if(thing->z == m->m_sector->srf.floor.height)
          break;
    }
 

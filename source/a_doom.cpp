@@ -1110,8 +1110,8 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
       const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
       // ioanch: removed redundant parentheses (of which the compiler doesn't 
       // cry)
-      if(newmobj->z > ceilingsector->ceilingheight - newmobj->height ||
-         newmobj->z < floorsector->floorheight)
+      if(newmobj->z > ceilingsector->srf.ceiling.height - newmobj->height ||
+         newmobj->z < floorsector->srf.floor.height)
       {
          // kill it immediately
          P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);

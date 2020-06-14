@@ -155,28 +155,28 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
 //
 static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
 {
-   static const struct surfaceset_t
+   const struct surfaceset_t
    {
       unsigned extflag;
-      unsigned sector_t::*pflags;
-      fixed_t sector_t::*height;
-      portal_t *sector_t::*portal;
+      unsigned pflags;
+      fixed_t height;
+      portal_t *portal;
       fixed_t(*pzfunc)(const sector_t &);
       bool(*compare)(fixed_t, fixed_t);
    } ssets[2] = {
       {
          EX_ML_LOWERPORTAL,
-         &sector_t::f_pflags,
-         &sector_t::floorheight,
-         &sector_t::f_portal,
+         li->backsector->f_pflags,
+         li->frontsector->srf.floor.height,
+         li->backsector->f_portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
       },
       {
          EX_ML_UPPERPORTAL,
-         &sector_t::c_pflags,
-         &sector_t::ceilingheight,
-         &sector_t::c_portal,
+         li->backsector->c_pflags,
+         li->frontsector->srf.ceiling.height,
+         li->backsector->c_portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
       }
@@ -184,12 +184,12 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
    for(int i = 0; i < 2; ++i)
    {
       const auto &s = ssets[i];
-      if(li->extflags & s.extflag && li->backsector->*s.pflags & PS_PASSABLE &&
-         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, li->frontsector->*s.height))
+      if(li->extflags & s.extflag && s.pflags & PS_PASSABLE &&
+         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, s.height))
       {
          traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
          traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
-         traverse.link = &(li->backsector->*s.portal)->data.link;
+         traverse.link = &s.portal->data.link;
          traverse.startz = z;
          return true;
       }
@@ -283,9 +283,9 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
             return false;
          }
 
-         if((li->flags & ML_BLOCKING) || 
-            (othersector->floorheight>z) || (othersector->ceilingheight<z)
-            || (othersector->ceilingheight-othersector->floorheight
+         if((li->flags & ML_BLOCKING) ||
+            (othersector->srf.floor.height >z) || (othersector->srf.ceiling.height <z)
+            || (othersector->srf.ceiling.height -othersector->srf.floor.height
                 < 40*FRACUNIT));          // hit
          else
             return !P_checkLinePortal(li, z, in->frac, traverse);
@@ -294,12 +294,12 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
       pCamTarget.x = x; // point the new chasecam target at the intersection
       pCamTarget.y = y;
       pCamTarget.z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
-      
+
       // don't go any farther
-      
+
       return false;
    }
-   
+
    return true;
 }
 
@@ -358,9 +358,9 @@ static void P_GetChasecamTarget()
    trace.attackrange = oldAttackRange;
 
    const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
-   
-   fixed_t floorheight = ss->sector->floorheight;
-   fixed_t ceilingheight = ss->sector->ceilingheight;
+
+   fixed_t floorheight = ss->sector->srf.floor.height;
+   fixed_t ceilingheight = ss->sector->srf.ceiling.height;
 
    // don't aim above the ceiling or below the floor
    if(!(ss->sector->f_pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
@@ -647,11 +647,11 @@ void P_WalkTicker()
    if(!walkcamera.flying)
    {
       // keep on the ground
-      walkcamera.z = bottomsector->floorheight + 41 * FRACUNIT;
+      walkcamera.z = bottomsector->srf.floor.height + 41 * FRACUNIT;
    }
 
-   fixed_t maxheight = topsector->ceilingheight - 8*FRACUNIT;
-   fixed_t minheight = bottomsector->floorheight + 4*FRACUNIT;
+   fixed_t maxheight = topsector->srf.ceiling.height - 8*FRACUNIT;
+   fixed_t minheight = bottomsector->srf.floor.height + 4*FRACUNIT;
 
    if(walkcamera.z > maxheight)
       walkcamera.z = maxheight;
@@ -677,7 +677,7 @@ void P_ResetWalkcam()
    
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
-   walkcamera.z = sec->floorheight + 41*FRACUNIT;
+   walkcamera.z = sec->srf.floor.height + 41*FRACUNIT;
    walkcamera.groupid = sec->groupid;
 
    walkcamera.backupPosition();
@@ -756,7 +756,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 
       camparams.cx       = v->x;
       camparams.cy       = v->y;
-      camparams.cz       = sec->floorheight;
+      camparams.cz       = sec->srf.floor.height;
       camparams.cheight  = 41 * FRACUNIT;
       camparams.cgroupid = sec->groupid;
       camparams.prev     = nullptr;
@@ -821,7 +821,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
 
    P_setFollowPitch();
    followcam.backupPosition();
@@ -845,7 +845,7 @@ bool P_FollowCamTicker()
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z       = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z       = subsec->sector->srf.floor.height + 41*FRACUNIT;
    followcam.groupid = subsec->sector->groupid;
    P_setFollowPitch();
 

@@ -973,48 +973,48 @@ static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
 {
    bool active;
    int     ret = sflags & (PF_FLAGMASK | PS_OVERLAYFLAGS | PO_OPACITYMASK);
-   
+
    if(!portal)
       return 0;
-      
+
    active = !obscured && !(portal->flags & PF_DISABLED) && !(sflags & PF_DISABLED);
-   
+
    if(active && !(portal->flags & PF_NORENDER) && !(sflags & PF_NORENDER))
       ret |= PS_VISIBLE;
-      
+
    // Next two flags are for linked portals only
    active = (active && portal->type == R_LINKED && useportalgroups == true);
-      
+
    if(active && !(portal->flags & PF_NOPASS) && !(sflags & PF_NOPASS))
       ret |= PS_PASSABLE;
-   
+
    if(active && !(portal->flags & PF_BLOCKSOUND) && !(sflags & PF_BLOCKSOUND))
       ret |= PS_PASSSOUND;
-      
+
    return ret;
 }
 
 void P_CheckCPortalState(sector_t *sec)
 {
    bool     obscured;
-   
+
    if(!sec->c_portal)
    {
       sec->c_pflags = 0;
       return;
    }
-   
+
    obscured = (sec->c_portal->type == R_LINKED &&
                !(sec->c_pflags & PF_ATTACHEDPORTAL) &&
-               sec->ceilingheight < sec->c_portal->data.link.planez);
-               
+               sec->srf.ceiling.height < sec->c_portal->data.link.planez);
+
    sec->c_pflags = P_GetPortalState(sec->c_portal, sec->c_pflags, obscured);
 }
 
 void P_CheckFPortalState(sector_t *sec)
 {
    bool     obscured;
-   
+
    if(!sec->f_portal)
    {
       sec->f_pflags = 0;
@@ -1023,8 +1023,8 @@ void P_CheckFPortalState(sector_t *sec)
 
    obscured = (sec->f_portal->type == R_LINKED &&
                !(sec->f_pflags & PF_ATTACHEDPORTAL) &&
-               sec->floorheight > sec->f_portal->data.link.planez);
-               
+               sec->srf.floor.height > sec->f_portal->data.link.planez);
+
    sec->f_pflags = P_GetPortalState(sec->f_portal, sec->f_pflags, obscured);
 }
 
@@ -1035,7 +1035,7 @@ void P_CheckLPortalState(line_t *line)
       line->pflags = 0;
       return;
    }
-   
+
    line->pflags = P_GetPortalState(line->portal, line->pflags, false);
 }
 
@@ -1048,8 +1048,8 @@ void P_CheckLPortalState(line_t *line)
 void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
    // set new value
-   sec->floorheight = h;
-   sec->floorheightf = M_FixedToFloat(sec->floorheight);
+   sec->srf.floor.height = h;
+   sec->floorheightf = M_FixedToFloat(sec->srf.floor.height);
 
    // check floor portal state
    P_CheckFPortalState(sec);
@@ -1064,8 +1064,8 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
    // set new value
-   sec->ceilingheight = h;
-   sec->ceilingheightf = M_FixedToFloat(sec->ceilingheight);
+   sec->srf.ceiling.height = h;
+   sec->ceilingheightf = M_FixedToFloat(sec->srf.ceiling.height);
 
    // check ceiling portal state
    P_CheckCPortalState(sec);
@@ -1189,7 +1189,7 @@ fixed_t P_CeilingPortalZ(const sector_t &sector)
 {
    return !sector.c_portal || sector.c_portal->type != R_LINKED ||
    sector.c_pflags & PF_ATTACHEDPORTAL ?
-   sector.ceilingheight : sector.c_portal->data.link.planez;
+   sector.srf.ceiling.height : sector.c_portal->data.link.planez;
 }
 
 //
@@ -1199,7 +1199,7 @@ fixed_t P_FloorPortalZ(const sector_t &sector)
 {
    return !sector.f_portal || sector.f_portal->type != R_LINKED ||
    sector.f_pflags & PF_ATTACHEDPORTAL ?
-   sector.floorheight : sector.f_portal->data.link.planez;
+   sector.srf.floor.height : sector.f_portal->data.link.planez;
 }
 
 //

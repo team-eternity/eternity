@@ -2612,10 +2612,10 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
       }
    }
 
-   mo = P_SpawnMobj(x + 20 * mtcos, 
+   mo = P_SpawnMobj(x + 20 * mtcos,
                     y + 20 * mtsin,
-                    ss->sector->floorheight + 
-                       GameModeInfo->teleFogHeight, 
+                    ss->sector->srf.floor.height +
+                       GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    // haleyjd: There was a hack here trying to avoid playing the sound on the

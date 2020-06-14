@@ -486,7 +486,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
 
          // Whether walking towards first side of exit linedef steps down
          int stepdown =
-            l->frontsector->floorheight < l->backsector->floorheight;
+            l->frontsector->srf.floor.height < l->backsector->srf.floor.height;
 
          // Height of thing above ground
          fixed_t z = thing->z - thing->zref.floor;
@@ -531,15 +531,15 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Adjust z position to be same height above ground as before.
          // Ground level at the exit is measured as the higher of the
          // two floor heights at the exit linedef.
-         thing->z = z + sides[l->sidenum[stepdown]].sector->floorheight;
-         
+         thing->z = z + sides[l->sidenum[stepdown]].sector->srf.floor.height;
+
          // Rotate thing's orientation according to difference in linedef angles
          thing->angle += angle;
-         
+
          // Momentum of thing crossing teleporter linedef
          x = thing->momx;
          y = thing->momy;
-         
+
          // Rotate thing's momentum to come out of exit just like it entered
          thing->momx = FixedMul(x, c) - FixedMul(y, s);
          thing->momy = FixedMul(y, c) + FixedMul(x, s);

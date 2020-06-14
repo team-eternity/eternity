@@ -309,7 +309,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 &&
          ((clip.openfrontsector->c_pflags & PS_PASSABLE &&
-         clip.openbacksector->c_pflags & PS_PASSABLE && 
+         clip.openbacksector->c_pflags & PS_PASSABLE &&
          clip.openfrontsector->c_portal == clip.openbacksector->c_portal) ||
          (clip.openfrontsector->c_pflags & PS_PASSABLE &&
           linedef->pflags & PS_PASSABLE &&
@@ -319,33 +319,33 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          // also handle line portal + ceiling portal, for edge portals
          if(!portaldetect) // ioanch
          {
-            frontceilz = backceilz = clip.openfrontsector->ceilingheight
+            frontceilz = backceilz = clip.openfrontsector->srf.ceiling.height
             + (1024 * FRACUNIT);
          }
          else
          {
             *lineclipflags |= LINECLIP_UNDERPORTAL;
-            frontceilz = clip.openfrontsector->ceilingheight;
-            backceilz  = clip.openbacksector->ceilingheight;
+            frontceilz = clip.openfrontsector->srf.ceiling.height;
+            backceilz  = clip.openbacksector->srf.ceiling.height;
          }
       }
       else
 #endif
       {
-         frontceilz = clip.openfrontsector->ceilingheight;
-         backceilz  = clip.openbacksector->ceilingheight;
+         frontceilz = clip.openfrontsector->srf.ceiling.height;
+         backceilz  = clip.openbacksector->srf.ceiling.height;
       }
-      
-      frontcz = clip.openfrontsector->ceilingheight;
-      backcz  = clip.openbacksector->ceilingheight;
+
+      frontcz = clip.openfrontsector->srf.ceiling.height;
+      backcz  = clip.openbacksector->srf.ceiling.height;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && 
+      if(mo && demo_version >= 333 &&
          ((clip.openfrontsector->f_pflags & PS_PASSABLE &&
-         clip.openbacksector->f_pflags & PS_PASSABLE && 
+         clip.openbacksector->f_pflags & PS_PASSABLE &&
          clip.openfrontsector->f_portal == clip.openbacksector->f_portal) ||
           (clip.openfrontsector->f_pflags & PS_PASSABLE &&
            linedef->pflags & PS_PASSABLE &&
@@ -354,24 +354,24 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       {
          if(!portaldetect)  // ioanch
          {
-            frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+            frontfloorz = backfloorz = clip.openfrontsector->srf.floor.height - (1024 * FRACUNIT); //mo->height;
          }
          else
          {
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
-            frontfloorz = clip.openfrontsector->floorheight;
-            backfloorz  = clip.openbacksector->floorheight;
+            frontfloorz = clip.openfrontsector->srf.floor.height;
+            backfloorz  = clip.openbacksector->srf.floor.height;
          }
       }
-      else 
+      else
 #endif
       {
-         frontfloorz = clip.openfrontsector->floorheight;
-         backfloorz  = clip.openbacksector->floorheight;
+         frontfloorz = clip.openfrontsector->srf.floor.height;
+         backfloorz  = clip.openbacksector->srf.floor.height;
       }
 
-      frontfz = clip.openfrontsector->floorheight;
-      backfz = clip.openbacksector->floorheight;
+      frontfz = clip.openfrontsector->srf.floor.height;
+      backfz = clip.openbacksector->srf.floor.height;
    }
 
    if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->c_pflags & PS_PASSABLE)
@@ -460,8 +460,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
             clip.opentop = texbot;
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
-         if(portaldetect && (texbot < clip.openfrontsector->ceilingheight ||
-                             texbot < clip.openbacksector->ceilingheight))
+         if(portaldetect && (texbot < clip.openfrontsector->srf.ceiling.height ||
+                             texbot < clip.openbacksector->srf.ceiling.height))
          {
             *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
          }
@@ -472,8 +472,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
             clip.openbottom = textop;
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
-         if(portaldetect && (textop > clip.openfrontsector->floorheight ||
-                             textop > clip.openbacksector->floorheight))
+         if(portaldetect && (textop > clip.openfrontsector->srf.floor.height ||
+                             textop > clip.openbacksector->srf.floor.height))
          {
             *lineclipflags |= LINECLIP_OVER3DMIDTEX;
          }

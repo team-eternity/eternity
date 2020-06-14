@@ -607,8 +607,8 @@ void P_InitSector(sector_t *ss)
    ss->groupid = R_NOGROUP;
 
    // SoM: These are kept current with floorheight and ceilingheight now
-   ss->floorheightf   = M_FixedToFloat(ss->floorheight);
-   ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
+   ss->floorheightf   = M_FixedToFloat(ss->srf.floor.height);
+   ss->ceilingheightf = M_FixedToFloat(ss->srf.ceiling.height);
 
    // needs to be defaulted as it starts as nonzero
    ss->srf.floor.scale = { 1.0f, 1.0f };
@@ -651,8 +651,8 @@ static void P_LoadPSXSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(data) << FRACBITS;
+      ss->srf.floor.height = GetBinaryWord(data) << FRACBITS;
+      ss->srf.ceiling.height = GetBinaryWord(data) << FRACBITS;
       GetBinaryString(data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
       GetBinaryString(data, namebuf, 8);
@@ -693,8 +693,8 @@ static void P_LoadSectors(int lumpnum)
    {
       sector_t *ss = sectors + i;
 
-      ss->floorheight        = GetBinaryWord(data) << FRACBITS;
-      ss->ceilingheight      = GetBinaryWord(data) << FRACBITS;
+      ss->srf.floor.height = GetBinaryWord(data) << FRACBITS;
+      ss->srf.ceiling.height = GetBinaryWord(data) << FRACBITS;
       GetBinaryString(data, namebuf, 8);
       ss->floorpic           = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
@@ -719,8 +719,8 @@ static void P_CreateSectorInterps()
 
    for(int i = 0; i < numsectors; i++)
    {
-      sectorinterps[i].prevfloorheight    = sectors[i].floorheight;
-      sectorinterps[i].prevceilingheight  = sectors[i].ceilingheight;
+      sectorinterps[i].prevfloorheight    = sectors[i].srf.floor.height;
+      sectorinterps[i].prevceilingheight  = sectors[i].srf.ceiling.height;
       sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
       sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
    }

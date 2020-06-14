@@ -262,34 +262,34 @@ static bool P_CrossSubsector(int num, los_t *los)
 
       // crosses a two sided line
       // no wall to block sight with?
-      if((front = lseg->frontsector)->floorheight ==
-         (back = lseg->backsector)->floorheight   &&
-         front->ceilingheight == back->ceilingheight)
+      if((front = lseg->frontsector)->srf.floor.height ==
+         (back = lseg->backsector)->srf.floor.height &&
+         front->srf.ceiling.height == back->srf.ceiling.height)
          continue;
 
       // possible occluder
       // because of ceiling height differences
-      opentop = front->ceilingheight < back->ceilingheight ?
-         front->ceilingheight : back->ceilingheight ;
-      
+      opentop = front->srf.ceiling.height < back->srf.ceiling.height ?
+         front->srf.ceiling.height : back->srf.ceiling.height;
+
       // because of floor height differences
-      openbottom = front->floorheight > back->floorheight ?
-         front->floorheight : back->floorheight ;
-      
+      openbottom = front->srf.floor.height > back->srf.floor.height ?
+         front->srf.floor.height : back->srf.floor.height;
+
       // quick test for totally closed doors
       if(openbottom >= opentop)
          return false;               // stop
 
       frac = P_InterceptVector2(&los->strace, &divl);
-      
-      if(front->floorheight != back->floorheight)
+
+      if(front->srf.floor.height != back->srf.floor.height)
       {
          fixed_t slope = FixedDiv(openbottom - los->sightzstart , frac);
          if(slope > los->bottomslope)
             los->bottomslope = slope;
       }
-      
-      if(front->ceilingheight != back->ceilingheight)
+
+      if(front->srf.ceiling.height != back->srf.ceiling.height)
       {
          fixed_t slope = FixedDiv(opentop - los->sightzstart , frac);
          if(slope < los->topslope)
@@ -364,16 +364,16 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
 
    // killough 4/19/98: make fake floors and ceilings block monster view
    if((s1->heightsec != -1 &&
-       ((t1->z + t1->height <= sectors[s1->heightsec].floorheight &&
-         t2->z >= sectors[s1->heightsec].floorheight) ||
-        (t1->z >= sectors[s1->heightsec].ceilingheight &&
-         t2->z + t1->height <= sectors[s1->heightsec].ceilingheight)))
+       ((t1->z + t1->height <= sectors[s1->heightsec].srf.floor.height &&
+         t2->z >= sectors[s1->heightsec].srf.floor.height) ||
+        (t1->z >= sectors[s1->heightsec].srf.ceiling.height &&
+         t2->z + t1->height <= sectors[s1->heightsec].srf.ceiling.height)))
       ||
       (s2->heightsec != -1 &&
-       ((t2->z + t2->height <= sectors[s2->heightsec].floorheight &&
-         t1->z >= sectors[s2->heightsec].floorheight) ||
-        (t2->z >= sectors[s2->heightsec].ceilingheight &&
-         t1->z + t2->height <= sectors[s2->heightsec].ceilingheight))))
+       ((t2->z + t2->height <= sectors[s2->heightsec].srf.floor.height &&
+         t1->z >= sectors[s2->heightsec].srf.floor.height) ||
+        (t2->z >= sectors[s2->heightsec].srf.ceiling.height &&
+         t1->z + t2->height <= sectors[s2->heightsec].srf.ceiling.height))))
       return false;
 
    // killough 11/98: shortcut for melee situations
@@ -382,16 +382,16 @@ bool P_CheckSight(Mobj *t1, Mobj *t2)
    // haleyjd 02/23/06: can't do this if there are polyobjects in the subsec
    // haleyjd 12/28/10: This "fix" was not in BOOM 200-202 either!
 
-   if(demo_version >= 203 && !t1->subsector->polyList && 
+   if(demo_version >= 203 && !t1->subsector->polyList &&
       t1->subsector == t2->subsector)
       return true;
 
    // An unobstructed LOS is possible.
    // Now look from eyes of t1 to any part of t2.
-   
+
    validcount++;
 
-   los.topslope = 
+   los.topslope =
       (los.bottomslope = t2->z - (los.sightzstart =
                                  t1->z + t1->height -
                                   (t1->height>>2))) + t2->height;

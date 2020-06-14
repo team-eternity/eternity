@@ -539,14 +539,14 @@ void lineopening_t::calculate(const line_t *linedef)
 
    // no need to apply the portal hack (1024 units) here fortunately
    if(linedef->extflags & EX_ML_UPPERPORTAL && back->c_pflags & PS_PASSABLE)
-      opentop = front->ceilingheight;
+      opentop = front->srf.ceiling.height;
    else
-      opentop = emin(front->ceilingheight, back->ceilingheight);
+      opentop = emin(front->srf.ceiling.height, back->srf.ceiling.height);
 
    if(linedef->extflags & EX_ML_LOWERPORTAL && back->f_pflags & PS_PASSABLE)
-      openbottom = front->floorheight;
+      openbottom = front->srf.floor.height;
    else
-      openbottom = emax(front->floorheight, back->floorheight);
+      openbottom = emax(front->srf.floor.height, back->srf.floor.height);
    openrange = opentop - openbottom;
 }
 

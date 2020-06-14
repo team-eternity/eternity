@@ -402,8 +402,8 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
       {
       case fastCrushAndRaise:
          ceiling->crush = 10;
-         ceiling->topheight = sec->ceilingheight;
-         ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+         ceiling->topheight = sec->srf.ceiling.height;
+         ceiling->bottomheight = sec->srf.floor.height + (8*FRACUNIT);
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED * 2;
          break;
@@ -412,10 +412,10 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
          noise = CNOISE_SEMISILENT;
       case crushAndRaise:
          ceiling->crush = 10;
-         ceiling->topheight = sec->ceilingheight;
+         ceiling->topheight = sec->srf.ceiling.height;
       case lowerAndCrush:
       case lowerToFloor:
-         ceiling->bottomheight = sec->floorheight;
+         ceiling->bottomheight = sec->srf.floor.height;
          if(type != lowerToFloor)
             ceiling->bottomheight += 8*FRACUNIT;
          ceiling->direction = plat_down;
@@ -774,10 +774,10 @@ void CeilingWaggleThinker::Think()
       {
          // Remove
          destheight = originalHeight;
-         dist       = originalHeight - sector->ceilingheight;
+         dist       = originalHeight - sector->srf.ceiling.height;
 
          T_MoveCeilingInDirection(sector, abs(dist),
-            destheight, 8, destheight >= sector->ceilingheight ? plat_up : plat_down);
+            destheight, 8, destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 
          sector->ceilingdata = nullptr;
          remove();
@@ -798,10 +798,10 @@ void CeilingWaggleThinker::Think()
 
    destheight = originalHeight +
                 FixedMul(FloatBobOffsets[(accumulator >> FRACBITS) & 63], scale);
-   dist = destheight - sector->ceilingheight;
+   dist = destheight - sector->srf.ceiling.height;
 
    T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->ceilingheight ? plat_up : plat_down);
+      destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 }
 
 //
@@ -853,7 +853,7 @@ manual_waggle:
       waggle->addThinker();
 
       waggle->sector         = sector;
-      waggle->originalHeight = sector->ceilingheight;
+      waggle->originalHeight = sector->srf.ceiling.height;
       waggle->accumulator    = offset * FRACUNIT;
       waggle->accDelta       = speed << 10;
       waggle->scale          = 0;

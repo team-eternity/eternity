@@ -1099,7 +1099,7 @@ bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
    if(secnum >= 0)
    {
       // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].ceilingheight);
+      thread->dataStk.push(sectors[secnum].srf.ceiling.height);
    }
    else
       thread->dataStk.push(0);
@@ -1119,7 +1119,7 @@ bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS)
    if(secnum >= 0)
    {
       // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].floorheight);
+      thread->dataStk.push(sectors[secnum].srf.floor.height);
    }
    else
       thread->dataStk.push(0);
@@ -2065,8 +2065,8 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
-         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->floorheight;
-         mo->zref.ceiling = newsubsec->sector->ceilingheight;
+         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.height;
+         mo->zref.ceiling = newsubsec->sector->srf.ceiling.height;
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
          mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 

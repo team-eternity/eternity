@@ -49,11 +49,11 @@
 static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
 {
    fixed_t x, y, tmbbox[4];
-   return 
-     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <= 
+   return
+     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
      ld->bbox[BOXLEFT] ||
      (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
-     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <= 
+     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
      ld->bbox[BOXBOTTOM] ||
      (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
@@ -64,53 +64,53 @@ static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
 //
 // ioanch 20160112: helper function to get line extremities
 //
-static void P_getLineHeights(const line_t *ld, fixed_t &linebottom, 
+static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
                              fixed_t &linetop)
 {
    if(ld->frontsector->f_pflags & PS_PASSABLE &&
       !(ld->frontsector->f_pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->f_portal->data.link.planez > ld->frontsector->floorheight)
+      ld->frontsector->f_portal->data.link.planez > ld->frontsector->srf.floor.height)
    {
       linebottom = ld->frontsector->f_portal->data.link.planez;
    }
    else
-      linebottom = ld->frontsector->floorheight;
-   
+      linebottom = ld->frontsector->srf.floor.height;
+
    if(ld->frontsector->c_pflags & PS_PASSABLE &&
       !(ld->frontsector->c_pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->c_portal->data.link.planez < 
-      ld->frontsector->ceilingheight)
+      ld->frontsector->c_portal->data.link.planez <
+      ld->frontsector->srf.ceiling.height)
    {
       linetop = ld->frontsector->c_portal->data.link.planez;
    }
    else
-      linetop = ld->frontsector->ceilingheight;
+      linetop = ld->frontsector->srf.ceiling.height;
 
    if(ld->backsector)
    {
       fixed_t bottomback;
       if(ld->backsector->f_pflags & PS_PASSABLE &&
          !(ld->backsector->f_pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->f_portal->data.link.planez > 
-         ld->backsector->floorheight)
+         ld->backsector->f_portal->data.link.planez >
+         ld->backsector->srf.floor.height)
       {
          bottomback = ld->backsector->f_portal->data.link.planez;
       }
       else
-         bottomback = ld->backsector->floorheight;
+         bottomback = ld->backsector->srf.floor.height;
       if(bottomback < linebottom)
          linebottom = bottomback;
 
       fixed_t topback;
       if(ld->backsector->c_pflags & PS_PASSABLE &&
          !(ld->backsector->c_pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->c_portal->data.link.planez < 
-         ld->backsector->ceilingheight)
+         ld->backsector->c_portal->data.link.planez <
+         ld->backsector->srf.ceiling.height)
       {
          topback = ld->backsector->c_portal->data.link.planez;
       }
       else
-         topback = ld->backsector->ceilingheight;
+         topback = ld->backsector->srf.ceiling.height;
       if(topback > linetop)
          linetop = topback;
    }
@@ -162,10 +162,10 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    fixed_t lowfloor;
    if(!ld->backsector || !moveup)   // if line is 1-sided or above thing
       lowfloor = linebottom;
-   else if(linebottom == ld->backsector->floorheight) 
-      lowfloor = ld->frontsector->floorheight;
+   else if(linebottom == ld->backsector->srf.floor.height)
+      lowfloor = ld->frontsector->srf.floor.height;
    else
-      lowfloor = ld->backsector->floorheight;
+      lowfloor = ld->backsector->srf.floor.height;
    // 2-sided and below the thing: pick the higher floor ^^^
 
    // SAME TRICK AS BELOW!
@@ -177,15 +177,15 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
       clip.zref.secfloor = linetop;
    if(!moveup && linebottom < clip.zref.secceil)
       clip.zref.secceil = linebottom;
-         
+
    if(moveup && clip.zref.floor > clip.zref.passfloor)
       clip.zref.passfloor = clip.zref.floor;
    if(!moveup && clip.zref.ceiling < clip.zref.passceil)
       clip.zref.passceil = clip.zref.ceiling;
 
    // We need now to collect spechits for push activation.
-   if(pushhit && full_demo_version >= make_full_version(401, 0) && 
-      (clip.thing->groupid == ld->frontsector->groupid || 
+   if(pushhit && full_demo_version >= make_full_version(401, 0) &&
+      (clip.thing->groupid == ld->frontsector->groupid ||
       (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE))))
    {
       pushhit->add(ld);
@@ -212,22 +212,22 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
 
-   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
-      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
-      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
+   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
+      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
+      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
       bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
 
    if(P_BoxOnLineSide(bbox, ld) != -1)
       return true; // didn't hit it
-   
+
    fixed_t linetop, linebottom;
    if(po)
    {
       const sector_t *midsector = R_PointInSubsector(po->centerPt.x,
                                                      po->centerPt.y)->sector;
-      linebottom = midsector->floorheight;
-      linetop = midsector->ceilingheight;
+      linebottom = midsector->srf.floor.height;
+      linetop = midsector->srf.ceiling.height;
    }
    else
       P_getLineHeights(ld, linebottom, linetop);
@@ -418,11 +418,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       // adjust the lowfloor to the real observed value, to prevent
       // wrong dropoffz
-      if(ld->backsector && 
-         ((clip.opensecceil == ld->backsector->ceilingheight &&
-         clip.opensecfloor == ld->frontsector->floorheight) ||
-         (clip.opensecceil == ld->frontsector->ceilingheight && 
-         clip.opensecfloor == ld->backsector->floorheight)))
+      if(ld->backsector &&
+         ((clip.opensecceil == ld->backsector->srf.ceiling.height &&
+         clip.opensecfloor == ld->frontsector->srf.floor.height) ||
+         (clip.opensecceil == ld->frontsector->srf.ceiling.height &&
+         clip.opensecfloor == ld->backsector->srf.floor.height)))
       {
          clip.lowfloor = clip.opensecfloor;
       }

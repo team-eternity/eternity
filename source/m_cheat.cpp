@@ -1226,7 +1226,7 @@ CONSOLE_COMMAND(warp, cf_notnet | cf_level)
    }
 
    const sector_t *sector = R_PointInSubsector(x, y)->sector;
-   fixed_t z = sector->ceilingheight / 2 + sector->floorheight / 2 - plyr->mo->height / 2;
+   fixed_t z = sector->srf.ceiling.height / 2 + sector->srf.floor.height / 2 - plyr->mo->height / 2;
 
    P_TeleportMove(plyr->mo, x, y, false);
    plyr->mo->z = z;

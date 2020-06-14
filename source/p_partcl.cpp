@@ -416,11 +416,11 @@ void P_ParticleThinker(void)
 
       // haleyjd 09/04/05: use deep water floor if it is higher
       // than the real floor.
-      floorheight = 
-         (psec->heightsec != -1 && 
-          sectors[psec->heightsec].floorheight > psec->floorheight) ?
-          sectors[psec->heightsec].floorheight :
-          psec->floorheight; 
+      floorheight =
+         (psec->heightsec != -1 &&
+          sectors[psec->heightsec].srf.floor.height > psec->srf.floor.height) ?
+          sectors[psec->heightsec].srf.floor.height :
+          psec->srf.floor.height;
 
       // did particle hit ground, but is now no longer on it?
       if(particle->styleflags & PS_HITGROUND && particle->z != floorheight)
@@ -455,7 +455,7 @@ void P_ParticleThinker(void)
                E_PtclTerrainHit(particle);
          }
       }
-      else if(particle->z > psec->ceilingheight && psec->c_pflags & PS_PASSABLE)
+      else if(particle->z > psec->srf.ceiling.height && psec->c_pflags & PS_PASSABLE)
       {
          const linkdata_t *ldata = R_CPLink(psec);
 
@@ -1247,7 +1247,7 @@ static void P_DripEffect(Mobj *actor)
       p->styleflags |= PS_FULLBRIGHT;
    p->x = actor->x;
    p->y = actor->y;
-   p->z = actor->subsector->sector->ceilingheight;
+   p->z = actor->subsector->sector->srf.ceiling.height;
    P_SetParticlePosition(p);
 }
 

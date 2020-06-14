@@ -363,9 +363,9 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
       if((ceiling ? !(sector->c_pflags & PF_ATTACHEDPORTAL) &&
-          sector->ceilingheight < link.planez
+          sector->srf.ceiling.height < link.planez
           : !(sector->f_pflags & PF_ATTACHEDPORTAL) &&
-          sector->floorheight > link.planez) ||
+          sector->srf.floor.height > link.planez) ||
          (!link.deltax && !link.deltay))
       {
          return sector;
@@ -612,7 +612,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
    fixed_t topz = mobj->z + mobj->height;
-   if(topz < sector->floorheight || mobj->z > sector->ceilingheight)
+   if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
       return false;
    if(sector->f_pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
       return false;

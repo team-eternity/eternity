@@ -67,8 +67,8 @@ static void P_spawnGlitter(Mobj *actor, int type)
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
-   Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
-      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y,
+      P_ExtremeSectorAtPoint(actor, false)->srf.floor.height, type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -666,8 +666,8 @@ void A_GenWizard(actionargs_t *actionargs)
    // ioanch 20160116: portal aware
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
       (mo->z >
-      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
+      (P_ExtremeSectorAtPoint(mo, true)->srf.ceiling.height - mo->height)) ||
+      (mo->z < P_ExtremeSectorAtPoint(mo, false)->srf.floor.height))
    {
       // doesn't fit, so remove it immediately
       mo->remove();

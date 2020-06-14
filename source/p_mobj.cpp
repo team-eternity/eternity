@@ -419,16 +419,16 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    if(demo_version >= 329)
    {
       const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
-      if((ceilingsector->intflags & SIF_SKY || 
+      if((ceilingsector->intflags & SIF_SKY ||
          R_IsSkyLikePortalCeiling(*ceilingsector)) &&
-         mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
+         mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the actual sky itself
          return;
       }
       if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*topedgesec)) && 
-         mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
+         R_IsSkyLikePortalCeiling(*topedgesec)) &&
+         mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the edge
          return;
@@ -625,7 +625,7 @@ void P_XYMovement(Mobj* mo)
                   R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
             {
                if (demo_compatibility ||  // killough
-                  mo->z > clip.ceilingline->backsector->ceilingheight)
+                  mo->z > clip.ceilingline->backsector->srf.ceiling.height)
                {
                   // Hack to prevent missiles exploding against the sky.
                   // Does not handle sky floors.
@@ -693,7 +693,7 @@ void P_XYMovement(Mobj* mo)
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->zref.floor != P_ExtremeSectorAtPoint(mo, false)->floorheight)
+      mo->zref.floor != P_ExtremeSectorAtPoint(mo, false)->srf.floor.height)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // Some objects never rest on other things
@@ -936,7 +936,7 @@ static void P_ZMovement(Mobj* mo)
       {
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
-            (mo->z > clip.ceilingline->backsector->ceilingheight) &&
+            (mo->z > clip.ceilingline->backsector->srf.ceiling.height) &&
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
                clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
@@ -1138,7 +1138,7 @@ void P_NightmareRespawn(Mobj* mobj)
       subsector_t *newsubsec = R_PointInSubsector(x, y);
 
       fixed_t sheight = mobj->height;
-      fixed_t tz      = newsubsec->sector->floorheight + mobj->spawnpoint.height;
+      fixed_t tz      = newsubsec->sector->srf.floor.height + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
@@ -1159,7 +1159,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at old spot
    // because of removal of the body?
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    P_ExtremeSectorAtPoint(mobj, false)->floorheight +
+                    P_ExtremeSectorAtPoint(mobj, false)->srf.floor.height +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
@@ -1169,7 +1169,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x, y);
    mo = P_SpawnMobj(x, y,
-                    ss->sector->floorheight + GameModeInfo->teleFogHeight,
+                    ss->sector->srf.floor.height + GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    S_StartSound(mo, GameModeInfo->teleSound);
@@ -1419,7 +1419,7 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->floorheight);
+      waterstate = (z < hs->srf.floor.height);
    }
 
    // Heretic Wind transfer specials
@@ -1557,7 +1557,7 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->floorheight);
+      waterstate = (z < hs->srf.floor.height);
    }
    else
       waterstate = 0;
@@ -1935,8 +1935,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // killough 11/98: for tracking dropoffs
    // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
-   mobj->zref.dropoff = mobj->zref.floor = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
-   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
+   mobj->zref.dropoff = mobj->zref.floor = P_ExtremeSectorAtPoint(mobj, false)->srf.floor.height;
+   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, true)->srf.ceiling.height;
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
@@ -2133,7 +2133,7 @@ void P_RespawnSpecials()
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
-   mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
+   mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
 
    // find which type to spawn
@@ -3381,7 +3381,7 @@ void P_AdjustFloorClip(Mobj *thing)
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
       if(m->m_sector->heightsec == -1 &&
-         thing->z == m->m_sector->floorheight)
+         thing->z == m->m_sector->srf.floor.height)
       {
          fixed_t fclip = E_SectorFloorClip(m->m_sector);
 

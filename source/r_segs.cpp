@@ -142,14 +142,14 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // find positioning
    if(linedef->flags & ML_DONTPEGBOTTOM)
    {
-      column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
-         ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
+      column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height
+         ? segclip.frontsec->srf.floor.height : segclip.backsec->srf.floor.height;
       column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
    }
    else
    {
-      column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
-         ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
+      column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height
+         ? segclip.frontsec->srf.ceiling.height : segclip.backsec->srf.ceiling.height;
       column.texmid = column.texmid - viewz;
    }
 

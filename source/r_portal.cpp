@@ -1055,11 +1055,11 @@ static void R_ShowTainted(pwindow_t *window)
       const sector_t *sector = window->line->frontsector;
       float floorangle = sector->floorbaseangle + sector->floorangle;
       float ceilingangle = sector->ceilingbaseangle + sector->ceilingangle;
-      visplane_t *topplane = R_FindPlane(sector->ceilingheight,
+      visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
          sector->ceilingpic, sector->lightlevel, sector->srf.ceiling.offset.x,
          sector->srf.ceiling.offset.y, sector->srf.ceiling.scale.x, sector->srf.ceiling.scale.y,
          ceilingangle, nullptr, 0, 255, nullptr);
-      visplane_t *bottomplane = R_FindPlane(sector->floorheight,
+      visplane_t *bottomplane = R_FindPlane(sector->srf.floor.height,
          sector->floorpic, sector->lightlevel, sector->srf.floor.offset.x,
          sector->srf.floor.offset.y, sector->srf.floor.scale.x, sector->srf.floor.scale.y,
          floorangle, nullptr, 0, 255, nullptr);
@@ -1874,14 +1874,14 @@ void R_DefinePortal(const line_t &line)
    switch(type)
    {
    case portaltype_plane:
-      portal = R_GetPlanePortal(&sector->ceilingpic, &sector->ceilingheight,
+      portal = R_GetPlanePortal(&sector->ceilingpic, &sector->srf.ceiling.height,
          &sector->lightlevel, &sector->srf.ceiling.offset.x, &sector->srf.ceiling.offset.y,
          &sector->ceilingbaseangle, &sector->ceilingangle,
          &sector->srf.ceiling.scale.x, &sector->srf.ceiling.scale.y);
       break;
    case portaltype_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
-         &sector->floorheight, &sector->ceilingheight, &sector->lightlevel,
+         &sector->srf.floor.height, &sector->srf.ceiling.height, &sector->lightlevel,
          &sector->lightlevel, &sector->srf.floor.offset,
          &sector->srf.ceiling.offset,
          &sector->floorbaseangle, &sector->floorangle,
@@ -1944,14 +1944,14 @@ void R_DefinePortal(const line_t &line)
          fromid = sector->groupid;
          toid = othersector->groupid;
 
-         if(othersector->floorheight / 2 + othersector->ceilingheight / 2 <=
-            sector->floorheight / 2 + sector->ceilingheight / 2)
+         if(othersector->srf.floor.height / 2 + othersector->srf.ceiling.height / 2 <=
+            sector->srf.floor.height / 2 + sector->srf.ceiling.height / 2)
          {
             // this sector is above the other
-            planez = sector->floorheight + zoffset;
+            planez = sector->srf.floor.height + zoffset;
          }
          else
-            planez = sector->ceilingheight + zoffset;
+            planez = sector->srf.ceiling.height + zoffset;
 
          portal = R_GetLinkedPortal(destlinenum, thislinenum, planez, fromid, 
             toid);

@@ -655,7 +655,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
    sector_t *sec;
    line_t   *li;
    side_t   *si;
-  
+
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
@@ -667,10 +667,10 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
-      arc << sec->floorheight << sec->ceilingheight 
-          << sec->friction << sec->movefactor  
+      arc << sec->srf.floor.height << sec->srf.ceiling.height
+          << sec->friction << sec->movefactor
           << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags 
+          << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
           << sec->floorpic << sec->ceilingpic
@@ -687,8 +687,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->floorheight);
-         P_SetCeilingHeight(sec, sec->ceilingheight);
+         P_SetFloorHeight(sec, sec->srf.floor.height);
+         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
       }
    }
 

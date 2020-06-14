@@ -90,19 +90,19 @@ static bool EV_Check3DMidTexSwitch(line_t *line, Mobj *thing, int side)
    if(sidenum != -1)
       sidedef = &sides[sidenum];
 
-   // SoM: only allow switch specials on 3d sides to be triggered if 
+   // SoM: only allow switch specials on 3d sides to be triggered if
    // the mobj is within range of the side.
    // haleyjd 05/02/06: ONLY on two-sided lines.
-   if((line->flags & ML_3DMIDTEX) && line->backsector && 
+   if((line->flags & ML_3DMIDTEX) && line->backsector &&
       sidedef && sidedef->midtexture)
    {
       fixed_t opentop, openbottom, textop, texbot;
 
-      opentop = line->frontsector->ceilingheight < line->backsector->ceilingheight ?
-                line->frontsector->ceilingheight : line->backsector->ceilingheight;
-      
-      openbottom = line->frontsector->floorheight > line->backsector->floorheight ?
-                   line->frontsector->floorheight : line->backsector->floorheight;
+      opentop = line->frontsector->srf.ceiling.height < line->backsector->srf.ceiling.height ?
+                line->frontsector->srf.ceiling.height : line->backsector->srf.ceiling.height;
+
+      openbottom = line->frontsector->srf.floor.height > line->backsector->srf.floor.height ?
+                   line->frontsector->srf.floor.height : line->backsector->srf.floor.height;
 
       if(line->flags & ML_DONTPEGBOTTOM)
       {

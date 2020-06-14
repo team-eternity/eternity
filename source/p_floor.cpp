@@ -134,8 +134,8 @@ void FloorMoveThinker::Think()
          {
             type = genBuildStair;
             delayTimer = stepRaiseTime;
-            
-            if(sector->floorheight != floordestheight)
+
+            if(sector->srf.floor.height != floordestheight)
                P_StairSequence(sector);
          }
          return;
@@ -145,14 +145,14 @@ void FloorMoveThinker::Think()
          break;
       }
    }
-   
+
    // move the floor
    res = T_MoveFloorInDirection(sector, speed, floordestheight, crush, direction,
                                 emulateStairCrush);
 
    // sf: added silentmove
    // haleyjd: moving sound handled by sound sequences now
-    
+
    if(res == pastdest)    // if destination height is reached
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
@@ -471,8 +471,8 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->direction = plat_down;
          floor->sector = sec;
          floor->speed = FLOORSPEED;
-         floor->floordestheight = 
-            floor->sector->floorheight + 24 * FRACUNIT;
+         floor->floordestheight =
+            floor->sector->srf.floor.height + 24 * FRACUNIT;
          break;
 
          //jff 02/03/30 support lowering floor by 32 absolute (fast)
@@ -481,7 +481,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED*4;
          floor->floordestheight =
-            floor->sector->floorheight + 32 * FRACUNIT;
+            floor->sector->srf.floor.height + 32 * FRACUNIT;
          break;
 
       case lowerFloorToLowest:
@@ -497,7 +497,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            P_FindNextLowestFloor(sec,floor->sector->floorheight);
+            P_FindNextLowestFloor(sec,floor->sector->srf.floor.height);
          break;
 
       case turboLower:
@@ -505,7 +505,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED * 4;
          floor->floordestheight = P_FindHighestFloorSurrounding(sec);
-         if(floor->floordestheight != sec->floorheight)
+         if(floor->floordestheight != sec->srf.floor.height)
             floor->floordestheight += 8*FRACUNIT;
          break;
 
@@ -526,8 +526,8 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->ceilingheight)
-            floor->floordestheight = sec->ceilingheight;
+         if(floor->floordestheight > sec->srf.ceiling.height)
+            floor->floordestheight = sec->srf.ceiling.height;
          floor->floordestheight -=
             (8*FRACUNIT)*(floortype == raiseFloorCrush);
          break;
@@ -537,7 +537,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED*4;
          floor->floordestheight =
-            P_FindNextHighestFloor(sec,sec->floorheight);
+            P_FindNextHighestFloor(sec,sec->srf.floor.height);
          break;
 
       case raiseFloorToNearest:
@@ -545,7 +545,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            P_FindNextHighestFloor(sec,sec->floorheight);
+            P_FindNextHighestFloor(sec,sec->srf.floor.height);
          break;
 
       case raiseFloor24:
@@ -553,7 +553,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            floor->sector->floorheight + 24 * FRACUNIT;
+            floor->sector->srf.floor.height + 24 * FRACUNIT;
          break;
 
          // jff 2/03/30 support straight raise by 32 (fast)
@@ -562,7 +562,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED*4;
          floor->floordestheight =
-            floor->sector->floorheight + 32 * FRACUNIT;
+            floor->sector->srf.floor.height + 32 * FRACUNIT;
          break;
 
       case raiseFloor512:
@@ -570,7 +570,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            floor->sector->floorheight + 512 * FRACUNIT;
+            floor->sector->srf.floor.height + 512 * FRACUNIT;
          break;
 
       case raiseFloor24AndChange:
@@ -578,7 +578,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight =
-            floor->sector->floorheight + 24 * FRACUNIT;
+            floor->sector->srf.floor.height + 24 * FRACUNIT;
          sec->floorpic = line->frontsector->floorpic;
          //jff 3/14/98 transfer both old and new special
          P_DirectTransferSectorSpecial(line->frontsector, sec);
@@ -617,12 +617,12 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
             if(comp[comp_model])
             {
                floor->floordestheight =
-                  floor->sector->floorheight + minsize;
+                  floor->sector->srf.floor.height + minsize;
             }
             else
             {
                floor->floordestheight =
-                  (floor->sector->floorheight>>FRACBITS) + 
+                  (floor->sector->srf.floor.height >>FRACBITS) +
                   (minsize>>FRACBITS);
                if(floor->floordestheight>32000)
                   floor->floordestheight = 32000;   //jff 3/13/98 do not
@@ -732,7 +732,7 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
          P_DirectTransferSectorSpecial(line->frontsector, sec);
          break;
       case numChangeOnly:
-         secm = P_FindModelFloorSector(sec->floorheight,secnum);
+         secm = P_FindModelFloorSector(sec->srf.floor.height,secnum);
          if(secm) // if no model, no change
          {
             sec->floorpic = secm->floorpic;
@@ -864,7 +864,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          }
 
          floor->speed = speed;
-         height = sec->floorheight + stairsize;
+         height = sec->srf.floor.height + stairsize;
          floor->floordestheight = height;
          
          texture = sec->floorpic;
@@ -1113,7 +1113,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          }
          else
          {
-            s3_floorheight = s3->floorheight;
+            s3_floorheight = s3->srf.floor.height;
             s3_floorpic    = s3->floorpic;
          }
         
@@ -1210,32 +1210,32 @@ int EV_DoElevator
       case elevateDown:
          elevator->direction = plat_down;
          elevator->floordestheight =
-            P_FindNextLowestFloor(sec,sec->floorheight);
+            P_FindNextLowestFloor(sec,sec->srf.floor.height);
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
+            elevator->floordestheight + sec->srf.ceiling.height - sec->srf.floor.height;
          break;
 
       // elevator up to next floor
       case elevateUp:
          elevator->direction = plat_up;
          elevator->floordestheight =
-            P_FindNextHighestFloor(sec,sec->floorheight);
+            P_FindNextHighestFloor(sec,sec->srf.floor.height);
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
+            elevator->floordestheight + sec->srf.ceiling.height - sec->srf.floor.height;
          break;
 
       // elevator to floor height of activating switch's front sector
       case elevateCurrent:
-         elevator->floordestheight = line->frontsector->floorheight;
+         elevator->floordestheight = line->frontsector->srf.floor.height;
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
+            elevator->floordestheight + sec->srf.ceiling.height - sec->srf.floor.height;
          elevator->direction =
-            elevator->floordestheight>sec->floorheight ? plat_up : plat_down;
+            elevator->floordestheight>sec->srf.floor.height ? plat_up : plat_down;
          break;
       case elevateByValue:
-         elevator->floordestheight = sec->floorheight + amount;
+         elevator->floordestheight = sec->srf.floor.height + amount;
          elevator->ceilingdestheight =
-            elevator->floordestheight + sec->ceilingheight - sec->floorheight;
+            elevator->floordestheight + sec->srf.ceiling.height - sec->srf.floor.height;
          elevator->direction = amount > 0 ? plat_up : plat_down;
          break;
       default:
@@ -1278,57 +1278,57 @@ int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
       sector = &sectors[sectornum];
 
 manual_pillar:
-      // already being buggered about with, 
+      // already being buggered about with,
       // or ceiling <= floor, therefore closed
-      if(sector->floordata || sector->ceilingdata || 
-         sector->ceilingheight <= sector->floorheight)
+      if(sector->floordata || sector->ceilingdata ||
+         sector->srf.ceiling.height <= sector->srf.floor.height)
       {
          if(manual)
             return returnval;
          else
             continue;
       }
-            
+
       pillar = new PillarThinker;
       sector->floordata = pillar;
       sector->ceilingdata = pillar;
       pillar->addThinker();
       pillar->sector = sector;
-      
+
       if(pd->height == 0) // height == 0 so we meet in the middle
       {
-         destheight = sector->floorheight + 
-                         ((sector->ceilingheight - sector->floorheight) / 2);
+         destheight = sector->srf.floor.height +
+                         ((sector->srf.ceiling.height - sector->srf.floor.height) / 2);
       }
       else // else we meet at floorheight + args[2]
-         destheight = sector->floorheight + pd->height;
+         destheight = sector->srf.floor.height + pd->height;
 
       if(pd->height == 0) // height is 0 so we meet halfway
       {
          pillar->ceilingSpeed = pd->speed;
          pillar->floorSpeed   = pd->speed;
-      }      
-      else if(destheight-sector->floorheight > sector->ceilingheight-destheight)
+      }
+      else if(destheight-sector->srf.floor.height > sector->srf.ceiling.height -destheight)
       {
          pillar->floorSpeed = pd->speed;
-         pillar->ceilingSpeed = FixedDiv(sector->ceilingheight - destheight,
-                                   FixedDiv(destheight - sector->floorheight,
+         pillar->ceilingSpeed = FixedDiv(sector->srf.ceiling.height - destheight,
+                                   FixedDiv(destheight - sector->srf.floor.height,
                                             pillar->floorSpeed));
       }
       else
       {
          pillar->ceilingSpeed = pd->speed;
-         pillar->floorSpeed = FixedDiv(destheight - sector->floorheight,
-                                 FixedDiv(sector->ceilingheight - destheight, 
+         pillar->floorSpeed = FixedDiv(destheight - sector->srf.floor.height,
+                                 FixedDiv(sector->srf.ceiling.height - destheight,
                                           pillar->ceilingSpeed));
-      } 
-      
+      }
+
       pillar->floordest = destheight;
       pillar->ceilingdest = destheight;
       pillar->direction = 1;
       pillar->crush = pd->crush;
       returnval = 1;
-      
+
       P_FloorSequence(pillar->sector);
 
       if(manual)
@@ -1369,7 +1369,7 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
 manual_pillar:
       // already being buggered about with
       if(sector->floordata || sector->ceilingdata ||
-         sector->floorheight != sector->ceilingheight)
+         sector->srf.floor.height != sector->srf.ceiling.height)
       {
          if(manual)
             return returnval;
@@ -1382,36 +1382,36 @@ manual_pillar:
       sector->ceilingdata = pillar;
       pillar->addThinker();
       pillar->sector = sector;
-      
+
       if(pd->fdist == 0) // floordist == 0 so we find the next lowest floor
          pillar->floordest = P_FindLowestFloorSurrounding(sector);
       else               // else we meet at floorheight - args[2]
-         pillar->floordest = sector->floorheight - pd->fdist;
-      
+         pillar->floordest = sector->srf.floor.height - pd->fdist;
+
       if(pd->cdist == 0) // ceilingdist = 0 so we find the next highest ceiling
          pillar->ceilingdest = P_FindHighestCeilingSurrounding(sector);
       else               // else we meet at ceilingheight + args[3]
-         pillar->ceilingdest = sector->ceilingheight + pd->cdist;
-       
-      if(pillar->ceilingdest - sector->ceilingheight > 
-            sector->floorheight - pillar->floordest)
+         pillar->ceilingdest = sector->srf.ceiling.height + pd->cdist;
+
+      if(pillar->ceilingdest - sector->srf.ceiling.height >
+            sector->srf.floor.height - pillar->floordest)
       {
          pillar->ceilingSpeed = pd->speed;
-         pillar->floorSpeed = FixedDiv(sector->floorheight - pillar->floordest, 
-                                 FixedDiv(pillar->ceilingdest - sector->ceilingheight,
+         pillar->floorSpeed = FixedDiv(sector->srf.floor.height - pillar->floordest,
+                                 FixedDiv(pillar->ceilingdest - sector->srf.ceiling.height,
                                           pillar->ceilingSpeed));
       }
       else
       {
          pillar->floorSpeed = pd->speed;
-         pillar->ceilingSpeed = FixedDiv(pillar->ceilingdest - sector->ceilingheight,
-                                   FixedDiv(sector->floorheight - pillar->floordest, 
+         pillar->ceilingSpeed = FixedDiv(pillar->ceilingdest - sector->srf.ceiling.height,
+                                   FixedDiv(sector->srf.floor.height - pillar->floordest,
                                             pillar->floorSpeed));
       }
 
       pillar->direction = -1;
       returnval = 1;
-      
+
       P_FloorSequence(pillar->sector);
 
       if(manual)
@@ -1468,13 +1468,13 @@ void FloorWaggleThinker::Think()
 
    case WGLSTATE_REDUCE:
       if((scale -= scaleDelta) <= 0)
-      { 
+      {
          // Remove
          destheight = originalHeight;
-         dist       = originalHeight - sector->floorheight;
-         
+         dist       = originalHeight - sector->srf.floor.height;
+
          T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
-            destheight >= sector->floorheight ? plat_down : plat_up, false);
+            destheight >= sector->srf.floor.height ? plat_down : plat_up, false);
 
          sector->floordata = NULL;
          remove();
@@ -1496,10 +1496,10 @@ void FloorWaggleThinker::Think()
    destheight = 
       originalHeight + 
          FixedMul(FloatBobOffsets[(accumulator >> FRACBITS) & 63], scale);
-   dist = destheight - sector->floorheight;
+   dist = destheight - sector->srf.floor.height;
 
    T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->floorheight ? plat_up : plat_down, false);
+      destheight >= sector->srf.floor.height ? plat_up : plat_down, false);
 }
 
 //
@@ -1556,7 +1556,7 @@ manual_waggle:
       waggle->addThinker();
 
       waggle->sector         = sector;
-      waggle->originalHeight = sector->floorheight;
+      waggle->originalHeight = sector->srf.floor.height;
       waggle->accumulator    = offset * FRACUNIT;
       waggle->accDelta       = speed << 10;
       waggle->scale          = 0;

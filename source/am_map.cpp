@@ -998,7 +998,7 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
       const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
       x = M_DoubleToFixed(m_x + m_w / 2) + link.x;
       y = M_DoubleToFixed(m_y + m_h / 2) + link.y;
-      z = R_PointInSubsector(x, y)->sector->floorheight + link.z;
+      z = R_PointInSubsector(x, y)->sector->srf.floor.height + link.z;
    }
 }
 
@@ -1651,8 +1651,8 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&
-           (line->backsector->floorheight == line->backsector->ceilingheight ||
-            line->frontsector->floorheight == line->backsector->ceilingheight));
+           (line->backsector->srf.floor.height == line->backsector->srf.ceiling.height ||
+            line->frontsector->srf.floor.height == line->backsector->srf.ceiling.height));
 }
 
 //
@@ -1660,15 +1660,15 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 //
 inline static bool AM_differentFloor(const line_t &line)
 {
-   return line.frontsector->floorheight > line.backsector->floorheight ||
-   (line.frontsector->floorheight < line.backsector->floorheight &&
-    (!(line.extflags & EX_ML_LOWERPORTAL) || 
+   return line.frontsector->srf.floor.height > line.backsector->srf.floor.height ||
+   (line.frontsector->srf.floor.height < line.backsector->srf.floor.height &&
+    (!(line.extflags & EX_ML_LOWERPORTAL) ||
        !(line.backsector->f_pflags & PS_PASSABLE)));
 }
 inline static bool AM_differentCeiling(const line_t &line)
 {
-   return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
-   (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
+   return line.frontsector->srf.ceiling.height < line.backsector->srf.ceiling.height ||
+   (line.frontsector->srf.ceiling.height > line.backsector->srf.ceiling.height &&
     (!(line.extflags & EX_ML_UPPERPORTAL) ||
        !(line.backsector->c_pflags & PS_PASSABLE)));
 }

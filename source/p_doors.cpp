@@ -159,13 +159,13 @@ void VerticalDoorThinker::Think()
 
    case plat_down:
       // Door is moving down
-      res = T_MoveCeilingDown(sector, speed, sector->floorheight, -1);
+      res = T_MoveCeilingDown(sector, speed, sector->srf.floor.height, -1);
 
       // killough 10/98: implement gradual lighting effects
-      if(lighttag && topheight - sector->floorheight)
+      if(lighttag && topheight - sector->srf.floor.height)
          EV_LightTurnOnPartway(lighttag,
-                               FixedDiv(sector->ceilingheight - sector->floorheight,
-                                        topheight - sector->floorheight));
+                               FixedDiv(sector->srf.ceiling.height - sector->srf.floor.height,
+                                        topheight - sector->srf.floor.height));
 
       // handle door reaching bottom
       if(res == pastdest)
@@ -223,10 +223,10 @@ void VerticalDoorThinker::Think()
       res = T_MoveCeilingUp(sector, speed, topheight, -1);
 
       // killough 10/98: implement gradual lighting effects
-      if(lighttag && topheight - sector->floorheight)
+      if(lighttag && topheight - sector->srf.floor.height)
          EV_LightTurnOnPartway(lighttag,
-                               FixedDiv(sector->ceilingheight - sector->floorheight,
-                                        topheight - sector->floorheight));
+                               FixedDiv(sector->srf.ceiling.height - sector->srf.floor.height,
+                                        topheight - sector->srf.floor.height));
 
       // handle door reaching the top
       if(res == pastdest)
@@ -373,7 +373,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
          break;
 
       case closeThenOpen:
-         door->topheight = sec->ceilingheight;
+         door->topheight = sec->srf.ceiling.height;
          door->direction = plat_down;
          door->topwait   = 30 * TICRATE;                    // haleyjd 01/16/12: set here
          door->turbo     = false;
@@ -387,7 +387,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
          door->topheight -= 4*FRACUNIT;
          door->speed     = VDOORSPEED * 4;
          door->turbo     = true;
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->srf.ceiling.height)
             P_DoorSequence(true, true, false, door->sector); // haleyjd
          break;
 
@@ -397,7 +397,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
          door->topheight = P_FindLowestCeilingSurrounding(sec);
          door->topheight -= 4*FRACUNIT;
          door->turbo     = false;
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->srf.ceiling.height)
             P_DoorSequence(true, false, false, door->sector); // haleyjd
          break;
          

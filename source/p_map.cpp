@@ -281,9 +281,9 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
          }
          if((sec = m->m_sector)->flags & SECF_FRICTION &&
             (sec->friction < friction || friction == ORIG_FRICTION) &&
-            (mo->z <= sec->floorheight ||
+            (mo->z <= sec->srf.floor.height ||
              (sec->heightsec != -1 &&
-              mo->z <= sectors[sec->heightsec].floorheight &&
+              mo->z <= sectors[sec->heightsec].srf.floor.height &&
               demo_version >= 203)))
          {
             friction = sec->friction;
@@ -417,22 +417,22 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    {
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
             newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
    }
    else
 #endif
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
 
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
    {
       clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
-            newsubsec->sector)->ceilingheight;
+            newsubsec->sector)->srf.ceiling.height;
    }
    else
 #endif
-      clip.zref.ceiling = newsubsec->sector->ceilingheight;
+      clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
@@ -1222,8 +1222,8 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // Any contacted lines the step closer together
    // will adjust them.
 
-   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
-   clip.zref.ceiling = newsubsec->sector->ceilingheight;
+   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+   clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
@@ -1633,8 +1633,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             else
                steplimit = STEPSIZE;
 
-            if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit || 
-               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
+            if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit ||
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->srf.ceiling.height
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.zref.ceiling - (clip.BlockingMobj->z + clip.BlockingMobj->height)
                  < thing->height))
@@ -1642,9 +1642,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                P_RunPushSpechits(*thing, pushhit);
                return false;
             }
-            
+
             // haleyjd: hack for touchies: don't allow running through them when
-            // they die until they become non-solid (just being a corpse isn't 
+            // they die until they become non-solid (just being a corpse isn't
             // good enough)
             if(clip.BlockingMobj->flags & MF_TOUCHY)
             {
@@ -1911,24 +1911,24 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
       if(!useportalgroups || full_demo_version < make_full_version(340, 48))
       {
          cond = dist < 0 ?                               // dropoff direction
-         ld->frontsector->floorheight < mo->z &&
-         ld->backsector->floorheight >= mo->z :
-         ld->backsector->floorheight < mo->z &&
-         ld->frontsector->floorheight >= mo->z;
+         ld->frontsector->srf.floor.height < mo->z &&
+         ld->backsector->srf.floor.height >= mo->z :
+         ld->backsector->srf.floor.height < mo->z &&
+         ld->frontsector->srf.floor.height >= mo->z;
       }
       else
       {
          // with portals and advanced version, also allow equal floor heights
          // if one side has portals. Require equal floor height though
          cond = dist < 0 ?                               // dropoff direction
-         (ld->frontsector->floorheight < mo->z ||
-         (ld->frontsector->floorheight == mo->z && 
+         (ld->frontsector->srf.floor.height < mo->z ||
+         (ld->frontsector->srf.floor.height == mo->z &&
          ld->frontsector->f_pflags & PS_PASSABLE)) &&
-         ld->backsector->floorheight == mo->z :
-         (ld->backsector->floorheight < mo->z ||
-         (ld->backsector->floorheight == mo->z &&
+         ld->backsector->srf.floor.height == mo->z :
+         (ld->backsector->srf.floor.height < mo->z ||
+         (ld->backsector->srf.floor.height == mo->z &&
          ld->backsector->f_pflags & PS_PASSABLE)) &&
-         ld->frontsector->floorheight == mo->z;
+         ld->frontsector->srf.floor.height == mo->z;
       }
 
       if(cond)
@@ -2959,7 +2959,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
       i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
       i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->floorheight,
+      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->srf.floor.height,
                                        ld->frontsector->groupid,
                                        pClip->thing->groupid, ld->frontsector,
                                        pClip->thing->z))
@@ -2975,7 +2975,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
          i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
          i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
          if(P_PointReachesGroupVertically(i2.x, i2.y,
-                                          ld->backsector->floorheight,
+                                          ld->backsector->srf.floor.height,
                                           ld->backsector->groupid,
                                           pClip->thing->groupid, ld->backsector,
                                           pClip->thing->z))

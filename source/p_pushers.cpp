@@ -248,7 +248,7 @@ void PushThinker::Think()
    // constant pushers p_wind and p_current
    
    if(sec->heightsec != -1) // special water sector?
-      ht = sectors[sec->heightsec].floorheight;
+      ht = sectors[sec->heightsec].srf.floor.height;
 
    node = sec->touching_thinglist; // things touching this sector
 
@@ -302,7 +302,7 @@ void PushThinker::Think()
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > sec->floorheight) // above ground
+            if(thing->z > sec->srf.floor.height) // above ground
                xspeed = yspeed = 0; // no force
             else // on ground
             {

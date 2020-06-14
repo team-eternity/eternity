@@ -482,22 +482,22 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    {
       bottomsector = P_ExtremeSectorAtPoint(x, y, false, 
          newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomsector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = bottomsector->srf.floor.height;
    }
    else
 #endif
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
 
 #ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
    {
       clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
-         newsubsec->sector)->ceilingheight;
+         newsubsec->sector)->srf.ceiling.height;
    }
    else
 #endif
-      clip.zref.ceiling = newsubsec->sector->ceilingheight;
+      clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
@@ -678,7 +678,7 @@ bool P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z)
       if(mo->flags2 & MF2_FLOATBOB)
          z -= FloatBobOffsets[(mo->floatbob + leveltime - 1) & 63];
 
-      if(z < newsubsec->sector->floorheight || z + mo->height > newsubsec->sector->ceilingheight)
+      if(z < newsubsec->sector->srf.floor.height || z + mo->height > newsubsec->sector->srf.ceiling.height)
          return false;
    }
    

@@ -301,14 +301,14 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
          li->backsector->f_pflags,
          li->backsector->f_portal,
          state.bottomslope,
-         FixedDiv(li->backsector->floorheight - state.cz, totaldist),
+         FixedDiv(li->backsector->srf.floor.height - state.cz, totaldist),
       },
       {
          EX_ML_UPPERPORTAL,
          li->backsector->c_pflags,
          li->backsector->c_portal,
          -state.topslope,
-         -FixedDiv(li->backsector->ceilingheight - state.cz, totaldist),
+         -FixedDiv(li->backsector->srf.ceiling.height - state.cz, totaldist),
       },
    };
 
@@ -379,15 +379,15 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
       fixed_t slope;
 
-      if(sector->floorheight != osector->floorheight || (!!(sector->f_pflags & PS_PASSABLE) ^
-                                                         !!(osector->f_pflags & PS_PASSABLE)))
+      if(sector->srf.floor.height != osector->srf.floor.height ||
+         (!!(sector->f_pflags & PS_PASSABLE) ^ !!(osector->f_pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.openbottom - context.state.cz, totaldist);
          if(slope > context.state.bottomslope)
             context.state.bottomslope = slope;
       }
 
-      if(sector->ceilingheight != osector->ceilingheight || (!!(sector->c_pflags & PS_PASSABLE) ^
+      if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->c_pflags & PS_PASSABLE) ^
                                                              !!(osector->c_pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.opentop - context.state.cz, totaldist);

@@ -252,20 +252,20 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(lo.openrange <= 0 || li->extflags & EX_ML_BLOCKALL)
       return false;
 
-   const sector_t *osector = sector == li->frontsector ? 
+   const sector_t *osector = sector == li->frontsector ?
       li->backsector : li->frontsector;
    fixed_t slope;
 
-   if(sector->floorheight != osector->floorheight ||
+   if(sector->srf.floor.height != osector->srf.floor.height ||
       (!!(sector->f_pflags & PS_PASSABLE) ^ !!(osector->f_pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.openbottom - context.sightzstart, totalfrac);
       if(slope > context.state.bottomslope)
          context.state.bottomslope = slope;
-      
+
    }
 
-   if(sector->ceilingheight != osector->ceilingheight ||
+   if(sector->srf.ceiling.height != osector->srf.ceiling.height ||
       (!!(sector->c_pflags & PS_PASSABLE) ^ !!(osector->c_pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.opentop - context.sightzstart, totalfrac);
@@ -280,7 +280,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
       li->backsector->f_pflags & PS_PASSABLE &&
       context.state.bottomslope <=
-      FixedDiv(li->backsector->floorheight - context.sightzstart, totalfrac) &&
+      FixedDiv(li->backsector->srf.floor.height - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
@@ -299,7 +299,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
       li->backsector->c_pflags & PS_PASSABLE &&
       context.state.topslope >=
-      FixedDiv(li->backsector->ceilingheight - context.sightzstart, totalfrac) &&
+      FixedDiv(li->backsector->srf.ceiling.height - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
@@ -522,16 +522,16 @@ bool CamContext::checkSight(const camsightparams_t &params,
    {
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
-          ((params.cz + params.cheight <= sectors[csec->heightsec].floorheight &&
-            params.tz >= sectors[csec->heightsec].floorheight) ||
-           (params.cz >= sectors[csec->heightsec].ceilingheight &&
-            params.tz + params.cheight <= sectors[csec->heightsec].ceilingheight)))
+          ((params.cz + params.cheight <= sectors[csec->heightsec].srf.floor.height &&
+            params.tz >= sectors[csec->heightsec].srf.floor.height) ||
+           (params.cz >= sectors[csec->heightsec].srf.ceiling.height &&
+            params.tz + params.cheight <= sectors[csec->heightsec].srf.ceiling.height)))
          ||
          (tsec->heightsec != -1 &&
-          ((params.tz + params.theight <= sectors[tsec->heightsec].floorheight &&
-            params.cz >= sectors[tsec->heightsec].floorheight) ||
-           (params.tz >= sectors[tsec->heightsec].ceilingheight &&
-            params.cz + params.theight <= sectors[tsec->heightsec].ceilingheight))))
+          ((params.tz + params.theight <= sectors[tsec->heightsec].srf.floor.height &&
+            params.cz >= sectors[tsec->heightsec].srf.floor.height) ||
+           (params.tz >= sectors[tsec->heightsec].srf.ceiling.height &&
+            params.cz + params.theight <= sectors[tsec->heightsec].srf.ceiling.height))))
          return false;
 
       //

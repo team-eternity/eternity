@@ -884,23 +884,23 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
       {
          auto &si  = sectorinterps[i];
          auto &sec = sectors[i];
-         
-         if(si.prevfloorheight   != sec.floorheight ||
-            si.prevceilingheight != sec.ceilingheight)
+
+         if(si.prevfloorheight   != sec.srf.floor.height ||
+            si.prevceilingheight != sec.srf.ceiling.height)
          {
             si.interpolated = true;
 
             // backup heights
-            si.backfloorheight    = sec.floorheight;
+            si.backfloorheight    = sec.srf.floor.height;
             si.backfloorheightf   = sec.floorheightf;
-            si.backceilingheight  = sec.ceilingheight;
+            si.backceilingheight  = sec.srf.ceiling.height;
             si.backceilingheightf = sec.ceilingheightf;
 
             // set interpolated heights
-            sec.floorheight    = lerpCoord(view.lerp, si.prevfloorheight,   sec.floorheight);
-            sec.ceilingheight  = lerpCoord(view.lerp, si.prevceilingheight, sec.ceilingheight);
-            sec.floorheightf   = M_FixedToFloat(sec.floorheight);
-            sec.ceilingheightf = M_FixedToFloat(sec.ceilingheight);
+            sec.srf.floor.height = lerpCoord(view.lerp, si.prevfloorheight,   sec.srf.floor.height);
+            sec.srf.ceiling.height = lerpCoord(view.lerp, si.prevceilingheight, sec.srf.ceiling.height);
+            sec.floorheightf   = M_FixedToFloat(sec.srf.floor.height);
+            sec.ceilingheightf = M_FixedToFloat(sec.srf.ceiling.height);
          }
          else
             si.interpolated = false;
@@ -911,13 +911,13 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
       {
          auto &si  = sectorinterps[i];
          auto &sec = sectors[i];
-         
+
          // restore backed up heights
          if(si.interpolated)
          {
-            sec.floorheight    = si.backfloorheight;
+            sec.srf.floor.height = si.backfloorheight;
             sec.floorheightf   = si.backfloorheightf;
-            sec.ceilingheight  = si.backceilingheight;
+            sec.srf.ceiling.height = si.backceilingheight;
             sec.ceilingheightf = si.backceilingheightf;
          }
       }
@@ -1130,8 +1130,8 @@ void R_SectorColormap(const sector_t *s)
    {
       // We're in a Boom-kind sector. Now check each area
       int hs = view.sector->heightsec;
-      viewarea = (viewz < sectors[hs].floorheight ? area_below : 
-         viewz > sectors[hs].ceilingheight ? area_above : area_normal);
+      viewarea = (viewz < sectors[hs].srf.floor.height ? area_below :
+         viewz > sectors[hs].srf.ceiling.height ? area_above : area_normal);
       cm = R_getSectorColormap(*view.sector, viewarea);
       if(cm & COLORMAP_BOOMKIND)
       {
@@ -1150,8 +1150,8 @@ void R_SectorColormap(const sector_t *s)
          int hs = view.sector->heightsec;
          viewarea =
             (hs == -1 ? area_normal :
-               viewz < sectors[hs].floorheight ? area_below :
-               viewz > sectors[hs].ceilingheight ? area_above : area_normal);
+               viewz < sectors[hs].srf.floor.height ? area_below :
+               viewz > sectors[hs].srf.ceiling.height ? area_above : area_normal);
       }
       cm = R_getSectorColormap(*s, viewarea);
    }

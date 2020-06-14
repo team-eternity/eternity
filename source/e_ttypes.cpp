@@ -689,7 +689,7 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
       {
          fixed_t z = usefloorz ? thing->zref.floor : thing->z;
-         if(z == m->m_sector->floorheight)
+         if(z == m->m_sector->srf.floor.height)
             break;
       }
 
@@ -900,9 +900,9 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
    if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
       terrain = &solid;
 
-   z = sector->heightsec != -1 ? 
-         sectors[sector->heightsec].floorheight :
-         sector->floorheight;
+   z = sector->heightsec != -1 ?
+         sectors[sector->heightsec].srf.floor.height :
+         sector->srf.floor.height;
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another
    // group
@@ -932,7 +932,7 @@ bool E_HitFloor(Mobj *thing)
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->floorheight)
+      if(thing->z == m->m_sector->srf.floor.height)
          break;
    }
 
