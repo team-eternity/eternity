@@ -8,6 +8,11 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+13.06.2020
+
+BUGFIX: Fixed the FLIES thingtype particlefx from sounding badly.
+
+--------------------------------------------------------------------------------
 25.05.2020
 
 BUGFIX: Fixed an occasional crash happening when starting maps with things with
