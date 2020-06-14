@@ -3130,8 +3130,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                   &sector->surface.ceiling.offset,
                                   &sector->floorbaseangle, &sector->floorangle,
                                   &sector->ceilingbaseangle, &sector->ceilingangle,
-                                  &sector->surface.floor.scale.x, &sector->surface.floor.scale.y,
-                                  &sector->surface.ceiling.scale.x, &sector->surface.ceiling.scale.y);
+                                  &sector->surface.floor.scale, &sector->surface.ceiling.scale);
       // TODO: line portal
       if(effects == portal_lineonly)
       {

@@ -627,8 +627,7 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
                              v2fixed_t *flooroff, v2fixed_t *ceilingoff,
                              float *floorbaseangle, float *floorangle,
                              float *ceilingbaseangle, float *ceilingangle,
-                             const float *floorxscale, const float *flooryscale,
-                             const float *ceilingxscale, const float *ceilingyscale)
+                             const v2float_t *floorscale, const v2float_t *ceilingscale)
 {
    portal_t *rover, *ret;
    horizondata_t horizon[surf_NUM] = {};
@@ -636,8 +635,7 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
    if(!floorpic || !ceilingpic || !floorz || !ceilingz ||
       !floorlight || !ceilinglight || !flooroff ||
       !ceilingoff || !floorbaseangle || !floorangle ||
-      !ceilingbaseangle || !ceilingangle || !floorxscale || !flooryscale ||
-      !ceilingxscale || !ceilingyscale)
+      !ceilingbaseangle || !ceilingangle || !floorscale || !ceilingscale)
       return NULL;
 
    horizon[surf_ceil].light = ceilinglight;
@@ -646,16 +644,14 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
    horizon[surf_ceil].off   = ceilingoff;
    horizon[surf_ceil].baseangle = ceilingbaseangle;
    horizon[surf_ceil].angle = ceilingangle;
-   horizon[surf_ceil].xscale = ceilingxscale;
-   horizon[surf_ceil].yscale = ceilingyscale;
+   horizon[surf_ceil].scale = ceilingscale;
    horizon[surf_floor].light= floorlight;
    horizon[surf_floor].pic  = floorpic;
    horizon[surf_floor].z    = floorz;
    horizon[surf_floor].off = flooroff;
    horizon[surf_floor].baseangle = floorbaseangle; // haleyjd 01/05/08
    horizon[surf_floor].angle = floorangle;
-   horizon[surf_floor].xscale = floorxscale;
-   horizon[surf_floor].yscale = flooryscale;
+   horizon[surf_floor].scale = floorscale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -875,8 +871,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                           *portal->data.horizon[surf_ceil].light,
                           portal->data.horizon[surf_ceil].off->x,
                           portal->data.horizon[surf_ceil].off->y,
-                          *portal->data.horizon[surf_ceil].xscale,
-                          *portal->data.horizon[surf_ceil].yscale,
+                          portal->data.horizon[surf_ceil].scale->x,
+                          portal->data.horizon[surf_ceil].scale->y,
                           ceilingangle, NULL, 0, 255, NULL);
 
    // FIXME: Replace the 1.0s?
@@ -885,8 +881,8 @@ static void R_RenderHorizonPortal(pwindow_t *window)
                              *portal->data.horizon[surf_floor].light,
                              portal->data.horizon[surf_floor].off->x,
                              portal->data.horizon[surf_floor].off->y,
-                             *portal->data.horizon[surf_floor].xscale,
-                             *portal->data.horizon[surf_floor].yscale,
+                             portal->data.horizon[surf_floor].scale->x,
+                             portal->data.horizon[surf_floor].scale->y,
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
@@ -1890,8 +1886,7 @@ void R_DefinePortal(const line_t &line)
          &sector->surface.ceiling.offset,
          &sector->floorbaseangle, &sector->floorangle,
          &sector->ceilingbaseangle, &sector->ceilingangle,
-         &sector->surface.floor.scale.x, &sector->surface.floor.scale.y, &sector->surface.ceiling.scale.x,
-         &sector->surface.ceiling.scale.y);
+         &sector->surface.floor.scale, &sector->surface.ceiling.scale);
       break;
    case portaltype_skybox:
       skycam = sector->thinglist;
