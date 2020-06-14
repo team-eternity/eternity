@@ -308,8 +308,8 @@ struct sector_t
 
    // thinker_t for reversable actions
    Thinker *floordata;    // jff 2/22/98 make thinkers on
-   Thinker *ceilingdata;  // floors, ceilings, lighting,
-   Thinker *lightingdata; // independent of one another
+   Thinker *ceilingdata;  // floors, ceilings independent of one another
+   // ioanch: deleted lightingdata
 
    // jff 2/26/98 lockout machinery for stairbuilding
    int stairlock;   // -2 on first locked -1 after thinker done 0 normally

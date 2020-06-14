@@ -461,8 +461,6 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    {
       if(!secThinker)
          secThinker = thinker_cast<SectorThinker *>(sec->floordata);
-      if(!secThinker)
-         secThinker = thinker_cast<SectorThinker *>(sec->lightingdata);
    }
    
    // if door already has a thinker, use it

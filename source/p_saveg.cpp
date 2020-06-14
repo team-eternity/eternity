@@ -683,7 +683,6 @@ static void P_ArchiveWorld(SaveArchive &arc)
          // jff 2/22/98 now three thinker fields, not two
          sec->ceilingdata  = nullptr;
          sec->floordata    = nullptr;
-         sec->lightingdata = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights

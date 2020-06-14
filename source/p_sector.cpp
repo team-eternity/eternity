@@ -73,7 +73,7 @@ void SectorThinker::serialize(SaveArchive &arc)
          sector->ceilingdata = this;
          break;
       case ATTACH_LIGHT:
-         sector->lightingdata = this;
+         // NOTE: light thinkers don't exist
          break;
       default:
          break;
