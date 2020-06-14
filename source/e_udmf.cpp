@@ -123,10 +123,8 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->ceilingheight = us.heightceiling;
 
          // New to Eternity
-         ss->floor_xoffs = us.xpanningfloor;
-         ss->floor_yoffs = us.ypanningfloor;
-         ss->ceiling_xoffs = us.xpanningceiling;
-         ss->ceiling_yoffs = us.ypanningceiling;
+         ss->surface.floor.offset = { us.xpanningfloor, us.ypanningfloor };
+         ss->surface.ceiling.offset = { us.xpanningceiling, us.ypanningceiling };
          ss->floorbaseangle = static_cast<float>
             (E_NormalizeFlatAngle(us.rotationfloor) *  PI / 180.0f);
          ss->ceilingbaseangle = static_cast<float>
@@ -270,10 +268,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
          ss->c_pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
 
-         ss->floor_xscale = static_cast<float>(us.xscalefloor);
-         ss->floor_yscale = static_cast<float>(us.yscalefloor);
-         ss->ceiling_xscale = static_cast<float>(us.xscaleceiling);
-         ss->ceiling_yscale = static_cast<float>(us.yscaleceiling);
+         ss->scale[surf_floor].x = static_cast<float>(us.xscalefloor);
+         ss->scale[surf_floor].y = static_cast<float>(us.yscalefloor);
+         ss->scale[surf_ceil].x = static_cast<float>(us.xscaleceiling);
+         ss->scale[surf_ceil].y = static_cast<float>(us.yscaleceiling);
 
          // Sound sequences
          if(!us.soundsequence.empty())

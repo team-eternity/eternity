@@ -34,14 +34,13 @@ struct v3fixed_t
    fixed_t x, y, z;
 };
 
+struct v2double_t;
+
 struct v2fixed_t
 {
    fixed_t x, y;
    
    // ioanch 20160106: added operators as needed
-   template<typename T>
-   bool operator == (T &&other) const { return x == other.x && 
-                                               y == other.y; }
    
    template<typename T>
    v2fixed_t &operator += (T &&other) { x += other.x; 
@@ -76,6 +75,18 @@ struct v2fixed_t
    {
       return !x && !y;
    }
+
+   bool operator != (v2fixed_t other) const
+   {
+      return x != other.x || y != other.y;
+   }
+
+   bool operator == (v2fixed_t other) const
+   {
+      return x == other.x && y == other.y;
+   }
+
+   static v2fixed_t doubleToFixed(const v2double_t &v);
 };
 
 struct v3float_t
@@ -83,9 +94,13 @@ struct v3float_t
    float x, y, z;
 };
 
+struct v2float_t;
+
 struct v2double_t
 {
    double x, y;
+
+   explicit operator v2float_t() const;
 };
 
 struct v3double_t
@@ -96,7 +111,30 @@ struct v3double_t
 struct v2float_t
 {
    float x, y;
+
+   bool operator != (v2float_t other) const
+   {
+      return x != other.x || y != other.y;
+   }
+
+   bool operator == (v2float_t other) const
+   {
+      return x == other.x && y == other.y;
+   }
 };
+
+//
+// Vector-wise operation
+//
+inline v2fixed_t v2fixed_t::doubleToFixed(const v2double_t &v)
+{
+   return { M_DoubleToFixed(v.x), M_DoubleToFixed(v.y) };
+}
+
+inline v2double_t::operator v2float_t() const
+{
+   return v2float_t{ static_cast<float>(x), static_cast<float>(y) };
+}
 
 // 
 // M_MagnitudeVec2

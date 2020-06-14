@@ -3115,23 +3115,23 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       portal = R_GetPlanePortal(&sector->ceilingpic, 
                                 &sector->ceilingheight, 
                                 &sector->lightlevel, 
-                                &sector->ceiling_xoffs, 
-                                &sector->ceiling_yoffs,
+                                &sector->surface.ceiling.offset.x,
+                                &sector->surface.ceiling.offset.y,
                                 &sector->ceilingbaseangle,
-                                &sector->ceilingangle, &sector->ceiling_xscale,
-                                &sector->ceiling_yscale);
+                                &sector->ceilingangle, &sector->scale[surf_ceil].x,
+                                &sector->scale[surf_ceil].y);
       break;
 
    case portal_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic, 
                                   &sector->floorheight, &sector->ceilingheight,
                                   &sector->lightlevel, &sector->lightlevel,
-                                  &sector->floor_xoffs, &sector->floor_yoffs,
-                                  &sector->ceiling_xoffs, &sector->ceiling_yoffs,
+                                  &sector->surface.floor.offset.x, &sector->surface.floor.offset.y,
+                                  &sector->surface.ceiling.offset.x, &sector->surface.ceiling.offset.y,
                                   &sector->floorbaseangle, &sector->floorangle,
                                   &sector->ceilingbaseangle, &sector->ceilingangle,
-                                  &sector->floor_xscale, &sector->floor_yscale, 
-                                  &sector->ceiling_xscale, &sector->ceiling_yscale);
+                                  &sector->scale[surf_floor].x, &sector->scale[surf_floor].y,
+                                  &sector->scale[surf_ceil].x, &sector->scale[surf_ceil].y);
       // TODO: line portal
       if(effects == portal_lineonly)
       {

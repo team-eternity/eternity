@@ -132,8 +132,8 @@ void ScrollThinker::Think()
 
    case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
       sec = sectors + this->affectee;
-      sec->floor_xoffs += dx;
-      sec->floor_yoffs += dy;
+      sec->surface.floor.offset.x += dx;
+      sec->surface.floor.offset.y += dy;
       {
          seclerpinfo_t &info = pScrolledSectors.addNew();
          info.sector = sec;
@@ -145,8 +145,8 @@ void ScrollThinker::Think()
 
    case ScrollThinker::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
       sec = sectors + this->affectee;
-      sec->ceiling_xoffs += dx;
-      sec->ceiling_yoffs += dy;
+      sec->surface.ceiling.offset.x += dx;
+      sec->surface.ceiling.offset.y += dy;
       {
          seclerpinfo_t &info = pScrolledSectors.addNew();
          info.sector = sec;

@@ -1345,25 +1345,80 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       if(*tempstr != '\0')
          sec->damageflagsrem = E_ParseFlags(tempstr, &sectordamage_flagset);
 
-      // floor and ceiling offsets
-      sec->floor_xoffs   = cfg_getfloat(section, FIELD_SECTOR_FLOOROFFSETX);
-      sec->floor_yoffs   = cfg_getfloat(section, FIELD_SECTOR_FLOOROFFSETY);
-      sec->ceiling_xoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETX);
-      sec->ceiling_yoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETY);
+      struct fieldset_t
+      {
+         const char *offsetx;
+         const char *offsety;
+         const char *scalex;
+         const char *scaley;
+         const char *angle;
+         const char *terrain;
+         const char *pflags;
+         const char *alpha;
+         const char *portalid;
+      };
+      static const Surfaces<fieldset_t> fieldsets =
+      {
+         {
+            FIELD_SECTOR_FLOOROFFSETX,
+            FIELD_SECTOR_FLOOROFFSETY,
+            FIELD_SECTOR_FLOORSCALEX,
+            FIELD_SECTOR_FLOORSCALEY,
+            FIELD_SECTOR_FLOORANGLE,
+            FIELD_SECTOR_FLOORTERRAIN,
+            FIELD_SECTOR_PORTALFLAGS_F,
+            FIELD_SECTOR_OVERLAYALPHA_F,
+            FIELD_SECTOR_PORTALID_F
+         },
+         {
+            FIELD_SECTOR_CEILINGOFFSETX,
+            FIELD_SECTOR_CEILINGOFFSETY,
+            FIELD_SECTOR_CEILINGSCALEX,
+            FIELD_SECTOR_CEILINGSCALEY,
+            FIELD_SECTOR_CEILINGANGLE,
+            FIELD_SECTOR_CEILINGTERRAIN,
+            FIELD_SECTOR_PORTALFLAGS_C,
+            FIELD_SECTOR_OVERLAYALPHA_C,
+            FIELD_SECTOR_PORTALID_C
+         },
+      };
 
-      // floor and ceiling scale
-      sec->floor_xscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEX);
-      sec->floor_yscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEY);
-      sec->ceiling_xscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEX);
-      sec->ceiling_yscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEY);
+      for(int surf = surf_floor; surf != surf_NUM; surf++)
+      {
+         // floor and ceiling offsets
+         sec->surface[surf].offs = {
+            cfg_getfloat(section, fieldsets[surf].offsetx),
+            cfg_getfloat(section, fieldsets[surf].offsety)
+         };
 
+         // floor and ceiling scale
+         sec->surface[surf].scale = {
+            cfg_getfloat(section, fieldsets[surf].scalex),
+            cfg_getfloat(section, fieldsets[surf].scaley)
+         };
 
-      // floor and ceiling angles
-      tempdouble = cfg_getfloat(section, FIELD_SECTOR_FLOORANGLE);
-      sec->floorangle = E_NormalizeFlatAngle(tempdouble);
+         // floor and ceiling angles
+         tempdouble = cfg_getfloat(section, fieldsets[surf].angle);
+         sec->surface[surf].angle = E_NormalizeFlatAngle(tempdouble);
 
-      tempdouble = cfg_getfloat(section, FIELD_SECTOR_CEILINGANGLE);
-      sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
+         // terrain type overrides
+         tempstr = cfg_getstr(section, fieldsets[surf].terrain);
+         if(strcasecmp(tempstr, "@flat"))
+            sec->surface[surf].terrain = E_TerrainForName(tempstr);
+
+         tempstr = cfg_getstr(section, fieldsets[surf].pflags);
+         if(*tempstr != '\0')
+            sec->surface[surf].pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
+
+         tempint = cfg_getint(section, fieldsets[surf].alpha);
+         if(tempint < 0)
+            tempint = 0;
+         if(tempint > 255)
+            tempint = 255;
+         sec->surface[surf].alpha = (unsigned int)tempint;
+
+         sec->surface[surf].portalid = cfg_getint(section, fieldsets[surf].portalid);
+      }
 
       // sector colormaps
       sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
@@ -1399,40 +1454,6 @@ static void E_ProcessEDSectors(cfg_t *cfg)
          sec->bottommap = R_ColormapNumForName(tempstr);
          checkBadCMap(sec->bottommap);
       }
-
-      // terrain type overrides
-      tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);
-      if(strcasecmp(tempstr, "@flat"))
-         sec->floorterrain = E_TerrainForName(tempstr);
-
-      tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
-      if(strcasecmp(tempstr, "@flat"))
-         sec->ceilingterrain = E_TerrainForName(tempstr);
-
-      tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_F);
-      if(*tempstr != '\0')
-         sec->f_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
-
-      tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_C);
-      if(*tempstr != '\0')
-         sec->c_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
-
-      tempint = cfg_getint(section, FIELD_SECTOR_OVERLAYALPHA_F);
-      if(tempint < 0)
-         tempint = 0;
-      if(tempint > 255)
-         tempint = 255;
-      sec->f_alpha = (unsigned int)tempint;
-
-      tempint = cfg_getint(section, FIELD_SECTOR_OVERLAYALPHA_C);
-      if(tempint < 0)
-         tempint = 0;
-      if(tempint > 255)
-         tempint = 255;
-      sec->c_alpha = (unsigned int)tempint;
-
-      sec->f_portalid = cfg_getint(section, FIELD_SECTOR_PORTALID_F);
-      sec->c_portalid = cfg_getint(section, FIELD_SECTOR_PORTALID_C);
    }
 }
 
@@ -1641,20 +1662,16 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    // delete the flags
 
    // flat offsets
-   sector->floor_xoffs   = M_DoubleToFixed(edsector->floor_xoffs);
-   sector->floor_yoffs   = M_DoubleToFixed(edsector->floor_yoffs);
-   sector->ceiling_xoffs = M_DoubleToFixed(edsector->ceiling_xoffs);
-   sector->ceiling_yoffs = M_DoubleToFixed(edsector->ceiling_yoffs);
+   sector->surface.floor.offset = v2fixed_t::doubleToFixed(edsector->surface.floor.offs);
+   sector->surface.ceiling.offset = v2fixed_t::doubleToFixed(edsector->surface.ceiling.offs);
 
    // floor and ceiling scale
-   sector->floor_xscale = static_cast<float>(edsector->floor_xscale);
-   sector->floor_yscale = static_cast<float>(edsector->floor_yscale);
-   sector->ceiling_xscale = static_cast<float>(edsector->ceiling_xscale);
-   sector->ceiling_yscale = static_cast<float>(edsector->ceiling_yscale);
+   sector->scale[surf_floor] = static_cast<v2float_t>(edsector->surface.floor.scale);
+   sector->scale[surf_ceil] = static_cast<v2float_t>(edsector->surface.ceiling.scale);
 
    // flat angles
-   sector->floorbaseangle   = (float)(edsector->floorangle   * PI / 180.0f);
-   sector->ceilingbaseangle = (float)(edsector->ceilingangle * PI / 180.0f);
+   sector->floorbaseangle   = (float)(edsector->surface.floor.angle * PI / 180.0f);
+   sector->ceilingbaseangle = (float)(edsector->surface.ceiling.angle * PI / 180.0f);
 
    // colormaps
    if(edsector->topmap >= 0)
@@ -1674,20 +1691,20 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    }
 
    // terrain overrides
-   sector->floorterrain   = edsector->floorterrain;
-   sector->ceilingterrain = edsector->ceilingterrain;
+   sector->floorterrain   = edsector->surface.floor.terrain;
+   sector->ceilingterrain = edsector->surface.ceiling.terrain;
 
    // per-sector portal properties
-   sector->f_pflags = (edsector->f_pflags | (edsector->f_alpha << PO_OPACITYSHIFT));
-   sector->c_pflags = (edsector->c_pflags | (edsector->c_alpha << PO_OPACITYSHIFT));
+   sector->f_pflags = (edsector->surface.floor.pflags | (edsector->surface.floor.alpha << PO_OPACITYSHIFT));
+   sector->c_pflags = (edsector->surface.ceiling.pflags | (edsector->surface.ceiling.alpha << PO_OPACITYSHIFT));
    
    if(sector->f_portal)
       P_CheckFPortalState(sector);
    if(sector->c_portal)
       P_CheckCPortalState(sector);
    
-   setupSettings.setSectorPortals(eindex(sector - sectors), edsector->c_portalid,
-                                  edsector->f_portalid);
+   setupSettings.setSectorPortals(eindex(sector - sectors), edsector->surface.ceiling.portalid,
+                                  edsector->surface.floor.portalid);
    // TODO: more?
 
    // clear the line tag

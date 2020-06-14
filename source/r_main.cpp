@@ -940,13 +940,13 @@ static void R_setScrollInterpolationState(secinterpstate_e state)
          P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
             if(isceiling)
             {
-               sector->ceiling_xoffs += lerpCoord(view.lerp, -offset.x, 0);
-               sector->ceiling_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+               sector->surface.ceiling.offset.x += lerpCoord(view.lerp, -offset.x, 0);
+               sector->surface.ceiling.offset.y += lerpCoord(view.lerp, -offset.y, 0);
             }
             else
             {
-               sector->floor_xoffs += lerpCoord(view.lerp, -offset.x, 0);
-               sector->floor_yoffs += lerpCoord(view.lerp, -offset.y, 0);
+               sector->surface.floor.offset.x += lerpCoord(view.lerp, -offset.x, 0);
+               sector->surface.floor.offset.y += lerpCoord(view.lerp, -offset.y, 0);
             }
          });
          break;
@@ -958,13 +958,13 @@ static void R_setScrollInterpolationState(secinterpstate_e state)
          P_ForEachScrolledSector([](sector_t *sector, bool isceiling, v2fixed_t offset) {
             if(isceiling)
             {
-               sector->ceiling_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
-               sector->ceiling_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+               sector->surface.ceiling.offset.x -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->surface.ceiling.offset.y -= lerpCoord(view.lerp, -offset.y, 0);
             }
             else
             {
-               sector->floor_xoffs -= lerpCoord(view.lerp, -offset.x, 0);
-               sector->floor_yoffs -= lerpCoord(view.lerp, -offset.y, 0);
+               sector->surface.floor.offset.x -= lerpCoord(view.lerp, -offset.x, 0);
+               sector->surface.floor.offset.y -= lerpCoord(view.lerp, -offset.y, 0);
             }
          });
          break;

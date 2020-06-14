@@ -611,10 +611,8 @@ void P_InitSector(sector_t *ss)
    ss->ceilingheightf = M_FixedToFloat(ss->ceilingheight);
 
    // needs to be defaulted as it starts as nonzero
-   ss->floor_xscale = 1.0;
-   ss->floor_yscale = 1.0;
-   ss->ceiling_xscale = 1.0;
-   ss->ceiling_yscale = 1.0;
+   ss->scale[surf_floor] = { 1.0f, 1.0f };
+   ss->scale[surf_ceil] = { 1.0f, 1.0f };
 
    // haleyjd 09/24/06: sound sequences -- set default
    ss->sndSeqID = defaultSndSeq;

@@ -232,6 +232,40 @@ enum surf_e
 };
 
 //
+// More convenient than raw array. Must be POD
+//
+template<typename T>
+struct Surfaces
+{
+   // THESE MUST BE the same order as the surf_e enum
+   T floor;
+   T ceiling;
+   T &operator[](int surf)
+   {
+      return surf == surf_ceil ? ceiling : floor;
+   }
+   const T &operator[](int surf) const
+   {
+      return surf == surf_ceil ? ceiling : floor;
+   }
+   template<typename FUNC, typename U>
+   void operate(FUNC &&func, const Surfaces<U> &other)
+   {
+      floor = func(other.floor);
+      ceiling = func(other.ceiling);
+   }
+};
+
+//
+// Sector surface structure
+//
+struct surface_t
+{
+   // killough 3/7/98: floor and ceiling texture offsets
+   v2fixed_t offset;
+};
+
+//
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
@@ -279,11 +313,9 @@ struct sector_t
    int nextsec;     // -1 or number of next step sector
   
    // killough 3/7/98: floor and ceiling texture offsets
-   fixed_t   floor_xoffs,   floor_yoffs;
-   fixed_t ceiling_xoffs, ceiling_yoffs;
+   Surfaces<surface_t> surface;  // TODO: move all floor/ceiling doubles here.
 
-   float floor_xscale,   floor_yscale;
-   float ceiling_xscale, ceiling_yscale;
+   v2float_t scale[surf_NUM];
 
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector
