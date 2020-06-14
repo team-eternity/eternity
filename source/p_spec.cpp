@@ -3112,25 +3112,25 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    switch(type)
    {
    case portal_plane:
-      portal = R_GetPlanePortal(&sector->ceilingpic, 
-                                &sector->ceilingheight, 
-                                &sector->lightlevel, 
-                                &sector->surface.ceiling.offset.x,
-                                &sector->surface.ceiling.offset.y,
+      portal = R_GetPlanePortal(&sector->ceilingpic,
+                                &sector->ceilingheight,
+                                &sector->lightlevel,
+                                &sector->srf.ceiling.offset.x,
+                                &sector->srf.ceiling.offset.y,
                                 &sector->ceilingbaseangle,
-                                &sector->ceilingangle, &sector->surface.ceiling.scale.x,
-                                &sector->surface.ceiling.scale.y);
+                                &sector->ceilingangle, &sector->srf.ceiling.scale.x,
+                                &sector->srf.ceiling.scale.y);
       break;
 
    case portal_horizon:
-      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic, 
+      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
                                   &sector->floorheight, &sector->ceilingheight,
                                   &sector->lightlevel, &sector->lightlevel,
-                                  &sector->surface.floor.offset,
-                                  &sector->surface.ceiling.offset,
+                                  &sector->srf.floor.offset,
+                                  &sector->srf.ceiling.offset,
                                   &sector->floorbaseangle, &sector->floorangle,
                                   &sector->ceilingbaseangle, &sector->ceilingangle,
-                                  &sector->surface.floor.scale, &sector->surface.ceiling.scale);
+                                  &sector->srf.floor.scale, &sector->srf.ceiling.scale);
       // TODO: line portal
       if(effects == portal_lineonly)
       {

@@ -280,6 +280,9 @@ struct sector_t
       ceiling = 2
    };
 
+   // Keep name short because it's very frequently used.
+   Surfaces<surface_t> srf;
+
    fixed_t floorheight;
    fixed_t ceilingheight;
    int     floorpic;
@@ -313,9 +316,6 @@ struct sector_t
    int stairlock;   // -2 on first locked -1 after thinker done 0 normally
    int prevsec;     // -1 or number of sector for previous step
    int nextsec;     // -1 or number of next step sector
-  
-   // killough 3/7/98: floor and ceiling texture offsets
-   Surfaces<surface_t> surface;  // TODO: move all floor/ceiling doubles here.
 
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector

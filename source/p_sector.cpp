@@ -164,8 +164,8 @@ int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->surface.ceiling.offset.x = xoffs;
-      sector->surface.ceiling.offset.y = yoffs;
+      sector->srf.ceiling.offset.x = xoffs;
+      sector->srf.ceiling.offset.y = yoffs;
       if(manual)
          return 1;
    }
@@ -198,8 +198,8 @@ int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->surface.floor.offset.x = xoffs;
-      sector->surface.floor.offset.y = yoffs;
+      sector->srf.floor.offset.x = xoffs;
+      sector->srf.floor.offset.y = yoffs;
       if(manual)
          return 1;
    }
