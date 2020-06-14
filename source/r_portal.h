@@ -173,8 +173,7 @@ struct horizondata_t
    int *pic;
    fixed_t *z;
    int16_t *light;
-   fixed_t *xoff;
-   fixed_t *yoff;
+   v2fixed_t *off;
    float *baseangle;
    float *angle; // haleyjd 01/05/08: flat angles
    const float *xscale;
@@ -239,11 +238,10 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
    bool allowrotate, bool flipped, fixed_t zoffset);
 
-portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
-                             fixed_t *floorz, fixed_t *ceilingz, 
-                             int16_t *floorlight, int16_t *ceilinglight, 
-                             fixed_t *floorxoff, fixed_t *flooryoff, 
-                             fixed_t *ceilingxoff, fixed_t *ceilingyoff,
+portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
+                             fixed_t *floorz, fixed_t *ceilingz,
+                             int16_t *floorlight, int16_t *ceilinglight,
+                             v2fixed_t *flooroff, v2fixed_t *ceilingoff,
                              float *floorbaseangle, float *floorangle,
                              float *ceilingbaseangle, float *ceilingangle,
                              const float *floorxscale, const float *flooryscale,
