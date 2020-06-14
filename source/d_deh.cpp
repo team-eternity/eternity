@@ -66,38 +66,37 @@
 
 // variables used in other routines
 bool deh_pars = false; // in wi_stuff to allow pars in modified games
-bool deh_loaded = false; // sf
 
 // Function prototypes
-void  lfstrip(char *);     // strip the \r and/or \n off of a line
-void  rstrip(char *);      // strip trailing whitespace
-char *ptr_lstrip(char *);  // point past leading whitespace
-bool  deh_GetData(char *, char *, int *, char **);
-bool  deh_procStringSub(char *, char *, char *);
+static void  lfstrip(char *);     // strip the \r and/or \n off of a line
+static void  rstrip(char *);      // strip trailing whitespace
+static char *ptr_lstrip(char *);  // point past leading whitespace
+static bool  deh_GetData(char *, char *, int *, char **);
+static bool  deh_procStringSub(char *, char *, char *);
 static char *dehReformatStr(char *);
 
 // Prototypes for block processing functions
 // Pointers to these functions are used as the blocks are encountered.
 
-void deh_procThing(DWFILE *, char *);
-void deh_procFrame(DWFILE *, char *);
-void deh_procPointer(DWFILE *, char *);
-void deh_procSounds(DWFILE *, char *);
-void deh_procAmmo(DWFILE *, char *);
-void deh_procWeapon(DWFILE *, char *);
-void deh_procSprite(DWFILE *, char *);
-void deh_procCheat(DWFILE *, char *);
-void deh_procMisc(DWFILE *, char *);
-void deh_procText(DWFILE *, char *);
-void deh_procPars(DWFILE *, char *);
-void deh_procStrings(DWFILE *, char *);
-void deh_procError(DWFILE *, char *);
-void deh_procBexCodePointers(DWFILE *, char *);
-void deh_procHelperThing(DWFILE *, char *); // haleyjd 9/22/99
+static void deh_procThing(DWFILE *, char *);
+static void deh_procFrame(DWFILE *, char *);
+static void deh_procPointer(DWFILE *, char *);
+static void deh_procSounds(DWFILE *, char *);
+static void deh_procAmmo(DWFILE *, char *);
+static void deh_procWeapon(DWFILE *, char *);
+static void deh_procSprite(DWFILE *, char *);
+static void deh_procCheat(DWFILE *, char *);
+static void deh_procMisc(DWFILE *, char *);
+static void deh_procText(DWFILE *, char *);
+static void deh_procPars(DWFILE *, char *);
+static void deh_procStrings(DWFILE *, char *);
+static void deh_procError(DWFILE *, char *);
+static void deh_procBexCodePointers(DWFILE *, char *);
+static void deh_procHelperThing(DWFILE *, char *); // haleyjd 9/22/99
 // haleyjd: handlers to fully deprecate the DeHackEd text section
-void deh_procBexSounds(DWFILE *, char *);
-void deh_procBexMusic(DWFILE *, char *);
-void deh_procBexSprites(DWFILE *, char *);
+static void deh_procBexSounds(DWFILE *, char *);
+static void deh_procBexMusic(DWFILE *, char *);
+static void deh_procBexSprites(DWFILE *, char *);
 
 // Structure deh_block is used to hold the block names that can
 // be encountered, and the routines to use to decipher them
@@ -115,7 +114,7 @@ struct deh_block
 
 // Put all the block header values, and the function to be called when that
 // one is encountered, in this array:
-deh_block deh_blocks[] = 
+static deh_block deh_blocks[] =
 {
    /* 0 */  {"Thing",   deh_procThing},
    /* 1 */  {"Frame",   deh_procFrame},
@@ -150,7 +149,7 @@ static bool includenotext = false;
 // array to offset by sizeof(int) into the mobjinfo_t array at [nn]
 // * things are base zero but dehacked considers them to start at #1. ***
 
-const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
+static const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 {
   "ID #",                // .doomednum
   "Initial frame",       // .spawnstate
@@ -195,7 +194,7 @@ const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 // haleyjd 02/19/04: combined into one array for new cflags support --
 //                   also changed to be terminated by a zero entry
 
-dehflags_t deh_mobjflags[] =
+static dehflags_t deh_mobjflags[] =
 {
   {"SPECIAL",          0x00000001}, // call  P_Specialthing when touched
   {"SOLID",            0x00000002}, // block movement
@@ -367,7 +366,7 @@ static dehflagset_t dehacked_flags =
 // that Dehacked uses and is useless to us.
 // * states are base zero and have a dummy #0 (TROO)
 
-const char *deh_state[] =
+static const char *deh_state[] =
 {
   "Sprite number",    // .sprite (spritenum_t) // an enum
   "Sprite subnumber", // .frame 
@@ -394,7 +393,7 @@ const char *deh_state[] =
 
 // * sounds are base zero but have a dummy #0
 
-const char *deh_sfxinfo[] =
+static const char *deh_sfxinfo[] =
 {
   "Offset",     // pointer to a name string, changed in text
   "Zero/One",   // .singularity (int, one at a time flag)
@@ -415,7 +414,7 @@ const char *deh_sfxinfo[] =
 // Sprite redirection by offset into the text area - unsupported by BOOM
 // * sprites are base zero and dehacked uses it that way.
 
-const char *deh_sprite[] =
+static const char *deh_sprite[] =
 {
   "Offset"      // supposed to be the offset into the text section
 };
@@ -428,7 +427,7 @@ const char *deh_sprite[] =
 // Usage: Weapon nn (name)
 // Basically a list of frames and what kind of ammo (see above)it uses.
 
-const char *deh_weapon[] =
+static const char *deh_weapon[] =
 {
   "Ammo type",      // .ammo
   "Deselect frame", // .upstate
@@ -594,8 +593,6 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
    
    deh_LogPrintf("\nLoading DEH file %s\n\n", filename);
 
-   deh_loaded = true;
-   
    // loop until end of file
 
    while(infile.getStr(inbuffer, sizeof(inbuffer)))
@@ -683,7 +680,7 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
 // haleyjd 03/14/03: rewritten to replace linear search on deh_bexptrs
 // table with in-table chained hashing -- table is now in d_dehtbl.c
 //
-void deh_procBexCodePointers(DWFILE *fpin, char *line)
+static void deh_procBexCodePointers(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -973,7 +970,7 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
 // Ty 8/27/98 - revised to also allow mnemonics for
 // bit masks for monster attributes
 //
-void deh_procThing(DWFILE *fpin, char *line)
+static void deh_procThing(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1104,7 +1101,7 @@ static void deh_createArgList(state_t *state)
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procFrame(DWFILE *fpin, char *line)
+static void deh_procFrame(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1231,7 +1228,7 @@ void deh_procFrame(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procPointer(DWFILE *fpin, char *line) // done
+static void deh_procPointer(DWFILE *fpin, char *line) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1314,7 +1311,7 @@ void deh_procPointer(DWFILE *fpin, char *line) // done
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procSounds(DWFILE *fpin, char *line)
+static void deh_procSounds(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1425,7 +1422,7 @@ static const char *deh_giverNames[NUMWEAPONS] =
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procAmmo(DWFILE *fpin, char *line)
+static void deh_procAmmo(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1531,7 +1528,7 @@ void deh_procAmmo(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procWeapon(DWFILE *fpin, char *line)
+static void deh_procWeapon(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1605,7 +1602,7 @@ void deh_procWeapon(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procSprite(DWFILE *fpin, char *line) // Not supported
+static void deh_procSprite(DWFILE *fpin, char *line) // Not supported
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1642,7 +1639,7 @@ void deh_procSprite(DWFILE *fpin, char *line) // Not supported
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procPars(DWFILE *fpin, char *line) // extension
+static void deh_procPars(DWFILE *fpin, char *line) // extension
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1730,7 +1727,7 @@ void deh_procPars(DWFILE *fpin, char *line) // extension
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procCheat(DWFILE *fpin, char *line) // done
+static void deh_procCheat(DWFILE *fpin, char *line) // done
 {
    char  key[DEH_MAXKEYLEN];
    char  inbuffer[DEH_BUFFERMAX];
@@ -1801,7 +1798,7 @@ void deh_procCheat(DWFILE *fpin, char *line) // done
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procMisc(DWFILE *fpin, char *line) // done
+static void deh_procMisc(DWFILE *fpin, char *line) // done
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -1979,7 +1976,7 @@ void deh_procMisc(DWFILE *fpin, char *line) // done
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procText(DWFILE *fpin, char *line)
+static void deh_procText(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX*2]; // can't use line -- double size buffer too.
@@ -2121,7 +2118,7 @@ void deh_procText(DWFILE *fpin, char *line)
       efree(line2);
 }
 
-void deh_procError(DWFILE *fpin, char *line)
+static void deh_procError(DWFILE *fpin, char *line)
 {
    char inbuffer[DEH_BUFFERMAX];
    
@@ -2136,7 +2133,7 @@ void deh_procError(DWFILE *fpin, char *line)
 //          line  -- current line in file to process
 // Returns: void
 //
-void deh_procStrings(DWFILE *fpin, char *line)
+static void deh_procStrings(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2231,7 +2228,7 @@ void deh_procStrings(DWFILE *fpin, char *line)
 // haleyjd 11/02/02: rewritten to replace linear search on string
 // table with in-table chained hashing -- table is now in d_dehtbl.c
 //
-bool deh_procStringSub(char *key, char *lookfor, char *newstring)
+static bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 {
    dehstr_t *dehstr = NULL;
 
@@ -2292,7 +2289,7 @@ bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 // is a waste of effort, and so have added this new [HELPER] 
 // BEX block
 //
-void deh_procHelperThing(DWFILE *fpin, char *line)
+static void deh_procHelperThing(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2329,7 +2326,7 @@ void deh_procHelperThing(DWFILE *fpin, char *line)
 // Supports sprite name substitutions without requiring use
 // of the DeHackEd Text block
 //
-void deh_procBexSprites(DWFILE *fpin, char *line)
+static void deh_procBexSprites(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2388,7 +2385,7 @@ void deh_procBexSprites(DWFILE *fpin, char *line)
 }
 
 // ditto for sound names
-void deh_procBexSounds(DWFILE *fpin, char *line)
+static void deh_procBexSounds(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2448,7 +2445,7 @@ void deh_procBexSounds(DWFILE *fpin, char *line)
 }
 
 // ditto for music names
-void deh_procBexMusic(DWFILE *fpin, char *line)
+static void deh_procBexMusic(DWFILE *fpin, char *line)
 {
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
@@ -2550,7 +2547,7 @@ static char *dehReformatStr(char *string)
 //
 // killough 10/98: only strip at end of line, not entire string
 
-void lfstrip(char *s)  // strip the \r and/or \n off of a line
+static void lfstrip(char *s)  // strip the \r and/or \n off of a line
 {
    char *p = s + strlen(s);
    while(p > s && (*--p == '\r' || *p == '\n'))
@@ -2563,7 +2560,7 @@ void lfstrip(char *s)  // strip the \r and/or \n off of a line
 // Args:    s -- the string to work on
 // Returns: void -- the string is modified in place
 //
-void rstrip(char *s)  // strip trailing whitespace
+static void rstrip(char *s)  // strip trailing whitespace
 {
    char *p = s + strlen(s);         // killough 4/4/98: same here
    while(p > s && ectype::isSpace(*--p)) // break on first non-whitespace
@@ -2577,7 +2574,7 @@ void rstrip(char *s)  // strip trailing whitespace
 // Returns: char * pointing to the first nonblank character in the
 //          string.  The original string is not changed.
 //
-char *ptr_lstrip(char *p)  // point past leading whitespace
+static char *ptr_lstrip(char *p)  // point past leading whitespace
 {
    while(ectype::isSpace(*p))
       p++;
@@ -2596,7 +2593,7 @@ char *ptr_lstrip(char *p)  // point past leading whitespace
 //          optional space and a value, mostly an int. The passed 
 //          pointer to hold the key must be DEH_MAXKEYLEN in size.
 
-bool deh_GetData(char *s, char *k, int *l, char **strval)
+static bool deh_GetData(char *s, char *k, int *l, char **strval)
 {
    char *t;                    // current char
    int  val = 0;               // to hold value of pair
