@@ -167,18 +167,18 @@ struct anchordata_t
 };
 
 
-// Represents the data needed for a horizon portal
+// Represents the data needed for a horizon portal's surface (floor and ceiling)
 struct horizondata_t
 {
-   int *pic[surf_NUM];
-   fixed_t *z[surf_NUM];
-   int16_t *light[surf_NUM];
-   fixed_t *xoff[surf_NUM];
-   fixed_t *yoff[surf_NUM];
-   float *baseangle[surf_NUM];
-   float *angle[surf_NUM]; // haleyjd 01/05/08: flat angles
-   const float *xscale[surf_NUM];
-   const float *yscale[surf_NUM];
+   int *pic;
+   fixed_t *z;
+   int16_t *light;
+   fixed_t *xoff;
+   fixed_t *yoff;
+   float *baseangle;
+   float *angle; // haleyjd 01/05/08: flat angles
+   const float *xscale;
+   const float *yscale;
 };
 
 
@@ -203,7 +203,7 @@ struct portal_t
    union portaldata_u
    {
       skyplanedata_t plane;
-      horizondata_t  horizon;
+      horizondata_t  horizon[surf_NUM];
       anchordata_t   anchor;
       linkdata_t     link;
       Mobj          *camera;
