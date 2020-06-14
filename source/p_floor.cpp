@@ -171,7 +171,7 @@ void FloorMoveThinker::Think()
          {
          case donutRaise:
             P_TransferSectorSpecial(sector, &special);
-            sector->floorpic = texture;
+            sector->srf.floor.pic = texture;
             break;
          case genFloorChgT:
          case genFloorChg0:
@@ -179,7 +179,7 @@ void FloorMoveThinker::Think()
             P_TransferSectorSpecial(sector, &special);
             //fall thru
          case genFloorChg:
-            sector->floorpic = texture;
+            sector->srf.floor.pic = texture;
             break;
          default:
             break;
@@ -192,7 +192,7 @@ void FloorMoveThinker::Think()
          case lowerAndChange:
             //jff add to fix bug in special transfers from changes
             P_TransferSectorSpecial(sector, &special);
-            sector->floorpic = texture;
+            sector->srf.floor.pic = texture;
             break;
          case genFloorChgT:
          case genFloorChg0:
@@ -200,7 +200,7 @@ void FloorMoveThinker::Think()
             P_TransferSectorSpecial(sector, &special);
             //fall thru
          case genFloorChg:
-            sector->floorpic = texture;
+            sector->srf.floor.pic = texture;
             break;
          default:
             break;
@@ -579,7 +579,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->speed = FLOORSPEED;
          floor->floordestheight =
             floor->sector->srf.floor.height + 24 * FRACUNIT;
-         sec->floorpic = line->frontsector->floorpic;
+         sec->srf.floor.pic = line->frontsector->srf.floor.pic;
          //jff 3/14/98 transfer both old and new special
          P_DirectTransferSectorSpecial(line->frontsector, sec);
          break;
@@ -636,7 +636,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
          floor->sector = sec;
          floor->speed = FLOORSPEED;
          floor->floordestheight = P_FindLowestFloorSurrounding(sec);
-         floor->texture = sec->floorpic;
+         floor->texture = sec->srf.floor.pic;
 
          // jff 1/24/98 make sure floor->newspecial gets initialized
          // in case no surrounding sector is at floordestheight
@@ -649,7 +649,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
                                       eindex(sec-sectors));
          if(sec)
          {
-            floor->texture = sec->floorpic;
+            floor->texture = sec->srf.floor.pic;
             //jff 3/14/98 transfer both old and new special
             P_SetupSpecialTransfer(sec, &(floor->special));
          }
@@ -728,14 +728,14 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
       switch(changetype)
       {
       case trigChangeOnly:
-         sec->floorpic = line->frontsector->floorpic;
+         sec->srf.floor.pic = line->frontsector->srf.floor.pic;
          P_DirectTransferSectorSpecial(line->frontsector, sec);
          break;
       case numChangeOnly:
          secm = P_FindModelFloorSector(sec->srf.floor.height,secnum);
          if(secm) // if no model, no change
          {
-            sec->floorpic = secm->floorpic;
+            sec->srf.floor.pic = secm->srf.floor.pic;
             P_DirectTransferSectorSpecial(secm, sec);
          }
          break;
@@ -867,7 +867,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          height = sec->srf.floor.height + stairsize;
          floor->floordestheight = height;
          
-         texture = sec->floorpic;
+         texture = sec->srf.floor.pic;
 
          P_StairSequence(floor->sector);
          
@@ -897,7 +897,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                newsecnum = eindex(tsec - sectors);
 
                // if sector's floor is different texture, look for another
-               if(tsec->floorpic != texture)
+               if(tsec->srf.floor.pic != texture)
                   continue;
 
                  /* jff 6/19/98 prevent double stepsize
@@ -1114,7 +1114,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          else
          {
             s3_floorheight = s3->srf.floor.height;
-            s3_floorpic    = s3->floorpic;
+            s3_floorpic    = s3->srf.floor.pic;
          }
         
          //  Spawn rising slime
@@ -1429,7 +1429,7 @@ void P_ChangeFloorTex(const char *name, int tag)
    flatnum = R_FindFlat(name);
 
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
-      sectors[secnum].floorpic = flatnum;
+      sectors[secnum].srf.floor.pic = flatnum;
 }
 
 //=============================================================================

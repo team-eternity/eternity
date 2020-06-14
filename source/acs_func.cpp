@@ -534,9 +534,9 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
    case ACS_TP_Armor:        return mo->player ?
                                     static_cast<uint32_t>(mo->player->armorpoints) == val : false;
-   case ACS_TP_CeilTex:      return mo->subsector->sector->ceilingpic == R_FindWall(ACSenv.getString(val)->str);
+   case ACS_TP_CeilTex:      return mo->subsector->sector->srf.ceiling.pic == R_FindWall(ACSenv.getString(val)->str);
    case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
-   case ACS_TP_FloorTex:     return mo->subsector->sector->floorpic == R_FindWall(ACSenv.getString(val)->str);
+   case ACS_TP_FloorTex:     return mo->subsector->sector->srf.floor.pic == R_FindWall(ACSenv.getString(val)->str);
    case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
    case ACS_TP_Frags:        return mo->player ?
                                     static_cast<uint32_t>(mo->player->totalfrags) == val : false;
@@ -1655,11 +1655,11 @@ bool ACS_CF_ReplaceTex(ACS_CF_ARGS)
    {
       for(sector_t *sector = sectors, *end = sector + numsectors; sector != end; ++sector)
       {
-         if(!(flags & RETEX_NOT_FLOOR) && sector->floorpic == oldtex)
-            sector->floorpic = newtex;
+         if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldtex)
+            sector->srf.floor.pic = newtex;
 
-         if(!(flags & RETEX_NOT_CEIL) && sector->ceilingpic == oldtex)
-            sector->ceilingpic = newtex;
+         if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldtex)
+            sector->srf.ceiling.pic = newtex;
       }
    }
 

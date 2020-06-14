@@ -586,7 +586,7 @@ void R_PrecacheLevel(void)
    
    // Mark floors and ceilings
    for(i = numsectors; --i >= 0; )
-      hitlist[sectors[i].floorpic] = hitlist[sectors[i].ceilingpic] = 1;
+      hitlist[sectors[i].srf.floor.pic] = hitlist[sectors[i].srf.ceiling.pic] = 1;
       
    // Mark walls
    for(i = numsides; --i >= 0; )

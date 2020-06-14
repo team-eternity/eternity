@@ -387,7 +387,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.openbottom = frontfloorz;
       clip.lowfloor = frontfloorz;
       if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
-         clip.floorpic = clip.openfrontsector->floorpic;
+         clip.floorpic = clip.openfrontsector->srf.floor.pic;
    }
    else if(frontfloorz > backfloorz)
    {
@@ -395,7 +395,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.lowfloor = backfloorz;
       // haleyjd
       if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
-         clip.floorpic = clip.openfrontsector->floorpic;
+         clip.floorpic = clip.openfrontsector->srf.floor.pic;
    }
    else
    {
@@ -403,7 +403,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.lowfloor = frontfloorz;
       // haleyjd
       if(!portaldetect || !(clip.openbacksector->f_pflags & PS_PASSABLE))
-         clip.floorpic = clip.openbacksector->floorpic;
+         clip.floorpic = clip.openbacksector->srf.floor.pic;
    }
 
    if(frontcz < backcz)

@@ -193,7 +193,7 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->srf.floor.height = us.heightfloor << FRACBITS;
          ss->srf.ceiling.height = us.heightceiling << FRACBITS;
       }
-      ss->floorpic = R_FindFlat(us.texturefloor.constPtr());
+      ss->srf.floor.pic = R_FindFlat(us.texturefloor.constPtr());
       P_SetSectorCeilingPic(ss,
                             R_FindFlat(us.textureceiling.constPtr()));
       ss->lightlevel = us.lightlevel;

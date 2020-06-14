@@ -397,7 +397,7 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
       y = trace.dl.y + FixedMul(trace.dl.dy, frac);
       z = trace.z    + FixedMul(trace.aimslope, FixedMul(frac, trace.attackrange));
 
-      if(R_IsSkyFlat(li->frontsector->ceilingpic))
+      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic))
       {
          // don't shoot the sky!
          if(z > li->frontsector->srf.ceiling.height)
@@ -405,7 +405,7 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
          // it's a sky hack wall
          // fix bullet eaters -- killough
-         if(li->backsector && R_IsSkyFlat(li->backsector->ceilingpic))
+         if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
          {
             if(demo_compatibility || li->backsector->srf.ceiling.height < z)
                return false;
@@ -541,7 +541,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
                                      trace.aimslope);
 
             // SoM: don't check for portals here anymore
-            if(R_IsSkyFlat(sidesector->floorpic) ||
+            if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
                R_IsSkyLikePortalFloor(*sidesector))
             {
                return false;
@@ -597,7 +597,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // don't shoot the sky
       // don't shoot ceiling portals either
-      if(R_IsSkyFlat(li->frontsector->ceilingpic) || li->frontsector->c_portal)
+      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->c_portal)
       {
          // don't shoot the sky!
          if(z > li->frontsector->srf.ceiling.height)
@@ -605,7 +605,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
          // it's a sky hack wall
          // fix bullet eaters -- killough
-         if(li->backsector && R_IsSkyFlat(li->backsector->ceilingpic))
+         if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
          {
             if(li->backsector->srf.ceiling.height < z)
                return false;

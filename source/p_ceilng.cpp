@@ -85,10 +85,10 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
    // clear sky flag
    sector->intflags &= ~SIF_SKY;
 
-   sector->ceilingpic = pic;
+   sector->srf.ceiling.pic = pic;
 
    // reset the sky flag
-   if(R_IsSkyFlat(sector->ceilingpic))
+   if(R_IsSkyFlat(sector->srf.ceiling.pic))
       sector->intflags |= SIF_SKY;
 }
 

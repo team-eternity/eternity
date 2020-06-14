@@ -499,7 +499,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          tempsec->c_portal = NULL;
 
          // head-below-floor hack
-         tempsec->floorpic       = s->floorpic;
+         tempsec->srf.floor.pic = s->srf.floor.pic;
          tempsec->srf.floor.offset = s->srf.floor.offset;
          tempsec->srf.floor.scale = s->srf.floor.scale;
          tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
@@ -509,7 +509,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          if(s->intflags & SIF_SKY)
          {
             tempsec->srf.floor.height = tempsec->srf.ceiling.height +1;
-            tempsec->ceilingpic       = tempsec->floorpic;
+            tempsec->srf.floor.pic = tempsec->srf.floor.pic;
             tempsec->srf.ceiling.offset = tempsec->srf.floor.offset;
             tempsec->srf.ceiling.scale = tempsec->srf.floor.scale;
             tempsec->ceilingbaseangle = tempsec->floorbaseangle; // haleyjd: angles
@@ -517,7 +517,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          }
          else
          {
-            tempsec->ceilingpic       = s->ceilingpic;
+            tempsec->srf.ceiling.pic = s->srf.ceiling.pic;
             tempsec->srf.ceiling.offset = s->srf.ceiling.offset;
             tempsec->srf.ceiling.scale = s->srf.ceiling.scale;
             tempsec->ceilingbaseangle = s->ceilingbaseangle; // haleyjd: angles
@@ -526,7 +526,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec!
          // ioanch 20160205: not always
-         if(!R_IsSkyFlat(tempsec->ceilingpic))
+         if(!R_IsSkyFlat(tempsec->srf.ceiling.pic))
             tempsec->intflags &= ~SIF_SKY;
          else
             tempsec->intflags |= SIF_SKY;
@@ -562,16 +562,16 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          tempsec->srf.ceiling.height = s->srf.ceiling.height;
          tempsec->srf.floor.height = s->srf.ceiling.height + 1;
 
-         tempsec->floorpic       = tempsec->ceilingpic       = s->ceilingpic;
+         tempsec->srf.floor.pic = tempsec->srf.ceiling.pic = s->srf.ceiling.pic;
          tempsec->srf.floor.offset = tempsec->srf.ceiling.offset = s->srf.ceiling.offset;
          tempsec->srf.floor.scale = tempsec->srf.ceiling.scale = s->srf.ceiling.scale;
          tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
          tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
 
-         if(!R_IsSkyFlat(s->floorpic))
+         if(!R_IsSkyFlat(s->srf.floor.pic))
          {
             tempsec->srf.ceiling.height = sec->srf.ceiling.height;
-            tempsec->floorpic       = s->floorpic;
+            tempsec->srf.floor.pic = s->srf.floor.pic;
             tempsec->srf.floor.offset = s->srf.floor.offset;
             tempsec->srf.floor.scale = s->srf.floor.scale;
             tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
@@ -580,7 +580,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
          // ioanch 20160205: not always
-         if(!R_IsSkyFlat(tempsec->ceilingpic))
+         if(!R_IsSkyFlat(tempsec->srf.ceiling.pic))
             tempsec->intflags &= ~SIF_SKY;
          else
             tempsec->intflags |= SIF_SKY;
@@ -1209,7 +1209,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
         seg.frontsec->srf.ceiling.scale != seg.backsec->srf.ceiling.scale ||
         (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
          seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
-        seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+        seg.frontsec->srf.ceiling.pic != seg.backsec->srf.ceiling.pic ||
         seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
         seg.frontsec->ceilinglightdelta != seg.backsec->ceilinglightdelta ||
         (seg.frontsec->flags & SECF_CEILLIGHTABSOLUTE) !=
@@ -1289,7 +1289,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        seg.frontsec->srf.floor.scale != seg.backsec->srf.floor.scale ||
        (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
         seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
-       seg.frontsec->floorpic != seg.backsec->floorpic ||
+       seg.frontsec->srf.floor.pic != seg.backsec->srf.floor.pic ||
        seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
        seg.frontsec->floorlightdelta != seg.backsec->floorlightdelta ||
        (seg.frontsec->flags & SECF_FLOORLIGHTABSOLUTE) !=
@@ -1469,7 +1469,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.frontsec->srf.ceiling.scale != seg.backsec->srf.ceiling.scale ||
       (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
-      seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
+      seg.frontsec->srf.ceiling.pic != seg.backsec->srf.ceiling.pic ||
       seg.frontsec->ceilinglightsec != seg.backsec->ceilinglightsec ||
       seg.frontsec->ceilinglightdelta != seg.backsec->ceilinglightdelta ||
       (seg.frontsec->flags & SECF_CEILLIGHTABSOLUTE) !=
@@ -1548,7 +1548,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.frontsec->srf.floor.scale != seg.backsec->srf.floor.scale ||
       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
-      seg.frontsec->floorpic != seg.backsec->floorpic ||
+      seg.frontsec->srf.floor.pic != seg.backsec->srf.floor.pic ||
       seg.frontsec->floorlightsec != seg.backsec->floorlightsec ||
       seg.frontsec->floorlightdelta != seg.backsec->floorlightdelta ||
       (seg.frontsec->flags & SECF_FLOORLIGHTABSOLUTE) !=
@@ -2111,8 +2111,8 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
 
    // Reject empty two-sided lines used for line specials.
    if(seg.backsec && seg.frontsec
-      && seg.backsec->ceilingpic == seg.frontsec->ceilingpic
-      && seg.backsec->floorpic   == seg.frontsec->floorpic
+      && seg.backsec->srf.ceiling.pic == seg.frontsec->srf.ceiling.pic
+      && seg.backsec->srf.floor.pic == seg.frontsec->srf.floor.pic
       && seg.backsec->lightlevel == seg.frontsec->lightlevel
       && seg.line->sidedef->midtexture == 0
 
@@ -2752,7 +2752,7 @@ static void R_Subsector(int num)
       seg.floorplane = visible && seg.frontsec->f_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->srf.floor.height,
                     seg.frontsec->f_pflags & PS_USEGLOBALTEX ?
-                    seg.f_portal->globaltex : seg.frontsec->floorpic,
+                    seg.f_portal->globaltex : seg.frontsec->srf.floor.pic,
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->srf.floor.offset.x,       // killough 3/7/98
                     seg.frontsec->srf.floor.offset.y,
@@ -2770,9 +2770,9 @@ static void R_Subsector(int num)
          (seg.frontsec->heightsec != -1 &&
           sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
         R_FindPlane(seg.frontsec->srf.floor.height,
-                    R_IsSkyFlat(seg.frontsec->floorpic) &&  // kilough 10/98
+                    R_IsSkyFlat(seg.frontsec->srf.floor.pic) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
-                    seg.frontsec->floorpic,
+                    seg.frontsec->srf.floor.pic,
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->srf.floor.offset.x,       // killough 3/7/98
                     seg.frontsec->srf.floor.offset.y,
@@ -2804,7 +2804,7 @@ static void R_Subsector(int num)
       seg.ceilingplane = visible && seg.frontsec->c_pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->srf.ceiling.height,
                     seg.frontsec->c_pflags & PS_USEGLOBALTEX ?
-                    seg.c_portal->globaltex : seg.frontsec->ceilingpic,
+                    seg.c_portal->globaltex : seg.frontsec->srf.ceiling.pic,
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->srf.ceiling.offset.x,       // killough 3/7/98
                     seg.frontsec->srf.ceiling.offset.y,
@@ -2820,11 +2820,11 @@ static void R_Subsector(int num)
       seg.ceilingplane = (visible ||
          (seg.frontsec->intflags & SIF_SKY) ||
         (seg.frontsec->heightsec != -1 &&
-         R_IsSkyFlat(sectors[seg.frontsec->heightsec].floorpic))) ?
+         R_IsSkyFlat(sectors[seg.frontsec->heightsec].srf.floor.pic))) ?
         R_FindPlane(seg.frontsec->srf.ceiling.height,     // killough 3/8/98
                     (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
-                    seg.frontsec->ceilingpic,
+                    seg.frontsec->srf.ceiling.pic,
                     ceilinglightlevel,              // killough 4/11/98
                     seg.frontsec->srf.ceiling.offset.x,     // killough 3/7/98
                     seg.frontsec->srf.ceiling.offset.y,

@@ -673,7 +673,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
           << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
-          << sec->floorpic << sec->ceilingpic
+          << sec->srf.floor.pic << sec->srf.ceiling.pic
           << sec->lightlevel << sec->oldlightlevel
           << sec->floorlightdelta << sec->ceilinglightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough

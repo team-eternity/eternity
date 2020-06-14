@@ -101,7 +101,7 @@ manual_floor:
       floor->crush     = fd->crush;
       floor->direction = fd->direction ? plat_up : plat_down;
       floor->sector    = sec;
-      floor->texture   = sec->floorpic;
+      floor->texture   = sec->srf.floor.pic;
       floor->type      = genFloor;
 
       //jff 3/14/98 transfer old special field too
@@ -228,7 +228,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
-                  sec->floorpic = msec->floorpic;
+                  sec->srf.floor.pic = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:  // zero type
@@ -247,7 +247,7 @@ manual_floor:
                }
                else
                {
-                  floor->texture = msec->floorpic;
+                  floor->texture = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:  // zero type
@@ -275,7 +275,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
-                  sec->floorpic = line->frontsector->floorpic;
+                  sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:    // zero type
@@ -294,7 +294,7 @@ manual_floor:
                }
                else
                {
-                  floor->texture = line->frontsector->floorpic;
+                  floor->texture = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:    // zero type
@@ -408,7 +408,7 @@ manual_ceiling:
       ceiling->crushflags = 0;
       ceiling->direction = cd->direction ? plat_up : plat_down;
       ceiling->sector = sec;
-      ceiling->texture = sec->ceilingpic;
+      ceiling->texture = sec->srf.ceiling.pic;
       //jff 3/14/98 change old field too
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
@@ -540,7 +540,7 @@ manual_ceiling:
             {
                if(cd->flags & CDF_CHANGEONSTART)
                {
-                  P_SetSectorCeilingPic(sec, msec->ceilingpic);
+                  P_SetSectorCeilingPic(sec, msec->srf.ceiling.pic);
                   switch(cd->change_type)
                   {
                      case CChgZero:
@@ -557,7 +557,7 @@ manual_ceiling:
                }
                else
                {
-                  ceiling->texture = msec->ceilingpic;
+                  ceiling->texture = msec->srf.ceiling.pic;
                   switch(cd->change_type)
                   {
                      case CChgZero:  // type is zeroed
@@ -585,7 +585,7 @@ manual_ceiling:
             {
                if(cd->flags & CDF_CHANGEONSTART)
                {
-                  P_SetSectorCeilingPic(sec, line->frontsector->ceilingpic);
+                  P_SetSectorCeilingPic(sec, line->frontsector->srf.ceiling.pic);
                   switch(cd->change_type)
                   {
                      case CChgZero:
@@ -603,7 +603,7 @@ manual_ceiling:
                }
                else
                {
-                  ceiling->texture = line->frontsector->ceilingpic;
+                  ceiling->texture = line->frontsector->srf.ceiling.pic;
                   switch(cd->change_type)
                   {
                      case CChgZero:    // type is zeroed
@@ -968,7 +968,7 @@ manual_stair:
 
       speed        = floor->speed;
       height       = sec->srf.floor.height + floor->direction * stairsize;
-      texture      = sec->floorpic;
+      texture      = sec->srf.floor.pic;
       floor->crush = sd->crush ? 10 : -1; // constant crush damage, for now
       floor->type  = genBuildStair; // jff 3/31/98 do not leave uninited
 
@@ -1008,7 +1008,7 @@ manual_stair:
             tsec = (sec->lines[i])->backsector;
             newsecnum = eindex(tsec - sectors);
 
-            if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->floorpic != texture)
+            if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->srf.floor.pic != texture)
                continue;
 
             // jff 6/19/98 prevent double stepsize
@@ -1176,7 +1176,7 @@ manual_crusher:
       ceiling->crush = cd->damage;
       ceiling->direction = plat_down;
       ceiling->sector = sec;
-      ceiling->texture = sec->ceilingpic;
+      ceiling->texture = sec->srf.ceiling.pic;
       // haleyjd: note: transfer isn't actually used by crushers...
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;

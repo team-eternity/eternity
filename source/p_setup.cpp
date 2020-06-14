@@ -654,7 +654,7 @@ static void P_LoadPSXSectors(int lumpnum)
       ss->srf.floor.height = GetBinaryWord(data) << FRACBITS;
       ss->srf.ceiling.height = GetBinaryWord(data) << FRACBITS;
       GetBinaryString(data, namebuf, 8);
-      ss->floorpic           = R_FindFlat(namebuf);
+      ss->srf.floor.pic = R_FindFlat(namebuf);
       GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
       ss->lightlevel         = *data++;
@@ -696,7 +696,7 @@ static void P_LoadSectors(int lumpnum)
       ss->srf.floor.height = GetBinaryWord(data) << FRACBITS;
       ss->srf.ceiling.height = GetBinaryWord(data) << FRACBITS;
       GetBinaryString(data, namebuf, 8);
-      ss->floorpic           = R_FindFlat(namebuf);
+      ss->srf.floor.pic = R_FindFlat(namebuf);
       // haleyjd 08/30/09: set ceiling pic using function
       GetBinaryString(data, namebuf, 8);
       P_SetSectorCeilingPic(ss, R_FindFlat(namebuf));
