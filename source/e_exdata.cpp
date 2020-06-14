@@ -1386,7 +1386,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       for(int surf = surf_floor; surf != surf_NUM; surf++)
       {
          // floor and ceiling offsets
-         sec->surface[surf].offs = {
+         sec->surface[surf].offset = {
             cfg_getfloat(section, fieldsets[surf].offsetx),
             cfg_getfloat(section, fieldsets[surf].offsety)
          };
@@ -1662,8 +1662,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    // delete the flags
 
    // flat offsets
-   sector->surface.floor.offset = v2fixed_t::doubleToFixed(edsector->surface.floor.offs);
-   sector->surface.ceiling.offset = v2fixed_t::doubleToFixed(edsector->surface.ceiling.offs);
+   sector->surface.floor.offset = v2fixed_t::doubleToFixed(edsector->surface.floor.offset);
+   sector->surface.ceiling.offset = v2fixed_t::doubleToFixed(edsector->surface.ceiling.offset);
 
    // floor and ceiling scale
    sector->surface.floor.scale = static_cast<v2float_t>(edsector->surface.floor.scale);

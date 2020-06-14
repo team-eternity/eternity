@@ -110,7 +110,7 @@ class  UDMFSetupSettings;
 //
 struct mapsurfaceext_t
 {
-   v2double_t offs;
+   v2double_t offset;
    v2double_t scale;
    double angle;
    unsigned pflags;
