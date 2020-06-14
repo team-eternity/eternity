@@ -29,6 +29,7 @@
 
 #include "doomdef.h"
 #include "p_maputl.h"
+#include "r_defs.h"
 
 #define SECTOR_PORTAL_LOOP_PROTECTION 128
 
@@ -169,15 +170,15 @@ struct anchordata_t
 // Represents the data needed for a horizon portal
 struct horizondata_t
 {
-   int     *floorpic, *ceilingpic;
-   fixed_t *floorz, *ceilingz;
-   int16_t *floorlight, *ceilinglight;
-   fixed_t *floorxoff, *flooryoff;
-   fixed_t *ceilingxoff, *ceilingyoff;
-   float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
-   float   *ceilingbaseangle, *ceilingangle;
-   const float   *floorxscale, *flooryscale;
-   const float   *ceilingxscale, *ceilingyscale;
+   int *pic[surf_NUM];
+   fixed_t *z[surf_NUM];
+   int16_t *light[surf_NUM];
+   fixed_t *xoff[surf_NUM];
+   fixed_t *yoff[surf_NUM];
+   float *baseangle[surf_NUM];
+   float *angle[surf_NUM]; // haleyjd 01/05/08: flat angles
+   const float *xscale[surf_NUM];
+   const float *yscale[surf_NUM];
 };
 
 

@@ -641,24 +641,24 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
       !ceilingxscale || !ceilingyscale)
       return NULL;
 
-   horizon.ceilinglight     = ceilinglight;
-   horizon.floorlight       = floorlight;
-   horizon.ceilingpic       = ceilingpic;
-   horizon.floorpic         = floorpic;
-   horizon.ceilingz         = ceilingz;
-   horizon.floorz           = floorz;
-   horizon.ceilingxoff      = ceilingxoff;
-   horizon.ceilingyoff      = ceilingyoff;
-   horizon.floorxoff        = floorxoff;
-   horizon.flooryoff        = flooryoff;
-   horizon.floorbaseangle   = floorbaseangle; // haleyjd 01/05/08
-   horizon.floorangle       = floorangle;
-   horizon.ceilingbaseangle = ceilingbaseangle;
-   horizon.ceilingangle     = ceilingangle;
-   horizon.floorxscale = floorxscale;
-   horizon.flooryscale = flooryscale;
-   horizon.ceilingxscale = ceilingxscale;
-   horizon.ceilingyscale = ceilingyscale;
+   horizon.light[surf_ceil] = ceilinglight;
+   horizon.light[surf_floor]= floorlight;
+   horizon.pic[surf_ceil]   = ceilingpic;
+   horizon.pic[surf_floor]  = floorpic;
+   horizon.z[surf_ceil]     = ceilingz;
+   horizon.z[surf_floor]    = floorz;
+   horizon.xoff[surf_ceil]  = ceilingxoff;
+   horizon.yoff[surf_ceil]  = ceilingyoff;
+   horizon.xoff[surf_floor] = floorxoff;
+   horizon.yoff[surf_floor] = flooryoff;
+   horizon.baseangle[surf_floor] = floorbaseangle; // haleyjd 01/05/08
+   horizon.angle[surf_floor]= floorangle;
+   horizon.baseangle[surf_ceil] = ceilingbaseangle;
+   horizon.angle[surf_ceil] = ceilingangle;
+   horizon.xscale[surf_floor] = floorxscale;
+   horizon.yscale[surf_floor] = flooryscale;
+   horizon.xscale[surf_ceil] = ceilingxscale;
+   horizon.yscale[surf_ceil] = ceilingyscale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -867,30 +867,30 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    }
 
    // haleyjd 01/05/08: angles
-   floorangle = *portal->data.horizon.floorbaseangle + 
-                *portal->data.horizon.floorangle;
+   floorangle = *portal->data.horizon.baseangle[surf_floor] +
+                *portal->data.horizon.angle[surf_floor];
 
-   ceilingangle = *portal->data.horizon.ceilingbaseangle +
-                  *portal->data.horizon.ceilingangle;
+   ceilingangle = *portal->data.horizon.baseangle[surf_ceil] +
+                  *portal->data.horizon.angle[surf_ceil];
 
    // FIXME: Replace the 1.0s?
-   topplane = R_FindPlane(*portal->data.horizon.ceilingz, 
-                          *portal->data.horizon.ceilingpic, 
-                          *portal->data.horizon.ceilinglight, 
-                          *portal->data.horizon.ceilingxoff, 
-                          *portal->data.horizon.ceilingyoff,
-                          *portal->data.horizon.ceilingxscale, 
-                          *portal->data.horizon.ceilingyscale,
+   topplane = R_FindPlane(*portal->data.horizon.z[surf_ceil],
+                          *portal->data.horizon.pic[surf_ceil],
+                          *portal->data.horizon.light[surf_ceil],
+                          *portal->data.horizon.xoff[surf_ceil],
+                          *portal->data.horizon.yoff[surf_ceil],
+                          *portal->data.horizon.xscale[surf_ceil],
+                          *portal->data.horizon.yscale[surf_ceil],
                           ceilingangle, NULL, 0, 255, NULL);
 
    // FIXME: Replace the 1.0s?
-   bottomplane = R_FindPlane(*portal->data.horizon.floorz, 
-                             *portal->data.horizon.floorpic, 
-                             *portal->data.horizon.floorlight, 
-                             *portal->data.horizon.floorxoff, 
-                             *portal->data.horizon.flooryoff,
-                             *portal->data.horizon.floorxscale,
-                             *portal->data.horizon.flooryscale,
+   bottomplane = R_FindPlane(*portal->data.horizon.z[surf_floor],
+                             *portal->data.horizon.pic[surf_floor],
+                             *portal->data.horizon.light[surf_floor],
+                             *portal->data.horizon.xoff[surf_floor], 
+                             *portal->data.horizon.yoff[surf_floor],
+                             *portal->data.horizon.xscale[surf_floor],
+                             *portal->data.horizon.yscale[surf_floor],
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);

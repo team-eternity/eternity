@@ -222,6 +222,16 @@ struct soundzone_t
 };
 
 //
+// Common enum to get surface index to avoid repeating floor/ceiling etc.
+//
+enum surf_e
+{
+   surf_floor,
+   surf_ceil,
+   surf_NUM
+};
+
+//
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
