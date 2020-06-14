@@ -268,10 +268,10 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
          ss->c_pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
 
-         ss->scale[surf_floor].x = static_cast<float>(us.xscalefloor);
-         ss->scale[surf_floor].y = static_cast<float>(us.yscalefloor);
-         ss->scale[surf_ceil].x = static_cast<float>(us.xscaleceiling);
-         ss->scale[surf_ceil].y = static_cast<float>(us.yscaleceiling);
+         ss->surface.floor.scale.x = static_cast<float>(us.xscalefloor);
+         ss->surface.floor.scale.y = static_cast<float>(us.yscalefloor);
+         ss->surface.ceiling.scale.x = static_cast<float>(us.xscaleceiling);
+         ss->surface.ceiling.scale.y = static_cast<float>(us.yscaleceiling);
 
          // Sound sequences
          if(!us.soundsequence.empty())

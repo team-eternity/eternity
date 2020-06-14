@@ -1064,11 +1064,11 @@ static void R_ShowTainted(pwindow_t *window)
       float ceilingangle = sector->ceilingbaseangle + sector->ceilingangle;
       visplane_t *topplane = R_FindPlane(sector->ceilingheight, 
          sector->ceilingpic, sector->lightlevel, sector->surface.ceiling.offset.x,
-         sector->surface.ceiling.offset.y, sector->scale[surf_ceil].x, sector->scale[surf_ceil].y,
+         sector->surface.ceiling.offset.y, sector->surface.ceiling.scale.x, sector->surface.ceiling.scale.y,
          ceilingangle, nullptr, 0, 255, nullptr);
       visplane_t *bottomplane = R_FindPlane(sector->floorheight,
          sector->floorpic, sector->lightlevel, sector->surface.floor.offset.x,
-         sector->surface.floor.offset.y, sector->scale[surf_floor].x, sector->scale[surf_floor].y,
+         sector->surface.floor.offset.y, sector->surface.floor.scale.x, sector->surface.floor.scale.y,
          floorangle, nullptr, 0, 255, nullptr);
       topplane = R_CheckPlane(topplane, window->minx, window->maxx);
       bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
@@ -1884,7 +1884,7 @@ void R_DefinePortal(const line_t &line)
       portal = R_GetPlanePortal(&sector->ceilingpic, &sector->ceilingheight,
          &sector->lightlevel, &sector->surface.ceiling.offset.x, &sector->surface.ceiling.offset.y,
          &sector->ceilingbaseangle, &sector->ceilingangle, 
-         &sector->scale[surf_ceil].x, &sector->scale[surf_ceil].y);
+         &sector->surface.ceiling.scale.x, &sector->surface.ceiling.scale.y);
       break;
    case portaltype_horizon:
       portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic,
@@ -1893,8 +1893,8 @@ void R_DefinePortal(const line_t &line)
          &sector->surface.ceiling.offset.x, &sector->surface.ceiling.offset.y,
          &sector->floorbaseangle, &sector->floorangle,
          &sector->ceilingbaseangle, &sector->ceilingangle,
-         &sector->scale[surf_floor].x, &sector->scale[surf_floor].y, &sector->scale[surf_ceil].x,
-         &sector->scale[surf_ceil].y);
+         &sector->surface.floor.scale.x, &sector->surface.floor.scale.y, &sector->surface.ceiling.scale.x,
+         &sector->surface.ceiling.scale.y);
       break;
    case portaltype_skybox:
       skycam = sector->thinglist;

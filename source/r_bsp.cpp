@@ -501,7 +501,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          // head-below-floor hack
          tempsec->floorpic       = s->floorpic;
          tempsec->surface.floor.offset = s->surface.floor.offset;
-         tempsec->scale[surf_floor] = s->scale[surf_floor];
+         tempsec->surface.floor.scale = s->surface.floor.scale;
          tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
          tempsec->floorangle     = s->floorangle;
 
@@ -511,7 +511,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
             tempsec->floorheight      = tempsec->ceilingheight+1;
             tempsec->ceilingpic       = tempsec->floorpic;
             tempsec->surface.ceiling.offset = tempsec->surface.floor.offset;
-            tempsec->scale[surf_ceil]    = tempsec->scale[surf_floor];
+            tempsec->surface.ceiling.scale = tempsec->surface.floor.scale;
             tempsec->ceilingbaseangle = tempsec->floorbaseangle; // haleyjd: angles
             tempsec->ceilingangle     = tempsec->floorangle;
          }
@@ -519,7 +519,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          {
             tempsec->ceilingpic       = s->ceilingpic;
             tempsec->surface.ceiling.offset = s->surface.ceiling.offset;
-            tempsec->scale[surf_ceil]    = s->scale[surf_ceil];
+            tempsec->surface.ceiling.scale = s->surface.ceiling.scale;
             tempsec->ceilingbaseangle = s->ceilingbaseangle; // haleyjd: angles
             tempsec->ceilingangle     = s->ceilingangle;
          }
@@ -564,7 +564,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
 
          tempsec->floorpic       = tempsec->ceilingpic       = s->ceilingpic;
          tempsec->surface.floor.offset = tempsec->surface.ceiling.offset = s->surface.ceiling.offset;
-         tempsec->scale[surf_floor] = tempsec->scale[surf_ceil] = s->scale[surf_ceil];
+         tempsec->surface.floor.scale = tempsec->surface.ceiling.scale = s->surface.ceiling.scale;
          tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
          tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
 
@@ -573,7 +573,7 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
             tempsec->ceilingheight  = sec->ceilingheight;
             tempsec->floorpic       = s->floorpic;
             tempsec->surface.floor.offset = s->surface.floor.offset;
-            tempsec->scale[surf_floor] = s->scale[surf_floor];
+            tempsec->surface.floor.scale = s->surface.floor.scale;
             tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
             tempsec->floorangle     = s->floorangle;
          }
@@ -1206,7 +1206,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    if(seg.ceilingplane && 
        (mark || (marktheight && !blocktheight) || seg.clipsolid || heightchange ||
         seg.frontsec->surface.ceiling.offset != seg.backsec->surface.ceiling.offset ||
-        seg.frontsec->scale[surf_ceil] != seg.backsec->scale[surf_ceil] ||
+        seg.frontsec->surface.ceiling.scale != seg.backsec->surface.ceiling.scale ||
         (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
          seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
         seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
@@ -1286,7 +1286,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    if(seg.floorplane && 
       (mark || marktheight || seg.clipsolid || heightchange ||
        seg.frontsec->surface.floor.offset != seg.backsec->surface.floor.offset ||
-       seg.frontsec->scale[surf_floor] != seg.backsec->scale[surf_floor] ||
+       seg.frontsec->surface.floor.scale != seg.backsec->surface.floor.scale ||
        (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
         seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
        seg.frontsec->floorpic != seg.backsec->floorpic ||
@@ -1466,7 +1466,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
                
    if(mark || (marktheight && !blocktheight) || seg.clipsolid || frontc != backc || 
       seg.frontsec->surface.ceiling.offset != seg.backsec->surface.ceiling.offset ||
-      seg.frontsec->scale[surf_ceil] != seg.backsec->scale[surf_ceil] ||
+      seg.frontsec->surface.ceiling.scale != seg.backsec->surface.ceiling.scale ||
       (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
        seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
       seg.frontsec->ceilingpic != seg.backsec->ceilingpic ||
@@ -1545,7 +1545,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(mark || marktheight || seg.clipsolid ||  
       seg.frontsec->floorheight != seg.backsec->floorheight ||
       seg.frontsec->surface.floor.offset != seg.backsec->surface.floor.offset ||
-      seg.frontsec->scale[surf_floor] != seg.backsec->scale[surf_floor] ||
+      seg.frontsec->surface.floor.scale != seg.backsec->surface.floor.scale ||
       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
       seg.frontsec->floorpic != seg.backsec->floorpic ||
@@ -2120,8 +2120,8 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       && seg.backsec->surface.floor.offset == seg.frontsec->surface.floor.offset
       && seg.backsec->surface.ceiling.offset == seg.frontsec->surface.ceiling.offset
 
-      && seg.backsec->scale[surf_floor] == seg.frontsec->scale[surf_floor]
-      && seg.backsec->scale[surf_ceil] == seg.frontsec->scale[surf_ceil]
+      && seg.backsec->surface.floor.scale == seg.frontsec->surface.floor.scale
+      && seg.backsec->surface.ceiling.scale == seg.frontsec->surface.ceiling.scale
 
       // haleyjd 11/04/10: angles
       && (seg.backsec->floorbaseangle + seg.backsec->floorangle ==
@@ -2756,8 +2756,8 @@ static void R_Subsector(int num)
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->surface.floor.offset.x,       // killough 3/7/98
                     seg.frontsec->surface.floor.offset.y,
-                    seg.frontsec->scale[surf_floor].x,
-                    seg.frontsec->scale[surf_floor].y,
+                    seg.frontsec->surface.floor.scale.x,
+                    seg.frontsec->surface.floor.scale.y,
                     floorangle, seg.frontsec->f_slope, 
                     seg.frontsec->f_pflags,
                     fpalpha,
@@ -2776,8 +2776,8 @@ static void R_Subsector(int num)
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->surface.floor.offset.x,       // killough 3/7/98
                     seg.frontsec->surface.floor.offset.y,
-                    seg.frontsec->scale[surf_floor].x,
-                    seg.frontsec->scale[surf_floor].y,
+                    seg.frontsec->surface.floor.scale.x,
+                    seg.frontsec->surface.floor.scale.y,
                     floorangle, seg.frontsec->f_slope, 0, 255, NULL) : NULL;
    }
    
@@ -2808,8 +2808,8 @@ static void R_Subsector(int num)
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->surface.ceiling.offset.x,       // killough 3/7/98
                     seg.frontsec->surface.ceiling.offset.y,
-                    seg.frontsec->scale[surf_ceil].x,
-                    seg.frontsec->scale[surf_ceil].y,
+                    seg.frontsec->surface.ceiling.scale.x,
+                    seg.frontsec->surface.ceiling.scale.y,
                     ceilingangle, seg.frontsec->c_slope, 
                     seg.frontsec->c_pflags,
                     cpalpha,
@@ -2828,8 +2828,8 @@ static void R_Subsector(int num)
                     ceilinglightlevel,              // killough 4/11/98
                     seg.frontsec->surface.ceiling.offset.x,     // killough 3/7/98
                     seg.frontsec->surface.ceiling.offset.y,
-                    seg.frontsec->scale[surf_ceil].x,
-                    seg.frontsec->scale[surf_ceil].y,
+                    seg.frontsec->surface.ceiling.scale.x,
+                    seg.frontsec->surface.ceiling.scale.y,
                     ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
    }
   

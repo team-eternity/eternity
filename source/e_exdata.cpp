@@ -1666,8 +1666,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->surface.ceiling.offset = v2fixed_t::doubleToFixed(edsector->surface.ceiling.offs);
 
    // floor and ceiling scale
-   sector->scale[surf_floor] = static_cast<v2float_t>(edsector->surface.floor.scale);
-   sector->scale[surf_ceil] = static_cast<v2float_t>(edsector->surface.ceiling.scale);
+   sector->surface.floor.scale = static_cast<v2float_t>(edsector->surface.floor.scale);
+   sector->surface.ceiling.scale = static_cast<v2float_t>(edsector->surface.ceiling.scale);
 
    // flat angles
    sector->floorbaseangle   = (float)(edsector->surface.floor.angle * PI / 180.0f);

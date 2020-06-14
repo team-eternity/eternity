@@ -263,6 +263,8 @@ struct surface_t
 {
    // killough 3/7/98: floor and ceiling texture offsets
    v2fixed_t offset;
+
+   v2float_t scale;
 };
 
 //
@@ -314,8 +316,6 @@ struct sector_t
   
    // killough 3/7/98: floor and ceiling texture offsets
    Surfaces<surface_t> surface;  // TODO: move all floor/ceiling doubles here.
-
-   v2float_t scale[surf_NUM];
 
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector
