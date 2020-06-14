@@ -1636,8 +1636,8 @@ inline static bool AM_drawAsLockedDoor(const line_t *line)
 //
 inline static bool AM_isDoorClosed(const line_t *line)
 {
-   return !line->backsector->ceilingdata ||
-          !line->backsector->ceilingdata->isDescendantOf(RTTI(VerticalDoorThinker));
+   return !line->backsector->srf.ceiling.data ||
+          !line->backsector->srf.ceiling.data->isDescendantOf(RTTI(VerticalDoorThinker));
 }
 
 //

@@ -207,7 +207,7 @@ void FloorMoveThinker::Think()
          }
       }
       
-      sector->floordata = NULL; //jff 2/22/98
+      sector->srf.floor.data = NULL; //jff 2/22/98
       this->remove(); //remove this floor from list of movers
 
       //jff 2/26/98 implement stair retrigger lockout while still building
@@ -328,8 +328,8 @@ void ElevatorThinker::Think()
    if(res == pastdest)            // if destination height acheived
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
-      sector->floordata = NULL;     //jff 2/22/98
-      sector->ceilingdata = NULL;   //jff 2/22/98
+      sector->srf.floor.data = NULL;     //jff 2/22/98
+      sector->srf.ceiling.data = NULL;   //jff 2/22/98
       this->remove();               // remove elevator from actives
       
       // make floor stop sound
@@ -370,8 +370,8 @@ void PillarThinker::Think()
    if(resf == pastdest && resc == pastdest)
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
-      sector->floordata = NULL;
-      sector->ceilingdata = NULL;      
+      sector->srf.floor.data = NULL;
+      sector->srf.ceiling.data = NULL;
       this->remove();
    }
 }
@@ -413,7 +413,7 @@ int EV_FloorCrushStop(const line_t *line, int tag)
       if(P_LevelIsVanillaHexen() || fmt->sector->tag == tag)
       {
          rtn = 1;
-         fmt->sector->floordata = nullptr;
+         fmt->sector->srf.floor.data = nullptr;
          S_StopSectorSequence(fmt->sector, SEQ_ORIGIN_SECTOR_F);
          fmt->remove();
       }
@@ -452,7 +452,7 @@ int EV_DoFloor(const line_t *line, floor_e floortype )
       rtn = 1;
       floor = new FloorMoveThinker;
       floor->addThinker();
-      sec->floordata = floor; //jff 2/22/98
+      sec->srf.floor.data = floor; //jff 2/22/98
       floor->type = floortype;
       floor->crush = -1;
 
@@ -676,7 +676,7 @@ int EV_DoFloorAndCeiling(const line_t *line, int tag, const floordata_t &fd,
       int secnum = -1;
       while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
       {
-         sectors[secnum].ceilingdata = nullptr;
+         sectors[secnum].srf.ceiling.data = nullptr;
       }
    }
    int ceiling = EV_DoParamCeiling(line, tag, &cd);
@@ -828,7 +828,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
          rtn = 1;
          floor = new FloorMoveThinker;
          floor->addThinker();
-         sec->floordata = floor;
+         sec->srf.floor.data = floor;
          floor->direction = 1;
          floor->sector = sec;
          floor->type = buildStair;   //jff 3/31/98 do not leave uninited
@@ -923,7 +923,7 @@ int EV_BuildStairs(const line_t *line, stair_e type)
                floor = new FloorMoveThinker;
                floor->addThinker();
 
-               sec->floordata = floor; //jff 2/22/98
+               sec->srf.floor.data = floor; //jff 2/22/98
                floor->direction = 1;
                floor->sector = sec;
                floor->speed = speed;
@@ -1120,7 +1120,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          //  Spawn rising slime
          floor = new FloorMoveThinker;
          floor->addThinker();
-         s2->floordata    = floor; //jff 2/22/98
+         s2->srf.floor.data = floor; //jff 2/22/98
          floor->type      = donutRaise;
          floor->crush     = -1;
          floor->direction = plat_up;
@@ -1134,7 +1134,7 @@ int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
          //  Spawn lowering donut-hole pillar
          floor = new FloorMoveThinker;
          floor->addThinker();
-         s1->floordata    = floor; //jff 2/22/98
+         s1->srf.floor.data = floor; //jff 2/22/98
          floor->type      = lowerFloor;
          floor->crush     = -1;
          floor->direction = plat_down;
@@ -1185,7 +1185,7 @@ int EV_DoElevator
               
    manualElevator:
       // If either floor or ceiling is already activated, skip it
-      if(sec->floordata || sec->ceilingdata) //jff 2/22/98
+      if(sec->srf.floor.data || sec->srf.ceiling.data) //jff 2/22/98
       {
          if(manual)
             return rtn; // ioanch: also take care of manual activation
@@ -1196,8 +1196,8 @@ int EV_DoElevator
       rtn = 1;
       elevator = new ElevatorThinker;
       elevator->addThinker();
-      sec->floordata = elevator; //jff 2/22/98
-      sec->ceilingdata = elevator; //jff 2/22/98
+      sec->srf.floor.data = elevator; //jff 2/22/98
+      sec->srf.ceiling.data = elevator; //jff 2/22/98
       elevator->type = elevtype;
 
       elevator->speed = speed;
@@ -1280,7 +1280,7 @@ int EV_PillarBuild(const line_t *line, const pillardata_t *pd)
 manual_pillar:
       // already being buggered about with,
       // or ceiling <= floor, therefore closed
-      if(sector->floordata || sector->ceilingdata ||
+      if(sector->srf.floor.data || sector->srf.ceiling.data ||
          sector->srf.ceiling.height <= sector->srf.floor.height)
       {
          if(manual)
@@ -1290,8 +1290,8 @@ manual_pillar:
       }
 
       pillar = new PillarThinker;
-      sector->floordata = pillar;
-      sector->ceilingdata = pillar;
+      sector->srf.floor.data = pillar;
+      sector->srf.ceiling.data = pillar;
       pillar->addThinker();
       pillar->sector = sector;
 
@@ -1368,7 +1368,7 @@ int EV_PillarOpen(const line_t *line, const pillardata_t *pd)
 
 manual_pillar:
       // already being buggered about with
-      if(sector->floordata || sector->ceilingdata ||
+      if(sector->srf.floor.data || sector->srf.ceiling.data ||
          sector->srf.floor.height != sector->srf.ceiling.height)
       {
          if(manual)
@@ -1378,8 +1378,8 @@ manual_pillar:
       }
 
       pillar = new PillarThinker;
-      sector->floordata   = pillar;
-      sector->ceilingdata = pillar;
+      sector->srf.floor.data = pillar;
+      sector->srf.ceiling.data = pillar;
       pillar->addThinker();
       pillar->sector = sector;
 
@@ -1476,7 +1476,7 @@ void FloorWaggleThinker::Think()
          T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
             destheight >= sector->srf.floor.height ? plat_down : plat_up, false);
 
-         sector->floordata = NULL;
+         sector->srf.floor.data = NULL;
          remove();
          return;
       }
@@ -1542,7 +1542,7 @@ int EV_StartFloorWaggle(const line_t *line, int tag, int height, int speed,
 
 manual_waggle:
       // Already busy with another thinker
-      if(sector->floordata)
+      if(sector->srf.floor.data)
       {
          if(manual)
             return retCode;
@@ -1552,7 +1552,7 @@ manual_waggle:
 
       retCode = 1;
       waggle = new FloorWaggleThinker;
-      sector->floordata = waggle;      
+      sector->srf.floor.data = waggle;
       waggle->addThinker();
 
       waggle->sector         = sector;

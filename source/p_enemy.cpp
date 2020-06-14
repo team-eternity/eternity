@@ -366,7 +366,7 @@ static bool P_IsOnLift(const Mobj *actor)
    line_t line;
 
    // Short-circuit: it's on a lift which is active.
-   if(thinker_cast<PlatThinker *>(sec->floordata) != NULL)
+   if(thinker_cast<PlatThinker *>(sec->srf.floor.data) != NULL)
       return true;
 
    // Check to see if it's in a sector which can be 
@@ -420,7 +420,7 @@ static int P_IsUnderDamage(Mobj *actor)
 
    for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
    {
-      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->ceilingdata)) &&
+      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->srf.ceiling.data)) &&
          !cl->inStasis)
          dir |= cl->direction;
    }

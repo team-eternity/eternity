@@ -681,8 +681,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->ceilingdata  = nullptr;
-         sec->floordata    = nullptr;
+         sec->srf.ceiling.data = nullptr;
+         sec->srf.floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights

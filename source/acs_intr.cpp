@@ -408,7 +408,7 @@ bool ACSEnvironment::checkTag(ACSVM::Word type, ACSVM::Word tag)
       for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) >= 0;)
       {
          sector_t *sec = &sectors[secnum];
-         if(sec->floordata || sec->ceilingdata)
+         if(sec->srf.floor.data || sec->srf.ceiling.data)
             return false;
       }
       return true;

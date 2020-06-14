@@ -392,7 +392,7 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
       rtn = 1;
       ceiling = new CeilingThinker;
       ceiling->addThinker();
-      sec->ceilingdata = ceiling;               //jff 2/22/98
+      sec->srf.ceiling.data = ceiling;               //jff 2/22/98
       ceiling->sector = sec;
       ceiling->crush = -1;
       ceiling->crushflags = 0;   // ioanch 20160305
@@ -676,7 +676,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
       {
          if(vanilla_activeceilings[i] == ceiling)
          {
-            ceiling->sector->ceilingdata = nullptr;
+            ceiling->sector->srf.ceiling.data = nullptr;
             S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
             ceiling->remove();
             vanilla_activeceilings[i] = nullptr;
@@ -688,7 +688,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 
    // ioanch: normal setup
    ceilinglist_t *list = ceiling->list;
-   ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
+   ceiling->sector->srf.ceiling.data = NULL;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
    ceiling->remove();
    if((*list->prev = list->next))
@@ -779,7 +779,7 @@ void CeilingWaggleThinker::Think()
          T_MoveCeilingInDirection(sector, abs(dist),
             destheight, 8, destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 
-         sector->ceilingdata = nullptr;
+         sector->srf.ceiling.data = nullptr;
          remove();
          return;
       }
@@ -839,7 +839,7 @@ int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed,
 
 manual_waggle:
       // Already busy with another thinker
-      if(sector->ceilingdata)
+      if(sector->srf.ceiling.data)
       {
          if(manual)
             return retCode;
@@ -849,7 +849,7 @@ manual_waggle:
 
       retCode = 1;
       waggle = new CeilingWaggleThinker;
-      sector->ceilingdata = waggle;
+      sector->srf.ceiling.data = waggle;
       waggle->addThinker();
 
       waggle->sector         = sector;

@@ -313,7 +313,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
       plat->crush  = -1;
       plat->tag    = line->args[0];
       plat->sector = sec;
-      plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
+      plat->sector->srf.floor.data = plat; //jff 2/23/98 multiple thinkers
       plat->rnctype = PlatThinker::PRNC_DEFAULT;
 
       //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
@@ -469,7 +469,7 @@ manual_plat:
       plat->speed  = args[1] * FRACUNIT / 8;
       plat->wait   = args[2];
       plat->sector = sec;
-      plat->sector->floordata = plat;
+      plat->sector->srf.floor.data = plat;
       plat->rnctype = PlatThinker::PRNC_DEFAULT;
 
       switch(type)
@@ -641,7 +641,7 @@ bool EV_StopPlatByTag(int tag, bool removeThinker)
          // Make it possible to completely remove the thinker, like in Hexen
          if(plat->tag == tag)
          {
-            plat->sector->floordata = nullptr;
+            plat->sector->srf.floor.data = nullptr;
             S_StopSectorSequence(plat->sector, SEQ_ORIGIN_SECTOR_F);
             plat->remove();
          }
@@ -679,7 +679,7 @@ void PlatThinker::addActivePlat()
 //
 void PlatThinker::removeActivePlat()
 {
-   sector->floordata = NULL; //jff 2/23/98 multiple thinkers
+   sector->srf.floor.data = NULL; //jff 2/23/98 multiple thinkers
    remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;

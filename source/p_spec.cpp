@@ -1013,9 +1013,9 @@ int P_FindMinSurroundingLight(const sector_t *sector, int min)
 int P_SectorActive(special_e t, const sector_t *sec)
 {
    return demo_compatibility ?  // return whether any thinker is active
-     sec->floordata || sec->ceilingdata :
-     t == floor_special ? !!sec->floordata :        // return whether
-     t == ceiling_special ? !!sec->ceilingdata :    // thinker of same
+     sec->srf.floor.data || sec->srf.ceiling.data :
+     t == floor_special ? !!sec->srf.floor.data :        // return whether
+     t == ceiling_special ? !!sec->srf.ceiling.data :    // thinker of same
      t == lighting_special ? 0 :  // type is active (NOTE: no light thinker currently)
      1; // don't know which special, must be active, shouldn't be here
 }

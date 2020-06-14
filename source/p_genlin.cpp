@@ -96,7 +96,7 @@ manual_floor:
       rtn = 1;
       floor = new FloorMoveThinker;
       floor->addThinker();
-      sec->floordata = floor;
+      sec->srf.floor.data = floor;
       
       floor->crush     = fd->crush;
       floor->direction = fd->direction ? plat_up : plat_down;
@@ -402,7 +402,7 @@ manual_ceiling:
       rtn = 1;
       ceiling = new CeilingThinker;
       ceiling->addThinker();
-      sec->ceilingdata = ceiling; //jff 2/22/98
+      sec->srf.ceiling.data = ceiling; //jff 2/22/98
 
       ceiling->crush = cd->crush;
       ceiling->crushflags = 0;
@@ -793,7 +793,7 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
       plat->high   = sec->srf.floor.height;
       plat->status = PlatThinker::down;
       plat->sector = sec;
-      plat->sector->floordata = plat;
+      plat->sector->srf.floor.data = plat;
 
       // setup the target destination height
       switch(target)
@@ -913,7 +913,7 @@ manual_stair:
       rtn = 1;
       floor = new FloorMoveThinker;
       floor->addThinker();
-      sec->floordata = floor;
+      sec->srf.floor.data = floor;
 
       floor->direction = sd->direction ? plat_up : plat_down;
       floor->sector = sec;
@@ -1039,7 +1039,7 @@ manual_stair:
 
             floor->addThinker();
 
-            sec->floordata = floor;
+            sec->srf.floor.data = floor;
             floor->direction = sd->direction ? plat_up : plat_down;
             floor->sector = sec;
 
@@ -1172,7 +1172,7 @@ manual_crusher:
       rtn = 1;
       ceiling = new CeilingThinker;
       ceiling->addThinker();
-      sec->ceilingdata = ceiling; //jff 2/22/98
+      sec->srf.ceiling.data = ceiling; //jff 2/22/98
       ceiling->crush = cd->damage;
       ceiling->direction = plat_down;
       ceiling->sector = sec;
@@ -1374,7 +1374,7 @@ manual_door:
             // haleyjd 02/23/04: allow repushing of certain generalized
             // doors
             if(demo_version >= 331)
-               rtn = GenDoorRetrigger(sec->ceilingdata, dd, tag);
+               rtn = GenDoorRetrigger(sec->srf.ceiling.data, dd, tag);
 
             return rtn;
          }
@@ -1385,7 +1385,7 @@ manual_door:
       rtn = 1;
       door = new VerticalDoorThinker;
       door->addThinker();
-      sec->ceilingdata = door; //jff 2/22/98
+      sec->srf.ceiling.data = door; //jff 2/22/98
       
       door->sector = sec;
       door->turbo  = false;

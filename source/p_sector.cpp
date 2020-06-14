@@ -63,14 +63,14 @@ void SectorThinker::serialize(SaveArchive &arc)
       switch(getAttachPoint())
       {
       case ATTACH_FLOOR:
-         sector->floordata = this;
+         sector->srf.floor.data = this;
          break;
       case ATTACH_CEILING:
-         sector->ceilingdata = this;
+         sector->srf.ceiling.data = this;
          break;
       case ATTACH_FLOORCEILING:
-         sector->floordata   = this;
-         sector->ceilingdata = this;
+         sector->srf.floor.data = this;
+         sector->srf.ceiling.data = this;
          break;
       case ATTACH_LIGHT:
          // NOTE: light thinkers don't exist

@@ -180,7 +180,7 @@ void VerticalDoorThinker::Think()
          case blazeRaise:
          case blazeClose:
          case paramCloseIn:      // haleyjd 03/01/05
-            sector->ceilingdata = NULL;  //jff 2/22/98
+            sector->srf.ceiling.data = NULL;  //jff 2/22/98
             this->remove();  // unlink and free
             // killough 4/15/98: remove double-closing sound of blazing doors
             // haleyjd 10/06/06: behavior is determined via sound sequence now
@@ -243,7 +243,7 @@ void VerticalDoorThinker::Think()
          case blazeOpen:
          case doorOpen:
             S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_C);
-            sector->ceilingdata = NULL; //jff 2/22/98
+            sector->srf.ceiling.data = NULL; //jff 2/22/98
             this->remove(); // unlink and free
             break;
             
@@ -344,7 +344,7 @@ int EV_DoDoor(const line_t *line, vldoor_e type)
       rtn = 1;
       door = new VerticalDoorThinker;
       door->addThinker();
-      sec->ceilingdata = door; //jff 2/22/98
+      sec->srf.ceiling.data = door; //jff 2/22/98
 
       door->sector    = sec;
       door->type      = type;
@@ -454,13 +454,13 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    //    demo_compatibility (only VerticalDoorThinker::reTriggerVerticalDoor
    //    will actually do anything outside of demo_compatibility mode)
 
-   secThinker = thinker_cast<SectorThinker *>(sec->ceilingdata);
+   secThinker = thinker_cast<SectorThinker *>(sec->srf.ceiling.data);
 
    // exactly only one at most of these pointers is valid during demo_compatibility
    if(demo_compatibility)
    {
       if(!secThinker)
-         secThinker = thinker_cast<SectorThinker *>(sec->floordata);
+         secThinker = thinker_cast<SectorThinker *>(sec->srf.floor.data);
    }
    
    // if door already has a thinker, use it
@@ -502,7 +502,7 @@ int EV_VerticalDoor(line_t *line, const Mobj *thing, int lockID)
    door = new VerticalDoorThinker;
    door->addThinker();
    
-   sec->ceilingdata = door; //jff 2/22/98
+   sec->srf.ceiling.data = door; //jff 2/22/98
    
    door->sector    = sec;
    door->direction = plat_up;
@@ -574,7 +574,7 @@ void P_SpawnDoorCloseIn30(sector_t* sec)
    
    door->addThinker();
    
-   sec->ceilingdata = door; //jff 2/22/98
+   sec->srf.ceiling.data = door; //jff 2/22/98
    P_ZeroSectorSpecial(sec);
    
    door->sector       = sec;
@@ -600,7 +600,7 @@ void P_SpawnDoorRaiseIn5Mins(sector_t *sec)
    
    door->addThinker();
    
-   sec->ceilingdata = door; //jff 2/22/98
+   sec->srf.ceiling.data = door; //jff 2/22/98
    P_ZeroSectorSpecial(sec);
    
    door->sector       = sec;

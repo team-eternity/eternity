@@ -264,6 +264,11 @@ struct surface_t
    fixed_t height;
    int pic;
 
+   // thinker_t for reversable actions
+   // jff 2/22/98 make thinkers on
+   // floors, ceilings independent of one another
+   Thinker *data;
+
    // killough 3/7/98: floor and ceiling texture offsets
    v2fixed_t offset;
 
@@ -306,9 +311,6 @@ struct sector_t
    // when processed as mobj properties. Fix is to make them sector properties.
    int friction, movefactor;
 
-   // thinker_t for reversable actions
-   Thinker *floordata;    // jff 2/22/98 make thinkers on
-   Thinker *ceilingdata;  // floors, ceilings independent of one another
    // ioanch: deleted lightingdata
 
    // jff 2/26/98 lockout machinery for stairbuilding
