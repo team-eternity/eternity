@@ -296,6 +296,11 @@ struct surface_t
    int *attached;
    int numsectors;
    int *attsectors;
+
+   // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
+   // sector's floor and/or ceiling
+   int asurfacecount;
+   attachedsurface_t *asurfaces;
 };
 
 //
@@ -361,13 +366,6 @@ struct sector_t
    
    int linecount;
    line_t **lines;
-
-   // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
-   // sector's floor and/or ceiling
-   int c_asurfacecount;
-   attachedsurface_t *c_asurfaces;
-   int f_asurfacecount;
-   attachedsurface_t *f_asurfaces;
 
    // Flags for portals
    unsigned int c_pflags, f_pflags;

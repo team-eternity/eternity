@@ -659,11 +659,11 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
          {
             int j;
 
-            for(j = 0; j < sec->c_asurfacecount; j++)
-               if(sec->c_asurfaces[j].sector == other)
+            for(j = 0; j < sec->srf.ceiling.asurfacecount; j++)
+               if(sec->srf.ceiling.asurfaces[j].sector == other)
                   break;
 
-            if(j == sec->c_asurfacecount)
+            if(j == sec->srf.ceiling.asurfacecount)
                height = other->srf.ceiling.height;
          }
       }
@@ -2373,13 +2373,13 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
    
    if(ceiling)
    {
-      count = sector->c_asurfacecount;
-      list = sector->c_asurfaces;
+      count = sector->srf.ceiling.asurfacecount;
+      list = sector->srf.ceiling.asurfaces;
    }
    else
    {
-      count = sector->f_asurfacecount;
-      list = sector->f_asurfaces;
+      count = sector->srf.floor.asurfacecount;
+      list = sector->srf.floor.asurfaces;
    }
 
    for(i = 0; i < count; i++)
@@ -2543,21 +2543,21 @@ static void P_attachSectors(UDMFSetupSettings &settings)
       }
       if(!floornew.isEmpty())
       {
-         efree(sectors[i].f_asurfaces);
-         sectors[i].f_asurfaces = estructalloctag(attachedsurface_t, 
+         efree(sectors[i].srf.floor.asurfaces);
+         sectors[i].srf.floor.asurfaces = estructalloctag(attachedsurface_t,
             floornew.getLength(), PU_LEVEL);
-         sectors[i].f_asurfacecount = static_cast<int>(floornew.getLength());
-         memcpy(sectors[i].f_asurfaces, &floornew[0], 
-            sectors[i].f_asurfacecount * sizeof(attachedsurface_t));
+         sectors[i].srf.floor.asurfacecount = static_cast<int>(floornew.getLength());
+         memcpy(sectors[i].srf.floor.asurfaces, &floornew[0],
+            sectors[i].srf.floor.asurfacecount * sizeof(attachedsurface_t));
       }
       if(!ceilingnew.isEmpty())
       {
-         efree(sectors[i].c_asurfaces);
-         sectors[i].c_asurfaces = estructalloctag(attachedsurface_t,
+         efree(sectors[i].srf.ceiling.asurfaces);
+         sectors[i].srf.ceiling.asurfaces = estructalloctag(attachedsurface_t,
             ceilingnew.getLength(), PU_LEVEL);
-         sectors[i].c_asurfacecount = static_cast<int>(ceilingnew.getLength());
-         memcpy(sectors[i].c_asurfaces, &ceilingnew[0],
-            sectors[i].c_asurfacecount * sizeof(attachedsurface_t));
+         sectors[i].srf.ceiling.asurfacecount = static_cast<int>(ceilingnew.getLength());
+         memcpy(sectors[i].srf.ceiling.asurfaces, &ceilingnew[0],
+            sectors[i].srf.ceiling.asurfacecount * sizeof(attachedsurface_t));
       }
    }
 }
@@ -2588,9 +2588,9 @@ void P_AttachSectors(const line_t *line, int staticFn)
    
    // Check to ensure that this sector doesn't already 
    // have attachments.
-   if(!ceiling && sector->f_asurfacecount)
+   if(!ceiling && sector->srf.floor.asurfacecount)
    {
-      numattached = sector->f_asurfacecount;
+      numattached = sector->srf.floor.asurfacecount;
 
       if(numattached >= maxattached)
       {
@@ -2603,14 +2603,14 @@ void P_AttachSectors(const line_t *line, int staticFn)
       if(!attached)
          I_Error("P_AttachSector: no attached list\n");
 
-      memcpy(attached, sector->f_asurfaces, sizeof(attachedsurface_t) * numattached);
-      Z_Free(sector->f_asurfaces);
-      sector->f_asurfaces = NULL;
-      sector->f_asurfacecount = 0;
+      memcpy(attached, sector->srf.floor.asurfaces, sizeof(attachedsurface_t) * numattached);
+      Z_Free(sector->srf.floor.asurfaces);
+      sector->srf.floor.asurfaces = NULL;
+      sector->srf.floor.asurfacecount = 0;
    }
-   else if(ceiling && sector->c_asurfacecount)
+   else if(ceiling && sector->srf.ceiling.asurfacecount)
    {
-      numattached = sector->c_asurfacecount;
+      numattached = sector->srf.ceiling.asurfacecount;
 
       if(numattached >= maxattached)
       {
@@ -2619,10 +2619,10 @@ void P_AttachSectors(const line_t *line, int staticFn)
                              sizeof(attachedsurface_t) * maxattached);
       }
 
-      memcpy(attached, sector->c_asurfaces, sizeof(attachedsurface_t) * numattached);
-      Z_Free(sector->c_asurfaces);
-      sector->c_asurfaces = NULL;
-      sector->c_asurfacecount = 0;
+      memcpy(attached, sector->srf.ceiling.asurfaces, sizeof(attachedsurface_t) * numattached);
+      Z_Free(sector->srf.ceiling.asurfaces);
+      sector->srf.ceiling.asurfaces = NULL;
+      sector->srf.ceiling.asurfacecount = 0;
    }
 
    // Search the lines list. Check for every tagged line that
@@ -2757,17 +2757,17 @@ void P_AttachSectors(const line_t *line, int staticFn)
    // Copy the list to the sector.
    if(ceiling)
    {
-      sector->c_asurfacecount = numattached;
-      sector->c_asurfaces = 
+      sector->srf.ceiling.asurfacecount = numattached;
+      sector->srf.ceiling.asurfaces =
          (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
-      memcpy(sector->c_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
+      memcpy(sector->srf.ceiling.asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
    else
    {
-      sector->f_asurfacecount = numattached;
-      sector->f_asurfaces = 
+      sector->srf.floor.asurfacecount = numattached;
+      sector->srf.floor.asurfaces =
          (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
-      memcpy(sector->f_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
+      memcpy(sector->srf.floor.asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
 }
 

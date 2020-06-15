@@ -67,7 +67,7 @@ result_e T_MoveFloorDown(sector_t *sector, fixed_t speed, fixed_t dest, int crus
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
    move3dsides  = (sector->srf.floor.attached && demo_version >= 331);
-   moveattached = (sector->f_asurfaces && demo_version >= 331);
+   moveattached = (sector->srf.floor.asurfaces && demo_version >= 331);
 
    // Moving a floor down
    if(sector->srf.floor.height - speed < dest)
@@ -176,7 +176,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
    move3dsides  = (sector->srf.floor.attached && demo_version >= 331);
-   moveattached = (sector->f_asurfaces && demo_version >= 331);
+   moveattached = (sector->srf.floor.asurfaces && demo_version >= 331);
 
    // Moving a floor up
    // jff 02/04/98 keep floor from moving thru ceilings
@@ -292,7 +292,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
    move3dsides  = (sector->srf.ceiling.attached && demo_version >= 331);
-   moveattached = (sector->c_asurfaces && demo_version >= 331);
+   moveattached = (sector->srf.ceiling.asurfaces && demo_version >= 331);
 
    // moving a ceiling down
    // jff 02/04/98 keep ceiling from moving thru floors
@@ -409,7 +409,7 @@ result_e T_MoveCeilingUp(sector_t *sector, fixed_t speed, fixed_t dest, int crus
    bool moveattached; // SoM: if set, check for and move attached sector surfaces.
 
    move3dsides  = (sector->srf.ceiling.attached && demo_version >= 331);
-   moveattached = (sector->c_asurfaces && demo_version >= 331);
+   moveattached = (sector->srf.ceiling.asurfaces && demo_version >= 331);
 
    // moving a ceiling up
    if(sector->srf.ceiling.height + speed > dest)

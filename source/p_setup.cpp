@@ -599,7 +599,7 @@ void P_InitSector(sector_t *ss)
    ss->srf.ceiling.attsectors = ss->srf.floor.attsectors = nullptr;
 
    // SoM 10/14/07:
-   ss->c_asurfaces = ss->f_asurfaces = nullptr;
+   ss->srf.ceiling.asurfaces = ss->srf.floor.asurfaces = nullptr;
 
    // SoM: init portals
    ss->c_pflags = ss->f_pflags = 0;
