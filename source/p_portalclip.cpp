@@ -67,8 +67,8 @@ static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
 static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
                              fixed_t &linetop)
 {
-   if(ld->frontsector->f_pflags & PS_PASSABLE &&
-      !(ld->frontsector->f_pflags & PF_ATTACHEDPORTAL) &&
+   if(ld->frontsector->srf.floor.pflags & PS_PASSABLE &&
+      !(ld->frontsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
       ld->frontsector->f_portal->data.link.planez > ld->frontsector->srf.floor.height)
    {
       linebottom = ld->frontsector->f_portal->data.link.planez;
@@ -76,8 +76,8 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
    else
       linebottom = ld->frontsector->srf.floor.height;
 
-   if(ld->frontsector->c_pflags & PS_PASSABLE &&
-      !(ld->frontsector->c_pflags & PF_ATTACHEDPORTAL) &&
+   if(ld->frontsector->srf.ceiling.pflags & PS_PASSABLE &&
+      !(ld->frontsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
       ld->frontsector->c_portal->data.link.planez <
       ld->frontsector->srf.ceiling.height)
    {
@@ -89,8 +89,8 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
    if(ld->backsector)
    {
       fixed_t bottomback;
-      if(ld->backsector->f_pflags & PS_PASSABLE &&
-         !(ld->backsector->f_pflags & PF_ATTACHEDPORTAL) &&
+      if(ld->backsector->srf.floor.pflags & PS_PASSABLE &&
+         !(ld->backsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
          ld->backsector->f_portal->data.link.planez >
          ld->backsector->srf.floor.height)
       {
@@ -102,8 +102,8 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
          linebottom = bottomback;
 
       fixed_t topback;
-      if(ld->backsector->c_pflags & PS_PASSABLE &&
-         !(ld->backsector->c_pflags & PF_ATTACHEDPORTAL) &&
+      if(ld->backsector->srf.ceiling.pflags & PS_PASSABLE &&
+         !(ld->backsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
          ld->backsector->c_portal->data.link.planez <
          ld->backsector->srf.ceiling.height)
       {

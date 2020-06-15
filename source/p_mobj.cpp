@@ -1259,24 +1259,21 @@ bool P_CheckPortalTeleport(Mobj *mobj)
 {
    struct opset_t
    {
-      unsigned sector_t::* pflags;
       fixed_t (*portalzfunc)(const sector_t &);
       bool (*comparison)(fixed_t, fixed_t);
       linkdata_t *(*plink)(const sector_t *);
       bool isceiling;
    };
 
-   static const opset_t opsets[2] =
+   const opset_t opsets[2] =
    {
       {
-         &sector_t::f_pflags,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; },
          R_FPLink,
          false
       },
       {
-         &sector_t::c_pflags,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a >= b; },
          R_CPLink,
@@ -1298,7 +1295,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       for(int j = 0; j < MAXIMUM_PER_TIC; ++j)  // allow checking if multiple portals were passed
       {
          const sector_t *sector = mobj->subsector->sector;
-         if(!(sector->*op.pflags & PS_PASSABLE))
+         if(!(sector->srf[i].pflags & PS_PASSABLE))
             break;
          fixed_t passheight, prevpassheight;
 

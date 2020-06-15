@@ -427,7 +427,7 @@ void P_ParticleThinker(void)
          particle->z = floorheight;
 
       // floor clipping
-      if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
+      if(particle->z < floorheight && psec->srf.floor.pflags & PS_PASSABLE)
       {
          const linkdata_t *ldata = R_FPLink(psec);
 
@@ -455,7 +455,7 @@ void P_ParticleThinker(void)
                E_PtclTerrainHit(particle);
          }
       }
-      else if(particle->z > psec->srf.ceiling.height && psec->c_pflags & PS_PASSABLE)
+      else if(particle->z > psec->srf.ceiling.height && psec->srf.ceiling.pflags & PS_PASSABLE)
       {
          const linkdata_t *ldata = R_CPLink(psec);
 

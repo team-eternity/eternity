@@ -257,7 +257,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    fixed_t slope;
 
    if(sector->srf.floor.height != osector->srf.floor.height ||
-      (!!(sector->f_pflags & PS_PASSABLE) ^ !!(osector->f_pflags & PS_PASSABLE)))
+      (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.openbottom - context.sightzstart, totalfrac);
       if(slope > context.state.bottomslope)
@@ -266,7 +266,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    }
 
    if(sector->srf.ceiling.height != osector->srf.ceiling.height ||
-      (!!(sector->c_pflags & PS_PASSABLE) ^ !!(osector->c_pflags & PS_PASSABLE)))
+      (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^ !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.opentop - context.sightzstart, totalfrac);
       if(slope < context.state.topslope)
@@ -278,7 +278,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 
    // have we hit a lower edge portal
    if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-      li->backsector->f_pflags & PS_PASSABLE &&
+      li->backsector->srf.floor.pflags & PS_PASSABLE &&
       context.state.bottomslope <=
       FixedDiv(li->backsector->srf.floor.height - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
@@ -297,7 +297,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    }
 
    if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
-      li->backsector->c_pflags & PS_PASSABLE &&
+      li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
       context.state.topslope >=
       FixedDiv(li->backsector->srf.ceiling.height - context.sightzstart, totalfrac) &&
       P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
@@ -355,7 +355,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    State newstate;
    bool result = false;
    
-   if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
+   if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
       (newfromid = sector->c_portal->data.link.toid) != params->cgroupid)
    {
       // ceiling portal (slope must be up)
@@ -408,7 +408,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       }
    }
 
-   if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE &&
+   if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
       (newfromid = sector->f_portal->data.link.toid) != params->cgroupid)
    {
       linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);

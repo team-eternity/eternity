@@ -240,33 +240,33 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          int balpha = us.alphafloor >= 1.0 ? 255 : us.alphafloor <= 0 ? 
             0 : int(round(255 * us.alphafloor));
          balpha = eclamp(balpha, 0, 255);
-         ss->f_pflags |= balpha << PO_OPACITYSHIFT;
-         ss->f_pflags |= us.portal_floor_blocksound ? PF_BLOCKSOUND : 0;
-         ss->f_pflags |= us.portal_floor_disabled ? PF_DISABLED : 0;
-         ss->f_pflags |= us.portal_floor_nopass ? PF_NOPASS : 0;
-         ss->f_pflags |= us.portal_floor_norender ? PF_NORENDER : 0;
+         ss->srf.floor.pflags |= balpha << PO_OPACITYSHIFT;
+         ss->srf.floor.pflags |= us.portal_floor_blocksound ? PF_BLOCKSOUND : 0;
+         ss->srf.floor.pflags |= us.portal_floor_disabled ? PF_DISABLED : 0;
+         ss->srf.floor.pflags |= us.portal_floor_nopass ? PF_NOPASS : 0;
+         ss->srf.floor.pflags |= us.portal_floor_norender ? PF_NORENDER : 0;
          if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_translucent))
-            ss->f_pflags |= PS_OVERLAY;
+            ss->srf.floor.pflags |= PS_OVERLAY;
          else if(!us.portal_floor_overlaytype.strCaseCmp(RENDERSTYLE_add))
-            ss->f_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
-         ss->f_pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
-         ss->f_pflags |= us.portal_floor_attached ? PF_ATTACHEDPORTAL : 0;
+            ss->srf.floor.pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
+         ss->srf.floor.pflags |= us.portal_floor_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->srf.floor.pflags |= us.portal_floor_attached ? PF_ATTACHEDPORTAL : 0;
 
          // Ceilings
          balpha = us.alphaceiling >= 1.0 ? 255 : us.alphaceiling <= 0 ? 
             0 : int(round(255 * us.alphaceiling));
          balpha = eclamp(balpha, 0, 255);
-         ss->c_pflags |= balpha << PO_OPACITYSHIFT;
-         ss->c_pflags |= us.portal_ceil_blocksound ? PF_BLOCKSOUND : 0;
-         ss->c_pflags |= us.portal_ceil_disabled ? PF_DISABLED : 0;
-         ss->c_pflags |= us.portal_ceil_nopass ? PF_NOPASS : 0;
-         ss->c_pflags |= us.portal_ceil_norender ? PF_NORENDER : 0;
+         ss->srf.ceiling.pflags |= balpha << PO_OPACITYSHIFT;
+         ss->srf.ceiling.pflags |= us.portal_ceil_blocksound ? PF_BLOCKSOUND : 0;
+         ss->srf.ceiling.pflags |= us.portal_ceil_disabled ? PF_DISABLED : 0;
+         ss->srf.ceiling.pflags |= us.portal_ceil_nopass ? PF_NOPASS : 0;
+         ss->srf.ceiling.pflags |= us.portal_ceil_norender ? PF_NORENDER : 0;
          if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_translucent))
-            ss->c_pflags |= PS_OVERLAY;
+            ss->srf.ceiling.pflags |= PS_OVERLAY;
          else if(!us.portal_ceil_overlaytype.strCaseCmp(RENDERSTYLE_add))
-            ss->c_pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
-         ss->c_pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
-         ss->c_pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
+            ss->srf.ceiling.pflags |= PS_OBLENDFLAGS; // PS_OBLENDFLAGS is PS_OVERLAY | PS_ADDITIVE
+         ss->srf.ceiling.pflags |= us.portal_ceil_useglobaltex ? PS_USEGLOBALTEX : 0;
+         ss->srf.ceiling.pflags |= us.portal_ceil_attached ? PF_ATTACHEDPORTAL : 0;
 
          ss->srf.floor.scale.x = static_cast<float>(us.xscalefloor);
          ss->srf.floor.scale.y = static_cast<float>(us.yscalefloor);

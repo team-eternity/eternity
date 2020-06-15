@@ -1751,7 +1751,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
       sector_t *sector = sectors + spr->sector;
 
       mh = M_FixedToFloat(sector->srf.floor.height) - view.z;
-      if(sector->f_pflags & PS_PASSABLE && sector->srf.floor.height > spr->gz)
+      if(sector->srf.floor.pflags & PS_PASSABLE && sector->srf.floor.height > spr->gz)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
@@ -1763,7 +1763,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
       }
 
       mh = M_FixedToFloat(sector->srf.ceiling.height) - view.z;
-      if(sector->c_pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
+      if(sector->srf.ceiling.pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
 
@@ -2031,13 +2031,13 @@ static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
    else
    {
       if(line.extflags & EX_ML_LOWERPORTAL &&
-         line.backsector->f_pflags & PS_PASSABLE &&
+         line.backsector->srf.floor.pflags & PS_PASSABLE &&
          mpi.mobj->z + mpi.scaledbottom < line.backsector->srf.floor.height)
       {
          data = &line.backsector->f_portal->data.link;
       }
       if(line.extflags & EX_ML_UPPERPORTAL &&
-         line.backsector->c_pflags & PS_PASSABLE &&
+         line.backsector->srf.ceiling.pflags & PS_PASSABLE &&
          mpi.mobj->z + mpi.scaledtop > line.backsector->srf.ceiling.height)
       {
          data2 = &line.backsector->c_portal->data.link;
@@ -2069,7 +2069,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    DLListItem<spriteprojnode_t> *item = mobj->spriteproj;
 
    if(mobj->flags & MF_NOSECTOR || overflown ||
-      (!(sector->f_pflags & PS_PASSABLE) && !(sector->c_pflags & PS_PASSABLE) &&
+      (!(sector->srf.floor.pflags & PS_PASSABLE) && !(sector->srf.ceiling.pflags & PS_PASSABLE) &&
        !checklines))
    {
       if(item)
@@ -2090,7 +2090,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    v3fixed_t delta = {0, 0, 0};
    int loopprot = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
-         sector->f_pflags & PS_PASSABLE &&
+         sector->srf.floor.pflags & PS_PASSABLE &&
          P_FloorPortalZ(*sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
    {
       // always accept first sector
@@ -2102,7 +2102,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    sector = mobj->subsector->sector;
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
-         sector->c_pflags & PS_PASSABLE &&
+         sector->srf.ceiling.pflags & PS_PASSABLE &&
          P_CeilingPortalZ(*sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
    {
       // always accept first sector

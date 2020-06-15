@@ -142,7 +142,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 
    fixed_t x, y;
 
-   if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
+   if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
       (newfromid = sector->c_portal->data.link.toid) != state.groupid)
    {
       // ceiling portal (slope must be up)
@@ -201,7 +201,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 
       }
    }
-   if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE &&
+   if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
       (newfromid = sector->f_portal->data.link.toid) != state.groupid)
    {
       linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
@@ -298,14 +298,14 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
    {
       {
          EX_ML_LOWERPORTAL,
-         li->backsector->f_pflags,
+         li->backsector->srf.floor.pflags,
          li->backsector->f_portal,
          state.bottomslope,
          FixedDiv(li->backsector->srf.floor.height - state.cz, totaldist),
       },
       {
          EX_ML_UPPERPORTAL,
-         li->backsector->c_pflags,
+         li->backsector->srf.ceiling.pflags,
          li->backsector->c_portal,
          -state.topslope,
          -FixedDiv(li->backsector->srf.ceiling.height - state.cz, totaldist),
@@ -380,15 +380,15 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       fixed_t slope;
 
       if(sector->srf.floor.height != osector->srf.floor.height ||
-         (!!(sector->f_pflags & PS_PASSABLE) ^ !!(osector->f_pflags & PS_PASSABLE)))
+         (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.openbottom - context.state.cz, totaldist);
          if(slope > context.state.bottomslope)
             context.state.bottomslope = slope;
       }
 
-      if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->c_pflags & PS_PASSABLE) ^
-                                                             !!(osector->c_pflags & PS_PASSABLE)))
+      if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^
+                                                             !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.opentop - context.state.cz, totaldist);
          if(slope < context.state.topslope)

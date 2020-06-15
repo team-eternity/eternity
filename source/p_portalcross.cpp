@@ -351,20 +351,20 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       return sector; // just return the current sector in this case
    }
 
-   auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
    auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
+   surf_e surf = ceiling ? surf_ceil : surf_floor;
 
    int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
-   while(sector->*pflags & PS_PASSABLE && loopprotection--)
+   while(sector->srf[surf].pflags & PS_PASSABLE && loopprotection--)
    {
       const linkdata_t &link = (sector->*portal)->data.link;
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
-      if((ceiling ? !(sector->c_pflags & PF_ATTACHEDPORTAL) &&
+      if((ceiling ? !(sector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
           sector->srf.ceiling.height < link.planez
-          : !(sector->f_pflags & PF_ATTACHEDPORTAL) &&
+          : !(sector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
           sector->srf.floor.height > link.planez) ||
          (!link.deltax && !link.deltay))
       {
@@ -529,8 +529,8 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             if(accessedgroupids[entry.ldata->toid])
                continue;
             if(entry.type == portalblocktype_e::sector &&
-               ((!entry.isceiling && !(entry.sector->f_pflags & PS_PASSABLE)) ||
-                ( entry.isceiling && !(entry.sector->c_pflags & PS_PASSABLE)) ))
+               ((!entry.isceiling && !(entry.sector->srf.floor.pflags & PS_PASSABLE)) ||
+                ( entry.isceiling && !(entry.sector->srf.ceiling.pflags & PS_PASSABLE)) ))
             {
                continue;   // be careful to skip concealed portals.
             }
@@ -614,9 +614,9 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
    fixed_t topz = mobj->z + mobj->height;
    if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
       return false;
-   if(sector->f_pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
+   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
       return false;
-   if(sector->c_pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
+   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
       return false;
    return true;
 }
@@ -649,14 +649,15 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
    groupVisit[cgroupid] = true;
 
-   unsigned sector_t::*pflags[2];
    portal_t *sector_t::*portal[2];
    uint8_t fcflag[2];
 
+   surf_e surfs[2];
+
    if(midzhint < cmidz)
    {
-      pflags[0] = &sector_t::f_pflags;
-      pflags[1] = &sector_t::c_pflags;
+      surfs[0] = surf_floor;
+      surfs[1] = surf_ceil;
       portal[0] = &sector_t::f_portal;
       portal[1] = &sector_t::c_portal;
       fcflag[0] = sector_t::floor;
@@ -664,8 +665,8 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
    }
    else
    {
-      pflags[0] = &sector_t::c_pflags;
-      pflags[1] = &sector_t::f_pflags;
+      surfs[0] = surf_ceil;
+      surfs[1] = surf_floor;
       portal[0] = &sector_t::c_portal;
       portal[1] = &sector_t::f_portal;
       fcflag[0] = sector_t::ceiling;
@@ -682,7 +683,7 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       x = cx;
       y = cy;
 
-      while(sector->*pflags[i] & PS_PASSABLE)
+      while(sector->srf[surfs[i]].pflags & PS_PASSABLE)
       {
          const linkdata_t &ldata = (sector->*portal[i])->data.link;
          x += ldata.deltax;

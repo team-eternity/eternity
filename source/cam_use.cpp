@@ -172,7 +172,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    if(li->pflags & PS_PASSABLE)
       portal = li->portal;
    else if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-      li->backsector->f_pflags & PS_PASSABLE)
+      li->backsector->srf.floor.pflags & PS_PASSABLE)
    {
       portal = li->backsector->f_portal;
    }

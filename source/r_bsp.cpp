@@ -620,42 +620,42 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
 
    if(sec->c_portal)
    {
-      if(sec->c_portal->type == R_LINKED && !(sec->c_pflags & PF_ATTACHEDPORTAL))
+      if(sec->c_portal->type == R_LINKED && !(sec->srf.ceiling.pflags & PF_ATTACHEDPORTAL))
       {
          if(sec->srf.ceiling.height < R_CPLink(sec)->planez)
          {
             tempsec->c_portal = NULL;
-            tempsec->c_pflags = 0;
+            tempsec->srf.ceiling.pflags = 0;
          }
          else
             P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
          sec = tempsec;
       }
-      else if(!(sec->c_pflags & PS_VISIBLE))
+      else if(!(sec->srf.ceiling.pflags & PS_VISIBLE))
       {
          tempsec->c_portal = NULL;
-         tempsec->c_pflags = 0;
+         tempsec->srf.ceiling.pflags = 0;
          sec = tempsec;
       }
    }
    if(sec->f_portal)
    {
-      if(sec->f_portal->type == R_LINKED && !(sec->f_pflags & PF_ATTACHEDPORTAL))
+      if(sec->f_portal->type == R_LINKED && !(sec->srf.floor.pflags & PF_ATTACHEDPORTAL))
       {
          if(sec->srf.floor.height > R_FPLink(sec)->planez)
          {
             tempsec->f_portal = NULL;
-            tempsec->f_pflags = 0;
+            tempsec->srf.floor.pflags = 0;
          }
          else
             P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
             
          sec = tempsec;
       }
-      else if(!(sec->f_pflags & PS_VISIBLE))
+      else if(!(sec->srf.floor.pflags & PS_VISIBLE))
       {
          tempsec->f_portal = NULL;
-         tempsec->f_pflags = 0;
+         tempsec->srf.floor.pflags = 0;
          sec = tempsec;
       }
    }
@@ -1178,7 +1178,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    
    markblend = seg.frontsec->c_portal != NULL 
          && seg.backsec->c_portal != NULL 
-         && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
+         && (seg.frontsec->srf.ceiling.pflags & PS_BLENDFLAGS) != (seg.backsec->srf.ceiling.pflags & PS_BLENDFLAGS);
 
    if(seg.c_portal)
    {
@@ -1258,7 +1258,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    markblend = seg.frontsec->f_portal != NULL
          && seg.backsec->f_portal != NULL
-         && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
+         && (seg.frontsec->srf.floor.pflags & PS_BLENDFLAGS) != (seg.backsec->srf.floor.pflags & PS_BLENDFLAGS);
 
    if(seg.f_portal)
    {
@@ -1462,7 +1462,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    
    markblend = seg.frontsec->c_portal != NULL 
             && seg.backsec->c_portal != NULL 
-            && (seg.frontsec->c_pflags & PS_BLENDFLAGS) != (seg.backsec->c_pflags & PS_BLENDFLAGS);
+            && (seg.frontsec->srf.ceiling.pflags & PS_BLENDFLAGS) != (seg.backsec->srf.ceiling.pflags & PS_BLENDFLAGS);
                
    if(mark || (marktheight && !blocktheight) || seg.clipsolid || frontc != backc || 
       seg.frontsec->srf.ceiling.offset != seg.backsec->srf.ceiling.offset ||
@@ -1540,7 +1540,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    markblend = seg.frontsec->f_portal != NULL
             && seg.backsec->f_portal != NULL
-            && (seg.frontsec->f_pflags & PS_BLENDFLAGS) != (seg.backsec->f_pflags & PS_BLENDFLAGS);
+            && (seg.frontsec->srf.floor.pflags & PS_BLENDFLAGS) != (seg.backsec->srf.floor.pflags & PS_BLENDFLAGS);
 
    if(mark || marktheight || seg.clipsolid ||
       seg.frontsec->srf.floor.height != seg.backsec->srf.floor.height ||
@@ -1745,7 +1745,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
 
    // SoM: these should be treated differently!
    if(seg.frontsec->c_portal && (seg.frontsec->c_portal->type < R_TWOWAY ||
-                                 (seg.frontsec->c_pflags & PS_VISIBLE && seg.frontsec->srf.ceiling.height > viewz)))
+                                 (seg.frontsec->srf.ceiling.pflags & PS_VISIBLE && seg.frontsec->srf.ceiling.height > viewz)))
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->c_portal,
@@ -1754,7 +1754,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    }
 
    if(seg.frontsec->f_portal && (seg.frontsec->f_portal->type < R_TWOWAY ||
-                                 (seg.frontsec->f_pflags & PS_VISIBLE && seg.frontsec->srf.floor.height <= viewz)))
+                                 (seg.frontsec->srf.floor.pflags & PS_VISIBLE && seg.frontsec->srf.floor.height <= viewz)))
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->f_portal,
@@ -2103,9 +2103,9 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    if(!seg.frontsec->f_slope && !seg.frontsec->c_slope &&
       seg.frontsec->srf.ceiling.height <= seg.frontsec->srf.floor.height &&
       !(seg.frontsec->intflags & SIF_SKY) &&
-      !((seg.frontsec->c_pflags & PS_PASSABLE && seg.frontsec->c_portal &&
+      !((seg.frontsec->srf.ceiling.pflags & PS_PASSABLE && seg.frontsec->c_portal &&
         viewz > P_CeilingPortalZ(*seg.frontsec)) ||
-        (seg.frontsec->f_pflags & PS_PASSABLE && seg.frontsec->f_portal &&
+        (seg.frontsec->srf.floor.pflags & PS_PASSABLE && seg.frontsec->f_portal &&
         viewz < P_FloorPortalZ(*seg.frontsec))))
       return;
 
@@ -2150,8 +2150,8 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       && seg.backsec->c_portal == seg.frontsec->c_portal
       && seg.backsec->f_portal == seg.frontsec->f_portal
 
-      && (seg.backsec->c_portal != NULL && (seg.backsec->c_pflags & PS_BLENDFLAGS) == (seg.frontsec->c_pflags & PS_BLENDFLAGS))
-      && (seg.backsec->f_portal != NULL && (seg.backsec->f_pflags & PS_BLENDFLAGS) == (seg.frontsec->f_pflags & PS_BLENDFLAGS))
+      && (seg.backsec->c_portal != NULL && (seg.backsec->srf.ceiling.pflags & PS_BLENDFLAGS) == (seg.frontsec->srf.ceiling.pflags & PS_BLENDFLAGS))
+      && (seg.backsec->f_portal != NULL && (seg.backsec->srf.floor.pflags & PS_BLENDFLAGS) == (seg.frontsec->srf.floor.pflags & PS_BLENDFLAGS))
 
       && !seg.line->linedef->portal
 
@@ -2737,7 +2737,7 @@ static void R_Subsector(int num)
                                 &seg.frontsec->f_slope->normalf) > 0.0f);
 
    // ioanch 20160118: ADDED A f_portal existence check!
-   seg.f_portal = seg.frontsec->f_pflags & PS_VISIBLE
+   seg.f_portal = seg.frontsec->srf.floor.pflags & PS_VISIBLE
                && (!portalrender.active || portalrender.w->type != pw_ceiling)
                && (visible ||
                (seg.frontsec->f_portal && seg.frontsec->f_portal->type < R_TWOWAY))
@@ -2746,12 +2746,12 @@ static void R_Subsector(int num)
    // This gets a little convoluted if you try to do it on one inequality
    if(seg.f_portal)
    {
-      unsigned int fpalpha = (seg.frontsec->f_pflags >> PO_OPACITYSHIFT) & 0xff;
+      unsigned int fpalpha = (seg.frontsec->srf.floor.pflags >> PO_OPACITYSHIFT) & 0xff;
       visible = (visible && (fpalpha > 0));
 
-      seg.floorplane = visible && seg.frontsec->f_pflags & PS_OVERLAY ?
+      seg.floorplane = visible && seg.frontsec->srf.floor.pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->srf.floor.height,
-                    seg.frontsec->f_pflags & PS_USEGLOBALTEX ?
+                    seg.frontsec->srf.floor.pflags & PS_USEGLOBALTEX ?
                     seg.f_portal->globaltex : seg.frontsec->srf.floor.pic,
                     floorlightlevel,                // killough 3/16/98
                     seg.frontsec->srf.floor.offset.x,       // killough 3/7/98
@@ -2759,7 +2759,7 @@ static void R_Subsector(int num)
                     seg.frontsec->srf.floor.scale.x,
                     seg.frontsec->srf.floor.scale.y,
                     floorangle, seg.frontsec->f_slope,
-                    seg.frontsec->f_pflags,
+                    seg.frontsec->srf.floor.pflags,
                     fpalpha,
                     seg.f_portal->poverlay) : NULL;
    }
@@ -2789,7 +2789,7 @@ static void R_Subsector(int num)
                                 &seg.frontsec->c_slope->normalf) > 0.0f);
 
    // ioanch 20160118: ADDED A c_portal existence check!
-   seg.c_portal = seg.frontsec->c_pflags & PS_VISIBLE
+   seg.c_portal = seg.frontsec->srf.ceiling.pflags & PS_VISIBLE
                && (!portalrender.active || portalrender.w->type != pw_floor)
                && (visible ||
                (seg.frontsec->c_portal && seg.frontsec->c_portal->type < R_TWOWAY))
@@ -2798,12 +2798,12 @@ static void R_Subsector(int num)
    // This gets a little convoluted if you try to do it on one inequality
    if(seg.c_portal)
    {
-      unsigned int cpalpha = (seg.frontsec->c_pflags >> PO_OPACITYSHIFT) & 0xff;
+      unsigned int cpalpha = (seg.frontsec->srf.ceiling.pflags >> PO_OPACITYSHIFT) & 0xff;
       visible = (visible && (cpalpha > 0));
 
-      seg.ceilingplane = visible && seg.frontsec->c_pflags & PS_OVERLAY ?
+      seg.ceilingplane = visible && seg.frontsec->srf.ceiling.pflags & PS_OVERLAY ?
         R_FindPlane(seg.frontsec->srf.ceiling.height,
-                    seg.frontsec->c_pflags & PS_USEGLOBALTEX ?
+                    seg.frontsec->srf.ceiling.pflags & PS_USEGLOBALTEX ?
                     seg.c_portal->globaltex : seg.frontsec->srf.ceiling.pic,
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->srf.ceiling.offset.x,       // killough 3/7/98
@@ -2811,7 +2811,7 @@ static void R_Subsector(int num)
                     seg.frontsec->srf.ceiling.scale.x,
                     seg.frontsec->srf.ceiling.scale.y,
                     ceilingangle, seg.frontsec->c_slope,
-                    seg.frontsec->c_pflags,
+                    seg.frontsec->srf.ceiling.pflags,
                     cpalpha,
                     seg.c_portal->poverlay) : NULL;
    }

@@ -217,8 +217,8 @@ bool PathTraverser::checkLine(size_t linenum)
    // ioanch 20151229: also check sectors
    const sector_t *fsec = ld->frontsector, *bsec = ld->backsector;
    if(ld->pflags & PS_PASSABLE
-      || (fsec && (fsec->c_pflags & PS_PASSABLE || fsec->f_pflags & PS_PASSABLE))
-      || (bsec && (bsec->c_pflags & PS_PASSABLE || bsec->f_pflags & PS_PASSABLE)))
+      || (fsec && (fsec->srf.ceiling.pflags & PS_PASSABLE || fsec->srf.floor.pflags & PS_PASSABLE))
+      || (bsec && (bsec->srf.ceiling.pflags & PS_PASSABLE || bsec->srf.floor.pflags & PS_PASSABLE)))
    {
       portalguard.addedportal = true;
    }
@@ -538,12 +538,12 @@ void lineopening_t::calculate(const line_t *linedef)
       back = beyond;
 
    // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL && back->c_pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
       opentop = front->srf.ceiling.height;
    else
       opentop = emin(front->srf.ceiling.height, back->srf.ceiling.height);
 
-   if(linedef->extflags & EX_ML_LOWERPORTAL && back->f_pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
       openbottom = front->srf.floor.height;
    else
       openbottom = emax(front->srf.floor.height, back->srf.floor.height);

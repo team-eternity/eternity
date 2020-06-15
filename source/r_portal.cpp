@@ -2081,8 +2081,8 @@ void R_ApplyPortal(line_t &line, int portal)
 //
 bool R_IsSkyLikePortalCeiling(const sector_t &sector)
 {
-   return sector.c_portal && !(sector.c_pflags & (PF_DISABLED | PF_NOPASS)) &&
-   (!(sector.c_pflags & PS_OVERLAY) || !(sector.c_pflags & PO_OPACITYMASK)) &&
+   return sector.c_portal && !(sector.srf.ceiling.pflags & (PF_DISABLED | PF_NOPASS)) &&
+   (!(sector.srf.ceiling.pflags & PS_OVERLAY) || !(sector.srf.ceiling.pflags & PO_OPACITYMASK)) &&
    (sector.c_portal->type == R_SKYBOX || sector.c_portal->type == R_HORIZON ||
     sector.c_portal->type == R_PLANE);
 }
@@ -2092,8 +2092,8 @@ bool R_IsSkyLikePortalCeiling(const sector_t &sector)
 //
 bool R_IsSkyLikePortalFloor(const sector_t &sector)
 {
-   return sector.f_portal && !(sector.f_pflags & (PF_DISABLED | PF_NOPASS)) &&
-      (!(sector.f_pflags & PS_OVERLAY) || !(sector.f_pflags & PO_OPACITYMASK)) &&
+   return sector.f_portal && !(sector.srf.floor.pflags & (PF_DISABLED | PF_NOPASS)) &&
+      (!(sector.srf.floor.pflags & PS_OVERLAY) || !(sector.srf.floor.pflags & PO_OPACITYMASK)) &&
       (sector.f_portal->type == R_SKYBOX || sector.f_portal->type == R_HORIZON ||
          sector.f_portal->type == R_PLANE);
 }

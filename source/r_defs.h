@@ -301,6 +301,9 @@ struct surface_t
    // sector's floor and/or ceiling
    int asurfacecount;
    attachedsurface_t *asurfaces;
+
+   // Flags for portals
+   unsigned pflags;
 };
 
 //
@@ -367,9 +370,6 @@ struct sector_t
    int linecount;
    line_t **lines;
 
-   // Flags for portals
-   unsigned int c_pflags, f_pflags;
-   
    // Portals
    portal_t *c_portal;
    portal_t *f_portal;

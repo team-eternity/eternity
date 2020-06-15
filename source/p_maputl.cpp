@@ -308,10 +308,10 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 &&
-         ((clip.openfrontsector->c_pflags & PS_PASSABLE &&
-         clip.openbacksector->c_pflags & PS_PASSABLE &&
+         ((clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
+         clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE &&
          clip.openfrontsector->c_portal == clip.openbacksector->c_portal) ||
-         (clip.openfrontsector->c_pflags & PS_PASSABLE &&
+         (clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
           linedef->pflags & PS_PASSABLE &&
           clip.openfrontsector->c_portal
           ->data.link.deltaEquals(linedef->portal->data.link))))
@@ -344,10 +344,10 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 &&
-         ((clip.openfrontsector->f_pflags & PS_PASSABLE &&
-         clip.openbacksector->f_pflags & PS_PASSABLE &&
+         ((clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
+         clip.openbacksector->srf.floor.pflags & PS_PASSABLE &&
          clip.openfrontsector->f_portal == clip.openbacksector->f_portal) ||
-          (clip.openfrontsector->f_pflags & PS_PASSABLE &&
+          (clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
            linedef->pflags & PS_PASSABLE &&
            clip.openfrontsector->f_portal
            ->data.link.deltaEquals(linedef->portal->data.link))))
@@ -374,7 +374,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       backfz = clip.openbacksector->srf.floor.height;
    }
 
-   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->c_pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE)
       clip.opentop = frontceilz;
    else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
@@ -382,11 +382,11 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.opentop = backceilz;
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
-   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->f_pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->srf.floor.pflags & PS_PASSABLE)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = frontfloorz;
-      if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
+      if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
          clip.floorpic = clip.openfrontsector->srf.floor.pic;
    }
    else if(frontfloorz > backfloorz)
@@ -394,7 +394,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.openbottom = frontfloorz;
       clip.lowfloor = backfloorz;
       // haleyjd
-      if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
+      if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
          clip.floorpic = clip.openfrontsector->srf.floor.pic;
    }
    else
@@ -402,7 +402,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.openbottom = backfloorz;
       clip.lowfloor = frontfloorz;
       // haleyjd
-      if(!portaldetect || !(clip.openbacksector->f_pflags & PS_PASSABLE))
+      if(!portaldetect || !(clip.openbacksector->srf.floor.pflags & PS_PASSABLE))
          clip.floorpic = clip.openbacksector->srf.floor.pic;
    }
 

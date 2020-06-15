@@ -413,7 +413,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    const sector_t *bottomfloorsector = newsubsec->sector;
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
-   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
+   if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE)
    {
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
             newsubsec->sector);
@@ -425,7 +425,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 
 #ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
-   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
+   if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
       clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
             newsubsec->sector)->srf.ceiling.height;
@@ -1923,11 +1923,11 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
          cond = dist < 0 ?                               // dropoff direction
          (ld->frontsector->srf.floor.height < mo->z ||
          (ld->frontsector->srf.floor.height == mo->z &&
-         ld->frontsector->f_pflags & PS_PASSABLE)) &&
+         ld->frontsector->srf.floor.pflags & PS_PASSABLE)) &&
          ld->backsector->srf.floor.height == mo->z :
          (ld->backsector->srf.floor.height < mo->z ||
          (ld->backsector->srf.floor.height == mo->z &&
-         ld->backsector->f_pflags & PS_PASSABLE)) &&
+         ld->backsector->srf.floor.pflags & PS_PASSABLE)) &&
          ld->frontsector->srf.floor.height == mo->z;
       }
 

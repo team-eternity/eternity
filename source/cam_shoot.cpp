@@ -124,7 +124,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    fixed_t z = state.z + FixedMul(params.aimslope,
                                   FixedMul(infrac, params.attackrange));
 
-   if(sidesector->c_pflags & PS_PASSABLE)
+   if(sidesector->srf.ceiling.pflags & PS_PASSABLE)
    {
       // ceiling portal
       fixed_t planez = P_CeilingPortalZ(*sidesector);
@@ -137,7 +137,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          newfromid = sidesector->c_portal->data.link.toid;
       }
    }
-   if(!portaldata && sidesector->f_pflags & PS_PASSABLE)
+   if(!portaldata && sidesector->srf.floor.pflags & PS_PASSABLE)
    {
       // floor portal
       fixed_t planez = P_FloorPortalZ(*sidesector);
@@ -244,14 +244,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;
          if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-            li->backsector->f_pflags & PS_PASSABLE &&
+            li->backsector->srf.floor.pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->srf.floor.height - context.state.z, dist)
             >= context.params.aimslope)
          {
             portal = li->backsector->f_portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
-            li->backsector->c_pflags & PS_PASSABLE &&
+            li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->srf.ceiling.height - context.state.z, dist)
             <= context.params.aimslope)
          {

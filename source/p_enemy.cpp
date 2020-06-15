@@ -106,7 +106,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
 #ifdef R_LINKEDPORTALS
-   if(sec->f_pflags & PS_PASSSOUND)
+   if(sec->srf.floor.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even
       // lines, the portal structure won't tell you what sector is on the
@@ -123,7 +123,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
    
-   if(sec->c_pflags & PS_PASSSOUND)
+   if(sec->srf.ceiling.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even 
       // lines, the portal structure won't tell you what sector is on the 

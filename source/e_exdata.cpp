@@ -1695,8 +1695,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->ceilingterrain = edsector->surface.ceiling.terrain;
 
    // per-sector portal properties
-   sector->f_pflags = (edsector->surface.floor.pflags | (edsector->surface.floor.alpha << PO_OPACITYSHIFT));
-   sector->c_pflags = (edsector->surface.ceiling.pflags | (edsector->surface.ceiling.alpha << PO_OPACITYSHIFT));
+   sector->srf.floor.pflags = (edsector->surface.floor.pflags | (edsector->surface.floor.alpha << PO_OPACITYSHIFT));
+   sector->srf.ceiling.pflags = (edsector->surface.ceiling.pflags | (edsector->surface.ceiling.alpha << PO_OPACITYSHIFT));
    
    if(sector->f_portal)
       P_CheckFPortalState(sector);

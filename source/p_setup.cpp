@@ -602,7 +602,7 @@ void P_InitSector(sector_t *ss)
    ss->srf.ceiling.asurfaces = ss->srf.floor.asurfaces = nullptr;
 
    // SoM: init portals
-   ss->c_pflags = ss->f_pflags = 0;
+   ss->srf.ceiling.pflags = ss->srf.floor.pflags = 0;
    ss->c_portal = ss->f_portal = nullptr;
    ss->groupid = R_NOGROUP;
 

@@ -109,21 +109,21 @@ struct chasetraverse_t
 static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector, 
    chasetraverse_t &traverse)
 {
-   static const struct surfaceset_t
+   const struct surfaceset_t
    {
-      unsigned sector_t::*pflags;
+      unsigned pflags;
       portal_t *sector_t::*portal;
       fixed_t(*pzfunc)(const sector_t &);
       bool(*compare)(fixed_t, fixed_t);
    } ssets[2] = {
       {
-         &sector_t::f_pflags,
+         sector->srf.floor.pflags,
          &sector_t::f_portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
       },
       {
-         &sector_t::c_pflags,
+         sector->srf.ceiling.pflags,
          &sector_t::c_portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
@@ -133,7 +133,7 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
    {
       const auto &s = ssets[i];
       fixed_t pz = s.pzfunc(*sector);
-      if(sector->*s.pflags & PS_PASSABLE && s.compare(z, pz))
+      if(s.pflags & PS_PASSABLE && s.compare(z, pz))
       {
          if(!s.compare(pz, traverse.startz))
             pz = traverse.startz;
@@ -166,7 +166,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
    } ssets[2] = {
       {
          EX_ML_LOWERPORTAL,
-         li->backsector->f_pflags,
+         li->backsector->srf.floor.pflags,
          li->frontsector->srf.floor.height,
          li->backsector->f_portal,
          P_FloorPortalZ,
@@ -174,7 +174,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
       },
       {
          EX_ML_UPPERPORTAL,
-         li->backsector->c_pflags,
+         li->backsector->srf.ceiling.pflags,
          li->frontsector->srf.ceiling.height,
          li->backsector->c_portal,
          P_CeilingPortalZ,
@@ -363,9 +363,9 @@ static void P_GetChasecamTarget()
    fixed_t ceilingheight = ss->sector->srf.ceiling.height;
 
    // don't aim above the ceiling or below the floor
-   if(!(ss->sector->f_pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
+   if(!(ss->sector->srf.floor.pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
       pCamTarget.z = floorheight + 10 * FRACUNIT;
-   if(!(ss->sector->c_pflags & PS_PASSABLE) && pCamTarget.z > ceilingheight - 10 * FRACUNIT)
+   if(!(ss->sector->srf.ceiling.pflags & PS_PASSABLE) && pCamTarget.z > ceilingheight - 10 * FRACUNIT)
       pCamTarget.z = ceilingheight - 10 * FRACUNIT;
 }
 
@@ -501,24 +501,24 @@ static void P_checkWalkcamSectorPortal(const sector_t *sector)
 {
    struct opset_t
    {
-      unsigned sector_t::* pflags;
+      unsigned pflags;
       fixed_t(*portalzfunc)(const sector_t &);
       bool(*comparison)(fixed_t, fixed_t);
       linkdata_t *(*plink)(const sector_t *);
       bool isceiling;
    };
 
-   static const opset_t opsets[2] =
+   const opset_t opsets[2] =
    {
       {
-         &sector_t::f_pflags,
+         sector->srf.floor.pflags,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; },
          R_FPLink,
          false
       },
       {
-         &sector_t::c_pflags,
+         sector->srf.ceiling.pflags,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a >= b; },
          R_CPLink,
@@ -535,7 +535,7 @@ static void P_checkWalkcamSectorPortal(const sector_t *sector)
       const auto &op = opsets[i];
       for(int j = 0; j < MAXIMUM_PER_TIC; ++j)
       {
-         if(!(sector->*op.pflags & PS_PASSABLE))
+         if(!(op.pflags & PS_PASSABLE))
             break;
          fixed_t planez = op.portalzfunc(*sector);
          if(!op.comparison(walkcamera.z, planez))
