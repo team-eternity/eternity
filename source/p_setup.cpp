@@ -568,11 +568,11 @@ void P_InitSector(sector_t *ss)
 
    // killough 3/7/98:
    ss->heightsec     = -1;   // sector used to get floor and ceiling height
-   ss->floorlightsec = -1;   // sector used to get floor lighting
+   ss->srf.floor.lightsec = -1;   // sector used to get floor lighting
    // killough 3/7/98: end changes
 
    // killough 4/11/98 sector used to get ceiling lighting:
-   ss->ceilinglightsec = -1;
+   ss->srf.ceiling.lightsec = -1;
 
    // killough 4/4/98: colormaps:
    // haleyjd 03/04/07: modifications for per-sector colormap logic

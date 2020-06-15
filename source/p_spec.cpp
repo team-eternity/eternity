@@ -1432,7 +1432,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_LIGHT_TRANSFER_FLOOR:
          sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
-            sectors[s].floorlightsec = sec;
+            sectors[s].srf.floor.lightsec = sec;
          break;
 
          // killough 4/11/98: Add support for setting
@@ -1440,7 +1440,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_LIGHT_TRANSFER_CEILING:
          sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
-            sectors[s].ceilinglightsec = sec;
+            sectors[s].srf.ceiling.lightsec = sec;
          break;
 
          // killough 10/98:
