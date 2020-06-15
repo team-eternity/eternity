@@ -235,18 +235,28 @@ enum surf_e
 // More convenient than raw array. Must be POD
 //
 template<typename T>
-struct Surfaces
+union Surfaces
 {
    // THESE MUST BE the same order as the surf_e enum
-   T floor;
-   T ceiling;
+   struct
+   {
+      T floor;
+      T ceiling;
+   };
+   T items[2];
+
+   Surfaces() = default;
+   Surfaces(const T &first, const T &second) : floor(first), ceiling(second)
+   {
+   }
+   
    T &operator[](int surf)
    {
-      return surf == surf_ceil ? ceiling : floor;
+      return items[surf];
    }
    const T &operator[](int surf) const
    {
-      return surf == surf_ceil ? ceiling : floor;
+      return items[surf];
    }
    template<typename FUNC, typename U>
    void operate(FUNC &&func, const Surfaces<U> &other)
