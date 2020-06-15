@@ -286,6 +286,9 @@ struct surface_t
 
    // killough 4/11/98: support for lightlevels coming from another sector
    int lightsec;
+
+   // ioanch: UDMF-given floor and ceiling delta light level
+   int16_t lightdelta;
 };
 
 //
@@ -333,9 +336,6 @@ struct sector_t
 
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector
-   
-   // ioanch: UDMF-given floor and ceiling delta light level
-   int16_t floorlightdelta, ceilinglightdelta;
    
    int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
    

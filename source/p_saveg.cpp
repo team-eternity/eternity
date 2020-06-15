@@ -675,7 +675,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
           << sec->damagemod
           << sec->srf.floor.pic << sec->srf.ceiling.pic
           << sec->lightlevel << sec->oldlightlevel
-          << sec->floorlightdelta << sec->ceilinglightdelta
+          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
