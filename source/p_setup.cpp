@@ -594,9 +594,9 @@ void P_InitSector(sector_t *ss)
    //   ((ss->intflags & SIF_SKY) ? global_fog_index : global_cmap_index);
 
    // SoM 9/19/02: Initialize the attached sector list for 3dsides
-   ss->c_attached = ss->f_attached = nullptr;
+   ss->srf.ceiling.attached = ss->srf.floor.attached = nullptr;
    // SoM 11/9/04: 
-   ss->c_attsectors = ss->f_attsectors = nullptr;
+   ss->srf.ceiling.attsectors = ss->srf.floor.attsectors = nullptr;
 
    // SoM 10/14/07:
    ss->c_asurfaces = ss->f_asurfaces = nullptr;

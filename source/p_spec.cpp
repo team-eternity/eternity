@@ -2084,17 +2084,17 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
    if(ceiling)
    {
-      numattached = sector->c_numattached;
-      attached = sector->c_attached;
-      numattsectors = sector->c_numsectors;
-      attsectors = sector->c_attsectors;
+      numattached = sector->srf.ceiling.numattached;
+      attached = sector->srf.ceiling.attached;
+      numattsectors = sector->srf.ceiling.numsectors;
+      attsectors = sector->srf.ceiling.attsectors;
    }
    else
    {
-      numattached = sector->f_numattached;
-      attached = sector->f_attached;
-      numattsectors = sector->f_numsectors;
-      attsectors = sector->f_attsectors;
+      numattached = sector->srf.floor.numattached;
+      attached = sector->srf.floor.attached;
+      numattsectors = sector->srf.floor.numsectors;
+      attsectors = sector->srf.floor.attsectors;
    }
 
    // Go through the sectors list one sector at a time.
@@ -2188,9 +2188,9 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
    // Check to ensure that this sector doesn't already 
    // have attachments.
-   if(!ceiling && cline->frontsector->f_numattached)
+   if(!ceiling && cline->frontsector->srf.floor.numattached)
    {
-      numattach = cline->frontsector->f_numattached;
+      numattach = cline->frontsector->srf.floor.numattached;
 
       if(numattach >= maxattach)
       {
@@ -2198,15 +2198,15 @@ void P_AttachLines(const line_t *cline, bool ceiling)
          attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
-      memcpy(attached, cline->frontsector->f_attached, sizeof(int) * numattach);
-      Z_Free(cline->frontsector->f_attached);
-      cline->frontsector->f_attached = NULL;
-      cline->frontsector->f_numattached = 0;
-      Z_Free(cline->frontsector->f_attsectors);
+      memcpy(attached, cline->frontsector->srf.floor.attached, sizeof(int) * numattach);
+      Z_Free(cline->frontsector->srf.floor.attached);
+      cline->frontsector->srf.floor.attached = NULL;
+      cline->frontsector->srf.floor.numattached = 0;
+      Z_Free(cline->frontsector->srf.floor.attsectors);
    }
-   else if(ceiling && cline->frontsector->c_numattached)
+   else if(ceiling && cline->frontsector->srf.ceiling.numattached)
    {
-      numattach = cline->frontsector->c_numattached;
+      numattach = cline->frontsector->srf.ceiling.numattached;
 
       if(numattach >= maxattach)
       {
@@ -2218,11 +2218,11 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       if(!attached)
          I_Error("P_AttachLines: no attached list\n");
 
-      memcpy(attached, cline->frontsector->c_attached, sizeof(int) * numattach);
-      Z_Free(cline->frontsector->c_attached);
-      cline->frontsector->c_attached = NULL;
-      cline->frontsector->c_numattached = 0;
-      Z_Free(cline->frontsector->c_attsectors);
+      memcpy(attached, cline->frontsector->srf.ceiling.attached, sizeof(int) * numattach);
+      Z_Free(cline->frontsector->srf.ceiling.attached);
+      cline->frontsector->srf.ceiling.attached = NULL;
+      cline->frontsector->srf.ceiling.numattached = 0;
+      Z_Free(cline->frontsector->srf.ceiling.attsectors);
    }
 
    // ioanch: param specisl
@@ -2282,21 +2282,21 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    // Copy the list to the c_attached or f_attached list.
    if(ceiling)
    {
-      cline->frontsector->c_numattached = numattach;
-      cline->frontsector->c_attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->c_attached, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.ceiling.numattached = numattach;
+      cline->frontsector->srf.ceiling.attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      memcpy(cline->frontsector->srf.ceiling.attached, attached, sizeof(int) * numattach);
 
-      alist = cline->frontsector->c_attached;
-      alistsize = cline->frontsector->c_numattached;
+      alist = cline->frontsector->srf.ceiling.attached;
+      alistsize = cline->frontsector->srf.ceiling.numattached;
    }
    else
    {
-      cline->frontsector->f_numattached = numattach;
-      cline->frontsector->f_attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->f_attached, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.floor.numattached = numattach;
+      cline->frontsector->srf.floor.attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      memcpy(cline->frontsector->srf.floor.attached, attached, sizeof(int) * numattach);
 
-      alist = cline->frontsector->f_attached;
-      alistsize = cline->frontsector->f_numattached;
+      alist = cline->frontsector->srf.floor.attached;
+      alistsize = cline->frontsector->srf.floor.numattached;
    }
 
    // (re)create the sectors list.
@@ -2344,15 +2344,15 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    // Copy the attached sectors list.
    if(ceiling)
    {
-      cline->frontsector->c_numsectors = numattach;
-      cline->frontsector->c_attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->c_attsectors, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.ceiling.numsectors = numattach;
+      cline->frontsector->srf.ceiling.attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      memcpy(cline->frontsector->srf.ceiling.attsectors, attached, sizeof(int) * numattach);
    }
    else
    {
-      cline->frontsector->f_numsectors = numattach;
-      cline->frontsector->f_attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->f_attsectors, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.floor.numsectors = numattach;
+      cline->frontsector->srf.floor.attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      memcpy(cline->frontsector->srf.floor.attsectors, attached, sizeof(int) * numattach);
    }
 }
 

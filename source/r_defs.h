@@ -289,6 +289,13 @@ struct surface_t
 
    // ioanch: UDMF-given floor and ceiling delta light level
    int16_t lightdelta;
+
+   // SoM 9/19/02: Better way to move 3dsides with a sector.
+   // SoM 11/09/04: Improved yet again!
+   int numattached;
+   int *attached;
+   int numsectors;
+   int *attsectors;
 };
 
 //
@@ -354,19 +361,6 @@ struct sector_t
    
    int linecount;
    line_t **lines;
-
-   // SoM 9/19/02: Better way to move 3dsides with a sector.
-   // SoM 11/09/04: Improved yet again!
-   int f_numattached;
-   int *f_attached;
-   int f_numsectors;
-   int *f_attsectors;
-
-   int c_numattached;
-   int *c_attached;
-   int c_numsectors;
-   int *c_attsectors;
-
 
    // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
    // sector's floor and/or ceiling
