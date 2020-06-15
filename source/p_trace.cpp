@@ -597,7 +597,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // don't shoot the sky
       // don't shoot ceiling portals either
-      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->c_portal)
+      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
       {
          // don't shoot the sky!
          if(z > li->frontsector->srf.ceiling.height)

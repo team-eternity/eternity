@@ -69,19 +69,19 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
 {
    if(ld->frontsector->srf.floor.pflags & PS_PASSABLE &&
       !(ld->frontsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->f_portal->data.link.planez > ld->frontsector->srf.floor.height)
+      ld->frontsector->srf.floor.portal->data.link.planez > ld->frontsector->srf.floor.height)
    {
-      linebottom = ld->frontsector->f_portal->data.link.planez;
+      linebottom = ld->frontsector->srf.floor.portal->data.link.planez;
    }
    else
       linebottom = ld->frontsector->srf.floor.height;
 
    if(ld->frontsector->srf.ceiling.pflags & PS_PASSABLE &&
       !(ld->frontsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->c_portal->data.link.planez <
+      ld->frontsector->srf.ceiling.portal->data.link.planez <
       ld->frontsector->srf.ceiling.height)
    {
-      linetop = ld->frontsector->c_portal->data.link.planez;
+      linetop = ld->frontsector->srf.ceiling.portal->data.link.planez;
    }
    else
       linetop = ld->frontsector->srf.ceiling.height;
@@ -91,10 +91,10 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
       fixed_t bottomback;
       if(ld->backsector->srf.floor.pflags & PS_PASSABLE &&
          !(ld->backsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->f_portal->data.link.planez >
+         ld->backsector->srf.floor.portal->data.link.planez >
          ld->backsector->srf.floor.height)
       {
-         bottomback = ld->backsector->f_portal->data.link.planez;
+         bottomback = ld->backsector->srf.floor.portal->data.link.planez;
       }
       else
          bottomback = ld->backsector->srf.floor.height;
@@ -104,10 +104,10 @@ static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
       fixed_t topback;
       if(ld->backsector->srf.ceiling.pflags & PS_PASSABLE &&
          !(ld->backsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->c_portal->data.link.planez <
+         ld->backsector->srf.ceiling.portal->data.link.planez <
          ld->backsector->srf.ceiling.height)
       {
-         topback = ld->backsector->c_portal->data.link.planez;
+         topback = ld->backsector->srf.ceiling.portal->data.link.planez;
       }
       else
          topback = ld->backsector->srf.ceiling.height;

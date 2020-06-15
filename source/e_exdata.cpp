@@ -1698,9 +1698,9 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->srf.floor.pflags = (edsector->surface.floor.pflags | (edsector->surface.floor.alpha << PO_OPACITYSHIFT));
    sector->srf.ceiling.pflags = (edsector->surface.ceiling.pflags | (edsector->surface.ceiling.alpha << PO_OPACITYSHIFT));
    
-   if(sector->f_portal)
+   if(sector->srf.floor.portal)
       P_CheckFPortalState(sector);
-   if(sector->c_portal)
+   if(sector->srf.ceiling.portal)
       P_CheckCPortalState(sector);
    
    setupSettings.setSectorPortals(eindex(sector - sectors), edsector->surface.ceiling.portalid,

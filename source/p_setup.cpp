@@ -603,7 +603,7 @@ void P_InitSector(sector_t *ss)
 
    // SoM: init portals
    ss->srf.ceiling.pflags = ss->srf.floor.pflags = 0;
-   ss->c_portal = ss->f_portal = nullptr;
+   ss->srf.ceiling.portal = ss->srf.floor.portal = nullptr;
    ss->groupid = R_NOGROUP;
 
    // SoM: These are kept current with floorheight and ceilingheight now

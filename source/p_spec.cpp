@@ -2790,15 +2790,15 @@ void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect ef
    switch(effects)
    {
    case portal_ceiling:
-      sec->c_portal = portal;
+      sec->srf.ceiling.portal = portal;
       P_CheckCPortalState(sec);
       break;
    case portal_floor:
-      sec->f_portal = portal;
+      sec->srf.floor.portal = portal;
       P_CheckFPortalState(sec);
       break;
    case portal_both:
-      sec->c_portal = sec->f_portal = portal;
+      sec->srf.ceiling.portal = sec->srf.floor.portal = portal;
       P_CheckCPortalState(sec);
       P_CheckFPortalState(sec);
       break;
@@ -2951,10 +2951,10 @@ static void P_copyParamPortalSector(line_t *line)
    portal_t *fportal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
-      if(sectors[s].c_portal)
-         cportal = sectors[s].c_portal;
-      if(sectors[s].f_portal)
-         fportal = sectors[s].f_portal;
+      if(sectors[s].srf.ceiling.portal)
+         cportal = sectors[s].srf.ceiling.portal;
+      if(sectors[s].srf.floor.portal)
+         fportal = sectors[s].srf.floor.portal;
       if(cportal && fportal)
          break;
    }
@@ -2993,14 +2993,14 @@ static void P_copyParamPortalLine(line_t *line)
    portal_t *portal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
-      if(sectors[s].c_portal) // ceiling portal has priority
+      if(sectors[s].srf.ceiling.portal) // ceiling portal has priority
       {
-         portal = sectors[s].c_portal;
+         portal = sectors[s].srf.ceiling.portal;
          break;
       }
-      if(!portal && sectors[s].f_portal)
+      if(!portal && sectors[s].srf.floor.portal)
       {
-         portal = sectors[s].f_portal;
+         portal = sectors[s].srf.floor.portal;
          break;
       }
    }

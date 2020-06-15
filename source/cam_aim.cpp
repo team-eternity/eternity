@@ -143,7 +143,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    fixed_t x, y;
 
    if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
-      (newfromid = sector->c_portal->data.link.toid) != state.groupid)
+      (newfromid = sector->srf.ceiling.portal->data.link.toid) != state.groupid)
    {
       // ceiling portal (slope must be up)
       linehitz = state.cz + FixedMul(state.topslope, totalfrac);
@@ -202,7 +202,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
       }
    }
    if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
-      (newfromid = sector->f_portal->data.link.toid) != state.groupid)
+      (newfromid = sector->srf.floor.portal->data.link.toid) != state.groupid)
    {
       linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
       fixed_t planez = P_FloorPortalZ(*sector);
@@ -299,14 +299,14 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
       {
          EX_ML_LOWERPORTAL,
          li->backsector->srf.floor.pflags,
-         li->backsector->f_portal,
+         li->backsector->srf.floor.portal,
          state.bottomslope,
          FixedDiv(li->backsector->srf.floor.height - state.cz, totaldist),
       },
       {
          EX_ML_UPPERPORTAL,
          li->backsector->srf.ceiling.pflags,
-         li->backsector->c_portal,
+         li->backsector->srf.ceiling.portal,
          -state.topslope,
          -FixedDiv(li->backsector->srf.ceiling.height - state.cz, totaldist),
       },

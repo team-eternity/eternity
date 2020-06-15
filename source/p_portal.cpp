@@ -523,9 +523,9 @@ static void P_GlobalPortalStateCheck()
    {
       sec = sectors + i;
       
-      if(sec->c_portal)
+      if(sec->srf.ceiling.portal)
          P_CheckCPortalState(sec);
-      if(sec->f_portal)
+      if(sec->srf.floor.portal)
          P_CheckFPortalState(sec);
    }
    
@@ -585,12 +585,12 @@ static void P_buildPortalMap()
                ::bmaporgx + (x << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2),
                ::bmaporgy + (y << MAPBLOCKSHIFT) + (MAPBLOCKSHIFT / 2))->sector;
 
-            if(sector->c_portal && sector->c_portal->type == R_LINKED)
+            if(sector->srf.ceiling.portal && sector->srf.ceiling.portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                gMapHasSectorPortals = true;
             }
-            if(sector->f_portal && sector->f_portal->type == R_LINKED)
+            if(sector->srf.floor.portal && sector->srf.floor.portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                gMapHasSectorPortals = true;
@@ -604,22 +604,22 @@ static void P_buildPortalMap()
                portalmap[writeOfs] |= PMF_LINE;
                gMapHasLinePortals = true;
             }
-            if(li.frontsector->c_portal && li.frontsector->c_portal->type == R_LINKED)
+            if(li.frontsector->srf.ceiling.portal && li.frontsector->srf.ceiling.portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                gMapHasSectorPortals = true;
             }
-            if(li.backsector && li.backsector->c_portal && li.backsector->c_portal->type == R_LINKED)
+            if(li.backsector && li.backsector->srf.ceiling.portal && li.backsector->srf.ceiling.portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_CEILING;
                gMapHasSectorPortals = true;
             }
-            if(li.frontsector->f_portal && li.frontsector->f_portal->type == R_LINKED)
+            if(li.frontsector->srf.floor.portal && li.frontsector->srf.floor.portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                gMapHasSectorPortals = true;
             }
-            if(li.backsector && li.backsector->f_portal && li.backsector->f_portal->type == R_LINKED)
+            if(li.backsector && li.backsector->srf.floor.portal && li.backsector->srf.floor.portal->type == R_LINKED)
             {
                portalmap[writeOfs] |= PMF_FLOOR;
                gMapHasSectorPortals = true;
@@ -706,10 +706,10 @@ bool P_BuildLinkTable()
          return false;
       }
 
-      if(!P_CheckLinkedPortal(sec->c_portal, sec))
+      if(!P_CheckLinkedPortal(sec->srf.ceiling.portal, sec))
          return false;
 
-      if(!P_CheckLinkedPortal(sec->f_portal, sec))
+      if(!P_CheckLinkedPortal(sec->srf.floor.portal, sec))
          return false;
 
       for(p = 0; p < sec->linecount; p++)
@@ -998,34 +998,34 @@ void P_CheckCPortalState(sector_t *sec)
 {
    bool     obscured;
 
-   if(!sec->c_portal)
+   if(!sec->srf.ceiling.portal)
    {
       sec->srf.ceiling.pflags = 0;
       return;
    }
 
-   obscured = (sec->c_portal->type == R_LINKED &&
+   obscured = (sec->srf.ceiling.portal->type == R_LINKED &&
                !(sec->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-               sec->srf.ceiling.height < sec->c_portal->data.link.planez);
+               sec->srf.ceiling.height < sec->srf.ceiling.portal->data.link.planez);
 
-   sec->srf.ceiling.pflags = P_GetPortalState(sec->c_portal, sec->srf.ceiling.pflags, obscured);
+   sec->srf.ceiling.pflags = P_GetPortalState(sec->srf.ceiling.portal, sec->srf.ceiling.pflags, obscured);
 }
 
 void P_CheckFPortalState(sector_t *sec)
 {
    bool     obscured;
 
-   if(!sec->f_portal)
+   if(!sec->srf.floor.portal)
    {
       sec->srf.floor.pflags = 0;
       return;
    }
 
-   obscured = (sec->f_portal->type == R_LINKED &&
+   obscured = (sec->srf.floor.portal->type == R_LINKED &&
                !(sec->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-               sec->srf.floor.height > sec->f_portal->data.link.planez);
+               sec->srf.floor.height > sec->srf.floor.portal->data.link.planez);
 
-   sec->srf.floor.pflags = P_GetPortalState(sec->f_portal, sec->srf.floor.pflags, obscured);
+   sec->srf.floor.pflags = P_GetPortalState(sec->srf.floor.portal, sec->srf.floor.pflags, obscured);
 }
 
 void P_CheckLPortalState(line_t *line)
@@ -1080,9 +1080,9 @@ void P_SetPortalBehavior(portal_t *portal, int newbehavior)
    {
       sector_t *sec = sectors + i;
       
-      if(sec->c_portal == portal)
+      if(sec->srf.ceiling.portal == portal)
          P_CheckCPortalState(sec);
-      if(sec->f_portal == portal)
+      if(sec->srf.floor.portal == portal)
          P_CheckFPortalState(sec);
    }
    
@@ -1095,7 +1095,7 @@ void P_SetPortalBehavior(portal_t *portal, int newbehavior)
 
 void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
 {
-   if(!sec->f_portal)
+   if(!sec->srf.floor.portal)
       return;
       
    sec->srf.floor.pflags = newbehavior;
@@ -1104,7 +1104,7 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
 
 void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
 {
-   if(!sec->c_portal)
+   if(!sec->srf.ceiling.portal)
       return;
       
    sec->srf.ceiling.pflags = newbehavior;
@@ -1187,9 +1187,9 @@ void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
 //
 fixed_t P_CeilingPortalZ(const sector_t &sector)
 {
-   return !sector.c_portal || sector.c_portal->type != R_LINKED ||
+   return !sector.srf.ceiling.portal || sector.srf.ceiling.portal->type != R_LINKED ||
    sector.srf.ceiling.pflags & PF_ATTACHEDPORTAL ?
-   sector.srf.ceiling.height : sector.c_portal->data.link.planez;
+   sector.srf.ceiling.height : sector.srf.ceiling.portal->data.link.planez;
 }
 
 //
@@ -1197,9 +1197,9 @@ fixed_t P_CeilingPortalZ(const sector_t &sector)
 //
 fixed_t P_FloorPortalZ(const sector_t &sector)
 {
-   return !sector.f_portal || sector.f_portal->type != R_LINKED ||
+   return !sector.srf.floor.portal || sector.srf.floor.portal->type != R_LINKED ||
    sector.srf.floor.pflags & PF_ATTACHEDPORTAL ?
-   sector.srf.floor.height : sector.f_portal->data.link.planez;
+   sector.srf.floor.height : sector.srf.floor.portal->data.link.planez;
 }
 
 //

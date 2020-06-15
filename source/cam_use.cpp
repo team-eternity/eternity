@@ -174,7 +174,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    else if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
       li->backsector->srf.floor.pflags & PS_PASSABLE)
    {
-      portal = li->backsector->f_portal;
+      portal = li->backsector->srf.floor.portal;
    }
    if(portal && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
    {

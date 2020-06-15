@@ -134,7 +134,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
          portaldata = R_CPLink(sidesector);
-         newfromid = sidesector->c_portal->data.link.toid;
+         newfromid = sidesector->srf.ceiling.portal->data.link.toid;
       }
    }
    if(!portaldata && sidesector->srf.floor.pflags & PS_PASSABLE)
@@ -147,7 +147,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
          portaldata = R_FPLink(sidesector);
-         newfromid = sidesector->f_portal->data.link.toid;
+         newfromid = sidesector->srf.floor.portal->data.link.toid;
       }
    }
    if(portaldata && pfrac > 0)
@@ -248,14 +248,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             FixedDiv(li->backsector->srf.floor.height - context.state.z, dist)
             >= context.params.aimslope)
          {
-            portal = li->backsector->f_portal;
+            portal = li->backsector->srf.floor.portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
             li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
             FixedDiv(li->backsector->srf.ceiling.height - context.state.z, dist)
             <= context.params.aimslope)
          {
-            portal = li->backsector->c_portal;
+            portal = li->backsector->srf.ceiling.portal;
          }
          else if(li->pflags & PS_PASSABLE &&
             (!(li->extflags & EX_ML_LOWERPORTAL) ||
@@ -366,7 +366,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(!hitplane && li->special)
          P_ShootSpecialLine(context.params.thing, li, lineside);
 
-      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->c_portal)
+      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
       {
          if(z > li->frontsector->srf.ceiling.height)
             return false;

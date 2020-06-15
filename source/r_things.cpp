@@ -2034,13 +2034,13 @@ static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
          line.backsector->srf.floor.pflags & PS_PASSABLE &&
          mpi.mobj->z + mpi.scaledbottom < line.backsector->srf.floor.height)
       {
-         data = &line.backsector->f_portal->data.link;
+         data = &line.backsector->srf.floor.portal->data.link;
       }
       if(line.extflags & EX_ML_UPPERPORTAL &&
          line.backsector->srf.ceiling.pflags & PS_PASSABLE &&
          mpi.mobj->z + mpi.scaledtop > line.backsector->srf.ceiling.height)
       {
-         data2 = &line.backsector->c_portal->data.link;
+         data2 = &line.backsector->srf.ceiling.portal->data.link;
       }
    }
    v3fixed_t v = { 0, 0, 0 };

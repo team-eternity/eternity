@@ -351,14 +351,13 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       return sector; // just return the current sector in this case
    }
 
-   auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
    surf_e surf = ceiling ? surf_ceil : surf_floor;
 
    int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    while(sector->srf[surf].pflags & PS_PASSABLE && loopprotection--)
    {
-      const linkdata_t &link = (sector->*portal)->data.link;
+      const linkdata_t &link = sector->srf[surf].portal->data.link;
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
@@ -649,7 +648,6 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
    groupVisit[cgroupid] = true;
 
-   portal_t *sector_t::*portal[2];
    uint8_t fcflag[2];
 
    surf_e surfs[2];
@@ -658,8 +656,6 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
    {
       surfs[0] = surf_floor;
       surfs[1] = surf_ceil;
-      portal[0] = &sector_t::f_portal;
-      portal[1] = &sector_t::c_portal;
       fcflag[0] = sector_t::floor;
       fcflag[1] = sector_t::ceiling;
    }
@@ -667,8 +663,6 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
    {
       surfs[0] = surf_ceil;
       surfs[1] = surf_floor;
-      portal[0] = &sector_t::c_portal;
-      portal[1] = &sector_t::f_portal;
       fcflag[0] = sector_t::ceiling;
       fcflag[1] = sector_t::floor;
    }
@@ -685,7 +679,7 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
 
       while(sector->srf[surfs[i]].pflags & PS_PASSABLE)
       {
-         const linkdata_t &ldata = (sector->*portal[i])->data.link;
+         const linkdata_t &ldata = sector->srf[surfs[i]].portal->data.link;
          x += ldata.deltax;
          y += ldata.deltay;
          sector = R_PointInSubsector(x, y)->sector;

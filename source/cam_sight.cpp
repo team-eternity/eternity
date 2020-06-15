@@ -285,11 +285,11 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    {
       State state(context.state);
       state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->f_portal->data.link.toid,
+      if(context.recurse(li->backsector->srf.floor.portal->data.link.toid,
                          context.params->cx + FixedMul(trace.dx, in->frac),
                          context.params->cy + FixedMul(trace.dy, in->frac),
                          state, &context.portalresult,
-                         li->backsector->f_portal->data.link))
+                         li->backsector->srf.floor.portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -304,11 +304,11 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    {
       State state(context.state);
       state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->c_portal->data.link.toid,
+      if(context.recurse(li->backsector->srf.ceiling.portal->data.link.toid,
                          context.params->cx + FixedMul(trace.dx, in->frac),
                          context.params->cy + FixedMul(trace.dy, in->frac),
                          state, &context.portalresult,
-                         li->backsector->c_portal->data.link))
+                         li->backsector->srf.ceiling.portal->data.link))
       {
          context.portalexit = true;
          return false;
@@ -356,7 +356,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    bool result = false;
    
    if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
-      (newfromid = sector->c_portal->data.link.toid) != params->cgroupid)
+      (newfromid = sector->srf.ceiling.portal->data.link.toid) != params->cgroupid)
    {
       // ceiling portal (slope must be up)
       linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
@@ -409,7 +409,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    }
 
    if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
-      (newfromid = sector->f_portal->data.link.toid) != params->cgroupid)
+      (newfromid = sector->srf.floor.portal->data.link.toid) != params->cgroupid)
    {
       linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
       fixed_t planez = P_FloorPortalZ(*sector);

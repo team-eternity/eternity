@@ -304,6 +304,8 @@ struct surface_t
 
    // Flags for portals
    unsigned pflags;
+   // Portals
+   portal_t *portal;
 };
 
 //
@@ -370,10 +372,6 @@ struct sector_t
    int linecount;
    line_t **lines;
 
-   // Portals
-   portal_t *c_portal;
-   portal_t *f_portal;
-   
    int groupid;
 
    // haleyjd 03/12/03: Heretic wind specials

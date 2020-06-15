@@ -112,19 +112,19 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
    const struct surfaceset_t
    {
       unsigned pflags;
-      portal_t *sector_t::*portal;
+      portal_t *portal;
       fixed_t(*pzfunc)(const sector_t &);
       bool(*compare)(fixed_t, fixed_t);
    } ssets[2] = {
       {
          sector->srf.floor.pflags,
-         &sector_t::f_portal,
+         sector->srf.floor.portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
       },
       {
          sector->srf.ceiling.pflags,
-         &sector_t::c_portal,
+         sector->srf.ceiling.portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
       },
@@ -141,7 +141,7 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
          fixed_t hfrac = FixedMul(zfrac, frac);
          traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, hfrac);
          traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, hfrac);
-         traverse.link = &(sector->*s.portal)->data.link;
+         traverse.link = &s.portal->data.link;
          traverse.startz = pz;
          return true;
       }
@@ -168,7 +168,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
          EX_ML_LOWERPORTAL,
          li->backsector->srf.floor.pflags,
          li->frontsector->srf.floor.height,
-         li->backsector->f_portal,
+         li->backsector->srf.floor.portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
       },
@@ -176,7 +176,7 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
          EX_ML_UPPERPORTAL,
          li->backsector->srf.ceiling.pflags,
          li->frontsector->srf.ceiling.height,
-         li->backsector->c_portal,
+         li->backsector->srf.ceiling.portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
       }
