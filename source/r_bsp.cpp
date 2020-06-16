@@ -613,8 +613,8 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
             tempsec->srf.floor.portal = NULL;
       }
 
-      tempsec->ceilingheightf = M_FixedToFloat(tempsec->srf.ceiling.height);
-      tempsec->floorheightf   = M_FixedToFloat(tempsec->srf.floor.height);
+      tempsec->srf.ceiling.heightf = M_FixedToFloat(tempsec->srf.ceiling.height);
+      tempsec->srf.floor.heightf = M_FixedToFloat(tempsec->srf.floor.height);
       sec = tempsec;            // Use other sector
    }
 
@@ -1098,15 +1098,15 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    else
    {
-      seg.high = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
-      seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+      seg.high = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i1) - 1.0f;
+      seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i2) - 1.0f;
       seg.minbackceil = seg.backsec->srf.ceiling.height;
    }
 
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
-   texhigh = seg.line->backsector->ceilingheightf - view.z;
+   texhigh = seg.line->backsector->srf.ceiling.heightf - view.z;
 
    if(seg.backsec->f_slope)
    {
@@ -1125,8 +1125,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    }
    else
    {
-      seg.low = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
-      seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+      seg.low = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i1);
+      seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i2);
       seg.maxbackfloor = seg.backsec->srf.floor.height;
    }
 
@@ -1328,7 +1328,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
 
-   texlow = seg.line->backsector->floorheightf - view.z;
+   texlow = seg.line->backsector->srf.floor.heightf - view.z;
    if(!toolow && !havebportal && (b > l || b2 > l2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
@@ -1401,14 +1401,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    frontc = seg.frontsec->srf.ceiling.height;
    backc  = seg.backsec->srf.ceiling.height;
 
-   seg.high  = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i1) - 1.0f;
-   seg.high2 = view.ycenter - ((seg.backsec->ceilingheightf - view.z) * i2) - 1.0f;
+   seg.high  = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i1) - 1.0f;
+   seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i2) - 1.0f;
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
    seg.minbackceil = backc;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
-   texhigh = seg.line->backsector->ceilingheightf - view.z;
+   texhigh = seg.line->backsector->srf.ceiling.heightf - view.z;
 
    uppermissing = (seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height &&
                    seg.side->toptexture == 0);
@@ -1606,8 +1606,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
          seg.c_portalignore = true;
    }
 
-   seg.low  = view.ycenter - ((seg.backsec->floorheightf - view.z) * i1);
-   seg.low2 = view.ycenter - ((seg.backsec->floorheightf - view.z) * i2);
+   seg.low  = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i1);
+   seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i2);
    seg.lowstep = (seg.low2 - seg.low) * pstep;
    seg.maxbackfloor = seg.backsec->srf.floor.height;
 
@@ -1621,7 +1621,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
 
-   texlow = seg.line->backsector->floorheightf - view.z;
+   texlow = seg.line->backsector->srf.floor.heightf - view.z;
    if(!toolow && !havebportal
       && seg.frontsec->srf.floor.height < seg.backsec->srf.floor.height
       && side->bottomtexture)
@@ -1687,15 +1687,15 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
          seg.toptex = texturetranslation[side->toptexture];
          seg.toptexh = textures[side->toptexture]->height;
 
-         float texhigh = beyond->ceilingheightf - view.z;
+         float texhigh = beyond->srf.ceiling.heightf - view.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
             seg.toptexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
          else
             seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety); // SCALE_TODO: Y scale-factor here
 
-         seg.high  = view.ycenter - ((beyond->ceilingheightf - view.z) * i1) - 1.0f;
-         seg.high2 = view.ycenter - ((beyond->ceilingheightf - view.z) * i2) - 1.0f;
+         seg.high  = view.ycenter - ((beyond->srf.ceiling.heightf - view.z) * i1) - 1.0f;
+         seg.high2 = view.ycenter - ((beyond->srf.ceiling.heightf - view.z) * i2) - 1.0f;
          seg.highstep = (seg.high2 - seg.high) * pstep;
       }
       else
@@ -1706,15 +1706,15 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
          seg.bottomtex  = texturetranslation[side->bottomtexture];
          seg.bottomtexh = textures[side->bottomtexture]->height;
 
-         float texlow = beyond->floorheightf - view.z;
+         float texlow = beyond->srf.floor.heightf - view.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
             seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
          else
             seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety); // SCALE_TODO: Y scale-factor here
 
-         seg.low  = view.ycenter - ((beyond->floorheightf - view.z) * i1);
-         seg.low2 = view.ycenter - ((beyond->floorheightf - view.z) * i2);
+         seg.low  = view.ycenter - ((beyond->srf.floor.heightf - view.z) * i1);
+         seg.low2 = view.ycenter - ((beyond->srf.floor.heightf - view.z) * i2);
          seg.lowstep = (seg.low2 - seg.low) * pstep;
       }
       else
@@ -2332,8 +2332,8 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    }
    else
    {
-      seg.top = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i1);
-      seg.top2 = view.ycenter - ((seg.frontsec->ceilingheightf - view.z) * i2);
+      seg.top = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - view.z) * i1);
+      seg.top2 = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - view.z) * i2);
       seg.minfrontceil = seg.frontsec->srf.ceiling.height;
    }
    seg.topstep = (seg.top2 - seg.top) * pstep;
@@ -2356,16 +2356,16 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    }
    else
    {      
-      seg.bottom  = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i1) - 1.0f;
-      seg.bottom2 = view.ycenter - ((seg.frontsec->floorheightf - view.z) * i2) - 1.0f;
+      seg.bottom  = view.ycenter - ((seg.frontsec->srf.floor.heightf - view.z) * i1) - 1.0f;
+      seg.bottom2 = view.ycenter - ((seg.frontsec->srf.floor.heightf - view.z) * i2) - 1.0f;
       seg.maxfrontfloor = seg.frontsec->srf.floor.height;
    }
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
    // Get these from the actual sectors because R_FakeFlat could have changed the actual heights.
-   textop    = seg.line->frontsector->ceilingheightf - view.z;
-   texbottom = seg.line->frontsector->floorheightf   - view.z;
+   textop    = seg.line->frontsector->srf.ceiling.heightf - view.z;
+   texbottom = seg.line->frontsector->srf.floor.heightf - view.z;
 
    seg.f_portalignore = seg.c_portalignore = false;
 

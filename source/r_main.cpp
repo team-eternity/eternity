@@ -892,15 +892,15 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
 
             // backup heights
             si.backfloorheight    = sec.srf.floor.height;
-            si.backfloorheightf   = sec.floorheightf;
+            si.backfloorheightf   = sec.srf.floor.heightf;
             si.backceilingheight  = sec.srf.ceiling.height;
-            si.backceilingheightf = sec.ceilingheightf;
+            si.backceilingheightf = sec.srf.ceiling.heightf;
 
             // set interpolated heights
             sec.srf.floor.height = lerpCoord(view.lerp, si.prevfloorheight,   sec.srf.floor.height);
             sec.srf.ceiling.height = lerpCoord(view.lerp, si.prevceilingheight, sec.srf.ceiling.height);
-            sec.floorheightf   = M_FixedToFloat(sec.srf.floor.height);
-            sec.ceilingheightf = M_FixedToFloat(sec.srf.ceiling.height);
+            sec.srf.floor.heightf = M_FixedToFloat(sec.srf.floor.height);
+            sec.srf.ceiling.heightf = M_FixedToFloat(sec.srf.ceiling.height);
          }
          else
             si.interpolated = false;
@@ -916,9 +916,9 @@ static void R_setSectorInterpolationState(secinterpstate_e state)
          if(si.interpolated)
          {
             sec.srf.floor.height = si.backfloorheight;
-            sec.floorheightf   = si.backfloorheightf;
+            sec.srf.floor.heightf = si.backfloorheightf;
             sec.srf.ceiling.height = si.backceilingheight;
-            sec.ceilingheightf = si.backceilingheightf;
+            sec.srf.ceiling.heightf = si.backceilingheightf;
          }
       }
       break;

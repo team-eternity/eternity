@@ -1049,7 +1049,7 @@ void P_SetFloorHeight(sector_t *sec, fixed_t h)
 {
    // set new value
    sec->srf.floor.height = h;
-   sec->floorheightf = M_FixedToFloat(sec->srf.floor.height);
+   sec->srf.floor.heightf = M_FixedToFloat(sec->srf.floor.height);
 
    // check floor portal state
    P_CheckFPortalState(sec);
@@ -1065,7 +1065,7 @@ void P_SetCeilingHeight(sector_t *sec, fixed_t h)
 {
    // set new value
    sec->srf.ceiling.height = h;
-   sec->ceilingheightf = M_FixedToFloat(sec->srf.ceiling.height);
+   sec->srf.ceiling.heightf = M_FixedToFloat(sec->srf.ceiling.height);
 
    // check ceiling portal state
    P_CheckCPortalState(sec);

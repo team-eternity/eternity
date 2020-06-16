@@ -243,9 +243,9 @@ void P_SaveSectorPositions()
       auto &sec = sectors[i];
 
       si.prevfloorheight    = sec.srf.floor.height;
-      si.prevfloorheightf   = sec.floorheightf;
+      si.prevfloorheightf   = sec.srf.floor.heightf;
       si.prevceilingheight  = sec.srf.ceiling.height;
-      si.prevceilingheightf = sec.ceilingheightf;
+      si.prevceilingheightf = sec.srf.ceiling.heightf;
    }
 }
 
@@ -256,9 +256,9 @@ void P_SaveSectorPosition(const sector_t &sec)
 {
    auto &si = sectorinterps[&sec - sectors];
    si.prevfloorheight = sec.srf.floor.height;
-   si.prevfloorheightf = sec.floorheightf;
+   si.prevfloorheightf = sec.srf.floor.heightf;
    si.prevceilingheight = sec.srf.ceiling.height;
-   si.prevceilingheightf = sec.ceilingheightf;
+   si.prevceilingheightf = sec.srf.ceiling.heightf;
 }
 
 //
@@ -271,11 +271,11 @@ void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf)
    {
       case ssurf_floor:
          si.prevfloorheight = sec.srf.floor.height;
-         si.prevfloorheightf = sec.floorheightf;
+         si.prevfloorheightf = sec.srf.floor.heightf;
          break;
       case ssurf_ceiling:
          si.prevceilingheight = sec.srf.ceiling.height;
-         si.prevceilingheightf = sec.ceilingheightf;
+         si.prevceilingheightf = sec.srf.ceiling.heightf;
          break;
    }
 }

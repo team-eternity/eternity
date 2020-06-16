@@ -279,15 +279,15 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 
       if(frontfloor)
       {
-         point.z = line->frontsector->floorheightf;
-         dz = (line->backsector->floorheightf - point.z) / extent;
+         point.z = line->frontsector->srf.floor.heightf;
+         dz = (line->backsector->srf.floor.heightf - point.z) / extent;
 
          line->frontsector->f_slope = P_MakeSlope(&point, &direction, dz, false);
       }
       if(frontceil)
       {
-         point.z = line->frontsector->ceilingheightf;
-         dz = (line->backsector->ceilingheightf - point.z) / extent;
+         point.z = line->frontsector->srf.ceiling.heightf;
+         dz = (line->backsector->srf.ceiling.heightf - point.z) / extent;
 
          line->frontsector->c_slope = P_MakeSlope(&point, &direction, dz, true);
       }
@@ -315,15 +315,15 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 
       if(backfloor)
       {
-         point.z = line->backsector->floorheightf;
-         dz = (line->frontsector->floorheightf - point.z) / extent;
+         point.z = line->backsector->srf.floor.heightf;
+         dz = (line->frontsector->srf.floor.heightf - point.z) / extent;
 
          line->backsector->f_slope = P_MakeSlope(&point, &direction, dz, false);
       }
       if(backceil)
       {
-         point.z = line->backsector->ceilingheightf;
-         dz = (line->frontsector->ceilingheightf - point.z) / extent;
+         point.z = line->backsector->srf.ceiling.heightf;
+         dz = (line->frontsector->srf.ceiling.heightf - point.z) / extent;
 
          line->backsector->c_slope = P_MakeSlope(&point, &direction, dz, true);
       }

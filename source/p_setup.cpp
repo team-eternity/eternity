@@ -607,8 +607,8 @@ void P_InitSector(sector_t *ss)
    ss->groupid = R_NOGROUP;
 
    // SoM: These are kept current with floorheight and ceilingheight now
-   ss->floorheightf   = M_FixedToFloat(ss->srf.floor.height);
-   ss->ceilingheightf = M_FixedToFloat(ss->srf.ceiling.height);
+   ss->srf.floor.heightf = M_FixedToFloat(ss->srf.floor.height);
+   ss->srf.ceiling.heightf = M_FixedToFloat(ss->srf.ceiling.height);
 
    // needs to be defaulted as it starts as nonzero
    ss->srf.floor.scale = { 1.0f, 1.0f };
@@ -721,8 +721,8 @@ static void P_CreateSectorInterps()
    {
       sectorinterps[i].prevfloorheight    = sectors[i].srf.floor.height;
       sectorinterps[i].prevceilingheight  = sectors[i].srf.ceiling.height;
-      sectorinterps[i].prevfloorheightf   = sectors[i].floorheightf;
-      sectorinterps[i].prevceilingheightf = sectors[i].ceilingheightf;
+      sectorinterps[i].prevfloorheightf   = sectors[i].srf.floor.heightf;
+      sectorinterps[i].prevceilingheightf = sectors[i].srf.ceiling.heightf;
    }
 }
 

@@ -309,6 +309,11 @@ struct surface_t
    unsigned pflags;
    // Portals
    portal_t *portal;
+
+   // Cardboard optimization
+   // They are set in R_Subsector and R_FakeFlat and are
+   // only valid for that sector for that frame.
+   float heightf;
 };
 
 //
@@ -386,12 +391,6 @@ struct sector_t
    int sndSeqID;
 
    DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
-
-   // Cardboard optimization
-   // They are set in R_Subsector and R_FakeFlat and are
-   // only valid for that sector for that frame.
-   float ceilingheightf;
-   float floorheightf;
 
    // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
    // generalized sector types outside of DOOM-format maps.
