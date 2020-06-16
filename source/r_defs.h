@@ -267,6 +267,31 @@ union Surfaces
 };
 
 //
+// Check if floor is higher or ceiling is lower, respectively viceversa
+// Also have template versions
+//
+template<typename T>
+inline static bool isInner(surf_e surf, const T &a, const T &b)
+{
+   return surf == surf_floor ? a > b : a < b;
+}
+template<surf_e S, typename T>
+inline static bool isInner(const T &a, const T &b)
+{
+   return S == surf_floor ? a > b : a < b;
+}
+template<typename T>
+inline static bool isOuter(surf_e surf, const T &a, const T &b)
+{
+   return surf == surf_floor ? a < b : a > b;
+}
+template<surf_e S, typename T>
+inline static bool isOuter(const T &a, const T &b)
+{
+   return S == surf_floor ? a < b : a > b;
+}
+
+//
 // Sector surface structure
 //
 struct surface_t

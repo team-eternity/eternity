@@ -1658,19 +1658,13 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 //
 // True if floor or ceiling heights are different, lower or upper portal aware
 //
-inline static bool AM_differentFloor(const line_t &line)
+template<surf_e surfa>
+inline static bool AM_different(const line_t &line)
 {
-   return line.frontsector->srf.floor.height > line.backsector->srf.floor.height ||
-   (line.frontsector->srf.floor.height < line.backsector->srf.floor.height &&
-    (!(line.extflags & EX_ML_LOWERPORTAL) ||
-       !(line.backsector->srf.floor.pflags & PS_PASSABLE)));
-}
-inline static bool AM_differentCeiling(const line_t &line)
-{
-   return line.frontsector->srf.ceiling.height < line.backsector->srf.ceiling.height ||
-   (line.frontsector->srf.ceiling.height > line.backsector->srf.ceiling.height &&
-    (!(line.extflags & EX_ML_UPPERPORTAL) ||
-       !(line.backsector->srf.ceiling.pflags & PS_PASSABLE)));
+   return isInner<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) ||
+      (isOuter<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) &&
+         (!(line.extflags & e_edgePortalFlags[surf]) ||
+            !(line.backsector->srf[surf].pflags & PS_PASSABLE));
 }
 
 inline static bool AM_dontDraw(const line_t &line)
@@ -1737,7 +1731,7 @@ static void AM_drawWalls()
                continue;
 
             if(!line->backsector ||
-               AM_differentFloor(*line) || AM_differentCeiling(*line))
+               AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_prtl);
             }
@@ -1748,7 +1742,7 @@ static void AM_drawWalls()
             if(!AM_dontDraw(*line)) // invisible flag lines do not show
             {
                if(!line->backsector ||
-                  AM_differentFloor(*line) || AM_differentCeiling(*line))
+                  AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
                {
                   AM_drawMline(&l, mapcolor_prtl);
                }
@@ -1852,11 +1846,11 @@ static void AM_drawWalls()
             {
                AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
             } 
-            else if(AM_differentFloor(*line))
+            else if(AM_different<surf_floor>(*line))
             {
                AM_drawMline(&l, mapcolor_fchg); // floor level change
             }
-            else if(AM_differentCeiling(*line))
+            else if(AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_cchg); // ceiling level change
             }
@@ -1872,7 +1866,7 @@ static void AM_drawWalls()
          if(!AM_dontDraw(*line)) // invisible flag lines do not show
          {
             if(mapcolor_flat || !line->backsector ||
-               AM_differentFloor(*line) || AM_differentCeiling(*line))
+               AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_unsn);
             }
