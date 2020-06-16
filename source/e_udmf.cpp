@@ -125,9 +125,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
          // New to Eternity
          ss->srf.floor.offset = { us.xpanningfloor, us.ypanningfloor };
          ss->srf.ceiling.offset = { us.xpanningceiling, us.ypanningceiling };
-         ss->floorbaseangle = static_cast<float>
+         ss->srf.floor.baseangle = static_cast<float>
             (E_NormalizeFlatAngle(us.rotationfloor) *  PI / 180.0f);
-         ss->ceilingbaseangle = static_cast<float>
+         ss->srf.ceiling.baseangle = static_cast<float>
             (E_NormalizeFlatAngle(us.rotationceiling) *  PI / 180.0f);
 
          int scrolltype = E_StrToNumLinear(udmfscrolltypes, NUMSCROLLTYPES,

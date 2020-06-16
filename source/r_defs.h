@@ -281,8 +281,11 @@ struct surface_t
 
    // killough 3/7/98: floor and ceiling texture offsets
    v2fixed_t offset;
-
    v2float_t scale;
+
+   // haleyjd 07/04/07: Happy July 4th :P
+   // Angles for flat rotation!
+   float angle, baseangle;
 
    // killough 4/11/98: support for lightlevels coming from another sector
    int lightsec;
@@ -383,10 +386,6 @@ struct sector_t
    int sndSeqID;
 
    DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
-
-   // haleyjd 07/04/07: Happy July 4th :P
-   // Angles for flat rotation!
-   float floorangle, ceilingangle, floorbaseangle, ceilingbaseangle;
 
    // Cardboard optimization
    // They are set in R_Subsector and R_FakeFlat and are

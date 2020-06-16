@@ -1053,8 +1053,8 @@ static void R_ShowTainted(pwindow_t *window)
    if(window->line)
    {
       const sector_t *sector = window->line->frontsector;
-      float floorangle = sector->floorbaseangle + sector->floorangle;
-      float ceilingangle = sector->ceilingbaseangle + sector->ceilingangle;
+      float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
+      float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
          sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset.x,
          sector->srf.ceiling.offset.y, sector->srf.ceiling.scale.x, sector->srf.ceiling.scale.y,
@@ -1876,7 +1876,7 @@ void R_DefinePortal(const line_t &line)
    case portaltype_plane:
       portal = R_GetPlanePortal(&sector->srf.ceiling.pic, &sector->srf.ceiling.height,
          &sector->lightlevel, &sector->srf.ceiling.offset.x, &sector->srf.ceiling.offset.y,
-         &sector->ceilingbaseangle, &sector->ceilingangle,
+         &sector->srf.ceiling.baseangle, &sector->srf.ceiling.angle,
          &sector->srf.ceiling.scale.x, &sector->srf.ceiling.scale.y);
       break;
    case portaltype_horizon:
@@ -1884,8 +1884,8 @@ void R_DefinePortal(const line_t &line)
          &sector->srf.floor.height, &sector->srf.ceiling.height, &sector->lightlevel,
          &sector->lightlevel, &sector->srf.floor.offset,
          &sector->srf.ceiling.offset,
-         &sector->floorbaseangle, &sector->floorangle,
-         &sector->ceilingbaseangle, &sector->ceilingangle,
+         &sector->srf.floor.baseangle, &sector->srf.floor.angle,
+         &sector->srf.ceiling.baseangle, &sector->srf.ceiling.angle,
          &sector->srf.floor.scale, &sector->srf.ceiling.scale);
       break;
    case portaltype_skybox:

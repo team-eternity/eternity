@@ -1670,8 +1670,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    sector->srf.ceiling.scale = static_cast<v2float_t>(edsector->surface.ceiling.scale);
 
    // flat angles
-   sector->floorbaseangle   = (float)(edsector->surface.floor.angle * PI / 180.0f);
-   sector->ceilingbaseangle = (float)(edsector->surface.ceiling.angle * PI / 180.0f);
+   sector->srf.floor.baseangle = (float)(edsector->surface.floor.angle * PI / 180.0f);
+   sector->srf.ceiling.baseangle = (float)(edsector->surface.ceiling.angle * PI / 180.0f);
 
    // colormaps
    if(edsector->topmap >= 0)

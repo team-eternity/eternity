@@ -3117,8 +3117,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                 &sector->lightlevel,
                                 &sector->srf.ceiling.offset.x,
                                 &sector->srf.ceiling.offset.y,
-                                &sector->ceilingbaseangle,
-                                &sector->ceilingangle, &sector->srf.ceiling.scale.x,
+                                &sector->srf.ceiling.baseangle,
+                                &sector->srf.ceiling.angle, &sector->srf.ceiling.scale.x,
                                 &sector->srf.ceiling.scale.y);
       break;
 
@@ -3128,8 +3128,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                                   &sector->lightlevel, &sector->lightlevel,
                                   &sector->srf.floor.offset,
                                   &sector->srf.ceiling.offset,
-                                  &sector->floorbaseangle, &sector->floorangle,
-                                  &sector->ceilingbaseangle, &sector->ceilingangle,
+                                  &sector->srf.floor.baseangle, &sector->srf.floor.angle,
+                                  &sector->srf.ceiling.baseangle, &sector->srf.ceiling.angle,
                                   &sector->srf.floor.scale, &sector->srf.ceiling.scale);
       // TODO: line portal
       if(effects == portal_lineonly)

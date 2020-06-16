@@ -128,9 +128,9 @@ int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->floorangle = static_cast<float>
+      sector->srf.floor.angle = static_cast<float>
          (E_NormalizeFlatAngle(floorangle) * PI / 180.0f);
-      sector->ceilingangle = static_cast<float>
+      sector->srf.ceiling.angle = static_cast<float>
          (E_NormalizeFlatAngle(ceilingangle) * PI / 180.0f);
       if(manual)
          return 1;

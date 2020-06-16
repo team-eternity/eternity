@@ -502,8 +502,8 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          tempsec->srf.floor.pic = s->srf.floor.pic;
          tempsec->srf.floor.offset = s->srf.floor.offset;
          tempsec->srf.floor.scale = s->srf.floor.scale;
-         tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
-         tempsec->floorangle     = s->floorangle;
+         tempsec->srf.floor.baseangle = s->srf.floor.baseangle; // haleyjd: angles
+         tempsec->srf.floor.angle = s->srf.floor.angle;
 
          // haleyjd 03/13/05: removed redundant if(underwater) check
          if(s->intflags & SIF_SKY)
@@ -512,16 +512,16 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
             tempsec->srf.floor.pic = tempsec->srf.floor.pic;
             tempsec->srf.ceiling.offset = tempsec->srf.floor.offset;
             tempsec->srf.ceiling.scale = tempsec->srf.floor.scale;
-            tempsec->ceilingbaseangle = tempsec->floorbaseangle; // haleyjd: angles
-            tempsec->ceilingangle     = tempsec->floorangle;
+            tempsec->srf.ceiling.baseangle = tempsec->srf.floor.baseangle; // haleyjd: angles
+            tempsec->srf.ceiling.angle = tempsec->srf.floor.angle;
          }
          else
          {
             tempsec->srf.ceiling.pic = s->srf.ceiling.pic;
             tempsec->srf.ceiling.offset = s->srf.ceiling.offset;
             tempsec->srf.ceiling.scale = s->srf.ceiling.scale;
-            tempsec->ceilingbaseangle = s->ceilingbaseangle; // haleyjd: angles
-            tempsec->ceilingangle     = s->ceilingangle;
+            tempsec->srf.ceiling.baseangle = s->srf.ceiling.baseangle; // haleyjd: angles
+            tempsec->srf.ceiling.angle = s->srf.ceiling.angle;
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec!
@@ -565,8 +565,8 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
          tempsec->srf.floor.pic = tempsec->srf.ceiling.pic = s->srf.ceiling.pic;
          tempsec->srf.floor.offset = tempsec->srf.ceiling.offset = s->srf.ceiling.offset;
          tempsec->srf.floor.scale = tempsec->srf.ceiling.scale = s->srf.ceiling.scale;
-         tempsec->floorbaseangle = tempsec->ceilingbaseangle = s->ceilingbaseangle;
-         tempsec->floorangle     = tempsec->ceilingangle     = s->ceilingangle; // haleyjd: angles
+         tempsec->srf.floor.baseangle = tempsec->srf.ceiling.baseangle = s->srf.ceiling.baseangle;
+         tempsec->srf.floor.angle = tempsec->srf.ceiling.angle = s->srf.ceiling.angle; // haleyjd: angles
 
          if(!R_IsSkyFlat(s->srf.floor.pic))
          {
@@ -574,8 +574,8 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
             tempsec->srf.floor.pic = s->srf.floor.pic;
             tempsec->srf.floor.offset = s->srf.floor.offset;
             tempsec->srf.floor.scale = s->srf.floor.scale;
-            tempsec->floorbaseangle = s->floorbaseangle; // haleyjd: angles
-            tempsec->floorangle     = s->floorangle;
+            tempsec->srf.floor.baseangle = s->srf.floor.baseangle; // haleyjd: angles
+            tempsec->srf.floor.angle = s->srf.floor.angle;
          }
 
          // haleyjd 03/20/10: must clear SIF_SKY flag from tempsec
@@ -1207,8 +1207,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
        (mark || (marktheight && !blocktheight) || seg.clipsolid || heightchange ||
         seg.frontsec->srf.ceiling.offset != seg.backsec->srf.ceiling.offset ||
         seg.frontsec->srf.ceiling.scale != seg.backsec->srf.ceiling.scale ||
-        (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
-         seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
+        (seg.frontsec->srf.ceiling.baseangle + seg.frontsec->srf.ceiling.angle !=
+         seg.backsec->srf.ceiling.baseangle + seg.backsec->srf.ceiling.angle) || // haleyjd: angles
         seg.frontsec->srf.ceiling.pic != seg.backsec->srf.ceiling.pic ||
         seg.frontsec->srf.ceiling.lightsec != seg.backsec->srf.ceiling.lightsec ||
         seg.frontsec->srf.ceiling.lightdelta != seg.backsec->srf.ceiling.lightdelta ||
@@ -1287,8 +1287,8 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       (mark || marktheight || seg.clipsolid || heightchange ||
        seg.frontsec->srf.floor.offset != seg.backsec->srf.floor.offset ||
        seg.frontsec->srf.floor.scale != seg.backsec->srf.floor.scale ||
-       (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
-        seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd: angles
+       (seg.frontsec->srf.floor.baseangle + seg.frontsec->srf.floor.angle !=
+        seg.backsec->srf.floor.baseangle + seg.backsec->srf.floor.angle) || // haleyjd: angles
        seg.frontsec->srf.floor.pic != seg.backsec->srf.floor.pic ||
        seg.frontsec->srf.floor.lightsec != seg.backsec->srf.floor.lightsec ||
        seg.frontsec->srf.floor.lightdelta != seg.backsec->srf.floor.lightdelta ||
@@ -1467,8 +1467,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(mark || (marktheight && !blocktheight) || seg.clipsolid || frontc != backc || 
       seg.frontsec->srf.ceiling.offset != seg.backsec->srf.ceiling.offset ||
       seg.frontsec->srf.ceiling.scale != seg.backsec->srf.ceiling.scale ||
-      (seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle !=
-       seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle) || // haleyjd: angles
+      (seg.frontsec->srf.ceiling.baseangle + seg.frontsec->srf.ceiling.angle !=
+       seg.backsec->srf.ceiling.baseangle + seg.backsec->srf.ceiling.angle) || // haleyjd: angles
       seg.frontsec->srf.ceiling.pic != seg.backsec->srf.ceiling.pic ||
       seg.frontsec->srf.ceiling.lightsec != seg.backsec->srf.ceiling.lightsec ||
       seg.frontsec->srf.ceiling.lightdelta != seg.backsec->srf.ceiling.lightdelta ||
@@ -1546,8 +1546,8 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.frontsec->srf.floor.height != seg.backsec->srf.floor.height ||
       seg.frontsec->srf.floor.offset != seg.backsec->srf.floor.offset ||
       seg.frontsec->srf.floor.scale != seg.backsec->srf.floor.scale ||
-      (seg.frontsec->floorbaseangle + seg.frontsec->floorangle !=
-       seg.backsec->floorbaseangle + seg.backsec->floorangle) || // haleyjd
+      (seg.frontsec->srf.floor.baseangle + seg.frontsec->srf.floor.angle !=
+       seg.backsec->srf.floor.baseangle + seg.backsec->srf.floor.angle) || // haleyjd
       seg.frontsec->srf.floor.pic != seg.backsec->srf.floor.pic ||
       seg.frontsec->srf.floor.lightsec != seg.backsec->srf.floor.lightsec ||
       seg.frontsec->srf.floor.lightdelta != seg.backsec->srf.floor.lightdelta ||
@@ -2124,10 +2124,10 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       && seg.backsec->srf.ceiling.scale == seg.frontsec->srf.ceiling.scale
 
       // haleyjd 11/04/10: angles
-      && (seg.backsec->floorbaseangle + seg.backsec->floorangle ==
-          seg.frontsec->floorbaseangle + seg.frontsec->floorangle)
-      && (seg.backsec->ceilingbaseangle + seg.backsec->ceilingangle ==
-          seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle)
+      && (seg.backsec->srf.floor.baseangle + seg.backsec->srf.floor.angle ==
+          seg.frontsec->srf.floor.baseangle + seg.frontsec->srf.floor.angle)
+      && (seg.backsec->srf.ceiling.baseangle + seg.backsec->srf.ceiling.angle ==
+          seg.frontsec->srf.ceiling.baseangle + seg.frontsec->srf.ceiling.angle)
 
       // killough 4/16/98: consider altered lighting
       && seg.backsec->srf.floor.lightsec == seg.frontsec->srf.floor.lightsec
@@ -2718,8 +2718,8 @@ static void R_Subsector(int num)
    }
 
    // haleyjd 01/05/08: determine angles for floor and ceiling
-   floorangle   = seg.frontsec->floorbaseangle   + seg.frontsec->floorangle;
-   ceilingangle = seg.frontsec->ceilingbaseangle + seg.frontsec->ceilingangle;
+   floorangle   = seg.frontsec->srf.floor.baseangle + seg.frontsec->srf.floor.angle;
+   ceilingangle = seg.frontsec->srf.ceiling.baseangle + seg.frontsec->srf.ceiling.angle;
 
    // killough 3/7/98: Add (x,y) offsets to flats, add deep water check
    // killough 3/16/98: add floorlightlevel
