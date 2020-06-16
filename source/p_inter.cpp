@@ -1455,7 +1455,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // end of game hell hack
       // ioanch 20160116: portal aware
-      if(P_ExtremeSectorAtPoint(target, false)->damageflags & SDMG_EXITLEVEL &&
+      if(P_ExtremeSectorAtPoint(target, surf_floor)->damageflags & SDMG_EXITLEVEL &&
          damage >= target->health)
       {
          damage = target->health - 1;

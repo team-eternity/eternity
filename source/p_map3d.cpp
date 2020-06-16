@@ -476,27 +476,22 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
 
    // ioanch 20160110: portal aware floor and ceiling z detection
    const sector_t *bottomsector = newsubsec->sector;
-#ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
    {
-      bottomsector = P_ExtremeSectorAtPoint(x, y, false, 
-         newsubsec->sector);
+      bottomsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
       clip.zref.floor = clip.zref.dropoff = bottomsector->srf.floor.height;
    }
    else
-#endif
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
 
-#ifdef R_LINKEDPORTALS
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
    {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
+      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
          newsubsec->sector)->srf.ceiling.height;
    }
    else
-#endif
       clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;

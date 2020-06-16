@@ -917,7 +917,7 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
 void E_ExplosionHitWater(Mobj *thing, int damage)
 {
    if(thing->z <= thing->zref.secfloor + damage * FRACUNIT)
-      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, false));
+      E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));
 }
 
 //

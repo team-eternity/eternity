@@ -738,7 +738,7 @@ void P_PlayerThink(player_t *player)
    // going to affect you, like painful floors.
 
    // ioanch 20160116: portal aware
-   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, false);
+   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
    if(P_SectorIsSpecial(sector))
       P_PlayerInSpecialSector(player, sector);
 

@@ -1280,8 +1280,8 @@ void A_ThingSummon(actionargs_t *actionargs)
 
    // ioanch 20160107: consider sectors when killing things stuck in floor or
    // ceiling. Also remove redundant parentheses.
-   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, true);
-   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, false);
+   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, surf_ceil);
+   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, surf_floor);
 
    if(newmobj->z > csector->srf.ceiling.height - newmobj->height ||
       newmobj->z < fsector->srf.floor.height)

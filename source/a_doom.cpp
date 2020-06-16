@@ -1106,8 +1106,8 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
 
       // ioanch 20160107: check against the floor or ceiling sector behind any
       // portals
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, true);
-      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, false);
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, surf_ceil);
+      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, surf_floor);
       // ioanch: removed redundant parentheses (of which the compiler doesn't 
       // cry)
       if(newmobj->z > ceilingsector->srf.ceiling.height - newmobj->height ||

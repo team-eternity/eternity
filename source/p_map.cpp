@@ -411,27 +411,22 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    // ioanch 20160113: use correct floor and ceiling heights
    const sector_t *bottomfloorsector = newsubsec->sector;
-#ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE)
    {
-      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
-            newsubsec->sector);
+      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
       clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
    }
    else
-#endif
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
 
-#ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
+      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
             newsubsec->sector)->srf.ceiling.height;
    }
    else
-#endif
       clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
@@ -1634,7 +1629,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                steplimit = STEPSIZE;
 
             if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit ||
-               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->srf.ceiling.height
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, surf_ceil)->srf.ceiling.height
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.zref.ceiling - (clip.BlockingMobj->z + clip.BlockingMobj->height)
                  < thing->height))
@@ -1777,7 +1772,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // haleyjd: CANTLEAVEFLOORPIC flag
       // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
-         (clip.floorpic != P_ExtremeSectorAtPoint(thing, false)->srf.floor.pic ||
+         (clip.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
           clip.zref.floor - thing->z != 0))
       {
          // thing must stay within its current floor type

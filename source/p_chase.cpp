@@ -639,9 +639,9 @@ void P_WalkTicker()
 
    subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
 
-   const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, true, 
+   const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_ceil, 
       subsec->sector);
-   const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, false,
+   const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_floor,
       subsec->sector);
 
    if(!walkcamera.flying)

@@ -1133,7 +1133,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 {
    // ioanch 20160116: portal aware
    if(!sector)
-      sector = P_ExtremeSectorAtPoint(player->mo, false);
+      sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?

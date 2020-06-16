@@ -338,7 +338,7 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 // ioanch 20160107
 // If point x/y resides in a sector with portal, pass through it
 //
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
                                  sector_t *sector)
 {
    if(!sector) // if not preset
@@ -351,8 +351,6 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       return sector; // just return the current sector in this case
    }
 
-   surf_e surf = ceiling ? surf_ceil : surf_floor;
-
    int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
    while(sector->srf[surf].pflags & PS_PASSABLE && loopprotection--)
@@ -361,11 +359,8 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
-      if((ceiling ? !(sector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-          sector->srf.ceiling.height < link.planez
-          : !(sector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-          sector->srf.floor.height > link.planez) ||
-         (!link.deltax && !link.deltay))
+      if((!(sector->srf[surf].pflags & PF_ATTACHEDPORTAL) &&
+         isInner(surf, sector->srf[surf].height, link.planez)) || (!link.deltax && !link.deltay))
       {
          return sector;
       }
@@ -377,7 +372,6 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       x += link.deltax;
       y += link.deltay;
       sector = R_PointInSubsector(x, y)->sector;
-
    }
 
    if(loopprotection < 0)
@@ -386,9 +380,9 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
    return sector;
 }
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf)
 {
-   return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
+   return P_ExtremeSectorAtPoint(mo->x, mo->y, surf, mo->subsector->sector);
 }
 
 //==============================================================================

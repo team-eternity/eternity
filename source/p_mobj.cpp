@@ -418,7 +418,7 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
       if((ceilingsector->intflags & SIF_SKY ||
          R_IsSkyLikePortalCeiling(*ceilingsector)) &&
          mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
@@ -693,7 +693,7 @@ void P_XYMovement(Mobj* mo)
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->zref.floor != P_ExtremeSectorAtPoint(mo, false)->srf.floor.height)
+      mo->zref.floor != P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // Some objects never rest on other things
@@ -1159,7 +1159,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at old spot
    // because of removal of the body?
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    P_ExtremeSectorAtPoint(mobj, false)->srf.floor.height +
+                    P_ExtremeSectorAtPoint(mobj, surf_floor)->srf.floor.height +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
@@ -1932,8 +1932,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
 
    // killough 11/98: for tracking dropoffs
    // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
-   mobj->zref.dropoff = mobj->zref.floor = P_ExtremeSectorAtPoint(mobj, false)->srf.floor.height;
-   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, true)->srf.ceiling.height;
+   mobj->zref.dropoff = mobj->zref.floor = P_ExtremeSectorAtPoint(mobj, surf_floor)->srf.floor.height;
+   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, surf_ceil)->srf.ceiling.height;
 
    mobj->z = 
       (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
