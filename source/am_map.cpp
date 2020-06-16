@@ -1658,13 +1658,13 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 //
 // True if floor or ceiling heights are different, lower or upper portal aware
 //
-template<surf_e surfa>
+template<surf_e surf>
 inline static bool AM_different(const line_t &line)
 {
    return isInner<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) ||
       (isOuter<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) &&
          (!(line.extflags & e_edgePortalFlags[surf]) ||
-            !(line.backsector->srf[surf].pflags & PS_PASSABLE));
+            !(line.backsector->srf[surf].pflags & PS_PASSABLE)));
 }
 
 inline static bool AM_dontDraw(const line_t &line)
