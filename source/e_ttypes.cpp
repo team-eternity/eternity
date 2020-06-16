@@ -696,7 +696,7 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
       // if found one that's valid, use that terrain
       if(m)
       {
-         if(!(terrain = m->m_sector->floorterrain))
+         if(!(terrain = m->m_sector->srf.floor.terrain))
             terrain = TerrainTypes[m->m_sector->srf.floor.pic];
       }
       else
@@ -705,7 +705,7 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
 
    if(!terrain) 
    {
-      if(!(terrain = thing->subsector->sector->floorterrain))
+      if(!(terrain = thing->subsector->sector->srf.floor.terrain))
          terrain = TerrainTypes[thing->subsector->sector->srf.floor.pic];
    }
    
@@ -726,10 +726,10 @@ ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
    sector_t *sector = subsec->sector;
    ETerrain *floorterrain = NULL, *ceilingterrain = NULL;
 
-   if(!(floorterrain = sector->floorterrain))
+   if(!(floorterrain = sector->srf.floor.terrain))
       floorterrain = TerrainTypes[sector->srf.floor.pic];
 
-   if(!(ceilingterrain = sector->ceilingterrain))
+   if(!(ceilingterrain = sector->srf.ceiling.terrain))
       ceilingterrain = TerrainTypes[sector->srf.ceiling.pic];
 
    // can retrieve a TerrainType for either the floor or the
@@ -756,7 +756,7 @@ fixed_t E_SectorFloorClip(sector_t *sector)
    ETerrain *terrain = NULL;
    
    // override with sector terrain if one is specified
-   if(!(terrain = sector->floorterrain))
+   if(!(terrain = sector->srf.floor.terrain))
       terrain = TerrainTypes[sector->srf.floor.pic];
 
    return (demo_version >= terrain->minversion) ? terrain->footclip : 0;
@@ -788,7 +788,7 @@ void E_PtclTerrainHit(particle_t *p)
    sector = p->subsector->sector;
 
    // override with sector terrain if one is specified
-   if(!(terrain = sector->floorterrain))
+   if(!(terrain = sector->srf.floor.terrain))
       terrain = TerrainTypes[sector->srf.floor.pic];
 
    // some terrains didn't exist before a certain version
@@ -889,7 +889,7 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
    ETerrain *terrain;
 
    // override with sector terrain if one is specified
-   if(!(terrain = sector->floorterrain))
+   if(!(terrain = sector->srf.floor.terrain))
       terrain = TerrainTypes[sector->srf.floor.pic];
 
    // no TerrainTypes in old demos or if comp enabled

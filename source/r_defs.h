@@ -314,6 +314,12 @@ struct surface_t
    // They are set in R_Subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
    float heightf;
+
+   // SoM 5/10/09: Happy birthday to me. Err, Slopes!
+   pslope_t *slope;
+
+   // haleyjd 10/17/10: terrain type overrides
+   ETerrain *terrain;
 };
 
 //
@@ -404,15 +410,10 @@ struct sector_t
    unsigned int damageflags; // special damage behaviors
 
    // SoM 5/10/09: Happy birthday to me. Err, Slopes!
-   pslope_t *f_slope;
    pslope_t *c_slope;
 
    // haleyjd 08/30/09 - used by the lightning code
    int16_t oldlightlevel; 
-
-   // haleyjd 10/17/10: terrain type overrides
-   ETerrain *floorterrain;
-   ETerrain *ceilingterrain;
 
    // haleyjd 01/15/12: sector actions
    DLListItem<sectoraction_t> *actions;

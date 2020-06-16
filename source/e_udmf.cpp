@@ -167,9 +167,9 @@ void UDMFParser::loadSectors(UDMFSetupSettings &setupSettings) const
 
          // Terrain types
          if(us.floorterrain.strCaseCmp(DEFAULT_flat))
-            ss->floorterrain = E_TerrainForName(us.floorterrain.constPtr());
+            ss->srf.floor.terrain = E_TerrainForName(us.floorterrain.constPtr());
          if (us.ceilingterrain.strCaseCmp(DEFAULT_flat))
-            ss->ceilingterrain = E_TerrainForName(us.ceilingterrain.constPtr());
+            ss->srf.ceiling.terrain = E_TerrainForName(us.ceilingterrain.constPtr());
 
          // Lights
          ss->srf.floor.lightdelta = static_cast<int16_t>(us.lightfloor);

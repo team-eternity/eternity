@@ -1691,8 +1691,8 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    }
 
    // terrain overrides
-   sector->floorterrain   = edsector->surface.floor.terrain;
-   sector->ceilingterrain = edsector->surface.ceiling.terrain;
+   sector->srf.floor.terrain   = edsector->surface.floor.terrain;
+   sector->srf.ceiling.terrain = edsector->surface.ceiling.terrain;
 
    // per-sector portal properties
    sector->srf.floor.pflags = (edsector->surface.floor.pflags | (edsector->surface.floor.alpha << PO_OPACITYSHIFT));
