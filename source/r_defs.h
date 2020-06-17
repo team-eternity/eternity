@@ -291,6 +291,10 @@ inline static bool isOuter(const T &a, const T &b)
    return S == surf_floor ? a < b : a > b;
 }
 
+static const unsigned secf_surfLightAbsolute[surf_NUM] = {
+   SECF_FLOORLIGHTABSOLUTE, SECF_CEILLIGHTABSOLUTE
+};
+
 //
 // Sector surface structure
 //

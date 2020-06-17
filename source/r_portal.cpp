@@ -668,38 +668,24 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
 }
 
 //
-// R_GetPlanePortal
+// Get plane portal
+// We really need a reference to the entire sector
 //
-// Either finds a plane portal matching the parameters, or creates a
-// new one. Used in p_spec.c.
-//
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, v2fixed_t *off,
-                           float *baseangle, float *angle, const v2float_t *scale)
+portal_t *R_GetPlanePortal(const sector_t *sector)
 {
-   portal_t *rover, *ret;
+   I_Assert(!!sector, "Expected non-null sector");
+
    edefstructvar(skyplanedata_t, skyplane);
+   skyplane.sector = sector;
 
-   if(!pic || !delta || !lightlevel || !off || !baseangle || !angle || !scale)
-      return NULL;
-      
-   skyplane.pic        = pic;
-   skyplane.delta      = delta;
-   skyplane.lightlevel = lightlevel;
-   skyplane.off        = off;
-   skyplane.baseangle  = baseangle; // haleyjd 01/05/08: flat angles
-   skyplane.angle      = angle;
-   skyplane.scale      = scale;
-
-   for(rover = portals; rover; rover = rover->next)
+   for(portal_t *rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_PLANE || 
-         memcmp(&rover->data.plane, &skyplane, sizeof(skyplane)))
+      if(rover->type != R_PLANE || memcmp(&rover->data.plane, &skyplane, sizeof(skyplane)))
          continue;
-
       return rover;
    }
 
-   ret = R_CreatePortal();
+   portal_t *ret = R_CreatePortal();
    ret->type = R_PLANE;
    ret->data.plane = skyplane;
    return ret;
@@ -733,7 +719,6 @@ static void R_RenderPlanePortal(pwindow_t *window)
 {
    visplane_t *vplane;
    int x;
-   float angle;
    portal_t *portal = window->portal;
 
    if(portal->type != R_PLANE)
@@ -767,12 +752,21 @@ static void R_RenderPlanePortal(pwindow_t *window)
       view.cos = cosf(view.angle);
    }
 
-   // haleyjd 01/05/08: flat angle
-   angle = *portal->data.plane.baseangle + *portal->data.plane.angle;
-
-   vplane = R_FindPlane(*portal->data.plane.delta + viewz, *portal->data.plane.pic, 
-                        *portal->data.plane.lightlevel, *portal->data.plane.off,
-                        *portal->data.plane.scale, angle, NULL, 0, 255, NULL);
+   const sector_t *sector = portal->data.plane.sector;
+   vplane = R_FindPlane(
+      sector->srf.ceiling.height + viewz,
+      sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
+      ? sector->sky : sector->srf.ceiling.pic,
+      R_GetSurfaceLightLevel(surf_ceil, sector),
+      sector->srf.ceiling.offset,
+      sector->srf.ceiling.scale,
+      // haleyjd 01/05/08: flat angle
+      sector->srf.ceiling.angle + sector->srf.ceiling.baseangle,
+      sector->srf.ceiling.slope,
+      0,
+      255,
+      nullptr
+   );
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
 
@@ -1857,9 +1851,7 @@ void R_DefinePortal(const line_t &line)
    switch(type)
    {
    case portaltype_plane:
-      portal = R_GetPlanePortal(&sector->srf.ceiling.pic, &sector->srf.ceiling.height,
-         &sector->lightlevel, &sector->srf.ceiling.offset, &sector->srf.ceiling.baseangle,
-         &sector->srf.ceiling.angle, &sector->srf.ceiling.scale);
+      portal = R_GetPlanePortal(sector);
       break;
    case portaltype_horizon:
       portal = R_GetHorizonPortal(&sector->srf.floor.pic, &sector->srf.ceiling.pic,

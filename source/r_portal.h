@@ -183,12 +183,7 @@ struct horizondata_t
 // The data needed for a skyplane portal
 struct skyplanedata_t
 {
-   int     *pic;
-   fixed_t *delta;
-   int16_t *lightlevel;
-   v2fixed_t *off;
-   float   *baseangle, *angle; // haleyjd 01/05/08: angles
-   const v2float_t *scale;
+   const sector_t *sector; // reference sector to get light and ceiling info
 };
 
 
@@ -245,8 +240,7 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
                              float *ceilingbaseangle, float *ceilingangle,
                              const v2float_t *floorscale, const v2float_t *ceilingscale);
 
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
-                           v2fixed_t *off, float *baseangle, float *angle, const v2float_t *scale);
+portal_t *R_GetPlanePortal(const sector_t *sector);
 
 void R_MovePortalOverlayToWindow(bool isceiling);
 void R_ClearPortals();

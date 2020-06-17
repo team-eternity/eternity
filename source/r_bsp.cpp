@@ -430,6 +430,15 @@ endclosed:
 }
 
 //
+// Get surface light level based on rules
+//
+int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec)
+{
+   return (sec->flags & secf_surfLightAbsolute[surf] ? 0 : sec->srf[surf].lightsec == -1 ?
+      sec->lightlevel : sectors[sec->srf[surf].lightsec].lightlevel) + sec->srf[surf].lightdelta;
+}
+
+//
 // killough 3/7/98: Hack floor/ceiling heights for deep water etc.
 //
 // If player's view height is underneath fake floor, lower the
@@ -451,21 +460,11 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
       return NULL;
 
    if(floorlightlevel)
-   {
-      *floorlightlevel =
-      (sec->flags & SECF_FLOORLIGHTABSOLUTE ? 0 : sec->srf.floor.lightsec == -1 ?
-       sec->lightlevel : sectors[sec->srf.floor.lightsec].lightlevel)
-      + sec->srf.floor.lightdelta;
-   }
+      *floorlightlevel = R_GetSurfaceLightLevel(surf_floor, sec);
 
+   // killough 4/11/98
    if(ceilinglightlevel)
-   {
-       // killough 4/11/98
-      *ceilinglightlevel =
-      (sec->flags & SECF_CEILLIGHTABSOLUTE ? 0 : sec->srf.ceiling.lightsec == -1 ?
-       sec->lightlevel : sectors[sec->srf.ceiling.lightsec].lightlevel)
-      + sec->srf.ceiling.lightdelta;
-   }
+      *ceilinglightlevel = R_GetSurfaceLightLevel(surf_ceil, sec);
 
    if(sec->heightsec != -1 || sec->srf.floor.portal || sec->srf.ceiling.portal)
    {
