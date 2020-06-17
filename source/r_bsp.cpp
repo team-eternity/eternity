@@ -1080,12 +1080,12 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    b = (int)seg.bottom;
    b2 = (int)seg.bottom2;
 
-   if(seg.backsec->c_slope)
+   if(seg.backsec->srf.ceiling.slope)
    {
       float z1, z2, zstep;
 
-      z1 = P_GetZAtf(seg.backsec->c_slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.backsec->c_slope, v2->fx, v2->fy);
+      z1 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v1->fx, v1->fy);
+      z2 = P_GetZAtf(seg.backsec->srf.ceiling.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
 
       z1 += lclip1 * zstep;
@@ -1170,7 +1170,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    // -- Ceilings -- 
    // SoM: TODO: Float comparisons should be done within an epsilon
-   heightchange = seg.frontsec->c_slope || seg.backsec->c_slope ? 
+   heightchange = seg.frontsec->srf.ceiling.slope || seg.backsec->srf.ceiling.slope ?
                   (t != h || t2 != h2) :
                   (seg.backsec->srf.ceiling.height != seg.frontsec->srf.ceiling.height);
 
@@ -1216,7 +1216,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          (seg.backsec->flags & SECF_CEILLIGHTABSOLUTE) ||
         seg.frontsec->topmap != seg.backsec->topmap ||
         seg.frontsec->srf.ceiling.portal != seg.backsec->srf.ceiling.portal ||
-        !R_CompareSlopes(seg.frontsec->c_slope, seg.backsec->c_slope) || markblend)) // haleyjd
+        !R_CompareSlopes(seg.frontsec->srf.ceiling.slope, seg.backsec->srf.ceiling.slope) || markblend)) // haleyjd
    {
       seg.markflags |= seg.c_portal ? SEG_MARKCOVERLAY : SEG_MARKCEILING;
    }
@@ -2100,7 +2100,7 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    // IOANCH 20160120: ADD C_PORTAL AND F_PORTAL CHECK BECAUSE IT MIGHT HAVE
    // BEEN REMOVED BY R_FAKEFLAT WITHOUT ALSO CANCELLING PS_PASSABLE!
    //
-   if(!seg.frontsec->srf.floor.slope && !seg.frontsec->c_slope &&
+   if(!seg.frontsec->srf.floor.slope && !seg.frontsec->srf.ceiling.slope &&
       seg.frontsec->srf.ceiling.height <= seg.frontsec->srf.floor.height &&
       !(seg.frontsec->intflags & SIF_SKY) &&
       !((seg.frontsec->srf.ceiling.pflags & PS_PASSABLE && seg.frontsec->srf.ceiling.portal &&
@@ -2156,7 +2156,7 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       && !seg.line->linedef->portal
 
       && seg.backsec->srf.floor.slope == seg.frontsec->srf.floor.slope
-      && seg.backsec->c_slope == seg.frontsec->c_slope
+      && seg.backsec->srf.ceiling.slope == seg.frontsec->srf.ceiling.slope
       )
       return;
 
@@ -2315,12 +2315,12 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
 
    seg.side = side;
 
-   if(seg.frontsec->c_slope)
+   if(seg.frontsec->srf.ceiling.slope)
    {
       float z1, z2, zstep;
 
-      z1 = P_GetZAtf(seg.frontsec->c_slope, v1->fx, v1->fy);
-      z2 = P_GetZAtf(seg.frontsec->c_slope, v2->fx, v2->fy);
+      z1 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v1->fx, v1->fy);
+      z2 = P_GetZAtf(seg.frontsec->srf.ceiling.slope, v2->fx, v2->fy);
       zstep = (z2 - z1) / seg.line->len;
 
       z1 += lclip1 * zstep;
@@ -2379,8 +2379,8 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    }
    else
    {
-      if(seg.frontsec->srf.floor.slope || seg.frontsec->c_slope ||
-         seg.backsec->srf.floor.slope || seg.backsec->c_slope)
+      if(seg.frontsec->srf.floor.slope || seg.frontsec->srf.ceiling.slope ||
+         seg.backsec->srf.floor.slope || seg.backsec->srf.ceiling.slope)
          R_2S_Sloped(pstep, i1, i2, textop, texbottom, v1, v2, lclip1, lclip2);
       else
          R_2S_Normal(pstep, i1, i2, textop, texbottom);
@@ -2779,10 +2779,10 @@ static void R_Subsector(int num)
 
 
    // -- Ceiling plane and portal --
-   visible  = (!seg.frontsec->c_slope && seg.frontsec->srf.ceiling.height > viewz)
-           || (seg.frontsec->c_slope
-           &&  P_DistFromPlanef(&cam, &seg.frontsec->c_slope->of,
-                                &seg.frontsec->c_slope->normalf) > 0.0f);
+   visible  = (!seg.frontsec->srf.ceiling.slope && seg.frontsec->srf.ceiling.height > viewz)
+           || (seg.frontsec->srf.ceiling.slope
+           &&  P_DistFromPlanef(&cam, &seg.frontsec->srf.ceiling.slope->of,
+                                &seg.frontsec->srf.ceiling.slope->normalf) > 0.0f);
 
    // ioanch 20160118: ADDED A c_portal existence check!
    seg.c_portal = seg.frontsec->srf.ceiling.pflags & PS_VISIBLE
@@ -2804,7 +2804,7 @@ static void R_Subsector(int num)
                     ceilinglightlevel,                // killough 3/16/98
                     seg.frontsec->srf.ceiling.offset,       // killough 3/7/98
                     seg.frontsec->srf.ceiling.scale,
-                    ceilingangle, seg.frontsec->c_slope,
+                    ceilingangle, seg.frontsec->srf.ceiling.slope,
                     seg.frontsec->srf.ceiling.pflags,
                     cpalpha,
                     seg.c_portal->poverlay) : NULL;
@@ -2822,7 +2822,7 @@ static void R_Subsector(int num)
                     ceilinglightlevel,              // killough 4/11/98
                     seg.frontsec->srf.ceiling.offset,     // killough 3/7/98
                     seg.frontsec->srf.ceiling.scale,
-                    ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
+                    ceilingangle, seg.frontsec->srf.ceiling.slope, 0, 255, NULL) : NULL;
    }
   
    // killough 9/18/98: Fix underwater slowdown, by passing real sector 

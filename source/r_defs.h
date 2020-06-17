@@ -434,9 +434,6 @@ struct sector_t
    int damagemod;   // damage method to use
    unsigned int damageflags; // special damage behaviors
 
-   // SoM 5/10/09: Happy birthday to me. Err, Slopes!
-   pslope_t *c_slope;
-
    // haleyjd 08/30/09 - used by the lightning code
    int16_t oldlightlevel; 
 

@@ -289,7 +289,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
          point.z = line->frontsector->srf.ceiling.heightf;
          dz = (line->backsector->srf.ceiling.heightf - point.z) / extent;
 
-         line->frontsector->c_slope = P_MakeSlope(&point, &direction, dz, true);
+         line->frontsector->srf.ceiling.slope = P_MakeSlope(&point, &direction, dz, true);
       }
    }
 
@@ -325,7 +325,7 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
          point.z = line->backsector->srf.ceiling.heightf;
          dz = (line->frontsector->srf.ceiling.heightf - point.z) / extent;
 
-         line->backsector->c_slope = P_MakeSlope(&point, &direction, dz, true);
+         line->backsector->srf.ceiling.slope = P_MakeSlope(&point, &direction, dz, true);
       }
    }
 
@@ -345,9 +345,9 @@ static void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
    {
       // Deliberately overwrite the plane_align slope
       const sector_t &srcsec = sectors[secnum];
-      if(copyCeil && srcsec.c_slope)
+      if(copyCeil && srcsec.srf.ceiling.slope)
       {
-         dest->c_slope = P_CopySlope(srcsec.c_slope);
+         dest->srf.ceiling.slope = P_CopySlope(srcsec.srf.ceiling.slope);
          return;
       }
 
@@ -393,9 +393,9 @@ static void P_copySectorSlopeParam(line_t *line)
       }
 
       if((line->args[4] & 12) == 4)
-         line->backsector->c_slope = P_CopySlope(line->frontsector->c_slope);
+         line->backsector->srf.ceiling.slope = P_CopySlope(line->frontsector->srf.ceiling.slope);
       else if((line->args[4] & 12) == 8)
-         line->frontsector->c_slope = P_CopySlope(line->backsector->c_slope);
+         line->frontsector->srf.ceiling.slope = P_CopySlope(line->backsector->srf.ceiling.slope);
       else if((line->args[4] & 12) == 12)
       {
          C_Printf(FC_ERROR "P_CopySectorSlopeParam: Plane_Copy[4] flags 4 and 8 are mutually"
@@ -444,8 +444,8 @@ void P_CopySectorSlope(line_t *line, int staticFn)
       if(copyFloor && !fsec->srf.floor.slope && srcsec->srf.floor.slope)
          fsec->srf.floor.slope = P_CopySlope(srcsec->srf.floor.slope);
 
-      if(copyCeiling && !fsec->c_slope && srcsec->c_slope)
-         fsec->c_slope = P_CopySlope(srcsec->c_slope);
+      if(copyCeiling && !fsec->srf.ceiling.slope && srcsec->srf.ceiling.slope)
+         fsec->srf.ceiling.slope = P_CopySlope(srcsec->srf.ceiling.slope);
    }
 
    line->special = 0;
