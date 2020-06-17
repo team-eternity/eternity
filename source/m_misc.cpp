@@ -1539,7 +1539,7 @@ void M_SaveDefaultFile(defaultfile_t *df)
       return;
    }
 
-   for(char ch = fgetc(f); ch != EOF; ch = fgetc(f))
+   for(int ch = fgetc(f); ch != EOF; ch = fgetc(f))
       fputc(ch, destf);
 
    // We don't care about errors at this stage
