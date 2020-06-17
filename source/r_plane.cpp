@@ -460,8 +460,8 @@ static void R_CalcSlope(visplane_t *pl)
    // SoM: Add offsets? YAH!
 
    // Need to reduce them to the visible range, because otherwise it may overflow
-   double xoffsf = fmod(pl->xoffsf, xl / pl->xscale);
-   double yoffsf = fmod(pl->yoffsf, yl / pl->yscale);
+   double xoffsf = fmod(pl->xoffsf, xl / pl->scale.x);
+   double yoffsf = fmod(pl->yoffsf, yl / pl->scale.y);
 
    v3double_t P;
    P.x = -xoffsf * tcos - yoffsf * tsin;
@@ -510,7 +510,7 @@ static void R_CalcSlope(visplane_t *pl)
    iyscale = view.tan / (float)yl;
 
    rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
-   rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
+   rslope->shade = 256.0 * 2.0 - (pl->lightlevel + 16.0) * 256.0 / 128.0;
 }
 
 //
@@ -648,8 +648,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 // haleyjd 01/05/08: Add angle
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                        fixed_t xoffs, fixed_t yoffs,
-                        float xscale, float yscale, float angle,
+                        v2fixed_t offs, v2float_t scale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
                         planehash_t *table)
 {
@@ -692,10 +691,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       if(height == check->height &&
          picnum == check->picnum &&
          lightlevel == check->lightlevel &&
-         xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
-         yoffs == check->yoffs &&
-         xscale == check->xscale &&
-         yscale == check->yscale &&
+         offs == check->offs &&      // killough 2/28/98: Add offset checks
+         scale == check->scale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap &&
@@ -716,10 +713,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->lightlevel = lightlevel;
    check->minx = viewwindow.width;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = -1;
-   check->xoffs = xoffs;               // killough 2/28/98: Save offsets
-   check->yoffs = yoffs;
-   check->xscale = xscale;
-   check->yscale = yscale;
+   check->offs = offs;               // killough 2/28/98: Save offsets
+   check->scale = scale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
@@ -730,15 +725,15 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->viewz = viewz;
    
    check->heightf = M_FixedToFloat(height);
-   check->xoffsf  = M_FixedToFloat(xoffs);
-   check->yoffsf  = M_FixedToFloat(yoffs);
+   check->xoffsf  = M_FixedToFloat(offs.x);
+   check->yoffsf  = M_FixedToFloat(offs.y);
    
    check->bflags = blendflags;
    check->opacity = opacity;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
-   check->viewsin = (float) sin(view.angle + check->angle);
-   check->viewcos = (float) cos(view.angle + check->angle);
+   check->viewsin = sinf(view.angle + check->angle);
+   check->viewcos = cosf(view.angle + check->angle);
    
    // SoM: set up slope type stuff
    if((check->pslope = slope))
@@ -786,8 +781,7 @@ visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
    new_pl->lightlevel = pl->lightlevel;
    new_pl->colormap = pl->colormap;
    new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
-   new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
-   new_pl->yoffs = pl->yoffs;
+   new_pl->offs = pl->offs;                 // killough 2/28/98
    new_pl->angle = pl->angle;                 // haleyjd 01/05/08
 
    new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
@@ -803,8 +797,7 @@ visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
 
    // SoM: copy converted stuffs too
    new_pl->heightf = pl->heightf;
-   new_pl->yscale = pl->yscale;
-   new_pl->xscale = pl->xscale;
+   new_pl->scale = pl->scale;
    new_pl->xoffsf = pl->xoffsf;
    new_pl->yoffsf = pl->yoffsf;
 
@@ -1195,8 +1188,8 @@ static void do_draw_plane(visplane_t *pl)
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
 
-      plane.xscale = pl->xscale;
-      plane.yscale = pl->yscale;
+      plane.xscale = pl->scale.x;
+      plane.yscale = pl->scale.y;
 
       plane.pviewx   = pl->viewxf;
       plane.pviewy   = pl->viewyf;

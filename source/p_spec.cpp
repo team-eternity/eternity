@@ -3115,11 +3115,10 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       portal = R_GetPlanePortal(&sector->srf.ceiling.pic,
                                 &sector->srf.ceiling.height,
                                 &sector->lightlevel,
-                                &sector->srf.ceiling.offset.x,
-                                &sector->srf.ceiling.offset.y,
+                                &sector->srf.ceiling.offset,
                                 &sector->srf.ceiling.baseangle,
-                                &sector->srf.ceiling.angle, &sector->srf.ceiling.scale.x,
-                                &sector->srf.ceiling.scale.y);
+                                &sector->srf.ceiling.angle,
+                                &sector->srf.ceiling.scale);
       break;
 
    case portal_horizon:

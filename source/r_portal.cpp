@@ -673,28 +673,22 @@ portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
 // Either finds a plane portal matching the parameters, or creates a
 // new one. Used in p_spec.c.
 //
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, 
-                           int16_t *lightlevel, 
-                           fixed_t *xoff, fixed_t *yoff,
-                           float *baseangle, float *angle, const float *xscale,
-                           const float *yscale)
+portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, v2fixed_t *off,
+                           float *baseangle, float *angle, const v2float_t *scale)
 {
    portal_t *rover, *ret;
    edefstructvar(skyplanedata_t, skyplane);
 
-   if(!pic || !delta || !lightlevel || !xoff || !yoff || !baseangle || !angle ||
-      !xscale || !yscale)
+   if(!pic || !delta || !lightlevel || !off || !baseangle || !angle || !scale)
       return NULL;
       
    skyplane.pic        = pic;
    skyplane.delta      = delta;
    skyplane.lightlevel = lightlevel;
-   skyplane.xoff       = xoff;
-   skyplane.yoff       = yoff;
+   skyplane.off        = off;
    skyplane.baseangle  = baseangle; // haleyjd 01/05/08: flat angles
    skyplane.angle      = angle;
-   skyplane.xscale = xscale;
-   skyplane.yscale = yscale;
+   skyplane.scale      = scale;
 
    for(rover = portals; rover; rover = rover->next)
    {
@@ -776,14 +770,9 @@ static void R_RenderPlanePortal(pwindow_t *window)
    // haleyjd 01/05/08: flat angle
    angle = *portal->data.plane.baseangle + *portal->data.plane.angle;
 
-   vplane = R_FindPlane(*portal->data.plane.delta + viewz, 
-                        *portal->data.plane.pic, 
-                        *portal->data.plane.lightlevel, 
-                        *portal->data.plane.xoff, 
-                        *portal->data.plane.yoff,
-                        *portal->data.plane.xscale,
-                        *portal->data.plane.yscale,
-                        angle, NULL, 0, 255, NULL);
+   vplane = R_FindPlane(*portal->data.plane.delta + viewz, *portal->data.plane.pic, 
+                        *portal->data.plane.lightlevel, *portal->data.plane.off,
+                        *portal->data.plane.scale, angle, NULL, 0, 255, NULL);
 
    vplane = R_CheckPlane(vplane, window->minx, window->maxx);
 
@@ -869,20 +858,16 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    topplane = R_FindPlane(*portal->data.horizon[surf_ceil].z,
                           *portal->data.horizon[surf_ceil].pic,
                           *portal->data.horizon[surf_ceil].light,
-                          portal->data.horizon[surf_ceil].off->x,
-                          portal->data.horizon[surf_ceil].off->y,
-                          portal->data.horizon[surf_ceil].scale->x,
-                          portal->data.horizon[surf_ceil].scale->y,
+                          *portal->data.horizon[surf_ceil].off,
+                          *portal->data.horizon[surf_ceil].scale,
                           ceilingangle, NULL, 0, 255, NULL);
 
    // FIXME: Replace the 1.0s?
    bottomplane = R_FindPlane(*portal->data.horizon[surf_floor].z,
                              *portal->data.horizon[surf_floor].pic,
                              *portal->data.horizon[surf_floor].light,
-                             portal->data.horizon[surf_floor].off->x,
-                             portal->data.horizon[surf_floor].off->y,
-                             portal->data.horizon[surf_floor].scale->x,
-                             portal->data.horizon[surf_floor].scale->y,
+                             *portal->data.horizon[surf_floor].off,
+                             *portal->data.horizon[surf_floor].scale,
                              floorangle, NULL, 0, 255, NULL);
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
@@ -1056,13 +1041,11 @@ static void R_ShowTainted(pwindow_t *window)
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
-         sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset.x,
-         sector->srf.ceiling.offset.y, sector->srf.ceiling.scale.x, sector->srf.ceiling.scale.y,
-         ceilingangle, nullptr, 0, 255, nullptr);
+         sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset,
+         sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr);
       visplane_t *bottomplane = R_FindPlane(sector->srf.floor.height,
-         sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset.x,
-         sector->srf.floor.offset.y, sector->srf.floor.scale.x, sector->srf.floor.scale.y,
-         floorangle, nullptr, 0, 255, nullptr);
+         sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset,
+         sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr);
       topplane = R_CheckPlane(topplane, window->minx, window->maxx);
       bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
 
@@ -1475,7 +1458,7 @@ void R_MovePortalOverlayToWindow(bool isceiling)
    if(plane)
    {
       plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,
-         plane->xoffs, plane->yoffs, plane->xscale, plane->yscale, plane->angle,
+         plane->offs, plane->scale, plane->angle,
          plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
    }
 //   if(portal)
@@ -1875,9 +1858,8 @@ void R_DefinePortal(const line_t &line)
    {
    case portaltype_plane:
       portal = R_GetPlanePortal(&sector->srf.ceiling.pic, &sector->srf.ceiling.height,
-         &sector->lightlevel, &sector->srf.ceiling.offset.x, &sector->srf.ceiling.offset.y,
-         &sector->srf.ceiling.baseangle, &sector->srf.ceiling.angle,
-         &sector->srf.ceiling.scale.x, &sector->srf.ceiling.scale.y);
+         &sector->lightlevel, &sector->srf.ceiling.offset, &sector->srf.ceiling.baseangle,
+         &sector->srf.ceiling.angle, &sector->srf.ceiling.scale);
       break;
    case portaltype_horizon:
       portal = R_GetHorizonPortal(&sector->srf.floor.pic, &sector->srf.ceiling.pic,

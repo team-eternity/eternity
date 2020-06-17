@@ -689,8 +689,8 @@ struct visplane_t
    lighttable_t *(*colormap)[MAXLIGHTZ];
    lighttable_t *fullcolormap;   // SoM: Used by slopes.
    lighttable_t *fixedcolormap;  // haleyjd 10/16/06
-   fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
-   float xscale, yscale;
+   v2fixed_t offs;         // killough 2/28/98: Support scrolling flats
+   v2float_t scale;
 
    // SoM: The plane silhouette arrays are allocated based on screen-size now.
    int *top;

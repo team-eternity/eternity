@@ -2754,10 +2754,8 @@ static void R_Subsector(int num)
                     seg.frontsec->srf.floor.pflags & PS_USEGLOBALTEX ?
                     seg.f_portal->globaltex : seg.frontsec->srf.floor.pic,
                     floorlightlevel,                // killough 3/16/98
-                    seg.frontsec->srf.floor.offset.x,       // killough 3/7/98
-                    seg.frontsec->srf.floor.offset.y,
-                    seg.frontsec->srf.floor.scale.x,
-                    seg.frontsec->srf.floor.scale.y,
+                    seg.frontsec->srf.floor.offset,       // killough 3/7/98
+                    seg.frontsec->srf.floor.scale,
                     floorangle, seg.frontsec->srf.floor.slope,
                     seg.frontsec->srf.floor.pflags,
                     fpalpha,
@@ -2774,10 +2772,8 @@ static void R_Subsector(int num)
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
                     seg.frontsec->srf.floor.pic,
                     floorlightlevel,                // killough 3/16/98
-                    seg.frontsec->srf.floor.offset.x,       // killough 3/7/98
-                    seg.frontsec->srf.floor.offset.y,
-                    seg.frontsec->srf.floor.scale.x,
-                    seg.frontsec->srf.floor.scale.y,
+                    seg.frontsec->srf.floor.offset,       // killough 3/7/98
+                    seg.frontsec->srf.floor.scale,
                     floorangle, seg.frontsec->srf.floor.slope, 0, 255, NULL) : NULL;
    }
 
@@ -2806,10 +2802,8 @@ static void R_Subsector(int num)
                     seg.frontsec->srf.ceiling.pflags & PS_USEGLOBALTEX ?
                     seg.c_portal->globaltex : seg.frontsec->srf.ceiling.pic,
                     ceilinglightlevel,                // killough 3/16/98
-                    seg.frontsec->srf.ceiling.offset.x,       // killough 3/7/98
-                    seg.frontsec->srf.ceiling.offset.y,
-                    seg.frontsec->srf.ceiling.scale.x,
-                    seg.frontsec->srf.ceiling.scale.y,
+                    seg.frontsec->srf.ceiling.offset,       // killough 3/7/98
+                    seg.frontsec->srf.ceiling.scale,
                     ceilingangle, seg.frontsec->c_slope,
                     seg.frontsec->srf.ceiling.pflags,
                     cpalpha,
@@ -2826,10 +2820,8 @@ static void R_Subsector(int num)
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
                     seg.frontsec->srf.ceiling.pic,
                     ceilinglightlevel,              // killough 4/11/98
-                    seg.frontsec->srf.ceiling.offset.x,     // killough 3/7/98
-                    seg.frontsec->srf.ceiling.offset.y,
-                    seg.frontsec->srf.ceiling.scale.x,
-                    seg.frontsec->srf.ceiling.scale.y,
+                    seg.frontsec->srf.ceiling.offset,     // killough 3/7/98
+                    seg.frontsec->srf.ceiling.scale,
                     ceilingangle, seg.frontsec->c_slope, 0, 255, NULL) : NULL;
    }
   
