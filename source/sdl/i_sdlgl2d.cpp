@@ -567,6 +567,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                    colordepth, SDL_GetPixelFormatName(format));
    }
 
+   const char *extensions = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
+
    // Try loading the ARB PBO extension
    LoadPBOExtension();
 
@@ -590,8 +592,16 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    GL_SetOrthoMode(v_w, v_h);
 
    // Calculate framebuffer texture sizes
-   framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
-   framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
+   if(strstr(extensions, "GL_ARB_texture_non_power_of_two") != nullptr)
+   {
+       framebuffer_umax = v_w;
+       framebuffer_vmax = v_h;
+   }
+   else
+   {
+       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
+       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
+   }
 
    // calculate right- and bottom-side texture coordinates
    texcoord_smax = static_cast<GLfloat>(v_w) / framebuffer_umax;
