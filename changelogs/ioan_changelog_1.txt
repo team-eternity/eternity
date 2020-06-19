@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+19.06.2020
+
+IMPROVEMENT: Plane portals can now render sloped visplanes, with the slope
+             copied from the source sector. Note that horizon portals still lack
+             this feature, due to how they were designed.
+
+--------------------------------------------------------------------------------
 13.06.2020
 
 BUGFIX: Fixed the FLIES thingtype particlefx from sounding badly.
