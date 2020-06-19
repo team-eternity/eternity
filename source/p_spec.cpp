@@ -3116,15 +3116,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       break;
 
    case portal_horizon:
-      portal = R_GetHorizonPortal(&sector->srf.floor.pic, &sector->srf.ceiling.pic,
-                                  &sector->srf.floor.height, &sector->srf.ceiling.height,
-                                  &sector->lightlevel, &sector->lightlevel,
-                                  &sector->srf.floor.offset,
-                                  &sector->srf.ceiling.offset,
-                                  &sector->srf.floor.baseangle, &sector->srf.floor.angle,
-                                  &sector->srf.ceiling.baseangle, &sector->srf.ceiling.angle,
-                                  &sector->srf.floor.scale, &sector->srf.ceiling.scale);
-      // TODO: line portal
+      portal = R_GetHorizonPortal(sector);
       if(effects == portal_lineonly)
       {
          // special case for line-only portal

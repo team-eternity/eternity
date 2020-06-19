@@ -616,54 +616,22 @@ portal_t *R_GetSkyBoxPortal(Mobj *camera)
 }
 
 //
-// R_GetHorizonPortal
+// Gets or creates a horizon portal from two given surfaces
 //
-// Either finds an existing horizon portal matching the parameters,
-// or creates a new one. Used in p_spec.c.
-//
-portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
-                             fixed_t *floorz, fixed_t *ceilingz,
-                             int16_t *floorlight, int16_t *ceilinglight,
-                             v2fixed_t *flooroff, v2fixed_t *ceilingoff,
-                             float *floorbaseangle, float *floorangle,
-                             float *ceilingbaseangle, float *ceilingangle,
-                             const v2float_t *floorscale, const v2float_t *ceilingscale)
+portal_t *R_GetHorizonPortal(const sector_t *sector)
 {
-   portal_t *rover, *ret;
-   horizondata_t horizon[surf_NUM] = {};
+   I_Assert(!!sector, "Expected non-null sector");
 
-   if(!floorpic || !ceilingpic || !floorz || !ceilingz ||
-      !floorlight || !ceilinglight || !flooroff ||
-      !ceilingoff || !floorbaseangle || !floorangle ||
-      !ceilingbaseangle || !ceilingangle || !floorscale || !ceilingscale)
-      return NULL;
-
-   horizon[surf_ceil].light = ceilinglight;
-   horizon[surf_ceil].pic   = ceilingpic;
-   horizon[surf_ceil].z     = ceilingz;
-   horizon[surf_ceil].off   = ceilingoff;
-   horizon[surf_ceil].baseangle = ceilingbaseangle;
-   horizon[surf_ceil].angle = ceilingangle;
-   horizon[surf_ceil].scale = ceilingscale;
-   horizon[surf_floor].light= floorlight;
-   horizon[surf_floor].pic  = floorpic;
-   horizon[surf_floor].z    = floorz;
-   horizon[surf_floor].off = flooroff;
-   horizon[surf_floor].baseangle = floorbaseangle; // haleyjd 01/05/08
-   horizon[surf_floor].angle = floorangle;
-   horizon[surf_floor].scale = floorscale;
-
-   for(rover = portals; rover; rover = rover->next)
+   for(portal_t *rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_HORIZON || memcmp(rover->data.horizon, horizon, sizeof(horizon)))
+      if(rover->type != R_HORIZON || rover->data.sector != sector)
          continue;
-
       return rover;
    }
 
-   ret = R_CreatePortal();
+   portal_t *ret = R_CreatePortal();
    ret->type = R_HORIZON;
-   memcpy(ret->data.horizon, horizon, sizeof(horizon));
+   ret->data.sector = sector;
    return ret;
 }
 
@@ -675,19 +643,16 @@ portal_t *R_GetPlanePortal(const sector_t *sector)
 {
    I_Assert(!!sector, "Expected non-null sector");
 
-   edefstructvar(skyplanedata_t, skyplane);
-   skyplane.sector = sector;
-
    for(portal_t *rover = portals; rover; rover = rover->next)
    {
-      if(rover->type != R_PLANE || memcmp(&rover->data.plane, &skyplane, sizeof(skyplane)))
+      if(rover->type != R_PLANE || rover->data.sector != sector)
          continue;
       return rover;
    }
 
    portal_t *ret = R_CreatePortal();
    ret->type = R_PLANE;
-   ret->data.plane = skyplane;
+   ret->data.sector = sector;
    return ret;
 }
 
@@ -752,7 +717,7 @@ static void R_RenderPlanePortal(pwindow_t *window)
       view.cos = cosf(view.angle);
    }
 
-   const sector_t *sector = portal->data.plane.sector;
+   const sector_t *sector = portal->data.sector;
    vplane = R_FindPlane(
       sector->srf.ceiling.height + viewz,
       sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
@@ -805,7 +770,7 @@ static void R_RenderPlanePortal(pwindow_t *window)
 static void R_RenderHorizonPortal(pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz; // SoM 3/10/2005
-   float   lastxf, lastyf, lastzf, floorangle, ceilingangle;
+   float   lastxf, lastyf, lastzf;
    visplane_t *topplane, *bottomplane;
    int x;
    portal_t *portal = window->portal;
@@ -841,28 +806,34 @@ static void R_RenderHorizonPortal(pwindow_t *window)
       view.cos = cosf(view.angle);
    }
 
+   const sector_t *sector = portal->data.sector;
    // haleyjd 01/05/08: angles
-   floorangle = *portal->data.horizon[surf_floor].baseangle +
-                *portal->data.horizon[surf_floor].angle;
-
-   ceilingangle = *portal->data.horizon[surf_ceil].baseangle +
-                  *portal->data.horizon[surf_ceil].angle;
-
-   // FIXME: Replace the 1.0s?
-   topplane = R_FindPlane(*portal->data.horizon[surf_ceil].z,
-                          *portal->data.horizon[surf_ceil].pic,
-                          *portal->data.horizon[surf_ceil].light,
-                          *portal->data.horizon[surf_ceil].off,
-                          *portal->data.horizon[surf_ceil].scale,
-                          ceilingangle, NULL, 0, 255, NULL);
-
-   // FIXME: Replace the 1.0s?
-   bottomplane = R_FindPlane(*portal->data.horizon[surf_floor].z,
-                             *portal->data.horizon[surf_floor].pic,
-                             *portal->data.horizon[surf_floor].light,
-                             *portal->data.horizon[surf_floor].off,
-                             *portal->data.horizon[surf_floor].scale,
-                             floorangle, NULL, 0, 255, NULL);
+   
+   const float angles[surf_NUM] = {
+      sector->srf.floor.baseangle + sector->srf.ceiling.angle,
+      sector->srf.ceiling.baseangle + sector->srf.ceiling.angle
+   };
+      
+   topplane = R_FindPlane(
+      sector->srf.ceiling.height,
+      sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT 
+      ? sector->sky : sector->srf.ceiling.pic,
+      R_GetSurfaceLightLevel(surf_ceil, sector),
+      sector->srf.ceiling.offset,
+      sector->srf.ceiling.scale,
+      angles[surf_ceil],
+      nullptr, 0, 255, nullptr
+   );
+   bottomplane = R_FindPlane(
+      sector->srf.floor.height,
+      R_IsSkyFlat(sector->srf.floor.pic) && sector->sky & PL_SKYFLAT
+      ? sector->sky : sector->srf.floor.pic,
+      R_GetSurfaceLightLevel(surf_floor, sector),
+      sector->srf.floor.offset,
+      sector->srf.floor.scale,
+      angles[surf_floor],
+      nullptr, 0, 255, nullptr
+   );
 
    topplane = R_CheckPlane(topplane, window->minx, window->maxx);
    bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
@@ -1854,13 +1825,7 @@ void R_DefinePortal(const line_t &line)
       portal = R_GetPlanePortal(sector);
       break;
    case portaltype_horizon:
-      portal = R_GetHorizonPortal(&sector->srf.floor.pic, &sector->srf.ceiling.pic,
-         &sector->srf.floor.height, &sector->srf.ceiling.height, &sector->lightlevel,
-         &sector->lightlevel, &sector->srf.floor.offset,
-         &sector->srf.ceiling.offset,
-         &sector->srf.floor.baseangle, &sector->srf.floor.angle,
-         &sector->srf.ceiling.baseangle, &sector->srf.ceiling.angle,
-         &sector->srf.floor.scale, &sector->srf.ceiling.scale);
+      portal = R_GetHorizonPortal(sector);
       break;
    case portaltype_skybox:
       skycam = sector->thinglist;

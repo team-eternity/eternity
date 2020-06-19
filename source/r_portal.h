@@ -166,27 +166,6 @@ struct anchordata_t
    int       maker, anchor;
 };
 
-
-// Represents the data needed for a horizon portal's surface (floor and ceiling)
-struct horizondata_t
-{
-   int *pic;
-   fixed_t *z;
-   int16_t *light;
-   v2fixed_t *off;
-   float *baseangle;
-   float *angle; // haleyjd 01/05/08: flat angles
-   const v2float_t *scale;
-};
-
-
-// The data needed for a skyplane portal
-struct skyplanedata_t
-{
-   const sector_t *sector; // reference sector to get light and ceiling info
-};
-
-
 // The portal struct. This is what is assigned to sectors and can represent any
 // kind of portal.
 struct portal_t
@@ -195,8 +174,7 @@ struct portal_t
 
    union portaldata_u
    {
-      skyplanedata_t plane;
-      horizondata_t  horizon[surf_NUM];
+      const sector_t *sector; // when a single sector reference is enough
       anchordata_t   anchor;
       linkdata_t     link;
       Mobj          *camera;
@@ -232,13 +210,7 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
    bool allowrotate, bool flipped, fixed_t zoffset);
 
-portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic,
-                             fixed_t *floorz, fixed_t *ceilingz,
-                             int16_t *floorlight, int16_t *ceilinglight,
-                             v2fixed_t *flooroff, v2fixed_t *ceilingoff,
-                             float *floorbaseangle, float *floorangle,
-                             float *ceilingbaseangle, float *ceilingangle,
-                             const v2float_t *floorscale, const v2float_t *ceilingscale);
+portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
