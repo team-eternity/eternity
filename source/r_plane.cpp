@@ -60,10 +60,6 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#ifdef _SDL_VER
-#include "SDL_endian.h"
-#endif
-
 #define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
 
 static visplane_t *freetail;                   // killough

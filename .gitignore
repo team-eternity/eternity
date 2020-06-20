@@ -25,3 +25,4 @@ SDL2_net.framework
 *.VC.db
 vc2017/Debug/
 .dir-locals.el
+*.framework.version.txt

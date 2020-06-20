@@ -26,10 +26,15 @@
 // haleyjd 11/22/08: I don't understand why this is needed here...
 #define USE_RWOPS
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#include "SDL2_mixer/SDL_mixer.h"
+#else
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"
 #include "SDL_mixer.h"
+#endif
 
 #include "i_midirpc.h"
 

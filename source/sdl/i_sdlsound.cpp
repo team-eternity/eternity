@@ -19,10 +19,15 @@
 // Authors: James Haley, Stephen McGranahan, Julian Aubourg
 //
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#include "SDL2_mixer/SDL_mixer.h"
+#else
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "SDL_thread.h"
 #include "SDL_mixer.h"
+#endif
 
 #include "../z_zone.h"
 
