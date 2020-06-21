@@ -1783,7 +1783,7 @@ static void E_ProcessBlood(int i, cfg_t *cfg, const char *searchedprop)
    const char *bloodVal = cfg_getstr(cfg, searchedprop);
 
    // if empty or set to @default, this blood type definition will be removed.
-   if(*bloodVal && strcasecmp(bloodVal, "@default"))
+   if(estrnonempty(bloodVal) && strcasecmp(bloodVal, "@default"))
    {
       // "@none" is explicitly reserved in order to disable a specific type of blood
       if(strcasecmp(bloodVal, "@none") && E_ThingNumForName(bloodVal) < 0)
