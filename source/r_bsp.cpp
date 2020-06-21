@@ -1185,14 +1185,12 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.frontsec->srf.ceiling.portal != seg.backsec->srf.ceiling.portal)
       {
          seg.markflags |= SEG_MARKCPORTAL;
-         seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->srf.ceiling.portal,
-                                                   seg.frontsec->srf.ceiling.height);
+         seg.c_window   = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_MovePortalOverlayToWindow(true);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
-         seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->srf.ceiling.portal,
-                                                   seg.frontsec->srf.ceiling.height);
+         seg.c_window   = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_MovePortalOverlayToWindow(true);
          seg.c_window = nullptr;
       }
@@ -1265,14 +1263,12 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
          seg.frontsec->srf.floor.portal != seg.backsec->srf.floor.portal)
       {
          seg.markflags |= SEG_MARKFPORTAL;
-         seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->srf.floor.portal,
-                                                 seg.frontsec->srf.floor.height);
+         seg.f_window   = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_MovePortalOverlayToWindow(false);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
-         seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->srf.floor.portal,
-                                                 seg.frontsec->srf.floor.height);
+         seg.f_window   = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_MovePortalOverlayToWindow(false);
          seg.f_window = nullptr;
       }
@@ -1487,16 +1483,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
          seg.frontsec->srf.ceiling.portal != seg.backsec->srf.ceiling.portal)
       {
          seg.markflags |= SEG_MARKCPORTAL;
-         seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->srf.ceiling.portal,
-                                                   seg.frontsec->srf.ceiling.height);
+         seg.c_window   = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_MovePortalOverlayToWindow(true);
       }
       else if(seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal &&
               seg.frontsec->srf.ceiling.height == seg.backsec->srf.ceiling.height)
       {
          // We need to do this just to transfer the plane
-         seg.c_window = R_GetCeilingPortalWindow(seg.frontsec->srf.ceiling.portal,
-                                                 seg.frontsec->srf.ceiling.height);
+         seg.c_window = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_MovePortalOverlayToWindow(true);
          seg.c_window = nullptr;
       }
@@ -1567,16 +1561,14 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
          seg.frontsec->srf.floor.portal != seg.backsec->srf.floor.portal)
       {
          seg.markflags |= SEG_MARKFPORTAL;
-         seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->srf.floor.portal,
-                                                 seg.frontsec->srf.floor.height);
+         seg.f_window   = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_MovePortalOverlayToWindow(false);
       }
       else if(seg.frontsec->srf.floor.height == seg.backsec->srf.floor.height &&
               seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
          // We need to do this just to transfer the plane
-         seg.f_window = R_GetFloorPortalWindow(seg.frontsec->srf.floor.portal,
-                                               seg.frontsec->srf.floor.height);
+         seg.f_window = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_MovePortalOverlayToWindow(false);
          seg.f_window = nullptr;
       }
@@ -1747,8 +1739,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
                                  (seg.frontsec->srf.ceiling.pflags & PS_VISIBLE && seg.frontsec->srf.ceiling.height > viewz)))
    {
       seg.markflags |= SEG_MARKCPORTAL;
-      seg.c_window   = R_GetCeilingPortalWindow(seg.frontsec->srf.ceiling.portal,
-                                                seg.frontsec->srf.ceiling.height);
+      seg.c_window   = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
       R_MovePortalOverlayToWindow(true);
    }
 
@@ -1756,8 +1747,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
                                  (seg.frontsec->srf.floor.pflags & PS_VISIBLE && seg.frontsec->srf.floor.height <= viewz)))
    {
       seg.markflags |= SEG_MARKFPORTAL;
-      seg.f_window   = R_GetFloorPortalWindow(seg.frontsec->srf.floor.portal,
-                                              seg.frontsec->srf.floor.height);
+      seg.f_window   = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
       R_MovePortalOverlayToWindow(false);
    }
 

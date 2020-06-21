@@ -245,12 +245,14 @@ void R_ApplyPortal(line_t &line, int portal);
 // 'looking' at the portal.
 //
 
-typedef enum
+enum pwindowtype_e
 {
    pw_floor,
    pw_ceiling,
    pw_line
-} pwindowtype_e;
+};
+
+static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
 typedef void (*R_WindowFunc)(pwindow_t *);
 typedef void (*R_ClipSegFunc)();
@@ -305,10 +307,8 @@ struct pwindow_t
 // SoM: Cardboard
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
 
-pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez);
-pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez);
+pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface);
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
-
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t

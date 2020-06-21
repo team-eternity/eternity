@@ -1342,54 +1342,23 @@ static void R_SetPortalFunction(pwindow_t *window)
 }
 
 //
-// R_Get*PortalWindow
+// Get sector portal window. 
 //
-// functions return a portal window based on the given parameters.
-//
-pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez)
+pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
 {
-   pwindow_t *rover = windowhead;
-
-   while(rover)
-   {
-      // SoM: TODO: There could be the possibility of multiple portals
-      // being able to share a single window set.
-      // ioanch: also added plane checks
-      if(rover->portal == portal && rover->type == pw_floor &&
-         rover->planez == planez)
-      {
-         return rover;
-      }
-   
-      rover = rover->next;
-   }
-
-   // not found, so make it
-   pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_floor);
-   window->planez = planez;
-   M_ClearBox(window->barrier.bbox);
-
-   return window;
-}
-
-pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez)
-{
-   pwindow_t *rover = windowhead;
-
-   while(rover)
-   {
-      if(rover->portal == portal && rover->type == pw_ceiling &&
-         rover->planez == planez)
+   // SoM: TODO: There could be the possibility of multiple portals
+   // being able to share a single window set.
+   // ioanch: also added plane checks
+   for(pwindow_t *rover = windowhead; rover; rover = rover->next)
+      if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
+         rover->planez == surface.height)
       {
          return rover;
       }
 
-      rover = rover->next;
-   }
-
    // not found, so make it
-   pwindow_t *window = R_NewPortalWindow(portal, NULL, pw_ceiling);
-   window->planez = planez;
+   pwindow_t *window = R_NewPortalWindow(surface.portal, nullptr, pw_surface[surf]);
+   window->planez = surface.height;
    M_ClearBox(window->barrier.bbox);
 
    return window;
