@@ -819,7 +819,8 @@ bool MN_Responder(event_t *ev)
       return true;
    }
 
-   if(ev->repeat)
+   if(ev->repeat &&
+      !(input_command && ev->type == ev_keydown && ev->data1 == KEYD_BACKSPACE))
    {
       const unsigned int currtime = i_haltimer.GetTicks();
       // only accept repeated input every 120 ms

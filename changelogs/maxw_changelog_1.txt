@@ -451,6 +451,11 @@ Added console command "s_stopmusic" as well as the alias "stopmus".
 Made "summon" console command check thing num for compat name if no thing is
 found for the regular name.
 
+-------------------------------------------------------------------------------
+2020/06/21
+Increased repeat backspace speed. Before it only accepted a repeat input
+every 120ms.
+
 ================================================================================
 EOF
 ================================================================================
