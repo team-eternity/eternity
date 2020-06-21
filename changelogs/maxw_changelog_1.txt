@@ -455,6 +455,8 @@ found for the regular name.
 2020/06/21
 Increased repeat backspace speed. Before it only accepted a repeat input
 every 120ms.
+Made it so if Eternity sets its Windows mixer volume it will not use the volume
+it was set to during its runtime.
 
 ================================================================================
 EOF

@@ -26,6 +26,8 @@
 // haleyjd 11/22/08: I don't understand why this is needed here...
 #define USE_RWOPS
 
+#include <optional>
+
 #ifdef __APPLE__
 #include "SDL2/SDL.h"
 #include "SDL2_mixer/SDL_mixer.h"
@@ -59,6 +61,14 @@
 
 #ifdef HAVE_ADLMIDILIB
 #include "adlmidi.hpp"
+#endif
+
+#ifdef EE_FEATURE_MIDIRPC
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include "Mmeapi.h"
+
+#pragma comment(lib, "Winmm.lib")
 #endif
 
 extern int audio_buffers;
@@ -237,6 +247,8 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
 static bool haveMidiServer;
 static bool haveMidiClient;
 static bool serverMidiPlaying;
+
+static std::optional<DWORD> initialVolume;
 #endif
 
 // julian (10/25/2005): rewrote (nearly) entirely
@@ -270,6 +282,9 @@ static void I_SDLShutdownMusic(void)
    I_SDLUnRegisterSong(1);
 
 #ifdef EE_FEATURE_MIDIRPC
+   if(initialVolume.has_value())
+      waveOutSetVolume(NULL, *initialVolume);
+
    I_MidiRPCClientShutDown();
 #endif
 }
@@ -337,6 +352,12 @@ static int I_SDLInitMusic(void)
 #ifdef EE_FEATURE_MIDIRPC
    // Initialize RPC server
    haveMidiServer = I_MidiRPCInitServer();
+
+   if(!haveMidiServer)
+   {
+      if(DWORD currVolume = 0; waveOutGetVolume(NULL, &currVolume) == MMSYSERR_NOERROR)
+         initialVolume = currVolume;
+   }
 #endif
 
    return success;
