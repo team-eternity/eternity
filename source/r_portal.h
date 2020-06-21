@@ -266,18 +266,15 @@ extern R_ClipSegFunc segclipfuncs[];
 struct renderbarrier_t
 {
    // Selection depends on context
-   union
-   {
-      dlnormal_t dln;
-      fixed_t bbox[4];  // for sector portals (very rough, won't cover all cases)
-   };
+   dlnormal_t dln;   // for line portals or sector portals behind lines
+   fixed_t bbox[4];  // for sector portals (very rough, won't cover all cases)
 };
 
 // SoM: TODO: Overlays go in here.
 struct pwindow_t
 {
    portal_t *portal;
-   line_t *line;
+   const seg_t *seg; // ioanch: need to use seg, because each window needs EXACT source location
    // rendering barrier: blocks unwanted objects from showing
    renderbarrier_t barrier;
    pwindowtype_e type;
@@ -308,7 +305,7 @@ struct pwindow_t
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface);
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
+pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t

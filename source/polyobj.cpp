@@ -1087,7 +1087,7 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
       if(in->d.line->special)
       {
          P_CrossSpecialLine(in->d.line,
-            P_PointOnLineSide(trace.x, trace.y, in->d.line), nullptr, po);
+            P_PointOnLineSidePrecise(trace.x, trace.y, in->d.line), nullptr, po);
       }
 
       return true;

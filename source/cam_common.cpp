@@ -145,8 +145,8 @@ bool PathTraverser::blockThingsIterator(int x, int y)
          y2 = thing->y + thing->radius;
       }
 
-      s1 = P_PointOnDivlineSide(x1, y1, &trace);
-      s2 = P_PointOnDivlineSide(x2, y2, &trace);
+      s1 = P_PointOnDivlineSidePrecise(x1, y1, &trace);
+      s2 = P_PointOnDivlineSidePrecise(x2, y2, &trace);
 
       if(s1 == s2)
          continue;
@@ -183,14 +183,14 @@ bool PathTraverser::checkLine(size_t linenum)
    if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
       return true;
 
-   s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace);
-   s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace);
+   s1 = P_PointOnDivlineSidePrecise(ld->v1->x, ld->v1->y, &trace);
+   s2 = P_PointOnDivlineSidePrecise(ld->v2->x, ld->v2->y, &trace);
    if(s1 == s2)
       return true; // line isn't crossed
 
    P_MakeDivline(ld, &dl);
-   s1 = P_PointOnDivlineSide(trace.x, trace.y, &dl);
-   s2 = P_PointOnDivlineSide(trace.x + trace.dx,
+   s1 = P_PointOnDivlineSidePrecise(trace.x, trace.y, &dl);
+   s2 = P_PointOnDivlineSidePrecise(trace.x + trace.dx,
       trace.y + trace.dy, &dl);
    if(s1 == s2)
       return true; // line isn't crossed

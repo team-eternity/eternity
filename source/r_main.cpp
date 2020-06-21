@@ -812,7 +812,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
          viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
          viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
          if(((pline = thing->prevpos.portalline) &&
-             P_PointOnLineSide(viewx, viewy, pline)) ||
+            P_PointOnLineSidePrecise(viewx, viewy, pline)) ||
             (!pline && FixedMul(viewz - psec->planez,
                                 player->prevviewz - psec->planez) < 0))
          {

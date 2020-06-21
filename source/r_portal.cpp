@@ -179,7 +179,7 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
    window->child    = NULL;
    window->next     = NULL;
    window->portal   = NULL;
-   window->line     = NULL;
+   window->seg      = NULL;
    window->func     = R_RenderPortalNOP;
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
@@ -252,18 +252,25 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
 }
 
 //
-// Calculates the render barrier based on portal type and source linedef
-// (assuming line portal)
+// Calculates the render barrier based on portal type and source seg
+// (assuming line portal). Use seg because it may round-off badly in dynasegs
 //
-static void R_calcRenderBarrier(const portal_t *portal, const line_t *line,
-   renderbarrier_t &barrier)
+static void R_calcRenderBarrier(const portal_t *portal, dlnormal_t &dln)
 {
-   P_MakeDivline(line, &barrier.dln.dl);
-   barrier.dln.nx = line->nx;
-   barrier.dln.ny = line->ny;
-   R_applyPortalTransformTo(portal, barrier.dln.dl.x, barrier.dln.dl.y, true);
-   R_applyPortalTransformTo(portal, barrier.dln.dl.dx, barrier.dln.dl.dy, false);
-   R_applyPortalTransformTo(portal, barrier.dln.nx, barrier.dln.ny, false);
+   R_applyPortalTransformTo(portal, dln.dl.x, dln.dl.y, true);
+   R_applyPortalTransformTo(portal, dln.dl.dx, dln.dl.dy, false);
+   R_applyPortalTransformTo(portal, dln.nx, dln.ny, false);
+}
+static void R_calcRenderBarrier(const portal_t *portal, const seg_t *seg,
+   dlnormal_t &dln)
+{
+   dln.dl.x = seg->v1->x;
+   dln.dl.y = seg->v1->y;
+   dln.dl.dx = seg->v2->x - dln.dl.x;
+   dln.dl.dy = seg->v2->y - dln.dl.y;
+   dln.nx = seg->linedef->nx;
+   dln.ny = seg->linedef->ny;
+   R_calcRenderBarrier(portal, dln);
 }
 
 //
@@ -292,21 +299,18 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
    }
 }
 
-static pwindow_t *R_NewPortalWindow(portal_t *p, line_t *l, pwindowtype_e type)
+static pwindow_t *R_NewPortalWindow(portal_t *p, const seg_t *seg, pwindowtype_e type)
 {
    pwindow_t *ret = newPortalWindow();
    
    ret->portal = p;
-   ret->line   = l;
+   ret->seg    = seg;
    ret->type   = type;
    ret->head   = ret;
    if(type == pw_line)
    {
-#ifdef RANGECHECK
-      if(!l)
-         I_Error("R_NewPortalWindow: Null line despite type == pw_line!");
-#endif
-      R_calcRenderBarrier(p, l, ret->barrier);
+      I_Assert(seg && seg->linedef, "R_NewPortalWindow: Null line despite type == pw_line!");
+      R_calcRenderBarrier(p, seg, ret->barrier.dln);
    }
    
    R_SetPortalFunction(ret);
@@ -340,7 +344,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
    parent->child   = child;
    child->head     = parent->head;
    child->portal   = parent->portal;
-   child->line     = parent->line;
+   child->seg      = parent->seg;
    child->barrier  = parent->barrier;  // FIXME: not sure if necessary
    child->type     = parent->type;
    child->func     = parent->func;
@@ -1000,9 +1004,9 @@ static void R_ShowTainted(pwindow_t *window)
 {
    int y1, y2, count;
 
-   if(window->line)
+   if(window->type == pw_line)
    {
-      const sector_t *sector = window->line->frontsector;
+      const sector_t *sector = window->seg->linedef->frontsector;
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
@@ -1349,10 +1353,25 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
    // SoM: TODO: There could be the possibility of multiple portals
    // being able to share a single window set.
    // ioanch: also added plane checks
+
+   edefstructvar(dlnormal_t, dlnTransformed);
+   if(portalrender.active && portalrender.w->seg)
+   {
+      dlnTransformed = portalrender.w->barrier.dln;
+      R_calcRenderBarrier(surface.portal, dlnTransformed);
+   }
+
    for(pwindow_t *rover = windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
          rover->planez == surface.height)
       {
+         // If within a line-bounded portal, keep track of that too
+         if(portalrender.active && (rover->seg != portalrender.w->seg ||
+            memcmp(&rover->barrier.dln, &dlnTransformed, sizeof(dlnTransformed))))
+         {
+            continue;
+         }
+
          return rover;
       }
 
@@ -1361,24 +1380,31 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
    window->planez = surface.height;
    M_ClearBox(window->barrier.bbox);
 
+   // Inherit the line info if active, to help cull segs
+   if(portalrender.active)
+   {
+      window->seg = portalrender.w->seg;
+      window->barrier.dln = dlnTransformed;
+   }
+
    return window;
 }
 
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
+pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 {
    pwindow_t *rover = windowhead;
 
    while(rover)
    {
       if(rover->portal == portal && rover->type == pw_line && 
-         rover->line == line)
+         rover->seg == seg)
          return rover;
 
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, line, pw_line);
+   return R_NewPortalWindow(portal, seg, pw_line);
 }
 
 //

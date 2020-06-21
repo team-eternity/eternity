@@ -284,7 +284,7 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
 void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace,
                                   fixed_t frac)
 {
-   if(!li->backsector || P_PointOnLineSide(trace.x, trace.y, li) != 0 || frac <= 0)
+   if(!li->backsector || P_PointOnLineSidePrecise(trace.x, trace.y, li) != 0 || frac <= 0)
       return;
 
    struct edgepart_t
@@ -354,7 +354,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
    const line_t *li = in->d.line;
    Mobj *th = in->d.thing;
    if(in->isaline)
-      sector = P_PointOnLineSide(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
+      sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ? li->frontsector : li->backsector;
    else
       sector = th->subsector->sector;
    if(sector && totaldist > 0)
@@ -401,7 +401,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       // Check for edge portals, but don't stop looking
       context.checkEdgePortals(li, totaldist, trace, in->frac);
 
-      if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+      if(li->pflags & PS_PASSABLE && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 &&
          in->frac > 0)
       {
          State newState(context.state);

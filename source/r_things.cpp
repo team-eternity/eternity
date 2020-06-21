@@ -921,8 +921,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
 
    // ioanch 20160125: reject sprites in front of portal line when rendering
    // line portal
-   if(portalrender.w && portalrender.w->portal &&
-      portalrender.w->portal->type != R_SKYBOX)
+   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
    {
       v2fixed_t offsetpos = { thing->x, thing->y };
       if(delta)
@@ -931,18 +930,23 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          offsetpos.y += delta->y;
       }
       const renderbarrier_t &barrier = portalrender.w->barrier;
-      if(portalrender.w->line && portalrender.w->line != portalline &&
-         P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
+      if(portalrender.w->type == pw_line && portalrender.w->seg->linedef != portalline &&
+         P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
       {
          return;
       }
-      if(!portalrender.w->line)
+      if(portalrender.w->type != pw_line)
       {
+         if(portalrender.w->seg && portalrender.w->seg->linedef != portalline &&
+            P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
+         {
+            return;
+         }
          dlnormal_t dl1, dl2;
          if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
-            (P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
+            (P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
                (dl2.dl.x != D_MAXINT && 
-                  P_PointOnDivlineSide(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
+                  P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
          {
             return;
          }
@@ -2017,7 +2021,7 @@ static bool RIT_checkMobjProjection(const line_t &line, void *vdata)
       line.bbox[BOXBOTTOM] >= mpi.bbox[BOXTOP] ||
       line.bbox[BOXRIGHT] <= mpi.bbox[BOXLEFT] ||
       line.bbox[BOXTOP] <= mpi.bbox[BOXBOTTOM] ||
-      P_PointOnLineSide(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
+      P_PointOnLineSidePrecise(mpi.mobj->x, mpi.mobj->y, &line) == 1 ||
       P_BoxOnLineSide(mpi.bbox, &line) != -1 ||
       line.intflags & MLI_MOVINGPORTAL)
    {

@@ -115,7 +115,7 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 //
 // Also divline version
 //
-int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl)
+int P_BoxOnDivlineSidePrecise(const fixed_t *tmbox, const divline_t &dl)
 {
    int p;
 
@@ -131,11 +131,11 @@ int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl)
    }
    if((dl.dx ^ dl.dy) >= 0)
    {
-      return P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], &dl) ==
-         (p = P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXTOP], &dl)) ? p : -1;
+      return P_PointOnDivlineSidePrecise(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], &dl) ==
+         (p = P_PointOnDivlineSidePrecise(tmbox[BOXLEFT], tmbox[BOXTOP], &dl)) ? p : -1;
    }
-   return P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], &dl) ==
-      (p = P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], &dl)) ? p : -1;
+   return P_PointOnDivlineSidePrecise(tmbox[BOXLEFT], tmbox[BOXBOTTOM], &dl) ==
+      (p = P_PointOnDivlineSidePrecise(tmbox[BOXRIGHT], tmbox[BOXTOP], &dl)) ? p : -1;
 }
 
 //
@@ -195,8 +195,8 @@ int P_LineIsCrossed(const line_t &line, const divline_t &dl)
    int a;
    return (a = P_PointOnLineSide(dl.x, dl.y, &line)) !=
    P_PointOnLineSide(dl.x + dl.dx, dl.y + dl.dy, &line) &&
-   P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl) !=
-   P_PointOnDivlineSide(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
+   P_PointOnDivlineSidePrecise(line.v1->x, line.v1->y, &dl) !=
+   P_PointOnDivlineSidePrecise(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
 }
 
 //
@@ -231,7 +231,7 @@ bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
+int P_PointOnDivlineSideClassic(fixed_t x, fixed_t y, const divline_t *line)
 {
    return
       !line->dx ? x <= line->x ? line->dy > 0 : line->dy < 0 :
@@ -239,6 +239,16 @@ int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
       (line->dy^line->dx^(x -= line->x)^(y -= line->y)) < 0 ? (line->dy^x) < 0 :
       FixedMul(y>>8, line->dx>>8) >= FixedMul(line->dy>>8, x>>8);
 }
+int P_PointOnDivlineSidePrecise(fixed_t x, fixed_t y, const divline_t *line)
+{
+   return
+      !line->dx ? x <= line->x ? line->dy > 0 : line->dy < 0 :
+      !line->dy ? y <= line->y ? line->dx < 0 : line->dx > 0 :
+      (line->dy ^ line->dx ^ (x -= line->x) ^ (y -= line->y)) < 0 ? (line->dy ^ x) < 0 :
+      static_cast<int64_t>(y) * line->dx >= static_cast<int64_t>(line->dy) * x;
+}
+int (*P_PointOnDivlineSide)(fixed_t x, fixed_t y, const divline_t *line) = 
+      P_PointOnDivlineSideClassic;
 
 //
 // P_MakeDivline

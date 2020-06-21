@@ -3528,10 +3528,16 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   if(isUdmf)
+   if(isUdmf || demo_version >= 401)
+   {
       P_PointOnLineSide = P_PointOnLineSidePrecise;
+      P_PointOnDivlineSide = P_PointOnDivlineSidePrecise;
+   }
    else
+   {
       P_PointOnLineSide = P_PointOnLineSideClassic;
+      P_PointOnDivlineSide = P_PointOnDivlineSideClassic;
+   }
 
    // haleyjd 07/22/04: moved up
    newlevel   = (lumpinfo[lumpnum]->source != WadDirectory::IWADSource);

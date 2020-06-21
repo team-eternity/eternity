@@ -458,8 +458,8 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsecto
       const vertex_t &v1 = *wall.v1;
       const vertex_t &v2 = *wall.v2;
       const divline_t walldl = { v1.x, v1.y, v2.x - v1.x, v2.y - v1.y };
-      int side_v1 = P_PointOnDivlineSide(lseg.v1->x, lseg.v1->y, &walldl);
-      int side_v2 = P_PointOnDivlineSide(lseg.v2->x, lseg.v2->y, &walldl);
+      int side_v1 = P_PointOnDivlineSidePrecise(lseg.v1->x, lseg.v1->y, &walldl);
+      int side_v2 = P_PointOnDivlineSidePrecise(lseg.v2->x, lseg.v2->y, &walldl);
       if(side_v1 == 0 && side_v2 == 0)
          continue;   // this one is fine.
       if(side_v1 == 1 && side_v2 == 1)

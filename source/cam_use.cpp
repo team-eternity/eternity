@@ -144,7 +144,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid,
          li->frontsector->groupid);
       P_UseSpecialLine(context->thing, li,
-         P_PointOnLineSide(context->thing->x + link->x,
+         P_PointOnLineSidePrecise(context->thing->x + link->x,
             context->thing->y + link->y, li) == 1);
 
       //WAS can't use for than one special line in a row
@@ -176,7 +176,7 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    {
       portal = li->backsector->srf.floor.portal;
    }
-   if(portal && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+   if(portal && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       int newfromid = portal->data.link.toid;
       if(newfromid == context->state.groupid ||

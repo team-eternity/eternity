@@ -207,8 +207,8 @@ static bool P_checkLinePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
       // Exact target pos
       v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
       // Portal stuff. Only count it if truly crossed
-      if(P_PointOnLineSide(targpos.x, targpos.y, li) &&
-         !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
+      if(P_PointOnLineSidePrecise(targpos.x, targpos.y, li) &&
+         !P_PointOnLineSidePrecise(trace.dl.x, trace.dl.y, li))
       {
          traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
          traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);

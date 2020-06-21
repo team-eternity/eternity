@@ -236,7 +236,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    // avoid round-off errors if possible
    fixed_t totalfrac = context.state.originfrac ? context.state.originfrac +
       FixedMul(in->frac, FRACUNIT - context.state.originfrac) : in->frac;
-   const sector_t *sector = P_PointOnLineSide(trace.x, trace.y, li) == 0 ?
+   const sector_t *sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ?
       li->frontsector : li->backsector;
    if(sector && totalfrac > 0)
    {
@@ -281,7 +281,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       li->backsector->srf.floor.pflags & PS_PASSABLE &&
       context.state.bottomslope <=
       FixedDiv(li->backsector->srf.floor.height - context.sightzstart, totalfrac) &&
-      P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+      P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
@@ -300,7 +300,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
       context.state.topslope >=
       FixedDiv(li->backsector->srf.ceiling.height - context.sightzstart, totalfrac) &&
-      P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+      P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       State state(context.state);
       state.originfrac = totalfrac;
@@ -316,7 +316,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    }
 
    // have we hit a portal line
-   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 &&
       in->frac > 0)
    {
       State state(context.state);

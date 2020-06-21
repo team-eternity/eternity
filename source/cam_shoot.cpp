@@ -236,7 +236,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 
       // ioanch 20160101: use the trace origin instead of assuming it being the
       // same as the source thing origin, as it happens in PTR_ShootTraverse
-      int lineside = P_PointOnLineSide(trace.x, trace.y, li);
+      int lineside = P_PointOnLineSidePrecise(trace.x, trace.y, li);
 
       fixed_t dist = FixedMul(context.params.attackrange, in->frac);
       if(context.shotCheck2SLine(li, lineside, dist))

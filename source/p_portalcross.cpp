@@ -82,9 +82,9 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
       return true;
 
    // double check: line MUST be crossed and trace origin must be in front
-   int originside = P_PointOnLineSide(trace.x, trace.y, line);
+   int originside = P_PointOnLineSidePrecise(trace.x, trace.y, line);
    if(originside != 0 || originside ==
-      P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, line))
+      P_PointOnLineSidePrecise(trace.x + trace.dx, trace.y + trace.dy, line))
    {
       return true;
    }
@@ -174,11 +174,11 @@ static bool P_divlineInsideLine(const divline_t &dl, const line_t &line)
    divline_t pdir = { dl.x, dl.y, normal.x, normal.y };
    const v2fixed_t lv1 = { line.v1->x, line.v1->y };
    const v2fixed_t lv2 = { lv1.x + line.dx, lv1.y + line.dy };
-   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+   if(P_PointOnDivlineSidePrecise(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSidePrecise(lv2.x, lv2.y, &pdir))
       return false;
    pdir.x += dl.dx;
    pdir.y += dl.dy;
-   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+   if(P_PointOnDivlineSidePrecise(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSidePrecise(lv2.x, lv2.y, &pdir))
       return false;
    return true;
 }
@@ -197,14 +197,14 @@ static bool PIT_exactTraverse(const line_t &line, void *vdata)
 
    auto &data = *static_cast<exacttraverse_t *>(vdata);
 
-   int destside = P_PointOnLineSide(data.trace->x + data.trace->dx, data.trace->y + data.trace->dy,
+   int destside = P_PointOnLineSidePrecise(data.trace->x + data.trace->dx, data.trace->y + data.trace->dy,
                                     &line);
-   if(destside != 1 || destside == P_PointOnLineSide(data.trace->x, data.trace->y, &line))
+   if(destside != 1 || destside == P_PointOnLineSidePrecise(data.trace->x, data.trace->y, &line))
       return true;   // doesn't get past it
 
    // Trace must cross this
-   if(P_PointOnDivlineSide(line.v1->x, line.v1->y, data.trace) ==
-      P_PointOnDivlineSide(line.v2->x, line.v2->y, data.trace))
+   if(P_PointOnDivlineSidePrecise(line.v1->x, line.v1->y, data.trace) ==
+      P_PointOnDivlineSidePrecise(line.v2->x, line.v2->y, data.trace))
    {
       // check against edge cases where the trace crosses validly but the linedef vertices don't
       // sit on different sides of the divline. Happens with traces (almost) parallel in direction.

@@ -1242,7 +1242,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    if(!toohigh && havetportal && heightchange)
    {
-      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line->linedef);
+      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1344,7 +1344,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
-      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line);
       seg.clipsolid = true;
    }
    else
@@ -1359,7 +1359,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    if(!toolow && havebportal && (b > l || b2 > l2))
    {
-      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line->linedef);
+      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1525,7 +1525,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(!toohigh && havetportal &&
       seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height)
    {
-      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line->linedef);
+      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1635,7 +1635,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
-      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line->linedef);
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line);
       seg.clipsolid = true;
    }
    else
@@ -1651,7 +1651,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(!toolow && havebportal &&
       seg.frontsec->srf.floor.height < seg.backsec->srf.floor.height)
    {
-      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line->linedef);
+      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1759,7 +1759,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    seg.clipsolid   = true;
    seg.segtextured = seg.midtex || seg.toptex || seg.bottomtex;
    seg.l_window    = line->linedef->portal ?
-   R_GetLinePortalWindow(line->linedef->portal, line->linedef) : NULL;
+   R_GetLinePortalWindow(line->linedef->portal, line) : NULL;
 
    // haleyjd 03/12/06: inverted predicates to simplify
    if(seg.frontsec->srf.floor.portal && seg.frontsec->srf.floor.portal->type != R_LINKED &&
@@ -1803,24 +1803,24 @@ static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg,
 
    const divline_t &dl = dln.dl;
 
-   int p1 = P_PointOnDivlineSide(rend.x, rend.y, &dl);
-   int p2 = P_PointOnDivlineSide(rend.x + rend.dx, rend.y + rend.dy, &dl);
+   int p1 = P_PointOnDivlineSidePrecise(rend.x, rend.y, &dl);
+   int p2 = P_PointOnDivlineSidePrecise(rend.x + rend.dx, rend.y + rend.dy, &dl);
 
    if(p1 == p2)
       return p1 == 1;   // only accept if behind the barrier line
 
    // Check cases where vertices are common
    if(tooclose(dl.x, rend.x) && tooclose(dl.y, rend.y))
-      return P_PointOnDivlineSide(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
+      return P_PointOnDivlineSidePrecise(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
    if(tooclose(dl.x + dl.dx, rend.x + rend.dx) && 
       tooclose(dl.y + dl.dy, rend.y + rend.dy))
    {
-      return P_PointOnDivlineSide(dl.x, dl.y, &rend) == 0;
+      return P_PointOnDivlineSidePrecise(dl.x, dl.y, &rend) == 0;
    }
 
    // At least one point must be in front of the rendered line
-   return P_PointOnDivlineSide(dl.x, dl.y, &rend) == 0 || 
-      P_PointOnDivlineSide(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
+   return P_PointOnDivlineSidePrecise(dl.x, dl.y, &rend) == 0 ||
+      P_PointOnDivlineSidePrecise(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
 }
 
 //
@@ -1979,7 +1979,7 @@ static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg
    segdl.dx = tryseg.v2->x - segdl.x;
    segdl.dy = tryseg.v2->y - segdl.y;
 
-   int boxside = P_BoxOnDivlineSide(bbox, segdl);
+   int boxside = P_BoxOnDivlineSidePrecise(bbox, segdl);
 
    if(boxside == 0)
       return true;
@@ -2045,17 +2045,18 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    const vertex_t *v1, *v2;
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.w && portalrender.w->portal &&
-      portalrender.w->portal->type != R_SKYBOX)
+   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
    {
       // only reject if they're anchored portals (including linked)
-      if(portalrender.w->line)
+      if(portalrender.w->type == pw_line)
       {
          if(!R_allowBehindDivline(portalrender.w->barrier.dln, line))
             return;
       }
       else
       {
+         if(portalrender.w->line && !R_allowBehindDivline(portalrender.w->barrier.dln, line))
+            return;
          if(!R_allowBehindSectorPortal(portalrender.w->barrier.bbox, *line))
             return;
       }
