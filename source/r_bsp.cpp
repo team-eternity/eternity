@@ -2055,7 +2055,7 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       }
       else
       {
-         if(portalrender.w->line && !R_allowBehindDivline(portalrender.w->barrier.dln, line))
+         if(portalrender.w->seg && !R_allowBehindDivline(portalrender.w->barrier.dln, line))
             return;
          if(!R_allowBehindSectorPortal(portalrender.w->barrier.bbox, *line))
             return;
