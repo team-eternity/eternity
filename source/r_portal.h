@@ -214,7 +214,7 @@ portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(bool isceiling);
+void R_MovePortalOverlayToWindow(surf_e surf);
 void R_ClearPortals();
 void R_RenderPortals();
 

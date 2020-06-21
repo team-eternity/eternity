@@ -1384,11 +1384,11 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line)
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(bool isceiling)
+void R_MovePortalOverlayToWindow(surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
-   pwindow_t *window = isceiling ? seg.c_window : seg.f_window;
-   visplane_t *&plane = isceiling ? seg.ceilingplane : seg.floorplane;
+   pwindow_t *window = surf == surf_ceil ? seg.c_window : seg.f_window;
+   visplane_t *&plane = surf == surf_ceil ? seg.ceilingplane : seg.floorplane;
    if(plane)
    {
       plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,
