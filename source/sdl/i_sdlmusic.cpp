@@ -31,8 +31,6 @@
 #include "SDL2_mixer/SDL_mixer.h"
 #else
 #include "SDL.h"
-#include "SDL_audio.h"
-#include "SDL_thread.h"
 #include "SDL_mixer.h"
 #endif
 
