@@ -237,14 +237,14 @@ static void R_RenderSegLoop(void)
 #endif
 
 
-   visplane_t *plane = nullptr;
+   visplane_t *skyplane = nullptr;
    if(segclip.skyflat)
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      plane = R_FindPlane(viewz - 1, segclip.skyflat, 144, {}, { 1, 1 }, 0, nullptr, 0,
+      skyplane = R_FindPlane(viewz - 1, segclip.skyflat, 144, {}, { 1, 1 }, 0, nullptr, 0,
                           255, nullptr);
-      plane = R_CheckPlane(plane, segclip.x1, segclip.x2);
+      skyplane = R_CheckPlane(skyplane, segclip.x1, segclip.x2);
    }
 
    // haleyjd 06/30/07: cardboard invuln fix.
@@ -519,12 +519,12 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
-            else if(plane)
+            else if(skyplane)
             {
                if(ceilingclip[i] < floorclip[i])
                {
-                  plane->top[i] = static_cast<int>(ceilingclip[i]);
-                  plane->bottom[i] = static_cast<int>(floorclip[i]);
+                  skyplane->top[i] = static_cast<int>(ceilingclip[i]);
+                  skyplane->bottom[i] = static_cast<int>(floorclip[i]);
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -537,12 +537,12 @@ static void R_RenderSegLoop(void)
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
-      else if(plane)
+      else if(skyplane)
       {
          if(t < b)
          {
-            plane->top[i] = t;
-            plane->bottom[i] = b;
+            skyplane->top[i] = t;
+            skyplane->bottom[i] = b;
          }
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
