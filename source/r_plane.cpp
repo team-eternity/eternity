@@ -52,6 +52,7 @@
 #include "r_plane.h"
 #include "r_portal.h"
 #include "r_ripple.h"
+#include "r_segs.h"
 #include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
@@ -588,6 +589,8 @@ void R_ClearPlanes()
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
+   memset(lastsurfseg[surf_floor], -1, surf_NUM * video.width);
+   memset(lastsurfseg[surf_ceil], -1, surf_NUM * video.width);
 
    // opening / clipping determination
    for(i = 0; i < video.width; ++i)

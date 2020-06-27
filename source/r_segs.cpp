@@ -41,6 +41,7 @@
 #include "r_segs.h"
 #include "r_state.h"
 #include "r_things.h"
+#include "v_alloc.h"
 #include "w_wad.h"
 
 // OPTIMIZE: closed two sided lines as single sided
@@ -52,6 +53,18 @@ cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
 static float  *maskedtexturecol;
+
+//
+// Stores the index of the last surface-marked seg clipping that column. Needed by sector portals 
+// to know which segs delimit them from the viewer.
+//
+int *lastsurfseg[surf_NUM];
+VALLOCATION(lastsurfseg)
+{
+   int *buffer = ecalloctag(int *, w * 2, sizeof(*buffer), PU_VALLOC, nullptr);
+   lastsurfseg[surf_floor] = buffer;
+   lastsurfseg[surf_ceil] = buffer + w;
+}
 
 //
 // R_RenderMaskedSegRange
@@ -208,9 +221,6 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       Z_ChangeTag(tranmap, PU_CACHE); // killough 4/11/98
 }
 
-
-
-
 //
 // R_RenderSegLoop
 //
@@ -295,6 +305,8 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = (float)t;
             }
          }
+         if(segclip.markflags & SEG_MARKCEILING)
+            lastsurfseg[surf_ceil][i] = eindex(segclip.line - segs);
       }
   
       // SoM 3/10/2005: Only add to the portal of the floor is marked
@@ -332,6 +344,8 @@ static void R_RenderSegLoop(void)
                floorclip[i] = (float)b;
             }
          }
+         if(segclip.markflags & SEG_MARKFLOOR)
+            lastsurfseg[surf_floor][i] = eindex(segclip.line - segs);
       }
       
       if(segclip.segtextured)

@@ -43,6 +43,7 @@
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
+#include "r_segs.h"
 #include "r_sky.h"
 #include "r_state.h"
 #include "r_things.h"
@@ -676,6 +677,17 @@ void R_InitPortals()
    gPortals.clear(); // clear the portal list
 }
 
+//
+// Clears last-clip-segs array before rendering an area portal
+//
+inline static void R_clearLastClipSegs(const pwindow_t *window)
+{
+   I_Assert(window->maxx >= window->minx, "Expected actual window\n");
+   int width = window->maxx - window->minx + 1;
+   memset(lastsurfseg[surf_floor] + window->minx, -1, width * sizeof(int));
+   memset(lastsurfseg[surf_ceil] + window->minx, -1, width * sizeof(int));
+}
+
 //=============================================================================
 //
 // Plane and Horizon Portals
@@ -932,6 +944,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
    
+   R_clearLastClipSegs(window);
    R_ClearOverlayClips();
 
    portalrender.minx = window->minx;
@@ -1120,6 +1133,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
 
+   R_clearLastClipSegs(window);
    R_ClearOverlayClips();
    
    portalrender.minx = window->minx;
@@ -1228,6 +1242,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
 
+   R_clearLastClipSegs(window);
    R_ClearOverlayClips();
    
    portalrender.minx = window->minx;
