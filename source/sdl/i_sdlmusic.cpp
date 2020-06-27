@@ -64,11 +64,10 @@
 #endif
 
 #ifdef EE_FEATURE_MIDIRPC
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include "Mmeapi.h"
-
 #pragma comment(lib, "Winmm.lib")
+
+#include "../Win32/i_winversion.h"
 #endif
 
 extern int audio_buffers;
@@ -282,7 +281,7 @@ static void I_SDLShutdownMusic(void)
    I_SDLUnRegisterSong(1);
 
 #ifdef EE_FEATURE_MIDIRPC
-   if(initialVolume.has_value())
+   if(initialVolume.has_value() && I_IsWindowsVistaOrHigher())
       waveOutSetVolume(NULL, *initialVolume);
 
    I_MidiRPCClientShutDown();
