@@ -335,10 +335,7 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, const seg_t *seg, pwindowtype_e
 //
 static void R_CreateChildWindow(pwindow_t *parent)
 {
-#ifdef RANGECHECK
-   if(parent->child)
-      I_Error("R_CreateChildWindow: child portal displaced\n");
-#endif
+   I_Assert(!parent->child, "R_CreateChildWindow: child portal displaced\n");
 
    auto child = newPortalWindow(true);
 
@@ -362,32 +359,21 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 {
    float windowtop, windowbottom;
 
-#ifdef RANGECHECK
-   if(!window)
-      I_Error("R_WindowAdd: null portal window\n");
-
-   if(x < 0 || x >= video.width)
-      I_Error("R_WindowAdd: column out of bounds (%d)\n", x);
-
-   if((ybottom >= view.height || ytop < 0) && ytop < ybottom)
-   {
-      I_Error("R_WindowAdd portal supplied with bad column data.\n"
-              "\tx:%d, top:%f, bottom:%f\n", x, ytop, ybottom);
-   }
-#endif
+   I_Assert(window, "R_WindowAdd: null portal window\n");
+   I_Assert(x >= 0 && x < video.width,
+            "R_WindowAdd: column out of bounds (%d)\n", x);
+   I_Assert((ybottom < view.height && ytop >= 0) || ytop >= ybottom,
+            "R_WindowAdd portal supplied with bad column data.\n"
+            "\tx:%d, top:%f, bottom:%f\n", x, ytop, ybottom);
 
    windowtop    = window->top[x];
    windowbottom = window->bottom[x];
 
-#ifdef RANGECHECK
-   if(windowbottom > windowtop && 
-      (windowtop < 0 || windowbottom < 0 || 
-       windowtop >= view.height || windowbottom >= view.height))
-   {
-      I_Error("R_WindowAdd portal had bad opening data.\n"
-              "\tx:%i, top:%f, bottom:%f\n", x, windowtop, windowbottom);
-   }
-#endif
+   I_Assert(windowbottom <= windowtop ||
+            (windowtop >= 0 && windowbottom >= 0 &&
+             windowtop < view.height && windowbottom < view.height),
+            "R_WindowAdd portal had bad opening data.\n"
+            "\tx:%i, top:%f, bottom:%f\n", x, windowtop, windowbottom);
 
    if(ybottom < 0.0f || ytop >= view.height)
       return;
