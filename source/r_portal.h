@@ -286,6 +286,7 @@ struct pwindow_t
 
    float *top;
    float *bottom;
+   float *dist;
    int minx, maxx;
 
    R_WindowFunc func;
@@ -302,7 +303,7 @@ struct pwindow_t
 };
 
 // SoM: Cardboard
-void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
+void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist);
 
 pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface);
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg);

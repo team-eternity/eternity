@@ -41,6 +41,9 @@ extern float *lastopening;
 extern float *floorclip, *ceilingclip;
 extern float *floorcliparray, *ceilingcliparray;
 
+extern float *lastcoldistarray;
+extern float *lastcoldist;
+
 // SoM: We have to use secondary clipping arrays for portal overlays
 extern float *overlayfclip, *overlaycclip;
 

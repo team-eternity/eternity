@@ -28,14 +28,12 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 
 #include "c_io.h"
 #include "d_gi.h"
 #include "e_exdata.h"
 #include "e_things.h"
 #include "m_bbox.h"
-#include "m_collection.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_bsp.h"
@@ -43,10 +41,8 @@
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
-#include "r_segs.h"
 #include "r_sky.h"
 #include "r_state.h"
-#include "r_things.h"
 #include "v_alloc.h"
 #include "v_misc.h"
 
@@ -175,6 +171,7 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
    {
       window->top[i]    = view.height;
       window->bottom[i] = -1.0f;
+      window->dist[i]   = 0;
    }
 
    window->child    = NULL;
@@ -208,9 +205,10 @@ static pwindow_t *newPortalWindow(bool noplanes = false)
    {
       ret = estructalloctag(pwindow_t, 1, PU_LEVEL);
       
-      float *buf  = emalloctag(float *, 2*video.width*sizeof(float), PU_LEVEL, NULL);
+      float *buf  = emalloctag(float *, 3*video.width*sizeof(float), PU_LEVEL, NULL);
       ret->top    = buf;
       ret->bottom = buf + video.width;
+      ret->dist   = buf + 2 * video.width;
    }
 
    R_ClearPortalWindow(ret, noplanes);
@@ -355,7 +353,7 @@ static void R_CreateChildWindow(pwindow_t *parent)
 // Adds a column to a portal for rendering. A child portal may
 // be created.
 //
-void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
+void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist)
 {
    float windowtop, windowbottom;
 
@@ -387,6 +385,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       {
          window->top[x]    = ytop;
          window->bottom[x] = ybottom;
+         // Set up dist when new column is made
+         window->dist[x] = dist;
          return;
       }
 
@@ -396,7 +396,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
          if(!window->child)
             R_CreateChildWindow(window);
 
-         R_WindowAdd(window->child, x, ytop, ybottom);
+         R_WindowAdd(window->child, x, ytop, ybottom, dist);
          return;
       }
 
@@ -417,6 +417,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       window->minx = window->maxx = x;
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      window->dist[x]   = dist;
 
       // SoM 3/10/2005: store the viewz in the portal struct for later use
       window->vx = viewx;
@@ -432,6 +433,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      window->dist[x]   = dist;
       return;
    }
 
@@ -441,6 +443,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
+      window->dist[x]   = dist;
       return;
    }
 }
@@ -661,17 +664,6 @@ void R_InitPortals()
    R_MapInitOverlaySets();
 
    gPortals.clear(); // clear the portal list
-}
-
-//
-// Clears last-clip-segs array before rendering an area portal
-//
-inline static void R_clearLastClipSegs(const pwindow_t *window)
-{
-   I_Assert(window->maxx >= window->minx, "Expected actual window\n");
-   int width = window->maxx - window->minx + 1;
-   memset(lastsurfseg[surf_floor] + window->minx, -1, width * sizeof(int));
-   memset(lastsurfseg[surf_ceil] + window->minx, -1, width * sizeof(int));
 }
 
 //=============================================================================
@@ -929,8 +921,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    floorclip   = window->bottom;
    ceilingclip = window->top;
-   
-   R_clearLastClipSegs(window);
+   lastcoldist = window->dist;
+
    R_ClearOverlayClips();
 
    portalrender.minx = window->minx;
@@ -1118,8 +1110,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 
    floorclip   = window->bottom;
    ceilingclip = window->top;
+   lastcoldist = window->dist;
 
-   R_clearLastClipSegs(window);
    R_ClearOverlayClips();
    
    portalrender.minx = window->minx;
@@ -1227,8 +1219,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
 
    floorclip   = window->bottom;
    ceilingclip = window->top;
+   lastcoldist = window->dist;
 
-   R_clearLastClipSegs(window);
    R_ClearOverlayClips();
    
    portalrender.minx = window->minx;

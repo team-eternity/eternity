@@ -37,29 +37,21 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"    /* memory allocation wrappers -- killough */
-#include "i_system.h"
 
-#include "c_io.h"
-#include "d_gi.h"
 #include "doomstat.h"
 #include "ev_specials.h"
-#include "p_anim.h"
 #include "p_info.h"
 #include "p_slopes.h"
-#include "p_user.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
 #include "r_portal.h"
 #include "r_ripple.h"
-#include "r_segs.h"
 #include "r_sky.h"
 #include "r_state.h"
-#include "r_things.h"
 #include "v_alloc.h"
 #include "v_misc.h"
 #include "v_video.h"
-#include "w_wad.h"
 
 #define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
 
@@ -135,6 +127,19 @@ VALLOCATION(overlayfclip)
    float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
    overlayfclip = buffer;
    overlaycclip = buffer + w;
+}
+
+//
+// Stores the index of the last surface-marked seg clipping that column. Needed by sector portals
+// to know which segs delimit them from the viewer.
+//
+float *lastcoldistarray;
+float *lastcoldist;
+VALLOCATION(lastsurfdist)
+{
+   float *buffer = ecalloctag(float *, w, sizeof(*buffer), PU_VALLOC, nullptr);
+   lastcoldistarray = buffer;
+   lastcoldist = lastcoldistarray;
 }
 
 // spanstart holds the start of a plane span; initialized to 0 at start
@@ -589,14 +594,14 @@ void R_ClearPlanes()
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
-   memset(lastsurfseg[surf_floor], -1, surf_NUM * video.width);
-   memset(lastsurfseg[surf_ceil], -1, surf_NUM * video.width);
+   lastcoldist = lastcoldistarray;
 
    // opening / clipping determination
    for(i = 0; i < video.width; ++i)
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;
+      lastcoldist[i] = FLT_MAX;  // that means on viewport
    }
 
    R_ClearPlaneHash(&mainhash);

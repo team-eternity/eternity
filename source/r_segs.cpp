@@ -31,7 +31,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "p_info.h"
-#include "p_user.h"
 #include "r_draw.h"
 #include "r_bsp.h"
 #include "r_data.h"
@@ -40,8 +39,6 @@
 #include "r_portal.h"
 #include "r_segs.h"
 #include "r_state.h"
-#include "r_things.h"
-#include "v_alloc.h"
 #include "w_wad.h"
 
 // OPTIMIZE: closed two sided lines as single sided
@@ -53,18 +50,6 @@ cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
 static float  *maskedtexturecol;
-
-//
-// Stores the index of the last surface-marked seg clipping that column. Needed by sector portals 
-// to know which segs delimit them from the viewer.
-//
-int *lastsurfseg[surf_NUM];
-VALLOCATION(lastsurfseg)
-{
-   int *buffer = ecalloctag(int *, w * 2, sizeof(*buffer), PU_VALLOC, nullptr);
-   lastsurfseg[surf_floor] = buffer;
-   lastsurfseg[surf_ceil] = buffer + w;
-}
 
 //
 // R_RenderMaskedSegRange
@@ -236,16 +221,10 @@ static void R_RenderSegLoop(void)
    float texx;
    float basescale;
 
-#ifdef RANGECHECK
-   if(segclip.x1 < 0 || segclip.x2 >= viewwindow.width || segclip.x1 > segclip.x2)
-   {
-      I_Error("R_RenderSegLoop: invalid seg x values!\n"
-              "   x1 = %d, x2 = %d, linenum = %d\n", 
-              segclip.x1, segclip.x2,
-              static_cast<int>(segclip.line->linedef - lines));
-   }
-#endif
-
+   I_Assert(segclip.x1 >= 0 && segclip.x2 < viewwindow.width && segclip.x1 <= segclip.x2,
+            "R_RenderSegLoop: invalid seg x values!\n"
+            "   x1 = %d, x2 = %d, linenum = %d\n", segclip.x1, segclip.x2,
+            static_cast<int>(segclip.line->linedef - lines));
 
    visplane_t *skyplane = nullptr;
    if(segclip.skyflat)
@@ -295,7 +274,7 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
-               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line, lastcoldist[i]);
                ceilingclip[i] = (float)t;
             }
             else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
@@ -305,8 +284,6 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = (float)t;
             }
          }
-         if(segclip.markflags & SEG_MARKCEILING)
-            lastsurfseg[surf_ceil][i] = eindex(segclip.line - segs);
       }
   
       // SoM 3/10/2005: Only add to the portal of the floor is marked
@@ -334,7 +311,7 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
-               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot, lastcoldist[i]);
                floorclip[i] = (float)b;
             }
             else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
@@ -344,10 +321,10 @@ static void R_RenderSegLoop(void)
                floorclip[i] = (float)b;
             }
          }
-         if(segclip.markflags & SEG_MARKFLOOR)
-            lastsurfseg[surf_floor][i] = eindex(segclip.line - segs);
       }
       
+      lastcoldist[i] = segclip.dist;
+
       if(segclip.segtextured)
       {
          int index;
@@ -422,11 +399,11 @@ static void R_RenderSegLoop(void)
                      
                   }
 
-                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i], segclip.dist);
                }
                else
                {
-                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b, segclip.dist);
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -455,8 +432,8 @@ static void R_RenderSegLoop(void)
                column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.t_window, i, 
-                     static_cast<float>(column.y1), static_cast<float>(column.y2));
+                  R_WindowAdd(segclip.t_window, i,  static_cast<float>(column.y1),
+                              static_cast<float>(column.y2), segclip.dist);
                   ceilingclip[i] = static_cast<float>(column.y2 + 1);
                }
                else
@@ -494,8 +471,8 @@ static void R_RenderSegLoop(void)
                column.y2 = b;
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.b_window, i, 
-                     static_cast<float>(column.y1), static_cast<float>(column.y2));
+                  R_WindowAdd(segclip.b_window, i, static_cast<float>(column.y1),
+                              static_cast<float>(column.y2), segclip.dist);
                   floorclip[i] = static_cast<float>(column.y1 - 1);
                }
                else
@@ -529,7 +506,7 @@ static void R_RenderSegLoop(void)
 
             if(segclip.l_window)
             {
-               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i], segclip.dist);
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
@@ -547,7 +524,7 @@ static void R_RenderSegLoop(void)
       }
       else if(segclip.l_window)
       {
-         R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+         R_WindowAdd(segclip.l_window, i, (float)t, (float)b, segclip.dist);
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
