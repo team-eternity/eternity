@@ -711,8 +711,12 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
    // SoM: Quickly reject the seg based on the bounding box of the portal
-   if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx ||
-      (seg.dist > portalrender.closestdist && seg.dist2 > portalrender.closestdist))
+   if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
+      return false;
+
+   // Now we know we're inside the window, so check the distances
+   if(portalrender.dist && (seg.dist > portalrender.dist[seg.x1] ||
+                            seg.dist2 > portalrender.dist[seg.x2]))
    {
       return false;
    }
