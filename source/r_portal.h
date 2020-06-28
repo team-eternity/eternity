@@ -288,6 +288,7 @@ struct pwindow_t
    float *bottom;
    float *dist;
    int minx, maxx;
+   float closestdist;
 
    R_WindowFunc func;
    R_ClipSegFunc clipfunc;

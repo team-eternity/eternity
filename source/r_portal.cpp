@@ -166,6 +166,7 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
 {
    window->maxx = 0;
    window->minx = viewwindow.width - 1;
+   window->closestdist = 0;
 
    for(int i = 0; i < video.width; i++)
    {
@@ -386,7 +387,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
          window->top[x]    = ytop;
          window->bottom[x] = ybottom;
          // Set up dist when new column is made
-         window->dist[x] = dist;
+         if((window->dist[x] = dist) > window->closestdist)
+            window->closestdist = dist;
          return;
       }
 
@@ -417,7 +419,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
       window->minx = window->maxx = x;
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      window->dist[x]   = dist;
+      if((window->dist[x] = dist) > window->closestdist)
+         window->closestdist = dist;
 
       // SoM 3/10/2005: store the viewz in the portal struct for later use
       window->vx = viewx;
@@ -433,7 +436,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      window->dist[x]   = dist;
+      if((window->dist[x] = dist) > window->closestdist)
+         window->closestdist = dist;
       return;
    }
 
@@ -443,7 +447,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      window->dist[x]   = dist;
+      if((window->dist[x] = dist) > window->closestdist)
+         window->closestdist = dist;
       return;
    }
 }
