@@ -221,8 +221,6 @@ void R_RenderPortals();
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
 
-void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box);
-
 bool R_IsSkyLikePortalCeiling(const sector_t &sector);
 bool R_IsSkyLikePortalFloor(const sector_t &sector);
 bool R_IsSkyWall(const line_t &line);
@@ -276,7 +274,6 @@ struct pwindow_t
    portal_t *portal;
    const seg_t *seg; // ioanch: need to use seg, because each window needs EXACT source location
    // rendering barrier: blocks unwanted objects from showing
-   renderbarrier_t barrier;
    pwindowtype_e type;
 
    fixed_t planez;   // if line == nullptr, this is the sector portal plane z
@@ -317,6 +314,7 @@ struct portalrender_t
    float miny, maxy;
    float closestdist;
    const float *dist;   // shall point to window->dist. Can be NULL to mark "ignore" (so check it!)
+   divline_t barrier;
 
    pwindow_t *w;
 

@@ -919,9 +919,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(roty < 1.0f)
       return;
 
-   // ioanch 20160125: reject sprites in front of portal line when rendering
-   // line portal
-   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
+   if(portalrender.active && portalrender.barrier.nonzero())
    {
       v2fixed_t offsetpos = { thing->x, thing->y };
       if(delta)
@@ -929,28 +927,8 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          offsetpos.x += delta->x;
          offsetpos.y += delta->y;
       }
-      const renderbarrier_t &barrier = portalrender.w->barrier;
-      if(portalrender.w->type == pw_line && portalrender.w->seg->linedef != portalline &&
-         P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
-      {
+      if(P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &portalrender.barrier) == 0)
          return;
-      }
-      if(portalrender.w->type != pw_line)
-      {
-         if(portalrender.w->seg && portalrender.w->seg->linedef != portalline &&
-            P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
-         {
-            return;
-         }
-         dlnormal_t dl1, dl2;
-         if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
-            (P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
-               (dl2.dl.x != D_MAXINT && 
-                  P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
-         {
-            return;
-         }
-      }
    }
 
    rotx = (tempx * view.cos) - (tempy * view.sin);
@@ -2273,6 +2251,18 @@ static void R_ProjectParticle(particle_t *particle)
    // off either side?
    if(x1 >= viewwindow.width || x2 < 0)
       return;
+
+   // Raw way to reject projecting particle due to portal barrier
+   if(portalrender.active && portalrender.dist)
+   {
+      int i = (x1 + x2) / 2;
+      if(i < 0)
+         i = 0;
+      if(i >= viewwindow.width)
+         i = viewwindow.width;
+      if(idist > portalrender.dist[i])
+         return;
+   }
 
    tz = M_FixedToFloat(particle->z) - view.z;
 

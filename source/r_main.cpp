@@ -773,10 +773,6 @@ void R_IncrementFrameid()
                "GET A LIFE.\a\n");
 
       frameid = 1;
-
-      // Do as the description says...
-      for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].fframeid = pSectorBoxes[i].cframeid = 0;
    }
 }
 

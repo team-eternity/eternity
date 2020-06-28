@@ -243,6 +243,15 @@ static void R_RenderSegLoop(void)
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
+      if(portalrender.active && portalrender.dist && segclip.dist > portalrender.dist[i])
+      {
+         // Reject this column. Make sure to update all current values, including these "optional"
+         // ones (they would be updated uniformly on all columns if applicable).
+         segclip.low += segclip.lowstep;
+         segclip.high += segclip.highstep;
+         goto nextcol;
+      }
+
       cliptop = (int)ceilingclip[i];
       clipbot = (int)floorclip[i];
 
@@ -546,6 +555,7 @@ static void R_RenderSegLoop(void)
             ceilingclip[i] = (float)t;
       }
 
+   nextcol:
       segclip.len += segclip.lenstep;
       segclip.dist += segclip.diststep;
       segclip.top += segclip.topstep;

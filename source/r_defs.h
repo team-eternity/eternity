@@ -209,8 +209,6 @@ struct sectorinterp_t
 struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
-   unsigned fframeid;   // updated to avoid visiting more than once
-   unsigned cframeid;
 };
 
 //

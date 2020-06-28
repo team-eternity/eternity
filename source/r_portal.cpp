@@ -183,7 +183,6 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
-   memset(&window->barrier, 0, sizeof(window->barrier));
    if(!noplanes)
    {
       if(!window->poverlay)
@@ -235,69 +234,6 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
       y += link.deltay;
    }
 }
-inline static void R_applyPortalTransformTo(const portal_t *portal,
-   float &x, float &y, bool applyTranslation)
-{
-   if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
-   {
-      const portaltransform_t &tr = portal->data.anchor.transform;
-      tr.applyTo(x, y, !applyTranslation);
-   }
-   else if(portal->type == R_LINKED && applyTranslation)
-   {
-      const linkdata_t &link = portal->data.link;
-      x += M_FixedToFloat(link.deltax);
-      y += M_FixedToFloat(link.deltay);
-   }
-}
-
-//
-// Calculates the render barrier based on portal type and source seg
-// (assuming line portal). Use seg because it may round-off badly in dynasegs
-//
-static void R_calcRenderBarrier(const portal_t *portal, dlnormal_t &dln)
-{
-   R_applyPortalTransformTo(portal, dln.dl.x, dln.dl.y, true);
-   R_applyPortalTransformTo(portal, dln.dl.dx, dln.dl.dy, false);
-   R_applyPortalTransformTo(portal, dln.nx, dln.ny, false);
-}
-static void R_calcRenderBarrier(const portal_t *portal, const seg_t *seg,
-   dlnormal_t &dln)
-{
-   dln.dl.x = seg->v1->x;
-   dln.dl.y = seg->v1->y;
-   dln.dl.dx = seg->v2->x - dln.dl.x;
-   dln.dl.dy = seg->v2->y - dln.dl.y;
-   dln.nx = seg->linedef->nx;
-   dln.ny = seg->linedef->ny;
-   R_calcRenderBarrier(portal, dln);
-}
-
-//
-// Expands a portal barrier BBox. For sector portals
-//
-void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
-{
-   const portal_t *portal = window.portal;
-   if(!R_portalIsAnchored(portal))
-      return;
-
-   static const int ind[2][4] = { 
-      {BOXLEFT, BOXRIGHT, BOXRIGHT, BOXLEFT}, 
-      {BOXBOTTOM, BOXBOTTOM, BOXTOP, BOXTOP} 
-   };
-   
-   renderbarrier_t &barrier = window.barrier;
-   fixed_t x, y;
-   for(int i = 0; i < 4; ++i)
-   {
-      // Use the corners of the box when applying transformation
-      x = box.box[ind[0][i]];
-      y = box.box[ind[1][i]];
-      R_applyPortalTransformTo(portal, x, y, true);
-      M_AddToBox(barrier.bbox, x, y);
-   }
-}
 
 static pwindow_t *R_NewPortalWindow(portal_t *p, const seg_t *seg, pwindowtype_e type)
 {
@@ -308,10 +244,7 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, const seg_t *seg, pwindowtype_e
    ret->type   = type;
    ret->head   = ret;
    if(type == pw_line)
-   {
       I_Assert(seg && seg->linedef, "R_NewPortalWindow: Null line despite type == pw_line!");
-      R_calcRenderBarrier(p, seg, ret->barrier.dln);
-   }
    
    R_SetPortalFunction(ret);
    
@@ -342,7 +275,6 @@ static void R_CreateChildWindow(pwindow_t *parent)
    child->head     = parent->head;
    child->portal   = parent->portal;
    child->seg      = parent->seg;
-   child->barrier  = parent->barrier;  // FIXME: not sure if necessary
    child->type     = parent->type;
    child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
@@ -936,6 +868,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    portalrender.maxx = window->maxx;
    portalrender.closestdist = FLT_MAX; // We don't want to block anything
    portalrender.dist = nullptr;  // Set to NULL to ignore!
+   portalrender.barrier = {};
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1069,6 +1002,71 @@ static void R_ShowTainted(pwindow_t *window)
 }
 
 //
+// Given portalrender's closestdist and view positioning, compute the barrier divline
+//
+static divline_t R_computeRenderBarrier()
+{
+   I_Assert(portalrender.closestdist != 0 && portalrender.closestdist != FLT_MAX,
+            "Infinite distance!");
+
+   // Reverse the operation
+   float dirdist = 1.0f / portalrender.closestdist;
+
+   // From R_AddLine, idist = 1.0f / t1.y
+   // and t1.y = (temp.y * view.cos) + (temp.x * view.sin)
+   // and temp is delta from map point to view vector
+
+   // We know dirdist, view.cos and view.sin so we already have the equation:
+   // view.sin * dx + view.cos * dy - dirdist = 0
+   v2float_t v1, v2;
+   divline_t dl;  // the final fixed_t return
+   // Handle special case
+   if(!view.cos)
+   {
+      // Handle extreme case gracefully
+      if(!view.sin)
+         return {};
+      v1.x = dirdist / view.sin;
+      v1.y = 0;
+      v2.x = v1.x;
+      v2.y = v1.x > 0 ? -16 : 16;
+
+      dl.x = M_FloatToFixed(v1.x);
+      dl.y = M_FloatToFixed(v1.y);
+      dl.dx = M_FloatToFixed(v2.x - v1.x);
+      dl.dy = M_FloatToFixed(v2.y - v1.y);
+   }
+   else
+   {
+      // General case
+      v1.x = 0;
+      v1.y = dirdist / view.cos;
+      v2.x = dirdist / view.sin;
+      v2.y = 0;
+
+      if(v1.y * v2.x >= 0)
+      {
+         dl.x = M_FloatToFixed(v1.x);
+         dl.y = M_FloatToFixed(v1.y);
+         dl.dx = M_FloatToFixed(v2.x - v1.x);
+         dl.dy = M_FloatToFixed(v2.y - v1.y);
+      }
+      else
+      {
+         dl.x = M_FloatToFixed(v2.x);
+         dl.y = M_FloatToFixed(v2.y);
+         dl.dx = M_FloatToFixed(v1.x - v2.x);
+         dl.dy = M_FloatToFixed(v1.y - v2.y);
+      }
+   }
+
+   // Move it relative to view
+   dl.x += view.x;
+   dl.y += view.y;
+   return dl;
+}
+
+//
 // R_RenderAnchoredPortal
 //
 static void R_RenderAnchoredPortal(pwindow_t *window)
@@ -1128,6 +1126,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    portalrender.maxx = window->maxx;
    portalrender.closestdist = window->closestdist;
    portalrender.dist = window->dist;
+   portalrender.barrier = R_computeRenderBarrier();
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1240,6 +1239,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    portalrender.maxx = window->maxx;
    portalrender.closestdist = window->closestdist;
    portalrender.dist = window->dist;
+   portalrender.barrier = R_computeRenderBarrier();
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1363,22 +1363,14 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
    // ioanch: also added plane checks
 
    edefstructvar(dlnormal_t, dlnTransformed);
-   if(portalrender.active && portalrender.w->seg)
-   {
-      dlnTransformed = portalrender.w->barrier.dln;
-      R_calcRenderBarrier(surface.portal, dlnTransformed);
-   }
 
    for(pwindow_t *rover = windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
          rover->planez == surface.height)
       {
          // If within a line-bounded portal, keep track of that too
-         if(portalrender.active && (rover->seg != portalrender.w->seg ||
-            memcmp(&rover->barrier.dln, &dlnTransformed, sizeof(dlnTransformed))))
-         {
+         if(portalrender.active && rover->seg != portalrender.w->seg)
             continue;
-         }
 
          return rover;
       }
@@ -1386,14 +1378,10 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
    // not found, so make it
    pwindow_t *window = R_NewPortalWindow(surface.portal, nullptr, pw_surface[surf]);
    window->planez = surface.height;
-   M_ClearBox(window->barrier.bbox);
 
    // Inherit the line info if active, to help cull segs
    if(portalrender.active)
-   {
       window->seg = portalrender.w->seg;
-      window->barrier.dln = dlnTransformed;
-   }
 
    return window;
 }

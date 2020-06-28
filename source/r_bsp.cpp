@@ -48,10 +48,6 @@
 #include "v_alloc.h"
 #include "v_misc.h"
 
-// Microscopic distance to move rejectable segs from portal lines to avoid point
-// on line overlaps.
-static const float kPortalSegRejectionFudge = 1.f / 256;
-
 drawseg_t *ds_p;
 
 // killough 4/7/98: indicates doors closed wrt automap bugfix:
@@ -1773,59 +1769,6 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
       seg.c_portalignore = true;
 }
 
-inline static const bool tooclose(fixed_t n1, fixed_t n2)
-{
-   return D_abs(n1 - n2) < 256;
-}
-
-//
-// Checks if a line is behind a portal-generated divline (barrier)
-//
-static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg,
-                                 bool reverse = false)
-{
-   divline_t rend;
-   if(!reverse)
-   {
-      rend.x = renderSeg->v1->x;
-      rend.y = renderSeg->v1->y;
-      rend.dx = renderSeg->v2->x - rend.x;
-      rend.dy = renderSeg->v2->y - rend.y;
-   }
-   else  // this may be needed sometimes
-   {
-      rend.x = renderSeg->v2->x;
-      rend.y = renderSeg->v2->y;
-      rend.dx = renderSeg->v1->x - rend.x;
-      rend.dy = renderSeg->v1->y - rend.y;
-   }
-
-   // HACK: pull render-seg to me as a slack to avoid on-line points
-   rend.x += M_FloatToFixed(dln.nx * kPortalSegRejectionFudge);
-   rend.y += M_FloatToFixed(dln.ny * kPortalSegRejectionFudge);
-
-   const divline_t &dl = dln.dl;
-
-   int p1 = P_PointOnDivlineSidePrecise(rend.x, rend.y, &dl);
-   int p2 = P_PointOnDivlineSidePrecise(rend.x + rend.dx, rend.y + rend.dy, &dl);
-
-   if(p1 == p2)
-      return p1 == 1;   // only accept if behind the barrier line
-
-   // Check cases where vertices are common
-   if(tooclose(dl.x, rend.x) && tooclose(dl.y, rend.y))
-      return P_PointOnDivlineSidePrecise(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
-   if(tooclose(dl.x + dl.dx, rend.x + rend.dx) && 
-      tooclose(dl.y + dl.dy, rend.y + rend.dy))
-   {
-      return P_PointOnDivlineSidePrecise(dl.x, dl.y, &rend) == 0;
-   }
-
-   // At least one point must be in front of the rendered line
-   return P_PointOnDivlineSidePrecise(dl.x, dl.y, &rend) == 0 ||
-      P_PointOnDivlineSidePrecise(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
-}
-
 //
 // Picks the two bounding box lines pointed towards the viewer.
 //
@@ -1972,64 +1915,6 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
 }
 
 //
-// Check seg against barrier bbox
-//
-static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg)
-{
-   divline_t segdl;
-   segdl.x = tryseg.v1->x;
-   segdl.y = tryseg.v1->y;
-   segdl.dx = tryseg.v2->x - segdl.x;
-   segdl.dy = tryseg.v2->y - segdl.y;
-
-   int boxside = P_BoxOnDivlineSidePrecise(bbox, segdl);
-
-   if(boxside == 0)
-      return true;
-   if(boxside == 1)
-      return false;
-
-   dlnormal_t dl1;
-   dlnormal_t dl2;
-
-   slopetype_t slope, lnslope = tryseg.linedef->slopetype;
-   if(!R_PickNearestBoxLines(bbox, dl1, dl2, &slope))
-      return true;
-
-   if(slope == ST_VERTICAL || slope == ST_HORIZONTAL)
-      return R_allowBehindDivline(dl1, &tryseg);
-
-   // Slanted
-   if(slope != lnslope)
-   {
-      return R_allowBehindDivline(dl1, &tryseg) &&
-      R_allowBehindDivline(dl2, &tryseg);
-   }
-
-   // Pointed to the corner
-   bool revfirst = slope == ST_POSITIVE ?
-   !!((segdl.dx > 0) ^ (dl1.dl.x == bbox[BOXRIGHT])) :
-   !!((segdl.dx > 0) ^ (dl1.dl.x == bbox[BOXLEFT]));
-
-   // truth table:
-   // Positive slope
-   // v1--->v2     top right   =>  revfirst
-   //  false          false           false
-   //  false           true           true
-   //   true          false           true
-   //   true           true           false
-   // Negative slope
-   // v1--->v2     top left   =>  revfirst
-   //  false          false           false
-   //  false           true           true
-   //   true          false           true
-   //   true           true           false
-
-   return R_allowBehindDivline(dl1, &tryseg, revfirst) &&
-      R_allowBehindDivline(dl2, &tryseg, !revfirst);
-}
-
-//
 // R_AddLine
 //
 // Clips the given segment
@@ -2047,23 +1932,13 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    float floorx1, floorx2;
    const vertex_t *v1, *v2;
 
-   // ioanch 20160125: reject segs in front of line when rendering line portal
-   if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
+   if(portalrender.active && portalrender.barrier.nonzero() &&
+      P_PointOnDivlineSidePrecise(line->v1->x, line->v1->y, &portalrender.barrier) == 0 &&
+      P_PointOnDivlineSidePrecise(line->v2->x, line->v2->y, &portalrender.barrier) == 0)
    {
-      // only reject if they're anchored portals (including linked)
-      if(portalrender.w->type == pw_line)
-      {
-         if(!R_allowBehindDivline(portalrender.w->barrier.dln, line))
-            return;
-      }
-      else
-      {
-         if(portalrender.w->seg && !R_allowBehindDivline(portalrender.w->barrier.dln, line))
-            return;
-         if(!R_allowBehindSectorPortal(portalrender.w->barrier.bbox, *line))
-            return;
-      }
+      return;
    }
+   
    // SoM: one of the byproducts of the portal height enforcement: The top 
    // silhouette should be drawn at ceilingheight but the actual texture 
    // coords should start at ceilingz. Yeah Quasar, it did get a LITTLE 
@@ -2434,18 +2309,6 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
 
    // Add new solid segs when it is safe to do so...
    R_AddMarkedSegs();
-
-   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
-   if(seg.f_window && box.fframeid != frameid)
-   {
-      box.fframeid = frameid;
-      R_CalcRenderBarrier(*seg.f_window, box);
-   }
-   if(seg.c_window && box.cframeid != frameid)
-   {
-      box.cframeid = frameid;
-      R_CalcRenderBarrier(*seg.c_window, box);
-   }
 }
 
 
@@ -2477,6 +2340,13 @@ static bool R_CheckBBox(const fixed_t *bspcoord) // killough 1/28/98: static
    angle_t angle1, angle2, span, tspan;
    int     sx1, sx2;
    const cliprange_t *start;
+
+   // Early reject bounding boxes in front of line
+   if(portalrender.active && portalrender.barrier.nonzero() &&
+      P_BoxOnDivlineSidePrecise(bspcoord, portalrender.barrier) == 0)
+   {
+      return false;
+   }
 
    // Find the corners of the box
    // that define the edges from current viewpoint.

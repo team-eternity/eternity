@@ -53,6 +53,11 @@ struct divline_t
    fixed_t     y;
    fixed_t     dx;
    fixed_t     dy;
+
+   inline bool nonzero() const
+   {
+      return dx || dy;
+   }
 };
 
 //
