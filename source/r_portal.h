@@ -315,6 +315,8 @@ struct portalrender_t
    bool  active;
    int   minx, maxx;
    float miny, maxy;
+   float closestdist;
+   const float *dist;   // shall point to window->dist. Can be NULL to mark "ignore" (so check it!)
 
    pwindow_t *w;
 

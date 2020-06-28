@@ -934,6 +934,8 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
+   portalrender.closestdist = FLT_MAX; // We don't want to block anything
+   portalrender.dist = nullptr;  // Set to NULL to ignore!
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1124,6 +1126,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
+   portalrender.closestdist = window->closestdist;
+   portalrender.dist = window->dist;
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1234,6 +1238,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
+   portalrender.closestdist = window->closestdist;
+   portalrender.dist = window->dist;
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
