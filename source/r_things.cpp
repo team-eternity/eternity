@@ -720,7 +720,7 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
 //
 //  mfloorclip and mceilingclip should also be set.
 //
-static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
+static void R_DrawVisSprite(vissprite_t *vis)
 {
    column_t *tcolumn;
    int       texturecolumn;
@@ -1379,7 +1379,7 @@ static void R_DrawPSprite(const pspdef_t *psp)
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_DrawVisSprite(vis, vis->x1, vis->x2);
+   R_DrawVisSprite(vis);
    
    view.ycenter = oldycenter;
 }
@@ -1793,7 +1793,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 
    mfloorclip   = clipbot;
    mceilingclip = cliptop;
-   R_DrawVisSprite(spr, spr->x1, spr->x2);
+   R_DrawVisSprite(spr);
 }
 
 //
