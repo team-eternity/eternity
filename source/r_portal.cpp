@@ -1029,7 +1029,7 @@ static divline_t R_computeRenderBarrier()
       v1.x = dirdist / view.sin;
       v1.y = 0;
       v2.x = v1.x;
-      v2.y = v1.x > 0 ? -16 : 16;
+      v2.y = v1.x > 0 ? -16.f : 16.f;
 
       dl.x = M_FloatToFixed(v1.x);
       dl.y = M_FloatToFixed(v1.y);
@@ -1061,8 +1061,8 @@ static divline_t R_computeRenderBarrier()
    }
 
    // Move it relative to view
-   dl.x += view.x;
-   dl.y += view.y;
+   dl.x += viewx;
+   dl.y += viewy;
    return dl;
 }
 
