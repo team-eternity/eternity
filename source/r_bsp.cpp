@@ -710,38 +710,55 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 // 
 static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
+   // Setup a small tolerance to avoid the risk of rejecting lines starting from the vertex of the
+   // portal line
+   static const float DISTANCE_EPSILON = 0.001f;
+
    // SoM: Quickly reject the seg based on the bounding box of the portal
    if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
       return false;
-
-   // Now we know we're inside the window, so check the distances
-   if(portalrender.dist && (seg.dist > portalrender.dist[seg.x1] ||
-                            seg.dist2 > portalrender.dist[seg.x2]))
-   {
-      return false;
-   }
 
    // Do initial clipping.
    if(portalrender.minx > seg.x1)
    {
       *start = portalrender.minx;
       *clipx1 = *start - seg.x1frac;
+
+      if(portalrender.dist)
+      {
+         float dist = seg.dist + seg.diststep * *clipx1;
+         if(dist > portalrender.dist[portalrender.minx] + DISTANCE_EPSILON)
+            return false;
+      }
    }
    else
    {
       *start = seg.x1;
       *clipx1 = 0.0;
+
+      if(portalrender.dist && seg.dist > portalrender.dist[seg.x1] + DISTANCE_EPSILON)
+         return false;
    }
 
    if(portalrender.maxx < seg.x2)
    {
       *stop = portalrender.maxx;
       *clipx2 = seg.x2frac - *stop;
+
+      if(portalrender.dist)
+      {
+         float dist = seg.dist2 - seg.diststep * *clipx2;
+         if(dist > portalrender.dist[portalrender.maxx] + DISTANCE_EPSILON)
+            return false;
+      }
    }
    else
    {
       *stop = seg.x2;
       *clipx2 = 0.0;
+
+      if(portalrender.dist && seg.dist2 > portalrender.dist[seg.x2] + DISTANCE_EPSILON)
+         return false;
    }
 
    if(*start > *stop)
