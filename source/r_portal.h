@@ -272,8 +272,6 @@ struct renderbarrier_t
 struct pwindow_t
 {
    portal_t *portal;
-   const seg_t *seg; // ioanch: need to use seg, because each window needs EXACT source location
-   // rendering barrier: blocks unwanted objects from showing
    pwindowtype_e type;
 
    fixed_t planez;   // if line == nullptr, this is the sector portal plane z
@@ -304,7 +302,7 @@ struct pwindow_t
 void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist);
 
 pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface);
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg);
+pwindow_t *R_GetLinePortalWindow(portal_t *portal);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t
@@ -312,7 +310,6 @@ struct portalrender_t
    bool  active;
    int   minx, maxx;
    float miny, maxy;
-   float closestdist;
    const float *dist;   // shall point to window->dist. Can be NULL to mark "ignore" (so check it!)
    divline_t barrier;
 

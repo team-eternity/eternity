@@ -134,7 +134,7 @@ VALLOCATION(overlayfclip)
 // to know which segs delimit them from the viewer.
 //
 float *lastcoldist;
-VALLOCATION(lastsurfdist)
+VALLOCATION(lastcoldist)
 {
    lastcoldist = ecalloctag(float *, w, sizeof(*lastcoldist), PU_VALLOC, nullptr);
 }

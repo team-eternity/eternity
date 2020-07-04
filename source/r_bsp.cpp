@@ -1262,7 +1262,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    if(!toohigh && havetportal && heightchange)
    {
-      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line);
+      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal);
       seg.segtextured = true;
    }
    else
@@ -1364,7 +1364,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
-      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line);
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal);
       seg.clipsolid = true;
    }
    else
@@ -1379,7 +1379,7 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
 
    if(!toolow && havebportal && (b > l || b2 > l2))
    {
-      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line);
+      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal);
       seg.segtextured = true;
    }
    else
@@ -1545,7 +1545,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(!toohigh && havetportal &&
       seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height)
    {
-      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line);
+      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal);
       seg.segtextured = true;
    }
    else
@@ -1655,7 +1655,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
-      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line);
+      seg.l_window = R_GetLinePortalWindow(line->linedef->portal);
       seg.clipsolid = true;
    }
    else
@@ -1671,7 +1671,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
    if(!toolow && havebportal &&
       seg.frontsec->srf.floor.height < seg.backsec->srf.floor.height)
    {
-      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line);
+      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal);
       seg.segtextured = true;
    }
    else
@@ -1779,7 +1779,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    seg.clipsolid   = true;
    seg.segtextured = seg.midtex || seg.toptex || seg.bottomtex;
    seg.l_window    = line->linedef->portal ?
-   R_GetLinePortalWindow(line->linedef->portal, line) : NULL;
+   R_GetLinePortalWindow(line->linedef->portal) : NULL;
 
    // haleyjd 03/12/06: inverted predicates to simplify
    if(seg.frontsec->srf.floor.portal && seg.frontsec->srf.floor.portal->type != R_LINKED &&

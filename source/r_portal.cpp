@@ -178,7 +178,6 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
    window->child    = NULL;
    window->next     = NULL;
    window->portal   = NULL;
-   window->seg      = NULL;
    window->func     = R_RenderPortalNOP;
    window->clipfunc = NULL;
    window->vx = window->vy = window->vz = 0;
@@ -235,16 +234,13 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
    }
 }
 
-static pwindow_t *R_NewPortalWindow(portal_t *p, const seg_t *seg, pwindowtype_e type)
+static pwindow_t *R_NewPortalWindow(portal_t *p, pwindowtype_e type)
 {
    pwindow_t *ret = newPortalWindow();
    
    ret->portal = p;
-   ret->seg    = seg;
    ret->type   = type;
    ret->head   = ret;
-   if(type == pw_line)
-      I_Assert(seg && seg->linedef, "R_NewPortalWindow: Null line despite type == pw_line!");
    
    R_SetPortalFunction(ret);
    
@@ -274,7 +270,6 @@ static void R_CreateChildWindow(pwindow_t *parent)
    parent->child   = child;
    child->head     = parent->head;
    child->portal   = parent->portal;
-   child->seg      = parent->seg;
    child->type     = parent->type;
    child->func     = parent->func;
    child->clipfunc = parent->clipfunc;
@@ -866,7 +861,6 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
-   portalrender.closestdist = FLT_MAX; // We don't want to block anything
    portalrender.dist = nullptr;  // Set to NULL to ignore!
    portalrender.barrier = {};
 
@@ -937,47 +931,6 @@ static void R_ShowTainted(pwindow_t *window)
 {
    int y1, y2, count;
 
-   if(window->type == pw_line)
-   {
-      const sector_t *sector = window->seg->linedef->frontsector;
-      float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
-      float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
-      visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
-         sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset,
-         sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr);
-      visplane_t *bottomplane = R_FindPlane(sector->srf.floor.height,
-         sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset,
-         sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr);
-      topplane = R_CheckPlane(topplane, window->minx, window->maxx);
-      bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
-
-      for(int x = window->minx; x <= window->maxx; x++)
-      {
-         if(window->top[x] > window->bottom[x])
-            continue;
-         if(window->top[x] <= view.ycenter - 1.0f &&
-            window->bottom[x] >= view.ycenter)
-         {
-            topplane->top[x] = static_cast<int>(window->top[x]);
-            topplane->bottom[x] = centery - 1;
-            bottomplane->top[x] = centery;
-            bottomplane->bottom[x] = static_cast<int>(window->bottom[x]);
-         }
-         else if(window->top[x] <= view.ycenter - 1.0f)
-         {
-            topplane->top[x] = static_cast<int>(window->top[x]);
-            topplane->bottom[x] = static_cast<int>(window->bottom[x]);
-         }
-         else if(window->bottom[x] > view.ycenter - 1.0f)
-         {
-            bottomplane->top[x] = static_cast<int>(window->top[x]);
-            bottomplane->bottom[x] = static_cast<int>(window->bottom[x]);
-         }
-      }
-      
-      return;
-   }
-
    for(int i = window->minx; i <= window->maxx; i++)
    {
       byte *dest;
@@ -1004,13 +957,12 @@ static void R_ShowTainted(pwindow_t *window)
 //
 // Given portalrender's closestdist and view positioning, compute the barrier divline
 //
-static divline_t R_computeRenderBarrier()
+static divline_t R_computeRenderBarrier(float closestdist)
 {
-   I_Assert(portalrender.closestdist != 0 && portalrender.closestdist != FLT_MAX,
-            "Infinite distance!");
+   I_Assert(closestdist != 0 && closestdist != FLT_MAX, "Infinite distance!");
 
    // Reverse the operation
-   float dirdist = 1.0f / portalrender.closestdist;
+   float dirdist = 1.0f / closestdist;
 
    // From R_AddLine, idist = 1.0f / t1.y
    // and t1.y = (temp.y * view.cos) + (temp.x * view.sin)
@@ -1124,9 +1076,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
-   portalrender.closestdist = window->closestdist;
    portalrender.dist = window->dist;
-   portalrender.barrier = R_computeRenderBarrier();
+   portalrender.barrier = R_computeRenderBarrier(window->closestdist);
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1237,9 +1188,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
-   portalrender.closestdist = window->closestdist;
    portalrender.dist = window->dist;
-   portalrender.barrier = R_computeRenderBarrier();
+   portalrender.barrier = R_computeRenderBarrier(window->closestdist);
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -1369,38 +1319,33 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
          rover->planez == surface.height)
       {
          // If within a line-bounded portal, keep track of that too
-         if(portalrender.active && rover->seg != portalrender.w->seg)
+         if(portalrender.active)
             continue;
 
          return rover;
       }
 
    // not found, so make it
-   pwindow_t *window = R_NewPortalWindow(surface.portal, nullptr, pw_surface[surf]);
+   pwindow_t *window = R_NewPortalWindow(surface.portal, pw_surface[surf]);
    window->planez = surface.height;
-
-   // Inherit the line info if active, to help cull segs
-   if(portalrender.active)
-      window->seg = portalrender.w->seg;
 
    return window;
 }
 
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
+pwindow_t *R_GetLinePortalWindow(portal_t *portal)
 {
    pwindow_t *rover = windowhead;
 
    while(rover)
    {
-      if(rover->portal == portal && rover->type == pw_line && 
-         rover->seg == seg)
+      if(rover->portal == portal && rover->type == pw_line)
          return rover;
 
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, seg, pw_line);
+   return R_NewPortalWindow(portal, pw_line);
 }
 
 //

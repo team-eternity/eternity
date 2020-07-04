@@ -1054,6 +1054,23 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          return;
    }
 
+   int visx1 = x1 < 0.0f ? 0 : intx1;
+   int visx2 = x2 >= view.width ? viewwindow.width - 1 : intx2;
+   if(portalrender.active)
+   {
+      // Exclude if totally out of window
+      if(visx2 < portalrender.minx || visx1 > portalrender.maxx)
+         return;
+      if(portalrender.dist)
+      {
+         int point1 = visx1 > portalrender.minx ? visx1 : portalrender.minx;
+         int point2 = visx2 < portalrender.maxx ? visx2 : portalrender.maxx;
+         // If in front in both positions, reject the sprite
+         if(idist > portalrender.dist[point1] && idist > portalrender.dist[point2])
+            return;
+      }
+   }
+
    // store information in a vissprite
    vis = R_NewVisSprite();
 
@@ -1067,8 +1084,8 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    vis->gzt    = gzt;                          // killough 3/27/98
 
    // Cardboard
-   vis->x1 = x1 < 0.0f ? 0 : intx1;
-   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : intx2;
+   vis->x1 = visx1;
+   vis->x2 = visx2;
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
