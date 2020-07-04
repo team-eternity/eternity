@@ -727,8 +727,8 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
 
       if(portalrender.dist)
       {
-         float dist = seg.dist + seg.diststep * *clipx1;
-         if(dist > portalrender.dist[portalrender.minx] + DISTANCE_EPSILON)
+         float dist = 1.0f / (seg.dist + seg.diststep * *clipx1);
+         if(dist < portalrender.dist[portalrender.minx] - DISTANCE_EPSILON)
             return false;
          limitdists[0] = dist - portalrender.dist[portalrender.minx];
       }
@@ -738,9 +738,11 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
       *start = seg.x1;
       *clipx1 = 0.0;
 
-      if(portalrender.dist && seg.dist > portalrender.dist[seg.x1] + DISTANCE_EPSILON)
+      float ddist = 1.0f / seg.dist;
+
+      if(portalrender.dist && ddist < portalrender.dist[seg.x1] - DISTANCE_EPSILON)
          return false;
-      limitdists[0] = seg.dist - portalrender.dist[seg.x1];
+      limitdists[0] = ddist - portalrender.dist[seg.x1];
    }
 
    if(portalrender.maxx < seg.x2)
@@ -750,8 +752,8 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
 
       if(portalrender.dist)
       {
-         float dist = seg.dist2 - seg.diststep * *clipx2;
-         if(dist > portalrender.dist[portalrender.maxx] + DISTANCE_EPSILON)
+         float dist = 1.0f / (seg.dist2 - seg.diststep * *clipx2);
+         if(dist < portalrender.dist[portalrender.maxx] - DISTANCE_EPSILON)
             return false;
          limitdists[1] = dist - portalrender.dist[portalrender.maxx];
       }
@@ -761,9 +763,11 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
       *stop = seg.x2;
       *clipx2 = 0.0;
 
-      if(portalrender.dist && seg.dist2 > portalrender.dist[seg.x2] + DISTANCE_EPSILON)
+      float ddist = 1.0f / seg.dist2;
+
+      if(portalrender.dist && ddist < portalrender.dist[seg.x2] - DISTANCE_EPSILON)
          return false;
-      limitdists[1] = seg.dist2 - portalrender.dist[seg.x2];
+      limitdists[1] = ddist - portalrender.dist[seg.x2];
    }
 
    // Also reject line portals right on edge! Otherwise we may very well risk infinite recursion.

@@ -597,7 +597,7 @@ void R_ClearPlanes()
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;
-      lastcoldist[i] = FLT_MAX;  // that means on viewport
+      lastcoldist[i] = 0;  // that means on viewport
    }
 
    R_ClearPlaneHash(&mainhash);

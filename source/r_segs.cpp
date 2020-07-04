@@ -323,7 +323,7 @@ static void R_RenderSegLoop(void)
          }
       }
       
-      lastcoldist[i] = segclip.dist;
+      lastcoldist[i] = 1.0f / segclip.dist;
 
       if(segclip.segtextured)
       {
@@ -399,11 +399,11 @@ static void R_RenderSegLoop(void)
                      
                   }
 
-                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i], segclip.dist);
+                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i], 1.0f / segclip.dist);
                }
                else
                {
-                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b, segclip.dist);
+                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b, 1.0f / segclip.dist);
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -433,7 +433,7 @@ static void R_RenderSegLoop(void)
                if(column.y2 >= column.y1)
                {
                   R_WindowAdd(segclip.t_window, i,  static_cast<float>(column.y1),
-                              static_cast<float>(column.y2), segclip.dist);
+                              static_cast<float>(column.y2), 1.0f / segclip.dist);
                   ceilingclip[i] = static_cast<float>(column.y2 + 1);
                }
                else
@@ -472,7 +472,7 @@ static void R_RenderSegLoop(void)
                if(column.y2 >= column.y1)
                {
                   R_WindowAdd(segclip.b_window, i, static_cast<float>(column.y1),
-                              static_cast<float>(column.y2), segclip.dist);
+                              static_cast<float>(column.y2), 1.0f / segclip.dist);
                   floorclip[i] = static_cast<float>(column.y1 - 1);
                }
                else
@@ -506,7 +506,7 @@ static void R_RenderSegLoop(void)
 
             if(segclip.l_window)
             {
-               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i], segclip.dist);
+               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i], 1.0f / segclip.dist);
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
@@ -524,7 +524,7 @@ static void R_RenderSegLoop(void)
       }
       else if(segclip.l_window)
       {
-         R_WindowAdd(segclip.l_window, i, (float)t, (float)b, segclip.dist);
+         R_WindowAdd(segclip.l_window, i, (float)t, (float)b, 1.0f / segclip.dist);
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }

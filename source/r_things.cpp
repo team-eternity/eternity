@@ -1066,7 +1066,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          int point1 = visx1 > portalrender.minx ? visx1 : portalrender.minx;
          int point2 = visx2 < portalrender.maxx ? visx2 : portalrender.maxx;
          // If in front in both positions, reject the sprite
-         if(idist > portalrender.dist[point1] && idist > portalrender.dist[point2])
+         if(roty < portalrender.dist[point1] && roty < portalrender.dist[point2])
             return;
       }
    }
@@ -2277,7 +2277,7 @@ static void R_ProjectParticle(particle_t *particle)
          i = 0;
       if(i >= viewwindow.width)
          i = viewwindow.width;
-      if(idist > portalrender.dist[i])
+      if(ty1 < portalrender.dist[i])
          return;
    }
 

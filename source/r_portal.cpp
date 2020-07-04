@@ -166,13 +166,13 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
 {
    window->maxx = 0;
    window->minx = viewwindow.width - 1;
-   window->closestdist = 0;
+   window->closestdist = FLT_MAX;   // Farthest from viewport
 
    for(int i = 0; i < video.width; i++)
    {
       window->top[i]    = view.height;
       window->bottom[i] = -1.0f;
-      window->dist[i]   = 0;
+      window->dist[i]   = FLT_MAX;
    }
 
    window->child    = NULL;
@@ -314,7 +314,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
          window->top[x]    = ytop;
          window->bottom[x] = ybottom;
          // Set up dist when new column is made
-         if((window->dist[x] = dist) > window->closestdist)
+         if((window->dist[x] = dist) < window->closestdist)
             window->closestdist = dist;
          return;
       }
@@ -346,7 +346,7 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
       window->minx = window->maxx = x;
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      if((window->dist[x] = dist) > window->closestdist)
+      if((window->dist[x] = dist) < window->closestdist)
          window->closestdist = dist;
 
       // SoM 3/10/2005: store the viewz in the portal struct for later use
@@ -363,7 +363,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      if((window->dist[x] = dist) > window->closestdist)
+
+      if((window->dist[x] = dist) < window->closestdist)
          window->closestdist = dist;
       return;
    }
@@ -374,7 +375,8 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom, float dist
 
       window->top[x]    = ytop;
       window->bottom[x] = ybottom;
-      if((window->dist[x] = dist) > window->closestdist)
+
+      if((window->dist[x] = dist) < window->closestdist)
          window->closestdist = dist;
       return;
    }
@@ -855,7 +857,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    ceilingclip = window->top;
    // For skybox portals, we can be as close as we want to surfaces
    for(int i = 0; i < video.width; ++i)
-      lastcoldist[i] = FLT_MAX;
+      lastcoldist[i] = 0;
 
    R_ClearOverlayClips();
 
@@ -959,10 +961,7 @@ static void R_ShowTainted(pwindow_t *window)
 //
 static divline_t R_computeRenderBarrier(float closestdist)
 {
-   I_Assert(closestdist != 0 && closestdist != FLT_MAX, "Infinite distance!");
-
-   // Reverse the operation
-   float dirdist = 1.0f / closestdist;
+   I_Assert(closestdist != 0 && closestdist != FLT_MAX, "Infinite or zero distance %g!\n", closestdist);
 
    // From R_AddLine, idist = 1.0f / t1.y
    // and t1.y = (temp.y * view.cos) + (temp.x * view.sin)
@@ -978,7 +977,7 @@ static divline_t R_computeRenderBarrier(float closestdist)
       // Handle extreme case gracefully
       if(!view.sin)
          return {};
-      v1.x = dirdist / view.sin;
+      v1.x = closestdist / view.sin;
       v1.y = 0;
       v2.x = v1.x;
       v2.y = v1.x > 0 ? -16.f : 16.f;
@@ -992,8 +991,8 @@ static divline_t R_computeRenderBarrier(float closestdist)
    {
       // General case
       v1.x = 0;
-      v1.y = dirdist / view.cos;
-      v2.x = dirdist / view.sin;
+      v1.y = closestdist / view.cos;
+      v2.x = closestdist / view.sin;
       v2.y = 0;
 
       if(v1.y * v2.x >= 0)

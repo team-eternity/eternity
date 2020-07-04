@@ -195,6 +195,7 @@ struct cb_seg_t
    float x1frac, x2frac;
    float toffsetx, toffsety;
 
+   // NOTE: dist and dist2 are inverse distances (from viewport to them)
    float dist, dist2, diststep;
    float len, len2, lenstep;
 
