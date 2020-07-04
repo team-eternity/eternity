@@ -719,6 +719,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
       return false;
 
    // Do initial clipping.
+   float limitdists[2];
    if(portalrender.minx > seg.x1)
    {
       *start = portalrender.minx;
@@ -729,6 +730,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
          float dist = seg.dist + seg.diststep * *clipx1;
          if(dist > portalrender.dist[portalrender.minx] + DISTANCE_EPSILON)
             return false;
+         limitdists[0] = dist - portalrender.dist[portalrender.minx];
       }
    }
    else
@@ -738,6 +740,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
 
       if(portalrender.dist && seg.dist > portalrender.dist[seg.x1] + DISTANCE_EPSILON)
          return false;
+      limitdists[0] = seg.dist - portalrender.dist[seg.x1];
    }
 
    if(portalrender.maxx < seg.x2)
@@ -750,6 +753,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
          float dist = seg.dist2 - seg.diststep * *clipx2;
          if(dist > portalrender.dist[portalrender.maxx] + DISTANCE_EPSILON)
             return false;
+         limitdists[1] = dist - portalrender.dist[portalrender.maxx];
       }
    }
    else
@@ -759,6 +763,14 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
 
       if(portalrender.dist && seg.dist2 > portalrender.dist[seg.x2] + DISTANCE_EPSILON)
          return false;
+      limitdists[1] = seg.dist2 - portalrender.dist[seg.x2];
+   }
+
+   // Also reject line portals right on edge! Otherwise we may very well risk infinite recursion.
+   if(portalrender.dist && (seg.l_window || seg.t_window || seg.b_window) &&
+      fabsf(limitdists[0]) < DISTANCE_EPSILON && fabsf(limitdists[1]) < DISTANCE_EPSILON)
+   {
+      return false;
    }
 
    if(*start > *stop)
