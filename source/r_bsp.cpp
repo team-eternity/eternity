@@ -710,75 +710,36 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 // 
 static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
-   // Setup a small tolerance to avoid the risk of rejecting lines starting from the vertex of the
-   // portal line
-   static const float DISTANCE_EPSILON = 0.001f;
+   I_Assert(portalrender.active, "R_ClipInitialSegRange: no portal active!\n");
+   // NOTE: we need this tolerance because R_StoreWallRange recomputes segclip.diststep so it's
+   // different from what we have now! And we can't simulate it in advance
+   static const float DISTANCE_TOLERANCE = 0.01f;
 
    // SoM: Quickly reject the seg based on the bounding box of the portal
    if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
       return false;
 
    // Do initial clipping.
-   float limitdists[2];
-   if(portalrender.minx > seg.x1)
-   {
-      *start = portalrender.minx;
-      *clipx1 = *start - seg.x1frac;
 
-      if(portalrender.dist)
-      {
-         float dist = 1.0f / (seg.dist + seg.diststep * *clipx1);
-         if(dist < portalrender.dist[portalrender.minx] - DISTANCE_EPSILON)
-            return false;
-         limitdists[0] = dist - portalrender.dist[portalrender.minx];
-      }
-   }
-   else
-   {
-      *start = seg.x1;
-      *clipx1 = 0.0;
+   *start = portalrender.minx > seg.x1 ? portalrender.minx : seg.x1;
+   *clipx1 = *start - seg.x1frac;
 
-      float ddist = 1.0f / seg.dist;
-
-      if(portalrender.dist && ddist < portalrender.dist[seg.x1] - DISTANCE_EPSILON)
-         return false;
-      limitdists[0] = ddist - portalrender.dist[seg.x1];
-   }
-
-   if(portalrender.maxx < seg.x2)
-   {
-      *stop = portalrender.maxx;
-      *clipx2 = seg.x2frac - *stop;
-
-      if(portalrender.dist)
-      {
-         float dist = 1.0f / (seg.dist2 - seg.diststep * *clipx2);
-         if(dist < portalrender.dist[portalrender.maxx] - DISTANCE_EPSILON)
-            return false;
-         limitdists[1] = dist - portalrender.dist[portalrender.maxx];
-      }
-   }
-   else
-   {
-      *stop = seg.x2;
-      *clipx2 = 0.0;
-
-      float ddist = 1.0f / seg.dist2;
-
-      if(portalrender.dist && ddist < portalrender.dist[seg.x2] - DISTANCE_EPSILON)
-         return false;
-      limitdists[1] = ddist - portalrender.dist[seg.x2];
-   }
-
-   // Also reject line portals right on edge! Otherwise we may very well risk infinite recursion.
-   if(portalrender.dist && (seg.l_window || seg.t_window || seg.b_window) &&
-      fabsf(limitdists[0]) < DISTANCE_EPSILON && fabsf(limitdists[1]) < DISTANCE_EPSILON)
-   {
-      return false;
-   }
-
+   *stop = portalrender.maxx < seg.x2 ? portalrender.maxx : seg.x2;
+   *clipx2 = seg.x2frac - *stop;
    if(*start > *stop)
       return false;
+
+   // Check for portal drawing
+   if(portalrender.dist)
+   {
+      float deltadists[2];
+      deltadists[0] = 1.0f / (seg.dist + seg.diststep * *clipx1) - portalrender.dist[*start];
+      deltadists[1] = 1.0f / (seg.dist2 - seg.diststep * *clipx2) - portalrender.dist[*stop];
+      // Reject segs whose both endpoints (either on portal or themselves) are drawn in front of window
+      // with some error. Also reject them if they're by "tolerance" even behind the portal.
+      if(deltadists[0] < DISTANCE_TOLERANCE && deltadists[1] < DISTANCE_TOLERANCE)
+         return false;
+   }
 
    return true;
 }

@@ -743,11 +743,8 @@ void R_StoreWallRange(const int start, const int stop)
    memcpy(&segclip, &seg, sizeof(seg));
 
    // haleyjd: NULL segclip line?? shouldn't happen.
-#ifdef RANGECHECK
-   if(!segclip.line)
-      I_Error("R_StoreWallRange: null segclip.line\n");
-#endif
-   
+   I_Assert(segclip.line, "R_StoreWallRange: null segclip.line\n");
+
    clipx1 = (float)(start - segclip.x1frac);
 
    clipx2 = (float)(segclip.x2frac - stop);

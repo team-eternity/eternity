@@ -961,7 +961,7 @@ static void R_ShowTainted(pwindow_t *window)
 //
 static divline_t R_computeRenderBarrier(float closestdist)
 {
-   I_Assert(closestdist != 0 && closestdist != FLT_MAX, "Infinite or zero distance %g!\n", closestdist);
+   I_Assert(closestdist != FLT_MAX, "Infinite distance %g!\n", closestdist);
 
    // From R_AddLine, idist = 1.0f / t1.y
    // and t1.y = (temp.y * view.cos) + (temp.x * view.sin)
