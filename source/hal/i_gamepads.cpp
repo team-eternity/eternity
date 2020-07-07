@@ -52,11 +52,14 @@ static HALGamePad *activePad;
 static gamePadChangeCallback_t gamePadChangeCallback;
 
 // Generic sensitivity values, for drivers that need them
-int i_joysticksens;
+double i_joyturnsens;
+int    i_joysticksens;
 
 // haleyjd 04/15/02: joystick sensitivity variables
+VARIABLE_FLOAT(i_joyturnsens, NULL, 0.0, 100.0);
 VARIABLE_INT(i_joysticksens, NULL, 0, 32767, NULL);
 
+CONSOLE_VARIABLE(i_joyturnsens, i_joyturnsens, 0) {}
 CONSOLE_VARIABLE(i_joysticksens, i_joysticksens, 0) {}
 
 //=============================================================================

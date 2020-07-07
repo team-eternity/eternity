@@ -311,7 +311,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
 
-      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn] * i_joyturnsens);
    }
 
    // gamepad dedicated analog strafe axis applies regardless

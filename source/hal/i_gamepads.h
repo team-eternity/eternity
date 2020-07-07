@@ -38,6 +38,9 @@ class HALGamePad;
 // Joystick device number, for config file
 extern int i_joysticknum;
 
+// Joystick turning sensitvity
+extern double i_joyturnsens;
+
 // Generic sensitivity value, for drivers that need it
 extern int i_joysticksens;
 

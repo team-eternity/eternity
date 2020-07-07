@@ -2572,6 +2572,7 @@ static menuitem_t mn_joystick_items[] =
    { it_gap                                                          },
    { it_info,         "Settings"                                     },
    { it_runcmd,       "Load profile...",           "mn_profiles"     },
+   { it_variable,     "Turn sensitivity",          "i_joyturnsens"   },
    { it_variable,     "SDL axis dead zone",        "i_joysticksens"  },
    { it_toggle,       "Force feedback",            "i_forcefeedback" },
    { it_end                                                          }

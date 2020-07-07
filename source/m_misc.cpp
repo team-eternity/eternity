@@ -150,6 +150,9 @@ default_t defaults[] =
    DEFAULT_INT("joystick_num", &i_joysticknum, NULL, -1, -1, UL, default_t::wad_no,
                "SDL joystick device number, -1 to disable"),
 
+   // joystick turn sensitivity
+   DEFAULT_FLOAT("i_joyturnsens", &i_joyturnsens, NULL, 1.0, 0.0, 100.0, default_t::wad_no,
+                 "Joystick turning sensitivity"),
    // joystick sensitivity
    DEFAULT_INT("i_joysticksens", &i_joysticksens, NULL, 7849, 0, 32767, default_t::wad_no,
                "SDL MMSYSTEM joystick sensitivity"),
