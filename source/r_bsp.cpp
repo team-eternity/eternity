@@ -732,12 +732,25 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
    // Check for portal drawing
    if(portalrender.dist)
    {
+      float ddists[2];
+      ddists[0] = 1.0f / (seg.dist + seg.diststep * *clipx1);
+      ddists[1] = 1.0f / (seg.dist2 - seg.diststep * *clipx2);
+      float fdists[2][2];
+      fdists[0][0] = fabsf(ddists[0]);
+      fdists[0][1] = fabsf(portalrender.dist[*start]);
+      fdists[1][0] = fabsf(ddists[1]);
+      fdists[1][1] = fabsf(portalrender.dist[*stop]);
+      float tol[2];
+      tol[0] = DISTANCE_TOLERANCE * (fdists[0][0] > fdists[0][1] ? fdists[0][0] : fdists[0][1]);
+      tol[1] = DISTANCE_TOLERANCE * (fdists[1][0] > fdists[1][1] ? fdists[1][0] : fdists[1][1]);
+
+
       float deltadists[2];
-      deltadists[0] = 1.0f / (seg.dist + seg.diststep * *clipx1) - portalrender.dist[*start];
-      deltadists[1] = 1.0f / (seg.dist2 - seg.diststep * *clipx2) - portalrender.dist[*stop];
+      deltadists[0] = ddists[0] - portalrender.dist[*start];
+      deltadists[1] = ddists[1] - portalrender.dist[*stop];
       // Reject segs whose both endpoints (either on portal or themselves) are drawn in front of window
       // with some error. Also reject them if they're by "tolerance" even behind the portal.
-      if(deltadists[0] < DISTANCE_TOLERANCE && deltadists[1] < DISTANCE_TOLERANCE)
+      if(deltadists[0] < tol[0] && deltadists[1] < tol[1])
          return false;
    }
 
