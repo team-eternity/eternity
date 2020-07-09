@@ -285,7 +285,7 @@ static patch_t *marknums[10];   // numbers used for marking by the automap
 // killough 2/22/98: Remove limit on automap marks,
 // and make variables external for use in savegames.
 
-markpoint_t *markpoints = NULL;    // where the points are
+markpoint_t *markpoints = nullptr;    // where the points are
 int markpointnum = 0; // next point to be assigned (also number of points now)
 int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
@@ -296,7 +296,7 @@ static bool am_needbackscreen; // haleyjd 05/03/13
 // haleyjd 12/22/02: Heretic stuff
 
 // backdrop
-static byte *am_backdrop = NULL;
+static byte *am_backdrop = nullptr;
 static bool am_usebackdrop = false;
 
 // haleyjd 08/01/09: this function is unused
@@ -609,7 +609,7 @@ static void AM_loadPics()
 
       // allocate backdrop
       if(!am_backdrop)
-         am_backdrop = (byte *)(Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, NULL));
+         am_backdrop = (byte *)(Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, nullptr));
 
       // must be at least 100 tall
       if(height < 100 || height > SCREENHEIGHT)
@@ -649,7 +649,7 @@ static void AM_unloadPics()
    if(am_backdrop)
    {
       Z_Free(am_backdrop);
-      am_backdrop = NULL;
+      am_backdrop = nullptr;
       am_usebackdrop = false;
    }
 }
@@ -2360,10 +2360,10 @@ void AM_Drawer()
 // Console Commands
 //
 
-VARIABLE_TOGGLE(am_drawnodelines, NULL, onoff);
+VARIABLE_TOGGLE(am_drawnodelines, nullptr, onoff);
 CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
 
-VARIABLE_TOGGLE(am_dynasegs_bysubsec, NULL, yesno);
+VARIABLE_TOGGLE(am_dynasegs_bysubsec, nullptr, yesno);
 CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
 
 //----------------------------------------------------------------------------

@@ -1406,7 +1406,7 @@ static dehflags_t fireplayermissile_flaglist[] =
    { "normal",    0x00000000               }, // [XA] explicit no-op. :P
    { "homing",    FIREPLAYERMISSILE_HOMING },
    { "noammo",    FIREPLAYERMISSILE_NOAMMO },
-   { NULL,        0 }
+   { nullptr,     0 }
 };
 
 static dehflagset_t fireplayermissile_flagset =

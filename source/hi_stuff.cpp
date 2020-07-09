@@ -157,7 +157,7 @@ static void HI_loadData(void)
    memset(mapname, 0, 9);
 
    // load interpic
-   hi_interpic = NULL;
+   hi_interpic = nullptr;
    hi_exitpic = nullptr;
 
    if(estrnonempty(hi_wbs.li_lastexitpic))
@@ -196,8 +196,8 @@ static void HI_loadData(void)
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName     = NULL;
-   nextMapName = NULL;
+   mapName     = nullptr;
+   nextMapName = nullptr;
 
    {
       char nameBuffer[24];
@@ -694,9 +694,11 @@ static void HI_drawCoopStats(void)
    {
       if(HI_playerInGame(i))
       {
-         V_DrawPatchShadowed(25, ypos, &subscreen43, 
-            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
-            NULL, FRACUNIT);
+         V_DrawPatchShadowed(
+            25, ypos, &subscreen43,
+            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
+            nullptr, FRACUNIT
+         );
 
          if(statstage == 1)
          {
@@ -816,12 +818,16 @@ static void HI_drawDMStats(void)
                                     FRACUNIT/3);
             }
 
-            V_DrawPatchTL(40, ypos, &subscreen43,
+            V_DrawPatchTL(
+               40, ypos, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
-               NULL, tllevel);
-            V_DrawPatchTL(xpos, 18, &subscreen43,
+               nullptr, tllevel
+            );
+            V_DrawPatchTL(
+               xpos, 18, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_dead_faces[i], PU_CACHE),
-               NULL, tllevel);
+               nullptr, tllevel
+            );
 
             kpos = 86;
 

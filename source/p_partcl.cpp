@@ -93,7 +93,7 @@ static struct particleColorList {
    {&maroon2,   125, 24,  24 },
    {&mdred,     165, 0,   0  },
    {&dred2,     115, 0,   0  },
-   {NULL}
+   {nullptr}
 };
 
 //
@@ -325,7 +325,7 @@ void P_InitParticleEffects(void)
 static void P_UnsetParticlePosition(particle_t *ptcl)
 {
    ptcl->seclinks.remove();
-   ptcl->subsector = NULL;
+   ptcl->subsector = nullptr;
 }
 
 //
@@ -352,7 +352,7 @@ void P_ParticleThinker(void)
    fixed_t floorheight;
    
    i = activeParticles;
-   prev = NULL;
+   prev = nullptr;
    while(i != -1) 
    {
       particle = Particles + i;
@@ -1262,7 +1262,7 @@ static void P_DripEffect(Mobj *actor)
 
 particle_event_t particleEvents[P_EVENT_NUMEVENTS] =
 {
-   { NULL,              "pevt_none"    },       // P_EVENT_NONE
+   { nullptr,           "pevt_none"    },       // P_EVENT_NONE
    { P_RocketExplosion, "pevt_rexpl"   },       // P_EVENT_ROCKET_EXPLODE
    { P_BFGExplosion,    "pevt_bfgexpl" },       // P_EVENT_BFG_EXPLODE
 };
@@ -1281,7 +1281,7 @@ void P_RunEvent(Mobj *actor)
       return;
 
    // haleyjd: 
-   // if actor->state is NULL, the thing has been removed, or
+   // if actor->state is nullptr, the thing has been removed, or
    // if MIF_NOPTCLEVTS is set, don't run events for this thing
    if(!actor || !actor->state || (actor->intflags & MIF_NOPTCLEVTS))
       return;
@@ -1369,20 +1369,20 @@ void P_AddEventVars()
       variable_t *variable;
       command_t  *command;
 
-      variable = (variable_t *)(Z_Malloc(sizeof(variable_t), PU_STATIC, NULL));
+      variable = (variable_t *)(Z_Malloc(sizeof(variable_t), PU_STATIC, nullptr));
       variable->variable  = &(particleEvents[i].enabled);
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_int;
       variable->min       = 0;
       variable->max       = 1;
       variable->defines   = onoff;
 
-      command = (command_t *)(Z_Malloc(sizeof(command_t), PU_STATIC, NULL));
+      command = (command_t *)(Z_Malloc(sizeof(command_t), PU_STATIC, nullptr));
       command->name     = particleEvents[i].name;
       command->type     = ct_variable;
       command->flags    = 0;
       command->variable = variable;
-      command->handler  = NULL;
+      command->handler  = nullptr;
       command->netcmd   = 0;
 
       C_AddCommand(command);
@@ -1420,7 +1420,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionthing(AMX *amx, cell *params)
 {
    int tid;
    byte col1, col2;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -1443,7 +1443,7 @@ AMX_NATIVE_INFO ptcl_Natives[] =
 {
    { "_PtclExplosionPos",   sm_ptclexplosionpos   },
    { "_PtclExplosionThing", sm_ptclexplosionthing },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

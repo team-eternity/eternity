@@ -126,7 +126,7 @@ int viewangletox[FINEANGLES/2];
 angle_t *xtoviewangle;   // killough 2/8/98
 VALLOCATION(xtoviewangle)
 {
-   xtoviewangle = ecalloctag(angle_t *, w+1, sizeof(angle_t), PU_VALLOC, NULL);
+   xtoviewangle = ecalloctag(angle_t *, w+1, sizeof(angle_t), PU_VALLOC, nullptr);
 }
 
 
@@ -1181,7 +1181,7 @@ void R_SectorColormap(const sector_t *s)
         + viewplayer->fixedcolormap*256*sizeof(lighttable_t);
    }
    else
-      fixedcolormap = NULL;   
+      fixedcolormap = nullptr;   
 }
 
 angle_t R_WadToAngle(int wadangle)
@@ -1248,15 +1248,15 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // Check for new console commands.
    NetUpdate();
 
-   R_SetMaskedSilhouette(NULL, NULL);
+   R_SetMaskedSilhouette(nullptr, nullptr);
    
    // Push the first element on the Post-BSP stack
-   R_PushPost(true, NULL);
+   R_PushPost(true, nullptr);
    
    // SoM 12/9/03: render the portals.
    R_RenderPortals();
 
-   R_DrawPlanes(NULL);
+   R_DrawPlanes(nullptr);
    
    // Check for new console commands.
    NetUpdate();
@@ -1455,30 +1455,30 @@ static const char *coleng[]     = { "normal", "quad" };
 static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "none", "boom", "new" };
 
-VARIABLE_BOOLEAN(lefthanded, NULL,                  handedstr);
-VARIABLE_BOOLEAN(r_blockmap, NULL,                  onoff);
-VARIABLE_BOOLEAN(flashing_hom, NULL,                onoff);
-VARIABLE_BOOLEAN(r_precache, NULL,                  onoff);
-VARIABLE_TOGGLE(showpsprites,  NULL,                yesno);
-VARIABLE_BOOLEAN(stretchsky, NULL,                  onoff);
-VARIABLE_BOOLEAN(r_swirl, NULL,                     onoff);
-VARIABLE_BOOLEAN(general_translucency, NULL,        onoff);
-VARIABLE_BOOLEAN(autodetect_hom, NULL,              yesno);
-VARIABLE_TOGGLE(r_boomcolormaps, NULL,              onoff);
+VARIABLE_BOOLEAN(lefthanded, nullptr,               handedstr);
+VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);
+VARIABLE_BOOLEAN(flashing_hom, nullptr,             onoff);
+VARIABLE_BOOLEAN(r_precache, nullptr,               onoff);
+VARIABLE_TOGGLE(showpsprites,  nullptr,             yesno);
+VARIABLE_BOOLEAN(stretchsky, nullptr,               onoff);
+VARIABLE_BOOLEAN(r_swirl, nullptr,                  onoff);
+VARIABLE_BOOLEAN(general_translucency, nullptr,     onoff);
+VARIABLE_BOOLEAN(autodetect_hom, nullptr,           yesno);
+VARIABLE_TOGGLE(r_boomcolormaps, nullptr,           onoff);
 
 // SoM: Variable FOV
-VARIABLE_INT(fov, NULL, 20, 179, NULL);
+VARIABLE_INT(fov, nullptr, 20, 179, nullptr);
 
 // SoM: Portal tainted
-VARIABLE_BOOLEAN(showtainted, NULL,                 onoff);
+VARIABLE_BOOLEAN(showtainted, nullptr,              onoff);
 
-VARIABLE_INT(tran_filter_pct,     NULL, 0, 100,                  NULL);
-VARIABLE_INT(screenSize,          NULL, 0, 8,                    NULL);
-VARIABLE_INT(usegamma,            NULL, 0, 4,                    NULL);
-VARIABLE_INT(particle_trans,      NULL, 0, 2,                    ptranstr);
-VARIABLE_INT(r_column_engine_num, NULL, 0, NUMCOLUMNENGINES - 1, coleng);
-VARIABLE_INT(r_span_engine_num,   NULL, 0, NUMSPANENGINES - 1,   spaneng);
-VARIABLE_INT(r_tlstyle,           NULL, 0, R_TLSTYLE_NUM - 1,    tlstylestr);
+VARIABLE_INT(tran_filter_pct,     nullptr, 0, 100,                  nullptr);
+VARIABLE_INT(screenSize,          nullptr, 0, 8,                    nullptr);
+VARIABLE_INT(usegamma,            nullptr, 0, 4,                    nullptr);
+VARIABLE_INT(particle_trans,      nullptr, 0, 2,                    ptranstr);
+VARIABLE_INT(r_column_engine_num, nullptr, 0, NUMCOLUMNENGINES - 1, coleng);
+VARIABLE_INT(r_span_engine_num,   nullptr, 0, NUMSPANENGINES - 1,   spaneng);
+VARIABLE_INT(r_tlstyle,           nullptr, 0, R_TLSTYLE_NUM - 1,    tlstylestr);
 
 CONSOLE_VARIABLE(r_fov, fov, 0)
 {
@@ -1517,7 +1517,7 @@ CONSOLE_VARIABLE(gamma, usegamma, 0)
    player_printf(&players[consoleplayer], "%s", msg);
 
    // change to new gamma val
-   I_SetPalette(NULL);
+   I_SetPalette(nullptr);
 }
 
 CONSOLE_VARIABLE(lefthanded, lefthanded, 0) {}

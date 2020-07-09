@@ -32,7 +32,7 @@
 #include "i_system.h"
 
 
-RTTIObject::Type RTTIObject::StaticType("RTTIObject", NULL);
+RTTIObject::Type RTTIObject::StaticType("RTTIObject", nullptr);
 
 RTTIObject::Type *RTTIObject::Type::rttiTypes[NUMTYPECHAINS];
 

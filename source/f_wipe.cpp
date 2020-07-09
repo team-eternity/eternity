@@ -47,7 +47,7 @@ int wipetype;
 
 // common statics
 static int current_wipetype;
-static byte *wipe_buffer = NULL;
+static byte *wipe_buffer = nullptr;
 
 //==============================================================================
 //
@@ -60,7 +60,7 @@ static byte *wipe_buffer = NULL;
 static byte **start_screen;
 VALLOCATION(start_screen)
 {
-   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, NULL);
+   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, nullptr);
 }
 
 // y co-ordinate of various columns
@@ -243,7 +243,7 @@ struct fwipe_t
 static fwipe_t wipers[] =
 {
    // none
-   { NULL, NULL, NULL },
+   { nullptr, nullptr, nullptr },
 
    // melt wipe
    {
@@ -317,7 +317,7 @@ void Wipe_ScreenReset(void)
    if(wipe_buffer)
    {
       Z_Free(wipe_buffer);
-      wipe_buffer = NULL;
+      wipe_buffer = nullptr;
    }
 
    // cancel any current wipe (screen contents have been lost)

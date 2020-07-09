@@ -412,14 +412,14 @@ int twoSided(int sector, int line)
 //
 // Return sector_t * of sector next to current across line.
 //
-// Note: returns NULL if not two-sided line, or both sides refer to sector
+// Note: returns nullptr if not two-sided line, or both sides refer to sector
 //
 // killough 11/98: reformatted
 //
 sector_t *getNextSector(const line_t *line, const sector_t *sec)
 {
    //jff 1/26/98 check unneeded since line->backsector already
-   //returns NULL if the line is not two sided, and does so from
+   //returns nullptr if the line is not two sided, and does so from
    //the actual two-sidedness of the line, rather than its 2S flag
    //
    //jff 5/3/98 don't retn sec unless compatibility
@@ -428,11 +428,11 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
 
    return 
       comp[comp_model] && !(line->flags & ML_TWOSIDED) ? 
-         NULL :
+         nullptr :
          line->frontsector == sec ? 
             comp[comp_model] || line->backsector != sec ?
                line->backsector : 
-               NULL : 
+               nullptr : 
             line->frontsector;
 }
 
@@ -807,7 +807,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
 // a sector with that floor height across the lowest numbered two sided
 // line surrounding the sector.
 //
-// Note: If no sector at that height bounds the sector passed, return NULL
+// Note: If no sector at that height bounds the sector passed, return nullptr
 //
 // jff 02/03/98 Add routine to find numeric model floor
 //  around a sector specified by sector number
@@ -837,7 +837,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -847,7 +847,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 // a sector with that ceiling height across the lowest numbered two sided
 // line surrounding the sector.
 //
-// Note: If no sector at that height bounds the sector passed, return NULL
+// Note: If no sector at that height bounds the sector passed, return nullptr
 //
 // jff 02/03/98 Add routine to find numeric model ceiling
 //  around a sector specified by sector number
@@ -879,7 +879,7 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -1172,7 +1172,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
          if(sector->damagemask <= 0 || !(leveltime % sector->damagemask))
          {
             // do the damage
-            P_DamageMobj(player->mo, NULL, NULL, sector->damage, 
+            P_DamageMobj(player->mo, nullptr, nullptr, sector->damage, 
                          sector->damagemod);
 
             // possibly cause a terrain hit
@@ -1221,7 +1221,7 @@ void P_PlayerOnSpecialFlat(const player_t *player)
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
    {
-      P_DamageMobj(player->mo, NULL, NULL, terrain->damageamount,
+      P_DamageMobj(player->mo, nullptr, nullptr, terrain->damageamount,
                    terrain->damagetype);
 
       if(terrain->splash)
@@ -1890,7 +1890,7 @@ static void P_SpawnFriction()
 //
 line_t *P_FindLine(int tag, int *searchPosition)
 {
-   line_t *line = NULL;
+   line_t *line = nullptr;
    
    int start = 
       (*searchPosition >= 0 ? lines[*searchPosition].nexttag :
@@ -1919,7 +1919,7 @@ void P_SetLineID(line_t *line, int id)
    {
       int chain = (unsigned int)line->tag % (unsigned int)numlines;
       int i;
-      line_t *prevline = NULL;
+      line_t *prevline = nullptr;
 
       // walk the chain
       for(i = lines[chain].firsttag; i != -1; i = lines[i].nexttag)
@@ -2176,7 +2176,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    static int maxattach = 0;
    static int numattach = 0;
    static int alistsize = 0;
-   static int *attached = NULL, *alist = NULL;
+   static int *attached = nullptr, *alist = nullptr;
 
    int start = 0, i;
    line_t *line;
@@ -2200,7 +2200,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
       memcpy(attached, cline->frontsector->srf.floor.attached, sizeof(int) * numattach);
       Z_Free(cline->frontsector->srf.floor.attached);
-      cline->frontsector->srf.floor.attached = NULL;
+      cline->frontsector->srf.floor.attached = nullptr;
       cline->frontsector->srf.floor.numattached = 0;
       Z_Free(cline->frontsector->srf.floor.attsectors);
    }
@@ -2220,7 +2220,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
       memcpy(attached, cline->frontsector->srf.ceiling.attached, sizeof(int) * numattach);
       Z_Free(cline->frontsector->srf.ceiling.attached);
-      cline->frontsector->srf.ceiling.attached = NULL;
+      cline->frontsector->srf.ceiling.attached = nullptr;
       cline->frontsector->srf.ceiling.numattached = 0;
       Z_Free(cline->frontsector->srf.ceiling.attsectors);
    }
@@ -2573,7 +2573,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
    // FIXME / TODO: replace with a collection
    static int numattached = 0;
    static int maxattached = 0;
-   static attachedsurface_t *attached = NULL;
+   static attachedsurface_t *attached = nullptr;
 
    bool ceiling = (staticFn == EV_STATIC_ATTACH_SET_CEILING_CONTROL);
    sector_t *sector = line->frontsector;
@@ -2605,7 +2605,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
 
       memcpy(attached, sector->srf.floor.asurfaces, sizeof(attachedsurface_t) * numattached);
       Z_Free(sector->srf.floor.asurfaces);
-      sector->srf.floor.asurfaces = NULL;
+      sector->srf.floor.asurfaces = nullptr;
       sector->srf.floor.asurfacecount = 0;
    }
    else if(ceiling && sector->srf.ceiling.asurfacecount)
@@ -2621,7 +2621,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
 
       memcpy(attached, sector->srf.ceiling.asurfaces, sizeof(attachedsurface_t) * numattached);
       Z_Free(sector->srf.ceiling.asurfaces);
-      sector->srf.ceiling.asurfaces = NULL;
+      sector->srf.ceiling.asurfaces = nullptr;
       sector->srf.ceiling.asurfacecount = 0;
    }
 
@@ -3047,7 +3047,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    portal_effect effects = portal_ceiling;
    int       CamType = E_ThingNumForName("EESkyboxCam"); // find the skybox camera object
    sector_t *sector;
-   portal_t *portal = NULL;
+   portal_t *portal = nullptr;
    Mobj     *skycam;
    fixed_t   planez = 0;
    int       anchortype = 0; // SoM 3-10-04: new plan.
@@ -3303,7 +3303,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                 !(lines[s].extflags &
                   (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
                line == &lines[s] ||
-               lines[s].frontsector == NULL)
+               lines[s].frontsector == nullptr)
             {
                continue;
             }
@@ -3401,7 +3401,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    // SoM: TODO: Why am I not checking groupids?
    for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
-      P_SetPortal(sectors + s, NULL, portal, effects);
+      P_SetPortal(sectors + s, nullptr, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
@@ -3536,7 +3536,7 @@ AMX_NATIVE_INFO pspec_Natives[] =
 {
    { "_SectorSpecial",  sm_sectorspecial },
    { "_SectorColormap", sm_sectorcolormap },
-   { NULL,               NULL }
+   { nullptr,            nullptr }
 };
 #endif
 

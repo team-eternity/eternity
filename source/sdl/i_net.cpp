@@ -432,13 +432,13 @@ void I_QuitNetwork(void)
    if(packet)
    {
       SDLNet_FreePacket(packet);
-      packet = NULL;
+      packet = nullptr;
    }
    
    if(udpsocket)
    {
       SDLNet_UDP_Close(udpsocket);
-      udpsocket = NULL;
+      udpsocket = nullptr;
    }
    
    SDLNet_Quit();

@@ -146,7 +146,7 @@ cfg_opt_t edf_terrn_opts[] =
 
 cfg_opt_t edf_terdelta_opts[] =
 {
-   CFG_STR(ITEM_TERDELTA_NAME,    NULL,      CFGF_NONE),
+   CFG_STR(ITEM_TERDELTA_NAME,    nullptr,   CFGF_NONE),
 
    CFG_STR(ITEM_TERRAIN_SPLASH,   "",        CFGF_NONE),
    CFG_INT(ITEM_TERRAIN_DMGAMT,   0,         CFGF_NONE),
@@ -180,7 +180,7 @@ cfg_opt_t edf_floor_opts[] =
 // E_SplashForName
 //
 // Returns a terrain splash object for a name.
-// Returns NULL if no such splash exists.
+// Returns nullptr if no such splash exists.
 //
 static ETerrainSplash *E_SplashForName(const char *name)
 {
@@ -310,7 +310,7 @@ static void E_ProcessSplashes(cfg_t *cfg)
 // E_TerrainForName
 //
 // Returns a terrain object for a name.
-// Returns NULL if no such terrain exists.
+// Returns nullptr if no such terrain exists.
 //
 ETerrain *E_TerrainForName(const char *name)
 {
@@ -518,7 +518,7 @@ static void E_ProcessTerrainDeltas(cfg_t *cfg)
 // E_FloorForName
 //
 // Returns a floor object for a flat name.
-// Returns NULL if no such floor exists.
+// Returns nullptr if no such floor exists.
 //
 static EFloor *E_FloorForName(const char *name)
 {
@@ -632,7 +632,7 @@ void E_ProcessTerrainTypes(cfg_t *cfg)
 }
 
 // TerrainTypes lookup array
-static ETerrain **TerrainTypes = NULL;
+static ETerrain **TerrainTypes = nullptr;
 
 //
 // E_InitTerrainTypes
@@ -679,11 +679,11 @@ void E_InitTerrainTypes(void)
 //
 ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
 {
-   ETerrain *terrain = NULL;
+   ETerrain *terrain = nullptr;
    
    if(full_demo_version >= make_full_version(339, 21))
    {
-      msecnode_t *m = NULL;
+      msecnode_t *m = nullptr;
 
       // determine what touched sector the thing is standing on
       for(m = thing->touching_sectorlist; m; m = m->m_tnext)
@@ -724,7 +724,7 @@ ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
 {
    subsector_t *subsec = R_PointInSubsector(x, y);
    sector_t *sector = subsec->sector;
-   ETerrain *floorterrain = NULL, *ceilingterrain = NULL;
+   ETerrain *floorterrain = nullptr, *ceilingterrain = nullptr;
 
    if(!(floorterrain = sector->srf.floor.terrain))
       floorterrain = TerrainTypes[sector->srf.floor.pic];
@@ -753,7 +753,7 @@ ETerrain *E_GetTerrainTypeForPt(fixed_t x, fixed_t y, int position)
 //
 fixed_t E_SectorFloorClip(sector_t *sector)
 {
-   ETerrain *terrain = NULL;
+   ETerrain *terrain = nullptr;
    
    // override with sector terrain if one is specified
    if(!(terrain = sector->srf.floor.terrain))
@@ -769,11 +769,11 @@ fixed_t E_SectorFloorClip(sector_t *sector)
 //
 void E_PtclTerrainHit(particle_t *p)
 {
-   ETerrain *terrain = NULL;
-   ETerrainSplash *splash = NULL;
-   Mobj *mo = NULL;
+   ETerrain *terrain = nullptr;
+   ETerrainSplash *splash = nullptr;
+   Mobj *mo = nullptr;
    fixed_t x, y, z;
-   sector_t *sector = NULL;
+   sector_t *sector = nullptr;
 
    // particles could never hit terrain before v3.33
    if(demo_version < 333 || comp[comp_terrain])
@@ -828,7 +828,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z,
                          const sector_t *sector)
 {
    ETerrainSplash *splash = terrain->splash;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    bool lowmass = (thing->info->mass < 10);   
 
    if(!splash)
@@ -927,7 +927,7 @@ void E_ExplosionHitWater(Mobj *thing, int damage)
 //
 bool E_HitFloor(Mobj *thing)
 {
-   msecnode_t  *m = NULL;
+   msecnode_t  *m = nullptr;
 
    // determine what touched sector the thing is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)

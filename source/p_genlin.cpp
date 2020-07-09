@@ -1333,7 +1333,7 @@ static int GenDoorRetrigger(Thinker *th, const doordata_t *dd, int tag)
 // instead of the hardcoded generalized options.
 //
 // Parameters:
-// line -- pointer to originating line; may be NULL
+// line -- pointer to originating line; may be nullptr
 // tag  -- tag of sectors to affect (may come from line or elsewhere)
 // dd   -- pointer to full parameter info for door
 //
@@ -1603,13 +1603,13 @@ enum
 //
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag)
 {
-   line_t *l = NULL;
+   line_t *l = nullptr;
    int linenum, texnum;
    
    texnum = R_FindWall(texture);
    linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != nullptr)
    {
        if(l->sidenum[side] == -1)
          continue;

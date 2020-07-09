@@ -70,7 +70,7 @@ void SDLGamePadDriver::shutdown()
    if(joystick)
    {
       SDL_JoystickClose(joystick);
-      joystick = NULL;
+      joystick = nullptr;
    }
 }
 
@@ -125,7 +125,7 @@ bool SDLGamePad::select()
    // remember who is in use internally
    activeIdx = sdlIndex;
 
-   if((joystick = SDL_JoystickOpen(sdlIndex)) != NULL)
+   if((joystick = SDL_JoystickOpen(sdlIndex)) != nullptr)
    {
       numAxes    = SDL_JoystickNumAxes(joystick);
       numButtons = SDL_JoystickNumButtons(joystick);
@@ -149,7 +149,7 @@ void SDLGamePad::deselect()
    if(joystick)
    {
       SDL_JoystickClose(joystick);
-      joystick  = NULL;
+      joystick  = nullptr;
       activeIdx = -1;
    }
 }

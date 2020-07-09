@@ -515,7 +515,7 @@ static void DoTokenStateText(tkstate_t *tks)
    }
    else if(str[i] == '.')
    {
-      char *endpos = NULL;
+      char *endpos = nullptr;
 
       // we see a '.' which could either be the decimal point in a float
       // value, or the dot name separator in a label. If the token is only
@@ -870,7 +870,7 @@ static void doGoto(pstate_t *ps)
          DSP.numgotostates++;
 
       // make a goto object
-      E_AddBufferedState(BUF_GOTO, NULL, ps->linenum);
+      E_AddBufferedState(BUF_GOTO, nullptr, ps->linenum);
    }
    else
    {
@@ -932,7 +932,7 @@ static void doGoto(pstate_t *ps)
 //   their jump targets immediately. The wait keyword keeps an object in its 
 //   current state, whereas the loop keyword returns it to the previous state
 //   to which a label was resolved, which is kept in the variable 
-//   "lastlabelstate" (see doText below). "stop" sends a state to the NULL
+//   "lastlabelstate" (see doText below). "stop" sends a state to the nullptr
 //   state. stop keywords that follow labels are added to the killstates list
 //   in the DSO object immediately, once for each consecutive label that 
 //   points to that stop keyword.
@@ -1255,7 +1255,7 @@ static void DoPSNeedStateFrames(pstate_t *ps)
          int numstatestomake = (int)(ps->tokenbuffer->length());
 
          for(i = 0; i < numstatestomake; ++i)
-            E_AddBufferedState(BUF_STATE, NULL, ps->linenum);
+            E_AddBufferedState(BUF_STATE, nullptr, ps->linenum);
 
          DSP.numdecstates += numstatestomake;
       }
@@ -1882,7 +1882,7 @@ static bool E_parseDecorateInternal(const char *input, bool principals)
 static bool E_checkPrincipalSemantics(const char *firststate)
 {
    DLListItem<estatebuf_t> *link = DSP.statebuffer; 
-   estatebuf_t *prev = NULL;
+   estatebuf_t *prev = nullptr;
 
    // Trying to use a pre-defined set of states. Certain conditions must be met:
    // * The state being named must exist.
@@ -1982,17 +1982,17 @@ static bool E_checkPrincipalSemantics(const char *firststate)
 //
 static edecstateout_t *E_DecoratePrincipals(const char *input, const char *firststate)
 {
-   edecstateout_t *newdso = NULL;
+   edecstateout_t *newdso = nullptr;
    int totalstates;
    
    // Parse for principals (basic grammatic acceptance/rejection,
    // counting objects, recording some basic information).
    if(!E_parseDecorateInternal(input, true))
-      return NULL;
+      return nullptr;
 
    // Run basic semantic checks
    if(!E_checkPrincipalSemantics(firststate))
-      return NULL;
+      return nullptr;
 
    // Create the DSO object
    newdso = estructalloc(edecstateout_t, 1);
@@ -2157,12 +2157,12 @@ static bool E_resolveGotos(edecstateout_t *dso)
 //
 static void E_freeDecorateData()
 {
-   DLListItem<estatebuf_t> *obj = NULL;
+   DLListItem<estatebuf_t> *obj = nullptr;
 
    // free the internalgotos list
    if(DSP.internalgotos)
       efree(DSP.internalgotos);
-   DSP.internalgotos = NULL;
+   DSP.internalgotos = nullptr;
    DSP.numinternalgotos = DSP.numinternalgotosalloc = 0;
 
    // free the buffered state list
@@ -2182,8 +2182,8 @@ static void E_freeDecorateData()
       // free the object itself
       efree(bs);
    }
-   DSP.statebuffer = DSP.curbufstate = NULL;
-   DSP.neweststate = NULL;
+   DSP.statebuffer = DSP.curbufstate = nullptr;
+   DSP.neweststate = nullptr;
 }
 
 //=============================================================================
@@ -2203,7 +2203,7 @@ static void E_freeDecorateData()
 //
 edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate)
 {
-   edecstateout_t *dso = NULL;
+   edecstateout_t *dso = nullptr;
    bool isgood = false;
 
    // init variables
@@ -2212,7 +2212,7 @@ edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate)
 
    // parse for principals
    if(!(dso = E_DecoratePrincipals(input, firststate)))
-      return NULL;
+      return nullptr;
 
    // do main pass
    if(E_DecorateMainPass(input, dso))
@@ -2226,11 +2226,11 @@ edecstateout_t *E_ParseDecorateStates(const char *input, const char *firststate)
    E_freeDecorateData();
 
    // if an error occured during processing, destroy whatever was created and
-   // return NULL
+   // return nullptr
    if(!isgood)
    {
       E_FreeDSO(dso);
-      dso = NULL;
+      dso = nullptr;
    }
 
    // return the DSO!
@@ -2254,7 +2254,7 @@ void E_FreeDSO(edecstateout_t *dso)
             efree(dso->states[i].label);
       }
       efree(dso->states);
-      dso->states = NULL;
+      dso->states = nullptr;
    }
 
    if(dso->gotos)
@@ -2265,7 +2265,7 @@ void E_FreeDSO(edecstateout_t *dso)
             efree(dso->gotos[i].label);
       }
       efree(dso->gotos);
-      dso->gotos = NULL;
+      dso->gotos = nullptr;
    }
 
    if(dso->killstates)
@@ -2276,7 +2276,7 @@ void E_FreeDSO(edecstateout_t *dso)
             efree(dso->killstates[i].killname);
       }
       efree(dso->killstates);
-      dso->killstates = NULL;
+      dso->killstates = nullptr;
    }
 
    efree(dso);

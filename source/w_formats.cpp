@@ -247,7 +247,7 @@ static namespace_matcher_t matchers[] =
    { "gamepads/",     lumpinfo_t::ns_pads         }, // EE extension
    { "textures/",     lumpinfo_t::ns_textures     },
 
-   { NULL,            -1                          }  // keep this last
+   { nullptr,         -1                          }  // keep this last
 
    // TODO ??
    /*

@@ -505,10 +505,10 @@ static cfg_opt_t bloodbeh_opts[] =
 static cfg_opt_t tngpfx_opts[] =
 {
    CFG_STR(ITEM_TNG_PFX_EFFECTS,   0,          CFGF_LIST),
-   CFG_STR(ITEM_TNG_PFX_CHANGEWPN, NULL,       CFGF_NONE),
-   CFG_STR(ITEM_TNG_PFX_MSG,       NULL,       CFGF_NONE),
-   CFG_STR(ITEM_TNG_PFX_SOUND,     NULL,       CFGF_NONE),
-   CFG_STR(ITEM_TNG_PFX_FLAGS,     NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_CHANGEWPN, nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_MSG,       nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_SOUND,     nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_FLAGS,     nullptr,    CFGF_NONE),
 
    CFG_END()
 };

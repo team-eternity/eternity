@@ -120,7 +120,7 @@ static void lexer_free_buffer()
 {
    if(lexbuffer)
       efree(lexbuffer);
-   lexbuffer = bufferpos = NULL;
+   lexbuffer = bufferpos = nullptr;
 }
 
 //
@@ -163,7 +163,7 @@ void lexer_reset()
    include_stack_ptr = 0;
 
    // reset lexer variables
-   mytext = NULL;
+   mytext = nullptr;
    unquoted_spaces = false;
    currentDialect  = CFG_DIALECT_DELTA;
 
@@ -384,7 +384,7 @@ static int lexer_state_hexescape(lexerstate_t *ls)
 
       if(hexchar.length() == 2) // Only two chars max.
       {
-         qstr += (char)(hexchar.toLong(NULL, 16));
+         qstr += (char)(hexchar.toLong(nullptr, 16));
          ls->state = STATE_STRING; // Back to string parsing.
       }
    }
@@ -728,14 +728,14 @@ char *cfg_lexer_open(const char *filename, int lumpnum, size_t *len)
       dwfile.openFile(filename, "rb");
 
    if(!dwfile.isOpen())
-      return NULL;
+      return nullptr;
 
    return lexer_buffer_file(&dwfile, len);
 }
 
 char *cfg_lexer_mustopen(cfg_t *cfg, const char *filename, int lumpnum, size_t *len)
 {
-   char *ret = NULL;
+   char *ret = nullptr;
    
    if(!(ret = cfg_lexer_open(filename, lumpnum, len)))
    {

@@ -85,9 +85,9 @@ static planehash_t *r_overlayfreesets;
 //
 VALLOCATION(mainhash)
 {
-   freetail = NULL;
+   freetail = nullptr;
    freehead = &freetail;
-   floorplane = ceilingplane = NULL;
+   floorplane = ceilingplane = nullptr;
 
    memset(mainchains, 0, sizeof(mainchains));
 }
@@ -104,7 +104,7 @@ float *openings, *lastopening;
 
 VALLOCATION(openings)
 {
-   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, NULL);
+   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, nullptr);
    lastopening = openings;
 }
 
@@ -120,7 +120,7 @@ float *floorclip, *ceilingclip;
 
 VALLOCATION(floorcliparray)
 {
-   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, nullptr);
 
    floorclip   = floorcliparray   = buffer;
    ceilingclip = ceilingcliparray = buffer + w;
@@ -131,7 +131,7 @@ float *overlayfclip, *overlaycclip;
 
 VALLOCATION(overlayfclip)
 {
-   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, nullptr);
    overlayfclip = buffer;
    overlaycclip = buffer + w;
 }
@@ -141,7 +141,7 @@ static int *spanstart;
 
 VALLOCATION(spanstart)
 {
-   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, NULL);
+   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
 }
 
 //
@@ -155,7 +155,7 @@ cb_slopespan_t slopespan;
 VALLOCATION(slopespan)
 {
    size_t size = sizeof(lighttable_t *) * w;
-   slopespan.colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, NULL);
+   slopespan.colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
 }
 
 float slopevis; // SoM: used in slope lighting
@@ -298,7 +298,7 @@ static void R_MapPlane(int y, int x1, int x2)
    }
 
    // killough 2/28/98: Add offsets
-   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
+   if((span.colormap = plane.fixedcolormap) == nullptr) // haleyjd 10/16/06
       span.colormap = plane.colormap + R_SpanLight(realy) * 256;
    
    span.y  = y;
@@ -413,7 +413,7 @@ static void R_MapSlope(int y, int x1, int x2)
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
    return 
-      (s1 == s2) ||                 // both are equal, including both NULL; OR:
+      (s1 == s2) ||                 // both are equal, including both nullptr; OR:
        (s1 && s2 &&                 // both are valid and...
         CompFloats(s1->normalf.x, s2->normalf.x) &&  // components are equal and...
         CompFloats(s1->normalf.y, s2->normalf.y) &&
@@ -530,13 +530,13 @@ planehash_t *R_NewPlaneHash(int chaincount)
       chaincount = c;
    }
    
-   ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, NULL));
+   ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, nullptr));
    ret->chaincount = chaincount;
-   ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, NULL));
+   ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr));
    ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
-      ret->chains[i] = NULL;
+      ret->chains[i] = nullptr;
       
    return ret;
 }
@@ -551,7 +551,7 @@ void R_ClearPlaneHash(planehash_t *table)
 {
    for(int i = 0; i < table->chaincount; i++)    // new code -- killough
    {
-      for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
+      for(*freehead = table->chains[i], table->chains[i] = nullptr; *freehead; )
          freehead = &(*freehead)->next;
    }
 }
@@ -612,7 +612,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, NULL);
+      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -627,7 +627,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
       int *paddedTop, *paddedBottom;
 
       check->max_width = (unsigned int)video.width;
-      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, NULL);
+      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
       paddedBottom = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
@@ -652,7 +652,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    unsigned int hash;                      // killough
    float tsin, tcos;
 
-   // SoM: table == NULL means use main table
+   // SoM: table == nullptr means use main table
    if(!table)
       table = &mainhash;
       
@@ -1148,12 +1148,12 @@ static void do_draw_plane(visplane_t *pl)
          span.bg2rgb = Col2RGB8_LessPrecision[64];
       }
       else
-         span.fg2rgb = span.bg2rgb = NULL;
+         span.fg2rgb = span.bg2rgb = nullptr;
 
       if(pl->pslope)
          plane.slope = &pl->rslope;
       else
-         plane.slope = NULL;
+         plane.slope = nullptr;
          
       {
          int rw, rh;
@@ -1216,7 +1216,7 @@ static void do_draw_plane(visplane_t *pl)
 
       R_PlaneLight();
 
-      plane.MapFunc = (plane.slope == NULL ? R_MapPlane : R_MapSlope);
+      plane.MapFunc = (plane.slope == nullptr ? R_MapPlane : R_MapSlope);
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);

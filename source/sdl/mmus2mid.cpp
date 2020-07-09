@@ -404,7 +404,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
       track[i].deltaT = 0;
       track[i].lastEvt = 0;
       efree(mididata->track[i].data);//jff 3/5/98 remove old allocations
-      mididata->track[i].data=NULL;
+      mididata->track[i].data=nullptr;
       track[i].alloced = 0;
       mididata->track[i].len = 0;
    }
@@ -595,7 +595,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
             goto err;
          if(TWriteByte(mididata, i, 0x00))
             goto err;
-         // jff 1/23/98 fix failure to set data NULL, len 0 for unused tracks
+         // jff 1/23/98 fix failure to set data nullptr, len 0 for unused tracks
          // shorten allocation to proper length (important for Allegro)
          if(!(mididata->track[i].data =
             erealloc(unsigned char *, mididata->track[i].data, mididata->track[i].len)))
@@ -604,7 +604,7 @@ int mmus2mid(UBYTE *mus, size_t size, MIDI *mididata, UWORD division, int nocomp
       else
       {
          efree(mididata->track[i].data);
-         mididata->track[i].data = NULL;
+         mididata->track[i].data = nullptr;
       }
    }
    
@@ -688,7 +688,7 @@ int MidiToMIDI(UBYTE *mid,MIDI *mididata)
       if(mididata->track[i].len)
       {
          efree(mididata->track[i].data);
-         mididata->track[i].data = NULL;
+         mididata->track[i].data = nullptr;
          mididata->track[i].len = 0;
       }
    }
@@ -726,7 +726,7 @@ static void FreeTracks(MIDI *mididata)
    for(i = 0; i < MIDI_TRACKS; i++)
    {
       efree(mididata->track[i].data);
-      mididata->track[i].data = NULL;
+      mididata->track[i].data = nullptr;
       mididata->track[i].len = 0;
    }
 }
@@ -778,7 +778,7 @@ int MIDIToMidi(const MIDI *mididata, UBYTE **mid, int *midlen)
          ntrks++;
       }
    }
-   if((*mid = emalloc(UBYTE *, total)) == NULL)
+   if((*mid = emalloc(UBYTE *, total)) == nullptr)
       return MEMALLOC;
    
 

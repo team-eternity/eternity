@@ -123,7 +123,7 @@ public:
    virtual void poll() = 0;     // Refresh all input state data
 
    // Haptic interface
-   virtual HALHapticInterface *getHapticInterface() { return NULL; }
+   virtual HALHapticInterface *getHapticInterface() { return nullptr; }
 
    // Data
    int     num;         // Device number

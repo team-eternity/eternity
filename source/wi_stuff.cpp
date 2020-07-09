@@ -420,7 +420,7 @@ static void WI_OverlayBackground();
 static void WI_drawLF()
 {
    int y = WI_TITLEY;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    
    // haleyjd 07/08/04: fixed to work for any map
    // haleyjd 03/27/05: added string functionality
@@ -468,7 +468,7 @@ static void WI_drawLF()
 static void WI_drawEL()
 {
    int y = WI_TITLEY;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    bool loadedInfoPatch = false;
 
    // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
@@ -497,7 +497,7 @@ static void WI_drawEL()
       loadedInfoPatch = true;
    }
 
-   // if no MapInfo patch was loaded, try the default (may also be NULL)
+   // if no MapInfo patch was loaded, try the default (may also be nullptr)
    if(!patch)
       patch = wi_lname_next;
 
@@ -1937,14 +1937,14 @@ static void WI_loadData()
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_this = NULL;
+            wi_lname_this = nullptr;
 
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_next = NULL;
+            wi_lname_next = nullptr;
       }
    }
    else
@@ -1959,14 +1959,14 @@ static void WI_loadData()
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_this = NULL;
+            wi_lname_this = nullptr;
 
          psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_next = NULL;
+            wi_lname_next = nullptr;
       }
       
       // you are here
@@ -2152,8 +2152,8 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName     = NULL;
-   nextMapName = NULL;
+   mapName     = nullptr;
+   nextMapName = nullptr;
 
    // NOTE: in UMAPINFO, level-pic has priority
    if((!wbs->li_lastlevelpic || !*wbs->li_lastlevelpic) &&

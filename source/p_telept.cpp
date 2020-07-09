@@ -147,7 +147,7 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
             
    // killough 5/12/98: exclude voodoo dolls:
    if(player && player->mo != thing)
-      player = NULL;
+      player = nullptr;
 
    if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
       return 0;
@@ -482,7 +482,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Whether this is a player, and if so, a pointer to its player_t.
          // Voodoo dolls are excluded by making sure thing->player->mo==thing.
          player_t *player = thing->player && thing->player->mo == thing ?
-            thing->player : NULL;
+            thing->player : nullptr;
 
          // Whether walking towards first side of exit linedef steps down
          int stepdown =

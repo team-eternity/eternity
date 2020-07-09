@@ -367,7 +367,7 @@ void A_Scratch(actionargs_t *actionargs)
 void A_PlaySound(actionargs_t *actionargs)
 {
    Mobj *mo = actionargs->actor;
-   S_StartSound(mo->state->misc2 ? NULL : mo, mo->state->misc1);
+   S_StartSound(mo->state->misc2 ? nullptr : mo, mo->state->misc1);
 }
 
 void A_RandomJump(actionargs_t *actionargs)
@@ -510,7 +510,7 @@ static dehflags_t spawnex_flaglist[] =
    { "absolutevelocity", SPAWNEX_ABSOLUTEVELOCITY },
    { "absoluteposition", SPAWNEX_ABSOLUTEPOSITION },
    { "checkposition"   , SPAWNEX_CHECKPOSITION    },
-   { NULL,        0 }
+   { nullptr,            0 }
 };
 
 static dehflagset_t spawnex_flagset =
@@ -724,11 +724,11 @@ void A_StartScript(actionargs_t *actionargs)
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, NULL, 0, nullptr);
+         ACS_ExecuteScriptIResult(scriptnum, argv, argc, actor, nullptr, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptIResult(scriptnum, NULL, 0, actor, NULL, 0, nullptr);
+         ACS_ExecuteScriptIResult(scriptnum, nullptr, 0, actor, nullptr, 0, nullptr);
       }
    }
 }
@@ -761,11 +761,11 @@ void A_StartScriptNamed(actionargs_t *actionargs)
          for(int i = 0; i < argc; ++i)
              argv[i] = E_ArgAsInt(args, i + 2, 0);
 
-         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, NULL, 0, nullptr);
+         ACS_ExecuteScriptSResult(scriptname, argv, argc, actor, nullptr, 0, nullptr);
       }
       else
       {
-         ACS_ExecuteScriptSResult(scriptname, NULL, 0, actor, NULL, 0, nullptr);
+         ACS_ExecuteScriptSResult(scriptname, nullptr, 0, actor, nullptr, 0, nullptr);
       }
    }
 }
@@ -1291,7 +1291,7 @@ void A_ThingSummon(actionargs_t *actionargs)
       dieaction.actiontype = actionargs_t::MOBJFRAME;
       dieaction.actor      = newmobj;
       dieaction.args       = ESAFEARGS(newmobj);
-      dieaction.pspr       = NULL;
+      dieaction.pspr       = nullptr;
 
       // kill it immediately
       switch(kill_or_remove)
@@ -1322,7 +1322,7 @@ void A_ThingSummon(actionargs_t *actionargs)
       dieaction.actiontype = actionargs_t::MOBJFRAME;
       dieaction.actor      = newmobj;
       dieaction.args       = ESAFEARGS(newmobj);
-      dieaction.pspr       = NULL;
+      dieaction.pspr       = nullptr;
 
       // kill it immediately
       switch(kill_or_remove)
@@ -1369,7 +1369,7 @@ void A_KillChildren(actionargs_t *actionargs)
          dieaction.actiontype = actionargs_t::MOBJFRAME;
          dieaction.actor      = mo;
          dieaction.args       = ESAFEARGS(mo);
-         dieaction.pspr       = NULL;
+         dieaction.pspr       = nullptr;
 
          switch(kill_or_remove)
          {
@@ -1395,7 +1395,7 @@ void A_AproxDistance(actionargs_t *actionargs)
 {
    Mobj      *actor = actionargs->actor;
    arglist_t *args  = actionargs->args;
-   int *dest = NULL;
+   int *dest = nullptr;
    fixed_t distance;
    int cnum;
 

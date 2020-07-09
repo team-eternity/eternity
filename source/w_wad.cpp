@@ -1053,17 +1053,17 @@ struct nsdata_t
 // namespaces
 static nsdata_t wadNameSpaces[lumpinfo_t::ns_max] =
 {
-   { NULL,       NULL,     lumpinfo_t::ns_global       },
+   { nullptr,    nullptr,  lumpinfo_t::ns_global       },
    { "S_START",  "S_END",  lumpinfo_t::ns_sprites      },
    { "F_START",  "F_END",  lumpinfo_t::ns_flats        },
    { "C_START",  "C_END",  lumpinfo_t::ns_colormaps    },
    { "T_START",  "T_END",  lumpinfo_t::ns_translations },
-   { NULL,       NULL,     lumpinfo_t::ns_demos        },
+   { nullptr,    nullptr,  lumpinfo_t::ns_demos        },
    { "A_START",  "A_END",  lumpinfo_t::ns_acs          },
-   { NULL,       NULL,     lumpinfo_t::ns_pads         },
+   { nullptr,    nullptr,  lumpinfo_t::ns_pads         },
    { "TX_START", "TX_END", lumpinfo_t::ns_textures     },
-   { NULL,       NULL,     lumpinfo_t::ns_graphics     },
-   { NULL,       NULL,     lumpinfo_t::ns_sounds       },
+   { nullptr,    nullptr,  lumpinfo_t::ns_graphics     },
+   { nullptr,    nullptr,  lumpinfo_t::ns_sounds       },
    { "HI_START", "HI_END", lumpinfo_t::ns_hires        }, // TODO: Implement
 };
 
@@ -1312,7 +1312,7 @@ int WadDirectory::checkNumForNameNSG(const char *name, int ns) const
 {
    int num = -1;
    int inNS, inGlobal;
-   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
+   lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
 
    if((inNS = checkNumForName(name, ns)) >= 0)
       nsLump = lumpinfo[inNS];
@@ -1383,7 +1383,7 @@ int WadDirectory::checkNumForLFNNSG(const char *name, int ns) const
 {
    int num = -1;
    int inNS, inGlobal;
-   lumpinfo_t *nsLump = NULL, *globalLump = NULL;
+   lumpinfo_t *nsLump = nullptr, *globalLump = nullptr;
 
    if((inNS = checkNumForLFN(name, ns)) >= 0)
       nsLump = lumpinfo[inNS];

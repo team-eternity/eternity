@@ -168,7 +168,7 @@ diskwad_t D_FindWadInDiskFile(diskfile_t *df, const char *filename)
 // D_CacheDiskFileResource
 //
 // Loads a resource from the disk file given the absolute path name.
-// Returns an allocated buffer holding the data, or NULL if the path
+// Returns an allocated buffer holding the data, or nullptr if the path
 // does not exist. If "text" is set to true, the buffer will be allocated
 // at size+1 and null-terminated, so that it can be treated as a C string.
 //
@@ -176,7 +176,7 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 {
    size_t i, len;
    diskfileint_t *dfi = static_cast<diskfileint_t *>(df->opaque);
-   diskentry_t *entry = NULL;
+   diskentry_t *entry = nullptr;
    void *buffer;
 
    // find the resource
@@ -191,7 +191,7 @@ void *D_CacheDiskFileResource(diskfile_t *df, const char *path, bool text)
 
    // return if not found
    if(!entry)
-      return NULL;
+      return nullptr;
 
    len = entry->length;
 
@@ -227,19 +227,19 @@ void D_CloseDiskFile(diskfile_t *df, bool closefile)
       if(dfi->f && closefile)
       {
          fclose(dfi->f);
-         dfi->f = NULL;
+         dfi->f = nullptr;
       }
 
       // free the entries
       if(dfi->entries)
       {
          efree(dfi->entries);
-         dfi->entries = NULL;
+         dfi->entries = nullptr;
       }
 
       // free the internal structure
       efree(dfi);
-      df->opaque = NULL;
+      df->opaque = nullptr;
    }
 
    // free the structure itself

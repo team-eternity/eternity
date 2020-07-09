@@ -194,7 +194,7 @@ bool ACS_CF_AmbientSound(ACS_CF_ARGS)
    const char *snd = thread->scopeMap->getString(argV[0])->str;
    int         vol = argV[1];
 
-   S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+   S_StartSoundNameAtVolume(nullptr, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
    return false;
 }
@@ -211,7 +211,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
    int         vol  = argV[1];
 
    if(info->mo == players[displayplayer].mo)
-      S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+      S_StartSoundNameAtVolume(nullptr, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
    return false;
 }
@@ -1574,7 +1574,7 @@ bool ACS_CF_RadiusQuake(ACS_CF_ARGS)
    int32_t     damageRadius = argV[3];
    int32_t     quakeRadius  = argV[4];
    const char *snd          = thread->scopeMap->getString(argV[5])->str;
-   Mobj       *mo           = NULL;
+   Mobj       *mo           = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
    {
@@ -1704,7 +1704,7 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
          if(mo->z != mo->zref.floor && !(flags & SECDAM_IN_AIR))
             continue;
 
-         P_DamageMobj(mo, NULL, NULL, damage, mod);
+         P_DamageMobj(mo, nullptr, nullptr, damage, mod);
       }
    }
 
@@ -1727,7 +1727,7 @@ bool ACS_CF_SectorSound(ACS_CF_ARGS)
    if(info->line)
       src = &(info->line->frontsector->soundorg);
    else
-      src = NULL;
+      src = nullptr;
 
    S_StartSoundNameAtVolume(src, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
@@ -1827,7 +1827,7 @@ static void ACS_setLineBlocking(int tag, int block)
    line_t *l;
    int linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != nullptr)
    {
       switch(block)
       {
@@ -1890,7 +1890,7 @@ bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
    line_t *l;
    int     linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != nullptr)
    {
       l->special = EV_ActionForACSAction(spec);
       for(int i = NUMLINEARGS; i--;)
@@ -2211,7 +2211,7 @@ bool ACS_CF_SetThingSpec(ACS_CF_ARGS)
    auto  info = &static_cast<ACSThread *>(thread)->info;
    int   tid  = argV[0];
    //int spec = argV[1]; // HEXEN_TODO
-   Mobj *mo   = NULL;
+   Mobj *mo   = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
    {
@@ -2320,7 +2320,7 @@ bool ACS_CF_SoundSeq(ACS_CF_ARGS)
    if(info->line && (sec = info->line->frontsector))
       S_StartSectorSequenceName(sec, snd, SEQ_ORIGIN_SECTOR_F);
    else
-      S_StartSequenceName(NULL, snd, SEQ_ORIGIN_OTHER, -1);
+      S_StartSequenceName(nullptr, snd, SEQ_ORIGIN_OTHER, -1);
 
    return false;
 }
@@ -2338,9 +2338,9 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
       if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       {
          // And if not, unmake the Mobj.
-         mo->state = NULL;
+         mo->state = nullptr;
          mo->remove();
-         return NULL;
+         return nullptr;
       }
 
       if(tid) P_AddThingTID(mo, tid);
@@ -2348,7 +2348,7 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
       return mo;
    }
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -2614,7 +2614,7 @@ static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)
 
    if(tid)
    {
-      while((mo = P_FindMobjFromTID(tid, mo, NULL)))
+      while((mo = P_FindMobjFromTID(tid, mo, nullptr)))
       {
          if(type == 0 || mo->type == type)
          {
@@ -2815,7 +2815,7 @@ bool ACS_CF_ThingSound(ACS_CF_ARGS)
    int         tid  = argV[0];
    const char *snd  = thread->scopeMap->getString(argV[1])->str;
    int         vol  = argV[2];
-   Mobj       *mo   = NULL;
+   Mobj       *mo   = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
       S_StartSoundNameAtVolume(mo, snd, vol, ATTN_NORMAL, CHAN_AUTO);

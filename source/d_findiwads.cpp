@@ -560,7 +560,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    if(version.error) // Not a WAD, or could not access
       return;
 
-   char **var = NULL;
+   char **var = nullptr;
 
    switch(version.gamemode)
    {

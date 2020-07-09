@@ -57,7 +57,7 @@
 VImage *VImage::FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -68,7 +68,7 @@ VImage *VImage::FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal)
 VImage *VImage::FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -79,7 +79,7 @@ VImage *VImage::FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal
 VImage *VImage::FromLinear(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 //=============================================================================
@@ -126,7 +126,7 @@ int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name,
    if(allowglobal && li_namespace != lumpinfo_t::ns_global)
       useNSG = true;
 
-   if(strlen(name) > 8 || strchr(name, '/') != NULL)
+   if(strlen(name) > 8 || strchr(name, '/') != nullptr)
       lfn = true;
 
    // NSG lookup prefers a resource in the given namespace if it is available,
@@ -155,7 +155,7 @@ int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name,
 //
 VImage *VImageManager::findDefaultResource(int expectedWidth, int expectedHeight)
 {
-   VImage *ret = NULL;
+   VImage *ret = nullptr;
    auto img = pImpl->defaultResources.head;
 
    while(img)
@@ -182,7 +182,7 @@ VImage *VImageManager::findDefaultResource(int expectedWidth, int expectedHeight
 //
 VImage *VImageManager::generateDefaultResource(int expectedWidth, int expectedHeight)
 {
-   VImage *ret = NULL;
+   VImage *ret = nullptr;
 
    // check if we already have a default resource with these properties
    if((ret = findDefaultResource(expectedWidth, expectedHeight)))
@@ -424,7 +424,7 @@ VImage *VImageManager::loadResource(WadDirectory &dir, int lumpnum,
                                     vimgformathint_e expectedFormat,
                                     int expectedWidth, int expectedHeight)
 {
-   VImage *ret = NULL;
+   VImage *ret = nullptr;
 
    // missing resource, generate a default with characteristics that best
    // match any expected ones passed in.
@@ -482,7 +482,7 @@ VImage *VImageManager::loadResource(WadDirectory &dir, const char *name,
 //
 bool VImageManager::hasResource(int lumpnum) const
 {
-   return pImpl->hash.objectForKey(lumpnum) != NULL;
+   return pImpl->hash.objectForKey(lumpnum) != nullptr;
 }
 
 // EOF

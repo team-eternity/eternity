@@ -174,7 +174,7 @@ static texture_t *R_AllocTexStruct(const char *name, int16_t width,
 
    size = sizeof(texture_t) + sizeof(tcomponent_t) * (compcount - 1);
    
-   ret = (texture_t *)(Z_Calloc(1, size, PU_RENDERER, NULL));
+   ret = (texture_t *)(Z_Calloc(1, size, PU_RENDERER, nullptr));
    
    ret->name = ret->namebuf;
    strncpy(ret->namebuf, name, 8);
@@ -277,7 +277,7 @@ static byte *R_ReadUnknownPatch(byte *rawpatch, mappatch_t &tp)
 {
    I_Error("R_ReadUnknownPatch called\n");
 
-   return NULL;
+   return nullptr;
 }
 
 static byte *R_ReadDoomTexture(byte *rawtexture, maptexture_t &tt)
@@ -321,7 +321,7 @@ static byte *R_ReadUnknownTexture(byte *rawtexture, maptexture_t &tt)
 {
    I_Error("R_ReadUnknownTexture called\n");
 
-   return NULL;
+   return nullptr;
 }
 
 struct texturehandler_t
@@ -632,7 +632,7 @@ struct tempmask_s
    texture_t *tex;
    
    texcol_t  *tempcols;
-} tempmask = { false, 0, NULL, NULL, NULL };
+} tempmask = { false, 0, nullptr, nullptr, nullptr };
 
 //
 // AddTexColumn
@@ -952,7 +952,7 @@ static void FinishTexture(texture_t *tex)
    }
    
    // Allocate column pointers
-   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t **), tex->width, PU_RENDERER, NULL);
+   tex->columns = ecalloctag(texcol_t **, sizeof(texcol_t **), tex->width, PU_RENDERER, nullptr);
    
    // Build the columns based on mask info
    maskp = tempmask.buffer;
@@ -962,7 +962,7 @@ static void FinishTexture(texture_t *tex)
    for(x = 0; x < tex->width; x++)
    {
       y = 0;
-      col = NULL;
+      col = nullptr;
       colcount = 0;
       
       while(y < tex->height)
@@ -996,20 +996,20 @@ static void FinishTexture(texture_t *tex)
       // No columns? No problem!
       if(!colcount)
       {
-         tex->columns[x] = NULL;
+         tex->columns[x] = nullptr;
          continue;
       }
          
       // Now allocate and build the actual column structs in the texture
       tcol = tex->columns[x] = estructalloctag(texcol_t, colcount, PU_RENDERER);
            
-      col = NULL;
+      col = nullptr;
       for(i = 0; i < colcount; i++)
       {
          col = NextTempCol(col);
          memcpy(tcol, col, sizeof(texcol_t));
          
-         tcol->next = i + 1 < colcount ? tcol + 1 : NULL;
+         tcol->next = i + 1 < colcount ? tcol + 1 : nullptr;
          tcol = tcol->next;
       }
    }
@@ -1052,7 +1052,7 @@ texture_t *R_CacheTexture(int num)
    //    This case means we only have to rebuilt the buffer.
 
    // Start the texture. Check the size of the mask buffer if needed.   
-   StartTexture(tex, tex->columns == NULL);
+   StartTexture(tex, tex->columns == nullptr);
    
    // Add the components to the buffer/mask
    for(i = 0; i < tex->ccount; i++)
@@ -1102,7 +1102,7 @@ static void R_checkerBoardTexture(texture_t *tex)
    for(int i = 0; i < tex->width; i++)
    {
       tex->columns[i] = estructalloctag(texcol_t, 1, PU_RENDERER);
-      tex->columns[i]->next = NULL;
+      tex->columns[i]->next = nullptr;
       tex->columns[i]->yoff = 0;
       tex->columns[i]->len = tex->height;
       tex->columns[i]->ptroff = i * tex->height;
@@ -1270,7 +1270,7 @@ static void R_InitTranslationLUT()
    // killough 4/9/98: make column offsets 32-bit;
    // clean up malloc-ing to use sizeof   
    texturetranslation = 
-      emalloctag(int *, (texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, NULL);
+      emalloctag(int *, (texturecount + 1) * sizeof(*texturetranslation), PU_RENDERER, nullptr);
 
    for(int i = 0; i < texturecount; i++)
       texturetranslation[i] = i;
@@ -1477,7 +1477,7 @@ void R_InitTextures()
    texturecount = numwalls + numflats + 1;
    
    // Allocate textures
-   textures = (texture_t **)(Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, NULL));
+   textures = (texture_t **)(Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, nullptr));
    memset(textures, 0, sizeof(texture_t *) * texturecount);
 
    // init lookup tables
@@ -1546,7 +1546,7 @@ void R_InitTextures()
 //
 
 static int R_Doom1Texture(const char *name);
-const char *level_error = NULL;
+const char *level_error = nullptr;
 
 //
 // R_GetRawColumn
@@ -1630,7 +1630,7 @@ int R_FindFlat(const char *name)    // killough -- const added
    
    // SoM: Check here for flat-ness!
    if(tex && !(tex->flags & TF_CANBEFLAT))
-      tex = NULL;
+      tex = nullptr;
 
    // SoM: Return missing texture index if invalid
    return tex ? tex->index : texturecount - 1;

@@ -54,12 +54,12 @@
 static int numskins = 0;      // haleyjd 03/22/03
 static int numskinsalloc = 0; // haleyjd 03/22/03
 static int numedfskins;       // haleyjd 11/14/06
-static skin_t **skins = NULL;
+static skin_t **skins = nullptr;
 
-static skin_t **monster_skins = NULL; // haleyjd 09/26/04
+static skin_t **monster_skins = nullptr; // haleyjd 09/26/04
 
-char **spritelist = NULL;
-char *default_skin = NULL;     // name of currently selected skin
+char **spritelist = nullptr;
+char *default_skin = nullptr;     // name of currently selected skin
 
 static const char *skinsoundnames[NUMSKINSOUNDS] =
 {
@@ -121,7 +121,7 @@ void P_InitSkins(void)
    P_InitMonsterSkins();
 
    // FIXME: problem here with preferences
-   if(default_skin == NULL) 
+   if(default_skin == nullptr) 
    {
       playerclass_t *dpc = E_PlayerClassForName(GameModeInfo->defPClassName);
       default_skin = estrdup(dpc->defaultskin->skinname);
@@ -164,7 +164,7 @@ void P_InitSkins(void)
       P_CacheFaces(skins[i]);
    }
 
-   *currentsprite = NULL;     // end in null
+   *currentsprite = nullptr;     // end in null
 }
 
 
@@ -325,7 +325,7 @@ void P_ParseSkin(int lumpnum)
    newskin->spritename[4] = 0;
 
    newskin->facename = estrdup("STF");      // default status bar face
-   newskin->faces    = NULL;
+   newskin->faces    = nullptr;
 
    newskin->type    = SKIN_PLAYER; // haleyjd: it's a player skin
    newskin->edfskin = false;       // haleyjd: it's not an EDF skin
@@ -417,7 +417,7 @@ static skin_t *P_SkinForName(const char *s)
       s++;
    
    if(!skins)
-      return NULL;
+      return nullptr;
 
    for(i = 0; i < numskins; i++)
    {
@@ -425,7 +425,7 @@ static skin_t *P_SkinForName(const char *s)
          return skins[i];
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -481,7 +481,7 @@ static skin_t *P_PrevSkin(int player)
    }
          
    if(skinnum == numskins)
-      return NULL;         // not found (?)
+      return nullptr;         // not found (?)
 
    --skinnum;      // previous skin
    
@@ -505,7 +505,7 @@ static skin_t *P_NextSkin(int player)
    }
 
    if(skinnum == numskins)
-      return NULL;         // not found (?)
+      return nullptr;         // not found (?)
    
    ++skinnum;      // next skin
    
@@ -570,7 +570,7 @@ CONSOLE_COMMAND(listskins, 0)
 #define isvowel(c)              \
         ( (c)=='a' || (c)=='e' || (c)=='i' || (c)=='o' || (c)=='u' )
 
-VARIABLE_STRING(default_skin, NULL, 256);
+VARIABLE_STRING(default_skin, nullptr, 256);
 
         // player skin
 CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)

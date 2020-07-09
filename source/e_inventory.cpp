@@ -722,7 +722,7 @@ static void E_collectAmmoTypes()
 {
    e_ammoTypesLookup.makeEmpty();
 
-   itemeffect_t *itr = NULL;
+   itemeffect_t *itr = nullptr;
 
    while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
    {
@@ -807,7 +807,7 @@ static void E_collectKeyItems()
 {
    e_keysLookup.makeEmpty();
 
-   itemeffect_t *itr = NULL;
+   itemeffect_t *itr = nullptr;
 
    while((itr = runtime_cast<itemeffect_t *>(e_effectsTable.tableIterator(itr))))
    {
@@ -884,10 +884,10 @@ cfg_opt_t edf_lockdef_opts[] =
 {
    CFG_STR(ITEM_LOCKDEF_REQUIRE,  "",       CFGF_MULTI),
    CFG_SEC(ITEM_LOCKDEF_ANY,      any_opts, CFGF_MULTI),
-   CFG_STR(ITEM_LOCKDEF_MESSAGE,  NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_REMOTE,   NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_LOCKSND,  NULL,     CFGF_NONE ),
-   CFG_STR(ITEM_LOCKDEF_MAPCOLOR, NULL,     CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_MESSAGE,  nullptr,  CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_REMOTE,   nullptr,  CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_LOCKSND,  nullptr,  CFGF_NONE ),
+   CFG_STR(ITEM_LOCKDEF_MAPCOLOR, nullptr,  CFGF_NONE ),
    CFG_END()
 };
 
@@ -911,7 +911,7 @@ static void E_freeLockDefData(lockdef_t *lockdef)
    if(lockdef->requiredKeys)
    {
       efree(lockdef->requiredKeys);
-      lockdef->requiredKeys = NULL;
+      lockdef->requiredKeys = nullptr;
    }
    lockdef->numRequiredKeys = 0;
 
@@ -925,7 +925,7 @@ static void E_freeLockDefData(lockdef_t *lockdef)
             efree(any->keys);
       }
       efree(lockdef->anyKeys);
-      lockdef->anyKeys = NULL;
+      lockdef->anyKeys = nullptr;
    }
    lockdef->numAnyLists = 0;
    lockdef->numAnyKeys  = 0;
@@ -933,17 +933,17 @@ static void E_freeLockDefData(lockdef_t *lockdef)
    if(lockdef->message)
    {
       efree(lockdef->message);
-      lockdef->message = NULL;
+      lockdef->message = nullptr;
    }
    if(lockdef->remoteMessage)
    {
       efree(lockdef->remoteMessage);
-      lockdef->remoteMessage = NULL;
+      lockdef->remoteMessage = nullptr;
    }
    if(lockdef->lockedSound)
    {
       efree(lockdef->lockedSound);
-      lockdef->lockedSound = NULL;
+      lockdef->lockedSound = nullptr;
    }
 }
 
@@ -983,7 +983,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
 
    AutoPalette pal(wGlobalDir);
    long        lresult = 0;
-   command_t  *cmd     = NULL;
+   command_t  *cmd     = nullptr;
 
    switch(*value)
    {
@@ -1001,7 +1001,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
       break;
    case '#':
       // hex constant
-      lresult = strtol(value + 1, NULL, 16);
+      lresult = strtol(value + 1, nullptr, 16);
       lock->colorType = LOCKDEF_COLOR_CONSTANT;
       lock->color = V_FindBestColor(pal.get(),
                        (int)((lresult >> 16) & 0xff),
@@ -1010,7 +1010,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
       break;
    default:
       // decimal palette index
-      lresult = strtol(value, NULL, 10);
+      lresult = strtol(value, nullptr, 10);
       if(lresult >= 0 && lresult <= 255)
       {
          lock->colorType = LOCKDEF_COLOR_CONSTANT;
@@ -1027,7 +1027,7 @@ static void E_processLockDefColor(lockdef_t *lock, const char *value)
 //
 static void E_processLockDef(cfg_t *lock)
 {
-   lockdef_t *lockdef = NULL;
+   lockdef_t *lockdef = nullptr;
 
    // the ID of the lockdef is the title of the section; it will be interpreted
    // as an integer
@@ -1119,7 +1119,7 @@ static void E_processLockDefs(cfg_t *cfg)
 static void E_failPlayerUnlock(const player_t *player, const lockdef_t *lock,
                                bool remote)
 {
-   const char *msg = NULL;
+   const char *msg = nullptr;
 
    if(remote && lock->remoteMessage)
    {
@@ -1334,7 +1334,7 @@ static dehflags_t e_PickupFlags[] =
    { "SILENTNOBENEFIT",   PFXF_SILENTNOBENEFIT   },
    { "COMMERCIALONLY",    PFXF_COMMERCIALONLY    },
    { "GIVESBACKPACKAMMO", PFXF_GIVESBACKPACKAMMO },
-   { NULL,           0 }
+   { nullptr,        0 }
 };
 
 static dehflagset_t e_PickupFlagSet =
@@ -1364,8 +1364,8 @@ static dehflagset_t e_PickupFlagSet =
 cfg_opt_t edf_sprpkup_opts[] =
 {
    CFG_STR(ITEM_PICKUP_FX,    "PFX_NONE", CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_MSG,   NULL,       CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SOUND, NULL,       CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_MSG,   nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND, nullptr,    CFGF_NONE),
 
    CFG_END()
 };
@@ -1373,13 +1373,13 @@ cfg_opt_t edf_sprpkup_opts[] =
 // standalone pickup effects
 cfg_opt_t edf_pkupfx_opts[] =
 {
-   CFG_STR(ITEM_PICKUP_CNAME,     NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SPRITE,    NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_EFFECTS,   0,    CFGF_LIST),
-   CFG_STR(ITEM_PICKUP_CHANGEWPN, "",   CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_MSG,       NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_SOUND,     NULL, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_FLAGS,     NULL, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_CNAME,     nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SPRITE,    nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_EFFECTS,   0,       CFGF_LIST),
+   CFG_STR(ITEM_PICKUP_CHANGEWPN, "",      CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_MSG,       nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_SOUND,     nullptr, CFGF_NONE),
+   CFG_STR(ITEM_PICKUP_FLAGS,     nullptr, CFGF_NONE),
 
    CFG_END()
 };
@@ -1867,7 +1867,7 @@ void E_TryUseItem(player_t *player, inventoryitemid_t ID)
 //
 static void E_allocateInventoryItemIDs()
 {
-   itemeffect_t *item = NULL;
+   itemeffect_t *item = nullptr;
 
    // empty the table if it was already created before
    e_InventoryItemsByID.clear();
@@ -1950,7 +1950,7 @@ static void E_allocatePlayerInventories()
 //
 itemeffect_t *E_EffectForInventoryItemID(inventoryitemid_t id)
 {
-   return (id >= 0 && id < e_maxitemid) ? e_InventoryItemsByID[id] : NULL;
+   return (id >= 0 && id < e_maxitemid) ? e_InventoryItemsByID[id] : nullptr;
 }
 
 //
@@ -1962,14 +1962,14 @@ itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
                                         inventoryindex_t idx)
 {
    return (idx >= 0 && idx < e_maxitemid) ?
-      E_EffectForInventoryItemID(player->inventory[idx].item) : NULL;
+      E_EffectForInventoryItemID(player->inventory[idx].item) : nullptr;
 }
 
 //
 // E_InventorySlotForItemID
 //
 // Find the slot being used by an item in the player's inventory, if one exists.
-// NULL is returned if the item is not in the player's inventory.
+// nullptr is returned if the item is not in the player's inventory.
 //
 inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
                                           inventoryitemid_t id)
@@ -1982,14 +1982,14 @@ inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
          return &inventory[idx];
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
 // E_InventorySlotForItem
 //
 // Find the slot being used by an item in the player's inventory, by pointer,
-// if one exists. NULL is returned if the item is not in the player's
+// if one exists. nullptr is returned if the item is not in the player's
 // inventory.
 //
 inventoryslot_t *E_InventorySlotForItem(const player_t *player,
@@ -2007,7 +2007,7 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
 // E_InventorySlotForItemName
 //
 // Find the slot being used by an item in the player's inventory, by name,
-// if one exists. NULL is returned if the item is not in the player's
+// if one exists. nullptr is returned if the item is not in the player's
 // inventory.
 //
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,

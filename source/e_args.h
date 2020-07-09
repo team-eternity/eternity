@@ -48,8 +48,8 @@ struct weaponinfo_t;
 #define EMAXARGS 16
 
 // Get an arglist safely from an Mobj * even if the pointer or the 
-// Mobj's state is NULL (NULL is returned in either case).
-#define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : NULL)
+// Mobj's state is nullptr (nullptr is returned in either case).
+#define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : nullptr)
 
 typedef enum
 {

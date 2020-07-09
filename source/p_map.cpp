@@ -65,7 +65,7 @@ static int ls_y; // Lost Soul position for Lost Soul checks      // phares
 doom_mapinter_t  clip;
 doom_mapinter_t *pClip = &clip;
 
-static doom_mapinter_t *unusedclip = NULL;
+static doom_mapinter_t *unusedclip = nullptr;
 
 // CLIP STACK
 
@@ -402,7 +402,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
-   clip.ceilingline = NULL;
+   clip.ceilingline = nullptr;
    
    // The base floor/ceiling is from the subsector
    // that contains the point.
@@ -580,7 +580,7 @@ static void SpechitOverrun(line_t *ld)
 
       if((p = M_CheckParm("-spechit")) && p < myargc - 1)
       {
-         baseaddr = (unsigned int)strtol(myargv[p + 1], NULL, 0);
+         baseaddr = (unsigned int)strtol(myargv[p + 1], nullptr, 0);
          spechitparm = true;
       }
       else
@@ -811,7 +811,7 @@ bool P_Touched(Mobj *thing)
       (thing->type ^ skullType) |                  // (but Barons & Knights
       (clip.thing->type ^ painType))               // are intentionally not)
    {
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
+      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_UNKNOWN); // kill object
       return true;
    }
 
@@ -869,7 +869,7 @@ bool P_SkullHit(Mobj *thing)
 
       P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
 
-      clip.BlockingMobj = NULL; // haleyjd: from zdoom
+      clip.BlockingMobj = nullptr; // haleyjd: from zdoom
 
       ret = true; // stop moving
    }
@@ -1205,7 +1205,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = NULL; // killough 8/1/98
+   clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
    // Whether object can get out of a sticky situation:
    clip.unstuck = thing->player &&          // only players
@@ -1244,7 +1244,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
    yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
 
    for(bx = xl; bx <= xh; bx++)
    {
@@ -1257,7 +1257,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
 
    // check lines
    
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
    
    xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
    xh = (clip.bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
@@ -2118,7 +2118,7 @@ static void P_HitSlideLine(line_t *ld)
          variable_friction &&  // killough 8/28/98: calc friction on demand
          slidemo->z <= slidemo->zref.floor &&
          !(slidemo->flags4 & MF4_FLY) && // haleyjd: not when just flying
-         P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
+         P_GetFriction(slidemo, nullptr) > ORIG_FRICTION;
    }
    else
    {
@@ -2598,7 +2598,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       // haleyjd 03/11/03: only in Doom
       if(GameModeInfo->type == Game_DOOM)
       {
-         thing->skin = NULL;
+         thing->skin = nullptr;
          P_SetMobjState(thing, E_SafeState(S_GIBS));
       }
       thing->flags &= ~MF_SOLID;
@@ -2618,7 +2618,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       (thing->intflags & MIF_ARMED || sentient(thing)))
    {
       // kill object
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_CRUSH);
       return true;   // keep checking
    }
 
@@ -2635,7 +2635,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       if(thing->flags2 & MF2_INVULNERABLE || thing->flags2 & MF2_DORMANT)
          return true;
 
-      P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, crushchange, MOD_CRUSH);
       
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // haleyjd FIXME: needs compflag
@@ -2739,7 +2739,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
 //
 // Maintain a freelist of msecnode_t's to reduce memory allocs and frees.
 
-msecnode_t *headsecnode = NULL;
+msecnode_t *headsecnode = nullptr;
 
 // sf: fix annoying crash on restarting levels
 //
@@ -2767,7 +2767,7 @@ msecnode_t *headsecnode = NULL;
 //
 void P_FreeSecNodeList(void)
 {
-   headsecnode = NULL; // this is all thats needed to fix the bug
+   headsecnode = nullptr; // this is all thats needed to fix the bug
 }
 
 //
@@ -2784,7 +2784,7 @@ static msecnode_t *P_GetSecnode(void)
 
    return headsecnode ?
    node = headsecnode, headsecnode = node->m_snext, node :
-      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
+      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, nullptr)); 
 }
 
 //
@@ -2831,7 +2831,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 
    node->m_sector = s;         // sector
    node->m_thing  = thing;     // mobj
-   node->m_tprev  = NULL;      // prev node on Thing thread
+   node->m_tprev  = nullptr;   // prev node on Thing thread
    node->m_tnext  = nextnode;  // next node on Thing thread
    
    if(nextnode)
@@ -2839,7 +2839,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 
    // Add new node at head of sector thread starting at s->touching_thinglist
    
-   node->m_sprev  = NULL;    // prev node on sector thread
+   node->m_sprev  = nullptr;    // prev node on sector thread
    node->m_snext  = s->touching_thinglist; // next node on sector thread
    if(s->touching_thinglist)
       node->m_snext->m_sprev = node;
@@ -2850,7 +2850,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 // P_DelSecnode
 //
 // Deletes a sector node from the list of sectors this object appears in.
-// Returns a pointer to the next node on the linked list, or NULL.
+// Returns a pointer to the next node on the linked list, or nullptr.
 //
 // killough 11/98: reformatted
 //
@@ -3020,11 +3020,11 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 
    // First, clear out the existing m_thing fields. As each node is
    // added or verified as needed, m_thing will be set properly. When
-   // finished, delete all nodes where m_thing is still NULL. These
+   // finished, delete all nodes where m_thing is still nullptr. These
    // represent the sectors the Thing has vacated.
    
    for(node = thing->old_sectorlist; node; node = node->m_tnext)
-      node->m_thing = NULL;
+      node->m_thing = nullptr;
 
    pClip->thing = thing;
 
@@ -3104,11 +3104,11 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    }
 
    // Now delete any nodes that won't be used. These are the ones where
-   // m_thing is still NULL.
+   // m_thing is still nullptr.
    
    for(node = list; node;)
    {
-      if(node->m_thing == NULL)
+      if(node->m_thing == nullptr)
       {
          if(node == list)
             list = node->m_tnext;

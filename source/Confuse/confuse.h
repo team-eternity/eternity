@@ -239,7 +239,7 @@ struct cfg_opt_t
  *
  * @param name name of the option
  * @param value pointer to a character pointer (a char **). This value
- * must be initalized either to NULL or to a malloc()'ed string. You
+ * must be initalized either to nullptr or to a malloc()'ed string. You
  * can't use CFG_SIMPLE_STR("user", "joe"), since libConfuse will try to
  * free the static string "joe" (which is an error) if a "user" option
  * is found. Rather, use the following code snippet:
@@ -475,7 +475,7 @@ double        cfg_getfloat(cfg_t *cfg, const char *name);
  * @return The requested value is returned. If the option was not set
  * in the configuration file, the default value given in the
  * corresponding cfg_opt_t structure is returned. If no option is found
- * with that name, cfg_error is called and NULL is returned.
+ * with that name, cfg_error is called and nullptr is returned.
  */
 const char *  cfg_getstr(cfg_t *cfg, const char *name);
 
@@ -485,7 +485,7 @@ const char *  cfg_getstr(cfg_t *cfg, const char *name);
  * @return A heap-allocated copy of the value is returned. If the option
  * was not set in the configuration file, the default value given in the
  * corresponding cfg_opt_t structure is returned. If no option is found
- * with that name, cfg_error is called and NULL is returned.
+ * with that name, cfg_error is called and nullptr is returned.
  */
 char *cfg_getstrdup(cfg_t *cfg, const char *name);
 
@@ -656,7 +656,7 @@ int cfg_parse_boolean(const char *s);
  * @param cfg The configuration file context.
  * @param name The name of the option.
  *
- * @return Returns a pointer to the option, or NULL if the option is
+ * @return Returns a pointer to the option, or nullptr if the option is
  * not found (an error message is also printed).
  */
 cfg_opt_t *cfg_getopt(cfg_t *cfg, const char *name);

@@ -207,7 +207,7 @@ void FloorMoveThinker::Think()
          }
       }
       
-      sector->srf.floor.data = NULL; //jff 2/22/98
+      sector->srf.floor.data = nullptr; //jff 2/22/98
       this->remove(); //remove this floor from list of movers
 
       //jff 2/26/98 implement stair retrigger lockout while still building
@@ -328,8 +328,8 @@ void ElevatorThinker::Think()
    if(res == pastdest)            // if destination height acheived
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
-      sector->srf.floor.data = NULL;     //jff 2/22/98
-      sector->srf.ceiling.data = NULL;   //jff 2/22/98
+      sector->srf.floor.data = nullptr;     //jff 2/22/98
+      sector->srf.ceiling.data = nullptr;   //jff 2/22/98
       this->remove();               // remove elevator from actives
       
       // make floor stop sound
@@ -370,8 +370,8 @@ void PillarThinker::Think()
    if(resf == pastdest && resc == pastdest)
    {
       S_StopSectorSequence(sector, SEQ_ORIGIN_SECTOR_F);
-      sector->srf.floor.data = NULL;
-      sector->srf.ceiling.data = NULL;
+      sector->srf.floor.data = nullptr;
+      sector->srf.ceiling.data = nullptr;
       this->remove();
    }
 }
@@ -993,8 +993,8 @@ static bool DonutOverflow(fixed_t *pfloorheight, int16_t *pfloorpic)
 
       if((p = M_CheckParm("-donut")) && p < myargc - 2)
       {
-         floorheight = (int)strtol(myargv[p + 1], NULL, 0);
-         floorpic    = (int)strtol(myargv[p + 2], NULL, 0);
+         floorheight = (int)strtol(myargv[p + 1], nullptr, 0);
+         floorpic    = (int)strtol(myargv[p + 2], nullptr, 0);
 
          // bounds-check floorpic
          if(floorpic <= 0 || floorpic >= numflats)
@@ -1476,7 +1476,7 @@ void FloorWaggleThinker::Think()
          T_MoveFloorInDirection(sector, abs(dist), destheight, 8,
             destheight >= sector->srf.floor.height ? plat_down : plat_up, false);
 
-         sector->srf.floor.data = NULL;
+         sector->srf.floor.data = nullptr;
          remove();
          return;
       }

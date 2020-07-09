@@ -81,7 +81,7 @@ bool PathTraverser::traverseIntercepts() const
    //
    // go through in order
    //	
-   in = NULL; // shut up compiler warning
+   in = nullptr; // shut up compiler warning
 
    while(count--)
    {

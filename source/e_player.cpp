@@ -146,30 +146,30 @@ static cfg_opt_t reborn_opts[] =
 };
 
 #define PLAYERCLASS_FIELDS \
-   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   NULL, CFGF_NONE),  \
-   CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),  \
-   CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,  CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,  CFGF_NONE),  \
-   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0, CFGF_NONE),  \
-                                                         \
-   /* speeds */                                          \
-   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE), \
-   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0, CFGF_NONE), \
-                                                         \
-   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
-                                                         \
-   /* reborn inventory items */                          \
-   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE), \
+   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   nullptr, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_THINGTYPE,     nullptr, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_ALTATTACK,     nullptr, CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,     CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,     CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,     CFGF_NONE),  \
+   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0,    CFGF_NONE),  \
+                                                            \
+   /* speeds */                                             \
+   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0,    CFGF_NONE), \
+                                                            \
+   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),         \
+                                                            \
+   /* reborn inventory items */                             \
+   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE),    \
    CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
                                                                              \
     /* weapon slots */                                                       \
@@ -356,7 +356,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       E_ReplaceString(newSkin->facename, cfg_getstrdup(skinsec, ITEM_SKIN_FACES));
 
       // faces have been reset, so clear the face array pointer
-      newSkin->faces = NULL; // handled by skin code
+      newSkin->faces = nullptr; // handled by skin code
    }
 
    // set sounds if specified
@@ -410,7 +410,7 @@ static void E_AddPlayerClass(playerclass_t *pc)
 //
 // E_PlayerClassForName
 //
-// Returns a player class given a name, or NULL if no such class exists.
+// Returns a player class given a name, or nullptr if no such class exists.
 //
 playerclass_t *E_PlayerClassForName(const char *name)
 {
@@ -801,7 +801,7 @@ void E_ProcessPlayerDeltas(cfg_t *cfg)
 //
 void E_VerifyDefaultPlayerClass()
 {
-   if(E_PlayerClassForName(GameModeInfo->defPClassName) == NULL)
+   if(E_PlayerClassForName(GameModeInfo->defPClassName) == nullptr)
    {
       I_Error("E_VerifyDefaultPlayerClass: default playerclass '%s' "
               "does not exist!\n",

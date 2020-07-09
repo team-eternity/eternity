@@ -48,7 +48,7 @@ struct actionargs_t
 
    Mobj      *actor; // Actor for either type of invocation; use mo->player when needed
    pspdef_t  *pspr;  // psprite, only valid if actiontype is WEAPONFRAME
-   arglist_t *args;  // EDF arguments list; potentially NULL, but all e_args funcs check.
+   arglist_t *args;  // EDF arguments list; potentially nullptr, but all e_args funcs check.
 };
 
 #endif

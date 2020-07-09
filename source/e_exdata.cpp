@@ -174,7 +174,7 @@ static dehflags_t mapthingflags[] =
    { "NOTCOOP",   MTF_NOTCOOP },
    { "FRIEND",    MTF_FRIEND },
    { "DORMANT",   MTF_DORMANT },
-   { NULL,        0 }
+   { nullptr,     0 }
 };
 
 static dehflagset_t mt_flagset =
@@ -218,7 +218,7 @@ static dehflags_t extlineflags[] =
    { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
    { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
    { "POLYOBJECT",   EX_ML_POLYOBJECT   },
-   { NULL,           0                  }
+   { nullptr,        0                  }
 };
 
 static dehflagset_t ld_flagset =
@@ -279,7 +279,7 @@ static dehflags_t sectorflags[] =
    { "PHASEDLIGHT",   SECF_PHASEDLIGHT   },
    { "LIGHTSEQUENCE", SECF_LIGHTSEQUENCE },
    { "LIGHTSEQALT",   SECF_LIGHTSEQALT   },
-   { NULL,            0                  }
+   { nullptr,         0                  }
 };
 
 static dehflagset_t sector_flagset =
@@ -295,7 +295,7 @@ static dehflags_t sectordamageflags[] =
    { "ENDGODMODE", SDMG_ENDGODMODE },
    { "EXITLEVEL",  SDMG_EXITLEVEL  },
    { "TERRAINHIT", SDMG_TERRAINHIT },
-   { NULL,         0               }
+   { nullptr,      0               }
 };
 
 static dehflagset_t sectordamage_flagset =
@@ -314,7 +314,7 @@ static dehflags_t sectorportalflags[] =
    { "ADDITIVE",     PS_ADDITIVE     },
    { "USEGLOBALTEX", PS_USEGLOBALTEX },
    { "ATTACHEDPORTAL", PF_ATTACHEDPORTAL },
-   { NULL,           0               }
+   { nullptr,        0               }
 };
 
 static dehflagset_t sectorportal_flagset =
@@ -346,7 +346,7 @@ static cfg_opt_t ed_opts[] =
 static void E_ParseArg(const char *str, int *dest)
 {
    // currently only integers are supported
-   *dest = static_cast<int>(strtol(str, NULL, 0));
+   *dest = static_cast<int>(strtol(str, nullptr, 0));
 }
 
 //=============================================================================
@@ -386,7 +386,7 @@ static int E_ParseTypeField(const char *value)
    int  i;
    char prefix[16];
    const char *colonloc;
-   char *numpos = NULL;
+   char *numpos = nullptr;
 
    num = strtol(value, &numpos, 0);
 
@@ -579,7 +579,7 @@ static int E_GenTypeForName(const char *name)
    static const char *names[] =
    {
       "GenFloor", "GenCeiling", "GenDoor", "GenLockedDoor",
-      "GenLift", "GenStairs", "GenCrusher", NULL
+      "GenLift", "GenStairs", "GenCrusher", nullptr
    };
    static int bases[] =
    {
@@ -603,9 +603,9 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
    char c;
    int state = 0;
 
-   // if we're already at the end, return NULL
+   // if we're already at the end, return nullptr
    if(text[*index] == '\0')
-      return NULL;
+      return nullptr;
 
    token->clear();
 
@@ -651,7 +651,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
       }
    }
 
-   // return final token, next call will return NULL
+   // return final token, next call will return nullptr
    return token->constPtr();
 }
 
@@ -675,7 +675,7 @@ static int E_SpeedArg(const char *str)
    int i = 0;
    static const char *speeds[] =
    {
-      "slow", "normal", "fast", "turbo", NULL
+      "slow", "normal", "fast", "turbo", nullptr
    };
 
    while(speeds[i] && strcasecmp(str, speeds[i]))
@@ -694,7 +694,7 @@ static int E_ChangeArg(const char *str)
    int i = 0;
    static const char *changes[] =
    {
-      "none", "zero", "texture", "texturetype", NULL
+      "none", "zero", "texture", "texturetype", nullptr
    };
 
    while(changes[i] && strcasecmp(str, changes[i]))
@@ -727,7 +727,7 @@ static int E_FloorTarget(const char *str)
    int i = 0;
    static const char *targs[] =
    {
-      "HnF", "LnF", "NnF", "LnC", "C", "sT", "24", "32", NULL
+      "HnF", "LnF", "NnF", "LnC", "C", "sT", "24", "32", nullptr
    };
 
    while(targs[i] && strcasecmp(str, targs[i]))
@@ -746,7 +746,7 @@ static int E_CeilingTarget(const char *str)
    int i = 0;
    static const char *targs[] =
    {
-      "HnC", "LnC", "NnC", "HnF", "F", "sT", "24", "32", NULL
+      "HnC", "LnC", "NnC", "HnF", "F", "sT", "24", "32", nullptr
    };
 
    while(targs[i] && strcasecmp(str, targs[i]))
@@ -830,7 +830,7 @@ static int E_LockedKey(const char *str)
    static const char *keys[] =
    {
       "Any", "RedCard", "BlueCard", "YellowCard", "RedSkull", "BlueSkull",
-      "YellowSkull", "All", NULL
+      "YellowSkull", "All", nullptr
    };
 
    while(keys[i] && strcasecmp(str, keys[i]))
@@ -903,7 +903,7 @@ static int E_GenTrigger(const char *str)
    int i = 0;
    static const char *trigs[] =
    {
-      "W1", "WR", "S1", "SR", "G1", "GR", "D1", "DR", NULL
+      "W1", "WR", "S1", "SR", "G1", "GR", "D1", "DR", nullptr
    };
 
    while(trigs[i] && strcasecmp(str, trigs[i]))
@@ -943,7 +943,7 @@ static int E_GenTrigger(const char *str)
 static int E_ProcessGenSpec(const char *value)
 {
    qstring buffer;
-   const char *curtoken = NULL;
+   const char *curtoken = nullptr;
    int t, forc = 0, tok_index = 0;
    int trigger;
 
@@ -1476,10 +1476,10 @@ void E_LoadExtraData(void)
    // cache level, so anything from any earlier level has been
    // freed)
    
-   EDThings = NULL;
+   EDThings = nullptr;
    numEDMapThings = 0;
    
-   EDLines = NULL;
+   EDLines = nullptr;
    numEDLines = 0;
 
    // check to see if the ExtraData lump is defined by MapInfo

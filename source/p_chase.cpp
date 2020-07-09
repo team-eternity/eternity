@@ -418,7 +418,7 @@ void P_ChaseTicker()
 
 // console commands
 
-VARIABLE_BOOLEAN(chasecam_active, NULL, onoff);
+VARIABLE_BOOLEAN(chasecam_active, nullptr, onoff);
 
 CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
 {
@@ -431,13 +431,13 @@ CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
       P_ChaseEnd();
 }
 
-VARIABLE_INT(chasecam_height, NULL, -31, 100, NULL);
+VARIABLE_INT(chasecam_height, nullptr, -31, 100, nullptr);
 CONSOLE_VARIABLE(chasecam_height, chasecam_height, 0) {}
 
-VARIABLE_INT(chasecam_dist, NULL, 10, 1024, NULL);
+VARIABLE_INT(chasecam_dist, nullptr, 10, 1024, nullptr);
 CONSOLE_VARIABLE(chasecam_dist, chasecam_dist, 0) {}
 
-VARIABLE_INT(chasecam_speed, NULL, 1, 100, NULL);
+VARIABLE_INT(chasecam_speed, nullptr, 1, 100, nullptr);
 CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
 
 void P_ChaseStart()
@@ -450,7 +450,7 @@ void P_ChaseStart()
 void P_ChaseEnd()
 {
    chasecam_active = false;
-   camera = NULL;
+   camera = nullptr;
 }
 
 // SoM: moved globals into linetracer_t see p_maputil.h
@@ -683,7 +683,7 @@ void P_ResetWalkcam()
    walkcamera.backupPosition();
 }
 
-VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
+VARIABLE_BOOLEAN(walkcam_active, nullptr, onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
    if(!Console.argc)
@@ -705,7 +705,7 @@ void P_WalkStart()
 void P_WalkEnd()
 {
    walkcam_active = false;
-   camera = NULL;
+   camera = nullptr;
 }
 
 //==============================================================================
@@ -829,7 +829,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 
 void P_FollowCamOff()
 {
-   P_SetTarget<Mobj>(&followtarget, NULL);
+   P_SetTarget<Mobj>(&followtarget, nullptr);
 }
 
 bool P_FollowCamTicker()
@@ -851,7 +851,7 @@ bool P_FollowCamTicker()
 
    // still visible?
    camsightparams_t camparams;
-   camparams.prev = NULL;
+   camparams.prev = nullptr;
    camparams.setCamera(followcam, 41 * FRACUNIT);
    camparams.setTargetMobj(followtarget);
 
@@ -892,7 +892,7 @@ AMX_NATIVE_INFO chase_Natives[] =
 {
    { "_ToggleChasecam", sm_chasecam  },
    { "_IsChasecamOn",   sm_ischaseon },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

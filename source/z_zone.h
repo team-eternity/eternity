@@ -167,7 +167,7 @@ void  Z_SysFree(void *p);
    type name;                      \
    memset(&name, 0, sizeof(name))
 
-// Classify a string as either lengthful (non-NULL, not zero length), or empty
+// Classify a string as either lengthful (non-nullptr, not zero length), or empty
 #define estrnonempty(str) ((str) && *(str))
 #define estrempty(str)    (!estrnonempty((str)))
 

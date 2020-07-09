@@ -85,7 +85,7 @@ static TCHAR *lstrrchr(LPCTSTR str, int ch)
    if(*str == (TCHAR)ch)
       return (TCHAR *)str; // found it
    
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -117,7 +117,7 @@ static void GetModuleName(void)
 
    ZeroMemory(moduleFileName, sizeof(moduleFileName));
 
-   if(GetModuleFileName(NULL, moduleFileName, charcount(moduleFileName) - 2) <= 0)
+   if(GetModuleFileName(nullptr, moduleFileName, charcount(moduleFileName) - 2) <= 0)
       lstrcpy(moduleFileName, _T("Unknown"));
 
    fileName = ExtractFileName(moduleFileName);
@@ -236,7 +236,7 @@ static exceptiondata_t ExceptionData[] =
    { 0xE06D7363, _T("a Microsoft C++")              },
    
    // must be last
-   { 0, NULL }
+   { 0, nullptr }
 };
 
 //
@@ -624,8 +624,8 @@ static int LaunchCrashApp(void)
    si.dwFlags = STARTF_USESHOWWINDOW;
    si.wShowWindow = SW_SHOW;   
 
-   return CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 
-                        0, NULL, NULL, &si, &pi) ? 1 : 0;
+   return CreateProcess(nullptr, cmdline, nullptr, nullptr, FALSE, 
+                        0, nullptr, nullptr, &si, &pi) ? 1 : 0;
 }
 
 //=============================================================================

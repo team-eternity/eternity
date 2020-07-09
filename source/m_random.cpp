@@ -247,7 +247,7 @@ AMX_NATIVE_INFO random_Natives[] =
 {
    { "_P_Random", sm_random  },
    { "_M_Random", sm_mrandom },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

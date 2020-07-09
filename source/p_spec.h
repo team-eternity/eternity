@@ -647,7 +647,7 @@ protected:
    virtual attachpoint_e getAttachPoint() const { return ATTACH_NONE; }
 
 public:
-   SectorThinker() : Thinker(), sector(NULL) {}
+   SectorThinker() : Thinker(), sector(nullptr) {}
 
    // Methods
    virtual void serialize(SaveArchive &arc) override;

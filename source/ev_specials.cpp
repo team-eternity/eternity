@@ -82,7 +82,7 @@ inline static bool EV_ClearSwitchOnFail(void)
 static bool EV_Check3DMidTexSwitch(line_t *line, Mobj *thing, int side)
 {
    int     sidenum = line->sidenum[side];
-   side_t *sidedef = NULL;
+   side_t *sidedef = nullptr;
 
    if(demo_version < 331)
       return true; // 3DMidTex don't exist in old demos
@@ -894,7 +894,7 @@ static void EV_initACSSpecHash()
 // EV_DOOMBindingForSpecial
 //
 // Returns a special binding from the DOOM gamemode's bindings array, 
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 ev_binding_t *EV_DOOMBindingForSpecial(int special)
@@ -921,21 +921,21 @@ ev_binding_t *EV_DOOMBindingForName(const char *name)
 // EV_DOOMActionForSpecial
 //
 // Returns an action from the DOOM gamemode's bindings array, regardless
-// of the current gamemode or map format. Returns NULL if the special is
+// of the current gamemode or map format. Returns nullptr if the special is
 // not bound to an action.
 //
 ev_action_t *EV_DOOMActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_DOOMBindingForSpecial(special);
 
-   return bind ? bind->action : NULL;
+   return bind ? bind->action : nullptr;
 }
 
 //
 // EV_HereticBindingForSpecial
 //
 // Returns a special binding from the Heretic gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 ev_binding_t *EV_HereticBindingForSpecial(int special)
@@ -956,21 +956,21 @@ ev_binding_t *EV_HereticBindingForSpecial(int special)
 // EV_HereticActionForSpecial
 //
 // Returns an action from the Heretic gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 ev_action_t *EV_HereticActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_HereticBindingForSpecial(special);
 
-   return bind ? bind->action : NULL;
+   return bind ? bind->action : nullptr;
 }
 
 //
 // EV_HexenBindingForSpecial
 //
 // Returns a special binding from the Hexen gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 ev_binding_t *EV_HexenBindingForSpecial(int special)
@@ -997,14 +997,14 @@ ev_binding_t *EV_HexenBindingForName(const char *name)
 // EV_HexenActionForSpecial
 //
 // Returns a special binding from the Hexen gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 ev_action_t *EV_HexenActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_HexenBindingForSpecial(special);
 
-   return bind ? bind->action : NULL;
+   return bind ? bind->action : nullptr;
 }
 
 //
@@ -1014,14 +1014,14 @@ ev_action_t *EV_HexenActionForSpecial(int special)
 //
 static ev_action_t *EV_StrifeActionForSpecial(int special)
 {
-   return NULL;
+   return nullptr;
 }
 
 //
 // EV_PSXBindingForSpecial
 //
 // Returns a special binding from the PSX mission's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 static ev_binding_t *EV_PSXBindingForSpecial(int special)
@@ -1053,7 +1053,7 @@ static ev_action_t *EV_PSXActionForSpecial(int special)
 // EV_UDMFEternityBindingForSpecial
 //
 // Returns a special binding from the UDMFEternity gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 static ev_binding_t *EV_UDMFEternityBindingForSpecial(int special)
@@ -1094,21 +1094,21 @@ static ev_binding_t *EV_UDMFEternityBindingForName(const char *name)
 // EV_UDMFEternityActionForSpecial
 //
 // Returns a special binding from the UDMFEternity gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 static ev_action_t *EV_UDMFEternityActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_UDMFEternityBindingForSpecial(special);
 
-   return bind ? bind->action : NULL;
+   return bind ? bind->action : nullptr;
 
 }
 
 
 //
 // Returns a special binding from the ACS gamemode's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 static ev_binding_t *EV_ACSBindingForSpecial(int special)
@@ -1129,14 +1129,14 @@ static ev_binding_t *EV_ACSBindingForSpecial(int special)
 }
 //
 // Returns a special binding from the ACS's bindings array,
-// regardless of the current gamemode or map format. Returns NULL if
+// regardless of the current gamemode or map format. Returns nullptr if
 // the special is not bound to an action.
 //
 ev_action_t *EV_ACSActionForSpecial(int special)
 {
    ev_binding_t *bind = EV_ACSBindingForSpecial(special);
 
-   return bind ? bind->action : NULL;
+   return bind ? bind->action : nullptr;
 
 }
 

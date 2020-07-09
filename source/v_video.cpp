@@ -184,7 +184,7 @@ static const crdef_t crdefs[] =
    { "CRORANGE", &cr_orange,  &colrngs[CR_ORANGE] },
    { "CRYELLOW", &cr_yellow,  &colrngs[CR_YELLOW] },
    { "CRBLUE2",  &cr_blue_status, &cr_blue_status },
-   { NULL }
+   { nullptr }
 };
 
 // killough 5/2/98: tiny engine driven by table above
@@ -687,8 +687,8 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 //
 void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
-   void    *source = NULL;
-   patch_t *patch  = NULL;
+   void    *source = nullptr;
+   patch_t *patch  = nullptr;
 
    if(lumpnum < 0)
       return;
@@ -795,7 +795,7 @@ void V_InitFlexTranTable(const byte *palette)
    // mark that we've initialized the flex tran table
    flexTranInit = true;
    
-   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL));
+   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, nullptr));
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {

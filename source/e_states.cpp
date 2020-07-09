@@ -361,7 +361,7 @@ void E_ReallocStates(int numnewstates)
       // reallocate states[]
       states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
-      // set the new state pointers to NULL
+      // set the new state pointers to nullptr
       for(i = NUMSTATES; i < numstatesalloc; ++i)
          states[i] = nullptr;
    }
@@ -610,7 +610,7 @@ static void E_AssignMiscState(int *target, int framenum)
 
 static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
 {
-   // 01/04/09: check for NULL just in case
+   // 01/04/09: check for nullptr just in case
    if(!sfx)
       sfx = &NullSound;
 
@@ -928,7 +928,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
    char c;
    int state = 0;
 
-   // if we're already at the end, return NULL
+   // if we're already at the end, return nullptr
    if(text[*index] == '\0')
       return nullptr;
 

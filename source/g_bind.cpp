@@ -85,7 +85,7 @@ struct keyaction_t
 keyaction_t keyactions[NUMKEYACTIONS] =
 {
    // Null Action
-   { NULL,                kac_game,    at_variable },
+   { nullptr,             kac_game,    at_variable },
 
    // Game Actions
 
@@ -198,7 +198,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
 // time it was full. Not exactly model efficiency. I have modified the 
 // system to use a linked list.
 
-static keyaction_t *cons_keyactions = NULL;
+static keyaction_t *cons_keyactions = nullptr;
 
 //
 // The actual key bindings
@@ -417,7 +417,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    }
    else
    {
-      // first time only - cons_keyactions was NULL
+      // first time only - cons_keyactions was nullptr
       cons_keyactions = estructalloc(keyaction_t, 1);
       cons_keyactions->bclass = kac_cmd;
       cons_keyactions->type   = at_conscmd;
@@ -558,7 +558,7 @@ const char *G_FirstBoundKey(const char *action)
 int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
 {
    int ret = ka_nothing;
-   keyaction_t *action = NULL;
+   keyaction_t *action = nullptr;
 
    if(allreleased)
       *allreleased = false;
@@ -683,7 +683,7 @@ static bool G_BindResponder(event_t *ev, int mnaction)
    if(keybindings[ev->data1].bindings[action->bclass] != action)
       keybindings[ev->data1].bindings[action->bclass] = action;
    else
-      keybindings[ev->data1].bindings[action->bclass] = NULL;
+      keybindings[ev->data1].bindings[action->bclass] = nullptr;
 
    // haleyjd 10/16/05: clear state of action involved
    bool wasdown = keybindings[ev->data1].keydown[action->bclass];
@@ -694,7 +694,7 @@ static bool G_BindResponder(event_t *ev, int mnaction)
    return true;
 }
 
-menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
+menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, nullptr, true };
 
 //
 // G_EditBinding
@@ -744,7 +744,7 @@ void G_CreateAxisActionVars()
 
       variable = estructalloc(variable_t, 1);
       variable->variable  = &axisActions[i];
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_int;
       variable->min       = axis_none;
       variable->max       = axis_max - 1;
@@ -760,7 +760,7 @@ void G_CreateAxisActionVars()
 
       variable = estructalloc(variable_t, 1);
       variable->variable  = &axisOrientation[i];
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_int;
       variable->min       = -1;
       variable->max       =  1;
@@ -1077,7 +1077,7 @@ CONSOLE_COMMAND(unbind, 0)
          {
             // do not release menu or console actions in this manner
             if(j != kac_menu && j != kac_console)
-               keybindings[key].bindings[j] = NULL;
+               keybindings[key].bindings[j] = nullptr;
          }
       }
       else
@@ -1087,7 +1087,7 @@ CONSOLE_COMMAND(unbind, 0)
          if(ke)
          {
             C_Printf("unbound key %s from action %s\n", Console.argv[0]->constPtr(), ke->name);
-            keybindings[key].bindings[bclass] = NULL;
+            keybindings[key].bindings[bclass] = nullptr;
          }
          else
             C_Printf("key %s has no binding in class %d\n", Console.argv[0]->constPtr(), bclass);

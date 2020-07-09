@@ -255,19 +255,19 @@ static std::optional<DWORD> initialVolume;
 #include "mmus2mid.h"
 
 // Only one track at a time
-static Mix_Music *music = NULL;
+static Mix_Music *music = nullptr;
 
 // Some tracks are directly streamed from the RWops;
 // we need to free them in the end
-static SDL_RWops *rw = NULL;
+static SDL_RWops *rw = nullptr;
 
 // Same goes for buffers that were allocated to convert music;
 // since this concerns mus, we could do otherwise but this 
 // approach is better for consistency
-static void *music_block = NULL;
+static void *music_block = nullptr;
 
 // Macro to make code more readable
-#define CHECK_MUSIC(h) ((h) && music != NULL)
+#define CHECK_MUSIC(h) ((h) && music != nullptr)
 
 static void I_SDLUnRegisterSong(int);
 
@@ -282,7 +282,7 @@ static void I_SDLShutdownMusic(void)
 
 #ifdef EE_FEATURE_MIDIRPC
    if(initialVolume.has_value() && I_IsWindowsVistaOrHigher())
-      waveOutSetVolume(NULL, *initialVolume);
+      waveOutSetVolume(nullptr, *initialVolume);
 
    I_MidiRPCClientShutDown();
 #endif
@@ -354,7 +354,7 @@ static int I_SDLInitMusic(void)
 
    if(!haveMidiServer)
    {
-      if(DWORD currVolume = 0; waveOutGetVolume(NULL, &currVolume) == MMSYSERR_NOERROR)
+      if(DWORD currVolume = 0; waveOutGetVolume(nullptr, &currVolume) == MMSYSERR_NOERROR)
          initialVolume = currVolume;
    }
 #endif
@@ -533,29 +533,29 @@ static void I_SDLUnRegisterSong(int handle)
       Mix_FreeMusic(music);
      
       // Reinitialize all this
-      music = NULL;
-      rw    = NULL;
+      music = nullptr;
+      rw    = nullptr;
    }
 
    // Free music block
-   if(music_block != NULL)
+   if(music_block != nullptr)
    {
       efree(music_block);
-      music_block = NULL;
+      music_block = nullptr;
    }
 
 #ifdef HAVE_SPCLIB
    if(snes_spc)
    {
       // be certain the callback is unregistered first
-      Mix_HookMusic(NULL, NULL);
+      Mix_HookMusic(nullptr, nullptr);
 
       // free the spc and filter objects
       spc_delete(snes_spc);
       spc_filter_delete(spc_filter);
 
-      snes_spc   = NULL;
-      spc_filter = NULL;
+      snes_spc   = nullptr;
+      spc_filter = nullptr;
    }
 #endif
 }
@@ -577,7 +577,7 @@ static int I_TryLoadSPC(void *data, int size)
 
    snes_spc = spc_new();
 
-   if(snes_spc == NULL)
+   if(snes_spc == nullptr)
    {
       doom_printf("Failed to allocate snes_spc");
       return -1;
@@ -586,18 +586,18 @@ static int I_TryLoadSPC(void *data, int size)
    if((err = spc_load_spc(snes_spc, data, (long)size)))
    {
       spc_delete(snes_spc);
-      snes_spc = NULL;
+      snes_spc = nullptr;
       return -1;
    }
 
    // It is a SPC, so set everything up for SPC playing
    spc_filter = spc_filter_new();
 
-   if(spc_filter == NULL)
+   if(spc_filter == nullptr)
    {
       doom_printf("Failed to allocate spc_filter");
       spc_delete(snes_spc);
-      snes_spc = NULL;
+      snes_spc = nullptr;
       return -1;
    }
 
@@ -622,7 +622,7 @@ static int I_SDLRegisterSong(void *data, int size)
    bool isMIDI = false;
    bool isMUS  = false;
 
-   if(music != NULL)
+   if(music != nullptr)
       I_UnRegisterSong(1);
 
    // Check for MIDI or MUS format first:
@@ -641,7 +641,7 @@ static int I_SDLRegisterSong(void *data, int size)
       UBYTE *mid;
       int midlen;
 
-      rw = NULL;
+      rw = nullptr;
       memset(&mididata, 0, sizeof(MIDI));
 
       if((err = mmus2mid((byte *)data, (size_t)size, &mididata, 89, 0)))

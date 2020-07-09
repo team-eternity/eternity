@@ -230,7 +230,7 @@ struct doom_mapinter_t
    line_t    *blockline;   // killough 8/11/98: blocking linedef
    line_t    *floorline;   // killough 8/1/98: Highest touched floor
 
-   Mobj      *linetarget;  // who got hit (or NULL)
+   Mobj      *linetarget;  // who got hit (or nullptr)
 
    // keep track of special lines as they are hit,
    // but don't process them until the move is proven valid

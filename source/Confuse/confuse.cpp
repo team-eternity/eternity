@@ -295,7 +295,7 @@ char *cfg_getstrdup(cfg_t *cfg, const char *name)
    // haleyjd 12/31/11: get a dynamic copy of a string
    const char *value = cfg_getstr(cfg, name);
 
-   return value ? estrdup(value) : NULL;
+   return value ? estrdup(value) : nullptr;
 }
 
 cfg_t *cfg_getnsec(cfg_t *cfg, const char *name, unsigned int index)
@@ -604,7 +604,7 @@ cfg_value_t *cfg_setopt(cfg_t *cfg, cfg_opt_t *opt, const char *value)
       val->section->filename  = cfg->filename;
       val->section->line      = cfg->line;
       val->section->errfunc   = cfg->errfunc;
-      val->section->title     = value ? estrdup(value) : NULL;
+      val->section->title     = value ? estrdup(value) : nullptr;
       // haleyjd 01/02/12: make the old section a displaced version of the
       // new one, so that it can remain accessible
       val->section->displaced = oldsection;
@@ -1410,7 +1410,7 @@ cfg_t *cfg_init(cfg_opt_t *opts, cfg_flag_t flags)
    cfg->lumpnum  = -1;   // haleyjd
    cfg->errfunc  = 0;
    cfg->lexfunc  = 0;    // haleyjd
-   cfg->lookfor  = NULL; // haleyjd
+   cfg->lookfor  = nullptr; // haleyjd
 
    // haleyjd: removed ENABLE_NLS
 
@@ -1528,7 +1528,7 @@ int cfg_include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
       return 1;
    }
 
-   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, NULL)))
+   if(!(data = cfg_lexer_mustopen(cfg, argv[0], -1, nullptr)))
       return 1;
 
    return cfg_lexer_include(cfg, data, argv[0], -1);

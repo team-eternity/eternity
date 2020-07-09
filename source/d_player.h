@@ -203,7 +203,7 @@ struct player_t
    int            newtorch;      // haleyjd 08/31/13: change torch level?
    int            torchdelta;    // haleyjd 08/31/13: amount to change torch level
 
-   Mobj          *attacker;      // Who did damage (NULL for floors/ceilings).
+   Mobj          *attacker;      // Who did damage (nullptr for floors/ceilings).
 
    int            colormap;      // colorshift for player sprites
 
