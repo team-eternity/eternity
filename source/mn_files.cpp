@@ -281,7 +281,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
       return ec.value();
 
    const fs::directory_iterator itr(dir->dirpath);
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
       qstring filename(ent.path().filename().generic_u8string().c_str());
       if(allowsubdirs)

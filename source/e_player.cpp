@@ -812,30 +812,30 @@ void E_VerifyDefaultPlayerClass()
 //
 // Recursively populate a weapon slot with data from a WeaponSlotTree
 //
-static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node,
+static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode &node,
                                  unsigned int &data)
 {
-   if(node->left)
-      E_populateWeaponSlot(slotlist, node->left, data);
+   if(node.left)
+      E_populateWeaponSlot(slotlist, *node.left, data);
 
    weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
    curslot->slotindex = slotlist.bdObject->slotindex;
    curslot->links.bdData = data;
-   curslot->weapon = node->object;
+   curslot->weapon = node.object;
    curslot->links.insert(curslot, slotlist);
    data++;
 
-   if(node->next)
-      E_populateWeaponSlot(slotlist, node->next, data);
+   if(node.next)
+      E_populateWeaponSlot(slotlist, *node.next, data);
 
-   if(node->right)
-      E_populateWeaponSlot(slotlist, node->right, data);
+   if(node.right)
+      E_populateWeaponSlot(slotlist, *node.right, data);
 }
 
 //
 // Creates a weapon slot from a given tree, then assigns it to the appropriate pclass slot
 //
-static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree *slottree)
+static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree &slottree)
 {
    weaponslot_t *initslot = estructalloc(weaponslot_t, 1);
    initslot->slotindex = slotindex;
@@ -844,14 +844,14 @@ static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, 
    slotlist.bdObject = initslot;
 
    unsigned int temp = 0;
-   E_populateWeaponSlot(slotlist, slottree->root, temp);
+   E_populateWeaponSlot(slotlist, *slottree.root, temp);
    pc->weaponslots[slotindex] = initslot;
 }
 
 //
 // Recursively place all weapons from the global slot tree into the playerclass weaponslot (in-order traversal)
 //
-static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node, bool *weaponinslot)
+static void E_addGlobalWeaponsToSlot(WeaponSlotTree *&slot, WeaponSlotNode *node, bool *weaponinslot)
 {
    if(node == nullptr)
       return;
@@ -941,7 +941,7 @@ void E_ProcessFinalWeaponSlots()
             if(pclassslottree != nullptr)
             {
                E_freeWeaponSlot(chain, i);
-               E_createWeaponSlotFromTree(chain, i, pclassslottree);
+               E_createWeaponSlotFromTree(chain, i, *pclassslottree);
                delete pclassslottree;
             }
             else if(chain->weaponslots[i] != nullptr &&
