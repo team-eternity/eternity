@@ -2702,8 +2702,7 @@ static void P_LoadBlockMap(int lump)
    {
       int i;
       int16_t *wadblockmaplump = (int16_t *)(setupwad->cacheLumpNum(lump, PU_LEVEL));
-      blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
-                                      PU_LEVEL, nullptr));
+      blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * count, PU_LEVEL, nullptr);
 
       // killough 3/1/98: Expand wad blockmap into larger internal one,
       // by treating all offsets except -1 as unsigned and zero-extending
@@ -3056,7 +3055,7 @@ static void P_LoadReject(int lump)
    else
    {
       // set to all zeroes so that the reject has no effect
-      rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, nullptr));
+      rejectmatrix = ecalloctag(byte *, 1, expectedsize, PU_LEVEL, nullptr);
 
       // Pad remaining space with 0xff if specified on command line)
       if(M_CheckParm("-reject_pad_with_ff"))

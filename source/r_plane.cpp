@@ -530,9 +530,9 @@ planehash_t *R_NewPlaneHash(int chaincount)
       chaincount = c;
    }
    
-   ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, nullptr));
+   ret = emalloctag(planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
    ret->chaincount = chaincount;
-   ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr));
+   ret->chains = emalloctag(visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
    ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)

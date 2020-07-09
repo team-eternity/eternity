@@ -795,7 +795,7 @@ void V_InitFlexTranTable(const byte *palette)
    // mark that we've initialized the flex tran table
    flexTranInit = true;
    
-   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, nullptr));
+   tempRGBpal = emalloctag(tpalcol_t *, 256*sizeof(*tempRGBpal), PU_STATIC, nullptr);
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {

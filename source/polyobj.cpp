@@ -204,19 +204,9 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
    if(po->numVertices >= po->numVerticesAlloc)
    {
       po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
-      po->vertices = 
-         (vertex_t **)(Z_Realloc(po->vertices,
-                                 po->numVerticesAlloc * sizeof(vertex_t *),
-                                 PU_LEVEL, nullptr));
-      po->origVerts =
-         (vertex_t *)(Z_Realloc(po->origVerts,
-                                po->numVerticesAlloc * sizeof(vertex_t),
-                                PU_LEVEL, nullptr));
-
-      po->tmpVerts =
-         (vertex_t *)(Z_Realloc(po->tmpVerts,
-                                po->numVerticesAlloc * sizeof(vertex_t),
-                                PU_LEVEL, nullptr));
+      po->vertices  = erealloctag(vertex_t **, po->vertices,  po->numVerticesAlloc * sizeof(vertex_t *), PU_LEVEL, nullptr);
+      po->origVerts = erealloctag(vertex_t *,  po->origVerts, po->numVerticesAlloc * sizeof(vertex_t),   PU_LEVEL, nullptr);
+      po->tmpVerts  = erealloctag(vertex_t *,  po->tmpVerts, po->numVerticesAlloc * sizeof(vertex_t),    PU_LEVEL, nullptr);
    }
    po->vertices[po->numVertices] = v;
    v->polyindex = po->numVertices; // mark it for reference to the index.
@@ -248,9 +238,7 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    if(po->numLines >= po->numLinesAlloc)
    {
       po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
-      po->lines = (line_t **)(Z_Realloc(po->lines, 
-                                        po->numLinesAlloc * sizeof(line_t *),
-                                        PU_LEVEL, nullptr));
+      po->lines = erealloctag(line_t **, po->lines, po->numLinesAlloc * sizeof(line_t *), PU_LEVEL, nullptr);
    }
    po->lines[po->numLines++] = l;
 

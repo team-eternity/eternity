@@ -69,8 +69,8 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
    }
 
    // create the model and its voxel buffer
-   model         = (rvoxelmodel_t *)(Z_Calloc(1,       sizeof(rvoxelmodel_t), PU_RENDERER, nullptr));
-   model->voxels =          (byte *)(Z_Calloc(voxsize, sizeof(byte),          PU_RENDERER, nullptr));
+   model         = ecalloctag(rvoxelmodel_t *, 1,       sizeof(rvoxelmodel_t), PU_RENDERER, nullptr);
+   model->voxels = ecalloctag(byte *,          voxsize, sizeof(byte),          PU_RENDERER, nullptr);
 
    model->xsize = xsize;
    model->ysize = ysize;

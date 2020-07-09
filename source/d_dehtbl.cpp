@@ -2277,7 +2277,7 @@ void D_BuildBEXTables()
    // 09/07/05: allocate all music names through one pointer
    musicstr = ecalloctag(char *, NUMMUSIC, 7, PU_STATIC, nullptr);
 
-   deh_musicnames = (char **)(Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, nullptr));
+   deh_musicnames = emalloctag(char **, (NUMMUSIC+1)*sizeof(char *), PU_STATIC, nullptr);
 
    for(i = 1; i < NUMMUSIC; ++i)
    {

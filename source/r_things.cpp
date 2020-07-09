@@ -2207,7 +2207,7 @@ void R_InitParticles()
    else if(numParticles < 100)
       numParticles = 100;
    
-   Particles = (particle_t *)(Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, nullptr));
+   Particles = emalloctag(particle_t *, numParticles*sizeof(particle_t), PU_STATIC, nullptr);
    R_ClearParticles();
 }
 

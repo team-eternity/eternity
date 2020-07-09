@@ -2784,7 +2784,7 @@ static msecnode_t *P_GetSecnode(void)
 
    return headsecnode ?
    node = headsecnode, headsecnode = node->m_snext, node :
-      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, nullptr)); 
+      emalloctag(msecnode_t *, sizeof *node, PU_LEVEL, nullptr); 
 }
 
 //

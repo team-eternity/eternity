@@ -748,7 +748,7 @@ static void F_InitDemonScroller()
    int lsize1, lsize2;
    VBuffer vbuf;
 
-   DemonBuffer = (byte *)(Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer)));
+   DemonBuffer = emalloctag(byte *, 128000, PU_LEVEL, reinterpret_cast<void **>(&DemonBuffer));
 
    // get screens
    lnum1  = W_GetNumForName("FINAL1");

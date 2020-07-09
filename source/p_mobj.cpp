@@ -2087,7 +2087,7 @@ int P_FindDoomedNum(int type)
 
    if(!hash)
    {
-      hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
+      hash = emalloctag(dnumhash_s *, sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash);
       for(i = 0; i < NUMMOBJTYPES; i++)
          hash[i].first = NUMMOBJTYPES;
       for(i = 0; i < NUMMOBJTYPES; i++)

@@ -1369,7 +1369,7 @@ void P_AddEventVars()
       variable_t *variable;
       command_t  *command;
 
-      variable = (variable_t *)(Z_Malloc(sizeof(variable_t), PU_STATIC, nullptr));
+      variable = emalloctag(variable_t *, sizeof(variable_t), PU_STATIC, nullptr);
       variable->variable  = &(particleEvents[i].enabled);
       variable->v_default = nullptr;
       variable->type      = vt_int;
@@ -1377,7 +1377,7 @@ void P_AddEventVars()
       variable->max       = 1;
       variable->defines   = onoff;
 
-      command = (command_t *)(Z_Malloc(sizeof(command_t), PU_STATIC, nullptr));
+      command = emalloctag(command_t *, sizeof(command_t), PU_STATIC, nullptr);
       command->name     = particleEvents[i].name;
       command->type     = ct_variable;
       command->flags    = 0;

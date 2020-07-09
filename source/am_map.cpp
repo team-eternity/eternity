@@ -609,7 +609,7 @@ static void AM_loadPics()
 
       // allocate backdrop
       if(!am_backdrop)
-         am_backdrop = (byte *)(Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, nullptr));
+         am_backdrop = emalloctag(byte *, SCREENWIDTH*SCREENHEIGHT, PU_STATIC, nullptr);
 
       // must be at least 100 tall
       if(height < 100 || height > SCREENHEIGHT)

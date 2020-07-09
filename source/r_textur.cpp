@@ -174,7 +174,7 @@ static texture_t *R_AllocTexStruct(const char *name, int16_t width,
 
    size = sizeof(texture_t) + sizeof(tcomponent_t) * (compcount - 1);
    
-   ret = (texture_t *)(Z_Calloc(1, size, PU_RENDERER, nullptr));
+   ret = ecalloctag(texture_t *, 1, size, PU_RENDERER, nullptr);
    
    ret->name = ret->namebuf;
    strncpy(ret->namebuf, name, 8);
@@ -872,8 +872,8 @@ static void StartTexture(texture_t *tex, bool mask)
       if(bufferlen > tempmask.buffermax || !tempmask.buffer)
       {
          tempmask.buffermax = bufferlen;
-         tempmask.buffer = (byte *)(Z_Realloc(tempmask.buffer, bufferlen, 
-                                        PU_RENDERER, (void **)&tempmask.buffer));
+         tempmask.buffer = erealloctag(byte *, tempmask.buffer, bufferlen,
+                                       PU_RENDERER, reinterpret_cast<void **>(&tempmask.buffer));
       }
       memset(tempmask.buffer, 0, bufferlen);
    }
@@ -1477,7 +1477,7 @@ void R_InitTextures()
    texturecount = numwalls + numflats + 1;
    
    // Allocate textures
-   textures = (texture_t **)(Z_Malloc(sizeof(texture_t *) * texturecount, PU_RENDERER, nullptr));
+   textures = emalloctag(texture_t **, sizeof(texture_t *) * texturecount, PU_RENDERER, nullptr);
    memset(textures, 0, sizeof(texture_t *) * texturecount);
 
    // init lookup tables
