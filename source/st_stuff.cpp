@@ -381,7 +381,7 @@ static void ST_drawSmallNumber(int val, int x, int y)
       if(val > 99999)
          val = 99999;
       sprintf(buf, "%d", val);
-      x -= 4 * (strlen(buf));
+      x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
          int i = *rover - '0';

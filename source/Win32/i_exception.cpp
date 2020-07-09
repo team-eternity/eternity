@@ -367,6 +367,8 @@ static void PrintUserInfo(void)
 //
 // Prints out version information for the operating system.
 //
+#pragma warning(push)
+#pragma warning(disable : 4996)
 static void PrintOSInfo(void)
 {
    OSVERSIONINFO osinfo;
@@ -390,6 +392,7 @@ static void PrintOSInfo(void)
    else
       LogPrintf(_T("%s"), "Operating system unknown\r\n");
 }
+#pragma warning(pop)
 
 //
 // PrintCPUInfo
