@@ -360,7 +360,7 @@ void G_InitKeyBindings()
          else
             sprintf(tempstr, "key%x", i);
 
-         keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, 0);
+         keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, nullptr);
       }
 
       memset(keybindings[i].bindings, 0, NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
@@ -421,7 +421,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
       cons_keyactions = estructalloc(keyaction_t, 1);
       cons_keyactions->bclass = kac_cmd;
       cons_keyactions->type   = at_conscmd;
-      cons_keyactions->name   = Z_Strdup(name, PU_STATIC, 0);
+      cons_keyactions->name   = Z_Strdup(name, PU_STATIC, nullptr);
       cons_keyactions->next   = nullptr;
       cons_keyactions->num    = cons_actionnum++;
 
@@ -439,7 +439,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    newaction = estructalloc(keyaction_t, 1);
    newaction->bclass = kac_cmd;
    newaction->type = at_conscmd;
-   newaction->name = Z_Strdup(name, PU_STATIC, 0);
+   newaction->name = Z_Strdup(name, PU_STATIC, nullptr);
    newaction->next = nullptr;
    newaction->num  = cons_actionnum++;
 

@@ -58,12 +58,12 @@ static gfs_t gfs;
 
 static cfg_opt_t gfs_opts[] =
 {
-   CFG_STR(SEC_WADFILE,   0, CFGF_MULTI),
-   CFG_STR(SEC_DEHFILE,   0, CFGF_MULTI),
-   CFG_STR(SEC_CSCFILE,   0, CFGF_MULTI),
-   CFG_STR(SEC_EDFFILE,   0, CFGF_NONE),
-   CFG_STR(SEC_IWAD,      0, CFGF_NONE),
-   CFG_STR(SEC_BASEPATH,  0, CFGF_NONE),
+   CFG_STR(SEC_WADFILE,   nullptr, CFGF_MULTI),
+   CFG_STR(SEC_DEHFILE,   nullptr, CFGF_MULTI),
+   CFG_STR(SEC_CSCFILE,   nullptr, CFGF_MULTI),
+   CFG_STR(SEC_EDFFILE,   nullptr, CFGF_NONE),
+   CFG_STR(SEC_IWAD,      nullptr, CFGF_NONE),
+   CFG_STR(SEC_BASEPATH,  nullptr, CFGF_NONE),
    CFG_END()
 };
 

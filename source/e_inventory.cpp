@@ -477,7 +477,7 @@ static int E_actionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **arg
    CFG_INT_CB(KEY_ARTIFACTTYPE, ARTI_NORMAL, CFGF_NONE, E_artiTypeCB), /* artifact sub-type */       \
                                                                                                      \
    CFG_STRFUNC(KEY_USEACTION,  "NULL",                  E_actionFuncCB), /* action function */       \
-   CFG_STR(KEY_ARGS,           0,            CFGF_LIST),                                             \
+   CFG_STR(KEY_ARGS,           nullptr,      CFGF_LIST),                                             \
                                                                                                      \
                                                                                                      \
    /* Sub-Type Specific Fields */                                                                    \
@@ -1375,7 +1375,7 @@ cfg_opt_t edf_pkupfx_opts[] =
 {
    CFG_STR(ITEM_PICKUP_CNAME,     nullptr, CFGF_NONE),
    CFG_STR(ITEM_PICKUP_SPRITE,    nullptr, CFGF_NONE),
-   CFG_STR(ITEM_PICKUP_EFFECTS,   0,       CFGF_LIST),
+   CFG_STR(ITEM_PICKUP_EFFECTS,   nullptr, CFGF_LIST),
    CFG_STR(ITEM_PICKUP_CHANGEWPN, "",      CFGF_NONE),
    CFG_STR(ITEM_PICKUP_MSG,       nullptr, CFGF_NONE),
    CFG_STR(ITEM_PICKUP_SOUND,     nullptr, CFGF_NONE),

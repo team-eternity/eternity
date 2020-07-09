@@ -105,7 +105,7 @@ cfg_opt_t edf_puff_opts[] =
 
 cfg_opt_t edf_puff_delta_opts[] =
 {
-   CFG_STR("name", 0, CFGF_NONE),
+   CFG_STR("name", nullptr, CFGF_NONE),
    PUFF_CONFIGS
 };
 

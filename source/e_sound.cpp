@@ -177,7 +177,7 @@ static const char *subchans[] =
    CFG_INT(ITEM_SND_PRIORITY,      64,                CFGF_NONE), \
    CFG_STR(ITEM_SND_LINK,          "none",            CFGF_NONE), \
    CFG_STR(ITEM_SND_ALIAS,         "none",            CFGF_NONE), \
-   CFG_STR(ITEM_SND_RANDOM,        0,                 CFGF_LIST), \
+   CFG_STR(ITEM_SND_RANDOM,        nullptr,           CFGF_LIST), \
    CFG_STR(ITEM_SND_SKININDEX,     "sk_none",         CFGF_NONE), \
    CFG_INT(ITEM_SND_LINKVOL,       -1,                CFGF_NONE), \
    CFG_INT(ITEM_SND_LINKPITCH,     -1,                CFGF_NONE), \

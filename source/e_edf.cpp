@@ -218,7 +218,7 @@ static cfg_opt_t cast_opts[] =
 
 static cfg_opt_t edf_opts[] =
 {
-   CFG_STR(SEC_SPRITE,          0,                 CFGF_LIST),
+   CFG_STR(SEC_SPRITE,          nullptr,           CFGF_LIST),
    CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
    CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
    CFG_SEC(EDF_SEC_SPRPKUP,     edf_sprpkup_opts,  EDF_TSEC_FLAGS),
@@ -262,8 +262,8 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PUFFTYPE,    edf_puff_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PUFFDELTA,   edf_puff_delta_opts, EDF_NSEC_FLAGS),
-   CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
-   CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
+   CFG_STR(SEC_CASTORDER,       nullptr,           CFGF_LIST),
+   CFG_STR(SEC_BOSSTYPES,       nullptr,           CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
    CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),

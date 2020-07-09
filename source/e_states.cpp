@@ -92,7 +92,7 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
+   CFG_STR(ITEM_FRAME_ARGS,        nullptr,     CFGF_LIST), \
    CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
    CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
    CFG_FLAG(ITEM_FRAME_INTERPOLATE, 0,          CFGF_SIGNPREFIX), \
@@ -101,13 +101,13 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
 cfg_opt_t edf_frame_opts[] =
 {
    CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
-   CFG_STR(ITEM_FRAME_CMP, 0, CFGF_NONE),
+   CFG_STR(ITEM_FRAME_CMP, nullptr, CFGF_NONE),
    FRAME_FIELDS
 };
 
 cfg_opt_t edf_fdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    FRAME_FIELDS
 };
 

@@ -133,8 +133,8 @@ cfg_opt_t edf_skin_opts[] =
 
 static cfg_opt_t wpnslot_opts[] =
 {
-   CFG_STR(ITEM_WPNSLOT_WPNS,   0, CFGF_LIST),
-   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0, CFGF_NONE),
+   CFG_STR(ITEM_WPNSLOT_WPNS,   nullptr, CFGF_LIST),
+   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0,       CFGF_NONE),
    CFG_END()
 };
 
@@ -185,7 +185,7 @@ cfg_opt_t edf_pclass_opts[] =
 
 cfg_opt_t edf_pdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    PLAYERCLASS_FIELDS
 };
 

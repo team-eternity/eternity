@@ -2141,8 +2141,8 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
    case ACS_TP_NoTrigger:    break;
    case ACS_TP_DamageFactor: break;
    case ACS_TP_MasterTID:    break;
-   case ACS_TP_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, 0, 0)); break;
-   case ACS_TP_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, 0, 0)); break;
+   case ACS_TP_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, nullptr, nullptr)); break;
+   case ACS_TP_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, nullptr, nullptr)); break;
    case ACS_TP_WaterLevel:   break;
    case ACS_TP_ScaleX:       thing->xscale = M_FixedToFloat(val); break;
    case ACS_TP_ScaleY:       thing->yscale = M_FixedToFloat(val); break;

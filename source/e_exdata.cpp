@@ -151,13 +151,13 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 
 static cfg_opt_t mapthing_opts[] =
 {
-   CFG_INT(FIELD_NUM,     0,  CFGF_NONE),
-   CFG_INT(FIELD_TID,     0,  CFGF_NONE),
-   CFG_STR(FIELD_TYPE,    "", CFGF_NONE),
-   CFG_STR(FIELD_OPTIONS, "", CFGF_NONE),
-   CFG_STR(FIELD_ARGS,    0,  CFGF_LIST),
-   CFG_INT(FIELD_HEIGHT,  0,  CFGF_NONE),
-   CFG_INT_CB(FIELD_SPECIAL, 0,  CFGF_NONE, E_LineSpecCB),
+   CFG_INT(FIELD_NUM,     0,       CFGF_NONE),
+   CFG_INT(FIELD_TID,     0,       CFGF_NONE),
+   CFG_STR(FIELD_TYPE,    "",      CFGF_NONE),
+   CFG_STR(FIELD_OPTIONS, "",      CFGF_NONE),
+   CFG_STR(FIELD_ARGS,    nullptr, CFGF_LIST),
+   CFG_INT(FIELD_HEIGHT,  0,       CFGF_NONE),
+   CFG_INT_CB(FIELD_SPECIAL, 0,    CFGF_NONE, E_LineSpecCB),
    CFG_END()
 };
 
@@ -191,7 +191,7 @@ static cfg_opt_t linedef_opts[] =
    CFG_INT_CB(FIELD_LINE_SPECIAL,  0, CFGF_NONE, E_LineSpecCB),
    CFG_INT(FIELD_LINE_TAG,         0, CFGF_NONE),
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
-   CFG_STR(FIELD_LINE_ARGS,        0, CFGF_LIST),
+   CFG_STR(FIELD_LINE_ARGS,   nullptr, CFGF_LIST),
    CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
    CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
    CFG_INT(FIELD_LINE_PORTALID,    0, CFGF_NONE),
