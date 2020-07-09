@@ -758,7 +758,7 @@ int WadDirectory::addDirectory(const char *dirpath)
    const fs::directory_iterator itr(dir);
 
    // count the files in the directory
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
       edefstructvar(dirfile_t, newfile);
       const std::string filename = ent.path().filename().generic_u8string();
@@ -885,7 +885,7 @@ static void W_recurseFiles(Collection<ArchiveDirFile> &paths, const char *base,
    prevPaths.add(real);
 
    const fs::directory_iterator itr(dir);
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
        std::string filename = ent.path().filename().generic_u8string();
 

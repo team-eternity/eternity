@@ -613,7 +613,7 @@ static int D_CheckBasePath(const qstring &qpath)
          int score = 0;
 
          const fs::directory_iterator itr(path);
-         for(const fs::directory_entry ent : itr)
+         for(const fs::directory_entry &ent : itr)
          {
             const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
 
@@ -799,7 +799,7 @@ static int D_CheckUserPath(const qstring &qpath)
          int score = 0;
 
          const fs::directory_iterator itr(path);
-         for(const fs::directory_entry ent : itr)
+         for(const fs::directory_entry &ent : itr)
          {
             const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
 
@@ -1199,7 +1199,7 @@ void D_GameAutoloadWads()
       }
 
       const fs::directory_iterator itr(autoloads);
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
          if(ent.path().extension() == ".wad")
          {
@@ -1223,7 +1223,7 @@ void D_GameAutoloadDEH()
    if(!autoloads.empty())
    {
       const fs::directory_iterator itr(autoloads);
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
 
          if(const fs::path extension = ent.path().extension();
@@ -1249,7 +1249,7 @@ void D_GameAutoloadCSC()
    if(!autoloads.empty())
    {
       const fs::directory_iterator itr(autoloads);
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
          if(ent.path().extension() == ".csc")
          {

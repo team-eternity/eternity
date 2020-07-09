@@ -368,7 +368,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
    if(startgroup == targetgroup)
       return 0;
 
-   link = (linkoffset_t *)(Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0));
+   link = emalloctag(linkoffset_t *, sizeof(linkoffset_t), PU_LEVEL, nullptr);
    linktable[startgroup * groupcount + targetgroup] = link;
    
    link->x = x;
@@ -688,9 +688,7 @@ bool P_BuildLinkTable()
 
    // SoM: the last line of the table (starting at groupcount * groupcount) is
    // used as a temporary list for gathering links.
-   linktable = 
-      (linkoffset_t **)(Z_Calloc(1, sizeof(linkoffset_t *)*groupcount*groupcount,
-                                PU_LEVEL, 0));
+   linktable = ecalloctag(linkoffset_t **, 1, sizeof(linkoffset_t *) * groupcount * groupcount, PU_LEVEL, nullptr );
 
    // Run through the sectors check for invalid portal references.
    for(i = 0; i < numsectors; i++)

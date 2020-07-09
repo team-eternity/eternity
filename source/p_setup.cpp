@@ -1942,7 +1942,7 @@ static void P_LoadLineDefs2()
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
-      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
+      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : nullptr;
       
       // haleyjd 02/06/13: lookup static init
       int staticFn = EV_StaticInitForSpecial(ld->special);
@@ -2564,8 +2564,7 @@ static void P_CreateBlockMap()
          }
 
          // Allocate blockmap lump with computed count
-         blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count, 
-                                         PU_LEVEL, 0));
+         blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * count,  PU_LEVEL, nullptr);
       }
 
       // Now compress the blockmap.
@@ -2806,7 +2805,7 @@ static void P_GroupLines()
    gTotalLinesForRejectOverflow = total;
 
    // build line tables for each sector
-   linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
+   linebuffer = emalloctag(line_t **, total * sizeof(*linebuffer), PU_LEVEL, nullptr);
 
    for(i = 0; i < numsectors; i++)
    {

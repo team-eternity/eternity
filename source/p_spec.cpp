@@ -2283,7 +2283,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    if(ceiling)
    {
       cline->frontsector->srf.ceiling.numattached = numattach;
-      cline->frontsector->srf.ceiling.attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      cline->frontsector->srf.ceiling.attached = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
       memcpy(cline->frontsector->srf.ceiling.attached, attached, sizeof(int) * numattach);
 
       alist = cline->frontsector->srf.ceiling.attached;
@@ -2292,7 +2292,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    else
    {
       cline->frontsector->srf.floor.numattached = numattach;
-      cline->frontsector->srf.floor.attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      cline->frontsector->srf.floor.attached = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
       memcpy(cline->frontsector->srf.floor.attached, attached, sizeof(int) * numattach);
 
       alist = cline->frontsector->srf.floor.attached;
@@ -2345,13 +2345,13 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    if(ceiling)
    {
       cline->frontsector->srf.ceiling.numsectors = numattach;
-      cline->frontsector->srf.ceiling.attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      cline->frontsector->srf.ceiling.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
       memcpy(cline->frontsector->srf.ceiling.attsectors, attached, sizeof(int) * numattach);
    }
    else
    {
       cline->frontsector->srf.floor.numsectors = numattach;
-      cline->frontsector->srf.floor.attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
+      cline->frontsector->srf.floor.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
       memcpy(cline->frontsector->srf.floor.attsectors, attached, sizeof(int) * numattach);
    }
 }
@@ -2758,15 +2758,13 @@ void P_AttachSectors(const line_t *line, int staticFn)
    if(ceiling)
    {
       sector->srf.ceiling.asurfacecount = numattached;
-      sector->srf.ceiling.asurfaces =
-         (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
+      sector->srf.ceiling.asurfaces = emalloctag(attachedsurface_t *, sizeof(attachedsurface_t) * numattached, PU_LEVEL, nullptr);
       memcpy(sector->srf.ceiling.asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
    else
    {
       sector->srf.floor.asurfacecount = numattached;
-      sector->srf.floor.asurfaces =
-         (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
+      sector->srf.floor.asurfaces = emalloctag(attachedsurface_t *, sizeof(attachedsurface_t) * numattached, PU_LEVEL, nullptr);
       memcpy(sector->srf.floor.asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
 }

@@ -317,7 +317,7 @@ void P_ParseSkin(int lumpnum)
 
    newskin = estructalloc(skin_t, 1);
 
-   newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
+   newskin->spritename = emalloctag(char *, 5, PU_STATIC, nullptr);
    if(lumpnum + 1 < wGlobalDir.getNumLumps())
       strncpy(newskin->spritename, lumpinfo[lumpnum + 1]->name, 4);
    else
@@ -397,7 +397,7 @@ static void P_CacheFaces(skin_t *skin)
    }
    else
    {
-      skin->faces = (patch_t **)(Z_Malloc(ST_NUMFACES * sizeof(patch_t *), PU_STATIC, 0));
+      skin->faces = emalloctag(patch_t **, ST_NUMFACES * sizeof(patch_t *), PU_STATIC, nullptr);
       ST_CacheFaces(skin->faces, skin->facename);
    }
 }
@@ -525,7 +525,7 @@ static skin_t *P_NextSkin(int player)
 static void P_InitMonsterSkins(void)
 {
    if(!monster_skins)
-      monster_skins = (skin_t **)(Z_Calloc(NUMSPRITES, sizeof(skin_t *), PU_STATIC, 0));
+      monster_skins = ecalloctag(skin_t **, NUMSPRITES, sizeof(skin_t *), PU_STATIC, nullptr);
 }
 
 //

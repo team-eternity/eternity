@@ -1625,7 +1625,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
    bool settarget;
    bool useammo;
    int cptrnum, statenum;
-   state_t *oldstate = 0;
+   state_t *oldstate = nullptr;
    Mobj *oldtarget = nullptr, *localtarget = nullptr;
    Mobj *mo = actionargs->actor;
    player_t  *player;

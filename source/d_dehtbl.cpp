@@ -2263,9 +2263,9 @@ void D_BuildBEXTables()
 
    // haleyjd 03/11/03: must be dynamic now
    // 10/17/03: allocate all the names through a single pointer
-   spritestr = (char *)(Z_Calloc(NUMSPRITES, 5, PU_STATIC, nullptr));
+   spritestr = ecalloctag(char *, NUMSPRITES, 5, PU_STATIC, nullptr);
 
-   deh_spritenames = (char **)(Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0));
+   deh_spritenames = emalloctag(char **, (NUMSPRITES+1)*sizeof(char *),PU_STATIC, nullptr);
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
@@ -2275,9 +2275,9 @@ void D_BuildBEXTables()
    deh_spritenames[NUMSPRITES] = nullptr;
 
    // 09/07/05: allocate all music names through one pointer
-   musicstr = (char *)(Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0));
+   musicstr = ecalloctag(char *, NUMMUSIC, 7, PU_STATIC, nullptr);
 
-   deh_musicnames = (char **)(Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0));
+   deh_musicnames = (char **)(Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, nullptr));
 
    for(i = 1; i < NUMMUSIC; ++i)
    {

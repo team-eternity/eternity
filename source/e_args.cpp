@@ -953,7 +953,7 @@ int E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw, int defvalue)
    if(!al || index >= al->numargs)
       return defvalue;
 
-      evalcache_t &eval = al->values[index];
+   evalcache_t &eval = al->values[index];
 
    if(eval.type != EVALTYPE_KEYWORD)
    {

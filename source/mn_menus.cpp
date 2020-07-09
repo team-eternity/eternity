@@ -949,7 +949,7 @@ CONSOLE_VARIABLE(startlevel, startlevel, cf_handlerset)
    {
       if(startlevel)
          Z_Free(startlevel);
-      startlevel = Z_Strdup(newvalue, PU_STATIC, 0);
+      startlevel = Z_Strdup(newvalue, PU_STATIC, nullptr);
    }
 }
 
@@ -1366,7 +1366,7 @@ static void MN_ReadSaveStrings()
          // haleyjd
          if(savegamenames[i])
             Z_Free(savegamenames[i]);
-         savegamenames[i] = Z_Strdup(DEH_String("EMPTYSTRING"), PU_STATIC, 0);
+         savegamenames[i] = Z_Strdup(DEH_String("EMPTYSTRING"), PU_STATIC, nullptr);
          continue;
       }
 
@@ -1375,7 +1375,7 @@ static void MN_ReadSaveStrings()
          doom_printf("%s", FC_ERROR "Warning: savestring read failed");
       if(savegamenames[i])
          Z_Free(savegamenames[i]);
-      savegamenames[i] = Z_Strdup(description, PU_STATIC, 0);  // haleyjd
+      savegamenames[i] = Z_Strdup(description, PU_STATIC, nullptr);  // haleyjd
       savegamepresent[i] = true;
       fclose(fp);
    }
