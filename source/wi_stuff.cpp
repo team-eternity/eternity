@@ -126,56 +126,56 @@ typedef enum
    ANIM_LEVEL     // continuous
 } animenum_t;
 
-typedef struct point_s
+struct point_t
 {
    int   x;       // x/y coordinate pair structure
    int   y;
-} point_t;
+};
 
 //
 // Animation.
 // There is another anim_t used in p_spec.
 //
-typedef struct anim_s
+struct anim_t
 {
    animenum_t  type;
-   
+
    // period in tics between animations
    int   period;
-   
+
    // number of animation frames
    int   nanims;
-   
+
    // location of animation
    point_t loc;
-   
+
    // ALWAYS: n/a,
    // RANDOM: period deviation (<256),
    // LEVEL: level
    int   data1;
-   
+
    // ALWAYS: n/a,
    // RANDOM: random base period,
    // LEVEL: n/a
-   int   data2; 
-   
+   int   data2;
+
    // actual graphics for frames of animations
-   patch_t*  p[3]; 
-   
+   patch_t*  p[3];
+
    // following must be initialized to zero before use!
-   
+
    // next value of intertime (used in conjunction with period)
    int   nexttic;
-   
+
    // last drawn animation frame
    int   lastdrawn;
-   
+
    // next frame number to animate
    int   ctr;
-   
+
    // used by RANDOM and LEVEL when animating
-   int   state;  
-} anim_t;
+   int   state;
+};
 
 static point_t lnodes[NUMEPISODES][NUMMAPS] =
 {

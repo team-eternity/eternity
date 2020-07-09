@@ -1124,12 +1124,12 @@ static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
 // Special damage type code -- see codepointer table below.
 //
 
-typedef struct dmgspecdata_s
+struct dmgspecdata_t
 {
    Mobj *source;
    Mobj *target;
    int     damage;
-} dmgspecdata_t;
+};
 
 //
 // Special damage action for Maulotaurs slamming into things.

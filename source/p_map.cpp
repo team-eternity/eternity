@@ -521,7 +521,7 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 //
 // killough 11/98: reformatted
 
-static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_CrossLine(line_t *ld, polyobj_t *po, void *context)
 {
    auto type = static_cast<const mobjtype_t *>(context);
    // SoM 9/7/02: wow a killoughism... * SoM is scared
@@ -672,7 +672,7 @@ bool P_BlockedAsMonster(const Mobj &mo)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
+bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 {
    auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
@@ -1872,7 +1872,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
 {
    // ioanch 20160116: portal aware
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
@@ -2418,16 +2418,16 @@ void P_SlideMove(Mobj *mo)
 // * bombdata_t's will be pushed and popped for recursive explosions
 // * a limit of 128 recursive explosions is enforced
 
-typedef struct bombdata_s
+struct bombdata_t
 {
    Mobj *bombsource;
    Mobj *bombspot;
    int   bombdamage;
    int   bombdistance; // haleyjd 12/22/12
    int   bombmod;      // haleyjd 07/13/03
-   
+
    unsigned int bombflags; // haleyjd 12/22/12
-} bombdata_t;
+};
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
 static int bombindex;              // current index into bombs array
@@ -2915,7 +2915,7 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
 {
    // ioanch 20160115: portal aware
    fixed_t bbox[4];

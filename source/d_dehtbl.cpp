@@ -2296,13 +2296,13 @@ void D_BuildBEXTables()
 // all at once. This allows EDF to be extended for loading from
 // wad files.
 
-typedef struct dehqueueitem_s
+struct dehqueueitem_t
 {
    mqueueitem_t mqitem; // this must be first
 
    char name[PATH_MAX+1];
-   int  lumpnum;   
-} dehqueueitem_t;
+   int  lumpnum;
+};
 
 static mqueue_t dehqueue;
 

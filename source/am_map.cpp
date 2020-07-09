@@ -127,25 +127,25 @@ bool am_dynasegs_bysubsec;
 #define HORZ_PAN_SCALE(x) ((x) * f_w / SCREENWIDTH )
 #define VERT_PAN_SCALE(y) ((y) * f_h / SCREENHEIGHT)
 
-typedef struct fpoint_s
+struct fpoint_t
 {
    int x, y;
-} fpoint_t;
+};
 
-typedef struct fline_s
+struct fline_t
 {
    fpoint_t a, b;
-} fline_t;
+};
 
-typedef struct mline_s
+struct mline_t
 {
    mpoint_t a, b;
-} mline_t;
+};
 
-typedef struct islope_s
+struct islope_t
 {
    double slp, islp;
-} islope_t;
+};
 
 // haleyjd: moved here, as this is the only place it is used
 #define PLAYERRADIUS    (16.0)

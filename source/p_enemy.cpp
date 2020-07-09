@@ -786,7 +786,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&

@@ -192,14 +192,14 @@ enum
 };
 
 // lexerstate structure; because lots of arguments annoy me :)
-typedef struct lexerstate_s
+struct lexerstate_t
 {
    cfg_t *cfg;        // current cfg_t
    int   state;       // current state of the lexer
    int   stringtype;  // type of string being parsed
    int   heredoctype; // type of heredoc delimiter being used
    char  c;           // current character
-} lexerstate_t;
+};
 
 // lexer function protocol
 typedef int (*lexfunc_t)(lexerstate_t *);

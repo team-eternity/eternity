@@ -233,12 +233,12 @@ static bool Wipe_fadeTicker(void)
 // Wipe Objects
 //
 
-typedef struct fwipe_s
+struct fwipe_t
 {
    void (*StartScreen)(void);
    void (*Drawer)(void);
    bool (*Ticker)(void);
-} fwipe_t;
+};
 
 static fwipe_t wipers[] =
 {

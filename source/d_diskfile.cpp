@@ -35,22 +35,22 @@
 //
 // Internal disk file entry structure
 //
-typedef struct diskentry_s
+struct diskentry_t
 {
    char name[64];
    size_t offset;
    size_t length;
-} diskentry_t;
+};
 
 //
 // Internal diskfile_t structure
 //
-typedef struct diskfileint_s
+struct diskfileint_t
 {
    FILE *f;              // physical disk file
    size_t numfiles;      // number of files
    diskentry_t *entries; // directory entries
-} diskfileint_t;
+};
 
 //
 // D_readDiskFileDirectory

@@ -87,13 +87,13 @@
 // Memblock Structure
 // 
 
-typedef struct memblock
+struct memblock_t
 {
 #ifdef ZONEIDCHECK
   unsigned int id;
 #endif
 
-  struct memblock *next,**prev;
+  struct memblock_t *next,**prev;
   size_t size;
   void **user;
   unsigned char tag;
@@ -102,7 +102,7 @@ typedef struct memblock
   const char *file;
   int line;
 #endif
-} memblock_t;
+};
 
 //=============================================================================
 //

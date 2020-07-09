@@ -86,11 +86,11 @@ typedef enum
    AS_MIRRORCEILING  = 0x08,
 } attachedtype_e;
 
-typedef struct attachedsurface_s
+struct attachedsurface_t
 {
    sector_t        *sector;
    int             type;
-} attachedsurface_t;
+};
 
 // haleyjd 12/28/08: sector flags
 enum

@@ -316,11 +316,11 @@ static void Polyobj_findLines(polyobj_t *po, line_t *line)
 }
 
 // structure used to store linedefs during explicit search process
-typedef struct lineitem_s
+struct lineitem_t
 {
    line_t *line;
    int   num;
-} lineitem_t;
+};
 
 //
 // Polyobj_lineCompare
@@ -1405,11 +1405,11 @@ static polyobj_t *Polyobj_GetMirror(polyobj_t *po)
 }
 
 // structure used to queue up mobj pointers in Polyobj_InitLevel
-typedef struct mobjqitem_s
+struct mobjqitem_t
 {
    mqueueitem_t mqitem;
    Mobj *mo;
-} mobjqitem_t;
+};
 
 //
 // Check if mobj is a polyobject spawn spot

@@ -292,11 +292,11 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
 
 void MN_DrawCredits(void);
 
-typedef struct helpscreen_s
+struct helpscreen_t
 {
    int lumpnum;
    void (*Drawer)(); // alternate drawer
-} helpscreen_t;
+};
 
 static helpscreen_t helpscreens[120];  // 100 + credit/built-in help screens
 static int num_helpscreens;

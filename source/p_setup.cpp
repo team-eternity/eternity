@@ -1084,7 +1084,7 @@ static void CheckZNodesOverflowFN(int *size, int count)
 }
 
 // IOANCH 20151217: updated for XGLN and XGL2
-typedef struct mapseg_znod_s
+struct mapseg_znod_t
 {
    uint32_t v1;
    union // IOANCH
@@ -1094,10 +1094,10 @@ typedef struct mapseg_znod_s
    };
    uint32_t linedef; // IOANCH: use 32-bit instead of 16-bit   
    byte     side;
-} mapseg_znod_t;
+};
 
 // IOANCH: modified to support XGL3 nodes
-typedef struct mapnode_znod_s
+struct mapnode_znod_t
 {
   union
   {
@@ -1120,7 +1120,7 @@ typedef struct mapnode_znod_s
   int16_t bbox[2][4];
   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
   int32_t children[2];
-} mapnode_znod_t;
+};
 
 //
 // R_DynaSegOffset
@@ -2104,7 +2104,7 @@ static void P_LoadSideDefs2(int lumpnum)
 }
 
 // haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
-typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
+struct bmap_t { int n, nalloc, *list; }; // blocklist structure
 
 //
 // Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not

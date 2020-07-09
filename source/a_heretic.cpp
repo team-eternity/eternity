@@ -770,12 +770,12 @@ void A_HticExplode(actionargs_t *actionargs)
    E_ExplosionHitWater(actor, damage);
 }
 
-typedef struct boss_spec_htic_s
+struct boss_spec_htic_t
 {
    unsigned int thing_flag;
    unsigned int level_flag;
    int flagfield;
-} boss_spec_htic_t;
+};
 
 #define NUM_HBOSS_SPECS 5
 

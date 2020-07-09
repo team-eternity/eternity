@@ -201,11 +201,11 @@ static void LogPrintf(LPCTSTR fmt, ...)
 // Information Output Routines
 //
 
-typedef struct exceptiondata_s
+struct exceptiondata_t
 {
    DWORD        code;
    const TCHAR *name;
-} exceptiondata_t;
+};
 
 static exceptiondata_t ExceptionData[] =
 {

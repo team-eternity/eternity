@@ -83,7 +83,7 @@ static const int e_edgePortalFlags[surf_NUM] = { EX_ML_LOWERPORTAL, EX_ML_UPPERP
 
 // ExtraData line structure
 
-typedef struct maplinedefext_s
+struct maplinedefext_t
 {
    // standard fields
    maplinedef_t stdfields;
@@ -100,7 +100,7 @@ typedef struct maplinedefext_s
    int recordnum;
    int next;
 
-} maplinedefext_t;
+};
 
 // ExtraData sector structure
 

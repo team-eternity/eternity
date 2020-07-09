@@ -53,8 +53,7 @@
 
 #define MAXHUBLEVELS 128
 
-typedef struct hublevel_s hublevel_t;
-struct hublevel_s
+struct hublevel_t
 {
    char levelname[8];
    char *tmpfile;        // temporary file holding the saved level

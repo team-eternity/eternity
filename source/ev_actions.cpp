@@ -2953,7 +2953,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      argc  = NUMLINEARGS - 1;
    uint32_t argv[NUMLINEARGS - 1];
@@ -4302,7 +4302,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;

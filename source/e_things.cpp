@@ -324,13 +324,13 @@ static const char *BasicTypeNames[] =
 
 #define NUMBASICTYPES earrlen(BasicTypeNames)
 
-typedef struct basicttype_s
+struct basicttype_t
 {
    unsigned int flags;     // goes to: mi->flags
    unsigned int flags2;    //        : mi->flags2
    unsigned int flags3;    //        : mi->flags3
    const char *spawnstate; //        : mi->spawnstate
-} basicttype_t;
+};
 
 static basicttype_t BasicThingTypes[] =
 {

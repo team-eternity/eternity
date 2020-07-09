@@ -87,7 +87,7 @@ typedef enum
 #pragma pack(push, 1)
 #endif
 
-struct tagMUSheader
+struct MUSheader
 {
    char        ID[4];            // identifier "MUS"0x1A
    UWORD       ScoreLength;      // length of music portion
@@ -97,21 +97,19 @@ struct tagMUSheader
    UWORD       InstrCnt;         // number of instruments
 };
 
-typedef struct tagMUSheader MUSheader;
-
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
 // to keep track of information in a MIDI track
 
-typedef struct Track
+struct TrackInfo
 {
    char  velocity;
    int   deltaT;
    UBYTE lastEvt;
    int   alloced;
-} TrackInfo;
+};
 
 // array of info about tracks
 

@@ -1211,11 +1211,11 @@ void A_PainDie(actionargs_t *actionargs)
 // Special Death Effects
 //
 
-typedef struct boss_spec_s
+struct boss_spec_t
 {
    unsigned int thing_flag;
    unsigned int level_flag;
-} boss_spec_t;
+};
 
 #define NUM_BOSS_SPECS 7
 

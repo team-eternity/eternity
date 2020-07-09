@@ -1262,9 +1262,7 @@ static void C_RunAlias(alias_t *alias)
 //              rather than a static array: no limit on
 //              buffered commands and nicer code
 
-typedef struct bufferedcmd_s bufferedcmd;
-
-struct bufferedcmd_s
+struct bufferedcmd
 {
    command_t *command;     // the command
    char *options;          // command line options
@@ -1272,12 +1270,12 @@ struct bufferedcmd_s
    bufferedcmd *next;      // next in list
 };
 
-typedef struct cmdbuffer_s
+struct cmdbuffer
 {
    // NULL once list empty
    bufferedcmd *cmdbuffer;
    int timer;   // tic timer to temporarily freeze executing of cmds
-} cmdbuffer;
+};
 
 cmdbuffer buffers[C_CMDTYPES];
 

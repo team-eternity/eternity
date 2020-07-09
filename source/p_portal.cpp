@@ -1124,7 +1124,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // Moves a polyobject portal cluster, updating link offsets.
 //
 void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
-   fixed_t dy, bool setpolyref, const polyobj_s *po)
+   fixed_t dy, bool setpolyref, const polyobj_t *po)
 {
    const int *row = clusters + ingroup * groupcount;
    for(int i = 0; i < groupcount; ++i)

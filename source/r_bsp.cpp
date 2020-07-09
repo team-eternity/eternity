@@ -86,10 +86,10 @@ void R_ClearDrawSegs(void)
 // clip based on solidsegs because the first solidseg is from MININT, -1
 // to viewwindow.width, MAXINT
 
-typedef struct cliprange_s
+struct cliprange_t
 {
   int first, last;
-} cliprange_t;
+};
 
 
 // 1/11/98: Lee Killough

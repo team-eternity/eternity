@@ -31,13 +31,13 @@
 
 struct patch_t;
 
-typedef struct PatchInfo_s
+struct PatchInfo
 {
    patch_t *patch;
    int x, y;        // screen coordinates
    bool flipped;    // flipped?
    int drawstyle;   // drawing style (normal, tr, tl, trtl, etc.)
-} PatchInfo;
+};
 
 
 // VBuffer moved

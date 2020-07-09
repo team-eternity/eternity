@@ -44,7 +44,7 @@ enum
    VFONT_BIG_NUM,
 };
 
-typedef struct vfontfilter_s
+struct vfontfilter_t
 {
    unsigned int start;    // first character
    unsigned int end;      // last character
@@ -52,7 +52,7 @@ typedef struct vfontfilter_s
    unsigned int numchars; // number of chars
    const char   *mask;    // loading string
 
-} vfontfilter_t;
+};
 
 //
 // Linear lump wad reload data

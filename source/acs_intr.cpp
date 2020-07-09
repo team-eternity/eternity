@@ -753,7 +753,7 @@ void ACS_Exec()
 // ACS_ExecuteScriptI
 //
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
    ACSThreadInfo  info{mo, line, side, po};
@@ -764,7 +764,7 @@ bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptIAlways
 //
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
    ACSThreadInfo  info{mo, line, side, po};
@@ -775,7 +775,7 @@ bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *ar
 // ACS_ExecuteScriptIResult
 //
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                  uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                                  uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSThreadInfo info{mo, line, side, po};
    return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
@@ -785,7 +785,7 @@ uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
 // ACS_ExecuteScriptS
 //
 bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
@@ -797,7 +797,7 @@ bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptSAlways
 //
 bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
@@ -809,7 +809,7 @@ bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *
 // ACS_ExecuteScriptSResult
 //
 uint32_t ACS_ExecuteScriptSResult(const char *str, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSThreadInfo  info{mo, line, side, po};

@@ -58,21 +58,21 @@ typedef EHashTable<texture_t, ENCStringHashKey, &texture_t::name, &texture_t::li
 // and possibly other attributes.
 //
 
-typedef struct mappatch_s
+struct mappatch_t
 {
    int16_t originx;
    int16_t originy;
    int16_t patch;
    int16_t stepdir;         // unused in Doom but might be used in Phase 2 Boom
    int16_t colormap;        // unused in Doom but might be used in Phase 2 Boom
-} mappatch_t;
+};
 
 //
 // Texture definition.
 // A DOOM wall texture is a list of patches
 // which are to be combined in a predefined order.
 //
-typedef struct maptexture_s
+struct maptexture_t
 {
    char       name[8];
    int32_t    masked;
@@ -81,7 +81,7 @@ typedef struct maptexture_s
    int8_t     pad[4];       // unused in Doom but might be used in Boom Phase 2
    int16_t    patchcount;
    mappatch_t patches[1];
-} maptexture_t;
+};
 
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
@@ -217,7 +217,7 @@ enum
    texture_strife
 };
 
-typedef struct texturelump_s
+struct texturelump_t
 {
    int  lumpnum;     // number of lump
    int  maxoff;      // max offset, determined from size of lump
@@ -225,7 +225,7 @@ typedef struct texturelump_s
    byte *directory;  // directory pointer
    int  numtextures; // number of textures
    int  format;      // format of textures in this lump
-} texturelump_t;
+};
 
 // locations of pad[3] and pad[4] relative to start of maptexture_t
 #define MTEX_OFFSET_PAD3 18
@@ -324,11 +324,11 @@ static byte *R_ReadUnknownTexture(byte *rawtexture, maptexture_t &tt)
    return NULL;
 }
 
-typedef struct texturehandler_s
+struct texturehandler_t
 {
    byte *(*ReadTexture)(byte *, maptexture_t &tt);
    byte *(*ReadPatch)(byte *, mappatch_t &tp);
-} texturehandler_t;
+};
 
 static texturehandler_t TextureHandlers[] =
 {
@@ -1713,11 +1713,11 @@ int R_FindWall(const char *name)  // const added -- killough
 // convert old doom I levels so they will work under doom II
 //
 
-typedef struct doom1text_s
+struct doom1text_t
 {
    char doom1[9];
    char doom2[9];
-} doom1text_t;
+};
 
 doom1text_t *txtrconv;
 int numconvs = 0;

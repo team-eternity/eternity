@@ -63,11 +63,11 @@ extern char gamemapname[9];
 
 // Private Data
 
-typedef struct hipoint_s
+struct hipoint_t
 {
    int x;
    int y;
-} hipoint_t;
+};
 
 static hipoint_t hipoints[3][9] =
 {

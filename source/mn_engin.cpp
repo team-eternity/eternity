@@ -1384,7 +1384,7 @@ int MN_StringHeight(const char *s)
 // "Inherits" from menuwidget_t and extends it to contain a list of commands
 // or menu pages.
 //
-typedef struct box_widget_s
+struct box_widget_t
 {
    menuwidget_t widget;      // the actual menu widget object
 
@@ -1401,7 +1401,7 @@ typedef struct box_widget_s
    int        height;        // precalculated height
    int        selection_idx; // currently selected item index
    int        maxidx;        // precalculated maximum index value
-} box_widget_t;
+};
 
 //
 // MN_BoxSetDimensions

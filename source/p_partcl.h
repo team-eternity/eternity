@@ -107,12 +107,12 @@ enum
    P_EVENT_NUMEVENTS,
 };
 
-typedef struct particle_event_s
+struct particle_event_t
 {
    void (*func)(Mobj *);
    char name[16];
    int  enabled;
-} particle_event_t;
+};
 
 extern particle_event_t particleEvents[P_EVENT_NUMEVENTS];
 

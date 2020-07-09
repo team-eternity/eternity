@@ -1329,11 +1329,11 @@ enum
 };
 
 // tlstyle struct for R_DoomTLStyle
-typedef struct r_tlstyle_s
+struct r_tlstyle_t
 {
    const char *className; // name of the thingtype
    int actions[3];        // actions
-} r_tlstyle_t;
+};
 
 static r_tlstyle_t DoomThingStyles[] =
 {

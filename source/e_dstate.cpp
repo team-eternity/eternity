@@ -92,16 +92,16 @@ struct estatebuf_t
 // to the caller in the DSO's goto list, where they can be checked for super
 // state references or references to inherited or native state names
 //
-typedef struct internalgoto_s
+struct internalgoto_t
 {
    estatebuf_t *gotoInfo; // buffered state object with goto information
    int state;             // index into states[] that was assigned to this goto
-} internalgoto_t;
+};
 
 //
 // Parser state globals
 //
-typedef struct edecparser_s
+struct edecparser_t
 {
    // buffered states - accumulated in the principals pass and
    // iterated over during the main pass to drive generation
@@ -135,7 +135,7 @@ typedef struct edecparser_s
    internalgoto_t *internalgotos; // array of goto entries
    int numinternalgotos;          // current number of gotos
    int numinternalgotosalloc;     // number of gotos allocated
-} edecparser_t;
+};
 
 // The one and only Decorate State Parser object
 static edecparser_t DSP;
@@ -269,7 +269,7 @@ enum
 };
 
 // parser state structure
-typedef struct pstate_s
+struct pstate_t
 {
    int state; // state of the parser, as defined by the above enumeration
    qstring *linebuffer;  // qstring to use as line buffer
@@ -282,7 +282,7 @@ typedef struct pstate_s
 
    int tokentype;        // current token type, once decided upon
    int tokenerror;       // current token error code
-} pstate_t;
+};
 
 // tokenization
 
@@ -346,7 +346,7 @@ enum
 };
 
 // tokenizer state structure
-typedef struct tkstate_s
+struct tkstate_t
 {
    int state;        // current state of tokenizer
    int i;            // index into string
@@ -354,7 +354,7 @@ typedef struct tkstate_s
    int tokenerror;   // token error code
    qstring *line;    // line text
    qstring *token;   // token text
-} tkstate_t;
+};
 
 //=============================================================================
 //

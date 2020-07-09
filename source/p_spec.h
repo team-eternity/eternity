@@ -39,7 +39,7 @@
 struct line_t;
 class  Mobj;
 struct player_t;
-struct polyobj_s;
+struct polyobj_t;
 struct portal_t;
 class  SaveArchive;
 struct sector_t;
@@ -667,20 +667,18 @@ public:
 #pragma pack(push, 1)
 #endif
 
-struct switchlist_s
+struct switchlist_t
 {
   char    name1[9];
   char    name2[9];
   int16_t episode;
 }; 
 
-typedef struct switchlist_s switchlist_t;
-
 #if defined(_MSC_VER) || defined(__GNUC__)
 #pragma pack(pop)
 #endif
 
-typedef struct button_s
+struct button_t
 {
    int      line;
    int      side;
@@ -689,7 +687,7 @@ typedef struct button_s
    int      btimer;
    bool     dopopout;
    int switchindex;  // for sounds
-} button_t;
+};
 
 // haleyjd 04/17/08: made buttonlist/numbuttonsalloc external for savegames
 extern button_t *buttonlist;
@@ -945,7 +943,7 @@ enum
 };
 
 // haleyjd 05/04/04: extended data struct for gen/param doors
-typedef struct doordata_s
+struct doordata_t
 {
    int     flags;         // flags for action; use DDF values above.
    int     spac;          // valid IFF DDF_HAVESPAC is set
@@ -958,7 +956,7 @@ typedef struct doordata_s
    int     topcountdown;  // delay before initial activation
 
    Mobj   *thing;         // activating thing, if any
-} doordata_t;
+};
 
 // haleyjd 09/06/07: sector special transfer structure
 
@@ -1023,14 +1021,14 @@ public:
    // ID
    int tag;                   
    int olddirection;
-   struct ceilinglist *list;   // jff 2/22/98 copied from killough's plats
+   struct ceilinglist_t *list;   // jff 2/22/98 copied from killough's plats
 };
 
-typedef struct ceilinglist 
+struct ceilinglist_t
 {
-  CeilingThinker *ceiling; 
-  struct ceilinglist *next,**prev;
-} ceilinglist_t;
+  CeilingThinker *ceiling;
+  ceilinglist_t *next,**prev;
+};
 
 // haleyjd 01/09/12: ceiling data flags
 enum
@@ -1043,13 +1041,13 @@ enum
 };
 
 // haleyjd 10/05/05: extended data struct for parameterized ceilings
-typedef struct ceilingdata_s
-{   
+struct ceilingdata_t
+{
    int flags;        // combination of values above
    int trigger_type; // valid IFF (flags & CDF_HAVETRIGGERTYPE)
    int spac;         // valid IFF (flags & CDF_HAVESPAC)
-   
-   // generalized values   
+
+   // generalized values
    int crush;
    int direction;
    int speed_type;
@@ -1061,7 +1059,7 @@ typedef struct ceilingdata_s
    fixed_t height_value;
    fixed_t speed_value;
    fixed_t ceiling_gap;
-} ceilingdata_t;
+};
 
 // ioanch 20160305
 struct crusherdata_t
@@ -1133,13 +1131,13 @@ enum
 };
 
 // haleyjd 05/07/04: extended data struct for parameterized floors
-typedef struct floordata_s
-{   
+struct floordata_t
+{
    // generalized values
    int flags;
    int spac;         // valid IFF flags & FDF_HAVESPAC
    int trigger_type; // valid IFF flags & FDF_HAVETRIGGERTYPE
-   
+
    int crush;
    int direction;
    int speed_type;
@@ -1153,7 +1151,7 @@ typedef struct floordata_s
    int     adjust;        // valid IFF flags & FDF_HACKFORDESTHNF
    int     force_adjust;  // valid IFF flags & FDF_HACKFORDESTHNF
    bool    changeOnStart; // change texture and type immediately, not on landing
-} floordata_t;
+};
 
 // haleyjd 01/21/13: stairdata flags
 enum
@@ -1165,8 +1163,8 @@ enum
 };
 
 // haleyjd 10/06/05: extended data struct for parameterized stairs
-typedef struct stairdata_s
-{   
+struct stairdata_t
+{
    int flags;
    int spac;
    int trigger_type;
@@ -1182,7 +1180,7 @@ typedef struct stairdata_s
    int delay_value;
    int reset_value;
    bool crush; // does it crush
-} stairdata_t;
+};
 
 class ElevatorThinker : public SectorThinker
 {
@@ -1229,7 +1227,7 @@ public:
 };
 
 // haleyjd 10/21/06: data struct for param pillars
-typedef struct pillardata_s
+struct pillardata_t
 {
    fixed_t speed;  // speed of furthest moving surface
    fixed_t fdist;  // for open, how far to open floor
@@ -1237,7 +1235,7 @@ typedef struct pillardata_s
    fixed_t height; // for close, where to meet
    int     crush;  // amount of crushing damage
    int     tag;    // tag
-} pillardata_t;
+};
 
 // haleyjd 06/30/09: waggle floors
 class FloorWaggleThinker : public SectorThinker
@@ -1608,7 +1606,7 @@ bool P_UseSpecialLine(Mobj *thing, line_t *line, int side);
 void P_ShootSpecialLine(Mobj *thing, line_t *line, int side);
 
 // killough 11/98
-void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_s *poly); 
+void P_CrossSpecialLine(line_t *, int side, Mobj *thing, polyobj_t *poly); 
 // ioanch
 void P_PushSpecialLine(Mobj &thing, line_t &line, int side);
 
@@ -1705,7 +1703,7 @@ enum
    SPAC_PUSH,
 };
 
-extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po);
+extern void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po);
 
 #endif
 

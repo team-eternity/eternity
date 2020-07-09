@@ -91,14 +91,14 @@
 // Animating textures and planes
 // There is another anim_t used in wi_stuff, unrelated.
 //
-typedef struct anim_s
+struct anim_t
 {
   bool        istexture;
   int         picnum;
   int         basepic;
   int         numpics;
   int         speed;
-} anim_t;
+};
 
 //
 //      source animation definition
@@ -1053,7 +1053,7 @@ bool P_WasSecret(const sector_t *sec)
 //
 // haleyjd 06/01/04: starts a script from a linedef.
 //
-void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po)
+void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po)
 {
    constexpr uint32_t argc = NUMLINEARGS - 1;
    uint32_t args[argc];
