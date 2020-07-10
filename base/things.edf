@@ -116,7 +116,7 @@ thingtype MBFHelperDog : Mobj, 888, 140
 
 // SMMU Objects ----------------------------------------------------------------
 
-thingtype SMMUCameraSpot : Mobj, 5003, 162
+thingtype SMMUCameraSpot : Mobj, 5003, 1062
 {
   spawnstate  S_TNT1
   mass        10
@@ -159,7 +159,7 @@ thingtype EESkyboxCam : Mobj, 5006
   flags       NOBLOCKMAP|NOGRAVITY
 }
 
-thingtype EEParticleDrip : Mobj, 5007, 151
+thingtype EEParticleDrip : Mobj, 5007, 1051
 {
   spawnstate  S_TNT1
   radius      1.0
@@ -177,14 +177,14 @@ thingtype EERavenObj : Unknown, 5008
 
 // Hexen compatible map spots for scripting
 
-thingtype EEMapSpot : Mobj, 9001, 152
+thingtype EEMapSpot : Mobj, 9001, 1052
 {
   compatname  MapSpot
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEMapSpotGravity : Mobj, 9013, 153
+thingtype EEMapSpotGravity : Mobj, 9013, 1053
 {
   compatname  MapSpotGravity
   spawnstate  S_TNT1
@@ -210,25 +210,25 @@ thingtype EESoundEnvironment : Mobj, 9048
 
 // Polyobject spots
 
-thingtype EEPolyObjAnchor : Mobj, 9300, 154
+thingtype EEPolyObjAnchor : Mobj, 9300, 1054
 {
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEPolyObjSpawnSpot : Mobj, 9301, 155
+thingtype EEPolyObjSpawnSpot : Mobj, 9301, 1055
 {
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEPolyObjSpawnSpotCrush : Mobj, 9302, 156
+thingtype EEPolyObjSpawnSpotCrush : Mobj, 9302, 1056
 {
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
 }
 
-thingtype EEPolyObjSpawnSpotDamage : Mobj, 9303, 157
+thingtype EEPolyObjSpawnSpotDamage : Mobj, 9303, 1057
 {
   spawnstate  S_TNT1
   cflags      NOBLOCKMAP|NOSECTOR|NOGRAVITY
@@ -245,7 +245,7 @@ thingtype EEAmbience : Mobj, 14065
 
 // Music Changer
 
-thingtype EEMusicChanger : Mobj, 14165
+thingtype EEMusicChanger : Mobj, 145
 {
   compatname MusicChanger
   spawnstate S_TNT1
@@ -263,14 +263,14 @@ thingtype DoomBuilderCameraSpot : Unknown
 
 // Terrain Objects
 
-thingtype EETerrainLavaSplash : Mobj, -1, 145
+thingtype EETerrainLavaSplash : Mobj, -1, 1045
 {
   compatname  LavaSplash
   spawnstate  S_LAVASPLASH1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
-thingtype EETerrainLavaSmoke : Mobj, -1, 146
+thingtype EETerrainLavaSmoke : Mobj, -1, 1046
 {
   compatname   LavaSmoke
   spawnstate   S_LAVASMOKE1
@@ -279,7 +279,7 @@ thingtype EETerrainLavaSmoke : Mobj, -1, 146
 
 }
 
-thingtype EETerrainWaterSplash : Mobj, -1, 147
+thingtype EETerrainWaterSplash : Mobj, -1, 1047
 {
   compatname  WaterSplash
   spawnstate  S_SPLASH1
@@ -289,14 +289,14 @@ thingtype EETerrainWaterSplash : Mobj, -1, 147
   cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
 }
 
-thingtype EETerrainWaterBase : Mobj, -1, 148
+thingtype EETerrainWaterBase : Mobj, -1, 1048
 {
   compatname  WaterSplashBase
   spawnstate  S_SPLASHBASE1
   cflags      NOBLOCKMAP|NOGRAVITY|NOSPLASH
 }
 
-thingtype EETerrainSludgeChunk : Mobj, -1, 149
+thingtype EETerrainSludgeChunk : Mobj, -1, 1049
 {
   compatname  SludgeChunk
   spawnstate  S_SLUDGE1
@@ -307,7 +307,7 @@ thingtype EETerrainSludgeChunk : Mobj, -1, 149
   cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
 }
 
-thingtype EETerrainSludgeBase : Mobj, -1, 150
+thingtype EETerrainSludgeBase : Mobj, -1, 1050
 {
   compatname  SludgeSplash
   spawnstate  S_SLUDGEBASE1

@@ -244,9 +244,6 @@ enum
   MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
   MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
 
-  MT_CAMERA = 162, // SMMU camera spot
-  MT_PLASMA3,      // haleyjd: for burst bfg
-
   // haleyjd 10/08/02: Heretic things
   MT_POD = 305,
   MT_PODGOO,
@@ -335,6 +332,9 @@ enum
   MT_FOGPATCHL,
   
 // End Eternity TC New Things
+
+  MT_CAMERA = 1062, // SMMU camera spot
+  MT_PLASMA3,       // haleyjd: for burst bfg
 
   // haleyjd: NUMMOBJTYPES is a variable now
   //NUMMOBJTYPES  // Counter of how many there are
