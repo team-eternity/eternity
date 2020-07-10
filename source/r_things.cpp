@@ -919,7 +919,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if(roty < 1.0f)
       return;
 
-   if(portalrender.active && portalrender.barrier.nonzero())
+   if(portalrender.active && portalrender.fbarrier)
    {
       v2fixed_t offsetpos = { thing->x, thing->y };
       if(delta)
@@ -927,7 +927,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          offsetpos.x += delta->x;
          offsetpos.y += delta->y;
       }
-      if(P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &portalrender.barrier) == 0)
+      if(portalrender.fbarrier.drill(M_FixedToFloat(offsetpos.x), M_FixedToFloat(offsetpos.y)) <= 0)
          return;
    }
 

@@ -711,9 +711,9 @@ void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
 static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *clipx2)
 {
    I_Assert(portalrender.active, "R_ClipInitialSegRange: no portal active!\n");
-   // NOTE: we need this tolerance because R_StoreWallRange recomputes segclip.diststep so it's
-   // different from what we have now! And we can't simulate it in advance
-   static const float DISTANCE_TOLERANCE = 0.01f;
+   // NOTE: for portal fronts we need to be absolutely sure they never get redrawn if too close to
+   // the window, otherwise we risk infinite recursion!
+   static const float DISTANCE_TOLERANCE = 0.25f;
 
    // SoM: Quickly reject the seg based on the bounding box of the portal
    if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
@@ -732,25 +732,13 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
    // Check for portal drawing
    if(portalrender.dist)
    {
-      float ddists[2];
-      ddists[0] = 1.0f / (seg.dist + seg.diststep * *clipx1);
-      ddists[1] = 1.0f / (seg.dist2 - seg.diststep * *clipx2);
-      float fdists[2][2];
-      fdists[0][0] = fabsf(ddists[0]);
-      fdists[0][1] = fabsf(portalrender.dist[*start]);
-      fdists[1][0] = fabsf(ddists[1]);
-      fdists[1][1] = fabsf(portalrender.dist[*stop]);
-      float tol[2];
-      tol[0] = DISTANCE_TOLERANCE * (fdists[0][0] > fdists[0][1] ? fdists[0][0] : fdists[0][1]);
-      tol[1] = DISTANCE_TOLERANCE * (fdists[1][0] > fdists[1][1] ? fdists[1][0] : fdists[1][1]);
-
-
       float deltadists[2];
-      deltadists[0] = ddists[0] - portalrender.dist[*start];
-      deltadists[1] = ddists[1] - portalrender.dist[*stop];
-      // Reject segs whose both endpoints (either on portal or themselves) are drawn in front of window
-      // with some error. Also reject them if they're by "tolerance" even behind the portal.
-      if(deltadists[0] < tol[0] && deltadists[1] < tol[1])
+      deltadists[0] = 1.0f / (seg.dist + seg.diststep * *clipx1) - portalrender.dist[*start];
+      deltadists[1] = 1.0f / (seg.dist2 - seg.diststep * *clipx2) - portalrender.dist[*stop];
+
+      // Only apply the nonzero buffer if portals. Otherwise 0.
+      float threshold = seg.l_window || seg.t_window || seg.b_window ? DISTANCE_TOLERANCE : 0;
+      if(deltadists[0] < threshold && deltadists[1] < threshold)
          return false;
    }
 
@@ -1943,9 +1931,9 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    float floorx1, floorx2;
    const vertex_t *v1, *v2;
 
-   if(portalrender.active && portalrender.barrier.nonzero() &&
-      P_PointOnDivlineSidePrecise(line->v1->x, line->v1->y, &portalrender.barrier) == 0 &&
-      P_PointOnDivlineSidePrecise(line->v2->x, line->v2->y, &portalrender.barrier) == 0)
+   if(portalrender.active && portalrender.fbarrier && 
+      portalrender.fbarrier.drill(line->v1->fx, line->v1->fy) <= 0 && 
+      portalrender.fbarrier.drill(line->v2->fx, line->v2->fy) <= 0)
    {
       return;
    }
@@ -2339,6 +2327,22 @@ static const int checkcoord[12][4] = // killough -- static const
 };
 
 //
+// True if box lies entirely in front
+//
+static bool R_boxInRight(const fdivline_t &dl, const fixed_t box[4])
+{
+   if(dl.dv.x > 0)
+   {
+      if(dl.dv.y > 0)
+         return dl.drill(M_FixedToFloat(box[BOXLEFT]), M_FixedToFloat(box[BOXTOP])) < 0;
+      return dl.drill(M_FixedToFloat(box[BOXRIGHT]), M_FixedToFloat(box[BOXTOP])) < 0;
+   }
+   if(dl.dv.y > 0)
+      return dl.drill(M_FixedToFloat(box[BOXLEFT]), M_FixedToFloat(box[BOXBOTTOM])) < 0;
+   return dl.drill(M_FixedToFloat(box[BOXRIGHT]), M_FixedToFloat(box[BOXBOTTOM])) < 0;
+}
+
+//
 // R_CheckBBox
 //
 // Checks BSP node/subtree bounding box.
@@ -2353,8 +2357,7 @@ static bool R_CheckBBox(const fixed_t *bspcoord) // killough 1/28/98: static
    const cliprange_t *start;
 
    // Early reject bounding boxes in front of line
-   if(portalrender.active && portalrender.barrier.nonzero() &&
-      P_BoxOnDivlineSidePrecise(bspcoord, portalrender.barrier) == 0)
+   if(portalrender.active && portalrender.fbarrier && R_boxInRight(portalrender.fbarrier, bspcoord))
    {
       return false;
    }

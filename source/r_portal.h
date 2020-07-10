@@ -30,6 +30,7 @@
 #include "doomdef.h"
 #include "p_maputl.h"
 #include "r_defs.h"
+#include "r_main.h"
 
 #define SECTOR_PORTAL_LOOP_PROTECTION 128
 
@@ -311,7 +312,7 @@ struct portalrender_t
    int   minx, maxx;
    float miny, maxy;
    const float *dist;   // shall point to window->dist. Can be NULL to mark "ignore" (so check it!)
-   divline_t barrier;
+   fdivline_t fbarrier;
 
    pwindow_t *w;
 

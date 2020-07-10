@@ -28,6 +28,7 @@
 
 #include "tables.h"
 
+#include "m_vector.h"
 // haleyjd 12/15/2010: Lighting data is required
 #include "r_lighting.h"
 
@@ -83,6 +84,37 @@ struct node_t;
 struct seg_t;
 struct subsector_t;
 struct sector_t;
+
+//
+// Floating-point version of divline
+//
+struct fdivline_t
+{
+   v2float_t v, dv;
+
+   //
+   // Quick way to check against null
+   //
+   operator bool() const
+   {
+      return v.x && v.y && dv.x && dv.y;
+   }
+
+   //
+   // Get the Z of cross product of this with point relative to my origin
+   // Positive is point is to the left, negative if to the left
+   //
+   float drill(float x, float y) const
+   {
+      // i  j  k
+      // dx dy 0
+      // x  y  0
+      // means xdy - ydx
+      x -= v.x;
+      y -= v.y;
+      return dv.x * y - x * dv.y;
+   }
+};
 
 int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
 int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);

@@ -864,7 +864,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
    portalrender.dist = nullptr;  // Set to NULL to ignore!
-   portalrender.barrier = {};
+   portalrender.fbarrier = {};
 
    ++validcount;
    R_SetMaskedSilhouette(ceilingclip, floorclip);
@@ -959,7 +959,7 @@ static void R_ShowTainted(pwindow_t *window)
 //
 // Given portalrender's closestdist and view positioning, compute the barrier divline
 //
-static divline_t R_computeRenderBarrier(float closestdist)
+static fdivline_t R_computeRenderBarrier(float closestdist)
 {
    I_Assert(closestdist != FLT_MAX, "Infinite distance %g!\n", closestdist);
 
@@ -970,7 +970,7 @@ static divline_t R_computeRenderBarrier(float closestdist)
    // We know dirdist, view.cos and view.sin so we already have the equation:
    // view.sin * dx + view.cos * dy - dirdist = 0
    v2float_t v1, v2;
-   divline_t dl;  // the final fixed_t return
+   fdivline_t dl;  // the final fixed_t return
    // Handle special case
    if(!view.cos)
    {
@@ -982,10 +982,9 @@ static divline_t R_computeRenderBarrier(float closestdist)
       v2.x = v1.x;
       v2.y = v1.x > 0 ? -16.f : 16.f;
 
-      dl.x = M_FloatToFixed(v1.x);
-      dl.y = M_FloatToFixed(v1.y);
-      dl.dx = M_FloatToFixed(v2.x - v1.x);
-      dl.dy = M_FloatToFixed(v2.y - v1.y);
+      dl.v = v1;
+      dl.dv.x = v2.x - v1.x;
+      dl.dv.y = v2.y - v1.y;
    }
    else
    {
@@ -997,23 +996,22 @@ static divline_t R_computeRenderBarrier(float closestdist)
 
       if(v1.y * v2.x >= 0)
       {
-         dl.x = M_FloatToFixed(v1.x);
-         dl.y = M_FloatToFixed(v1.y);
-         dl.dx = M_FloatToFixed(v2.x - v1.x);
-         dl.dy = M_FloatToFixed(v2.y - v1.y);
+         dl.v = v1;
+         dl.dv.x = v2.x - v1.x;
+         dl.dv.y = v2.y - v1.y;
       }
       else
       {
-         dl.x = M_FloatToFixed(v2.x);
-         dl.y = M_FloatToFixed(v2.y);
-         dl.dx = M_FloatToFixed(v1.x - v2.x);
-         dl.dy = M_FloatToFixed(v1.y - v2.y);
+         dl.v = v2;
+         dl.dv.x = v1.x - v2.x;
+         dl.dv.y = v1.y - v2.y;
       }
    }
 
    // Move it relative to view
-   dl.x += viewx;
-   dl.y += viewy;
+   dl.v.x += view.x;
+   dl.v.y += view.y;
+
    return dl;
 }
 
@@ -1105,7 +1103,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    view.sin = sinf(view.angle);
    view.cos = cosf(view.angle);
 
-   portalrender.barrier = R_computeRenderBarrier(window->closestdist);
+   portalrender.fbarrier = R_computeRenderBarrier(window->closestdist);
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
@@ -1220,7 +1218,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
       view.cos = cosf(view.angle);
    }
 
-   portalrender.barrier = R_computeRenderBarrier(window->closestdist);
+   portalrender.fbarrier = R_computeRenderBarrier(window->closestdist);
 
    R_IncrementFrameid();
    R_RenderBSPNode(numnodes - 1);
