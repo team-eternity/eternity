@@ -52,11 +52,14 @@ static HALGamePad *activePad;
 static gamePadChangeCallback_t gamePadChangeCallback;
 
 // Generic sensitivity values, for drivers that need them
-int i_joysticksens;
+double i_joyturnsens;
+int    i_joysticksens;
 
 // haleyjd 04/15/02: joystick sensitivity variables
-VARIABLE_INT(i_joysticksens, NULL, 0, 32767, NULL);
+VARIABLE_FLOAT(i_joyturnsens, nullptr, 0.0, 100.0);
+VARIABLE_INT(i_joysticksens, nullptr, 0, 32767, nullptr);
 
+CONSOLE_VARIABLE(i_joyturnsens, i_joyturnsens, 0) {}
 CONSOLE_VARIABLE(i_joysticksens, i_joysticksens, 0) {}
 
 //=============================================================================
@@ -142,7 +145,7 @@ static halpaddriveritem_t halPadDriverTable[] =
 #ifdef _SDL_VER
       &i_sdlGamePadDriver,
 #else
-      NULL,
+      nullptr,
 #endif
       false
    },
@@ -154,30 +157,30 @@ static halpaddriveritem_t halPadDriverTable[] =
 #ifdef EE_FEATURE_XINPUT
       &i_xinputGamePadDriver,
 #else
-      NULL,
+      nullptr,
 #endif
       false
    },
 
    // Terminating entry
-   { -1, NULL, NULL, false }
+   { -1, nullptr, nullptr, false }
 };
 
 //
 // I_SelectDefaultGamePad
 //
 // Select the gamepad configured in the configuration file, if it can be
-// found. Otherwise, nothing will happen and activePad will remain NULL.
+// found. Otherwise, nothing will happen and activePad will remain nullptr.
 //
 bool I_SelectDefaultGamePad()
 {
-   HALGamePad *pad = NULL;
+   HALGamePad *pad = nullptr;
 
    // Deselect any active device first.
    if(activePad)
    {
       activePad->deselect();
-      activePad = NULL;
+      activePad = nullptr;
    }
 
    if(i_joysticknum >= 0)
@@ -205,7 +208,7 @@ bool I_SelectDefaultGamePad()
    if(gamePadChangeCallback)
       gamePadChangeCallback();
 
-   return (activePad != NULL);
+   return (activePad != nullptr);
 }
 
 //
@@ -290,7 +293,7 @@ void I_ShutdownGamePads()
 // I_PollActiveGamePad
 //
 // Get input from the currently active gamepad, if any.
-// Returns NULL if there is no device active.
+// Returns nullptr if there is no device active.
 //
 HALGamePad::padstate_t *I_PollActiveGamePad()
 {
@@ -300,7 +303,7 @@ HALGamePad::padstate_t *I_PollActiveGamePad()
       return &activePad->state;
    }
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -410,7 +413,7 @@ void I_ClearHaptics()
       hhi->clearEffects();
 }
 
-VARIABLE_TOGGLE(i_forcefeedback, NULL, onoff);
+VARIABLE_TOGGLE(i_forcefeedback, nullptr, onoff);
 CONSOLE_VARIABLE(i_forcefeedback, i_forcefeedback, 0)
 {
    // stop any running effects immediately if false

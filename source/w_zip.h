@@ -99,7 +99,7 @@ protected:
 
 public:
    ZipFile() 
-      : ZoneObject(), lumps(NULL), numLumps(0), file(NULL), links(), wads(NULL) 
+      : ZoneObject(), lumps(nullptr), numLumps(0), file(nullptr), links(), wads(nullptr) 
    {
    }
    

@@ -105,7 +105,7 @@ void QuakeThinker::Think()
             {
                if(P_Random(pr_quake) < 50)
                {
-                  P_DamageMobj(mo, NULL, NULL, P_Random(pr_quakedmg) % 8 + 1,
+                  P_DamageMobj(mo, nullptr, nullptr, P_Random(pr_quakedmg) % 8 + 1,
                                MOD_QUAKE);
                }
                thrustangle = (359 * P_Random(pr_quake) / 255) * ANGLE_1;
@@ -136,7 +136,7 @@ void QuakeThinker::serialize(SaveArchive &arc)
 //
 bool P_StartQuake(int *args, Mobj *activator)
 {
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    bool ret = false;
 
    while((mo = P_FindMobjFromTID(args[4], mo, activator)))

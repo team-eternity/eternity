@@ -64,7 +64,7 @@ visplane_t *R_FindPlane(fixed_t height,
                         pslope_t *slope,     // SoM: slopes
                         int blendflags,      // SoM: Blending flags for the plane
                         byte opacity,        // SoM: Opacity for translucent planes
-                        planehash_t *table); // SoM: Table. Can be NULL
+                        planehash_t *table); // SoM: Table. Can be nullptr
 
 visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop);
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);

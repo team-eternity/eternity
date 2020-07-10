@@ -82,8 +82,8 @@ static PODCollection<portalentry_t> gPortals;   // defined portals
 // Portal Spawning and Management
 //
 
-static portal_t *portals = NULL, *last = NULL;
-static pwindow_t *unusedhead = NULL, *windowhead = NULL, *windowlast = NULL;
+static portal_t *portals = nullptr, *last = nullptr;
+static pwindow_t *unusedhead = nullptr, *windowhead = nullptr, *windowlast = nullptr;
 
 //
 // VALLOCATION(portals)
@@ -99,7 +99,7 @@ VALLOCATION(portals)
       if((hash = p->poverlay))
       {
          for(int i = 0; i < hash->chaincount; i++)
-            hash->chains[i] = NULL;
+            hash->chains[i] = nullptr;
       }
    }
 
@@ -145,7 +145,7 @@ VALLOCATION(portals)
       rover = next;
    }
 
-   windowhead = windowlast = unusedhead = NULL;   
+   windowhead = windowlast = unusedhead = nullptr;   
 }
 
 // This flag is set when a portal is being rendered. This flag is checked in 
@@ -175,11 +175,11 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
       window->dist[i]   = FLT_MAX;
    }
 
-   window->child    = NULL;
-   window->next     = NULL;
-   window->portal   = NULL;
+   window->child    = nullptr;
+   window->next     = nullptr;
+   window->portal   = nullptr;
    window->func     = R_RenderPortalNOP;
-   window->clipfunc = NULL;
+   window->clipfunc = nullptr;
    window->vx = window->vy = window->vz = 0;
    window->vangle = 0;
    if(!noplanes)
@@ -204,7 +204,7 @@ static pwindow_t *newPortalWindow(bool noplanes = false)
    {
       ret = estructalloctag(pwindow_t, 1, PU_LEVEL);
       
-      float *buf  = emalloctag(float *, 3*video.width*sizeof(float), PU_LEVEL, NULL);
+      float *buf  = emalloctag(float *, 3*video.width*sizeof(float), PU_LEVEL, nullptr);
       ret->top    = buf;
       ret->bottom = buf + video.width;
       ret->dist   = buf + 2 * video.width;
@@ -593,8 +593,8 @@ portal_t *R_GetPlanePortal(const sector_t *sector)
 //
 void R_InitPortals()
 {
-   portals = last = NULL;
-   windowhead = unusedhead = windowlast = NULL;
+   portals = last = nullptr;
+   windowhead = unusedhead = windowlast = nullptr;
    R_MapInitOverlaySets();
 
    gPortals.clear(); // clear the portal list
@@ -898,7 +898,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
    
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window : NULL);
+   R_PushPost(true, window->head == window ? window : nullptr);
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1109,7 +1109,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window : NULL);
+   R_PushPost(true, window->head == window ? window : nullptr);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1224,7 +1224,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    R_RenderBSPNode(numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window : NULL);
+   R_PushPost(true, window->head == window ? window : nullptr);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1276,15 +1276,15 @@ static void R_SetPortalFunction(pwindow_t *window)
    {
    case R_PLANE:
       window->func     = R_RenderPlanePortal;
-      window->clipfunc = NULL;
+      window->clipfunc = nullptr;
       break;
    case R_HORIZON:
       window->func     = R_RenderHorizonPortal;
-      window->clipfunc = NULL;
+      window->clipfunc = nullptr;
       break;
    case R_SKYBOX:
       window->func     = R_RenderSkyboxPortal;
-      window->clipfunc = NULL;
+      window->clipfunc = nullptr;
       break;
    case R_ANCHORED:
    case R_TWOWAY:
@@ -1297,7 +1297,7 @@ static void R_SetPortalFunction(pwindow_t *window)
       break;
    default:
       window->func     = R_RenderPortalNOP;
-      window->clipfunc = NULL;
+      window->clipfunc = nullptr;
       break;
    }
 }
@@ -1401,9 +1401,9 @@ void R_RenderPortals()
          windowhead->func(windowhead);
 
       portalrender.active = false;
-      portalrender.w = NULL;
-      portalrender.segClipFunc = NULL;
-//      portalrender.overlay = NULL;
+      portalrender.w = nullptr;
+      portalrender.segClipFunc = nullptr;
+//      portalrender.overlay = nullptr;
 
       // free the window structs
       w = windowhead->child;
@@ -1412,13 +1412,13 @@ void R_RenderPortals()
          w->next = unusedhead;
          unusedhead = w;
          w = w->child;
-         unusedhead->child = NULL;
+         unusedhead->child = nullptr;
       }
 
       w = windowhead->next;
       windowhead->next = unusedhead;
       unusedhead = windowhead;
-      unusedhead->child = NULL;
+      unusedhead->child = nullptr;
 
       windowhead = w;
    }

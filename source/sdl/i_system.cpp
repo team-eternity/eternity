@@ -391,17 +391,17 @@ int I_CheckAbort()
  *************************/
 int leds_always_off;
 
-VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
+VARIABLE_BOOLEAN(leds_always_off, nullptr,  yesno);
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 #ifdef _SDL_VER
-VARIABLE_BOOLEAN(waitAtExit, NULL, yesno);
+VARIABLE_BOOLEAN(waitAtExit, nullptr, yesno);
 CONSOLE_VARIABLE(i_waitatexit, waitAtExit, 0) {}
 
-VARIABLE_BOOLEAN(showendoom, NULL, yesno);
+VARIABLE_BOOLEAN(showendoom, nullptr, yesno);
 CONSOLE_VARIABLE(i_showendoom, showendoom, 0) {}
 
-VARIABLE_INT(endoomdelay, NULL, 35, 3500, NULL);
+VARIABLE_INT(endoomdelay, nullptr, 35, 3500, nullptr);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 

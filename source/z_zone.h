@@ -145,6 +145,9 @@ void  Z_SysFree(void *p);
 #define erealloc(type, p, n) \
    static_cast<type>((Z_Realloc)(p, n, PU_STATIC, 0, __FILE__, __LINE__))
 
+#define erealloctag(type, p, n, tag, user) \
+   static_cast<type>((Z_Realloc)(p, n, tag, user, __FILE__, __LINE__))
+
 #define estructalloc(type, n) \
    static_cast<type *>((Z_Calloc)(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
 
@@ -167,7 +170,7 @@ void  Z_SysFree(void *p);
    type name;                      \
    memset(&name, 0, sizeof(name))
 
-// Classify a string as either lengthful (non-NULL, not zero length), or empty
+// Classify a string as either lengthful (non-nullptr, not zero length), or empty
 #define estrnonempty(str) ((str) && *(str))
 #define estrempty(str)    (!estrnonempty((str)))
 

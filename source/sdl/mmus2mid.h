@@ -50,14 +50,14 @@ typedef uint32_t ULONG;   // a four-byte int (assumes int 4 bytes)
 #ifndef DJGPP // proff: This is from allegro.h
 #define MIDI_TRACKS           32       
 
-typedef struct MIDI                    /* a midi file */
+struct MIDI                    /* a midi file */
 {
    int divisions;                      /* number of ticks per quarter note */
    struct {
       unsigned char *data;             /* MIDI message stream */
       size_t len;                      /* length of the track data */
-   } track[MIDI_TRACKS]; 
-} MIDI;
+   } track[MIDI_TRACKS];
+};
 #endif // DJGPP
 
 bool mmuscheckformat(UBYTE *mus, int size);

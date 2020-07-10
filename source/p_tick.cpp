@@ -94,7 +94,7 @@ void Thinker::addToThreadedList(int tclass)
    Thinker *th;
    
    // Remove from current thread, if in one -- haleyjd: from PrBoom
-   if((th = this->cnext) != NULL)
+   if((th = this->cnext) != nullptr)
       (th->cprev = this->cprev)->cnext = th;
 
    // Add to appropriate thread

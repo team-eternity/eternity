@@ -135,7 +135,7 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 //
 // The first argument is the cheat code.
 //
-// The second argument is its DEH name, or NULL if it's not supported by -deh.
+// The second argument is its DEH name, or nullptr if it's not supported by -deh.
 //
 // The third argument is a combination of the bitmasks:
 // { always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh },
@@ -223,7 +223,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "stat", -1, always, cheat_printstats, 0 },
 #endif
 
-   { NULL, -1, 0, NULL, 0 } // end-of-list marker
+   { nullptr, -1, 0, nullptr, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -539,7 +539,7 @@ static void cheat_keyx(const void *arg)
 static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
-   const char *msg = NULL;
+   const char *msg = nullptr;
 
    if(key >= GameModeInfo->numHUDKeys)
       return;
@@ -740,7 +740,7 @@ static void cheat_htickill(const void *arg)
 //
 static void cheat_hticiddqd(const void *arg)
 {
-   P_DamageMobj(plyr->mo, NULL, plyr->mo, 10000, MOD_UNKNOWN);
+   P_DamageMobj(plyr->mo, nullptr, plyr->mo, 10000, MOD_UNKNOWN);
    player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
 }
 
@@ -1139,7 +1139,7 @@ static int M_NukeMonsters()
             if(mo->health > 0)
             {
                killcount++;
-               P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, 10000, MOD_UNKNOWN);
             }
 
             // haleyjd: made behavior customizable
@@ -1149,8 +1149,8 @@ static int M_NukeMonsters()
 
                actionargs.actiontype = actionargs_t::MOBJFRAME;
                actionargs.actor      = mo;
-               actionargs.args       = NULL;
-               actionargs.pspr       = NULL;
+               actionargs.args       = nullptr;
+               actionargs.pspr       = nullptr;
 
                mi->nukespec(&actionargs);
             }

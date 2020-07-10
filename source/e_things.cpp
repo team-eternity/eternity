@@ -324,13 +324,13 @@ static const char *BasicTypeNames[] =
 
 #define NUMBASICTYPES earrlen(BasicTypeNames)
 
-typedef struct basicttype_s
+struct basicttype_t
 {
    unsigned int flags;     // goes to: mi->flags
    unsigned int flags2;    //        : mi->flags2
    unsigned int flags3;    //        : mi->flags3
    const char *spawnstate; //        : mi->spawnstate
-} basicttype_t;
+};
 
 static basicttype_t BasicThingTypes[] =
 {
@@ -447,9 +447,9 @@ static basicttype_t BasicThingTypes[] =
 // title properties
 static cfg_opt_t thing_tprops[] =
 {
-   CFG_STR(ITEM_TNG_TITLE_SUPER,      0, CFGF_NONE),
-   CFG_INT(ITEM_TNG_TITLE_DOOMEDNUM, -1, CFGF_NONE),
-   CFG_INT(ITEM_TNG_TITLE_DEHNUM,    -1, CFGF_NONE),
+   CFG_STR(ITEM_TNG_TITLE_SUPER,     nullptr, CFGF_NONE),
+   CFG_INT(ITEM_TNG_TITLE_DOOMEDNUM, -1,      CFGF_NONE),
+   CFG_INT(ITEM_TNG_TITLE_DEHNUM,    -1,      CFGF_NONE),
    CFG_END()
 };
 
@@ -504,11 +504,11 @@ static cfg_opt_t bloodbeh_opts[] =
 
 static cfg_opt_t tngpfx_opts[] =
 {
-   CFG_STR(ITEM_TNG_PFX_EFFECTS,   0,          CFGF_LIST),
-   CFG_STR(ITEM_TNG_PFX_CHANGEWPN, NULL,       CFGF_NONE),
-   CFG_STR(ITEM_TNG_PFX_MSG,       NULL,       CFGF_NONE),
-   CFG_STR(ITEM_TNG_PFX_SOUND,     NULL,       CFGF_NONE),
-   CFG_STR(ITEM_TNG_PFX_FLAGS,     NULL,       CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_EFFECTS,   nullptr,    CFGF_LIST),
+   CFG_STR(ITEM_TNG_PFX_CHANGEWPN, nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_MSG,       nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_SOUND,     nullptr,    CFGF_NONE),
+   CFG_STR(ITEM_TNG_PFX_FLAGS,     nullptr,    CFGF_NONE),
 
    CFG_END()
 };
@@ -525,15 +525,15 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_SPAWNSTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_SEESTATE,        "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_PAINSTATE,       "S_NULL",      CFGF_NONE), \
-   CFG_STR(ITEM_TNG_PAINSTATES,      0,             CFGF_LIST), \
-   CFG_STR(ITEM_TNG_PNSTATESADD,     0,             CFGF_LIST), \
-   CFG_STR(ITEM_TNG_PNSTATESREM,     0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PAINSTATES,      nullptr,       CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PNSTATESADD,     nullptr,       CFGF_LIST), \
+   CFG_STR(ITEM_TNG_PNSTATESREM,     nullptr,       CFGF_LIST), \
    CFG_STR(ITEM_TNG_MELEESTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_MISSILESTATE,    "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEATHSTATE,      "S_NULL",      CFGF_NONE), \
-   CFG_STR(ITEM_TNG_DEATHSTATES,     0,             CFGF_LIST), \
-   CFG_STR(ITEM_TNG_DTHSTATESADD,    0,             CFGF_LIST), \
-   CFG_STR(ITEM_TNG_DTHSTATESREM,    0,             CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DEATHSTATES,     nullptr,       CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DTHSTATESADD,    nullptr,       CFGF_LIST), \
+   CFG_STR(ITEM_TNG_DTHSTATESREM,    nullptr,       CFGF_LIST), \
    CFG_STR(ITEM_TNG_XDEATHSTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_RAISESTATE,      "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_HEALSTATE,       "S_NULL",      CFGF_NONE), \
@@ -541,7 +541,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_ACTIVESTATE,     "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_INACTIVESTATE,   "S_NULL",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_FIRSTDECSTATE,   nullptr,       CFGF_NONE), \
-   CFG_STR(ITEM_TNG_STATES,          0,             CFGF_NONE), \
+   CFG_STR(ITEM_TNG_STATES,          nullptr,       CFGF_NONE), \
    CFG_STR(ITEM_TNG_SEESOUND,        "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_ATKSOUND,        "none",        CFGF_NONE), \
    CFG_STR(ITEM_TNG_PAINSOUND,       "none",        CFGF_NONE), \
@@ -610,14 +610,14 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
 
 cfg_opt_t edf_thing_opts[] =
 {
-   CFG_TPROPS(thing_tprops,       CFGF_NOCASE),
-   CFG_STR(ITEM_TNG_INHERITS,  0, CFGF_NONE),
+   CFG_TPROPS(thing_tprops,            CFGF_NOCASE),
+   CFG_STR(ITEM_TNG_INHERITS, nullptr, CFGF_NONE),
    THINGTYPE_FIELDS
 };
 
 cfg_opt_t edf_tdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    THINGTYPE_FIELDS
 };
 
@@ -646,8 +646,8 @@ static dehflagset_t tgroup_kindset =
 //
 cfg_opt_t edf_tgroup_opts[] =
 {
-   CFG_STR(ITEM_TGROUP_FLAGS, "", CFGF_NONE),
-   CFG_STR(ITEM_TGROUP_TYPES, 0, CFGF_LIST),
+   CFG_STR(ITEM_TGROUP_FLAGS, "",      CFGF_NONE),
+   CFG_STR(ITEM_TGROUP_TYPES, nullptr, CFGF_LIST),
    CFG_END()
 };
 

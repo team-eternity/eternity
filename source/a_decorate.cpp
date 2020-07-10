@@ -97,7 +97,7 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
 void A_ClearSkin(actionargs_t *actionargs)
 {
    Mobj *mo   = actionargs->actor;
-   mo->skin   = NULL;
+   mo->skin   = nullptr;
    mo->sprite = mo->state->sprite;
 }
 

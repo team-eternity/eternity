@@ -238,7 +238,7 @@ bool P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj)
 // P_GetThingUnder
 //
 // If we're standing on something, this function will return it. Otherwise,
-// it'll return NULL.
+// it'll return nullptr.
 //
 Mobj *P_GetThingUnder(Mobj *mo)
 {
@@ -247,7 +247,7 @@ Mobj *P_GetThingUnder(Mobj *mo)
 
    // fake the move, then test
    P_ZMovementTest(mo);
-   testz_mobj = NULL;
+   testz_mobj = nullptr;
    P_TestMobjZ(mo, clip);
 
    // restore z
@@ -273,7 +273,7 @@ static bool P_SBlockThingsIterator(int x, int y, bool (*func)(Mobj *),
    if(x < 0 || y < 0 || x >= bmapwidth || y >= bmapheight)
       return true;
    
-   if(actor == NULL)
+   if(actor == nullptr)
       mobj = blocklinks[y * bmapwidth + x];
    else
       mobj = actor->bnext;
@@ -463,7 +463,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = NULL; // killough 8/1/98
+   clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
    // Whether object can get out of a sticky situation:
    clip.unstuck = thing->player &&        // only players
@@ -523,9 +523,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    bbox[BOXBOTTOM] = clip.bbox[BOXBOTTOM] - MAXRADIUS;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + MAXRADIUS;
    
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
-   thingblocker = NULL;
-   stepthing    = NULL;
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
+   thingblocker = nullptr;
+   stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
    if(thing->player)   
@@ -537,7 +537,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
       [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
          // haleyjd: from zdoom:
-         Mobj *robin = NULL;
+         Mobj *robin = nullptr;
 
          do
          {
@@ -547,7 +547,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                // other things in the blocks and see if we hit something that is
                // definitely blocking. Otherwise, we need to check the lines, or we
                // could end up stuck inside a wall.
-               if(clip.BlockingMobj == NULL)
+               if(clip.BlockingMobj == nullptr)
                { 
                   // Thing slammed into something; don't let it move now.
                   thing->height = realheight;
@@ -558,10 +558,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
                        clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
                {
-                  if(thingblocker == NULL || clip.BlockingMobj->z > thingblocker->z)
+                  if(thingblocker == nullptr || clip.BlockingMobj->z > thingblocker->z)
                      thingblocker = clip.BlockingMobj;
                   robin = clip.BlockingMobj;
-                  clip.BlockingMobj = NULL;
+                  clip.BlockingMobj = nullptr;
                }
                else if(thing->player &&
                        thing->z + thing->height - clip.BlockingMobj->z <= STEPSIZE)
@@ -577,7 +577,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                   // Nothing is blocking us, but this actor potentially could
                   // if there is something else to step on.
                   robin = clip.BlockingMobj;
-                  clip.BlockingMobj = NULL;
+                  clip.BlockingMobj = nullptr;
                }
                else
                { // Definitely blocking
@@ -587,7 +587,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                }
             }
             else
-               robin = NULL;
+               robin = nullptr;
          } 
          while(robin);
          return true;
@@ -596,10 +596,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    
    // check lines
    
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
    thing->height = realheight;
    if(clip.thing->flags & MF_NOCLIP)
-      return (clip.BlockingMobj = thingblocker) == NULL;
+      return (clip.BlockingMobj = thingblocker) == nullptr;
 
    memcpy(bbox, clip.bbox, sizeof(bbox));
    
@@ -639,10 +639,10 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    if(clip.zref.ceiling - clip.zref.floor < thing->height)
       return false;
          
-   if(stepthing != NULL)
+   if(stepthing != nullptr)
       clip.zref.dropoff = thingdropoffz;
    
-   return (clip.BlockingMobj = thingblocker) == NULL;
+   return (clip.BlockingMobj = thingblocker) == nullptr;
 }
 
 //
@@ -909,7 +909,7 @@ static void P_DoCrunch(Mobj *thing)
       // haleyjd 03/11/03: not in heretic
       if(GameModeInfo->type == Game_DOOM)
       {
-         thing->skin = NULL;
+         thing->skin = nullptr;
          P_SetMobjState(thing, E_SafeState(S_GIBS));
       }
       thing->flags &= ~MF_SOLID;
@@ -929,7 +929,7 @@ static void P_DoCrunch(Mobj *thing)
       (thing->intflags & MIF_ARMED || sentient(thing)))
    {
       // kill object
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_CRUSH);
       return;
    }
 
@@ -946,7 +946,7 @@ static void P_DoCrunch(Mobj *thing)
       if(thing->flags2 & MF2_INVULNERABLE || thing->flags2 & MF2_DORMANT)
          return;
 
-      P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, crushchange, MOD_CRUSH);
       
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // FIXME: needs comp flag!
@@ -1201,8 +1201,8 @@ static void PIT_CeilingRaise(Mobj *thing)
 //
 bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
 {
-   void (*iterator)(Mobj *)  = NULL;
-   void (*iterator2)(Mobj *) = NULL;
+   void (*iterator)(Mobj *)  = nullptr;
+   void (*iterator2)(Mobj *) = nullptr;
    msecnode_t *n;
 
    midtex_moving = false;

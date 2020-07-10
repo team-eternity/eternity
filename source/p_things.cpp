@@ -60,7 +60,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
    fixed_t speed;
    fixed_t vspeed;
    mobjtype_t moType;
-   Mobj *mobj = NULL, *newMobj;
+   Mobj *mobj = nullptr, *newMobj;
    mobjinfo_t *mi;
    bool success = false;
 
@@ -82,7 +82,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
    speed     = (fixed_t)args[3] << 13;
    vspeed    = (fixed_t)args[4] << 13;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       newMobj = P_SpawnMobj(mobj->x, mobj->y, mobj->z, moType);
       if(newMobj->info->seesound)
@@ -115,7 +115,7 @@ int EV_ThingSpawn(const int *args, bool fog)
 {
    int tid, newtid;
    angle_t angle;
-   Mobj *mobj = NULL, *newMobj, *fogMobj;
+   Mobj *mobj = nullptr, *newMobj, *fogMobj;
    mobjtype_t moType;
    mobjinfo_t *mi;
    bool success = false;
@@ -137,7 +137,7 @@ int EV_ThingSpawn(const int *args, bool fog)
    angle = (angle_t)args[2] << 24;
    newtid = args[3];
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       z = mobj->z;
 
@@ -176,10 +176,10 @@ int EV_ThingSpawn(const int *args, bool fog)
 //
 int EV_ThingActivate(int tid)
 {
-   Mobj *mobj = NULL;
+   Mobj *mobj = nullptr;
    int success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
       {
@@ -211,10 +211,10 @@ int EV_ThingActivate(int tid)
 //
 int EV_ThingDeactivate(int tid)
 {
-   Mobj *mobj = NULL;
+   Mobj *mobj = nullptr;
    int success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
       {

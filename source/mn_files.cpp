@@ -228,7 +228,7 @@ void MN_ClearDirectory(mndir_t *dir)
    for(int i = 0; i < dir->numfiles; i++)
    {
       efree(dir->filenames[i]);
-      dir->filenames[i] = NULL;
+      dir->filenames[i] = nullptr;
    }
 
    dir->numfiles = 0;
@@ -281,7 +281,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
       return ec.value();
 
    const fs::directory_iterator itr(dir->dirpath);
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
       qstring filename(ent.path().filename().generic_u8string().c_str());
       if(allowsubdirs)
@@ -330,7 +330,7 @@ static bool MN_FileResponder(event_t *ev, int action);
 
 // file selector is handled using a menu widget
 
-static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, NULL, true };
+static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, nullptr, true };
 static int selected_item;
 static const char *variable_name;
 static const char *help_description;
@@ -584,7 +584,7 @@ char *wad_directory; // directory where user keeps wads
 
 static qstring wad_cur_directory; // current directory being viewed
 
-VARIABLE_STRING(wad_directory,  NULL,          1024);
+VARIABLE_STRING(wad_directory,  nullptr,       1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 {
    // normalize slashes
@@ -640,7 +640,7 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 
 char *mn_wadname; // wad to load
 
-VARIABLE_STRING(mn_wadname,  NULL,       UL);
+VARIABLE_STRING(mn_wadname,  nullptr,    UL);
 CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset) 
 {
    if(!Console.argc)
@@ -653,12 +653,12 @@ CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset)
       size_t lastslash;
       if((lastslash = wad_cur_directory.findLastOf('/')) != qstring::npos)
          wad_cur_directory.truncate(lastslash);
-      MN_doSelectWad(NULL);
+      MN_doSelectWad(nullptr);
    }
    else if(newVal.findFirstOf('/') == 0)
    {
       wad_cur_directory.pathConcatenate(newVal.constPtr());
-      MN_doSelectWad(NULL);
+      MN_doSelectWad(nullptr);
    }
    else
    {

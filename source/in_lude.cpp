@@ -58,7 +58,7 @@ int intertime;
 // used to accelerate or skip a stage
 int acceleratestage; // killough 3/28/98: made global
 
-static interfns_t *InterFuncs = NULL;
+static interfns_t *InterFuncs = nullptr;
 
 vfont_t *in_font;
 vfont_t *in_bigfont;
@@ -150,7 +150,7 @@ static void IN_StartCamera()
    else            // no camera, boring interpic
    {
       realbackdrop = 0;
-      wi_camera = NULL;
+      wi_camera = nullptr;
       S_StopAllSequences(); // haleyjd 06/06/06
       S_StopLoopedSounds(); // haleyjd 10/06/06
    }

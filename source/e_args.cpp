@@ -738,7 +738,7 @@ int E_ArgAsStateNumG0(arglist_t *al, int index, const player_t *player)
 //
 // Gets the arg value at index i as a set of thing flag masks, if such argument 
 // exists. The evaluated value will be cached so that it can be returned on 
-// subsequent calls. If the arg does not exist, NULL is returned.
+// subsequent calls. If the arg does not exist, nullptr is returned.
 //
 unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 {
@@ -771,7 +771,7 @@ unsigned int *E_ArgAsThingFlags(arglist_t *al, int index)
 // Gets the arg value at index i as a flag mask, if such argument  exists,
 // using the specified flagset. The evaluated value will be cached
 // so that it can be returned on subsequent calls. If the arg does not
-// exist, NULL is returned.
+// exist, nullptr is returned.
 //
 unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
 {
@@ -800,7 +800,7 @@ unsigned int E_ArgAsFlags(arglist_t *al, int index, dehflagset_t *flagset)
 //
 // Gets the arg value at index i as a sound, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
-// calls. If the arg does not exist, NULL is returned.
+// calls. If the arg does not exist, nullptr is returned.
 //
 sfxinfo_t *E_ArgAsSound(arglist_t *al, int index)
 {
@@ -864,7 +864,7 @@ int E_ArgAsBexptr(arglist_t *al, int index)
 //
 // Gets the arg value at index i as an EDF string, if such argument exists.
 // The evaluated value will be cached so that it can be returned on subsequent
-// calls. If the arg does not exist, NULL is returned.
+// calls. If the arg does not exist, nullptr is returned.
 //
 edf_string_t *E_ArgAsEDFString(arglist_t *al, int index)
 {
@@ -953,7 +953,7 @@ int E_ArgAsKwd(arglist_t *al, int index, const argkeywd_t *kw, int defvalue)
    if(!al || index >= al->numargs)
       return defvalue;
 
-      evalcache_t &eval = al->values[index];
+   evalcache_t &eval = al->values[index];
 
    if(eval.type != EVALTYPE_KEYWORD)
    {

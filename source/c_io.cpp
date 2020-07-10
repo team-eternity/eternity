@@ -90,7 +90,7 @@ static char *input_point;      // left-most point you see of the command line
 static int pgup_down=0, pgdn_down=0;
 
 // haleyjd 09/07/03: true logging capability
-static FILE *console_log = NULL;
+static FILE *console_log = nullptr;
 
 // SoM: Use the new VBuffer system
 static VBuffer cback;
@@ -876,7 +876,7 @@ void C_CloseConsoleLog(void)
    if(console_log)
       fclose(console_log);
 
-   console_log = NULL;
+   console_log = nullptr;
 }
 
 //
@@ -963,7 +963,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
    int numparams = (int)(params[0] / sizeof(cell));
 
    // create a string table
-   msgs = (char **)(Z_Calloc(numparams, sizeof(char *), PU_STATIC, NULL));
+   msgs = (char **)(Z_Calloc(numparams, sizeof(char *), PU_STATIC, nullptr));
 
    for(i = 1; i <= numparams; i++)
    {      
@@ -986,7 +986,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       // get length of string
       amx_StrLen(cstr, &len);
 
-      msgs[i-1] = (char *)(Z_Malloc(len + 1, PU_STATIC, NULL));
+      msgs[i-1] = (char *)(Z_Malloc(len + 1, PU_STATIC, nullptr));
 
       // convert from small string to C string
       amx_GetString(msgs[i-1], cstr, 0);
@@ -997,7 +997,7 @@ static cell AMX_NATIVE_CALL sm_c_print(AMX *amx, cell *params)
       totallen += (int)strlen(msgs[i]);
   
    // create complete message
-   msg = (char *)(Z_Calloc(1, totallen + 1, PU_STATIC, NULL));
+   msg = (char *)(Z_Calloc(1, totallen + 1, PU_STATIC, nullptr));
 
    for(i = 0; i < numparams; i++)
       strcat(msg, msgs[i]);
@@ -1041,7 +1041,7 @@ AMX_NATIVE_INFO cons_io_Natives[] =
    { "_ConsolePrint", sm_c_print },
    { "_ConsoleHR",    sm_consolehr },
    { "_ConsoleBeep",  sm_consolebeep },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

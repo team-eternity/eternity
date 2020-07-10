@@ -886,10 +886,10 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 }
 */
  
-VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
+VARIABLE_TOGGLE(d_fastrefresh, nullptr, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
 
-VARIABLE_TOGGLE(d_interpolate, NULL, onoff);
+VARIABLE_TOGGLE(d_interpolate, nullptr, onoff);
 CONSOLE_VARIABLE(d_interpolate, d_interpolate, 0) {}
 
 //----------------------------------------------------------------------------

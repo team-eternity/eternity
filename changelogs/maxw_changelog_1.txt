@@ -458,6 +458,10 @@ every 120ms.
 Made it so if Eternity sets its Windows mixer volume it will not use the volume
 it was set to during its runtime.
 
+-------------------------------------------------------------------------------
+2020/07/07
+Added turning sensitivity for joysticks.
+
 ================================================================================
 EOF
 ================================================================================

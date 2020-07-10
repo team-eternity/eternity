@@ -138,7 +138,7 @@ protected:
 public:
    // Constructors
    explicit XLParser(const char *pLumpname) 
-      : lumpname(pLumpname), lumpdata(NULL), waddir(NULL)
+      : lumpname(pLumpname), lumpdata(nullptr), waddir(nullptr)
    {
    }
 
@@ -149,7 +149,7 @@ public:
       if(lumpdata)
       {
          efree(lumpdata);
-         lumpdata = NULL;
+         lumpdata = nullptr;
       }
    }
 

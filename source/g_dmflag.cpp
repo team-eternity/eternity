@@ -74,7 +74,7 @@ void G_SetDefaultDMFlags(int dmtype, bool setdefault)
       default_dmflags = dmflags;
 }
 
-VARIABLE_INT(dmflags, &default_dmflags, 0, D_MAXINT, NULL);
+VARIABLE_INT(dmflags, &default_dmflags, 0, D_MAXINT, nullptr);
 CONSOLE_NETVAR(dmflags, dmflags, cf_server, netcmd_dmflags) {}
 
 // allows setting of default flags for a certain game mode

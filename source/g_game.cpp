@@ -311,7 +311,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
 
-      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn] * i_joyturnsens);
    }
 
    // gamepad dedicated analog strafe axis applies regardless
@@ -1084,7 +1084,7 @@ static byte *G_ReadDemoHeader(byte *demo_p)
    skill_t skill;
    int i, episode, map;
    int demover;
-   byte *option_p = NULL;      // killough 11/98
+   byte *option_p = nullptr;      // killough 11/98
 
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1661,7 +1661,7 @@ static void G_PlayerFinishLevel(int player)
 static void G_SetNextMap()
 {
    exitrule_t *exitrule = GameModeInfo->exitRules;
-   exitrule_t *theRule = NULL;
+   exitrule_t *theRule = nullptr;
 
    // find a rule
    for(; exitrule->gameepisode != -2; exitrule++)
@@ -2080,7 +2080,7 @@ uint64_t G_Signature(const WadDirectory *dir)
 
 static void G_DoSaveGame(void)
 {
-   char *name = NULL;
+   char *name = nullptr;
    size_t len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
    
    G_SaveGameName(name, len, savegameslot);
@@ -2467,7 +2467,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       if(bodyque.getLength() < queuesize)
          bodyque.resize(queuesize);
       
-      if(bodyque[index] != NULL)
+      if(bodyque[index] != nullptr)
       {
          bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
          bodyque[index]->remove();
@@ -2674,7 +2674,7 @@ extern const char *level_error;
 void G_DeathMatchSpawnPlayer(int playernum)
 {
    int j, selections = int(deathmatch_p - deathmatchstarts);
-   Mobj *fog = NULL;
+   Mobj *fog = nullptr;
    
    if(selections < MAXPLAYERS)
    {
@@ -2722,10 +2722,10 @@ void G_DoReborn(int playernum)
    else
    {                               // respawn at the start
       int i;
-      Mobj *fog = NULL;
+      Mobj *fog = nullptr;
       
       // first disassociate the corpse
-      players[playernum].mo->player = NULL;
+      players[playernum].mo->player = nullptr;
 
       // spawn at random spot if in deathmatch
       if(GameType == gt_dm)
@@ -2753,7 +2753,7 @@ void G_DoReborn(int playernum)
       // try to spawn at one of the other players spots
       for(i = 0; i < MAXPLAYERS; i++)
       {
-         fog = NULL;
+         fog = nullptr;
 
          if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
@@ -2991,7 +2991,7 @@ void G_ScrambleRand()
 {
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
-   rngseed = (unsigned int) time(NULL);
+   rngseed = (unsigned int) time(nullptr);
 }
 
 void G_DoNewGame()
@@ -3217,7 +3217,7 @@ void G_InitNew(skill_t skill, const char *name)
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
    g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
-   d_dir = NULL;
+   d_dir = nullptr;
    
    G_DoLoadLevel();
 }
@@ -3901,7 +3901,7 @@ static void G_CoolViewPoint()
    // turn off followcam
    P_FollowCamOff();
    if(camera == &followcam)
-      camera = NULL;
+      camera = nullptr;
   
    if(viewtype == 1)  // view from the chasecam
    {
@@ -4032,7 +4032,7 @@ AMX_NATIVE_INFO game_Natives[] =
    { "_StartGame",  sm_startgame },
    { "_GameSkill",  sm_gameskill },
    { "_GameType",   sm_gametype },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 
 #endif

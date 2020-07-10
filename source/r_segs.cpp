@@ -111,7 +111,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
    
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false)
+   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, nullptr, nullptr, false)
                ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
@@ -583,7 +583,7 @@ static void R_CloseDSP(void)
    ds_p->sprbottomclip    = zeroarray;
    ds_p->bsilheight       = D_MAXINT;
    ds_p->tsilheight       = D_MININT;
-   ds_p->maskedtexturecol = NULL;
+   ds_p->maskedtexturecol = nullptr;
 }
 
 #define NEXTDSP(model, newx1) \
@@ -742,7 +742,7 @@ void R_StoreWallRange(const int start, const int stop)
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
 
-   // haleyjd: NULL segclip line?? shouldn't happen.
+   // haleyjd: nullptr segclip line?? shouldn't happen.
    I_Assert(segclip.line, "R_StoreWallRange: null segclip.line\n");
 
    clipx1 = (float)(start - segclip.x1frac);
@@ -871,7 +871,7 @@ void R_StoreWallRange(const int start, const int stop)
       R_CloseDSP();
    else
    {
-      ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
+      ds_p->sprtopclip = ds_p->sprbottomclip = nullptr;
       ds_p->silhouette = 0;
 
       // SoM: TODO: This can be a bit problematic for slopes because we'll have 
@@ -916,7 +916,7 @@ void R_StoreWallRange(const int start, const int stop)
          lastopening += xlen;
       }
       else
-         ds_p->maskedtexturecol = NULL;
+         ds_p->maskedtexturecol = nullptr;
    }
 
    usesegloop = !seg.backsec        || 

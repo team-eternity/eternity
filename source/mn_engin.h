@@ -90,7 +90,7 @@ struct menuitem_t
   // variable name if variable, etc
   const char *data;         
 
-  const char *patch; // patch to use or NULL
+  const char *patch; // patch to use or nullptr
 
   unsigned int flags;   // haleyjd 03/29/05: menu item flags
 
@@ -164,7 +164,7 @@ struct menu_t
 // A structured way for the menu to display things
 // other than the usual menus
 //
-// if current_menuwidget is not NULL, the drawer in
+// if current_menuwidget is not nullptr, the drawer in
 // the menuwidget pointed to by it is called by
 // MN_Drawer. Also events caught by MN_Responder are
 // sent to current_menuwidget->responder

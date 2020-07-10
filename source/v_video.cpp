@@ -164,11 +164,11 @@ int usegamma;
 // provided in v_video.h.
 //
 
-typedef struct crdef_s
+struct crdef_t
 {
   const char *name;
   byte **map1, **map2;
-} crdef_t;
+};
 
 // killough 5/2/98: table-driven approach
 static const crdef_t crdefs[] = 
@@ -184,7 +184,7 @@ static const crdef_t crdefs[] =
    { "CRORANGE", &cr_orange,  &colrngs[CR_ORANGE] },
    { "CRYELLOW", &cr_yellow,  &colrngs[CR_YELLOW] },
    { "CRBLUE2",  &cr_blue_status, &cr_blue_status },
-   { NULL }
+   { nullptr }
 };
 
 // killough 5/2/98: tiny engine driven by table above
@@ -205,7 +205,7 @@ void V_InitColorTranslation()
 // haleyjd 05/04/10: clippable and scalable rect structure.
 // TODO: make available to v_block.c
 //
-typedef struct vrect_s
+struct vrect_t
 {
    int x;   // original x coordinate for upper left corner
    int y;   // original y coordinate for upper left corner
@@ -223,7 +223,7 @@ typedef struct vrect_s
    int sy;  // scaled y
    int sw;  // scaled width
    int sh;  // scaled height
-} vrect_t;
+};
 
 //
 // V_clipRect
@@ -687,8 +687,8 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 //
 void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
-   void    *source = NULL;
-   patch_t *patch  = NULL;
+   void    *source = nullptr;
+   patch_t *patch  = nullptr;
 
    if(lumpnum < 0)
       return;
@@ -781,10 +781,10 @@ static unsigned int Col2RGB8_2[63][256];
 
 #define MAKECOLOR(a) (((a)<<3)|((a)>>2))
 
-typedef struct tpalcol_s
+struct tpalcol_t
 {
    unsigned int r, g, b;
-} tpalcol_t;
+};
 
 void V_InitFlexTranTable(const byte *palette)
 {
@@ -795,7 +795,7 @@ void V_InitFlexTranTable(const byte *palette)
    // mark that we've initialized the flex tran table
    flexTranInit = true;
    
-   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL));
+   tempRGBpal = emalloctag(tpalcol_t *, 256*sizeof(*tempRGBpal), PU_STATIC, nullptr);
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {

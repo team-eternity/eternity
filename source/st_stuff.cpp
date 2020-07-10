@@ -381,7 +381,7 @@ static void ST_drawSmallNumber(int val, int x, int y)
       if(val > 99999)
          val = 99999;
       sprintf(buf, "%d", val);
-      x -= 4 * (strlen(buf));
+      x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
          int i = *rover - '0';
@@ -405,7 +405,7 @@ static void ST_refreshBackground()
          V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
-               NULL, 
+               nullptr, 
             false);
       }
 
@@ -938,8 +938,8 @@ static void ST_drawWidgets()
 
    for(i = 0; i < 4; i++)
    {
-      STlib_updateNum(&w_ammo[i],    NULL, FRACUNIT);   //jff 2/16/98 no xlation
-      STlib_updateNum(&w_maxammo[i], NULL, FRACUNIT);
+      STlib_updateNum(&w_ammo[i],    nullptr, FRACUNIT);   //jff 2/16/98 no xlation
+      STlib_updateNum(&w_maxammo[i], nullptr, FRACUNIT);
    }
 
    STlib_updateBinIcon(&w_armsbg);
@@ -949,7 +949,7 @@ static void ST_drawWidgets()
 
    STlib_updateMultIcon(&w_faces, FRACUNIT);
 
-   STlib_updateNum(&w_frags, NULL, FRACUNIT);
+   STlib_updateNum(&w_frags, nullptr, FRACUNIT);
 
    STlib_updateBinIcon(&w_invbarbg);
    if(*w_invbarbg.on && *w_invbarbg.val)
@@ -1048,16 +1048,16 @@ static void ST_DoomFSDrawer()
    // draw graphics
 
    // health
-   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
+   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, nullptr, ST_ALPHA);
    
    // armor
    fixed_t armorclass = 0;
    if(plyr->armordivisor)
       armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
    if(armorclass > FRACUNIT/3)
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, nullptr, ST_ALPHA);
    else
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, nullptr, ST_ALPHA);
 
    ST_updateWidgets();
 
@@ -1067,7 +1067,7 @@ static void ST_DoomFSDrawer()
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
       if(num != NUMAMMO)
-         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], NULL, ST_ALPHA);
+         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], nullptr, ST_ALPHA);
    }
 
    // draw common number widgets (always refresh since no background)
@@ -1594,21 +1594,21 @@ void ST_Init()
         CONSOLE COMMANDS
  ***********************/
 
-VARIABLE_INT(ammo_red,      NULL,          0, 100, NULL);
-VARIABLE_INT(ammo_yellow,   NULL,          0, 100, NULL);
-VARIABLE_INT(health_red,    NULL,          0, 200, NULL);
-VARIABLE_INT(health_yellow, NULL,          0, 200, NULL);
-VARIABLE_INT(health_green,  NULL,          0, 200, NULL);
-VARIABLE_INT(armor_red,     NULL,          0, 200, NULL);
-VARIABLE_INT(armor_yellow,  NULL,          0, 200, NULL);
-VARIABLE_INT(armor_green,   NULL,          0, 200, NULL);
+VARIABLE_INT(ammo_red,      nullptr,       0, 100, nullptr);
+VARIABLE_INT(ammo_yellow,   nullptr,       0, 100, nullptr);
+VARIABLE_INT(health_red,    nullptr,       0, 200, nullptr);
+VARIABLE_INT(health_yellow, nullptr,       0, 200, nullptr);
+VARIABLE_INT(health_green,  nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_red,     nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_yellow,  nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_green,   nullptr,       0, 200, nullptr);
 
-VARIABLE_TOGGLE(armor_byclass,             NULL,   yesno);
-VARIABLE_BOOLEAN(sts_pct_always_gray,      NULL,   yesno);
-VARIABLE_BOOLEAN(sts_always_red,           NULL,   yesno);
-VARIABLE_BOOLEAN(sts_traditional_keys,     NULL,   yesno);
+VARIABLE_TOGGLE(armor_byclass,             nullptr,yesno);
+VARIABLE_BOOLEAN(sts_pct_always_gray,      nullptr,yesno);
+VARIABLE_BOOLEAN(sts_always_red,           nullptr,yesno);
+VARIABLE_BOOLEAN(sts_traditional_keys,     nullptr,yesno);
 
-VARIABLE_INT(st_fsalpha, NULL,             0, 100, NULL);
+VARIABLE_INT(st_fsalpha, nullptr,          0, 100, nullptr);
 
 CONSOLE_VARIABLE(ammo_red,      ammo_red,      0) {}
 CONSOLE_VARIABLE(ammo_yellow,   ammo_yellow,   0) {}

@@ -415,7 +415,7 @@ static void P_LoadSegs(int lump)
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = NULL;
+         li->backsector = nullptr;
 
       P_CalcSegLength(li);
    }
@@ -487,7 +487,7 @@ static void P_LoadSegs_V4(int lump)
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1]!=-1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = NULL;
+         li->backsector = nullptr;
 
       P_CalcSegLength(li);
    }
@@ -876,8 +876,8 @@ static void P_LoadNodes(int lump)
          level_error = "no nodes in level";
       else
          C_Printf("trivial map (no nodes, one subsector)\n");
-      nodes  = NULL;
-      fnodes = NULL;
+      nodes  = nullptr;
+      fnodes = nullptr;
       return;
    }
 
@@ -1084,7 +1084,7 @@ static void CheckZNodesOverflowFN(int *size, int count)
 }
 
 // IOANCH 20151217: updated for XGLN and XGL2
-typedef struct mapseg_znod_s
+struct mapseg_znod_t
 {
    uint32_t v1;
    union // IOANCH
@@ -1094,10 +1094,10 @@ typedef struct mapseg_znod_s
    };
    uint32_t linedef; // IOANCH: use 32-bit instead of 16-bit   
    byte     side;
-} mapseg_znod_t;
+};
 
 // IOANCH: modified to support XGL3 nodes
-typedef struct mapnode_znod_s
+struct mapnode_znod_t
 {
   union
   {
@@ -1120,7 +1120,7 @@ typedef struct mapnode_znod_s
   int16_t bbox[2][4];
   // If NF_SUBSECTOR its a subsector, else it's a node of another subtree.
   int32_t children[2];
-} mapnode_znod_t;
+};
 
 //
 // R_DynaSegOffset
@@ -1233,7 +1233,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
       if(ldef->flags & ML_TWOSIDED && ldef->sidenum[side^1] != -1)
          li->backsector = sides[ldef->sidenum[side^1]].sector;
       else
-         li->backsector = NULL;
+         li->backsector = nullptr;
 
       li->v1 = &vertexes[v1];
       if(signature == ZNodeType_Normal)
@@ -1292,7 +1292,7 @@ static void P_LoadZNodes(int lump, ZNodeType signature)
    uint32_t numSubs, currSeg;
    uint32_t numSegs;
    uint32_t numNodes;
-   vertex_t *newvertarray = NULL;
+   vertex_t *newvertarray = nullptr;
 
    data = lumpptr = (byte *)(setupwad->cacheLumpNum(lump, PU_STATIC));
    len  = setupwad->lumpLength(lump);
@@ -1942,7 +1942,7 @@ static void P_LoadLineDefs2()
 
       // haleyjd 03/13/05: removed redundant -1 check for first side
       ld->frontsector = sides[ld->sidenum[0]].sector;
-      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : 0;
+      ld->backsector  = ld->sidenum[1] != -1 ? sides[ld->sidenum[1]].sector : nullptr;
       
       // haleyjd 02/06/13: lookup static init
       int staticFn = EV_StaticInitForSpecial(ld->special);
@@ -2104,7 +2104,7 @@ static void P_LoadSideDefs2(int lumpnum)
 }
 
 // haleyjd 10/10/11: externalized structure due to pre-C++11 template limitations
-typedef struct bmap_s { int n, nalloc, *list; } bmap_t; // blocklist structure
+struct bmap_t { int n, nalloc, *list; }; // blocklist structure
 
 //
 // Boom variant of blockmap creation, which will fix PrBoom+ demos recorded with -complevel 9. Not
@@ -2564,8 +2564,7 @@ static void P_CreateBlockMap()
          }
 
          // Allocate blockmap lump with computed count
-         blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count, 
-                                         PU_LEVEL, 0));
+         blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * count,  PU_LEVEL, nullptr);
       }
 
       // Now compress the blockmap.
@@ -2611,7 +2610,7 @@ static bool P_VerifyBlockMap(int count)
    int x, y;
    int *maxoffs = blockmaplump + count;
 
-   bmaperrormsg = NULL;
+   bmaperrormsg = nullptr;
 
    skipblstart = true;
 
@@ -2703,8 +2702,7 @@ static void P_LoadBlockMap(int lump)
    {
       int i;
       int16_t *wadblockmaplump = (int16_t *)(setupwad->cacheLumpNum(lump, PU_LEVEL));
-      blockmaplump = (int *)(Z_Malloc(sizeof(*blockmaplump) * count,
-                                      PU_LEVEL, NULL));
+      blockmaplump = emalloctag(int *, sizeof(*blockmaplump) * count, PU_LEVEL, nullptr);
 
       // killough 3/1/98: Expand wad blockmap into larger internal one,
       // by treating all offsets except -1 as unsigned and zero-extending
@@ -2734,23 +2732,23 @@ static void P_LoadBlockMap(int lump)
       {
          C_Printf(FC_ERROR "Blockmap error: %s\a\n", bmaperrormsg);
          Z_Free(blockmaplump);
-         blockmaplump = NULL;
+         blockmaplump = nullptr;
          P_CreateBlockMap();
       }
    }
 
    // clear out mobj chains
    count      = sizeof(*blocklinks) * bmapwidth * bmapheight;
-   blocklinks = ecalloctag(Mobj **, 1, count, PU_LEVEL, NULL);
+   blocklinks = ecalloctag(Mobj **, 1, count, PU_LEVEL, nullptr);
    blockmap   = blockmaplump + 4;
 
    // haleyjd 2/22/06: setup polyobject blockmap
    count = sizeof(*polyblocklinks) * bmapwidth * bmapheight;
-   polyblocklinks = ecalloctag(DLListItem<polymaplink_t> **, 1, count, PU_LEVEL, NULL);
+   polyblocklinks = ecalloctag(DLListItem<polymaplink_t> **, 1, count, PU_LEVEL, nullptr);
 
    // haleyjd 05/17/13: setup portalmap
    count = sizeof(*portalmap) * bmapwidth * bmapheight;
-   portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, NULL);
+   portalmap = ecalloctag(byte *, 1, count, PU_LEVEL, nullptr);
 }
 
 
@@ -2806,7 +2804,7 @@ static void P_GroupLines()
    gTotalLinesForRejectOverflow = total;
 
    // build line tables for each sector
-   linebuffer = (line_t **)(Z_Malloc(total * sizeof(*linebuffer), PU_LEVEL, 0));
+   linebuffer = emalloctag(line_t **, total * sizeof(*linebuffer), PU_LEVEL, nullptr);
 
    for(i = 0; i < numsectors; i++)
    {
@@ -3057,7 +3055,7 @@ static void P_LoadReject(int lump)
    else
    {
       // set to all zeroes so that the reject has no effect
-      rejectmatrix = (byte *)(Z_Calloc(1, expectedsize, PU_LEVEL, NULL));
+      rejectmatrix = ecalloctag(byte *, 1, expectedsize, PU_LEVEL, nullptr);
 
       // Pad remaining space with 0xff if specified on command line)
       if(M_CheckParm("-reject_pad_with_ff"))
@@ -3295,10 +3293,10 @@ static void P_ClearPlayerVars()
       memset(players[i].frags, 0, sizeof(players[i].frags));
 
       // haleyjd: explicitly nullify old player object pointers
-      players[i].mo = NULL;
+      players[i].mo = nullptr;
 
       // haleyjd: explicitly nullify old player attacker
-      players[i].attacker = NULL;
+      players[i].attacker = nullptr;
    }
 
    totalkills = totalitems = totalsecret = wminfo.maxfrags = 0;
@@ -3439,7 +3437,7 @@ static void P_DeathMatchSpawnPlayers()
       {
          if(playeringame[i])
          {
-            players[i].mo = NULL;
+            players[i].mo = nullptr;
             G_DeathMatchSpawnPlayer(i);
          }
       }
@@ -3560,7 +3558,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    // killough 4/4/98: split load of sidedefs into two parts,
    // to allow texture names to be used in special linedefs
 
-   level_error = NULL; // reset
+   level_error = nullptr; // reset
 
    ScrollThinker::RemoveAllScrollers();
 
@@ -3777,7 +3775,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
    else if(camera == &walkcamera)
       P_ResetWalkcam();
    else
-      camera = NULL;        // camera off
+      camera = nullptr;        // camera off
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo

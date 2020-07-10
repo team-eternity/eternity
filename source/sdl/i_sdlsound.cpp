@@ -70,7 +70,7 @@ SDL_AudioSpec audio_spec = {};
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static const int snd_samplerate = 44100;
 
-typedef struct channel_info_s
+struct channel_info_t
 {
   // SFX id of the playing sound effect.
   // Used to catch duplicates (like chainsaw).
@@ -97,7 +97,7 @@ typedef struct channel_info_s
   SDL_sem *semaphore;
   bool shouldstop; // haleyjd 05/16/11
 
-} channel_info_t;
+};
 
 static channel_info_t channelinfo[MAX_CHANNELS+1];
 

@@ -410,7 +410,7 @@ static const char *hud_overlaynames[] =
    "Boom HUD",
 };
 
-VARIABLE_INT(hud_overlayid, NULL, -1, HUO_MAXOVERLAYS - 1, hud_overlaynames);
+VARIABLE_INT(hud_overlayid, nullptr, -1, HUO_MAXOVERLAYS - 1, hud_overlaynames);
 CONSOLE_VARIABLE(hu_overlayid, hud_overlayid, 0)
 {
    hudoverlayitem_t *item = I_defaultHUDOverlay();
@@ -430,10 +430,10 @@ const char *str_style[HUD_NUMHUDS] =
    "graphical",   // haleyjd 01/11/05
 };
 
-VARIABLE_INT(hud_overlaylayout, NULL, HUD_OFF, HUD_GRAPHICAL, str_style);
+VARIABLE_INT(hud_overlaylayout, nullptr, HUD_OFF, HUD_GRAPHICAL, str_style);
 CONSOLE_VARIABLE(hu_overlaystyle, hud_overlaylayout, 0) {}
 
-VARIABLE_BOOLEAN(hud_hidestatus, NULL, yesno);
+VARIABLE_BOOLEAN(hud_hidestatus, nullptr, yesno);
 CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
 
 // EOF

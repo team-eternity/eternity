@@ -293,7 +293,7 @@ public:
    int16_t movecount;      // when 0, select a new dir
    int16_t strafecount;    // killough 9/8/98: monster strafing
 
-   // Thing being chased/attacked (or NULL),
+   // Thing being chased/attacked (or nullptr),
    // also the originator for missiles.
    Mobj *target;
 
@@ -390,7 +390,7 @@ protected:
    virtual void Think() override;
 
 public:
-   MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
+   MobjFadeThinker() : Super(), target(nullptr), swizzled_target(0) {}
    virtual void remove() override;
    virtual void serialize(SaveArchive &arc) override;
    virtual void deSwizzle() override;

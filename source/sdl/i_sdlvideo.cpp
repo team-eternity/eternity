@@ -461,7 +461,7 @@ CONSOLE_COMMAND(maxdisplaynum, 0)
    C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
 }
 
-VARIABLE_INT(displaynum, NULL, -1, UL, nullptr);
+VARIABLE_INT(displaynum, nullptr, -1, UL, nullptr);
 CONSOLE_VARIABLE(displaynum, displaynum, 0)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();

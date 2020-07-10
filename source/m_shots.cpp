@@ -70,7 +70,7 @@ int screenshot_gamma;
 //
 
 // PCX header structure
-typedef struct pcx_s
+struct pcx_t
 {
    uint8_t  manufacturer;
    uint8_t  version;
@@ -88,7 +88,7 @@ typedef struct pcx_s
    uint16_t bytes_per_line;
    uint16_t palette_type;
    uint8_t  filler[58];
-} pcx_t;
+};
 
 //
 // pcx_Writer
@@ -190,16 +190,16 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
 
 // SoM 6/5/02: Chu-Chu-Chu-Chu-Chu-Changes... heh
 
-typedef struct tagBITMAPFILEHEADER
+struct BITMAPFILEHEADER
 {
   uint16_t bfType;
   uint32_t bfSize;
   uint16_t bfReserved1;
   uint16_t bfReserved2;
   uint32_t bfOffBits;
-} BITMAPFILEHEADER;
+};
 
-typedef struct tagBITMAPINFOHEADER
+struct BITMAPINFOHEADER
 {
   uint32_t biSize;
   uint32_t biWidth;
@@ -212,7 +212,7 @@ typedef struct tagBITMAPINFOHEADER
   uint32_t biYPelsPerMeter;
   uint32_t biClrUsed;
   uint32_t biClrImportant;
-} BITMAPINFOHEADER;
+};
 
 //
 // bmp_Writer
@@ -310,7 +310,7 @@ static bool bmp_Writer(OutBuffer *ob, byte *data,
 // to not support it :)
 //
 
-typedef struct tgaheader_s
+struct tgaheader_t
 {
    uint8_t  idlength;        // size of image id field
    uint8_t  colormaptype;    // color map type
@@ -324,7 +324,7 @@ typedef struct tgaheader_s
    uint16_t height;          // height of image
    uint8_t  pixeldepth;      // image pixel size
    uint8_t  imagedescriptor; // image descriptor byte
-} tgaheader_t;
+};
 
 //
 // tga_Writer
@@ -556,12 +556,12 @@ static bool png_Writer(OutBuffer *ob, byte *data,
 
 typedef bool (*ShotWriter_t)(OutBuffer *, byte *, uint32_t, uint32_t, byte *);
 
-typedef struct shotformat_s
+struct shotformat_t
 {
    const char   *extension; // file extension
    int           endian;    // endianness of file format
    ShotWriter_t  writer;    // writing method
-} shotformat_t;
+};
 
 enum
 {

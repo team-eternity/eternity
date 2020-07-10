@@ -799,7 +799,7 @@ void A_VileTarget(actionargs_t *actionargs)
    fogaction.actiontype = actionargs_t::MOBJFRAME;
    fogaction.actor      = fog;
    fogaction.args       = ESAFEARGS(fog);
-   fogaction.pspr       = NULL;
+   fogaction.pspr       = nullptr;
    
    A_Fire(&fogaction);
 }
@@ -1211,11 +1211,11 @@ void A_PainDie(actionargs_t *actionargs)
 // Special Death Effects
 //
 
-typedef struct boss_spec_s
+struct boss_spec_t
 {
    unsigned int thing_flag;
    unsigned int level_flag;
-} boss_spec_t;
+};
 
 #define NUM_BOSS_SPECS 7
 
@@ -1376,7 +1376,7 @@ void P_SpawnBrainTargets()  // killough 3/26/98: renamed old function
 //
 void A_BrainAwake(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_bossit); // killough 3/26/98: only generates sound now
+   S_StartSound(nullptr, sfx_bossit); // killough 3/26/98: only generates sound now
 }
 
 //
@@ -1386,7 +1386,7 @@ void A_BrainAwake(actionargs_t *actionargs)
 //
 void A_BrainPain(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_bospn);
+   S_StartSound(nullptr, sfx_bospn);
 }
 
 //
@@ -1414,7 +1414,7 @@ void A_BrainScream(actionargs_t *actionargs)
       if(th->tics < 1)
          th->tics = 1;
    }
-   S_StartSound(NULL, sfx_bosdth);
+   S_StartSound(nullptr, sfx_bosdth);
 }
 
 //
@@ -1492,7 +1492,7 @@ void A_BrainSpit(actionargs_t *actionargs)
    // killough 8/29/98: add to appropriate thread
    newmobj->updateThinker();
    
-   S_StartSound(NULL, sfx_bospit);
+   S_StartSound(nullptr, sfx_bospit);
 }
 
 void A_SpawnFly(actionargs_t *actionargs);

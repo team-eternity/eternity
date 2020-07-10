@@ -1940,8 +1940,8 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FogSpawn),
    POINTER(FogMove),
 
-   // This NULL entry must be the last in the list
-   { NULL, "NULL" } // Ty 05/16/98
+   // This nullptr entry must be the last in the list
+   { nullptr, "NULL" } // Ty 05/16/98
 };
 
 // haleyjd 03/14/03: Just because its null-terminated doesn't mean 
@@ -2060,7 +2060,7 @@ dehstr_t *D_GetBEXStr(const char *string)
 
    // hash chain empty -- not found
    if(bexstrhashchains[key] == deh_numstrlookup)
-      return NULL;
+      return nullptr;
 
    dehstr = &deh_strlookup[bexstrhashchains[key]];
 
@@ -2069,7 +2069,7 @@ dehstr_t *D_GetBEXStr(const char *string)
    {
       // end of hash chain -- not found
       if(dehstr->bnext == deh_numstrlookup)
-         return NULL;
+         return nullptr;
       else
          dehstr = &deh_strlookup[dehstr->bnext];
    }
@@ -2094,7 +2094,7 @@ dehstr_t *D_GetDEHStr(const char *string)
 
    // hash chain empty -- not found
    if(dehstrhashchains[key] == deh_numstrlookup)
-      return NULL;
+      return nullptr;
 
    dehstr = &deh_strlookup[dehstrhashchains[key]];
 
@@ -2103,7 +2103,7 @@ dehstr_t *D_GetDEHStr(const char *string)
    {
       // end of hash chain -- not found
       if(dehstr->dnext == deh_numstrlookup)
-         return NULL;
+         return nullptr;
       else
          dehstr = &deh_strlookup[dehstr->dnext];
    }
@@ -2123,9 +2123,9 @@ const char *DEH_String(const char *mnemonic)
 {
    dehstr_t *dehstr;
 
-   // allow NULL mnemonic to return NULL
-   if(mnemonic == NULL)
-      return NULL;
+   // allow nullptr mnemonic to return nullptr
+   if(mnemonic == nullptr)
+      return nullptr;
 
    // 05/31/08: modified to return mnemonic on unknown string
    if(!(dehstr = D_GetBEXStr(mnemonic)))
@@ -2207,7 +2207,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
 
    // is chain empty?
    if(bexcpchains[key] == -1)
-      return NULL; // doesn't exist
+      return nullptr; // doesn't exist
 
    bexptr = &deh_bexptrs[bexcpchains[key]];
 
@@ -2215,7 +2215,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
    {
       // end of hash chain?
       if(bexptr->next == -1)
-         return NULL; // doesn't exist
+         return nullptr; // doesn't exist
       else
          bexptr = &deh_bexptrs[bexptr->next];
    }
@@ -2263,28 +2263,28 @@ void D_BuildBEXTables()
 
    // haleyjd 03/11/03: must be dynamic now
    // 10/17/03: allocate all the names through a single pointer
-   spritestr = (char *)(Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL));
+   spritestr = ecalloctag(char *, NUMSPRITES, 5, PU_STATIC, nullptr);
 
-   deh_spritenames = (char **)(Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0));
+   deh_spritenames = emalloctag(char **, (NUMSPRITES+1)*sizeof(char *),PU_STATIC, nullptr);
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
       deh_spritenames[i] = spritestr + i * 5;
       strncpy(deh_spritenames[i], sprnames[i], 4);
    }
-   deh_spritenames[NUMSPRITES] = NULL;
+   deh_spritenames[NUMSPRITES] = nullptr;
 
    // 09/07/05: allocate all music names through one pointer
-   musicstr = (char *)(Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0));
+   musicstr = ecalloctag(char *, NUMMUSIC, 7, PU_STATIC, nullptr);
 
-   deh_musicnames = (char **)(Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0));
+   deh_musicnames = emalloctag(char **, (NUMMUSIC+1)*sizeof(char *), PU_STATIC, nullptr);
 
    for(i = 1; i < NUMMUSIC; ++i)
    {
       deh_musicnames[i] = musicstr + i * 7;
       strncpy(deh_musicnames[i], S_music[i].name, 6);
    }
-   deh_musicnames[0] = deh_musicnames[NUMMUSIC] = NULL;
+   deh_musicnames[0] = deh_musicnames[NUMMUSIC] = nullptr;
 }
 
 //
@@ -2296,13 +2296,13 @@ void D_BuildBEXTables()
 // all at once. This allows EDF to be extended for loading from
 // wad files.
 
-typedef struct dehqueueitem_s
+struct dehqueueitem_t
 {
    mqueueitem_t mqitem; // this must be first
 
    char name[PATH_MAX+1];
-   int  lumpnum;   
-} dehqueueitem_t;
+   int  lumpnum;
+};
 
 static mqueue_t dehqueue;
 
@@ -2339,7 +2339,7 @@ void D_QueueDEH(const char *filename, int lumpnum)
 
 // DeHackEd support - Ty 03/09/97
 // killough 10/98:
-// Add lump number as third argument, for use when filename==NULL
+// Add lump number as third argument, for use when filename==nullptr
 void ProcessDehFile(const char *filename, const char *outfilename, int lump);
 
 // killough 10/98: support -dehout filename
@@ -2352,7 +2352,7 @@ static const char *D_dehout()
    if(!p)
       p = M_CheckParm("-bexout");
    
-   return (p && ++p < myargc) ? myargv[p] : NULL;
+   return (p && ++p < myargc) ? myargv[p] : nullptr;
 }
 
 //
@@ -2376,7 +2376,7 @@ void D_ProcessDEHQueue()
       // it's a file
       if(dqitem->lumpnum != -1)
       {
-         ProcessDehFile(NULL, D_dehout(), dqitem->lumpnum);
+         ProcessDehFile(nullptr, D_dehout(), dqitem->lumpnum);
       }
       else
       {

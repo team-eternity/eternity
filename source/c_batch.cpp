@@ -71,7 +71,7 @@ private:
 
 public:
    CommandBatches()
-      : ZoneObject(), finished_batches(NULL)
+      : ZoneObject(), finished_batches(nullptr)
    {
       command_batches.initialize(initial_batch_count);
    }
@@ -102,7 +102,7 @@ public:
 
    void Tick()
    {
-      CommandBatch *batch = NULL;
+      CommandBatch *batch = nullptr;
 
       // [CG] Clean up finished batches first.
       while((batch = command_batches.tableIterator(batch)))
@@ -120,7 +120,7 @@ public:
       }
 
       // [CG] Finally run any remaining batches.
-      batch = NULL;
+      batch = nullptr;
       while((batch = command_batches.tableIterator(batch)))
          batch->run();
    }
@@ -226,7 +226,7 @@ void CommandBatch::run()
 
          finished = true;
 
-         current_command = NULL;
+         current_command = nullptr;
       }
    }
 }
@@ -242,16 +242,16 @@ void C_ActivateCommandBatch()
 
 void C_AddCommandBatch(const char *name, const char *commands)
 {
-   CommandBatch *batch = NULL;
+   CommandBatch *batch = nullptr;
    command_t *command = C_GetCmdForName(name);
    variable_t *variable = estructalloc(variable_t, 1);
 
    variable->variable = estrdup(commands);
-   variable->v_default = NULL;
+   variable->v_default = nullptr;
    variable->type = vt_string;
    variable->min = 0;
    variable->max = 128;
-   variable->defines = NULL;
+   variable->defines = nullptr;
 
    if(command)
    {
@@ -283,7 +283,7 @@ const char* C_GetCommandBatch(const char *name)
    command_t *batch = C_GetCmdForName(name);
 
    if((!batch) || (!batch->variable))
-      return NULL;
+      return nullptr;
 
    return (const char *)batch->variable->variable;
 }
@@ -308,7 +308,7 @@ CommandBatch* C_CommandBatchIterator(CommandBatch *batch)
 
 void C_SaveCommandBatches(FILE *file)
 {
-   CommandBatch *batch = NULL;
+   CommandBatch *batch = nullptr;
 
    while((batch = saved_command_batches.batchIterator(batch)))
    {

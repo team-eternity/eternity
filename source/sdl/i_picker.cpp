@@ -139,7 +139,7 @@ static void I_Pick_LoadIWAD(int num)
 
          if(png.getWidth() == 320 && png.getHeight() == 240 && pngPalette)
          {
-            iwadpics[num] = png.getAs8Bit(NULL);
+            iwadpics[num] = png.getAs8Bit(nullptr);
             pals[num]     = pngPalette;
          }
       }

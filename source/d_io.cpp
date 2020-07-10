@@ -41,7 +41,7 @@
 // Constructor
 //
 DWFILE::DWFILE()
-   : type(0), inp(NULL), lump(NULL), data(NULL), size(0), origsize(0), 
+   : type(0), inp(nullptr), lump(nullptr), data(nullptr), size(0), origsize(0), 
      lumpnum(0)
 {
 }
@@ -68,7 +68,7 @@ char *DWFILE::getStr(char *buf, size_t n)
    
    // If no more characters
    if(!n || size <= 0 || !*inp)
-      return NULL;
+      return nullptr;
   
    if(n == 1)
    {
@@ -137,8 +137,8 @@ void DWFILE::openFile(const char *filename, const char *mode)
    type    = DWF_FILE;
 
    // zero out fields not used for file reading
-   data     = NULL;
-   lump     = NULL;
+   data     = nullptr;
+   lump     = nullptr;
    origsize = 0;
    size     = 0;
 }
@@ -161,7 +161,7 @@ void DWFILE::openLump(int p_lumpnum)
    type    = DWF_LUMP;
 
    // zero out fields not used for lump reading
-   data = NULL;
+   data = nullptr;
 }
 
 /*
@@ -202,7 +202,7 @@ void DWFILE::close()
       break;
    }
 
-   inp = lump = data = NULL;
+   inp = lump = data = nullptr;
 }
 
 //

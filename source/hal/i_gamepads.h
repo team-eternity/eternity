@@ -38,6 +38,9 @@ class HALGamePad;
 // Joystick device number, for config file
 extern int i_joysticknum;
 
+// Joystick turning sensitvity
+extern double i_joyturnsens;
+
 // Generic sensitivity value, for drivers that need it
 extern int i_joysticksens;
 
@@ -120,7 +123,7 @@ public:
    virtual void poll() = 0;     // Refresh all input state data
 
    // Haptic interface
-   virtual HALHapticInterface *getHapticInterface() { return NULL; }
+   virtual HALHapticInterface *getHapticInterface() { return nullptr; }
 
    // Data
    int     num;         // Device number

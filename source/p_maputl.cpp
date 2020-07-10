@@ -506,7 +506,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 // P_LogThingPosition
 //
 // haleyjd 04/15/2010: thing position logging for debugging demo problems.
-// Pass a NULL mobj to close the log.
+// Pass a nullptr mobj to close the log.
 //
 //#define THING_LOGGING
 #ifdef THING_LOGGING
@@ -521,7 +521,7 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    {
       if(thinglog)
          fclose(thinglog);
-      thinglog = NULL;
+      thinglog = nullptr;
       return;
    }
 
@@ -574,7 +574,7 @@ void P_UnsetThingPosition(Mobj *thing)
       // routine will clear out the nodes in sector_list.
       
       thing->old_sectorlist = thing->touching_sectorlist;
-      thing->touching_sectorlist = NULL; // to be restored by P_SetThingPosition
+      thing->touching_sectorlist = nullptr; // to be restored by P_SetThingPosition
    }
 
    if(!(thing->flags & MF_NOBLOCKMAP))
@@ -630,7 +630,7 @@ void P_SetThingPosition(Mobj *thing)
 
       // phares 3/16/98
       //
-      // If sector_list isn't NULL, it has a collection of sector
+      // If sector_list isn't nullptr, it has a collection of sector
       // nodes that were just removed from this Thing.
       //
       // Collect the sectors the object will live in by looking at
@@ -642,7 +642,7 @@ void P_SetThingPosition(Mobj *thing)
       // added, new sector links are created.
 
       thing->touching_sectorlist = P_CreateSecNodeList(thing, thing->x, thing->y);
-      thing->old_sectorlist = NULL;
+      thing->old_sectorlist = nullptr;
    }
 
    // link into blockmap
@@ -666,8 +666,8 @@ void P_SetThingPosition(Mobj *thing)
       }
       else        // thing is off the map
       {
-         thing->bnext = NULL;
-         thing->bprev = NULL;
+         thing->bnext = nullptr;
+         thing->bprev = nullptr;
       }
    }
 }

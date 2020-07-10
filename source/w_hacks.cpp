@@ -58,7 +58,7 @@ struct w_dirhack_t
 //
 static void W_doGothic2Hack(filelump_t *fileinfo, int numlumps)
 {
-   filelump_t *lump = NULL;
+   filelump_t *lump = nullptr;
    int i;
 
    // scan backward and look for ADEL_Y08
@@ -173,7 +173,7 @@ static w_dirhack_t w_dirhacks[] =
    { "9f823104462d9575750bf0ba6a4a3a6df0f766e3", W_doOtakonHack  }, // otakugfx.wad
 
    // Terminator, must be last
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 
 //

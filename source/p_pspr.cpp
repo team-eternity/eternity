@@ -1406,7 +1406,7 @@ static dehflags_t fireplayermissile_flaglist[] =
    { "normal",    0x00000000               }, // [XA] explicit no-op. :P
    { "homing",    FIREPLAYERMISSILE_HOMING },
    { "noammo",    FIREPLAYERMISSILE_NOAMMO },
-   { NULL,        0 }
+   { nullptr,     0 }
 };
 
 static dehflagset_t fireplayermissile_flagset =
@@ -1625,7 +1625,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
    bool settarget;
    bool useammo;
    int cptrnum, statenum;
-   state_t *oldstate = 0;
+   state_t *oldstate = nullptr;
    Mobj *oldtarget = nullptr, *localtarget = nullptr;
    Mobj *mo = actionargs->actor;
    player_t  *player;

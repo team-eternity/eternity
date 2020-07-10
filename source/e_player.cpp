@@ -133,8 +133,8 @@ cfg_opt_t edf_skin_opts[] =
 
 static cfg_opt_t wpnslot_opts[] =
 {
-   CFG_STR(ITEM_WPNSLOT_WPNS,   0, CFGF_LIST),
-   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0, CFGF_NONE),
+   CFG_STR(ITEM_WPNSLOT_WPNS,   nullptr, CFGF_LIST),
+   CFG_FLAG(ITEM_WPNSLOT_CLEAR, 0,       CFGF_NONE),
    CFG_END()
 };
 
@@ -146,30 +146,30 @@ static cfg_opt_t reborn_opts[] =
 };
 
 #define PLAYERCLASS_FIELDS \
-   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   NULL, CFGF_NONE),  \
-   CFG_STR(ITEM_PCLASS_THINGTYPE,     NULL, CFGF_NONE),  \
-   CFG_STR(ITEM_PCLASS_ALTATTACK,     NULL, CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,  CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,  CFGF_NONE),  \
-   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,  CFGF_NONE),  \
-   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0, CFGF_NONE),  \
-                                                         \
-   /* speeds */                                          \
-   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450, CFGF_NONE), \
-   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512, CFGF_NONE), \
-   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0, CFGF_NONE), \
-                                                         \
-   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),      \
-                                                         \
-   /* reborn inventory items */                          \
-   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE), \
+   CFG_STR(ITEM_PCLASS_DEFAULTSKIN,   nullptr, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_THINGTYPE,     nullptr, CFGF_NONE),  \
+   CFG_STR(ITEM_PCLASS_ALTATTACK,     nullptr, CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_INITIALHEALTH, 100,     CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_MAXHEALTH,     100,     CFGF_NONE),  \
+   CFG_INT(ITEM_PCLASS_SUPERHEALTH,   100,     CFGF_NONE),  \
+   CFG_FLOAT(ITEM_PCLASS_VIEWHEIGHT,  41.0,    CFGF_NONE),  \
+                                                            \
+   /* speeds */                                             \
+   CFG_INT(ITEM_PCLASS_SPEEDWALK,      0x19,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDRUN,       0x32,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFE,    0x18,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDSTRAFERUN, 0x28,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURN,       640,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNFAST,  1280,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDTURNSLOW,   320,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKSLOW,   450,    CFGF_NONE), \
+   CFG_INT(ITEM_PCLASS_SPEEDLOOKFAST,   512,    CFGF_NONE), \
+   CFG_FLOAT(ITEM_PCLASS_SPEEDJUMP,     8.0,    CFGF_NONE), \
+                                                            \
+   CFG_BOOL(ITEM_PCLASS_DEFAULT, false, CFGF_NONE),         \
+                                                            \
+   /* reborn inventory items */                             \
+   CFG_FLAG(ITEM_PCLASS_CLRREBORNITEMS, 0,   CFGF_NONE),    \
    CFG_MVPROP(ITEM_PCLASS_REBORNITEM, reborn_opts,  CFGF_MULTI|CFGF_NOCASE), \
                                                                              \
     /* weapon slots */                                                       \
@@ -185,7 +185,7 @@ cfg_opt_t edf_pclass_opts[] =
 
 cfg_opt_t edf_pdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    PLAYERCLASS_FIELDS
 };
 
@@ -356,7 +356,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
       E_ReplaceString(newSkin->facename, cfg_getstrdup(skinsec, ITEM_SKIN_FACES));
 
       // faces have been reset, so clear the face array pointer
-      newSkin->faces = NULL; // handled by skin code
+      newSkin->faces = nullptr; // handled by skin code
    }
 
    // set sounds if specified
@@ -410,7 +410,7 @@ static void E_AddPlayerClass(playerclass_t *pc)
 //
 // E_PlayerClassForName
 //
-// Returns a player class given a name, or NULL if no such class exists.
+// Returns a player class given a name, or nullptr if no such class exists.
 //
 playerclass_t *E_PlayerClassForName(const char *name)
 {
@@ -801,7 +801,7 @@ void E_ProcessPlayerDeltas(cfg_t *cfg)
 //
 void E_VerifyDefaultPlayerClass()
 {
-   if(E_PlayerClassForName(GameModeInfo->defPClassName) == NULL)
+   if(E_PlayerClassForName(GameModeInfo->defPClassName) == nullptr)
    {
       I_Error("E_VerifyDefaultPlayerClass: default playerclass '%s' "
               "does not exist!\n",
@@ -812,30 +812,30 @@ void E_VerifyDefaultPlayerClass()
 //
 // Recursively populate a weapon slot with data from a WeaponSlotTree
 //
-static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode *node,
+static void E_populateWeaponSlot(BDListItem<weaponslot_t> &slotlist, WeaponSlotNode &node,
                                  unsigned int &data)
 {
-   if(node->left)
-      E_populateWeaponSlot(slotlist, node->left, data);
+   if(node.left)
+      E_populateWeaponSlot(slotlist, *node.left, data);
 
    weaponslot_t *curslot = estructalloc(weaponslot_t, 1);
    curslot->slotindex = slotlist.bdObject->slotindex;
    curslot->links.bdData = data;
-   curslot->weapon = node->object;
+   curslot->weapon = node.object;
    curslot->links.insert(curslot, slotlist);
    data++;
 
-   if(node->next)
-      E_populateWeaponSlot(slotlist, node->next, data);
+   if(node.next)
+      E_populateWeaponSlot(slotlist, *node.next, data);
 
-   if(node->right)
-      E_populateWeaponSlot(slotlist, node->right, data);
+   if(node.right)
+      E_populateWeaponSlot(slotlist, *node.right, data);
 }
 
 //
 // Creates a weapon slot from a given tree, then assigns it to the appropriate pclass slot
 //
-static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree *slottree)
+static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, WeaponSlotTree &slottree)
 {
    weaponslot_t *initslot = estructalloc(weaponslot_t, 1);
    initslot->slotindex = slotindex;
@@ -844,14 +844,14 @@ static inline void E_createWeaponSlotFromTree(playerclass_t *pc, int slotindex, 
    slotlist.bdObject = initslot;
 
    unsigned int temp = 0;
-   E_populateWeaponSlot(slotlist, slottree->root, temp);
+   E_populateWeaponSlot(slotlist, *slottree.root, temp);
    pc->weaponslots[slotindex] = initslot;
 }
 
 //
 // Recursively place all weapons from the global slot tree into the playerclass weaponslot (in-order traversal)
 //
-static void E_addGlobalWeaponsToSlot(WeaponSlotTree *slot, WeaponSlotNode *node, bool *weaponinslot)
+static void E_addGlobalWeaponsToSlot(WeaponSlotTree *&slot, WeaponSlotNode *node, bool *weaponinslot)
 {
    if(node == nullptr)
       return;
@@ -941,7 +941,7 @@ void E_ProcessFinalWeaponSlots()
             if(pclassslottree != nullptr)
             {
                E_freeWeaponSlot(chain, i);
-               E_createWeaponSlotFromTree(chain, i, pclassslottree);
+               E_createWeaponSlotFromTree(chain, i, *pclassslottree);
                delete pclassslottree;
             }
             else if(chain->weaponslots[i] != nullptr &&

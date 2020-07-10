@@ -96,7 +96,7 @@ int    lefthanded = 0;
 
 VALLOCATION(zeroarray)
 {
-   float *buffer = emalloctag(float *, w*2 * sizeof(float), PU_VALLOC, NULL);
+   float *buffer = emalloctag(float *, w*2 * sizeof(float), PU_VALLOC, nullptr);
    zeroarray = buffer;
    screenheightarray = buffer + w;
 
@@ -189,7 +189,7 @@ static float *portalbottom;
 
 VALLOCATION(portaltop)
 {
-   float *buf = emalloctag(float *, 2 * w * sizeof(*portaltop), PU_VALLOC, NULL);
+   float *buf = emalloctag(float *, 2 * w * sizeof(*portaltop), PU_VALLOC, nullptr);
 
    for(int i = 0; i < 2*w; i++)
       buf[i] = 0.0f;
@@ -209,7 +209,7 @@ static float *pscreenheightarray; // for psprites
 
 VALLOCATION(pscreenheightarray)
 {
-   pscreenheightarray = ecalloctag(float *, w, sizeof(float), PU_VALLOC, NULL);
+   pscreenheightarray = ecalloctag(float *, w, sizeof(float), PU_VALLOC, nullptr);
 }
 
 static lighttable_t **spritelights; // killough 1/25/98 made static
@@ -224,10 +224,10 @@ static vissprite_t *vissprites, **vissprite_ptrs;  // killough
 static size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
 
 // SoM 12/13/03: the post-BSP stack
-static poststack_t   *pstack       = NULL;
+static poststack_t   *pstack       = nullptr;
 static int            pstacksize   = 0;
 static int            pstackmax    = 0;
-static maskedrange_t *unusedmasked = NULL;
+static maskedrange_t *unusedmasked = nullptr;
 
 // MaxW: 2018/07/01: Whether or not to draw psprites
 static bool r_drawplayersprites = true;
@@ -260,10 +260,10 @@ VALLOCATION(pstack)
       mr = next;
    }
 
-   pstack       = NULL;
+   pstack       = nullptr;
    pstacksize   = 0;
    pstackmax    = 0;
-   unusedmasked = NULL;
+   unusedmasked = nullptr;
 }
 
 // haleyjd: made static global
@@ -272,7 +272,7 @@ static float *cliptop;
 
 VALLOCATION(clipbot)
 {
-   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, nullptr);
    clipbot = buffer;
    cliptop = buffer + w;
 }
@@ -499,11 +499,11 @@ static void R_InitSpriteDefs(char **namelist)
          // If j was -1 above, meaning that there are no lumps for the sprite
          // present, the sprite is left uninitialized. This creates major 
          // problems in R_PrecacheLevel if a thing tries to subsequently use
-         // that sprite. Instead, set numframes to 0 and spriteframes to NULL.
+         // that sprite. Instead, set numframes to 0 and spriteframes to nullptr.
          // Then, check for these values before loading any sprite.
          
          sprites[i].numframes = 0;
-         sprites[i].spriteframes = NULL;
+         sprites[i].spriteframes = nullptr;
       }
    }
    efree(hash);             // free hash table
@@ -569,7 +569,7 @@ void R_PushPost(bool pushmasked, pwindow_t *window)
          post->masked = unusedmasked;
          unusedmasked = unusedmasked->next;
 
-         post->masked->next = NULL;
+         post->masked->next = nullptr;
          post->masked->firstds = post->masked->lastds =
             post->masked->firstsprite = post->masked->lastsprite = 0;
       }
@@ -603,7 +603,7 @@ void R_PushPost(bool pushmasked, pwindow_t *window)
       memcpy(post->masked->floorclip,   portalbottom, sizeof(*portalbottom) * video.width);
    }
    else
-      post->masked = NULL;
+      post->masked = nullptr;
 
    pstacksize++;
 }
@@ -1843,8 +1843,8 @@ void R_DrawPostBSP()
                      drawsegs_xrange_count++;
                   }
                }
-               // haleyjd: terminate with a NULL user for faster loop - adds ~3 FPS
-               drawsegs_xrange[drawsegs_xrange_count].user = NULL;
+               // haleyjd: terminate with a nullptr user for faster loop - adds ~3 FPS
+               drawsegs_xrange[drawsegs_xrange_count].user = nullptr;
             }
 
             ptop    = masked->ceilingclip;
@@ -1867,11 +1867,11 @@ void R_DrawPostBSP()
          }
          
          // Done with the masked range
-         pstack[pstacksize].masked = NULL;
+         pstack[pstacksize].masked = nullptr;
          masked->next = unusedmasked;
          unusedmasked = masked;
          
-         masked = NULL;
+         masked = nullptr;
       }       
       
       if(pstack[pstacksize].overlay)
@@ -2167,11 +2167,11 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
 // newParticle
 //
 // Tries to find an inactive particle in the Particles list
-// Returns NULL on failure
+// Returns nullptr on failure
 //
 particle_t *newParticle()
 {
-   particle_t *result = NULL;
+   particle_t *result = nullptr;
    if(inactiveParticles != -1)
    {
       result = Particles + inactiveParticles;
@@ -2202,7 +2202,7 @@ void R_InitParticles()
    else if(numParticles < 100)
       numParticles = 100;
    
-   Particles = (particle_t *)(Z_Malloc(numParticles*sizeof(particle_t), PU_STATIC, NULL));
+   Particles = emalloctag(particle_t *, numParticles*sizeof(particle_t), PU_STATIC, nullptr);
    R_ClearParticles();
 }
 
@@ -2231,7 +2231,7 @@ static void R_ProjectParticle(particle_t *particle)
    fixed_t gzt;
    int x1, x2;
    vissprite_t *vis;
-   sector_t    *sector = NULL;
+   sector_t    *sector = nullptr;
    int heightsec = -1;
    
    float tempx, tempy, ty1, tx1, tx2, tz;
@@ -2489,7 +2489,7 @@ static void R_DrawParticle(vissprite_t *vis)
 // Console Commands
 //
 
-VARIABLE_TOGGLE(r_drawplayersprites, NULL, onoff);
+VARIABLE_TOGGLE(r_drawplayersprites, nullptr, onoff);
 CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------

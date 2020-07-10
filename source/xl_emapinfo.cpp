@@ -125,7 +125,7 @@ protected:
 public:
    XLEMapInfoParser() 
       : XLParser("EMAPINFO"), state(STATE_EXPECTHEADER), nextstate(-1),
-        isGlobal(true), curInfo(NULL), key(), value(), allowMultiValue(false)
+        isGlobal(true), curInfo(nullptr), key(), value(), allowMultiValue(false)
    {
    }
 
@@ -156,7 +156,7 @@ void XLEMapInfoParser::startLump()
 {
    state     = STATE_EXPECTHEADER;
    nextstate = -1;
-   curInfo   = NULL;
+   curInfo   = nullptr;
    key       = "";
    value     = "";
    allowMultiValue = false;
@@ -443,10 +443,10 @@ CONSOLE_COMMAND(xl_dumpemapinfo, 0)
       return;
    }
 
-   MetaTable *mapInfo = NULL;
+   MetaTable *mapInfo = nullptr;
    if((mapInfo = XL_EMapInfoForMapName(Console.argv[0]->constPtr())))
    {
-      const MetaObject *obj = NULL;
+      const MetaObject *obj = nullptr;
 
       C_Printf("EMAPINFO Entry for %s:\n", mapInfo->getKey());
       while((obj = mapInfo->tableIterator(obj)))

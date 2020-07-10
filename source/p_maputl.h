@@ -33,7 +33,7 @@
 struct line_t;
 class  Mobj;
 struct mobjinfo_t;
-struct polyobj_s; // ioanch 20160114
+struct polyobj_t; // ioanch 20160114
 struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
@@ -130,7 +130,7 @@ void    P_LineOpening (const line_t *linedef, const Mobj *mo,
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
-bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_s *, void *),
+bool P_BlockLinesIterator (int x, int y, bool func(line_t *, polyobj_t *, void *),
                            int groupid = R_NOGROUP, void *context = nullptr);
 bool P_BlockThingsIterator(int x, int y, int groupid, bool (*func)(Mobj *, void *),
                            void *context = nullptr);

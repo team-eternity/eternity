@@ -301,7 +301,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
 
    // haleyjd 03/27/10: new state cycle detection
    static bool firsttime = true; // for initialization
-   DLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
+   DLListItem<seenstate_t> *seenstates  = nullptr; // list of seenstates for this instance
    bool ret = true;                           // return value
 
    if(firsttime)
@@ -314,7 +314,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    {
       if(state == NullStateNum)
       {
-         mobj->state = NULL;
+         mobj->state = nullptr;
          mobj->remove();
          ret = false;
          break;                 // killough 4/9/98
@@ -338,7 +338,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
          actionargs.actiontype = actionargs_t::MOBJFRAME;
          actionargs.actor      = mobj;
          actionargs.args       = st->args;
-         actionargs.pspr       = NULL;
+         actionargs.pspr       = nullptr;
 
          st->action(&actionargs);
       }
@@ -382,7 +382,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    if(state == NullStateNum)
    {
       // remove mobj
-      mobj->state = NULL;
+      mobj->state = nullptr;
       mobj->remove();
       return false;
    }
@@ -542,7 +542,7 @@ void P_XYMovement(Mobj* mo)
             (mo->flags & MF_BOUNCES ||
              (!player && clip.blockline &&
               variable_friction && mo->z <= mo->zref.floor &&
-              P_GetFriction(mo, NULL) > ORIG_FRICTION)))
+              P_GetFriction(mo, nullptr) > ORIG_FRICTION)))
          {
             if (clip.blockline)
             {
@@ -757,7 +757,7 @@ void P_XYMovement(Mobj* mo)
       }
       else
       {
-         fixed_t friction = P_GetFriction(mo, NULL);
+         fixed_t friction = P_GetFriction(mo, nullptr);
 
          if(friction != FRACUNIT)
          {
@@ -880,7 +880,7 @@ static void P_ZMovement(Mobj* mo)
             // killough 11/98: touchy objects explode on impact
             if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
                mo->health > 0)
-               P_DamageMobj(mo, NULL, NULL, mo->health,MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, mo->health,MOD_UNKNOWN);
             else if (mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
             return;
@@ -1015,7 +1015,7 @@ floater:
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
             mo->health > 0)
-            P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
+            P_DamageMobj(mo, nullptr, nullptr, mo->health, MOD_UNKNOWN);
          else if(mo->player && // killough 5/12/98: exclude voodoo dolls
                  mo->player->mo == mo &&
                  mo->momz < -LevelInfo.gravity*8)
@@ -1409,7 +1409,7 @@ void Mobj::Think()
    // removed old code which looked at target references
    // (we use pointer reference counting now)
 
-   clip.BlockingMobj = NULL;
+   clip.BlockingMobj = nullptr;
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(subsector->sector->heightsec != -1)
@@ -1429,7 +1429,7 @@ void Mobj::Think()
    }
 
    // momentum movement
-   clip.BlockingMobj = NULL;
+   clip.BlockingMobj = nullptr;
    if(momx | momy || flags & MF_SKULLFLY)
    {
       P_XYMovement(this);
@@ -1438,7 +1438,7 @@ void Mobj::Think()
    }
 
    if(!P_Use3DClipping())
-      clip.BlockingMobj = NULL;
+      clip.BlockingMobj = nullptr;
 
    lz = z;
 
@@ -1718,7 +1718,7 @@ void Mobj::serialize(SaveArchive &arc)
          if(info->altsprite != -1)
             skin = P_GetMonsterSkin(info->altsprite);
          else
-            skin = NULL;
+            skin = nullptr;
       }
 
       backupPosition();
@@ -1758,7 +1758,7 @@ void Mobj::deSwizzle()
 
    // Done with the deswizzle info structure.
    efree(dsInfo);
-   dsInfo = NULL;
+   dsInfo = nullptr;
 }
 
 //
@@ -2051,7 +2051,7 @@ void Mobj::remove()
    if(demo_version > 337)
    {
       this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      this->old_sectorlist = NULL; 
+      this->old_sectorlist = nullptr; 
    }
 
    // killough 11/98: Remove any references to other mobjs.
@@ -2060,9 +2060,9 @@ void Mobj::remove()
    // current tic.
    if(demo_version >= 203)
    {
-      P_SetTarget<Mobj>(&this->target,    NULL);
-      P_SetTarget<Mobj>(&this->tracer,    NULL);
-      P_SetTarget<Mobj>(&this->lastenemy, NULL);
+      P_SetTarget<Mobj>(&this->target,    nullptr);
+      P_SetTarget<Mobj>(&this->tracer,    nullptr);
+      P_SetTarget<Mobj>(&this->lastenemy, nullptr);
    }
 
    // remove from thinker list
@@ -2087,7 +2087,7 @@ int P_FindDoomedNum(int type)
 
    if(!hash)
    {
-      hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
+      hash = emalloctag(dnumhash_s *, sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash);
       for(i = 0; i < NUMMOBJTYPES; i++)
          hash[i].first = NUMMOBJTYPES;
       for(i = 0; i < NUMMOBJTYPES; i++)
@@ -2313,7 +2313,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    }
 
    // haleyjd: now handled through IN_AddCameras
-   // return NULL for old demos
+   // return nullptr for old demos
    if(mthing->type == 5003 && demo_version < 331)
       return nullptr;
 
@@ -3320,7 +3320,7 @@ void P_Massacre(int friends)
             break;
          }
          mo->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99: none of that!
-         P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+         P_DamageMobj(mo, nullptr, nullptr, 10000, MOD_UNKNOWN);
       }
    }
 }
@@ -3351,7 +3351,7 @@ void P_FallingDamage(player_t *player)
    if(damage >= player->mo->health)
       player->mo->intflags |= MIF_DIEDFALLING;
 
-   P_DamageMobj(player->mo, NULL, NULL, damage, MOD_FALLING);
+   P_DamageMobj(player->mo, nullptr, nullptr, damage, MOD_FALLING);
 }
 
 //
@@ -3474,8 +3474,8 @@ void P_AddThingTID(Mobj *mo, int tid)
    if(tid <= 0)
    {
       mo->tid = 0;
-      mo->tid_next = NULL;
-      mo->tid_prevn = NULL;
+      mo->tid_next = nullptr;
+      mo->tid_prevn = nullptr;
    }
    else
    {
@@ -3521,7 +3521,7 @@ void P_RemoveThingTID(Mobj *mo)
 //
 // Like line and sector tag search functions, this function will
 // keep returning the next object with the same tid when called
-// repeatedly with the previous call's return value. Returns NULL
+// repeatedly with the previous call's return value. Returns nullptr
 // once the end of the chain is hit. Calling it again at that point
 // would restart the search from the base of the chain.
 //
@@ -3546,8 +3546,8 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
    // Reserved TIDs
    switch(tid)
    {
-   case 0:   // script trigger object (may be NULL, which is fine)
-      return !rover ? trigger : NULL;
+   case 0:   // script trigger object (may be nullptr, which is fine)
+      return !rover ? trigger : nullptr;
 
    case -1:  // players are -1 through -4
    case -2:
@@ -3556,11 +3556,11 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
       {
          int pnum = -tid - 1;
 
-         return !rover && playeringame[pnum] ? players[pnum].mo : NULL;
+         return !rover && playeringame[pnum] ? players[pnum].mo : nullptr;
       }
 
    default:
-      return NULL;
+      return nullptr;
    }
 }
 
@@ -3592,7 +3592,7 @@ void MobjFadeThinker::setTarget(Mobj *pTarget)
 //
 void MobjFadeThinker::remove()
 {
-   P_SetTarget<Mobj>(&target, NULL); // clear reference to parent Mobj
+   P_SetTarget<Mobj>(&target, nullptr); // clear reference to parent Mobj
    Super::remove();           // call parent implementation
 }
 
@@ -3676,7 +3676,7 @@ void MobjFadeThinker::deSwizzle()
 //
 void P_StartMobjFade(Mobj *mo, int alphavelocity)
 {
-   MobjFadeThinker *mf = NULL;
+   MobjFadeThinker *mf = nullptr;
    Thinker *cap = &thinkerclasscap[th_misc];
 
    for(Thinker *th = cap->cnext; th != cap; th = th->cnext)
@@ -3685,7 +3685,7 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity)
          break; // found one
 
       // keep looking
-      mf = NULL;
+      mf = nullptr;
    }
 
    if(!mf && alphavelocity != 0) // not one? spawn it now.
@@ -3768,7 +3768,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
 {
    int type, spottid, tid, ang;
    angle_t angle;
-   Mobj *mo, *spawnspot = NULL;
+   Mobj *mo, *spawnspot = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3819,7 +3819,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
 {
    int err, tid;
    char *sndname;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3853,7 +3853,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 {
    int tid, sndnum;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3883,7 +3883,7 @@ static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinginfosound(AMX *amx, cell *params)
 {
    int tid, typenum;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3962,7 +3962,7 @@ enum
 static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 {
    int value = 0, field, tid;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4000,7 +4000,7 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
 {
    int field, value, tid;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4035,7 +4035,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    int     tid, op, err;
    char   *flags;
    int    *results;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4093,7 +4093,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 {
    int tid, friendly;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4134,7 +4134,7 @@ static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
    bool friendly = false;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4161,7 +4161,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
 {
    int tid;
    fixed_t x, y, z;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4193,7 +4193,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
 {
-   Mobj  *mo   = NULL;
+   Mobj  *mo   = nullptr;
    angle_t angle = FixedToAngle((fixed_t)params[1]);
    fixed_t force = (fixed_t)params[2];
    int     tid   = params[3];
@@ -4232,7 +4232,7 @@ enum
 static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
 {
    int tid, valuetoget;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4291,7 +4291,7 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
 
    for(tid = 1; tid <= 65535; ++tid)
    {
-      if(P_FindMobjFromTID(tid, NULL, NULL) == NULL)
+      if(P_FindMobjFromTID(tid, nullptr, nullptr) == nullptr)
          return tid;
    }
 
@@ -4320,7 +4320,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
    fixed_t oldy;
    fixed_t oldz;
 
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4381,7 +4381,7 @@ AMX_NATIVE_INFO mobj_Natives[] =
    { "_ThingGetPos",       sm_thinggetpos },
    { "_GetFreeTID",        sm_getfreetid },
    { "_ThingTeleport",     sm_thingteleport },
-   { NULL,                 NULL }
+   { nullptr,              nullptr }
 };
 #endif
 

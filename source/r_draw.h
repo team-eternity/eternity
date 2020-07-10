@@ -166,7 +166,7 @@ extern const int fuzzoffset[];
 extern int fuzzpos;
 
 // Cardboard
-typedef struct cb_column_s
+struct cb_column_t
 {
    int x, y1, y2;
 
@@ -181,7 +181,7 @@ typedef struct cb_column_s
    fixed_t translevel; // haleyjd: zdoom style trans level
 
    const void *source;
-} cb_column_t;
+};
 
 
 extern cb_column_t column;

@@ -255,11 +255,11 @@ typedef enum {
 } pr_class_t;
 
 // The random number generator's state.
-typedef struct rng_s
+struct rng_t
 {
    unsigned int  seed[NUMPRCLASS];      // Each block's random seed
    int rndindex, prndindex;             // For compatibility support
-} rng_t;
+};
 
 extern rng_t rng;                      // The rng's state
 

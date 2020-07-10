@@ -92,7 +92,7 @@ class MobjCollection;
 // holds a ton of information to allow for the teleportation of
 // a thing with various effects
 //
-typedef struct bossteleport_s
+struct bossteleport_t
 {
    MobjCollection *mc;          // mobj collection to use
    pr_class_t      rngNum;      // rng number to use for selecting spot
@@ -105,7 +105,7 @@ typedef struct bossteleport_s
    int             hereThere;   // locations to spawn effects at (0, 1, or 2)
    int             soundNum;    // sound to play at locations
    fixed_t         minDistance; // minimum distance a spot must be from origin
-} bossteleport_t;
+};
 
 void P_BossTeleport(bossteleport_t *bt);
 

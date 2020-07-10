@@ -2953,7 +2953,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      argc  = NUMLINEARGS - 1;
    uint32_t argv[NUMLINEARGS - 1];
@@ -4302,7 +4302,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -4446,7 +4446,7 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 {
    // Don't use INIT_STRUCT or memset because of line_t PointThinker vtable
    // warnings. Just zero-init it.
-   line_t ln = { 0 };
+   line_t ln = {};
 
    // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
    ln.args[0] = instance->args[0];
@@ -4468,7 +4468,7 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 DEFINE_ACTION(EV_ActionACSScrollCeiling)
 {
    // See other comment in this file on this
-   line_t ln = { 0 };
+   line_t ln = {};
 
    // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
    ln.args[0] = instance->args[0];

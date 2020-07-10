@@ -86,11 +86,11 @@ typedef enum
    AS_MIRRORCEILING  = 0x08,
 } attachedtype_e;
 
-typedef struct attachedsurface_s
+struct attachedsurface_t
 {
    sector_t        *sector;
    int             type;
-} attachedsurface_t;
+};
 
 // haleyjd 12/28/08: sector flags
 enum
@@ -550,7 +550,7 @@ struct subsector_t
 // As an mobj moves through the world, these nodes are created and
 // destroyed, with the links changed appropriately.
 //
-// For the links, NULL means top or end of list.
+// For the links, nullptr means top or end of list.
 
 struct msecnode_t
 {
@@ -580,7 +580,7 @@ struct seg_t
   // Sector references.
   // Could be retrieved from linedef, too
   // (but that would be slower -- killough)
-  // backsector is NULL for one sided lines
+  // backsector is nullptr for one sided lines
 
   sector_t *frontsector, *backsector;
 

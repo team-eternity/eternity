@@ -33,7 +33,7 @@ struct line_t;
 struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
-struct polyobj_s; // ioanch 20160122
+struct polyobj_t; // ioanch 20160122
 struct sector_t;
 
 //=============================================================================
@@ -70,7 +70,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 
-bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context);  // ioanch: used in the code
+bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context);  // ioanch: used in the code
 
 void P_SlideMove(Mobj *mo);
 
@@ -230,7 +230,7 @@ struct doom_mapinter_t
    line_t    *blockline;   // killough 8/11/98: blocking linedef
    line_t    *floorline;   // killough 8/1/98: Highest touched floor
 
-   Mobj      *linetarget;  // who got hit (or NULL)
+   Mobj      *linetarget;  // who got hit (or nullptr)
 
    // keep track of special lines as they are hit,
    // but don't process them until the move is proven valid
@@ -263,7 +263,7 @@ struct doom_mapinter_t
    struct linepoly_t
    {
       line_t *ld;
-      polyobj_s *po;
+      polyobj_t *po;
    } *portalhit;
    int         portalhit_max;
    int         numportalhit;

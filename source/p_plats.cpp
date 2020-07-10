@@ -419,7 +419,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
 //
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
 {
-   sector_t *sec    = NULL;
+   sector_t *sec    = nullptr;
    int       secnum = -1;
    bool      manual = false;
    bool      rtn    = false;
@@ -584,7 +584,7 @@ manual_plat:
 // The following were all rewritten by Lee Killough to use the new structure 
 // which places no limits on active plats. It also avoids spending as much
 // time searching for active plats. Previously a fixed-size array was used,
-// with NULL indicating empty entries, while now a doubly-linked list is used.
+// with nullptr indicating empty entries, while now a doubly-linked list is used.
 
 //
 // P_ActivateInStasis()
@@ -679,7 +679,7 @@ void PlatThinker::addActivePlat()
 //
 void PlatThinker::removeActivePlat()
 {
-   sector->srf.floor.data = NULL; //jff 2/23/98 multiple thinkers
+   sector->srf.floor.data = nullptr; //jff 2/23/98 multiple thinkers
    remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;

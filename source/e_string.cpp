@@ -166,7 +166,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
 // E_StringForName
 //
 // Returns a pointer to an EDF string given a mnemonic value.
-// Returns NULL if not found.
+// Returns nullptr if not found.
 //
 edf_string_t *E_StringForName(const char *key)
 {
@@ -198,7 +198,7 @@ edf_string_t *E_GetStringForName(const char *key)
 // E_StringForNum
 //
 // Returns an EDF string object for a numeric key.
-// Returns NULL if not found.
+// Returns nullptr if not found.
 //
 edf_string_t *E_StringForNum(int num)
 {
@@ -208,7 +208,7 @@ edf_string_t *E_StringForNum(int num)
    while(cur && (*cur)->numkey != num)
       cur = cur->dllNext;
 
-   return cur ? cur->dllObject : NULL;
+   return cur ? cur->dllObject : nullptr;
 }
 
 //

@@ -216,17 +216,17 @@ itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
                                         inventoryindex_t idx);
 
 // Get the slot being used for a particular inventory item, by ID, if one
-// exists. Returns NULL if the item isn't in the player's inventory.
+// exists. Returns nullptr if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
                                           inventoryitemid_t id);
 
 // Get the slot being used for a particular inventory item, by item pointer, if
-// one exists. Returns NULL if the item isn't in the player's inventory.
+// one exists. Returns nullptr if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItem(const player_t *player,
                                         const itemeffect_t *effect);
 
 // Get the slot being used for a particular inventory item, by name, if one
-// exists. Returns NULL if the item isn't in the player's inventory.
+// exists. Returns nullptr if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
                                             const char *name);
 

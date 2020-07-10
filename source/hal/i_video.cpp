@@ -98,7 +98,7 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #if defined(_SDL_VER) && defined(EE_FEATURE_OPENGL)
       &i_sdlgl2dvideodriver
 #else
-      NULL
+      nullptr
 #endif
    },
 
@@ -109,7 +109,7 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #ifdef _SDL_VER
       &i_sdlvideodriver
 #else
-      NULL
+      nullptr
 #endif
    }
 };
@@ -493,7 +493,7 @@ static void I_ResetScreen()
 void I_InitGraphics()
 {
    static int firsttime = true;
-   haldriveritem_t *driveritem = NULL;
+   haldriveritem_t *driveritem = nullptr;
    
    if(!firsttime)
       return;
@@ -614,22 +614,22 @@ CONSOLE_COMMAND(togglefullscreen, cf_buffered)
    i_default_videomode = estrdup(i_videomode);
 }
 
-VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
+VARIABLE_BOOLEAN(use_vsync, nullptr,  yesno);
 
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
    I_SetMode();
 }
 
-VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
+VARIABLE_BOOLEAN(usemouse,    nullptr, yesno);
 
 CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
 
 // haleyjd 03/27/06: mouse grabbing
-VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
+VARIABLE_BOOLEAN(grabmouse, nullptr, yesno);
 CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 
-VARIABLE_STRING(i_videomode, NULL, UL);
+VARIABLE_STRING(i_videomode, nullptr, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
    I_SetMode();
@@ -647,10 +647,10 @@ static const char *i_videodrivernames[] =
    "SDL GL2D"
 };
 
-VARIABLE_INT(i_videodriverid, NULL, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
+VARIABLE_INT(i_videodriverid, nullptr, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
 CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
 
-VARIABLE_TOGGLE(i_letterbox, NULL, yesno);
+VARIABLE_TOGGLE(i_letterbox, nullptr, yesno);
 CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)
 {
    I_SetMode();

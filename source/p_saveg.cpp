@@ -326,7 +326,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    else
    {
       loadfile->readSint32(linenum);
-      if(linenum == -1) // Some line pointers can be NULL
+      if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
       else if(linenum < 0 || linenum >= numlines)
       {
@@ -435,7 +435,7 @@ static void P_DeNumberThinkers()
 //
 unsigned int P_NumForThinker(Thinker *th)
 {
-   return th ? th->getOrdinal() : 0; // 0 == NULL
+   return th ? th->getOrdinal() : 0; // 0 == nullptr
 }
 
 //
@@ -443,7 +443,7 @@ unsigned int P_NumForThinker(Thinker *th)
 //
 Thinker *P_ThinkerForNum(unsigned int n)
 {
-   return n <= num_thinkers ? thinker_p[n] : NULL;
+   return n <= num_thinkers ? thinker_p[n] : nullptr;
 }
 
 //=============================================================================
@@ -836,7 +836,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    {
       char *className = nullptr;
       size_t len;
-      unsigned int idx = 1; // Start at index 1, as 0 means NULL
+      unsigned int idx = 1; // Start at index 1, as 0 means nullptr
       Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
@@ -1472,7 +1472,7 @@ void P_LoadGame(const char *filename)
          arc << lvc;
          gamemapname[i] = (char)lvc;
       }
-      gamemapname[8] = '\0'; // ending NULL
+      gamemapname[8] = '\0'; // ending nullptr
 
       G_SetGameMap(); // get gameepisode, map
 

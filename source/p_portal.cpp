@@ -56,7 +56,7 @@ struct polycouple_t
 // table is built it is allocated as a linear buffer of groupcount * groupcount
 // entries. The entries are arranged much like pixels in a screen buffer where 
 // the offset is located in linktable[startgroup * groupcount + targetgroup]
-linkoffset_t **linktable = NULL;
+linkoffset_t **linktable = nullptr;
 
 
 // This guy is a (0, 0, 0) link offset which is used to populate null links in the 
@@ -140,7 +140,7 @@ int P_PortalGroupCount()
 // Called before map processing. Simply inits some module variables
 void P_InitPortals(void)
 {
-   linktable = NULL;
+   linktable = nullptr;
 
    groupcount = 0;
 
@@ -209,7 +209,7 @@ int P_CreatePortalGroup(sector_t *from)
 //
 void P_GatherSectors(sector_t *from, const int groupid)
 {
-   static sector_t   **list = NULL;
+   static sector_t   **list = nullptr;
    static int        listmax = 0;
 
    sector_t  *sec2;
@@ -313,29 +313,29 @@ linkoffset_t *P_GetLinkOffset(int startgroup, int targetgroup)
 // P_GetLinkIfExists
 //
 // Returns a link offset to get from 'fromgroup' to 'togroup' if one exists. 
-// Returns NULL otherwise
+// Returns nullptr otherwise
 //
 linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 {
    if(!useportalgroups)
-      return NULL;
+      return nullptr;
 
    if(!linktable)
    {
       C_Printf(FC_ERROR "P_GetLinkIfExists: called with no link table.\n");
-      return NULL;
+      return nullptr;
    }
    
    if(fromgroup < 0 || fromgroup >= groupcount)
    {
       C_Printf(FC_ERROR "P_GetLinkIfExists: called with OoB fromgroup %d.\n", fromgroup);
-      return NULL;
+      return nullptr;
    }
 
    if(togroup < 0 || togroup >= groupcount)
    {
       C_Printf(FC_ERROR "P_GetLinkIfExists: called with OoB togroup %d.\n", togroup);
-      return NULL;
+      return nullptr;
    }
 
    return linktable[fromgroup * groupcount + togroup];
@@ -368,7 +368,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
    if(startgroup == targetgroup)
       return 0;
 
-   link = (linkoffset_t *)(Z_Malloc(sizeof(linkoffset_t), PU_LEVEL, 0));
+   link = emalloctag(linkoffset_t *, sizeof(linkoffset_t), PU_LEVEL, nullptr);
    linktable[startgroup * groupcount + targetgroup] = link;
    
    link->x = x;
@@ -688,9 +688,7 @@ bool P_BuildLinkTable()
 
    // SoM: the last line of the table (starting at groupcount * groupcount) is
    // used as a temporary list for gathering links.
-   linktable = 
-      (linkoffset_t **)(Z_Calloc(1, sizeof(linkoffset_t *)*groupcount*groupcount,
-                                PU_LEVEL, 0));
+   linktable = ecalloctag(linkoffset_t **, 1, sizeof(linkoffset_t *) * groupcount * groupcount, PU_LEVEL, nullptr );
 
    // Run through the sectors check for invalid portal references.
    for(i = 0; i < numsectors; i++)
@@ -1124,7 +1122,7 @@ void P_SetLPortalBehavior(line_t *line, int newbehavior)
 // Moves a polyobject portal cluster, updating link offsets.
 //
 void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
-   fixed_t dy, bool setpolyref, const polyobj_s *po)
+   fixed_t dy, bool setpolyref, const polyobj_t *po)
 {
    const int *row = clusters + ingroup * groupcount;
    for(int i = 0; i < groupcount; ++i)

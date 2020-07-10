@@ -41,12 +41,12 @@
 // Flats?
 //
 // a pic is an unmasked block of pixels
-typedef struct pic_s
+struct pic_t
 {
   byte  width;
   byte  height;
   byte  data;
-} pic_t;
+};
 
 
 #endif

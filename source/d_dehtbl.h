@@ -22,24 +22,24 @@
 
 struct actionargs_t;
 
-typedef struct deh_bexptr_s
+struct deh_bexptr
 {
    void (*cptr)(actionargs_t *); // actual pointer to the subroutine
    const char *lookup;           // mnemonic lookup string to be specified in BEX
    int next;                     // haleyjd: for bex hash chaining   
-} deh_bexptr;
+};
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
 extern int num_bexptrs;
 
-typedef struct dehstr_s
+struct dehstr_t
 {
    const char **ppstr;   // doubly indirect pointer to string   
    const char *lookup;   // pointer to lookup string name
    const char *original; // haleyjd 10/08/06: original string
    size_t bnext;         // haleyjd: for bex hash chaining (by mnemonic)
    size_t dnext;         // haleyjd: for deh hash chaining (by value)
-} dehstr_t;
+};
 
 extern char **deh_spritenames;
 extern char **deh_musicnames;

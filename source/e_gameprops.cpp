@@ -176,7 +176,7 @@ static dehflags_t gmi_flags[] =
    { "CHEATSOUND",     GIF_CHEATSOUND     },
    { "CHASEFAST",      GIF_CHASEFAST      },
    { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
-   { NULL,             0                  }
+   { nullptr,          0                  }
 };
 
 static dehflagset_t gmi_flagset =
@@ -197,7 +197,7 @@ static dehflags_t mission_flags[] =
    { "NOGDHIGH",       MI_NOGDHIGH       },
    { "ALLOWEXITTAG",   MI_ALLOWEXITTAG   },
    { "ALLOWSECRETTAG", MI_ALLOWSECRETTAG },
-   { NULL,             0                 }
+   { nullptr,          0                 }
 };
 
 static dehflagset_t mission_flagset =

@@ -346,7 +346,7 @@ static dehflags_t deh_mobjflags[] =
   {"SETTARGETONDEATH",   0x10000000, 3},
   {"SLIDEOVERTHINGS",    0x20000000, 3},
 
-  { NULL,              0 }             // NULL terminator
+  { nullptr,             0 }             // nullptr terminator
 };
 
 // haleyjd 02/19/04: new dehflagset for combined flags
@@ -546,7 +546,7 @@ static void deh_CloseLog()
    if(fileout && fileout != stdout)
       fclose(fileout);
    
-   fileout = NULL;
+   fileout = nullptr;
 }
 
 // ====================================================================
@@ -639,8 +639,8 @@ void ProcessDehFile(const char *filename, const char *outfilename, int lumpnum)
          deh_LogPrintf("Branching to include file %s...\n", nextfile);
 
          // killough 10/98:
-         // Second argument must be NULL to prevent closing fileout too soon         
-         ProcessDehFile(nextfile, NULL, 0); // do the included file
+         // Second argument must be nullptr to prevent closing fileout too soon         
+         ProcessDehFile(nextfile, nullptr, 0); // do the included file
          
          includenotext = oldnotext;
          
@@ -686,7 +686,7 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
    char inbuffer[DEH_BUFFERMAX];
    int indexnum;
    char mnemonic[DEH_MAXKEYLEN];  // to hold the codepointer mnemonic
-   deh_bexptr *bexptr = NULL; // haleyjd 03/14/03
+   deh_bexptr *bexptr = nullptr; // haleyjd 03/14/03
 
    // Ty 05/16/98 - initialize it to something, dummy!
    strncpy(inbuffer, line, DEH_BUFFERMAX);
@@ -759,7 +759,7 @@ dehflags_t *deh_ParseFlag(dehflagset_t *flagset, const char *name)
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 dehflags_t *deh_ParseFlagCombined(const char *name)
@@ -795,7 +795,7 @@ void deh_ParseFlags(dehflagset_t *flagset, char **strval)
    //
    // Use OR logic instead of addition, to allow repetition
 
-   for(;(*strval = strtok(*strval, ",+| \t\f\r")); *strval = NULL)
+   for(;(*strval = strtok(*strval, ",+| \t\f\r")); *strval = nullptr)
    {
       dehflags_t *flag = deh_ParseFlag(flagset, *strval);
 
@@ -1127,7 +1127,7 @@ static void deh_procFrame(DWFILE *fpin, char *line)
       if(!*inbuffer)
          break; // killough 11/98
 
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1262,7 +1262,7 @@ static void deh_procPointer(DWFILE *fpin, char *line) // done
       if(!*inbuffer) 
          break;       // killough 11/98
 
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1342,7 +1342,7 @@ static void deh_procSounds(DWFILE *fpin, char *line)
       if(!*inbuffer)
          break;         // killough 11/98
       
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok      
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok      
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1456,7 +1456,7 @@ static void deh_procAmmo(DWFILE *fpin, char *line)
       if(!*inbuffer)
          break;       // killough 11/98
       
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1558,7 +1558,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
       if(!*inbuffer) 
          break;       // killough 11/98
       
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1569,7 +1569,7 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
       if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
       {
          if(value < 0 || value >= NUMAMMO)
-            weaponinfo.ammo = NULL; // no ammo
+            weaponinfo.ammo = nullptr; // no ammo
          else
             weaponinfo.ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
       }
@@ -1816,7 +1816,7 @@ static void deh_procMisc(DWFILE *fpin, char *line) // done
       if(!*inbuffer)
          break;    // killough 11/98
       
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -1984,7 +1984,7 @@ static void deh_procText(DWFILE *fpin, char *line)
    unsigned int fromlen, tolen;    // as specified on the text block line
    int usedlen;                    // shorter of fromlen and tolen if not matched
    bool found = false;             // to allow early exit once found
-   char* line2 = NULL;             // duplicate line for rerouting
+   char* line2 = nullptr;             // duplicate line for rerouting
    sfxinfo_t *sfx;
 
    // Ty 04/11/98 - Included file may have NOTEXT skip flag set
@@ -2111,7 +2111,7 @@ static void deh_procText(DWFILE *fpin, char *line)
          inbuffer[fromlen] = '\0';
       }
       
-      deh_procStringSub(NULL, inbuffer, line2);
+      deh_procStringSub(nullptr, inbuffer, line2);
    }
 
    if(line2)
@@ -2138,9 +2138,9 @@ static void deh_procStrings(DWFILE *fpin, char *line)
    char key[DEH_MAXKEYLEN];
    char inbuffer[DEH_BUFFERMAX];
    int  value;          // All deh values are ints or longs
-   char *strval = NULL; // holds the string value of the line
+   char *strval = nullptr; // holds the string value of the line
    // holds the final result of the string after concatenation
-   static char *holdstring = NULL;
+   static char *holdstring = nullptr;
    static unsigned int maxstrlen = 128; // maximum string length, bumped 128 at
                                         // a time as needed
    bool found = false;  // looking for string continuation
@@ -2202,7 +2202,7 @@ static void deh_procStrings(DWFILE *fpin, char *line)
       {
          // go process the current string
          // supply key and not search string
-         found = deh_procStringSub(key, NULL, holdstring);
+         found = deh_procStringSub(key, nullptr, holdstring);
 
           if(!found)
           {
@@ -2230,7 +2230,7 @@ static void deh_procStrings(DWFILE *fpin, char *line)
 //
 static bool deh_procStringSub(char *key, char *lookfor, char *newstring)
 {
-   dehstr_t *dehstr = NULL;
+   dehstr_t *dehstr = nullptr;
 
    if(lookfor)
       dehstr = D_GetDEHStr(lookfor);
@@ -2305,7 +2305,7 @@ static void deh_procHelperThing(DWFILE *fpin, char *line)
       if(!*inbuffer)
          break;    
       
-      if(!deh_GetData(inbuffer, key, &value, NULL)) // returns TRUE if ok
+      if(!deh_GetData(inbuffer, key, &value, nullptr)) // returns TRUE if ok
       {
          deh_LogPrintf("Bad data pair in '%s'\n", inbuffer);
          continue;
@@ -2588,7 +2588,7 @@ static char *ptr_lstrip(char *p)  // point past leading whitespace
 //          k -- a place to put the key
 //          l -- pointer to an integer to store the number
 //          strval -- a pointer to the place in s where the number
-//                    value comes from.  Pass NULL to not use this.
+//                    value comes from.  Pass nullptr to not use this.
 // Notes:   Expects a key phrase, optional space, equal sign,
 //          optional space and a value, mostly an int. The passed 
 //          pointer to hold the key must be DEH_MAXKEYLEN in size.
@@ -2620,7 +2620,7 @@ static bool deh_GetData(char *s, char *k, int *l, char **strval)
          okrc = false; 
 
       // we've incremented t
-      val = static_cast<int>(strtol(t, NULL, 0));  // killough 8/9/98: allow hex or octal input
+      val = static_cast<int>(strtol(t, nullptr, 0));  // killough 8/9/98: allow hex or octal input
    }
 
    // go put the results in the passed pointers
@@ -2629,9 +2629,9 @@ static bool deh_GetData(char *s, char *k, int *l, char **strval)
    // if spaces between key and equal sign, strip them
    strcpy(k, ptr_lstrip(buffer));  // could be a zero-length string
    
-   if(strval != NULL) // pass NULL if you don't want this back
-      *strval = t;    // pointer, has to be somewhere in s,
-                      // even if pointing at the zero byte.   
+   if(strval != nullptr) // pass nullptr if you don't want this back
+      *strval = t;       // pointer, has to be somewhere in s,
+                         // even if pointing at the zero byte.
    return okrc;
 }
 

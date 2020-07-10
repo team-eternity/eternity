@@ -1045,7 +1045,8 @@ void A_WeaponSetCtr(actionargs_t *actionargs)
       *counter = P_Random(pr_weapsetctr); break;
    case CPOP_RNDMOD:
       if(value > 0)
-         *counter = P_Random(pr_weapsetctr) % value; break;
+         *counter = P_Random(pr_weapsetctr) % value;
+      break;
    case CPOP_SHIFTLEFT:
       *counter <<= value; break;
    case CPOP_SHIFTRIGHT:

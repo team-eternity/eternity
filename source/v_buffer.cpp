@@ -258,7 +258,7 @@ void V_FreeVBuffer(VBuffer *buffer)
    if(buffer->owndata)
    {
       efree(buffer->data);
-      buffer->data = NULL;
+      buffer->data = nullptr;
       buffer->owndata = false;
    }
 
@@ -289,7 +289,7 @@ void V_UnsetScaling(VBuffer *buffer)
    }
 
    buffer->x1lookup = buffer->x2lookup 
-      = buffer->y1lookup = buffer->y2lookup = NULL;
+      = buffer->y1lookup = buffer->y2lookup = nullptr;
 
    V_SetupBufferFuncs(buffer, DRAWTYPE_UNSCALED);
 }
