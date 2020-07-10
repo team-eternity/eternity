@@ -737,8 +737,7 @@ static bool R_ClipInitialSegRange(int *start, int *stop, float *clipx1, float *c
       deltadists[1] = 1.0f / (seg.dist2 - seg.diststep * *clipx2) - portalrender.dist[*stop];
 
       // Only apply the nonzero buffer if portals. Otherwise 0.
-      float threshold = seg.l_window || seg.t_window || seg.b_window ? DISTANCE_TOLERANCE : 0;
-      if(deltadists[0] < threshold && deltadists[1] < threshold)
+      if(deltadists[0] < DISTANCE_TOLERANCE && deltadists[1] < DISTANCE_TOLERANCE)
          return false;
    }
 
