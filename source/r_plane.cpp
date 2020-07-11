@@ -133,10 +133,11 @@ VALLOCATION(overlayfclip)
 // Stores the index of the last surface-marked seg clipping that column. Needed by sector portals
 // to know which segs delimit them from the viewer.
 //
-float *lastcoldist;
+float *lastcoldist[surf_NUM];
 VALLOCATION(lastcoldist)
 {
-   lastcoldist = ecalloctag(float *, w, sizeof(*lastcoldist), PU_VALLOC, nullptr);
+   lastcoldist[surf_floor] = ecalloctag(float *, 2 * w, sizeof(*lastcoldist), PU_VALLOC, nullptr);
+   lastcoldist[surf_ceil] = lastcoldist[surf_floor] + w;
 }
 
 // spanstart holds the start of a plane span; initialized to 0 at start
@@ -597,7 +598,7 @@ void R_ClearPlanes()
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;
-      lastcoldist[i] = 0;  // that means on viewport
+      lastcoldist[surf_floor][i] = lastcoldist[surf_ceil][i] = 0;  // that means on viewport
    }
 
    R_ClearPlaneHash(&mainhash);

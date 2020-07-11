@@ -274,7 +274,8 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
-               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line, lastcoldist[i]);
+               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line,
+                           lastcoldist[surf_ceil][i]);
                ceilingclip[i] = (float)t;
             }
             else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
@@ -283,6 +284,11 @@ static void R_RenderSegLoop(void)
                segclip.ceilingplane->bottom[i] = line;
                ceilingclip[i] = (float)t;
             }
+         }
+         if(segclip.backsec &&
+            segclip.backsec->srf.ceiling.portal != segclip.frontsec->srf.ceiling.portal)
+         {
+            lastcoldist[surf_ceil][i] = 1.0f / segclip.dist;
          }
       }
   
@@ -311,7 +317,8 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
-               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot, lastcoldist[i]);
+               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot,
+                           lastcoldist[surf_floor][i]);
                floorclip[i] = (float)b;
             }
             else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
@@ -321,9 +328,12 @@ static void R_RenderSegLoop(void)
                floorclip[i] = (float)b;
             }
          }
+         if(segclip.backsec &&
+            segclip.backsec->srf.floor.portal != segclip.frontsec->srf.floor.portal)
+         {
+            lastcoldist[surf_floor][i] = 1.0f / segclip.dist;
+         }
       }
-      
-      lastcoldist[i] = 1.0f / segclip.dist;
 
       if(segclip.segtextured)
       {

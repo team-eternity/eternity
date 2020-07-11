@@ -857,7 +857,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    ceilingclip = window->top;
    // For skybox portals, we can be as close as we want to surfaces
    for(int i = 0; i < video.width; ++i)
-      lastcoldist[i] = 0;
+      lastcoldist[surf_floor][i] = lastcoldist[surf_ceil][i] = 0;
 
    R_ClearOverlayClips();
 
@@ -1067,7 +1067,8 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
    // Can't just switch reference: we need to preserve window->dist for blocking unwanted rendering
-   memcpy(lastcoldist, window->dist, video.width * sizeof(*lastcoldist));
+   memcpy(lastcoldist[surf_floor], window->dist, video.width * sizeof(*lastcoldist[surf_floor]));
+   memcpy(lastcoldist[surf_ceil], window->dist, video.width * sizeof(*lastcoldist[surf_ceil]));
 
    R_ClearOverlayClips();
    
@@ -1180,7 +1181,8 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
    // Can't just switch reference: we need to preserve window->dist for blocking unwanted rendering
-   memcpy(lastcoldist, window->dist, video.width * sizeof(*lastcoldist));
+   memcpy(lastcoldist[surf_floor], window->dist, video.width * sizeof(*lastcoldist[surf_floor]));
+   memcpy(lastcoldist[surf_ceil], window->dist, video.width * sizeof(*lastcoldist[surf_ceil]));
 
    R_ClearOverlayClips();
    
