@@ -286,7 +286,8 @@ static void R_RenderSegLoop(void)
             }
          }
          if(segclip.backsec &&
-            segclip.backsec->srf.ceiling.portal != segclip.frontsec->srf.ceiling.portal)
+            (segclip.backsec->srf.ceiling.portal != segclip.frontsec->srf.ceiling.portal ||
+             segclip.backsec->srf.ceiling.height != segclip.frontsec->srf.ceiling.height))
          {
             lastcoldist[surf_ceil][i] = 1.0f / segclip.dist;
          }
@@ -329,7 +330,8 @@ static void R_RenderSegLoop(void)
             }
          }
          if(segclip.backsec &&
-            segclip.backsec->srf.floor.portal != segclip.frontsec->srf.floor.portal)
+            (segclip.backsec->srf.floor.portal != segclip.frontsec->srf.floor.portal ||
+             segclip.backsec->srf.floor.height != segclip.frontsec->srf.floor.height))
          {
             lastcoldist[surf_floor][i] = 1.0f / segclip.dist;
          }
