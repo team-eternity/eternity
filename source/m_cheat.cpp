@@ -1207,7 +1207,9 @@ CONSOLE_COMMAND(warp, cf_notnet | cf_level)
       return;
    if(Console.argc <= 1)
    {
-      C_Puts("Usage: warp x y\nTeleports player to given coordinates.");
+      C_Printf("Usage: warp x y\nTeleports player to given coordinates.\n"
+               "Position: %d %d %d a=%d\n", plyr->mo->x / FRACUNIT, plyr->mo->y / FRACUNIT,
+               plyr->mo->z / FRACUNIT, plyr->mo->angle / ANGLE_1);
       return;
    }
    char *endptr;
