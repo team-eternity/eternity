@@ -113,29 +113,26 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 }
 
 //
-// Also divline version
+// Floating-point version
 //
-int P_BoxOnDivlineSidePrecise(const fixed_t *tmbox, const divline_t &dl)
+int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta)
 {
-   int p;
-
-   if(!dl.dy)
+   bool p;
+   if(!delta.y)
+      return (box[BOXBOTTOM] > start.y) == (p = box[BOXTOP] > start.y) ? p ^ (delta.x < 0) : -1;
+   if(!delta.x)
+      return (box[BOXLEFT] < start.x) == (p = box[BOXRIGHT] < start.x) ? p ^ (delta.y < 0) : -1;
+   if(delta.x * delta.y >= 0)
    {
-      return (tmbox[BOXBOTTOM] > dl.y) == (p = tmbox[BOXTOP] > dl.y) ?
-         p ^ (dl.dx < 0) : -1;
+      v2float_t bottomRight = { box[BOXRIGHT], box[BOXBOTTOM] };
+      v2float_t topLeft = { box[BOXLEFT], box[BOXTOP] };
+      float prod = delta % (topLeft - start);
+      return delta % (bottomRight - start) * prod >= 0 ? prod >= 0 : -1;
    }
-   if(!dl.dx)
-   {
-      return (tmbox[BOXLEFT] < dl.x) == (p = tmbox[BOXRIGHT] < dl.x) ?
-         p ^ (dl.dy < 0) : -1;
-   }
-   if((dl.dx ^ dl.dy) >= 0)
-   {
-      return P_PointOnDivlineSidePrecise(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], &dl) ==
-         (p = P_PointOnDivlineSidePrecise(tmbox[BOXLEFT], tmbox[BOXTOP], &dl)) ? p : -1;
-   }
-   return P_PointOnDivlineSidePrecise(tmbox[BOXLEFT], tmbox[BOXBOTTOM], &dl) ==
-      (p = P_PointOnDivlineSidePrecise(tmbox[BOXRIGHT], tmbox[BOXTOP], &dl)) ? p : -1;
+   v2float_t bottomLeft = { box[BOXLEFT], box[BOXBOTTOM] };
+   v2float_t topRight = { box[BOXRIGHT], box[BOXTOP] };
+   float prod = delta % (topRight - start);
+   return delta % (bottomLeft - start) * prod >= 0 ? prod >= 0 : -1;
 }
 
 //

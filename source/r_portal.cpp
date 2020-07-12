@@ -179,7 +179,8 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
    window->child    = nullptr;
    window->next     = nullptr;
    window->portal   = nullptr;
-   window->seg      = nullptr;
+   window->line     = nullptr;
+   window->linegen  = {};
    window->func     = R_RenderPortalNOP;
    window->clipfunc = nullptr;
    window->vx = window->vy = window->vz = 0;
@@ -235,8 +236,8 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
       y += link.deltay;
    }
 }
-inline static void R_applyPortalTransformTo(const portal_t *portal,
-   float &x, float &y, bool applyTranslation)
+inline static void R_applyPortalTransformTo(const portal_t *portal, float &x, float &y,
+                                            bool applyTranslation)
 {
    if(portal->type == R_ANCHORED || portal->type == R_TWOWAY)
    {
@@ -250,27 +251,23 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
       y += M_FixedToFloat(link.deltay);
    }
 }
-
-//
-// Calculates the render barrier based on portal type and source seg
-// (assuming line portal). Use seg because it may round-off badly in dynasegs
-//
-static void R_calcRenderBarrier(const portal_t *portal, dlnormal_t &dln)
+static void R_applyPortalTransformTo(const portal_t *portal, v2float_t &v, bool applyTranslation)
 {
-   R_applyPortalTransformTo(portal, dln.dl.x, dln.dl.y, true);
-   R_applyPortalTransformTo(portal, dln.dl.dx, dln.dl.dy, false);
-   R_applyPortalTransformTo(portal, dln.nx, dln.ny, false);
+   R_applyPortalTransformTo(portal, v.x, v.y, applyTranslation);
 }
-static void R_calcRenderBarrier(const portal_t *portal, const seg_t *seg,
-   dlnormal_t &dln)
+
+static void R_applyPortalTransformTo(const portal_t *portal, windowlinegen_t &linegen)
 {
-   dln.dl.x = seg->v1->x;
-   dln.dl.y = seg->v1->y;
-   dln.dl.dx = seg->v2->x - dln.dl.x;
-   dln.dl.dy = seg->v2->y - dln.dl.y;
-   dln.nx = seg->linedef->nx;
-   dln.ny = seg->linedef->ny;
-   R_calcRenderBarrier(portal, dln);
+   R_applyPortalTransformTo(portal, linegen.start, true);
+   R_applyPortalTransformTo(portal, linegen.delta, false);
+   R_applyPortalTransformTo(portal, linegen.normal, false);
+}
+
+static void R_calcRenderBarrier(const portal_t *portal, const windowlinegen_t &linegen,
+                                windowlinegen_t &translatedgen)
+{
+   translatedgen = linegen;
+   R_applyPortalTransformTo(portal, translatedgen);
 }
 
 //
@@ -288,29 +285,33 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
    };
    
    renderbarrier_t &barrier = window.barrier;
-   fixed_t x, y;
+   float x, y;
    for(int i = 0; i < 4; ++i)
    {
       // Use the corners of the box when applying transformation
-      x = box.box[ind[0][i]];
-      y = box.box[ind[1][i]];
+      x = box.fbox[ind[0][i]];
+      y = box.fbox[ind[1][i]];
       R_applyPortalTransformTo(portal, x, y, true);
-      M_AddToBox(barrier.bbox, x, y);
+      M_AddToBox2(barrier.fbox, x, y);
    }
 }
 
-static pwindow_t *R_NewPortalWindow(portal_t *p, const seg_t *seg, pwindowtype_e type)
+static pwindow_t *R_NewPortalWindow(portal_t *p, const line_t *linedef, pwindowtype_e type)
 {
    pwindow_t *ret = newPortalWindow();
    
    ret->portal = p;
-   ret->seg    = seg;
+   ret->line   = linedef;
+
    ret->type   = type;
    ret->head   = ret;
    if(type == pw_line)
    {
-      I_Assert(seg && seg->linedef, "R_NewPortalWindow: Null line despite type == pw_line!");
-      R_calcRenderBarrier(p, seg, ret->barrier.dln);
+      I_Assert(linedef, "R_NewPortalWindow: Null line despite type == pw_line!");
+      
+      // Start it with the linedef's shape
+      ret->linegen.makeFrom(linedef);
+      R_calcRenderBarrier(p, ret->linegen, ret->barrier.linegen);
    }
    
    R_SetPortalFunction(ret);
@@ -344,7 +345,8 @@ static void R_CreateChildWindow(pwindow_t *parent)
    parent->child   = child;
    child->head     = parent->head;
    child->portal   = parent->portal;
-   child->seg      = parent->seg;
+   child->line     = parent->line;
+   child->linegen  = parent->linegen;
    child->barrier  = parent->barrier;  // FIXME: not sure if necessary
    child->type     = parent->type;
    child->func     = parent->func;
@@ -1006,7 +1008,7 @@ static void R_ShowTainted(pwindow_t *window)
 
    if(window->type == pw_line)
    {
-      const sector_t *sector = window->seg->linedef->frontsector;
+      const sector_t *sector = window->line->frontsector;
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
@@ -1354,23 +1356,28 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
    // being able to share a single window set.
    // ioanch: also added plane checks
 
-   edefstructvar(dlnormal_t, dlnTransformed);
-   if(portalrender.active && portalrender.w->seg)
+   edefstructvar(windowlinegen_t, linegenTransformed);
+   if(portalrender.active && portalrender.w->line)
    {
-      dlnTransformed = portalrender.w->barrier.dln;
-      R_calcRenderBarrier(surface.portal, dlnTransformed);
+      linegenTransformed = portalrender.w->barrier.linegen;
+      R_applyPortalTransformTo(surface.portal, linegenTransformed);;
    }
 
    for(pwindow_t *rover = windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
          rover->planez == surface.height)
       {
-         // If within a line-bounded portal, keep track of that too
-         if(portalrender.active && (rover->seg != portalrender.w->seg ||
-            memcmp(&rover->barrier.dln, &dlnTransformed, sizeof(dlnTransformed))))
+         // If within a line-bounded portal, keep track of that too           )
+         if(portalrender.active)
          {
-            continue;
+            if(rover->line != portalrender.w->line ||
+               memcmp(&rover->barrier.linegen, &linegenTransformed, sizeof(linegenTransformed)))
+            {
+               continue;
+            }
          }
+         else if(rover->line || rover->barrier.linegen)  // reject marked windows if not thru portal
+            continue;
 
          return rover;
       }
@@ -1378,16 +1385,44 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
    // not found, so make it
    pwindow_t *window = R_NewPortalWindow(surface.portal, nullptr, pw_surface[surf]);
    window->planez = surface.height;
-   M_ClearBox(window->barrier.bbox);
+   M_ClearBox(window->barrier.fbox);
 
    // Inherit the line info if active, to help cull segs
    if(portalrender.active)
    {
-      window->seg = portalrender.w->seg;
-      window->barrier.dln = dlnTransformed;
+      window->line = portalrender.w->line;
+      window->barrier.linegen = linegenTransformed;
+   }
+   else
+   {
+      window->line = nullptr;
+      window->barrier.linegen = {};
    }
 
    return window;
+}
+
+//
+// Update a line portal window's divline by checking the seg's actual position
+// Necessary to avoid dents caused by imperfect splits, which combined with polyobject or edge
+// portals may result in infinite recursion.
+//
+static void R_updateLinePortalWindowGenerator(pwindow_t *window, const seg_t *seg)
+{
+   windowlinegen_t &linegen = window->linegen;
+   // For each new seg relative to window, make sure to push the fline further below
+   v2float_t p1 = { seg->v1->fx - linegen.start.x, seg->v1->fy - linegen.start.y };
+   v2float_t p2 = { seg->v2->fx - linegen.start.x, seg->v2->fy - linegen.start.y };
+
+   float dist1 = p1 * linegen.normal;
+   float dist2 = p2 * linegen.normal;
+   float mindist = dist1 < dist2 ? dist1 : dist2;
+   if(mindist >= 0)  // both points are in front of fline divline, so no need to push divline
+      return;
+
+   // Update divline to cover the seg
+   linegen.start += linegen.normal * mindist;
+   R_calcRenderBarrier(window->portal, window->linegen, window->barrier.linegen);
 }
 
 pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
@@ -1396,15 +1431,19 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 
    while(rover)
    {
-      if(rover->portal == portal && rover->type == pw_line && 
-         rover->seg == seg)
+      if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef)
+      {
+         R_updateLinePortalWindowGenerator(rover, seg);
          return rover;
+      }
 
       rover = rover->next;
    }
 
    // not found, so make it
-   return R_NewPortalWindow(portal, seg, pw_line);
+   rover = R_NewPortalWindow(portal, seg->linedef, pw_line);
+   R_updateLinePortalWindowGenerator(rover, seg);
+   return rover;
 }
 
 //

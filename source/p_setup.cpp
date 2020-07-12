@@ -737,12 +737,16 @@ static void P_createSectorBoundingBoxes()
    {
       const sector_t &sector = sectors[i];
       fixed_t *box = pSectorBoxes[i].box;
+      float *fbox = pSectorBoxes[i].fbox;
       M_ClearBox(box);
+      M_ClearBox(fbox);
       for(int j = 0; j < sector.linecount; ++j)
       {
          const line_t &line = *sector.lines[j];
          M_AddToBox(box, line.v1->x, line.v1->y);
          M_AddToBox(box, line.v2->x, line.v2->y);
+         M_AddToBox2(fbox, line.v1->fx, line.v1->fy);
+         M_AddToBox2(fbox, line.v2->fx, line.v2->fy);
       }
    }
 }

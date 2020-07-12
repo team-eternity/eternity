@@ -927,26 +927,29 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
          offsetpos.x += delta->x;
          offsetpos.y += delta->y;
       }
+      v2float_t posf = v2float_t::fromFixed(offsetpos);
+
       const renderbarrier_t &barrier = portalrender.w->barrier;
-      if(portalrender.w->type == pw_line && portalrender.w->seg->linedef != portalline &&
-         P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
+      if(portalrender.w->type == pw_line && portalrender.w->line != portalline &&
+         barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
       {
          return;
       }
       if(portalrender.w->type != pw_line)
       {
-         if(portalrender.w->seg && portalrender.w->seg->linedef != portalline &&
-            P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &barrier.dln.dl) == 0)
+         if(portalrender.w->line && portalrender.w->line != portalline &&
+            barrier.linegen.normal * (posf - barrier.linegen.start) >= 0)
          {
             return;
          }
-         dlnormal_t dl1, dl2;
-         if(R_PickNearestBoxLines(barrier.bbox, dl1, dl2) &&
-            (P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &dl1.dl) == 0 ||
-               (dl2.dl.x != D_MAXINT && 
-                  P_PointOnDivlineSidePrecise(offsetpos.x, offsetpos.y, &dl2.dl) == 0)))
+         windowlinegen_t linegen1, linegen2;
+         if(R_PickNearestBoxLines(barrier.fbox, linegen1, linegen2))
          {
-            return;
+
+            if(linegen1.normal * (posf - linegen1.start) >= 0)
+               return;
+            if(linegen2.normal && linegen2.normal * (posf - linegen2.start) >= 0)
+               return;
          }
       }
    }

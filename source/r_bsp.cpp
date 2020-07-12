@@ -1770,142 +1770,110 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
       seg.c_portalignore = true;
 }
 
-inline static const bool tooclose(fixed_t n1, fixed_t n2)
+inline static bool tooclose(v2float_t v1, v2float_t v2)
 {
-   return D_abs(n1 - n2) < 256;
+   return fabsf(v1.x - v2.x) < 1 / 256.0f && fabsf(v1.y - v2.y) < 1 / 256.0f;
 }
 
 //
-// Checks if a line is behind a portal-generated divline (barrier)
+// Checks if a line is behind a line portal generated barrier
 //
-static bool R_allowBehindDivline(const dlnormal_t &dln, const seg_t *renderSeg,
-                                 bool reverse = false)
+static bool R_allowBehindBarrier(const windowlinegen_t &linegen, const seg_t *renderSeg,
+   bool reverse = false)
 {
-   divline_t rend;
+   v2float_t rstart;
+   v2float_t rdelta;
    if(!reverse)
    {
-      rend.x = renderSeg->v1->x;
-      rend.y = renderSeg->v1->y;
-      rend.dx = renderSeg->v2->x - rend.x;
-      rend.dy = renderSeg->v2->y - rend.y;
+      rstart = { renderSeg->v1->fx, renderSeg->v1->fy };
+      rdelta = { renderSeg->v2->fx - rstart.x, renderSeg->v2->fy - rstart.y };
    }
    else  // this may be needed sometimes
    {
-      rend.x = renderSeg->v2->x;
-      rend.y = renderSeg->v2->y;
-      rend.dx = renderSeg->v1->x - rend.x;
-      rend.dy = renderSeg->v1->y - rend.y;
+      rstart = { renderSeg->v2->fx, renderSeg->v2->fy };
+      rdelta = { renderSeg->v1->fx - rstart.x, renderSeg->v1->fy - rstart.y };
    }
-
    // HACK: pull render-seg to me as a slack to avoid on-line points
-   rend.x += M_FloatToFixed(dln.nx * kPortalSegRejectionFudge);
-   rend.y += M_FloatToFixed(dln.ny * kPortalSegRejectionFudge);
+   rstart += linegen.normal * kPortalSegRejectionFudge;
 
-   const divline_t &dl = dln.dl;
-
-   int p1 = P_PointOnDivlineSidePrecise(rend.x, rend.y, &dl);
-   int p2 = P_PointOnDivlineSidePrecise(rend.x + rend.dx, rend.y + rend.dy, &dl);
-
-   if(p1 == p2)
-      return p1 == 1;   // only accept if behind the barrier line
+   float s1 = linegen.normal * (rstart - linegen.start);
+   float s2 = linegen.normal * (rstart + rdelta - linegen.start);
+   if(s1 * s2 >= 0)  // both on same side
+      return s1 < 0;   // only accept if behind the barrier line
 
    // Check cases where vertices are common
-   if(tooclose(dl.x, rend.x) && tooclose(dl.y, rend.y))
-      return P_PointOnDivlineSidePrecise(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
-   if(tooclose(dl.x + dl.dx, rend.x + rend.dx) && 
-      tooclose(dl.y + dl.dy, rend.y + rend.dy))
-   {
-      return P_PointOnDivlineSidePrecise(dl.x, dl.y, &rend) == 0;
-   }
+   // the other portal tip to the right of seg
+   if(tooclose(linegen.start, rstart)) 
+      return rdelta % (linegen.start + linegen.delta - rstart) < 0;
+   if(tooclose(linegen.start + linegen.delta, rstart + rdelta))
+      return rdelta % (linegen.start - rstart) < 0;
 
    // At least one point must be in front of the rendered line
-   return P_PointOnDivlineSidePrecise(dl.x, dl.y, &rend) == 0 ||
-      P_PointOnDivlineSidePrecise(dl.x + dl.dx, dl.y + dl.dy, &rend) == 0;
+   return rdelta % (linegen.start - rstart) < 0 || 
+      rdelta % (linegen.start + linegen.delta - rstart) < 0;
 }
 
 //
 // Picks the two bounding box lines pointed towards the viewer.
 //
-bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
-                           dlnormal_t &dl2, slopetype_t *slope)
+bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
+   windowlinegen_t &linegen2, slopetype_t *slope)
 {
-   dl2.dl.x = D_MAXINT;
-   if(viewx < bbox[BOXLEFT])
+   linegen2.normal = {};   // mark normal as empty to prevent stuff
+   if(view.x < fbox[BOXLEFT])
    {
-      if(viewy < bbox[BOXBOTTOM])
+      if(view.y < fbox[BOXBOTTOM])
       {
-         dl1.dl.x = bbox[BOXLEFT];
-         dl1.dl.y = bbox[BOXTOP];
-         dl1.dl.dx = 0;
-         dl1.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
-         dl1.nx = -1;
-         dl1.ny = 0;
+         linegen1.start = { fbox[BOXLEFT], fbox[BOXTOP] };
+         linegen1.delta = { 0, fbox[BOXBOTTOM] - fbox[BOXTOP] };
+         linegen1.normal = { -1, 0 };
 
-         dl2.dl.x = bbox[BOXLEFT];
-         dl2.dl.y = bbox[BOXBOTTOM];
-         dl2.dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
-         dl2.dl.dy = 0;
-         dl2.nx = 0;
-         dl2.ny = -1;
+         linegen2.start = { fbox[BOXLEFT], fbox[BOXBOTTOM] };
+         linegen2.delta = { fbox[BOXRIGHT] - fbox[BOXLEFT], 0 };
+         linegen2.normal = { 0, -1 };
 
          if(slope)
             *slope = ST_POSITIVE;
       }
-      else if(viewy > bbox[BOXTOP])
+      else if(view.y > fbox[BOXTOP])
       {
          // The divlines MUST be left to right relative to view.
-         dl1.dl.x = bbox[BOXRIGHT];
-         dl1.dl.y = bbox[BOXTOP];
-         dl1.dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
-         dl1.dl.dy = 0;
-         dl1.nx = 0;
-         dl1.ny = 1;
+         linegen1.start = { fbox[BOXRIGHT], fbox[BOXTOP] };
+         linegen1.delta = { fbox[BOXLEFT] - fbox[BOXRIGHT], 0 };
+         linegen1.normal = { 0, 1 };
 
-         dl2.dl.x = bbox[BOXLEFT];
-         dl2.dl.y = bbox[BOXTOP];
-         dl2.dl.dx = 0;
-         dl2.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
-         dl2.nx = -1;
-         dl2.ny = 0;
+         linegen2.start = { fbox[BOXLEFT], fbox[BOXTOP] };
+         linegen2.delta = { 0, fbox[BOXBOTTOM] - fbox[BOXTOP] };
+         linegen2.normal = { -1, 0 };
 
          if(slope)
             *slope = ST_NEGATIVE;
       }
       else
       {
-         dl1.dl.x = bbox[BOXLEFT];
-         dl1.dl.y = bbox[BOXTOP];
-         dl1.dl.dx = 0;
-         dl1.dl.dy = bbox[BOXBOTTOM] - bbox[BOXTOP];
-         dl1.nx = -1;
-         dl1.ny = 0;
+         linegen1.start = { fbox[BOXLEFT], fbox[BOXTOP] };
+         linegen1.delta = { 0, fbox[BOXBOTTOM] - fbox[BOXTOP] };
+         linegen1.normal = { -1, 0 };
 
          if(slope)
             *slope = ST_VERTICAL;
       }
    }
-   else if(viewx <= bbox[BOXRIGHT])
+   else if(view.x <= fbox[BOXRIGHT])
    {
-      if(viewy < bbox[BOXBOTTOM])
+      if(view.y < fbox[BOXBOTTOM])
       {
-         dl1.dl.x = bbox[BOXLEFT];
-         dl1.dl.y = bbox[BOXBOTTOM];
-         dl1.dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
-         dl1.dl.dy = 0;
-         dl1.nx = 0;
-         dl1.ny = -1;
-
+         linegen1.start = { fbox[BOXLEFT], fbox[BOXBOTTOM] };
+         linegen1.delta = { fbox[BOXRIGHT] - fbox[BOXLEFT], 0 };
+         linegen1.normal = { 0, -1 };
       }
-      else if(viewy <= bbox[BOXTOP])
+      else if(view.y <= fbox[BOXTOP])
          return false;   // if actor is below portal, just render everything
       else
       {
-         dl1.dl.x = bbox[BOXRIGHT];
-         dl1.dl.y = bbox[BOXTOP];
-         dl1.dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
-         dl1.dl.dy = 0;
-         dl1.nx = 0;
-         dl1.ny = 1;
+         linegen1.start = { fbox[BOXRIGHT], fbox[BOXTOP] };
+         linegen1.delta = { fbox[BOXLEFT] - fbox[BOXRIGHT], 0 };
+         linegen1.normal = { 0, 1 };
       }
 
       if(slope)
@@ -1913,100 +1881,77 @@ bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
    }
    else
    {
-      if(viewy < bbox[BOXBOTTOM])
+      if(view.y < fbox[BOXBOTTOM])
       {
-         dl1.dl.x = bbox[BOXLEFT];
-         dl1.dl.y = bbox[BOXBOTTOM];
-         dl1.dl.dx = bbox[BOXRIGHT] - bbox[BOXLEFT];
-         dl1.dl.dy = 0;
-         dl1.nx = 0;
-         dl1.ny = -1;
+         linegen1.start = { fbox[BOXLEFT], fbox[BOXBOTTOM] };
+         linegen1.delta = { fbox[BOXRIGHT] - fbox[BOXLEFT], 0 };
+         linegen1.normal = { 0, -1 };
 
-         dl2.dl.x = bbox[BOXRIGHT];
-         dl2.dl.y = bbox[BOXBOTTOM];
-         dl2.dl.dx = 0;
-         dl2.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
-         dl2.nx = 1;
-         dl2.ny = 0;
+         linegen2.start = { fbox[BOXRIGHT], fbox[BOXBOTTOM] };
+         linegen2.delta = { 0, fbox[BOXTOP] - fbox[BOXBOTTOM] };
+         linegen2.normal = { 1, 0 };
 
          if(slope)
             *slope = ST_NEGATIVE;
       }
-      else if(viewy > bbox[BOXTOP])
+      else if(view.y > fbox[BOXTOP])
       {
-         dl1.dl.x = bbox[BOXRIGHT];
-         dl1.dl.y = bbox[BOXBOTTOM];
-         dl1.dl.dx = 0;
-         dl1.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
-         dl1.nx = 1;
-         dl1.ny = 0;
+         linegen1.start = { fbox[BOXRIGHT], fbox[BOXBOTTOM] };
+         linegen1.delta = { 0, fbox[BOXTOP] - fbox[BOXBOTTOM] };
+         linegen1.normal = { 1, 0 };
 
-         dl2.dl.x = bbox[BOXRIGHT];
-         dl2.dl.y = bbox[BOXTOP];
-         dl2.dl.dx = bbox[BOXLEFT] - bbox[BOXRIGHT];
-         dl2.dl.dy = 0;
-         dl2.nx = 0;
-         dl2.ny = 1;
+         linegen2.start = { fbox[BOXRIGHT], fbox[BOXTOP] };
+         linegen2.delta = { fbox[BOXLEFT] - fbox[BOXRIGHT], 0 };
+         linegen2.normal = { 0, 1 };
 
          if(slope)
             *slope = ST_POSITIVE;
       }
       else
       {
-         dl1.dl.x = bbox[BOXRIGHT];
-         dl1.dl.y = bbox[BOXBOTTOM];
-         dl1.dl.dx = 0;
-         dl1.dl.dy = bbox[BOXTOP] - bbox[BOXBOTTOM];
-         dl1.nx = 1;
-         dl1.ny = 0;
+         linegen1.start = { fbox[BOXRIGHT], fbox[BOXBOTTOM] };
+         linegen1.delta = { 0, fbox[BOXTOP] - fbox[BOXBOTTOM] };
+         linegen1.normal = { 1, 0 };
 
          if(slope)
             *slope = ST_VERTICAL;
       }
    }
-
    return true;
 }
 
 //
 // Check seg against barrier bbox
 //
-static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg)
+static bool R_allowBehindSectorPortal(const float fbox[4], const seg_t &tryseg)
 {
-   divline_t segdl;
-   segdl.x = tryseg.v1->x;
-   segdl.y = tryseg.v1->y;
-   segdl.dx = tryseg.v2->x - segdl.x;
-   segdl.dy = tryseg.v2->y - segdl.y;
+   v2float_t start = { tryseg.v1->fx, tryseg.v1->fy };
+   v2float_t delta = { tryseg.v2->fx - start.x, tryseg.v2->fy - start.y };
 
-   int boxside = P_BoxOnDivlineSidePrecise(bbox, segdl);
+   int boxside = P_BoxOnDivlineSideFloat(fbox, start, delta);
 
    if(boxside == 0)
       return true;
    if(boxside == 1)
       return false;
 
-   dlnormal_t dl1;
-   dlnormal_t dl2;
+   windowlinegen_t linegen1, linegen2;
 
    slopetype_t slope, lnslope = tryseg.linedef->slopetype;
-   if(!R_PickNearestBoxLines(bbox, dl1, dl2, &slope))
+   if(!R_PickNearestBoxLines(fbox, linegen1, linegen2, &slope))
       return true;
 
    if(slope == ST_VERTICAL || slope == ST_HORIZONTAL)
-      return R_allowBehindDivline(dl1, &tryseg);
+      return R_allowBehindBarrier(linegen1, &tryseg);
 
    // Slanted
    if(slope != lnslope)
-   {
-      return R_allowBehindDivline(dl1, &tryseg) &&
-      R_allowBehindDivline(dl2, &tryseg);
-   }
+      return R_allowBehindBarrier(linegen1, &tryseg) && R_allowBehindBarrier(linegen2, &tryseg);
 
    // Pointed to the corner
-   bool revfirst = slope == ST_POSITIVE ?
-   !!((segdl.dx > 0) ^ (dl1.dl.x == bbox[BOXRIGHT])) :
-   !!((segdl.dx > 0) ^ (dl1.dl.x == bbox[BOXLEFT]));
+   bool revfirst = slope == ST_POSITIVE ? 
+      !!((delta.x > 0) ^ (linegen1.start.x == fbox[BOXRIGHT])) :
+      !!((delta.x > 0) ^ (linegen1.start.x == fbox[BOXLEFT]));
 
    // truth table:
    // Positive slope
@@ -2022,8 +1967,8 @@ static bool R_allowBehindSectorPortal(const fixed_t bbox[4], const seg_t &tryseg
    //   true          false           true
    //   true           true           false
 
-   return R_allowBehindDivline(dl1, &tryseg, revfirst) &&
-      R_allowBehindDivline(dl2, &tryseg, !revfirst);
+   return R_allowBehindBarrier(linegen1, &tryseg, revfirst) && 
+      R_allowBehindBarrier(linegen2, &tryseg, !revfirst);
 }
 
 //
@@ -2050,14 +1995,14 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       // only reject if they're anchored portals (including linked)
       if(portalrender.w->type == pw_line)
       {
-         if(!R_allowBehindDivline(portalrender.w->barrier.dln, line))
+         if(!R_allowBehindBarrier(portalrender.w->barrier.linegen, line))
             return;
       }
       else
       {
-         if(portalrender.w->seg && !R_allowBehindDivline(portalrender.w->barrier.dln, line))
+         if(portalrender.w->line && !R_allowBehindBarrier(portalrender.w->barrier.linegen, line))
             return;
-         if(!R_allowBehindSectorPortal(portalrender.w->barrier.bbox, *line))
+         if(!R_allowBehindSectorPortal(portalrender.w->barrier.fbox, *line))
             return;
       }
    }

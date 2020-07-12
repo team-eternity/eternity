@@ -121,6 +121,55 @@ struct v2float_t
    {
       return x == other.x && y == other.y;
    }
+
+   v2float_t operator + (v2float_t other) const
+   {
+      return { x + other.x, y + other.y };
+   }
+
+   v2float_t operator - (v2float_t other) const
+   {
+      return { x - other.x, y - other.y };
+   }
+
+   float operator * (v2float_t other) const
+   {
+      return x * other.x + y * other.y;
+   }
+
+   v2float_t operator * (float other) const
+   {
+      return { x * other, y * other };
+   }
+
+   v2float_t &operator += (v2float_t other)
+   {
+      x += other.x;
+      y += other.y;
+      return *this;
+   }
+
+   //
+   // Z of cross product assuming these two vectors have z=0. Uses the corkscrew rule. Useful to
+   // know line side of point.
+   //
+   float operator % (v2float_t other) const
+   {
+      // i  j  k
+      // x  y  0
+      // ox oy 0
+      return x * other.y - other.x * y;
+   }
+
+   operator bool() const
+   {
+      return x || y;
+   }
+
+   static v2float_t fromFixed(v2fixed_t other)
+   {
+      return { M_FixedToFloat(other.x), M_FixedToFloat(other.y) };
+   }
 };
 
 //

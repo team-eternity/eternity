@@ -198,8 +198,7 @@ struct portal_t
 //
 inline static bool R_portalIsAnchored(const portal_t *portal)
 {
-   return portal->type == R_ANCHORED || portal->type == R_TWOWAY || 
-      portal->type == R_LINKED;
+   return portal->type == R_ANCHORED || portal->type == R_TWOWAY || portal->type == R_LINKED;
 }
 
 const portal_t *R_GetPortalHead();
@@ -260,21 +259,50 @@ typedef void (*R_ClipSegFunc)();
 extern R_ClipSegFunc segclipfuncs[];
 
 //
+// Line portal window barrier generator. Starts based on source linedef and is shifted by each seg,
+// if dented away from the line (can happen with dynasegs and result in infinite recursions or HOMs
+// if not taken care of). It's always on the source viewer's space, not the portal target's space,
+// unlike renderbarrier.
+//
+struct windowlinegen_t
+{
+   v2float_t start;  // start vertex
+   v2float_t delta;  // delta to end vertex
+   v2float_t normal; // line normal. 1 length.
+
+   void makeFrom(const line_t *line)
+   {
+      start.x = line->v1->fx;
+      start.y = line->v1->fy;
+      delta.x = line->v2->fx - start.x;
+      delta.y = line->v2->fy - start.y;
+      normal.x = line->nx;
+      normal.y = line->ny;
+   }
+
+   operator bool() const
+   {
+      return start || delta || normal;
+   }
+};
+
+//
 // Render barrier: used by anchored portals to mark limits for rendering
 // geometry and sprites.
 //
 struct renderbarrier_t
 {
    // Selection depends on context
-   dlnormal_t dln;   // for line portals or sector portals behind lines
-   fixed_t bbox[4];  // for sector portals (very rough, won't cover all cases)
+   windowlinegen_t linegen;
+   float fbox[4]; // for sector portals (very rough, won't cover all cases)
 };
 
 // SoM: TODO: Overlays go in here.
 struct pwindow_t
 {
    portal_t *portal;
-   const seg_t *seg; // ioanch: need to use seg, because each window needs EXACT source location
+   const line_t *line;
+   windowlinegen_t linegen;   // Generator, prepared to be stored on barrier after transforming
    // rendering barrier: blocks unwanted objects from showing
    renderbarrier_t barrier;
    pwindowtype_e type;
