@@ -475,6 +475,7 @@ Extend dehacked to be able to set drop item.
 2020/07/12
 Made it so your aim is always the centre of the actual non-HUD viewport. This
 removes the need to move the crosshair up/down depending on player pitch.
+Split "Fullscreen Desktop" into its own option for favoured screen type.
 
 ================================================================================
 EOF

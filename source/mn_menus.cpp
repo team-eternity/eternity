@@ -1792,7 +1792,7 @@ CONSOLE_VARIABLE(mn_favaspectratio, mn_favaspectratio, 0) {}
 // haleyjd 06/19/11: user's favored fullscreen/window setting
 int mn_favscreentype;
 
-static const char *screen_type_desc[] = { "windowed", "fullscreen" };
+static const char *screen_type_desc[] = { "windowed", "fs desktop", "exclusive fs" };
 
 VARIABLE_INT(mn_favscreentype, nullptr, 0, MN_NUMSCREENTYPES-1, screen_type_desc);
 CONSOLE_VARIABLE(mn_favscreentype, mn_favscreentype, 0) {}
@@ -1972,6 +1972,9 @@ static void MN_BuildVidmodeTables()
       {
       case MN_FULLSCREEN:
          description += 'f';
+         break;
+      case MN_FULLSCREEN_DESKTOP:
+         description += 'd';
          break;
       case MN_WINDOWED:
       default:

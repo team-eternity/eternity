@@ -242,13 +242,10 @@ enum
 };
 
 //
-// I_ParseGeom
-//
-// Function to parse geometry description strings in the form [wwww]x[hhhh][f].
+// Function to parse geometry description strings in the form [wwww]x[hhhh][f/d].
 // This is now the primary way in which Eternity stores its video mode setting.
 //
-void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf, bool *dfs)
+void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
@@ -302,28 +299,28 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
          switch(ectype::toLower(*c))
          {
          case 'w': // window
-            *fs = false;
-            break;
-         case 'f': // fullscreen
-            *fs = true;
-            break;
-         case 'a': // async update
-            *vs = false;
-            break;
-         case 'v': // vsync update
-            *vs = true;
-            break;
-         case 's': // software
-            *hw = false;
-            break;
-         case 'h': // hardware 
-            *hw = true;
-            break;
-         case 'n': // noframe
-            *wf = false;
+            st = screentype_e::WINDOWED;
             break;
          case 'd': // fullscreen desktop
-            *dfs = true;
+            st = screentype_e::FULLSCREEN_DESKTOP;
+            break;
+         case 'f': // fullscreen
+            st = screentype_e::FULLSCREEN;
+            break;
+         case 'a': // async update
+            vs = false;
+            break;
+         case 'v': // vsync update
+            vs = true;
+            break;
+         case 's': // software
+            hw = false;
+            break;
+         case 'h': // hardware 
+            hw = true;
+            break;
+         case 'n': // noframe
+            wf = false;
             break;
          default:
             break;
@@ -351,12 +348,10 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
       tmpheight = 480;
    }
 
-   *w = tmpwidth;
-   *h = tmpheight;
+   w = tmpwidth;
+   h = tmpheight;
 }
 
-//
-// I_CheckVideoCmds
 //
 // Checks for all video-mode-related command-line parameters in one
 // convenient location. Though called from I_InitGraphicsMode, this
@@ -364,7 +359,7 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bool *dfs)
+void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf)
 {
    static bool firsttime = true;
    int p;
@@ -374,35 +369,35 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bo
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf, dfs);
+         I_ParseGeom(myargv[p + 1], w, h, st, vs, hw, wf);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
-         *w = p;
-      
+         w = p;
+
       if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
-         *h = p;
-      
+         h = p;
+
       if(M_CheckParm("-fullscreen"))
-         *fs = true;
+         st = screentype_e::FULLSCREEN_DESKTOP;
       if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
-         *fs = false;
-      
+         st = screentype_e::WINDOWED;
+
       if(M_CheckParm("-vsync"))
-         *vs = true;
+         vs = true;
       if(M_CheckParm("-novsync"))
-         *vs = false;
+         vs = false;
 
       if(M_CheckParm("-hardware"))
-         *hw = true;
+         hw = true;
       if(M_CheckParm("-software"))
-         *hw = false;
+         hw = false;
 
       if(M_CheckParm("-frame"))
-         *wf = true;
+         wf = true;
       if(M_CheckParm("-noframe"))
-         *wf = false;
+         wf = false;
    }
 }
 

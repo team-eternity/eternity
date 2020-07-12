@@ -307,15 +307,14 @@ bool SDLVideoDriver::InitGraphicsMode()
    // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
-   bool wantfullscreen = false;
-   bool wantdesktopfs  = false;
-   bool wantvsync      = false;
-   bool wanthardware   = false;
-   bool wantframe      = true;
-   int  v_w            = 640;
-   int  v_h            = 480;
-   int  v_displaynum   = 0;
-   int  window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
+   screentype_e screentype   = screentype_e::WINDOWED;
+   bool         wantvsync    = false;
+   bool         wanthardware = false;
+   bool         wantframe    = true;
+   int          v_w          = 640;
+   int          v_h          = 480;
+   int          v_displaynum = 0;
+   int          window_flags = SDL_WINDOW_ALLOW_HIGHDPI;
    // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
 
@@ -324,13 +323,11 @@ bool SDLVideoDriver::InitGraphicsMode()
       wantvsync = true;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
-               &wanthardware, &wantframe, &wantdesktopfs);
+   I_ParseGeom(i_videomode, v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe, &wantdesktopfs);
+   I_CheckVideoCmds(v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
 
    // Wanting vsync forces framebuffer acceleration on
    if(wantvsync)
@@ -380,12 +377,12 @@ bool SDLVideoDriver::InitGraphicsMode()
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
    // this and the below #else block are done here as monitor video mode isn't
    // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(wantfullscreen)
+   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 #else
-   if(wantfullscreen && wantdesktopfs)
+   if(screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(wantfullscreen) // && !wantdesktopfs
+   else if(screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 #endif
 
