@@ -464,7 +464,12 @@ Added turning sensitivity for joysticks.
 
 -------------------------------------------------------------------------------
 2020/07/10
-Added the vast majority of dehacked extensions made by Doom Retro.
+Added the vast majority of dehacked extensions made by Doom Retro. Allow
+non-contiguous sprite frames (e.g. TROO G is missing but F and H are present).
+
+-------------------------------------------------------------------------------
+2020/07/11
+Extend dehacked to be able to set drop item.
 
 ================================================================================
 EOF

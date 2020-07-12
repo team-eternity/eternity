@@ -1719,6 +1719,21 @@ static void E_processDropItems(mobjinfo_t *mi, cfg_t *thingsec)
 }
 
 //
+// Set the dropitem via dehacked
+//
+void E_SetDropItem(mobjinfo_t *mi, const int itemnum)
+{
+   E_clearDropItems(mi);
+
+   if(itemnum)
+   {
+      const int thingnum = E_GetThingNumForDEHNum(itemnum);
+      mobjinfo_t *const dropmi = mobjinfo[thingnum];
+      E_addDropItem(mi, dropmi->name, 255, 0, false);
+   }
+}
+
+//
 // Collection Spawn
 //
 // A thingtype that specifies this will have a global collection created
