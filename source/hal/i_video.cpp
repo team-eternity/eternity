@@ -433,9 +433,6 @@ static bool I_InitGraphicsMode()
    // errors have occured and we should continue with initialization.
    if(!(result = i_video_driver->InitGraphicsMode()))
    {
-      // Reset renderer field of view
-      R_ResetFOV(video.width, video.height);
-
 #ifdef _MSC_VER
       // Win32 specific hacks
       if(!D_noWindow())

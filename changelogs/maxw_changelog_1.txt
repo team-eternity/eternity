@@ -471,6 +471,11 @@ non-contiguous sprite frames (e.g. TROO G is missing but F and H are present).
 2020/07/11
 Extend dehacked to be able to set drop item.
 
+-------------------------------------------------------------------------------
+2020/07/12
+Made it so your aim is always the centre of the actual non-HUD viewport. This
+removes the need to move the crosshair up/down depending on player pitch.
+
 ================================================================================
 EOF
 ================================================================================
