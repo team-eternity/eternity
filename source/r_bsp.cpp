@@ -1233,9 +1233,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
-         seg.toptexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+         seg.toptexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscaletop);
       else
-         seg.toptexmid = FixedMul(M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety), side->yscale);
+         seg.toptexmid = FixedMul(M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety), side->yscaletop);
    }
    else
       seg.toptex = 0;
@@ -1330,9 +1330,9 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.bottomtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+         seg.bottomtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscalebottom);
       else
-         seg.bottomtexmid = FixedMul(M_FloatToFixed(texlow + seg.toffsety), side->yscale);
+         seg.bottomtexmid = FixedMul(M_FloatToFixed(texlow + seg.toffsety), side->yscalebottom);
    }
    else
       seg.bottomtex = 0;
@@ -1515,9 +1515,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.toptexh = textures[side->toptexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGTOP)
-         seg.toptexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+         seg.toptexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscaletop);
       else
-         seg.toptexmid = FixedMul(M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety), side->yscale);
+         seg.toptexmid = FixedMul(M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety), side->yscaletop);
    }
    else
       seg.toptex = 0;
@@ -1621,9 +1621,9 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       seg.bottomtexh = textures[side->bottomtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.bottomtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+         seg.bottomtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscalebottom);
       else
-         seg.bottomtexmid = FixedMul(M_FloatToFixed(texlow + seg.toffsety), side->yscale);
+         seg.bottomtexmid = FixedMul(M_FloatToFixed(texlow + seg.toffsety), side->yscalebottom);
    }
    else
       seg.bottomtex = 0;
@@ -1681,9 +1681,9 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
          float texhigh = beyond->srf.ceiling.heightf - view.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
-            seg.toptexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+            seg.toptexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscaletop);
          else
-            seg.toptexmid = FixedMul(M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety), side->yscale);
+            seg.toptexmid = FixedMul(M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety), side->yscaletop);
 
          seg.high  = view.ycenter - ((beyond->srf.ceiling.heightf - view.z) * i1) - 1.0f;
          seg.high2 = view.ycenter - ((beyond->srf.ceiling.heightf - view.z) * i2) - 1.0f;
@@ -1700,9 +1700,9 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
          float texlow = beyond->srf.floor.heightf - view.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-            seg.bottomtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+            seg.bottomtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscalebottom);
          else
-            seg.bottomtexmid = FixedMul(M_FloatToFixed(texlow + seg.toffsety), side->yscale);
+            seg.bottomtexmid = FixedMul(M_FloatToFixed(texlow + seg.toffsety), side->yscalebottom);
 
          seg.low  = view.ycenter - ((beyond->srf.floor.heightf - view.z) * i1);
          seg.low2 = view.ycenter - ((beyond->srf.floor.heightf - view.z) * i2);
@@ -1720,9 +1720,9 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
       seg.midtexh  = textures[side->midtexture]->height;
 
       if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
-         seg.midtexmid = FixedMul(M_FloatToFixed(texbottom + seg.midtexh + seg.toffsety), side->yscale);
+         seg.midtexmid = FixedMul(M_FloatToFixed(texbottom + seg.midtexh + seg.toffsety), side->yscalemid);
       else
-         seg.midtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscale);
+         seg.midtexmid = FixedMul(M_FloatToFixed(textop + seg.toffsety), side->yscalemid);
       seg.skyflat = 0;
    }
    else

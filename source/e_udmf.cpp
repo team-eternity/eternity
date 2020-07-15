@@ -465,8 +465,12 @@ bool UDMFParser::loadSidedefs2()
          mError = "Sector overflow";
          return false;
       }
-      sd->xscale = M_DoubleToFixed(usd.scalex);
-      sd->yscale = M_DoubleToFixed(usd.scaley);
+      sd->xscaletop = M_DoubleToFixed(usd.scalex_top);
+      sd->yscaletop = M_DoubleToFixed(usd.scaley_top);
+      sd->xscalemid = M_DoubleToFixed(usd.scalex_mid);
+      sd->yscalemid = M_DoubleToFixed(usd.scaley_mid);
+      sd->xscalebottom = M_DoubleToFixed(usd.scalex_bottom);
+      sd->yscalebottom = M_DoubleToFixed(usd.scaley_bottom);
       sd->sector = &sectors[usd.sector];
       P_SetupSidedefTextures(*sd, usd.texturebottom.constPtr(),
                              usd.texturemiddle.constPtr(),
@@ -671,8 +675,12 @@ enum token_e
    t_repeatspecial,
    t_rotationceiling,
    t_rotationfloor,
-   t_scalex,
-   t_scaley,
+   t_scalex_top,
+   t_scaley_top,
+   t_scalex_mid,
+   t_scaley_mid,
+   t_scalex_bottom,
+   t_scaley_bottom,
    t_scroll_ceil_x,
    t_scroll_ceil_y,
    t_scroll_ceil_type,
@@ -826,8 +834,12 @@ static keytoken_t gTokenList[] =
    TOKEN(repeatspecial),
    TOKEN(rotationceiling),
    TOKEN(rotationfloor),
-   TOKEN(scalex),
-   TOKEN(scaley),
+   TOKEN(scalex_top),
+   TOKEN(scaley_top),
+   TOKEN(scalex_mid),
+   TOKEN(scaley_mid),
+   TOKEN(scalex_bottom),
+   TOKEN(scaley_bottom),
    TOKEN(scroll_ceil_x),
    TOKEN(scroll_ceil_y),
    TOKEN(scroll_ceil_type),
@@ -1114,8 +1126,12 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_STRING(sidedef, texturebottom);
                   READ_STRING(sidedef, texturemiddle);
                   REQUIRE_INT(sidedef, sector, sset);
-                  READ_NUMBER(sidedef, scalex);
-                  READ_NUMBER(sidedef, scaley);
+                  READ_NUMBER(sidedef, scalex_top);
+                  READ_NUMBER(sidedef, scaley_top);
+                  READ_NUMBER(sidedef, scalex_mid);
+                  READ_NUMBER(sidedef, scaley_mid);
+                  READ_NUMBER(sidedef, scalex_bottom);
+                  READ_NUMBER(sidedef, scaley_bottom);
                   default:
                      break;
                }
