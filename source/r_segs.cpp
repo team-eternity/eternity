@@ -224,7 +224,7 @@ static void R_RenderSegLoop(void)
    int t, b, line;
    int cliptop, clipbot;
    int i;
-   float texx;
+   float texxtop, texxmid, texxbottom;
    float basescale;
 
 #ifdef RANGECHECK
@@ -341,13 +341,15 @@ static void R_RenderSegLoop(void)
 
          basescale = 1.0f / (segclip.dist * view.yfoc);
 
-         column.step = FixedMul(M_FloatToFixed(basescale), segclip.side->yscalemid);
+         column.step = M_FloatToFixed(basescale);
          column.x = i;
 
-         texx = segclip.len * basescale * M_FixedToFloat(segclip.side->xscalemid) + segclip.toffsetx;
+         texxtop    = segclip.len * basescale * M_FixedToFloat(segclip.side->xscaletop)    + segclip.toffsetx;
+         texxmid    = segclip.len * basescale * M_FixedToFloat(segclip.side->xscalemid)    + segclip.toffsetx;
+         texxbottom = segclip.len * basescale * M_FixedToFloat(segclip.side->xscalebottom) + segclip.toffsetx;
 
          if(ds_p->maskedtexturecol)
-            ds_p->maskedtexturecol[i] = texx;
+            ds_p->maskedtexturecol[i] = texxmid;
 
          // calculate lighting
          // SoM: ANYRES
@@ -379,7 +381,7 @@ static void R_RenderSegLoop(void)
                      if(column.y2 >= column.y1)
                      {
                         column.texmid = segclip.toptexmid;
-                        column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                        column.source = R_GetRawColumn(segclip.toptex, (int)texxtop);
                         column.texheight = segclip.toptexh;
                         colfunc();
                         ceilingclip[i] = (float)(column.y2 + 1);
@@ -398,7 +400,7 @@ static void R_RenderSegLoop(void)
                      if(column.y2 >= column.y1)
                      {
                         column.texmid = segclip.bottomtexmid;
-                        column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                        column.source = R_GetRawColumn(segclip.bottomtex, (int)texxbottom);
                         column.texheight = segclip.bottomtexh;
                         colfunc();
                         floorclip[i] = (float)(column.y1 - 1);
@@ -425,10 +427,12 @@ static void R_RenderSegLoop(void)
 
                column.texmid = segclip.midtexmid;
 
-               column.source = R_GetRawColumn(segclip.midtex, (int)texx);
+               column.source = R_GetRawColumn(segclip.midtex, (int)texxmid);
                column.texheight = segclip.midtexh;
 
+               column.step = FixedMul(column.step, segclip.side->yscalemid);
                colfunc();
+               column.step = FixedDiv(column.step, segclip.side->yscalemid);
 
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -459,10 +463,12 @@ static void R_RenderSegLoop(void)
                {
                   column.texmid = segclip.toptexmid;
 
-                  column.source = R_GetRawColumn(segclip.toptex, (int)texx);
+                  column.source = R_GetRawColumn(segclip.toptex, (int)texxmid);
                   column.texheight = segclip.toptexh;
 
+                  column.step = FixedMul(column.step, segclip.side->yscaletop);
                   colfunc();
+                  column.step = FixedDiv(column.step, segclip.side->yscaletop);
 
                   ceilingclip[i] = (float)(column.y2 + 1);
                }
@@ -498,10 +504,12 @@ static void R_RenderSegLoop(void)
                {
                   column.texmid = segclip.bottomtexmid;
 
-                  column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
+                  column.source = R_GetRawColumn(segclip.bottomtex, (int)texxbottom);
                   column.texheight = segclip.bottomtexh;
 
+                  column.step = FixedMul(column.step, segclip.side->yscalebottom);
                   colfunc();
+                  column.step = FixedDiv(column.step, segclip.side->yscalebottom);
 
                   floorclip[i] = (float)(column.y1 - 1);
                }
