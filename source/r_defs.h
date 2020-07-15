@@ -456,6 +456,8 @@ struct side_t
 {
   fixed_t textureoffset; // add this to the calculated texture column
   fixed_t rowoffset;     // add this to the calculated texture top
+  fixed_t xscale;
+  fixed_t yscale;
   int16_t toptexture;      // Texture indices. We do not maintain names here. 
   int16_t bottomtexture;
   int16_t midtexture;

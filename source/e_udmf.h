@@ -306,9 +306,13 @@ private:
 
       bool sset;
 
+      double scalex;
+      double scaley;
+
       int errorline;
 
-      USidedef() : offsetx(0), offsety(0), sector(0), sset(false), errorline(0)
+      USidedef() : offsetx(0), offsety(0), sector(0), sset(false),
+         scalex(1.0), scaley(1.0), errorline(0)
       {
       }
    };

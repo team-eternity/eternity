@@ -2083,6 +2083,8 @@ static void P_LoadSideDefs2(int lumpnum)
       side_t *sd = sides + i;
       int secnum;
 
+      sd->xscale = sd->yscale = 1 << FRACBITS;
+
       sd->textureoffset = GetBinaryWord(data) << FRACBITS;
       sd->rowoffset     = GetBinaryWord(data) << FRACBITS; 
 

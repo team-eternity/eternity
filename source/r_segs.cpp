@@ -144,13 +144,13 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    {
       column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height
          ? segclip.frontsec->srf.floor.height : segclip.backsec->srf.floor.height;
-      column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
+      column.texmid = FixedMul(column.texmid - viewz, segclip.line->sidedef->yscale) + textures[texnum]->heightfrac;
    }
    else
    {
       column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height
          ? segclip.frontsec->srf.ceiling.height : segclip.backsec->srf.ceiling.height;
-      column.texmid = column.texmid - viewz;
+      column.texmid = FixedMul(column.texmid - viewz, segclip.line->sidedef->yscale);
    }
 
    column.texmid += segclip.line->sidedef->rowoffset - ds->deltaz;
@@ -162,8 +162,9 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
       column.colormap = ds->fixedcolormap;
 
    // SoM: performance tuning (tm Lee Killough 1998)
-   scale     = dist * view.yfoc;
-   scalestep = diststep * view.yfoc;
+   const float yscalef = M_FixedToFloat(segclip.line->sidedef->yscale);
+   scale     = dist * view.yfoc / yscalef;
+   scalestep = diststep * view.yfoc / yscalef;
    texmidf   = M_FixedToFloat(column.texmid);
 
    // draw the columns
@@ -340,10 +341,10 @@ static void R_RenderSegLoop(void)
 
          basescale = 1.0f / (segclip.dist * view.yfoc);
 
-         column.step = M_FloatToFixed(basescale); // SCALE_TODO: Y scale-factor here
+         column.step = FixedMul(M_FloatToFixed(basescale), segclip.side->yscale);
          column.x = i;
 
-         texx = segclip.len * basescale + segclip.toffsetx; // SCALE_TODO: X scale-factor here
+         texx = segclip.len * basescale * M_FixedToFloat(segclip.side->xscale) + segclip.toffsetx;
 
          if(ds_p->maskedtexturecol)
             ds_p->maskedtexturecol[i] = texx;

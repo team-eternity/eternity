@@ -475,7 +475,14 @@ Extend dehacked to be able to set drop item.
 2020/07/12
 Made it so your aim is always the centre of the actual non-HUD viewport. This
 removes the need to move the crosshair up/down depending on player pitch.
-Split "Fullscreen Desktop" into its own option for favoured screen type.
+Split "Fullscreen Desktop" into its own option for favoured type.
+
+-------------------------------------------------------------------------------
+2020/07/14
+It may be 04:00 on the 15th but I haven't gone to sleep yet, so there. Anyway,
+I've added overall per-sidedef (not per-texture) scaling, for both x and y,
+with UDMF property names "xscale" and "yscale". Will add to ExtraData if
+anybody complains or I'm feeling less lazy.
 
 ================================================================================
 EOF

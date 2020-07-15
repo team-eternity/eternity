@@ -465,6 +465,8 @@ bool UDMFParser::loadSidedefs2()
          mError = "Sector overflow";
          return false;
       }
+      sd->xscale = M_DoubleToFixed(usd.scalex);
+      sd->yscale = M_DoubleToFixed(usd.scaley);
       sd->sector = &sectors[usd.sector];
       P_SetupSidedefTextures(*sd, usd.texturebottom.constPtr(),
                              usd.texturemiddle.constPtr(),
@@ -669,6 +671,8 @@ enum token_e
    t_repeatspecial,
    t_rotationceiling,
    t_rotationfloor,
+   t_scalex,
+   t_scaley,
    t_scroll_ceil_x,
    t_scroll_ceil_y,
    t_scroll_ceil_type,
@@ -822,6 +826,8 @@ static keytoken_t gTokenList[] =
    TOKEN(repeatspecial),
    TOKEN(rotationceiling),
    TOKEN(rotationfloor),
+   TOKEN(scalex),
+   TOKEN(scaley),
    TOKEN(scroll_ceil_x),
    TOKEN(scroll_ceil_y),
    TOKEN(scroll_ceil_type),
@@ -1108,6 +1114,8 @@ bool UDMFParser::parse(WadDirectory &setupwad, int lump)
                   READ_STRING(sidedef, texturebottom);
                   READ_STRING(sidedef, texturemiddle);
                   REQUIRE_INT(sidedef, sector, sset);
+                  READ_NUMBER(sidedef, scalex);
+                  READ_NUMBER(sidedef, scaley);
                   default:
                      break;
                }
