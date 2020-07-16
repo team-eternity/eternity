@@ -357,7 +357,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= BT_ATTACK;
 
    if(gameactions[ka_use])
+   {
       cmd->buttons |= BT_USE;
+      // clear double clicks if hit use button
+      dclicks = 0;
+   }
 
    // only put BTN codes in here
    int newweapon; // phares

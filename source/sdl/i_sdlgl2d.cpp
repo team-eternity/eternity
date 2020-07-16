@@ -464,17 +464,16 @@ static GLint textureFilterParams[CFG_GL_NUMFILTERS] =
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
-   bool    wantfullscreen = false;
-   bool    wantdesktopfs  = false;
-   bool    wantvsync      = false;
-   bool    wanthardware   = false; // Not used - this is always "hardware".
-   bool    wantframe      = true;
-   int     v_w            = 640;
-   int     v_h            = 480;
-   int     v_displaynum   = 0;
-   int     window_flags   = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
-   GLvoid *tempbuffer     = nullptr;
-   GLint   texfiltertype  = GL_LINEAR;
+   screentype_e  screentype    = screentype_e::WINDOWED;
+   bool          wantvsync     = false;
+   bool          wanthardware  = false; // Not used - this is always "hardware".
+   bool          wantframe     = true;
+   int           v_w           = 640;
+   int           v_h           = 480;
+   int           v_displaynum  = 0;
+   int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
+   GLvoid       *tempbuffer    = nullptr;
+   GLint         texfiltertype = GL_LINEAR;
 
    // Get video commands and geometry settings
 
@@ -500,13 +499,11 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       wantvsync = true;
 
    // set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
-               &wanthardware, &wantframe, &wantdesktopfs);
+   I_ParseGeom(i_videomode, v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe, &wantdesktopfs);
+   I_CheckVideoCmds(v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
 
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
@@ -535,12 +532,12 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
    // this and the below #else block are done here as monitor video mode isn't
    // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(wantfullscreen)
+   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 #else
-   if(wantfullscreen && wantdesktopfs)
+   if(screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(wantfullscreen) // && !wantdesktopfs
+   else if(screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 #endif
 

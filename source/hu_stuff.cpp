@@ -960,18 +960,7 @@ void HUDCrossHairWidget::drawer()
    h = patch->height;
    
    drawx = (SCREENWIDTH - w) / 2;
-
-   // haleyjd 04/09/05: this kludge moves the crosshair to within
-   // a tolerable distance of the player's true vertical aim when
-   // the screen size is less than full.
-   if(scaledwindow.height != SCREENHEIGHT)
-   {
-      // use 1/5 of the displayplayer's pitch angle in integer degrees
-      int angle = players[displayplayer].pitch / (ANGLE_1*5);
-      drawy = scaledwindow.y + (scaledwindow.height - h) / 2 + angle;
-   }
-   else
-      drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
+   drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
   
    if(pal == notargetcolour)
       V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);

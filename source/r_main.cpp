@@ -393,14 +393,18 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y)
 //
 // R_ResetFOV
 // 
-// SoM: Called by I_InitGraphicsMode when the video mode is changed.
+// MaxW: Called by R_SetupViewScaling after the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
 //
 // SoM: This is used by the sprite code
 //
 void R_ResetFOV(int width, int height)
 {
-   double ratio = (double)width / (double)height;
+   extern int setblocks;
+   if(setblocks != 11) // status bar up
+      height -= height * static_cast<double>(GameModeInfo->StatusBar->height) / static_cast<double>(SCREENHEIGHT);
+
+   double ratio = static_cast<double>(width) / static_cast<double>(height);
 
    // Special case for tallscreen modes
    if((width == 320 && height == 200) ||
@@ -413,7 +417,7 @@ void R_ResetFOV(int width, int height)
    // The general equation is as follows:
    // y = mx + b -> fov = (75/2) * ratio + 40
    // This gives 90 for 4:3, 100 for 16:10, and 106 for 16:9.
-   fov = (int)((75.0/2.0) * ratio + 40.0);
+   fov = static_cast<int>((75.0/2.0) * ratio + 40.0);
 
    if(fov < 20)
       fov = 20;
@@ -574,6 +578,9 @@ void R_SetupViewScaling()
    // SoM: ANYRES
    // Moved stuff, reformatted a bit
    // haleyjd 04/03/05: removed unnecessary FixedDiv calls
+
+   // Reset renderer field of view
+   R_ResetFOV(video.width, video.height);
 
    video.xscale  = (video.width << FRACBITS) / SCREENWIDTH;
    video.xstep   = ((SCREENWIDTH << FRACBITS) / video.width) + 1;

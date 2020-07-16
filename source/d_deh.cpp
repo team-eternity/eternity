@@ -110,7 +110,7 @@ struct deh_block
 #define DEH_BUFFERMAX 1024 // input buffer area size, hardcoded for now
 #define DEH_MAXKEYLEN 32   // as much of any key as we'll look at
 #define DEH_MAXKEYLEN_FMT "31"  // for scanf format strings
-#define DEH_MOBJINFOMAX 27 // number of ints in the mobjinfo_t structure (!) haleyjd: 27
+#define DEH_MOBJINFOMAX 28 // number of ints in the mobjinfo_t structure (!) MaxW: 28
 
 // Put all the block header values, and the function to be called when that
 // one is encountered, in this array:
@@ -178,6 +178,7 @@ static const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
   "Translucency",        // .translucency  haleyjd 09/01/02
   "Bits3",               // .flags3 haleyjd 02/02/03
   "Blood color",         // .bloodcolor haleyjd 05/08/03
+  "Dropped item",        // .meta sorta kinda it's complicated
 };
 
 // Strings that are used to indicate flags ("Bits" in mobjinfo)
@@ -954,6 +955,8 @@ static void SetMobjInfoValue(int mobjInfoIndex, int keyIndex, int value)
       break;
    case 26: 
       mi->bloodcolor = value; 
+   case 27:
+      E_SetDropItem(mi, value);
       break;
    default: 
       break;
