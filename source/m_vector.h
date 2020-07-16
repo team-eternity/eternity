@@ -35,6 +35,8 @@ struct v3fixed_t
    fixed_t x, y, z;
 };
 
+struct v2double_t;
+
 struct v2fixed_t
 {
    fixed_t x, y;
@@ -144,6 +146,18 @@ struct v2fixed_t
       extern angle_t P_PointToAngle(fixed_t xo, fixed_t yo, fixed_t x, fixed_t y);
       return P_PointToAngle(0, 0, x, y);
    }
+
+   bool operator != (v2fixed_t other) const
+   {
+      return x != other.x || y != other.y;
+   }
+
+   bool operator == (v2fixed_t other) const
+   {
+      return x == other.x && y == other.y;
+   }
+
+   static v2fixed_t doubleToFixed(const v2double_t &v);
 };
 typedef v2fixed_t v2int_t;
 
@@ -152,9 +166,13 @@ struct v3float_t
    float x, y, z;
 };
 
+struct v2float_t;
+
 struct v2double_t
 {
    double x, y;
+
+   explicit operator v2float_t() const;
 };
 
 struct v3double_t
@@ -165,7 +183,79 @@ struct v3double_t
 struct v2float_t
 {
    float x, y;
+
+   bool operator != (v2float_t other) const
+   {
+      return x != other.x || y != other.y;
+   }
+
+   bool operator == (v2float_t other) const
+   {
+      return x == other.x && y == other.y;
+   }
+
+   v2float_t operator + (v2float_t other) const
+   {
+      return { x + other.x, y + other.y };
+   }
+
+   v2float_t operator - (v2float_t other) const
+   {
+      return { x - other.x, y - other.y };
+   }
+
+   float operator * (v2float_t other) const
+   {
+      return x * other.x + y * other.y;
+   }
+
+   v2float_t operator * (float other) const
+   {
+      return { x * other, y * other };
+   }
+
+   v2float_t &operator += (v2float_t other)
+   {
+      x += other.x;
+      y += other.y;
+      return *this;
+   }
+
+   //
+   // Z of cross product assuming these two vectors have z=0. Uses the corkscrew rule. Useful to
+   // know line side of point.
+   //
+   float operator % (v2float_t other) const
+   {
+      // i  j  k
+      // x  y  0
+      // ox oy 0
+      return x * other.y - other.x * y;
+   }
+
+   operator bool() const
+   {
+      return x || y;
+   }
+
+   static v2float_t fromFixed(v2fixed_t other)
+   {
+      return { M_FixedToFloat(other.x), M_FixedToFloat(other.y) };
+   }
 };
+
+//
+// Vector-wise operation
+//
+inline v2fixed_t v2fixed_t::doubleToFixed(const v2double_t &v)
+{
+   return { M_DoubleToFixed(v.x), M_DoubleToFixed(v.y) };
+}
+
+inline v2double_t::operator v2float_t() const
+{
+   return v2float_t{ static_cast<float>(x), static_cast<float>(y) };
+}
 
 // 
 // M_MagnitudeVec2

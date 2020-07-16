@@ -424,7 +424,7 @@ void CB_DrawTLTRColumn_8(void)
 // sf: restored original fuzz effect (changed in mbf)
 // sf: changed to use vis->colormap not fullcolormap
 //     for coloured lighting and SHADOW now done with
-//     flags not NULL colormap
+//     flags not nullptr colormap
 
 #define SRCPIXEL \
    colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
@@ -487,7 +487,7 @@ void CB_DrawFuzzColumn_8(void)
 //
 
 // haleyjd: changed translationtables to byte **
-byte **translationtables = NULL;
+byte **translationtables = nullptr;
 
 // haleyjd: new stuff
 static int firsttranslationlump;
@@ -1048,7 +1048,7 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL,
+   nullptr,
 
    {
       // Normal              Translated
@@ -1107,7 +1107,7 @@ void R_InitTranslationTables()
    numtranslations = TRANSLATIONCOLOURS + wni.getNumLumps();
 
    // allocate the array of pointers
-   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, nullptr);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)
@@ -1157,7 +1157,7 @@ byte *R_GetIdentityMap()
 
    if(!identityMap)
    {
-      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, nullptr);
       for(int i = 0; i < 256; i++)
          identityMap[i] = i;
    }

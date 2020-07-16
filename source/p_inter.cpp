@@ -905,7 +905,7 @@ bool P_TouchSpecialThing(Mobj *special, Mobj *toucher)
 void P_DropItems(Mobj *actor, bool tossitems)
 {
    MetaTable    *meta = actor->info->meta;
-   MetaDropItem *mdi  = NULL;
+   MetaDropItem *mdi  = nullptr;
 
    // players only drop items if so indicated
    if(actor->player && !(dmflags & DM_PLAYERDROP))
@@ -1091,7 +1091,7 @@ static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
                            emod_t *mod)
 {
    bool friendly = false;
-   const char *message = NULL;
+   const char *message = nullptr;
 
    if(!target->player || !obituaries)
       return;
@@ -1102,7 +1102,7 @@ static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
    // miscellaneous death types that cannot be determined
    // directly from the source or inflictor without difficulty
 
-   if((source == NULL && inflictor == NULL) || mod->sourceless)
+   if((source == nullptr && inflictor == nullptr) || mod->sourceless)
       message = P_GetDeathMessageString(mod, false);
 
    if(source && !message)
@@ -1167,12 +1167,12 @@ static void P_DeathMessage(Mobj *source, Mobj *target, Mobj *inflictor,
 // Special damage type code -- see codepointer table below.
 //
 
-typedef struct dmgspecdata_s
+struct dmgspecdata_t
 {
    Mobj *source;
    Mobj *target;
    int     damage;
-} dmgspecdata_t;
+};
 
 //
 // Special damage action for Maulotaurs slamming into things.
@@ -1194,7 +1194,7 @@ static bool P_minotaurChargeHit(dmgspecdata_t *dmgspec)
       thrust = 16*FRACUNIT + (P_Random(pr_mincharge) << 10);
 
       P_ThrustMobj(target, angle, thrust);
-      P_DamageMobj(target, NULL, NULL,
+      P_DamageMobj(target, nullptr, nullptr,
                    ((P_Random(pr_mincharge) & 7) + 1) * 6,
                    MOD_UNKNOWN);
 
@@ -1238,7 +1238,7 @@ static bool P_touchWhirlwind(dmgspecdata_t *dmgspec)
 
    // do a small amount of damage (it adds up fast)
    if(!(leveltime & 7))
-      P_DamageMobj(target, NULL, NULL, 3, MOD_UNKNOWN);
+      P_DamageMobj(target, nullptr, nullptr, 3, MOD_UNKNOWN);
 
    return true; // always return from P_DamageMobj
 }
@@ -1341,11 +1341,11 @@ static int P_AdjustDamageType(Mobj *source, Mobj *inflictor, int mod)
 //
 // Damages both enemies and players
 // "inflictor" is the thing that caused the damage
-//  creature or missile, can be NULL (slime, etc)
+//  creature or missile, can be nullptr (slime, etc)
 // "source" is the thing to target after taking damage
-//  creature or NULL
+//  creature or nullptr
 // Source and inflictor are the same for melee attacks.
-// Source can be NULL for slime, barrel explosions
+// Source can be nullptr for slime, barrel explosions
 // and other environmental stuff.
 //
 // haleyjd 07/13/03: added method of death flag
@@ -1498,7 +1498,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // end of game hell hack
       // ioanch 20160116: portal aware
-      if(P_ExtremeSectorAtPoint(target, false)->damageflags & SDMG_EXITLEVEL &&
+      if(P_ExtremeSectorAtPoint(target, surf_floor)->damageflags & SDMG_EXITLEVEL &&
          damage >= target->health)
       {
          damage = target->health - 1;
@@ -1632,7 +1632,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
          target->flags |= MF_JUSTHIT;    // fight back!
 
       statenum_t st = target->info->painstate;
-      state_t *state = NULL;
+      state_t *state = nullptr;
 
       // haleyjd  06/05/08: check for special damagetype painstate
       if(mod > 0 && (state = E_StateForMod(target->info, "Pain", emod)))
@@ -1889,12 +1889,11 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
    corpse->intflags &= ~MIF_CLEARRAISED;
 
    corpse->health = corpse->getModifiedSpawnHealth();
-
-   P_SetTarget<Mobj>(&corpse->target, NULL);  // killough 11/98
+   P_SetTarget<Mobj>(&corpse->target, nullptr);  // killough 11/98
 
    if(demo_version >= 203)
    {         // kilough 9/9/98
-      P_SetTarget<Mobj>(&corpse->lastenemy, NULL);
+      P_SetTarget<Mobj>(&corpse->lastenemy, nullptr);
       corpse->flags &= ~MF_JUSTHIT;
    }
 
@@ -1915,7 +1914,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
 static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   Mobj *rover = NULL;
+   Mobj *rover = nullptr;
 
    if(gamestate != GS_LEVEL)
    {
@@ -1938,7 +1937,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
          break;
       }
 
-      P_DamageMobj(rover, NULL, NULL, damage, MOD_UNKNOWN);
+      P_DamageMobj(rover, nullptr, nullptr, damage, MOD_UNKNOWN);
    }
 
    return 0;
@@ -1952,9 +1951,9 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   Mobj *rover = NULL;
-   Mobj *inflictor = NULL;
-   Mobj *source = NULL;
+   Mobj *rover = nullptr;
+   Mobj *inflictor = nullptr;
+   Mobj *source = nullptr;
 
    if(gamestate != GS_LEVEL)
    {
@@ -1990,7 +1989,7 @@ static cell AMX_NATIVE_CALL sm_thinghurt(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinghate(AMX *amx, cell *params)
 {
    SmallContext_t *context = SM_GetContextForAMX(amx);
-   Mobj *obj = NULL, *targ = NULL;
+   Mobj *obj = nullptr, *targ = nullptr;
 
    if(gamestate != GS_LEVEL)
    {
@@ -2014,7 +2013,7 @@ AMX_NATIVE_INFO pinter_Natives[] =
    { "_ThingKill", sm_thingkill },
    { "_ThingHurt", sm_thinghurt },
    { "_ThingHate", sm_thinghate },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

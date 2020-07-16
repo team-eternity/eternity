@@ -158,7 +158,7 @@ void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
 
    wadfiles[numwadfiles].flags = flags;
 
-   wadfiles[numwadfiles+1].filename = NULL; // sf: always NULL at end
+   wadfiles[numwadfiles+1].filename = nullptr; // sf: always nullptr at end
 
    ++numwadfiles;
 }
@@ -174,13 +174,13 @@ void D_AddDirectory(const char *dir)
 
    wadfiles[numwadfiles].filename     = estrdup(dir);
    wadfiles[numwadfiles].li_namespace = lumpinfo_t::ns_global; // TODO?
-   wadfiles[numwadfiles].f            = NULL;
+   wadfiles[numwadfiles].f            = nullptr;
    wadfiles[numwadfiles].baseoffset   = 0;
 
    // haleyjd 10/27/12: flags
    wadfiles[numwadfiles].flags = WFA_OPENFAILFATAL | WFA_DIRECTORY_RAW;
 
-   wadfiles[numwadfiles+1].filename = NULL;
+   wadfiles[numwadfiles+1].filename = nullptr;
 
    ++numwadfiles;
 }
@@ -203,7 +203,7 @@ void D_ListWads()
 void D_ProcessGFSDeh(gfs_t *gfs)
 {
    int i;
-   char *filename = NULL;
+   char *filename = nullptr;
 
    for(i = 0; i < gfs->numdehs; ++i)
    {
@@ -227,7 +227,7 @@ void D_ProcessGFSDeh(gfs_t *gfs)
 void D_ProcessGFSWads(gfs_t *gfs)
 {
    int i;
-   char *filename = NULL;
+   char *filename = nullptr;
 
    // haleyjd 09/30/08: don't load GFS wads in shareware gamemodes
    if(GameModeInfo->flags & GIF_SHAREWARE)
@@ -255,14 +255,14 @@ void D_ProcessGFSWads(gfs_t *gfs)
       if(access(filename, F_OK))
          I_Error("Couldn't open WAD file %s\n", filename);
 
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+      D_AddFile(filename, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
    }
 }
 
 void D_ProcessGFSCsc(gfs_t *gfs)
 {
    int i;
-   char *filename = NULL;
+   char *filename = nullptr;
 
    for(i = 0; i < gfs->numcsc; ++i)
    {
@@ -320,7 +320,7 @@ void D_LooseWads()
       filename = Z_Strdupa(myargv[i]);
       M_NormalizeSlashes(filename);
       modifiedgame = true;
-      D_AddFile(filename, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+      D_AddFile(filename, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
    }
 }
 
@@ -373,7 +373,7 @@ gfs_t *D_LooseGFS()
       return G_LoadGFS(myargv[i]);
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -385,7 +385,7 @@ gfs_t *D_LooseGFS()
 const char *D_LooseDemo()
 {
    const char *dot;
-   const char *ret = NULL;
+   const char *ret = nullptr;
 
    for(int i = 1; i < myargc; i++)
    {
@@ -450,8 +450,8 @@ bool D_LooseEDF(char **buffer)
 void D_LoadEDF(gfs_t *gfs)
 {
    int i;
-   char *edfname = NULL;
-   const char *shortname = NULL;
+   char *edfname = nullptr;
+   const char *shortname = nullptr;
 
    // command line takes utmost precedence
    if((i = M_CheckParm("-edf")) && i < myargc - 1)
@@ -564,7 +564,7 @@ bool D_AddNewFile(const char *s)
    if(!wGlobalDir.addNewFile(s))
       return false;
    modifiedgame = true;
-   D_AddFile(s, lumpinfo_t::ns_global, NULL, 0, DAF_NONE); // add to the list of wads
+   D_AddFile(s, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE); // add to the list of wads
    C_SetConsole();
    D_reInitWadfiles();
    return true;
@@ -614,7 +614,7 @@ static int D_CheckBasePath(const qstring &qpath)
          int score = 0;
 
          const fs::directory_iterator itr(path);
-         for(const fs::directory_entry ent : itr)
+         for(const fs::directory_entry &ent : itr)
          {
             const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
 
@@ -835,7 +835,7 @@ static int D_CheckUserPath(const qstring &qpath)
          int score = 0;
 
          const fs::directory_iterator itr(path);
-         for(const fs::directory_entry ent : itr)
+         for(const fs::directory_entry &ent : itr)
          {
             const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
 
@@ -1153,7 +1153,7 @@ void D_SetGamePath()
 //
 // Check for a file or directory in the user or base gamepath, preferring the
 // former over the latter when it exists. Returns the path of the file to use,
-// or NULL if neither location has that file.
+// or nullptr if neither location has that file.
 //
 static char *D_CheckGamePathFile(const char *name, bool isDir)
 {
@@ -1177,7 +1177,7 @@ static char *D_CheckGamePathFile(const char *name, bool isDir)
    }
 
    // not found, or not a file or directory as expected
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -1278,7 +1278,7 @@ void D_GameAutoloadWads()
       }
 
       const fs::directory_iterator itr(autoloads);
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
          if(ent.path().extension() == ".wad")
          {
@@ -1302,7 +1302,7 @@ void D_GameAutoloadDEH()
    if(!autoloads.empty())
    {
       const fs::directory_iterator itr(autoloads);
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
 
          if(const fs::path extension = ent.path().extension();
@@ -1328,7 +1328,7 @@ void D_GameAutoloadCSC()
    if(!autoloads.empty())
    {
       const fs::directory_iterator itr(autoloads);
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
          if(ent.path().extension() == ".csc")
          {

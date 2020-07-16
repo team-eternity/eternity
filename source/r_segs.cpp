@@ -113,7 +113,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
    
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, NULL, NULL, false)
+   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, nullptr, nullptr, false)
                ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
@@ -142,14 +142,14 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    // find positioning
    if(linedef->flags & ML_DONTPEGBOTTOM)
    {
-      column.texmid = segclip.frontsec->floorheight > segclip.backsec->floorheight
-         ? segclip.frontsec->floorheight : segclip.backsec->floorheight;
+      column.texmid = segclip.frontsec->srf.floor.height > segclip.backsec->srf.floor.height
+         ? segclip.frontsec->srf.floor.height : segclip.backsec->srf.floor.height;
       column.texmid = column.texmid + textures[texnum]->heightfrac - viewz;
    }
    else
    {
-      column.texmid = segclip.frontsec->ceilingheight < segclip.backsec->ceilingheight
-         ? segclip.frontsec->ceilingheight : segclip.backsec->ceilingheight;
+      column.texmid = segclip.frontsec->srf.ceiling.height < segclip.backsec->srf.ceiling.height
+         ? segclip.frontsec->srf.ceiling.height : segclip.backsec->srf.ceiling.height;
       column.texmid = column.texmid - viewz;
    }
 
@@ -237,14 +237,14 @@ static void R_RenderSegLoop(void)
 #endif
 
 
-   visplane_t *plane = nullptr;
+   visplane_t *skyplane = nullptr;
    if(segclip.skyflat)
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      plane = R_FindPlane(-1, segclip.skyflat, 144, 0, 0, 1, 1, 0, nullptr, 0,
+      skyplane = R_FindPlane(viewz - 1, segclip.skyflat, 144, {}, { 1, 1 }, 0, nullptr, 0,
                           255, nullptr);
-      plane = R_CheckPlane(plane, segclip.x1, segclip.x2);
+      skyplane = R_CheckPlane(skyplane, segclip.x1, segclip.x2);
    }
 
    // haleyjd 06/30/07: cardboard invuln fix.
@@ -519,12 +519,12 @@ static void R_RenderSegLoop(void)
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
-            else if(plane)
+            else if(skyplane)
             {
                if(ceilingclip[i] < floorclip[i])
                {
-                  plane->top[i] = static_cast<int>(ceilingclip[i]);
-                  plane->bottom[i] = static_cast<int>(floorclip[i]);
+                  skyplane->top[i] = static_cast<int>(ceilingclip[i]);
+                  skyplane->bottom[i] = static_cast<int>(floorclip[i]);
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -537,12 +537,12 @@ static void R_RenderSegLoop(void)
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
-      else if(plane)
+      else if(skyplane)
       {
          if(t < b)
          {
-            plane->top[i] = t;
-            plane->bottom[i] = b;
+            skyplane->top[i] = t;
+            skyplane->bottom[i] = b;
          }
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
@@ -592,7 +592,7 @@ static void R_CloseDSP(void)
    ds_p->sprbottomclip    = zeroarray;
    ds_p->bsilheight       = D_MAXINT;
    ds_p->tsilheight       = D_MININT;
-   ds_p->maskedtexturecol = NULL;
+   ds_p->maskedtexturecol = nullptr;
 }
 
 #define NEXTDSP(model, newx1) \
@@ -751,7 +751,7 @@ void R_StoreWallRange(const int start, const int stop)
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
 
-   // haleyjd: NULL segclip line?? shouldn't happen.
+   // haleyjd: nullptr segclip line?? shouldn't happen.
 #ifdef RANGECHECK
    if(!segclip.line)
       I_Error("R_StoreWallRange: null segclip.line\n");
@@ -883,7 +883,7 @@ void R_StoreWallRange(const int start, const int stop)
       R_CloseDSP();
    else
    {
-      ds_p->sprtopclip = ds_p->sprbottomclip = NULL;
+      ds_p->sprtopclip = ds_p->sprbottomclip = nullptr;
       ds_p->silhouette = 0;
 
       // SoM: TODO: This can be a bit problematic for slopes because we'll have 
@@ -928,7 +928,7 @@ void R_StoreWallRange(const int start, const int stop)
          lastopening += xlen;
       }
       else
-         ds_p->maskedtexturecol = NULL;
+         ds_p->maskedtexturecol = nullptr;
    }
 
    usesegloop = !seg.backsec        || 
@@ -953,7 +953,18 @@ void R_StoreWallRange(const int start, const int stop)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
 
-      memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
+      if(segclip.markflags & SEG_MARKCOVERLAY)
+      {
+         for(int i = xlen; i --> 0;)
+         {
+            float over = overlaycclip[segclip.x1 + i];
+            float solid = ceilingclip[segclip.x1 + i];
+            lastopening[i] = over > solid ? over : solid;
+         }
+      }
+      else
+         memcpy(lastopening, ceilingclip + segclip.x1, sizeof(float) * xlen);
+
       ds_p->sprtopclip = lastopening - segclip.x1;
       lastopening += xlen;
    }
@@ -961,7 +972,18 @@ void R_StoreWallRange(const int start, const int stop)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
 
-      memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
+      if(segclip.markflags & SEG_MARKFOVERLAY)
+      {
+         for(int i = xlen; i-- > 0;)
+         {
+            float over = overlayfclip[segclip.x1 + i];
+            float solid = floorclip[segclip.x1 + i];
+            lastopening[i] = over < solid ? over : solid;
+         }
+      }
+      else
+         memcpy(lastopening, floorclip + segclip.x1, sizeof(float) * xlen);
+
       ds_p->sprbottomclip = lastopening - segclip.x1;
       lastopening += xlen;
    }

@@ -133,25 +133,25 @@ static bool am_takeSvgSnapshot;
 #define HORZ_PAN_SCALE(x) ((x) * f_w / SCREENWIDTH )
 #define VERT_PAN_SCALE(y) ((y) * f_h / SCREENHEIGHT)
 
-typedef struct fpoint_s
+struct fpoint_t
 {
    int x, y;
-} fpoint_t;
+};
 
-typedef struct fline_s
+struct fline_t
 {
    fpoint_t a, b;
-} fline_t;
+};
 
-typedef struct mline_s
+struct mline_t
 {
    mpoint_t a, b;
-} mline_t;
+};
 
-typedef struct islope_s
+struct islope_t
 {
    double slp, islp;
-} islope_t;
+};
 
 // haleyjd: moved here, as this is the only place it is used
 #define PLAYERRADIUS    (16.0)
@@ -291,7 +291,7 @@ static patch_t *marknums[10];   // numbers used for marking by the automap
 // killough 2/22/98: Remove limit on automap marks,
 // and make variables external for use in savegames.
 
-markpoint_t *markpoints = NULL;    // where the points are
+markpoint_t *markpoints = nullptr;    // where the points are
 int markpointnum = 0; // next point to be assigned (also number of points now)
 int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
@@ -302,7 +302,7 @@ static bool am_needbackscreen; // haleyjd 05/03/13
 // haleyjd 12/22/02: Heretic stuff
 
 // backdrop
-static byte *am_backdrop = NULL;
+static byte *am_backdrop = nullptr;
 static bool am_usebackdrop = false;
 
 // haleyjd 08/01/09: this function is unused
@@ -615,7 +615,7 @@ static void AM_loadPics()
 
       // allocate backdrop
       if(!am_backdrop)
-         am_backdrop = (byte *)(Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, NULL));
+         am_backdrop = emalloctag(byte *, SCREENWIDTH*SCREENHEIGHT, PU_STATIC, nullptr);
 
       // must be at least 100 tall
       if(height < 100 || height > SCREENHEIGHT)
@@ -655,7 +655,7 @@ static void AM_unloadPics()
    if(am_backdrop)
    {
       Z_Free(am_backdrop);
-      am_backdrop = NULL;
+      am_backdrop = nullptr;
       am_usebackdrop = false;
    }
 }
@@ -1004,7 +1004,7 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
       const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
       x = M_DoubleToFixed(m_x + m_w / 2) + link.x;
       y = M_DoubleToFixed(m_y + m_h / 2) + link.y;
-      z = R_PointInSubsector(x, y)->sector->floorheight + link.z;
+      z = R_PointInSubsector(x, y)->sector->srf.floor.height + link.z;
    }
 }
 
@@ -1644,8 +1644,8 @@ inline static bool AM_drawAsLockedDoor(const line_t *line)
 //
 inline static bool AM_isDoorClosed(const line_t *line)
 {
-   return !line->backsector->ceilingdata ||
-          !line->backsector->ceilingdata->isDescendantOf(RTTI(VerticalDoorThinker));
+   return !line->backsector->srf.ceiling.data ||
+          !line->backsector->srf.ceiling.data->isDescendantOf(RTTI(VerticalDoorThinker));
 }
 
 //
@@ -1659,26 +1659,20 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&
-           (line->backsector->floorheight == line->backsector->ceilingheight ||
-            line->frontsector->floorheight == line->backsector->ceilingheight));
+           (line->backsector->srf.floor.height == line->backsector->srf.ceiling.height ||
+            line->frontsector->srf.floor.height == line->backsector->srf.ceiling.height));
 }
 
 //
 // True if floor or ceiling heights are different, lower or upper portal aware
 //
-inline static bool AM_differentFloor(const line_t &line)
+template<surf_e surf>
+inline static bool AM_different(const line_t &line)
 {
-   return line.frontsector->floorheight > line.backsector->floorheight ||
-   (line.frontsector->floorheight < line.backsector->floorheight &&
-    (!(line.extflags & EX_ML_LOWERPORTAL) || 
-       !(line.backsector->f_pflags & PS_PASSABLE)));
-}
-inline static bool AM_differentCeiling(const line_t &line)
-{
-   return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
-   (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
-    (!(line.extflags & EX_ML_UPPERPORTAL) ||
-       !(line.backsector->c_pflags & PS_PASSABLE)));
+   return isInner<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) ||
+      (isOuter<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) &&
+         (!(line.extflags & e_edgePortalFlags[surf]) ||
+            !(line.backsector->srf[surf].pflags & PS_PASSABLE)));
 }
 
 inline static bool AM_dontDraw(const line_t &line)
@@ -1745,7 +1739,7 @@ static void AM_drawWalls()
                continue;
 
             if(!line->backsector ||
-               AM_differentFloor(*line) || AM_differentCeiling(*line))
+               AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_prtl);
             }
@@ -1756,7 +1750,7 @@ static void AM_drawWalls()
             if(!AM_dontDraw(*line)) // invisible flag lines do not show
             {
                if(!line->backsector ||
-                  AM_differentFloor(*line) || AM_differentCeiling(*line))
+                  AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
                {
                   AM_drawMline(&l, mapcolor_prtl);
                }
@@ -1860,11 +1854,11 @@ static void AM_drawWalls()
             {
                AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
             } 
-            else if(AM_differentFloor(*line))
+            else if(AM_different<surf_floor>(*line))
             {
                AM_drawMline(&l, mapcolor_fchg); // floor level change
             }
-            else if(AM_differentCeiling(*line))
+            else if(AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_cchg); // ceiling level change
             }
@@ -1880,7 +1874,7 @@ static void AM_drawWalls()
          if(!AM_dontDraw(*line)) // invisible flag lines do not show
          {
             if(mapcolor_flat || !line->backsector ||
-               AM_differentFloor(*line) || AM_differentCeiling(*line))
+               AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_unsn);
             }
@@ -2431,10 +2425,10 @@ void AM_Drawer()
 // Console Commands
 //
 
-VARIABLE_TOGGLE(am_drawnodelines, NULL, onoff);
+VARIABLE_TOGGLE(am_drawnodelines, nullptr, onoff);
 CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
 
-VARIABLE_TOGGLE(am_dynasegs_bysubsec, NULL, yesno);
+VARIABLE_TOGGLE(am_dynasegs_bysubsec, nullptr, yesno);
 CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
 
 // IOANCH 20150215: automap SVG snapshot

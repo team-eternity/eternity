@@ -107,7 +107,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
 #ifdef R_LINKEDPORTALS
-   if(sec->f_pflags & PS_PASSSOUND)
+   if(sec->srf.floor.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even
       // lines, the portal structure won't tell you what sector is on the
@@ -124,7 +124,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
    
-   if(sec->c_pflags & PS_PASSSOUND)
+   if(sec->srf.ceiling.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even 
       // lines, the portal structure won't tell you what sector is on the 
@@ -162,7 +162,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
-      P_LineOpening(check, NULL);
+      P_LineOpening(check, nullptr);
       
       if(clip.openrange <= 0)
          continue;       // closed door
@@ -367,7 +367,7 @@ static bool P_IsOnLift(const Mobj *actor)
    line_t line;
 
    // Short-circuit: it's on a lift which is active.
-   if(thinker_cast<PlatThinker *>(sec->floordata) != NULL)
+   if(thinker_cast<PlatThinker *>(sec->srf.floor.data) != nullptr)
       return true;
 
    // Check to see if it's in a sector which can be 
@@ -421,7 +421,7 @@ static int P_IsUnderDamage(Mobj *actor)
 
    for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
    {
-      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->ceilingdata)) &&
+      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->srf.ceiling.data)) &&
          !cl->inStasis)
          dir |= cl->direction;
    }
@@ -787,7 +787,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -796,8 +796,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po, void *context)
       clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
       P_BoxOnLineSide(clip.bbox, line) == -1)
    {
-      fixed_t front = line->frontsector->floorheight;
-      fixed_t back  = line->backsector->floorheight;
+      fixed_t front = line->frontsector->srf.floor.height;
+      fixed_t back  = line->backsector->srf.floor.height;
       angle_t angle;
 
       // The monster must contact one of the two floors,
@@ -1176,7 +1176,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
                // would ideally remain balanced (lastenemy already has a ref
                // from actor, so it's only moving to target).
                actor->target = actor->lastenemy;
-               actor->lastenemy = NULL;
+               actor->lastenemy = nullptr;
                return true;
             }
          }
@@ -1225,7 +1225,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
       if(actor->target != actor->lastenemy)
          P_LastEnemyRoar(actor);
       P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
-      P_SetTarget<Mobj>(&actor->lastenemy, NULL);
+      P_SetTarget<Mobj>(&actor->lastenemy, nullptr);
       return true;
    }
 
@@ -1378,7 +1378,7 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
    actionargs.actiontype = actionargs_t::MOBJFRAME;
    actionargs.actor      = actor;
    actionargs.args       = ESAFEARGS(actor);
-   actionargs.pspr       = NULL;
+   actionargs.pspr       = nullptr;
 
    A_FaceTarget(&actionargs);
    an = actor->angle >> ANGLETOFINESHIFT;
@@ -1540,7 +1540,7 @@ void A_PlayerStartScript(actionargs_t *actionargs)
 void A_FogSpawn(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
 
    if(actor->counters[0]-- > 0)
      return;
@@ -1719,7 +1719,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          fireargs.actiontype = actionargs_t::MOBJFRAME;
          fireargs.actor      = newmobj;
          fireargs.args       = ESAFEARGS(newmobj);
-         fireargs.pspr       = NULL;
+         fireargs.pspr       = nullptr;
 
          A_Fire(&fireargs);
       }
@@ -1791,7 +1791,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 {
    int type;
    int flagsmode = -1;
-   const char *flags = NULL;
+   const char *flags = nullptr;
 
    if(!Console.argc)
    {
@@ -1813,7 +1813,8 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1 &&
+      (type = E_ThingNumForCompatName(Console.argv[0]->constPtr())) == -1)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1980,7 +1981,7 @@ static void P_ResurrectPlayer()
 
       p->health = p->pclass->initialhealth;
       P_SpawnPlayer(&mthing);
-      oldmo->player = NULL;
+      oldmo->player = nullptr;
       P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
    }
 }
@@ -1990,7 +1991,7 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
    P_ResurrectPlayer();
 }
 
-VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
+VARIABLE_BOOLEAN(p_lastenemyroar, nullptr, onoff);
 CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
 
 //----------------------------------------------------------------------------

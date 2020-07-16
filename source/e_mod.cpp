@@ -56,12 +56,12 @@
 
 cfg_opt_t edf_dmgtype_opts[] =
 {
-   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,    CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_OBIT,        NULL,  CFGF_NONE),
-   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    NULL,  CFGF_NONE),
-   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false, CFGF_NONE),
-   CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,     CFGF_NONE),
-   CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,     CFGF_NONE),
+   CFG_INT(ITEM_DAMAGETYPE_NUM,         -1,       CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_OBIT,        nullptr,  CFGF_NONE),
+   CFG_STR(ITEM_DAMAGETYPE_SELFOBIT,    nullptr,  CFGF_NONE),
+   CFG_BOOL(ITEM_DAMAGETYPE_SOURCELESS, false,    CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSPUSH,   0,        CFGF_NONE),
+   CFG_FLOAT(ITEM_DAMAGETYPE_ABSHOP,    0,        CFGF_NONE),
    CFG_END()
 };
 
@@ -180,7 +180,7 @@ static void E_DelDamageTypeFromNumHash(emod_t *mod)
 // E_EDFDamageTypeForName
 //
 // Finds a damage type for the given name. If the name does not exist, this
-// routine returns NULL rather than the Unknown type.
+// routine returns nullptr rather than the Unknown type.
 //
 static emod_t *E_EDFDamageTypeForName(const char *name)
 {
@@ -252,7 +252,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       if(!def && mod->obituary)
       {
          efree(mod->obituary);
-         mod->obituary = NULL;
+         mod->obituary = nullptr;
       }
 
       if(obituary)
@@ -279,7 +279,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       if(!def && mod->selfobituary)
       {
          efree(mod->selfobituary);
-         mod->selfobituary = NULL;
+         mod->selfobituary = nullptr;
       }
 
       if(obituary)
@@ -379,7 +379,7 @@ emod_t *E_DamageTypeForName(const char *name)
 {
    emod_t *mod;
 
-   if((mod = e_mod_namehash.objectForKey(name)) == NULL)
+   if((mod = e_mod_namehash.objectForKey(name)) == nullptr)
       mod = &unknown_mod;
 
    return mod;
@@ -395,7 +395,7 @@ emod_t *E_DamageTypeForNum(int num)
 {
    emod_t *mod;
 
-   if((mod = e_mod_numhash.objectForKey(num)) == NULL)
+   if((mod = e_mod_numhash.objectForKey(num)) == nullptr)
       mod = &unknown_mod;
 
    return mod;

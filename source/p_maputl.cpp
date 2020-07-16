@@ -114,29 +114,26 @@ int P_BoxOnLineSide(const fixed_t *tmbox, const line_t *ld)
 }
 
 //
-// Also divline version
+// Floating-point version
 //
-int P_BoxOnDivlineSide(const fixed_t *tmbox, const divline_t &dl)
+int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta)
 {
-   int p;
-
-   if(!dl.dy)
+   bool p;
+   if(!delta.y)
+      return (box[BOXBOTTOM] > start.y) == (p = box[BOXTOP] > start.y) ? p ^ (delta.x < 0) : -1;
+   if(!delta.x)
+      return (box[BOXLEFT] < start.x) == (p = box[BOXRIGHT] < start.x) ? p ^ (delta.y < 0) : -1;
+   if(delta.x * delta.y >= 0)
    {
-      return (tmbox[BOXBOTTOM] > dl.y) == (p = tmbox[BOXTOP] > dl.y) ?
-         p ^ (dl.dx < 0) : -1;
+      v2float_t bottomRight = { box[BOXRIGHT], box[BOXBOTTOM] };
+      v2float_t topLeft = { box[BOXLEFT], box[BOXTOP] };
+      float prod = delta % (topLeft - start);
+      return delta % (bottomRight - start) * prod >= 0 ? prod >= 0 : -1;
    }
-   if(!dl.dx)
-   {
-      return (tmbox[BOXLEFT] < dl.x) == (p = tmbox[BOXRIGHT] < dl.x) ?
-         p ^ (dl.dy < 0) : -1;
-   }
-   if((dl.dx ^ dl.dy) >= 0)
-   {
-      return P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXBOTTOM], &dl) ==
-         (p = P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXTOP], &dl)) ? p : -1;
-   }
-   return P_PointOnDivlineSide(tmbox[BOXLEFT], tmbox[BOXBOTTOM], &dl) ==
-      (p = P_PointOnDivlineSide(tmbox[BOXRIGHT], tmbox[BOXTOP], &dl)) ? p : -1;
+   v2float_t bottomLeft = { box[BOXLEFT], box[BOXBOTTOM] };
+   v2float_t topRight = { box[BOXRIGHT], box[BOXTOP] };
+   float prod = delta % (topRight - start);
+   return delta % (bottomLeft - start) * prod >= 0 ? prod >= 0 : -1;
 }
 
 //
@@ -196,8 +193,8 @@ int P_LineIsCrossed(const line_t &line, const divline_t &dl)
    int a;
    return (a = P_PointOnLineSide(dl.x, dl.y, &line)) !=
    P_PointOnLineSide(dl.x + dl.dx, dl.y + dl.dy, &line) &&
-   P_PointOnDivlineSide(line.v1->x, line.v1->y, &dl) !=
-   P_PointOnDivlineSide(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
+   P_PointOnDivlineSidePrecise(line.v1->x, line.v1->y, &dl) !=
+   P_PointOnDivlineSidePrecise(line.v1->x + line.dx, line.v1->y + line.dy, &dl) ? a : -1;
 }
 
 //
@@ -232,7 +229,7 @@ bool P_BoxesIntersect(const fixed_t bbox1[4], const fixed_t bbox2[4])
 //
 // killough 5/3/98: reformatted, cleaned up
 //
-int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
+int P_PointOnDivlineSideClassic(fixed_t x, fixed_t y, const divline_t *line)
 {
    return
       !line->dx ? x <= line->x ? line->dy > 0 : line->dy < 0 :
@@ -240,14 +237,16 @@ int P_PointOnDivlineSide(fixed_t x, fixed_t y, const divline_t *line)
       (line->dy^line->dx^(x -= line->x)^(y -= line->y)) < 0 ? (line->dy^x) < 0 :
       FixedMul(y>>8, line->dx>>8) >= FixedMul(line->dy>>8, x>>8);
 }
-int P_PointOnDivlineSide(v2fixed_t v, const divline_t &line)
+int P_PointOnDivlineSidePrecise(fixed_t x, fixed_t y, const divline_t *line)
 {
    return
-   !line.dx ? v.x <= line.x ? line.dy > 0 : line.dy < 0 :
-   !line.dy ? v.y <= line.y ? line.dx < 0 : line.dx > 0 :
-   (line.dy ^ line.dx ^ (v.x -= line.x) ^ (v.y -= line.y)) < 0 ? (line.dy ^ v.x) < 0 :
-   FixedMul(v.y >> 8, line.dx >> 8) >= FixedMul(line.dy >> 8, v.x >> 8);
+      !line->dx ? x <= line->x ? line->dy > 0 : line->dy < 0 :
+      !line->dy ? y <= line->y ? line->dx < 0 : line->dx > 0 :
+      (line->dy ^ line->dx ^ (x -= line->x) ^ (y -= line->y)) < 0 ? (line->dy ^ x) < 0 :
+      static_cast<int64_t>(y) * line->dx >= static_cast<int64_t>(line->dy) * x;
 }
+int (*P_PointOnDivlineSide)(fixed_t x, fixed_t y, const divline_t *line) = 
+      P_PointOnDivlineSideClassic;
 
 //
 // P_MakeDivline
@@ -317,73 +316,73 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    {
 #ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 &&
-         ((clip.openfrontsector->c_pflags & PS_PASSABLE &&
-         clip.openbacksector->c_pflags & PS_PASSABLE && 
-         clip.openfrontsector->c_portal == clip.openbacksector->c_portal) ||
-         (clip.openfrontsector->c_pflags & PS_PASSABLE &&
+         ((clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
+         clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE &&
+         clip.openfrontsector->srf.ceiling.portal == clip.openbacksector->srf.ceiling.portal) ||
+         (clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
           linedef->pflags & PS_PASSABLE &&
-          clip.openfrontsector->c_portal
+          clip.openfrontsector->srf.ceiling.portal
           ->data.link.deltaEquals(linedef->portal->data.link))))
       {
          // also handle line portal + ceiling portal, for edge portals
          if(!portaldetect) // ioanch
          {
-            frontceilz = backceilz = clip.openfrontsector->ceilingheight
+            frontceilz = backceilz = clip.openfrontsector->srf.ceiling.height
             + (1024 * FRACUNIT);
          }
          else
          {
             *lineclipflags |= LINECLIP_UNDERPORTAL;
-            frontceilz = clip.openfrontsector->ceilingheight;
-            backceilz  = clip.openbacksector->ceilingheight;
+            frontceilz = clip.openfrontsector->srf.ceiling.height;
+            backceilz  = clip.openbacksector->srf.ceiling.height;
          }
       }
       else
 #endif
       {
-         frontceilz = clip.openfrontsector->ceilingheight;
-         backceilz  = clip.openbacksector->ceilingheight;
+         frontceilz = clip.openfrontsector->srf.ceiling.height;
+         backceilz  = clip.openbacksector->srf.ceiling.height;
       }
-      
-      frontcz = clip.openfrontsector->ceilingheight;
-      backcz  = clip.openbacksector->ceilingheight;
+
+      frontcz = clip.openfrontsector->srf.ceiling.height;
+      backcz  = clip.openbacksector->srf.ceiling.height;
    }
 
 
    {
 #ifdef R_LINKEDPORTALS
-      if(mo && demo_version >= 333 && 
-         ((clip.openfrontsector->f_pflags & PS_PASSABLE &&
-         clip.openbacksector->f_pflags & PS_PASSABLE && 
-         clip.openfrontsector->f_portal == clip.openbacksector->f_portal) ||
-          (clip.openfrontsector->f_pflags & PS_PASSABLE &&
+      if(mo && demo_version >= 333 &&
+         ((clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
+         clip.openbacksector->srf.floor.pflags & PS_PASSABLE &&
+         clip.openfrontsector->srf.floor.portal == clip.openbacksector->srf.floor.portal) ||
+          (clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
            linedef->pflags & PS_PASSABLE &&
-           clip.openfrontsector->f_portal
+           clip.openfrontsector->srf.floor.portal
            ->data.link.deltaEquals(linedef->portal->data.link))))
       {
          if(!portaldetect)  // ioanch
          {
-            frontfloorz = backfloorz = clip.openfrontsector->floorheight - (1024 * FRACUNIT); //mo->height;
+            frontfloorz = backfloorz = clip.openfrontsector->srf.floor.height - (1024 * FRACUNIT); //mo->height;
          }
          else
          {
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
-            frontfloorz = clip.openfrontsector->floorheight;
-            backfloorz  = clip.openbacksector->floorheight;
+            frontfloorz = clip.openfrontsector->srf.floor.height;
+            backfloorz  = clip.openbacksector->srf.floor.height;
          }
       }
-      else 
+      else
 #endif
       {
-         frontfloorz = clip.openfrontsector->floorheight;
-         backfloorz  = clip.openbacksector->floorheight;
+         frontfloorz = clip.openfrontsector->srf.floor.height;
+         backfloorz  = clip.openbacksector->srf.floor.height;
       }
 
-      frontfz = clip.openfrontsector->floorheight;
-      backfz = clip.openbacksector->floorheight;
+      frontfz = clip.openfrontsector->srf.floor.height;
+      backfz = clip.openbacksector->srf.floor.height;
    }
 
-   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->c_pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE)
       clip.opentop = frontceilz;
    else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
@@ -391,28 +390,28 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.opentop = backceilz;
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
-   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->f_pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->srf.floor.pflags & PS_PASSABLE)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = frontfloorz;
-      if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
-         clip.floorpic = clip.openfrontsector->floorpic;
+      if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
+         clip.floorpic = clip.openfrontsector->srf.floor.pic;
    }
    else if(frontfloorz > backfloorz)
    {
       clip.openbottom = frontfloorz;
       clip.lowfloor = backfloorz;
       // haleyjd
-      if(!portaldetect || !(clip.openfrontsector->f_pflags & PS_PASSABLE))
-         clip.floorpic = clip.openfrontsector->floorpic;
+      if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
+         clip.floorpic = clip.openfrontsector->srf.floor.pic;
    }
    else
    {
       clip.openbottom = backfloorz;
       clip.lowfloor = frontfloorz;
       // haleyjd
-      if(!portaldetect || !(clip.openbacksector->f_pflags & PS_PASSABLE))
-         clip.floorpic = clip.openbacksector->floorpic;
+      if(!portaldetect || !(clip.openbacksector->srf.floor.pflags & PS_PASSABLE))
+         clip.floorpic = clip.openbacksector->srf.floor.pic;
    }
 
    if(frontcz < backcz)
@@ -469,8 +468,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
             clip.opentop = texbot;
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
-         if(portaldetect && (texbot < clip.openfrontsector->ceilingheight ||
-                             texbot < clip.openbacksector->ceilingheight))
+         if(portaldetect && (texbot < clip.openfrontsector->srf.ceiling.height ||
+                             texbot < clip.openbacksector->srf.ceiling.height))
          {
             *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
          }
@@ -481,8 +480,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
             clip.openbottom = textop;
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
-         if(portaldetect && (textop > clip.openfrontsector->floorheight ||
-                             textop > clip.openbacksector->floorheight))
+         if(portaldetect && (textop > clip.openfrontsector->srf.floor.height ||
+                             textop > clip.openbacksector->srf.floor.height))
          {
             *lineclipflags |= LINECLIP_OVER3DMIDTEX;
          }
@@ -505,7 +504,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 // P_LogThingPosition
 //
 // haleyjd 04/15/2010: thing position logging for debugging demo problems.
-// Pass a NULL mobj to close the log.
+// Pass a nullptr mobj to close the log.
 //
 //#define THING_LOGGING
 #ifdef THING_LOGGING
@@ -520,7 +519,7 @@ void P_LogThingPosition(Mobj *mo, const char *caller)
    {
       if(thinglog)
          fclose(thinglog);
-      thinglog = NULL;
+      thinglog = nullptr;
       return;
    }
 
@@ -633,7 +632,7 @@ void P_SetThingPosition(Mobj *thing)
 
       // phares 3/16/98
       //
-      // If sector_list isn't NULL, it has a collection of sector
+      // If sector_list isn't nullptr, it has a collection of sector
       // nodes that were just removed from this Thing.
       //
       // Collect the sectors the object will live in by looking at
@@ -673,8 +672,8 @@ void P_SetThingPosition(Mobj *thing)
       }
       else        // thing is off the map
       {
-         thing->bnext = NULL;
-         thing->bprev = NULL;
+         thing->bnext = nullptr;
+         thing->bprev = nullptr;
       }
    }
 }

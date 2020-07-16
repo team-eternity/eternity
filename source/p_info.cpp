@@ -103,7 +103,7 @@ struct metainfo_t
    int         nextsecret; // next secret #, only used if non-0
    bool        finale;     // if true, sets LevelInfo.endOfGame
    const char *intertext;  // only used if finale is true
-   const char *interpic;   // interpic, if not NULL
+   const char *interpic;   // interpic, if not nullptr
    int         mission;    // if non-zero, only applies during a mission pack
 };
 
@@ -124,7 +124,7 @@ static dehflags_t boss_spec_flags[] =
    { "E4M6",    BSPEC_E4M6 },
    { "E4M8",    BSPEC_E4M8 },
    { "E5M8",    BSPEC_E5M8 },
-   { NULL,      0 }
+   { nullptr,   0 }
 };
 
 static dehflagset_t boss_flagset =
@@ -186,11 +186,11 @@ static textvals_t sectorColormapVals =
 // P_GetMetaInfoForLevel
 //
 // Finds a metainfo object for the given map number, if one exists (returns 
-// NULL otherwise).
+// nullptr otherwise).
 //
 static metainfo_t *P_GetMetaInfoForLevel(int mapnum)
 {
-   metainfo_t *mi = NULL;
+   metainfo_t *mi = nullptr;
 
    for(int i = 0; i < nummetainfo; i++)
    {
@@ -292,12 +292,12 @@ void P_AddSndInfoMusic(int mapnum, const char *lumpname)
 // P_GetSndInfoMusic
 //
 // If a Hexen SNDINFO music definition exists for the passed-in map number,
-// the lumpname to use will be passed in. Otherwise, NULL is returned.
+// the lumpname to use will be passed in. Otherwise, nullptr is returned.
 //
 const char *P_GetSndInfoMusic(int mapnum)
 {
-   const char   *lumpname = NULL;
-   sndinfomus_t *music    = NULL;
+   const char   *lumpname = nullptr;
+   sndinfomus_t *music    = nullptr;
 
    if((music = sndInfoMusHash.objectForKey(mapnum)))
       lumpname = music->lumpname;
@@ -334,7 +334,7 @@ static EHashTable<MusInfoMusic, ENCQStrHashKey,
 //
 void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
 {
-   MusInfoMusic *music = NULL;
+   MusInfoMusic *music = nullptr;
 
    // Does it exist already?
    if((music = musInfoMusHash.objectForKey(mapname)))
@@ -382,12 +382,12 @@ void P_AddMusInfoMusic(const char *mapname, int number, const char *lump)
 // P_GetMusInfoMusic
 //
 // If a Risen3D MUSINFO music definition exists for the passed-in map name,
-// the lumpname to use will be passed in. Otherwise, NULL is returned.
+// the lumpname to use will be passed in. Otherwise, nullptr is returned.
 //
 const char *P_GetMusInfoMusic(const char *mapname, int number)
 {
-   const char   *lumpname = NULL;
-   MusInfoMusic *music    = NULL;
+   const char   *lumpname = nullptr;
+   MusInfoMusic *music    = nullptr;
 
    if((music = musInfoMusHash.objectForKey(mapname)))
    {
@@ -419,13 +419,13 @@ const char *P_GetMusInfoMusic(const char *mapname, int number)
 //
 // Input:  The filepath to the wad file for the current level.
 // Output: The buffered text from the corresponding wad template file, if the
-//         file was found. NULL otherwise.
+//         file was found. nullptr otherwise.
 //
 static char *P_openWadTemplate(const char *wadfile, int *len)
 {
    char *fn = Z_Strdupa(wadfile);
-   char *dotloc = NULL;
-   byte *buffer = NULL;
+   char *dotloc = nullptr;
+   byte *buffer = nullptr;
 
    // find an extension if it has one, and see that it is ".wad"
    if((dotloc = strrchr(fn, '.')) && !strcasecmp(dotloc, ".wad"))
@@ -436,11 +436,11 @@ static char *P_openWadTemplate(const char *wadfile, int *len)
       {
          strcpy(dotloc, ".TXT"); // try with .TXT (for You-neeks systems 9_9)
          if(access(fn, R_OK))
-            return NULL;         // oh well, tough titties.
+            return nullptr;         // oh well, tough titties.
       }
    }
 
-   return (*len = M_ReadFile(fn, &buffer)) < 0 ? NULL : (char *)buffer;
+   return (*len = M_ReadFile(fn, &buffer)) < 0 ? nullptr : (char *)buffer;
 }
 
 // template parsing states
@@ -618,7 +618,7 @@ static char *P_findTextInTemplate(char *text, int len, int titleOrAuthor)
 {
    tmplpstate_t state;
    qstring tokenbuffer;
-   char *ret = NULL;
+   char *ret = nullptr;
 
    state.text          = text;
    state.len           = len;
@@ -776,7 +776,7 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd)
 //
 static void P_InfoDefaultLevelName()
 {
-   levelnamedata_t lnd = { NULL, SYNTH_NEWLEVEL };
+   levelnamedata_t lnd = { nullptr, SYNTH_NEWLEVEL };
    bool deh_modified = false;
 
    // if we have a current metainfo, use its level name
@@ -840,8 +840,8 @@ static const char **infoSoundPtrs[NUMMAPINFOSOUNDS] =
 //
 static void P_applyHexenMapInfo()
 {
-   MetaTable  *xlmi = NULL;
-   const char *s    = NULL;
+   MetaTable  *xlmi = nullptr;
+   const char *s    = nullptr;
    int i;
 
    if(!(xlmi = XL_MapInfoForMapName(gamemapname)))
@@ -850,13 +850,13 @@ static void P_applyHexenMapInfo()
    LevelInfo.levelName = xlmi->getString("name", "");
    
    // sky textures
-   if((s = xlmi->getString("sky1", NULL)))
+   if((s = xlmi->getString("sky1", nullptr)))
    {
       LevelInfo.skyName  = s;
       // FIXME: currently legacy MAPINFO is still integer-only
       LevelInfo.skyDelta = xlmi->getInt("sky1delta", 0) * FRACUNIT;
    }
-   if((s = xlmi->getString("sky2", NULL)))
+   if((s = xlmi->getString("sky2", nullptr)))
    {
       LevelInfo.sky2Name  = s;
       LevelInfo.sky2Delta = xlmi->getInt("sky2delta", 0) * FRACUNIT;
@@ -871,21 +871,21 @@ static void P_applyHexenMapInfo()
       LevelInfo.hasLightning = !!i;
 
    // colormap
-   if((s = xlmi->getString("fadetable", NULL)))
+   if((s = xlmi->getString("fadetable", nullptr)))
       LevelInfo.colorMap = s;
 
    // TODO: cluster, warptrans
 
    // next map
-   if((s = xlmi->getString("next", NULL)))
+   if((s = xlmi->getString("next", nullptr)))
       LevelInfo.nextLevel = s;
 
    // next secret
-   if((s = xlmi->getString("secretnext", NULL)))
+   if((s = xlmi->getString("secretnext", nullptr)))
       LevelInfo.nextSecret = s;
 
    // titlepatch for intermission
-   if((s = xlmi->getString("titlepatch", NULL)))
+   if((s = xlmi->getString("titlepatch", nullptr)))
       LevelInfo.levelPic = s;
 
    // TODO: cdtrack
@@ -894,7 +894,7 @@ static void P_applyHexenMapInfo()
    if((i = xlmi->getInt("par", -1)) >= 0)
       LevelInfo.partime = i;
 
-   if((s = xlmi->getString("music", NULL)))
+   if((s = xlmi->getString("music", nullptr)))
       LevelInfo.musicName = s;
 
    // flags
@@ -935,7 +935,7 @@ static void P_InfoDefaultSoundNames()
          sfxinfo_t *sfx = E_SoundForName(DefSoundNames[i]);
 
          DefSoundAliases[i][0] = sfx;
-         DefSoundAliases[i][1] = sfx ? sfx->alias : NULL;
+         DefSoundAliases[i][1] = sfx ? sfx->alias : nullptr;
       }
    }
    else
@@ -992,7 +992,7 @@ static char *P_loadTextLump(const char *lumpname)
    lumpNum = W_GetNumForName(lumpname);
    lumpLen = W_LumpLength(lumpNum);
 
-   str = emalloctag(char *, lumpLen + 1, PU_LEVEL, NULL);
+   str = emalloctag(char *, lumpLen + 1, PU_LEVEL, nullptr);
 
    wGlobalDir.readLump(lumpNum, str);
 
@@ -1033,11 +1033,11 @@ static void P_InfoDefaultFinale()
 {
    finaledata_t *fdata   = GameModeInfo->finaleData;
    finalerule_t *rule    = fdata->rules;
-   finalerule_t *theRule = NULL;
+   finalerule_t *theRule = nullptr;
 
    // universal defaults
-   LevelInfo.interTextLump    = NULL;
-   LevelInfo.interTextSLump   = NULL;
+   LevelInfo.interTextLump    = nullptr;
+   LevelInfo.interTextSLump   = nullptr;
    LevelInfo.finaleNormalOnly = false;
    LevelInfo.finaleSecretOnly = false;
    LevelInfo.finaleEarly      = false;
@@ -1050,7 +1050,7 @@ static void P_InfoDefaultFinale()
    if(fdata->musicnum != mus_None)
       LevelInfo.interMusic = (GameModeInfo->s_music[fdata->musicnum]).name;
    else
-      LevelInfo.interMusic = NULL;
+      LevelInfo.interMusic = nullptr;
 
    // check killStats flag - a bit of a hack, this is for Heretic's "hidden"
    // levels in episode 6, which have no statistics intermission.
@@ -1100,7 +1100,7 @@ static void P_InfoDefaultFinale()
             LevelInfo.endOfGame = true;
          }
          else
-            LevelInfo.interText = NULL; // disable other levels
+            LevelInfo.interText = nullptr; // disable other levels
       }
    }
    else
@@ -1113,14 +1113,14 @@ static void P_InfoDefaultFinale()
       // caused crashes during development of Heretic support, so now
       // it uses the F_SKY2 flat which is provided in eternity.wad.
       LevelInfo.backDrop   = "F_SKY2";
-      LevelInfo.interText  = NULL;
+      LevelInfo.interText  = nullptr;
       LevelInfo.finaleType = FINALE_TEXT;
    }
 
    // finale type for secret exits starts unspecified; if left that way and a
    // finale occurs for a secret exit anyway, the normal finale will be used.
    LevelInfo.finaleSecretType = FINALE_UNSPECIFIED;
-   LevelInfo.interTextSecret  = NULL;
+   LevelInfo.interTextSecret  = nullptr;
 }
 
 
@@ -1166,7 +1166,7 @@ static void P_InfoDefaultSky()
    else
       I_Error("P_InfoDefaultSky: no default rule in skyrule set\n");
 
-   // set sky2Name to NULL now, we'll test it later
+   // set sky2Name to nullptr now, we'll test it later
    LevelInfo.sky2Name  = nullptr;
    LevelInfo.doubleSky = false; // double skies off by default
 
@@ -1175,8 +1175,8 @@ static void P_InfoDefaultSky()
    LevelInfo.sky2Delta = 0;
 
    // altSkyName -- this is used for lightning flashes --
-   // starts out NULL to indicate none.
-   LevelInfo.altSkyName = NULL;
+   // starts out nullptr to indicate none.
+   LevelInfo.altSkyName = nullptr;
 }
 
 //
@@ -1234,7 +1234,7 @@ static void P_InfoDefaultMusic(metainfo_t *curmetainfo)
 //
 // Post-processing routine.
 //
-// Sets the sky2Name, if it is still NULL, to whatever 
+// Sets the sky2Name, if it is still nullptr, to whatever 
 // skyName has ended up as. This may be the default, or 
 // the value from MapInfo.
 //
@@ -1334,7 +1334,7 @@ static void P_SetParTime()
 //
 static void P_SetOutdoorFog()
 {
-   if(LevelInfo.outdoorFog == NULL)
+   if(LevelInfo.outdoorFog == nullptr)
       LevelInfo.outdoorFog = LevelInfo.colorMap;
 }
 
@@ -1358,10 +1358,10 @@ static void P_ClearLevelVars()
    // set default level type depending on game mode
    LevelInfo.levelType = GameModeInfo->levelType;
 
-   LevelInfo.levelPic        = NULL;
+   LevelInfo.levelPic        = nullptr;
    LevelInfo.interLevelName  = nullptr;
-   LevelInfo.nextLevelPic    = NULL;
-   LevelInfo.nextSecretPic   = NULL;
+   LevelInfo.nextLevelPic    = nullptr;
+   LevelInfo.nextSecretPic   = nullptr;
    LevelInfo.creator         = "unknown";
 
    if(curmetainfo) // metadata-overridable intermission defaults
@@ -1376,7 +1376,7 @@ static void P_ClearLevelVars()
    }
 
    LevelInfo.colorMap        = "COLORMAP";
-   LevelInfo.outdoorFog      = NULL;
+   LevelInfo.outdoorFog      = nullptr;
    LevelInfo.useFullBright   = true;
    LevelInfo.unevenLight     = true;
    
@@ -1384,8 +1384,8 @@ static void P_ClearLevelVars()
    LevelInfo.nextSecret      = "";
    //info_weapons            = "";
    LevelInfo.gravity         = DEFAULTGRAVITY;
-   LevelInfo.acsScriptLump   = NULL;
-   LevelInfo.extraData       = NULL;
+   LevelInfo.acsScriptLump   = nullptr;
+   LevelInfo.extraData       = nullptr;
 
    // Hexen TODO: will be true for Hexen maps by default
    LevelInfo.acsOpenDelay    = false;
@@ -1963,7 +1963,7 @@ static void P_processUMapInfo(MetaTable *info)
 //
 void P_LoadLevelInfo(WadDirectory *dir, int lumpnum, const char *lvname)
 {
-   MetaTable *info = NULL;
+   MetaTable *info = nullptr;
    
    // set all the level defaults
    P_ClearLevelVars();

@@ -501,7 +501,7 @@ static void P_HereticCurrent(player_t *player)
    // determine what touched sector the player is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->floorheight)
+      if(thing->z == m->m_sector->srf.floor.height)
          break;
    }
 
@@ -738,7 +738,7 @@ void P_PlayerThink(player_t *player)
    // going to affect you, like painful floors.
 
    // ioanch 20160116: portal aware
-   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, false);
+   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
    if(P_SectorIsSpecial(sector))
       P_PlayerInSpecialSector(player, sector);
 
@@ -1044,7 +1044,7 @@ static cell AMX_NATIVE_CALL sm_getplayername(AMX *amx, cell *params)
 AMX_NATIVE_INFO user_Natives[] =
 {
    { "_GetPlayerName", sm_getplayername },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

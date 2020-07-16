@@ -80,11 +80,11 @@ void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-typedef struct cb_maskedcolumn_s
+struct cb_maskedcolumn_t
 {
    float ytop;
    float scale;
-} cb_maskedcolumn_t;
+};
 
 extern cb_maskedcolumn_t maskedcolumn;
 

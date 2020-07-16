@@ -150,7 +150,7 @@
 
 #define DOOM_GIFLAGS \
    (GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | \
-    GIF_SKILL5WARNING | GIF_HUDSTATBARNAME)
+    GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
@@ -436,7 +436,7 @@ static finalerule_t DoomFinaleRules[] =
    {  3,  8, "BGFLATE3", "E3TEXT", FINALE_DOOM_BUNNY,   false, false, true  },
    {  4,  8, "BGFLATE4", "E4TEXT", FINALE_DOOM_MARINE,  false, false, true  },
    { -1,  8, "BGFLATE1", "E1TEXT", FINALE_DOOM_CREDITS, false, false, true  }, // ExM8 default
-   { -1, -1, "BGFLATE1", NULL,     FINALE_TEXT,         false, false, false }, // other default
+   { -1, -1, "BGFLATE1", nullptr,  FINALE_TEXT,         false, false, false }, // other default
    { -2 }
 };
 
@@ -457,7 +457,7 @@ static finalerule_t Doom2FinaleRules[] =
    {  1, 30, "BGFLAT30", "C4TEXT", FINALE_TEXT, true,  false, false }, // end of game
    {  1, 15, "BGFLAT15", "C5TEXT", FINALE_TEXT, false, true,  false }, // only after secret
    {  1, 31, "BGFLAT31", "C6TEXT", FINALE_TEXT, false, true,  false }, // only after secret
-   { -1, -1, "BGFLAT06", NULL,     FINALE_TEXT, false, false, false },
+   { -1, -1, "BGFLAT06", nullptr,  FINALE_TEXT, false, false, false },
    { -2 }
 };
 
@@ -478,7 +478,7 @@ static finalerule_t TNTFinaleRules[] =
    {  1, 30, "BGFLAT30", "T4TEXT", FINALE_TEXT, true,  false, false }, // end of game
    {  1, 15, "BGFLAT15", "T5TEXT", FINALE_TEXT, false, true,  false }, // only after secret
    {  1, 31, "BGFLAT31", "T6TEXT", FINALE_TEXT, false, true,  false }, // only after secret
-   { -1, -1, "BGFLAT06", NULL,     FINALE_TEXT, false, false, false },
+   { -1, -1, "BGFLAT06", nullptr,  FINALE_TEXT, false, false, false },
    { -2 }
 };
 
@@ -499,7 +499,7 @@ static finalerule_t PlutFinaleRules[] =
    {  1, 30, "BGFLAT30", "P4TEXT", FINALE_TEXT, true,  false, false }, // end of game
    {  1, 15, "BGFLAT15", "P5TEXT", FINALE_TEXT, false, true,  false }, // only after secret
    {  1, 31, "BGFLAT31", "P6TEXT", FINALE_TEXT, false, true,  false }, // only after secret
-   { -1, -1, "BGFLAT06", NULL,     FINALE_TEXT, false, false, false },
+   { -1, -1, "BGFLAT06", nullptr,  FINALE_TEXT, false, false, false },
    { -2 }
 };
 
@@ -520,7 +520,7 @@ static finalerule_t HereticFinaleRules[] =
    {  4,  8, "BGFLATHE4", "H4TEXT", FINALE_HTIC_CREDITS, false, false, true  },
    {  5,  8, "BGFLATHE5", "H5TEXT", FINALE_HTIC_CREDITS, false, false, true  },
    { -1,  8, "BGFLATHE1", "H1TEXT", FINALE_HTIC_CREDITS, false, false, true  }, // ExM8 default
-   { -1, -1, "BGFLATHE1", NULL,     FINALE_TEXT,         false, false, false }, // other default
+   { -1, -1, "BGFLATHE1", nullptr,  FINALE_TEXT,         false, false, false }, // other default
    { -2 }
 };
 
@@ -535,7 +535,7 @@ static finaledata_t HereticFinale =
 
 static finalerule_t UnknownFinaleRules[] =
 {
-   { -1, -1, "F_SKY2", NULL, FINALE_TEXT, false, false, false },
+   { -1, -1, "F_SKY2", nullptr, FINALE_TEXT, false, false, false },
    { -2 }
 };
 
@@ -804,18 +804,18 @@ extern default_or_t HereticDefaultORs[];
 //
 static missioninfo_t gmDoom =
 {
-   doom,   // id
-   0,      // flags
-   "doom", // gamePathName
-   NULL,   // sameLevels
+   doom,    // id
+   0,       // flags
+   "doom",  // gamePathName
+   nullptr, // sameLevels
 
-   0,      // addGMIFlags
-   0,      // remGMIFlags
-   NULL,   // versionNameOR
-   NULL,   // startupBannerOR
-   0,      // numEpisodesOR
-   NULL,   // iwadPathOR
-   NULL,   // finaleDataOR
+   0,       // addGMIFlags
+   0,       // remGMIFlags
+   nullptr, // versionNameOR
+   nullptr, // startupBannerOR
+   0,       // numEpisodesOR
+   nullptr, // iwadPathOR
+   nullptr, // finaleDataOR
 };
 
 //
@@ -826,15 +826,15 @@ static missioninfo_t gmDoom2 =
    doom2,            // id
    MI_DOOM2MISSIONS, // flags
    "doom2",          // gamePathName
-   NULL,             // sameLevels
+   nullptr,          // sameLevels
 
    0,       // addGMIFlags
    0,       // remGMIFlags
-   NULL,    // versionNameOR
-   NULL,    // startupBannerOR
+   nullptr, // versionNameOR
+   nullptr, // startupBannerOR
    0,       // numEpisodesOR
-   NULL,    // iwadPathOR
-   NULL,    // finaleDataOR
+   nullptr, // iwadPathOR
+   nullptr, // finaleDataOR
 };
 
 //
@@ -845,7 +845,7 @@ static missioninfo_t gmFinalTNT =
    pack_tnt,           // id
    FINALDOOM_MIFLAGS,  // flags
    "tnt",              // gamePathName
-   NULL,               // sameLevels
+   nullptr,            // sameLevels
 
    GIF_LOSTSOULBOUNCE, // addGMIFlags
    0,                  // remGMIFlags
@@ -854,11 +854,11 @@ static missioninfo_t gmFinalTNT =
    0,                  // numEpisodesOR
    &gi_path_tnt,       // iwadPathOR
    &TNTFinale,         // finaleDataOR
-   NULL,               // menuBackgroundOR
-   NULL,               // creditBackgroundOR
+   nullptr,            // menuBackgroundOR
+   nullptr,            // creditBackgroundOR
    demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
-   NULL,               // interPicOR
-   NULL,               // exitRulesOR
+   nullptr,            // interPicOR
+   nullptr,            // exitRulesOR
    mapnamest,          // levelNamesOR
 };
 
@@ -870,7 +870,7 @@ static missioninfo_t gmFinalPlutonia =
    pack_plut,          // id
    FINALDOOM_MIFLAGS,  // flags
    "plutonia",         // gamePathName
-   NULL,               // sameLevels
+   nullptr,            // sameLevels
 
    GIF_LOSTSOULBOUNCE, // addGMIFlags
    0,                  // remGMIFlags
@@ -879,11 +879,11 @@ static missioninfo_t gmFinalPlutonia =
    0,                  // numEpisodesOR
    &gi_path_plut,      // iwadPathOR
    &PlutFinale,        // finaleDataOR
-   NULL,               // menuBackgroundOR
-   NULL,               // creditBackgroundOR
+   nullptr,            // menuBackgroundOR
+   nullptr,            // creditBackgroundOR
    demostates_udoom,   // demoStatesOR -- haleyjd 11/12/09: to play DEMO4
-   NULL,               // interPicOR
-   NULL,               // exitRulesOR
+   nullptr,            // interPicOR
+   nullptr,            // exitRulesOR
    mapnamesp,          // levelNamesOR
 };
 
@@ -903,19 +903,19 @@ static missioninfo_t gmDisk =
    pack_disk,          // id
    BFGMISSIONFLAGS,    // flags
    "doom2",            // gamePathName
-   NULL,               // sameLevels
+   nullptr,            // sameLevels
 
    GIF_LOSTSOULBOUNCE, // addGMIFlags
    0,                  // remGMIFlags
    VNAME_DISK,         // versionNameOR
-   NULL,               // startupBannerOR
+   nullptr,            // startupBannerOR
    0,                  // numEpisodesOR
-   NULL,               // iwadPathOR
-   NULL,               // finaleDataOR
-   NULL,               // menuBackgroundOR
-   NULL,               // creditBackgroundOR
-   NULL,               // demoStatesOR
-   NULL,               // interPicOR
+   nullptr,            // iwadPathOR
+   nullptr,            // finaleDataOR
+   nullptr,            // menuBackgroundOR
+   nullptr,            // creditBackgroundOR
+   nullptr,            // demoStatesOR
+   nullptr,            // interPicOR
    DiskExitRules,      // exitRulesOR
 };
 
@@ -927,7 +927,7 @@ static missioninfo_t gmHacx =
    pack_hacx,       // id
    0,               // flags
    "hacx",          // gamePathName
-   NULL,            // sameLevels
+   nullptr,         // sameLevels
 
    0,               // addGMIFlags
    0,               // remGMIFlags
@@ -935,7 +935,7 @@ static missioninfo_t gmHacx =
    BANNER_HACX,     // startupBannerOR
    0,               // numEpisodesOR
    &gi_path_hacx,   // iwadPathOR
-   NULL,            // finaleDataOR
+   nullptr,         // finaleDataOR
    HACXMENUBACK,    // menuBackgroundOR
    HACXCREDITBK,    // creditBackgroundOR
 };
@@ -981,11 +981,11 @@ static missioninfo_t gmHeretic =
 
    0,         // addGMIFlags
    0,         // remGMIFlags
-   NULL,      // versionNameOR
-   NULL,      // startupBannerOR
+   nullptr,   // versionNameOR
+   nullptr,   // startupBannerOR
    0,         // numEpisodesOR
-   NULL,      // iwadPathOR
-   NULL,      // finaleDataOR
+   nullptr,   // iwadPathOR
+   nullptr,   // finaleDataOR
 };
 
 //
@@ -1003,16 +1003,16 @@ static missioninfo_t gmHereticBeta =
    0,                   // addGMIFlags
    0,                   // remGMIFlags
    VNAME_HTIC_BETA,     // versionNameOR
-   NULL,                // startupBannerOR
+   nullptr,             // startupBannerOR
    0,                   // numEpisodesOR
-   NULL,                // iwadPathOR
-   NULL,                // finaleDataOR
-   NULL,                // menuBackgroundOR
-   NULL,                // creditBackgroundOR
-   NULL,                // demoStatesOR
-   NULL,                // interPicOR
-   NULL,                // exitRulesOR
-   NULL,                // levelNamesOR
+   nullptr,             // iwadPathOR
+   nullptr,             // finaleDataOR
+   nullptr,             // menuBackgroundOR
+   nullptr,             // creditBackgroundOR
+   nullptr,             // demoStatesOR
+   nullptr,             // interPicOR
+   nullptr,             // exitRulesOR
+   nullptr,             // levelNamesOR
    hmus_e1m3,           // randMusMaxOR
 };
 
@@ -1032,7 +1032,7 @@ static missioninfo_t gmHereticSoSR =
    BANNER_HTIC_SOSR, // startupBannerOR
    6,                // numEpisodesOR
    &gi_path_sosr,    // iwadPathOR
-   NULL,             // finaleDataOR
+   nullptr,          // finaleDataOR
 };
 
 //
@@ -1043,14 +1043,14 @@ static missioninfo_t gmUnknown =
    none,           // id
    0,              // flags
    "doom",         // gamePathName
-   NULL,           // sameLevels
+   nullptr,        // sameLevels
 
    0,              // addGMIFlags
    0,              // remGMIFlags
    VNAME_UNKNOWN,  // versionNameOR
    BANNER_UNKNOWN, // startupBannerOR
    0,              // numEpisodesOR
-   NULL,           // iwadPathOR
+   nullptr,        // iwadPathOR
    &UnknownFinale, // finaleDataOR
 };
 
@@ -1087,7 +1087,7 @@ static gamemodeinfo_t giDoomSW =
    
    VNAME_DOOM_SW,    // versionName
    FNAME_DOOM_SW,    // freeVerName
-   NULL,             // bfgEditionName
+   nullptr,          // bfgEditionName
    BANNER_DOOM_SW,   // startupBanner
    &gi_path_doomsw,  // iwadPath
    
@@ -1151,7 +1151,7 @@ static gamemodeinfo_t giDoomSW =
    100,              // thrustFactor
    GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
+   nullptr,          // defTranslate
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
@@ -1193,7 +1193,7 @@ static gamemodeinfo_t giDoomSW =
    DoomSkyFlats,       // skyFlats
    &giPsprNoScale,     // pspriteGlobalScale
 
-   NULL,             // defaultORs
+   nullptr,          // defaultORs
 
    "ENDOOM",         // endTextName
    quitsounds,       // exitSounds
@@ -1210,7 +1210,7 @@ static gamemodeinfo_t giDoomReg =
    
    VNAME_DOOM_REG,   // versionName
    FNAME_DOOM_R,     // freeVerName
-   NULL,             // bfgEditionName
+   nullptr,          // bfgEditionName
    BANNER_DOOM_REG,  // startupBanner
    &gi_path_doomreg, // iwadPath
    
@@ -1274,7 +1274,7 @@ static gamemodeinfo_t giDoomReg =
    100,              // thrustFactor
    GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
+   nullptr,          // defTranslate
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
@@ -1316,7 +1316,7 @@ static gamemodeinfo_t giDoomReg =
    DoomSkyFlats,       // skyFlats
    &giPsprNoScale,     // pspriteGlobalScale
 
-   NULL,             // defaultORs
+   nullptr,          // defaultORs
 
    "ENDOOM",         // endTextName
    quitsounds,       // exitSounds
@@ -1397,7 +1397,7 @@ static gamemodeinfo_t giDoomRetail =
    100,              // thrustFactor
    GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
+   nullptr,          // defTranslate
    DoomBossSpecs,    // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
@@ -1439,7 +1439,7 @@ static gamemodeinfo_t giDoomRetail =
    DoomSkyFlats,       // skyFlats
    &giPsprNoScale,     // pspriteGlobalScale
 
-   NULL,             // defaultORs
+   nullptr,          // defaultORs
 
    "ENDOOM",         // endTextName
    quitsounds,       // exitSounds
@@ -1520,7 +1520,7 @@ static gamemodeinfo_t giDoomCommercial =
    100,              // thrustFactor
    GI_GIBFULLHEALTH, // defaultGibHealth
    "DoomMarine",     // defPClassName
-   NULL,             // defTranslate
+   nullptr,          // defTranslate
    Doom2BossSpecs,   // bossRules
    LI_TYPE_DOOM,     // levelType
    "DoomBlood",      // bloodDefaultNormal
@@ -1558,11 +1558,11 @@ static gamemodeinfo_t giDoomCommercial =
 
    3,              // switchEpisode
    &Doom2SkyData,  // skyData
-   NULL,           // TextureHacks
+   nullptr,        // TextureHacks
    DoomSkyFlats,   // skyFlats
    &giPsprNoScale, // pspriteGlobalScale
 
-   NULL,             // defaultORs
+   nullptr,          // defaultORs
 
    "ENDOOM",         // endTextName
    quitsounds2,      // exitSounds
@@ -1578,8 +1578,8 @@ static gamemodeinfo_t giHereticSW =
    GIF_SHAREWARE | HERETIC_GIFLAGS, // flags
 
    VNAME_HTIC_SW,    // versionName
-   NULL,             // freeVerName
-   NULL,             // bfgEditionName
+   nullptr,          // freeVerName
+   nullptr,          // bfgEditionName
    BANNER_HTIC_SW,   // startupBanner
    &gi_path_hticsw,  // iwadPath
 
@@ -1688,7 +1688,7 @@ static gamemodeinfo_t giHereticSW =
    HereticDefaultORs, // defaultORs
 
    "ENDTEXT",        // endTextName
-   NULL,             // exitSounds
+   nullptr,          // exitSounds
 };
 
 //
@@ -1705,8 +1705,8 @@ static gamemodeinfo_t giHereticReg =
    HERETIC_GIFLAGS,  // flags
    
    VNAME_HTIC_REG,   // versionName
-   NULL,             // freeVerName
-   NULL,             // bfgEditionName
+   nullptr,          // freeVerName
+   nullptr,          // bfgEditionName
    BANNER_HTIC_REG,  // startupBanner
    &gi_path_hticreg, // iwadPath
 
@@ -1815,7 +1815,7 @@ static gamemodeinfo_t giHereticReg =
    HereticDefaultORs,  // defaultORs
 
    "ENDTEXT",          // endTextName
-   NULL,               // exitSounds
+   nullptr,            // exitSounds
 };
 
 // Game Mode Info Array

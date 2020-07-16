@@ -120,7 +120,7 @@ DebugLogger &DebugLogger::operator << (const line_t &line)
 }
 DebugLogger &DebugLogger::operator << (const pwindow_t &window)
 {
-   return *this << "pwindow(" << window.line << window.type >> window.planez >> window.vx >> window.vy >> window.vz << ')';
+   return *this << "pwindow(" << window.type >> window.planez >> window.vx >> window.vy >> window.vz << ')';
 }
 DebugLogger &DebugLogger::operator << (const sector_t &sector)
 {

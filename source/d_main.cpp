@@ -192,7 +192,7 @@ static int eventhead, eventtail;
 // D_PostEvent
 // Called by the I/O functions when input is detected
 //
-void D_PostEvent(event_t *ev)
+void D_PostEvent(const event_t *ev)
 {
    events[eventhead++] = *ev;
    eventhead &= MAXEVENTS-1;
@@ -309,34 +309,34 @@ const demostate_t demostates_doom[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "HELP2"    },
    { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_doom2[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // commercial
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "CREDIT"   },
    { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_udoom[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // retail
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "CREDIT"   },
    { G_DeferedPlayDemo, "DEMO3"    },
    { G_DeferedPlayDemo, "DEMO4"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_hsw[] =
@@ -346,9 +346,9 @@ const demostate_t demostates_hsw[] =
    { G_DeferedPlayDemo, "DEMO1" },
    { D_SetPageName,     "ORDER" },
    { G_DeferedPlayDemo, "DEMO2" },
-   { D_SetPageName,     NULL    },
+   { D_SetPageName,     nullptr },
    { G_DeferedPlayDemo, "DEMO3" },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_hreg[] =
@@ -358,9 +358,9 @@ const demostate_t demostates_hreg[] =
    { G_DeferedPlayDemo, "DEMO1"  },
    { D_SetPageName,     "CREDIT" },
    { G_DeferedPlayDemo, "DEMO2"  },
-   { D_SetPageName,     NULL     },
+   { D_SetPageName,     nullptr  },
    { G_DeferedPlayDemo, "DEMO3"  },
-   { NULL }
+   { nullptr }
 };
 
 //const demostate_t demostates_unknown[] =
@@ -742,7 +742,7 @@ static void D_Display()
 //
 char *D_DoomExeDir()
 {
-   static char *base = NULL;
+   static char *base = nullptr;
 
    if(!base) // cache multiple requests
    {
@@ -775,7 +775,7 @@ static const char *game_name; // description of iwad
 // D_SetGameName
 //
 // Sets the game_name variable for displaying what version of the game is being
-// played at startup. "iwad" may be NULL. GameModeInfo must be initialized prior
+// played at startup. "iwad" may be nullptr. GameModeInfo must be initialized prior
 // to calling this.
 //
 void D_SetGameName(const char *iwad)
@@ -888,7 +888,7 @@ static void FindResponseFile()
       {
          int size, index, indexinfile;
          byte *f;
-         char *file = NULL, *firstargv;
+         char *file = nullptr, *firstargv;
          char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
          qstring fname;
@@ -1151,7 +1151,7 @@ static void D_AutoExecScripts()
 //
 // If there are multiple instances of "DEHACKED", we process each, in first
 // to last order (we must reverse the order since they will be stored in
-// last to first order in the chain). Passing NULL as first argument to
+// last to first order in the chain). Passing nullptr as first argument to
 // ProcessDehFile() indicates that the data comes from the lump number
 // indicated by the third argument, instead of from a file.
 
@@ -1167,7 +1167,7 @@ static void D_ProcessDehInWad(int i)
       D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
-         D_QueueDEH(NULL, i); // haleyjd: queue it
+         D_QueueDEH(nullptr, i); // haleyjd: queue it
    }
 }
 
@@ -1272,7 +1272,7 @@ static void D_DoomInit()
    int p, slot;
    int dmtype = 0;          // haleyjd 04/14/03
    bool haveGFS = false;    // haleyjd 03/10/03
-   gfs_t *gfs = NULL;
+   gfs_t *gfs = nullptr;
 
    gamestate = GS_STARTUP; // haleyjd 01/01/10
 
@@ -1429,7 +1429,7 @@ static void D_DoomInit()
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
          }
       }
    }
@@ -1439,7 +1439,7 @@ static void D_DoomInit()
       G_DemoLogInit(myargv[p + 1]);
 
    // haleyjd 01/17/11: allow -play also
-   const char *playdemoparms[] = { "-playdemo", "-play", NULL };
+   const char *playdemoparms[] = { "-playdemo", "-play", nullptr };
 
    if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
    {
@@ -1450,7 +1450,7 @@ static void D_DoomInit()
    }
 
    // haleyjd 02/29/2012: support a loose demo on the command line
-   const char *loosedemo = NULL;
+   const char *loosedemo = nullptr;
    if(!p)
       loosedemo = D_LooseDemo();
 
@@ -1462,7 +1462,7 @@ static void D_DoomInit()
       file = demosource;
       file.addDefaultExtension(".lmp"); // killough
 
-      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
+      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, nullptr, 0, DAF_DEMO);
       usermsg("Playing demo '%s'\n", file.constPtr());
    }
 
@@ -1868,7 +1868,7 @@ static void D_DoomInit()
    else
    {
       // haleyjd 01/17/11: allow -recorddemo as well
-      const char *recordparms[] = { "-record", "-recorddemo", NULL };
+      const char *recordparms[] = { "-record", "-recorddemo", nullptr };
 
       slot = M_CheckParm("-loadgame");
  
@@ -1919,7 +1919,7 @@ static void D_DoomInit()
 
    if(slot && ++slot < myargc)
    {
-      char *file = NULL;
+      char *file = nullptr;
       size_t len = M_StringAlloca(&file, 2, 26, basesavegame, savegamename);
       slot = atoi(myargv[slot]);        // killough 3/16/98: add slot info
       G_SaveGameName(file, len, slot); // killough 3/22/98
@@ -2013,7 +2013,7 @@ void D_DoomMain()
 // Console Commands
 //
 
-VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
+VARIABLE_TOGGLE(d_drawfps, nullptr, onoff);
 CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
 
 //----------------------------------------------------------------------------

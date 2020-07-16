@@ -155,10 +155,13 @@ enum
 typedef int statenum_t;
 
 // state flags
+// NOTE: STATEFI = internal flag, not meant for user consumption
 enum stateflags_e
 {
-   STATEF_DECORATE   = 0x00000001, // 01/01/12: reserved for DECORATE definition
-   STATEF_SKILL5FAST = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEFI_DECORATE    = 0x00000001, // 01/01/12: reserved for DECORATE definition
+   STATEF_SKILL5FAST   = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEFI_VANILLA0TIC = 0x00000004, // always use old 0-tic behaviour (when spawnstate)
+   STATEF_INTERPOLATE  = 0x00000008, // Interpolate when given offset
 };
 
 // ********************************************************************
@@ -240,9 +243,6 @@ enum
   MT_DOGS,       // killough 7/19/98: Marine's best friend
   MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
   MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
-
-  MT_CAMERA = 162, // SMMU camera spot
-  MT_PLASMA3,      // haleyjd: for burst bfg
 
   // haleyjd 10/08/02: Heretic things
   MT_POD = 305,
@@ -332,6 +332,9 @@ enum
   MT_FOGPATCHL,
   
 // End Eternity TC New Things
+
+  MT_CAMERA = 1062, // SMMU camera spot
+  MT_PLASMA3,       // haleyjd: for burst bfg
 
   // haleyjd: NUMMOBJTYPES is a variable now
   //NUMMOBJTYPES  // Counter of how many there are

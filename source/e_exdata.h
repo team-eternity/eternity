@@ -79,9 +79,11 @@ enum extmlflags_e : unsigned int
    EX_ML_POLYOBJECT   = 0x00010000, // enabled for polyobjects
 };
 
+static const int e_edgePortalFlags[surf_NUM] = { EX_ML_LOWERPORTAL, EX_ML_UPPERPORTAL };
+
 // ExtraData line structure
 
-typedef struct maplinedefext_s
+struct maplinedefext_t
 {
    // standard fields
    maplinedef_t stdfields;
@@ -98,26 +100,32 @@ typedef struct maplinedefext_s
    int recordnum;
    int next;
 
-} maplinedefext_t;
+};
 
 // ExtraData sector structure
 
 struct ETerrain;
 class  UDMFSetupSettings;
 
-typedef struct mapsectorext_s
+//
+// Sector floor/ceiling component
+//
+struct mapsurfaceext_t
+{
+   v2double_t offset;
+   v2double_t scale;
+   double angle;
+   unsigned pflags;
+   unsigned alpha;
+   int portalid;
+   ETerrain *terrain;
+};
+
+struct mapsectorext_t
 {
    // extended fields
-   double floor_xoffs;
-   double floor_yoffs;
-   double ceiling_xoffs;
-   double ceiling_yoffs;
-   double floor_xscale;
-   double floor_yscale;
-   double ceiling_xscale;
-   double ceiling_yscale;
-   double floorangle;
-   double ceilingangle;
+   Surfaces<mapsurfaceext_t> surface;
+
    unsigned int flags;
    unsigned int flagsadd;
    unsigned int flagsrem;
@@ -131,23 +139,13 @@ typedef struct mapsectorext_s
    unsigned int damageflagsadd;
    unsigned int damageflagsrem;
 
-   unsigned int f_pflags;
-   unsigned int c_pflags;
-   unsigned int f_alpha;
-   unsigned int c_alpha;
-   int f_portalid;
-   int c_portalid;
-
-   ETerrain *floorterrain;
-   ETerrain *ceilingterrain;
-
    // internal fields (used by ExtraData only)
    bool hasflags;
    bool hasdamageflags;
    int  recordnum;
    int  next;
 
-} mapsectorext_t;
+};
 
 // Globals
 

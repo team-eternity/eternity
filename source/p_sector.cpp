@@ -63,17 +63,17 @@ void SectorThinker::serialize(SaveArchive &arc)
       switch(getAttachPoint())
       {
       case ATTACH_FLOOR:
-         sector->floordata = this;
+         sector->srf.floor.data = this;
          break;
       case ATTACH_CEILING:
-         sector->ceilingdata = this;
+         sector->srf.ceiling.data = this;
          break;
       case ATTACH_FLOORCEILING:
-         sector->floordata   = this;
-         sector->ceilingdata = this;
+         sector->srf.floor.data = this;
+         sector->srf.ceiling.data = this;
          break;
       case ATTACH_LIGHT:
-         sector->lightingdata = this;
+         // NOTE: light thinkers don't exist
          break;
       default:
          break;
@@ -128,9 +128,9 @@ int EV_SectorSetRotation(const line_t *line, int tag, int floorangle,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->floorangle = static_cast<float>
+      sector->srf.floor.angle = static_cast<float>
          (E_NormalizeFlatAngle(floorangle) * PI / 180.0f);
-      sector->ceilingangle = static_cast<float>
+      sector->srf.ceiling.angle = static_cast<float>
          (E_NormalizeFlatAngle(ceilingangle) * PI / 180.0f);
       if(manual)
          return 1;
@@ -164,8 +164,8 @@ int EV_SectorSetCeilingPanning(const line_t *line, int tag, fixed_t xoffs,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->ceiling_xoffs = xoffs;
-      sector->ceiling_yoffs = yoffs;
+      sector->srf.ceiling.offset.x = xoffs;
+      sector->srf.ceiling.offset.y = yoffs;
       if(manual)
          return 1;
    }
@@ -198,8 +198,8 @@ int EV_SectorSetFloorPanning(const line_t *line, int tag, fixed_t xoffs,
    {
       sector = sectors + secnum;
    manualtrig:
-      sector->floor_xoffs = xoffs;
-      sector->floor_yoffs = yoffs;
+      sector->srf.floor.offset.x = xoffs;
+      sector->srf.floor.offset.y = yoffs;
       if(manual)
          return 1;
    }
@@ -242,10 +242,10 @@ void P_SaveSectorPositions()
       auto &si  = sectorinterps[i];
       auto &sec = sectors[i];
 
-      si.prevfloorheight    = sec.floorheight;
-      si.prevfloorheightf   = sec.floorheightf;
-      si.prevceilingheight  = sec.ceilingheight;
-      si.prevceilingheightf = sec.ceilingheightf;
+      si.prevfloorheight    = sec.srf.floor.height;
+      si.prevfloorheightf   = sec.srf.floor.heightf;
+      si.prevceilingheight  = sec.srf.ceiling.height;
+      si.prevceilingheightf = sec.srf.ceiling.heightf;
    }
 }
 
@@ -255,10 +255,10 @@ void P_SaveSectorPositions()
 void P_SaveSectorPosition(const sector_t &sec)
 {
    auto &si = sectorinterps[&sec - sectors];
-   si.prevfloorheight = sec.floorheight;
-   si.prevfloorheightf = sec.floorheightf;
-   si.prevceilingheight = sec.ceilingheight;
-   si.prevceilingheightf = sec.ceilingheightf;
+   si.prevfloorheight = sec.srf.floor.height;
+   si.prevfloorheightf = sec.srf.floor.heightf;
+   si.prevceilingheight = sec.srf.ceiling.height;
+   si.prevceilingheightf = sec.srf.ceiling.heightf;
 }
 
 //
@@ -270,12 +270,12 @@ void P_SaveSectorPosition(const sector_t &sec, ssurftype_e surf)
    switch(surf)
    {
       case ssurf_floor:
-         si.prevfloorheight = sec.floorheight;
-         si.prevfloorheightf = sec.floorheightf;
+         si.prevfloorheight = sec.srf.floor.height;
+         si.prevfloorheightf = sec.srf.floor.heightf;
          break;
       case ssurf_ceiling:
-         si.prevceilingheight = sec.ceilingheight;
-         si.prevceilingheightf = sec.ceilingheightf;
+         si.prevceilingheight = sec.srf.ceiling.height;
+         si.prevceilingheightf = sec.srf.ceiling.heightf;
          break;
    }
 }

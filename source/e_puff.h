@@ -46,7 +46,7 @@ extern MetaKeyIndex keyPuffUpSpeed;
 extern MetaKeyIndex keyPuffZSpread;
 extern MetaKeyIndex keyPuffPunchHack;
 extern MetaKeyIndex keyPuffParticles;
-extern MetaKeyIndex keyPuffAlwaysPuff;
+extern MetaKeyIndex keyPuffPuffOnActors;
 extern MetaKeyIndex keyPuffBloodless;
 extern MetaKeyIndex keyPuffLocalThrust;
 extern MetaKeyIndex keyPuffRandomTics;

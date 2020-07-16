@@ -111,12 +111,12 @@ manual_floor:
       rtn = 1;
       floor = new FloorMoveThinker;
       floor->addThinker();
-      sec->floordata = floor;
+      sec->srf.floor.data = floor;
       
       floor->crush     = fd->crush;
       floor->direction = fd->direction ? plat_up : plat_down;
       floor->sector    = sec;
-      floor->texture   = sec->floorpic;
+      floor->texture   = sec->srf.floor.pic;
       floor->type      = genFloor;
 
       //jff 3/14/98 transfer old special field too
@@ -155,7 +155,7 @@ manual_floor:
             fixed_t amt = (fd->adjust - 128) * FRACUNIT;
             if(fd->force_adjust == 1)
                floor->floordestheight += amt;
-            else if(floor->floordestheight != sec->floorheight)
+            else if(floor->floordestheight != sec->srf.floor.height)
                floor->floordestheight += amt;
          }
          break;
@@ -164,24 +164,24 @@ manual_floor:
          break;
       case FtoNnF:
          floor->floordestheight = fd->direction ?
-            P_FindNextHighestFloor(sec,sec->floorheight) :
-            P_FindNextLowestFloor(sec,sec->floorheight);
+            P_FindNextHighestFloor(sec,sec->srf.floor.height) :
+            P_FindNextLowestFloor(sec,sec->srf.floor.height);
          break;
       case FtoLnC:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec) + fd->adjust;
          break;
       case FtoLnCInclusive:
          floor->floordestheight = P_FindLowestCeilingSurrounding(sec);
-         if(floor->floordestheight > sec->ceilingheight)
-            floor->floordestheight = sec->ceilingheight;
+         if(floor->floordestheight > sec->srf.ceiling.height)
+            floor->floordestheight = sec->srf.ceiling.height;
          floor->floordestheight += fd->adjust;
          break;
       case FtoC:
-         floor->floordestheight = sec->ceilingheight + fd->adjust;
+         floor->floordestheight = sec->srf.ceiling.height + fd->adjust;
          break;
       case FbyST:
-         floor->floordestheight = 
-            (floor->sector->floorheight>>FRACBITS) + floor->direction * 
+         floor->floordestheight =
+            (floor->sector->srf.floor.height >>FRACBITS) + floor->direction *
             (P_FindShortestTextureAround(secnum)>>FRACBITS);
          if(floor->floordestheight>32000)  //jff 3/13/98 prevent overflow
             floor->floordestheight=32000;    // wraparound in floor height
@@ -190,33 +190,33 @@ manual_floor:
          floor->floordestheight<<=FRACBITS;
          break;
       case Fby24:
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->srf.floor.height +
             floor->direction * 24*FRACUNIT;
          break;
       case Fby32:
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->srf.floor.height +
             floor->direction * 32*FRACUNIT;
          break;
-      
+
          // haleyjd 05/07/04: parameterized extensions
          //         05/20/05: added FtoAbs, FInst
-      case FbyParam: 
-         floor->floordestheight = floor->sector->floorheight +
+      case FbyParam:
+         floor->floordestheight = floor->sector->srf.floor.height +
             floor->direction * fd->height_value;
          break;
       case FtoAbs:
          floor->floordestheight = fd->height_value;
          // adjust direction appropriately (instant movement not possible)
-         if(floor->floordestheight > floor->sector->floorheight)
+         if(floor->floordestheight > floor->sector->srf.floor.height)
             floor->direction = plat_up;
          else
             floor->direction = plat_down;
          break;
       case FInst:
-         floor->floordestheight = floor->sector->floorheight +
+         floor->floordestheight = floor->sector->srf.floor.height +
             floor->direction * fd->height_value;
          // adjust direction appropriately (always instant)
-         if(floor->floordestheight > floor->sector->floorheight)
+         if(floor->floordestheight > floor->sector->srf.floor.height)
             floor->direction = plat_down;
          else
             floor->direction = plat_up;
@@ -243,7 +243,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
-                  sec->floorpic = msec->floorpic;
+                  sec->srf.floor.pic = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:  // zero type
@@ -262,7 +262,7 @@ manual_floor:
                }
                else
                {
-                  floor->texture = msec->floorpic;
+                  floor->texture = msec->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:  // zero type
@@ -290,7 +290,7 @@ manual_floor:
             {
                if(fd->changeOnStart)
                {
-                  sec->floorpic = line->frontsector->floorpic;
+                  sec->srf.floor.pic = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:    // zero type
@@ -309,7 +309,7 @@ manual_floor:
                }
                else
                {
-                  floor->texture = line->frontsector->floorpic;
+                  floor->texture = line->frontsector->srf.floor.pic;
                   switch(fd->change_type)
                   {
                      case FChgZero:    // zero type
@@ -417,13 +417,13 @@ manual_ceiling:
       rtn = 1;
       ceiling = new CeilingThinker;
       ceiling->addThinker();
-      sec->ceilingdata = ceiling; //jff 2/22/98
+      sec->srf.ceiling.data = ceiling; //jff 2/22/98
 
       ceiling->crush = cd->crush;
       ceiling->crushflags = 0;
       ceiling->direction = cd->direction ? plat_up : plat_down;
       ceiling->sector = sec;
-      ceiling->texture = sec->ceilingpic;
+      ceiling->texture = sec->srf.ceiling.pic;
       //jff 3/14/98 change old field too
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
@@ -452,7 +452,7 @@ manual_ceiling:
       }
 
       // set destination target height
-      targheight = sec->ceilingheight;
+      targheight = sec->srf.ceiling.height;
       switch(cd->target_type)
       {
       case CtoHnC:
@@ -463,8 +463,8 @@ manual_ceiling:
          break;
       case CtoNnC:
          targheight = cd->direction ?
-            P_FindNextHighestCeiling(sec,sec->ceilingheight) :
-            P_FindNextLowestCeiling(sec,sec->ceilingheight);
+            P_FindNextHighestCeiling(sec,sec->srf.ceiling.height) :
+            P_FindNextLowestCeiling(sec,sec->srf.ceiling.height);
          break;
       case CtoHnF:
          targheight = P_FindHighestFloorSurrounding(sec);
@@ -474,8 +474,8 @@ manual_ceiling:
             // gap to have any effect. But if gap is 0, just emulate the buggy
             // (but compat-fixed) Boom behavior. The only classic specials with
             // this behavior are from Boom anyway.
-            if(targheight < sec->floorheight)
-               targheight = sec->floorheight;
+            if(targheight < sec->srf.floor.height)
+               targheight = sec->srf.floor.height;
             targheight += cd->ceiling_gap;
 
             // Also slow ceiling down if blocked while gap is nonzero
@@ -484,14 +484,14 @@ manual_ceiling:
          }
          break;
       case CtoF:
-         targheight = sec->floorheight + cd->ceiling_gap;
+         targheight = sec->srf.floor.height + cd->ceiling_gap;
          // ioanch: if hack flag is available, apply the Doom-like behavior if
          // gap is nonzero
          if(cd->ceiling_gap && cd->flags & CDF_HACKFORDESTF)
             ceiling->crushflags |= CeilingThinker::crushParamSlow;
          break;
       case CbyST:
-         targheight = (ceiling->sector->ceilingheight>>FRACBITS) +
+         targheight = (ceiling->sector->srf.ceiling.height >>FRACBITS) +
             ceiling->direction * (P_FindShortestUpperAround(secnum)>>FRACBITS);
          if(targheight > 32000)  // jff 3/13/98 prevent overflow
             targheight = 32000;  // wraparound in ceiling height
@@ -500,32 +500,32 @@ manual_ceiling:
          targheight <<= FRACBITS;
          break;
       case Cby24:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->srf.ceiling.height +
             ceiling->direction * 24*FRACUNIT;
          break;
       case Cby32:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->srf.ceiling.height +
             ceiling->direction * 32*FRACUNIT;
          break;
 
          // haleyjd 10/06/05: parameterized extensions
       case CbyParam:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->srf.ceiling.height +
             ceiling->direction * cd->height_value;
          break;
       case CtoAbs:
          targheight = cd->height_value;
          // adjust direction appropriately (instant movement not possible)
-         if(targheight > ceiling->sector->ceilingheight)
+         if(targheight > ceiling->sector->srf.ceiling.height)
             ceiling->direction = plat_up;
          else
             ceiling->direction = plat_down;
          break;
       case CInst:
-         targheight = ceiling->sector->ceilingheight +
+         targheight = ceiling->sector->srf.ceiling.height +
             ceiling->direction * cd->height_value;
          // adjust direction appropriately (always instant)
-         if(targheight > ceiling->sector->ceilingheight)
+         if(targheight > ceiling->sector->srf.ceiling.height)
             ceiling->direction = plat_down;
          else
             ceiling->direction = plat_up;
@@ -555,7 +555,7 @@ manual_ceiling:
             {
                if(cd->flags & CDF_CHANGEONSTART)
                {
-                  P_SetSectorCeilingPic(sec, msec->ceilingpic);
+                  P_SetSectorCeilingPic(sec, msec->srf.ceiling.pic);
                   switch(cd->change_type)
                   {
                      case CChgZero:
@@ -572,7 +572,7 @@ manual_ceiling:
                }
                else
                {
-                  ceiling->texture = msec->ceilingpic;
+                  ceiling->texture = msec->srf.ceiling.pic;
                   switch(cd->change_type)
                   {
                      case CChgZero:  // type is zeroed
@@ -600,7 +600,7 @@ manual_ceiling:
             {
                if(cd->flags & CDF_CHANGEONSTART)
                {
-                  P_SetSectorCeilingPic(sec, line->frontsector->ceilingpic);
+                  P_SetSectorCeilingPic(sec, line->frontsector->srf.ceiling.pic);
                   switch(cd->change_type)
                   {
                      case CChgZero:
@@ -618,7 +618,7 @@ manual_ceiling:
                }
                else
                {
-                  ceiling->texture = line->frontsector->ceilingpic;
+                  ceiling->texture = line->frontsector->srf.ceiling.pic;
                   switch(cd->change_type)
                   {
                      case CChgZero:    // type is zeroed
@@ -805,35 +805,35 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
       plat->crush  = -1;
       plat->tag    = line.args[0];
       plat->type   = genLift;
-      plat->high   = sec->floorheight;
+      plat->high   = sec->srf.floor.height;
       plat->status = PlatThinker::down;
       plat->sector = sec;
-      plat->sector->floordata = plat;
+      plat->sector->srf.floor.data = plat;
 
       // setup the target destination height
       switch(target)
       {
          case F2LnF:
             plat->low = P_FindLowestFloorSurrounding(sec);
-            if(plat->low > sec->floorheight)
-               plat->low = sec->floorheight;
+            if(plat->low > sec->srf.floor.height)
+               plat->low = sec->srf.floor.height;
             break;
          case F2NnF:
-            plat->low = P_FindNextLowestFloor(sec,sec->floorheight);
+            plat->low = P_FindNextLowestFloor(sec,sec->srf.floor.height);
             break;
          case F2LnC:
             plat->low = P_FindLowestCeilingSurrounding(sec);
-            if(plat->low > sec->floorheight)
-               plat->low = sec->floorheight;
+            if(plat->low > sec->srf.floor.height)
+               plat->low = sec->srf.floor.height;
             break;
          case LnF2HnF:
             plat->type = genPerpetual;
             plat->low = P_FindLowestFloorSurrounding(sec);
-            if(plat->low > sec->floorheight)
-               plat->low = sec->floorheight;
+            if(plat->low > sec->srf.floor.height)
+               plat->low = sec->srf.floor.height;
             plat->high = P_FindHighestFloorSurrounding(sec);
-            if(plat->high < sec->floorheight)
-               plat->high = sec->floorheight;
+            if(plat->high < sec->srf.floor.height)
+               plat->high = sec->srf.floor.height;
             plat->status = (P_Random(pr_genlift)&1) ? PlatThinker::down : PlatThinker::up;
             break;
          case lifttarget_upValue:
@@ -841,10 +841,10 @@ int EV_DoGenLiftByParameters(bool manualtrig, const line_t &line, fixed_t speed,
             // Generic_Lift anyway.
             plat->type = upWaitDownStay;
             plat->status = PlatThinker::up;
-            plat->low = sec->floorheight;
+            plat->low = sec->srf.floor.height;
             plat->high = plat->low + height;
-            if(plat->high < sec->floorheight)
-               plat->high = sec->floorheight;
+            if(plat->high < sec->srf.floor.height)
+               plat->high = sec->srf.floor.height;
             break;
          default:
             break;
@@ -928,7 +928,7 @@ manual_stair:
       rtn = 1;
       floor = new FloorMoveThinker;
       floor->addThinker();
-      sec->floordata = floor;
+      sec->srf.floor.data = floor;
 
       floor->direction = sd->direction ? plat_up : plat_down;
       floor->sector = sec;
@@ -982,17 +982,17 @@ manual_stair:
       }
 
       speed        = floor->speed;
-      height       = sec->floorheight + floor->direction * stairsize;
-      texture      = sec->floorpic;
+      height       = sec->srf.floor.height + floor->direction * stairsize;
+      texture      = sec->srf.floor.pic;
       floor->crush = sd->crush ? 10 : -1; // constant crush damage, for now
       floor->type  = genBuildStair; // jff 3/31/98 do not leave uninited
-      
+
       floor->floordestheight = height;
-      
+
       // haleyjd 10/13/05: init reset and delay properties
       floor->resetTime     = sd->reset_value;
-      floor->resetHeight   = sec->floorheight;
-      floor->delayTime     = sd->delay_value;      
+      floor->resetHeight   = sec->srf.floor.height;
+      floor->delayTime     = sd->delay_value;
       floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;
       floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
@@ -1001,8 +1001,8 @@ manual_stair:
       sec->prevsec   = -1;
 
       P_StairSequence(floor->sector);
-      
-      osecnum = secnum;            // jff 3/4/98 preserve loop index  
+
+      osecnum = secnum;            // jff 3/4/98 preserve loop index
       // Find next sector to raise
       // 1.     Find 2-sided line with same sector side[0]
       // 2.     Other side is the next sector to raise
@@ -1013,17 +1013,17 @@ manual_stair:
          {
             if(!((sec->lines[i])->backsector))
                continue;
-            
+
             tsec = (sec->lines[i])->frontsector;
             newsecnum = eindex(tsec-sectors);
 
             if(secnum != newsecnum)
                continue;
-            
+
             tsec = (sec->lines[i])->backsector;
             newsecnum = eindex(tsec - sectors);
 
-            if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->floorpic != texture)
+            if(!(sd->flags & SDF_IGNORETEXTURES) && tsec->srf.floor.pic != texture)
                continue;
 
             // jff 6/19/98 prevent double stepsize
@@ -1035,7 +1035,7 @@ manual_stair:
             if(P_SectorActive(floor_special, tsec) || tsec->stairlock)
                continue;
 
-            // jff 6/19/98 increase height AFTER continue        
+            // jff 6/19/98 increase height AFTER continue
             // killough 10/98: corrected use of demo compatibility flag
             if(demo_version >= 202)
                height += floor->direction * stairsize;
@@ -1047,40 +1047,40 @@ manual_stair:
             tsec->prevsec   = secnum;    // link next back
             tsec->nextsec   = -1;        // set next forward link as end
             tsec->stairlock = -2;        // lock the step
-            
+
             sec = tsec;
             secnum = newsecnum;
             floor = new FloorMoveThinker;
-            
+
             floor->addThinker();
-            
-            sec->floordata = floor;
+
+            sec->srf.floor.data = floor;
             floor->direction = sd->direction ? plat_up : plat_down;
             floor->sector = sec;
 
             // haleyjd 10/06/05: support synchronized stair raising
             if(sd->flags & SDF_SYNCHRONIZED)
             {
-               floor->speed = 
-                  D_abs(FixedMul(speed, 
-                        FixedDiv(height - sec->floorheight, stairsize)));
+               floor->speed =
+                  D_abs(FixedMul(speed,
+                        FixedDiv(height - sec->srf.floor.height, stairsize)));
             }
             else
                floor->speed = speed;
-            
+
             floor->floordestheight = height;
             floor->crush = sd->crush ? 10 : -1;
             floor->type = genBuildStair; // jff 3/31/98 do not leave uninited
 
             // haleyjd 10/13/05: init reset and delay properties
             floor->resetTime     = sd->reset_value;
-            floor->resetHeight   = sec->floorheight;
-            floor->delayTime     = sd->delay_value;      
-            floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;            
+            floor->resetHeight   = sec->srf.floor.height;
+            floor->delayTime     = sd->delay_value;
+            floor->stepRaiseTime = FixedDiv(stairsize, speed) >> FRACBITS;
             floor->delayTimer    = floor->delayTime ? floor->stepRaiseTime : 0;
 
             P_StairSequence(floor->sector);
-            
+
             ok = 1;
             break;
          }
@@ -1187,11 +1187,11 @@ manual_crusher:
       rtn = 1;
       ceiling = new CeilingThinker;
       ceiling->addThinker();
-      sec->ceilingdata = ceiling; //jff 2/22/98
+      sec->srf.ceiling.data = ceiling; //jff 2/22/98
       ceiling->crush = cd->damage;
       ceiling->direction = plat_down;
       ceiling->sector = sec;
-      ceiling->texture = sec->ceilingpic;
+      ceiling->texture = sec->srf.ceiling.pic;
       // haleyjd: note: transfer isn't actually used by crushers...
       P_SetupSpecialTransfer(sec, &(ceiling->special));
       ceiling->tag = sec->tag;
@@ -1227,8 +1227,8 @@ manual_crusher:
          break;
       }
 
-      ceiling->topheight = sec->ceilingheight;
-      ceiling->bottomheight = sec->floorheight + cd->ground_dist;
+      ceiling->topheight = sec->srf.ceiling.height;
+      ceiling->bottomheight = sec->srf.floor.height + cd->ground_dist;
 
       // setup ceiling motion speed
       switch (cd->speed_type)
@@ -1348,7 +1348,7 @@ static int GenDoorRetrigger(Thinker *th, const doordata_t *dd, int tag)
 // instead of the hardcoded generalized options.
 //
 // Parameters:
-// line -- pointer to originating line; may be NULL
+// line -- pointer to originating line; may be nullptr
 // tag  -- tag of sectors to affect (may come from line or elsewhere)
 // dd   -- pointer to full parameter info for door
 //
@@ -1389,7 +1389,7 @@ manual_door:
             // haleyjd 02/23/04: allow repushing of certain generalized
             // doors
             if(demo_version >= 331)
-               rtn = GenDoorRetrigger(sec->ceilingdata, dd, tag);
+               rtn = GenDoorRetrigger(sec->srf.ceiling.data, dd, tag);
 
             return rtn;
          }
@@ -1400,7 +1400,7 @@ manual_door:
       rtn = 1;
       door = new VerticalDoorThinker;
       door->addThinker();
-      sec->ceilingdata = door; //jff 2/22/98
+      sec->srf.ceiling.data = door; //jff 2/22/98
       
       door->sector = sec;
       door->turbo  = false;
@@ -1430,7 +1430,7 @@ manual_door:
             door->type = blazeRaise;
          else
             door->type = doorNormal;
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->srf.ceiling.height)
             P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
          break;
       case ODoor:
@@ -1441,11 +1441,11 @@ manual_door:
             door->type = blazeOpen;
          else
             door->type = doorOpen;
-         if(door->topheight != sec->ceilingheight)
+         if(door->topheight != sec->srf.ceiling.height)
             P_DoorSequence(true, door->turbo, false, door->sector); // haleyjd
          break;
       case CdODoor:
-         door->topheight = sec->ceilingheight;
+         door->topheight = sec->srf.ceiling.height;
          door->direction = plat_down;
          door->turbo = (door->speed >= VDOORSPEED*4);
          door->type = closeThenOpen;
@@ -1618,13 +1618,13 @@ enum
 //
 void P_ChangeLineTex(const char *texture, int pos, int side, int tag, bool usetag)
 {
-   line_t *l = NULL;
+   line_t *l = nullptr;
    int linenum, texnum;
    
    texnum = R_FindWall(texture);
    linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != nullptr)
    {
        if(l->sidenum[side] == -1)
          continue;

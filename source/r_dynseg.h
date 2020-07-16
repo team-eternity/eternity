@@ -46,7 +46,7 @@ struct dynaseg_t
 
    dynaseg_t *subnext;         // next dynaseg in fragment
    dynaseg_t *freenext;        // next dynaseg on freelist
-   struct polyobj_s *polyobj;  // polyobject
+   polyobj_t *polyobj;  // polyobject
 
    DLListItem<dynaseg_t> bsplink;   // link for BSP chains
    DLListItem<dynaseg_t> ownerlink; // link for owning node chain

@@ -39,32 +39,21 @@
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_compare.h"
-#include "m_random.h"
 #include "p_info.h"
 #include "p_inter.h"
-#include "p_mobj.h"
-#include "p_maputl.h"
-#include "p_map.h"
 #include "p_map3d.h"
 #include "p_mobjcol.h"
-#include "p_partcl.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_spec.h"
-#include "p_tick.h"
-#include "p_user.h"
-#include "r_defs.h"
 #include "r_main.h"
 #include "r_portal.h"
-#include "r_segs.h"
 #include "r_state.h"
 #include "s_sound.h"
-#include "sounds.h"
 #include "v_misc.h"
-#include "v_video.h"
 
 
 // SoM: This should be ok left out of the globals struct.
@@ -77,7 +66,7 @@ static int ls_y; // Lost Soul position for Lost Soul checks      // phares
 doom_mapinter_t  clip;
 doom_mapinter_t *pClip = &clip;
 
-static doom_mapinter_t *unusedclip = NULL;
+static doom_mapinter_t *unusedclip = nullptr;
 
 // CLIP STACK
 
@@ -293,9 +282,9 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
          }
          if((sec = m->m_sector)->flags & SECF_FRICTION &&
             (sec->friction < friction || friction == ORIG_FRICTION) &&
-            (mo->z <= sec->floorheight ||
+            (mo->z <= sec->srf.floor.height ||
              (sec->heightsec != -1 &&
-              mo->z <= sectors[sec->heightsec].floorheight &&
+              mo->z <= sectors[sec->heightsec].srf.floor.height &&
               demo_version >= 203)))
          {
             friction = sec->friction;
@@ -414,7 +403,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
-   clip.ceilingline = NULL;
+   clip.ceilingline = nullptr;
    
    // The base floor/ceiling is from the subsector
    // that contains the point.
@@ -423,35 +412,30 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    
    // ioanch 20160113: use correct floor and ceiling heights
    const sector_t *bottomfloorsector = newsubsec->sector;
-#ifdef R_LINKEDPORTALS
     //newsubsec->sector->floorheight - clip.thing->height;
-   if(demo_version >= 333 && newsubsec->sector->f_pflags & PS_PASSABLE)
+   if(demo_version >= 333 && newsubsec->sector->srf.floor.pflags & PS_PASSABLE)
    {
-      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, false, 
-            newsubsec->sector);
-      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->floorheight;
+      bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
+      clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
    }
    else
-#endif
-      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
+      clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
 
-#ifdef R_LINKEDPORTALS
     //newsubsec->sector->ceilingheight + clip.thing->height;
-   if(demo_version >= 333 && newsubsec->sector->c_pflags & PS_PASSABLE)
+   if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
    {
-      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, true,
-            newsubsec->sector)->ceilingheight;
+      clip.zref.ceiling = P_ExtremeSectorAtPoint(x, y, surf_ceil,
+            newsubsec->sector)->srf.ceiling.height;
    }
    else
-#endif
-      clip.zref.ceiling = newsubsec->sector->ceilingheight;
+      clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
    // ioanch 20160114: use the final sector below
-   clip.floorpic = bottomfloorsector->floorpic;
+   clip.floorpic = bottomfloorsector->srf.floor.pic;
    
    // SoM 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
@@ -538,7 +522,7 @@ bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 //
 // killough 11/98: reformatted
 
-static bool PIT_CrossLine(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_CrossLine(line_t *ld, polyobj_t *po, void *context)
 {
    auto type = static_cast<const mobjtype_t *>(context);
    // SoM 9/7/02: wow a killoughism... * SoM is scared
@@ -597,7 +581,7 @@ static void SpechitOverrun(line_t *ld)
 
       if((p = M_CheckParm("-spechit")) && p < myargc - 1)
       {
-         baseaddr = (unsigned int)strtol(myargv[p + 1], NULL, 0);
+         baseaddr = (unsigned int)strtol(myargv[p + 1], nullptr, 0);
          spechitparm = true;
       }
       else
@@ -689,7 +673,7 @@ bool P_BlockedAsMonster(const Mobj &mo)
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
-bool PIT_CheckLine(line_t *ld, polyobj_s *po, void *context)
+bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 {
    auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
@@ -828,7 +812,7 @@ bool P_Touched(Mobj *thing)
       (thing->type ^ skullType) |                  // (but Barons & Knights
       (clip.thing->type ^ painType))               // are intentionally not)
    {
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_UNKNOWN); // kill object
+      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_UNKNOWN); // kill object
       return true;
    }
 
@@ -896,7 +880,7 @@ bool P_SkullHit(Mobj *thing)
 
       P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
 
-      clip.BlockingMobj = NULL; // haleyjd: from zdoom
+      clip.BlockingMobj = nullptr; // haleyjd: from zdoom
 
       ret = true; // stop moving
    }
@@ -1232,7 +1216,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
    newsubsec = R_PointInSubsector(x,y);
-   clip.floorline = clip.blockline = clip.ceilingline = NULL; // killough 8/1/98
+   clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
    // Whether object can get out of a sticky situation:
    clip.unstuck = thing->player &&          // only players
@@ -1244,14 +1228,14 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // Any contacted lines the step closer together
    // will adjust them.
 
-   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->floorheight;
-   clip.zref.ceiling = newsubsec->sector->ceilingheight;
+   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+   clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->floorpic;
+   clip.floorpic = newsubsec->sector->srf.floor.pic;
    // SoM: 09/07/02: 3dsides monster fix
    clip.touch3dside = 0;
    validcount++;
@@ -1271,7 +1255,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy - MAXRADIUS) >> MAPBLOCKSHIFT;
    yh = (clip.bbox[BOXTOP]    - bmaporgy + MAXRADIUS) >> MAPBLOCKSHIFT;
 
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
 
    for(bx = xl; bx <= xh; bx++)
    {
@@ -1284,7 +1268,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
 
    // check lines
    
-   clip.BlockingMobj = NULL; // haleyjd 1/17/00: global hit reference
+   clip.BlockingMobj = nullptr; // haleyjd 1/17/00: global hit reference
    
    xl = (clip.bbox[BOXLEFT]   - bmaporgx) >> MAPBLOCKSHIFT;
    xh = (clip.bbox[BOXRIGHT]  - bmaporgx) >> MAPBLOCKSHIFT;
@@ -1655,8 +1639,8 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             else
                steplimit = STEPSIZE;
 
-            if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit || 
-               (P_ExtremeSectorAtPoint(clip.BlockingMobj, true)->ceilingheight
+            if(clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z > steplimit ||
+               (P_ExtremeSectorAtPoint(clip.BlockingMobj, surf_ceil)->srf.ceiling.height
                  - (clip.BlockingMobj->z + clip.BlockingMobj->height) < thing->height) ||
                (clip.zref.ceiling - (clip.BlockingMobj->z + clip.BlockingMobj->height)
                  < thing->height))
@@ -1664,9 +1648,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                P_RunPushSpechits(*thing, pushhit);
                return false;
             }
-            
+
             // haleyjd: hack for touchies: don't allow running through them when
-            // they die until they become non-solid (just being a corpse isn't 
+            // they die until they become non-solid (just being a corpse isn't
             // good enough)
             if(clip.BlockingMobj->flags & MF_TOUCHY)
             {
@@ -1799,7 +1783,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // haleyjd: CANTLEAVEFLOORPIC flag
       // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
-         (clip.floorpic != P_ExtremeSectorAtPoint(thing, false)->floorpic ||
+         (clip.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
           clip.zref.floor - thing->z != 0))
       {
          // thing must stay within its current floor type
@@ -1900,7 +1884,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 // If more than one linedef is contacted, the effects are cumulative,
 // so balancing is possible.
 //
-static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_ApplyTorque(line_t *ld, polyobj_t *po, void *context)
 {
    // ioanch 20160116: portal aware
    const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid,
@@ -1934,24 +1918,24 @@ static bool PIT_ApplyTorque(line_t *ld, polyobj_s *po, void *context)
       if(!useportalgroups || full_demo_version < make_full_version(340, 48))
       {
          cond = dist < 0 ?                               // dropoff direction
-         ld->frontsector->floorheight < mo->z &&
-         ld->backsector->floorheight >= mo->z :
-         ld->backsector->floorheight < mo->z &&
-         ld->frontsector->floorheight >= mo->z;
+         ld->frontsector->srf.floor.height < mo->z &&
+         ld->backsector->srf.floor.height >= mo->z :
+         ld->backsector->srf.floor.height < mo->z &&
+         ld->frontsector->srf.floor.height >= mo->z;
       }
       else
       {
          // with portals and advanced version, also allow equal floor heights
          // if one side has portals. Require equal floor height though
          cond = dist < 0 ?                               // dropoff direction
-         (ld->frontsector->floorheight < mo->z ||
-         (ld->frontsector->floorheight == mo->z && 
-         ld->frontsector->f_pflags & PS_PASSABLE)) &&
-         ld->backsector->floorheight == mo->z :
-         (ld->backsector->floorheight < mo->z ||
-         (ld->backsector->floorheight == mo->z &&
-         ld->backsector->f_pflags & PS_PASSABLE)) &&
-         ld->frontsector->floorheight == mo->z;
+         (ld->frontsector->srf.floor.height < mo->z ||
+         (ld->frontsector->srf.floor.height == mo->z &&
+         ld->frontsector->srf.floor.pflags & PS_PASSABLE)) &&
+         ld->backsector->srf.floor.height == mo->z :
+         (ld->backsector->srf.floor.height < mo->z ||
+         (ld->backsector->srf.floor.height == mo->z &&
+         ld->backsector->srf.floor.pflags & PS_PASSABLE)) &&
+         ld->frontsector->srf.floor.height == mo->z;
       }
 
       if(cond)
@@ -2146,7 +2130,7 @@ static void P_HitSlideLine(line_t *ld)
          variable_friction &&  // killough 8/28/98: calc friction on demand
          slidemo->z <= slidemo->zref.floor &&
          !(slidemo->flags4 & MF4_FLY) && // haleyjd: not when just flying
-         P_GetFriction(slidemo, NULL) > ORIG_FRICTION;
+         P_GetFriction(slidemo, nullptr) > ORIG_FRICTION;
    }
    else
    {
@@ -2446,16 +2430,16 @@ void P_SlideMove(Mobj *mo)
 // * bombdata_t's will be pushed and popped for recursive explosions
 // * a limit of 128 recursive explosions is enforced
 
-typedef struct bombdata_s
+struct bombdata_t
 {
    Mobj *bombsource;
    Mobj *bombspot;
    int   bombdamage;
    int   bombdistance; // haleyjd 12/22/12
    int   bombmod;      // haleyjd 07/13/03
-   
+
    unsigned int bombflags; // haleyjd 12/22/12
-} bombdata_t;
+};
 
 #define MAXBOMBS 128               // a static limit to prevent stack faults.
 static int bombindex;              // current index into bombs array
@@ -2626,7 +2610,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       // haleyjd 03/11/03: only in Doom
       if(GameModeInfo->type == Game_DOOM)
       {
-         thing->skin = NULL;
+         thing->skin = nullptr;
          P_SetMobjState(thing, E_SafeState(S_GIBS));
       }
       thing->flags &= ~MF_SOLID;
@@ -2646,7 +2630,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       (thing->intflags & MIF_ARMED || sentient(thing)))
    {
       // kill object
-      P_DamageMobj(thing, NULL, NULL, thing->health, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, thing->health, MOD_CRUSH);
       return true;   // keep checking
    }
 
@@ -2663,7 +2647,7 @@ static bool PIT_ChangeSector(Mobj *thing, void *context)
       if(thing->flags2 & MF2_INVULNERABLE || thing->flags2 & MF2_DORMANT)
          return true;
 
-      P_DamageMobj(thing, NULL, NULL, crushchange, MOD_CRUSH);
+      P_DamageMobj(thing, nullptr, nullptr, crushchange, MOD_CRUSH);
       
       // haleyjd 06/26/06: NOBLOOD objects shouldn't bleed when crushed
       // haleyjd FIXME: needs compflag
@@ -2767,7 +2751,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
 //
 // Maintain a freelist of msecnode_t's to reduce memory allocs and frees.
 
-msecnode_t *headsecnode = NULL;
+msecnode_t *headsecnode = nullptr;
 
 // sf: fix annoying crash on restarting levels
 //
@@ -2795,7 +2779,7 @@ msecnode_t *headsecnode = NULL;
 //
 void P_FreeSecNodeList(void)
 {
-   headsecnode = NULL; // this is all thats needed to fix the bug
+   headsecnode = nullptr; // this is all thats needed to fix the bug
 }
 
 //
@@ -2812,7 +2796,7 @@ static msecnode_t *P_GetSecnode(void)
 
    return headsecnode ?
    node = headsecnode, headsecnode = node->m_snext, node :
-      (msecnode_t *)(Z_Malloc(sizeof *node, PU_LEVEL, NULL)); 
+      emalloctag(msecnode_t *, sizeof *node, PU_LEVEL, nullptr); 
 }
 
 //
@@ -2859,7 +2843,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 
    node->m_sector = s;         // sector
    node->m_thing  = thing;     // mobj
-   node->m_tprev  = NULL;      // prev node on Thing thread
+   node->m_tprev  = nullptr;   // prev node on Thing thread
    node->m_tnext  = nextnode;  // next node on Thing thread
    
    if(nextnode)
@@ -2867,7 +2851,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 
    // Add new node at head of sector thread starting at s->touching_thinglist
    
-   node->m_sprev  = NULL;    // prev node on sector thread
+   node->m_sprev  = nullptr;    // prev node on sector thread
    node->m_snext  = s->touching_thinglist; // next node on sector thread
    if(s->touching_thinglist)
       node->m_snext->m_sprev = node;
@@ -2878,7 +2862,7 @@ static msecnode_t *P_AddSecnode(sector_t *s, Mobj *thing, msecnode_t *nextnode)
 // P_DelSecnode
 //
 // Deletes a sector node from the list of sectors this object appears in.
-// Returns a pointer to the next node on the linked list, or NULL.
+// Returns a pointer to the next node on the linked list, or nullptr.
 //
 // killough 11/98: reformatted
 //
@@ -2943,7 +2927,7 @@ void P_DelSeclist(msecnode_t *node)
 // at this location, so don't bother with checking impassable or
 // blocking lines.
 //
-static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
+static bool PIT_GetSectors(line_t *ld, polyobj_t *po, void *context)
 {
    // ioanch 20160115: portal aware
    fixed_t bbox[4];
@@ -2982,7 +2966,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
       i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
       i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
 
-      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->floorheight,
+      if(P_PointReachesGroupVertically(i2.x, i2.y, ld->frontsector->srf.floor.height,
                                        ld->frontsector->groupid,
                                        pClip->thing->groupid, ld->frontsector,
                                        pClip->thing->z))
@@ -2998,7 +2982,7 @@ static bool PIT_GetSectors(line_t *ld, polyobj_s *po, void *context)
          i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
          i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
          if(P_PointReachesGroupVertically(i2.x, i2.y,
-                                          ld->backsector->floorheight,
+                                          ld->backsector->srf.floor.height,
                                           ld->backsector->groupid,
                                           pClip->thing->groupid, ld->backsector,
                                           pClip->thing->z))
@@ -3048,11 +3032,11 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 
    // First, clear out the existing m_thing fields. As each node is
    // added or verified as needed, m_thing will be set properly. When
-   // finished, delete all nodes where m_thing is still NULL. These
+   // finished, delete all nodes where m_thing is still nullptr. These
    // represent the sectors the Thing has vacated.
    
    for(node = thing->old_sectorlist; node; node = node->m_tnext)
-      node->m_thing = NULL;
+      node->m_thing = nullptr;
 
    pClip->thing = thing;
 
@@ -3132,11 +3116,11 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
    }
 
    // Now delete any nodes that won't be used. These are the ones where
-   // m_thing is still NULL.
+   // m_thing is still nullptr.
    
    for(node = list; node;)
    {
-      if(node->m_thing == NULL)
+      if(node->m_thing == nullptr)
       {
          if(node == list)
             list = node->m_tnext;
@@ -3160,6 +3144,14 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
       P_PopClipStack();
 
    return list;
+}
+
+//
+// Clears all remaining Mobj references to avoid dangling references on next PU_LEVEL session.
+//
+void P_ClearGlobalMobjReferences()
+{
+   P_ClearTarget(clip.linetarget);
 }
 
 //----------------------------------------------------------------------------

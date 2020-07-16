@@ -202,11 +202,11 @@ char qstring::charAt(size_t idx) const
 // qstring::bufferAt
 //
 // Gets a pointer into the buffer at the given position, if that position would
-// be valid. Returns NULL otherwise. The same caveats apply as with qstring::getBuffer.
+// be valid. Returns nullptr otherwise. The same caveats apply as with qstring::getBuffer.
 //
 char *qstring::bufferAt(size_t idx)
 {
-   return idx < size ? buffer + idx : NULL;
+   return idx < size ? buffer + idx : nullptr;
 }
 
 //
@@ -1030,7 +1030,7 @@ double qstring::toDouble(char **endptr) const
 //
 char *qstring::duplicate(int tag) const
 {
-   return Z_Strdup(buffer, tag, NULL);
+   return Z_Strdup(buffer, tag, nullptr);
 }
 
 //

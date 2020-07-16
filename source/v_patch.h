@@ -31,13 +31,13 @@
 
 struct patch_t;
 
-typedef struct PatchInfo_s
+struct PatchInfo
 {
    patch_t *patch;
    int x, y;        // screen coordinates
    bool flipped;    // flipped?
    int drawstyle;   // drawing style (normal, tr, tl, trtl, etc.)
-} PatchInfo;
+};
 
 
 // VBuffer moved
@@ -100,10 +100,10 @@ byte *V_PatchToLinear(patch_t *patch, bool flipped, byte fillcolor,
                       int *width, int *height);
 
 patch_t *V_LinearToPatch(byte *linear, int w, int h, size_t *memsize, 
-                         int tag, void **user = NULL);
+                         int tag, void **user = nullptr);
 
 patch_t *V_LinearToTransPatch(const byte *linear, int w, int h, size_t *memsize,
-                              int color_key, int tag, void **user = NULL);
+                              int color_key, int tag, void **user = nullptr);
 
 bool V_WritePatchAsPNG(const char *lump, const char *filename, byte fillcolor);
 

@@ -203,7 +203,8 @@ unsigned int P_RangeRandomEx(pr_class_t pr_class,
 //
 int P_SubRandomEx(pr_class_t pr_class, unsigned max)
 {
-   int temp = P_RandomEx(pr_class) % max;
+   max++; // max has to be 1 more than the supplied arg to function as expected
+   const int temp = P_RandomEx(pr_class) % max;
    return temp - static_cast<int>(P_RandomEx(pr_class) % max);
 }
 
@@ -246,7 +247,7 @@ AMX_NATIVE_INFO random_Natives[] =
 {
    { "_P_Random", sm_random  },
    { "_M_Random", sm_mrandom },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

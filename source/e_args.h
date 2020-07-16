@@ -48,8 +48,8 @@ struct weaponinfo_t;
 #define EMAXARGS 16
 
 // Get an arglist safely from an Mobj * even if the pointer or the 
-// Mobj's state is NULL (NULL is returned in either case).
-#define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : NULL)
+// Mobj's state is nullptr (nullptr is returned in either case).
+#define ESAFEARGS(mo) ((mo && mo->state) ? mo->state->args : nullptr)
 
 typedef enum
 {
@@ -69,7 +69,7 @@ typedef enum
    EVALTYPE_NUMTYPES
 } evaltype_e;
 
-typedef struct evalcache_s
+struct evalcache_t
 {
    evaltype_e type;
    union evalue_s
@@ -83,7 +83,7 @@ typedef struct evalcache_s
       emod_t       *mod;
       unsigned int  flags[MAXFLAGFIELDS];
    } value;
-} evalcache_t;
+};
 
 struct arglist_t
 {
@@ -92,11 +92,11 @@ struct arglist_t
    int numargs;                  // number of arguments
 };
 
-typedef struct argkeywd_s
+struct argkeywd_t
 {
    const char **keywords;
    int        numkeywords;
-} argkeywd_t;
+};
 
 bool          E_AddArgToList(arglist_t *al, const char *value);
 inline int    E_GetArgCount(const arglist_t *al) { return al ? al->numargs : 0; }

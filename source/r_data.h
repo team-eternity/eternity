@@ -46,15 +46,15 @@ typedef enum
 } cmptype_e;
 
 // Generalized graphic
-typedef struct tcomponent_s
+struct tcomponent_t
 {
    int32_t   originx, originy;  // Block origin, which has already accounted
    uint32_t  width, height;     // Unscaled dimensions of the graphic. 
-   
+
    int32_t   lump;              // Lump number of the
-    
+
    cmptype_e type;              // Type of lump
-} tcomponent_t;
+};
 
 
 // SoM: Columns are used inside the texture struct to reference the linear

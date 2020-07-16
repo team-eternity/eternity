@@ -98,7 +98,7 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #if defined(_SDL_VER) && defined(EE_FEATURE_OPENGL)
       &i_sdlgl2dvideodriver
 #else
-      NULL
+      nullptr
 #endif
    },
 
@@ -109,7 +109,7 @@ static haldriveritem_t halVideoDriverTable[VDR_MAXDRIVERS] =
 #ifdef _SDL_VER
       &i_sdlvideodriver
 #else
-      NULL
+      nullptr
 #endif
    }
 };
@@ -242,13 +242,10 @@ enum
 };
 
 //
-// I_ParseGeom
-//
-// Function to parse geometry description strings in the form [wwww]x[hhhh][f].
+// Function to parse geometry description strings in the form [wwww]x[hhhh][f/d].
 // This is now the primary way in which Eternity stores its video mode setting.
 //
-void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf, bool *dfs)
+void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
@@ -302,28 +299,28 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
          switch(ectype::toLower(*c))
          {
          case 'w': // window
-            *fs = false;
-            break;
-         case 'f': // fullscreen
-            *fs = true;
-            break;
-         case 'a': // async update
-            *vs = false;
-            break;
-         case 'v': // vsync update
-            *vs = true;
-            break;
-         case 's': // software
-            *hw = false;
-            break;
-         case 'h': // hardware 
-            *hw = true;
-            break;
-         case 'n': // noframe
-            *wf = false;
+            st = screentype_e::WINDOWED;
             break;
          case 'd': // fullscreen desktop
-            *dfs = true;
+            st = screentype_e::FULLSCREEN_DESKTOP;
+            break;
+         case 'f': // fullscreen
+            st = screentype_e::FULLSCREEN;
+            break;
+         case 'a': // async update
+            vs = false;
+            break;
+         case 'v': // vsync update
+            vs = true;
+            break;
+         case 's': // software
+            hw = false;
+            break;
+         case 'h': // hardware 
+            hw = true;
+            break;
+         case 'n': // noframe
+            wf = false;
             break;
          default:
             break;
@@ -351,12 +348,10 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
       tmpheight = 480;
    }
 
-   *w = tmpwidth;
-   *h = tmpheight;
+   w = tmpwidth;
+   h = tmpheight;
 }
 
-//
-// I_CheckVideoCmds
 //
 // Checks for all video-mode-related command-line parameters in one
 // convenient location. Though called from I_InitGraphicsMode, this
@@ -364,7 +359,7 @@ void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bool *dfs)
+void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf)
 {
    static bool firsttime = true;
    int p;
@@ -374,35 +369,35 @@ void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bo
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, fs, vs, hw, wf, dfs);
+         I_ParseGeom(myargv[p + 1], w, h, st, vs, hw, wf);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
-         *w = p;
-      
+         w = p;
+
       if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
-         *h = p;
-      
+         h = p;
+
       if(M_CheckParm("-fullscreen"))
-         *fs = true;
+         st = screentype_e::FULLSCREEN_DESKTOP;
       if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
-         *fs = false;
-      
+         st = screentype_e::WINDOWED;
+
       if(M_CheckParm("-vsync"))
-         *vs = true;
+         vs = true;
       if(M_CheckParm("-novsync"))
-         *vs = false;
+         vs = false;
 
       if(M_CheckParm("-hardware"))
-         *hw = true;
+         hw = true;
       if(M_CheckParm("-software"))
-         *hw = false;
+         hw = false;
 
       if(M_CheckParm("-frame"))
-         *wf = true;
+         wf = true;
       if(M_CheckParm("-noframe"))
-         *wf = false;
+         wf = false;
    }
 }
 
@@ -433,9 +428,6 @@ static bool I_InitGraphicsMode()
    // errors have occured and we should continue with initialization.
    if(!(result = i_video_driver->InitGraphicsMode()))
    {
-      // Reset renderer field of view
-      R_ResetFOV(video.width, video.height);
-
 #ifdef _MSC_VER
       // Win32 specific hacks
       if(!D_noWindow())
@@ -493,7 +485,7 @@ static void I_ResetScreen()
 void I_InitGraphics()
 {
    static int firsttime = true;
-   haldriveritem_t *driveritem = NULL;
+   haldriveritem_t *driveritem = nullptr;
    
    if(!firsttime)
       return;
@@ -614,22 +606,22 @@ CONSOLE_COMMAND(togglefullscreen, cf_buffered)
    i_default_videomode = estrdup(i_videomode);
 }
 
-VARIABLE_BOOLEAN(use_vsync, NULL,  yesno);
+VARIABLE_BOOLEAN(use_vsync, nullptr,  yesno);
 
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
    I_SetMode();
 }
 
-VARIABLE_BOOLEAN(usemouse,    NULL, yesno);
+VARIABLE_BOOLEAN(usemouse,    nullptr, yesno);
 
 CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
 
 // haleyjd 03/27/06: mouse grabbing
-VARIABLE_BOOLEAN(grabmouse, NULL, yesno);
+VARIABLE_BOOLEAN(grabmouse, nullptr, yesno);
 CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
 
-VARIABLE_STRING(i_videomode, NULL, UL);
+VARIABLE_STRING(i_videomode, nullptr, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
    I_SetMode();
@@ -643,14 +635,14 @@ CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 static const char *i_videodrivernames[] = 
 {
    "default",
-   "SDL Software",
+   "SDL Default",
    "SDL GL2D"
 };
 
-VARIABLE_INT(i_videodriverid, NULL, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
+VARIABLE_INT(i_videodriverid, nullptr, -1, VDR_MAXDRIVERS-1, i_videodrivernames);
 CONSOLE_VARIABLE(i_videodriverid, i_videodriverid, 0) {}
 
-VARIABLE_TOGGLE(i_letterbox, NULL, yesno);
+VARIABLE_TOGGLE(i_letterbox, nullptr, yesno);
 CONSOLE_VARIABLE(i_letterbox, i_letterbox, cf_buffered)
 {
    I_SetMode();

@@ -249,16 +249,17 @@ typedef enum {
   pr_nailbombshoot,  // A_Nailbomb random damage
 
   pr_spawnexchance,           // [XA] 02/28/2020: A_SpawnEx spawnchance
+  pr_seekermissile,           // A_SeekerMissile
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 
 // The random number generator's state.
-typedef struct rng_s
+struct rng_t
 {
    unsigned int  seed[NUMPRCLASS];      // Each block's random seed
    int rndindex, prndindex;             // For compatibility support
-} rng_t;
+};
 
 extern rng_t rng;                      // The rng's state
 

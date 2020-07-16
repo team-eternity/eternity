@@ -26,12 +26,19 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <float.h>
 #include "m_bbox.h"
 
 void M_ClearBox(fixed_t *box)
 {
    box[BOXTOP]    = box[BOXRIGHT] = D_MININT;
    box[BOXBOTTOM] = box[BOXLEFT]  = D_MAXINT;
+}
+
+void M_ClearBox(float *box)
+{
+   box[BOXTOP] = box[BOXRIGHT] = -FLT_MAX;
+   box[BOXBOTTOM] = box[BOXLEFT] = FLT_MAX;
 }
 
 void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y)
@@ -48,6 +55,19 @@ void M_AddToBox(fixed_t *box, fixed_t x, fixed_t y)
 }
 
 void M_AddToBox2(fixed_t *box, fixed_t x, fixed_t y)
+{
+   if(x < box[BOXLEFT])
+      box[BOXLEFT] = x;
+   if(x > box[BOXRIGHT])
+      box[BOXRIGHT] = x;
+
+   if(y < box[BOXBOTTOM])
+      box[BOXBOTTOM] = y;
+   if(y > box[BOXTOP])
+      box[BOXTOP] = y;
+}
+
+void M_AddToBox2(float *box, float x, float y)
 {
    if(x < box[BOXLEFT])
       box[BOXLEFT] = x;

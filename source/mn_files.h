@@ -23,13 +23,13 @@
 #ifndef MN_FILES_H__
 #define MN_FILES_H__
 
-typedef struct mndir_s
+struct mndir_t
 {
    const char *dirpath; // physical file system path of directory
    char **filenames;    // array of file names
    int  numfiles;       // number of files
    int  numfilesalloc;  // number of files allocated
-} mndir_t;
+};
 
 extern char *wad_directory;
 extern char *mn_wadname;

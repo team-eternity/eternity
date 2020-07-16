@@ -81,7 +81,7 @@ bool PathTraverser::traverseIntercepts() const
    //
    // go through in order
    //	
-   in = NULL; // shut up compiler warning
+   in = nullptr; // shut up compiler warning
 
    while(count--)
    {
@@ -145,8 +145,8 @@ bool PathTraverser::blockThingsIterator(int x, int y)
          y2 = thing->y + thing->radius;
       }
 
-      s1 = P_PointOnDivlineSide(x1, y1, &trace);
-      s2 = P_PointOnDivlineSide(x2, y2, &trace);
+      s1 = P_PointOnDivlineSidePrecise(x1, y1, &trace);
+      s2 = P_PointOnDivlineSidePrecise(x2, y2, &trace);
 
       if(s1 == s2)
          continue;
@@ -183,14 +183,14 @@ bool PathTraverser::checkLine(size_t linenum)
    if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
       return true;
 
-   s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace);
-   s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace);
+   s1 = P_PointOnDivlineSidePrecise(ld->v1->x, ld->v1->y, &trace);
+   s2 = P_PointOnDivlineSidePrecise(ld->v2->x, ld->v2->y, &trace);
    if(s1 == s2)
       return true; // line isn't crossed
 
    P_MakeDivline(ld, &dl);
-   s1 = P_PointOnDivlineSide(trace.x, trace.y, &dl);
-   s2 = P_PointOnDivlineSide(trace.x + trace.dx,
+   s1 = P_PointOnDivlineSidePrecise(trace.x, trace.y, &dl);
+   s2 = P_PointOnDivlineSidePrecise(trace.x + trace.dx,
       trace.y + trace.dy, &dl);
    if(s1 == s2)
       return true; // line isn't crossed
@@ -217,8 +217,8 @@ bool PathTraverser::checkLine(size_t linenum)
    // ioanch 20151229: also check sectors
    const sector_t *fsec = ld->frontsector, *bsec = ld->backsector;
    if(ld->pflags & PS_PASSABLE
-      || (fsec && (fsec->c_pflags & PS_PASSABLE || fsec->f_pflags & PS_PASSABLE))
-      || (bsec && (bsec->c_pflags & PS_PASSABLE || bsec->f_pflags & PS_PASSABLE)))
+      || (fsec && (fsec->srf.ceiling.pflags & PS_PASSABLE || fsec->srf.floor.pflags & PS_PASSABLE))
+      || (bsec && (bsec->srf.ceiling.pflags & PS_PASSABLE || bsec->srf.floor.pflags & PS_PASSABLE)))
    {
       portalguard.addedportal = true;
    }
@@ -538,15 +538,15 @@ void lineopening_t::calculate(const line_t *linedef)
       back = beyond;
 
    // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL && back->c_pflags & PS_PASSABLE)
-      opentop = front->ceilingheight;
+   if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
+      opentop = front->srf.ceiling.height;
    else
-      opentop = emin(front->ceilingheight, back->ceilingheight);
+      opentop = emin(front->srf.ceiling.height, back->srf.ceiling.height);
 
-   if(linedef->extflags & EX_ML_LOWERPORTAL && back->f_pflags & PS_PASSABLE)
-      openbottom = front->floorheight;
+   if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
+      openbottom = front->srf.floor.height;
    else
-      openbottom = emax(front->floorheight, back->floorheight);
+      openbottom = emax(front->srf.floor.height, back->srf.floor.height);
    openrange = opentop - openbottom;
 }
 

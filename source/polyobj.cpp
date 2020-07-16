@@ -204,19 +204,9 @@ static void Polyobj_addVertex(polyobj_t *po, vertex_t *v)
    if(po->numVertices >= po->numVerticesAlloc)
    {
       po->numVerticesAlloc = po->numVerticesAlloc ? po->numVerticesAlloc * 2 : 4;
-      po->vertices = 
-         (vertex_t **)(Z_Realloc(po->vertices,
-                                 po->numVerticesAlloc * sizeof(vertex_t *),
-                                 PU_LEVEL, NULL));
-      po->origVerts =
-         (vertex_t *)(Z_Realloc(po->origVerts,
-                                po->numVerticesAlloc * sizeof(vertex_t),
-                                PU_LEVEL, NULL));
-
-      po->tmpVerts =
-         (vertex_t *)(Z_Realloc(po->tmpVerts,
-                                po->numVerticesAlloc * sizeof(vertex_t),
-                                PU_LEVEL, NULL));
+      po->vertices  = erealloctag(vertex_t **, po->vertices,  po->numVerticesAlloc * sizeof(vertex_t *), PU_LEVEL, nullptr);
+      po->origVerts = erealloctag(vertex_t *,  po->origVerts, po->numVerticesAlloc * sizeof(vertex_t),   PU_LEVEL, nullptr);
+      po->tmpVerts  = erealloctag(vertex_t *,  po->tmpVerts, po->numVerticesAlloc * sizeof(vertex_t),    PU_LEVEL, nullptr);
    }
    po->vertices[po->numVertices] = v;
    v->polyindex = po->numVertices; // mark it for reference to the index.
@@ -248,9 +238,7 @@ static void Polyobj_addLine(polyobj_t *po, line_t *l)
    if(po->numLines >= po->numLinesAlloc)
    {
       po->numLinesAlloc = po->numLinesAlloc ? po->numLinesAlloc * 2 : 4;
-      po->lines = (line_t **)(Z_Realloc(po->lines, 
-                                        po->numLinesAlloc * sizeof(line_t *),
-                                        PU_LEVEL, NULL));
+      po->lines = erealloctag(line_t **, po->lines, po->numLinesAlloc * sizeof(line_t *), PU_LEVEL, nullptr);
    }
    po->lines[po->numLines++] = l;
 
@@ -316,11 +304,11 @@ static void Polyobj_findLines(polyobj_t *po, line_t *line)
 }
 
 // structure used to store linedefs during explicit search process
-typedef struct lineitem_s
+struct lineitem_t
 {
    line_t *line;
    int   num;
-} lineitem_t;
+};
 
 //
 // Polyobj_lineCompare
@@ -343,7 +331,7 @@ static int Polyobj_lineCompare(const void *s1, const void *s2)
 static void Polyobj_findExplicit(polyobj_t *po)
 {
    // temporary dynamic seg array
-   lineitem_t *lineitems = NULL;
+   lineitem_t *lineitems = nullptr;
    int numLineItems = 0;
    int numLineItemsAlloc = 0;
 
@@ -833,7 +821,7 @@ static void Polyobj_removeFromBlockmap(polyobj_t *po)
       l = next;
    }
 
-   po->linkhead = NULL;
+   po->linkhead = nullptr;
 
    po->flags &= ~POF_LINKED;
 }
@@ -892,7 +880,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
    if(po->damage && mo->flags & MF_SHOOTABLE)
    {
       if(po->flags & POF_DAMAGING)
-         P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+         P_DamageMobj(mo, nullptr, nullptr, po->damage, MOD_CRUSH);
       else
       {
          // Temporarily remove from blockmap to avoid this poly's lines from
@@ -900,7 +888,7 @@ static void Polyobj_pushThing(polyobj_t *po, line_t *line, Mobj *mo)
          // damage the mobj.
          Polyobj_removeFromBlockmap(po);
          if(!P_CheckPosition(mo, mo->x + momx, mo->y + momy))
-            P_DamageMobj(mo, NULL, NULL, po->damage, MOD_CRUSH);
+            P_DamageMobj(mo, nullptr, nullptr, po->damage, MOD_CRUSH);
          Polyobj_linkToBlockmap(po);
       }
    }
@@ -1087,7 +1075,7 @@ static void Polyobj_crossLines(polyobj_t *po, v2fixed_t oldcentre)
       if(in->d.line->special)
       {
          P_CrossSpecialLine(in->d.line,
-            P_PointOnLineSide(trace.x, trace.y, in->d.line), nullptr, po);
+            P_PointOnLineSidePrecise(trace.x, trace.y, in->d.line), nullptr, po);
       }
 
       return true;
@@ -1375,7 +1363,7 @@ static bool Polyobj_rotate(polyobj_t *po, angle_t delta, bool onload = false)
 // Polyobj_GetForNum
 //
 // Retrieves a polyobject by its numeric id using hashing.
-// Returns NULL if no such polyobject exists.
+// Returns nullptr if no such polyobject exists.
 //
 polyobj_t *Polyobj_GetForNum(int id)
 {
@@ -1383,33 +1371,33 @@ polyobj_t *Polyobj_GetForNum(int id)
 
    // haleyjd 01/07/07: must check if == 0 first!
    if(numPolyObjects == 0)
-      return NULL;
+      return nullptr;
    
    curidx = PolyObjects[id % numPolyObjects].first;
 
    while(curidx != numPolyObjects && PolyObjects[curidx].id != id)
       curidx = PolyObjects[curidx].next;
 
-   return curidx == numPolyObjects ? NULL : &PolyObjects[curidx];
+   return curidx == numPolyObjects ? nullptr : &PolyObjects[curidx];
 }
 
 //
 // Polyobj_GetMirror
 //
-// Retrieves the mirroring polyobject if one exists. Returns NULL
+// Retrieves the mirroring polyobject if one exists. Returns nullptr
 // otherwise.
 //
 static polyobj_t *Polyobj_GetMirror(polyobj_t *po)
 {
-   return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : NULL;
+   return (po && po->mirror != -1) ? Polyobj_GetForNum(po->mirror) : nullptr;
 }
 
 // structure used to queue up mobj pointers in Polyobj_InitLevel
-typedef struct mobjqitem_s
+struct mobjqitem_t
 {
    mqueueitem_t mqitem;
    Mobj *mo;
-} mobjqitem_t;
+};
 
 //
 // Check if mobj is a polyobject spawn spot
@@ -1441,9 +1429,9 @@ void Polyobj_InitLevel(void)
    // get rid of values from previous level
    // note: as with msecnodes, it is very important to clear out the blockmap
    // node freelist, otherwise it may contain dangling pointers to old objects
-   PolyObjects    = NULL;
+   PolyObjects    = nullptr;
    numPolyObjects = 0;
-   bmap_freelist  = NULL;
+   bmap_freelist  = nullptr;
 
    // run down the thinker list, count the number of spawn points, and save
    // the Mobj pointers on a queue for use below.
@@ -1558,7 +1546,7 @@ void PolyRotateThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1588,7 +1576,7 @@ void PolyRotateThinker::Think()
          // remove thinker
          if(po->thinker == this)
          {
-            po->thinker = NULL;
+            po->thinker = nullptr;
             po->thrust = FRACUNIT;
          }
          this->remove();
@@ -1644,7 +1632,7 @@ void PolyMoveThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1670,7 +1658,7 @@ void PolyMoveThinker::Think()
          // remove thinker
          if(po->thinker == this)
          {
-            po->thinker = NULL;
+            po->thinker = nullptr;
             po->thrust = FRACUNIT;
          }
          this->remove();
@@ -1779,7 +1767,7 @@ void PolySlideDoorThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1833,7 +1821,7 @@ void PolySlideDoorThinker::Think()
             // remove thinker
             if(po->thinker == this)
             {
-               po->thinker = NULL;
+               po->thinker = nullptr;
                po->thrust = FRACUNIT;
             }
             this->remove();
@@ -1891,7 +1879,7 @@ void PolySwingDoorThinker::Think()
 #endif
 
    // check for displacement due to override and reattach when possible
-   if(po->thinker == NULL)
+   if(po->thinker == nullptr)
    {
       po->thinker = this;
       
@@ -1945,7 +1933,7 @@ void PolySwingDoorThinker::Think()
             // remove thinker
             if(po->thinker == this)
             {
-               po->thinker = NULL;
+               po->thinker = nullptr;
                po->thrust = FRACUNIT;
             }
             this->remove();

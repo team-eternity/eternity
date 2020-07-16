@@ -19,10 +19,13 @@
 // Authors: James Haley, Stephen McGranahan, Julian Aubourg
 //
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#include "SDL2_mixer/SDL_mixer.h"
+#else
 #include "SDL.h"
-#include "SDL_audio.h"
-#include "SDL_thread.h"
 #include "SDL_mixer.h"
+#endif
 
 #include "../z_zone.h"
 
@@ -67,7 +70,7 @@ SDL_AudioSpec audio_spec = {};
 // haleyjd 10/28/05: updated for Julian's music code, need full quality now
 static const int snd_samplerate = 44100;
 
-typedef struct channel_info_s
+struct channel_info_t
 {
   // SFX id of the playing sound effect.
   // Used to catch duplicates (like chainsaw).
@@ -94,7 +97,7 @@ typedef struct channel_info_s
   SDL_sem *semaphore;
   bool shouldstop; // haleyjd 05/16/11
 
-} channel_info_t;
+};
 
 static channel_info_t channelinfo[MAX_CHANNELS+1];
 
@@ -538,7 +541,7 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
 
    // do reverberation if an effect is active
    if(s_reverbactive)
-      S_ProcessReverb(mixbuffer[1], mixbuffer_size / 2);
+      S_ProcessReverb(mixbuffer[1], mixbuffer_size / step, step);
 
    // mix reverberated sound with unreverberated buffer
    I_SDLMixBuffers();

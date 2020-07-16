@@ -327,7 +327,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    else
    {
       loadfile->readSint32(linenum);
-      if(linenum == -1) // Some line pointers can be NULL
+      if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
       else if(linenum < 0 || linenum >= numlines)
       {
@@ -436,7 +436,7 @@ static void P_DeNumberThinkers()
 //
 unsigned int P_NumForThinker(Thinker *th)
 {
-   return th ? th->getOrdinal() : 0; // 0 == NULL
+   return th ? th->getOrdinal() : 0; // 0 == nullptr
 }
 
 //
@@ -444,7 +444,7 @@ unsigned int P_NumForThinker(Thinker *th)
 //
 Thinker *P_ThinkerForNum(unsigned int n)
 {
-   return n <= num_thinkers ? thinker_p[n] : NULL;
+   return n <= num_thinkers ? thinker_p[n] : nullptr;
 }
 
 //=============================================================================
@@ -656,7 +656,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
    sector_t *sec;
    line_t   *li;
    side_t   *si;
-  
+
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
@@ -668,28 +668,27 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
-      arc << sec->floorheight << sec->ceilingheight 
-          << sec->friction << sec->movefactor  
+      arc << sec->srf.floor.height << sec->srf.ceiling.height
+          << sec->friction << sec->movefactor
           << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags 
+          << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
-          << sec->floorpic << sec->ceilingpic
+          << sec->srf.floor.pic << sec->srf.ceiling.pic
           << sec->lightlevel << sec->oldlightlevel
-          << sec->floorlightdelta << sec->ceilinglightdelta
+          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->ceilingdata  = nullptr;
-         sec->floordata    = nullptr;
-         sec->lightingdata = nullptr;
+         sec->srf.ceiling.data = nullptr;
+         sec->srf.floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->floorheight);
-         P_SetCeilingHeight(sec, sec->ceilingheight);
+         P_SetFloorHeight(sec, sec->srf.floor.height);
+         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
       }
    }
 
@@ -838,7 +837,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    {
       char *className = nullptr;
       size_t len;
-      unsigned int idx = 1; // Start at index 1, as 0 means NULL
+      unsigned int idx = 1; // Start at index 1, as 0 means nullptr
       Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
@@ -1474,7 +1473,7 @@ void P_LoadGame(const char *filename)
          arc << lvc;
          gamemapname[i] = (char)lvc;
       }
-      gamemapname[8] = '\0'; // ending NULL
+      gamemapname[8] = '\0'; // ending nullptr
 
       G_SetGameMap(); // get gameepisode, map
 

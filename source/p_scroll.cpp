@@ -97,8 +97,8 @@ void ScrollThinker::Think()
    
    if(this->control != -1)
    {   // compute scroll amounts based on a sector's height changes
-      fixed_t height = sectors[this->control].floorheight +
-         sectors[this->control].ceilingheight;
+      fixed_t height = sectors[this->control].srf.floor.height +
+         sectors[this->control].srf.ceiling.height;
       fixed_t delta = height - this->last_height;
       this->last_height = height;
       dx = FixedMul(dx, delta);
@@ -132,8 +132,8 @@ void ScrollThinker::Think()
 
    case ScrollThinker::sc_floor:         // killough 3/7/98: Scroll floor texture
       sec = sectors + this->affectee;
-      sec->floor_xoffs += dx;
-      sec->floor_yoffs += dy;
+      sec->srf.floor.offset.x += dx;
+      sec->srf.floor.offset.y += dy;
       {
          seclerpinfo_t &info = pScrolledSectors.addNew();
          info.sector = sec;
@@ -145,8 +145,8 @@ void ScrollThinker::Think()
 
    case ScrollThinker::sc_ceiling:       // killough 3/7/98: Scroll ceiling texture
       sec = sectors + this->affectee;
-      sec->ceiling_xoffs += dx;
-      sec->ceiling_yoffs += dy;
+      sec->srf.ceiling.offset.x += dx;
+      sec->srf.ceiling.offset.y += dy;
       {
          seclerpinfo_t &info = pScrolledSectors.addNew();
          info.sector = sec;
@@ -164,10 +164,10 @@ void ScrollThinker::Think()
       // killough 4/4/98: Underwater, carry things even w/o gravity
 
       sec = sectors + this->affectee;
-      height = sec->floorheight;
+      height = sec->srf.floor.height;
       waterheight = sec->heightsec != -1 &&
-         sectors[sec->heightsec].floorheight > height ?
-         sectors[sec->heightsec].floorheight : D_MININT;
+         sectors[sec->heightsec].srf.floor.height > height ?
+         sectors[sec->heightsec].srf.floor.height : D_MININT;
 
       // Move objects only if on floor or underwater,
       // non-floating, and clipped.
@@ -305,7 +305,7 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
 
    if((s->control = control) != -1)
       s->last_height =
-       sectors[control].floorheight + sectors[control].ceilingheight;
+       sectors[control].srf.floor.height + sectors[control].srf.ceiling.height;
 
    s->affectee = affectee;
 

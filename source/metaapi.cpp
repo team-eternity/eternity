@@ -452,7 +452,7 @@ IMPLEMENT_RTTI_TYPE(MetaString)
 //
 // Non-trivial, unlike the other MetaObjects' setValue methods.
 // This one can return the current value of the MetaString in *ret if the
-// pointer-to-pointer is non-NULL. If it IS NULL, the current value will
+// pointer-to-pointer is non-nullptr. If it IS nullptr, the current value will
 // be freed instead.
 //
 void MetaString::setValue(const char *s, char **ret)
@@ -729,7 +729,7 @@ MetaTable::~MetaTable()
    clearTable();
 
    delete pImpl;
-   pImpl = NULL;
+   pImpl = nullptr;
 }
 
 //
@@ -960,7 +960,7 @@ void MetaTable::removeAndDeleteAllObjects(const char *key, const MetaObject::Typ
 // MetaTable::getObject
 //
 // Returns the first object found in the metatable with the given key, 
-// regardless of its type. Returns NULL if no such object exists.
+// regardless of its type. Returns nullptr if no such object exists.
 //
 MetaObject *MetaTable::getObject(const char *key) const
 {
@@ -982,7 +982,7 @@ MetaObject *MetaTable::getObject(size_t keyIndex) const
 // MetaTable::getObjectType
 //
 // Returns the first object found in the metatable which matches the type. 
-// Returns NULL if no such object exists.
+// Returns nullptr if no such object exists.
 //
 MetaObject *MetaTable::getObjectType(const char *type) const
 {
@@ -1066,7 +1066,7 @@ MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, const char *type) co
 // MetaTable::getNextObject
 //
 // Returns the next object with the same key, or the first such object
-// in the table if NULL is passed in the object pointer. Returns NULL
+// in the table if nullptr is passed in the object pointer. Returns nullptr
 // when no further objects of the same key are available.
 //
 MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key) const
@@ -1192,7 +1192,7 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, cons
 
    if(object)
    {
-      // As above, allow NULL in type to mean "same as current"
+      // As above, allow nullptr in type to mean "same as current"
       if(!type)
          type = object->getClassName();
    }
@@ -1212,7 +1212,7 @@ const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t 
 
    if(object)
    {
-      // As above, allow NULL in type to mean "same as current"
+      // As above, allow nullptr in type to mean "same as current"
       if(!type)
          type = object->getClassName();
    }
@@ -1849,7 +1849,7 @@ void MetaTable::setConstString(const char *key, const char *newValue)
 // MetaTable::removeConstString
 //
 // Removes a constant string from the table with the given key. If no such
-// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and NULL is returned.
+// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and nullptr is returned.
 // Otherwise, metaerrno is META_ERR_NOERR and the shared string value that 
 // was in the MetaConstString instance is returned.
 //
@@ -1966,7 +1966,7 @@ void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
 
 //
 // Removes a meta table from the table with the given key. If no such
-// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and NULL is returned.
+// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and nullptr is returned.
 // Otherwise, metaerrno is META_ERR_NOERR.
 //
 void MetaTable::removeMetaTableNR(size_t keyIndex)

@@ -61,8 +61,8 @@ struct variable_t;
 #define CONSOLE_COMMAND(name, flags)                     \
    static void Handler_ ## name(void);                   \
    static command_t Cmd_ ## name = { # name, ct_command, \
-                  flags, NULL, Handler_ ## name,         \
-                  0, NULL };                             \
+                  flags, nullptr, Handler_ ## name,      \
+                  0, nullptr };                          \
    static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
    static void Handler_ ## name(void)
 
@@ -76,7 +76,7 @@ struct variable_t;
    static void Handler_ ## name(void);                         \
    static command_t Cmd_ ## name = { # name, ct_variable,      \
                    flags, &var_ ## variable, Handler_ ## name, \
-                   0, NULL };                                  \
+                   0, nullptr };                               \
    static CCmdRegistry regCmd ## name (&Cmd_ ## name);         \
    static void Handler_ ## name(void)
 
@@ -90,8 +90,8 @@ struct variable_t;
 #define CONSOLE_NETCMD(name, flags, netcmd)              \
    static void Handler_ ## name(void);                   \
    static command_t Cmd_ ## name = { # name, ct_command, \
-                  (flags) | cf_netvar, NULL,             \
-                  Handler_ ## name, netcmd, NULL };      \
+                  (flags) | cf_netvar, nullptr,          \
+                  Handler_ ## name, netcmd, nullptr };   \
    static CCmdRegistry regCmd ## name (&Cmd_ ## name);   \
    static void Handler_ ## name()
 
@@ -104,7 +104,7 @@ struct variable_t;
    static void Handler_ ## name(void);                     \
    static command_t Cmd_ ## name = { # name, ct_variable,  \
                    cf_netvar | (flags), &var_ ## variable, \
-                   Handler_ ## name, netcmd, NULL };       \
+                   Handler_ ## name, netcmd, nullptr };    \
    static CCmdRegistry regCmd ## name (&Cmd_ ## name);     \
    static void Handler_ ## name(void)
 
@@ -116,7 +116,7 @@ struct variable_t;
 //
 #define CONSOLE_CONST(name, variable)                         \
     static command_t Cmd_ ## name = { # name, ct_constant, 0, \
-       &var_ ## variable, NULL, 0, NULL };                    \
+       &var_ ## variable, nullptr, 0, nullptr };              \
     static CCmdRegistry regCmd ## name (&Cmd_ ## name);
 
         /*********** variable macros *************/
@@ -134,7 +134,7 @@ struct variable_t;
 //
 #define VARIABLE(name, defaultvar, type, min, max, strings)  \
         variable_t var_ ## name = { &name, defaultvar,       \
-                  type, min, max, strings, 0, 0, NULL, NULL};
+                  type, min, max, strings, 0, 0, nullptr, nullptr};
 
 //
 // VARIABLE_INT
@@ -143,7 +143,7 @@ struct variable_t;
 //
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, min, max, strings, 0, 0, NULL, NULL };
+                        vt_int, min, max, strings, 0, 0, nullptr, nullptr };
 #define VARIABLE_INT2(name, addr, defaultvar, min, max, strings)    \
         variable_t var_ ## name = { addr, defaultvar,               \
                 vt_int, min, max, strings, 0, 0, NULL, NULL };
@@ -155,7 +155,7 @@ struct variable_t;
 //
 #define VARIABLE_STRING(name, defaultvar, max)               \
         variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_string, 0, max, NULL, 0, 0, NULL, NULL};
+                  vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr};
 
 //
 // VARIABLE_CHARARRAY
@@ -164,7 +164,7 @@ struct variable_t;
 //
 #define VARIABLE_CHARARRAY(name, defaultvar, max)            \
         variable_t var_ ## name = { name, defaultvar,        \
-                  vt_chararray, 0, max, NULL, 0, 0, NULL, NULL};
+                  vt_chararray, 0, max, nullptr, 0, 0, nullptr, nullptr};
 
 //
 // VARIABLE_BOOLEAN
@@ -175,7 +175,7 @@ struct variable_t;
 //
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
         variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_int, 0, 1, strings, 0, 0, NULL, NULL };
+                  vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
 #define VARIABLE_BOOLEAN2(name, addr, defaultvar, strings)   \
         variable_t var_ ## name = { addr, defaultvar,        \
                   vt_int, 0, 1, strings, 0, 0, NULL, NULL };
@@ -187,7 +187,7 @@ struct variable_t;
 //
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
         variable_t var_ ## name = { &name, defaultvar,       \
-                   vt_toggle, 0, 1, strings, 0, 0, NULL, NULL };
+                   vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
 
 //
 // VARIABLE_FLOAT
@@ -196,17 +196,17 @@ struct variable_t;
 //
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
         variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_float, 0, 0, NULL, min, max, NULL, NULL };
+                  vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
 
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
-        variable_t var_ ## name = { &name, NULL,             \
-                  vt_int, -1, -1, NULL, 0, 0, NULL, NULL };
+        variable_t var_ ## name = { &name, nullptr,          \
+                  vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
 
 #define CONST_STRING(name)                                   \
-        variable_t var_ ## name = { &name, NULL,             \
-                  vt_string, -1, -1, NULL, 0, 0, NULL, NULL };
+        variable_t var_ ## name = { &name, nullptr,          \
+                  vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
 
 //=============================================================================
 //

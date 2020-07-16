@@ -55,7 +55,7 @@ static int    tempyl[4], tempyh[4];
 static int    startx = 0;
 static int    temptype = COL_NONE;
 static int    commontop, commonbot;
-static const byte *temptranmap = NULL;
+static const byte *temptranmap = nullptr;
 static fixed_t temptranslevel;
 // haleyjd 09/12/04: optimization -- precalculate flex tran lookups
 static const unsigned int *temp_fg2rgb;
@@ -67,7 +67,7 @@ static byte   *newskymask;
 
 VALLOCATION(tempbuf)
 {
-   tempbuf = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, NULL);
+   tempbuf = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, nullptr);
 }
 
 VALLOCATION(newskymask)

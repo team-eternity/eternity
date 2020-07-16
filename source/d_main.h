@@ -57,7 +57,7 @@ extern int use_startmap;
 
 // Called by IO functions when input is detected.
 struct event_t;
-void D_PostEvent(event_t* ev);
+void D_PostEvent(const event_t* ev);
 
 struct camera_t;
 extern camera_t *camera;

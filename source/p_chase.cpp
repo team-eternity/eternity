@@ -109,22 +109,22 @@ struct chasetraverse_t
 static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector, 
    chasetraverse_t &traverse)
 {
-   static const struct surfaceset_t
+   const struct surfaceset_t
    {
-      unsigned sector_t::*pflags;
-      portal_t *sector_t::*portal;
+      unsigned pflags;
+      portal_t *portal;
       fixed_t(*pzfunc)(const sector_t &);
       bool(*compare)(fixed_t, fixed_t);
    } ssets[2] = {
       {
-         &sector_t::f_pflags,
-         &sector_t::f_portal,
+         sector->srf.floor.pflags,
+         sector->srf.floor.portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
       },
       {
-         &sector_t::c_pflags,
-         &sector_t::c_portal,
+         sector->srf.ceiling.pflags,
+         sector->srf.ceiling.portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
       },
@@ -133,7 +133,7 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
    {
       const auto &s = ssets[i];
       fixed_t pz = s.pzfunc(*sector);
-      if(sector->*s.pflags & PS_PASSABLE && s.compare(z, pz))
+      if(s.pflags & PS_PASSABLE && s.compare(z, pz))
       {
          if(!s.compare(pz, traverse.startz))
             pz = traverse.startz;
@@ -141,7 +141,7 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
          fixed_t hfrac = FixedMul(zfrac, frac);
          traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, hfrac);
          traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, hfrac);
-         traverse.link = &(sector->*s.portal)->data.link;
+         traverse.link = &s.portal->data.link;
          traverse.startz = pz;
          return true;
       }
@@ -155,28 +155,28 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
 //
 static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
 {
-   static const struct surfaceset_t
+   const struct surfaceset_t
    {
       unsigned extflag;
-      unsigned sector_t::*pflags;
-      fixed_t sector_t::*height;
-      portal_t *sector_t::*portal;
+      unsigned pflags;
+      fixed_t height;
+      portal_t *portal;
       fixed_t(*pzfunc)(const sector_t &);
       bool(*compare)(fixed_t, fixed_t);
    } ssets[2] = {
       {
          EX_ML_LOWERPORTAL,
-         &sector_t::f_pflags,
-         &sector_t::floorheight,
-         &sector_t::f_portal,
+         li->backsector->srf.floor.pflags,
+         li->frontsector->srf.floor.height,
+         li->backsector->srf.floor.portal,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; }
       },
       {
          EX_ML_UPPERPORTAL,
-         &sector_t::c_pflags,
-         &sector_t::ceilingheight,
-         &sector_t::c_portal,
+         li->backsector->srf.ceiling.pflags,
+         li->frontsector->srf.ceiling.height,
+         li->backsector->srf.ceiling.portal,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a > b; }
       }
@@ -184,12 +184,12 @@ static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
    for(int i = 0; i < 2; ++i)
    {
       const auto &s = ssets[i];
-      if(li->extflags & s.extflag && li->backsector->*s.pflags & PS_PASSABLE &&
-         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, li->frontsector->*s.height))
+      if(li->extflags & s.extflag && s.pflags & PS_PASSABLE &&
+         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, s.height))
       {
          traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
          traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
-         traverse.link = &(li->backsector->*s.portal)->data.link;
+         traverse.link = &s.portal->data.link;
          traverse.startz = z;
          return true;
       }
@@ -207,8 +207,8 @@ static bool P_checkLinePortal(const line_t *li, fixed_t z, fixed_t frac, chasetr
       // Exact target pos
       v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
       // Portal stuff. Only count it if truly crossed
-      if(P_PointOnLineSide(targpos.x, targpos.y, li) &&
-         !P_PointOnLineSide(trace.dl.x, trace.dl.y, li))
+      if(P_PointOnLineSidePrecise(targpos.x, targpos.y, li) &&
+         !P_PointOnLineSidePrecise(trace.dl.x, trace.dl.y, li))
       {
          traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
          traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
@@ -283,9 +283,9 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
             return false;
          }
 
-         if((li->flags & ML_BLOCKING) || 
-            (othersector->floorheight>z) || (othersector->ceilingheight<z)
-            || (othersector->ceilingheight-othersector->floorheight
+         if((li->flags & ML_BLOCKING) ||
+            (othersector->srf.floor.height >z) || (othersector->srf.ceiling.height <z)
+            || (othersector->srf.ceiling.height -othersector->srf.floor.height
                 < 40*FRACUNIT));          // hit
          else
             return !P_checkLinePortal(li, z, in->frac, traverse);
@@ -294,12 +294,12 @@ static bool PTR_chaseTraverse(intercept_t *in, void *context)
       pCamTarget.x = x; // point the new chasecam target at the intersection
       pCamTarget.y = y;
       pCamTarget.z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
-      
+
       // don't go any farther
-      
+
       return false;
    }
-   
+
    return true;
 }
 
@@ -358,14 +358,14 @@ static void P_GetChasecamTarget()
    trace.attackrange = oldAttackRange;
 
    const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
-   
-   fixed_t floorheight = ss->sector->floorheight;
-   fixed_t ceilingheight = ss->sector->ceilingheight;
+
+   fixed_t floorheight = ss->sector->srf.floor.height;
+   fixed_t ceilingheight = ss->sector->srf.ceiling.height;
 
    // don't aim above the ceiling or below the floor
-   if(!(ss->sector->f_pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
+   if(!(ss->sector->srf.floor.pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
       pCamTarget.z = floorheight + 10 * FRACUNIT;
-   if(!(ss->sector->c_pflags & PS_PASSABLE) && pCamTarget.z > ceilingheight - 10 * FRACUNIT)
+   if(!(ss->sector->srf.ceiling.pflags & PS_PASSABLE) && pCamTarget.z > ceilingheight - 10 * FRACUNIT)
       pCamTarget.z = ceilingheight - 10 * FRACUNIT;
 }
 
@@ -418,7 +418,7 @@ void P_ChaseTicker()
 
 // console commands
 
-VARIABLE_BOOLEAN(chasecam_active, NULL, onoff);
+VARIABLE_BOOLEAN(chasecam_active, nullptr, onoff);
 
 CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
 {
@@ -431,13 +431,13 @@ CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
       P_ChaseEnd();
 }
 
-VARIABLE_INT(chasecam_height, NULL, -31, 100, NULL);
+VARIABLE_INT(chasecam_height, nullptr, -31, 100, nullptr);
 CONSOLE_VARIABLE(chasecam_height, chasecam_height, 0) {}
 
-VARIABLE_INT(chasecam_dist, NULL, 10, 1024, NULL);
+VARIABLE_INT(chasecam_dist, nullptr, 10, 1024, nullptr);
 CONSOLE_VARIABLE(chasecam_dist, chasecam_dist, 0) {}
 
-VARIABLE_INT(chasecam_speed, NULL, 1, 100, NULL);
+VARIABLE_INT(chasecam_speed, nullptr, 1, 100, nullptr);
 CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
 
 void P_ChaseStart()
@@ -450,7 +450,7 @@ void P_ChaseStart()
 void P_ChaseEnd()
 {
    chasecam_active = false;
-   camera = NULL;
+   camera = nullptr;
 }
 
 // SoM: moved globals into linetracer_t see p_maputil.h
@@ -501,24 +501,24 @@ static void P_checkWalkcamSectorPortal(const sector_t *sector)
 {
    struct opset_t
    {
-      unsigned sector_t::* pflags;
+      unsigned pflags;
       fixed_t(*portalzfunc)(const sector_t &);
       bool(*comparison)(fixed_t, fixed_t);
       linkdata_t *(*plink)(const sector_t *);
       bool isceiling;
    };
 
-   static const opset_t opsets[2] =
+   const opset_t opsets[2] =
    {
       {
-         &sector_t::f_pflags,
+         sector->srf.floor.pflags,
          P_FloorPortalZ,
          [](fixed_t a, fixed_t b) { return a < b; },
          R_FPLink,
          false
       },
       {
-         &sector_t::c_pflags,
+         sector->srf.ceiling.pflags,
          P_CeilingPortalZ,
          [](fixed_t a, fixed_t b) { return a >= b; },
          R_CPLink,
@@ -535,7 +535,7 @@ static void P_checkWalkcamSectorPortal(const sector_t *sector)
       const auto &op = opsets[i];
       for(int j = 0; j < MAXIMUM_PER_TIC; ++j)
       {
-         if(!(sector->*op.pflags & PS_PASSABLE))
+         if(!(op.pflags & PS_PASSABLE))
             break;
          fixed_t planez = op.portalzfunc(*sector);
          if(!op.comparison(walkcamera.z, planez))
@@ -639,19 +639,19 @@ void P_WalkTicker()
 
    subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
 
-   const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, true, 
+   const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_ceil, 
       subsec->sector);
-   const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, false,
+   const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_floor,
       subsec->sector);
 
    if(!walkcamera.flying)
    {
       // keep on the ground
-      walkcamera.z = bottomsector->floorheight + 41 * FRACUNIT;
+      walkcamera.z = bottomsector->srf.floor.height + 41 * FRACUNIT;
    }
 
-   fixed_t maxheight = topsector->ceilingheight - 8*FRACUNIT;
-   fixed_t minheight = bottomsector->floorheight + 4*FRACUNIT;
+   fixed_t maxheight = topsector->srf.ceiling.height - 8*FRACUNIT;
+   fixed_t minheight = bottomsector->srf.floor.height + 4*FRACUNIT;
 
    if(walkcamera.z > maxheight)
       walkcamera.z = maxheight;
@@ -677,13 +677,13 @@ void P_ResetWalkcam()
    
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
-   walkcamera.z = sec->floorheight + 41*FRACUNIT;
+   walkcamera.z = sec->srf.floor.height + 41*FRACUNIT;
    walkcamera.groupid = sec->groupid;
 
    walkcamera.backupPosition();
 }
 
-VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
+VARIABLE_BOOLEAN(walkcam_active, nullptr, onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
    if(!Console.argc)
@@ -705,7 +705,7 @@ void P_WalkStart()
 void P_WalkEnd()
 {
    walkcam_active = false;
-   camera = NULL;
+   camera = nullptr;
 }
 
 //==============================================================================
@@ -756,7 +756,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
 
       camparams.cx       = v->x;
       camparams.cy       = v->y;
-      camparams.cz       = sec->floorheight;
+      camparams.cz       = sec->srf.floor.height;
       camparams.cheight  = 41 * FRACUNIT;
       camparams.cgroupid = sec->groupid;
       camparams.prev     = nullptr;
@@ -821,7 +821,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
 
    P_setFollowPitch();
    followcam.backupPosition();
@@ -829,7 +829,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 
 void P_FollowCamOff()
 {
-   P_SetTarget<Mobj>(&followtarget, NULL);
+   P_SetTarget<Mobj>(&followtarget, nullptr);
 }
 
 bool P_FollowCamTicker()
@@ -845,13 +845,13 @@ bool P_FollowCamTicker()
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z       = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z       = subsec->sector->srf.floor.height + 41*FRACUNIT;
    followcam.groupid = subsec->sector->groupid;
    P_setFollowPitch();
 
    // still visible?
    camsightparams_t camparams;
-   camparams.prev = NULL;
+   camparams.prev = nullptr;
    camparams.setCamera(followcam, 41 * FRACUNIT);
    camparams.setTargetMobj(followtarget);
 
@@ -892,7 +892,7 @@ AMX_NATIVE_INFO chase_Natives[] =
 {
    { "_ToggleChasecam", sm_chasecam  },
    { "_IsChasecamOn",   sm_ischaseon },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

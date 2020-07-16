@@ -101,7 +101,7 @@ void I_GetRealPath(const char *path, qstring &real)
    std::wstring wpath(pathobj.c_str());
    char *ret = ecalloc(char *, wpath.length() + 1, 1);
    WideCharToMultiByte(CP_UTF8, 0, wpath.c_str(), -1, ret,
-                       static_cast<int>(wpath.length()), NULL, NULL);
+                       static_cast<int>(wpath.length()), nullptr, nullptr);
    real = ret;
    efree(ret);
 

@@ -65,7 +65,7 @@ struct polymaplink_t;
 //
 // Polyobject Structure
 //
-typedef struct polyobj_s
+struct polyobj_t
 {
    int id;    // numeric id
    int first; // for hashing: index of first polyobject in this hash chain
@@ -81,8 +81,8 @@ typedef struct polyobj_s
    int numVerticesAlloc;       // number of vertices allocated
    vertex_t *origVerts;        // original positions relative to spawn spot
    vertex_t *tmpVerts;         // temporary vertex backups for rotation
-   vertex_t **vertices;        // vertices this polyobject must move   
-   
+   vertex_t **vertices;        // vertices this polyobject must move
+
    int numLines;               // number of linedefs
    int numLinesAlloc;          // number of linedefs allocated
    line_t **lines;             // linedefs this polyobject must move
@@ -107,8 +107,8 @@ typedef struct polyobj_s
    size_t numPortals;          // ioanch 20160228: quick cache if it has
    portal_t **portals;         // portals. NO NEED TO SERIALIZE THIS. 
    bool hasLinkedPortals;      // quick check if any portal is linked
-                               
-} polyobj_t;
+
+};
 
 //
 // Polyobject Blockmap Link Structure
@@ -238,23 +238,23 @@ public:
 // Line Activation Data Structures
 //
 
-typedef struct polyrotdata_s
+struct polyrotdata_t
 {
    int polyObjNum;   // numeric id of polyobject to affect
    int direction;    // direction of rotation
    int speed;        // angular speed
    int distance;     // distance to move
    bool overRide;    // if true, will override any action on the object
-} polyrotdata_t;
+};
 
-typedef struct polymovedata_s
+struct polymovedata_t
 {
    int polyObjNum;     // numeric id of polyobject to affect
    fixed_t distance;   // distance to move
    fixed_t speed;      // linear speed
    unsigned int angle; // angle of movement
    bool overRide;      // if true, will override any action on the object
-} polymovedata_t;
+};
 
 // polyobject door types
 typedef enum
@@ -263,7 +263,7 @@ typedef enum
    POLY_DOOR_SWING,
 } polydoor_e;
 
-typedef struct polydoordata_s
+struct polydoordata_t
 {
    int polyObjNum;     // numeric id of polyobject to affect
    int doorType;       // polyobj door type
@@ -271,7 +271,7 @@ typedef struct polydoordata_s
    unsigned int angle; // for slide door only, angle of motion
    int distance;       // distance to move
    int delay;          // delay time after opening
-} polydoordata_t;
+};
 
 //
 // Polyobj_[OR]_MoveTo[Spot] data

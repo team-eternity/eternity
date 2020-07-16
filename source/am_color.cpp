@@ -59,29 +59,29 @@ extern int mapcolor_prtl;    // SoM: color for lines not in player portal group
 // and underneath) and false means the map is not modified.
 extern int mapportal_overlay;
 
-VARIABLE_INT(mapcolor_back, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_grid, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_wall, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_fchg, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_cchg, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_clsd, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_rkey, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_bkey, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_ykey, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_rdor, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_bdor, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_ydor, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_tele, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_secr, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_exit, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_unsn, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_flat, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_sprt, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_hair, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_sngl, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_frnd, NULL, 0, 255, NULL);
-VARIABLE_INT(mapcolor_prtl, NULL, 0, 255, NULL);
-VARIABLE_BOOLEAN(mapportal_overlay, NULL, yesno);
+VARIABLE_INT(mapcolor_back, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_grid, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_wall, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_fchg, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_cchg, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_clsd, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_rkey, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_bkey, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_ykey, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_rdor, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_bdor, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_ydor, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_tele, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_secr, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_exit, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_unsn, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_flat, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_sprt, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_hair, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_sngl, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_frnd, nullptr, 0, 255, nullptr);
+VARIABLE_INT(mapcolor_prtl, nullptr, 0, 255, nullptr);
+VARIABLE_BOOLEAN(mapportal_overlay, nullptr, yesno);
 
 CONSOLE_VARIABLE(mapcolor_back, mapcolor_back, 0) {}
 CONSOLE_VARIABLE(mapcolor_grid, mapcolor_grid, 0) {}

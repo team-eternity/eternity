@@ -82,9 +82,9 @@ static bool PTR_linePortalCrossing(const intercept_t *in, void *vdata,
       return true;
 
    // double check: line MUST be crossed and trace origin must be in front
-   int originside = P_PointOnLineSide(trace.x, trace.y, line);
+   int originside = P_PointOnLineSidePrecise(trace.x, trace.y, line);
    if(originside != 0 || originside ==
-      P_PointOnLineSide(trace.x + trace.dx, trace.y + trace.dy, line))
+      P_PointOnLineSidePrecise(trace.x + trace.dx, trace.y + trace.dy, line))
    {
       return true;
    }
@@ -174,11 +174,11 @@ static bool P_divlineInsideLine(const divline_t &dl, const line_t &line)
    divline_t pdir = { dl.x, dl.y, normal.x, normal.y };
    const v2fixed_t lv1 = { line.v1->x, line.v1->y };
    const v2fixed_t lv2 = { lv1.x + line.dx, lv1.y + line.dy };
-   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+   if(P_PointOnDivlineSidePrecise(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSidePrecise(lv2.x, lv2.y, &pdir))
       return false;
    pdir.x += dl.dx;
    pdir.y += dl.dy;
-   if(P_PointOnDivlineSide(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSide(lv2.x, lv2.y, &pdir))
+   if(P_PointOnDivlineSidePrecise(lv1.x, lv1.y, &pdir) == P_PointOnDivlineSidePrecise(lv2.x, lv2.y, &pdir))
       return false;
    return true;
 }
@@ -197,14 +197,14 @@ static bool PIT_exactTraverse(const line_t &line, void *vdata)
 
    auto &data = *static_cast<exacttraverse_t *>(vdata);
 
-   int destside = P_PointOnLineSide(data.trace->x + data.trace->dx, data.trace->y + data.trace->dy,
+   int destside = P_PointOnLineSidePrecise(data.trace->x + data.trace->dx, data.trace->y + data.trace->dy,
                                     &line);
-   if(destside != 1 || destside == P_PointOnLineSide(data.trace->x, data.trace->y, &line))
+   if(destside != 1 || destside == P_PointOnLineSidePrecise(data.trace->x, data.trace->y, &line))
       return true;   // doesn't get past it
 
    // Trace must cross this
-   if(P_PointOnDivlineSide(line.v1->x, line.v1->y, data.trace) ==
-      P_PointOnDivlineSide(line.v2->x, line.v2->y, data.trace))
+   if(P_PointOnDivlineSidePrecise(line.v1->x, line.v1->y, data.trace) ==
+      P_PointOnDivlineSidePrecise(line.v2->x, line.v2->y, data.trace))
    {
       // check against edge cases where the trace crosses validly but the linedef vertices don't
       // sit on different sides of the divline. Happens with traces (almost) parallel in direction.
@@ -338,7 +338,7 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 // ioanch 20160107
 // If point x/y resides in a sector with portal, pass through it
 //
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
                                  sector_t *sector)
 {
    if(!sector) // if not preset
@@ -351,22 +351,16 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       return sector; // just return the current sector in this case
    }
 
-   auto pflags = ceiling ? &sector_t::c_pflags : &sector_t::f_pflags;
-   auto portal = ceiling ? &sector_t::c_portal : &sector_t::f_portal;
-
    int loopprotection = SECTOR_PORTAL_LOOP_PROTECTION;
 
-   while(sector->*pflags & PS_PASSABLE && loopprotection--)
+   while(sector->srf[surf].pflags & PS_PASSABLE && loopprotection--)
    {
-      const linkdata_t &link = (sector->*portal)->data.link;
+      const linkdata_t &link = sector->srf[surf].portal->data.link;
 
       // Also quit early if the planez is obscured by a dynamic horizontal plane
       // or if deltax and deltay are somehow zero
-      if((ceiling ? !(sector->c_pflags & PF_ATTACHEDPORTAL) &&
-          sector->ceilingheight < link.planez
-          : !(sector->f_pflags & PF_ATTACHEDPORTAL) &&
-          sector->floorheight > link.planez) ||
-         (!link.deltax && !link.deltay))
+      if((!(sector->srf[surf].pflags & PF_ATTACHEDPORTAL) &&
+         isInner(surf, sector->srf[surf].height, link.planez)) || (!link.deltax && !link.deltay))
       {
          return sector;
       }
@@ -378,7 +372,6 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
       x += link.deltax;
       y += link.deltay;
       sector = R_PointInSubsector(x, y)->sector;
-
    }
 
    if(loopprotection < 0)
@@ -387,9 +380,9 @@ sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
    return sector;
 }
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf)
 {
-   return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
+   return P_ExtremeSectorAtPoint(mo->x, mo->y, surf, mo->subsector->sector);
 }
 
 //==============================================================================
@@ -529,8 +522,8 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             if(accessedgroupids[entry.ldata->toid])
                continue;
             if(entry.type == portalblocktype_e::sector &&
-               ((!entry.isceiling && !(entry.sector->f_pflags & PS_PASSABLE)) ||
-                ( entry.isceiling && !(entry.sector->c_pflags & PS_PASSABLE)) ))
+               ((!entry.isceiling && !(entry.sector->srf.floor.pflags & PS_PASSABLE)) ||
+                ( entry.isceiling && !(entry.sector->srf.ceiling.pflags & PS_PASSABLE)) ))
             {
                continue;   // be careful to skip concealed portals.
             }
@@ -612,11 +605,11 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
 bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
 {
    fixed_t topz = mobj->z + mobj->height;
-   if(topz < sector->floorheight || mobj->z > sector->ceilingheight)
+   if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
       return false;
-   if(sector->f_pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
+   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
       return false;
-   if(sector->c_pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
+   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
       return false;
    return true;
 }
@@ -649,25 +642,21 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       memset(groupVisit, 0, sizeof(*groupVisit) * P_PortalGroupCount());
    groupVisit[cgroupid] = true;
 
-   unsigned sector_t::*pflags[2];
-   portal_t *sector_t::*portal[2];
    uint8_t fcflag[2];
+
+   surf_e surfs[2];
 
    if(midzhint < cmidz)
    {
-      pflags[0] = &sector_t::f_pflags;
-      pflags[1] = &sector_t::c_pflags;
-      portal[0] = &sector_t::f_portal;
-      portal[1] = &sector_t::c_portal;
+      surfs[0] = surf_floor;
+      surfs[1] = surf_ceil;
       fcflag[0] = sector_t::floor;
       fcflag[1] = sector_t::ceiling;
    }
    else
    {
-      pflags[0] = &sector_t::c_pflags;
-      pflags[1] = &sector_t::f_pflags;
-      portal[0] = &sector_t::c_portal;
-      portal[1] = &sector_t::f_portal;
+      surfs[0] = surf_ceil;
+      surfs[1] = surf_floor;
       fcflag[0] = sector_t::ceiling;
       fcflag[1] = sector_t::floor;
    }
@@ -682,9 +671,9 @@ sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
       x = cx;
       y = cy;
 
-      while(sector->*pflags[i] & PS_PASSABLE)
+      while(sector->srf[surfs[i]].pflags & PS_PASSABLE)
       {
-         const linkdata_t &ldata = (sector->*portal[i])->data.link;
+         const linkdata_t &ldata = sector->srf[surfs[i]].portal->data.link;
          x += ldata.deltax;
          y += ldata.deltay;
          sector = R_PointInSubsector(x, y)->sector;

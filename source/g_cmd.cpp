@@ -167,22 +167,22 @@ CONSOLE_COMMAND(screenshot, 0)
 
 const char *particle_choices[] = { "sprites", "particles", "both" };
 
-VARIABLE_BOOLEAN(drawparticles, NULL, onoff);
+VARIABLE_BOOLEAN(drawparticles, nullptr, onoff);
 CONSOLE_VARIABLE(draw_particles, drawparticles, 0) {}
 
-VARIABLE_INT(bloodsplat_particle, NULL, 0, 2, particle_choices);
+VARIABLE_INT(bloodsplat_particle, nullptr, 0, 2, particle_choices);
 CONSOLE_VARIABLE(bloodsplattype, bloodsplat_particle, 0) {}
 
-VARIABLE_INT(bulletpuff_particle, NULL, 0, 2, particle_choices);
+VARIABLE_INT(bulletpuff_particle, nullptr, 0, 2, particle_choices);
 CONSOLE_VARIABLE(bulletpufftype, bulletpuff_particle, 0) {}
 
-VARIABLE_BOOLEAN(drawrockettrails, NULL, onoff);
+VARIABLE_BOOLEAN(drawrockettrails, nullptr, onoff);
 CONSOLE_VARIABLE(rocket_trails, drawrockettrails, 0) {}
 
-VARIABLE_BOOLEAN(drawgrenadetrails, NULL, onoff);
+VARIABLE_BOOLEAN(drawgrenadetrails, nullptr, onoff);
 CONSOLE_VARIABLE(grenade_trails, drawgrenadetrails, 0) {}
 
-VARIABLE_BOOLEAN(drawbfgcloud, NULL, onoff);
+VARIABLE_BOOLEAN(drawbfgcloud, nullptr, onoff);
 CONSOLE_VARIABLE(bfg_cloud, drawbfgcloud, 0) {}
 
 // always mlook
@@ -200,18 +200,18 @@ CONSOLE_VARIABLE(invert_padlook, invert_padlook, 0) {}
 
 // horizontal mouse sensitivity
 
-VARIABLE_FLOAT(mouseSensitivity_horiz, NULL, 0.0, 1024.0);
+VARIABLE_FLOAT(mouseSensitivity_horiz, nullptr, 0.0, 1024.0);
 CONSOLE_VARIABLE(sens_horiz, mouseSensitivity_horiz, 0) {}
 
 // vertical mouse sensitivity
 
-VARIABLE_FLOAT(mouseSensitivity_vert, NULL, 0.0, 1024.0);
+VARIABLE_FLOAT(mouseSensitivity_vert, nullptr, 0.0, 1024.0);
 CONSOLE_VARIABLE(sens_vert, mouseSensitivity_vert, 0) {}
 
 int mouseSensitivity_c;
 
 // combined sensitivity (for old-style menu only)
-VARIABLE_INT(mouseSensitivity_c, NULL, 0, 16, NULL);
+VARIABLE_INT(mouseSensitivity_c, nullptr, 0, 16, nullptr);
 CONSOLE_VARIABLE(sens_combined, mouseSensitivity_c, 0)
 {
    mouseSensitivity_horiz = mouseSensitivity_vert = mouseSensitivity_c * 4;
@@ -234,7 +234,7 @@ CONSOLE_VARIABLE(weapon_hotkey_cycling, weapon_hotkey_cycling, 0) {}
 // turbo scale
 
 int turbo_scale = 100;
-VARIABLE_INT(turbo_scale, NULL,         10, 400, NULL);
+VARIABLE_INT(turbo_scale, nullptr,      10, 400, nullptr);
 CONSOLE_VARIABLE(turbo, turbo_scale, 0)
 {
    C_Printf("turbo scale: %i%%\n",turbo_scale);
@@ -299,7 +299,7 @@ const char *cooldemo_modes[] =
    "follow"
 };
 
-VARIABLE_INT(cooldemo, NULL, 0, 2, cooldemo_modes);
+VARIABLE_INT(cooldemo, nullptr, 0, 2, cooldemo_modes);
 CONSOLE_VARIABLE(cooldemo, cooldemo, 0) {}
 
 //=============================================================================
@@ -342,7 +342,7 @@ CONSOLE_NETCMD(kill, cf_level, netcmd_kill)
    playernum = Console.cmdsrc;
 
    mobj = players[playernum].mo;
-   P_DamageMobj(mobj, NULL, NULL,
+   P_DamageMobj(mobj, nullptr, nullptr,
                 2*(players[playernum].health+players[playernum].armorpoints),
                 MOD_SUICIDE);
    mobj->momx = mobj->momy = mobj->momz = 0;
@@ -401,7 +401,7 @@ CONSOLE_NETCMD(restartmap, cf_server, netcmd_restartmap)
 }
 
         // player name
-VARIABLE_STRING(default_name, NULL,             20);
+VARIABLE_STRING(default_name, nullptr,          20);
 CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 {
    int playernum;
@@ -423,16 +423,16 @@ CONSOLE_NETVAR(name, default_name, cf_handlerset, netcmd_name)
 // screenshot type
 
 const char *str_pcx[] = { "bmp", "pcx", "tga", "png" };
-VARIABLE_INT(screenshot_pcx, NULL, 0, 3, str_pcx);
+VARIABLE_INT(screenshot_pcx, nullptr, 0, 3, str_pcx);
 CONSOLE_VARIABLE(shot_type, screenshot_pcx, 0) {}
 
-VARIABLE_BOOLEAN(screenshot_gamma, NULL, yesno);
+VARIABLE_BOOLEAN(screenshot_gamma, nullptr, yesno);
 CONSOLE_VARIABLE(shot_gamma, screenshot_gamma, 0) {}
 
 // textmode startup
 
 extern int textmode_startup;            // d_main.c
-VARIABLE_BOOLEAN(textmode_startup, NULL,        onoff);
+VARIABLE_BOOLEAN(textmode_startup, nullptr,     onoff);
 CONSOLE_VARIABLE(textmode_startup, textmode_startup, 0) {}
 
 // demo insurance
@@ -454,8 +454,7 @@ CONSOLE_VARIABLE(mouse_accel_type, mouseAccel_type, ACCELTYPE_NONE) {}
 
 // [CG] 01/20/12: Custom mouse acceleration (threshold & value).
 int default_mouse_accel_threshold = 10;
-VARIABLE_INT(mouseAccel_threshold, &default_mouse_accel_threshold, 0, 1024,
-             NULL);
+VARIABLE_INT(mouseAccel_threshold, &default_mouse_accel_threshold, 0, 1024, nullptr);
 CONSOLE_VARIABLE(mouse_accel_threshold, mouseAccel_threshold, 0) {}
 
 double default_mouse_accel_value = 2.0;
@@ -474,14 +473,14 @@ CONSOLE_VARIABLE(mouseb_dblc2, mouseb_dblc2, 0) {}
 // haleyjd: new stuff
 
 extern int map_point_coordinates;
-VARIABLE_BOOLEAN(map_point_coordinates, NULL, onoff);
+VARIABLE_BOOLEAN(map_point_coordinates, nullptr, onoff);
 CONSOLE_VARIABLE(map_coords, map_point_coordinates, 0) {}
 
 extern int map_secret_after;
-VARIABLE_BOOLEAN(map_secret_after, NULL, yesno);
+VARIABLE_BOOLEAN(map_secret_after, nullptr, yesno);
 CONSOLE_VARIABLE(map_secret_after, map_secret_after, 0) {}
 
-VARIABLE_INT(dogs, &default_dogs, 0, 3, NULL);
+VARIABLE_INT(dogs, &default_dogs, 0, 3, nullptr);
 CONSOLE_VARIABLE(numhelpers, dogs, cf_notnet) {}
 
 VARIABLE_BOOLEAN(dog_jumping, &default_dog_jumping, onoff);
@@ -495,23 +494,23 @@ CONSOLE_VARIABLE(runiswalk, runiswalk, 0) {}
 
 // haleyjd 03/22/09: iwad cvars
 
-VARIABLE_STRING(gi_path_doomsw,   NULL, UL);
-VARIABLE_STRING(gi_path_doomreg,  NULL, UL);
-VARIABLE_STRING(gi_path_doomu,    NULL, UL);
-VARIABLE_STRING(gi_path_doom2,    NULL, UL);
-VARIABLE_STRING(gi_path_bfgdoom2, NULL, UL);
-VARIABLE_STRING(gi_path_tnt,      NULL, UL);
-VARIABLE_STRING(gi_path_plut,     NULL, UL);
-VARIABLE_STRING(gi_path_hacx,     NULL, UL);
-VARIABLE_STRING(gi_path_hticsw,   NULL, UL);
-VARIABLE_STRING(gi_path_hticreg,  NULL, UL);
-VARIABLE_STRING(gi_path_sosr,     NULL, UL);
-VARIABLE_STRING(gi_path_fdoom,    NULL, UL);
-VARIABLE_STRING(gi_path_fdoomu,   NULL, UL);
-VARIABLE_STRING(gi_path_freedm,   NULL, UL);
+VARIABLE_STRING(gi_path_doomsw,   nullptr, UL);
+VARIABLE_STRING(gi_path_doomreg,  nullptr, UL);
+VARIABLE_STRING(gi_path_doomu,    nullptr, UL);
+VARIABLE_STRING(gi_path_doom2,    nullptr, UL);
+VARIABLE_STRING(gi_path_bfgdoom2, nullptr, UL);
+VARIABLE_STRING(gi_path_tnt,      nullptr, UL);
+VARIABLE_STRING(gi_path_plut,     nullptr, UL);
+VARIABLE_STRING(gi_path_hacx,     nullptr, UL);
+VARIABLE_STRING(gi_path_hticsw,   nullptr, UL);
+VARIABLE_STRING(gi_path_hticreg,  nullptr, UL);
+VARIABLE_STRING(gi_path_sosr,     nullptr, UL);
+VARIABLE_STRING(gi_path_fdoom,    nullptr, UL);
+VARIABLE_STRING(gi_path_fdoomu,   nullptr, UL);
+VARIABLE_STRING(gi_path_freedm,   nullptr, UL);
 
-VARIABLE_STRING(w_masterlevelsdirname, NULL, UL);
-VARIABLE_STRING(w_norestpath,          NULL, UL);
+VARIABLE_STRING(w_masterlevelsdirname, nullptr, UL);
+VARIABLE_STRING(w_norestpath,          nullptr, UL);
 
 static bool G_TestIWADPath(char *path)
 {
@@ -612,7 +611,7 @@ CONSOLE_VARIABLE(w_norestpath, w_norestpath, cf_allowblank)
    G_TestIWADPath(w_norestpath);
 }
 
-VARIABLE_BOOLEAN(use_doom_config, NULL, yesno);
+VARIABLE_BOOLEAN(use_doom_config, nullptr, yesno);
 CONSOLE_VARIABLE(use_doom_config, use_doom_config, 0) {}
 
 CONSOLE_COMMAND(spectate_prev, 0)
@@ -679,11 +678,11 @@ void G_AddChatMacros()
       // create the variable first
       variable = estructalloc(variable_t, 1);
       variable->variable  = &chat_macros[i];
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_string;      // string value
       variable->min       = 0;
       variable->max       = 128;
-      variable->defines   = NULL;
+      variable->defines   = nullptr;
 
       // now the command
       command = estructalloc(command_t, 1);
@@ -693,7 +692,7 @@ void G_AddChatMacros()
       command->type     = ct_variable;
       command->flags    = 0;
       command->variable = variable;
-      command->handler  = NULL;
+      command->handler  = nullptr;
       command->netcmd   = 0;
 
       C_AddCommand(command); // hook into cmdlist
@@ -741,11 +740,11 @@ void G_AddAutoloadFiles()
       // create the variable first
       variable = estructalloc(variable_t, 1);
       variable->variable  = autoload_ptrs[i];
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_string;
       variable->min       = 0;
       variable->max       = 1024;
-      variable->defines   = NULL;
+      variable->defines   = nullptr;
 
       // now the command
       command = estructalloc(command_t, 1);
@@ -753,7 +752,7 @@ void G_AddAutoloadFiles()
       command->type     = ct_variable;
       command->flags    = cf_allowblank;
       command->variable = variable;
-      command->handler  = NULL;
+      command->handler  = nullptr;
       command->netcmd   = 0;
 
       C_AddCommand(command); // hook into cmdlist
@@ -836,7 +835,7 @@ void G_AddCompat()
          break;
       default:
          command->flags   = cf_server | cf_netvar;
-         command->handler = NULL;
+         command->handler = nullptr;
          break;
       }
 

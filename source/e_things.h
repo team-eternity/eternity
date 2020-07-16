@@ -87,6 +87,8 @@ int E_GetThingNumForName(const char *name);    //   fatal error version
 int E_SafeThingName(const char *name);         //   fallback version
 int E_ThingNumForCompatName(const char *name); //   ACS compat version
 
+void E_SetDropItem(mobjinfo_t *mi, const int itemnum);
+
 // setup default gibhealth
 void E_ThingDefaultGibHealth(mobjinfo_t *mi);
 

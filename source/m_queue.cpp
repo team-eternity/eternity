@@ -35,7 +35,7 @@
 //
 void M_QueueInit(mqueue_t *queue)
 {
-   queue->head.next = NULL;
+   queue->head.next = nullptr;
    queue->tail = &(queue->head);
    queue->rover = &(queue->head);
    queue->size = 0;
@@ -51,8 +51,8 @@ void M_QueueInsert(mqueueitem_t *item, mqueue_t *queue)
    // link in at the tail (this works even for the first node!)
    queue->tail = queue->tail->next = item;
 
-   // [CG] Ensure the tail's ->next member is NULL.
-   queue->tail->next = NULL;
+   // [CG] Ensure the tail's ->next member is nullptr.
+   queue->tail->next = nullptr;
 
    // [CG] Update the queue's size.
    queue->size++;
@@ -65,7 +65,7 @@ void M_QueueInsert(mqueueitem_t *item, mqueue_t *queue)
 //
 bool M_QueueIsEmpty(mqueue_t *queue)
 {
-   if(queue->head.next == NULL)
+   if(queue->head.next == nullptr)
       return true;
 
    return false;
@@ -81,7 +81,7 @@ mqueueitem_t* M_QueuePop(mqueue_t *queue)
    mqueueitem_t *item;
 
    if(M_QueueIsEmpty(queue))
-      return NULL;
+      return nullptr;
 
    item = queue->head.next;
    queue->head.next = item->next;
@@ -99,13 +99,13 @@ mqueueitem_t* M_QueuePop(mqueue_t *queue)
 // M_QueueIterator
 //
 // Returns the next item in the queue each time it is called,
-// or NULL once the end is reached. The iterator can be reset
+// or nullptr once the end is reached. The iterator can be reset
 // using M_QueueResetIterator.
 //
 mqueueitem_t* M_QueueIterator(mqueue_t *queue)
 {
-   if(queue->rover == NULL)
-      return NULL;
+   if(queue->rover == nullptr)
+      return nullptr;
       
    return (queue->rover = queue->rover->next);
 }

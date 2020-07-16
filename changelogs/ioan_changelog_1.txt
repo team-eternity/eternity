@@ -8,6 +8,69 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+19.06.2020
+
+IMPROVEMENT: Plane portals can now render sloped visplanes, with the slope
+             copied from the source sector. Note that horizon portals still lack
+             this feature, due to how they were designed.
+
+--------------------------------------------------------------------------------
+13.06.2020
+
+BUGFIX: Fixed the FLIES thingtype particlefx from sounding badly.
+
+--------------------------------------------------------------------------------
+25.05.2020
+
+BUGFIX: Fixed an occasional crash happening when starting maps with things with
+        negative doomednums.
+
+--------------------------------------------------------------------------------
+3.05.2020
+
+BUGFIX: Odd-duration frames now restore correctly when returning to nightmare
+        mode to normal.
+
+        Fixed the CLIPMIDTEX linedef flag not working over portals.
+
+--------------------------------------------------------------------------------
+26.04.2020
+
+FEATURE: New console command: warp, which, like in ZDoom, teleports player to
+         given coordinates.
+
+--------------------------------------------------------------------------------
+23.04.2020
+
+BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
+        called from ACS, and crashing when such a script is triggered from the
+        console.
+        
+        Fixed a crash happening when entering a sector with an invalid colormap
+        specified in the UDMF editor or ExtraData.
+
+--------------------------------------------------------------------------------
+5.04.2020
+
+FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
+         is used to set the misc1 and misc2 flags, which are also capable of
+         setting weapon coordinates.
+         
+         Eternity is also capable of interpolation when using offset(). By
+         default it's disabled, but you can enable it by using the "interpolate"
+         specifier as a third argument, for example: offset(1, 32, interpolate).
+         When inheriting via the Decorate syntax and reapplying offset(),
+         interpolation will be disabled again unless you specify it again.
+         
+         For the standard "frame" EDF section, you can use the +|-interpolate 
+         specifier to add or remove the flag.
+
+         Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
+         for DOOM (solely for Dehacked and past EDF mod compatibility) and
+         enables the less intuitive DOOM rule on when offsets have effect.
+         Otherwise the better Hexen rule applies.
+
+--------------------------------------------------------------------------------
 27.03.2020
 
 IMPROVEMENT: Added damagefactor.remove and cleardamagefactors to thingtype and

@@ -333,7 +333,7 @@ weaponinfo PhoenixRodPowered : PhoenixRod
     PHNX C 1 bright A_FirePhoenixPL2
     PHNX B 4 A_ReFire
   Powerdown:
-    PHNX B 4 A_ShutdownPhoenixPL2
+    PHNX B 4 A_SubtractAmmo
     goto Ready
   "@
 }

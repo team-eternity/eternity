@@ -340,7 +340,7 @@ pickupeffect WeaponChainsaw
 }
 pickupeffect WeaponRocketLauncher
 {
-  effects GiverMissileLauncher
+  effects GiverRocketLauncher
   message $GOTLAUNCHER
   sound   wpnup
 

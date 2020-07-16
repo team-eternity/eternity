@@ -67,8 +67,8 @@ static void P_spawnGlitter(Mobj *actor, int type)
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
-   Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
-      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y,
+      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.height, type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -114,7 +114,7 @@ void A_AccelGlitter(actionargs_t *actionargs)
 void A_InitKeyGizmo(actionargs_t *actionargs)
 {
    Mobj *gizmo = actionargs->actor;
-   const char *stateName = NULL;
+   const char *stateName = nullptr;
 
    if(gizmo->type == E_ThingNumForName("KeyGizmoBlue"))
       stateName = "Blue";
@@ -512,32 +512,32 @@ void A_SorcererRise(actionargs_t *actionargs)
 
 void A_SorZap(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sorzap);
+   S_StartSound(nullptr, sfx_sorzap);
 }
 
 void A_SorRise(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sorrise);
+   S_StartSound(nullptr, sfx_sorrise);
 }
 
 void A_SorDSph(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sordsph);
+   S_StartSound(nullptr, sfx_sordsph);
 }
 
 void A_SorDExp(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sordexp);
+   S_StartSound(nullptr, sfx_sordexp);
 }
 
 void A_SorDBon(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sordbon);
+   S_StartSound(nullptr, sfx_sordbon);
 }
 
 void A_SorSightSnd(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sorsit);
+   S_StartSound(nullptr, sfx_sorsit);
 }
 
 //=============================================================================
@@ -666,8 +666,8 @@ void A_GenWizard(actionargs_t *actionargs)
    // ioanch 20160116: portal aware
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
       (mo->z >
-      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
+      (P_ExtremeSectorAtPoint(mo, surf_ceil)->srf.ceiling.height - mo->height)) ||
+      (mo->z < P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height))
    {
       // doesn't fit, so remove it immediately
       mo->remove();
@@ -770,12 +770,12 @@ void A_HticExplode(actionargs_t *actionargs)
    E_ExplosionHitWater(actor, damage);
 }
 
-typedef struct boss_spec_htic_s
+struct boss_spec_htic_t
 {
    unsigned int thing_flag;
    unsigned int level_flag;
    int flagfield;
-} boss_spec_htic_t;
+};
 
 #define NUM_HBOSS_SPECS 5
 
@@ -1209,7 +1209,7 @@ void A_MinotaurAtk1(actionargs_t *actionargs)
    
       // if target is player, make the viewheight go down
       player_t *player = actor->target->player;
-      if(player != NULL)
+      if(player != nullptr)
          player->deltaviewheight = -16*FRACUNIT;
    }
 }
@@ -1376,7 +1376,7 @@ void A_MinotaurAtk3(actionargs_t *actionargs)
 
       // if target is player, decrease viewheight
       player_t *player = actor->target->player;
-      if(player != NULL)
+      if(player != nullptr)
          player->deltaviewheight = -16*FRACUNIT;
    }
    else
@@ -1595,7 +1595,7 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
        actor->tracer->health < 0))
    {
       Mobj *originator = actor->target;
-      Mobj *origtarget = originator ? originator->target : NULL;
+      Mobj *origtarget = originator ? originator->target : nullptr;
 
       // See if the Lich has a new target; if so, maybe chase it now.
       // This keeps the tornado from sitting around uselessly.

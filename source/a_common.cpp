@@ -92,7 +92,7 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
       
       // haleyjd: generalize to all bosses
       if(actor->flags2 & MF2_BOSS)
-         emitter = NULL;
+         emitter = nullptr;
 
       S_StartSound(emitter, sound);
    }
@@ -216,7 +216,7 @@ static void P_MakeActiveSound(Mobj *actor)
 
       // haleyjd: some heretic enemies snort at full volume :)
       if(actor->flags3 & MF3_LOUDACTIVE)
-         actor = NULL;
+         actor = nullptr;
 
       S_StartSound(actor, sound);
    }
@@ -547,7 +547,7 @@ void A_Scream(actionargs_t *actionargs)
    // Check for bosses.
    // haleyjd: generalize to all bosses
    if(actor->flags2 & MF2_BOSS)
-      S_StartSound(NULL, sound); // full volume
+      S_StartSound(nullptr, sound); // full volume
    else
       S_StartSound(actor, sound);
 }
@@ -645,7 +645,7 @@ void A_PlayerSkull(actionargs_t *actionargs)
 
    // clear old body of player
    actor->flags &= ~MF_SOLID;
-   actor->player = NULL;
+   actor->player = nullptr;
 
    // fiddle with player properties
    if(head->player)
@@ -697,7 +697,7 @@ void A_Die(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    actor->flags2 &= ~MF2_INVULNERABLE;  // haleyjd: just in case
-   P_DamageMobj(actor, NULL, NULL, actor->health, MOD_UNKNOWN);
+   P_DamageMobj(actor, nullptr, nullptr, actor->health, MOD_UNKNOWN);
 }
 
 //

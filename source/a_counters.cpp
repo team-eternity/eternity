@@ -1045,7 +1045,8 @@ void A_WeaponSetCtr(actionargs_t *actionargs)
       *counter = P_Random(pr_weapsetctr); break;
    case CPOP_RNDMOD:
       if(value > 0)
-         *counter = P_Random(pr_weapsetctr) % value; break;
+         *counter = P_Random(pr_weapsetctr) % value;
+      break;
    case CPOP_SHIFTLEFT:
       *counter <<= value; break;
    case CPOP_SHIFTRIGHT:
@@ -1327,6 +1328,74 @@ void A_CheckReloadEx(actionargs_t *actionargs)
 
    if(branch)
       P_SetPsprite(player, psprnum, statenum);
+}
+
+static const char *kwds_CPSetOrAdd[] =
+{
+   "assign", //  0
+   "add",    //  1
+};
+
+static argkeywd_t cpsetoradd =
+{
+   kwds_CPSetOrAdd, earrlen(kwds_CPSetOrAdd)
+};
+
+static const char *kwds_CPRollTypes[] =
+{
+   "multiplyone", //  0
+   "rollmany",    //  1
+};
+
+static argkeywd_t cprolltypes =
+{
+   kwds_CPRollTypes, earrlen(kwds_CPRollTypes)
+};
+
+//
+// Performs a TTRPG-style damage dice calculation
+//
+// args[0] : counter # to set
+// args[1] : multipler of dice outcome, or # of dice to roll
+// args[2] : # of sides each die has
+// args[3] : static damage to add
+// args[4] : whether or not the counter's value is set to or added by the calc's outcome
+// args[5] : type of damage calculation (multiply one roll or roll many times)
+//
+void A_CounterDiceRoll(actionargs_t *actionargs)
+{
+   Mobj      *mo   = actionargs->actor;
+   arglist_t *args = actionargs->args;
+
+   const int cnum         = E_ArgAsInt(args, 0, 0);
+   const int numdice      = E_ArgAsInt(args, 1, 0);
+   const int numdicesides = E_ArgAsInt(args, 2, 0);
+   const int staticdamage = E_ArgAsInt(args, 3, 0);
+   const int adddamage    = E_ArgAsKwd(args, 4, &cpsetoradd,  0);
+   const int type         = E_ArgAsKwd(args, 5, &cprolltypes, 0);
+
+   if(cnum < 0 || cnum >= NUMMOBJCOUNTERS || numdicesides <= 0)
+      return; // invalid
+
+   int &counter = mo->counters[cnum];
+
+   int val = 0;
+   if(type == 0)
+      val = ((P_Random(pr_setcounter) % numdicesides) + 1) * numdice;
+   else if(type == 1)
+   {
+      if(numdice < 0)
+         return;
+
+      for(int i = 0; i < numdice; i++)
+         val += (P_Random(pr_setcounter) % numdicesides) + 1;
+   }
+   val += staticdamage;
+
+   if(adddamage == 0)
+      counter = val;
+   else if(adddamage == 1)
+      counter += val;
 }
 
 // EOF

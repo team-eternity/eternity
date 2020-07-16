@@ -175,7 +175,8 @@ static dehflags_t gmi_flags[] =
    { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
    { "CHEATSOUND",     GIF_CHEATSOUND     },
    { "CHASEFAST",      GIF_CHASEFAST      },
-   { NULL,             0                  }
+   { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
+   { nullptr,          0                  }
 };
 
 static dehflagset_t gmi_flagset =
@@ -196,7 +197,7 @@ static dehflags_t mission_flags[] =
    { "NOGDHIGH",       MI_NOGDHIGH       },
    { "ALLOWEXITTAG",   MI_ALLOWEXITTAG   },
    { "ALLOWSECRETTAG", MI_ALLOWSECRETTAG },
-   { NULL,             0                 }
+   { nullptr,          0                 }
 };
 
 static dehflagset_t mission_flagset =

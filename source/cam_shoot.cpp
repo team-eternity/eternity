@@ -124,7 +124,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    fixed_t z = state.z + FixedMul(params.aimslope,
                                   FixedMul(infrac, params.attackrange));
 
-   if(sidesector->c_pflags & PS_PASSABLE)
+   if(sidesector->srf.ceiling.pflags & PS_PASSABLE)
    {
       // ceiling portal
       fixed_t planez = P_CeilingPortalZ(*sidesector);
@@ -134,10 +134,10 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
          portaldata = R_CPLink(sidesector);
-         newfromid = sidesector->c_portal->data.link.toid;
+         newfromid = sidesector->srf.ceiling.portal->data.link.toid;
       }
    }
-   if(!portaldata && sidesector->f_pflags & PS_PASSABLE)
+   if(!portaldata && sidesector->srf.floor.pflags & PS_PASSABLE)
    {
       // floor portal
       fixed_t planez = P_FloorPortalZ(*sidesector);
@@ -147,7 +147,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
          absratio = FixedDiv(planez - state.z, z - state.z);
          z = planez;
          portaldata = R_FPLink(sidesector);
-         newfromid = sidesector->f_portal->data.link.toid;
+         newfromid = sidesector->srf.floor.portal->data.link.toid;
       }
    }
    if(portaldata && pfrac > 0)
@@ -236,7 +236,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 
       // ioanch 20160101: use the trace origin instead of assuming it being the
       // same as the source thing origin, as it happens in PTR_ShootTraverse
-      int lineside = P_PointOnLineSide(trace.x, trace.y, li);
+      int lineside = P_PointOnLineSidePrecise(trace.x, trace.y, li);
 
       fixed_t dist = FixedMul(context.params.attackrange, in->frac);
       if(context.shotCheck2SLine(li, lineside, dist))
@@ -244,22 +244,22 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;
          if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-            li->backsector->f_pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->floorheight - context.state.z, dist)
+            li->backsector->srf.floor.pflags & PS_PASSABLE &&
+            FixedDiv(li->backsector->srf.floor.height - context.state.z, dist)
             >= context.params.aimslope)
          {
-            portal = li->backsector->f_portal;
+            portal = li->backsector->srf.floor.portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
-            li->backsector->c_pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->ceilingheight - context.state.z, dist)
+            li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
+            FixedDiv(li->backsector->srf.ceiling.height - context.state.z, dist)
             <= context.params.aimslope)
          {
-            portal = li->backsector->c_portal;
+            portal = li->backsector->srf.ceiling.portal;
          }
          else if(li->pflags & PS_PASSABLE &&
             (!(li->extflags & EX_ML_LOWERPORTAL) ||
-               FixedDiv(li->backsector->floorheight - context.state.z, dist)
+               FixedDiv(li->backsector->srf.floor.height - context.state.z, dist)
                < context.params.aimslope))
          {
             portal = li->portal;
@@ -327,12 +327,12 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(context.checkShootFlatPortal(sidesector, in->frac))
             return false;  // done here
 
-         if(z < sidesector->floorheight)
+         if(z < sidesector->srf.floor.height)
          {
-            fixed_t pfrac = FixedDiv(sidesector->floorheight
+            fixed_t pfrac = FixedDiv(sidesector->srf.floor.height
                - context.state.z, context.params.aimslope);
 
-            if(R_IsSkyFlat(sidesector->floorpic) ||
+            if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
                R_IsSkyLikePortalFloor(*sidesector))
             {
                return false;
@@ -340,14 +340,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 
             x = trace.x + FixedMul(context.cos, pfrac);
             y = trace.y + FixedMul(context.sin, pfrac);
-            z = sidesector->floorheight;
+            z = sidesector->srf.floor.height;
 
             hitplane = true;
             updown = 0;
          }
-         else if(z > sidesector->ceilingheight)
+         else if(z > sidesector->srf.ceiling.height)
          {
-            fixed_t pfrac = FixedDiv(sidesector->ceilingheight
+            fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height
                - context.state.z, context.params.aimslope);
             if(sidesector->intflags & SIF_SKY ||
                R_IsSkyLikePortalCeiling(*sidesector))
@@ -356,7 +356,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             }
             x = trace.x + FixedMul(context.cos, pfrac);
             y = trace.y + FixedMul(context.sin, pfrac);
-            z = sidesector->ceilingheight;
+            z = sidesector->srf.ceiling.height;
 
             hitplane = true;
             updown = 1;
@@ -366,25 +366,25 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(!hitplane && li->special)
          P_ShootSpecialLine(context.params.thing, li, lineside);
 
-      if(R_IsSkyFlat(li->frontsector->ceilingpic) || li->frontsector->c_portal)
+      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
       {
-         if(z > li->frontsector->ceilingheight)
+         if(z > li->frontsector->srf.ceiling.height)
             return false;
-         if(li->backsector && R_IsSkyFlat(li->backsector->ceilingpic))
+         if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
          {
-            if(li->backsector->ceilingheight < z)
+            if(li->backsector->srf.ceiling.height < z)
                return false;
          }
       }
 
       if(demo_version >= 342 && li->backsector &&
          ((li->extflags & EX_ML_UPPERPORTAL &&
-            li->backsector->ceilingheight < li->frontsector->ceilingheight &&
-            li->backsector->ceilingheight < z &&
+            li->backsector->srf.ceiling.height < li->frontsector->srf.ceiling.height &&
+            li->backsector->srf.ceiling.height < z &&
             R_IsSkyLikePortalCeiling(*li->backsector)) ||
             (li->extflags & EX_ML_LOWERPORTAL &&
-               li->backsector->floorheight > li->frontsector->floorheight &&
-               li->backsector->floorheight > z &&
+               li->backsector->srf.floor.height > li->frontsector->srf.floor.height &&
+               li->backsector->srf.floor.height > z &&
                R_IsSkyLikePortalFloor(*li->backsector))))
       {
          return false;

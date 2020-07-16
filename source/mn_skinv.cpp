@@ -75,7 +75,7 @@ enum
 
 // static state variables
 
-static state_t *skview_state     = NULL;
+static state_t *skview_state     = nullptr;
 static int      skview_tics      = 0;
 static int      skview_action    = SKV_WALKING;
 static int      skview_rot       = 0;
@@ -90,7 +90,7 @@ static statenum_t skview_atkstate2;
 
 // haleyjd 01/22/12: for special death states
 static PODCollection<MetaState *> skview_metadeaths;
-static MetaState *skview_metadeath = NULL;
+static MetaState *skview_metadeath = nullptr;
 
 extern void A_PlaySoundEx(actionargs_t *);
 extern void A_Pain(actionargs_t *);
@@ -372,7 +372,7 @@ static void MN_SkinDrawer()
    patch_t *patch;
    int pctype;
    int lighttouse;
-   byte *translate = NULL;
+   byte *translate = nullptr;
 
    // draw the normal menu background
    V_DrawBackground(mn_background_flat, &vbscreen);
@@ -451,7 +451,7 @@ static void MN_initMetaDeaths()
 {
    playerclass_t *pclass = players[consoleplayer].pclass;
    MetaTable     *meta   = mobjinfo[pclass->type]->meta;
-   MetaState     *state  = NULL;
+   MetaState     *state  = nullptr;
 
    skview_metadeaths.clear();
 

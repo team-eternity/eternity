@@ -27,7 +27,7 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-struct polyobj_s;
+struct polyobj_t;
 
 extern bool useportalgroups;
 
@@ -35,7 +35,7 @@ extern bool useportalgroups;
 extern bool gMapHasSectorPortals;
 extern bool gMapHasLinePortals;  // ioanch 20160131: also check line portals
 extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
-extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
+extern const polyobj_t **gGroupPolyobject; // ioanch 20160227
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
@@ -182,7 +182,7 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
 void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
-                        fixed_t dy, bool setpolyref, const polyobj_s *po);
+                        fixed_t dy, bool setpolyref, const polyobj_t *po);
 void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
                            bool (*func)(int groupid, void *context), void *context);
 

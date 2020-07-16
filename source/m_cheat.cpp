@@ -34,6 +34,7 @@
 #include "z_zone.h"
 
 #include "a_args.h"
+#include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -57,6 +58,8 @@
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_data.h"
+#include "r_defs.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_levels.h"
@@ -132,7 +135,7 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 //
 // The first argument is the cheat code.
 //
-// The second argument is its DEH name, or NULL if it's not supported by -deh.
+// The second argument is its DEH name, or nullptr if it's not supported by -deh.
 //
 // The third argument is a combination of the bitmasks:
 // { always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh },
@@ -220,7 +223,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "stat", -1, always, cheat_printstats, 0 },
 #endif
 
-   { NULL, -1, 0, NULL, 0 } // end-of-list marker
+   { nullptr, -1, 0, nullptr, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -536,7 +539,7 @@ static void cheat_keyx(const void *arg)
 static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
-   const char *msg = NULL;
+   const char *msg = nullptr;
 
    if(key >= GameModeInfo->numHUDKeys)
       return;
@@ -737,7 +740,7 @@ static void cheat_htickill(const void *arg)
 //
 static void cheat_hticiddqd(const void *arg)
 {
-   P_DamageMobj(plyr->mo, NULL, plyr->mo, 10000, MOD_UNKNOWN);
+   P_DamageMobj(plyr->mo, nullptr, plyr->mo, 10000, MOD_UNKNOWN);
    player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
 }
 
@@ -1136,7 +1139,7 @@ static int M_NukeMonsters()
             if(mo->health > 0)
             {
                killcount++;
-               P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, 10000, MOD_UNKNOWN);
             }
 
             // haleyjd: made behavior customizable
@@ -1146,8 +1149,8 @@ static int M_NukeMonsters()
 
                actionargs.actiontype = actionargs_t::MOBJFRAME;
                actionargs.actor      = mo;
-               actionargs.args       = NULL;
-               actionargs.pspr       = NULL;
+               actionargs.args       = nullptr;
+               actionargs.pspr       = nullptr;
 
                mi->nukespec(&actionargs);
             }
@@ -1191,6 +1194,44 @@ CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)
 {
    cheat_k(nullptr);
+}
+
+//
+// Teleports player to coordinates
+//
+// warp <x> <y>
+//
+CONSOLE_COMMAND(warp, cf_notnet | cf_level)
+{
+   if(!plyr->mo)
+      return;
+   if(Console.argc <= 1)
+   {
+      C_Printf("Usage: warp x y\nTeleports player to given coordinates.\n"
+               "Position: %d %d %d a=%d\n", plyr->mo->x / FRACUNIT, plyr->mo->y / FRACUNIT,
+               plyr->mo->z / FRACUNIT, plyr->mo->angle / ANGLE_1);
+      return;
+   }
+   char *endptr;
+   fixed_t x = static_cast<fixed_t>(Console.argv[0]->toLong(&endptr, 0)) << FRACBITS;
+   // Don't teleport player to 0 in case of bad input
+   if(*endptr) 
+   {
+      C_Puts("Wrong x argument.");
+      return;
+   }
+   fixed_t y = static_cast<fixed_t>(Console.argv[1]->toLong(&endptr, 0)) << FRACBITS;
+   if(*endptr)
+   {
+      C_Puts("Wrong y argument.");
+      return;
+   }
+
+   const sector_t *sector = R_PointInSubsector(x, y)->sector;
+   fixed_t z = sector->srf.ceiling.height / 2 + sector->srf.floor.height / 2 - plyr->mo->height / 2;
+
+   P_TeleportMove(plyr->mo, x, y, false);
+   plyr->mo->z = z;
 }
 
 //----------------------------------------------------------------------------

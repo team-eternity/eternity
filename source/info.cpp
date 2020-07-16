@@ -42,10 +42,10 @@
 // Sprite names
 // ********************************************************************
 // This is the list of sprite 4-character prefixes.  They are searched
-// through, with a NULL entry terminating the list.  In DOOM originally
-// this NULL entry was missing, and coincidentally the next thing in
+// through, with a nullptr entry terminating the list.  In DOOM originally
+// this nullptr entry was missing, and coincidentally the next thing in
 // memory was the dummy state_t[] entry that started with zero bytes.
-// killough 1/17/98: add an explicit NULL entry.
+// killough 1/17/98: add an explicit nullptr entry.
 // NUMSPRITES is an enum from info.h where all these are listed
 // as SPR_xxxx
 
@@ -85,7 +85,7 @@ int NUMSPRITES = 0;
 
 // haleyjd: made dynamic via EDF
 // haleyjd 6/18/09: made into pointer-to-pointer
-state_t **states = NULL;
+state_t **states = nullptr;
 int NUMSTATES = 0;
 
 
@@ -115,7 +115,7 @@ int NUMSTATES = 0;
 
 // haleyjd: made dynamic via EDF
 // haleyjd 11/03/11: made into pointer-to-pointer
-mobjinfo_t **mobjinfo = NULL;
+mobjinfo_t **mobjinfo = nullptr;
 int NUMMOBJTYPES = 0;
 
 

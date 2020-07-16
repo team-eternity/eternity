@@ -1165,8 +1165,8 @@ PARAMLINE(ACSScrollCeiling);
 // additions (many of which conflict with BOOM extensions).
 //
 
-#define LINESPEC(number, action)            { number, &action, NULL },
-#define LINESPECNAMED(number, action, name) { number, &action, name },
+#define LINESPEC(number, action)            { number, &action, nullptr },
+#define LINESPECNAMED(number, action, name) { number, &action, name    },
 
 // DOOM Bindings
 ev_binding_t DOOMBindings[] =
