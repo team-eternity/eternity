@@ -243,7 +243,7 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                 if (db[0].items[bytele->ss - first].visit != db[0].validcount)
                 {
                     db[0].items[bytele->ss - first].visit = db[0].validcount;
-                   I_Assert(back - db[0].ssqueue < db[0].sscount,
+                   I_Assert(back - db[0].ssqueue < (ptrdiff_t)db[0].sscount,
                             "Back sscoount tele error: %d >= %u!\n", eindex(back - db[0].ssqueue),
                             db[0].sscount);
                     *back++ = bytele->ss;
@@ -253,7 +253,7 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
                 && m_map->canPass(*t, *neigh.otherss, m_player->mo->height))
             {
                 db[0].items[neigh.otherss - first].visit = db[0].validcount;
-               I_Assert(back - db[0].ssqueue < db[0].sscount, "Back sscoount error: %d >= %u!\n",
+               I_Assert(back - db[0].ssqueue < (ptrdiff_t)db[0].sscount, "Back sscoount error: %d >= %u!\n",
                         eindex(back - db[0].ssqueue), db[0].sscount);
                 *back++ = neigh.otherss;
             }
