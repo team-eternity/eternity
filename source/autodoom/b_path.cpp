@@ -227,7 +227,7 @@ bool PathFinder::AvailableGoals(const BSubsec& source,
     const TeleItem* bytele;
     while (front < back)
     {
-       I_Assert(front - db[0].ssqueue < db[0].sscount, "Front sscoount error: %d >= %u!\n",
+       I_Assert(front - db[0].ssqueue < (ptrdiff_t)db[0].sscount, "Front sscoount error: %d >= %u!\n",
                 eindex(front - db[0].ssqueue), db[0].sscount);
         t = *front++;
         res = isGoal(*t, parm);

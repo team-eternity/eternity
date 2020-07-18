@@ -89,7 +89,7 @@ static bool g_useRealHeights;
 static fixed_t applyDoorCorrection(const sector_t& sector)
 {
    if(g_useRealHeights)
-      return sector.ceilingheight;
+      return sector.srf.ceiling.height;
    
    
    size_t secnum = &sector - ::sectors;
@@ -105,36 +105,36 @@ static fixed_t applyDoorCorrection(const sector_t& sector)
          return P_FindLowestCeilingSurrounding(&sector) - 4 * FRACUNIT;
    }
    
-    const VerticalDoorThinker* vdt = thinker_cast<const VerticalDoorThinker*>(sector.ceilingdata);
+    const VerticalDoorThinker* vdt = thinker_cast<const VerticalDoorThinker*>(sector.srf.ceiling.data);
     if (vdt && vdt->direction == 1)
         return vdt->topheight;
 
-    const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
+    const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.srf.ceiling.data);
     if (ct && !ct->inStasis && ct->speed > 0 && (ct->direction == 1 || ct->crush))
         return ct->topheight;
     
-    const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.ceilingdata);
+    const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.srf.ceiling.data);
     if (et && et->speed > 0)
         return et->ceilingdestheight;
 
-    return sector.ceilingheight;
+    return sector.srf.ceiling.height;
 }
 
 // Very special treatment needed for plats
 static fixed_t applyLiftCorrection(const sector_t& sector)
 {
-   const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.floordata);
+   const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.srf.floor.data);
    if(pt && pt->speed > 0 && pt->status == PlatThinker::down)
    {
       return pt->high;  // will alternate with the pt->low on applyFloorCorr
    }
    
-   return sector.floorheight;
+   return sector.srf.floor.height;
 }
 
 static fixed_t applyFloorCorrection(const sector_t& sector)
 {
-    const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.floordata);
+    const PlatThinker* pt = thinker_cast<const PlatThinker*>(sector.srf.floor.data);
     if (pt && pt->speed > 0 && pt->status != PlatThinker::in_stasis)
     {
         switch (pt->status)
@@ -149,17 +149,17 @@ static fixed_t applyFloorCorrection(const sector_t& sector)
         }
     }
 
-    const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.floordata);
+    const ElevatorThinker* et = thinker_cast<const ElevatorThinker*>(sector.srf.floor.data);
     if (et && et->speed > 0)
         return et->floordestheight;
 
-    const FloorMoveThinker* fmt = thinker_cast<const FloorMoveThinker*>(sector.floordata);
+    const FloorMoveThinker* fmt = thinker_cast<const FloorMoveThinker*>(sector.srf.floor.data);
     if (fmt && fmt->speed > 0)
         return fmt->floordestheight;
 
 
 
-    return sector.floorheight;
+    return sector.srf.floor.height;
 }
 
 class SectorHeightStack
@@ -342,15 +342,13 @@ static fixed_t getMinTextureSize(const sector_t& sector);
 
 static bool doorBusy(const sector_t& sector)
 {
-    auto secThinker = thinker_cast<SectorThinker *>(sector.ceilingdata);
+    auto secThinker = thinker_cast<SectorThinker *>(sector.srf.ceiling.data);
 
     // exactly only one at most of these pointers is valid during demo_compatibility
     if (demo_compatibility)
     {
         if (!secThinker)
-            secThinker = thinker_cast<SectorThinker *>(sector.floordata);
-        if (!secThinker)
-            secThinker = thinker_cast<SectorThinker *>(sector.lightingdata);
+            secThinker = thinker_cast<SectorThinker *>(sector.srf.floor.data);
     }
 
     return secThinker != nullptr;
@@ -388,7 +386,7 @@ static void B_applyShortestTexture(SectorStateEntry &sae, const sector_t &sector
 //
 static bool B_handleCrusher(const sector_t &sector, SectorStateEntry &sae)
 {
-   const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.ceilingdata);
+   const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(sector.srf.ceiling.data);
    if (ct && ct->inStasis)
    {
       sae.ceilingHeight = ct->topheight;
@@ -1129,7 +1127,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
    {
       if(floorBlocked)
       {
-         const PlatThinker *pt = thinker_cast<PlatThinker *>(sector.floordata);
+         const PlatThinker *pt = thinker_cast<PlatThinker *>(sector.srf.floor.data);
          if(pt && pt->type == toggleUpDn &&
             pt->status == PlatThinker::in_stasis)
          {
@@ -1139,7 +1137,7 @@ static void B_pushSectorHeights(int secnum, const line_t& line,
          else
             return;
       }
-      sae.floorHeight = sector.ceilingheight;
+      sae.floorHeight = sector.srf.ceiling.height;
       sae.floorTerminal = true;
    }
    else if(func == EV_ActionFloorRaiseToNearest || func == EV_ActionRaiseFloorTurbo ||
@@ -1683,7 +1681,7 @@ static bool B_fillInStairs(const sector_t* sector, SectorStateEntry& sae,
          if(tsec != sector || !(sector->lines[i]->flags & ML_TWOSIDED))
             continue;
          tsec = sector->lines[i]->backsector;
-         if(!tsec || tsec->floorpic != sector->floorpic)
+         if(!tsec || tsec->srf.floor.pic != sector->srf.floor.pic)
             continue;
          if(comp[comp_stairs] || demo_version == 203)
             height += stairIncrement;

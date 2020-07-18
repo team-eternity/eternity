@@ -453,7 +453,7 @@ struct sector_t
    //
    inline bool isShut() const
    {
-      return floorheight >= ceilingheight;
+      return srf.floor.height >= srf.ceiling.height;
    }
 };
 
