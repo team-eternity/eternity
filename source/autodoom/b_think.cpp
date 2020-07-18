@@ -428,10 +428,10 @@ static bool BTR_switchReachTraverse(const intercept_t *in, void *parm, const div
 
    // no special. Check if blocking.
    if(l.extflags & EX_ML_BLOCKALL || l.sidenum[1] == -1 ||
-      l.frontsector->floorheight >= l.frontsector->ceilingheight ||
-      l.backsector->floorheight >= l.backsector->ceilingheight ||
-      l.frontsector->floorheight >= l.backsector->ceilingheight ||
-      l.backsector->floorheight >= l.frontsector->ceilingheight)
+      l.frontsector->srf.floor.height >= l.frontsector->srf.ceiling.height ||
+      l.backsector->srf.floor.height >= l.backsector->srf.ceiling.height ||
+      l.frontsector->srf.floor.height >= l.backsector->srf.ceiling.height ||
+      l.backsector->srf.floor.height >= l.frontsector->srf.ceiling.height)
    {
       return false;
    }
@@ -475,7 +475,7 @@ bool Bot::checkGunSwitchReach(v2fixed_t point, const line_t &swline) const
    fixed_t z = CAM_getShootHeight(msector.getFloorHeight() + floorclip, *pl->mo->info);
 
    // FIXME: SSG reach, lookpitch reach
-   if(z < sector->floorheight || z > sector->ceilingheight)
+   if(z < sector->srf.floor.height || z > sector->srf.ceiling.height)
       return false;
 
    v2fixed_t mpos = v2fixed_t(*swline.v1) + v2fixed_t(swline.dx, swline.dy) / 2;
@@ -501,7 +501,8 @@ bool Bot::checkGunSwitchReach(v2fixed_t point, const line_t &swline) const
 
       int side = P_PointOnLineSide(context.point.x, context.point.y, &l);
       const sector_t *osector = side ? l.frontsector : l.backsector;
-      return osector && context.z >= osector->floorheight && context.z < osector->ceilingheight;
+      return osector && context.z >= osector->srf.floor.height &&
+         context.z < osector->srf.ceiling.height;
    });
 }
 
@@ -1321,7 +1322,7 @@ bool Bot::shouldWaitSector(const BNeigh &neigh) const
 
     if(nsector != msector)
     {
-        const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(nsector->ceilingdata);
+       const CeilingThinker* ct = thinker_cast<const CeilingThinker*>(nsector->srf.ceiling.data);
 
        // TODO: actually try to stop asap
         if(ct && ct->crush > 0 && ct->direction == plat_down)
@@ -1335,9 +1336,9 @@ bool Bot::shouldWaitSector(const BNeigh &neigh) const
 //
 static bool B_wantOpenDoor(const sector_t &sector)
 {
-   auto doorTh = thinker_cast<VerticalDoorThinker *>(sector.ceilingdata);
+   auto doorTh = thinker_cast<VerticalDoorThinker *>(sector.srf.ceiling.data);
    return (!doorTh &&
-           sector.ceilingheight < P_FindLowestCeilingSurrounding(&sector) - 4 * FRACUNIT) ||
+           sector.srf.ceiling.height < P_FindLowestCeilingSurrounding(&sector) - 4 * FRACUNIT) ||
    (doorTh && doorTh->direction == plat_down);
 }
 
@@ -1410,7 +1411,7 @@ void Bot::doNonCombatAI()
                 break;
 
            const PlatThinker* pt = thinker_cast<const PlatThinker*>
-                 (neigh->otherss->msector->getFloorSector()->floordata);
+            (neigh->otherss->msector->getFloorSector()->srf.floor.data);
 
              if(pt && pt->wait > 0)
              {
@@ -1595,7 +1596,7 @@ bool Bot::stepLedges(bool avoid, v2fixed_t npos)
    return movement &&
    !botMap->pathTraverse({ mpos, movement }, [this, mpos, avoid, npos](const BotMap::Line &line, const divline_t &dl, fixed_t frac) {
 
-        int s = P_PointOnDivlineSide(dl.v, divline_t::points(*line.v[0], *line.v[1]));
+      int s = P_PointOnDivlineSidePrecise(dl.v.x, dl.v.y, divline_t::points(*line.v[0], *line.v[1]));
 
         if(botMap->canPassNow(line.msec[s], line.msec[s ^ 1], pl->mo->height) &&
            !botMap->canPassNow(line.msec[s ^ 1], line.msec[s], pl->mo->height))

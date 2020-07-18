@@ -437,7 +437,7 @@ static void B_traceTriggerPoints(const line_t &line, fixed_t range, bool isgun, 
       intersect.v = dl.v + dl.dv.fixedmul(frac);
 
       divline_t wall = divline_t::points(*line.v[0], *line.v[1]);
-      int side = P_PointOnDivlineSide(dl.v, &wall);
+      int side = P_PointOnDivlineSide(dl.v.x, dl.v.y, &wall);
       if((line.msec[1] == botMap->nullMSec && side == 0) ||
          (line.msec[0] == botMap->nullMSec && side == 1))
       {

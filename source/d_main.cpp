@@ -1247,7 +1247,7 @@ static void D_StartupMessage()
         "the GNU General Public License. See the file \"COPYING\" for\n"
         "full details. Commercial sale or distribution of this product\n"
         "without its license, source code, and copyright notices is an\n"
-        "infringement of US and international copyright laws.\n\n", __DATE__ + 7);
+          "infringement of US and international copyright laws.\n\n", &__DATE__[7]);
 }
 
 //! ioanch 20160329: check for basic errors

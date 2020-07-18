@@ -1110,7 +1110,7 @@ static void FindDynamicSectors(bool* dynamicSectors)
                      continue;
 
                   sector2 = sector->lines[j]->backsector;
-                  if(!sector2 || sector2->floorpic != sector->floorpic || sector2 == sector ||
+                  if(!sector2 || sector2->srf.floor.pic != sector->srf.floor.pic || sector2 == sector ||
                      stairSectors.count(sector2))
                   {
                      continue;
@@ -1285,8 +1285,8 @@ void TempBotMap::obtainMetaSectors()
    scoll.reserve(numsectors);
    for (int i = 0; i < numsectors; ++i)
    {
-      uint64_t comboHeight = FLOORCEILING_HEIGHT(::sectors[i].floorheight,
-                                                 ::sectors[i].ceilingheight);
+      uint64_t comboHeight = FLOORCEILING_HEIGHT(::sectors[i].srf.floor.height,
+                                                 ::sectors[i].srf.ceiling.height);
       // TODO: the other specials may count too
       bool isStatic = !dynamicSectors[i] && !::sectors[i].damage;
       
@@ -1366,8 +1366,8 @@ void TempBotMap::obtainMetaSectors()
                   && !(rms.lineGen->flags & ML_BLOCKING))
                {
                   fixed_t deltaFloor, deltaCeiling;
-                  deltaFloor = front->floorheight - back->floorheight;
-                  deltaCeiling = front->ceilingheight - back->ceilingheight;
+                  deltaFloor = front->srf.floor.height - back->srf.floor.height;
+                  deltaCeiling = front->srf.ceiling.height - back->srf.ceiling.height;
 
                   // B inside A: DC <= 0, DF >= 0
                   // A inside B: DC >= 0, DF <= 0
@@ -1511,14 +1511,14 @@ void TempBotMap::obtainMetaSectors()
                            break;
                         }
                         
-                        if(sms->sector->floorheight > maxFloor)
+                        if(sms->sector->srf.floor.height > maxFloor)
                         {
-                           maxFloor = sms->sector->floorheight;
+                           maxFloor = sms->sector->srf.floor.height;
                            floorSms = sms;
                         }
-                        if(sms->sector->ceilingheight < minCeiling)
+                        if(sms->sector->srf.ceiling.height < minCeiling)
                         {
-                           minCeiling = sms->sector->ceilingheight;
+                           minCeiling = sms->sector->srf.ceiling.height;
                            ceilingSms = sms;
                         }
                      }

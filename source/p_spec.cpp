@@ -606,7 +606,7 @@ fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight, bool use
    {
       if((other = getNextSector(sec->lines[i],sec)))
       {
-         newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->sef.ceiling.height;
+         newHeight = useStates ? LevelStateStack::Ceiling(*other) : other->srf.ceiling.height;
          if(newHeight < currentheight)
          {
             int height = newHeight;
@@ -698,7 +698,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec, bool useAdvance)
             {
                int j;
 
-               for(j = 0; j < sec->c_asurfacecount; j++)
+               for(j = 0; j < sec->srf.ceiling.asurfacecount; j++)
                   if(sec->srf.ceiling.asurfaces[j].sector == other)
                      break;
                

@@ -60,7 +60,7 @@
 		4F5076BD2068B6AE000226F6 /* p_portalblockmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BB2068B6AE000226F6 /* p_portalblockmap.cpp */; };
 		4F5076C020754959000226F6 /* a_weaponsheretic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BE20754958000226F6 /* a_weaponsheretic.cpp */; };
 		4F5076C120754959000226F6 /* a_weaponsdoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */; };
-		4F5E98BF234534E900AB2810 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F5E98BE234534E900AB2810 /* CoreServices.framework */; };
+		4F531FB224C2F425005E0589 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4F531FB124C2F424005E0589 /* CoreServices.framework */; };
 		4F5F3878182D98A30027813A /* a_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB4158BF42800C49E93 /* a_common.cpp */; };
 		4F5F3879182D98A60027813A /* a_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB5158BF42800C49E93 /* a_counters.cpp */; };
 		4F5F387A182D98E10027813A /* a_decorate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5CB6158BF42800C49E93 /* a_decorate.cpp */; };
@@ -327,7 +327,6 @@
 		4FB11C46249E68F600593746 /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FB11C28249E414600593746 /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4FB11C47249E68F700593746 /* SDL2_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FB11C27249E414600593746 /* SDL2_net.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4FB11C48249E68FA00593746 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FB11C29249E414600593746 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FB8211623F1DCD80044B1C3 /* hu_inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
 		4FC0A9281E1E2A50006CEC45 /* Array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FD1E1E2A50006CEC45 /* Array.cpp */; };
@@ -517,8 +516,8 @@
 		4F5076BF20754958000226F6 /* a_weaponsdoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = a_weaponsdoom.cpp; path = ../source/a_weaponsdoom.cpp; sourceTree = "<group>"; };
 		4F50E3FE173770EC00878167 /* r_dynabsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynabsp.cpp; path = ../source/r_dynabsp.cpp; sourceTree = "<group>"; };
 		4F50E3FF173770EC00878167 /* r_dynabsp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynabsp.h; path = ../source/r_dynabsp.h; sourceTree = "<group>"; };
+		4F531FB124C2F424005E0589 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		4F579A4317BE860B0088B797 /* metaspawn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = metaspawn.h; path = ../source/metaspawn.h; sourceTree = "<group>"; };
-		4F5E98BE234534E900AB2810 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		4F5F3864182D97860027813A /* mn_items.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mn_items.cpp; path = ../source/mn_items.cpp; sourceTree = "<group>"; };
 		4F5F3865182D97860027813A /* mn_items.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mn_items.h; path = ../source/mn_items.h; sourceTree = "<group>"; };
 		4F5F386B182D97A10027813A /* autodoom */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = autodoom; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1122,6 +1121,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F531FB224C2F425005E0589 /* CoreServices.framework in Frameworks */,
 				4FB11C2C249E414600593746 /* SDL2.framework in Frameworks */,
 				4FB11C2A249E414600593746 /* SDL2_net.framework in Frameworks */,
 				4FB11C2B249E414600593746 /* SDL2_mixer.framework in Frameworks */,
@@ -1181,6 +1181,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4F531FB124C2F424005E0589 /* CoreServices.framework */,
 				4FB11C28249E414600593746 /* SDL2_mixer.framework */,
 				4FB11C27249E414600593746 /* SDL2_net.framework */,
 				4FB11C29249E414600593746 /* SDL2.framework */,

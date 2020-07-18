@@ -1721,7 +1721,7 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry& sae, int sp
                               PODCollection<int>& coll, bool terminal)
 {
    fixed_t height = lastFloorHeight + dir * stairsize;
-   int texture = sec->floorpic;
+   int texture = sec->srf.floor.pic;
    bool ok;
    bool othersAffected = false;
 
@@ -1741,7 +1741,7 @@ static bool B_fillInGenStairs(const sector_t *sec, SectorStateEntry& sae, int sp
          if(tsec != sec)
             continue;
          tsec = sec->lines[i]->backsector;
-         if(!ignoretex && tsec->floorpic != texture)
+         if(!ignoretex && tsec->srf.floor.pic != texture)
             continue;
 
          if(demo_version < 202)
