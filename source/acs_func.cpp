@@ -1883,7 +1883,7 @@ bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS)
 //
 // void SetLineSpecial(int tag, int spec, int arg0, int arg1, int arg2, int arg3, int arg4);
 //
-bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
+bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
 {
    int     tag  = argV[0];
    int     spec = argV[1];

@@ -127,7 +127,7 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0( 96, {"",        1, addCallFunc(ACS_CF_SoundSeq)});
    addCodeDataACS0( 97, {"",        4, addCallFunc(ACS_CF_SetLineTex)});
    addCodeDataACS0( 98, {"",        2, addCallFunc(ACS_CF_SetLineBlock)});
-   addCodeDataACS0( 99, {"",        7, addCallFunc(ACS_CF_SetLineSpec)});
+   addCodeDataACS0( 99, {"",        7, addCallFunc(ACS_CF_SetLineSpecial)});
    addCodeDataACS0(100, {"",        3, addCallFunc(ACS_CF_ThingSound)});
    addCodeDataACS0(101, {"",        0, addCallFunc(ACS_CF_EndPrintBold)});
    addCodeDataACS0(102, {"",        2, addCallFunc(ACS_CF_ActivatorSound)});

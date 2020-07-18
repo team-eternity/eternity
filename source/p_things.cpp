@@ -389,8 +389,7 @@ int EV_ThingDestroy(int tid, int sectortag)
    int success = 0;
    while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
-      if(mobj->flags & MF_SHOOTABLE &&
-         (!sectortag || mobj->subsector->sector->tag == sectortag))
+      if(mobj->flags & MF_SHOOTABLE && (!sectortag || mobj->subsector->sector->tag == sectortag))
       {
          P_DamageMobj(mobj, nullptr, nullptr, 10000, MOD_UNKNOWN);
          success = 1;

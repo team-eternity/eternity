@@ -396,7 +396,7 @@ bool ACS_CF_SetAirFriction(ACS_CF_ARGS);
 bool ACS_CF_SetGravity(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlock(ACS_CF_ARGS);
 bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS);
-bool ACS_CF_SetLineSpec(ACS_CF_ARGS);
+bool ACS_CF_SetLineSpecial(ACS_CF_ARGS);
 bool ACS_CF_SetLineTex(ACS_CF_ARGS);
 bool ACS_CF_SetMusic(ACS_CF_ARGS);
 bool ACS_CF_SetMusicLoc(ACS_CF_ARGS);
