@@ -402,7 +402,10 @@ void R_ResetFOV(int width, int height)
 {
    extern int setblocks;
    if(setblocks != 11) // status bar up
-      height -= height * static_cast<double>(GameModeInfo->StatusBar->height) / static_cast<double>(SCREENHEIGHT);
+   {
+      height -= static_cast<int>(height * static_cast<double>(GameModeInfo->StatusBar->height) /
+         static_cast<double>(SCREENHEIGHT));
+   }
 
    double ratio = static_cast<double>(width) / static_cast<double>(height);
 
