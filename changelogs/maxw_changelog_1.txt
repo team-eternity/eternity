@@ -477,6 +477,12 @@ Made it so your aim is always the centre of the actual non-HUD viewport. This
 removes the need to move the crosshair up/down depending on player pitch.
 Split "Fullscreen Desktop" into its own option for favoured screen type.
 
+-------------------------------------------------------------------------------
+2020/07/18
+Fixed replacing music when both tracks have a length of 4 (after the "D_").
+Thanks to JadingTsunami for the code fix and esselfortium for reporting the bug
+with a minimum failing case.
+
 ================================================================================
 EOF
 ================================================================================

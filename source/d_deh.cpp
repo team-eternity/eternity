@@ -2056,7 +2056,7 @@ static void deh_procText(DWFILE *fpin, char *line)
          ++i;  // next array element
       }
    }
-   else if(fromlen < 7 && tolen < 7) // lengths of music and sfx are 6 or shorter
+   if(!found && fromlen < 7 && tolen < 7) // lengths of music and sfx are 6 or shorter
    {
       usedlen = (fromlen < tolen) ? fromlen : tolen;
       if(fromlen != tolen)
