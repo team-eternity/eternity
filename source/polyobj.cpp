@@ -1008,7 +1008,7 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
             if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&line, mo))
                continue;
             portalthing_t &pt = things.addNew();
-            pt.thing = mo;
+            P_SetTarget(&pt.thing, mo);
             pt.position = { mo->x, mo->y };
             pt.velocity = { mo->momx, mo->momy };
          }
@@ -1198,6 +1198,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
       Polyobj_moveObjectsInside(*po, -x, -y);
    }
+
+   // Remember to clear reference
+   for(portalthing_t &pt : pts)
+      P_ClearTarget(pt.thing);
 
    return !hitthing;
 }
