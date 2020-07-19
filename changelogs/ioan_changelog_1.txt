@@ -8,6 +8,13 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+19.07.2020
+
+IMPROVEMENT: Thing_Destroy now works like in GZDoom, unless level is vanilla
+             Hexen (where it will still support arg 3). Most notably, arg 2 is
+             now "flags" and 1 means "extreme death".
+
+--------------------------------------------------------------------------------
 19.06.2020
 
 IMPROVEMENT: Plane portals can now render sloped visplanes, with the slope
