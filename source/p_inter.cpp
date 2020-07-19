@@ -1231,7 +1231,7 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
          }
       }
    }
-   P_DamageMobj(target, nullptr, nullptr, 10000, MOD_UNKNOWN);
+   P_DamageMobj(target, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
    return true;
 }
 
@@ -1327,7 +1327,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    // Dormancy -- things are invulnerable until they are awakened
    // No Friend Damage -- some things aren't hurt by friends
    // Invuln-Charge -- skullflying objects won't take damage (for Maulotaur)
-   if(damage < 10000)
+   if(damage < GOD_BREACH_DAMAGE)
    {
       if(target->flags2 & (MF2_INVULNERABLE | MF2_DORMANT))
          return;
@@ -1451,7 +1451,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    {
       // haleyjd 07/10/09: instagib
       if(source && dmflags & DM_INSTAGIB)
-         damage = 10000;
+         damage = GOD_BREACH_DAMAGE;
 
       // end of game hell hack
       // ioanch 20160116: portal aware
@@ -1503,7 +1503,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    }
 
    // do the damage
-   if(!(target->flags4 & MF4_NODAMAGE) || damage >= 10000)
+   if(!(target->flags4 & MF4_NODAMAGE) || damage >= GOD_BREACH_DAMAGE)
       target->health -= damage;
 
    // check for death
@@ -1877,7 +1877,7 @@ static cell AMX_NATIVE_CALL sm_thingkill(AMX *amx, cell *params)
       switch(params[2])
       {
       case 1: // telefrag damage
-         damage = 10000;
+         damage = GOD_BREACH_DAMAGE;
          break;
       default: // damage for health
          damage = rover->health;

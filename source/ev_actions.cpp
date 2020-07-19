@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_inter.h"
 #include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
@@ -3359,7 +3360,7 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
 DEFINE_ACTION(EV_ActionDamageThing)
 {
    return EV_DamageThing(instance->actor, 
-      instance->args[0] == 0 ? 10000 : instance->args[0], instance->args[1], 0);
+      instance->args[0] == 0 ? GOD_BREACH_DAMAGE : instance->args[0], instance->args[1], 0);
 }
 
 //

@@ -35,6 +35,11 @@ typedef MetaTable itemeffect_t;
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
+enum
+{
+   GOD_BREACH_DAMAGE = 10000, // common damage that bypasses invulnerability
+};
+
 bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
 bool P_GiveBody(player_t *, const itemeffect_t *);
 bool P_GiveArmor(player_t *, const itemeffect_t *);

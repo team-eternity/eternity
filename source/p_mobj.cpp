@@ -3320,7 +3320,7 @@ void P_Massacre(int friends)
             break;
          }
          mo->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99: none of that!
-         P_DamageMobj(mo, nullptr, nullptr, 10000, MOD_UNKNOWN);
+         P_DamageMobj(mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
       }
    }
 }
@@ -3335,7 +3335,7 @@ void P_FallingDamage(player_t *player)
    dist = FixedMul(mom, 16*FRACUNIT/23);
 
    if(mom > 63*FRACUNIT)
-      damage = 10000; // instant death
+      damage = GOD_BREACH_DAMAGE; // instant death
    else
       damage = ((FixedMul(dist, dist)/10)>>FRACBITS)-24;
 

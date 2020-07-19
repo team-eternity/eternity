@@ -1902,7 +1902,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
@@ -1918,7 +1918,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    for(int i = 0; i < 60; i++)  // offset angles from its attack angle
    {

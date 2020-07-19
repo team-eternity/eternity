@@ -183,16 +183,16 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    if(clip.thing->player)
    {
       // "thing" dies, unconditionally
-      P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+      P_DamageMobj(thing, clip.thing, clip.thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG); // Stomp!
 
       // if "thing" is also a player, both die, for fairness.
       if(thing->player)
-         P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+         P_DamageMobj(clip.thing, thing, thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG);
    }
    else if(thing->player) // Thing moving into a player?
    {
       // clip.thing dies
-      P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+      P_DamageMobj(clip.thing, thing, thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG);
    }
    else // Neither thing is a player...
    {
@@ -230,7 +230,7 @@ static bool PIT_StompThing(Mobj *thing, void *context)
    if(!telefrag)
       return false;
    
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+   P_DamageMobj(thing, clip.thing, clip.thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG); // Stomp!
    
    return true;
 }

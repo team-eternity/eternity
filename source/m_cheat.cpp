@@ -740,7 +740,7 @@ static void cheat_htickill(const void *arg)
 //
 static void cheat_hticiddqd(const void *arg)
 {
-   P_DamageMobj(plyr->mo, nullptr, plyr->mo, 10000, MOD_UNKNOWN);
+   P_DamageMobj(plyr->mo, nullptr, plyr->mo, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
    player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
 }
 
@@ -1139,7 +1139,7 @@ static int M_NukeMonsters()
             if(mo->health > 0)
             {
                killcount++;
-               P_DamageMobj(mo, nullptr, nullptr, 10000, MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
             }
 
             // haleyjd: made behavior customizable
