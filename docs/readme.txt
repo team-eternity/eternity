@@ -257,6 +257,9 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     MONSTERPASS, LOWAIMPRIO, STICKYCARRY, SETTARGETONDEATH, SLIDEOVERTHINGS.
     See the wiki for details.
 
+  * Added "damagemod" thing property, which allows damage randomization. Thanks
+    to Xaser for the addition!
+
   * Added damagefactor.remove and cleardamagefactors to thingtype and
     thingdelta to be able to remove them from the list.
 
@@ -302,10 +305,14 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
   * Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
 
+  * Added A_SpawnEx, A_SelfDestruct and A_MushroomEx. Thanks to Xaser!
+
   * Parameterised A_Turn to be able to take a constant value, or using a counter
     as either a BAM or degrees.
 
   * Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
+
+  * Added "noammo" to A_FirePlayerMissile. Thanks to Xaser for the addition!
 
   * New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
     resetting the Phoenix Rod from the powered state. Its drawback is that
@@ -326,6 +333,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     enable jumping regardless of compatibility setting or EMAPINFO
     disable-jump. Also, setting "speedjump" to 0 will completely
     disable jumping for that class.
+
+  * Added "viewheight" playerclass property. Thanks to Xaser for the addition!
 
   * Added "speedjump" playerclass property. Its value is a fixed, and is how
     much upwards speed is added to momz when the player successfully jumps.
@@ -357,6 +366,9 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     overrides item pickup height, which is set to 8 in Doom/Strife and to
     32 in Heretic/Hexen.
 
+  * Allow title music to be changed via the EDF gameproperties block. Thanks to
+    Xaser for the addition!
+
   * Finally added support for Dehacked "Monsters Infight" misc setting.
 
   * Added the vast majority of dehacked extensions made by Doom Retro. Allow
@@ -376,6 +388,13 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     or args in a delta structure targetting said artifact.
 
   * Re-implemented the MBF pickups.
+
+  * Wherever a string placeholder is used you can use either an EDF string or a
+    BEX string. Thanks to marrub for the addition!
+
+  * Sound definitions now allow long lump file names in the definitions, such as:
+      sound mpistolf {lump "/lsounds/pistol/fire.wav"}
+    Thanks to marrub for the addition!
 
 
   Level Editing Stuff
@@ -532,6 +551,12 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     removes the need to move the crosshair up/down depending on player pitch.
 
   * Split "Fullscreen Desktop" into its own option for favoured screen type.
+
+  * Added the -recordfromto command-line parameter from PrBoom+. Thanks to vita
+    for adding it!
+
+  * Improved OpenGL performance on some drivers. Thanks to icecream95 for the
+    contribution!
 
 
 - Visual improvements -
