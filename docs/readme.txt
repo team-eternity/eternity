@@ -198,9 +198,48 @@ These include some of the major features added in the latest version:
 
 - Editing improvements -
 
+  EDF, DeHackEd and Gameplay Modding Stuff
+
   * Fixed Heretic pods to act properly. For this, new flags have been added:
     MONSTERPASS, LOWAIMPRIO, STICKYCARRY, SETTARGETONDEATH, SLIDEOVERTHINGS.
     See the wiki for details.
+
+  * Added damagefactor.remove and cleardamagefactors to thingtype and
+    thingdelta to be able to remove them from the list.
+
+  * Added the +Skill5Fast prefix flag for non-Decorate frame and framedelta
+    definitions.
+
+  * Added the offset(,) Decorate state specifier which exists in ZDoom and
+    is used to set the misc1 and misc2 flags, which are also capable of
+    setting weapon coordinates.
+
+    Eternity is also capable of interpolation when using offset(). By
+    default it's disabled, but you can enable it by using the "interpolate"
+    specifier as a third argument, for example: offset(1, 32, interpolate).
+    When inheriting via the Decorate syntax and reapplying offset(),
+    interpolation will be disabled again unless you specify it again.
+
+    For the standard "frame" EDF section, you can use the +|-interpolate
+    specifier to add or remove the flag.
+
+  * Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
+    for DOOM (solely for Dehacked and past EDF mod compatibility) and
+    enables the less intuitive DOOM rule on when offsets have effect.
+    Otherwise the better Hexen rule applies.
+
+  * A_Nailbomb codepointer is now fully customizable.
+
+  * Fixed the custom spread distribution of A_FireCustomBullets to be
+    triangular, just like the vanilla Doom hitscans.
+
+  * New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
+    resetting the Phoenix Rod from the powered state. Its drawback is that
+    sometimes it can consume more ammo than intended. You can still use
+    FORCETOREADY as a more general-purpose counterpart.
+
+  * Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
+    the ghost effect.
 
   * Added hitscan puff type EDF definitions, which is necessary for Heretic
     support. Consideration has also been made for future Hexen and Strife
@@ -218,13 +257,51 @@ These include some of the major features added in the latest version:
   * Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
     powered staff.
 
-  * A_Nailbomb codepointer is now fully customizable.
+  * Now playerclass has two new fields: maxhealth (default 100) and
+    superhealth (default = maxhealth). They're needed for some built-in
+    effects, mainly the HealThing special and the powered A_GauntletAttack.
 
-  * Fixed the custom spread distribution of A_FireCustomBullets to be
-    triangular, just like the vanilla Doom hitscans.
+  * EDF player classes now support an "+AlwaysJump" option, which will
+    enable jumping regardless of compatibility setting or EMAPINFO
+    disable-jump. Also, setting "speedjump" to 0 will completely
+    disable jumping for that class.
+
+  * Updated the EDF healtheffect items to use the new @maxhealth and
+    @superhealth keywords instead of absolute values to refer to the
+    current playerclass values. They're safely replaceable by Dehacked and
+    healthdelta structures.
+
+  * Added a CHASEFAST EDF game property flag. Needed to support Raven games
+    where the monster A_Chase frames are sped up on -fast and skill 5.
+
+  * Added game.skillammomultiplier EDF gameprop specifier to customize ammo
+    multiplication in the extreme skill levels.
+
+  * Added a "game.itemheight" property to EDF game properties which
+    overrides item pickup height, which is set to 8 in Doom/Strife and to
+    32 in Heretic/Hexen.
+
+  * Finally added support for Dehacked "Monsters Infight" misc setting.
+
+
+  Level Editing Stuff
+
+  * Added the Generic_Lift special, which ZDoom had added, because there
+    are a few Boom generalized specials which can't be represented by other
+    parameterized lift specials.
+
+  * Added the Generic_Stairs special. Needed for proper support of BOOM ge-
+    neralized stairs, which the current parameterized specials aren't
+    capable of.
 
   * New polyobject linedef specials: Polyobj_MoveTo, Polyobj_MoveToSpot,
     Polyobj_OR_MoveTo and Polyobj_OR_MoveToSpot, based on the GZDoom extensions.
+
+  * Thing_Destroy now works like in GZDoom, unless level is vanilla
+    Hexen (where it will still support arg 3). Most notably, arg 2 is
+    now "flags" and 1 means "extreme death".
+
+  * Added support for CPXF_ANCESTOR to CheckProximity.
 
   * Added the push activation from Hexen. The feature was long advertised in
     ExtraData (and later UDMF) but only now it has been implemented.
@@ -239,6 +316,25 @@ These include some of the major features added in the latest version:
   * Added UDMF sector "phasedlight", "lightsequence" and "lightseqalt"
     boolean fields, because ExtraData supports adding them individually,
     without resorting to the "special" field.
+
+  * Added some UDMF-exclusive fields to ExtraData: linedef portalid and
+    sector portalid.floor and portalid.ceiling, so that Portal_Define
+    doesn't require UDMF any longer.
+
+  * Now ExtraData mapthings also support names in the "special" field,
+    just like linedefs. It was badly missing.
+
+  * F_SKY1 now when applied on middle textures has the same effect as floor
+    and ceiling skies.
+
+  * EMAPINFO skyDelta and sky2Delta now accept fractional values. It
+    was appropriate to add this because an ACS function already
+    supports fixed-point for changing these states.
+
+    Currently legacy Hexen MAPINFO doesn't have it however.
+
+
+  Portals and Polyobjects
 
   * Inconsistent linked portals between separate sector islands are now
     supported! This means you can now place "wormholes" in the map without
@@ -263,41 +359,30 @@ These include some of the major features added in the latest version:
 
   * Visual portals on polyobjects now rotate along with the poly.
 
-  * Added game.skillammomultiplier EDF gameprop specifier to customize ammo
-    multiplication in the extreme skill levels.
-
-  * Added a "game.itemheight" property to EDF game properties which
-    overrides item pickup height, which is set to 8 in Doom/Strife and to
-    32 in Heretic/Hexen.
-
-  * Added a CHASEFAST EDF game property flag. Needed to support Raven games
-    where the monster A_Chase frames are sped up on -fast and skill 5.
-
-  * Added the +Skill5Fast prefix flag for non-Decorate frame and framedelta
-    definitions.
-
-  * Added some UDMF-exclusive fields to ExtraData: linedef portalid and
-    sector portalid.floor and portalid.ceiling, so that Portal_Define
-    doesn't require UDMF any longer.
-
-  * F_SKY1 now when applied on middle textures has the same effect as floor
-    and ceiling skies.
-
   * Masked textures (such as mid-grates) can now be applied on portal
     overlays. They can even use the SMMU rippling animation (unlike the
     2-sided linedef midtextures).
 
-  * EMAPINFO skyDelta and sky2Delta now accept fractional values. It
-    was appropriate to add this because an ACS function already
-    supports fixed-point for changing these states.
+  * Plane portals can now render sloped visplanes, with the slope
+    copied from the source sector. Note that horizon portals still lack
+    this feature, due to how they were designed.
 
-    Currently legacy Hexen MAPINFO doesn't have it however.
 
-- Control improvements -
+- Control and user experience improvements -
 
   * Now if an action is bound to more than one key, and two of the keys
     are being pressed, releasing just one of them will not stop the
     action. You need to release all of them.
+
+  * You can now use level lump names with -warp at the command line.
+
+  * Jumping is now a compatibility setting. By default it's disabled.
+    If player attempts to jump anyway, a message will be shown that it
+    needs to be explicitly enabled in settings.
+
+  * New console command: warp, which, like in ZDoom, teleports player to
+    given coordinates.
+
 
 - Visual improvements -
 
@@ -645,6 +730,64 @@ Bugs Fixed (since 4.01.00):
 + The scrolling sky scrolling speed, changeable through ACS, wasn't stored
   in save games.
 
++ Fixed PointPush_SetForce not using argument for magnitude when tagging
+  sectors.
+
++ Fixed a crash happening when seeing for the first time progressively
+  larger swirling textures.
+
++ Fixed a crash happening when loading a game with alpha-cycling sprites.
+
++ Fixed a serious crash happening when having 3D clipping on, going first
+  to a map with linked portals, then going to a map without portals. The
+  crash would occur randomly and not always.
+
++ Fixed ACS function CheckProximity failing to work when counting players.
+
++ Fixed EDF thingtype droptype to actually remove inherited object's item.
+
++ If there are multiple textures with the same name in TEXTURE1+TEXTURE2,
+  the first one should be loaded, not the last. This fixes mods such as
+  Army of Darkness DOOM, which looked wrong in Eternity.
+
++ For macOS, fixed the failure to start Eternity from Terminal if its
+  locale was set to non-English settings. This may apply to other
+  UNIX-like systems too.
+
++ Stop HealThing from attempting to heal dead bodies. Crazy stuff would
+  happen, such as the view getting garbled and Eternity crashing.
+
++ Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
+  any place where both floor and ceiling of a zero-height sector have
+  F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
+  whereas both Chocolate-Doom and PrBoom would render the sky properly.
+
++ Fixed EDF thingtype translation 14 (white) not having any effect.
+
++ Fixed buggy rendering of masked middle textures when mixing sector
+  colormaps with player invulnerability or light amplification.
+
++ Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
+
++ Fixed 1-sided linedef wall portals showing HOM if their middle texture
+  isn't set.
+
++ Fixed the ChangeSkill linedef special acting completely wrong when
+  called from ACS, and crashing when such a script is triggered from the
+  console.
+
++ Fixed a crash happening when entering a sector with an invalid colormap
+  specified in the UDMF editor or ExtraData.
+
++ Odd-duration frames now restore correctly when returning to nightmare
+  mode to normal.
+
++ Fixed the CLIPMIDTEX linedef flag not working over portals.
+
++ Fixed an occasional crash happening when starting maps with things with
+  negative doomednums.
+
++ Fixed the FLIES thingtype particlefx from sounding badly.
 
 Known Issues in v4.01.00:
 
@@ -657,5 +800,5 @@ Known Issues in v4.01.00:
 - There are some problems with slopes and portals when combined. All
   slope-related bugs will be fixed when physics is introduced.
 
-- Polyobject portals don't support rotation, so only use them with translation
-  motion.
+- Polyobject interactive portals don't support rotation, so only use them with
+  translation motion.
