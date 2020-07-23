@@ -192,13 +192,66 @@ These include some of the major features added in the latest version:
 
 *** FEATURED ADDITIONS ********************************************************
 
+Introduced EDF weapons:
 
+  * Users can now define brand new weapons.
+  * All the original Doom weapons are now defined through this system.
+  * Almost all Heretic weapons are now defined through this system (the others
+    aren't defined at all).
+  * Almost all of the Heretic weapon codepointers have been added.
+  * Additionally, weapondeltas have been added.
+
+Introduced EDF pickupeffects:
+
+  * Users can define brand new pickups.
+  * These can define either thing-based or sprite-based pickups. They can also
+    be defined externally, or inside a thingtype definition.
+  * They encompass health, armor, ammo, power-ups, weapons and artifacts.
+  * All the Doom and Heretic pickups now use this system.
+  * >>> Pickupitems are deprecated, please do not use them <<<
+
+Added hitscan puff type EDF definitions, which is necessary for Heretic
+support:
+
+  * Consideration has also been made for future Hexen and Strife
+    support in Eternity. More info on the wiki:
+    https://eternity.youfailit.net/wiki/EDF_puff_type_reference
+
+  * effects.edf files have been added in base/doom and base/heretic.
+
+  * Each pufftype defines how a hitscan attack should spawn a thing of a given
+    class, with options such as dragonclaw alternate blast, or Strife mauler
+    behavior etc.
+
+  * Relevant codepointers have been updated to support pufftype.
+
+New (modern) HUD:
+
+  * Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
+    the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
+    layouts have been made to be the new default for overlay-style HUDs.
+    Added an inventory bar to Doom. Currently it only works when not using the
+    regular Doom HUD, and currently selected items are not rendered  outside of
+    when the inventory bar is active.
+
+Added libADLMIDI support, which enables OPL3 MIDI playback. The default
+emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
 *** END FEATURED ADDITIONS ****************************************************
 
 - Editing improvements -
 
   EDF, DeHackEd and Gameplay Modding Stuff
+
+  * The edf "include" directive can now include files with longer names or using
+    paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is
+    case-insensitive, and all \s are converted to /s when internally hashed.
+    Additionally these includes are relative to the file making the include
+    (e.g: if "edf/monsters.edf" does "include("monsters/something.edf")" it will
+    include "edf/monsters/something.edf"). Includes can be made non-relative by
+    putting a '/' before the rest of the path.
+
+    IMPORTANT: . and .. are not supported.
 
   * Fixed Heretic pods to act properly. For this, new flags have been added:
     MONSTERPASS, LOWAIMPRIO, STICKYCARRY, SETTARGETONDEATH, SLIDEOVERTHINGS.
@@ -209,6 +262,9 @@ These include some of the major features added in the latest version:
 
   * Added the +Skill5Fast prefix flag for non-Decorate frame and framedelta
     definitions.
+
+  * Allowed 0-tic initial states if the states are DECORATE, and don't have their
+    duration modified—or aren't made the spawnstate of a thing—by dehacked.
 
   * Added the offset(,) Decorate state specifier which exists in ZDoom and
     is used to set the misc1 and misc2 flags, which are also capable of
@@ -230,8 +286,26 @@ These include some of the major features added in the latest version:
 
   * A_Nailbomb codepointer is now fully customizable.
 
+  * Made A_Jump work for weapons with DECORATE states.
+
   * Fixed the custom spread distribution of A_FireCustomBullets to be
     triangular, just like the vanilla Doom hitscans.
+
+  * Added range parameter to A_CustomPlayerMelee. This displaces the new-ish
+    pufftype parameter, punting that to last position.
+
+  * Extended A_PainAttack to have ZDoom's parameters.
+
+  * Extended A_PainDie to have thingtype arg.
+
+  * Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
+
+  * Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
+
+  * Parameterised A_Turn to be able to take a constant value, or using a counter
+    as either a BAM or degrees.
+
+  * Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
 
   * New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
     resetting the Phoenix Rod from the powered state. Its drawback is that
@@ -240,19 +314,6 @@ These include some of the major features added in the latest version:
 
   * Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
     the ghost effect.
-
-  * Added hitscan puff type EDF definitions, which is necessary for Heretic
-    support. Consideration has also been made for future Hexen and Strife
-    support in Eternity. More info on the wiki:
-    https://eternity.youfailit.net/wiki/EDF_puff_type_reference
-
-    effects.edf files have been added in base/doom and base/heretic.
-
-    Each pufftype defines how a hitscan attack should spawn a thing of a given
-    class, with options such as dragonclaw alternate blast, or Strife mauler
-    behavior etc.
-
-    Relevant codepointers have been updated to support pufftype.
 
   * Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
     powered staff.
@@ -266,10 +327,25 @@ These include some of the major features added in the latest version:
     disable-jump. Also, setting "speedjump" to 0 will completely
     disable jumping for that class.
 
+  * Added "speedjump" playerclass property. Its value is a fixed, and is how
+    much upwards speed is added to momz when the player successfully jumps.
+
+  * Added EDF playerdelta.
+
+  * Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
+
   * Updated the EDF healtheffect items to use the new @maxhealth and
     @superhealth keywords instead of absolute values to refer to the
     current playerclass values. They're safely replaceable by Dehacked and
     healthdelta structures.
+
+  * Introduced support for Heretic-style inventory. Items can only be used
+    in Heretic at the moment, but support will be extended to other IWADs.
+    All the Heretic artifacts now use this system (except for the egg).
+
+  * Split armor's +bonus into +additive and -setabsorption. Added the RAMBO
+    cheat from Heretic, and improved givearsenal to give armor in Heretic
+    too.
 
   * Added a CHASEFAST EDF game property flag. Needed to support Raven games
     where the monster A_Chase frames are sped up on -fast and skill 5.
@@ -283,6 +359,24 @@ These include some of the major features added in the latest version:
 
   * Finally added support for Dehacked "Monsters Infight" misc setting.
 
+  * Added the vast majority of dehacked extensions made by Doom Retro. Allow
+    non-contiguous sprite frames (e.g. TROO G is missing but F and H are present).
+
+  * Extend dehacked to be able to set drop item.
+
+  * Added EDF fontdelta.
+
+  * Implemented deltas for itemeffects (healtheffect, armoreffect, ammoeffect,
+    powereffect, weapongiver, artifact). Replace effect with delta for those ending
+    with effect, and append delta to the end of the others to get the name of the
+    appropriate delta structure. weapongiverdelta also has clearammogiven, which
+    does what it says on the tin.
+
+    The artifact's args are implicitly cleared if a delta specifies a useaction
+    or args in a delta structure targetting said artifact.
+
+  * Re-implemented the MBF pickups.
+
 
   Level Editing Stuff
 
@@ -294,8 +388,12 @@ These include some of the major features added in the latest version:
     neralized stairs, which the current parameterized specials aren't
     capable of.
 
+  * Added Ceiling_Waggle action special.
+
   * New polyobject linedef specials: Polyobj_MoveTo, Polyobj_MoveToSpot,
     Polyobj_OR_MoveTo and Polyobj_OR_MoveToSpot, based on the GZDoom extensions.
+
+  * Added SetWeapon and CheckWeapon ACS functions.
 
   * Thing_Destroy now works like in GZDoom, unless level is vanilla
     Hexen (where it will still support arg 3). Most notably, arg 2 is
@@ -368,11 +466,30 @@ These include some of the major features added in the latest version:
     this feature, due to how they were designed.
 
 
+- Sound improvements -
+
+  * Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV loading,
+    so that WAVs with incorret chunk size will successfully load.
+
+  * Made midiproc shut down if Eternity isn't running.
+
+  * Added console command "s_stopmusic" as well as the alias "stopmus".
+
+  * Made it so if Eternity sets its Windows mixer volume it will not use the volume
+    it was set to during its runtime.
+
+  * Fixed replacing music when both tracks have a length of 4 (after the "D_").
+    Thanks to JadingTsunami for the code fix and esselfortium for reporting the bug
+    with a minimum failing case.
+
+
 - Control and user experience improvements -
 
   * Now if an action is bound to more than one key, and two of the keys
     are being pressed, releasing just one of them will not stop the
     action. You need to release all of them.
+
+  * Added turning sensitivity for joysticks.
 
   * You can now use level lump names with -warp at the command line.
 
@@ -383,9 +500,44 @@ These include some of the major features added in the latest version:
   * New console command: warp, which, like in ZDoom, teleports player to
     given coordinates.
 
+  * Added support for the Rekkr stand-alone IWAD.
+
+  * Added r_drawplayersprites, which lets players choose not to render
+    weapons if they don't want to (for example, if taking photos).
+
+  * Made it so the Windows close button on the console is re-enabled when Eternity
+    is closed.
+
+  * Changed the key bindings menus.
+
+  * Made Eternity use WASAPI on Windows Vista and later.
+
+  * Made the "idmypos" cheat toggle location display. Additionally, a new console
+    variable "hu_alwaysshowcoords" has been introduced to control the same thing.
+
+  * Added an option that allows you to set message alignment to either default,
+    left, or centred.
+
+  * Made FoV save in configs.
+
+  * Extended -file to search DOOMWADPATH directories if required.
+
+  * Made "summon" console command check thing num for compat name if no thing is
+    found for the regular name.
+
+  * Increased repeat backspace speed. Before it only accepted a repeat input
+    every 120ms.
+
+  * Made it so your aim is always the centre of the actual non-HUD viewport. This
+    removes the need to move the crosshair up/down depending on player pitch.
+
+  * Split "Fullscreen Desktop" into its own option for favoured screen type.
+
 
 - Visual improvements -
 
+  * Significantly improved performance in maps with lots of flats (such as
+    the central area of Mothership).
   * Movement through portals is finally interpolated. No more hops or slight
     discontinuities.
   * Hexen style double skies finally work!
@@ -401,41 +553,6 @@ These include some of the major features added in the latest version:
     disabled.
   * Scrolling texture movement (including attached 3dmidtex) is now
     interpolated.
-
-===============================================================================
-* Features New to Version 4.00.00 *
-
-These include some of the major features added in the latest version:
-
-*** FEATURED ADDITIONS ********************************************************
-
-- Migration from SDL to SDL2 -
-
-  * Just after the Windows 10's Fall Creators Update to break the SDL1.2
-    version in bizarre ways, a complete migration has been made to the SDL2
-    framework. This comes with a bevy of changes.
-
-      * "unicodeinput" has been removed. All text input is UTF-8.
-      * -8in32 and the software bitdepth setting are gone.
-      * A new console variable "displaynum" exists, and lets you set what
-        display the window is created on when you run Eternity.
-      * A new console command "maxdisplaynum" has been added, which retrieves
-        the maximum permitted value that displaynum can take.
-      * -directx and -gdi are gone.
-      * Support for many types of music has been updated, due to the new dlls
-        used by SDL2.
-
-  * Added EDF animation and switch definitions. Added ANIMDEFS support --
-    a subset with what Eternity supports.
-
-  * Monster infighting can now be customized. Several EDF features have
-    been added. Make sure to update the "base" folder now.
-
-  * Polyobjects now accept clusters of portals inside them.
-
-*** END FEATURED ADDITIONS ****************************************************
-
-
 
 ===============================================================================
 * Coming Soon *
@@ -788,6 +905,32 @@ Bugs Fixed (since 4.01.00):
   negative doomednums.
 
 + Fixed the FLIES thingtype particlefx from sounding badly.
+
++ Fixed ev_text events causing some issues, such as menu navigation occurring
+  when inserting specific keys for key bindings on certain menus.
+
++ Fixed the FOV parameter for A_JumpIfTargetInLOS, which was read in as an int
+  FRACUNIT times smaller than it should have been before being converted to an
+  angle. It is now read in as a fixed.
+
++ Made A_AlertMonsters work properly for weapons. Now it actually just alerts all
+  the things without being contingent on you pointing your gun at an enemy.
+  Thanks to Xaser for this.
+
++ A_CustomPlayerMelee now correctly turns you through portals.
+
++ Fixed an issue with window grabbing not working.
+
++ Fixed next and previous weapon (weapon scrolling) in vanilla recordings.
+
++ Fixed a crash caused by ANIMATED lumps of size 0. It hard errors now.
+
++ Fixed crashes due to not being able to handle floating 32-bit audio samples.
+
++ Fixed cfg saving ignoring symlinks (and just overwriting the link).
+
++ Fixed crashing if the CONSOLE lump isn't a valid graphic.
+
 
 Known Issues in v4.01.00:
 
