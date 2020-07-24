@@ -1,7 +1,7 @@
 ===============================================================================
 Title                   : The Eternity Engine v4.01.00 "Tyrfing"
 Filename                : ee-4.01.00-win32.zip, ee-4.01.00-macos.dmg
-Release date            : 2020-07-22
+Release date            : 2020-07-24
 Author                  : Team Eternity:
                           Ioan "printz" Chera,
                           James "Quasar" Haley,
@@ -227,10 +227,12 @@ support:
 
 New (modern) HUD:
 
-  * Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
-    the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
-    layouts have been made to be the new default for overlay-style HUDs.
-    Added an inventory bar to Doom. Currently it only works when not using the
+  * Added the new Modern HUD (with graphics courtesy of ptoing), which supports 
+    all the layouts the BOOM HUD does as well. Along with this the Modern HUD
+    and flat layouts have been made to be the new default for overlay-style
+    HUDs.
+    
+  * Added an inventory bar to Doom. Currently it only works when not using the
     regular Doom HUD, and currently selected items are not rendered  outside of
     when the inventory bar is active.
 
@@ -244,8 +246,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   EDF, DeHackEd and Gameplay Modding Stuff
 
   * The edf "include" directive can now include files with longer names or using
-    paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is
-    case-insensitive, and all \s are converted to /s when internally hashed.
+    paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is case-
+    insensitive, and all \s are converted to /s when internally hashed.
     Additionally these includes are relative to the file making the include
     (e.g: if "edf/monsters.edf" does "include("monsters/something.edf")" it will
     include "edf/monsters/something.edf"). Includes can be made non-relative by
@@ -254,38 +256,39 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     IMPORTANT: . and .. are not supported.
 
   * Fixed Heretic pods to act properly. For this, new flags have been added:
-    MONSTERPASS, LOWAIMPRIO, STICKYCARRY, SETTARGETONDEATH, SLIDEOVERTHINGS.
-    See the wiki for details.
+    MONSTERPASS, LOWAIMPRIO, STICKYCARRY, SETTARGETONDEATH, SLIDEOVERTHINGS. See
+    the wiki for details.
 
   * Added "damagemod" thing property, which allows damage randomization. Thanks
     to Xaser for the addition!
 
-  * Added damagefactor.remove and cleardamagefactors to thingtype and
-    thingdelta to be able to remove them from the list.
+  * Added damagefactor.remove and cleardamagefactors to thingtype and thingdelta
+    to be able to remove them from the list.
 
   * Added the +Skill5Fast prefix flag for non-Decorate frame and framedelta
     definitions.
 
-  * Allowed 0-tic initial states if the states are DECORATE, and don't have their
-    duration modified—or aren't made the spawnstate of a thing—by dehacked.
+  * Allowed 0-tic initial states if the states are DECORATE, and don't have
+    their duration modified—or aren't made the spawnstate of a thing—by 
+    DeHackEd.
 
-  * Added the offset(,) Decorate state specifier which exists in ZDoom and
-    is used to set the misc1 and misc2 flags, which are also capable of
-    setting weapon coordinates.
+  * Added the offset(,) Decorate state specifier which exists in ZDoom and is
+    used to set the misc1 and misc2 flags, which are also capable of setting
+    weapon coordinates.
 
-    Eternity is also capable of interpolation when using offset(). By
-    default it's disabled, but you can enable it by using the "interpolate"
-    specifier as a third argument, for example: offset(1, 32, interpolate).
-    When inheriting via the Decorate syntax and reapplying offset(),
-    interpolation will be disabled again unless you specify it again.
+    Eternity is also capable of interpolation when using offset(). By default
+    it's disabled, but you can enable it by using the "interpolate" specifier as
+    a third argument, for example: offset(1, 32, interpolate). When inheriting
+    via the Decorate syntax and reapplying offset(), interpolation will be
+    disabled again unless you specify it again.
 
     For the standard "frame" EDF section, you can use the +|-interpolate
     specifier to add or remove the flag.
 
-  * Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
-    for DOOM (solely for Dehacked and past EDF mod compatibility) and
-    enables the less intuitive DOOM rule on when offsets have effect.
-    Otherwise the better Hexen rule applies.
+  * Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled for
+    DOOM (solely for Dehacked and past EDF mod compatibility) and enables the
+    less intuitive DOOM rule on when offsets have effect. Otherwise the better
+    Hexen rule applies.
 
   * A_Nailbomb codepointer is now fully customizable.
 
@@ -301,7 +304,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
   * Extended A_PainDie to have thingtype arg.
 
-  * Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
+  * Added A_SeekerMissile, based on the ZDoom wiki docs for the same 
+    codepointer.
 
   * Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
 
@@ -319,20 +323,19 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     sometimes it can consume more ammo than intended. You can still use
     FORCETOREADY as a more general-purpose counterpart.
 
-  * Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
-    the ghost effect.
+  * Now the TINTTAB Heretic lump works as a BOOM-like translucency map for the
+    ghost effect.
 
   * Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
     powered staff.
 
-  * Now playerclass has two new fields: maxhealth (default 100) and
-    superhealth (default = maxhealth). They're needed for some built-in
-    effects, mainly the HealThing special and the powered A_GauntletAttack.
+  * Now playerclass has two new fields: maxhealth (default 100) and superhealth
+    (default = maxhealth). They're needed for some built-in effects, mainly the
+    HealThing special and the powered A_GauntletAttack.
 
-  * EDF player classes now support an "+AlwaysJump" option, which will
-    enable jumping regardless of compatibility setting or EMAPINFO
-    disable-jump. Also, setting "speedjump" to 0 will completely
-    disable jumping for that class.
+  * EDF player classes now support an "+AlwaysJump" option, which will enable
+    jumping regardless of compatibility setting or EMAPINFO disable-jump. Also,
+    setting "speedjump" to 0 will completely disable jumping for that class.
 
   * Added "viewheight" playerclass property. Thanks to Xaser for the addition!
 
@@ -341,20 +344,20 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
   * Added EDF playerdelta.
 
-  * Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
+  * Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation
+    logic.
 
   * Updated the EDF healtheffect items to use the new @maxhealth and
-    @superhealth keywords instead of absolute values to refer to the
-    current playerclass values. They're safely replaceable by Dehacked and
-    healthdelta structures.
+    @superhealth keywords instead of absolute values to refer to the current
+    playerclass values. They're safely replaceable by Dehacked and healthdelta
+    structures.
 
-  * Introduced support for Heretic-style inventory. Items can only be used
-    in Heretic at the moment, but support will be extended to other IWADs.
-    All the Heretic artifacts now use this system (except for the egg).
+  * Introduced support for Heretic-style inventory. Items can only be used in
+    Heretic at the moment, but support will be extended to other IWADs. All the
+    Heretic artifacts now use this system (except for the egg).
 
   * Split armor's +bonus into +additive and -setabsorption. Added the RAMBO
-    cheat from Heretic, and improved givearsenal to give armor in Heretic
-    too.
+    cheat from Heretic, and improved givearsenal to give armor in Heretic too.
 
   * Added a CHASEFAST EDF game property flag. Needed to support Raven games
     where the monster A_Chase frames are sped up on -fast and skill 5.
@@ -362,27 +365,28 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * Added game.skillammomultiplier EDF gameprop specifier to customize ammo
     multiplication in the extreme skill levels.
 
-  * Added a "game.itemheight" property to EDF game properties which
-    overrides item pickup height, which is set to 8 in Doom/Strife and to
-    32 in Heretic/Hexen.
+  * Added a "game.itemheight" property to EDF game properties which overrides
+    item pickup height, which is set to 8 in Doom/Strife and to 32 in
+    Heretic/Hexen.
 
   * Allow title music to be changed via the EDF gameproperties block. Thanks to
     Xaser for the addition!
 
   * Finally added support for Dehacked "Monsters Infight" misc setting.
 
-  * Added the vast majority of dehacked extensions made by Doom Retro. Allow
-    non-contiguous sprite frames (e.g. TROO G is missing but F and H are present).
+  * Added the vast majority of dehacked extensions made by Doom Retro. Allow 
+    non-contiguous sprite frames (e.g. TROO G is missing but F and H are 
+    present).
 
   * Extend dehacked to be able to set drop item.
 
   * Added EDF fontdelta.
 
   * Implemented deltas for itemeffects (healtheffect, armoreffect, ammoeffect,
-    powereffect, weapongiver, artifact). Replace effect with delta for those ending
-    with effect, and append delta to the end of the others to get the name of the
-    appropriate delta structure. weapongiverdelta also has clearammogiven, which
-    does what it says on the tin.
+    powereffect, weapongiver, artifact). Replace effect with delta for those 
+    ending with effect, and append delta to the end of the others to get the
+    name of the appropriate delta structure. weapongiverdelta also has
+    clearammogiven, which does what it says on the tin.
 
     The artifact's args are implicitly cleared if a delta specifies a useaction
     or args in a delta structure targetting said artifact.
@@ -392,20 +396,21 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * Wherever a string placeholder is used you can use either an EDF string or a
     BEX string. Thanks to marrub for the addition!
 
-  * Sound definitions now allow long lump file names in the definitions, such as:
+  * Sound definitions now allow long lump file names in the definitions, such
+    as:
       sound mpistolf {lump "/lsounds/pistol/fire.wav"}
     Thanks to marrub for the addition!
 
 
   Level Editing Stuff
 
-  * Added the Generic_Lift special, which ZDoom had added, because there
-    are a few Boom generalized specials which can't be represented by other
+  * Added the Generic_Lift special, which ZDoom had added, because there are a
+    few Boom generalized specials which can't be represented by other 
     parameterized lift specials.
 
-  * Added the Generic_Stairs special. Needed for proper support of BOOM ge-
-    neralized stairs, which the current parameterized specials aren't
-    capable of.
+  * Added the Generic_Stairs special. Needed for proper support of BOOM 
+    generalized stairs, which the current parameterized specials aren't capable
+    of.
 
   * Added Ceiling_Waggle action special.
 
@@ -414,125 +419,125 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
   * Added SetWeapon and CheckWeapon ACS functions.
 
-  * Thing_Destroy now works like in GZDoom, unless level is vanilla
-    Hexen (where it will still support arg 3). Most notably, arg 2 is
-    now "flags" and 1 means "extreme death".
+  * Thing_Destroy now works like in GZDoom, unless level is vanilla Hexen (where
+    it will still support arg 3). Most notably, arg 2 is now "flags" and 1 means
+    "extreme death".
 
   * Added support for CPXF_ANCESTOR to CheckProximity.
 
   * Added the push activation from Hexen. The feature was long advertised in
     ExtraData (and later UDMF) but only now it has been implemented.
 
-  * Added UDMF linedef "monstershoot" boolean field. Needed because the
-    ill-named "impact" field only allows players to shoot the linedef.
-    This one allows monsters too. The ones who wrote the original UDMF
-    specs must have been unaware that vanilla Doom has some specials
-    (such as GR: Open Door) which are triggerable by both monsters and
-    players, while others (the rising platforms) only by players.
+  * Added UDMF linedef "monstershoot" boolean field. Needed because the ill-
+    named "impact" field only allows players to shoot the linedef. This one
+    allows monsters too. The ones who wrote the original UDMF specs must have
+    been unaware that vanilla Doom has some specials (such as GR: Open Door)
+    which are triggerable by both monsters and players, while others (the rising
+    platforms) only by players.
 
-  * Added UDMF sector "phasedlight", "lightsequence" and "lightseqalt"
-    boolean fields, because ExtraData supports adding them individually,
-    without resorting to the "special" field.
+  * Added UDMF sector "phasedlight", "lightsequence" and "lightseqalt" boolean
+    fields, because ExtraData supports adding them individually, without
+    resorting to the "special" field.
 
-  * Added some UDMF-exclusive fields to ExtraData: linedef portalid and
-    sector portalid.floor and portalid.ceiling, so that Portal_Define
-    doesn't require UDMF any longer.
+  * Added some UDMF-exclusive fields to ExtraData: linedef portalid and sector
+    portalid.floor and portalid.ceiling, so that Portal_Define doesn't require
+    UDMF any longer.
 
-  * Now ExtraData mapthings also support names in the "special" field,
-    just like linedefs. It was badly missing.
+  * Now ExtraData mapthings also support names in the "special" field, just like
+    linedefs. It was badly missing.
 
-  * F_SKY1 now when applied on middle textures has the same effect as floor
-    and ceiling skies.
+  * F_SKY1 now when applied on middle textures has the same effect as floor and
+    ceiling skies.
 
-  * EMAPINFO skyDelta and sky2Delta now accept fractional values. It
-    was appropriate to add this because an ACS function already
-    supports fixed-point for changing these states.
+  * EMAPINFO skyDelta and sky2Delta now accept fractional values. It was
+    appropriate to add this because an ACS function already supports fixed-point
+    for changing these states.
 
     Currently legacy Hexen MAPINFO doesn't have it however.
 
 
   Portals and Polyobjects
 
-  * Inconsistent linked portals between separate sector islands are now
-    supported! This means you can now place "wormholes" in the map without
-    getting errors! The link offsets are updated dynamically in order to
-    provide a gameplay as good as possible.
+  * Inconsistent linked portals between separate sector islands are now 
+    supported! This means you can now place "wormholes" in the map without 
+    getting errors! The link offsets are updated dynamically in order to provide
+    a gameplay as good as possible.
 
     There is still a restriction left: do not place portals between two areas
     already interconnected by sectors. That would still error out.
 
-  * Changed how floating objects move in relation to portal
-    polyobjects. They no longer remain fixed relative to the inner
-    chamber sectors, but are shifted in the opposite direction, so they
-    appear as remaining fixed relative to the main world. This
-    behaviour is more consistent with how thing movement isn't
-    influenced by traditional vertically moving sectors, and more
-    stable as well than just adapting velocity when passing the portal.
-    It also avoids unrealistic direction changes when the containing
-    polyobject changes movement.
+  * Changed how floating objects move in relation to portal polyobjects. They no
+    longer remain fixed relative to the inner chamber sectors, but are shifted
+    in the opposite direction, so they appear as remaining fixed relative to the
+    main world. This behaviour is more consistent with how thing movement isn't
+    influenced by traditional vertically moving sectors, and more stable as well
+    than just adapting velocity when passing the portal. It also avoids
+    unrealistic direction changes when the containing polyobject changes
+    movement.
 
   * Polyobjects with portals no longer require their origin box to be connected
     to sectors from the spawn spot's layer.
 
   * Visual portals on polyobjects now rotate along with the poly.
 
-  * Masked textures (such as mid-grates) can now be applied on portal
-    overlays. They can even use the SMMU rippling animation (unlike the
-    2-sided linedef midtextures).
+  * Masked textures (such as mid-grates) can now be applied on portal overlays.
+    They can even use the SMMU rippling animation (unlike the 2-sided linedef
+    midtextures).
 
-  * Plane portals can now render sloped visplanes, with the slope
-    copied from the source sector. Note that horizon portals still lack
-    this feature, due to how they were designed.
+  * Plane portals can now render sloped visplanes, with the slope copied from
+    the source sector. Note that horizon portals still lack this feature, due to
+    how they were designed.
 
 
 - Sound improvements -
 
-  * Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV loading,
-    so that WAVs with incorret chunk size will successfully load.
+  * Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV
+    loading, so that WAVs with incorret chunk size will successfully load.
 
   * Made midiproc shut down if Eternity isn't running.
 
   * Added console command "s_stopmusic" as well as the alias "stopmus".
 
-  * Made it so if Eternity sets its Windows mixer volume it will not use the volume
-    it was set to during its runtime.
+  * Made it so if Eternity sets its Windows mixer volume it will not use the
+    volume it was set to during its runtime.
 
   * Fixed replacing music when both tracks have a length of 4 (after the "D_").
-    Thanks to JadingTsunami for the code fix and esselfortium for reporting the bug
-    with a minimum failing case.
+    Thanks to JadingTsunami for the code fix and esselfortium for reporting the
+    bug with a minimum failing case.
 
 
 - Control and user experience improvements -
 
-  * Now if an action is bound to more than one key, and two of the keys
-    are being pressed, releasing just one of them will not stop the
-    action. You need to release all of them.
+  * Now if an action is bound to more than one key, and two of the keys are
+    being pressed, releasing just one of them will not stop the action. You need
+    to release all of them.
 
   * Added turning sensitivity for joysticks.
 
   * You can now use level lump names with -warp at the command line.
 
-  * Jumping is now a compatibility setting. By default it's disabled.
-    If player attempts to jump anyway, a message will be shown that it
-    needs to be explicitly enabled in settings.
+  * Jumping is now a compatibility setting. By default it's disabled. If player
+    attempts to jump anyway, a message will be shown that it needs to be
+    explicitly enabled in settings.
 
-  * New console command: warp, which, like in ZDoom, teleports player to
-    given coordinates.
+  * New console command: warp, which, like in ZDoom, teleports player to given
+    coordinates.
 
   * Added support for the Rekkr stand-alone IWAD.
 
-  * Added r_drawplayersprites, which lets players choose not to render
-    weapons if they don't want to (for example, if taking photos).
+  * Added r_drawplayersprites, which lets players choose not to render weapons
+    if they don't want to (for example, if taking photos).
 
-  * Made it so the Windows close button on the console is re-enabled when Eternity
-    is closed.
+  * Made it so the Windows close button on the console is re-enabled when
+    Eternity is closed.
 
   * Changed the key bindings menus.
 
   * Made Eternity use WASAPI on Windows Vista and later.
 
-  * Made the "idmypos" cheat toggle location display. Additionally, a new console
-    variable "hu_alwaysshowcoords" has been introduced to control the same thing.
+  * Made the "idmypos" cheat toggle location display. Additionally, a new
+    console variable "hu_alwaysshowcoords" has been introduced to control the
+    same thing.
 
   * Added an option that allows you to set message alignment to either default,
     left, or centred.
@@ -547,8 +552,9 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * Increased repeat backspace speed. Before it only accepted a repeat input
     every 120ms.
 
-  * Made it so your aim is always the centre of the actual non-HUD viewport. This
-    removes the need to move the crosshair up/down depending on player pitch.
+  * Made it so your aim is always the centre of the actual non-HUD viewport.
+    This removes the need to move the crosshair up/down depending on player
+    pitch.
 
   * Split "Fullscreen Desktop" into its own option for favoured screen type.
 
@@ -561,8 +567,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
 - Visual improvements -
 
-  * Significantly improved performance in maps with lots of flats (such as
-    the central area of Mothership).
+  * Significantly improved performance in maps with lots of flats (such as the
+    central area of Mothership).
   * Movement through portals is finally interpolated. No more hops or slight
     discontinuities.
   * Hexen style double skies finally work!
@@ -572,30 +578,27 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     graphics "bleeding" through them outside the playable area.
   * Interpolate walkcam even while game is paused.
   * Console sliding is now interpolated.
-  * Polyobject portals now show in the map as part of the main area,
-    because indeed they rarely ever overlap anything vertically.
-  * Chasecam and walkcam are now portal-aware. Interpolation is however
+  * Polyobject portals now show in the map as part of the main area, because
+    indeed they rarely ever overlap anything vertically.
+  * Chasecam and walkcam are now portal-aware. Interpolation is however 
     disabled.
-  * Scrolling texture movement (including attached 3dmidtex) is now
+  * Scrolling texture movement (including attached 3dmidtex) is now 
     interpolated.
 
 ===============================================================================
 * Coming Soon *
 
-These are features planned to debut in future versions of the Eternity
-Engine:
+These are features planned to debut in future versions of the Eternity Engine:
 
 - Priority -
 
-  ** EDF Inventory/Weapons/Pickup system (Partially finished!)
-  ** 100% Heretic support                (Major progress made)
   ** Slope physics
-  ** PSX Doom support                    (In progress)
-  Aeon scripting system
+  ** Aeon scripting system
+  ** 100% Heretic support                (Major progress made)
   Hexen Support
   Strife Support
+  PSX Doom support                       (In progress)
   Double flats
-  More standard TerrainTypes
 
   ** == TOP PRIORITY
 
@@ -606,6 +609,12 @@ Engine:
 
 ===============================================================================
 * Revision History *
+
+4.01.00 "Tyrfing" -- 07/24/20
+
+  Major update which introduces EDF weapons, EDF items, EDF bullet puff effects,
+  a new HUD by ptoing and libADLMIDI music support. In addition a lot of other
+  features have been added and bugs fixed.
 
 4.00.00 "Völuspá" -- 03/16/18
 
@@ -671,92 +680,90 @@ Engine:
 
 3.35.92 "Nekhbet" -- 03/22/09
 
-  Minor maintenance release with numerous interface improvements, and a new
-  EDF font specification system.
+  Minor maintenance release with numerous interface improvements, and a new EDF
+  font specification system.
 
 3.35.90 "Simorgh" -- 01/11/09
 
-  It took two years and almost 450 SVN revisions to create this new
-  incarnation of the Eternity Engine.
+  It took two years and almost 450 SVN revisions to create this new incarnation
+  of the Eternity Engine.
 
 3.33.50 "Phoenix" -- 10/23/06
 
-  Sad times have given way to happy ones as the energy to do great work
-  has been unleashed.
+  Sad times have given way to happy ones as the energy to do great work has been
+  unleashed.
 
 3.33.33 "Paladin" -- 05/17/06
 
-  The most work ever done for a single release possibly excepting only the
-  port of v3.29 Gamma to Windows. We apologize for the delay, but it is
-  well worth the wait.
+  The most work ever done for a single release possibly excepting only the port
+  of v3.29 Gamma to Windows. We apologize for the delay, but it is well worth
+  the wait.
 
 3.33.02 "Warrior" -- 10/01/05
 
-  A very respectable amount of progress hopefully offsets the terrible
-  delay experienced for this release. 3D object clipping improvement,
-  new EDF TerrainTypes engine, and various EDF improvements are the
-  most significant features.
+  A very respectable amount of progress hopefully offsets the terrible delay
+  experienced for this release. 3D object clipping improvement, new EDF
+  TerrainTypes engine, and various EDF improvements are the most significant
+  features.
 
 3.33.01 "Outcast" -- 06/24/05
 
-  Minor fixes, some user-requested and CQIII-needed features implemented,
-  and HUD scripting functions for Small.
+  Minor fixes, some user-requested and CQIII-needed features implemented, and
+  HUD scripting functions for Small.
 
 3.33.00 "Genesis" -- 05/26/05
 
-  Small scripting finally complete and available to the user. Lots of
-  fixes, tweaks, and feature additions on top of that.
+  Small scripting finally complete and available to the user. Lots of fixes,
+  tweaks, and feature additions on top of that.
 
 3.31.10 "Delta" -- 01/19/05
 
-  More Small support, ExtraData, global MapInfo, and tons of other new
-  features and bug fixes make this an extremely critical release.
+  More Small support, ExtraData, global MapInfo, and tons of other new features
+  and bug fixes make this an extremely critical release.
 
 3.31 Public Beta 7 04/11/04
 
-  High resolution support enabled via generalization of the screen
-  drawing code. Some minor fixes to portals, and a new codepointer just
-  for good measure.
+  High resolution support enabled via generalization of the screen drawing code.
+  Some minor fixes to portals, and a new codepointer just for good measure.
 
 3.31 Public Beta 6 02/29/04
 
-  A huge amount of progress toward all current goals for the engine.
-  Portals, the brain child of SoM, are the major stars of this release.
-  Small and ExtraData are on the verge of becoming available to users
-  for editing.
+  A huge amount of progress toward all current goals for the engine. Portals,
+  the brain child of SoM, are the major stars of this release. Small and
+  ExtraData are on the verge of becoming available to users for editing.
 
 3.31 Public Beta 5 12/17/03
 
-  Several minor bug fixes over beta 4, including 3D object clipping and
-  file drag-and-drop. Incremental improvements to EDF and to several
-  parameterized codepointers.
+  Several minor bug fixes over beta 4, including 3D object clipping and file
+  drag-and-drop. Incremental improvements to EDF and to several parameterized
+  codepointers.
 
 3.31 Public Beta 4 11/29/03
 
-  Most effort put into improving EDF, largely via user feature requests.
-  Major progress has been made toward working ExtraData as well. The
-  Heretic status bar is now implemented.
+  Most effort put into improving EDF, largely via user feature requests. Major
+  progress has been made toward working ExtraData as well. The Heretic status
+  bar is now implemented.
 
 3.31 Public Beta 3 08/08/03
 
-  A long time in coming, and a ton of features to show for the delay.
-  EDF steals the show for this release.
+  A long time in coming, and a ton of features to show for the delay. EDF steals
+  the show for this release.
 
 3.31 Public Beta 2 03/05/03
 
   New BFGs, object z clipping, movable 3DMidTex lines, tons more Heretic
-  support, and some really nasty bugs fixed. Also first version to use
-  SDL_mixer for better sound.
+  support, and some really nasty bugs fixed. Also first version to use SDL_mixer
+  for better sound.
 
 3.31 Public Beta 1 09/11/02
 
-  Prelim. Heretic support, 3DMIDTEX flag, zdoom-style translucency, and
-  some other stuff now in. And of course, bug fixes galore.
+  Prelim. Heretic support, 3DMIDTEX flag, zdoom-style translucency, and some
+  other stuff now in. And of course, bug fixes galore.
 
 3.29 "Gamma" 07/04/02
 
-  Final release for v3.29. Massive changes all over. First version to
-  include Windows support. SoM is now co-programmer.
+  Final release for v3.29. Massive changes all over. First version to include
+  Windows support. SoM is now co-programmer.
 
 3.29 Development Beta 5 10/02/01
 
@@ -764,21 +771,20 @@ Engine:
 
 3.29 Public Beta 4 06/30/01
 
-  Fixed a good number of bugs once again. Improved portability with
-  Julian's help, major feature is working demo recording. See info below
-  and changelog for more info, as usual.
+  Fixed a good number of bugs once again. Improved portability with Julian's
+  help, major feature is working demo recording. See info below and changelog
+  for more info, as usual.
 
 3.29 Public Beta 3 05/10/01
 
-  Fixed a large number of bugs, added several interesting features. See
-  bug list below, and the changelog, for more information.
+  Fixed a large number of bugs, added several interesting features. See bug list
+  below, and the changelog, for more information.
 
 3.29 Public Beta 2 01/09/01
 
-  Fixed mouse buttons - problem was leftover code in I_GetEvent() that
-  caused the mouse button variables to never be asserted - code was
-  unreachable because of an assignment of the variable 'buttons' to
-  'lastbuttons'.
+  Fixed mouse buttons - problem was leftover code in I_GetEvent() that caused
+  the mouse button variables to never be asserted - code was unreachable because
+  of an assignment of the variable 'buttons' to 'lastbuttons'.
 
 3.29 Public Beta 1 01/08/01
 
@@ -798,7 +804,8 @@ Bugs Fixed (since 4.01.00):
   unlike the linked portals.
 
 + Concealed sector portals were previously missed by the blockmap, resulting in
-  buggy behavior when clipping against things inside some through-portal elevators.
+  buggy behavior when clipping against things inside some through-portal
+  elevators.
 
 + Fixed weird texture glitches happening with multiple polyobjects in a sector,
   some still and some moving.
@@ -815,12 +822,12 @@ Bugs Fixed (since 4.01.00):
 + Fixed wrong Heretic sound sequences, by adding more game mode specific
   implementations in EDF.
 
-+ Fixed the ceiling movement sound sequence from being cut off on stop.
-  This was breaking mods which were replacing DSSTNMOV with something longer,
-  which would only fully play when a ceiling stopped moving.
++ Fixed the ceiling movement sound sequence from being cut off on stop. This was
+  breaking mods which were replacing DSSTNMOV with something longer, which would
+  only fully play when a ceiling stopped moving.
 
-+ Fixed a buffer reading runaway when a demo has no marker at the end. Thanks
-  to vita for the bug fix.
++ Fixed a buffer reading runaway when a demo has no marker at the end. Thanks to
+  vita for the bug fix.
 
 + The Heretic skills 1 and 5 now multiply the ammo per item correctly.
 
@@ -844,85 +851,84 @@ Bugs Fixed (since 4.01.00):
 + Fixed edge-case situations where line portal teleportation would fail, such as
   when sliding really slowly along a wall, or almost parallel to one.
 
-+ Fixed several cases where portal interpolation would fail displaying correctly.
++ Fixed several cases where portal interpolation would fail displaying
+  correctly.
 
 + Fixed a bug where the walkcam would move a bit backwards when opening console.
 
 + Fixed objects standing on the outer edges of portal polyobjects not updating
   their floor reference Z.
 
-+ Fixed polyobject doors which rotate more than 180 degrees from
-  malfunctioning when blocked by things when closing.
++ Fixed polyobject doors which rotate more than 180 degrees from malfunctioning
+  when blocked by things when closing.
 
-+ Fixed the wrong drawing of Heretic weapons when no status bar is drawn.
-  Added a "fullscreenoffset" floating-point field in weaponinfo for that,
-  because Heretic weapons have different hardcoded offsets.
++ Fixed the wrong drawing of Heretic weapons when no status bar is drawn. Added
+  a "fullscreenoffset" floating-point field in weaponinfo for that, because
+  Heretic weapons have different hardcoded offsets.
 
-+ Fixed a memory leak where things with alphavelocity would never be
-  deallocated and gradually slow the game to a crawl.
++ Fixed a memory leak where things with alphavelocity would never be deallocated
+  and gradually slow the game to a crawl.
 
 + Fixed a crash happening with slopes having MBF-transferred skies.
 
-+ Fixed wrong drawing of animated textures on slopes when the textures are
-  of different sizes.
++ Fixed wrong drawing of animated textures on slopes when the textures are of
+  different sizes.
 
-+ Fixed a crash happening with sub-unit linedef length maps (made in UDMF).
-  Now the slime-trail reduction function uses floating-point.
++ Fixed a crash happening with sub-unit linedef length maps (made in UDMF). Now
+  the slime-trail reduction function uses floating-point.
 
-+ The scrolling sky scrolling speed, changeable through ACS, wasn't stored
-  in save games.
++ The scrolling sky scrolling speed, changeable through ACS, wasn't stored in
+  save games.
 
-+ Fixed PointPush_SetForce not using argument for magnitude when tagging
++ Fixed PointPush_SetForce not using argument for magnitude when tagging 
   sectors.
 
-+ Fixed a crash happening when seeing for the first time progressively
-  larger swirling textures.
++ Fixed a crash happening when seeing for the first time progressively larger
+  swirling textures.
 
 + Fixed a crash happening when loading a game with alpha-cycling sprites.
 
-+ Fixed a serious crash happening when having 3D clipping on, going first
-  to a map with linked portals, then going to a map without portals. The
-  crash would occur randomly and not always.
++ Fixed a serious crash happening when having 3D clipping on, going first to a
+  map with linked portals, then going to a map without portals. The crash would
+  occur randomly and not always.
 
 + Fixed ACS function CheckProximity failing to work when counting players.
 
 + Fixed EDF thingtype droptype to actually remove inherited object's item.
 
-+ If there are multiple textures with the same name in TEXTURE1+TEXTURE2,
-  the first one should be loaded, not the last. This fixes mods such as
-  Army of Darkness DOOM, which looked wrong in Eternity.
++ If there are multiple textures with the same name in TEXTURE1+TEXTURE2, the
+  first one should be loaded, not the last. This fixes mods such as Army of
+  Darkness DOOM, which looked wrong in Eternity.
 
-+ For macOS, fixed the failure to start Eternity from Terminal if its
-  locale was set to non-English settings. This may apply to other
-  UNIX-like systems too.
++ For macOS, fixed the failure to start Eternity from Terminal if its locale was
+  set to non-English settings. This may apply to other UNIX-like systems too.
 
-+ Stop HealThing from attempting to heal dead bodies. Crazy stuff would
-  happen, such as the view getting garbled and Eternity crashing.
++ Stop HealThing from attempting to heal dead bodies. Crazy stuff would happen,
+  such as the view getting garbled and Eternity crashing.
 
-+ Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
-  any place where both floor and ceiling of a zero-height sector have
-  F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
-  whereas both Chocolate-Doom and PrBoom would render the sky properly.
++ Fixed a sky rendering HOM happening in maps like Sargasso level 2 and any
+  place where both floor and ceiling of a zero-height sector have F_SKY1 and
+  it's expected to see a sky wall. Eternity would show HOM, whereas both
+  Chocolate-Doom and PrBoom would render the sky properly.
 
 + Fixed EDF thingtype translation 14 (white) not having any effect.
 
-+ Fixed buggy rendering of masked middle textures when mixing sector
-  colormaps with player invulnerability or light amplification.
++ Fixed buggy rendering of masked middle textures when mixing sector colormaps
+  with player invulnerability or light amplification.
 
 + Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
 
-+ Fixed 1-sided linedef wall portals showing HOM if their middle texture
-  isn't set.
++ Fixed 1-sided linedef wall portals showing HOM if their middle texture isn't
+  set.
 
-+ Fixed the ChangeSkill linedef special acting completely wrong when
-  called from ACS, and crashing when such a script is triggered from the
-  console.
++ Fixed the ChangeSkill linedef special acting completely wrong when called from
+  ACS, and crashing when such a script is triggered from the console.
 
 + Fixed a crash happening when entering a sector with an invalid colormap
   specified in the UDMF editor or ExtraData.
 
-+ Odd-duration frames now restore correctly when returning to nightmare
-  mode to normal.
++ Odd-duration frames now restore correctly when returning to nightmare mode to
+  normal.
 
 + Fixed the CLIPMIDTEX linedef flag not working over portals.
 
@@ -938,8 +944,8 @@ Bugs Fixed (since 4.01.00):
   FRACUNIT times smaller than it should have been before being converted to an
   angle. It is now read in as a fixed.
 
-+ Made A_AlertMonsters work properly for weapons. Now it actually just alerts all
-  the things without being contingent on you pointing your gun at an enemy.
++ Made A_AlertMonsters work properly for weapons. Now it actually just alerts
+  all the things without being contingent on you pointing your gun at an enemy.
   Thanks to Xaser for this.
 
 + A_CustomPlayerMelee now correctly turns you through portals.
@@ -965,8 +971,8 @@ Known Issues in v4.01.00:
   walk through them or get close. We will either fix this or add a compatibility
   flag for it.
 
-- There are some problems with slopes and portals when combined. All
-  slope-related bugs will be fixed when physics is introduced.
+- There are some problems with slopes and portals when combined. All slope-
+  related bugs will be fixed when physics is introduced.
 
 - Polyobject interactive portals don't support rotation, so only use them with
   translation motion.
