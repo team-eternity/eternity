@@ -22,6 +22,23 @@
 #ifndef M_DEBUG_H_
 #define M_DEBUG_H_
 
+#ifdef DEBUG_PROFILING
+
+class Profiler
+{
+public:
+   Profiler(int gametic, const char *func, double crashlimit = 0);
+   ~Profiler();
+
+private:
+   double starttime;
+   int gametic;
+   double climit;
+   const char *name;
+};
+
+#endif
+
 #if defined(_DEBUG) && !defined(NDEBUG)
 
 #include <typeinfo>
