@@ -366,6 +366,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
       {
          stepthing = thing;
          clip.zref.floor = topz;
+         clip.zref.floorgroupid = thing->groupid;
       }
    }
 
@@ -481,9 +482,13 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    {
       bottomsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
       clip.zref.floor = clip.zref.dropoff = bottomsector->srf.floor.height;
+      clip.zref.floorgroupid = bottomsector->groupid;
    }
    else
+   {
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+      clip.zref.floorgroupid = newsubsec->sector->groupid;
+   }
 
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE &&
       !(clip.thing->flags & MF_NOCLIP))
@@ -604,6 +609,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    memcpy(bbox, clip.bbox, sizeof(bbox));
    
    thingdropoffz = clip.zref.floor;
+
+   // WARNING: This may be a point of contention because we LOSE floorgroupid
+   // If we HAVE problems, then we need to write down the dropoffgroupid into clip
    clip.zref.floor = clip.zref.dropoff;
 
    // ioanch 20160121: reset portalhits and thing-visited groups

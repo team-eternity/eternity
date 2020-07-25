@@ -416,9 +416,13 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    {
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
       clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
+      clip.zref.floorgroupid = bottomfloorsector->groupid;
    }
    else
+   {
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+      clip.zref.floorgroupid = newsubsec->sector->groupid;
+   }
 
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
@@ -753,6 +757,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    if(clip.openbottom > clip.zref.floor)
    {
       clip.zref.floor = clip.openbottom;
+      clip.zref.floorgroupid = clip.bottomgroupid;
 
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
@@ -1218,6 +1223,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // will adjust them.
 
    clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+   clip.zref.floorgroupid = newsubsec->sector->groupid;
    clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;

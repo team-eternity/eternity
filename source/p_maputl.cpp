@@ -289,6 +289,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
                    uint32_t *lineclipflags)
 {
    fixed_t frontceilz, frontfloorz, backceilz, backfloorz;
+   int frontfloorgroupid, backfloorgroupid;
    // SoM: used for 3dmidtex
    fixed_t frontcz, frontfz, backcz, backfz, otop, obot;
 
@@ -362,19 +363,25 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          if(!portaldetect)  // ioanch
          {
             frontfloorz = backfloorz = clip.openfrontsector->srf.floor.height - (1024 * FRACUNIT); //mo->height;
+            frontfloorgroupid = backfloorgroupid =
+               clip.openfrontsector->srf.floor.portal->data.link.toid;  // Not exactly "extreme"
          }
          else
          {
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
             frontfloorz = clip.openfrontsector->srf.floor.height;
+            frontfloorgroupid = clip.openfrontsector->groupid;
             backfloorz  = clip.openbacksector->srf.floor.height;
+            backfloorgroupid = clip.openbacksector->groupid;
          }
       }
       else
 #endif
       {
          frontfloorz = clip.openfrontsector->srf.floor.height;
+         frontfloorgroupid = clip.openfrontsector->groupid;
          backfloorz  = clip.openbacksector->srf.floor.height;
+         backfloorgroupid = clip.openbacksector->groupid;
       }
 
       frontfz = clip.openfrontsector->srf.floor.height;
@@ -392,6 +399,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->srf.floor.pflags & PS_PASSABLE)
    {
       clip.openbottom = frontfloorz;
+      clip.bottomgroupid = frontfloorgroupid;
       clip.lowfloor = frontfloorz;
       if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
          clip.floorpic = clip.openfrontsector->srf.floor.pic;
@@ -399,6 +407,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    else if(frontfloorz > backfloorz)
    {
       clip.openbottom = frontfloorz;
+      clip.bottomgroupid = frontfloorgroupid;
       clip.lowfloor = backfloorz;
       // haleyjd
       if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
@@ -407,6 +416,7 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    else
    {
       clip.openbottom = backfloorz;
+      clip.bottomgroupid = backfloorgroupid;
       clip.lowfloor = frontfloorz;
       // haleyjd
       if(!portaldetect || !(clip.openbacksector->srf.floor.pflags & PS_PASSABLE))
@@ -476,7 +486,10 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       else
       {
          if(textop > clip.openbottom)
+         {
             clip.openbottom = textop;
+            clip.bottomgroupid = linedef->frontsector->groupid;
+         }
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
          if(portaldetect && (textop > clip.openfrontsector->srf.floor.height ||
