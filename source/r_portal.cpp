@@ -1348,6 +1348,17 @@ static void R_SetPortalFunction(pwindow_t *window)
 }
 
 //
+// Checks if window matches current view, if set
+//
+static bool R_windowMatchesCurrentView(const pwindow_t *window)
+{
+   if(window->minx > window->maxx)  // Empty window won't have initialized coordinates, so skip
+      return true;
+   return window->vx == viewx && window->vy == viewy && window->vz == viewz &&
+      window->vangle == viewangle;
+}
+
+//
 // Get sector portal window. 
 //
 pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
@@ -1365,7 +1376,7 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
 
    for(pwindow_t *rover = windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
-         rover->planez == surface.height)
+         rover->planez == surface.height && R_windowMatchesCurrentView(rover))
       {
          // If within a line-bounded portal, keep track of that too           )
          if(portalrender.active)
@@ -1431,7 +1442,8 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 
    while(rover)
    {
-      if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef)
+      if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef &&
+         R_windowMatchesCurrentView(rover))
       {
          R_updateLinePortalWindowGenerator(rover, seg);
          return rover;
