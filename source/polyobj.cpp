@@ -977,6 +977,7 @@ struct portalthing_t
    Mobj *thing;   // the touched thing
    v2fixed_t position;  // the position when touched
    v2fixed_t velocity;  // the velocity when touched
+   int interiorgroupid; // the groupid of the portal this mobj touches
 };
 
 //
@@ -987,6 +988,8 @@ struct portalthing_t
 static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
                                         PODCollection<portalthing_t> &things)
 {
+   I_Assert(line.pflags & PS_PASSABLE, "Expected linked portal\n");   // linked portal
+
    fixed_t linebox[4];
    // adjust linedef bounding box to blockmap, extend by MAXRADIUS
    linebox[BOXLEFT]   = (line.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -1011,9 +1014,19 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
             P_SetTarget(&pt.thing, mo);
             pt.position = { mo->x, mo->y };
             pt.velocity = { mo->momx, mo->momy };
+            pt.interiorgroupid = line.portal->data.link.toid;
          }
       }
 }
+
+//
+// Holds mobj reference and whether to move it or update its position
+//
+struct insideMobjMove_t
+{
+   Mobj *mobj;
+   bool onground;
+};
 
 //
 // Iterator for the function below
@@ -1022,16 +1035,17 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
 {
    int count;
    sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
-   auto &moved = *static_cast<PODCollection<Mobj *> *>(context);
+   auto &moved = *static_cast<PODCollection<insideMobjMove_t> *>(context);
    for(int i = 0; i < count; ++i)
    {
       for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
       {
          // NOSECTOR invisible things will be ignored :)
          // Also don't push back standing and hanging things
-         if(P_mobjOnSurface(*mo))
-            continue;
-         moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
+         insideMobjMove_t imm;
+         imm.mobj = mo;
+         imm.onground = P_mobjOnSurface(*mo);
+         moved.add(imm); // don't move them from here, as it may mutate the sector thinglist.
       }
    }
    return true;
@@ -1045,7 +1059,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
    if(!useportalgroups)
       return;
    bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
-   PODCollection<Mobj *> moved;
+   PODCollection<insideMobjMove_t> moved;
    for(size_t i = 0; i < po.numPortals; ++i)
    {
       const portal_t &portal = *po.portals[i];
@@ -1054,8 +1068,21 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
       P_ForEachClusterGroup(portal.data.link.fromid, portal.data.link.toid, groupvisit,
                             PolyobjIT_moveObjectsInside, &moved);
    }
-   for(Mobj *mo : moved)
-      P_TryMove(mo, mo->x + dx, mo->y + dy, 1);
+   for(const insideMobjMove_t &imm : moved)
+   {
+      bool p = false;
+      if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
+         p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);
+
+      if(!p)
+      {
+         // Make sure to update zref anyway
+         P_CheckPosition(imm.mobj, imm.mobj->x, imm.mobj->y);
+         imm.mobj->zref = clip.zref;
+      }
+      else
+         imm.mobj->backupPosition();   // FIXME: do this until we can interpolate polys with portals
+   }
    efree(groupvisit);
 }
 
@@ -1182,10 +1209,15 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
          {
             // We got one which we may want to move
-            if(P_mobjOnSurface(*pt.thing))
+            if(P_mobjOnSurface(*pt.thing) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
             {
                if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+               {
+                  P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
                   pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
+               }
+               else
+                  pt.thing->backupPosition();   // FIXME: temporary until we interpolate polyportals
             }
             else
             {
