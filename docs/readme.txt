@@ -488,6 +488,9 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     the source sector. Note that horizon portals still lack this feature, due to
     how they were designed.
 
+  * Self-tagging Portal_Define flipped-anchor visual portals are now possible,
+    though there'll be no mirror.
+
 
 - Sound improvements -
 

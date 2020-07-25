@@ -13,6 +13,9 @@ Since v4.00.00 "Völuspá"
 BUGFIX: Fixed HOM happening when trying to render same portal from two separate
         windows.
 
+IMPROVEMENT: Self-tagging Portal_Define flipped-anchor visual portals are now 
+        possible, though there'll be no mirror.
+
 --------------------------------------------------------------------------------
 19.07.2020
 
