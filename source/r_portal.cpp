@@ -1900,7 +1900,8 @@ void R_DefinePortal(const line_t &line)
       for(destlinenum = -1; 
          (destlinenum = P_FindLineFromTag(anchorid, destlinenum)) >= 0; )
       {
-         if(&lines[destlinenum] == &line)  // don't allow same target
+         // don't allow same target if there'll be no change
+         if(&lines[destlinenum] == &line && (type == portaltype_linked || !flipped))
             continue;
          break;
       }
