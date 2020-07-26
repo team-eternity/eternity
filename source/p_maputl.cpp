@@ -127,12 +127,14 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta)
       v2float_t bottomRight = { box[BOXRIGHT], box[BOXBOTTOM] };
       v2float_t topLeft = { box[BOXLEFT], box[BOXTOP] };
       float prod = delta % (topLeft - start);
-      return delta % (bottomRight - start) * prod >= 0 ? prod >= 0 : -1;
+      float prod2 = delta % (bottomRight - start);
+      return prod2 * prod >= 0 ? prod + prod2 >= 0 : -1;
    }
    v2float_t bottomLeft = { box[BOXLEFT], box[BOXBOTTOM] };
    v2float_t topRight = { box[BOXRIGHT], box[BOXTOP] };
    float prod = delta % (topRight - start);
-   return delta % (bottomLeft - start) * prod >= 0 ? prod >= 0 : -1;
+   float prod2 = delta % (bottomLeft - start);
+   return prod2 * prod >= 0 ? prod + prod2 >= 0 : -1;
 }
 
 //
