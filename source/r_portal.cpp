@@ -1148,7 +1148,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewz = M_DoubleToFixed(vz);
    view.z = static_cast<float>(vz);
 
-   viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   // IMPORTANT: cast the double first to signed integer, THEN to angle. Otherwise, on 32-bit MSVC
+   // at least, it will fail to convert, returning 0xFFFFFFFF instead!
+   viewangle = window->vangle + static_cast<angle_t>(static_cast<int32_t>(tr.angle * ANG180 / PI));
    viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
    viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.angle = (ANG90 - viewangle) * PI / ANG180;
@@ -1545,8 +1547,7 @@ void R_RenderPortals()
 //
 // Apply transform to fixed-point values
 //
-void portaltransform_t::applyTo(fixed_t &x, fixed_t &y, 
-   float *fx, float *fy, bool nomove) const
+void portaltransform_t::applyTo(fixed_t &x, fixed_t &y, float *fx, float *fy, bool nomove) const
 {
    double wx = M_FixedToDouble(x);
    double wy = M_FixedToDouble(y);
