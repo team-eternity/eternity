@@ -783,14 +783,17 @@ enum
 //
 // Flood-fill the clusters matrix
 //
-static void P_floodFillCluster(const uint8_t *connections, int sourcegroup, 
-   int groupid, int *row, int clusterid)
+static void P_floodFillCluster(const uint8_t *connections, int sourcegroup, int groupid, int *row,
+                               int clusterid)
 {
    row[groupid] = clusterid;
    for(int i = 0; i < groupcount; ++i)
    {
-      if(i == sourcegroup || i == groupid || connections[sourcegroup * groupcount + i] & conn_polycoupled)
+      if(i == sourcegroup || i == groupid ||
+         connections[sourcegroup * groupcount + i] & conn_polycoupled)
+      {
          continue;
+      }
       if(connections[groupid * groupcount + i] & conn_yes && row[i] == -1)
          P_floodFillCluster(connections, sourcegroup, i, row, clusterid);
    }

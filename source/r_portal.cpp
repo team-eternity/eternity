@@ -1686,14 +1686,12 @@ static void R_pairPortalLines(line_t &line, line_t &pline)
 
    if(line.portal && pline.portal)
    {
-      if(line.portal->type == R_LINKED &&
-         pline.portal->type == R_LINKED)
+      if(line.portal->type == R_LINKED && pline.portal->type == R_LINKED)
       {
          line.portal->data.link.polyportalpartner = pline.portal;
          pline.portal->data.link.polyportalpartner = line.portal;
       }
-      else if(line.portal->type == R_TWOWAY &&
-         pline.portal->type == R_TWOWAY)
+      else if(line.portal->type == R_TWOWAY && pline.portal->type == R_TWOWAY)
       {
          line.portal->data.anchor.polyportalpartner = pline.portal;
          pline.portal->data.anchor.polyportalpartner = line.portal;

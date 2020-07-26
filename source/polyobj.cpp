@@ -534,8 +534,8 @@ static void Polyobj_collectPortals(polyobj_t *po)
    po->hasLinkedPortals = hasLinked;
    if(po->numPortals)
    {
-      po->portals = emalloctag(decltype(po->portals), 
-         po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
+      po->portals = emalloctag(decltype(po->portals),  po->numPortals * sizeof(*po->portals),
+                               PU_LEVEL, nullptr);
       memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
    }
 }
