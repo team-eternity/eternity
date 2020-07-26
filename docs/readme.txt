@@ -983,5 +983,9 @@ Known Issues in v4.01.00:
 - Polyobject interactive portals don't support rotation, so only use them with
   translation motion.
 
+- Do not assume stable physical behavior when using polyobject linked portals
+  to lead into other polyobject linked portals. Right now the only supported
+  behavior is to use them as vehicles/service lifts/platforms.
+
 - Some momentary interpolation glitches occur when an attached horizontal
   portal surface passes through you.
