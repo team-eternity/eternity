@@ -254,9 +254,8 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 }
 
 
-fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
-   fixed_t *outSlope, Mobj **outTarget,
-   fixed_t *outDist, const linkdata_t &data) const
+fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope,
+                            Mobj **outTarget, fixed_t *outDist, const linkdata_t &data) const
 {
    if(newstate.groupid == state.groupid)
       return false;
@@ -271,8 +270,7 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac,
    fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
    newstate.prev = this;
 
-   fixed_t res = aimLineAttack(thing, angle, lessdist, aimflagsmask, &newstate,
-      outTarget, outDist);
+   fixed_t res = aimLineAttack(thing, angle, lessdist, aimflagsmask, &newstate, outTarget, outDist);
    if(outSlope)
       *outSlope = res;
    return true;
