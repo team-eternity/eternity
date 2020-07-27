@@ -195,60 +195,6 @@ static void R_PlaneLight()
 }
 
 //
-// R_doubleToUint32
-//
-// haleyjd: Derived from Mozilla SpiderMonkey jsnum.c;
-// used under the terms of the GPL.
-//
-// * The Original Code is Mozilla Communicator client code, released
-// * March 31, 1998.
-// *
-// * The Initial Developer of the Original Code is
-// * Netscape Communications Corporation.
-// * Portions created by the Initial Developer are Copyright (C) 1998
-// * the Initial Developer. All Rights Reserved.
-// *
-// * Contributor(s):
-// *   IBM Corp.
-//
-static inline uint32_t R_doubleToUint32(double d)
-{
-#ifdef SDL_BYTEORDER
-   // TODO: Use C++ std::endian when C++20 can be used
-   // This bit (and the ifdef) isn't from SpiderMonkey.
-   // Credit goes to Marrub and David Hill
-   return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
-#else
-   int32_t i;
-   bool    neg;
-   double  two32;
-
-   // FIXME: should check for finiteness first, but we have no code for 
-   // doing that in EE yet.
-
-   //if (!JSDOUBLE_IS_FINITE(d))
-   //   return 0;
-
-   // We check whether d fits int32, not uint32, as all but the ">>>" bit
-   // manipulation bytecode stores the result as int, not uint. When the
-   // result does not fit int jsval, it will be stored as a negative double.
-   i = (int32_t)d;
-   if((double)i == d)
-      return (int32_t)i;
-
-   neg = (d < 0);
-   d   = floor(neg ? -d : d);
-   d   = neg ? -d : d;
-
-   // haleyjd: This is the important part: reduction modulo UINT_MAX.
-   two32 = 4294967296.0;
-   d     = fmod(d, two32);
-
-   return (uint32_t)(d >= 0 ? d : d + two32);
-#endif
-}
-
-//
 // R_MapPlane
 //
 // BASIC PRIMITIVE

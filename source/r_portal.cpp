@@ -1150,7 +1150,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
 
    // IMPORTANT: cast the double first to signed integer, THEN to angle. Otherwise, on 32-bit MSVC
    // at least, it will fail to convert, returning 0xFFFFFFFF instead!
-   viewangle = window->vangle + static_cast<angle_t>(static_cast<int32_t>(tr.angle * ANG180 / PI));
+   viewangle = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
    viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
    viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.angle = (ANG90 - viewangle) * PI / ANG180;
