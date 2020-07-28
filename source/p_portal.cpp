@@ -770,6 +770,20 @@ bool P_BuildLinkTable()
 
    // haleyjd 05/17/13: mark all blockmap cells where portals live.
    P_buildPortalMap();
+
+   // Check all portals if they fit the link
+   for(const portal_t *portal = R_GetPortalHead(); portal; portal = portal->next)
+   {
+      if(portal->type != R_LINKED)
+         continue;
+      const linkdata_t &data = portal->data.link;
+      const linkoffset_t *link = P_GetLinkOffset(data.fromid, data.toid);
+      if(link->x != data.deltax || link->y != data.deltay || link->z != data.deltaz)
+      {
+         C_Printf("This level is twisted (line %d).\n", portal->data.link.maker);
+         break;
+      }
+   }
    
    return true;
 }
