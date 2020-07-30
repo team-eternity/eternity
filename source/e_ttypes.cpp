@@ -824,8 +824,7 @@ void E_PtclTerrainHit(particle_t *p)
 // Executes mobj terrain effects.
 // ioanch 20160116: also use "sector" to change the group ID if needed
 //
-static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, 
-                         const sector_t *sector)
+static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = nullptr;
@@ -841,8 +840,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z,
 
    // low mass splash?
    // note: small splash didn't exist before version 3.33
-   if(demo_version >= 333 && 
-      lowmass && splash->smallclass != -1)
+   if(demo_version >= 333 && lowmass && splash->smallclass != -1)
    {
       mo = P_SpawnMobj(tx, ty, z, splash->smallclass);
       mo->floorclip += splash->smallclip;
@@ -883,7 +881,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z,
 //
 // Called when a thing hits a floor or passes a deep water plane.
 //
-bool E_HitWater(Mobj *thing, sector_t *sector)
+bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
    ETerrain *terrain;
@@ -900,12 +898,10 @@ bool E_HitWater(Mobj *thing, sector_t *sector)
    if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
       terrain = &solid;
 
-   z = sector->heightsec != -1 ?
-         sectors[sector->heightsec].srf.floor.height :
-         sector->srf.floor.height;
+   z = sector->heightsec != -1 ? sectors[sector->heightsec].srf.floor.height : 
+      sector->srf.floor.height;
 
-   // ioanch 20160116: also use "sector" as a parameter in case it's in another
-   // group
+   // ioanch 20160116: also use "sector" as a parameter in case it's in another group
    E_TerrainHit(terrain, thing, z, sector);
 
    return terrain->liquid;

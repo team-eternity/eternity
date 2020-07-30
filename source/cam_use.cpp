@@ -141,11 +141,10 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    if(li->special && !(li->pflags & PS_PASSABLE))
    {
       // ioanch 20160131: portal aware
-      const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid,
-         li->frontsector->groupid);
-      P_UseSpecialLine(context->thing, li,
-         P_PointOnLineSidePrecise(context->thing->x + link->x,
-            context->thing->y + link->y, li) == 1);
+      const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid, li->frontsector->groupid);
+      P_UseSpecialLine(context->thing, li, 
+                       P_PointOnLineSidePrecise(context->thing->x + link->x, 
+                                                context->thing->y + link->y, li));
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
