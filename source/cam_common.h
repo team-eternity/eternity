@@ -52,6 +52,10 @@ class PathTraverser
 {
 public:
    bool traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty);
+   bool traverse(v2fixed_t c, v2fixed_t t)
+   {
+      return traverse(c.x, c.y, t.x, t.y);
+   }
    PathTraverser(const PTDef &indef, void *incontext);
    ~PathTraverser()
    {

@@ -51,7 +51,7 @@ public:
    struct State
    {
       const ShootContext *prev;
-      fixed_t x, y, z;
+      v3fixed_t v;
       fixed_t origindist;
       int groupid;
       int reclevel;
@@ -74,11 +74,9 @@ public:
 private:
 
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
-   bool shoot2SLine(line_t *li, int lineside, fixed_t dist,
-      const lineopening_t &lo) const;
+   bool shoot2SLine(line_t *li, int lineside, fixed_t dist, const lineopening_t &lo) const;
    bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const;
-   static bool shootTraverse(const intercept_t *in, void *data,
-      const divline_t &trace);
+   static bool shootTraverse(const intercept_t *in, void *data, const divline_t &trace);
    ShootContext(const params_t &params, const State *instate);
 
    const params_t params;
@@ -92,10 +90,8 @@ private:
 void ShootContext::lineAttack(const params_t &params, const State *state)
 {
    ShootContext context(params, state);
-   fixed_t x2 = context.state.x + (context.params.attackrange >>
-                                   FRACBITS) * context.cos;
-   fixed_t y2 = context.state.y + (context.params.attackrange >>
-                                   FRACBITS) * context.sin;
+   v2fixed_t v2 = v2fixed_t(context.state.v) +
+         v2fixed_t(context.cos, context.sin).fixedMul(context.params.attackrange);
 
    PTDef def;
    def.flags = CAM_ADDLINES | CAM_ADDTHINGS;
@@ -103,10 +99,10 @@ void ShootContext::lineAttack(const params_t &params, const State *state)
    def.trav = shootTraverse;
    PathTraverser traverser(def, &context);
 
-   if(traverser.traverse(context.state.x, context.state.y, x2, y2))
+   if(traverser.traverse(v2fixed_t(context.state.v), v2))
    {
       // if 100% passed, check if the final sector was crossed
-      const sector_t *endsector = R_PointInSubsector(x2, y2)->sector;
+      const sector_t *endsector = R_PointInSubsector(v2)->sector;
       context.checkShootFlatPortal(endsector, FRACUNIT);
    }
 }
@@ -114,25 +110,24 @@ void ShootContext::lineAttack(const params_t &params, const State *state)
 //
 // Check if hit a portal
 //
-bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
-   fixed_t infrac) const
+bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infrac) const
 {
    const linkdata_t *portaldata = nullptr;
    fixed_t pfrac = 0;
    fixed_t absratio = 0;
    int newfromid = R_NOGROUP;
-   fixed_t z = state.z + FixedMul(params.aimslope,
-                                  FixedMul(infrac, params.attackrange));
+   v3fixed_t v;
+   v.z = state.v.z + FixedMul(params.aimslope, FixedMul(infrac, params.attackrange));
 
    if(sidesector->srf.ceiling.pflags & PS_PASSABLE)
    {
       // ceiling portal
       fixed_t planez = P_CeilingPortalZ(*sidesector);
-      if(z > planez)
+      if(v.z > planez)
       {
-         pfrac = FixedDiv(planez - state.z, params.aimslope);
-         absratio = FixedDiv(planez - state.z, z - state.z);
-         z = planez;
+         pfrac = FixedDiv(planez - state.v.z, params.aimslope);
+         absratio = FixedDiv(planez - state.v.z, v.z - state.v.z);
+         v.z = planez;
          portaldata = R_CPLink(sidesector);
          newfromid = sidesector->srf.ceiling.portal->data.link.toid;
       }
@@ -141,11 +136,11 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    {
       // floor portal
       fixed_t planez = P_FloorPortalZ(*sidesector);
-      if(z < planez)
+      if(v.z < planez)
       {
-         pfrac = FixedDiv(planez - state.z, params.aimslope);
-         absratio = FixedDiv(planez - state.z, z - state.z);
-         z = planez;
+         pfrac = FixedDiv(planez - state.v.z, params.aimslope);
+         absratio = FixedDiv(planez - state.v.z, v.z - state.v.z);
+         v.z = planez;
          portaldata = R_FPLink(sidesector);
          newfromid = sidesector->srf.floor.portal->data.link.toid;
       }
@@ -153,19 +148,19 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
    if(portaldata && pfrac > 0)
    {
       // update x and y as well
-      fixed_t x = state.x + FixedMul(cos, pfrac);
-      fixed_t y = state.y + FixedMul(sin, pfrac);
+      v.x = state.v.x + FixedMul(cos, pfrac);
+      v.y = state.v.y + FixedMul(sin, pfrac);
       if(newfromid == state.groupid || state.reclevel >= RECURSION_LIMIT ||
-         R_PointInSubsector(x, y)->sector != sidesector)
+         R_PointInSubsector(v.x, v.y)->sector != sidesector)
+      {
          return false;
+      }
 
       // NOTE: for line attacks, sightzstart also moves!
       fixed_t dist = FixedMul(FixedMul(params.attackrange, infrac), absratio);
       fixed_t remdist = params.attackrange - dist;
 
-      x += portaldata->delta.x;
-      y += portaldata->delta.y;
-      z += portaldata->delta.z;
+      v += portaldata->delta;
 
       P_FitLinkOffsetsToPortal(*portaldata);
 
@@ -173,9 +168,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       newstate.groupid = newfromid;
       newstate.origindist += dist;
       newstate.prev = this;
-      newstate.x = x;
-      newstate.y = y;
-      newstate.z = z;
+      newstate.v = v;
       newstate.reclevel++;
 
       params_t newparams(params);
@@ -194,8 +187,8 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
    const lineopening_t &lo) const
 {
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
-   if(FixedDiv(lo.openbottom - state.z, dist) <= params.aimslope &&
-      FixedDiv(lo.opentop - state.z, dist) >= params.aimslope)
+   if(FixedDiv(lo.openbottom - state.v.z, dist) <= params.aimslope &&
+      FixedDiv(lo.opentop - state.v.z, dist) >= params.aimslope)
    {
       if(li->special)
          P_ShootSpecialLine(params.thing, li, lineside);
@@ -245,21 +238,21 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          const portal_t *portal = nullptr;
          if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
             li->backsector->srf.floor.pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->srf.floor.height - context.state.z, dist)
+            FixedDiv(li->backsector->srf.floor.height - context.state.v.z, dist)
             >= context.params.aimslope)
          {
             portal = li->backsector->srf.floor.portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
             li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->srf.ceiling.height - context.state.z, dist)
+            FixedDiv(li->backsector->srf.ceiling.height - context.state.v.z, dist)
             <= context.params.aimslope)
          {
             portal = li->backsector->srf.ceiling.portal;
          }
          else if(li->pflags & PS_PASSABLE &&
             (!(li->extflags & EX_ML_LOWERPORTAL) ||
-               FixedDiv(li->backsector->srf.floor.height - context.state.z, dist)
+             FixedDiv(li->backsector->srf.floor.height - context.state.v.z, dist)
                < context.params.aimslope))
          {
             portal = li->portal;
@@ -274,26 +267,23 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
                return true;
 
             // NOTE: for line attacks, sightzstart also moves!
-            fixed_t x = trace.x + FixedMul(trace.dx, in->frac);
-            fixed_t y = trace.y + FixedMul(trace.dy, in->frac);
-            fixed_t z = context.state.z + FixedMul(context.params.aimslope,
+            v3fixed_t v;
+            v.x = trace.x + FixedMul(trace.dx, in->frac);
+            v.y = trace.y + FixedMul(trace.dy, in->frac);
+            v.z = context.state.v.z + FixedMul(context.params.aimslope,
                FixedMul(in->frac, context.params.attackrange));
             fixed_t dist = FixedMul(context.params.attackrange, in->frac);
             fixed_t remdist = context.params.attackrange - dist;
 
             const linkdata_t &data = portal->data.link;
 
-            x += data.delta.x;
-            y += data.delta.y;
-            z += data.delta.z;  // why not
+            v += data.delta;
 
             P_FitLinkOffsetsToPortal(data);
 
             State newstate(context.state);
             newstate.groupid = newfromid;
-            newstate.x = x;
-            newstate.y = y;
-            newstate.z = z;
+            newstate.v = v;
             newstate.prev = &context;
             newstate.origindist += dist;
             ++newstate.reclevel;
@@ -313,7 +303,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          context.state.origindist);
       fixed_t x = trace.x + FixedMul(trace.dx, frac);
       fixed_t y = trace.y + FixedMul(trace.dy, frac);
-      fixed_t z = context.state.z + FixedMul(context.params.aimslope,
+      fixed_t z = context.state.v.z + FixedMul(context.params.aimslope,
          FixedMul(frac, context.params.attackrange));
 
       const sector_t *sidesector = lineside ? li->backsector : li->frontsector;
@@ -330,7 +320,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(z < sidesector->srf.floor.height)
          {
             fixed_t pfrac = FixedDiv(sidesector->srf.floor.height
-               - context.state.z, context.params.aimslope);
+                                     - context.state.v.z, context.params.aimslope);
 
             if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
                R_IsSkyLikePortalFloor(*sidesector))
@@ -348,7 +338,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          else if(z > sidesector->srf.ceiling.height)
          {
             fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height
-               - context.state.z, context.params.aimslope);
+                                     - context.state.v.z, context.params.aimslope);
             if(sidesector->intflags & SIF_SKY ||
                R_IsSkyLikePortalCeiling(*sidesector))
             {
@@ -401,7 +391,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
    return P_ShootThing(in,
                        context.params.thing,
                        context.params.attackrange,
-                       context.state.z,
+                       context.state.v.z,
                        context.params.aimslope,
                        context.params.attackrange + context.state.origindist,
                        trace,
@@ -422,9 +412,9 @@ ShootContext::ShootContext(const params_t &params, const State *instate) :
       state = *instate;
    else
    {
-      state.x = params.thing->x;
-      state.y = params.thing->y;
-      state.z = params.thing->z - params.thing->floorclip +
+      state.v.x = params.thing->x;
+      state.v.y = params.thing->y;
+      state.v.z = params.thing->z - params.thing->floorclip +
       (params.thing->height >> 1) + 8 * FRACUNIT;
       state.groupid = params.thing->groupid;
       state.prev = nullptr;

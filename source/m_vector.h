@@ -55,6 +55,14 @@ struct v2fixed_t
    
    // ioanch 20160106: added operators as needed
 
+   v2fixed_t() = default;
+   v2fixed_t(fixed_t x, fixed_t y) : x(x), y(y)
+   {
+   }
+   explicit v2fixed_t(const v3fixed_t &other3d) : x(other3d.x), y(other3d.y)
+   {
+   }
+
    v2fixed_t operator + (v2fixed_t other) const
    {
       return { x + other.x, y + other.y };
