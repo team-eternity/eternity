@@ -232,8 +232,8 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
    else if(portal->type == R_LINKED && applyTranslation)
    {
       const linkdata_t &link = portal->data.link;
-      x += link.deltax;
-      y += link.deltay;
+      x += link.delta.x;
+      y += link.delta.y;
    }
 }
 inline static void R_applyPortalTransformTo(const portal_t *portal, float &x, float &y,
@@ -247,8 +247,8 @@ inline static void R_applyPortalTransformTo(const portal_t *portal, float &x, fl
    else if(portal->type == R_LINKED && applyTranslation)
    {
       const linkdata_t &link = portal->data.link;
-      x += M_FixedToFloat(link.deltax);
-      y += M_FixedToFloat(link.deltay);
+      x += M_FixedToFloat(link.delta.x);
+      y += M_FixedToFloat(link.delta.y);
    }
 }
 static void R_applyPortalTransformTo(const portal_t *portal, v2float_t &v, bool applyTranslation)
@@ -1250,9 +1250,9 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx + portal->data.link.deltax;
-   viewy  = window->vy + portal->data.link.deltay;
-   viewz  = window->vz + portal->data.link.deltaz;
+   viewx  = window->vx + portal->data.link.delta.x;
+   viewy  = window->vy + portal->data.link.delta.y;
+   viewz  = window->vz + portal->data.link.delta.z;
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -1631,8 +1631,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ldata.toid   = toid;
    ldata.planez = planez;
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &ldata.deltax, &ldata.deltay, &ldata.deltaz);
+   R_CalculateDeltas(markerlinenum, anchorlinenum, &ldata.delta.x, &ldata.delta.y, &ldata.delta.z);
 
    ldata.maker = markerlinenum;
    ldata.anchor = anchorlinenum;
@@ -1640,9 +1639,9 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type  != R_LINKED                || 
-         ldata.deltax != rover->data.link.deltax ||
-         ldata.deltay != rover->data.link.deltay ||
-         ldata.deltaz != rover->data.link.deltaz ||
+         ldata.delta.x != rover->data.link.delta.x ||
+         ldata.delta.y != rover->data.link.delta.y ||
+         ldata.delta.z != rover->data.link.delta.z ||
          ldata.fromid != rover->data.link.fromid ||
          ldata.toid   != rover->data.link.toid   ||
          ldata.planez != rover->data.link.planez)

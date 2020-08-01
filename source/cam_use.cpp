@@ -189,8 +189,8 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       newState.attackrange -= FixedMul(newState.attackrange, in->frac);
       newState.groupid = newfromid;
       newState.reclevel++;
-      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + portal->data.link.deltax;
-      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + portal->data.link.deltay;
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + portal->data.link.delta.x;
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + portal->data.link.delta.y;
 
       useLines(context->player, x, y, &newState);
       context->portalhit = true;

@@ -263,9 +263,9 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac, fixed_t *outSl
    if(state.reclevel > RECURSION_LIMIT)
       return false;
 
-   newstate.cx += data.deltax;
-   newstate.cy += data.deltay;
-   newstate.cz += data.deltaz;
+   newstate.cx += data.delta.x;
+   newstate.cy += data.delta.y;
+   newstate.cz += data.delta.z;
 
    fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
    newstate.prev = this;

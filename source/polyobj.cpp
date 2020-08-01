@@ -555,13 +555,13 @@ static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t d
       if(portal->type == R_LINKED)
       {
          linkdata_t &ldata = portal->data.link;
-         ldata.deltax -= dx;
-         ldata.deltay -= dy;
+         ldata.delta.x -= dx;
+         ldata.delta.y -= dy;
          portal_t *partner = ldata.polyportalpartner;
          if(partner)
          {
-            partner->data.link.deltax += dx;
-            partner->data.link.deltay += dy;
+            partner->data.link.delta.x += dx;
+            partner->data.link.delta.y += dy;
          }
          // mark the group as being moved by the portal or not.
          P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, true,

@@ -346,12 +346,12 @@ static void P_GetChasecamTarget()
       }
       if(traverse.link)
       {
-         travstart.x = traverse.intersection.x + traverse.link->deltax;
-         travstart.y = traverse.intersection.y + traverse.link->deltay;
-         traverse.startz += traverse.link->deltaz;
-         pCamTarget.x += traverse.link->deltax;
-         pCamTarget.y += traverse.link->deltay;
-         pCamTarget.z += traverse.link->deltaz;
+         travstart.x = traverse.intersection.x + traverse.link->delta.x;
+         travstart.y = traverse.intersection.y + traverse.link->delta.y;
+         traverse.startz += traverse.link->delta.z;
+         pCamTarget.x += traverse.link->delta.x;
+         pCamTarget.y += traverse.link->delta.y;
+         pCamTarget.z += traverse.link->delta.z;
          pCamTargetGroupId = traverse.link->toid;
       }
    } while(traverse.link && repprotection++ < 64);
@@ -541,9 +541,9 @@ static void P_checkWalkcamSectorPortal(const sector_t *sector)
          if(!op.comparison(walkcamera.z, planez))
             break;
          const linkdata_t *ldata = op.plink(sector);
-         walkcamera.x += ldata->deltax;
-         walkcamera.y += ldata->deltay;
-         walkcamera.z += ldata->deltaz;
+         walkcamera.x += ldata->delta.x;
+         walkcamera.y += ldata->delta.y;
+         walkcamera.z += ldata->delta.z;
          walkcamera.groupid = ldata->toid;
          sector = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
          movedalready = true;

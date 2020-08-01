@@ -431,10 +431,8 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
    // We've found a linked portal so add the entry to the table
    if(!link)
    {
-      int ret = P_AddLinkOffset(sec->groupid, ldata.toid,
-                                ldata.deltax, 
-                                ldata.deltay, 
-                                ldata.deltaz);
+      int ret = P_AddLinkOffset(sec->groupid, ldata.toid, ldata.delta.x, ldata.delta.y,
+                                ldata.delta.z);
       if(ret)
          return false;
    }
@@ -503,8 +501,8 @@ void P_FitLinkOffsetsToPortal(const linkdata_t &ldata)
 {
    linkoffset_t *offset = P_GetLinkOffset(ldata.fromid, ldata.toid);
    // Move the "fromid" group because the crossing actor is now in "toid".
-   v3fixed_t shift = { ldata.deltax - offset->x, ldata.deltay - offset->y, 
-                       ldata.deltaz - offset->z };
+   v3fixed_t shift = { ldata.delta.x - offset->x, ldata.delta.y - offset->y,
+      ldata.delta.z - offset->z };
    if(!shift.x && !shift.y && !shift.z)
       return;
    
@@ -778,7 +776,7 @@ bool P_BuildLinkTable()
          continue;
       const linkdata_t &data = portal->data.link;
       const linkoffset_t *link = P_GetLinkOffset(data.fromid, data.toid);
-      if(link->x != data.deltax || link->y != data.deltay || link->z != data.deltaz)
+      if(link->x != data.delta.x || link->y != data.delta.y || link->z != data.delta.z)
       {
          C_Printf("This level is twisted (line %d).\n", portal->data.link.maker);
          break;

@@ -321,10 +321,9 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          ((clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
          clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE &&
          clip.openfrontsector->srf.ceiling.portal == clip.openbacksector->srf.ceiling.portal) ||
-         (clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
-          linedef->pflags & PS_PASSABLE &&
-          clip.openfrontsector->srf.ceiling.portal
-          ->data.link.deltaEquals(linedef->portal->data.link))))
+         (clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+          clip.openfrontsector->srf.ceiling.portal->data.link.delta ==
+          linedef->portal->data.link.delta)))
       {
          // also handle line portal + ceiling portal, for edge portals
          if(!portaldetect) // ioanch
@@ -357,10 +356,9 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          ((clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
          clip.openbacksector->srf.floor.pflags & PS_PASSABLE &&
          clip.openfrontsector->srf.floor.portal == clip.openbacksector->srf.floor.portal) ||
-          (clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
-           linedef->pflags & PS_PASSABLE &&
-           clip.openfrontsector->srf.floor.portal
-           ->data.link.deltaEquals(linedef->portal->data.link))))
+          (clip.openfrontsector->srf.floor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+           clip.openfrontsector->srf.floor.portal->data.link.delta ==
+           linedef->portal->data.link.delta)))
       {
          if(!portaldetect)  // ioanch
          {

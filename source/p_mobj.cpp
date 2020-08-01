@@ -1324,8 +1324,8 @@ bool P_CheckPortalTeleport(Mobj *mobj)
                if(op.comparison(prevpassheight, planez))
                   mobj->prevpos.portalline = crossedge;
             }
-            EV_SectorPortalTeleport(mobj, ldata->deltax, ldata->deltay,
-                                    ldata->deltaz, ldata->fromid, ldata->toid);
+            EV_SectorPortalTeleport(mobj, ldata->delta.x, ldata->delta.y, ldata->delta.z,
+                                    ldata->fromid, ldata->toid);
             if(j)
             {
                mobj->backupPosition();

@@ -432,9 +432,9 @@ void P_ParticleThinker(void)
          const linkdata_t *ldata = R_FPLink(psec);
 
          P_UnsetParticlePosition(particle);
-         particle->x += ldata->deltax;
-         particle->y += ldata->deltay;
-         particle->z += ldata->deltaz;
+         particle->x += ldata->delta.x;
+         particle->y += ldata->delta.y;
+         particle->z += ldata->delta.z;
          P_SetParticlePosition(particle);
       }
       else if(particle->z < floorheight)
@@ -460,9 +460,9 @@ void P_ParticleThinker(void)
          const linkdata_t *ldata = R_CPLink(psec);
 
          P_UnsetParticlePosition(particle);
-         particle->x += ldata->deltax;
-         particle->y += ldata->deltay;
-         particle->z += ldata->deltaz;
+         particle->x += ldata->delta.x;
+         particle->y += ldata->delta.y;
+         particle->z += ldata->delta.z;
          P_SetParticlePosition(particle);
       }
       

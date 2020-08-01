@@ -163,9 +163,9 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector,
       fixed_t dist = FixedMul(FixedMul(params.attackrange, infrac), absratio);
       fixed_t remdist = params.attackrange - dist;
 
-      x += portaldata->deltax;
-      y += portaldata->deltay;
-      z += portaldata->deltaz;
+      x += portaldata->delta.x;
+      y += portaldata->delta.y;
+      z += portaldata->delta.z;
 
       P_FitLinkOffsetsToPortal(*portaldata);
 
@@ -283,9 +283,9 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 
             const linkdata_t &data = portal->data.link;
 
-            x += data.deltax;
-            y += data.deltay;
-            z += data.deltaz;  // why not
+            x += data.delta.x;
+            y += data.delta.y;
+            z += data.delta.z;  // why not
 
             P_FitLinkOffsetsToPortal(data);
 
