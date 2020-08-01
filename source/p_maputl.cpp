@@ -316,7 +316,6 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
    {
-#ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 &&
          ((clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
          clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE &&
@@ -339,7 +338,6 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          }
       }
       else
-#endif
       {
          frontceilz = clip.openfrontsector->srf.ceiling.height;
          backceilz  = clip.openbacksector->srf.ceiling.height;
@@ -351,7 +349,6 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
 
 
    {
-#ifdef R_LINKEDPORTALS
       if(mo && demo_version >= 333 &&
          ((clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
          clip.openbacksector->srf.floor.pflags & PS_PASSABLE &&
@@ -376,7 +373,6 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          }
       }
       else
-#endif
       {
          frontfloorz = clip.openfrontsector->srf.floor.height;
          frontfloorgroupid = clip.openfrontsector->groupid;
