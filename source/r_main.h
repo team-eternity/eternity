@@ -35,6 +35,7 @@
 
 #include "tables.h"
 
+#include "m_vector.h"
 // haleyjd 12/15/2010: Lighting data is required
 #include "r_lighting.h"
 
@@ -104,9 +105,7 @@ subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
 void R_SectorColormap(const sector_t *s);
 
-// ioanch 20160106: template variants
-template<typename T> 
-inline static subsector_t *R_PointInSubsector(T &&v)
+inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
    return R_PointInSubsector(v.x, v.y);
 }

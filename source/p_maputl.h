@@ -49,10 +49,24 @@ struct subsector_t;
 
 struct divline_t
 {
-   fixed_t     x;
-   fixed_t     y;
-   fixed_t     dx;
-   fixed_t     dy;
+   union
+   {
+      struct
+      {
+         fixed_t     x;
+         fixed_t     y;
+      };
+      v2fixed_t v;
+   };
+   union
+   {
+      struct
+      {
+         fixed_t     dx;
+         fixed_t     dy;
+      };
+      v2fixed_t dv;
+   };
 };
 
 // SoM: linetracer_t contains a divline_t for the appropriate functions but 

@@ -54,20 +54,25 @@ struct v2fixed_t
    fixed_t x, y;
    
    // ioanch 20160106: added operators as needed
-   
-   template<typename T>
-   v2fixed_t &operator += (T &&other) { x += other.x; 
-                                        y += other.y; return *this; }
-                                        
-   template<typename T>
-   v2fixed_t operator - (T &&other) const 
-   { 
-      v2fixed_t ret = { x - other.x, y - other.y };
-      return ret;
+
+   v2fixed_t operator + (v2fixed_t other) const
+   {
+      return { x + other.x, y + other.y };
    }
 
-   template<typename T>
-   v2fixed_t &operator -= (const T &other)
+   v2fixed_t operator - (v2fixed_t other) const
+   {
+      return { x - other.x, y - other.y };
+   }
+   
+   v2fixed_t &operator += (v2fixed_t other)
+   {
+      x += other.x;
+      y += other.y;
+      return *this;
+   }
+
+   v2fixed_t &operator -= (v2fixed_t other)
    {
       x -= other.x;
       y -= other.y;
@@ -100,6 +105,11 @@ struct v2fixed_t
    }
 
    static v2fixed_t doubleToFixed(const v2double_t &v);
+
+   v2fixed_t fixedMul(fixed_t scalar) const
+   {
+      return { FixedMul(x, scalar), FixedMul(y, scalar) };
+   }
 };
 
 struct v3float_t

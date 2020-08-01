@@ -2252,7 +2252,8 @@ int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
    th->addThinker();
    po->thinker = th;
 
-   distance -= po->spawnSpot;
+   distance.x -= po->spawnSpot.x;
+   distance.y -= po->spawnSpot.y;
 
    th->polyObjNum = pmdata.polyObjNum;
    th->distance = distance.abs();

@@ -140,7 +140,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    fixed_t linehitz, fixedratio;
    int newfromid;
 
-   fixed_t x, y;
+   v2fixed_t v;
 
    if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
       (newfromid = sector->srf.ceiling.portal->data.link.toid) != state.groupid)
@@ -154,8 +154,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
          if(linehitz == state.c.z)
          {
             // handle this edge case: put point right on line
-            x = trace.x + FixedMul(trace.dx, partialfrac);
-            y = trace.y + FixedMul(trace.dy, partialfrac);
+            v = trace.v + trace.dv.fixedMul(partialfrac);
          }
          else
          {
@@ -166,21 +165,19 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
             // retrieve the xy frac using the origin frac
             partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
 
-            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
-
+            v = trace.v + trace.dv.fixedMul(partialfrac + 1);
          }
 
          // don't allow if it's going back
-         if(partialfrac + 1 > 0 && R_PointInSubsector(x, y)->sector == sector)
+         if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
          {
             fixed_t outSlope;
             Mobj *outTarget = nullptr;
             fixed_t outDist;
 
             State newstate(state);
-            newstate.c.x = x;
-            newstate.c.y = y;
+            newstate.c.x = v.x;
+            newstate.c.y = v.y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
             // don't allow the bottom slope to keep going down
@@ -209,29 +206,25 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
       if(linehitz < planez)
       {
          if(linehitz == state.c.z)
-         {
-            x = trace.x + FixedMul(trace.dx, partialfrac);
-            y = trace.y + FixedMul(trace.dy, partialfrac);
-         }
+            v = trace.v + trace.dv.fixedMul(partialfrac);
          else
          {
             fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
 
-            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
+            v = trace.v + trace.dv.fixedMul(partialfrac + 1);
          }
 
-         if(partialfrac + 1 > 0 && R_PointInSubsector(x, y)->sector == sector)
+         if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
          {
             fixed_t outSlope;
             Mobj *outTarget = nullptr;
             fixed_t outDist;
 
             State newstate(state);
-            newstate.c.x = x;
-            newstate.c.y = y;
+            newstate.c.x = v.x;
+            newstate.c.y = v.y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
             newstate.topslope = emin(0, state.topslope);
