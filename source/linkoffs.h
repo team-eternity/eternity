@@ -37,10 +37,7 @@
 #define R_NOGROUP -1
 #endif
 
-struct linkoffset_t
-{
-   fixed_t x, y, z;
-};
+typedef v3fixed_t linkoffset_t;
 
 extern linkoffset_t **linktable;
 extern linkoffset_t zerolink;

@@ -347,8 +347,7 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 // Returns 0 if the link offset was added successfully, 1 if the start group is
 // out of bounds, and 2 of the target group is out of bounds.
 //
-static int P_AddLinkOffset(int startgroup, int targetgroup,
-                           fixed_t x, fixed_t y, fixed_t z)
+static int P_AddLinkOffset(int startgroup, int targetgroup, const v3fixed_t &v)
 {
    linkoffset_t *link;
 
@@ -371,9 +370,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
    link = emalloctag(linkoffset_t *, sizeof(linkoffset_t), PU_LEVEL, nullptr);
    linktable[startgroup * groupcount + targetgroup] = link;
    
-   link->x = x;
-   link->y = y;
-   link->z = z;
+   *link = v;
 
    return 0;
 }
@@ -431,8 +428,7 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
    // We've found a linked portal so add the entry to the table
    if(!link)
    {
-      int ret = P_AddLinkOffset(sec->groupid, ldata.toid, ldata.delta.x, ldata.delta.y,
-                                ldata.delta.z);
+      int ret = P_AddLinkOffset(sec->groupid, ldata.toid, ldata.delta);
       if(ret)
          return false;
    }
@@ -447,8 +443,7 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
 //
-static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
-                          int via)
+static void P_GatherLinks(int group, const v3fixed_t &dv, int via)
 {
    int i, p;
    linkoffset_t *link, **linklist, **grouplinks;
@@ -469,7 +464,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
             continue;
 
          if((link = linklist[i]))
-            P_GatherLinks(group, link->x, link->y, link->z, i);
+            P_GatherLinks(group, *link, i);
       }
 
       return;
@@ -489,8 +484,8 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       if(!(link = linklist[p]) || grouplinks[p])
          continue;
 
-      P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
-      P_GatherLinks(group, dx + link->x, dy + link->y, dz + link->z, p);
+      P_AddLinkOffset(group, p, dv + *link);
+      P_GatherLinks(group, dv + *link, p);
    }
 }
 
@@ -745,7 +740,7 @@ bool P_BuildLinkTable()
 
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; i++)
-      P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
+      P_GatherLinks(i, {}, R_NOGROUP);
 
    // SoM: one last step. Find all map architecture with a group id of -1 and 
    // assign it to group 0
