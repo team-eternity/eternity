@@ -36,6 +36,14 @@ struct v3fixed_t
       return x == other.x && y == other.y && z == other.z;
    }
 
+   v3fixed_t &operator += (const v3fixed_t &other)
+   {
+      x += other.x;
+      y += other.y;
+      z += other.z;
+      return *this;
+   }
+
    fixed_t x, y, z;
 };
 

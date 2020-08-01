@@ -52,7 +52,7 @@ public:
       fixed_t origindist;     // distance travelled so far
       fixed_t bottomslope;    // bottom sight slope (gets narrowed by obstacles)
       fixed_t topslope;       // top sight slope
-      fixed_t cx, cy, cz;     // source coordinates
+      v3fixed_t c;          // source coordinates
       int groupid;            // current group ID
       const AimContext *prev; // reference to previous aim context in recursion
       int reclevel;           // recursion level (for safety)
@@ -105,9 +105,9 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
    else
    {
       state.origindist = 0;
-      state.cx = t1->x;
-      state.cy = t1->y;
-      state.cz = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
+      state.c.x = t1->x;
+      state.c.y = t1->y;
+      state.c.z = t1->z + (t1->height >> 1) + 8 * FRACUNIT;
       state.groupid = t1->groupid;
       state.prev = nullptr;
       state.reclevel = 0;
@@ -146,12 +146,12 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
       (newfromid = sector->srf.ceiling.portal->data.link.toid) != state.groupid)
    {
       // ceiling portal (slope must be up)
-      linehitz = state.cz + FixedMul(state.topslope, totalfrac);
+      linehitz = state.c.z + FixedMul(state.topslope, totalfrac);
       fixed_t planez = P_CeilingPortalZ(*sector);
       if(linehitz > planez)
       {
          // get x and y of position
-         if(linehitz == state.cz)
+         if(linehitz == state.c.z)
          {
             // handle this edge case: put point right on line
             x = trace.x + FixedMul(trace.dx, partialfrac);
@@ -160,7 +160,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
          else
          {
             // add a unit just to ensure that it enters the sector
-            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
+            fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
             // update z frac
             totalfrac = FixedMul(fixedratio, totalfrac);
             // retrieve the xy frac using the origin frac
@@ -179,8 +179,8 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
             fixed_t outDist;
 
             State newstate(state);
-            newstate.cx = x;
-            newstate.cy = y;
+            newstate.c.x = x;
+            newstate.c.y = y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
             // don't allow the bottom slope to keep going down
@@ -204,18 +204,18 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
       (newfromid = sector->srf.floor.portal->data.link.toid) != state.groupid)
    {
-      linehitz = state.cz + FixedMul(state.bottomslope, totalfrac);
+      linehitz = state.c.z + FixedMul(state.bottomslope, totalfrac);
       fixed_t planez = P_FloorPortalZ(*sector);
       if(linehitz < planez)
       {
-         if(linehitz == state.cz)
+         if(linehitz == state.c.z)
          {
             x = trace.x + FixedMul(trace.dx, partialfrac);
             y = trace.y + FixedMul(trace.dy, partialfrac);
          }
          else
          {
-            fixedratio = FixedDiv(planez - state.cz, linehitz - state.cz);
+            fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
             totalfrac = FixedMul(fixedratio, totalfrac);
             partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
 
@@ -230,8 +230,8 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
             fixed_t outDist;
 
             State newstate(state);
-            newstate.cx = x;
-            newstate.cy = y;
+            newstate.c.x = x;
+            newstate.c.y = y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
             newstate.topslope = emin(0, state.topslope);
@@ -263,9 +263,7 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac, fixed_t *outSl
    if(state.reclevel > RECURSION_LIMIT)
       return false;
 
-   newstate.cx += data.delta.x;
-   newstate.cy += data.delta.y;
-   newstate.cz += data.delta.z;
+   newstate.c += data.delta;
 
    fixed_t lessdist = attackrange - FixedMul(attackrange, partialfrac);
    newstate.prev = this;
@@ -299,14 +297,14 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
          li->backsector->srf.floor.pflags,
          li->backsector->srf.floor.portal,
          state.bottomslope,
-         FixedDiv(li->backsector->srf.floor.height - state.cz, totaldist),
+         FixedDiv(li->backsector->srf.floor.height - state.c.z, totaldist),
       },
       {
          EX_ML_UPPERPORTAL,
          li->backsector->srf.ceiling.pflags,
          li->backsector->srf.ceiling.portal,
          -state.topslope,
-         -FixedDiv(li->backsector->srf.ceiling.height - state.cz, totaldist),
+         -FixedDiv(li->backsector->srf.ceiling.height - state.c.z, totaldist),
       },
    };
 
@@ -317,8 +315,8 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
          part.contextslope <= part.refslope)
       {
          State newState(state);
-         newState.cx = trace.x + FixedMul(trace.dx, frac);
-         newState.cy = trace.y + FixedMul(trace.dy, frac);
+         newState.c.x = trace.x + FixedMul(trace.dx, frac);
+         newState.c.y = trace.y + FixedMul(trace.dy, frac);
          newState.groupid = part.portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = state.reclevel + 1;
@@ -380,7 +378,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       if(sector->srf.floor.height != osector->srf.floor.height ||
          (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
       {
-         slope = FixedDiv(lo.openbottom - context.state.cz, totaldist);
+         slope = FixedDiv(lo.openbottom - context.state.c.z, totaldist);
          if(slope > context.state.bottomslope)
             context.state.bottomslope = slope;
       }
@@ -388,7 +386,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^
                                                              !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
       {
-         slope = FixedDiv(lo.opentop - context.state.cz, totaldist);
+         slope = FixedDiv(lo.opentop - context.state.c.z, totaldist);
          if(slope < context.state.topslope)
             context.state.topslope = slope;
       }
@@ -403,8 +401,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          in->frac > 0)
       {
          State newState(context.state);
-         newState.cx = trace.x + FixedMul(trace.dx, in->frac);
-         newState.cy = trace.y + FixedMul(trace.dy, in->frac);
+         newState.c.x = trace.x + FixedMul(trace.dx, in->frac);
+         newState.c.y = trace.y + FixedMul(trace.dy, in->frac);
          newState.groupid = li->portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = context.state.reclevel + 1;
@@ -421,7 +419,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
 
       edefstructvar(linetracer_t, atrace);
       atrace.attackrange = context.attackrange;
-      atrace.z = context.state.cz;
+      atrace.z = context.state.c.z;
       atrace.bottomslope = context.state.bottomslope;
       atrace.topslope = context.state.topslope;
       if(!P_CheckThingAimSlopes(th, context.state.origindist, in->frac, atrace))
@@ -448,10 +446,10 @@ fixed_t AimContext::aimLineAttack(const Mobj *t1, angle_t angle, fixed_t distanc
    def.trav = aimTraverse;
    PathTraverser traverser(def, &context);
 
-   fixed_t tx = context.state.cx + (distance >> FRACBITS) * finecosine[angle >> ANGLETOFINESHIFT];
-   fixed_t ty = context.state.cy + (distance >> FRACBITS) * finesine[angle >> ANGLETOFINESHIFT];
+   fixed_t tx = context.state.c.x + (distance >> FRACBITS) * finecosine[angle >> ANGLETOFINESHIFT];
+   fixed_t ty = context.state.c.y + (distance >> FRACBITS) * finesine[angle >> ANGLETOFINESHIFT];
 
-   if(traverser.traverse(context.state.cx, context.state.cy, tx, ty))
+   if(traverser.traverse(context.state.c.x, context.state.c.y, tx, ty))
    {
       const sector_t *endsector = R_PointInSubsector(tx, ty)->sector;
       if(context.checkPortalSector(endsector, distance, FRACUNIT, traverser.trace))
