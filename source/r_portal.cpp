@@ -1639,9 +1639,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type  != R_LINKED                || 
-         ldata.delta.x != rover->data.link.delta.x ||
-         ldata.delta.y != rover->data.link.delta.y ||
-         ldata.delta.z != rover->data.link.delta.z ||
+         ldata.delta != rover->data.link.delta   ||
          ldata.fromid != rover->data.link.fromid ||
          ldata.toid   != rover->data.link.toid   ||
          ldata.planez != rover->data.link.planez)

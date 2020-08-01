@@ -1956,17 +1956,13 @@ static spriteprojnode_t *R_newProjNode()
 //
 // Helper function for below. Returns the next sector
 //
-inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
-                                      v3fixed_t &delta,
+inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixed_t &delta,
                                       DLListItem<spriteprojnode_t> *&item,
-                                      DLListItem<spriteprojnode_t> **&tail,
-                                      const line_t *line)
+                                      DLListItem<spriteprojnode_t> **&tail, const line_t *line)
 {
    sector_t *sector;
 
-   delta.x += data->delta.x;
-   delta.y += data->delta.y;
-   delta.z += data->delta.z;
+   delta += data->delta;
    sector = R_PointInSubsector(mobj->x + delta.x, mobj->y + delta.y)->sector;
    if(!item)
    {
