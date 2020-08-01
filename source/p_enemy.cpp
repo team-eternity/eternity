@@ -114,10 +114,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                            + R_FPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) 
-                            + R_FPLink(sec)->delta.y)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + R_FPLink(sec)->delta.y)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -131,10 +129,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                            + R_CPLink(sec)->delta.x,
-                            ((check->v1->y + check->v2->y) / 2) 
-                            + R_CPLink(sec)->delta.y)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + R_CPLink(sec)->delta.y)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }

@@ -910,8 +910,7 @@ bool P_PortalLayersByPoly(int groupid1, int groupid2)
 // The player passed a line portal from P_TryMove; just update viewport and
 // pass-polyobject velocity
 //
-void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                         int fromid, int toid)
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz, int fromid, int toid)
 {
    // Prevent bad interpolation
    // FIXME: this is not interpolation, it's just instant movement; must be
@@ -953,20 +952,19 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 //
 // EV_PortalTeleport
 //
-bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid)
+bool EV_SectorPortalTeleport(Mobj *mo, const linkdata_t &ldata)
 {
    if(!mo)
       return 0;
 
    // ioanch 20160113: don't teleport. Just change x and y
    P_UnsetThingPosition(mo);
-   mo->x += dx;
-   mo->y += dy;
-   mo->z += dz;
+   mo->x += ldata.delta.x;
+   mo->y += ldata.delta.y;
+   mo->z += ldata.delta.z;
    P_SetThingPosition(mo);
 
-   P_PortalDidTeleport(mo, dx, dy, dz, fromid, toid);
+   P_PortalDidTeleport(mo, ldata.delta.x, ldata.delta.y, ldata.delta.z, ldata.fromid, ldata.toid);
    
    return 1;
 }

@@ -346,12 +346,9 @@ static void P_GetChasecamTarget()
       }
       if(traverse.link)
       {
-         travstart.x = traverse.intersection.x + traverse.link->delta.x;
-         travstart.y = traverse.intersection.y + traverse.link->delta.y;
+         travstart = traverse.intersection + v2fixed_t(traverse.link->delta);
          traverse.startz += traverse.link->delta.z;
-         pCamTarget.x += traverse.link->delta.x;
-         pCamTarget.y += traverse.link->delta.y;
-         pCamTarget.z += traverse.link->delta.z;
+         pCamTarget += traverse.link->delta;
          pCamTargetGroupId = traverse.link->toid;
       }
    } while(traverse.link && repprotection++ < 64);
