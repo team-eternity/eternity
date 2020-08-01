@@ -466,8 +466,7 @@ static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed
 // Having a bounding box in a group id, visit all blocks it touches as well as
 // whatever is behind portals
 //
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              void *data,
+bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, void *data,
                               bool (*func)(int x, int y, int groupid, void *data))
 {
    int gcount = P_PortalGroupCount();
@@ -522,8 +521,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
             if(accessedgroupids[entry.ldata->toid])
                continue;
             if(entry.type == portalblocktype_e::sector &&
-               ((!entry.isceiling && !(entry.sector->srf.floor.pflags & PS_PASSABLE)) ||
-                ( entry.isceiling && !(entry.sector->srf.ceiling.pflags & PS_PASSABLE)) ))
+               !(entry.sector->srf[entry.surf].pflags & PS_PASSABLE))
             {
                continue;   // be careful to skip concealed portals.
             }

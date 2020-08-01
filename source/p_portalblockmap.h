@@ -26,6 +26,7 @@
 #define P_PORTALBLOCKMAP_H_
 
 #include "m_collection.h"
+#include "r_defs.h"
 
 struct line_t;
 struct linkdata_t;
@@ -58,7 +59,7 @@ struct portalblockentry_t
       struct
       {
          const sector_t *sector; // source sector. Pair sector/ldata unique per block.
-         bool isceiling;      // true if ceiling, not floor.
+         surf_e surf;   // on which surface is it?
       };
    };   
 };
@@ -97,8 +98,7 @@ private:
    // Set to true during initialization
    bool mInitializing;
 
-   void checkLinkSector(const sector_t &sector, const portal_t *portal, bool isceiling, 
-      int mapindex);
+   void checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf, int mapindex);
 };
 
 //
