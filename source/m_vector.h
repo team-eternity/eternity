@@ -62,7 +62,7 @@ struct v2double_t;
 struct v2fixed_t
 {
    fixed_t x, y;
-   
+
    // ioanch 20160106: added operators as needed
 
    v2fixed_t() = default;
@@ -78,11 +78,13 @@ struct v2fixed_t
       return { x + other.x, y + other.y };
    }
 
-   v2fixed_t operator - (v2fixed_t other) const
+   template<typename T>
+   v2fixed_t operator - (T &&other) const
    {
-      return { x - other.x, y - other.y };
+      v2fixed_t ret = { x - other.x, y - other.y };
+      return ret;
    }
-   
+
    v2fixed_t &operator += (v2fixed_t other)
    {
       x += other.x;
