@@ -530,7 +530,7 @@ static dehflagset_t seekermissile_flagset =
 // args[0] : threshold
 // args[1] : maxturnangle
 // args[2] : flags
-// args[3] : chance
+// args[3] : chance (out of 256) it will try acquire a target if it doesn't have one
 // args[4] : distance
 //
 void A_SeekerMissile(actionargs_t *actionargs)
@@ -562,7 +562,7 @@ void A_SeekerMissile(actionargs_t *actionargs)
 
    if(!dest || dest->health <= 0)
    {
-      if((flags & SMF_LOOK) && P_Random(pr_seekermissile) > chance)
+      if((flags & SMF_LOOK) && P_Random(pr_seekermissile) < chance)
       {
          bool success = false;
 

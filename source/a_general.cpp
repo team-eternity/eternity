@@ -534,7 +534,7 @@ static dehflagset_t spawnex_flagset =
 // args[6] -- y-velocity
 // args[7] -- z-velocity
 // args[8] -- angle
-// args[9] -- chance (out of 255) for the object to spawn; default is 255.
+// args[9] -- chance (out of 256) for the object to spawn; default is 256.
 //
 void A_SpawnEx(actionargs_t *actionargs)
 {
