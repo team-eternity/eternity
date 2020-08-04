@@ -585,11 +585,23 @@ void A_SpawnEx(actionargs_t *actionargs)
 
    if((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       mo->remove();
-   else {
+   else
+   {
       mo->angle = angle;
       mo->momx = xvel;
       mo->momy = yvel;
       mo->momz = zvel;
+
+      // TODO: Flag to make it set tracer?
+      // If we're spawning a projectile then we want to set its target as its owner
+      if(mo->flags & MF_MISSILE)
+      {
+         // If the spawner is a projectile then set target as spawner's owner (if it exists)
+         if((actor->flags & MF_MISSILE) && actor->target)
+            P_SetTarget<Mobj>(&mo->target, actor->target);
+         else
+            P_SetTarget<Mobj>(&mo->target, actor);
+      }
    }
 }
 
