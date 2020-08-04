@@ -1271,7 +1271,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // ioanch 20160107: spawn past portals in front of spawner
    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
                         actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - v2fixed_t{ actor->x, actor->y });
 
    x = pos.x;
    y = pos.y;
