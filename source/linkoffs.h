@@ -28,6 +28,7 @@
 #define P_LINKOFFSET_H__
 
 #include "m_fixed.h"
+#include "m_vector.h"
 #include "tables.h"
 
 #ifndef R_NOGROUP
