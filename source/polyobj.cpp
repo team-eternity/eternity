@@ -1604,7 +1604,7 @@ void PolyRotateThinker::Think()
       this->distance -= avel;
 
       // MaxW: 20160106: set the flag which differentiates angles >= 180 from angles < 0
-      hasBeenPositive = hasBeenPositive || (distance > 0);
+      hasBeenPositive = hasBeenPositive || (distance >= 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1945,7 +1945,7 @@ void PolySwingDoorThinker::Think()
       this->distance -= avel;
 
       // MaxW: 20160109: set the flag which differentiates angles >= 180 from angles < 0
-      hasBeenPositive = hasBeenPositive || (distance > 0);
+      hasBeenPositive = hasBeenPositive || (distance >= 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1962,7 +1962,7 @@ void PolySwingDoorThinker::Think()
             // start delay
             this->delayCount = this->delay;    
 
-            this->hasBeenPositive = this->distance < 0 ? false : true;
+            this->hasBeenPositive = this->distance >= 0;
          } 
          else
          {
@@ -1989,7 +1989,7 @@ void PolySwingDoorThinker::Think()
       // move was blocked, special handling required -- make it reopen
 
       this->distance = this->initDistance - this->distance;
-      this->hasBeenPositive = this->distance < 0 ? false : true;
+      this->hasBeenPositive = this->distance >= 0;
       this->speed    = this->initSpeed;
       this->closing  = false;
 
@@ -2055,7 +2055,7 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
       th->distance = prdata->distance * BYTEANGLEMUL;
 
    // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
-   th->hasBeenPositive = th->distance < 0 ? false : true;
+   th->hasBeenPositive = th->distance >= 0;
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 8;
    if(po->thrust < FRACUNIT)
@@ -2097,7 +2097,7 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
          th->distance = prdata->distance * BYTEANGLEMUL;
 
       // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
-      th->hasBeenPositive = th->distance < 0 ? false : true;
+      th->hasBeenPositive = th->distance >= 0;
       // set polyobject's thrust
       po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
@@ -2391,7 +2391,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
    th->speed        = (doordata->speed * BYTEANGLEMUL) >> 3;
    th->initSpeed    = th->speed;
    // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
-   th->hasBeenPositive = th->distance < 0 ? false : true;
+   th->hasBeenPositive = th->distance >= 0;
 
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 3;
@@ -2423,7 +2423,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
       th->delayCount   = 0;
       th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
       // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
-      th->hasBeenPositive = th->distance < 0 ? false : true;
+      th->hasBeenPositive = th->distance >= 0;
 
       // alternate direction with each mirror
       th->speed = (doordata->speed * BYTEANGLEMUL * diracc) >> 3;
