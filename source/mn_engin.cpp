@@ -1271,7 +1271,7 @@ void MN_ForcedLoadGame(char *msg)
 //
 // display error msg in popup display at bottom of screen
 //
-void MN_ErrorMsg(const char *s, ...)
+void MN_ErrorMsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
 {
    va_list args;
    

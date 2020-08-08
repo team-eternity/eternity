@@ -67,7 +67,7 @@ void G_DemoLogInit(const char *path)
 //
 // Write a message to the -demolog file
 //
-void G_DemoLog(const char *format, ...)
+void G_DemoLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2)
 {
    if(!demoLogFile)
       return;

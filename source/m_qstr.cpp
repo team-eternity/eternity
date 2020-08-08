@@ -1274,7 +1274,7 @@ qstring &qstring::makeQuoted()
 // padding directives, as they will be ignored, and the resulting output may
 // then be truncated to qstr->size - 1.
 //
-int qstring::Printf(size_t maxlen, const char *fmt, ...)
+int qstring::Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3)
 {
    va_list va2;
    int returnval;

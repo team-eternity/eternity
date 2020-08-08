@@ -35,9 +35,11 @@
 #include <windows.h>
 #include "SDL_syswm.h"
 
+#include "../d_keywds.h"
+
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern void I_FatalError(int code, const char *error, ...);
+extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 
 int disable_sysmenu;
 

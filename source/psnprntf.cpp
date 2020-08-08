@@ -39,7 +39,7 @@
 //
 // Portable snprintf
 //
-int psnprintf(char *str, size_t n, const char *format, ...)
+int psnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), ...) E_PRINTF(3, 4)
 {
    va_list args;
    int ret;
@@ -54,7 +54,7 @@ int psnprintf(char *str, size_t n, const char *format, ...)
 //
 // Portable vsnprintf
 //
-int pvsnprintf(char *str, size_t nmax, const char *format, va_list ap)
+int pvsnprintf(char *str, size_t nmax, E_FORMAT_STRING(const char *format), va_list ap) E_PRINTF(3, 0)
 {
    if(nmax < 1)
    {

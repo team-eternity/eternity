@@ -88,7 +88,7 @@ int G_TotalFoundSecrets();
 void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
         // sf: player_printf
-void player_printf(const player_t *player, const char *s, ...);
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...) E_PRINTF(2, 3);
 
 // killough 5/2/98: moved from m_misc.c:
 

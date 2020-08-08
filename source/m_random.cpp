@@ -35,7 +35,7 @@
 #include "a_small.h"
 
 #ifdef RANDOM_LOG
-void M_RandomLog(const char *format, ...)
+void M_RandomLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2)
 {
    static FILE *f;
    if(!f)

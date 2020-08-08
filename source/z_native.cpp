@@ -249,7 +249,7 @@ static void Z_CloseLogFile()
 #endif
 }
 
-static void Z_LogPrintf(const char *msg, ...)
+static void Z_LogPrintf(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2)
 {
 #ifdef ZONEFILE
    if(!zonelog)
