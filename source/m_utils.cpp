@@ -401,7 +401,7 @@ void M_NormalizeSlashes(char *str)
 // iteration, so don't cache it. Note that this idiom is not possible with the
 // normal non-standard alloca function, which allocates stack space.
 //
-int M_StringAlloca(char **str, int numstrs, size_t extra, E_FORMAT_STRING(const char *str1), ...) E_PRINTF(4, 5)
+int M_StringAlloca(char **str, int numstrs, size_t extra, E_FORMAT_STRING(const char *str1), ...)
 {
    size_t len = extra;
 

@@ -217,7 +217,7 @@ public:
 
    // Special Formatting 
    qstring &makeQuoted();
-   int      Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3);
+   int      Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(3, 4);
 
    // Operators
    bool     operator == (const qstring &other) const;

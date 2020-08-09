@@ -3800,7 +3800,7 @@ void G_StopDemo()
 
 #define MAX_MESSAGE_SIZE 1024
 
-void doom_printf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
+void doom_printf(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
@@ -3816,7 +3816,7 @@ void doom_printf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
 //
 // Like above, but uses FC_ERROR and occasional beeping
 //
-void doom_warningf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
+void doom_warningf(E_FORMAT_STRING(const char *s), ...)
 {
    static int lastbeeptic = -1000;
 
@@ -3843,7 +3843,7 @@ void doom_warningf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
 // sf: printf to a particular player only
 // to make up for the loss of player->msg = ...
 //
-void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...) E_PRINTF(2, 3)
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;

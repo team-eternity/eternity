@@ -180,7 +180,7 @@ static void LogFlush(HANDLE file)
 // This is supposed to be safe to call during an exception, unlike fprintf.
 // We'll see.
 //
-static void LogPrintf(E_FORMAT_STRING(LPCTSTR fmt), ...) E_PRINTF(1, 2)
+static void LogPrintf(E_FORMAT_STRING(LPCTSTR fmt), ...)
 {
    DWORD bytecount;
    va_list args;

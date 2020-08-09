@@ -752,7 +752,7 @@ static void C_AppendToLog(const char *text);
 // work better with any new console message buffering system that
 // is designed.
 //
-void C_Printf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
+void C_Printf(E_FORMAT_STRING(const char *s), ...)
 {
    char tempstr[1024];
    va_list args;

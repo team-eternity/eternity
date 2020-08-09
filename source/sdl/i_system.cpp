@@ -194,7 +194,7 @@ void I_QuitFast()
 // haleyjd 05/21/10: Call this for super-evil errors such as heap corruption,
 // system-related problems, etc.
 //
-void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3)
+void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 {
    // Flag a fatal error, so that some shutdown code will not be executed;
    // chiefly, saving the configuration files, which can malfunction in
@@ -235,7 +235,7 @@ void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2,
 // haleyjd 06/05/10: exit with a message which is not technically an error. The
 // code used to call I_Error for this, but it wasn't semantically correct.
 //
-void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2)
+void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_MESSAGE)
@@ -261,7 +261,7 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2)
 //
 // Normal error reporting / exit routine.
 //
-void I_Error(E_FORMAT_STRING(const char *error), ...) E_PRINTF(1, 2) // killough 3/20/98: add const
+void I_Error(E_FORMAT_STRING(const char *error), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -289,7 +289,7 @@ void I_Error(E_FORMAT_STRING(const char *error), ...) E_PRINTF(1, 2) // killough
 //
 // haleyjd: varargs version of I_Error used chiefly by libConfuse.
 //
-void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args) E_PRINTF(1, 0)
+void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)

@@ -505,7 +505,7 @@ static FILE *fileout;
 // haleyjd 10/08/06: cleaned up some more of the mess in here by creating this
 // logging function, similar to the one used by EDF.
 //
-static void deh_LogPrintf(E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(1, 2)
+static void deh_LogPrintf(E_FORMAT_STRING(const char *fmt), ...)
 {
    if(fileout)
    {

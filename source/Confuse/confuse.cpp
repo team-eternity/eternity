@@ -706,7 +706,7 @@ cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc)
    return old;
 }
 
-void cfg_error(cfg_t *cfg, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3)
+void cfg_error(cfg_t *cfg, E_FORMAT_STRING(const char *fmt), ...)
 {
    va_list ap;
    

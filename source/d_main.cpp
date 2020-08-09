@@ -142,7 +142,7 @@ void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd);
 void D_DoAdvanceDemo(void);
 
-void usermsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2)
+void usermsg(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[1024];
    va_list v;
