@@ -39,7 +39,7 @@
 
 #include "../d_keywds.h"
 
-extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
+extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 extern void M_GetFilePath(const char *fn, char *base, size_t len);
 
 //
