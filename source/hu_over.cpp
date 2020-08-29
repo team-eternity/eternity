@@ -141,18 +141,16 @@ int HU_WC_PlayerAmmo(const weaponinfo_t *w)
 // Determine if the player has enough ammo for one shot with the given weapon
 bool HU_WC_NoAmmo(const weaponinfo_t *w)
 {
-   bool outofammo = false;
-   itemeffect_t *ammo = w->ammo;
+   const itemeffect_t *const ammo = w->ammo;
 
    // no-ammo weapons are always considered to have ammo
    if(ammo)
    {
-      int amount = E_GetItemOwnedAmount(&hu_player, ammo);
-      if(amount)
-         outofammo = (amount < w->ammopershot);
+      const int amount = E_GetItemOwnedAmount(&hu_player, ammo);
+      return amount < w->ammopershot;
    }
-
-   return outofammo;
+   else
+      return false;
 }
 
 // Get the player's maxammo for the given weapon, or 0 if am_noammo
@@ -170,9 +168,9 @@ int HU_WC_MaxAmmo(const weaponinfo_t *w)
 // Determine the color to use for the given weapon's number and ammo bar/count
 char HU_WeapColor(const weaponinfo_t *w)
 {
-   int  maxammo = HU_WC_MaxAmmo(w);
-   bool noammo  = HU_WC_NoAmmo(w);
-   int  pammo   = HU_WC_PlayerAmmo(w);
+   const int  maxammo = HU_WC_MaxAmmo(w);
+   const bool noammo  = HU_WC_NoAmmo(w);
+   const int  pammo   = HU_WC_PlayerAmmo(w);
 
    return
       (!maxammo                                ? *FC_GRAY    :
