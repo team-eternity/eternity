@@ -588,7 +588,7 @@ int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
          }
 
          ret = action->num;
-         if(!wasdown)
+         if(!wasdown && ret < NUMKEYACTIONS)
             ++gGameKeyCount[bclass][ret];
       }
    }
@@ -602,10 +602,13 @@ int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
       if((action = keybindings[key].bindings[bclass]))
       {
          ret = action->num;
-         if(wasdown)
-            --gGameKeyCount[bclass][ret];
-         if(allreleased && !gGameKeyCount[bclass][ret])
-            *allreleased = true;
+         if(ret < NUMKEYACTIONS)
+         {
+            if(wasdown)
+               --gGameKeyCount[bclass][ret];
+            if(allreleased && !gGameKeyCount[bclass][ret])
+               *allreleased = true;
+         }
       }
    }
 
@@ -688,7 +691,7 @@ static bool G_BindResponder(event_t *ev, int mnaction)
    // haleyjd 10/16/05: clear state of action involved
    bool wasdown = keybindings[ev->data1].keydown[action->bclass];
    keybindings[ev->data1].keydown[action->bclass] = false;
-   if(wasdown)
+   if(wasdown && action->num < NUMKEYACTIONS)
       --gGameKeyCount[action->bclass][action->num];
    
    return true;
