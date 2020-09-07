@@ -2396,8 +2396,8 @@ bool ACS_CF_SpawnMissile(ACS_CF_ARGS)
    int32_t    spotid  = argV[0];
    mobjtype_t type    = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    angle_t    angle   = argV[2] << 24;
-   int32_t    speed   = argV[3] * 8;
-   int32_t    vspeed  = argV[4] * 8;
+   int32_t    speed   = argV[3] / 8;
+   int32_t    vspeed  = argV[4] / 8;
    bool       gravity = argV[5] ? true : false;
    int32_t    tid     = argV[6];
    Mobj      *spot    = nullptr;
