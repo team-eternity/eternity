@@ -1949,12 +1949,12 @@ bool ACS_CF_SetSectorDamage(ACS_CF_ARGS)
    int secnum = -1;
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
-      sector_t *sector = &sectors[secnum];
+      sector_t &sector = sectors[secnum];
 
-      sector->damage     = amount;
-      sector->damagemod  = E_DamageTypeNumForName(damageType);
-      sector->damagemask = interval;
-      sector->leakiness  = eclamp(leakiness, 0, 256);
+      sector.damage     = amount;
+      sector.damagemod  = E_DamageTypeNumForName(damageType);
+      sector.damagemask = interval;
+      sector.leakiness  = eclamp(leakiness, 0, 256);
    }
 
    thread->dataStk.push(0);
