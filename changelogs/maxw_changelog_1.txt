@@ -490,7 +490,7 @@ in colour.
 
 -------------------------------------------------------------------------------
 2020/09/07
-Fixed SpawnProjectile speed.
+Fixed SpawnProjectile speed. Add SetSectorDamage (ACS function).
 
 ================================================================================
 EOF

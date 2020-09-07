@@ -400,6 +400,7 @@ bool ACS_CF_SetLineSpecial(ACS_CF_ARGS);
 bool ACS_CF_SetLineTex(ACS_CF_ARGS);
 bool ACS_CF_SetMusic(ACS_CF_ARGS);
 bool ACS_CF_SetMusicLoc(ACS_CF_ARGS);
+bool ACS_CF_SetSectorDamage(ACS_CF_ARGS);
 bool ACS_CF_SetSkyDelta(ACS_CF_ARGS);
 bool ACS_CF_SetThingAngle(ACS_CF_ARGS);
 bool ACS_CF_SetThingAngleRet(ACS_CF_ARGS);

@@ -1936,6 +1936,32 @@ bool ACS_CF_SetMusicLoc(ACS_CF_ARGS)
 }
 
 //
+// void SetSectorDamage(int tag, int amount, string damagetype = "Unknown", int interval = 32, int leaky = 0)
+//
+bool ACS_CF_SetSectorDamage(ACS_CF_ARGS)
+{
+   const int   tag        = argV[0];
+   const int   amount     = argV[1];
+   const char *damageType = argC > 2 ? thread->scopeMap->getString(argV[2])->str : "Unknown";
+   const int   interval   = argC > 3 ? argV[3] : 32;
+   const int   leakiness  = argC > 4 ? argV[4] : 0;
+
+   int secnum = -1;
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector_t *sector = &sectors[secnum];
+
+      sector->damage     = amount;
+      sector->damagemod  = E_DamageTypeNumForName(damageType);
+      sector->damagemask = interval;
+      sector->leakiness  = eclamp(leakiness, 0, 256);
+   }
+
+   thread->dataStk.push(0);
+   return false;
+}
+
+//
 // ACS_CF_SetSkyDelta
 //
 // int SetSkyScrollSpeed(int sky, fixed speed);
