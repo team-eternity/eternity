@@ -780,6 +780,10 @@ static menuitem_t mn_wadiwad2_items[] =
    {it_variable, "Heretic (SW):",       "iwad_heretic_shareware", nullptr, MENUITEM_LALIGNED },
    {it_variable, "Heretic (Reg):",      "iwad_heretic",           nullptr, MENUITEM_LALIGNED },
    {it_variable, "Heretic SoSR:",       "iwad_heretic_sosr",      nullptr, MENUITEM_LALIGNED },
+   {it_gap},
+   {it_info,     "IWAD Paths - Strife", nullptr,                  nullptr, MENUITEM_CENTERED },
+   {it_gap},
+   {it_variable, "Strife:",             "iwad_strife",            nullptr, MENUITEM_LALIGNED },
    {it_end}
 };
 

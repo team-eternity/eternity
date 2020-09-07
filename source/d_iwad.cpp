@@ -550,6 +550,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
    &gi_path_tnt,    &gi_path_plut,                      // Final Doom
    &gi_path_hacx,                                       // HACX
    &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
+   &gi_path_strife,                                     // Strife
    &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // Freedoom
    &gi_path_rekkr,                                      // Rekkr
 };
@@ -639,6 +640,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_GAME, "plutonia",  { &gi_path_plut,     nullptr,           nullptr         } },
    { MATCH_GAME, "hacx",      { &gi_path_hacx,     nullptr,           nullptr         } },
    { MATCH_GAME, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  &gi_path_hticsw } },
+   { MATCH_GAME, "strife",    { &gi_path_strife,   nullptr,           nullptr         } },
 
    // -iwad matches 
    { MATCH_IWAD, "doom2f",    { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
@@ -651,6 +653,7 @@ static iwadpathmatch_t iwadMatchers[] =
    { MATCH_IWAD, "hacx",      { &gi_path_hacx,     nullptr,           nullptr         } },
    { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   nullptr,           nullptr         } },
    { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  nullptr         } },
+   { MATCH_IWAD, "strife",    { &gi_path_strife,   nullptr,           nullptr         } },
    { MATCH_IWAD, "freedoom2", { &gi_path_fdoom,    nullptr,           nullptr         } },
    { MATCH_IWAD, "freedoom1", { &gi_path_fdoomu,   nullptr,           nullptr         } },
    { MATCH_IWAD, "freedm",    { &gi_path_freedm,   nullptr,           nullptr         } },
@@ -787,6 +790,7 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
 {
    int ud = 0, rg = 0, sw = 0, cm = 0, sc = 0, tnt = 0, plut = 0, hacx = 0, bfg = 0;
    int raven = 0, sosr = 0;
+   int strife = 0;
    filelump_t lump;
    wadinfo_t header;
    const char *n = lump.name;
@@ -868,14 +872,23 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
       }
       else if(!lumpnamecmp(n, "REKCREDS"))
          version.rekkr = true;
+      else if(!lumpnamecmp(n, "XLATAB") ||
+              !lumpnamecmp(n, "SERIAL") ||
+              !lumpnamecmp(n, "STARTUP"))
+         ++strife;
    }
 
    fclose(fp);
 
    version.hassecrets = false;
 
-   // haleyjd 10/09/05: "Raven mode" detection
-   if(raven == 3)
+   if(strife == 3)
+   {
+      // TODO: Demo, and SVE
+      version.gamemission = strifeqfts;
+      version.gamemode = strifereg;
+   }
+   else if(raven == 3) // haleyjd 10/09/05: "Raven mode" detection
    {
       // TODO: Hexen
       version.gamemission = heretic;
@@ -952,19 +965,20 @@ struct zipmission_t
 // Table of ZIP-format supported mission data
 static zipmission_t zipMissions[] =
 {
-   { "doom retail",        retail,     doom      },
-   { "doom registered",    registered, doom      },
-   { "doom shareware",     shareware,  doom      },
-   { "doom2 commercial",   commercial, doom2     },
-   { "doom2 tnt",          commercial, pack_tnt  },
-   { "doom2 plutonia",     commercial, pack_plut },
-   { "doom2 hacx",         commercial, pack_hacx },
-   { "doom2 bfg",          commercial, pack_disk },
-   { "doom2 psx",          commercial, pack_psx  },
-   { "heretic sosr",       hereticreg, hticsosr  },
-   { "heretic registered", hereticreg, heretic   },
-   { "heretic shareware",  hereticsw,  heretic   },
-   { "heretic beta",       hereticsw,  hticbeta  },
+   { "doom retail",        retail,     doom       },
+   { "doom registered",    registered, doom       },
+   { "doom shareware",     shareware,  doom       },
+   { "doom2 commercial",   commercial, doom2      },
+   { "doom2 tnt",          commercial, pack_tnt   },
+   { "doom2 plutonia",     commercial, pack_plut  },
+   { "doom2 hacx",         commercial, pack_hacx  },
+   { "doom2 bfg",          commercial, pack_disk  },
+   { "doom2 psx",          commercial, pack_psx   },
+   { "heretic sosr",       hereticreg, hticsosr   },
+   { "heretic registered", hereticreg, heretic    },
+   { "heretic shareware",  hereticsw,  heretic    },
+   { "heretic beta",       hereticsw,  hticbeta   },
+   { "strife registered",  strifereg,  strifeqfts },
 };
 
 //

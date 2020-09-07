@@ -508,6 +508,7 @@ VARIABLE_STRING(gi_path_hacx,     nullptr, UL);
 VARIABLE_STRING(gi_path_hticsw,   nullptr, UL);
 VARIABLE_STRING(gi_path_hticreg,  nullptr, UL);
 VARIABLE_STRING(gi_path_sosr,     nullptr, UL);
+VARIABLE_STRING(gi_path_strife,   nullptr, UL);
 VARIABLE_STRING(gi_path_fdoom,    nullptr, UL);
 VARIABLE_STRING(gi_path_fdoomu,   nullptr, UL);
 VARIABLE_STRING(gi_path_freedm,   nullptr, UL);
@@ -586,6 +587,11 @@ CONSOLE_VARIABLE(iwad_heretic,           gi_path_hticreg,  cf_allowblank)
 CONSOLE_VARIABLE(iwad_heretic_sosr,      gi_path_sosr,     cf_allowblank)
 {
    G_TestIWADPath(gi_path_sosr);
+}
+
+CONSOLE_VARIABLE(iwad_strife,            gi_path_strife,   cf_allowblank)
+{
+   G_TestIWADPath(gi_path_strife);
 }
 
 CONSOLE_VARIABLE(iwad_freedoom,          gi_path_fdoom,    cf_allowblank)

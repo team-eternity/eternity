@@ -240,6 +240,7 @@ typedef enum
   retail,       // DOOM 1 retail, E4, M36
   hereticsw,    // Heretic shareware
   hereticreg,   // Heretic full
+  strifereg,    // Strife: Quest for the Sigil
   indetermined, // Incomplete or corrupted IWAD
   NumGameModes
 } GameMode_t;
@@ -257,6 +258,7 @@ typedef enum
   heretic,      // Heretic
   hticbeta,     // Heretic Beta Version
   hticsosr,     // Heretic - Shadow of the Serpent Riders
+  strifeqfts,   // Strife: Quest for the Sigil
   none,
   NumGameMissions
 } GameMission_t;
@@ -272,6 +274,7 @@ enum
 {
    Game_DOOM,
    Game_Heretic,
+   Game_Strife,
    NumGameModeTypes
 };
 
@@ -506,6 +509,7 @@ extern char *gi_path_hacx;
 extern char *gi_path_hticsw;
 extern char *gi_path_hticreg;
 extern char *gi_path_sosr;
+extern char *gi_path_strife;
 extern char *gi_path_fdoom;
 extern char *gi_path_fdoomu;
 extern char *gi_path_freedm;
