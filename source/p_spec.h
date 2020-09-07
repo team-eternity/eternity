@@ -1497,6 +1497,8 @@ int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam);
 
+void EV_SetFriction(const int tag, int amount);
+
 // ioanch: now it's parameterized
 int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
                     fixed_t pspeed, fixed_t sspeed);

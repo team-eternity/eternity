@@ -1153,6 +1153,7 @@ PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
+PARAMLINE(ACSSetFriction);
 PARAMLINE(ACSScrollFloor);
 PARAMLINE(ACSScrollCeiling);
 
@@ -1820,6 +1821,7 @@ const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 // accessible by ACS, or that have multiple definitions, one for lines, one for ACS
 ev_binding_t ACSBindings[] =
 {
+   LINESPEC(219, ACSSetFriction)
    LINESPEC(223, ACSScrollFloor)
    LINESPEC(224, ACSScrollCeiling)
 };

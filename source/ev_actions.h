@@ -268,6 +268,7 @@ DECLARE_ACTION(EV_ActionParamSectorSetCeilingPanning);
 DECLARE_ACTION(EV_ActionParamSectorSetFloorPanning);
 DECLARE_ACTION(EV_ActionParamSectorChangeSound);
 
+DECLARE_ACTION(EV_ActionACSSetFriction);
 DECLARE_ACTION(EV_ActionACSScrollFloor);
 DECLARE_ACTION(EV_ActionACSScrollCeiling);
 #endif

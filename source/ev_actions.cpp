@@ -4439,6 +4439,18 @@ DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 //
 
 //
+// Implements Scroll_Floor(tag, amount)
+//
+// * ACS: 219
+//
+DEFINE_ACTION(EV_ActionACSSetFriction)
+{
+   EV_SetFriction(instance->args[0], instance->args[1]);
+
+   return 1;
+}
+
+//
 // Implements Scroll_Floor(tag, x-move, y-move, type)
 //
 // * ACS: 223
