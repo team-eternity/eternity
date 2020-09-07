@@ -593,6 +593,7 @@ enum
 {
    ENABLE_DOOM,
    ENABLE_HERETIC,
+   ENABLE_STRIFE,
    NUMENABLES,
 };
 
@@ -605,6 +606,7 @@ static E_Enable_t edf_enables[] =
    // all game modes are enabled by default
    { "DOOM",     1 },
    { "HERETIC",  1 },
+   { "STRIFE",   1 },
 
    // terminator
    { nullptr }
@@ -869,7 +871,8 @@ static int edf_disable(cfg_t *cfg, cfg_opt_t *opt, int argc,
 
    // 05/12/08: don't allow disabling the active gamemode
    if(!((GameModeInfo->type == Game_DOOM    && idx == ENABLE_DOOM) ||
-        (GameModeInfo->type == Game_Heretic && idx == ENABLE_HERETIC)))
+        (GameModeInfo->type == Game_Heretic && idx == ENABLE_HERETIC) ||
+        (GameModeInfo->type == Game_Strife  && idx == ENABLE_STRIFE)))
    {
       edf_enables[idx].enabled = 0;
    }

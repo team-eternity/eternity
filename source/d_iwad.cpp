@@ -1127,6 +1127,7 @@ const char *const standard_iwads[]=
    "/doom1.wad",     // Shareware DOOM
    "/heretic.wad",   // Heretic  -- haleyjd 10/10/05
    "/heretic1.wad",  // Shareware Heretic
+   "/strife1.wad",   // Strife: Quest for the Sigil
 
    // Unofficial IWADs
    "/freedoom2.wad", // Freedoom Phase 2         -- haleyjd 01/11/14

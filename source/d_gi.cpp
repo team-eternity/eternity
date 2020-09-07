@@ -62,23 +62,27 @@
 #define DOOMMENUBACK "FLOOR4_6"
 #define HACXMENUBACK "CONS1_5"
 #define HTICMENUBACK "FLOOR16"
+#define STRFMENUBACK "F_KNTBRK"
 
 // credit background flats
 #define DOOMCREDITBK "NUKAGE1"
 #define DM2CREDITBK  "SLIME05"
 #define HACXCREDITBK "SLIME01"
 #define HTICCREDITBK "FLTWAWA1"
+#define STRFCREDITBK "F_WATR01"
 
 // border flats
 #define DOOMBRDRFLAT "FLOOR7_2"
 #define DM2BRDRFLAT  "GRNROCK"
 #define HREGBRDRFLAT "FLAT513"
 #define HSWBRDRFLAT  "FLOOR04"
+#define STRFBRDRFLAT "F_BGROCK"
 
 // Default sound names
 // Note: these are lump names, not sound mnemonics
 #define DOOMDEFSOUND "DSPISTOL"
 #define HTICDEFSOUND "GLDHIT"
+#define STRFDEFSOUND "DSSWISH"
 
 // Default console backdrops
 // Used when no "CONSOLE" lump has been provided.
@@ -101,6 +105,7 @@
 #define VNAME_HTIC_REG  "Heretic Registered version"
 #define VNAME_HTIC_BETA "Heretic Beta version"
 #define VNAME_HTIC_SOSR "Heretic: Shadow of the Serpent Riders version"
+#define VNAME_STRF_QFTS "Strife: Quest for the Sigil version"
 #define VNAME_UNKNOWN   "Unknown Game version. May not work."
 
 // FreeDoom/Blasphemer/Etc override names
@@ -124,6 +129,7 @@
 #define BANNER_HTIC_SW   "Heretic Shareware Startup"
 #define BANNER_HTIC_REG  "Heretic Registered Startup"
 #define BANNER_HTIC_SOSR "Heretic: Shadow of the Serpent Riders"
+#define BANNER_STRF_QFTS "Strife: Quest for the Sigil"
 #define BANNER_UNKNOWN   "Public DOOM"
 
 // Default intermission pics
@@ -1819,6 +1825,129 @@ static gamemodeinfo_t giHereticReg =
    nullptr,            // exitSounds
 };
 
+//
+// Strife: Quest for the Sigil
+//
+static gamemodeinfo_t giStrifeReg =
+{
+   strifereg,        // id
+   Game_Strife,      // type
+   DOOM_GIFLAGS | GIF_MAPXY | GIF_SETENDOFGAME, // flags
+
+   VNAME_STRF_QFTS,  // versionName
+   nullptr,          // freeVerName
+   nullptr,          // bfgEditionName
+   BANNER_STRF_QFTS, // startupBanner
+   &gi_path_strife,  // iwadPath
+
+   demostates_doom2, // demoStates
+   11*TICRATE,       // titleTics
+   0,                // advisorTics
+   11*TICRATE,       // pageTics
+   smus_logo,        // titleMusNum
+
+   STRFMENUBACK,     // menuBackground
+   STRFCREDITBK,     // creditBackground
+   20,               // creditY
+   12,               // creditTitleStep
+   &giSkullCursor,   // menuCursor
+   &menu_main_doom2, // mainMenu
+   &menu_savegame,   // saveMenu
+   &menu_loadgame,   // loadMenu
+   &menu_newgame,    // newGameMenu
+   doomMenuSounds,   // menuSounds
+   S_TBALL1,         // transFrame
+   sfx_shotgn,       // skvAtkSound
+   CR_RED,           // unselectColor
+   CR_GRAY,          // selectColor
+   CR_GREEN,         // variableColor
+   CR_RED,           // titleColor
+   CR_GOLD,          // itemColor
+   CR_RED,           // bigFontItemColor
+   0,                // menuOffset
+   MN_Doom2NewGame,  // OnNewGame
+
+   STRFBRDRFLAT,     // borderFlat
+   &giDoomBorder,    // border
+
+   CR_RED,           // defTextTrans
+   CR_RED,           // colorNormal
+   CR_GRAY,          // colorHigh
+   CR_GOLD,          // colorError
+   40,               // c_numCharsPerLine
+   sfx_tink,         // c_BellSound
+   sfx_radio,        // c_ChatSound
+   CONBACK_DEFAULT,  // consoleBack
+   0,                // blackIndex
+   4,                // whiteIndex
+   NUMCARDS,         // numHUDKeys
+   DOOMCardNames,    // cardNames
+   nullptr,          // levelNames STRIFE_FIXME
+   P_Doom2DefaultLevelName, // GetLevelName
+
+   &DoomStatusBar,   // StatusBar
+
+   DOOMMARKS,        // markNumFmt
+
+   "M_PAUSE",        // pausePatch
+
+   1,                // numEpisodes
+   Doom2ExitRules,   // exitRules
+   "BulletPuff",     // puffType
+   "DoomTeleFog",    // teleFogType
+   0,                // teleFogHeight
+   sfx_telept,       // teleSound
+   100,              // thrustFactor
+   GI_GIBFULLHEALTH, // defaultGibHealth
+   "DoomMarine",     // defPClassName
+   nullptr,          // defTranslate
+   Doom2BossSpecs,   // bossRules
+   LI_TYPE_DOOM,     // levelType
+   "DoomBlood",      // bloodDefaultNormal
+   "DoomBlood",      // bloodDefaultImpact
+   "DoomBlood",      // bloodDefaultRIP
+   "DoomBlood",      // bloodDefaultCrush
+   bloodTypeForActionStrife, // default behavior for action array
+   2,                // skillAmmoMultiplier
+   meleecalc_doom,   // monsterMeleeRange
+   8 * FRACUNIT,     // itemHeight
+
+   INTERPIC_DOOM,     // interPic
+   smus_None,         // interMusNum
+   P_Doom2ParTime,    // GetParTime
+   &giDoomFText,      // fTextPos
+   &DoomIntermission, // interfuncs
+   FINALE_TEXT,       // teleEndGameFinaleType
+   &Doom2Finale,      // finaleData
+   CAST_DEFTITLEY,    // castTitleY
+   CAST_DEFNAMEY,     // castNameY
+
+   S_music,            // s_music
+   S_MusicForMapDoom2, // MusicForMap
+   S_Doom2MusicCheat,  // MusicCheat
+   smus_None,          // musMin
+   NUMSTRFMUSIC,       // numMusic
+   mus_runnin,         // randMusMin
+   mus_ultima,         // randMusMax
+   "D_",               // musPrefix
+   "action",           // defMusName
+   DOOMDEFSOUND,       // defSoundName
+   doom_skindefs,      // skinSounds
+   doom_soundnums,     // playerSounds
+   nullptr,            // titleMusName
+
+   3,              // switchEpisode
+   &Doom2SkyData,  // skyData
+   nullptr,        // TextureHacks
+   DoomSkyFlats,   // skyFlats
+   &giPsprNoScale, // pspriteGlobalScale
+
+   nullptr,          // defaultORs
+
+   "ENDSTRF",        // endTextName
+   quitsounds2,      // exitSounds
+};
+
 // Game Mode Info Array
 gamemodeinfo_t *GameModeInfoObjects[NumGameModes] =
 {
@@ -1828,6 +1957,7 @@ gamemodeinfo_t *GameModeInfoObjects[NumGameModes] =
    &giDoomRetail,     // retail
    &giHereticSW,      // hereticsw
    &giHereticReg,     // hereticreg
+   &giStrifeReg,      // strifereg
    &giDoomReg,        // indetermined - act like Doom, mostly.
 };
 

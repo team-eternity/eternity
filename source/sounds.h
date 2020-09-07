@@ -271,6 +271,47 @@ typedef enum
    NUMHTICMUSIC
 } htic_musicenum_t;
 
+// villsa [STRIFE]
+typedef enum
+{
+   smus_None,
+   smus_logo,
+   smus_action,
+   smus_tavern,
+   smus_danger,
+   smus_fast,
+   smus_intro,
+   smus_darker,
+   smus_strike,
+   smus_slide,
+   smus_tribal,
+   smus_march,
+   smus_danger2,
+   smus_mood,
+   smus_castle,
+   smus_darker2,
+   smus_action2,
+   smus_fight,
+   smus_spense,
+   smus_slide2,
+   smus_strike2,
+   smus_dark,
+   smus_tech,
+   smus_slide3,
+   smus_drone,
+   smus_panthr,
+   smus_sad,
+   smus_instry,
+   smus_tech2,
+   smus_action3,
+   smus_instry2,
+   smus_drone2,
+   smus_fight2,
+   smus_happy,
+   smus_end,
+   NUMSTRFMUSIC
+} strf_musicenum_t;
+
 //
 // Identifiers for all sfx in game.
 //
