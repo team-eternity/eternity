@@ -332,7 +332,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    switch(cfg_lexer_source_type(cfg))
    {
    case -1: // physical file
-      len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
+      len = M_StringAlloca(&currentpath, 1, 2, "%s", cfg->filename);
       M_GetFilePath(cfg->filename, currentpath, len);
 
       filename = M_SafeFilePath(currentpath, argv[0]);

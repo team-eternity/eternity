@@ -778,12 +778,12 @@ static void cheat_hticgimme(const void *varg)
    auto args = static_cast<const char *>(varg);
    if(!*args)
    {
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS1));
       return;
    }
    if(!*(args + 1))
    {
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS2));
       return;
    }
    int i;
@@ -803,7 +803,7 @@ static void cheat_hticgimme(const void *varg)
             continue;
          E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
       }
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else if(type >= 0 && type < numHArtifacts && count > 0 && count < 10)
    {
@@ -814,15 +814,15 @@ static void cheat_hticgimme(const void *varg)
       }
       if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
       {
-         player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+         player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
          return;
       }
       E_GiveInventoryItem(plyr, artifact, count);
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else
    {                           // Bad input
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
    }
 
 }
@@ -845,7 +845,7 @@ static void cheat_rambo(const void *arg)
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
 
-   player_printf(plyr, DEH_String(TXT_CHEATWEAPONS));
+   player_printf(plyr, "%s", DEH_String(TXT_CHEATWEAPONS));
 }
 
 //-----------------------------------------------------------------------------

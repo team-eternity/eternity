@@ -3313,7 +3313,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", line - lines);
+         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", eindex(line - lines));
          return;
       }
 
