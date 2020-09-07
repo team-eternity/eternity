@@ -1043,6 +1043,25 @@ static missioninfo_t gmHereticSoSR =
 };
 
 //
+// Strife: Quest for the Sigil
+//
+static missioninfo_t gmStrife =
+{
+   strifeqfts,      // id
+   0,               // flags
+   "strife",        // gamePathName
+   nullptr,         // sameLevels
+
+   0,               // addGMIFlags
+   0,               // remGMIFlags
+   VNAME_STRF_QFTS, // versionNameOR
+   BANNER_UNKNOWN,  // startupBannerOR
+   0,               // numEpisodesOR
+   nullptr,         // iwadPathOR
+   &UnknownFinale,  // finaleDataOR
+
+};
+//
 // ???
 //
 static missioninfo_t gmUnknown =
@@ -1075,6 +1094,7 @@ missioninfo_t *MissionInfoObjects[NumGameMissions] =
    &gmHeretic,       // heretic
    &gmHereticBeta,   // hticbeta
    &gmHereticSoSR,   // hticsosr
+   &gmStrife,        // strifeqfts
    &gmUnknown,       // none - ???
 };
 
