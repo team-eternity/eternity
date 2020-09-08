@@ -36,9 +36,22 @@ struct v3fixed_t
       return { x + other.x, y + other.y, z + other.z };
    }
 
+   v3fixed_t &operator += (const v3fixed_t &other)
+   {
+      x += other.x;
+      y += other.y;
+      z += other.z;
+      return *this;
+   }
+
    bool operator == (const v3fixed_t &other) const
    {
       return x == other.x && y == other.y && z == other.z;
+   }
+
+   bool operator ! () const
+   {
+      return !x && !y && !z;
    }
 
    bool operator != (const v3fixed_t &other) const
@@ -46,12 +59,9 @@ struct v3fixed_t
       return x != other.x || y != other.y || z != other.z;
    }
 
-   v3fixed_t &operator += (const v3fixed_t &other)
+   operator bool () const
    {
-      x += other.x;
-      y += other.y;
-      z += other.z;
-      return *this;
+      return x || y || z;
    }
 
    fixed_t x, y, z;
