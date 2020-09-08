@@ -643,6 +643,30 @@ static skydata_t HereticSkyData =
    HereticSkyRules
 };
 
+// Heretic Gamemodes
+
+static skyrule_t StrifeSkyRules[] =
+{
+   {   9, "SKYMNT02" },
+   {  32, "SKYMNT01" },
+   {  35, "SKYMNT01" },
+   {  36, "SKYMNT02" },
+   { -1,  "SKYMNT01" },
+   { -2 }
+};
+
+static skydata_t StrifeSkyData =
+{
+   GI_SKY_IFMAPLESSTHAN,
+   StrifeSkyRules
+};
+
+static skyflat_t StrifeSkyFlats[] =
+{
+   { "F_SKY001", nullptr, 0, 0, 0 },
+   { nullptr,    nullptr, 0, 0, 0 }
+};
+
 //
 // Default boss spec rules
 //
@@ -1957,9 +1981,9 @@ static gamemodeinfo_t giStrifeReg =
    nullptr,            // titleMusName
 
    3,              // switchEpisode
-   &Doom2SkyData,  // skyData
+   &StrifeSkyData, // skyData
    nullptr,        // TextureHacks
-   DoomSkyFlats,   // skyFlats
+   StrifeSkyFlats, // skyFlats
    &giPsprNoScale, // pspriteGlobalScale
 
    nullptr,          // defaultORs
