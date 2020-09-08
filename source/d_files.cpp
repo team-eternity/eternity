@@ -494,12 +494,11 @@ void D_LoadEDF(gfs_t *gfs)
                E_EDFSetEnableValue("DOOM",   0);
                E_EDFSetEnableValue("STRIFE", 0);
             }
-            // STRIFE_FIXME: Enable this
-            //else if(GameModeInfo->type == Game_Strife)
-            //{
-            //   E_EDFSetEnableValue("DOOM",    0);
-            //   E_EDFSetEnableValue("HERETIC", 0);
-            //}
+            else if(GameModeInfo->type == Game_Strife)
+            {
+               E_EDFSetEnableValue("DOOM",    0);
+               E_EDFSetEnableValue("HERETIC", 0);
+            }
             else
             {
                E_EDFSetEnableValue("HERETIC", 0);
