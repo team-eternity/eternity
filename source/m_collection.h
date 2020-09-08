@@ -162,6 +162,22 @@ public:
    {
       return ptrArray[length - 1];
    }
+
+   operator bool() const
+   {
+      return !isEmpty();
+   }
+
+   //
+   // Simple linear lookup
+   //
+   bool contains(const T &value) const
+   {
+      for(size_t i = 0; i < length; ++i)
+         if(ptrArray[i] == value)
+            return true;
+      return false;
+   }
 };
 
 //
