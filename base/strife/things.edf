@@ -9,8 +9,8 @@ thingtype StrifePlayer : Mobj
   spawnhealth  100
   reactiontime 0
   painchance   255
-  painsound    splpain
-  deathsound   spldeth
+  painsound    st_plpain
+  deathsound   st_pldeth
 
   radius       18.0
   height       56.0

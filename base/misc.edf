@@ -72,3 +72,79 @@ string _IN_NAME_E5M8 { val = "FIELD OF JUDGEMENT" }
 string _IN_NAME_E5M9 { val = "SKEIN OF D'SPARIL" }
 
 endif()
+
+# Strife Miscellany
+
+ifgametype(STRIFE)
+
+switch GLASS01  { on GLASS02;   sound bglass  }
+switch GLASS03  { on GLASS04;   sound bglass  }
+switch GLASS05  { on GLASS06;   sound bglass  }
+switch GLASS07  { on GLASS08;   sound bglass  }
+switch GLASS17  { on GLASS18;   sound bglass  }
+switch GLASS19  { on GLASS20;   sound bglass  }
+switch SWKNOB01 { on SWKNOB02;  sound swknob  }
+switch SWLITE01 { on SWLITE02                 }
+switch SWCHN01  { on SWCHN02;   sound pulchn  }
+switch COMP01   { on COMP04B;   sound bglass  }
+switch COMP05   { on COMP12B;   sound bglass  }
+switch COMP09   { on COMP12B;   sound bglass  }
+switch COMP12   { on COMP04B;   sound bglass  }
+switch COMP13   { on COMP12B;   sound bglass  }
+switch COMP17   { on COMP20B;   sound bglass  }
+switch COMP21   { on COMP28B;   sound bglass  }
+switch WALTEK09 { on WALTEKB1                 }
+switch WALTEK10 { on WALTEKB1                 }
+switch WALTEK15 { on WALTEKB1                 }
+switch SWFORC01 { on SWFORC02                 }
+switch SWEXIT01 { on SWEXIT02                 }
+switch DORSBK01 { on DORSBK02;  sound swston  }
+switch SWSLD01  { on SWSLD02                  }
+switch DORWS04  { on DORWS05;   sound swbolt  }
+switch SWIRON01 { on SWIRON02                 }
+switch GLASS09  { on GLASS10;   sound bglass  }
+switch GLASS11  { on GLASS12;   sound bglass  }
+switch GLASS13  { on GLASS14;   sound bglass  }
+switch GLASS15  { on GLASS16;   sound bglass  }
+switch SWFORC03 { on SWFORC04                 }
+switch SWCIT01  { on SWCIT02                  }
+switch SWTRMG01 { on SWTRMG04                 }
+switch SWMETL01 { on SWMETL02                 }
+switch SWWOOD01 { on SWWOOD02                 }
+switch SWTKBL01 { on SWTKBL02                 }
+switch AZWAL21  { on AZWAL22                  }
+switch SWINDT01 { on SWINDT02                 }
+switch SWRUST01 { on SWRUST02                 }
+switch SWCHAP01 { on SWCHAP02                 }
+switch SWALIN01 { on SWALIN02                 }
+switch SWWALG01 { on SWWALG02                 }
+switch SWWALG03 { on SWWALG04                 }
+switch SWTRAM01 { on SWTRAM02                 }
+switch SWTRAM03 { on SWTRAM04                 }
+switch SWORC01  { on SWORC02                  }
+switch SWBRIK01 { on SWBRIK02                 }
+switch SWIRON03 { on SWIRON04                 }
+switch SWIRON05 { on SWIRON06                 }
+switch SWIRON07 { on SWIRON08                 }
+switch SWCARD01 { on SWCARD02;  sound keycrd  }
+switch SWSIGN01 { on SWSIGN02                 }
+switch SWLEV01  { on SWLEV02                  }
+switch SWLEV03  { on SWLEV04                  }
+switch SWLEV05  { on SWLEV06                  }
+switch SWBRN01  { on SWBRN02;   sound keycrd  }
+switch SWPIP01  { on SWPIP02;   sound valve   }
+switch SWPALM01 { on SWPALM02;  sound swscan  }
+switch SWKNOB03 { on SWKNOB04;  sound swknob  }
+switch ALTSW01  { on ALTSW02                  }
+switch COMP25   { on COMP28B;   sound bglass  }
+switch COMP29   { on COMP20B;   sound bglass  }
+switch COMP33   { on COMP50;    sound bglass  }
+switch COMP42   { on COMP51;    sound bglass  }
+switch GODSCRN1 { on GODSCRN2;  sound difool  }
+switch ALIEN04  { on ALIEN05                  }
+switch CITADL04 { on CITADL05                 }
+switch SWITE03  { on SWITE04                  }
+switch SWTELP01 { on SWTELP02                 }
+switch BRNSCN01 { on BRNSCN05;  sound firxpl  }
+
+endif()

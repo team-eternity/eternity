@@ -1980,7 +1980,7 @@ static gamemodeinfo_t giStrifeReg =
    doom_soundnums,     // playerSounds
    nullptr,            // titleMusName
 
-   3,              // switchEpisode
+   1,              // switchEpisode
    &StrifeSkyData, // skyData
    nullptr,        // TextureHacks
    StrifeSkyFlats, // skyFlats
