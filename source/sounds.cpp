@@ -145,6 +145,45 @@ int H_Mus_Matrix[6][9] =
    { 18, 19,  6, 20, 21, 22,  1,  1,  1 }, // hidden levels
 };
 
+musicinfo_t Strf_music[] =
+{
+   { nullptr },
+   { "logo",   true },
+   { "action", true },
+   { "tavern", true },
+   { "danger", true },
+   { "fast",   true },
+   { "intro" , true },
+   { "darker", true },
+   { "strike", true },
+   { "slide",  true },
+   { "tribal", true },
+   { "march",  true },
+   { "danger", true },
+   { "mood",   true },
+   { "castle", true },
+   { "darker", true },
+   { "action", true },
+   { "fight",  true },
+   { "spense", true },
+   { "slide",  true },
+   { "strike", true },
+   { "dark",   true },
+   { "tech",   true },
+   { "slide",  true },
+   { "drone",  true },
+   { "panthr", true },
+   { "sad",    true },
+   { "instry", true },
+   { "tech",   true },
+   { "action", true },
+   { "instry", true },
+   { "drone",  true },
+   { "fight",  true },
+   { "happy",  true },
+   { "end",    true },
+};
+
 //
 // Information about all the sfx
 //

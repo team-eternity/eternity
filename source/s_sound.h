@@ -177,6 +177,7 @@ extern bool s_randmusic;
 int S_MusicForMapDoom();
 int S_MusicForMapDoom2();
 int S_MusicForMapHtic();
+int S_MusicForMapStrf();
 int S_DoomMusicCheat(const char *buf);
 int S_Doom2MusicCheat(const char *buf);
 int S_HereticMusicCheat(const char *buf);

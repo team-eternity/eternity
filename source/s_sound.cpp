@@ -1375,6 +1375,17 @@ int S_MusicForMapHtic()
 }
 
 //
+// Extremely simple (STRIFE_TODO: SVE stuff)
+//
+int S_MusicForMapStrf()
+{
+   int map = eclamp(gamemap, 1, 35);
+   if(map == 35)
+      return smus_tribal;
+   return (smus_action + map - 1);
+}
+
+//
 // S_Start
 //
 // Per level startup code.

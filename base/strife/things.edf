@@ -15,7 +15,7 @@ thingtype StrifePlayer : Mobj
   radius       18.0
   height       56.0
 
-  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
+  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|WINDTHRUST|PASSMOBJ
 
   states
   @"

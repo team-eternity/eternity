@@ -166,6 +166,9 @@ extern musicinfo_t  H_music[];
 // haleyjd: clever indirection for heretic maps
 extern int H_Mus_Matrix[6][9];
 
+// strife music
+extern musicinfo_t  Strf_music[];
+
 //
 // Identifiers for all music in game.
 //

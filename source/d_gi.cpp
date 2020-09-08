@@ -1899,7 +1899,7 @@ static gamemodeinfo_t giStrifeReg =
    sfx_radio,        // c_ChatSound
    CONBACK_DEFAULT,  // consoleBack
    0,                // blackIndex
-   4,                // whiteIndex
+   255,              // whiteIndex
    NUMCARDS,         // numHUDKeys
    DOOMCardNames,    // cardNames
    mapnamess,         // levelNames
@@ -1942,8 +1942,8 @@ static gamemodeinfo_t giStrifeReg =
    CAST_DEFTITLEY,    // castTitleY
    CAST_DEFNAMEY,     // castNameY
 
-   S_music,            // s_music
-   S_MusicForMapDoom2, // MusicForMap
+   Strf_music,         // s_music
+   S_MusicForMapStrf,  // MusicForMap
    S_Doom2MusicCheat,  // MusicCheat
    smus_None,          // musMin
    NUMSTRFMUSIC,       // numMusic
