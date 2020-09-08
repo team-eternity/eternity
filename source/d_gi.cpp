@@ -1047,18 +1047,18 @@ static missioninfo_t gmHereticSoSR =
 //
 static missioninfo_t gmStrife =
 {
-   strifeqfts,      // id
-   0,               // flags
-   "strife",        // gamePathName
-   nullptr,         // sameLevels
+   strifeqfts,       // id
+   0,                // flags
+   "strife",         // gamePathName
+   nullptr,          // sameLevels
 
-   0,               // addGMIFlags
-   0,               // remGMIFlags
-   VNAME_STRF_QFTS, // versionNameOR
-   BANNER_UNKNOWN,  // startupBannerOR
-   0,               // numEpisodesOR
-   nullptr,         // iwadPathOR
-   &UnknownFinale,  // finaleDataOR
+   0,                // addGMIFlags
+   0,                // remGMIFlags
+   VNAME_STRF_QFTS,  // versionNameOR
+   BANNER_STRF_QFTS, // startupBannerOR
+   0,                // numEpisodesOR
+   nullptr,          // iwadPathOR
+   &UnknownFinale,   // finaleDataOR
 
 };
 //
@@ -1947,8 +1947,8 @@ static gamemodeinfo_t giStrifeReg =
    S_Doom2MusicCheat,  // MusicCheat
    smus_None,          // musMin
    NUMSTRFMUSIC,       // numMusic
-   mus_runnin,         // randMusMin
-   mus_ultima,         // randMusMax
+   smus_action,        // randMusMin
+   smus_fight2,        // randMusMax
    "D_",               // musPrefix
    "action",           // defMusName
    DOOMDEFSOUND,       // defSoundName
