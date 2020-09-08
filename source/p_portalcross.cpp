@@ -476,11 +476,8 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
                               bool (*func)(int x, int y, int groupid, void *data))
 {
    int gcount = P_PortalGroupCount();
-   if(gcount <= 1 || groupid == R_NOGROUP ||
-      full_demo_version < make_full_version(340, 48))
-   {
+   if(gcount <= 1 || groupid == R_NOGROUP || full_demo_version < make_full_version(340, 48))
       return P_simpleBlockWalker(bbox, xfirst, data, func);
-   }
 
    // OPTIMIZE: if needed, use some global store instead of malloc
    bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
