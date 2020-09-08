@@ -43,10 +43,10 @@ thingtype StrifePlayer : Mobj
     RGIB A 5 //A_BodyParts
     RGIB B 5 A_XScream
     RGIB C 5 A_Fall
-    RGIB DEFG 5 A //A_BodyParts
+    RGIB DEFG 5 //A_BodyParts
   DeathLoop:
     RGIB H 1400 // A_CheckPlayerDone
-    loop DeathLoop
+    loop
   "@
 }
 
