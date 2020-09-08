@@ -1563,6 +1563,9 @@ static void P_LoadThings(int lump)
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
 
+      if(LevelInfo.levelType = LI_TYPE_STRIFE)
+         P_ConvertStrifeThing(ft);
+
       // haleyjd 12/27/13: convert Doom extended thing numbers
       P_ConvertDoomExtendedSpawnNum(ft);
       
@@ -3943,8 +3946,9 @@ static void P_ConvertHexenThing(mapthing_t *mthing)
 // 2001 - 2048 -> 7901 - 7948
 // 3001 - 3006 -> 7951 - 7956
 // Covers all Strife thingtypes.
+// NB: SVE's new objects use 7970 - 7975
 //
-static void P_ConvertStrifeThing(mapthing_t *mthing)
+void P_ConvertStrifeThing(mapthing_t *mthing)
 {
    int16_t num = mthing->type;
 

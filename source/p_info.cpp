@@ -768,6 +768,14 @@ void P_HticDefaultLevelName(levelnamedata_t &lnd)
    }
 }
 
+void P_StrifeDefaultLevelName(levelnamedata_t &lnd)
+{
+   int strifeupperbound = 34; // STRIFE_TODO: SVE bonuses
+
+   if(isMAPxy(gamemapname) && gamemap > 0 && gamemap <= strifeupperbound)
+      lnd.bexName = GameModeInfo->levelNames[gamemap - 1];
+}
+
 //
 // P_InfoDefaultLevelName
 //

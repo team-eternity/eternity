@@ -35,6 +35,7 @@
 #include "doomdef.h"
 #include "doomtype.h"
 #include "dhticstr.h"  // haleyjd
+#include "dstrifestr.h"
 #include "dstrings.h"  // to get initial text values
 #include "e_lib.h"
 #include "info.h"
@@ -494,6 +495,42 @@ static const char *s_TXT_CHEATCHICKENOFF    = TXT_CHEATCHICKENOFF;
 static const char *s_TXT_CHEATMASSACRE      = TXT_CHEATMASSACRE;
 static const char *s_TXT_CHEATIDDQD         = TXT_CHEATIDDQD;
 static const char *s_TXT_CHEATIDKFA         = TXT_CHEATIDKFA;
+
+// strife strings
+static const char *s_SHUSTR_1  = SHUSTR_1;
+static const char *s_SHUSTR_2  = SHUSTR_2;
+static const char *s_SHUSTR_3  = SHUSTR_3;
+static const char *s_SHUSTR_4  = SHUSTR_4;
+static const char *s_SHUSTR_5  = SHUSTR_5;
+static const char *s_SHUSTR_6  = SHUSTR_6;
+static const char *s_SHUSTR_7  = SHUSTR_7;
+static const char *s_SHUSTR_8  = SHUSTR_8;
+static const char *s_SHUSTR_9  = SHUSTR_9;
+static const char *s_SHUSTR_10 = SHUSTR_10;
+static const char *s_SHUSTR_11 = SHUSTR_11;
+static const char *s_SHUSTR_12 = SHUSTR_12;
+static const char *s_SHUSTR_13 = SHUSTR_13;
+static const char *s_SHUSTR_14 = SHUSTR_14;
+static const char *s_SHUSTR_15 = SHUSTR_15;
+static const char *s_SHUSTR_16 = SHUSTR_16;
+static const char *s_SHUSTR_17 = SHUSTR_17;
+static const char *s_SHUSTR_18 = SHUSTR_18;
+static const char *s_SHUSTR_19 = SHUSTR_19;
+static const char *s_SHUSTR_20 = SHUSTR_20;
+static const char *s_SHUSTR_21 = SHUSTR_21;
+static const char *s_SHUSTR_22 = SHUSTR_22;
+static const char *s_SHUSTR_23 = SHUSTR_23;
+static const char *s_SHUSTR_24 = SHUSTR_24;
+static const char *s_SHUSTR_25 = SHUSTR_25;
+static const char *s_SHUSTR_26 = SHUSTR_26;
+static const char *s_SHUSTR_27 = SHUSTR_27;
+static const char *s_SHUSTR_28 = SHUSTR_28;
+static const char *s_SHUSTR_29 = SHUSTR_29;
+static const char *s_SHUSTR_30 = SHUSTR_30;
+static const char *s_SHUSTR_31 = SHUSTR_31;
+static const char *s_SHUSTR_32 = SHUSTR_32;
+static const char *s_SHUSTR_33 = SHUSTR_33;
+static const char *s_SHUSTR_34 = SHUSTR_34;
 
 // obituaries
 static const char *s_OB_SUICIDE = OB_SUICIDE;
@@ -979,6 +1016,40 @@ dehstr_t deh_strlookup[] =
    { &s_TXT_CHEATMASSACRE,      "TXT_CHEATMASSACRE"      },
    { &s_TXT_CHEATIDDQD,         "TXT_CHEATIDDQD"         },
    { &s_TXT_CHEATIDKFA,         "TXT_CHEATIDKFA"         },
+   { &s_SHUSTR_1 ,              "SHUSTR_1"     },
+   { &s_SHUSTR_2 ,              "SHUSTR_2"     },
+   { &s_SHUSTR_3 ,              "SHUSTR_3"     },
+   { &s_SHUSTR_4 ,              "SHUSTR_4"     },
+   { &s_SHUSTR_5 ,              "SHUSTR_5"     },
+   { &s_SHUSTR_6 ,              "SHUSTR_6"     },
+   { &s_SHUSTR_7 ,              "SHUSTR_7"     },
+   { &s_SHUSTR_8 ,              "SHUSTR_8"     },
+   { &s_SHUSTR_9 ,              "SHUSTR_9"     },
+   { &s_SHUSTR_10,              "SHUSTR_10"    },
+   { &s_SHUSTR_11,              "SHUSTR_11"    },
+   { &s_SHUSTR_12,              "SHUSTR_12"    },
+   { &s_SHUSTR_13,              "SHUSTR_13"    },
+   { &s_SHUSTR_14,              "SHUSTR_14"    },
+   { &s_SHUSTR_15,              "SHUSTR_15"    },
+   { &s_SHUSTR_16,              "SHUSTR_16"    },
+   { &s_SHUSTR_17,              "SHUSTR_17"    },
+   { &s_SHUSTR_18,              "SHUSTR_18"    },
+   { &s_SHUSTR_19,              "SHUSTR_19"    },
+   { &s_SHUSTR_20,              "SHUSTR_20"    },
+   { &s_SHUSTR_21,              "SHUSTR_21"    },
+   { &s_SHUSTR_22,              "SHUSTR_22"    },
+   { &s_SHUSTR_23,              "SHUSTR_23"    },
+   { &s_SHUSTR_24,              "SHUSTR_24"    },
+   { &s_SHUSTR_25,              "SHUSTR_25"    },
+   { &s_SHUSTR_26,              "SHUSTR_26"    },
+   { &s_SHUSTR_27,              "SHUSTR_27"    },
+   { &s_SHUSTR_28,              "SHUSTR_28"    },
+   { &s_SHUSTR_29,              "SHUSTR_29"    },
+   { &s_SHUSTR_30,              "SHUSTR_30"    },
+   { &s_SHUSTR_31,              "SHUSTR_31"    },
+   { &s_SHUSTR_32,              "SHUSTR_32"    },
+   { &s_SHUSTR_33,              "SHUSTR_33"    },
+   { &s_SHUSTR_34,              "SHUSTR_34"    },
    { &s_OB_SUICIDE,        "OB_SUICIDE"        },
    { &s_OB_FALLING,        "OB_FALLING"        },
    { &s_OB_CRUSH,          "OB_CRUSH"          },
@@ -1230,6 +1301,48 @@ const char *mapnamesh[] = // haleyjd: heretic map names
    "HHUSTR_E5M7",
    "HHUSTR_E5M8",
    "HHUSTR_E5M9",
+};
+
+const char *mapnamess[] = // strife map names
+{
+   "SHUSTR_1",
+   "SHUSTR_2",
+   "SHUSTR_3",
+   "SHUSTR_4",
+   "SHUSTR_5",
+   "SHUSTR_6",
+   "SHUSTR_7",
+   "SHUSTR_8",
+   "SHUSTR_9",
+
+   "SHUSTR_10",
+   "SHUSTR_11",
+   "SHUSTR_12",
+   "SHUSTR_13",
+   "SHUSTR_14",
+   "SHUSTR_15",
+   "SHUSTR_16",
+   "SHUSTR_17",
+   "SHUSTR_18",
+   "SHUSTR_19",
+
+   "SHUSTR_20",
+   "SHUSTR_21",
+   "SHUSTR_22",
+   "SHUSTR_23",
+   "SHUSTR_24",
+   "SHUSTR_25",
+   "SHUSTR_26",
+   "SHUSTR_27",
+   "SHUSTR_28",
+   "SHUSTR_29",
+
+   "SHUSTR_30",
+   "SHUSTR_31",
+
+   "SHUSTR_32",
+   "SHUSTR_33",
+   "SHUSTR_34",
 };
 
 

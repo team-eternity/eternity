@@ -43,6 +43,7 @@ extern const char *mapnames2[];
 extern const char *mapnamesp[];
 extern const char *mapnamest[];
 extern const char *mapnamesh[];
+extern const char *mapnamess[];
 
 extern bool deh_pars;
 

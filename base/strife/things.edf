@@ -4,5 +4,49 @@
 // Thing type definitions for Strife gamemode.
 //
 
-//
+thingtype StrifePlayer : Mobj
+{
+  spawnhealth  100
+  reactiontime 0
+  painchance   255
+  painsound    splpain
+  deathsound   spldeth
+
+  radius       18.0
+  height       56.0
+
+  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    PLAY A -1
+    stop
+  See:
+    PLAY ABCD 4
+    loop
+  Missile:
+    PLAY E 12
+    goto Spawn
+  Pain:
+    PLAY Q 4
+    PLAY Q 4 A_Pain
+    goto Spawn
+  Death:
+    PLAY H 3
+    PLAY I 3 A_PlayerScream
+    PLAY J 3 A_Fall
+    PLAY KLMNO 4
+    PLAY P 700
+    goto DeathLoop
+  XDeath:
+    RGIB A 5 //A_BodyParts
+    RGIB B 5 A_XScream
+    RGIB C 5 A_Fall
+    RGIB DEFG 5 A //A_BodyParts
+  DeathLoop:
+    RGIB H 1400 // A_CheckPlayerDone
+    loop DeathLoop
+  "@
+}
 

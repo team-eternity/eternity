@@ -1014,6 +1014,9 @@
     <ClCompile Include="..\source\hu_inventory.cpp">
       <Filter>Source Files\HU_\HU_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\dstrifestr.h">
+      <Filter>Source Files\doom</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">

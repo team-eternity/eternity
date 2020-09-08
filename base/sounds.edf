@@ -16,7 +16,7 @@ includeifenabled("doom/sounds.edf", "DOOM")
 
 includeifenabled("heretic/sounds.edf", "HERETIC")
 
-// Heretic : DeHackEd nums 500 - 635
+// Strife : DeHackEd nums 500 - 635
 
 includeifenabled("strife/sounds.edf", "STRIFE")
 

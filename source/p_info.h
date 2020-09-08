@@ -185,6 +185,7 @@ struct levelnamedata_t;
 void P_DoomDefaultLevelName(levelnamedata_t &lnd);
 void P_Doom2DefaultLevelName(levelnamedata_t &lnd);
 void P_HticDefaultLevelName(levelnamedata_t &lnd);
+void P_StrifeDefaultLevelName(levelnamedata_t &lnd);
 
 // ioanch
 bool P_LevelIsVanillaHexen();

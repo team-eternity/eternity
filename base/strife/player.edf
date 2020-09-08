@@ -6,14 +6,14 @@
 
 //=============================================================================
 //
-// Strifeguy Player Class
+// StrifeRebel Player Class
 //
 
-skin strifeguy {}
+skin striferebel {}
 
-playerclass StrifeGuy
+playerclass StrifeRebel
 {
-   defaultskin    strifeguy
+   defaultskin    striferebel
    thingtype      StrifePlayer
 }
 

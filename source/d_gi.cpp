@@ -1902,8 +1902,8 @@ static gamemodeinfo_t giStrifeReg =
    4,                // whiteIndex
    NUMCARDS,         // numHUDKeys
    DOOMCardNames,    // cardNames
-   nullptr,          // levelNames STRIFE_FIXME
-   P_Doom2DefaultLevelName, // GetLevelName
+   mapnamess,         // levelNames
+   P_StrifeDefaultLevelName, // GetLevelName
 
    &DoomStatusBar,   // StatusBar
 
@@ -1919,10 +1919,10 @@ static gamemodeinfo_t giStrifeReg =
    sfx_telept,       // teleSound
    100,              // thrustFactor
    GI_GIBFULLHEALTH, // defaultGibHealth
-   "DoomMarine",     // defPClassName
+   "StrifeRebel",    // defPClassName
    nullptr,          // defTranslate
    Doom2BossSpecs,   // bossRules
-   LI_TYPE_DOOM,     // levelType
+   LI_TYPE_STRIFE,   // levelType
    "DoomBlood",      // bloodDefaultNormal
    "DoomBlood",      // bloodDefaultImpact
    "DoomBlood",      // bloodDefaultRIP

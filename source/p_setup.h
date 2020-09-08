@@ -70,6 +70,7 @@ void P_SetupSidedefTextures(side_t &sd, const char *bottomTexture,
                             const char *midTexture, const char *topTexture);
 bool P_CheckThingDoomBan(int16_t type);
 void P_ConvertHereticThing(mapthing_t *mthing);
+void P_ConvertStrifeThing(mapthing_t *mthing);
 void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 
 extern byte     *rejectmatrix;   // for fast sight rejection

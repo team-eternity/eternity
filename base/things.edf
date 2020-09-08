@@ -28,7 +28,7 @@ includeifenabled("heretic/things.edf", "HERETIC")
 
 // Strife Thing Types ---------------------------------------------------------
 
-// DoomEdNums: 8001 - 8354
+// DoomEdNums: 7605 - 7956
 // DeHackEd Nums: 500 - 599
 
 includeifenabled("strife/things.edf", "STRIFE")

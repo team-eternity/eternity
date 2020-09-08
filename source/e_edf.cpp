@@ -934,6 +934,7 @@ static const char *e_typenames[] =
 {
    "DOOM",
    "HERETIC",
+   "STRIFE",
 };
 
 //

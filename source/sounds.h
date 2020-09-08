@@ -570,6 +570,13 @@ typedef enum {
   sfx_blshit,
   sfx_hnoway,
 
+  // Strife sounds
+  sfx_swish = 500,
+
+  sfx_splpain = 510,
+
+  sfx_spldeth = 517,
+
   // haleyjd 11/05/03: NUMSFX is a variable now
   // NUMSFX
 } sfxenum_t;
