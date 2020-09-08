@@ -32,6 +32,8 @@ includeifenabled("doom/sprites.edf", "DOOM");
 
 includeifenabled("heretic/sprites.edf", "HERETIC");
 
+includeifenabled("strife/sprites.edf", "STRIFE");
+
 // Eternity Engine Sprites -- Always defined
 spritenames +=
 {

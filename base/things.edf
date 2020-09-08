@@ -26,6 +26,13 @@ includeifenabled("doom/things.edf", "DOOM")
 
 includeifenabled("heretic/things.edf", "HERETIC")
 
+// Strife Thing Types ---------------------------------------------------------
+
+// DoomEdNums: 8001 - 8354
+// DeHackEd Nums: 500 - 599
+
+includeifenabled("strife/things.edf", "STRIFE")
+
 
 // Common Objects --------------------------------------------------------------
 

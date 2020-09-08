@@ -12,6 +12,10 @@ includeifenabled("doom/items.edf", "DOOM");
 
 includeifenabled("heretic/items.edf", "HERETIC");
 
+// Strife Items --------------------------------------------------------------
+
+includeifenabled("strife/items.edf", "STRIFE");
+
 // Shared Items ---------------------------------------------------------------
 
 //

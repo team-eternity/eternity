@@ -49,5 +49,9 @@ includeifenabled("doom/player.edf", "DOOM");
 
 includeifenabled("heretic/player.edf", "HERETIC");
 
+// Strife Player and Weapons -------------------------------------------------
+
+includeifenabled("strife/player.edf", "STRIFE");
+
 endif()
 

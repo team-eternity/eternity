@@ -12,9 +12,13 @@
 
 includeifenabled("doom/sounds.edf", "DOOM")
 
-// Heretic : DeHackEd nums 300 - 397
+// Heretic : DeHackEd nums 300 - 441
 
 includeifenabled("heretic/sounds.edf", "HERETIC")
+
+// Heretic : DeHackEd nums 500 - 635
+
+includeifenabled("strife/sounds.edf", "STRIFE")
 
 // MBF sounds ------------------------------------------------------------------
 

@@ -1,0 +1,263 @@
+// fonts.edf - EDF File for Eternity Engine v4.01.00+
+
+// Strife-only fonts.
+
+ifgametype(STRIFE)
+
+// Small font - this is used by the HUD and V-system by default
+font ee_smallfont
+{
+   id          0
+   start       '!'
+   end         0x7f
+   linesize    8
+   spacesize   4
+   tallestchar 8
+   colorable   true
+   uppercase   true
+
+   filter { start '!'; end 0x7f; mask "STCFN%.3d" }
+}
+
+// Hud overlay font - used by BOOM-style HUD
+font ee_hudfont
+{
+   id          1
+   start       '!'
+   end         0x7f
+   linesize    8
+   spacesize   4
+   tallestchar 8
+   colorable   true
+   uppercase   true
+
+   filter { start '0'; end = '9';         mask "DIG%c"  }
+   filter { start 'A'; end = 'Z';         mask "DIG%c"  }
+   filter { chars { 45, 47, 58, 91, 93 }; mask "DIG%i"  }
+   filter { start 123; end = 127;         mask "STBR%i" }
+   filter { chars { '_' };                mask "DIG45"  }
+   filter { chars { '(' };                mask "DIG91"  }
+   filter { chars { ')' };                mask "DIG93"  }
+
+   colortables
+   {
+      // Dark gray
+      custom1 "176=96,180=100,185=105"
+   }
+}
+
+// Modern HUD overlay small font - arms numbers and kills/items/secrets
+font ee_fshudsmallfont
+{
+   start       '/'
+   end         'Z'
+   colorable   true
+   uppercase   true
+   spacesize   1
+   tallestchar 6
+   defaultcolor gray
+
+   filter { chars { '/' };                mask "NHUD_SLS"  }
+   filter { start 'A'; end = 'Z';         mask "NHUD_%c"   }
+   filter { start '0'; end = '9';         mask "NHUD_DS%c" }
+
+   colortables
+   {
+      gray:    @identity
+      green:   "80=112,95=117"
+      gold:    "80=249,95=163"
+      red:     "80=179,95=184"
+      blue:    "80=194,95=197"
+      custom1: "80=128,95=134"
+      custom2: "80=95,95=102"
+   }
+}
+
+// Modern HUD overlay medium font - ammo numbers
+font ee_fshudmediumfont
+{
+   start       '/'
+   end         '9'
+   colorable   true
+   uppercase   true
+   spacesize   1
+   tallestchar 6
+   defaultcolor gray
+
+   filter { chars { '/' };                mask "NHUD_SLS"  }
+   filter { start '0'; end = '9';         mask "NHUD_DM%c" }
+
+   colortables
+   {
+      gray:    @identity
+      green:   "80=112,95=117"
+      gold:    "80=249,95=163"
+      red:     "80=179,95=184"
+      blue:    "80=194,95=197"
+      custom1: "80=128,95=134"
+      custom2: "80=95,95=102"
+   }
+}
+
+// Modern HUD overlay large font - health/armor numbers
+font ee_fshudslargefont
+{
+   start       '0'
+   end         '9'
+   colorable   true
+   uppercase   true
+   spacesize   10
+   tallestchar 10
+
+   filter { start '0'; end = '9';         mask "NHUD_DL%c" }
+
+   colortables
+   {
+      gray:    @identity
+      green:   "80=112,95=117"
+      gold:    "80=249,95=163"
+      red:     "80=179,95=184"
+      blue:    "80=194,95=197"
+      custom1: "80=128,95=134"
+      custom2: "80=95,95=102"
+   }
+}
+
+// Medium font - extracted from the Doom / Doom 2 CREDITS resource.
+// New characters by esselfortium and Quasar.
+font ee_midfont
+{
+   start       '!'
+   end         0x7f
+   linesize    9
+   spacesize   6
+   widthdelta  1
+   tallestchar 9
+   uppercase   true
+
+   filter { start '!'; end 0x7f; mask "MIDFON%02X" }
+
+   colorable    true
+   defaultcolor gold
+
+   colortables
+   {
+      brick:  "164:167=25:31,238=46"
+      tan:    "164:167=58:64,238=72"
+      gray:   "164:167=92:104,238=110"
+      green:  "164:167=117:123,238=125"
+      brown:  "164=68,165=71,166=73,167=75,238=78"
+      gold:   @identity
+      red:    "164=180,165=182,166=185,167=188,238=47"
+      blue:   "164:165=202:203,166:167=205:206,238=241"
+      orange: "164=215,165=219,166=223,167=235,238=78"
+      yellow: "164:167=161:164,238=167"
+   }
+}
+
+// Big font - used by intermission and menus occasionally
+font ee_bigfont
+{
+   id          2
+   start       '!'
+   end         'Z'
+   linesize    12
+   spacesize   8
+   widthdelta  1
+   tallestchar 12
+   uppercase   true
+
+   patchnumoffset 32
+
+   filter { start '!'; end 'Z'; mask "FONTB%.2d" }
+
+   colorable    true
+   defaultcolor gray
+
+   colortables
+   {
+      // Special thanks to esselfortium for tweaking these!
+
+      brick  "3=45,4=17,80=19,81:92=21:32,93=34,95:98=36:39,"
+             "99=41,101=42,102:106=44:47,208=17"
+
+      tan    "3=74,4=50,80:81=51,82=52,84:89=53:58,91:97=59:65,"
+             "98:103=67:72,105:106=75:76,208=50"
+
+      gray   @identity
+
+      green  "3=123,4=112,80=113,81:82=114,84:89=115:117,91:92=118,93:95=119,"
+             "97:99=120:122,101=122,102:103=123,105:106=125,208=112"
+
+      brown  "3=75,4=60,80:83=61:62,84=63,85:90=64:66,91=67,92:95=68:69,96=70,"
+             "97:100=70:73,101:102=74,103=75,105:106=76:78,208=60"
+
+      gold   "3=167,4=160,80:81=249,82:105=161:167,106=42,208=160"
+
+      red    "3=45,4=178,80:82=179:181,84:85=181:182,86:97=183:188,98=187,"
+             "99:101=188,102=44,103:105=46,106=47,208=177"
+
+      blue   "3=240,4=199,80:91=200:202,92:103=202:207,102:105=240:241,"
+             "106=242,208=199"
+
+      orange "3=38,4=214,80:96=215:223,97:101=232:235,102:105=36:40,106=42,"
+             "208=214"
+
+      yellow "3=14,4=225,80:83=226:231,84=160,85:86=249,87:90=161:163,"
+             "91:101=129:143,102:105=13:15,106=238,208=225"
+   }
+}
+
+// Big number font - used only in special circumstances
+font ee_bignumfont
+{
+   id            3
+   start         '!'
+   end           'Z'
+   linesize      12
+   spacesize     12
+   tallestchar   12
+   centerwidth   12
+   uppercase     true
+   blockcentered true
+
+   patchnumoffset = 32
+
+   filter { start '!'; end 'Z'; mask "FONTB%.2d" }
+}
+
+// Menu font - this is a special copy of the smallfont used by the menus;
+// widthdelta is set to 1 to move the text closer together.
+font ee_menufont
+{
+   id          5
+   start       '!'
+   end         0x7f
+   linesize    8
+   spacesize   4
+   widthdelta  1
+   tallestchar 8
+   colorable   true
+   uppercase   true
+
+   filter { start '!'; end 0x7f; mask "STCFN%.3d" }
+}
+
+// Finale font - this is yet another copy of the smallfont, used by the finale.
+// This one has a bigger linebreak step.
+font ee_finalefont
+{
+   id          6
+   start       '!'
+   end         0x7f
+   linesize    11
+   spacesize   4
+   tallestchar 8
+   colorable   true
+   uppercase   true
+
+   filter { start '!'; end 0x7f; mask "STCFN%.3d" }
+}
+
+endif()
+

@@ -1,0 +1,21 @@
+//
+// EDF for Eternity Engine v4.01.00+
+//
+// Strife Player-related Definitions
+//
+
+//=============================================================================
+//
+// Strifeguy Player Class
+//
+
+skin strifeguy {}
+
+playerclass StrifeGuy
+{
+   defaultskin    strifeguy
+   thingtype      StrifePlayer
+}
+
+//
+

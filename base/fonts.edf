@@ -4,6 +4,8 @@ includeifenabled("doom/fonts.edf",    "DOOM");
 
 includeifenabled("heretic/fonts.edf", "HERETIC");
 
+includeifenabled("strife/fonts.edf",  "STRIFE");
+
 //=============================================================================
 //
 // Common Fonts
