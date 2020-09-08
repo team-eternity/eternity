@@ -438,7 +438,13 @@ static bool P_boxTouchesBlockPortal(const portalblockentry_t &entry, const fixed
    {
       if(!M_BoxesTouch(line.bbox, bbox))
          return false;
-      return P_BoxOnLineSide(bbox, &line) == -1;
+      if(P_BoxOnLineSide(bbox, &line) != -1)
+         return false;
+      v2fixed_t center = { bbox[BOXLEFT] / 2 + bbox[BOXRIGHT] / 2,
+                           bbox[BOXBOTTOM] / 2 + bbox[BOXTOP] / 2 };
+
+      // Only pass portal if facing it
+      return P_PointOnLineSide(center.x, center.y, &line) == 0;
    };
 
    if(entry.type == portalblocktype_e::line)
