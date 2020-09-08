@@ -479,25 +479,46 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
    if(gcount <= 1 || groupid == R_NOGROUP || full_demo_version < make_full_version(340, 48))
       return P_simpleBlockWalker(bbox, xfirst, data, func);
 
-   // OPTIMIZE: if needed, use some global store instead of malloc
-   bool *accessedgroupids = ecalloc(bool *, gcount, sizeof(*accessedgroupids));
-   accessedgroupids[groupid] = true;
-   auto portalqueue = ecalloc(const portalblockentry_t **, gcount, sizeof(portalblockentry_t *));
    int queuehead = 0;
-   int queueback = 0;
+   PODCollection<const portalblockentry_t *> portalqueue;
 
    // initialize link with zero link because we're visiting the current area.
    // groupid has already been set in the parameter
-   const linkoffset_t *link = &zerolink;
+   v3fixed_t delta = {};
+
+   //
+   // Position with local layer mark
+   //
+   struct localposition_t
+   {
+      v3fixed_t pos;
+      int groupid;
+
+      //
+      // Equality operator to be easily found
+      //
+      bool operator == (const localposition_t &other) const
+      {
+         return pos == other.pos && groupid == other.groupid;
+      }
+   };
+   PODCollection<localposition_t> positions;
+
+   localposition_t position = {};
 
    fixed_t movedBBox[4] = { bbox[0], bbox[1], bbox[2], bbox[3] };
 
    do
    {
-      movedBBox[BOXLEFT] += link->x;
-      movedBBox[BOXRIGHT] += link->x;
-      movedBBox[BOXBOTTOM] += link->y;
-      movedBBox[BOXTOP] += link->y;
+      movedBBox[BOXLEFT] += delta.x;
+      movedBBox[BOXRIGHT] += delta.x;
+      movedBBox[BOXBOTTOM] += delta.y;
+      movedBBox[BOXTOP] += delta.y;
+
+      position.pos += delta;
+      position.groupid = groupid;
+      positions.add(position);
+
       // set the blocks to be visited
       int xl = (movedBBox[BOXLEFT] - bmaporgx) >> MAPBLOCKSHIFT;
       int xh = (movedBBox[BOXRIGHT] - bmaporgx) >> MAPBLOCKSHIFT;
@@ -514,14 +535,17 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
          yh = bmapheight - 1;
 
       // Define a function to use in the 'for' blocks
-      auto operate = [accessedgroupids, portalqueue, &queueback, func, &groupid, data, gcount,
-                      &movedBBox] (int x, int y) -> bool
+      auto operate = [&portalqueue, func, &groupid, data, gcount, &movedBBox]
+            (int x, int y) -> bool
       {
+         int blockindex = y * bmapwidth + x;
+
          // Check for portals
-         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[y * bmapwidth + x];
+         const PODCollection<portalblockentry_t> &block = gPortalBlockmap[blockindex];
          for(const portalblockentry_t &entry : block)
          {
-            if(accessedgroupids[entry.ldata->toid])
+            // Must be portal from my layer
+            if(entry.ldata->fromid != groupid)
                continue;
             if(entry.type == portalblocktype_e::sector &&
                !(entry.sector->srf[entry.surf].pflags & PS_PASSABLE))
@@ -531,18 +555,18 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
             if(!P_boxTouchesBlockPortal(entry, movedBBox))
                continue;
 
-            accessedgroupids[entry.ldata->toid] = true;
-            portalqueue[queueback++] = &entry;
-            
-            P_FitLinkOffsetsToPortal(*entry.ldata);
+            portalqueue.add(&entry);
          }
 
-         // now call the function
+         // Now call the function. Skip if already visited.
+         // TODO: avoid gametic
+//         if(gTransPortalValidBlocks[blockindex] == gametic)
+//            return true;
+//         gTransPortalValidBlocks[blockindex] = gametic;
+
+         // make it possible to escape by func returning false
          if(!func(x, y, groupid, data))
-         {
-            // make it possible to escape by func returning false
             return false;
-         }
          return true;
       };
 
@@ -552,47 +576,44 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
          for(x = xl; x <= xh; ++x)
             for(y = yl; y <= yh; ++y)
                if(!operate(x, y))
-               {
-                  efree(portalqueue);
-                  efree(accessedgroupids);
                   return false;
-               }
       }
       else
          for(y = yl; y <= yh; ++y)
             for(x = xl; x <= xh; ++x)
                if(!operate(x, y))
-               {
-                  efree(portalqueue);
-                  efree(accessedgroupids);
                   return false;
-               }
-
 
       // look at queue
-      link = &zerolink;
-      if(queuehead < queueback)
+      if(queuehead < (int)portalqueue.getLength())
       {
          do
          {
-            link = P_GetLinkOffset(groupid, portalqueue[queuehead]->ldata->toid);
+            delta = portalqueue[queuehead]->ldata->delta;
+
+            // reject if already visited that position
+            localposition_t newpos = position;
+            newpos.pos += delta;
+            newpos.groupid = groupid = portalqueue[queuehead]->ldata->toid;
+
             ++queuehead;
 
+            if(positions.contains(newpos))
+               delta = {};
+
             // make sure to reject trivial (zero) links
-         } while(!link->x && !link->y && queuehead < queueback);
+         } while(!delta && queuehead < (int)portalqueue.getLength());
 
          // if a valid link has been found, also update current groupid
-         if(link->x || link->y)
+         if(delta)
             groupid = portalqueue[queuehead - 1]->ldata->toid;
       }
 
       // if a valid link has been found (and groupid updated) continue
-   } while(link->x || link->y);
+   } while(delta);
 
    // we now have the list of accessedgroupids
    
-   efree(portalqueue);
-   efree(accessedgroupids);
    return true;
 }
 
