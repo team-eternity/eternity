@@ -151,6 +151,14 @@ static ev_static_t DOOMStaticBindings[] =
    STATICSPEC(493, EV_STATIC_SLOPE_PARAM_TAG)
 };
 
+// Strife Static Init Bindings
+static ev_static_t StrifeStaticBindings[] =
+{
+   STATICSPEC(142, EV_STATIC_SCROLL_LINE_UP)
+   STATICSPEC(143, EV_STATIC_SCROLL_LINE_DOWN_FAST)
+   STATICSPEC(149, EV_STATIC_SCROLL_LINE_DOWN)
+};
+
 // Hexen Static Init Bindings
 static ev_static_t HexenStaticBindings[] =
 {
@@ -364,6 +372,40 @@ static int EV_HereticStaticInitForSpecial(int special)
 }
 
 //
+// Always looks up a special in the Strife gamemode's static init list,
+// regardless of the map format or gamemode in use. Returns 0 if no such special
+// exists.
+//
+static int EV_StrifeSpecialForStaticInit(int staticFn)
+{
+   // small set, so, linear search
+   for(size_t i = 0; i < earrlen(StrifeStaticBindings); i++)
+   {
+      if(StrifeStaticBindings[i].staticFn == staticFn)
+         return StrifeStaticBindings[i].actionNumber;
+   }
+
+   return EV_DOOMSpecialForStaticInit(staticFn);
+}
+
+//
+// Always looks up a static init function in the Strife gamemode's static init
+// list, regardless of the map format or gamemode in use. Returns 0 if the given
+// special isn't bound to a static init function.
+//
+static int EV_StrifeStaticInitForSpecial(int special)
+{
+   // small set, so, linear search
+   for(size_t i = 0; i < earrlen(StrifeStaticBindings); i++)
+   {
+      if(StrifeStaticBindings[i].actionNumber == special)
+         return StrifeStaticBindings[i].staticFn;
+   }
+
+   return EV_DOOMStaticInitForSpecial(special);
+}
+
+//
 // EV_HexenSpecialForStaticInit
 //
 // Always looks up a special in the Hexen gamemode's static init list, 
@@ -399,29 +441,6 @@ static int EV_HexenStaticInitForSpecial(int special)
    EV_initHexenStaticHash();
 
    return (binding = HexenStaticSpecHash.objectForKey(special)) ? binding->staticFn: 0;
-}
-
-// 
-// EV_StrifeSpecialForStaticInit
-//
-// Always looks up a special in the Strife gamemode's static init list,
-// regardless of the map format or gamemode in use. Returns 0 if no such special
-// exists.
-//
-static int EV_StrifeSpecialForStaticInit(int staticFn)
-{
-   // TODO
-   return 0;
-}
-
-//
-// EV_StrifeStaticInitForSpecial
-//
-// TODO
-//
-static int EV_StrifeStaticInitForSpecial(int special)
-{
-   return 0;
 }
 
 //

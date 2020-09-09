@@ -1635,61 +1635,38 @@ const size_t HereticBindingsLen = earrlen(HereticBindings);
 // Strife's bindings are /mostly/ additive over DOOM 2's.
 ev_binding_t StrifeBindings[] =
 {
-   // Potentially modified by Strife
-   LINESPEC(  4, NullAction)
-   LINESPEC(  6, NullAction)
-   LINESPEC(  7, NullAction)
-   LINESPEC(  8, NullAction)
-   LINESPEC( 11, NullAction)
-   LINESPEC( 14, NullAction)
-   LINESPEC( 15, NullAction)
-   LINESPEC( 20, NullAction)
-   LINESPEC( 25, NullAction)
-   LINESPEC( 26, NullAction)
-   LINESPEC( 27, NullAction)
-   LINESPEC( 28, NullAction)
-   LINESPEC( 32, NullAction)
-   LINESPEC( 33, NullAction)
-   LINESPEC( 34, NullAction)
-   LINESPEC( 36, NullAction)
-   LINESPEC( 40, NullAction)
-   LINESPEC( 41, NullAction)
-   LINESPEC( 43, NullAction)
-   LINESPEC( 44, NullAction)
-   LINESPEC( 46, NullAction)
-   LINESPEC( 48, NullAction)
-   LINESPEC( 49, NullAction)
-   LINESPEC( 51, NullAction)
-   LINESPEC( 52, NullAction)
-   LINESPEC( 58, NullAction)
-   LINESPEC( 66, NullAction)
-   LINESPEC( 67, NullAction)
-   LINESPEC( 68, NullAction)
-   LINESPEC( 70, NullAction)
-   LINESPEC( 71, NullAction)
-   LINESPEC( 72, NullAction)
-   LINESPEC( 77, NullAction)
-   LINESPEC( 92, NullAction)
-   LINESPEC( 98, NullAction)
-   LINESPEC( 99, NullAction)
-   LINESPEC(100, NullAction)
-   LINESPEC(124, NullAction)
-   LINESPEC(127, NullAction)
-   LINESPEC(133, NullAction)
-   LINESPEC(134, NullAction)
-   LINESPEC(135, NullAction)
-   LINESPEC(136, NullAction)
-   LINESPEC(137, NullAction)
+   // Modified by Strife
+   LINESPEC( 11, NullAction) // SR Exit to Level (Tag)
+   LINESPEC( 25, NullAction) // W1 Ceiling Lower & Raise
+   LINESPEC( 26, NullAction) // DR Raise Door ID Card
+   LINESPEC( 27, NullAction) // DR Raise Door Pass Card
+   LINESPEC( 28, NullAction) // DR Raise Door ID Badge
+   LINESPEC( 31, NullAction) // D1 Open Door (Modified to allow monsters to activate)
+   LINESPEC( 32, NullAction) // D1 Open Door ID Card
+   LINESPEC( 33, NullAction) // D1 Open Door ID Badge
+   LINESPEC( 34, NullAction) // D1 Open Door Pass Card
+   LINESPEC( 40, NullAction) // S1 Split Open Door
+   LINESPEC( 49, NullAction) // S1 Ceiling Lower & Raise
+   LINESPEC( 51, NullAction) // S1 Start Finale
+   LINESPEC( 52, NullAction) // W1 Exit to Level (Tag/100)
+   LINESPEC( 58, NullAction) // W1 Raise Floor 64
+   LINESPEC( 73, NullAction) // WR Ceiling Lower & Raise
+   LINESPEC( 92, NullAction) // WR Raise Floor 64
+   LINESPEC( 99, NullAction) // SR Door Blaze Open ID Card Key
+   LINESPEC(124, NullAction) // W1 Start Finale
+   LINESPEC(133, NullAction) // S1 Door Blaze Open ID Card Key
+   LINESPEC(134, NullAction) // SR Door Blaze Open ID Badge Key
+   LINESPEC(135, NullAction) // S1 Door Blaze Open ID Badge Key
+   LINESPEC(136, NullAction) // SR Door Blaze Open Pass Card Key
+   LINESPEC(137, NullAction) // S1 Door Blaze Open Pass Card Key
+   LINESPEC(141, NullAction) // W1 Ceiling Lower & Raise Silent
 
    // New to Strife
-   LINESPEC(142, NullAction)
-   LINESPEC(143, NullAction)
    LINESPEC(144, NullAction)
    LINESPEC(145, NullAction)
    LINESPEC(146, NullAction)
    LINESPEC(147, NullAction)
    LINESPEC(148, NullAction)
-   LINESPEC(149, NullAction)
    LINESPEC(150, NullAction)
    LINESPEC(151, NullAction)
    LINESPEC(152, NullAction)
@@ -1774,6 +1751,7 @@ ev_binding_t StrifeBindings[] =
    LINESPEC(233, NullAction)
    LINESPEC(234, NullAction)
    LINESPEC(235, NullAction)
+   LINESPEC(666, NullAction)
 };
 
 const size_t StrifeBindingsLen = earrlen(StrifeBindings);

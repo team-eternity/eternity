@@ -146,12 +146,12 @@ sound valve     { pitchvariance = Doom;  priority = 98  }
 
 ifgametype(STRIFE)
 
-//sound EE_DoorOpen   { alias = doropn }
-//sound EE_DoorClose  { alias = dorcls }
+sound EE_DoorOpen   { alias = drsmto    }
+sound EE_DoorClose  { alias = drsmtc    }
 sound EE_BDoorOpen  { alias = st_bdopn  }
 sound EE_BDoorClose { alias = st_bdcls  }
 sound EE_SwitchOn   { alias = st_swtchn }
-//sound EE_SwitchEx   { alias = swtchx }
+//sound EE_SwitchEx   { alias = swtchx    }
 sound EE_PlatStart  { alias = st_pstart }
 sound EE_PlatStop   { alias = st_pstop  }
 sound EE_PlatMove   { alias = st_stnmov }
