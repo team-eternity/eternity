@@ -54,6 +54,7 @@ extern ev_action_t  BoomGenAction;
 
 extern ev_binding_t DOOMBindings[];
 extern ev_binding_t HereticBindings[];
+extern ev_binding_t StrifeBindings[];
 extern ev_binding_t HexenBindings[];
 extern ev_binding_t PSXBindings[];
 extern ev_binding_t UDMFEternityBindings[];
@@ -61,6 +62,7 @@ extern ev_binding_t ACSBindings[];
 
 extern const size_t DOOMBindingsLen;
 extern const size_t HereticBindingsLen;
+extern const size_t StrifeBindingsLen;
 extern const size_t HexenBindingsLen;
 extern const size_t PSXBindingsLen;
 extern const size_t UDMFEternityBindingsLen;

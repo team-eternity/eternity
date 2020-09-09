@@ -777,6 +777,7 @@ typedef EHashTable<ev_binding_t, ENCStringHashKey, &ev_binding_t::name,
 // Hash tables for binding arrays
 static EV_SpecHash DOOMSpecHash;
 static EV_SpecHash HereticSpecHash;
+static EV_SpecHash StrifeSpecHash;
 static EV_SpecHash HexenSpecHash;
 static EV_SpecHash UDMFEternitySpecHash;
 static EV_SpecHash ACSSpecHash;
@@ -843,6 +844,19 @@ static void EV_initHereticSpecHash()
       return;
 
    EV_initSpecHash(HereticSpecHash, HereticBindings, HereticBindingsLen);
+   EV_initDoomSpecHash(); // initialize DOOM bindings as well
+}
+
+//
+// Initializes the Strife special bindings hash table the first time it is
+// called. Also inits DOOM bindings.
+//
+static void EV_initStrifeSpecHash()
+{
+   if(StrifeSpecHash.isInitialized())
+      return;
+
+   EV_initSpecHash(StrifeSpecHash, StrifeBindings, StrifeBindingsLen);
    EV_initDoomSpecHash(); // initialize DOOM bindings as well
 }
 
@@ -967,6 +981,37 @@ ev_action_t *EV_HereticActionForSpecial(int special)
 }
 
 //
+// Returns a special binding from the Strife gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns nullptr if
+// the special is not bound to an action.
+//
+ev_binding_t *EV_StrifeBindingForSpecial(int special)
+{
+   ev_binding_t *bind;
+
+   EV_initStrifeSpecHash(); // ensure table is initialized
+
+   // Try Strife's bindings first. If nothing is found, defer to DOOM's 
+   // bindings.
+   if(!(bind = StrifeSpecHash.objectForKey(special)))
+      bind = DOOMSpecHash.objectForKey(special);
+
+   return bind;
+}
+
+//
+// Returns an action from the Strife gamemode's bindings array,
+// regardless of the current gamemode or map format. Returns nullptr if
+// the special is not bound to an action.
+//
+ev_action_t *EV_StrifeActionForSpecial(int special)
+{
+   ev_binding_t *bind = EV_StrifeBindingForSpecial(special);
+
+   return bind ? bind->action : nullptr;
+}
+
+//
 // EV_HexenBindingForSpecial
 //
 // Returns a special binding from the Hexen gamemode's bindings array,
@@ -1005,16 +1050,6 @@ ev_action_t *EV_HexenActionForSpecial(int special)
    ev_binding_t *bind = EV_HexenBindingForSpecial(special);
 
    return bind ? bind->action : nullptr;
-}
-
-//
-// EV_StrifeActionForSpecial
-//
-// TODO
-//
-static ev_action_t *EV_StrifeActionForSpecial(int special)
-{
-   return nullptr;
 }
 
 //
