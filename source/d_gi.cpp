@@ -1975,7 +1975,7 @@ static gamemodeinfo_t giStrifeReg =
    smus_fight2,        // randMusMax
    "D_",               // musPrefix
    "action",           // defMusName
-   DOOMDEFSOUND,       // defSoundName
+   STRFDEFSOUND,       // defSoundName
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
    nullptr,            // titleMusName

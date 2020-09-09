@@ -422,6 +422,27 @@ static void EV_SectorHticWind(sector_t *sector)
 }
 
 //
+// Strife Types
+//
+
+//
+// Sets up Strife instakill floor.
+// * Strife: 15
+//
+static void EV_SectorStrfDamageInstaKill(sector_t *sector)
+{
+   sector->damage = 999;
+   sector->damagemask = 1;
+   sector->damagemod = MOD_UNKNOWN; // STRIFE_TODO: Proper mod
+   sector->damageflags |= SDMG_IGNORESUIT;
+}
+
+static void EV_SectorStrfWater(sector_t *sector)
+{
+   // STRIFE_TODO
+}
+
+//
 // Hexen Types
 //
 
@@ -604,6 +625,28 @@ static ev_sectorbinding_t HticSectorBindings[] =
    { 49, EV_SectorHticWind<ANG180, 0>      },
    { 50, EV_SectorHticWind<ANG180, 1>      },
    { 51, EV_SectorHticWind<ANG180, 2>      }
+};
+
+// Strife sector specials
+static ev_sectorbinding_t StrifeSectorBindings[] =
+{
+   {  1, EV_SectorLightRandomOff       },
+   {  2, EV_SectorLightStrobeFast      },
+   {  3, EV_SectorLightStrobeSlow      },
+   {  4, EV_SectorLightStrobeHurt      },
+   {  5, EV_SectorDamageHellSlime      },
+   {  7, EV_SectorDamageNukage         },
+   {  8, EV_SectorLightGlow            },
+   {  9, EV_SectorSecret               },
+   { 10, EV_SectorDoorCloseIn30        },
+   { 11, EV_SectorExitSuperDamage      },
+   { 12, EV_SectorLightStrobeSlowSync  },
+   { 13, EV_SectorLightStrobeFastSync  },
+   { 14, EV_SectorDoorRaiseIn5Mins     },
+   { 15, EV_SectorStrfDamageInstaKill  },
+   { 16, EV_SectorDamageSuperHellSlime },
+   { 17, EV_SectorLightFireFlicker     },
+   { 18, EV_SectorStrfWater            }
 };
 
 // Hexen sector specials
@@ -799,6 +842,14 @@ static ev_sectorbinding_t *EV_HereticBindingForSectorSpecial(int special)
 }
 
 //
+// Look up a Strife sector special binding.
+//
+static ev_sectorbinding_t *EV_StrifeBindingForSectorSpecial(int special)
+{
+   return EV_findBinding(StrifeSectorBindings, earrlen(StrifeSectorBindings), special);
+}
+
+//
 // EV_HexenBindingForSectorSpecial
 //
 // Look up a Hexen sector special binding.
@@ -857,6 +908,9 @@ static ev_sectorbinding_t *EV_BindingForSectorSpecial(int special)
          break;
       case LI_TYPE_HERETIC:
          binding = EV_HereticBindingForSectorSpecial(special);
+         break;
+      case LI_TYPE_STRIFE:
+         binding = EV_StrifeBindingForSectorSpecial(special);
          break;
       default:
          break; // others TODO

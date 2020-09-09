@@ -940,6 +940,13 @@ W1LINE(W1HereticStairsBuildUp16FS, HereticStairsBuildUp16FS, 0, 0);
 // Heretic Line Type 107 - S1 Stairs Build Up 16 FLOORSPEED
 S1LINE(S1HereticStairsBuildUp16FS, HereticStairsBuildUp16FS, 0, 0);
 
+//
+// Strife Actions
+//
+
+// Strife Line Type 31 - D1 Open Door (allow monsters, as opposed to DOOM)
+DRLINE(D1StrifeOpenDoor, VerticalDoor, EV_PREALLOWMONSTERS, 0);
+
 //=============================================================================
 //
 // BOOM Generalized Line Action
@@ -1641,7 +1648,7 @@ ev_binding_t StrifeBindings[] =
    LINESPEC( 26, NullAction) // DR Raise Door ID Card
    LINESPEC( 27, NullAction) // DR Raise Door Pass Card
    LINESPEC( 28, NullAction) // DR Raise Door ID Badge
-   LINESPEC( 31, NullAction) // D1 Open Door (Modified to allow monsters to activate)
+   LINESPEC( 31, D1StrifeOpenDoor)
    LINESPEC( 32, NullAction) // D1 Open Door ID Card
    LINESPEC( 33, NullAction) // D1 Open Door ID Badge
    LINESPEC( 34, NullAction) // D1 Open Door Pass Card
@@ -1662,96 +1669,96 @@ ev_binding_t StrifeBindings[] =
    LINESPEC(141, NullAction) // W1 Ceiling Lower & Raise Silent
 
    // New to Strife
-   LINESPEC(144, NullAction)
-   LINESPEC(145, NullAction)
-   LINESPEC(146, NullAction)
-   LINESPEC(147, NullAction)
-   LINESPEC(148, NullAction)
-   LINESPEC(150, NullAction)
-   LINESPEC(151, NullAction)
-   LINESPEC(152, NullAction)
-   LINESPEC(153, NullAction)
-   LINESPEC(154, NullAction)
-   LINESPEC(155, NullAction)
-   LINESPEC(156, NullAction)
-   LINESPEC(157, NullAction)
-   LINESPEC(158, NullAction)
-   LINESPEC(159, NullAction)
-   LINESPEC(160, NullAction)
-   LINESPEC(161, NullAction)
-   LINESPEC(162, NullAction)
-   LINESPEC(163, NullAction)
-   LINESPEC(164, NullAction)
-   LINESPEC(165, NullAction)
-   LINESPEC(166, NullAction)
-   LINESPEC(167, NullAction)
-   LINESPEC(168, NullAction)
-   LINESPEC(169, NullAction)
-   LINESPEC(170, NullAction)
-   LINESPEC(171, NullAction)
-   LINESPEC(172, NullAction)
-   LINESPEC(173, NullAction)
-   LINESPEC(174, NullAction)
-   LINESPEC(175, NullAction)
-   LINESPEC(176, NullAction)
-   LINESPEC(177, NullAction)
-   LINESPEC(178, NullAction)
-   LINESPEC(179, NullAction)
-   LINESPEC(180, NullAction)
-   LINESPEC(181, NullAction)
-   LINESPEC(182, NullAction)
-   LINESPEC(183, NullAction)
-   LINESPEC(184, NullAction)
-   LINESPEC(185, NullAction)
-   LINESPEC(186, NullAction)
-   LINESPEC(187, NullAction)
-   LINESPEC(188, NullAction)
-   LINESPEC(189, NullAction)
-   LINESPEC(190, NullAction)
-   LINESPEC(191, NullAction)
-   LINESPEC(192, NullAction)
-   LINESPEC(193, NullAction)
-   LINESPEC(194, NullAction)
-   LINESPEC(195, NullAction)
-   LINESPEC(196, NullAction)
-   LINESPEC(197, NullAction)
-   LINESPEC(198, NullAction)
-   LINESPEC(199, NullAction)
-   LINESPEC(200, NullAction)
-   LINESPEC(201, NullAction)
-   LINESPEC(202, NullAction)
-   LINESPEC(203, NullAction)
-   LINESPEC(204, NullAction)
-   LINESPEC(205, NullAction)
-   LINESPEC(206, NullAction)
-   LINESPEC(207, NullAction)
-   LINESPEC(208, NullAction)
-   LINESPEC(209, NullAction)
-   LINESPEC(210, NullAction)
-   LINESPEC(211, NullAction)
-   LINESPEC(212, NullAction)
-   LINESPEC(213, NullAction)
-   LINESPEC(214, NullAction)
-   LINESPEC(215, NullAction)
-   LINESPEC(216, NullAction)
-   LINESPEC(217, NullAction)
-   LINESPEC(219, NullAction)
-   LINESPEC(220, NullAction)
-   LINESPEC(221, NullAction)
-   LINESPEC(223, NullAction)
-   LINESPEC(224, NullAction)
-   LINESPEC(225, NullAction)
-   LINESPEC(226, NullAction)
-   LINESPEC(227, NullAction)
-   LINESPEC(228, NullAction)
-   LINESPEC(229, NullAction)
-   LINESPEC(230, NullAction)
-   LINESPEC(231, NullAction)
-   LINESPEC(232, NullAction)
-   LINESPEC(233, NullAction)
-   LINESPEC(234, NullAction)
-   LINESPEC(235, NullAction)
-   LINESPEC(666, NullAction)
+   LINESPEC(144, NullAction) // DR Sliding Door
+   LINESPEC(145, NullAction) // WR Exit To Level at Spot (Tag/100, Tag%100)
+   LINESPEC(146, NullAction) // S1 Build Stairs Down 16
+   LINESPEC(147, NullAction) // S1 Clear Force Fields
+   LINESPEC(148, NullAction) // DR Force Field Zap
+   LINESPEC(150, NullAction) // WR Raise Alarm
+   LINESPEC(151, NullAction) // SR Blaze Open Door Gold Key
+   LINESPEC(152, NullAction) // SR Blaze Open Door Brass Key
+   LINESPEC(153, NullAction) // SR Blaze Open Door Silver Key
+   LINESPEC(154, NullAction) // SR Plat Down-Wait-Up-Stay Gold Key
+   LINESPEC(155, NullAction) // SR Plat Up-Wait-Down-Stay
+   LINESPEC(156, NullAction) // D1 Open Door Brass Key
+   LINESPEC(157, NullAction) // D1 Open Door Silver Key
+   LINESPEC(158, NullAction) // D1 Open Door Gold Key
+   LINESPEC(159, NullAction) // DR Raise Door Gold Key
+   LINESPEC(160, NullAction) // DR Raise Door Silver Key
+   LINESPEC(161, NullAction) // DR Raise Door Brass key
+   LINESPEC(162, NullAction) // S1 Blaze Open Door Brass Key
+   LINESPEC(163, NullAction) // S1 Blaze Open Door Silver Key
+   LINESPEC(164, NullAction) // S1 Blaze Open Door Gold Key
+   LINESPEC(165, NullAction) // DR "That Doesn't Seem to Work"
+   LINESPEC(166, NullAction) // DR Raise Door Hand Print
+   LINESPEC(167, NullAction) // S1 Blaze Open Door Hand Print Key
+   LINESPEC(168, NullAction) // SR Blaze Open Door Hand Print Key
+   LINESPEC(169, NullAction) // DR Raise Door Base Key
+   LINESPEC(170, NullAction) // DR Raise Door Gov's Key
+   LINESPEC(171, NullAction) // S1 Open Door Prison Key
+   LINESPEC(172, NullAction) // SR Raise Door Power1 Key
+   LINESPEC(173, NullAction) // SR Raise Door Power2 Key
+   LINESPEC(174, NullAction) // W1 Split Open Door
+   LINESPEC(175, NullAction) // WR Raise Alarm if < 16 Above Floor
+   LINESPEC(176, NullAction) // SR Raise Door Power3 Key
+   LINESPEC(177, NullAction) // SR Plat Down-Wait-Up-Stay Power3 Key
+   LINESPEC(178, NullAction) // W1 Build Stairs Down 16
+   LINESPEC(179, NullAction) // W1 Ceiling Lower to Floor
+   LINESPEC(180, NullAction) // G1 Raise Floor 512 & Change
+   LINESPEC(181, NullAction) // S1 Raise Floor 512 & Change
+   LINESPEC(182, NullAction) // G1/W1 Break Glass
+   LINESPEC(183, NullAction) // W1 Door Split Raise Nearest
+   LINESPEC(184, NullAction) // WR Plat Up-Wait-Down-Stay and Change Switch Texture
+   LINESPEC(185, NullAction) // WR Silent Teleport
+   LINESPEC(186, NullAction) // WR Exit to Level at Spot (First Side Only) (Tag/100, Tag%100) 
+   LINESPEC(187, NullAction) // W1 Clear Force Fields if Quest (Rowoffset == Quest #)
+   LINESPEC(188, NullAction) // W1 Open Door if Quest 16 (Gate Mechanism Destroyed)
+   LINESPEC(189, NullAction) // S1 Split Open Door Oracle Key
+   LINESPEC(190, NullAction) // DR Raise Door Order Key
+   LINESPEC(191, NullAction) // SR Raise Door Military ID Key
+   LINESPEC(192, NullAction) // SR Open Door Warehouse Key
+   LINESPEC(193, NullAction) // W1 Floor Lower to Lowest if Quest (Rowoffset == Quest #)
+   LINESPEC(194, NullAction) // S1 Free Prisoners
+   LINESPEC(195, NullAction) // WR Silent Teleport and Change Zombie
+   LINESPEC(196, NullAction) // W1 Floor Lower to Lowest if Sigil Type > 0
+   LINESPEC(197, NullAction) // W1 Door Blaze Close if Have Sigil 2
+   LINESPEC(198, NullAction) // WR Raise Alarm if No Guard Uniform
+   LINESPEC(199, NullAction) // S1 Destroy Converter (Ceiling Lower & Crush, Give Quest 25, +1 Stamina/Accuracy)
+   LINESPEC(200, NullAction) // W1 Door Open if Sigil Owned
+   LINESPEC(201, NullAction) // W1 Voiced Objective (First Side Only) (Tag = VOC/LOG #)
+   LINESPEC(202, NullAction) // W1 Voiced Objective (Tag = VOC/LOG #) 
+   LINESPEC(203, NullAction) // WR Change Music (Tag = Internal Music #)
+   LINESPEC(204, NullAction) // W1 Change Music (Tag = Internal Music #)
+   LINESPEC(205, NullAction) // DR "This area is only in the registered version of Strife"
+   LINESPEC(206, NullAction) // WR Raise Alarm if Have Chalice
+   LINESPEC(207, NullAction) // SR Remote Sliding Door
+   LINESPEC(208, NullAction) // WR Raise Alarm if Have Flamethrower
+   LINESPEC(209, NullAction) // S1 Build Stairs Down 16 if Have Chalice
+   LINESPEC(210, NullAction) // W1 Voiced Objective if Have Flamethrower (Tag = VOC/LOG #)
+   LINESPEC(211, NullAction) // S1 Start Voice if Have Comm Unit (Tag = VOC #)
+   LINESPEC(212, NullAction) // W1 Floor Lower to Lowest if Have Flamethrower
+   LINESPEC(213, NullAction) // DR Raise Door if Have Chalice
+   LINESPEC(214, NullAction) // SR Plat Slow Down-Wait-Up-Stay
+   LINESPEC(215, NullAction) // W1 Voiced Objective if Quest (Tag/100 = VOC/LOG #, Tag%100 = Quest #)
+   LINESPEC(216, NullAction) // WR Raise Door if Quest (Rowoffset == Quest #)
+   LINESPEC(217, NullAction) // DR Raise Door Core Key
+   LINESPEC(219, NullAction) // S1 Lower Floor Blue Crystal Key
+   LINESPEC(220, NullAction) // S1 Lower Floor Red Crystal Key
+   LINESPEC(221, NullAction) // DR Raise Door Mauler Key
+   LINESPEC(223, NullAction) // SR Raise Door Mine Key
+   LINESPEC(224, NullAction) // DR Raise Door Chapel Key
+   LINESPEC(225, NullAction) // DR Raise Door Catacomb Key
+   LINESPEC(226, NullAction) // S1 Complete Training Area (Give +1 Stamina/Accuracy and Message)
+   LINESPEC(227, NullAction) // W1 Close Door if Quest (Rowoffset == Quest #)
+   LINESPEC(228, NullAction) // W1 Play Entity Voice (VOC128 or VOC130 dep. on quest flags 24 & 28)
+   LINESPEC(229, NullAction) // SR Remote Sliding Door (Requires Sigil lv. 4)
+   LINESPEC(230, NullAction) // W1 Open Door if Quest (Rowoffset == Quest #)
+   LINESPEC(231, NullAction) // WR Teleport (Silent at Source Only)
+   LINESPEC(232, NullAction) // DR Raise Door Oracle Pass (Quest 18)
+   LINESPEC(233, NullAction) // S1 Split Open Sector, Reveal computer (Blackbird: LETS BLOW IT UP)
+   LINESPEC(234, NullAction) // SR Raise Door if Quest 3 (Permission to Visit Irale)
+   LINESPEC(235, NullAction) // S1 Split Open Door if Have Sigil 4
+   //LINESPEC(666, NullAction) // SR Move Wall (NEVER TO BE IMPLEMENTED (PROBABLY))
 };
 
 const size_t StrifeBindingsLen = earrlen(StrifeBindings);
