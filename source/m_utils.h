@@ -42,7 +42,7 @@ char  *M_Strupr(char *string);
 char  *M_Strlwr(char *string);
 char  *M_Itoa(int value, char *string, int radix);
 int    M_CountNumLines(const char *str);
-int    M_StringAlloca(char **str, int numstrs, size_t extra, E_FORMAT_STRING(const char *str1), ...) E_PRINTF(4, 5);
+int    M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...);
 
 // Misc file routines
 // haleyjd: moved a number of these here from w_wad module.

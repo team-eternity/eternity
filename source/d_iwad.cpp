@@ -1395,7 +1395,7 @@ static void D_findIWADFile(qstring &iwad)
 static void D_loadResourceWad()
 {
    char *filestr = nullptr;
-   size_t len = M_StringAlloca(&filestr, 1, 20, "%s", basegamepath);
+   size_t len = M_StringAlloca(&filestr, 1, 20, basegamepath);
 
    psnprintf(filestr, len, "%s/eternity.pke", basegamepath);
 
