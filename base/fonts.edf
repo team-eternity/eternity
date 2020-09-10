@@ -12,12 +12,23 @@ includeifenabled("strife/fonts.edf",  "STRIFE");
 //
 
 // Console font
+ifdisabled(STRIFE)
 font ee_consolefont
 {
    id = 4;
    linearlump = "CONCHARS";
-
 }
+endif()
+
+// STRIFE_TODO: Actually convert CONCHARS to a linear so this doesn't have to happen
+ifenabled(STRIFE)
+font ee_consolefont
+{
+   id = 4;
+   linearlump = "CONCHARS";
+   linearformat = patch;
+}
+endif()
 
 // Commented out from when the Kate memorial was active
 //// Console font

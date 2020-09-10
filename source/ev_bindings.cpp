@@ -947,6 +947,12 @@ S1LINE(S1HereticStairsBuildUp16FS, HereticStairsBuildUp16FS, 0, 0);
 // Strife Line Type 31 - D1 Open Door (allow monsters, as opposed to DOOM)
 DRLINE(D1StrifeOpenDoor, VerticalDoor, EV_PREALLOWMONSTERS, 0);
 
+// Strife Line Type 58 - W1 Raise Floor 64
+W1LINE(W1StrifeRaiseFloor64, StrifeRaiseFloor64, 0, 0);
+
+// Strife Line Type 92 - WR Raise Floor 64
+WRLINE(WRStrifeRaiseFloor64, StrifeRaiseFloor64, 0, 0);
+
 //=============================================================================
 //
 // BOOM Generalized Line Action
@@ -1656,9 +1662,9 @@ ev_binding_t StrifeBindings[] =
    LINESPEC( 49, NullAction) // S1 Ceiling Lower & Raise
    LINESPEC( 51, NullAction) // S1 Start Finale
    LINESPEC( 52, NullAction) // W1 Exit to Level (Tag/100)
-   LINESPEC( 58, NullAction) // W1 Raise Floor 64
+   LINESPEC( 58, W1StrifeRaiseFloor64)
    LINESPEC( 73, NullAction) // WR Ceiling Lower & Raise
-   LINESPEC( 92, NullAction) // WR Raise Floor 64
+   LINESPEC( 92, WRStrifeRaiseFloor64)
    LINESPEC( 99, NullAction) // SR Door Blaze Open ID Card Key
    LINESPEC(124, NullAction) // W1 Start Finale
    LINESPEC(133, NullAction) // S1 Door Blaze Open ID Card Key
@@ -1710,7 +1716,7 @@ ev_binding_t StrifeBindings[] =
    LINESPEC(183, NullAction) // W1 Door Split Raise Nearest
    LINESPEC(184, NullAction) // WR Plat Up-Wait-Down-Stay and Change Switch Texture
    LINESPEC(185, NullAction) // WR Silent Teleport
-   LINESPEC(186, NullAction) // WR Exit to Level at Spot (First Side Only) (Tag/100, Tag%100) 
+   LINESPEC(186, NullAction) // WR Exit to Level at Spot (First Side Only) (Tag/100, Tag%100)
    LINESPEC(187, NullAction) // W1 Clear Force Fields if Quest (Rowoffset == Quest #)
    LINESPEC(188, NullAction) // W1 Open Door if Quest 16 (Gate Mechanism Destroyed)
    LINESPEC(189, NullAction) // S1 Split Open Door Oracle Key
@@ -1726,7 +1732,7 @@ ev_binding_t StrifeBindings[] =
    LINESPEC(199, NullAction) // S1 Destroy Converter (Ceiling Lower & Crush, Give Quest 25, +1 Stamina/Accuracy)
    LINESPEC(200, NullAction) // W1 Door Open if Sigil Owned
    LINESPEC(201, NullAction) // W1 Voiced Objective (First Side Only) (Tag = VOC/LOG #)
-   LINESPEC(202, NullAction) // W1 Voiced Objective (Tag = VOC/LOG #) 
+   LINESPEC(202, NullAction) // W1 Voiced Objective (Tag = VOC/LOG #)
    LINESPEC(203, NullAction) // WR Change Music (Tag = Internal Music #)
    LINESPEC(204, NullAction) // W1 Change Music (Tag = Internal Music #)
    LINESPEC(205, NullAction) // DR "This area is only in the registered version of Strife"

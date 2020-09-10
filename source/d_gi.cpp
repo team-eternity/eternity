@@ -1958,7 +1958,7 @@ static gamemodeinfo_t giStrifeReg =
 
    INTERPIC_DOOM,     // interPic
    smus_None,         // interMusNum
-   P_Doom2ParTime,    // GetParTime
+   P_NoParTime,       // GetParTime
    &giDoomFText,      // fTextPos
    &DoomIntermission, // interfuncs
    FINALE_TEXT,       // teleEndGameFinaleType

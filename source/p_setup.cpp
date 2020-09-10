@@ -3963,6 +3963,10 @@ void P_ConvertStrifeThing(mapthing_t *mthing)
       num += 4950;
 
    mthing->type = num;
+
+   // Strife flag handling
+   // STRIFE_TODO: Remap flags below to different flags? Handle this /somehow/. MTF_EX_ stuff probably.
+   mthing->options &= ~(MTF_STRIFE_ALLY | MTF_STRIFE_TRANS | MTF_STRIFE_INVIS);
 }
 
 #define DEN_PSXCHAIN   64

@@ -1256,6 +1256,35 @@ DEFINE_ACTION(EV_ActionHereticStairsBuildUp16FS)
 }
 
 //
+// Strife Actions
+//
+// Strife added a few new line types, all of which (I think)
+// it should be noted conflict with BOOM extended line types.
+//
+
+//
+// EV_ActionRaiseFloor64
+//
+// Strife: 58 (W1)
+// Strife: 92 (WR)
+//
+DEFINE_ACTION(EV_ActionStrifeRaiseFloor64)
+{
+   floordata_t fd = {};
+
+   fd.direction      = 1;             // up
+   fd.target_type    = FbyParam;      // by value
+   fd.spac           = SPAC_CROSS;
+   fd.flags          = FDF_HAVESPAC;
+   fd.speed_type     = SpeedParam;
+   fd.speed_value    = FLOORSPEED;    // speed
+   fd.height_value   = 64 * FRACUNIT; // height
+   fd.crush          = -1;            // crush
+
+   return EV_DoParamFloor(instance->line, instance->tag, &fd);
+}
+
+//
 // BOOM Generalized Action
 //
 

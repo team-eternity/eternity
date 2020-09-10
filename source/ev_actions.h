@@ -110,6 +110,9 @@ DECLARE_ACTION(EV_ActionHereticDoorRaise3x);
 DECLARE_ACTION(EV_ActionHereticStairsBuildUp8FS);
 DECLARE_ACTION(EV_ActionHereticStairsBuildUp16FS);
 
+// Strife Actions
+DECLARE_ACTION(EV_ActionStrifeRaiseFloor64);
+
 // BOOM Generalized Action
 DECLARE_ACTION(EV_ActionBoomGen);
 
