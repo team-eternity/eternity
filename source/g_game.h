@@ -131,7 +131,7 @@ extern int smooth_turning;
 #define VERSIONSIZE   16
 
 // killough 2/22/98: version id string format for savegames
-#define VERSIONID "MBF %d"
+#define VERSIONID "EE"
 
 extern WadDirectory *g_dir;
 extern WadDirectory *d_dir;

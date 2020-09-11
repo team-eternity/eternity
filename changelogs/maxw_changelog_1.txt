@@ -493,6 +493,11 @@ in colour.
 Fixed SpawnProjectile speed. Add SetSectorDamage (ACS function). Add ACS
 variant of Sector_SetFriction.
 
+-------------------------------------------------------------------------------
+2020/09/11
+Extended line flags are now archived. Saves now have a version, allowing
+backwards compatibility.
+
 ================================================================================
 EOF
 ================================================================================
