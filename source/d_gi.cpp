@@ -165,6 +165,9 @@
 
 #define FINALDOOM_MIFLAGS (MI_DEMOIFDEMO4 | MI_NOTELEPORTZ)
 
+#define STRIFE_GIFLAGS \
+   (GIF_MAPXY | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET) // STRIFE_FIXME: This is probably wrong
+
 // globals
 
 // holds the address of the gamemodeinfo_t for the current gamemode,
@@ -1941,7 +1944,7 @@ static gamemodeinfo_t giStrifeReg =
 {
    strifereg,        // id
    Game_Strife,      // type
-   DOOM_GIFLAGS | GIF_MAPXY | GIF_SETENDOFGAME, // flags
+   STRIFE_GIFLAGS,   // flags
 
    VNAME_STRF_QFTS,  // versionName
    nullptr,          // freeVerName
