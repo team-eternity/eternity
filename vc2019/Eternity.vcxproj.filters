@@ -1017,6 +1017,9 @@
     <ClCompile Include="..\source\dstrifestr.h">
       <Filter>Source Files\doom</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\mn_strife.cpp">
+      <Filter>Source Files\Mn_\Mn_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1810,6 +1813,9 @@
     </ClInclude>
     <ClInclude Include="..\source\hu_inventory.h">
       <Filter>Source Files\HU_\HU_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\mn_strife.h">
+      <Filter>Source Files\Mn_\Mn_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

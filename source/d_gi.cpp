@@ -41,6 +41,7 @@
 #include "info.h"
 #include "mn_htic.h"
 #include "mn_menus.h"
+#include "mn_strife.h"
 #include "p_info.h"
 #include "p_skin.h"
 #include "r_sky.h"
@@ -1958,7 +1959,7 @@ static gamemodeinfo_t giStrifeReg =
    20,               // creditY
    12,               // creditTitleStep
    &giSigilCursor,   // menuCursor
-   &menu_main_doom2, // mainMenu
+   &menu_smain,      // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu

@@ -1144,6 +1144,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Shipping|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\source\mn_items.cpp" />
+    <ClCompile Include="..\source\mn_strife.cpp" />
     <ClCompile Include="..\source\m_debug.cpp" />
     <ClCompile Include="..\source\m_utils.cpp" />
     <ClCompile Include="..\source\p_portalblockmap.cpp" />
@@ -2702,6 +2703,7 @@
     <ClInclude Include="..\Source\in_lude.h" />
     <ClInclude Include="..\source\metaspawn.h" />
     <ClInclude Include="..\source\mn_items.h" />
+    <ClInclude Include="..\source\mn_strife.h" />
     <ClInclude Include="..\source\m_avltree.h" />
     <ClInclude Include="..\source\m_binary.h" />
     <ClInclude Include="..\source\m_compare.h" />
