@@ -377,6 +377,40 @@ static int htic_soundnums[NUMSKINSOUNDS] =
    sfx_jump,
 };
 
+static const char *strf_skindefs[NUMSKINSOUNDS] =
+{
+   "st_plpain",
+   "plxdth",
+   "st_oof",
+   "st_slop",
+   "swish",
+   "st_radio",
+   "st_pldeth",
+   "plfall",
+   "plfeet",
+   "fallht",
+   "none",
+   "st_noway",
+   "none",
+};
+
+static int strf_soundnums[NUMSKINSOUNDS] =
+{
+   sfx_splpain,
+   sfx_plxdth,
+   sfx_soof,
+   sfx_sslop,
+   sfx_swish,
+   sfx_radio,
+   sfx_pldeth,
+   sfx_plfall,
+   sfx_plfeet,
+   sfx_fallht,
+   sfx_plwdth,
+   sfx_snoway,
+   sfx_jump,
+};
+
 //
 // Exit sounds
 //
@@ -2005,8 +2039,8 @@ static gamemodeinfo_t giStrifeReg =
    "D_",               // musPrefix
    "action",           // defMusName
    STRFDEFSOUND,       // defSoundName
-   doom_skindefs,      // skinSounds
-   doom_soundnums,     // playerSounds
+   strf_skindefs,      // skinSounds
+   strf_soundnums,     // playerSounds
    nullptr,            // titleMusName
 
    1,              // switchEpisode
