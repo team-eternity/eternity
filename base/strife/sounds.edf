@@ -4,141 +4,141 @@
 // Sound definitions for Strife gamemode
 //
 
-sound swish     { pitchvariance = Doom;  priority = 64  }
-sound meatht    { pitchvariance = Doom;  priority = 64  }
-sound mtalht    { pitchvariance = Doom;  priority = 64  }
-sound st_wpnup  { lump wpnup;  pitchvariance = Doom;  priority = 78; prefix = true  }
-sound rifle     { pitchvariance = Doom;  priority = 64  }
-sound mislht    { pitchvariance = Doom;  priority = 64  }
-sound st_barexp { pitchvariance = Doom;  priority = 32  }
-sound flburn    { pitchvariance = Doom;  priority = 64  }
-sound flidl     { pitchvariance = Doom;  priority = 118 }
-sound agrsee    { pitchvariance = Doom;  priority = 98  }
-sound st_plpain { lump plpain; pitchvariance = Doom;  priority = 96; prefix = true  }
-sound pcrush    { pitchvariance = Doom;  priority = 96  }
-sound pespna    { pitchvariance = Doom;  priority = 98  }
-sound pespnb    { pitchvariance = Doom;  priority = 98  }
-sound pespnc    { pitchvariance = Doom;  priority = 98  }
-sound pespnd    { pitchvariance = Doom;  priority = 98  }
-sound agrdpn    { pitchvariance = Doom;  priority = 98  }
-sound st_pldeth { lump pldeth; pitchvariance = Doom;  priority = 32; prefix = true  }
-sound plxdth    { pitchvariance = Doom;  priority = 32  }
-sound st_slop   { lump slop;   pitchvariance = Doom;  priority = 78; prefix = true  }
-sound rebdth    { pitchvariance = Doom;  priority = 98  }
-sound agrdth    { pitchvariance = Doom;  priority = 98  }
-sound lgfire    { pitchvariance = Doom;  priority = 211 }
-sound smfire    { pitchvariance = Doom;  priority = 211 }
-sound alarm     { pitchvariance = Doom;  priority = 210 }
-sound drlmto    { pitchvariance = Doom;  priority = 98  }
-sound drlmtc    { pitchvariance = Doom;  priority = 98  }
-sound drsmto    { pitchvariance = Doom;  priority = 98  }
-sound drsmtc    { pitchvariance = Doom;  priority = 98  }
-sound drlwud    { pitchvariance = Doom;  priority = 98  }
-sound drswud    { pitchvariance = Doom;  priority = 98  }
-sound drston    { pitchvariance = Doom;  priority = 98  }
-sound st_bdopn  { lump bdopn;  pitchvariance = Doom;  priority = 98; prefix = true  }
-sound st_bdcls  { lump bdcls;  pitchvariance = Doom;  priority = 98; prefix = true  }
-sound st_swtchn { lump swtchn; pitchvariance = Doom;  priority = 78; prefix = true  }
-sound swbolt    { pitchvariance = Doom;  priority = 98  }
-sound swscan    { pitchvariance = Doom;  priority = 98  }
-sound yeah      { pitchvariance = Doom;  priority = 10  }
-sound mask      { pitchvariance = Doom;  priority = 210 }
-sound st_pstart { lump pstart; pitchvariance = Doom;  priority = 100; prefix = true }
-sound st_pstop  { lump pstop;  pitchvariance = Doom;  priority = 100; prefix = true }
-sound st_itemup { lump itemup; pitchvariance = Doom;  priority = 78;  prefix = true }
-sound bglass    { pitchvariance = Doom;  priority = 200 }
-sound wriver    { pitchvariance = Doom;  priority = 201 }
-sound wfall     { pitchvariance = Doom;  priority = 201 }
-sound wdrip     { pitchvariance = Doom;  priority = 201 }
-sound wsplsh    { pitchvariance = Doom;  priority = 95  }
-sound rebact    { pitchvariance = Doom;  priority = 200 }
-sound agrac1    { pitchvariance = Doom;  priority = 98  }
-sound agrac2    { pitchvariance = Doom;  priority = 98  }
-sound agrac3    { pitchvariance = Doom;  priority = 98  }
-sound agrac4    { pitchvariance = Doom;  priority = 98  }
-sound ambppl    { pitchvariance = Doom;  priority = 218 }
-sound ambbar    { pitchvariance = Doom;  priority = 218 }
-sound st_telept { lump telept; pitchvariance = Doom;  priority = 32; prefix = true  }
-sound ratact    { pitchvariance = Doom;  priority = 99  }
-sound st_itmbk  { lump itmbk;  pitchvariance = Doom;  priority = 100; prefix = true }
-sound xbow      { pitchvariance = Doom;  priority = 99  }
-sound burnme    { pitchvariance = Doom;  priority = 95  }
-sound st_oof    { lump oof;    pitchvariance = Doom;  priority = 96; prefix = true  }
-sound wbrldt    { pitchvariance = Doom;  priority = 98  }
-sound psdtha    { pitchvariance = Doom;  priority = 109 }
-sound psdthb    { pitchvariance = Doom;  priority = 109 }
-sound psdthc    { pitchvariance = Doom;  priority = 109 }
-sound rb2pn     { pitchvariance = Doom;  priority = 96  }
-sound rb2dth    { pitchvariance = Doom;  priority = 32  }
-sound rb2see    { pitchvariance = Doom;  priority = 98  }
-sound rb2act    { pitchvariance = Doom;  priority = 98  }
-sound st_firxpl { lump firxpl; pitchvariance = Doom;  priority = 70;  prefix = true }
-sound st_stnmov { lump stnmov; pitchvariance = Doom;  priority = 100; prefix = true }
-sound st_noway  { lump noway;  pitchvariance = Doom;  priority = 78;  prefix = true }
-sound st_rlaunc { lump rlaunc; pitchvariance = Doom;  priority = 64;  prefix = true }
-sound rflite    { pitchvariance = Doom;  priority = 65  }
-sound st_radio  { pitchvariance = Doom;  priority = 60  }
-sound pulchn    { pitchvariance = Doom;  priority = 98  }
-sound swknob    { pitchvariance = Doom;  priority = 98  }
-sound keycrd    { pitchvariance = Doom;  priority = 98  }
-sound swston    { pitchvariance = Doom;  priority = 98  }
-sound sntsee    { pitchvariance = Doom;  priority = 98  }
-sound sntdth    { pitchvariance = Doom;  priority = 98  }
-sound sntact    { pitchvariance = Doom;  priority = 98  }
-sound pgrdat    { pitchvariance = Doom;  priority = 64  }
-sound pgrsee    { pitchvariance = Doom;  priority = 90  }
-sound pgrdpn    { pitchvariance = Doom;  priority = 96  }
-sound pgrdth    { pitchvariance = Doom;  priority = 32  }
-sound pgract    { pitchvariance = Doom;  priority = 120 }
-sound proton    { pitchvariance = Doom;  priority = 64  }
-sound protfl    { pitchvariance = Doom;  priority = 64  }
-sound st_plasma { lump plasma; pitchvariance = Doom;  priority = 64; prefix = true  }
-sound dsrptr    { pitchvariance = Doom;  priority = 30  }
-sound reavat    { pitchvariance = Doom;  priority = 64  }
-sound revbld    { pitchvariance = Doom;  priority = 64  }
-sound revsee    { pitchvariance = Doom;  priority = 90  }
-sound reavpn    { pitchvariance = Doom;  priority = 96  }
-sound revdth    { pitchvariance = Doom;  priority = 32  }
-sound revact    { pitchvariance = Doom;  priority = 120 }
-sound st_spisit { lump spisit; pitchvariance = Doom;  priority = 90; prefix = true  }
-sound spdwlk    { pitchvariance = Doom;  priority = 65  }
-sound st_spidth { lump spidth; pitchvariance = Doom;  priority = 32; prefix = true  }
-sound spdatk    { pitchvariance = Doom;  priority = 32  }
-sound chant     { pitchvariance = Doom;  priority = 218 }
-sound static    { pitchvariance = Doom;  priority = 32  }
-sound chain     { pitchvariance = Doom;  priority = 70  }
-sound tend      { pitchvariance = Doom;  priority = 100 }
-sound phoot     { pitchvariance = Doom;  priority = 32  }
-sound explod    { pitchvariance = Doom;  priority = 32  }
-sound sigil     { pitchvariance = Doom;  priority = 32  }
-sound sglhit    { pitchvariance = Doom;  priority = 32  }
-sound siglup    { pitchvariance = Doom;  priority = 32  }
-sound prgpn     { pitchvariance = Doom;  priority = 96  }
-sound progac    { pitchvariance = Doom;  priority = 120 }
-sound lorpn     { pitchvariance = Doom;  priority = 96  }
-sound lorsee    { pitchvariance = Doom;  priority = 90  }
-sound difool    { pitchvariance = Doom;  priority = 32  }
-sound inqdth    { pitchvariance = Doom;  priority = 32  }
-sound inqact    { pitchvariance = Doom;  priority = 98  }
-sound inqsee    { pitchvariance = Doom;  priority = 90  }
-sound inqjmp    { pitchvariance = Doom;  priority = 65  }
-sound amaln1    { pitchvariance = Doom;  priority = 99  }
-sound amaln2    { pitchvariance = Doom;  priority = 99  }
-sound amaln3    { pitchvariance = Doom;  priority = 99  }
-sound amaln4    { pitchvariance = Doom;  priority = 99  }
-sound amaln5    { pitchvariance = Doom;  priority = 99  }
-sound amaln6    { pitchvariance = Doom;  priority = 99  }
-sound mnalse    { pitchvariance = Doom;  priority = 64  }
-sound alnsee    { pitchvariance = Doom;  priority = 64  }
-sound alnpn     { pitchvariance = Doom;  priority = 96  }
-sound alnact    { pitchvariance = Doom;  priority = 120 }
-sound alndth    { pitchvariance = Doom;  priority = 32  }
-sound mnaldt    { pitchvariance = Doom;  priority = 32  }
-sound reactr    { pitchvariance = Doom;  priority = 31  }
-sound airlck    { pitchvariance = Doom;  priority = 98  }
-sound drchno    { pitchvariance = Doom;  priority = 98  }
-sound drchnc    { pitchvariance = Doom;  priority = 98  }
-sound valve     { pitchvariance = Doom;  priority = 98  }
+sound swish     { pitchvariance = Doom;  priority =  64; dehackednum = 500;                            }
+sound meatht    { pitchvariance = Doom;  priority =  64; dehackednum = 501;                            }
+sound mtalht    { pitchvariance = Doom;  priority =  64; dehackednum = 502;                            }
+sound st_wpnup  { pitchvariance = Doom;  priority =  78; dehackednum = 503; lump wpnup;  prefix = true }
+sound rifle     { pitchvariance = Doom;  priority =  64; dehackednum = 504;                            }
+sound mislht    { pitchvariance = Doom;  priority =  64; dehackednum = 505;                            }
+sound st_barexp { pitchvariance = Doom;  priority =  32; dehackednum = 506;                            }
+sound flburn    { pitchvariance = Doom;  priority =  64; dehackednum = 507;                            }
+sound flidl     { pitchvariance = Doom;  priority = 118; dehackednum = 508;                            }
+sound agrsee    { pitchvariance = Doom;  priority =  98; dehackednum = 509;                            }
+sound st_plpain { pitchvariance = Doom;  priority =  96; dehackednum = 510; lump plpain; prefix = true }
+sound pcrush    { pitchvariance = Doom;  priority =  96; dehackednum = 511;                            }
+sound pespna    { pitchvariance = Doom;  priority =  98; dehackednum = 512;                            }
+sound pespnb    { pitchvariance = Doom;  priority =  98; dehackednum = 513;                            }
+sound pespnc    { pitchvariance = Doom;  priority =  98; dehackednum = 514;                            }
+sound pespnd    { pitchvariance = Doom;  priority =  98; dehackednum = 515;                            }
+sound agrdpn    { pitchvariance = Doom;  priority =  98; dehackednum = 516;                            }
+sound st_pldeth { pitchvariance = Doom;  priority =  32; dehackednum = 517; lump pldeth; prefix = true }
+sound plxdth    { pitchvariance = Doom;  priority =  32; dehackednum = 518;                            }
+sound st_slop   { pitchvariance = Doom;  priority =  78; dehackednum = 519; lump slop;   prefix = true }
+sound rebdth    { pitchvariance = Doom;  priority =  98; dehackednum = 520;                            }
+sound agrdth    { pitchvariance = Doom;  priority =  98; dehackednum = 521;                            }
+sound lgfire    { pitchvariance = Doom;  priority = 211; dehackednum = 522;                            }
+sound smfire    { pitchvariance = Doom;  priority = 211; dehackednum = 523;                            }
+sound alarm     { pitchvariance = Doom;  priority = 210; dehackednum = 524;                            }
+sound drlmto    { pitchvariance = Doom;  priority =  98; dehackednum = 525;                            }
+sound drlmtc    { pitchvariance = Doom;  priority =  98; dehackednum = 526;                            }
+sound drsmto    { pitchvariance = Doom;  priority =  98; dehackednum = 527;                            }
+sound drsmtc    { pitchvariance = Doom;  priority =  98; dehackednum = 528;                            }
+sound drlwud    { pitchvariance = Doom;  priority =  98; dehackednum = 529;                            }
+sound drswud    { pitchvariance = Doom;  priority =  98; dehackednum = 530;                            }
+sound drston    { pitchvariance = Doom;  priority =  98; dehackednum = 531;                            }
+sound st_bdopn  { pitchvariance = Doom;  priority =  98; dehackednum = 532; lump bdopn;  prefix = true }
+sound st_bdcls  { pitchvariance = Doom;  priority =  98; dehackednum = 533; lump bdcls;  prefix = true }
+sound st_swtchn { pitchvariance = Doom;  priority =  78; dehackednum = 534; lump swtchn; prefix = true }
+sound swbolt    { pitchvariance = Doom;  priority =  98; dehackednum = 535;                            }
+sound swscan    { pitchvariance = Doom;  priority =  98; dehackednum = 536;                            }
+sound yeah      { pitchvariance = Doom;  priority =  10; dehackednum = 537;                            }
+sound mask      { pitchvariance = Doom;  priority = 210; dehackednum = 538;                            }
+sound st_pstart { pitchvariance = Doom;  priority = 100; dehackednum = 539; lump pstart; prefix = true }
+sound st_pstop  { pitchvariance = Doom;  priority = 100; dehackednum = 540; lump pstop;  prefix = true }
+sound st_itemup { pitchvariance = Doom;  priority =  78; dehackednum = 541; lump itemup; prefix = true }
+sound bglass    { pitchvariance = Doom;  priority = 200; dehackednum = 542;                            }
+sound wriver    { pitchvariance = Doom;  priority = 201; dehackednum = 543;                            }
+sound wfall     { pitchvariance = Doom;  priority = 201; dehackednum = 544;                            }
+sound wdrip     { pitchvariance = Doom;  priority = 201; dehackednum = 545;                            }
+sound wsplsh    { pitchvariance = Doom;  priority =  95; dehackednum = 546;                            }
+sound rebact    { pitchvariance = Doom;  priority = 200; dehackednum = 547;                            }
+sound agrac1    { pitchvariance = Doom;  priority =  98; dehackednum = 548;                            }
+sound agrac2    { pitchvariance = Doom;  priority =  98; dehackednum = 549;                            }
+sound agrac3    { pitchvariance = Doom;  priority =  98; dehackednum = 550;                            }
+sound agrac4    { pitchvariance = Doom;  priority =  98; dehackednum = 551;                            }
+sound ambppl    { pitchvariance = Doom;  priority = 218; dehackednum = 552;                            }
+sound ambbar    { pitchvariance = Doom;  priority = 218; dehackednum = 553;                            }
+sound st_telept { pitchvariance = Doom;  priority =  32; dehackednum = 554; lump telept; prefix = true }
+sound ratact    { pitchvariance = Doom;  priority =  99; dehackednum = 555;                            }
+sound st_itmbk  { pitchvariance = Doom;  priority = 100; dehackednum = 556; lump itmbk;  prefix = true }
+sound xbow      { pitchvariance = Doom;  priority =  99; dehackednum = 557;                            }
+sound burnme    { pitchvariance = Doom;  priority =  95; dehackednum = 558;                            }
+sound st_oof    { pitchvariance = Doom;  priority =  96; dehackednum = 559; lump oof;    prefix = true }
+sound wbrldt    { pitchvariance = Doom;  priority =  98; dehackednum = 560;                            }
+sound psdtha    { pitchvariance = Doom;  priority = 109; dehackednum = 561;                            }
+sound psdthb    { pitchvariance = Doom;  priority = 109; dehackednum = 562;                            }
+sound psdthc    { pitchvariance = Doom;  priority = 109; dehackednum = 563;                            }
+sound rb2pn     { pitchvariance = Doom;  priority =  96; dehackednum = 564;                            }
+sound rb2dth    { pitchvariance = Doom;  priority =  32; dehackednum = 565;                            }
+sound rb2see    { pitchvariance = Doom;  priority =  98; dehackednum = 566;                            }
+sound rb2act    { pitchvariance = Doom;  priority =  98; dehackednum = 567;                            }
+sound st_firxpl { pitchvariance = Doom;  priority =  70; dehackednum = 568; lump firxpl; prefix = true }
+sound st_stnmov { pitchvariance = Doom;  priority = 100; dehackednum = 569; lump stnmov; prefix = true }
+sound st_noway  { pitchvariance = Doom;  priority =  78; dehackednum = 570; lump noway;  prefix = true }
+sound st_rlaunc { pitchvariance = Doom;  priority =  64; dehackednum = 571; lump rlaunc; prefix = true }
+sound rflite    { pitchvariance = Doom;  priority =  65; dehackednum = 572;                            }
+sound st_radio  { pitchvariance = Doom;  priority =  60; dehackednum = 573; lump radio;  prefix = true }
+sound pulchn    { pitchvariance = Doom;  priority =  98; dehackednum = 574;                            }
+sound swknob    { pitchvariance = Doom;  priority =  98; dehackednum = 575;                            }
+sound keycrd    { pitchvariance = Doom;  priority =  98; dehackednum = 576;                            }
+sound swston    { pitchvariance = Doom;  priority =  98; dehackednum = 577;                            }
+sound sntsee    { pitchvariance = Doom;  priority =  98; dehackednum = 578;                            }
+sound sntdth    { pitchvariance = Doom;  priority =  98; dehackednum = 579;                            }
+sound sntact    { pitchvariance = Doom;  priority =  98; dehackednum = 580;                            }
+sound pgrdat    { pitchvariance = Doom;  priority =  64; dehackednum = 581;                            }
+sound pgrsee    { pitchvariance = Doom;  priority =  90; dehackednum = 582;                            }
+sound pgrdpn    { pitchvariance = Doom;  priority =  96; dehackednum = 583;                            }
+sound pgrdth    { pitchvariance = Doom;  priority =  32; dehackednum = 584;                            }
+sound pgract    { pitchvariance = Doom;  priority = 120  dehackednum = 585;                            }
+sound proton    { pitchvariance = Doom;  priority =  64; dehackednum = 586;                            }
+sound protfl    { pitchvariance = Doom;  priority =  64; dehackednum = 587;                            }
+sound st_plasma { pitchvariance = Doom;  priority =  64; dehackednum = 588; lump plasma; prefix = true }
+sound dsrptr    { pitchvariance = Doom;  priority =  30; dehackednum = 589;                            }
+sound reavat    { pitchvariance = Doom;  priority =  64; dehackednum = 590;                            }
+sound revbld    { pitchvariance = Doom;  priority =  64; dehackednum = 591;                            }
+sound revsee    { pitchvariance = Doom;  priority =  90; dehackednum = 592;                            }
+sound reavpn    { pitchvariance = Doom;  priority =  96; dehackednum = 593;                            }
+sound revdth    { pitchvariance = Doom;  priority =  32; dehackednum = 594;                            }
+sound revact    { pitchvariance = Doom;  priority = 120  dehackednum = 595;                            }
+sound st_spisit { pitchvariance = Doom;  priority =  90; dehackednum = 596; lump spisit; prefix = true }
+sound spdwlk    { pitchvariance = Doom;  priority =  65; dehackednum = 597;                            }
+sound st_spidth { pitchvariance = Doom;  priority =  32; dehackednum = 598; lump spidth; prefix = true }
+sound spdatk    { pitchvariance = Doom;  priority =  32; dehackednum = 599;                            }
+sound chant     { pitchvariance = Doom;  priority = 218; dehackednum = 600;                            }
+sound static    { pitchvariance = Doom;  priority =  32; dehackednum = 601;                            }
+sound chain     { pitchvariance = Doom;  priority =  70; dehackednum = 602;                            }
+sound tend      { pitchvariance = Doom;  priority = 100; dehackednum = 603;                            }
+sound phoot     { pitchvariance = Doom;  priority =  32; dehackednum = 604;                            }
+sound explod    { pitchvariance = Doom;  priority =  32; dehackednum = 605;                            }
+sound sigil     { pitchvariance = Doom;  priority =  32; dehackednum = 606;                            }
+sound sglhit    { pitchvariance = Doom;  priority =  32; dehackednum = 607;                            }
+sound siglup    { pitchvariance = Doom;  priority =  32; dehackednum = 608;                            }
+sound prgpn     { pitchvariance = Doom;  priority =  96; dehackednum = 609;                            }
+sound progac    { pitchvariance = Doom;  priority = 120; dehackednum = 610;                            }
+sound lorpn     { pitchvariance = Doom;  priority =  96; dehackednum = 611;                            }
+sound lorsee    { pitchvariance = Doom;  priority =  90; dehackednum = 612;                            }
+sound difool    { pitchvariance = Doom;  priority =  32; dehackednum = 613;                            }
+sound inqdth    { pitchvariance = Doom;  priority =  32; dehackednum = 614;                            }
+sound inqact    { pitchvariance = Doom;  priority =  98; dehackednum = 615;                            }
+sound inqsee    { pitchvariance = Doom;  priority =  90; dehackednum = 616;                            }
+sound inqjmp    { pitchvariance = Doom;  priority =  65; dehackednum = 617;                            }
+sound amaln1    { pitchvariance = Doom;  priority =  99; dehackednum = 618;                            }
+sound amaln2    { pitchvariance = Doom;  priority =  99; dehackednum = 619;                            }
+sound amaln3    { pitchvariance = Doom;  priority =  99; dehackednum = 620;                            }
+sound amaln4    { pitchvariance = Doom;  priority =  99; dehackednum = 621;                            }
+sound amaln5    { pitchvariance = Doom;  priority =  99; dehackednum = 622;                            }
+sound amaln6    { pitchvariance = Doom;  priority =  99; dehackednum = 623;                            }
+sound mnalse    { pitchvariance = Doom;  priority =  64; dehackednum = 624;                            }
+sound alnsee    { pitchvariance = Doom;  priority =  64; dehackednum = 625;                            }
+sound alnpn     { pitchvariance = Doom;  priority =  96; dehackednum = 626;                            }
+sound alnact    { pitchvariance = Doom;  priority = 120; dehackednum = 627;                            }
+sound alndth    { pitchvariance = Doom;  priority =  32; dehackednum = 628;                            }
+sound mnaldt    { pitchvariance = Doom;  priority =  32; dehackednum = 629;                            }
+sound reactr    { pitchvariance = Doom;  priority =  31; dehackednum = 630;                            }
+sound airlck    { pitchvariance = Doom;  priority =  98; dehackednum = 631;                            }
+sound drchno    { pitchvariance = Doom;  priority =  98; dehackednum = 632;                            }
+sound drchnc    { pitchvariance = Doom;  priority =  98; dehackednum = 633;                            }
+sound valve     { pitchvariance = Doom;  priority =  98; dehackednum = 634;                            }
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.

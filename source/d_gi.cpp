@@ -287,6 +287,16 @@ static int hticMenuSounds[MN_SND_NUMSOUNDS] =
    sfx_keyup,   // key left/right
 };
 
+static int strfMenuSounds[MN_SND_NUMSOUNDS] =
+{
+   sfx_sswtchn, // activate
+   sfx_mtalht,  // deactivate
+   sfx_spstop,  // key up/down
+   sfx_None,    // command
+   sfx_sswtchn, // previous menu
+   sfx_spstop,  // key left/right
+};
+
 // gamemode-dependent menus (defined in mn_menus.c et al.)
 extern menu_t menu_savegame;
 extern menu_t menu_hsavegame;
@@ -1918,7 +1928,7 @@ static gamemodeinfo_t giStrifeReg =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
-   doomMenuSounds,   // menuSounds
+   strfMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
    CR_RED,           // unselectColor
