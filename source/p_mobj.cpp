@@ -805,7 +805,11 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
          // new features -- feet sound for normal hits,
          // grunt for harder, falling damage for worse
 
-         if(mo->momz < -23*FRACUNIT)
+         if(GameModeInfo->type == Game_Strife && mo->momz < -20 * FRACUNIT)
+         {
+            // STRIFE_TODO: Fall damage calcs
+         }
+         else if(mo->momz < -23*FRACUNIT)
          {
             if(!mo->player->powers[pw_invulnerability] &&
                !(mo->player->cheats & CF_GODMODE))

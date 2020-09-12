@@ -403,7 +403,7 @@ static int strf_soundnums[NUMSKINSOUNDS] =
    sfx_sslop,
    sfx_swish,
    sfx_radio,
-   sfx_pldeth,
+   sfx_spldeth,
    sfx_plfall,
    sfx_plfeet,
    sfx_fallht,
@@ -888,6 +888,7 @@ char *gi_path_rekkr;
 // Default Override Objects
 //
 extern default_or_t HereticDefaultORs[];
+extern default_or_t StrifeDefaultORs[];
 
 //=============================================================================
 //
@@ -2050,7 +2051,7 @@ static gamemodeinfo_t giStrifeReg =
    StrifeSkyFlats, // skyFlats
    &giPsprNoScale, // pspriteGlobalScale
 
-   nullptr,          // defaultORs
+   StrifeDefaultORs, // defaultORs
 
    "ENDSTRF",        // endTextName
    quitsounds2,      // exitSounds

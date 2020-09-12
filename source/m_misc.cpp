@@ -921,6 +921,21 @@ default_or_t HereticDefaultORs[] =
    { nullptr }
 };
 
+default_or_t StrifeDefaultORs[]
+{
+   // misc
+   { "allowmlook",        1 }, // mlook defaults to on
+   { "wipetype",          2 }, // use crossfade wipe by default
+
+   // compatibility
+   { "comp_terrain",    0 }, // terrain active
+   { "comp_fallingdmg", 0 }, // enable fall damage
+   { "comp_aircontrol", 0 }, // enable jumping no matter what
+
+   // gotta be last
+   { nullptr }
+};
+
 // haleyjd 03/14/09: main defaultfile object
 static defaultfile_t maindefaults =
 {
