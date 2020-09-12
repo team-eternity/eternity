@@ -206,6 +206,25 @@ static gimenucursor_t giArrowCursor =
    arrowCursorPatches // patch array
 };
 
+static const char *sigilCursorPatches[] =
+{
+   "M_CURS1",
+   "M_CURS2",
+   "M_CURS3",
+   "M_CURS4",
+   "M_CURS5",
+   "M_CURS6",
+   "M_CURS7",
+   "M_CURS8",
+};
+
+static gimenucursor_t giSigilCursor =
+{
+   5,                 // blinktime
+   8,                 // numpatches
+   sigilCursorPatches // patch array
+};
+
 //
 // Display Borders
 //
@@ -1894,7 +1913,7 @@ static gamemodeinfo_t giStrifeReg =
    STRFCREDITBK,     // creditBackground
    20,               // creditY
    12,               // creditTitleStep
-   &giSkullCursor,   // menuCursor
+   &giSigilCursor,   // menuCursor
    &menu_main_doom2, // mainMenu
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
@@ -1936,7 +1955,7 @@ static gamemodeinfo_t giStrifeReg =
    "M_PAUSE",        // pausePatch
 
    1,                // numEpisodes
-   Doom2ExitRules,   // exitRules
+   NullExitRules,    // exitRules
    "BulletPuff",     // puffType
    "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
