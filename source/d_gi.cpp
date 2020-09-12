@@ -1930,7 +1930,7 @@ static gamemodeinfo_t giStrifeReg =
    &menu_newgame,    // newGameMenu
    strfMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
-   sfx_shotgn,       // skvAtkSound
+   sfx_pgrdat,       // skvAtkSound
    CR_RED,           // unselectColor
    CR_GRAY,          // selectColor
    CR_GREEN,         // variableColor
@@ -1948,8 +1948,8 @@ static gamemodeinfo_t giStrifeReg =
    CR_GRAY,          // colorHigh
    CR_GOLD,          // colorError
    40,               // c_numCharsPerLine
-   sfx_tink,         // c_BellSound
-   sfx_radio,        // c_ChatSound
+   sfx_ambppl,       // c_BellSound (I wanted to make it sfx_ratact so bad you wouldn't believe)
+   sfx_sradio,       // c_ChatSound
    CONBACK_DEFAULT,  // consoleBack
    0,                // blackIndex
    255,              // whiteIndex
@@ -1969,7 +1969,7 @@ static gamemodeinfo_t giStrifeReg =
    "BulletPuff",     // puffType
    "DoomTeleFog",    // teleFogType
    0,                // teleFogHeight
-   sfx_telept,       // teleSound
+   sfx_stelept,      // teleSound
    100,              // thrustFactor
    GI_GIBFULLHEALTH, // defaultGibHealth
    "StrifeRebel",    // defPClassName
