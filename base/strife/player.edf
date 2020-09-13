@@ -16,8 +16,39 @@ playerclass StrifeRebel
    defaultskin    striferebel
    thingtype      StrifePlayer
 
+   weaponslot 1 { weapons: PunchDagger }
+
+   rebornitem PunchDagger
+
    +alwaysjump
 }
 
-//
+weaponinfo PunchDagger
+{
+  selectionorder 8.0
+
+  flags        FLEEMELEE|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM // STRIFE_FIXME: These're likely wrong
+  //mod          ""
+  recoil       10
+
+  states
+  @"
+  Ready:
+    PNCH A 1 A_WeaponReady
+    loop
+  Deselect:
+    PNCH A 1 A_Lower
+    loop
+  Select:
+    PNCH A 1 A_Raise
+    loop
+  Fire:
+    PNCH B 4
+    PNCH C 4 //A_JabDagger Use ZDoom name since SVE uses A_Punch
+    PNCH D 5
+    PNCH C 4
+    PNCH B 5 A_ReFire
+    goto Ready
+  "@
+}
 
