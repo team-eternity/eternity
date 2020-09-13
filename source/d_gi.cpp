@@ -1997,7 +1997,7 @@ static gamemodeinfo_t giStrifeReg =
    mapnamess,         // levelNames
    P_StrifeDefaultLevelName, // GetLevelName
 
-   &DoomStatusBar,   // StatusBar
+   &StrfStatusBar,   // StatusBar
 
    DOOMMARKS,        // markNumFmt
 

@@ -1151,6 +1151,7 @@
     <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\p_portalcross.cpp" />
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
+    <ClCompile Include="..\source\st_strife.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_musinfo.cpp" />
     <ClCompile Include="..\source\s_reverb.cpp" />

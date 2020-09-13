@@ -83,6 +83,7 @@ struct stbarfns_t
 
 extern stbarfns_t DoomStatusBar;
 extern stbarfns_t HticStatusBar;
+extern stbarfns_t StrfStatusBar;
 
 // States for status bar code.
 typedef enum
