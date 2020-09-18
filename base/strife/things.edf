@@ -15,7 +15,7 @@ thingtype StrifePlayer : Mobj
   radius       18.0
   height       56.0
 
-  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|WINDTHRUST|PASSMOBJ
+  cflags SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|WINDTHRUST|PASSMOBJ // STRIFE_TODO: MF_ALLY
 
   states
   @"
@@ -48,5 +48,115 @@ thingtype StrifePlayer : Mobj
     RGIB H 1400 // A_CheckPlayerDone
     loop
   "@
+}
+
+thingtype ForceFieldGuard : Mobj, 7625
+{
+  spawnhealth 10
+  radius      2.0
+  height      1.0
+  mass        10000
+
+  cflags SHOOTABLE|NOSECTOR // STRIFE_TODO: MF_NODIALOG
+
+  states
+  @"
+  Spawn:
+    TOKN A -1
+    stop
+  Death:
+    XPRK A 1 // STRIFE_TODO: A_RemoveForceField
+    stop
+  "@
+}
+
+thingtype Merchant : Mobj
+{
+  spawnhealth 10000000
+  painchance  150
+  radius      20.0
+  height      50.0
+  mass        5000
+
+  cflags SOLID|SHOOTABLE|NOTDMATCH|NODAMAGE // SVE_TODO: MF2_NOREBELATTACK
+
+  // These are in the same order as SVE's info.c
+  states
+  @"
+  // Yes/No States
+  Yes:
+    MRYS A 30
+    goto Spawn
+  No:
+    MRNO A 6
+    MRNO B 6
+    MRNO C 10
+    MRNO B 6
+    MRNO A 6
+    goto Spawn
+  // Ordinary States
+  Spawn:
+    MRST A 10 // STRIFE_TODO: A_FriendLook
+    loop
+  Idle1:
+    MRLK A 30 // STRIFE_TODO: A_ActiveSound
+    loop
+  Idle2:
+    MRLK B 30
+    loop
+  Idle3:
+    MRBD ABCDEDCB 4
+    MRBD A 5
+    MRBD F 6
+    loop
+  See:
+  Pain:
+    MRPN A 3
+    MRPN B 3 A_Pain
+    MRPN C 3
+    MRPN D 9 // STRIFE_TODO: A_MerchantPain
+    MRPN C 4
+    MRPN B 3
+    MRPN A 3 // STRIFE_TODO: A_ClearSoundTarget
+    goto Spawn
+  // Greetings States
+  Greetings:
+    MRGT A 5
+    MRGT B 5
+    MRGT C 5
+    MRGT D 5
+    MRGT E 5
+    MRGT F 5
+    MRGT G 5
+    MRGT H 5
+    MRGT I 5
+  "@
+}
+
+thingtype WeaponSmith : Merchant, 7716
+{
+  painsound   pespna
+}
+
+thingtype BarKeep : WeaponSmith, 7672
+{
+  painsound   ambbar
+  activesound ambppl
+
+  translation TR_STCS5
+}
+
+thingtype Armorer : WeaponSmith, 7673
+{
+  painsound   pespna
+
+  translation TR_STCS6
+}
+
+thingtype Medic : WeaponSmith, 7673
+{
+  painsound   pespna
+
+  translation TR_STCS7
 }
 

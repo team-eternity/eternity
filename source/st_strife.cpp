@@ -83,9 +83,9 @@ static void ST_StrfInit()
       yellowinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpnamey, PU_STATIC);
    }
    efree(greenpercentage);
-   greenpercentage  = PatchLoader::CacheName(wGlobalDir, "INVFONG\%", PU_STATIC);
+   greenpercentage  = PatchLoader::CacheName(wGlobalDir, "INVFONG%", PU_STATIC);
    efree(yellowpercentage);
-   yellowpercentage = PatchLoader::CacheName(wGlobalDir, "INVFONY\%", PU_STATIC);
+   yellowpercentage = PatchLoader::CacheName(wGlobalDir, "INVFONY%", PU_STATIC);
 
    PatchINVCURS  = PatchLoader::CacheName(wGlobalDir, "INVCURS",  PU_CACHE);
    PatchINVBACK  = PatchLoader::CacheName(wGlobalDir, "INVBACK",  PU_CACHE);
