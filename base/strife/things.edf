@@ -6,6 +6,8 @@
 
 thingtype StrifePlayer : Mobj
 {
+  //speakerid/conversationid 1
+
   spawnhealth  100
   reactiontime 0
   painchance   255
@@ -40,19 +42,22 @@ thingtype StrifePlayer : Mobj
     PLAY P 700
     goto DeathLoop
   XDeath:
-    RGIB A 5 //A_BodyParts
+    RGIB A 5 // STRIFE_TODO: A_BodyParts
     RGIB B 5 A_XScream
     RGIB C 5 A_Fall
     RGIB DEFG 5 //A_BodyParts
   DeathLoop:
-    RGIB H 1400 // A_CheckPlayerDone
+    RGIB H 1400 // STRIFE_TODO: A_CheckPlayerDone
     loop
   "@
 }
 
 thingtype ForceFieldGuard : Mobj, 7625
 {
+  //speakerid/conversationid 0
+
   spawnhealth 10
+
   radius      2.0
   height      1.0
   mass        10000
@@ -74,6 +79,7 @@ thingtype Merchant : Mobj
 {
   spawnhealth 10000000
   painchance  150
+
   radius      20.0
   height      50.0
   mass        5000
@@ -135,11 +141,15 @@ thingtype Merchant : Mobj
 
 thingtype WeaponSmith : Merchant, 7716
 {
+  //speakerid/conversationid 2
+
   painsound   pespna
 }
 
 thingtype BarKeep : WeaponSmith, 7672
 {
+  //speakerid/conversationid 3
+
   painsound   ambbar
   activesound ambppl
 
@@ -148,6 +158,8 @@ thingtype BarKeep : WeaponSmith, 7672
 
 thingtype Armorer : WeaponSmith, 7673
 {
+  //speakerid/conversationid 4
+
   painsound   pespna
 
   translation TR_STCS6
@@ -155,8 +167,249 @@ thingtype Armorer : WeaponSmith, 7673
 
 thingtype Medic : WeaponSmith, 7673
 {
+  //speakerid/conversationid 5
+
   painsound   pespna
 
+  translation TR_STCS7
+}
+
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
+thingtype Peasant : Mobj
+{
+  spawnhealth  31
+  reactiontime 8
+  painchance   200
+  speed        4
+
+  seesound     rebact
+  attacksound  meatht
+  painsound    pespna
+  deathsound   psdtha
+  activesound  rebact
+
+  radius       20.0
+  height       56.0
+  mass         100
+
+  cflags       SOLID|SHOOTABLE|JUSTHIT|COUNTKILL // SVE_TODO: MF2_NOSTONECOLD|MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+
+  states @"
+  Spawn:
+    PEAS A 10 // STRIFE_TODO: A_FriendLook
+    loop
+  See:
+    PEAS AA 5 A_RandomWalk
+    PEAS BB 5 A_RandomWalk
+    PEAS CC 5 A_RandomWalk
+    PEAS DD 5 A_RandomWalk
+    goto Spawn
+  Melee:
+    PEAS E 10 A_FaceTarget
+    PEAS F 8 // STRIFE_TODO: A_PeasantPunch
+    PEAS E 8
+    goto See
+  Pain:
+    PEAS O 3
+    PEAS O 3 A_Pain
+    goto Melee
+  Crash:
+    PEAS G 5
+    PEAS H 10 // STRIFE_TODO: A_PeasantCrash
+    PEAS I 6
+    goto Crash+1
+  Death:
+    PEAS G 5
+    PEAS H 5 A_Scream
+    PEAS I 6
+    PEAS J 5 A_Fall
+    PEAS K 5
+    PEAS L 6
+    PEAS M 8
+    PEAS N 1400
+    stop
+  XDeath:
+    GIBS M 5 // STRIFE_TODO: A_BodyParts
+    GIBS N 5 A_XScream
+    GIBS O 5 A_Fall
+    GIBS PQRS 4 // STRIFE_TODO: A_BodyParts
+    GIBS T 4
+    GIBS U 5
+    GIBS V 1400
+    stop
+  "@
+}
+
+thingtype Peasant2A : Peasant, 7954
+{
+  //speakerid/conversationid 6
+
+  speed       4
+}
+
+thingtype Peasant2B : Peasant, 7730
+{
+    //speakerid/conversationid 7
+
+  speed       5
+}
+
+thingtype Peasant2C : Peasant, 7731
+{
+  //speakerid/conversationid 8
+
+  speed       5
+}
+
+thingtype Peasant5A : Peasant, 7665
+{
+  //speakerid/conversationid 9
+
+  speed       7
+  translation TR_STCS1
+}
+
+thingtype Peasant5B : Peasant, 7732
+{
+  //speakerid/conversationid 10
+
+  speed       7
+  translation TR_STCS1
+}
+
+thingtype Peasant5C : Peasant, 7733
+{
+  //speakerid/conversationid 11
+
+  speed       7
+  translation TR_STCS1
+}
+
+thingtype Peasant4A : Peasant, 7666
+{
+  //speakerid/conversationid 12
+
+  speed       8
+  translation TR_STCS3
+}
+
+thingtype Peasant4B : Peasant, 7734
+{
+  //speakerid/conversationid 13
+
+  speed       8
+  translation TR_STCS3
+}
+
+thingtype Peasant4C : Peasant, 7735
+{
+  //speakerid/conversationid 14
+
+  speed       8
+  translation TR_STCS3
+}
+
+thingtype Peasant6A : Peasant, 7667
+{
+  //speakerid/conversationid 15
+
+  speed       8
+  translation TR_STCS2
+}
+
+thingtype Peasant6B : Peasant, 7735
+{
+  //speakerid/conversationid 16
+
+  speed       8
+  translation TR_STCS2
+}
+
+thingtype Peasant6C : Peasant, 7736
+{
+  //speakerid/conversationid 17
+
+  speed       8
+  translation TR_STCS2
+}
+
+thingtype Peasant3A : Peasant, 7772
+{
+  //speakerid/conversationid 18
+
+  speed       8
+  translation TR_STCS4
+}
+
+thingtype Peasant3B : Peasant, 7773
+{
+  //speakerid/conversationid 19
+
+  speed       8
+  translation TR_STCS4
+}
+
+thingtype Peasant3C : Peasant, 7774
+{
+  //speakerid/conversationid 20
+
+  speed       8
+  translation TR_STCS4
+}
+
+thingtype Peasant8A : Peasant, 7775
+{
+  //speakerid/conversationid 21
+
+  speed       8
+  translation TR_STCS6
+}
+
+thingtype Peasant8B : Peasant, 7776
+{
+  //speakerid/conversationid 22
+
+  speed       8
+  translation TR_STCS6
+}
+
+thingtype Peasant8C : Peasant, 7777
+{
+  //speakerid/conversationid 23
+
+  speed       8
+  translation TR_STCS6
+}
+
+thingtype Peasant7A : Peasant, 7778
+{
+  //speakerid/conversationid 24
+
+  speed       8
+  translation TR_STCS5
+}
+
+thingtype Peasant7B : Peasant, 7779
+{
+  //speakerid/conversationid 25
+
+  speed       8
+  translation TR_STCS5
+}
+
+thingtype Peasant7C : Peasant, 7780
+{
+  //speakerid/conversationid 26
+
+  speed       8
+  translation TR_STCS5
+}
+
+thingtype Peasant1 : Peasant, 7781
+{
+  //speakerid/conversationid 27
+
+  speed       8
   translation TR_STCS7
 }
 
