@@ -1149,6 +1149,19 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
       player->secretcount++;             // credit the player
       sector->intflags |= SIF_WASSECRET; // remember secretness for automap
       sector->flags &= ~SECF_SECRET;     // clear the flag
+
+      // If consoleplayer then play secret sound
+      if(player == &players[consoleplayer])
+      {
+         qstring secretMsg { FC_GOLD };
+         secretMsg += DEH_String("SECRETMESSAGE");
+
+         doom_printf("%s", secretMsg.constPtr());
+         if(int lumpnum = W_CheckNumForNameNS(GameModeInfo->secretSoundName, lumpinfo_t::ns_sounds); lumpnum != -1)
+            S_StartInterfaceSound(lumpnum);
+         else
+            S_StartInterfaceSound(GameModeInfo->defSecretSound);
+      }
    }
 
    // Has hit ground

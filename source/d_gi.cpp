@@ -1186,6 +1186,8 @@ static gamemodeinfo_t giDoomSW =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
    nullptr,           // titleMusName
+   "DSSECRET",        // secretSoundName
+   sfx_itmbk,         // defSecretSound
 
    1,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1309,6 +1311,8 @@ static gamemodeinfo_t giDoomReg =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
    nullptr,           // titleMusName
+   "DSSECRET",        // secretSoundName
+   sfx_itmbk,         // defSecretSound
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1432,6 +1436,8 @@ static gamemodeinfo_t giDoomRetail =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
    nullptr,           // titleMusName
+   "DSSECRET",        // secretSoundName
+   sfx_itmbk,         // defSecretSound
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1555,6 +1561,8 @@ static gamemodeinfo_t giDoomCommercial =
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
    nullptr,            // titleMusName
+   "DSSECRET",         // secretSoundName
+   sfx_itmbk,          // defSecretSound
 
    3,              // switchEpisode
    &Doom2SkyData,  // skyData
@@ -1678,6 +1686,8 @@ static gamemodeinfo_t giHereticSW =
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
    nullptr,             // titleMusName
+   "DSSECRET",          // secretSoundName
+   sfx_chat,            // defSecretSound
 
    1,                  // switchEpisode
    &HereticSkyData,    // skyData
@@ -1805,6 +1815,8 @@ static gamemodeinfo_t giHereticReg =
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
    nullptr,             // titleMusName
+   "DSSECRET" ,         // secretSoundName
+   sfx_chat,            // defSecretSound
 
    2,                  // switchEpisode
    &HereticSkyData,    // skyData

@@ -470,6 +470,8 @@ struct gamemodeinfo_t
    const char **skinSounds;       // default skin sound mnemonics array
    int *playerSounds;             // player sound dehnum indirection
    const char *titleMusName;      // [XA] title music override, for EDF
+   const char *secretSoundName;   // name of the secret lump (DSSECRET for non-Strife games)
+   int         defSecretSound;    // dehnum of default secret sound
 
    // Renderer stuff
    int switchEpisode;             // "episode" number for switch texture defs
