@@ -919,8 +919,7 @@ static void ST_drawInventory()
                     nullptr, (FRACUNIT * 6) / 10);
    }
 
-   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43, inv_selectbox);
 }
 
 static void ST_drawWidgets()

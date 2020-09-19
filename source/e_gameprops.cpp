@@ -176,6 +176,7 @@ static dehflags_t gmi_flags[] =
    { "CHEATSOUND",     GIF_CHEATSOUND     },
    { "CHASEFAST",      GIF_CHASEFAST      },
    { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
+   { "INVALWAYSOPEN",  GIF_INVALWAYSOPEN  },
    { nullptr,          0                  }
 };
 

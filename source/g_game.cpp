@@ -229,6 +229,11 @@ static bool gameactions[NUMKEYACTIONS];
 int inventoryTics;
 bool usearti = true;
 
+static bool InventoryCanClose()
+{
+   return (GameModeInfo->flags & GIF_INVALWAYSOPEN) != GIF_INVALWAYSOPEN;
+}
+
 //
 // G_BuildTiccmd
 //
@@ -258,13 +263,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use] && demo_version >= 401)
    {
-      // FIXME: Handle noartiskip?
-      if(invbarstate.inventory)
+      // FIXME: Handle noartiskip
+      const bool inventorycanclose = InventoryCanClose();
+      if(invbarstate.inventory && inventorycanclose)
       {
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti)
+      else if(usearti || inventorycanclose)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -900,7 +906,7 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_left])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
@@ -911,7 +917,7 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_right])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
@@ -2310,10 +2316,13 @@ void G_Ticker()
       }
    }
 
-   // turn inventory off after a certain amount of time
-   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
-   if(invbarstate.inventory && !(--inventoryTics))
-      invbarstate.inventory = false;
+   if(InventoryCanClose())
+   {
+      // turn inventory off after a certain amount of time
+      invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
+      if(invbarstate.inventory && !(--inventoryTics))
+         invbarstate.inventory = false;
+   }
 
    // do main actions
    

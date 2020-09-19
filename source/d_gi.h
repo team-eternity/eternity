@@ -228,6 +228,7 @@ enum
    // Weapon frame X offset must be nonzero for both XY offsets to be enabled. Needed for DeHackEd
    // compatibility.
    GIF_DOOMWEAPONOFFSET = 0x00400000,
+   GIF_INVALWAYSOPEN  = 0x00800000, // Inventory is always open (like Strife, but not Heretic)
 };
 
 // Game mode handling - identify IWAD version
