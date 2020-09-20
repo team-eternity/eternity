@@ -95,6 +95,10 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 
    int   neg;
 
+   // if non-number, do not draw it
+   if(num == INT_MIN)
+      return;
+
    neg = num < 0;
 
    if(neg)
@@ -103,13 +107,9 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
          num = -9;
       else if(numdigits == 3 && num < -99)
          num = -99;
-      
+
       num = -num;
    }
-
-   // if non-number, do not draw it
-   if(num == 1994)
-      return;
 
    x = n->x;
 

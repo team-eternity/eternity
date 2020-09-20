@@ -692,7 +692,7 @@ static void ST_updateWidgets()
    auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
-   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : INT_MIN;
    w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
 
    // update armor
