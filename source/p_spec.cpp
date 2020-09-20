@@ -1157,8 +1157,8 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
          secretMsg += DEH_String("SECRETMESSAGE");
 
          doom_printf("%s", secretMsg.constPtr());
-         if(int lumpnum = W_CheckNumForNameNS(GameModeInfo->secretSoundName, lumpinfo_t::ns_sounds); lumpnum != -1)
-            S_StartInterfaceSound(lumpnum);
+         if(sfxinfo_t *sfx = S_SfxInfoForName(GameModeInfo->secretSoundName); sfx != nullptr)
+            S_StartInterfaceSound(sfx);
          else
             S_StartInterfaceSound(GameModeInfo->defSecretSound);
       }
