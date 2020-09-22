@@ -1888,12 +1888,12 @@ static void AM_drawNodeLines()
 
    for(int i = 0; i < numnodes; i++)
    {
-      fnode_t *fnode = &fnodes[i];
+      const node_t &node = nodes[i];
 
-      l.a.x = fnode->fx;
-      l.a.y = fnode->fy;
-      l.b.x = fnode->fx + fnode->fdx;
-      l.b.y = fnode->fy + fnode->fdy;
+      l.a.x = M_FixedToDouble(node.x);
+      l.a.y = M_FixedToDouble(node.y);
+      l.b.x = M_FixedToDouble(node.x + node.dx);
+      l.b.y = M_FixedToDouble(node.y + node.dy);
 
       AM_drawMline(&l, mapcolor_frnd);
    }

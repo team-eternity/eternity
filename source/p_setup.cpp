@@ -827,16 +827,16 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 {
    // haleyjd 05/16/08: keep floating point versions as well for dynamic
    // seg splitting operations
-   fnode->fx  = (double)node->x;
-   fnode->fy  = (double)node->y;
-   fnode->fdx = (double)node->dx;
-   fnode->fdy = (double)node->dy;
+   double fx = (double)node->x;
+   double fy = (double)node->y;
+   double fdx = (double)node->dx;
+   double fdy = (double)node->dy;
 
    // haleyjd 05/20/08: precalculate general line equation coefficients
-   fnode->a   = -fnode->fdy;
-   fnode->b   =  fnode->fdx;
-   fnode->c   =  fnode->fdy * fnode->fx - fnode->fdx * fnode->fy;
-   fnode->len = sqrt(fnode->fdx * fnode->fdx + fnode->fdy * fnode->fdy);
+   fnode->a = -fdy;
+   fnode->b = fdx;
+   fnode->c = fdy * fx - fdx * fy;
+   fnode->len = sqrt(fdx * fdx + fdy * fdy);
 }
 
 //
@@ -846,16 +846,16 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 //
 static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
 {
-   fnode.fx = M_FixedToDouble(node.x);
-   fnode.fy = M_FixedToDouble(node.y);
-   fnode.fdx = M_FixedToDouble(node.dx);
-   fnode.fdy = M_FixedToDouble(node.dy);
+   double fx = M_FixedToDouble(node.x);
+   double fy = M_FixedToDouble(node.y);
+   double fdx = M_FixedToDouble(node.dx);
+   double fdy = M_FixedToDouble(node.dy);
    
    // IOANCH: same as code above
-   fnode.a   = -fnode.fdy;
-   fnode.b   =  fnode.fdx;
-   fnode.c   =  fnode.fdy * fnode.fx - fnode.fdx * fnode.fy;
-   fnode.len = sqrt(fnode.fdx * fnode.fdx + fnode.fdy * fnode.fdy);
+   fnode.a = -fdy;
+   fnode.b = fdx;
+   fnode.c = fdy * fx - fdx * fy;
+   fnode.len = sqrt(fdx * fdx + fdy * fdy);
 }
 
 //
