@@ -223,8 +223,8 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
       if (inters == v2double_invalid)
          continue;
       
-      dist1 = fabs(inters.x - fnode.fx) + fabs(inters.y - fnode.fy);
-      dist2 = fabs(inters.x - fnode.fx - fnode.fdx) + fabs(inters.y - fnode.fy - fnode.fdy);
+      dist1 = fabs(inters.x - fnode.v[0].x) + fabs(inters.y - fnode.v[0].y);
+      dist2 = fabs(inters.x - fnode.v[1].x) + fabs(inters.y - fnode.v[1].y);
       
       if (dist2 < dist1)
       {

@@ -619,7 +619,7 @@ struct node_t
 //
 struct fnode_t
 {
-   double fx, fy, fdx, fdy; // haleyjd 05/16/08: float versions
+   v2double_t v[2];
    double a, b, c;          // haleyjd 05/20/08: coefficients for general line equation
    double len;              // length of partition line, for normalization
 };
