@@ -95,6 +95,8 @@ extern int hud_msg_scrollup;// killough 11/98: whether message list scrolls up
 extern int message_timer;   // killough 11/98: timer used for normal messages
 extern int show_scores;
 
+extern bool secret_notification_enabled;
+
 // haleyjd: SDL-specific configuration values
 #ifdef _SDL_VER
 extern int  showendoom;
@@ -664,6 +666,9 @@ default_t defaults[] =
    // show secret after gotten
    DEFAULT_INT("map_secret_after",&map_secret_after, nullptr, 1, 0, 1, default_t::wad_yes,
                "1 to not show secret sectors till after entered"),
+
+   DEFAULT_BOOL("secret_notification", &secret_notification_enabled, nullptr, true, default_t::wad_yes,
+                "enable secret notification"),
    
    //jff 1/7/98 end additions for automap
 

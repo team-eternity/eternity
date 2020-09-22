@@ -504,6 +504,11 @@ Added secret notifications. The defaults are DSITMBK for Doom and CHAT for
 Heretic. They can be overriden by providing a "DSSECRET" lump, or "DSYEAH" in
 Strife (when Strife is a thing).
 
+-------------------------------------------------------------------------------
+2020/09/22
+Secret notifications are now toggleable on/off via the "secret_notification"
+console variable.
+
 ================================================================================
 EOF
 ================================================================================
