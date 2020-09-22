@@ -207,6 +207,8 @@ struct v2double_t
    explicit operator v2float_t() const;
 };
 
+static const v2double_t v2double_invalid = { DBL_MAX, 0 };
+
 struct v3double_t
 {
    double x, y, z;
