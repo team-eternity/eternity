@@ -547,18 +547,8 @@ void BotMap::createBlockMap()
 	fixed_t extend = radius / 2 + 8 * FRACUNIT;
 
    // Do not trust the level blockmap, it may be optimized. We need the entire level blockmap.
-   v2fixed_t min = { D_MAXINT, D_MAXINT }, max = { D_MININT, D_MININT };
-   for(int i = 0; i < ::numvertexes; ++i)
-   {
-      if(vertexes[i].x < min.x)
-         min.x = vertexes[i].x;
-      if(vertexes[i].x > max.x)
-         max.x = vertexes[i].x;
-      if(vertexes[i].y < min.y)
-         min.y = vertexes[i].y;
-      if(vertexes[i].y > max.y)
-         max.y = vertexes[i].y;
-   }
+   v2fixed_t min, max;
+   B_GetMapBounds(min, max);
    bMapOrgX = min.x - extend;
    bMapOrgY = min.y - extend;
    bMapWidth = (max.x + extend - bMapOrgX) / BOTMAPBLOCKSIZE + 1;

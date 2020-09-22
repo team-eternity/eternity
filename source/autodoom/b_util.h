@@ -157,7 +157,7 @@ v2fixed_t B_ProjectionOnLine(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
 v2fixed_t B_ProjectionOnSegment(v2fixed_t v, v2fixed_t v1, v2fixed_t dv, fixed_t padding);
 v2fixed_t B_ProjectionOnLine_f(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
    fixed_t dx, fixed_t dy);
-void B_GetMapBounds(fixed_t &minx, fixed_t &miny, fixed_t &maxx, fixed_t &maxy);
+void B_GetMapBounds(v2fixed_t &min, v2fixed_t &max);
 bool B_IntersectionPoint(const LineEq &l1, const LineEq &l2, double &ix,
                                double &iy);
 int B_BoxOnLineSide(fixed_t top, fixed_t bottom, fixed_t left, fixed_t right,

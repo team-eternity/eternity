@@ -288,14 +288,14 @@ void TempBotMapPImpl::BSPLineGen::startGetLines()
    splitcoll.makeEmpty();
    
    // get map bounds
-   fixed_t minx, miny, maxx, maxy;
-   B_GetMapBounds(minx, miny, maxx, maxy);
+   v2fixed_t min, max;
+   B_GetMapBounds(min, max);
    
    // add square bounds first
-   linestack.add({ 1, 0, -M_FixedToDouble(minx), -1 });  // x = minx
-   linestack.add({ 0, 1, -M_FixedToDouble(maxy), -1 });  // y = maxy
-   linestack.add({ 1, 0, -M_FixedToDouble(maxx), -1 });  // x = maxx
-   linestack.add({ 0, 1, -M_FixedToDouble(miny), -1 });  // y = miny
+   linestack.add({ 1, 0, -M_FixedToDouble(min.x), -1 });  // x = minx
+   linestack.add({ 0, 1, -M_FixedToDouble(max.y), -1 });  // y = maxy
+   linestack.add({ 1, 0, -M_FixedToDouble(max.x), -1 });  // x = maxx
+   linestack.add({ 0, 1, -M_FixedToDouble(min.y), -1 });  // y = miny
 
    // Do the work
    recursiveGetLines(numnodes - 1);

@@ -154,30 +154,28 @@ v2fixed_t B_ProjectionOnLine_f(fixed_t x, fixed_t y, fixed_t x1, fixed_t y1,
 }
 
 //
-// B_GetMapBounds
-//
 // Obtains map bounds without translating by FRACBITS
 //
-void B_GetMapBounds(fixed_t &minx, fixed_t &miny, fixed_t &maxx, fixed_t &maxy)
+void B_GetMapBounds(v2fixed_t &min, v2fixed_t &max)
 {
-   minx = D_MAXINT;
-   miny = D_MAXINT;
-   maxx = D_MININT;
-   maxy = D_MININT;
-   
+   min.x = D_MAXINT;
+   min.y = D_MAXINT;
+   max.x = D_MININT;
+   max.y = D_MININT;
+
    // First find limits of map
-   
+
    for(int i = 0; i < numvertexes; ++i)
    {
-      if(vertexes[i].x < minx)
-         minx = vertexes[i].x;
-      else if(vertexes[i].x > maxx)
-         maxx = vertexes[i].x;
-      
-      if(vertexes[i].y < miny)
-         miny = vertexes[i].y;
-      else if(vertexes[i].y > maxy)
-         maxy = vertexes[i].y;
+      if(vertexes[i].x < min.x)
+         min.x = vertexes[i].x;
+      if(vertexes[i].x > max.x)
+         max.x = vertexes[i].x;
+
+      if(vertexes[i].y < min.y)
+         min.y = vertexes[i].y;
+      if(vertexes[i].y > max.y)
+         max.y = vertexes[i].y;
    }
 }
 
