@@ -102,6 +102,11 @@ struct LineEq
    {
    }
 
+   bool valid() const
+   {
+      return a || b;
+   }
+
    v2double_t intersection(const LineEq &other) const;
 };
 

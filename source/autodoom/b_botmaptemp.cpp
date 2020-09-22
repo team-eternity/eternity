@@ -208,7 +208,7 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
    const fnode_t &fnode = fnodes[nodenum];
    LineEq le(fnode);
 
-   if(!le.a && !le.b)
+   if(!le.valid())
       return;  // avoid degenerate nodes
    
    double ix, iy, dist1, dist2, dmin1, dmin2; // intersection point
