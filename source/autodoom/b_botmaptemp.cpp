@@ -211,19 +211,20 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
    if(!le.valid())
       return;  // avoid degenerate nodes
    
-   double ix, iy, dist1, dist2, dmin1, dmin2; // intersection point
-   double x1, y1, x2, y2;
-   int imin1, imin2;
-   dmin1 = dmin2 = 1e100;
+   double dist1, dist2, dmin1, dmin2; // intersection point
+   v2double_t v1 = {}, v2 = {};
+   int imin1 = -1, imin2 = -1;
+   dmin1 = dmin2 = DBL_MAX;
    
    for (IndexedLineEq *it = linestack.begin(); it != linestack.end(); ++it)
    {
       const LineEq &le2 = *it;
-      if (!B_IntersectionPoint(le, le2, ix, iy))
+      v2double_t inters = le.intersection(le2);
+      if (inters == v2double_invalid)
          continue;
       
-      dist1 = fabs(ix - fnode.fx) + fabs(iy - fnode.fy);
-      dist2 = fabs(ix - fnode.fx - fnode.fdx) + fabs(iy - fnode.fy - fnode.fdy);
+      dist1 = fabs(inters.x - fnode.fx) + fabs(inters.y - fnode.fy);
+      dist2 = fabs(inters.x - fnode.fx - fnode.fdx) + fabs(inters.y - fnode.fy - fnode.fdy);
       
       if (dist2 < dist1)
       {
@@ -231,8 +232,7 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
          if (dist2 < dmin2)
          {
             dmin2 = dist2;
-            x2 = ix;
-            y2 = iy;
+            v2 = inters;
             imin2 = it->ind;
          }
       }
@@ -242,31 +242,24 @@ void TempBotMapPImpl::BSPLineGen::recursiveGetLines(int nodenum)
          if (dist1 < dmin1)
          {
             dmin1 = dist1;
-            x1 = ix;
-            y1 = iy;
+            v1 = inters;
             imin1 = it->ind;
          }
       }
    }
+
+   v2fixed_t fv1 = v2fixed_t::doubleToFixed(v1);
+   v2fixed_t fv2 = v2fixed_t::doubleToFixed(v2);
    
-   fixed_t fx1, fy1, fx2, fy2;
-   fx1 = M_DoubleToFixed(x1);
-   fy1 = M_DoubleToFixed(y1);
-   fx2 = M_DoubleToFixed(x2);
-   fy2 = M_DoubleToFixed(y2);
    // got them
    if (imin1 >= 0)
-   {
-      splitcoll[imin1].add({ fx1, fy1 });
-   }
+      splitcoll[imin1].add(fv1);
    if (imin2 >= 0)
-   {
-      splitcoll[imin2].add({ fx2, fy2 });
-   }
+      splitcoll[imin2].add(fv2);
    
    PODCollection<v2fixed_t> &sle = splitcoll.addNew();
-   sle.add({ fx1, fy1 });
-   sle.add({ fx2, fy2 });
+   sle.add(fv1);
+   sle.add(fv2);
    
    linestack.add({ le, (int)splitcoll.getLength() - 1 });
    recursiveGetLines(nodes[nodenum].children[0]);
