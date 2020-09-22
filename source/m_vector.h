@@ -199,6 +199,11 @@ struct v2double_t
 {
    double x, y;
 
+   v2double_t operator / (double value) const
+   {
+      return { x / value, y / value };
+   }
+
    explicit operator v2float_t() const;
 };
 
