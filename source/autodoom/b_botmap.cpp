@@ -544,19 +544,27 @@ static void B_setSpecLinePositions()
 //
 void BotMap::createBlockMap()
 {
-	// derive from level blockmap's size
 	fixed_t extend = radius / 2 + 8 * FRACUNIT;
-	bMapOrgX = bmaporgx - extend;
-	bMapOrgY = bmaporgy - extend;
-	// assume bmapwidth is exactly level width
-	bMapWidth = (2 * extend + bmapwidth * MAPBLOCKSIZE)
-		/ BOTMAPBLOCKSIZE + 1;
-	bMapHeight = (2 * extend + bmapheight * MAPBLOCKSIZE)
-		/ BOTMAPBLOCKSIZE + 1;
-	// now, how can i forget about the level blockmap sizes?
+
+   // Do not trust the level blockmap, it may be optimized. We need the entire level blockmap.
+   v2fixed_t min = { D_MAXINT, D_MAXINT }, max = { D_MININT, D_MININT };
+   for(int i = 0; i < ::numvertexes; ++i)
+   {
+      if(vertexes[i].x < min.x)
+         min.x = vertexes[i].x;
+      if(vertexes[i].x > max.x)
+         max.x = vertexes[i].x;
+      if(vertexes[i].y < min.y)
+         min.y = vertexes[i].y;
+      if(vertexes[i].y > max.y)
+         max.y = vertexes[i].y;
+   }
+   bMapOrgX = min.x - extend;
+   bMapOrgY = min.y - extend;
+   bMapWidth = (max.x + extend - bMapOrgX) / BOTMAPBLOCKSIZE + 1;
+   bMapHeight = (max.y + extend - bMapOrgY) / BOTMAPBLOCKSIZE + 1;
 
 	int bsz = botMap->bMapWidth * botMap->bMapHeight;
-
 	for (int i = 0; i < bsz; ++i)
 	{
 		// Create botmap finals
