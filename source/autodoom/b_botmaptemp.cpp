@@ -44,6 +44,11 @@
 #include "../r_state.h"
 #include "../v_misc.h"
 
+enum
+{
+   BM_EPSILON = FRACUNIT / 2,
+};
+
 TempBotMap *tempBotMap;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,8 +323,8 @@ void TempBotMapPImpl::BSPLineGen::putLinesInColl(PODCollection<RawLine> &coll)
          v2fixed_t v[2];
          v[0] = *oldv;
          v[1] = *jt;
-         if (D_abs(v[0].x - v[1].x) < FRACUNIT &&
-             D_abs(v[0].y - v[1].y) < FRACUNIT)
+         if (D_abs(v[0].x - v[1].x) < BM_EPSILON &&
+             D_abs(v[0].y - v[1].y) < BM_EPSILON)
          {
             continue;   // don't accept negligible lengths
          }
@@ -329,13 +334,13 @@ void TempBotMapPImpl::BSPLineGen::putLinesInColl(PODCollection<RawLine> &coll)
          
          const angle_t ang = P_PointToAngle(v[0].x, v[0].y, v[1].x, v[1].y) -
          ANG90;
-         sector[0] = R_PointInSubsector(mid.x + FixedMul(FRACUNIT >> 2,
+         sector[0] = R_PointInSubsector(mid.x + FixedMul(BM_EPSILON >> 2,
                                                 B_AngleCosine(ang)),
-                                                mid.y + FixedMul(FRACUNIT >> 2,
+                                                mid.y + FixedMul(BM_EPSILON >> 2,
                                                 B_AngleSine(ang)))->sector;
-         sector[1] = R_PointInSubsector(mid.x - FixedMul(FRACUNIT >> 2,
+         sector[1] = R_PointInSubsector(mid.x - FixedMul(BM_EPSILON >> 2,
                                                 B_AngleCosine(ang)),
-                                                mid.y - FixedMul(FRACUNIT >> 2,
+                                                mid.y - FixedMul(BM_EPSILON >> 2,
                                                 B_AngleSine(ang)))->sector;
          if (sector[0] == sector[1])
          {
@@ -822,7 +827,7 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2, const line_t* as
          v2fixed_t proj = B_ProjectionOnLine(v.x, v.y, v1.x, v1.y, v2.x - v1.x,
                                              v2.y - v1.y);
          // scan each vertex in a block
-         if(D_abs(proj.x - v.x) < FRACUNIT && D_abs(proj.y - v.y) < FRACUNIT)
+         if(D_abs(proj.x - v.x) < BM_EPSILON && D_abs(proj.y - v.y) < BM_EPSILON)
          {
             // intersecting, now see if inside
             if(FixedMul64(v.x - v1.x, v2.x - v.x) +
@@ -961,7 +966,7 @@ TempBotMap::Vertex &TempBotMap::placeVertex(fixed_t x, fixed_t y)
         item;
         item = item->dllNext)
    {
-      if (D_abs((*item)->x - x) < FRACUNIT && D_abs((*item)->y - y) < FRACUNIT)
+      if (D_abs((*item)->x - x) < BM_EPSILON && D_abs((*item)->y - y) < BM_EPSILON)
          return **item;
    }
    int8_t m, n;
@@ -971,7 +976,7 @@ TempBotMap::Vertex &TempBotMap::placeVertex(fixed_t x, fixed_t y)
       {
          if (!m && !n)  // don't revisit centre
             continue;
-         int c = B_GetBlockCoords(x + m * FRACUNIT, y + n * FRACUNIT,
+         int c = B_GetBlockCoords(x + m * BM_EPSILON, y + n * BM_EPSILON,
                                   botMap->bMapOrgX, botMap->bMapOrgY,
                                   botMap->bMapWidth, BOTMAPBLOCKSIZE);
          if(c != b)
@@ -980,8 +985,8 @@ TempBotMap::Vertex &TempBotMap::placeVertex(fixed_t x, fixed_t y)
                  item;
                  item = item->dllNext)
             {
-               if (D_abs((*item)->x - x) < FRACUNIT &&
-                   D_abs((*item)->y - y) < FRACUNIT)
+               if (D_abs((*item)->x - x) < BM_EPSILON &&
+                   D_abs((*item)->y - y) < BM_EPSILON)
                {
 //                  printf("Found cross-block vertex merge %d %d (%d %d)\n",
 //                         m, n, x>>FRACBITS, y>>FRACBITS);
@@ -1002,7 +1007,7 @@ TempBotMap::Vertex &TempBotMap::placeVertex(fixed_t x, fixed_t y)
       v2fixed_t proj = B_ProjectionOnLine(x, y, ln.v1->x, ln.v1->y,
                                           ln.v2->x - ln.v1->x,
                                           ln.v2->y - ln.v1->y);
-      if(D_abs(x - proj.x) < FRACUNIT && D_abs(y - proj.y) < FRACUNIT)
+      if(D_abs(x - proj.x) < BM_EPSILON && D_abs(y - proj.y) < BM_EPSILON)
       {
          if(FixedMul64(x - ln.v1->x, ln.v2->x - x) +
             FixedMul64(y - ln.v1->y, ln.v2->y - y) > 0)
@@ -1439,9 +1444,9 @@ void TempBotMap::obtainMetaSectors()
             (i ? ANG90 : -ANG90);
             
             const sector_t *sector;
-            sector = R_PointInSubsector(mid.x + FixedMul(FRACUNIT >> 2,
+            sector = R_PointInSubsector(mid.x + FixedMul(BM_EPSILON >> 2,
                                                             B_AngleCosine(ang)),
-                                        mid.y + FixedMul(FRACUNIT >> 2,
+                                        mid.y + FixedMul(BM_EPSILON >> 2,
                                                    B_AngleSine(ang)))->sector;
             ln.metasec[i] = scoll[sector - sectors];
          }
