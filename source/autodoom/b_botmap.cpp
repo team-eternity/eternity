@@ -737,7 +737,7 @@ void BotMap::cacheToFile(const char* path) const
                                 segBlocks.getLength() + lineBlocks.getLength());
    int progress = 0;
 
-   V_SetLoading(total, "Saving");
+   V_SetLoading(total, "Caching");
     
     try
     {
