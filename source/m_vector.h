@@ -199,6 +199,11 @@ struct v2double_t
 {
    double x, y;
 
+   bool operator == (const v2double_t & other) const
+   {
+      return x == other.x && y == other.y;
+   }
+
    v2double_t operator / (double value) const
    {
       return { x / value, y / value };
