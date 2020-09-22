@@ -785,7 +785,7 @@ mobj(),  // vital to zero-init before setting target
 coord(mobj)
 {
    P_SetTarget(&this->mobj, &mobj);
-   v2fixed_t delta = coord - source;
+   v2fixed_t delta = coord - v2fixed_t(source);
    dist = delta.sqrtabs();
    dangle = delta.angle() - source.angle;
 }
@@ -797,13 +797,13 @@ Bot::Target::Target(const line_t &line, const Mobj &source) :
 type(TargetLine),
 gline(&line)
 {
-   coord = (v2fixed_t(*line.v1) + *line.v2) / 2;
+   coord = (v2fixed_t(*line.v1) + v2fixed_t(*line.v2)) / 2;
    angle_t lang = v2fixed_t(line.dx, line.dy).angle();
    lang -= ANG90;
    lang >>= ANGLETOFINESHIFT;
    coord.x += FixedMul(FRACUNIT, finecosine[lang]);
    coord.y += FixedMul(FRACUNIT, finesine[lang]);
-   v2fixed_t delta = coord - source;
+   v2fixed_t delta = coord - v2fixed_t(source);
    dist = delta.sqrtabs();
    dangle = delta.angle() - source.angle;
 }
@@ -1671,7 +1671,7 @@ void Bot::cruiseControl(v2fixed_t npos, bool moveslow)
     fixed_t runSpeed = moveslow && !m_runfast ? 8 * FRACUNIT : 16 * FRACUNIT;
     if(m_straferunstate)
         runSpeed = runSpeed * 64 / 50;
-    angle_t tangle = (npos - *pl->mo).angle();
+    angle_t tangle = (npos - v2fixed_t(*pl->mo)).angle();
     angle_t dangle = tangle - pl->mo->angle;
 
     // Intended speed: forwardly, V*cos(dangle)

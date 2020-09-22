@@ -160,7 +160,8 @@ public:
    //
    struct Node
    {
-      fixed_t x, y, dx, dy;
+      v2fixed_t v;
+      fixed_t dx, dy;
       int child[2];   // right, left
    } *nodes;
    int numnodes;

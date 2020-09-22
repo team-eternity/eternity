@@ -73,6 +73,10 @@ struct v2fixed_t
    explicit v2fixed_t(const v3fixed_t &other3d) : x(other3d.x), y(other3d.y)
    {
    }
+   template<typename T>
+   explicit v2fixed_t(const T &obj) : x(obj.x), y(obj.y)
+   {
+   }
 
    static v2fixed_t polar(fixed_t dist, angle_t ang)
    {

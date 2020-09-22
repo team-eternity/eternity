@@ -476,8 +476,8 @@ void B_GLBSP_CreateNodeArray(int numnodes)
 void B_GLBSP_PutNode(double x, double y, double dx, double dy, int rnode,
                      int lnode, int riss, int liss, int ndidx)
 {
-   botMap->nodes[ndidx].x = M_DoubleToFixed(x);
-   botMap->nodes[ndidx].y = M_DoubleToFixed(y);
+   botMap->nodes[ndidx].v.x = M_DoubleToFixed(x);
+   botMap->nodes[ndidx].v.y = M_DoubleToFixed(y);
    botMap->nodes[ndidx].dx = M_DoubleToFixed(dx);
    botMap->nodes[ndidx].dy = M_DoubleToFixed(dy);
 

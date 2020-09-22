@@ -208,12 +208,12 @@ v2fixed_t BotMap::Subsec::farthestCorner(v2fixed_t fsource) const
 int BotMap::pointOnSide(v2fixed_t pos, const Node &node) const
 {
    if(!node.dx)
-      return pos.x <= node.x ? node.dy > 0 : node.dy < 0;
+      return pos.x <= node.v.x ? node.dy > 0 : node.dy < 0;
    
    if(!node.dy)
-      return pos.y <= node.y ? node.dx < 0 : node.dx > 0;
+      return pos.y <= node.v.y ? node.dx < 0 : node.dx > 0;
 
-   pos -= node;
+   pos -= node.v;
    
    // Try to quickly decide by looking at sign bits.
    if((node.dy ^ node.dx ^ pos.x ^ pos.y) < 0)
@@ -415,7 +415,7 @@ static void B_setMobjPositions()
 //
 static void B_traceTriggerPoints(const line_t &line, fixed_t range, bool isgun, angle_t dangle)
 {
-   v2fixed_t mid = (v2fixed_t(*line.v1) + *line.v2) / 2;
+   v2fixed_t mid = (v2fixed_t(*line.v1) + v2fixed_t(*line.v2)) / 2;
    angle_t ang = v2fixed_t(line.dx, line.dy).angle() - ANG90 + dangle;
 
    struct Intersect
@@ -843,8 +843,8 @@ void BotMap::cacheToFile(const char* path) const
         for (i = 0; i < numnodes; ++i)
         {
            V_LoadingUpdateTicked(++progress);
-            file.writeSint32(nodes[i].x);
-            file.writeSint32(nodes[i].y);
+            file.writeSint32(nodes[i].v.x);
+            file.writeSint32(nodes[i].v.y);
             file.writeSint32(nodes[i].dx);
             file.writeSint32(nodes[i].dy);
             file.writeSint32(nodes[i].child[0]);
@@ -1069,8 +1069,8 @@ void BotMap::loadFromCache(const char* path)
       for (i = 0; i < botMap->numnodes; ++i)
       {
           Node& n = botMap->nodes[i];
-          file.readSint32T(n.x);
-          file.readSint32T(n.y);
+          file.readSint32T(n.v.x);
+          file.readSint32T(n.v.y);
           file.readSint32T(n.dx);
           file.readSint32T(n.dy);
           file.readSint32T(n.child[0]);
