@@ -816,8 +816,8 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
       {
          v2fixed_t orgtarg =
          {
-            thing->x - psec->deltax,
-            thing->y - psec->deltay
+            thing->x - psec->delta.x,
+            thing->y - psec->delta.y
          };
          viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
          viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
@@ -829,10 +829,10 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             // Once it crosses it, we're done
             thing->prevpos.portalline = nullptr;
             thing->prevpos.ldata = nullptr;
-            thing->prevpos.x += psec->deltax;
-            thing->prevpos.y += psec->deltay;
-            viewx += psec->deltax;
-            viewy += psec->deltay;
+            thing->prevpos.x += psec->delta.x;
+            thing->prevpos.y += psec->delta.y;
+            viewx += psec->delta.x;
+            viewy += psec->delta.y;
          }
       }
       else

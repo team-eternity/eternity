@@ -834,12 +834,9 @@ static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
       const linkdata_t *ldata;
       if((ldata = thing->prevpos.ldata))
       {
-         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->deltax,
-                           thing->x);
-         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata->deltay,
-                           thing->y);
-         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata->deltaz,
-                           thing->z);
+         pos.x = lerpCoord(view.lerp, thing->prevpos.x + ldata->delta.x, thing->x);
+         pos.y = lerpCoord(view.lerp, thing->prevpos.y + ldata->delta.y, thing->y);
+         pos.z = lerpCoord(view.lerp, thing->prevpos.z + ldata->delta.z, thing->z);
       }
       else
       {
@@ -1959,17 +1956,13 @@ static spriteprojnode_t *R_newProjNode()
 //
 // Helper function for below. Returns the next sector
 //
-inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data,
-                                      v3fixed_t &delta,
+inline static sector_t *R_addProjNode(Mobj *mobj, const linkdata_t *data, v3fixed_t &delta,
                                       DLListItem<spriteprojnode_t> *&item,
-                                      DLListItem<spriteprojnode_t> **&tail,
-                                      const line_t *line)
+                                      DLListItem<spriteprojnode_t> **&tail, const line_t *line)
 {
    sector_t *sector;
 
-   delta.x += data->deltax;
-   delta.y += data->deltay;
-   delta.z += data->deltaz;
+   delta += data->delta;
    sector = R_PointInSubsector(mobj->x + delta.x, mobj->y + delta.y)->sector;
    if(!item)
    {

@@ -182,6 +182,8 @@ struct zrefs_t
    // killough 11/98: the lowest floor over all contacted Sectors.
    fixed_t dropoff;
 
+   int floorgroupid;
+
    // Strictly sector floor and ceiling z, not counting 3dmidtex
    fixed_t secfloor;
    fixed_t secceil;
@@ -249,6 +251,8 @@ struct doom_mapinter_t
    fixed_t    lowfloor;     // lowest floorheight involved   
    fixed_t    opensecfloor; // SoM 11/3/02: considering only sector floor
    fixed_t    opensecceil;  // SoM 11/3/02: considering only sector ceiling
+
+   int bottomgroupid;   // openbottom group id
 
    // moved front and back outside P_LineOpening and changed -- phares 3/7/98
    // them to these so we can pick up the new friction value

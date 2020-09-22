@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_inter.h"
 #include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
@@ -3359,7 +3360,7 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
 DEFINE_ACTION(EV_ActionDamageThing)
 {
    return EV_DamageThing(instance->actor, 
-      instance->args[0] == 0 ? 10000 : instance->args[0], instance->args[1], 0);
+      instance->args[0] == 0 ? GOD_BREACH_DAMAGE : instance->args[0], instance->args[1], 0);
 }
 
 //
@@ -3378,13 +3379,13 @@ DEFINE_ACTION(EV_ActionDamageThingEx)
 //
 // EV_ActionThingDestroy
 //
-// Implements Thing_Destroy(tid, reserved, sectortag)
+// Implements Thing_Destroy(tid, flags, sectortag)
 // * ExtraData: 428
 // * Hexen:     133
 //
 DEFINE_ACTION(EV_ActionThingDestroy)
 {
-   return EV_ThingDestroy(instance->args[0], instance->args[2]);
+   return EV_ThingDestroy(instance->args[0], instance->args[1], instance->args[2]);
 }
 
 //
@@ -4436,6 +4437,18 @@ DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 //
 // ACS-specific specials
 //
+
+//
+// Implements Scroll_Floor(tag, amount)
+//
+// * ACS: 219
+//
+DEFINE_ACTION(EV_ActionACSSetFriction)
+{
+   EV_SetFriction(instance->args[0], instance->args[1]);
+
+   return 1;
+}
 
 //
 // Implements Scroll_Floor(tag, x-move, y-move, type)

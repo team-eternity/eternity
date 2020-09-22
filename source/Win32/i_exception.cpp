@@ -34,6 +34,8 @@
 #include <windows.h>
 #include <tchar.h>
 
+#include "../d_keywds.h"
+
 //=============================================================================
 //
 // Macros
@@ -178,7 +180,7 @@ static void LogFlush(HANDLE file)
 // This is supposed to be safe to call during an exception, unlike fprintf.
 // We'll see.
 //
-static void LogPrintf(LPCTSTR fmt, ...)
+static void LogPrintf(E_FORMAT_STRING(LPCTSTR fmt), ...)
 {
    DWORD bytecount;
    va_list args;

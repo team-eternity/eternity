@@ -22,6 +22,7 @@
 #ifndef M_UTILS_H__
 #define M_UTILS_H__
 
+#include "d_keywds.h"
 #include "doomtype.h"
 
 // File IO utilities

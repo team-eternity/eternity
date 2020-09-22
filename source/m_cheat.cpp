@@ -74,8 +74,6 @@ enum
    FLAG_ALWAYSCALL = 16    // apply this on top of negative arg
 };
 
-static int M_NukeMonsters();
-
 //=============================================================================
 //
 // CHEAT SEQUENCE PACKAGE
@@ -740,7 +738,7 @@ static void cheat_htickill(const void *arg)
 //
 static void cheat_hticiddqd(const void *arg)
 {
-   P_DamageMobj(plyr->mo, nullptr, plyr->mo, 10000, MOD_UNKNOWN);
+   P_DamageMobj(plyr->mo, nullptr, plyr->mo, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
    player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
 }
 
@@ -780,12 +778,12 @@ static void cheat_hticgimme(const void *varg)
    auto args = static_cast<const char *>(varg);
    if(!*args)
    {
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS1));
       return;
    }
    if(!*(args + 1))
    {
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS2));
       return;
    }
    int i;
@@ -805,7 +803,7 @@ static void cheat_hticgimme(const void *varg)
             continue;
          E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
       }
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else if(type >= 0 && type < numHArtifacts && count > 0 && count < 10)
    {
@@ -816,15 +814,15 @@ static void cheat_hticgimme(const void *varg)
       }
       if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
       {
-         player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+         player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
          return;
       }
       E_GiveInventoryItem(plyr, artifact, count);
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else
    {                           // Bad input
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
    }
 
 }
@@ -847,7 +845,7 @@ static void cheat_rambo(const void *arg)
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
 
-   player_printf(plyr, DEH_String(TXT_CHEATWEAPONS));
+   player_printf(plyr, "%s", DEH_String(TXT_CHEATWEAPONS));
 }
 
 //-----------------------------------------------------------------------------
@@ -1114,7 +1112,7 @@ void A_SorcNukeSpec(actionargs_t *actionargs)
 // killough 7/20/98: kill friendly monsters only if no others to kill
 // haleyjd 01/10/02: reformatted some code
 //
-static int M_NukeMonsters()
+int M_NukeMonsters()
 {   
    int killcount = 0;
    Thinker *th = &thinkercap;
@@ -1139,7 +1137,7 @@ static int M_NukeMonsters()
             if(mo->health > 0)
             {
                killcount++;
-               P_DamageMobj(mo, nullptr, nullptr, 10000, MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
             }
 
             // haleyjd: made behavior customizable

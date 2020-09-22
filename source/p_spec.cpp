@@ -1196,6 +1196,19 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
       player->secretcount++;             // credit the player
       sector->intflags |= SIF_WASSECRET; // remember secretness for automap
       sector->flags &= ~SECF_SECRET;     // clear the flag
+
+      // If consoleplayer then play secret sound
+      if(player == &players[consoleplayer])
+      {
+         qstring secretMsg { FC_GOLD };
+         secretMsg += DEH_String("SECRETMESSAGE");
+
+         doom_printf("%s", secretMsg.constPtr());
+         if(sfxinfo_t *sfx = S_SfxInfoForName(GameModeInfo->secretSoundName); sfx != nullptr)
+            S_StartInterfaceSound(sfx);
+         else
+            S_StartInterfaceSound(GameModeInfo->defSecretSound);
+      }
    }
 
    // Has hit ground
@@ -3370,7 +3383,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", line - lines);
+         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", eindex(line - lines));
          return;
       }
 

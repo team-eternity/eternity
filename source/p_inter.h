@@ -48,6 +48,11 @@ struct ArmorInfo
    bool setabsorption;
 };
 
+enum
+{
+   GOD_BREACH_DAMAGE = 10000, // common damage that bypasses invulnerability
+};
+
 bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
 bool P_WouldGiveBody(const player_t *player, const itemeffect_t *effect, int &maxamount);
 bool P_GiveBody(player_t *, const itemeffect_t *);

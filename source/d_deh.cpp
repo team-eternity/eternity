@@ -505,7 +505,7 @@ static FILE *fileout;
 // haleyjd 10/08/06: cleaned up some more of the mess in here by creating this
 // logging function, similar to the one used by EDF.
 //
-static void deh_LogPrintf(const char *fmt, ...)
+static void deh_LogPrintf(E_FORMAT_STRING(const char *fmt), ...)
 {
    if(fileout)
    {
@@ -2056,7 +2056,7 @@ static void deh_procText(DWFILE *fpin, char *line)
          ++i;  // next array element
       }
    }
-   else if(fromlen < 7 && tolen < 7) // lengths of music and sfx are 6 or shorter
+   if(!found && fromlen < 7 && tolen < 7) // lengths of music and sfx are 6 or shorter
    {
       usedlen = (fromlen < tolen) ? fromlen : tolen;
       if(fromlen != tolen)

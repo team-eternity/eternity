@@ -1079,7 +1079,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    // lation. Needed for Check_Sides
    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
                         actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - v2fixed_t{ actor->x, actor->y });
    x = pos.x;
    y = pos.y;
    z = actor->z + 8*FRACUNIT;
@@ -1115,7 +1115,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
          newmobj->z < floorsector->srf.floor.height)
       {
          // kill it immediately
-         P_DamageMobj(newmobj,actor,actor,10000,MOD_UNKNOWN);
+         P_DamageMobj(newmobj,actor,actor,GOD_BREACH_DAMAGE,MOD_UNKNOWN);
          return;                                                    //   ^
       }                                                             //   |
    }                                                                // phares
@@ -1132,7 +1132,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    if(!P_TryMove(newmobj, newmobj->x, newmobj->y, false))
    {
       // kill it immediately
-      P_DamageMobj(newmobj, actor, actor, 10000, MOD_UNKNOWN);
+      P_DamageMobj(newmobj, actor, actor, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
       return;
    }
    

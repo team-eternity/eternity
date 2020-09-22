@@ -89,7 +89,7 @@ void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 [[noreturn]] void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 // killough 3/20/98: add const
 [[noreturn]] void I_Error(E_FORMAT_STRING(const char *error), ...) E_PRINTF(1, 2);
-[[noreturn]] void I_ErrorVA(const char *error, va_list args);
+[[noreturn]] void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args) E_PRINTF(1, 0);
 
 #ifdef RANGECHECK
 #define I_Assert(condition, ...) if(!(condition)) I_Error(__VA_ARGS__)

@@ -31,6 +31,7 @@
 #include "d_mod.h"
 #include "e_inventory.h"
 #include "ev_specials.h"
+#include "m_cheat.h"
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -381,19 +382,62 @@ int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
 //
 // EV_ThingDestroy
 //
-// Implements Thing_Destroy(tid, reserved, sectortag)
+// Implements Thing_Destroy(tid, flags, sectortag)
 //
-int EV_ThingDestroy(int tid, int sectortag)
+int EV_ThingDestroy(int tid, int flags, int sectortag)
 {
    Mobj *mobj = nullptr;
    int success = 0;
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   if(P_LevelIsVanillaHexen())   // Support vanilla Hexen behavior
    {
-      if(mobj->flags & MF_SHOOTABLE &&
-         (!sectortag || mobj->subsector->sector->tag == sectortag))
+      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
       {
-         P_DamageMobj(mobj, nullptr, nullptr, 10000, MOD_UNKNOWN);
-         success = 1;
+         // Also support sector tags because it's harmless
+         if(mobj->flags & MF_SHOOTABLE && (!sectortag || mobj->subsector->sector->tag == sectortag))
+         {
+            P_DamageMobj(mobj, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
+            success = 1;
+         }
+      }
+   }
+   else if(!tid && !sectortag)   // zero tagging: kill all monsters
+      success = M_NukeMonsters() > 0;
+   else
+   {
+      //
+      // Common function to kill iterated thing
+      //
+      auto killthing = [](Mobj *mobj, int sectortag, bool extreme)
+      {
+         if(!(mobj->flags & MF_SHOOTABLE) ||
+            (sectortag && mobj->subsector->sector->tag != sectortag))
+         {
+            return false;
+         }
+         int damage;
+         damage = extreme ? GOD_BREACH_DAMAGE : mobj->health;
+         P_DamageMobj(mobj, nullptr, nullptr, damage, MOD_UNKNOWN);
+         return true;
+      };
+
+      bool extreme = !!(flags & 1);
+      // Normal, GZDoom-compatible behavior
+      if(!tid)
+      {
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            if(!(mobj = thinker_cast<Mobj *>(th)) || !killthing(mobj, sectortag, extreme))
+               continue;
+            success = 1;
+         }
+      }
+      else
+      {
+         while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+         {
+            if(killthing(mobj, sectortag, extreme))
+               success = 1;
+         }
       }
    }
    return success;

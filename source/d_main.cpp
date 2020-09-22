@@ -147,7 +147,7 @@ void D_ProcessEvents(void);
 void G_BuildTiccmd(ticcmd_t* cmd, player_t &p, playerinput_t &input, bool handlechatchar);
 void D_DoAdvanceDemo(void);
 
-void usermsg(const char *s, ...)
+void usermsg(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[1024];
    va_list v;

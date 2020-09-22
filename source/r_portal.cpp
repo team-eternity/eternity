@@ -232,8 +232,8 @@ inline static void R_applyPortalTransformTo(const portal_t *portal,
    else if(portal->type == R_LINKED && applyTranslation)
    {
       const linkdata_t &link = portal->data.link;
-      x += link.deltax;
-      y += link.deltay;
+      x += link.delta.x;
+      y += link.delta.y;
    }
 }
 inline static void R_applyPortalTransformTo(const portal_t *portal, float &x, float &y,
@@ -247,8 +247,8 @@ inline static void R_applyPortalTransformTo(const portal_t *portal, float &x, fl
    else if(portal->type == R_LINKED && applyTranslation)
    {
       const linkdata_t &link = portal->data.link;
-      x += M_FixedToFloat(link.deltax);
-      y += M_FixedToFloat(link.deltay);
+      x += M_FixedToFloat(link.delta.x);
+      y += M_FixedToFloat(link.delta.y);
    }
 }
 static void R_applyPortalTransformTo(const portal_t *portal, v2float_t &v, bool applyTranslation)
@@ -1148,7 +1148,9 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    viewz = M_DoubleToFixed(vz);
    view.z = static_cast<float>(vz);
 
-   viewangle = window->vangle + static_cast<angle_t>(tr.angle * ANG180 / PI);
+   // IMPORTANT: cast the double first to signed integer, THEN to angle. Otherwise, on 32-bit MSVC
+   // at least, it will fail to convert, returning 0xFFFFFFFF instead!
+   viewangle = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
    viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
    viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
    view.angle = (ANG90 - viewangle) * PI / ANG180;
@@ -1248,9 +1250,9 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    lastanglef = view.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx + portal->data.link.deltax;
-   viewy  = window->vy + portal->data.link.deltay;
-   viewz  = window->vz + portal->data.link.deltaz;
+   viewx  = window->vx + portal->data.link.delta.x;
+   viewy  = window->vy + portal->data.link.delta.y;
+   viewz  = window->vz + portal->data.link.delta.z;
    view.x = M_FixedToFloat(viewx);
    view.y = M_FixedToFloat(viewy);
    view.z = M_FixedToFloat(viewz);
@@ -1348,6 +1350,17 @@ static void R_SetPortalFunction(pwindow_t *window)
 }
 
 //
+// Checks if window matches current view, if set
+//
+static bool R_windowMatchesCurrentView(const pwindow_t *window)
+{
+   if(window->minx > window->maxx)  // Empty window won't have initialized coordinates, so skip
+      return true;
+   return window->vx == viewx && window->vy == viewy && window->vz == viewz &&
+      window->vangle == viewangle;
+}
+
+//
 // Get sector portal window. 
 //
 pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
@@ -1365,7 +1378,7 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
 
    for(pwindow_t *rover = windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
-         rover->planez == surface.height)
+         rover->planez == surface.height && R_windowMatchesCurrentView(rover))
       {
          // If within a line-bounded portal, keep track of that too           )
          if(portalrender.active)
@@ -1431,7 +1444,8 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 
    while(rover)
    {
-      if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef)
+      if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef &&
+         R_windowMatchesCurrentView(rover))
       {
          R_updateLinePortalWindowGenerator(rover, seg);
          return rover;
@@ -1533,8 +1547,7 @@ void R_RenderPortals()
 //
 // Apply transform to fixed-point values
 //
-void portaltransform_t::applyTo(fixed_t &x, fixed_t &y, 
-   float *fx, float *fy, bool nomove) const
+void portaltransform_t::applyTo(fixed_t &x, fixed_t &y, float *fx, float *fy, bool nomove) const
 {
    double wx = M_FixedToDouble(x);
    double wy = M_FixedToDouble(y);
@@ -1618,8 +1631,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    ldata.toid   = toid;
    ldata.planez = planez;
 
-   R_CalculateDeltas(markerlinenum, anchorlinenum, 
-                     &ldata.deltax, &ldata.deltay, &ldata.deltaz);
+   R_CalculateDeltas(markerlinenum, anchorlinenum, &ldata.delta.x, &ldata.delta.y, &ldata.delta.z);
 
    ldata.maker = markerlinenum;
    ldata.anchor = anchorlinenum;
@@ -1627,9 +1639,7 @@ portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum,
    for(rover = portals; rover; rover = rover->next)
    {
       if(rover->type  != R_LINKED                || 
-         ldata.deltax != rover->data.link.deltax ||
-         ldata.deltay != rover->data.link.deltay ||
-         ldata.deltaz != rover->data.link.deltaz ||
+         ldata.delta != rover->data.link.delta   ||
          ldata.fromid != rover->data.link.fromid ||
          ldata.toid   != rover->data.link.toid   ||
          ldata.planez != rover->data.link.planez)
@@ -1674,14 +1684,12 @@ static void R_pairPortalLines(line_t &line, line_t &pline)
 
    if(line.portal && pline.portal)
    {
-      if(line.portal->type == R_LINKED &&
-         pline.portal->type == R_LINKED)
+      if(line.portal->type == R_LINKED && pline.portal->type == R_LINKED)
       {
          line.portal->data.link.polyportalpartner = pline.portal;
          pline.portal->data.link.polyportalpartner = line.portal;
       }
-      else if(line.portal->type == R_TWOWAY &&
-         pline.portal->type == R_TWOWAY)
+      else if(line.portal->type == R_TWOWAY && pline.portal->type == R_TWOWAY)
       {
          line.portal->data.anchor.polyportalpartner = pline.portal;
          pline.portal->data.anchor.polyportalpartner = line.portal;
@@ -1888,7 +1896,8 @@ void R_DefinePortal(const line_t &line)
       for(destlinenum = -1; 
          (destlinenum = P_FindLineFromTag(anchorid, destlinenum)) >= 0; )
       {
-         if(&lines[destlinenum] == &line)  // don't allow same target
+         // don't allow same target if there'll be no change
+         if(&lines[destlinenum] == &line && (type == portaltype_linked || !flipped))
             continue;
          break;
       }

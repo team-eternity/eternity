@@ -184,16 +184,16 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    if(clip.thing->player)
    {
       // "thing" dies, unconditionally
-      P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+      P_DamageMobj(thing, clip.thing, clip.thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG); // Stomp!
 
       // if "thing" is also a player, both die, for fairness.
       if(thing->player)
-         P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+         P_DamageMobj(clip.thing, thing, thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG);
    }
    else if(thing->player) // Thing moving into a player?
    {
       // clip.thing dies
-      P_DamageMobj(clip.thing, thing, thing, 10000, MOD_TELEFRAG);
+      P_DamageMobj(clip.thing, thing, thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG);
    }
    else // Neither thing is a player...
    {
@@ -231,7 +231,7 @@ static bool PIT_StompThing(Mobj *thing, void *context)
    if(!telefrag)
       return false;
    
-   P_DamageMobj(thing, clip.thing, clip.thing, 10000, MOD_TELEFRAG); // Stomp!
+   P_DamageMobj(thing, clip.thing, clip.thing, GOD_BREACH_DAMAGE, MOD_TELEFRAG); // Stomp!
    
    return true;
 }
@@ -417,9 +417,13 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    {
       bottomfloorsector = P_ExtremeSectorAtPoint(x, y, surf_floor, newsubsec->sector);
       clip.zref.floor = clip.zref.dropoff = bottomfloorsector->srf.floor.height;
+      clip.zref.floorgroupid = bottomfloorsector->groupid;
    }
    else
+   {
       clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+      clip.zref.floorgroupid = newsubsec->sector->groupid;
+   }
 
     //newsubsec->sector->ceilingheight + clip.thing->height;
    if(demo_version >= 333 && newsubsec->sector->srf.ceiling.pflags & PS_PASSABLE)
@@ -754,6 +758,7 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    if(clip.openbottom > clip.zref.floor)
    {
       clip.zref.floor = clip.openbottom;
+      clip.zref.floorgroupid = clip.bottomgroupid;
 
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
@@ -1229,6 +1234,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // will adjust them.
 
    clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+   clip.zref.floorgroupid = newsubsec->sector->groupid;
    clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;

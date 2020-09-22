@@ -101,10 +101,8 @@ void P_MarkPolyobjPortalLinks();
 
 void P_InitPortals();
 
-bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid);
-void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                         int fromid, int toid);
+bool EV_SectorPortalTeleport(Mobj *mo, const linkdata_t &ldata);
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz, int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 

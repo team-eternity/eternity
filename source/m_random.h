@@ -27,9 +27,11 @@
 #ifndef M_RANDOM_H__
 #define M_RANDOM_H__
 
+#include "d_keywds.h"
+
 //#define RANDOM_LOG
 #ifdef RANDOM_LOG
-void M_RandomLog(const char *format, ...);
+void M_RandomLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2);
 #else
 #define M_RandomLog(...)
 #endif

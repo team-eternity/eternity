@@ -249,7 +249,7 @@ static void Z_CloseLogFile()
 #endif
 }
 
-static void Z_LogPrintf(const char *msg, ...)
+static void Z_LogPrintf(E_FORMAT_STRING(const char *msg), ...)
 {
 #ifdef ZONEFILE
    if(!zonelog)
@@ -990,9 +990,9 @@ void *ZoneObject::operator new (size_t size)
 {
    return (newalloc = Z_Calloc(1, size, PU_STATIC, nullptr));
 }
-void *ZoneObject::operator new[] (size_t size)
+void *ZoneObject::operator new[](size_t size)
 {
-   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, nullptr));
 }
 
 //
@@ -1001,6 +1001,10 @@ void *ZoneObject::operator new[] (size_t size)
 // Overload supporting full zone allocation semantics.
 //
 void *ZoneObject::operator new(size_t size, int tag, void **user)
+{
+   return (newalloc = Z_Calloc(1, size, tag, user));
+}
+void *ZoneObject::operator new[](size_t size, int tag, void **user)
 {
    return (newalloc = Z_Calloc(1, size, tag, user));
 }
@@ -1100,7 +1104,7 @@ void ZoneObject::operator delete (void *p)
 {
    Z_Free(p);
 }
-void ZoneObject::operator delete[] (void *p)
+void ZoneObject::operator delete[](void *p)
 {
    Z_Free(p);
 }
@@ -1112,6 +1116,10 @@ void ZoneObject::operator delete[] (void *p)
 // exceptions during initialization.
 //
 void ZoneObject::operator delete (void *p, int, void **)
+{
+   Z_Free(p);
+}
+void ZoneObject::operator delete[](void *p, int, void **)
 {
    Z_Free(p);
 }

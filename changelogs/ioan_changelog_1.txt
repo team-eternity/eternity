@@ -8,6 +8,22 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+25.07.2020
+
+BUGFIX: Fixed HOM happening when trying to render same portal from two separate
+        windows.
+
+IMPROVEMENT: Self-tagging Portal_Define flipped-anchor visual portals are now 
+        possible, though there'll be no mirror.
+
+--------------------------------------------------------------------------------
+19.07.2020
+
+IMPROVEMENT: Thing_Destroy now works like in GZDoom, unless level is vanilla
+             Hexen (where it will still support arg 3). Most notably, arg 2 is
+             now "flags" and 1 means "extreme death".
+
+--------------------------------------------------------------------------------
 19.06.2020
 
 IMPROVEMENT: Plane portals can now render sloped visplanes, with the slope

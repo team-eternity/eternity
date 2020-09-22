@@ -1883,7 +1883,7 @@ bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS)
 //
 // void SetLineSpecial(int tag, int spec, int arg0, int arg1, int arg2, int arg3, int arg4);
 //
-bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
+bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
 {
    int     tag  = argV[0];
    int     spec = argV[1];
@@ -1932,6 +1932,32 @@ bool ACS_CF_SetMusicLoc(ACS_CF_ARGS)
    auto info = &static_cast<ACSThread *>(thread)->info;
    if(info->mo == players[consoleplayer].mo)
       S_ChangeMusicName(thread->scopeMap->getString(argV[0])->str, 1);
+   return false;
+}
+
+//
+// void SetSectorDamage(int tag, int amount, string damagetype = "Unknown", int interval = 32, int leaky = 0)
+//
+bool ACS_CF_SetSectorDamage(ACS_CF_ARGS)
+{
+   const int   tag        = argV[0];
+   const int   amount     = argV[1];
+   const char *damageType = argC > 2 ? thread->scopeMap->getString(argV[2])->str : "Unknown";
+   const int   interval   = argC > 3 ? argV[3] : 32;
+   const int   leakiness  = argC > 4 ? argV[4] : 0;
+
+   int secnum = -1;
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector_t &sector = sectors[secnum];
+
+      sector.damage     = amount;
+      sector.damagemod  = E_DamageTypeNumForName(damageType);
+      sector.damagemask = interval;
+      sector.leakiness  = eclamp(leakiness, 0, 256);
+   }
+
+   thread->dataStk.push(0);
    return false;
 }
 
@@ -2066,6 +2092,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          P_UnsetThingPosition(mo);
 
          mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.height;
+         mo->zref.floorgroupid = newsubsec->sector->groupid;
          mo->zref.ceiling = newsubsec->sector->srf.ceiling.height;
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
          mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
@@ -2395,8 +2422,8 @@ bool ACS_CF_SpawnMissile(ACS_CF_ARGS)
    int32_t    spotid  = argV[0];
    mobjtype_t type    = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    angle_t    angle   = argV[2] << 24;
-   int32_t    speed   = argV[3] * 8;
-   int32_t    vspeed  = argV[4] * 8;
+   int32_t    speed   = argV[3] / 8;
+   int32_t    vspeed  = argV[4] / 8;
    bool       gravity = argV[5] ? true : false;
    int32_t    tid     = argV[6];
    Mobj      *spot    = nullptr;

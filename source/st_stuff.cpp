@@ -692,7 +692,7 @@ static void ST_updateWidgets()
    auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
-   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : INT_MIN;
    w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
 
    // update armor
@@ -919,8 +919,7 @@ static void ST_drawInventory()
                     nullptr, (FRACUNIT * 6) / 10);
    }
 
-   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43, inv_selectbox);
 }
 
 static void ST_drawWidgets()

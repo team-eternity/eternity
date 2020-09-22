@@ -228,6 +228,7 @@ enum
    // Weapon frame X offset must be nonzero for both XY offsets to be enabled. Needed for DeHackEd
    // compatibility.
    GIF_DOOMWEAPONOFFSET = 0x00400000,
+   GIF_INVALWAYSOPEN  = 0x00800000, // Inventory is always open (like Strife, but not Heretic)
 };
 
 // Game mode handling - identify IWAD version
@@ -470,6 +471,8 @@ struct gamemodeinfo_t
    const char **skinSounds;       // default skin sound mnemonics array
    int *playerSounds;             // player sound dehnum indirection
    const char *titleMusName;      // [XA] title music override, for EDF
+   const char *secretSoundName;   // name of the secret lump (DSSECRET for non-Strife games)
+   int         defSecretSound;    // dehnum of default secret sound
 
    // Renderer stuff
    int switchEpisode;             // "episode" number for switch texture defs

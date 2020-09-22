@@ -21,6 +21,8 @@
 #ifndef C_IO_H__
 #define C_IO_H__
 
+#include "d_keywds.h"
+
 #define INPUTLENGTH 512
 #define LINELENGTH  128
 
@@ -34,7 +36,7 @@ void C_Drawer(void);
 bool C_Responder(event_t* ev);
 void C_Update(void);
 
-void C_Printf(const char *s, ...);
+void C_Printf(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 void C_Puts(const char *s);
 void C_Separator(void);
 

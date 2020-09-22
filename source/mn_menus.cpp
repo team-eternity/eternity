@@ -1087,7 +1087,7 @@ static void MN_DMFlagsDrawer()
 
    menuitem = &(menu_dmflags.menuitems[DMF_MENU_DMFLAGS]);
    // draw dmflags value
-   psnprintf(buf, sizeof(buf), "%c%lu", GameModeInfo->infoColor, dmflags);
+   psnprintf(buf, sizeof(buf), "%c%u", GameModeInfo->infoColor, dmflags);
    V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y, &subscreen43);
 }
 
@@ -1095,7 +1095,7 @@ static void toggle_dm_flag(unsigned int flag)
 {
    char cmdbuf[64];
    dmflags ^= flag;
-   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %lu", dmflags);
+   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %u", dmflags);
    C_RunTextCmd(cmdbuf);
 }
 

@@ -534,8 +534,8 @@ static void Polyobj_collectPortals(polyobj_t *po)
    po->hasLinkedPortals = hasLinked;
    if(po->numPortals)
    {
-      po->portals = emalloctag(decltype(po->portals), 
-         po->numPortals * sizeof(*po->portals), PU_LEVEL, nullptr);
+      po->portals = emalloctag(decltype(po->portals),  po->numPortals * sizeof(*po->portals),
+                               PU_LEVEL, nullptr);
       memcpy(po->portals, &portals[0], po->numPortals * sizeof(*po->portals));
    }
 }
@@ -555,13 +555,13 @@ static void Polyobj_moveLinkedPortals(const polyobj_t *po, fixed_t dx, fixed_t d
       if(portal->type == R_LINKED)
       {
          linkdata_t &ldata = portal->data.link;
-         ldata.deltax -= dx;
-         ldata.deltay -= dy;
+         ldata.delta.x -= dx;
+         ldata.delta.y -= dy;
          portal_t *partner = ldata.polyportalpartner;
          if(partner)
          {
-            partner->data.link.deltax += dx;
-            partner->data.link.deltay += dy;
+            partner->data.link.delta.x += dx;
+            partner->data.link.delta.y += dy;
          }
          // mark the group as being moved by the portal or not.
          P_MoveGroupCluster(ldata.fromid, ldata.toid, groupvisit, dx, dy, true,
@@ -977,6 +977,7 @@ struct portalthing_t
    Mobj *thing;   // the touched thing
    v2fixed_t position;  // the position when touched
    v2fixed_t velocity;  // the velocity when touched
+   int interiorgroupid; // the groupid of the portal this mobj touches
 };
 
 //
@@ -987,6 +988,8 @@ struct portalthing_t
 static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
                                         PODCollection<portalthing_t> &things)
 {
+   I_Assert(line.pflags & PS_PASSABLE, "Expected linked portal\n");   // linked portal
+
    fixed_t linebox[4];
    // adjust linedef bounding box to blockmap, extend by MAXRADIUS
    linebox[BOXLEFT]   = (line.bbox[BOXLEFT]   - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -1008,12 +1011,22 @@ static void Polyobj_collectPortalThings(const polyobj_t &po, const line_t &line,
             if(!Polyobj_canPushThing(*mo) || Polyobj_untouched(&line, mo))
                continue;
             portalthing_t &pt = things.addNew();
-            pt.thing = mo;
+            P_SetTarget(&pt.thing, mo);
             pt.position = { mo->x, mo->y };
             pt.velocity = { mo->momx, mo->momy };
+            pt.interiorgroupid = line.portal->data.link.toid;
          }
       }
 }
+
+//
+// Holds mobj reference and whether to move it or update its position
+//
+struct insideMobjMove_t
+{
+   Mobj *mobj;
+   bool onground;
+};
 
 //
 // Iterator for the function below
@@ -1022,16 +1035,17 @@ static bool PolyobjIT_moveObjectsInside(int groupid, void *context)
 {
    int count;
    sector_t **gsectors = P_GetSectorsWithGroupId(groupid, &count);
-   auto &moved = *static_cast<PODCollection<Mobj *> *>(context);
+   auto &moved = *static_cast<PODCollection<insideMobjMove_t> *>(context);
    for(int i = 0; i < count; ++i)
    {
       for(Mobj *mo = gsectors[i]->thinglist; mo; mo = mo->snext)
       {
          // NOSECTOR invisible things will be ignored :)
          // Also don't push back standing and hanging things
-         if(P_mobjOnSurface(*mo))
-            continue;
-         moved.add(mo); // don't move them from here, as it may mutate the sector thinglist.
+         insideMobjMove_t imm;
+         imm.mobj = mo;
+         imm.onground = P_mobjOnSurface(*mo);
+         moved.add(imm); // don't move them from here, as it may mutate the sector thinglist.
       }
    }
    return true;
@@ -1045,7 +1059,7 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
    if(!useportalgroups)
       return;
    bool *groupvisit = ecalloc(bool *, P_PortalGroupCount(), sizeof(bool));
-   PODCollection<Mobj *> moved;
+   PODCollection<insideMobjMove_t> moved;
    for(size_t i = 0; i < po.numPortals; ++i)
    {
       const portal_t &portal = *po.portals[i];
@@ -1054,8 +1068,21 @@ static void Polyobj_moveObjectsInside(const polyobj_t &po, fixed_t dx, fixed_t d
       P_ForEachClusterGroup(portal.data.link.fromid, portal.data.link.toid, groupvisit,
                             PolyobjIT_moveObjectsInside, &moved);
    }
-   for(Mobj *mo : moved)
-      P_TryMove(mo, mo->x + dx, mo->y + dy, 1);
+   for(const insideMobjMove_t &imm : moved)
+   {
+      bool p = false;
+      if(!imm.onground || imm.mobj->zref.floorgroupid != imm.mobj->groupid)
+         p = P_TryMove(imm.mobj, imm.mobj->x + dx, imm.mobj->y + dy, 1);
+
+      if(!p)
+      {
+         // Make sure to update zref anyway
+         P_CheckPosition(imm.mobj, imm.mobj->x, imm.mobj->y);
+         imm.mobj->zref = clip.zref;
+      }
+      else
+         imm.mobj->backupPosition();   // FIXME: do this until we can interpolate polys with portals
+   }
    efree(groupvisit);
 }
 
@@ -1182,10 +1209,15 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
             pt.thing->momx == pt.velocity.x && pt.thing->momy == pt.velocity.y)
          {
             // We got one which we may want to move
-            if(P_mobjOnSurface(*pt.thing))
+            if(P_mobjOnSurface(*pt.thing) && pt.thing->zref.floorgroupid == pt.interiorgroupid)
             {
                if(!P_TryMove(pt.thing, pt.thing->x + x, pt.thing->y + y, 1))
+               {
+                  P_CheckPosition(pt.thing, pt.thing->x, pt.thing->y);
                   pt.thing->zref = clip.zref;   // If couldn't move, still adjust Z references
+               }
+               else
+                  pt.thing->backupPosition();   // FIXME: temporary until we interpolate polyportals
             }
             else
             {
@@ -1198,6 +1230,10 @@ static bool Polyobj_moveXY(polyobj_t *po, fixed_t x, fixed_t y, bool onload = fa
       // Now move the airborne things inside the polyobject portal, except for the ceiling hangers
       Polyobj_moveObjectsInside(*po, -x, -y);
    }
+
+   // Remember to clear reference
+   for(portalthing_t &pt : pts)
+      P_ClearTarget(pt.thing);
 
    return !hitthing;
 }
@@ -1568,7 +1604,7 @@ void PolyRotateThinker::Think()
       this->distance -= avel;
 
       // MaxW: 20160106: set the flag which differentiates angles >= 180 from angles < 0
-      hasBeenPositive = hasBeenPositive || (distance > 0);
+      hasBeenPositive = hasBeenPositive || (distance >= 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1909,7 +1945,7 @@ void PolySwingDoorThinker::Think()
       this->distance -= avel;
 
       // MaxW: 20160109: set the flag which differentiates angles >= 180 from angles < 0
-      hasBeenPositive = hasBeenPositive || (distance > 0);
+      hasBeenPositive = hasBeenPositive || (distance >= 0);
 
       // are we at or past the destination?
       if(this->distance <= 0 && this->hasBeenPositive)
@@ -1926,7 +1962,7 @@ void PolySwingDoorThinker::Think()
             // start delay
             this->delayCount = this->delay;    
 
-            this->hasBeenPositive = this->distance < 0 ? false : true;
+            this->hasBeenPositive = this->distance >= 0;
          } 
          else
          {
@@ -1953,7 +1989,7 @@ void PolySwingDoorThinker::Think()
       // move was blocked, special handling required -- make it reopen
 
       this->distance = this->initDistance - this->distance;
-      this->hasBeenPositive = this->distance < 0 ? false : true;
+      this->hasBeenPositive = this->distance >= 0;
       this->speed    = this->initSpeed;
       this->closing  = false;
 
@@ -2019,7 +2055,7 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
       th->distance = prdata->distance * BYTEANGLEMUL;
 
    // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
-   th->hasBeenPositive = th->distance < 0 ? false : true;
+   th->hasBeenPositive = th->distance >= 0;
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 8;
    if(po->thrust < FRACUNIT)
@@ -2061,7 +2097,7 @@ int EV_DoPolyObjRotate(const polyrotdata_t *prdata)
          th->distance = prdata->distance * BYTEANGLEMUL;
 
       // MaxW: 20160106: Initialise flag which differentiates angles >= 180 from angles < 0
-      th->hasBeenPositive = th->distance < 0 ? false : true;
+      th->hasBeenPositive = th->distance >= 0;
       // set polyobject's thrust
       po->thrust = D_abs(th->speed) >> 8;
       if(po->thrust < FRACUNIT)
@@ -2216,7 +2252,8 @@ int EV_DoPolyObjMoveToSpot(const polymoveto_t &pmdata)
    th->addThinker();
    po->thinker = th;
 
-   distance -= po->spawnSpot;
+   distance.x -= po->spawnSpot.x;
+   distance.y -= po->spawnSpot.y;
 
    th->polyObjNum = pmdata.polyObjNum;
    th->distance = distance.elemabs();
@@ -2354,7 +2391,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
    th->speed        = (doordata->speed * BYTEANGLEMUL) >> 3;
    th->initSpeed    = th->speed;
    // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
-   th->hasBeenPositive = th->distance < 0 ? false : true;
+   th->hasBeenPositive = th->distance >= 0;
 
    // set polyobject's thrust
    po->thrust = D_abs(th->speed) >> 3;
@@ -2386,7 +2423,7 @@ static void Polyobj_doSwingDoor(polyobj_t *po, const polydoordata_t *doordata)
       th->delayCount   = 0;
       th->distance     = th->initDistance = doordata->distance * BYTEANGLEMUL;
       // MaxW: 20160109: Initialise flag which differentiates angles >= 180 from angles < 0
-      th->hasBeenPositive = th->distance < 0 ? false : true;
+      th->hasBeenPositive = th->distance >= 0;
 
       // alternate direction with each mirror
       th->speed = (doordata->speed * BYTEANGLEMUL * diracc) >> 3;

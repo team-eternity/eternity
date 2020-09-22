@@ -20,8 +20,8 @@
 
 #include "d_keywds.h"
 
-int psnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), ...);
-int pvsnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), va_list ap);
+int psnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), ...) E_PRINTF(3, 4);
+int pvsnprintf(char *str, size_t n, E_FORMAT_STRING(const char *format), va_list ap) E_PRINTF(3, 0);
 
 #endif /* ifdef PSNPRINTF_H */
 

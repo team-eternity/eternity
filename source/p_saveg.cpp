@@ -86,7 +86,7 @@
 // Constructs a SaveArchive object in saving mode.
 //
 SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
-   : savefile(pSaveFile), loadfile(nullptr)
+   : savefile(pSaveFile), loadfile(nullptr), read_save_version(0)
 {
    if(!pSaveFile)
       I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
@@ -96,7 +96,7 @@ SaveArchive::SaveArchive(OutBuffer *pSaveFile)
 // Constructs a SaveArchive object in loading mode.
 //
 SaveArchive::SaveArchive(InBuffer *pLoadFile)
-   : savefile(nullptr), loadfile(pLoadFile)
+   : savefile(nullptr), loadfile(pLoadFile), read_save_version(0)
 {
    if(!pLoadFile)
       I_Error("SaveArchive: created a load file without a valid InBuffer\n");
@@ -144,6 +144,53 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
       else
          str = nullptr;
    }
+}
+
+//
+// Attempts to read save version, returning false if it fails
+//
+bool SaveArchive::readSaveVersion()
+{
+   char vread[VERSIONSIZE];
+
+   if(!loadfile)
+      I_Error("SaveArchive::readSaveVersion: cannot read version if not loading file!\n");
+
+   archiveCString(vread, VERSIONSIZE);
+
+   if(!strncmp(vread, "MBF ", 4))
+   {
+      const long tempver = strtol(vread + 4, nullptr, 10);
+      if(tempver != 401)
+      {
+         C_Printf(FC_ERROR "Warning: Save too old to be read (pre 4.01.00)!\a");
+         return false;
+      }
+
+      read_save_version = 0;
+   }
+   else if(strncmp(vread, "EE", 2))
+   {
+      C_Printf(FC_ERROR "Warning: unsupported save format!\a"); // blah...
+      return false;
+   }
+   else
+      loadfile->readSint32(read_save_version);
+
+   return true;
+}
+
+//
+// Writes save version
+//
+void SaveArchive::writeSaveVersion()
+{
+   char vread[VERSIONSIZE];
+
+   if(!savefile)
+      I_Error("SaveArchive::writeSaveVersion: cannot save version if not writing file!\n");
+
+   savefile->writeSint32(WRITE_SAVE_VERSION);
 }
 
 //
@@ -699,6 +746,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       arc << li->flags << li->special << li->tag
           << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
+
+      if((arc.saveVersion() >= 1))
+         arc << li->extflags;
 
       for(j = 0; j < 2; j++)
       {
@@ -1285,9 +1335,11 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID, version);
+      sprintf(name2, VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
+
+      arc.writeSaveVersion();
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
@@ -1414,7 +1466,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
 void P_LoadGame(const char *filename)
 {
    int i;
-   char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
    //uint64_t checksum, rchecksum;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
@@ -1435,16 +1486,9 @@ void P_LoadGame(const char *filename)
       char throwaway[SAVESTRINGSIZE];
 
       arc.archiveCString(throwaway, SAVESTRINGSIZE);
-      
-      // killough 2/22/98: "proprietary" version string :-)
-      sprintf(vcheck, VERSIONID, version);
 
-      arc.archiveCString(vread, VERSIONSIZE);
-   
-      // killough 2/22/98: Friendly savegame version difference message
-      // FIXME/TODO: restore proper version verification
-      if(strncmp(vread, vcheck, VERSIONSIZE))
-         C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
+      if(!arc.readSaveVersion())
+         return;
 
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state

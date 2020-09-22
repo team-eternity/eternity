@@ -105,6 +105,9 @@ extern const char *endmsg[];
 #define OB_TELEFRAG "turned inside out"
 #define OB_QUAKE    "got a bad case of the shakes"
 
+// misc new strings
+#define SECRETMESSAGE "You found a secret!"
+
 #endif
 //-----------------------------------------------------------------------------
 //

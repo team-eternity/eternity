@@ -534,7 +534,7 @@ static dehflagset_t spawnex_flagset =
 // args[6] -- y-velocity
 // args[7] -- z-velocity
 // args[8] -- angle
-// args[9] -- chance (out of 255) for the object to spawn; default is 255.
+// args[9] -- chance (out of 256) for the object to spawn; default is 256.
 //
 void A_SpawnEx(actionargs_t *actionargs)
 {
@@ -585,11 +585,23 @@ void A_SpawnEx(actionargs_t *actionargs)
 
    if((flags & SPAWNEX_CHECKPOSITION) && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       mo->remove();
-   else {
+   else
+   {
       mo->angle = angle;
       mo->momx = xvel;
       mo->momy = yvel;
       mo->momz = zvel;
+
+      // TODO: Flag to make it set tracer?
+      // If we're spawning a projectile then we want to set its target as its owner
+      if(mo->flags & MF_MISSILE)
+      {
+         // If the spawner is a projectile then set target as spawner's owner (if it exists)
+         if((actor->flags & MF_MISSILE) && actor->target)
+            P_SetTarget<Mobj>(&mo->target, actor->target);
+         else
+            P_SetTarget<Mobj>(&mo->target, actor);
+      }
    }
 }
 
@@ -1259,7 +1271,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // ioanch 20160107: spawn past portals in front of spawner
    v2fixed_t relpos = { actor->x + FixedMul(prestep, finecosine[an]),
                         actor->y + FixedMul(prestep, finesine[an]) };
-   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - *actor);
+   v2fixed_t pos = P_LinePortalCrossing(*actor, relpos - v2fixed_t{ actor->x, actor->y });
 
    x = pos.x;
    y = pos.y;

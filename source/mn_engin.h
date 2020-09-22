@@ -29,6 +29,8 @@
 #ifndef MN_ENGIN_H__
 #define MN_ENGIN_H__
 
+#include "d_keywds.h"
+
 struct command_t;
 struct event_t;
 class  qstring;
@@ -226,7 +228,7 @@ void MN_WriteTextColored(const char *s, int colour, int x, int y);
 int  MN_StringWidth(const char *s);
 int  MN_StringHeight(const char *s);
 
-void MN_ErrorMsg(const char *s, ...);
+void MN_ErrorMsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 
 enum boxwidget_e
 {

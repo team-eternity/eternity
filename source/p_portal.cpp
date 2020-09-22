@@ -347,8 +347,7 @@ linkoffset_t *P_GetLinkIfExists(int fromgroup, int togroup)
 // Returns 0 if the link offset was added successfully, 1 if the start group is
 // out of bounds, and 2 of the target group is out of bounds.
 //
-static int P_AddLinkOffset(int startgroup, int targetgroup,
-                           fixed_t x, fixed_t y, fixed_t z)
+static int P_AddLinkOffset(int startgroup, int targetgroup, const v3fixed_t &v)
 {
    linkoffset_t *link;
 
@@ -371,9 +370,7 @@ static int P_AddLinkOffset(int startgroup, int targetgroup,
    link = emalloctag(linkoffset_t *, sizeof(linkoffset_t), PU_LEVEL, nullptr);
    linktable[startgroup * groupcount + targetgroup] = link;
    
-   link->x = x;
-   link->y = y;
-   link->z = z;
+   *link = v;
 
    return 0;
 }
@@ -431,10 +428,7 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
    // We've found a linked portal so add the entry to the table
    if(!link)
    {
-      int ret = P_AddLinkOffset(sec->groupid, ldata.toid,
-                                ldata.deltax, 
-                                ldata.deltay, 
-                                ldata.deltaz);
+      int ret = P_AddLinkOffset(sec->groupid, ldata.toid, ldata.delta);
       if(ret)
          return false;
    }
@@ -449,8 +443,7 @@ static bool P_CheckLinkedPortal(portal_t *const portal, sector_t *sec)
 // group, that is, if group A has a link to B, and B has a link to C, a link
 // can be found to go from A to C.
 //
-static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
-                          int via)
+static void P_GatherLinks(int group, const v3fixed_t &dv, int via)
 {
    int i, p;
    linkoffset_t *link, **linklist, **grouplinks;
@@ -471,7 +464,7 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
             continue;
 
          if((link = linklist[i]))
-            P_GatherLinks(group, link->x, link->y, link->z, i);
+            P_GatherLinks(group, *link, i);
       }
 
       return;
@@ -491,8 +484,8 @@ static void P_GatherLinks(int group, fixed_t dx, fixed_t dy, fixed_t dz,
       if(!(link = linklist[p]) || grouplinks[p])
          continue;
 
-      P_AddLinkOffset(group, p, dx + link->x, dy + link->y, dz + link->z);
-      P_GatherLinks(group, dx + link->x, dy + link->y, dz + link->z, p);
+      P_AddLinkOffset(group, p, dv + *link);
+      P_GatherLinks(group, dv + *link, p);
    }
 }
 
@@ -503,8 +496,8 @@ void P_FitLinkOffsetsToPortal(const linkdata_t &ldata)
 {
    linkoffset_t *offset = P_GetLinkOffset(ldata.fromid, ldata.toid);
    // Move the "fromid" group because the crossing actor is now in "toid".
-   v3fixed_t shift = { ldata.deltax - offset->x, ldata.deltay - offset->y, 
-                       ldata.deltaz - offset->z };
+   v3fixed_t shift = { ldata.delta.x - offset->x, ldata.delta.y - offset->y,
+      ldata.delta.z - offset->z };
    if(!shift.x && !shift.y && !shift.z)
       return;
    
@@ -747,7 +740,7 @@ bool P_BuildLinkTable()
 
    // That first loop has to complete before this can be run!
    for(i = 0; i < groupcount; i++)
-      P_GatherLinks(i, 0, 0, 0, R_NOGROUP);
+      P_GatherLinks(i, {}, R_NOGROUP);
 
    // SoM: one last step. Find all map architecture with a group id of -1 and 
    // assign it to group 0
@@ -770,6 +763,20 @@ bool P_BuildLinkTable()
 
    // haleyjd 05/17/13: mark all blockmap cells where portals live.
    P_buildPortalMap();
+
+   // Check all portals if they fit the link
+   for(const portal_t *portal = R_GetPortalHead(); portal; portal = portal->next)
+   {
+      if(portal->type != R_LINKED)
+         continue;
+      const linkdata_t &data = portal->data.link;
+      const linkoffset_t *link = P_GetLinkOffset(data.fromid, data.toid);
+      if(link->x != data.delta.x || link->y != data.delta.y || link->z != data.delta.z)
+      {
+         C_Printf("This level is twisted (line %d).\n", portal->data.link.maker);
+         break;
+      }
+   }
    
    return true;
 }
@@ -783,14 +790,17 @@ enum
 //
 // Flood-fill the clusters matrix
 //
-static void P_floodFillCluster(const uint8_t *connections, int sourcegroup, 
-   int groupid, int *row, int clusterid)
+static void P_floodFillCluster(const uint8_t *connections, int sourcegroup, int groupid, int *row,
+                               int clusterid)
 {
    row[groupid] = clusterid;
    for(int i = 0; i < groupcount; ++i)
    {
-      if(i == sourcegroup || i == groupid || connections[sourcegroup * groupcount + i] & conn_polycoupled)
+      if(i == sourcegroup || i == groupid ||
+         connections[sourcegroup * groupcount + i] & conn_polycoupled)
+      {
          continue;
+      }
       if(connections[groupid * groupcount + i] & conn_yes && row[i] == -1)
          P_floodFillCluster(connections, sourcegroup, i, row, clusterid);
    }
@@ -895,8 +905,7 @@ bool P_PortalLayersByPoly(int groupid1, int groupid2)
 // The player passed a line portal from P_TryMove; just update viewport and
 // pass-polyobject velocity
 //
-void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                         int fromid, int toid)
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz, int fromid, int toid)
 {
    // Prevent bad interpolation
    // FIXME: this is not interpolation, it's just instant movement; must be
@@ -938,20 +947,19 @@ void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
 //
 // EV_PortalTeleport
 //
-bool EV_SectorPortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid)
+bool EV_SectorPortalTeleport(Mobj *mo, const linkdata_t &ldata)
 {
    if(!mo)
       return 0;
 
    // ioanch 20160113: don't teleport. Just change x and y
    P_UnsetThingPosition(mo);
-   mo->x += dx;
-   mo->y += dy;
-   mo->z += dz;
+   mo->x += ldata.delta.x;
+   mo->y += ldata.delta.y;
+   mo->z += ldata.delta.z;
    P_SetThingPosition(mo);
 
-   P_PortalDidTeleport(mo, dx, dy, dz, fromid, toid);
+   P_PortalDidTeleport(mo, ldata.delta.x, ldata.delta.y, ldata.delta.z, ldata.fromid, ldata.toid);
    
    return 1;
 }

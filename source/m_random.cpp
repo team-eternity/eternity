@@ -35,7 +35,7 @@
 #include "a_small.h"
 
 #ifdef RANDOM_LOG
-void M_RandomLog(const char *format, ...)
+void M_RandomLog(E_FORMAT_STRING(const char *format), ...)
 {
    static FILE *f;
    if(!f)
@@ -46,6 +46,7 @@ void M_RandomLog(const char *format, ...)
      va_list ap;
      va_start(ap, format);
      vfprintf(f, format, ap);
+     va_end(ap);
      fflush(f);
    }
 }

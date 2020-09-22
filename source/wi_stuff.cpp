@@ -735,6 +735,10 @@ static int WI_drawNum(int x, int y, int n, int digits)
 {
    int neg, temp, fontwidth = num[0]->width;
 
+   // if non-number, do not draw it
+   if(n == INT_MIN)
+      return 0;
+
    neg = n < 0;    // killough 11/98: move up to here, for /= 10 division below
    if(neg)
       n = -n;
@@ -751,7 +755,7 @@ static int WI_drawNum(int x, int y, int n, int digits)
          // figure out # of digits in #
          digits = 0;
          temp = n;
-         
+
          while(temp)
          {
             temp /= 10;
@@ -759,10 +763,6 @@ static int WI_drawNum(int x, int y, int n, int digits)
          }
       }
    }
-
-   // if non-number, do not draw it
-   if(n == 1994)
-      return 0;
 
    // draw the new number
    while(digits--)
@@ -775,7 +775,7 @@ static int WI_drawNum(int x, int y, int n, int digits)
    // draw a minus sign if necessary
    if(neg)
       V_DrawPatch(x -= 8, y, &subscreen43, wiminus);
-   
+
    return x;
 }
 

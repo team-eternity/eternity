@@ -29,6 +29,7 @@
 #include "c_io.h"
 #include "doomstat.h"
 #include "m_argv.h"
+#include "m_compare.h"
 #include "p_info.h"
 #include "p_map.h"
 #include "p_portal.h"
@@ -748,6 +749,34 @@ int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam)
    return rtn;
 }
 
+//
+// Change the friction values of sector
+//
+void EV_SetFriction(const int tag, int amount)
+{
+   amount = eclamp(amount, 1, 255); // Valid range allegedly 1 to 255
+
+   for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0;)
+   {
+      sector_t &sector = sectors[s];
+
+      if(amount == 100)
+      {
+         sector.flags     &= ~SECF_FRICTION;
+         sector.friction   = ORIG_FRICTION;
+         sector.movefactor = ORIG_FRICTION_FACTOR;
+      }
+      else
+      {
+         int friction, movefactor;
+         P_CalcFriction(amount, friction, movefactor);
+
+         sector.flags     |= SECF_FRICTION;
+         sector.friction   = friction;
+         sector.movefactor = movefactor;
+      }
+   }
+}
 
 //
 // P_FindSectorFromLineTagWithLowerBound

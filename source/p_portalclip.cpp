@@ -155,6 +155,7 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    if(moveup && linetop > clip.zref.floor)
    {
       clip.zref.floor = linetop;
+      clip.zref.floorgroupid = ld->frontsector->groupid;
       clip.floorline = ld;
       clip.blockline = ld;
    }
@@ -448,6 +449,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       && clip.openbottom > clip.zref.floor)
    {
       clip.zref.floor = clip.openbottom;
+      clip.zref.floorgroupid = clip.bottomgroupid;
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }

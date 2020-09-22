@@ -385,7 +385,7 @@ void E_EDFLogPuts(const char *msg)
 //
 // Calls vfprintf on the verbose log for formatted messages.
 //
-void E_EDFLogPrintf(const char *msg, ...)
+void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...)
 {
    if(edf_output)
    {
@@ -404,7 +404,7 @@ void E_EDFLogPrintf(const char *msg, ...)
 // output "lv" number of tabs before the error message in the verbose
 // log file to maintain proper formatting.
 //
-void E_EDFLoggedErr(int lv, const char *msg, ...)
+void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...)
 {
    qstring msg_no_tabs;
    va_list va;
@@ -440,7 +440,7 @@ static bool edf_warning_out;
 // finished, so that users are aware that warnings have occured even if verbose
 // logging is not enabled.
 //
-void E_EDFLoggedWarning(int lv, const char *msg, ...)
+void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...)
 {
    ++edf_warning_count;
 

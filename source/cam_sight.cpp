@@ -470,9 +470,9 @@ bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y,
       return false;  // protection
 
    camsightparams_t params;
-   params.cx = x + data.deltax;
-   params.cy = y + data.deltay;
-   params.cz = this->params->cz + data.deltaz;
+   params.cx = x + data.delta.x;
+   params.cy = y + data.delta.y;
+   params.cz = this->params->cz + data.delta.z;
    params.cheight = this->params->cheight;
    params.tx = this->params->tx;
    params.ty = this->params->ty;

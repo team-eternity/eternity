@@ -112,7 +112,7 @@ typedef enum
 struct linkdata_t
 {
    // SoM: linked portals are similar to anchored portals
-   fixed_t   deltax, deltay, deltaz;
+   v3fixed_t delta;
    fixed_t   planez;
    
    // fromid is the group where the portal actually is, toid is the group on 
@@ -126,12 +126,6 @@ struct linkdata_t
    // ioanch 20160226: access the partner portal (if any) in case of polyobject
    // cars
    portal_t *polyportalpartner;
-
-   inline bool deltaEquals(const linkdata_t &data) const
-   {
-      return deltax == data.deltax && deltay == data.deltay &&
-             deltaz == data.deltaz;
-   }
 };
 
 struct portaltransform_t

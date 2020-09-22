@@ -477,6 +477,33 @@ Made it so your aim is always the centre of the actual non-HUD viewport. This
 removes the need to move the crosshair up/down depending on player pitch.
 Split "Fullscreen Desktop" into its own option for favoured screen type.
 
+-------------------------------------------------------------------------------
+2020/07/18
+Fixed replacing music when both tracks have a length of 4 (after the "D_").
+Thanks to JadingTsunami for the code fix and esselfortium for reporting the bug
+with a minimum failing case.
+
+-------------------------------------------------------------------------------
+2020/08/29
+Changed my age from 23 to 24. Made empty weapons in the BOOM-style HUDs brown
+in colour.
+
+-------------------------------------------------------------------------------
+2020/09/07
+Fixed SpawnProjectile speed. Add SetSectorDamage (ACS function). Add ACS
+variant of Sector_SetFriction.
+
+-------------------------------------------------------------------------------
+2020/09/11
+Extended line flags are now archived. Saves now have a version, allowing
+backwards compatibility.
+
+-------------------------------------------------------------------------------
+2020/09/19
+Added secret notifications. The defaults are DSITMBK for Doom and CHAT for
+Heretic. They can be overriden by providing a "DSSECRET" lump, or "DSYEAH" in
+Strife (when Strife is a thing).
+
 ================================================================================
 EOF
 ================================================================================

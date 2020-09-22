@@ -106,7 +106,6 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-#ifdef R_LINKEDPORTALS
    if(sec->srf.floor.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even
@@ -116,10 +115,8 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_FPLink(sec)->deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + R_FPLink(sec)->delta.y)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
@@ -133,32 +130,27 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_CPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_CPLink(sec)->deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + R_CPLink(sec)->delta.y)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
-#endif
 
    for(i=0; i<sec->linecount; i++)
    {
       sector_t *other;
       line_t *check = sec->lines[i];
       
-#ifdef R_LINKEDPORTALS
       if(check->pflags & PS_PASSSOUND)
       {
          sector_t *iother;
 
          iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.deltax,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.delta.y)->sector;
 
          P_RecursiveSound(iother, soundblocks, soundtarget);
       }
-#endif
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
@@ -498,6 +490,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       fixed_t x = actor->x;
       fixed_t y = actor->y;
       fixed_t floorz = actor->zref.floor;
+      int floorgroupid = actor->zref.floorgroupid;
       fixed_t ceilingz = actor->zref.ceiling;
       fixed_t dropoffz = actor->zref.dropoff;
       
@@ -512,6 +505,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          actor->x = x;
          actor->y = y;
          actor->zref.floor = floorz;
+         actor->zref.floorgroupid = floorgroupid;
          actor->zref.ceiling = ceilingz;
          actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
@@ -1903,7 +1897,7 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
@@ -1919,7 +1913,7 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    for(int i = 0; i < 60; i++)  // offset angles from its attack angle
    {

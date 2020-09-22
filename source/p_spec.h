@@ -1517,6 +1517,8 @@ int EV_FlickerLight(const line_t *, int tag, int maxval, int minval);
 
 int EV_DoChange(const line_t *line, int tag, change_e changetype, bool isParam);
 
+void EV_SetFriction(const int tag, int amount);
+
 // ioanch: now it's parameterized
 int EV_DoParamDonut(const line_t *line, int tag, bool havespac,
                     fixed_t pspeed, fixed_t sspeed);
@@ -1580,7 +1582,7 @@ int EV_ThingStop(Mobj *actor, int tid);
 int EV_ThrustThing(Mobj *actor, int side, int byteangle, int speed, int tid);
 int EV_ThrustThingZ(Mobj *actor, int tid, int speed, bool upDown, bool setAdd);
 int EV_DamageThing(Mobj *actor, int damage, int mod, int tid);
-int EV_ThingDestroy(int tid, int sectortag);
+int EV_ThingDestroy(int tid, int flags, int sectortag);
 int EV_HealThing(Mobj *actor, int amount, int maxhealth);
 int EV_ThingRemove(int tid);
 

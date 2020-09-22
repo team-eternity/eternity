@@ -214,7 +214,7 @@ static bool MN_PopupResponder(event_t *ev, int action)
 // alert message
 // -- just press enter
 //
-void MN_Alert(const char *message, ...)
+void MN_Alert(E_FORMAT_STRING(const char *message), ...)
 {
    va_list args;
    

@@ -129,7 +129,7 @@ int G_TotalFoundSecrets();
 void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
         // sf: player_printf
-void player_printf(const player_t *player, const char *s, ...);
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...) E_PRINTF(2, 3);
 
 bool G_RealNetGame();
 
@@ -163,7 +163,7 @@ extern bool scriptSecret;   // haleyjd
 #define VERSIONSIZE   16
 
 // killough 2/22/98: version id string format for savegames
-#define VERSIONID "MBF %d"
+#define VERSIONID "EE"
 
 extern WadDirectory *g_dir;
 extern WadDirectory *d_dir;

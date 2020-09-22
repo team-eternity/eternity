@@ -74,7 +74,7 @@ void D_StartTitle();
 void D_DoomMain();
 
 // sf: display a message to the player: either in text mode or graphics
-void usermsg(E_FORMAT_STRING(const char *s), ...);
+void usermsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 void startupmsg(const char *func, const char *desc);
 
 #endif

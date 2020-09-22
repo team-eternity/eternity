@@ -154,6 +154,15 @@ public:
    T *end()   const { return ptrArray + length; }
     
     // Mister jackson
+
+   T &back()
+   {
+      return ptrArray[length - 1];
+   }
+   const T &back() const
+   {
+      return ptrArray[length - 1];
+   }
 };
 
 //

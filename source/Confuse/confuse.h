@@ -480,7 +480,7 @@ cfg_lexfunc_t cfg_set_lexer_callback(cfg_t *cfg, cfg_lexfunc_t lexfunc);
 /** Show a parser error. Any user-defined error reporting function is called.
  * @see cfg_set_error_function
  */
-void          cfg_error(cfg_t *cfg, const char *fmt, ...);
+void          cfg_error(cfg_t *cfg, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(2, 3);
 
 /** Returns the value of an integer option. This is the same as
  * calling cfg_getnint with index 0.
