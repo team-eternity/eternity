@@ -101,6 +101,8 @@ struct LineEq
    c(M_FixedToDouble(FixedMul64(crd1.x, crd2.y) - FixedMul64(crd2.x, crd1.y)))
    {
    }
+
+   v2double_t intersection(const LineEq &other) const;
 };
 
 //

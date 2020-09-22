@@ -46,6 +46,30 @@
 #include "../r_state.h"
 
 //
+// Returns the intersection with another line. Returns v2double_t::invalid if parallel
+//
+v2double_t LineEq::intersection(const LineEq &other) const
+{
+   //   delta = a1b2 - a2b1
+   //   deltax = -c1b2 + c2b1
+   //   deltay = -a1c2 + a2c1
+   //   
+   //   x = deltax / delta
+   //   y = deltay / delta
+
+   v2double_t deltav;
+   double delta;
+   delta = a * other.b - other.a * b;
+   if(!delta)  // parallel
+      return v2double_invalid;
+
+   deltav.x = -c * other.b + other.c * b;
+   deltav.y = -a * other.c + other.a * c;
+
+   return deltav / delta;
+}
+
+//
 // B_ProjectionOnLine
 //
 // Returns the projection of point "vert" on line described by "v1" and "v2".
