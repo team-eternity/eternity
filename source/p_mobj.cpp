@@ -1313,7 +1313,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
       }
    }
 
-   return false;
+   return movedalready;
 }
 
 //
