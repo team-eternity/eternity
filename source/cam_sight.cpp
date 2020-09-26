@@ -273,42 +273,27 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(context.state.slope.ceiling <= context.state.slope.floor)
       return false;  // stop
 
-   // have we hit a lower edge portal
-   if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-      li->backsector->srf.floor.pflags & PS_PASSABLE &&
-      context.state.slope.floor <=
-      FixedDiv(li->backsector->srf.floor.height - context.sightzstart, totalfrac) &&
-      P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
+   // have we hit an edge portal?
+   for(surf_e surf : SURFS)
    {
-      State state(context.state);
-      state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->srf.floor.portal->data.link.toid,
-                         context.params->cx + FixedMul(trace.dx, in->frac),
-                         context.params->cy + FixedMul(trace.dy, in->frac),
-                         state, &context.portalresult,
-                         li->backsector->srf.floor.portal->data.link))
-      {
-         context.portalexit = true;
-         return false;
-      }
-   }
+      const surface_t &backSurface = li->backsector->srf[surf];
 
-   if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
-      li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
-      context.state.slope.ceiling >=
-      FixedDiv(li->backsector->srf.ceiling.height - context.sightzstart, totalfrac) &&
-      P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
-   {
-      State state(context.state);
-      state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->srf.ceiling.portal->data.link.toid,
-                         context.params->cx + FixedMul(trace.dx, in->frac),
-                         context.params->cy + FixedMul(trace.dy, in->frac),
-                         state, &context.portalresult,
-                         li->backsector->srf.ceiling.portal->data.link))
+      if(li->extflags & e_edgePortalFlags[surf] && li->backsector &&
+         backSurface.pflags & PS_PASSABLE &&
+         !isInner(surf, context.state.slope[surf],
+                  FixedDiv(backSurface.height - context.sightzstart, totalfrac)) &&
+         P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
-         context.portalexit = true;
-         return false;
+         State state(context.state);
+         state.originfrac = totalfrac;
+         if(context.recurse(backSurface.portal->data.link.toid,
+                            context.params->cx + FixedMul(trace.dx, in->frac),
+                            context.params->cy + FixedMul(trace.dy, in->frac),
+                            state, &context.portalresult, backSurface.portal->data.link))
+         {
+            context.portalexit = true;
+            return false;
+         }
       }
    }
 
