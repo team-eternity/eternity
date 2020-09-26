@@ -174,7 +174,8 @@ public:
 
    struct State
    {
-      fixed_t originfrac, bottomslope, topslope;
+      fixed_t originfrac;
+      Surfaces<fixed_t> slope;
       int reclevel;
    };
 
@@ -212,8 +213,8 @@ portalexit(false), portalresult(false), params(&inparams)
    else
    {
       state.originfrac = 0;
-      state.bottomslope = params->tz - sightzstart;
-      state.topslope = state.bottomslope + params->theight;
+      state.slope.floor = params->tz - sightzstart;
+      state.slope.ceiling = state.slope.floor + params->theight;
       state.reclevel = 0;
    }
 
@@ -260,8 +261,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.open.floor - context.sightzstart, totalfrac);
-      if(slope > context.state.bottomslope)
-         context.state.bottomslope = slope;
+      if(slope > context.state.slope.floor)
+         context.state.slope.floor = slope;
 
    }
 
@@ -269,17 +270,17 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^ !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
    {
       slope = FixedDiv(lo.open.ceiling - context.sightzstart, totalfrac);
-      if(slope < context.state.topslope)
-         context.state.topslope = slope;
+      if(slope < context.state.slope.ceiling)
+         context.state.slope.ceiling = slope;
    }
 
-   if(context.state.topslope <= context.state.bottomslope)
+   if(context.state.slope.ceiling <= context.state.slope.floor)
       return false;  // stop
 
    // have we hit a lower edge portal
    if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
       li->backsector->srf.floor.pflags & PS_PASSABLE &&
-      context.state.bottomslope <=
+      context.state.slope.floor <=
       FixedDiv(li->backsector->srf.floor.height - context.sightzstart, totalfrac) &&
       P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
@@ -298,7 +299,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 
    if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
       li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
-      context.state.topslope >=
+      context.state.slope.ceiling >=
       FixedDiv(li->backsector->srf.ceiling.height - context.sightzstart, totalfrac) &&
       P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
@@ -355,11 +356,11 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
    State newstate;
    bool result = false;
    
-   if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
+   if(state.slope.ceiling > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
       (newfromid = sector->srf.ceiling.portal->data.link.toid) != params->cgroupid)
    {
       // ceiling portal (slope must be up)
-      linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
+      linehitz = sightzstart + FixedMul(state.slope.ceiling, totalfrac);
       fixed_t planez = P_PortalZ(surf_ceil, *sector);
       if(linehitz > planez)
       {
@@ -367,8 +368,8 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          newslope = FixedDiv(planez - sightzstart, totalfrac);
 
          // if totalfrac == 0, then it will just be a very big slope
-         if(newslope < state.bottomslope)
-            newslope = state.bottomslope;
+         if(newslope < state.slope.floor)
+            newslope = state.slope.floor;
 
          // get x and y of position
          if(linehitz == sightzstart)
@@ -393,8 +394,8 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
 
          if(partialfrac + 1 > 0) // don't allow going back
          {
-            newstate.bottomslope = newslope;
-            newstate.topslope = state.topslope;
+            newstate.slope.floor = newslope;
+            newstate.slope.ceiling = state.slope.ceiling;
             newstate.originfrac = totalfrac;
             newstate.reclevel = state.reclevel + 1;
 
@@ -408,16 +409,16 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
       }
    }
 
-   if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
+   if(state.slope.floor < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
       (newfromid = sector->srf.floor.portal->data.link.toid) != params->cgroupid)
    {
-      linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
+      linehitz = sightzstart + FixedMul(state.slope.floor, totalfrac);
       fixed_t planez = P_PortalZ(surf_floor, *sector);
       if(linehitz < planez)
       {
          newslope = FixedDiv(planez - sightzstart, totalfrac);
-         if(newslope > state.topslope)
-            newslope = state.topslope;
+         if(newslope > state.slope.ceiling)
+            newslope = state.slope.ceiling;
 
          if(linehitz == sightzstart)
          {
@@ -438,8 +439,8 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
          if(partialfrac + 1 > 0)
          {
 
-            newstate.bottomslope = state.bottomslope;
-            newstate.topslope = newslope;
+            newstate.slope.floor = state.slope.floor;
+            newstate.slope.ceiling = newslope;
             newstate.originfrac = totalfrac;
             newstate.reclevel = state.reclevel + 1;
 
