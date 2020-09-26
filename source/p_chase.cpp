@@ -109,39 +109,18 @@ struct chasetraverse_t
 static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector, 
    chasetraverse_t &traverse)
 {
-   const struct surfaceset_t
+   for(surf_e surf : SURFS)
    {
-      unsigned pflags;
-      portal_t *portal;
-      fixed_t(*pzfunc)(const sector_t &);
-      bool(*compare)(fixed_t, fixed_t);
-   } ssets[2] = {
+      const surface_t &surface = sector->srf[surf];
+      fixed_t pz = P_PortalZ(surface);
+      if(surface.pflags & PS_PASSABLE && isOuter(surf, z, pz))
       {
-         sector->srf.floor.pflags,
-         sector->srf.floor.portal,
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; }
-      },
-      {
-         sector->srf.ceiling.pflags,
-         sector->srf.ceiling.portal,
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a > b; }
-      },
-   };
-   for(int i = 0; i < 2; ++i)
-   {
-      const auto &s = ssets[i];
-      fixed_t pz = s.pzfunc(*sector);
-      if(s.pflags & PS_PASSABLE && s.compare(z, pz))
-      {
-         if(!s.compare(pz, traverse.startz))
+         if(!isOuter(surf, pz, traverse.startz))
             pz = traverse.startz;
          fixed_t zfrac = FixedDiv(pz - traverse.startz, z - traverse.startz);
          fixed_t hfrac = FixedMul(zfrac, frac);
-         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, hfrac);
-         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, hfrac);
-         traverse.link = &s.portal->data.link;
+         traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(hfrac);
+         traverse.link = &surface.portal->data.link;
          traverse.startz = pz;
          return true;
       }
