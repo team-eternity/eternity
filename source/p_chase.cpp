@@ -134,41 +134,14 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
 //
 static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
 {
-   const struct surfaceset_t
+   for(surf_e surf : SURFS)
    {
-      unsigned extflag;
-      unsigned pflags;
-      fixed_t height;
-      portal_t *portal;
-      fixed_t(*pzfunc)(const sector_t &);
-      bool(*compare)(fixed_t, fixed_t);
-   } ssets[2] = {
+      if(li->extflags & e_edgePortalFlags[surf] && li->backsector->srf[surf].pflags & PS_PASSABLE &&
+         isOuter(surf, z, P_PortalZ(li->backsector->srf[surf])) &&
+         !isOuter(surf, z, li->frontsector->srf[surf].height))
       {
-         EX_ML_LOWERPORTAL,
-         li->backsector->srf.floor.pflags,
-         li->frontsector->srf.floor.height,
-         li->backsector->srf.floor.portal,
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; }
-      },
-      {
-         EX_ML_UPPERPORTAL,
-         li->backsector->srf.ceiling.pflags,
-         li->frontsector->srf.ceiling.height,
-         li->backsector->srf.ceiling.portal,
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a > b; }
-      }
-   };
-   for(int i = 0; i < 2; ++i)
-   {
-      const auto &s = ssets[i];
-      if(li->extflags & s.extflag && s.pflags & PS_PASSABLE &&
-         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, s.height))
-      {
-         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
-         traverse.link = &s.portal->data.link;
+         traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(frac);
+         traverse.link = &li->backsector->srf[surf].portal->data.link;
          traverse.startz = z;
          return true;
       }
