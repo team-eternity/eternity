@@ -147,7 +147,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    {
       // ceiling portal (slope must be up)
       linehitz = state.c.z + FixedMul(state.topslope, totalfrac);
-      fixed_t planez = P_CeilingPortalZ(*sector);
+      fixed_t planez = P_PortalZ(surf_ceil, *sector);
       if(linehitz > planez)
       {
          // get x and y of position
@@ -202,7 +202,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
       (newfromid = sector->srf.floor.portal->data.link.toid) != state.groupid)
    {
       linehitz = state.c.z + FixedMul(state.bottomslope, totalfrac);
-      fixed_t planez = P_FloorPortalZ(*sector);
+      fixed_t planez = P_PortalZ(surf_floor, *sector);
       if(linehitz < planez)
       {
          if(linehitz == state.c.z)

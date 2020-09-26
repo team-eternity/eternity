@@ -2090,7 +2090,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    int loopprot = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->srf.floor.pflags & PS_PASSABLE &&
-         P_FloorPortalZ(*sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
+         P_PortalZ(surf_floor, *sector) > emin(mobj->z, mobj->prevpos.z) + scaledbottom)
    {
       // always accept first sector
       data = R_FPLink(sector);
@@ -2102,7 +2102,7 @@ void R_CheckMobjProjections(Mobj *mobj, bool checklines)
    delta.x = delta.y = delta.z = 0;
    while(++loopprot < SECTOR_PORTAL_LOOP_PROTECTION && sector &&
          sector->srf.ceiling.pflags & PS_PASSABLE &&
-         P_CeilingPortalZ(*sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
+         P_PortalZ(surf_ceil, *sector) < emax(mobj->z, mobj->prevpos.z) + scaledtop)
    {
       // always accept first sector
       data = R_CPLink(sector);

@@ -122,7 +122,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infr
    if(sidesector->srf.ceiling.pflags & PS_PASSABLE)
    {
       // ceiling portal
-      fixed_t planez = P_CeilingPortalZ(*sidesector);
+      fixed_t planez = P_PortalZ(surf_ceil, *sidesector);
       if(v.z > planez)
       {
          pfrac = FixedDiv(planez - state.v.z, params.aimslope);
@@ -135,7 +135,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infr
    if(!portaldata && sidesector->srf.floor.pflags & PS_PASSABLE)
    {
       // floor portal
-      fixed_t planez = P_FloorPortalZ(*sidesector);
+      fixed_t planez = P_PortalZ(surf_floor, *sidesector);
       if(v.z < planez)
       {
          pfrac = FixedDiv(planez - state.v.z, params.aimslope);

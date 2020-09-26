@@ -604,9 +604,9 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
    fixed_t topz = mobj->z + mobj->height;
    if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
       return false;
-   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
+   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(surf_floor, *sector))
       return false;
-   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
+   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_PortalZ(surf_ceil, *sector))
       return false;
    return true;
 }
