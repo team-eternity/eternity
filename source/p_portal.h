@@ -188,7 +188,11 @@ void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
 
 fixed_t P_CeilingPortalZ(const sector_t &sector);
 fixed_t P_FloorPortalZ(const sector_t &sector);
-fixed_t P_PortalZ(surf_e surf, const sector_t &sector);
+fixed_t P_PortalZ(const surface_t &surface);
+inline fixed_t P_PortalZ(surf_e surf, const sector_t &sector)
+{
+   return P_PortalZ(sector.srf[surf]);
+}
 
 // Group mappings
 void P_BuildSectorGroupMappings();

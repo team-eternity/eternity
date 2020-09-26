@@ -1208,9 +1208,8 @@ fixed_t P_FloorPortalZ(const sector_t &sector)
    sector.srf.floor.height : sector.srf.floor.portal->data.link.planez;
 }
 
-fixed_t P_PortalZ(surf_e surf, const sector_t &sector)
+fixed_t P_PortalZ(const surface_t &surface)
 {
-   const surface_t &surface = sector.srf[surf];
    return !surface.portal || surface.portal->type != R_LINKED ||
          surface.pflags & PF_ATTACHEDPORTAL ? surface.height : surface.portal->data.link.planez;
 }
