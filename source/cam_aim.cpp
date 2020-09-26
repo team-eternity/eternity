@@ -300,20 +300,17 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       const sector_t *osector = sector == li->frontsector ? li->backsector : li->frontsector;
       fixed_t slope;
 
-      if(sector->srf.floor.height != osector->srf.floor.height ||
-         (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
+      for(surf_e surf : SURFS)
       {
-         slope = FixedDiv(lo.open.floor - context.state.c.z, totaldist);
-         if(slope > context.state.slope.floor)
-            context.state.slope.floor = slope;
-      }
-
-      if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^
-                                                             !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
-      {
-         slope = FixedDiv(lo.open.ceiling - context.state.c.z, totaldist);
-         if(slope < context.state.slope.ceiling)
-            context.state.slope.ceiling = slope;
+         const surface_t &surface = sector->srf[surf];
+         const surface_t &otherSurface = osector->srf[surf];
+         if(surface.height != otherSurface.height ||
+            (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
+         {
+            slope = FixedDiv(lo.open[surf] - context.state.c.z, totaldist);
+            if(isInner(surf, slope, context.state.slope[surf]))
+               context.state.slope[surf] = slope;
+         }
       }
 
       if(context.state.slope.ceiling <= context.state.slope.floor)
