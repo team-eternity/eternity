@@ -79,7 +79,7 @@ enum extmlflags_e : unsigned int
    EX_ML_POLYOBJECT   = 0x00010000, // enabled for polyobjects
 };
 
-static const int e_edgePortalFlags[surf_NUM] = { EX_ML_LOWERPORTAL, EX_ML_UPPERPORTAL };
+static const unsigned e_edgePortalFlags[surf_NUM] = { EX_ML_LOWERPORTAL, EX_ML_UPPERPORTAL };
 
 // ExtraData line structure
 
