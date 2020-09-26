@@ -326,6 +326,7 @@
 		4FC0A93F1E1E2ABC006CEC45 /* cam_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93A1E1E2ABC006CEC45 /* cam_common.cpp */; };
 		4FC0A9401E1E2ABC006CEC45 /* cam_shoot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93C1E1E2ABC006CEC45 /* cam_shoot.cpp */; };
 		4FC0A9411E1E2ABC006CEC45 /* cam_use.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93D1E1E2ABC006CEC45 /* cam_use.cpp */; };
+		4FFC849B250811F2000FA6A3 /* m_bitset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFC8499250811F2000FA6A3 /* m_bitset.cpp */; };
 		4FFDE54921D2817D00836A2D /* hu_modern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54421D2817C00836A2D /* hu_modern.cpp */; };
 		4FFDE54A21D2817D00836A2D /* hu_boom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54521D2817C00836A2D /* hu_boom.cpp */; };
 		4FFDE56021DE891F00836A2D /* inffast.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54D21DE891D00836A2D /* inffast.c */; };
@@ -561,6 +562,8 @@
 		4FC0A93D1E1E2ABC006CEC45 /* cam_use.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cam_use.cpp; path = ../source/cam_use.cpp; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../source/v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
+		4FFC8499250811F2000FA6A3 /* m_bitset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = m_bitset.cpp; path = ../source/m_bitset.cpp; sourceTree = "<group>"; };
+		4FFC849A250811F2000FA6A3 /* m_bitset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = m_bitset.h; path = ../source/m_bitset.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
 		4FFD27351796990400E4E5B1 /* p_henemy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_henemy.cpp; path = ../source/p_henemy.cpp; sourceTree = "<group>"; };
 		4FFD27371796990400E4E5B1 /* w_iterator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w_iterator.h; path = ../source/w_iterator.h; sourceTree = "<group>"; };
@@ -1700,6 +1703,8 @@
 			children = (
 				4FFDE54821D2817D00836A2D /* m_avltree.h */,
 				4F2F32A41867100100EED7DE /* m_binary.h */,
+				4FFC8499250811F2000FA6A3 /* m_bitset.cpp */,
+				4FFC849A250811F2000FA6A3 /* m_bitset.h */,
 				4F2F32A51867100100EED7DE /* m_compare.h */,
 				4F2F32A61867100100EED7DE /* m_ctype.h */,
 				FABF5CF6158BF42800C49E93 /* m_argv.cpp */,
@@ -2481,6 +2486,7 @@
 				4FC0A9361E1E2A50006CEC45 /* Thread.cpp in Sources */,
 				4F5F38FA182D9AC00027813A /* p_ceilng.cpp in Sources */,
 				4F5F38FB182D9AC00027813A /* p_chase.cpp in Sources */,
+				4FFC849B250811F2000FA6A3 /* m_bitset.cpp in Sources */,
 				4F920FF01F642143008F105C /* e_anim.cpp in Sources */,
 				4F5F38FC182D9AC00027813A /* p_cmd.cpp in Sources */,
 				4F5F38FD182D9AC00027813A /* p_doors.cpp in Sources */,
