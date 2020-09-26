@@ -257,21 +257,17 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       li->backsector : li->frontsector;
    fixed_t slope;
 
-   if(sector->srf.floor.height != osector->srf.floor.height ||
-      (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
+   for(surf_e surf : SURFS)
    {
-      slope = FixedDiv(lo.open.floor - context.sightzstart, totalfrac);
-      if(slope > context.state.slope.floor)
-         context.state.slope.floor = slope;
-
-   }
-
-   if(sector->srf.ceiling.height != osector->srf.ceiling.height ||
-      (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^ !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
-   {
-      slope = FixedDiv(lo.open.ceiling - context.sightzstart, totalfrac);
-      if(slope < context.state.slope.ceiling)
-         context.state.slope.ceiling = slope;
+      const surface_t &surface = sector->srf[surf];
+      const surface_t &otherSurface = osector->srf[surf];
+      if(surface.height != otherSurface.height ||
+         (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
+      {
+         slope = FixedDiv(lo.open[surf] - context.sightzstart, totalfrac);
+         if(isInner(surf, slope, context.state.slope[surf]))
+            context.state.slope[surf] = slope;
+      }
    }
 
    if(context.state.slope.ceiling <= context.state.slope.floor)
