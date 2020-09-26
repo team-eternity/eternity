@@ -1202,7 +1202,9 @@ void P_NightmareRespawn(Mobj* mobj)
 //
 // The mobj is already assumed to be sunk into the sector portal.
 //
-static void P_avoidPortalEdges(Mobj &mobj, surf_e surf, const line_t *&crossedge)
+// Returns the line that gets crossed by interpolation, if any.
+//
+static const line_t *P_avoidPortalEdges(Mobj &mobj, surf_e surf)
 {
    const sector_t &sector = *mobj.subsector->sector;
    unsigned flag = e_edgePortalFlags[surf];
@@ -1215,7 +1217,7 @@ static void P_avoidPortalEdges(Mobj &mobj, surf_e surf, const line_t *&crossedge
    box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
    box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
 
-   crossedge = nullptr;
+   const line_t *crossedge = nullptr;
 
    for(int i = 0; i < sector.linecount; ++i)
    {
@@ -1228,7 +1230,7 @@ static void P_avoidPortalEdges(Mobj &mobj, surf_e surf, const line_t *&crossedge
          mobj.y - mobj.prevpos.y };
 
       if(P_LineIsCrossed(line, dl) == 0)
-         crossedge = &line;  // TODO
+         crossedge = &line;
 
       // line must be an edge portal with its back towards the sector.
       // The thing's centre must be very close to the line
@@ -1249,6 +1251,8 @@ static void P_avoidPortalEdges(Mobj &mobj, surf_e surf, const line_t *&crossedge
    }
    if(displace.x != mobj.x || displace.y != mobj.y)
       P_TryMove(&mobj, displace.x, displace.y, 1);
+
+   return crossedge;
 }
 
 //
@@ -1287,8 +1291,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
          fixed_t planez = P_PortalZ(surface);
          if(isOuter(surf, passheight, planez))
          {
-            const line_t *crossedge;
-            P_avoidPortalEdges(*mobj, surf, crossedge);
+            const line_t *crossedge = P_avoidPortalEdges(*mobj, surf);
             const linkdata_t &ldata = surface.portal->data.link;
             if(!j)
             {
