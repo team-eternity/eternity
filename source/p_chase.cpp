@@ -448,52 +448,26 @@ int walkcam_active = 0;
 //
 static void P_checkWalkcamSectorPortal(const sector_t *sector)
 {
-   struct opset_t
-   {
-      unsigned pflags;
-      fixed_t(*portalzfunc)(const sector_t &);
-      bool(*comparison)(fixed_t, fixed_t);
-      linkdata_t *(*plink)(const sector_t *);
-      bool isceiling;
-   };
-
-   const opset_t opsets[2] =
-   {
-      {
-         sector->srf.floor.pflags,
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; },
-         R_FPLink,
-         false
-      },
-      {
-         sector->srf.ceiling.pflags,
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a >= b; },
-         R_CPLink,
-         true
-      }
-   };
-
    static const int MAXIMUM_PER_TIC = 8;
    bool movedalready = false;
-   for(int i = 0; i < 2; ++i)
+
+   for(surf_e surf : SURFS)
    {
       if(movedalready)
          return;
-      const auto &op = opsets[i];
+      const surface_t &surface = sector->srf[surf];
       for(int j = 0; j < MAXIMUM_PER_TIC; ++j)
       {
-         if(!(op.pflags & PS_PASSABLE))
+         if(!(surface.pflags & PS_PASSABLE))
             break;
-         fixed_t planez = op.portalzfunc(*sector);
-         if(!op.comparison(walkcamera.z, planez))
+         fixed_t planez = P_PortalZ(surface);
+         if(!isOuter(surf, walkcamera.z, planez))
             break;
-         const linkdata_t *ldata = op.plink(sector);
-         walkcamera.x += ldata->delta.x;
-         walkcamera.y += ldata->delta.y;
-         walkcamera.z += ldata->delta.z;
-         walkcamera.groupid = ldata->toid;
+         const linkdata_t &ldata = surface.portal->data.link;
+         walkcamera.x += ldata.delta.x;
+         walkcamera.y += ldata.delta.y;
+         walkcamera.z += ldata.delta.z;
+         walkcamera.groupid = ldata.toid;
          sector = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
          movedalready = true;
          walkcamera.backupPosition();
