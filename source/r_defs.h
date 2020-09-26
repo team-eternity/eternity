@@ -232,6 +232,8 @@ enum surf_e
    surf_NUM
 };
 
+inline static const surf_e SURFS[] = { surf_floor, surf_ceil };
+
 //
 // More convenient than raw array. Must be POD
 //
