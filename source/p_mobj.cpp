@@ -1295,6 +1295,7 @@ bool P_CheckPortalTeleport(Mobj *mobj)
             const linkdata_t &ldata = surface.portal->data.link;
             if(!j)
             {
+               mobj->prevpos.portalsurface = &surface;
                mobj->prevpos.ldata = &ldata;
                if(isOuter(surf, prevpassheight, planez))
                   mobj->prevpos.portalline = crossedge;
@@ -1775,6 +1776,7 @@ void Mobj::backupPosition()
    prevpos.angle = angle; // NB: only used for player objects
    prevpos.portalline = nullptr;
    prevpos.ldata = nullptr;
+   prevpos.portalsurface = nullptr;
 }
 
 //

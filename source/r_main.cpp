@@ -46,6 +46,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
@@ -805,11 +806,9 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
    else
    {
       viewz = lerpCoord(lerp, player->prevviewz, player->viewz);
-      const line_t *pline;
-      const linkdata_t *psec;
       Mobj *thing = player->mo;
 
-      if((psec = thing->prevpos.ldata))
+      if(const linkdata_t * psec = thing->prevpos.ldata)
       {
          v2fixed_t orgtarg =
          {
@@ -818,14 +817,27 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
          };
          viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
          viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
-         if(((pline = thing->prevpos.portalline) &&
-            P_PointOnLineSidePrecise(viewx, viewy, pline)) ||
-            (!pline && FixedMul(viewz - psec->planez,
-                                player->prevviewz - psec->planez) < 0))
+
+         bool execute = false;
+         const line_t *pline = thing->prevpos.portalline;
+         if(pline && P_PointOnLineSidePrecise(viewx, viewy, pline))
+            execute = true;
+         if(!execute && !pline)
+         {
+            const surface_t *psurface = thing->prevpos.portalsurface;
+            if(psurface)
+            {
+               fixed_t planez = P_PortalZ(*psurface);
+               execute = FixedMul(viewz - planez, player->prevviewz - planez) < 0;
+            }
+         }
+
+         if(execute)
          {
             // Once it crosses it, we're done
             thing->prevpos.portalline = nullptr;
             thing->prevpos.ldata = nullptr;
+            thing->prevpos.portalsurface = nullptr;
             thing->prevpos.x += psec->delta.x;
             thing->prevpos.y += psec->delta.y;
             viewx += psec->delta.x;
