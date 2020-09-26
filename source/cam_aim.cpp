@@ -303,7 +303,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       if(sector->srf.floor.height != osector->srf.floor.height ||
          (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
       {
-         slope = FixedDiv(lo.openbottom - context.state.c.z, totaldist);
+         slope = FixedDiv(lo.open.floor - context.state.c.z, totaldist);
          if(slope > context.state.slope.floor)
             context.state.slope.floor = slope;
       }
@@ -311,7 +311,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^
                                                              !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
       {
-         slope = FixedDiv(lo.opentop - context.state.c.z, totaldist);
+         slope = FixedDiv(lo.open.ceiling - context.state.c.z, totaldist);
          if(slope < context.state.slope.ceiling)
             context.state.slope.ceiling = slope;
       }

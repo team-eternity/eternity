@@ -187,8 +187,8 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
    const lineopening_t &lo) const
 {
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
-   if(FixedDiv(lo.openbottom - state.v.z, dist) <= params.aimslope &&
-      FixedDiv(lo.opentop - state.v.z, dist) >= params.aimslope)
+   if(FixedDiv(lo.open.floor - state.v.z, dist) <= params.aimslope &&
+      FixedDiv(lo.open.ceiling - state.v.z, dist) >= params.aimslope)
    {
       if(li->special)
          P_ShootSpecialLine(params.thing, li, lineside);

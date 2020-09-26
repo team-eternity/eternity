@@ -24,6 +24,7 @@
 
 #include "m_collection.h"
 #include "p_maputl.h"
+#include "r_defs.h"
 
 #define VALID_ALLOC(set, n) ((set) = ecalloc(byte *, 1, (((n) + 7) & ~7) / 8))
 #define VALID_FREE(set) efree(set)
@@ -87,7 +88,8 @@ private:
 //
 struct lineopening_t
 {
-   fixed_t openrange, opentop, openbottom;
+   fixed_t openrange;
+   Surfaces<fixed_t> open;
 
    void calculate(const line_t *linedef);
 };

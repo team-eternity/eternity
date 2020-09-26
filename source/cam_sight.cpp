@@ -259,7 +259,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(sector->srf.floor.height != osector->srf.floor.height ||
       (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
    {
-      slope = FixedDiv(lo.openbottom - context.sightzstart, totalfrac);
+      slope = FixedDiv(lo.open.floor - context.sightzstart, totalfrac);
       if(slope > context.state.bottomslope)
          context.state.bottomslope = slope;
 
@@ -268,7 +268,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(sector->srf.ceiling.height != osector->srf.ceiling.height ||
       (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^ !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
    {
-      slope = FixedDiv(lo.opentop - context.sightzstart, totalfrac);
+      slope = FixedDiv(lo.open.ceiling - context.sightzstart, totalfrac);
       if(slope < context.state.topslope)
          context.state.topslope = slope;
    }
