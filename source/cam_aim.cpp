@@ -135,110 +135,66 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
 bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
                                    const divline_t &trace)
 {
-   fixed_t linehitz, fixedratio;
-   int newfromid;
-
-   v2fixed_t v;
-
-   if(state.slope.ceiling > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
-      (newfromid = sector->srf.ceiling.portal->data.link.toid) != state.groupid)
+   for(surf_e surf : SURFS)
    {
-      // ceiling portal (slope must be up)
-      linehitz = state.c.z + FixedMul(state.slope.ceiling, totalfrac);
-      fixed_t planez = P_PortalZ(surf_ceil, *sector);
-      if(linehitz > planez)
+      const surface_t &surface = sector->srf[surf];
+      fixed_t slope = state.slope[surf];
+      int newfromid;
+      if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
+         (newfromid = surface.portal->data.link.toid) != state.groupid)
       {
-         // get x and y of position
-         if(linehitz == state.c.z)
+         fixed_t linehitz = state.c.z + FixedMul(slope, totalfrac);
+         fixed_t planez = P_PortalZ(surface);
+         if(isOuter(surf, linehitz, planez))
          {
-            // handle this edge case: put point right on line
-            v = trace.v + trace.dv.fixedMul(partialfrac);
-         }
-         else
-         {
-            // add a unit just to ensure that it enters the sector
-            fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
-            // update z frac
-            totalfrac = FixedMul(fixedratio, totalfrac);
-            // retrieve the xy frac using the origin frac
-            partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
-
-            v = trace.v + trace.dv.fixedMul(partialfrac + 1);
-         }
-
-         // don't allow if it's going back
-         if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
-         {
-            fixed_t outSlope;
-            Mobj *outTarget = nullptr;
-            fixed_t outDist;
-
-            State newstate(state);
-            newstate.c.x = v.x;
-            newstate.c.y = v.y;
-            newstate.groupid = newfromid;
-            newstate.origindist = totalfrac;
-            // don't allow the bottom slope to keep going down
-            newstate.slope.floor = emax(0, state.slope.floor);
-            newstate.reclevel = state.reclevel + 1;
-
-            if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
+            // get x and y of position
+            v2fixed_t v;
+            if(linehitz == state.c.z)
             {
-               if(outTarget && (!linetarget || outDist < targetdist))
+               // handle this edge case: put point right on line
+               v = trace.v + trace.dv.fixedMul(partialfrac);
+            }
+            else
+            {
+               // add a unit just to ensure that it enters the sector
+               fixed_t fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
+               // update z frac
+               totalfrac = FixedMul(fixedratio, totalfrac);
+               // retrieve the xy frac using the origin frac
+               partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
+
+               v = trace.v + trace.dv.fixedMul(partialfrac + 1);
+            }
+
+            // don't allow if it's going back
+            if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
+            {
+               fixed_t outSlope;
+               Mobj *outTarget = nullptr;
+               fixed_t outDist;
+
+               State newstate(state);
+               newstate.c.x = state.c.x;
+               newstate.c.y = state.c.y;
+               newstate.groupid = newfromid;
+               newstate.origindist = totalfrac;
+               // don't allow the opposite slope to keep going forth
+               if(isInner(surf, newstate.slope[!surf], 0))
+                  newstate.slope[!surf] = 0;
+               newstate.reclevel = state.reclevel + 1;
+
+               if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist,
+                          surface.portal->data.link))
                {
-                  linetarget = outTarget;
-                  targetdist = outDist;
-                  aimslope = outSlope;
+                  if(outTarget && (!linetarget || outDist < targetdist))
+                  {
+                     linetarget = outTarget;
+                     targetdist = outDist;
+                     aimslope = outSlope;
+                  }
                }
             }
          }
-
-
-      }
-   }
-   if(state.slope.floor < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
-      (newfromid = sector->srf.floor.portal->data.link.toid) != state.groupid)
-   {
-      linehitz = state.c.z + FixedMul(state.slope.floor, totalfrac);
-      fixed_t planez = P_PortalZ(surf_floor, *sector);
-      if(linehitz < planez)
-      {
-         if(linehitz == state.c.z)
-            v = trace.v + trace.dv.fixedMul(partialfrac);
-         else
-         {
-            fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
-            totalfrac = FixedMul(fixedratio, totalfrac);
-            partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
-
-            v = trace.v + trace.dv.fixedMul(partialfrac + 1);
-         }
-
-         if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
-         {
-            fixed_t outSlope;
-            Mobj *outTarget = nullptr;
-            fixed_t outDist;
-
-            State newstate(state);
-            newstate.c.x = v.x;
-            newstate.c.y = v.y;
-            newstate.groupid = newfromid;
-            newstate.origindist = totalfrac;
-            newstate.slope.ceiling = emin(0, state.slope.ceiling);
-            newstate.reclevel = state.reclevel + 1;
-
-            if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))
-            {
-               if(outTarget && (!linetarget || outDist < targetdist))
-               {
-                  linetarget = outTarget;
-                  targetdist = outDist;
-                  aimslope = outSlope;
-               }
-            }
-         }
-
       }
    }
    return false;
