@@ -234,6 +234,11 @@ enum surf_e
 
 inline static const surf_e SURFS[] = { surf_floor, surf_ceil };
 
+inline static surf_e operator!(surf_e surf)
+{
+   return (surf_e)!(int)surf;
+}
+
 //
 // More convenient than raw array. Must be POD
 //
