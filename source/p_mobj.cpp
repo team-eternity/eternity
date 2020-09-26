@@ -1202,11 +1202,10 @@ void P_NightmareRespawn(Mobj* mobj)
 //
 // The mobj is already assumed to be sunk into the sector portal.
 //
-static void P_avoidPortalEdges(Mobj &mobj, bool isceiling,
-                               const line_t *&crossedge)
+static void P_avoidPortalEdges(Mobj &mobj, surf_e surf, const line_t *&crossedge)
 {
    const sector_t &sector = *mobj.subsector->sector;
-   unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
+   unsigned flag = e_edgePortalFlags[surf];
 
    fixed_t box[4];
 
@@ -1257,48 +1256,21 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling,
 //
 bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   struct opset_t
-   {
-      fixed_t (*portalzfunc)(const sector_t &);
-      bool (*comparison)(fixed_t, fixed_t);
-      linkdata_t *(*plink)(const sector_t *);
-      bool isceiling;
-   };
-
-   const opset_t opsets[2] =
-   {
-      {
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; },
-         R_FPLink,
-         false
-      },
-      {
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a >= b; },
-         R_CPLink,
-         true
-      }
-   };
-
    static const int MAXIMUM_PER_TIC = 8;  // set some limit for maximum portals to cross per tic
 
    bool movedalready = false;
 
-   for(int i = 0; i < earrlen(opsets); ++i)
+   for(surf_e surf : SURFS)
    {
       if(movedalready)
          return true;   // if moved from the previous plane attempt, signal success now
-
-      const auto &op = opsets[i];
-
       for(int j = 0; j < MAXIMUM_PER_TIC; ++j)  // allow checking if multiple portals were passed
       {
          const sector_t *sector = mobj->subsector->sector;
-         if(!(sector->srf[i].pflags & PS_PASSABLE))
+         const surface_t &surface = sector->srf[surf];
+         if(!(surface.pflags & PS_PASSABLE))
             break;
          fixed_t passheight, prevpassheight;
-
          if(mobj->player)
          {
             P_CalcHeight(mobj->player);
@@ -1312,26 +1284,26 @@ bool P_CheckPortalTeleport(Mobj *mobj)
          }
 
          // ioanch 20160109: link offset outside
-         fixed_t planez = op.portalzfunc(*sector);
-         if(op.comparison(passheight, planez))
+         fixed_t planez = P_PortalZ(surface);
+         if(isOuter(surf, passheight, planez))
          {
             const line_t *crossedge;
-            P_avoidPortalEdges(*mobj, op.isceiling, crossedge);
-            const linkdata_t *ldata = op.plink(sector);
+            P_avoidPortalEdges(*mobj, surf, crossedge);
+            const linkdata_t &ldata = surface.portal->data.link;
             if(!j)
             {
-               mobj->prevpos.ldata = ldata;
-               if(op.comparison(prevpassheight, planez))
+               mobj->prevpos.ldata = &ldata;
+               if(isOuter(surf, prevpassheight, planez))
                   mobj->prevpos.portalline = crossedge;
             }
-            EV_SectorPortalTeleport(mobj, *ldata);
+            EV_SectorPortalTeleport(mobj, ldata);
             if(j)
             {
                mobj->backupPosition();
                if(mobj->player)
                   mobj->player->prevviewz = mobj->player->viewz;
             }
-            movedalready = true; // signal not to attempt moving down now
+            movedalready = true;  // signal not to attempt moving the other way now
          }
          else
             break;   // break out of the eight-attempt if there's no portal now
