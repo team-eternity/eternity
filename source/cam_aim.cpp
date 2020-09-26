@@ -230,41 +230,19 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
    if(!li->backsector || P_PointOnLineSidePrecise(trace.x, trace.y, li) != 0 || frac <= 0)
       return;
 
-   struct edgepart_t
+   for(surf_e surf : SURFS)
    {
-      unsigned extflag;
-      unsigned pflags;
-      portal_t *portal;
-      fixed_t contextslope;
-      fixed_t refslope;
-   } edgeparts[2] =
-   {
-      {
-         EX_ML_LOWERPORTAL,
-         li->backsector->srf.floor.pflags,
-         li->backsector->srf.floor.portal,
-         state.slope.floor,
-         FixedDiv(li->backsector->srf.floor.height - state.c.z, totaldist),
-      },
-      {
-         EX_ML_UPPERPORTAL,
-         li->backsector->srf.ceiling.pflags,
-         li->backsector->srf.ceiling.portal,
-         -state.slope.ceiling,
-         -FixedDiv(li->backsector->srf.ceiling.height - state.c.z, totaldist),
-      },
-   };
+      const surface_t &surface = li->backsector->srf[surf];
+      fixed_t contextslope = state.slope[surf];
+      fixed_t refslope = FixedDiv(surface.height - state.c.z, totaldist);
 
-   for(int partnum = 0; partnum < 2; ++partnum)
-   {
-      edgepart_t &part = edgeparts[partnum];
-      if(li->extflags & part.extflag && part.pflags & PS_PASSABLE &&
-         part.contextslope <= part.refslope)
+      if(li->extflags & e_edgePortalFlags[surf] && surface.pflags & PS_PASSABLE &&
+         !isInner(surf, contextslope, refslope))
       {
          State newState(state);
          newState.c.x = trace.x + FixedMul(trace.dx, frac);
          newState.c.y = trace.y + FixedMul(trace.dy, frac);
-         newState.groupid = part.portal->data.link.toid;
+         newState.groupid = surface.portal->data.link.toid;
          newState.origindist = totaldist;
          newState.reclevel = state.reclevel + 1;
 
@@ -272,7 +250,7 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
          Mobj *outTarget = nullptr;
          fixed_t outDist;
 
-         if(recurse(newState, frac, &outSlope, &outTarget, &outDist, part.portal->data.link))
+         if(recurse(newState, frac, &outSlope, &outTarget, &outDist, surface.portal->data.link))
          {
             if(outTarget && (!linetarget || outDist < targetdist))
             {
