@@ -50,8 +50,7 @@ public:
    struct State
    {
       fixed_t origindist;     // distance travelled so far
-      fixed_t bottomslope;    // bottom sight slope (gets narrowed by obstacles)
-      fixed_t topslope;       // top sight slope
+      Surfaces<fixed_t> slope;   // sight slopes (floor and ceiling)
       v3fixed_t c;          // source coordinates
       int groupid;            // current group ID
       const AimContext *prev; // reference to previous aim context in recursion
@@ -114,18 +113,17 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
 
       if(!pitch)
       {
-         state.topslope = 100 * FRACUNIT / 160;
-         state.bottomslope = -100 * FRACUNIT / 160;
+         state.slope.ceiling = DEFAULT_AIM_SLOPE;
+         state.slope.floor = -DEFAULT_AIM_SLOPE;
       }
       else
       {
          fixed_t topangle, bottomangle;
-         topangle = pitch - ANGLE_1 * 32;
-         bottomangle = pitch + ANGLE_1 * 32;
+         topangle = pitch - ANGLE_1 * MAXPITCHUP;
+         bottomangle = pitch + ANGLE_1 * MAXPITCHDOWN;
 
-         state.topslope = finetangent[(ANG90 - topangle) >> ANGLETOFINESHIFT];
-         state.bottomslope = finetangent[(ANG90 - bottomangle) >>
-            ANGLETOFINESHIFT];
+         state.slope.ceiling = finetangent[(ANG90 - topangle) >> ANGLETOFINESHIFT];
+         state.slope.floor = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
       }
    }
 
@@ -142,11 +140,11 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 
    v2fixed_t v;
 
-   if(state.topslope > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
+   if(state.slope.ceiling > 0 && sector->srf.ceiling.pflags & PS_PASSABLE &&
       (newfromid = sector->srf.ceiling.portal->data.link.toid) != state.groupid)
    {
       // ceiling portal (slope must be up)
-      linehitz = state.c.z + FixedMul(state.topslope, totalfrac);
+      linehitz = state.c.z + FixedMul(state.slope.ceiling, totalfrac);
       fixed_t planez = P_PortalZ(surf_ceil, *sector);
       if(linehitz > planez)
       {
@@ -181,7 +179,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
             // don't allow the bottom slope to keep going down
-            newstate.bottomslope = emax(0, state.bottomslope);
+            newstate.slope.floor = emax(0, state.slope.floor);
             newstate.reclevel = state.reclevel + 1;
 
             if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_CPLink(sector)))
@@ -198,10 +196,10 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 
       }
    }
-   if(state.bottomslope < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
+   if(state.slope.floor < 0 && sector->srf.floor.pflags & PS_PASSABLE &&
       (newfromid = sector->srf.floor.portal->data.link.toid) != state.groupid)
    {
-      linehitz = state.c.z + FixedMul(state.bottomslope, totalfrac);
+      linehitz = state.c.z + FixedMul(state.slope.floor, totalfrac);
       fixed_t planez = P_PortalZ(surf_floor, *sector);
       if(linehitz < planez)
       {
@@ -227,7 +225,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
             newstate.c.y = v.y;
             newstate.groupid = newfromid;
             newstate.origindist = totalfrac;
-            newstate.topslope = emin(0, state.topslope);
+            newstate.slope.ceiling = emin(0, state.slope.ceiling);
             newstate.reclevel = state.reclevel + 1;
 
             if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist, *R_FPLink(sector)))
@@ -289,14 +287,14 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
          EX_ML_LOWERPORTAL,
          li->backsector->srf.floor.pflags,
          li->backsector->srf.floor.portal,
-         state.bottomslope,
+         state.slope.floor,
          FixedDiv(li->backsector->srf.floor.height - state.c.z, totaldist),
       },
       {
          EX_ML_UPPERPORTAL,
          li->backsector->srf.ceiling.pflags,
          li->backsector->srf.ceiling.portal,
-         -state.topslope,
+         -state.slope.ceiling,
          -FixedDiv(li->backsector->srf.ceiling.height - state.c.z, totaldist),
       },
    };
@@ -372,19 +370,19 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          (!!(sector->srf.floor.pflags & PS_PASSABLE) ^ !!(osector->srf.floor.pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.openbottom - context.state.c.z, totaldist);
-         if(slope > context.state.bottomslope)
-            context.state.bottomslope = slope;
+         if(slope > context.state.slope.floor)
+            context.state.slope.floor = slope;
       }
 
       if(sector->srf.ceiling.height != osector->srf.ceiling.height || (!!(sector->srf.ceiling.pflags & PS_PASSABLE) ^
                                                              !!(osector->srf.ceiling.pflags & PS_PASSABLE)))
       {
          slope = FixedDiv(lo.opentop - context.state.c.z, totaldist);
-         if(slope < context.state.topslope)
-            context.state.topslope = slope;
+         if(slope < context.state.slope.ceiling)
+            context.state.slope.ceiling = slope;
       }
 
-      if(context.state.topslope <= context.state.bottomslope)
+      if(context.state.slope.ceiling <= context.state.slope.floor)
          return false;
 
       // Check for edge portals, but don't stop looking
@@ -413,8 +411,8 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       edefstructvar(linetracer_t, atrace);
       atrace.attackrange = context.attackrange;
       atrace.z = context.state.c.z;
-      atrace.bottomslope = context.state.bottomslope;
-      atrace.topslope = context.state.topslope;
+      atrace.bottomslope = context.state.slope.floor;
+      atrace.topslope = context.state.slope.ceiling;
       if(!P_CheckThingAimSlopes(th, context.state.origindist, in->frac, atrace))
          return true;
 
