@@ -61,7 +61,7 @@ BotMap *botMap;
 
 bool BotMap::demoPlayingFlag;
 
-const int CACHE_BUFFER_SIZE = 16384;//512 * 1024;
+const int CACHE_BUFFER_SIZE = 16384;
 
 static const char* const BOTMAP_CACHE_MAGIC = "BOTMAP13";
 
@@ -1235,22 +1235,18 @@ void BotMap::addCornerNeighs()
         vertSsList[seg.v[1]].insert(seg.owner);
     }
 
-    int i;
-    const Vertex *v;
-    const std::unordered_set<Subsec *> *ssset;
-
     Neigh n;
     n.line = nullptr;
-    n.d.x = n.d.y = 0;
+   n.d = {};
 
-    for (i = 0; i < numverts; ++i)
+    for (int i = 0; i < numverts; ++i)
     {
-        v = vertices + i;
-        auto kt = vertSsList.find(v);
+        const Vertex &v = vertices[i];
+        auto kt = vertSsList.find(&v);
         if (kt == vertSsList.end())
             continue;
 
-        ssset = &kt->second;
+        const std::unordered_set<Subsec *> *ssset = &kt->second;
         for (auto it = ssset->begin(); it != ssset->end(); ++it)
         {
             for (auto jt = it; jt != ssset->cend(); ++jt)
@@ -1267,8 +1263,7 @@ void BotMap::addCornerNeighs()
 
                     n.otherss = *jt;
                     n.myss = *it;
-                    n.v.x = v->x;
-                    n.v.y = v->y;
+                   n.v = v2fixed_t(v);
                     n.dist = ((*jt)->mid - n.v).sqrtabs() + (n.v - (*it)->mid).sqrtabs();
                     (*it)->neighs.add(n);
                 }
@@ -1278,8 +1273,7 @@ void BotMap::addCornerNeighs()
 
                     n.otherss = *it;
                     n.myss = *jt;
-                    n.v.x = v->x;
-                    n.v.y = v->y;
+                   n.v = v2fixed_t(v);
                     n.dist = ((*jt)->mid - n.v).sqrtabs() + (n.v - (*it)->mid).sqrtabs();
                     (*jt)->neighs.add(n);
                 }
