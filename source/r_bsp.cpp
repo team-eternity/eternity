@@ -2039,9 +2039,9 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
       seg.frontsec->srf.ceiling.height <= seg.frontsec->srf.floor.height &&
       !(seg.frontsec->intflags & SIF_SKY) &&
       !((seg.frontsec->srf.ceiling.pflags & PS_PASSABLE && seg.frontsec->srf.ceiling.portal &&
-        viewz > P_CeilingPortalZ(*seg.frontsec)) ||
+        viewz > P_PortalZ(surf_ceil, *seg.frontsec)) ||
         (seg.frontsec->srf.floor.pflags & PS_PASSABLE && seg.frontsec->srf.floor.portal &&
-        viewz < P_FloorPortalZ(*seg.frontsec))))
+        viewz < P_PortalZ(surf_floor, *seg.frontsec))))
       return;
 
    // Reject empty two-sided lines used for line specials.

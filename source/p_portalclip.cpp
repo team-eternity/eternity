@@ -314,12 +314,12 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       // Cap the line bottom and top if it's a line from another portal
       fixed_t planez;
       if(floorceiling == sector_t::floor &&
-         linebottom < (planez = P_CeilingPortalZ(*reachedsec)))
+         linebottom < (planez = P_PortalZ(surf_ceil, *reachedsec)))
       {
          linebottom = planez;
       }
       if(floorceiling == sector_t::ceiling &&
-         linetop > (planez = P_FloorPortalZ(*reachedsec)))
+         linetop > (planez = P_PortalZ(surf_floor, *reachedsec)))
       {
          linetop = planez;
       }

@@ -38,6 +38,8 @@ struct divline_t;
 struct intercept_t;
 struct player_t;  // ioanch 20160131: for use
 
+static const fixed_t DEFAULT_AIM_SLOPE = 100 * FRACUNIT / 160;
+
 struct camsightparams_t
 {
    fixed_t cx;       // camera (or "looker") coordinates

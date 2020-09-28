@@ -90,6 +90,8 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+bool secret_notification_enabled = true;
+
 //
 // Animating textures and planes
 // There is another anim_t used in wi_stuff, unrelated.
@@ -1198,7 +1200,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
       sector->flags &= ~SECF_SECRET;     // clear the flag
 
       // If consoleplayer then play secret sound
-      if(player == &players[consoleplayer])
+      if(secret_notification_enabled && player == &players[consoleplayer])
       {
          qstring secretMsg { FC_GOLD };
          secretMsg += DEH_String("SECRETMESSAGE");
@@ -3521,6 +3523,9 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       lines[s].special = 0;
    }
 }
+
+VARIABLE_BOOLEAN(secret_notification_enabled, nullptr, onoff);
+CONSOLE_VARIABLE(secret_notification, secret_notification_enabled, 0) {}
 
 #if 0
 //

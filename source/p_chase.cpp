@@ -109,39 +109,18 @@ struct chasetraverse_t
 static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector, 
    chasetraverse_t &traverse)
 {
-   const struct surfaceset_t
+   for(surf_e surf : SURFS)
    {
-      unsigned pflags;
-      portal_t *portal;
-      fixed_t(*pzfunc)(const sector_t &);
-      bool(*compare)(fixed_t, fixed_t);
-   } ssets[2] = {
+      const surface_t &surface = sector->srf[surf];
+      fixed_t pz = P_PortalZ(surface);
+      if(surface.pflags & PS_PASSABLE && isOuter(surf, z, pz))
       {
-         sector->srf.floor.pflags,
-         sector->srf.floor.portal,
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; }
-      },
-      {
-         sector->srf.ceiling.pflags,
-         sector->srf.ceiling.portal,
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a > b; }
-      },
-   };
-   for(int i = 0; i < 2; ++i)
-   {
-      const auto &s = ssets[i];
-      fixed_t pz = s.pzfunc(*sector);
-      if(s.pflags & PS_PASSABLE && s.compare(z, pz))
-      {
-         if(!s.compare(pz, traverse.startz))
+         if(!isOuter(surf, pz, traverse.startz))
             pz = traverse.startz;
          fixed_t zfrac = FixedDiv(pz - traverse.startz, z - traverse.startz);
          fixed_t hfrac = FixedMul(zfrac, frac);
-         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, hfrac);
-         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, hfrac);
-         traverse.link = &s.portal->data.link;
+         traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(hfrac);
+         traverse.link = &surface.portal->data.link;
          traverse.startz = pz;
          return true;
       }
@@ -155,41 +134,14 @@ static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector,
 //
 static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
 {
-   const struct surfaceset_t
+   for(surf_e surf : SURFS)
    {
-      unsigned extflag;
-      unsigned pflags;
-      fixed_t height;
-      portal_t *portal;
-      fixed_t(*pzfunc)(const sector_t &);
-      bool(*compare)(fixed_t, fixed_t);
-   } ssets[2] = {
+      if(li->extflags & e_edgePortalFlags[surf] && li->backsector->srf[surf].pflags & PS_PASSABLE &&
+         isOuter(surf, z, P_PortalZ(li->backsector->srf[surf])) &&
+         !isOuter(surf, z, li->frontsector->srf[surf].height))
       {
-         EX_ML_LOWERPORTAL,
-         li->backsector->srf.floor.pflags,
-         li->frontsector->srf.floor.height,
-         li->backsector->srf.floor.portal,
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; }
-      },
-      {
-         EX_ML_UPPERPORTAL,
-         li->backsector->srf.ceiling.pflags,
-         li->frontsector->srf.ceiling.height,
-         li->backsector->srf.ceiling.portal,
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a > b; }
-      }
-   };
-   for(int i = 0; i < 2; ++i)
-   {
-      const auto &s = ssets[i];
-      if(li->extflags & s.extflag && s.pflags & PS_PASSABLE &&
-         s.compare(z, s.pzfunc(*li->backsector)) && !s.compare(z, s.height))
-      {
-         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
-         traverse.link = &s.portal->data.link;
+         traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(frac);
+         traverse.link = &li->backsector->srf[surf].portal->data.link;
          traverse.startz = z;
          return true;
       }
@@ -496,52 +448,26 @@ int walkcam_active = 0;
 //
 static void P_checkWalkcamSectorPortal(const sector_t *sector)
 {
-   struct opset_t
-   {
-      unsigned pflags;
-      fixed_t(*portalzfunc)(const sector_t &);
-      bool(*comparison)(fixed_t, fixed_t);
-      linkdata_t *(*plink)(const sector_t *);
-      bool isceiling;
-   };
-
-   const opset_t opsets[2] =
-   {
-      {
-         sector->srf.floor.pflags,
-         P_FloorPortalZ,
-         [](fixed_t a, fixed_t b) { return a < b; },
-         R_FPLink,
-         false
-      },
-      {
-         sector->srf.ceiling.pflags,
-         P_CeilingPortalZ,
-         [](fixed_t a, fixed_t b) { return a >= b; },
-         R_CPLink,
-         true
-      }
-   };
-
    static const int MAXIMUM_PER_TIC = 8;
    bool movedalready = false;
-   for(int i = 0; i < 2; ++i)
+
+   for(surf_e surf : SURFS)
    {
       if(movedalready)
          return;
-      const auto &op = opsets[i];
+      const surface_t &surface = sector->srf[surf];
       for(int j = 0; j < MAXIMUM_PER_TIC; ++j)
       {
-         if(!(op.pflags & PS_PASSABLE))
+         if(!(surface.pflags & PS_PASSABLE))
             break;
-         fixed_t planez = op.portalzfunc(*sector);
-         if(!op.comparison(walkcamera.z, planez))
+         fixed_t planez = P_PortalZ(surface);
+         if(!isOuter(surf, walkcamera.z, planez))
             break;
-         const linkdata_t *ldata = op.plink(sector);
-         walkcamera.x += ldata->delta.x;
-         walkcamera.y += ldata->delta.y;
-         walkcamera.z += ldata->delta.z;
-         walkcamera.groupid = ldata->toid;
+         const linkdata_t &ldata = surface.portal->data.link;
+         walkcamera.x += ldata.delta.x;
+         walkcamera.y += ldata.delta.y;
+         walkcamera.z += ldata.delta.z;
+         walkcamera.groupid = ldata.toid;
          sector = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
          movedalready = true;
          walkcamera.backupPosition();

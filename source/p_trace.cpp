@@ -206,8 +206,8 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
 
    if(pitch == 0 || demo_version < 333)
    {
-      trace.topslope    =  100*FRACUNIT/160;
-      trace.bottomslope = -100*FRACUNIT/160;
+      trace.topslope    =  DEFAULT_AIM_SLOPE;
+      trace.bottomslope = -DEFAULT_AIM_SLOPE;
    }
    else
    {

@@ -720,15 +720,15 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    thing->flags3 = oldfl3;
 
    // no sector linear interpolation tic
-   // Use this to prevent all subsequent movement from interpolating if one just
-   // triggered a portal teleport
+   // Use this to prevent all subsequent movement from interpolating if one just triggered a portal
+   // teleport
    static int noseclerptic = INT_MIN;
 
-   // Teleport thngs in the way if this is a portal sector. If targeted thing
-   // is the displayplayer, prevent interpolation.
-   if(noseclerptic == gametic || (demo_version >= 342 &&
-      P_CheckPortalTeleport(thing) && !camera &&
-      thing == players[displayplayer].mo))
+   // Teleport things in the way if this is a portal sector. If targeted thing is the displayplayer,
+   // prevent interpolation.
+   bool portalled = P_CheckPortalTeleport(thing);
+   if(noseclerptic == gametic || (demo_version >= 342 && portalled && !camera &&
+                                  thing == players[displayplayer].mo))
    {
       // Prevent interpolation both for moving sector and player's destination 
       // sector.

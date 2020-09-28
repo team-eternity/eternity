@@ -119,32 +119,26 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infr
    v3fixed_t v;
    v.z = state.v.z + FixedMul(params.aimslope, FixedMul(infrac, params.attackrange));
 
-   if(sidesector->srf.ceiling.pflags & PS_PASSABLE)
+   for(surf_e surf : SURFS)
    {
-      // ceiling portal
-      fixed_t planez = P_CeilingPortalZ(*sidesector);
-      if(v.z > planez)
+      const surface_t &surface = sidesector->srf[surf];
+      if(surface.pflags & PS_PASSABLE)
       {
-         pfrac = FixedDiv(planez - state.v.z, params.aimslope);
-         absratio = FixedDiv(planez - state.v.z, v.z - state.v.z);
-         v.z = planez;
-         portaldata = R_CPLink(sidesector);
-         newfromid = sidesector->srf.ceiling.portal->data.link.toid;
+         // portal
+         fixed_t planez = P_PortalZ(surface);
+         if(isOuter(surf, v.z, planez))
+         {
+            pfrac = FixedDiv(planez - state.v.z, params.aimslope);
+            absratio = FixedDiv(planez - state.v.z, v.z - state.v.z);
+            v.z = planez;
+            portaldata = &surface.portal->data.link;
+            newfromid = surface.portal->data.link.toid;
+         }
       }
+      if(portaldata) // don't try the other side if we have one way already
+         break;
    }
-   if(!portaldata && sidesector->srf.floor.pflags & PS_PASSABLE)
-   {
-      // floor portal
-      fixed_t planez = P_FloorPortalZ(*sidesector);
-      if(v.z < planez)
-      {
-         pfrac = FixedDiv(planez - state.v.z, params.aimslope);
-         absratio = FixedDiv(planez - state.v.z, v.z - state.v.z);
-         v.z = planez;
-         portaldata = R_FPLink(sidesector);
-         newfromid = sidesector->srf.floor.portal->data.link.toid;
-      }
-   }
+
    if(portaldata && pfrac > 0)
    {
       // update x and y as well
@@ -187,8 +181,8 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
    const lineopening_t &lo) const
 {
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
-   if(FixedDiv(lo.openbottom - state.v.z, dist) <= params.aimslope &&
-      FixedDiv(lo.opentop - state.v.z, dist) >= params.aimslope)
+   if(FixedDiv(lo.open.floor - state.v.z, dist) <= params.aimslope &&
+      FixedDiv(lo.open.ceiling - state.v.z, dist) >= params.aimslope)
    {
       if(li->special)
          P_ShootSpecialLine(params.thing, li, lineside);

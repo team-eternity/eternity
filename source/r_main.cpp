@@ -46,6 +46,7 @@
 #include "p_chase.h"
 #include "p_info.h"
 #include "p_partcl.h"
+#include "p_portal.h"
 #include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
@@ -391,23 +392,14 @@ angle_t R_PointToAngle(fixed_t x, fixed_t y)
 }
 
 //
-// R_ResetFOV
-// 
-// MaxW: Called by R_SetupViewScaling after the video mode is changed.
+// SoM: Called by I_InitGraphicsMode when the video mode is changed.
 // Sets the base-line fov for the given screen ratio.
 //
 // SoM: This is used by the sprite code
 //
 void R_ResetFOV(int width, int height)
 {
-   extern int setblocks;
-   if(setblocks != 11) // status bar up
-   {
-      height -= static_cast<int>(height * static_cast<double>(GameModeInfo->StatusBar->height) /
-         static_cast<double>(SCREENHEIGHT));
-   }
-
-   double ratio = static_cast<double>(width) / static_cast<double>(height);
+   const double ratio = static_cast<double>(width) / static_cast<double>(height);
 
    // Special case for tallscreen modes
    if((width == 320 && height == 200) ||
@@ -415,7 +407,7 @@ void R_ResetFOV(int width, int height)
    {
       fov = 90;
       return;
-   }   
+   }
 
    // The general equation is as follows:
    // y = mx + b -> fov = (75/2) * ratio + 40
@@ -581,9 +573,6 @@ void R_SetupViewScaling()
    // SoM: ANYRES
    // Moved stuff, reformatted a bit
    // haleyjd 04/03/05: removed unnecessary FixedDiv calls
-
-   // Reset renderer field of view
-   R_ResetFOV(video.width, video.height);
 
    video.xscale  = (video.width << FRACBITS) / SCREENWIDTH;
    video.xstep   = ((SCREENWIDTH << FRACBITS) / video.width) + 1;
@@ -808,11 +797,9 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
    else
    {
       viewz = lerpCoord(lerp, player->prevviewz, player->viewz);
-      const line_t *pline;
-      const linkdata_t *psec;
       Mobj *thing = player->mo;
 
-      if((psec = thing->prevpos.ldata))
+      if(const linkdata_t * psec = thing->prevpos.ldata)
       {
          v2fixed_t orgtarg =
          {
@@ -821,14 +808,27 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
          };
          viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
          viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
-         if(((pline = thing->prevpos.portalline) &&
-            P_PointOnLineSidePrecise(viewx, viewy, pline)) ||
-            (!pline && FixedMul(viewz - psec->planez,
-                                player->prevviewz - psec->planez) < 0))
+
+         bool execute = false;
+         const line_t *pline = thing->prevpos.portalline;
+         if(pline && P_PointOnLineSidePrecise(viewx, viewy, pline))
+            execute = true;
+         if(!execute && !pline)
+         {
+            const surface_t *psurface = thing->prevpos.portalsurface;
+            if(psurface)
+            {
+               fixed_t planez = P_PortalZ(*psurface);
+               execute = FixedMul(viewz - planez, player->prevviewz - planez) < 0;
+            }
+         }
+
+         if(execute)
          {
             // Once it crosses it, we're done
             thing->prevpos.portalline = nullptr;
             thing->prevpos.ldata = nullptr;
+            thing->prevpos.portalsurface = nullptr;
             thing->prevpos.x += psec->delta.x;
             thing->prevpos.y += psec->delta.y;
             viewx += psec->delta.x;
@@ -1030,6 +1030,12 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
       R_interpolateViewPoint(camera, walkcam_active ? R_GetLerp(true) : lerp);
    }
 
+   // Bound the pitch here
+   if(viewpitch < -ANGLE_1 * MAXPITCHUP)
+      viewpitch = -ANGLE_1 * MAXPITCHUP;
+   else if(viewpitch > ANGLE_1 * MAXPITCHDOWN)
+      viewpitch = ANGLE_1 * MAXPITCHDOWN;
+
    extralight = player->extralight;
    viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
    viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
@@ -1063,15 +1069,11 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    // appear a half-pixel too low (the entire display was too low actually).
    if(viewpitch)
    {
-      fixed_t dy = FixedMul(focallen_y, 
-                            finetangent[(ANG90 - viewpitch) >> ANGLETOFINESHIFT]);
-            
-      // haleyjd: must bound after zooming
-      if(dy < -viewheightfrac)
-         dy = -viewheightfrac;
-      else if(dy > viewheightfrac)
-         dy = viewheightfrac;
-      
+      const fixed_t dy = FixedMul(
+         focallen_y,
+         finetangent[(ANG90 - viewpitch) >> ANGLETOFINESHIFT]
+      );
+
       centeryfrac = viewheightfrac + dy;
    }
    else
