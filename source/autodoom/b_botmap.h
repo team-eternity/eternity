@@ -69,8 +69,8 @@ public:
    // Simple 2D coordinate
    //
    typedef v2fixed_t Vertex;
-   Vertex *vertices;
-   int numverts;
+   Vertex *vertices = nullptr;
+   int numverts = 0;
    
    //
    // Line
@@ -84,8 +84,8 @@ public:
       const line_t* specline;
 
       qstring toString() const;
-   } *lines;
-   int numlines;
+   } *lines = nullptr;
+   int numlines = 0;
    
    //
    // Seg
@@ -163,16 +163,16 @@ public:
       v2fixed_t v;
       fixed_t dx, dy;
       int child[2];   // right, left
-   } *nodes;
-   int numnodes;
+   } *nodes = nullptr;
+   int numnodes = 0;
    
    PODCollection<MetaSector*> metasectors;
-   MetaSector *nullMSec;   // the metasector for walls (exclude from BSP)
+   MetaSector *nullMSec = nullptr;   // the metasector for walls (exclude from BSP)
    
    // use its own blockmap size, because it goes beyond the bounds of the
    // level blockmap
-   fixed_t bMapOrgX, bMapOrgY;
-   int bMapWidth, bMapHeight;
+   fixed_t bMapOrgX = 0, bMapOrgY = 0;
+   int bMapWidth = 0, bMapHeight = 0;
    Collection<PODCollection<Seg *> > segBlocks;
    Collection<PODCollection<Line *> > lineBlocks;
    fixed_t radius;
@@ -183,11 +183,7 @@ public:
    //
    // Constructor
    //
-   BotMap() : vertices(NULL), numverts(0), lines(NULL), numlines(0),
-   nodes(NULL), numnodes(0),
-   nullMSec(NULL),
-   bMapOrgX(0), bMapOrgY(0), bMapWidth(0), bMapHeight(0), sectorFlags(nullptr),
-   validLines(nullptr)
+   BotMap()
    {
       // set collection prototype
       static Seg protoSeg;
@@ -239,8 +235,7 @@ public:
    int pointOnSide(v2fixed_t pos, const Node &node) const;
    Subsec &pointInSubsector(v2fixed_t pos) const;
    void getTouchedBlocks(v2fixed_t v1, v2fixed_t v2, const std::function<void(int)> &func) const;
-   void getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
-                            fixed_t left, fixed_t right,
+   void getBoxTouchedBlocks(fixed_t top, fixed_t bottom, fixed_t left, fixed_t right,
                             const std::function<void(int)> &func) const;
    int getBlockCoords(fixed_t x, fixed_t y) const
    {
@@ -278,7 +273,7 @@ public:
       DoorInfo door = {};
       PODCollection<const line_t *> doorlines;  // if a door, then it's list of the door lines
    };
-   SectorTrait* sectorFlags;
+   SectorTrait* sectorFlags = nullptr;
    
    // Defined in b_trace.cpp
    bool pathTraverse(divline_t trace,
@@ -298,7 +293,7 @@ private:
    bool blockLinesIterator(int x, int y,
                            bool lineHit(const Line &line, void *context),
                            void *context) const;
-   byte *validLines;
+   byte *validLines = nullptr;
 
    void clearMsecList()
 	{
