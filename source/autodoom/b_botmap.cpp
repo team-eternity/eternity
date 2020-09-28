@@ -232,12 +232,8 @@ void BotMap::unsetThingPosition(const Mobj *thing)
 {
    if(mobjSecMap.count(thing))
    {
-      for (auto it = mobjSecMap[thing].begin(); 
-         it != mobjSecMap[thing].end(); 
-         ++it) 
-      {
+      for (auto it = mobjSecMap[thing].begin(); it != mobjSecMap[thing].end(); ++it)
          (*it)->mobjlist.erase(thing);
-      }
       mobjSecMap[thing].makeEmpty();
    }
 }
@@ -268,17 +264,13 @@ void BotMap::setThingPosition(const Mobj *thing)
            Seg *sg = *it;
            if (!sg->owner)
                continue;
-           if (right <= sg->bbox[BOXLEFT] ||
-               left >= sg->bbox[BOXRIGHT] ||
-               top <= sg->bbox[BOXBOTTOM] ||
-               bottom >= sg->bbox[BOXTOP])
+           if (right <= sg->bbox[BOXLEFT] || left >= sg->bbox[BOXRIGHT] ||
+               top <= sg->bbox[BOXBOTTOM] || bottom >= sg->bbox[BOXTOP])
            {
                continue;
            }
-           if (B_BoxOnLineSide(top, bottom, left, right,
-               sg->v[0]->x, sg->v[0]->y,
-               sg->dx,
-               sg->dy) == -1)
+           if (B_BoxOnLineSide(top, bottom, left, right, sg->v[0]->x, sg->v[0]->y, sg->dx, sg->dy)
+               == -1)
            {
 
                // if seg crosses thing bbox, add it
@@ -658,11 +650,11 @@ void BotMap::getDoorSectors()
     // - they all have the same lockID
 
    // Check for doors
-   PODCollection<const line_t *> doorlines;
+
     for (int i = 0; i < ::numsectors; ++i)
     {
        const sector_t &sec = ::sectors[i];
-       doorlines.makeEmpty();
+       PODCollection<const line_t *> doorlines;
 
        SectorTrait::DoorInfo door = {}, defdoor = {};
 
