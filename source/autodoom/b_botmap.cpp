@@ -85,18 +85,18 @@ qstring BotMap::Line::toString() const
 // Lists the blocks the line touches into a collection, code from P_Setup.cpp,
 // P_CreateBlockmap
 //
-void BotMap::getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
+void BotMap::getTouchedBlocks(v2fixed_t v1, v2fixed_t v2,
                               const std::function<void(int)> &func) const
 {
    fixed_t minx = botMap->bMapOrgX >> FRACBITS;
    fixed_t miny = botMap->bMapOrgY >> FRACBITS;
    unsigned tot = botMap->bMapWidth * botMap->bMapHeight;
-   int x = (x1 >> FRACBITS) - minx;
-   int y = (y1 >> FRACBITS) - miny;
+   int x = (v1.x >> FRACBITS) - minx;
+   int y = (v1.y >> FRACBITS) - miny;
    
    // x-y deltas
-   int adx = (x2 - x1) >> FRACBITS, dx = adx < 0 ? -1 : 1;
-   int ady = (y2 - y1) >> FRACBITS, dy = ady < 0 ? -1 : 1;
+   int adx = (v2.x - v1.x) >> FRACBITS, dx = adx < 0 ? -1 : 1;
+   int ady = (v2.y - v1.y) >> FRACBITS, dy = ady < 0 ? -1 : 1;
    
    // difference in preferring to move across y (>0)
    // instead of x (<0)
@@ -110,8 +110,8 @@ void BotMap::getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
    int b = (y / BOTMAPBLOCKUNITS) * botMap->bMapWidth + (x / BOTMAPBLOCKUNITS);
    
    // ending block
-   int bend = (((y2 >> FRACBITS) - miny) / BOTMAPBLOCKUNITS) *
-   botMap->bMapWidth + (((x2 >> FRACBITS) - minx) / BOTMAPBLOCKUNITS);
+   int bend = (((v2.y >> FRACBITS) - miny) / BOTMAPBLOCKUNITS) *
+   botMap->bMapWidth + (((v2.x >> FRACBITS) - minx) / BOTMAPBLOCKUNITS);
    
    // delta for pointer when moving across y
    dy *= botMap->bMapWidth;

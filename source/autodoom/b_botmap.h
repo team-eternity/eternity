@@ -238,8 +238,7 @@ public:
    
    int pointOnSide(v2fixed_t pos, const Node &node) const;
    Subsec &pointInSubsector(v2fixed_t pos) const;
-   void getTouchedBlocks(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2,
-                         const std::function<void(int)> &func) const;
+   void getTouchedBlocks(v2fixed_t v1, v2fixed_t v2, const std::function<void(int)> &func) const;
    void getBoxTouchedBlocks(fixed_t top, fixed_t bottom,
                             fixed_t left, fixed_t right,
                             const std::function<void(int)> &func) const;

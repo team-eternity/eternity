@@ -309,12 +309,11 @@ void B_GLBSP_PutSegment(int v1idx, int v2idx, int back, int lnidx, int part,
    sg.mid.y = (sg.v[0]->y + sg.v[1]->y) >> 1;
    
    // put into blockmap
-   botMap->getTouchedBlocks(sg.v[0]->x, sg.v[0]->y, sg.v[1]->x, sg.v[1]->y,
-                            [&sg](int b)->void
-                            {
-                               botMap->segBlocks[b].add(&sg);
-                               sg.blocklist.add(b);
-                            });
+   botMap->getTouchedBlocks(*sg.v[0], *sg.v[1], [&sg](int b)->void
+   {
+       botMap->segBlocks[b].add(&sg);
+       sg.blocklist.add(b);
+    });
    
    // Bounding box
    if(sg.v[0]->x < sg.v[1]->x)
@@ -368,11 +367,10 @@ void B_GLBSP_PutLine(int v1idx, int v2idx, int s1idx, int s2idx, int lnidx, int 
    ln.specline = tag >= 0 ? ::lines + tag : nullptr;
 
    // put into blockmap
-   botMap->getTouchedBlocks(ln.v[0]->x, ln.v[0]->y, ln.v[1]->x, ln.v[1]->y,
-                            [&ln](int b)->void
-                            {
-                               botMap->lineBlocks[b].add(&ln);
-                            });
+   botMap->getTouchedBlocks(*ln.v[0], *ln.v[1], [&ln](int b)->void
+    {
+       botMap->lineBlocks[b].add(&ln);
+    });
 }
 
 //

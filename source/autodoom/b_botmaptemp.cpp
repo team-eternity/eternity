@@ -797,7 +797,7 @@ TempBotMap::Line &TempBotMap::placeLine(Vertex &v1, Vertex &v2, const line_t* as
    
    // -- a vertex exist in this line's way, create two instead
    PODCollection<int> coll;
-   botMap->getTouchedBlocks(v1.x, v1.y, v2.x, v2.y, [&coll](int b){
+   botMap->getTouchedBlocks(v2fixed_t(v1), v2fixed_t(v2), [&coll](int b){
       coll.add(b);
    });
 
