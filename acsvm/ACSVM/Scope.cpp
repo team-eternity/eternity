@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2020 David Hill
 //
 // See COPYING for license information.
 //
@@ -541,12 +541,15 @@ namespace ACSVM
       struct
       {
          std::unordered_set<Module *> set;
+         std::vector<Module *>        vec;
 
          void add(Module *module)
          {
-            if(set.insert(module).second)
-               for(auto &import : module->importV)
-                  add(import);
+            if(!set.insert(module).second) return;
+
+            vec.push_back(module);
+            for(auto &import : module->importV)
+               add(import);
          }
       } modules;
 
@@ -559,7 +562,7 @@ namespace ACSVM
       std::size_t scriptIntC = 0;
       std::size_t scriptStrC = 0;
 
-      for(auto &module : modules.set)
+      for(auto &module : modules.vec)
       {
          for(auto &script : module->scriptV)
          {
@@ -573,7 +576,7 @@ namespace ACSVM
 
       // Create lookup tables.
 
-      pd->scopes.alloc(modules.set.size());
+      pd->scopes.alloc(modules.vec.size());
       pd->scriptInt.alloc(scriptIntC);
       pd->scriptStr.alloc(scriptStrC);
       pd->scriptThread.alloc(scriptThrC);
@@ -583,7 +586,7 @@ namespace ACSVM
       auto scriptStrItr = pd->scriptStr.begin();
       auto scriptThrItr = pd->scriptThread.begin();
 
-      for(auto &module : modules.set)
+      for(auto &module : modules.vec)
       {
          using ElemScope = HashMapFixed<Module *, ModuleScope>::Elem;
 
