@@ -259,7 +259,7 @@ void P_CalcHeight(player_t *player)
 //
 // haleyjd 06/05/12: flying logic for players
 //
-static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+static void P_PlayerFlight(player_t *player, const ticcmd_t *cmd)
 {
    int fly = cmd->fly;
 
@@ -304,16 +304,14 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
 //
 void P_MovePlayer(player_t* player)
 {
-   ticcmd_t *cmd = &player->cmd;
+   const ticcmd_t *cmd = &player->cmd;
    Mobj *mo = player->mo;
    
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
-   onground = 
-      mo->z <= mo->zref.floor ||
-      (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
+   onground = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) ||
       (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
