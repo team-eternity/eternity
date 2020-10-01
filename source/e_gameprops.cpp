@@ -87,6 +87,7 @@
 #define ITEM_GPROP_FINTYPE     "game.endgamefinaletype"
 #define ITEM_GPROP_SKILLMUL    "game.skillammomultiplier"
 #define ITEM_GPROP_MELEECALC   "game.monstermeleerange"
+#define ITEM_GPROP_ITEMHEIGHT  "game.itemheight"
 #define ITEM_GPROP_FINALEX     "finale.text.x"
 #define ITEM_GPROP_FINALEY     "finale.text.y"
 #define ITEM_GPROP_CASTTITLEY  "castcall.title.y"
@@ -94,6 +95,7 @@
 #define ITEM_GPROP_INTERPIC    "intermission.pic"
 #define ITEM_GPROP_DEFMUSNAME  "sound.defaultmusname"
 #define ITEM_GPROP_DEFSNDNAME  "sound.defaultsndname"
+#define ITEM_GPROP_TITLEMUSNAME "sound.titlemusic"
 #define ITEM_GPROP_CREDITBKGND "credit.background"
 #define ITEM_GPROP_CREDITY     "credit.y"
 #define ITEM_GPROP_CREDITTSTEP "credit.titlestep"
@@ -125,6 +127,7 @@ enum
    GI_STR_INTERPIC,
    GI_STR_DEFMUSNAME,
    GI_STR_DEFSNDNAME,
+   GI_STR_TITLEMUSNAME,
    GI_STR_CREDITBKGND,
    GI_STR_ENDTEXTNAME,
    GI_STR_BLOODNORM,
@@ -172,7 +175,9 @@ static dehflags_t gmi_flags[] =
    { "IMPACTBLOOD",    GIF_IMPACTBLOOD    },
    { "CHEATSOUND",     GIF_CHEATSOUND     },
    { "CHASEFAST",      GIF_CHASEFAST      },
-   { NULL,             0                  }
+   { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
+   { "INVALWAYSOPEN",  GIF_INVALWAYSOPEN  },
+   { nullptr,          0                  }
 };
 
 static dehflagset_t gmi_flagset =
@@ -193,7 +198,7 @@ static dehflags_t mission_flags[] =
    { "NOGDHIGH",       MI_NOGDHIGH       },
    { "ALLOWEXITTAG",   MI_ALLOWEXITTAG   },
    { "ALLOWSECRETTAG", MI_ALLOWSECRETTAG },
-   { NULL,             0                 }
+   { nullptr,          0                 }
 };
 
 static dehflagset_t mission_flagset =
@@ -247,6 +252,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_FINTYPE,     "",   CFGF_NONE),
    CFG_FLOAT(ITEM_GPROP_SKILLMUL,  0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_MELEECALC,   "",   CFGF_NONE),
+   CFG_FLOAT(ITEM_GPROP_ITEMHEIGHT, 0,   CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEX,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_FINALEY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CASTTITLEY,  0,    CFGF_NONE),
@@ -254,6 +260,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_STR(ITEM_GPROP_INTERPIC,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFMUSNAME,  "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_DEFSNDNAME,  "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_TITLEMUSNAME,"",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_CREDITBKGND, "",   CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITY,     0,    CFGF_NONE),
    CFG_INT(ITEM_GPROP_CREDITTSTEP, 0,    CFGF_NONE),
@@ -531,6 +538,8 @@ static void E_processGamePropsBlock(cfg_t *props)
       if(meleetype >= 0 && meleetype < meleecalc_NUM)
          GameModeInfo->monsterMeleeRange = static_cast<meleecalc_e>(meleetype);
    }
+   if(IS_SET(ITEM_GPROP_ITEMHEIGHT))
+      GameModeInfo->itemHeight = M_DoubleToFixed(cfg_getfloat(props, ITEM_GPROP_ITEMHEIGHT));
 
    // Finale Properties
 
@@ -568,6 +577,12 @@ static void E_processGamePropsBlock(cfg_t *props)
                          cfg_getstr(props, ITEM_GPROP_DEFSNDNAME));
    }
    
+   if(IS_SET(ITEM_GPROP_TITLEMUSNAME))
+   {
+      E_setDynamicString(GameModeInfo->titleMusName, GI_STR_TITLEMUSNAME,
+                         cfg_getstr(props, ITEM_GPROP_TITLEMUSNAME));
+   }
+
    // Credit Screen Properties
 
    if(IS_SET(ITEM_GPROP_CREDITBKGND))

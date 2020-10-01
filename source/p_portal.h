@@ -27,9 +27,9 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-#include "m_collection.h"
+#include "r_defs.h"
 
-struct polyobj_s;
+struct polyobj_t;
 
 extern bool useportalgroups;
 
@@ -37,7 +37,7 @@ extern bool useportalgroups;
 extern bool gMapHasSectorPortals;
 extern bool gMapHasLinePortals;  // ioanch 20160131: also check line portals
 extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
-extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
+extern const polyobj_t **gGroupPolyobject; // ioanch 20160227
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
@@ -99,13 +99,12 @@ void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
 //
 bool P_BuildLinkTable();
 void P_MarkPortalClusters();
+void P_MarkPolyobjPortalLinks();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid);
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid);
+bool EV_SectorPortalTeleport(Mobj *mo, const linkdata_t &ldata);
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz, int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
 
@@ -183,10 +182,20 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
 void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
-                        fixed_t dy, bool setpolyref, const polyobj_s *po);
+                        fixed_t dy, bool setpolyref, const polyobj_t *po);
+void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
+                           bool (*func)(int groupid, void *context), void *context);
 
-fixed_t P_CeilingPortalZ(const sector_t &sector);
-fixed_t P_FloorPortalZ(const sector_t &sector);
+fixed_t P_PortalZ(const surface_t &surface);
+inline fixed_t P_PortalZ(surf_e surf, const sector_t &sector)
+{
+   return P_PortalZ(sector.srf[surf]);
+}
+
+// Group mappings
+void P_BuildSectorGroupMappings();
+sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 #endif
 

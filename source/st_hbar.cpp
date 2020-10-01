@@ -25,17 +25,14 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 #include "doomstat.h"
 #include "d_dehtbl.h"
 #include "e_inventory.h"
-#include "m_random.h"
-#include "m_swap.h"
+#include "hu_inventory.h"
 #include "metaapi.h"
-#include "p_mobj.h"
+#include "r_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
-#include "w_wad.h"
 #include "st_stuff.h"
 
 //
@@ -51,15 +48,12 @@
 // cached patches
 static patch_t *invnums[10];      // inventory numbers
 static patch_t *smallinvnums[10]; // small inventory numbers
+static patch_t *bigfsnums[10];    // large fullscreen numbers
 static patch_t *PatchINVLFGEM1;
 static patch_t *PatchINVLFGEM2;
 static patch_t *PatchINVRTGEM1;
 static patch_t *PatchINVRTGEM2;
 static patch_t *PatchBLACKSQ;
-
-// important patch numbers
-static int spinbooklump;
-static int spinflylump;
 
 // current state variables
 static int chainhealth;        // current position of the gem
@@ -71,8 +65,8 @@ static int chainwiggle;        // small randomized addend for chain y coord.
 // Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
 // x is expected to be 8 more than its equivalent Heretic calls.
 //
-static void ST_drawSmallNumber(int val, int x, int y)
-{   
+void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen)
+{
    if(val > 1)
    {
       patch_t *patch;
@@ -83,15 +77,43 @@ static void ST_drawSmallNumber(int val, int x, int y)
       if(val > 99999)
          val = 99999;
       sprintf(buf, "%d", val);
-      x -= 4 * (strlen(buf));
+      x -= static_cast<int>(4 * (strlen(buf)));
       for(char *rover = buf; *rover; rover++)
       {
          int i = *rover - '0';
          patch = smallinvnums[i];
-         V_DrawPatch(x, y, &subscreen43, patch);
+         V_DrawPatch(x, y, fullscreen ? &vbscreenyscaled : &subscreen43, patch);
          x += 4;
       }
    }
+}
+
+//
+// Big green numbers for fullscreen graphical HUD
+//
+static void ST_drawBigNumber(int val, int x, int y)
+{
+   int oldval = val;
+   int xpos = x;
+   if(val < 0)
+      val = 0;
+   patch_t *patch;
+   if(val > 99)
+   {
+      patch = bigfsnums[val / 100 % 10];
+      V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+   }
+   val %= 100;
+   xpos += 12;
+   if(val > 9 || oldval > 99)
+   {
+      patch = bigfsnums[val / 10 % 10];
+      V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+   }
+   val %= 10;
+   xpos += 12;
+   patch = bigfsnums[val % 10];
+   V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
 }
 
 //
@@ -125,13 +147,16 @@ static void ST_HticInit()
       sprintf(lumpname, "SMALLIN%d", i);
 
       smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+
+      snprintf(lumpname, sizeof(lumpname), "FONTB%d", 16 + i); // FONTB16-FONTB25
+      bigfsnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
 
    PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
    PatchINVLFGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
    PatchINVRTGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
    PatchINVRTGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR2"), PU_STATIC);
-   PatchBLACKSQ = PatchLoader::CacheName(wGlobalDir, DEH_String("BLACKSQ"), PU_STATIC);
+   PatchBLACKSQ   = PatchLoader::CacheName(wGlobalDir, DEH_String("BLACKSQ"),  PU_STATIC);
 
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
@@ -143,15 +168,6 @@ static void ST_HticInit()
       efree(keys[i]);
       keys[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-
-   // load important numbers needed when some arithmetic is done with them
-   spinbooklump = W_GetNumForName(DEH_String("SPINBK0"));
-   spinflylump = W_GetNumForName(DEH_String("SPFLY0"));
-
-   // EDF_FEATURES_FIXME: This should be moved elsewhere probably.
-   // Initialise the inventory bar states.
-   for(int i = 0; i < MAXPLAYERS; i++)
-      players[i].invbarstate = { false, 0, 0 };
 }
 
 //
@@ -423,13 +439,13 @@ static void ST_drawStatBar()
    {
       if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
       {
-         patch = artifact->getString("icon", "");
+         patch = artifact->getString("icon", nullptr);
          if(estrnonempty(patch) && artifact->getInt("invbar", 0))
          {
             V_DrawPatch(179, 160, &subscreen43,
                         PatchLoader::CacheName(wGlobalDir, patch,
                                                PU_CACHE, lumpinfo_t::ns_sprites));
-            ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182);
+            ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182, false);
          }
       }
    }
@@ -477,12 +493,15 @@ static void ST_drawStatBar()
 
 static void ST_drawInvBar()
 {
-   itemeffect_t *artifact;
-   const char *patch;
-   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
-   int leftoffs = invbarstate.inv_ptr >= 7 ? invbarstate.inv_ptr - 6 : 0;
+   constexpr int ST_INVBARBGX = 34; // You'd think it'd be (SCREENWIDTH - 248) / 2 (= 36)? Nope.
+   constexpr int ST_INVBARBGY = SCREENHEIGHT - 40; // 31 high but 9 extra pixels
+   constexpr int ST_INVSLOTSTARTX = ST_INVBARBGX + 16;
 
-   V_DrawPatch(34, 160, &subscreen43, PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
+   const int inv_ptr  = players[displayplayer].inv_ptr;
+   const int leftoffs = inv_ptr >= 7 ? inv_ptr - 6 : 0;
+
+   V_DrawPatch(ST_INVBARBGX, ST_INVBARBGY, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
 
    int i = -1;
    // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
@@ -493,15 +512,23 @@ static void ST_drawInvBar()
       // for the selected item, then that there is an associated patch for that effect.
       if(plyr->inventory[i + leftoffs].amount > 0)
       {
-         if((artifact = E_EffectForInventoryIndex(plyr, i + leftoffs)))
+         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         if(artifact)
          {
-            patch = artifact->getString("icon", "");
-            if(estrnonempty(patch))
+            const char *patchname = artifact->getString("icon", nullptr);
+            if(estrnonempty(patchname))
             {
-               V_DrawPatch(50 + i * 31, 160, &subscreen43,
-                           PatchLoader::CacheName(wGlobalDir, patch,
-                                                  PU_CACHE, lumpinfo_t::ns_sprites));
-               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact), 77 + i * 31, 182);
+               int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+                           lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+               patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+
+               const int xoffs = artifact->getInt("icon.offset.x", 0);
+               const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+               V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
+                           &subscreen43, patch);
+               ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), ST_INVSLOTSTARTX +
+                                         27 + (i * 31), ST_INVBARBGY + 22, false);
             }
          }
       }
@@ -509,69 +536,11 @@ static void ST_drawInvBar()
 
    if(leftoffs)
       V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
-   int temp = i + leftoffs - 1;
-   if(i == 7 && E_MoveInventoryCursor(plyr, 1, temp))
+   if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
       V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
 
-   V_DrawPatch(50 + (invbarstate.inv_ptr - leftoffs) * 31, 189, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
-}
-
-//
-// Draw spinning powerups
-//
-static void ST_drawPowerUps()
-{
-   static bool hitCenterFrame = false;
-   // Display the little rotating wings of wrath
-   if(plyr->powers[pw_flight])
-   {
-      // Blink the wings when the player is almost out
-      if(plyr->powers[pw_flight] > (4 * 32) || !(plyr->powers[pw_flight] & 16))
-      {
-         int frame = (leveltime / 3) & 15;
-         if(plyr->mo->flags4 & MF4_FLY)
-         {
-            if(hitCenterFrame && (frame != 15 && frame != 0))
-            {
-               V_DrawPatch(20, 17, &vbscreen,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
-            }
-            else
-            {
-               V_DrawPatch(20, 17, &vbscreen,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
-               hitCenterFrame = false;
-            }
-         }
-         else
-         {
-            // FIXME: Why would this code trigger?
-            if(!hitCenterFrame && (frame != 15 && frame != 0))
-            {
-               V_DrawPatch(20, 17, &vbscreen,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + frame, PU_CACHE));
-               hitCenterFrame = false;
-            }
-            else
-            {
-               V_DrawPatch(20, 17, &vbscreen,
-                           PatchLoader::CacheNum(wGlobalDir, spinflylump + 15, PU_CACHE));
-               hitCenterFrame = true;
-            }
-         }
-      }
-   }
-
-   if(plyr->powers[pw_weaponlevel2])
-   {
-      if(plyr->powers[pw_weaponlevel2] > (4 * 32) || !(plyr->powers[pw_weaponlevel2] & 16))
-      {
-         const int frame = (leveltime / 3) & 15;
-         V_DrawPatch(300, 17, &vbscreen,
-                     PatchLoader::CacheNum(wGlobalDir, spinbooklump + frame, PU_CACHE));
-      }
-   }
+   V_DrawPatch(ST_INVSLOTSTARTX + ((inv_ptr - leftoffs) * 31), SCREENHEIGHT - 11,
+               &subscreen43, PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 
 //
@@ -583,7 +552,6 @@ static void ST_HticDrawer()
 {
    ST_drawBackground();
    ST_drawLifeChain();
-   ST_drawPowerUps();
 
    if(players[displayplayer].invbarstate.inventory)
       ST_drawInvBar();
@@ -598,6 +566,13 @@ static void ST_HticDrawer()
 //
 static void ST_HticFSDrawer()
 {
+   ST_drawBigNumber(plyr->health, 5, 180);
+   if(GameType == gt_dm)
+      ST_drawInvNum(plyr->totalfrags, 45, 185);
+
+   int posx, posy;
+   HU_InventoryGetCurrentBoxHints(posx, posy);
+   HU_InventoryDrawCurrentBox(posx, posy);
 }
 
 //

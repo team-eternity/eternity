@@ -166,7 +166,7 @@ static int E_OpenAndCheckInclude(cfg_t *cfg, const char *fn, int lumpnum)
 //
 // Finds a lump from the same data source as the including lump.
 // Returns -1 if no such lump can be found.
-// 
+//
 static int E_FindLumpInclude(cfg_t *src, const char *name)
 {
    lumpinfo_t  *inclump;
@@ -193,6 +193,59 @@ static int E_FindLumpInclude(cfg_t *src, const char *name)
    }
 
    return -1; // not found
+}
+
+//
+// Finds a file from the same data source as the including file.
+// Returns -1 if no such lump can be found.
+//
+static int E_findFileInclude(cfg_t *src, const char *name)
+{
+   lumpinfo_t  *inclump;
+   lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
+   qstring      qname     = qstring(name).toLower();
+   qstring      includepath;
+   int          includinglumpnum;
+
+   // this is not for files
+   if((includinglumpnum = cfg_lexer_source_type(src)) < 0)
+      return -1;
+
+   // get a pointer to the including lump's lumpinfo
+   inclump = lumpinfo[includinglumpnum];
+
+   qname.replace("\\", '/');
+   if(qname[0] != '/')
+   {
+      qstring parentdir    = qstring(src->filename);
+      size_t  lastslashloc = parentdir.findLastOf('/');
+      parentdir.truncate(lastslashloc + 1);
+      includepath << parentdir;
+   }
+   else
+   {
+      if(qname.length() > 1u)
+         qname.erase(0u, 1u);
+      else
+         return -1;
+   }
+
+   includepath << qname;
+   includepath.toLower();
+
+   WadChainIterator wci(wGlobalDir, includepath.constPtr(), true);
+
+   // walk down the hash chain
+   for(wci.begin(); wci.current(); wci.next())
+   {
+      if(wci.testLump(lumpinfo_t::ns_global) && // name matches, is global
+         (*wci)->source == inclump->source)     // is from same source
+      {
+         return (*wci)->selfindex;
+      }
+   }
+
+   return strlen(name) > 8 ? -1 : E_FindLumpInclude(src, name); // not found
 }
 
 //
@@ -258,8 +311,8 @@ int E_SetDialect(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 //
 int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
-   char  *currentpath = NULL;
-   char  *filename    = NULL;
+   char  *currentpath = nullptr;
+   char  *filename    = nullptr;
    size_t len         =  0;
    int    lumpnum     = -1;
 
@@ -281,21 +334,15 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    case -1: // physical file
       len = M_StringAlloca(&currentpath, 1, 2, cfg->filename);
       M_GetFilePath(cfg->filename, currentpath, len);
-      
-      filename = M_SafeFilePath(currentpath, argv[0]);
-      
-      return E_OpenAndCheckInclude(cfg, filename, -1);
-   
-   default: // data source
-      if(strlen(argv[0]) > 8)
-      {
-         cfg_error(cfg, "include: %s is not a valid lump name\n", argv[0]);
-         return 1;
-      }
 
+      filename = M_SafeFilePath(currentpath, argv[0]);
+
+      return E_OpenAndCheckInclude(cfg, filename, -1);
+
+   default: // data source
       // haleyjd 03/19/10:
       // find a lump of the requested name in the same data source only
-      if((lumpnum = E_FindLumpInclude(cfg, argv[0])) < 0)
+      if((lumpnum = E_findFileInclude(cfg, argv[0])) < 0)
       {
          cfg_error(cfg, "include: %s not found\n", argv[0]);
          return 1;
@@ -374,7 +421,7 @@ int E_IncludePrev(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 
    // Go down the hash chain and look for the next lump of the same
    // name within the global namespace.
-   while((i = lumpinfo[i]->namehash.next) >= 0)
+   while((i = lumpinfo[i]->next) >= 0)
    {
       if(lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
          !strncasecmp(lumpinfo[i]->name, cfg->filename, 8))
@@ -484,7 +531,7 @@ int E_EnableNumForName(const char *name, E_Enable_t *enables)
 int E_Endif(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
 {
    cfg->flags &= ~CFGF_LOOKFORFUNC;
-   cfg->lookfor = NULL;
+   cfg->lookfor = nullptr;
 
    return 0;
 }
@@ -542,7 +589,7 @@ unsigned int E_ParseFlags(const char *str, dehflagset_t *flagset)
 // sprite lump names (implemented by popular demand ;)
 //
 // This function is also called explicitly by E_ProcessCmpState.
-// When this is done, the cfg and opt parameters are set to NULL,
+// When this is done, the cfg and opt parameters are set to nullptr,
 // and will not be used.
 //
 int E_SpriteFrameCB(cfg_t *cfg, cfg_opt_t *opt, const char *value, 
@@ -854,8 +901,8 @@ int E_ColorStrCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 // E_ExtractPrefix
 //
 // Returns the result of strchr called on the string in value.
-// If the return is non-NULL, you can expect to find the extracted
-// prefix written into prefixbuf. If the return value is NULL,
+// If the return is non-nullptr, you can expect to find the extracted
+// prefix written into prefixbuf. If the return value is nullptr,
 // prefixbuf is unmodified.
 //
 const char *E_ExtractPrefix(const char *value, char *prefixbuf, int buflen)
@@ -1059,6 +1106,16 @@ void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype)
       bool list = opt->flags & CFGF_LIST;
       if(!list)
          n = 1;
+      else if(prototype)
+      {
+         // If we have a prototype to inherit and we use a list, clear all old stuff
+         MetaObject *ob;
+         while((ob = table->getNextObject(nullptr, opt->name)))
+         {
+            table->removeObject(ob);
+            delete ob;
+         }
+      }
 
       for(int i = n; i --> 0;)
       {
@@ -1121,7 +1178,7 @@ void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set)
 //
 // Finds the start of the next line in the string, and modifies the string with
 // a \0 to terminate the current line. Returns the start of the current line, or
-// NULL if input is exhausted. Based loosely on E_GetDSLine from the DECORATE 
+// nullptr if input is exhausted. Based loosely on E_GetDSLine from the DECORATE
 // state parser.
 //
 char *E_GetHeredocLine(char **src)
@@ -1130,7 +1187,7 @@ char *E_GetHeredocLine(char **src)
    char *linestart = srctxt;
 
    if(!*srctxt) // at end?
-      linestart = NULL;
+      linestart = nullptr;
    else
    {
       char c;
@@ -1179,7 +1236,7 @@ enum
 tempcmd_t E_ParseTextLine(char *str)
 {
    tempcmd_t retcmd;
-   char *tokenstart = NULL;
+   char *tokenstart = nullptr;
    int state = STATE_LOOKFORCMD, strnum = 0;
 
    memset(&retcmd, 0, sizeof(retcmd));
@@ -1214,7 +1271,7 @@ tempcmd_t E_ParseTextLine(char *str)
             ++strnum;
             if(*str == '\0' || strnum >= E_MAXCMDTOKENS) // are we done?
                return retcmd;
-            tokenstart = NULL;
+            tokenstart = nullptr;
             state = STATE_LOOKFORCMD;
             *str = '\0'; // modify string to terminate tokens
             break;
@@ -1562,7 +1619,7 @@ byte *E_ParseTranslation(const char *str, int tag)
 {
    int i;
    qstring tokenbuf;
-   byte *translation = ecalloctag(byte *, 1, 256, tag, NULL);
+   byte *translation = ecalloctag(byte *, 1, 256, tag, nullptr);
    tr_pstate_t parserstate;
 
    // initialize to monotonically increasing sequence (identity translation)
@@ -1578,7 +1635,7 @@ byte *E_ParseTranslation(const char *str, int tag)
    parserstate.error       = false;
    parserstate.done        = false;
    parserstate.singlecolor = false;
-   parserstate.ranges      = NULL;
+   parserstate.ranges      = nullptr;
 
    while(!(parserstate.done || parserstate.error))
       trpfuncs[parserstate.state](&parserstate);

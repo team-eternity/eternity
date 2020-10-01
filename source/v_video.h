@@ -157,14 +157,14 @@ void V_DrawPatchTranslatedLit(int x, int y, VBuffer *buffer, patch_t *patch,
 // V_DrawPatchTL
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with the given opacity. If a color translation table is supplied
-// (outr != NULL) the patch is translated as well.
+// (outr != nullptr) the patch is translated as well.
 void V_DrawPatchTL(int x, int y, VBuffer *buffer, patch_t *patch, 
                    byte *outr, int tl);
 
 // V_DrawPatchAdd
 // Renders a patch to the given VBuffer like V_DrawPatchGeneral, but renders
 // the patch with additive blending of the given amount. If a color translation
-// table is supplied (outr != NULL) the patch is translated as well.
+// table is supplied (outr != nullptr) the patch is translated as well.
 void V_DrawPatchAdd(int x, int y, VBuffer *buffer, patch_t *patch,
                     byte *outr, int tl);
 
@@ -208,6 +208,7 @@ extern VBuffer backscreen1;
 extern VBuffer backscreen2;
 extern VBuffer backscreen3;
 extern VBuffer subscreen43;
+extern VBuffer vbscreenyscaled;
 
 #endif
 

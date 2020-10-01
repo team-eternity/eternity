@@ -102,9 +102,9 @@ static bool E_AddSprite(const char *name, esprite_t *sprite)
       sprnames = erealloc(char **, sprnames, numspritesalloc * sizeof(char *));
    }
 
-   // set the new sprnames entry, and make the next one NULL
+   // set the new sprnames entry, and make the next one nullptr
    sprnames[NUMSPRITES]     = sprite->name;
-   sprnames[NUMSPRITES + 1] = NULL;
+   sprnames[NUMSPRITES + 1] = nullptr;
 
    ++NUMSPRITES;
 

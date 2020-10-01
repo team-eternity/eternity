@@ -57,8 +57,6 @@
 //  and the total size == width*height*depth/8.,
 //
 
-byte *viewimage; 
-
 rrect_t viewwindow;   // haleyjd 05/02/13
 rrect_t scaledwindow; // haleyjd 05/02/13
 
@@ -73,6 +71,8 @@ byte *renderscreen;            // haleyjd
 byte *tranmap;          // translucency filter maps 256x256   // phares 
 byte *main_tranmap;     // killough 4/11/98
 byte *main_submap;      // haleyjd 11/30/13
+
+int rTintTableIndex;
 
 //
 // R_DrawColumn
@@ -123,8 +123,8 @@ void CB_DrawColumn_8()
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -201,7 +201,7 @@ static void CB_DrawNewSkyColumn_8()
    // killough 2/1/98: more performance tuning
 
    {
-      const byte *source = (byte *)(column.source);
+      const byte *source = static_cast<const byte *>(column.source);
       const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight-1;
       if (column.texheight & heightmask)   // not a power of 2 -- killough
@@ -287,8 +287,8 @@ void CB_DrawTLColumn_8(void)
 
    // killough 2/1/98, 2/21/98: more performance tuning
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -361,8 +361,8 @@ void CB_DrawTLTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -424,7 +424,7 @@ void CB_DrawTLTRColumn_8(void)
 // sf: restored original fuzz effect (changed in mbf)
 // sf: changed to use vis->colormap not fullcolormap
 //     for coloured lighting and SHADOW now done with
-//     flags not NULL colormap
+//     flags not nullptr colormap
 
 #define SRCPIXEL \
    colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
@@ -454,7 +454,7 @@ void CB_DrawFuzzColumn_8(void)
    dest = R_ADDRESS(column.x, column.y1);
 
    {
-      lighttable_t *colormap = column.colormap;
+      const lighttable_t *colormap = column.colormap;
       
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
@@ -487,11 +487,11 @@ void CB_DrawFuzzColumn_8(void)
 //
 
 // haleyjd: changed translationtables to byte **
-byte **translationtables = NULL;
+byte **translationtables = nullptr;
 
 // haleyjd: new stuff
-int firsttranslationlump;
-int numtranslations = 0;
+static int firsttranslationlump;
+static int numtranslations = 0;
 
 #define SRCPIXEL \
    colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
@@ -517,8 +517,8 @@ void CB_DrawTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -597,8 +597,8 @@ void CB_DrawFlexColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if (column.texheight & heightmask)   // not a power of 2 -- killough
@@ -681,7 +681,7 @@ void CB_DrawFlexTRColumn_8(void)
    byte *dest;
    fixed_t frac;
    fixed_t fracstep;
-   unsigned int *fg2rgb, *bg2rgb;
+   const unsigned int *fg2rgb, *bg2rgb;
    unsigned int fg, bg;
 
    count = column.y2 - column.y1 + 1;
@@ -707,8 +707,8 @@ void CB_DrawFlexTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -792,7 +792,7 @@ void CB_DrawAddColumn_8(void)
    byte *dest;
    fixed_t frac;
    fixed_t fracstep;
-   unsigned int *fg2rgb, *bg2rgb;
+   const unsigned int *fg2rgb, *bg2rgb;
    unsigned int a, b;
 
    count = column.y2 - column.y1 + 1;
@@ -818,8 +818,8 @@ void CB_DrawAddColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -920,7 +920,7 @@ void CB_DrawAddTRColumn_8(void)
    byte *dest;
    fixed_t frac;
    fixed_t fracstep;
-   unsigned int *fg2rgb, *bg2rgb;
+   const unsigned int *fg2rgb, *bg2rgb;
    unsigned int a, b;
 
    count = column.y2 - column.y1 + 1;
@@ -946,8 +946,8 @@ void CB_DrawAddTRColumn_8(void)
    frac = column.texmid + (int)((column.y1 - view.ycenter + 1) * fracstep);
 
    {
-      byte *source = (byte *)(column.source);
-      lighttable_t *colormap = column.colormap;
+      const byte *source = static_cast<const byte *>(column.source);
+      const lighttable_t *colormap = column.colormap;
       int heightmask = column.texheight - 1;
       
       if(column.texheight & heightmask)
@@ -1048,7 +1048,7 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL,
+   nullptr,
 
    {
       // Normal              Translated
@@ -1107,7 +1107,7 @@ void R_InitTranslationTables()
    numtranslations = TRANSLATIONCOLOURS + wni.getNumLumps();
 
    // allocate the array of pointers
-   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, nullptr);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)
@@ -1116,6 +1116,11 @@ void R_InitTranslationTables()
    // read in the lumps, if any
    for(wni.begin(); wni.current(); wni.next(), i++)
       translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum((*wni)->selfindex, PU_RENDERER));
+
+   // Check if TINTTAB exists for MF3_GHOST
+   rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
+   if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
+      rTintTableIndex = -1;   // bad length
 }
 
 //
@@ -1152,7 +1157,7 @@ byte *R_GetIdentityMap()
 
    if(!identityMap)
    {
-      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, nullptr);
       for(int i = 0; i < 256; i++)
          identityMap[i] = i;
    }

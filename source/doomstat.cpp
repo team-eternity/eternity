@@ -75,6 +75,8 @@ int default_monsters_remember=1;
 int monster_infighting=1;       // killough 7/19/98: monster<=>monster attacks
 int default_monster_infighting=1;
 
+bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
+
 int monster_friction=1;       // killough 10/98: monsters affected by friction 
 int default_monster_friction=1;
 
@@ -107,7 +109,7 @@ int help_friends, default_help_friends;
 
 int flashing_hom;     // killough 10/98
 
-int doom_weapon_toggles; // killough 10/98
+int weapon_hotkey_cycling; // killough 10/98
 
 int monkeys, default_monkeys;
 

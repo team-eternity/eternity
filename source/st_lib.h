@@ -35,7 +35,7 @@ struct patch_t;
 //
 // Number widget
 //
-typedef struct st_number_s
+struct st_number_t
 {
    int       x;      // upper right-hand corner
    int       y;      //  of the number (right-justified)
@@ -44,21 +44,20 @@ typedef struct st_number_s
    int       max;    // max value
    bool     *on;     // pointer to bool stating whether to update number
    patch_t **p;      // list of patches for 0-9
-   int       data;   // user data
-} st_number_t;
+};
 
 //
 // Percent widget ("child" of number widget,
 //  or, more precisely, contains a number widget.)
 //
-typedef struct st_percent_s
+struct st_percent_t
 {
    st_number_t  n; // number information
    patch_t     *p; // percent sign graphic
-} st_percent_t;
+};
 
 // Multiple Icon widget
-typedef struct st_multicon_s
+struct st_multicon_t
 {
    int       x;       // center-justified location of icons
    int       y;
@@ -66,12 +65,12 @@ typedef struct st_multicon_s
    bool     *on;      // pointer to bool stating whether to update icon
    patch_t **p;       // list of icons
    int       data;    // user data
-} st_multicon_t;
+};
 
 //
 // Binary Icon widget
 //
-typedef struct st_binicon_s
+struct st_binicon_t
 {
    int      x;      // center-justified location of icon
    int      y;
@@ -79,7 +78,7 @@ typedef struct st_binicon_s
    bool    *on;     // pointer to bool stating whether to update icon
    patch_t *p;      // icon
    int      data;   // user data
-} st_binicon_t;
+};
 
 //
 // Widget creation, access, and update routines

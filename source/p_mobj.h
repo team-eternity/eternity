@@ -38,6 +38,7 @@
 #include "info.h"
 #include "m_fixed.h"
 #include "m_vector.h"   // ioanch 20160109: for portal rendering
+#include "p_map.h"
 #include "r_interpolate.h"
 #include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
@@ -51,7 +52,7 @@ class  BloodSpawner;
 
 // Defines
 
-#define VIEWHEIGHT      (41*FRACUNIT)
+// [XA] VIEWHEIGHT is now a playerclass property
 
 // sf: gravity >>> defaultgravity
 #define DEFAULTGRAVITY  FRACUNIT
@@ -252,11 +253,7 @@ public:
    subsector_t *subsector;
 
    // The closest interval over all contacted Sectors.
-   fixed_t floorz;
-   fixed_t ceilingz;
-
-   // killough 11/98: the lowest floor over all contacted Sectors.
-   fixed_t dropoffz;
+   zrefs_t zref;
 
    // For movement checking.
    fixed_t radius;
@@ -296,7 +293,7 @@ public:
    int16_t movecount;      // when 0, select a new dir
    int16_t strafecount;    // killough 9/8/98: monster strafing
 
-   // Thing being chased/attacked (or NULL),
+   // Thing being chased/attacked (or nullptr),
    // also the originator for missiles.
    Mobj *target;
 
@@ -361,16 +358,6 @@ public:
    float xscale;      // haleyjd 11/22/09: x scaling
    float yscale;      // haleyjd 11/22/09: y scaling
 
-   fixed_t secfloorz;
-   fixed_t secceilz;
-
-   // SoM 11/6/02: Yet again! Two more z values that must be stored
-   // in the mobj struct 9_9
-   // These are the floor and ceiling heights given by the first
-   // clipping pass (map architecture + 3d sides).
-   fixed_t passfloorz;
-   fixed_t passceilz;
-
    prevpos_t prevpos;   // previous position for interpolation
 
    // scripting fields
@@ -403,7 +390,7 @@ protected:
    virtual void Think() override;
 
 public:
-   MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
+   MobjFadeThinker() : Super(), target(nullptr), swizzled_target(0) {}
    virtual void remove() override;
    virtual void serialize(SaveArchive &arc) override;
    virtual void deSwizzle() override;
@@ -439,7 +426,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 void  P_MobjThinker(Mobj *mobj);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
-                  bool ptcl, const MetaTable *pufftype = nullptr,
+                  bool ptcl, Mobj *shooter, const MetaTable *pufftype = nullptr,
                   const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
@@ -509,13 +496,36 @@ struct missileinfo_t
    uint32_t    flags;  // flags to affect firing (use enum values)
 };
 
+//
+// Feedback from targetting
+//
+struct playertargetinfo_t
+{
+   bool isfriend;
+   fixed_t slope;
+};
+
+//
+// SpawnPlayerMissile flags
+//
+enum
+{
+   SPM_ADDSLOPETOZ = 1,
+
+   SPMAH_FOLLOWTARGETFRIENDSLOPE = 1,
+   SPMAH_AIMFRIENDSTOO = 2,
+};
+
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
 // Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type, unsigned flags = 0,
+                           playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
-Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle,
+                                       unsigned flags = 0,
+                                       const playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
@@ -748,9 +758,25 @@ enum
    // A substitute for calling E_SafeThingName every tic for every Mobj
    MIF_MUSICCHANGER = 0x00020000,
 
+   MIF_MAYPLAYPARTICLESOUNDS = 0x00040000,   // Hint that it may be playing particle sounds
+
    // these should be cleared when a thing is being raised
    MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
 };
+
+//=============================================================================
+//
+// Functions which depend on flags
+//
+
+//
+// True if thing is on floor or hanging from ceiling
+//
+inline static bool P_mobjOnSurface(const Mobj &mobj)
+{
+   return mobj.z <= mobj.zref.floor || (mobj.z + mobj.height >= mobj.zref.ceiling &&
+                                        mobj.flags & MF_SPAWNCEILING && mobj.flags & MF_NOGRAVITY);
+}
 
 #endif
 

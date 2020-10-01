@@ -39,7 +39,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
 struct drawseg_t
 {
-   seg_t *curline;
+   const seg_t *curline;
    int x1, x2;
    float dist1, dist2, diststep;
    fixed_t bsilheight;                   // do not clip sprites above this
@@ -48,6 +48,7 @@ struct drawseg_t
    // sf: colormap to be used when drawing the drawseg
    // for coloured lighting
    lighttable_t *(*colormap)[MAXLIGHTSCALE];
+   lighttable_t *fixedcolormap;
 
    // Pointers to lists for sprite clipping,
    // all three adjusted so [x1] is first value.

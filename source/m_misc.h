@@ -105,24 +105,24 @@ struct default_t
 // haleyjd 07/27/09: Macros for defining configuration values.
 
 #define DEFAULT_END() \
-   { NULL, dt_integer, NULL, NULL, 0, NULL, 0.0, false, { 0, 0 }, default_t::wad_no, NULL, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+   { nullptr, dt_integer, nullptr, nullptr, 0, nullptr, 0.0, false, { 0, 0 }, default_t::wad_no, nullptr, \
+     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
 
 #define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_integer, loc, cur, def, NULL, 0.0, false, { min, max }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+   { name, dt_integer, loc, cur, def, nullptr, 0.0, false, { min, max }, wad, help, \
+     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
 
 #define DEFAULT_STR(name, loc, cur, def, wad, help) \
    { name, dt_string, loc, cur, 0, def, 0.0, false, { 0, 0 }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
 
 #define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_float, loc, cur, 0, NULL, def, false, { min, max }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+   { name, dt_float, loc, cur, 0, nullptr, def, false, { min, max }, wad, help, \
+     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
 
 #define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
-   { name, dt_boolean, loc, cur, 0, NULL, 0.0, def, { 0, 1 }, wad, help, \
-     NULL, NULL, 0, 0, NULL, 0.0, false, NULL }
+   { name, dt_boolean, loc, cur, 0, nullptr, 0.0, def, { 0, 1 }, wad, help, \
+     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
 
 // haleyjd 03/14/09: defaultfile_t structure
 struct defaultfile_t
@@ -170,6 +170,10 @@ default_t *M_FindDefaultForCVar(variable_t *var);
   #define MUS_MIN      0
   #define MUS_MAX      0
   #define MUS_DESCR    "no midi driver available for this platform"
+#endif
+
+#ifdef HAVE_ADLMIDILIB
+extern const int BANKS_MAX;
 #endif
 
 #endif

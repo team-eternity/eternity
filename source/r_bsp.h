@@ -26,7 +26,7 @@
 #ifndef R_BSP_H__
 #define R_BSP_H__
 
-struct dlnormal_t;
+struct windowlinegen_t;
 struct drawseg_t;
 struct line_t;
 struct seg_t;
@@ -61,9 +61,10 @@ void R_ClearDrawSegs();
 void R_RenderBSPNode(int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
-sector_t *R_FakeFlat(sector_t *, sector_t *, int *, int *, bool);
-bool R_PickNearestBoxLines(const fixed_t bbox[4], dlnormal_t &dl1,
-                           dlnormal_t &dl2, slopetype_t *slope = nullptr);
+int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);
+const sector_t *R_FakeFlat(const sector_t *, sector_t *, int *, int *, bool);
+bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
+   windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
 
 extern int detaillevel;
 

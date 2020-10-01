@@ -32,11 +32,14 @@
 #include "doomstat.h"
 #include "d_gi.h"
 #include "e_args.h"
+#include "e_exdata.h"
 #include "e_inventory.h"
 #include "e_sound.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
+#include "m_compare.h"
 #include "p_mobj.h"
 #include "p_enemy.h"
 #include "p_info.h"
@@ -50,16 +53,19 @@
 #include "r_state.h"
 #include "sounds.h"
 #include "s_sound.h"
+#include "v_misc.h"
 
 //
 // A_AlertMonsters
 //
 // ZDoom codepointer #3, implemented from scratch using wiki
 // documentation. 100% GPL version.
-// 
+//
 void A_AlertMonsters(actionargs_t *actionargs)
 {
    Mobj *mo = actionargs->actor;
+   if(actionargs->pspr)
+      P_NoiseAlert(mo, mo);
    if(mo->target)
       P_NoiseAlert(mo->target, mo->target);
 }
@@ -76,7 +82,7 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
    Mobj *actor = actionargs->actor;
    int statenum;
    
-   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor, nullptr)) < 0)
+   if((statenum = E_ArgAsStateNumNI(actionargs->args, 0, actor)) < 0)
       return;
 
    if(!actor->player)
@@ -91,7 +97,7 @@ void A_CheckPlayerDone(actionargs_t *actionargs)
 void A_ClearSkin(actionargs_t *actionargs)
 {
    Mobj *mo   = actionargs->actor;
-   mo->skin   = NULL;
+   mo->skin   = nullptr;
    mo->sprite = mo->state->sprite;
 }
 
@@ -142,8 +148,10 @@ void A_FadeOut(actionargs_t *actionargs)
 void A_Jump(actionargs_t *actionargs)
 {
    int        chance, choice;
-   Mobj      *actor = actionargs->actor;
-   arglist_t *al    = actionargs->args;
+   Mobj      *actor  = actionargs->actor;
+   player_t  *player = actor->player;
+   arglist_t *al     = actionargs->args;
+   auto       at     = actionargs->actiontype;
    state_t   *state;
 
    // no args?
@@ -163,8 +171,11 @@ void A_Jump(actionargs_t *actionargs)
    choice = (P_Random(pr_decjump2) % (al->numargs - 1)) + 1;
 
    // if the state is found, jump to it.
-   if((state = E_ArgAsStateLabel(actor, al, choice)))
+   if(at == actionargs_t::MOBJFRAME && (state = E_ArgAsStateLabel(actor, al, choice)))
       P_SetMobjState(actor, state->index);
+   else if(at == actionargs_t::WEAPONFRAME && (state = E_ArgAsStateLabel(player, al, choice)))
+      P_SetPspritePtr(player, actionargs->pspr, state->index);
+
 }
 
 //
@@ -178,7 +189,7 @@ void A_JumpIfNoAmmo(actionargs_t *actionargs)
    if(actionargs->pspr)
    {
       player_t *p     = actionargs->actor->player;
-      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, nullptr, p);
+      int statenum    = E_ArgAsStateNumNI(actionargs->args, 0, p);
       weaponinfo_t *w = p->readyweapon;
       int ammo;
 
@@ -224,7 +235,7 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, nullptr, player)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, player)) < 0)
          return;
 
       P_SetPspritePtr(player, pspr, statenum);
@@ -232,21 +243,14 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
    else
    {
       Mobj *target = actor->target;
-      int seek = !!E_ArgAsInt(args, 2, 0);
-      int ifov =   E_ArgAsInt(args, 1, 0);
+      bool    seek = !!E_ArgAsInt(args, 2, 0);
+      fixed_t ffov = E_ArgAsFixed(args, 1, 0);
 
       // if a missile, determine what to do from args[2]
       if(actor->flags & MF_MISSILE)
       {
-         switch(seek)
-         {
-         default:
-         case 0: // 0 == use originator (mo->target)
-            break;
-         case 1: // 1 == use seeker target
+         if(seek)
             target = actor->tracer;
-            break;
-         }
       }
 
       // no target? nothing else to do
@@ -254,35 +258,35 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
          return;
 
       // check fov if one is specified
-      if(ifov)
+      if(ffov)
       {
-         angle_t fov  = FixedToAngle(ifov);
+         angle_t fov  = FixedToAngle(ffov);
          angle_t tang = P_PointToAngle(actor->x, actor->y,
 #ifdef R_LINKEDPORTALS
-                                        getThingX(actor, target), 
+                                        getThingX(actor, target),
                                         getThingY(actor, target));
 #else
                                         target->x, target->y);
 #endif
-         angle_t minang = actor->angle - fov / 2;
-         angle_t maxang = actor->angle + fov / 2;
+         angle_t minang = actor->angle - FixedToAngle(fov) / 2;
+         angle_t maxang = actor->angle + FixedToAngle(fov) / 2;
 
          // if the angles are backward, compare differently
-         if((minang > maxang) ? tang < minang && tang > maxang 
+         if((minang > maxang) ? tang < minang && tang > maxang
                               : tang < minang || tang > maxang)
          {
             return;
          }
       }
 
-      // check line of sight 
+      // check line of sight
       if(!P_CheckSight(actor, target))
          return;
 
       // prepare to jump!
-      if((statenum = E_ArgAsStateNumNI(args, 0, actor, nullptr)) < 0)
+      if((statenum = E_ArgAsStateNumNI(args, 0, actor)) < 0)
          return;
-      
+
       P_SetMobjState(actor, statenum);
    }
 }
@@ -349,10 +353,12 @@ static const char *kwds_channel_old[] =
    "chan_voice",  // 2 },
    "chan_item",   // 3 },
    "chan_body",   // 4 },
+   "5",           // 5 },
+   "6",           // 6 },
+   "7",           // 7 },
 };
 
-// EDF_FEATURES_FIXME?
-static argkeywd_t channelkwdsold = { kwds_channel_old, earrlen(kwds_channel_old) };
+static argkeywd_t channelkwdsold = { kwds_channel_old, NUMSCHANNELS };
 
 static const char *kwds_attn_old[] =
 {
@@ -373,10 +379,12 @@ static const char *kwds_channel_new[] =
    "voice",  // 2
    "item",   // 3
    "body",   // 4
+   "5",      // 5
+   "6",      // 6
+   "7",      // 7
 };
 
-// EDF_FEATURES_FIXME?
-static argkeywd_t channelkwdsnew = { kwds_channel_new, earrlen(kwds_channel_old) };
+static argkeywd_t channelkwdsnew = { kwds_channel_new, NUMSCHANNELS };
 
 static const char *kwds_attn_new[] =
 {
@@ -462,11 +470,188 @@ void A_SetSpecial(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    arglist_t *args = actionargs->args;
-   
-   actor->special = E_ArgAsInt(args, 0, 0);
 
-   for(int i = 1; i >= 5; i++)
+   int specnum = E_ArgAsInt(args, 0, 0);
+   const char *specname = E_ArgAsString(args, 0, "");
+
+   int special = 0;
+   if(specnum)
+      special = EV_ActionForACSAction(specnum);
+   else
+   {
+      if(estrempty(specname))
+         return;
+      special = E_LineSpecForName(specname);
+   }
+
+   if(!special)
+   {
+      // Check for deliberate '0' value
+      char *endptr = nullptr;
+      strtol(specname, &endptr, 0);
+      if(*endptr) // not just '0'
+      {
+         doom_printf(FC_ERROR "A_SetSpecial: unknown special '%s'\n", specname);
+         return;
+      }  // otherwise we have special 0 coming from value "0"
+   }
+
+   actor->special = special;
+
+   for(int i = 1; i <= 5; i++)
       actor->args[i - 1] = E_ArgAsInt(args, i, 0);
+}
+
+enum seekermissile_flags : unsigned int
+{
+   SMF_LOOK     = 0x00000001,
+   SMF_PRECISE  = 0x00000002,
+   SMF_CURSPEED = 0x00000004,
+};
+
+static dehflags_t seekermissile_flaglist[] =
+{
+   { "normal",   0x00000000   },
+   { "look",     SMF_LOOK     },
+   { "precise",  SMF_PRECISE  },
+   { "curspeed", SMF_CURSPEED },
+   { nullptr,    0            }
+};
+
+static dehflagset_t seekermissile_flagset =
+{
+   seekermissile_flaglist, // flaglist
+   0,                      // mode
+};
+
+//
+// ZDoom-inspired action function, implemented using wiki docs.
+//
+// args[0] : threshold
+// args[1] : maxturnangle
+// args[2] : flags
+// args[3] : chance (out of 256) it will try acquire a target if it doesn't have one
+// args[4] : distance
+//
+void A_SeekerMissile(actionargs_t *actionargs)
+{
+   Mobj      *dest;
+   Mobj      *actor = actionargs->actor;
+   arglist_t *args  = actionargs->args;
+
+   const angle_t threshold    = eclamp<angle_t>(E_ArgAsAngle(args, 0, ANG90), 0, ANG90);
+   const angle_t maxTurnAngle = eclamp<angle_t>(E_ArgAsAngle(args, 1, ANG90), 0, ANG90);
+   const unsigned int flags   = E_ArgAsFlags(args, 2, &seekermissile_flagset);
+   const int     chance       = E_ArgAsInt(args, 3, 50);
+   const fixed_t distance     = E_ArgAsFixed(args, 4, 10 << FRACBITS) * 64;
+
+   const fixed_t speed = [flags, actor] {
+      if(!(flags & SMF_CURSPEED))
+         return actor->info->speed;
+      else
+      {
+         const double fx = M_FixedToDouble(actor->momx);
+         const double fy = M_FixedToDouble(actor->momy);
+         const double fz = M_FixedToDouble(actor->momz);
+         return M_DoubleToFixed(sqrt(fx*fx + fy*fy + fz*fz));
+      }
+   }();
+
+   // adjust direction
+   dest = actor->tracer;
+
+   if(!dest || dest->health <= 0)
+   {
+      if((flags & SMF_LOOK) && P_Random(pr_seekermissile) < chance)
+      {
+         bool success = false;
+
+         // Code based on A_BouncingBFG
+         for(int i = 1; i < 40; i++)  // offset angles from its attack angle
+         {
+            // Angle fans outward, preferring nearer angles
+            angle_t an = actor->angle;
+            if(i & 2)
+               an += (ANG360 / 40) * (i / 2);
+            else
+               an -= (ANG360 / 40) * (i / 2);
+
+            P_AimLineAttack(actor, an, distance, true);
+
+            // don't aim for shooter, or for friends of shooter
+            if(clip.linetarget)
+            {
+               if(clip.linetarget == actor->target ||
+                  (clip.linetarget->flags & actor->target->flags & MF_FRIEND))
+                  continue;
+
+               if(clip.linetarget)
+               {
+                  P_SetTarget<Mobj>(&actor->tracer, clip.linetarget);
+                  dest = clip.linetarget;
+                  success = true;
+                  break;
+               }
+            }
+         }
+
+         if(!success)
+            return;
+      }
+      else
+         return;
+   }
+
+   const fixed_t dx = getThingX(actor, dest);
+   const fixed_t dy = getThingY(actor, dest);
+   const fixed_t dz = getThingZ(actor, dest);
+
+   // change angle
+   angle_t exact = P_PointToAngle(actor->x, actor->y, dx, dy);
+
+   if(exact != actor->angle)
+   {
+      // MaxW: I've been informed ZDoom halves turning if the
+      // angle towards the target is larger than the threshold
+      angle_t turnAngle = exact - actor->angle;
+      if(turnAngle > threshold)
+         turnAngle = maxTurnAngle / 2;
+      else
+         turnAngle = maxTurnAngle;
+
+      if(exact - actor->angle > 0x80000000)
+      {
+         actor->angle -= turnAngle;
+         if(exact - actor->angle < 0x80000000)
+            actor->angle = exact;
+      }
+      else
+      {
+         actor->angle += turnAngle;
+         if(exact - actor->angle > 0x80000000)
+            actor->angle = exact;
+      }
+   }
+
+   exact = actor->angle >> ANGLETOFINESHIFT;
+   actor->momx = FixedMul(speed, finecosine[exact]);
+   actor->momy = FixedMul(speed, finesine[exact]);
+
+   // change slope
+   fixed_t dist = P_AproxDistance(dx - actor->x, dy - actor->y);
+   dist = emax(dist / speed, 1);
+
+   if(flags & SMF_PRECISE)
+      actor->momz = (dz + (dest->height >> 1) - actor->z) / dist;
+   else
+   {
+      const fixed_t slope = (dz + 40 * FRACUNIT - actor->z) / dist;
+
+      if(slope < actor->momz)
+         actor->momz -= FRACUNIT / 8;
+      else
+         actor->momz += FRACUNIT / 8;
+   }
 }
 
 // EOF

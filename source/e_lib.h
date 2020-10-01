@@ -34,11 +34,11 @@
 struct dehflags_t;
 struct dehflagset_t;
 
-typedef struct E_Enable_s
+struct E_Enable_t
 {
    const char *name;
    int enabled;
-} E_Enable_t;
+};
 
 #ifdef NEED_EDF_DEFINITIONS
 
@@ -70,7 +70,7 @@ void E_MetaStringFromCfgString(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaIntFromCfgInt(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaIntFromCfgBool(MetaTable *meta, cfg_t *cfg, const char *prop);
 void E_MetaIntFromCfgFlag(MetaTable *meta, cfg_t *cfg, const char *prop);
-void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype = NULL);
+void E_MetaTableFromCfg(cfg_t *cfg, MetaTable *table, MetaTable *prototype = nullptr);
 
 // Prefix flag stuff
 void E_SetFlagsFromPrefixCfg(cfg_t *cfg, unsigned &flags, const dehflags_t *set);
@@ -98,7 +98,7 @@ byte *E_ParseTranslation(const char *str, int tag);
 
 //
 // This structure is returned by E_ParseTextLine and is used to hold pointers
-// to the tokens inside the command string. The pointers may be NULL if the
+// to the tokens inside the command string. The pointers may be nullptr if the
 // corresponding tokens do not exist.
 //
 struct tempcmd_t

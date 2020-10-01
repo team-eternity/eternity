@@ -586,7 +586,7 @@ thingtype TeleGlitterGenBlue : Mobj, 7052, 331
 thingtype TeleGlitterRed : Mobj, -1, 332
 {
   compatname TeleGlitter1
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE|NOZERODAMAGE
+  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NOSPLASH|NORANDOMIZE|NOZERODAMAGE
   acs_spawndata
   {
     num   166 
@@ -609,7 +609,7 @@ thingtype TeleGlitterRed : Mobj, -1, 332
 thingtype TeleGlitterBlue : Mobj, -1, 333
 {
   compatname TeleGlitter2
-  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NORANDOMIZE|NOZERODAMAGE
+  cflags     NOBLOCKMAP|NOGRAVITY|MISSILE|NOSPLASH|NORANDOMIZE|NOZERODAMAGE
   acs_spawndata
   {
     num   167
@@ -783,7 +783,7 @@ thingtype GolemShot : Mobj, -1, 341
   radius     8.0
   height     14.0
   damage     4
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SEEKERMISSILE|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|SEEKERMISSILE|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   131
@@ -875,7 +875,7 @@ thingtype WeredragonShot : Mobj, -1, 343
   radius     9.0
   height     8.0
   damage     4
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   120
@@ -973,7 +973,7 @@ thingtype OphidianShotA : Mobj, -1, 346
   radius     12.0
   height     8.0
   damage     1
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   138
@@ -1002,7 +1002,7 @@ thingtype OphidianShotB : Mobj, -1, 347
   radius     12.0
   height     8.0
   damage     3
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   139
@@ -1147,7 +1147,7 @@ thingtype DiscipleShot : Mobj, -1, 350
   radius     10.0
   height     6.0
   damage     3
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   140
@@ -1244,7 +1244,7 @@ thingtype KnightAxe : Mobj, -1, 353
   height     8.0
   damage     2
   deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NORANDOMIZE|NOCROSS|THRUGHOST|WINDTHRUST|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NORANDOMIZE|NOCROSS|THRUGHOST|WINDTHRUST|DRAWSBLOOD
   acs_spawndata
   {
     num   127
@@ -1273,7 +1273,7 @@ thingtype KnightAxeRed : Mobj, -1, 354
   height     8.0
   damage     7
   deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   128
@@ -1364,7 +1364,7 @@ thingtype SRDsparilShot1 : Mobj, -1, 356
   radius     10.0
   height     10.0
   damage     10
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|FIREDAMAGE|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   144
@@ -1457,7 +1457,7 @@ thingtype DsparilShot1 : Mobj, -1, 358
   radius     10.0
   height     6.0
   damage     1
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   146
@@ -1498,7 +1498,7 @@ thingtype DsparilShot2 : Mobj, -1, 360
   radius     10.0
   height     6.0
   damage     10
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   145
@@ -1804,7 +1804,7 @@ thingtype MaulotaurShot : Mobj, -1, 372
   radius     10.0
   height     6.0
   damage     3
-  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|FIREDAMAGE|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOSPLASH|NOCROSS|FIREDAMAGE|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   115     // note: different from zdoom  
@@ -1877,9 +1877,9 @@ thingtype MaulotaurFloorFlame : MaulotaurFireProto, -1, 374
   states
   @"
   Spawn:
-    FX13 DC   4
-    FX13 BCDE 5
-    FX13 FGH  4
+    FX13 DC   4 bright
+    FX13 BCDE 5 bright
+    FX13 FGH  4 bright
     stop
   "@
 }
@@ -1959,7 +1959,7 @@ thingtype IronLichShot1 : Mobj, -1, 377
   radius     12.0
   height     6.0
   damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NOCROSS|THRUGHOST|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   164
@@ -1986,7 +1986,7 @@ thingtype IronLichShot2 : Mobj, -1, 378
   radius     12.0
   height     6.0
   damage     3
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NOCROSS|NORANDOMIZE|DRAWSBLOOD
 
   firstdecoratestate S_LICHFX2_1
   states
@@ -2008,7 +2008,7 @@ thingtype IronLichShot3 : Mobj, -1, 379
   radius     14.0
   height     12.0
   damage     5
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NOCROSS|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
 
   firstdecoratestate S_LICHFX3_1
   states
@@ -2032,7 +2032,7 @@ thingtype LichWhirlwind : Mobj, -1, 380
   radius       16.0
   height       74.0
   damage       1
-  cflags       NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|SEEKERMISSILE|EXPLOCOUNT|NORANDOMIZE|DRAWSBLOOD
+  cflags       NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOCROSS|NOSPLASH|SEEKERMISSILE|EXPLOCOUNT|NORANDOMIZE|DRAWSBLOOD
   translucency 26624
   dmgspecial   Whirlwind
   acs_spawndata
@@ -2413,7 +2413,7 @@ thingtype HereticImpShot : Mobj, -1, 397
   radius     8.0
   height     8.0
   damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NOCROSS|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|WINDTHRUST|NOCROSS|NORANDOMIZE|DRAWSBLOOD
   acs_spawndata
   {
     num   10
@@ -2848,7 +2848,7 @@ thingtype HereticRipper : Mobj, -1, 422
   radius     8.0
   height     6.0
   damage     1
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|RIP|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|RIP|NORANDOMIZE|DRAWSBLOOD
 
   firstdecoratestate S_HRIPPER1
   states
@@ -2902,7 +2902,7 @@ thingtype HereticHornRodFX1 : Mobj, -1, 425
   damage     3
   seesound   ht_hrnsht
   deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|WINDTHRUST|NORANDOMIZE|DRAWSBLOOD
 
   firstdecoratestate S_HRODFX1_1
   states
@@ -2926,7 +2926,7 @@ thingtype HereticGoldWandFX1 : Mobj, -1, 426
   height     6.0
   damage     2
   deathsound ht_gldhit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NORANDOMIZE|DRAWSBLOOD
 
   firstdecoratestate S_GWANDFX1_1
   states
@@ -3037,7 +3037,7 @@ thingtype CrossbowFX1 : Mobj, -1, 434
   damage     10
   seesound   ht_bowsht
   deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
 
   //firstdecoratestate S_CRBOWFX1_1
   states
@@ -3070,12 +3070,12 @@ thingtype CrossbowFX2 : CrossbowFX1, -1, 435
 thingtype CrossbowFX3 : Mobj, -1, 436
 {
   compatname CrossbowFX3
-  speed      32.0
+  speed      20.0
   radius     11.0
   height     8.0
-  damage     6
+  damage     2
   deathsound ht_hrnhit
-  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|WINDTHRUST|THRUGHOST|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
+  cflags     NOBLOCKMAP|MISSILE|DROPOFF|NOGRAVITY|NOSPLASH|WINDTHRUST|THRUGHOST|NOTELEPORT|NORANDOMIZE|DRAWSBLOOD
 
   //firstdecoratestate S_CRBOWFX3_1
   states
@@ -3095,7 +3095,8 @@ thingtype CrossbowFX4 : Mobj, -1, 437
   cflags NOBLOCKMAP|LOGRAV
 
   //firstdecoratestate S_CRBOWFX4_1
-  states @"
+  states
+  @"
   Spawn:
     FX03 FG 8 bright
     stop
@@ -3107,7 +3108,8 @@ thingtype MaceShotProto
   cflags NOBLOCKMAP|MISSILE|DROPOFF|HERETICBOUNCES|THRUGHOST|NOTELEPORT
 
   //firstdecoratestate S_MACEFX1_1
-  states @"
+  states
+  @"
   Death:
     FX02 F 4 bright A_MaceBallImpact
     FX02 GHIJ 4 bright
@@ -3126,7 +3128,8 @@ thingtype MaceFX1 : MaceShotProto, -1, 438
   addflags   NOGRAVITY
 
   //firstdecoratestate S_MACEFX1_1
-  states @"
+  states
+  @"
   Spawn:
     FX02 AB 4 A_MacePL1Check
     loop
@@ -3143,7 +3146,8 @@ thingtype MaceFX2 : MaceShotProto, -1, 439
   addflags   LOGRAV
 
   //firstdecoratestate S_MACEFX2_1
-  states @"
+  states
+  @"
   Spawn:
     FX02 CD 4
     loop
@@ -3163,7 +3167,8 @@ thingtype MaceFX3 : MaceShotProto, -1, 440
   addflags   LOGRAV
 
   //firstdecoratestate S_MACEFX2_1
-  states @"
+  states
+  @"
   Spawn:
     FX02 AB 4
     loop
@@ -3177,10 +3182,12 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
   radius     8.0
   height     6.0
   damage     18
+  dmgspecial PoweredMaceBall
   remflags   NOTELEPORT
   addflags   LOGRAV|TELESTOMP
 
-  states @"
+  states
+  @"
   Spawn:
     FX02 E 99
     loop
@@ -3235,7 +3242,7 @@ thingtype HereticBloodSplatter : Mobj, -1, 433
 {
   radius 2.0
   height 4.0
-  cflags NOBLOCKMAP|MISSILE|DROPOFF|CANNOTPUSH|NORANDOMIZE|NOZERODAMAGE /*|NOTELEPORT*/
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|NORANDOMIZE|NOSPLASH|CANNOTPUSH|NOZERODAMAGE /*|NOTELEPORT*/
   states
   @"
   Spawn:

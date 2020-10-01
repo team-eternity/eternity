@@ -248,7 +248,7 @@ void PushThinker::Think()
    // constant pushers p_wind and p_current
    
    if(sec->heightsec != -1) // special water sector?
-      ht = sectors[sec->heightsec].floorheight;
+      ht = sectors[sec->heightsec].srf.floor.height;
 
    node = sec->touching_thinglist; // things touching this sector
 
@@ -271,7 +271,7 @@ void PushThinker::Think()
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > thing->floorz) // above ground
+            if(thing->z > thing->zref.floor) // above ground
             {
                xspeed = this->x_mag; // full force
                yspeed = this->y_mag;
@@ -302,7 +302,7 @@ void PushThinker::Think()
       {
          if(sec->heightsec == -1) // NOT special water sector
          {
-            if(thing->z > sec->floorheight) // above ground
+            if(thing->z > sec->srf.floor.height) // above ground
                xspeed = yspeed = 0; // no force
             else // on ground
             {
@@ -345,7 +345,7 @@ void PushThinker::serialize(SaveArchive &arc)
 //
 // P_GetPushThing
 //
-// returns a pointer to an PUSH or PULL thing, NULL otherwise.
+// returns a pointer to an PUSH or PULL thing, nullptr otherwise.
 //
 Mobj* P_GetPushThing(int s)
 {
@@ -365,7 +365,7 @@ Mobj* P_GetPushThing(int s)
       thing = thing->snext;
    }
    
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -435,7 +435,7 @@ void P_SpawnPushers()
       {
       case EV_STATIC_WIND_CONTROL: // wind
          for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-            Add_Pusher(PushThinker::p_wind, line->dx, line->dy, NULL, s);
+            Add_Pusher(PushThinker::p_wind, line->dx, line->dy, nullptr, s);
          break;
 
       case EV_STATIC_WIND_CONTROL_PARAM:
@@ -448,14 +448,14 @@ void P_SpawnPushers()
             else
             {
                for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-                  Add_Pusher(PushThinker::p_wind, x_mag, y_mag, NULL, s);
+                  Add_Pusher(PushThinker::p_wind, x_mag, y_mag, nullptr, s);
             }
             break;
          }
 
       case EV_STATIC_CURRENT_CONTROL: // current
          for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-            Add_Pusher(PushThinker::p_current, line->dx, line->dy, NULL, s);
+            Add_Pusher(PushThinker::p_current, line->dx, line->dy, nullptr, s);
          break;
 
       case EV_STATIC_CURRENT_CONTROL_PARAM:
@@ -468,7 +468,7 @@ void P_SpawnPushers()
             else 
             {
                for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
-                  Add_Pusher(PushThinker::p_current, x_mag, y_mag, NULL, s);
+                  Add_Pusher(PushThinker::p_current, x_mag, y_mag, nullptr, s);
             }
             break;
          }
@@ -486,7 +486,12 @@ void P_SpawnPushers()
          {
             int tag = line->args[0];
             int x_mag, y_mag;
-            if(line->args[3])
+            if(line->args[3] & ~1)
+            {
+               doom_warningf("PointPush_SetForce line %d: invalid arg4 %d", i, line->args[3]);
+               break;   // kill it quickly
+            }
+            if(line->args[3] & 1)
             {
                x_mag = line->dx;
                y_mag = line->dy;
@@ -503,10 +508,7 @@ void P_SpawnPushers()
                {
                   Mobj *thing = P_GetPushThing(s);
                   if(thing) // No P* means no effect
-                  {
-                     Add_Pusher(PushThinker::p_push, line->dx, line->dy, thing,
-                                s);
-                  }
+                     Add_Pusher(PushThinker::p_push, x_mag, y_mag, thing, s);
                }
             }
             else

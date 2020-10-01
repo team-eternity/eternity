@@ -57,8 +57,8 @@ struct sfxinfo_t;
 #define WEAPON_VOLUME_SILENCED 50
 
 // Defines needed for weapon codepointers
-#define LOWERSPEED   (6)
-#define RAISESPEED   (6)
+#define LOWERSPEED   (FRACUNIT*6)
+#define RAISESPEED   (FRACUNIT*6)
 #define WEAPONBOTTOM (FRACUNIT*128)
 #define WEAPONTOP    (FRACUNIT*32)
 
@@ -77,7 +77,7 @@ typedef enum
 
 struct pspdef_t
 {
-  state_t *state;       // a NULL state means not active
+  state_t *state;       // a nullptr state means not active
   int     tics;
   v2fixed_t prevpos;
   fixed_t sx;

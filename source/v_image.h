@@ -112,9 +112,9 @@ protected:
    int lumpnum;              // lump number loaded from
    DLListItem<VImage> links; // hash links for lookup by lump number
 
-   static VImage *FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal = NULL);
-   static VImage *FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal = NULL);
-   static VImage *FromLinear(const vimageprops_t &props, int lumpnum, VPalette *pal = NULL);
+   static VImage *FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal = nullptr);
+   static VImage *FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal = nullptr);
+   static VImage *FromLinear(const vimageprops_t &props, int lumpnum, VPalette *pal = nullptr);
 
 public:
    // Test if the image is drawable

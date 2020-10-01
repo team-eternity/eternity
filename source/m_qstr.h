@@ -188,7 +188,7 @@ public:
    qstring &pathConcatenate(const char *addend);
    qstring &addDefaultExtension(const char *ext);
    qstring &removeFileSpec();
-   void     extractFileBase(qstring &dest);
+   void     extractFileBase(qstring &dest) const;
 
    // Zone strdup wrappers
    char *duplicate(int tag = PU_STATIC) const;
@@ -197,7 +197,7 @@ public:
    // Numeric Conversions
    int    toInt() const;
    long   toLong(char **endptr, int radix) const;
-   double toDouble(char **endptr);
+   double toDouble(char **endptr) const;
 
    // Searching/Substring Finding Routines
    const char *strChr(char c) const;
@@ -217,7 +217,7 @@ public:
 
    // Special Formatting 
    qstring &makeQuoted();
-   int      Printf(size_t maxlen, const char *fmt, ...);
+   int      Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(3, 4);
 
    // Operators
    bool     operator == (const qstring &other) const;

@@ -49,6 +49,14 @@ There are four ways available for building Eternity: CMake, Visual
 Studio, Xcode files, and Homebrew, for Unix, Windows, and both
 Mac OS X respectively.
 
+Git submodule
+~~~~~~~~~~~~~
+The project contains the ADLMIDI submodule. You need to load it after you've just cloned Eternity, by using this command:
+
+----
+git submodule update --init
+----
+
 Building with CMake
 ~~~~~~~~~~~~~~~~~~~
 CMake should be capable of generating build files for all platforms,
@@ -89,21 +97,8 @@ Building with Xcode
 ~~~~~~~~~~~~~~~~~~~
 You need Mac OS X 10.7 or more to run Eternity.
 
-* Download SDL2 macOS development library (SDL2-2.0.x.dmg) from 
-https://www.libsdl.org/download-2.0.php
-
-* Download SDL2_mixer macOS development library (SDL2_mixer-2.0.x.dmg) from
-https://www.libsdl.org/projects/SDL_mixer/
-
-* Download SDL2_net macOS development library (SDL2_net-2.0.x.dmg) from
-https://www.libsdl.org/projects/SDL_net/
-
-* Open each .dmg file you downloaded. Each of them has a *.framework file (icon
-should look like a shiny grey Lego brick). Extract (by copy-pasting) each
-framework into the macosx/ subfolder located along with this file.
-
-* Now you have the prerequisites. They'll be ignored by Git. Open Xcode and load
-macosx/EternityEngine.xcodeproj. This builds the main game executable.
+* Open Xcode and load macosx/EternityEngine.xcodeproj. This builds the main game
+executable. Any dependencies should be automatically downloaded.
 
 * If you want to build the full package, open 
 macosx/launcher/EternityLaunch.xcodeproj. It depends on EternityEngine.xcodeproj
@@ -149,7 +144,7 @@ using an older cmake release folder, you will need to create a new one.
  cmake .. -DCMAKE_BUILD_TYPE=Release
  make
 
-Building with Visual Studio (2015 and up)
+Building with Visual Studio (2017 and up)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These instructions are written with the assumption that the user has
@@ -157,32 +152,36 @@ already set up Visual Studio.
 
 . Acquire the following libraries:
 +
- SDL-2.0.7
- SDL2_mixer-2.0.2
+ SDL-2.0.12
+ SDL2_mixer-2.0.4
  SDL2_net-2.0.1
 
 . Extract them to a folder of your choosing, eg. `C:\Libs`.
 
-. Open `Eternity.sln` from the `vc2015` (or higher) folder.
+. Open `Eternity.sln` from the `vc2017` (or higher) folder.
 
 . Select 'View -> Property Manager' (if it is not there you will need to enable it from Tools -> Customize -> Commands:
 Menu bar -> View -> Add Command -> View -> Property Manager).
 
-. If you wish to build for 32-bit then open `Release | Win32` or `Debug | Win32` and double click `Microsoft.Cpp.Win32.user`.
+. If using Visual Studio 2019 then copy "EternityTemplate.props" in the "vc2019" folder to the same folder, and rename it to "Eternity.props". After doing this you'll need to reload the Eternity solution if it's already open.
+
+. If using Visual Studio 2019 then open `Release | Win32` or `Debug | Win32` and double click `Eternity`, then skip to the next step.
+If you wish to build for 32-bit then open `Release | Win32` or `Debug | Win32` and double click `Microsoft.Cpp.Win32.user`.
 If you wish to build for 64-bit then open `Release | x64` or `Debug | x64` and double click `Microsoft.Cpp.x64.user`.
 Do this for both if you plan on building both.
 
 . Under the 'User Macros' section, click 'Add Macro'.
 
-. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.7`.
+. Enter `SDL2_0` for the name, and the directory you extracted SDL2.0 to as the value, eg. `C:\Libs\SDL2-2.0.12`.
 
 . Tick 'Set this macro as an environment variable in the build environment' and click OK.
 
-. Repeat the above 2 steps for `SDLMIXER2_0` (C:\Libs\SDL2_mixer-2.0.2) and `SDLNET2_0` (C:\Libs\SDL2_net-2.0.1).
+. Repeat the above 2 steps for `SDLMIXER2_0` (C:\Libs\SDL2_mixer-2.0.4) and `SDLNET2_0` (C:\Libs\SDL2_net-2.0.1).
 
 . Click OK to close the property pages window.
 
-. Right click `Microsoft.Cpp.Win32.user`, or `Microsoft.Cpp.x64.user`, or both, and select 'Save'.
+. If using Visual Studio 2019 then right click `Eternity` and select 'Save', then skip to the next step.
+Otherwise right click `Microsoft.Cpp.Win32.user`, or `Microsoft.Cpp.x64.user`, or both, and select 'Save'.
 
 . Select whether or not you want to compile using 'Debug' or 'Release' config.
 

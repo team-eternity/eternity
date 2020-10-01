@@ -120,12 +120,11 @@ CONSOLE_CONST(opt, cmdoptions);
 CONSOLE_COMMAND(cmdlist, 0)
 {
    command_t *current;
-   int i;
    int charnum = 33;
    int maxchar = 'z';
 
    // SoM: This could be a little better
-   const char *mask = NULL;
+   const char *mask = nullptr;
    unsigned int masklen = 0;
 
    // haleyjd 07/08/04: optional filter parameter -- the provided
@@ -153,11 +152,11 @@ CONSOLE_COMMAND(cmdlist, 0)
 
    for(; charnum <= maxchar; ++charnum) // go thru each char in alphabet
    {
-      for(i = 0; i < CMDCHAINS; ++i)
+      for(command_t *&cmdroot : cmdroots)
       {
-         for(current = cmdroots[i]; current; current = current->next)
+         for(current = cmdroot; current; current = current->next)
          {
-            if(current->name[0] == charnum && 
+            if(current->name[0] == charnum &&
                (!mask || !strncasecmp(current->name, mask, masklen)) &&
                !(current->flags & cf_hidden))
             {
@@ -170,12 +169,12 @@ CONSOLE_COMMAND(cmdlist, 0)
 
 // console height
 
-VARIABLE_INT(c_height,  NULL,                   20, 200, NULL);
+VARIABLE_INT(c_height,  nullptr,                   20, 200, nullptr);
 CONSOLE_VARIABLE(c_height, c_height, 0) {}
 
 // console speed
 
-VARIABLE_INT(c_speed,   NULL,                   1, 200, NULL);
+VARIABLE_INT(c_speed,   nullptr,                   1, 200, nullptr);
 CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 // echo string to console
@@ -435,7 +434,7 @@ static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 AMX_NATIVE_INFO ccmd_Natives[] =
 {
    {"_EngineVersion", sm_version },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

@@ -28,12 +28,12 @@
 #ifndef R_VOXELS_H__
 #define R_VOXELS_H__
 
-typedef struct rvoxelmodel_s
+struct rvoxelmodel_t
 {
    int  xsize, ysize, zsize; // dimensions
    byte *voxels;             // three-dimensional voxel buffer
    byte palette[768];        // original palette
-} rvoxelmodel_t;
+};
 
 #endif
 

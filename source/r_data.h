@@ -46,15 +46,15 @@ typedef enum
 } cmptype_e;
 
 // Generalized graphic
-typedef struct tcomponent_s
+struct tcomponent_t
 {
    int32_t   originx, originy;  // Block origin, which has already accounted
    uint32_t  width, height;     // Unscaled dimensions of the graphic. 
-   
+
    int32_t   lump;              // Lump number of the
-    
+
    cmptype_e type;              // Type of lump
-} tcomponent_t;
+};
 
 
 // SoM: Columns are used inside the texture struct to reference the linear
@@ -111,7 +111,8 @@ struct texture_t
    byte       flatsize;
    
    texcol_t   **columns;     // SoM: width length list of columns
-   byte       *buffer;       // SoM: Linear buffer the texture occupies
+   byte       *bufferalloc;   // ioanch: allocate this one with a leading padding for safety
+   byte       *bufferdata;    // SoM: Linear buffer the texture occupies (ioanch: points to real data)
    
    // New texture system can put either textures or flats (or anything, really)
    // into a texture, so the old patches idea has been scrapped for 'graphics'

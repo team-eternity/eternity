@@ -26,8 +26,16 @@
 #ifndef R_MAIN_H__
 #define R_MAIN_H__
 
+// NEEDED BY R_doubleToUint32 below
+#ifdef __APPLE__
+#include "SDL2/SDL_endian.h"
+#else
+#include "SDL_endian.h"
+#endif
+
 #include "tables.h"
 
+#include "m_vector.h"
 // haleyjd 12/15/2010: Lighting data is required
 #include "r_lighting.h"
 
@@ -84,17 +92,20 @@ struct seg_t;
 struct subsector_t;
 struct sector_t;
 
-int R_PointOnSide(fixed_t x, fixed_t y, node_t *node);
-int R_PointOnSegSide(fixed_t x, fixed_t y, seg_t *line);
+int R_PointOnSideClassic(fixed_t x, fixed_t y, const node_t *node);
+int R_PointOnSidePrecise(fixed_t x, fixed_t y, const node_t *node);
+extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
+
+int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
+
 int SlopeDiv(unsigned int num, unsigned int den);
 angle_t R_PointToAngle(fixed_t x, fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
+fixed_t R_GetLerp(bool ignorepause);
 void R_SectorColormap(const sector_t *s);
 
-// ioanch 20160106: template variants
-template<typename T> 
-inline static subsector_t *R_PointInSubsector(T &&v)
+inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
    return R_PointInSubsector(v.x, v.y);
 }
@@ -161,7 +172,7 @@ struct cb_view_t
    float pspriteystep;
 
    fixed_t   lerp;   // haleyjd: linear interpolation factor
-   sector_t *sector; // haleyjd: view sector, because of interpolation
+   const sector_t *sector; // haleyjd: view sector, because of interpolation
 };
 
 // haleyjd 3/11/10: markflags
@@ -215,17 +226,20 @@ struct cb_seg_t
    // 8 bit tables
    lighttable_t **walllights;
 
-   side_t *side;
-   sector_t *frontsec, *backsec;
+   const side_t *side;
+   const sector_t *frontsec, *backsec;
    visplane_t *floorplane, *ceilingplane;
-   seg_t *line;
+   const seg_t *line;
 
-   portal_t  *f_portal, *c_portal;
+   const portal_t *f_portal, *c_portal;
    pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
    // ioanch: added b_window for bottom edge portal
 
-   // SoM: used for portals
-   fixed_t  frontfloorz, frontceilz, backfloorz, backceilz;
+   // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
+   fixed_t maxfrontfloor, minfrontceil, maxbackfloor, minbackceil;
+
+   // If nonzero, require f_sky1 rendering
+   int skyflat;
 };
 
 
@@ -236,6 +250,60 @@ extern cb_seg_t   segclip;
 // SoM: frameid frame counter.
 void R_IncrementFrameid(); // Needed by the portal functions... 
 extern unsigned   frameid;
+
+//
+// R_doubleToUint32
+//
+// haleyjd: Derived from Mozilla SpiderMonkey jsnum.c;
+// used under the terms of the GPL.
+//
+// * The Original Code is Mozilla Communicator client code, released
+// * March 31, 1998.
+// *
+// * The Initial Developer of the Original Code is
+// * Netscape Communications Corporation.
+// * Portions created by the Initial Developer are Copyright (C) 1998
+// * the Initial Developer. All Rights Reserved.
+// *
+// * Contributor(s):
+// *   IBM Corp.
+//
+static inline uint32_t R_doubleToUint32(double d)
+{
+#ifdef SDL_BYTEORDER
+   // TODO: Use C++ std::endian when C++20 can be used
+   // This bit (and the ifdef) isn't from SpiderMonkey.
+   // Credit goes to Marrub and David Hill
+   return reinterpret_cast<uint32_t *>(&(d += 6755399441055744.0))[SDL_BYTEORDER == SDL_BIG_ENDIAN];
+#else
+   int32_t i;
+   bool    neg;
+   double  two32;
+
+   // FIXME: should check for finiteness first, but we have no code for
+   // doing that in EE yet.
+
+   //if (!JSDOUBLE_IS_FINITE(d))
+   //   return 0;
+
+   // We check whether d fits int32, not uint32, as all but the ">>>" bit
+   // manipulation bytecode stores the result as int, not uint. When the
+   // result does not fit int jsval, it will be stored as a negative double.
+   i = (int32_t)d;
+   if((double)i == d)
+      return (int32_t)i;
+
+   neg = (d < 0);
+   d   = floor(neg ? -d : d);
+   d   = neg ? -d : d;
+
+   // haleyjd: This is the important part: reduction modulo UINT_MAX.
+   two32 = 4294967296.0;
+   d     = fmod(d, two32);
+
+   return (uint32_t)(d >= 0 ? d : d + two32);
+#endif
+}
 
 #endif
 

@@ -29,7 +29,13 @@
 #include "doomtype.h"
 
 struct SDL_Window;
-//struct SDL_Renderer;
+
+enum class screentype_e : int
+{
+   WINDOWED,
+   FULLSCREEN_DESKTOP,
+   FULLSCREEN,
+};
 
 //
 // Video Driver Base Class
@@ -69,9 +75,8 @@ void I_FinishUpdate();
 
 void I_ReadScreen(byte *scr);
 
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf, bool *dfs);
-void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf, bool *dfs);
+void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf);
+void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf);
 
 // letterboxing utilities
 bool I_VideoShouldLetterbox(int w, int h);
@@ -95,7 +100,7 @@ extern int   displaynum;
 // Driver enumeration
 enum halvdr_e
 {
-   VDR_SDLSOFT,
+   VDR_SDLDEFAULT,
    VDR_SDLGL2D,
    VDR_MAXDRIVERS
 };

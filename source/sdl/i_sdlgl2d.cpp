@@ -153,14 +153,29 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
 {
-   Uint32 *fb = static_cast<Uint32 *>(buffer);
+   Uint32   *fb          = static_cast<Uint32 *>(buffer);
+   const int d_end       = (screen->w - bump) & ~7;
+   const int d_remainder = (screen->w - bump) & 7;
 
    for(int y = 0; y < screen->h; y++)
    {
       byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
       Uint32 *dest = fb + y * destwidth;
 
-      for(int x = 0; x < screen->w - bump; x++)
+      for(int x = d_end; x; x -= 8)
+      {
+         *dest   = RGB8to32[*src];
+         dest[1] = RGB8to32[src[1]];
+         dest[2] = RGB8to32[src[2]];
+         dest[3] = RGB8to32[src[3]];
+         dest[4] = RGB8to32[src[4]];
+         dest[5] = RGB8to32[src[5]];
+         dest[6] = RGB8to32[src[6]];
+         dest[7] = RGB8to32[src[7]];
+         src  += 8;
+         dest += 8;
+      }
+      for(int i = d_remainder; i; i--)
       {
          *dest = RGB8to32[*src];
          ++src;
@@ -449,17 +464,16 @@ static GLint textureFilterParams[CFG_GL_NUMFILTERS] =
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
-   bool    wantfullscreen = false;
-   bool    wantdesktopfs  = false;
-   bool    wantvsync      = false;
-   bool    wanthardware   = false; // Not used - this is always "hardware".
-   bool    wantframe      = true;
-   int     v_w            = 640;
-   int     v_h            = 480;
-   int     v_displaynum   = 0;
-   int     window_flags   = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
-   GLvoid *tempbuffer     = nullptr;
-   GLint   texfiltertype  = GL_LINEAR;
+   screentype_e  screentype    = screentype_e::WINDOWED;
+   bool          wantvsync     = false;
+   bool          wanthardware  = false; // Not used - this is always "hardware".
+   bool          wantframe     = true;
+   int           v_w           = 640;
+   int           v_h           = 480;
+   int           v_displaynum  = 0;
+   int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
+   GLvoid       *tempbuffer    = nullptr;
+   GLint         texfiltertype = GL_LINEAR;
 
    // Get video commands and geometry settings
 
@@ -485,13 +499,11 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
       wantvsync = true;
 
    // set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync,
-               &wanthardware, &wantframe, &wantdesktopfs);
+   I_ParseGeom(i_videomode, v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe, &wantdesktopfs);
+   I_CheckVideoCmds(v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
 
    if(!wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
@@ -520,12 +532,12 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
    // this and the below #else block are done here as monitor video mode isn't
    // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(wantfullscreen)
+   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 #else
-   if(wantfullscreen && wantdesktopfs)
+   if(screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(wantfullscreen) // && !wantdesktopfs
+   else if(screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
 #endif
 
@@ -552,6 +564,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                    colordepth, SDL_GetPixelFormatName(format));
    }
 
+   const char *extensions = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
+
    // Try loading the ARB PBO extension
    LoadPBOExtension();
 
@@ -575,8 +589,16 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    GL_SetOrthoMode(v_w, v_h);
 
    // Calculate framebuffer texture sizes
-   framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
-   framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
+   if(strstr(extensions, "GL_ARB_texture_non_power_of_two") != nullptr)
+   {
+       framebuffer_umax = v_w;
+       framebuffer_vmax = v_h;
+   }
+   else
+   {
+       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
+       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
+   }
 
    // calculate right- and bottom-side texture coordinates
    texcoord_smax = static_cast<GLfloat>(v_w) / framebuffer_umax;

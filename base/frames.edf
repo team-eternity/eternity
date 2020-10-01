@@ -74,48 +74,48 @@ frame S_EE_AMBIENCE_LOOP  { cmp = "TNT1|*|*|1|AmbientThinker|@this"; }
 // Terrain Object Frames
 
 // Splash
-frame S_SPLASH1     { cmp = "SPSH|A|*| 8|*|@next"; dehackednum = 1076 }
-frame S_SPLASH2     { cmp = "SPSH|B|*| 8|*|@next"; dehackednum = 1077 }
-frame S_SPLASH3     { cmp = "SPSH|C|*| 8|*|@next"; dehackednum = 1078 }
-frame S_SPLASH4     { cmp = "SPSH|D|*|16";         dehackednum = 1079 }
-frame S_SPLASHX     { cmp = "SPSH|D|*|10";         dehackednum = 1080 }
+frame S_SPLASH1     { cmp = "SPSH|A|*| 8|*|@next"; dehackednum = 4076 }
+frame S_SPLASH2     { cmp = "SPSH|B|*| 8|*|@next"; dehackednum = 4077 }
+frame S_SPLASH3     { cmp = "SPSH|C|*| 8|*|@next"; dehackednum = 4078 }
+frame S_SPLASH4     { cmp = "SPSH|D|*|16";         dehackednum = 4079 }
+frame S_SPLASHX     { cmp = "SPSH|D|*|10";         dehackednum = 4080 }
 
 // Splash Base
-frame S_SPLASHBASE1 { cmp = "SPSH|E|*| 5|*|@next"; dehackednum = 1081 }
-frame S_SPLASHBASE2 { cmp = "SPSH|F|*| 5|*|@next"; dehackednum = 1082 }
-frame S_SPLASHBASE3 { cmp = "SPSH|G|*| 5|*|@next"; dehackednum = 1083 }
-frame S_SPLASHBASE4 { cmp = "SPSH|H|*| 5|*|@next"; dehackednum = 1084 }
-frame S_SPLASHBASE5 { cmp = "SPSH|I|*| 5|*|@next"; dehackednum = 1085 }
-frame S_SPLASHBASE6 { cmp = "SPSH|J|*| 5|*|@next"; dehackednum = 1086 }
-frame S_SPLASHBASE7 { cmp = "SPSH|K|*| 5";         dehackednum = 1087 }
+frame S_SPLASHBASE1 { cmp = "SPSH|E|*| 5|*|@next"; dehackednum = 4081 }
+frame S_SPLASHBASE2 { cmp = "SPSH|F|*| 5|*|@next"; dehackednum = 4082 }
+frame S_SPLASHBASE3 { cmp = "SPSH|G|*| 5|*|@next"; dehackednum = 4083 }
+frame S_SPLASHBASE4 { cmp = "SPSH|H|*| 5|*|@next"; dehackednum = 4084 }
+frame S_SPLASHBASE5 { cmp = "SPSH|I|*| 5|*|@next"; dehackednum = 4085 }
+frame S_SPLASHBASE6 { cmp = "SPSH|J|*| 5|*|@next"; dehackednum = 4086 }
+frame S_SPLASHBASE7 { cmp = "SPSH|K|*| 5";         dehackednum = 4087 }
 
 // Sludge
-frame S_SLUDGE1     { cmp = "SLDG|A|*| 8|*|@next"; dehackednum = 1088 }
-frame S_SLUDGE2     { cmp = "SLDG|B|*| 8|*|@next"; dehackednum = 1089 }
-frame S_SLUDGE3     { cmp = "SLDG|C|*| 8|*|@next"; dehackednum = 1090 }
-frame S_SLUDGE4     { cmp = "SLDG|D|*| 8";         dehackednum = 1091 }
-frame S_SLUDGEX     { cmp = "SLDG|D|*| 6";         dehackednum = 1092 }
+frame S_SLUDGE1     { cmp = "SLDG|A|*| 8|*|@next"; dehackednum = 4088 }
+frame S_SLUDGE2     { cmp = "SLDG|B|*| 8|*|@next"; dehackednum = 4089 }
+frame S_SLUDGE3     { cmp = "SLDG|C|*| 8|*|@next"; dehackednum = 4090 }
+frame S_SLUDGE4     { cmp = "SLDG|D|*| 8";         dehackednum = 4091 }
+frame S_SLUDGEX     { cmp = "SLDG|D|*| 6";         dehackednum = 4092 }
 
 // Sludge Base
-frame S_SLUDGEBASE1 { cmp = "SLDG|E|*| 6|*|@next"; dehackednum = 1093 }
-frame S_SLUDGEBASE2 { cmp = "SLDG|F|*| 6|*|@next"; dehackednum = 1094 }
-frame S_SLUDGEBASE3 { cmp = "SLDG|G|*| 6|*|@next"; dehackednum = 1095 }
-frame S_SLUDGEBASE4 { cmp = "SLDG|H|*| 6";         dehackednum = 1096 }
+frame S_SLUDGEBASE1 { cmp = "SLDG|E|*| 6|*|@next"; dehackednum = 4093 }
+frame S_SLUDGEBASE2 { cmp = "SLDG|F|*| 6|*|@next"; dehackednum = 4094 }
+frame S_SLUDGEBASE3 { cmp = "SLDG|G|*| 6|*|@next"; dehackednum = 4095 }
+frame S_SLUDGEBASE4 { cmp = "SLDG|H|*| 6";         dehackednum = 4096 }
 
 // Lava
-frame S_LAVASPLASH1 { cmp = "LVAS|A|T| 5|*|@next"; dehackednum = 1097 }
-frame S_LAVASPLASH2 { cmp = "LVAS|B|T| 5|*|@next"; dehackednum = 1098 }
-frame S_LAVASPLASH3 { cmp = "LVAS|C|T| 5|*|@next"; dehackednum = 1099 }
-frame S_LAVASPLASH4 { cmp = "LVAS|D|T| 5|*|@next"; dehackednum = 1100 }
-frame S_LAVASPLASH5 { cmp = "LVAS|E|T| 5|*|@next"; dehackednum = 1101 }
-frame S_LAVASPLASH6 { cmp = "LVAS|F|T| 5";         dehackednum = 1102 }
+frame S_LAVASPLASH1 { cmp = "LVAS|A|T| 5|*|@next"; dehackednum = 4097 }
+frame S_LAVASPLASH2 { cmp = "LVAS|B|T| 5|*|@next"; dehackednum = 4098 }
+frame S_LAVASPLASH3 { cmp = "LVAS|C|T| 5|*|@next"; dehackednum = 4099 }
+frame S_LAVASPLASH4 { cmp = "LVAS|D|T| 5|*|@next"; dehackednum = 4100 }
+frame S_LAVASPLASH5 { cmp = "LVAS|E|T| 5|*|@next"; dehackednum = 4101 }
+frame S_LAVASPLASH6 { cmp = "LVAS|F|T| 5";         dehackednum = 4102 }
 
 // Lava Smoke
-frame S_LAVASMOKE1  { cmp = "LVAS|G|T| 5|*|@next"; dehackednum = 1103 }
-frame S_LAVASMOKE2  { cmp = "LVAS|H|T| 5|*|@next"; dehackednum = 1104 }
-frame S_LAVASMOKE3  { cmp = "LVAS|I|T| 5|*|@next"; dehackednum = 1105 }
-frame S_LAVASMOKE4  { cmp = "LVAS|J|T| 5|*|@next"; dehackednum = 1106 }
-frame S_LAVASMOKE5  { cmp = "LVAS|K|T| 5";         dehackednum = 1107 }
+frame S_LAVASMOKE1  { cmp = "LVAS|G|T| 5|*|@next"; dehackednum = 4103 }
+frame S_LAVASMOKE2  { cmp = "LVAS|H|T| 5|*|@next"; dehackednum = 4104 }
+frame S_LAVASMOKE3  { cmp = "LVAS|I|T| 5|*|@next"; dehackednum = 4105 }
+frame S_LAVASMOKE4  { cmp = "LVAS|J|T| 5|*|@next"; dehackednum = 4106 }
+frame S_LAVASMOKE5  { cmp = "LVAS|K|T| 5";         dehackednum = 4107 }
 
 
 // Heretic Frames --------------------------------------------------------------

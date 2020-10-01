@@ -202,11 +202,11 @@ char qstring::charAt(size_t idx) const
 // qstring::bufferAt
 //
 // Gets a pointer into the buffer at the given position, if that position would
-// be valid. Returns NULL otherwise. The same caveats apply as with qstring::getBuffer.
+// be valid. Returns nullptr otherwise. The same caveats apply as with qstring::getBuffer.
 //
 char *qstring::bufferAt(size_t idx)
 {
-   return idx < size ? buffer + idx : NULL;
+   return idx < size ? buffer + idx : nullptr;
 }
 
 //
@@ -1008,7 +1008,7 @@ long qstring::toLong(char **endptr, int radix) const
 //
 // Calls strtod on the qstring.
 
-double qstring::toDouble(char **endptr)
+double qstring::toDouble(char **endptr) const
 {
    return strtod(buffer, endptr);
 }
@@ -1024,7 +1024,7 @@ double qstring::toDouble(char **endptr)
 //
 char *qstring::duplicate(int tag) const
 {
-   return Z_Strdup(buffer, tag, NULL);
+   return Z_Strdup(buffer, tag, nullptr);
 }
 
 //
@@ -1225,7 +1225,7 @@ qstring &qstring::removeFileSpec()
 // This one is not limited to 8 character file names, and will include any
 // file extension, however, so it is not strictly equivalent.
 //
-void qstring::extractFileBase(qstring &dest)
+void qstring::extractFileBase(qstring &dest) const
 {
    const char *src = buffer + index - 1;
    dest = "";
@@ -1274,7 +1274,7 @@ qstring &qstring::makeQuoted()
 // padding directives, as they will be ignored, and the resulting output may
 // then be truncated to qstr->size - 1.
 //
-int qstring::Printf(size_t maxlen, const char *fmt, ...)
+int qstring::Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...)
 {
    va_list va2;
    int returnval;

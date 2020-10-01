@@ -81,7 +81,7 @@ public:
    // iteration from the beginning of the list. Do *NOT* attempt to
    // cache next/prev values from the object around this call yourself.
 
-   inline void remove(BDListItem<T> **myIterator = NULL)
+   inline void remove(BDListItem<T> **myIterator = nullptr)
    {
       BDListItem<T> *lnext = this->bdNext;
 
@@ -91,7 +91,7 @@ public:
       (lnext->bdPrev = this->bdPrev)->bdNext = lnext;
    }
 
-   inline bool isDummy()
+   inline bool isDummy() const
    {
       return this->bdData == BDLISTMAGIC;
    }

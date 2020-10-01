@@ -94,12 +94,17 @@ void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned
 // start of a 64*64 tile image
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 
+extern int rTintTableIndex;   // check if we have a TINTTAB lump in the directory
+
 // haleyjd 06/22/08: Span styles enumeration
 enum
 {
    SPAN_STYLE_NORMAL,
    SPAN_STYLE_TL,
    SPAN_STYLE_ADD,
+   SPAN_STYLE_NORMAL_MASKED,
+   SPAN_STYLE_TL_MASKED,
+   SPAN_STYLE_ADD_MASKED,
    SPAN_NUMSTYLES
 };
 
@@ -161,7 +166,7 @@ extern const int fuzzoffset[];
 extern int fuzzpos;
 
 // Cardboard
-typedef struct cb_column_s
+struct cb_column_t
 {
    int x, y1, y2;
 
@@ -171,12 +176,12 @@ typedef struct cb_column_s
    int texmid;
 
    // 8-bit lighting
-   lighttable_t *colormap;
-   byte *translation;
+   const lighttable_t *colormap;
+   const byte *translation;
    fixed_t translevel; // haleyjd: zdoom style trans level
 
-   void *source;
-} cb_column_t;
+   const void *source;
+};
 
 
 extern cb_column_t column;

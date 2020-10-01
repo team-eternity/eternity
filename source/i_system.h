@@ -26,6 +26,8 @@
 #ifndef I_SYSTEM_H__
 #define I_SYSTEM_H__
 
+#include <stdarg.h>
+
 #include "d_keywds.h"
 
 struct ticcmd_t;
@@ -80,25 +82,19 @@ enum
 };
 
 // haleyjd 06/05/10
-void I_ExitWithMessage(const char *msg, ...);
+void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 
-#ifdef __GNUC__
+// MaxW: 2018/06/20: No more need for an #ifdef!
 // haleyjd 05/21/10
-void I_FatalError(int code, const char *error, ...) __attribute__((noreturn, format(printf,2,3)));
-
+[[noreturn]] void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 // killough 3/20/98: add const
-// killough 4/25/98: add gcc attributes
-void I_Error(const char *error, ...) __attribute__((noreturn, format(printf,1,2)));
+[[noreturn]] void I_Error(E_FORMAT_STRING(const char *error), ...) E_PRINTF(1, 2);
+[[noreturn]] void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args) E_PRINTF(1, 0);
 
-void I_ErrorVA(const char *error, va_list args) __attribute__((noreturn));
+#ifdef RANGECHECK
+#define I_Assert(condition, ...) if(!(condition)) I_Error(__VA_ARGS__)
 #else
-// haleyjd 05/21/10
-void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...);
-
-//SoM 3/14/2002: vc++ 
-void I_Error(E_FORMAT_STRING(const char *error), ...);
-
-void I_ErrorVA(const char *error, va_list args);
+#define I_Assert(condition, ...)
 #endif
 
 extern int mousepresent;                // killough

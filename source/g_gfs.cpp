@@ -58,12 +58,12 @@ static gfs_t gfs;
 
 static cfg_opt_t gfs_opts[] =
 {
-   CFG_STR(SEC_WADFILE,   0, CFGF_MULTI),
-   CFG_STR(SEC_DEHFILE,   0, CFGF_MULTI),
-   CFG_STR(SEC_CSCFILE,   0, CFGF_MULTI),
-   CFG_STR(SEC_EDFFILE,   0, CFGF_NONE),
-   CFG_STR(SEC_IWAD,      0, CFGF_NONE),
-   CFG_STR(SEC_BASEPATH,  0, CFGF_NONE),
+   CFG_STR(SEC_WADFILE,   nullptr, CFGF_MULTI),
+   CFG_STR(SEC_DEHFILE,   nullptr, CFGF_MULTI),
+   CFG_STR(SEC_CSCFILE,   nullptr, CFGF_MULTI),
+   CFG_STR(SEC_EDFFILE,   nullptr, CFGF_NONE),
+   CFG_STR(SEC_IWAD,      nullptr, CFGF_NONE),
+   CFG_STR(SEC_BASEPATH,  nullptr, CFGF_NONE),
    CFG_END()
 };
 
@@ -75,7 +75,7 @@ gfs_t *G_LoadGFS(const char *filename)
 
    // only one GFS can be loaded per session
    if(loaded)
-      return NULL;
+      return nullptr;
 
    cfg = cfg_init(gfs_opts, CFGF_NOCASE);
 
@@ -187,17 +187,17 @@ void G_FreeGFS(gfs_t *lgfs)
 
    if(lgfs->edf)
       efree(lgfs->edf);
-   lgfs->edf = NULL;
+   lgfs->edf = nullptr;
    lgfs->hasEDF = false;
 
    if(lgfs->iwad)
       efree(lgfs->iwad);
-   lgfs->iwad = NULL;
+   lgfs->iwad = nullptr;
    lgfs->hasIWAD = false;
 
    if(lgfs->filepath)
       efree(lgfs->filepath);
-   lgfs->filepath = NULL;
+   lgfs->filepath = nullptr;
 }
 
 //
@@ -205,7 +205,7 @@ void G_FreeGFS(gfs_t *lgfs)
 //
 // Checks to see if a GFS IWAD has been loaded.
 // Convenience function to avoid rewriting too much of FindIWADFile
-// Only valid while the GFS is still loaded; returns NULL otherwise,
+// Only valid while the GFS is still loaded; returns nullptr otherwise,
 // and when there is no GFS IWAD specified.
 //
 const char *G_GFSCheckIWAD(void)
@@ -213,7 +213,7 @@ const char *G_GFSCheckIWAD(void)
    if(gfs.hasIWAD)
       return gfs.iwad;
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -226,7 +226,7 @@ const char *G_GFSCheckEDF(void)
    if(gfs.hasEDF)
       return gfs.edf;
    else
-      return NULL;
+      return nullptr;
 }
 
 // EOF

@@ -55,19 +55,19 @@ static int    tempyl[4], tempyh[4];
 static int    startx = 0;
 static int    temptype = COL_NONE;
 static int    commontop, commonbot;
-static byte   *temptranmap = NULL;
+static const byte *temptranmap = nullptr;
 static fixed_t temptranslevel;
 // haleyjd 09/12/04: optimization -- precalculate flex tran lookups
-static unsigned int *temp_fg2rgb;
-static unsigned int *temp_bg2rgb;
+static const unsigned int *temp_fg2rgb;
+static const unsigned int *temp_bg2rgb;
 // SoM 7-28-04: Fix the fuzz problem.
-static byte   *tempfuzzmap;
+static const byte *tempfuzzmap;
 static byte   *tempbuf;
 static byte   *newskymask;
 
 VALLOCATION(tempbuf)
 {
-   tempbuf = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, NULL);
+   tempbuf = ecalloctag(byte *, h*4, sizeof(byte), PU_VALLOC, nullptr);
 }
 
 VALLOCATION(newskymask)
@@ -101,7 +101,7 @@ static void R_QuadFlushNil(void)
 //
 static void R_FlushWholeOpaque()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
 
@@ -126,7 +126,7 @@ static void R_FlushWholeOpaque()
 //
 static void R_FlushWholeNewSky()
 {
-   byte *source;
+   const byte *source;
    const byte *mask;
    byte *dest;
    int  count, yl;
@@ -159,7 +159,7 @@ static void R_FlushWholeNewSky()
 //
 static void R_FlushHTOpaque(void)
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count, colnum = 0;
    int yl, yh;
@@ -207,7 +207,7 @@ static void R_FlushHTOpaque(void)
 //
 static void R_FlushHTNewSky()
 {
-   byte *source;
+   const byte *source;
    const byte *mask;
    byte *dest;
    int count, colnum = 0;
@@ -259,7 +259,7 @@ static void R_FlushHTNewSky()
 
 static void R_FlushWholeTL()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
 
@@ -282,7 +282,7 @@ static void R_FlushWholeTL()
 
 static void R_FlushHTTL()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count;
    int colnum = 0, yl, yh;
@@ -333,7 +333,7 @@ static void R_FlushHTTL()
 
 static void R_FlushWholeFuzz()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
 
@@ -423,7 +423,7 @@ static void R_FlushHTFuzz()
 
 static void R_FlushWholeFlex()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
    unsigned int fg, bg;
@@ -451,7 +451,7 @@ static void R_FlushWholeFlex()
 
 static void R_FlushHTFlex()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count;
    int colnum = 0, yl, yh;
@@ -508,7 +508,7 @@ static void R_FlushHTFlex()
 
 static void R_FlushWholeFlexAdd()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int  count, yl;
    unsigned int a, b;
@@ -542,7 +542,7 @@ static void R_FlushWholeFlexAdd()
 
 static void R_FlushHTFlexAdd()
 {
-   byte *source;
+   const byte *source;
    byte *dest;
    int count;
    int colnum = 0, yl, yh;
@@ -615,8 +615,8 @@ static void (*R_FlushHTColumns)()    = R_FlushHTNil;
 // Begin: Quad column flushing functions.
 static void R_FlushQuadOpaque()
 {
-   int *source = (int *)(tempbuf + (commontop << 2));
-   int *dest   = (int *)(R_ADDRESS(startx, commontop));
+   const int *source = reinterpret_cast<const int *>(tempbuf + (commontop << 2));
+   int *dest = reinterpret_cast<int *>(R_ADDRESS(startx, commontop));
    int count;
    int deststep = linesize / 4;
 
@@ -632,9 +632,9 @@ static void R_FlushQuadOpaque()
 // ioanch: doublesky variant
 static void R_FlushQuadNewSky()
 {
-   int *source = (int *)(tempbuf + (commontop << 2));
+   const int *source = reinterpret_cast<const int *>(tempbuf + (commontop << 2));
    const int *mask = reinterpret_cast<const int *>(newskymask + (commontop << 2));
-   int *dest   = (int *)(R_ADDRESS(startx, commontop));
+   int *dest = reinterpret_cast<int *>(R_ADDRESS(startx, commontop));
    int count;
    int deststep = linesize / 4;
 
@@ -650,7 +650,7 @@ static void R_FlushQuadNewSky()
 
 static void R_FlushQuadTL()
 {
-   byte *source = tempbuf + (commontop << 2);
+   const byte *source = tempbuf + (commontop << 2);
    byte *dest   = R_ADDRESS(startx, commontop);
    int count;
 
@@ -712,7 +712,7 @@ static void R_FlushQuadFuzz()
 
 static void R_FlushQuadFlex()
 {
-   byte *source = tempbuf + (commontop << 2);
+   const byte *source = tempbuf + (commontop << 2);
    byte *dest   = R_ADDRESS(startx, commontop);
    int count;
    unsigned int fg, bg;
@@ -749,7 +749,7 @@ static void R_FlushQuadFlex()
 
 static void R_FlushQuadFlexAdd()
 {
-   byte *source = tempbuf + (commontop << 2);
+   const byte *source = tempbuf + (commontop << 2);
    byte *dest   = R_ADDRESS(startx, commontop);
    int count;
    unsigned int a, b;

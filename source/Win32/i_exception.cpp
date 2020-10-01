@@ -34,6 +34,8 @@
 #include <windows.h>
 #include <tchar.h>
 
+#include "../d_keywds.h"
+
 //=============================================================================
 //
 // Macros
@@ -85,7 +87,7 @@ static TCHAR *lstrrchr(LPCTSTR str, int ch)
    if(*str == (TCHAR)ch)
       return (TCHAR *)str; // found it
    
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -117,7 +119,7 @@ static void GetModuleName(void)
 
    ZeroMemory(moduleFileName, sizeof(moduleFileName));
 
-   if(GetModuleFileName(NULL, moduleFileName, charcount(moduleFileName) - 2) <= 0)
+   if(GetModuleFileName(nullptr, moduleFileName, charcount(moduleFileName) - 2) <= 0)
       lstrcpy(moduleFileName, _T("Unknown"));
 
    fileName = ExtractFileName(moduleFileName);
@@ -144,14 +146,14 @@ static void GetModuleName(void)
 static int OpenLogFile(void)
 {
    logFile = CreateFile(moduleFileName, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 
-                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, 0);
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, nullptr);
 
    if(logFile == INVALID_HANDLE_VALUE)
       return 0;
    else
    {
       // set to append
-      SetFilePointer(logFile, 0, 0, FILE_END);
+      SetFilePointer(logFile, 0, nullptr, FILE_END);
       return 1;
    }
 }
@@ -167,7 +169,7 @@ static void LogFlush(HANDLE file)
 
    if(logidx > 0)
    {
-      WriteFile(file, logbuffer, lstrlen(logbuffer), &bytecount, 0);
+      WriteFile(file, logbuffer, lstrlen(logbuffer), &bytecount, nullptr);
       logidx = 0;
    }
 }
@@ -178,7 +180,7 @@ static void LogFlush(HANDLE file)
 // This is supposed to be safe to call during an exception, unlike fprintf.
 // We'll see.
 //
-static void LogPrintf(LPCTSTR fmt, ...)
+static void LogPrintf(E_FORMAT_STRING(LPCTSTR fmt), ...)
 {
    DWORD bytecount;
    va_list args;
@@ -187,7 +189,7 @@ static void LogPrintf(LPCTSTR fmt, ...)
    
    if(logidx > LOG_BUFFER_SIZE - 1024)
    {
-      WriteFile(logFile, logbuffer, lstrlen(logbuffer), &bytecount, 0);
+      WriteFile(logFile, logbuffer, lstrlen(logbuffer), &bytecount, nullptr);
       logidx = 0;
    }
    
@@ -201,11 +203,11 @@ static void LogPrintf(LPCTSTR fmt, ...)
 // Information Output Routines
 //
 
-typedef struct exceptiondata_s
+struct exceptiondata_t
 {
-   DWORD  code;
-   TCHAR *name;
-} exceptiondata_t;
+   DWORD        code;
+   const TCHAR *name;
+};
 
 static exceptiondata_t ExceptionData[] =
 {
@@ -236,7 +238,7 @@ static exceptiondata_t ExceptionData[] =
    { 0xE06D7363, _T("a Microsoft C++")              },
    
    // must be last
-   { 0, NULL }
+   { 0, nullptr }
 };
 
 //
@@ -269,7 +271,7 @@ static const TCHAR *PhraseForException(DWORD code)
 //
 static void PrintHeader(void)
 {
-   TCHAR *crashModuleFn = _T("Unknown");
+   [[maybe_unused]] const TCHAR *crashModuleFn = _T("Unknown");
    
    ZeroMemory(crashModulePath, sizeof(crashModulePath));
 
@@ -353,7 +355,7 @@ static void PrintUserInfo(void)
    ZeroMemory(userName,   sizeof(userName));
    userNameLen = charcount(userName) - 2;
 
-   if(GetModuleFileName(0, moduleName, charcount(moduleName) - 2) <= 0)
+   if(GetModuleFileName(nullptr, moduleName, charcount(moduleName) - 2) <= 0)
       lstrcpy(moduleName, _T("Unknown"));
       
    if(!GetUserName(userName, &userNameLen))
@@ -367,6 +369,8 @@ static void PrintUserInfo(void)
 //
 // Prints out version information for the operating system.
 //
+#pragma warning(push)
+#pragma warning(disable : 4996)
 static void PrintOSInfo(void)
 {
    OSVERSIONINFO osinfo;
@@ -390,6 +394,7 @@ static void PrintOSInfo(void)
    else
       LogPrintf(_T("%s"), "Operating system unknown\r\n");
 }
+#pragma warning(pop)
 
 //
 // PrintCPUInfo
@@ -609,7 +614,7 @@ static int LaunchCrashApp(void)
 
    ZeroMemory(moduleFileName, sizeof(moduleFileName));
    
-   GetModuleFileName(0, moduleFileName, charcount(moduleFileName)-2);
+   GetModuleFileName(nullptr, moduleFileName, charcount(moduleFileName)-2);
    
    lstrcat(cmdline, ExtractFileName(moduleFileName));
    lstrcat(cmdline, _T("\""));
@@ -621,8 +626,8 @@ static int LaunchCrashApp(void)
    si.dwFlags = STARTF_USESHOWWINDOW;
    si.wShowWindow = SW_SHOW;   
 
-   return CreateProcess(NULL, cmdline, NULL, NULL, FALSE, 
-                        0, NULL, NULL, &si, &pi) ? 1 : 0;
+   return CreateProcess(nullptr, cmdline, nullptr, nullptr, FALSE, 
+                        0, nullptr, nullptr, &si, &pi) ? 1 : 0;
 }
 
 //=============================================================================

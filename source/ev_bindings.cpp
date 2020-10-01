@@ -1067,6 +1067,7 @@ PARAMLINE(ParamStairsBuildUpDoomCrush);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
 PARAMLINE(ParamStairsBuildDownDoomSync);
+PARAMLINE(ParamGenStairs);
 PARAMLINE(PolyobjDoorSlide);
 PARAMLINE(PolyobjDoorSwing);
 PARAMLINE(PolyobjMove);
@@ -1101,6 +1102,7 @@ PARAMLINE(ParamLightFlicker);
 PARAMLINE(ParamLightStrobe);
 PARAMLINE(ParamLightStrobeDoom);
 PARAMLINE(RadiusQuake);
+PARAMLINE(CeilingWaggle);
 PARAMLINE(FloorWaggle);
 PARAMLINE(ThingSpawn);
 PARAMLINE(ThingSpawnNoFog);
@@ -1130,6 +1132,7 @@ PARAMLINE(ParamPlatUpByValue);
 PARAMLINE(ParamPlatRaiseNearestChange);
 PARAMLINE(ParamPlatRaiseChange);
 PARAMLINE(ParamPlatToggleCeiling);
+PARAMLINE(ParamPlatGeneric);
 PARAMLINE(ParamDonut);
 PARAMLINEFLAGGED(ParamTeleport, EV_ISTELEPORTER);
 PARAMLINE(ParamTeleportNoFog);
@@ -1150,6 +1153,7 @@ PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
+PARAMLINE(ACSSetFriction);
 PARAMLINE(ACSScrollFloor);
 PARAMLINE(ACSScrollCeiling);
 
@@ -1162,8 +1166,8 @@ PARAMLINE(ACSScrollCeiling);
 // additions (many of which conflict with BOOM extensions).
 //
 
-#define LINESPEC(number, action)            { number, &action, NULL },
-#define LINESPECNAMED(number, action, name) { number, &action, name },
+#define LINESPEC(number, action)            { number, &action, nullptr },
+#define LINESPECNAMED(number, action, name) { number, &action, name    },
 
 // DOOM Bindings
 ev_binding_t DOOMBindings[] =
@@ -1566,6 +1570,9 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
    LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
    LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
+   LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
+   LINESPECNAMED(501, ParamPlatGeneric,                    "Generic_Lift")
+   LINESPECNAMED(502, ParamGenStairs,                      "Generic_Stairs")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1651,6 +1658,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(35,  ParamFloorRaiseByValueTimes8,        "Floor_RaiseByValueTimes8")
    LINESPECNAMED(36,  ParamFloorLowerByValueTimes8,        "Floor_LowerByValueTimes8")
    LINESPECNAMED(37,  ParamFloorMoveToValue,               "Floor_MoveToValue")
+   LINESPECNAMED(38,  CeilingWaggle,                       "Ceiling_Waggle")
    LINESPECNAMED(40,  ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
    LINESPECNAMED(41,  ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
    LINESPECNAMED(42,  ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")
@@ -1733,6 +1741,8 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(199, ParamCeilingLowerByValueTimes8,      "Ceiling_LowerByValueTimes8")
    LINESPECNAMED(200, ParamFloorGeneric,                   "Generic_Floor")
    LINESPECNAMED(201, ParamCeilingGeneric,                 "Generic_Ceiling")
+   LINESPECNAMED(203, ParamPlatGeneric,                    "Generic_Lift")
+   LINESPECNAMED(204, ParamGenStairs,                      "Generic_Stairs")
    LINESPECNAMED(205, ParamGenCrusher,                     "Generic_Crusher")
    LINESPECNAMED(206, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
    LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
@@ -1811,6 +1821,7 @@ const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 // accessible by ACS, or that have multiple definitions, one for lines, one for ACS
 ev_binding_t ACSBindings[] =
 {
+   LINESPEC(219, ACSSetFriction)
    LINESPEC(223, ACSScrollFloor)
    LINESPEC(224, ACSScrollCeiling)
 };

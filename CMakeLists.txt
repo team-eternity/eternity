@@ -30,6 +30,10 @@ IF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
         MESSAGE( FATAL_ERROR "In-tree Builds are NOT supported.")
 ENDIF (${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/adlmidi/CMakeLists.txt)
+   message(FATAL_ERROR "adlmidi not found. Please install adlmidi submodule.")
+endif()
+
 # Supported Build Types are:
 #    * Debug (CMAKE_C_FLAGS_DEBUG)
 #    * Release (CMAKE_C_FLAGS_RELEASE)
@@ -159,6 +163,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
    TRY_CXX_COMPILER_FLAG(-std=c++17 FLAG_CXX_stdcxx17)
 endif()
 
+# Crappy hack for GCC because it's a bad compiler
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+   TRY_CXX_COMPILER_FLAG(-lstdc++fs FLAG_CXX_lstdcxxfs)
+endif()
+
 
 ################################################################################
 ######################### Compiler: Warnings  ##################################
@@ -284,6 +293,11 @@ IF (NOT HAVE_STDINT_H)
         ENDIF (MSVC)
 ENDIF (NOT HAVE_STDINT_H)
 
+CHECK_INCLUDE_FILES (xlocale.h HAVE_XLOCALE_H)
+IF (HAVE_XLOCALE_H)
+        add_definitions(-DHAVE_XLOCALE_H)
+ENDIF()
+
 ################################################################################
 ######################### Find Needed Libs #####################################
 FIND_PACKAGE (OpenGL)
@@ -316,10 +330,14 @@ ENDIF (WIN32)
 INCLUDE_DIRECTORIES(acsvm)
 INCLUDE_DIRECTORIES(libpng)
 INCLUDE_DIRECTORIES(zlib)
+INCLUDE_DIRECTORIES(adlmidi/include)
 
 SET(ACSVM_NOFLAGS ON)
 SET(ACSVM_SHARED OFF)
 ADD_SUBDIRECTORY(acsvm)
+
+SET(WITH_CPP_EXTRAS ON)
+ADD_SUBDIRECTORY(adlmidi)
 
 ADD_SUBDIRECTORY(zlib)
 ADD_SUBDIRECTORY(libpng)

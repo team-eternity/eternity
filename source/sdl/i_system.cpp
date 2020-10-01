@@ -24,10 +24,15 @@
 #include <conio.h>
 #endif
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#else
 #include "SDL.h"
+#endif
 
 // HAL modules
 #include "../hal/i_gamepads.h"
+#include "../hal/i_platform.h"
 #include "../hal/i_timer.h"
 
 #include "../z_zone.h"
@@ -41,6 +46,7 @@
 #include "../doomstat.h"
 #include "../m_misc.h"
 #include "../m_syscfg.h"
+#include "../mn_menus.h"
 #include "../g_demolog.h"
 #include "../g_game.h"
 #include "../w_wad.h"
@@ -89,7 +95,7 @@ void I_Init()
    I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads();
+   I_InitGamePads(MN_UpdateJoystickMenus);
  
    atexit(I_Shutdown);
    
@@ -139,8 +145,13 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
+
+   // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
+   // affecting functions. MUST FIX.
+#if EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
+#endif
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
    // haleyjd 10/09/05: moved down here
@@ -183,7 +194,7 @@ void I_QuitFast()
 // haleyjd 05/21/10: Call this for super-evil errors such as heap corruption,
 // system-related problems, etc.
 //
-void I_FatalError(int code, const char *error, ...)
+void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 {
    // Flag a fatal error, so that some shutdown code will not be executed;
    // chiefly, saving the configuration files, which can malfunction in
@@ -224,7 +235,7 @@ void I_FatalError(int code, const char *error, ...)
 // haleyjd 06/05/10: exit with a message which is not technically an error. The
 // code used to call I_Error for this, but it wasn't semantically correct.
 //
-void I_ExitWithMessage(const char *msg, ...)
+void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_MESSAGE)
@@ -250,7 +261,7 @@ void I_ExitWithMessage(const char *msg, ...)
 //
 // Normal error reporting / exit routine.
 //
-void I_Error(const char *error, ...) // killough 3/20/98: add const
+void I_Error(E_FORMAT_STRING(const char *error), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -278,7 +289,7 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
 //
 // haleyjd: varargs version of I_Error used chiefly by libConfuse.
 //
-void I_ErrorVA(const char *error, va_list args)
+void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -380,17 +391,17 @@ int I_CheckAbort()
  *************************/
 int leds_always_off;
 
-VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
+VARIABLE_BOOLEAN(leds_always_off, nullptr,  yesno);
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 #ifdef _SDL_VER
-VARIABLE_BOOLEAN(waitAtExit, NULL, yesno);
+VARIABLE_BOOLEAN(waitAtExit, nullptr, yesno);
 CONSOLE_VARIABLE(i_waitatexit, waitAtExit, 0) {}
 
-VARIABLE_BOOLEAN(showendoom, NULL, yesno);
+VARIABLE_BOOLEAN(showendoom, nullptr, yesno);
 CONSOLE_VARIABLE(i_showendoom, showendoom, 0) {}
 
-VARIABLE_INT(endoomdelay, NULL, 35, 3500, NULL);
+VARIABLE_INT(endoomdelay, nullptr, 35, 3500, nullptr);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 

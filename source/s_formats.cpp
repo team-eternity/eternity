@@ -47,6 +47,7 @@ enum sampleformat_e
 
 struct sounddata_t
 {
+   unsigned int    channels;
    unsigned int    samplerate;
    size_t          samplecount;
    byte           *samplestart;
@@ -67,8 +68,8 @@ struct sounddata_t
 // S_checkDMXPadded
 //
 // Most canonical DMX samples are padded with 16 lead-in bytes and 16 lead-out
-// bytes. All such samples with this property have the 17th byte (the first 
-// real sample) equal in value to the first 16 bytes (and likewise, the 17th 
+// bytes. All such samples with this property have the 17th byte (the first
+// real sample) equal in value to the first 16 bytes (and likewise, the 17th
 // byte from the end is repeated 16 more times).
 //
 // We'll consider the sample to be in canonical padded form if it passes the
@@ -105,8 +106,8 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    byte *r = data + 2;
-   sd.samplerate  = GetBinaryUWord(&r);
-   sd.samplecount = GetBinaryUDWord(&r);
+   sd.samplerate  = GetBinaryUWord(r);
+   sd.samplecount = GetBinaryUDWord(r);
 
    if(!sd.samplerate)
       return false;
@@ -127,15 +128,16 @@ static bool S_isDMXSample(byte *data, size_t len, sounddata_t &sd)
       sd.samplestart += 16;
    }
 
-   // always 8-bit unsigned samples
-   sd.fmt = S_FMT_U8;
+   // always 8-bit unsigned mono samples
+   sd.fmt      = S_FMT_U8;
+   sd.channels = 1;
 
    return true;
 }
 
 //=============================================================================
 //
-// Wave 
+// Wave
 //
 // There are a billion and one variants of the RIFF WAVE format. We accept only
 // so-called canonical waves in either 8- or 16-bit PCM, mono only.
@@ -168,12 +170,15 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false;
 
    byte *r = data + 4;
-   size_t chunksize = GetBinaryUDWord(&r);
-   if(chunksize < len - 8) // need correct chunk size; will tolerate overage
-      return false;
+   // MaxW: Note: This check is unnecessary, and causes many waves
+   // that would otherwise play to not be considered a wave sample
+   r += 4;
+   //size_t chunksize = GetBinaryUDWord(r);
+   //if(chunksize < len - 8) // need correct chunk size; will tolerate overage
+   //   return false;
 
    r = data + 16;
-   int headerSize = GetBinaryDWord(&r);
+   int headerSize = GetBinaryDWord(r);
    switch(headerSize)
    {
    case 16: // normal PCM header
@@ -200,18 +205,18 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    if(len <= minLength)
       return false;
 
-   uint16_t fmt = GetBinaryUWord(&r);
-   if(fmt != 0x0001 && fmt != 0xFFFE) // PCM or EXTENSIBLE formats only
-      return false;
-   if(GetBinaryWord(&r) != 1)    // mono only
+   // PCM or EXTENSIBLE formats only
+   if(const uint16_t fmt = GetBinaryUWord(r);  fmt != 0x0001 && fmt != 0xFFFE)
       return false;
 
-   sd.samplerate = GetBinaryUDWord(&r);
+   sd.channels = GetBinaryWord(r); // MaxW: WE GOT STEREO!
+
+   sd.samplerate = GetBinaryUDWord(r);
    if(!sd.samplerate)
       return false;
 
    r = data + 34;
-   int bps = GetBinaryWord(&r);
+   const int bps = GetBinaryWord(r);
    if(bps != 8 && bps != 16) // 8- or 16-bit only
       return false;
 
@@ -230,7 +235,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
    // check for extended format information in larger headers
    if(headerSize > 16)
    {
-      int cbSize = GetBinaryWord(&r);
+      int cbSize = GetBinaryWord(r);
       if(cbSize != 0 && cbSize != 22)
          return false; // unknown cbSize
       if(cbSize == 22) // check for EXTENSIBLE subformat
@@ -238,7 +243,7 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
          if(headerSize != 40)
             return false; // illegal combination.
          r = data + 44;
-         if(GetBinaryWord(&r) != 1) // must be PCM
+         if(GetBinaryWord(r) != 1) // must be PCM
             return false;
       }
    }
@@ -263,14 +268,14 @@ static bool S_isWaveSample(byte *data, size_t len, sounddata_t &sd)
       return false; // no data marker
 
    r += 4;
-   size_t bytes = GetBinaryUDWord(&r);
+   size_t bytes = GetBinaryUDWord(r);
    if(!bytes) // empty sample stream
       return false;
 
    if(bytes + totalMDSize > len) // truncated sample stream
-      sd.samplecount = (len - totalMDSize) / (bps / 8);
+      sd.samplecount = (len - totalMDSize) / ((bps * sd.channels) / 8);
    else
-      sd.samplecount = bytes / (bps / 8);
+      sd.samplecount = bytes / ((bps * sd.channels) / 8);
 
    sd.samplestart = data + sampleOffset;
 
@@ -309,7 +314,7 @@ static bool S_detectSoundFormat(sounddata_t &sd, byte *data, size_t len)
 //
 // S_alenForSample
 //
-// Calculate the "actual" sample length for a digital sound effect after 
+// Calculate the "actual" sample length for a digital sound effect after
 // conversion from its native samplerate to the samplerate used for output.
 //
 static unsigned int S_alenForSample(const sounddata_t &sd)
@@ -341,10 +346,16 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       // do linear filtering operation
       for(i = 0; i < sfx->alen && j < sd.samplecount - 1; i++)
       {
-         double d = (((unsigned int)src[j  ] * (0x10000 - stepremainder)) +
-                     ((unsigned int)src[j+1] * stepremainder));
-         d /= 65536.0;
-         dest[i] = static_cast<float>(eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+         {
+            double d = (((unsigned int)src[(j * sd.channels) + k  ] * (0x10000 - stepremainder)) +
+                        ((unsigned int)src[(j * sd.channels) + k+1] * stepremainder));
+            d /= 65536.0;
+            dest[i] = static_cast<float>(eclamp(d * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
 
          stepremainder += step;
          j += (stepremainder >> 16);
@@ -353,7 +364,13 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       }
       // fill remainder (if any) with final sample byte
       for(; i < sfx->alen; i++)
-         dest[i] = static_cast<float>(eclamp(src[j] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+      {
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+            dest[i] += static_cast<float>(eclamp(src[(j * sd.channels) + k] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
+      }
    }
    else
    {
@@ -362,7 +379,13 @@ static void S_convertPCMU8(sfxinfo_t *sfx, const sounddata_t &sd)
       byte  *src  = sd.samplestart;
 
       for(unsigned int i = 0; i < sfx->alen; i++)
-         dest[i] = static_cast<float>(eclamp(src[i] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+      {
+         dest[i] = 0.0f;
+         for(unsigned int j = 0; j < sd.channels; j++)
+            dest[i] += static_cast<float>(eclamp(src[(i * sd.channels) + j] * 2.0 / 255.0 - 1.0, -1.0, 1.0));
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
+      }
    }
 }
 
@@ -390,11 +413,17 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
       // do linear filtering operation
       for(i = 0; i < sfx->alen && j < sd.samplecount - 1; i++)
       {
-         double s1 = SwapShort(src[j]);
-         double s2 = SwapShort(src[j+1]);
-         double d  = (s1 * (0x10000 - stepremainder)) + (s2 * stepremainder);
-         d /= 65536.0;
-         dest[i] = static_cast<float>(eclamp((d + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+         {
+            const double s1 = SwapShort(src[(j * sd.channels) + k  ]);
+            const double s2 = SwapShort(src[(j * sd.channels) + k+1]);
+            double d  = (s1 * (0x10000 - stepremainder)) + (s2 * stepremainder);
+            d /= 65536.0;
+            dest[i] += static_cast<float>(eclamp((d + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
 
          stepremainder += step;
          j += (stepremainder >> 16);
@@ -404,8 +433,14 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
       // fill remainder (if any) with final sample byte
       for(; i < sfx->alen; i++)
       {
-         double s = SwapShort(src[j]);
-         dest[i] = static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int k = 0; k < sd.channels; k++)
+         {
+            const double s = SwapShort(src[(j * sd.channels) + k]);
+            dest[i] += static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
       }
    }
    else
@@ -416,8 +451,14 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
 
       for(unsigned int i = 0; i < sfx->alen; i++)
       {
-         double s = SwapShort(src[i]);
-         dest[i] = static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         dest[i] = 0.0f;
+         for(unsigned int j = 0; j < sd.channels; j++)
+         {
+            const double s = SwapShort(src[(i * sd.channels) + j]);
+            dest[i] += static_cast<float>(eclamp((s + 32768.0) * 2.0 / 65535.0 - 1.0, -1.0, 1.0));
+         }
+         if(sd.channels > 1)
+            dest[i] /= sd.channels;
       }
    }
 }
@@ -434,9 +475,11 @@ static void S_convertPCM16(sfxinfo_t *sfx, const sounddata_t &sd)
 //
 static int S_getSfxLumpNum(sfxinfo_t *sfx)
 {
-   char namebuf[16];
+   char namebuf[16] = { 0 };
 
-   memset(namebuf, 0, sizeof(namebuf));
+   // alison: check long file name
+   if(sfx->lfn)
+      return wGlobalDir.checkNumForLFNNSG(sfx->lfn, lumpinfo_t::ns_sounds);
 
    // haleyjd 09/03/03: determine whether to apply DS prefix to
    // name or not using new prefix flag
@@ -463,11 +506,11 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 {
    bool  res = false;
    int   lump = S_getSfxLumpNum(sfx);
-  
+
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = wGlobalDir.getNumForNameNSG(GameModeInfo->defSoundName, lumpinfo_t::ns_sounds);
-   
+
    size_t lumplen = (size_t)wGlobalDir.lumpLength(lump);
    if(!lumplen)
       return false;
@@ -514,11 +557,11 @@ bool S_LoadDigitalSoundEffect(sfxinfo_t *sfx)
 void S_CacheDigitalSoundLump(sfxinfo_t *sfx)
 {
    int lump = S_getSfxLumpNum(sfx);
-   
+
    // replace missing sounds with a reasonable default
    if(lump == -1)
       lump = wGlobalDir.getNumForNameNSG(GameModeInfo->defSoundName, lumpinfo_t::ns_sounds);
-   
+
    wGlobalDir.cacheLumpNum(lump, PU_CACHE);
 }
 

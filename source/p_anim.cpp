@@ -189,9 +189,9 @@ void P_AnimateSurfaces()
    skyflat_t *sky2 = R_SkyFlatForIndex(1);
 
    if(sky1)
-      sky1->columnoffset += LevelInfo.skyDelta  << 8;
+      sky1->columnoffset += LevelInfo.skyDelta  >> (FRACBITS / 2);
    if(sky2)
-      sky2->columnoffset += LevelInfo.sky2Delta << 8;
+      sky2->columnoffset += LevelInfo.sky2Delta >> (FRACBITS / 2);
    
    if(LevelInfo.hasLightning)
    {
@@ -339,7 +339,7 @@ static cell AMX_NATIVE_CALL sm_lightning(AMX *amx, cell *params)
 AMX_NATIVE_INFO panim_Natives[] =
 {
    { "_ForceLightning", sm_lightning },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

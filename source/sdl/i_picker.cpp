@@ -19,7 +19,11 @@
 // Authors: James Haley, Max Waine
 //
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#else
 #include "SDL.h"
+#endif
 
 #include "../z_zone.h"
 #include "../i_system.h"
@@ -56,6 +60,7 @@ static const char *iwadPicNames[NUMPICKIWADS] =
    "FREEDOOM",
    "ULTFD",
    "FREEDM",
+   "REKKR",
 };
 
 // IWAD game names
@@ -75,6 +80,7 @@ static const char *titles[NUMPICKIWADS] =
    "Freedoom Phase 2",
    "Freedoom Phase 1",
    "FreeDM",
+   "Rekkr",
 };
 
 static byte *bgframe;                // background graphics
@@ -133,7 +139,7 @@ static void I_Pick_LoadIWAD(int num)
 
          if(png.getWidth() == 320 && png.getHeight() == 240 && pngPalette)
          {
-            iwadpics[num] = png.getAs8Bit(NULL);
+            iwadpics[num] = png.getAs8Bit(nullptr);
             pals[num]     = pngPalette;
          }
       }
@@ -557,6 +563,9 @@ int I_Pick_DoPicker(bool haveIWADs[], int startchoice)
    // create the renderer
    if(!(pickrenderer = SDL_CreateRenderer(pickwindow, -1, SDL_RENDERER_SOFTWARE)))
       return -1;
+
+   // bring the window to the front
+   SDL_RaiseWindow(pickwindow);
 
    // open startup.wad (private to this module)
    if(!I_Pick_OpenWad())

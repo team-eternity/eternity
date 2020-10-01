@@ -453,8 +453,9 @@ static void D_ArbitrateNetStart()
             dm           = !!((netbuffer->retransmitfrom & 0xc0) >> 6);
             nomonsters   = (netbuffer->retransmitfrom & 0x20) > 0;
             respawnparm  = (netbuffer->retransmitfrom & 0x10) > 0;
-            startmap     = netbuffer->starttic & 0x3f;
-            startepisode = 1 + (netbuffer->starttic >> 6);
+
+            d_startlevel.map = netbuffer->starttic & 0x3f;
+            d_startlevel.episode = 1 + (netbuffer->starttic >> 6);
 
             if(dm)
                DefaultGameType = GameType = gt_dm;
@@ -485,7 +486,7 @@ static void D_ArbitrateNetStart()
             if(respawnparm)
                netbuffer->retransmitfrom |= 0x10;
             // FIXME: not large enough for Heretic!
-            netbuffer->starttic = (startepisode - 1) * 64 + startmap;
+            netbuffer->starttic = (d_startlevel.episode - 1) * 64 + d_startlevel.map;
             netbuffer->player = version;
 
 #ifdef RANGECHECK
@@ -885,10 +886,10 @@ CONSOLE_COMMAND(disconnect, cf_netonly)
 }
 */
  
-VARIABLE_TOGGLE(d_fastrefresh, NULL, onoff);
+VARIABLE_TOGGLE(d_fastrefresh, nullptr, onoff);
 CONSOLE_VARIABLE(d_fastrefresh, d_fastrefresh, 0) {}
 
-VARIABLE_TOGGLE(d_interpolate, NULL, onoff);
+VARIABLE_TOGGLE(d_interpolate, nullptr, onoff);
 CONSOLE_VARIABLE(d_interpolate, d_interpolate, 0) {}
 
 //----------------------------------------------------------------------------

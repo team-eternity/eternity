@@ -1,6 +1,10 @@
 //
+//
 // The Eternity Engine
-// Copyright(C) 2016 James Haley, Ioan Chera, et al.
+// Copyright (C) 2018 James Haley, Ioan Chera, et al.
+//
+// ZDoom
+// Copyright (C) 1998-2012 Marisa Heit
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,40 +21,8 @@
 //
 //--------------------------------------------------------------------------
 //
-// For portions of code explicitly marked as being under the 
-// ZDoom Source Distribution License only:
-//
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//--------------------------------------------------------------------------
-//
-// Purpose: reentrant path traversing, used by several new functions
-// Authors: James Haley, Ioan Chera
+// Purpose: Reentrant path traversing, used by several new functions
+// Authors: James Haley, Ioan Chera, Max Waine
 //
 
 #include "z_zone.h"
@@ -109,7 +81,7 @@ bool PathTraverser::traverseIntercepts() const
    //
    // go through in order
    //	
-   in = NULL; // shut up compiler warning
+   in = nullptr; // shut up compiler warning
 
    while(count--)
    {
@@ -173,8 +145,8 @@ bool PathTraverser::blockThingsIterator(int x, int y)
          y2 = thing->y + thing->radius;
       }
 
-      s1 = P_PointOnDivlineSide(x1, y1, &trace);
-      s2 = P_PointOnDivlineSide(x2, y2, &trace);
+      s1 = P_PointOnDivlineSidePrecise(x1, y1, &trace);
+      s2 = P_PointOnDivlineSidePrecise(x2, y2, &trace);
 
       if(s1 == s2)
          continue;
@@ -211,14 +183,14 @@ bool PathTraverser::checkLine(size_t linenum)
    if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
       return true;
 
-   s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace);
-   s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace);
+   s1 = P_PointOnDivlineSidePrecise(ld->v1->x, ld->v1->y, &trace);
+   s2 = P_PointOnDivlineSidePrecise(ld->v2->x, ld->v2->y, &trace);
    if(s1 == s2)
       return true; // line isn't crossed
 
    P_MakeDivline(ld, &dl);
-   s1 = P_PointOnDivlineSide(trace.x, trace.y, &dl);
-   s2 = P_PointOnDivlineSide(trace.x + trace.dx,
+   s1 = P_PointOnDivlineSidePrecise(trace.x, trace.y, &dl);
+   s2 = P_PointOnDivlineSidePrecise(trace.x + trace.dx,
       trace.y + trace.dy, &dl);
    if(s1 == s2)
       return true; // line isn't crossed
@@ -245,8 +217,8 @@ bool PathTraverser::checkLine(size_t linenum)
    // ioanch 20151229: also check sectors
    const sector_t *fsec = ld->frontsector, *bsec = ld->backsector;
    if(ld->pflags & PS_PASSABLE
-      || (fsec && (fsec->c_pflags & PS_PASSABLE || fsec->f_pflags & PS_PASSABLE))
-      || (bsec && (bsec->c_pflags & PS_PASSABLE || bsec->f_pflags & PS_PASSABLE)))
+      || (fsec && (fsec->srf.ceiling.pflags & PS_PASSABLE || fsec->srf.floor.pflags & PS_PASSABLE))
+      || (bsec && (bsec->srf.ceiling.pflags & PS_PASSABLE || bsec->srf.floor.pflags & PS_PASSABLE)))
    {
       portalguard.addedportal = true;
    }
@@ -425,7 +397,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 
    xintercept = (cx >> MAPBTOFRAC) + FixedMul(partialy, xstep);
 
-   // From ZDoom (usable under ZDoom code license):
+   // From ZDoom (usable under the GPLv3):
    // [RH] Fix for traces that pass only through blockmap corners. In that case,
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
@@ -485,7 +457,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
          continue;
       }
 
-      // From ZDoom (usable under the ZDoom code license):
+      // From ZDoom (usable under the GPLv3):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
       // Doom 1.2, and persisted into Heretic, Hexen, and some versions of 
@@ -573,16 +545,16 @@ void lineopening_t::calculate(const line_t *linedef)
       back = beyond;
 
    // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL && back->c_pflags & PS_PASSABLE)
-      opentop = front->ceilingheight;
+   if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
+      open.ceiling = front->srf.ceiling.height;
    else
-      opentop = emin(front->ceilingheight, back->ceilingheight);
+      open.ceiling = emin(front->srf.ceiling.height, back->srf.ceiling.height);
 
-   if(linedef->extflags & EX_ML_LOWERPORTAL && back->f_pflags & PS_PASSABLE)
-      openbottom = front->floorheight;
+   if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
+      open.floor = front->srf.floor.height;
    else
-      openbottom = emax(front->floorheight, back->floorheight);
-   openrange = opentop - openbottom;
+      open.floor = emax(front->srf.floor.height, back->srf.floor.height);
+   openrange = open.ceiling - open.floor;
 }
 
 //

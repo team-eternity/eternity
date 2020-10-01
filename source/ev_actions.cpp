@@ -35,6 +35,7 @@
 #include "ev_specials.h"
 #include "g_game.h"
 #include "p_info.h"
+#include "p_inter.h"
 #include "p_scroll.h"
 #include "p_sector.h"
 #include "p_skin.h"
@@ -918,7 +919,7 @@ DEFINE_ACTION(EV_ActionDoDonut)
    // case 155: (WR - BOOM Extended)
    // case 191: (SR - BOOM Extended)
    // Lower Pillar, Raise Donut
-   return EV_DoParamDonut(instance->line, instance->line->args[0], false, 
+   return EV_DoParamDonut(instance->line, instance->tag, false, 
                           FLOORSPEED / 2, FLOORSPEED / 2);
 }
 
@@ -2526,6 +2527,33 @@ DEFINE_ACTION(EV_ActionParamStairsBuildDownDoomSync)
 }
 
 //
+// EV_ActionParamGenStairs
+//
+// Implements Generic_Stairs(tag, speed, height, flags, reset)
+// * ExtraData: 502
+// * UDMF:      204
+//
+DEFINE_ACTION(EV_ActionParamGenStairs)
+{
+   edefstructvar(stairdata_t, sd);
+
+   int flags = instance->args[3];
+   sd.flags = SDF_HAVESPAC;
+   sd.direction = flags & 1;
+   sd.stepsize_type = StepSizeParam;
+   sd.stepsize_value = instance->args[2] * FRACUNIT;
+   sd.speed_type = SpeedParam;
+   sd.speed_value = instance->args[1] * (FRACUNIT / 8);
+   if(flags & 2)
+      sd.flags |= SDF_IGNORETEXTURES;
+   sd.reset_value = instance->args[4];
+   int rtn = EV_DoParamStairs(instance->line, instance->tag, &sd);
+   if(rtn && instance->line)
+      instance->line->args[3] ^= 1;
+   return rtn;
+}
+
+//
 // EV_ActionPolyobjDoorSlide
 //
 // Implements Polyobj_DoorSlide(id, speed, angle, distance, delay)
@@ -2926,7 +2954,7 @@ DEFINE_ACTION(EV_ActionACSExecuteWithResult)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      argc  = NUMLINEARGS - 1;
    uint32_t argv[NUMLINEARGS - 1];
@@ -3037,6 +3065,16 @@ DEFINE_ACTION(EV_ActionRadiusQuake)
    return P_StartQuake(instance->args, instance->actor);
 }
 
+// Implements Ceiling_Waggle(tag, height, speed, offset, timer)
+// * ExtraData: 500
+// * Hexen:     38
+//
+DEFINE_ACTION(EV_ActionCeilingWaggle)
+{
+   return EV_StartCeilingWaggle(instance->line, instance->tag, instance->args[1],
+                                instance->args[2], instance->args[3], instance->args[4]);
+}
+
 //
 // EV_ActionFloorWaggle
 //
@@ -3047,7 +3085,7 @@ DEFINE_ACTION(EV_ActionRadiusQuake)
 DEFINE_ACTION(EV_ActionFloorWaggle)
 {
    return EV_StartFloorWaggle(instance->line, instance->tag, instance->args[1],
-                                instance->args[2], instance->args[3], instance->args[4]);
+                              instance->args[2], instance->args[3], instance->args[4]);
 }
 
 //
@@ -3322,7 +3360,7 @@ DEFINE_ACTION(EV_ActionThrustThingZ)
 DEFINE_ACTION(EV_ActionDamageThing)
 {
    return EV_DamageThing(instance->actor, 
-      instance->args[0] == 0 ? 10000 : instance->args[0], instance->args[1], 0);
+      instance->args[0] == 0 ? GOD_BREACH_DAMAGE : instance->args[0], instance->args[1], 0);
 }
 
 //
@@ -3341,13 +3379,13 @@ DEFINE_ACTION(EV_ActionDamageThingEx)
 //
 // EV_ActionThingDestroy
 //
-// Implements Thing_Destroy(tid, reserved, sectortag)
+// Implements Thing_Destroy(tid, flags, sectortag)
 // * ExtraData: 428
 // * Hexen:     133
 //
 DEFINE_ACTION(EV_ActionThingDestroy)
 {
-   return EV_ThingDestroy(instance->args[0], instance->args[2]);
+   return EV_ThingDestroy(instance->args[0], instance->args[1], instance->args[2]);
 }
 
 //
@@ -3910,7 +3948,6 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingLowerByValue)
 
       cd.direction = 0;
       cd.target_type = CbyParam;
-      cd.speed_type = instance->spac;
       cd.flags = CDF_HAVESPAC;
       cd.speed_type = SpeedParam;
       cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -3954,7 +3991,6 @@ DEFINE_ACTION(EV_ActionParamFloorCeilingRaiseByValue)
 
       cd.direction = 1;
       cd.target_type = CbyParam;
-      cd.speed_type = instance->spac;
       cd.flags = CDF_HAVESPAC;
       cd.speed_type = SpeedParam;
       cd.speed_value = instance->args[1] * (FRACUNIT / 8);
@@ -4021,7 +4057,7 @@ DEFINE_ACTION(EV_ActionChangeSkill)
    if(instance->args[0] < sk_baby || instance->args[0] > sk_nightmare)
       return 0;
 
-   gameskill = (skill_t)instance->line->args[0];
+   gameskill = static_cast<skill_t>(instance->args[0]);
    G_SetFastParms(gameskill >= sk_nightmare || fastparm);
    return 1;
 }
@@ -4267,7 +4303,7 @@ DEFINE_ACTION(EV_ActionACSExecuteAlways)
    Mobj    *thing = instance->actor;
    line_t  *line  = instance->line;
    int      side  = instance->side;
-   polyobj_s *po = instance->poly;
+   polyobj_t *po = instance->poly;
    int      num   = instance->args[0];
    int      map   = instance->args[1];
    int      argc  = NUMLINEARGS - 2;
@@ -4299,6 +4335,45 @@ DEFINE_ACTION(EV_ActionThingRemove)
 DEFINE_ACTION(EV_ActionParamPlatToggleCeiling)
 {
    return EV_DoParamPlat(instance->line, instance->args, paramToggleCeiling);
+}
+
+//
+// Implements Generic_Lift(tag, speed, delay, type, height)
+//
+// * ExtraData: 501
+// * UDMF:      203
+//
+DEFINE_ACTION(EV_ActionParamPlatGeneric)
+{
+   fixed_t speed = instance->args[1] * (FRACUNIT / 8);
+   int delay = instance->args[2] * 35 / 8;   // OCTICS
+
+   int target;
+   fixed_t height = 0;
+   switch (instance->args[3])
+   {
+      case 0:
+         target = lifttarget_upValue;
+         height = 8 * instance->args[4] * FRACUNIT;
+         break;
+      case 1:
+         target = F2LnF;
+         break;
+      case 2:
+         target = F2NnF;
+         break;
+      case 3:
+         target = F2LnC;
+         break;
+      case 4:
+         target = LnF2HnF;
+         break;
+      default:
+         doom_warningf("Generic_Lift: illegal target %d", instance->args[3]);
+         return 0;
+   }
+
+   return EV_DoGenLiftByParameters(!instance->tag, *instance->line, speed, delay, target, height);
 }
 
 //
@@ -4364,6 +4439,18 @@ DEFINE_ACTION(EV_ActionParamSectorChangeSound)
 //
 
 //
+// Implements Scroll_Floor(tag, amount)
+//
+// * ACS: 219
+//
+DEFINE_ACTION(EV_ActionACSSetFriction)
+{
+   EV_SetFriction(instance->args[0], instance->args[1]);
+
+   return 1;
+}
+
+//
 // Implements Scroll_Floor(tag, x-move, y-move, type)
 //
 // * ACS: 223
@@ -4372,7 +4459,7 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 {
    // Don't use INIT_STRUCT or memset because of line_t PointThinker vtable
    // warnings. Just zero-init it.
-   line_t ln = { 0 };
+   line_t ln = {};
 
    // convert (tag, x-move, y-move, type) to (tag, scrollbits, type, x-move, y-move)
    ln.args[0] = instance->args[0];
@@ -4394,7 +4481,7 @@ DEFINE_ACTION(EV_ActionACSScrollFloor)
 DEFINE_ACTION(EV_ActionACSScrollCeiling)
 {
    // See other comment in this file on this
-   line_t ln = { 0 };
+   line_t ln = {};
 
    // convert (tag, x-move, y-move, unused) to (tag, scrollbits, unused, x-move, y-move)
    ln.args[0] = instance->args[0];

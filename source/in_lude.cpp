@@ -58,7 +58,7 @@ int intertime;
 // used to accelerate or skip a stage
 int acceleratestage; // killough 3/28/98: made global
 
-static interfns_t *InterFuncs = NULL;
+static interfns_t *InterFuncs = nullptr;
 
 vfont_t *in_font;
 vfont_t *in_bigfont;
@@ -140,7 +140,7 @@ static void IN_StartCamera()
       intercam.pitch = 0;
 
       subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-      intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
+      intercam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
 
       intercam.backupPosition();
       
@@ -150,7 +150,7 @@ static void IN_StartCamera()
    else            // no camera, boring interpic
    {
       realbackdrop = 0;
-      wi_camera = NULL;
+      wi_camera = nullptr;
       S_StopAllSequences(); // haleyjd 06/06/06
       S_StopLoopedSounds(); // haleyjd 10/06/06
    }

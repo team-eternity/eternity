@@ -75,7 +75,7 @@ enum
 
 // static state variables
 
-static state_t *skview_state     = NULL;
+static state_t *skview_state     = nullptr;
 static int      skview_tics      = 0;
 static int      skview_action    = SKV_WALKING;
 static int      skview_rot       = 0;
@@ -90,7 +90,7 @@ static statenum_t skview_atkstate2;
 
 // haleyjd 01/22/12: for special death states
 static PODCollection<MetaState *> skview_metadeaths;
-static MetaState *skview_metadeath = NULL;
+static MetaState *skview_metadeath = nullptr;
 
 extern void A_PlaySoundEx(actionargs_t *);
 extern void A_Pain(actionargs_t *);
@@ -109,10 +109,7 @@ static void MN_skinEmulateAction(state_t *state)
 {
    if(state->action == A_PlaySoundEx)
    {
-      sfxinfo_t *sfx = E_ArgAsSound(state->args, 0);
-
-      if(sfx)
-         S_StartInterfaceSound(sfx->name);
+      S_StartInterfaceSound(E_ArgAsSound(state->args, 0));
    }
    else if(state->action == A_Pain)
    {
@@ -150,7 +147,7 @@ static void MN_skinEmulateAction(state_t *state)
       else
       {
          S_StartInterfaceSound(
-            ((GameModeInfo->flags & GIF_NODIEHI) || M_Random() % 2) ? 
+            ((GameModeInfo->flags & GIF_NODIEHI) || M_Random() % 2) ?
              players[consoleplayer].skin->sounds[sk_pldeth] :
              players[consoleplayer].skin->sounds[sk_pdiehi]);
       }
@@ -176,9 +173,9 @@ static void MN_skinEmulateAction(state_t *state)
 static void MN_SkinSetState(state_t *state)
 {
    int tics;
-   
+
    skview_state = state;
-   
+
    tics = skview_state->tics;
    skview_tics = menutime + (skview_halfspeed ? 2*tics : tics);
 
@@ -345,7 +342,7 @@ static void MN_SkinInstructions()
 
    // haleyjd 05/29/06: rewrote to be binding neutral and to draw all of
    // it with one call to V_FontWriteText instead of five.
-   V_FontWriteText(menu_font_normal, 
+   V_FontWriteText(menu_font_normal,
                "Instructions:\n"
                FC_GRAY "left"  FC_RED " = rotate left, "
                FC_GRAY "right" FC_RED " = rotate right\n"
@@ -355,7 +352,7 @@ static void MN_SkinInstructions()
                FC_GRAY "x"     FC_RED " = gib\n"
                FC_GRAY "space" FC_RED " = respawn, "
                FC_GRAY "h"     FC_RED " = half-speed\n"
-               FC_GRAY "toggle or previous" FC_RED " = exit", 
+               FC_GRAY "toggle or previous" FC_RED " = exit",
                4, INSTR_Y, &subscreen43);
 }
 
@@ -375,7 +372,7 @@ static void MN_SkinDrawer()
    patch_t *patch;
    int pctype;
    int lighttouse;
-   byte *translate = NULL;
+   byte *translate = nullptr;
 
    // draw the normal menu background
    V_DrawBackground(mn_background_flat, &vbscreen);
@@ -411,7 +408,7 @@ static void MN_SkinDrawer()
 
    // draw the sprite, with color translation and proper flipping
    // 01/12/04: changed translation handling
-   V_DrawPatchTranslatedLit(160, 120, &subscreen43, patch, translate, 
+   V_DrawPatchTranslatedLit(160, 120, &subscreen43, patch, translate,
                             colormaps[0] + 256 * lighttouse, flip);
 }
 
@@ -454,8 +451,8 @@ static void MN_initMetaDeaths()
 {
    playerclass_t *pclass = players[consoleplayer].pclass;
    MetaTable     *meta   = mobjinfo[pclass->type]->meta;
-   MetaState     *state  = NULL;
-   
+   MetaState     *state  = nullptr;
+
    skview_metadeaths.clear();
 
    while((state = meta->getNextTypeEx(state)))
@@ -493,7 +490,7 @@ void MN_InitSkinViewer()
    skview_atkstate2 = pclass->altattack;
 
    // haleyjd 03/29/08: determine if player skin has wimpy death sound
-   skview_haswdth = 
+   skview_haswdth =
       (strcasecmp(players[consoleplayer].skin->sounds[sk_plwdth], "none") != 0);
 
    MN_SkinSetState(states[mobjinfo[skview_typenum]->seestate]);

@@ -35,6 +35,11 @@ typedef MetaTable itemeffect_t;
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
+enum
+{
+   GOD_BREACH_DAMAGE = 10000, // common damage that bypasses invulnerability
+};
+
 bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
 bool P_GiveBody(player_t *, const itemeffect_t *);
 bool P_GiveArmor(player_t *, const itemeffect_t *);
@@ -62,9 +67,8 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max);
 
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 
-extern int god_health;   // Ty 03/09/98 - deh support, see also p_inter.c
+extern int god_health_override;   // Ty 03/09/98 - deh support, see also p_inter.c
 // Ty 03/13/98 - externalized initial settings for respawned player
-extern int god_health;
 extern int bfgcells;
 
 // haleyjd 08/01/04: special inflictor types
@@ -73,6 +77,7 @@ typedef enum
    INFLICTOR_NONE,
    INFLICTOR_MINOTAUR,  // minotaur charge
    INFLICTOR_WHIRLWIND, // whirlwinds
+   INFLICTOR_MACEBALL,  // powered mace ball
    INFLICTOR_NUMTYPES
 } inflictor_type_e;
 

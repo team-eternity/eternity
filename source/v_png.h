@@ -65,14 +65,14 @@ public:
    // conversions
    byte     *getAs8Bit(const byte *outpal) const;
    byte     *getAs24Bit() const;
-   patch_t  *getAsPatch(int tag, void **user = NULL, size_t *size = NULL) const;
+   patch_t  *getAsPatch(int tag, void **user = nullptr, size_t *size = nullptr) const;
 
    // Static routines
    static bool     CheckPNGFormat(const void *data);
-   static patch_t *LoadAsPatch(int lumpnum, int tag, void **user = NULL,
-                               size_t *size = NULL);
+   static patch_t *LoadAsPatch(int lumpnum, int tag, void **user = nullptr,
+                               size_t *size = nullptr);
    static patch_t *LoadAsPatch(const char *lumpname, int tag, 
-                               void **user = NULL, size_t *size = NULL);
+                               void **user = nullptr, size_t *size = nullptr);
 };
 
 bool V_WritePNG(byte *linear, int width, int height, const char *filename);

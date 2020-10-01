@@ -31,6 +31,7 @@
 #include "m_fixed.h"
 
 using itemeffect_t = class MetaTable;
+class qstring;
 
 //
 // haleyjd 09/11/07: weapon flags
@@ -48,9 +49,11 @@ enum wepflags_e : unsigned int
    WPF_ALWAYSRECOIL   = 0x00000100, // weapon always has recoil
    WPF_HAPTICRECOIL   = 0x00000200, // use recoil-style haptic effect
    WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
-   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a wep w/o this is picked up
+   WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a better wep is picked up
    WPF_POWEREDUP      = 0x00001000, // powered up weapon (tomed weapons in Heretic)
    WPF_FORCETOREADY   = 0x00002000, // force to readystate on receiving/losing pw_weaponlevel2
+   WPF_PHOENIXRESET   = 0x00004000, // Phoenix rod tome reset behaviour
+   WPF_DEPOWERSWITCH  = 0x00008000, // visually switch weapon when tome of power runs out
 };
 
 //
@@ -84,21 +87,30 @@ struct weaponinfo_t
    int          holdstate_alt;    // Alt hold state
    int          ammopershot_alt;  // Alt ammo per shot
 
+   int          reloadstate; // Reload state
+   int          zoomstate;   // Zoom state
+   int          userstate_1; // The four user states
+   int          userstate_2;
+   int          userstate_3;
+   int          userstate_4;
+
    int           defaultslotindex;
    fixed_t       defaultslotrank;
 
-   int           sortorder;   // sort order (lower is higher priority)
+   fixed_t       sortorder;   // sort order (lower is higher priority)
    weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
 
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
    unsigned int flags;
    uint8_t      intflags;
    int          mod;
-   int          recoil;
+   fixed_t      recoil;
    int          hapticrecoil; // haptic recoil strength, from 1 to 10
    int          haptictime;   // haptic recoil duration, from 1 to 10
-   int          upsound;      // sound made when weapon is being brought up
-   int          readysound;   // sound made when weapon is ready
+   const char  *upsound;      // sound made when weapon is being brought up
+   const char  *readysound;   // sound made when weapon is ready
+
+   int fullscreenoffset;   // how much to vertically offset a weapon on fullscreen (for Heretic)
 
    itemeffect_t *tracker;     // tracker artifact for weapon
 

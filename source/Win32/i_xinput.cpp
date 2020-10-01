@@ -100,8 +100,8 @@ bool XInputGamePadDriver::initialize()
 //
 void XInputGamePadDriver::shutdown()
 {
-   for(auto it = devices.begin(); it != devices.end(); it++)
-      (*it)->getHapticInterface()->clearEffects();
+   for(HALGamePad *&it : devices)
+      it->getHapticInterface()->clearEffects();
 }
 
 //
@@ -501,9 +501,9 @@ public:
    virtual ~XIConstantEffect() 
    {
       if(CurrentLeft == this)
-         CurrentLeft = NULL;
+         CurrentLeft = nullptr;
       if(CurrentRight == this)
-         CurrentRight = NULL;
+         CurrentRight = nullptr;
    }
 
    virtual void evolve(XINPUT_VIBRATION &xvib, uint32_t curTime);

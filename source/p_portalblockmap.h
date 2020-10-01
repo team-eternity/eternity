@@ -26,6 +26,7 @@
 #define P_PORTALBLOCKMAP_H_
 
 #include "m_collection.h"
+#include "r_defs.h"
 
 struct line_t;
 struct linkdata_t;
@@ -58,7 +59,7 @@ struct portalblockentry_t
       struct
       {
          const sector_t *sector; // source sector. Pair sector/ldata unique per block.
-         bool isceiling;      // true if ceiling, not floor.
+         surf_e surf;   // on which surface is it?
       };
    };   
 };
@@ -97,18 +98,17 @@ private:
    // Set to true during initialization
    bool mInitializing;
 
-   void checkLinkSector(const sector_t &sector, const portal_t *portal, bool isceiling, 
-      int mapindex);
+   void checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf, int mapindex);
 };
 
 //
-// Line portal blockmap: stores just the portal linedefs on the blockmap.
-// Only used by rendering facilities (e.g. sprite projections) right now.
+// Line portal blockmap: stores just the portal linedefs (both wall and edge) on the blockmap.
+// Does NOT store the polyportals (yet). Usable ONLY for rendering purposes because of this.
 //
-class LinePortalRenderBlockmap
+class StaticLinedefPortalBlockmap
 {
 public:
-   LinePortalRenderBlockmap() : mValidcount(0), mValids(nullptr)
+   StaticLinedefPortalBlockmap() : mValidcount(0), mValids(nullptr)
    {
    }
 
@@ -129,7 +129,7 @@ private:
 bool P_BlockHasLinkedPortals(int index, bool includesectors);
 
 extern PortalBlockmap gPortalBlockmap;
-extern LinePortalRenderBlockmap pLPortalMap;
+extern StaticLinedefPortalBlockmap pLPortalMap;
 
 #endif
 

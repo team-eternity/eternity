@@ -481,7 +481,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       if(!isPlaying)
       {
          curSeq->cmdPtr += 1;
-         curSeq->currentSound = NULL;
+         curSeq->currentSound = nullptr;
       }
       break;
    case SEQ_CMD_PLAYREPEAT: // play the sound continuously (doesn't advance)
@@ -499,12 +499,12 @@ static void S_RunSequence(SndSeq_t *curSeq)
       S_StartSeqSound(curSeq, false);
       break;
    case SEQ_CMD_DELAY: // delay for a while
-      curSeq->currentSound = NULL;
+      curSeq->currentSound = nullptr;
       curSeq->delayCounter = CMD_ARG1(data);
       curSeq->cmdPtr += 2;
       break;
    case SEQ_CMD_DELAYRANDOM: // delay a random amount within given range
-      curSeq->currentSound = NULL;
+      curSeq->currentSound = nullptr;
       {
          int min = CMD_ARG1(data);
          int max = CMD_ARG2(data);
@@ -551,7 +551,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          if(ancient_demo)
             S_clearEnviroSequence();   // clear it now if demo
       }
-      else if(curSeq->sequence->stopsound == NULL)
+      else if(curSeq->sequence->stopsound == nullptr)
       {
          // if allowed, stop any other sound playing
          if(curSeq->sequence->nostopcutoff == false)
@@ -604,7 +604,7 @@ void S_StopAllSequences()
    // Because everything is allocated PU_LEVEL, simply disconnecting the list
    // head is all that is needed to stop all sequences from playing. The sndseq
    // nodes will all be destroyed by P_SetupLevel.
-   SoundSequences = NULL;
+   SoundSequences = nullptr;
 
    // also stop any running environmental sequence
    S_StopEnviroSequence();
@@ -641,13 +641,13 @@ static SndSeq_t enviroSeq;
 //
 static void S_ResetEnviroSeqEngine()
 {
-   EnviroSequence    = NULL;
+   EnviroSequence    = nullptr;
    enviroSeqFinished = true;
 
    if(!enviroSpots.isEmpty() && !ancient_demo)
       nextEnviroSpot = enviroSpots.getRandom(pr_misc);
    else
-      nextEnviroSpot = NULL; // broken, but shouldn't matter
+      nextEnviroSpot = nullptr; // broken, but shouldn't matter
 
    if(ancient_demo)
       enviroTics = 10 * TICRATE;
@@ -737,7 +737,7 @@ static void S_RunEnviroSequence()
 
       enviroSeq.sequence     = edfSeq;
       enviroSeq.cmdPtr       = edfSeq->commands;
-      enviroSeq.currentSound = NULL;
+      enviroSeq.currentSound = nullptr;
       enviroSeq.origin       = nextEnviroSpot;
       enviroSeq.attenuation  = edfSeq->attenuation;
       enviroSeq.delayCounter = 0;
@@ -772,8 +772,8 @@ static void S_RunEnviroSequence()
 static void S_StopEnviroSequence()
 {
    // stomp on everything to stop it from running any more sequences
-   EnviroSequence = NULL;     // no playing sequence
-   nextEnviroSpot = NULL;     // no spot chosen
+   EnviroSequence = nullptr;  // no playing sequence
+   nextEnviroSpot = nullptr;  // no spot chosen
    enviroSeqFinished = true;  // finished playing
    enviroTics = D_MAXINT;     // wait more or less forever
 }
@@ -834,7 +834,7 @@ void S_SequenceGameLoad()
 // Console commands
 //
 
-VARIABLE_INT(s_enviro_volume, NULL, 0, 16, NULL);
+VARIABLE_INT(s_enviro_volume, nullptr, 0, 16, nullptr);
 CONSOLE_VARIABLE(s_enviro_volume, s_enviro_volume, 0) {}
 
 // EOF

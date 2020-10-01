@@ -145,13 +145,13 @@ static void D_parseDoomWadPath()
 // Looks for a file in each path extracted from DOOMWADPATH in the order the
 // paths were defined. A normalized concatenation of the path and the filename
 // will be returned which must be freed by the calling code, if the file is
-// found. Otherwise NULL is returned.
+// found. Otherwise nullptr is returned.
 //
 static bool D_FindInDoomWadPath(qstring &out, const char *filename, const char *extension)
 {
    qstring qstr;
    bool success = false;
-   char *currext = NULL;
+   char *currext = nullptr;
    size_t numpaths = doomwadpaths.getLength();
 
    for(size_t i = 0; i < numpaths ; i++)
@@ -210,12 +210,12 @@ size_t D_GetNumDoomWadPaths()
 // D_GetDoomWadPath
 //
 // Returns the DOOMWADPATH entry at index i.
-// Returns NULL if i is not a valid index.
+// Returns nullptr if i is not a valid index.
 //
 char *D_GetDoomWadPath(size_t i)
 {
    if(i >= doomwadpaths.getLength())
-      return NULL;
+      return nullptr;
 
    return doomwadpaths[i];
 }
@@ -289,8 +289,8 @@ static void D_FindDiskFileIWAD()
    {
       // close it up, we can't use it
       D_CloseDiskFile(diskfile, true);
-      diskfile     = NULL;
-      diskpwad     = NULL;
+      diskfile     = nullptr;
+      diskpwad     = nullptr;
       havediskfile = false;
       havediskiwad = false;
    }
@@ -371,7 +371,7 @@ static bool D_metaGetLine(qstring &qstr, const char *input, int *idx)
 static void D_parseMetaData(const char *metatext, int mission)
 {
    qstring buffer;
-   const char *endtext = NULL, *levelname = NULL, *musicname = NULL;
+   const char *endtext = nullptr, *levelname = nullptr, *musicname = nullptr;
    int partime = 0, musicnum = 0, index = 0;
    int exitreturn = 0, secretlevel = 0, levelnum = 1, linenum = 0;
    const char *intername = "INTERPIC";
@@ -428,7 +428,7 @@ static void D_parseMetaData(const char *metatext, int mission)
                           levelnum == secretlevel ? exitreturn : 0,
                           levelnum == exitreturn - 1 ? secretlevel : 0,
                           levelnum == secretlevel - 1, 
-                          (levelnum == secretlevel - 1) ? endtext : NULL,
+                          (levelnum == secretlevel - 1) ? endtext : nullptr,
                           mission, intername);
          break;
       }
@@ -450,8 +450,8 @@ static void D_parseMetaData(const char *metatext, int mission)
 static void D_DiskMetaData()
 {
    qstring name;
-   char *metatext = NULL;
-   const char *slash = NULL;
+   char *metatext = nullptr;
+   const char *slash = nullptr;
    int slen = 0;
    diskwad_t wad;
 
@@ -531,7 +531,7 @@ void D_DeferredMissionMetaData(const char *lump, int mission)
 //
 void D_DoDeferredMissionMetaData()
 {
-   if(d_deferredMetaData.lumpname != NULL)
+   if(d_deferredMetaData.lumpname != nullptr)
       D_MissionMetaData(d_deferredMetaData.lumpname, d_deferredMetaData.mission);
 }
 
@@ -551,6 +551,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
    &gi_path_hacx,                                       // HACX
    &gi_path_hticsw, &gi_path_hticreg,  &gi_path_sosr,   // Heretic
    &gi_path_fdoom,  &gi_path_fdoomu,   &gi_path_freedm, // Freedoom
+   &gi_path_rekkr,                                      // Rekkr
 };
 
 //
@@ -563,7 +564,7 @@ static char **iwadVarForNum[NUMPICKIWADS] =
 //
 static const char *D_doIWADMenu()
 {
-   const char *iwadToUse = NULL;
+   const char *iwadToUse = nullptr;
 
 #ifdef _SDL_VER
    bool haveIWADs[NUMPICKIWADS];
@@ -634,36 +635,37 @@ static iwadpathmatch_t iwadMatchers[] =
    // -game matches:
    { MATCH_GAME, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
    { MATCH_GAME, "doom",      { &gi_path_doomu,    &gi_path_doomreg,  &gi_path_doomsw } },
-   { MATCH_GAME, "tnt",       { &gi_path_tnt,      NULL,              NULL            } },
-   { MATCH_GAME, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
-   { MATCH_GAME, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
+   { MATCH_GAME, "tnt",       { &gi_path_tnt,      nullptr,           nullptr         } },
+   { MATCH_GAME, "plutonia",  { &gi_path_plut,     nullptr,           nullptr         } },
+   { MATCH_GAME, "hacx",      { &gi_path_hacx,     nullptr,           nullptr         } },
    { MATCH_GAME, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  &gi_path_hticsw } },
 
    // -iwad matches 
    { MATCH_IWAD, "doom2f",    { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
    { MATCH_IWAD, "doom2",     { &gi_path_doom2,    &gi_path_bfgdoom2, &gi_path_fdoom  } },
-   { MATCH_IWAD, "doomu",     { &gi_path_doomu,    &gi_path_fdoomu,   NULL            } },
-   { MATCH_IWAD, "doom1",     { &gi_path_doomsw,   NULL,              NULL            } },
+   { MATCH_IWAD, "doomu",     { &gi_path_doomu,    &gi_path_fdoomu,   nullptr         } },
+   { MATCH_IWAD, "doom1",     { &gi_path_doomsw,   nullptr,           nullptr         } },
    { MATCH_IWAD, "doom",      { &gi_path_doomu,    &gi_path_doomreg,  &gi_path_fdoomu } },
-   { MATCH_IWAD, "tnt",       { &gi_path_tnt,      NULL,              NULL            } },
-   { MATCH_IWAD, "plutonia",  { &gi_path_plut,     NULL,              NULL            } },
-   { MATCH_IWAD, "hacx",      { &gi_path_hacx,     NULL,              NULL            } },
-   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   NULL,              NULL            } },
-   { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  NULL            } },
-   { MATCH_IWAD, "freedoom2", { &gi_path_fdoom,    NULL,              NULL            } },
-   { MATCH_IWAD, "freedoom1", { &gi_path_fdoomu,   NULL,              NULL            } },
-   { MATCH_IWAD, "freedm",    { &gi_path_freedm,   NULL,              NULL            } },
-   { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, NULL,              NULL,           } },
-   
+   { MATCH_IWAD, "tnt",       { &gi_path_tnt,      nullptr,           nullptr         } },
+   { MATCH_IWAD, "plutonia",  { &gi_path_plut,     nullptr,           nullptr         } },
+   { MATCH_IWAD, "hacx",      { &gi_path_hacx,     nullptr,           nullptr         } },
+   { MATCH_IWAD, "heretic1",  { &gi_path_hticsw,   nullptr,           nullptr         } },
+   { MATCH_IWAD, "heretic",   { &gi_path_sosr,     &gi_path_hticreg,  nullptr         } },
+   { MATCH_IWAD, "freedoom2", { &gi_path_fdoom,    nullptr,           nullptr         } },
+   { MATCH_IWAD, "freedoom1", { &gi_path_fdoomu,   nullptr,           nullptr         } },
+   { MATCH_IWAD, "freedm",    { &gi_path_freedm,   nullptr,           nullptr         } },
+   { MATCH_IWAD, "bfgdoom2",  { &gi_path_bfgdoom2, nullptr,           nullptr,        } },
+   { MATCH_IWAD, "rekkr",     { &gi_path_rekkr,    nullptr,           nullptr,        } },
+
    // Terminating entry
-   { MATCH_NONE, NULL,        { NULL,              NULL,              NULL            } }
+   { MATCH_NONE, nullptr,     { nullptr,           nullptr,           nullptr         } }
 };
 
 //
 // D_IWADPathForGame
 //
 // haleyjd 12/31/10: Return the best defined IWAD path variable for a 
-// -game parameter. Returns NULL if none found.
+// -game parameter. Returns nullptr if none found.
 //
 static char *D_IWADPathForGame(const char *game)
 {
@@ -688,14 +690,14 @@ static char *D_IWADPathForGame(const char *game)
       ++cur; // try the next entry
    }
 
-   return NULL; // nothing was found
+   return nullptr; // nothing was found
 }
 
 //
 // D_IWADPathForIWADParam
 //
 // haleyjd 12/31/10: Return the best defined IWAD path variable for a 
-// -iwad parameter. Returns NULL if none found.
+// -iwad parameter. Returns nullptr if none found.
 //
 static char *D_IWADPathForIWADParam(const char *iwad)
 {
@@ -728,7 +730,7 @@ static char *D_IWADPathForIWADParam(const char *iwad)
       ++cur; // try the next entry
    }
 
-   return NULL; // nothing was found
+   return nullptr; // nothing was found
 }
 
 // macros for CheckIWAD
@@ -864,6 +866,8 @@ static void D_checkIWAD_WAD(FILE *fp, const char *iwadname, iwadcheck_t &version
         if(bfg >= 5) // demand all 5 new lumps for safety.
            version.bfgedition = true;
       }
+      else if(!lumpnamecmp(n, "REKCREDS"))
+         version.rekkr = true;
    }
 
    fclose(fp);
@@ -1069,7 +1073,7 @@ static bool WadFileStatus(qstring &filename, bool *isdir)
    size_t i = filename.length();
 
    *isdir = false;   // default is directory to false
-   if(i == 0)        // if path NULL or empty, doesn't exist
+   if(i == 0)        // if path nullptr or empty, doesn't exist
       return false;
 
    if(!stat(filename.constPtr(), &sbuf)) // check for existence
@@ -1111,14 +1115,15 @@ const char *const standard_iwads[]=
    "/heretic1.wad",  // Shareware Heretic
 
    // Unofficial IWADs
-   "/freedoom2.wad", // Freedoom Phase 2        -- haleyjd 01/11/14
-   "/freedoom1.wad", // Freedoom "Demo"/Phase 1 -- haleyjd 03/07/10
-   "/freedoom.wad",  // Freedoom                -- haleyjd 01/31/03 (deprecated)
-   "/freedoomu.wad", // "Ultimate" Freedoom     -- haleyjd 03/07/10 (deprecated)
-   "/freedm.wad",    // FreeDM IWAD             -- haleyjd 08/28/11
-   "/hacx.wad",      // HACX standalone version -- haleyjd 08/19/09
-   "/bfgdoom.wad",   // BFG Edition UDoom IWAD  -- haleyjd 11/03/12
-   "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD  -- haleyjd 11/03/12
+   "/freedoom2.wad", // Freedoom Phase 2         -- haleyjd 01/11/14
+   "/freedoom1.wad", // Freedoom "Demo"/Phase 1  -- haleyjd 03/07/10
+   "/freedoom.wad",  // Freedoom                 -- haleyjd 01/31/03 (deprecated)
+   "/freedoomu.wad", // "Ultimate" Freedoom      -- haleyjd 03/07/10 (deprecated)
+   "/freedm.wad",    // FreeDM IWAD              -- haleyjd 08/28/11
+   "/hacx.wad",      // HACX standalone version  -- haleyjd 08/19/09
+   "/bfgdoom.wad",   // BFG Edition UDoom IWAD   -- haleyjd 11/03/12
+   "/bfgdoom2.wad",  // BFG Edition DOOM2 IWAD   -- haleyjd 11/03/12
+   "/rekkrsa.wad",   // Rekkr standalone version -- MaxW: 2018/07/15
 };
 
 int nstandard_iwads = earrlen(standard_iwads);
@@ -1171,7 +1176,7 @@ static void D_findIWADFile(qstring &iwad)
    qstring customiwad;
    qstring gameiwad;
    bool isdir = false;
-   const char *basename = NULL;
+   const char *basename = nullptr;
 
    // haleyjd 01/01/11: support for DOOMWADPATH
    D_parseDoomWadPath();
@@ -1389,7 +1394,7 @@ static void D_findIWADFile(qstring &iwad)
 //
 static void D_loadResourceWad()
 {
-   char *filestr = NULL;
+   char *filestr = nullptr;
    size_t len = M_StringAlloca(&filestr, 1, 20, basegamepath);
 
    psnprintf(filestr, len, "%s/eternity.pke", basegamepath);
@@ -1399,7 +1404,7 @@ static void D_loadResourceWad()
       psnprintf(filestr, len, "%s/doom/eternity.pke", basepath);
 
    M_NormalizeSlashes(filestr);
-   D_AddFile(filestr, lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+   D_AddFile(filestr, lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
 
    modifiedgame = false; // reset, ignoring smmu.wad etc.
 }
@@ -1436,7 +1441,7 @@ static void D_identifyDisk()
    D_DiskMetaData();
 
    // set and display version name
-   D_SetGameName(NULL);
+   D_SetGameName(nullptr);
 
    // initialize game/data paths
    D_InitPaths();
@@ -1457,7 +1462,7 @@ static void D_identifyDisk()
 
    // done with the diskfile structure
    D_CloseDiskFile(diskfile, false);
-   diskfile = NULL;
+   diskfile = nullptr;
 }
 
 //
@@ -1507,7 +1512,7 @@ static void D_identifyIWAD()
       // fraggle -- this allows better compatibility with new IWADs
       D_loadResourceWad();
 
-      D_AddFile(iwad.constPtr(), lumpinfo_t::ns_global, NULL, 0, DAF_IWAD);
+      D_AddFile(iwad.constPtr(), lumpinfo_t::ns_global, nullptr, 0, DAF_IWAD);
 
       // 12/24/11: check for game folder hi-def music
       D_CheckGameMusic();

@@ -26,6 +26,8 @@
 #ifndef R_THINGS_H__
 #define R_THINGS_H__
 
+#define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
+
 struct line_t;
 struct sector_t;
 struct particle_t;
@@ -78,11 +80,11 @@ void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-typedef struct cb_maskedcolumn_s
+struct cb_maskedcolumn_t
 {
    float ytop;
    float scale;
-} cb_maskedcolumn_t;
+};
 
 extern cb_maskedcolumn_t maskedcolumn;
 

@@ -85,7 +85,7 @@
 // Constructs a SaveArchive object in saving mode.
 //
 SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
-   : savefile(pSaveFile), loadfile(nullptr)
+   : savefile(pSaveFile), loadfile(nullptr), read_save_version(0)
 {
    if(!pSaveFile)
       I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
@@ -95,7 +95,7 @@ SaveArchive::SaveArchive(OutBuffer *pSaveFile)
 // Constructs a SaveArchive object in loading mode.
 //
 SaveArchive::SaveArchive(InBuffer *pLoadFile)
-   : savefile(nullptr), loadfile(pLoadFile)
+   : savefile(nullptr), loadfile(pLoadFile), read_save_version(0)
 {
    if(!pLoadFile)
       I_Error("SaveArchive: created a load file without a valid InBuffer\n");
@@ -143,6 +143,53 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
       else
          str = nullptr;
    }
+}
+
+//
+// Attempts to read save version, returning false if it fails
+//
+bool SaveArchive::readSaveVersion()
+{
+   char vread[VERSIONSIZE];
+
+   if(!loadfile)
+      I_Error("SaveArchive::readSaveVersion: cannot read version if not loading file!\n");
+
+   archiveCString(vread, VERSIONSIZE);
+
+   if(!strncmp(vread, "MBF ", 4))
+   {
+      const long tempver = strtol(vread + 4, nullptr, 10);
+      if(tempver != 401)
+      {
+         C_Printf(FC_ERROR "Warning: Save too old to be read (pre 4.01.00)!\a");
+         return false;
+      }
+
+      read_save_version = 0;
+   }
+   else if(strncmp(vread, "EE", 2))
+   {
+      C_Printf(FC_ERROR "Warning: unsupported save format!\a"); // blah...
+      return false;
+   }
+   else
+      loadfile->readSint32(read_save_version);
+
+   return true;
+}
+
+//
+// Writes save version
+//
+void SaveArchive::writeSaveVersion()
+{
+   char vread[VERSIONSIZE];
+
+   if(!savefile)
+      I_Error("SaveArchive::writeSaveVersion: cannot save version if not writing file!\n");
+
+   savefile->writeSint32(WRITE_SAVE_VERSION);
 }
 
 //
@@ -326,7 +373,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    else
    {
       loadfile->readSint32(linenum);
-      if(linenum == -1) // Some line pointers can be NULL
+      if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
       else if(linenum < 0 || linenum >= numlines)
       {
@@ -372,6 +419,14 @@ SaveArchive &SaveArchive::operator << (inventoryslot_t &slot)
 SaveArchive &SaveArchive::operator << (v2fixed_t &vec)
 {
    *this << vec.x << vec.y;
+   return *this;
+}
+
+// Serialize a z plane reference
+SaveArchive &SaveArchive::operator << (zrefs_t &zref)
+{
+   *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
+         << zref.passfloor << zref.passceil;
    return *this;
 }
 
@@ -427,7 +482,7 @@ static void P_DeNumberThinkers()
 //
 unsigned int P_NumForThinker(Thinker *th)
 {
-   return th ? th->getOrdinal() : 0; // 0 == NULL
+   return th ? th->getOrdinal() : 0; // 0 == nullptr
 }
 
 //
@@ -435,7 +490,7 @@ unsigned int P_NumForThinker(Thinker *th)
 //
 Thinker *P_ThinkerForNum(unsigned int n)
 {
-   return n <= num_thinkers ? thinker_p[n] : NULL;
+   return n <= num_thinkers ? thinker_p[n] : nullptr;
 }
 
 //=============================================================================
@@ -481,8 +536,8 @@ static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
       if(node->right)
          P_saveWeaponCounters(arc, node->right);
       arc.writeLString(E_WeaponForID(node->key)->name);
-      for(int i = 0; i < NUMWEAPCOUNTERS; i++)
-         arc << (*node->object)[i];
+      for(int &counter : *node->object)
+         arc << counter;
    }
 }
 
@@ -510,8 +565,8 @@ static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
          if(!wp)
             I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
          WeaponCounter &wc = weaponCounters[i];
-         for(int j = 0; j < NUMWEAPCOUNTERS; j++)
-            arc << wc[j];
+         for(int &counter : wc)
+            arc << counter;
          p.weaponctrs->insert(wp->id, &wc);
       }
    }
@@ -530,7 +585,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int j;
          player_t &p = players[i];
 
-         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
+         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn
              << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
@@ -547,6 +602,7 @@ static void P_ArchivePlayers(SaveArchive &arc)
          if(arc.isSaving())
          {
             int numCounters, slotIndex;
+            size_t noLen = 0;
 
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
@@ -555,11 +611,11 @@ static void P_ArchivePlayers(SaveArchive &arc)
             if(p.readyweapon)
                arc.writeLString(p.readyweapon->name);
             else
-               arc.writeLString("");
+               arc.archiveSize(noLen);
             if(p.pendingweapon)
                arc.writeLString(p.pendingweapon->name);
             else
-               arc.writeLString("");
+               arc.archiveSize(noLen);
 
             slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
             arc << slotIndex;
@@ -591,24 +647,24 @@ static void P_ArchivePlayers(SaveArchive &arc)
                I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
 
             arc << slotIndex;
-            p.readyweaponslot = E_FindEntryForWeaponInSlot(&p, p.readyweapon, slotIndex);
+            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.readyweapon, slotIndex);
             arc << slotIndex;
             if(p.pendingweapon != nullptr)
-               p.pendingweaponslot = E_FindEntryForWeaponInSlot(&p, p.pendingweapon, slotIndex);
+               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.pendingweapon, slotIndex);
 
             // Load counters if there's a need to
             P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(j = 0; j < NUMPOWERS; j++)
-            arc << p.powers[j];
+         for(int &power : p.powers)
+            arc << power;
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
 
-         for(j = 0; j < NUMPSPRITES; j++)
-            P_ArchivePSprite(arc, p.psprites[j]);
+         for(pspdef_t &psprite : p.psprites)
+            P_ArchivePSprite(arc, psprite);
 
          arc.archiveCString(p.name, 20);
 
@@ -624,9 +680,6 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.cmd.buttons = 0;       // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
-
-            //if(i == consoleplayer)
-            p.invbarstate.inv_ptr = p.inv_ptr;
          }
       }
    }
@@ -649,7 +702,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
    sector_t *sec;
    line_t   *li;
    side_t   *si;
-  
+
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
@@ -661,28 +714,27 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
-      arc << sec->floorheight << sec->ceilingheight 
-          << sec->friction << sec->movefactor  
+      arc << sec->srf.floor.height << sec->srf.ceiling.height
+          << sec->friction << sec->movefactor
           << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags 
+          << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
-          << sec->floorpic << sec->ceilingpic
+          << sec->srf.floor.pic << sec->srf.ceiling.pic
           << sec->lightlevel << sec->oldlightlevel
-          << sec->floorlightdelta << sec->ceilinglightdelta
+          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->ceilingdata  = nullptr;
-         sec->floordata    = nullptr;
-         sec->lightingdata = nullptr;
+         sec->srf.ceiling.data = nullptr;
+         sec->srf.floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->floorheight);
-         P_SetCeilingHeight(sec, sec->ceilingheight);
+         P_SetFloorHeight(sec, sec->srf.floor.height);
+         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
       }
    }
 
@@ -693,6 +745,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       arc << li->flags << li->special << li->tag
           << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
+
+      if((arc.saveVersion() >= 1))
+         arc << li->extflags;
 
       for(j = 0; j < 2; j++)
       {
@@ -724,7 +779,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
 //
 static void P_ArchiveLevelInfo(SaveArchive &arc)
 {
-   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity;
+   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity <<
+          LevelInfo.skyDelta << LevelInfo.sky2Delta;
 }
 
 //
@@ -830,7 +886,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    {
       char *className = nullptr;
       size_t len;
-      unsigned int idx = 1; // Start at index 1, as 0 means NULL
+      unsigned int idx = 1; // Start at index 1, as 0 means nullptr
       Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
@@ -924,7 +980,7 @@ static void P_ArchiveMap(SaveArchive &arc)
    {
       if(markpointnum)
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
    }
    else
    {
@@ -936,12 +992,12 @@ static void P_ArchiveMap(SaveArchive &arc)
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints,
+            markpoints = erealloc(markpoint_t *, markpoints,
                sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
       }
    }
 }
@@ -1278,9 +1334,11 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID, version);
+      sprintf(name2, VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
+
+      arc.writeSaveVersion();
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
@@ -1407,7 +1465,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
 void P_LoadGame(const char *filename)
 {
    int i;
-   char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
    //uint64_t checksum, rchecksum;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
@@ -1428,16 +1485,9 @@ void P_LoadGame(const char *filename)
       char throwaway[SAVESTRINGSIZE];
 
       arc.archiveCString(throwaway, SAVESTRINGSIZE);
-      
-      // killough 2/22/98: "proprietary" version string :-)
-      sprintf(vcheck, VERSIONID, version);
 
-      arc.archiveCString(vread, VERSIONSIZE);
-   
-      // killough 2/22/98: Friendly savegame version difference message
-      // FIXME/TODO: restore proper version verification
-      if(strncmp(vread, vcheck, VERSIONSIZE))
-         C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
+      if(!arc.readSaveVersion())
+         return;
 
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
@@ -1466,7 +1516,7 @@ void P_LoadGame(const char *filename)
          arc << lvc;
          gamemapname[i] = (char)lvc;
       }
-      gamemapname[8] = '\0'; // ending NULL
+      gamemapname[8] = '\0'; // ending nullptr
 
       G_SetGameMap(); // get gameepisode, map
 

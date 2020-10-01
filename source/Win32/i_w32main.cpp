@@ -35,18 +35,18 @@
 #include <windows.h>
 #include "SDL_syswm.h"
 
+#include "../d_keywds.h"
+
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern void I_FatalError(int code, const char *error, ...);
+extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 
 int disable_sysmenu;
 
 //
-// I_TweakConsole
+// Enables the Win32 console window's close button.
 //
-// Disable the Win32 console window's close button and set its title.
-//
-static void I_TweakConsole()
+static void I_untweakConsole()
 {
 #if _WIN32_WINNT > 0x500
    HWND hwnd = GetConsoleWindow();
@@ -54,19 +54,35 @@ static void I_TweakConsole()
    if(hwnd)
    {
       HMENU hMenu = GetSystemMenu(hwnd, FALSE);
-      DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+      EnableMenuItem(hMenu, SC_CLOSE, MF_ENABLED);
+   }
+#endif
+}
+
+//
+// Disable the Win32 console window's close button and set its title.
+//
+static void I_tweakConsole()
+{
+#if _WIN32_WINNT > 0x500
+   HWND hwnd = GetConsoleWindow();
+
+   if(hwnd)
+   {
+      HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+      EnableMenuItem(hMenu, SC_CLOSE, MF_DISABLED|MF_GRAYED);
+      atexit(I_untweakConsole);
    }
    SetConsoleTitle("Eternity Engine System Console");
 #endif
 }
-
 
 #if !defined(_DEBUG)
 int main(int argc, char **argv)
 {
    __try
    {
-      I_TweakConsole();
+      I_tweakConsole();
       common_main(argc, argv);
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))

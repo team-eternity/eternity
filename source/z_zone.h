@@ -65,6 +65,9 @@
 #include "m_ctype.h"
 #include "psnprntf.h"
 
+// ioanch: added debug headers, enabled only in debug builds
+#include "m_debug.h"
+
 // ZONE MEMORY
 
 // PU - purge tags.
@@ -142,6 +145,9 @@ void  Z_SysFree(void *p);
 #define erealloc(type, p, n) \
    static_cast<type>((Z_Realloc)(p, n, PU_STATIC, 0, __FILE__, __LINE__))
 
+#define erealloctag(type, p, n, tag, user) \
+   static_cast<type>((Z_Realloc)(p, n, tag, user, __FILE__, __LINE__))
+
 #define estructalloc(type, n) \
    static_cast<type *>((Z_Calloc)(n, sizeof(type), PU_STATIC, 0, __FILE__, __LINE__))
 
@@ -164,7 +170,7 @@ void  Z_SysFree(void *p);
    type name;                      \
    memset(&name, 0, sizeof(name))
 
-// Classify a string as either lengthful (non-NULL, not zero length), or empty
+// Classify a string as either lengthful (non-nullptr, not zero length), or empty
 #define estrnonempty(str) ((str) && *(str))
 #define estrempty(str)    (!estrnonempty((str)))
 
@@ -172,7 +178,8 @@ void  Z_SysFree(void *p);
 #define eindex static_cast<int>
 
 // Doom-style printf
-void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
+void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
+void doom_warningf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
 #ifdef INSTRUMENTED
 extern size_t memorybytag[PU_MAX]; // haleyjd  04/01/11
@@ -208,9 +215,13 @@ public:
    ZoneObject();
    virtual ~ZoneObject();
    void *operator new (size_t size);
+   void *operator new[](size_t size);
    void *operator new (size_t size, int tag, void **user = nullptr);
+   void *operator new[](size_t size, int tag, void **user = nullptr);
    void  operator delete (void *p);
+   void operator delete[](void *p);
    void  operator delete (void *p, int, void **);
+   void operator delete[](void *p, int, void **);
    void  changeTag(int tag);
 
    // zone memblock reflection

@@ -45,7 +45,6 @@ extern const char *mapnamest[];
 extern const char *mapnamesh[];
 
 extern bool deh_pars;
-extern bool deh_loaded; // sf
 
 #endif
 

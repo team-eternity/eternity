@@ -62,6 +62,7 @@
 #include "r_main.h"
 #include "r_portal.h"
 #include "r_state.h"
+#include "v_misc.h"
 #include "w_wad.h"
 
 // statics
@@ -101,6 +102,7 @@ static unsigned int sector_chains[NUMSECCHAINS];
 
 // linedef fields:
 #define FIELD_LINE_NUM       "recordnum"
+#define FIELD_LINE_PORTALID  "portalid"
 #define FIELD_LINE_SPECIAL   "special"
 #define FIELD_LINE_TAG       "tag"
 #define FIELD_LINE_EXTFLAGS  "extflags"
@@ -138,18 +140,24 @@ static unsigned int sector_chains[NUMSECCHAINS];
 #define FIELD_SECTOR_PORTALFLAGS_C  "portalflags.ceiling"
 #define FIELD_SECTOR_OVERLAYALPHA_F "overlayalpha.floor"
 #define FIELD_SECTOR_OVERLAYALPHA_C "overlayalpha.ceiling"
+#define FIELD_SECTOR_PORTALID_F     "portalid.floor"
+#define FIELD_SECTOR_PORTALID_C     "portalid.ceiling"
 
 // mapthing options and related data structures
 
+// line special callback
+static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
+                        void *result);
+
 static cfg_opt_t mapthing_opts[] =
 {
-   CFG_INT(FIELD_NUM,     0,  CFGF_NONE),
-   CFG_INT(FIELD_TID,     0,  CFGF_NONE),
-   CFG_STR(FIELD_TYPE,    "", CFGF_NONE),
-   CFG_STR(FIELD_OPTIONS, "", CFGF_NONE),
-   CFG_STR(FIELD_ARGS,    0,  CFGF_LIST),
-   CFG_INT(FIELD_HEIGHT,  0,  CFGF_NONE),
-   CFG_INT(FIELD_SPECIAL, 0,  CFGF_NONE),
+   CFG_INT(FIELD_NUM,     0,       CFGF_NONE),
+   CFG_INT(FIELD_TID,     0,       CFGF_NONE),
+   CFG_STR(FIELD_TYPE,    "",      CFGF_NONE),
+   CFG_STR(FIELD_OPTIONS, "",      CFGF_NONE),
+   CFG_STR(FIELD_ARGS,    nullptr, CFGF_LIST),
+   CFG_INT(FIELD_HEIGHT,  0,       CFGF_NONE),
+   CFG_INT_CB(FIELD_SPECIAL, 0,    CFGF_NONE, E_LineSpecCB),
    CFG_END()
 };
 
@@ -166,7 +174,7 @@ static dehflags_t mapthingflags[] =
    { "NOTCOOP",   MTF_NOTCOOP },
    { "FRIEND",    MTF_FRIEND },
    { "DORMANT",   MTF_DORMANT },
-   { NULL,        0 }
+   { nullptr,     0 }
 };
 
 static dehflagset_t mt_flagset =
@@ -177,19 +185,16 @@ static dehflagset_t mt_flagset =
 
 // linedef options and related data structures
 
-// line special callback
-static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
-                        void *result);
-
 static cfg_opt_t linedef_opts[] =
 {
    CFG_INT(FIELD_LINE_NUM,         0, CFGF_NONE),
    CFG_INT_CB(FIELD_LINE_SPECIAL,  0, CFGF_NONE, E_LineSpecCB),
    CFG_INT(FIELD_LINE_TAG,         0, CFGF_NONE),
    CFG_STR(FIELD_LINE_EXTFLAGS,   "", CFGF_NONE),
-   CFG_STR(FIELD_LINE_ARGS,        0, CFGF_LIST),
+   CFG_STR(FIELD_LINE_ARGS,   nullptr, CFGF_LIST),
    CFG_INT(FIELD_LINE_ID,         -1, CFGF_NONE),
    CFG_FLOAT(FIELD_LINE_ALPHA,   1.0, CFGF_NONE), 
+   CFG_INT(FIELD_LINE_PORTALID,    0, CFGF_NONE),
    CFG_END()
 };
 
@@ -213,7 +218,7 @@ static dehflags_t extlineflags[] =
    { "LOWERPORTAL",  EX_ML_LOWERPORTAL  },
    { "UPPERPORTAL",  EX_ML_UPPERPORTAL  },
    { "POLYOBJECT",   EX_ML_POLYOBJECT   },
-   { NULL,           0                  }
+   { nullptr,        0                  }
 };
 
 static dehflagset_t ld_flagset =
@@ -258,6 +263,8 @@ static cfg_opt_t sector_opts[] =
    CFG_STR(FIELD_SECTOR_PORTALFLAGS_C,     "",        CFGF_NONE),
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_F, 255,       CFGF_NONE, E_TranslucCB2),
    CFG_INT_CB(FIELD_SECTOR_OVERLAYALPHA_C, 255,       CFGF_NONE, E_TranslucCB2),
+   CFG_INT(FIELD_SECTOR_PORTALID_F,        0,         CFGF_NONE),
+   CFG_INT(FIELD_SECTOR_PORTALID_C,        0,         CFGF_NONE),
    
    CFG_END()
 };
@@ -272,7 +279,7 @@ static dehflags_t sectorflags[] =
    { "PHASEDLIGHT",   SECF_PHASEDLIGHT   },
    { "LIGHTSEQUENCE", SECF_LIGHTSEQUENCE },
    { "LIGHTSEQALT",   SECF_LIGHTSEQALT   },
-   { NULL,            0                  }
+   { nullptr,         0                  }
 };
 
 static dehflagset_t sector_flagset =
@@ -288,7 +295,7 @@ static dehflags_t sectordamageflags[] =
    { "ENDGODMODE", SDMG_ENDGODMODE },
    { "EXITLEVEL",  SDMG_EXITLEVEL  },
    { "TERRAINHIT", SDMG_TERRAINHIT },
-   { NULL,         0               }
+   { nullptr,      0               }
 };
 
 static dehflagset_t sectordamage_flagset =
@@ -307,7 +314,7 @@ static dehflags_t sectorportalflags[] =
    { "ADDITIVE",     PS_ADDITIVE     },
    { "USEGLOBALTEX", PS_USEGLOBALTEX },
    { "ATTACHEDPORTAL", PF_ATTACHEDPORTAL },
-   { NULL,           0               }
+   { nullptr,        0               }
 };
 
 static dehflagset_t sectorportal_flagset =
@@ -339,7 +346,7 @@ static cfg_opt_t ed_opts[] =
 static void E_ParseArg(const char *str, int *dest)
 {
    // currently only integers are supported
-   *dest = static_cast<int>(strtol(str, NULL, 0));
+   *dest = static_cast<int>(strtol(str, nullptr, 0));
 }
 
 //=============================================================================
@@ -379,7 +386,7 @@ static int E_ParseTypeField(const char *value)
    int  i;
    char prefix[16];
    const char *colonloc;
-   char *numpos = NULL;
+   char *numpos = nullptr;
 
    num = strtol(value, &numpos, 0);
 
@@ -416,17 +423,17 @@ static int E_ParseTypeField(const char *value)
 //
 static void E_ParseThingArgs(mapthing_t *mte, cfg_t *sec)
 {
-   unsigned int i, numargs;
+   unsigned int numargs;
 
    // count number of args given in list
    numargs = cfg_size(sec, FIELD_ARGS);
-   
+
    // init all args to 0
-   for(i = 0; i < NUMMTARGS; ++i)
-      mte->args[i] = 0;
-   
+   for(int &arg : mte->args)
+      arg = 0;
+
    // parse the given args values
-   for(i = 0; i < numargs && i < NUMMTARGS; ++i)
+   for(unsigned int i = 0; i < numargs && i < NUMMTARGS; ++i)
    {
       const char *argstr = cfg_getnstr(sec, FIELD_ARGS, i);
       E_ParseArg(argstr, &(mte->args[i]));
@@ -440,8 +447,6 @@ static void E_ParseThingArgs(mapthing_t *mte, cfg_t *sec)
 //
 static void E_ProcessEDThings(cfg_t *cfg)
 {
-   unsigned int i;
-
    // get the number of mapthing records
    numEDMapThings = cfg_size(cfg, SEC_MAPTHING);
 
@@ -453,11 +458,11 @@ static void E_ProcessEDThings(cfg_t *cfg)
    EDThings = estructalloctag(mapthing_t, numEDMapThings, PU_LEVEL);
 
    // initialize the hash chains
-   for(i = 0; i < NUMMTCHAINS; ++i)
-      mapthing_chains[i] = numEDMapThings;
+   for(unsigned int &mapthing_chain : mapthing_chains)
+      mapthing_chain = numEDMapThings;
 
    // read fields
-   for(i = 0; i < numEDMapThings; i++)
+   for(unsigned int i = 0; i < numEDMapThings; i++)
    {
       cfg_t *thingsec;
       const char *tempstr;
@@ -574,7 +579,7 @@ static int E_GenTypeForName(const char *name)
    static const char *names[] =
    {
       "GenFloor", "GenCeiling", "GenDoor", "GenLockedDoor",
-      "GenLift", "GenStairs", "GenCrusher", NULL
+      "GenLift", "GenStairs", "GenCrusher", nullptr
    };
    static int bases[] =
    {
@@ -598,9 +603,9 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
    char c;
    int state = 0;
 
-   // if we're already at the end, return NULL
+   // if we're already at the end, return nullptr
    if(text[*index] == '\0')
-      return NULL;
+      return nullptr;
 
    token->clear();
 
@@ -646,7 +651,7 @@ static const char *E_GenTokenizer(const char *text, int *index, qstring *token)
       }
    }
 
-   // return final token, next call will return NULL
+   // return final token, next call will return nullptr
    return token->constPtr();
 }
 
@@ -670,7 +675,7 @@ static int E_SpeedArg(const char *str)
    int i = 0;
    static const char *speeds[] =
    {
-      "slow", "normal", "fast", "turbo", NULL
+      "slow", "normal", "fast", "turbo", nullptr
    };
 
    while(speeds[i] && strcasecmp(str, speeds[i]))
@@ -689,7 +694,7 @@ static int E_ChangeArg(const char *str)
    int i = 0;
    static const char *changes[] =
    {
-      "none", "zero", "texture", "texturetype", NULL
+      "none", "zero", "texture", "texturetype", nullptr
    };
 
    while(changes[i] && strcasecmp(str, changes[i]))
@@ -722,7 +727,7 @@ static int E_FloorTarget(const char *str)
    int i = 0;
    static const char *targs[] =
    {
-      "HnF", "LnF", "NnF", "LnC", "C", "sT", "24", "32", NULL
+      "HnF", "LnF", "NnF", "LnC", "C", "sT", "24", "32", nullptr
    };
 
    while(targs[i] && strcasecmp(str, targs[i]))
@@ -741,7 +746,7 @@ static int E_CeilingTarget(const char *str)
    int i = 0;
    static const char *targs[] =
    {
-      "HnC", "LnC", "NnC", "HnF", "F", "sT", "24", "32", NULL
+      "HnC", "LnC", "NnC", "HnF", "F", "sT", "24", "32", nullptr
    };
 
    while(targs[i] && strcasecmp(str, targs[i]))
@@ -825,7 +830,7 @@ static int E_LockedKey(const char *str)
    static const char *keys[] =
    {
       "Any", "RedCard", "BlueCard", "YellowCard", "RedSkull", "BlueSkull",
-      "YellowSkull", "All", NULL
+      "YellowSkull", "All", nullptr
    };
 
    while(keys[i] && strcasecmp(str, keys[i]))
@@ -898,7 +903,7 @@ static int E_GenTrigger(const char *str)
    int i = 0;
    static const char *trigs[] =
    {
-      "W1", "WR", "S1", "SR", "G1", "GR", "D1", "DR", NULL
+      "W1", "WR", "S1", "SR", "G1", "GR", "D1", "DR", nullptr
    };
 
    while(trigs[i] && strcasecmp(str, trigs[i]))
@@ -938,7 +943,7 @@ static int E_GenTrigger(const char *str)
 static int E_ProcessGenSpec(const char *value)
 {
    qstring buffer;
-   const char *curtoken = NULL;
+   const char *curtoken = nullptr;
    int t, forc = 0, tok_index = 0;
    int trigger;
 
@@ -1100,17 +1105,15 @@ static int E_LineSpecCB(cfg_t *cfg, cfg_opt_t *opt, const char *value,
 //
 static void E_ParseLineArgs(maplinedefext_t *mlde, cfg_t *sec)
 {
-   unsigned int i, numargs;
-
    // count number of args given in list
-   numargs = cfg_size(sec, FIELD_LINE_ARGS);
-   
+   const unsigned int numargs = cfg_size(sec, FIELD_LINE_ARGS);
+
    // init all args to 0
-   for(i = 0; i < NUMLINEARGS; ++i)
-      mlde->args[i] = 0;
-   
+   for(int &arg : mlde->args)
+      arg = 0;
+
    // parse the given args values
-   for(i = 0; i < numargs && i < NUMLINEARGS; ++i)
+   for(unsigned int i = 0; i < numargs && i < NUMLINEARGS; ++i)
    {
       const char *argstr = cfg_getnstr(sec, FIELD_LINE_ARGS, i);
       E_ParseArg(argstr, &(mlde->args[i]));
@@ -1124,8 +1127,6 @@ static void E_ParseLineArgs(maplinedefext_t *mlde, cfg_t *sec)
 //
 static void E_ProcessEDLines(cfg_t *cfg)
 {
-   unsigned int i;
-
    // get the number of linedef records
    numEDLines = cfg_size(cfg, SEC_LINEDEF);
 
@@ -1137,11 +1138,11 @@ static void E_ProcessEDLines(cfg_t *cfg)
    EDLines = estructalloctag(maplinedefext_t, numEDLines, PU_LEVEL);
 
    // initialize the hash chains
-   for(i = 0; i < NUMLDCHAINS; ++i)
-      linedef_chains[i] = numEDLines;
+   for(unsigned int &linedef_chain : linedef_chains)
+      linedef_chain = numEDLines;
 
    // read fields
-   for(i = 0; i < numEDLines; ++i)
+   for(unsigned int i = 0; i < numEDLines; ++i)
    {
       cfg_t *linesec;
       const char *tempstr;
@@ -1196,6 +1197,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
       else if(EDLines[i].alpha > 1.0f)
          EDLines[i].alpha = 1.0f;
 
+      EDLines[i].portalid = cfg_getint(linesec, FIELD_LINE_PORTALID);
       // TODO: any other new fields
    }
 }
@@ -1260,8 +1262,6 @@ double E_NormalizeFlatAngle(double input)
 //
 static void E_ProcessEDSectors(cfg_t *cfg)
 {
-   unsigned int i;
-
    // get the number of sector records
    numEDSectors = cfg_size(cfg, SEC_SECTOR);
 
@@ -1273,11 +1273,11 @@ static void E_ProcessEDSectors(cfg_t *cfg)
    EDSectors = estructalloctag(mapsectorext_t, numEDSectors, PU_LEVEL);
 
    // initialize the hash chains
-   for(i = 0; i < NUMSECCHAINS; ++i)
-      sector_chains[i] = numEDSectors;
+   for(unsigned int &sector_chain : sector_chains)
+      sector_chain = numEDSectors;
 
    // read fields
-   for(i = 0; i < numEDSectors; ++i)
+   for(unsigned int i = 0; i < numEDSectors; ++i)
    {
       cfg_t *section;
       int tempint;
@@ -1345,71 +1345,115 @@ static void E_ProcessEDSectors(cfg_t *cfg)
       if(*tempstr != '\0')
          sec->damageflagsrem = E_ParseFlags(tempstr, &sectordamage_flagset);
 
-      // floor and ceiling offsets
-      sec->floor_xoffs   = cfg_getfloat(section, FIELD_SECTOR_FLOOROFFSETX);
-      sec->floor_yoffs   = cfg_getfloat(section, FIELD_SECTOR_FLOOROFFSETY);
-      sec->ceiling_xoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETX);
-      sec->ceiling_yoffs = cfg_getfloat(section, FIELD_SECTOR_CEILINGOFFSETY);
+      struct fieldset_t
+      {
+         const char *offsetx;
+         const char *offsety;
+         const char *scalex;
+         const char *scaley;
+         const char *angle;
+         const char *terrain;
+         const char *pflags;
+         const char *alpha;
+         const char *portalid;
+      };
+      static const Surfaces<fieldset_t> fieldsets =
+      {
+         {
+            FIELD_SECTOR_FLOOROFFSETX,
+            FIELD_SECTOR_FLOOROFFSETY,
+            FIELD_SECTOR_FLOORSCALEX,
+            FIELD_SECTOR_FLOORSCALEY,
+            FIELD_SECTOR_FLOORANGLE,
+            FIELD_SECTOR_FLOORTERRAIN,
+            FIELD_SECTOR_PORTALFLAGS_F,
+            FIELD_SECTOR_OVERLAYALPHA_F,
+            FIELD_SECTOR_PORTALID_F
+         },
+         {
+            FIELD_SECTOR_CEILINGOFFSETX,
+            FIELD_SECTOR_CEILINGOFFSETY,
+            FIELD_SECTOR_CEILINGSCALEX,
+            FIELD_SECTOR_CEILINGSCALEY,
+            FIELD_SECTOR_CEILINGANGLE,
+            FIELD_SECTOR_CEILINGTERRAIN,
+            FIELD_SECTOR_PORTALFLAGS_C,
+            FIELD_SECTOR_OVERLAYALPHA_C,
+            FIELD_SECTOR_PORTALID_C
+         },
+      };
 
-      // floor and ceiling scale
-      sec->floor_xscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEX);
-      sec->floor_yscale   = cfg_getfloat(section, FIELD_SECTOR_FLOORSCALEY);
-      sec->ceiling_xscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEX);
-      sec->ceiling_yscale = cfg_getfloat(section, FIELD_SECTOR_CEILINGSCALEY);
+      for(int surf = surf_floor; surf != surf_NUM; surf++)
+      {
+         // floor and ceiling offsets
+         sec->surface[surf].offset = {
+            cfg_getfloat(section, fieldsets[surf].offsetx),
+            cfg_getfloat(section, fieldsets[surf].offsety)
+         };
 
+         // floor and ceiling scale
+         sec->surface[surf].scale = {
+            cfg_getfloat(section, fieldsets[surf].scalex),
+            cfg_getfloat(section, fieldsets[surf].scaley)
+         };
 
-      // floor and ceiling angles
-      tempdouble = cfg_getfloat(section, FIELD_SECTOR_FLOORANGLE);
-      sec->floorangle = E_NormalizeFlatAngle(tempdouble);
+         // floor and ceiling angles
+         tempdouble = cfg_getfloat(section, fieldsets[surf].angle);
+         sec->surface[surf].angle = E_NormalizeFlatAngle(tempdouble);
 
-      tempdouble = cfg_getfloat(section, FIELD_SECTOR_CEILINGANGLE);
-      sec->ceilingangle = E_NormalizeFlatAngle(tempdouble);
+         // terrain type overrides
+         tempstr = cfg_getstr(section, fieldsets[surf].terrain);
+         if(strcasecmp(tempstr, "@flat"))
+            sec->surface[surf].terrain = E_TerrainForName(tempstr);
+
+         tempstr = cfg_getstr(section, fieldsets[surf].pflags);
+         if(*tempstr != '\0')
+            sec->surface[surf].pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
+
+         tempint = cfg_getint(section, fieldsets[surf].alpha);
+         if(tempint < 0)
+            tempint = 0;
+         if(tempint > 255)
+            tempint = 255;
+         sec->surface[surf].alpha = (unsigned int)tempint;
+
+         sec->surface[surf].portalid = cfg_getint(section, fieldsets[surf].portalid);
+      }
 
       // sector colormaps
       sec->topmap = sec->midmap = sec->bottommap = -1; // mark as not specified
 
+      auto checkBadCMap = [sec](int cmap)
+      {
+         if(cmap < 0)
+         {
+            doom_printf(FC_ERROR "Invalid colormap for sector %d in ExtraData '%s'",
+                        sec->recordnum, LevelInfo.extraData);
+            // Do not correct it. It already started as -1, so keep it -1 in case of error. But warn
+            // user.
+         }
+      };
+
       tempstr = cfg_getstr(section, FIELD_SECTOR_TOPMAP);
       if(strcasecmp(tempstr, "@default"))
+      {
          sec->topmap = R_ColormapNumForName(tempstr);
+         checkBadCMap(sec->topmap);
+      }
 
       tempstr = cfg_getstr(section, FIELD_SECTOR_MIDMAP);
       if(strcasecmp(tempstr, "@default"))
+      {
          sec->midmap = R_ColormapNumForName(tempstr);
+         checkBadCMap(sec->midmap);
+      }
 
       tempstr = cfg_getstr(section, FIELD_SECTOR_BOTTOMMAP);
       if(strcasecmp(tempstr, "@default"))
+      {
          sec->bottommap = R_ColormapNumForName(tempstr);
-
-      // terrain type overrides
-      tempstr = cfg_getstr(section, FIELD_SECTOR_FLOORTERRAIN);
-      if(strcasecmp(tempstr, "@flat"))
-         sec->floorterrain = E_TerrainForName(tempstr);
-
-      tempstr = cfg_getstr(section, FIELD_SECTOR_CEILINGTERRAIN);
-      if(strcasecmp(tempstr, "@flat"))
-         sec->ceilingterrain = E_TerrainForName(tempstr);
-
-      tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_F);
-      if(*tempstr != '\0')
-         sec->f_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
-
-      tempstr = cfg_getstr(section, FIELD_SECTOR_PORTALFLAGS_C);
-      if(*tempstr != '\0')
-         sec->c_pflags = E_ParseFlags(tempstr, &sectorportal_flagset);
-
-      tempint = cfg_getint(section, FIELD_SECTOR_OVERLAYALPHA_F);
-      if(tempint < 0)
-         tempint = 0;
-      if(tempint > 255)
-         tempint = 255;
-      sec->f_alpha = (unsigned int)tempint;
-
-      tempint = cfg_getint(section, FIELD_SECTOR_OVERLAYALPHA_C);
-      if(tempint < 0)
-         tempint = 0;
-      if(tempint > 255)
-         tempint = 255;
-      sec->c_alpha = (unsigned int)tempint;
+         checkBadCMap(sec->bottommap);
+      }
    }
 }
 
@@ -1432,10 +1476,10 @@ void E_LoadExtraData(void)
    // cache level, so anything from any earlier level has been
    // freed)
    
-   EDThings = NULL;
+   EDThings = nullptr;
    numEDMapThings = 0;
    
-   EDLines = NULL;
+   EDLines = nullptr;
    numEDLines = 0;
 
    // check to see if the ExtraData lump is defined by MapInfo
@@ -1512,7 +1556,7 @@ Mobj *E_SpawnMapThingExt(mapthing_t *mt)
 // have been initialized normally. Normal fields will be altered and
 // extended fields will be set in the linedef.
 //
-void E_LoadLineDefExt(line_t *line, bool applySpecial)
+void E_LoadLineDefExt(line_t *line, bool applySpecial, UDMFSetupSettings &setupSettings)
 {
    unsigned int edLineIdx;
    maplinedefext_t *edline;
@@ -1556,6 +1600,8 @@ void E_LoadLineDefExt(line_t *line, bool applySpecial)
 
    // 11/11/10: alpha
    line->alpha = edline->alpha;
+
+   setupSettings.setLinePortal(eindex(line - lines), edline->portalid);
 }
 
 //
@@ -1616,20 +1662,16 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    // delete the flags
 
    // flat offsets
-   sector->floor_xoffs   = M_DoubleToFixed(edsector->floor_xoffs);
-   sector->floor_yoffs   = M_DoubleToFixed(edsector->floor_yoffs);
-   sector->ceiling_xoffs = M_DoubleToFixed(edsector->ceiling_xoffs);
-   sector->ceiling_yoffs = M_DoubleToFixed(edsector->ceiling_yoffs);
+   sector->srf.floor.offset = v2fixed_t::doubleToFixed(edsector->surface.floor.offset);
+   sector->srf.ceiling.offset = v2fixed_t::doubleToFixed(edsector->surface.ceiling.offset);
 
    // floor and ceiling scale
-   sector->floor_xscale = static_cast<float>(edsector->floor_xscale);
-   sector->floor_yscale = static_cast<float>(edsector->floor_yscale);
-   sector->ceiling_xscale = static_cast<float>(edsector->ceiling_xscale);
-   sector->ceiling_yscale = static_cast<float>(edsector->ceiling_yscale);
+   sector->srf.floor.scale = static_cast<v2float_t>(edsector->surface.floor.scale);
+   sector->srf.ceiling.scale = static_cast<v2float_t>(edsector->surface.ceiling.scale);
 
    // flat angles
-   sector->floorbaseangle   = (float)(edsector->floorangle   * PI / 180.0f);
-   sector->ceilingbaseangle = (float)(edsector->ceilingangle * PI / 180.0f);
+   sector->srf.floor.baseangle = (float)(edsector->surface.floor.angle * PI / 180.0f);
+   sector->srf.ceiling.baseangle = (float)(edsector->surface.ceiling.angle * PI / 180.0f);
 
    // colormaps
    if(edsector->topmap >= 0)
@@ -1649,18 +1691,20 @@ void E_LoadSectorExt(line_t *line, UDMFSetupSettings &setupSettings)
    }
 
    // terrain overrides
-   sector->floorterrain   = edsector->floorterrain;
-   sector->ceilingterrain = edsector->ceilingterrain;
+   sector->srf.floor.terrain   = edsector->surface.floor.terrain;
+   sector->srf.ceiling.terrain = edsector->surface.ceiling.terrain;
 
    // per-sector portal properties
-   sector->f_pflags = (edsector->f_pflags | (edsector->f_alpha << PO_OPACITYSHIFT));
-   sector->c_pflags = (edsector->c_pflags | (edsector->c_alpha << PO_OPACITYSHIFT));
+   sector->srf.floor.pflags = (edsector->surface.floor.pflags | (edsector->surface.floor.alpha << PO_OPACITYSHIFT));
+   sector->srf.ceiling.pflags = (edsector->surface.ceiling.pflags | (edsector->surface.ceiling.alpha << PO_OPACITYSHIFT));
    
-   if(sector->f_portal)
+   if(sector->srf.floor.portal)
       P_CheckFPortalState(sector);
-   if(sector->c_portal)
+   if(sector->srf.ceiling.portal)
       P_CheckCPortalState(sector);
    
+   setupSettings.setSectorPortals(eindex(sector - sectors), edsector->surface.ceiling.portalid,
+                                  edsector->surface.floor.portalid);
    // TODO: more?
 
    // clear the line tag

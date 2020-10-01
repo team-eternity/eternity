@@ -54,9 +54,9 @@ static void P_dropToFloor(Mobj *thing, player_t *player)
    {
       // SoM: so yeah... Need this for linked portals.
       if(demo_version >= 333)
-         thing->z = thing->secfloorz;
+         thing->z = thing->zref.secfloor;
       else
-         thing->z = thing->floorz;
+         thing->z = thing->zref.floor;
    }
 
    if(player)
@@ -79,7 +79,7 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    oldx = thing->x;
    oldy = thing->y;
    oldz = thing->z;
-   aboveFloor = thing->z - thing->floorz;
+   aboveFloor = thing->z - thing->zref.floor;
    if(!P_TeleportMove(thing, x, y, false))
       return false;
 
@@ -87,9 +87,9 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    {
       if(player->powers[pw_flight] && aboveFloor)
       {
-         thing->z = thing->floorz + aboveFloor;
-         if(thing->z + thing->height > thing->ceilingz)
-            thing->z = thing->ceilingz - thing->height;
+         thing->z = thing->zref.floor + aboveFloor;
+         if(thing->z + thing->height > thing->zref.ceiling)
+            thing->z = thing->zref.ceiling - thing->height;
          player->prevviewz = player->viewz = thing->z + player->viewheight;
       }
       else
@@ -100,9 +100,9 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    }
    else if(thing->flags & MF_MISSILE)
    {
-      thing->z = thing->floorz + aboveFloor;
-      if(thing->z + thing->height > thing->ceilingz)
-         thing->z = thing->ceilingz - thing->height;
+      thing->z = thing->zref.floor + aboveFloor;
+      if(thing->z + thing->height > thing->zref.ceiling)
+         thing->z = thing->zref.ceiling - thing->height;
    }
    else
       P_dropToFloor(thing, nullptr);
@@ -147,7 +147,7 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
             
    // killough 5/12/98: exclude voodoo dolls:
    if(player && player->mo != thing)
-      player = NULL;
+      player = nullptr;
 
    if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
       return 0;
@@ -203,7 +203,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
                             const Mobj *m, struct teleparms_t parms)
 {
    // Height of thing above ground, in case of mid-air teleports:
-   fixed_t z = thing->z - thing->floorz;
+   fixed_t z = thing->z - thing->zref.floor;
 
    // Get the angle between the exit thing and source linedef.
    // Rotate 90 degrees, so that walking perpendicularly across
@@ -255,7 +255,7 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
    else
    {
       // Adjust z position to be same height above ground as before
-      thing->z = z + thing->floorz;
+      thing->z = z + thing->zref.floor;
    }
 
    // Hexen (teleangle_keep) behavior doesn't even touch the velocity
@@ -482,14 +482,14 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Whether this is a player, and if so, a pointer to its player_t.
          // Voodoo dolls are excluded by making sure thing->player->mo==thing.
          player_t *player = thing->player && thing->player->mo == thing ?
-            thing->player : NULL;
+            thing->player : nullptr;
 
          // Whether walking towards first side of exit linedef steps down
          int stepdown =
-            l->frontsector->floorheight < l->backsector->floorheight;
+            l->frontsector->srf.floor.height < l->backsector->srf.floor.height;
 
          // Height of thing above ground
-         fixed_t z = thing->z - thing->floorz;
+         fixed_t z = thing->z - thing->zref.floor;
 
          // Side to exit the linedef on positionally.
          //
@@ -531,15 +531,15 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Adjust z position to be same height above ground as before.
          // Ground level at the exit is measured as the higher of the
          // two floor heights at the exit linedef.
-         thing->z = z + sides[l->sidenum[stepdown]].sector->floorheight;
-         
+         thing->z = z + sides[l->sidenum[stepdown]].sector->srf.floor.height;
+
          // Rotate thing's orientation according to difference in linedef angles
          thing->angle += angle;
-         
+
          // Momentum of thing crossing teleporter linedef
          x = thing->momx;
          y = thing->momy;
-         
+
          // Rotate thing's momentum to come out of exit just like it entered
          thing->momx = FixedMul(x, c) - FixedMul(y, s);
          thing->momy = FixedMul(y, c) + FixedMul(x, s);

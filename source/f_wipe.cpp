@@ -47,7 +47,7 @@ int wipetype;
 
 // common statics
 static int current_wipetype;
-static byte *wipe_buffer = NULL;
+static byte *wipe_buffer = nullptr;
 
 //==============================================================================
 //
@@ -60,7 +60,7 @@ static byte *wipe_buffer = NULL;
 static byte **start_screen;
 VALLOCATION(start_screen)
 {
-   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, NULL);
+   start_screen = ecalloctag(byte **, w, sizeof(byte *), PU_VALLOC, nullptr);
 }
 
 // y co-ordinate of various columns
@@ -142,31 +142,29 @@ static void Wipe_meltDrawer(void)
 static bool Wipe_meltTicker(void)
 {
    bool done;
-   int x;
-  
+
    done = true;  // default to true
 
    // SoM 2-4-04: ANYRES
-   for(x = 0; x < SCREENWIDTH; ++x)
+   for(int &worm : worms)
    {
-      if(worms[x] < 0)
+      if(worm < 0)
       {
-         ++worms[x];
+         ++worm;
          done = false;
       }
-      else if(worms[x] < SCREENHEIGHT)
+      else if(worm < SCREENHEIGHT)
       {
          int dy;
 
-         dy = (worms[x] < 16) ? worms[x] + 1 : 8;
+         dy = (worm < 16) ? worm + 1 : 8;
 
-         if(worms[x] + dy >= SCREENHEIGHT)
-            dy = SCREENHEIGHT - worms[x];
-         worms[x] += dy;
+         if(worm + dy >= SCREENHEIGHT)
+            dy = SCREENHEIGHT - worm;
+         worm += dy;
          done = false;
       }
    }
-  
    return done;
 }
 
@@ -235,17 +233,17 @@ static bool Wipe_fadeTicker(void)
 // Wipe Objects
 //
 
-typedef struct fwipe_s
+struct fwipe_t
 {
    void (*StartScreen)(void);
    void (*Drawer)(void);
    bool (*Ticker)(void);
-} fwipe_t;
+};
 
 static fwipe_t wipers[] =
 {
    // none
-   { NULL, NULL, NULL },
+   { nullptr, nullptr, nullptr },
 
    // melt wipe
    {
@@ -282,8 +280,7 @@ void Wipe_StartScreen(void)
    {
       // SoM: Reformatted and cleaned up (ANYRES)
       // haleyjd: make purgable, allocate at required size
-      wipe_buffer = (byte *)(Z_Malloc(video.height * video.width, PU_STATIC, 
-                                      (void **)&wipe_buffer));
+      wipe_buffer = emalloctag(byte *, video.height * video.width, PU_STATIC, reinterpret_cast<void **>(&wipe_buffer));
    }
    else
       Z_ChangeTag(wipe_buffer, PU_STATIC); // buffer is in use
@@ -319,7 +316,7 @@ void Wipe_ScreenReset(void)
    if(wipe_buffer)
    {
       Z_Free(wipe_buffer);
-      wipe_buffer = NULL;
+      wipe_buffer = nullptr;
    }
 
    // cancel any current wipe (screen contents have been lost)

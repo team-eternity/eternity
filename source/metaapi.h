@@ -76,7 +76,7 @@ public:
    explicit MetaObject(const char *pKey);
    MetaObject(const MetaObject &other)
       : Super(), links(), typelinks(), key(other.key),
-        type(NULL), keyIdx(other.keyIdx)
+        type(nullptr), keyIdx(other.keyIdx)
    {
    }
 
@@ -210,7 +210,7 @@ public:
    {
       if(value)
          efree(value);
-      value = NULL;
+      value = nullptr;
    }
 
    // Virtual Methods
@@ -219,7 +219,7 @@ public:
 
    // Accessors
    const char *getValue() const { return value; }
-   virtual void setValue(const char *s, char **ret = NULL);
+   virtual void setValue(const char *s, char **ret = nullptr);
 
    friend class MetaTable;
 };
@@ -271,7 +271,7 @@ public:
 
    // Virtual Methods
    virtual MetaObject *clone() const override { return new MetaVariant(*this); }
-   virtual void setValue(const char *s, char **ret = NULL) override;
+   virtual void setValue(const char *s, char **ret = nullptr) override;
 
    // Accessors
    int    getInt();
@@ -296,7 +296,7 @@ protected:
    const char *value;
 
 public:
-   MetaConstString() : Super(), value(NULL) {}
+   MetaConstString() : Super(), value(nullptr) {}
    MetaConstString(size_t keyIndex, const char *s)
       : Super(keyIndex), value(s)
    {
@@ -367,6 +367,10 @@ public:
    void addObject(MetaObject &object);
    void removeObject(MetaObject *object);
    void removeObject(MetaObject &object);
+   void removeAndDeleteAllObjects(size_t keyIndex);
+   void removeAndDeleteAllObjects(const char *key);
+   void removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type);
+   void removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type);
 
    // Find objects in the table:
    // * By Key
@@ -457,6 +461,7 @@ public:
    const char *getString(const char *key, const char *defValue) const;
    void        setString(const char *key, const char *newValue);
    char       *removeString(const char *key);
+   char       *removeString(size_t keyIndex);
    void        removeStringNR(const char *key);
    void        removeStringNR(size_t keyIndex);
 
@@ -464,9 +469,11 @@ public:
    void        addConstString(size_t keyIndex, const char *value);
    void        addConstString(const char *key, const char *value);
    const char *getConstString(const char *key, const char *defValue) const;
+   const char *getConstString(size_t keyIndex, const char *defValue) const;
    void        setConstString(size_t keyIndex, const char *newValue);
    void        setConstString(const char *key, const char *newValue);
    const char *removeConstString(const char *key);
+   const char *removeConstString(size_t keyIndex);
 
    // Nested MetaTable
    void       addMetaTable(size_t keyIndex, MetaTable *value);
@@ -475,6 +482,7 @@ public:
    MetaTable *getMetaTable(const char *key, MetaTable *defValue) const;
    void       setMetaTable(size_t keyIndex, MetaTable *value);
    void       setMetaTable(const char *key, MetaTable *value);
+   void       removeMetaTableNR(size_t keyIndex);
 
    // Copy routine - clones the entire MetaTable
    void copyTableTo(MetaTable *dest) const;

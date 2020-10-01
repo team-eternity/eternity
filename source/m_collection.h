@@ -153,6 +153,15 @@ public:
 
    T *begin() const { return ptrArray; }
    T *end()   const { return ptrArray + length; }
+
+   T &back()
+   {
+      return ptrArray[length - 1];
+   }
+   const T &back() const
+   {
+      return ptrArray[length - 1];
+   }
 };
 
 //

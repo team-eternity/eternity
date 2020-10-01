@@ -268,7 +268,7 @@ static int C_CheckFlags(command_t *command, const char **errormsg)
    }
 
    // check the flags
-   *errormsg = NULL;
+   *errormsg = nullptr;
    
    if((command->flags & cf_notnet) && (netgame && !demoplayback))
       *errormsg = "not available in netgame";
@@ -312,7 +312,7 @@ static void C_doErrorMsg(command_t *command, const char *errormsg)
    {
       C_Printf("%s: %s\n", command->name, errormsg);
       if(menuactive)
-         MN_ErrorMsg(errormsg);
+         MN_ErrorMsg("%s", errormsg);
    }
 }
 
@@ -338,7 +338,7 @@ void C_RunCommand(command_t *command, const char *options)
 static void C_DoRunCommand(command_t *command, const char *options)
 {
    int i;
-   const char *errormsg = NULL;
+   const char *errormsg = nullptr;
    
    C_GetTokens(options);
    
@@ -498,7 +498,7 @@ static int C_Sync(command_t *command)
 void C_RunTextCmd(const char *command)
 {
    bool quotemark = false;  // for " quote marks
-   char *sub_command = NULL;
+   char *sub_command = nullptr;
    const char *rover;
 
    for(rover = command; *rover; rover++)
@@ -545,7 +545,7 @@ const char *C_VariableValue(variable_t *variable)
 {
    static qstring value;
    void *loc;
-   const char *dummymsg = NULL;
+   const char *dummymsg = nullptr;
    
    value.clearOrCreate(1024);
    
@@ -604,7 +604,7 @@ const char *C_VariableStringValue(variable_t *variable)
 {
    static qstring value;
    int stateflags;
-   const char *dummymsg = NULL;
+   const char *dummymsg = nullptr;
    
    value.clearOrCreate(1024);
    
@@ -805,7 +805,7 @@ static const char *C_ValueForDefine(variable_t *variable, const char *s, int set
       }
       
       if(!isnum(s))
-         return NULL;
+         return nullptr;
    }
    
    return returnstr.constPtr();
@@ -829,7 +829,7 @@ static void C_SetVariable(command_t *command)
    const char *errormsg;
    const char *temp;
    int setflags;
-   const char *varerror = NULL;
+   const char *varerror = nullptr;
    
    // cut off the leading spaces
    
@@ -873,7 +873,7 @@ static void C_SetVariable(command_t *command)
 
    case vt_float:
       // haleyjd 04/21/10: vt_float
-      fs = Console.argv[0]->toDouble(NULL);
+      fs = Console.argv[0]->toDouble(nullptr);
       break;
       
    default:
@@ -882,7 +882,7 @@ static void C_SetVariable(command_t *command)
 
    // check the min/max sizes
    
-   errormsg = NULL;
+   errormsg = nullptr;
    
    // haleyjd 03/22/09: allow unlimited bounds
    // haleyjd 04/21/10: implement vt_float
@@ -905,7 +905,7 @@ static void C_SetVariable(command_t *command)
    
    if(errormsg)
    {
-      MN_ErrorMsg(errormsg);
+      MN_ErrorMsg("%s", errormsg);
       C_Puts(errormsg);
       return;
    }
@@ -1018,9 +1018,8 @@ static void CheckTabs()
 //
 static void GetTabs(qstring &qkey)
 {
-   int i;
    size_t pos, keylen;
-   
+
    numtabs = 0;
 
    origkey.clearOrCreate(128);
@@ -1031,21 +1030,19 @@ static void GetTabs(qstring &qkey)
    // find the first non-space character; if none, we can't do this
    if((pos = qkey.findFirstNotOf(' ')) == qstring::npos)
       return;
-   
+
    // save the input from the first non-space character, and lowercase it
    origkey = qkey.bufferAt(pos);
    origkey.toLower();
 
    gotkey = true;
-      
+
    keylen = origkey.length();
 
    // check each hash chain in turn
-   
-   for(i = 0; i < CMDCHAINS; i++)
+
+   for(command_t *browser : cmdroots)
    {
-      command_t *browser = cmdroots[i];
-      
       // go through each link in this chain
       for(; browser; browser = browser->next)
       {
@@ -1163,7 +1160,7 @@ alias_t *C_GetAlias(const char *name)
       alias = alias->next;
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -1203,7 +1200,7 @@ void C_RemoveAlias(qstring *aliasname)
 {
    alias_t *prev  = &aliases;
    alias_t *rover = aliases.next;
-   alias_t *alias = NULL;
+   alias_t *alias = nullptr;
 
    while(rover)
    {
@@ -1231,7 +1228,7 @@ void C_RemoveAlias(qstring *aliasname)
 
    // unlink alias
    prev->next  = alias->next;
-   alias->next = NULL;
+   alias->next = nullptr;
 
    // free the alias
    efree(alias);
@@ -1265,9 +1262,7 @@ static void C_RunAlias(alias_t *alias)
 //              rather than a static array: no limit on
 //              buffered commands and nicer code
 
-typedef struct bufferedcmd_s bufferedcmd;
-
-struct bufferedcmd_s
+struct bufferedcmd
 {
    command_t *command;     // the command
    char *options;          // command line options
@@ -1275,12 +1270,12 @@ struct bufferedcmd_s
    bufferedcmd *next;      // next in list
 };
 
-typedef struct cmdbuffer_s
+struct cmdbuffer
 {
-   // NULL once list empty
+   // nullptr once list empty
    bufferedcmd *cmdbuffer;
    int timer;   // tic timer to temporarily freeze executing of cmds
-} cmdbuffer;
+};
 
 cmdbuffer buffers[C_CMDTYPES];
 
@@ -1307,7 +1302,7 @@ void C_BufferCommand(int cmtype, command_t *command, const char *options,
    newbuf->command = command;
    newbuf->options = estrdup(options);
    newbuf->cmdsrc = cmdsrc;
-   newbuf->next = NULL;            // is always at end of chain
+   newbuf->next = nullptr;            // is always at end of chain
    
    // no need to be buffered: run it now
    if(!(command->flags & cf_buffered) && buffers[cmtype].timer == 0)
@@ -1388,7 +1383,7 @@ void C_BufferDelay(int cmdtype, int delay)
 void C_ClearBuffer(int cmdtype)
 {
    buffers[cmdtype].timer = 0;                     // clear timer
-   buffers[cmdtype].cmdbuffer = NULL;              // empty 
+   buffers[cmdtype].cmdbuffer = nullptr;           // empty
 }
 
         // compare regardless of font colour
@@ -1481,7 +1476,7 @@ command_t *C_GetCmdForName(const char *cmdname)
       current = current->next;        // try next in chain
    }
    
-   return NULL;
+   return nullptr;
 }
 
 /*

@@ -51,7 +51,7 @@ size_t PatchLoader::DefaultPatchSize;
 //
 patch_t *PatchLoader::GetDefaultPatch()
 {
-   static patch_t *defaultPatch = NULL;
+   static patch_t *defaultPatch = nullptr;
 
    if(!defaultPatch)
    {
@@ -175,7 +175,7 @@ WadLumpLoader::Code PatchLoader::verifyData(lumpinfo_t *lump) const
          buf.alloc(lump->size, false);
          memcpy(buf.get(), lump->cache[fmt], lump->size);
          Z_Free(lump->cache[fmt]);
-         V_LinearToPatch(buf.getAs<byte *>(), w, h, NULL, curTag, &lump->cache[fmt]);
+         V_LinearToPatch(buf.getAs<byte *>(), w, h, nullptr, curTag, &lump->cache[fmt]);
          if(lump->cache[fmt])
             return CODE_NOFMT;
       }
@@ -243,7 +243,10 @@ bool PatchLoader::VerifyAndFormat(void *data, size_t size)
 //
 patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
 {
-   return static_cast<patch_t *>(dir.cacheLumpNum(lumpnum, tag, &patchFmt));
+   if(lumpnum >= 0)
+      return static_cast<patch_t *>(dir.cacheLumpNum(lumpnum, tag, &patchFmt));
+   else
+      return GetDefaultPatch();
 }
 
 //
@@ -253,15 +256,7 @@ patch_t *PatchLoader::CacheNum(WadDirectory &dir, int lumpnum, int tag)
 //
 patch_t *PatchLoader::CacheName(WadDirectory &dir, const char *name, int tag, int ns)
 {
-   int lumpnum;
-   patch_t *ret;
-
-   if((lumpnum = dir.checkNumForName(name, ns)) >= 0)
-      ret = PatchLoader::CacheNum(dir, lumpnum, tag);
-   else
-      ret = GetDefaultPatch();
-
-   return ret;
+   return PatchLoader::CacheNum(dir, dir.checkNumForName(name, ns), tag);
 }
 
 //

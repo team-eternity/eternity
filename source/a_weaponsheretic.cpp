@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright(C) 2017 James Haley, Max Waine, et al.
+// Copyright(C) 2018 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include "doomstat.h"
 #include "d_player.h"
 #include "e_args.h"
+#include "e_player.h"
 #include "e_things.h"
 #include "e_ttypes.h"
 #include "e_weapons.h"
@@ -44,7 +45,7 @@
 
 #include "p_map.h"
 
-// FIXME: This will probably be defined elsewhere at some point
+// TODO: This will probably be defined elsewhere at some point
 #undef PO2
 #define PO2(x) (1 << x)
 
@@ -56,12 +57,9 @@ void A_StaffAttackPL1(actionargs_t *actionargs)
    fixed_t  slope  = P_DoAutoAim(mo, angle, MELEERANGE);
 
    P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff");
+   // Turn to face the target if necessary
    if(clip.linetarget)
-   {
-      //S_StartSound(player->mo, sfx_stfhit);
-      // turn to face target
       mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
-   }
 }
 
 void A_StaffAttackPL2(actionargs_t *actionargs)
@@ -72,12 +70,9 @@ void A_StaffAttackPL2(actionargs_t *actionargs)
    fixed_t  slope = P_DoAutoAim(mo, angle, MELEERANGE);
 
    P_LineAttack(mo, angle, MELEERANGE, slope, damage, "HereticStaffPuff2");
+   // Turn to face the target if necessary
    if(clip.linetarget)
-   {
-      //S_StartSound(player->mo, sfx_stfhit);
-      // turn to face target
       mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
-   }
 }
 
 void A_FireGoldWandPL1(actionargs_t *actionargs)
@@ -85,7 +80,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    Mobj     *mo     = actionargs->actor;
    player_t *player = mo->player;
    angle_t   angle  = mo->angle;
-   const int damage = 7 + (P_Random(pr_goldwand) & 7);;
+   const int damage = 7 + (P_Random(pr_goldwand) & 7);
 
    if(!player)
       return;
@@ -95,8 +90,7 @@ void A_FireGoldWandPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_goldwand) * PO2(18);
 
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
-                "HereticGoldWandPuff1");
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, "HereticGoldWandPuff1");
    P_WeaponSound(mo, sfx_gldhit);
 }
 
@@ -127,8 +121,7 @@ void A_FireGoldWandPL2(actionargs_t *actionargs)
    for(i = 0; i < 5; i++)
    {
       damage = 1 + (P_Random(pr_goldwand2) & 7);
-      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
-                   "HereticGoldWandPuff2");
+      P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, "HereticGoldWandPuff2");
       angle += ((ANG45 / 8) * 2) / 4;
    }
 
@@ -149,11 +142,11 @@ void A_FireMacePL1B(actionargs_t *actionargs)
 
    const int   tnum = E_SafeThingType(MT_MACEFX2);
 
-   ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT) - pmo->floorclip, tnum);
+   ball = P_SpawnMobj(pmo->x, pmo->y, pmo->z + (28 * FRACUNIT), tnum);
 
    const fixed_t slope = P_PlayerPitchSlope(player);
-   // Use Heretic's weird formula.
-   ball->momz = 2 * FRACUNIT + slope * 173 / 32;
+   // NOTE: the 'magic' number came from computing Heretic's formula.
+   ball->momz = 2 * FRACUNIT + FixedMul(ball->info->speed, FixedMul(slope, 35430));
 
    angle = pmo->angle;
    P_SetTarget(&ball->target, pmo);
@@ -184,14 +177,15 @@ void A_FireMacePL1(actionargs_t *actionargs)
    }
    if(!P_CheckAmmo(player))
       return;
-   
+
    const int tnum = E_SafeThingType(MT_MACEFX1);
 
    P_SubtractAmmo(player, -1);
    psp->sx = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
    psp->sy = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
    ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
-                                               ((P_Random(pr_firemace) & 7) - 4) * PO2(24));
+                                           ((P_Random(pr_firemace) & 7) - 4) * PO2(24),
+                                           SPMAH_AIMFRIENDSTOO);
    if(ball)
       ball->counters[0] = 16;    // tics till dropoff
 }
@@ -219,12 +213,13 @@ void A_MaceBallImpact(actionargs_t *actionargs)
    constexpr int MAGIC_JUNK = 1234;
 
    Mobj *ball = actionargs->actor;
-   if((ball->z <= ball->floorz) && E_HitFloor(ball))
-   {                           // Landed in some sort of liquid
+   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   {
+      // Landed in some sort of liquid
       ball->remove();
       return;
    }
-   if((ball->health != MAGIC_JUNK) && (ball->z <= ball->floorz)
+   if((ball->health != MAGIC_JUNK) && (ball->z <= ball->zref.floor)
       && ball->momz)
    {                           // Bounce
       ball->health = MAGIC_JUNK;
@@ -234,7 +229,8 @@ void A_MaceBallImpact(actionargs_t *actionargs)
       S_StartSound(ball, sfx_bounce);
    }
    else
-   {                           // Explode
+   {
+      // Explode
       ball->flags |= MF_NOGRAVITY;
       ball->flags2 &= ~MF2_LOGRAV;
       S_StartSound(ball, sfx_lobhit);
@@ -248,19 +244,22 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
    angle_t   angle;
    const int tnum = E_SafeThingType(MT_MACEFX3);
 
-   if((ball->z <= ball->floorz) && E_HitFloor(ball))
-   {                           // Landed in some sort of liquid
+   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   {
+      // Landed in some sort of liquid
       ball->remove();
       return;
    }
-   if((ball->z != ball->floorz) || (ball->momz < 2 * FRACUNIT))
+   if((ball->z != ball->zref.floor) || (ball->momz < 2 * FRACUNIT))
    {                           // Explode
       ball->momx = ball->momy = ball->momz = 0;
       ball->flags |= MF_NOGRAVITY;
-      ball->flags2 &= ~(MF2_LOGRAV | MF4_HERETICBOUNCES);
+      ball->flags2 &= ~MF2_LOGRAV;
+      ball->flags4 &= ~MF4_HERETICBOUNCES;
    }
    else
-   {                           // Bounce
+   {
+      // Bounce
       ball->momz = ball->momz * 192 / PO2(8);
       P_SetMobjState(ball, ball->info->spawnstate);
 
@@ -292,7 +291,8 @@ void A_FireMacePL2(actionargs_t *actionargs)
    // FIXME: This needs to do the above behaviour:
    // to wit, fire the wimpy version's amount of ammo if in deathmatch
    P_SubtractAmmo(player, -1);
-   mo = P_SpawnPlayerMissile(player->mo, tnum);
+
+   mo = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
    if(mo)
    {
       mobjinfo_t *fx = mobjinfo[tnum];
@@ -300,9 +300,19 @@ void A_FireMacePL2(actionargs_t *actionargs)
 
       mo->momx += player->mo->momx;
       mo->momy += player->mo->momy;
-      mo->momz = FixedMul(fx->speed, slope) + (2 * FRACUNIT);
-      if(clip.linetarget)
+      // NOTE: the 'magic' number came from computing how Heretic's constant slope calculation fits
+      // with a super mace projectile's forward speed.
+      mo->momz = FixedMul(fx->speed, FixedMul(slope, 50615)) + (2 * FRACUNIT);
+      if(autoaim && clip.linetarget)
          P_SetTarget(&mo->tracer, clip.linetarget);
+      else if(!autoaim)
+      {
+         fixed_t oldBulletSlope = bulletslope;
+         P_BulletSlope(player->mo);    // use the same routine as in A_FirePlayerMissile
+         bulletslope = oldBulletSlope; // don't tamper with it
+         if(clip.linetarget)
+            P_SetTarget(&mo->tracer, clip.linetarget);
+      }
    }
    S_StartSound(player->mo, sfx_lobsht);
 }
@@ -314,13 +324,13 @@ void A_DeathBallImpact(actionargs_t *actionargs)
    angle_t  angle;
    bool     newAngle;
 
-   if((ball->z <= ball->floorz) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
    {
       // Landed in some sort of liquid
       ball->remove();
       return;
    }
-   if((ball->z <= ball->floorz) && ball->momz)
+   if((ball->z <= ball->zref.floor) && ball->momz)
    {
       // Bounce
       newAngle = false;
@@ -386,9 +396,13 @@ void A_FireCrossbowPL1(actionargs_t *actionargs)
       return;
 
    P_SubtractAmmo(player, -1);
-   P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1));
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10));
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10));
+
+   edefstructvar(playertargetinfo_t, targetinfo);
+   P_SpawnPlayerMissile(pmo, E_SafeThingType(MT_CRBOWFX1), SPM_ADDSLOPETOZ, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle - (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum, pmo->angle + (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
 }
 
 void A_FireCrossbowPL2(actionargs_t *actionargs)
@@ -402,11 +416,17 @@ void A_FireCrossbowPL2(actionargs_t *actionargs)
       return;
 
    P_SubtractAmmo(player, -1);
-   P_SpawnPlayerMissile(pmo, tnum2);
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10));
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10));
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5));
-   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5));
+
+   edefstructvar(playertargetinfo_t, targetinfo);
+   P_SpawnPlayerMissile(pmo, tnum2, SPM_ADDSLOPETOZ, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle - (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum2, pmo->angle + (ANG45 / 10),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle - (ANG45 / 5),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
+   P_SpawnPlayerMissileAngleHeretic(pmo, tnum3, pmo->angle + (ANG45 / 5),
+                                    SPMAH_FOLLOWTARGETFRIENDSLOPE, &targetinfo);
 }
 
 void A_BoltSpark(actionargs_t *actionargs)
@@ -440,8 +460,7 @@ void A_FireBlasterPL1(actionargs_t *actionargs)
    if(player->refire)
       angle += P_SubRandom(pr_blaster) * PO2(18);
 
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage,
-                "HereticBlasterPuff1");
+   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage, "HereticBlasterPuff1");
    P_WeaponSound(mo, sfx_blssht);
 }
 
@@ -454,7 +473,8 @@ void A_FireSkullRodPL1(actionargs_t *actionargs)
 
    P_SubtractAmmo(player, -1);
    const int tnum = E_SafeThingType(MT_HORNRODFX1);
-   Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum);
+
+   Mobj     *mo   = P_SpawnPlayerMissile(player->mo, tnum, SPM_ADDSLOPETOZ);
    // Randomize the first frame
    if(mo && P_Random(pr_skullrod) > 128)
       P_SetMobjState(mo, mo->state->nextstate);
@@ -471,7 +491,8 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
       return;
 
    P_SubtractAmmo(player, -1);
-   P_SpawnPlayerMissile(mo, tnum);
+
+   P_SpawnPlayerMissile(mo, tnum, SPM_ADDSLOPETOZ);
    // Commented out fire-trail functionality
    //P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_MNTRFX2));
    angle = mo->angle + ANG180;
@@ -482,13 +503,13 @@ void A_FirePhoenixPL1(actionargs_t *actionargs)
 
 void A_InitPhoenixPL2(actionargs_t *actionargs)
 {
-   constexpr int FLAME_THROWER_TICS = 10 * 35;
-   Mobj          *mo = actionargs->actor;
-   player_t      *player = mo->player;
+   constexpr int  FLAME_THROWER_TICS = 10 * 35;
+   Mobj          *mo                 = actionargs->actor;
+   player_t      *player             = mo->player;
 
    if(!player)
       return;
-   
+
    player->weaponctrs->setCounter(player, 0, FLAME_THROWER_TICS);
 }
 
@@ -509,8 +530,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    if(--flamecount == 0)
    {
       // Out of flame
-      //P_SetPsprite(player, ps_weapon, player->psprites[ps_weapon].state->nextstate);
-      state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
+      const state_t *state = E_GetWpnJumpInfo(player->readyweapon, "Powerdown");
       if(state != nullptr)
       {
          P_SetPsprite(player, ps_weapon, state->index);
@@ -543,7 +563,7 @@ void A_FirePhoenixPL2(actionargs_t *actionargs)
    P_CheckMissileSpawn(mo);
 }
 
-void A_ShutdownPhoenixPL2(actionargs_t *actionargs)
+void A_SubtractAmmo(actionargs_t *actionargs)
 {
    player_t *player = actionargs->actor->player;
    if(!player)
@@ -607,8 +627,14 @@ void A_GauntletAttack(actionargs_t *actionargs)
 
    if(powered)
    {
-      // FIXME: This needs to do damage vamp
-      //P_GiveBody(player, damage >> 1);
+      if(mo->health > 0 && player->health < player->pclass->maxhealth)
+      {
+         player->health += damage >> 1;
+         if(player->health > player->pclass->maxhealth)
+            player->health = player->pclass->maxhealth;
+         mo->health = player->health;
+      }
+
       P_WeaponSound(mo, sfx_gntpow);
    }
    else

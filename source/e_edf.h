@@ -40,15 +40,10 @@ void E_ProcessNewEDF(void);
 void E_EDFSetEnableValue(const char *, int); // enables
 
 void E_EDFLogPuts(const char *msg);
-void E_EDFLogPrintf(const char *msg, ...);
+void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...) E_PRINTF(1, 2);
 
-#ifdef __GNUC__
-void E_EDFLoggedErr(int lv, const char *msg, ...) __attribute__((noreturn));
-#else
-void E_EDFLoggedErr(int lv, const char *msg, ...);
-#endif
-
-void E_EDFLoggedWarning(int lv, const char *msg, ...);
+[[noreturn]] void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
+void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...) E_PRINTF(2, 3);
 
 #endif
 

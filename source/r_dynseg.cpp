@@ -36,8 +36,6 @@
 #include "r_dynabsp.h"
 #include "r_state.h"
 
-extern void P_CalcSegLength(seg_t *);
-
 //
 // dynaseg free list
 //
@@ -59,6 +57,31 @@ static rpolyobj_t *freePolyFragments;
 // Dynavertices added this tic.
 //
 static PODCollection<dynavertex_t *> gTicDynavertices;
+static PODCollection<dynaseg_t *> gTicDynasegs;
+
+//
+// External interface
+//
+void R_AddTicDynaSeg(dynaseg_t &seg)
+{
+   gTicDynasegs.add(&seg);
+}
+
+//
+// Used for dynasegs, not base segs
+//
+void P_CalcDynaSegLength(dynaseg_t *dynaseg)
+{
+   seg_t *lseg = &dynaseg->seg;
+   float dx = lseg->v2->fx - lseg->v1->fx;
+   float dy = lseg->v2->fy - lseg->v1->fy;
+   lseg->len = sqrtf(dx * dx + dy * dy);
+
+   dynaseg->prevlen = R_calcPrevLen(dynaseg->seg);
+
+   if(lseg->len != dynaseg->prevlen)
+      R_AddTicDynaSeg(*dynaseg);
+}
 
 //
 // R_AddDynaSubsec
@@ -99,7 +122,7 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 //
 dynavertex_t *R_GetFreeDynaVertex()
 {
-   dynavertex_t *ret = NULL;
+   dynavertex_t *ret = nullptr;
 
    if(dynaVertexFreeList)
    {
@@ -137,7 +160,7 @@ void R_FreeDynaVertex(dynavertex_t **vtx)
       }
    }
 
-   *vtx = NULL;
+   *vtx = nullptr;
 }
 
 //
@@ -154,6 +177,13 @@ void R_SaveDynasegPositions()
       vertex->fbackup.y = vertex->fy;
    }
    gTicDynavertices.makeEmpty();
+
+   for(dynaseg_t *seg : gTicDynasegs)
+   {
+      seg->prevlen = seg->seg.len;
+      seg->prevofs = seg->seg.offset;
+   }
+   gTicDynasegs.makeEmpty();
 }
 
 //
@@ -180,7 +210,7 @@ void R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx)
 //
 static dynaseg_t *R_GetFreeDynaSeg()
 {
-   dynaseg_t *ret = NULL;
+   dynaseg_t *ret = nullptr;
 
    if(dynaSegFreeList)
    {
@@ -201,6 +231,12 @@ static dynaseg_t *R_GetFreeDynaSeg()
 //
 void R_FreeDynaSeg(dynaseg_t *dseg)
 {
+   R_FreeDynaVertex(&dseg->seg.dyv1);
+   R_FreeDynaVertex(&dseg->seg.dyv2);
+   R_FreeDynaVertex(&dseg->originalv2);
+   R_FreeDynaVertex(&dseg->linev1);
+   R_FreeDynaVertex(&dseg->linev2);
+
    dseg->alterlink.remove();  // remove it from alterable list
    dseg->freenext = dynaSegFreeList;
    dynaSegFreeList = dseg;
@@ -213,7 +249,7 @@ void R_FreeDynaSeg(dynaseg_t *dseg)
 //
 static rpolyobj_t *R_GetFreeRPolyObj()
 {
-   rpolyobj_t *ret = NULL;
+   rpolyobj_t *ret = nullptr;
 
    if(freePolyFragments)
    {
@@ -269,21 +305,20 @@ static rpolyobj_t *R_FindFragment(subsector_t *ss, polyobj_t *po)
 }
 
 //
-// R_DynaSegOffset
+// Calculates dynaseg offset using the originating seg's dynavertices.
 //
-// Computes the offset value of the seg relative to its parent linedef.
-// Not terribly fast.
-// Derived from BSP 5.2 SplitDist routine.
-//
-// haleyjd 06/14/10: made global for map loading in p_setup.c and added
-//                   side parameter.
-//
-void R_DynaSegOffset(seg_t *lseg, const line_t *line, int side)
+static void R_calcDynaSegOffset(dynaseg_t &dynaseg, int side)
 {
-   double dx = (side ? line->v2->fx : line->v1->fx) - lseg->v1->fx;
-   double dy = (side ? line->v2->fy : line->v1->fy) - lseg->v1->fy;
- 
-   lseg->offset = static_cast<float>(sqrt(dx * dx + dy * dy));
+   float dx = (side ? dynaseg.linev2->fx : dynaseg.linev1->fx) - dynaseg.seg.v1->fx;
+   float dy = (side ? dynaseg.linev2->fy : dynaseg.linev1->fy) - dynaseg.seg.v1->fy;
+   dynaseg.seg.offset = sqrtf(dx * dx + dy * dy);
+
+   dx = (side ? dynaseg.linev2->fbackup.x : dynaseg.linev1->fbackup.x) - dynaseg.seg.dyv1->fbackup.x;
+   dy = (side ? dynaseg.linev2->fbackup.y : dynaseg.linev1->fbackup.y) - dynaseg.seg.dyv1->fbackup.y;
+   dynaseg.prevofs = sqrtf(dx * dx + dy * dy);
+
+   if(dynaseg.seg.offset != dynaseg.prevofs)
+      R_AddTicDynaSeg(dynaseg);
 }
 
 //
@@ -301,12 +336,15 @@ dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, dynavertex_t *v1, dynavertex_
    ret->seg.sidedef = proto->seg.sidedef;
    ret->backside = proto->backside;
 
+   R_SetDynaVertexRef(&ret->linev1, proto->linev1);
+   R_SetDynaVertexRef(&ret->linev2, proto->linev2);
+
    // vertices
    R_SetDynaVertexRef(&ret->seg.dyv1, v1);
    R_SetDynaVertexRef(&ret->seg.dyv2, v2);
 
    // calculate texture offset
-   R_DynaSegOffset(&ret->seg, proto->seg.linedef, ret->backside ? 1 : 0);
+   R_calcDynaSegOffset(*ret, ret->backside ? 1 : 0);
 
    return ret;
 }
@@ -379,6 +417,23 @@ inline static double R_PartitionDistance(double x, double y, const fnode_t *node
 #define DS_EPSILON 0.3125
 
 //
+// Checks if seg is on top of a partition line
+//
+static bool R_segIsOnPartition(const seg_t &seg, const subsector_t &frontss)
+{
+   if(seg.backsector)
+      return true;
+   const line_t &line = *seg.linedef;
+   int sign = line.frontsector == seg.frontsector ? 1 : -1;
+   v2float_t midp = {
+      static_cast<float>((seg.v1->fx + seg.v2->fx) / 2 - line.nx * DS_EPSILON * sign),
+      static_cast<float>((seg.v1->fy + seg.v2->fy) / 2 - line.ny * DS_EPSILON * sign)
+   };
+
+   return R_PointInSubsector(M_FloatToFixed(midp.x), M_FloatToFixed(midp.y)) != &frontss;
+}
+
+//
 // Checks the subsector for any wall segs which should cut or totally remove dseg.
 // Necessary to avoid polyobject bleeding. Returns true if entire dynaseg is gone.
 //
@@ -398,11 +453,13 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsecto
    for(int i = 0; i < ss.numlines; ++i)
    {
       const seg_t &wall = segs[ss.firstline + i];
+      if(R_segIsOnPartition(wall, ss))
+         continue;   // only check 1-sided lines
       const vertex_t &v1 = *wall.v1;
       const vertex_t &v2 = *wall.v2;
       const divline_t walldl = { v1.x, v1.y, v2.x - v1.x, v2.y - v1.y };
-      int side_v1 = P_PointOnDivlineSide(lseg.v1->x, lseg.v1->y, &walldl);
-      int side_v2 = P_PointOnDivlineSide(lseg.v2->x, lseg.v2->y, &walldl);
+      int side_v1 = P_PointOnDivlineSidePrecise(lseg.v1->x, lseg.v1->y, &walldl);
+      int side_v2 = P_PointOnDivlineSidePrecise(lseg.v2->x, lseg.v2->y, &walldl);
       if(side_v1 == 0 && side_v2 == 0)
          continue;   // this one is fine.
       if(side_v1 == 1 && side_v2 == 1)
@@ -430,13 +487,13 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsecto
          if(backdseg)
          {
             R_SetDynaVertexRef(&backdseg->seg.dyv1, nv);
-            R_DynaSegOffset(&backdseg->seg, backdseg->seg.linedef, 1);
+            R_calcDynaSegOffset(*backdseg, 1);
          }
       }
       else
       {
          R_SetDynaVertexRef(&lseg.dyv1, nv);
-         R_DynaSegOffset(&lseg, lseg.linedef, 0);  // also need to update this
+         R_calcDynaSegOffset(dseg, 0); // also need to update this
          if(backdseg)
             R_SetDynaVertexRef(&backdseg->seg.dyv2, nv);
       }
@@ -518,7 +575,7 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
             {
                backnds = R_CreateDynaSeg(backdseg, backdseg->seg.dyv1, nv);
                R_SetDynaVertexRef(&backdseg->seg.dyv1, nv);
-               R_DynaSegOffset(&backdseg->seg, backdseg->seg.linedef, 1);
+               R_calcDynaSegOffset(*backdseg, 1);
             }
             else
                backnds = nullptr;
@@ -580,9 +637,14 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
    dseg->subnext = backdseg;
 
    // 05/13/09: calculate seg length for SoM
-   P_CalcSegLength(&dseg->seg);
+   P_CalcDynaSegLength(dseg);
    if(backdseg)
+   {
       backdseg->seg.len = dseg->seg.len;
+      backdseg->prevlen = dseg->prevlen;
+      if(backdseg->prevlen != backdseg->seg.len)
+         R_AddTicDynaSeg(*backdseg);
+   }
 
    // 07/15/09: rendering consistency - set frontsector/backsector here
    dseg->seg.frontsector = subsectors[num].sector;
@@ -591,7 +653,7 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
    if(dseg->seg.linedef->backsector)
       dseg->seg.backsector = subsectors[num].sector;
    else
-      dseg->seg.backsector = NULL;
+      dseg->seg.backsector = nullptr;
 
    if(backdseg)
       backdseg->seg.frontsector = backdseg->seg.backsector = subsectors[num].sector;
@@ -667,6 +729,8 @@ void R_AttachPolyObject(polyobj_t *poly)
 
       R_SetDynaVertexRef(&idseg->seg.dyv1, v1);
       R_SetDynaVertexRef(&idseg->seg.dyv2, v2);
+      R_SetDynaVertexRef(&idseg->linev1, v1);
+      R_SetDynaVertexRef(&idseg->linev2, v2);
 
       dynaseg_t *backdseg;
       // Make sure not to render portal line backsides if they were generated
@@ -682,6 +746,8 @@ void R_AttachPolyObject(polyobj_t *poly)
          backdseg->seg.sidedef = &sides[line->sidenum[1]];
          R_SetDynaVertexRef(&backdseg->seg.dyv1, v2);
          R_SetDynaVertexRef(&backdseg->seg.dyv2, v1);
+         R_SetDynaVertexRef(&backdseg->linev1, v2);
+         R_SetDynaVertexRef(&backdseg->linev2, v1);
       }
       else
          backdseg = nullptr;
@@ -746,9 +812,6 @@ void R_DetachPolyObject(polyobj_t *poly)
                dynaseg_t *nextds = ds->subnext;
                
                // free dynamic vertices
-               R_FreeDynaVertex(&ds->seg.dyv1);
-               R_FreeDynaVertex(&ds->seg.dyv2);
-               
                // put this dynaseg on the free list
                R_FreeDynaSeg(ds);
                
@@ -766,7 +829,7 @@ void R_DetachPolyObject(polyobj_t *poly)
       }
 
       // no longer tracking this subsector
-      poly->dynaSubsecs[i] = NULL;
+      poly->dynaSubsecs[i] = nullptr;
    }
 
    // no longer tracking any subsectors
@@ -785,6 +848,9 @@ void R_DetachPolyObject(polyobj_t *poly)
 void R_ClearDynaSegs()
 {
    int i;
+
+   gTicDynasegs.clear();
+   gTicDynavertices.clear();
 
    for(i = 0; i < numPolyObjects; i++)
       R_DetachPolyObject(&PolyObjects[i]);

@@ -49,11 +49,11 @@
 static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
 {
    fixed_t x, y, tmbbox[4];
-   return 
-     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <= 
+   return
+     (tmbbox[BOXRIGHT] = (x = clip.thing->x + link->x) + clip.thing->radius) <=
      ld->bbox[BOXLEFT] ||
      (tmbbox[BOXLEFT] = x - clip.thing->radius) >= ld->bbox[BOXRIGHT] ||
-     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <= 
+     (tmbbox[BOXTOP] = (y = clip.thing->y + link->y) + clip.thing->radius) <=
      ld->bbox[BOXBOTTOM] ||
      (tmbbox[BOXBOTTOM] = y - clip.thing->radius) >= ld->bbox[BOXTOP] ||
      P_BoxOnLineSide(tmbbox, ld) != -1;
@@ -64,53 +64,53 @@ static int untouchedViaOffset(line_t *ld, const linkoffset_t *link)
 //
 // ioanch 20160112: helper function to get line extremities
 //
-static void P_getLineHeights(const line_t *ld, fixed_t &linebottom, 
+static void P_getLineHeights(const line_t *ld, fixed_t &linebottom,
                              fixed_t &linetop)
 {
-   if(ld->frontsector->f_pflags & PS_PASSABLE &&
-      !(ld->frontsector->f_pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->f_portal->data.link.planez > ld->frontsector->floorheight)
+   if(ld->frontsector->srf.floor.pflags & PS_PASSABLE &&
+      !(ld->frontsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
+      ld->frontsector->srf.floor.portal->data.link.planez > ld->frontsector->srf.floor.height)
    {
-      linebottom = ld->frontsector->f_portal->data.link.planez;
+      linebottom = ld->frontsector->srf.floor.portal->data.link.planez;
    }
    else
-      linebottom = ld->frontsector->floorheight;
-   
-   if(ld->frontsector->c_pflags & PS_PASSABLE &&
-      !(ld->frontsector->c_pflags & PF_ATTACHEDPORTAL) &&
-      ld->frontsector->c_portal->data.link.planez < 
-      ld->frontsector->ceilingheight)
+      linebottom = ld->frontsector->srf.floor.height;
+
+   if(ld->frontsector->srf.ceiling.pflags & PS_PASSABLE &&
+      !(ld->frontsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
+      ld->frontsector->srf.ceiling.portal->data.link.planez <
+      ld->frontsector->srf.ceiling.height)
    {
-      linetop = ld->frontsector->c_portal->data.link.planez;
+      linetop = ld->frontsector->srf.ceiling.portal->data.link.planez;
    }
    else
-      linetop = ld->frontsector->ceilingheight;
+      linetop = ld->frontsector->srf.ceiling.height;
 
    if(ld->backsector)
    {
       fixed_t bottomback;
-      if(ld->backsector->f_pflags & PS_PASSABLE &&
-         !(ld->backsector->f_pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->f_portal->data.link.planez > 
-         ld->backsector->floorheight)
+      if(ld->backsector->srf.floor.pflags & PS_PASSABLE &&
+         !(ld->backsector->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
+         ld->backsector->srf.floor.portal->data.link.planez >
+         ld->backsector->srf.floor.height)
       {
-         bottomback = ld->backsector->f_portal->data.link.planez;
+         bottomback = ld->backsector->srf.floor.portal->data.link.planez;
       }
       else
-         bottomback = ld->backsector->floorheight;
+         bottomback = ld->backsector->srf.floor.height;
       if(bottomback < linebottom)
          linebottom = bottomback;
 
       fixed_t topback;
-      if(ld->backsector->c_pflags & PS_PASSABLE &&
-         !(ld->backsector->c_pflags & PF_ATTACHEDPORTAL) &&
-         ld->backsector->c_portal->data.link.planez < 
-         ld->backsector->ceilingheight)
+      if(ld->backsector->srf.ceiling.pflags & PS_PASSABLE &&
+         !(ld->backsector->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
+         ld->backsector->srf.ceiling.portal->data.link.planez <
+         ld->backsector->srf.ceiling.height)
       {
-         topback = ld->backsector->c_portal->data.link.planez;
+         topback = ld->backsector->srf.ceiling.portal->data.link.planez;
       }
       else
-         topback = ld->backsector->ceilingheight;
+         topback = ld->backsector->srf.ceiling.height;
       if(topback > linetop)
          linetop = topback;
    }
@@ -146,15 +146,16 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    fixed_t linemid = linetop / 2 + linebottom / 2;
    bool moveup = thingmid >= linemid;
 
-   if(!moveup && linebottom < clip.ceilingz)
+   if(!moveup && linebottom < clip.zref.ceiling)
    {
-      clip.ceilingz = linebottom;
+      clip.zref.ceiling = linebottom;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
-   if(moveup && linetop > clip.floorz)
+   if(moveup && linetop > clip.zref.floor)
    {
-      clip.floorz = linetop;
+      clip.zref.floor = linetop;
+      clip.zref.floorgroupid = ld->frontsector->groupid;
       clip.floorline = ld;
       clip.blockline = ld;
    }
@@ -162,30 +163,30 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
    fixed_t lowfloor;
    if(!ld->backsector || !moveup)   // if line is 1-sided or above thing
       lowfloor = linebottom;
-   else if(linebottom == ld->backsector->floorheight) 
-      lowfloor = ld->frontsector->floorheight;
+   else if(linebottom == ld->backsector->srf.floor.height)
+      lowfloor = ld->frontsector->srf.floor.height;
    else
-      lowfloor = ld->backsector->floorheight;
+      lowfloor = ld->backsector->srf.floor.height;
    // 2-sided and below the thing: pick the higher floor ^^^
 
    // SAME TRICK AS BELOW!
-   if(lowfloor < clip.dropoffz && linetop >= clip.dropoffz)
-      clip.dropoffz = lowfloor;
+   if(lowfloor < clip.zref.dropoff && linetop >= clip.zref.dropoff)
+      clip.zref.dropoff = lowfloor;
 
    // ioanch: only change if postpone is false by now
-   if(moveup && linetop > clip.secfloorz)
-      clip.secfloorz = linetop;
-   if(!moveup && linebottom < clip.secceilz)
-      clip.secceilz = linebottom;
-         
-   if(moveup && clip.floorz > clip.passfloorz)
-      clip.passfloorz = clip.floorz;
-   if(!moveup && clip.ceilingz < clip.passceilz)
-      clip.passceilz = clip.ceilingz;
+   if(moveup && linetop > clip.zref.secfloor)
+      clip.zref.secfloor = linetop;
+   if(!moveup && linebottom < clip.zref.secceil)
+      clip.zref.secceil = linebottom;
+
+   if(moveup && clip.zref.floor > clip.zref.passfloor)
+      clip.zref.passfloor = clip.zref.floor;
+   if(!moveup && clip.zref.ceiling < clip.zref.passceil)
+      clip.zref.passceil = clip.zref.ceiling;
 
    // We need now to collect spechits for push activation.
-   if(pushhit && full_demo_version >= make_full_version(401, 0) && 
-      (clip.thing->groupid == ld->frontsector->groupid || 
+   if(pushhit && full_demo_version >= make_full_version(401, 0) &&
+      (clip.thing->groupid == ld->frontsector->groupid ||
       (linetop > thingz && linebottom < thingtopz && !(ld->pflags & PS_PASSABLE))))
    {
       pushhit->add(ld);
@@ -212,22 +213,22 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    bbox[BOXRIGHT] = clip.bbox[BOXRIGHT] + link->x;
    bbox[BOXTOP] = clip.bbox[BOXTOP] + link->y;
 
-   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
-      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
-      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
+   if(bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
+      bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  ||
+      bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] ||
       bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
       return true; // didn't hit it
 
    if(P_BoxOnLineSide(bbox, ld) != -1)
       return true; // didn't hit it
-   
+
    fixed_t linetop, linebottom;
    if(po)
    {
       const sector_t *midsector = R_PointInSubsector(po->centerPt.x,
                                                      po->centerPt.y)->sector;
-      linebottom = midsector->floorheight;
-      linetop = midsector->ceilingheight;
+      linebottom = midsector->srf.floor.height;
+      linetop = midsector->srf.ceiling.height;
    }
    else
       P_getLineHeights(ld, linebottom, linetop);
@@ -274,8 +275,15 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       i2 = inters;
       i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
       i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
-      if(!P_PointReachesGroupVertically(i2.x, i2.y, (linebottom + linetop) / 2,
-         linegroupid, clip.thing->groupid, ld->frontsector, thingmid))
+
+      uint8_t floorceiling = 0;
+      const sector_t *reachedsec;
+      fixed_t linemid = (linebottom + linetop) / 2;
+
+      if(!(reachedsec =
+           P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid,
+                                         clip.thing->groupid, ld->frontsector,
+                                         thingmid, &floorceiling)))
       {
          if(ld->backsector)
          {
@@ -283,8 +291,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
             i2 = inters;
             i2.x += FixedMul(FRACUNIT >> 12, finecosine[angle >> ANGLETOFINESHIFT]);
             i2.y += FixedMul(FRACUNIT >> 12, finesine[angle >> ANGLETOFINESHIFT]);
-            if(!P_PointReachesGroupVertically(i2.x, i2.y, (linebottom + linetop) / 2,
-               linegroupid, clip.thing->groupid, ld->backsector, thingmid))
+            if(!(reachedsec =
+                 P_PointReachesGroupVertically(i2.x, i2.y, linemid, linegroupid,
+                                               clip.thing->groupid,
+                                               ld->backsector, thingmid,
+                                               &floorceiling)))
             {
                postpone = true;
             }
@@ -298,6 +309,19 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       {
          P_addPortalHitLine(ld, po);
          return true;
+      }
+
+      // Cap the line bottom and top if it's a line from another portal
+      fixed_t planez;
+      if(floorceiling == sector_t::floor &&
+         linebottom < (planez = P_PortalZ(surf_ceil, *reachedsec)))
+      {
+         linebottom = planez;
+      }
+      if(floorceiling == sector_t::ceiling &&
+         linetop > (planez = P_PortalZ(surf_floor, *reachedsec)))
+      {
+         linetop = planez;
       }
    }
 
@@ -395,11 +419,11 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    {
       // adjust the lowfloor to the real observed value, to prevent
       // wrong dropoffz
-      if(ld->backsector && 
-         ((clip.opensecceil == ld->backsector->ceilingheight &&
-         clip.opensecfloor == ld->frontsector->floorheight) ||
-         (clip.opensecceil == ld->frontsector->ceilingheight && 
-         clip.opensecfloor == ld->backsector->floorheight)))
+      if(ld->backsector &&
+         ((clip.opensecceil == ld->backsector->srf.ceiling.height &&
+         clip.opensecfloor == ld->frontsector->srf.floor.height) ||
+         (clip.opensecceil == ld->frontsector->srf.ceiling.height &&
+         clip.opensecfloor == ld->backsector->srf.floor.height)))
       {
          clip.lowfloor = clip.opensecfloor;
       }
@@ -415,16 +439,17 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    // ioanch 20160315: don't forget about 3dmidtex on the same group ID if they
    // decrease the opening
    if((!underportal || (lineclipflags & LINECLIP_UNDER3DMIDTEX)) 
-      && clip.opentop < clip.ceilingz)
+      && clip.opentop < clip.zref.ceiling)
    {
-      clip.ceilingz = clip.opentop;
+      clip.zref.ceiling = clip.opentop;
       clip.ceilingline = ld;
       clip.blockline = ld;
    }
    if((!aboveportal || (lineclipflags & LINECLIP_OVER3DMIDTEX)) 
-      && clip.openbottom > clip.floorz)
+      && clip.openbottom > clip.zref.floor)
    {
-      clip.floorz = clip.openbottom;
+      clip.zref.floor = clip.openbottom;
+      clip.zref.floorgroupid = clip.bottomgroupid;
       clip.floorline = ld;          // killough 8/1/98: remember floor linedef
       clip.blockline = ld;
    }
@@ -436,26 +461,26 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
    // as each layer is explored, if there really is a gap, and accidental
    // detail downstairs will not count, considering the linetop would always
    // be below any dropfloorz upstairs.
-   if(clip.lowfloor < clip.dropoffz && (samegroupid || linetop >= clip.dropoffz))
+   if(clip.lowfloor < clip.zref.dropoff && (samegroupid || linetop >= clip.zref.dropoff))
    {
-      clip.dropoffz = clip.lowfloor;
+      clip.zref.dropoff = clip.lowfloor;
    }
 
    // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
    // touching 3DMidTex lines.
    if(demo_version >= 331 && clip.touch3dside)
-      clip.dropoffz = clip.floorz;
+      clip.zref.dropoff = clip.zref.floor;
 
-   if(!aboveportal && clip.opensecfloor > clip.secfloorz)
-      clip.secfloorz = clip.opensecfloor;
-   if(!underportal && clip.opensecceil < clip.secceilz)
-      clip.secceilz = clip.opensecceil;
+   if(!aboveportal && clip.opensecfloor > clip.zref.secfloor)
+      clip.zref.secfloor = clip.opensecfloor;
+   if(!underportal && clip.opensecceil < clip.zref.secceil)
+      clip.zref.secceil = clip.opensecceil;
 
    // SoM 11/6/02: AGHAH
-   if(clip.floorz > clip.passfloorz)
-      clip.passfloorz = clip.floorz;
-   if(clip.ceilingz < clip.passceilz)
-      clip.passceilz = clip.ceilingz;
+   if(clip.zref.floor > clip.zref.passfloor)
+      clip.zref.passfloor = clip.zref.floor;
+   if(clip.zref.ceiling < clip.zref.passceil)
+      clip.zref.passceil = clip.zref.ceiling;
 
    // ioanch: only allow spechits if on contact or simply same group.
    // Line portals however are ONLY collected if on the same group

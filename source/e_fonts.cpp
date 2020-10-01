@@ -110,10 +110,10 @@
 
 static cfg_opt_t filter_opts[] =
 {
-   CFG_STR(ITEM_FILTER_CHARS, 0,  CFGF_LIST),
-   CFG_STR(ITEM_FILTER_START, "", CFGF_NONE),
-   CFG_STR(ITEM_FILTER_END,   "", CFGF_NONE),
-   CFG_STR(ITEM_FILTER_MASK,  "", CFGF_NONE),
+   CFG_STR(ITEM_FILTER_CHARS, nullptr, CFGF_LIST),
+   CFG_STR(ITEM_FILTER_START, "",      CFGF_NONE),
+   CFG_STR(ITEM_FILTER_END,   "",      CFGF_NONE),
+   CFG_STR(ITEM_FILTER_MASK,  "",      CFGF_NONE),
    CFG_END()
 };
 
@@ -404,7 +404,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
    if(font->data && !E_IsLinearLumpUsed(font, font->data))
    {
       efree(font->data);
-      font->data = NULL;
+      font->data = nullptr;
    }
 
    lumpnum = W_GetNumForName(name);
@@ -423,7 +423,7 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
                               fontpng.getNumColors() == 256);
          bool doRequantize = (!is8Bit256 || requantize);
 
-         font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : NULL);
+         font->data = fontpng.getAs8Bit(doRequantize ? pal.get() : nullptr);
 
          w = static_cast<int>(fontpng.getWidth());
          h = static_cast<int>(fontpng.getHeight());
@@ -679,12 +679,12 @@ static void E_LoadPatchFont(vfont_t *font)
    if(font->size <= 0)
       E_EDFLoggedErr(2, "E_LoadPatchFont: font %s size <= 0\n", font->name);
 
-   // init all to NULL at beginning
+   // init all to nullptr at beginning
    font->fontgfx = ecalloc(patch_t **, font->size, sizeof(patch_t *));
 
    for(i = 0, j = font->start; i < font->size; i++, j++)
    {
-      vfontfilter_t *filter, *filtertouse = NULL;
+      vfontfilter_t *filter, *filtertouse = nullptr;
 
       // run down filters until a match is found
       for(k = 0; k < font->numfilters; k++)
@@ -804,7 +804,7 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // process start
    if(IS_SET(sec, ITEM_FONT_START))
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FONT_START);
 
       if(strlen(tempstr) > 1)
@@ -819,7 +819,7 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // process end
    if(IS_SET(sec, ITEM_FONT_END))
    {
-      char *pos = NULL;
+      char *pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FONT_END);
 
       if(strlen(tempstr) > 1)
@@ -997,6 +997,9 @@ static void E_ProcessFontVars(cfg_t *cfg)
    // 02/25/09: set native module font names
    E_ReplaceString(hud_fontname,      cfg_getstrdup(cfg, ITEM_FONT_HUD));
    E_ReplaceString(hud_overfontname,  cfg_getstrdup(cfg, ITEM_FONT_HUDO));
+   E_ReplaceString(hud_fssmallname,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSS));
+   E_ReplaceString(hud_fsmediumname,  cfg_getstrdup(cfg, ITEM_FONT_HUDFSM));
+   E_ReplaceString(hud_fslargename,   cfg_getstrdup(cfg, ITEM_FONT_HUDFSL));
    E_ReplaceString(mn_fontname,       cfg_getstrdup(cfg, ITEM_FONT_MENU));
    E_ReplaceString(mn_bigfontname,    cfg_getstrdup(cfg, ITEM_FONT_BMENU));
    E_ReplaceString(mn_normalfontname, cfg_getstrdup(cfg, ITEM_FONT_NMENU));

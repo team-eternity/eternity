@@ -193,7 +193,7 @@ public:
    bool loadSidedefs2();
    bool loadThings();
 
-   bool checkForCompatibilityFlag(const char *nstext);
+   bool checkForCompatibilityFlag(qstring nstext);
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;
@@ -262,7 +262,7 @@ private:
       bool translucent, jumpover, blockfloaters;   // Strife
 
       // Activation specials
-      bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
+      bool playercross, playeruse, monstercross, monsteruse, impact, monstershoot, playerpush,
       monsterpush, missilecross, repeatspecial, polycross;
 
       int special, arg[5];       // linedef special and args
@@ -361,6 +361,9 @@ private:
       int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
+      bool phasedlight;
+      bool lightsequence;
+      bool lightseqalt;
 
       qstring colormaptop;
       qstring colormapmid;

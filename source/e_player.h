@@ -40,6 +40,14 @@ enum rebornitemflag_e
    RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
 };
 
+//
+// Player class flags
+//
+enum
+{
+   PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
+};
+
 // default inventory items
 struct reborninventory_t
 {
@@ -57,12 +65,16 @@ struct playerclass_t
    mobjtype_t type;      // index of mobj type used
    statenum_t altattack; // index of alternate attack state for weapon code
    int initialhealth;    // initial health when reborn
+   int maxhealth;        // max health for regular items, HealThing and Gauntlets
+   int superhealth;      // max health for superchargers and HealThing
+   fixed_t viewheight;   // [XA] view height, relative to player's 'z' position
 
    // speeds
    fixed_t forwardmove[2];
    fixed_t sidemove[2];
    fixed_t angleturn[3]; // + slow turn
    fixed_t lookspeed[2]; // haleyjd: look speeds (from zdoom)
+   fixed_t jumpspeed;
 
    // original speeds - before turbo is applied.
    fixed_t oforwardmove[2];
@@ -76,6 +88,9 @@ struct playerclass_t
    weaponslot_t *weaponslots[NUMWEAPONSLOTS];
    bool          hasslots;
 
+   // flags
+   unsigned flags;
+
    // hashing data
    char mnemonic[129];
    playerclass_t *next;
@@ -87,6 +102,9 @@ void E_VerifyDefaultPlayerClass(void);
 bool E_IsPlayerClassThingType(mobjtype_t);
 bool E_PlayerInWalkingState(player_t *);
 void E_ApplyTurbo(int ts);
+
+bool E_CanJump(const playerclass_t &pclass);
+bool E_MayJumpIfOverriden(const playerclass_t &pclass);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS

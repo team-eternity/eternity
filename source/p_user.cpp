@@ -196,10 +196,10 @@ void P_CalcHeight(player_t *player)
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
    {
-      player->viewz = player->mo->z + VIEWHEIGHT;
+      player->viewz = player->mo->z + player->pclass->viewheight;
       
-      if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
-         player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
+      if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
+         player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
 
       // phares 2/25/98:
       // The following line was in the Id source and appears
@@ -220,15 +220,15 @@ void P_CalcHeight(player_t *player)
    {
       player->viewheight += player->deltaviewheight;
       
-      if(player->viewheight > VIEWHEIGHT)
+      if(player->viewheight > player->pclass->viewheight)
       {
-         player->viewheight = VIEWHEIGHT;
+         player->viewheight = player->pclass->viewheight;
          player->deltaviewheight = 0;
       }
 
-      if(player->viewheight < VIEWHEIGHT / 2)
+      if(player->viewheight < player->pclass->viewheight / 2)
       {
-         player->viewheight = VIEWHEIGHT / 2;
+         player->viewheight = player->pclass->viewheight / 2;
          if(player->deltaviewheight <= 0)
             player->deltaviewheight = 1;
       }
@@ -245,13 +245,13 @@ void P_CalcHeight(player_t *player)
 
    // haleyjd 08/07/04: new floorclip system
    if(player->mo->floorclip && player->playerstate != PST_DEAD && 
-      player->mo->z <= player->mo->floorz)
+      player->mo->z <= player->mo->zref.floor)
    {
       player->viewz -= player->mo->floorclip;
    }
    
-   if(player->viewz > player->mo->ceilingz - 4 * FRACUNIT)
-      player->viewz = player->mo->ceilingz - 4 * FRACUNIT;
+   if(player->viewz > player->mo->zref.ceiling - 4 * FRACUNIT)
+      player->viewz = player->mo->zref.ceiling - 4 * FRACUNIT;
 }
 
 //
@@ -312,7 +312,7 @@ void P_MovePlayer(player_t* player)
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
    onground = 
-      mo->z <= mo->floorz ||
+      mo->z <= mo->zref.floor ||
       (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
       (mo->flags4 & MF4_FLY);
    
@@ -375,7 +375,7 @@ void P_MovePlayer(player_t* player)
          if(cmd->sidemove)
             P_Thrust(player, mo->angle - ANG90, 0, cmd->sidemove*movefactor);
       }
-      else if(LevelInfo.airControl == 0 && !comp[comp_aircontrol])
+      else if(LevelInfo.airControl == 0 && E_CanJump(*player->pclass))
       {
          // Apply legacy Hexen/Strife primitive air control if air control is 0
          // (default) and the compatibility setting is "NO".
@@ -430,7 +430,7 @@ void P_DeathThink(player_t *player)
    }
    else
    {
-      onground = player->mo->z <= player->mo->floorz ||
+      onground = player->mo->z <= player->mo->zref.floor ||
                     (P_Use3DClipping() &&
                      player->mo->intflags & MIF_ONMOBJ);
    }
@@ -473,17 +473,12 @@ void P_DeathThink(player_t *player)
    if(!E_IsPlayerClassThingType(player->mo->type))
    {
       player->prevpitch = player->pitch;
-      if(player->mo->z <= player->mo->floorz && player->pitch > -ANGLE_1 * 15)
+      if(player->mo->z <= player->mo->zref.floor && player->pitch > -ANGLE_1 * 15)
          player->pitch -= 2*ANGLE_1/3;
    }
-      
-   if(player->cmd.buttons & BT_USE)
-   {
-      if(player == &players[consoleplayer])
-         player->invbarstate.inv_ptr = 0;
 
+   if(player->cmd.buttons & BT_USE)
       player->playerstate = PST_REBORN;
-   }
 }
 
 //
@@ -506,7 +501,7 @@ static void P_HereticCurrent(player_t *player)
    // determine what touched sector the player is standing on
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
-      if(thing->z == m->m_sector->floorheight)
+      if(thing->z == m->m_sector->srf.floor.height)
          break;
    }
 
@@ -693,14 +688,31 @@ void P_PlayerThink(player_t *player)
       // Handle actions   -- joek 12/22/07
       // ioanch: not on demo_version lower than some amount. Was happening
       // accidentally in -vanilla.
-      if(cmd->actions & AC_JUMP && demo_version >= 335 && !LevelInfo.disableJump)
+      if(cmd->actions & AC_JUMP)
       {
-         if((player->mo->z == player->mo->floorz || 
-             (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+         if(E_CanJump(*player->pclass))
          {
-            player->mo->momz += 8*FRACUNIT; // PCLASS_FIXME: make jump height pclass property
-            player->mo->intflags &= ~MIF_ONMOBJ;
-            player->jumptime = 18;
+            if((player->mo->z == player->mo->zref.floor ||
+                (player->mo->intflags & MIF_ONMOBJ)) && !player->jumptime)
+            {
+               if(strcasecmp(player->skin->sounds[sk_jump], "none"))
+                  S_StartSound(player->mo, GameModeInfo->playerSounds[sk_jump]);
+               player->mo->momz += player->pclass->jumpspeed;
+               player->mo->intflags &= ~MIF_ONMOBJ;
+               player->jumptime = 18;
+            }
+         }
+         else
+         {
+            static int printtic = -3 * TICRATE;
+            if(gametic >= printtic + 3 * TICRATE && player == &players[consoleplayer])
+            {
+               printtic = gametic;
+               if(E_MayJumpIfOverriden(*player->pclass))
+                  doom_printf("Jumping needs to be allowed in the settings.");
+               else
+                  doom_printf("Jumping not possible.");
+            }
          }
       }
    }
@@ -726,7 +738,7 @@ void P_PlayerThink(player_t *player)
    // going to affect you, like painful floors.
 
    // ioanch 20160116: portal aware
-   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, false);
+   sector_t *sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
    if(P_SectorIsSpecial(sector))
       P_PlayerInSpecialSector(player, sector);
 
@@ -754,7 +766,7 @@ void P_PlayerThink(player_t *player)
          else
             player->pendingweapon = wp;
 
-         player->pendingweaponslot = E_FindEntryForWeaponInSlot(player, wp, cmd->slotIndex);
+         player->pendingweaponslot = E_FindEntryForWeaponInSlotIndex(player, wp, cmd->slotIndex);
       }
    }
    else if(cmd->buttons & BT_CHANGE)
@@ -885,12 +897,23 @@ void P_PlayerThink(player_t *player)
          {
             // Note: sisterWeapon is guaranteed to != nullptr elsewhere
             weaponinfo_t *unpowered = player->readyweapon->sisterWeapon;
-            if(unpowered->readystate != player->readyweapon->readystate ||
-               unpowered->flags & WPF_FORCETOREADY)
+            if(player->readyweapon->flags & WPF_PHOENIXRESET &&
+               player->psprites[ps_weapon].state->index != player->readyweapon->readystate &&
+               player->psprites[ps_weapon].state->index != player->readyweapon->upstate)
             {
+               P_SetPsprite(player, ps_weapon, unpowered->readystate);
+               P_SubtractAmmo(player, -1);
+               player->refire = 0;
+            }
+            else if(unpowered->flags & WPF_FORCETOREADY || player->attackdown == AT_NONE)
+            {
+               // TODO: Figure out if should be || (player->attackdown == AT_NONE && current-state-isireadystate)
                P_SetPsprite(player, ps_weapon, unpowered->readystate);
                player->refire = 0;
             }
+            else if(player->readyweapon->flags & WPF_DEPOWERSWITCH)
+               player->pendingweapon = unpowered;
+
             player->readyweapon = unpowered;
          }
       }
@@ -967,7 +990,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
    player->mo->flags4 |= MF4_FLY;
    player->mo->flags  |= MF_NOGRAVITY;
 
-   if(thrustup && player->mo->z <= player->mo->floorz)
+   if(thrustup && player->mo->z <= player->mo->zref.floor)
       player->flyheight = 2 * FLIGHT_IMPULSE_AMT;
 
    // TODO: stop screaming if falling
@@ -1021,7 +1044,7 @@ static cell AMX_NATIVE_CALL sm_getplayername(AMX *amx, cell *params)
 AMX_NATIVE_INFO user_Natives[] =
 {
    { "_GetPlayerName", sm_getplayername },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

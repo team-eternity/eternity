@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,15 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//  Gamma correction LUT stuff.
-//  Color range translation support
-//  Functions to draw patches (by post) directly to screen.
-//  Functions to blit a block to the screen.
+// Purpose: Gamma correction LUT stuff.
+//          Color range translation support.
+//          Functions to draw patches (by post) directly to screen.
+//          Functions to blit a block to the screen.
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
+
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -165,11 +164,11 @@ int usegamma;
 // provided in v_video.h.
 //
 
-typedef struct crdef_s
+struct crdef_t
 {
   const char *name;
   byte **map1, **map2;
-} crdef_t;
+};
 
 // killough 5/2/98: table-driven approach
 static const crdef_t crdefs[] = 
@@ -185,7 +184,7 @@ static const crdef_t crdefs[] =
    { "CRORANGE", &cr_orange,  &colrngs[CR_ORANGE] },
    { "CRYELLOW", &cr_yellow,  &colrngs[CR_YELLOW] },
    { "CRBLUE2",  &cr_blue_status, &cr_blue_status },
-   { NULL }
+   { nullptr }
 };
 
 // killough 5/2/98: tiny engine driven by table above
@@ -206,7 +205,7 @@ void V_InitColorTranslation()
 // haleyjd 05/04/10: clippable and scalable rect structure.
 // TODO: make available to v_block.c
 //
-typedef struct vrect_s
+struct vrect_t
 {
    int x;   // original x coordinate for upper left corner
    int y;   // original y coordinate for upper left corner
@@ -224,7 +223,7 @@ typedef struct vrect_s
    int sy;  // scaled y
    int sw;  // scaled width
    int sh;  // scaled height
-} vrect_t;
+};
 
 //
 // V_clipRect
@@ -624,7 +623,7 @@ void V_DrawPatchShadowed(int x, int y, VBuffer *buffer, patch_t *patch,
       firsttime = false;
    }
 
-   V_DrawPatchTL(x + 2, y + 2, buffer, patch, blackmap, FRACUNIT*2/3);
+   V_DrawPatchTL(x + 2, y + 2, buffer, patch, blackmap, HTIC_GHOST_TRANS);
    V_DrawPatchTL(x,     y,     buffer, patch, outr,     tl);
 }
 
@@ -688,8 +687,8 @@ void V_DrawPatchFS(VBuffer *buffer, patch_t *patch)
 //
 void V_DrawFSBackground(VBuffer *dest, int lumpnum)
 {
-   void    *source = NULL;
-   patch_t *patch  = NULL;
+   void    *source = nullptr;
+   patch_t *patch  = nullptr;
 
    if(lumpnum < 0)
       return;
@@ -719,10 +718,10 @@ void V_DrawFSBackground(VBuffer *dest, int lumpnum)
    }
 }
 
-// 
+//
 // V_FindBestColor
 //
-// Adapted from zdoom -- thanks to Randy Heit.
+// Adapted from ZDoom -- thanks to Marisa Heit.
 //
 // This always assumes a 256-color palette;
 // it's intended for use in startup functions to match hard-coded
@@ -743,7 +742,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
       dr = r - *palette++;
       dg = g - *palette++;
       db = b - *palette++;
-      
+
       distortion = dr*dr + dg*dg + db*db;
 
       if(distortion < bestdistortion)
@@ -751,7 +750,7 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
          // exact match
          if(!distortion)
             return i;
-         
+
          bestdistortion = distortion;
          bestcolor = i;
       }
@@ -767,37 +766,10 @@ byte V_FindBestColor(const byte *palette, int r, int g, int b)
 // for variable mapthing trans levels, and for screen patches.
 
 // haleyjd: Updated 06/21/08 to use 32k lookup, mainly to fix
-// additive translucency. Note this code is included in Odamex and
-// so it can be considered GPL as used here, rather than BSD. But,
-// I don't care either way. It is effectively dual-licensed I suppose.
-// So, you can use it under this license if you wish:
+// additive translucency.
+// MaxW: As GZDoom is now GPLv3, this code is no longer dual-licenced:
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+// Copyright 1998-2012 (C) Marisa Heit
 //
 
 bool flexTranInit = false;
@@ -809,10 +781,10 @@ static unsigned int Col2RGB8_2[63][256];
 
 #define MAKECOLOR(a) (((a)<<3)|((a)>>2))
 
-typedef struct tpalcol_s
+struct tpalcol_t
 {
    unsigned int r, g, b;
-} tpalcol_t;
+};
 
 void V_InitFlexTranTable(const byte *palette)
 {
@@ -823,7 +795,7 @@ void V_InitFlexTranTable(const byte *palette)
    // mark that we've initialized the flex tran table
    flexTranInit = true;
    
-   tempRGBpal = (tpalcol_t *)(Z_Malloc(256*sizeof(*tempRGBpal), PU_STATIC, NULL));
+   tempRGBpal = emalloctag(tpalcol_t *, 256*sizeof(*tempRGBpal), PU_STATIC, nullptr);
    
    for(i = 0, palRover = palette; i < 256; i++, palRover += 3)
    {

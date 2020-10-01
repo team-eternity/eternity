@@ -3378,13 +3378,45 @@ thingtype MBFBetaPlasma2
   mod         BetaBFG
 }
 
+// Pre-Beta bonus items
+
+thingtype MBFBetaSceptre : Mobj, 2016, 143
+{
+  compatname  EvilSceptre
+  radius      10.0
+  cflags      SPECIAL|COUNTITEM
+
+  firstdecoratestate S_BON3
+  states
+  @"
+  Spawn:
+    BON3 A 6
+    loop
+  "@
+}
+
+thingtype MBFBetaBible : Mobj, 2017, 144
+{
+  compatname  UnholyBible
+  radius      10.0
+  cflags      SPECIAL|COUNTITEM
+
+  firstdecoratestate S_BON4
+  states
+  @"
+  Spawn:
+    BON4 A 6
+    loop
+  "@
+}
+
 // EE DOOM-Specific Objects ---------------------------------------------------
 
 // Sub-Fireball for Cephaler's Plasma Burst BFG
 
 thingtype EEBetaPlasma3 
 {
-  dehackednum 144
+  dehackednum 1063
   spawnstate  S_PLS1BALL
   deathstate  S_PLS1EXP
   speed       25.0
@@ -3397,7 +3429,7 @@ thingtype EEBetaPlasma3
 
 // Nightmare Spectre, from the PlayStation verson of Doom
 
-thingtype EENightmareSpectre : Demon, 889, 158
+thingtype EENightmareSpectre : Demon, 889, 1058
 {
   spawnhealth 300
   addflags    TLSTYLESUB
@@ -3408,7 +3440,7 @@ thingtype EENightmareSpectre : Demon, 889, 158
 
 // PlayStation-style Spectre (25%)
 
-thingtype EEPSXSpectre : Spectre, 890, 159
+thingtype EEPSXSpectre : Spectre, 890, 1059
 {
   addflags     TLSTYLEADD
   remflags     SHADOW
@@ -3418,7 +3450,7 @@ thingtype EEPSXSpectre : Spectre, 890, 159
 
 // PlayStation bloody chain object
 
-thingtype EEPSXBloodyChain : Mobj, 891, 160
+thingtype EEPSXBloodyChain : Mobj, 891, 1060
 {
   cflags SPAWNCEILING|NOGRAVITY
   radius 8.0
@@ -3469,7 +3501,7 @@ frameblock
   "@
 }
 
-thingtype EEBetaLostSoul : LostSoul, 9037, 161
+thingtype EEBetaLostSoul : LostSoul, 9037, 1061
 {
   compatname BetaSkull
   addflags   COUNTKILL

@@ -349,6 +349,248 @@ static void R_DrawSpanAdd_8_GEN()
    }
 }
 
+//==============================================================================
+//
+// Masked drawers (normal and TL -- additive doesn't need it because black is
+// already transparent there)
+//
+
+// Keep this a macro to easily change to a byte set if needed
+#define MASK(alpham, i) ((alpham)[(i)>>3] & 1 << ((i) & 7))
+
+template<int xshift, int yshift, int xmask>
+static void R_DrawSpanSolidMasked_8()
+{
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count >= 4)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[0] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[1] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[2] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[3] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      dest  += 4;
+      count -= 4;
+   }
+   while(count-- > 0)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         *dest = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      ++dest;
+   }
+}
+static void R_DrawSpanSolidMasked_8_GEN()
+{
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int yshift = span.yshift;
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count >= 4)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[0] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[1] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[2] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         dest[3] = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      dest  += 4;
+      count -= 4;
+   }
+   while(count-- > 0)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+         *dest = colormap[source[i]];
+      xf += xs;
+      yf += ys;
+      ++dest;
+   }
+}
+template<int xshift, int yshift, int xmask>
+static void R_DrawSpanTLMasked_8()
+{
+   unsigned int t;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count-- > 0)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+      {
+         t = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+         t |= 0x01f07c1f;
+         *dest = RGB32k[0][0][t & (t >> 15)];
+      }
+      xf += xs;
+      yf += ys;
+      ++dest;
+   }
+}
+static void R_DrawSpanTLMasked_8_GEN()
+{
+   unsigned int t;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int yshift = span.yshift;
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count-- > 0)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+      {
+         t = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+         t |= 0x01f07c1f;
+         *dest = RGB32k[0][0][t & (t >> 15)];
+      }
+      xf += xs;
+      yf += ys;
+      ++dest;
+   }
+}
+template<int xshift, int yshift, int xmask>
+static void R_DrawSpanAddMasked_8()
+{
+   unsigned int a, b;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count-- > 0)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+      {
+         a = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+         b = a;
+         a |= 0x01f07c1f;
+         b &= 0x40100400;
+         a &= 0x3fffffff;
+         b  = b - (b >> 5);
+         a |= b;
+         *dest = RGB32k[0][0][a & (a >> 15)];
+      }
+      xf += xs;
+      yf += ys;
+      ++dest;
+   }
+}
+static void R_DrawSpanAddMasked_8_GEN()
+{
+   unsigned int a, b;
+   unsigned int xf = span.xfrac, xs = span.xstep;
+   unsigned int yf = span.yfrac, ys = span.ystep;
+   lighttable_t *colormap = span.colormap;
+   int count = span.x2 - span.x1 + 1;
+
+   byte *source = (byte *)span.source;
+   byte *dest   = R_ADDRESS(span.x1, span.y);
+
+   unsigned int xshift = span.xshift;
+   unsigned int xmask  = span.xmask;
+   unsigned int yshift = span.yshift;
+
+   const byte *alpham = (byte *)span.alphamask;
+   unsigned i;
+
+   while(count-- > 0)
+   {
+      i = ((xf >> xshift) & xmask) | (yf >> yshift);
+      if(MASK(alpham, i))
+      {
+         a = span.bg2rgb[*dest] + span.fg2rgb[colormap[source[i]]];
+         b = a;
+         a |= 0x01f07c1f;
+         b &= 0x40100400;
+         a &= 0x3fffffff;
+         b  = b - (b >> 5);
+         a |= b;
+         *dest = RGB32k[0][0][a & (a >> 15)];
+      }
+      xf += xs;
+      yf += ys;
+      ++dest;
+   }
+}
 
 //==============================================================================
 //
@@ -582,6 +824,30 @@ spandrawer_t r_spandrawer =
          R_DrawSpanAdd_8<16, 24, 0x0FF00>,   // 256x256
          R_DrawSpanAdd_8<14, 23, 0x3FE00>,   // 512x512
          R_DrawSpanAdd_8_GEN                 // General
+      },
+      // Solid masked
+      {
+         R_DrawSpanSolidMasked_8<20, 26, 0x00FC0>, // 64x64
+         R_DrawSpanSolidMasked_8<18, 25, 0x03F80>, // 128x128
+         R_DrawSpanSolidMasked_8<16, 24, 0x0FF00>, // 256x256
+         R_DrawSpanSolidMasked_8<14, 23, 0x3FE00>, // 512x512
+         R_DrawSpanSolidMasked_8_GEN               // General
+      },
+      // Translucent masked
+      {
+         R_DrawSpanTLMasked_8<20, 26, 0x00FC0>,    // 64x64
+         R_DrawSpanTLMasked_8<18, 25, 0x03F80>,    // 128x128
+         R_DrawSpanTLMasked_8<16, 24, 0x0FF00>,    // 256x256
+         R_DrawSpanTLMasked_8<14, 23, 0x3FE00>,    // 512x512
+         R_DrawSpanTLMasked_8_GEN                  // General
+      },
+      // Additive masked
+      {
+         R_DrawSpanAddMasked_8<20, 26, 0x00FC0>,   // 64x64
+         R_DrawSpanAddMasked_8<18, 25, 0x03F80>,   // 128x128
+         R_DrawSpanAddMasked_8<16, 24, 0x0FF00>,   // 256x256
+         R_DrawSpanAddMasked_8<14, 23, 0x3FE00>,   // 512x512
+         R_DrawSpanAddMasked_8_GEN                 // General
       }
    },
 
@@ -605,6 +871,30 @@ spandrawer_t r_spandrawer =
       // Additive - TODO
       {
          R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
+      },
+      // Solid masked - TODO
+      {
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
+      },
+      // Translucent masked - TODO
+      {
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64
+         R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
+         R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
+         R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512
+         R_DrawSlope_8_GEN                   // General
+      },
+      // Additive masked - TODO
+      {
+         R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64
          R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
          R_DrawSlope_8< 8, 0x0FF00, 0x0FF>,  // 256x256
          R_DrawSlope_8< 7, 0x3FE00, 0x1FF>,  // 512x512

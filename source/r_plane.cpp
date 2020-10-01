@@ -60,7 +60,7 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAINHASHCHAINS 128    /* must be a power of 2 */
+#define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
 
 static visplane_t *freetail;                   // killough
 static visplane_t **freehead = &freetail;      // killough
@@ -85,9 +85,9 @@ static planehash_t *r_overlayfreesets;
 //
 VALLOCATION(mainhash)
 {
-   freetail = NULL;
+   freetail = nullptr;
    freehead = &freetail;
-   floorplane = ceilingplane = NULL;
+   floorplane = ceilingplane = nullptr;
 
    memset(mainchains, 0, sizeof(mainchains));
 }
@@ -95,7 +95,7 @@ VALLOCATION(mainhash)
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
 #define visplane_hash(picnum, lightlevel, height, chains) \
-  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) & ((chains) - 1))
+  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) % chains)
 
 
 // killough 8/1/98: set static number of openings to be large enough
@@ -104,7 +104,7 @@ float *openings, *lastopening;
 
 VALLOCATION(openings)
 {
-   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, NULL);
+   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, nullptr);
    lastopening = openings;
 }
 
@@ -120,7 +120,7 @@ float *floorclip, *ceilingclip;
 
 VALLOCATION(floorcliparray)
 {
-   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, nullptr);
 
    floorclip   = floorcliparray   = buffer;
    ceilingclip = ceilingcliparray = buffer + w;
@@ -131,7 +131,7 @@ float *overlayfclip, *overlaycclip;
 
 VALLOCATION(overlayfclip)
 {
-   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, NULL);
+   float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, nullptr);
    overlayfclip = buffer;
    overlaycclip = buffer + w;
 }
@@ -141,7 +141,7 @@ static int *spanstart;
 
 VALLOCATION(spanstart)
 {
-   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, NULL);
+   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
 }
 
 //
@@ -155,7 +155,7 @@ cb_slopespan_t slopespan;
 VALLOCATION(slopespan)
 {
    size_t size = sizeof(lighttable_t *) * w;
-   slopespan.colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, NULL);
+   slopespan.colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
 }
 
 float slopevis; // SoM: used in slope lighting
@@ -195,53 +195,6 @@ static void R_PlaneLight()
 }
 
 //
-// R_doubleToUint32
-//
-// haleyjd: Derived from Mozilla SpiderMonkey jsnum.c;
-// used under the terms of the GPL.
-//
-// * The Original Code is Mozilla Communicator client code, released
-// * March 31, 1998.
-// *
-// * The Initial Developer of the Original Code is
-// * Netscape Communications Corporation.
-// * Portions created by the Initial Developer are Copyright (C) 1998
-// * the Initial Developer. All Rights Reserved.
-// *
-// * Contributor(s):
-// *   IBM Corp.
-//
-static uint32_t R_doubleToUint32(double d)
-{
-   int32_t i;
-   bool    neg;
-   double  two32;
-
-   // FIXME: should check for finiteness first, but we have no code for 
-   // doing that in EE yet.
-
-   //if (!JSDOUBLE_IS_FINITE(d))
-   //   return 0;
-
-   // We check whether d fits int32, not uint32, as all but the ">>>" bit
-   // manipulation bytecode stores the result as int, not uint. When the
-   // result does not fit int jsval, it will be stored as a negative double.
-   i = (int32_t)d;
-   if((double)i == d)
-      return (int32_t)i;
-
-   neg = (d < 0);
-   d   = floor(neg ? -d : d);
-   d   = neg ? -d : d;
-
-   // haleyjd: This is the important part: reduction modulo UINT_MAX.
-   two32 = 4294967296.0;
-   d     = fmod(d, two32);
-
-   return (uint32_t)(d >= 0 ? d : d + two32);
-}
-
-//
 // R_MapPlane
 //
 // BASIC PRIMITIVE
@@ -271,7 +224,8 @@ static void R_MapPlane(int y, int x1, int x2)
    xstep = plane.pviewcos * slope * view.focratio * plane.xscale;
    ystep = plane.pviewsin * slope * view.focratio * plane.yscale;
 
-   // Use Mozilla routine for portable double->uint32 conversion
+   // Use fast hack routine for portable double->uint32 conversion
+   // iff we know host endianness, otherwise use Mozilla routine
    {
       double value;
 
@@ -290,7 +244,7 @@ static void R_MapPlane(int y, int x1, int x2)
    }
 
    // killough 2/28/98: Add offsets
-   if((span.colormap = plane.fixedcolormap) == NULL) // haleyjd 10/16/06
+   if((span.colormap = plane.fixedcolormap) == nullptr) // haleyjd 10/16/06
       span.colormap = plane.colormap + R_SpanLight(realy) * 256;
    
    span.y  = y;
@@ -361,14 +315,16 @@ static void R_MapSlope(int y, int x1, int x2)
    s.y = y - view.ycenter + 1;
    s.z = view.xfoc;
 
-   slopespan.iufrac = M_DotVec3(&s, &slope->A) * (double)plane.tex->width *
+   slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
                       static_cast<double>(plane.yscale);
-   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * (double)plane.tex->height *
+   slopespan.ivfrac = M_DotVec3(&s, &slope->B) * static_cast<double>(plane.tex->height) *
                       static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * (double)plane.tex->width * plane.yscale;
-   slopespan.ivstep = slope->B.x * (double)plane.tex->height * plane.xscale;
+   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
+                      static_cast<double>(plane.yscale);
+   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
+                      static_cast<double>(plane.xscale);
    slopespan.idstep = slope->C.x;
 
    slopespan.source = plane.source;
@@ -388,7 +344,7 @@ static void R_MapSlope(int y, int x1, int x2)
       map2 = map1;
 
    R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
- 
+
    slopefunc();
 }
 
@@ -403,7 +359,7 @@ static void R_MapSlope(int y, int x1, int x2)
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 {
    return 
-      (s1 == s2) ||                 // both are equal, including both NULL; OR:
+      (s1 == s2) ||                 // both are equal, including both nullptr; OR:
        (s1 && s2 &&                 // both are valid and...
         CompFloats(s1->normalf.x, s2->normalf.x) &&  // components are equal and...
         CompFloats(s1->normalf.y, s2->normalf.y) &&
@@ -425,7 +381,6 @@ static void R_CalcSlope(visplane_t *pl)
    double         xl, yl, tsin, tcos;
    double         ixscale, iyscale;
    rslope_t       *rslope = &pl->rslope;
-   texture_t      *tex = textures[pl->picnum];
 
    if(!pl->pslope)
       return;
@@ -433,34 +388,48 @@ static void R_CalcSlope(visplane_t *pl)
    
    tsin = sin(pl->angle);
    tcos = cos(pl->angle);
-   
-   xl = tex->width;
-   yl = tex->height;
+
+   if(pl->picnum & PL_SKYFLAT)
+      xl = yl = 64;  // just choose a default, it won't matter
+   else
+   {
+      const texture_t *tex = textures[texturetranslation[pl->picnum]];
+      xl = tex->width;
+      yl = tex->height;
+   }
 
    // SoM: To change the origin of rotation, add an offset to P.x and P.z
    // SoM: Add offsets? YAH!
-   rslope->P.x = -pl->xoffsf * tcos - pl->yoffsf * tsin;
-   rslope->P.z = -pl->xoffsf * tsin + pl->yoffsf * tcos;
-   rslope->P.y = P_GetZAtf(pl->pslope, (float)rslope->P.x, (float)rslope->P.z);
 
-   rslope->M.x = rslope->P.x - xl * tsin;
-   rslope->M.z = rslope->P.z + xl * tcos;
-   rslope->M.y = P_GetZAtf(pl->pslope, (float)rslope->M.x, (float)rslope->M.z);
+   // Need to reduce them to the visible range, because otherwise it may overflow
+   double xoffsf = fmod(pl->xoffsf, xl / pl->scale.x);
+   double yoffsf = fmod(pl->yoffsf, yl / pl->scale.y);
 
-   rslope->N.x = rslope->P.x + yl * tcos;
-   rslope->N.z = rslope->P.z + yl * tsin;
-   rslope->N.y = P_GetZAtf(pl->pslope, (float)rslope->N.x, (float)rslope->N.z);
+   v3double_t P;
+   P.x = -xoffsf * tcos - yoffsf * tsin;
+   P.z = -xoffsf * tsin + yoffsf * tcos;
+   P.y = P_GetZAtf(pl->pslope, (float)P.x, (float)P.z);
 
-   M_TranslateVec3(&rslope->P);
-   M_TranslateVec3(&rslope->M);
-   M_TranslateVec3(&rslope->N);
+   v3double_t M;
+   M.x = P.x - xl * tsin;
+   M.z = P.z + xl * tcos;
+   M.y = P_GetZAtf(pl->pslope, (float)M.x, (float)M.z);
 
-   M_SubVec3(&rslope->M, &rslope->M, &rslope->P);
-   M_SubVec3(&rslope->N, &rslope->N, &rslope->P);
+   v3double_t N;
+   N.x = P.x + yl * tcos;
+   N.z = P.z + yl * tsin;
+   N.y = P_GetZAtf(pl->pslope, (float)N.x, (float)N.z);
+
+   M_TranslateVec3(&P);
+   M_TranslateVec3(&M);
+   M_TranslateVec3(&N);
+
+   M_SubVec3(&M, &M, &P);
+   M_SubVec3(&N, &N, &P);
    
-   M_CrossProduct3(&rslope->A, &rslope->P, &rslope->N);
-   M_CrossProduct3(&rslope->B, &rslope->P, &rslope->M);
-   M_CrossProduct3(&rslope->C, &rslope->M, &rslope->N);
+   M_CrossProduct3(&rslope->A, &P, &N);
+   M_CrossProduct3(&rslope->B, &P, &M);
+   M_CrossProduct3(&rslope->C, &M, &N);
 
    // This is helpful for removing some of the muls when calculating light.
 
@@ -483,7 +452,7 @@ static void R_CalcSlope(visplane_t *pl)
    iyscale = view.tan / (float)yl;
 
    rslope->plight = (slopevis * ixscale * iyscale) / (rslope->zat - pl->viewzf);
-   rslope->shade = 256.0f * 2.0f - (pl->lightlevel + 16.0f) * 256.0f / 128.0f;
+   rslope->shade = 256.0 * 2.0 - (pl->lightlevel + 16.0) * 256.0 / 128.0;
 }
 
 //
@@ -507,13 +476,13 @@ planehash_t *R_NewPlaneHash(int chaincount)
       chaincount = c;
    }
    
-   ret = (planehash_t *)(Z_Malloc(sizeof(planehash_t), PU_LEVEL, NULL));
+   ret = emalloctag(planehash_t *, sizeof(planehash_t), PU_LEVEL, nullptr);
    ret->chaincount = chaincount;
-   ret->chains = (visplane_t **)(Z_Malloc(sizeof(visplane_t *) * chaincount, PU_LEVEL, NULL));
+   ret->chains = emalloctag(visplane_t **, sizeof(visplane_t *) * chaincount, PU_LEVEL, nullptr);
    ret->next = nullptr;
    
    for(i = 0; i < chaincount; i++)
-      ret->chains[i] = NULL;
+      ret->chains[i] = nullptr;
       
    return ret;
 }
@@ -528,7 +497,7 @@ void R_ClearPlaneHash(planehash_t *table)
 {
    for(int i = 0; i < table->chaincount; i++)    // new code -- killough
    {
-      for(*freehead = table->chains[i], table->chains[i] = NULL; *freehead; )
+      for(*freehead = table->chains[i], table->chains[i] = nullptr; *freehead; )
          freehead = &(*freehead)->next;
    }
 }
@@ -589,7 +558,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
    visplane_t *check = freetail;
 
    if(!check)
-      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, NULL);
+      check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
    else 
       if(!(freetail = freetail->next))
          freehead = &freetail;
@@ -604,7 +573,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
       int *paddedTop, *paddedBottom;
 
       check->max_width = (unsigned int)video.width;
-      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, NULL);
+      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
       paddedBottom = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
@@ -621,8 +590,7 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 // haleyjd 01/05/08: Add angle
 //
 visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
-                        fixed_t xoffs, fixed_t yoffs,
-                        float xscale, float yscale, float angle,
+                        v2fixed_t offs, v2float_t scale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
                         planehash_t *table)
 {
@@ -630,15 +598,18 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    unsigned int hash;                      // killough
    float tsin, tcos;
 
-   // SoM: table == NULL means use main table
+   // SoM: table == nullptr means use main table
    if(!table)
       table = &mainhash;
       
    blendflags &= PS_OBLENDFLAGS;
 
    // haleyjd: tweak opacity/blendflags when 100% opaque is specified
-   if(!(blendflags & PS_ADDITIVE) && opacity == 255)
+   if(!(blendflags & PS_ADDITIVE) && opacity == 255 &&
+      (picnum & PL_SKYFLAT || !(textures[texturetranslation[picnum]]->flags & TF_MASKED)))
+   {
       blendflags = 0;
+   }
       
    // killough 10/98: PL_SKYFLAT
    if(R_IsSkyFlat(picnum) || picnum & PL_SKYFLAT)
@@ -662,15 +633,13 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
       if(height == check->height &&
          picnum == check->picnum &&
          lightlevel == check->lightlevel &&
-         xoffs == check->xoffs &&      // killough 2/28/98: Add offset checks
-         yoffs == check->yoffs &&
-         xscale == check->xscale &&
-         yscale == check->yscale &&
+         offs == check->offs &&      // killough 2/28/98: Add offset checks
+         scale == check->scale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap && 
-         viewx == check->viewx && 
-         viewy == check->viewy && 
+         fixedcolormap == check->fixedcolormap &&
+         viewx == check->viewx &&
+         viewy == check->viewy &&
          viewz == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
@@ -686,10 +655,8 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->lightlevel = lightlevel;
    check->minx = viewwindow.width;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = -1;
-   check->xoffs = xoffs;               // killough 2/28/98: Save offsets
-   check->yoffs = yoffs;
-   check->xscale = xscale;
-   check->yscale = yscale;
+   check->offs = offs;               // killough 2/28/98: Save offsets
+   check->scale = scale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
    check->colormap = zlight;
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
@@ -700,15 +667,15 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
    check->viewz = viewz;
    
    check->heightf = M_FixedToFloat(height);
-   check->xoffsf  = M_FixedToFloat(xoffs);
-   check->yoffsf  = M_FixedToFloat(yoffs);
+   check->xoffsf  = M_FixedToFloat(offs.x);
+   check->yoffsf  = M_FixedToFloat(offs.y);
    
    check->bflags = blendflags;
    check->opacity = opacity;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
-   check->viewsin = (float) sin(view.angle + check->angle);
-   check->viewcos = (float) cos(view.angle + check->angle);
+   check->viewsin = sinf(view.angle + check->angle);
+   check->viewcos = cosf(view.angle + check->angle);
    
    // SoM: set up slope type stuff
    if((check->pslope = slope))
@@ -742,13 +709,67 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 }
 
 //
+// From PrBoom+
+// cph 2003/04/18 - create duplicate of existing visplane and set initial range
+//
+visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
+{
+   planehash_t *table = pl->table;
+   unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
+   visplane_t *new_pl = new_visplane(hash, table);
+
+   new_pl->height = pl->height;
+   new_pl->picnum = pl->picnum;
+   new_pl->lightlevel = pl->lightlevel;
+   new_pl->colormap = pl->colormap;
+   new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
+   new_pl->offs = pl->offs;                 // killough 2/28/98
+   new_pl->angle = pl->angle;                 // haleyjd 01/05/08
+
+   new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
+   new_pl->viewcos = pl->viewcos;
+
+   new_pl->viewx = pl->viewx;
+   new_pl->viewy = pl->viewy;
+   new_pl->viewz = pl->viewz;
+
+   new_pl->viewxf = pl->viewxf;
+   new_pl->viewyf = pl->viewyf;
+   new_pl->viewzf = pl->viewzf;
+
+   // SoM: copy converted stuffs too
+   new_pl->heightf = pl->heightf;
+   new_pl->scale = pl->scale;
+   new_pl->xoffsf = pl->xoffsf;
+   new_pl->yoffsf = pl->yoffsf;
+
+   new_pl->bflags = pl->bflags;
+   new_pl->opacity = pl->opacity;
+
+   new_pl->pslope = pl->pslope;
+   memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
+   new_pl->fullcolormap = pl->fullcolormap;
+
+   visplane_t *retpl = new_pl;
+   retpl->minx = start;
+   retpl->maxx = stop;
+   {
+      int *p = retpl->top;
+      const int *const p_end  = p + retpl->max_width;
+      // Unrolling this loop makes performance WORSE for optimised MSVC builds.
+      // Nothing makes sense any more.
+      while(p < p_end)
+         *(p++) = 0x7FFFFFFF;
+   }
+   return retpl;
+}
+
+//
 // R_CheckPlane
 //
 visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
-   
-   planehash_t *table = pl->table;
    
    if(start < pl->minx)
    {
@@ -781,55 +802,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->maxx = unionh;
    }
    else
-   {
-      unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-      visplane_t *new_pl = new_visplane(hash, table);
-      
-      new_pl->height = pl->height;
-      new_pl->picnum = pl->picnum;
-      new_pl->lightlevel = pl->lightlevel;
-      new_pl->colormap = pl->colormap;
-      new_pl->fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
-      new_pl->xoffs = pl->xoffs;                 // killough 2/28/98
-      new_pl->yoffs = pl->yoffs;
-      new_pl->angle = pl->angle;                 // haleyjd 01/05/08
-      
-      new_pl->viewsin = pl->viewsin;             // haleyjd 01/06/08
-      new_pl->viewcos = pl->viewcos;
+      pl = R_DupPlane(pl, start, stop);
 
-      new_pl->viewx = pl->viewx;
-      new_pl->viewy = pl->viewy;
-      new_pl->viewz = pl->viewz;
-
-      new_pl->viewxf = pl->viewxf;
-      new_pl->viewyf = pl->viewyf;
-      new_pl->viewzf = pl->viewzf;
-
-      // SoM: copy converted stuffs too
-      new_pl->heightf = pl->heightf;
-      new_pl->yscale = pl->yscale;
-      new_pl->xscale = pl->xscale;
-      new_pl->xoffsf = pl->xoffsf;
-      new_pl->yoffsf = pl->yoffsf;
-      
-      new_pl->bflags = pl->bflags;
-      new_pl->opacity = pl->opacity;
-
-      new_pl->pslope = pl->pslope;
-      memcpy(&new_pl->rslope, &pl->rslope, sizeof(rslope_t));
-      new_pl->fullcolormap = pl->fullcolormap;
-
-      pl = new_pl;
-      pl->minx = start;
-      pl->maxx = stop;
-      {
-         int *p = pl->top;
-         unsigned i = 0;
-         while(i < pl->max_width)
-            p[i++] = 0x7FFFFFFF;
-      }
-   }
-   
    return pl;
 }
 
@@ -1076,27 +1050,43 @@ static void do_draw_plane(visplane_t *pl)
       {
          // SoM: Handled outside
          tex = plane.tex = R_CacheTexture(picnum);
-         plane.source = tex->buffer;
+         plane.source = tex->bufferdata;
       }
 
       // haleyjd: TODO: feed pl->drawstyle to the first dimension to enable
       // span drawstyles (ie. translucency)
 
       stylenum = (pl->bflags & PS_ADDITIVE) ? SPAN_STYLE_ADD : 
-                 (pl->bflags & PS_OVERLAY)  ? SPAN_STYLE_TL :
+                 (pl->opacity < 255)  ? SPAN_STYLE_TL :
                  SPAN_STYLE_NORMAL;
+
+      if(plane.tex->flags & TF_MASKED && pl->bflags & PS_OVERLAY)
+      {
+         switch(stylenum)
+         {
+            case SPAN_STYLE_TL:
+               stylenum = SPAN_STYLE_TL_MASKED;
+               break;
+            case SPAN_STYLE_ADD:
+               stylenum = SPAN_STYLE_ADD_MASKED;
+               break;
+            default:
+               stylenum = SPAN_STYLE_NORMAL_MASKED;
+         }
+         span.alphamask = static_cast<const byte *>(plane.source) + tex->width * tex->height;
+      }
                 
       flatfunc  = r_span_engine->DrawSpan[stylenum][tex->flatsize];
       slopefunc = r_span_engine->DrawSlope[stylenum][tex->flatsize];
       
-      if(stylenum == SPAN_STYLE_TL)
+      if(stylenum == SPAN_STYLE_TL || stylenum == SPAN_STYLE_TL_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
          span.fg2rgb = Col2RGB8[level];
          span.bg2rgb = Col2RGB8[64 - level];
       }
-      else if(stylenum == SPAN_STYLE_ADD)
+      else if(stylenum == SPAN_STYLE_ADD || stylenum == SPAN_STYLE_ADD_MASKED)
       {
          int level = (pl->opacity + 1) >> 2;
          
@@ -1104,12 +1094,12 @@ static void do_draw_plane(visplane_t *pl)
          span.bg2rgb = Col2RGB8_LessPrecision[64];
       }
       else
-         span.fg2rgb = span.bg2rgb = NULL;
+         span.fg2rgb = span.bg2rgb = nullptr;
 
       if(pl->pslope)
          plane.slope = &pl->rslope;
       else
-         plane.slope = NULL;
+         plane.slope = nullptr;
          
       {
          int rw, rh;
@@ -1140,8 +1130,8 @@ static void do_draw_plane(visplane_t *pl)
       plane.xoffset = pl->xoffsf;  // killough 2/28/98: Add offsets
       plane.yoffset = pl->yoffsf;
 
-      plane.xscale = pl->xscale;
-      plane.yscale = pl->yscale;
+      plane.xscale = pl->scale.x;
+      plane.yscale = pl->scale.y;
 
       plane.pviewx   = pl->viewxf;
       plane.pviewy   = pl->viewyf;
@@ -1172,7 +1162,7 @@ static void do_draw_plane(visplane_t *pl)
 
       R_PlaneLight();
 
-      plane.MapFunc = (plane.slope == NULL ? R_MapPlane : R_MapSlope);
+      plane.MapFunc = (plane.slope == nullptr ? R_MapPlane : R_MapSlope);
 
       for(x = pl->minx ; x <= stop ; x++)
          R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
@@ -1214,7 +1204,7 @@ planehash_t *R_NewOverlaySet()
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(32);
+      set = R_NewPlaneHash(31);
       return set;
    }
    set = r_overlayfreesets;

@@ -62,12 +62,21 @@ void AM_clearMarks(void);
 class Mobj;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
-typedef struct mpoint_s
+struct mpoint_t
 {
    double x, y;
-} mpoint_t;
+};
 
-extern mpoint_t *markpoints;
+//
+// mark point (portal aware)
+//
+struct markpoint_t
+{
+   double x, y;
+   int groupid;
+};
+
+extern markpoint_t *markpoints;
 extern int markpointnum, markpointnum_max;
 extern int followplayer;
 extern int automap_grid;

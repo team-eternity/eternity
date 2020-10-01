@@ -87,13 +87,13 @@
 // Memblock Structure
 // 
 
-typedef struct memblock
+struct memblock_t
 {
 #ifdef ZONEIDCHECK
   unsigned int id;
 #endif
 
-  struct memblock *next,**prev;
+  struct memblock_t *next,**prev;
   size_t size;
   void **user;
   unsigned char tag;
@@ -102,7 +102,7 @@ typedef struct memblock
   const char *file;
   int line;
 #endif
-} memblock_t;
+};
 
 //=============================================================================
 //
@@ -242,14 +242,14 @@ static void Z_CloseLogFile()
    {
       fputs("Closing zone log", zonelog);
       fclose(zonelog);
-      zonelog = NULL;      
+      zonelog = nullptr;      
    }
    // Do not open a new log after this point.
    logclosed = true;
 #endif
 }
 
-static void Z_LogPrintf(const char *msg, ...)
+static void Z_LogPrintf(E_FORMAT_STRING(const char *msg), ...)
 {
 #ifdef ZONEFILE
    if(!zonelog)
@@ -306,7 +306,7 @@ void Z_Init(void)
 //
 // Z_Malloc
 //
-// You can pass a NULL user if the tag is < PU_PURGELEVEL.
+// You can pass a nullptr user if the tag is < PU_PURGELEVEL.
 //
 void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
 {
@@ -320,7 +320,7 @@ void *(Z_Malloc)(size_t size, int tag, void **user, const char *file, int line)
                file, line);
 
    if(!size)
-      return user ? *user = NULL : NULL;          // malloc(0) returns NULL
+      return user ? *user = nullptr : nullptr;          // malloc(0) returns nullptr
    
    if(!(block = (memblock_t *)(malloc(size + header_size))))
    {
@@ -408,7 +408,7 @@ void (Z_Free)(void *p, const char *file, int line)
       SCRAMBLER(p, block->size);
 
       if(block->user)            // Nullify user if one exists
-         *block->user = NULL;
+         *block->user = nullptr;
 
       if((*block->prev = block->next))
          block->next->prev = block->prev;
@@ -437,7 +437,7 @@ void (Z_FreeTags)(int lowtag, int hightag, const char *file, int line)
    
    for(; lowtag <= hightag; ++lowtag)
    {
-      for(block = blockbytag[lowtag], blockbytag[lowtag] = NULL; block;)
+      for(block = blockbytag[lowtag], blockbytag[lowtag] = nullptr; block;)
       {
          memblock_t *next = block->next;
 
@@ -466,7 +466,7 @@ void (Z_ChangeTag)(void *ptr, int tag, const char *file, int line)
    if(!ptr)
    {
       I_FatalError(I_ERR_KILL, 
-                   "Z_ChangeTag: can't change a NULL pointer at %s:%d\n",
+                   "Z_ChangeTag: can't change a nullptr at %s:%d\n",
                    file, line);
    }
    
@@ -519,7 +519,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
    if(n == 0)
    {
       (Z_Free)(ptr, file, line);
-      return NULL;
+      return nullptr;
    }
 
    DEBUG_CHECKHEAP();
@@ -536,14 +536,14 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 
    // nullify current user, if any
    if(block->user)
-      *(block->user) = NULL;
+      *(block->user) = nullptr;
 
    // detach from list before reallocation
    if((*block->prev = block->next))
       block->next->prev = block->prev;
 
-   block->next = NULL;
-   block->prev = NULL;
+   block->next = nullptr;
+   block->prev = nullptr;
 
    INSTRUMENT(memorybytag[block->tag] -= block->size);
 
@@ -604,7 +604,7 @@ void *(Z_Realloc)(void *ptr, size_t n, int tag, void **user,
 void *(Z_Calloc)(size_t n1, size_t n2, int tag, void **user,
                  const char *file, int line)
 {
-   return (n1*=n2) ? memset((Z_Malloc)(n1, tag, user, file, line), 0, n1) : NULL;
+   return (n1*=n2) ? memset((Z_Malloc)(n1, tag, user, file, line), 0, n1) : nullptr;
 }
 
 //
@@ -900,7 +900,7 @@ void Z_FreeAlloca(void)
    
    Z_LogPuts("* Freeing alloca blocks\n");
 
-   blockbytag[PU_AUTO] = NULL;
+   blockbytag[PU_AUTO] = nullptr;
 
    while(block)
    {
@@ -926,10 +926,10 @@ void *(Z_Alloca)(size_t n, const char *file, int line)
    void *ptr;
 
    if(n == 0)
-      return NULL;
+      return nullptr;
 
    // allocate it
-   ptr = (Z_Calloc)(n, 1, PU_AUTO, NULL, file, line);
+   ptr = (Z_Calloc)(n, 1, PU_AUTO, nullptr, file, line);
 
    Z_LogPrintf("* %p = Z_Alloca(n = %lu, file = %s, line = %d)\n", 
                ptr, n, file, line);
@@ -958,7 +958,7 @@ void *(Z_Realloca)(void *ptr, size_t n, const char *file, int line)
          I_FatalError(I_ERR_KILL, "Z_Realloca: strange block tag %d\n", block->tag);
    }
    
-   ret = (Z_Realloc)(ptr, n, PU_AUTO, NULL, file, line);
+   ret = (Z_Realloc)(ptr, n, PU_AUTO, nullptr, file, line);
 
    Z_LogPrintf("* %p = Z_Realloca(ptr = %p, n = %lu, file = %s, line = %d)\n", 
                ret, ptr, n, file, line);
@@ -988,7 +988,11 @@ char *(Z_Strdupa)(const char *s, const char *file, int line)
 //
 void *ZoneObject::operator new (size_t size)
 {
-   return (newalloc = Z_Calloc(1, size, PU_STATIC, NULL));
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, nullptr));
+}
+void *ZoneObject::operator new[](size_t size)
+{
+   return (newalloc = Z_Calloc(1, size, PU_STATIC, nullptr));
 }
 
 //
@@ -1000,6 +1004,10 @@ void *ZoneObject::operator new(size_t size, int tag, void **user)
 {
    return (newalloc = Z_Calloc(1, size, tag, user));
 }
+void *ZoneObject::operator new[](size_t size, int tag, void **user)
+{
+   return (newalloc = Z_Calloc(1, size, tag, user));
+}
 
 //
 // ZoneObject Constructor
@@ -1008,12 +1016,12 @@ void *ZoneObject::operator new(size_t size, int tag, void **user)
 // subsequent constructor call and stored in the object that was allocated.
 //
 ZoneObject::ZoneObject() 
-   : zonealloc(NULL), zonenext(NULL), zoneprev(NULL)
+   : zonealloc(nullptr), zonenext(nullptr), zoneprev(nullptr)
 {
    if(newalloc)
    {
       zonealloc = newalloc;
-      newalloc  = NULL;
+      newalloc  = nullptr;
       addToTagList(getZoneTag());
    }
 }
@@ -1028,8 +1036,8 @@ void ZoneObject::removeFromTagList()
    if(zoneprev && (*zoneprev = zonenext))
       zonenext->zoneprev = zoneprev;
 
-   zonenext = NULL;
-   zoneprev = NULL;
+   zonenext = nullptr;
+   zoneprev = nullptr;
 }
 
 //
@@ -1083,7 +1091,7 @@ ZoneObject::~ZoneObject()
    if(zonealloc)
    {
       removeFromTagList();
-      zonealloc = NULL;
+      zonealloc = nullptr;
    }
 }
 
@@ -1096,6 +1104,10 @@ void ZoneObject::operator delete (void *p)
 {
    Z_Free(p);
 }
+void ZoneObject::operator delete[](void *p)
+{
+   Z_Free(p);
+}
 
 //
 // ZoneObject::operator delete
@@ -1104,6 +1116,10 @@ void ZoneObject::operator delete (void *p)
 // exceptions during initialization.
 //
 void ZoneObject::operator delete (void *p, int, void **)
+{
+   Z_Free(p);
+}
+void ZoneObject::operator delete[](void *p, int, void **)
 {
    Z_Free(p);
 }
@@ -1134,7 +1150,7 @@ void ZoneObject::FreeTags(int lowtag, int hightag)
    
    for(; lowtag <= hightag; lowtag++)
    {
-      for(obj = objectbytag[lowtag], objectbytag[lowtag] = NULL; obj;)
+      for(obj = objectbytag[lowtag], objectbytag[lowtag] = nullptr; obj;)
       {
          ZoneObject *next = obj->zonenext;
          delete obj;

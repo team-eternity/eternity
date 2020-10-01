@@ -195,7 +195,7 @@ void PlatThinker::Think()
    case waiting: // plat is waiting
       if(!--count)  // downcount and check for delay elapsed
       {
-         if(sector->floorheight == low)
+         if(sector->srf.floor.height == low)
             status = up;     // if at bottom, start up
          else
             status = down;   // if at top, start down
@@ -275,7 +275,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
    int          secnum;
    bool         rtn;
    sector_t    *sec;
-   
+
    secnum = -1;
    rtn    = false;
 
@@ -285,106 +285,106 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
    case perpetualRaise:
       PlatThinker::ActivateInStasis(line->args[0]);
       break;
-      
+
    case toggleUpDn:
       PlatThinker::ActivateInStasis(line->args[0]);
       rtn = true;
       break;
-      
+
    default:
       break;
    }
-      
+
    // act on all sectors tagged the same as the activating linedef
    while((secnum = P_FindSectorFromLineArg0(line, secnum)) >= 0)
    {
       sec = &sectors[secnum];
-      
+
       // don't start a second floor function if already moving
       if(P_SectorActive(floor_special,sec)) //jff 2/23/98 multiple thinkers
          continue;
-      
+
       // Create a thinker
       rtn = true;
       plat = new PlatThinker;
       plat->addThinker();
-      
+
       plat->type   = type;
       plat->crush  = -1;
       plat->tag    = line->args[0];
       plat->sector = sec;
-      plat->sector->floordata = plat; //jff 2/23/98 multiple thinkers
+      plat->sector->srf.floor.data = plat; //jff 2/23/98 multiple thinkers
       plat->rnctype = PlatThinker::PRNC_DEFAULT;
 
       //jff 1/26/98 Avoid raise plat bouncing a head off a ceiling and then
       //going down forever -- default low to plat height when triggered
-      plat->low = sec->floorheight;
-      
-      // set up plat according to type  
+      plat->low = sec->srf.floor.height;
+
+      // set up plat according to type
       switch(type)
       {
       case raiseToNearestAndChange:
          plat->speed   = PLATSPEED/2;
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high    = P_FindNextHighestFloor(sec,sec->floorheight);
+         sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         plat->high    = P_FindNextHighestFloor(sec,sec->srf.floor.height);
          plat->wait    = 0;
          plat->status  = PlatThinker::up;
          //jff 3/14/98 clear old field as well
          P_ZeroSectorSpecial(sec);
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
-          
+
       case raiseAndChange:
          plat->speed   = PLATSPEED/2;
-         sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high    = sec->floorheight + amount*FRACUNIT;
+         sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         plat->high    = sec->srf.floor.height + amount*FRACUNIT;
          plat->wait    = 0;
          plat->status  = PlatThinker::up;
-         
+
          P_PlatSequence(plat->sector, "EEPlatRaise"); // haleyjd
          break;
-          
+
       case downWaitUpStay:
          plat->speed = PLATSPEED * 4;
          plat->low   = P_FindLowestFloorSurrounding(sec);
-         
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         
-         plat->high   = sec->floorheight;
+
+         if(plat->low > sec->srf.floor.height)
+            plat->low = sec->srf.floor.height;
+
+         plat->high   = sec->srf.floor.height;
          plat->wait   = 35*PLATWAIT;
          plat->status = PlatThinker::down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
-          
+
       case blazeDWUS:
          plat->speed = PLATSPEED * 8;
          plat->low   = P_FindLowestFloorSurrounding(sec);
-         
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         
-         plat->high   = sec->floorheight;
+
+         if(plat->low > sec->srf.floor.height)
+            plat->low = sec->srf.floor.height;
+
+         plat->high   = sec->srf.floor.height;
          plat->wait   = 35*PLATWAIT;
          plat->status = PlatThinker::down;
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
-          
+
       case perpetualRaise:
          plat->speed = PLATSPEED;
          plat->low   = P_FindLowestFloorSurrounding(sec);
-         
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         
+
+         if(plat->low > sec->srf.floor.height)
+            plat->low = sec->srf.floor.height;
+
          plat->high = P_FindHighestFloorSurrounding(sec);
-         
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
-         
+
+         if(plat->high < sec->srf.floor.height)
+            plat->high = sec->srf.floor.height;
+
          plat->wait   = 35*PLATWAIT;
          plat->status = (P_Random(pr_plats) & 1) ? PlatThinker::down : PlatThinker::up;
-         
+
          P_PlatSequence(plat->sector, "EEPlatNormal"); // haleyjd
          break;
 
@@ -392,15 +392,15 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
          plat->speed = PLATSPEED;   //not used
          plat->wait  = 35*PLATWAIT; //not used
          plat->crush = 10;          //jff 3/14/98 crush anything in the way
-         
+
          // set up toggling between ceiling, floor inclusive
-         plat->low    = sec->ceilingheight;
-         plat->high   = sec->floorheight;
+         plat->low    = sec->srf.ceiling.height;
+         plat->high   = sec->srf.floor.height;
          plat->status = PlatThinker::down;
 
          P_PlatSequence(plat->sector, "EEPlatSilent");
          break;
-         
+
       default:
          break;
       }
@@ -419,7 +419,7 @@ bool EV_DoPlat(const line_t *line, plattype_e type, int amount )
 //
 bool EV_DoParamPlat(const line_t *line, const int *args, paramplattype_e type)
 {
-   sector_t *sec    = NULL;
+   sector_t *sec    = nullptr;
    int       secnum = -1;
    bool      manual = false;
    bool      rtn    = false;
@@ -469,7 +469,7 @@ manual_plat:
       plat->speed  = args[1] * FRACUNIT / 8;
       plat->wait   = args[2];
       plat->sector = sec;
-      plat->sector->floordata = plat;
+      plat->sector->srf.floor.data = plat;
       plat->rnctype = PlatThinker::PRNC_DEFAULT;
 
       switch(type)
@@ -478,43 +478,43 @@ manual_plat:
       case paramDownWaitUpStay:
          plat->type   = downWaitUpStay;
          plat->status = PlatThinker::down;
-         plat->high   = sec->floorheight;
+         plat->high   = sec->srf.floor.height;
          plat->low    = P_FindLowestFloorSurrounding(sec);
          if(type == paramDownWaitUpStay)
             plat->low += 8 * FRACUNIT;
          else
             plat->low += args[3] * FRACUNIT;
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
+         if(plat->low > sec->srf.floor.height)
+            plat->low = sec->srf.floor.height;
          break;
 
       case paramDownByValueWaitUpStay:
          plat->type   = downWaitUpStay;
          plat->status = PlatThinker::down;
-         plat->high   = sec->floorheight;
-         plat->low    = sec->floorheight - args[3] * 8 * FRACUNIT;
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
+         plat->high   = sec->srf.floor.height;
+         plat->low    = sec->srf.floor.height - args[3] * 8 * FRACUNIT;
+         if(plat->low > sec->srf.floor.height)
+            plat->low = sec->srf.floor.height;
          break;
-      
+
       case paramUpWaitDownStay:
          plat->type   = upWaitDownStay;
          plat->status = PlatThinker::up;
-         plat->low    = sec->floorheight;
+         plat->low    = sec->srf.floor.height;
          plat->high   = P_FindHighestFloorSurrounding(sec);
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
+         if(plat->high < sec->srf.floor.height)
+            plat->high = sec->srf.floor.height;
          break;
-      
+
       case paramUpByValueWaitDownStay:
          plat->type   = upWaitDownStay;
          plat->status = PlatThinker::up;
-         plat->low    = sec->floorheight;
-         plat->high   = sec->floorheight + args[3] * 8 * FRACUNIT;
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
+         plat->low    = sec->srf.floor.height;
+         plat->high   = sec->srf.floor.height + args[3] * 8 * FRACUNIT;
+         if(plat->high < sec->srf.floor.height)
+            plat->high = sec->srf.floor.height;
          break;
-      
+
       case paramPerpetualRaise:
       case paramPerpetualRaiseLip:
          plat->type   = perpetualRaise;
@@ -525,10 +525,10 @@ manual_plat:
          else
             plat->low += args[3] * FRACUNIT;
          plat->high   = P_FindHighestFloorSurrounding(sec);
-         if(plat->low > sec->floorheight)
-            plat->low = sec->floorheight;
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
+         if(plat->low > sec->srf.floor.height)
+            plat->low = sec->srf.floor.height;
+         if(plat->high < sec->srf.floor.height)
+            plat->high = sec->srf.floor.height;
          break;
 
       case paramUpByValueStayAndChange:
@@ -536,11 +536,11 @@ manual_plat:
          plat->status = PlatThinker::up;
          platTypeStr = "EEPlatRaise";
          if(line)
-            sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high   = sec->floorheight + args[2] * 8 * FRACUNIT;
-         plat->wait = 0; // We need to override the earlier setting of this         
-         if(plat->high < sec->floorheight)
-            plat->high = sec->floorheight;
+            sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         plat->high   = sec->srf.floor.height + args[2] * 8 * FRACUNIT;
+         plat->wait = 0; // We need to override the earlier setting of this
+         if(plat->high < sec->srf.floor.height)
+            plat->high = sec->srf.floor.height;
          break;
 
       case paramRaiseToNearestAndChange:
@@ -549,9 +549,9 @@ manual_plat:
          plat->rnctype = static_cast<PlatThinker::rnctype_e>(args[2]);
          platTypeStr = "EEPlatRaise";
          if(line)
-            sec->floorpic = sides[line->sidenum[0]].sector->floorpic;
-         plat->high = P_FindNextHighestFloor(sec, sec->floorheight);         
-         plat->wait = 0; // We need to override the earlier setting of this 
+            sec->srf.floor.pic = sides[line->sidenum[0]].sector->srf.floor.pic;
+         plat->high = P_FindNextHighestFloor(sec, sec->srf.floor.height);
+         plat->wait = 0; // We need to override the earlier setting of this
          P_ZeroSectorSpecial(sec);
          break;
 
@@ -560,8 +560,8 @@ manual_plat:
          plat->speed = PLATSPEED;      // not used
          plat->wait = 35 * PLATWAIT;   // not used
          plat->crush = 10;             // jff 3/14/98 crush anything in the way
-         plat->low = sec->ceilingheight;
-         plat->high = sec->floorheight;
+         plat->low = sec->srf.ceiling.height;
+         plat->high = sec->srf.floor.height;
          plat->status = PlatThinker::down;
          platTypeStr = "EEPlatSilent";
          break;
@@ -584,7 +584,7 @@ manual_plat:
 // The following were all rewritten by Lee Killough to use the new structure 
 // which places no limits on active plats. It also avoids spending as much
 // time searching for active plats. Previously a fixed-size array was used,
-// with NULL indicating empty entries, while now a doubly-linked list is used.
+// with nullptr indicating empty entries, while now a doubly-linked list is used.
 
 //
 // P_ActivateInStasis()
@@ -641,7 +641,7 @@ bool EV_StopPlatByTag(int tag, bool removeThinker)
          // Make it possible to completely remove the thinker, like in Hexen
          if(plat->tag == tag)
          {
-            plat->sector->floordata = nullptr;
+            plat->sector->srf.floor.data = nullptr;
             S_StopSectorSequence(plat->sector, SEQ_ORIGIN_SECTOR_F);
             plat->remove();
          }
@@ -679,7 +679,7 @@ void PlatThinker::addActivePlat()
 //
 void PlatThinker::removeActivePlat()
 {
-   sector->floordata = NULL; //jff 2/23/98 multiple thinkers
+   sector->srf.floor.data = nullptr; //jff 2/23/98 multiple thinkers
    remove();
    if((*list->prev = list->next))
       list->next->prev = list->prev;

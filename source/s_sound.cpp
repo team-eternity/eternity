@@ -155,7 +155,7 @@ static void S_StopChannel(int cnum)
    if(c->sfxinfo)
    {
       I_StopSound(c->handle, c->idnum); // stop the sound playing
-      
+
       // haleyjd 09/27/06: clear the entire channel
       memset(c, 0, sizeof(channel_t));
    }
@@ -171,11 +171,11 @@ static bool S_CheckSectorKill(const sector_t *earsec, const PointThinker *src)
 {
    // haleyjd 05/29/06: moved up to here and fixed a major bug
    if(gamestate == GS_LEVEL)
-   { 
+   {
       // are we in a killed-sound sector?
       if(earsec && earsec->flags & SECF_KILLSOUND)
          return true;
-      
+
       // source in a killed-sound sector?
       if(src &&
          R_PointInSubsector(src->x, src->y)->sector->flags & SECF_KILLSOUND)
@@ -206,16 +206,16 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    int attenuator = 0, basevolume;            // haleyjd
    fixed_t close_dist = 0, clipping_dist = 0; // haleyjd
 
-   // haleyjd 08/12/04: we cannot adjust a sound for a NULL listener.
+   // haleyjd 08/12/04: we cannot adjust a sound for a nullptr listener.
    if(!listener)
       return 1;
 
-   // haleyjd 05/29/06: this function isn't supposed to be called for NULL sources
+   // haleyjd 05/29/06: this function isn't supposed to be called for nullptr sources
 #ifdef RANGECHECK
    if(!source)
       I_Error("S_AdjustSoundParams: NULL source\n");
 #endif
-   
+
    // calculate the distance to sound origin
    //  and clip it if necessary
    //
@@ -224,7 +224,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    sx = source->x;
    sy = source->y;
-      
+
    if(useportalgroups && listener->groupid != source->groupid)
    {
       // The listener and the source are not in the same subspace, so offset
@@ -236,7 +236,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    adx = D_abs((listener->x >> FRACBITS) - (sx >> FRACBITS));
    ady = D_abs((listener->y >> FRACBITS) - (sy >> FRACBITS));
-   
+
    if(ady > adx)
    {
       dist = adx;
@@ -245,8 +245,8 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    }
 
    dist = adx ? FixedDiv(adx, finesine[(tantoangle_acc[FixedDiv(ady,adx) >> DBITS]
-                                        + ANG90) >> ANGLETOFINESHIFT]) : 0;   
-   
+                                        + ANG90) >> ANGLETOFINESHIFT]) : 0;
+
    // haleyjd 05/29/06: allow per-channel volume scaling
    basevolume = (snd_SfxVolume * chanvol) / 15;
 
@@ -287,7 +287,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    // angle of source to listener
    // sf: use listenx, listeny
-   
+
    angle = R_PointToAngle2(listener->x, listener->y, sx, sy);
 
    if(angle <= listener->angle)
@@ -297,7 +297,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
 
    // stereo separation
    *sep = NORM_SEP - FixedMul(S_STEREO_SWING >> FRACBITS, finesine[angle]);
-   
+
    // volume calculation
    *vol = dist < close_dist >> FRACBITS ? basevolume :
       basevolume * ((clipping_dist >> FRACBITS) - dist) / attenuator;
@@ -306,7 +306,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
    // haleyjd 04/27/10: special treatment for priorities <= 0
    if(*pri > 0)
       *pri = *pri + (127 - *vol);
-   
+
    if(*pri > 255) // cap to 255
       *pri = 255;
 
@@ -343,9 +343,9 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
       // haleyjd 06/12/08: only if subchannel matches
       for(cnum = 0; cnum < numChannels; cnum++)
       {
-         // haleyjd 04/09/11: Allow different sounds played on NULL
+         // haleyjd 04/09/11: Allow different sounds played on nullptr
          // channel to not cut each other off
-         if(origin == NULL)
+         if(origin == nullptr)
             origin_equivalent = (channels[cnum].sfxinfo == sfxinfo);
          else
             origin_equivalent = (channels[cnum].origin == origin);
@@ -360,7 +360,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
          }
       }
    }
-   
+
    // Find an open channel
    if(cnum == numChannels)
    {
@@ -397,7 +397,7 @@ static int S_getChannel(const PointThinker *origin, sfxinfo_t *sfxinfo,
    if(cnum >= numChannels)
       I_Error("S_getChannel: handle %d out of range\n", cnum);
 #endif
-   
+
    return cnum;
 }
 
@@ -437,15 +437,15 @@ void S_StartSfxInfo(const soundparams_t &params)
    bool nocutoff       = false;
    camera_t      playercam;
    camera_t     *listener = &playercam;
-   sector_t     *earsec   = NULL;
+   sector_t     *earsec   = nullptr;
    sfxinfo_t    *sfx      = params.sfx;
    const PointThinker *origin   = params.origin;
    const Mobj *mo;
 
-   // haleyjd 09/03/03: allow NULL sounds to fall through
+   // haleyjd 09/03/03: allow nullptr sounds to fall through
    if(!sfx)
       return;
-   
+
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
       return;
@@ -455,7 +455,7 @@ void S_StartSfxInfo(const soundparams_t &params)
    // serve as alternate names for the same sounds, in contrast to links which
    // provide a way of playing the same sound with different parameters.
 
-   // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to 
+   // haleyjd 05/12/09: Randomized sounds. Like aliases, these are links to
    // other sounds, but we choose one at random.
 
    sfxinfo_t *aliasinfo = sfx;
@@ -472,7 +472,7 @@ void S_StartSfxInfo(const soundparams_t &params)
       }
    }
 
-   // haleyjd:  we must weed out degenMobj's before trying to 
+   // haleyjd:  we must weed out degenMobj's before trying to
    // dereference these fields -- a thinker check perhaps?
    if((mo = thinker_cast<const Mobj *>(origin)))
    {
@@ -486,7 +486,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 
          // haleyjd: monster skins don't support sound replacements
          if(mo->skin && mo->skin->type == SKIN_PLAYER)
-         {         
+         {
             sndname = mo->skin->sounds[sfx->skinsound - 1];
             sfx = S_SfxInfoForName(sndname);
          }
@@ -499,8 +499,8 @@ void S_StartSfxInfo(const soundparams_t &params)
       }
 
       // haleyjd: give local client sounds high priority
-      if(mo == players[displayplayer].mo || 
-         (mo->flags & MF_MISSILE && 
+      if(mo == players[displayplayer].mo ||
+         (mo->flags & MF_MISSILE &&
           mo->target == players[displayplayer].mo))
       {
          priority_boost = true;
@@ -526,7 +526,7 @@ void S_StartSfxInfo(const soundparams_t &params)
       if(volumeScale > chancount)
          volumeScale -= chancount;
    }
-   
+
    // haleyjd: modified so that priority value is always used
    // haleyjd: also modified to get and store proper singularity value
    // haleyjd: allow priority boost for local client sounds
@@ -535,7 +535,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 
    // haleyjd: setup playercam
    if(gamestate == GS_LEVEL)
-   {     
+   {
       if(camera) // an external camera is active
       {
          playercam = *camera; // assign directly
@@ -549,8 +549,8 @@ void S_StartSfxInfo(const soundparams_t &params)
          // adjust sounds for a player that hasn't been spawned yet!
          if(pmo)
          {
-            playercam.x = pmo->x; 
-            playercam.y = pmo->y; 
+            playercam.x = pmo->x;
+            playercam.y = pmo->y;
             playercam.z = pmo->z;
             playercam.angle = pmo->angle;
             playercam.groupid = pmo->groupid;
@@ -558,7 +558,7 @@ void S_StartSfxInfo(const soundparams_t &params)
          else
          {
             memset(&playercam, 0, sizeof(playercam));
-            listener = NULL;
+            listener = nullptr;
          }
       }
 
@@ -572,7 +572,7 @@ void S_StartSfxInfo(const soundparams_t &params)
    // Check to see if it is audible, modify the params
    // killough 3/7/98, 4/25/98: code rearranged slightly
    // haleyjd 08/12/04: add extcamera check
-   
+
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
    {
       sep = NORM_SEP;
@@ -582,7 +582,7 @@ void S_StartSfxInfo(const soundparams_t &params)
          return;
    }
    else
-   {     
+   {
       // use an external cam?
       if(!S_AdjustSoundParams(listener, origin, volumeScale, params.attenuation,
                               &volume, &sep, &pitch, &priority, sfx))
@@ -590,7 +590,7 @@ void S_StartSfxInfo(const soundparams_t &params)
       else if(origin->x == playercam.x && origin->y == playercam.y)
          sep = NORM_SEP;
    }
-  
+
    if(pitched_sounds)
    {
       switch(sfx->pitch_type)
@@ -645,7 +645,7 @@ void S_StartSfxInfo(const soundparams_t &params)
    if(handle >= 0)
    {
       channels[cnum].handle = handle;
-      
+
       // haleyjd 05/29/06: record volume scale value and attenuation type
       // haleyjd 06/03/06: record pitch too (wtf is going on here??)
       // haleyjd 09/27/06: store priority and singularity values (!!!)
@@ -670,7 +670,7 @@ void S_StartSfxInfo(const soundparams_t &params)
 // S_StartSoundAtVolume
 //
 // haleyjd 05/29/06: Actually, DOOM had a routine named this, but it was
-// removed, apparently by the BOOM team, because it was never used for 
+// removed, apparently by the BOOM team, because it was never used for
 // anything useful (it was always called with snd_SfxVolume...).
 //
 void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
@@ -692,6 +692,25 @@ void S_StartSoundAtVolume(const PointThinker *origin, int sfx_id,
       S_StartSfxInfo(params);
    }
 }
+static void S_StartSoundAtVolumeLooped(const PointThinker *origin, int sfx_id,
+   int volume, int attn, int subchannel)
+{
+   soundparams_t params;
+
+   // haleyjd: changed to use EDF DeHackEd number hashing,
+   // to enable full use of dynamically defined sounds ^_^
+   if((params.sfx = E_SoundForDEHNum(sfx_id)))
+   {
+      params.origin = origin;
+      params.volumeScale = volume;
+      params.attenuation = attn;
+      params.loop = true;
+      params.subchannel = subchannel;
+      params.reverb = true;
+
+      S_StartSfxInfo(params);
+   }
+}
 
 //
 // S_StartSound
@@ -705,6 +724,10 @@ void S_StartSound(const PointThinker *origin, int sfx_id)
 {
    S_StartSoundAtVolume(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
 }
+void S_StartSoundLooped(const PointThinker *origin, int sfx_id)
+{
+   S_StartSoundAtVolumeLooped(origin, sfx_id, 127, ATTN_NORMAL, CHAN_AUTO);
+}
 
 //
 // S_StartSoundNameAtVolume
@@ -715,8 +738,8 @@ void S_StartSoundNameAtVolume(const PointThinker *origin, const char *name,
                               int volume, int attn, int subchannel)
 {
    soundparams_t params;
-   
-   // haleyjd 03/17/03: allow NULL sound names to fall through
+
+   // haleyjd 03/17/03: allow nullptr sound names to fall through
    if(!name)
       return;
 
@@ -746,33 +769,6 @@ void S_StartSoundName(const PointThinker *origin, const char *name)
 }
 
 //
-// S_StartSoundLooped
-//
-// haleyjd 06/03/06: support playing looped sounds.
-//
-// FIXME: unused?
-//
-static void S_StartSoundLooped(PointThinker *origin, char *name, int volume,
-                               int attn, int subchannel)
-{
-   soundparams_t params;
-   
-   if(!name)
-      return;
-
-   if((params.sfx = S_SfxInfoForName(name)))
-   {
-      params.origin      = origin;
-      params.volumeScale = volume;
-      params.attenuation = attn;
-      params.loop        = true;
-      params.subchannel  = subchannel;
-      params.reverb      = true;
-      S_StartSfxInfo(params);
-   }
-}
-
-//
 // S_StartInterfaceSound(int)
 //
 // Start an interface sound by DeHackEd number.
@@ -783,7 +779,7 @@ void S_StartInterfaceSound(int sound_id)
 
    if((params.sfx = E_SoundForDEHNum(sound_id)))
    {
-      params.setNormalDefaults(NULL);
+      params.setNormalDefaults(nullptr);
       params.reverb = false;
       S_StartSfxInfo(params);
    }
@@ -800,7 +796,24 @@ void S_StartInterfaceSound(const char *name)
 
    if((params.sfx = E_SoundForName(name)))
    {
-      params.setNormalDefaults(NULL);
+      params.setNormalDefaults(nullptr);
+      params.reverb = false;
+      S_StartSfxInfo(params);
+   }
+}
+
+//
+// S_StartInterfaceSound(sfxinfo_t *)
+//
+// Start an interface sound by sfxinfo.
+//
+void S_StartInterfaceSound(sfxinfo_t *sfx)
+{
+   soundparams_t params;
+
+   if((params.sfx = sfx))
+   {
+      params.setNormalDefaults(nullptr);
       params.reverb = false;
       S_StartSfxInfo(params);
    }
@@ -812,7 +825,7 @@ void S_StartInterfaceSound(const char *name)
 void S_StopSound(const PointThinker *origin, int subchannel)
 {
    int cnum;
-   
+
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
       return;
@@ -822,6 +835,28 @@ void S_StopSound(const PointThinker *origin, int subchannel)
       if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
          channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
          (subchannel == CHAN_ALL || channels[cnum].subchannel == subchannel))
+      {
+         S_StopChannel(cnum);
+      }
+   }
+}
+
+//
+// Stops a sound from an origin if it has the given dehackednum
+//
+void S_StopSoundId(const PointThinker *origin, int sound_id)
+{
+   int cnum;
+
+   //jff 1/22/98 return if sound is not enabled
+   if(!snd_card || nosfxparm)
+      return;
+
+   for(cnum = 0; cnum < numChannels; cnum++)
+   {
+      if(channels[cnum].sfxinfo && channels[cnum].origin == origin &&
+         channels[cnum].idnum == I_SoundID(channels[cnum].handle) &&
+         channels[cnum].aliasinfo && channels[cnum].aliasinfo->dehackednum == sound_id)
       {
          S_StopChannel(cnum);
       }
@@ -867,7 +902,7 @@ static ereverb_t *s_currentEnvironment;
 static void S_updateEnvironment(sector_t *earsec)
 {
    ereverb_t *reverb;
-   
+
    if(!earsec || gamestate != GS_LEVEL)
       reverb = E_GetDefaultReverb();
    else
@@ -888,8 +923,8 @@ static void S_updateEnvironment(sector_t *earsec)
 void S_UpdateSounds(const Mobj *listener)
 {
    // sf: a camera_t holding the information about the player
-   camera_t playercam = { 0 }; 
-   sector_t *earsec = NULL;
+   camera_t playercam = { 0 };
+   sector_t *earsec = nullptr;
 
    //jff 1/22/98 return if sound is not enabled
    if(!snd_card || nosfxparm)
@@ -945,7 +980,7 @@ void S_UpdateSounds(const Mobj *listener)
          // or modify their params
 
          // sf again: use external camera if there is one
-         // fix afterglows bug: segv because of NULL listener
+         // fix afterglows bug: segv because of nullptr listener
 
          // haleyjd 09/29/06: major bug fix. fraggle's change to remove the
          // listener != origin check here causes player sounds to be adjusted
@@ -958,7 +993,7 @@ void S_UpdateSounds(const Mobj *listener)
          {
             // haleyjd 05/29/06: allow per-channel volume scaling
             // and attenuation type selection
-            if(!S_AdjustSoundParams(listener ? &playercam : NULL,
+            if(!S_AdjustSoundParams(listener ? &playercam : nullptr,
                                     c->origin,
                                     c->volume,
                                     c->attenuation,
@@ -998,7 +1033,22 @@ bool S_CheckSoundPlaying(const PointThinker *mo, sfxinfo_t *aliasinfo)
          }
       }
    }
-   
+
+   return false;
+}
+// Dehackednum variant
+bool S_CheckSoundPlaying(const PointThinker *mo, int sound_id)
+{
+   if(!mo || !sound_id)
+      return false;
+   for(int cnum = 0; cnum < numChannels; cnum++)
+   {
+      const channel_t &channel = channels[cnum];
+      if(channel.origin != mo || !channel.aliasinfo || channel.aliasinfo->dehackednum != sound_id)
+         continue;
+      if(I_SoundIsPlaying(channels[cnum].handle))
+         return true;
+   }
    return false;
 }
 
@@ -1059,8 +1109,8 @@ void S_SetSfxVolume(int volume)
 //
 
 sfxinfo_t *S_SfxInfoForName(const char *name)
-{   
-   // haleyjd 09/03/03: now calls down to master EDF sound hash   
+{
+   // haleyjd 09/03/03: now calls down to master EDF sound hash
    sfxinfo_t *sfx = E_SoundForName(name);
 
    // haleyjd 03/26/11: if not found, check for an implicit wad sound
@@ -1083,7 +1133,7 @@ sfxinfo_t *S_SfxInfoForName(const char *name)
 // S_Chgun
 //
 // Delinks the chgun sound effect when a DSCHGUN lump has been
-// detected. This allows the sound to be used separately without 
+// detected. This allows the sound to be used separately without
 // use of EDF.
 //
 void S_Chgun()
@@ -1093,7 +1143,7 @@ void S_Chgun()
    if(!s_chgun)
       return;
 
-   s_chgun->link = NULL;
+   s_chgun->link = nullptr;
    s_chgun->pitch = -1;
    s_chgun->volume = -1;
 }
@@ -1141,14 +1191,14 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
 
    // same as the one playing ?
    if(mus_playing == music)
-      return;  
+      return;
 
    // shutdown old music
    S_StopMusic();
 
    if(music->prefix)
    {
-      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+      psnprintf(namebuf, sizeof(namebuf), "%s%s",
                 GameModeInfo->musPrefix, music->name);
    }
    else
@@ -1164,12 +1214,12 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
    // haleyjd: changed to PU_STATIC
    // julian: added lump length
 
-   music->data = wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);   
+   music->data = wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC);
 
    if(music->data)
    {
       music->handle = I_RegisterSong(music->data, W_LumpLength(lumpnum));
-      
+
       // play it
       if(music->handle)
       {
@@ -1179,12 +1229,12 @@ void S_ChangeMusic(musicinfo_t *music, int looping)
       else
       {
          Z_Free(music->data);
-         music->data = NULL;
-         mus_playing = NULL;
+         music->data = nullptr;
+         mus_playing = nullptr;
       }
    }
    else
-      mus_playing = NULL;
+      mus_playing = nullptr;
 }
 
 //
@@ -1199,20 +1249,20 @@ void S_ChangeMusicNum(int musnum, int looping)
    musicinfo_t *music;
 
    // haleyjd 05/18/14: check for Tarnsman's random music
-   if(s_randmusic && 
+   if(s_randmusic &&
       musnum >= GameModeInfo->randMusMin && musnum <= GameModeInfo->randMusMax)
    {
       musnum = M_RangeRandomEx(GameModeInfo->randMusMin, GameModeInfo->randMusMax);
    }
-   
+
    if(musnum <= GameModeInfo->musMin || musnum >= GameModeInfo->numMusic)
    {
       doom_printf(FC_ERROR "Bad music number %d\n", musnum);
       return;
    }
-   
+
    music = &(GameModeInfo->s_music[musnum]);
-   
+
    S_ChangeMusic(music, looping);
 }
 
@@ -1232,9 +1282,9 @@ void S_StartMusic(int m_id)
 void S_ChangeMusicName(const char *name, int looping)
 {
    musicinfo_t *music;
-   
+
    music = S_MusicForName(name);
-   
+
    if(music)
       S_ChangeMusic(music, looping);
    else
@@ -1258,9 +1308,9 @@ void S_StopMusic()
    I_StopSong(mus_playing->handle);
    I_UnRegisterSong(mus_playing->handle);
    Z_Free(mus_playing->data);
-   
-   mus_playing->data = NULL;
-   mus_playing = NULL;
+
+   mus_playing->data = nullptr;
+   mus_playing = nullptr;
 }
 
 //=============================================================================
@@ -1273,8 +1323,8 @@ void S_StopMusic()
 //
 // Doom
 //
-// Probably the most complicated music determination, between the 
-// original episodes and the addition of episode 4, which is all 
+// Probably the most complicated music determination, between the
+// original episodes and the addition of episode 4, which is all
 // over the place.
 //
 int S_MusicForMapDoom()
@@ -1294,7 +1344,7 @@ int S_MusicForMapDoom()
 
    int episode = eclamp(gameepisode, 1, 4);
    int map     = eclamp(gamemap,     1, 9);
-            
+
    // sf: simplified
    return episode < 4 ? mus_e1m1 + (episode-1)*9 + map-1 : spmus[map-1];
 }
@@ -1320,7 +1370,7 @@ int S_MusicForMapHtic()
    // ensure bounds just for safety
    int gep = eclamp(gameepisode, 1, 6);
    int gmp = eclamp(gamemap,     1, 9);
-     
+
    return H_Mus_Matrix[gep - 1][gmp - 1];
 }
 
@@ -1334,23 +1384,23 @@ int S_MusicForMapHtic()
 void S_Start()
 {
    int mnum;
-   
+
    S_StopSounds(false);
-   
+
    //jff 1/22/98 return if music is not enabled
    if(!mus_card || nomusicparm)
       return;
-   
+
    // start new music for the level
    mus_paused = 0;
-   
+
    if(!*LevelInfo.musicName && gamemap == 0)
    {
       // dont know what music to play
       // we need a default
       LevelInfo.musicName = GameModeInfo->defMusName;
    }
-   
+
    // sf: replacement music
    if(*LevelInfo.musicName)
       S_ChangeMusicName(LevelInfo.musicName, true);
@@ -1360,7 +1410,7 @@ void S_Start()
          mnum = idmusnum; //jff 3/17/98 reload IDMUS music if not -1
       else
          mnum = GameModeInfo->MusicForMap();
-         
+
       // start music
       S_ChangeMusicNum(mnum, true);
    }
@@ -1374,7 +1424,7 @@ void S_Start()
 int S_DoomMusicCheat(const char *buf)
 {
    int input = (buf[0] - '1') * 9 + (buf[1] - '1');
-          
+
    // jff 4/11/98: prevent IDMUS0x IDMUSx0 in DOOM I and greater than introa
    if(buf[0] < '1' || buf[1] < '1' || input > 31)
       return -1;
@@ -1415,7 +1465,7 @@ static void S_HookMusic(musicinfo_t *);
 
 //
 // S_Init
-// 
+//
 // Initializes sound stuff, including volume
 // Sets channels, SFX and music volume,
 //  allocates channel buffer, sets S_sfx lookup.
@@ -1452,7 +1502,7 @@ void S_Init(int sfxVolume, int musicVolume)
       return;
 
    S_SetMusicVolume(musicVolume);
-   
+
    // no sounds are playing, and they are not mus_paused
    mus_paused = 0;
 
@@ -1469,12 +1519,12 @@ void S_Init(int sfxVolume, int musicVolume)
 static void S_HookMusic(musicinfo_t *music)
 {
    int hashslot;
-   
-   if(!music || !music->name) 
+
+   if(!music || !music->name)
       return;
-   
+
    hashslot = sound_hash(music->name);
-   
+
    music->next = musicinfos[hashslot];
    musicinfos[hashslot] = music;
 }
@@ -1483,12 +1533,12 @@ static void S_HookMusic(musicinfo_t *music)
 // S_MusicForName
 //
 // Returns a musicinfo_t structure given a music entry name.
-// Returns NULL if not found.
+// Returns nullptr if not found.
 //
 musicinfo_t *S_MusicForName(const char *name)
 {
    int hashnum, lumpnum;
-   musicinfo_t *mus = NULL;
+   musicinfo_t *mus = nullptr;
    bool nameHasPrefix, lumpHasPrefix;
    const char *nameToUse;
    qstring tempname;
@@ -1499,9 +1549,9 @@ musicinfo_t *S_MusicForName(const char *name)
    tempname.toUpper(); // uppercase for insensitivity
 
    // If the gamemode-dependent music prefix is present, skip past it
-   if(prefixlen > 0 && namelen > prefixlen && 
+   if(prefixlen > 0 && namelen > prefixlen &&
       tempname.findSubStr(GameModeInfo->musPrefix) == tempname.constPtr())
-   {      
+   {
       nameToUse = name + prefixlen;
       nameHasPrefix = true;
    }
@@ -1514,7 +1564,7 @@ musicinfo_t *S_MusicForName(const char *name)
    tempname = nameToUse;
 
    hashnum = sound_hash(tempname.constPtr());
-  
+
    for(mus = musicinfos[hashnum]; mus; mus = mus->next)
    {
       if(!tempname.strCaseCmp(mus->name))
@@ -1540,7 +1590,7 @@ musicinfo_t *S_MusicForName(const char *name)
       else
          lumpHasPrefix = true;
    }
-   
+
    // Not found? Create a new musicinfo if the indicated lump is found.
    if(lumpnum >= 0)
    {
@@ -1549,7 +1599,7 @@ musicinfo_t *S_MusicForName(const char *name)
       mus->prefix = lumpHasPrefix;
       S_HookMusic(mus);
    }
-   
+
    return mus;
 }
 
@@ -1558,13 +1608,13 @@ musicinfo_t *S_MusicForName(const char *name)
 // Console Commands
 //
 
-VARIABLE_BOOLEAN(s_precache,      NULL, onoff);
-VARIABLE_BOOLEAN(pitched_sounds,  NULL, onoff);
-VARIABLE_INT(default_numChannels, NULL, 1, 32,  NULL);
-VARIABLE_INT(snd_SfxVolume,       NULL, 0, 15,  NULL);
-VARIABLE_INT(snd_MusicVolume,     NULL, 0, 15,  NULL);
-VARIABLE_BOOLEAN(forceFlipPan,    NULL, onoff);
-VARIABLE_TOGGLE(s_hidefmusic,     NULL, onoff);
+VARIABLE_BOOLEAN(s_precache,      nullptr, onoff);
+VARIABLE_BOOLEAN(pitched_sounds,  nullptr, onoff);
+VARIABLE_INT(default_numChannels, nullptr, 1, 32,  nullptr);
+VARIABLE_INT(snd_SfxVolume,       nullptr, 0, 15,  nullptr);
+VARIABLE_INT(snd_MusicVolume,     nullptr, 0, 15,  nullptr);
+VARIABLE_BOOLEAN(forceFlipPan,    nullptr, onoff);
+VARIABLE_TOGGLE(s_hidefmusic,     nullptr, onoff);
 
 CONSOLE_VARIABLE(s_precache, s_precache, 0) {}
 CONSOLE_VARIABLE(s_pitched, pitched_sounds, 0) {}
@@ -1585,7 +1635,7 @@ CONSOLE_VARIABLE(s_flippan, forceFlipPan, 0) {}
 
 CONSOLE_VARIABLE(s_hidefmusic, s_hidefmusic, 0) {}
 
-VARIABLE_TOGGLE(s_randmusic,      NULL, onoff);
+VARIABLE_TOGGLE(s_randmusic,      nullptr, onoff);
 CONSOLE_VARIABLE(s_randmusic, s_randmusic, 0) {}
 
 CONSOLE_COMMAND(s_playmusic, 0)
@@ -1610,7 +1660,7 @@ CONSOLE_COMMAND(s_playmusic, 0)
    // is missing
    if(music->prefix)
    {
-      psnprintf(namebuf, sizeof(namebuf), "%s%s", 
+      psnprintf(namebuf, sizeof(namebuf), "%s%s",
                 GameModeInfo->musPrefix, music->name);
    }
    else
@@ -1618,12 +1668,17 @@ CONSOLE_COMMAND(s_playmusic, 0)
 
    if(W_CheckNumForName(namebuf) < 0)
    {
-      C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf, 
+      C_Printf(FC_ERROR "Lump %s not found for music %s\a\n", namebuf,
                Console.argv[0]->constPtr());
       return;
    }
 
    S_ChangeMusic(music, true);
+}
+
+CONSOLE_COMMAND(s_stopmusic, 0)
+{
+   S_StopMusic();
 }
 
 #if 0
@@ -1643,7 +1698,7 @@ static cell AMX_NATIVE_CALL sm_globalsound(AMX *amx, cell *params)
       return 0;
    }
 
-   S_StartSoundName(NULL, sndname);
+   S_StartSoundName(nullptr, sndname);
 
    Z_Free(sndname);
 
@@ -1654,7 +1709,7 @@ static cell AMX_NATIVE_CALL sm_glblsoundnum(AMX *amx, cell *params)
 {
    int soundnum = (int)params[1];
 
-   S_StartSound(NULL, soundnum);
+   S_StartSound(nullptr, soundnum);
 
    return 0;
 }
@@ -1681,7 +1736,7 @@ static cell AMX_NATIVE_CALL sm_sectorsound(AMX *amx, cell *params)
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sector_t *sector = &sectors[secnum];
-      
+
       S_StartSoundName(&sector->soundorg, sndname);
    }
 
@@ -1703,11 +1758,11 @@ static cell AMX_NATIVE_CALL sm_sectorsoundnum(AMX *amx, cell *params)
       amx_RaiseError(amx, SC_ERR_GAMEMODE | SC_ERR_MASK);
       return -1;
    }
-   
+
    while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
       sector_t *sector = &sectors[secnum];
-      
+
       S_StartSound(&sector->soundorg, sndnum);
    }
 
@@ -1720,7 +1775,7 @@ AMX_NATIVE_INFO sound_Natives[] =
    { "_SoundGlobalNum", sm_glblsoundnum },
    { "_SectorSound",    sm_sectorsound },
    { "_SectorSoundNum", sm_sectorsoundnum },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

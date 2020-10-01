@@ -27,6 +27,7 @@
 #define P_PORTALCROSS_H_
 
 #include "m_vector.h"
+#include "r_defs.h"
 
 struct sector_t;
 
@@ -38,7 +39,8 @@ struct sector_t;
 // others, and there's no other way to detect line portal change.
 //
 v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr, bool *passed = nullptr);
+                               int *group = nullptr,
+                               const line_t **passed = nullptr);
 
 template <typename T>
 inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy,
@@ -54,13 +56,26 @@ inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr
 }
 
 //
+// Portal crossing outcome
+//
+struct portalcrossingoutcome_t
+{
+   int finalgroup;            // the final reached group ID
+   const line_t *lastpassed;  // the last passed linedef
+   bool multipassed;          // whether multiple lines have been passed
+};
+
+v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
+                                  portalcrossingoutcome_t &outcome);
+
+//
 // P_ExtremeSectorAtPoint
 // ioanch 20160107
 //
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
                                  sector_t *preCalcSector = nullptr);
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling);
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf);
 //
 // P_TransPortalBlockWalker
 // ioanch 20160107
@@ -91,7 +106,8 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
 // ioanch 20160222
 sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
                                         int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint);
+                                        sector_t *csector, fixed_t midzhint,
+                                        uint8_t *floorceiling = nullptr);
 sector_t *P_ThingReachesGroupVertically(const Mobj *mo, int groupid,
                                         fixed_t midzhint);
 

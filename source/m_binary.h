@@ -47,10 +47,10 @@
 //
 // Reads an int16 from the lump data and increments the read pointer.
 //
-inline int16_t GetBinaryWord(byte **data)
+inline int16_t GetBinaryWord(byte *&data)
 {
-   int16_t val = SwapShort(read16_le(*data, int16_t));
-   *data += 2;
+   const int16_t val = SwapShort(read16_le(data, int16_t));
+   data += 2;
 
    return val;
 }
@@ -60,10 +60,10 @@ inline int16_t GetBinaryWord(byte **data)
 //
 // Reads a uint16 from the lump data and increments the read pointer.
 //
-inline uint16_t GetBinaryUWord(byte **data)
+inline uint16_t GetBinaryUWord(byte *&data)
 {
-   uint16_t val = SwapUShort(read16_le(*data, uint16_t));
-   *data += 2;
+   const uint16_t val = SwapUShort(read16_le(data, uint16_t));
+   data += 2;
 
    return val;
 }
@@ -73,10 +73,10 @@ inline uint16_t GetBinaryUWord(byte **data)
 //
 // Reads an int32 from the lump data and increments the read pointer.
 //
-inline int32_t GetBinaryDWord(byte **data)
+inline int32_t GetBinaryDWord(byte *&data)
 {
-   int32_t val = SwapLong(read32_le(*data, int32_t));
-   *data += 4;
+   const int32_t val = SwapLong(read32_le(data, int32_t));
+   data += 4;
 
    return val;
 }
@@ -86,10 +86,10 @@ inline int32_t GetBinaryDWord(byte **data)
 //
 // Reads a uint32 from the lump data and increments the read pointer.
 //
-inline uint32_t GetBinaryUDWord(byte **data)
+inline uint32_t GetBinaryUDWord(byte *&data)
 {
-   uint32_t val = SwapULong(read32_le(*data, uint32_t));
-   *data += 4;
+   const uint32_t val = SwapULong(read32_le(data, uint32_t));
+   data += 4;
 
    return val;
 }
@@ -100,13 +100,13 @@ inline uint32_t GetBinaryUDWord(byte **data)
 // Reads a "len"-byte string from the lump data and writes it into the 
 // destination buffer. The read pointer is incremented by len bytes.
 //
-inline void GetBinaryString(byte **data, char *dest, int len)
+inline void GetBinaryString(byte *&data, char *dest, const int len)
 {
-   char *loc = (char *)(*data);
+   const char *loc = reinterpret_cast<const char *>(data);
 
    memcpy(dest, loc, len);
 
-   *data += len;
+   data += len;
 }
 
 #endif

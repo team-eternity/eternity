@@ -100,7 +100,7 @@ void UseContext::useLines(const player_t *player, fixed_t x, fixed_t y,
          def.flags = CAM_ADDLINES;
          def.trav = noWayTraverse;
          PathTraverser traverser(def, &context);
-         if(!traverser.traverse(x, y, x2, y2))
+         if(!traverser.traverse(x, y, x2, y2) && strcasecmp(player->skin->sounds[sk_noway], "none"))
             S_StartSound(context.thing, GameModeInfo->playerSounds[sk_noway]);
       }
    }
@@ -141,11 +141,10 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    if(li->special && !(li->pflags & PS_PASSABLE))
    {
       // ioanch 20160131: portal aware
-      const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid,
-         li->frontsector->groupid);
-      P_UseSpecialLine(context->thing, li,
-         P_PointOnLineSide(context->thing->x + link->x,
-            context->thing->y + link->y, li) == 1);
+      const linkoffset_t *link = P_GetLinkOffset(context->thing->groupid, li->frontsector->groupid);
+      P_UseSpecialLine(context->thing, li, 
+                       P_PointOnLineSidePrecise(context->thing->x + link->x, 
+                                                context->thing->y + link->y, li));
 
       //WAS can't use for than one special line in a row
       //jff 3/21/98 NOW multiple use allowed with enabling line flag
@@ -162,7 +161,8 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    if(lo.openrange <= 0)
    {
       // can't use through a wall
-      S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
+      if(strcasecmp(context->thing->player->skin->sounds[sk_noway], "none"))
+         S_StartSound(context->thing, GameModeInfo->playerSounds[sk_noway]);
       return false;
    }
 
@@ -171,11 +171,11 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
    if(li->pflags & PS_PASSABLE)
       portal = li->portal;
    else if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-      li->backsector->f_pflags & PS_PASSABLE)
+      li->backsector->srf.floor.pflags & PS_PASSABLE)
    {
-      portal = li->backsector->f_portal;
+      portal = li->backsector->srf.floor.portal;
    }
-   if(portal && P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+   if(portal && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
    {
       int newfromid = portal->data.link.toid;
       if(newfromid == context->state.groupid ||
@@ -189,8 +189,8 @@ bool UseContext::useTraverse(const intercept_t *in, void *vcontext,
       newState.attackrange -= FixedMul(newState.attackrange, in->frac);
       newState.groupid = newfromid;
       newState.reclevel++;
-      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + portal->data.link.deltax;
-      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + portal->data.link.deltay;
+      fixed_t x = trace.x + FixedMul(trace.dx, in->frac) + portal->data.link.delta.x;
+      fixed_t y = trace.y + FixedMul(trace.dy, in->frac) + portal->data.link.delta.y;
 
       useLines(context->player, x, y, &newState);
       context->portalhit = true;
@@ -221,8 +221,8 @@ bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext,
 
    return
       !(lo.openrange <= 0 ||                                  // No opening
-         lo.openbottom > context->thing->z + STEPSIZE ||// Too high, it blocks
-         lo.opentop    < context->thing->z + context->thing->height);
+         lo.open.floor > context->thing->z + STEPSIZE ||// Too high, it blocks
+         lo.open.ceiling < context->thing->z + context->thing->height);
    // Too low, it blocks
 }
 

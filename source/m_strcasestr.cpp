@@ -83,7 +83,7 @@ static bool knuth_morris_pratt(const char *haystack, const char *needle,
       size_t j = 0;
       const char *rhaystack, *phaystack;
 
-      *resultp = NULL;
+      *resultp = nullptr;
       rhaystack = haystack;
       phaystack = haystack;
 
@@ -128,9 +128,9 @@ static bool knuth_morris_pratt(const char *haystack, const char *needle,
 //
 const char *M_StrCaseStr(const char *haystack, const char *needle)
 {
-   // haleyjd: return NULL when given NULL argument(s)
+   // haleyjd: return nullptr when given nullptr argument(s)
    if(!haystack || !needle)
-      return NULL;
+      return nullptr;
 
    // Be careful not to look at the entire extent of haystack or needle until
    // needed. This is useful because of these two cases:
@@ -162,7 +162,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
       for(;; haystack++)
       {
          if(!*haystack)
-            return NULL; // No match.
+            return nullptr; // No match.
 
          // See whether it's advisable to use an asymptotically faster algorithm
          if(try_kmp && 
@@ -175,7 +175,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
                needle_last_ccount += M_Strnlen(needle_last_ccount,
                                                comparison_count - last_ccount);
                if(!*needle_last_ccount)
-                  needle_last_ccount = NULL;
+                  needle_last_ccount = nullptr;
                last_ccount = comparison_count;
             }
             if(!needle_last_ccount)
@@ -201,7 +201,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
                if(!*rneedle)
                   return haystack; // Found a match
                if(!*rhaystack)
-                  return NULL; // No match.
+                  return nullptr; // No match.
                
                ++comparison_count;
                if(ectype::toLower(*rhaystack) != ectype::toLower(*rneedle))

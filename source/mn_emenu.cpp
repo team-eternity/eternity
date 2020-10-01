@@ -65,9 +65,9 @@ static cfg_opt_t mnitem_opts[] =
 {
    CFG_STR(ITEM_MNITEM_TYPE,       "info",            CFGF_NONE),
    CFG_STR(ITEM_MNITEM_TEXT,       "",                CFGF_NONE),
-   CFG_STR(ITEM_MNITEM_CMD,        NULL,              CFGF_NONE),
-   CFG_STR(ITEM_MNITEM_PATCH,      NULL,              CFGF_NONE),
-   CFG_STR(ITEM_MNITEM_FLAGS,      NULL,              CFGF_NONE),
+   CFG_STR(ITEM_MNITEM_CMD,        nullptr,           CFGF_NONE),
+   CFG_STR(ITEM_MNITEM_PATCH,      nullptr,           CFGF_NONE),
+   CFG_STR(ITEM_MNITEM_FLAGS,      nullptr,           CFGF_NONE),
    CFG_END()
 };
 
@@ -80,7 +80,7 @@ cfg_opt_t edf_menu_opts[] =
    CFG_INT(ITEM_MENU_X,            200,               CFGF_NONE),
    CFG_INT(ITEM_MENU_Y,            15,                CFGF_NONE),
    CFG_INT(ITEM_MENU_FIRST,        0,                 CFGF_NONE),
-   CFG_STR(ITEM_MENU_FLAGS,        NULL,              CFGF_NONE),
+   CFG_STR(ITEM_MENU_FLAGS,        nullptr,           CFGF_NONE),
    CFG_END()
 };
 
@@ -112,7 +112,7 @@ static dehflags_t mnflagvalues[] =
    { "centeraligned", mf_centeraligned },
    { "emulated",      mf_emulated      },
    { "bigfont",       mf_bigfont       },
-   { NULL,            0                }
+   { nullptr,         0                }
 };
 
 static dehflagset_t mnflagset = { mnflagvalues, 0 };
@@ -124,7 +124,7 @@ static dehflags_t mnitemflagvalues[] =
    { "BIGFONT",  MENUITEM_BIGFONT  },
    { "CENTERED", MENUITEM_CENTERED },
    { "LALIGNED", MENUITEM_LALIGNED },
-   { NULL,       0                 },
+   { nullptr,    0                 },
 };
 
 static dehflagset_t mnitemflagset = { mnitemflagvalues, 0 };
@@ -139,7 +139,7 @@ static menu_t *dynaMenuChains[NUMMENUCHAINS];
 // MN_DynamicMenuForName
 //
 // Returns a pointer to a dynamic menu given its name.
-// Returns NULL if no such menu exists.
+// Returns nullptr if no such menu exists.
 //
 menu_t *MN_DynamicMenuForName(const char *name)
 {
@@ -225,7 +225,7 @@ static void MN_InitDynamicMenu(menu_t *newMenu, menuitem_t *items,
 // MN_CreateMenuItems
 //
 // Given an EDF menu section, returns an array of menu items.
-// Returns NULL if an error occurs.
+// Returns nullptr if an error occurs.
 //
 static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
 {
@@ -235,7 +235,7 @@ static menuitem_t *MN_CreateMenuItems(cfg_t *menuSec)
 
    // woops! menus need at least one real item.
    if(itemCount == 0)
-      return NULL;
+      return nullptr;
 
    // add one to itemCount for the it_end terminator
    items = estructalloc(menuitem_t, itemCount + 1);
@@ -304,9 +304,9 @@ static void MN_ClearDynamicMenu(menu_t *menu)
    }
 
    // zero out menu data fields (cannot memset, must maintain hash data)
-   menu->menuitems = NULL;
-   menu->prevpage  = NULL;
-   menu->nextpage  = NULL;
+   menu->menuitems = nullptr;
+   menu->prevpage  = nullptr;
+   menu->nextpage  = nullptr;
    menu->rootpage  = menu; // point to self
    menu->x         = 0;
    menu->y         = 0;
@@ -349,7 +349,7 @@ static void MN_ProcessMenu(menu_t *menu, cfg_t *menuSec)
 }
 
 // global menu overrides
-menu_t *mn_episode_override = NULL;
+menu_t *mn_episode_override = nullptr;
 
 //
 // MN_ProcessMenus

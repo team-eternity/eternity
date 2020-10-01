@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
-// DESCRIPTION:
-//      Moving object handling. Spawn functions.
+// Purpose: Moving object handling. Spawn functions
+// Authors: James Haley, Ioan Chera, Max Waine
 //
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 #include "i_system.h"
@@ -270,17 +268,40 @@ static bool P_CheckSeenState(int statenum, DLListItem<seenstate_t> *list)
 }
 
 //
+// Sets sprite by checking skin
+//
+inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
+{
+   // sf: skins
+   // haleyjd 06/11/08: only replace if st->sprite == default sprite
+   if(mobj.skin && st.sprite == mobj.info->defsprite)
+      mobj.sprite = mobj.skin->sprite;
+   else
+      mobj.sprite = st.sprite;
+}
+
+//
 // P_SetMobjState
 //
 // Returns true if the mobj is still present.
 //
 bool P_SetMobjState(Mobj* mobj, statenum_t state)
 {
+   static int recursion;
+   ++recursion;
+
+   if(recursion >= 10000)
+   {
+      doom_printf(FC_ERROR "Warning: State Recursion Detected from %s", mobj->info->name);
+      --recursion;
+      return true;
+   }
+
    state_t *st;
 
    // haleyjd 03/27/10: new state cycle detection
    static bool firsttime = true; // for initialization
-   DLListItem<seenstate_t> *seenstates  = NULL; // list of seenstates for this instance
+   DLListItem<seenstate_t> *seenstates  = nullptr; // list of seenstates for this instance
    bool ret = true;                           // return value
 
    if(firsttime)
@@ -293,7 +314,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    {
       if(state == NullStateNum)
       {
-         mobj->state = NULL;
+         mobj->state = nullptr;
          mobj->remove();
          ret = false;
          break;                 // killough 4/9/98
@@ -303,12 +324,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       mobj->state = st;
       mobj->tics = st->tics;
 
-      // sf: skins
-      // haleyjd 06/11/08: only replace if st->sprite == default sprite
-      if(mobj->skin && st->sprite == mobj->info->defsprite)
-         mobj->sprite = mobj->skin->sprite;
-      else
-         mobj->sprite = st->sprite;
+      P_setSpriteBySkin(*mobj, *st);
 
       mobj->frame = st->frame;
 
@@ -322,7 +338,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
          actionargs.actiontype = actionargs_t::MOBJFRAME;
          actionargs.actor      = mobj;
          actionargs.args       = st->args;
-         actionargs.pspr       = NULL;
+         actionargs.pspr       = nullptr;
 
          st->action(&actionargs);
       }
@@ -344,6 +360,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
    if(seenstates)
       P_FreeSeenStates(seenstates);
 
+   --recursion;
    return ret;
 }
 
@@ -365,7 +382,7 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
    if(state == NullStateNum)
    {
       // remove mobj
-      mobj->state = NULL;
+      mobj->state = nullptr;
       mobj->remove();
       return false;
    }
@@ -375,11 +392,8 @@ bool P_SetMobjStateNF(Mobj *mobj, statenum_t state)
 
    // don't leave an object in a state with 0 tics
    mobj->tics = (st->tics > 0) ? st->tics : 1;
-   
-   if(mobj->skin && st->sprite == mobj->info->defsprite)
-      mobj->sprite = mobj->skin->sprite;
-   else
-      mobj->sprite = st->sprite;
+
+   P_setSpriteBySkin(*mobj, *st);
 
    mobj->frame = st->frame;
 
@@ -404,17 +418,17 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    // haleyjd: an attempt at fixing explosions on skies (works!)
    if(demo_version >= 329)
    {
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, true);
-      if((ceilingsector->intflags & SIF_SKY || 
+      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
+      if((ceilingsector->intflags & SIF_SKY ||
          R_IsSkyLikePortalCeiling(*ceilingsector)) &&
-         mo->z >= ceilingsector->ceilingheight - P_ThingInfoHeight(mo->info))
+         mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the actual sky itself
          return;
       }
       if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*topedgesec)) && 
-         mo->z >= topedgesec->ceilingheight - P_ThingInfoHeight(mo->info))
+         R_IsSkyLikePortalCeiling(*topedgesec)) &&
+         mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the edge
          return;
@@ -535,8 +549,8 @@ void P_XYMovement(Mobj* mo)
          if(!(mo->flags & MF_MISSILE) && demo_version >= 203 &&
             (mo->flags & MF_BOUNCES ||
              (!player && clip.blockline &&
-              variable_friction && mo->z <= mo->floorz &&
-              P_GetFriction(mo, NULL) > ORIG_FRICTION)))
+              variable_friction && mo->z <= mo->zref.floor &&
+              P_GetFriction(mo, nullptr) > ORIG_FRICTION)))
          {
             if (clip.blockline)
             {
@@ -619,7 +633,7 @@ void P_XYMovement(Mobj* mo)
                   R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
             {
                if (demo_compatibility ||  // killough
-                  mo->z > clip.ceilingline->backsector->ceilingheight)
+                  mo->z > clip.ceilingline->backsector->srf.ceiling.height)
                {
                   // Hack to prevent missiles exploding against the sky.
                   // Does not handle sky floors.
@@ -635,7 +649,7 @@ void P_XYMovement(Mobj* mo)
 
             if(demo_version >= 342 && clip.blockline && 
                !clip.blockline->backsector && 
-               R_IsSkyLikePortalWall(*clip.blockline))
+               R_IsSkyWall(*clip.blockline))
             {
                mo->remove();
                return;
@@ -672,7 +686,7 @@ void P_XYMovement(Mobj* mo)
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
    // 2017/09/09: players when air friction is active
-   if(mo->z > mo->floorz && !(mo->flags4 & MF4_FLY) &&
+   if(mo->z > mo->zref.floor && !(mo->flags4 & MF4_FLY) &&
       (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
       (!mo->player || LevelInfo.airFriction == 0))
    {
@@ -683,11 +697,11 @@ void P_XYMovement(Mobj* mo)
    // killough 9/15/98: add objects falling off ledges
    // killough 11/98: only include bouncers hanging off ledges
    // ioanch 20160116: portal aware
-   if(((mo->flags & MF_BOUNCES && mo->z > mo->dropoffz) ||
+   if(((mo->flags & MF_BOUNCES && mo->z > mo->zref.dropoff) ||
        mo->flags & MF_CORPSE || mo->intflags & MIF_FALLING) &&
       (mo->momx > FRACUNIT/4 || mo->momx < -FRACUNIT/4 ||
        mo->momy > FRACUNIT/4 || mo->momy < -FRACUNIT/4) &&
-      mo->floorz != P_ExtremeSectorAtPoint(mo, false)->floorheight)
+      mo->zref.floor != P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height)
       return;  // do not stop sliding if halfway off a step with some momentum
 
    // Some objects never rest on other things
@@ -751,7 +765,7 @@ void P_XYMovement(Mobj* mo)
       }
       else
       {
-         fixed_t friction = P_GetFriction(mo, NULL);
+         fixed_t friction = P_GetFriction(mo, nullptr);
 
          if(friction != FRACUNIT)
          {
@@ -851,9 +865,9 @@ static void P_ZMovement(Mobj* mo)
    {
       mo->z += mo->momz;
 
-      if (mo->z <= mo->floorz)                  // bounce off floors
+      if (mo->z <= mo->zref.floor)                  // bounce off floors
       {
-         mo->z = mo->floorz;
+         mo->z = mo->zref.floor;
          E_HitFloor(mo); // haleyjd
          if (mo->momz < 0)
          {
@@ -874,15 +888,15 @@ static void P_ZMovement(Mobj* mo)
             // killough 11/98: touchy objects explode on impact
             if (mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
                mo->health > 0)
-               P_DamageMobj(mo, NULL, NULL, mo->health,MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, mo->health,MOD_UNKNOWN);
             else if (mo->flags & MF_FLOAT && sentient(mo))
                goto floater;
             return;
          }
       }
-      else if(mo->z >= mo->ceilingz - mo->height) // bounce off ceilings
+      else if(mo->z >= mo->zref.ceiling - mo->height) // bounce off ceilings
       {
-         mo->z = mo->ceilingz - mo->height;
+         mo->z = mo->zref.ceiling - mo->height;
          if(mo->momz > 0)
          {
             if(!(mo->subsector->sector->intflags & SIF_SKY))
@@ -930,7 +944,7 @@ static void P_ZMovement(Mobj* mo)
       {
          if(clip.ceilingline &&
             clip.ceilingline->backsector &&
-            (mo->z > clip.ceilingline->backsector->ceilingheight) &&
+            (mo->z > clip.ceilingline->backsector->srf.ceiling.height) &&
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
                clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
@@ -956,11 +970,11 @@ static void P_ZMovement(Mobj* mo)
 
    if(mo->player &&
       mo->player->mo == mo &&  // killough 5/12/98: exclude voodoo dolls
-      mo->z < mo->floorz)
+      mo->z < mo->zref.floor)
    {
-      mo->player->viewheight -= mo->floorz-mo->z;
+      mo->player->viewheight -= mo->zref.floor-mo->z;
       mo->player->deltaviewheight =
-         (VIEWHEIGHT - mo->player->viewheight)>>3;
+         (mo->player->pclass->viewheight - mo->player->viewheight)>>3;
    }
 
    // adjust altitude
@@ -985,7 +999,7 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
-   if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->floorz)
+   if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
    {
       if(ancient_demo)
       {
@@ -998,7 +1012,7 @@ floater:
 
    // clip movement
 
-   if(mo->z <= mo->floorz)
+   if(mo->z <= mo->zref.floor)
    {
       // hit the floor
 
@@ -1017,7 +1031,7 @@ floater:
          // killough 11/98: touchy objects explode on impact
          if(mo->flags & MF_TOUCHY && mo->intflags & MIF_ARMED &&
             mo->health > 0)
-            P_DamageMobj(mo, NULL, NULL, mo->health, MOD_UNKNOWN);
+            P_DamageMobj(mo, nullptr, nullptr, mo->health, MOD_UNKNOWN);
          else if(mo->player && // killough 5/12/98: exclude voodoo dolls
                  mo->player->mo == mo &&
                  mo->momz < -LevelInfo.gravity*8)
@@ -1027,9 +1041,9 @@ floater:
          mo->momz = 0;
       }
 
-      mo->z = mo->floorz;
+      mo->z = mo->zref.floor;
 
-      if(moving_down && initial_mo_z != mo->floorz)
+      if(moving_down && initial_mo_z != mo->zref.floor)
          E_HitFloor(mo);
 
       /* cph 2001/05/26 -
@@ -1042,7 +1056,7 @@ floater:
          mo->momz = -mo->momz;
 
 
-      if(!((mo->flags ^ MF_MISSILE) & (MF_MISSILE | MF_NOCLIP)))
+      if(mo->flags & MF_MISSILE && !(mo->flags & MF_NOCLIP))
       {
          if(mo->flags4 & MF4_HERETICBOUNCES) // MaxW
          {
@@ -1089,14 +1103,14 @@ floater:
    if(!ancient_demo)
       P_AdjustFloorClip(mo);
 
-   if(mo->z + mo->height > mo->ceilingz)
+   if(mo->z + mo->height > mo->zref.ceiling)
    {
       // hit the ceiling
 
       if(mo->momz > 0)
          mo->momz = 0;
 
-      mo->z = mo->ceilingz - mo->height;
+      mo->z = mo->zref.ceiling - mo->height;
 
       if(mo->flags & MF_SKULLFLY)
          mo->momz = -mo->momz; // the skull slammed into something
@@ -1147,7 +1161,7 @@ void P_NightmareRespawn(Mobj* mobj)
       subsector_t *newsubsec = R_PointInSubsector(x, y);
 
       fixed_t sheight = mobj->height;
-      fixed_t tz      = newsubsec->sector->floorheight + mobj->spawnpoint.height;
+      fixed_t tz      = newsubsec->sector->srf.floor.height + mobj->spawnpoint.height;
 
       // need to restore real height before checking
       mobj->height = P_ThingInfoHeight(mobj->info);
@@ -1168,7 +1182,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at old spot
    // because of removal of the body?
    mo = P_SpawnMobj(mobj->x, mobj->y,
-                    P_ExtremeSectorAtPoint(mobj, false)->floorheight +
+                    P_ExtremeSectorAtPoint(mobj, surf_floor)->srf.floor.height +
                        GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
@@ -1178,7 +1192,7 @@ void P_NightmareRespawn(Mobj* mobj)
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x, y);
    mo = P_SpawnMobj(x, y,
-                    ss->sector->floorheight + GameModeInfo->teleFogHeight,
+                    ss->sector->srf.floor.height + GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    S_StartSound(mo, GameModeInfo->teleSound);
@@ -1211,10 +1225,12 @@ void P_NightmareRespawn(Mobj* mobj)
 //
 // The mobj is already assumed to be sunk into the sector portal.
 //
-static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
+// Returns the line that gets crossed by interpolation, if any.
+//
+static const line_t *P_avoidPortalEdges(Mobj &mobj, surf_e surf)
 {
    const sector_t &sector = *mobj.subsector->sector;
-   unsigned flag = isceiling ? EX_ML_UPPERPORTAL : EX_ML_LOWERPORTAL;
+   unsigned flag = e_edgePortalFlags[surf];
 
    fixed_t box[4];
 
@@ -1224,17 +1240,25 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
    box[BOXRIGHT] = displace.x + AVOID_EDGE_PORTAL_RANGE;
    box[BOXTOP] = displace.y + AVOID_EDGE_PORTAL_RANGE;
 
+   const line_t *crossedge = nullptr;
+
    for(int i = 0; i < sector.linecount; ++i)
    {
       const line_t &line = *sector.lines[i];
 
+      if(line.frontsector == &sector || !(line.extflags & flag))
+         continue;
+
+      divline_t dl = { mobj.prevpos.x, mobj.prevpos.y, mobj.x - mobj.prevpos.x,
+         mobj.y - mobj.prevpos.y };
+
+      if(P_LineIsCrossed(line, dl) == 0)
+         crossedge = &line;
+
       // line must be an edge portal with its back towards the sector.
       // The thing's centre must be very close to the line
-      if(line.frontsector == &sector || !(line.extflags & flag) ||
-         !P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
-      {
+      if(!P_BoxesIntersect(box, line.bbox) || P_BoxOnLineSide(box, &line) != -1)
          continue;
-      }
 
       // Got one. Add to the vector
       angle_t angle = P_PointToAngle(0, 0, line.dx, line.dy) + ANG90;
@@ -1250,6 +1274,8 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
    }
    if(displace.x != mobj.x || displace.y != mobj.y)
       P_TryMove(&mobj, displace.x, displace.y, 1);
+
+   return crossedge;
 }
 
 //
@@ -1257,59 +1283,61 @@ static void P_avoidPortalEdges(Mobj &mobj, bool isceiling)
 //
 bool P_CheckPortalTeleport(Mobj *mobj)
 {
-   bool ret = false;
+   static const int MAXIMUM_PER_TIC = 8;  // set some limit for maximum portals to cross per tic
 
-   // ioanch 20160109: reference sector
-   const sector_t *sector = mobj->subsector->sector;
+   bool movedalready = false;
 
-   if(sector->f_pflags & PS_PASSABLE)
+   for(surf_e surf : SURFS)
    {
-      fixed_t passheight;
-
-      if(mobj->player)
+      if(movedalready)
+         return true;   // if moved from the previous plane attempt, signal success now
+      for(int j = 0; j < MAXIMUM_PER_TIC; ++j)  // allow checking if multiple portals were passed
       {
-         P_CalcHeight(mobj->player);
-         passheight = mobj->player->viewz;
-      }
-      else
-         passheight = mobj->z + (mobj->height >> 1);
+         const sector_t *sector = mobj->subsector->sector;
+         const surface_t &surface = sector->srf[surf];
+         if(!(surface.pflags & PS_PASSABLE))
+            break;
+         fixed_t passheight, prevpassheight;
+         if(mobj->player)
+         {
+            P_CalcHeight(mobj->player);
+            passheight = mobj->player->viewz;
+            prevpassheight = mobj->player->prevviewz;
+         }
+         else
+         {
+            passheight = mobj->z + (mobj->height >> 1);
+            prevpassheight = mobj->prevpos.z + (mobj->height >> 1);
+         }
 
-      // ioanch 20160109: link offset outside
-      if(passheight < P_FloorPortalZ(*sector))
-      {
-         P_avoidPortalEdges(*mobj, false);
-         const linkdata_t *ldata = R_FPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
-         ret = true;
+         // ioanch 20160109: link offset outside
+         fixed_t planez = P_PortalZ(surface);
+         if(isOuter(surf, passheight, planez))
+         {
+            const line_t *crossedge = P_avoidPortalEdges(*mobj, surf);
+            const linkdata_t &ldata = surface.portal->data.link;
+            if(!j)
+            {
+               mobj->prevpos.portalsurface = &surface;
+               mobj->prevpos.ldata = &ldata;
+               if(isOuter(surf, prevpassheight, planez))
+                  mobj->prevpos.portalline = crossedge;
+            }
+            EV_SectorPortalTeleport(mobj, ldata);
+            if(j)
+            {
+               mobj->backupPosition();
+               if(mobj->player)
+                  mobj->player->prevviewz = mobj->player->viewz;
+            }
+            movedalready = true;  // signal not to attempt moving the other way now
+         }
+         else
+            break;   // break out of the eight-attempt if there's no portal now
       }
    }
-   
-   if(!ret && sector->c_pflags & PS_PASSABLE)
-   {
-      // Calculate the height at which the mobj should pass through the portal
-      fixed_t passheight;
 
-      if(mobj->player)
-      {
-         P_CalcHeight(mobj->player);
-         passheight = mobj->player->viewz;
-      }
-      else
-         passheight = mobj->z + (mobj->height >> 1);
-
-      // ioanch 20160109: link offset outside
-      if(passheight >= P_CeilingPortalZ(*sector))
-      {
-         P_avoidPortalEdges(*mobj, true);
-         linkdata_t *ldata = R_CPLink(sector);
-         EV_PortalTeleport(mobj, ldata->deltax, ldata->deltay, ldata->deltaz,
-                           ldata->fromid, ldata->toid);
-         ret = true;
-      }
-   }
-
-   return ret;
+   return movedalready;
 }
 
 //
@@ -1327,7 +1355,7 @@ bool Mobj::shouldApplyTorque()
       return false; // flags say no.
    
    // all else considered, only dependent on presence of a dropoff
-   return z > dropoffz;
+   return z > zref.dropoff;
 }
 
 // Mobj RTTI Proxy Type
@@ -1379,14 +1407,14 @@ void Mobj::Think()
    // removed old code which looked at target references
    // (we use pointer reference counting now)
 
-   clip.BlockingMobj = NULL;
+   clip.BlockingMobj = nullptr;
 
    // haleyjd 08/07/04: handle deep water plane hits
    if(subsector->sector->heightsec != -1)
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->floorheight);
+      waterstate = (z < hs->srf.floor.height);
    }
 
    // Heretic Wind transfer specials
@@ -1399,7 +1427,7 @@ void Mobj::Think()
    }
 
    // momentum movement
-   clip.BlockingMobj = NULL;
+   clip.BlockingMobj = nullptr;
    if(momx | momy || flags & MF_SKULLFLY)
    {
       P_XYMovement(this);
@@ -1408,7 +1436,7 @@ void Mobj::Think()
    }
 
    if(!P_Use3DClipping())
-      clip.BlockingMobj = NULL;
+      clip.BlockingMobj = nullptr;
 
    lz = z;
 
@@ -1425,7 +1453,7 @@ void Mobj::Think()
       }
    }
 
-   if(momz || clip.BlockingMobj || lz != floorz)
+   if(momz || clip.BlockingMobj || lz != zref.floor)
    {
       if(P_Use3DClipping() && ((flags3 & MF3_PASSMOBJ) || (flags & MF_SPECIAL)))
       {
@@ -1464,7 +1492,7 @@ void Mobj::Think()
                {
                   fixed_t deltaview;
                   player->viewheight -= onmo->z + onmo->height - z;
-                  deltaview = (VIEWHEIGHT - player->viewheight)>>3;
+                  deltaview = (player->pclass->viewheight - player->viewheight)>>3;
                   if(deltaview > player->deltaviewheight)
                   {
                      player->deltaviewheight = deltaview;
@@ -1530,7 +1558,7 @@ void Mobj::Think()
    if(info->crashstate != NullStateNum
       && flags & MF_CORPSE
       && !(intflags & MIF_CRASHED) && !ancient_demo
-      && z <= floorz)
+      && z <= zref.floor)
    {
       intflags |= MIF_CRASHED;
       P_SetMobjState(this, info->crashstate);
@@ -1543,7 +1571,7 @@ void Mobj::Think()
    {
       sector_t *hs = &sectors[subsector->sector->heightsec];
 
-      waterstate = (z < hs->floorheight);
+      waterstate = (z < hs->srf.floor.height);
    }
    else
       waterstate = 0;
@@ -1565,7 +1593,8 @@ void Mobj::Think()
 
    if(tics != -1) // you can cycle through multiple states in a tic
    {
-      if(!--tics)
+      if(((tics == 0) && (state->flags & STATEFI_DECORATE) &&
+          !(state->flags & STATEFI_VANILLA0TIC)) || !--tics)
          P_SetMobjState(this, state->nextstate);
    }
    else
@@ -1623,8 +1652,7 @@ void Mobj::serialize(SaveArchive &arc)
       // Position
       << angle                                             // Angles
       << momx << momy << momz                              // Momenta
-      << floorz << ceilingz << dropoffz                    // Basic z coords
-      << secfloorz << secceilz << passfloorz << passceilz  // Advanced z coords
+      << zref                                              // Basic and advanced z coords
       << spawnpoint                                        // Spawn info
       << friction << movefactor                            // BOOM 202 friction
       << floatbob                                          // Floatbobbing
@@ -1707,7 +1735,7 @@ void Mobj::serialize(SaveArchive &arc)
          if(info->altsprite != -1)
             skin = P_GetMonsterSkin(info->altsprite);
          else
-            skin = NULL;
+            skin = nullptr;
       }
 
       backupPosition();
@@ -1747,7 +1775,7 @@ void Mobj::deSwizzle()
 
    // Done with the deswizzle info structure.
    efree(dsInfo);
-   dsInfo = NULL;
+   dsInfo = nullptr;
 }
 
 //
@@ -1788,6 +1816,9 @@ void Mobj::backupPosition()
    prevpos.y     = y;
    prevpos.z     = z;
    prevpos.angle = angle; // NB: only used for player objects
+   prevpos.portalline = nullptr;
+   prevpos.ldata = nullptr;
+   prevpos.portalsurface = nullptr;
 }
 
 //
@@ -1802,13 +1833,7 @@ void Mobj::copyPosition(const Mobj *other)
    z          = other->z;
    angle      = other->angle;
    groupid    = other->groupid;
-   floorz     = other->floorz;
-   ceilingz   = other->ceilingz;
-   dropoffz   = other->dropoffz;
-   passfloorz = other->passfloorz;
-   passceilz  = other->passceilz;
-   secfloorz  = other->secfloorz;
-   secceilz   = other->secceilz;
+   zref       = other->zref;
 
    intflags  &= ~(MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ);
    intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
@@ -1900,9 +1925,9 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    if(gameskill != sk_nightmare)
       mobj->reactiontime = info->reactiontime;
 
-   printf("%d %d ", x/FRACUNIT, y/FRACUNIT);
    if(!nolastlook)
       mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
+   M_RandomLog("type=%d\n", info->dehnum - 1);
 
    // do not set the state with P_SetMobjState,
    // because action routines can not be called yet
@@ -1911,10 +1936,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
 
    mobj->state  = st;
    mobj->tics   = st->tics;
-   if(mobj->skin && st->sprite == mobj->info->defsprite)
-      mobj->sprite = mobj->skin->sprite;
-   else
-      mobj->sprite = st->sprite;
+
+   P_setSpriteBySkin(*mobj, *st);
    mobj->frame  = st->frame;
 
    // ioanch 20160109: init spriteproj. They won't be set in P_SetThingPosition 
@@ -1928,25 +1951,27 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    P_SetThingPosition(mobj);
 
    // killough 11/98: for tracking dropoffs
-   // ioanch 20160201: fix floorz and ceilingz to be portal-aware
-   mobj->dropoffz = mobj->floorz = P_ExtremeSectorAtPoint(mobj, false)->floorheight;
-   mobj->ceilingz = P_ExtremeSectorAtPoint(mobj, true)->ceilingheight;
+   // ioanch 20160201: fix zref.floor and zref.ceiling to be portal-aware
+   const sector_t *extremesector = P_ExtremeSectorAtPoint(mobj, surf_floor);
+   mobj->zref.dropoff = mobj->zref.floor = extremesector->srf.floor.height;
+   mobj->zref.floorgroupid = extremesector->groupid;
+   mobj->zref.ceiling = P_ExtremeSectorAtPoint(mobj, surf_ceil)->srf.ceiling.height;
 
    mobj->z = 
-      (z == ONFLOORZ ? mobj->floorz : z == ONCEILINGZ ? mobj->ceilingz - mobj->height : z);
+      (z == ONFLOORZ ? mobj->zref.floor : z == ONCEILINGZ ? mobj->zref.ceiling - mobj->height : z);
 
    // floatrand, for Heretic
    if(z == FLOATRANDZ)
    {
-      fixed_t space = (mobj->ceilingz - mobj->height) - mobj->floorz;
+      fixed_t space = (mobj->zref.ceiling - mobj->height) - mobj->zref.floor;
       if(space > 48*FRACUNIT)
       {
          space -= 40*FRACUNIT;
          mobj->z = ((space * P_Random(pr_spawnfloat)) >> 8)
-                     + mobj->floorz + 40*FRACUNIT;
+                     + mobj->zref.floor + 40*FRACUNIT;
       }
       else
-         mobj->z = mobj->floorz;
+         mobj->z = mobj->zref.floor;
    }
 
    // initialize floatbob seed
@@ -2048,7 +2073,7 @@ void Mobj::remove()
    if(demo_version > 337)
    {
       this->flags |= (MF_NOSECTOR | MF_NOBLOCKMAP);
-      this->old_sectorlist = NULL; 
+      this->old_sectorlist = nullptr; 
    }
 
    // killough 11/98: Remove any references to other mobjs.
@@ -2057,9 +2082,9 @@ void Mobj::remove()
    // current tic.
    if(demo_version >= 203)
    {
-      P_SetTarget<Mobj>(&this->target,    NULL);
-      P_SetTarget<Mobj>(&this->tracer,    NULL);
-      P_SetTarget<Mobj>(&this->lastenemy, NULL);
+      P_SetTarget<Mobj>(&this->target,    nullptr);
+      P_SetTarget<Mobj>(&this->tracer,    nullptr);
+      P_SetTarget<Mobj>(&this->lastenemy, nullptr);
    }
 
    // remove from thinker list
@@ -2078,9 +2103,13 @@ int P_FindDoomedNum(int type)
    static struct dnumhash_s { int first, next; } *hash;
    int i;
 
+   // Negative type would crash otherwise.
+   if(type < 0)
+      return -1;
+
    if(!hash)
    {
-      hash = (dnumhash_s *)(Z_Malloc(sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash));
+      hash = emalloctag(dnumhash_s *, sizeof(*hash) * NUMMOBJTYPES, PU_CACHE, (void **)&hash);
       for(i = 0; i < NUMMOBJTYPES; i++)
          hash[i].first = NUMMOBJTYPES;
       for(i = 0; i < NUMMOBJTYPES; i++)
@@ -2123,7 +2152,7 @@ void P_RespawnSpecials()
 
    // spawn a teleport fog at the new spot
    ss = R_PointInSubsector(x,y);
-   mo = P_SpawnMobj(x, y, ss->sector->floorheight , E_SafeThingType(MT_IFOG));
+   mo = P_SpawnMobj(x, y, ss->sector->srf.floor.height, E_SafeThingType(MT_IFOG));
    S_StartSound(mo, sfx_itmbk);
 
    // find which type to spawn
@@ -2193,8 +2222,8 @@ void P_SpawnPlayer(mapthing_t* mthing)
    p->bonuscount    = 0;
    p->extralight    = 0;
    p->fixedcolormap = 0;
-   p->viewheight    = VIEWHEIGHT;
-   p->viewz         = mobj->z + VIEWHEIGHT;
+   p->viewheight    = p->pclass->viewheight;
+   p->viewz         = mobj->z + p->pclass->viewheight;
    p->prevviewz     = p->viewz;
 
    p->momx = p->momy = 0;   // killough 10/98: initialize bobbing to 0.
@@ -2306,8 +2335,13 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    }
 
    // haleyjd: now handled through IN_AddCameras
-   // return NULL for old demos
+   // return nullptr for old demos
    if(mthing->type == 5003 && demo_version < 331)
+      return nullptr;
+
+   // if vanilla, do it like Chocolate-Doom which deems it safe to silently ignore negative
+   // doomednums
+   if(demo_compatibility && mthing->type <= 0)
       return nullptr;
 
    // check for players specially
@@ -2426,7 +2460,14 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
                      M_FixedToDouble(mthing->y));
       }
       else
+      {
+         // Still print the error, but only at console
+         C_Printf(FC_ERROR "Unknown thing type %d at (%.2f, %.2f)",
+            mthing->type,
+            M_FixedToDouble(mthing->x),
+            M_FixedToDouble(mthing->y));
          UnknownThings.add(*mthing);
+      }
 
        return nullptr;
    }
@@ -2488,7 +2529,10 @@ spawnit:
    mobj->health = mobj->getModifiedSpawnHealth();
 
    if(mobj->tics > 0 && !(mobj->flags4 & MF4_SYNCHRONIZED))
+   {
       mobj->tics = 1 + (P_Random(pr_spawnthing) % mobj->tics);
+      M_RandomLog("type=%d\n", mthing->type);
+   }
 
    if(!(mobj->flags & MF_FRIEND) &&
       mthing->options & MTF_FRIEND &&
@@ -2567,8 +2611,8 @@ spawnit:
 // P_SpawnPuff
 //
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
-                  int updown, bool ptcl, const MetaTable *pufftype,
-                  const Mobj *hitmobj)
+                  int updown, bool ptcl, Mobj *shooter,
+                  const MetaTable *pufftype, const Mobj *hitmobj)
 {
    if(!pufftype)
    {
@@ -2640,6 +2684,14 @@ Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir,
             punchhack = true;
          }
       }
+
+      // [XA] 03/02/20: new flag that sets target to the shooter.
+      // This is useful for doing things like setting A_DetonateEx's
+      // hurt_self field on a puff, and other projectile-esque
+      // behaviors that rely on a valid 'target' field. Basically
+      // GZD's "PUFFGETSOWNER" flag but with a less crappy name. :P
+      if(pufftype->getInt(keyPuffTargetShooter, 0))
+         P_SetTarget(&th->target, shooter);
    }
 
    // ioanch: spawn particles even for melee range if nothing is spawned
@@ -3076,7 +3128,8 @@ fixed_t P_PlayerPitchSlope(player_t *player)
 //
 // Tries to aim at a nearby monster
 //
-Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
+Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
+                           playertargetinfo_t *targetinfo)
 {
    Mobj *th;
    fixed_t x, y, z, slope = 0;
@@ -3087,35 +3140,50 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type)
 
    // killough 7/19/98: autoaiming was not in original beta
    // sf: made a multiplayer option
+   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
    if(autoaim)
    {
       // killough 8/2/98: prefer autoaiming at enemies
       int mask = demo_version < 203 ? false : true;
+      bool hadmask = !!mask;
+      // Aspiratory Heretic demo support
+      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
+
+      bool avoidfriendsideaim = demo_version >= 401 || hereticdemo;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         if(mask || !hadmask || !avoidfriendsideaim)
+         {
+            if(!clip.linetarget)
+               slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+            if(!clip.linetarget)
+               slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         }
          if(!clip.linetarget)
          {
             an = source->angle;
             // haleyjd: use true slope angle
-            slope = P_PlayerPitchSlope(source->player);
+            slope = playersightslope;
          }
+         else if(targetinfo)
+            targetinfo->isfriend = !mask && hadmask;
       }
       while(mask && (mask=false, !clip.linetarget));  // killough 8/2/98
    }
    else
    {
       // haleyjd: use true slope angle
-      slope = P_PlayerPitchSlope(source->player);
+      slope = playersightslope;
    }
+   if(targetinfo)
+      targetinfo->slope = slope;
 
    x = source->x;
    y = source->y;
    z = source->z + 4*8*FRACUNIT - source->floorclip;
+   if(flags & SPM_ADDSLOPETOZ)
+      z += playersightslope;
 
    th = P_SpawnMobj(x, y, z, type);
 
@@ -3160,23 +3228,42 @@ Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type,
 // Tries to aim at a nearby monster, but with angle parameter
 // Code lifted from P_SPMAngle in Chocolate Heretic, p_mobj.c
 //
-Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle)
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle, unsigned flags,
+                                       const playertargetinfo_t *targetinfo)
 {
    fixed_t z, slope = 0;
    angle_t an = angle;
 
-   fixed_t playersightslope = P_PlayerPitchSlope(source->player);
+   // If the main fire hit pods, point towards them.
+   fixed_t playersightslope;
+   if(flags & SPMAH_FOLLOWTARGETFRIENDSLOPE && targetinfo && targetinfo->isfriend)
+      playersightslope = targetinfo->slope;
+   else
+      playersightslope = P_PlayerPitchSlope(source->player);
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      int mask = demo_version < 203 ? false : true;
+      // Aspiratory Heretic demo support
+      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
+      int mask = demo_version < 203 && !hereticdemo ? false : true;
+      bool hadmask = !!mask;  // mark if the mask was set initially
       do
       {
-         slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
-         if(!clip.linetarget)
-            slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+         // don't autoaim pods with the side projectiles in Heretic (unless flagged otherwise)
+         if(mask || !hadmask || flags & SPMAH_AIMFRIENDSTOO)
+         {
+            slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
+            if(mask || !hadmask) // never try to side-aim friends
+            {
+               if(!clip.linetarget)
+                  slope = P_AimLineAttack(source, an += 1<<26, 16*64*FRACUNIT, mask);
+               if(!clip.linetarget)
+                  slope = P_AimLineAttack(source, an -= 2<<26, 16*64*FRACUNIT, mask);
+            }
+         }
+         else
+            P_ClearTarget(clip.linetarget);
+
          if(!clip.linetarget)
          {
             an = angle;
@@ -3261,7 +3348,7 @@ void P_Massacre(int friends)
             break;
          }
          mo->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99: none of that!
-         P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+         P_DamageMobj(mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
       }
    }
 }
@@ -3276,7 +3363,7 @@ void P_FallingDamage(player_t *player)
    dist = FixedMul(mom, 16*FRACUNIT/23);
 
    if(mom > 63*FRACUNIT)
-      damage = 10000; // instant death
+      damage = GOD_BREACH_DAMAGE; // instant death
    else
       damage = ((FixedMul(dist, dist)/10)>>FRACBITS)-24;
 
@@ -3292,14 +3379,14 @@ void P_FallingDamage(player_t *player)
    if(damage >= player->mo->health)
       player->mo->intflags |= MIF_DIEDFALLING;
 
-   P_DamageMobj(player->mo, NULL, NULL, damage, MOD_FALLING);
+   P_DamageMobj(player->mo, nullptr, nullptr, damage, MOD_FALLING);
 }
 
 //
 // P_AdjustFloorClip
 //
-// Adapted from zdoom source, see the zdoom license.
-// Thanks to Randy Heit.
+// Adapted from ZDoom source (licenced under GPLv3).
+// Thanks to Marisa Heit.
 //
 void P_AdjustFloorClip(Mobj *thing)
 {
@@ -3331,7 +3418,7 @@ void P_AdjustFloorClip(Mobj *thing)
    for(m = thing->touching_sectorlist; m; m = m->m_tnext)
    {
       if(m->m_sector->heightsec == -1 &&
-         thing->z == m->m_sector->floorheight)
+         thing->z == m->m_sector->srf.floor.height)
       {
          fixed_t fclip = E_SectorFloorClip(m->m_sector);
 
@@ -3351,7 +3438,7 @@ void P_AdjustFloorClip(Mobj *thing)
       player_t *p = thing->player;
 
       p->viewheight -= oldclip - thing->floorclip;
-      p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+      p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
    }
 }
 
@@ -3427,8 +3514,8 @@ void P_AddThingTID(Mobj *mo, int tid)
    if(tid <= 0)
    {
       mo->tid = 0;
-      mo->tid_next = NULL;
-      mo->tid_prevn = NULL;
+      mo->tid_next = nullptr;
+      mo->tid_prevn = nullptr;
    }
    else
    {
@@ -3474,7 +3561,7 @@ void P_RemoveThingTID(Mobj *mo)
 //
 // Like line and sector tag search functions, this function will
 // keep returning the next object with the same tid when called
-// repeatedly with the previous call's return value. Returns NULL
+// repeatedly with the previous call's return value. Returns nullptr
 // once the end of the chain is hit. Calling it again at that point
 // would restart the search from the base of the chain.
 //
@@ -3499,8 +3586,8 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
    // Reserved TIDs
    switch(tid)
    {
-   case 0:   // script trigger object (may be NULL, which is fine)
-      return !rover ? trigger : NULL;
+   case 0:   // script trigger object (may be nullptr, which is fine)
+      return !rover ? trigger : nullptr;
 
    case -1:  // players are -1 through -4
    case -2:
@@ -3509,11 +3596,11 @@ Mobj *P_FindMobjFromTID(int tid, Mobj *rover, Mobj *trigger)
       {
          int pnum = -tid - 1;
 
-         return !rover && playeringame[pnum] ? players[pnum].mo : NULL;
+         return !rover && playeringame[pnum] ? players[pnum].mo : nullptr;
       }
 
    default:
-      return NULL;
+      return nullptr;
    }
 }
 
@@ -3545,7 +3632,7 @@ void MobjFadeThinker::setTarget(Mobj *pTarget)
 //
 void MobjFadeThinker::remove()
 {
-   P_SetTarget<Mobj>(&target, NULL); // clear reference to parent Mobj
+   P_SetTarget<Mobj>(&target, nullptr); // clear reference to parent Mobj
    Super::remove();           // call parent implementation
 }
 
@@ -3557,7 +3644,9 @@ void MobjFadeThinker::remove()
 void MobjFadeThinker::Think()
 {
    // If target is being removed, or won't fade, remove self.
-   if(target->isRemoved() || !target->alphavelocity)
+   // ioanch: also fix if no target, which can happen after loading a game saved
+   // during this transition.
+   if(!target || target->isRemoved() || !target->alphavelocity)
    {
       remove();
       return;
@@ -3627,7 +3716,7 @@ void MobjFadeThinker::deSwizzle()
 //
 void P_StartMobjFade(Mobj *mo, int alphavelocity)
 {
-   MobjFadeThinker *mf = NULL;
+   MobjFadeThinker *mf = nullptr;
    Thinker *cap = &thinkerclasscap[th_misc];
 
    for(Thinker *th = cap->cnext; th != cap; th = th->cnext)
@@ -3636,7 +3725,7 @@ void P_StartMobjFade(Mobj *mo, int alphavelocity)
          break; // found one
 
       // keep looking
-      mf = NULL;
+      mf = nullptr;
    }
 
    if(!mf && alphavelocity != 0) // not one? spawn it now.
@@ -3719,7 +3808,7 @@ static cell AMX_NATIVE_CALL sm_thingspawnspot(AMX *amx, cell *params)
 {
    int type, spottid, tid, ang;
    angle_t angle;
-   Mobj *mo, *spawnspot = NULL;
+   Mobj *mo, *spawnspot = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3770,7 +3859,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
 {
    int err, tid;
    char *sndname;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3804,7 +3893,7 @@ static cell AMX_NATIVE_CALL sm_thingsound(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 {
    int tid, sndnum;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3834,7 +3923,7 @@ static cell AMX_NATIVE_CALL sm_thingsoundnum(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thinginfosound(AMX *amx, cell *params)
 {
    int tid, typenum;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3913,7 +4002,7 @@ enum
 static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 {
    int value = 0, field, tid;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3951,7 +4040,7 @@ static cell AMX_NATIVE_CALL sm_thinggetproperty(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsetproperty(AMX *amx, cell *params)
 {
    int field, value, tid;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -3986,7 +4075,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
    int     tid, op, err;
    char   *flags;
    int    *results;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4044,7 +4133,7 @@ static cell AMX_NATIVE_CALL sm_thingflagsstr(AMX *amx, cell *params)
 static cell AMX_NATIVE_CALL sm_thingsetfriend(AMX *amx, cell *params)
 {
    int tid, friendly;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4085,7 +4174,7 @@ static cell AMX_NATIVE_CALL sm_thingisfriend(AMX *amx, cell *params)
 {
    int tid;
    bool friendly = false;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4112,7 +4201,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
 {
    int tid;
    fixed_t x, y, z;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4144,7 +4233,7 @@ static cell AMX_NATIVE_CALL sm_thingthrust3f(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_thingthrust(AMX *amx, cell *params)
 {
-   Mobj  *mo   = NULL;
+   Mobj  *mo   = nullptr;
    angle_t angle = FixedToAngle((fixed_t)params[1]);
    fixed_t force = (fixed_t)params[2];
    int     tid   = params[3];
@@ -4183,7 +4272,7 @@ enum
 static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
 {
    int tid, valuetoget;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4214,9 +4303,9 @@ static cell AMX_NATIVE_CALL sm_thinggetpos(AMX *amx, cell *params)
       case TPOS_MOMZ:
          return (cell)mo->momz;
       case TPOS_FLOORZ:
-         return (cell)mo->floorz;
+         return (cell)mo->zref.floor;
       case TPOS_CEILINGZ:
-         return (cell)mo->ceilingz;
+         return (cell)mo->zref.ceiling;
       default:
          return 0;
       }
@@ -4242,7 +4331,7 @@ static cell AMX_NATIVE_CALL sm_getfreetid(AMX *amx, cell *params)
 
    for(tid = 1; tid <= 65535; ++tid)
    {
-      if(P_FindMobjFromTID(tid, NULL, NULL) == NULL)
+      if(P_FindMobjFromTID(tid, nullptr, nullptr) == nullptr)
          return tid;
    }
 
@@ -4271,7 +4360,7 @@ static cell sm_thingteleport(AMX *amx, cell *params)
    fixed_t oldy;
    fixed_t oldz;
 
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *context = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -4332,7 +4421,7 @@ AMX_NATIVE_INFO mobj_Natives[] =
    { "_ThingGetPos",       sm_thinggetpos },
    { "_GetFreeTID",        sm_getfreetid },
    { "_ThingTeleport",     sm_thingteleport },
-   { NULL,                 NULL }
+   { nullptr,              nullptr }
 };
 #endif
 

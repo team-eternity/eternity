@@ -60,6 +60,7 @@
 #include "g_game.h"
 #include "in_lude.h"
 #include "m_argv.h"
+#include "m_buffer.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -100,9 +101,10 @@ static char     eedemosig[] = "ETERN";
 //static size_t   savegamesize = SAVEGAMESIZE; // killough
 static char    *demoname;
 static bool     netdemo;
-static byte    *demobuffer;   // made some static -- killough
-static size_t   maxdemosize;
-static byte    *demo_p;
+static byte    *demobuffer;      // only for playback
+static OutBuffer demofp;         // only for recording
+static byte    *demo_p;          // used for both playing and recording
+static byte    *demo_continue_p; // only for rerecording
 static size_t   demolength;
 static int16_t  consistency[MAXPLAYERS][BACKUPTICS];
 static int      g_destmap;
@@ -136,6 +138,7 @@ int             gametic;
 int             levelstarttic; // gametic at level start
 int             basetic;       // killough 9/29/98: for demo sync
 int             totalkills, totalitems, totalsecret;    // for intermission
+bool            democontinue;
 bool            demorecording;
 bool            demoplayback;
 bool            singledemo;           // quit after playing a demo from cmdline
@@ -226,6 +229,11 @@ static bool gameactions[NUMKEYACTIONS];
 int inventoryTics;
 bool usearti = true;
 
+static bool InventoryCanClose()
+{
+   return (GameModeInfo->flags & GIF_INVALWAYSOPEN) != GIF_INVALWAYSOPEN;
+}
+
 //
 // G_BuildTiccmd
 //
@@ -238,45 +246,31 @@ bool usearti = true;
 //
 void G_BuildTiccmd(ticcmd_t *cmd)
 {
-   bool sendcenterview = false;
-   int speed;
-   int tspeed;
-   int forward;
-   int side;
-   int newweapon;            // phares
-   int look = 0; 
-   int mlook = 0;
-   int flyheight = 0;
-   static int prevmlook = 0;
-   ticcmd_t *base;
-   double tmousex, tmousey;     // local mousex, mousey
-   playerclass_t *pc = players[consoleplayer].pclass;
-   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
    player_t &p = players[consoleplayer]; // used to pretty-up code
+   playerclass_t *pc = p.pclass;
+   invbarstate_t &invbarstate = p.invbarstate;
 
-   base = I_BaseTiccmd();    // empty, or external driver
-   memcpy(cmd, base, sizeof(*cmd));
+   *cmd = *I_BaseTiccmd();    // empty, or external driver
 
    cmd->consistency = consistency[consoleplayer][maketic%BACKUPTICS];
 
+   int speed;
    if(autorun)
       speed = !(runiswalk && gameactions[ka_speed]);
    else
       speed = gameactions[ka_speed];
 
-   forward = side = 0;
-
    cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use] && demo_version >= 401)
    {
-      // FIXME: Handle noartiskip?
-      if(invbarstate.inventory)
+      // FIXME: Handle noartiskip
+      const bool inventorycanclose = InventoryCanClose();
+      if(invbarstate.inventory && inventorycanclose)
       {
-         p.inv_ptr = invbarstate.inv_ptr;
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti)
+      else if(usearti || inventorycanclose)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -291,6 +285,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    else
       turnheld = 0;
 
+   int tspeed;
    if(turnheld < SLOWTURNTICS)
       tspeed = 2;             // slow turn
    else
@@ -304,13 +299,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // let movement keys cancel each other out
+   int side = 0;
    if(gameactions[ka_strafe])
    {
       if(gameactions[ka_right])
          side += pc->sidemove[speed];
       if(gameactions[ka_left])
          side -= pc->sidemove[speed];
-      
+
       // analog axes: turn becomes stafe if strafe-on is held
       side += (int)(pc->sidemove[speed] * joyaxes[axis_turn]);
    }
@@ -321,12 +317,13 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
 
-      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn] * i_joyturnsens);
    }
 
    // gamepad dedicated analog strafe axis applies regardless
    side += (int)(pc->sidemove[speed] * joyaxes[axis_strafe]);
 
+   int forward = 0;
    if(gameactions[ka_forward])
       forward += pc->forwardmove[speed];
    if(gameactions[ka_backward])
@@ -339,11 +336,25 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       side += pc->sidemove[speed];
    if(gameactions[ka_moveleft])
       side -= pc->sidemove[speed];
-   
+
    if(gameactions[ka_jump])                // -- joek 12/22/07
       cmd->actions |= AC_JUMP;
-   
-   mlook = allowmlook && (gameactions[ka_mlook] || automlook);
+
+   // MaxW: Non-attack weapon state change keys
+   if(gameactions[ka_reload])
+      cmd->actions |= AC_RELOAD;
+   if(gameactions[ka_zoom])
+      cmd->actions |= AC_ZOOM;
+   if(gameactions[ka_user1])
+      cmd->actions |= AC_USER1;
+   if(gameactions[ka_user2])
+      cmd->actions |= AC_USER2;
+   if(gameactions[ka_user3])
+      cmd->actions |= AC_USER3;
+   if(gameactions[ka_user4])
+      cmd->actions |= AC_USER4;
+
+   int mlook = allowmlook && (gameactions[ka_mlook] || automlook);
 
    // console commands
    cmd->chatchar = C_dequeueChatChar();
@@ -352,9 +363,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= BT_ATTACK;
 
    if(gameactions[ka_use])
+   {
       cmd->buttons |= BT_USE;
+      // clear double clicks if hit use button
+      dclicks = 0;
+   }
 
    // only put BTN codes in here
+   int newweapon; // phares
    if(demo_version >= 401)
    {
       if(gameactions[ka_attack_alt])
@@ -362,19 +378,18 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       newweapon = -1;
 
-      if((players[consoleplayer].attackdown && !P_CheckAmmo(&players[consoleplayer]))
-         || gameactions[ka_nextweapon])
+      if((p.attackdown && !P_CheckAmmo(&p)) || gameactions[ka_nextweapon])
       {
-         weaponinfo_t *temp = E_FindBestWeapon(&players[consoleplayer]);
+         weaponinfo_t *temp = E_FindBestWeapon(&p);
          if(temp == nullptr)
          {
-            players[consoleplayer].attackdown = AT_NONE;
+            p.attackdown = AT_NONE;
             newweapon = -1;
          }
          else
          {
             newweapon = temp->id; // phares
-            cmd->slotIndex = E_FindFirstWeaponSlot(&players[consoleplayer], temp)->slotindex;
+            cmd->slotIndex = E_FindFirstWeaponSlot(&p, temp)->slotindex;
          }
       }
 
@@ -382,11 +397,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       {
          if(gameactions[i])
          {
-            weaponinfo_t *weapon = P_GetPlayerWeapon(&players[consoleplayer], i - ka_weapon1);
+            weaponinfo_t *weapon = P_GetPlayerWeapon(&p, i - ka_weapon1);
             if(weapon)
             {
-               const auto slot = E_FindEntryForWeaponInSlot(&players[consoleplayer],
-                                                            weapon, i - ka_weapon1);
+               const auto slot = E_FindEntryForWeaponInSlotIndex(&p, weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
                break;
@@ -396,14 +410,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       //next / prev weapon actions
       if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&players[consoleplayer], &cmd->slotIndex);
+         newweapon = P_NextWeapon(&p, &cmd->slotIndex);
       else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&players[consoleplayer], &cmd->slotIndex);
+         newweapon = P_PrevWeapon(&p, &cmd->slotIndex);
 
-      if(players[consoleplayer].readyweapon)
+      if(p.readyweapon)
       {
-         if(players[consoleplayer].readyweapon->id == newweapon ||
-            E_IsPoweredVariantOf(E_WeaponForID(newweapon), players[consoleplayer].readyweapon))
+         if(p.readyweapon->id == newweapon ||
+            E_IsPoweredVariantOf(E_WeaponForID(newweapon), p.readyweapon))
             newweapon = -1;
       }
 
@@ -423,10 +437,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       //
       // killough 3/26/98, 4/2/98: fix autoswitch when no weapons are left
 
-      if((!demo_compatibility && (players[consoleplayer].attackdown & AT_PRIMARY) &&
-          !P_CheckAmmo(&players[consoleplayer])) || gameactions[ka_nextweapon])
+      if((!demo_compatibility && (p.attackdown & AT_PRIMARY) && !P_CheckAmmo(&p)) ||
+         gameactions[ka_nextweapon])
       {
-         newweapon = P_SwitchWeaponOld(&players[consoleplayer]); // phares
+         newweapon = P_SwitchWeaponOld(&p); // phares
       }
       else
       {                                 // phares 02/26/98: Added gamemode checks
@@ -456,20 +470,18 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          //
          // killough 10/98: make SG/SSG and Fist/Chainsaw
          // weapon toggles optional
-      
-         if(!demo_compatibility && doom_weapon_toggles)
-         {
-            player_t *player = &players[consoleplayer];
 
+         if(!demo_compatibility && weapon_hotkey_cycling)
+         {
             // only select chainsaw from '1' if it's owned, it's
             // not already in use, and the player prefers it or
             // the fist is already in use, or the player does not
             // have the berserker strength.
 
-            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw) &&
-               !E_WeaponIsCurrentDEHNum(player, wp_chainsaw) &&
-               (E_WeaponIsCurrentDEHNum(player, wp_fist) ||
-                !player->powers[pw_strength] ||
+            if(newweapon==wp_fist && E_PlayerOwnsWeaponForDEHNum(&p, wp_chainsaw) &&
+               !E_WeaponIsCurrentDEHNum(&p, wp_chainsaw) &&
+               (E_WeaponIsCurrentDEHNum(&p, wp_fist) ||
+                !p.powers[pw_strength] ||
                 P_WeaponPreferred(wp_chainsaw, wp_fist)))
             {
                newweapon = wp_chainsaw;
@@ -481,10 +493,10 @@ void G_BuildTiccmd(ticcmd_t *cmd)
             // player prefers it.
 
             if(newweapon == wp_shotgun && enable_ssg &&
-               E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
-               (!E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) ||
-                E_WeaponIsCurrentDEHNum(player, wp_shotgun) ||
-                !(E_WeaponIsCurrentDEHNum(player, wp_supershotgun) &&
+               E_PlayerOwnsWeaponForDEHNum(&p, wp_supershotgun) &&
+               (!E_PlayerOwnsWeaponForDEHNum(&p, wp_shotgun) ||
+                E_WeaponIsCurrentDEHNum(&p, wp_shotgun) ||
+                !(E_WeaponIsCurrentDEHNum(&p, wp_supershotgun) &&
                  P_WeaponPreferred(wp_supershotgun, wp_shotgun))))
             {
                newweapon = wp_supershotgun;
@@ -493,26 +505,31 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          // killough 2/8/98, 3/22/98 -- end of weapon selection changes
       }
 
-      // haleyjd 03/06/09: next/prev weapon actions
-      if(gameactions[ka_weaponup])
-         newweapon = P_NextWeapon(&players[consoleplayer]);
-      else if(gameactions[ka_weapondown])
-         newweapon = P_PrevWeapon(&players[consoleplayer]);
-
-      if(newweapon != wp_nochange)
+      if(GameModeInfo->type == Game_DOOM)
       {
-         cmd->buttons |= BT_CHANGE;
-         cmd->buttons |= newweapon << BT_WEAPONSHIFT;
+          // haleyjd 03/06/09: next/prev weapon actions
+          if(gameactions[ka_weaponup])
+              newweapon = P_NextWeapon(&p);
+          else if(gameactions[ka_weapondown])
+              newweapon = P_PrevWeapon(&p);
+
+          const weaponinfo_t *wp = E_WeaponForDEHNum(newweapon);
+
+          if(newweapon != -1 && wp && wp->dehnum >= wp_fist && wp->dehnum <= wp_supershotgun)
+          {
+              cmd->buttons |= BT_CHANGE;
+              cmd->buttons |= wp->dehnum << BT_WEAPONSHIFT;
+          }
       }
    }
 
    // mouse
-  
+
    // forward double click -- haleyjd: still allow double clicks
    if(mouseb_dblc2 >= 0 && mousebuttons[mouseb_dblc2] != dclickstate && dclicktime > 1)
    {
       dclickstate = mousebuttons[mouseb_dblc2];
-      
+
       if(dclickstate)
          dclicks++;
 
@@ -538,7 +555,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
       if(dclickstate2)
          dclicks2++;
-      
+
       if(dclicks2 == 2)
       {
          cmd->buttons |= BT_USE;
@@ -554,10 +571,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // sf: smooth out the mouse movement
-   // change to use tmousex, y   
+   // change to use tmousex, y
 
-   tmousex = mousex;
-   tmousey = mousey;
+   // local mousex, mousey
+   double tmousex = mousex;
+   double tmousey = mousey;
 
    // we average the mouse movement as well
    // this is most important in smoothing movement
@@ -574,7 +592,9 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // YSHEAR_FIXME: add arrow keylook?
-
+   bool sendcenterview = false;
+   int look = 0;
+   static int prevmlook;
    if(mlook)
    {
       // YSHEAR_FIXME: provide separate mlook speed setting?
@@ -598,7 +618,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 
    // analog gamepad look
    look += (int)(pc->lookspeed[1] * joyaxes[axis_look] * (invert_padlook ? -1.0 : 1.0));
-   
+
    if(gameactions[ka_lookup])
       look += pc->lookspeed[speed];
    if(gameactions[ka_lookdown])
@@ -618,6 +638,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    }
 
    // haleyjd 06/05/12: flight
+   int flyheight = 0;
    if(gameactions[ka_flyup])
       flyheight = FLIGHT_IMPULSE_AMT;
    if(gameactions[ka_flydown])
@@ -643,7 +664,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       forward = MAXPLMOVE;
    else if(forward < -MAXPLMOVE)
       forward = -MAXPLMOVE;
-   
+
    if(side > MAXPLMOVE)
       side = MAXPLMOVE;
    else if(side < -MAXPLMOVE)
@@ -679,7 +700,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
 void G_SetGameMap(void)
 {
    gamemap = G_GetMapForName(gamemapname);
-   
+
    if(!(GameModeInfo->flags & GIF_MAPXY))
    {
       gameepisode = gamemap / 10;
@@ -687,17 +708,17 @@ void G_SetGameMap(void)
    }
    else
       gameepisode = 1;
-   
+
    if(gameepisode < 1)
       gameepisode = 1;
 
    // haleyjd: simplified to use gameModeInfo
 
-   // bound to maximum episode for gamemode
+   // bound to maximum episode for gamemode (if the no-upper-episode-bound flag isn't set)
    // (only start episode 1 on shareware, etc)
-   if(gameepisode > GameModeInfo->numEpisodes)
-      gameepisode = GameModeInfo->numEpisodes;   
-   
+   if(gameepisode > GameModeInfo->numEpisodes && !(GameModeInfo->flags & GIF_NOUPPEREPBOUND))
+      gameepisode = GameModeInfo->numEpisodes;
+
    if(gamemap < 0)
       gamemap = 0;
    if(gamemap > 9 && !(GameModeInfo->flags & GIF_MAPXY))
@@ -793,6 +814,10 @@ bool G_Responder(const event_t* ev)
    int action;
    invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
 
+   // This if is here to ensure the game doesn't crash due to weapon selection inputs
+   if(gamestate == GS_CONSOLE)
+      return true;
+
    // killough 9/29/98: reformatted
    if(gamestate == GS_LEVEL && 
       (HU_Responder(ev) ||  // chat ate the event
@@ -881,32 +906,36 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_left])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], -1, invbarstate.inv_ptr);
+         E_MoveInventoryCursor(&players[consoleplayer], -1, players[consoleplayer].inv_ptr);
          return true;
       }
       if(gameactions[ka_inventory_right])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
          }
-         E_MoveInventoryCursor(&players[consoleplayer], 1, invbarstate.inv_ptr);
+         E_MoveInventoryCursor(&players[consoleplayer], 1, players[consoleplayer].inv_ptr);
          return true;
       }
 
       return true;    // eat key down events
       
    case ev_keyup:
-      action = G_KeyResponder(ev, kac_game);   // haleyjd
-      gameactions[action] = false;
+   {
+      bool allreleased;
+      action = G_KeyResponder(ev, kac_game, &allreleased);   // haleyjd
+      if(allreleased)
+         gameactions[action] = false;
       return false;   // always let key up events filter down
+   }
       
    case ev_mouse:
       mousebuttons[0] = !!(ev->data1 & 1);
@@ -990,27 +1019,28 @@ struct complevel_s
 {
    int fix; // first version that contained a fix
    int opt; // first version that made the fix an option
+   bool boomcomp; // affected by the BOOM "compatibility" flag
 } complevels[] =
 {
-   { 203, 203 }, // comp_telefrag
-   { 203, 203 }, // comp_dropoff
-   { 201, 203 }, // comp_vile
-   { 201, 203 }, // comp_pain
-   { 201, 203 }, // comp_skull
-   { 201, 203 }, // comp_blazing
-   { 201, 203 }, // comp_doorlight
-   { 201, 203 }, // comp_model
-   { 201, 203 }, // comp_god
-   { 203, 203 }, // comp_falloff
+   { 203, 203, true }, // comp_telefrag
+   { 203, 203, true }, // comp_dropoff
+   { 201, 203, true }, // comp_vile
+   { 201, 203, true }, // comp_pain
+   { 201, 203, true }, // comp_skull
+   { 201, 203, true }, // comp_blazing
+   { 201, 203, true }, // comp_doorlight
+   { 201, 203, true }, // comp_model
+   { 201, 203, true }, // comp_god
+   { 203, 203, true }, // comp_falloff
    { 200, 203 }, // comp_floors - FIXME
-   { 201, 203 }, // comp_skymap
-   { 203, 203 }, // comp_pursuit
-   { 202, 203 }, // comp_doorstuck
-   { 203, 203 }, // comp_staylift
-   { 203, 203 }, // comp_zombie
-   { 202, 203 }, // comp_stairs
-   { 203, 203 }, // comp_infcheat
-   { 201, 203 }, // comp_zerotags
+   { 201, 203, true }, // comp_skymap
+   { 203, 203, true }, // comp_pursuit
+   { 202, 203, true }, // comp_doorstuck
+   { 203, 203, true }, // comp_staylift
+   { 203, 203, true }, // comp_zombie
+   { 202, 203, true }, // comp_stairs
+   { 203, 203, true }, // comp_infcheat
+   { 201, 203, true }, // comp_zerotags
    { 329, 329 }, // comp_terrain
    { 329, 329 }, // comp_respawnfix
    { 329, 329 }, // comp_fallingdmg
@@ -1020,7 +1050,7 @@ struct complevel_s
    { 329, 329 }, // comp_planeshoot
    { 335, 335 }, // comp_special
    { 337, 337 }, // comp_ninja
-   { 340, 340 }, // comp_aircontrol
+   { 340, 340 }, // comp_jump
    { 0,   0   }
 };
 
@@ -1036,8 +1066,12 @@ static void G_SetCompatibility(void)
    while(complevels[i].fix > 0)
    {
       if(demo_version < complevels[i].opt)
-         comp[i] = (demo_version < complevels[i].fix);
-
+      {
+         if(complevels[i].boomcomp && compatibility)
+            comp[i] = true;
+         else
+            comp[i] = (demo_version < complevels[i].fix);
+      }
       ++i;
    }
 }
@@ -1054,49 +1088,13 @@ static void G_SetCompatibility(void)
 // avenue should be pursued but it might be a good idea. The current
 // system being used to send them at startup is garbage.
 //
-void G_DoPlayDemo(void)
+
+static byte *G_ReadDemoHeader(byte *demo_p)
 {
    skill_t skill;
    int i, episode, map;
    int demover;
-   char basename[9];
-   byte *option_p = NULL;      // killough 11/98
-   int lumpnum;
-
-   memset(basename, 0, sizeof(basename));
-  
-   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
-      basetic = gametic;  // killough 9/29/98
-      
-   M_ExtractFileBase(defdemoname, basename);         // killough
-   
-   // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
-   if((lumpnum = wGlobalDir.checkNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
-   {
-      if(singledemo)
-         I_Error("G_DoPlayDemo: no such demo %s\n", basename);
-      else
-      {
-         C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
-         gameaction = ga_nothing;
-         D_AdvanceDemo();
-      }
-      return;
-   }
-
-   // Check for empty demo lumps
-   if(!(demolength = wGlobalDir.lumpLength(lumpnum)))
-   {
-      if(singledemo)
-         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
-      else
-      {
-         gameaction = ga_nothing;
-         D_AdvanceDemo();
-      }
-      return;  // protect against zero-length lumps
-   }
-   demobuffer = demo_p = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+   byte *option_p = nullptr;      // killough 11/98
 
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1127,7 +1125,7 @@ void G_DoPlayDemo(void)
         (demover == 255)))                    // Eternity
    {
       if(singledemo)
-         I_Error("G_DoPlayDemo: unsupported demo format\n");
+         I_Error("G_ReadDemoHeader: unsupported demo format\n");
       else
       {
          C_Printf(FC_ERROR "Unsupported demo format\n");
@@ -1135,7 +1133,7 @@ void G_DoPlayDemo(void)
          Z_ChangeTag(demobuffer, PU_CACHE);
          D_AdvanceDemo();
       }
-      return;
+      return nullptr;
    }
    
    int dmtype = 0;
@@ -1344,12 +1342,55 @@ void G_DoPlayDemo(void)
          G_ReadOptions(option_p);
    }
 
+   return demo_p;
+}
+
+void G_DoPlayDemo(void)
+{
+   char basename[9];
+   int lumpnum;
+
+   memset(basename, 0, sizeof(basename));
+
+   if(gameaction != ga_loadgame)      // killough 12/98: support -loadgame
+      basetic = gametic;  // killough 9/29/98
+
+   M_ExtractFileBase(defdemoname, basename);         // killough
+
+   // haleyjd 11/09/09: check ns_demos namespace first, then ns_global
+   if((lumpnum = wGlobalDir.checkNumForNameNSG(basename, lumpinfo_t::ns_demos)) < 0)
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: no such demo %s\n", basename);
+      else
+      {
+         C_Printf(FC_ERROR "G_DoPlayDemo: no such demo %s\n", basename);
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;
+   }
+
+   // Check for empty demo lumps
+   if(!(demolength = wGlobalDir.lumpLength(lumpnum)))
+   {
+      if(singledemo)
+         I_Error("G_DoPlayDemo: empty demo %s\n", basename);
+      else
+      {
+         gameaction = ga_nothing;
+         D_AdvanceDemo();
+      }
+      return;  // protect against zero-length lumps
+   }
+   demobuffer = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC)); // killough
+
+   if(!(demo_p = G_ReadDemoHeader(demobuffer)))
+      return;
+
    precache = true;
    usergame = false;
    demoplayback = true;
-   
-   for(i=0; i<MAXPLAYERS;i++)         // killough 4/24/98
-      players[i].cheats = 0;
    
    gameaction = ga_nothing;
 
@@ -1383,6 +1424,79 @@ void G_DoPlayDemo(void)
 // ticcmds.
 //
 
+static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
+{
+   cmd->forwardmove = ((signed char)*p++);
+   cmd->sidemove    = ((signed char)*p++);
+
+   if(longtics_demo) // haleyjd 10/08/06: longtics support
+   {
+      cmd->angleturn  =  *p++;
+      cmd->angleturn |= (*p++) << 8;
+   }
+   else
+      cmd->angleturn = ((unsigned char)*p++)<<8;
+
+   cmd->buttons = (unsigned char)*p++;
+
+   // old Heretic demo?
+   if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
+   {
+      p++;
+      p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
+   }
+
+   if(demo_version >= 335)
+      cmd->actions = *p++;
+   else
+      cmd->actions = 0;
+
+   if(demo_version >= 333)
+   {
+      cmd->look  =  *p++;
+      cmd->look |= (*p++) << 8;
+   }
+   else if(demo_version >= 329)
+   {
+      // haleyjd: 329 and 331 store updownangle, but we can't use
+      // it any longer. Demos recorded with mlook will desync,
+      // but ones without can still play with this here.
+      p++;
+      cmd->look = 0;
+   }
+   else
+      cmd->look = 0;
+
+   if(full_demo_version >= make_full_version(340, 23))
+      cmd->fly = *p++;
+   else
+      cmd->fly = 0;
+
+   if(demo_version >= 401)
+   {
+      cmd->itemID =   *p++;
+      cmd->itemID |= (*p++) << 8;
+      cmd->weaponID = *p++;
+      cmd->weaponID |= (*p++) << 8;
+      cmd->slotIndex = *p++;
+   }
+   else
+   {
+      cmd->itemID = 0;
+      cmd->weaponID = 0;
+      cmd->slotIndex = 0;
+   }
+
+   // killough 3/26/98, 10/98: Ignore savegames in demos
+   if(demoplayback && cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
+   {
+      cmd->buttons &= ~BTS_SAVEGAME;
+      doom_printf("Game Saved (Suppressed)");
+   }
+
+   return p;
+}
+
 static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 {
    if(*demo_p == DEMOMARKER)
@@ -1396,74 +1510,27 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
    }
    else
    {
-      cmd->forwardmove = ((signed char)*demo_p++);
-      cmd->sidemove    = ((signed char)*demo_p++);
-      
-      if(longtics_demo) // haleyjd 10/08/06: longtics support
-      {
-         cmd->angleturn  =  *demo_p++;
-         cmd->angleturn |= (*demo_p++) << 8;
-      }
-      else
-         cmd->angleturn = ((unsigned char)*demo_p++)<<8;
-      
-      cmd->buttons = (unsigned char)*demo_p++;
+      demo_p = G_ReadTic(cmd, demo_p);
+   }
+}
 
-      // old Heretic demo?
-      if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
-      {
-         demo_p++;
-         demo_p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
-      }
-      
-      if(demo_version >= 335)
-         cmd->actions = *demo_p++;
-      else
-         cmd->actions = 0;
+//
+// G_ReadDemoContinueTiccmd
+//
+// Used for reading tics when rerecording.
+//
+static void G_ReadDemoContinueTiccmd(ticcmd_t *cmd)
+{
+   if(!demo_continue_p)
+      return;
 
-      if(demo_version >= 333)
-      {
-         cmd->look  =  *demo_p++;
-         cmd->look |= (*demo_p++) << 8;
-      }
-      else if(demo_version >= 329)
-      {
-         // haleyjd: 329 and 331 store updownangle, but we can't use
-         // it any longer. Demos recorded with mlook will desync, 
-         // but ones without can still play with this here.
-         ++demo_p;
-         cmd->look = 0;
-      }
-      else
-         cmd->look = 0;
-
-      if(full_demo_version >= make_full_version(340, 23))
-         cmd->fly = *demo_p++;
-      else
-         cmd->fly = 0;
-
-      if(demo_version >= 401)
-      {
-         cmd->itemID =   *demo_p++;
-         cmd->itemID |= (*demo_p++) << 8;
-         cmd->weaponID = *demo_p++;
-         cmd->weaponID |= (*demo_p++) << 8;
-         cmd->slotIndex = *demo_p++;
-      }
-      else
-      {
-         cmd->itemID = 0;
-         cmd->weaponID = 0;
-         cmd->slotIndex = 0;
-      }
-
-      // killough 3/26/98, 10/98: Ignore savegames in demos 
-      if(demoplayback && 
-         cmd->buttons & BT_SPECIAL && cmd->buttons & BTS_SAVEGAME)
-      {
-         cmd->buttons &= ~BTS_SAVEGAME;
-         doom_printf("Game Saved (Suppressed)");
-      }
+   if(demo_continue_p < demobuffer + demolength && *demo_continue_p != DEMOMARKER &&
+      !gameactions[ka_join_demo])
+      demo_continue_p = G_ReadTic(cmd, demo_continue_p);
+   else
+   {
+      demo_continue_p = nullptr;
+      democontinue = false;
    }
 }
 
@@ -1483,57 +1550,49 @@ static void G_ReadDemoTiccmd(ticcmd_t *cmd)
 //
 static void G_WriteDemoTiccmd(ticcmd_t *cmd)
 {
-   unsigned int position = static_cast<unsigned int>(demo_p - demobuffer);
-   int i = 0;
-   
-   demo_p[i++] = cmd->forwardmove;
-   demo_p[i++] = cmd->sidemove;
+   byte start[32], *p = start;
+   memset(start, 0, sizeof start);
+
+   *p++ = cmd->forwardmove;
+   *p++ = cmd->sidemove;
 
    // haleyjd 10/08/06: longtics support from Choco Doom.
    // If this is a longtics demo, record in higher resolution
    if(longtics_demo)
    {
-      demo_p[i++] =  cmd->angleturn & 0xff;
-      demo_p[i++] = (cmd->angleturn >> 8) & 0xff;
+      *p++ =  cmd->angleturn & 0xff;
+      *p++ = (cmd->angleturn >> 8) & 0xff;
    }
    else
-      demo_p[i++] = (cmd->angleturn + 128) >> 8; 
+      *p++ = (cmd->angleturn + 128) >> 8;
 
-   demo_p[i++] =  cmd->buttons;
+   *p++ = cmd->buttons;
 
    if(demo_version >= 335)
-      demo_p[i++] =  cmd->actions;         //  -- joek 12/22/07
+      *p++ = cmd->actions;         //  -- joek 12/22/07
 
    if(demo_version >= 333)
    {
-      demo_p[i++] =  cmd->look & 0xff;
-      demo_p[i++] = (cmd->look >> 8) & 0xff;
+      *p++ =  cmd->look & 0xff;
+      *p++ = (cmd->look >> 8) & 0xff;
    }
 
    if(full_demo_version >= make_full_version(340, 23))
-      demo_p[i++] = cmd->fly;
+      *p++ = cmd->fly;
    
    if(demo_version >= 401)
    {
-      demo_p[i++] =  cmd->itemID & 0xff;
-      demo_p[i++] = (cmd->itemID >> 8) & 0xff;
-      demo_p[i++] = cmd->weaponID & 0xff;
-      demo_p[i++] = (cmd->weaponID >> 8) & 0xff;
-      demo_p[i] = cmd->slotIndex;
+      *p++ =  cmd->itemID & 0xff;
+      *p++ = (cmd->itemID >> 8) & 0xff;
+      *p++ =  cmd->weaponID & 0xff;
+      *p++ = (cmd->weaponID >> 8) & 0xff;
+      *p++ =  cmd->slotIndex;
    }
 
-   // NOTE: the distance is *double* that of (ticcmd_t + trailer) because on
-   // Release builds, if ticcmd_t becomes larger, just using the simple value
-   // would lock up the program when calling realloc!
-   if(position + 2 * (sizeof(ticcmd_t) + sizeof(uint32_t)) > maxdemosize)   // killough 8/23/98
-   {
-      // no more space
-      maxdemosize += 128*1024;   // add another 128K  -- killough
-      demobuffer = erealloc(byte *, demobuffer, maxdemosize);
-      demo_p = position + demobuffer;  // back on track
-      // end of main demo limit changes -- killough
-   }
-   
+   if(!demofp.write(start, p - start))
+      I_Error("G_WriteDemoTiccmd: error writing demo\n");
+
+   demo_p = start; // alias demo_p so it can be read back
    G_ReadDemoTiccmd(cmd); // make SURE it is exactly the same
 }
 
@@ -1549,6 +1608,10 @@ void G_ExitLevel(int destmap)
    G_DemoLogStats();
    G_DemoLog("\n");
    G_DemoLogSetExited(true);
+   if(players[0].mo)
+   {
+      M_RandomLog("Exit (pos %g %g ang %08x)\n", players[0].mo->x / 65536., players[0].mo->y / 65536., players[0].mo->angle);
+   }
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1582,7 +1645,10 @@ static void G_PlayerFinishLevel(int player)
    player_t *p = &players[player];
 
    // INVENTORY_TODO: convert powers to inventory
+   if(p->powers[pw_weaponlevel2] && E_IsPoweredVariant(p->readyweapon))
+      p->readyweapon = p->readyweapon->sisterWeapon;
    memset(p->powers, 0, sizeof p->powers);
+
    p->mo->flags  &= ~MF_SHADOW;             // cancel invisibility
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
@@ -1605,7 +1671,7 @@ static void G_PlayerFinishLevel(int player)
 static void G_SetNextMap()
 {
    exitrule_t *exitrule = GameModeInfo->exitRules;
-   exitrule_t *theRule = NULL;
+   exitrule_t *theRule = nullptr;
 
    // find a rule
    for(; exitrule->gameepisode != -2; exitrule++)
@@ -2024,7 +2090,7 @@ uint64_t G_Signature(const WadDirectory *dir)
 
 static void G_DoSaveGame(void)
 {
-   char *name = NULL;
+   char *name = nullptr;
    size_t len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
    
    G_SaveGameName(name, len, savegameslot);
@@ -2178,6 +2244,9 @@ void G_Ticker()
             
             memcpy(cmd, &netcmds[i][buf], sizeof *cmd);
             
+            if(democontinue)
+               G_ReadDemoContinueTiccmd(cmd);
+
             if(demoplayback)
                G_ReadDemoTiccmd(cmd);
             
@@ -2247,12 +2316,12 @@ void G_Ticker()
       }
    }
 
-   // turn inventory off after a certain amount of time
-   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
-   if(invbarstate.inventory && !(--inventoryTics))
+   if(InventoryCanClose())
    {
-      players[consoleplayer].inv_ptr = invbarstate.inv_ptr;
-      invbarstate.inventory = false;
+      // turn inventory off after a certain amount of time
+      invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
+      if(invbarstate.inventory && !(--inventoryTics))
+         invbarstate.inventory = false;
    }
 
    // do main actions
@@ -2317,7 +2386,6 @@ void G_PlayerReborn(int player)
    skin_t *playerskin;
    playerclass_t *playerclass;
    inventory_t inventory;
-   inventoryindex_t inv_ptr;
 
    p = &players[player];
 
@@ -2333,7 +2401,6 @@ void G_PlayerReborn(int player)
    playerskin   = p->skin;
    playerclass  = p->pclass;     // haleyjd: playerclass
    inventory    = p->inventory;  // haleyjd: inventory
-   inv_ptr      = p->inv_ptr;
 
    delete p->weaponctrs;
   
@@ -2353,7 +2420,6 @@ void G_PlayerReborn(int player)
    p->skin        = playerskin;
    p->pclass      = playerclass;              // haleyjd: playerclass
    p->inventory   = inventory;                // haleyjd: inventory
-   p->inv_ptr     = inv_ptr;
    p->playerstate = PST_LIVE;
    p->health      = p->pclass->initialhealth; // Ty 03/12/98 - use dehacked values
    p->quake       = 0;                        // haleyjd 01/21/07
@@ -2414,7 +2480,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       if(bodyque.getLength() < queuesize)
          bodyque.resize(queuesize);
       
-      if(bodyque[index] != NULL)
+      if(bodyque[index] != nullptr)
       {
          bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
          bodyque[index]->remove();
@@ -2436,10 +2502,10 @@ static void G_queuePlayerCorpse(Mobj *mo)
 //
 void G_DeQueuePlayerCorpse(const Mobj *mo)
 {
-   for(auto itr = bodyque.begin(); itr != bodyque.end(); itr++)
+   for(Mobj *&body : bodyque)
    {
-      if(mo == *itr)
-         *itr = NULL;
+      if(mo == body)
+         body = nullptr;
    }
 }
 
@@ -2559,10 +2625,10 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
       }
    }
 
-   mo = P_SpawnMobj(x + 20 * mtcos, 
+   mo = P_SpawnMobj(x + 20 * mtcos,
                     y + 20 * mtsin,
-                    ss->sector->floorheight + 
-                       GameModeInfo->teleFogHeight, 
+                    ss->sector->srf.floor.height +
+                       GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    // haleyjd: There was a hack here trying to avoid playing the sound on the
@@ -2621,7 +2687,7 @@ extern const char *level_error;
 void G_DeathMatchSpawnPlayer(int playernum)
 {
    int j, selections = int(deathmatch_p - deathmatchstarts);
-   Mobj *fog = NULL;
+   Mobj *fog = nullptr;
    
    if(selections < MAXPLAYERS)
    {
@@ -2669,10 +2735,10 @@ void G_DoReborn(int playernum)
    else
    {                               // respawn at the start
       int i;
-      Mobj *fog = NULL;
+      Mobj *fog = nullptr;
       
       // first disassociate the corpse
-      players[playernum].mo->player = NULL;
+      players[playernum].mo->player = nullptr;
 
       // spawn at random spot if in deathmatch
       if(GameType == gt_dm)
@@ -2700,7 +2766,7 @@ void G_DoReborn(int playernum)
       // try to spawn at one of the other players spots
       for(i = 0; i < MAXPLAYERS; i++)
       {
-         fog = NULL;
+         fog = nullptr;
 
          if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
@@ -2938,7 +3004,7 @@ void G_ScrambleRand()
 {
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
-   rngseed = (unsigned int) time(NULL);
+   rngseed = (unsigned int) time(nullptr);
 }
 
 void G_DoNewGame()
@@ -3044,16 +3110,19 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
+   static PODCollection<int> originalStateTics;
    MetaSpeedSet *mss;
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
+         originalStateTics.resize(NUMSTATES);
          for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
             {
+               originalStateTics[i] = states[i]->tics;
                // killough 4/10/98
                // don't change 1->0 since it causes cycles
                if(states[i]->tics != 1 || demo_compatibility)
@@ -3073,7 +3142,7 @@ void G_SetFastParms(int fast_pending)
          for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
-               states[i]->tics <<= 1;
+               states[i]->tics = originalStateTics[i];
          }
 
          for(int i = 0; i < NUMMOBJTYPES; i++)
@@ -3161,7 +3230,7 @@ void G_InitNew(skill_t skill, const char *name)
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
    g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
-   d_dir = NULL;
+   d_dir = nullptr;
    
    G_DoLoadLevel();
 }
@@ -3174,29 +3243,52 @@ void G_InitNew(skill_t skill, const char *name)
 //
 void G_RecordDemo(const char *name)
 {
-   int i;
-   
+   efree(demoname);
+   demoname = emalloc(char *, strlen(name) + 8);
+   M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
+
+   if(!demofp.createFile(demoname, 0x20000, OutBuffer::NENDIAN))
+   {
+      I_Error("G_RecordDemo: cannot open %s\n", demoname);
+      return;
+   }
+
    demo_insurance = (default_demo_insurance != 0); // killough 12/98
    
    usergame = false;
 
-   if(demoname)
-      efree(demoname);
-   demoname = emalloc(char *, strlen(name) + 8);
-
-   M_AddDefaultExtension(strcpy(demoname, name), ".lmp");  // 1/18/98 killough
-   
-   i = M_CheckParm("-maxdemo");
-   
-   if(i && i<myargc-1)
-      maxdemosize = atoi(myargv[i+1]) * 1024;
-   
-   if(maxdemosize < 0x20000)  // killough
-      maxdemosize = 0x20000;
-   
-   demobuffer = emalloc(byte *, maxdemosize); // killough
-   
    demorecording = true;
+}
+
+void G_RecordDemoContinue(const char *in, const char *name)
+{
+   democontinue = true;
+   char *tmp = emalloc(char *, strlen(in) + 8);
+   M_AddDefaultExtension(strcpy(tmp, in), ".lmp");
+   InBuffer fp;
+   if(!fp.openFile(tmp, InBuffer::NENDIAN))
+   {
+      I_Error("G_RecordDemoContinue: cannot open %s\n", tmp);
+   }
+   efree(tmp);
+   fp.seek(0, SEEK_END);
+   demolength = fp.tell();
+   fp.seek(0, SEEK_SET);
+   demobuffer = demo_continue_p = emalloc(byte *, demolength);
+   if(fp.read(demo_continue_p, demolength) != demolength)
+   {
+      I_Error("G_RecordDemoContinue: error reading demo\n");
+      return;
+   }
+   fp.close();
+   if(!(demo_continue_p = G_ReadDemoHeader(demo_continue_p)))
+      return;
+
+   netgame = false;
+   singledemo = true;
+   G_RecordDemo(name);
+   G_BeginRecording();
+   usergame = true;
 }
 
 // These functions are used to read and write game-specific options in demos
@@ -3387,10 +3479,6 @@ byte *G_ReadOptions(byte *demoptr)
    }
    else  // defaults for versions <= 2.02
    {
-      int i;  // killough 10/98: a compatibility vector now
-      for(i = 0; i <= comp_zerotags; ++i)
-         comp[i] = compatibility;
-
       G_SetCompatibility();
       
       monster_infighting = 1;           // killough 7/19/98
@@ -3482,7 +3570,7 @@ static void G_BeginRecordingOld()
    // haleyjd 01/16/11: set again to ensure consistency
    G_SetOldDemoOptions();
 
-   demo_p = demobuffer;
+   byte start[13], *demo_p = start; // vanilla header is always 13 bytes long
 
    *demo_p++ = demo_version;    
    *demo_p++ = gameskill;
@@ -3504,6 +3592,9 @@ static void G_BeginRecordingOld()
 
    for(i = 0; i < MAXPLAYERS; i++)
       *demo_p++ = playeringame[i];
+
+   if(!demofp.write(start, 13))
+      I_Error("G_BeginRecordingOld: error writing demo header\n");
 }
 
 /*
@@ -3530,13 +3621,13 @@ void G_BeginRecording()
    int i;
 
    // haleyjd 02/21/10: -vanilla will record v1.9-format demos
-   if(M_CheckParm("-vanilla"))
+   if(M_CheckParm("-vanilla") || demo_version < 200)
    {
       G_BeginRecordingOld();
       return;
    }
    
-   demo_p = demobuffer;
+   byte start[256], *demo_p = start;
 
    longtics_demo = true;
    
@@ -3598,6 +3689,9 @@ void G_BeginRecording()
    
    for(; i < MIN_MAXPLAYERS; i++)
       *demo_p++ = 0;
+
+   if(!demofp.write(start, demo_p - start))
+      I_Error("G_BeginRecording: error writing demo header\n");
 }
 
 //
@@ -3652,27 +3746,11 @@ bool G_CheckDemoStatus()
    if(demorecording)
    {
       demorecording = false;
-      if(demo_p)
-      {
-         *demo_p++ = DEMOMARKER;
 
-         if(!M_WriteFile(demoname, demobuffer, demo_p - demobuffer))
-         {
-            // killough 11/98
-            I_Error("Error recording demo %s: %s\n", demoname,
-               errno ? strerror(errno) : "(Unknown Error)");
-         }
-      }
-      
-      efree(demobuffer);
-      demobuffer = NULL;  // killough
-      if(demo_p)
-         I_ExitWithMessage("Demo %s recorded\n", demoname);
-      else
-      {
-         I_ExitWithMessage("Demo %s not recorded: exited prematurely\n", 
-            demoname);
-      }
+      demofp.writeUint8(DEMOMARKER);
+      demofp.close();
+
+      I_ExitWithMessage("Demo %s recorded\n", demoname);
       return false;  // killough
    }
 
@@ -3731,7 +3809,7 @@ void G_StopDemo()
 
 #define MAX_MESSAGE_SIZE 1024
 
-void doom_printf(const char *s, ...)
+void doom_printf(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
@@ -3745,12 +3823,36 @@ void doom_printf(const char *s, ...)
 }
 
 //
+// Like above, but uses FC_ERROR and occasional beeping
+//
+void doom_warningf(E_FORMAT_STRING(const char *s), ...)
+{
+   static int lastbeeptic = -1000;
+
+   static char msg[MAX_MESSAGE_SIZE] = FC_ERROR;
+   va_list v;
+
+   va_start(v, s);
+   pvsnprintf(msg + 1, sizeof(msg) - 1, s, v); // print message in buffer
+   va_end(v);
+
+   if(lastbeeptic + 100 < gametic)
+   {
+      lastbeeptic = gametic;
+      C_Printf("%s\a\n", msg);
+   }
+   else
+      C_Puts(msg);
+   HU_PlayerMsg(msg);
+}
+
+//
 // player_printf
 //
 // sf: printf to a particular player only
 // to make up for the loss of player->msg = ...
 //
-void player_printf(const player_t *player, const char *s, ...)
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
@@ -3812,7 +3914,7 @@ static void G_CoolViewPoint()
    // turn off followcam
    P_FollowCamOff();
    if(camera == &followcam)
-      camera = NULL;
+      camera = nullptr;
   
    if(viewtype == 1)  // view from the chasecam
    {
@@ -3943,7 +4045,7 @@ AMX_NATIVE_INFO game_Natives[] =
    { "_StartGame",  sm_startgame },
    { "_GameSkill",  sm_gameskill },
    { "_GameType",   sm_gametype },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 
 #endif

@@ -33,6 +33,7 @@
 #include "autopalette.h"
 #include "c_io.h"
 #include "doomtype.h"
+#include "e_hash.h"
 #include "m_swap.h"
 #include "v_misc.h"
 #include "v_png.h"
@@ -186,7 +187,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    if(!VPNGImage::CheckPNGFormat(data))
       return false;
 
-   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, 
+   png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, 
                                     V_pngError, V_pngWarning);
    if(!png_ptr)
       return false;
@@ -194,7 +195,7 @@ bool VPNGImagePimpl::readImage(const void *data)
    info_ptr = png_create_info_struct(png_ptr);
    if(!info_ptr)
    {
-      png_destroy_read_struct(&png_ptr, NULL, NULL);
+      png_destroy_read_struct(&png_ptr, nullptr, nullptr);
       return false;
    }
 
@@ -213,7 +214,7 @@ bool VPNGImagePimpl::readImage(const void *data)
       // read header info
       png_read_info(png_ptr, info_ptr);
       png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type,
-                   NULL, NULL, NULL);
+                   nullptr, nullptr, nullptr);
 
       // Set offsets (retrieved via V_pngReadUnknownChunk)
       xoffset = ioStruct.offsets.x;
@@ -269,7 +270,7 @@ bool VPNGImagePimpl::readImage(const void *data)
       // Update info
       png_read_update_info(png_ptr, info_ptr);
       png_get_IHDR(png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, 
-                   NULL, NULL, NULL);
+                   nullptr, nullptr, nullptr);
 
       channels = png_get_channels(png_ptr, info_ptr);
       
@@ -329,11 +330,11 @@ bool VPNGImagePimpl::readImage(const void *data)
    }
 
    // Done, cleanup.
-   png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
+   png_destroy_read_struct(&png_ptr, &info_ptr, nullptr);
 
    if(row_pointers)
       efree(row_pointers);
-   row_pointers = NULL;
+   row_pointers = nullptr;
 
    return readSuccess;
 }
@@ -376,11 +377,11 @@ void VPNGImagePimpl::freeImage()
 {
    if(palette.colors)
       efree(palette.colors);
-   palette.colors = NULL;
+   palette.colors = nullptr;
 
    if(surface)
       efree(surface);
-   surface = NULL;
+   surface = nullptr;
 }
 
 //
@@ -407,6 +408,20 @@ byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
    return newpal;
 }
 
+struct rgbto8bit_t
+{
+   int key;
+   byte index;
+   DLListItem<rgbto8bit_t> links;
+};
+
+//
+// Colours are likely to be re-used, both within themselves and across multiple images,
+// so this hash table exists to caches RGB colours and the index they map to
+// TODO: Figure out if and when the contents of this hash should be disposed
+//
+static EHashTable<rgbto8bit_t, EIntHashKey, &rgbto8bit_t::key, &rgbto8bit_t::links> v_rgbto8bithash;
+
 //
 // VPNGImagePimpl::getAs8Bit
 //
@@ -414,14 +429,13 @@ byte *VPNGImagePimpl::buildTranslation(const byte *outpal) const
 //
 byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
 {
-   if(color_type == PNG_COLOR_TYPE_GRAY || 
-      color_type == PNG_COLOR_TYPE_PALETTE)
+   if(color_type == PNG_COLOR_TYPE_GRAY ||  color_type == PNG_COLOR_TYPE_PALETTE)
    {
       if(!outpal)
       {
          // Pure copy, no requantization
          byte *output = ecalloc(byte *, height, pitch);
-         return (byte *)(memcpy(output, surface, height * pitch));
+         return static_cast<byte *>(memcpy(output, surface, height * pitch));
       }
       else
       {
@@ -447,7 +461,7 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
    else
    {
       if(!outpal) // a palette is required for this conversion
-         return NULL;
+         return nullptr;
 
       byte *src  = surface;
       byte *dest = ecalloc(byte *, width, height);
@@ -456,9 +470,19 @@ byte *VPNGImagePimpl::getAs8Bit(const byte *outpal) const
       {
          for(png_uint_32 x = 0; x < width; x++)
          {
-            // TODO: extremely inefficient
-            dest[y * width + x] =
-               V_FindBestColor(outpal, *dest, *(dest+1), *(dest+2));
+            // TODO: figure out if this is still extremely inefficient
+            const int col = ((*src) << 16) + (*(src+1) << 8) + *(src+2);
+            rgbto8bit_t *cached_entry = v_rgbto8bithash.objectForKey(col);
+
+            if(cached_entry)
+               dest[y * width + x] = cached_entry->key;
+            else
+            {
+               cached_entry = estructalloc(rgbto8bit_t, 1);
+               cached_entry->key = col;
+               cached_entry->index = dest[y * width + x] = V_FindBestColor(outpal, *src, *(src+1), *(src+2));
+               v_rgbto8bithash.addObject(cached_entry);
+            }
             src += channels;
          }
       }
@@ -478,7 +502,7 @@ byte *VPNGImagePimpl::getAs24Bit() const
       color_type == PNG_COLOR_TYPE_PALETTE)
    {
       if(!palette.colors) // no palette??
-         return NULL;
+         return nullptr;
 
       byte *src    = surface;
       byte *buffer = ecalloc(byte *, width*3, height);
@@ -550,7 +574,7 @@ VPNGImage::~VPNGImage()
 
       // Free the pImpl
       efree(pImpl);
-      pImpl = NULL;
+      pImpl = nullptr;
    }
 }
 
@@ -643,7 +667,7 @@ int32_t VPNGImage::getYOffset() const
 // VPNGImage::getPalette
 //
 // If the PNG image is paletted (numColors > 0), this will return the palette.
-// Otherwise NULL is returned.
+// Otherwise nullptr is returned.
 //
 byte *VPNGImage::getPalette() const
 {
@@ -660,7 +684,7 @@ byte *VPNGImage::getPalette() const
 // 
 byte *VPNGImage::expandPalette() const
 {
-   byte *newPalette = NULL;
+   byte *newPalette = nullptr;
    
    if(pImpl->palette.colors)
    {
@@ -683,7 +707,7 @@ byte *VPNGImage::expandPalette() const
 // Returns an 8-bit linear version of the PNG graphics. 
 // If it is grayscale or 8-bit color:
 //  * If outpal is provided, the colors will be requantized to that palette
-//  * If outpal is NULL, the colors are left alone
+//  * If outpal is nullptr, the colors are left alone
 // If it is true color:
 //  * outpal must be valid; the colors will be requantized to that palette
 //
@@ -747,7 +771,7 @@ bool VPNGImage::CheckPNGFormat(const void *data)
 //
 patch_t *VPNGImage::LoadAsPatch(int lumpnum, int tag, void **user, size_t *size)
 {   
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    int len;
   
    if((len = wGlobalDir.lumpLength(lumpnum)) > 8)
@@ -767,7 +791,7 @@ patch_t *VPNGImage::LoadAsPatch(const char *lumpname, int tag, void **user,
 {
    int lumpnum = wGlobalDir.checkNumForName(lumpname);
 
-   return lumpnum >= 0 ? LoadAsPatch(lumpnum, tag, user, size) : NULL;
+   return lumpnum >= 0 ? LoadAsPatch(lumpnum, tag, user, size) : nullptr;
 }
 
 //=============================================================================
@@ -848,7 +872,7 @@ static void V_pngRemoveFile(pngwrite_t *writeData, const char *filename)
    if(writeData->outf)
    {
       fclose(writeData->outf);
-      writeData->outf = NULL;
+      writeData->outf = nullptr;
       if(writeData->errorFlag)
       {
          int error = writeData->errnoVal;
@@ -907,7 +931,7 @@ bool V_WritePNG(byte *linear, int width, int height, const char *filename)
    // Create the libpng info struct
    if(!(pngInfo = png_create_info_struct(pngStruct)))
    {
-      png_destroy_write_struct(&pngStruct, NULL);
+      png_destroy_write_struct(&pngStruct, nullptr);
       V_pngRemoveFile(&writeData, filename);
       return false;
    }

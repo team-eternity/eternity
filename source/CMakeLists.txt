@@ -20,7 +20,7 @@
 
 # General flags.
 
-add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DKATE_MEMORIAL)
+add_definitions(-DR_LINKEDPORTALS -D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DHAVE_ADLMIDILIB)
 
 # Library search flags.
 
@@ -104,8 +104,14 @@ FILE (GLOB SDL_SOURCES sdl/*.cpp)
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
 ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
                 ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
+                
+set_target_properties(eternity
+   PROPERTIES
+   CXX_STANDARD          17
+   CXX_STANDARD_REQUIRED ON
+)
 
-target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png15_static snes_spc)
+target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
@@ -115,6 +121,16 @@ if(MSVC)
    target_link_libraries(eternity rpcrt4)
    
    target_compile_options(eternity PUBLIC "/utf-8")
+
+   if(NOT MSVC_VERSION LESS  "1914")
+      target_compile_options(eternity PUBLIC "/std:c++17")
+   endif()
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+   target_link_libraries(eternity stdc++fs)
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  target_link_libraries(eternity version)
 endif()
 
 INSTALL (TARGETS eternity

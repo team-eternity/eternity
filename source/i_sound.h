@@ -28,7 +28,7 @@
 
 struct sfxinfo_t;
 
-typedef struct i_sounddriver_s
+struct i_sounddriver_t
 {
    int  (*InitSound)(void);
    void (*CacheSound)(sfxinfo_t *);
@@ -41,7 +41,7 @@ typedef struct i_sounddriver_s
    int  (*SoundIsPlaying)(int);
    void (*UpdateSoundParams)(int, int, int, int);
    void (*UpdateEQParams)(void);
-} i_sounddriver_t;
+};
 
 // Init at program start...
 void I_InitSound();
@@ -83,7 +83,7 @@ void I_UpdateSoundParams(int handle, int vol, int sep, int pitch);
 //  MUSIC I/O
 //
 
-typedef struct i_musicdriver_s
+struct i_musicdriver_t
 {
    int  (*InitMusic)(void);
    void (*ShutdownMusic)(void);
@@ -95,7 +95,7 @@ typedef struct i_musicdriver_s
    void (*StopSong)(int);
    void (*UnRegisterSong)(int);
    int  (*QrySongPlaying)(int);
-} i_musicdriver_t;
+};
 
 void I_InitMusic();
 void I_ShutdownMusic();

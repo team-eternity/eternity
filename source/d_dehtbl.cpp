@@ -120,6 +120,8 @@ static const char *s_GOTLAUNCHER = GOTLAUNCHER;
 static const char *s_GOTPLASMA   = GOTPLASMA;
 static const char *s_GOTSHOTGUN  = GOTSHOTGUN;
 static const char *s_GOTSHOTGUN2 = GOTSHOTGUN2;
+static const char *s_BETA_BONUS3 = BETA_BONUS3;
+static const char *s_BETA_BONUS4 = BETA_BONUS4;
 static const char *s_PD_BLUEO    = PD_BLUEO;
 static const char *s_PD_REDO     = PD_REDO;
 static const char *s_PD_YELLOWO  = PD_YELLOWO;
@@ -524,6 +526,9 @@ static const char *s_OB_GRENADE = OB_GRENADE;
 static const char *s_OB_TELEFRAG = OB_TELEFRAG;
 static const char *s_OB_QUAKE = OB_QUAKE;
 
+// misc new strings
+static const char *s_SECRETMESSAGE = SECRETMESSAGE;
+
 // Ty 05/03/98 - externalized
 const char *savegamename;
 
@@ -601,6 +606,8 @@ dehstr_t deh_strlookup[] =
    { &s_GOTPLASMA,   "GOTPLASMA"   },
    { &s_GOTSHOTGUN,  "GOTSHOTGUN"  },
    { &s_GOTSHOTGUN2, "GOTSHOTGUN2" },
+   { &s_BETA_BONUS3, "BETA_BONUS3" },
+   { &s_BETA_BONUS4, "BETA_BONUS4" },
    { &s_PD_BLUEO,    "PD_BLUEO"    },
    { &s_PD_REDO,     "PD_REDO"     },
    { &s_PD_YELLOWO,  "PD_YELLOWO"  },
@@ -1004,6 +1011,7 @@ dehstr_t deh_strlookup[] =
    { &s_OB_GRENADE,        "OB_GRENADE"        },
    { &s_OB_TELEFRAG,       "OB_TELEFRAG"       },
    { &s_OB_QUAKE,          "OB_QUAKE"          },
+   { &s_SECRETMESSAGE,     "SECRETMESSAGE"     },
 };
 
 static size_t deh_numstrlookup = earrlen(deh_strlookup);
@@ -1325,6 +1333,7 @@ void A_Nailbomb(actionargs_t *);
 // haleyjd: start new eternity action functions
 void A_SpawnAbove(actionargs_t *);
 void A_SpawnGlitter(actionargs_t *);
+void A_SpawnEx(actionargs_t *);
 void A_SetFlags(actionargs_t *);
 void A_UnSetFlags(actionargs_t *);
 void A_BetaSkullAttack(actionargs_t *);
@@ -1354,6 +1363,7 @@ void A_CounterSwitchEx(actionargs_t *);
 void A_SetCounter(actionargs_t *);
 void A_CopyCounter(actionargs_t *);
 void A_CounterOp(actionargs_t *);
+void A_CounterDiceRoll(actionargs_t *);
 void A_SetTics(actionargs_t *);
 void A_AproxDistance(actionargs_t *);
 void A_ShowMessage(actionargs_t *);
@@ -1374,12 +1384,16 @@ void A_CasingThrust(actionargs_t *);
 void A_JumpIfNoAmmo(actionargs_t *);
 void A_CheckReloadEx(actionargs_t *);
 void A_DetonateEx(actionargs_t *);
+void A_MushroomEx(actionargs_t *);
 void A_HideThing(actionargs_t *);
 void A_UnHideThing(actionargs_t *);
 void A_RestoreArtifact(actionargs_t *);
 void A_RestoreSpecialThing1(actionargs_t *);
 void A_RestoreSpecialThing2(actionargs_t *);
 void A_SargAttack12(actionargs_t *actionargs);
+void A_SelfDestruct(actionargs_t *);
+void A_TurnProjectile(actionargs_t *);
+void A_SubtractAmmo(actionargs_t *);
 
 // haleyjd 10/12/02: Heretic pointers
 void A_SpawnTeleGlitter(actionargs_t *actionargs);
@@ -1473,7 +1487,6 @@ void A_FireBlasterPL1(actionargs_t *);
 void A_FireSkullRodPL1(actionargs_t *);
 void A_FirePhoenixPL1(actionargs_t *);
 void A_InitPhoenixPL2(actionargs_t *);
-void A_ShutdownPhoenixPL2(actionargs_t *);
 void A_FirePhoenixPL2(actionargs_t *);
 void A_GauntletAttack(actionargs_t *);
 
@@ -1562,9 +1575,10 @@ void A_AlertMonsters(actionargs_t *);
 void A_CheckPlayerDone(actionargs_t *);
 void A_FadeIn(actionargs_t *);
 void A_FadeOut(actionargs_t *);
-void A_PlaySoundEx(actionargs_t *mo);
+void A_PlaySoundEx(actionargs_t *);
 void A_SetSpecial(actionargs_t *);
-void A_Jump(actionargs_t *actor);
+void A_Jump(actionargs_t *);
+void A_SeekerMissile(actionargs_t *);
 
 // eternity tc ptrs: TODO: remove these?
 void A_FogSpawn(actionargs_t *);
@@ -1675,6 +1689,7 @@ deh_bexptr deh_bexptrs[] =
    // haleyjd: start new eternity codeptrs
    POINTER(SpawnAbove),
    POINTER(SpawnGlitter),
+   POINTER(SpawnEx),
    POINTER(StartScript),
    POINTER(StartScriptNamed),
    POINTER(PlayerStartScript),
@@ -1704,6 +1719,7 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetCounter),
    POINTER(CopyCounter),
    POINTER(CounterOp),
+   POINTER(CounterDiceRoll),
    POINTER(SetTics),
    POINTER(AproxDistance),
    POINTER(ShowMessage),
@@ -1724,12 +1740,16 @@ deh_bexptr deh_bexptrs[] =
    POINTER(JumpIfNoAmmo),
    POINTER(CheckReloadEx),
    POINTER(DetonateEx),
+   POINTER(MushroomEx),
    POINTER(HideThing),
    POINTER(UnHideThing),
    POINTER(RestoreArtifact),
    POINTER(RestoreSpecialThing1),
    POINTER(RestoreSpecialThing2),
    POINTER(SargAttack12),
+   POINTER(SelfDestruct),
+   POINTER(TurnProjectile),
+   POINTER(SubtractAmmo),
 
    // haleyjd 07/13/03: nuke specials
    POINTER(PainNukeSpec),
@@ -1828,7 +1848,6 @@ deh_bexptr deh_bexptrs[] =
    POINTER(FirePhoenixPL1),
    POINTER(InitPhoenixPL2),
    POINTER(FirePhoenixPL2),
-   POINTER(ShutdownPhoenixPL2),
    POINTER(GauntletAttack),
 
    // MaxW: 2018/01/02: Heretic artifact use pointers
@@ -1919,13 +1938,14 @@ deh_bexptr deh_bexptrs[] =
    POINTER(SetSpecial),
    POINTER(SetTranslucent),
    POINTER(Jump),
+   POINTER(SeekerMissile),
 
    // ETERNITY TC ptrs -- TODO: eliminate these
    POINTER(FogSpawn),
    POINTER(FogMove),
 
-   // This NULL entry must be the last in the list
-   { NULL, "NULL" } // Ty 05/16/98
+   // This nullptr entry must be the last in the list
+   { nullptr, "NULL" } // Ty 05/16/98
 };
 
 // haleyjd 03/14/03: Just because its null-terminated doesn't mean 
@@ -2044,7 +2064,7 @@ dehstr_t *D_GetBEXStr(const char *string)
 
    // hash chain empty -- not found
    if(bexstrhashchains[key] == deh_numstrlookup)
-      return NULL;
+      return nullptr;
 
    dehstr = &deh_strlookup[bexstrhashchains[key]];
 
@@ -2053,7 +2073,7 @@ dehstr_t *D_GetBEXStr(const char *string)
    {
       // end of hash chain -- not found
       if(dehstr->bnext == deh_numstrlookup)
-         return NULL;
+         return nullptr;
       else
          dehstr = &deh_strlookup[dehstr->bnext];
    }
@@ -2078,7 +2098,7 @@ dehstr_t *D_GetDEHStr(const char *string)
 
    // hash chain empty -- not found
    if(dehstrhashchains[key] == deh_numstrlookup)
-      return NULL;
+      return nullptr;
 
    dehstr = &deh_strlookup[dehstrhashchains[key]];
 
@@ -2087,7 +2107,7 @@ dehstr_t *D_GetDEHStr(const char *string)
    {
       // end of hash chain -- not found
       if(dehstr->dnext == deh_numstrlookup)
-         return NULL;
+         return nullptr;
       else
          dehstr = &deh_strlookup[dehstr->dnext];
    }
@@ -2107,9 +2127,9 @@ const char *DEH_String(const char *mnemonic)
 {
    dehstr_t *dehstr;
 
-   // allow NULL mnemonic to return NULL
-   if(mnemonic == NULL)
-      return NULL;
+   // allow nullptr mnemonic to return nullptr
+   if(mnemonic == nullptr)
+      return nullptr;
 
    // 05/31/08: modified to return mnemonic on unknown string
    if(!(dehstr = D_GetBEXStr(mnemonic)))
@@ -2191,7 +2211,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
 
    // is chain empty?
    if(bexcpchains[key] == -1)
-      return NULL; // doesn't exist
+      return nullptr; // doesn't exist
 
    bexptr = &deh_bexptrs[bexcpchains[key]];
 
@@ -2199,7 +2219,7 @@ deh_bexptr *D_GetBexPtr(const char *mnemonic)
    {
       // end of hash chain?
       if(bexptr->next == -1)
-         return NULL; // doesn't exist
+         return nullptr; // doesn't exist
       else
          bexptr = &deh_bexptrs[bexptr->next];
    }
@@ -2247,28 +2267,28 @@ void D_BuildBEXTables()
 
    // haleyjd 03/11/03: must be dynamic now
    // 10/17/03: allocate all the names through a single pointer
-   spritestr = (char *)(Z_Calloc(NUMSPRITES, 5, PU_STATIC, NULL));
+   spritestr = ecalloctag(char *, NUMSPRITES, 5, PU_STATIC, nullptr);
 
-   deh_spritenames = (char **)(Z_Malloc((NUMSPRITES+1)*sizeof(char *),PU_STATIC,0));
+   deh_spritenames = emalloctag(char **, (NUMSPRITES+1)*sizeof(char *),PU_STATIC, nullptr);
 
    for(i = 0; i < NUMSPRITES; ++i)
    {
       deh_spritenames[i] = spritestr + i * 5;
       strncpy(deh_spritenames[i], sprnames[i], 4);
    }
-   deh_spritenames[NUMSPRITES] = NULL;
+   deh_spritenames[NUMSPRITES] = nullptr;
 
    // 09/07/05: allocate all music names through one pointer
-   musicstr = (char *)(Z_Calloc(NUMMUSIC, 7, PU_STATIC, 0));
+   musicstr = ecalloctag(char *, NUMMUSIC, 7, PU_STATIC, nullptr);
 
-   deh_musicnames = (char **)(Z_Malloc((NUMMUSIC+1)*sizeof(char *), PU_STATIC, 0));
+   deh_musicnames = emalloctag(char **, (NUMMUSIC+1)*sizeof(char *), PU_STATIC, nullptr);
 
    for(i = 1; i < NUMMUSIC; ++i)
    {
       deh_musicnames[i] = musicstr + i * 7;
       strncpy(deh_musicnames[i], S_music[i].name, 6);
    }
-   deh_musicnames[0] = deh_musicnames[NUMMUSIC] = NULL;
+   deh_musicnames[0] = deh_musicnames[NUMMUSIC] = nullptr;
 }
 
 //
@@ -2280,13 +2300,13 @@ void D_BuildBEXTables()
 // all at once. This allows EDF to be extended for loading from
 // wad files.
 
-typedef struct dehqueueitem_s
+struct dehqueueitem_t
 {
    mqueueitem_t mqitem; // this must be first
 
    char name[PATH_MAX+1];
-   int  lumpnum;   
-} dehqueueitem_t;
+   int  lumpnum;
+};
 
 static mqueue_t dehqueue;
 
@@ -2323,7 +2343,7 @@ void D_QueueDEH(const char *filename, int lumpnum)
 
 // DeHackEd support - Ty 03/09/97
 // killough 10/98:
-// Add lump number as third argument, for use when filename==NULL
+// Add lump number as third argument, for use when filename==nullptr
 void ProcessDehFile(const char *filename, const char *outfilename, int lump);
 
 // killough 10/98: support -dehout filename
@@ -2336,7 +2356,7 @@ static const char *D_dehout()
    if(!p)
       p = M_CheckParm("-bexout");
    
-   return (p && ++p < myargc) ? myargv[p] : NULL;
+   return (p && ++p < myargc) ? myargv[p] : nullptr;
 }
 
 //
@@ -2360,7 +2380,7 @@ void D_ProcessDEHQueue()
       // it's a file
       if(dqitem->lumpnum != -1)
       {
-         ProcessDehFile(NULL, D_dehout(), dqitem->lumpnum);
+         ProcessDehFile(nullptr, D_dehout(), dqitem->lumpnum);
       }
       else
       {

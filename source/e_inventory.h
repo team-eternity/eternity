@@ -30,6 +30,7 @@
 // doesn't rebuild if you modify this header.
 #include "d_player.h"
 
+class MetaKeyIndex;
 class MetaTable;
 
 extern inventoryindex_t e_maxvisiblesortorder;
@@ -106,7 +107,7 @@ extern const char *powerStrings[NUMPOWERS];
 
 //
 // Item Effect
-// 
+//
 // An item effect is a MetaTable. The properties in the table depend on the type
 // of section that instantiated the effect (and therefore what its purpose is).
 //
@@ -123,7 +124,7 @@ enum pickupflags_e : unsigned int
    PFXF_LEAVEINMULTI      = 0x00000002, // item is left in multiplayer games
    PFXF_NOSCREENFLASH     = 0x00000004, // does not cause bonuscount increment
    PFXF_SILENTNOBENEFIT   = 0x00000008, // no pickup effects if picked up without benefit
-   PXFX_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
+   PFXF_COMMERCIALONLY    = 0x00000010, // can only be picked up in commercial gamemodes
    PFXF_GIVESBACKPACKAMMO = 0x00000020, // gives backpack ammo
 };
 
@@ -195,8 +196,11 @@ bool E_PlayerCanUnlock(const player_t *player, int lockID, bool remote);
 // Get the automap color for a lockdef
 int E_GetLockDefColor(int lockID);
 
-// Tries to move the inventory cursor 'amount' right.
-bool E_MoveInventoryCursor(const player_t *player, int amount, int &cursor);
+// Tries to move the inventory cursor 'amount' right
+bool E_MoveInventoryCursor(const player_t *player, const int amount, int &cursor);
+
+// Checks if inventory cursor can be moved 'amount' right without mutating cursor
+bool E_CanMoveInventoryCursor(const player_t *player, const int amount, const int cursor);
 
 // Says if a player possesses at least one item w/ +invbar
 bool E_PlayerHasVisibleInvItem(const player_t *player);
@@ -212,17 +216,17 @@ itemeffect_t *E_EffectForInventoryIndex(const player_t *player,
                                         inventoryindex_t idx);
 
 // Get the slot being used for a particular inventory item, by ID, if one
-// exists. Returns NULL if the item isn't in the player's inventory.
+// exists. Returns nullptr if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemID(const player_t *player,
                                           inventoryitemid_t id);
 
 // Get the slot being used for a particular inventory item, by item pointer, if
-// one exists. Returns NULL if the item isn't in the player's inventory.
+// one exists. Returns nullptr if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItem(const player_t *player,
                                         const itemeffect_t *effect);
 
-// Get the slot being used for a particular inventory item, by name, if one 
-// exists. Returns NULL if the item isn't in the player's inventory.
+// Get the slot being used for a particular inventory item, by name, if one
+// exists. Returns nullptr if the item isn't in the player's inventory.
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
                                             const char *name);
 
@@ -245,7 +249,7 @@ int E_GetItemOwnedAmount(const player_t *player, const itemeffect_t *artifact);
 // Get amount of an item owned by name
 int E_GetItemOwnedAmountName(const player_t *player, const char *name);
 
-// Place an item into a player's inventory. 
+// Place an item into a player's inventory.
 bool E_GiveInventoryItem(player_t *player, const itemeffect_t *artifact, int amount = -1);
 
 e_pickupfx_t *E_PickupFXForName(const char *name);
@@ -275,6 +279,21 @@ void E_ClearInventory(player_t *player);
 // Get allocated size of player inventory arrays
 int E_GetInventoryAllocSize();
 
+int E_GetPClassHealth(const itemeffect_t &effect, size_t keyIndex, const playerclass_t &pclass,
+                      int def);
+int E_GetPClassHealth(const itemeffect_t &effect, const char *key, const playerclass_t &pclass,
+                      int def);
+
+extern MetaKeyIndex keyAmount;
+extern MetaKeyIndex keyBackpackAmount;
+extern MetaKeyIndex keyClass;
+extern MetaKeyIndex keyClassName;
+extern MetaKeyIndex keyItemID;
+extern MetaKeyIndex keyMaxAmount;
+extern MetaKeyIndex keyBackpackMaxAmt;
+extern MetaKeyIndex keyInvBar;
+extern MetaKeyIndex keyAmmoGiven;
+
 //
 // EDF-Only Definitions
 //
@@ -288,6 +307,14 @@ int E_GetInventoryAllocSize();
 #define EDF_SEC_POWERFX  "powereffect"
 #define EDF_SEC_WEAPGFX  "weapongiver"
 #define EDF_SEC_ARTIFACT "artifact"
+
+#define EDF_SEC_HEALTHFXDELTA "healthdelta"
+#define EDF_SEC_ARMORFXDELTA  "armordelta"
+#define EDF_SEC_AMMOFXDELTA   "ammodelta"
+#define EDF_SEC_POWERFXDELTA  "powerdelta"
+#define EDF_SEC_WEAPGFXDELTA  "weapongiverdelta"
+#define EDF_SEC_ARTIFACTDELTA "artifactdelta"
+
 #define EDF_SEC_SPRPKUP  "pickupitem"
 #define EDF_SEC_PICKUPFX "pickupeffect"
 #define EDF_SEC_LOCKDEF  "lockdef"
@@ -299,6 +326,14 @@ extern cfg_opt_t edf_ammofx_opts[];
 extern cfg_opt_t edf_powerfx_opts[];
 extern cfg_opt_t edf_weapgfx_opts[];
 extern cfg_opt_t edf_artifact_opts[];
+
+extern cfg_opt_t edf_healthfx_delta_opts[];
+extern cfg_opt_t edf_armorfx_delta_opts[];
+extern cfg_opt_t edf_ammofx_delta_opts[];
+extern cfg_opt_t edf_powerfx_delta_opts[];
+extern cfg_opt_t edf_weapgfx_delta_opts[];
+extern cfg_opt_t edf_artifact_delta_opts[];
+
 extern cfg_opt_t edf_sprpkup_opts[];
 extern cfg_opt_t edf_pkupfx_opts[];
 extern cfg_opt_t edf_lockdef_opts[];

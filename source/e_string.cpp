@@ -103,7 +103,7 @@ static void E_DelStringFromNumHash(edf_string_t *str)
 // Creates an EDF string object with the given value which is hashable
 // by one or two different keys. The mnemonic key is required and must
 // be 128 or fewer characters long. The numeric key is optional. If a
-// negative value is passed as the numeric key, the object will not be 
+// negative value is passed as the numeric key, the object will not be
 // added to the numeric hash table.
 //
 edf_string_t *E_CreateString(const char *value, const char *key, int num)
@@ -121,10 +121,10 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
          // If old key is >= 0, must remove from hash first
          if(newStr->numkey >= 0)
             E_DelStringFromNumHash(newStr);
-         
+
          // Set new key
          newStr->numkey = num;
-         
+
          // If new key >= 0, add back to hash
          if(newStr->numkey >= 0)
             E_AddStringToNumHash(newStr);
@@ -134,26 +134,26 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
    {
       // Create a new string object
       newStr = estructalloc(edf_string_t, 1);
-      
+
       // copy keys into string object
       if(strlen(key) >= sizeof(newStr->key))
       {
-         E_EDFLoggedErr(2, 
+         E_EDFLoggedErr(2,
             "E_CreateString: invalid string mnemonic '%s'\n", key);
       }
       strncpy(newStr->key, key, sizeof(newStr->key));
-      
+
       newStr->numkey = num;
-      
+
       // duplicate value
       newStr->string = estrdup(value);
-      
+
       // add to hash tables
-      
+
       int keyval = D_HashTableKey(newStr->key) % NUM_EDFSTR_CHAINS;
       newStr->next = edf_str_chains[keyval];
       edf_str_chains[keyval] = newStr;
-      
+
       // numeric key is not required
       if(num >= 0)
          E_AddStringToNumHash(newStr);
@@ -166,7 +166,7 @@ edf_string_t *E_CreateString(const char *value, const char *key, int num)
 // E_StringForName
 //
 // Returns a pointer to an EDF string given a mnemonic value.
-// Returns NULL if not found.
+// Returns nullptr if not found.
 //
 edf_string_t *E_StringForName(const char *key)
 {
@@ -198,7 +198,7 @@ edf_string_t *E_GetStringForName(const char *key)
 // E_StringForNum
 //
 // Returns an EDF string object for a numeric key.
-// Returns NULL if not found.
+// Returns nullptr if not found.
 //
 edf_string_t *E_StringForNum(int num)
 {
@@ -208,7 +208,7 @@ edf_string_t *E_StringForNum(int num)
    while(cur && (*cur)->numkey != num)
       cur = cur->dllNext;
 
-   return cur ? cur->dllObject : NULL;
+   return cur ? cur->dllObject : nullptr;
 }
 
 //
@@ -224,6 +224,21 @@ edf_string_t *E_GetStringForNum(int num)
       I_Error("E_GetStringForNum: no such string with id #%d\n", num);
 
    return str;
+}
+
+//
+// E_StringOrDehForName
+//
+// Returns an EDF string if it exists, or a DeHackEd string.
+//
+const char *E_StringOrDehForName(const char *mnemonic)
+{
+   const edf_string_t *result = E_StringForName(mnemonic);
+
+   if(!result)
+      return DEH_String(mnemonic);
+   else
+      return result->string;
 }
 
 //
@@ -259,7 +274,7 @@ void E_ProcessStrings(cfg_t *cfg)
       bex       = cfg_getstr(sec, ITEM_STRING_BEXDST);
       bexsource = cfg_getstr(sec, ITEM_STRING_BEXSRC);
 
-      // if bexsource is a valid BEX mnemonic, the value to use becomes the 
+      // if bexsource is a valid BEX mnemonic, the value to use becomes the
       // value of that BEX string rather than any specified in this string object.
       if((dehstr = D_GetBEXStr(bexsource)))
          value = *(dehstr->ppstr);
@@ -278,7 +293,6 @@ void E_ProcessStrings(cfg_t *cfg)
       }
    }
 }
-
 
 // EOF
 
