@@ -63,8 +63,8 @@
 static void P_spawnGlitter(Mobj *actor, int type)
 {
    // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
-   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
    Mobj *mo = P_SpawnMobj(pos.x, pos.y,
@@ -1133,9 +1133,9 @@ void A_BeastPuff(actionargs_t *actionargs)
       fixed_t x, y, z;
       Mobj *mo;
 
-      x = actor->x + (P_SubRandom(pr_puffy) << 10);      
-      y = actor->y + (P_SubRandom(pr_puffy) << 10);
       z = actor->z + (P_SubRandom(pr_puffy) << 10);
+      y = actor->y + (P_SubRandom(pr_puffy) << 10);
+      x = actor->x + (P_SubRandom(pr_puffy) << 10);
 
       mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFFY));
 
