@@ -2537,8 +2537,8 @@ thingtype HArtiInvisibility : HereticArtifact, 7075, 400
   states
   @"
   Spawn:
-    INVS A -1 bright
-    stop
+    INVS A 350 bright
+    loop
   "@
 }
 
@@ -2593,8 +2593,8 @@ thingtype HArtiTomeOfPower : HereticArtifact, 7086, 404
   states
   @"
   Spawn:
-    PWBK A -1
-    stop
+    PWBK A 350
+    loop
   "@
 }
 
@@ -2621,8 +2621,8 @@ thingtype HArtiSuperHeal : HereticArtifact, 7032, 406
   states
   @"
   Spawn:
-    SPHL A -1
-    stop
+    SPHL A 350
+    loop
   "@
 }
 
@@ -3242,7 +3242,7 @@ thingtype HereticBloodSplatter : Mobj, -1, 433
 {
   radius 2.0
   height 4.0
-  cflags NOBLOCKMAP|MISSILE|DROPOFF|NOSPLASH|CANNOTPUSH|NOZERODAMAGE /*|NOTELEPORT*/
+  cflags NOBLOCKMAP|MISSILE|DROPOFF|NORANDOMIZE|NOSPLASH|CANNOTPUSH|NOZERODAMAGE /*|NOTELEPORT*/
   states
   @"
   Spawn:
