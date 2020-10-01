@@ -563,7 +563,7 @@ void P_SpawnSorcSpots()
 
 void A_Srcr2Decide(actionargs_t *actionargs)
 {
-   static int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
+   static const int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
 
    Mobj *actor = actionargs->actor;
    int   index = actor->health / (actor->getModifiedSpawnHealth() / 8);

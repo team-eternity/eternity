@@ -810,12 +810,8 @@ void A_WeaponReady(actionargs_t *actionargs)
    }
 
    // get out of attack state
-   if(mo->state == states[mo->info->missilestate] || 
-      mo->state == states[player->pclass->altattack])
-   {
+   if(mo->state == states[mo->info->missilestate] || mo->state == states[player->pclass->altattack])
       P_SetMobjState(mo, mo->info->spawnstate);
-   }
-
 
    // Play sound if the readyweapon has a sound to play and the current
    // state is the ready state, and do it only 50% of the time if the

@@ -1751,8 +1751,7 @@ static void E_processCollectionSpawn(mobjinfo_t *mi, cfg_t *spawn)
    int         coopchance = cfg_getint(spawn, ITEM_TNG_COLSPAWN_COOP);
    int         dmchance   = cfg_getint(spawn, ITEM_TNG_COLSPAWN_DM);
 
-   auto mcs = new MetaCollectionSpawn("collectionspawn", type, 
-                                      spchance, coopchance, dmchance);
+   auto mcs = new MetaCollectionSpawn("collectionspawn", type, spchance, coopchance, dmchance);
    mi->meta->addObject(mcs);
 
    // create the global collection for the spot thingtype, if it hasn't been

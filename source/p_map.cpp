@@ -973,8 +973,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          // TODO: ripper sound - gamemode dependent? thing dependent?
          //S_StartSound(clip.thing, sfx_ripslop);
 
-         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
-                      clip.thing->info->mod);
+         P_DamageMobj(thing, clip.thing, clip.thing->target, damage, clip.thing->info->mod);
          
          if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
          { 

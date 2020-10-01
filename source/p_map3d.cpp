@@ -346,8 +346,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    blockdist = thing->radius + clip.thing->radius;
 
    // ioanch 20160110: portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
-      thing->groupid);
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
 
    if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
       D_abs(thing->y - link->y - clip.y) >= blockdist)
