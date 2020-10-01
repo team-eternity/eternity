@@ -1445,8 +1445,7 @@ void P_BossTeleport(bossteleport_t *bt)
 
    if(P_TeleportMove(boss, targ->x, targ->y, false))
    {
-      if(bt->hereThere <= BOSSTELE_BOTH &&
-         bt->hereThere != BOSSTELE_NONE)
+      if(bt->hereThere <= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
       {
          Mobj *mo = P_SpawnMobj(prevx, prevy, prevz + bt->zpamt, bt->fxtype);
          S_StartSound(mo, bt->soundNum);
@@ -1456,8 +1455,7 @@ void P_BossTeleport(bossteleport_t *bt)
          P_SetMobjState(boss, bt->state);
       S_StartSound(boss, bt->soundNum);
 
-      if(bt->hereThere >= BOSSTELE_BOTH &&
-         bt->hereThere != BOSSTELE_NONE)
+      if(bt->hereThere >= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
          P_SpawnMobj(boss->x, boss->y, boss->z + bt->zpamt, bt->fxtype);
 
       boss->z = boss->zref.floor;

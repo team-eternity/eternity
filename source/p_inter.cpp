@@ -1569,8 +1569,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       }
    }
 
-   if(P_Random(pr_painchance) < target->info->painchance &&
-      !(target->flags & MF_SKULLFLY))
+   if(P_Random(pr_painchance) < target->info->painchance && !(target->flags & MF_SKULLFLY))
    {
       //killough 11/98: see below
       if(demo_version >= 203)
