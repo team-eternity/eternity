@@ -29,9 +29,11 @@
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_compare.h"
+#include "p_info.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"
@@ -402,7 +404,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
 
-   if(!ancient_demo && abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
+   if(!vanilla_heretic && abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
    {
       if(ystep < 0)
          partialx = FRACUNIT - partialx;
@@ -420,9 +422,9 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
    mapx = xt1;
    mapy = yt1;
 
-   int countmax = ancient_demo ? 64 : 100;
-
-   for(int count = 0; count < countmax; count++)
+   // VANILLA_HERETIC: vanilla Heretic is limited at 64. Keep this in mind in case we find a
+   // desyncing demo
+   for(int count = 0; count < 100; count++)
    {
       // if a flag is set, only accept blocks with line portals (needed for
       // some function in the code)
@@ -438,7 +440,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
       if((mapxstep | mapystep) == 0)
          break;
 
-      if(ancient_demo)
+      if(vanilla_heretic)
       {
          // vanilla Heretic demo compatibility
          if(mapx == xt2 && mapy == yt2)

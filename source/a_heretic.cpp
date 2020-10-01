@@ -1590,16 +1590,16 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
    }
    
    // test if tracer has become an invalid target
-   if(!ancient_demo && actor->tracer && 
-      (actor->tracer->flags3 & MF3_GHOST ||
-       actor->tracer->health < 0))
+   // VANILLA_HERETIC: see if the health check needs to be excluded
+   if(actor->tracer && (actor->tracer->flags3 & MF3_GHOST || actor->tracer->health < 0))
    {
       Mobj *originator = actor->target;
       Mobj *origtarget = originator ? originator->target : nullptr;
 
       // See if the Lich has a new target; if so, maybe chase it now.
       // This keeps the tornado from sitting around uselessly.
-      if(originator && origtarget && actor->tracer != origtarget &&
+      // Do not do this in case of vanilla Heretic compatibility
+      if(!vanilla_heretic && originator && origtarget && actor->tracer != origtarget &&
          origtarget->health > 0 &&
          !(origtarget->flags3 & MF3_GHOST) &&
          !(originator->flags & origtarget->flags & MF_FRIEND))

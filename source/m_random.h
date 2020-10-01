@@ -284,13 +284,7 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
 #define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
 
-//
-// Heretic demo compatibility switch
-//
-inline static int HT_Random(pr_class_t pr_class)
-{
-   return ancient_demo ? P_Random(pr_class) : M_Random();
-}
+int HT_Random(pr_class_t pr_class);
 
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);

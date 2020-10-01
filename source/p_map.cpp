@@ -259,17 +259,15 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
 
    bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
 
-   if(mo->flags4 & MF4_FLY && (!ancient_demo || !onfloor))
-   {
+   // TODO: fix the flight behavior to match Heretic's
+   if(mo->flags4 & MF4_FLY && (!vanilla_heretic || !onfloor))
       friction = FRICTION_FLY;
-   }
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
       // Air friction only affects players
       friction = FRACUNIT - LevelInfo.airFriction;
    }   
-   else if(ancient_demo &&
-           (sec = mo->subsector->sector)->flags & SECF_FRICTION &&
+   else if(vanilla_heretic && (sec = mo->subsector->sector)->flags & SECF_FRICTION &&
            sec->friction != ORIG_FRICTION)
    {
       friction = sec->friction;
@@ -1622,10 +1620,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          thing->groupid = oldgroupid;
       }
 
-      if((groupidchange && !check)
-         || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
+      if((groupidchange && !check) || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
-         if(ancient_demo)
+         if(vanilla_heretic)
             return false;
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
@@ -1736,7 +1733,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
                P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
-         else if(P_Use3DClipping() && thing->z < clip.zref.floor && !ancient_demo)
+         else if(P_Use3DClipping() && thing->z < clip.zref.floor && !vanilla_heretic)
          {
             // TODO: make sure to add projectile impact checking if MISSILE
             // haleyjd: OVER_UNDER:

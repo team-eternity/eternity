@@ -30,9 +30,11 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "m_random.h"
 #include "a_small.h"
+#include "p_info.h"
 
 #ifdef RANDOM_LOG
 void M_RandomLog(E_FORMAT_STRING(const char *format), ...)
@@ -391,6 +393,14 @@ int P_SubRandom(pr_class_t pr_class)
 int P_RangeRandom(pr_class_t pr_class, int min, int max)
 {
    return (P_Random(pr_class) % (max - min + 1)) + min;
+}
+
+//
+// Heretic demo compatibility switch
+//
+int HT_Random(pr_class_t pr_class)
+{
+   return vanilla_heretic ? P_Random(pr_class) : M_Random();
 }
 
 //

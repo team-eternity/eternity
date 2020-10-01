@@ -488,7 +488,7 @@ void P_XYMovement(Mobj* mo)
    }
 
    // handle winds here when demo compatible
-   if(ancient_demo && mo->flags3 & MF3_WINDTHRUST)
+   if(vanilla_heretic && mo->flags3 & MF3_WINDTHRUST)
    {
       const sector_t &sec = *mo->subsector->sector;
       if(sec.hticPushType == SECTOR_HTIC_WIND)
@@ -580,7 +580,7 @@ void P_XYMovement(Mobj* mo)
                mo->momx = mo->momy = 0;
             }
          }
-         else if(demo_version <= 203 && !ancient_demo ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
+         else if(demo_version <= 203 && !vanilla_heretic ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
          {
             // Checking against "player" is still needed for MBF and lower demo
             // compatibility. Relevant for respawned players' old corpses.
@@ -733,7 +733,7 @@ void P_XYMovement(Mobj* mo)
    else
    {
       // BOOM friction compatibility 
-      if(demo_version <= 201 && !ancient_demo)
+      if(demo_version <= 201 && !vanilla_heretic)
       {
          // phares 3/17/98
          // Friction will have been adjusted by friction thinkers for icy
@@ -743,7 +743,7 @@ void P_XYMovement(Mobj* mo)
          mo->momy = FixedMul(mo->momy, mo->friction);
          mo->friction = ORIG_FRICTION; // reset to normal for next tic
       }
-      else if(demo_version <= 202 && !ancient_demo)
+      else if(demo_version <= 202 && !vanilla_heretic)
       {
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
 
@@ -1001,7 +1001,7 @@ floater:
    // haleyjd 06/05/12: flying players
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
    {
-      if(ancient_demo)
+      if(vanilla_heretic)
       {
          if(leveltime & 2)
             mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
@@ -1070,8 +1070,7 @@ floater:
          }
          return;
       }
-      if(ancient_demo && mo->info->crashstate != NullStateNum &&
-         mo->flags & MF_CORPSE)
+      if(vanilla_heretic && mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE)
       {
          P_SetMobjState(mo, mo->info->crashstate);
          return;
@@ -1100,7 +1099,7 @@ floater:
    }
 
    // new footclip system
-   if(!ancient_demo)
+   if(!vanilla_heretic)
       P_AdjustFloorClip(mo);
 
    if(mo->z + mo->height > mo->zref.ceiling)
@@ -1418,7 +1417,7 @@ void Mobj::Think()
    }
 
    // Heretic Wind transfer specials
-   if(!ancient_demo && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
+   if(!vanilla_heretic && (flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
    {
       sector_t *sec = subsector->sector;
 
@@ -1442,7 +1441,7 @@ void Mobj::Think()
 
    if(flags2 & MF2_FLOATBOB)
    {
-      if(ancient_demo)  // apply this crazy rule here
+      if(vanilla_heretic)  // apply this crazy rule here
          lz = z = zref.floor + FloatBobOffsets[health++ & 63];
       else
       {
@@ -1462,7 +1461,7 @@ void Mobj::Think()
          if(!(onmo = P_GetThingUnder(this)))
          {
             P_ZMovement(this);
-            if(!ancient_demo) // in vanilla Heretic it stays on all the time!
+            if(!vanilla_heretic) // in vanilla Heretic it stays on all the time!
                intflags &= ~MIF_ONMOBJ;
          }
          else
@@ -1486,7 +1485,7 @@ void Mobj::Think()
                P_PlayerHitFloor(this, true);
             }
 
-            if(!ancient_demo && onmo->z + onmo->height - z <= STEPSIZE)
+            if(!vanilla_heretic && onmo->z + onmo->height - z <= STEPSIZE)
             {
                if(player && player->mo == this)
                {
@@ -1500,7 +1499,7 @@ void Mobj::Think()
                }
                z = onmo->z + onmo->height;
             }
-            if(!ancient_demo || (player && momz < 0))
+            if(!vanilla_heretic || (player && momz < 0))
             {
                intflags |= MIF_ONMOBJ;
                momz = 0;
@@ -1509,7 +1508,7 @@ void Mobj::Think()
             {
                player->momx = momx = onmo->momx;
                player->momy = momy = onmo->momy;
-               if(ancient_demo && onmo->z < onmo->zref.floor)
+               if(vanilla_heretic && onmo->z < onmo->zref.floor)
                {
                   z += onmo->zref.floor - onmo->z;
                   if (onmo->player)
@@ -1520,8 +1519,7 @@ void Mobj::Think()
                   onmo->z = onmo->zref.floor;
                }
             }
-            if(!ancient_demo && info->crashstate != NullStateNum
-               && flags & MF_CORPSE
+            if(!vanilla_heretic && info->crashstate != NullStateNum && flags & MF_CORPSE
                && !(intflags & MIF_CRASHED))
             {
                intflags |= MIF_CRASHED;
@@ -1555,10 +1553,8 @@ void Mobj::Think()
    P_CheckPortalTeleport(this);
 
    // handle crashstate here
-   if(info->crashstate != NullStateNum
-      && flags & MF_CORPSE
-      && !(intflags & MIF_CRASHED) && !ancient_demo
-      && z <= zref.floor)
+   if(info->crashstate != NullStateNum && flags & MF_CORPSE && !(intflags & MIF_CRASHED) &&
+      !vanilla_heretic && z <= zref.floor)
    {
       intflags |= MIF_CRASHED;
       P_SetMobjState(this, info->crashstate);
@@ -2427,7 +2423,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    if(mthing->type >= 1200 && mthing->type < 1300)         // enviro sequences
    {
       i = E_SafeThingName("EEEnviroSequence");
-      norandomcall = ancient_demo;
+      norandomcall = vanilla_heretic;
    }
    else if(mthing->type >= 1400 && mthing->type < 1500)    // sector sequence
       i = E_SafeThingName("EESectorSequence");
@@ -2442,7 +2438,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
       // killough 8/23/98: use table for faster lookup
       i = P_FindDoomedNum(mthing->type);
       if(mthing->type == 7056)
-         norandomcall = ancient_demo;
+         norandomcall = vanilla_heretic;
    }
 
    // phares 5/16/98:
@@ -3147,9 +3143,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
       int mask = demo_version < 203 ? false : true;
       bool hadmask = !!mask;
       // Aspiratory Heretic demo support
-      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
-
-      bool avoidfriendsideaim = demo_version >= 401 || hereticdemo;
+      bool avoidfriendsideaim = demo_version >= 401 || vanilla_heretic;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3244,8 +3238,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
       // Aspiratory Heretic demo support
-      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
-      int mask = demo_version < 203 && !hereticdemo ? false : true;
+      int mask = demo_version < 203 && !vanilla_heretic ? false : true;
       bool hadmask = !!mask;  // mark if the mask was set initially
       do
       {
@@ -3394,7 +3387,7 @@ void P_AdjustFloorClip(Mobj *thing)
    fixed_t shallowestclip = 0x7fffffff;
    const msecnode_t *m;
 
-   if(ancient_demo)
+   if(vanilla_heretic)
    {
       thing->floorclip = E_SectorFloorClip(thing->subsector->sector);
       if(thing->floorclip != oldclip && thing->player)

@@ -31,9 +31,11 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "i_system.h"
 #include "c_runcmd.h"
+#include "p_info.h"
 #include "p_mobjcol.h"
 #include "s_sndseq.h"
 #include "e_things.h"
@@ -447,7 +449,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
    bool isPlaying = false;
    
    // if delaying, count down delay
-   if(ancient_demo)
+   if(vanilla_heretic)
    {
       if(curSeq->delayCounter && --curSeq->delayCounter)
          return;
@@ -474,7 +476,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          S_StartSeqSound(curSeq, false);
       }
       curSeq->cmdPtr += 2;
-      if(ancient_demo && curSeq == EnviroSequence)
+      if(vanilla_heretic && curSeq == EnviroSequence)
          S_RunSequence(curSeq);
       break;
    case SEQ_CMD_WAITSOUND: // waiting on a sound to finish
@@ -508,9 +510,9 @@ static void S_RunSequence(SndSeq_t *curSeq)
       {
          int min = CMD_ARG1(data);
          int max = CMD_ARG2(data);
-         curSeq->delayCounter = ancient_demo ? min +
-         (HT_Random(pr_envirotics) % (max - min + 1)) :
-         (int)M_RangeRandomEx(min, max);
+         curSeq->delayCounter = vanilla_heretic ? min +
+               (HT_Random(pr_envirotics) % (max - min + 1)) :
+               (int)M_RangeRandomEx(min, max);
       }
       curSeq->cmdPtr += 3;
       break;
@@ -522,7 +524,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
       curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
-      if(ancient_demo && curSeq == EnviroSequence)
+      if(vanilla_heretic && curSeq == EnviroSequence)
          S_RunSequence(curSeq);
       break;
    case SEQ_CMD_SETVOLUMEREL: // set relative volume
@@ -533,7 +535,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
       curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
-      if(ancient_demo && curSeq == EnviroSequence)
+      if(vanilla_heretic && curSeq == EnviroSequence)
          S_RunSequence(curSeq);
       break;
    case SEQ_CMD_SETATTENUATION: // set attenuation
@@ -548,7 +550,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
       if(curSeq == EnviroSequence)
       {
          enviroSeqFinished = true;
-         if(ancient_demo)
+         if(vanilla_heretic)
             S_clearEnviroSequence();   // clear it now if demo
       }
       else if(curSeq->sequence->stopsound == nullptr)
@@ -644,12 +646,12 @@ static void S_ResetEnviroSeqEngine()
    EnviroSequence    = nullptr;
    enviroSeqFinished = true;
 
-   if(!enviroSpots.isEmpty() && !ancient_demo)
+   if(!enviroSpots.isEmpty() && !vanilla_heretic)
       nextEnviroSpot = enviroSpots.getRandom(pr_misc);
    else
       nextEnviroSpot = nullptr; // broken, but shouldn't matter
 
-   if(ancient_demo)
+   if(vanilla_heretic)
       enviroTics = 10 * TICRATE;
    else
       enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
@@ -680,13 +682,13 @@ static void S_clearEnviroSequence()
    memset(&enviroSeq, 0, sizeof(SndSeq_t));
    EnviroSequence = NULL;
 
-   if(ancient_demo)
+   if(vanilla_heretic)
       enviroTics = 6 * TICRATE + P_Random(pr_envirotics);
    else
       enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
                                         EnviroSeqManager.maxEnviroWait);
 
-   nextEnviroSpot = enviroSpots.getRandom(ancient_demo ? pr_envirospot : pr_misc);
+   nextEnviroSpot = enviroSpots.getRandom(vanilla_heretic ? pr_envirospot : pr_misc);
 }
 
 //
@@ -704,7 +706,7 @@ static void S_RunEnviroSequence()
       return;
 
    // if waiting, count down the wait time
-   if(ancient_demo)
+   if(vanilla_heretic)
    {
       if(enviroTics > 0 && --enviroTics)
          return;
@@ -731,7 +733,7 @@ static void S_RunEnviroSequence()
 
       if(!edfSeq) // woops, bad sequence, try another next time.
       {
-         nextEnviroSpot = enviroSpots.getRandom(ancient_demo ? pr_envirospot : pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(vanilla_heretic ? pr_envirospot : pr_misc);
          return;
       }
 
@@ -747,15 +749,15 @@ static void S_RunEnviroSequence()
 
       // possibly randomize the starting volume
       enviroSeq.volume = 
-      edfSeq->randvol ? ancient_demo ? P_Random(pr_envirospot) / 4 : M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
+      edfSeq->randvol ? vanilla_heretic ? P_Random(pr_envirospot) / 4 : M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
                          : edfSeq->volume;
 
       EnviroSequence    = &enviroSeq; // now playing an enviro sequence
       enviroSeqFinished = false;      // sequence is not finished
-      if(ancient_demo)
+      if(vanilla_heretic)
          S_RunSequence(EnviroSequence);   // on demos, already play it
    }
-   else if(ancient_demo)
+   else if(vanilla_heretic)
    {
       // Heretic demos only initialize the next sequence now.
       enviroTics = 6 * TICRATE + P_Random(pr_envirotics);

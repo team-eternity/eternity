@@ -32,6 +32,7 @@
 
 #include "z_zone.h"
 
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_hash.h"
 #include "e_lib.h"
@@ -39,6 +40,7 @@
 #include "metaapi.h"
 #include "metaspawn.h"
 #include "m_qstrkeys.h"
+#include "p_info.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_mobjcol.h"
@@ -158,7 +160,7 @@ void MobjCollection::moveToRandom(Mobj *actor)
    P_UnsetThingPosition(actor);
    actor->copyPosition(getRandom(pr_moverandom));
    P_SetThingPosition(actor);
-   if(!ancient_demo)
+   if(!vanilla_heretic)
       P_AdjustFloorClip(actor);
    actor->backupPosition();
 }
