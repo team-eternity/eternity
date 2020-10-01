@@ -1443,7 +1443,7 @@ void Mobj::Think()
    if(flags2 & MF2_FLOATBOB)
    {
       if(ancient_demo)  // apply this crazy rule here
-         lz = z = floorz + FloatBobOffsets[health++ & 63];
+         lz = z = zref.floor + FloatBobOffsets[health++ & 63];
       else
       {
          int idx = (floatbob + leveltime) & 63;
@@ -1509,15 +1509,15 @@ void Mobj::Think()
             {
                player->momx = momx = onmo->momx;
                player->momy = momy = onmo->momy;
-               if(ancient_demo && onmo->z < onmo->floorz)
+               if(ancient_demo && onmo->z < onmo->zref.floor)
                {
-                  z += onmo->floorz - onmo->z;
+                  z += onmo->zref.floor - onmo->z;
                   if (onmo->player)
                   {
-                     onmo->player->viewheight -= onmo->floorz - onmo->z;
-                     onmo->player->deltaviewheight = (VIEWHEIGHT - onmo->player->viewheight) >> 3;
+                     onmo->player->viewheight -= onmo->zref.floor - onmo->z;
+                     onmo->player->deltaviewheight = (onmo->player->pclass->viewheight - onmo->player->viewheight) >> 3;
                   }
-                  onmo->z = onmo->floorz;
+                  onmo->z = onmo->zref.floor;
                }
             }
             if(!ancient_demo && info->crashstate != NullStateNum
@@ -3401,7 +3401,7 @@ void P_AdjustFloorClip(Mobj *thing)
       {
          player_t *p = thing->player;
          p->viewheight -= oldclip - thing->floorclip;
-         p->deltaviewheight = (VIEWHEIGHT - p->viewheight) / 8;
+         p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
       }
       return;
    }
