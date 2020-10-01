@@ -861,7 +861,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector
             mo->momy = P_SubRandom(pr_splash) << splash->chunkyvelshift;
          mo->momz = splash->chunkbasezvel;
          if(splash->chunkzvelshift != -1)
-            mo->momz += P_SubRandom(pr_splash) << splash->chunkzvelshift;
+            mo->momz += P_Random(pr_splash) << splash->chunkzvelshift;
       }
 
       // some terrains may awaken enemies when hit
