@@ -261,7 +261,9 @@ void A_Chase(actionargs_t *actionargs)
    // modify target threshold
    if(actor->threshold)
    {
-      if(!vanilla_heretic && (!actor->target || actor->target->health <= 0))
+      // VANILLA_HERETIC: In Heretic, threshold is always --, never resets to 0. Add a check when it
+      // desyncs
+      if(!actor->target || actor->target->health <= 0)
          actor->threshold = 0;
       else
          actor->threshold--;

@@ -260,19 +260,20 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
 
    // TODO: fix the flight behavior to match Heretic's
-   if(mo->flags4 & MF4_FLY && (!vanilla_heretic || !onfloor))
+   // VANILLA_HERETIC: check if (!vanilla_heretic || !onfloor). Also check whatever is commented
+   if(mo->flags4 & MF4_FLY && !onfloor)
       friction = FRICTION_FLY;
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
       // Air friction only affects players
       friction = FRACUNIT - LevelInfo.airFriction;
    }   
-   else if(vanilla_heretic && (sec = mo->subsector->sector)->flags & SECF_FRICTION &&
-           sec->friction != ORIG_FRICTION)
-   {
-      friction = sec->friction;
-      movefactor = sec->movefactor;
-   }
+//   else if(vanilla_heretic && (sec = mo->subsector->sector)->flags & SECF_FRICTION &&
+//           sec->friction != ORIG_FRICTION)
+//   {
+//      friction = sec->friction;
+//      movefactor = sec->movefactor;
+//   }
    else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) && 
            (demo_version >= 203 || (mo->player && !compatibility)) &&
            variable_friction)
@@ -1621,8 +1622,9 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
       if((groupidchange && !check) || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
-         if(vanilla_heretic)
-            return false;
+         // VANILLA_HERETIC
+//         if(vanilla_heretic)
+//            return false;
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
          {
@@ -1726,13 +1728,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
          // too big a step up
+         // VANILLA_HERETIC
          if(clip.zref.floor - thing->z > STEPSIZE)
          {
             if(!ret)
                P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
-         else if(P_Use3DClipping() && thing->z < clip.zref.floor && !vanilla_heretic)
+         else if(P_Use3DClipping() && thing->z < clip.zref.floor/* && !vanilla_heretic*/)
          {
             // TODO: make sure to add projectile impact checking if MISSILE
             // haleyjd: OVER_UNDER:

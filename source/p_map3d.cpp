@@ -142,12 +142,13 @@ floater:
    // haleyjd 06/05/12: flying players
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
    {
-      if(vanilla_heretic)
-      {
-         if(leveltime & 2)
-            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
-      }
-      else
+      // VANILLA_HERETIC
+//      if(vanilla_heretic)
+//      {
+//         if(leveltime & 2)
+//            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+//      }
+//      else
          mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
    }
 
@@ -200,8 +201,9 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
 {
    testmobjzdata_t &data = *static_cast<testmobjzdata_t *>(context);
 
-   if(vanilla_heretic)
-      return P_testMobjZOldHeretic(thing, data);
+   // VANILLA_HERETIC
+//   if(vanilla_heretic)
+//      return P_testMobjZOldHeretic(thing, data);
 
    fixed_t blockdist = thing->radius + data.clip.thing->radius;
 
@@ -388,7 +390,8 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
-   if(!vanilla_heretic && !(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
+   // VANILLA_HERETIC
+   if(/*!vanilla_heretic && */!(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
    {
       // [RH] Let monsters walk on actors as well as floors
@@ -421,22 +424,27 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          }
       }
 
-      if(vanilla_heretic)
+      if(clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z)
       {
-         if(!(thing->flags & MF_SPECIAL) &&
-            (clip.thing->z > topz || clip.thing->z + clip.thing->height < thing->z))
+         if(thing->flags & MF_SPECIAL)
          {
-            return true;
+            // VANILLA_HERETIC: it's critical to avoid this pick-up check here.
+            if(!vanilla_heretic)
+            {
+               if(clip.thing->z >= topz && clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+                  return P_CheckPickUp(thing);
+               return true;
+            }
          }
-      }
-      else if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
-      {
-         if(thing->flags & MF_SPECIAL && clip.thing->z >= topz &&
-            clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+         else
          {
-            return P_CheckPickUp(thing);
+            // VANILLA_HERETIC: it appears that base Heretic uses strict comparisons
+//            if(!vanilla_heretic || (clip.thing->z != topz &&
+//                                    clip.thing->z + clip.thing->height != thing->z))
+            {
+               return true;
+            }
          }
-         return true;
       }
    }
 
@@ -578,7 +586,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
-   if(thing->player && !vanilla_heretic)
+   // VANILLA_HERETIC
+   if(thing->player/* && !vanilla_heretic*/)
       thing->height = realheight + STEPSIZE;
 
    // ioanch: portal aware
@@ -586,8 +595,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    if(!P_TransPortalBlockWalker(bbox, thing->groupid, true,
       [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
-         if(vanilla_heretic)
-            return P_BlockThingsIterator(x, y, PIT_CheckThing3D);
+      // VANILLA_HERETIC
+//         if(vanilla_heretic)
+//            return P_BlockThingsIterator(x, y, PIT_CheckThing3D);
          // haleyjd: from zdoom:
          Mobj *robin = nullptr;
 
@@ -691,7 +701,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
             return false;
    }
 
-   if(!vanilla_heretic && clip.zref.ceiling - clip.zref.floor < thing->height)
+   // VANILLA_HERETIC
+   if(/*!vanilla_heretic && */clip.zref.ceiling - clip.zref.floor < thing->height)
       return false;
          
    if(stepthing != nullptr)

@@ -342,7 +342,7 @@ static bool P_CrossBSPNode(int bspnum, los_t *los)
 //
 bool P_CheckSight(Mobj *t1, Mobj *t2)
 {
-   // both in modern and Heretic demo gameplay use CAM_CheckSight
+   // VANILLA_HERETIC: both in modern and Heretic demo gameplay use CAM_CheckSight
    if(full_demo_version >= make_full_version(340, 24) || vanilla_heretic)
    {
       camsightparams_t camparams;

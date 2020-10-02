@@ -288,6 +288,7 @@ void P_Ticker()
    
    P_ParticleThinker(); // haleyjd: think for particles
 
+   // VANILLA_HERETIC: it's critical to postpone S_RunSequences below
    if(!vanilla_heretic)
       S_RunSequences(); // haleyjd 06/06/06
 

@@ -1599,7 +1599,8 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
       // See if the Lich has a new target; if so, maybe chase it now.
       // This keeps the tornado from sitting around uselessly.
       // Do not do this in case of vanilla Heretic compatibility
-      if(!vanilla_heretic && originator && origtarget && actor->tracer != origtarget &&
+      // VANILLA_HERETIC: do not do this
+      if(originator && origtarget && actor->tracer != origtarget &&
          origtarget->health > 0 &&
          !(origtarget->flags3 & MF3_GHOST) &&
          !(originator->flags & origtarget->flags & MF_FRIEND))

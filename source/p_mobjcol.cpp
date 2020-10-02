@@ -160,7 +160,8 @@ void MobjCollection::moveToRandom(Mobj *actor)
    P_UnsetThingPosition(actor);
    actor->copyPosition(getRandom(pr_moverandom));
    P_SetThingPosition(actor);
-   if(!vanilla_heretic)
+   // VANILLA_HERETIC
+//   if(!vanilla_heretic)
       P_AdjustFloorClip(actor);
    actor->backupPosition();
 }
