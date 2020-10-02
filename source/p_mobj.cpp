@@ -447,6 +447,10 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
 
    mo->flags &= ~MF_MISSILE;
 
+   // VANILLA_HERETIC: "nosplash" is tied to "missile" there, so it has to be joined sometimes
+   if(vanilla_heretic)
+      mo->flags2 &= ~MF2_NOSPLASH;
+
    S_StartSound(mo, mo->info->deathsound);
 
    // haleyjd: disable any particle effects
