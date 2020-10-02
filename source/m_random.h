@@ -258,6 +258,8 @@ typedef enum {
 
   pr_wpnreadysnd,
 
+  pr_enviroticsend,
+
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
 

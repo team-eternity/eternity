@@ -276,6 +276,7 @@ static const char *M_prcString(pr_class_t pr_class)
          CASE(pr_chainwiggle);
          CASE(pr_envirospot);
          CASE(pr_envirotics);
+         CASE(pr_enviroticsend);
       default:
          return "unknown";
    }

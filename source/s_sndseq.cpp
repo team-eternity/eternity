@@ -760,7 +760,7 @@ static void S_RunEnviroSequence()
    else if(vanilla_heretic)
    {
       // Heretic demos only initialize the next sequence now.
-      enviroTics = 6 * TICRATE + P_Random(pr_envirotics);
+      enviroTics = 6 * TICRATE + P_Random(pr_enviroticsend);
       nextEnviroSpot = enviroSpots.getRandom(pr_envirospot);
    }
 }
