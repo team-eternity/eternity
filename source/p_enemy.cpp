@@ -428,6 +428,18 @@ extern  line_t **spechit;          // New code -- killough
 extern  int    numspechit;
 
 //
+// Inverts the conversion done by Heretic mapthings to Eternity
+//
+static int P_deconvertHereticDoomednum(int num)
+{
+   if((num >= 7201 && num <= 7205) || num == 7235)
+      return num - 5200;
+   if(num >= 7005 && num != 7011 && num != 7014 && num <= 7096)
+      return num - 7000;
+   return num;
+}
+
+//
 // P_Move
 //
 // Move in the current direction; returns false if the move is blocked.
@@ -485,7 +497,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    if(friction <= ORIG_FRICTION)
    {
       printf("%d: MOVEACTOR %d (%g %g %g) -> %g %g\n", gametic,
-             actor->info->doomednum, actor->x/65536., actor->y/65536.,
+             P_deconvertHereticDoomednum(actor->info->doomednum), actor->x/65536., actor->y/65536.,
              actor->z/65536., tryx/65536., tryy/65536.);
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
    }
