@@ -513,6 +513,10 @@ static void S_RunSequence(SndSeq_t *curSeq)
          curSeq->delayCounter = vanilla_heretic ? min +
                (HT_Random(pr_envirotics) % (max - min + 1)) :
                (int)M_RangeRandomEx(min, max);
+
+         // Emulate bug of enviroTics being set to 0 and causing the sounds to stop forever
+         if(vanilla_heretic && curSeq == EnviroSequence && curSeq->delayCounter == 0)
+            curSeq->delayCounter = INT_MAX;
       }
       curSeq->cmdPtr += 3;
       break;
