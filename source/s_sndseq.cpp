@@ -625,7 +625,7 @@ void S_StopAllSequences()
 EnviroSeqMgr_t EnviroSeqManager =
 {
    10*TICRATE,        // minimum start wait
-   10*TICRATE + 31,   // maximum start wait
+   10*TICRATE,        // maximum start wait
     6*TICRATE,        // minimum wait between sequences
     6*TICRATE + 255,  // maximum wait between sequences
 };
@@ -651,11 +651,7 @@ static void S_ResetEnviroSeqEngine()
    else
       nextEnviroSpot = nullptr; // broken, but shouldn't matter
 
-   if(vanilla_heretic)
-      enviroTics = 10 * TICRATE;
-   else
-      enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
-                                        EnviroSeqManager.maxStartWait);
+   enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait, EnviroSeqManager.maxStartWait);
 }
 
 //
