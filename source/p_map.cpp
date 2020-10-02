@@ -1614,8 +1614,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          thing->groupid = oldgroupid;
       }
 
-      if((groupidchange && !check)
-         || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
+      if((groupidchange && !check) || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
