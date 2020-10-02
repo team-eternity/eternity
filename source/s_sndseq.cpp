@@ -683,7 +683,7 @@ static void S_clearEnviroSequence()
    EnviroSequence = NULL;
 
    if(vanilla_heretic)
-      enviroTics = 6 * TICRATE + P_Random(pr_envirotics);
+      enviroTics = 6 * TICRATE + P_Random(pr_enviroticsend);
    else
       enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
                                         EnviroSeqManager.maxEnviroWait);
