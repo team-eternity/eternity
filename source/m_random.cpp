@@ -84,7 +84,7 @@ const unsigned char rndtable[256] =  // 1/19/98 killough -- made const
 //
 // Converts a class to a string
 //
-const char *M_prcString(pr_class_t pr_class)
+static const char *M_prcString(pr_class_t pr_class)
 {
 #define CASE(a) case a: return #a
    switch(pr_class)
