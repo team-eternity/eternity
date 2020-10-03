@@ -919,7 +919,7 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
    // VANILLA_HERETIC: Mandatory to pass demos
    if(vanilla_heretic)
       target->flags3 &= ~MF3_PASSMOBJ;
-   
+
    if(!(target->flags3 & MF3_DEADFLOAT))
       target->flags &= ~MF_NOGRAVITY;
 

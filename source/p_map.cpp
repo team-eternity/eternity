@@ -262,7 +262,9 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // TODO: fix the flight behavior to match Heretic's
    // VANILLA_HERETIC: check if && (!vanilla_heretic || !onfloor). Also check whatever is commented
    if(mo->flags4 & MF4_FLY)
+   {
       friction = FRICTION_FLY;
+   }
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
       // Air friction only affects players
@@ -1728,14 +1730,14 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       if(!(thing->flags & MF_TELEPORT) && !(thing->flags3 & MF3_FLOORMISSILE))
       {
          // too big a step up
-         // VANILLA_HERETIC
+         // VANILLA_HERETIC: check if the second branch needs disabling
          if(clip.zref.floor - thing->z > STEPSIZE)
          {
             if(!ret)
                P_RunPushSpechits(*thing, pushhit);
             return ret;
          }
-         else if(P_Use3DClipping() && thing->z < clip.zref.floor/* && !vanilla_heretic*/)
+         else if(P_Use3DClipping() && thing->z < clip.zref.floor)
          {
             // TODO: make sure to add projectile impact checking if MISSILE
             // haleyjd: OVER_UNDER:

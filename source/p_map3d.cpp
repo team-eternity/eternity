@@ -140,17 +140,9 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
+   // VANILLA_HERETIC: maybe make it choppier per 4 tics?
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
-   {
-      // VANILLA_HERETIC
-//      if(vanilla_heretic)
-//      {
-//         if(leveltime & 2)
-//            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
-//      }
-//      else
-         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
-   }
+      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
 
    // clip movement
    
@@ -390,8 +382,8 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    // haleyjd: from zdoom: OVER_UNDER
    topz = thing->z + thing->height;
 
-   // VANILLA_HERETIC
-   if(/*!vanilla_heretic && */!(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
+   // VANILLA_HERETIC: maybe disable this?
+   if(!(clip.thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY|MF_NOGRAVITY)) &&
       (thing->flags & MF_SOLID))
    {
       // [RH] Let monsters walk on actors as well as floors
@@ -424,6 +416,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          }
       }
 
+      // VANILLA_HERETIC: maybe use strict comparisons here. ONLY FOR VANILLA.
       if(clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z)
       {
          if(thing->flags & MF_SPECIAL)
@@ -437,14 +430,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
             }
          }
          else
-         {
-            // VANILLA_HERETIC: it appears that base Heretic uses strict comparisons
-//            if(!vanilla_heretic || (clip.thing->z != topz &&
-//                                    clip.thing->z + clip.thing->height != thing->z))
-            {
-               return true;
-            }
-         }
+            return true;
       }
    }
 
@@ -586,8 +572,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    stepthing    = nullptr;
 
    // [RH] Fake taller height to catch stepping up into things.
-   // VANILLA_HERETIC
-   if(thing->player/* && !vanilla_heretic*/)
+   // VANILLA_HERETIC: maybe avoid?
+   if(thing->player)
       thing->height = realheight + STEPSIZE;
 
    // ioanch: portal aware
@@ -595,9 +581,7 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    if(!P_TransPortalBlockWalker(bbox, thing->groupid, true,
       [thing, realheight, &thingblocker](int x, int y, int groupid) -> bool
    {
-      // VANILLA_HERETIC
-//         if(vanilla_heretic)
-//            return P_BlockThingsIterator(x, y, PIT_CheckThing3D);
+         // VANILLA_HERETIC: maybe call P_BlockThingsIterator immediately and return it?
          // haleyjd: from zdoom:
          Mobj *robin = nullptr;
 
@@ -701,8 +685,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
             return false;
    }
 
-   // VANILLA_HERETIC
-   if(/*!vanilla_heretic && */clip.zref.ceiling - clip.zref.floor < thing->height)
+   // VANILLA_HERETIC: maybe avoid?
+   if(clip.zref.ceiling - clip.zref.floor < thing->height)
       return false;
          
    if(stepthing != nullptr)

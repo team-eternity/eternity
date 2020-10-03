@@ -37,6 +37,7 @@ void M_RandomLog(E_FORMAT_STRING(const char *format), ...) E_PRINTF(1, 2);
 #define M_RandomLog(...)
 #endif
 
+
 // killough 1/19/98: rewritten to use to use a better random number generator
 // in the new engine, although the old one is available for compatibility.
 

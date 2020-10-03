@@ -491,13 +491,7 @@ void P_XYMovement(Mobj* mo)
       return;
    }
 
-   // VANILLA_HERETIC: possibly handled before, only set up if it really makes a difference
-//   if(vanilla_heretic && mo->flags3 & MF3_WINDTHRUST)
-//   {
-//      const sector_t &sec = *mo->subsector->sector;
-//      if(sec.hticPushType == SECTOR_HTIC_WIND)
-//         P_ThrustMobj(mo, sec.hticPushAngle, sec.hticPushForce);
-//   }
+   // VANILLA_HERETIC: maybe handle wind here?
 
    if(mo->momx > MAXMOVE)
       mo->momx = MAXMOVE;
@@ -584,8 +578,8 @@ void P_XYMovement(Mobj* mo)
                mo->momx = mo->momy = 0;
             }
          }
-         // VANILLA_HERETIC
-         else if(demo_version <= 203/* && !vanilla_heretic*/ ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
+         // VANILLA_HERETIC: maybe avoid?
+         else if(demo_version <= 203 ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
          {
             // Checking against "player" is still needed for MBF and lower demo
             // compatibility. Relevant for respawned players' old corpses.
@@ -738,8 +732,8 @@ void P_XYMovement(Mobj* mo)
    else
    {
       // BOOM friction compatibility
-      // VANILLA_HERETIC
-      if(demo_version <= 201/* && !vanilla_heretic*/)
+      // VANILLA_HERETIC: disable?
+      if(demo_version <= 201)
       {
          // phares 3/17/98
          // Friction will have been adjusted by friction thinkers for icy
@@ -749,8 +743,9 @@ void P_XYMovement(Mobj* mo)
          mo->momy = FixedMul(mo->momy, mo->friction);
          mo->friction = ORIG_FRICTION; // reset to normal for next tic
       }
-      else if(demo_version <= 202/* && !vanilla_heretic*/)  // VANILLA_HERETIC
+      else if(demo_version <= 202)
       {
+         // VANILLA_HERETIC: disable?
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
 
          if ((oldx == mo->x) && (oldy == mo->y)) // Did you go anywhere?
@@ -1005,17 +1000,9 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
+   // VANILLA_HERETIC: jerky flying player motion
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
-   {
-      // VANILLA_HERETIC: jerky flying player motion
-//      if(vanilla_heretic)
-//      {
-//         if(leveltime & 2)
-//            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
-//      }
-//      else
-         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
-   }
+      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
 
    // clip movement
 
@@ -1077,12 +1064,7 @@ floater:
          }
          return;
       }
-      // VANILLA_HERETIC: we may need this bug emulation active
-//      if(vanilla_heretic && mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE)
-//      {
-//         P_SetMobjState(mo, mo->info->crashstate);
-//         return;
-//      }
+      // VANILLA_HERETIC: crash bug emulation here?
    }
    else if(mo->flags4 & MF4_FLY)
    {
@@ -1107,9 +1089,8 @@ floater:
    }
 
    // new footclip system
-   // VANILLA_HERETIC: old footclip?
-//   if(!vanilla_heretic)
-      P_AdjustFloorClip(mo);
+   // VANILLA_HERETIC: old footclip disabling?
+   P_AdjustFloorClip(mo);
 
    if(mo->z + mo->height > mo->zref.ceiling)
    {
@@ -1427,7 +1408,7 @@ void Mobj::Think()
 
    // Heretic Wind transfer specials
    // VANILLA_HERETIC: may need to move this in the other place at the beginning
-   if(/*!vanilla_heretic && */(flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
+   if((flags3 & MF3_WINDTHRUST) && !(flags & MF_NOCLIP))
    {
       sector_t *sec = subsector->sector;
 
@@ -1451,16 +1432,11 @@ void Mobj::Think()
 
    if(flags2 & MF2_FLOATBOB)
    {
-      // VANILLA_HERETIC: hopefully not needed (commented implementation is buggy)
-//      if(vanilla_heretic)  // apply this crazy rule here
-//         lz = z = zref.floor + FloatBobOffsets[health++ & 63];
-//      else
-      {
-         int idx = (floatbob + leveltime) & 63;
+      // VANILLA_HERETIC: implement weirder mode?
+      int idx = (floatbob + leveltime) & 63;
 
-         z += FloatBobDiffs[idx];
-         lz = z - FloatBobOffsets[idx];
-      }
+      z += FloatBobDiffs[idx];
+      lz = z - FloatBobOffsets[idx];
    }
 
    if(momz || clip.BlockingMobj || lz != zref.floor)
@@ -1473,8 +1449,7 @@ void Mobj::Think()
          {
             P_ZMovement(this);
             // VANILLA_HERETIC: check if this needs set
-//            if(!vanilla_heretic)
-               intflags &= ~MIF_ONMOBJ;
+            intflags &= ~MIF_ONMOBJ;
          }
          else
          {
@@ -1501,19 +1476,9 @@ void Mobj::Think()
                player->momx = momx = onmo->momx;
                player->momy = momy = onmo->momy;
                // VANILLA_HERETIC: weird functionality to check. Also this may move after intflags
-               //               if(vanilla_heretic && onmo->z < onmo->zref.floor)
-               //               {
-               //                  z += onmo->zref.floor - onmo->z;
-               //                  if (onmo->player)
-               //                  {
-               //                     onmo->player->viewheight -= onmo->zref.floor - onmo->z;
-               //                     onmo->player->deltaviewheight = (onmo->player->pclass->viewheight - onmo->player->viewheight) >> 3;
-               //                  }
-               //                  onmo->z = onmo->zref.floor;
-               //               }
             }
             // VANILLA_HERETIC: this seems important. Maybe it will even be part of main game
-            if(/*!vanilla_heretic && */onmo->z + onmo->height - z <= STEPSIZE)
+            if(onmo->z + onmo->height - z <= STEPSIZE)
             {
                if(player && player->mo == this)
                {
@@ -1528,13 +1493,12 @@ void Mobj::Think()
                z = onmo->z + onmo->height;
             }
             // VANILLA_HERETIC: check if this needs adding
-//            if(!vanilla_heretic || (player && momz < 0))
-            {
-               intflags |= MIF_ONMOBJ;
-               momz = 0;
-            }
+            intflags |= MIF_ONMOBJ;
+            momz = 0;
+
             // VANILLA_HERETIC: set this up if we need to emulate the buggy behaviour
-            if(/*!vanilla_heretic && */info->crashstate != NullStateNum && flags & MF_CORPSE
+            if(info->crashstate != NullStateNum
+               && flags & MF_CORPSE
                && !(intflags & MIF_CRASHED))
             {
                intflags |= MIF_CRASHED;
@@ -1568,9 +1532,11 @@ void Mobj::Think()
    P_CheckPortalTeleport(this);
 
    // handle crashstate here
-   // VANILLA_HERETIC: enable this if we need to emulate the buggy behavior
-   if(info->crashstate != NullStateNum && flags & MF_CORPSE && !(intflags & MIF_CRASHED) &&
-      /* !vanilla_heretic && */z <= zref.floor)
+   // VANILLA_HERETIC: disable this if we need to emulate the buggy behavior
+   if(info->crashstate != NullStateNum
+      && flags & MF_CORPSE
+      && !(intflags & MIF_CRASHED)
+      && z <= zref.floor)
    {
       intflags |= MIF_CRASHED;
       P_SetMobjState(this, info->crashstate);
@@ -3161,7 +3127,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
       bool hadmask = !!mask;
       // Aspiratory Heretic demo support
       // VANILLA_HERETIC: may need to disable it for certain scenarios
-      bool avoidfriendsideaim = demo_version >= 401/* || vanilla_heretic*/;
+      bool avoidfriendsideaim = demo_version >= 401;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3256,7 +3222,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
       // VANILLA_HERETIC: Aspiratory Heretic demo support (only if needed)
-      int mask = demo_version < 203/* && !vanilla_heretic*/ ? false : true;
+      int mask = demo_version < 203 ? false : true;
       bool hadmask = !!mask;  // mark if the mask was set initially
       do
       {
@@ -3405,18 +3371,7 @@ void P_AdjustFloorClip(Mobj *thing)
    fixed_t shallowestclip = 0x7fffffff;
    const msecnode_t *m;
 
-   // VANILLA_HERETIC: commented implementation is buggy for our purposes
-//   if(vanilla_heretic)
-//   {
-//      thing->floorclip = E_SectorFloorClip(thing->subsector->sector);
-//      if(thing->floorclip != oldclip && thing->player)
-//      {
-//         player_t *p = thing->player;
-//         p->viewheight -= oldclip - thing->floorclip;
-//         p->deltaviewheight = (p->pclass->viewheight - p->viewheight) / 8;
-//      }
-//      return;
-//   }
+   // VANILLA_HERETIC: adjust?
 
    // absorb test for FOOTCLIP flag here
    if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))

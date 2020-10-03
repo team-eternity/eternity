@@ -655,7 +655,8 @@ static void S_ResetEnviroSeqEngine()
    else
       nextEnviroSpot = nullptr; // broken, but shouldn't matter
 
-   enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait, EnviroSeqManager.maxStartWait);
+   enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
+                                     EnviroSeqManager.maxStartWait);
 }
 
 //
