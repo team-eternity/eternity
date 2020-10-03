@@ -1496,7 +1496,22 @@ void Mobj::Think()
             {
                P_PlayerHitFloor(this, true);
             }
-
+            if(player && onmo->flags4 & MF4_STICKYCARRY)
+            {
+               player->momx = momx = onmo->momx;
+               player->momy = momy = onmo->momy;
+               // VANILLA_HERETIC: weird functionality to check. Also this may move after intflags
+               //               if(vanilla_heretic && onmo->z < onmo->zref.floor)
+               //               {
+               //                  z += onmo->zref.floor - onmo->z;
+               //                  if (onmo->player)
+               //                  {
+               //                     onmo->player->viewheight -= onmo->zref.floor - onmo->z;
+               //                     onmo->player->deltaviewheight = (onmo->player->pclass->viewheight - onmo->player->viewheight) >> 3;
+               //                  }
+               //                  onmo->z = onmo->zref.floor;
+               //               }
+            }
             // VANILLA_HERETIC: this seems important. Maybe it will even be part of main game
             if(/*!vanilla_heretic && */onmo->z + onmo->height - z <= STEPSIZE)
             {
@@ -1517,22 +1532,6 @@ void Mobj::Think()
             {
                intflags |= MIF_ONMOBJ;
                momz = 0;
-            }
-            if(player && onmo->flags4 & MF4_STICKYCARRY)
-            {
-               player->momx = momx = onmo->momx;
-               player->momy = momy = onmo->momy;
-               // VANILLA_HERETIC: weird functionality to check
-//               if(vanilla_heretic && onmo->z < onmo->zref.floor)
-//               {
-//                  z += onmo->zref.floor - onmo->z;
-//                  if (onmo->player)
-//                  {
-//                     onmo->player->viewheight -= onmo->zref.floor - onmo->z;
-//                     onmo->player->deltaviewheight = (onmo->player->pclass->viewheight - onmo->player->viewheight) >> 3;
-//                  }
-//                  onmo->z = onmo->zref.floor;
-//               }
             }
             // VANILLA_HERETIC: set this up if we need to emulate the buggy behaviour
             if(/*!vanilla_heretic && */info->crashstate != NullStateNum && flags & MF_CORPSE
