@@ -399,7 +399,7 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max)
 //
 // Heretic demo compatibility switch
 //
-int HT_Random(pr_class_t pr_class)
+int M_VHereticPRandom(pr_class_t pr_class)
 {
    return vanilla_heretic ? P_Random(pr_class) : M_Random();
 }

@@ -411,7 +411,7 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
    {
       // haleyjd 01/12/11: randomplayvol supports proper Heretic randomization
       if(seq->sequence->randomplayvol && !(seq->flags & SEQ_FLAG_NORANDOM))
-         seq->volume = HT_Random(pr_envirospot) / 4 + 96 * s_enviro_volume / 16;
+         seq->volume = M_VHereticPRandom(pr_envirospot) / 4 + 96 * s_enviro_volume / 16;
 
       // clear the NORANDOM flag
       seq->flags &= ~SEQ_FLAG_NORANDOM;
@@ -512,8 +512,7 @@ static void S_RunSequence(SndSeq_t *curSeq)
          int min = CMD_ARG1(data);
          int max = CMD_ARG2(data);
          curSeq->delayCounter = vanilla_heretic ? min +
-               (HT_Random(pr_envirotics) % (max - min + 1)) :
-               (int)M_RangeRandomEx(min, max);
+               (P_Random(pr_envirotics) % (max - min + 1)) : (int)M_RangeRandomEx(min, max);
 
          // Emulate bug of enviroTics being set to 0 and causing the sounds to stop forever
          if(vanilla_heretic && curSeq == EnviroSequence && curSeq->delayCounter == 0)

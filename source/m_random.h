@@ -289,7 +289,7 @@ int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
 #define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
 
-int HT_Random(pr_class_t pr_class);
+int M_VHereticPRandom(pr_class_t pr_class);
 
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);
