@@ -260,8 +260,8 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
 
    // TODO: fix the flight behavior to match Heretic's
-   // VANILLA_HERETIC: check if (!vanilla_heretic || !onfloor). Also check whatever is commented
-   if(mo->flags4 & MF4_FLY && !onfloor)
+   // VANILLA_HERETIC: check if && (!vanilla_heretic || !onfloor). Also check whatever is commented
+   if(mo->flags4 & MF4_FLY)
       friction = FRICTION_FLY;
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
