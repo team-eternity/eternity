@@ -421,7 +421,8 @@ enum bloodaction_e : int
 };
 
 void  P_RespawnSpecials();
-Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
+                  bool nolastlook = false);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
                   bool ptcl, Mobj *shooter, const MetaTable *pufftype = nullptr,

@@ -54,6 +54,7 @@
 #include "hu_stuff.h"
 #include "m_random.h"
 #include "metaapi.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_maputl.h"
@@ -915,6 +916,9 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
+   // VANILLA_HERETIC: Mandatory to pass demos
+   if(vanilla_heretic)
+      target->flags3 &= ~MF3_PASSMOBJ;
 
    if(!(target->flags3 & MF3_DEADFLOAT))
       target->flags &= ~MF_NOGRAVITY;

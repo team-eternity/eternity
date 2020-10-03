@@ -818,7 +818,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // according flag is set.
    if(player->readyweapon->readysound &&
       psp->state->index == player->readyweapon->readystate &&
-      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_Random() < 128))
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128))
       S_StartSoundName(player->mo, player->readyweapon->readysound);
 
    // WEAPON_FIXME: chainsaw particulars (haptic feedback)

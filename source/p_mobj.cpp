@@ -447,6 +447,10 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
 
    mo->flags &= ~MF_MISSILE;
 
+   // VANILLA_HERETIC: "nosplash" is tied to "missile" there, so it has to be joined sometimes
+   if(vanilla_heretic)
+      mo->flags2 &= ~MF2_NOSPLASH;
+
    S_StartSound(mo, mo->info->deathsound);
 
    // haleyjd: disable any particle effects
@@ -1820,7 +1824,8 @@ extern fixed_t tmsecceilz;
 //
 // P_SpawnMobj
 //
-Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
+                  bool nolastlook)
 {
    Mobj       *mobj = new Mobj;
    mobjinfo_t *info = mobjinfo[type];
@@ -1885,7 +1890,8 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type)
    if(gameskill != sk_nightmare)
       mobj->reactiontime = info->reactiontime;
 
-   mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
+   if(!nolastlook)
+      mobj->lastlook = P_Random(pr_lastlook) % MAXPLAYERS;
    M_RandomLog("type=%d\n", info->dehnum - 1);
 
    // do not set the state with P_SetMobjState,
@@ -2305,6 +2311,7 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
 
    // check for players specially
 
+   bool norandomcall = false;
    if(mthing->type <= 4 && mthing->type > 0) // killough 2/26/98 -- fix crashes
    {
       // killough 7/19/98: Marine's best friend :)
@@ -2383,7 +2390,11 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    // below must be caught here
 
    if(mthing->type >= 1200 && mthing->type < 1300)         // enviro sequences
+   {
       i = E_SafeThingName("EEEnviroSequence");
+      // VANILLA_HERETIC: critical. Same as below
+      norandomcall = vanilla_heretic;
+   }
    else if(mthing->type >= 1400 && mthing->type < 1500)    // sector sequence
       i = E_SafeThingName("EESectorSequence");
    else if(mthing->type >= 9027 && mthing->type <= 9033)   // particle fountains
@@ -2396,6 +2407,8 @@ Mobj *P_SpawnMapThing(mapthing_t *mthing)
    {
       // killough 8/23/98: use table for faster lookup
       i = P_FindDoomedNum(mthing->type);
+      if(mthing->type == 7056)
+         norandomcall = vanilla_heretic;
    }
 
    // phares 5/16/98:
@@ -2454,7 +2467,7 @@ spawnit:
    if(mobjinfo[i]->flags2 & MF2_SPAWNFLOAT)
       z = FLOATRANDZ;
 
-   mobj = P_SpawnMobj(x, y, z, i);
+   mobj = P_SpawnMobj(x, y, z, i, norandomcall);
 
    // haleyjd 10/03/05: Hexen-format mapthing support
    
@@ -3100,9 +3113,7 @@ Mobj *P_SpawnPlayerMissile(Mobj* source, mobjtype_t type, unsigned flags,
       int mask = demo_version < 203 ? false : true;
       bool hadmask = !!mask;
       // Aspiratory Heretic demo support
-      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
-
-      bool avoidfriendsideaim = demo_version >= 401 || hereticdemo;
+      bool avoidfriendsideaim = demo_version >= 401;
       do
       {
          slope = P_AimLineAttack(source, an, 16*64*FRACUNIT, mask);
@@ -3196,9 +3207,7 @@ Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t an
    if(autoaim)
    {
       // ioanch: reuse killough's code from P_SpawnPlayerMissile
-      // Aspiratory Heretic demo support
-      bool hereticdemo = ancient_demo && GameModeInfo->type == Game_Heretic;
-      int mask = demo_version < 203 && !hereticdemo ? false : true;
+      int mask = demo_version < 203 ? false : true;
       bool hadmask = !!mask;  // mark if the mask was set initially
       do
       {

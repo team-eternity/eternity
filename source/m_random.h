@@ -249,9 +249,16 @@ typedef enum {
   pr_hereticartiteleport, // A_ArtiTele
   pr_puffblood,   // P_shootThing draw blood when Heretic-like puff is defined
   pr_nailbombshoot,  // A_Nailbomb random damage
+  pr_chainwiggle, // ST_HticTicker
+  pr_envirospot,
+  pr_envirotics,
 
   pr_spawnexchance,           // [XA] 02/28/2020: A_SpawnEx spawnchance
   pr_seekermissile,           // A_SeekerMissile
+
+  pr_wpnreadysnd,
+
+  pr_enviroticsend,
 
   NUMPRCLASS                  // MUST be last item in list
 } pr_class_t;
@@ -280,6 +287,8 @@ int P_SubRandom(pr_class_t);
 int P_RangeRandom(pr_class_t pr_class, int min, int max);
 
 #define M_RangeRandom(min, max) P_RangeRandom(pr_misc, (min), (max))
+
+int M_VHereticPRandom(pr_class_t pr_class);
 
 // haleyjd 03/16/09: extended random functions
 unsigned int P_RandomEx(pr_class_t);

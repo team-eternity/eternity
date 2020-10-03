@@ -31,8 +31,11 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
+#include "d_gi.h"
+#include "doomstat.h"
 #include "i_system.h"
 #include "c_runcmd.h"
+#include "p_info.h"
 #include "p_mobjcol.h"
 #include "s_sndseq.h"
 #include "e_things.h"
@@ -408,7 +411,7 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
    {
       // haleyjd 01/12/11: randomplayvol supports proper Heretic randomization
       if(seq->sequence->randomplayvol && !(seq->flags & SEQ_FLAG_NORANDOM))
-         seq->volume = M_Random() / 4 + 96 * s_enviro_volume / 16;
+         seq->volume = M_VHereticPRandom(pr_envirospot) / 4 + 96 * s_enviro_volume / 16;
 
       // clear the NORANDOM flag
       seq->flags &= ~SEQ_FLAG_NORANDOM;
@@ -433,6 +436,8 @@ static void S_StartSeqSound(SndSeq_t *seq, bool loop)
 // when true, the current environmental sequence has ended
 static bool enviroSeqFinished;
 
+static void S_clearEnviroSequence();
+
 //
 // S_RunSequence
 //
@@ -444,7 +449,13 @@ static void S_RunSequence(SndSeq_t *curSeq)
    bool isPlaying = false;
    
    // if delaying, count down delay
-   if(curSeq->delayCounter)
+   if(vanilla_heretic)
+   {
+      // Different, buggier way of counting down in vanilla Heretic compatibility mode
+      if(curSeq->delayCounter && --curSeq->delayCounter)
+         return;
+   }
+   else if(curSeq->delayCounter)
    {
       curSeq->delayCounter--;
       return;
@@ -466,6 +477,8 @@ static void S_RunSequence(SndSeq_t *curSeq)
          S_StartSeqSound(curSeq, false);
       }
       curSeq->cmdPtr += 2;
+      if(vanilla_heretic && curSeq == EnviroSequence)
+         S_RunSequence(curSeq);  // continue immediately in vanilla Heretic mode
       break;
    case SEQ_CMD_WAITSOUND: // waiting on a sound to finish
       if(!isPlaying)
@@ -498,7 +511,12 @@ static void S_RunSequence(SndSeq_t *curSeq)
       {
          int min = CMD_ARG1(data);
          int max = CMD_ARG2(data);
-         curSeq->delayCounter = (int)M_RangeRandomEx(min, max);
+         curSeq->delayCounter = vanilla_heretic ? min +
+               (P_Random(pr_envirotics) % (max - min + 1)) : (int)M_RangeRandomEx(min, max);
+
+         // Emulate bug of enviroTics being set to 0 and causing the sounds to stop forever
+         if(vanilla_heretic && curSeq == EnviroSequence && curSeq->delayCounter == 0)
+            curSeq->delayCounter = INT_MAX;
       }
       curSeq->cmdPtr += 3;
       break;
@@ -510,6 +528,8 @@ static void S_RunSequence(SndSeq_t *curSeq)
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
       curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
+      if(vanilla_heretic && curSeq == EnviroSequence)
+         S_RunSequence(curSeq);  // continue immediately in vanilla Heretic mode
       break;
    case SEQ_CMD_SETVOLUMEREL: // set relative volume
       curSeq->volume += CMD_ARG1(data);
@@ -519,6 +539,8 @@ static void S_RunSequence(SndSeq_t *curSeq)
       else if(curSeq->volume > 127)
          curSeq->volume = 127;
       curSeq->flags |= SEQ_FLAG_NORANDOM; // don't randomize the next volume
+      if(vanilla_heretic && curSeq == EnviroSequence)
+         S_RunSequence(curSeq);  // continue immediately in vanilla Heretic mode
       break;
    case SEQ_CMD_SETATTENUATION: // set attenuation
       curSeq->attenuation = CMD_ARG1(data);
@@ -530,7 +552,11 @@ static void S_RunSequence(SndSeq_t *curSeq)
    case SEQ_CMD_END:
       // sequences without a stopsound are ended here
       if(curSeq == EnviroSequence)
+      {
          enviroSeqFinished = true;
+         if(vanilla_heretic)
+            S_clearEnviroSequence();   // clear it now if demo
+      }
       else if(curSeq->sequence->stopsound == nullptr)
       {
          // if allowed, stop any other sound playing
@@ -603,7 +629,7 @@ void S_StopAllSequences()
 EnviroSeqMgr_t EnviroSeqManager =
 {
    10*TICRATE,        // minimum start wait
-   10*TICRATE + 31,   // maximum start wait
+   10*TICRATE,        // maximum start wait
     6*TICRATE,        // minimum wait between sequences
     6*TICRATE + 255,  // maximum wait between sequences
 };
@@ -624,10 +650,8 @@ static void S_ResetEnviroSeqEngine()
    EnviroSequence    = nullptr;
    enviroSeqFinished = true;
 
-   if(!enviroSpots.isEmpty())
-      nextEnviroSpot = enviroSpots.getRandom(pr_misc);
-   else
-      nextEnviroSpot = nullptr; // broken, but shouldn't matter
+   // At startup we don't know the first spot. It will be known at the end of this turn.
+   nextEnviroSpot = nullptr; 
 
    enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
                                      EnviroSeqManager.maxStartWait);
@@ -649,6 +673,26 @@ void S_InitEnviroSpots()
 }
 
 //
+// Clears the current Heretic-like environment sequence, if ready. Needed to
+// support all entry-points, depending on demo
+//
+static void S_clearEnviroSequence()
+{
+   memset(&enviroSeq, 0, sizeof(SndSeq_t));
+   EnviroSequence = NULL;
+
+   int min = EnviroSeqManager.minEnviroWait;
+   int max = EnviroSeqManager.maxEnviroWait;
+
+   if(vanilla_heretic)
+      enviroTics = min + P_Random(pr_enviroticsend) % (max - min + 1);
+   else
+      enviroTics = (int)M_RangeRandomEx(min, max);
+
+   nextEnviroSpot = enviroSpots.getRandom(vanilla_heretic ? pr_envirospot : pr_misc);
+}
+
+//
 // S_RunEnviroSequence
 //
 // Runs the current environmental sound sequence, or schedules another to run
@@ -663,7 +707,12 @@ static void S_RunEnviroSequence()
       return;
 
    // if waiting, count down the wait time
-   if(enviroTics)
+   if(vanilla_heretic)
+   {
+      if(enviroTics > 0 && --enviroTics)
+         return;
+   }
+   else if(enviroTics)
    {
       enviroTics--;
       return;
@@ -674,24 +723,18 @@ static void S_RunEnviroSequence()
    {
       // is it finished?
       if(enviroSeqFinished)
-      {
-         memset(&enviroSeq, 0, sizeof(SndSeq_t));
-         EnviroSequence = nullptr;
-         enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minEnviroWait,
-                                           EnviroSeqManager.maxEnviroWait);
-         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
-      }
+         S_clearEnviroSequence();
       else
          S_RunSequence(EnviroSequence);
    }
-   else if(nextEnviroSpot) // next spot must be valid (always should be)
+   else if(nextEnviroSpot)
    {
       // start a new sequence
       ESoundSeq_t *edfSeq = E_EnvironmentSequence(nextEnviroSpot->args[0]);
 
       if(!edfSeq) // woops, bad sequence, try another next time.
       {
-         nextEnviroSpot = enviroSpots.getRandom(pr_misc);
+         nextEnviroSpot = enviroSpots.getRandom(vanilla_heretic ? pr_envirospot : pr_misc);
          return;
       }
 
@@ -706,13 +749,17 @@ static void S_RunEnviroSequence()
       enviroSeq.originIdx    = -1;
 
       // possibly randomize the starting volume
-      enviroSeq.volume = 
-         edfSeq->randvol ? M_RangeRandom(edfSeq->minvolume, edfSeq->volume)
-                         : edfSeq->volume;
+      enviroSeq.volume = edfSeq->randvol ? 
+         vanilla_heretic ? P_Random(pr_envirospot) / 4 : 
+         M_RangeRandom(edfSeq->minvolume, edfSeq->volume) : edfSeq->volume;
 
       EnviroSequence    = &enviroSeq; // now playing an enviro sequence
       enviroSeqFinished = false;      // sequence is not finished
+      if(vanilla_heretic)
+         S_RunSequence(EnviroSequence);   // on vanilla Heretic mode, already play it
    }
+   else  // We don't have a sequence playing and there's no spot. Wait for next spot then.
+      S_clearEnviroSequence();
 }
 
 //

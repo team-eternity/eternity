@@ -259,6 +259,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
 
    bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
 
+   // TODO: fix the flight behavior to match Heretic's
    if(mo->flags4 & MF4_FLY)
    {
       friction = FRICTION_FLY;
@@ -1727,6 +1728,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          }
          else if(P_Use3DClipping() && thing->z < clip.zref.floor)
          { 
+            // TODO: make sure to add projectile impact checking if MISSILE
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
             fixed_t savedz = thing->z;

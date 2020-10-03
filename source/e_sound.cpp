@@ -1592,7 +1592,7 @@ static void E_ResolveNames(cfg_t *cfg, unsigned int i)
 cfg_opt_t edf_seqmgr_opts[] =
 {
    CFG_INT(ITEM_SEQMGR_MINSTARTWAIT, (10*TICRATE),       CFGF_NONE),
-   CFG_INT(ITEM_SEQMGR_MAXSTARTWAIT, (10*TICRATE + 31),  CFGF_NONE),
+   CFG_INT(ITEM_SEQMGR_MAXSTARTWAIT, (10*TICRATE),       CFGF_NONE),
    CFG_INT(ITEM_SEQMGR_MINWAIT,      ( 6*TICRATE),       CFGF_NONE),
    CFG_INT(ITEM_SEQMGR_MAXWAIT,      ( 6*TICRATE + 255), CFGF_NONE),
    CFG_END()
@@ -1623,21 +1623,21 @@ static void E_ProcessEnviroMgr(cfg_t *cfg)
       // range check
       if(EnviroSeqManager.minStartWait < 0)
          EnviroSeqManager.minStartWait = 0;
-      if(EnviroSeqManager.maxStartWait < 1)
-         EnviroSeqManager.maxStartWait = 1;
+      if(EnviroSeqManager.maxStartWait < 0)
+         EnviroSeqManager.maxStartWait = 0;
 
-      if(EnviroSeqManager.maxStartWait <= EnviroSeqManager.minStartWait)
-         EnviroSeqManager.maxStartWait = EnviroSeqManager.minStartWait + 1;
+      if(EnviroSeqManager.maxStartWait < EnviroSeqManager.minStartWait)
+         EnviroSeqManager.maxStartWait = EnviroSeqManager.minStartWait;
 
       EnviroSeqManager.minEnviroWait = cfg_getint(eseq, ITEM_SEQMGR_MINWAIT);
       EnviroSeqManager.maxEnviroWait = cfg_getint(eseq, ITEM_SEQMGR_MAXWAIT);
 
       if(EnviroSeqManager.minEnviroWait < 1)
          EnviroSeqManager.minEnviroWait = 1;
-      if(EnviroSeqManager.maxEnviroWait < 2)
-         EnviroSeqManager.maxEnviroWait = 2;
-      if(EnviroSeqManager.maxEnviroWait <= EnviroSeqManager.minEnviroWait)
-         EnviroSeqManager.maxEnviroWait = EnviroSeqManager.minEnviroWait + 1;
+      if(EnviroSeqManager.maxEnviroWait < 1)
+         EnviroSeqManager.maxEnviroWait = 1;
+      if(EnviroSeqManager.maxEnviroWait < EnviroSeqManager.minEnviroWait)
+         EnviroSeqManager.maxEnviroWait = EnviroSeqManager.minEnviroWait;
    }
 }
 

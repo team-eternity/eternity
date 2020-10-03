@@ -40,6 +40,7 @@
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobjcol.h"
+#include "p_info.h"
 #include "p_inter.h"
 #include "p_map3d.h"
 #include "p_portal.h"
@@ -391,12 +392,18 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
 
       if(clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z)
       {
-         if(thing->flags & MF_SPECIAL && clip.thing->z >= topz &&
-            clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+         if(thing->flags & MF_SPECIAL)
          {
-            return P_CheckPickUp(thing);
+            // VANILLA_HERETIC: it's critical to avoid this pick-up check here.
+            if(!vanilla_heretic)
+            {
+               if(clip.thing->z >= topz && clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+                  return P_CheckPickUp(thing);
+               return true;
+            }
          }
-         return true;
+         else
+            return true;
       }
    }
 
