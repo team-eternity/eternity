@@ -1590,9 +1590,7 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
    }
    
    // test if tracer has become an invalid target
-   if(!ancient_demo && actor->tracer && 
-      (actor->tracer->flags3 & MF3_GHOST ||
-       actor->tracer->health < 0))
+   if(actor->tracer && (actor->tracer->flags3 & MF3_GHOST || actor->tracer->health < 0))
    {
       Mobj *originator = actor->target;
       Mobj *origtarget = originator ? originator->target : nullptr;
