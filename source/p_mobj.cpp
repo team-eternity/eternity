@@ -1301,7 +1301,10 @@ bool P_CheckPortalTeleport(Mobj *mobj)
                   mobj->prevpos.portalline = crossedge;
             }
             EV_SectorPortalTeleport(mobj, ldata);
-            if(j)
+
+            // FIXME: remove the attached-portal hack and implement correct interpolation through
+            // moving sector portal.
+            if(j || surface.pflags & PF_ATTACHEDPORTAL)
             {
                mobj->backupPosition();
                if(mobj->player)
