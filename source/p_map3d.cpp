@@ -193,9 +193,7 @@ static bool PIT_TestMobjZ(Mobj *thing, void *context)
 {
    testmobjzdata_t &data = *static_cast<testmobjzdata_t *>(context);
 
-   // VANILLA_HERETIC
-//   if(vanilla_heretic)
-//      return P_testMobjZOldHeretic(thing, data);
+   // VANILLA_HERETIC: call the "old heretic" variant
 
    fixed_t blockdist = thing->radius + data.clip.thing->radius;
 

@@ -261,6 +261,7 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
 
    // TODO: fix the flight behavior to match Heretic's
    // VANILLA_HERETIC: check if && (!vanilla_heretic || !onfloor). Also check whatever is commented
+   // VANILLA_HERETIC: else if(friction on thing sector)
    if(mo->flags4 & MF4_FLY)
    {
       friction = FRICTION_FLY;
@@ -270,12 +271,6 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
       // Air friction only affects players
       friction = FRACUNIT - LevelInfo.airFriction;
    }   
-//   else if(vanilla_heretic && (sec = mo->subsector->sector)->flags & SECF_FRICTION &&
-//           sec->friction != ORIG_FRICTION)
-//   {
-//      friction = sec->friction;
-//      movefactor = sec->movefactor;
-//   }
    else if(!(mo->flags & (MF_NOCLIP|MF_NOGRAVITY)) && 
            (demo_version >= 203 || (mo->player && !compatibility)) &&
            variable_friction)
@@ -1624,9 +1619,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
 
       if((groupidchange && !check) || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
-         // VANILLA_HERETIC
-//         if(vanilla_heretic)
-//            return false;
+         // VANILLA_HERETIC: return false here
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
          {
