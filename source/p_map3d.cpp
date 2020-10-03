@@ -465,12 +465,6 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
           && (clip.thing->flags & MF_SOLID || demo_compatibility));
 }
 
-// Just for convenience
-inline static bool PIT_CheckThing3D(Mobj *thing, void *)
-{
-   return PIT_CheckThing3D(thing);
-}
-
 //
 // P_CheckPosition3D
 //
