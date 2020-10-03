@@ -1634,10 +1634,10 @@ static void E_ProcessEnviroMgr(cfg_t *cfg)
 
       if(EnviroSeqManager.minEnviroWait < 1)
          EnviroSeqManager.minEnviroWait = 1;
-      if(EnviroSeqManager.maxEnviroWait < 2)
-         EnviroSeqManager.maxEnviroWait = 2;
-      if(EnviroSeqManager.maxEnviroWait <= EnviroSeqManager.minEnviroWait)
-         EnviroSeqManager.maxEnviroWait = EnviroSeqManager.minEnviroWait + 1;
+      if(EnviroSeqManager.maxEnviroWait < 1)
+         EnviroSeqManager.maxEnviroWait = 1;
+      if(EnviroSeqManager.maxEnviroWait < EnviroSeqManager.minEnviroWait)
+         EnviroSeqManager.maxEnviroWait = EnviroSeqManager.minEnviroWait;
    }
 }
 
