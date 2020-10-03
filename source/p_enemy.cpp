@@ -1421,7 +1421,7 @@ void P_BossTeleport(bossteleport_t *bt)
          // ioanch 20151230: portal aware
          x = getThingX(boss, targ);
          y = getThingY(boss, targ);
-         if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
+         if(P_AproxDistance(boss->x - x, boss->y - y) >= bt->minDistance)
          {
             foundSpot = true;
             break;
