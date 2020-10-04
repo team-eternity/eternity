@@ -35,7 +35,6 @@
 #include "i_system.h"
 #include "p_anim.h"
 #include "p_chase.h"
-#include "p_info.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
 #include "p_sector.h"
