@@ -1592,7 +1592,7 @@ void Mobj::Think()
           !(state->flags & STATEFI_VANILLA0TIC)) || !--tics)
          P_SetMobjState(this, state->nextstate);
 
-      if(bef != v3fixed_t{x, y, z} && !(flags2 & MF2_FLOATBOB))
+      if(!removed && bef != v3fixed_t{x, y, z} && !(flags2 & MF2_FLOATBOB))
       {
           printf("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
          if(bef.x != x)
