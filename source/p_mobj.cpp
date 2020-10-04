@@ -1377,6 +1377,18 @@ inline static void P_checkMobjProjections(Mobj &mobj)
 }
 
 //
+// Inverts the conversion done by Heretic mapthings to Eternity
+//
+static int P_deconvertHereticDoomednum(int num)
+{
+   if((num >= 7201 && num <= 7205) || num == 7235)
+      return num - 5200;
+   if(num >= 7005 && num != 7011 && num != 7014 && num <= 7096)
+      return num - 7000;
+   return num;
+}
+
+//
 // P_MobjThinker
 //
 void Mobj::Think()
@@ -1386,6 +1398,8 @@ void Mobj::Think()
       S_MusInfoThink(*this);
       return;
    }
+
+   v3fixed_t bef = { x, y, z };
 
    int oldwaterstate, waterstate = 0;
    fixed_t lz;
@@ -1577,6 +1591,18 @@ void Mobj::Think()
       if(((tics == 0) && (state->flags & STATEFI_DECORATE) &&
           !(state->flags & STATEFI_VANILLA0TIC)) || !--tics)
          P_SetMobjState(this, state->nextstate);
+
+      if(bef != v3fixed_t{x, y, z} && !(flags2 & MF2_FLOATBOB))
+      {
+          printf("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
+         if(bef.x != x)
+            printf("x %g -> %g, ", bef.x/65536., x/65536.);
+         if(bef.y != y)
+            printf("y %g -> %g, ", bef.y/65536., y/65536.);
+         if(bef.z != z)
+            printf("z %g -> %g, ", bef.z/65536., z/65536.);
+          puts("");
+      }
    }
    else
    {
