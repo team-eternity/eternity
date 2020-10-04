@@ -628,7 +628,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID && demo_version >= 401)
+   if(cmd->itemID && (demo_version >= 401 || vanilla_heretic))
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
 
    if(player->mo->flags & MF_JUSTATTACKED)

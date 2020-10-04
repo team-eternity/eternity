@@ -230,6 +230,9 @@ inventoryslot_t *E_InventorySlotForItem(const player_t *player,
 inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
                                             const char *name);
 
+// Returns the item ID for a given item effect name. Returns -1 if not found.
+int E_ItemIDForName(const char *name);
+
 // Special function to test for player backpack.
 bool E_PlayerHasBackpack(const player_t *player);
 
