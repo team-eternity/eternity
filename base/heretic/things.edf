@@ -2649,8 +2649,8 @@ thingtype HArtiFireBomb : HereticArtifact, 7034, 408
   states
   @"
   Spawn:
-    FBMB E -1
-    stop
+    FBMB E 350
+    loop
   "@
 }
 
