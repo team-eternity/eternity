@@ -629,7 +629,7 @@ void S_StopAllSequences()
 EnviroSeqMgr_t EnviroSeqManager =
 {
    10*TICRATE,        // minimum start wait
-   10*TICRATE,        // maximum start wait
+   10*TICRATE + 31,   // maximum start wait
     6*TICRATE,        // minimum wait between sequences
     6*TICRATE + 255,  // maximum wait between sequences
 };
@@ -650,11 +650,16 @@ static void S_ResetEnviroSeqEngine()
    EnviroSequence    = nullptr;
    enviroSeqFinished = true;
 
-   // At startup we don't know the first spot. It will be known at the end of this turn.
-   nextEnviroSpot = nullptr; 
+   if(!enviroSpots.isEmpty() && !vanilla_heretic)
+      nextEnviroSpot = enviroSpots.getRandom(pr_misc);
+   else
+      nextEnviroSpot = nullptr; // initially null, will get found later (game of P_Random calls)
 
-   enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
-                                     EnviroSeqManager.maxStartWait);
+   if(vanilla_heretic)
+      enviroTics = 10 * TICRATE;
+   else
+      enviroTics = (int)M_RangeRandomEx(EnviroSeqManager.minStartWait,
+                                        EnviroSeqManager.maxStartWait);
 }
 
 //
@@ -758,7 +763,7 @@ static void S_RunEnviroSequence()
       if(vanilla_heretic)
          S_RunSequence(EnviroSequence);   // on vanilla Heretic mode, already play it
    }
-   else  // We don't have a sequence playing and there's no spot. Wait for next spot then.
+   else if(vanilla_heretic)   // Vanilla Heretic plays by different rules here
       S_clearEnviroSequence();
 }
 

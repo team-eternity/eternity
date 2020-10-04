@@ -969,6 +969,12 @@ sound ht_noway
 
 ifgametype(HERETIC)
 
+enviromanager
+{
+  minstartwait 560
+  maxstartwait 815
+}
+
 sound EE_DoorOpen   { alias  ht_doropn }
 sound EE_DoorClose  { alias  ht_dorcls }
 sound EE_BDoorOpen  { alias  ht_doropn }
