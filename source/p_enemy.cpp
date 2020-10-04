@@ -601,7 +601,8 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
-   if(!P_Use3DClipping())
+   // VANILLA_HERETIC: inferior 3D clipping engine
+   if(!P_Use3DClipping() || vanilla_heretic)
    {
       if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
