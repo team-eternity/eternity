@@ -1089,8 +1089,8 @@ void A_DripBlood(actionargs_t *actionargs)
    Mobj *mo;
    fixed_t x, y;
 
-   x = actor->x + (P_SubRandom(pr_dripblood) << 11);
    y = actor->y + (P_SubRandom(pr_dripblood) << 11);
+   x = actor->x + (P_SubRandom(pr_dripblood) << 11);
 
    mo = P_SpawnMobj(x, y, actor->z, E_SafeThingType(MT_HTICBLOOD));
    
