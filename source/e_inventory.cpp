@@ -2017,6 +2017,17 @@ inventoryslot_t *E_InventorySlotForItemName(const player_t *player,
 }
 
 //
+// Returns the item ID for a given item effect name. Returns -1 if not found.
+//
+int E_ItemIDForName(const char *name)
+{
+   const itemeffect_t *effect = E_ItemEffectForName(name);
+   if(!effect)
+      return -1;
+   return effect->getInt(keyItemID, -1);
+}
+
+//
 // E_findInventorySlot
 //
 // Finds the first unused inventory slot index.

@@ -752,22 +752,6 @@ static void cheat_hticbehold(const void *arg)
    player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
 }
 
-
-static constexpr char const *hartiNames[] =
-{
-   "ArtiInvulnerability",
-   "ArtiInvisibility",
-   "ArtiHealth",
-   "ArtiSuperHealth",
-   "ArtiTomeOfPower",
-   "ArtiTorch",
-   "ArtiTimeBomb",
-   "ArtiEgg",
-   "ArtiFly",
-   "ArtiTeleport"
-
-};
-
 static constexpr int numHArtifacts = earrlen(hartiNames);
 
 //

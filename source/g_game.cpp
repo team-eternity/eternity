@@ -61,6 +61,7 @@
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_buffer.h"
+#include "m_cheat.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -1440,10 +1441,10 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
    cmd->buttons = (unsigned char)*p++;
 
    // old Heretic demo?
-   if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
+   if(vanilla_heretic)
    {
+      // TODO: look and fly
       p++;
-      p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
    }
 
    if(demo_version >= 335)
@@ -1479,6 +1480,17 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
       cmd->weaponID = *p++;
       cmd->weaponID |= (*p++) << 8;
       cmd->slotIndex = *p++;
+   }
+   else if(vanilla_heretic)
+   {
+      // One byte for the inventory usage
+      byte index = *p++;
+      if(!index || index > earrlen(hartiNames))
+         cmd->itemID = 0;
+      else
+         cmd->itemID = E_ItemIDForName(hartiNames[index - 1]) + 1;
+      cmd->weaponID = 0;
+      cmd->slotIndex = 0;
    }
    else
    {
