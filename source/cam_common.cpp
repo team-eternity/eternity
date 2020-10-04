@@ -33,7 +33,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_compare.h"
-#include "p_info.h"
 #include "p_portal.h"
 #include "p_portalblockmap.h"
 #include "p_setup.h"

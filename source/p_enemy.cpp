@@ -51,7 +51,6 @@
 #include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
-#include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_map3d.h"

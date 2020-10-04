@@ -31,7 +31,6 @@
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_bbox.h"
-#include "p_info.h"
 #include "p_maputl.h"
 #include "p_setup.h"
 #include "r_dynseg.h"

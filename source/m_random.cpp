@@ -34,7 +34,6 @@
 #include "doomstat.h"
 #include "m_random.h"
 #include "a_small.h"
-#include "p_info.h"
 
 #ifdef RANDOM_LOG
 void M_RandomLog(E_FORMAT_STRING(const char *format), ...)

@@ -35,7 +35,6 @@
 #include "doomstat.h"
 #include "i_system.h"
 #include "c_runcmd.h"
-#include "p_info.h"
 #include "p_mobjcol.h"
 #include "s_sndseq.h"
 #include "e_things.h"
