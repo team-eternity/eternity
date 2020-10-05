@@ -8,6 +8,14 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+05.10.2020
+
+FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific
+         situation of being unable to step on things. Makes sense when playing
+         without jumping. All Heretic solid things shall inherit from a common
+         thing with SOLID and this flag.
+
+--------------------------------------------------------------------------------
 25.07.2020
 
 BUGFIX: Fixed HOM happening when trying to render same portal from two separate

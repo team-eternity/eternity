@@ -1628,8 +1628,11 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             // haleyjd: yikes...
             // ioanch 20160111: updated for portals
             fixed_t steplimit;
-            if(clip.BlockingMobj->flags & MF_CORPSE && LevelInfo.levelType != LI_TYPE_HEXEN)
+            if((clip.BlockingMobj->flags & MF_CORPSE && LevelInfo.levelType != LI_TYPE_HEXEN) ||
+               clip.BlockingMobj->flags4 & MF4_UNSTEPPABLE)
+            {
                steplimit = 0;
+            }
             else
                steplimit = STEPSIZE;
 
