@@ -107,15 +107,17 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    else
       P_dropToFloor(thing, nullptr);
 
+   if(thing->player == players + displayplayer)
+      P_ResetChasecam();
+
    // Spawn teleport fog at source and destination
    const int fogNum = E_SafeThingName(GameModeInfo->teleFogType);
    fogDelta = thing->flags & MF_MISSILE ? 0 : GameModeInfo->teleFogHeight;
    S_StartSound(P_SpawnMobj(oldx, oldy, oldz + fogDelta, fogNum),
                 GameModeInfo->teleSound);
    an = angle >> ANGLETOFINESHIFT;
-   S_StartSound(P_SpawnMobj(x + 20 * finecosine[an], y + 20 * finesine[an],
-                           thing->z + fogDelta, fogNum),
-                GameModeInfo->teleSound);
+   v2fixed_t pos = P_LinePortalCrossing(x, y, 20 * finecosine[an], 20 * finesine[an]);
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, thing->z + fogDelta, fogNum), GameModeInfo->teleSound);
 
    // Freeze player for ~.5s, but only if they don't have tome active
    if(thing->player && !thing->player->powers[pw_weaponlevel2])
@@ -130,6 +132,10 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    else
       thing->momx = thing->momy = thing->momz = 0;
 
+   // killough 10/98: kill all bobbing momentum too
+   if(player)
+      player->momx = player->momy = 0;
+
    thing->backupPosition();
    P_AdjustFloorClip(thing);
 
@@ -142,6 +148,9 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
 //
 static int P_Teleport(Mobj *thing, const Mobj *landing)
 {
+   if(GameModeInfo->type == Game_Heretic)
+      return P_HereticTeleport(thing, landing->x, landing->y, landing->angle);
+
    fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
    player_t *player = thing->player;
             
