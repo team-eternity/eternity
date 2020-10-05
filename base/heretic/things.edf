@@ -3109,6 +3109,7 @@ thingtype CrossbowFX4 : Mobj, -1, 437
 thingtype MaceShotProto : HereticMissile, -1, -1
 {
   addflags HERETICBOUNCES|THRUGHOST
+  remflags NOGRAVITY
 
   //firstdecoratestate S_MACEFX1_1
   states
@@ -3245,6 +3246,7 @@ thingtype HereticBloodSplatter : HereticMissile, -1, 433
 {
   radius 2.0
   height 4.0
+  remflags NOGRAVITY
   states
   @"
   Spawn:
