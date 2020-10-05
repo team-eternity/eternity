@@ -304,6 +304,14 @@ static int P_SilentTeleport(Mobj *thing, const line_t *line,
 }
 
 //
+// True if allowed to use teleport specials
+//
+inline static bool P_allowedToTeleport(const Mobj *thing)
+{
+   return !(thing->flags & MF_MISSILE) || thing->flags3 & MF3_TELESTOMP;
+}
+
+//
 // TELEPORTATION
 //
 // killough 5/3/98: reformatted, cleaned up
@@ -318,7 +326,7 @@ int EV_Teleport(int tag, int side, Mobj *thing)
    // don't teleport missiles
    // Don't teleport if hit back of line,
    //  so you can get out of teleporter.
-   if(!thing || side || thing->flags & MF_MISSILE)
+   if(!thing || side || !P_allowedToTeleport(thing))
       return 0;
 
    // killough 1/31/98: improve performance by using
@@ -369,7 +377,7 @@ int EV_ParamTeleport(int tid, int tag, int side, Mobj *thing)
    // don't teleport missiles
    // Don't teleport if hit back of line,
    //  so you can get out of teleporter.
-   if(!thing || side || thing->flags & MF_MISSILE)
+   if(!thing || side || !P_allowedToTeleport(thing))
       return 0;
 
    if(tid)
@@ -400,7 +408,7 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
    // Don't teleport if hit back of line,
    // so you can get out of teleporter.
    
-   if(!thing || side || thing->flags & MF_MISSILE)
+   if(!thing || side || !P_allowedToTeleport(thing))
       return 0;
 
    for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
@@ -426,7 +434,7 @@ int EV_SilentTeleport(const line_t *line, int tag, int side, Mobj *thing,
 int EV_ParamSilentTeleport(int tid, const line_t *line, int tag, int side,
                            Mobj *thing, teleparms_t parms)
 {
-   if(!thing || side || thing->flags & MF_MISSILE)
+   if(!thing || side || !P_allowedToTeleport(thing))
       return 0;
 
    if(tid)
@@ -457,7 +465,7 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
    line_t *l;
 
    // ioanch 20160424: protect against null line or thing pointer
-   if(side || !thing || thing->flags & MF_MISSILE || !line)
+   if(side || !thing || !P_allowedToTeleport(thing) || !line)
       return 0;
 
    for (i = -1; (i = P_FindLineFromTag(lineid, i)) >= 0;)
