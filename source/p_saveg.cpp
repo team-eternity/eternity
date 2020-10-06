@@ -184,8 +184,6 @@ bool SaveArchive::readSaveVersion()
 //
 void SaveArchive::writeSaveVersion()
 {
-   char vread[VERSIONSIZE];
-
    if(!savefile)
       I_Error("SaveArchive::writeSaveVersion: cannot save version if not writing file!\n");
 
