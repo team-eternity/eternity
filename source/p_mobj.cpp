@@ -1040,6 +1040,7 @@ floater:
          mo->momz = 0;
       }
 
+      fixed_t oldz = mo->z;
       mo->z = mo->zref.floor;
 
       if(moving_down && initial_mo_z != mo->zref.floor)
@@ -1069,7 +1070,13 @@ floater:
          }
          return;
       }
-      // VANILLA_HERETIC: crash bug emulation here?
+      // VANILLA_HERETIC: crash bug emulation here
+      // Also make sure it happens under the same conditions on coming here
+      if(vanilla_heretic && mo->info->crashstate != NullStateNum && mo->flags & MF_CORPSE &&
+         oldz != mo->z)
+      {
+         P_SetMobjState(mo, mo->info->crashstate);
+      }
    }
    else if(mo->flags4 & MF4_FLY)
    {
@@ -1554,8 +1561,8 @@ void Mobj::Think()
    P_CheckPortalTeleport(this);
 
    // handle crashstate here
-   // VANILLA_HERETIC: disable this if we need to emulate the buggy behavior
-   if(info->crashstate != NullStateNum
+   // VANILLA_HERETIC: move this check into Z_Movement.
+   if(!vanilla_heretic && info->crashstate != NullStateNum
       && flags & MF_CORPSE
       && !(intflags & MIF_CRASHED)
       && z <= zref.floor)
