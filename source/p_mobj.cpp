@@ -1611,6 +1611,20 @@ void Mobj::Think()
    }
    else
    {
+      if(player && health > 0)
+      {
+         if(!removed && bef != v3fixed_t{x, y, z} && !(flags2 & MF2_FLOATBOB))
+         {
+             printf("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
+            if(bef.x != x)
+               printf("x %g -> %g, ", bef.x/65536., x/65536.);
+            if(bef.y != y)
+               printf("y %g -> %g, ", bef.y/65536., y/65536.);
+            if(bef.z != z)
+               printf("z %g -> %g, ", bef.z/65536., z/65536.);
+             puts("");
+         }
+      }
       // A thing can respawn if:
       // 1) counts for kill AND
       // 2) respawn is on OR
