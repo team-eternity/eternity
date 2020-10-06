@@ -301,7 +301,7 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
                          const char *sound)
 {
-   if(demo_version < 401)
+   if(demo_version < 401 && !vanilla_heretic)
       return P_giveWeaponCompat(player, giver, dropped, special, sound);
 
    bool gaveammo = false;

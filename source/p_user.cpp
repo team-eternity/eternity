@@ -753,7 +753,7 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(demo_version >= 401)
+   if(demo_version >= 401 || vanilla_heretic)
    {
       if(cmd->weaponID)
       {
