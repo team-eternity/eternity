@@ -66,6 +66,10 @@ bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimfla
    if(!(th->flags & MF_SHOOTABLE))
       return false; // corpse or something
 
+   // VANILLA_HERETIC: the pods have LOWAIMPRIO so reject hitting them
+   if(vanilla_heretic && th->flags4 & MF4_LOWAIMPRIO)
+      return false;
+
    // killough 7/19/98, 8/2/98:
    // friends don't aim at friends (except players), at least not first
    // ioanch: also avoid aiming for LOWAIMPRIO things

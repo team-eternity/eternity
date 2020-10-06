@@ -583,8 +583,8 @@ void P_XYMovement(Mobj* mo)
                mo->momx = mo->momy = 0;
             }
          }
-         // VANILLA_HERETIC: maybe avoid?
-         else if(demo_version <= 203 ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
+         // VANILLA_HERETIC: SLIDE also supported here.
+         else if(demo_version <= 203 && !vanilla_heretic ? !!player : !!(mo->flags3 & MF3_SLIDE)) // haleyjd: SLIDE flag
          {
             // Checking against "player" is still needed for MBF and lower demo
             // compatibility. Relevant for respawned players' old corpses.
