@@ -875,7 +875,11 @@ bool P_SkullHit(Mobj *thing)
       // A_Chase in turn calls P_TryMove and that can cause a lot of shit
       // to explode.
 
-      P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
+      if(clip.thing->intflags & MIF_SKULLFLYSEE)
+         P_SetMobjState(clip.thing, clip.thing->info->seestate);
+      else
+         P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
+      clip.thing->intflags &= ~MIF_SKULLFLYSEE;
 
       clip.BlockingMobj = nullptr; // haleyjd: from zdoom
 

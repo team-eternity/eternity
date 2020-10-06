@@ -987,7 +987,7 @@ void A_SkullAttack(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
 
    // haleyjd 08/07/04: use new P_SkullFly function
-   P_SkullFly(actor, SKULLSPEED);
+   P_SkullFly(actor, SKULLSPEED, false);
 }
 
 //

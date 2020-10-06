@@ -1357,7 +1357,7 @@ bool P_HelpFriend(Mobj *actor)
 // haleyjd 08/07/04: generalized code to make a thing skullfly.
 // actor->target must be valid.
 //
-void P_SkullFly(Mobj *actor, fixed_t speed)
+void P_SkullFly(Mobj *actor, fixed_t speed, bool useSeeState)
 {
    Mobj *dest;
    angle_t an;
@@ -1365,6 +1365,10 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 
    dest = actor->target;
    actor->flags |= MF_SKULLFLY;
+   if(useSeeState)
+      actor->intflags |= MIF_SKULLFLYSEE;
+   else
+      actor->intflags &= ~MIF_SKULLFLYSEE;
 
    actionargs_t actionargs;
 

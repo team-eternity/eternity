@@ -607,7 +607,8 @@ enum mobjflags_e : unsigned int
    MF_INFLOAT      = 0x00200000, // Floating to a height for a move.
    MF_COUNTKILL    = 0x00400000, // On kill, count this enemy object towards intermission kill total. Happy gathering.
    MF_COUNTITEM    = 0x00800000, // On picking up, count this item object towards intermission item total.
-   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a missile.
+   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a
+                                 // missile. ALSO CHECK intflag MIF_SKULLFLYSEE.
    MF_NOTDMATCH    = 0x02000000, // Don't spawn this object in deathmatch mode (e.g. key cards).
    MF_TRANSLATION  = 0x0c000000, // Player translation mask for sprite re-indexing.
    MF_TRANSSHIFT   = 26,         // Hmm ???. -- well, what? sf  -- Bernd Kremeier again, probably. haleyjd
@@ -763,9 +764,10 @@ enum
    MIF_MUSICCHANGER = 0x00020000,
 
    MIF_MAYPLAYPARTICLESOUNDS = 0x00040000,   // Hint that it may be playing particle sounds
+   MIF_SKULLFLYSEE = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
 
    // these should be cleared when a thing is being raised
-   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
+   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_SKULLFLYSEE|MIF_WIMPYDEATH),
 };
 
 //=============================================================================
