@@ -730,14 +730,18 @@ enum mobjflags4_e : unsigned int
 // killough 9/15/98: Same, but internal flags, not intended for .deh
 // (some degree of opaqueness is good, to avoid compatibility woes)
 
+//
+// IMPORTANT: if you want to reuse any of the UNUSED bits, remember to increment WRITE_SAVE_VERSION
+//            and clear them in Mobj::serialize when loading older saves.
+//
 enum
 {
    MIF_FALLING     = 0x00000001, // Object is falling
    MIF_ARMED       = 0x00000002, // Object is armed (for MF_TOUCHY objects)
    MIF_LINEDONE    = 0x00000004, // Object has activated W1 or S1 linedef via DEH frame
    MIF_DIEDFALLING = 0x00000008, // haleyjd: object died by falling
-   MIF_ONFLOOR     = 0x00000010, // SoM: object stands on floor
-   MIF_ONSECFLOOR  = 0x00000020, // SoM: Object stands on sector floor *specific*
+   MIF_ONFLOOR     = 0x00000010, // [UNUSED] SoM: object stands on floor
+   MIF_ONSECFLOOR  = 0x00000020, // [UNUSED] SoM: Object stands on sector floor *specific*
    MIF_SCREAMED    = 0x00000040, // haleyjd: player has screamed
    MIF_NOFACE      = 0x00000080, // haleyjd: thing won't face its target
    MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate

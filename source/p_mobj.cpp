@@ -1842,8 +1842,8 @@ void Mobj::copyPosition(const Mobj *other)
    groupid    = other->groupid;
    zref       = other->zref;
 
-   intflags  &= ~(MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ);
-   intflags  |= (other->intflags & (MIF_ONFLOOR|MIF_ONSECFLOOR|MIF_ONMOBJ));
+   intflags  &= ~MIF_ONMOBJ;
+   intflags  |= (other->intflags & MIF_ONMOBJ);
 }
 
 //
