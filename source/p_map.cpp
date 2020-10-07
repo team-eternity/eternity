@@ -1046,8 +1046,11 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
    if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
    {
       // transfer one-fourth momentum along the x and y axes
-      thing->momx += clip.thing->momx / 4;
-      thing->momy += clip.thing->momy / 4;
+      // ioanch: this may be pedantic, but do '& ~3' to make the '/ 4' operation equivalent to the
+      // old '>> 2' arithmetic right shift. We can't add more '>>' here because it's only implemen-
+      // tation defined.
+      thing->momx += (clip.thing->momx & ~3) / 4;
+      thing->momy += (clip.thing->momy & ~3) / 4;
    }
 
    return ItemCheck_furtherNeeded;
