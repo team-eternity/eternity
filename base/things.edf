@@ -304,7 +304,7 @@ thingtype EETerrainSludgeChunk : Mobj, -1, 1049
   radius      2.0
   height      4.0
   mass        150
-  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE|LOGRAV|NORANDOMIZE|NOSPLASH|NOCROSS|CANNOTPUSH|NOZERODAMAGE
 }
 
 thingtype EETerrainSludgeBase : Mobj, -1, 1050
