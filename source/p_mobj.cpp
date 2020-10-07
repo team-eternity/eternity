@@ -281,6 +281,27 @@ inline static void P_setSpriteBySkin(Mobj &mobj, const state_t &st)
 }
 
 //
+// Returns the weird pod post-death state for exact vanilla compatibility
+//
+static state_t P_getVanillaHereticPodDeathState()
+{
+   state_t state = {};
+   state.tics = 1050;
+   state.nextstate = NullStateNum;
+   state.action = [](actionargs_t *args) {
+      Mobj *actor = args->actor;
+      actor->momx = actor->momy = actor->momz = 0;
+      actor->z = actor->zref.ceiling + 4 * FRACUNIT;
+      actor->flags &= ~(MF_SHOOTABLE | MF_FLOAT | MF_SKULLFLY | MF_SOLID);
+      actor->flags |= MF_CORPSE | MF_DROPOFF | MF_NOGRAVITY | MF_NOSECTOR;
+      actor->flags2 &= ~MF2_LOGRAV;
+      actor->flags3 &= ~MF3_PASSMOBJ;
+      actor->player = NULL;
+   };
+   return state;
+}
+
+//
 // P_SetMobjState
 //
 // Returns true if the mobj is still present.
@@ -310,6 +331,14 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       firsttime = false;
    }
 
+   static state_t vanillaHereticFreeTargMobj = P_getVanillaHereticPodDeathState();
+   if(vanilla_heretic && mobj->type == E_SafeThingType(MT_POD) && state == NullStateNum &&
+      mobj->state != &vanillaHereticFreeTargMobj)
+   {
+      st = &vanillaHereticFreeTargMobj;
+      goto hackState;
+   }
+
    do
    {
       if(state == NullStateNum)
@@ -321,6 +350,7 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       }
 
       st = states[state];
+   hackState:
       mobj->state = st;
       mobj->tics = st->tics;
 
