@@ -1981,6 +1981,22 @@ static int itemrespawntime[ITEMQUESIZE];
 int iquehead, iquetail;
 
 //
+// Checks if the Mobj was previously linked and make sure to enable NOSECTOR or NOBLOCKMAP before
+// the next call to P_UnsetThingPosition, if it's necessary to unlink
+//
+static void P_guardMobjLinking(Mobj &thing)
+{
+   if(thing.touching_sectorlist)    // Having this set is enough clue that we were linked
+      thing.flags &= ~MF_NOSECTOR;  // we need to unlink from sectors
+   else
+      thing.flags |= MF_NOSECTOR;   // conversely, no such reference means it is implied NOSECTOR
+   if(thing.bprev)
+      thing.flags &= ~MF_NOBLOCKMAP;
+   else
+      thing.flags |= MF_NOBLOCKMAP;
+}
+
+//
 // P_RemoveMobj
 //
 void Mobj::remove()
@@ -2024,6 +2040,7 @@ void Mobj::remove()
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
+   P_guardMobjLinking(*this);
    P_UnsetThingPosition(this);
 
    // ioanch 20160109: remove portal sprite projections

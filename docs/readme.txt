@@ -401,6 +401,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
       sound mpistolf {lump "/lsounds/pistol/fire.wav"}
     Thanks to marrub for the addition!
 
+  * Added the UNSTEPPABLE thing flag, needed by the Heretic gameplay.
+
 
   Level Editing Stuff
 
@@ -967,6 +969,9 @@ Bugs Fixed (since 4.01.00):
 
 + Fixed HOM happening when trying to render the same portal from two separate 
   windows.
+
++ Fixed crashes happening when changing the NOBLOCKMAP and NOSECTOR thing
+  flags via SetFlags/UnSetFlags.
 
 
 Known Issues in v4.01.00:
