@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+08.10.2020
+
+BUGFIX: Fixed crashes happening when changing NOBLOCKMAP and NOSECTOR via code-
+        pointers.
+
+--------------------------------------------------------------------------------
 05.10.2020
 
 FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific

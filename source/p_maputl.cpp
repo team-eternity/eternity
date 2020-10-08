@@ -563,7 +563,7 @@ void P_UnsetThingPosition(Mobj *thing)
       // pointers, allows head node pointers to be treated like everything else
       Mobj **sprev = thing->sprev;
       Mobj  *snext = thing->snext;
-      if((*sprev = snext))  // unlink from sector list
+      if(sprev && (*sprev = snext))  // unlink from sector list
          snext->sprev = sprev;
 
       // phares 3/14/98
@@ -598,6 +598,7 @@ void P_UnsetThingPosition(Mobj *thing)
       Mobj *bnext, **bprev = thing->bprev;
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
+      thing->bprev = nullptr; // set it to null: we need a way to tell if thing got unlinked
    }
 }
 
@@ -616,9 +617,7 @@ void P_SetThingPosition(Mobj *thing)
 
    P_LogThingPosition(thing, " set ");
 
-#ifdef R_LINKEDPORTALS
    thing->groupid = ss->sector->groupid;
-#endif
 
    if(!(thing->flags & MF_NOSECTOR))
    {
