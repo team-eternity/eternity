@@ -99,6 +99,7 @@ struct weaponinfo_t
 
    fixed_t       sortorder;   // sort order (lower is higher priority)
    weaponinfo_t *sisterWeapon; // sister weapon (e.g.: tomed variant, Strife-style "alt-fire")
+   fixed_t       autoswitchvalue; // weapon value for autoswitch decision
 
    // haleyjd 09/11/07: new fields in prep. for dynamic weapons
    unsigned int flags;

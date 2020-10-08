@@ -380,10 +380,15 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    else if(!E_PlayerOwnsWeapon(player, wp))
    {
       weaponinfo_t *sister = wp->sisterWeapon;
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
-         player->pendingweapon = sister;
+      // If none of the values are negative, then only switch if value is superior or equal
+      if(wp->autoswitchvalue < 0 || player->readyweapon->autoswitchvalue < 0 ||
+         wp->autoswitchvalue >= player->readyweapon->autoswitchvalue)
+      {
+         player->pendingweapon = wp;
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+      }
       E_GiveWeapon(player, wp);
       return true;
    }

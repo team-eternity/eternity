@@ -79,6 +79,7 @@ weapontype_t UnknownWeaponInfo;
 
 #define ITEM_WPN_SELECTORDER  "selectionorder"
 #define ITEM_WPN_SISTERWEAPON "sisterweapon"
+#define ITEM_WPN_AUTOSWITCHVALUE  "autoswitchvalue"
 
 #define ITEM_WPN_SLOTNUM      "slotnumber"
 #define ITEM_WPN_SLOTRANK     "slotselectionorder"
@@ -132,6 +133,7 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_HOLDSTATE_ALT,   "S_NULL", CFGF_NONE), \
    CFG_INT(ITEM_WPN_AMMOPERSHOT_ALT,  0,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SELECTORDER,   -1,       CFGF_NONE), \
+   CFG_FLOAT(ITEM_WPN_AUTOSWITCHVALUE, -1,     CFGF_NONE), \
    CFG_INT(ITEM_WPN_SLOTNUM,         -1,       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_SLOTRANK,      -1.0,     CFGF_NONE), \
    CFG_STR(ITEM_WPN_SISTERWEAPON,    "",       CFGF_NONE), \
@@ -1293,6 +1295,12 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
          E_insertSelectOrderNode(tempfixed, &wp, !def);
          wp.sortorder = tempfixed;
       }
+   }
+   if(IS_SET(ITEM_WPN_AUTOSWITCHVALUE))
+   {
+      tempfloat = cfg_getfloat(weaponsec, ITEM_WPN_AUTOSWITCHVALUE);
+      const fixed_t tempfixed = M_DoubleToFixed(tempfloat);
+      wp.autoswitchvalue = tempfixed;
    }
    if(cfg_size(weaponsec, ITEM_WPN_SISTERWEAPON) > 0)
    {
