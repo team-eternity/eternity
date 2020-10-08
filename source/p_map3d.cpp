@@ -566,7 +566,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                }
                else if(!clip.BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
+                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE &&
+                       !(clip.BlockingMobj->flags4 & MF4_UNSTEPPABLE))
                {
                   if(thingblocker == nullptr || clip.BlockingMobj->z > thingblocker->z)
                      thingblocker = clip.BlockingMobj;
