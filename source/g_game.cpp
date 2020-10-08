@@ -1409,6 +1409,31 @@ void G_DoPlayDemo(void)
    }
 }
 
+//
+// Converts classic demo "buttons" byte into weapon ID. Needed for vanilla Heretic demos.
+//
+static void G_convertButtonsToWeaponID(ticcmd_t &cmd)
+{
+   if(!(cmd.buttons & BT_CHANGE))
+      return;
+
+   int index = (cmd.buttons & BT_WEAPONMASK_OLD) >> BT_WEAPONSHIFT;
+
+   // HACK: check if ticcmd_t is part of a player. If it is, proceed.
+   for(const player_t &player : players)
+      if((byte*)&cmd == (byte*)&player + offsetof(player_t, cmd))
+      {
+         const weaponinfo_t *info = P_GetPlayerWeapon(&player, index);
+         if(info)
+         {
+            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(&player, info, index);
+            cmd.weaponID = info->id + 1;
+            cmd.slotIndex = slot->slotindex;
+         }
+         break;
+      }
+}
+
 #define DEMOMARKER    0x80
 
 //
@@ -1489,8 +1514,7 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
          cmd->itemID = 0;
       else
          cmd->itemID = E_ItemIDForName(hartiNames[index - 1]) + 1;
-      cmd->weaponID = 0;
-      cmd->slotIndex = 0;
+      G_convertButtonsToWeaponID(*cmd);
    }
    else
    {
