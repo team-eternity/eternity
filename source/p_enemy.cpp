@@ -1154,6 +1154,8 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
    stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
 
+   bool unseen[MAXPLAYERS] = {};
+
    for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
    {
       if(!playeringame[actor->lastlook])
@@ -1189,8 +1191,11 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
       if(player->health <= 0)
          continue;               // dead
       
-      if(!P_IsVisible(actor, player->mo, allaround))
+      if(unseen[actor->lastlook] || !P_IsVisible(actor, player->mo, allaround))
+      {
+         unseen[actor->lastlook] = true;
          continue;
+      }
       
       P_SetTarget<Mobj>(&actor->target, player->mo);
 
