@@ -13,6 +13,9 @@ Since v4.00.00 "Völuspá"
 BUGFIX: Fixed crashes happening when changing NOBLOCKMAP and NOSECTOR via code-
         pointers.
 
+        Fixed wrong double check of standby monsters for shadowsphere stealth
+        players.
+
 --------------------------------------------------------------------------------
 05.10.2020
 

@@ -973,6 +973,8 @@ Bugs Fixed (since 4.01.00):
 + Fixed crashes happening when changing the NOBLOCKMAP and NOSECTOR thing
   flags via SetFlags/UnSetFlags.
 
++ Fixed wrong double check of standby monsters for shadowsphere stealth players.
+
 
 Known Issues in v4.01.00:
 
