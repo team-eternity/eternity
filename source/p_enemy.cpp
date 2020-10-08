@@ -960,7 +960,8 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
          // to be "sneaking"
          return false;
       }
-      if(P_Random(pr_ghostsneak) < 225)
+      // VANILLA_HERETIC: move this check _after_ P_CheckSight for demo compatibility
+      if(!vanilla_heretic && P_Random(pr_ghostsneak) < 225)
          return false;
    }
 
@@ -973,7 +974,13 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
          return false;
    }
 
-   return P_CheckSight(actor, mo);
+   if(!P_CheckSight(actor, mo))
+      return false;
+
+   if(vanilla_heretic && mo->flags3 & MF3_GHOST && P_Random(pr_ghostsneak) < 225)
+      return false;
+
+   return true;
 }
 
 int p_lastenemyroar;
