@@ -1271,6 +1271,7 @@ void A_MinotaurDecide(actionargs_t *actionargs)
       // set to charge state and start skull-flying
       P_SetMobjStateNF(actor, E_SafeState(S_MNTR_ATK4_1));
       actor->flags |= MF_SKULLFLY;
+      actor->intflags |= MIF_SKULLFLYSEE;
       
       // give him momentum
       angle_t angle = actor->angle >> ANGLETOFINESHIFT;
@@ -1313,6 +1314,7 @@ void A_MinotaurCharge(actionargs_t *actionargs)
    {
       // end of the charge
       actor->flags &= ~MF_SKULLFLY;
+      actor->intflags &= ~MIF_SKULLFLYSEE;
       P_SetMobjState(actor, actor->info->seestate);
    }
 }
@@ -1686,7 +1688,7 @@ void A_ImpChargeAtk(actionargs_t *actionargs)
    {   
       S_StartSound(actor, actor->info->attacksound);
 
-      P_SkullFly(actor, 12 * FRACUNIT);
+      P_SkullFly(actor, 12 * FRACUNIT, true);
    }
 }
 

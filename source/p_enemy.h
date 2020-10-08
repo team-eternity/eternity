@@ -109,7 +109,7 @@ struct bossteleport_t
 
 void P_BossTeleport(bossteleport_t *bt);
 
-void P_SkullFly(Mobj *actor, fixed_t speed);
+void P_SkullFly(Mobj *actor, fixed_t speed, bool useSeeState);
 
 int P_GetAimShift(Mobj *target, bool missile);
 
