@@ -183,6 +183,7 @@ thingtype Pod : ClassicHereticSolid, 7235, 305
     PPOD D  5 bright A_Scream
     PPOD E  5 bright A_Explode
     PPOD F 10 bright
+    PPOD F  0 bright  // for vanilla Heretic compatibility
     stop
   PodGrow:
     PPOD IJKLMNOP 3
