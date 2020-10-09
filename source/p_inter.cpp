@@ -1227,7 +1227,7 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
       if(chaosdevice)
       {
          const int itemid = chaosdevice->getInt("itemid", -1);
-         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) > 1)
+         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) >= 1)
          {
             E_TryUseItem(target->player, itemid);
             player->health = player->mo->health = (player->health + 1) / 2;
