@@ -41,6 +41,7 @@
 
 #include "e_edf.h"
 #include "e_gameprops.h"
+#include "e_inventory.h"
 #include "e_lib.h"
 #include "e_sound.h"
 #include "e_states.h"
@@ -88,6 +89,7 @@
 #define ITEM_GPROP_SKILLMUL    "game.skillammomultiplier"
 #define ITEM_GPROP_MELEECALC   "game.monstermeleerange"
 #define ITEM_GPROP_ITEMHEIGHT  "game.itemheight"
+#define ITEM_GPROP_AUTOFLIGHT  "game.autoflightartifact"
 #define ITEM_GPROP_FINALEX     "finale.text.x"
 #define ITEM_GPROP_FINALEY     "finale.text.y"
 #define ITEM_GPROP_CASTTITLEY  "castcall.title.y"
@@ -124,6 +126,7 @@ enum
    GI_STR_DEFPCLASS,
    GI_STR_PUFFTYPE,
    GI_STR_TELEFOGTYPE,
+   GI_STR_AUTOFLIGHT,
    GI_STR_INTERPIC,
    GI_STR_DEFMUSNAME,
    GI_STR_DEFSNDNAME,
@@ -540,6 +543,13 @@ static void E_processGamePropsBlock(cfg_t *props)
    }
    if(IS_SET(ITEM_GPROP_ITEMHEIGHT))
       GameModeInfo->itemHeight = M_DoubleToFixed(cfg_getfloat(props, ITEM_GPROP_ITEMHEIGHT));
+
+   if(IS_SET(ITEM_GPROP_AUTOFLIGHT))
+   {
+      const char *name = cfg_getstr(props, ITEM_GPROP_AUTOFLIGHT);
+      if(E_ItemEffectForName(name))
+         E_setDynamicString(GameModeInfo->autoFlightArtifact, GI_STR_AUTOFLIGHT, name);
+   }
 
    // Finale Properties
 

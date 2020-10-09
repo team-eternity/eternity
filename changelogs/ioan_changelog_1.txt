@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+09.10.2020
+
+FEATURE: New EDF game property, game.autoflightartifact, which names the
+         artifact to use when attempting to fly.
+
+--------------------------------------------------------------------------------
 08.10.2020
 
 BUGFIX: Fixed crashes happening when changing NOBLOCKMAP and NOSECTOR via code-
