@@ -1468,35 +1468,40 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
    // old Heretic demo?
    if(vanilla_heretic)
    {
-      // TODO: look and fly
-      p++;
+      byte lookfly = *p++;
+      // TODO: look
+      cmd->fly = lookfly >> 4;
+      if(cmd->fly > 7)
+         cmd->fly -= 16;
    }
-
-   if(demo_version >= 335)
-      cmd->actions = *p++;
    else
-      cmd->actions = 0;
-
-   if(demo_version >= 333)
    {
-      cmd->look  =  *p++;
-      cmd->look |= (*p++) << 8;
-   }
-   else if(demo_version >= 329)
-   {
-      // haleyjd: 329 and 331 store updownangle, but we can't use
-      // it any longer. Demos recorded with mlook will desync,
-      // but ones without can still play with this here.
-      p++;
-      cmd->look = 0;
-   }
-   else
-      cmd->look = 0;
+      if(demo_version >= 335)
+         cmd->actions = *p++;
+      else
+         cmd->actions = 0;
 
-   if(full_demo_version >= make_full_version(340, 23))
-      cmd->fly = *p++;
-   else
-      cmd->fly = 0;
+      if(demo_version >= 333)
+      {
+         cmd->look  =  *p++;
+         cmd->look |= (*p++) << 8;
+      }
+      else if(demo_version >= 329)
+      {
+         // haleyjd: 329 and 331 store updownangle, but we can't use
+         // it any longer. Demos recorded with mlook will desync,
+         // but ones without can still play with this here.
+         p++;
+         cmd->look = 0;
+      }
+      else
+         cmd->look = 0;
+
+      if(full_demo_version >= make_full_version(340, 23))
+         cmd->fly = *p++;
+      else
+         cmd->fly = 0;
+   }
 
    if(demo_version >= 401)
    {
