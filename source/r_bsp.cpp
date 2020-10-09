@@ -2378,14 +2378,14 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    R_AddMarkedSegs();
 
    sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
-   if(seg.f_window && box.fframeid != frameid)
+   if(seg.f_window && box.frameid.floor != frameid)
    {
-      box.fframeid = frameid;
+      box.frameid.floor = frameid;
       R_CalcRenderBarrier(*seg.f_window, box);
    }
-   if(seg.c_window && box.cframeid != frameid)
+   if(seg.c_window && box.frameid.ceiling != frameid)
    {
-      box.cframeid = frameid;
+      box.frameid.ceiling = frameid;
       R_CalcRenderBarrier(*seg.c_window, box);
    }
 }
