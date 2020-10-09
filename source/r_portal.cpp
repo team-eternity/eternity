@@ -1467,7 +1467,7 @@ void R_MovePortalOverlayToWindow(surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
    pwindow_t *window = seg.secwindow[surf];
-   visplane_t *&plane = surf == surf_ceil ? seg.ceilingplane : seg.floorplane;
+   visplane_t *&plane = seg.plane[surf];
    if(plane)
    {
       plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,

@@ -274,10 +274,10 @@ static void R_RenderSegLoop(void)
             {
                int otop = ceilingclip[i] > overlaycclip[i] ? cliptop : (int)overlaycclip[i];
                
-               if(segclip.ceilingplane && line >= otop)
+               if(segclip.plane.ceiling && line >= otop)
                {
-                  segclip.ceilingplane->top[i]    = otop;
-                  segclip.ceilingplane->bottom[i] = line;
+                  segclip.plane.ceiling->top[i]    = otop;
+                  segclip.plane.ceiling->bottom[i] = line;
                }
 
                overlaycclip[i] = (float)t;
@@ -288,10 +288,10 @@ static void R_RenderSegLoop(void)
                R_WindowAdd(segclip.secwindow.ceiling, i, (float)cliptop, (float)line);
                ceilingclip[i] = (float)t;
             }
-            else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
+            else if(segclip.plane.ceiling && segclip.markflags & SEG_MARKCEILING)
             {
-               segclip.ceilingplane->top[i]    = cliptop;
-               segclip.ceilingplane->bottom[i] = line;
+               segclip.plane.ceiling->top[i]    = cliptop;
+               segclip.plane.ceiling->bottom[i] = line;
                ceilingclip[i] = (float)t;
             }
          }
@@ -311,10 +311,10 @@ static void R_RenderSegLoop(void)
             {
                int olow = floorclip[i] < overlayfclip[i] ? clipbot : (int)overlayfclip[i];
                
-               if(segclip.floorplane && line <= olow)
+               if(segclip.plane.floor && line <= olow)
                {
-                  segclip.floorplane->top[i]    = line;
-                  segclip.floorplane->bottom[i] = olow;
+                  segclip.plane.floor->top[i]    = line;
+                  segclip.plane.floor->bottom[i] = olow;
                }
 
                overlayfclip[i] = (float)b;
@@ -325,10 +325,10 @@ static void R_RenderSegLoop(void)
                R_WindowAdd(segclip.secwindow.floor, i, (float)line, (float)clipbot);
                floorclip[i] = (float)b;
             }
-            else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
+            else if(segclip.plane.floor && segclip.markflags & SEG_MARKFLOOR)
             {
-               segclip.floorplane->top[i]    = line;
-               segclip.floorplane->bottom[i] = clipbot;
+               segclip.plane.floor->top[i]    = line;
+               segclip.plane.floor->bottom[i] = clipbot;
                floorclip[i] = (float)b;
             }
          }
@@ -764,10 +764,10 @@ void R_StoreWallRange(const int start, const int stop)
    segclip.x1 = start;
    segclip.x2 = stop;
 
-   if(segclip.floorplane)
-      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
+   if(segclip.plane.floor)
+      segclip.plane.floor = R_CheckPlane(segclip.plane.floor, start, stop);
 
-   if(segclip.ceilingplane)
+   if(segclip.plane.ceiling)
    {
       // From PrBoom
       /* cph 2003/04/18  - ceilingplane and floorplane might be the same
@@ -783,10 +783,10 @@ void R_StoreWallRange(const int start, const int stop)
       // NOTE: PrBoom sets the floorplane AFTER the ceilingplane, unlike Eternity. So it does this
       // duplication when it encounters the floorplane, not the ceilingplane like here.
 
-      if(segclip.ceilingplane == segclip.floorplane)
-         segclip.ceilingplane = R_DupPlane(segclip.ceilingplane, start, stop);
+      if(segclip.plane.ceiling == segclip.plane.floor)
+         segclip.plane.ceiling = R_DupPlane(segclip.plane.ceiling, start, stop);
       else
-         segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+         segclip.plane.ceiling = R_CheckPlane(segclip.plane.ceiling, start, stop);
    }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
