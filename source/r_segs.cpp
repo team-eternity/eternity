@@ -285,7 +285,7 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
-               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+               R_WindowAdd(segclip.secwindow.ceiling, i, (float)cliptop, (float)line);
                ceilingclip[i] = (float)t;
             }
             else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
@@ -322,7 +322,7 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
-               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+               R_WindowAdd(segclip.secwindow.floor, i, (float)line, (float)clipbot);
                floorclip[i] = (float)b;
             }
             else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)

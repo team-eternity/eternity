@@ -35,6 +35,7 @@
 
 #include "tables.h"
 
+#include "m_surf.h"
 #include "m_vector.h"
 // haleyjd 12/15/2010: Lighting data is required
 #include "r_lighting.h"
@@ -232,7 +233,8 @@ struct cb_seg_t
    const seg_t *line;
 
    const portal_t *f_portal, *c_portal;
-   pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
+   pwindow_t *l_window, *b_window, *t_window;
+   Surfaces<pwindow_t *> secwindow;   // surface windows
    // ioanch: added b_window for bottom edge portal
 
    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
