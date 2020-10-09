@@ -1466,8 +1466,8 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 void R_MovePortalOverlayToWindow(surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
-   pwindow_t *window = surf == surf_ceil ? seg.c_window : seg.f_window;
-   visplane_t *&plane = surf == surf_ceil ? seg.ceilingplane : seg.floorplane;
+   pwindow_t *window = seg.secwindow[surf];
+   visplane_t *&plane = seg.plane[surf];
    if(plane)
    {
       plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,
