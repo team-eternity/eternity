@@ -1034,6 +1034,19 @@ static void R_ClipSegToLPortal()
    }
 }
 
+//
+// When a new seg obtains a sector portal window, make sure to update the render barrier accordingly
+// Needs to be done each time a sector window is detected.
+//
+static void R_updateWindowSectorBarrier(surf_e surf)
+{
+   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
+   if(seg.secwindow[surf] && box.frameid[surf] != frameid)
+   {
+      box.frameid[surf] = frameid;
+      R_CalcRenderBarrier(*seg.secwindow[surf], box);
+   }
+}
 
 
 R_ClipSegFunc segclipfuncs[] = 
@@ -1186,11 +1199,13 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         R_updateWindowSectorBarrier(surf_ceil);
          R_MovePortalOverlayToWindow(surf_ceil);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         R_updateWindowSectorBarrier(surf_ceil);
          R_MovePortalOverlayToWindow(surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
@@ -1264,11 +1279,13 @@ static void R_2S_Sloped(float pstep, float i1, float i2, float textop,
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         R_updateWindowSectorBarrier(surf_floor);
          R_MovePortalOverlayToWindow(surf_floor);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         R_updateWindowSectorBarrier(surf_floor);
          R_MovePortalOverlayToWindow(surf_floor);
          seg.secwindow.floor = nullptr;
       }
@@ -1484,6 +1501,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         R_updateWindowSectorBarrier(surf_ceil);
          R_MovePortalOverlayToWindow(surf_ceil);
       }
       else if(seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal &&
@@ -1491,6 +1509,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       {
          // We need to do this just to transfer the plane
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         R_updateWindowSectorBarrier(surf_ceil);
          R_MovePortalOverlayToWindow(surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
@@ -1562,6 +1581,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         R_updateWindowSectorBarrier(surf_floor);
          R_MovePortalOverlayToWindow(surf_floor);
       }
       else if(seg.frontsec->srf.floor.height == seg.backsec->srf.floor.height &&
@@ -1569,6 +1589,7 @@ static void R_2S_Normal(float pstep, float i1, float i2, float textop,
       {
          // We need to do this just to transfer the plane
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         R_updateWindowSectorBarrier(surf_floor);
          R_MovePortalOverlayToWindow(surf_floor);
          seg.secwindow.floor = nullptr;
       }
@@ -1740,6 +1761,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+      R_updateWindowSectorBarrier(surf_ceil);
       R_MovePortalOverlayToWindow(surf_ceil);
    }
 
@@ -1748,6 +1770,7 @@ static void R_1SidedLine(float pstep, float i1, float i2, float textop, float te
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+      R_updateWindowSectorBarrier(surf_floor);
       R_MovePortalOverlayToWindow(surf_floor);
    }
 
@@ -2377,17 +2400,6 @@ static void R_AddLine(const seg_t *line, bool dynasegs)
    // Add new solid segs when it is safe to do so...
    R_AddMarkedSegs();
 
-   sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
-   if(seg.secwindow.floor && box.frameid.floor != frameid)
-   {
-      box.frameid.floor = frameid;
-      R_CalcRenderBarrier(*seg.secwindow.floor, box);
-   }
-   if(seg.secwindow.ceiling && box.frameid.ceiling != frameid)
-   {
-      box.frameid.ceiling = frameid;
-      R_CalcRenderBarrier(*seg.secwindow.ceiling, box);
-   }
 }
 
 
