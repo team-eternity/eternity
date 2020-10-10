@@ -293,6 +293,10 @@ static void P_PlayerFlight(player_t *player, const ticcmd_t *cmd)
       {
          player->mo->momz = player->flyheight * FRACUNIT;
          player->flyheight /= 2;
+         // When flyheight turns to 0 from this location, mark it to become 0 instead of letting it
+         // be subject to P_ZMovement flying friction.
+         if(!(GameModeInfo->flags & GIF_FLIGHTINERTIA) && !player->flyheight)
+            player->mo->intflags |= MIF_CLEARMOMZ;
       }
    }
 }

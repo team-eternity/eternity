@@ -141,7 +141,15 @@ floater:
    // haleyjd 06/05/12: flying players
    // VANILLA_HERETIC: maybe make it choppier per 4 tics?
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
-      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   {
+      if(vanilla_heretic)
+      {
+         if(leveltime & 2)
+            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+      }
+      else
+         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   }
 
    // clip movement
    

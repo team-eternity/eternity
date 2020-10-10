@@ -229,6 +229,9 @@ enum
    // compatibility.
    GIF_DOOMWEAPONOFFSET = 0x00400000,
    GIF_INVALWAYSOPEN  = 0x00800000, // Inventory is always open (like Strife, but not Heretic)
+
+   // TODO: make this public for EDF gameprops
+   GIF_FLIGHTINERTIA  = 0x01000000, // player flight retains some inertia
 };
 
 // Game mode handling - identify IWAD version
