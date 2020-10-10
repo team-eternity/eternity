@@ -257,15 +257,12 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
-   bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
+   bool onfloor = P_OnGroundOrThing(*mo);
 
    // TODO: fix the flight behavior to match Heretic's
-   // VANILLA_HERETIC: check if && (!vanilla_heretic || !onfloor). Also check whatever is commented
    // VANILLA_HERETIC: else if(friction on thing sector)
-   if(mo->flags4 & MF4_FLY)
-   {
+   if(mo->flags4 & MF4_FLY && !onfloor)
       friction = FRICTION_FLY;
-   }
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
       // Air friction only affects players
@@ -3160,6 +3157,16 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 void P_ClearGlobalMobjReferences()
 {
    P_ClearTarget(clip.linetarget);
+}
+
+//
+// Return true if mobj is either on ground or another thing
+//
+bool P_OnGroundOrThing(const Mobj &mobj)
+{
+   return mobj.z <= mobj.zref.floor || ( P_Use3DClipping() &&   mobj.intflags & MIF_ONMOBJ);
+   // negative:
+   //     mobj.z >  mobj.zref.floor && (!P_Use3DClipping() || !(mobj.intflags & MIF_ONMOBJ))
 }
 
 //----------------------------------------------------------------------------

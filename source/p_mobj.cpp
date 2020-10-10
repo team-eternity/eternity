@@ -712,8 +712,7 @@ void P_XYMovement(Mobj* mo)
    // haleyjd: OVER_UNDER
    // 06/5/12: flying players
    // 2017/09/09: players when air friction is active
-   if(mo->z > mo->zref.floor && !(mo->flags4 & MF4_FLY) &&
-      (!P_Use3DClipping() || !(mo->intflags & MIF_ONMOBJ)) &&
+   if(!P_OnGroundOrThing(*mo) && !(mo->flags4 & MF4_FLY) &&
       (!mo->player || LevelInfo.airFriction == 0))
    {
       return;
