@@ -759,7 +759,7 @@ void P_XYMovement(Mobj* mo)
    {
       // BOOM friction compatibility
       // VANILLA_HERETIC: disable?
-      if(demo_version <= 201)
+      if(demo_version <= 201 && !vanilla_heretic)
       {
          // phares 3/17/98
          // Friction will have been adjusted by friction thinkers for icy
@@ -769,7 +769,7 @@ void P_XYMovement(Mobj* mo)
          mo->momy = FixedMul(mo->momy, mo->friction);
          mo->friction = ORIG_FRICTION; // reset to normal for next tic
       }
-      else if(demo_version <= 202)
+      else if(demo_version <= 202 && !vanilla_heretic)
       {
          // VANILLA_HERETIC: disable?
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
