@@ -259,11 +259,8 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
 
    bool onfloor = P_OnGroundOrThing(*mo);
 
-   // TODO: fix the flight behavior to match Heretic's
-   if(mo->flags4 & MF4_FLY)
-   {
+   if(mo->flags4 & MF4_FLY && !onfloor)
       friction = FRICTION_FLY;
-   }
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
       // Air friction only affects players

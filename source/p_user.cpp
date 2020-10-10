@@ -191,7 +191,7 @@ void P_CalcHeight(player_t *player)
    }
 
    // haleyjd 06/05/12: flying players
-   if(player->mo->flags4 & MF4_FLY && !onground)
+   if(player->mo->flags4 & MF4_FLY && !P_OnGroundOrThing(*player->mo))
       player->bob = FRACUNIT / 2;
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
