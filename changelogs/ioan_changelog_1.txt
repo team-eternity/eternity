@@ -8,6 +8,15 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+10.10.2020
+
+IMPROVEMENT: Flying now has the properties from Heretic: when on ground, the
+             friction is as on ground, and when on air, bobbing is removed
+             (having bobbing in air was actually an old Eternity regression).
+             Also, in Heretic if you press "fly up" you will automatically
+             activate the powerup.
+
+--------------------------------------------------------------------------------
 09.10.2020
 
 FEATURE: New EDF game property, game.autoflightartifact, which names the
