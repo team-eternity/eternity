@@ -42,6 +42,7 @@
 #include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_string.h"
 #include "e_things.h"
@@ -296,6 +297,34 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 }
 
 //
+// Check if player should switch to new weapon upon picking it up. It's assumed as unowned yet.
+//
+static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t &newWeapon)
+{
+   if(!(GameModeInfo->flags & GIF_WPNSWITCHSUPER))
+      return true;   // no limiting flag? Always switch
+
+   const weaponinfo_t *curWeapon = player.readyweapon;
+   if(E_IsPoweredVariant(curWeapon))
+      curWeapon = curWeapon->sisterWeapon;
+
+   for(const weaponslot_t *slot : player.pclass->weaponslots)
+   {
+      for(const BDListItem<weaponslot_t> *item = E_LastInSlot(slot); !item->isDummy();
+          item = item->bdPrev)
+      {
+         weapontype_t firstId = item->bdObject->weapon->id;
+         if(firstId == curWeapon->id)  // first encountered weapon is mine? Switch.
+            return true;
+         if(firstId == newWeapon.id)   // first encountered weapon is the picked one? Don't switch.
+            return false;
+      }
+   }
+   // We found neither ids in the possession? Weird case, but switch
+   return true;
+}
+
+//
 // The weapon name may have a MF_DROPPED flag ored in.
 //
 static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
@@ -379,11 +408,14 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    }
    else if(!E_PlayerOwnsWeapon(player, wp))
    {
-      weaponinfo_t *sister = wp->sisterWeapon;
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
-         player->pendingweapon = sister;
+      if(P_shouldSwitchToNewWeapon(*player, *wp))
+      {
+         weaponinfo_t *sister = wp->sisterWeapon;
+         player->pendingweapon = wp;
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+      }
       E_GiveWeapon(player, wp);
       return true;
    }
