@@ -444,6 +444,7 @@ struct gamemodeinfo_t
    double skillAmmoMultiplier;     // how much more ammo to give on baby and nightmare
    meleecalc_e monsterMeleeRange;  // how monster melee range is calculated
    fixed_t itemHeight;             // item pick-up height (independent of thing height)
+   const char *autoFlightArtifact; // name of artifact to trigger when commanding to fly
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop

@@ -824,7 +824,7 @@ void E_PtclTerrainHit(particle_t *p)
 // Executes mobj terrain effects.
 // ioanch 20160116: also use "sector" to change the group ID if needed
 //
-static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
+static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = nullptr;
@@ -877,6 +877,32 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector
 }
 
 //
+// Get the information for the thing's floor terrain. Also gets the resulting z value
+//
+static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, fixed_t *z)
+{
+   // override with sector terrain if one is specified
+   const ETerrain *terrain = sector.srf.floor.terrain;
+   if(!terrain)
+      terrain = TerrainTypes[sector.srf.floor.pic];
+
+   // no TerrainTypes in old demos or if comp enabled
+   if(demo_version < terrain->minversion || comp[comp_terrain])
+      terrain = &solid;
+
+   // some things don't cause splashes
+   if(thing.flags2 & MF2_NOSPLASH || thing.flags2 & MF2_FLOATBOB)
+      terrain = &solid;
+
+   if(z)
+   {
+      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.height :
+                                    sector.srf.floor.height;
+   }
+   return *terrain;
+}
+
+//
 // E_HitWater
 //
 // Called when a thing hits a floor or passes a deep water plane.
@@ -884,27 +910,12 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   ETerrain *terrain;
-
-   // override with sector terrain if one is specified
-   if(!(terrain = sector->srf.floor.terrain))
-      terrain = TerrainTypes[sector->srf.floor.pic];
-
-   // no TerrainTypes in old demos or if comp enabled
-   if(demo_version < terrain->minversion || comp[comp_terrain])
-      terrain = &solid;
-
-   // some things don't cause splashes
-   if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
-      terrain = &solid;
-
-   z = sector->heightsec != -1 ? sectors[sector->heightsec].srf.floor.height : 
-      sector->srf.floor.height;
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, &z);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
-   E_TerrainHit(terrain, thing, z, sector);
+   E_TerrainHit(&terrain, thing, z, sector);
 
-   return terrain->liquid;
+   return terrain.liquid;
 }
 
 //
@@ -939,6 +950,26 @@ bool E_HitFloor(Mobj *thing)
       return false;
 
    return E_HitWater(thing, m->m_sector);
+}
+
+//
+// Checks if E_HitFloor would happen without actually triggering a splash. Needed for certain things
+// whose behavior changes when hitting liquids
+//
+bool E_WouldHitFloorWater(const Mobj &thing)
+{
+   const msecnode_t *m;
+   for(m = thing.touching_sectorlist; m; m = m->m_tnext)
+      if(thing.z == m->m_sector->srf.floor.height)
+         break;
+
+   // NOTE: same conditions as E_HitFloor
+   if(!m || m->m_sector->heightsec != -1)
+      return false;
+
+   const sector_t &sector = *m->m_sector;
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, nullptr);
+   return terrain.liquid;
 }
 
 // EOF

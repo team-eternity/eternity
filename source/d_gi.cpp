@@ -1162,6 +1162,7 @@ static gamemodeinfo_t giDoomSW =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1287,6 +1288,7 @@ static gamemodeinfo_t giDoomReg =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1412,6 +1414,7 @@ static gamemodeinfo_t giDoomRetail =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1537,6 +1540,7 @@ static gamemodeinfo_t giDoomCommercial =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1662,6 +1666,7 @@ static gamemodeinfo_t giHereticSW =
    1.5,                // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
+   "ArtiFly",         // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1791,6 +1796,7 @@ static gamemodeinfo_t giHereticReg =
    1.5,               // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
+   "ArtiFly",         // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum

@@ -275,9 +275,11 @@ static void P_PlayerFlight(player_t *player, const ticcmd_t *cmd)
       else
          P_PlayerStopFlight(player);
    }
-   // TODO:
-   // else
-   // * If have a flight-granting powerup, activate it now
+   else if(fly > 0 && estrnonempty(GameModeInfo->autoFlightArtifact) &&
+           E_GetItemOwnedAmountName(player, GameModeInfo->autoFlightArtifact) >= 1)
+   {
+      E_TryUseItem(player, E_ItemIDForName(GameModeInfo->autoFlightArtifact));
+   }
 
    if(player->mo->flags4 & MF4_FLY)
    {
@@ -982,7 +984,7 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
 //
 void P_PlayerStartFlight(player_t *player, bool thrustup)
 {
-   if(full_demo_version < make_full_version(340, 23))
+   if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
    player->mo->flags4 |= MF4_FLY;
@@ -1001,7 +1003,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
 //
 void P_PlayerStopFlight(player_t *player)
 {
-   if(full_demo_version < make_full_version(340, 23))
+   if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
    player->mo->flags4 &= ~MF4_FLY;

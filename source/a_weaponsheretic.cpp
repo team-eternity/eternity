@@ -213,7 +213,7 @@ void A_MaceBallImpact(actionargs_t *actionargs)
    constexpr int MAGIC_JUNK = 1234;
 
    Mobj *ball = actionargs->actor;
-   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
    {
       // Landed in some sort of liquid
       ball->remove();
@@ -244,7 +244,7 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
    angle_t   angle;
    const int tnum = E_SafeThingType(MT_MACEFX3);
 
-   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
    {
       // Landed in some sort of liquid
       ball->remove();
@@ -324,7 +324,7 @@ void A_DeathBallImpact(actionargs_t *actionargs)
    angle_t  angle;
    bool     newAngle;
 
-   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
    {
       // Landed in some sort of liquid
       ball->remove();

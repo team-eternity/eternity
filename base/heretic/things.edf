@@ -3113,7 +3113,7 @@ thingtype CrossbowFX4 : Mobj, -1, 437
 thingtype MaceShotProto : HereticMissile, -1, -1
 {
   addflags HERETICBOUNCES|THRUGHOST
-  remflags NOGRAVITY
+  remflags NOGRAVITY|NOSPLASH
 
   //firstdecoratestate S_MACEFX1_1
   states
@@ -3152,6 +3152,7 @@ thingtype MaceFX2 : MaceShotProto, -1, 439
   height     8.0
   damage     6
   addflags   LOGRAV
+  remflags   NOSPLASH
 
   //firstdecoratestate S_MACEFX2_1
   states
@@ -3191,7 +3192,7 @@ thingtype MaceFX4 : MaceShotProto, -1, 441
   height     6.0
   damage     18
   dmgspecial PoweredMaceBall
-  remflags   NOTELEPORT
+  remflags   NOSPLASH   // |NOTELEPORT -- flag does not exist
   addflags   LOGRAV|TELESTOMP
 
   states
