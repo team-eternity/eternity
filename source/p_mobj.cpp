@@ -755,8 +755,8 @@ void P_XYMovement(Mobj* mo)
    }
    else
    {
-      // BOOM friction compatibility 
-      if(demo_version <= 201)
+      // BOOM friction compatibility
+      if(demo_version <= 201 && !vanilla_heretic)
       {
          // phares 3/17/98
          // Friction will have been adjusted by friction thinkers for icy
@@ -766,7 +766,7 @@ void P_XYMovement(Mobj* mo)
          mo->momy = FixedMul(mo->momy, mo->friction);
          mo->friction = ORIG_FRICTION; // reset to normal for next tic
       }
-      else if(demo_version <= 202)
+      else if(demo_version <= 202 && !vanilla_heretic)
       {
          // phares 9/10/98: reduce bobbing/momentum when on ice & up against wall
 
@@ -1022,8 +1022,17 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
+   // VANILLA_HERETIC: jerky flying player motion
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
-      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   {
+      if(vanilla_heretic)
+      {
+         if(leveltime & 2)
+            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+      }
+      else
+         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   }
 
    // clip movement
 
