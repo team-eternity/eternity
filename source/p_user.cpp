@@ -313,8 +313,7 @@ void P_MovePlayer(player_t* player)
    
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
-   onground = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) ||
-      (mo->flags4 & MF4_FLY);
+   onground = P_OnGroundOrThing(*mo) || (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
    //
@@ -429,12 +428,8 @@ void P_DeathThink(player_t *player)
       player->momx = player->momy = 0;
    }
    else
-   {
-      onground = player->mo->z <= player->mo->zref.floor ||
-                    (P_Use3DClipping() &&
-                     player->mo->intflags & MIF_ONMOBJ);
-   }
-   
+      onground = P_OnGroundOrThing(*player->mo);
+
    P_CalcHeight(player);
    
    if(player->attacker && player->attacker != player->mo)

@@ -281,6 +281,8 @@ void P_PopClipStack();
 
 void P_ClearGlobalMobjReferences();
 
+bool P_OnGroundOrThing(const Mobj &mobj);
+
 extern doom_mapinter_t  clip;  // haleyjd 04/16/10: made global, renamed
 extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed
 

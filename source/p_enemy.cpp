@@ -447,8 +447,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(P_Use3DClipping())
    {
-      if(!(actor->flags & MF_FLOAT) && actor->z > actor->zref.floor &&
-         !(actor->intflags & MIF_ONMOBJ))
+      if(!(actor->flags & MF_FLOAT) && !P_OnGroundOrThing(*actor))
       {
          if (actor->z > actor->zref.floor + STEPSIZE)
             return false;
