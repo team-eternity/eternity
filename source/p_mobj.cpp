@@ -758,7 +758,6 @@ void P_XYMovement(Mobj* mo)
    else
    {
       // BOOM friction compatibility
-      // VANILLA_HERETIC: disable?
       if(demo_version <= 201 && !vanilla_heretic)
       {
          // phares 3/17/98
