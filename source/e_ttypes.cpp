@@ -923,6 +923,10 @@ bool E_HitWater(Mobj *thing, const sector_t *sector)
 //
 void E_ExplosionHitWater(Mobj *thing, int damage)
 {
+   // Vanilla Heretic didn't really imply impact splash, only explosion, so avoid creating 2
+   // splashes at once in vHeretic
+   if(vanilla_heretic && E_WouldHitFloorWater(*thing))
+      return;
    // VANILLA_HERETIC: explosion infinite height
    if(vanilla_heretic || thing->z <= thing->zref.secfloor + damage * FRACUNIT)
       E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));
