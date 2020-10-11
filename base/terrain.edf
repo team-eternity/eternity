@@ -110,11 +110,6 @@ endif()
 
 ifgametype(HERETIC)
 
-// Heretic terrains cause noise alerts
-terraindelta { name = Water;  splashalert = true }
-terraindelta { name = Lava;   splashalert = true }
-terraindelta { name = Sludge; splashalert = true }
-
 floor { flat = FLTWAWA1; terrain = Water  }
 floor { flat = FLTWAWA2; terrain = Water  }
 floor { flat = FLTWAWA3; terrain = Water  }
