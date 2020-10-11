@@ -221,7 +221,7 @@ default_t defaults[] =
 
    // killough 3/1/98
    DEFAULT_INT("monsters_remember", &default_monsters_remember, &monsters_remember,
-               1, 0, 1, default_t::wad_yes,
+               0, 0, 1, default_t::wad_yes,
                "1 to enable monsters remembering enemies after killing others"),
 
    // killough 7/19/98
@@ -235,7 +235,7 @@ default_t defaults[] =
 
    //killough 9/9/98:
    DEFAULT_INT("monster_avoid_hazards", &default_monster_avoid_hazards, &monster_avoid_hazards,
-               1, 0, 1, default_t::wad_yes, "1 to enable monsters to intelligently avoid hazards"),
+               0, 0, 1, default_t::wad_yes, "1 to enable monsters to intelligently avoid hazards"),
    
    DEFAULT_INT("monkeys", &default_monkeys, &monkeys, 0, 0, 1, default_t::wad_yes,
                "1 to enable monsters to move up/down steep stairs"),

@@ -509,6 +509,10 @@ Strife (when Strife is a thing).
 Secret notifications are now toggleable on/off via the "secret_notification"
 console variable.
 
+-------------------------------------------------------------------------------
+2020/11/10
+Changed monsters_remember & monster_avoid_hazards to 0 by default.
+
 ================================================================================
 EOF
 ================================================================================
