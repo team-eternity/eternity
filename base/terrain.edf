@@ -110,6 +110,9 @@ endif()
 
 ifgametype(HERETIC)
 
+// Heretic sludge is silent
+splashdelta { name Sludge; smallsound none; sound none }
+
 floor { flat = FLTWAWA1; terrain = Water  }
 floor { flat = FLTWAWA2; terrain = Water  }
 floor { flat = FLTWAWA3; terrain = Water  }

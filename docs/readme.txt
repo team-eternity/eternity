@@ -403,6 +403,9 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
   * Added the UNSTEPPABLE thing flag, needed by the Heretic gameplay.
 
+  * New delta structure, splashdelta. It's similar to terraindelta but applies 
+    to splash definitions.
+
 
   Level Editing Stuff
 

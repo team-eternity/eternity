@@ -8,6 +8,12 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+11.10.2020
+
+FEATURE: New delta structure, splashdelta. It's similar to terraindelta but
+         applies to splash definitions.
+
+--------------------------------------------------------------------------------
 10.10.2020
 
 IMPROVEMENT: Flying now has the properties from Heretic: when on ground, the
