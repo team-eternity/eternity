@@ -244,9 +244,6 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, nullptr, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
 
-   DEFAULT_INT("r_fov", &fov, nullptr, 90, 20, 179, default_t::wad_no,
-               "The renderer's field of view angle (in degrees)"),
-
 #ifdef _SDL_VER
    DEFAULT_INT("displaynum", &displaynum, nullptr, 0, 0, UL, default_t::wad_no,
                "Display number that the window appears on"),
