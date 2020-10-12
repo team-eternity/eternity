@@ -789,6 +789,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Shipping|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_compatibility.cpp" />
     <ClCompile Include="..\source\e_dstate.cpp" />
     <ClCompile Include="..\Source\e_edf.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2657,6 +2658,7 @@
     <ClInclude Include="..\source\ev_sectors.h" />
     <ClInclude Include="..\source\e_anim.h" />
     <ClInclude Include="..\source\e_args.h" />
+    <ClInclude Include="..\source\e_compatibility.h" />
     <ClInclude Include="..\source\e_dstate.h" />
     <ClInclude Include="..\Source\e_edf.h" />
     <ClInclude Include="..\source\e_edfmetatable.h" />
