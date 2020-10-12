@@ -838,7 +838,7 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
       //jff 5/17/98 unless compatibility optioned 
       //then maximum near ANY tagged sector
       
-      if(comp[comp_model])
+      if(getComp(comp_model))
          bright = tbright;
 
       if(manual)

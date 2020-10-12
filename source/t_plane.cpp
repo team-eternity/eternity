@@ -181,7 +181,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
    // Moving a floor up
    // jff 02/04/98 keep floor from moving thru ceilings
    // jff 2/22/98 weaken check to demo_compatibility
-   if(comp[comp_floors] || dest < sector->srf.ceiling.height)
+   if(getComp(comp_floors) || dest < sector->srf.ceiling.height)
       destheight = dest;
    else
       destheight = sector->srf.ceiling.height;
@@ -256,7 +256,7 @@ result_e T_MoveFloorUp(sector_t *sector, fixed_t speed, fixed_t dest, int crush,
          // haleyjd 07/23/05: crush no longer boolean
          // Note: to make crushers that stop at heads, fail
          // to return crushed here even when crush is positive
-         if(demo_version < 203 || comp[comp_floors]) // killough 10/98
+         if(demo_version < 203 || getComp(comp_floors)) // killough 10/98
          {
             if(crush > 0 && !emulateStairCrush) //jff 1/25/98 fix floor crusher
                return crushed;
@@ -298,7 +298,7 @@ result_e T_MoveCeilingDown(sector_t *sector, fixed_t speed, fixed_t dest,
    // jff 02/04/98 keep ceiling from moving thru floors
    // jff 2/22/98 weaken check to demo_compatibility
    // killough 10/98: add comp flag
-   if(comp[comp_floors] || dest > sector->srf.floor.height)
+   if(getComp(comp_floors) || dest > sector->srf.floor.height)
       destheight = dest;
    else
       destheight = sector->srf.floor.height;

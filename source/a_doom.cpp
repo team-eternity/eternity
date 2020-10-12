@@ -1046,7 +1046,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    // and wouldn't spit another one if there were. If not in   // phares
    // compatibility mode, we remove the limit.                 // phares
 
-   if((comp[comp_pain] && count < 0) || count > 0)  // killough 10/98: compatibility-optioned
+   if((getComp(comp_pain) && count < 0) || count > 0)  // killough 10/98: compatibility-optioned
    {
       // count total number of skulls currently on the level
       if(count < 0)
@@ -1083,7 +1083,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    y = pos.y;
    z = actor->z + 8*FRACUNIT;
    
-   if(comp[comp_skull])   // killough 10/98: compatibility-optioned
+   if(getComp(comp_skull))   // killough 10/98: compatibility-optioned
       newmobj = P_SpawnMobj(x, y, z, thingType);                    // phares
    else                                                             //   V
    {

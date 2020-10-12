@@ -385,7 +385,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
    telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!comp[comp_telefrag] ? boss : (gamemap == 30));
+              (!getComp(comp_telefrag) ? boss : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -895,7 +895,7 @@ bool P_SkullHit(Mobj *thing)
 //
 int P_MissileBlockHeight(Mobj *mo)
 {
-   return (demo_version >= 333 && !comp[comp_theights] &&
+   return (demo_version >= 333 && !getComp(comp_theights) &&
            mo->flags3 & MF3_3DDECORATION) ? mo->info->height : mo->height;
 }
 
@@ -1336,7 +1336,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
 
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
    {
-      if(comp[comp_dropoff])
+      if(getComp(comp_dropoff))
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
@@ -1410,7 +1410,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          return true;
       }
 
-      if(comp[comp_dropoff])
+      if(getComp(comp_dropoff))
       {
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
@@ -2702,7 +2702,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    msecnode_t *n;
    
    // killough 10/98: sometimes use Doom's method
-   if(comp[comp_floors] && (demo_version >= 203 || demo_compatibility))
+   if(getComp(comp_floors) && (demo_version >= 203 || demo_compatibility))
       return P_ChangeSector(sector, crunch);
 
    // haleyjd: call down to P_ChangeSector3D instead.

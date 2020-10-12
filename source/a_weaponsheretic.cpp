@@ -704,7 +704,7 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
    // The footclip check turns into:
    //   (mo->flags2 & 1)
    // due to C operator precedence and a lack of parens/brackets.
-   const fixed_t z = comp[comp_terrain] || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
+   const fixed_t z = getComp(comp_terrain) || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
                      mo->z : mo->z - (15 * FRACUNIT);
    bomb = P_SpawnMobj(mo->x + (24 * finecosine[angle]),
                       mo->y + (24 * finesine[angle]),

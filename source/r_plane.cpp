@@ -853,7 +853,7 @@ static void do_draw_newsky(visplane_t *pl)
    sky1 = R_GetSkyTexture(skyTexture);
    sky2 = R_GetSkyTexture(skyTexture2);
       
-   if(comp[comp_skymap] || !(column.colormap = fixedcolormap))
+   if(getComp(comp_skymap) || !(column.colormap = fixedcolormap))
       column.colormap = fullcolormap;
       
    // first draw sky 2 with R_DrawColumn (unmasked)
@@ -998,7 +998,7 @@ static void do_draw_plane(visplane_t *pl)
       //
       // killough 7/19/98: fix hack to be more realistic:
       // haleyjd 10/31/10: use plane colormaps, not global vars!
-      if(comp[comp_skymap] || !(column.colormap = pl->fixedcolormap))
+      if(getComp(comp_skymap) || !(column.colormap = pl->fixedcolormap))
          column.colormap = pl->fullcolormap;
 
       //dc_texheight = (textureheight[texture])>>FRACBITS; // killough

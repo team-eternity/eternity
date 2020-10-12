@@ -2628,7 +2628,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // which is missing the fog and sound, as it spawns somewhere out in the
    // far reaches of the void.
 
-   if(!comp[comp_ninja])
+   if(!getComp(comp_ninja))
    {
       an = ANG45 * (angle_t)(mthing->angle / 45);
       mtcos = finecosine[an >> ANGLETOFINESHIFT];

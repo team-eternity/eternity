@@ -101,6 +101,7 @@
 
 #include "e_anim.h"
 #include "e_args.h"
+#include "e_compatibility.h"
 #include "e_fonts.h"
 #include "e_gameprops.h"
 #include "e_inventory.h"
@@ -258,6 +259,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_COMPATIBILITY, edf_compatibility_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SWITCH,      edf_switch_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ANIMATION,   edf_anim_opts,     EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
@@ -1715,6 +1717,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
+
+   // ioanch 2020-04-20: compatibility
+   E_ProcessCompatibilities(cfg);
 
    // post-processing routines
    E_SetThingDefaultSprites();

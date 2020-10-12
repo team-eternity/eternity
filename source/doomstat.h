@@ -166,6 +166,12 @@ enum {
 };
 
 extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
+extern int level_compat_comp[COMP_TOTAL];  // ioanch: level compat active?
+extern bool level_compat_compactive[COMP_TOTAL];   // true if use level_compat_comp instead of comp
+inline static int getComp(int index)
+{
+   return level_compat_compactive[index] ? level_compat_comp[index] : comp[index];
+}
 
 // -------------------------------------------
 // Language.

@@ -8,6 +8,14 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+12.10.2020
+
+IMPROVEMENT: Added a new EDF feature, compatibilityhacks, which shall be used
+             with MD5 checksums to setup comp_ settings.
+
+             To helps us here, we shall have the "mapchecksum" console command.
+
+--------------------------------------------------------------------------------
 11.10.2020
 
 FEATURE: New delta structure, splashdelta. It's similar to terraindelta but

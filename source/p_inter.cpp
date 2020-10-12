@@ -1510,7 +1510,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // ignore damage in GOD mode, or with INVUL power.
       // killough 3/26/98: make god mode 100% god mode in non-compat mode
 
-      if((damage < 1000 || (!comp[comp_god] && player->cheats&CF_GODMODE)) &&
+      if((damage < 1000 || (!getComp(comp_god) && player->cheats&CF_GODMODE)) &&
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
@@ -1801,7 +1801,7 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 {
    corpse->momx = corpse->momy = 0;
    bool check;
-   if(comp[comp_vile])
+   if(getComp(comp_vile))
    {
       corpse->height <<= 2;
 
@@ -1853,7 +1853,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
 
    P_SetMobjState(corpse, info->raisestate);
 
-   if(comp[comp_vile])
+   if(getComp(comp_vile))
       corpse->height <<= 2;                        // phares
    else                                               //   V
    {

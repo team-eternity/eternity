@@ -406,6 +406,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * New delta structure, splashdelta. It's similar to terraindelta but applies 
     to splash definitions.
 
+  * Gameplay hash-based compatibility to fix old wads not working.
+
 
   Level Editing Stuff
 

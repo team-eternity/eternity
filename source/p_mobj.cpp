@@ -831,7 +831,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    // haleyjd 05/09/99 no oof when dead :)
    if(demo_version < 329 || mo->health > 0)
    {
-      if(!comp[comp_fallingdmg] && demo_version >= 329)
+      if(!getComp(comp_fallingdmg) && demo_version >= 329)
       {
          // new features -- feet sound for normal hits,
          // grunt for harder, falling damage for worse
@@ -877,7 +877,7 @@ static void P_ZMovement(Mobj* mo)
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;
    else // from now on...
-      correct_lost_soul_bounce = !comp[comp_soul];
+      correct_lost_soul_bounce = !getComp(comp_soul);
 
    // killough 7/11/98:
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom
@@ -1166,7 +1166,7 @@ void P_NightmareRespawn(Mobj* mobj)
    y = mobj->spawnpoint.y;
 
    // stupid nightmare respawning bug fix
-   if(!comp[comp_respawnfix] && demo_version >= 329 && x == 0 && y == 0)
+   if(!getComp(comp_respawnfix) && demo_version >= 329 && x == 0 && y == 0)
    {
       // spawnpoint was zeroed out, so use point of death instead
       x = mobj->x;
@@ -1375,7 +1375,7 @@ bool Mobj::shouldApplyTorque()
 {
    if(demo_version < 203)
       return false; // never in old demos
-   if(comp[comp_falloff] && !(flags4 & MF4_ALWAYSTORQUE))
+   if(getComp(comp_falloff) && !(flags4 & MF4_ALWAYSTORQUE))
       return false; // torque is disabled
    if(flags & MF_NOGRAVITY  ||
       flags2 & MF2_FLOATBOB ||
@@ -3419,7 +3419,7 @@ void P_AdjustFloorClip(Mobj *thing)
    const msecnode_t *m;
 
    // absorb test for FOOTCLIP flag here
-   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))
+   if(getComp(comp_terrain) || !(thing->flags2 & MF2_FOOTCLIP))
    {
       thing->floorclip = 0;
       return;
@@ -3464,7 +3464,7 @@ void P_AdjustFloorClip(Mobj *thing)
 int P_ThingInfoHeight(const mobjinfo_t *mi)
 {
    return
-      ((demo_version >= 333 && !comp[comp_theights] &&
+      ((demo_version >= 333 && !getComp(comp_theights) &&
        mi->c3dheight) ?
        mi->c3dheight : mi->height);
 }

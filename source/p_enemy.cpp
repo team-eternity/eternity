@@ -580,7 +580,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       clip.numspechit = 0;
 
       // haleyjd 04/11/10: wider compatibility range
-      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+      if(!good || getComp(comp_doorstuck)) // v1.9, or BOOM 2.01 compatibility
          return good;
       else if(demo_version == 202) // BOOM 2.02
          return (P_Random(pr_trywalk) & 3);
@@ -625,7 +625,7 @@ bool P_SmartMove(Mobj *actor)
    int on_lift, dropoff = 0, under_damage;
 
    // killough 9/12/98: Stay on a lift if target is on one
-   on_lift = !comp[comp_staylift] && target && target->health > 0 &&
+   on_lift = !getComp(comp_staylift) && target && target->health > 0 &&
       target->subsector->sector->tag==actor->subsector->sector->tag &&
       P_IsOnLift(actor);
 
@@ -879,7 +879,7 @@ void P_NewChaseDir(Mobj *actor)
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
-         !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
+         !getComp(comp_dropoff) && P_AvoidDropoff(actor)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
          
@@ -1200,7 +1200,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
 
       // killough 9/9/98: give monsters a threshold towards getting players
       // (we don't want it to be too easy for a player with dogs :)
-      if(demo_version >= 203 && !comp[comp_pursuit])
+      if(demo_version >= 203 && !getComp(comp_pursuit))
          actor->threshold = 60;
       
       return true;

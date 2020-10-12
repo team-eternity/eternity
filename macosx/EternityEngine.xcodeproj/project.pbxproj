@@ -302,6 +302,7 @@
 		4FB11C46249E68F600593746 /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FB11C28249E414600593746 /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4FB11C47249E68F700593746 /* SDL2_net.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FB11C27249E414600593746 /* SDL2_net.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		4FB11C48249E68FA00593746 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4FB11C29249E414600593746 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		4FB21C722534C46C00F4812C /* e_compatibility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB21C702534C46C00F4812C /* e_compatibility.cpp */; };
 		4FB5F0051CCB5A0D00EFF2D9 /* p_portalclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */; };
 		4FB8211623F1DCD80044B1C3 /* hu_inventory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */; };
 		4FC0A9271E1E2A50006CEC45 /* Action.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A8FB1E1E2A50006CEC45 /* Action.cpp */; };
@@ -507,6 +508,8 @@
 		4FB11C28249E414600593746 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
 		4FB11C29249E414600593746 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
 		4FB11C3D249E544000593746 /* eternity.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = eternity.entitlements; sourceTree = "<group>"; };
+		4FB21C702534C46C00F4812C /* e_compatibility.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = e_compatibility.cpp; path = ../source/e_compatibility.cpp; sourceTree = "<group>"; };
+		4FB21C712534C46C00F4812C /* e_compatibility.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = e_compatibility.h; path = ../source/e_compatibility.h; sourceTree = "<group>"; };
 		4FB5F0031CCB5A0D00EFF2D9 /* p_portalclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = p_portalclip.cpp; path = ../source/p_portalclip.cpp; sourceTree = "<group>"; };
 		4FB5F0041CCB5A0D00EFF2D9 /* p_portalclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = p_portalclip.h; path = ../source/p_portalclip.h; sourceTree = "<group>"; };
 		4FB8211423F1DCD80044B1C3 /* hu_inventory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = hu_inventory.cpp; path = ../source/hu_inventory.cpp; sourceTree = "<group>"; };
@@ -1585,6 +1588,8 @@
 				FABF5CD7158BF42800C49E93 /* e_args.cpp */,
 				FACACB3C165280BF0091AF2E /* e_args.h */,
 				FABF5CD8158BF42800C49E93 /* e_cmd.cpp */,
+				4FB21C702534C46C00F4812C /* e_compatibility.cpp */,
+				4FB21C712534C46C00F4812C /* e_compatibility.h */,
 				FABF5CD9158BF42800C49E93 /* e_dstate.cpp */,
 				FA16D3DE15E01E96002318D1 /* e_dstate.h */,
 				FABF5CDA158BF42800C49E93 /* e_edf.cpp */,
@@ -2307,6 +2312,7 @@
 				4F5F395E182D9B820027813A /* v_font.cpp in Sources */,
 				4FFDE56121DE891F00836A2D /* inflate.c in Sources */,
 				4F02C37A23126D80004DBBA7 /* dbopl.cpp in Sources */,
+				4FB21C722534C46C00F4812C /* e_compatibility.cpp in Sources */,
 				4F5F395F182D9B820027813A /* v_misc.cpp in Sources */,
 				4F5F3960182D9B820027813A /* v_patch.cpp in Sources */,
 				4F5F3961182D9B820027813A /* v_patchfmt.cpp in Sources */,
