@@ -975,9 +975,6 @@ Bugs Fixed (since 4.01.00):
 + Fixed HOM happening when trying to render the same portal from two separate 
   windows.
 
-+ Fixed crashes happening when changing the NOBLOCKMAP and NOSECTOR thing
-  flags via SetFlags/UnSetFlags.
-
 + Fixed wrong double check of standby monsters for shadowsphere stealth players.
 
 

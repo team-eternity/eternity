@@ -37,15 +37,6 @@ FEATURE: New EDF game property, game.autoflightartifact, which names the
          artifact to use when attempting to fly.
 
 --------------------------------------------------------------------------------
-08.10.2020
-
-BUGFIX: Fixed crashes happening when changing NOBLOCKMAP and NOSECTOR via code-
-        pointers.
-
-        Fixed wrong double check of standby monsters for shadowsphere stealth
-        players.
-
---------------------------------------------------------------------------------
 05.10.2020
 
 FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific
