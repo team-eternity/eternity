@@ -125,6 +125,8 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
+      // FIXME: This assumes that the powered variant has the same
+      // ammo usage as the unpowered variant, which is not always true
       if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
       {
          weaponinfo_t *sister = wp->sisterWeapon;
