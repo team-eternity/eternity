@@ -125,9 +125,16 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
-      player->pendingweapon = E_FindBestBetterWeaponUsingAmmo(player, ammo);
-      if(player->pendingweapon)
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
+      {
+         weaponinfo_t *sister = wp->sisterWeapon;
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+         else
+            player->pendingweapon = wp;
+
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
