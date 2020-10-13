@@ -1231,15 +1231,20 @@ extern int levelFragLimit;
 //
 static void D_StartupMessage()
 {
-   puts("The Eternity Engine\n"
-        "Copyright 2017 James Haley, Stephen McGranahan, et al.\n"
-        "http://www.doomworld.com/eternity\n"
-        "\n"
-        "This program is free software distributed under the terms of\n"
-        "the GNU General Public License. See the file \"COPYING\" for\n"
-        "full details. Commercial sale or distribution of this product\n"
-        "without its license, source code, and copyright notices is an\n"
-        "infringement of US and international copyright laws.\n");
+   static char copyright[] =
+      "The Eternity Engine\n"
+      "Copyright YEAR James Haley, Stephen McGranahan, et al.\n"
+      "http://www.doomworld.com/eternity\n"
+      "\n"
+      "This program is free software distributed under the terms of\n"
+      "the GNU General Public License. See the file \"COPYING\" for\n"
+      "full details. Commercial sale or distribution of this product\n"
+      "without its license, source code, and copyright notices is an\n"
+      "infringement of US and international copyright laws.\n";
+
+   memcpy(copyright + 30, &__DATE__[7], 4); // Automatically update copyright year
+
+   puts(copyright);
 }
 
 //
