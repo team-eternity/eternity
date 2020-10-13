@@ -1017,6 +1017,9 @@
     <ClCompile Include="..\source\e_compatibility.cpp">
       <Filter>Source Files\E_\E_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\Win32\i_w32gui.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
