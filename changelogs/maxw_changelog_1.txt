@@ -509,6 +509,10 @@ console variable.
 2020/11/10
 Changed monsters_remember & monster_avoid_hazards to 0 by default.
 
+-------------------------------------------------------------------------------
+2020/13/10
+Added a folder selector popup on Windows for when no IWADs are found.
+
 ================================================================================
 EOF
 ================================================================================

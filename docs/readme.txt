@@ -1,7 +1,8 @@
 ===============================================================================
 Title                   : The Eternity Engine v4.01.00 "Tyrfing"
-Filename                : ee-4.01.00-win32.zip, ee-4.01.00-macos.dmg
-Release date            : 2020-07-24
+Filename                : ee-4.01.00-x64.zip, ee-4.01.00-macos.dmg,
+                          ee-4.01.00-win32.zip, ee-4.01.00-win-legacy.zip
+Release date            : 2020-10-13
 Author                  : Team Eternity:
                           Ioan "printz" Chera,
                           James "Quasar" Haley,
@@ -26,6 +27,7 @@ Additional Credits to   : Graphics
                             Sarah "esselfortium" Mancuso
                             Sven "ptoing" Ruthner
                             Bob Satori
+                            Nash Muhandes
 
                           Works Based On
                           --------------
@@ -58,7 +60,7 @@ Additional Credits to   : Graphics
                           - PrBoom-Plus -
                               Andrey Budko
                           - ZDoom -
-                              Randy Heit, Graf Zahl, Braden Obrzut
+                              Marisa Heit, Graf Zahl, Braden Obrzut
 
                           Libraries and Utilities
                           -----------------------
@@ -141,8 +143,8 @@ Other files required    : DOOM, DOOM II, Final Doom, HACX, or Heretic
 * Construction *
 
 Base                    : SMMU v3.21 / v3.30
-Build Time              : Seventeen years and counting
-Editor(s) used          : Visual Studio 2017, Xcode, UltraEdit-32, SLADE,
+Build Time              : Nineteen years and counting
+Editor(s) used          : Visual Studio 2017/2019, Xcode, UltraEdit-32, SLADE,
                           Notepad++, GZDoom Builder
 Known Bugs              : Too many to mention here, see below for more info
 May Not Run With...     : Most mods made for other source ports
@@ -167,6 +169,7 @@ License v3.0 or later and any additional compatible terms and conditions.
 
 Web sites: https://github.com/team-eternity/eternity/releases
            https://www.doomworld.com/forum/25-eternity/
+           https://eternity.youfailit.net/
            http://eternity.mancubus.net/
 FTP sites: None
 
@@ -552,8 +555,6 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * Added an option that allows you to set message alignment to either default,
     left, or centred.
 
-  * Made FoV save in configs.
-
   * Extended -file to search DOOMWADPATH directories if required.
 
   * Made "summon" console command check thing num for compat name if no thing is
@@ -606,7 +607,7 @@ These are features planned to debut in future versions of the Eternity Engine:
   ** Aeon scripting system
   ** 100% Heretic support                (Major progress made)
   Hexen Support
-  Strife Support
+  Strife Support                         (In progress)
   PSX Doom support                       (In progress)
   Double flats
 
