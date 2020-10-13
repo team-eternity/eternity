@@ -1,6 +1,6 @@
 ===============================================================================
 Title                   : The Eternity Engine v4.01.00 "Tyrfing"
-Filename                : ee-4.01.00-x64.zip, ee-4.01.00-macos.dmg,
+Filename                : ee-4.01.00-win64.zip, ee-4.01.00-macos.dmg,
                           ee-4.01.00-win32.zip, ee-4.01.00-win-legacy.zip
 Release date            : 2020-10-13
 Author                  : Team Eternity:
