@@ -28,7 +28,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <Shlobj_core.h>
+#include <ShlObj.h>
 
 #include "../m_qstr.h"
 
