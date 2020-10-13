@@ -409,7 +409,9 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * New delta structure, splashdelta. It's similar to terraindelta but applies 
     to splash definitions.
 
-  * Gameplay hash-based compatibility to fix old wads not working.
+  * Added gameplay hash-based compatibility to fix old wads.
+
+  * Added the 200 DEHEXTRA sounds.
 
 
   Level Editing Stuff
@@ -427,7 +429,8 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
   * New polyobject linedef specials: Polyobj_MoveTo, Polyobj_MoveToSpot,
     Polyobj_OR_MoveTo and Polyobj_OR_MoveToSpot, based on the GZDoom extensions.
 
-  * Added SetWeapon and CheckWeapon ACS functions.
+  * Added the SetWeapon, CheckWeapon, SetSectorDamage ACS functions. Added the
+    ACS variant of Sector_SetFriction.
 
   * Thing_Destroy now works like in GZDoom, unless level is vanilla Hexen (where
     it will still support arg 3). Most notably, arg 2 is now "flags" and 1 means
@@ -521,6 +524,17 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
 
 - Control and user experience improvements -
 
+  * Saves now are versioning, allowing backwards compatibility.
+
+  * Added secret revealing notifications. The defaults are DSITMBK for Doom and
+    CHAT for Heretic, and can be overridden by providing a "DSSECRET" lump, or
+    "DSYEAH" in Strife (when Strife becomes supported). Secret notifications can
+    be toggled via the "secret_notification" console variable.
+
+  * monsters_remember and monster_avoid_hazards are now 0 by default.
+
+  * Added a folder selector popup on Windows for when no IWADs are found.
+
   * Now if an action is bound to more than one key, and two of the keys are
     being pressed, releasing just one of them will not stop the action. You need
     to release all of them.
@@ -595,6 +609,7 @@ emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
     disabled.
   * Scrolling texture movement (including attached 3dmidtex) is now 
     interpolated.
+  * Made the empty weapons in the Boom-style HUDs brown in colour.
 
 ===============================================================================
 * Coming Soon *
@@ -621,7 +636,7 @@ These are features planned to debut in future versions of the Eternity Engine:
 ===============================================================================
 * Revision History *
 
-4.01.00 "Tyrfing" -- 07/24/20
+4.01.00 "Tyrfing" -- 10/13/20
 
   Major update which introduces EDF weapons, EDF items, EDF bullet puff effects,
   a new HUD by ptoing and libADLMIDI music support. In addition a lot of other
@@ -977,6 +992,10 @@ Bugs Fixed (since 4.01.00):
   windows.
 
 + Fixed wrong double check of standby monsters for shadowsphere stealth players.
+
++ Fixed the SpawnProjectile speed.
+
++ Fixed the extended linedef flags not getting saved.
 
 
 Known Issues in v4.01.00:
