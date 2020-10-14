@@ -150,11 +150,11 @@
     <ClInclude Include="..\adlmidi\src\chips\opl_chip_base.tcc">
       <Filter>Header Files\src\chips</Filter>
     </ClInclude>
+    <ClInclude Include="..\adlmidi\src\adlmidi_db.h">
+      <Filter>Header Files\src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\adlmidi\src\adldata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\adlmidi\src\adlmidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -199,6 +199,9 @@
     </ClCompile>
     <ClCompile Include="..\adlmidi\src\chips\java_opl3.cpp">
       <Filter>Source Files\chips</Filter>
+    </ClCompile>
+    <ClCompile Include="..\adlmidi\src\inst_db.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

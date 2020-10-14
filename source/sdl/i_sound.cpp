@@ -38,7 +38,7 @@
 #include "../s_sound.h"
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.hpp"
+#include "adlmidi.h"
 #endif
 
 int snd_card;   // default.cfg variables for digi and midi drives

@@ -61,7 +61,7 @@ namespace fs = std::experimental::filesystem;
 #include "w_wad.h"
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.hpp"
+#include "adlmidi.h"
 extern int adlmidi_bank;
 #endif
 

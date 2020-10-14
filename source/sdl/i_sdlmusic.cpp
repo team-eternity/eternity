@@ -60,7 +60,7 @@
 #endif
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.hpp"
+#include "adlmidi.h"
 #endif
 
 #ifdef EE_FEATURE_MIDIRPC
