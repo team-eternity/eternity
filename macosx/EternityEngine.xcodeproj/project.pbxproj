@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		4F015B111870EA5900ADB3F4 /* s_formats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F015B0E1870EA5900ADB3F4 /* s_formats.cpp */; };
 		4F02C37223126D6C004DBBA7 /* adlmidi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C36B23126D6B004DBBA7 /* adlmidi.cpp */; };
-		4F02C37323126D6C004DBBA7 /* adldata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C36C23126D6B004DBBA7 /* adldata.cpp */; };
 		4F02C37423126D6C004DBBA7 /* adlmidi_load.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C36D23126D6B004DBBA7 /* adlmidi_load.cpp */; };
 		4F02C37523126D6C004DBBA7 /* adlmidi_midiplay.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C36E23126D6C004DBBA7 /* adlmidi_midiplay.cpp */; };
 		4F02C37623126D6C004DBBA7 /* adlmidi_private.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C36F23126D6C004DBBA7 /* adlmidi_private.cpp */; };
@@ -327,6 +326,7 @@
 		4FC0A93F1E1E2ABC006CEC45 /* cam_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93A1E1E2ABC006CEC45 /* cam_common.cpp */; };
 		4FC0A9401E1E2ABC006CEC45 /* cam_shoot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93C1E1E2ABC006CEC45 /* cam_shoot.cpp */; };
 		4FC0A9411E1E2ABC006CEC45 /* cam_use.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FC0A93D1E1E2ABC006CEC45 /* cam_use.cpp */; };
+		4FCB3A3B253760F50038EFEB /* inst_db.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FCB3A3A253760F50038EFEB /* inst_db.cpp */; };
 		4FFDE54921D2817D00836A2D /* hu_modern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54421D2817C00836A2D /* hu_modern.cpp */; };
 		4FFDE54A21D2817D00836A2D /* hu_boom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54521D2817C00836A2D /* hu_boom.cpp */; };
 		4FFDE56021DE891F00836A2D /* inffast.c in Sources */ = {isa = PBXBuildFile; fileRef = 4FFDE54D21DE891D00836A2D /* inffast.c */; };
@@ -369,7 +369,6 @@
 		4F02C34A23126C50004DBBA7 /* adlmidi_opl3.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = adlmidi_opl3.hpp; path = ../adlmidi/src/adlmidi_opl3.hpp; sourceTree = "<group>"; };
 		4F02C34B23126C50004DBBA7 /* adlmidi_ptr.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = adlmidi_ptr.hpp; path = ../adlmidi/src/adlmidi_ptr.hpp; sourceTree = "<group>"; };
 		4F02C34C23126C50004DBBA7 /* adlmidi_private.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = adlmidi_private.hpp; path = ../adlmidi/src/adlmidi_private.hpp; sourceTree = "<group>"; };
-		4F02C34D23126C50004DBBA7 /* adldata.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = adldata.hh; path = ../adlmidi/src/adldata.hh; sourceTree = "<group>"; };
 		4F02C34E23126C50004DBBA7 /* adlmidi_cvt.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = adlmidi_cvt.hpp; path = ../adlmidi/src/adlmidi_cvt.hpp; sourceTree = "<group>"; };
 		4F02C34F23126C51004DBBA7 /* adlmidi_midiplay.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = adlmidi_midiplay.hpp; path = ../adlmidi/src/adlmidi_midiplay.hpp; sourceTree = "<group>"; };
 		4F02C35223126C74004DBBA7 /* dbopl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = dbopl.h; path = ../adlmidi/src/chips/dosbox/dbopl.h; sourceTree = "<group>"; };
@@ -393,7 +392,6 @@
 		4F02C36823126D38004DBBA7 /* pl_list.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = pl_list.hpp; path = ../adlmidi/src/structures/pl_list.hpp; sourceTree = "<group>"; };
 		4F02C36A23126D4B004DBBA7 /* wopl_file.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = wopl_file.h; path = ../adlmidi/src/wopl/wopl_file.h; sourceTree = "<group>"; };
 		4F02C36B23126D6B004DBBA7 /* adlmidi.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = adlmidi.cpp; path = ../adlmidi/src/adlmidi.cpp; sourceTree = "<group>"; };
-		4F02C36C23126D6B004DBBA7 /* adldata.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = adldata.cpp; path = ../adlmidi/src/adldata.cpp; sourceTree = "<group>"; };
 		4F02C36D23126D6B004DBBA7 /* adlmidi_load.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = adlmidi_load.cpp; path = ../adlmidi/src/adlmidi_load.cpp; sourceTree = "<group>"; };
 		4F02C36E23126D6C004DBBA7 /* adlmidi_midiplay.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = adlmidi_midiplay.cpp; path = ../adlmidi/src/adlmidi_midiplay.cpp; sourceTree = "<group>"; };
 		4F02C36F23126D6C004DBBA7 /* adlmidi_private.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = adlmidi_private.cpp; path = ../adlmidi/src/adlmidi_private.cpp; sourceTree = "<group>"; };
@@ -563,6 +561,8 @@
 		4FC0A93B1E1E2ABC006CEC45 /* cam_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cam_common.h; path = ../source/cam_common.h; sourceTree = "<group>"; };
 		4FC0A93C1E1E2ABC006CEC45 /* cam_shoot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cam_shoot.cpp; path = ../source/cam_shoot.cpp; sourceTree = "<group>"; };
 		4FC0A93D1E1E2ABC006CEC45 /* cam_use.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cam_use.cpp; path = ../source/cam_use.cpp; sourceTree = "<group>"; };
+		4FCB3A39253760F50038EFEB /* adlmidi_db.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = adlmidi_db.h; path = ../adlmidi/src/adlmidi_db.h; sourceTree = "<group>"; };
+		4FCB3A3A253760F50038EFEB /* inst_db.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = inst_db.cpp; path = ../adlmidi/src/inst_db.cpp; sourceTree = "<group>"; };
 		4FF640B81735256700793714 /* v_alloc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = v_alloc.cpp; path = ../source/v_alloc.cpp; sourceTree = "<group>"; };
 		4FF640B91735256700793714 /* v_alloc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = v_alloc.h; path = ../source/v_alloc.h; sourceTree = "<group>"; };
 		4FFD27341796990400E4E5B1 /* a_args.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = a_args.h; path = ../source/a_args.h; sourceTree = "<group>"; };
@@ -1113,8 +1113,8 @@
 		4F02C34523126BB7004DBBA7 /* ADLMIDI */ = {
 			isa = PBXGroup;
 			children = (
-				4F02C36C23126D6B004DBBA7 /* adldata.cpp */,
-				4F02C34D23126C50004DBBA7 /* adldata.hh */,
+				4FCB3A39253760F50038EFEB /* adlmidi_db.h */,
+				4FCB3A3A253760F50038EFEB /* inst_db.cpp */,
 				4F02C34923126C50004DBBA7 /* adlmidi_bankmap.h */,
 				4F02C34E23126C50004DBBA7 /* adlmidi_cvt.hpp */,
 				4F02C36D23126D6B004DBBA7 /* adlmidi_load.cpp */,
@@ -2407,6 +2407,7 @@
 				4F02C37423126D6C004DBBA7 /* adlmidi_load.cpp in Sources */,
 				4F5F3956182D9B0E0027813A /* txt_window.c in Sources */,
 				4F5F3957182D9B0E0027813A /* txt_window_action.c in Sources */,
+				4FCB3A3B253760F50038EFEB /* inst_db.cpp in Sources */,
 				4F5F38C3182D9AC00027813A /* ev_actions.cpp in Sources */,
 				4F36247B18A567CD00B94FA1 /* xl_emapinfo.cpp in Sources */,
 				4FC0A93E1E1E2ABC006CEC45 /* cam_aim.cpp in Sources */,
@@ -2469,7 +2470,6 @@
 				4F5F38EE182D9AC00027813A /* psnprntf.cpp in Sources */,
 				4F5F38EF182D9AC00027813A /* tables.cpp in Sources */,
 				4F5F38F0182D9AC00027813A /* version.cpp in Sources */,
-				4F02C37323126D6C004DBBA7 /* adldata.cpp in Sources */,
 				4F5F38F1182D9AC00027813A /* mn_items.cpp in Sources */,
 				4F5F38F2182D9AC00027813A /* mn_emenu.cpp in Sources */,
 				4F5F38F3182D9AC00027813A /* mn_engin.cpp in Sources */,
