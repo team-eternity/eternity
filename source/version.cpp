@@ -81,6 +81,7 @@ const char ee_wmCaption[] = u8"Eternity Engine v4.02.00 \"Tyrfing\"";
 // 3.42.02 'Heimdal'   -- 05/07/17
 // 3.42.03 'Heimdal 2' -- 08/02/17
 // 4.00.00 'Völuspá'   -- 03/17/18
+// 4.01.00 'Tyrfing'   -- 10/13/20
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
