@@ -477,7 +477,7 @@ static portal_t *R_CreatePortal()
       last = ret;
    }
    
-   ret->poverlay  = R_NewPlaneHash(31);
+   ret->poverlay  = R_NewPlaneHash(131);
    ret->globaltex = 1;
 
    return ret;

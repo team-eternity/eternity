@@ -60,7 +60,7 @@
 #include "v_video.h"
 #include "w_wad.h"
 
-#define MAINHASHCHAINS 257 // prime numbers are good for hashes with modulo-based functions
+#define MAINHASHCHAINS 1021 // prime numbers are good for hashes with modulo-based functions
 
 static visplane_t *freetail;                   // killough
 static visplane_t **freehead = &freetail;      // killough
@@ -94,8 +94,11 @@ VALLOCATION(mainhash)
 
 // killough -- hash function for visplanes
 // Empirically verified to be fairly uniform:
-#define visplane_hash(picnum, lightlevel, height, chains) \
-  (((unsigned int)(picnum)*3+(unsigned int)(lightlevel)+(unsigned int)(height)*7) % chains)
+constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned int lightlevel,
+                                     const unsigned int height, const int chains)
+{
+   return ((picnum * 3) + lightlevel + (height * 7)) % chains;
+}
 
 
 // killough 8/1/98: set static number of openings to be large enough
@@ -1204,7 +1207,7 @@ planehash_t *R_NewOverlaySet()
    planehash_t *set;
    if(!r_overlayfreesets)
    {
-      set = R_NewPlaneHash(31);
+      set = R_NewPlaneHash(131);
       return set;
    }
    set = r_overlayfreesets;
