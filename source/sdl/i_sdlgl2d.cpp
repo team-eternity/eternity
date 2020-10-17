@@ -125,16 +125,16 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 
    // Framebuffer Layout:
    //
-   // 0-------3  0 = (x,  y  ) [0,   0   ]   Tris:
+   // 2-------3  0 = (x+w,y+h) [0,   0   ]   Tris:
    // |       |  1 = (x,  y+h) [0,   tmax]   1: 0->1->3
-   // |       |  2 = (x+w,y+h) [smax,tmax]   2: 3->1->2
-   // 1-------2  3 = (x+w,y  ) [smax,0   ]
+   // |       |  2 = (x,  y  ) [smax,tmax]   2: 3->1->2
+   // 1-------0  3 = (x+w,y  ) [smax,0   ]
 
    // populate vertex coordinates
-   screenVertices[0] = screenVertices[2] = x;
-   screenVertices[1] = screenVertices[7] = y;
-   screenVertices[3] = screenVertices[5] = y + h;
-   screenVertices[4] = screenVertices[6] = x + w;
+   screenVertices[4] = screenVertices[2] = x;
+   screenVertices[5] = screenVertices[7] = y;
+   screenVertices[3] = screenVertices[1] = y + h;
+   screenVertices[0] = screenVertices[6] = x + w;
 
    // populate texture coordinates
    screenTexCoords[0] = screenTexCoords[1] = screenTexCoords[2] = screenTexCoords[7] = 0.0f;
