@@ -50,7 +50,7 @@
 
 // Microscopic distance to move rejectable segs from portal lines to avoid point
 // on line overlaps.
-static const float kPortalSegRejectionFudge = 1.f / 256;
+static constexpr float kPortalSegRejectionFudge = 1.f / 256;
 
 drawseg_t *ds_p;
 
