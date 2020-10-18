@@ -1020,6 +1020,15 @@
     <ClCompile Include="..\source\m_debug.cpp">
       <Filter>Source Files\M_\M_ Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\hu_inventory.cpp">
+      <Filter>Source Files\HU_\HU_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\e_compatibility.cpp">
+      <Filter>Source Files\E_\E_ Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\source\Win32\i_w32gui.cpp">
+      <Filter>Source Files\Win32\Win32 Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\source\aeon_string.cpp">
       <Filter>Source Files\Aeon_\Aeon_ Source</Filter>
     </ClCompile>
@@ -1834,6 +1843,12 @@
     </ClInclude>
     <ClInclude Include="..\source\m_debug.h">
       <Filter>Source Files\M_\M_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\hu_inventory.h">
+      <Filter>Source Files\HU_\HU_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\e_compatibility.h">
+      <Filter>Source Files\E_\E_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\aeon_common.h">
       <Filter>Source Files\Aeon_\Aeon_ Headers</Filter>

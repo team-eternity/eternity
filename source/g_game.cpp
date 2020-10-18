@@ -61,6 +61,7 @@
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_buffer.h"
+#include "m_cheat.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -229,6 +230,11 @@ static bool gameactions[NUMKEYACTIONS];
 int inventoryTics;
 bool usearti = true;
 
+static bool InventoryCanClose()
+{
+   return (GameModeInfo->flags & GIF_INVALWAYSOPEN) != GIF_INVALWAYSOPEN;
+}
+
 //
 // G_BuildTiccmd
 //
@@ -258,13 +264,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use] && demo_version >= 401)
    {
-      // FIXME: Handle noartiskip?
-      if(invbarstate.inventory)
+      // FIXME: Handle noartiskip
+      const bool inventorycanclose = InventoryCanClose();
+      if(invbarstate.inventory && inventorycanclose)
       {
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti)
+      else if(usearti || inventorycanclose)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -311,7 +318,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       if(gameactions[ka_left])
          cmd->angleturn += (int16_t)pc->angleturn[tspeed];
 
-      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn]);
+      cmd->angleturn -= (int16_t)(pc->angleturn[speed] * joyaxes[axis_turn] * i_joyturnsens);
    }
 
    // gamepad dedicated analog strafe axis applies regardless
@@ -357,7 +364,11 @@ void G_BuildTiccmd(ticcmd_t *cmd)
       cmd->buttons |= BT_ATTACK;
 
    if(gameactions[ka_use])
+   {
       cmd->buttons |= BT_USE;
+      // clear double clicks if hit use button
+      dclicks = 0;
+   }
 
    // only put BTN codes in here
    int newweapon; // phares
@@ -896,7 +907,7 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_left])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
@@ -907,7 +918,7 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_right])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
@@ -1009,27 +1020,28 @@ struct complevel_s
 {
    int fix; // first version that contained a fix
    int opt; // first version that made the fix an option
+   bool boomcomp; // affected by the BOOM "compatibility" flag
 } complevels[] =
 {
-   { 203, 203 }, // comp_telefrag
-   { 203, 203 }, // comp_dropoff
-   { 201, 203 }, // comp_vile
-   { 201, 203 }, // comp_pain
-   { 201, 203 }, // comp_skull
-   { 201, 203 }, // comp_blazing
-   { 201, 203 }, // comp_doorlight
-   { 201, 203 }, // comp_model
-   { 201, 203 }, // comp_god
-   { 203, 203 }, // comp_falloff
+   { 203, 203, true }, // comp_telefrag
+   { 203, 203, true }, // comp_dropoff
+   { 201, 203, true }, // comp_vile
+   { 201, 203, true }, // comp_pain
+   { 201, 203, true }, // comp_skull
+   { 201, 203, true }, // comp_blazing
+   { 201, 203, true }, // comp_doorlight
+   { 201, 203, true }, // comp_model
+   { 201, 203, true }, // comp_god
+   { 203, 203, true }, // comp_falloff
    { 200, 203 }, // comp_floors - FIXME
-   { 201, 203 }, // comp_skymap
-   { 203, 203 }, // comp_pursuit
-   { 202, 203 }, // comp_doorstuck
-   { 203, 203 }, // comp_staylift
-   { 203, 203 }, // comp_zombie
-   { 202, 203 }, // comp_stairs
-   { 203, 203 }, // comp_infcheat
-   { 201, 203 }, // comp_zerotags
+   { 201, 203, true }, // comp_skymap
+   { 203, 203, true }, // comp_pursuit
+   { 202, 203, true }, // comp_doorstuck
+   { 203, 203, true }, // comp_staylift
+   { 203, 203, true }, // comp_zombie
+   { 202, 203, true }, // comp_stairs
+   { 203, 203, true }, // comp_infcheat
+   { 201, 203, true }, // comp_zerotags
    { 329, 329 }, // comp_terrain
    { 329, 329 }, // comp_respawnfix
    { 329, 329 }, // comp_fallingdmg
@@ -1055,8 +1067,12 @@ static void G_SetCompatibility(void)
    while(complevels[i].fix > 0)
    {
       if(demo_version < complevels[i].opt)
-         comp[i] = (demo_version < complevels[i].fix);
-
+      {
+         if(complevels[i].boomcomp && compatibility)
+            comp[i] = true;
+         else
+            comp[i] = (demo_version < complevels[i].fix);
+      }
       ++i;
    }
 }
@@ -1079,7 +1095,7 @@ static byte *G_ReadDemoHeader(byte *demo_p)
    skill_t skill;
    int i, episode, map;
    int demover;
-   byte *option_p = NULL;      // killough 11/98
+   byte *option_p = nullptr;      // killough 11/98
 
    // killough 2/22/98, 2/28/98: autodetect old demos and act accordingly.
    // Old demos turn on demo_compatibility => compatibility; new demos load
@@ -1393,6 +1409,31 @@ void G_DoPlayDemo(void)
    }
 }
 
+//
+// Converts classic demo "buttons" byte into weapon ID. Needed for vanilla Heretic demos.
+//
+static void G_convertButtonsToWeaponID(ticcmd_t &cmd)
+{
+   if(!(cmd.buttons & BT_CHANGE))
+      return;
+
+   int index = (cmd.buttons & BT_WEAPONMASK_OLD) >> BT_WEAPONSHIFT;
+
+   // HACK: check if ticcmd_t is part of a player. If it is, proceed.
+   for(const player_t &player : players)
+      if((byte*)&cmd == (byte*)&player + offsetof(player_t, cmd))
+      {
+         const weaponinfo_t *info = P_GetPlayerWeapon(&player, index);
+         if(info)
+         {
+            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(&player, info, index);
+            cmd.weaponID = info->id + 1;
+            cmd.slotIndex = slot->slotindex;
+         }
+         break;
+      }
+}
+
 #define DEMOMARKER    0x80
 
 //
@@ -1425,37 +1466,42 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
    cmd->buttons = (unsigned char)*p++;
 
    // old Heretic demo?
-   if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
+   if(vanilla_heretic)
    {
-      p++;
-      p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
-   }
-
-   if(demo_version >= 335)
-      cmd->actions = *p++;
-   else
-      cmd->actions = 0;
-
-   if(demo_version >= 333)
-   {
-      cmd->look  =  *p++;
-      cmd->look |= (*p++) << 8;
-   }
-   else if(demo_version >= 329)
-   {
-      // haleyjd: 329 and 331 store updownangle, but we can't use
-      // it any longer. Demos recorded with mlook will desync,
-      // but ones without can still play with this here.
-      p++;
-      cmd->look = 0;
+      byte lookfly = *p++;
+      // TODO: look
+      cmd->fly = lookfly >> 4;
+      if(cmd->fly > 7)
+         cmd->fly -= 16;
    }
    else
-      cmd->look = 0;
+   {
+      if(demo_version >= 335)
+         cmd->actions = *p++;
+      else
+         cmd->actions = 0;
 
-   if(full_demo_version >= make_full_version(340, 23))
-      cmd->fly = *p++;
-   else
-      cmd->fly = 0;
+      if(demo_version >= 333)
+      {
+         cmd->look  =  *p++;
+         cmd->look |= (*p++) << 8;
+      }
+      else if(demo_version >= 329)
+      {
+         // haleyjd: 329 and 331 store updownangle, but we can't use
+         // it any longer. Demos recorded with mlook will desync,
+         // but ones without can still play with this here.
+         p++;
+         cmd->look = 0;
+      }
+      else
+         cmd->look = 0;
+
+      if(full_demo_version >= make_full_version(340, 23))
+         cmd->fly = *p++;
+      else
+         cmd->fly = 0;
+   }
 
    if(demo_version >= 401)
    {
@@ -1464,6 +1510,16 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
       cmd->weaponID = *p++;
       cmd->weaponID |= (*p++) << 8;
       cmd->slotIndex = *p++;
+   }
+   else if(vanilla_heretic)
+   {
+      // One byte for the inventory usage
+      byte index = *p++;
+      if(!index || index > earrlen(hartiNames))
+         cmd->itemID = 0;
+      else
+         cmd->itemID = E_ItemIDForName(hartiNames[index - 1]) + 1;
+      G_convertButtonsToWeaponID(*cmd);
    }
    else
    {
@@ -1593,6 +1649,10 @@ void G_ExitLevel(int destmap)
    G_DemoLogStats();
    G_DemoLog("\n");
    G_DemoLogSetExited(true);
+   if(players[0].mo)
+   {
+      M_RandomLog("Exit (pos %g %g ang %08x)\n", players[0].mo->x / 65536., players[0].mo->y / 65536., players[0].mo->angle);
+   }
    g_destmap  = destmap;
    secretexit = scriptSecret = false;
    gameaction = ga_completed;
@@ -1626,7 +1686,10 @@ static void G_PlayerFinishLevel(int player)
    player_t *p = &players[player];
 
    // INVENTORY_TODO: convert powers to inventory
+   if(p->powers[pw_weaponlevel2] && E_IsPoweredVariant(p->readyweapon))
+      p->readyweapon = p->readyweapon->sisterWeapon;
    memset(p->powers, 0, sizeof p->powers);
+
    p->mo->flags  &= ~MF_SHADOW;             // cancel invisibility
    p->mo->flags2 &= ~MF2_DONTDRAW;          // haleyjd: cancel total invis.
    p->mo->flags4 &= ~MF4_TOTALINVISIBLE; 
@@ -1649,7 +1712,7 @@ static void G_PlayerFinishLevel(int player)
 static void G_SetNextMap()
 {
    exitrule_t *exitrule = GameModeInfo->exitRules;
-   exitrule_t *theRule = NULL;
+   exitrule_t *theRule = nullptr;
 
    // find a rule
    for(; exitrule->gameepisode != -2; exitrule++)
@@ -2068,7 +2131,7 @@ uint64_t G_Signature(const WadDirectory *dir)
 
 static void G_DoSaveGame(void)
 {
-   char *name = NULL;
+   char *name = nullptr;
    size_t len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
    
    G_SaveGameName(name, len, savegameslot);
@@ -2294,10 +2357,13 @@ void G_Ticker()
       }
    }
 
-   // turn inventory off after a certain amount of time
-   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
-   if(invbarstate.inventory && !(--inventoryTics))
-      invbarstate.inventory = false;
+   if(InventoryCanClose())
+   {
+      // turn inventory off after a certain amount of time
+      invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
+      if(invbarstate.inventory && !(--inventoryTics))
+         invbarstate.inventory = false;
+   }
 
    // do main actions
    
@@ -2455,7 +2521,7 @@ static void G_queuePlayerCorpse(Mobj *mo)
       if(bodyque.getLength() < queuesize)
          bodyque.resize(queuesize);
       
-      if(bodyque[index] != NULL)
+      if(bodyque[index] != nullptr)
       {
          bodyque[index]->intflags &= ~MIF_PLYRCORPSE;
          bodyque[index]->remove();
@@ -2562,7 +2628,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // which is missing the fog and sound, as it spawns somewhere out in the
    // far reaches of the void.
 
-   if(!comp[comp_ninja])
+   if(!getComp(comp_ninja))
    {
       an = ANG45 * (angle_t)(mthing->angle / 45);
       mtcos = finecosine[an >> ANGLETOFINESHIFT];
@@ -2600,10 +2666,10 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
       }
    }
 
-   mo = P_SpawnMobj(x + 20 * mtcos, 
+   mo = P_SpawnMobj(x + 20 * mtcos,
                     y + 20 * mtsin,
-                    ss->sector->floorheight + 
-                       GameModeInfo->teleFogHeight, 
+                    ss->sector->srf.floor.height +
+                       GameModeInfo->teleFogHeight,
                     E_SafeThingName(GameModeInfo->teleFogType));
 
    // haleyjd: There was a hack here trying to avoid playing the sound on the
@@ -2662,7 +2728,7 @@ extern const char *level_error;
 void G_DeathMatchSpawnPlayer(int playernum)
 {
    int j, selections = int(deathmatch_p - deathmatchstarts);
-   Mobj *fog = NULL;
+   Mobj *fog = nullptr;
    
    if(selections < MAXPLAYERS)
    {
@@ -2710,10 +2776,10 @@ void G_DoReborn(int playernum)
    else
    {                               // respawn at the start
       int i;
-      Mobj *fog = NULL;
+      Mobj *fog = nullptr;
       
       // first disassociate the corpse
-      players[playernum].mo->player = NULL;
+      players[playernum].mo->player = nullptr;
 
       // spawn at random spot if in deathmatch
       if(GameType == gt_dm)
@@ -2741,7 +2807,7 @@ void G_DoReborn(int playernum)
       // try to spawn at one of the other players spots
       for(i = 0; i < MAXPLAYERS; i++)
       {
-         fog = NULL;
+         fog = nullptr;
 
          if(G_CheckSpot(playernum, &playerstarts[i], &fog))
          {
@@ -2979,7 +3045,7 @@ void G_ScrambleRand()
 {
    // SoM 3/13/2002: New SMMU code actually compiles in VC++
    // sf: simpler
-   rngseed = (unsigned int) time(NULL);
+   rngseed = (unsigned int) time(nullptr);
 }
 
 void G_DoNewGame()
@@ -3085,16 +3151,19 @@ void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed)
 void G_SetFastParms(int fast_pending)
 {
    static int fast = 0;            // remembers fast state
+   static PODCollection<int> originalStateTics;
    MetaSpeedSet *mss;
    
    if(fast != fast_pending)       // only change if necessary
    {
       if((fast = fast_pending))
       {
+         originalStateTics.resize(NUMSTATES);
          for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
             {
+               originalStateTics[i] = states[i]->tics;
                // killough 4/10/98
                // don't change 1->0 since it causes cycles
                if(states[i]->tics != 1 || demo_compatibility)
@@ -3114,7 +3183,7 @@ void G_SetFastParms(int fast_pending)
          for(int i = 0; i < NUMSTATES; i++)
          {
             if(states[i]->flags & STATEF_SKILL5FAST)
-               states[i]->tics <<= 1;
+               states[i]->tics = originalStateTics[i];
          }
 
          for(int i = 0; i < NUMMOBJTYPES; i++)
@@ -3202,7 +3271,7 @@ void G_InitNew(skill_t skill, const char *name)
    // haleyjd 06/16/04: set g_dir to d_dir if it is valid, or else restore it
    // to the default value.
    g_dir = d_dir ? d_dir : (inmanageddir = MD_NONE, &wGlobalDir);
-   d_dir = NULL;
+   d_dir = nullptr;
    
    G_DoLoadLevel();
 }
@@ -3451,10 +3520,6 @@ byte *G_ReadOptions(byte *demoptr)
    }
    else  // defaults for versions <= 2.02
    {
-      int i;  // killough 10/98: a compatibility vector now
-      for(i = 0; i <= comp_zerotags; ++i)
-         comp[i] = compatibility;
-
       G_SetCompatibility();
       
       monster_infighting = 1;           // killough 7/19/98
@@ -3785,7 +3850,7 @@ void G_StopDemo()
 
 #define MAX_MESSAGE_SIZE 1024
 
-void doom_printf(const char *s, ...)
+void doom_printf(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
@@ -3801,7 +3866,7 @@ void doom_printf(const char *s, ...)
 //
 // Like above, but uses FC_ERROR and occasional beeping
 //
-void doom_warningf(const char *s, ...)
+void doom_warningf(E_FORMAT_STRING(const char *s), ...)
 {
    static int lastbeeptic = -1000;
 
@@ -3828,7 +3893,7 @@ void doom_warningf(const char *s, ...)
 // sf: printf to a particular player only
 // to make up for the loss of player->msg = ...
 //
-void player_printf(const player_t *player, const char *s, ...)
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[MAX_MESSAGE_SIZE];
    va_list v;
@@ -3890,7 +3955,7 @@ static void G_CoolViewPoint()
    // turn off followcam
    P_FollowCamOff();
    if(camera == &followcam)
-      camera = NULL;
+      camera = nullptr;
   
    if(viewtype == 1)  // view from the chasecam
    {
@@ -4021,7 +4086,7 @@ AMX_NATIVE_INFO game_Natives[] =
    { "_StartGame",  sm_startgame },
    { "_GameSkill",  sm_gameskill },
    { "_GameType",   sm_gametype },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 
 #endif

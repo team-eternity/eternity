@@ -27,6 +27,7 @@
 #include "doomstat.h"
 #include "g_demolog.h"
 #include "m_argv.h"
+#include "m_qstr.h"
 
 FILE *demoLogFile;
 
@@ -54,7 +55,11 @@ void G_DemoLogInit(const char *path)
    fprintf(demoLogFile, "\n");
    // write arguments into it
    for(int i = 1; i < myargc; ++i)
-      fprintf(demoLogFile, "%s ", myargv[i]);
+   {
+      qstring argstring(myargv[i]);
+      argstring.normalizeSlashes();
+      fprintf(demoLogFile, "%s ", argstring.constPtr());
+   }
    fprintf(demoLogFile, "\n");
    atexit(G_demoLogAtExit);
 }
@@ -62,7 +67,7 @@ void G_DemoLogInit(const char *path)
 //
 // Write a message to the -demolog file
 //
-void G_DemoLog(const char *format, ...)
+void G_DemoLog(E_FORMAT_STRING(const char *format), ...)
 {
    if(!demoLogFile)
       return;
@@ -85,10 +90,10 @@ void G_DemoLogStats()
       allItems += players[i].itemcount;
       allSecret += players[i].secretcount;
    }
-   G_DemoLog("(k: %g%%, i: %g%%, s: %g%%)",
-             totalkills ? floor(100. * allKills / totalkills) : 0,
-             totalitems ? floor(100. * allItems / totalitems) : 0,
-             totalsecret ? floor(100. * allSecret / totalsecret) : 0);
+   G_DemoLog("(k: %d%%, i: %d%%, s: %d%%)",
+             totalkills ? 100 * allKills / totalkills : 0,
+             totalitems ? 100 * allItems / totalitems : 0,
+             totalsecret ? 100 * allSecret / totalsecret : 0);
 }
 
 //

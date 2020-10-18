@@ -263,7 +263,7 @@ bool I_MidiRPCInitServer()
    char filename[MAX_PATH+1];
 
    memset(filename, 0, sizeof(filename));
-   GetModuleFileName(NULL, filename, MAX_PATH);
+   GetModuleFileName(nullptr, filename, MAX_PATH);
 
    qstring module;
 
@@ -281,8 +281,8 @@ bool I_MidiRPCInitServer()
 
    si.cb = sizeof(si);
 
-   BOOL result = CreateProcess(module.constPtr(), NULL, NULL, NULL, FALSE,
-                               0, NULL, NULL, &si, &pi);
+   BOOL result = CreateProcess(module.constPtr(), nullptr, nullptr, nullptr, FALSE,
+                               0, nullptr, nullptr, &si, &pi);
 
    if(result)
    {
@@ -312,11 +312,11 @@ bool I_MidiRPCInitClient()
    status =
       RpcStringBindingCompose
       (
-         NULL,
+         nullptr,
          (RPC_CSTR)("ncalrpc"),
-         NULL,
+         nullptr,
          (RPC_CSTR)("2d4dc2f9-ce90-4080-8a00-1cb819086970"),
-         NULL,
+         nullptr,
          &szStringBinding
       );
 
@@ -367,13 +367,13 @@ void I_MidiRPCClientShutDown()
    if(szStringBinding)
    {
       RpcStringFree(&szStringBinding);
-      szStringBinding = NULL;
+      szStringBinding = nullptr;
    }
 
    if(hMidiRPCBinding)
    {
       RpcBindingFree(&hMidiRPCBinding);
-      hMidiRPCBinding = NULL;
+      hMidiRPCBinding = nullptr;
    }
 
    clientInit = false;

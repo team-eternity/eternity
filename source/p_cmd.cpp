@@ -120,7 +120,7 @@ CONSOLE_COMMAND(creator, 0)
 // colors. It needs serious refinement.
 //
 
-VARIABLE_INT(default_colour, NULL, 0, TRANSLATIONCOLOURS, colournames);
+VARIABLE_INT(default_colour, nullptr, 0, TRANSLATIONCOLOURS, colournames);
 CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 {
    int playernum, colour;
@@ -147,7 +147,7 @@ CONSOLE_NETVAR(colour, default_colour, cf_handlerset, netcmd_colour)
 
 // deathmatch
 
-//VARIABLE_INT(deathmatch, NULL,                  0, 3, dmstr);
+//VARIABLE_INT(deathmatch, nullptr,               0, 3, dmstr);
 //CONSOLE_NETVAR(deathmatch, deathmatch, cf_server, netcmd_deathmatch) {}
 
 //
@@ -220,7 +220,7 @@ CONSOLE_NETVAR(varfriction, variable_friction, cf_server, netcmd_varfriction){}
 // enable nukage
 
 extern int enable_nuke;         // p_spec.c
-VARIABLE_BOOLEAN(enable_nuke, NULL, onoff);
+VARIABLE_BOOLEAN(enable_nuke, nullptr, onoff);
 CONSOLE_NETVAR(nukage, enable_nuke, cf_server, netcmd_nukage) {}
 
 // allow mlook with bfg
@@ -231,10 +231,10 @@ CONSOLE_NETVAR(p_pitchedflight, pitchedflight, cf_server, netcmd_pitchedflight) 
 
 // 'auto exit' variables
 
-VARIABLE_INT(levelTimeLimit,    NULL,           0, 100,         NULL);
+VARIABLE_INT(levelTimeLimit,    nullptr,        0, 100,         nullptr);
 CONSOLE_NETVAR(timelimit, levelTimeLimit, cf_server, netcmd_timelimit) {}
 
-VARIABLE_INT(levelFragLimit,    NULL,           0, 100,         NULL);
+VARIABLE_INT(levelFragLimit,    nullptr,        0, 100,         nullptr);
 CONSOLE_NETVAR(fraglimit, levelFragLimit, cf_server, netcmd_fraglimit) {}
 
 
@@ -307,20 +307,20 @@ CONSOLE_NETVAR(mon_helpfriends, help_friends, cf_server, netcmd_monhelpfriends) 
 
 // distance friends keep from player
 
-VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, NULL);
+VARIABLE_INT(distfriend, &default_distfriend,   0, 1024, nullptr);
 CONSOLE_NETVAR(mon_distfriend, distfriend, cf_server, netcmd_mondistfriend) {}
 
 static const char *spechit_strs[] = { "off", "chocodoom", "prboomplus" };
 
 // haleyjd 09/20/06: spechits overflow emulation
-VARIABLE_INT(spechits_emulation, NULL, 0, 2, spechit_strs);
+VARIABLE_INT(spechits_emulation, nullptr, 0, 2, spechit_strs);
 CONSOLE_VARIABLE(spechits_emulation, spechits_emulation, 0) {}
 
-VARIABLE_TOGGLE(donut_emulation, NULL, onoff);
+VARIABLE_TOGGLE(donut_emulation, nullptr, onoff);
 CONSOLE_VARIABLE(donut_emulation, donut_emulation, 0) {}
 
 // haleyjd 01/24/07: spawn Unknowns for missing things on maps?
-VARIABLE_BOOLEAN(p_markunknowns, NULL, yesno);
+VARIABLE_BOOLEAN(p_markunknowns, nullptr, yesno);
 CONSOLE_VARIABLE(p_markunknowns, p_markunknowns, 0) {}
 
 // haleyjd 10/09/07
@@ -329,10 +329,10 @@ extern int wipewait;
 static const char *wipewait_strs[] = { "never", "always", "demos" };
 static const char *wipetype_strs[] = { "none", "melt", "fade" };
 
-VARIABLE_INT(wipewait, NULL, 0, 2, wipewait_strs);
+VARIABLE_INT(wipewait, nullptr, 0, 2, wipewait_strs);
 CONSOLE_VARIABLE(wipewait, wipewait, 0) {}
 
-VARIABLE_INT(wipetype, NULL, 0, 2, wipetype_strs);
+VARIABLE_INT(wipetype, nullptr, 0, 2, wipetype_strs);
 CONSOLE_VARIABLE(wipetype, wipetype, 0) {}
 
 void P_Chase_AddCommands(void);
@@ -355,7 +355,7 @@ CONSOLE_COMMAND(puke, cf_notnet)
       args[i - 1] = Console.argv[i]->toInt();
 
    ACS_ExecuteScriptIAlways(Console.argv[0]->toInt(), gamemap,
-                           args, 5, NULL, NULL, 0, nullptr);
+                           args, 5, nullptr, nullptr, 0, nullptr);
 }
 
 CONSOLE_COMMAND(enable_lightning, 0)

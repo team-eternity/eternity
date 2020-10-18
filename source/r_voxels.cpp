@@ -38,15 +38,15 @@
 //
 rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
 {
-   rvoxelmodel_t *model = NULL;
-   byte *buffer = NULL, *rover = NULL;
+   rvoxelmodel_t *model = nullptr;
+   byte *buffer = nullptr, *rover = nullptr;
    int lumplen  = W_LumpLength(lumpnum);
    int xsize, ysize, zsize, voxsize;
    int i;
 
    // minimum size test
    if(lumplen < 12)
-      return NULL;
+      return nullptr;
 
    // cache the lump
    rover = buffer = (byte *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
@@ -65,12 +65,12 @@ rvoxelmodel_t *R_LoadVoxelResource(int lumpnum)
    if(lumplen < 12 + voxsize + 768)
    {
       Z_ChangeTag(buffer, PU_CACHE);
-      return NULL;
+      return nullptr;
    }
 
    // create the model and its voxel buffer
-   model         = (rvoxelmodel_t *)(Z_Calloc(1,       sizeof(rvoxelmodel_t), PU_RENDERER, NULL));
-   model->voxels =          (byte *)(Z_Calloc(voxsize, sizeof(byte),          PU_RENDERER, NULL));
+   model         = ecalloctag(rvoxelmodel_t *, 1,       sizeof(rvoxelmodel_t), PU_RENDERER, nullptr);
+   model->voxels = ecalloctag(byte *,          voxsize, sizeof(byte),          PU_RENDERER, nullptr);
 
    model->xsize = xsize;
    model->ysize = ysize;

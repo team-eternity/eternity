@@ -47,6 +47,7 @@
 #include "g_bind.h"
 #include "g_game.h"
 #include "hu_frags.h"
+#include "hu_inventory.h"
 #include "hu_stuff.h"
 #include "hu_over.h"
 #include "m_qstr.h"
@@ -83,44 +84,6 @@ char *hud_fontname;
 static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
-//
-// Widget Superclass Functionality
-//
-// haleyjd 06/04/05: Complete HUD rewrite.
-//
-
-class HUDWidget : public ZoneObject
-{
-protected:
-   int  type;         // widget type
-   char name[33];     // name of this widget
-   HUDWidget *next;   // next in hash chain
-   bool disabled;     // disable flag
-
-   enum { NUMWIDGETCHAINS = 17 };
-
-   static HUDWidget *hu_chains[NUMWIDGETCHAINS];
-
-public:
-   void setName(const char *widgetName)
-   {
-      strncpy(name, widgetName, sizeof(name));
-   }
-
-   void setType(int widgetType) { type = widgetType; }
-   
-   // overridable functions (virtuals in a sense)
-   virtual void ticker() {} // ticker: called each gametic
-   virtual void drawer() {} // drawer: called when drawn
-   virtual void eraser() {} // eraser: called when erased
-   virtual void clear()  {} // clear : called on reinit
-
-   static HUDWidget *WidgetForName(const char *name);
-   static bool       AddWidgetToHash(HUDWidget *widget);
-   static void       StartWidgets();
-   static void       DrawWidgets();
-   static void       TickWidgets();
-};
 
 // widget hash table
 HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
@@ -129,7 +92,7 @@ HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
 // HUDWidget::WidgetForName
 //
 // Retrieves a widget given its name, using hashing.
-// Returns NULL if no such widget exists.
+// Returns nullptr if no such widget exists.
 //
 HUDWidget *HUDWidget::WidgetForName(const char *name)
 {
@@ -313,8 +276,14 @@ void HU_Drawer()
 
    // HUD_FIXME: generalize?
    // draw different modules
+   int leftoffset, rightoffset;
    HU_FragsDrawer();
-   HU_OverlayDraw();
+   HU_OverlayDraw(leftoffset, rightoffset);
+
+   HU_BuffsDraw(leftoffset, rightoffset);
+
+   // Temporary on-top overlays
+   HU_InventoryDrawSelector();
 }
 
 //
@@ -634,7 +603,7 @@ void HUDOpenSocketWidget::init()
 {
    strncpy(patchname, "OPENSOCK", 9);
    patch    = PatchLoader::CacheName(wGlobalDir, "OPENSOCK", PU_CACHE);
-   color    = NULL;
+   color    = nullptr;
    tl_level = FRACUNIT;
    x        = 20;
    y        = 20;
@@ -677,7 +646,7 @@ protected:
    int         y;        // y coordinate
    vfont_t    *font;     // font object
    const char *message;  // text to draw
-   char       *alloc;    // if non-NULL, widget owns the message
+   char       *alloc;    // if non-nullptr, widget owns the message
    int         flags;    // special flags
    int         color;    // allow colored text drawing (col # + 1)
 
@@ -706,7 +675,7 @@ public:
    {
       x        = 0;
       y        = 0;
-      message  = NULL;
+      message  = nullptr;
       cleartic = 0;
       font     = hud_font;
    }
@@ -778,10 +747,10 @@ void HUDTextWidget::clear()
    if(alloc)
    {
       efree(alloc);
-      alloc = NULL;
+      alloc = nullptr;
    }
    
-   message  = NULL;
+   message  = nullptr;
    cleartic = 0;
 }
 
@@ -855,7 +824,7 @@ void HU_CenterMessage(const char *s)
    if(centermsg_color)
    {
       qstr += centermsg_color;
-      centermsg_color = NULL;
+      centermsg_color = nullptr;
    }
    
    qstr += s;
@@ -916,7 +885,7 @@ public:
    void initProps()
    {
       color = notargetcolour;
-      patch = NULL; // determined dynamically
+      patch = nullptr; // determined dynamically
    }
 };
 
@@ -941,6 +910,7 @@ void HUDCrossHairWidget::ticker()
    
    // ioanch 20160101: don't let P_AimLineAttack change global trace.attackrange
    fixed_t oldAttackRange = trace.attackrange;
+   Mobj *oldLineTarget = clip.linetarget;
    P_AimLineAttack(players[displayplayer].mo,
                    players[displayplayer].mo->angle, 
                    16*64*FRACUNIT, false);
@@ -962,6 +932,10 @@ void HUDCrossHairWidget::ticker()
          color = notargetcolour;
       }
    }
+
+   // Restore previous reference on exit
+   if(clip.linetarget != oldLineTarget)
+      P_SetTarget(&clip.linetarget, oldLineTarget);
 }
 
 //
@@ -986,18 +960,7 @@ void HUDCrossHairWidget::drawer()
    h = patch->height;
    
    drawx = (SCREENWIDTH - w) / 2;
-
-   // haleyjd 04/09/05: this kludge moves the crosshair to within
-   // a tolerable distance of the player's true vertical aim when
-   // the screen size is less than full.
-   if(scaledwindow.height != SCREENHEIGHT)
-   {
-      // use 1/5 of the displayplayer's pitch angle in integer degrees
-      int angle = players[displayplayer].pitch / (ANGLE_1*5);
-      drawy = scaledwindow.y + (scaledwindow.height - h) / 2 + angle;
-   }
-   else
-      drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
+   drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
   
    if(pal == notargetcolour)
       V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
@@ -1055,7 +1018,7 @@ public:
          x = SCREENWIDTH - 60;
          y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
       }
-      message  = NULL;
+      message  = nullptr;
       font     = hud_font;
       cleartic = 0;
       flags    = TW_AUTOMAP_ONLY;
@@ -1080,7 +1043,7 @@ void HUDLevelTimeWidget::ticker()
    
    if(!automapactive || !hu_showtime)
    {
-      message = NULL;
+      message = nullptr;
       return;
    }
    
@@ -1154,7 +1117,7 @@ public:
          x = 0;
          y = SCREENHEIGHT - ST_HEIGHT - hud_font->absh;
       }
-      message  = NULL;
+      message  = nullptr;
       font     = hud_font;
       cleartic = 0;
       flags    = TW_AUTOMAP_ONLY;
@@ -1173,7 +1136,7 @@ int hu_levelnamecolor;
 //
 void HUDLevelNameWidget::ticker()
 {
-   message = automapactive ? LevelInfo.levelName : NULL;
+   message = automapactive ? LevelInfo.levelName : nullptr;
    color   = hu_levelnamecolor + 1;
 }
 
@@ -1226,7 +1189,7 @@ void HUDChatWidget::ticker()
       message = tempchatmsg;
    }
    else
-      message = NULL;
+      message = nullptr;
 }
 
 //
@@ -1559,26 +1522,26 @@ const char english_shiftxform[] =
 
 const char *align_str[] = { "default", "left", "centered" };
 
-VARIABLE_BOOLEAN(showMessages,  NULL,                   onoff);
-VARIABLE_INT(mess_align,        NULL, 0, 2,             align_str);
-VARIABLE_INT(mess_colour,       NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_BOOLEAN(showMessages,  nullptr,                onoff);
+VARIABLE_INT(mess_align,        nullptr, 0, 2,             align_str);
+VARIABLE_INT(mess_colour,       nullptr, 0, CR_BUILTIN,    textcolours);
 
-VARIABLE_BOOLEAN(obituaries,    NULL,                   onoff);
-VARIABLE_INT(obcolour,          NULL, 0, CR_BUILTIN,    textcolours);
-VARIABLE_INT(crosshairnum,      NULL, 0, CROSSHAIRS-1,  cross_str);
-VARIABLE_INT(hud_msg_lines,     NULL, 0, 14,            NULL);
-VARIABLE_INT(message_timer,     NULL, 0, 100000,        NULL);
+VARIABLE_BOOLEAN(obituaries,    nullptr,                onoff);
+VARIABLE_INT(obcolour,          nullptr, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(crosshairnum,      nullptr, 0, CROSSHAIRS-1,  cross_str);
+VARIABLE_INT(hud_msg_lines,     nullptr, 0, 14,            nullptr);
+VARIABLE_INT(message_timer,     nullptr, 0, 100000,        nullptr);
 
 // haleyjd 02/12/06: lost/new hud options
-VARIABLE_TOGGLE(hu_showtime,         NULL,                   yesno);
-VARIABLE_TOGGLE(hu_showcoords,       NULL,                   yesno);
-VARIABLE_TOGGLE(hu_alwaysshowcoords, NULL,                   yesno);
-VARIABLE_INT(hu_timecolor,           NULL, 0, CR_BUILTIN,    textcolours);
-VARIABLE_INT(hu_levelnamecolor,      NULL, 0, CR_BUILTIN,    textcolours);
-VARIABLE_INT(hu_coordscolor,         NULL, 0, CR_BUILTIN,    textcolours);
+VARIABLE_TOGGLE(hu_showtime,         nullptr,                yesno);
+VARIABLE_TOGGLE(hu_showcoords,       nullptr,                yesno);
+VARIABLE_TOGGLE(hu_alwaysshowcoords, nullptr,                yesno);
+VARIABLE_INT(hu_timecolor,           nullptr, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_levelnamecolor,      nullptr, 0, CR_BUILTIN,    textcolours);
+VARIABLE_INT(hu_coordscolor,         nullptr, 0, CR_BUILTIN,    textcolours);
 
-VARIABLE_BOOLEAN(hud_msg_scrollup,  NULL,               yesno);
-VARIABLE_TOGGLE(crosshair_hilite,   NULL,               onoff);
+VARIABLE_BOOLEAN(hud_msg_scrollup,  nullptr,            yesno);
+VARIABLE_TOGGLE(crosshair_hilite,   nullptr,            onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
@@ -1739,7 +1702,7 @@ static cell AMX_NATIVE_CALL sm_patchwidgetcolor(AMX *amx, cell *params)
       pw = (hu_patchwidget_t *)widget;
 
       if(params[2] != -2)
-         pw->color = params[2] >= 0 && params[2] < CR_LIMIT ? colrngs[params[1]] : NULL;
+         pw->color = params[2] >= 0 && params[2] < CR_LIMIT ? colrngs[params[1]] : nullptr;
 
       if(params[3] >= 0 && params[3] <= FRACUNIT)
          pw->tl_level = params[3];
@@ -1936,7 +1899,7 @@ AMX_NATIVE_INFO hustuff_Natives[] =
    { "_CenterMsgTimed",     sm_centermsgtimed   },
    { "_GetHUDMode",         sm_gethudmode       },
    { "_InAutomap",          sm_inautomap        },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

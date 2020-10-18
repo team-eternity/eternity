@@ -19,6 +19,37 @@
 // Authors: Ioan Chera
 //
 
+#include "m_debug.h"
+
+#ifdef DEBUG_PROFILING
+
+// TODO: extend the timing support outside of Windows too
+
+#include <Windows.h>
+#include <stdio.h>
+
+static LARGE_INTEGER freq;
+static BOOL bbb = QueryPerformanceFrequency(&freq);
+
+Profiler::Profiler(int tic, const char *func, double crashlimit) : gametic(tic), climit(crashlimit), name(func)
+{
+   LARGE_INTEGER jkac;
+   QueryPerformanceCounter(&jkac);
+   starttime = (double)jkac.QuadPart / freq.QuadPart;
+}
+
+Profiler::~Profiler()
+{
+   LARGE_INTEGER jkac;
+   QueryPerformanceCounter(&jkac);
+   double nowtime = (double)jkac.QuadPart / freq.QuadPart;
+   printf("%d: %s %f\n", gametic, name, nowtime - starttime);
+   if(climit && nowtime - starttime > climit)
+      abort();
+}
+
+#endif
+
 #if defined(_DEBUG) && !defined(NDEBUG)
 
 #include "z_zone.h"
@@ -120,7 +151,7 @@ DebugLogger &DebugLogger::operator << (const line_t &line)
 }
 DebugLogger &DebugLogger::operator << (const pwindow_t &window)
 {
-   return *this << "pwindow(" << window.line << window.type >> window.planez >> window.vx >> window.vy >> window.vz << ')';
+   return *this << "pwindow(" << window.type >> window.planez >> window.vx >> window.vy >> window.vz << ')';
 }
 DebugLogger &DebugLogger::operator << (const sector_t &sector)
 {

@@ -67,8 +67,8 @@ void PortalBlockmap::mapInit()
       const sector_t &sector = *R_PointInSubsector(
          bmaporgx + i % bmapwidth * MAPBLOCKSIZE + MAPBLOCKSIZE / 2,
          bmaporgy + i / bmapwidth * MAPBLOCKSIZE + MAPBLOCKSIZE / 2)->sector;
-      checkLinkSector(sector, sector.f_portal, false, i);
-      checkLinkSector(sector, sector.c_portal, true, i);
+      checkLinkSector(sector, sector.srf.floor.portal, surf_floor, i);
+      checkLinkSector(sector, sector.srf.ceiling.portal, surf_ceil, i);
    }
    mInitializing = false;
 }
@@ -154,12 +154,12 @@ void PortalBlockmap::linkLine(const line_t &line)
 
       if(mInitializing)
       {
-         checkLinkSector(*line.frontsector, line.frontsector->f_portal, false, b);
-         checkLinkSector(*line.frontsector, line.frontsector->c_portal, true, b);
+         checkLinkSector(*line.frontsector, line.frontsector->srf.floor.portal, surf_floor, b);
+         checkLinkSector(*line.frontsector, line.frontsector->srf.ceiling.portal, surf_ceil, b);
          if(line.backsector)
          {
-            checkLinkSector(*line.backsector, line.backsector->f_portal, false, b);
-            checkLinkSector(*line.backsector, line.backsector->c_portal, true, b);
+            checkLinkSector(*line.backsector, line.backsector->srf.floor.portal, surf_floor, b);
+            checkLinkSector(*line.backsector, line.backsector->srf.ceiling.portal, surf_ceil, b);
          }
       }
 
@@ -186,8 +186,8 @@ void PortalBlockmap::linkLine(const line_t &line)
 // Not optimized for gametime.
 // Sector NOT assumed to have a linked portals or unadded.
 //
-void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *portal, bool isceiling,
-   int mapindex)
+void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *portal, surf_e surf,
+                                     int mapindex)
 {
    if(!portal || portal->type != R_LINKED)
       return;
@@ -203,7 +203,7 @@ void PortalBlockmap::checkLinkSector(const sector_t &sector, const portal_t *por
    entry.ldata = &portal->data.link;
    entry.type = portalblocktype_e::sector;
    entry.sector = &sector;
-   entry.isceiling = isceiling;
+   entry.surf = surf;
 }
 
 //
@@ -236,11 +236,11 @@ void StaticLinedefPortalBlockmap::mapInit()
          if(line.backsector &&
             (line.pflags & PS_PASSABLE ||
             (line.extflags & EX_ML_LOWERPORTAL &&
-               line.backsector->f_portal &&
-               line.backsector->f_portal->type == R_LINKED) ||
+               line.backsector->srf.floor.portal &&
+               line.backsector->srf.floor.portal->type == R_LINKED) ||
                (line.extflags & EX_ML_UPPERPORTAL &&
-                  line.backsector->c_portal &&
-                  line.backsector->c_portal->type == R_LINKED)))
+                  line.backsector->srf.ceiling.portal &&
+                  line.backsector->srf.ceiling.portal->type == R_LINKED)))
          {
             coll.add(&line);
          }

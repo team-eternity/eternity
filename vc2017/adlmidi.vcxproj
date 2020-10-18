@@ -210,6 +210,7 @@
     <ClInclude Include="..\adlmidi\src\adldata.hh" />
     <ClInclude Include="..\adlmidi\src\adlmidi_bankmap.h" />
     <ClInclude Include="..\adlmidi\src\adlmidi_cvt.hpp" />
+    <ClInclude Include="..\adlmidi\src\adlmidi_db.h" />
     <ClInclude Include="..\adlmidi\src\adlmidi_midiplay.hpp" />
     <ClInclude Include="..\adlmidi\src\adlmidi_opl3.hpp" />
     <ClInclude Include="..\adlmidi\src\adlmidi_private.hpp" />
@@ -236,7 +237,6 @@
     <ClInclude Include="..\adlmidi\src\wopl\wopl_file.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\adlmidi\src\adldata.cpp" />
     <ClCompile Include="..\adlmidi\src\adlmidi.cpp" />
     <ClCompile Include="..\adlmidi\src\adlmidi_load.cpp" />
     <ClCompile Include="..\adlmidi\src\adlmidi_midiplay.cpp" />
@@ -251,6 +251,7 @@
     <ClCompile Include="..\adlmidi\src\chips\nuked_opl3.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\nuked_opl3_v174.cpp" />
     <ClCompile Include="..\adlmidi\src\chips\opal_opl3.cpp" />
+    <ClCompile Include="..\adlmidi\src\inst_db.cpp" />
     <ClCompile Include="..\adlmidi\src\wopl\wopl_file.c" />
   </ItemGroup>
   <ItemGroup>

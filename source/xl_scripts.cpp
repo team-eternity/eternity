@@ -376,7 +376,7 @@ void XLParser::parseLump(WadDirectory &dir, lumpinfo_t *lump, bool global)
    if(lumpdata)
    {
       efree(lumpdata);
-      lumpdata = NULL;
+      lumpdata = nullptr;
    }
 
    // can't parse empty lumps

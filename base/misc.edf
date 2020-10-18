@@ -72,3 +72,16 @@ string _IN_NAME_E5M8 { val = "FIELD OF JUDGEMENT" }
 string _IN_NAME_E5M9 { val = "SKEIN OF D'SPARIL" }
 
 endif()
+
+
+#
+# Gameplay compatibility for maps which didn't have certain settings
+#
+compatibilityhacks
+{
+  hashes
+  7D97556143568B497B84119F99E83962, // e2l11 map01
+  866A8726DC29E29AF8CFF691513D02EE  // vaprdemo map01
+
+  off comp_jump
+}

@@ -174,7 +174,8 @@ public:
 
    struct State
    {
-      fixed_t originfrac, bottomslope, topslope;
+      fixed_t originfrac;
+      Surfaces<fixed_t> slope;
       int reclevel;
    };
 
@@ -212,8 +213,8 @@ portalexit(false), portalresult(false), params(&inparams)
    else
    {
       state.originfrac = 0;
-      state.bottomslope = params->tz - sightzstart;
-      state.topslope = state.bottomslope + params->theight;
+      state.slope.floor = params->tz - sightzstart;
+      state.slope.ceiling = state.slope.floor + params->theight;
       state.reclevel = 0;
    }
 
@@ -236,7 +237,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    // avoid round-off errors if possible
    fixed_t totalfrac = context.state.originfrac ? context.state.originfrac +
       FixedMul(in->frac, FRACUNIT - context.state.originfrac) : in->frac;
-   const sector_t *sector = P_PointOnLineSide(trace.x, trace.y, li) == 0 ?
+   const sector_t *sector = P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 ?
       li->frontsector : li->backsector;
    if(sector && totalfrac > 0)
    {
@@ -252,71 +253,52 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    if(lo.openrange <= 0 || li->extflags & EX_ML_BLOCKALL)
       return false;
 
-   const sector_t *osector = sector == li->frontsector ? 
+   const sector_t *osector = sector == li->frontsector ?
       li->backsector : li->frontsector;
    fixed_t slope;
 
-   if(sector->floorheight != osector->floorheight ||
-      (!!(sector->f_pflags & PS_PASSABLE) ^ !!(osector->f_pflags & PS_PASSABLE)))
+   for(surf_e surf : SURFS)
    {
-      slope = FixedDiv(lo.openbottom - context.sightzstart, totalfrac);
-      if(slope > context.state.bottomslope)
-         context.state.bottomslope = slope;
-      
-   }
-
-   if(sector->ceilingheight != osector->ceilingheight ||
-      (!!(sector->c_pflags & PS_PASSABLE) ^ !!(osector->c_pflags & PS_PASSABLE)))
-   {
-      slope = FixedDiv(lo.opentop - context.sightzstart, totalfrac);
-      if(slope < context.state.topslope)
-         context.state.topslope = slope;
-   }
-
-   if(context.state.topslope <= context.state.bottomslope)
-      return false;  // stop
-
-   // have we hit a lower edge portal
-   if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
-      li->backsector->f_pflags & PS_PASSABLE &&
-      context.state.bottomslope <=
-      FixedDiv(li->backsector->floorheight - context.sightzstart, totalfrac) &&
-      P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
-   {
-      State state(context.state);
-      state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->f_portal->data.link.toid,
-                         context.params->cx + FixedMul(trace.dx, in->frac),
-                         context.params->cy + FixedMul(trace.dy, in->frac),
-                         state, &context.portalresult,
-                         li->backsector->f_portal->data.link))
+      const surface_t &surface = sector->srf[surf];
+      const surface_t &otherSurface = osector->srf[surf];
+      if(surface.height != otherSurface.height ||
+         (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
       {
-         context.portalexit = true;
-         return false;
+         slope = FixedDiv(lo.open[surf] - context.sightzstart, totalfrac);
+         if(isInner(surf, slope, context.state.slope[surf]))
+            context.state.slope[surf] = slope;
       }
    }
 
-   if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
-      li->backsector->c_pflags & PS_PASSABLE &&
-      context.state.topslope >=
-      FixedDiv(li->backsector->ceilingheight - context.sightzstart, totalfrac) &&
-      P_PointOnLineSide(trace.x, trace.y, li) == 0 && in->frac > 0)
+   if(context.state.slope.ceiling <= context.state.slope.floor)
+      return false;  // stop
+
+   // have we hit an edge portal?
+   for(surf_e surf : SURFS)
    {
-      State state(context.state);
-      state.originfrac = totalfrac;
-      if(context.recurse(li->backsector->c_portal->data.link.toid,
-                         context.params->cx + FixedMul(trace.dx, in->frac),
-                         context.params->cy + FixedMul(trace.dy, in->frac),
-                         state, &context.portalresult,
-                         li->backsector->c_portal->data.link))
+      const surface_t &backSurface = li->backsector->srf[surf];
+
+      if(li->extflags & e_edgePortalFlags[surf] && li->backsector &&
+         backSurface.pflags & PS_PASSABLE &&
+         !isInner(surf, context.state.slope[surf],
+                  FixedDiv(backSurface.height - context.sightzstart, totalfrac)) &&
+         P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
-         context.portalexit = true;
-         return false;
+         State state(context.state);
+         state.originfrac = totalfrac;
+         if(context.recurse(backSurface.portal->data.link.toid,
+                            context.params->cx + FixedMul(trace.dx, in->frac),
+                            context.params->cy + FixedMul(trace.dy, in->frac),
+                            state, &context.portalresult, backSurface.portal->data.link))
+         {
+            context.portalexit = true;
+            return false;
+         }
       }
    }
 
    // have we hit a portal line
-   if(li->pflags & PS_PASSABLE && P_PointOnLineSide(trace.x, trace.y, li) == 0 &&
+   if(li->pflags & PS_PASSABLE && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 &&
       in->frac > 0)
    {
       State state(context.state);
@@ -341,116 +323,67 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 // ioanch 20151229: check sector if it has portals and create cameras for them
 // Returns true if any branching sight check beyond a portal returned true
 //
-bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac,
-                                   fixed_t partialfrac, const divline_t &trace)
-                                   const
+bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac, 
+                                   const divline_t &trace) const
 {
-   int newfromid;
-   fixed_t linehitz;
-   fixed_t newslope;
+   for(const surf_e surf : SURFS)
+   {
+      fixed_t slope = state.slope[surf];
+      const surface_t &surface = sector->srf[surf];
+      int newfromid;
+      if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
+         (newfromid = surface.portal->data.link.toid) != params->cgroupid)
+      {
+         // Surface portal (slope must lead to it)
+         fixed_t linehitz = sightzstart + FixedMul(slope, totalfrac);
+         fixed_t planez = P_PortalZ(surface);
+         if(isOuter(surf, linehitz, planez))
+         {
+            // update other slope to be the edge of the sector wall
+            // if totalfrac == 0, then it will just be a very big slope
+            fixed_t newslope = FixedDiv(planez - sightzstart, totalfrac);
 
-   fixed_t sectorfrac;
-   fixed_t x, y;
+            if(isOuter(!surf, newslope, state.slope[!surf]))
+               newslope = state.slope[!surf];
 
-   State newstate;
-   bool result = false;
+            // get x and y of position
+            fixed_t x, y;
+            if(linehitz == sightzstart)
+            {
+               // handle this edge case: put point right on line
+               x = trace.x + FixedMul(trace.dx, partialfrac);
+               y = trace.y + FixedMul(trace.dy, partialfrac);
+            }
+            else
+            {
+               fixed_t sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
+               // update z frac
+               totalfrac = FixedMul(sectorfrac, totalfrac);
+               // retrieve the xy frac using the origin frac
+               partialfrac = FixedDiv(totalfrac - state.originfrac,
+                                      FRACUNIT - state.originfrac);
+
+               // HACK: add a unit just to ensure that it enters the sector
+               x = trace.x + FixedMul(partialfrac + 1, trace.dx);
+               y = trace.y + FixedMul(partialfrac + 1, trace.dy);
+            }
+
+            if(partialfrac + 1 > 0) // don't allow going back
+            {
+               State newstate;
+               newstate.slope[surf] = slope;
+               newstate.slope[!surf] = newslope;
+               newstate.originfrac = totalfrac;
+               newstate.reclevel = state.reclevel + 1;
+
+               bool result = false;
+               if(recurse(newfromid, x, y, newstate, &result, surface.portal->data.link) && result)
+                  return true;
+            }
+         }
+      }
+   }
    
-   if(state.topslope > 0 && sector->c_pflags & PS_PASSABLE &&
-      (newfromid = sector->c_portal->data.link.toid) != params->cgroupid)
-   {
-      // ceiling portal (slope must be up)
-      linehitz = sightzstart + FixedMul(state.topslope, totalfrac);
-      fixed_t planez = P_CeilingPortalZ(*sector);
-      if(linehitz > planez)
-      {
-         // update cam.bottomslope to be the top of the sector wall
-         newslope = FixedDiv(planez - sightzstart, totalfrac);
-
-         // if totalfrac == 0, then it will just be a very big slope
-         if(newslope < state.bottomslope)
-            newslope = state.bottomslope;
-
-         // get x and y of position
-         if(linehitz == sightzstart)
-         {
-            // handle this edge case: put point right on line
-            x = trace.x + FixedMul(trace.dx, partialfrac);
-            y = trace.y + FixedMul(trace.dy, partialfrac);
-         }
-         else
-         {
-            sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
-            // update z frac
-            totalfrac = FixedMul(sectorfrac, totalfrac);
-            // retrieve the xy frac using the origin frac
-            partialfrac = FixedDiv(totalfrac - state.originfrac, 
-               FRACUNIT - state.originfrac);
-
-            // HACK: add a unit just to ensure that it enters the sector
-            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
-         }
-
-         if(partialfrac + 1 > 0) // don't allow going back
-         {
-            newstate.bottomslope = newslope;
-            newstate.topslope = state.topslope;
-            newstate.originfrac = totalfrac;
-            newstate.reclevel = state.reclevel + 1;
-
-            if(recurse(newfromid, x, y, newstate, &result, *R_CPLink(sector)) &&
-               result)
-            {
-               return true;
-            }
-         }
-         
-      }
-   }
-
-   if(state.bottomslope < 0 && sector->f_pflags & PS_PASSABLE &&
-      (newfromid = sector->f_portal->data.link.toid) != params->cgroupid)
-   {
-      linehitz = sightzstart + FixedMul(state.bottomslope, totalfrac);
-      fixed_t planez = P_FloorPortalZ(*sector);
-      if(linehitz < planez)
-      {
-         newslope = FixedDiv(planez - sightzstart, totalfrac);
-         if(newslope > state.topslope)
-            newslope = state.topslope;
-
-         if(linehitz == sightzstart)
-         {
-            x = trace.x + FixedMul(trace.dx, partialfrac);
-            y = trace.y + FixedMul(trace.dy, partialfrac);
-         }
-         else
-         {
-            sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
-            totalfrac = FixedMul(sectorfrac, totalfrac);
-            partialfrac = FixedDiv(totalfrac - state.originfrac, 
-               FRACUNIT - state.originfrac);
-
-            x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-            y = trace.y + FixedMul(partialfrac + 1, trace.dy);
-         }
-
-         if(partialfrac + 1 > 0)
-         {
-
-            newstate.bottomslope = state.bottomslope;
-            newstate.topslope = newslope;
-            newstate.originfrac = totalfrac;
-            newstate.reclevel = state.reclevel + 1;
-
-            if(recurse(newfromid, x, y, newstate, &result, *R_FPLink(sector)) &&
-               result)
-            {
-               return true;
-            }
-         }
-      }
-   }
    return false;
 }
 
@@ -470,9 +403,9 @@ bool CamContext::recurse(int newfromid, fixed_t x, fixed_t y,
       return false;  // protection
 
    camsightparams_t params;
-   params.cx = x + data.deltax;
-   params.cy = y + data.deltay;
-   params.cz = this->params->cz + data.deltaz;
+   params.cx = x + data.delta.x;
+   params.cy = y + data.delta.y;
+   params.cz = this->params->cz + data.delta.z;
    params.cheight = this->params->cheight;
    params.tx = this->params->tx;
    params.ty = this->params->ty;
@@ -522,16 +455,16 @@ bool CamContext::checkSight(const camsightparams_t &params,
    {
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
-          ((params.cz + params.cheight <= sectors[csec->heightsec].floorheight &&
-            params.tz >= sectors[csec->heightsec].floorheight) ||
-           (params.cz >= sectors[csec->heightsec].ceilingheight &&
-            params.tz + params.cheight <= sectors[csec->heightsec].ceilingheight)))
+          ((params.cz + params.cheight <= sectors[csec->heightsec].srf.floor.height &&
+            params.tz >= sectors[csec->heightsec].srf.floor.height) ||
+           (params.cz >= sectors[csec->heightsec].srf.ceiling.height &&
+            params.tz + params.cheight <= sectors[csec->heightsec].srf.ceiling.height)))
          ||
          (tsec->heightsec != -1 &&
-          ((params.tz + params.theight <= sectors[tsec->heightsec].floorheight &&
-            params.cz >= sectors[tsec->heightsec].floorheight) ||
-           (params.tz >= sectors[tsec->heightsec].ceilingheight &&
-            params.cz + params.theight <= sectors[tsec->heightsec].ceilingheight))))
+          ((params.tz + params.theight <= sectors[tsec->heightsec].srf.floor.height &&
+            params.cz >= sectors[tsec->heightsec].srf.floor.height) ||
+           (params.tz >= sectors[tsec->heightsec].srf.ceiling.height &&
+            params.cz + params.theight <= sectors[tsec->heightsec].srf.ceiling.height))))
          return false;
 
       //

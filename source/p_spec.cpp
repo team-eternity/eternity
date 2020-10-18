@@ -63,6 +63,7 @@
 #include "p_pushers.h"
 #include "p_saveg.h"
 #include "p_scroll.h"
+#include "p_sector.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "p_slopes.h"
@@ -86,18 +87,20 @@
 #include "v_video.h"
 #include "w_wad.h"
 
+bool secret_notification_enabled = true;
+
 //
 // Animating textures and planes
 // There is another anim_t used in wi_stuff, unrelated.
 //
-typedef struct anim_s
+struct anim_t
 {
   bool        istexture;
   int         picnum;
   int         basepic;
   int         numpics;
   int         speed;
-} anim_t;
+};
 
 //
 //      source animation definition
@@ -318,7 +321,6 @@ void P_InitPicAnims(void)
    animdef_t               *animdefs; //jff 3/23/98 pointer to animation lump
    const lumpinfo_t *const *lumpinfo = wGlobalDir.getLumpInfo();
    const int                animatednum  = wGlobalDir.getNumForName("ANIMATED");
-   const size_t             animatedsize = lumpinfo[animatednum]->size;
 
    if(lumpinfo[animatednum]->size == 0)
       I_Error("P_InitPicAnims: ANIMATED lump has size 0\n");
@@ -402,7 +404,7 @@ int twoSided(int sector, int line)
    //has two sidedefs, rather than whether the 2S flag is set
    
    return 
-      comp[comp_model] ? 
+      getComp(comp_model) ?
          sectors[sector].lines[line]->flags & ML_TWOSIDED :
          sectors[sector].lines[line]->sidenum[1] != -1;
 }
@@ -412,14 +414,14 @@ int twoSided(int sector, int line)
 //
 // Return sector_t * of sector next to current across line.
 //
-// Note: returns NULL if not two-sided line, or both sides refer to sector
+// Note: returns nullptr if not two-sided line, or both sides refer to sector
 //
 // killough 11/98: reformatted
 //
 sector_t *getNextSector(const line_t *line, const sector_t *sec)
 {
    //jff 1/26/98 check unneeded since line->backsector already
-   //returns NULL if the line is not two sided, and does so from
+   //returns nullptr if the line is not two sided, and does so from
    //the actual two-sidedness of the line, rather than its 2S flag
    //
    //jff 5/3/98 don't retn sec unless compatibility
@@ -427,12 +429,12 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
    // like floor->highest floor
 
    return 
-      comp[comp_model] && !(line->flags & ML_TWOSIDED) ? 
-         NULL :
+      getComp(comp_model) && !(line->flags & ML_TWOSIDED) ?
+         nullptr :
          line->frontsector == sec ? 
-            comp[comp_model] || line->backsector != sec ?
+            getComp(comp_model) || line->backsector != sec ?
                line->backsector : 
-               NULL : 
+               nullptr : 
             line->frontsector;
 }
 
@@ -446,17 +448,17 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
 //
 fixed_t P_FindLowestFloorSurrounding(const sector_t* sec)
 {
-   fixed_t floor = sec->floorheight;
+   fixed_t floor = sec->srf.floor.height;
    const sector_t *other;
    int i;
-   
+
    for(i = 0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i], sec)) &&
-         other->floorheight < floor)
-         floor = other->floorheight;
+         other->srf.floor.height < floor)
+         floor = other->srf.floor.height;
    }
-   
+
    return floor;
 }
 
@@ -479,17 +481,17 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
 
    //jff 1/26/98 Fix initial value for floor to not act differently
    //in sections of wad that are below -500 units
-   
-   if(!comp[comp_model])          //jff 3/12/98 avoid ovf
+
+   if(!getComp(comp_model))          //jff 3/12/98 avoid ovf
       floor = -32000*FRACUNIT;      // in height calculations
 
    for(i = 0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight > floor)
-         floor = other->floorheight;
+         other->srf.floor.height > floor)
+         floor = other->srf.floor.height;
    }
-   
+
    return floor;
 }
 
@@ -507,19 +509,19 @@ fixed_t P_FindNextHighestFloor(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
-   
+
    for(i=0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight > currentheight)
+         other->srf.floor.height > currentheight)
       {
-         int height = other->floorheight;
+         int height = other->srf.floor.height;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->floorheight < height &&
-               other->floorheight > currentheight)
-               height = other->floorheight;
+               other->srf.floor.height < height &&
+               other->srf.floor.height > currentheight)
+               height = other->srf.floor.height;
          }
          return height;
       }
@@ -541,19 +543,19 @@ fixed_t P_FindNextLowestFloor(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
-   
+
    for(i=0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->floorheight < currentheight)
+         other->srf.floor.height < currentheight)
       {
-         int height = other->floorheight;
+         int height = other->srf.floor.height;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->floorheight > height &&
-               other->floorheight < currentheight)
-               height = other->floorheight;
+               other->srf.floor.height > height &&
+               other->srf.floor.height < currentheight)
+               height = other->srf.floor.height;
          }
          return height;
       }
@@ -575,19 +577,19 @@ fixed_t P_FindNextLowestCeiling(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
-   
+
    for(i=0 ;i < sec->linecount ; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight < currentheight)
+         other->srf.ceiling.height < currentheight)
       {
-         int height = other->ceilingheight;
+         int height = other->srf.ceiling.height;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->ceilingheight > height &&
-               other->ceilingheight < currentheight)
-               height = other->ceilingheight;
+               other->srf.ceiling.height > height &&
+               other->srf.ceiling.height < currentheight)
+               height = other->srf.ceiling.height;
          }
         return height;
       }
@@ -609,19 +611,19 @@ fixed_t P_FindNextHighestCeiling(const sector_t *sec, int currentheight)
 {
    sector_t *other;
    int i;
-   
+
    for(i=0; i < sec->linecount; i++)
    {
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight > currentheight)
+         other->srf.ceiling.height > currentheight)
       {
-         int height = other->ceilingheight;
+         int height = other->srf.ceiling.height;
          while (++i < sec->linecount)
          {
             if((other = getNextSector(sec->lines[i],sec)) &&
-               other->ceilingheight < height &&
-               other->ceilingheight > currentheight)
-               height = other->ceilingheight;
+               other->srf.ceiling.height < height &&
+               other->srf.ceiling.height > currentheight)
+               height = other->srf.ceiling.height;
          }
          return height;
       }
@@ -646,7 +648,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
    fixed_t height = D_MAXINT;
    int i;
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in height calculations
 
    if(demo_version >= 333)
@@ -655,25 +657,25 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
       for(i = 0; i < sec->linecount; i++)
       {
          if((other = getNextSector(sec->lines[i],sec)) &&
-            other->ceilingheight < height)
+            other->srf.ceiling.height < height)
          {
             int j;
 
-            for(j = 0; j < sec->c_asurfacecount; j++)
-               if(sec->c_asurfaces[j].sector == other)
+            for(j = 0; j < sec->srf.ceiling.asurfacecount; j++)
+               if(sec->srf.ceiling.asurfaces[j].sector == other)
                   break;
-            
-            if(j == sec->c_asurfacecount)
-               height = other->ceilingheight;
+
+            if(j == sec->srf.ceiling.asurfacecount)
+               height = other->srf.ceiling.height;
          }
       }
    }
    else
-   {      
+   {
       for(i = 0; i < sec->linecount; i++)
       {
-         if((other = getNextSector(sec->lines[i],sec)) && other->ceilingheight < height)
-            height = other->ceilingheight;
+         if((other = getNextSector(sec->lines[i],sec)) && other->srf.ceiling.height < height)
+            height = other->srf.ceiling.height;
       }
    }
 
@@ -700,15 +702,15 @@ fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
    //jff 1/26/98 Fix initial value for floor to not act differently
    //in sections of wad that are below 0 units
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       height = -32000*FRACUNIT; //jff 3/12/98 avoid ovf in
-   
+
    // height calculations
    for(i=0; i < sec->linecount; i++)
       if((other = getNextSector(sec->lines[i],sec)) &&
-         other->ceilingheight > height)
-         height = other->ceilingheight;
-      
+         other->srf.ceiling.height > height)
+         height = other->srf.ceiling.height;
+
    return height;
 }
 
@@ -736,7 +738,7 @@ fixed_t P_FindShortestTextureAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
    
    for(i = 0; i < sec->linecount; i++)
@@ -780,7 +782,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
 
    for(i = 0; i < sec->linecount; i++)
@@ -807,7 +809,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
 // a sector with that floor height across the lowest numbered two sided
 // line surrounding the sector.
 //
-// Note: If no sector at that height bounds the sector passed, return NULL
+// Note: If no sector at that height bounds the sector passed, return nullptr
 //
 // jff 02/03/98 Add routine to find numeric model floor
 //  around a sector specified by sector number
@@ -815,7 +817,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
 //  from routine not using FloorMoveThinker
 //
 // killough 11/98: reformatted
-// 
+//
 sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 {
    sector_t *sec = &sectors[secnum]; //jff 3/2/98 woops! better do this
@@ -824,20 +826,20 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
    // but allow early exit in old demos
 
    int i, lineCount = sec->linecount;
-   
-   for(i = 0; 
-       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount); 
+
+   for(i = 0;
+       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount);
        i++)
    {
       if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
-          getSide(secnum,i,0)->sector-sectors == secnum))->floorheight == floordestheight)
+          getSide(secnum,i,0)->sector-sectors == secnum))->srf.floor.height == floordestheight)
       {
          return sec;
       }
    }
-      
-   return NULL;
+
+   return nullptr;
 }
 
 //
@@ -847,7 +849,7 @@ sector_t *P_FindModelFloorSector(fixed_t floordestheight, int secnum)
 // a sector with that ceiling height across the lowest numbered two sided
 // line surrounding the sector.
 //
-// Note: If no sector at that height bounds the sector passed, return NULL
+// Note: If no sector at that height bounds the sector passed, return nullptr
 //
 // jff 02/03/98 Add routine to find numeric model ceiling
 //  around a sector specified by sector number
@@ -867,19 +869,19 @@ sector_t *P_FindModelCeilingSector(fixed_t ceildestheight, int secnum)
 
    int i, lineCount = sec->linecount;
 
-   for(i = 0; 
-       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount); 
+   for(i = 0;
+       i < (demo_compatibility && sec->linecount < lineCount ? sec->linecount : lineCount);
        i++)
    {
       if(twoSided(secnum, i) &&
          (sec = getSector(secnum, i,
-          getSide(secnum,i,0)->sector-sectors == secnum))->ceilingheight == ceildestheight)
+          getSide(secnum,i,0)->sector-sectors == secnum))->srf.ceiling.height == ceildestheight)
       {
          return sec;
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -1013,10 +1015,10 @@ int P_FindMinSurroundingLight(const sector_t *sector, int min)
 int P_SectorActive(special_e t, const sector_t *sec)
 {
    return demo_compatibility ?  // return whether any thinker is active
-     sec->floordata || sec->ceilingdata || sec->lightingdata :
-     t == floor_special ? !!sec->floordata :        // return whether
-     t == ceiling_special ? !!sec->ceilingdata :    // thinker of same
-     t == lighting_special ? !!sec->lightingdata :  // type is active
+     sec->srf.floor.data || sec->srf.ceiling.data :
+     t == floor_special ? !!sec->srf.floor.data :        // return whether
+     t == ceiling_special ? !!sec->srf.ceiling.data :    // thinker of same
+     t == lighting_special ? 0 :  // type is active (NOTE: no light thinker currently)
      1; // don't know which special, must be active, shouldn't be here
 }
 
@@ -1053,7 +1055,7 @@ bool P_WasSecret(const sector_t *sec)
 //
 // haleyjd 06/01/04: starts a script from a linedef.
 //
-void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_s *po)
+void P_StartLineScript(line_t *line, int side, Mobj *thing, polyobj_t *po)
 {
    constexpr uint32_t argc = NUMLINEARGS - 1;
    uint32_t args[argc];
@@ -1133,12 +1135,12 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
 {
    // ioanch 20160116: portal aware
    if(!sector)
-      sector = P_ExtremeSectorAtPoint(player->mo, false);
+      sector = P_ExtremeSectorAtPoint(player->mo, surf_floor);
 
    // TODO: waterzones should damage whenever you're in them
    // Falling, not all the way down yet?
    // Sector specials don't apply in mid-air
-   if(player->mo->z != sector->floorheight)
+   if(player->mo->z != sector->srf.floor.height)
       return;
 
    // haleyjd 12/28/08: We handle secrets uniformly now, through the
@@ -1149,6 +1151,19 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
       player->secretcount++;             // credit the player
       sector->intflags |= SIF_WASSECRET; // remember secretness for automap
       sector->flags &= ~SECF_SECRET;     // clear the flag
+
+      // If consoleplayer then play secret sound
+      if(secret_notification_enabled && player == &players[consoleplayer])
+      {
+         qstring secretMsg { FC_GOLD };
+         secretMsg += DEH_String("SECRETMESSAGE");
+
+         doom_printf("%s", secretMsg.constPtr());
+         if(sfxinfo_t *sfx = S_SfxInfoForName(GameModeInfo->secretSoundName); sfx != nullptr)
+            S_StartInterfaceSound(sfx);
+         else
+            S_StartInterfaceSound(GameModeInfo->defSecretSound);
+      }
    }
 
    // Has hit ground
@@ -1165,14 +1180,14 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
          // disables god mode?
          // killough 2/21/98: add compatibility switch on godmode cheat clearing;
          //                   does not affect invulnerability
-         if(sector->damageflags & SDMG_ENDGODMODE && comp[comp_god])
+         if(sector->damageflags & SDMG_ENDGODMODE && getComp(comp_god))
             player->cheats &= ~CF_GODMODE;
 
          // check time
          if(sector->damagemask <= 0 || !(leveltime % sector->damagemask))
          {
             // do the damage
-            P_DamageMobj(player->mo, NULL, NULL, sector->damage, 
+            P_DamageMobj(player->mo, nullptr, nullptr, sector->damage, 
                          sector->damagemod);
 
             // possibly cause a terrain hit
@@ -1206,7 +1221,7 @@ void P_PlayerOnSpecialFlat(const player_t *player)
    fixed_t floorz;
 
    if(full_demo_version < make_full_version(339, 21))
-      floorz = player->mo->subsector->sector->floorheight;
+      floorz = player->mo->subsector->sector->srf.floor.height;
    else
       floorz = player->mo->zref.floor; // use more correct floorz
 
@@ -1221,7 +1236,7 @@ void P_PlayerOnSpecialFlat(const player_t *player)
    if(enable_nuke && // haleyjd: allow nuke cheat to disable terrain damage too
       terrain->damageamount && !(leveltime & terrain->damagetimemask))
    {
-      P_DamageMobj(player->mo, NULL, NULL, terrain->damageamount,
+      P_DamageMobj(player->mo, nullptr, nullptr, terrain->damageamount,
                    terrain->damagetype);
 
       if(terrain->splash)
@@ -1432,7 +1447,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_LIGHT_TRANSFER_FLOOR:
          sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
-            sectors[s].floorlightsec = sec;
+            sectors[s].srf.floor.lightsec = sec;
          break;
 
          // killough 4/11/98: Add support for setting
@@ -1440,7 +1455,7 @@ void P_SpawnSpecials(UDMFSetupSettings &setupSettings)
       case EV_STATIC_LIGHT_TRANSFER_CEILING:
          sec = eindex(sides[*lines[i].sidenum].sector-sectors);
          for(s = -1; (s = P_FindSectorFromLineArg0(lines+i,s)) >= 0;)
-            sectors[s].ceilinglightsec = sec;
+            sectors[s].srf.ceiling.lightsec = sec;
          break;
 
          // killough 10/98:
@@ -1706,7 +1721,7 @@ void FrictionThinker::Think()
       thing = node->m_thing;
       if(thing->player &&
          !(thing->flags & (MF_NOGRAVITY | MF_NOCLIP)) &&
-         thing->z <= sec->floorheight)
+         thing->z <= sec->srf.floor.height)
       {
          if((thing->friction == ORIG_FRICTION) ||     // normal friction?
             (this->friction < thing->friction))
@@ -1890,7 +1905,7 @@ static void P_SpawnFriction()
 //
 line_t *P_FindLine(int tag, int *searchPosition)
 {
-   line_t *line = NULL;
+   line_t *line = nullptr;
    
    int start = 
       (*searchPosition >= 0 ? lines[*searchPosition].nexttag :
@@ -1919,7 +1934,7 @@ void P_SetLineID(line_t *line, int id)
    {
       int chain = (unsigned int)line->tag % (unsigned int)numlines;
       int i;
-      line_t *prevline = NULL;
+      line_t *prevline = nullptr;
 
       // walk the chain
       for(i = lines[chain].firsttag; i != -1; i = lines[i].nexttag)
@@ -2084,17 +2099,17 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
    if(ceiling)
    {
-      numattached = sector->c_numattached;
-      attached = sector->c_attached;
-      numattsectors = sector->c_numsectors;
-      attsectors = sector->c_attsectors;
+      numattached = sector->srf.ceiling.numattached;
+      attached = sector->srf.ceiling.attached;
+      numattsectors = sector->srf.ceiling.numsectors;
+      attsectors = sector->srf.ceiling.attsectors;
    }
    else
    {
-      numattached = sector->f_numattached;
-      attached = sector->f_attached;
-      numattsectors = sector->f_numsectors;
-      attsectors = sector->f_attsectors;
+      numattached = sector->srf.floor.numattached;
+      attached = sector->srf.floor.attached;
+      numattsectors = sector->srf.floor.numsectors;
+      attsectors = sector->srf.floor.attsectors;
    }
 
    // Go through the sectors list one sector at a time.
@@ -2176,7 +2191,7 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    static int maxattach = 0;
    static int numattach = 0;
    static int alistsize = 0;
-   static int *attached = NULL, *alist = NULL;
+   static int *attached = nullptr, *alist = nullptr;
 
    int start = 0, i;
    line_t *line;
@@ -2188,9 +2203,9 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 
    // Check to ensure that this sector doesn't already 
    // have attachments.
-   if(!ceiling && cline->frontsector->f_numattached)
+   if(!ceiling && cline->frontsector->srf.floor.numattached)
    {
-      numattach = cline->frontsector->f_numattached;
+      numattach = cline->frontsector->srf.floor.numattached;
 
       if(numattach >= maxattach)
       {
@@ -2198,15 +2213,15 @@ void P_AttachLines(const line_t *cline, bool ceiling)
          attached = erealloc(int *, attached, sizeof(int) * maxattach);
       }
 
-      memcpy(attached, cline->frontsector->f_attached, sizeof(int) * numattach);
-      Z_Free(cline->frontsector->f_attached);
-      cline->frontsector->f_attached = NULL;
-      cline->frontsector->f_numattached = 0;
-      Z_Free(cline->frontsector->f_attsectors);
+      memcpy(attached, cline->frontsector->srf.floor.attached, sizeof(int) * numattach);
+      Z_Free(cline->frontsector->srf.floor.attached);
+      cline->frontsector->srf.floor.attached = nullptr;
+      cline->frontsector->srf.floor.numattached = 0;
+      Z_Free(cline->frontsector->srf.floor.attsectors);
    }
-   else if(ceiling && cline->frontsector->c_numattached)
+   else if(ceiling && cline->frontsector->srf.ceiling.numattached)
    {
-      numattach = cline->frontsector->c_numattached;
+      numattach = cline->frontsector->srf.ceiling.numattached;
 
       if(numattach >= maxattach)
       {
@@ -2218,11 +2233,11 @@ void P_AttachLines(const line_t *cline, bool ceiling)
       if(!attached)
          I_Error("P_AttachLines: no attached list\n");
 
-      memcpy(attached, cline->frontsector->c_attached, sizeof(int) * numattach);
-      Z_Free(cline->frontsector->c_attached);
-      cline->frontsector->c_attached = NULL;
-      cline->frontsector->c_numattached = 0;
-      Z_Free(cline->frontsector->c_attsectors);
+      memcpy(attached, cline->frontsector->srf.ceiling.attached, sizeof(int) * numattach);
+      Z_Free(cline->frontsector->srf.ceiling.attached);
+      cline->frontsector->srf.ceiling.attached = nullptr;
+      cline->frontsector->srf.ceiling.numattached = 0;
+      Z_Free(cline->frontsector->srf.ceiling.attsectors);
    }
 
    // ioanch: param specisl
@@ -2282,21 +2297,21 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    // Copy the list to the c_attached or f_attached list.
    if(ceiling)
    {
-      cline->frontsector->c_numattached = numattach;
-      cline->frontsector->c_attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->c_attached, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.ceiling.numattached = numattach;
+      cline->frontsector->srf.ceiling.attached = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+      memcpy(cline->frontsector->srf.ceiling.attached, attached, sizeof(int) * numattach);
 
-      alist = cline->frontsector->c_attached;
-      alistsize = cline->frontsector->c_numattached;
+      alist = cline->frontsector->srf.ceiling.attached;
+      alistsize = cline->frontsector->srf.ceiling.numattached;
    }
    else
    {
-      cline->frontsector->f_numattached = numattach;
-      cline->frontsector->f_attached = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->f_attached, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.floor.numattached = numattach;
+      cline->frontsector->srf.floor.attached = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+      memcpy(cline->frontsector->srf.floor.attached, attached, sizeof(int) * numattach);
 
-      alist = cline->frontsector->f_attached;
-      alistsize = cline->frontsector->f_numattached;
+      alist = cline->frontsector->srf.floor.attached;
+      alistsize = cline->frontsector->srf.floor.numattached;
    }
 
    // (re)create the sectors list.
@@ -2344,15 +2359,15 @@ void P_AttachLines(const line_t *cline, bool ceiling)
    // Copy the attached sectors list.
    if(ceiling)
    {
-      cline->frontsector->c_numsectors = numattach;
-      cline->frontsector->c_attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->c_attsectors, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.ceiling.numsectors = numattach;
+      cline->frontsector->srf.ceiling.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+      memcpy(cline->frontsector->srf.ceiling.attsectors, attached, sizeof(int) * numattach);
    }
    else
    {
-      cline->frontsector->f_numsectors = numattach;
-      cline->frontsector->f_attsectors = (int *)(Z_Malloc(sizeof(int) * numattach, PU_LEVEL, 0));
-      memcpy(cline->frontsector->f_attsectors, attached, sizeof(int) * numattach);
+      cline->frontsector->srf.floor.numsectors = numattach;
+      cline->frontsector->srf.floor.attsectors = emalloctag(int *, sizeof(int) * numattach, PU_LEVEL, nullptr);
+      memcpy(cline->frontsector->srf.floor.attsectors, attached, sizeof(int) * numattach);
    }
 }
 
@@ -2362,52 +2377,60 @@ void P_AttachLines(const line_t *cline, bool ceiling)
 // Moves all attached surfaces.
 //
 bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
-                    int crush)
+                    int crush, bool nointerp)
 {
    int i;
 
    int count;
-   attachedsurface_t *list;
+   const attachedsurface_t *list;
 
    bool ok = true;
    
    if(ceiling)
    {
-      count = sector->c_asurfacecount;
-      list = sector->c_asurfaces;
+      count = sector->srf.ceiling.asurfacecount;
+      list = sector->srf.ceiling.asurfaces;
    }
    else
    {
-      count = sector->f_asurfacecount;
-      list = sector->f_asurfaces;
+      count = sector->srf.floor.asurfacecount;
+      list = sector->srf.floor.asurfaces;
    }
 
    for(i = 0; i < count; i++)
    {
       if(list[i].type & AS_CEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight + delta);
+         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->ceilingheight - delta);
+         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
       }
 
       if(list[i].type & AS_FLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->floorheight + delta);
+         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->floorheight - delta);
+         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
+         if(nointerp)
+            P_SaveSectorPosition(*list[i].sector, ssurf_floor);
       }
    }
 
@@ -2535,21 +2558,21 @@ static void P_attachSectors(UDMFSetupSettings &settings)
       }
       if(!floornew.isEmpty())
       {
-         efree(sectors[i].f_asurfaces);
-         sectors[i].f_asurfaces = estructalloctag(attachedsurface_t, 
+         efree(sectors[i].srf.floor.asurfaces);
+         sectors[i].srf.floor.asurfaces = estructalloctag(attachedsurface_t,
             floornew.getLength(), PU_LEVEL);
-         sectors[i].f_asurfacecount = static_cast<int>(floornew.getLength());
-         memcpy(sectors[i].f_asurfaces, &floornew[0], 
-            sectors[i].f_asurfacecount * sizeof(attachedsurface_t));
+         sectors[i].srf.floor.asurfacecount = static_cast<int>(floornew.getLength());
+         memcpy(sectors[i].srf.floor.asurfaces, &floornew[0],
+            sectors[i].srf.floor.asurfacecount * sizeof(attachedsurface_t));
       }
       if(!ceilingnew.isEmpty())
       {
-         efree(sectors[i].c_asurfaces);
-         sectors[i].c_asurfaces = estructalloctag(attachedsurface_t,
+         efree(sectors[i].srf.ceiling.asurfaces);
+         sectors[i].srf.ceiling.asurfaces = estructalloctag(attachedsurface_t,
             ceilingnew.getLength(), PU_LEVEL);
-         sectors[i].c_asurfacecount = static_cast<int>(ceilingnew.getLength());
-         memcpy(sectors[i].c_asurfaces, &ceilingnew[0],
-            sectors[i].c_asurfacecount * sizeof(attachedsurface_t));
+         sectors[i].srf.ceiling.asurfacecount = static_cast<int>(ceilingnew.getLength());
+         memcpy(sectors[i].srf.ceiling.asurfaces, &ceilingnew[0],
+            sectors[i].srf.ceiling.asurfacecount * sizeof(attachedsurface_t));
       }
    }
 }
@@ -2565,7 +2588,7 @@ void P_AttachSectors(const line_t *line, int staticFn)
    // FIXME / TODO: replace with a collection
    static int numattached = 0;
    static int maxattached = 0;
-   static attachedsurface_t *attached = NULL;
+   static attachedsurface_t *attached = nullptr;
 
    bool ceiling = (staticFn == EV_STATIC_ATTACH_SET_CEILING_CONTROL);
    sector_t *sector = line->frontsector;
@@ -2580,9 +2603,9 @@ void P_AttachSectors(const line_t *line, int staticFn)
    
    // Check to ensure that this sector doesn't already 
    // have attachments.
-   if(!ceiling && sector->f_asurfacecount)
+   if(!ceiling && sector->srf.floor.asurfacecount)
    {
-      numattached = sector->f_asurfacecount;
+      numattached = sector->srf.floor.asurfacecount;
 
       if(numattached >= maxattached)
       {
@@ -2595,14 +2618,14 @@ void P_AttachSectors(const line_t *line, int staticFn)
       if(!attached)
          I_Error("P_AttachSector: no attached list\n");
 
-      memcpy(attached, sector->f_asurfaces, sizeof(attachedsurface_t) * numattached);
-      Z_Free(sector->f_asurfaces);
-      sector->f_asurfaces = NULL;
-      sector->f_asurfacecount = 0;
+      memcpy(attached, sector->srf.floor.asurfaces, sizeof(attachedsurface_t) * numattached);
+      Z_Free(sector->srf.floor.asurfaces);
+      sector->srf.floor.asurfaces = nullptr;
+      sector->srf.floor.asurfacecount = 0;
    }
-   else if(ceiling && sector->c_asurfacecount)
+   else if(ceiling && sector->srf.ceiling.asurfacecount)
    {
-      numattached = sector->c_asurfacecount;
+      numattached = sector->srf.ceiling.asurfacecount;
 
       if(numattached >= maxattached)
       {
@@ -2611,10 +2634,10 @@ void P_AttachSectors(const line_t *line, int staticFn)
                              sizeof(attachedsurface_t) * maxattached);
       }
 
-      memcpy(attached, sector->c_asurfaces, sizeof(attachedsurface_t) * numattached);
-      Z_Free(sector->c_asurfaces);
-      sector->c_asurfaces = NULL;
-      sector->c_asurfacecount = 0;
+      memcpy(attached, sector->srf.ceiling.asurfaces, sizeof(attachedsurface_t) * numattached);
+      Z_Free(sector->srf.ceiling.asurfaces);
+      sector->srf.ceiling.asurfaces = nullptr;
+      sector->srf.ceiling.asurfacecount = 0;
    }
 
    // Search the lines list. Check for every tagged line that
@@ -2749,17 +2772,15 @@ void P_AttachSectors(const line_t *line, int staticFn)
    // Copy the list to the sector.
    if(ceiling)
    {
-      sector->c_asurfacecount = numattached;
-      sector->c_asurfaces = 
-         (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
-      memcpy(sector->c_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
+      sector->srf.ceiling.asurfacecount = numattached;
+      sector->srf.ceiling.asurfaces = emalloctag(attachedsurface_t *, sizeof(attachedsurface_t) * numattached, PU_LEVEL, nullptr);
+      memcpy(sector->srf.ceiling.asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
    else
    {
-      sector->f_asurfacecount = numattached;
-      sector->f_asurfaces = 
-         (attachedsurface_t *)(Z_Malloc(sizeof(attachedsurface_t) * numattached, PU_LEVEL, 0));
-      memcpy(sector->f_asurfaces, attached, sizeof(attachedsurface_t) * numattached);
+      sector->srf.floor.asurfacecount = numattached;
+      sector->srf.floor.asurfaces = emalloctag(attachedsurface_t *, sizeof(attachedsurface_t) * numattached, PU_LEVEL, nullptr);
+      memcpy(sector->srf.floor.asurfaces, attached, sizeof(attachedsurface_t) * numattached);
    }
 }
 
@@ -2782,15 +2803,15 @@ void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect ef
    switch(effects)
    {
    case portal_ceiling:
-      sec->c_portal = portal;
+      sec->srf.ceiling.portal = portal;
       P_CheckCPortalState(sec);
       break;
    case portal_floor:
-      sec->f_portal = portal;
+      sec->srf.floor.portal = portal;
       P_CheckFPortalState(sec);
       break;
    case portal_both:
-      sec->c_portal = sec->f_portal = portal;
+      sec->srf.ceiling.portal = sec->srf.floor.portal = portal;
       P_CheckCPortalState(sec);
       P_CheckFPortalState(sec);
       break;
@@ -2943,10 +2964,10 @@ static void P_copyParamPortalSector(line_t *line)
    portal_t *fportal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
-      if(sectors[s].c_portal)
-         cportal = sectors[s].c_portal;
-      if(sectors[s].f_portal)
-         fportal = sectors[s].f_portal;
+      if(sectors[s].srf.ceiling.portal)
+         cportal = sectors[s].srf.ceiling.portal;
+      if(sectors[s].srf.floor.portal)
+         fportal = sectors[s].srf.floor.portal;
       if(cportal && fportal)
          break;
    }
@@ -2985,14 +3006,14 @@ static void P_copyParamPortalLine(line_t *line)
    portal_t *portal = nullptr;
    for(int s = -1; (s = P_FindSectorFromTag(tag, s)) >= 0; )
    {
-      if(sectors[s].c_portal) // ceiling portal has priority
+      if(sectors[s].srf.ceiling.portal) // ceiling portal has priority
       {
-         portal = sectors[s].c_portal;
+         portal = sectors[s].srf.ceiling.portal;
          break;
       }
-      if(!portal && sectors[s].f_portal)
+      if(!portal && sectors[s].srf.floor.portal)
       {
-         portal = sectors[s].f_portal;
+         portal = sectors[s].srf.floor.portal;
          break;
       }
    }
@@ -3039,7 +3060,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    portal_effect effects = portal_ceiling;
    int       CamType = E_ThingNumForName("EESkyboxCam"); // find the skybox camera object
    sector_t *sector;
-   portal_t *portal = NULL;
+   portal_t *portal = nullptr;
    Mobj     *skycam;
    fixed_t   planez = 0;
    int       anchortype = 0; // SoM 3-10-04: new plan.
@@ -3104,27 +3125,11 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    switch(type)
    {
    case portal_plane:
-      portal = R_GetPlanePortal(&sector->ceilingpic, 
-                                &sector->ceilingheight, 
-                                &sector->lightlevel, 
-                                &sector->ceiling_xoffs, 
-                                &sector->ceiling_yoffs,
-                                &sector->ceilingbaseangle,
-                                &sector->ceilingangle, &sector->ceiling_xscale,
-                                &sector->ceiling_yscale);
+      portal = R_GetPlanePortal(sector);
       break;
 
    case portal_horizon:
-      portal = R_GetHorizonPortal(&sector->floorpic, &sector->ceilingpic, 
-                                  &sector->floorheight, &sector->ceilingheight,
-                                  &sector->lightlevel, &sector->lightlevel,
-                                  &sector->floor_xoffs, &sector->floor_yoffs,
-                                  &sector->ceiling_xoffs, &sector->ceiling_yoffs,
-                                  &sector->floorbaseangle, &sector->floorangle,
-                                  &sector->ceilingbaseangle, &sector->ceilingangle,
-                                  &sector->floor_xscale, &sector->floor_yscale, 
-                                  &sector->ceiling_xscale, &sector->ceiling_yscale);
-      // TODO: line portal
+      portal = R_GetHorizonPortal(sector);
       if(effects == portal_lineonly)
       {
          // special case for line-only portal
@@ -3246,8 +3251,8 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       {
          if(staticFn == EV_STATIC_PORTAL_SECTOR_PARAM_COMPAT)
          {
-            planez = line->args[2] == 0 ? sector->ceilingheight
-               : sector->floorheight;
+            planez = line->args[2] == 0 ? sector->srf.ceiling.height
+               : sector->srf.floor.height;
             s = P_findParamPortalAnchor(line);
          }
          else  // line portal
@@ -3282,12 +3287,12 @@ static void P_SpawnPortal(line_t *line, int staticFn)
          if(staticFn == EV_STATIC_PORTAL_LINKED_CEILING)
          {
             anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR;
-            planez = sector->floorheight;
+            planez = sector->srf.floor.height;
          }
          else if(staticFn == EV_STATIC_PORTAL_LINKED_FLOOR)
          {
             anchorfunc = EV_STATIC_PORTAL_LINKED_ANCHOR_FLOOR;
-            planez = sector->ceilingheight;
+            planez = sector->srf.ceiling.height;
          }
          else if(staticFn == EV_STATIC_PORTAL_LINKED_LINE2LINE)
          {
@@ -3311,7 +3316,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
                 !(lines[s].extflags &
                   (EX_ML_LOWERPORTAL | EX_ML_UPPERPORTAL))) ||
                line == &lines[s] ||
-               lines[s].frontsector == NULL)
+               lines[s].frontsector == nullptr)
             {
                continue;
             }
@@ -3323,7 +3328,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
 
       if(s < 0)
       {
-         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", line - lines);
+         C_Printf(FC_ERROR "No anchor line for portal. (line %i)\a\n", eindex(line - lines));
          return;
       }
 
@@ -3409,7 +3414,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    // SoM: TODO: Why am I not checking groupids?
    for(s = -1; (s = P_FindSectorFromLineArg0(line, s)) >= 0; )
    {
-      P_SetPortal(sectors + s, NULL, portal, effects);
+      P_SetPortal(sectors + s, nullptr, portal, effects);
    }
 
    // attach portal to like-tagged 289 lines
@@ -3461,6 +3466,9 @@ static void P_SpawnPortal(line_t *line, int staticFn)
       lines[s].special = 0;
    }
 }
+
+VARIABLE_BOOLEAN(secret_notification_enabled, nullptr, onoff);
+CONSOLE_VARIABLE(secret_notification, secret_notification_enabled, 0) {}
 
 #if 0
 //
@@ -3544,7 +3552,7 @@ AMX_NATIVE_INFO pspec_Natives[] =
 {
    { "_SectorSpecial",  sm_sectorspecial },
    { "_SectorColormap", sm_sectorcolormap },
-   { NULL,               NULL }
+   { nullptr,            nullptr }
 };
 #endif
 

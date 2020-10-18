@@ -58,8 +58,8 @@ static int numswitches;                           // killough
 static Collection<qstring> switchsounds;
 static Collection<qstring> offswitchsounds;
 
-button_t *buttonlist     = NULL; // haleyjd 04/16/08: made dynamic
-int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
+button_t *buttonlist     = nullptr; // haleyjd 04/16/08: made dynamic
+int      numbuttonsalloc = 0;       // haleyjd 04/16/08: number allocated
 
 //
 // Being given an EDF switch, check if we have SWITCHES entries which can be

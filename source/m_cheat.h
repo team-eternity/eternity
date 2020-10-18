@@ -131,8 +131,26 @@ extern cheat_s cheat[CHEAT_NUMCHEATS];
 
 bool M_FindCheats(int key);
 void M_DoCheat(const char *cheatname);
+int M_NukeMonsters();
 
 extern int idmusnum;
+
+//
+// Shared both by cheats and by vanilla Heretic demos
+//
+static constexpr char const *hartiNames[] =
+{
+   "ArtiInvulnerability",
+   "ArtiInvisibility",
+   "ArtiHealth",
+   "ArtiSuperHealth",
+   "ArtiTomeOfPower",
+   "ArtiTorch",
+   "ArtiTimeBomb",
+   "ArtiEgg",
+   "ArtiFly",
+   "ArtiTeleport"
+};
 
 #endif
 

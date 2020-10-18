@@ -471,7 +471,7 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
 static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 {
    const fs::directory_iterator itr(base);
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
       std::string filename = ent.path().filename().generic_u8string();
 
@@ -560,7 +560,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    if(version.error) // Not a WAD, or could not access
       return;
 
-   char **var = NULL;
+   char **var = nullptr;
 
    switch(version.gamemode)
    {
@@ -657,7 +657,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 // Check a path for any of the standard IWAD file names.
 //
-static void D_checkPathForIWADs(const qstring &path)
+void D_CheckPathForIWADs(const qstring &path)
 {
    if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
@@ -669,7 +669,7 @@ static void D_checkPathForIWADs(const qstring &path)
    }
 
    const fs::directory_iterator itr(path.constPtr());
-   for(const fs::directory_entry ent : itr)
+   for(const fs::directory_entry &ent : itr)
    {
       const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
       for(int i = 0; i < nstandard_iwads; i++)
@@ -708,7 +708,7 @@ static void D_checkForNoRest()
    if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
    {
       const fs::directory_iterator itr(nrvpath.constPtr());
-      for(const fs::directory_entry ent : itr)
+      for(const fs::directory_entry &ent : itr)
       {
          const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
          if(filename == "nerve.wad")
@@ -792,7 +792,7 @@ void D_FindIWADs()
 
    // Check all paths that were found for IWADs
    for(qstring &path : paths)
-      D_checkPathForIWADs(path);
+      D_CheckPathForIWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL

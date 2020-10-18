@@ -107,15 +107,17 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    else
       P_dropToFloor(thing, nullptr);
 
+   if(thing->player == players + displayplayer)
+      P_ResetChasecam();
+
    // Spawn teleport fog at source and destination
    const int fogNum = E_SafeThingName(GameModeInfo->teleFogType);
    fogDelta = thing->flags & MF_MISSILE ? 0 : GameModeInfo->teleFogHeight;
    S_StartSound(P_SpawnMobj(oldx, oldy, oldz + fogDelta, fogNum),
                 GameModeInfo->teleSound);
    an = angle >> ANGLETOFINESHIFT;
-   S_StartSound(P_SpawnMobj(x + 20 * finecosine[an], y + 20 * finesine[an],
-                           thing->z + fogDelta, fogNum),
-                GameModeInfo->teleSound);
+   v2fixed_t pos = P_LinePortalCrossing(x, y, 20 * finecosine[an], 20 * finesine[an]);
+   S_StartSound(P_SpawnMobj(pos.x, pos.y, thing->z + fogDelta, fogNum), GameModeInfo->teleSound);
 
    // Freeze player for ~.5s, but only if they don't have tome active
    if(thing->player && !thing->player->powers[pw_weaponlevel2])
@@ -130,6 +132,10 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
    else
       thing->momx = thing->momy = thing->momz = 0;
 
+   // killough 10/98: kill all bobbing momentum too
+   if(player)
+      player->momx = player->momy = 0;
+
    thing->backupPosition();
    P_AdjustFloorClip(thing);
 
@@ -142,12 +148,15 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
 //
 static int P_Teleport(Mobj *thing, const Mobj *landing)
 {
+   if(GameModeInfo->type == Game_Heretic)
+      return P_HereticTeleport(thing, landing->x, landing->y, landing->angle);
+
    fixed_t oldx = thing->x, oldy = thing->y, oldz = thing->z;
    player_t *player = thing->player;
             
    // killough 5/12/98: exclude voodoo dolls:
    if(player && player->mo != thing)
-      player = NULL;
+      player = nullptr;
 
    if(!P_TeleportMove(thing, landing->x, landing->y, false)) // killough 8/9/98
       return 0;
@@ -482,11 +491,11 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Whether this is a player, and if so, a pointer to its player_t.
          // Voodoo dolls are excluded by making sure thing->player->mo==thing.
          player_t *player = thing->player && thing->player->mo == thing ?
-            thing->player : NULL;
+            thing->player : nullptr;
 
          // Whether walking towards first side of exit linedef steps down
          int stepdown =
-            l->frontsector->floorheight < l->backsector->floorheight;
+            l->frontsector->srf.floor.height < l->backsector->srf.floor.height;
 
          // Height of thing above ground
          fixed_t z = thing->z - thing->zref.floor;
@@ -531,15 +540,15 @@ int EV_SilentLineTeleport(const line_t *line, int lineid, int side, Mobj *thing,
          // Adjust z position to be same height above ground as before.
          // Ground level at the exit is measured as the higher of the
          // two floor heights at the exit linedef.
-         thing->z = z + sides[l->sidenum[stepdown]].sector->floorheight;
-         
+         thing->z = z + sides[l->sidenum[stepdown]].sector->srf.floor.height;
+
          // Rotate thing's orientation according to difference in linedef angles
          thing->angle += angle;
-         
+
          // Momentum of thing crossing teleporter linedef
          x = thing->momx;
          y = thing->momy;
-         
+
          // Rotate thing's momentum to come out of exit just like it entered
          thing->momx = FixedMul(x, c) - FixedMul(y, s);
          thing->momy = FixedMul(y, c) + FixedMul(x, s);

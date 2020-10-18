@@ -61,6 +61,7 @@ void FireFlickerThinker::Think()
       return;
    
    amount = (P_Random(pr_lights)&3)*16;
+   M_RandomLog("FireFlickerThinker\n");
    
    if(this->sector->lightlevel - amount < this->minlight)
       this->sector->lightlevel = this->minlight;
@@ -102,11 +103,13 @@ void LightFlashThinker::Think()
    {
       this->sector->lightlevel = this->minlight;
       this->count = (P_Random(pr_lights)&this->mintime)+1;
+      M_RandomLog("LightFlashThinkerMax %d\n", (int)(sector - sectors));
    }
    else
    {
       this->sector->lightlevel = this->maxlight;
       this->count = (P_Random(pr_lights)&this->maxtime)+1;
+      M_RandomLog("LightFlashThinker %d\n", (int)(sector - sectors));
    }
 }
 
@@ -557,6 +560,7 @@ void P_SpawnLightFlash(sector_t *sector)
    flash->maxtime = 64;
    flash->mintime = 7;
    flash->count = (P_Random(pr_lights)&flash->maxtime)+1;
+   M_RandomLog("SpawnLightFlash\n");
 }
 
 //
@@ -590,7 +594,10 @@ void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
    sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    if(!inSync)
+   {
       flash->count = (P_Random(pr_lights)&7)+1;
+      M_RandomLog("SpawnStrobeFlash\n");
+   }
    else
       flash->count = 1;
 }
@@ -615,7 +622,10 @@ void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync)
       flash->minlight = 0;
 
    if(!inSync)
+   {
       flash->count = (P_Random(pr_lights) & 7) + 1;
+      M_RandomLog("SpawnPSXStrobeFlash\n");
+   }
    else
       flash->count = 1;
 }
@@ -828,7 +838,7 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
       //jff 5/17/98 unless compatibility optioned 
       //then maximum near ANY tagged sector
       
-      if(comp[comp_model])
+      if(getComp(comp_model))
          bright = tbright;
 
       if(manual)
@@ -1140,6 +1150,7 @@ dobackside:
       flash->maxtime  = 64;
       flash->mintime  = 7;
       flash->count    = (P_Random(pr_lights) & flash->maxtime) + 1;
+      M_RandomLog("EVFlickerLight\n");
 
       flash->sector->lightlevel = flash->maxlight;
 

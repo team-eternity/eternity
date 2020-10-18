@@ -34,11 +34,11 @@
 struct dehflags_t;
 struct dehflagset_t;
 
-typedef struct E_Enable_s
+struct E_Enable_t
 {
    const char *name;
    int enabled;
-} E_Enable_t;
+};
 
 #ifdef NEED_EDF_DEFINITIONS
 

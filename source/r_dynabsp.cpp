@@ -49,7 +49,7 @@ static rpolynode_t *polyNodeFreeList;
 //
 static rpolynode_t *R_GetFreePolyNode()
 {
-   rpolynode_t *ret = NULL;
+   rpolynode_t *ret = nullptr;
 
    if(polyNodeFreeList)
    {
@@ -135,7 +135,7 @@ static inline bool nearzero(double d)
 static dynaseg_t *R_selectPartition(dseglist_t segs)
 {
    dseglink_t *rover;
-   dynaseg_t *best = NULL;
+   dynaseg_t *best = nullptr;
    int bestcost = INT_MAX;
    int cnt = 0;
 
@@ -391,7 +391,7 @@ static int R_classifyDynaSeg(const dynaseg_t *part, const dynaseg_t *seg, double
 static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts, 
                          dseglist_t *rs, dseglist_t *ls)
 {
-   dynaseg_t *best, *add_to_rs = NULL, *add_to_ls = NULL;
+   dynaseg_t *best, *add_to_rs = nullptr, *add_to_ls = nullptr;
    
    // select best seg to use as partition line
    best = rpn->partition = R_selectPartition(*ts);
@@ -416,7 +416,7 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
    while((cur = *ts))
    {
       dynaseg_t *seg = *cur;
-      add_to_ls = add_to_rs = NULL;
+      add_to_ls = add_to_rs = nullptr;
 
       int val = R_classifyDynaSeg(best, seg, pdx, pdy);
 
@@ -519,16 +519,16 @@ static void R_divideSegs(rpolynode_t *rpn, dseglist_t *ts,
 // segs as the partition line, then recurse into the back and front spaces until
 // there are no segs left to classify.
 //
-// A tree of rpolynode instances is returned. NULL is returned in the terminal
+// A tree of rpolynode instances is returned. nullptr is returned in the terminal
 // case where there are no segs left to classify.
 //
 static rpolynode_t *R_createNode(dseglist_t *ts)
 {
-   dseglist_t rights = NULL;
-   dseglist_t lefts  = NULL;
+   dseglist_t rights = nullptr;
+   dseglist_t lefts  = nullptr;
 
    if(!*ts)
-      return NULL; // terminal case: empty list
+      return nullptr; // terminal case: empty list
 
    rpolynode_t *rpn = R_GetFreePolyNode();
 
@@ -580,7 +580,7 @@ static bool R_collapseFragmentsToDSList(const subsector_t *subsec, dseglist_t *l
       fragment = fragment->dllNext;
    }
 
-   return (*list != NULL);
+   return (*list != nullptr);
 }
 
 //=============================================================================
@@ -658,8 +658,8 @@ static void R_freeTreeRecursive(rpolynode_t *root)
 //
 rpolybsp_t *R_BuildDynaBSP(const subsector_t *subsec)
 {
-   rpolybsp_t *bsp = NULL;
-   dseglist_t segs = NULL;
+   rpolybsp_t *bsp = nullptr;
+   dseglist_t segs = nullptr;
 
    if(R_collapseFragmentsToDSList(subsec, &segs))
    {

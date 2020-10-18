@@ -57,7 +57,7 @@ extern int use_startmap;
 
 // Called by IO functions when input is detected.
 struct event_t;
-void D_PostEvent(event_t* ev);
+void D_PostEvent(const event_t* ev);
 
 struct camera_t;
 extern camera_t *camera;
@@ -74,7 +74,7 @@ void D_StartTitle();
 void D_DoomMain();
 
 // sf: display a message to the player: either in text mode or graphics
-void usermsg(E_FORMAT_STRING(const char *s), ...);
+void usermsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 void startupmsg(const char *func, const char *desc);
 
 #endif

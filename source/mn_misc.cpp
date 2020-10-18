@@ -214,7 +214,7 @@ static bool MN_PopupResponder(event_t *ev, int action)
 // alert message
 // -- just press enter
 //
-void MN_Alert(const char *message, ...)
+void MN_Alert(E_FORMAT_STRING(const char *message), ...)
 {
    va_list args;
    
@@ -292,11 +292,11 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
 
 void MN_DrawCredits(void);
 
-typedef struct helpscreen_s
+struct helpscreen_t
 {
    int lumpnum;
    void (*Drawer)(); // alternate drawer
-} helpscreen_t;
+};
 
 static helpscreen_t helpscreens[120];  // 100 + credit/built-in help screens
 static int num_helpscreens;
@@ -309,7 +309,7 @@ static void AddHelpScreen(const char *screenname)
    
    if((lumpnum = W_CheckNumForName(screenname)) != -1)
    {
-      helpscreens[num_helpscreens].Drawer = NULL;   // no drawer
+      helpscreens[num_helpscreens].Drawer = nullptr;   // no drawer
       helpscreens[num_helpscreens++].lumpnum = lumpnum;
    }  
 }
@@ -492,7 +492,7 @@ void MN_DrawCredits()
    // MaxW: I'm going to hell for this. Automatically update copyright year.
    static const char *const copyright_text = []() {
       static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
-      memcpy(temp + 11, __DATE__ + 7, 4); // Overwrite YEAR in temp.
+      memcpy(temp + 11, &__DATE__[7], 4); // Overwrite YEAR in temp.
       return temp;
    }();
 
@@ -573,7 +573,7 @@ cancel:
    return false;
 }
 
-menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, NULL, true};
+menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, nullptr, true};
 
 CONSOLE_COMMAND(help, 0)
 {
@@ -706,7 +706,7 @@ menuwidget_t colour_widget =
 {
    MN_MapColourDrawer, 
    MN_MapColourResponder,
-   NULL,
+   nullptr,
    true
 };
 
@@ -757,7 +757,7 @@ static menuwidget_t fonttest_widget =
 {
    MN_fontTestDrawer, 
    MN_fontTestResponder, 
-   NULL, 
+   nullptr,
    true
 };
 

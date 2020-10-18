@@ -14,3 +14,5 @@ AS_DEBUG/
 # Build result folders
 Win32/
 x64/
+# Command line arguments JSON file
+Eternity.args.json

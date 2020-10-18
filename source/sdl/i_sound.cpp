@@ -38,7 +38,7 @@
 #include "../s_sound.h"
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.hpp"
+#include "adlmidi.h"
 #endif
 
 int snd_card;   // default.cfg variables for digi and midi drives
@@ -243,7 +243,7 @@ void I_InitSound(void)
 #endif
       default:
          printf("Sound is disabled.\n");
-         i_sounddriver = NULL;
+         i_sounddriver = nullptr;
          snd_init = false;
          break;
       }
@@ -298,7 +298,7 @@ void I_InitMusic(void)
 #endif
    default:
       printf("I_InitMusic: Music is disabled.\n");
-      i_musicdriver = NULL;
+      i_musicdriver = nullptr;
       mus_init = false;
       break;
    }
@@ -392,16 +392,16 @@ int I_QrySongPlaying(int handle)
 static const char *sndcardstr[] = { "SDL mixer", "none", "PC Speaker" };
 static const char *muscardstr[] = { "SDL mixer", "none" };
 
-VARIABLE_INT(snd_card,       NULL,      -1,  1, sndcardstr);
-VARIABLE_INT(mus_card,       NULL,      -1,  0, muscardstr);
-VARIABLE_INT(detect_voices,  NULL,       0,  1, yesno);
+VARIABLE_INT(snd_card,       nullptr,   -1,  1, sndcardstr);
+VARIABLE_INT(mus_card,       nullptr,   -1,  0, muscardstr);
+VARIABLE_INT(detect_voices,  nullptr,    0,  1, yesno);
 
 #ifdef HAVE_SPCLIB
 extern int spc_preamp;
 extern int spc_bass_boost;
 
-VARIABLE_INT(spc_preamp,     NULL,       1,  6, NULL);
-VARIABLE_INT(spc_bass_boost, NULL,       0, 31, NULL);
+VARIABLE_INT(spc_preamp,     nullptr,    1,  6, nullptr);
+VARIABLE_INT(spc_bass_boost, nullptr,    0, 31, nullptr);
 #endif
 
 #ifdef HAVE_ADLMIDILIB
@@ -414,20 +414,20 @@ extern int adlmidi_numchips;
 extern int adlmidi_bank;
 extern int adlmidi_emulator;
 
-VARIABLE_INT(midi_device, NULL, -1, 0, mididevicestr);
-VARIABLE_INT(adlmidi_numchips, NULL, 1, 8, NULL);
-VARIABLE_INT(adlmidi_bank, NULL, 0, BANKS_MAX, adlbankstr);
-VARIABLE_INT(adlmidi_emulator, NULL, 0, ADLMIDI_EMU_end - 1, adlemustr);
+VARIABLE_INT(midi_device, nullptr, -1, 0, mididevicestr);
+VARIABLE_INT(adlmidi_numchips, nullptr, 1, 8, nullptr);
+VARIABLE_INT(adlmidi_bank, nullptr, 0, BANKS_MAX, adlbankstr);
+VARIABLE_INT(adlmidi_emulator, nullptr, 0, ADLMIDI_EMU_end - 1, adlemustr);
 #endif
 
 // Equalizer variables
 
-VARIABLE_FLOAT(s_lowfreq,  NULL, 0.0, UL);
-VARIABLE_FLOAT(s_highfreq, NULL, 0.0, UL);
-VARIABLE_FLOAT(s_eqpreamp, NULL, 0.0, 1.0);
-VARIABLE_FLOAT(s_lowgain,  NULL, 0.0, 3.0);
-VARIABLE_FLOAT(s_midgain,  NULL, 0.0, 3.0);
-VARIABLE_FLOAT(s_highgain, NULL, 0.0, 3.0);
+VARIABLE_FLOAT(s_lowfreq,  nullptr, 0.0, UL);
+VARIABLE_FLOAT(s_highfreq, nullptr, 0.0, UL);
+VARIABLE_FLOAT(s_eqpreamp, nullptr, 0.0, 1.0);
+VARIABLE_FLOAT(s_lowgain,  nullptr, 0.0, 3.0);
+VARIABLE_FLOAT(s_midgain,  nullptr, 0.0, 3.0);
+VARIABLE_FLOAT(s_highgain, nullptr, 0.0, 3.0);
 
 CONSOLE_VARIABLE(snd_card, snd_card, 0) 
 {

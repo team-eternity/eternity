@@ -135,7 +135,7 @@ protected:
 public:
    XLMapInfoParser() 
       : XLParser("MAPINFO"), state(STATE_EXPECTCMD), globalKW(KW_NUMGLOBAL),
-        curInfo(NULL), mapName(), kwd(NULL)
+        curInfo(nullptr), mapName(), kwd(nullptr)
    {
    }
 };
@@ -203,15 +203,15 @@ enum
 };
 
 #define XLMI_INTEGER(n)    \
-   { n, KW_TYPE_VALUE, KW_VALUE_INT,  XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_VALUE, KW_VALUE_INT,  XLMapInfoParser::mapKeywords[n], nullptr }
 #define XLMI_QSTRING(n)    \
-   { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_VALUE, KW_VALUE_QSTR, XLMapInfoParser::mapKeywords[n], nullptr }
 #define XLMI_BOOLEAN(n)    \
-   { n, KW_TYPE_FLAG,  KW_VALUE_BOOL, XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_FLAG,  KW_VALUE_BOOL, XLMapInfoParser::mapKeywords[n], nullptr }
 #define XLMI_SKYTYPE(n, i) \
    { n, KW_TYPE_SKY,   KW_VALUE_SKY,  XLMapInfoParser::mapKeywords[n], i    }
 #define XLMI_MAPNAME(n)    \
-   { n, KW_TYPE_VALUE, KW_VALUE_MAP,  XLMapInfoParser::mapKeywords[n], NULL }
+   { n, KW_TYPE_VALUE, KW_VALUE_MAP,  XLMapInfoParser::mapKeywords[n], nullptr }
 
 // This table drives parsing while inside a map block.
 static xlmikeyword_t mapKeywordParseTable[XL_NUMMAPINFO_FIELDS] =
@@ -253,8 +253,8 @@ void XLMapInfoParser::startLump()
 {
    state    = STATE_EXPECTCMD; // scanning for global command
    globalKW = KW_NUMGLOBAL;    // no current global keyword
-   curInfo  = NULL;            // not in a current info definition
-   kwd      = NULL;            // no current keyword data
+   curInfo  = nullptr;            // not in a current info definition
+   kwd      = nullptr;            // no current keyword data
    mapName.clear();
 }
 
@@ -297,11 +297,11 @@ bool XLMapInfoParser::doStateExpectGlobalVal(XLTokenizer &token)
 //
 static void MakeMAPxy(qstring &mapName)
 {
-   char *endptr = NULL;
+   char *endptr = nullptr;
    auto  num    = mapName.toLong(&endptr, 10);
 
    if(*endptr == '\0' && num >= 1 && num <= 99)
-      mapName.Printf(9, "MAP%02d", num);
+      mapName.Printf(9, "MAP%02ld", num);
 }
 
 // Expecting the map lump name or number after "map"
@@ -419,7 +419,7 @@ bool (XLMapInfoParser::* XLMapInfoParser::States[])(XLTokenizer &) =
 // XL_MapInfoForMapName
 //
 // Lookup an XLMapInfo object by mapname. Returns the active object for the
-// map if one exists, and NULL otherwise.
+// map if one exists, and nullptr otherwise.
 //
 MetaTable *XL_MapInfoForMapName(const char *name)
 {
@@ -474,10 +474,10 @@ CONSOLE_COMMAND(xl_dumpmapinfo, 0)
       return;
    }
 
-   MetaTable *mapInfo = NULL;
+   MetaTable *mapInfo = nullptr;
    if((mapInfo = XL_MapInfoForMapName(Console.argv[0]->constPtr())))
    {
-      const MetaObject *obj = NULL;
+      const MetaObject *obj = nullptr;
 
       C_Printf("MAPINFO Entry for %s:\n", mapInfo->getKey());
       while((obj = mapInfo->tableIterator(obj)))

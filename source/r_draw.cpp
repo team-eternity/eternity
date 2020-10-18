@@ -72,6 +72,8 @@ byte *tranmap;          // translucency filter maps 256x256   // phares
 byte *main_tranmap;     // killough 4/11/98
 byte *main_submap;      // haleyjd 11/30/13
 
+int rTintTableIndex;
+
 //
 // R_DrawColumn
 // Source is the top of the column to scale.
@@ -422,7 +424,7 @@ void CB_DrawTLTRColumn_8(void)
 // sf: restored original fuzz effect (changed in mbf)
 // sf: changed to use vis->colormap not fullcolormap
 //     for coloured lighting and SHADOW now done with
-//     flags not NULL colormap
+//     flags not nullptr colormap
 
 #define SRCPIXEL \
    colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
@@ -485,11 +487,11 @@ void CB_DrawFuzzColumn_8(void)
 //
 
 // haleyjd: changed translationtables to byte **
-byte **translationtables = NULL;
+byte **translationtables = nullptr;
 
 // haleyjd: new stuff
-int firsttranslationlump;
-int numtranslations = 0;
+static int firsttranslationlump;
+static int numtranslations = 0;
 
 #define SRCPIXEL \
    colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
@@ -1046,7 +1048,7 @@ columndrawer_t r_normal_drawer =
    CB_DrawAddColumn_8,
    CB_DrawAddTRColumn_8,
 
-   NULL,
+   nullptr,
 
    {
       // Normal              Translated
@@ -1105,7 +1107,7 @@ void R_InitTranslationTables()
    numtranslations = TRANSLATIONCOLOURS + wni.getNumLumps();
 
    // allocate the array of pointers
-   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, NULL);
+   translationtables = ecalloctag(byte **, numtranslations, sizeof(byte *), PU_RENDERER, nullptr);
    
    // build the internal player translations
    for(i = 0; i < TRANSLATIONCOLOURS; i++)
@@ -1114,6 +1116,11 @@ void R_InitTranslationTables()
    // read in the lumps, if any
    for(wni.begin(); wni.current(); wni.next(), i++)
       translationtables[i] = (byte *)(wGlobalDir.cacheLumpNum((*wni)->selfindex, PU_RENDERER));
+
+   // Check if TINTTAB exists for MF3_GHOST
+   rTintTableIndex = wGlobalDir.checkNumForName("TINTTAB");
+   if(rTintTableIndex != -1 && wGlobalDir.lumpLength(rTintTableIndex) < 256 * 256)
+      rTintTableIndex = -1;   // bad length
 }
 
 //
@@ -1150,7 +1157,7 @@ byte *R_GetIdentityMap()
 
    if(!identityMap)
    {
-      identityMap = emalloctag(byte *, 256, PU_PERMANENT, NULL);
+      identityMap = emalloctag(byte *, 256, PU_PERMANENT, nullptr);
       for(int i = 0; i < 256; i++)
          identityMap[i] = i;
    }

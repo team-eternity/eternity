@@ -25,10 +25,13 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#include "SDL2_mixer/SDL_mixer.h"
+#else
 #include "SDL.h"
-#include "SDL_audio.h"
-#include "SDL_thread.h"
 #include "SDL_mixer.h"
+#endif
 
 #include "../z_zone.h"
 #include "../d_main.h"
@@ -224,8 +227,8 @@ static bool pcs_initialised = false;
 
 static SDL_mutex *sound_lock;
 
-static Uint8 *current_sound_lump = NULL;
-static Uint8 *current_sound_pos = NULL;
+static Uint8 *current_sound_lump = nullptr;
+static Uint8 *current_sound_pos = nullptr;
 static unsigned int current_sound_remaining = 0;
 static int current_sound_handle = 0;
 static int current_sound_lump_num = -1;
@@ -265,7 +268,7 @@ static void PCSCallbackFunc(int *duration, int *freq)
       return;
    }
 
-   if(current_sound_lump != NULL && current_sound_remaining > 0)
+   if(current_sound_lump != nullptr && current_sound_remaining > 0)
    {
       // Read the next tone
 
@@ -339,10 +342,10 @@ static bool CachePCSLump(sfxinfo_t *sfx)
    int headerlen;
 
    // Free the current sound lump back to the cache
-   if(current_sound_lump != NULL)
+   if(current_sound_lump != nullptr)
    {
       Z_ChangeTag(current_sound_lump, PU_CACHE);
-      current_sound_lump = NULL;
+      current_sound_lump = nullptr;
    }
 
    // Load from WAD
@@ -464,7 +467,7 @@ static void I_PCSStopSound(int handle, int id)
 static int I_PCSSoundIsPlaying(int handle)
 {
    return pcs_initialised && handle == current_sound_handle &&
-          current_sound_lump != NULL && current_sound_remaining > 0;
+          current_sound_lump != nullptr && current_sound_remaining > 0;
 }
 
 static void I_PCSUpdateSoundParams(int handle, int vol, int sep, int pitch)
@@ -488,7 +491,7 @@ i_sounddriver_t i_pcsound_driver =
    I_PCSStopSound,         // StopSound
    I_PCSSoundIsPlaying,    // SoundIsPlaying
    I_PCSUpdateSoundParams, // UpdateSoundParams
-   NULL,                   // UpdateEQParams
+   nullptr,                // UpdateEQParams
 };
 
 // EOF

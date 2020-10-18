@@ -85,7 +85,7 @@
 // Constructs a SaveArchive object in saving mode.
 //
 SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
-   : savefile(pSaveFile), loadfile(nullptr)
+   : savefile(pSaveFile), loadfile(nullptr), read_save_version(0)
 {
    if(!pSaveFile)
       I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
@@ -95,7 +95,7 @@ SaveArchive::SaveArchive(OutBuffer *pSaveFile)
 // Constructs a SaveArchive object in loading mode.
 //
 SaveArchive::SaveArchive(InBuffer *pLoadFile)
-   : savefile(nullptr), loadfile(pLoadFile)
+   : savefile(nullptr), loadfile(pLoadFile), read_save_version(0)
 {
    if(!pLoadFile)
       I_Error("SaveArchive: created a load file without a valid InBuffer\n");
@@ -143,6 +143,51 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
       else
          str = nullptr;
    }
+}
+
+//
+// Attempts to read save version, returning false if it fails
+//
+bool SaveArchive::readSaveVersion()
+{
+   char vread[VERSIONSIZE];
+
+   if(!loadfile)
+      I_Error("SaveArchive::readSaveVersion: cannot read version if not loading file!\n");
+
+   archiveCString(vread, VERSIONSIZE);
+
+   if(!strncmp(vread, "MBF ", 4))
+   {
+      const long tempver = strtol(vread + 4, nullptr, 10);
+      if(tempver != 401)
+      {
+         C_Printf(FC_ERROR "Warning: Save too old to be read (pre 4.01.00)!\a");
+         return false;
+      }
+
+      read_save_version = 0;
+   }
+   else if(strncmp(vread, "EE", 2))
+   {
+      C_Printf(FC_ERROR "Warning: unsupported save format!\a"); // blah...
+      return false;
+   }
+   else
+      loadfile->readSint32(read_save_version);
+
+   return true;
+}
+
+//
+// Writes save version
+//
+void SaveArchive::writeSaveVersion()
+{
+   if(!savefile)
+      I_Error("SaveArchive::writeSaveVersion: cannot save version if not writing file!\n");
+
+   savefile->writeSint32(WRITE_SAVE_VERSION);
 }
 
 //
@@ -326,7 +371,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    else
    {
       loadfile->readSint32(linenum);
-      if(linenum == -1) // Some line pointers can be NULL
+      if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
       else if(linenum < 0 || linenum >= numlines)
       {
@@ -435,7 +480,7 @@ static void P_DeNumberThinkers()
 //
 unsigned int P_NumForThinker(Thinker *th)
 {
-   return th ? th->getOrdinal() : 0; // 0 == NULL
+   return th ? th->getOrdinal() : 0; // 0 == nullptr
 }
 
 //
@@ -443,7 +488,7 @@ unsigned int P_NumForThinker(Thinker *th)
 //
 Thinker *P_ThinkerForNum(unsigned int n)
 {
-   return n <= num_thinkers ? thinker_p[n] : NULL;
+   return n <= num_thinkers ? thinker_p[n] : nullptr;
 }
 
 //=============================================================================
@@ -655,7 +700,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
    sector_t *sec;
    line_t   *li;
    side_t   *si;
-  
+
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
@@ -667,28 +712,27 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
-      arc << sec->floorheight << sec->ceilingheight 
-          << sec->friction << sec->movefactor  
+      arc << sec->srf.floor.height << sec->srf.ceiling.height
+          << sec->friction << sec->movefactor
           << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags 
+          << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
-          << sec->floorpic << sec->ceilingpic
+          << sec->srf.floor.pic << sec->srf.ceiling.pic
           << sec->lightlevel << sec->oldlightlevel
-          << sec->floorlightdelta << sec->ceilinglightdelta
+          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->ceilingdata  = nullptr;
-         sec->floordata    = nullptr;
-         sec->lightingdata = nullptr;
+         sec->srf.ceiling.data = nullptr;
+         sec->srf.floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->floorheight);
-         P_SetCeilingHeight(sec, sec->ceilingheight);
+         P_SetFloorHeight(sec, sec->srf.floor.height);
+         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
       }
    }
 
@@ -699,6 +743,9 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
       arc << li->flags << li->special << li->tag
           << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
+
+      if((arc.saveVersion() >= 1))
+         arc << li->extflags;
 
       for(j = 0; j < 2; j++)
       {
@@ -837,7 +884,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    {
       char *className = nullptr;
       size_t len;
-      unsigned int idx = 1; // Start at index 1, as 0 means NULL
+      unsigned int idx = 1; // Start at index 1, as 0 means nullptr
       Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
@@ -931,7 +978,7 @@ static void P_ArchiveMap(SaveArchive &arc)
    {
       if(markpointnum)
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
    }
    else
    {
@@ -1285,9 +1332,11 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID, version);
+      sprintf(name2, VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
+
+      arc.writeSaveVersion();
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
@@ -1414,7 +1463,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
 void P_LoadGame(const char *filename)
 {
    int i;
-   char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
    //uint64_t checksum, rchecksum;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
@@ -1435,16 +1483,9 @@ void P_LoadGame(const char *filename)
       char throwaway[SAVESTRINGSIZE];
 
       arc.archiveCString(throwaway, SAVESTRINGSIZE);
-      
-      // killough 2/22/98: "proprietary" version string :-)
-      sprintf(vcheck, VERSIONID, version);
 
-      arc.archiveCString(vread, VERSIONSIZE);
-   
-      // killough 2/22/98: Friendly savegame version difference message
-      // FIXME/TODO: restore proper version verification
-      if(strncmp(vread, vcheck, VERSIONSIZE))
-         C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
+      if(!arc.readSaveVersion())
+         return;
 
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
@@ -1473,7 +1514,7 @@ void P_LoadGame(const char *filename)
          arc << lvc;
          gamemapname[i] = (char)lvc;
       }
-      gamemapname[8] = '\0'; // ending NULL
+      gamemapname[8] = '\0'; // ending nullptr
 
       G_SetGameMap(); // get gameepisode, map
 

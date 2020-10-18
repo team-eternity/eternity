@@ -127,7 +127,7 @@ ACSEnvironment::ACSEnvironment() :
    addCodeDataACS0( 96, {"",        1, addCallFunc(ACS_CF_SoundSeq)});
    addCodeDataACS0( 97, {"",        4, addCallFunc(ACS_CF_SetLineTex)});
    addCodeDataACS0( 98, {"",        2, addCallFunc(ACS_CF_SetLineBlock)});
-   addCodeDataACS0( 99, {"",        7, addCallFunc(ACS_CF_SetLineSpec)});
+   addCodeDataACS0( 99, {"",        7, addCallFunc(ACS_CF_SetLineSpecial)});
    addCodeDataACS0(100, {"",        3, addCallFunc(ACS_CF_ThingSound)});
    addCodeDataACS0(101, {"",        0, addCallFunc(ACS_CF_EndPrintBold)});
    addCodeDataACS0(102, {"",        2, addCallFunc(ACS_CF_ActivatorSound)});
@@ -362,7 +362,7 @@ ACSEnvironment::ACSEnvironment() :
  //addFuncDataACS0( 91, addCallFunc(ACS_CF_QuakeEx));
  //addFuncDataACS0( 92, addCallFunc(ACS_CF_Warp));
  //addFuncDataACS0( 93, addCallFunc(ACS_CF_GetMaxInventory));
- //addFuncDataACS0( 94, addCallFunc(ACS_CF_SetSectorDamage));
+   addFuncDataACS0( 94, addCallFunc(ACS_CF_SetSectorDamage));
  //addFuncDataACS0( 95, addCallFunc(ACS_CF_SetSectorTerrain));
  //addFuncDataACS0( 96, addCallFunc(ACS_CF_SpawnParticle));
  //addFuncDataACS0( 97, addCallFunc(ACS_CF_SetMusicVolume));
@@ -408,7 +408,7 @@ bool ACSEnvironment::checkTag(ACSVM::Word type, ACSVM::Word tag)
       for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) >= 0;)
       {
          sector_t *sec = &sectors[secnum];
-         if(sec->floordata || sec->ceilingdata)
+         if(sec->srf.floor.data || sec->srf.ceiling.data)
             return false;
       }
       return true;
@@ -753,7 +753,7 @@ void ACS_Exec()
 // ACS_ExecuteScriptI
 //
 bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
    ACSThreadInfo  info{mo, line, side, po};
@@ -764,7 +764,7 @@ bool ACS_ExecuteScriptI(uint32_t name, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptIAlways
 //
 bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
    ACSThreadInfo  info{mo, line, side, po};
@@ -775,7 +775,7 @@ bool ACS_ExecuteScriptIAlways(uint32_t name, uint32_t mapnum, const uint32_t *ar
 // ACS_ExecuteScriptIResult
 //
 uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
-                                  uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                                  uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSThreadInfo info{mo, line, side, po};
    return ACSenv.map->scriptStartResult(name, {argv, argc, &info});
@@ -785,7 +785,7 @@ uint32_t ACS_ExecuteScriptIResult(uint32_t name, const uint32_t *argv,
 // ACS_ExecuteScriptS
 //
 bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
-                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                        uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
@@ -797,7 +797,7 @@ bool ACS_ExecuteScriptS(const char *str, uint32_t mapnum, const uint32_t *argv,
 // ACS_ExecuteScriptSAlways
 //
 bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *argv,
-                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                              uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSVM::ScopeID scope{ACSenv.global->id, ACSenv.hub->id, mapnum ? mapnum : gamemap};
@@ -809,7 +809,7 @@ bool ACS_ExecuteScriptSAlways(const char *str, uint32_t mapnum, const uint32_t *
 // ACS_ExecuteScriptSResult
 //
 uint32_t ACS_ExecuteScriptSResult(const char *str, const uint32_t *argv,
-                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_s *po)
+                                 uint32_t argc, Mobj *mo, line_t *line, int side, polyobj_t *po)
 {
    ACSVM::String *name = ACSenv.getString(str, strlen(str));
    ACSThreadInfo  info{mo, line, side, po};

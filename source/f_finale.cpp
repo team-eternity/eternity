@@ -380,7 +380,7 @@ static void F_StartCast()
    
    // haleyjd 04/17/09: check against max_castorder; don't trash memory.
 
-   // if a cast name was left NULL by EDF, it means we're going to
+   // if a cast name was left nullptr by EDF, it means we're going to
    // use the old DeHackEd names
    for(i = 0; i < OLDCASTMAX && i < max_castorder; i++)
    {
@@ -417,7 +417,7 @@ static void F_CastTicker()
       // switch from deathstate to next monster
       castnum++;
       castdeath = false;
-      if(castorder[castnum].name == NULL)
+      if(castorder[castnum].name == nullptr)
          castnum = 0;
       S_StartInterfaceSound(mobjinfo[castorder[castnum].type]->seesound);
       caststate = states[mobjinfo[castorder[castnum].type]->seestate];
@@ -606,7 +606,7 @@ static void F_CastDrawer()
    int            lump, rot = 0;
    bool           flip;
    patch_t       *patch;
-   byte          *translate = NULL;
+   byte          *translate = nullptr;
    castinfo_t    *cast    = &castorder[castnum];
    mobjinfo_t    *mi      =  mobjinfo[cast->type];
    player_t      *cplayer = &players[consoleplayer];
@@ -633,7 +633,7 @@ static void F_CastDrawer()
       int colormap = cplayer->colormap;
       
       sprdef    = &sprites[cplayer->skin->sprite];
-      translate = colormap ? translationtables[colormap - 1] : NULL;
+      translate = colormap ? translationtables[colormap - 1] : nullptr;
    }
    
    // haleyjd 08/15/02
@@ -748,7 +748,7 @@ static void F_InitDemonScroller()
    int lsize1, lsize2;
    VBuffer vbuf;
 
-   DemonBuffer = (byte *)(Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer)));
+   DemonBuffer = emalloctag(byte *, 128000, PU_LEVEL, reinterpret_cast<void **>(&DemonBuffer));
 
    // get screens
    lnum1  = W_GetNumForName("FINAL1");

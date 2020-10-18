@@ -34,7 +34,7 @@
 struct ev_action_t;
 struct line_t;
 class  Mobj;
-struct polyobj_s;
+struct polyobj_t;
 
 // Action flags
 enum EVActionFlags
@@ -72,7 +72,7 @@ struct ev_instance_t
    int        spac;    // special activation type
    int        gentype; // generalized type, if is generalized (-1 otherwise)
    int        genspac; // generalized activation type, if generalized
-   polyobj_s *poly;    // possible polyobject activator
+   polyobj_t *poly;    // possible polyobject activator
 };
 
 //
@@ -207,9 +207,9 @@ int EV_LockDefIDForLine(const line_t *line);
 bool EV_IsParamLineSpec(int special);
 
 // Activation
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_s *poly, int spac);
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_s *poly);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //

@@ -34,6 +34,7 @@
 #include "z_zone.h"
 
 #include "a_args.h"
+#include "c_io.h"
 #include "c_net.h"
 #include "c_runcmd.h"
 #include "d_deh.h"    // Ty 03/27/98 - externalized strings
@@ -57,6 +58,8 @@
 #include "p_setup.h"
 #include "p_user.h"
 #include "r_data.h"
+#include "r_defs.h"
+#include "r_main.h"
 #include "s_sound.h"
 #include "sounds.h"
 #include "w_levels.h"
@@ -70,8 +73,6 @@ enum
 {
    FLAG_ALWAYSCALL = 16    // apply this on top of negative arg
 };
-
-static int M_NukeMonsters();
 
 //=============================================================================
 //
@@ -132,7 +133,7 @@ static void cheat_printstats(const void *);   // killough 8/23/98
 //
 // The first argument is the cheat code.
 //
-// The second argument is its DEH name, or NULL if it's not supported by -deh.
+// The second argument is its DEH name, or nullptr if it's not supported by -deh.
 //
 // The third argument is a combination of the bitmasks:
 // { always, not_dm, not_coop, not_net, not_menu, not_demo, not_deh },
@@ -220,7 +221,7 @@ cheat_s cheat[CHEAT_NUMCHEATS] =
    { "stat", -1, always, cheat_printstats, 0 },
 #endif
 
-   { NULL, -1, 0, NULL, 0 } // end-of-list marker
+   { nullptr, -1, 0, nullptr, 0 } // end-of-list marker
 };
 
 //-----------------------------------------------------------------------------
@@ -360,7 +361,7 @@ static void cheat_pw(const void *arg)
          INFRATICS,  // haleyjd: torch
       };
       P_GivePower(plyr, pw, tics[pw], false);
-      if(pw != pw_strength && !comp[comp_infcheat])
+      if(pw != pw_strength && !getComp(comp_infcheat))
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
 
@@ -536,7 +537,7 @@ static void cheat_keyx(const void *arg)
 static void cheat_keyxx(const void *arg)
 {
    int key = *(const int *)arg;
-   const char *msg = NULL;
+   const char *msg = nullptr;
 
    if(key >= GameModeInfo->numHUDKeys)
       return;
@@ -737,7 +738,7 @@ static void cheat_htickill(const void *arg)
 //
 static void cheat_hticiddqd(const void *arg)
 {
-   P_DamageMobj(plyr->mo, NULL, plyr->mo, 10000, MOD_UNKNOWN);
+   P_DamageMobj(plyr->mo, nullptr, plyr->mo, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
    player_printf(plyr, "%s", DEH_String("TXT_CHEATIDDQD"));
 }
 
@@ -751,22 +752,6 @@ static void cheat_hticbehold(const void *arg)
    player_printf(plyr, "inVuln, Ghost, Allmap, Torch, Fly or Rad");
 }
 
-
-static constexpr char const *hartiNames[] =
-{
-   "ArtiInvulnerability",
-   "ArtiInvisibility",
-   "ArtiHealth",
-   "ArtiSuperHealth",
-   "ArtiTomeOfPower",
-   "ArtiTorch",
-   "ArtiTimeBomb",
-   "ArtiEgg",
-   "ArtiFly",
-   "ArtiTeleport"
-
-};
-
 static constexpr int numHArtifacts = earrlen(hartiNames);
 
 //
@@ -777,12 +762,12 @@ static void cheat_hticgimme(const void *varg)
    auto args = static_cast<const char *>(varg);
    if(!*args)
    {
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS1));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS1));
       return;
    }
    if(!*(args + 1))
    {
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS2));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS2));
       return;
    }
    int i;
@@ -802,7 +787,7 @@ static void cheat_hticgimme(const void *varg)
             continue;
          E_GiveInventoryItem(plyr, artifact, E_GetMaxAmountForArtifact(plyr, artifact));
       }
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else if(type >= 0 && type < numHArtifacts && count > 0 && count < 10)
    {
@@ -813,15 +798,15 @@ static void cheat_hticgimme(const void *varg)
       }
       if((GameModeInfo->flags & GIF_SHAREWARE) && artifact->getInt("noshareware", 0))
       {
-         player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+         player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
          return;
       }
       E_GiveInventoryItem(plyr, artifact, count);
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTS3));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTS3));
    }
    else
    {                           // Bad input
-      player_printf(plyr, DEH_String(TXT_CHEATARTIFACTSFAIL));
+      player_printf(plyr, "%s", DEH_String(TXT_CHEATARTIFACTSFAIL));
    }
 
 }
@@ -844,7 +829,7 @@ static void cheat_rambo(const void *arg)
    // give full ammo
    E_GiveAllAmmo(plyr, GAA_MAXAMOUNT);
 
-   player_printf(plyr, DEH_String(TXT_CHEATWEAPONS));
+   player_printf(plyr, "%s", DEH_String(TXT_CHEATWEAPONS));
 }
 
 //-----------------------------------------------------------------------------
@@ -1111,7 +1096,7 @@ void A_SorcNukeSpec(actionargs_t *actionargs)
 // killough 7/20/98: kill friendly monsters only if no others to kill
 // haleyjd 01/10/02: reformatted some code
 //
-static int M_NukeMonsters()
+int M_NukeMonsters()
 {   
    int killcount = 0;
    Thinker *th = &thinkercap;
@@ -1136,7 +1121,7 @@ static int M_NukeMonsters()
             if(mo->health > 0)
             {
                killcount++;
-               P_DamageMobj(mo, NULL, NULL, 10000, MOD_UNKNOWN);
+               P_DamageMobj(mo, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
             }
 
             // haleyjd: made behavior customizable
@@ -1192,6 +1177,44 @@ CONSOLE_COMMAND(GIVEARSENAL, cf_notnet|cf_level)
 CONSOLE_COMMAND(GIVEKEYS, cf_notnet|cf_level)
 {
    cheat_k(nullptr);
+}
+
+//
+// Teleports player to coordinates
+//
+// warp <x> <y>
+//
+CONSOLE_COMMAND(warp, cf_notnet | cf_level)
+{
+   if(!plyr->mo)
+      return;
+   if(Console.argc <= 1)
+   {
+      C_Printf("Usage: warp x y\nTeleports player to given coordinates.\n"
+               "Position: %d %d %d a=%d\n", plyr->mo->x / FRACUNIT, plyr->mo->y / FRACUNIT,
+               plyr->mo->z / FRACUNIT, plyr->mo->angle / ANGLE_1);
+      return;
+   }
+   char *endptr;
+   fixed_t x = static_cast<fixed_t>(Console.argv[0]->toLong(&endptr, 0)) << FRACBITS;
+   // Don't teleport player to 0 in case of bad input
+   if(*endptr) 
+   {
+      C_Puts("Wrong x argument.");
+      return;
+   }
+   fixed_t y = static_cast<fixed_t>(Console.argv[1]->toLong(&endptr, 0)) << FRACBITS;
+   if(*endptr)
+   {
+      C_Puts("Wrong y argument.");
+      return;
+   }
+
+   const sector_t *sector = R_PointInSubsector(x, y)->sector;
+   fixed_t z = sector->srf.ceiling.height / 2 + sector->srf.floor.height / 2 - plyr->mo->height / 2;
+
+   P_TeleportMove(plyr->mo, x, y, false);
+   plyr->mo->z = z;
 }
 
 //----------------------------------------------------------------------------

@@ -113,7 +113,7 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    int key;
 
    // SoM: The new texture system handles tall patches in textures.
-   newSky = (skytexture_t *)(Z_Malloc(sizeof(skytexture_t), PU_STATIC, NULL));
+   newSky = emalloctag(skytexture_t *, sizeof(skytexture_t), PU_STATIC, nullptr);
 
    // 02/11/04: only if patch height is greater than texture height
    // should we use it
@@ -143,7 +143,7 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
 skytexture_t *R_GetSkyTexture(int texturenum)
 {
    int key;
-   skytexture_t *target = NULL;
+   skytexture_t *target = nullptr;
 
    key = skytexturekey(texturenum);
 
@@ -192,7 +192,7 @@ void R_ClearSkyTextures()
          }
       }
 
-      skytextures[i] = NULL;
+      skytextures[i] = nullptr;
    }
 }
 

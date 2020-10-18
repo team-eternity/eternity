@@ -103,6 +103,7 @@
 #include "e_actions.h"
 #include "e_anim.h"
 #include "e_args.h"
+#include "e_compatibility.h"
 #include "e_fonts.h"
 #include "e_gameprops.h"
 #include "e_inventory.h"
@@ -203,7 +204,7 @@ static cfg_opt_t cast_sound_opts[] =
 
 static cfg_opt_t cast_opts[] =
 {
-   CFG_STR(ITEM_CAST_TYPE,  NULL,            CFGF_NONE),
+   CFG_STR(ITEM_CAST_TYPE,  nullptr,         CFGF_NONE),
    CFG_STR(ITEM_CAST_NAME,  "unknown",       CFGF_NONE),
    CFG_BOOL(ITEM_CAST_SA,   false,           CFGF_NONE),
    CFG_SEC(ITEM_CAST_SOUND, cast_sound_opts, CFGF_MULTI|CFGF_NOCASE),
@@ -220,7 +221,7 @@ static cfg_opt_t cast_opts[] =
 
 static cfg_opt_t edf_opts[] =
 {
-   CFG_STR(SEC_SPRITE,          0,                 CFGF_LIST),
+   CFG_STR(SEC_SPRITE,          nullptr,           CFGF_LIST),
    CFG_STR(ITEM_PLAYERSPRITE,   "PLAY",            CFGF_NONE),
    CFG_STR(ITEM_BLANKSPRITE,    "TNT1",            CFGF_NONE),
    CFG_SEC(EDF_SEC_ACTION,      edf_action_opts,   EDF_TSEC_FLAGS),
@@ -253,6 +254,7 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_PCLASS,      edf_pclass_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(SEC_CAST,            cast_opts,         EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_SPLASH,      edf_splash_opts,   EDF_TSEC_FLAGS),
+   CFG_SEC(EDF_SEC_SPLASHDELTA, edf_spldelta_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TERRAIN,     edf_terrn_opts,    EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_TERDELTA,    edf_terdelta_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_FLOOR,       edf_floor_opts,    EDF_NSEC_FLAGS),
@@ -260,13 +262,14 @@ static cfg_opt_t edf_opts[] =
    CFG_SEC(EDF_SEC_FONT,        edf_font_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_STRING,      edf_string_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_GAMEPROPS,   edf_game_opts,     EDF_NSEC_FLAGS),
+   CFG_SEC(EDF_SEC_COMPATIBILITY, edf_compatibility_opts, EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_SWITCH,      edf_switch_opts,   EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_ANIMATION,   edf_anim_opts,     EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_WEAPONINFO,  edf_wpninfo_opts,  EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PUFFTYPE,    edf_puff_opts,     EDF_TSEC_FLAGS),
    CFG_SEC(EDF_SEC_PUFFDELTA,   edf_puff_delta_opts, EDF_NSEC_FLAGS),
-   CFG_STR(SEC_CASTORDER,       0,                 CFGF_LIST),
-   CFG_STR(SEC_BOSSTYPES,       0,                 CFGF_LIST),
+   CFG_STR(SEC_CASTORDER,       nullptr,           CFGF_LIST),
+   CFG_STR(SEC_BOSSTYPES,       nullptr,           CFGF_LIST),
    CFG_INT(SEC_BOSSPROBS,       0,                 CFGF_LIST), // schepe
    CFG_SEC(EDF_SEC_FRMDELTA,    edf_fdelta_opts,   EDF_NSEC_FLAGS),
    CFG_SEC(EDF_SEC_TNGDELTA,    edf_tdelta_opts,   EDF_NSEC_FLAGS),
@@ -278,7 +281,7 @@ static cfg_opt_t edf_opts[] =
    CFG_INT(ITEM_INTERPAUSE,     0,                 CFGF_NONE),
    CFG_INT(ITEM_INTERFADE,     -1,                 CFGF_NONE),
    CFG_INT_CB(ITEM_INTERTL,     0,                 CFGF_NONE, E_TranslucCB),
-   CFG_STR(ITEM_MN_EPISODE,     NULL,              CFGF_NONE),
+   CFG_STR(ITEM_MN_EPISODE,     nullptr,           CFGF_NONE),
    CFG_STR(ITEM_FONT_HUD,       "ee_smallfont",    CFGF_NONE),
    CFG_STR(ITEM_FONT_HUDO,      "ee_hudfont",      CFGF_NONE),
    CFG_STR(ITEM_FONT_HUDFSS,    "ee_fshudsmallfont", CFGF_NONE),
@@ -322,7 +325,7 @@ static cfg_opt_t edf_opts[] =
 //
 
 // verbose logging, toggled with -edfout cmdline param
-static FILE *edf_output = NULL;
+static FILE *edf_output = nullptr;
 
 //
 // E_EDFOpenVerboseLog
@@ -369,7 +372,7 @@ static void E_EDFCloseVerboseLog()
       fclose(edf_output);
    }
 
-   edf_output = NULL;
+   edf_output = nullptr;
 }
 
 //
@@ -388,7 +391,7 @@ void E_EDFLogPuts(const char *msg)
 //
 // Calls vfprintf on the verbose log for formatted messages.
 //
-void E_EDFLogPrintf(const char *msg, ...)
+void E_EDFLogPrintf(E_FORMAT_STRING(const char *msg), ...)
 {
    if(edf_output)
    {
@@ -407,7 +410,7 @@ void E_EDFLogPrintf(const char *msg, ...)
 // output "lv" number of tabs before the error message in the verbose
 // log file to maintain proper formatting.
 //
-void E_EDFLoggedErr(int lv, const char *msg, ...)
+void E_EDFLoggedErr(int lv, E_FORMAT_STRING(const char *msg), ...)
 {
    qstring msg_no_tabs;
    va_list va;
@@ -443,7 +446,7 @@ static bool edf_warning_out;
 // finished, so that users are aware that warnings have occured even if verbose
 // logging is not enabled.
 //
-void E_EDFLoggedWarning(int lv, const char *msg, ...)
+void E_EDFLoggedWarning(int lv, E_FORMAT_STRING(const char *msg), ...)
 {
    ++edf_warning_count;
 
@@ -543,7 +546,7 @@ static int bex_include(cfg_t *cfg, cfg_opt_t *opt, int argc,
                        const char **argv)
 {
    char *currentpath;
-   char *filename = NULL;
+   char *filename = nullptr;
 
    // haleyjd 03/18/10: deprecation warning
    E_EDFLoggedWarning(0, "Warning: bexinclude is deprecated. "
@@ -610,7 +613,7 @@ static E_Enable_t edf_enables[] =
    { "HERETIC",  1 },
 
    // terminator
-   { NULL }
+   { nullptr }
 };
 
 //
@@ -1201,21 +1204,21 @@ static void E_ProcessSpriteVars(cfg_t *cfg)
 // haleyjd 04/13/08: this replaces S_sfx[0].
 sfxinfo_t NullSound =
 {
-   { 'n', 'o', 'n', 'e', '\0' }, // name
-   { '\0' },                     // pcslump
-   sfxinfo_t::sg_none,           // singularity
-   255, 0, 0,                    // priority, pitch, volume
-   sfxinfo_t::pitch_none,        // pitch_type
-   0,                            // skin sound
-   CHAN_AUTO,                    // subchannel
-   0, 0, 0,                      // flags, clipping_dist, close_dist
-   NULL, NULL, NULL, 0,          // link, alias, random sounds
-   NULL, 0, 0, 0,                // data, length, alen, usefulness
-   { 'n', 'o', 'n', 'e', '\0' }, // mnemomnic
-   NULL, NULL,                   // lfn, pcslfn
-   { NULL, NULL, NULL, 0 },      // numlinks
-   NULL,                         // next
-   0                             // dehackednum
+   { 'n', 'o', 'n', 'e', '\0' },     // name
+   { '\0' },                         // pcslump
+   sfxinfo_t::sg_none,               // singularity
+   255, 0, 0,                        // priority, pitch, volume
+   sfxinfo_t::pitch_none,            // pitch_type
+   0,                                // skin sound
+   CHAN_AUTO,                        // subchannel
+   0, 0, 0,                          // flags, clipping_dist, close_dist
+   nullptr, nullptr, nullptr, 0,     // link, alias, random sounds
+   nullptr, 0, 0, 0,                 // data, length, alen, usefulness
+   { 'n', 'o', 'n', 'e', '\0' },     // mnemomnic
+   nullptr, nullptr,                 // lfn, pcslfn
+   { nullptr, nullptr, nullptr, 0 }, // numlinks
+   nullptr,                          // next
+   0                                 // dehackednum
 };
 
 //
@@ -1301,7 +1304,7 @@ static void E_ProcessCast(cfg_t *cfg)
       }
       // free castorder
       efree(castorder);
-      castorder = NULL;
+      castorder = nullptr;
       max_castorder = 0;
    }
 
@@ -1369,7 +1372,7 @@ static void E_ProcessCast(cfg_t *cfg)
       // default to using the internal string editable via BEX strings
       tempstr = cfg_getstr(castsec, ITEM_CAST_NAME);
       if(cfg_size(castsec, ITEM_CAST_NAME) == 0 && i < 17)
-         castorder[i].name = NULL; // set from DeHackEd
+         castorder[i].name = nullptr; // set from DeHackEd
       else
          castorder[i].name = estrdup(tempstr); // store provided value
 
@@ -1396,7 +1399,7 @@ static void E_ProcessCast(cfg_t *cfg)
          name = cfg_getstr(soundsec, ITEM_CAST_SOUNDNAME);
 
          // haleyjd 03/22/06: modified to support dehnum auto-allocation
-         if((sfx = E_EDFSoundForName(name)) == NULL)
+         if((sfx = E_EDFSoundForName(name)) == nullptr)
          {
             E_EDFLoggedWarning(2, "Warning: cast member references invalid sound %s\n",
                                name);
@@ -1475,12 +1478,12 @@ static void E_ProcessBossTypes(cfg_t *cfg)
    if(BossSpawnTypes)
    {
       efree(BossSpawnTypes);
-      BossSpawnTypes = NULL;
+      BossSpawnTypes = nullptr;
    }
    if(BossSpawnProbs)
    {
       efree(BossSpawnProbs);
-      BossSpawnProbs = NULL;
+      BossSpawnProbs = nullptr;
    }
 
    NumBossTypes = numTypes;
@@ -1731,6 +1734,9 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
    // 07/19/12: game properties
    E_ProcessGameProperties(cfg);    // see e_gameprops.cpp
 
+   // ioanch 2020-04-20: compatibility
+   E_ProcessCompatibilities(cfg);
+
    // post-processing routines
    E_SetThingDefaultSprites();
    E_ProcessFinalWeaponSlots();
@@ -1815,7 +1821,7 @@ void E_ProcessNewEDF()
    //
    // Parsing - parse only EDFROOT lumps, not root.edf
    //
-   E_ParseEDF(cfg, NULL);
+   E_ParseEDF(cfg, nullptr);
 
    //
    // Processing

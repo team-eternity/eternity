@@ -63,12 +63,12 @@
 static void P_spawnGlitter(Mobj *actor, int type)
 {
    // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
-   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
-   Mobj *mo = P_SpawnMobj(pos.x, pos.y, 
-      P_ExtremeSectorAtPoint(actor, false)->floorheight, type);
+   Mobj *mo = P_SpawnMobj(pos.x, pos.y,
+      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.height, type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -114,7 +114,7 @@ void A_AccelGlitter(actionargs_t *actionargs)
 void A_InitKeyGizmo(actionargs_t *actionargs)
 {
    Mobj *gizmo = actionargs->actor;
-   const char *stateName = NULL;
+   const char *stateName = nullptr;
 
    if(gizmo->type == E_ThingNumForName("KeyGizmoBlue"))
       stateName = "Blue";
@@ -512,32 +512,32 @@ void A_SorcererRise(actionargs_t *actionargs)
 
 void A_SorZap(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sorzap);
+   S_StartSound(nullptr, sfx_sorzap);
 }
 
 void A_SorRise(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sorrise);
+   S_StartSound(nullptr, sfx_sorrise);
 }
 
 void A_SorDSph(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sordsph);
+   S_StartSound(nullptr, sfx_sordsph);
 }
 
 void A_SorDExp(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sordexp);
+   S_StartSound(nullptr, sfx_sordexp);
 }
 
 void A_SorDBon(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sordbon);
+   S_StartSound(nullptr, sfx_sordbon);
 }
 
 void A_SorSightSnd(actionargs_t *actionargs)
 {
-   S_StartSound(NULL, sfx_sorsit);
+   S_StartSound(nullptr, sfx_sorsit);
 }
 
 //=============================================================================
@@ -563,7 +563,7 @@ void P_SpawnSorcSpots()
 
 void A_Srcr2Decide(actionargs_t *actionargs)
 {
-   static int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
+   static const int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
 
    Mobj *actor = actionargs->actor;
    int   index = actor->health / (actor->getModifiedSpawnHealth() / 8);
@@ -666,8 +666,8 @@ void A_GenWizard(actionargs_t *actionargs)
    // ioanch 20160116: portal aware
    if(!P_CheckPosition(mo, mo->x, mo->y) ||
       (mo->z >
-      (P_ExtremeSectorAtPoint(mo, true)->ceilingheight - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, false)->floorheight))
+      (P_ExtremeSectorAtPoint(mo, surf_ceil)->srf.ceiling.height - mo->height)) ||
+      (mo->z < P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height))
    {
       // doesn't fit, so remove it immediately
       mo->remove();
@@ -770,12 +770,12 @@ void A_HticExplode(actionargs_t *actionargs)
    E_ExplosionHitWater(actor, damage);
 }
 
-typedef struct boss_spec_htic_s
+struct boss_spec_htic_t
 {
    unsigned int thing_flag;
    unsigned int level_flag;
    int flagfield;
-} boss_spec_htic_t;
+};
 
 #define NUM_HBOSS_SPECS 5
 
@@ -1089,8 +1089,8 @@ void A_DripBlood(actionargs_t *actionargs)
    Mobj *mo;
    fixed_t x, y;
 
-   x = actor->x + (P_SubRandom(pr_dripblood) << 11);
    y = actor->y + (P_SubRandom(pr_dripblood) << 11);
+   x = actor->x + (P_SubRandom(pr_dripblood) << 11);
 
    mo = P_SpawnMobj(x, y, actor->z, E_SafeThingType(MT_HTICBLOOD));
    
@@ -1133,9 +1133,9 @@ void A_BeastPuff(actionargs_t *actionargs)
       fixed_t x, y, z;
       Mobj *mo;
 
-      x = actor->x + (P_SubRandom(pr_puffy) << 10);      
-      y = actor->y + (P_SubRandom(pr_puffy) << 10);
       z = actor->z + (P_SubRandom(pr_puffy) << 10);
+      y = actor->y + (P_SubRandom(pr_puffy) << 10);
+      x = actor->x + (P_SubRandom(pr_puffy) << 10);
 
       mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFFY));
 
@@ -1209,7 +1209,7 @@ void A_MinotaurAtk1(actionargs_t *actionargs)
    
       // if target is player, make the viewheight go down
       player_t *player = actor->target->player;
-      if(player != NULL)
+      if(player != nullptr)
          player->deltaviewheight = -16*FRACUNIT;
    }
 }
@@ -1271,6 +1271,7 @@ void A_MinotaurDecide(actionargs_t *actionargs)
       // set to charge state and start skull-flying
       P_SetMobjStateNF(actor, E_SafeState(S_MNTR_ATK4_1));
       actor->flags |= MF_SKULLFLY;
+      actor->intflags |= MIF_SKULLFLYSEE;
       
       // give him momentum
       angle_t angle = actor->angle >> ANGLETOFINESHIFT;
@@ -1313,6 +1314,7 @@ void A_MinotaurCharge(actionargs_t *actionargs)
    {
       // end of the charge
       actor->flags &= ~MF_SKULLFLY;
+      actor->intflags &= ~MIF_SKULLFLYSEE;
       P_SetMobjState(actor, actor->info->seestate);
    }
 }
@@ -1376,7 +1378,7 @@ void A_MinotaurAtk3(actionargs_t *actionargs)
 
       // if target is player, decrease viewheight
       player_t *player = actor->target->player;
-      if(player != NULL)
+      if(player != nullptr)
          player->deltaviewheight = -16*FRACUNIT;
    }
    else
@@ -1590,12 +1592,10 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
    }
    
    // test if tracer has become an invalid target
-   if(!ancient_demo && actor->tracer && 
-      (actor->tracer->flags3 & MF3_GHOST ||
-       actor->tracer->health < 0))
+   if(actor->tracer && (actor->tracer->flags3 & MF3_GHOST || actor->tracer->health < 0))
    {
       Mobj *originator = actor->target;
-      Mobj *origtarget = originator ? originator->target : NULL;
+      Mobj *origtarget = originator ? originator->target : nullptr;
 
       // See if the Lich has a new target; if so, maybe chase it now.
       // This keeps the tornado from sitting around uselessly.
@@ -1688,7 +1688,7 @@ void A_ImpChargeAtk(actionargs_t *actionargs)
    {   
       S_StartSound(actor, actor->info->attacksound);
 
-      P_SkullFly(actor, 12 * FRACUNIT);
+      P_SkullFly(actor, 12 * FRACUNIT, true);
    }
 }
 

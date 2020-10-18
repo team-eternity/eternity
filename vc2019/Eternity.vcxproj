@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -797,6 +797,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Shipping|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\e_compatibility.cpp" />
     <ClCompile Include="..\source\e_dstate.cpp" />
     <ClCompile Include="..\Source\e_edf.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1092,6 +1093,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Shipping|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\source\hu_inventory.cpp" />
     <ClCompile Include="..\source\hu_modern.cpp" />
     <ClCompile Include="..\source\hu_over.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1181,6 +1183,7 @@
     <ClCompile Include="..\source\textscreen\txt_window.c" />
     <ClCompile Include="..\source\textscreen\txt_window_action.c" />
     <ClCompile Include="..\source\v_image.cpp" />
+    <ClCompile Include="..\source\Win32\i_w32gui.cpp" />
     <ClCompile Include="..\Source\wi_stuff.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -2673,6 +2676,7 @@
     <ClInclude Include="..\source\e_actions.h" />
     <ClInclude Include="..\source\e_anim.h" />
     <ClInclude Include="..\source\e_args.h" />
+    <ClInclude Include="..\source\e_compatibility.h" />
     <ClInclude Include="..\source\e_dstate.h" />
     <ClInclude Include="..\Source\e_edf.h" />
     <ClInclude Include="..\source\e_edfmetatable.h" />
@@ -2709,6 +2713,7 @@
     <ClInclude Include="..\source\hal\i_timer.h" />
     <ClInclude Include="..\source\hu_boom.h" />
     <ClInclude Include="..\source\hu_frags.h" />
+    <ClInclude Include="..\source\hu_inventory.h" />
     <ClInclude Include="..\source\hu_modern.h" />
     <ClInclude Include="..\source\hu_over.h" />
     <ClInclude Include="..\source\hu_stuff.h" />

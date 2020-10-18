@@ -85,10 +85,10 @@ void P_SetSectorCeilingPic(sector_t *sector, int pic)
    // clear sky flag
    sector->intflags &= ~SIF_SKY;
 
-   sector->ceilingpic = pic;
+   sector->srf.ceiling.pic = pic;
 
    // reset the sky flag
-   if(R_IsSkyFlat(sector->ceilingpic))
+   if(R_IsSkyFlat(sector->srf.ceiling.pic))
       sector->intflags |= SIF_SKY;
 }
 
@@ -392,7 +392,7 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
       rtn = 1;
       ceiling = new CeilingThinker;
       ceiling->addThinker();
-      sec->ceilingdata = ceiling;               //jff 2/22/98
+      sec->srf.ceiling.data = ceiling;               //jff 2/22/98
       ceiling->sector = sec;
       ceiling->crush = -1;
       ceiling->crushflags = 0;   // ioanch 20160305
@@ -402,8 +402,8 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
       {
       case fastCrushAndRaise:
          ceiling->crush = 10;
-         ceiling->topheight = sec->ceilingheight;
-         ceiling->bottomheight = sec->floorheight + (8*FRACUNIT);
+         ceiling->topheight = sec->srf.ceiling.height;
+         ceiling->bottomheight = sec->srf.floor.height + (8*FRACUNIT);
          ceiling->direction = plat_down;
          ceiling->speed = CEILSPEED * 2;
          break;
@@ -412,10 +412,10 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
          noise = CNOISE_SEMISILENT;
       case crushAndRaise:
          ceiling->crush = 10;
-         ceiling->topheight = sec->ceilingheight;
+         ceiling->topheight = sec->srf.ceiling.height;
       case lowerAndCrush:
       case lowerToFloor:
-         ceiling->bottomheight = sec->floorheight;
+         ceiling->bottomheight = sec->srf.floor.height;
          if(type != lowerToFloor)
             ceiling->bottomheight += 8*FRACUNIT;
          ceiling->direction = plat_down;
@@ -467,7 +467,7 @@ int EV_DoCeiling(const line_t *line, ceiling_e type)
 // to use the new structure which places no limits
 // on active ceilings. It also avoids spending as much
 // time searching for active ceilings. Previously a 
-// fixed-size array was used, with NULL indicating
+// fixed-size array was used, with nullptr indicating
 // empty entries, while now a doubly-linked list
 // is used.
 
@@ -676,7 +676,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
       {
          if(vanilla_activeceilings[i] == ceiling)
          {
-            ceiling->sector->ceilingdata = nullptr;
+            ceiling->sector->srf.ceiling.data = nullptr;
             S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C);
             ceiling->remove();
             vanilla_activeceilings[i] = nullptr;
@@ -688,7 +688,7 @@ void P_RemoveActiveCeiling(CeilingThinker* ceiling)
 
    // ioanch: normal setup
    ceilinglist_t *list = ceiling->list;
-   ceiling->sector->ceilingdata = NULL;   //jff 2/22/98
+   ceiling->sector->srf.ceiling.data = nullptr;   //jff 2/22/98
    S_StopSectorSequence(ceiling->sector, SEQ_ORIGIN_SECTOR_C); // haleyjd 09/28/06
    ceiling->remove();
    if((*list->prev = list->next))
@@ -774,12 +774,12 @@ void CeilingWaggleThinker::Think()
       {
          // Remove
          destheight = originalHeight;
-         dist       = originalHeight - sector->ceilingheight;
+         dist       = originalHeight - sector->srf.ceiling.height;
 
          T_MoveCeilingInDirection(sector, abs(dist),
-            destheight, 8, destheight >= sector->ceilingheight ? plat_up : plat_down);
+            destheight, 8, destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 
-         sector->ceilingdata = nullptr;
+         sector->srf.ceiling.data = nullptr;
          remove();
          return;
       }
@@ -798,10 +798,10 @@ void CeilingWaggleThinker::Think()
 
    destheight = originalHeight +
                 FixedMul(FloatBobOffsets[(accumulator >> FRACBITS) & 63], scale);
-   dist = destheight - sector->ceilingheight;
+   dist = destheight - sector->srf.ceiling.height;
 
    T_MoveCeilingInDirection(sector, abs(dist), destheight, 8,
-      destheight >= sector->ceilingheight ? plat_up : plat_down);
+      destheight >= sector->srf.ceiling.height ? plat_up : plat_down);
 }
 
 //
@@ -839,7 +839,7 @@ int EV_StartCeilingWaggle(const line_t *line, int tag, int height, int speed,
 
 manual_waggle:
       // Already busy with another thinker
-      if(sector->ceilingdata)
+      if(sector->srf.ceiling.data)
       {
          if(manual)
             return retCode;
@@ -849,11 +849,11 @@ manual_waggle:
 
       retCode = 1;
       waggle = new CeilingWaggleThinker;
-      sector->ceilingdata = waggle;
+      sector->srf.ceiling.data = waggle;
       waggle->addThinker();
 
       waggle->sector         = sector;
-      waggle->originalHeight = sector->ceilingheight;
+      waggle->originalHeight = sector->srf.ceiling.height;
       waggle->accumulator    = offset * FRACUNIT;
       waggle->accDelta       = speed << 10;
       waggle->scale          = 0;

@@ -85,7 +85,7 @@ struct keyaction_t
 keyaction_t keyactions[NUMKEYACTIONS] =
 {
    // Null Action
-   { NULL,                kac_game,    at_variable },
+   { nullptr,             kac_game,    at_variable },
 
    // Game Actions
 
@@ -198,7 +198,7 @@ keyaction_t keyactions[NUMKEYACTIONS] =
 // time it was full. Not exactly model efficiency. I have modified the 
 // system to use a linked list.
 
-static keyaction_t *cons_keyactions = NULL;
+static keyaction_t *cons_keyactions = nullptr;
 
 //
 // The actual key bindings
@@ -271,6 +271,9 @@ struct keyname_t
    { KEYD_MOUSE3,     "mouse3"     },
    { KEYD_MOUSE4,     "mouse4"     },
    { KEYD_MOUSE5,     "mouse5"     },
+   { KEYD_MOUSE6,     "mouse6"     },
+   { KEYD_MOUSE7,     "mouse7"     },
+   { KEYD_MOUSE8,     "mouse8"     },
    { KEYD_MWHEELUP,   "wheelup"    },
    { KEYD_MWHEELDOWN, "wheeldown"  },
    { KEYD_KP0,        "kp_0"       },
@@ -306,6 +309,22 @@ struct keyname_t
    { KEYD_JOY14,      "joy14"      },
    { KEYD_JOY15,      "joy15"      },
    { KEYD_JOY16,      "joy16"      },
+   { KEYD_HAT1RIGHT,  "hat1right"  },
+   { KEYD_HAT1UP,     "hat1up"     },
+   { KEYD_HAT1LEFT,   "hat1left"   },
+   { KEYD_HAT1DOWN,   "hat1down"   },
+   { KEYD_HAT2RIGHT,  "hat2right"  },
+   { KEYD_HAT2UP,     "hat2up"     },
+   { KEYD_HAT2LEFT,   "hat2left"   },
+   { KEYD_HAT2DOWN,   "hat2down"   },
+   { KEYD_HAT3RIGHT,  "hat3right"  },
+   { KEYD_HAT3UP,     "hat3up"     },
+   { KEYD_HAT3LEFT,   "hat3left"   },
+   { KEYD_HAT3DOWN,   "hat3down"   },
+   { KEYD_HAT4RIGHT,  "hat4right"  },
+   { KEYD_HAT4UP,     "hat4up"     },
+   { KEYD_HAT4LEFT,   "hat4left"   },
+   { KEYD_HAT4DOWN,   "hat4down"   },
    { KEYD_AXISON01,   "axis1"      },
    { KEYD_AXISON02,   "axis2"      },
    { KEYD_AXISON03,   "axis3"      },
@@ -341,7 +360,7 @@ void G_InitKeyBindings()
          else
             sprintf(tempstr, "key%x", i);
 
-         keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, 0);
+         keybindings[i].name = Z_Strdup(tempstr, PU_STATIC, nullptr);
       }
 
       memset(keybindings[i].bindings, 0, NUMKEYACTIONCLASSES * sizeof(keyaction_t *));
@@ -398,11 +417,11 @@ static keyaction_t *G_KeyActionForName(const char *name)
    }
    else
    {
-      // first time only - cons_keyactions was NULL
+      // first time only - cons_keyactions was nullptr
       cons_keyactions = estructalloc(keyaction_t, 1);
       cons_keyactions->bclass = kac_cmd;
       cons_keyactions->type   = at_conscmd;
-      cons_keyactions->name   = Z_Strdup(name, PU_STATIC, 0);
+      cons_keyactions->name   = Z_Strdup(name, PU_STATIC, nullptr);
       cons_keyactions->next   = nullptr;
       cons_keyactions->num    = cons_actionnum++;
 
@@ -420,7 +439,7 @@ static keyaction_t *G_KeyActionForName(const char *name)
    newaction = estructalloc(keyaction_t, 1);
    newaction->bclass = kac_cmd;
    newaction->type = at_conscmd;
-   newaction->name = Z_Strdup(name, PU_STATIC, 0);
+   newaction->name = Z_Strdup(name, PU_STATIC, nullptr);
    newaction->next = nullptr;
    newaction->num  = cons_actionnum++;
 
@@ -539,7 +558,7 @@ const char *G_FirstBoundKey(const char *action)
 int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
 {
    int ret = ka_nothing;
-   keyaction_t *action = NULL;
+   keyaction_t *action = nullptr;
 
    if(allreleased)
       *allreleased = false;
@@ -569,7 +588,7 @@ int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
          }
 
          ret = action->num;
-         if(!wasdown)
+         if(!wasdown && ret < NUMKEYACTIONS)
             ++gGameKeyCount[bclass][ret];
       }
    }
@@ -583,10 +602,13 @@ int G_KeyResponder(const event_t *ev, int bclass, bool *allreleased)
       if((action = keybindings[key].bindings[bclass]))
       {
          ret = action->num;
-         if(wasdown)
-            --gGameKeyCount[bclass][ret];
-         if(allreleased && !gGameKeyCount[bclass][ret])
-            *allreleased = true;
+         if(ret < NUMKEYACTIONS)
+         {
+            if(wasdown)
+               --gGameKeyCount[bclass][ret];
+            if(allreleased && !gGameKeyCount[bclass][ret])
+               *allreleased = true;
+         }
       }
    }
 
@@ -664,18 +686,18 @@ static bool G_BindResponder(event_t *ev, int mnaction)
    if(keybindings[ev->data1].bindings[action->bclass] != action)
       keybindings[ev->data1].bindings[action->bclass] = action;
    else
-      keybindings[ev->data1].bindings[action->bclass] = NULL;
+      keybindings[ev->data1].bindings[action->bclass] = nullptr;
 
    // haleyjd 10/16/05: clear state of action involved
    bool wasdown = keybindings[ev->data1].keydown[action->bclass];
    keybindings[ev->data1].keydown[action->bclass] = false;
-   if(wasdown)
+   if(wasdown && action->num < NUMKEYACTIONS)
       --gGameKeyCount[action->bclass][action->num];
    
    return true;
 }
 
-menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, NULL, true };
+menuwidget_t binding_widget = { G_BindDrawer, G_BindResponder, nullptr, true };
 
 //
 // G_EditBinding
@@ -725,7 +747,7 @@ void G_CreateAxisActionVars()
 
       variable = estructalloc(variable_t, 1);
       variable->variable  = &axisActions[i];
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_int;
       variable->min       = axis_none;
       variable->max       = axis_max - 1;
@@ -741,10 +763,12 @@ void G_CreateAxisActionVars()
 
       variable = estructalloc(variable_t, 1);
       variable->variable  = &axisOrientation[i];
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_int;
       variable->min       = -1;
       variable->max       =  1;
+      static const char *orientationDefines[] = { "reversed", "default", "normal" };
+      variable->defines = orientationDefines;
 
       command = estructalloc(command_t, 1);
       name.clear() << "g_axisorientation" << i+1;
@@ -776,6 +800,15 @@ static void G_clearGamepadBindings()
 
       for(keyaction_t *&binding : keybindings[vkc].bindings)
          binding = nullptr;
+   }
+
+   // clear hats
+   for(int hat = 0; hat < HALGamePad::MAXHATS; hat++)
+   {
+      int vkc = KEYD_HAT1RIGHT + 4 * hat;
+      for(int i = 0; i < 4; ++i)
+         for(keyaction_t *&binding : keybindings[vkc + i].bindings)
+            binding = nullptr;
    }
 
    // clear axis actions, orientations, and trigger bindings
@@ -1047,7 +1080,7 @@ CONSOLE_COMMAND(unbind, 0)
          {
             // do not release menu or console actions in this manner
             if(j != kac_menu && j != kac_console)
-               keybindings[key].bindings[j] = NULL;
+               keybindings[key].bindings[j] = nullptr;
          }
       }
       else
@@ -1057,7 +1090,7 @@ CONSOLE_COMMAND(unbind, 0)
          if(ke)
          {
             C_Printf("unbound key %s from action %s\n", Console.argv[0]->constPtr(), ke->name);
-            keybindings[key].bindings[bclass] = NULL;
+            keybindings[key].bindings[bclass] = nullptr;
          }
          else
             C_Printf("key %s has no binding in class %d\n", Console.argv[0]->constPtr(), bclass);

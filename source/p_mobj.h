@@ -52,7 +52,7 @@ class  BloodSpawner;
 
 // Defines
 
-#define VIEWHEIGHT      (41*FRACUNIT)
+// [XA] VIEWHEIGHT is now a playerclass property
 
 // sf: gravity >>> defaultgravity
 #define DEFAULTGRAVITY  FRACUNIT
@@ -294,7 +294,7 @@ public:
    int16_t movecount;      // when 0, select a new dir
    int16_t strafecount;    // killough 9/8/98: monster strafing
 
-   // Thing being chased/attacked (or NULL),
+   // Thing being chased/attacked (or nullptr),
    // also the originator for missiles.
    Mobj *target;
 
@@ -391,7 +391,7 @@ protected:
    virtual void Think() override;
 
 public:
-   MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
+   MobjFadeThinker() : Super(), target(nullptr), swizzled_target(0) {}
    virtual void remove() override;
    virtual void serialize(SaveArchive &arc) override;
    virtual void deSwizzle() override;
@@ -422,11 +422,11 @@ enum bloodaction_e : int
 };
 
 void  P_RespawnSpecials();
-Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
+                  bool nolastlook = false);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
-void  P_MobjThinker(Mobj *mobj);
 Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
-                  bool ptcl, const MetaTable *pufftype = nullptr,
+                  bool ptcl, Mobj *shooter, const MetaTable *pufftype = nullptr,
                   const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
@@ -496,13 +496,36 @@ struct missileinfo_t
    uint32_t    flags;  // flags to affect firing (use enum values)
 };
 
+//
+// Feedback from targetting
+//
+struct playertargetinfo_t
+{
+   bool isfriend;
+   fixed_t slope;
+};
+
+//
+// SpawnPlayerMissile flags
+//
+enum
+{
+   SPM_ADDSLOPETOZ = 1,
+
+   SPMAH_FOLLOWTARGETFRIENDSLOPE = 1,
+   SPMAH_AIMFRIENDSTOO = 2,
+};
+
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
 // Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type, unsigned flags = 0,
+                           playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
-Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle);
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle,
+                                       unsigned flags = 0,
+                                       const playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
@@ -585,7 +608,8 @@ enum mobjflags_e : unsigned int
    MF_INFLOAT      = 0x00200000, // Floating to a height for a move.
    MF_COUNTKILL    = 0x00400000, // On kill, count this enemy object towards intermission kill total. Happy gathering.
    MF_COUNTITEM    = 0x00800000, // On picking up, count this item object towards intermission item total.
-   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a missile.
+   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a
+                                 // missile. ALSO CHECK intflag MIF_SKULLFLYSEE.
    MF_NOTDMATCH    = 0x02000000, // Don't spawn this object in deathmatch mode (e.g. key cards).
    MF_TRANSLATION  = 0x0c000000, // Player translation mask for sprite re-indexing.
    MF_TRANSSHIFT   = 26,         // Hmm ???. -- well, what? sf  -- Bernd Kremeier again, probably. haleyjd
@@ -701,20 +725,25 @@ enum mobjflags4_e : unsigned int
    MF4_LOWAIMPRIO         = 0x04000000, // can't be autoaimed.
    MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it.
    MF4_SETTARGETONDEATH   = 0x10000000, // target is updated even when one-shot
-   MF4_SLIDEOVERTHINGS    = 0x20000000  // thing will keep sliding when on top of things
+   MF4_SLIDEOVERTHINGS    = 0x20000000, // thing will keep sliding when on top of things
+   MF4_UNSTEPPABLE        = 0x40000000  // thing cannot be stepped on like stairs
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
 // (some degree of opaqueness is good, to avoid compatibility woes)
 
+//
+// IMPORTANT: if you want to reuse any of the UNUSED bits, remember to increment WRITE_SAVE_VERSION
+//            and clear them in Mobj::serialize when loading older saves.
+//
 enum
 {
    MIF_FALLING     = 0x00000001, // Object is falling
    MIF_ARMED       = 0x00000002, // Object is armed (for MF_TOUCHY objects)
    MIF_LINEDONE    = 0x00000004, // Object has activated W1 or S1 linedef via DEH frame
    MIF_DIEDFALLING = 0x00000008, // haleyjd: object died by falling
-   MIF_ONFLOOR     = 0x00000010, // SoM: object stands on floor
-   MIF_ONSECFLOOR  = 0x00000020, // SoM: Object stands on sector floor *specific*
+   MIF_ONFLOOR     = 0x00000010, // [UNUSED] SoM: object stands on floor
+   MIF_ONSECFLOOR  = 0x00000020, // [UNUSED] SoM: Object stands on sector floor *specific*
    MIF_SCREAMED    = 0x00000040, // haleyjd: player has screamed
    MIF_NOFACE      = 0x00000080, // haleyjd: thing won't face its target
    MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate
@@ -735,8 +764,11 @@ enum
    // A substitute for calling E_SafeThingName every tic for every Mobj
    MIF_MUSICCHANGER = 0x00020000,
 
+   MIF_MAYPLAYPARTICLESOUNDS = 0x00040000,   // Hint that it may be playing particle sounds
+   MIF_SKULLFLYSEE = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
+
    // these should be cleared when a thing is being raised
-   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
+   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_SKULLFLYSEE|MIF_WIMPYDEATH),
 };
 
 //=============================================================================

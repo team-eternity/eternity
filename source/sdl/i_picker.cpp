@@ -19,7 +19,11 @@
 // Authors: James Haley, Max Waine
 //
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#else
 #include "SDL.h"
+#endif
 
 #include "../z_zone.h"
 #include "../i_system.h"
@@ -135,7 +139,7 @@ static void I_Pick_LoadIWAD(int num)
 
          if(png.getWidth() == 320 && png.getHeight() == 240 && pngPalette)
          {
-            iwadpics[num] = png.getAs8Bit(NULL);
+            iwadpics[num] = png.getAs8Bit(nullptr);
             pals[num]     = pngPalette;
          }
       }

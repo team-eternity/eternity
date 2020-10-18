@@ -1153,6 +1153,7 @@ PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
+PARAMLINE(ACSSetFriction);
 PARAMLINE(ACSScrollFloor);
 PARAMLINE(ACSScrollCeiling);
 
@@ -1165,8 +1166,8 @@ PARAMLINE(ACSScrollCeiling);
 // additions (many of which conflict with BOOM extensions).
 //
 
-#define LINESPEC(number, action)            { number, &action, NULL },
-#define LINESPECNAMED(number, action, name) { number, &action, name },
+#define LINESPEC(number, action)            { number, &action, nullptr },
+#define LINESPECNAMED(number, action, name) { number, &action, name    },
 
 // DOOM Bindings
 ev_binding_t DOOMBindings[] =
@@ -1820,6 +1821,7 @@ const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 // accessible by ACS, or that have multiple definitions, one for lines, one for ACS
 ev_binding_t ACSBindings[] =
 {
+   LINESPEC(219, ACSSetFriction)
    LINESPEC(223, ACSScrollFloor)
    LINESPEC(224, ACSScrollCeiling)
 };

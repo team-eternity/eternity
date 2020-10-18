@@ -122,7 +122,7 @@ static void R_AddDynaSubsec(subsector_t *ss, polyobj_t *po)
 //
 dynavertex_t *R_GetFreeDynaVertex()
 {
-   dynavertex_t *ret = NULL;
+   dynavertex_t *ret = nullptr;
 
    if(dynaVertexFreeList)
    {
@@ -160,7 +160,7 @@ void R_FreeDynaVertex(dynavertex_t **vtx)
       }
    }
 
-   *vtx = NULL;
+   *vtx = nullptr;
 }
 
 //
@@ -210,7 +210,7 @@ void R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx)
 //
 static dynaseg_t *R_GetFreeDynaSeg()
 {
-   dynaseg_t *ret = NULL;
+   dynaseg_t *ret = nullptr;
 
    if(dynaSegFreeList)
    {
@@ -249,7 +249,7 @@ void R_FreeDynaSeg(dynaseg_t *dseg)
 //
 static rpolyobj_t *R_GetFreeRPolyObj()
 {
-   rpolyobj_t *ret = NULL;
+   rpolyobj_t *ret = nullptr;
 
    if(freePolyFragments)
    {
@@ -458,8 +458,8 @@ static bool R_cutByWallSegs(dynaseg_t &dseg, dynaseg_t *backdseg, const subsecto
       const vertex_t &v1 = *wall.v1;
       const vertex_t &v2 = *wall.v2;
       const divline_t walldl = { v1.x, v1.y, v2.x - v1.x, v2.y - v1.y };
-      int side_v1 = P_PointOnDivlineSide(lseg.v1->x, lseg.v1->y, &walldl);
-      int side_v2 = P_PointOnDivlineSide(lseg.v2->x, lseg.v2->y, &walldl);
+      int side_v1 = P_PointOnDivlineSidePrecise(lseg.v1->x, lseg.v1->y, &walldl);
+      int side_v2 = P_PointOnDivlineSidePrecise(lseg.v2->x, lseg.v2->y, &walldl);
       if(side_v1 == 0 && side_v2 == 0)
          continue;   // this one is fine.
       if(side_v1 == 1 && side_v2 == 1)
@@ -653,7 +653,7 @@ static void R_SplitLine(dynaseg_t *dseg, dynaseg_t *backdseg, int bspnum)
    if(dseg->seg.linedef->backsector)
       dseg->seg.backsector = subsectors[num].sector;
    else
-      dseg->seg.backsector = NULL;
+      dseg->seg.backsector = nullptr;
 
    if(backdseg)
       backdseg->seg.frontsector = backdseg->seg.backsector = subsectors[num].sector;
@@ -829,7 +829,7 @@ void R_DetachPolyObject(polyobj_t *poly)
       }
 
       // no longer tracking this subsector
-      poly->dynaSubsecs[i] = NULL;
+      poly->dynaSubsecs[i] = nullptr;
    }
 
    // no longer tracking any subsectors

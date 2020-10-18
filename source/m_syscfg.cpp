@@ -90,180 +90,177 @@ extern int disable_sysmenu;
 static default_t sysdefaults[] =
 {
       //jff 3/3/98
-   DEFAULT_INT("config_help", &config_help, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("config_help", &config_help, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to show help strings about each variable in config file"),
 
-   DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT(ITEM_USE_DOOM_CONFIG, &use_doom_config, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to use user/doom/eternity.cfg for all DOOM gamemodes"),
 
    // IWAD paths
 
-   DEFAULT_BOOL("d_scaniwads", &d_scaniwads, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("d_scaniwads", &d_scaniwads, nullptr, true, default_t::wad_no,
                 "1 to scan common locations for IWADs"),
 
-   DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_DOOM_SW, &gi_path_doomsw, nullptr, "", default_t::wad_no,
                "IWAD path for DOOM Shareware"),
 
-   DEFAULT_STR(ITEM_IWAD_DOOM, &gi_path_doomreg, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_DOOM, &gi_path_doomreg, nullptr, "", default_t::wad_no,
                "IWAD path for DOOM Registered"),
 
-   DEFAULT_STR(ITEM_IWAD_ULTIMATE_DOOM, &gi_path_doomu, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_ULTIMATE_DOOM, &gi_path_doomu, nullptr, "", default_t::wad_no,
                "IWAD path for The Ultimate DOOM"),
 
-   DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_DOOM2, &gi_path_doom2, nullptr, "", default_t::wad_no,
                "IWAD path for DOOM 2"),
 
-   DEFAULT_STR(ITEM_IWAD_BFGDOOM2, &gi_path_bfgdoom2, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_BFGDOOM2, &gi_path_bfgdoom2, nullptr, "", default_t::wad_no,
                "IWAD path for DOOM 2, BFG Edition"),
 
-   DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_TNT, &gi_path_tnt, nullptr, "", default_t::wad_no,
                "IWAD path for Final DOOM: TNT - Evilution"),
 
-   DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_PLUTONIA, &gi_path_plut, nullptr, "", default_t::wad_no,
                "IWAD path for Final DOOM: The Plutonia Experiment"),
 
-   DEFAULT_STR(ITEM_IWAD_HACX, &gi_path_hacx, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_HACX, &gi_path_hacx, nullptr, "", default_t::wad_no,
                "IWAD path for HACX - Twitch 'n Kill (v1.2 or later)"),
 
-   DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_HERETIC_SW, &gi_path_hticsw, nullptr, "", default_t::wad_no,
                "IWAD path for Heretic Shareware"),
 
-   DEFAULT_STR(ITEM_IWAD_HERETIC, &gi_path_hticreg, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_HERETIC, &gi_path_hticreg, nullptr, "", default_t::wad_no,
                "IWAD path for Heretic Registered"),
 
-   DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_HERETIC_SOSR, &gi_path_sosr, nullptr, "", default_t::wad_no,
                "IWAD path for Heretic: Shadow of the Serpent Riders"),
 
-   DEFAULT_STR(ITEM_IWAD_FREEDOOM, &gi_path_fdoom, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_FREEDOOM, &gi_path_fdoom, nullptr, "", default_t::wad_no,
                "IWAD path for Freedoom (Doom 2 gamemission)"),
 
-   DEFAULT_STR(ITEM_IWAD_FREEDOOMU, &gi_path_fdoomu, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_FREEDOOMU, &gi_path_fdoomu, nullptr, "", default_t::wad_no,
                "IWAD path for Freedoom (Ultimate Doom gamemission)"),
 
-   DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_FREEDM, &gi_path_freedm, nullptr, "", default_t::wad_no,
                "IWAD path for FreeDM (Freedoom Deathmatch IWAD)"),
 
-   DEFAULT_STR(ITEM_IWAD_REKKR, &gi_path_rekkr, NULL, "", default_t::wad_no,
+   DEFAULT_STR(ITEM_IWAD_REKKR, &gi_path_rekkr, nullptr, "", default_t::wad_no,
                "IWAD path for Rekkr (Ultimate Doom gamemission)"),
 
-   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, NULL, -1, -1, NUMPICKIWADS, default_t::wad_no,
+   DEFAULT_INT(ITEM_IWAD_CHOICE, &iwad_choice, nullptr, -1, -1, NUMPICKIWADS, default_t::wad_no,
                "Number of last IWAD chosen from the IWAD picker"),
 
-   DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, NULL, "", default_t::wad_no,
+   DEFAULT_STR("master_levels_dir", &w_masterlevelsdirname, nullptr, "", default_t::wad_no,
                "Directory containing Master Levels wad files"),
 
-   DEFAULT_STR("w_norestpath", &w_norestpath, NULL, "", default_t::wad_no,
+   DEFAULT_STR("w_norestpath", &w_norestpath, nullptr, "", default_t::wad_no,
                "Path to 'No Rest for the Living'"),
 
    // 11/04/09: system-level options moved here from the main config
 
-   DEFAULT_INT("textmode_startup", &textmode_startup, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("textmode_startup", &textmode_startup, nullptr, 0, 0, 1, default_t::wad_no,
                "Start up ETERNITY in text mode"),
 
-   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, NULL, 100, 10, 1000, default_t::wad_no,
+   DEFAULT_INT("realtic_clock_rate", &realtic_clock_rate, nullptr, 100, 10, 1000, default_t::wad_no,
                "Percentage of normal speed (35 fps) realtic clock runs at"),
 
    // killough
-   DEFAULT_INT("snd_channels", &default_numChannels, NULL, 32, 1, 32, default_t::wad_no,
+   DEFAULT_INT("snd_channels", &default_numChannels, nullptr, 32, 1, 32, default_t::wad_no,
                "number of sound effects handled simultaneously"),
 
    // haleyjd 12/08/01
-   DEFAULT_INT("force_flip_pan", &forceFlipPan, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("force_flip_pan", &forceFlipPan, nullptr, 0, 0, 1, default_t::wad_no,
                "Force reversal of stereo audio channels: 0 = normal, 1 = reverse"),
 
    // haleyjd 04/21/10
-   DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, NULL, 880.0, 0, UL, default_t::wad_no,
+   DEFAULT_FLOAT("s_lowfreq", &s_lowfreq, nullptr, 880.0, 0, UL, default_t::wad_no,
                  "High end of low pass band"),
    
-   DEFAULT_FLOAT("s_highfreq", &s_highfreq, NULL, 5000.0, 0, UL, default_t::wad_no,
+   DEFAULT_FLOAT("s_highfreq", &s_highfreq, nullptr, 5000.0, 0, UL, default_t::wad_no,
                  "Low end of high pass band"),
 
-   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, NULL, 0.93896, 0, 100, default_t::wad_no,
+   DEFAULT_FLOAT("s_eqpreamp", &s_eqpreamp, nullptr, 0.93896, 0, 100, default_t::wad_no,
                  "Preamplification factor"),
 
-   DEFAULT_FLOAT("s_lowgain", &s_lowgain, NULL, 1.2, 0, 300, default_t::wad_no,
+   DEFAULT_FLOAT("s_lowgain", &s_lowgain, nullptr, 1.2, 0, 300, default_t::wad_no,
                  "Low pass gain"),
 
-   DEFAULT_FLOAT("s_midgain", &s_midgain, NULL, 1.0, 0, 300, default_t::wad_no,
+   DEFAULT_FLOAT("s_midgain", &s_midgain, nullptr, 1.0, 0, 300, default_t::wad_no,
                  "Midrange gain"),
 
-   DEFAULT_FLOAT("s_highgain", &s_highgain, NULL, 0.8, 0, 300, default_t::wad_no,
+   DEFAULT_FLOAT("s_highgain", &s_highgain, nullptr, 0.8, 0, 300, default_t::wad_no,
                  "High pass gain"),  
 
-   DEFAULT_INT("s_enviro_volume", &s_enviro_volume, NULL, 4, 0, 16, default_t::wad_no,
+   DEFAULT_INT("s_enviro_volume", &s_enviro_volume, nullptr, 4, 0, 16, default_t::wad_no,
                "Volume of environmental sound sequences"),
 
    // haleyjd 12/24/11
-   DEFAULT_BOOL("s_hidefmusic", &s_hidefmusic, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("s_hidefmusic", &s_hidefmusic, nullptr, true, default_t::wad_no,
                 "use hi-def music if available"),
 
    // jff 3/30/98 add ability to take screenshots in BMP format
-   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, NULL, 3, 0, 3, default_t::wad_no,
+   DEFAULT_INT("screenshot_pcx", &screenshot_pcx, nullptr, 3, 0, 3, default_t::wad_no,
                "screenshot format (0=BMP,1=PCX,2=TGA,3=PNG)"),
    
-   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("screenshot_gamma", &screenshot_gamma, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to use gamma correction in screenshots"),
 
-   DEFAULT_INT("i_videodriverid", &i_videodriverid, NULL, -1, -1, VDR_MAXDRIVERS-1, 
+   DEFAULT_INT("i_videodriverid", &i_videodriverid, nullptr, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 
-   DEFAULT_BOOL("i_letterbox", &i_letterbox, NULL, false, default_t::wad_no, 
+   DEFAULT_BOOL("i_letterbox", &i_letterbox, nullptr, false, default_t::wad_no, 
                 "Letterbox video modes with aspect ratios narrower than 4:3"),
 
-   DEFAULT_INT("use_vsync", &use_vsync, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("use_vsync", &use_vsync, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to enable wait for vsync to avoid display tearing"),
 
-   DEFAULT_INT("mn_favaspectratio", &mn_favaspectratio, NULL, 0, 0, AR_NUMASPECTRATIOS-1,
+   DEFAULT_INT("mn_favaspectratio", &mn_favaspectratio, nullptr, 0, 0, AR_NUMASPECTRATIOS-1,
                default_t::wad_no, "Favorite aspect ratio for selection in menus"),
 
-   DEFAULT_INT("mn_favscreentype", &mn_favscreentype, NULL, 0, 0, MN_NUMSCREENTYPES-1,
+   DEFAULT_INT("mn_favscreentype", &mn_favscreentype, nullptr, 0, 0, MN_NUMSCREENTYPES-1,
                default_t::wad_no, "Favorite screen type for selection in menus"),
 
-   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("gl_use_extensions", &cfg_gl_use_extensions, nullptr, true, default_t::wad_no,
                 "1 to enable use of GL extensions in general"),
 
-   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, NULL, false, default_t::wad_no,
+   DEFAULT_BOOL("gl_arb_pixelbuffer", &cfg_gl_arb_pixelbuffer, nullptr, false, default_t::wad_no,
                 "1 to enable use of GL ARB pixelbuffer object extension"),
 
-   DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, NULL, 32, 16, 32, default_t::wad_no,
+   DEFAULT_INT("gl_colordepth", &cfg_gl_colordepth, nullptr, 32, 16, 32, default_t::wad_no,
                "GL backend screen bitdepth (16, 24, or 32)"),
 
-   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, NULL, CFG_GL_LINEAR,
+   DEFAULT_INT("gl_filter_type", &cfg_gl_filter_type, nullptr, CFG_GL_LINEAR,
                0, CFG_GL_NUMFILTERS-1, default_t::wad_no, 
                "GL2D texture filtering type (0 = GL_LINEAR, 1 = GL_NEAREST)"),
 
-   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("d_fastrefresh", &d_fastrefresh, nullptr, true, default_t::wad_no,
                 "1 to refresh as fast as possible (uses high CPU)"),
 
-   DEFAULT_BOOL("d_interpolate", &d_interpolate, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("d_interpolate", &d_interpolate, nullptr, true, default_t::wad_no,
                 "1 to activate frame interpolation (smooth rendering)"),
 
-   DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, NULL, true, default_t::wad_no,
+   DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, nullptr, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
 
-   DEFAULT_INT("r_fov", &fov, NULL, 90, 20, 179, default_t::wad_no,
-               "The renderer's field of view angle (in degrees)"),
-
 #ifdef _SDL_VER
-   DEFAULT_INT("displaynum", &displaynum, NULL, 0, 0, UL, default_t::wad_no,
+   DEFAULT_INT("displaynum", &displaynum, nullptr, 0, 0, UL, default_t::wad_no,
                "Display number that the window appears on"),
 
-   DEFAULT_INT("wait_at_exit", &waitAtExit, NULL, 0, 0, 1, default_t::wad_no,
+   DEFAULT_INT("wait_at_exit", &waitAtExit, nullptr, 0, 0, 1, default_t::wad_no,
                "Always wait for input at exit"),
    
-   DEFAULT_INT("grabmouse", &grabmouse, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("grabmouse", &grabmouse, nullptr, 1, 0, 1, default_t::wad_no,
                "Toggle mouse input grabbing"),
 
-   DEFAULT_INT("audio_buffers", &audio_buffers, NULL, 2048, 1024, 8192, default_t::wad_no,
+   DEFAULT_INT("audio_buffers", &audio_buffers, nullptr, 2048, 1024, 8192, default_t::wad_no,
                "SDL_mixer audio buffer size"),
 
 #endif
 
 #ifdef _MSC_VER
-   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, NULL, 1, 0, 1, default_t::wad_no,
+   DEFAULT_INT("disable_sysmenu", &disable_sysmenu, nullptr, 1, 0, 1, default_t::wad_no,
                "1 to disable Windows system menu for alt+space compatibility"),
 #endif
 

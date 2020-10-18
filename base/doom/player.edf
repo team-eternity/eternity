@@ -22,7 +22,7 @@ playerclass DoomMarine
    weaponslot 2 { weapons : Pistol }
    weaponslot 3 { weapons : SuperShotgun, Shotgun }
    weaponslot 4 { weapons : Chaingun }
-   weaponslot 5 { weapons : MissileLauncher }
+   weaponslot 5 { weapons : RocketLauncher }
    weaponslot 6 { weapons : PlasmaRifle }
    weaponslot 7 { weapons : BFG9000 }
    weaponslot 8 { weapons : Chainsaw }
@@ -195,7 +195,7 @@ weaponinfo Chaingun : DoomWeapon, 3
   "@
 }
 
-weaponinfo MissileLauncher : DoomWeapon, 4
+weaponinfo RocketLauncher : DoomWeapon, 4
 {
   ammotype     AmmoMissile
   ammouse      1
@@ -430,9 +430,9 @@ weapongiver GiverChaingun
   ammogiven AmmoClip, 20, 10, 50, 20
 }
 
-weapongiver GiverMissileLauncher
+weapongiver GiverRocketLauncher
 {
-  weapon MissileLauncher
+  weapon RocketLauncher
   ammogiven AmmoMissile, 2, 1, 5, 2
 }
 

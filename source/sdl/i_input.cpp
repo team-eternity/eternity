@@ -19,7 +19,11 @@
 // Authors: James Haley, Max Waine
 //
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#else
 #include "SDL.h"
+#endif
 
 // HAL modules
 #include "../hal/i_platform.h"
@@ -260,6 +264,40 @@ static void I_JoystickEvents()
          ev.type  = padstate->buttons[button] ? ev_keydown : ev_keyup;
          ev.data1 = KEYD_JOY01 + button;
          D_PostEvent(&ev);
+      }
+   }
+   for(int hat = 0; hat < HALGamePad::MAXHATS; hat++)
+   {
+      edefstructvar(event_t, ev);
+      if(padstate->hats[hat] != padstate->prevhats[hat])
+      {
+         uint8_t changed = padstate->hats[hat] ^ padstate->prevhats[hat];
+         uint8_t now = padstate->hats[hat];
+         const int offset = 4 * hat;
+         if(changed & HALGamePad::HAT_RIGHT)
+         {
+            ev.type = now & HALGamePad::HAT_RIGHT ? ev_keydown : ev_keyup;
+            ev.data1 = KEYD_HAT1RIGHT + offset;
+            D_PostEvent(&ev);
+         }
+         if(changed & HALGamePad::HAT_UP)
+         {
+            ev.type = now & HALGamePad::HAT_UP ? ev_keydown : ev_keyup;
+            ev.data1 = KEYD_HAT1UP + offset;
+            D_PostEvent(&ev);
+         }
+         if(changed & HALGamePad::HAT_LEFT)
+         {
+            ev.type = now & HALGamePad::HAT_LEFT ? ev_keydown : ev_keyup;
+            ev.data1 = KEYD_HAT1LEFT + offset;
+            D_PostEvent(&ev);
+         }
+         if(changed & HALGamePad::HAT_DOWN)
+         {
+            ev.type = now & HALGamePad::HAT_DOWN ? ev_keydown : ev_keyup;
+            ev.data1 = KEYD_HAT1DOWN + offset;
+            D_PostEvent(&ev);
+         }
       }
    }
 
@@ -530,7 +568,7 @@ static void I_GetEvent(SDL_Window *window)
             const char currchar = ev.text.text[i];
             if(ectype::isPrint(currchar))
             {
-               event_t textevent = { ev_text, currchar, 0, 0, !!ev.key.repeat };
+               const event_t textevent = { ev_text, currchar, 0, 0, false };
                D_PostEvent(&textevent);
             }
          }
@@ -644,6 +682,15 @@ static void I_GetEvent(SDL_Window *window)
             break;
          case SDL_BUTTON_X2:
             d_event.data1 = KEYD_MOUSE5;
+            break;
+         case SDL_BUTTON_X2 + 1:
+            d_event.data1 = KEYD_MOUSE6;
+            break;
+         case SDL_BUTTON_X2 + 2:
+            d_event.data1 = KEYD_MOUSE7;
+            break;
+         case SDL_BUTTON_X2 + 3:
+            d_event.data1 = KEYD_MOUSE8;
             break;
          }
 

@@ -62,10 +62,10 @@ void AM_clearMarks(void);
 class Mobj;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
-typedef struct mpoint_s
+struct mpoint_t
 {
    double x, y;
-} mpoint_t;
+};
 
 //
 // mark point (portal aware)

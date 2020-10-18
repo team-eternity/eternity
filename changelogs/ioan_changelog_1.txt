@@ -8,6 +8,169 @@ Since v4.00.00 "Völuspá"
 ========================
 
 --------------------------------------------------------------------------------
+12.10.2020
+
+IMPROVEMENT: Added a new EDF feature, compatibilityhacks, which shall be used
+             with MD5 checksums to setup comp_ settings.
+
+             To helps us here, we shall have the "mapchecksum" console command.
+
+--------------------------------------------------------------------------------
+11.10.2020
+
+FEATURE: New delta structure, splashdelta. It's similar to terraindelta but
+         applies to splash definitions.
+
+--------------------------------------------------------------------------------
+10.10.2020
+
+IMPROVEMENT: Flying now has the properties from Heretic: when on ground, the
+             friction is as on ground, and when on air, bobbing is removed
+             (having bobbing in air was actually an old Eternity regression).
+             Also, in Heretic if you press "fly up" you will automatically
+             activate the powerup.
+
+--------------------------------------------------------------------------------
+09.10.2020
+
+FEATURE: New EDF game property, game.autoflightartifact, which names the
+         artifact to use when attempting to fly.
+
+--------------------------------------------------------------------------------
+05.10.2020
+
+FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific
+         situation of being unable to step on things. Makes sense when playing
+         without jumping. All Heretic solid things shall inherit from a common
+         thing with SOLID and this flag.
+
+--------------------------------------------------------------------------------
+25.07.2020
+
+BUGFIX: Fixed HOM happening when trying to render same portal from two separate
+        windows.
+
+IMPROVEMENT: Self-tagging Portal_Define flipped-anchor visual portals are now 
+        possible, though there'll be no mirror.
+
+--------------------------------------------------------------------------------
+19.07.2020
+
+IMPROVEMENT: Thing_Destroy now works like in GZDoom, unless level is vanilla
+             Hexen (where it will still support arg 3). Most notably, arg 2 is
+             now "flags" and 1 means "extreme death".
+
+--------------------------------------------------------------------------------
+19.06.2020
+
+IMPROVEMENT: Plane portals can now render sloped visplanes, with the slope
+             copied from the source sector. Note that horizon portals still lack
+             this feature, due to how they were designed.
+
+--------------------------------------------------------------------------------
+13.06.2020
+
+BUGFIX: Fixed the FLIES thingtype particlefx from sounding badly.
+
+--------------------------------------------------------------------------------
+25.05.2020
+
+BUGFIX: Fixed an occasional crash happening when starting maps with things with
+        negative doomednums.
+
+--------------------------------------------------------------------------------
+3.05.2020
+
+BUGFIX: Odd-duration frames now restore correctly when returning to nightmare
+        mode to normal.
+
+        Fixed the CLIPMIDTEX linedef flag not working over portals.
+
+--------------------------------------------------------------------------------
+26.04.2020
+
+FEATURE: New console command: warp, which, like in ZDoom, teleports player to
+         given coordinates.
+
+--------------------------------------------------------------------------------
+23.04.2020
+
+BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
+        called from ACS, and crashing when such a script is triggered from the
+        console.
+        
+        Fixed a crash happening when entering a sector with an invalid colormap
+        specified in the UDMF editor or ExtraData.
+
+--------------------------------------------------------------------------------
+5.04.2020
+
+FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
+         is used to set the misc1 and misc2 flags, which are also capable of
+         setting weapon coordinates.
+         
+         Eternity is also capable of interpolation when using offset(). By
+         default it's disabled, but you can enable it by using the "interpolate"
+         specifier as a third argument, for example: offset(1, 32, interpolate).
+         When inheriting via the Decorate syntax and reapplying offset(),
+         interpolation will be disabled again unless you specify it again.
+         
+         For the standard "frame" EDF section, you can use the +|-interpolate 
+         specifier to add or remove the flag.
+
+         Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
+         for DOOM (solely for Dehacked and past EDF mod compatibility) and
+         enables the less intuitive DOOM rule on when offsets have effect.
+         Otherwise the better Hexen rule applies.
+
+--------------------------------------------------------------------------------
+27.03.2020
+
+IMPROVEMENT: Added damagefactor.remove and cleardamagefactors to thingtype and
+             thingdelta to be able to remove them from the list.
+
+--------------------------------------------------------------------------------
+24.03.2020
+
+IMPROVEMENT: Now ExtraData mapthings also support names in the "special" field,
+             just like linedefs. It was badly missing.
+
+--------------------------------------------------------------------------------
+22.03.2020
+
+BUGFIX: Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
+
+BUGFIX: Fixed 1-sided linedef wall portals showing HOM if their middle texture
+        isn't set.
+
+--------------------------------------------------------------------------------
+21.03.2020
+
+BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
+        any place where both floor and ceiling of a zero-height sector have
+        F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
+        whereas both Chocolate-Doom and PrBoom would render the sky properly.
+
+BUGFIX: Fixed EDF thingtype translation 14 (white) not having any effect.
+
+BUGFIX: Fixed buggy rendering of masked middle textures when mixing sector
+        colormaps with player invulnerability or light amplification.
+
+--------------------------------------------------------------------------------
+21.02.2020
+
+FEATURE: Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
+         the ghost effect.
+
+--------------------------------------------------------------------------------
+08.02.2020
+
+FEATURE: New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
+         resetting the Phoenix Rod from the powered state. Its drawback is that
+         sometimes it can consume more ammo than intended. You can still use
+         FORCETOREADY as a more general-purpose counterpart.
+
+--------------------------------------------------------------------------------
 01.11.2019
 
 IMPROVEMENT: Jumping is now a compatibility setting. By default it's disabled.

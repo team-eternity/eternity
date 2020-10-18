@@ -204,6 +204,8 @@ static dehflags_t e_weaponFlags[] =
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { "POWEREDUP",      WPF_POWEREDUP      },
    { "FORCETOREADY",   WPF_FORCETOREADY   },
+   { "PHOENIXRESET",   WPF_PHOENIXRESET   },
+   { "DEPOWERSWITCH",  WPF_DEPOWERSWITCH  },
    { nullptr,          0                  }
 };
 
@@ -1191,6 +1193,30 @@ static void E_insertWeaponSlotNode(int slotindex, fixed_t slotrank, weaponinfo_t
    wp->intflags |= WIF_INGLOBALSLOT;
 }
 
+static void E_updateVanillaStatesByDehNum(weaponinfo_t &wp)
+{
+   // If a given vanilla weapon state was "replaced" by a frame that uses
+   // the same dehackednum but not the same name then update the weapon
+   // state to be that of the final state created with that dehackednum
+   auto TryUpdateStateByDehNum = [](int &state) -> void {
+      if(state >= 0)
+      {
+         if(const state_t *const currState = states[state]; currState->dehnum >= 0)
+         {
+            if(const int statenum = E_StateNumForDEHNum(currState->dehnum); statenum >= 0)
+               state = statenum;
+         }
+      }
+   };
+
+   TryUpdateStateByDehNum(wp.readystate);
+   TryUpdateStateByDehNum(wp.upstate);
+   TryUpdateStateByDehNum(wp.downstate);
+   TryUpdateStateByDehNum(wp.readystate);
+   TryUpdateStateByDehNum(wp.atkstate);
+   TryUpdateStateByDehNum(wp.flashstate);
+}
+
 #undef  IS_SET
 #define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
 
@@ -1424,6 +1450,13 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
                            "when its sisterweapon also has this flag\n", wp.name);
       }
 
+      if(IS_SET(ITEM_WPN_SELECTORDER))
+      {
+         E_EDFLoggedErr(2, "E_processWeapon: weaponinfo '%s' has flag 'POWERED_UP' as well "
+                           "as an explicit selectionorder.\nPowered weapons use the same "
+                           "selectionorder as their unpowered sisterweapon\n", wp.name);
+      }
+
       E_RemoveItemEffect(wp.tracker);
       delete wp.tracker;
       wp.tracker = wp.sisterWeapon->tracker;
@@ -1467,6 +1500,8 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
 
    // Process DECORATE state block
    E_processDecorateWepStatesRecursive(weaponsec, i, false);
+
+   E_updateVanillaStatesByDehNum(wp);
 }
 
 //

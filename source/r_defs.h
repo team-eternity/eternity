@@ -29,6 +29,8 @@
 // haleyjd 12/15/10: lighting data is required here
 #include "r_lighting.h"
 
+#include "m_surf.h"
+
 // SoM: Slopes need vectors!
 #include "m_vector.h"
 
@@ -86,11 +88,11 @@ typedef enum
    AS_MIRRORCEILING  = 0x08,
 } attachedtype_e;
 
-typedef struct attachedsurface_s
+struct attachedsurface_t
 {
    sector_t        *sector;
    int             type;
-} attachedsurface_t;
+};
 
 // haleyjd 12/28/08: sector flags
 enum
@@ -209,8 +211,8 @@ struct sectorinterp_t
 struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
-   unsigned fframeid;   // updated to avoid visiting more than once
-   unsigned cframeid;
+   float fbox[4];
+   Surfaces<unsigned> frameid;   // updated to avoid visiting more than once
 };
 
 //
@@ -219,6 +221,66 @@ struct sectorbox_t
 struct soundzone_t
 {
    ereverb_t *reverb;
+};
+
+static const unsigned secf_surfLightAbsolute[surf_NUM] = {
+   SECF_FLOORLIGHTABSOLUTE, SECF_CEILLIGHTABSOLUTE
+};
+
+//
+// Sector surface structure
+//
+struct surface_t
+{
+   fixed_t height;
+   int pic;
+
+   // thinker_t for reversable actions
+   // jff 2/22/98 make thinkers on
+   // floors, ceilings independent of one another
+   Thinker *data;
+
+   // killough 3/7/98: floor and ceiling texture offsets
+   v2fixed_t offset;
+   v2float_t scale;
+
+   // haleyjd 07/04/07: Happy July 4th :P
+   // Angles for flat rotation!
+   float angle, baseangle;
+
+   // killough 4/11/98: support for lightlevels coming from another sector
+   int lightsec;
+
+   // ioanch: UDMF-given floor and ceiling delta light level
+   int16_t lightdelta;
+
+   // SoM 9/19/02: Better way to move 3dsides with a sector.
+   // SoM 11/09/04: Improved yet again!
+   int numattached;
+   int *attached;
+   int numsectors;
+   int *attsectors;
+
+   // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
+   // sector's floor and/or ceiling
+   int asurfacecount;
+   attachedsurface_t *asurfaces;
+
+   // Flags for portals
+   unsigned pflags;
+   // Portals
+   portal_t *portal;
+
+   // Cardboard optimization
+   // They are set in R_Subsector and R_FakeFlat and are
+   // only valid for that sector for that frame.
+   float heightf;
+
+   // SoM 5/10/09: Happy birthday to me. Err, Slopes!
+   pslope_t *slope;
+
+   // haleyjd 10/17/10: terrain type overrides
+   ETerrain *terrain;
 };
 
 //
@@ -234,10 +296,9 @@ struct sector_t
       ceiling = 2
    };
 
-   fixed_t floorheight;
-   fixed_t ceilingheight;
-   int     floorpic;
-   int     ceilingpic;
+   // Keep name short because it's very frequently used.
+   Surfaces<surface_t> srf;
+
    int16_t lightlevel;
    int16_t special;
    int16_t tag;
@@ -258,30 +319,15 @@ struct sector_t
    // when processed as mobj properties. Fix is to make them sector properties.
    int friction, movefactor;
 
-   // thinker_t for reversable actions
-   Thinker *floordata;    // jff 2/22/98 make thinkers on
-   Thinker *ceilingdata;  // floors, ceilings, lighting,
-   Thinker *lightingdata; // independent of one another
+   // ioanch: deleted lightingdata
 
    // jff 2/26/98 lockout machinery for stairbuilding
    int stairlock;   // -2 on first locked -1 after thinker done 0 normally
    int prevsec;     // -1 or number of sector for previous step
    int nextsec;     // -1 or number of next step sector
-  
-   // killough 3/7/98: floor and ceiling texture offsets
-   fixed_t   floor_xoffs,   floor_yoffs;
-   fixed_t ceiling_xoffs, ceiling_yoffs;
-
-   float floor_xscale,   floor_yscale;
-   float ceiling_xscale, ceiling_yscale;
 
    // killough 3/7/98: support flat heights drawn at another sector's heights
    int heightsec;    // other sector, or -1 if no other sector
-   
-   // killough 4/11/98: support for lightlevels coming from another sector
-   int floorlightsec, ceilinglightsec;
-   // ioanch: UDMF-given floor and ceiling delta light level
-   int16_t floorlightdelta, ceilinglightdelta;
    
    int bottommap, midmap, topmap; // killough 4/4/98: dynamic colormaps
    
@@ -301,33 +347,6 @@ struct sector_t
    int linecount;
    line_t **lines;
 
-   // SoM 9/19/02: Better way to move 3dsides with a sector.
-   // SoM 11/09/04: Improved yet again!
-   int f_numattached;
-   int *f_attached;
-   int f_numsectors;
-   int *f_attsectors;
-
-   int c_numattached;
-   int *c_attached;
-   int c_numsectors;
-   int *c_attsectors;
-
-
-   // SoM 10/14/07: And now surfaces of other sectors can be attached to a 
-   // sector's floor and/or ceiling
-   int c_asurfacecount;
-   attachedsurface_t *c_asurfaces;
-   int f_asurfacecount;
-   attachedsurface_t *f_asurfaces;
-
-   // Flags for portals
-   unsigned int c_pflags, f_pflags;
-   
-   // Portals
-   portal_t *c_portal;
-   portal_t *f_portal;
-   
    int groupid;
 
    // haleyjd 03/12/03: Heretic wind specials
@@ -340,16 +359,6 @@ struct sector_t
 
    DLListItem<particle_t> *ptcllist; // haleyjd 02/20/04: list of particles in sector
 
-   // haleyjd 07/04/07: Happy July 4th :P
-   // Angles for flat rotation!
-   float floorangle, ceilingangle, floorbaseangle, ceilingbaseangle;
-
-   // Cardboard optimization
-   // They are set in R_Subsector and R_FakeFlat and are
-   // only valid for that sector for that frame.
-   float ceilingheightf;
-   float floorheightf;
-
    // haleyjd 12/28/08: sector flags, for ED/UDMF use. Replaces stupid BOOM
    // generalized sector types outside of DOOM-format maps.
    unsigned int flags;
@@ -361,16 +370,8 @@ struct sector_t
    int damagemod;   // damage method to use
    unsigned int damageflags; // special damage behaviors
 
-   // SoM 5/10/09: Happy birthday to me. Err, Slopes!
-   pslope_t *f_slope;
-   pslope_t *c_slope;
-
    // haleyjd 08/30/09 - used by the lightning code
    int16_t oldlightlevel; 
-
-   // haleyjd 10/17/10: terrain type overrides
-   ETerrain *floorterrain;
-   ETerrain *ceilingterrain;
 
    // haleyjd 01/15/12: sector actions
    DLListItem<sectoraction_t> *actions;
@@ -483,7 +484,7 @@ struct subsector_t
 // As an mobj moves through the world, these nodes are created and
 // destroyed, with the links changed appropriately.
 //
-// For the links, NULL means top or end of list.
+// For the links, nullptr means top or end of list.
 
 struct msecnode_t
 {
@@ -513,7 +514,7 @@ struct seg_t
   // Sector references.
   // Could be retrieved from linedef, too
   // (but that would be slower -- killough)
-  // backsector is NULL for one sided lines
+  // backsector is nullptr for one sided lines
 
   sector_t *frontsector, *backsector;
 
@@ -541,7 +542,6 @@ struct node_t
 //
 struct fnode_t
 {
-   double fx, fy, fdx, fdy; // haleyjd 05/16/08: float versions
    double a, b, c;          // haleyjd 05/20/08: coefficients for general line equation
    double len;              // length of partition line, for normalization
 };
@@ -596,7 +596,6 @@ struct spritedef_t
 // SoM: Information used in texture mapping sloped planes
 struct rslope_t
 {
-   v3double_t P, M, N;
    v3double_t A, B, C;
    double     zat, plight, shade;
 };
@@ -622,8 +621,8 @@ struct visplane_t
    lighttable_t *(*colormap)[MAXLIGHTZ];
    lighttable_t *fullcolormap;   // SoM: Used by slopes.
    lighttable_t *fixedcolormap;  // haleyjd 10/16/06
-   fixed_t xoffs, yoffs;         // killough 2/28/98: Support scrolling flats
-   float xscale, yscale;
+   v2fixed_t offs;         // killough 2/28/98: Support scrolling flats
+   v2float_t scale;
 
    // SoM: The plane silhouette arrays are allocated based on screen-size now.
    int *top;

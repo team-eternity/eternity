@@ -27,6 +27,7 @@
 #define P_PORTALCROSS_H_
 
 #include "m_vector.h"
+#include "r_defs.h"
 
 struct sector_t;
 
@@ -71,10 +72,10 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 // P_ExtremeSectorAtPoint
 // ioanch 20160107
 //
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling,
+sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
                                  sector_t *preCalcSector = nullptr);
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling);
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf);
 //
 // P_TransPortalBlockWalker
 // ioanch 20160107

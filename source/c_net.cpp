@@ -124,7 +124,7 @@ unsigned char C_dequeueChatChar(void)
    return c;
 }
 
-void C_SendCmd(int dest, int cmdnum, const char *s,...)
+void C_SendCmd(int dest, int cmdnum, E_FORMAT_STRING(const char *s), ...)
 {
    va_list args;
    char tempstr[500];
@@ -269,9 +269,9 @@ void C_UpdateVar(command_t *command)
 {
   char tempstr[100];
   
-  sprintf(tempstr,"\"%s\"", C_VariableValue(command->variable) );
+  snprintf(tempstr, sizeof(tempstr), "\"%s\"", C_VariableValue(command->variable) );
   
-  C_SendCmd(CN_BROADCAST, command->netcmd, tempstr);
+  C_SendCmd(CN_BROADCAST, command->netcmd, "%s", tempstr);
 }
 
 // EOF

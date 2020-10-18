@@ -67,6 +67,7 @@ struct playerclass_t
    int initialhealth;    // initial health when reborn
    int maxhealth;        // max health for regular items, HealThing and Gauntlets
    int superhealth;      // max health for superchargers and HealThing
+   fixed_t viewheight;   // [XA] view height, relative to player's 'z' position
 
    // speeds
    fixed_t forwardmove[2];

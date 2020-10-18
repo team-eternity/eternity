@@ -91,7 +91,7 @@ void P_MakeSeeSound(Mobj *actor, pr_class_t rngnum)
       
       // haleyjd: generalize to all bosses
       if(actor->flags2 & MF2_BOSS)
-         emitter = NULL;
+         emitter = nullptr;
 
       S_StartSound(emitter, sound);
    }
@@ -215,7 +215,7 @@ static void P_MakeActiveSound(Mobj *actor)
 
       // haleyjd: some heretic enemies snort at full volume :)
       if(actor->flags3 & MF3_LOUDACTIVE)
-         actor = NULL;
+         actor = nullptr;
 
       S_StartSound(actor, sound);
    }
@@ -375,7 +375,7 @@ void A_Chase(actionargs_t *actionargs)
                // If current target is bad and a new one is found, return:
 
                if(!(actor->target && actor->target->health > 0 &&
-                   ((comp[comp_pursuit] && !netgame) || 
+                   ((getComp(comp_pursuit) && !netgame) ||
                     (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
                       (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
                     P_CheckSight(actor, actor->target)))) &&
@@ -546,7 +546,7 @@ void A_Scream(actionargs_t *actionargs)
    // Check for bosses.
    // haleyjd: generalize to all bosses
    if(actor->flags2 & MF2_BOSS)
-      S_StartSound(NULL, sound); // full volume
+      S_StartSound(nullptr, sound); // full volume
    else
       S_StartSound(actor, sound);
 }
@@ -574,7 +574,7 @@ void A_PlayerScream(actionargs_t *actionargs)
    }
 
    // if died falling, gross falling death sound
-   if(!comp[comp_fallingdmg] && demo_version >= 329 &&
+   if(!getComp(comp_fallingdmg) && demo_version >= 329 &&
       mo->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
@@ -615,7 +615,7 @@ void A_RavenPlayerScream(actionargs_t *actionargs)
    }
 
    // if died falling, gross falling death sound
-   if(!comp[comp_fallingdmg] && actor->intflags & MIF_DIEDFALLING)
+   if(!getComp(comp_fallingdmg) && actor->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
    S_StartSound(actor, GameModeInfo->playerSounds[sound]);
@@ -644,7 +644,7 @@ void A_PlayerSkull(actionargs_t *actionargs)
 
    // clear old body of player
    actor->flags &= ~MF_SOLID;
-   actor->player = NULL;
+   actor->player = nullptr;
 
    // fiddle with player properties
    if(head->player)
@@ -668,7 +668,7 @@ void A_XScream(actionargs_t *actionargs)
    int sound   = GameModeInfo->playerSounds[sk_slop];
    
    // haleyjd: falling damage
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!getComp(comp_fallingdmg) && demo_version >= 329)
    {
       if(actor->player && actor->intflags & MIF_DIEDFALLING)
          sound = GameModeInfo->playerSounds[sk_fallht];
@@ -696,7 +696,7 @@ void A_Die(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
    actor->flags2 &= ~MF2_INVULNERABLE;  // haleyjd: just in case
-   P_DamageMobj(actor, NULL, NULL, actor->health, MOD_UNKNOWN);
+   P_DamageMobj(actor, nullptr, nullptr, actor->health, MOD_UNKNOWN);
 }
 
 //
@@ -708,7 +708,9 @@ void A_Explode(actionargs_t *actionargs)
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   E_ExplosionHitWater(thingy, 128);
+   // VANILLA_HERETIC: apply the same check as in vanilla
+   if(!vanilla_heretic || thingy->zref.floor == thingy->subsector->sector->srf.floor.height)
+      E_ExplosionHitWater(thingy, 128);
 }
 
 //

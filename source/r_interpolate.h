@@ -31,6 +31,7 @@
 
 struct line_t;
 struct linkdata_t;
+struct surface_t;
 
 // prevpos_t represents an Mobj or camera's previous position for purposes of
 // frame interpolation in the renderer. - haleyjd 01/04/14
@@ -42,6 +43,7 @@ struct prevpos_t
    angle_t angle;
    const line_t *portalline;  // portal line being passed for interpolation
    const linkdata_t *ldata;   // portal sector data being passed
+   const surface_t *portalsurface;  // portal surface for interpolation
 };
 
 //

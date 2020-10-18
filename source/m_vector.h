@@ -31,31 +31,66 @@
 
 struct v3fixed_t
 {
+   v3fixed_t operator + (const v3fixed_t &other) const
+   {
+      return { x + other.x, y + other.y, z + other.z };
+   }
+
+   bool operator == (const v3fixed_t &other) const
+   {
+      return x == other.x && y == other.y && z == other.z;
+   }
+
+   bool operator != (const v3fixed_t &other) const
+   {
+      return x != other.x || y != other.y || z != other.z;
+   }
+
+   v3fixed_t &operator += (const v3fixed_t &other)
+   {
+      x += other.x;
+      y += other.y;
+      z += other.z;
+      return *this;
+   }
+
    fixed_t x, y, z;
 };
+
+struct v2double_t;
 
 struct v2fixed_t
 {
    fixed_t x, y;
-   
+
    // ioanch 20160106: added operators as needed
-   template<typename T>
-   bool operator == (T &&other) const { return x == other.x && 
-                                               y == other.y; }
-   
-   template<typename T>
-   v2fixed_t &operator += (T &&other) { x += other.x; 
-                                        y += other.y; return *this; }
-                                        
-   template<typename T>
-   v2fixed_t operator - (T &&other) const 
-   { 
-      v2fixed_t ret = { x - other.x, y - other.y };
-      return ret;
+
+   v2fixed_t() = default;
+   v2fixed_t(const fixed_t x, const fixed_t y) : x(x), y(y)
+   {
+   }
+   explicit v2fixed_t(const v3fixed_t &other3d) : x(other3d.x), y(other3d.y)
+   {
    }
 
-   template<typename T>
-   v2fixed_t &operator -= (const T &other)
+   v2fixed_t operator + (const v2fixed_t other) const
+   {
+      return { x + other.x, y + other.y };
+   }
+
+   v2fixed_t operator - (const v2fixed_t other) const
+   {
+      return { x - other.x, y - other.y };
+   }
+
+   v2fixed_t &operator += (const v2fixed_t other)
+   {
+      x += other.x;
+      y += other.y;
+      return *this;
+   }
+
+   v2fixed_t &operator -= (const v2fixed_t other)
    {
       x -= other.x;
       y -= other.y;
@@ -76,6 +111,23 @@ struct v2fixed_t
    {
       return !x && !y;
    }
+
+   bool operator != (const v2fixed_t other) const
+   {
+      return x != other.x || y != other.y;
+   }
+
+   bool operator == (const v2fixed_t other) const
+   {
+      return x == other.x && y == other.y;
+   }
+
+   static v2fixed_t doubleToFixed(const v2double_t &v);
+
+   v2fixed_t fixedMul(const fixed_t scalar) const
+   {
+      return { FixedMul(x, scalar), FixedMul(y, scalar) };
+   }
 };
 
 struct v3float_t
@@ -83,9 +135,13 @@ struct v3float_t
    float x, y, z;
 };
 
+struct v2float_t;
+
 struct v2double_t
 {
    double x, y;
+
+   explicit operator v2float_t() const;
 };
 
 struct v3double_t
@@ -96,7 +152,79 @@ struct v3double_t
 struct v2float_t
 {
    float x, y;
+
+   bool operator != (const v2float_t other) const
+   {
+      return x != other.x || y != other.y;
+   }
+
+   bool operator == (const v2float_t other) const
+   {
+      return x == other.x && y == other.y;
+   }
+
+   v2float_t operator + (const v2float_t other) const
+   {
+      return { x + other.x, y + other.y };
+   }
+
+   v2float_t operator - (const v2float_t other) const
+   {
+      return { x - other.x, y - other.y };
+   }
+
+   float operator * (const v2float_t other) const
+   {
+      return x * other.x + y * other.y;
+   }
+
+   v2float_t operator * (const float other) const
+   {
+      return { x * other, y * other };
+   }
+
+   v2float_t &operator += (const v2float_t other)
+   {
+      x += other.x;
+      y += other.y;
+      return *this;
+   }
+
+   //
+   // Z of cross product assuming these two vectors have z=0. Uses the corkscrew rule. Useful to
+   // know line side of point.
+   //
+   float operator % (const v2float_t other) const
+   {
+      // i  j  k
+      // x  y  0
+      // ox oy 0
+      return x * other.y - other.x * y;
+   }
+
+   operator bool() const
+   {
+      return x || y;
+   }
+
+   static v2float_t fromFixed(const v2fixed_t other)
+   {
+      return { M_FixedToFloat(other.x), M_FixedToFloat(other.y) };
+   }
 };
+
+//
+// Vector-wise operation
+//
+inline v2fixed_t v2fixed_t::doubleToFixed(const v2double_t &v)
+{
+   return { M_DoubleToFixed(v.x), M_DoubleToFixed(v.y) };
+}
+
+inline v2double_t::operator v2float_t() const
+{
+   return v2float_t{ static_cast<float>(x), static_cast<float>(y) };
+}
 
 // 
 // M_MagnitudeVec2
