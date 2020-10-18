@@ -151,7 +151,7 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 // Protected method.
 //
-void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
+void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destheight)
 {
    Uint32   *fb          = static_cast<Uint32 *>(buffer);
    const int d_end       = (screen->w - bump) & ~7;
@@ -160,7 +160,7 @@ void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
    for(int y = 0; y < screen->h; y++)
    {
       byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
-      Uint32 *dest = fb + y * destwidth;
+      Uint32 *dest = fb + y * destheight;
 
       for(int x = d_end; x; x -= 8)
       {
@@ -201,7 +201,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
    if(!use_arb_pbo)
    {
       // Convert the game's 8-bit output to the 32-bit texture buffer
-      DrawPixels(framebuffer, static_cast<unsigned int>(video.width));
+      DrawPixels(framebuffer, static_cast<unsigned int>(video.height));
 
       // bind the framebuffer texture if necessary
       GL_BindTextureIfNeeded(textureid);
@@ -320,7 +320,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
       bump = 0;
 
    // Create screen surface for the high-level code to render the game into
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                 0, SDL_PIXELFORMAT_INDEX8)))
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
