@@ -337,12 +337,13 @@ bool P_SetMobjState(Mobj* mobj, statenum_t state)
       }
 
       st = states[state];
-      if(vanilla_heretic && mobj->type == E_SafeThingType(MT_POD) && mobj->health <= 0 &&
-         st->tics == 0 && st->nextstate == NullStateNum)
-      {
-         st->tics = 1050;
-         st->action = A_vanillaHereticPodFinalAction;
-      }
+      // FIXME: This bullshit needs updating to work with the changes Aeon made
+      //if(vanilla_heretic && mobj->type == E_SafeThingType(MT_POD) && mobj->health <= 0 &&
+      //   st->tics == 0 && st->nextstate == NullStateNum)
+      //{
+      //   st->tics = 1050;
+      //   st->action = A_vanillaHereticPodFinalAction;
+      //}
       mobj->state = st;
       mobj->tics = st->tics;
 

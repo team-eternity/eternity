@@ -195,7 +195,7 @@ static const char *deh_mobjinfo[DEH_MOBJINFOMAX] =
 // haleyjd 02/19/04: combined into one array for new cflags support --
 //                   also changed to be terminated by a zero entry
 
-static dehflags_t deh_mobjflags[] =
+dehflags_t deh_mobjflags[] =
 {
   {"SPECIAL",          0x00000001}, // call  P_Specialthing when touched
   {"SOLID",            0x00000002}, // block movement
