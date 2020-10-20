@@ -70,6 +70,21 @@ namespace Aeon
       // TODO: else C_Printf warning?
    }
 
+   template <int flag, unsigned int Mobj::* flagMember>
+   static bool getFlag(const Mobj *const mo)
+   {
+      return !!(mo->*flagMember & flag);
+   }
+
+   template <int flag, unsigned int Mobj::* flagMember>
+   static void setFlag(const bool isTrue, Mobj *const mo)
+   {
+      if(isTrue)
+         mo->*flagMember |= flag;
+      else
+         mo->*flagMember &= ~flag;
+   }
+
    static Fixed floatBobOffsets(const int in)
    {
       static constexpr int NUMFLOATBOBOFFSETS = earrlen(FloatBobOffsets);
@@ -121,6 +136,10 @@ namespace Aeon
       P_LineAttack(t1, angle.value, distance.value, slope.value, damage, pufftype.constPtr());
    }
 
+#define FLAG_ACCESSOR(name, flag, member) \
+   { "bool get_" #name "() const property", WRAP_OBJ_LAST((getFlag<flag, &Mobj:: ##member>)) }, \
+   { "void set_" #name "(const bool val) const property", WRAP_OBJ_LAST((setFlag<flag, &Mobj:: ##member>)) }
+
    static const aeonfuncreg_t mobjFuncs[] =
    {
       // Native Mobj methods
@@ -160,6 +179,139 @@ namespace Aeon
       // Indexed property accessors (enables [] syntax for counters)
       { "int get_counters(const uint ctrnum) const property",           WRAP_OBJ_LAST(getMobjCounter)  },
       { "void set_counters(const uint ctrnum, const int val) property", WRAP_OBJ_LAST(setMobjCounter)  },
+
+      // Property accessors for the many, many, many flags
+      FLAG_ACCESSOR(special,      MF_SPECIAL,      flags),
+      FLAG_ACCESSOR(solid,        MF_SOLID,        flags),
+      FLAG_ACCESSOR(shootable,    MF_SHOOTABLE,    flags),
+      FLAG_ACCESSOR(nosector,     MF_NOSECTOR,     flags),
+      FLAG_ACCESSOR(noblockmap,   MF_NOBLOCKMAP,   flags),
+      FLAG_ACCESSOR(ambush,       MF_AMBUSH,       flags),
+      FLAG_ACCESSOR(justhit,      MF_JUSTHIT,      flags),
+      FLAG_ACCESSOR(justattack,   MF_JUSTATTACKED, flags),
+      FLAG_ACCESSOR(spawnceiling, MF_SPAWNCEILING, flags),
+      FLAG_ACCESSOR(nogravity,    MF_NOGRAVITY,    flags),
+      FLAG_ACCESSOR(dropoff,      MF_DROPOFF,      flags),
+      FLAG_ACCESSOR(pickup,       MF_PICKUP,       flags),
+      FLAG_ACCESSOR(noclip,       MF_NOCLIP,       flags),
+      FLAG_ACCESSOR(float,        MF_FLOAT,        flags),
+      FLAG_ACCESSOR(teleport,     MF_TELEPORT,     flags),
+      FLAG_ACCESSOR(missile,      MF_MISSILE,      flags),
+      FLAG_ACCESSOR(dropped,      MF_DROPPED,      flags),
+      FLAG_ACCESSOR(shadow,       MF_SHADOW,       flags),
+      FLAG_ACCESSOR(noblood,      MF_NOBLOOD,      flags),
+      FLAG_ACCESSOR(corpse,       MF_CORPSE,       flags),
+      FLAG_ACCESSOR(infloat,      MF_INFLOAT,      flags),
+      FLAG_ACCESSOR(countkill,    MF_COUNTKILL,    flags),
+      FLAG_ACCESSOR(countitem,    MF_COUNTITEM,    flags),
+      FLAG_ACCESSOR(skullfly,     MF_SKULLFLY,     flags),
+      FLAG_ACCESSOR(notdmatch,    MF_NOTDMATCH,    flags),
+      FLAG_ACCESSOR(translation,  0x04000000,      flags),
+      FLAG_ACCESSOR(translation1, 0x04000000,      flags),
+      FLAG_ACCESSOR(translation2, 0x08000000,      flags),
+      FLAG_ACCESSOR(touchy,       MF_TOUCHY,       flags),
+      FLAG_ACCESSOR(bounces,      MF_BOUNCES,      flags),
+      FLAG_ACCESSOR(friend,       MF_FRIEND,       flags),
+      FLAG_ACCESSOR(translucent,  MF_TRANSLUCENT,  flags),
+
+      FLAG_ACCESSOR(lograv,            MF2_LOGRAV,            flags2),
+      FLAG_ACCESSOR(nosplash,          MF2_NOSPLASH,          flags2),
+      FLAG_ACCESSOR(nostrafe,          MF2_NOSTRAFE,          flags2),
+      FLAG_ACCESSOR(norespawn,         MF2_NORESPAWN,         flags2),
+      FLAG_ACCESSOR(alwaysrespawn,     MF2_ALWAYSRESPAWN,     flags2),
+      FLAG_ACCESSOR(removedead,        MF2_REMOVEDEAD,        flags2),
+      FLAG_ACCESSOR(nothrust,          MF2_NOTHRUST,          flags2),
+      FLAG_ACCESSOR(nocross,           MF2_NOCROSS,           flags2),
+      FLAG_ACCESSOR(jumpdown,          MF2_JUMPDOWN,          flags2),
+      FLAG_ACCESSOR(pushable,          MF2_PUSHABLE,          flags2),
+      FLAG_ACCESSOR(map07boss1,        MF2_MAP07BOSS1,        flags2),
+      FLAG_ACCESSOR(map07boss2,        MF2_MAP07BOSS2,        flags2),
+      FLAG_ACCESSOR(e1m8boss,          MF2_E1M8BOSS,          flags2),
+      FLAG_ACCESSOR(e2m8boss,          MF2_E2M8BOSS,          flags2),
+      FLAG_ACCESSOR(e3m8boss,          MF2_E3M8BOSS,          flags2),
+      FLAG_ACCESSOR(boss,              MF2_BOSS,              flags2),
+      FLAG_ACCESSOR(e4m6boss,          MF2_E4M6BOSS,          flags2),
+      FLAG_ACCESSOR(e4m8boss,          MF2_E4M8BOSS,          flags2),
+      FLAG_ACCESSOR(footclip,          MF2_FOOTCLIP,          flags2),
+      FLAG_ACCESSOR(floatbob,          MF2_FLOATBOB,          flags2),
+      FLAG_ACCESSOR(dontdraw,          MF2_DONTDRAW,          flags2),
+      FLAG_ACCESSOR(shortmrange,       MF2_SHORTMRANGE,       flags2),
+      FLAG_ACCESSOR(longmelee,         MF2_LONGMELEE,         flags2),
+      FLAG_ACCESSOR(rangehalf,         MF2_RANGEHALF,         flags2),
+      FLAG_ACCESSOR(highermprob,       MF2_HIGHERMPROB,       flags2),
+      FLAG_ACCESSOR(cantleavefloorpic, MF2_CANTLEAVEFLOORPIC, flags2),
+      FLAG_ACCESSOR(spawnfloat,        MF2_SPAWNFLOAT,        flags2),
+      FLAG_ACCESSOR(invulnerable,      MF2_INVULNERABLE,      flags2),
+      FLAG_ACCESSOR(dormant,           MF2_DORMANT,           flags2),
+      FLAG_ACCESSOR(seekermissile,     MF2_SEEKERMISSILE,     flags2),
+      FLAG_ACCESSOR(deflective,        MF2_DEFLECTIVE,        flags2),
+      FLAG_ACCESSOR(reflective,        MF2_REFLECTIVE,        flags2),
+
+      FLAG_ACCESSOR(ghost,        MF3_GHOST,        flags3),
+      FLAG_ACCESSOR(thrughost,    MF3_THRUGHOST,    flags3),
+      FLAG_ACCESSOR(nodmgthrust,  MF3_NODMGTHRUST,  flags3),
+      FLAG_ACCESSOR(actseesound,  MF3_ACTSEESOUND,  flags3),
+      FLAG_ACCESSOR(loudactive,   MF3_LOUDACTIVE,   flags3),
+      FLAG_ACCESSOR(e5m8boss,     MF3_E5M8BOSS,     flags3),
+      FLAG_ACCESSOR(dmgignored,   MF3_DMGIGNORED,   flags3),
+      FLAG_ACCESSOR(bossignore,   MF3_BOSSIGNORE,   flags3),
+      FLAG_ACCESSOR(slide,        MF3_SLIDE,        flags3),
+      FLAG_ACCESSOR(telestomp,    MF3_TELESTOMP,    flags3),
+      FLAG_ACCESSOR(windthrust,   MF3_WINDTHRUST,   flags3),
+      FLAG_ACCESSOR(firedamage,   MF3_FIREDAMAGE,   flags3),
+      FLAG_ACCESSOR(killable,     MF3_KILLABLE,     flags3),
+      FLAG_ACCESSOR(deadfloat,    MF3_DEADFLOAT,    flags3),
+      FLAG_ACCESSOR(nothreshold,  MF3_NOTHRESHOLD,  flags3),
+      FLAG_ACCESSOR(floormissile, MF3_FLOORMISSILE, flags3),
+      FLAG_ACCESSOR(superitem,    MF3_SUPERITEM,    flags3),
+      FLAG_ACCESSOR(noitemresp,   MF3_NOITEMRESP,   flags3),
+      FLAG_ACCESSOR(superfriend,  MF3_SUPERFRIEND,  flags3),
+      FLAG_ACCESSOR(invulncharge, MF3_INVULNCHARGE, flags3),
+      FLAG_ACCESSOR(explocount,   MF3_EXPLOCOUNT,   flags3),
+      FLAG_ACCESSOR(cannotpush,   MF3_CANNOTPUSH,   flags3),
+      FLAG_ACCESSOR(tlstyleadd,   MF3_TLSTYLEADD,   flags3),
+      FLAG_ACCESSOR(spacmonster,  MF3_SPACMONSTER,  flags3),
+      FLAG_ACCESSOR(spacmissile,  MF3_SPACMISSILE,  flags3),
+      FLAG_ACCESSOR(nofrienddmg,  MF3_NOFRIENDDMG,  flags3),
+      FLAG_ACCESSOR(3ddecoration, MF3_3DDECORATION, flags3),
+      FLAG_ACCESSOR(alwaysfast,   MF3_ALWAYSFAST,   flags3),
+      FLAG_ACCESSOR(passmobj,     MF3_PASSMOBJ,     flags3),
+      FLAG_ACCESSOR(dontoverlap,  MF3_DONTOVERLAP,  flags3),
+      FLAG_ACCESSOR(cyclealpha,   MF3_CYCLEALPHA,   flags3),
+      FLAG_ACCESSOR(rip,          MF3_RIP,          flags3),
+
+      FLAG_ACCESSOR(autotranslate,      MF4_AUTOTRANSLATE,      flags4),
+      FLAG_ACCESSOR(noradiusdmg,        MF4_NORADIUSDMG,        flags4),
+      FLAG_ACCESSOR(forceradiusdmg,     MF4_FORCERADIUSDMG,     flags4),
+      FLAG_ACCESSOR(lookallaround,      MF4_LOOKALLAROUND,      flags4),
+      FLAG_ACCESSOR(nodamage,           MF4_NODAMAGE,           flags4),
+      FLAG_ACCESSOR(synchronized,       MF4_SYNCHRONIZED,       flags4),
+      FLAG_ACCESSOR(norandomize,        MF4_NORANDOMIZE,        flags4),
+      FLAG_ACCESSOR(bright,             MF4_BRIGHT,             flags4),
+      FLAG_ACCESSOR(fly,                MF4_FLY,                flags4),
+      FLAG_ACCESSOR(noradiushack,       MF4_NORADIUSHACK,       flags4),
+      FLAG_ACCESSOR(nosoundcutoff,      MF4_NOSOUNDCUTOFF,      flags4),
+      FLAG_ACCESSOR(ravenrespawn,       MF4_RAVENRESPAWN,       flags4),
+      FLAG_ACCESSOR(notshareware,       MF4_NOTSHAREWARE,       flags4),
+      FLAG_ACCESSOR(notorque,           MF4_NOTORQUE,           flags4),
+      FLAG_ACCESSOR(alwaystorque,       MF4_ALWAYSTORQUE,       flags4),
+      FLAG_ACCESSOR(nozerodamage,       MF4_NOZERODAMAGE,       flags4),
+      FLAG_ACCESSOR(tlstylesub,         MF4_TLSTYLESUB,         flags4),
+      FLAG_ACCESSOR(totalinvisible,     MF4_TOTALINVISIBLE,     flags4),
+      FLAG_ACCESSOR(drawsblood,         MF4_DRAWSBLOOD,         flags4),
+      FLAG_ACCESSOR(spacpushwall,       MF4_SPACPUSHWALL,       flags4),
+      FLAG_ACCESSOR(nospeciesinfight,   MF4_NOSPECIESINFIGHT,   flags4),
+      FLAG_ACCESSOR(harmspeciesmissile, MF4_HARMSPECIESMISSILE, flags4),
+      FLAG_ACCESSOR(friendfoemissile,   MF4_FRIENDFOEMISSILE,   flags4),
+      FLAG_ACCESSOR(bloodlessimpact,    MF4_BLOODLESSIMPACT,    flags4),
+      FLAG_ACCESSOR(hereticbounces,     MF4_HERETICBOUNCES,     flags4),
+      FLAG_ACCESSOR(monsterpass,        MF4_MONSTERPASS,        flags4),
+      FLAG_ACCESSOR(lowaimprio,         MF4_LOWAIMPRIO,         flags4),
+      FLAG_ACCESSOR(stickycarry,        MF4_STICKYCARRY,        flags4),
+      FLAG_ACCESSOR(settargetondeath,   MF4_SETTARGETONDEATH,   flags4),
+      FLAG_ACCESSOR(slideroverthings,   MF4_SLIDEOVERTHINGS,    flags4),
+      FLAG_ACCESSOR(unsteppable,        MF4_UNSTEPPABLE,        flags4),
+
    };
 
    static const aeonpropreg_t mobjProps[] =
@@ -181,10 +333,6 @@ namespace Aeon
       { "Player @const player", asOFFSET(Mobj, player) },
    };
 
-   #define DECLAREMOBJFLAGS(x) \
-      e->RegisterEnum("mobjflags" #x "_e"); \
-      e->RegisterObjectProperty("Mobj", "mobjflags" #x "_e flags" #x, asOFFSET(Mobj, flags ##x));
-
    void ScriptObjMobj::PreInit()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
@@ -198,7 +346,6 @@ namespace Aeon
 
    void ScriptObjMobj::Init()
    {
-      extern dehflags_t deh_mobjflags[];
       asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
@@ -215,25 +362,6 @@ namespace Aeon
 
       for(const aeonpropreg_t &prop : mobjProps)
          e->RegisterObjectProperty("Mobj", prop.declaration, prop.byteOffset);
-
-      DECLAREMOBJFLAGS();
-      DECLAREMOBJFLAGS(2);
-      DECLAREMOBJFLAGS(3);
-      DECLAREMOBJFLAGS(4);
-      for(dehflags_t *flag = deh_mobjflags; flag->name != nullptr; flag++)
-      {
-         qstring type("mobjflags");
-         qstring name("MF");
-         if(flag->index > 0)
-         {
-            name << (flag->index + 1);
-            type << (flag->index + 1);
-         }
-         type << "_e";
-
-         name << "_" << flag->name;
-         e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
-      }
 
       // Flags used by EE::Mobj::lookForPlayers/lookForTargets
       e->RegisterEnum("lftype_e");
