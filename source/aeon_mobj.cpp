@@ -138,6 +138,8 @@ namespace Aeon
       { "void weaponSound(const EE::Sound &in)",               WRAP_OBJ_FIRST(weaponSound)         },
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff = 0)", WRAP_OBJ_FIRST(P_TryMove)           },
       { "fixed_t doAutoAim(angle_t angle, fixed_t distance)",  WRAP_OBJ_FIRST(doAutoAim)           },
+      { "bool lookForPlayers(lftype_e looktype)",              WRAP_OBJ_FIRST(P_LookForPlayers)    },
+      { "bool lookForTargets(lftype_e looktype)",              WRAP_OBJ_FIRST(P_LookForTargets)    },
       {
          "EE::Mobj @spawnMissile(EE::Mobj @dest, const String &type, fixed_t z)",
          WRAP_OBJ_FIRST(spawnMissile),
@@ -232,6 +234,12 @@ namespace Aeon
          name << "_" << flag->name;
          e->RegisterEnumValue(type.constPtr(), name.constPtr(), flag->value);
       }
+
+      // Flags used by EE::Mobj::lookForPlayers/lookForTargets
+      e->RegisterEnum("lftype_e");
+      e->RegisterEnumValue("lftype_e", "LF_INFRONT",  0);
+      e->RegisterEnumValue("lftype_e", "LF_ALLAROUND", 1);
+
 
       // Flags used by EE::Mobj::aimLineAttack
       e->RegisterEnum("alaflags_e");
