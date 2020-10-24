@@ -474,6 +474,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
    GLvoid       *tempbuffer    = nullptr;
    GLint         texfiltertype = GL_LINEAR;
+   int           r_w = 640;
+   int           r_h = 480;
 
    // Get video commands and geometry settings
 
@@ -529,6 +531,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
                                "SDL Error: %s\n", v_w, v_h, SDL_GetError());
    }
 
+   I_ParseResolution(i_resolution, r_w, r_h, v_w, v_h);
+
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
    // this and the below #else block are done here as monitor video mode isn't
    // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
@@ -558,7 +562,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, v_w, v_h, 0, format)))
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, r_w, r_h, 0, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
@@ -591,18 +595,18 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    // Calculate framebuffer texture sizes
    if(strstr(extensions, "GL_ARB_texture_non_power_of_two") != nullptr)
    {
-       framebuffer_umax = v_w;
-       framebuffer_vmax = v_h;
+       framebuffer_umax = r_w;
+       framebuffer_vmax = r_h;
    }
    else
    {
-       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(v_w));
-       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(v_h));
+       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(r_w));
+       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(r_h));
    }
 
    // calculate right- and bottom-side texture coordinates
-   texcoord_smax = static_cast<GLfloat>(v_w) / framebuffer_umax;
-   texcoord_tmax = static_cast<GLfloat>(v_h) / framebuffer_vmax;
+   texcoord_smax = static_cast<GLfloat>(r_w) / framebuffer_umax;
+   texcoord_tmax = static_cast<GLfloat>(r_h) / framebuffer_vmax;
 
    GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(v_w), static_cast<float>(v_h),
                          texcoord_smax, texcoord_tmax);
@@ -629,7 +633,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Allocate framebuffer data, or PBOs
    if(!use_arb_pbo)
-      framebuffer = ecalloc(Uint32 *, v_w * 4, v_h);
+      framebuffer = ecalloc(Uint32 *, r_w * 4, r_h);
    else
    {
       pglGenBuffersARB(2, pboIDs);
@@ -644,8 +648,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // Init Cardboard video metrics
-   video.width     = v_w;
-   video.height    = v_h;
+   video.width     = r_w;
+   video.height    = r_h;
    video.bitdepth  = 8;
    video.pixelsize = 1;
 

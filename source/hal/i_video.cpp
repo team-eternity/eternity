@@ -186,7 +186,8 @@ bool noblit;
 
 bool in_graphics_mode;
 
-// haleyjd 07/15/09
+char *i_default_resolution;
+char *i_resolution;
 char *i_default_videomode;
 char *i_videomode;
 
@@ -233,13 +234,101 @@ void I_ShutdownGraphics()
 
 extern bool setsizeneeded;
 
-// states for geometry parser
+// states for geometry and resolution parser
 enum
 {
    STATE_WIDTH,
    STATE_HEIGHT,
-   STATE_FLAGS
+   STATE_FLAGS,
+   STATE_FINISHED
 };
+
+//
+// Function to parse resolution description strings in the form [wwww]x[hhhh].
+// This is now the primary way in which Eternity stores its renderer resolution setting.
+//
+void I_ParseResolution(const char *resolution, int &w, int &h, const int window_w, const int window_h)
+{
+   if(!strcasecmp(resolution, "native"))
+   {
+      w = window_w;
+      h = window_h;
+      return;
+   }
+
+   const char *c = resolution;
+   int state = STATE_WIDTH;
+   int tmpwidth = window_w, tmpheight = window_h;
+   qstring qstr;
+   bool errorflag = false;
+
+   while(*c && state != STATE_FINISHED)
+   {
+      switch(state)
+      {
+      case STATE_WIDTH:
+         if(*c >= '0' && *c <= '9')
+            qstr += *c;
+         else
+         {
+            int width = qstr.toInt();
+            if(width < 320 || width > MAX_SCREENWIDTH)
+            {
+               state = STATE_FINISHED;
+               errorflag = true;
+            }
+            else
+            {
+               tmpwidth = width;
+               qstr.clear();
+               state = STATE_HEIGHT;
+            }
+         }
+         break;
+      case STATE_HEIGHT:
+         if(*c >= '0' && *c <= '9')
+            qstr += *c;
+         else
+         {
+            int height = qstr.toInt();
+            if(height < 200 || height > MAX_SCREENHEIGHT)
+            {
+               state = STATE_FINISHED;
+               errorflag = true;
+            }
+            else
+            {
+               tmpheight = height;
+               state = STATE_FINISHED;
+               continue; // don't increment the pointer
+            }
+         }
+         break;
+      }
+      ++c;
+   }
+
+   // handle termination of loop during STATE_HEIGHT (expected behaviour)
+   if(state == STATE_HEIGHT)
+   {
+      int height = qstr.toInt();
+
+      if(height < 200 || height > MAX_SCREENHEIGHT)
+         errorflag = true;
+      else
+         tmpheight = height;
+   }
+
+   // if an error occurs setting w/h, we default.
+   if(errorflag)
+   {
+      tmpwidth = window_w;
+      tmpheight = window_h;
+   }
+
+   w = tmpwidth;
+   h = tmpheight;
+}
 
 //
 // Function to parse geometry description strings in the form [wwww]x[hhhh][f/d].
@@ -414,6 +503,12 @@ extern void I_DisableSysMenu(SDL_Window *window);
 static bool I_InitGraphicsMode()
 {
    bool result; 
+
+   if(!i_default_resolution)
+      i_default_resolution = estrdup("windowsize");
+
+   if(!i_resolution)
+      i_resolution = estrdup(i_default_resolution);
 
    if(!i_default_videomode)
       i_default_videomode = estrdup("640x480w");
@@ -623,6 +718,17 @@ CONSOLE_VARIABLE(i_usemouse, usemouse, 0) {}
 // haleyjd 03/27/06: mouse grabbing
 VARIABLE_BOOLEAN(grabmouse, nullptr, yesno);
 CONSOLE_VARIABLE(i_grabmouse, grabmouse, 0) {}
+
+VARIABLE_STRING(i_resolution, nullptr, UL);
+CONSOLE_VARIABLE(i_resolution, i_resolution, cf_buffered)
+{
+   I_SetMode();
+
+   if(i_default_resolution)
+      efree(i_default_resolution);
+
+   i_default_resolution = estrdup(i_resolution);
+}
 
 VARIABLE_STRING(i_videomode, nullptr, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
