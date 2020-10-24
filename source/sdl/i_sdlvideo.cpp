@@ -75,8 +75,7 @@ extern bool noblit;
 static SDL_Color basepal[256], colors[256];
 static bool setpalette = false;
 
-// haleyjd 07/15/09
-extern char *i_default_videomode;
+extern char *i_resolution;
 extern char *i_videomode;
 
 // MaxW: 2017/10/20: display number
@@ -304,19 +303,19 @@ bool SDLVideoDriver::InitGraphicsMode()
    static int fallback_w       = 640;
    static int fallback_h       = 480;
    static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
-   // SDL_RENDERER_SOFTWARE causes failures in creating renderer
    static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
-   screentype_e screentype   = screentype_e::WINDOWED;
-   bool         wantvsync    = false;
-   bool         wanthardware = false;
-   bool         wantframe    = true;
-   int          v_w          = 640;
-   int          v_h          = 480;
-   int          v_displaynum = 0;
-   int          window_flags = SDL_WINDOW_ALLOW_HIGHDPI;
-   // SDL_RENDERER_SOFTWARE causes failures in creating renderer
-   int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   screentype_e screentype     = screentype_e::WINDOWED;
+   bool         wantvsync      = false;
+   bool         wanthardware   = false;
+   bool         wantframe      = true;
+   int          v_w            = 640;
+   int          v_h            = 480;
+   int          v_displaynum   = 0;
+   int          window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
+   int          renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   int          r_w = 640;
+   int          r_h = 480;
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
@@ -374,6 +373,8 @@ bool SDLVideoDriver::InitGraphicsMode()
       window_flags = fallback_w_flags;
    }
 
+   I_ParseResolution(i_resolution, r_w, r_h, v_w, v_h);
+
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
    // this and the below #else block are done here as monitor video mode isn't
    // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
@@ -414,23 +415,23 @@ bool SDLVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // check for letterboxing
-   if(I_VideoShouldLetterbox(v_w, v_h))
+   if(I_VideoShouldLetterbox(r_w, r_h))
    {
-      int hs = I_VideoLetterboxHeight(v_w);
+      int hs = I_VideoLetterboxHeight(r_w);
 
       staticDestRect.x = 0;
-      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(v_h, hs));
-      staticDestRect.w = static_cast<Uint16>(v_w);
+      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(r_h, hs));
+      staticDestRect.w = static_cast<Uint16>(r_w);
       staticDestRect.h = static_cast<Uint16>(hs);
 
-      video.width  = v_w;
+      video.width  = r_w;
       video.height = hs;
       destrect     = &staticDestRect;
    }
    else
    {
-      video.width  = v_w;
-      video.height = v_h;
+      video.width  = r_w;
+      video.height = r_h;
       destrect     = nullptr;
    }
 

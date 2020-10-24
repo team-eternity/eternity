@@ -77,6 +77,7 @@ void I_ReadScreen(byte *scr);
 
 void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf);
 void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf);
+void I_ParseResolution(const char *resolution, int &w, int &h, const int window_w, const int window_h);
 
 // letterboxing utilities
 bool I_VideoShouldLetterbox(int w, int h);
@@ -91,6 +92,8 @@ extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 
 void I_SetMode();
 
+extern char *i_default_resolution;
+extern char *i_resolution;
 extern char *i_videomode;
 extern char *i_default_videomode;
 extern int   i_videodriverid;

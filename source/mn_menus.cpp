@@ -1917,31 +1917,34 @@ static int mn_vidmode_num;
 static char **mn_vidmode_desc;
 static char **mn_vidmode_cmds;
 
-//
-// MN_BuildVidmodeTables
+enum class tableType_e
+{
+   VIDEO_MODE,
+   RESOLUTION
+};
+
 //
 // haleyjd 06/19/11: Resurrected and restructured to allow choosing modes
 // from the precomposited lists above based on the user's favorite aspect
 // ratio and fullscreen/windowed settings.
 //
-static void MN_BuildVidmodeTables()
+static void MN_BuildVidmodeTables(const tableType_e type)
 {
    int useraspect = mn_favaspectratio;
    int userfs     = mn_favscreentype;
    const char **reslist = nullptr;
-   int i = 0;
-   int nummodes;
+   int offset = 0;
 
    if(mn_vidmode_desc)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_desc[i]);
       efree(mn_vidmode_desc);
       mn_vidmode_desc = nullptr;
    }
    if(mn_vidmode_cmds)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_cmds[i]);
       efree(mn_vidmode_cmds);
       mn_vidmode_cmds = nullptr;
@@ -1954,50 +1957,75 @@ static void MN_BuildVidmodeTables()
       reslist = resListForAspectRatio[AR_LEGACY]; // A safe pick.
 
    // count the modes on that list
-   while(reslist[i])
-      ++i;
+   mn_vidmode_num = 0;
+   while(reslist[mn_vidmode_num])
+      mn_vidmode_num++;
 
-   nummodes = i;
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_num++;
+      offset = 1;
+   }
 
    // allocate arrays
-   mn_vidmode_desc = ecalloc(char **, i+1, sizeof(const char *));
-   mn_vidmode_cmds = ecalloc(char **, i+1, sizeof(const char *));
+   mn_vidmode_desc = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
+   mn_vidmode_cmds = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
 
-   for(i = 0; i < nummodes; i++)
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_desc[0] = estrdup("native");
+      mn_vidmode_cmds[0] = estrdup("i_resolution native");
+   }
+
+   const char *cmdstr = (type == tableType_e::RESOLUTION) ? "i_resolution" : "i_videomode";
+   for(int i = offset; i < mn_vidmode_num; i++)
    {
       qstring cmd, description;
 
-      description = reslist[i];
-      switch(userfs)
+      description = reslist[i - offset];
+      if(type == tableType_e::VIDEO_MODE)
       {
-      case MN_FULLSCREEN:
-         description += 'f';
-         break;
-      case MN_FULLSCREEN_DESKTOP:
-         description += 'd';
-         break;
-      case MN_WINDOWED:
-      default:
-         description += 'w';
-         break;
+         switch(userfs)
+         {
+         case MN_FULLSCREEN:
+            description += 'f';
+            break;
+         case MN_FULLSCREEN_DESKTOP:
+            description += 'd';
+            break;
+         case MN_WINDOWED:
+         default:
+            description += 'w';
+            break;
+         }
       }
 
       // set the mode description
       mn_vidmode_desc[i] = description.duplicate();
-      
-      cmd << "i_videomode " << description;
-      
+
+      cmd << cmdstr << " " << description;
+
       mn_vidmode_cmds[i] = cmd.duplicate();
    }
 
    // null-terminate the lists
-   mn_vidmode_desc[nummodes] = nullptr;
-   mn_vidmode_cmds[nummodes] = nullptr;
+   mn_vidmode_desc[mn_vidmode_num] = nullptr;
+   mn_vidmode_cmds[mn_vidmode_num] = nullptr;
+}
+
+CONSOLE_COMMAND(mn_resolution, cf_hidden)
+{
+   MN_BuildVidmodeTables(tableType_e::RESOLUTION);
+
+   MN_SetupBoxWidget("Choose a Resolution",
+                     (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
+                     (const char **)mn_vidmode_cmds);
+   MN_ShowBoxWidget();
 }
 
 CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
-   MN_BuildVidmodeTables();
+   MN_BuildVidmodeTables(tableType_e::VIDEO_MODE);
 
    MN_SetupBoxWidget("Choose a Video Mode", 
                      (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
@@ -2052,6 +2080,8 @@ static menuitem_t mn_video_items[] =
    {it_slider,       "Gamma correction",        "gamma"                },
    {it_gap},
    {it_info,         "Rendering"                                       },
+   {it_runcmd,       "Choose a resolution...",  "mn_resolution"        },
+   {it_variable,     "Renderer resolution",     "i_resolution"         },
    {it_slider,       "Screen size",             "screensize"           },
    {it_toggle,       "HOM detector flashes",    "r_homflash"           },
    {it_toggle,       "Translucency",            "r_trans"              },
@@ -2097,7 +2127,7 @@ static void MN_VideoModeDrawer()
    patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
    
    // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[14].y - 5;
+   y = menu_video.menuitems[16].y - 5;
    V_DrawBox(270, y, 20, 20);
    V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
 }
