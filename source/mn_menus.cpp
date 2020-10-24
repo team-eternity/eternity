@@ -2064,8 +2064,6 @@ static menu_t *mn_vidpage_menus[] =
    nullptr
 };
 
-static void MN_VideoModeDrawer();
-
 static menuitem_t mn_video_items[] =
 {
    {it_title,        "Video Options",           nullptr, "m_video"     },
@@ -2073,19 +2071,15 @@ static menuitem_t mn_video_items[] =
    {it_info,         "Mode"                                            },
    {it_runcmd,       "Choose a mode...",        "mn_vidmode"           },
    {it_variable,     "Video mode",              "i_videomode"          },
+   {it_runcmd,       "Choose a resolution...",  "mn_resolution"        },
+   {it_variable,     "Renderer resolution",     "i_resolution"         },
    {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_gap},
+   {it_info,         "Display Properties"                              },
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
    {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
    {it_slider,       "Gamma correction",        "gamma"                },
-   {it_gap},
-   {it_info,         "Rendering"                                       },
-   {it_runcmd,       "Choose a resolution...",  "mn_resolution"        },
-   {it_variable,     "Renderer resolution",     "i_resolution"         },
-   {it_slider,       "Screen size",             "screensize"           },
-   {it_toggle,       "HOM detector flashes",    "r_homflash"           },
-   {it_toggle,       "Translucency",            "r_trans"              },
-   {it_variable,     "Opacity percentage",      "r_tranpct"            },
    {it_end}
 };
 
@@ -2098,39 +2092,10 @@ menu_t menu_video =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   MN_VideoModeDrawer,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
-
-static void MN_VideoModeDrawer()
-{
-   int lump, y;
-   patch_t *patch;
-   spritedef_t *sprdef;
-   spriteframe_t *sprframe;
-   int frame = E_SafeState(GameModeInfo->transFrame);
-
-   // draw an imp fireball
-
-   // don't draw anything before the menu has been initialized
-   if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
-      return;
-   
-   sprdef = &sprites[states[frame]->sprite];
-   // haleyjd 08/15/02
-   if(!(sprdef->spriteframes))
-      return;
-   sprframe = &sprdef->spriteframes[0];
-   lump = sprframe->lump[0];
-   
-   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   
-   // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[16].y - 5;
-   V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
-}
 
 CONSOLE_COMMAND(mn_video, 0)
 {
@@ -2141,19 +2106,24 @@ static menuitem_t mn_sysvideo_items[] =
 {
    { it_title,  "Video Options",            nullptr, "m_video" },
    { it_gap },
-   { it_info,   "Framerate"   },
-   { it_toggle, "Uncapped framerate",       "d_fastrefresh"    },
-   { it_toggle, "Interpolation",            "d_interpolate"    },
+   { it_info,     "Rendering"                                    },
+   { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "HOM detector flashes",     "r_homflash"       },
+   { it_toggle,   "Translucency",             "r_trans"          },
+   { it_variable, "Opacity percentage",       "r_tranpct"        },
    { it_gap },
-   { it_info,   "Screenshots"},
-   { it_toggle, "Screenshot format",        "shot_type"        },
-   { it_toggle, "Gamma correct shots",      "shot_gamma"       },
+   { it_info,     "Framerate"   },
+   { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
+   { it_toggle,   "Interpolation",            "d_interpolate"    },
    { it_gap },
-   { it_info,   "Screen Wipe" },
-   { it_toggle, "Wipe style",               "wipetype"         },
-   { it_toggle, "Game waits for wipe",      "wipewait"         },
+   { it_info,     "Screen Wipe" },
+   { it_toggle,   "Wipe style",               "wipetype"         },
+   { it_toggle,   "Game waits for wipe",      "wipewait"         },
    { it_end }
 };
+
+
+static void MN_SysVideoModeDrawer();
 
 menu_t menu_sysvideo =
 {
@@ -2164,14 +2134,48 @@ menu_t menu_sysvideo =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   nullptr,
+   MN_SysVideoModeDrawer,
    mn_vidpage_names,
    mn_vidpage_menus
 };
 
+static void MN_SysVideoModeDrawer()
+{
+   int lump, y;
+   patch_t *patch;
+   spritedef_t *sprdef;
+   spriteframe_t *sprframe;
+   int frame = E_SafeState(GameModeInfo->transFrame);
+
+   // draw an imp fireball
+
+   // don't draw anything before the menu has been initialized
+   if(!(menu_sysvideo.menuitems[5].flags & MENUITEM_POSINIT))
+      return;
+
+   sprdef = &sprites[states[frame]->sprite];
+   // haleyjd 08/15/02
+   if(!(sprdef->spriteframes))
+      return;
+   sprframe = &sprdef->spriteframes[0];
+   lump = sprframe->lump[0];
+
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
+
+   // approximately center box on "translucency" item in menu
+   y = menu_video.menuitems[5].y - 5;
+   V_DrawBox(270, y, 20, 20);
+   V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+}
+
+
 static menuitem_t mn_video_page2_items[] =
 {
    {it_title,    "Video Options",           nullptr, "m_video"},
+   {it_gap },
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_gap},
    {it_info,     "System"},
    {it_toggle,   "DOS-like startup",        "textmode_startup"},
