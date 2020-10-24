@@ -506,11 +506,11 @@ Secret notifications are now toggleable on/off via the "secret_notification"
 console variable.
 
 -------------------------------------------------------------------------------
-2020/11/10
+2020/10/11
 Changed monsters_remember & monster_avoid_hazards to 0 by default.
 
 -------------------------------------------------------------------------------
-2020/13/10
+2020/10/13
 Added a folder selector popup on Windows for when no IWADs are found.
 Added the 200 DEHEXTRA sounds.
 
@@ -519,9 +519,14 @@ Changes since Eternity Engine v4.01.00
 ================================================================================
 
 -------------------------------------------------------------------------------
-2020/16/10
+2020/10/16
 Increased visplane hash chain amount again, which should increase FPS in super
 nasty scenes.
+
+-------------------------------------------------------------------------------
+2020/10/24
+Added the ability to scale set the renderer's resolution independent of window
+size.
 
 ================================================================================
 EOF
