@@ -334,7 +334,7 @@ default_t defaults[] =
    DEFAULT_INT("autorun", &autorun, nullptr, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
 
    // haleyjd 08/23/09: allow shift to cancel autorun
-   DEFAULT_INT("runiswalk", &runiswalk, nullptr, 0, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("runiswalk", &runiswalk, nullptr, 1, 0, 1, default_t::wad_no, 
                "1 to walk with shift when autorun is enabled"),
 
    // killough 2/21/98: default to 10

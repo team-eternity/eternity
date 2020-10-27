@@ -528,6 +528,10 @@ nasty scenes.
 Added the ability to scale set the renderer's resolution independent of window
 size.
 
+-------------------------------------------------------------------------------
+2020/10/27
+Default so that holding run whilst autorun is on makes you walk (runiswalk).
+
 ================================================================================
 EOF
 ================================================================================
