@@ -111,7 +111,7 @@ void SDLVideoDriver::FinishUpdate()
       // Don't bother checking for errors. It should just cancel itself in that case.
       SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
       SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
-      SDL_RenderCopy(renderer, sdltexture, nullptr, destrect);
+      SDL_RenderCopyEx(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
    }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
@@ -351,13 +351,13 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  v_h, v_w, window_flags)))
+                                  v_w, v_h, window_flags)))
    {
       // try 320x200w safety mode
       if(!(window = SDL_CreateWindow(ee_wmCaption,
                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                     fallback_h, fallback_w, fallback_w_flags)))
+                                     fallback_w, fallback_h, fallback_w_flags)))
       {
          // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
@@ -430,9 +430,14 @@ bool SDLVideoDriver::InitGraphicsMode()
    }
    else
    {
+      staticDestRect.x = (r_w - r_h) / 2;
+      staticDestRect.y = (r_h - r_w) / 2;
+      staticDestRect.w = r_h;
+      staticDestRect.h = r_w;
+
       video.width  = r_w;
       video.height = r_h;
-      destrect     = nullptr;
+      destrect     = &staticDestRect;
    }
 
    video.bitdepth  = 8;
