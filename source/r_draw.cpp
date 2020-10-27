@@ -141,7 +141,7 @@ void CB_DrawColumn_8()
          do
          {
             *dest = colormap[source[frac>>FRACBITS]];
-            dest += linesize;                     // killough 11/98
+            dest += 1;                     // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -152,10 +152,10 @@ void CB_DrawColumn_8()
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -225,7 +225,7 @@ static void CB_DrawNewSkyColumn_8()
             // haleyjd
             if(source[frac>>FRACBITS])
                *dest = colormap[source[frac>>FRACBITS]];
-            dest += linesize;                     // killough 11/98
+            dest += 1;                     // killough 11/98
             if ((frac += fracstep) >= heightmask)
                frac -= heightmask;
          }
@@ -237,11 +237,11 @@ static void CB_DrawNewSkyColumn_8()
          {
             if(source[(frac>>FRACBITS) & heightmask])
                *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             if(source[(frac>>FRACBITS) & heightmask])
                *dest = colormap[source[(frac>>FRACBITS) & heightmask]];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if ((count & 1) && source[(frac>>FRACBITS) & heightmask])
@@ -305,7 +305,7 @@ void CB_DrawTLColumn_8(void)
          do
          {
             *dest = tranmap[(*dest<<8) + colormap[source[frac>>FRACBITS]]]; // phares
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -316,10 +316,10 @@ void CB_DrawTLColumn_8(void)
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = SRCPIXEL; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = SRCPIXEL; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -379,7 +379,7 @@ void CB_DrawTLTRColumn_8(void)
          do
          {
             *dest = SRCPIXEL; // phares
-            dest += linesize; // killough 11/98
+            dest += 1; // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -390,10 +390,10 @@ void CB_DrawTLTRColumn_8(void)
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = SRCPIXEL_MASK; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = SRCPIXEL_MASK; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -460,11 +460,11 @@ void CB_DrawFuzzColumn_8(void)
       {
          *dest = SRCPIXEL;
          if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
-         dest += linesize;   // killough 11/98
+         dest += 1;   // killough 11/98
 
          *dest = SRCPIXEL;
          if(++fuzzpos == FUZZTABLE) fuzzpos = 0;
-         dest += linesize;   // killough 11/98
+         dest += 1;   // killough 11/98
       }
       if(count & 1)
       {
@@ -535,7 +535,7 @@ void CB_DrawTRColumn_8(void)
          do
          {
             *dest = colormap[column.translation[source[frac>>FRACBITS]]]; // phares
-            dest += linesize;                     // killough 11/98
+            dest += 1;                     // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -546,10 +546,10 @@ void CB_DrawTRColumn_8(void)
          while((count -= 2) >= 0) // texture height is a power of 2 -- killough
          {
             *dest = SRCPIXEL; // phares
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             *dest = SRCPIXEL;
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -622,7 +622,7 @@ void CB_DrawFlexColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
             *dest = RGB32k[0][0][fg & (fg>>15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -639,7 +639,7 @@ void CB_DrawFlexColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             
             fg = colormap[source[(frac>>FRACBITS) & heightmask]];
@@ -649,7 +649,7 @@ void CB_DrawFlexColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -732,7 +732,7 @@ void CB_DrawFlexTRColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
             *dest = RGB32k[0][0][fg & (fg>>15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -749,7 +749,7 @@ void CB_DrawFlexTRColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
             
             fg = SRCPIXEL;
@@ -759,7 +759,7 @@ void CB_DrawFlexTRColumn_8(void)
             fg = (fg+bg) | 0x1f07c1f;
 
             *dest = RGB32k[0][0][fg & (fg>>15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
          }
          if(count & 1)
@@ -847,7 +847,7 @@ void CB_DrawAddColumn_8(void)
                         
             *dest = RGB32k[0][0][a & (a >> 15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -867,7 +867,7 @@ void CB_DrawAddColumn_8(void)
             a |= b;            
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
 
             a = SRCPIXEL + bg2rgb[*dest];
@@ -880,7 +880,7 @@ void CB_DrawAddColumn_8(void)
             a |= b;
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;            
          }
          if(count & 1)
@@ -975,7 +975,7 @@ void CB_DrawAddTRColumn_8(void)
             
             *dest = RGB32k[0][0][a & (a >> 15)];
             
-            dest += linesize;          // killough 11/98
+            dest += 1;          // killough 11/98
             if((frac += fracstep) >= heightmask)
                frac -= heightmask;
          } 
@@ -995,7 +995,7 @@ void CB_DrawAddTRColumn_8(void)
             a |= b;
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;
 
             a = SRCPIXEL_MASK + bg2rgb[*dest];
@@ -1008,7 +1008,7 @@ void CB_DrawAddTRColumn_8(void)
             a |= b;
             
             *dest = RGB32k[0][0][a & (a >> 15)];
-            dest += linesize;   // killough 11/98
+            dest += 1;   // killough 11/98
             frac += fracstep;            
          }
          if(count & 1)
@@ -1260,7 +1260,7 @@ void rrect_t::viewFromScaled(int blocks, int vwidth, int vheight,
 void R_InitBuffer(int width, int height)
 { 
    // SoM: use pitch damn you!
-   linesize     = video.pitch;      // killough 11/98
+   linesize     = video.height;     // killough 11/98
    renderscreen = video.screens[0]; // haleyjd 07/02/14
 } 
 

@@ -221,7 +221,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
    if(window)
    {
       // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
-      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                        0, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
@@ -230,7 +230,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
          pixelformat = SDL_PIXELFORMAT_RGBA32;
 
-      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                     0, pixelformat);
       if(!rgba_surface)
       {
@@ -239,7 +239,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       }
       sdltexture = SDL_CreateTexture(renderer, pixelformat,
                                      SDL_TEXTUREACCESS_STREAMING,
-                                     video.width + bump, video.height);
+                                     video.height, video.width + bump);
       if(!sdltexture)
       {
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create rendering texture: %s\n",
@@ -247,7 +247,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       }
 
       video.screens[0] = static_cast<byte *>(primary_surface->pixels);
-      video.pitch = primary_surface->pitch;
+      video.pitch = primary_surface->h;
    }
 }
 
@@ -351,13 +351,13 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  v_w, v_h, window_flags)))
+                                  v_h, v_w, window_flags)))
    {
       // try 320x200w safety mode
       if(!(window = SDL_CreateWindow(ee_wmCaption,
                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                      SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                     fallback_w, fallback_h, fallback_w_flags)))
+                                     fallback_h, fallback_w, fallback_w_flags)))
       {
          // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
