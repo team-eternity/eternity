@@ -247,7 +247,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       }
 
       video.screens[0] = static_cast<byte *>(primary_surface->pixels);
-      video.pitch = primary_surface->pitch;
+      video.pitch = primary_surface->h;
    }
 }
 
