@@ -241,7 +241,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
       if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
       {
          // draw directly into video memory
-         DrawPixels(ptr, framebuffer_umax);
+         DrawPixels(ptr, framebuffer_vmax);
 
          // release pointer
          pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
@@ -326,7 +326,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
 
    // Point screens[0] to 8-bit temp buffer
    video.screens[0] = static_cast<byte *>(screen->pixels);
-   video.pitch      = screen->pitch;
+   video.pitch      = screen->h;
 }
 
 //
@@ -562,7 +562,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, r_w, r_h, 0, format)))
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, r_h, r_w, 0, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
