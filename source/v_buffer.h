@@ -33,7 +33,7 @@
 #include "m_fixed.h"
 
 #define VBADDRESS(vb, x, y) \
-   ((vb)->data + (vb)->pitch * (y) + (vb)->pixelsize * (x))
+   ((vb)->data + (vb)->height * (x) + (vb)->pixelsize * (y))
 
 struct VBuffer
 {

@@ -369,15 +369,15 @@ void V_CopyRect(int srcx, int srcy, VBuffer *src, int width,
    // block copy
    if(src->pitch == dest->pitch && usew == src->width && usew == dest->width)
    {
-      memcpy(dstp, srcp, src->pitch * useh);
+      memcpy(dstp, srcp, src->height * usew);
    }
    else
    {
-      while(useh--)
+      while(usew--)
       {
-         memcpy(dstp, srcp, usew);
-         srcp += src->pitch;
-         dstp += dest->pitch;
+         memcpy(dstp, srcp, useh);
+         srcp += 1;
+         dstp += 1;
       }
    }
 }

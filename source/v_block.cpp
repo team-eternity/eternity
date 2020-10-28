@@ -73,7 +73,7 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    if(cw <= 0 || ch <= 0)
       return;
 
-   src  = source + dy * width + dx;
+   src  = source + dx * height + dy;
    dest = VBADDRESS(buffer, cx1, cy1);
 
    while(ch--)
@@ -130,7 +130,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    ystep = buffer->iyscale;
    yfrac = 0;
 
-   src  = source + dy * width + dx;
+   src  = source + dx * height + dy;
    dest = VBADDRESS(buffer, realx, realy);
 
 #ifdef RANGECHECK
@@ -152,11 +152,12 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
       while(i--)
       {
          xtex = (xfrac >> FRACBITS);
-         *row++ = src[ytex + xtex];
+         *row = src[ytex + xtex];
+         row += buffer->pitch;
          xfrac += xstep;
       }
 
-      dest += buffer->pitch;
+      dest += 1;
       yfrac += ystep;
    }
 }
@@ -168,6 +169,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
 // haleyjd 06/29/08
 //
 
+// TRANSPOSE_FIXME
 static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer, 
                                 int width, int height, int srcpitch,
                                 byte *source, byte *cmap)
@@ -208,18 +210,19 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
    src  = source + dy * srcpitch + dx;
    dest = VBADDRESS(buffer, cx1, cy1);
 
-   while(ch--)
+   while(cw--)
    {
-      for(i = 0; i < cw; ++i)
+      for(i = 0; i < ch; ++i)
       {
          if(*(src + i))
             *(dest + i) = cmap[*(src + i)];
       }
       src += srcpitch;
-      dest += buffer->pitch;
+      dest += 1;
    }
 }
 
+// TRANSPOSE_FIXME
 static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer, 
                                  int width, int height, int srcpitch,
                                  byte *source, byte *cmap)
@@ -279,10 +282,10 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    }
 #endif
 
-   while(h--)
+   while(w--)
    {
       row = dest;
-      i = w;
+      i = h;
       xfrac = 0;
       ytex = (yfrac >> FRACBITS) * srcpitch;
       
@@ -291,11 +294,11 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
          xtex = (xfrac >> FRACBITS);
          if(src[ytex + xtex])
             *row = cmap[src[ytex + xtex]];
-         ++row;
+         row += buffer->pitch;
          xfrac += xstep;
       }
 
-      dest += buffer->pitch;
+      dest += 1;
       yfrac += ystep;
    }
 }
@@ -430,10 +433,10 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
 
    dest = VBADDRESS(buffer, x, y);
    
-   while(h--)
+   while(w--)
    {
-      memset(dest, color, w);
-      dest += buffer->pitch;
+      memset(dest, color, h);
+      dest += 1;
    }
 }
 
@@ -446,7 +449,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
                     int w, int h, int tl)
 {
    byte *dest, *row;
-   int tw;
+   int th;
    unsigned int col;
    unsigned int *fg2rgb, *bg2rgb;
 
@@ -471,18 +474,19 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 
    dest = VBADDRESS(buffer, x, y);
    
-   while(h--)
+   while(w--)
    { 
       row = dest;
-      tw = w;
+      th = h;
 
-      while(tw--)
+      while(th--)
       {
-         col    = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
-         *row++ = RGB32k[0][0][col & (col >> 15)];
+         col  = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
+         *row = RGB32k[0][0][col & (col >> 15)];
+         row += buffer->pitch;
       }
 
-      dest += buffer->pitch;
+      dest += 1;
    }
 }
 
@@ -494,6 +498,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 // Unscaled
 //
 // Works for any video mode.
+// TRANSPOSE_FIXME
 //
 static void V_TileBlock64(VBuffer *buffer, byte *src)
 {
@@ -547,9 +552,9 @@ static void V_TileBlock64S(VBuffer *buffer, byte *src)
    
    dest = buffer->data;
 
-   while(h--)
+   while(w--)
    {
-      int i = w;
+      int i = h;
       row = dest;
       xfrac = 0;
       ytex = ((yfrac >> FRACBITS) & 63) << 6;
@@ -557,12 +562,13 @@ static void V_TileBlock64S(VBuffer *buffer, byte *src)
       while(i--)
       {
          xtex = (xfrac >> FRACBITS) & 63;
-         *row++ = src[ytex + xtex];
+         *row = src[ytex + xtex];
+         row += buffer->pitch;
          xfrac += xstep;
       }
       
       yfrac += ystep;
-      dest += buffer->pitch;
+      dest += 1;
    }
 }
 
