@@ -382,7 +382,7 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
 // V_BlitVBuffer
 //
 // SoM: blit from one vbuffer to another
-// TRANSPOSE_FIXME
+// TRANSPOSE_FIXME: Is this correct?
 //
 void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
                    unsigned int sx, unsigned int sy, unsigned int width, 
@@ -390,7 +390,7 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
 {
    byte *dbuf, *sbuf;
    int i = height;
-   int slice = width, dpitch = dest->pitch, spitch = src->pitch;
+   int slice = width, dheight = dest->height, sheight = src->height;
 
    if(dx < 0)
    {
@@ -426,14 +426,14 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
    if(slice < 0 || i < 0)
       return;
 
-   dbuf = dest->data + (dpitch * dy) + dx;
-   sbuf = src->data + (spitch * sy) + sx;
+   dbuf = dest->data + (dheight * dx) + dy;
+   sbuf = src->data + (sheight * sx) + sy;
 
-   while(i--)
+   while(slice--)
    {
-      memcpy(dbuf, sbuf, slice);
-      dbuf += dpitch;
-      sbuf += spitch;
+      memcpy(dbuf, sbuf, i);
+      dbuf += dheight;
+      sbuf += dheight;
    }
 }
 
