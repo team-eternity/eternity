@@ -539,36 +539,36 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
 //
 // General scaling
 //
-static void V_TileBlock64S(VBuffer *buffer, byte *src)
+static void V_tileBlock64S(VBuffer *buffer, byte *src)
 {
    byte *dest, *row;
-   fixed_t xstep, ystep, xfrac, yfrac = 0;
+   fixed_t xstep, ystep, xfrac = 0, yfrac;
    int xtex, ytex, w, h;
    
    w = buffer->width;
    h = buffer->height;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
-   
+
    dest = buffer->data;
 
    while(w--)
    {
       int i = h;
       row = dest;
-      xfrac = 0;
-      ytex = ((yfrac >> FRACBITS) & 63) << 6;
-      
+      yfrac = 0;
+      xtex = ((xfrac >> FRACBITS) & 63);
+
       while(i--)
       {
-         xtex = (xfrac >> FRACBITS) & 63;
+         ytex = ((yfrac >> FRACBITS) & 63) << 6;
          *row = src[ytex + xtex];
-         row += buffer->pitch;
-         xfrac += xstep;
+         row += 1;
+         yfrac += ystep;
       }
-      
-      yfrac += ystep;
-      dest += 1;
+
+      xfrac += xstep;
+      dest += buffer->height;
    }
 }
 
@@ -631,7 +631,7 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
    case DRAWTYPE_GENSCALED:
       buffer->BlockDrawer       = V_BlockDrawerS;
       buffer->MaskedBlockDrawer = V_MaskedBlockDrawerS;
-      buffer->TileBlock64       = V_TileBlock64S;
+      buffer->TileBlock64       = V_tileBlock64S;
       break;
    default:
       break;
