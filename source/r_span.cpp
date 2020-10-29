@@ -354,20 +354,20 @@ static void R_DrawSpanSolidMasked_8()
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[1] = colormap[source[i]];
+         dest[linesize] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[2] = colormap[source[i]];
+         dest[linesize * 2] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[3] = colormap[source[i]];
+         dest[linesize * 3] = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest  += 4;
+      dest  += linesize * 4;
       count -= 4;
    }
    while(count-- > 0)
@@ -377,7 +377,7 @@ static void R_DrawSpanSolidMasked_8()
          *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 static void R_DrawSpanSolidMasked_8_GEN()
@@ -406,20 +406,20 @@ static void R_DrawSpanSolidMasked_8_GEN()
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[1] = colormap[source[i]];
+         dest[linesize] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[2] = colormap[source[i]];
+         dest[linesize * 2] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[3] = colormap[source[i]];
+         dest[linesize * 3] = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest  += 4;
+      dest  += linesize * 4;
       count -= 4;
    }
    while(count-- > 0)
@@ -429,7 +429,7 @@ static void R_DrawSpanSolidMasked_8_GEN()
          *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -458,7 +458,7 @@ static void R_DrawSpanTLMasked_8()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 static void R_DrawSpanTLMasked_8_GEN()
@@ -490,7 +490,7 @@ static void R_DrawSpanTLMasked_8_GEN()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -524,7 +524,7 @@ static void R_DrawSpanAddMasked_8()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 static void R_DrawSpanAddMasked_8_GEN()
@@ -561,7 +561,7 @@ static void R_DrawSpanAddMasked_8_GEN()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+     dest += linesize;
    }
 }
 
