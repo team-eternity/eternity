@@ -541,7 +541,7 @@ static void V_TileBlock64(VBuffer *buffer, byte *src)
 //
 static void V_tileBlock64S(VBuffer *buffer, byte *src)
 {
-   byte *dest, *row;
+   byte *dest, *col;
    fixed_t xstep, ystep, xfrac = 0, yfrac;
    int xtex, ytex, w, h;
    
@@ -555,15 +555,15 @@ static void V_tileBlock64S(VBuffer *buffer, byte *src)
    while(w--)
    {
       int i = h;
-      row = dest;
+      col = dest;
       yfrac = 0;
       xtex = ((xfrac >> FRACBITS) & 63);
 
       while(i--)
       {
          ytex = ((yfrac >> FRACBITS) & 63) << 6;
-         *row = src[ytex + xtex];
-         row += 1;
+         *col = src[ytex + xtex];
+         col += 1;
          yfrac += ystep;
       }
 
