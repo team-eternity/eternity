@@ -342,22 +342,22 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    h = y2 - y + 1;
 
    d    = VBADDRESS(dest, x, y);
-   size = w;
+   size = h;
 
-   for(i = 0; i < h; i++)
+   for(i = 0; i < w; i++)
    {
       memset(d, color, size);
-      d += dest->pitch;
+      d += dest->height;
    }
 }
 
 void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
                           int tl)
 {
-   byte *d, *row;
-   int  i, tw;
+   byte *d, *col;
+   int  i, th;
    int x2, y2;
-   unsigned int *fg2rgb, *bg2rgb, col;
+   unsigned int *fg2rgb, *bg2rgb, row;
 
    // haleyjd 05/06/09: optimizations for opaque and invisible
    if(tl == FRACUNIT)
@@ -402,18 +402,18 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
 
    d = VBADDRESS(dest, x, y);
 
-   for(i = 0; i < h; i++)
+   for(i = 0; i < w; i++)
    {
-      row = d;
-      tw = w;
+      col = d;
+      th = h;
 
-      while(tw--)
+      while(th--)
       {
-         col    = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
-         *row++ = RGB32k[0][0][col & (col >> 15)];
+         row    = (fg2rgb[color] + bg2rgb[*col]) | 0x1f07c1f;
+         *col++ = RGB32k[0][0][row & (row >> 15)];
       }
 
-      d += dest->pitch;
+      d += dest->height;
    }
 }
 
