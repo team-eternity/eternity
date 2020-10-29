@@ -218,7 +218,7 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
             *(dest + i) = cmap[*(src + i)];
       }
       src += srcpitch;
-      dest += 1;
+      dest += ch;
    }
 }
 
@@ -436,7 +436,7 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
    while(w--)
    {
       memset(dest, color, h);
-      dest += 1;
+      dest += buffer->height;
    }
 }
 
