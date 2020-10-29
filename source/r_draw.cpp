@@ -427,7 +427,7 @@ void CB_DrawTLTRColumn_8(void)
 //     flags not nullptr colormap
 
 #define SRCPIXEL \
-   colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
+   colormap[6*256+dest[fuzzoffset[fuzzpos] ? viewwindow.height : -viewwindow.height]]
 
 void CB_DrawFuzzColumn_8(void)
 {
