@@ -222,12 +222,11 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
    }
 }
 
-// TRANSPOSE_FIXME
-static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer, 
+static void V_maskedBlockDrawerS(int x, int y, VBuffer *buffer, 
                                  int width, int height, int srcpitch,
                                  byte *source, byte *cmap)
 {
-   byte *src, *dest, *row;
+   byte *src, *dest, *col;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
@@ -268,6 +267,7 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    h     = buffer->y2lookup[cy2] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
+   xfrac = 0;
    yfrac = 0;
 
    src  = source + dy * srcpitch + dx;
@@ -284,22 +284,22 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
 
    while(w--)
    {
-      row = dest;
+      col = dest;
       i = h;
-      xfrac = 0;
-      ytex = (yfrac >> FRACBITS) * srcpitch;
-      
+      yfrac = 0;
+      xtex = (xfrac >> FRACBITS);
+
       while(i--)
       {
-         xtex = (xfrac >> FRACBITS);
+         ytex = (yfrac >> FRACBITS) * srcpitch;
          if(src[ytex + xtex])
-            *row = cmap[src[ytex + xtex]];
-         row += buffer->pitch;
-         xfrac += xstep;
+            *col = cmap[src[ytex + xtex]];
+         col += 1;
+         yfrac += ystep;
       }
 
-      dest += 1;
-      yfrac += ystep;
+      dest += buffer->height;
+      xfrac += xstep;
    }
 }
 
@@ -630,7 +630,7 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
       break;
    case DRAWTYPE_GENSCALED:
       buffer->BlockDrawer       = V_BlockDrawerS;
-      buffer->MaskedBlockDrawer = V_MaskedBlockDrawerS;
+      buffer->MaskedBlockDrawer = V_maskedBlockDrawerS;
       buffer->TileBlock64       = V_tileBlock64S;
       break;
    default:
