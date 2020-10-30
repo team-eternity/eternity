@@ -328,7 +328,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
 
    // Point screens[0] to 8-bit temp buffer
    video.screens[0] = static_cast<byte *>(screen->pixels);
-   video.pitch      = screen->h;
+   video.pitch      = screen->pitch;
 }
 
 //

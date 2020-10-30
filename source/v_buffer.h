@@ -39,7 +39,7 @@ struct VBuffer
 {
    int  width;
    int  height;
-   int  pitch, pixelsize;
+   int  pitch, pixelsize; // This is TRANSPOSED, PRE-TRANSFORMED pitch
 
    byte *data; // video memory
    bool  owndata;

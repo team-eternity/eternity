@@ -198,7 +198,7 @@ static void Wipe_fadeDrawer(void)
 
       for(y = 0; y < vbscreen.height; ++y)
       {
-         dest = vbscreen.data + y * vbscreen.pitch;
+         dest = vbscreen.data + y * vbscreen.width;
 
          for(x = 0; x < vbscreen.width; ++x)
          {
