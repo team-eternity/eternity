@@ -497,41 +497,20 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 // Unscaled
 //
 // Works for any video mode.
-// TRANSPOSE_FIXME
 //
-static void V_TileBlock64(VBuffer *buffer, byte *src)
+static void V_tileBlock64(VBuffer *buffer, byte *src)
 {
-   int x, y;
-   byte *row, *dest = buffer->data;
-   int wmod;
+   byte *col, *dest = buffer->data;
 
-   // if width % 64 != 0, we must do some extra copying at the end
-   if((wmod = buffer->width & 63))
+   for(int x = 0; x < buffer->width; x++)
    {
-      for(y = 0; y < buffer->height; y++)
+      col = dest;
+      for(int y = 0; y < buffer->height; y++)
       {
-         row = dest;
-         for(x = 0; x < buffer->width >> 6; x++)
-         {
-            memcpy(row, src + ((y & 63) << 6), 64);
-            row += 64;
-         }
-         memcpy(row, src + ((y & 63) << 6), wmod);
-         dest += buffer->pitch;
+         *col = src[((y & 63) << 6) + (x & 63)];
+         col += 1;
       }
-   }
-   else
-   {
-      for(y = 0; y < buffer->height; y++)
-      {
-         row = dest;         
-         for(x = 0; x < buffer->width >> 6; x++)
-         {
-            memcpy(row, src + ((y & 63) << 6), 64);
-            row += 64;
-         }
-         dest += buffer->pitch;
-      }
+      dest += buffer->height;
    }
 }
 
@@ -625,7 +604,7 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
    case DRAWTYPE_UNSCALED:
       buffer->BlockDrawer       = V_BlockDrawer;
       buffer->MaskedBlockDrawer = V_maskedBlockDrawer;
-      buffer->TileBlock64       = V_TileBlock64;
+      buffer->TileBlock64       = V_tileBlock64;
       break;
    case DRAWTYPE_GENSCALED:
       buffer->BlockDrawer       = V_BlockDrawerS;
