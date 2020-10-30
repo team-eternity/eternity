@@ -169,8 +169,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
 // haleyjd 06/29/08
 //
 
-// TRANSPOSE_FIXME
-static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer, 
+static void V_maskedBlockDrawer(int x, int y, VBuffer *buffer, 
                                 int width, int height, int srcpitch,
                                 byte *source, byte *cmap)
 {
@@ -210,15 +209,15 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
    src  = source + dy * srcpitch + dx;
    dest = VBADDRESS(buffer, cx1, cy1);
 
-   while(cw--)
+   while(ch--)
    {
-      for(i = 0; i < ch; ++i)
+      for(i = 0; i < cw; ++i)
       {
          if(*(src + i))
-            *(dest + i) = cmap[*(src + i)];
+            *(dest + i * buffer->height) = cmap[*(src + i)];
       }
       src += srcpitch;
-      dest += ch;
+      dest += 1;
    }
 }
 
@@ -625,7 +624,7 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
    {
    case DRAWTYPE_UNSCALED:
       buffer->BlockDrawer       = V_BlockDrawer;
-      buffer->MaskedBlockDrawer = V_MaskedBlockDrawer;
+      buffer->MaskedBlockDrawer = V_maskedBlockDrawer;
       buffer->TileBlock64       = V_TileBlock64;
       break;
    case DRAWTYPE_GENSCALED:
