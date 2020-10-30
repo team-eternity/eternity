@@ -415,14 +415,16 @@ bool SDLVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // check for letterboxing
-   if(I_VideoShouldLetterbox(r_w, r_h))
+   const int bump = (r_w == 512 || r_w == 1024) ? 4 : 0;
+   const int d_w = v_w + bump;
+   if(I_VideoShouldLetterbox(v_w, v_h))
    {
-      int hs = I_VideoLetterboxHeight(r_w);
+      const int hs = I_VideoLetterboxHeight(r_w);
 
-      staticDestRect.x = 0;
-      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(r_h, hs));
-      staticDestRect.w = static_cast<Uint16>(r_w);
-      staticDestRect.h = static_cast<Uint16>(hs);
+      staticDestRect.x = (d_w - hs) / 2;
+      staticDestRect.y = (I_VideoLetterboxOffset(v_h, d_w));
+      staticDestRect.w = hs;
+      staticDestRect.h = d_w;
 
       video.width  = r_w;
       video.height = hs;
@@ -430,9 +432,6 @@ bool SDLVideoDriver::InitGraphicsMode()
    }
    else
    {
-      const int bump = (r_w == 512 || r_w == 1024) ? 4 : 0;
-      const int d_w = v_w + bump;
-
       staticDestRect.x = (d_w - v_h) / 2;
       staticDestRect.y = (v_h - d_w) / 2;
       staticDestRect.w = v_h;
