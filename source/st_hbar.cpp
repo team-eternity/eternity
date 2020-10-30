@@ -288,9 +288,9 @@ static void ST_drawBackground()
 #define SHADOW_BOX_WIDTH  16
 #define SHADOW_BOX_HEIGHT 10
 
-static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
+static void ST_blockDrawerS(int x, int y, int startcmap, int mapdir)
 {
-   byte *dest, *row, *colormap;
+   byte *dest, *col, *colormap;
    int w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2;
 
@@ -300,13 +300,13 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    cy1 = y;
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
-               
+
    realx = subscreen43.x1lookup[cx1];
    realy = subscreen43.y1lookup[cy1];
    w     = subscreen43.x2lookup[cx2] - realx + 1;
    h     = subscreen43.y2lookup[cy2] - realy + 1;
 
-   dest = subscreen43.data + realy * subscreen43.pitch + realx;
+   dest = subscreen43.data + realx * subscreen43.height + realy;
 
    mapstep = mapdir * (16 << FRACBITS) / w;
 
@@ -315,25 +315,25 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    if(realx < 0 || realx + w > subscreen43.width ||
       realy < 0 || realy + h > subscreen43.height)
    {
-      I_Error("ST_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("ST_blockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
    while(h--)
    {
-      row = dest;
+      col = dest;
       i = w;
       mapnum = startcmap << FRACBITS;
-      
+
       while(i--)
       {
          colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
-         *row = colormap[*row];
-         ++row;
+         *col = colormap[*col];
+         col += subscreen43.height;
          mapnum += mapstep;
       }
 
-      dest += subscreen43.pitch;
+      dest += 1;
    }
 }
 
@@ -345,8 +345,8 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
 //
 static void ST_chainShadow()
 {
-   ST_BlockDrawerS(277, 190,  9,  1);
-   ST_BlockDrawerS( 19, 190, 23, -1);
+   ST_blockDrawerS(277, 190,  9,  1);
+   ST_blockDrawerS( 19, 190, 23, -1);
 }
 
 //
