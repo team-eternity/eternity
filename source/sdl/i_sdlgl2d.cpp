@@ -111,13 +111,13 @@ static const GLubyte screenVtxOrder[3*2] = { 0, 1, 3, 3, 1, 2 };
 //
 
 //
-// GL2D_setupVertexArray
-//
 // Static routine to setup vertex and texture coordinate arrays for use with
 // glDrawElements.
 //
-static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                                  GLfloat smax, GLfloat tmax)
+static void GL2D_setupVertexArray(
+   const GLfloat x, const GLfloat y, const GLfloat w, const GLfloat h,
+   const GLfloat smax, const GLfloat tmax, const GLfloat ymargin
+)
 {
    // enable vertex and texture coordinate arrays
    glEnableClientState(GL_VERTEX_ARRAY);
@@ -132,12 +132,13 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 
    // populate vertex coordinates
    screenVertices[0] = screenVertices[6] = x;
-   screenVertices[1] = screenVertices[3] = y;
-   screenVertices[5] = screenVertices[7] = y + h;
+   screenVertices[1] = screenVertices[3] = y + ymargin;
+   screenVertices[5] = screenVertices[7] = (y - ymargin) + h;
    screenVertices[2] = screenVertices[4] = x + w;
 
    // populate texture coordinates
-   screenTexCoords[0] = screenTexCoords[1] = screenTexCoords[2] = screenTexCoords[7] = 0.0f;
+   screenTexCoords[0] = screenTexCoords[2] = 0.0f;
+   screenTexCoords[1] = screenTexCoords[7] = 0.0f;
    screenTexCoords[3] = screenTexCoords[5] = tmax;
    screenTexCoords[4] = screenTexCoords[6] = smax;
 
@@ -609,8 +610,15 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    texcoord_smax = static_cast<GLfloat>(r_w) / framebuffer_umax;
    texcoord_tmax = static_cast<GLfloat>(r_h) / framebuffer_vmax;
 
+   GLfloat ymargin = 0.0f;
+   if(I_VideoShouldLetterbox(v_w, v_h))
+   {
+      const int hs = I_VideoLetterboxHeight(static_cast<int>(r_w));
+      ymargin = static_cast<GLfloat>(v_h - hs) / 2.0f;
+   }
+
    GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(v_w), static_cast<float>(v_h),
-                         texcoord_smax, texcoord_tmax);
+                         texcoord_smax, texcoord_tmax, ymargin);
 
    // Create texture
    glGenTextures(1, &textureid);
