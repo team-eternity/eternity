@@ -34,7 +34,7 @@
 // V_DrawBlock Implementors
 //
 // * V_blockDrawer   -- unscaled
-// * V_BlockDrawerS  -- general scaling
+// * V_blockDrawerS  -- general scaling
 //
 
 static void V_blockDrawer(int x, int y, VBuffer *buffer, 
@@ -89,10 +89,10 @@ static void V_blockDrawer(int x, int y, VBuffer *buffer,
    }
 }
 
-static void V_BlockDrawerS(int x, int y, VBuffer *buffer, 
+static void V_blockDrawerS(int x, int y, VBuffer *buffer, 
                            int width, int height, byte *source)
 {
-   byte *src, *dest, *row;
+   byte *src, *dest, *col;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
@@ -133,7 +133,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    h     = buffer->y2lookup[cy2] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
-   yfrac = 0;
+   xfrac = 0;
 
    src  = source + dx * height + dy;
    dest = VBADDRESS(buffer, realx, realy);
@@ -143,27 +143,27 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    if(realx < 0 || realx + w > buffer->width ||
       realy < 0 || realy + h > buffer->height)
    {
-      I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("V_blockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
-   while(h--)
+   while(w--)
    {
-      row = dest;
-      i = w;
-      xfrac = 0;
-      ytex = (yfrac >> FRACBITS) * width;
-      
+      col = dest;
+      i = h;
+      yfrac = 0;
+      xtex = (xfrac >> FRACBITS);
+
       while(i--)
       {
-         xtex = (xfrac >> FRACBITS);
-         *row = src[ytex + xtex];
-         row += buffer->pitch;
-         xfrac += xstep;
+         ytex = (yfrac >> FRACBITS) * width;
+         *col = src[ytex + xtex];
+         col += 1;
+         yfrac += ystep;
       }
 
-      dest += 1;
-      yfrac += ystep;
+      dest += buffer->height;
+      xfrac += xstep;
    }
 }
 
@@ -282,7 +282,7 @@ static void V_maskedBlockDrawerS(int x, int y, VBuffer *buffer,
    if(realx < 0 || realx + w > buffer->width ||
       realy < 0 || realy + h > buffer->height)
    {
-      I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("V_maskedBlockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
@@ -612,7 +612,7 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
       buffer->TileBlock64       = V_tileBlock64;
       break;
    case DRAWTYPE_GENSCALED:
-      buffer->BlockDrawer       = V_BlockDrawerS;
+      buffer->BlockDrawer       = V_blockDrawerS;
       buffer->MaskedBlockDrawer = V_maskedBlockDrawerS;
       buffer->TileBlock64       = V_tileBlock64S;
       break;
