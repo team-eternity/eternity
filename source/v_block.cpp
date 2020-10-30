@@ -85,7 +85,7 @@ static void V_blockDrawer(int x, int y, VBuffer *buffer,
          col += 1;
       }
       src += 1;
-      dest += buffer->height;
+      dest += buffer->pitch;
    }
 }
 
@@ -162,7 +162,7 @@ static void V_blockDrawerS(int x, int y, VBuffer *buffer,
          yfrac += ystep;
       }
 
-      dest += buffer->height;
+      dest += buffer->pitch;
       xfrac += xstep;
    }
 }
@@ -219,7 +219,7 @@ static void V_maskedBlockDrawer(int x, int y, VBuffer *buffer,
       for(i = 0; i < cw; ++i)
       {
          if(*(src + i))
-            *(dest + i * buffer->height) = cmap[*(src + i)];
+            *(dest + i * buffer->pitch) = cmap[*(src + i)];
       }
       src += srcpitch;
       dest += 1;
@@ -302,7 +302,7 @@ static void V_maskedBlockDrawerS(int x, int y, VBuffer *buffer,
          yfrac += ystep;
       }
 
-      dest += buffer->height;
+      dest += buffer->pitch;
       xfrac += xstep;
    }
 }
@@ -351,7 +351,7 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    for(i = 0; i < w; i++)
    {
       memset(d, color, size);
-      d += dest->height;
+      d += dest->pitch;
    }
 }
 
@@ -417,7 +417,7 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
          *col++ = RGB32k[0][0][row & (row >> 15)];
       }
 
-      d += dest->height;
+      d += dest->pitch;
    }
 }
 
@@ -440,7 +440,7 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
    while(w--)
    {
       memset(dest, color, h);
-      dest += buffer->height;
+      dest += buffer->pitch;
    }
 }
 
@@ -487,7 +487,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
       {
          col  = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
          *row = RGB32k[0][0][col & (col >> 15)];
-         row += buffer->pitch;
+         row += buffer->width;
       }
 
       dest += 1;
@@ -515,7 +515,7 @@ static void V_tileBlock64(VBuffer *buffer, byte *src)
          *col = src[((y & 63) << 6) + (x & 63)];
          col += 1;
       }
-      dest += buffer->height;
+      dest += buffer->pitch;
    }
 }
 
@@ -551,7 +551,7 @@ static void V_tileBlock64S(VBuffer *buffer, byte *src)
       }
 
       xfrac += xstep;
-      dest += buffer->height;
+      dest += buffer->pitch;
    }
 }
 
@@ -562,6 +562,7 @@ static void V_tileBlock64S(VBuffer *buffer, byte *src)
 // Fill a VBuffer with a texture.
 //
 
+// TRANSPOSE_FIXME
 void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
 {
    byte    *dest = buffer->data, *row;
