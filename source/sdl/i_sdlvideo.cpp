@@ -430,10 +430,13 @@ bool SDLVideoDriver::InitGraphicsMode()
    }
    else
    {
-      staticDestRect.x = (v_w - v_h) / 2;
-      staticDestRect.y = (v_h - v_w) / 2;
+      const int bump = (r_w == 512 || r_w == 1024) ? 4 : 0;
+      const int d_w = v_w + bump;
+
+      staticDestRect.x = (d_w - v_h) / 2;
+      staticDestRect.y = (v_h - d_w) / 2;
       staticDestRect.w = v_h;
-      staticDestRect.h = v_w;
+      staticDestRect.h = d_w;
 
       video.width  = r_w;
       video.height = r_h;

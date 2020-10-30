@@ -540,7 +540,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
       {
          // translate current row from transposed buffer for libpng
          for(uint32_t x = 0; x < width; x++)
-            row_pointer[x] = data[(height * x) + (height + y - 1)];
+            row_pointer[x] = data[((height * x) + y)];
 
          // copy data over
          png_write_row(pngStruct, row_pointer);
