@@ -33,11 +33,11 @@
 //
 // V_DrawBlock Implementors
 //
-// * V_BlockDrawer   -- unscaled
+// * V_blockDrawer   -- unscaled
 // * V_BlockDrawerS  -- general scaling
 //
 
-static void V_BlockDrawer(int x, int y, VBuffer *buffer, 
+static void V_blockDrawer(int x, int y, VBuffer *buffer, 
                           int width, int height, byte *source)
 {
    byte *src, *dest;
@@ -76,11 +76,16 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    src  = source + dx * height + dy;
    dest = VBADDRESS(buffer, cx1, cy1);
 
-   while(ch--)
+   while(cw--)
    {
-      memcpy(dest, src, cw);
-      src += width;
-      dest += buffer->pitch;
+      byte *col = dest;
+      for(int i = 0; i < ch; i++)
+      {
+         *col = src[i * width];
+         col += 1;
+      }
+      src += 1;
+      dest += buffer->height;
    }
 }
 
@@ -602,7 +607,7 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
    switch(drawtype)
    {
    case DRAWTYPE_UNSCALED:
-      buffer->BlockDrawer       = V_BlockDrawer;
+      buffer->BlockDrawer       = V_blockDrawer;
       buffer->MaskedBlockDrawer = V_maskedBlockDrawer;
       buffer->TileBlock64       = V_tileBlock64;
       break;
