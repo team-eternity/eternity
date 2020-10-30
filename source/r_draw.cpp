@@ -435,27 +435,27 @@ void CB_DrawFuzzColumn_8(void)
    byte *dest;
 
    // Adjust borders. Low...
-   if(!column.y1) 
-      column.y1 = 1;
-   
+   if(!column.x)
+      column.x = 1;
+
    // .. and high.
-   if(column.y2 == viewwindow.height - 1) 
-      column.y2 = viewwindow.height - 2; 
+   if(column.x == viewwindow.width - 1)
+      column.x = viewwindow.width - 2;
 
    count = column.y2 - column.y1 + 1;
    if(count <= 0) return;
 
-#ifdef RANGECHECK 
-   if(column.x  < 0 || column.x  >= video.width || 
+#ifdef RANGECHECK
+   if(column.x  < 0 || column.x  >= video.width ||
       column.y1 < 0 || column.y2 >= video.height)
-      I_Error("CB_DrawFuzzColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);    
-#endif 
+      I_Error("CB_DrawFuzzColumn_8: %i to %i at %i\n", column.y1, column.y2, column.x);
+#endif
 
    dest = R_ADDRESS(column.x, column.y1);
 
    {
       const lighttable_t *colormap = column.colormap;
-      
+
       while((count -= 2) >= 0) // texture height is a power of 2 -- killough
       {
          *dest = SRCPIXEL;
