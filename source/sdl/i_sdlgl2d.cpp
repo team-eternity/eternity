@@ -125,16 +125,16 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 
    // Framebuffer Layout:
    //
-   // 2-------3  0 = (x+w,y+h) [0,   0   ]   Tris:
-   // |       |  1 = (x,  y+h) [0,   tmax]   1: 0->1->3
-   // |       |  2 = (x,  y  ) [smax,tmax]   2: 3->1->2
-   // 1-------0  3 = (x+w,y  ) [smax,0   ]
+   // 0-------1  0 = (x,  y  ) [0,   0   ]   Tris:
+   // |       |  1 = (x+w,y  ) [0,   tmax]   1: 0->1->3
+   // |       |  2 = (x+w,y+h) [smax,tmax]   2: 3->1->2
+   // 3-------2  3 = (x,  y+h) [smax,0   ]
 
    // populate vertex coordinates
-   screenVertices[4] = screenVertices[2] = x;
-   screenVertices[5] = screenVertices[7] = y;
-   screenVertices[3] = screenVertices[1] = y + h;
-   screenVertices[0] = screenVertices[6] = x + w;
+   screenVertices[0] = screenVertices[6] = x;
+   screenVertices[1] = screenVertices[3] = y;
+   screenVertices[5] = screenVertices[7] = y + h;
+   screenVertices[2] = screenVertices[4] = x + w;
 
    // populate texture coordinates
    screenTexCoords[0] = screenTexCoords[1] = screenTexCoords[2] = screenTexCoords[7] = 0.0f;
@@ -208,7 +208,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
 
       // update the texture data
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                      static_cast<GLsizei>(video.width), static_cast<GLsizei>(video.height),
+                      static_cast<GLsizei>(video.height), static_cast<GLsizei>(video.width),
                       GL_BGRA, GL_UNSIGNED_BYTE, static_cast<GLvoid *>(framebuffer));
    }
    else
@@ -228,8 +228,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[pboindex]);
 
       // copy primary PBO to texture, using offset
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
-                   static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_vmax),
+                   static_cast<GLsizei>(framebuffer_umax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
                    nullptr);
 
       // bind the secondary PBO
@@ -626,8 +626,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
-                static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_vmax),
+                static_cast<GLsizei>(framebuffer_umax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
    efree(tempbuffer);
 
