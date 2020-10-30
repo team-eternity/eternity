@@ -1063,7 +1063,7 @@ static void R_ShowTainted(pwindow_t *window)
       while(count > 0)
       {
          *dest = GameModeInfo->blackIndex;
-         dest += video.pitch;
+         dest += 1;
 
          count--;
       }

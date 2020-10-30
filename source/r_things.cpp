@@ -2424,7 +2424,7 @@ static void R_DrawParticle(vissprite_t *vis)
          return;
       ++ycount;
 
-      spacing = video.pitch - xcount;
+      spacing = video.height - ycount;
       dest    = R_ADDRESS(x1, yl);
 
       // haleyjd 02/08/05: rewritten to remove inner loop invariants
@@ -2443,7 +2443,7 @@ static void R_DrawParticle(vissprite_t *vis)
 
          do // step in y
          {
-            int count = xcount;
+            int count = ycount;
 
             do // step in x
             {
@@ -2454,20 +2454,20 @@ static void R_DrawParticle(vissprite_t *vis)
             while(--count);
             dest += spacing;  // go to next row
          } 
-         while(--ycount);
+         while(--xcount);
       }
       else // opaque (fast, and looks terrible)
       {
          do // step in y
          {
-            int count = xcount;
+            int count = ycount;
             
             do // step in x
                *dest++ = color;
             while(--count);
             dest += spacing;  // go to next row
          } 
-         while(--ycount);
+         while(--xcount);
       } // end else [!general_translucency]
    } // end local block
 }
