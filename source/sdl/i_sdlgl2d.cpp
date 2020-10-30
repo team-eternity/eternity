@@ -153,11 +153,12 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destheight)
 {
-   Uint32   *fb          = static_cast<Uint32 *>(buffer);
-   const int d_end       = (screen->w - bump) & ~7;
-   const int d_remainder = (screen->w - bump) & 7;
+   Uint32   *fb            = static_cast<Uint32 *>(buffer);
+   const int d_end         = screen->w & ~7;
+   const int d_remainder   = screen->w & 7;
+   const int render_height = screen->h - bump;
 
-   for(int y = 0; y < screen->h; y++)
+   for(int y = 0; y < render_height; y++)
    {
       byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
       Uint32 *dest = fb + y * destheight;
@@ -271,12 +272,12 @@ void SDLGL2DVideoDriver::ReadScreen(byte *scr)
    else
    {
       // must copy one row at a time
-      for(int y = 0; y < screen->h; y++)
+      for(int x = 0; x < screen->w; x++)
       {
-         byte *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
-         byte *dest = scr + y * video.width;
+         byte *src = static_cast<byte *>(screen->pixels) + x * screen->h;
+         byte *dest = scr + x * (video.pitch - bump);
 
-         memcpy(dest, src, screen->w - bump);
+         memcpy(dest, src, screen->h);
       }
    }
 }
