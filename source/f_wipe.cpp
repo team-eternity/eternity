@@ -101,7 +101,7 @@ static void Wipe_meltStartScreen(void)
       int wormx = (x << FRACBITS) / video.xscale;
       int wormy = video.y1lookup[worms[wormx] > 0 ? worms[wormx] : 0];
       
-      src = vbscreen.data + x * video.height;
+      src = vbscreen.data + x * video.pitch;
       dest = start_screen[x];
       
       for(y = 0; y < video.height - wormy; y++)
@@ -125,7 +125,7 @@ static void Wipe_meltDrawer(void)
       wormy = video.y1lookup[wormy];
 
       src = start_screen[x];
-      dest = vbscreen.data + vbscreen.height * x + wormy;
+      dest = vbscreen.data + vbscreen.pitch * x + wormy;
       
       for(y = video.height - wormy; y--;)
          *dest++ = *src++;
@@ -196,11 +196,11 @@ static void Wipe_fadeDrawer(void)
 
       src = wipe_buffer;
 
-      for(y = 0; y < vbscreen.height; ++y)
+      for(x = 0; x < vbscreen.width; ++x)
       {
-         dest = vbscreen.data + y * vbscreen.width;
+         dest = vbscreen.data + x * vbscreen.pitch;
 
-         for(x = 0; x < vbscreen.width; ++x)
+         for(y = 0; y < vbscreen.height; ++y)
          {
             unsigned int fg, bg;
             
