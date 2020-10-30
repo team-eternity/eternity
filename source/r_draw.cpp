@@ -1260,7 +1260,7 @@ void rrect_t::viewFromScaled(int blocks, int vwidth, int vheight,
 void R_InitBuffer(int width, int height)
 { 
    // SoM: use pitch damn you!
-   linesize     = video.height;     // killough 11/98
+   linesize     = video.pitch;      // killough 11/98
    renderscreen = video.screens[0]; // haleyjd 07/02/14
 } 
 

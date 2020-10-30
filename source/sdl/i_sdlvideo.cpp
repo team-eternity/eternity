@@ -128,8 +128,8 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
-                     vbscreen.width, video.bitdepth, scr);
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height,
+                     vbscreen.height, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
 }

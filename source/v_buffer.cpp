@@ -83,7 +83,7 @@ void V_InitVBuffer(VBuffer *vb, int width, int height, int bitdepth)
    vb->width = width;
    vb->height = height;
    vb->pixelsize = psize;
-   vb->pitch = width * psize;
+   vb->pitch = height * psize;
    vb->scaled = false;
    vb->needfree = false;
    vb->freelookups = false;
