@@ -778,6 +778,9 @@ spandrawer_t r_spandrawer =
 {
    // Orthogonal span drawers
    {
+      // R_DrawSpan<32-2*n, 32-n, n 1s then n 0s> // 2^n x 2^n
+      // NB: n 1s then n 0s can be represented as ((1 << n) - 1) << n
+
       // Solid
       {
          R_DrawSpanSolid_8<20, 26, 0x00FC0>, // 64x64
@@ -830,6 +833,9 @@ spandrawer_t r_spandrawer =
 
    // SoM: Sloped span drawers
    {
+      // R_DrawSlope<16-n, n 1s then n 0s, n 1s>
+      // NB: n 1s can be represented as (1 << n) - 1
+
       { 
          R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
          R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128
