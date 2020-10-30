@@ -223,7 +223,7 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
    vb->needfree = false;
    vb->freelookups = false;
 
-   VB_SetData(vb, parent->data + x * parent->height + y * parent->pixelsize);
+   VB_SetData(vb, parent->data + x * parent->pitch + y * parent->pixelsize);
 
    V_SetupBufferFuncs(vb, DRAWTYPE_UNSCALED);
 }
@@ -390,7 +390,7 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
 {
    byte *dbuf, *sbuf;
    int i = height;
-   int slice = width, dheight = dest->height, sheight = src->height;
+   int slice = width, dpitch = dest->pitch, spitch = src->pitch;
 
    if(dx < 0)
    {
@@ -426,14 +426,14 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
    if(slice < 0 || i < 0)
       return;
 
-   dbuf = dest->data + (dheight * dx) + dy;
-   sbuf = src->data + (sheight * sx) + sy;
+   dbuf = dest->data + (dpitch * dx) + dy;
+   sbuf = src->data + (spitch * sx) + sy;
 
    while(slice--)
    {
       memcpy(dbuf, sbuf, i);
-      dbuf += dheight;
-      sbuf += dheight;
+      dbuf += dpitch;
+      sbuf += spitch;
    }
 }
 
