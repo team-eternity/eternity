@@ -51,7 +51,6 @@
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
-#include "r_drawq.h"
 #include "r_dynseg.h"
 #include "r_interpolate.h"
 #include "r_main.h"
@@ -155,7 +154,7 @@ int r_column_engine_num;
 static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
 {
    &r_normal_drawer, // normal engine
-   &r_quad_drawer,   // quad cache engine
+   // Here lies Quad Cache Engine: 2006/09/04 - 2020/10/31
 };
 
 //
@@ -1463,7 +1462,7 @@ void R_DoomTLStyle()
 
 static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
-static const char *coleng[]     = { "normal", "quad" };
+static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "none", "boom", "new" };
 

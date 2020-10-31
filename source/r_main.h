@@ -142,8 +142,7 @@ angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
 
-// haleyjd 09/04/06
-#define NUMCOLUMNENGINES 2
+#define NUMCOLUMNENGINES 1
 #define NUMSPANENGINES 1
 extern int r_column_engine_num;
 extern int r_span_engine_num;
