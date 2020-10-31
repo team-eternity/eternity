@@ -2424,7 +2424,7 @@ static void R_DrawParticle(vissprite_t *vis)
          return;
       ++ycount;
 
-      spacing = video.height - ycount;
+      spacing = video.pitch - ycount;
       dest    = R_ADDRESS(x1, yl);
 
       // haleyjd 02/08/05: rewritten to remove inner loop invariants
