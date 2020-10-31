@@ -306,7 +306,7 @@ static void ST_blockDrawerS(int x, int y, int startcmap, int mapdir)
    w     = subscreen43.x2lookup[cx2] - realx + 1;
    h     = subscreen43.y2lookup[cy2] - realy + 1;
 
-   dest = subscreen43.data + realx * subscreen43.height + realy;
+   dest = subscreen43.data + realx * subscreen43.pitch + realy;
 
    mapstep = mapdir * (16 << FRACBITS) / w;
 
