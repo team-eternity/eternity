@@ -73,7 +73,7 @@ static void V_blockDrawer(int x, int y, VBuffer *buffer,
    if(cw <= 0 || ch <= 0)
       return;
 
-   src  = source + dx * height + dy;
+   src  = source + dy * width + dx;
    dest = VBADDRESS(buffer, cx1, cy1);
 
    while(cw--)
@@ -135,7 +135,7 @@ static void V_blockDrawerS(int x, int y, VBuffer *buffer,
    ystep = buffer->iyscale;
    xfrac = 0;
 
-   src  = source + dx * height + dy;
+   src  = source + dy * width + dx;
    dest = VBADDRESS(buffer, realx, realy);
 
 #ifdef RANGECHECK
