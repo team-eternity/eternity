@@ -562,10 +562,9 @@ static void V_tileBlock64S(VBuffer *buffer, byte *src)
 // Fill a VBuffer with a texture.
 //
 
-// TRANSPOSE_FIXME
 void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
 {
-   byte    *dest = buffer->data, *row;
+   byte    *dest = buffer->data, *col;
    int      w = buffer->width;
    int      h = buffer->height;
    fixed_t  xstep = (texw << FRACBITS) / w;
@@ -576,19 +575,20 @@ void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
    while(h--)
    {
       int x = w;
-      row   = dest;
+      col   = dest;
       xfrac = 0;
       ytex  = eclamp(yfrac >> FRACBITS, 0, texh - 1);
 
       while(x--)
       {
          xtex = eclamp(xfrac >> FRACBITS, 0, texw - 1);
-         *row++ = src[ytex * texw + xtex];
+         *col = src[ytex * texw + xtex];
+         col += buffer->pitch;
          xfrac += xstep;
       }
 
       yfrac += ystep;
-      dest  += buffer->pitch;
+      dest  += 1;
    }
 }
 

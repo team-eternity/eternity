@@ -382,7 +382,6 @@ void V_SetScaling(VBuffer *buffer, int unscaledw, int unscaledh)
 // V_BlitVBuffer
 //
 // SoM: blit from one vbuffer to another
-// TRANSPOSE_FIXME: Is this correct?
 //
 void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src, 
                    unsigned int sx, unsigned int sy, unsigned int width, 
