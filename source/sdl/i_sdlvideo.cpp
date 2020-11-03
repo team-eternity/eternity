@@ -111,7 +111,7 @@ void SDLVideoDriver::FinishUpdate()
       // Don't bother checking for errors. It should just cancel itself in that case.
       SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
       SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
-      SDL_RenderCopy(renderer, sdltexture, nullptr, destrect);
+      SDL_RenderCopyEx(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
    }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
@@ -128,8 +128,8 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
-                     vbscreen.width, video.bitdepth, scr);
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height,
+                     vbscreen.height, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
 }
@@ -221,7 +221,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
    if(window)
    {
       // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
-      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                        0, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
@@ -230,7 +230,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
          pixelformat = SDL_PIXELFORMAT_RGBA32;
 
-      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                     0, pixelformat);
       if(!rgba_surface)
       {
@@ -239,7 +239,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       }
       sdltexture = SDL_CreateTexture(renderer, pixelformat,
                                      SDL_TEXTUREACCESS_STREAMING,
-                                     video.width + bump, video.height);
+                                     video.height, video.width + bump);
       if(!sdltexture)
       {
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create rendering texture: %s\n",
@@ -415,14 +415,16 @@ bool SDLVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // check for letterboxing
-   if(I_VideoShouldLetterbox(r_w, r_h))
+   const int bump = (r_w == 512 || r_w == 1024) ? 4 : 0;
+   const int d_w = v_w + bump;
+   if(I_VideoShouldLetterbox(v_w, v_h))
    {
-      int hs = I_VideoLetterboxHeight(r_w);
+      const int hs = I_VideoLetterboxHeight(r_w);
 
-      staticDestRect.x = 0;
-      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(r_h, hs));
-      staticDestRect.w = static_cast<Uint16>(r_w);
-      staticDestRect.h = static_cast<Uint16>(hs);
+      staticDestRect.x = (d_w - hs) / 2;
+      staticDestRect.y = (I_VideoLetterboxOffset(v_h, d_w));
+      staticDestRect.w = hs;
+      staticDestRect.h = d_w;
 
       video.width  = r_w;
       video.height = hs;
@@ -430,9 +432,14 @@ bool SDLVideoDriver::InitGraphicsMode()
    }
    else
    {
+      staticDestRect.x = (d_w - v_h) / 2;
+      staticDestRect.y = (v_h - d_w) / 2;
+      staticDestRect.w = v_h;
+      staticDestRect.h = d_w;
+
       video.width  = r_w;
       video.height = r_h;
-      destrect     = nullptr;
+      destrect     = &staticDestRect;
    }
 
    video.bitdepth  = 8;

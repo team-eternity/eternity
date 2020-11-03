@@ -157,7 +157,7 @@ extern byte  *main_tranmap;  // killough 4/11/98
 extern byte  *main_submap;   // haleyjd 11/30/13
 
 #define R_ADDRESS(px, py) \
-   (renderscreen + (viewwindow.y + (py)) * linesize + (viewwindow.x + (px)))
+   (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
 
 #define FUZZTABLE 50 
 #define FUZZOFF (SCREENWIDTH)

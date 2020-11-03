@@ -591,9 +591,6 @@
     <ClCompile Include="..\Source\r_draw.cpp">
       <Filter>Source Files\R_\R_ Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\source\r_drawq.cpp">
-      <Filter>Source Files\R_\R_ Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\source\r_dynabsp.cpp">
       <Filter>Source Files\R_\R_ Source</Filter>
     </ClCompile>
@@ -1389,9 +1386,6 @@
       <Filter>Source Files\R_\R_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\Source\r_draw.h">
-      <Filter>Source Files\R_\R_ Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\source\r_drawq.h">
       <Filter>Source Files\R_\R_ Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\source\r_dynabsp.h">

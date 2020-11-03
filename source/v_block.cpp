@@ -33,11 +33,11 @@
 //
 // V_DrawBlock Implementors
 //
-// * V_BlockDrawer   -- unscaled
-// * V_BlockDrawerS  -- general scaling
+// * V_blockDrawer   -- unscaled
+// * V_blockDrawerS  -- general scaling
 //
 
-static void V_BlockDrawer(int x, int y, VBuffer *buffer, 
+static void V_blockDrawer(int x, int y, VBuffer *buffer, 
                           int width, int height, byte *source)
 {
    byte *src, *dest;
@@ -76,18 +76,23 @@ static void V_BlockDrawer(int x, int y, VBuffer *buffer,
    src  = source + dy * width + dx;
    dest = VBADDRESS(buffer, cx1, cy1);
 
-   while(ch--)
+   while(cw--)
    {
-      memcpy(dest, src, cw);
-      src += width;
+      byte *col = dest;
+      for(int i = 0; i < ch; i++)
+      {
+         *col = src[i * width];
+         col += 1;
+      }
+      src += 1;
       dest += buffer->pitch;
    }
 }
 
-static void V_BlockDrawerS(int x, int y, VBuffer *buffer, 
+static void V_blockDrawerS(int x, int y, VBuffer *buffer, 
                            int width, int height, byte *source)
 {
-   byte *src, *dest, *row;
+   byte *src, *dest, *col;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
@@ -128,7 +133,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    h     = buffer->y2lookup[cy2] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
-   yfrac = 0;
+   xfrac = 0;
 
    src  = source + dy * width + dx;
    dest = VBADDRESS(buffer, realx, realy);
@@ -138,26 +143,27 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
    if(realx < 0 || realx + w > buffer->width ||
       realy < 0 || realy + h > buffer->height)
    {
-      I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("V_blockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
-   while(h--)
+   while(w--)
    {
-      row = dest;
-      i = w;
-      xfrac = 0;
-      ytex = (yfrac >> FRACBITS) * width;
-      
+      col = dest;
+      i = h;
+      yfrac = 0;
+      xtex = (xfrac >> FRACBITS);
+
       while(i--)
       {
-         xtex = (xfrac >> FRACBITS);
-         *row++ = src[ytex + xtex];
-         xfrac += xstep;
+         ytex = (yfrac >> FRACBITS) * width;
+         *col = src[ytex + xtex];
+         col += 1;
+         yfrac += ystep;
       }
 
       dest += buffer->pitch;
-      yfrac += ystep;
+      xfrac += xstep;
    }
 }
 
@@ -168,7 +174,7 @@ static void V_BlockDrawerS(int x, int y, VBuffer *buffer,
 // haleyjd 06/29/08
 //
 
-static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer, 
+static void V_maskedBlockDrawer(int x, int y, VBuffer *buffer, 
                                 int width, int height, int srcpitch,
                                 byte *source, byte *cmap)
 {
@@ -213,18 +219,18 @@ static void V_MaskedBlockDrawer(int x, int y, VBuffer *buffer,
       for(i = 0; i < cw; ++i)
       {
          if(*(src + i))
-            *(dest + i) = cmap[*(src + i)];
+            *(dest + i * buffer->pitch) = cmap[*(src + i)];
       }
       src += srcpitch;
-      dest += buffer->pitch;
+      dest += 1;
    }
 }
 
-static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer, 
+static void V_maskedBlockDrawerS(int x, int y, VBuffer *buffer, 
                                  int width, int height, int srcpitch,
                                  byte *source, byte *cmap)
 {
-   byte *src, *dest, *row;
+   byte *src, *dest, *col;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
@@ -265,6 +271,7 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    h     = buffer->y2lookup[cy2] - realy + 1;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
+   xfrac = 0;
    yfrac = 0;
 
    src  = source + dy * srcpitch + dx;
@@ -275,28 +282,28 @@ static void V_MaskedBlockDrawerS(int x, int y, VBuffer *buffer,
    if(realx < 0 || realx + w > buffer->width ||
       realy < 0 || realy + h > buffer->height)
    {
-      I_Error("V_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("V_maskedBlockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
-   while(h--)
+   while(w--)
    {
-      row = dest;
-      i = w;
-      xfrac = 0;
-      ytex = (yfrac >> FRACBITS) * srcpitch;
-      
+      col = dest;
+      i = h;
+      yfrac = 0;
+      xtex = (xfrac >> FRACBITS);
+
       while(i--)
       {
-         xtex = (xfrac >> FRACBITS);
+         ytex = (yfrac >> FRACBITS) * srcpitch;
          if(src[ytex + xtex])
-            *row = cmap[src[ytex + xtex]];
-         ++row;
-         xfrac += xstep;
+            *col = cmap[src[ytex + xtex]];
+         col += 1;
+         yfrac += ystep;
       }
 
       dest += buffer->pitch;
-      yfrac += ystep;
+      xfrac += xstep;
    }
 }
 
@@ -339,9 +346,9 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
    h = y2 - y + 1;
 
    d    = VBADDRESS(dest, x, y);
-   size = w;
+   size = h;
 
-   for(i = 0; i < h; i++)
+   for(i = 0; i < w; i++)
    {
       memset(d, color, size);
       d += dest->pitch;
@@ -351,10 +358,10 @@ void V_ColorBlockScaled(VBuffer *dest, byte color, int x, int y, int w, int h)
 void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h, 
                           int tl)
 {
-   byte *d, *row;
-   int  i, tw;
+   byte *d, *col;
+   int  i, th;
    int x2, y2;
-   unsigned int *fg2rgb, *bg2rgb, col;
+   unsigned int *fg2rgb, *bg2rgb, row;
 
    // haleyjd 05/06/09: optimizations for opaque and invisible
    if(tl == FRACUNIT)
@@ -399,15 +406,15 @@ void V_ColorBlockTLScaled(VBuffer *dest, byte color, int x, int y, int w, int h,
 
    d = VBADDRESS(dest, x, y);
 
-   for(i = 0; i < h; i++)
+   for(i = 0; i < w; i++)
    {
-      row = d;
-      tw = w;
+      col = d;
+      th = h;
 
-      while(tw--)
+      while(th--)
       {
-         col    = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
-         *row++ = RGB32k[0][0][col & (col >> 15)];
+         row    = (fg2rgb[color] + bg2rgb[*col]) | 0x1f07c1f;
+         *col++ = RGB32k[0][0][row & (row >> 15)];
       }
 
       d += dest->pitch;
@@ -430,9 +437,9 @@ void V_ColorBlock(VBuffer *buffer, byte color, int x, int y, int w, int h)
 
    dest = VBADDRESS(buffer, x, y);
    
-   while(h--)
+   while(w--)
    {
-      memset(dest, color, w);
+      memset(dest, color, h);
       dest += buffer->pitch;
    }
 }
@@ -446,7 +453,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
                     int w, int h, int tl)
 {
    byte *dest, *row;
-   int tw;
+   int th;
    unsigned int col;
    unsigned int *fg2rgb, *bg2rgb;
 
@@ -471,18 +478,19 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 
    dest = VBADDRESS(buffer, x, y);
    
-   while(h--)
+   while(w--)
    { 
       row = dest;
-      tw = w;
+      th = h;
 
-      while(tw--)
+      while(th--)
       {
-         col    = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
-         *row++ = RGB32k[0][0][col & (col >> 15)];
+         col  = (fg2rgb[color] + bg2rgb[*row]) | 0x1f07c1f;
+         *row = RGB32k[0][0][col & (col >> 15)];
+         row += buffer->width;
       }
 
-      dest += buffer->pitch;
+      dest += 1;
    }
 }
 
@@ -495,73 +503,54 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 //
 // Works for any video mode.
 //
-static void V_TileBlock64(VBuffer *buffer, byte *src)
+static void V_tileBlock64(VBuffer *buffer, byte *src)
 {
-   int x, y;
-   byte *row, *dest = buffer->data;
-   int wmod;
+   byte *col, *dest = buffer->data;
 
-   // if width % 64 != 0, we must do some extra copying at the end
-   if((wmod = buffer->width & 63))
+   for(int x = 0; x < buffer->width; x++)
    {
-      for(y = 0; y < buffer->height; y++)
+      col = dest;
+      for(int y = 0; y < buffer->height; y++)
       {
-         row = dest;
-         for(x = 0; x < buffer->width >> 6; x++)
-         {
-            memcpy(row, src + ((y & 63) << 6), 64);
-            row += 64;
-         }
-         memcpy(row, src + ((y & 63) << 6), wmod);
-         dest += buffer->pitch;
+         *col = src[((y & 63) << 6) + (x & 63)];
+         col += 1;
       }
-   }
-   else
-   {
-      for(y = 0; y < buffer->height; y++)
-      {
-         row = dest;         
-         for(x = 0; x < buffer->width >> 6; x++)
-         {
-            memcpy(row, src + ((y & 63) << 6), 64);
-            row += 64;
-         }
-         dest += buffer->pitch;
-      }
+      dest += buffer->pitch;
    }
 }
 
 //
 // General scaling
 //
-static void V_TileBlock64S(VBuffer *buffer, byte *src)
+static void V_tileBlock64S(VBuffer *buffer, byte *src)
 {
-   byte *dest, *row;
-   fixed_t xstep, ystep, xfrac, yfrac = 0;
+   byte *dest, *col;
+   fixed_t xstep, ystep, xfrac = 0, yfrac;
    int xtex, ytex, w, h;
    
    w = buffer->width;
    h = buffer->height;
    xstep = buffer->ixscale;
    ystep = buffer->iyscale;
-   
+
    dest = buffer->data;
 
-   while(h--)
+   while(w--)
    {
-      int i = w;
-      row = dest;
-      xfrac = 0;
-      ytex = ((yfrac >> FRACBITS) & 63) << 6;
-      
+      int i = h;
+      col = dest;
+      yfrac = 0;
+      xtex = ((xfrac >> FRACBITS) & 63);
+
       while(i--)
       {
-         xtex = (xfrac >> FRACBITS) & 63;
-         *row++ = src[ytex + xtex];
-         xfrac += xstep;
+         ytex = ((yfrac >> FRACBITS) & 63) << 6;
+         *col = src[ytex + xtex];
+         col += 1;
+         yfrac += ystep;
       }
-      
-      yfrac += ystep;
+
+      xfrac += xstep;
       dest += buffer->pitch;
    }
 }
@@ -575,7 +564,7 @@ static void V_TileBlock64S(VBuffer *buffer, byte *src)
 
 void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
 {
-   byte    *dest = buffer->data, *row;
+   byte    *dest = buffer->data, *col;
    int      w = buffer->width;
    int      h = buffer->height;
    fixed_t  xstep = (texw << FRACBITS) / w;
@@ -586,19 +575,20 @@ void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
    while(h--)
    {
       int x = w;
-      row   = dest;
+      col   = dest;
       xfrac = 0;
       ytex  = eclamp(yfrac >> FRACBITS, 0, texh - 1);
 
       while(x--)
       {
          xtex = eclamp(xfrac >> FRACBITS, 0, texw - 1);
-         *row++ = src[ytex * texw + xtex];
+         *col = src[ytex * texw + xtex];
+         col += buffer->pitch;
          xfrac += xstep;
       }
 
       yfrac += ystep;
-      dest  += buffer->pitch;
+      dest  += 1;
    }
 }
 
@@ -618,14 +608,14 @@ void V_SetBlockFuncs(VBuffer *buffer, int drawtype)
    switch(drawtype)
    {
    case DRAWTYPE_UNSCALED:
-      buffer->BlockDrawer       = V_BlockDrawer;
-      buffer->MaskedBlockDrawer = V_MaskedBlockDrawer;
-      buffer->TileBlock64       = V_TileBlock64;
+      buffer->BlockDrawer       = V_blockDrawer;
+      buffer->MaskedBlockDrawer = V_maskedBlockDrawer;
+      buffer->TileBlock64       = V_tileBlock64;
       break;
    case DRAWTYPE_GENSCALED:
-      buffer->BlockDrawer       = V_BlockDrawerS;
-      buffer->MaskedBlockDrawer = V_MaskedBlockDrawerS;
-      buffer->TileBlock64       = V_TileBlock64S;
+      buffer->BlockDrawer       = V_blockDrawerS;
+      buffer->MaskedBlockDrawer = V_maskedBlockDrawerS;
+      buffer->TileBlock64       = V_tileBlock64S;
       break;
    default:
       break;

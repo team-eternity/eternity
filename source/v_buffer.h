@@ -33,13 +33,13 @@
 #include "m_fixed.h"
 
 #define VBADDRESS(vb, x, y) \
-   ((vb)->data + (vb)->pitch * (y) + (vb)->pixelsize * (x))
+   ((vb)->data + (vb)->pitch * (x) + (vb)->pixelsize * (y))
 
 struct VBuffer
 {
    int  width;
    int  height;
-   int  pitch, pixelsize;
+   int  pitch, pixelsize; // This is TRANSPOSED, PRE-TRANSFORMED pitch
 
    byte *data; // video memory
    bool  owndata;

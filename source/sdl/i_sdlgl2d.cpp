@@ -111,13 +111,13 @@ static const GLubyte screenVtxOrder[3*2] = { 0, 1, 3, 3, 1, 2 };
 //
 
 //
-// GL2D_setupVertexArray
-//
 // Static routine to setup vertex and texture coordinate arrays for use with
 // glDrawElements.
 //
-static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
-                                  GLfloat smax, GLfloat tmax)
+static void GL2D_setupVertexArray(
+   const GLfloat x, const GLfloat y, const GLfloat w, const GLfloat h,
+   const GLfloat smax, const GLfloat tmax, const GLfloat ymargin
+)
 {
    // enable vertex and texture coordinate arrays
    glEnableClientState(GL_VERTEX_ARRAY);
@@ -125,19 +125,20 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 
    // Framebuffer Layout:
    //
-   // 0-------3  0 = (x,  y  ) [0,   0   ]   Tris:
-   // |       |  1 = (x,  y+h) [0,   tmax]   1: 0->1->3
+   // 0-------1  0 = (x,  y  ) [0,   0   ]   Tris:
+   // |       |  1 = (x+w,y  ) [0,   tmax]   1: 0->1->3
    // |       |  2 = (x+w,y+h) [smax,tmax]   2: 3->1->2
-   // 1-------2  3 = (x+w,y  ) [smax,0   ]
+   // 3-------2  3 = (x,  y+h) [smax,0   ]
 
    // populate vertex coordinates
-   screenVertices[0] = screenVertices[2] = x;
-   screenVertices[1] = screenVertices[7] = y;
-   screenVertices[3] = screenVertices[5] = y + h;
-   screenVertices[4] = screenVertices[6] = x + w;
+   screenVertices[0] = screenVertices[6] = x;
+   screenVertices[1] = screenVertices[3] = y + ymargin;
+   screenVertices[5] = screenVertices[7] = (y - ymargin) + h;
+   screenVertices[2] = screenVertices[4] = x + w;
 
    // populate texture coordinates
-   screenTexCoords[0] = screenTexCoords[1] = screenTexCoords[2] = screenTexCoords[7] = 0.0f;
+   screenTexCoords[0] = screenTexCoords[2] = 0.0f;
+   screenTexCoords[1] = screenTexCoords[7] = 0.0f;
    screenTexCoords[3] = screenTexCoords[5] = tmax;
    screenTexCoords[4] = screenTexCoords[6] = smax;
 
@@ -151,16 +152,17 @@ static void GL2D_setupVertexArray(GLfloat x, GLfloat y, GLfloat w, GLfloat h,
 //
 // Protected method.
 //
-void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destwidth)
+void SDLGL2DVideoDriver::DrawPixels(void *buffer, unsigned int destheight)
 {
-   Uint32   *fb          = static_cast<Uint32 *>(buffer);
-   const int d_end       = (screen->w - bump) & ~7;
-   const int d_remainder = (screen->w - bump) & 7;
+   Uint32   *fb            = static_cast<Uint32 *>(buffer);
+   const int d_end         = screen->w & ~7;
+   const int d_remainder   = screen->w & 7;
+   const int render_height = screen->h - bump;
 
-   for(int y = 0; y < screen->h; y++)
+   for(int y = 0; y < render_height; y++)
    {
       byte   *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
-      Uint32 *dest = fb + y * destwidth;
+      Uint32 *dest = fb + y * destheight;
 
       for(int x = d_end; x; x -= 8)
       {
@@ -201,14 +203,14 @@ void SDLGL2DVideoDriver::FinishUpdate()
    if(!use_arb_pbo)
    {
       // Convert the game's 8-bit output to the 32-bit texture buffer
-      DrawPixels(framebuffer, static_cast<unsigned int>(video.width));
+      DrawPixels(framebuffer, static_cast<unsigned int>(video.height));
 
       // bind the framebuffer texture if necessary
       GL_BindTextureIfNeeded(textureid);
 
       // update the texture data
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 
-                      static_cast<GLsizei>(video.width), static_cast<GLsizei>(video.height),
+                      static_cast<GLsizei>(video.height), static_cast<GLsizei>(video.width),
                       GL_BGRA, GL_UNSIGNED_BYTE, static_cast<GLvoid *>(framebuffer));
    }
    else
@@ -228,8 +230,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
       pglBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIDs[pboindex]);
 
       // copy primary PBO to texture, using offset
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
-                   static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_vmax),
+                   static_cast<GLsizei>(framebuffer_umax), 0, GL_BGRA, GL_UNSIGNED_BYTE,
                    nullptr);
 
       // bind the secondary PBO
@@ -241,7 +243,7 @@ void SDLGL2DVideoDriver::FinishUpdate()
       if((ptr = pglMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB)))
       {
          // draw directly into video memory
-         DrawPixels(ptr, framebuffer_umax);
+         DrawPixels(ptr, framebuffer_vmax);
 
          // release pointer
          pglUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB);
@@ -271,12 +273,12 @@ void SDLGL2DVideoDriver::ReadScreen(byte *scr)
    else
    {
       // must copy one row at a time
-      for(int y = 0; y < screen->h; y++)
+      for(int x = 0; x < screen->w; x++)
       {
-         byte *src  = static_cast<byte *>(screen->pixels) + y * screen->pitch;
-         byte *dest = scr + y * video.width;
+         byte *src = static_cast<byte *>(screen->pixels) + x * screen->h;
+         byte *dest = scr + x * (video.pitch - bump);
 
-         memcpy(dest, src, screen->w - bump);
+         memcpy(dest, src, screen->h);
       }
    }
 }
@@ -320,7 +322,7 @@ void SDLGL2DVideoDriver::SetPrimaryBuffer()
       bump = 0;
 
    // Create screen surface for the high-level code to render the game into
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                 0, SDL_PIXELFORMAT_INDEX8)))
       I_Error("SDLGL2DVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
@@ -562,7 +564,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, r_w, r_h, 0, format)))
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, r_h, r_w, 0, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
@@ -608,8 +610,15 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    texcoord_smax = static_cast<GLfloat>(r_w) / framebuffer_umax;
    texcoord_tmax = static_cast<GLfloat>(r_h) / framebuffer_vmax;
 
+   GLfloat ymargin = 0.0f;
+   if(I_VideoShouldLetterbox(v_w, v_h))
+   {
+      const int hs = I_VideoLetterboxHeight(static_cast<int>(r_w));
+      ymargin = static_cast<GLfloat>(v_h - hs) / 2.0f;
+   }
+
    GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(v_w), static_cast<float>(v_h),
-                         texcoord_smax, texcoord_tmax);
+                         texcoord_smax, texcoord_tmax, ymargin);
 
    // Create texture
    glGenTextures(1, &textureid);
@@ -626,8 +635,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_umax),
-                static_cast<GLsizei>(framebuffer_vmax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(framebuffer_vmax),
+                static_cast<GLsizei>(framebuffer_umax), 0, GL_BGRA, GL_UNSIGNED_BYTE, 
                 tempbuffer);
    efree(tempbuffer);
 

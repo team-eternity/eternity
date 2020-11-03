@@ -230,17 +230,21 @@ static void R_MapPlane(int y, int x1, int x2)
    // Use fast hack routine for portable double->uint32 conversion
    // iff we know host endianness, otherwise use Mozilla routine
    {
-      double value;
+      const double xfrac = (
+         ((plane.pviewx + plane.xoffset) * plane.xscale) +
+         (plane.pviewsin * realy * plane.xscale) +
+         ((static_cast<double>(x1) - view.xcenter) * xstep)
+      ) * plane.fixedunitx;
 
-      value = (((plane.pviewx + plane.xoffset) * plane.xscale) + (plane.pviewsin * realy * plane.xscale) +
-               (((double)x1 - view.xcenter) * xstep)) * plane.fixedunitx;
+      span.xfrac = R_doubleToUint32(xfrac);
 
-      span.xfrac = R_doubleToUint32(value);
+      const double yfrac = (
+         ((-plane.pviewy + plane.yoffset) * plane.yscale) +
+         (-plane.pviewcos * realy * plane.yscale) +
+         ((static_cast<double>(x1) - view.xcenter) * ystep)
+      ) * plane.fixedunity;
 
-      value = (((-plane.pviewy + plane.yoffset) * plane.yscale) + (-plane.pviewcos * realy * plane.yscale) +
-               (((double)x1 - view.xcenter) * ystep)) * plane.fixedunity;
-
-      span.yfrac = R_doubleToUint32(value);
+      span.yfrac = R_doubleToUint32(yfrac);
 
       span.xstep = R_doubleToUint32(xstep * plane.fixedunitx);
       span.ystep = R_doubleToUint32(ystep * plane.fixedunity);
