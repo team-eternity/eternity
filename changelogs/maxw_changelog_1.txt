@@ -532,6 +532,12 @@ size.
 2020/10/27
 Default so that holding run whilst autorun is on makes you walk (runiswalk).
 
+-------------------------------------------------------------------------------
+2020/11/03
+Made the backbuffer everything is rendered to transposed. This improves
+rendering times in some cases, and opens the door to many more optimisations.
+The old quad buffer column drawer has been deleted.
+
 ================================================================================
 EOF
 ================================================================================
