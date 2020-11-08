@@ -958,7 +958,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if((unsigned int)thing->sprite >= (unsigned int)numsprites)
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "Bad sprite number %i\n", thing->sprite);
+      doom_printf(FC_ERROR "Bad sprite number %i for thingtype %s\n", thing->sprite, thing->info->name);
 
       // blank the thing's state sprite and frame so that this error does not
       // occur perpetually, flooding the message widget and console.
