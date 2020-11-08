@@ -830,12 +830,12 @@ default_t defaults[] =
                "user's default wad directory"),
    
    DEFAULT_INT("r_columnengine",&r_column_engine_num, nullptr, 
-               1, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
-               "0 = normal, 1 = optimized quad cache"),
+               0, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
+               "0 = normal"),
    
    DEFAULT_INT("r_spanengine",&r_span_engine_num, nullptr,
                0, 0, NUMSPANENGINES - 1, default_t::wad_no, 
-               "0 = high precision, 1 = low precision"),
+               "0 = high precision"),
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, nullptr, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_yes,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),
