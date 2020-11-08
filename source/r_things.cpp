@@ -623,23 +623,24 @@ static vissprite_t *R_NewVisSprite()
 }
 
 //
-// R_DrawMaskedColumn
-//
 // Used for sprites and masked mid textures.
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_DrawMaskedColumn(column_t *tcolumn)
+static void R_drawMaskedColumn(column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
    
    column.texheight = 0; // killough 11/98
 
+   int top = 0;
    while(tcolumn->topdelta != 0xff)
    {
+      top = tcolumn->topdelta <= top ? tcolumn->topdelta + top : tcolumn->topdelta;
+
       // calculate unclipped screen coordinates for post
-      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcolumn->topdelta);
+      y1 = maskedcolumn.ytop + (maskedcolumn.scale * top);
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
@@ -649,7 +650,7 @@ static void R_DrawMaskedColumn(column_t *tcolumn)
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = (byte *)tcolumn + 3;
-         column.texmid = basetexturemid - (tcolumn->topdelta << FRACBITS);
+         column.texmid = basetexturemid - (top << FRACBITS);
 
          colfunc();
       }
@@ -795,7 +796,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_DrawMaskedColumn(tcolumn);
+         R_drawMaskedColumn(tcolumn);
       }
    }
    else
@@ -809,7 +810,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_DrawMaskedColumn(tcolumn);
+         R_drawMaskedColumn(tcolumn);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98

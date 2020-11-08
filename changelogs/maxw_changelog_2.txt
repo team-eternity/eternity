@@ -1,0 +1,31 @@
+================================================================================
+Changes since Eternity Engine v4.01.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2020/10/16
+Increased visplane hash chain amount again, which should increase FPS in super
+nasty scenes.
+
+--------------------------------------------------------------------------------
+2020/10/24
+Added the ability to scale set the renderer's resolution independent of window
+size.
+
+--------------------------------------------------------------------------------
+2020/10/27
+Default so that holding run whilst autorun is on makes you walk (runiswalk).
+
+--------------------------------------------------------------------------------
+2020/11/03
+Made the backbuffer everything is rendered to transposed. This improves
+rendering times in some cases, and opens the door to many more optimisations.
+The old quad buffer column drawer has been deleted.
+
+--------------------------------------------------------------------------------
+2020/11/08
+Added tall patch support to masked columns (e.g.: sprites, masked midtexes).
+
+================================================================================
+EOF
+================================================================================
