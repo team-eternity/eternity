@@ -104,15 +104,15 @@ static void R_DrawSpanSolid_8()
    unsigned int xf = span.xfrac, xs = span.xstep; 
    unsigned int yf = span.yfrac, ys = span.ystep; 
    lighttable_t *colormap = span.colormap; 
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    while(count-- > 0)
    {
       *dest = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      dest += linesize;
+      dest += 1;
       xf += xs;
       yf += ys;
    }
@@ -123,10 +123,10 @@ static void R_DrawSpanSolid_8_GEN()
    unsigned int xf = span.xfrac, xs = span.xstep; 
    unsigned int yf = span.yfrac, ys = span.ystep; 
    lighttable_t *colormap = span.colormap; 
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -136,7 +136,7 @@ static void R_DrawSpanSolid_8_GEN()
    while(count-- > 0)
    {
       *dest = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      dest += linesize;
+      dest += 1;
       xf += xs;
       yf += ys;
    }
@@ -162,8 +162,8 @@ static void R_DrawSpan_OLD()
    
    source   = (byte *)(span.source);
    colormap = span.colormap;
-   dest     = ylookup[span.y] + columnofs[span.x1];       
-   count    = span.x2 - span.x1 + 1; 
+   dest     = ylookup[span.x] + columnofs[span.y1];       
+   count    = span.y2 - span.y1 + 1; 
    
    // SoM: So I went back and realized the error of ID's ways and this is even
    // faster now! This is by far the fastest way because it uses the exact same
@@ -215,10 +215,10 @@ static void R_DrawSpanTL_8()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    while(count-- > 0)
    {
@@ -226,7 +226,7 @@ static void R_DrawSpanTL_8()
           span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       t |= 0x01f07c1f;
       *dest = RGB32k[0][0][t & (t >> 15)];
-      dest += linesize;
+      dest += 1;
       xf   += xs;
       yf   += ys;
    }
@@ -238,10 +238,10 @@ static void R_DrawSpanTL_8_GEN()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -253,7 +253,7 @@ static void R_DrawSpanTL_8_GEN()
           span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       t |= 0x01f07c1f;
       *dest = RGB32k[0][0][t & (t >> 15)];
-      dest += linesize;
+      dest += 1;
       xf   += xs;
       yf   += ys;
    }
@@ -268,10 +268,10 @@ static void R_DrawSpanAdd_8()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    while(count-- > 0)
    {
@@ -284,7 +284,7 @@ static void R_DrawSpanAdd_8()
       b  = b - (b >> 5);
       a |= b;
       *dest = RGB32k[0][0][a & (a >> 15)];
-      dest += linesize;
+      dest += 1;
       xf   += xs;
       yf   += ys;
    }
@@ -296,10 +296,10 @@ static void R_DrawSpanAdd_8_GEN()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -316,7 +316,7 @@ static void R_DrawSpanAdd_8_GEN()
       b  = b - (b >> 5);
       a |= b;
       *dest = RGB32k[0][0][a & (a >> 15)];
-      dest += linesize;
+      dest += 1;
       xf   += xs;
       yf   += ys;
    }
@@ -337,10 +337,10 @@ static void R_DrawSpanSolidMasked_8()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -367,7 +367,7 @@ static void R_DrawSpanSolidMasked_8()
          dest[linesize * 3] = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest  += linesize * 4;
+      dest  += 1 * 4;
       count -= 4;
    }
    while(count-- > 0)
@@ -377,7 +377,7 @@ static void R_DrawSpanSolidMasked_8()
          *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest += linesize;
+      dest += 1;
    }
 }
 static void R_DrawSpanSolidMasked_8_GEN()
@@ -385,10 +385,10 @@ static void R_DrawSpanSolidMasked_8_GEN()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -419,7 +419,7 @@ static void R_DrawSpanSolidMasked_8_GEN()
          dest[linesize * 3] = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest  += linesize * 4;
+      dest  += 1 * 4;
       count -= 4;
    }
    while(count-- > 0)
@@ -429,7 +429,7 @@ static void R_DrawSpanSolidMasked_8_GEN()
          *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest += linesize;
+      dest += 1;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -439,10 +439,10 @@ static void R_DrawSpanTLMasked_8()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -458,7 +458,7 @@ static void R_DrawSpanTLMasked_8()
       }
       xf += xs;
       yf += ys;
-      dest += linesize;
+      dest += 1;
    }
 }
 static void R_DrawSpanTLMasked_8_GEN()
@@ -467,10 +467,10 @@ static void R_DrawSpanTLMasked_8_GEN()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -490,7 +490,7 @@ static void R_DrawSpanTLMasked_8_GEN()
       }
       xf += xs;
       yf += ys;
-      dest += linesize;
+      dest += 1;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -500,10 +500,10 @@ static void R_DrawSpanAddMasked_8()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -524,7 +524,7 @@ static void R_DrawSpanAddMasked_8()
       }
       xf += xs;
       yf += ys;
-      dest += linesize;
+      dest += 1;
    }
 }
 static void R_DrawSpanAddMasked_8_GEN()
@@ -533,10 +533,10 @@ static void R_DrawSpanAddMasked_8_GEN()
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
    lighttable_t *colormap = span.colormap;
-   int count = span.x2 - span.x1 + 1;
+   int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.x1, span.y);
+   byte *dest   = R_ADDRESS(span.y1, span.x);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -561,7 +561,7 @@ static void R_DrawSpanAddMasked_8_GEN()
       }
       xf += xs;
       yf += ys;
-     dest += linesize;
+     dest += 1;
    }
 }
 
@@ -589,6 +589,7 @@ static void R_DrawSpanAddMasked_8_GEN()
    }
 #endif
 
+// FIXME: These may need to be removed and the span drawers made 100% accurate
 #define SPANJUMP 16
 #define INTERPSTEP (0.0625f)
 
@@ -598,16 +599,16 @@ static void R_DrawSlope_8()
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
    double id  = slopespan.idfrac, ids = slopespan.idstep;
-   
+
    byte *colormap;
    int count;
    fixed_t mapindex = 0;
 
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+   if((count = slopespan.y2 - slopespan.y1 + 1) < 0)
       return;
 
    byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   byte *dest = R_ADDRESS(slopespan.x, slopespan.y1);
 
    while(count >= SPANJUMP)
    {
@@ -636,7 +637,7 @@ static void R_DrawSlope_8()
       {
          colormap = slopespan.colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -670,7 +671,7 @@ static void R_DrawSlope_8()
       {
          colormap = slopespan.colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -687,11 +688,11 @@ static void R_DrawSlope_8_GEN()
    int count;
    fixed_t mapindex = 0;
 
-   if((count = slopespan.x2 - slopespan.x1 + 1) < 0)
+   if((count = slopespan.y2 - slopespan.y1 + 1) < 0)
       return;
 
    byte *src  = (byte *)slopespan.source;
-   byte *dest = R_ADDRESS(slopespan.x1, slopespan.y);
+   byte *dest = R_ADDRESS(slopespan.x, slopespan.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -724,7 +725,7 @@ static void R_DrawSlope_8_GEN()
       {
          colormap = slopespan.colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -758,7 +759,7 @@ static void R_DrawSlope_8_GEN()
       {
          colormap = slopespan.colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
-         dest  += linesize;
+         dest  += 1;
          ufrac += ustep;
          vfrac += vstep;
       }

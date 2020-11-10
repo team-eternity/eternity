@@ -71,7 +71,7 @@ bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
 struct cb_span_t
 {
-   int x1, x2, y;
+   int x, y1, y2;
    unsigned xfrac, yfrac, xstep, ystep;
    void *source;
    lighttable_t *colormap;
@@ -113,7 +113,7 @@ struct cb_plane_t
 
 struct cb_slopespan_t
 {
-   int y, x1, x2;
+   int x, y1, y2;
 
    double iufrac, ivfrac, idfrac;
    double iustep, ivstep, idstep;

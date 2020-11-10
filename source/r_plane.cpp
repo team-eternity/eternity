@@ -157,7 +157,7 @@ cb_slopespan_t slopespan;
 
 VALLOCATION(slopespan)
 {
-   size_t size = sizeof(lighttable_t *) * w;
+   size_t size = sizeof(lighttable_t *) * h;
    slopespan.colormap = ecalloctag(lighttable_t **, 1, size, PU_VALLOC, nullptr);
 }
 
@@ -272,8 +272,8 @@ static void R_SlopeLights(int len, double startcmap, double endcmap)
    fixed_t map, map2, step;
 
 #ifdef RANGECHECK
-   if(len > video.width)
-      I_Error("R_SlopeLights: len > video.width (%d)\n", len);
+   if(len > video.height)
+      I_Error("R_SlopeLights: len > video.height (%d)\n", len);
 #endif
 
    if(plane.fixedcolormap)
@@ -311,15 +311,15 @@ static void R_SlopeLights(int len, double startcmap, double endcmap)
 //
 // R_MapSlope
 //
-static void R_MapSlope(int y, int x1, int x2)
+static void R_MapSlope(int x, int y1, int y2)
 {
    rslope_t *slope = plane.slope;
-   int count = x2 - x1;
+   int count = y2 - y1;
    v3double_t s;
    double map1, map2;
 
-   s.x = x1 - view.xcenter;
-   s.y = y - view.ycenter + 1;
+   s.x = x - view.xcenter;
+   s.y = y1 - view.ycenter + 1;
    s.z = view.xfoc;
 
    slopespan.iufrac = M_DotVec3(&s, &slope->A) * static_cast<double>(plane.tex->width) *
@@ -328,29 +328,29 @@ static void R_MapSlope(int y, int x1, int x2)
                       static_cast<double>(plane.xscale);
    slopespan.idfrac = M_DotVec3(&s, &slope->C);
 
-   slopespan.iustep = slope->A.x * static_cast<double>(plane.tex->width) *
+   slopespan.iustep = slope->A.y * static_cast<double>(plane.tex->width) *
                       static_cast<double>(plane.yscale);
-   slopespan.ivstep = slope->B.x * static_cast<double>(plane.tex->height) *
+   slopespan.ivstep = slope->B.y * static_cast<double>(plane.tex->height) *
                       static_cast<double>(plane.xscale);
-   slopespan.idstep = slope->C.x;
+   slopespan.idstep = slope->C.y;
 
    slopespan.source = plane.source;
-   slopespan.x1 = x1;
-   slopespan.x2 = x2;
-   slopespan.y = y;
+   slopespan.x  = x;
+   slopespan.y1 = y1;
+   slopespan.y2 = y2;
 
    // Setup lighting
 
    map1 = 256.0 - (slope->shade - slope->plight * slopespan.idfrac);
    if(count > 0)
    {
-      double id = slopespan.idfrac + slopespan.idstep * (x2 - x1);
+      double id = slopespan.idfrac + slopespan.idstep * (y2 - y1);
       map2 = 256.0 - (slope->shade - slope->plight * id);
    }
    else
       map2 = map1;
 
-   R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
+   R_SlopeLights(y2 - y1 + 1, (256.0 - map1), (256.0 - map2));
 
    slopefunc();
 }
@@ -814,27 +814,6 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
    return pl;
 }
 
-//
-// R_MakeSpans
-//
-static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
-{
-#ifdef RANGECHECK
-   // haleyjd: do not allow this loop to trash the BSS data
-   if(b2 >= video.height)
-      I_Error("R_MakeSpans: b2 >= video.height\n");
-#endif
-
-   for(; t2 > t1 && t1 <= b1; t1++)
-      plane.MapFunc(t1, spanstart[t1], x - 1);
-   for(; b2 < b1 && t1 <= b1; b1--)
-      plane.MapFunc(b1, spanstart[b1], x - 1);
-   while(t2 < t1 && t2 <= b2)
-      spanstart[t2++] = x;
-   while(b2 > b1 && t2 <= b2)
-      spanstart[b2--] = x;
-}
-
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(visplane_t *pl)
 {
@@ -1171,8 +1150,11 @@ static void do_draw_plane(visplane_t *pl)
 
       plane.MapFunc = (plane.slope == nullptr ? R_MapPlane : R_MapSlope);
 
-      for(x = pl->minx ; x <= stop ; x++)
-         R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
+      for(x = pl->minx; x <= stop; x++)
+      {
+         if(pl->top[x] <= pl->bottom[x])
+            plane.MapFunc(x, pl->top[x], pl->bottom[x]);
+      }
    }
 }
 
