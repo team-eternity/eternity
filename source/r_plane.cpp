@@ -202,15 +202,15 @@ static void R_PlaneLight()
 //
 // BASIC PRIMITIVE
 //
-static void R_MapPlane(int y, int x1, int x2)
+static void R_MapPlane(int x, int y1, int y2)
 {
    float dy, xstep, ystep, realy, slope;
 
 #ifdef RANGECHECK
-   if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
-      I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
+   if(y2 < y1 || y1 < 0 || y2 >= viewwindow.height || x < 0 || x >= viewwindow.width)
+      I_Error("R_MapPlane: %i, %i at %i\n", y1, y2, x);
 #endif
-  
+
    // SoM: because ycenter is an actual row of pixels (and it isn't really the 
    // center row because there are an even number of rows) some corrections need
    // to be made depending on where the row lies relative to the ycenter row.
@@ -253,12 +253,12 @@ static void R_MapPlane(int y, int x1, int x2)
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == nullptr) // haleyjd 10/16/06
       span.colormap = plane.colormap + R_SpanLight(realy) * 256;
-   
-   span.y  = y;
-   span.x1 = x1;
-   span.x2 = x2;
+
+   span.x  = x;
+   span.y1 = y1;
+   span.y2 = y2;
    span.source = plane.source;
-   
+
    // BIG FLATS
    flatfunc();
 }
