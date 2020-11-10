@@ -107,7 +107,7 @@ static void R_DrawSpanSolid_8()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    while(count-- > 0)
    {
@@ -126,7 +126,7 @@ static void R_DrawSpanSolid_8_GEN()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -218,7 +218,7 @@ static void R_DrawSpanTL_8()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    while(count-- > 0)
    {
@@ -241,7 +241,7 @@ static void R_DrawSpanTL_8_GEN()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -271,7 +271,7 @@ static void R_DrawSpanAdd_8()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    while(count-- > 0)
    {
@@ -299,7 +299,7 @@ static void R_DrawSpanAdd_8_GEN()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -340,7 +340,7 @@ static void R_DrawSpanSolidMasked_8()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -388,7 +388,7 @@ static void R_DrawSpanSolidMasked_8_GEN()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -442,7 +442,7 @@ static void R_DrawSpanTLMasked_8()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -470,7 +470,7 @@ static void R_DrawSpanTLMasked_8_GEN()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
@@ -503,7 +503,7 @@ static void R_DrawSpanAddMasked_8()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    const byte *alpham = (byte *)span.alphamask;
    unsigned i;
@@ -536,7 +536,7 @@ static void R_DrawSpanAddMasked_8_GEN()
    int count = span.y2 - span.y1 + 1;
 
    byte *source = (byte *)span.source;
-   byte *dest   = R_ADDRESS(span.y1, span.x);
+   byte *dest   = R_ADDRESS(span.x, span.y1);
 
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
