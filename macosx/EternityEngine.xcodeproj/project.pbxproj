@@ -187,7 +187,6 @@
 		4F5F3921182D9B0D0027813A /* r_bsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D33158BF42800C49E93 /* r_bsp.cpp */; };
 		4F5F3922182D9B0D0027813A /* r_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D34158BF42800C49E93 /* r_data.cpp */; };
 		4F5F3923182D9B0D0027813A /* r_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D35158BF42800C49E93 /* r_draw.cpp */; };
-		4F5F3925182D9B0D0027813A /* r_drawq.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D37158BF42800C49E93 /* r_drawq.cpp */; };
 		4F5F3926182D9B0D0027813A /* r_dynseg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D38158BF42800C49E93 /* r_dynseg.cpp */; };
 		4F5F3927182D9B0D0027813A /* r_main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D39158BF42800C49E93 /* r_main.cpp */; };
 		4F5F3928182D9B0D0027813A /* r_plane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FABF5D3A158BF42800C49E93 /* r_plane.cpp */; };
@@ -718,7 +717,6 @@
 		FA16D43815E01E96002318D1 /* psnprntf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = psnprntf.h; path = ../source/psnprntf.h; sourceTree = SOURCE_ROOT; };
 		FA16D43915E01E96002318D1 /* r_data.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_data.h; path = ../source/r_data.h; sourceTree = SOURCE_ROOT; };
 		FA16D43A15E01E96002318D1 /* r_draw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_draw.h; path = ../source/r_draw.h; sourceTree = SOURCE_ROOT; };
-		FA16D43C15E01E96002318D1 /* r_drawq.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_drawq.h; path = ../source/r_drawq.h; sourceTree = SOURCE_ROOT; };
 		FA16D43D15E01E96002318D1 /* r_dynseg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_dynseg.h; path = ../source/r_dynseg.h; sourceTree = SOURCE_ROOT; };
 		FA16D43E15E01E96002318D1 /* r_lighting.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_lighting.h; path = ../source/r_lighting.h; sourceTree = SOURCE_ROOT; };
 		FA16D43F15E01E96002318D1 /* r_patch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_patch.h; path = ../source/r_patch.h; sourceTree = SOURCE_ROOT; };
@@ -930,7 +928,6 @@
 		FABF5D33158BF42800C49E93 /* r_bsp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_bsp.cpp; path = ../source/r_bsp.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D34158BF42800C49E93 /* r_data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_data.cpp; path = ../source/r_data.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D35158BF42800C49E93 /* r_draw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_draw.cpp; path = ../source/r_draw.cpp; sourceTree = SOURCE_ROOT; };
-		FABF5D37158BF42800C49E93 /* r_drawq.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_drawq.cpp; path = ../source/r_drawq.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D38158BF42800C49E93 /* r_dynseg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_dynseg.cpp; path = ../source/r_dynseg.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D39158BF42800C49E93 /* r_main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_main.cpp; path = ../source/r_main.cpp; sourceTree = SOURCE_ROOT; };
 		FABF5D3A158BF42800C49E93 /* r_plane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_plane.cpp; path = ../source/r_plane.cpp; sourceTree = SOURCE_ROOT; };
@@ -1864,8 +1861,6 @@
 				FACACB5C1652F2660091AF2E /* r_defs.h */,
 				FABF5D35158BF42800C49E93 /* r_draw.cpp */,
 				FA16D43A15E01E96002318D1 /* r_draw.h */,
-				FABF5D37158BF42800C49E93 /* r_drawq.cpp */,
-				FA16D43C15E01E96002318D1 /* r_drawq.h */,
 				4F50E3FE173770EC00878167 /* r_dynabsp.cpp */,
 				4F50E3FF173770EC00878167 /* r_dynabsp.h */,
 				FABF5D38158BF42800C49E93 /* r_dynseg.cpp */,
@@ -2343,7 +2338,6 @@
 				4F5076BD2068B6AE000226F6 /* p_portalblockmap.cpp in Sources */,
 				4F5F3922182D9B0D0027813A /* r_data.cpp in Sources */,
 				4F5F3923182D9B0D0027813A /* r_draw.cpp in Sources */,
-				4F5F3925182D9B0D0027813A /* r_drawq.cpp in Sources */,
 				4F5F3926182D9B0D0027813A /* r_dynseg.cpp in Sources */,
 				4FAD059A1F91567E003790C5 /* txt_utf8.c in Sources */,
 				4F02C38823126DB3004DBBA7 /* nukedopl3.c in Sources */,
