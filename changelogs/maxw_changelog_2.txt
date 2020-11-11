@@ -30,6 +30,7 @@ Added tall patch support to masked columns (e.g.: sprites, masked midtexes).
 2020/11/11
 Added a provisional fix for intercept traversal when some intercepts are in
 front of the player on the map, but behind them relatively (due to portals).
+Made SetThingSpecial actually set the thing's special in addition to args.
 
 ================================================================================
 EOF

@@ -2237,12 +2237,12 @@ bool ACS_CF_SetThingSpec(ACS_CF_ARGS)
 {
    auto  info = &static_cast<ACSThread *>(thread)->info;
    int   tid  = argV[0];
-   //int spec = argV[1]; // HEXEN_TODO
+   int   spec = argV[1];
    Mobj *mo   = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
    {
-      //mo->special = spec; // HEXEN_TODO
+      mo->special = spec;
       for(int i = 0; i != 5; ++i)
          mo->args[i] = argV[i + 2];
    }
