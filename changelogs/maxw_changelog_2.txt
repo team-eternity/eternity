@@ -26,6 +26,11 @@ The old quad buffer column drawer has been deleted.
 2020/11/08
 Added tall patch support to masked columns (e.g.: sprites, masked midtexes).
 
+--------------------------------------------------------------------------------
+2020/11/11
+Added a provisional fix for intercept traversal when some intercepts are in
+front of the player on the map, but behind them relatively (due to portals).
+
 ================================================================================
 EOF
 ================================================================================
