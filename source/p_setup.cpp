@@ -2444,7 +2444,15 @@ static void P_CreateBlockMap()
       return P_createBlockMapBoom();   // use Boom mode (which is also in PrBoom+)
 
    // First find limits of map
-   
+
+   // This fixes MBF's code, which has a bug where maxx/maxy
+   // are wrong if the 0th node has the largest x or y
+   if(demo_version > 401 && numvertexes)
+   {
+      minx = maxx = vertexes->x >> FRACBITS;
+      miny = maxy = vertexes->y >> FRACBITS;
+   }
+
    for(i = 0; i < (unsigned int)numvertexes; i++)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
