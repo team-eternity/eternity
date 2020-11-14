@@ -309,24 +309,25 @@ bool SDLVideoDriver::InitGraphicsMode()
    bool         wantvsync      = false;
    bool         wanthardware   = false;
    bool         wantframe      = true;
-   int          v_w            = 640;
-   int          v_h            = 480;
+   int          videoWidth     = 640;
+   int          videoHeight    = 480;
    int          v_displaynum   = 0;
    int          window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
    int          renderer_flags = SDL_RENDERER_TARGETTEXTURE;
-   int          r_w = 640;
-   int          r_h = 480;
+   int          resolutionWidth = 640;
+   int          resolutionHeight = 480;
 
    // haleyjd 04/11/03: "vsync" or page-flipping support
    if(use_vsync)
       wantvsync = true;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
+   I_ParseGeom(i_videomode, videoWidth, videoHeight, screentype, wantvsync, wanthardware,
+               wantframe);
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
+   I_CheckVideoCmds(videoWidth, videoHeight, screentype, wantvsync, wanthardware, wantframe);
 
    // Wanting vsync forces framebuffer acceleration on
    if(wantvsync)
@@ -351,7 +352,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  v_w, v_h, window_flags)))
+                                  videoWidth, videoHeight, window_flags)))
    {
       // try 320x200w safety mode
       if(!(window = SDL_CreateWindow(ee_wmCaption,
@@ -364,16 +365,16 @@ bool SDLVideoDriver::InitGraphicsMode()
                       "I_SDLInitGraphicsMode: couldn't create window for mode %dx%d;\n"
                       "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, fallback_w, fallback_h);
+                      videoWidth, videoHeight, fallback_w, fallback_h);
       }
 
       // reset these for below population of video struct
-      v_w          = fallback_w;
-      v_h          = fallback_h;
+      videoWidth   = fallback_w;
+      videoHeight  = fallback_h;
       window_flags = fallback_w_flags;
    }
 
-   I_ParseResolution(i_resolution, r_w, r_h, v_w, v_h);
+   I_ParseResolution(i_resolution, resolutionWidth, resolutionHeight, videoWidth, videoHeight);
 
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
    // this and the below #else block are done here as monitor video mode isn't
@@ -396,15 +397,15 @@ bool SDLVideoDriver::InitGraphicsMode()
                       "I_SDLInitGraphicsMode: couldn't create renderer for mode %dx%d;\n"
                       "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, fallback_w, fallback_h);
+                      videoWidth, videoHeight, fallback_w, fallback_h);
       }
 
       fallback_r_flags = renderer_flags;
    }
 
    // Record successful mode set for use as a fallback mode
-   fallback_w     = v_w;
-   fallback_h     = v_h;
+   fallback_w     = videoWidth;
+   fallback_h     = videoHeight;
    fallback_w_flags = window_flags;
    fallback_r_flags = renderer_flags;
 
@@ -415,30 +416,31 @@ bool SDLVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // check for letterboxing
-   const int bump = (r_w == 512 || r_w == 1024) ? 4 : 0;
-   const int d_w = v_w + bump;
-   if(I_VideoShouldLetterbox(v_w, v_h))
+   const int bump = (resolutionWidth == 512 || resolutionWidth == 1024) ? 4 : 0;
+   const int bumpedWidth = videoWidth + bump;
+
+   if(I_VideoShouldLetterbox(videoWidth, videoHeight))
    {
-      const int hs = I_VideoLetterboxHeight(r_w);
+      const int letterboxHeight = I_VideoLetterboxHeight(resolutionWidth);
 
-      staticDestRect.x = (d_w - hs) / 2;
-      staticDestRect.y = (I_VideoLetterboxOffset(v_h, d_w));
-      staticDestRect.w = hs;
-      staticDestRect.h = d_w;
+      staticDestRect.x = (bumpedWidth - letterboxHeight) / 2;
+      staticDestRect.y = I_VideoLetterboxOffset(videoHeight, bumpedWidth);
+      staticDestRect.w = letterboxHeight;
+      staticDestRect.h = bumpedWidth;
 
-      video.width  = r_w;
-      video.height = hs;
+      video.width  = resolutionWidth;
+      video.height = letterboxHeight;
       destrect     = &staticDestRect;
    }
    else
    {
-      staticDestRect.x = (d_w - v_h) / 2;
-      staticDestRect.y = (v_h - d_w) / 2;
-      staticDestRect.w = v_h;
-      staticDestRect.h = d_w;
+      staticDestRect.x = (bumpedWidth - videoHeight) / 2;
+      staticDestRect.y = (videoHeight - bumpedWidth) / 2;
+      staticDestRect.w = videoHeight;
+      staticDestRect.h = bumpedWidth;
 
-      video.width  = r_w;
-      video.height = r_h;
+      video.width  = resolutionWidth;
+      video.height = resolutionHeight;
       destrect     = &staticDestRect;
    }
 
