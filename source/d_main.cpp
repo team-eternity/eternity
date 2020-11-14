@@ -137,10 +137,10 @@ char    *basegamepath;            // haleyjd 11/23/06: path of base/game directo
 char    *userpath;                // haleyjd 02/05/12: path of "user" directory
 char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
 
-void D_CheckNetGame(void);
-void D_ProcessEvents(void);
+void D_CheckNetGame();
+void D_ProcessEvents();
 void G_BuildTiccmd(ticcmd_t* cmd);
-void D_DoAdvanceDemo(void);
+void D_DoAdvanceDemo();
 
 void usermsg(E_FORMAT_STRING(const char *s), ...)
 {
