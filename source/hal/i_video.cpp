@@ -686,14 +686,40 @@ CONSOLE_COMMAND(togglefullscreen, cf_buffered)
    qstring qgeom = qstring(i_videomode).toLower();
    const char *lastf = qgeom.strRChr('f'), *lastw = qgeom.strRChr('w');
 
+   bool toWindow = false;
+   static bool lastWasFullscreenDesktop;
+
    // Alter the geom string as needed.
    // NOTE: No shortcuts. Relational operators w/ nullptr as an operand is unspecified.
    if(!lastf && !lastw)
+   {
       qgeom.Putc('f'); // Currently implicitly windowed, make fullscreen.
+      if(lastWasFullscreenDesktop)
+         qgeom.Putc('d');
+   }
    if((lastf && !lastw) || (lastf > lastw))
+   {
       qgeom.replace("f", 'w');
+      toWindow = true;
+   }
    else if((lastw && !lastf) || (lastw > lastf))
+   {
       qgeom.replace("w", 'f');
+      if(lastWasFullscreenDesktop)
+         qgeom.Putc('d');
+   }
+
+   // Eliminate all d if to window
+   if(toWindow)
+   {
+      size_t found;
+      lastWasFullscreenDesktop = false;
+      while((found = qgeom.findFirstOf('d')) != qstring::npos)
+      {
+         lastWasFullscreenDesktop = true;
+         qgeom.erase(found, 1);
+      }
+   }
 
    efree(i_videomode);
    i_videomode = qgeom.duplicate();
