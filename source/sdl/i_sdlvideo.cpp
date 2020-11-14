@@ -262,6 +262,10 @@ void SDLVideoDriver::ShutdownGraphicsPartway()
 {
    // haleyjd 06/21/06: use UpdateGrab here, not release
    UpdateGrab(window);
+
+   // NOTE: must do this in macOS to avoid weird glitches when modifying fullscreen
+   SDL_SetWindowFullscreen(window, 0);
+
    if(sdltexture)
    {
       SDL_DestroyTexture(sdltexture);
