@@ -336,7 +336,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 06/19/11: remember characteristics of last successful modeset
    static int fallback_w       = 640;
    static int fallback_h       = 480;
-   static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
+   static int fallback_w_flags = 0;
    static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
    screentype_e screentype     = screentype_e::WINDOWED;
@@ -346,7 +346,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    int          videoWidth     = 640;
    int          videoHeight    = 480;
    int          v_displaynum   = 0;
-   int          window_flags   = SDL_WINDOW_ALLOW_HIGHDPI;
+   int          window_flags   = 0;
    int          renderer_flags = SDL_RENDERER_TARGETTEXTURE;
    int          resolutionWidth = 640;
    int          resolutionHeight = 480;
@@ -362,6 +362,11 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
    I_CheckVideoCmds(videoWidth, videoHeight, screentype, wantvsync, wanthardware, wantframe);
+   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
+   {
+      window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+      fallback_w_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+   }
 
    // Wanting vsync forces framebuffer acceleration on
    if(wantvsync)
