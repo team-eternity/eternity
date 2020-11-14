@@ -410,17 +410,12 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    I_ParseResolution(i_resolution, resolutionWidth, resolutionHeight, videoWidth, videoHeight);
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   // this and the below #else block are done here as monitor video mode isn't
-   // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
-      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-#else
+   // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop) is
+   // ORed in during window creation
    if(screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
    else if(screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-#endif
 
    if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
    {
