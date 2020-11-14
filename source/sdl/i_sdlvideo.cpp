@@ -37,6 +37,7 @@
 #include "../i_system.h"
 #include "../m_argv.h"
 #include "../m_misc.h"
+#include "../m_vector.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
@@ -296,6 +297,35 @@ void SDLVideoDriver::ShutdownGraphics()
 extern bool setsizeneeded;
 
 //
+// Computes rectangle re-scale and displacement
+//
+// "requestedFullscreen" means that fullscreen was requested. Due to a macOS bug when switching
+// fullscreen and back, we can't reliably get the fullscreen flag at this moment.
+//
+static double I_calcScaleAndDisplacement(SDL_Renderer *renderer, int width, int height,
+                                         v2double_t *displacement)
+{
+   double destScale = 1;
+   *displacement = {};
+
+   int renderWidth, renderHeight;
+   if(SDL_GetRendererOutputSize(renderer, &renderWidth, &renderHeight))
+      printf("Error: %s\n", SDL_GetError());
+   else
+   {
+      double widthScale = double(renderWidth) / width;
+      double heightScale = double(renderHeight) / height;
+      destScale = widthScale < heightScale ? widthScale : heightScale;
+      if(widthScale < heightScale)  // monitor letterbox
+         displacement->y = fabs(renderHeight - height * destScale) / 2;
+      else if(heightScale < widthScale) // monitor pillarbox
+         displacement->x = fabs(renderWidth - width * destScale) / 2;
+   }
+
+   return destScale;
+}
+
+//
 // SDLVideoDriver::InitGraphicsMode
 //
 // killough 11/98: New routine, for setting hires and page flipping
@@ -448,6 +478,17 @@ bool SDLVideoDriver::InitGraphicsMode()
       destrect     = &staticDestRect;
    }
 
+   // We need to adjust the static destination rectangle position and size based on renderer or real
+   // screen size and ratio.
+   if(fullscreen)
+   {
+      v2double_t displacement;
+      double scale = I_calcScaleAndDisplacement(renderer, bumpedWidth, videoHeight, &displacement);
+      staticDestRect.x = int(floor(staticDestRect.x * scale + displacement.x));
+      staticDestRect.y = int(floor(staticDestRect.y * scale + displacement.y));
+      staticDestRect.w = int(floor(staticDestRect.w * scale));
+      staticDestRect.h = int(floor(staticDestRect.h * scale));
+   }
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
