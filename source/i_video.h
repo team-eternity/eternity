@@ -75,8 +75,10 @@ void I_FinishUpdate();
 
 void I_ReadScreen(byte *scr);
 
-void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf);
-void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf);
+void I_CheckVideoCmds(int &width, int &height, screentype_e &screentype, bool &vsync,
+                      bool &hardware, bool &wantframe);
+void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screentype, bool &vsync,
+                 bool &hardware, bool &wantframe);
 void I_ParseResolution(const char *resolution, int &w, int &h, const int window_w, const int window_h);
 
 // letterboxing utilities
