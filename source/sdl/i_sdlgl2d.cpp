@@ -32,6 +32,7 @@
 #include "../z_zone.h"
 #include "../d_main.h"
 #include "../i_system.h"
+#include "../m_vector.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
@@ -462,22 +463,39 @@ static GLint textureFilterParams[CFG_GL_NUMFILTERS] =
 };
 
 //
+// Computes rectangle re-scale and displacement (this is the SDL GL 2D version)
+//
+static double I_calcScaleAndDisplacement(SDL_Window *window, int width, int height, 
+   v2double_t *displacement)
+{
+   double destScale = 1;
+   *displacement = {};
+
+   int drawableWidth, drawableHeight;
+   SDL_GL_GetDrawableSize(window, &drawableWidth, &drawableHeight);
+   
+   double widthScale = double(drawableWidth) / width;
+   double heightScale = double(drawableHeight) / height;
+   destScale = widthScale < heightScale ? widthScale : heightScale;
+   if(widthScale < heightScale)  // monitor letterbox
+      displacement->y = fabs(drawableHeight - height * destScale) / 2;
+   else if(heightScale < widthScale) // monitor pillarbox
+      displacement->x = fabs(drawableWidth - width * destScale) / 2;
+
+   return destScale;
+}
+
+//
 // SDLGL2DVideoDriver::InitGraphicsMode
 //
 bool SDLGL2DVideoDriver::InitGraphicsMode()
 {
-   screentype_e  screentype    = screentype_e::WINDOWED;
-   bool          wantvsync     = false;
-   bool          wanthardware  = false; // Not used - this is always "hardware".
-   bool          wantframe     = true;
-   int           v_w           = 640;
-   int           v_h           = 480;
    int           v_displaynum  = 0;
    int           window_flags  = SDL_WINDOW_OPENGL|SDL_WINDOW_ALLOW_HIGHDPI;
    GLvoid       *tempbuffer    = nullptr;
    GLint         texfiltertype = GL_LINEAR;
-   int           r_w = 640;
-   int           r_h = 480;
+   int           resolutionWidth = 640;
+   int           resolutionHeight = 480;
 
    // Get video commands and geometry settings
 
@@ -498,18 +516,23 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(cfg_gl_filter_type >= 0 && cfg_gl_filter_type < CFG_GL_NUMFILTERS)
       texfiltertype = textureFilterParams[cfg_gl_filter_type];
 
-   // haleyjd 04/11/03: "vsync" or page-flipping support
-   if(use_vsync)
-      wantvsync = true;
+   Geom geom;
 
    // set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
+   geom.parse(i_videomode);
+
+   // haleyjd 04/11/03: "vsync" or page-flipping support
+   bool actualVSync;
+   if(geom.vsync == Geom::TriState::neutral)
+      actualVSync = use_vsync;
+   else
+      actualVSync = geom.vsync == Geom::TriState::on;
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
+   I_CheckVideoCmdsOnce(geom);
 
-   if(!wantframe)
+   if(!geom.wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
 
    // Set GL attributes through SDL
@@ -527,25 +550,20 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  v_w, v_h, window_flags)))
+                                  geom.width, geom.height, window_flags)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't create OpenGL window %dx%d\n"
-                               "SDL Error: %s\n", v_w, v_h, SDL_GetError());
+                               "SDL Error: %s\n", geom.width, geom.height, SDL_GetError());
    }
 
-   I_ParseResolution(i_resolution, r_w, r_h, v_w, v_h);
+   I_ParseResolution(i_resolution, resolutionWidth, resolutionHeight, geom.width, geom.height);
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   // this and the below #else block are done here as monitor video mode isn't
-   // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
+   // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop)
+   // is ORed in during window creation
+   if(geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-#else
-   if(screentype == screentype_e::FULLSCREEN_DESKTOP)
-      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(screentype == screentype_e::FULLSCREEN)
+   else if(geom.screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-#endif
 
    if(!(glcontext = SDL_GL_CreateContext(window)))
    {
@@ -554,7 +572,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    }
 
    // Set swap interval through SDL (must be done after context is created)
-   SDL_GL_SetSwapInterval(wantvsync ? 1 : 0); // OMG vsync!
+   SDL_GL_SetSwapInterval(actualVSync ? 1 : 0); // OMG vsync!
 
    Uint32 format;
    if(colordepth == 32)
@@ -564,7 +582,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    else // 16
       format = SDL_PIXELFORMAT_RGB555;
 
-   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, r_h, r_w, 0, format)))
+   if(!(screen = SDL_CreateRGBSurfaceWithFormat(0, resolutionHeight, resolutionWidth, 0, format)))
    {
       I_FatalError(I_ERR_KILL, "Couldn't set RGB surface with colordepth %d, format %s\n",
                    colordepth, SDL_GetPixelFormatName(format));
@@ -579,45 +597,52 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glEnable(GL_TEXTURE_2D);
 
    // Set viewport
-   // This is necessary for high-DPI displays (tested so far on macOS).
-   int drawableW = 0;
-   int drawableH = 0;
-   SDL_GL_GetDrawableSize(window, &drawableW, &drawableH);
-   if(!drawableW || !drawableH)
+   // This is necessary for high-DPI displays.
+   int drawableW;
+   int drawableH;
+   v2double_t displacement = {};
+   double scale = I_calcScaleAndDisplacement(window, geom.width, geom.height, &displacement);
+   if(!scale)
    {
       // If the function somehow fails, reset to v_w and v_h
-      drawableW = v_w;
-      drawableH = v_h;
+      drawableW = geom.width;
+      drawableH = geom.height;
    }
-   glViewport(0, 0, static_cast<GLsizei>(drawableW), static_cast<GLsizei>(drawableH));
+   else
+   {
+      drawableW = int(floor(scale * geom.width));
+      drawableH = int(floor(scale * geom.height));
+   }
+   glViewport(static_cast<GLint>(floor(displacement.x)), static_cast<GLint>(floor(displacement.y)), 
+      static_cast<GLsizei>(drawableW), static_cast<GLsizei>(drawableH));
 
    // Set ortho projection
-   GL_SetOrthoMode(v_w, v_h);
+   GL_SetOrthoMode(geom.width, geom.height);
 
    // Calculate framebuffer texture sizes
    if(strstr(extensions, "GL_ARB_texture_non_power_of_two") != nullptr)
    {
-       framebuffer_umax = r_w;
-       framebuffer_vmax = r_h;
+       framebuffer_umax = resolutionWidth;
+       framebuffer_vmax = resolutionHeight;
    }
    else
    {
-       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(r_w));
-       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(r_h));
+       framebuffer_umax = GL_MakeTextureDimension(static_cast<unsigned int>(resolutionWidth));
+       framebuffer_vmax = GL_MakeTextureDimension(static_cast<unsigned int>(resolutionHeight));
    }
 
    // calculate right- and bottom-side texture coordinates
-   texcoord_smax = static_cast<GLfloat>(r_w) / framebuffer_umax;
-   texcoord_tmax = static_cast<GLfloat>(r_h) / framebuffer_vmax;
+   texcoord_smax = static_cast<GLfloat>(resolutionWidth) / framebuffer_umax;
+   texcoord_tmax = static_cast<GLfloat>(resolutionHeight) / framebuffer_vmax;
 
    GLfloat ymargin = 0.0f;
-   if(I_VideoShouldLetterbox(v_w, v_h))
+   if(I_VideoShouldLetterbox(geom.width, geom.height))
    {
-      const int hs = I_VideoLetterboxHeight(static_cast<int>(r_w));
-      ymargin = static_cast<GLfloat>(v_h - hs) / 2.0f;
+      const int letterboxHeight = I_VideoLetterboxHeight(static_cast<int>(resolutionWidth));
+      ymargin = static_cast<GLfloat>(geom.height - letterboxHeight) / 2.0f;
    }
 
-   GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(v_w), static_cast<float>(v_h),
+   GL2D_setupVertexArray(0.0f, 0.0f, static_cast<float>(geom.width), static_cast<float>(geom.height),
                          texcoord_smax, texcoord_tmax, ymargin);
 
    // Create texture
@@ -642,7 +667,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Allocate framebuffer data, or PBOs
    if(!use_arb_pbo)
-      framebuffer = ecalloc(Uint32 *, r_w * 4, r_h);
+      framebuffer = ecalloc(Uint32 *, resolutionWidth * 4, resolutionHeight);
    else
    {
       pglGenBuffersARB(2, pboIDs);
@@ -657,8 +682,8 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // Init Cardboard video metrics
-   video.width     = r_w;
-   video.height    = r_h;
+   video.width     = resolutionWidth;
+   video.height    = resolutionHeight;
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
@@ -667,6 +692,13 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
 
    // Set initial palette
    SetPalette(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
+
+   // Update the i_videomode cvar to correspond to the real state
+   efree(i_videomode);
+   i_videomode = geom.toString().duplicate();
+   // Also update the vsync variable
+   if(geom.vsync != Geom::TriState::neutral)
+      use_vsync = geom.vsync == Geom::TriState::on;
 
    return false;
 }
