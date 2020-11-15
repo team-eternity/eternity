@@ -360,28 +360,28 @@ void Geom::parse(const char *geom)
    {
       switch(ectype::toLower(*pos))
       {
-         case 'w':
+         case 'w': // window
             screentype = screentype_e::WINDOWED;
             break;
-         case 'd':
+         case 'd': // fullscreen desktop
             screentype = screentype_e::FULLSCREEN_DESKTOP;
             break;
-         case 'f':
+         case 'f': // fullscreen
             screentype = screentype_e::FULLSCREEN;
             break;
-         case 'a':
+         case 'a': // async update
             vsync = TriState::off;
             break;
-         case 'v':
+         case 'v': // vsync update
             vsync = TriState::on;
             break;
-         case 's':
+         case 's': // software
             hardware = false;
             break;
-         case 'h':
+         case 'h': // hardware 
             hardware = true;
             break;
-         case 'n':
+         case 'n': // noframe
             wantframe = false;
             break;
          default:

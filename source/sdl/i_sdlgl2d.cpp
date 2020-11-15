@@ -597,7 +597,7 @@ bool SDLGL2DVideoDriver::InitGraphicsMode()
    glEnable(GL_TEXTURE_2D);
 
    // Set viewport
-   // This is necessary for high-DPI displays.
+   // This is necessary for fullscreen.
    int drawableW;
    int drawableH;
    v2double_t displacement = {};
