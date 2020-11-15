@@ -111,10 +111,6 @@ void I_FinishUpdate();
 void I_ReadScreen(byte *scr);
 
 void I_CheckVideoCmdsOnce(Geom &geom);
-void I_CheckVideoCmds(int &width, int &height, screentype_e &screentype, bool &vsync,
-                      bool &hardware, bool &wantframe);
-void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screentype, bool &vsync,
-                 bool &hardware, bool &wantframe);
 void I_ParseResolution(const char *resolution, int &w, int &h, const int window_w, const int window_h);
 
 // letterboxing utilities
