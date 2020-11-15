@@ -304,9 +304,6 @@ extern bool setsizeneeded;
 //
 // Computes rectangle re-scale and displacement
 //
-// "requestedFullscreen" means that fullscreen was requested. Due to a macOS bug when switching
-// fullscreen and back, we can't reliably get the fullscreen flag at this moment.
-//
 static double I_calcScaleAndDisplacement(SDL_Renderer *renderer, int width, int height,
                                          v2double_t *displacement)
 {
