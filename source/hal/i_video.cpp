@@ -247,13 +247,13 @@ enum
 // Function to parse resolution description strings in the form [wwww]x[hhhh].
 // This is now the primary way in which Eternity stores its renderer resolution setting.
 //
-void I_ParseResolution(const char *resolution, int &w, int &h, const int window_w,
+void I_ParseResolution(const char *resolution, int &width, int &height, const int window_w,
                        const int window_h)
 {
    if(!strcasecmp(resolution, "native"))
    {
-      w = window_w;
-      h = window_h;
+      width = window_w;
+      height = window_h;
       return;
    }
 
@@ -327,8 +327,8 @@ void I_ParseResolution(const char *resolution, int &w, int &h, const int window_
       tmpheight = window_h;
    }
 
-   w = tmpwidth;
-   h = tmpheight;
+   width = tmpwidth;
+   height = tmpheight;
 }
 
 //
