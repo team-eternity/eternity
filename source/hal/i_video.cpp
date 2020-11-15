@@ -234,13 +234,15 @@ void I_ShutdownGraphics()
 
 extern bool setsizeneeded;
 
-// states for geometry and resolution parser
-enum
+//
+// States for geometry and resolution parser
+//
+enum class GeomParseState
 {
-   STATE_WIDTH,
-   STATE_HEIGHT,
-   STATE_FLAGS,
-   STATE_FINISHED
+   width,
+   height,
+   flags,
+   finished
 };
 
 //
@@ -258,16 +260,16 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
    }
 
    const char *c = resolution;
-   int state = STATE_WIDTH;
+   GeomParseState state = GeomParseState::width;
    int tmpwidth = window_w, tmpheight = window_h;
    qstring qstr;
    bool errorflag = false;
 
-   while(*c && state != STATE_FINISHED)
+   while(*c && state != GeomParseState::finished)
    {
       switch(state)
       {
-      case STATE_WIDTH:
+      case GeomParseState::width:
          if(*c >= '0' && *c <= '9')
             qstr += *c;
          else
@@ -275,18 +277,18 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
             int width = qstr.toInt();
             if(width < 320 || width > MAX_SCREENWIDTH)
             {
-               state = STATE_FINISHED;
+               state = GeomParseState::finished;
                errorflag = true;
             }
             else
             {
                tmpwidth = width;
                qstr.clear();
-               state = STATE_HEIGHT;
+               state = GeomParseState::height;
             }
          }
          break;
-      case STATE_HEIGHT:
+      case GeomParseState::height:
          if(*c >= '0' && *c <= '9')
             qstr += *c;
          else
@@ -294,23 +296,25 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
             int height = qstr.toInt();
             if(height < 200 || height > MAX_SCREENHEIGHT)
             {
-               state = STATE_FINISHED;
+               state = GeomParseState::finished;
                errorflag = true;
             }
             else
             {
                tmpheight = height;
-               state = STATE_FINISHED;
+               state = GeomParseState::finished;
                continue; // don't increment the pointer
             }
          }
+         break;
+      default:
          break;
       }
       ++c;
    }
 
    // handle termination of loop during STATE_HEIGHT (expected behaviour)
-   if(state == STATE_HEIGHT)
+   if(state == GeomParseState::height)
    {
       int height = qstr.toInt();
 
@@ -339,7 +343,7 @@ void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screen
                  bool &hardware, bool &wantframe)
 {
    const char *c = geom;
-   int state = STATE_WIDTH;
+   GeomParseState state = GeomParseState::width;
    int tmpwidth = 320, tmpheight = 200;
    qstring qstr;
    bool errorflag = false;
@@ -348,7 +352,7 @@ void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screen
    {
       switch(state)
       {
-      case STATE_WIDTH:
+      case GeomParseState::width:
          if(*c >= '0' && *c <= '9')
             qstr += *c;
          else
@@ -356,18 +360,18 @@ void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screen
             int width = qstr.toInt();
             if(width < 320 || width > MAX_SCREENWIDTH)
             {
-               state = STATE_FLAGS;
+               state = GeomParseState::flags;
                errorflag = true;
             }
             else
             {
                tmpwidth = width;
                qstr.clear();
-               state = STATE_HEIGHT;
+               state = GeomParseState::height;
             }
          }
          break;
-      case STATE_HEIGHT:
+      case GeomParseState::height:
          if(*c >= '0' && *c <= '9')
             qstr += *c;
          else
@@ -375,18 +379,18 @@ void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screen
             int height = qstr.toInt();
             if(height < 200 || height > MAX_SCREENHEIGHT)
             {
-               state = STATE_FLAGS;
+               state = GeomParseState::flags;
                errorflag = true;
             }
             else
             {
                tmpheight = height;
-               state = STATE_FLAGS;
+               state = GeomParseState::flags;
                continue; // don't increment the pointer
             }
          }
          break;
-      case STATE_FLAGS:
+      case GeomParseState::flags:
          switch(ectype::toLower(*c))
          {
          case 'w': // window
@@ -417,12 +421,14 @@ void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screen
             break;
          }
          break;
+      default:
+         break;
       }
       ++c;
    }
 
    // handle termination of loop during STATE_HEIGHT (no flags)
-   if(state == STATE_HEIGHT)
+   if(state == GeomParseState::height)
    {
       int height = qstr.toInt();
 
