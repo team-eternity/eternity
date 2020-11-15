@@ -339,6 +339,110 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
 // Function to parse geometry description strings in the form [wwww]x[hhhh][f/d].
 // This is now the primary way in which Eternity stores its video mode setting.
 //
+// NOTE: width and height are always applied, even if erroneous (in that case it will be 640x480)
+//
+void Geom::parse(const char *geom)
+{
+   if(!geom)   // sanity
+      return;
+   char *pos = nullptr;
+   width = (int)strtol(geom, &pos, 10);
+   if(!validateWidth(width))
+      width = 640;
+   // Only wait for height if 'x' is found after number, otherwise assume it's all flags afterwards
+   if(ectype::toLower(*pos) == 'x')
+   {
+      height = (int)strtol(pos + 1, &pos, 10);
+      if(!validateHeight(height))
+         height = 480;
+   }
+   for(; *pos; ++pos)
+   {
+      switch(ectype::toLower(*pos))
+      {
+         case 'w':
+            screentype = screentype_e::WINDOWED;
+            break;
+         case 'd':
+            screentype = screentype_e::FULLSCREEN_DESKTOP;
+            break;
+         case 'f':
+            screentype = screentype_e::FULLSCREEN;
+            break;
+         case 'a':
+            vsync = TriState::off;
+            break;
+         case 'v':
+            vsync = TriState::on;
+            break;
+         case 's':
+            hardware = false;
+            break;
+         case 'h':
+            hardware = true;
+            break;
+         case 'n':
+            wantframe = false;
+            break;
+         default:
+            break;
+      }
+   }
+}
+
+//
+// Validates the width
+//
+bool Geom::validateWidth(int width)
+{
+   return width >= 320 && width <= MAX_SCREENWIDTH;
+}
+
+//
+// Validates the height
+//
+bool Geom::validateHeight(int height)
+{
+   return height >= 200 && height <= MAX_SCREENHEIGHT;
+}
+
+//
+// Gets the string representation
+//
+qstring Geom::toString() const
+{
+   qstring result;
+   result.Printf(15, "%dx%d", width, height);
+   switch(screentype)
+   {
+      case screentype_e::FULLSCREEN:
+         result.Putc('f');
+         break;
+      case screentype_e::FULLSCREEN_DESKTOP:
+         result.Putc('d');
+         break;
+      case screentype_e::WINDOWED:
+         result.Putc('w');
+         break;
+   }
+   switch(vsync)
+   {
+      case TriState::on:
+         result.Putc('v');
+         break;
+      case TriState::off:
+         result.Putc('a');
+         break;
+      default:
+         break;
+   }
+   if(hardware)
+      result.Putc('h');
+   if(!wantframe)
+      result.Putc('n');
+   return result;
+}
+
 void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screentype, bool &vsync,
                  bool &hardware, bool &wantframe)
 {
@@ -456,6 +560,41 @@ void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screen
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
+void I_CheckVideoCmdsOnce(Geom &geom)
+{
+   static bool firsttime = true;
+   if(firsttime)
+   {
+      firsttime = false;
+      int p;
+      if((p = M_CheckParm("-geom")) && p < myargc - 1)
+         geom.parse(myargv[p + 1]);
+      if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
+         Geom::validateWidth(p = atoi(myargv[p + 1])))
+      {
+         geom.width = p;
+      }
+      if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
+         Geom::validateHeight(p = atoi(myargv[p + 1])))
+      {
+         geom.height = p;
+      }
+      if(M_CheckParm("-vsync"))
+         geom.vsync = Geom::TriState::on;
+      if(M_CheckParm("-novsync"))
+         geom.vsync = Geom::TriState::off;
+
+      if(M_CheckParm("-hardware"))
+         geom.hardware = true;
+      if(M_CheckParm("-software"))
+         geom.hardware = false;
+
+      if(M_CheckParm("-frame"))
+         geom.wantframe = true;
+      if(M_CheckParm("-noframe"))
+         geom.wantframe = false;
+   }
+}
 void I_CheckVideoCmds(int &width, int &height, screentype_e &screentype, bool &vsync,
                       bool &hardware, bool &wantframe)
 {
@@ -467,7 +606,25 @@ void I_CheckVideoCmds(int &width, int &height, screentype_e &screentype, bool &v
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], width, height, screentype, vsync, hardware, wantframe);
+      {
+         Geom geom;
+         geom.width = width;
+         geom.height = height;
+         geom.screentype = screentype;
+         geom.vsync = vsync ? Geom::TriState::on : Geom::TriState::off;
+         geom.hardware = hardware;
+         geom.wantframe = wantframe;
+
+         geom.parse(myargv[p + 1]);
+
+         width = geom.width;
+         height = geom.height;
+         screentype = geom.screentype;
+         if(geom.vsync != Geom::TriState::neutral)
+            vsync = geom.vsync == Geom::TriState::on;
+         hardware = geom.hardware;
+         wantframe = geom.wantframe;
+      }
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
@@ -689,48 +846,17 @@ void I_ToggleFullscreen()
         CONSOLE COMMANDS
  ************************/
 
-CONSOLE_COMMAND(togglefullscreen, cf_buffered)
+//
+// Common routine to update video mode from a geom and also save the new default. Given a nullptr
+// geom means to just set mode and save, i_videomode already got changed.
+//
+static void I_updateVideoMode(const Geom *geom)
 {
-   qstring qgeom = qstring(i_videomode).toLower();
-   const char *lastf = qgeom.strRChr('f'), *lastw = qgeom.strRChr('w');
-
-   bool toWindow = false;
-   static bool lastWasFullscreenDesktop;
-
-   // Alter the geom string as needed.
-   // NOTE: No shortcuts. Relational operators w/ nullptr as an operand is unspecified.
-   if(!lastf && !lastw)
+   if(geom)
    {
-      qgeom.Putc('f'); // Currently implicitly windowed, make fullscreen.
-      if(lastWasFullscreenDesktop)
-         qgeom.Putc('d');
+      efree(i_videomode);
+      i_videomode = geom->toString().duplicate();
    }
-   if((lastf && !lastw) || (lastf > lastw))
-   {
-      qgeom.replace("f", 'w');
-      toWindow = true;
-   }
-   else if((lastw && !lastf) || (lastw > lastf))
-   {
-      qgeom.replace("w", 'f');
-      if(lastWasFullscreenDesktop)
-         qgeom.Putc('d');
-   }
-
-   // Eliminate all d if to window
-   if(toWindow)
-   {
-      size_t found;
-      lastWasFullscreenDesktop = false;
-      while((found = qgeom.findFirstOf('d')) != qstring::npos)
-      {
-         lastWasFullscreenDesktop = true;
-         qgeom.erase(found, 1);
-      }
-   }
-
-   efree(i_videomode);
-   i_videomode = qgeom.duplicate();
 
    I_SetMode();
 
@@ -739,11 +865,39 @@ CONSOLE_COMMAND(togglefullscreen, cf_buffered)
    i_default_videomode = estrdup(i_videomode);
 }
 
+CONSOLE_COMMAND(togglefullscreen, cf_buffered)
+{
+   Geom geom(i_videomode);
+   static bool lastWasFullscreenDesktop;
+   switch(geom.screentype)
+   {
+      case screentype_e::FULLSCREEN_DESKTOP:
+         lastWasFullscreenDesktop = true;
+         geom.screentype = screentype_e::WINDOWED;
+         break;
+      case screentype_e::FULLSCREEN:
+         lastWasFullscreenDesktop = false;
+         geom.screentype = screentype_e::WINDOWED;
+         break;
+
+      case screentype_e::WINDOWED:
+         geom.screentype = lastWasFullscreenDesktop ? screentype_e::FULLSCREEN_DESKTOP :
+               screentype_e::FULLSCREEN;
+         break;
+   }
+
+   I_updateVideoMode(&geom);
+}
+
 VARIABLE_BOOLEAN(use_vsync, nullptr,  yesno);
 
 CONSOLE_VARIABLE(v_retrace, use_vsync, 0)
 {
-   I_SetMode();
+   Geom geom(i_videomode);
+   // reset the geom's state to neutral so this takes precedence
+   geom.vsync = Geom::TriState::neutral;
+
+   I_updateVideoMode(&geom);
 }
 
 VARIABLE_BOOLEAN(usemouse,    nullptr, yesno);
@@ -768,12 +922,7 @@ CONSOLE_VARIABLE(i_resolution, i_resolution, cf_buffered)
 VARIABLE_STRING(i_videomode, nullptr, UL);
 CONSOLE_VARIABLE(i_videomode, i_videomode, cf_buffered)
 {
-   I_SetMode();
-
-   if(i_default_videomode)
-      efree(i_default_videomode);
-
-   i_default_videomode = estrdup(i_videomode);
+   I_updateVideoMode(nullptr);
 }
 
 static const char *i_videodrivernames[] = 

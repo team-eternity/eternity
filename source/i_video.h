@@ -27,6 +27,7 @@
 #define I_VIDEO_H__
 
 #include "doomtype.h"
+#include "m_qstr.h"
 
 struct SDL_Window;
 
@@ -59,6 +60,40 @@ public:
    SDL_Window *window = nullptr;
 };
 
+//
+// Geom string data
+//
+struct Geom
+{
+   //
+   // Some fields may have neutral flags, as affected by other fields
+   //
+   enum class TriState
+   {
+      off,
+      on,
+      neutral
+   };
+
+   Geom() = default;
+   Geom(const char *geom)
+   {
+      parse(geom);
+   }
+
+   void parse(const char *geom);
+   static bool validateWidth(int width);
+   static bool validateHeight(int height);
+   qstring toString() const;
+
+   int width = 640;
+   int height = 480;
+   screentype_e screentype = screentype_e::WINDOWED;
+   TriState vsync = TriState::neutral;
+   bool hardware = false;
+   bool wantframe = true;
+};
+
 void I_StartTic();
 
 // Called by D_DoomMain,
@@ -75,6 +110,7 @@ void I_FinishUpdate();
 
 void I_ReadScreen(byte *scr);
 
+void I_CheckVideoCmdsOnce(Geom &geom);
 void I_CheckVideoCmds(int &width, int &height, screentype_e &screentype, bool &vsync,
                       bool &hardware, bool &wantframe);
 void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screentype, bool &vsync,
