@@ -335,7 +335,8 @@ void I_ParseResolution(const char *resolution, int &w, int &h, const int window_
 // Function to parse geometry description strings in the form [wwww]x[hhhh][f/d].
 // This is now the primary way in which Eternity stores its video mode setting.
 //
-void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf)
+void I_ParseGeom(const char *geom, int &width, int &height, screentype_e &screentype, bool &vsync,
+                 bool &hardware, bool &wantframe)
 {
    const char *c = geom;
    int state = STATE_WIDTH;
@@ -389,28 +390,28 @@ void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, b
          switch(ectype::toLower(*c))
          {
          case 'w': // window
-            st = screentype_e::WINDOWED;
+            screentype = screentype_e::WINDOWED;
             break;
          case 'd': // fullscreen desktop
-            st = screentype_e::FULLSCREEN_DESKTOP;
+            screentype = screentype_e::FULLSCREEN_DESKTOP;
             break;
          case 'f': // fullscreen
-            st = screentype_e::FULLSCREEN;
+            screentype = screentype_e::FULLSCREEN;
             break;
          case 'a': // async update
-            vs = false;
+            vsync = false;
             break;
          case 'v': // vsync update
-            vs = true;
+            vsync = true;
             break;
          case 's': // software
-            hw = false;
+            hardware = false;
             break;
          case 'h': // hardware 
-            hw = true;
+            hardware = true;
             break;
          case 'n': // noframe
-            wf = false;
+            wantframe = false;
             break;
          default:
             break;
@@ -438,8 +439,8 @@ void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, b
       tmpheight = 480;
    }
 
-   w = tmpwidth;
-   h = tmpheight;
+   width = tmpwidth;
+   height = tmpheight;
 }
 
 //
@@ -449,7 +450,8 @@ void I_ParseGeom(const char *geom, int &w, int &h, screentype_e &st, bool &vs, b
 // runtime want to use the precise settings specified through the UI
 // instead.
 //
-void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool &wf)
+void I_CheckVideoCmds(int &width, int &height, screentype_e &screentype, bool &vsync,
+                      bool &hardware, bool &wantframe)
 {
    static bool firsttime = true;
    int p;
@@ -459,35 +461,35 @@ void I_CheckVideoCmds(int &w, int &h, screentype_e &st, bool &vs, bool &hw, bool
       firsttime = false;
 
       if((p = M_CheckParm("-geom")) && p < myargc - 1)
-         I_ParseGeom(myargv[p + 1], w, h, st, vs, hw, wf);
+         I_ParseGeom(myargv[p + 1], width, height, screentype, vsync, hardware, wantframe);
 
       if((p = M_CheckParm("-vwidth")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 320 && p <= MAX_SCREENWIDTH)
-         w = p;
+         width = p;
 
       if((p = M_CheckParm("-vheight")) && p < myargc - 1 &&
          (p = atoi(myargv[p + 1])) >= 200 && p <= MAX_SCREENHEIGHT)
-         h = p;
+         height = p;
 
       if(M_CheckParm("-fullscreen"))
-         st = screentype_e::FULLSCREEN_DESKTOP;
+         screentype = screentype_e::FULLSCREEN_DESKTOP;
       if(M_CheckParm("-nofullscreen") || M_CheckParm("-window"))
-         st = screentype_e::WINDOWED;
+         screentype = screentype_e::WINDOWED;
 
       if(M_CheckParm("-vsync"))
-         vs = true;
+         vsync = true;
       if(M_CheckParm("-novsync"))
-         vs = false;
+         vsync = false;
 
       if(M_CheckParm("-hardware"))
-         hw = true;
+         hardware = true;
       if(M_CheckParm("-software"))
-         hw = false;
+         hardware = false;
 
       if(M_CheckParm("-frame"))
-         wf = true;
+         wantframe = true;
       if(M_CheckParm("-noframe"))
-         wf = false;
+         wantframe = false;
    }
 }
 
