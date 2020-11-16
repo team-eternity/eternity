@@ -14,6 +14,8 @@ BUGFIX: Fixed fullscreen-desktop transition errors causing the display to mess
         up in macOS. Weird stuff may still happens if somebody pulls the monitor
         from the laptop.
 
+IMPROVEMENT: Classic (exclusive) fullscreen is once again available on macOS.
+
 ========================
 Since v4.00.00 "Völuspá"
 ========================
