@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "adlmidi", "adlmidi.vcxproj", "{06F7C536-AB34-4054-ACE1-EF74F07A533C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EternityTest", "..\test\EternityTest\EternityTest.vcxproj", "{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -105,6 +107,18 @@ Global
 		{06F7C536-AB34-4054-ACE1-EF74F07A533C}.Shipping|Win32.Build.0 = Shipping|Win32
 		{06F7C536-AB34-4054-ACE1-EF74F07A533C}.Shipping|x64.ActiveCfg = Shipping|x64
 		{06F7C536-AB34-4054-ACE1-EF74F07A533C}.Shipping|x64.Build.0 = Shipping|x64
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Debug|Win32.Build.0 = Debug|Win32
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Debug|x64.ActiveCfg = Debug|x64
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Debug|x64.Build.0 = Debug|x64
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Release|Win32.ActiveCfg = Release|Win32
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Release|Win32.Build.0 = Release|Win32
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Release|x64.ActiveCfg = Release|x64
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Release|x64.Build.0 = Release|x64
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Shipping|Win32.ActiveCfg = Debug|Win32
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Shipping|Win32.Build.0 = Debug|Win32
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Shipping|x64.ActiveCfg = Debug|x64
+		{A44F843C-DF2D-477C-9BDE-F155DA2FA6A5}.Shipping|x64.Build.0 = Debug|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

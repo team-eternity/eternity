@@ -1,0 +1,834 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\gtest">
+      <UniqueIdentifier>{ef7efe47-33dd-4c60-96cd-d847656fd32f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\gtest">
+      <UniqueIdentifier>{356199e2-5886-46e7-8b61-c88dae0ed7db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\eternity">
+      <UniqueIdentifier>{ffa2f509-2fe6-4801-ada7-604828d6b64f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\eternity\hal">
+      <UniqueIdentifier>{ec74014a-2c41-4df6-a8bb-14a0191533a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\eternity\sdl">
+      <UniqueIdentifier>{fa432ba7-01c5-41f7-9ff6-6151d6972fbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\eternity\textscreen">
+      <UniqueIdentifier>{0cf9ecec-64c6-4853-9fda-c0762f2eb984}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EternityTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\googletest\googletest\src\gtest-all.cc">
+      <Filter>Source Files\gtest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\googletest\googletest\src\gtest_main.cc">
+      <Filter>Source Files\gtest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hal\i_video.cpp">
+      <Filter>Source Files\eternity\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_cmd.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_input.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_misc.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\z_native.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\am_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\g_game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_system.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_dehtbl.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_main.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_portal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_inventory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ev_specials.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\g_bind.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_spec.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_draw.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_main.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_block.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\w_wad.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_patchfmt.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_buffer.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_video.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\st_stuff.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\c_cmd.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_gi.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\tables.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\doomstat.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_setup.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_doors.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_misc.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\c_io.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\c_runcmd.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\version.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_qstr.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\g_cmd.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_menus.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_partcl.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\psnprntf.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_font.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\s_sound.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_fonts.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hu_over.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_engin.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\c_net.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_io.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_argv.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_pspr.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_weaponsdoom.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_random.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hal\i_gamepads.cpp">
+      <Filter>Source Files\eternity\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_states.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_things.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_weapons.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_trace.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_mobj.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_inter.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_maputl.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_user.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\info.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_map.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_info.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_common.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_args.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_ttypes.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\metaapi.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_enemy.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_sight.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_mobjcol.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_doom.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_tick.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_portalcross.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_rtti.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_general.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_floor.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\acs_intr.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\acs_func.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_deh.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_mod.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_counters.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_decorate.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_fixed.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_heretic.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_hexen.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_small.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\a_weaponsheretic.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\am_color.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\c_batch.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\cam_aim.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\cam_common.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\cam_shoot.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\cam_sight.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\cam_use.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_diskfile.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_files.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_findiwads.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_items.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_iwad.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\d_net.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\doomdef.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\dstrings.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_anim.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_cmd.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_compatibility.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_dstate.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_edf.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_edfmetatable.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_exdata.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_gameprops.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_hash.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_lib.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_player.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_puff.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_reverbs.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_sound.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_sprite.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_string.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_switch.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\e_udmf.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ev_actions.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ev_bindings.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ev_sectors.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ev_static.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\f_finale.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\f_wipe.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\g_demolog.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\g_dmflag.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\g_gfs.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hi_stuff.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hu_boom.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hu_frags.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hu_inventory.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hu_modern.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hu_stuff.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\in_lude.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_bbox.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_buffer.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_cheat.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_debug.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_fcvt.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_hash.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_queue.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_shots.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_strcasestr.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_syscfg.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_utils.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\m_vector.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\metaqstring.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_emenu.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_files.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_htic.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_items.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_misc.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\mn_skinv.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_anim.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_ceilng.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_chase.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_genlin.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_henemy.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_hubs.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_lights.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_map3d.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_plats.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_portalblockmap.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_portalclip.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_pushers.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_saveg.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_scroll.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_sector.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_skin.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_slopes.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_switch.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_telept.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_things.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\p_xenemy.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\polyobj.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_bsp.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_data.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_dynabsp.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_dynseg.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_plane.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_portal.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_ripple.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_segs.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_sky.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_span.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_textur.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_things.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\r_voxels.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\s_formats.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\s_musinfo.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\s_reverb.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\s_sndseq.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sounds.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\st_hbar.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\st_lib.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\t_plane.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_alloc.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_image.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_patch.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\v_png.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\w_formats.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\w_hacks.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\w_levels.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\w_zip.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\wi_stuff.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_animdefs.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_emapinfo.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_mapinfo.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_musinfo.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_scripts.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_sndinfo.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\xl_umapinfo.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hal\i_directory.cpp">
+      <Filter>Source Files\eternity\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hal\i_platform.cpp">
+      <Filter>Source Files\eternity\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\hal\i_timer.cpp">
+      <Filter>Source Files\eternity\hal</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_midirpc.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_net.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_pcsound.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_picker.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sdlgamepads.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sdlgl2d.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sdlmusic.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sdlsound.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sdltimer.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sdlvideo.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_button.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_checkbox.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_conditional.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_desktop.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_dropdown.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_fileselect.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_gui.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_inputbox.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_io.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_label.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_radiobutton.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_scrollpane.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_sdl.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_separator.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_spinctrl.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_strut.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_table.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_utf8.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_widget.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_window.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\textscreen\txt_window_action.c">
+      <Filter>Source Files\eternity\textscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Confuse\confuse.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Confuse\lexer.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\i_sound.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\mmus2mid.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\sdl\ser_main.cpp">
+      <Filter>Source Files\eternity\sdl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gl\gl_init.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gl\gl_primitives.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gl\gl_projection.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gl\gl_texture.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\gl\gl_vars.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Win32\i_exception.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Win32\i_fnames.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Win32\i_w32gui.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Win32\i_w32main.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Win32\i_xinput.cpp">
+      <Filter>Source Files\eternity</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\googletest\googletest\include\gtest\gtest.h">
+      <Filter>Header Files\gtest</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

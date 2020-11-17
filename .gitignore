@@ -68,3 +68,5 @@ user/shots/*.bmp
 user/shots/*.pcx
 user/shots/*.png
 user/shots/*.tga
+test/EternityTest/EternityTest.vcxproj.user
+test/EternityTest/Debug/

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{a44f843c-df2d-477c-9bde-f155da2fa6a5}</ProjectGuid>
+    <RootNamespace>EternityTest</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_SDL_VER;R_LINKEDPORTALS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\googletest\googletest\include;..\googletest\googletest;..\..\..\SDL2-2.0.12\include;..\..\acsvm;..\..\libpng;..\..\..\SDL2_mixer-2.0.4\include;..\..\..\SDL2_net-2.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\..\..\SDL2-2.0.12\lib\x86\SDL2.lib;..\..\..\SDL2_mixer-2.0.4\lib\x86\SDL2_mixer.lib;..\..\..\SDL2_net-2.0.1\lib\x86\SDL2_net.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_SDL_VER;R_LINKEDPORTALS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\googletest\googletest\include;..\googletest\googletest;..\..\..\SDL2-2.0.12\include;..\..\acsvm;..\..\libpng;..\..\..\SDL2_mixer-2.0.4\include;..\..\..\SDL2_net-2.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\..\..\SDL2-2.0.12\lib\x86\SDL2.lib;..\..\..\SDL2_mixer-2.0.4\lib\x86\SDL2_mixer.lib;..\..\..\SDL2_net-2.0.1\lib\x86\SDL2_net.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_SDL_VER;R_LINKEDPORTALS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\googletest\googletest\include;..\googletest\googletest;..\..\..\SDL2-2.0.12\include;..\..\acsvm;..\..\libpng;..\..\..\SDL2_mixer-2.0.4\include;..\..\..\SDL2_net-2.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\..\..\SDL2-2.0.12\lib\x86\SDL2.lib;..\..\..\SDL2_mixer-2.0.4\lib\x86\SDL2_mixer.lib;..\..\..\SDL2_net-2.0.1\lib\x86\SDL2_net.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;_SDL_VER;R_LINKEDPORTALS</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>..\googletest\googletest\include;..\googletest\googletest;..\..\..\SDL2-2.0.12\include;..\..\acsvm;..\..\libpng;..\..\..\SDL2_mixer-2.0.4\include;..\..\..\SDL2_net-2.0.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\..\..\SDL2-2.0.12\lib\x86\SDL2.lib;..\..\..\SDL2_mixer-2.0.4\lib\x86\SDL2_mixer.lib;..\..\..\SDL2_net-2.0.1\lib\x86\SDL2_net.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\acs_func.cpp" />
+    <ClCompile Include="..\..\source\acs_intr.cpp" />
+    <ClCompile Include="..\..\source\am_color.cpp" />
+    <ClCompile Include="..\..\source\am_map.cpp" />
+    <ClCompile Include="..\..\source\a_common.cpp" />
+    <ClCompile Include="..\..\source\a_counters.cpp" />
+    <ClCompile Include="..\..\source\a_decorate.cpp" />
+    <ClCompile Include="..\..\source\a_doom.cpp" />
+    <ClCompile Include="..\..\source\a_fixed.cpp" />
+    <ClCompile Include="..\..\source\a_general.cpp" />
+    <ClCompile Include="..\..\source\a_heretic.cpp" />
+    <ClCompile Include="..\..\source\a_hexen.cpp" />
+    <ClCompile Include="..\..\source\a_small.cpp" />
+    <ClCompile Include="..\..\source\a_weaponsdoom.cpp" />
+    <ClCompile Include="..\..\source\a_weaponsheretic.cpp" />
+    <ClCompile Include="..\..\source\cam_aim.cpp" />
+    <ClCompile Include="..\..\source\cam_common.cpp" />
+    <ClCompile Include="..\..\source\cam_shoot.cpp" />
+    <ClCompile Include="..\..\source\cam_sight.cpp" />
+    <ClCompile Include="..\..\source\cam_use.cpp" />
+    <ClCompile Include="..\..\source\Confuse\confuse.cpp" />
+    <ClCompile Include="..\..\source\Confuse\lexer.cpp" />
+    <ClCompile Include="..\..\source\c_batch.cpp" />
+    <ClCompile Include="..\..\source\c_cmd.cpp" />
+    <ClCompile Include="..\..\source\c_io.cpp" />
+    <ClCompile Include="..\..\source\c_net.cpp" />
+    <ClCompile Include="..\..\source\c_runcmd.cpp" />
+    <ClCompile Include="..\..\source\doomdef.cpp" />
+    <ClCompile Include="..\..\source\doomstat.cpp" />
+    <ClCompile Include="..\..\source\dstrings.cpp" />
+    <ClCompile Include="..\..\source\d_deh.cpp" />
+    <ClCompile Include="..\..\source\d_dehtbl.cpp" />
+    <ClCompile Include="..\..\source\d_diskfile.cpp" />
+    <ClCompile Include="..\..\source\d_files.cpp" />
+    <ClCompile Include="..\..\source\d_findiwads.cpp" />
+    <ClCompile Include="..\..\source\d_gi.cpp" />
+    <ClCompile Include="..\..\source\d_io.cpp" />
+    <ClCompile Include="..\..\source\d_items.cpp" />
+    <ClCompile Include="..\..\source\d_iwad.cpp" />
+    <ClCompile Include="..\..\source\d_main.cpp" />
+    <ClCompile Include="..\..\source\d_net.cpp" />
+    <ClCompile Include="..\..\source\ev_actions.cpp" />
+    <ClCompile Include="..\..\source\ev_bindings.cpp" />
+    <ClCompile Include="..\..\source\ev_sectors.cpp" />
+    <ClCompile Include="..\..\source\ev_specials.cpp" />
+    <ClCompile Include="..\..\source\ev_static.cpp" />
+    <ClCompile Include="..\..\source\e_anim.cpp" />
+    <ClCompile Include="..\..\source\e_args.cpp" />
+    <ClCompile Include="..\..\source\e_cmd.cpp" />
+    <ClCompile Include="..\..\source\e_compatibility.cpp" />
+    <ClCompile Include="..\..\source\e_dstate.cpp" />
+    <ClCompile Include="..\..\source\e_edf.cpp" />
+    <ClCompile Include="..\..\source\e_edfmetatable.cpp" />
+    <ClCompile Include="..\..\source\e_exdata.cpp" />
+    <ClCompile Include="..\..\source\e_fonts.cpp" />
+    <ClCompile Include="..\..\source\e_gameprops.cpp" />
+    <ClCompile Include="..\..\source\e_hash.cpp" />
+    <ClCompile Include="..\..\source\e_inventory.cpp" />
+    <ClCompile Include="..\..\source\e_lib.cpp" />
+    <ClCompile Include="..\..\source\e_mod.cpp" />
+    <ClCompile Include="..\..\source\e_player.cpp" />
+    <ClCompile Include="..\..\source\e_puff.cpp" />
+    <ClCompile Include="..\..\source\e_reverbs.cpp" />
+    <ClCompile Include="..\..\source\e_rtti.cpp" />
+    <ClCompile Include="..\..\source\e_sound.cpp" />
+    <ClCompile Include="..\..\source\e_sprite.cpp" />
+    <ClCompile Include="..\..\source\e_states.cpp" />
+    <ClCompile Include="..\..\source\e_string.cpp" />
+    <ClCompile Include="..\..\source\e_switch.cpp" />
+    <ClCompile Include="..\..\source\e_things.cpp" />
+    <ClCompile Include="..\..\source\e_ttypes.cpp" />
+    <ClCompile Include="..\..\source\e_udmf.cpp" />
+    <ClCompile Include="..\..\source\e_weapons.cpp" />
+    <ClCompile Include="..\..\source\f_finale.cpp" />
+    <ClCompile Include="..\..\source\f_wipe.cpp" />
+    <ClCompile Include="..\..\source\gl\gl_init.cpp" />
+    <ClCompile Include="..\..\source\gl\gl_primitives.cpp" />
+    <ClCompile Include="..\..\source\gl\gl_projection.cpp" />
+    <ClCompile Include="..\..\source\gl\gl_texture.cpp" />
+    <ClCompile Include="..\..\source\gl\gl_vars.cpp" />
+    <ClCompile Include="..\..\source\g_bind.cpp" />
+    <ClCompile Include="..\..\source\g_cmd.cpp" />
+    <ClCompile Include="..\..\source\g_demolog.cpp" />
+    <ClCompile Include="..\..\source\g_dmflag.cpp" />
+    <ClCompile Include="..\..\source\g_game.cpp" />
+    <ClCompile Include="..\..\source\g_gfs.cpp" />
+    <ClCompile Include="..\..\source\hal\i_directory.cpp" />
+    <ClCompile Include="..\..\source\hal\i_gamepads.cpp" />
+    <ClCompile Include="..\..\source\hal\i_platform.cpp" />
+    <ClCompile Include="..\..\source\hal\i_timer.cpp" />
+    <ClCompile Include="..\..\source\hal\i_video.cpp" />
+    <ClCompile Include="..\..\source\hi_stuff.cpp" />
+    <ClCompile Include="..\..\source\hu_boom.cpp" />
+    <ClCompile Include="..\..\source\hu_frags.cpp" />
+    <ClCompile Include="..\..\source\hu_inventory.cpp" />
+    <ClCompile Include="..\..\source\hu_modern.cpp" />
+    <ClCompile Include="..\..\source\hu_over.cpp" />
+    <ClCompile Include="..\..\source\hu_stuff.cpp" />
+    <ClCompile Include="..\..\source\info.cpp" />
+    <ClCompile Include="..\..\source\in_lude.cpp" />
+    <ClCompile Include="..\..\source\metaapi.cpp" />
+    <ClCompile Include="..\..\source\metaqstring.cpp" />
+    <ClCompile Include="..\..\source\mn_emenu.cpp" />
+    <ClCompile Include="..\..\source\mn_engin.cpp" />
+    <ClCompile Include="..\..\source\mn_files.cpp" />
+    <ClCompile Include="..\..\source\mn_htic.cpp" />
+    <ClCompile Include="..\..\source\mn_items.cpp" />
+    <ClCompile Include="..\..\source\mn_menus.cpp" />
+    <ClCompile Include="..\..\source\mn_misc.cpp" />
+    <ClCompile Include="..\..\source\mn_skinv.cpp" />
+    <ClCompile Include="..\..\source\m_argv.cpp" />
+    <ClCompile Include="..\..\source\m_bbox.cpp" />
+    <ClCompile Include="..\..\source\m_buffer.cpp" />
+    <ClCompile Include="..\..\source\m_cheat.cpp" />
+    <ClCompile Include="..\..\source\m_debug.cpp" />
+    <ClCompile Include="..\..\source\m_fcvt.cpp" />
+    <ClCompile Include="..\..\source\m_hash.cpp" />
+    <ClCompile Include="..\..\source\m_misc.cpp" />
+    <ClCompile Include="..\..\source\m_qstr.cpp" />
+    <ClCompile Include="..\..\source\m_queue.cpp" />
+    <ClCompile Include="..\..\source\m_random.cpp" />
+    <ClCompile Include="..\..\source\m_shots.cpp" />
+    <ClCompile Include="..\..\source\m_strcasestr.cpp" />
+    <ClCompile Include="..\..\source\m_syscfg.cpp" />
+    <ClCompile Include="..\..\source\m_utils.cpp" />
+    <ClCompile Include="..\..\source\m_vector.cpp" />
+    <ClCompile Include="..\..\source\polyobj.cpp" />
+    <ClCompile Include="..\..\source\psnprntf.cpp" />
+    <ClCompile Include="..\..\source\p_anim.cpp" />
+    <ClCompile Include="..\..\source\p_ceilng.cpp" />
+    <ClCompile Include="..\..\source\p_chase.cpp" />
+    <ClCompile Include="..\..\source\p_cmd.cpp" />
+    <ClCompile Include="..\..\source\p_doors.cpp" />
+    <ClCompile Include="..\..\source\p_enemy.cpp" />
+    <ClCompile Include="..\..\source\p_floor.cpp" />
+    <ClCompile Include="..\..\source\p_genlin.cpp" />
+    <ClCompile Include="..\..\source\p_henemy.cpp" />
+    <ClCompile Include="..\..\source\p_hubs.cpp" />
+    <ClCompile Include="..\..\source\p_info.cpp" />
+    <ClCompile Include="..\..\source\p_inter.cpp" />
+    <ClCompile Include="..\..\source\p_lights.cpp" />
+    <ClCompile Include="..\..\source\p_map.cpp" />
+    <ClCompile Include="..\..\source\p_map3d.cpp" />
+    <ClCompile Include="..\..\source\p_maputl.cpp" />
+    <ClCompile Include="..\..\source\p_mobj.cpp" />
+    <ClCompile Include="..\..\source\p_mobjcol.cpp" />
+    <ClCompile Include="..\..\source\p_partcl.cpp" />
+    <ClCompile Include="..\..\source\p_plats.cpp" />
+    <ClCompile Include="..\..\source\p_portal.cpp" />
+    <ClCompile Include="..\..\source\p_portalblockmap.cpp" />
+    <ClCompile Include="..\..\source\p_portalclip.cpp" />
+    <ClCompile Include="..\..\source\p_portalcross.cpp" />
+    <ClCompile Include="..\..\source\p_pspr.cpp" />
+    <ClCompile Include="..\..\source\p_pushers.cpp" />
+    <ClCompile Include="..\..\source\p_saveg.cpp" />
+    <ClCompile Include="..\..\source\p_scroll.cpp" />
+    <ClCompile Include="..\..\source\p_sector.cpp" />
+    <ClCompile Include="..\..\source\p_setup.cpp" />
+    <ClCompile Include="..\..\source\p_sight.cpp" />
+    <ClCompile Include="..\..\source\p_skin.cpp" />
+    <ClCompile Include="..\..\source\p_slopes.cpp" />
+    <ClCompile Include="..\..\source\p_spec.cpp" />
+    <ClCompile Include="..\..\source\p_switch.cpp" />
+    <ClCompile Include="..\..\source\p_telept.cpp" />
+    <ClCompile Include="..\..\source\p_things.cpp" />
+    <ClCompile Include="..\..\source\p_tick.cpp" />
+    <ClCompile Include="..\..\source\p_trace.cpp" />
+    <ClCompile Include="..\..\source\p_user.cpp" />
+    <ClCompile Include="..\..\source\p_xenemy.cpp" />
+    <ClCompile Include="..\..\source\r_bsp.cpp" />
+    <ClCompile Include="..\..\source\r_data.cpp" />
+    <ClCompile Include="..\..\source\r_draw.cpp" />
+    <ClCompile Include="..\..\source\r_dynabsp.cpp" />
+    <ClCompile Include="..\..\source\r_dynseg.cpp" />
+    <ClCompile Include="..\..\source\r_main.cpp" />
+    <ClCompile Include="..\..\source\r_plane.cpp" />
+    <ClCompile Include="..\..\source\r_portal.cpp" />
+    <ClCompile Include="..\..\source\r_ripple.cpp" />
+    <ClCompile Include="..\..\source\r_segs.cpp" />
+    <ClCompile Include="..\..\source\r_sky.cpp" />
+    <ClCompile Include="..\..\source\r_span.cpp" />
+    <ClCompile Include="..\..\source\r_textur.cpp" />
+    <ClCompile Include="..\..\source\r_things.cpp" />
+    <ClCompile Include="..\..\source\r_voxels.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_input.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_midirpc.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_net.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_pcsound.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_picker.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sdlgamepads.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sdlgl2d.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sdlmusic.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sdlsound.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sdltimer.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sdlvideo.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_sound.cpp" />
+    <ClCompile Include="..\..\source\sdl\i_system.cpp" />
+    <ClCompile Include="..\..\source\sdl\mmus2mid.cpp" />
+    <ClCompile Include="..\..\source\sdl\ser_main.cpp" />
+    <ClCompile Include="..\..\source\sounds.cpp" />
+    <ClCompile Include="..\..\source\st_hbar.cpp" />
+    <ClCompile Include="..\..\source\st_lib.cpp" />
+    <ClCompile Include="..\..\source\st_stuff.cpp" />
+    <ClCompile Include="..\..\source\s_formats.cpp" />
+    <ClCompile Include="..\..\source\s_musinfo.cpp" />
+    <ClCompile Include="..\..\source\s_reverb.cpp" />
+    <ClCompile Include="..\..\source\s_sndseq.cpp" />
+    <ClCompile Include="..\..\source\s_sound.cpp" />
+    <ClCompile Include="..\..\source\tables.cpp" />
+    <ClCompile Include="..\..\source\textscreen\txt_button.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_checkbox.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_conditional.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_desktop.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_dropdown.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_fileselect.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_gui.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_inputbox.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_io.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_label.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_radiobutton.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_scrollpane.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_sdl.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_separator.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_spinctrl.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_strut.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_table.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_utf8.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_widget.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_window.c" />
+    <ClCompile Include="..\..\source\textscreen\txt_window_action.c" />
+    <ClCompile Include="..\..\source\t_plane.cpp" />
+    <ClCompile Include="..\..\source\version.cpp" />
+    <ClCompile Include="..\..\source\v_alloc.cpp" />
+    <ClCompile Include="..\..\source\v_block.cpp" />
+    <ClCompile Include="..\..\source\v_buffer.cpp" />
+    <ClCompile Include="..\..\source\v_font.cpp" />
+    <ClCompile Include="..\..\source\v_image.cpp" />
+    <ClCompile Include="..\..\source\v_misc.cpp" />
+    <ClCompile Include="..\..\source\v_patch.cpp" />
+    <ClCompile Include="..\..\source\v_patchfmt.cpp" />
+    <ClCompile Include="..\..\source\v_png.cpp" />
+    <ClCompile Include="..\..\source\v_video.cpp" />
+    <ClCompile Include="..\..\source\Win32\i_exception.cpp" />
+    <ClCompile Include="..\..\source\Win32\i_fnames.cpp" />
+    <ClCompile Include="..\..\source\Win32\i_w32gui.cpp" />
+    <ClCompile Include="..\..\source\Win32\i_w32main.cpp" />
+    <ClCompile Include="..\..\source\Win32\i_xinput.cpp" />
+    <ClCompile Include="..\..\source\wi_stuff.cpp" />
+    <ClCompile Include="..\..\source\w_formats.cpp" />
+    <ClCompile Include="..\..\source\w_hacks.cpp" />
+    <ClCompile Include="..\..\source\w_levels.cpp" />
+    <ClCompile Include="..\..\source\w_wad.cpp" />
+    <ClCompile Include="..\..\source\w_zip.cpp" />
+    <ClCompile Include="..\..\source\xl_animdefs.cpp" />
+    <ClCompile Include="..\..\source\xl_emapinfo.cpp" />
+    <ClCompile Include="..\..\source\xl_mapinfo.cpp" />
+    <ClCompile Include="..\..\source\xl_musinfo.cpp" />
+    <ClCompile Include="..\..\source\xl_scripts.cpp" />
+    <ClCompile Include="..\..\source\xl_sndinfo.cpp" />
+    <ClCompile Include="..\..\source\xl_umapinfo.cpp" />
+    <ClCompile Include="..\..\source\z_native.cpp" />
+    <ClCompile Include="..\googletest\googletest\src\gtest-all.cc" />
+    <ClCompile Include="..\googletest\googletest\src\gtest_main.cc" />
+    <ClCompile Include="EternityTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\googletest\googletest\include\gtest\gtest.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\vc2019\ACSVM.vcxproj">
+      <Project>{a3d79066-950d-42e4-8555-d7663ba5e0c7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\vc2019\libpng.vcxproj">
+      <Project>{d431963b-f2d5-4ba6-9d01-4a942fc63e96}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
