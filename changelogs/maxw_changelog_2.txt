@@ -37,6 +37,10 @@ Made SetThingSpecial actually set the thing's special in addition to args.
 Fixed blockmap generation errors when the 0th vertex has the largest x or yo
 co-ordinates.
 
+--------------------------------------------------------------------------------
+2020/11/17
+Fixed slope rendering in weird niche circumstances with high scale values.
+
 ================================================================================
 EOF
 ================================================================================

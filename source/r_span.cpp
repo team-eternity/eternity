@@ -621,15 +621,15 @@ static void R_DrawSlope_8()
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
+      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
+      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
@@ -655,15 +655,15 @@ static void R_DrawSlope_8()
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
+      ustep = static_cast<unsigned int>((uend - ustart) / count);
+      vstep = static_cast<unsigned int>((vend - vstart) / count);
 
       incount = count;
       while(incount--)
@@ -709,15 +709,15 @@ static void R_DrawSlope_8_GEN()
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
+      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
+      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
@@ -743,15 +743,15 @@ static void R_DrawSlope_8_GEN()
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
+      ustep = static_cast<unsigned int>((uend - ustart) / count);
+      vstep = static_cast<unsigned int>((vend - vstart) / count);
 
       incount = count;
       while(incount--)
