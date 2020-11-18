@@ -825,6 +825,9 @@
     <ClCompile Include="..\..\source\Win32\i_xinput.cpp">
       <Filter>Source Files\eternity</Filter>
     </ClCompile>
+    <ClCompile Include="TestIVideo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\googletest\googletest\include\gtest\gtest.h">
