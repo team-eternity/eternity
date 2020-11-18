@@ -79,15 +79,18 @@ struct channel_info_t
   unsigned int step;
   // ... and a 0.16 bit remainder of last step.
   unsigned int stepremainder;
+  unsigned int restartstepremainder;
   unsigned int samplerate;
   // The channel data pointers, start and end.
   float *data;
   float *startdata; // haleyjd
   float *enddata;
+  float *restartdata; // For restarting a looping sound after a pause
   // Hardware left and right channel volume lookup.
   float  leftvol, rightvol;
   // haleyjd 06/03/06: looping
   int loop;
+  bool loopcutoff;
   // unique instance id
   unsigned int idnum;
   // if true, channel is affected by reverb
@@ -138,24 +141,30 @@ static bool addsfx(sfxinfo_t *sfx, int channel, int loop, unsigned int id, bool 
    if(SDL_SemWait(channelinfo[channel].semaphore) == 0)
    {
       channelinfo[channel].data = static_cast<float *>(sfx->data);
-      
+
       // Set pointer to end of raw data.
       channelinfo[channel].enddata = static_cast<float *>(sfx->data) + sfx->alen - 1;
-      
+
       // haleyjd 06/03/06: keep track of start of sound
       channelinfo[channel].startdata = channelinfo[channel].data;
-      
+
+      channelinfo[channel].restartdata = nullptr;
+
       channelinfo[channel].stepremainder = 0;
-      
+
+      channelinfo[channel].restartstepremainder = 0;
+
       // Preserve sound SFX id
       channelinfo[channel].id = sfx;
-      
+
       // Set looping
       channelinfo[channel].loop = loop;
 
+      channelinfo[channel].loopcutoff = false;
+
       // Set reverb
       channelinfo[channel].reverb = reverb;
-      
+
       // Set instance ID
       channelinfo[channel].idnum = id;
 
@@ -465,13 +474,24 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
    float *leftend1 = mixbuffer[1] + (len/sample_size);
    float *leftend;
 
+   const bool loopsounds = !paused && ((!menuactive && !consoleactive) || demoplayback || netgame);
+
    // Mix audio channels
    for(channel_info_t *chan = channelinfo; chan != &channelinfo[numChannels]; chan++)
    {
       // fast rejection before semaphore lock
-      if(chan->shouldstop || !chan->data)
+      if(chan->shouldstop || !chan->data || (!loopsounds && chan->loopcutoff))
          continue;
-         
+      else if(loopsounds && chan->loopcutoff)
+      {
+         chan->data                 = chan->restartdata;
+         chan->stepremainder        = chan->restartstepremainder;
+
+         chan->loopcutoff           = false;
+         chan->restartdata          = nullptr;
+         chan->restartstepremainder = 0;
+      }
+
       // try to acquire semaphore, but do not block; if the main thread is using
       // this channel we'll just skip it for now - safer and faster.
       if(SDL_SemTryWait(chan->semaphore) != 0)
@@ -498,6 +518,13 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          continue;
       }
 
+      // Save position of sound if we just paused
+      if(!loopsounds && !chan->restartdata && chan->loop)
+      {
+         chan->restartdata = chan->data;
+         chan->restartstepremainder = chan->stepremainder;
+      }
+
       while(leftout != leftend)
       {
          float sample  = *(chan->data);         
@@ -519,17 +546,27 @@ static void I_SDLUpdateSoundCB(void *userdata, Uint8 *stream, int len)
          // Check whether we are done
          if(chan->data >= chan->enddata)
          {
-            if(chan->loop && !paused && 
-               ((!menuactive && !consoleactive) || demoplayback || netgame))
+            if(chan->loop && loopsounds)
             {
                // haleyjd 06/03/06: restart a looping sample if not paused
                chan->data = chan->startdata;
                chan->stepremainder = 0;
+               chan->loopcutoff = false;
+               chan->restartdata = nullptr;
+               chan->restartstepremainder = 0;
             }
             else
             {
-               // flag the channel to be stopped by the main thread ASAP
-               chan->data = nullptr;
+               if(chan->loop && !loopsounds)
+               {
+                  // flag the channel to be started after sounds can play again
+                  chan->loopcutoff = true;
+               }
+               else
+               {
+                  // flag the channel to be stopped by the main thread ASAP
+                  chan->data = nullptr;
+               }
                break;
             }
          }
