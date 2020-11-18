@@ -831,6 +831,9 @@
     <ClCompile Include="TestCamCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TestDDehTbl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\googletest\googletest\include\gtest\gtest.h">
