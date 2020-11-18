@@ -415,6 +415,7 @@
     <ClCompile Include="..\googletest\googletest\src\gtest-all.cc" />
     <ClCompile Include="..\googletest\googletest\src\gtest_main.cc" />
     <ClCompile Include="EternityTest.cpp" />
+    <ClCompile Include="TestCamCommon.cpp" />
     <ClCompile Include="TestIVideo.cpp" />
   </ItemGroup>
   <ItemGroup>
