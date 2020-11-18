@@ -87,7 +87,7 @@ struct dehflagset_t
    unsigned int results[MAXFLAGFIELDS];
 };
 
-dehflags_t   *deh_ParseFlag(dehflagset_t *flagset, const char *name);
+dehflags_t   *deh_ParseFlag(const dehflagset_t *flagset, const char *name);
 dehflags_t   *deh_ParseFlagCombined(const char *name);
 void          deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 unsigned int  deh_ParseFlagsSingle(const char *strval, int mode);
