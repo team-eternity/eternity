@@ -346,15 +346,17 @@ void Geom::parse(const char *geom)
    if(!geom)   // sanity
       return;
    char *pos = nullptr;
-   width = (int)strtol(geom, &pos, 10);
-   if(!validateWidth(width))
-      width = 640;
+   int newWidth = (int)strtol(geom, &pos, 10);
+   // Only parse width if given
+   if(pos > geom)
+      width = validateWidth(newWidth) ? newWidth : 640;
    // Only wait for height if 'x' is found after number, otherwise assume it's all flags afterwards
    if(ectype::toLower(*pos) == 'x')
    {
-      height = (int)strtol(pos + 1, &pos, 10);
-      if(!validateHeight(height))
-         height = 480;
+      const char *prevpos = pos;
+      int newHeight = (int)strtol(pos + 1, &pos, 10);
+      if(pos != prevpos + 1)
+         height = validateHeight(newHeight) ? newHeight : 480;
    }
    for(; *pos; ++pos)
    {
