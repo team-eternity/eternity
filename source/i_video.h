@@ -75,6 +75,14 @@ struct Geom
       neutral
    };
 
+   enum
+   {
+      minimumWidth = 320,
+      minimumHeight = 200,
+      fallbackWidth = 640,
+      fallbackHeight = 480,
+   };
+
    Geom() = default;
    Geom(const char *geom)
    {
@@ -86,8 +94,8 @@ struct Geom
    static bool validateHeight(int height);
    qstring toString() const;
 
-   int width = 640;
-   int height = 480;
+   int width = fallbackWidth;
+   int height = fallbackHeight;
    screentype_e screentype = screentype_e::WINDOWED;
    TriState vsync = TriState::neutral;
    bool hardware = false;

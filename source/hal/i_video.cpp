@@ -275,7 +275,7 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
          else
          {
             int width = qstr.toInt();
-            if(width < 320 || width > MAX_SCREENWIDTH)
+            if(width < Geom::minimumWidth || width > MAX_SCREENWIDTH)
             {
                state = GeomParseState::finished;
                errorflag = true;
@@ -294,7 +294,7 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
          else
          {
             int height = qstr.toInt();
-            if(height < 200 || height > MAX_SCREENHEIGHT)
+            if(height < Geom::minimumHeight || height > MAX_SCREENHEIGHT)
             {
                state = GeomParseState::finished;
                errorflag = true;
@@ -318,7 +318,7 @@ void I_ParseResolution(const char *resolution, int &width, int &height, const in
    {
       int height = qstr.toInt();
 
-      if(height < 200 || height > MAX_SCREENHEIGHT)
+      if(height < Geom::minimumHeight || height > MAX_SCREENHEIGHT)
          errorflag = true;
       else
          tmpheight = height;
@@ -349,14 +349,14 @@ void Geom::parse(const char *geom)
    int newWidth = (int)strtol(geom, &pos, 10);
    // Only parse width if given
    if(pos > geom)
-      width = validateWidth(newWidth) ? newWidth : 640;
+      width = validateWidth(newWidth) ? newWidth : fallbackWidth;
    // Only wait for height if 'x' is found after number, otherwise assume it's all flags afterwards
    if(ectype::toLower(*pos) == 'x')
    {
       const char *prevpos = pos;
       int newHeight = (int)strtol(pos + 1, &pos, 10);
       if(pos != prevpos + 1)
-         height = validateHeight(newHeight) ? newHeight : 480;
+         height = validateHeight(newHeight) ? newHeight : fallbackHeight;
    }
    for(; *pos; ++pos)
    {
@@ -397,7 +397,7 @@ void Geom::parse(const char *geom)
 //
 bool Geom::validateWidth(int width)
 {
-   return width >= 320 && width <= MAX_SCREENWIDTH;
+   return width >= minimumWidth && width <= MAX_SCREENWIDTH;
 }
 
 //
@@ -405,7 +405,7 @@ bool Geom::validateWidth(int width)
 //
 bool Geom::validateHeight(int height)
 {
-   return height >= 200 && height <= MAX_SCREENHEIGHT;
+   return height >= minimumHeight && height <= MAX_SCREENHEIGHT;
 }
 
 //
