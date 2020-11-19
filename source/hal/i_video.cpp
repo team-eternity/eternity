@@ -60,7 +60,7 @@
 // Video Driver Object Pointer
 //
 
-HALVideoDriver *i_video_driver = nullptr;
+static HALVideoDriver *i_video_driver = nullptr;
 
 //=============================================================================
 //
@@ -184,7 +184,7 @@ void I_StartTic()
 int  use_vsync;     // killough 2/8/98: controls whether vsync is called
 bool noblit;
 
-bool in_graphics_mode;
+static bool in_graphics_mode;
 
 char *i_default_resolution;
 char *i_resolution;
