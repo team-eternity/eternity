@@ -199,13 +199,8 @@ bool P_CheckMeleeRange(Mobj *actor)
 
    // ioanch 20151225: make it linked-portal aware
    fixed_t tx, ty;
-#ifdef R_LINKEDPORTALS
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
-#else
-   tx = pl->x;
-   ty = pl->y;
-#endif
 
    fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
    MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
@@ -235,13 +230,8 @@ bool P_HitFriend(Mobj *actor)
       angle_t angle;
       fixed_t dist, tx, ty;
 
-#ifdef R_LINKEDPORTALS
       tx = getTargetX(actor);
       ty = getTargetY(actor);
-#else
-      tx = actor->target->x;
-      ty = actor->target->y;
-#endif
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
@@ -294,13 +284,8 @@ bool P_CheckMissileRange(Mobj *actor)
       return false;       // do not attack yet
 
    // OPTIMIZE: get this from a global checksight
-#ifdef R_LINKEDPORTALS
    dist = P_AproxDistance(actor->x - getTargetX(actor),
                           actor->y - getTargetY(actor)) - 64*FRACUNIT;
-#else
-   dist = P_AproxDistance(actor->x - actor->target->x,
-                          actor->y - actor->target->y) - 64*FRACUNIT;
-#endif
 
    if(actor->info->meleestate == NullStateNum)
       dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -642,13 +627,7 @@ bool P_SmartMove(Mobj *actor)
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
       target && dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
-#ifdef R_LINKEDPORTALS
-      P_AproxDistance(actor->x - getTargetX(actor),
-                      actor->y - getTargetY(actor)) < FRACUNIT*144 &&
-#else
-      P_AproxDistance(actor->x - target->x,
-                      actor->y - target->y) < FRACUNIT*144 &&
-#endif      
+      P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) < FRACUNIT*144 &&
       P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
@@ -857,13 +836,8 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
 void P_NewChaseDir(Mobj *actor)
 {
    Mobj *target = actor->target;
-#ifdef R_LINKEDPORTALS
    fixed_t deltax = getTargetX(actor) - actor->x;
    fixed_t deltay = getTargetY(actor) - actor->y;
-#else
-   fixed_t deltax = target->x - actor->x;
-   fixed_t deltay = target->y - actor->y;
-#endif
 
    // killough 8/8/98: sometimes move away from target, keeping distance
    //

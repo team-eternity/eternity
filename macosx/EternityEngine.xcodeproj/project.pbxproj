@@ -2690,7 +2690,6 @@
 				GCC_PREFIX_HEADER = "eternity/eternity-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
-					R_LINKEDPORTALS,
 					_DEBUG,
 					_SDL_VER,
 					HAVE_SPCLIB,
@@ -2698,7 +2697,6 @@
 					RANGECHECK,
 					INSTRUMENTED,
 					ZONEIDCHECK,
-					R_PORTALS,
 					HAVE_ADLMIDILIB,
 					HAVE_XLOCALE_H,
 				);
@@ -2766,7 +2764,6 @@
 					_SDL_VER,
 					_CONSOLE,
 					NDEBUG,
-					R_LINKEDPORTALS,
 					HAVE_ADLMIDILIB,
 					HAVE_XLOCALE_H,
 				);

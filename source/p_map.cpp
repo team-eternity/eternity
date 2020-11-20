@@ -149,7 +149,6 @@ static bool telefrag; // killough 8/9/98: whether to telefrag at exit
 // such things so far.
 static bool ignore_inerts = true;
 
-#ifdef R_LINKEDPORTALS
 // SoM: for portal teleports, PIT_StompThing will stomp anything the player is touching on the
 // x/y plane which means if the player jumps through a mile above a demon, the demon will be
 // telefragged. This simply will not do.
@@ -200,8 +199,6 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    
    return true;
 }
-#endif
-
 
 static bool PIT_StompThing(Mobj *thing, void *context)
 {
@@ -445,11 +442,9 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.numspechit = 0;
    
    // stomp on any things contacted
-#ifdef R_LINKEDPORTALS
    if(stomp3d)
       func = PIT_StompThing3D;
    else
-#endif
       func = PIT_StompThing;
    
    xl = (clip.bbox[BOXLEFT  ] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -1840,12 +1835,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
 // PTODO
          // ioanch 20160113: no longer use portals unless demo version is low
-#ifdef R_LINKEDPORTALS
          line_t *line = clip.spechit[clip.numspechit];
          if(!line)   // skip if it's nulled out
             continue;
 
-#endif
          if(line->special)  // see if the line was crossed
          {
             link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);

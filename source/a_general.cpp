@@ -1092,16 +1092,9 @@ void A_MissileSpread(actionargs_t *actionargs)
    for(i = 0; i < num; ++i)
    {
       // calculate z momentum
-#ifdef R_LINKEDPORTALS
       momz = P_MissileMomz(getTargetX(actor) - actor->x,
                            getTargetY(actor) - actor->y,
-                           getTargetZ(actor) - actor->z,
-#else
-      momz = P_MissileMomz(actor->target->x - actor->x,
-                           actor->target->y - actor->y,
-                           actor->target->z - actor->z,
-#endif
-                           mobjinfo[type]->speed);
+                           getTargetZ(actor) - actor->z, mobjinfo[type]->speed);
 
       P_SpawnMissileAngle(actor, type, ang, momz, z);
 
@@ -1424,13 +1417,7 @@ void A_AproxDistance(actionargs_t *actionargs)
       return;
    }
    
-#ifdef R_LINKEDPORTALS
-   distance = P_AproxDistance(actor->x - getTargetX(actor), 
-                              actor->y - getTargetY(actor));
-#else   
-   distance = P_AproxDistance(actor->x - actor->target->x, 
-                              actor->y - actor->target->y);
-#endif
+   distance = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
 
    *dest = distance >> FRACBITS;
 }

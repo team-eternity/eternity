@@ -261,13 +261,8 @@ void A_JumpIfTargetInLOS(actionargs_t *actionargs)
       if(ffov)
       {
          angle_t fov  = FixedToAngle(ffov);
-         angle_t tang = P_PointToAngle(actor->x, actor->y,
-#ifdef R_LINKEDPORTALS
-                                        getThingX(actor, target),
-                                        getThingY(actor, target));
-#else
-                                        target->x, target->y);
-#endif
+         angle_t tang = P_PointToAngle(actor->x, actor->y, getThingX(actor, target),
+                                       getThingY(actor, target));
          angle_t minang = actor->angle - FixedToAngle(fov) / 2;
          angle_t maxang = actor->angle + FixedToAngle(fov) / 2;
 
