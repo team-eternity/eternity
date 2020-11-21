@@ -280,6 +280,28 @@
 		4F5F3988182D9B9A0027813A /* pngwutil.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F572D158BC3F4006F8063 /* pngwutil.c */; };
 		4F68CE8D1963D88100E7B8BE /* ev_sectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F68CE8B1963D88100E7B8BE /* ev_sectors.cpp */; };
 		4F7ADA181E0C623900E34F5F /* m_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F7ADA161E0C623900E34F5F /* m_utils.cpp */; };
+		4F8867BB25697EA0009E69B1 /* pngpread.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F571F158BC3F4006F8063 /* pngpread.c */; };
+		4F8867BE25697EA1009E69B1 /* pngread.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5721158BC3F4006F8063 /* pngread.c */; };
+		4F8867C125697EA3009E69B1 /* pngrio.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5722158BC3F4006F8063 /* pngrio.c */; };
+		4F8867C425697EA5009E69B1 /* pngrtran.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5723158BC3F4006F8063 /* pngrtran.c */; };
+		4F8867C725697EA6009E69B1 /* pngrutil.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5724158BC3F4006F8063 /* pngrutil.c */; };
+		4F8867CA25697EA9009E69B1 /* pngset.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5725158BC3F4006F8063 /* pngset.c */; };
+		4F8867CD25697EAB009E69B1 /* pngtrans.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5728158BC3F4006F8063 /* pngtrans.c */; };
+		4F8867D025697EAC009E69B1 /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5716158BC3F4006F8063 /* png.c */; };
+		4F8867D325697EAE009E69B1 /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F571A158BC3F4006F8063 /* pngerror.c */; };
+		4F8867D625697EAF009E69B1 /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F571B158BC3F4006F8063 /* pngget.c */; };
+		4F8867D925697EB1009E69B1 /* pngmem.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F571E158BC3F4006F8063 /* pngmem.c */; };
+		4F8867DC25697EB3009E69B1 /* pngwio.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F572A158BC3F4006F8063 /* pngwio.c */; };
+		4F8867DF25697EB5009E69B1 /* pngwrite.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F572B158BC3F4006F8063 /* pngwrite.c */; };
+		4F8867E225697EB6009E69B1 /* pngwtran.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F572C158BC3F4006F8063 /* pngwtran.c */; };
+		4F8867E525697EB8009E69B1 /* pngwutil.c in Sources */ = {isa = PBXBuildFile; fileRef = FA1F572D158BC3F4006F8063 /* pngwutil.c */; };
+		4F8867E825697EC6009E69B1 /* dsp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F574B158BC4ED006F8063 /* dsp.cpp */; };
+		4F8867EB25697EC7009E69B1 /* SNES_SPC_misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F574D158BC4ED006F8063 /* SNES_SPC_misc.cpp */; };
+		4F8867EC25697EC8009E69B1 /* SNES_SPC_state.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F574E158BC4ED006F8063 /* SNES_SPC_state.cpp */; };
+		4F8867EF25697EC9009E69B1 /* SNES_SPC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F574F158BC4ED006F8063 /* SNES_SPC.cpp */; };
+		4F8867F025697ECA009E69B1 /* SPC_DSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5752158BC4ED006F8063 /* SPC_DSP.cpp */; };
+		4F8867F325697ECB009E69B1 /* SPC_Filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5754158BC4ED006F8063 /* SPC_Filter.cpp */; };
+		4F8867F425697ECC009E69B1 /* spc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FA1F5756158BC4ED006F8063 /* spc.cpp */; };
 		4F914A111F61163C00968197 /* BinaryIO.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A101F61163C00968197 /* BinaryIO.cpp */; };
 		4F914A131F61164E00968197 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A121F61164E00968197 /* Error.cpp */; };
 		4F914A171F61166F00968197 /* Serial.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F914A151F61166F00968197 /* Serial.cpp */; };
@@ -3229,6 +3251,28 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F8867BB25697EA0009E69B1 /* pngpread.c in Sources */,
+				4F8867BE25697EA1009E69B1 /* pngread.c in Sources */,
+				4F8867C125697EA3009E69B1 /* pngrio.c in Sources */,
+				4F8867C425697EA5009E69B1 /* pngrtran.c in Sources */,
+				4F8867EF25697EC9009E69B1 /* SNES_SPC.cpp in Sources */,
+				4F8867F025697ECA009E69B1 /* SPC_DSP.cpp in Sources */,
+				4F8867F325697ECB009E69B1 /* SPC_Filter.cpp in Sources */,
+				4F8867F425697ECC009E69B1 /* spc.cpp in Sources */,
+				4F8867EB25697EC7009E69B1 /* SNES_SPC_misc.cpp in Sources */,
+				4F8867C725697EA6009E69B1 /* pngrutil.c in Sources */,
+				4F8867EC25697EC8009E69B1 /* SNES_SPC_state.cpp in Sources */,
+				4F8867E825697EC6009E69B1 /* dsp.cpp in Sources */,
+				4F8867CA25697EA9009E69B1 /* pngset.c in Sources */,
+				4F8867CD25697EAB009E69B1 /* pngtrans.c in Sources */,
+				4F8867D025697EAC009E69B1 /* png.c in Sources */,
+				4F8867D325697EAE009E69B1 /* pngerror.c in Sources */,
+				4F8867E225697EB6009E69B1 /* pngwtran.c in Sources */,
+				4F8867D625697EAF009E69B1 /* pngget.c in Sources */,
+				4F8867E525697EB8009E69B1 /* pngwutil.c in Sources */,
+				4F8867DC25697EB3009E69B1 /* pngwio.c in Sources */,
+				4F8867DF25697EB5009E69B1 /* pngwrite.c in Sources */,
+				4F8867D925697EB1009E69B1 /* pngmem.c in Sources */,
 				4FC359E525685B2400736775 /* inst_db.cpp in Sources */,
 				4FC359E625685B2700736775 /* adlmidi_load.cpp in Sources */,
 				4FC359E925685B2E00736775 /* adlmidi_private.cpp in Sources */,
