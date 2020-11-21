@@ -664,14 +664,14 @@ static void R_drawMaskedColumn(column_t *tcolumn)
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
+void R_DrawNewMaskedColumn(const texture_t *const tex, const texcol_t *tcol)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
    
    column.texheight = 0; // killough 11/98
 
-   const byte *texend = tex->bufferdata + tex->width * tex->height + 1;
+   const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
 
    while(tcol)
    {
@@ -689,8 +689,8 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
          column.source = localstart;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *last = localstart + tcol->len;
-         byte orig;
+         byte *const last = localstart + tcol->len;
+         byte orig = 0;
          if(last < texend && last > tex->bufferdata)
          {
             orig = *last;

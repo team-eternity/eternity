@@ -1549,7 +1549,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    bool groupidchange = false;
-   fixed_t prex, prey;
+   fixed_t prex = x, prey = y;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
@@ -1605,7 +1605,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          y = dest.y;
       }
 
-      bool check;
+      bool check = false;
       if(groupidchange)
       {
          oldgroupid = thing->groupid;

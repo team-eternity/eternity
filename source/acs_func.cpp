@@ -289,7 +289,7 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
 
    uint32_t res;
    Mobj    *resMo = nullptr;
-   fixed_t  resDist;
+   fixed_t  resDist = 0;
 
    uint32_t count = 0;
 

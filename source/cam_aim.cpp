@@ -139,7 +139,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    {
       const surface_t &surface = sector->srf[surf];
       fixed_t slope = state.slope[surf];
-      int newfromid;
+      int newfromid = R_NOGROUP;
       if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
          (newfromid = surface.portal->data.link.toid) != state.groupid)
       {

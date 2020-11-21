@@ -1169,7 +1169,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
       line_t *ldef;
-      uint32_t v1, v2;
+      uint32_t v1, v2 = 0;
       uint32_t linedef;
       byte side;
       seg_t *li = segs+actualSegIndex;

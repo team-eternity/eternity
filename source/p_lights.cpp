@@ -703,7 +703,7 @@ void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
                           int brightTime, bool isParam)
 {
-   int   secnum;
+   int   secnum = -1;
    sector_t* sec;
 
    bool manual = false;
@@ -715,7 +715,6 @@ int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
       goto manualLight;
    }
    
-   secnum = -1;
    // start lights strobing in all sectors tagged same as line
    while(!manual && (secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
@@ -742,7 +741,7 @@ int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
 //
 int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 {
-   int j;
+   int j = -1;
    // search sectors for those with same tag as activating line
    
    // MaxW: Param tag0 support
@@ -757,7 +756,7 @@ int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
    }
 
    // killough 10/98: replaced inefficient search with fast search
-   for(j = -1; (j = P_FindSectorFromTag(tag, j)) >= 0; )
+   while((j = P_FindSectorFromTag(tag, j)) >= 0)
    {
       sector = sectors + j;
 
@@ -796,7 +795,7 @@ int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 //
 int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
 {
-   int i;
+   int i = -1;
    
    // search all sectors for ones with same tag as activating line
 
@@ -812,7 +811,7 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
    }
 
    // killough 10/98: replace inefficient search with fast search
-   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   while((i = P_FindSectorFromTag(tag, i)) >= 0)
    {
       sector = sectors+i;
 

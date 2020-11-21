@@ -1774,7 +1774,7 @@ static void P_parseLevelAction(levelvar_t *var, const qstring &value)
    int state = LVACT_STATE_EXPECTMOBJ;
    const char *rover = value.constPtr();
    qstring mobjName, lineSpec, argStr[5];
-   qstring *curArg;
+   qstring *curArg = nullptr;
    int argcount = 0;
    int args[NUMLINEARGS] = { 0, 0, 0, 0, 0 };
    int mobjType;
