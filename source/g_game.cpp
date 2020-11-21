@@ -220,7 +220,7 @@ void *statcopy;       // for statistics driver
 
 int keylookspeed = 5;
 
-int cooldemo = 0;
+CoolDemo cooldemo = CoolDemo::off;
 int cooldemo_tics;      // number of tics until changing view
 
 static void G_CoolViewPoint();
@@ -2170,12 +2170,14 @@ static void G_CameraTicker(void)
    }
 
    // cooldemo countdown   
-   if(demoplayback && cooldemo)
+   if(demoplayback && cooldemo != CoolDemo::off)
    {
       // force refresh on death (or rebirth in follow mode) of displayed player
       if(players[displayplayer].health <= 0 ||
-         (cooldemo == 2 && camera != &followcam))
+         (cooldemo == CoolDemo::follow && camera != &followcam))
+      {
          cooldemo_tics = 0;
+      }
 
       if(cooldemo_tics)
          cooldemo_tics--;
@@ -3918,13 +3920,21 @@ extern camera_t intercam;
 //
 static void G_CoolViewPoint()
 {
-   int viewtype;
+   enum viewtype_e
+   {
+      viewtype_1stperson,
+      viewtype_chase,
+      viewtype_follow,
+      NUM_viewtype
+   };
+
+   viewtype_e viewtype;
    int old_displayplayer = displayplayer;
 
-   if(cooldemo == 2) // always followcam?
-      viewtype = 2;
-   else
-      viewtype = M_Random() % 3;
+   if(cooldemo == CoolDemo::follow) // always followcam?
+      viewtype = viewtype_follow;
+   else  // "random" cooldemo
+      viewtype = static_cast<viewtype_e>(M_Random() % NUM_viewtype);
    
    // pick the next player
    do
@@ -3943,10 +3953,10 @@ static void G_CoolViewPoint()
    }
 
    if(players[displayplayer].health <= 0)
-      viewtype = 1; // use chasecam when player is dead
+      viewtype = viewtype_chase; // use chasecam when player is dead
   
    // turn off the chasecam?
-   if(chasecam_active && viewtype != 1)
+   if(chasecam_active && viewtype != viewtype_chase)
    {
       chasecam_active = false;
       P_ChaseEnd();
@@ -3957,12 +3967,12 @@ static void G_CoolViewPoint()
    if(camera == &followcam)
       camera = nullptr;
   
-   if(viewtype == 1)  // view from the chasecam
+   if(viewtype == viewtype_chase)  // view from the chasecam
    {
       chasecam_active = true;
       P_ChaseStart();
    }
-   else if(viewtype == 2) // follow camera view
+   else if(viewtype == viewtype_follow) // follow camera view
    {
       fixed_t x, y;
       Mobj *spot = players[displayplayer].mo;
