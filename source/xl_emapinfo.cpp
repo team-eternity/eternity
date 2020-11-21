@@ -353,7 +353,7 @@ MetaTable *XL_EMapInfoForMapName(const char *mapname)
 //
 // XL_EMapInfoForMapNum
 //
-// Retrieve and EMAPINFO definition by episode and map. Send in episode
+// Retrieve an EMAPINFO definition by episode and map. Send in episode
 // 0 for MAPxy maps.
 //
 MetaTable *XL_EMapInfoForMapNum(int episode, int map)
@@ -366,6 +366,29 @@ MetaTable *XL_EMapInfoForMapNum(int episode, int map)
       mapname.Printf(9, "MAP%02d", map);
 
    return emapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname.constPtr());
+}
+
+//
+// XL_MapNameForLevelNum
+//
+// Retrieve the map name by EMAPINFO levelnum.
+//
+const char* XL_MapNameForLevelNum(int map)
+{
+   MetaTable* level = nullptr;
+   qstring levelnum;
+
+   levelnum.Printf(2, "%d", map);
+
+   while((level = emapInfoTable.getNextTypeEx(level)))
+   {
+      auto str = level->getString("levelnum", "");
+
+      if(*str && strcmp(str, levelnum.constPtr()) == 0)
+         return level->getKey();
+   }
+
+   return nullptr;
 }
 
 //
