@@ -41,6 +41,11 @@ co-ordinates.
 2020/11/17
 Fixed slope rendering in weird niche circumstances with high scale values.
 
+--------------------------------------------------------------------------------
+2020/11/22
+Fixed Eternity hard-locking if a dynavertex has the same position after
+interpolation.
+
 ================================================================================
 EOF
 ================================================================================
