@@ -1463,7 +1463,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(surf_e surf)
+void R_MovePortalOverlayToWindow(cb_seg_t &seg, surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
    pwindow_t *window = seg.secwindow[surf];

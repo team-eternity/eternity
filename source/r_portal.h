@@ -33,6 +33,7 @@
 
 #define SECTOR_PORTAL_LOOP_PROTECTION 128
 
+struct cb_seg_t;
 struct line_t;
 class  Mobj;
 struct planehash_t;
@@ -207,7 +208,7 @@ portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(surf_e surf);
+void R_MovePortalOverlayToWindow(cb_seg_t &seg, surf_e surf);
 void R_ClearPortals();
 void R_RenderPortals();
 
@@ -248,7 +249,7 @@ enum pwindowtype_e
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
 typedef void (*R_WindowFunc)(pwindow_t *);
-typedef void (*R_ClipSegFunc)();
+typedef void (*R_ClipSegFunc)(const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
 
@@ -338,7 +339,7 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)();
+   void (*segClipFunc)(const cb_seg_t &);
 
 //   planehash_t *overlay;
 };

@@ -43,11 +43,6 @@
 #include "r_things.h"
 #include "w_wad.h"
 
-// OPTIMIZE: closed two sided lines as single sided
-// SoM: Done.
-// SoM: Cardboard globals
-cb_seg_t    seg;
-
 // killough 1/6/98: replaced globals with statics where appropriate
 static float  *maskedtexturecol;
 
@@ -737,7 +732,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-void R_StoreWallRange(const int start, const int stop)
+void R_StoreWallRange(const cb_seg_t &seg, const int start, const int stop)
 {
    float clipx1;
    float clipx2;
