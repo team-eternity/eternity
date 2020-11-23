@@ -28,6 +28,7 @@
 #ifndef R_CONTEXT_H__
 #define R_CONTEXT_H__
 
+struct cb_column_t;
 struct cliprange_t;
 
 struct rendercontext_t
@@ -47,7 +48,7 @@ struct rendercontext_t
    float *slopemark;
 
    // Currently uncategorised
-   void (*colfunc)();
+   void (*colfunc)(cb_column_t &);
    void (*flatfunc)();
 };
 

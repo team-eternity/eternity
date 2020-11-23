@@ -146,8 +146,6 @@ lighttable_t **colormaps;
 
 int extralight;                           // bumped light from gun blasts
 
-void (*colfunc)(cb_column_t &);           // current column draw function
-
 // haleyjd 09/04/06: column drawing engines
 columndrawer_t *r_column_engine;
 int r_column_engine_num;
@@ -1084,8 +1082,12 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.ycenter = (float)centery;
 
    // use drawcolumn
-   colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
-   
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
+      context.colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
+   }
+
    ++validcount;
 }
 
@@ -1286,14 +1288,14 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);
 
-   R_DrawPlanes(nullptr);
+   R_DrawPlanes(context, nullptr);
    
    // Check for new console commands.
    NetUpdate();
 
    // Draw Post-BSP elements such as sprites, masked textures, and portal 
    // overlays
-   R_DrawPostBSP();
+   R_DrawPostBSP(context);
    
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)

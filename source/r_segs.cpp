@@ -34,6 +34,7 @@
 #include "p_user.h"
 #include "r_draw.h"
 #include "r_bsp.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_main.h"
 #include "r_plane.h"
@@ -49,8 +50,10 @@ static float  *maskedtexturecol;
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int x2)
 {
+   void (*&colfunc)(cb_column_t &) = context.colfunc;
+
    texcol_t *col;
    int      lightnum;
    int      texnum;
@@ -192,7 +195,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
-         R_DrawNewMaskedColumn(column, maskedcolumn, textures[texnum], col);
+         R_DrawNewMaskedColumn(context, column, maskedcolumn, textures[texnum], col);
          
          maskedtexturecol[column.x] = FLT_MAX;
       }
@@ -211,8 +214,10 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_renderSegLoop(cb_seg_t &segclip)
+static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
 {
+   void (*colfunc)(cb_column_t &) = context.colfunc;
+
    int t, b, line;
    int cliptop, clipbot;
    int i;
@@ -940,7 +945,7 @@ void R_StoreWallRange(rendercontext_t &context, const cb_seg_t &seg,
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
-      R_renderSegLoop(segclip);
+      R_renderSegLoop(context, segclip);
    else
       R_storeTextureColumns(segclip);
    

@@ -46,6 +46,7 @@
 #include "p_skin.h"
 #include "p_user.h"
 #include "r_bsp.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_interpolate.h"
 #include "r_main.h"
@@ -625,7 +626,9 @@ static vissprite_t *R_NewVisSprite()
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_drawMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn, column_t *tcolumn)
+static void R_drawMaskedColumn(const rendercontext_t &context,
+                               cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
+                               column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -650,7 +653,7 @@ static void R_drawMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &mas
          column.source = (byte *)tcolumn + 3;
          column.texmid = basetexturemid - (top << FRACBITS);
 
-         colfunc(column);
+         context.colfunc(column);
       }
 
       tcolumn = (column_t *)((byte *)tcolumn + tcolumn->length + 4);
@@ -662,7 +665,8 @@ static void R_drawMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &mas
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
+void R_DrawNewMaskedColumn(const rendercontext_t &context,
+                           cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *const tex, const texcol_t *tcol)
 {
    float y1, y2;
@@ -701,7 +705,7 @@ void R_DrawNewMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedc
 
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
-         colfunc(column);
+         context.colfunc(column);
          if(last < texend && last > tex->bufferdata)
             *last = orig;
          localstart[-1] = origstart;
@@ -714,12 +718,12 @@ void R_DrawNewMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedc
 }
 
 //
-// R_DrawVisSprite
-//
 //  mfloorclip and mceilingclip should also be set.
 //
-static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
+static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, int x2)
 {
+   void (*&colfunc)(cb_column_t &) = context.colfunc;
+
    column_t *tcolumn;
    int       texturecolumn;
    float     frac;
@@ -796,7 +800,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(column, maskedcolumn, tcolumn);
+         R_drawMaskedColumn(context, column, maskedcolumn, tcolumn);
       }
    }
    else
@@ -810,7 +814,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(column, maskedcolumn, tcolumn);
+         R_drawMaskedColumn(context, column, maskedcolumn, tcolumn);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
@@ -1220,11 +1224,9 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 }
 
 //
-// R_DrawPSprite
-//
 // Draws player gun sprites.
 //
-static void R_DrawPSprite(const pspdef_t *psp)
+static void R_drawPSprite(rendercontext_t &context, const pspdef_t *psp)
 {
    float         tx;
    float         x1, x2, w;
@@ -1379,15 +1381,15 @@ static void R_DrawPSprite(const pspdef_t *psp)
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_DrawVisSprite(vis, vis->x1, vis->x2);
+   R_drawVisSprite(context, vis, vis->x1, vis->x2);
    
    view.ycenter = oldycenter;
 }
 
 //
-// R_DrawPlayerSprites
+// R_drawPlayerSprites
 //
-static void R_DrawPlayerSprites()
+static void R_drawPlayerSprites(rendercontext_t &context)
 {
    int i, lightnum;
    const pspdef_t *psp;
@@ -1426,7 +1428,7 @@ static void R_DrawPlayerSprites()
       // add all active psprites
       for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
          if(psp->state)
-            R_DrawPSprite(psp);
+            R_drawPSprite(context, psp);
    }
 }
 
@@ -1543,11 +1545,10 @@ static void R_SortVisSpriteRange(int first, int last)
 }
 
 //
-// R_DrawSpriteInDSRange
-//
 // Draws a sprite within a given drawseg range, for portals.
 //
-static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
+static void R_drawSpriteInDSRange(rendercontext_t &context,
+                                  vissprite_t *spr, int firstds, int lastds)
 {
    drawseg_t *ds;
    int        x;
@@ -1595,7 +1596,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
             {
                r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-               R_RenderMaskedSegRange(ds, r1, r2);
+               R_RenderMaskedSegRange(context, ds, r1, r2);
             }
             continue;                // seg is behind sprite
          }
@@ -1657,7 +1658,7 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
             !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
          {
             if(ds->maskedtexturecol) // masked mid texture?
-               R_RenderMaskedSegRange(ds, r1, r2);
+               R_RenderMaskedSegRange(context, ds, r1, r2);
             continue;                // seg is behind sprite
          }
 
@@ -1793,15 +1794,13 @@ static void R_DrawSpriteInDSRange(vissprite_t *spr, int firstds, int lastds)
 
    mfloorclip   = clipbot;
    mceilingclip = cliptop;
-   R_DrawVisSprite(spr, spr->x1, spr->x2);
+   R_drawVisSprite(context, spr, spr->x1, spr->x2);
 }
 
 //
-// R_DrawPostBSP
-//
 // Draws the items in the Post-BSP stack.
 //
-void R_DrawPostBSP()
+void R_DrawPostBSP(rendercontext_t &context)
 {
    maskedrange_t *masked;
    drawseg_t     *ds;
@@ -1856,7 +1855,7 @@ void R_DrawPostBSP()
             pbottom = masked->floorclip;
 
             for(int i = lastsprite - firstsprite; --i >= 0; )
-               R_DrawSpriteInDSRange(vissprite_ptrs[i], firstds, lastds);         // killough
+               R_drawSpriteInDSRange(context, vissprite_ptrs[i], firstds, lastds);         // killough
          }
 
          // render any remaining masked mid textures
@@ -1868,7 +1867,7 @@ void R_DrawPostBSP()
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(context, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
@@ -1885,7 +1884,7 @@ void R_DrawPostBSP()
          if(r_column_engine->ResetBuffer)
             r_column_engine->ResetBuffer();
             
-         R_DrawPlanes(pstack[pstacksize].overlay);
+         R_DrawPlanes(context, pstack[pstacksize].overlay);
          R_FreeOverlaySet(pstack[pstacksize].overlay);
       }
    }
@@ -1893,7 +1892,7 @@ void R_DrawPostBSP()
    // draw the psprites on top of everything
    //  but does not draw on side views
    if(!viewangleoffset)
-      R_DrawPlayerSprites();
+      R_drawPlayerSprites(context);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

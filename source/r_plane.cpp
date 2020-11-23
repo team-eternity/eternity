@@ -833,8 +833,10 @@ static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_pla
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(visplane_t *pl)
+static void do_draw_newsky(rendercontext_t &context, visplane_t *pl)
 {
+   void (*&colfunc)(cb_column_t &) = context.colfunc;
+
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
    
@@ -917,13 +919,13 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 };
 
 //
-// do_draw_plane
-//
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(visplane_t *pl)
+static void do_draw_plane(rendercontext_t &context, visplane_t *pl)
 {
+   void (*&colfunc)(cb_column_t &) = context.colfunc;
+
    int x;
 
    if(!(pl->minx <= pl->maxx))
@@ -932,7 +934,7 @@ static void do_draw_plane(visplane_t *pl)
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(pl);
+      do_draw_newsky(context, pl);
       return;
    }
    
@@ -1181,12 +1183,10 @@ static void do_draw_plane(visplane_t *pl)
 }
 
 //
-// R_DrawPlanes
-//
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(planehash_t *table)
+void R_DrawPlanes(rendercontext_t &context, planehash_t *table)
 {
    visplane_t *pl;
    int i;
@@ -1197,7 +1197,7 @@ void R_DrawPlanes(planehash_t *table)
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(pl);
+         do_draw_plane(context, pl);
    }
 }
 

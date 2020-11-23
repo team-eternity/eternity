@@ -80,12 +80,6 @@ void R_DoomTLStyle();
 void R_ResetTrans();
 
 //
-// Function pointer to switch refresh/drawing functions.
-//
-
-extern void (*colfunc)(cb_column_t &);
-
-//
 // Utility functions.
 //
 

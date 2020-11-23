@@ -47,7 +47,7 @@ extern float *overlayfclip, *overlaycclip;
 
 void R_ClearPlanes(void);
 void R_ClearOverlayClips(rendercontext_t &context);
-void R_DrawPlanes(planehash_t *table);
+void R_DrawPlanes(rendercontext_t &context, planehash_t *table);
 
 // Planehash stuff
 planehash_t *R_NewPlaneHash(int chaincount);
