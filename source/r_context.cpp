@@ -51,9 +51,9 @@ static renderdata_t *renderdatas = nullptr;
 //
 // Grab a given render context
 //
-rendercontext_t &R_GetContext(int context)
+rendercontext_t &R_GetContext(int index)
 {
-   return renderdatas[context].context;
+   return renderdatas[index].context;
 }
 
 //

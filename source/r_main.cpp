@@ -50,6 +50,7 @@
 #include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_dynseg.h"
 #include "r_interpolate.h"
@@ -1236,13 +1237,16 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    bool quake = false;
    unsigned int savedflags = 0;
 
+   rendercontext_t &context = R_GetContext(0); // THREAD_FIXME
+
    R_SetupFrame(player, camerapoint);
-   
+
    // haleyjd: untaint portals
    R_UntaintPortals();
 
    // Clear buffers.
-   R_ClearClipSegs();
+   // THREAD_TODO: Make these rendercontext_t methods?
+   R_ClearClipSegs(context);
    R_ClearDrawSegs();
    R_ClearPlanes();
    R_ClearPortals();
@@ -1266,7 +1270,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
    // The head node is the last node output.
-   R_RenderBSPNode(numnodes - 1);
+   R_RenderBSPNode(context, numnodes - 1);
 
    if(quake)
       player->mo->flags2 = savedflags;
@@ -1280,7 +1284,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_PushPost(true, nullptr);
    
    // SoM 12/9/03: render the portals.
-   R_RenderPortals();
+   R_RenderPortals(context);
 
    R_DrawPlanes(nullptr);
    

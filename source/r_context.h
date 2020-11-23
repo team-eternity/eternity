@@ -28,10 +28,21 @@
 #ifndef R_CONTEXT_H__
 #define R_CONTEXT_H__
 
+struct cliprange_t;
+
 struct rendercontext_t
 {
    int bufferindex;
    int startcolumn, endcolumn; // for(int x = startcolumn; x < endcolumn; x++)
+
+   // r_bsp.cpp
+   // newend is one past the last valid seg
+   cliprange_t *newend;
+   cliprange_t *solidsegs;
+
+   // addend is one past the last valid added seg.
+   cliprange_t *addedsegs;
+   cliprange_t *addend;
 
    void (*colfunc)();
    void (*flatfunc)();

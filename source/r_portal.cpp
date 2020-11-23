@@ -158,7 +158,7 @@ VALLOCATION(portals)
 
 portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
-static void R_RenderPortalNOP(pwindow_t *window)
+static void R_RenderPortalNOP(rendercontext_t &context, pwindow_t *window)
 {
    I_Error("R_RenderPortalNOP called\n");
 }
@@ -686,7 +686,7 @@ void R_InitPortals()
 //
 // R_RenderPlanePortal
 //
-static void R_RenderPlanePortal(pwindow_t *window)
+static void R_RenderPlanePortal(rendercontext_t &context, pwindow_t *window)
 {
    visplane_t *vplane;
    int x;
@@ -767,13 +767,13 @@ static void R_RenderPlanePortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_RenderPlanePortal(window->child);
+      R_RenderPlanePortal(context, window->child);
 }
 
 //
 // R_RenderHorizonPortal
 //
-static void R_RenderHorizonPortal(pwindow_t *window)
+static void R_RenderHorizonPortal(rendercontext_t &context, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz; // SoM 3/10/2005
    float   lastxf, lastyf, lastzf;
@@ -886,7 +886,7 @@ static void R_RenderHorizonPortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_RenderHorizonPortal(window->child);
+      R_RenderHorizonPortal(context, window->child);
 }
 
 //=============================================================================
@@ -899,7 +899,7 @@ extern void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
 //
 // R_RenderSkyboxPortal
 //
-static void R_RenderSkyboxPortal(pwindow_t *window)
+static void R_RenderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz, lastangle;
    float   lastxf, lastyf, lastzf, lastanglef;
@@ -926,7 +926,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    }
 #endif
 
-   if(!R_SetupPortalClipsegs(window->minx, window->maxx, window->top, window->bottom))
+   if(!R_SetupPortalClipsegs(context, window->minx, window->maxx, window->top, window->bottom))
       return;
 
    R_ClearSlopeMark(window->minx, window->maxx, window->type);
@@ -968,7 +968,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(numnodes - 1);
+   R_RenderBSPNode(context, numnodes - 1);
    
    // Only push the overlay if this is the head window
    R_PushPost(true, window->head == window ? window : nullptr);
@@ -992,7 +992,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_RenderSkyboxPortal(window->child);
+      R_RenderSkyboxPortal(context, window->child);
 }
 
 //=============================================================================
@@ -1002,7 +1002,7 @@ static void R_RenderSkyboxPortal(pwindow_t *window)
 
 extern int    showtainted;
 
-static void R_ShowTainted(pwindow_t *window)
+static void R_ShowTainted(rendercontext_t &context, pwindow_t *window)
 {
    int y1, y2, count;
 
@@ -1073,7 +1073,7 @@ static void R_ShowTainted(pwindow_t *window)
 //
 // R_RenderAnchoredPortal
 //
-static void R_RenderAnchoredPortal(pwindow_t *window)
+static void R_RenderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
    float   lastxf, lastyf, lastzf;
@@ -1088,7 +1088,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_ShowTainted(window);         
+      R_ShowTainted(context, window);
 
       portal->tainted++;
       doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.anchor.maker,
@@ -1111,7 +1111,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    }
 #endif
    
-   if(!R_SetupPortalClipsegs(window->minx, window->maxx, window->top, window->bottom))
+   if(!R_SetupPortalClipsegs(context, window->minx, window->maxx, window->top, window->bottom))
       return;
 
    R_ClearSlopeMark(window->minx, window->maxx, window->type);
@@ -1158,7 +1158,7 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    view.cos = cosf(view.angle);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(numnodes - 1);
+   R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(true, window->head == window ? window : nullptr);
@@ -1181,10 +1181,10 @@ static void R_RenderAnchoredPortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_RenderAnchoredPortal(window->child);
+      R_RenderAnchoredPortal(context, window->child);
 }
 
-static void R_RenderLinkedPortal(pwindow_t *window)
+static void R_RenderLinkedPortal(rendercontext_t &context, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
    angle_t lastangle;
@@ -1198,7 +1198,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_ShowTainted(window);         
+      R_ShowTainted(context, window);
 
       portal->tainted++;
       doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.link.maker,
@@ -1221,7 +1221,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    }
 #endif
    
-   if(!R_SetupPortalClipsegs(window->minx, window->maxx, window->top, window->bottom))
+   if(!R_SetupPortalClipsegs(context, window->minx, window->maxx, window->top, window->bottom))
       return;
 
    R_ClearSlopeMark(window->minx, window->maxx, window->type);
@@ -1268,7 +1268,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    }
 
    R_IncrementFrameid();
-   R_RenderBSPNode(numnodes - 1);
+   R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(true, window->head == window ? window : nullptr);
@@ -1290,7 +1290,7 @@ static void R_RenderLinkedPortal(pwindow_t *window)
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_RenderLinkedPortal(window->child);
+      R_RenderLinkedPortal(context, window->child);
 }
 
 //
@@ -1499,7 +1499,7 @@ void R_ClearPortals()
 //
 // Primary portal rendering function.
 //
-void R_RenderPortals()
+void R_RenderPortals(rendercontext_t &context)
 {
    pwindow_t *w;
 
@@ -1511,7 +1511,7 @@ void R_RenderPortals()
 //      portalrender.overlay = windowhead->portal->poverlay;
 
       if(windowhead->maxx >= windowhead->minx)
-         windowhead->func(windowhead);
+         windowhead->func(context, windowhead);
 
       portalrender.active = false;
       portalrender.w = nullptr;

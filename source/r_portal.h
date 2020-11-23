@@ -38,6 +38,7 @@ struct line_t;
 class  Mobj;
 struct planehash_t;
 struct pwindow_t;
+struct rendercontext_t;
 struct sectorbox_t;
 
 typedef enum
@@ -210,7 +211,7 @@ portal_t *R_GetPlanePortal(const sector_t *sector);
 
 void R_MovePortalOverlayToWindow(cb_seg_t &seg, surf_e surf);
 void R_ClearPortals();
-void R_RenderPortals();
+void R_RenderPortals(rendercontext_t &context);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
@@ -248,8 +249,8 @@ enum pwindowtype_e
 
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
-typedef void (*R_WindowFunc)(pwindow_t *);
-typedef void (*R_ClipSegFunc)(const cb_seg_t &seg);
+typedef void (*R_WindowFunc)(rendercontext_t &context, pwindow_t *);
+typedef void (*R_ClipSegFunc)(rendercontext_t &context, const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
 
@@ -339,7 +340,7 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)(const cb_seg_t &);
+   void (*segClipFunc)(rendercontext_t &context, const cb_seg_t &);
 
 //   planehash_t *overlay;
 };

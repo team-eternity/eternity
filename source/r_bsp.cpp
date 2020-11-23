@@ -33,6 +33,7 @@
 #include "p_maputl.h"   // ioanch 20160125
 #include "p_portal.h"
 #include "p_slopes.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_draw.h"
 #include "r_main.h"
@@ -110,27 +111,27 @@ struct cliprange_t
 
 #define MAXSEGS (w/2+1)   /* killough 1/11/98, 2/8/98 */
 
-// newend is one past the last valid seg
-static cliprange_t *newend;
-static cliprange_t *solidsegs;
-
-// addend is one past the last valid added seg.
-static cliprange_t *addedsegs;
-static cliprange_t *addend;
-
 VALLOCATION(solidsegs)
 {
-   cliprange_t *buf = 
-      ecalloctag(cliprange_t *, MAXSEGS*2, sizeof(cliprange_t), PU_VALLOC, nullptr);
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
 
-   solidsegs = buf;
-   addedsegs = buf + MAXSEGS;
-   addend = addedsegs;
+      cliprange_t *buf = ecalloctag(cliprange_t *, MAXSEGS * 2, sizeof(cliprange_t), PU_VALLOC, nullptr);
+
+      context.solidsegs = buf;
+      context.addedsegs = buf + MAXSEGS;
+      context.addend    = context.addedsegs;
+   }
 }
 
 
-static void R_AddSolidSeg(int x1, int x2)
+static void R_addSolidSeg(rendercontext_t &context,
+                          int x1, int x2)
 {
+   cliprange_t *&solidsegs = context.solidsegs;
+   cliprange_t *&newend    = context.newend;
+
    cliprange_t *rover = solidsegs;
 
    while(rover->last < x1 - 1) rover++;
@@ -173,7 +174,7 @@ static void R_AddSolidSeg(int x1, int x2)
    {
       if(rover->last >= (rover+1)->first)
       {
-         I_Error("R_AddSolidSeg: created a seg that overlaps next seg:\n"
+         I_Error("R_addSolidSeg: created a seg that overlaps next seg:\n"
                  "   (%i)->last = %i, (%i)->first = %i\n", 
                  static_cast<int>(rover - solidsegs),
                  rover->last, 
@@ -186,21 +187,21 @@ static void R_AddSolidSeg(int x1, int x2)
 #endif
 }
 
-void R_MarkSolidSeg(int x1, int x2)
+void R_MarkSolidSeg(rendercontext_t &context, int x1, int x2)
 {
-   addend->first = x1;
-   addend->last = x2;
-   addend++;
+   context.addend->first = x1;
+   context.addend->last = x2;
+   context.addend++;
 }
 
-static void R_AddMarkedSegs()
+static void R_addMarkedSegs(rendercontext_t &context)
 {
    cliprange_t *r;
 
-   for(r = addedsegs; r < addend; r++)
-      R_AddSolidSeg(r->first, r->last);
+   for(r = context.addedsegs; r < context.addend; r++)
+      R_addSolidSeg(context, r->first, r->last);
 
-   addend = addedsegs;
+   context.addend = context.addedsegs;
 }
 
 //
@@ -208,8 +209,12 @@ static void R_AddMarkedSegs()
 //  e.g. single sided LineDefs (middle texture)
 //  that entirely block the view.
 //
-static void R_clipSolidWallSegment(const cb_seg_t &seg, int x1, int x2)
+static void R_clipSolidWallSegment(rendercontext_t &context, const cb_seg_t &seg,
+                                   const int x1, const int x2)
 {
+   cliprange_t *&solidsegs = context.solidsegs;
+   cliprange_t *&newend    = context.newend;
+
    cliprange_t *next, *start;
    
    // Find the first range that touches the range
@@ -224,7 +229,7 @@ static void R_clipSolidWallSegment(const cb_seg_t &seg, int x1, int x2)
       if(x2 < start->first - 1)
       {
          // Post is entirely visible (above start), so insert a new clippost.
-         R_StoreWallRange(seg, x1, x2);
+         R_StoreWallRange(context, seg, x1, x2);
          
          // 1/11/98 killough: performance tuning using fast memmove
          memmove(start + 1, start, (++newend - start) * sizeof(*start));
@@ -234,7 +239,7 @@ static void R_clipSolidWallSegment(const cb_seg_t &seg, int x1, int x2)
       }
 
       // There is a fragment above *start.
-      R_StoreWallRange(seg, x1, start->first - 1);
+      R_StoreWallRange(context, seg, x1, start->first - 1);
       
       // Now adjust the clip size.
       start->first = x1;
@@ -247,7 +252,7 @@ static void R_clipSolidWallSegment(const cb_seg_t &seg, int x1, int x2)
    next = start;
    while(x2 >= (next + 1)->first - 1)
    {      // There is a fragment between two posts.
-      R_StoreWallRange(seg, next->last + 1, (next + 1)->first - 1);
+      R_StoreWallRange(context, seg, next->last + 1, (next + 1)->first - 1);
       ++next;
       if(x2 <= next->last)
       {  
@@ -258,7 +263,7 @@ static void R_clipSolidWallSegment(const cb_seg_t &seg, int x1, int x2)
    }
 
    // There is a fragment after *next.
-   R_StoreWallRange(seg, next->last + 1, x2);
+   R_StoreWallRange(context, seg, next->last + 1, x2);
    
    // Adjust the clip size.
    start->last = x2;
@@ -300,8 +305,12 @@ crunch:
 // Does handle windows,
 //  e.g. LineDefs with upper and lower texture.
 //
-static void R_clipPassWallSegment(const cb_seg_t &seg, int x1, int x2)
+static void R_clipPassWallSegment(rendercontext_t &context, const cb_seg_t &seg,
+                                  const int x1, const int x2)
 {
+   cliprange_t *&solidsegs = context.solidsegs;
+   cliprange_t *&newend    = context.newend;
+
    const cliprange_t *start;
    
    start = solidsegs;
@@ -316,12 +325,12 @@ static void R_clipPassWallSegment(const cb_seg_t &seg, int x1, int x2)
       if(x2 < start->first - 1)
       {
          // Post is entirely visible (above start).
-         R_StoreWallRange(seg, x1, x2);
+         R_StoreWallRange(context, seg, x1, x2);
          return;
       }
 
       // There is a fragment above *start.
-      R_StoreWallRange(seg, x1, start->first - 1);
+      R_StoreWallRange(context, seg, x1, start->first - 1);
    }
 
    // Bottom contained in start?
@@ -331,7 +340,7 @@ static void R_clipPassWallSegment(const cb_seg_t &seg, int x1, int x2)
    while(x2 >= (start + 1)->first - 1)
    {
       // There is a fragment between two posts.
-      R_StoreWallRange(seg, start->last + 1, (start + 1)->first - 1);
+      R_StoreWallRange(context, seg, start->last + 1, (start + 1)->first - 1);
       ++start;
       
       if(x2 <= start->last)
@@ -339,31 +348,35 @@ static void R_clipPassWallSegment(const cb_seg_t &seg, int x1, int x2)
    }
    
    // There is a fragment after *next.
-   R_StoreWallRange(seg, start->last + 1, x2);
+   R_StoreWallRange(context, seg, start->last + 1, x2);
 }
 
 //
 // R_ClearClipSegs
 //
-void R_ClearClipSegs()
+void R_ClearClipSegs(rendercontext_t &context)
 {
-   solidsegs[0].first = D_MININT + 1;
-   solidsegs[0].last  = -1;
-   solidsegs[1].first = viewwindow.width;
-   solidsegs[1].last  = D_MAXINT - 1;
-   newend = solidsegs+2;
-   addend = addedsegs;
+   context.solidsegs[0].first = D_MININT + 1;
+   context.solidsegs[0].last  = -1;
+   context.solidsegs[1].first = viewwindow.width;
+   context.solidsegs[1].last  = D_MAXINT - 1;
+   context.newend = context.solidsegs+2;
+   context.addend = context.addedsegs;
 }
 
 //
 // R_SetupPortalClipsegs
 //
-bool R_SetupPortalClipsegs(int minx, int maxx, const float *top, const float *bottom)
+bool R_SetupPortalClipsegs(rendercontext_t &context,
+                           int minx, int maxx, const float *top, const float *bottom)
 {
+   cliprange_t *&solidsegs = context.solidsegs;
+   cliprange_t *&newend = context.newend;
+
    int i = minx, stop = maxx + 1;
    cliprange_t *solidseg = solidsegs;
    
-   R_ClearClipSegs();
+   R_ClearClipSegs(context);
 
    // SoM: This should be done here instead of having an additional loop
    portalrender.miny = (float)(video.height);
@@ -737,7 +750,7 @@ static bool R_clipInitialSegRange(const cb_seg_t &seg, int *start, int *stop, fl
    return true;
 }
 
-static void R_clipSegToFPortal(const cb_seg_t &seg)
+static void R_clipSegToFPortal(rendercontext_t &context, const cb_seg_t &seg)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -763,9 +776,9 @@ static void R_clipSegToFPortal(const cb_seg_t &seg)
          while(i <= stop && floorclip[i] - slopemark[i] > -1.0f) i++;
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
    else
@@ -798,14 +811,14 @@ static void R_clipSegToFPortal(const cb_seg_t &seg)
          }
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
 }
 
-static void R_clipSegToCPortal(const cb_seg_t &seg)
+static void R_clipSegToCPortal(rendercontext_t &context, const cb_seg_t &seg)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -828,9 +841,9 @@ static void R_clipSegToCPortal(const cb_seg_t &seg)
          while(i <= stop && slopemark[i] >= ceilingclip[i]) i++;
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
    else
@@ -861,14 +874,14 @@ static void R_clipSegToCPortal(const cb_seg_t &seg)
          }
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
 }
 
-static void R_clipSegToLPortal(const cb_seg_t &seg)
+static void R_clipSegToLPortal(rendercontext_t &context, const cb_seg_t &seg)
 {
    int i, startx;
    float clipx1, clipx2;
@@ -921,9 +934,9 @@ static void R_clipSegToLPortal(const cb_seg_t &seg)
          }
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
    else if(!seg.plane.floor && !seg.secwindow.floor)
@@ -957,9 +970,9 @@ static void R_clipSegToLPortal(const cb_seg_t &seg)
             bottom += bottomstep;
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
    else if(!seg.plane.ceiling && !seg.secwindow.ceiling)
@@ -998,9 +1011,9 @@ static void R_clipSegToLPortal(const cb_seg_t &seg)
             top += topstep;
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
    else
@@ -1017,9 +1030,9 @@ static void R_clipSegToLPortal(const cb_seg_t &seg)
          while(i <= stop && floorclip[i] >= ceilingclip[i]) i++;
 
          if(seg.clipsolid)
-            R_clipSolidWallSegment(seg, startx, i - 1);
+            R_clipSolidWallSegment(context, seg, startx, i - 1);
          else
-            R_clipPassWallSegment(seg, startx, i - 1);
+            R_clipPassWallSegment(context, seg, startx, i - 1);
       }
    }
 }
@@ -1991,7 +2004,8 @@ static bool R_allowBehindSectorPortal(const float fbox[4], const seg_t &tryseg)
 // Clips the given segment
 // and adds any visible pieces to the line list.
 //
-static void R_addLine(cb_seg_t &seg, const seg_t *line, bool dynasegs)
+static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
+                      const seg_t *line, bool dynasegs)
 {
    static sector_t tempsec;
 
@@ -2382,14 +2396,14 @@ static void R_addLine(cb_seg_t &seg, const seg_t *line, bool dynasegs)
    seg.x2frac = x2;
 
    if(portalrender.active && portalrender.segClipFunc)
-      portalrender.segClipFunc(seg);
+      portalrender.segClipFunc(context, seg);
    else if(seg.clipsolid)
-      R_clipSolidWallSegment(seg, seg.x1, seg.x2);
+      R_clipSolidWallSegment(context, seg, seg.x1, seg.x2);
    else
-      R_clipPassWallSegment(seg, seg.x1, seg.x2);
+      R_clipPassWallSegment(context, seg, seg.x1, seg.x2);
 
    // Add new solid segs when it is safe to do so...
-   R_AddMarkedSegs();
+   R_addMarkedSegs(context);
 
 }
 
@@ -2410,12 +2424,11 @@ static const int checkcoord[12][4] = // killough -- static const
 };
 
 //
-// R_CheckBBox
-//
 // Checks BSP node/subtree bounding box.
 // Returns true if some part of the bbox might be visible.
 //
-static bool R_CheckBBox(const fixed_t *bspcoord) // killough 1/28/98: static
+static bool R_checkBBox(const cliprange_t *const solidsegs,
+                        const fixed_t *bspcoord) // killough 1/28/98: static
 {
    int     boxpos, boxx, boxy;
    fixed_t x1, x2, y1, y2;
@@ -2521,14 +2534,15 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 //
 // Recurse through a polynode mini-BSP
 //
-static void R_renderPolyNode(cb_seg_t &cbseg, const rpolynode_t *node)
+static void R_renderPolyNode(rendercontext_t &context, cb_seg_t &cbseg,
+                             const rpolynode_t *node)
 {
    while(node)
    {
       int side = R_PointOnDynaSegSide(node->partition, view.x, view.y);
       
       // render frontspace
-      R_renderPolyNode(cbseg, node->children[side]);
+      R_renderPolyNode(context, cbseg, node->children[side]);
 
       // render partition seg
       v2fixed_t org[2];
@@ -2546,7 +2560,7 @@ static void R_renderPolyNode(cb_seg_t &cbseg, const rpolynode_t *node)
          seg->offset = lerpCoordf(view.lerp, dynaseg.prevofs, seg->offset);
       }
 
-      R_addLine(cbseg, seg, true);
+      R_addLine(context, cbseg, seg, true);
       seg->offset = orgofs;
       seg->len = orglen;
       seg->v1->x = org[0].x;
@@ -2575,7 +2589,8 @@ static void R_renderPolyNode(cb_seg_t &cbseg, const rpolynode_t *node)
 //
 // See r_dynabsp.cpp for rpolybsp generation.
 //
-static void R_addDynaSegs(cb_seg_t &seg, subsector_t *sub)
+static void R_addDynaSegs(rendercontext_t &context, cb_seg_t &seg,
+                          subsector_t *sub)
 {
    bool needbsp = (!sub->bsp || sub->bsp->dirty);
 
@@ -2586,7 +2601,7 @@ static void R_addDynaSegs(cb_seg_t &seg, subsector_t *sub)
       sub->bsp = R_BuildDynaBSP(sub);
    }
    if(sub->bsp)
-      R_renderPolyNode(seg, sub->bsp->root);
+      R_renderPolyNode(context, seg, sub->bsp->root);
 }
 
 //
@@ -2596,7 +2611,7 @@ static void R_addDynaSegs(cb_seg_t &seg, subsector_t *sub)
 //
 // killough 1/31/98 -- made static, polished
 //
-static void R_subsector(int num)
+static void R_subsector(rendercontext_t &context, int num)
 {
    int         count;
    const seg_t *line;
@@ -2778,14 +2793,12 @@ static void R_subsector(int num)
    // haleyjd 10/09/06: skip call entirely if no polyobjects
 
    if(sub->polyList)
-      R_addDynaSegs(seg, sub);
+      R_addDynaSegs(context, seg, sub);
 
    while(count--)
-      R_addLine(seg, line++, false);
+      R_addLine(context, seg, line++, false);
 }
 
-//
-// R_RenderBSPNode
 //
 // Renders all subsectors below a given node,
 //  traversing subtree recursively.
@@ -2793,7 +2806,7 @@ static void R_subsector(int num)
 //
 // killough 5/2/98: reformatted, removed tail recursion
 //
-void R_RenderBSPNode(int bspnum)
+void R_RenderBSPNode(rendercontext_t &context, int bspnum)
 {
    while(!(bspnum & NF_SUBSECTOR))  // Found a subsector?
    {
@@ -2803,16 +2816,16 @@ void R_RenderBSPNode(int bspnum)
       int side = R_PointOnSide(viewx, viewy, bsp);
       
       // Recursively divide front space.
-      R_RenderBSPNode(bsp->children[side]);
+      R_RenderBSPNode(context, bsp->children[side]);
       
       // Possibly divide back space.
       
-      if(!R_CheckBBox(bsp->bbox[side^=1]))
+      if(!R_checkBBox(context.solidsegs, bsp->bbox[side^=1]))
          return;
       
       bspnum = bsp->children[side];
    }
-   R_subsector(bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
+   R_subsector(context, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR);
 }
 
 //----------------------------------------------------------------------------

@@ -607,7 +607,7 @@ static void R_CloseDSP(void)
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_detectClosedColumns(cb_seg_t &segclip)
+static void R_detectClosedColumns(rendercontext_t &context, cb_seg_t &segclip)
 {
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
@@ -623,7 +623,7 @@ static void R_detectClosedColumns(cb_seg_t &segclip)
 
       // Mark the closed area.
       R_CloseDSP();
-      R_MarkSolidSeg(startx, i - 1);
+      R_MarkSolidSeg(context, startx, i - 1);
 
       // End closed
       if(i == stop)
@@ -671,7 +671,7 @@ static void R_detectClosedColumns(cb_seg_t &segclip)
       // as solid? Sprites appear through architecture. The solution is to
       // modify the drawseg created before this function was called to only be 
       // open where the seg has not created a solid seg.
-      R_MarkSolidSeg(startx, i-1);
+      R_MarkSolidSeg(context, startx, i-1);
 
       // End closed
       if(i == stop)
@@ -732,7 +732,8 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-void R_StoreWallRange(const cb_seg_t &seg, const int start, const int stop)
+void R_StoreWallRange(rendercontext_t &context, const cb_seg_t &seg,
+                      const int start, const int stop)
 {
    float clipx1;
    float clipx2;
@@ -997,7 +998,7 @@ void R_StoreWallRange(const cb_seg_t &seg, const int start, const int stop)
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_detectClosedColumns(segclip);
+      R_detectClosedColumns(context, segclip);
 
    ++ds_p;
 }
