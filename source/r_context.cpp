@@ -81,7 +81,7 @@ void R_InitContexts(const int width)
 
 
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);
-CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, 0)
+CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
 {
    const int maxcontexts = std::thread::hardware_concurrency();
 
