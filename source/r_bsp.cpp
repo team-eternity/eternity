@@ -1068,7 +1068,7 @@ R_ClipSegFunc segclipfuncs[] =
 
 #define NEARCLIP 0.05f
 
-static void R_2S_Sloped(cb_seg_t &seg,
+static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
                         float texbottom, const vertex_t *v1, const vertex_t *v2, 
                         float lclip1, float lclip2)
@@ -1211,13 +1211,13 @@ static void R_2S_Sloped(cb_seg_t &seg,
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
-         R_MovePortalOverlayToWindow(seg, surf_ceil);
+         R_MovePortalOverlayToWindow(context, seg, surf_ceil);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
-         R_MovePortalOverlayToWindow(seg, surf_ceil);
+         R_MovePortalOverlayToWindow(context, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
       else
@@ -1291,13 +1291,13 @@ static void R_2S_Sloped(cb_seg_t &seg,
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
-         R_MovePortalOverlayToWindow(seg, surf_floor);
+         R_MovePortalOverlayToWindow(context, seg, surf_floor);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
-         R_MovePortalOverlayToWindow(seg, surf_floor);
+         R_MovePortalOverlayToWindow(context, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
       else
@@ -1394,7 +1394,7 @@ static void R_2S_Sloped(cb_seg_t &seg,
       seg.b_window = nullptr;
 }
 
-static void R_2S_Normal(cb_seg_t &seg,
+static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
                         float texbottom)
 {
@@ -1514,7 +1514,7 @@ static void R_2S_Normal(cb_seg_t &seg,
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
-         R_MovePortalOverlayToWindow(seg, surf_ceil);
+         R_MovePortalOverlayToWindow(context, seg, surf_ceil);
       }
       else if(seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal &&
               seg.frontsec->srf.ceiling.height == seg.backsec->srf.ceiling.height)
@@ -1522,7 +1522,7 @@ static void R_2S_Normal(cb_seg_t &seg,
          // We need to do this just to transfer the plane
          seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
-         R_MovePortalOverlayToWindow(seg, surf_ceil);
+         R_MovePortalOverlayToWindow(context, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
       else
@@ -1594,7 +1594,7 @@ static void R_2S_Normal(cb_seg_t &seg,
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
-         R_MovePortalOverlayToWindow(seg, surf_floor);
+         R_MovePortalOverlayToWindow(context, seg, surf_floor);
       }
       else if(seg.frontsec->srf.floor.height == seg.backsec->srf.floor.height &&
               seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
@@ -1602,7 +1602,7 @@ static void R_2S_Normal(cb_seg_t &seg,
          // We need to do this just to transfer the plane
          seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
-         R_MovePortalOverlayToWindow(seg, surf_floor);
+         R_MovePortalOverlayToWindow(context, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
       else
@@ -1695,7 +1695,7 @@ static void R_2S_Normal(cb_seg_t &seg,
 // Prepare 1-sided line for rendering (extracted from R_addLine due to size)
 // beyond is the optional sector on the other side of a polyobject/1-sided wall portal
 //
-static void R_1SidedLine(cb_seg_t &seg,
+static void R_1SidedLine(const rendercontext_t &context, cb_seg_t &seg,
                          float pstep, float i1, float i2, float textop, float texbottom,
                          const sector_t *beyond, const side_t *side, const seg_t *line)
 {
@@ -1775,7 +1775,7 @@ static void R_1SidedLine(cb_seg_t &seg,
       seg.markflags |= SEG_MARKCPORTAL;
       seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
       R_updateWindowSectorBarrier(seg, surf_ceil);
-      R_MovePortalOverlayToWindow(seg, surf_ceil);
+      R_MovePortalOverlayToWindow(context, seg, surf_ceil);
    }
 
    if(seg.frontsec->srf.floor.portal && (seg.frontsec->srf.floor.portal->type < R_TWOWAY ||
@@ -1784,7 +1784,7 @@ static void R_1SidedLine(cb_seg_t &seg,
       seg.markflags |= SEG_MARKFPORTAL;
       seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
       R_updateWindowSectorBarrier(seg, surf_floor);
-      R_MovePortalOverlayToWindow(seg, surf_floor);
+      R_MovePortalOverlayToWindow(context, seg, surf_floor);
    }
 
    if(seg.plane.ceiling != nullptr)
@@ -2345,15 +2345,15 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
       seg.line->linedef->beyondportalline->frontsector : nullptr;
    if(!seg.backsec || beyond) 
    {
-      R_1SidedLine(seg, pstep, i1, i2, textop, texbottom, beyond, side, line);
+      R_1SidedLine(context, seg, pstep, i1, i2, textop, texbottom, beyond, side, line);
    }
    else
    {
       if(seg.frontsec->srf.floor.slope || seg.frontsec->srf.ceiling.slope ||
          seg.backsec->srf.floor.slope || seg.backsec->srf.ceiling.slope)
-         R_2S_Sloped(seg, pstep, i1, i2, textop, texbottom, v1, v2, lclip1, lclip2);
+         R_2S_Sloped(context, seg, pstep, i1, i2, textop, texbottom, v1, v2, lclip1, lclip2);
       else
-         R_2S_Normal(seg, pstep, i1, i2, textop, texbottom);
+         R_2S_Normal(context, seg, pstep, i1, i2, textop, texbottom);
    }
 
    // SoM: This really needs to be handled here. The float values need to be 
@@ -2706,7 +2706,8 @@ static void R_subsector(rendercontext_t &context, int num)
       visible = (visible && (fpalpha > 0));
 
       seg.plane.floor = visible && seg.frontsec->srf.floor.pflags & PS_OVERLAY ?
-        R_FindPlane(seg.frontsec->srf.floor.height,
+        R_FindPlane(context,
+                    seg.frontsec->srf.floor.height,
                     seg.frontsec->srf.floor.pflags & PS_USEGLOBALTEX ?
                     seg.portal.floor->globaltex : seg.frontsec->srf.floor.pic,
                     floorlightlevel,                // killough 3/16/98
@@ -2723,7 +2724,8 @@ static void R_subsector(rendercontext_t &context, int num)
       seg.plane.floor = (visible || // killough 3/7/98
          (seg.frontsec->heightsec != -1 &&
           sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
-        R_FindPlane(seg.frontsec->srf.floor.height,
+        R_FindPlane(context,
+                    seg.frontsec->srf.floor.height,
                     R_IsSkyFlat(seg.frontsec->srf.floor.pic) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
                     seg.frontsec->srf.floor.pic,
@@ -2754,7 +2756,8 @@ static void R_subsector(rendercontext_t &context, int num)
       visible = (visible && (cpalpha > 0));
 
       seg.plane.ceiling = visible && seg.frontsec->srf.ceiling.pflags & PS_OVERLAY ?
-        R_FindPlane(seg.frontsec->srf.ceiling.height,
+        R_FindPlane(context,
+                    seg.frontsec->srf.ceiling.height,
                     seg.frontsec->srf.ceiling.pflags & PS_USEGLOBALTEX ?
                     seg.portal.ceiling->globaltex : seg.frontsec->srf.ceiling.pic,
                     ceilinglightlevel,                // killough 3/16/98
@@ -2771,7 +2774,8 @@ static void R_subsector(rendercontext_t &context, int num)
          (seg.frontsec->intflags & SIF_SKY) ||
         (seg.frontsec->heightsec != -1 &&
          R_IsSkyFlat(sectors[seg.frontsec->heightsec].srf.floor.pic))) ?
-        R_FindPlane(seg.frontsec->srf.ceiling.height,     // killough 3/8/98
+        R_FindPlane(context,
+                    seg.frontsec->srf.ceiling.height,     // killough 3/8/98
                     (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98
                     seg.frontsec->sky & PL_SKYFLAT ? seg.frontsec->sky :
                     seg.frontsec->srf.ceiling.pic,

@@ -35,6 +35,7 @@ struct rendercontext_t
 {
    int bufferindex;
    int startcolumn, endcolumn; // for(int x = startcolumn; x < endcolumn; x++)
+   int numcolumns; // cached endcolumn - startcolumn
 
    // r_bsp.cpp
    // newend is one past the last valid seg

@@ -242,9 +242,9 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      skyplane = R_FindPlane(viewz - 1, segclip.skyflat, 144, {}, { 1, 1 }, 0, nullptr, 0,
-                          255, nullptr);
-      skyplane = R_CheckPlane(skyplane, segclip.x1, segclip.x2);
+      skyplane = R_FindPlane(context, viewz - 1, segclip.skyflat,
+                             144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr);
+      skyplane = R_CheckPlane(context, skyplane, segclip.x1, segclip.x2);
    }
 
    // haleyjd 06/30/07: cardboard invuln fix.
@@ -766,7 +766,7 @@ void R_StoreWallRange(rendercontext_t &context, const cb_seg_t &seg,
    segclip.x2 = stop;
 
    if(segclip.plane.floor)
-      segclip.plane.floor = R_CheckPlane(segclip.plane.floor, start, stop);
+      segclip.plane.floor = R_CheckPlane(context, segclip.plane.floor, start, stop);
 
    if(segclip.plane.ceiling)
    {
@@ -785,9 +785,9 @@ void R_StoreWallRange(rendercontext_t &context, const cb_seg_t &seg,
       // duplication when it encounters the floorplane, not the ceilingplane like here.
 
       if(segclip.plane.ceiling == segclip.plane.floor)
-         segclip.plane.ceiling = R_DupPlane(segclip.plane.ceiling, start, stop);
+         segclip.plane.ceiling = R_DupPlane(context, segclip.plane.ceiling, start, stop);
       else
-         segclip.plane.ceiling = R_CheckPlane(segclip.plane.ceiling, start, stop);
+         segclip.plane.ceiling = R_CheckPlane(context, segclip.plane.ceiling, start, stop);
    }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))

@@ -552,32 +552,31 @@ void R_ClearPlanes()
 
 
 //
-// new_visplane
-//
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(unsigned hash, planehash_t *table)
+static visplane_t *new_visplane(const rendercontext_t &context,
+                                unsigned hash, planehash_t *table)
 {
    visplane_t *check = freetail;
 
    if(!check)
       check = ecalloctag(visplane_t *, 1, sizeof *check, PU_VALLOC, nullptr);
-   else 
+   else
       if(!(freetail = freetail->next))
          freehead = &freetail;
-   
+
    check->next = table->chains[hash];
    table->chains[hash] = check;
-   
+
    check->table = table;
 
    if(!check->top)
    {
       int *paddedTop, *paddedBottom;
 
-      check->max_width = (unsigned int)video.width;
-      paddedTop    = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
-      paddedBottom = paddedTop + video.width + 2;
+      check->max_width = static_cast<unsigned int>(context.numcolumns);
+      paddedTop        = ecalloctag(int *, 2 * (context.numcolumns + 2), sizeof(int), PU_VALLOC, nullptr);
+      paddedBottom     = paddedTop + context.numcolumns + 2;
 
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
@@ -587,12 +586,11 @@ static visplane_t *new_visplane(unsigned hash, planehash_t *table)
 }
 
 //
-// R_FindPlane
-//
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
+visplane_t *R_FindPlane(const rendercontext_t &context,
+                        fixed_t height, int picnum, int lightlevel,
                         v2fixed_t offs, v2float_t scale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
                         planehash_t *table)
@@ -651,7 +649,7 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
         return check;
    }
 
-   check = new_visplane(hash, table);         // killough
+   check = new_visplane(context, hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
@@ -715,11 +713,11 @@ visplane_t *R_FindPlane(fixed_t height, int picnum, int lightlevel,
 // From PrBoom+
 // cph 2003/04/18 - create duplicate of existing visplane and set initial range
 //
-visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
+visplane_t *R_DupPlane(const rendercontext_t &context, const visplane_t *pl, int start, int stop)
 {
    planehash_t *table = pl->table;
    unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
-   visplane_t *new_pl = new_visplane(hash, table);
+   visplane_t *new_pl = new_visplane(context, hash, table);
 
    new_pl->height = pl->height;
    new_pl->picnum = pl->picnum;
@@ -770,7 +768,7 @@ visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop)
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(const rendercontext_t &context, visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
@@ -805,7 +803,7 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
       pl->maxx = unionh;
    }
    else
-      pl = R_DupPlane(pl, start, stop);
+      pl = R_DupPlane(context, pl, start, stop);
 
    return pl;
 }

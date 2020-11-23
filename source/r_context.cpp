@@ -76,6 +76,7 @@ void R_InitContexts(const int width)
 
       context.startcolumn = static_cast<int>(roundf(static_cast<float>(currentcontext)     * contextwidth));
       context.endcolumn   = static_cast<int>(roundf(static_cast<float>(currentcontext + 1) * contextwidth));
+      context.numcolumns  = context.endcolumn - context.startcolumn;
    }
 }
 

@@ -726,6 +726,7 @@ static void R_RenderPlanePortal(rendercontext_t &context, pwindow_t *window)
 
    const sector_t *sector = portal->data.sector;
    vplane = R_FindPlane(
+      context,
       sector->srf.ceiling.height + viewz,
       sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
       ? sector->sky : sector->srf.ceiling.pic,
@@ -740,7 +741,7 @@ static void R_RenderPlanePortal(rendercontext_t &context, pwindow_t *window)
       nullptr
    );
 
-   vplane = R_CheckPlane(vplane, window->minx, window->maxx);
+   vplane = R_CheckPlane(context, vplane, window->minx, window->maxx);
 
    for(x = window->minx; x <= window->maxx; x++)
    {
@@ -822,6 +823,7 @@ static void R_RenderHorizonPortal(rendercontext_t &context, pwindow_t *window)
    };
       
    topplane = R_FindPlane(
+      context,
       sector->srf.ceiling.height,
       sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT 
       ? sector->sky : sector->srf.ceiling.pic,
@@ -832,6 +834,7 @@ static void R_RenderHorizonPortal(rendercontext_t &context, pwindow_t *window)
       nullptr, 0, 255, nullptr
    );
    bottomplane = R_FindPlane(
+      context,
       sector->srf.floor.height,
       R_IsSkyFlat(sector->srf.floor.pic) && sector->sky & PL_SKYFLAT
       ? sector->sky : sector->srf.floor.pic,
@@ -842,8 +845,8 @@ static void R_RenderHorizonPortal(rendercontext_t &context, pwindow_t *window)
       nullptr, 0, 255, nullptr
    );
 
-   topplane = R_CheckPlane(topplane, window->minx, window->maxx);
-   bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
+   topplane = R_CheckPlane(context, topplane, window->minx, window->maxx);
+   bottomplane = R_CheckPlane(context, bottomplane, window->minx, window->maxx);
 
    for(x = window->minx; x <= window->maxx; x++)
    {
@@ -1012,14 +1015,18 @@ static void R_ShowTainted(rendercontext_t &context, pwindow_t *window)
       const sector_t *sector = window->line->frontsector;
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
-      visplane_t *topplane = R_FindPlane(sector->srf.ceiling.height,
+      visplane_t *topplane = R_FindPlane(
+         context, sector->srf.ceiling.height,
          sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset,
-         sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr);
-      visplane_t *bottomplane = R_FindPlane(sector->srf.floor.height,
+         sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr
+      );
+      visplane_t *bottomplane = R_FindPlane(
+         context, sector->srf.floor.height,
          sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset,
-         sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr);
-      topplane = R_CheckPlane(topplane, window->minx, window->maxx);
-      bottomplane = R_CheckPlane(bottomplane, window->minx, window->maxx);
+         sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr
+      );
+      topplane = R_CheckPlane(context, topplane, window->minx, window->maxx);
+      bottomplane = R_CheckPlane(context, bottomplane, window->minx, window->maxx);
 
       for(int x = window->minx; x <= window->maxx; x++)
       {
@@ -1464,14 +1471,15 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(cb_seg_t &seg, surf_e surf)
+void R_MovePortalOverlayToWindow(const rendercontext_t &context, cb_seg_t &seg, surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
    pwindow_t *window = seg.secwindow[surf];
    visplane_t *&plane = seg.plane[surf];
    if(plane)
    {
-      plane = R_FindPlane(plane->height, plane->picnum, plane->lightlevel,
+      plane = R_FindPlane(
+         context, plane->height, plane->picnum, plane->lightlevel,
          plane->offs, plane->scale, plane->angle,
          plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
    }

@@ -54,7 +54,8 @@ planehash_t *R_NewPlaneHash(int chaincount);
 void R_ClearPlaneHash(planehash_t *table);
 
 
-visplane_t *R_FindPlane(fixed_t height, 
+visplane_t *R_FindPlane(const rendercontext_t &context,
+                        fixed_t height,
                         int picnum,
                         int lightlevel,
                         v2fixed_t offs,       // killough 2/28/98: add x-y offsets
@@ -65,8 +66,8 @@ visplane_t *R_FindPlane(fixed_t height,
                         byte opacity,        // SoM: Opacity for translucent planes
                         planehash_t *table); // SoM: Table. Can be nullptr
 
-visplane_t *R_DupPlane(const visplane_t *pl, int start, int stop);
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
+visplane_t *R_DupPlane(const rendercontext_t &context, const visplane_t *pl, int start, int stop);
+visplane_t *R_CheckPlane(const rendercontext_t &context, visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
