@@ -27,6 +27,7 @@
 #define R_PLANE_H__
 
 struct planehash_t;
+struct rendercontext_t;
 struct rslope_t;
 struct texture_t;
 
@@ -45,7 +46,7 @@ extern float *floorcliparray, *ceilingcliparray;
 extern float *overlayfclip, *overlaycclip;
 
 void R_ClearPlanes(void);
-void R_ClearOverlayClips(void);
+void R_ClearOverlayClips(rendercontext_t &context);
 void R_DrawPlanes(planehash_t *table);
 
 // Planehash stuff

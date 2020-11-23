@@ -934,8 +934,8 @@ static void R_RenderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
 
    floorclip   = window->bottom;
    ceilingclip = window->top;
-   
-   R_ClearOverlayClips();
+
+   R_ClearOverlayClips(context);
 
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
@@ -1123,7 +1123,7 @@ static void R_RenderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
 
-   R_ClearOverlayClips();
+   R_ClearOverlayClips(context);
    
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
@@ -1233,7 +1233,7 @@ static void R_RenderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    floorclip   = window->bottom;
    ceilingclip = window->top;
 
-   R_ClearOverlayClips();
+   R_ClearOverlayClips(context);
    
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;

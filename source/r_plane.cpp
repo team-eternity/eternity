@@ -47,6 +47,7 @@
 #include "p_info.h"
 #include "p_slopes.h"
 #include "p_user.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
@@ -507,17 +508,15 @@ void R_ClearPlaneHash(planehash_t *table)
 }
 
 //
-// R_ClearOverlayClips
-//
-// Clears the arrays used to clip portal overlays. This function is called before the start of 
+// Clears the arrays used to clip portal overlays. This function is called before the start of
 // each portal rendering.
 //
-void R_ClearOverlayClips()
+void R_ClearOverlayClips(rendercontext_t &context)
 {
    int i;
-   
+
    // opening / clipping determination
-   for(i = 0; i < video.width; ++i)
+   for(i = context.startcolumn; i < context.endcolumn; ++i)
    {
       overlayfclip[i] = view.height - 1.0f;
       overlaycclip[i] = 0.0f;
