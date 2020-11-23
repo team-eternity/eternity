@@ -685,14 +685,17 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
 // to be clipped. This is done so visplanes will still be rendered 
 // fully.
 
-static float *slopemark;
-
 VALLOCATION(slopemark)
 {
-   slopemark = ecalloctag(float *, w, sizeof(float), PU_VALLOC, nullptr);
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
+
+      context.slopemark = ecalloctag(float *, w, sizeof(float), PU_VALLOC, nullptr);
+   }
 }
 
-void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type)
+void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindowtype_e type)
 {
    int i;
 
@@ -752,6 +755,8 @@ static bool R_clipInitialSegRange(const cb_seg_t &seg, int *start, int *stop, fl
 
 static void R_clipSegToFPortal(rendercontext_t &context, const cb_seg_t &seg)
 {
+   float *&slopemark = context.slopemark;
+
    int i, startx;
    float clipx1, clipx2;
    int start, stop;
@@ -820,6 +825,8 @@ static void R_clipSegToFPortal(rendercontext_t &context, const cb_seg_t &seg)
 
 static void R_clipSegToCPortal(rendercontext_t &context, const cb_seg_t &seg)
 {
+   float *&slopemark = context.slopemark;
+
    int i, startx;
    float clipx1, clipx2;
    int start, stop;

@@ -39,6 +39,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_bsp.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_plane.h"
@@ -894,7 +895,7 @@ static void R_RenderHorizonPortal(rendercontext_t &context, pwindow_t *window)
 // Skybox Portals
 //
 
-extern void R_ClearSlopeMark(int minx, int maxx, pwindowtype_e type);
+extern void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindowtype_e type);
 
 //
 // R_RenderSkyboxPortal
@@ -929,7 +930,7 @@ static void R_RenderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    if(!R_SetupPortalClipsegs(context, window->minx, window->maxx, window->top, window->bottom))
       return;
 
-   R_ClearSlopeMark(window->minx, window->maxx, window->type);
+   R_ClearSlopeMark(context.slopemark, window->minx, window->maxx, window->type);
 
    floorclip   = window->bottom;
    ceilingclip = window->top;
@@ -1114,7 +1115,7 @@ static void R_RenderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    if(!R_SetupPortalClipsegs(context, window->minx, window->maxx, window->top, window->bottom))
       return;
 
-   R_ClearSlopeMark(window->minx, window->maxx, window->type);
+   R_ClearSlopeMark(context.slopemark, window->minx, window->maxx, window->type);
 
    // haleyjd: temporary debug
    portal->tainted++;
@@ -1224,7 +1225,7 @@ static void R_RenderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    if(!R_SetupPortalClipsegs(context, window->minx, window->maxx, window->top, window->bottom))
       return;
 
-   R_ClearSlopeMark(window->minx, window->maxx, window->type);
+   R_ClearSlopeMark(context.slopemark, window->minx, window->maxx, window->type);
 
    // haleyjd: temporary debug
    portal->tainted++;

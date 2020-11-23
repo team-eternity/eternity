@@ -44,6 +44,9 @@ struct rendercontext_t
    cliprange_t *addedsegs;
    cliprange_t *addend;
 
+   float *slopemark;
+
+   // Currently uncategorised
    void (*colfunc)();
    void (*flatfunc)();
 };
