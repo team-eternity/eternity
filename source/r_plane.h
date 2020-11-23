@@ -84,6 +84,18 @@ struct cb_span_t
    const void *alphamask;  // pointer to alphamask if applicable
 };
 
+struct cb_slopespan_t
+{
+   int y, x1, x2;
+
+   double iufrac, ivfrac, idfrac;
+   double iustep, ivstep, idstep;
+
+   void *source;
+
+   static inline lighttable_t **colormap;
+};
+
 struct cb_plane_t
 {
    float xoffset, yoffset;
@@ -108,23 +120,9 @@ struct cb_plane_t
    // SoM: slopes.
    rslope_t *slope;
 
-   void (*MapFunc)(cb_span_t &, const cb_plane_t &, int, int, int);
+   void (*MapFunc)(cb_span_t &, cb_slopespan_t &, const cb_plane_t &, int, int, int);
 };
 
-struct cb_slopespan_t
-{
-   int y, x1, x2;
-
-   double iufrac, ivfrac, idfrac;
-   double iustep, ivstep, idstep;
-
-   void *source;
-
-   lighttable_t **colormap;
-};
-
-
-extern cb_slopespan_t slopespan;
 
 planehash_t *R_NewOverlaySet();
 void R_FreeOverlaySet(planehash_t *set);

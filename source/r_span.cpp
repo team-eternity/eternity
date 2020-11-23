@@ -593,7 +593,7 @@ static void R_DrawSpanAddMasked_8_GEN(const cb_span_t &span)
 #define INTERPSTEP (0.0625f)
 
 template<int xshift, int xmask, int ymask>
-static void R_DrawSlope_8(const cb_span_t &span)
+static void R_DrawSlope_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -634,7 +634,7 @@ static void R_DrawSlope_8(const cb_span_t &span)
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
@@ -668,7 +668,7 @@ static void R_DrawSlope_8(const cb_span_t &span)
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
@@ -677,7 +677,7 @@ static void R_DrawSlope_8(const cb_span_t &span)
    }
 }
 
-static void R_DrawSlope_8_GEN(const cb_span_t &span)
+static void R_DrawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -722,7 +722,7 @@ static void R_DrawSlope_8_GEN(const cb_span_t &span)
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
@@ -756,7 +756,7 @@ static void R_DrawSlope_8_GEN(const cb_span_t &span)
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
