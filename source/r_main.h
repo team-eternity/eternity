@@ -247,7 +247,6 @@ struct cb_seg_t
 
 extern cb_view_t  view;
 extern cb_seg_t   seg;
-extern cb_seg_t   segclip;
 
 // SoM: frameid frame counter.
 void R_IncrementFrameid(); // Needed by the portal functions... 

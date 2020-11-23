@@ -358,9 +358,8 @@ void R_ClearClipSegs()
    newend = solidsegs+2;
    addend = addedsegs;
 
-   // haleyjd 09/22/07: must clear seg and segclip structures
+   // haleyjd 09/22/07: must clear seg structure
    memset(&seg,     0, sizeof(cb_seg_t));
-   memset(&segclip, 0, sizeof(cb_seg_t));
 }
 
 //

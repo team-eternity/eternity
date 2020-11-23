@@ -47,7 +47,6 @@
 // SoM: Done.
 // SoM: Cardboard globals
 cb_seg_t    seg;
-cb_seg_t    segclip;
 
 // killough 1/6/98: replaced globals with statics where appropriate
 static float  *maskedtexturecol;
@@ -67,7 +66,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    line_t  *linedef;
    lighttable_t **wlight;
 
-   cb_column_t column = {};
+   cb_column_t column  = {};
+   cb_seg_t    segclip = {};
 
    // Calculate light table.
    // Use different light tables
@@ -212,13 +212,11 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
 
 //
-// R_RenderSegLoop
-//
 // Draws zero, one, or two textures (and possibly a masked texture) for walls.
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_RenderSegLoop(void)
+static void R_renderSegLoop(cb_seg_t &segclip)
 {
    int t, b, line;
    int cliptop, clipbot;
@@ -231,7 +229,7 @@ static void R_RenderSegLoop(void)
 #ifdef RANGECHECK
    if(segclip.x1 < 0 || segclip.x2 >= viewwindow.width || segclip.x1 > segclip.x2)
    {
-      I_Error("R_RenderSegLoop: invalid seg x values!\n"
+      I_Error("R_renderSegLoop: invalid seg x values!\n"
               "   x1 = %d, x2 = %d, linenum = %d\n", 
               segclip.x1, segclip.x2,
               static_cast<int>(segclip.line->linedef - lines));
@@ -609,14 +607,12 @@ static void R_CloseDSP(void)
    ds_p->x2 = newx2
 
 //
-// R_DetectClosedColumns
-//
 // This function iterates through the x range of segclip, and checks for columns
 // that became closed in the clipping arrays after the segclip is rendered. Any
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_DetectClosedColumns()
+static void R_detectClosedColumns(cb_seg_t &segclip)
 {
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
@@ -672,7 +668,7 @@ static void R_DetectClosedColumns()
 #ifdef RANGECHECK
       if(startx > i - 1 || startx < 0 || i - 1 >= viewwindow.width || 
          startx >= viewwindow.width || i - 1 < 0)
-         I_Error("R_DetectClosedColumns: bad range %i, %i\n", startx, i - 1);
+         I_Error("R_detectClosedColumns: bad range %i, %i\n", startx, i - 1);
 #endif
 
       // SoM: This creates a bug clipping sprites:
@@ -696,12 +692,12 @@ static void R_DetectClosedColumns()
 #undef NEXTDSP
 #undef SETX2
 
-static void R_StoreTextureColumns(void)
+static void R_storeTextureColumns(cb_seg_t &segclip)
 {
    int i;
    float texx;
    float basescale;
-   
+
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
@@ -749,7 +745,9 @@ void R_StoreWallRange(const int start, const int stop)
    float pstep;
 
    bool usesegloop;
-   
+
+   cb_seg_t segclip;
+
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
 
@@ -946,9 +944,9 @@ void R_StoreWallRange(const int start, const int stop)
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
-      R_RenderSegLoop();
+      R_renderSegLoop(segclip);
    else
-      R_StoreTextureColumns();
+      R_storeTextureColumns(segclip);
    
    // store clipping arrays
    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
@@ -1004,7 +1002,7 @@ void R_StoreWallRange(const int start, const int stop)
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_DetectClosedColumns();
+      R_detectClosedColumns(segclip);
 
    ++ds_p;
 }
