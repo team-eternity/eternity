@@ -523,7 +523,7 @@ CONSOLE_COMMAND(maxdisplaynum, 0)
 }
 
 VARIABLE_INT(displaynum, nullptr, -1, UL, nullptr);
-CONSOLE_VARIABLE(displaynum, displaynum, 0)
+CONSOLE_VARIABLE(displaynum, displaynum, cf_buffered)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
 
