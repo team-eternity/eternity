@@ -214,7 +214,7 @@ void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
+static void R_renderSegLoop(rendercontext_t &context, cb_seg_t &segclip)
 {
    void (*colfunc)(cb_column_t &) = context.colfunc;
 
@@ -285,7 +285,7 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
             
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
-               R_WindowAdd(segclip.secwindow.ceiling, i, (float)cliptop, (float)line);
+               R_WindowAdd(context, segclip.secwindow.ceiling, i, (float)cliptop, (float)line);
                ceilingclip[i] = (float)t;
             }
             else if(segclip.plane.ceiling && segclip.markflags & SEG_MARKCEILING)
@@ -322,7 +322,7 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
             
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
-               R_WindowAdd(segclip.secwindow.floor, i, (float)line, (float)clipbot);
+               R_WindowAdd(context, segclip.secwindow.floor, i, (float)line, (float)clipbot);
                floorclip[i] = (float)b;
             }
             else if(segclip.plane.floor && segclip.markflags & SEG_MARKFLOOR)
@@ -408,11 +408,11 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
                      
                   }
 
-                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+                  R_WindowAdd(context, segclip.l_window, i, ceilingclip[i], floorclip[i]);
                }
                else
                {
-                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+                  R_WindowAdd(context, segclip.l_window, i, (float)t, (float)b);
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -441,8 +441,10 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
                column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.t_window, i, 
-                     static_cast<float>(column.y1), static_cast<float>(column.y2));
+                  R_WindowAdd(context,
+                     segclip.t_window, i,
+                     static_cast<float>(column.y1), static_cast<float>(column.y2)
+                  );
                   ceilingclip[i] = static_cast<float>(column.y2 + 1);
                }
                else
@@ -480,8 +482,10 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
                column.y2 = b;
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.b_window, i, 
-                     static_cast<float>(column.y1), static_cast<float>(column.y2));
+                  R_WindowAdd(context,
+                     segclip.b_window, i,
+                     static_cast<float>(column.y1), static_cast<float>(column.y2)
+                  );
                   floorclip[i] = static_cast<float>(column.y1 - 1);
                }
                else
@@ -515,7 +519,7 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
 
             if(segclip.l_window)
             {
-               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+               R_WindowAdd(context, segclip.l_window, i, ceilingclip[i], floorclip[i]);
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
@@ -533,7 +537,7 @@ static void R_renderSegLoop(const rendercontext_t &context, cb_seg_t &segclip)
       }
       else if(segclip.l_window)
       {
-         R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+         R_WindowAdd(context, segclip.l_window, i, (float)t, (float)b);
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }

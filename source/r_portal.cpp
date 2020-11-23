@@ -166,7 +166,7 @@ static void R_RenderPortalNOP(rendercontext_t &context, pwindow_t *window)
 
 static void R_SetPortalFunction(pwindow_t *window);
 
-static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
+static void R_clearPortalWindow(rendercontext_t &context, pwindow_t *window, bool noplanes)
 {
    window->maxx = 0;
    window->minx = viewwindow.width - 1;
@@ -190,13 +190,13 @@ static void R_ClearPortalWindow(pwindow_t *window, bool noplanes)
    if(!noplanes)
    {
       if(!window->poverlay)
-         window->poverlay = R_NewOverlaySet();
+         window->poverlay = R_NewOverlaySet(context);
       else
-         R_ClearPlaneHash(window->poverlay);
+         R_ClearPlaneHash(context, window->poverlay);
    }
 }
 
-static pwindow_t *newPortalWindow(bool noplanes = false)
+static pwindow_t *newPortalWindow(rendercontext_t &context, bool noplanes = false)
 {
    pwindow_t *ret;
 
@@ -214,7 +214,7 @@ static pwindow_t *newPortalWindow(bool noplanes = false)
       ret->bottom = buf + video.width;
    }
 
-   R_ClearPortalWindow(ret, noplanes);
+   R_clearPortalWindow(context, ret, noplanes);
    
    return ret;
 }
@@ -297,9 +297,10 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
    }
 }
 
-static pwindow_t *R_NewPortalWindow(portal_t *p, const line_t *linedef, pwindowtype_e type)
+static pwindow_t *R_newPortalWindow(rendercontext_t &context,
+                                    portal_t *p, const line_t *linedef, pwindowtype_e type)
 {
-   pwindow_t *ret = newPortalWindow();
+   pwindow_t *ret = newPortalWindow(context);
    
    ret->portal = p;
    ret->line   = linedef;
@@ -308,7 +309,7 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, const line_t *linedef, pwindowt
    ret->head   = ret;
    if(type == pw_line)
    {
-      I_Assert(linedef, "R_NewPortalWindow: Null line despite type == pw_line!");
+      I_Assert(linedef, "R_newPortalWindow: Null line despite type == pw_line!");
       
       // Start it with the linedef's shape
       ret->linegen.makeFrom(linedef);
@@ -329,19 +330,17 @@ static pwindow_t *R_NewPortalWindow(portal_t *p, const line_t *linedef, pwindowt
 }
 
 //
-// R_CreateChildWindow
-//
 // Spawns a child portal for an existing portal. Each portal can only
 // have one child.
 //
-static void R_CreateChildWindow(pwindow_t *parent)
+static void R_createChildWindow(rendercontext_t &context, pwindow_t *parent)
 {
 #ifdef RANGECHECK
    if(parent->child)
-      I_Error("R_CreateChildWindow: child portal displaced\n");
+      I_Error("R_createChildWindow: child portal displaced\n");
 #endif
 
-   auto child = newPortalWindow(true);
+   auto child = newPortalWindow(context, true);
 
    parent->child   = child;
    child->head     = parent->head;
@@ -355,12 +354,11 @@ static void R_CreateChildWindow(pwindow_t *parent)
 }
 
 //
-// R_WindowAdd
-//
 // Adds a column to a portal for rendering. A child portal may
 // be created.
 //
-void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
+void R_WindowAdd(rendercontext_t &context,
+                 pwindow_t *window, int x, float ytop, float ybottom)
 {
    float windowtop, windowbottom;
 
@@ -410,9 +408,9 @@ void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom)
       if(ytop > windowbottom || ybottom < windowtop)
       {
          if(!window->child)
-            R_CreateChildWindow(window);
+            R_createChildWindow(context, window);
 
-         R_WindowAdd(window->child, x, ytop, ybottom);
+         R_WindowAdd(context, window->child, x, ytop, ybottom);
          return;
       }
 
@@ -1371,7 +1369,7 @@ static bool R_windowMatchesCurrentView(const pwindow_t *window)
 //
 // Get sector portal window. 
 //
-pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
+pwindow_t *R_GetSectorPortalWindow(rendercontext_t &context, surf_e surf, const surface_t &surface)
 {
    // SoM: TODO: There could be the possibility of multiple portals
    // being able to share a single window set.
@@ -1404,7 +1402,7 @@ pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface)
       }
 
    // not found, so make it
-   pwindow_t *window = R_NewPortalWindow(surface.portal, nullptr, pw_surface[surf]);
+   pwindow_t *window = R_newPortalWindow(context, surface.portal, nullptr, pw_surface[surf]);
    window->planez = surface.height;
    M_ClearBox(window->barrier.fbox);
 
@@ -1446,7 +1444,7 @@ static void R_updateLinePortalWindowGenerator(pwindow_t *window, const seg_t *se
    R_calcRenderBarrier(window->portal, window->linegen, window->barrier.linegen);
 }
 
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
+pwindow_t *R_GetLinePortalWindow(rendercontext_t &context, portal_t *portal, const seg_t *seg)
 {
    pwindow_t *rover = windowhead;
 
@@ -1463,7 +1461,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
    }
 
    // not found, so make it
-   rover = R_NewPortalWindow(portal, seg->linedef, pw_line);
+   rover = R_newPortalWindow(context, portal, seg->linedef, pw_line);
    R_updateLinePortalWindowGenerator(rover, seg);
    return rover;
 }
@@ -1471,7 +1469,7 @@ pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg)
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(const rendercontext_t &context, cb_seg_t &seg, surf_e surf)
+void R_MovePortalOverlayToWindow(rendercontext_t &context, cb_seg_t &seg, surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
    pwindow_t *window = seg.secwindow[surf];
@@ -1492,13 +1490,13 @@ void R_MovePortalOverlayToWindow(const rendercontext_t &context, cb_seg_t &seg, 
 //
 // Called at the start of each frame
 //
-void R_ClearPortals()
+void R_ClearPortals(rendercontext_t &context)
 {
    portal_t *r = portals;
    
    while(r)
    {
-      R_ClearPlaneHash(r->poverlay);
+      R_ClearPlaneHash(context, r->poverlay);
       r = r->next;
    }
 }

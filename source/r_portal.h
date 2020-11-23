@@ -209,8 +209,8 @@ portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(const rendercontext_t &context, cb_seg_t &seg, surf_e surf);
-void R_ClearPortals();
+void R_MovePortalOverlayToWindow(rendercontext_t &context, cb_seg_t &seg, surf_e surf);
+void R_ClearPortals(rendercontext_t &context);
 void R_RenderPortals(rendercontext_t &context);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
@@ -326,10 +326,10 @@ struct pwindow_t
 };
 
 // SoM: Cardboard
-void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
+void R_WindowAdd(rendercontext_t &context, pwindow_t *window, int x, float ytop, float ybottom);
 
-pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface);
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg);
+pwindow_t *R_GetSectorPortalWindow(rendercontext_t &context, surf_e surf, const surface_t &surface);
+pwindow_t *R_GetLinePortalWindow(rendercontext_t &context, portal_t *portal, const seg_t *seg);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t

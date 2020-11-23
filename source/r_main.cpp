@@ -1250,8 +1250,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // THREAD_TODO: Make these rendercontext_t methods?
    R_ClearClipSegs(context);
    R_ClearDrawSegs();
-   R_ClearPlanes();
-   R_ClearPortals();
+   R_ClearPlanes(context);
+   R_ClearPortals(context);
    R_ClearSprites();
 
    if(autodetect_hom)

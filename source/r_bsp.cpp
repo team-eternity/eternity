@@ -1068,7 +1068,7 @@ R_ClipSegFunc segclipfuncs[] =
 
 #define NEARCLIP 0.05f
 
-static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
+static void R_2S_Sloped(rendercontext_t &context, cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
                         float texbottom, const vertex_t *v1, const vertex_t *v2, 
                         float lclip1, float lclip2)
@@ -1209,13 +1209,13 @@ static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
          seg.frontsec->srf.ceiling.portal != seg.backsec->srf.ceiling.portal)
       {
          seg.markflags |= SEG_MARKCPORTAL;
-         seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         seg.secwindow.ceiling = R_GetSectorPortalWindow(context, surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
          R_MovePortalOverlayToWindow(context, seg, surf_ceil);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
-         seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         seg.secwindow.ceiling = R_GetSectorPortalWindow(context, surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
          R_MovePortalOverlayToWindow(context, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
@@ -1268,7 +1268,7 @@ static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
 
    if(!toohigh && havetportal && heightchange)
    {
-      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line);
+      seg.t_window = R_GetLinePortalWindow(context, seg.backsec->srf.ceiling.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1289,13 +1289,13 @@ static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
          seg.frontsec->srf.floor.portal != seg.backsec->srf.floor.portal)
       {
          seg.markflags |= SEG_MARKFPORTAL;
-         seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         seg.secwindow.floor = R_GetSectorPortalWindow(context, surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
          R_MovePortalOverlayToWindow(context, seg, surf_floor);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
-         seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         seg.secwindow.floor = R_GetSectorPortalWindow(context, surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
          R_MovePortalOverlayToWindow(context, seg, surf_floor);
          seg.secwindow.floor = nullptr;
@@ -1372,7 +1372,7 @@ static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
-      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line);
+      seg.l_window = R_GetLinePortalWindow(context, line->linedef->portal, line);
       seg.clipsolid = true;
    }
    else
@@ -1387,14 +1387,14 @@ static void R_2S_Sloped(const rendercontext_t &context, cb_seg_t &seg,
 
    if(!toolow && havebportal && (b > l || b2 > l2))
    {
-      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line);
+      seg.b_window = R_GetLinePortalWindow(context, seg.backsec->srf.floor.portal, line);
       seg.segtextured = true;
    }
    else
       seg.b_window = nullptr;
 }
 
-static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
+static void R_2S_Normal(rendercontext_t &context, cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
                         float texbottom)
 {
@@ -1512,7 +1512,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
          seg.frontsec->srf.ceiling.portal != seg.backsec->srf.ceiling.portal)
       {
          seg.markflags |= SEG_MARKCPORTAL;
-         seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         seg.secwindow.ceiling = R_GetSectorPortalWindow(context, surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
          R_MovePortalOverlayToWindow(context, seg, surf_ceil);
       }
@@ -1520,7 +1520,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
               seg.frontsec->srf.ceiling.height == seg.backsec->srf.ceiling.height)
       {
          // We need to do this just to transfer the plane
-         seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+         seg.secwindow.ceiling = R_GetSectorPortalWindow(context, surf_ceil, seg.frontsec->srf.ceiling);
          R_updateWindowSectorBarrier(seg, surf_ceil);
          R_MovePortalOverlayToWindow(context, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
@@ -1556,7 +1556,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
    if(!toohigh && havetportal &&
       seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height)
    {
-      seg.t_window = R_GetLinePortalWindow(seg.backsec->srf.ceiling.portal, line);
+      seg.t_window = R_GetLinePortalWindow(context, seg.backsec->srf.ceiling.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1592,7 +1592,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
          seg.frontsec->srf.floor.portal != seg.backsec->srf.floor.portal)
       {
          seg.markflags |= SEG_MARKFPORTAL;
-         seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         seg.secwindow.floor = R_GetSectorPortalWindow(context, surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
          R_MovePortalOverlayToWindow(context, seg, surf_floor);
       }
@@ -1600,7 +1600,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
               seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
          // We need to do this just to transfer the plane
-         seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+         seg.secwindow.floor = R_GetSectorPortalWindow(context, surf_floor, seg.frontsec->srf.floor);
          R_updateWindowSectorBarrier(seg, surf_floor);
          R_MovePortalOverlayToWindow(context, seg, surf_floor);
          seg.secwindow.floor = nullptr;
@@ -1668,7 +1668,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
    if(line->linedef->portal && //line->linedef->sidenum[0] != line->linedef->sidenum[1] &&
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
-      seg.l_window = R_GetLinePortalWindow(line->linedef->portal, line);
+      seg.l_window = R_GetLinePortalWindow(context, line->linedef->portal, line);
       seg.clipsolid = true;
    }
    else
@@ -1684,7 +1684,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
    if(!toolow && havebportal &&
       seg.frontsec->srf.floor.height < seg.backsec->srf.floor.height)
    {
-      seg.b_window = R_GetLinePortalWindow(seg.backsec->srf.floor.portal, line);
+      seg.b_window = R_GetLinePortalWindow(context, seg.backsec->srf.floor.portal, line);
       seg.segtextured = true;
    }
    else
@@ -1695,7 +1695,7 @@ static void R_2S_Normal(const rendercontext_t &context, cb_seg_t &seg,
 // Prepare 1-sided line for rendering (extracted from R_addLine due to size)
 // beyond is the optional sector on the other side of a polyobject/1-sided wall portal
 //
-static void R_1SidedLine(const rendercontext_t &context, cb_seg_t &seg,
+static void R_1SidedLine(rendercontext_t &context, cb_seg_t &seg,
                          float pstep, float i1, float i2, float textop, float texbottom,
                          const sector_t *beyond, const side_t *side, const seg_t *line)
 {
@@ -1773,7 +1773,7 @@ static void R_1SidedLine(const rendercontext_t &context, cb_seg_t &seg,
                                  (seg.frontsec->srf.ceiling.pflags & PS_VISIBLE && seg.frontsec->srf.ceiling.height > viewz)))
    {
       seg.markflags |= SEG_MARKCPORTAL;
-      seg.secwindow.ceiling = R_GetSectorPortalWindow(surf_ceil, seg.frontsec->srf.ceiling);
+      seg.secwindow.ceiling = R_GetSectorPortalWindow(context, surf_ceil, seg.frontsec->srf.ceiling);
       R_updateWindowSectorBarrier(seg, surf_ceil);
       R_MovePortalOverlayToWindow(context, seg, surf_ceil);
    }
@@ -1782,7 +1782,7 @@ static void R_1SidedLine(const rendercontext_t &context, cb_seg_t &seg,
                                  (seg.frontsec->srf.floor.pflags & PS_VISIBLE && seg.frontsec->srf.floor.height <= viewz)))
    {
       seg.markflags |= SEG_MARKFPORTAL;
-      seg.secwindow.floor = R_GetSectorPortalWindow(surf_floor, seg.frontsec->srf.floor);
+      seg.secwindow.floor = R_GetSectorPortalWindow(context, surf_floor, seg.frontsec->srf.floor);
       R_updateWindowSectorBarrier(seg, surf_floor);
       R_MovePortalOverlayToWindow(context, seg, surf_floor);
    }
@@ -1795,7 +1795,7 @@ static void R_1SidedLine(const rendercontext_t &context, cb_seg_t &seg,
    seg.clipsolid   = true;
    seg.segtextured = seg.midtex || seg.toptex || seg.bottomtex;
    seg.l_window    = line->linedef->portal ?
-   R_GetLinePortalWindow(line->linedef->portal, line) : nullptr;
+   R_GetLinePortalWindow(context, line->linedef->portal, line) : nullptr;
 
    // haleyjd 03/12/06: inverted predicates to simplify
    if(seg.frontsec->srf.floor.portal && seg.frontsec->srf.floor.portal->type != R_LINKED &&

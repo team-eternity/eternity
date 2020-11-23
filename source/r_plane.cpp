@@ -63,15 +63,6 @@
 
 #define MAINHASHCHAINS 1021 // prime numbers are good for hashes with modulo-based functions
 
-static visplane_t *freetail;                   // killough
-static visplane_t **freehead = &freetail;      // killough
-visplane_t *floorplane, *ceilingplane;
-
-
-// SoM: New visplane hash
-// This is the main hash object used by the normal scene.
-static visplane_t *mainchains[MAINHASHCHAINS];   // killough
-static planehash_t  mainhash = { MAINHASHCHAINS,  mainchains, nullptr };
 
 // Free list of overlay portals. Used by portal windows and the post-BSP stack.
 static planehash_t *r_overlayfreesets;
@@ -86,11 +77,19 @@ static planehash_t *r_overlayfreesets;
 //
 VALLOCATION(mainhash)
 {
-   freetail = nullptr;
-   freehead = &freetail;
-   floorplane = ceilingplane = nullptr;
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
 
-   memset(mainchains, 0, sizeof(mainchains));
+      context.freetail = nullptr;
+      context.freehead = &context.freetail;
+      context.floorplane = context.ceilingplane = nullptr;
+
+      context.mainchains = ecalloctag(
+         visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
+      );
+      context.mainhash = { MAINHASHCHAINS, context.mainchains, nullptr };
+   }
 }
 
 // killough -- hash function for visplanes
@@ -493,13 +492,13 @@ planehash_t *R_NewPlaneHash(int chaincount)
 }
 
 //
-// R_ClearPlaneHash
-//
 // Empties the chains of the given hash table and places the planes within 
 // in the free stack.
 //
-void R_ClearPlaneHash(planehash_t *table)
+void R_ClearPlaneHash(rendercontext_t &context, planehash_t *table)
 {
+   visplane_t **&freehead = context.freehead;
+
    for(int i = 0; i < table->chaincount; i++)    // new code -- killough
    {
       for(*freehead = table->chains[i], table->chains[i] = nullptr; *freehead; )
@@ -526,11 +525,9 @@ void R_ClearOverlayClips(rendercontext_t &context)
 
 
 //
-// R_ClearPlanes
-//
 // At begining of frame.
 //
-void R_ClearPlanes()
+void R_ClearPlanes(rendercontext_t &context)
 {
    int i;
    float a = 0.0f;
@@ -545,7 +542,7 @@ void R_ClearPlanes()
       ceilingclip[i] = overlaycclip[i] = a;
    }
 
-   R_ClearPlaneHash(&mainhash);
+   R_ClearPlaneHash(context, &context.mainhash);
 
    lastopening = openings;
 }
@@ -554,9 +551,12 @@ void R_ClearPlanes()
 //
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(const rendercontext_t &context,
+static visplane_t *new_visplane(rendercontext_t &context,
                                 unsigned hash, planehash_t *table)
 {
+   visplane_t *&freetail  = context.freetail;
+   visplane_t **&freehead = context.freehead;
+
    visplane_t *check = freetail;
 
    if(!check)
@@ -589,7 +589,7 @@ static visplane_t *new_visplane(const rendercontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(const rendercontext_t &context,
+visplane_t *R_FindPlane(rendercontext_t &context,
                         fixed_t height, int picnum, int lightlevel,
                         v2fixed_t offs, v2float_t scale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
@@ -601,7 +601,7 @@ visplane_t *R_FindPlane(const rendercontext_t &context,
 
    // SoM: table == nullptr means use main table
    if(!table)
-      table = &mainhash;
+      table = &context.mainhash;
       
    blendflags &= PS_OBLENDFLAGS;
 
@@ -713,7 +713,7 @@ visplane_t *R_FindPlane(const rendercontext_t &context,
 // From PrBoom+
 // cph 2003/04/18 - create duplicate of existing visplane and set initial range
 //
-visplane_t *R_DupPlane(const rendercontext_t &context, const visplane_t *pl, int start, int stop)
+visplane_t *R_DupPlane(rendercontext_t &context, const visplane_t *pl, int start, int stop)
 {
    planehash_t *table = pl->table;
    unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
@@ -768,7 +768,7 @@ visplane_t *R_DupPlane(const rendercontext_t &context, const visplane_t *pl, int
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(const rendercontext_t &context, visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(rendercontext_t &context, visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
@@ -1190,7 +1190,7 @@ void R_DrawPlanes(rendercontext_t &context, planehash_t *table)
    int i;
    
    if(!table)
-      table = &mainhash;
+      table = &context.mainhash;
    
    for(i = 0; i < table->chaincount; ++i)
    {
@@ -1208,7 +1208,7 @@ VALLOCATION(overlaySets)
 //
 // Gets a free portal overlay plane set
 //
-planehash_t *R_NewOverlaySet()
+planehash_t *R_NewOverlaySet(rendercontext_t &context)
 {
    planehash_t *set;
    if(!r_overlayfreesets)
@@ -1218,7 +1218,7 @@ planehash_t *R_NewOverlaySet()
    }
    set = r_overlayfreesets;
    r_overlayfreesets = r_overlayfreesets->next;
-   R_ClearPlaneHash(set);
+   R_ClearPlaneHash(context, set);
    return set;
 }
 

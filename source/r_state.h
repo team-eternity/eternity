@@ -130,9 +130,6 @@ extern angle_t          clipangle;
 extern int              viewangletox[FINEANGLES/2];
 extern angle_t          *xtoviewangle;  // killough 2/8/98
 
-extern visplane_t       *floorplane;
-extern visplane_t       *ceilingplane;
-
 #endif
 
 //----------------------------------------------------------------------------

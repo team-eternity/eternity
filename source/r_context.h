@@ -28,6 +28,8 @@
 #ifndef R_CONTEXT_H__
 #define R_CONTEXT_H__
 
+#include "r_defs.h"
+
 struct cb_column_t;
 struct cliprange_t;
 
@@ -47,6 +49,17 @@ struct rendercontext_t
    cliprange_t *addend;
 
    float *slopemark;
+
+
+   // r_plane.cpp
+   visplane_t *floorplane, *ceilingplane;
+   visplane_t *freetail;
+   visplane_t **freehead = &freetail;
+
+   // SoM: New visplane hash
+   // This is the main hash object used by the normal scene.
+   visplane_t **mainchains;
+   planehash_t  mainhash;
 
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);
