@@ -29,6 +29,7 @@
 #include "r_data.h"
 #include "doomtype.h"
 
+struct cb_patch_column_t;
 struct patch_t;
 
 struct PatchInfo
@@ -55,10 +56,7 @@ enum
    PSTYLE_NUMSTYLES
 };
 
-void V_SetPatchColrng(byte *colrng);
-void V_SetPatchLight(byte *lighttable);
-void V_SetPatchTL(unsigned int *fg, unsigned int *bg);
-void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer);
+void V_DrawPatchInt(cb_patch_column_t &patchcol, PatchInfo *pi, VBuffer *buffer);
 
 enum
 {
@@ -87,7 +85,7 @@ struct cb_patch_column_t  // It's cardboard now, bitches!
 
    VBuffer *buffer;
 
-   void (*colfunc)(void);
+   void (*colfunc)(const cb_patch_column_t &);
 
    // haleyjd: translucency lookups
    unsigned int *fg2rgb;
