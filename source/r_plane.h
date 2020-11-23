@@ -108,7 +108,7 @@ struct cb_plane_t
    // SoM: slopes.
    rslope_t *slope;
 
-   void (*MapFunc)(int, int, int);
+   void (*MapFunc)(const cb_plane_t &, int, int, int);
 };
 
 struct cb_slopespan_t
@@ -125,7 +125,6 @@ struct cb_slopespan_t
 
 
 extern cb_span_t  span;
-extern cb_plane_t plane;
 
 extern cb_slopespan_t slopespan;
 

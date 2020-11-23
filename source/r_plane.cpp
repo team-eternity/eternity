@@ -152,7 +152,6 @@ VALLOCATION(spanstart)
 //
 
 cb_span_t      span;
-cb_plane_t     plane;
 cb_slopespan_t slopespan;
 
 VALLOCATION(slopespan)
@@ -173,11 +172,9 @@ void (*flatfunc)()  = R_Throw;
 void (*slopefunc)() = R_Throw;
 
 //
-// R_SpanLight
-//
 // Returns a colormap index from the given distance and lightlevel info
 //
-static int R_SpanLight(float dist)
+static int R_spanLight(const cb_plane_t &plane, float dist)
 {
    int map = 
       (int)(plane.startmap - (1280.0f / dist)) + 1 - (extralight * LIGHTBRIGHT);
@@ -185,12 +182,10 @@ static int R_SpanLight(float dist)
    return map < 0 ? 0 : map >= NUMCOLORMAPS ? NUMCOLORMAPS - 1 : map;
 }
 
-// 
-// R_PlaneLight
 //
 // Sets up the internal light level barriers inside the plane struct
 //
-static void R_PlaneLight()
+static void R_planeLight(cb_plane_t &plane)
 {
    // This formula was taken (almost) directly from r_main.c where the zlight
    // table is generated.
@@ -198,17 +193,15 @@ static void R_PlaneLight()
 }
 
 //
-// R_MapPlane
-//
 // BASIC PRIMITIVE
 //
-static void R_MapPlane(int y, int x1, int x2)
+static void R_mapPlane(const cb_plane_t &plane, int y, int x1, int x2)
 {
    float dy, xstep, ystep, realy, slope;
 
 #ifdef RANGECHECK
    if(x2 < x1 || x1 < 0 || x2 >= viewwindow.width || y < 0 || y >= viewwindow.height)
-      I_Error("R_MapPlane: %i, %i at %i\n", x1, x2, y);
+      I_Error("R_mapPlane: %i, %i at %i\n", x1, x2, y);
 #endif
   
    // SoM: because ycenter is an actual row of pixels (and it isn't really the 
@@ -252,7 +245,7 @@ static void R_MapPlane(int y, int x1, int x2)
 
    // killough 2/28/98: Add offsets
    if((span.colormap = plane.fixedcolormap) == nullptr) // haleyjd 10/16/06
-      span.colormap = plane.colormap + R_SpanLight(realy) * 256;
+      span.colormap = plane.colormap + R_spanLight(plane, realy) * 256;
    
    span.y  = y;
    span.x1 = x1;
@@ -264,16 +257,16 @@ static void R_MapPlane(int y, int x1, int x2)
 }
 
 //
-// R_SlopeLights
+// R_slopeLights
 //
-static void R_SlopeLights(int len, double startcmap, double endcmap)
+static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, double endcmap)
 {
    int i;
    fixed_t map, map2, step;
 
 #ifdef RANGECHECK
    if(len > video.width)
-      I_Error("R_SlopeLights: len > video.width (%d)\n", len);
+      I_Error("R_slopeLights: len > video.width (%d)\n", len);
 #endif
 
    if(plane.fixedcolormap)
@@ -309,9 +302,9 @@ static void R_SlopeLights(int len, double startcmap, double endcmap)
 }
 
 //
-// R_MapSlope
+// R_mapSlope
 //
-static void R_MapSlope(int y, int x1, int x2)
+static void R_mapSlope(const cb_plane_t &plane, int y, int x1, int x2)
 {
    rslope_t *slope = plane.slope;
    int count = x2 - x1;
@@ -350,7 +343,7 @@ static void R_MapSlope(int y, int x1, int x2)
    else
       map2 = map1;
 
-   R_SlopeLights(x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
+   R_slopeLights(plane, x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
 
    slopefunc();
 }
@@ -815,20 +808,20 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 }
 
 //
-// R_MakeSpans
+// R_makeSpans
 //
-static void R_MakeSpans(int x, int t1, int b1, int t2, int b2)
+static void R_makeSpans(cb_plane_t &plane, int x, int t1, int b1, int t2, int b2)
 {
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
    if(b2 >= video.height)
-      I_Error("R_MakeSpans: b2 >= video.height\n");
+      I_Error("R_makeSpans: b2 >= video.height\n");
 #endif
 
    for(; t2 > t1 && t1 <= b1; t1++)
-      plane.MapFunc(t1, spanstart[t1], x - 1);
+      plane.MapFunc(plane, t1, spanstart[t1], x - 1);
    for(; b2 < b1 && t1 <= b1; b1--)
-      plane.MapFunc(b1, spanstart[b1], x - 1);
+      plane.MapFunc(plane, b1, spanstart[b1], x - 1);
    while(t2 < t1 && t2 <= b2)
       spanstart[t2++] = x;
    while(b2 > b1 && t2 <= b2)
@@ -1045,6 +1038,8 @@ static void do_draw_plane(visplane_t *pl)
       int        stop, light;
       int        stylenum;
 
+      cb_plane_t plane = {};
+
       int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
@@ -1170,12 +1165,12 @@ static void do_draw_plane(visplane_t *pl)
       plane.fixedcolormap = pl->fixedcolormap; // haleyjd 10/16/06
       plane.lightlevel    = pl->lightlevel;
 
-      R_PlaneLight();
+      R_planeLight(plane);
 
-      plane.MapFunc = (plane.slope == nullptr ? R_MapPlane : R_MapSlope);
+      plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
 
       for(x = pl->minx ; x <= stop ; x++)
-         R_MakeSpans(x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
+         R_makeSpans(plane, x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
    }
 }
 
