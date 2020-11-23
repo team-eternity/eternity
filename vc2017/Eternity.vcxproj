@@ -1138,6 +1138,7 @@
     <ClCompile Include="..\source\p_portalblockmap.cpp" />
     <ClCompile Include="..\source\p_portalclip.cpp" />
     <ClCompile Include="..\source\p_portalcross.cpp" />
+    <ClCompile Include="..\source\r_context.cpp" />
     <ClCompile Include="..\source\sdl\i_sdltimer.cpp" />
     <ClCompile Include="..\source\s_formats.cpp" />
     <ClCompile Include="..\source\s_musinfo.cpp" />
@@ -2704,6 +2705,7 @@
     <ClInclude Include="..\source\p_portalcross.h" />
     <ClInclude Include="..\source\p_sector.h" />
     <ClInclude Include="..\source\p_things.h" />
+    <ClInclude Include="..\source\r_context.h" />
     <ClInclude Include="..\source\r_interpolate.h" />
     <ClInclude Include="..\source\r_textur.h" />
     <ClInclude Include="..\source\sdl\i_sdltimer.h" />

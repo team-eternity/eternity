@@ -1020,6 +1020,9 @@
     <ClCompile Include="..\source\Win32\i_w32gui.cpp">
       <Filter>Source Files\Win32\Win32 Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\r_context.cpp">
+      <Filter>Source Files\R_\R_ Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\source\acs_intr.h">
@@ -1816,6 +1819,9 @@
     </ClInclude>
     <ClInclude Include="..\source\e_compatibility.h">
       <Filter>Source Files\E_\E_ Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\source\r_context.h">
+      <Filter>Source Files\R_\R_ Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

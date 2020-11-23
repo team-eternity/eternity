@@ -38,6 +38,7 @@
 #include "i_video.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "r_context.h"
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
 #include "r_state.h"
@@ -481,6 +482,8 @@ void V_Init()
    static byte *s = nullptr;
    
    int size = video.width * video.height;
+
+   R_InitContexts(video.width);
 
    // haleyjd 04/29/13: purge and reallocate all VAllocItem instances
    VAllocItem::FreeAllocs();
