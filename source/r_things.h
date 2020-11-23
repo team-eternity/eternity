@@ -68,10 +68,12 @@ void R_PushPost(bool pushmasked, pwindow_t *window);
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const float *top, const float *bottom);
 
+struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
-void R_DrawNewMaskedColumn(const texture_t *tex, const texcol_t *tcolumn);
+void R_DrawNewMaskedColumn(const cb_maskedcolumn_t &maskedcolumn,
+                           const texture_t *tex, const texcol_t *tcolumn);
 void R_AddSprites(sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
@@ -85,8 +87,6 @@ struct cb_maskedcolumn_t
    float ytop;
    float scale;
 };
-
-extern cb_maskedcolumn_t maskedcolumn;
 
 ///////////////////////////////////////////////////////////////////////////////
 //

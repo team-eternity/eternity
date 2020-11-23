@@ -183,8 +183,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          }
 
 
-         maskedcolumn.scale = scale;
-         maskedcolumn.ytop = view.ycenter - (texmidf * scale);
+         const cb_maskedcolumn_t maskedcolumn = { view.ycenter - (texmidf * scale), scale };
          column.step = (int)(FPFRACUNIT / scale);
 
          // killough 1/25/98: here's where Medusa came in, because
@@ -197,7 +196,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
-         R_DrawNewMaskedColumn(textures[texnum], col);
+         R_DrawNewMaskedColumn(maskedcolumn, textures[texnum], col);
          
          maskedtexturecol[column.x] = FLT_MAX;
       }

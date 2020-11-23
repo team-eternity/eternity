@@ -118,8 +118,6 @@ int        particle_trans;
 
 float *mfloorclip, *mceilingclip;
 
-cb_maskedcolumn_t maskedcolumn;
-
 //=============================================================================
 //
 // Structures
@@ -627,7 +625,7 @@ static vissprite_t *R_NewVisSprite()
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_drawMaskedColumn(column_t *tcolumn)
+static void R_drawMaskedColumn(const cb_maskedcolumn_t &maskedcolumn, column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -664,7 +662,8 @@ static void R_drawMaskedColumn(column_t *tcolumn)
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(const texture_t *const tex, const texcol_t *tcol)
+void R_DrawNewMaskedColumn(const cb_maskedcolumn_t &maskedcolumn,
+                           const texture_t *const tex, const texcol_t *tcol)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -764,15 +763,13 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    //column.step = M_FloatToFixed(vis->ystep);
    column.step = M_FloatToFixed(1.0f / vis->scale);
    column.texmid = vis->texturemid;
-   maskedcolumn.scale = vis->scale;
-   maskedcolumn.ytop = vis->ytop;
    frac = vis->startx;
    
    // haleyjd 10/10/02: foot clipping
    if(vis->footclip)
    {
       footclipon = true;
-      baseclip = vis->ybottom - M_FixedToFloat(vis->footclip) * maskedcolumn.scale;
+      baseclip = vis->ybottom - M_FixedToFloat(vis->footclip) * vis->scale;
    }
 
    w = patch->width;
@@ -780,6 +777,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    // haleyjd: use a separate loop for footclip things, to minimize
    // overhead for regular sprites and to require no separate loop
    // just to update mfloorclip
+   const cb_maskedcolumn_t maskedcolumn = { vis->ytop, vis->scale };
    if(footclipon)
    {
       for(column.x=vis->x1 ; column.x<=vis->x2 ; column.x++, frac += vis->xstep)
@@ -796,7 +794,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(tcolumn);
+         R_drawMaskedColumn(maskedcolumn, tcolumn);
       }
    }
    else
@@ -810,7 +808,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(tcolumn);
+         R_drawMaskedColumn(maskedcolumn, tcolumn);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
