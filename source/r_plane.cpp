@@ -151,7 +151,6 @@ VALLOCATION(spanstart)
 // texture mapping
 //
 
-cb_span_t      span;
 cb_slopespan_t slopespan;
 
 VALLOCATION(slopespan)
@@ -163,13 +162,13 @@ VALLOCATION(slopespan)
 float slopevis; // SoM: used in slope lighting
 
 // BIG FLATS
-static void R_Throw()
+static void R_Throw(const cb_span_t &)
 {
    I_Error("R_Throw called.\n");
 }
 
-void (*flatfunc)()  = R_Throw;
-void (*slopefunc)() = R_Throw;
+void (*flatfunc)(const cb_span_t &)  = R_Throw;
+void (*slopefunc)(const cb_span_t &) = R_Throw;
 
 //
 // Returns a colormap index from the given distance and lightlevel info
@@ -195,7 +194,8 @@ static void R_planeLight(cb_plane_t &plane)
 //
 // BASIC PRIMITIVE
 //
-static void R_mapPlane(const cb_plane_t &plane, int y, int x1, int x2)
+static void R_mapPlane(cb_span_t &span, const cb_plane_t &plane,
+                       int y, int x1, int x2)
 {
    float dy, xstep, ystep, realy, slope;
 
@@ -253,7 +253,7 @@ static void R_mapPlane(const cb_plane_t &plane, int y, int x1, int x2)
    span.source = plane.source;
    
    // BIG FLATS
-   flatfunc();
+   flatfunc(span);
 }
 
 //
@@ -304,7 +304,8 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
 //
 // R_mapSlope
 //
-static void R_mapSlope(const cb_plane_t &plane, int y, int x1, int x2)
+static void R_mapSlope(cb_span_t &span, const cb_plane_t &plane,
+                       int y, int x1, int x2)
 {
    rslope_t *slope = plane.slope;
    int count = x2 - x1;
@@ -345,7 +346,7 @@ static void R_mapSlope(const cb_plane_t &plane, int y, int x1, int x2)
 
    R_slopeLights(plane, x2 - x1 + 1, (256.0 - map1), (256.0 - map2));
 
-   slopefunc();
+   slopefunc(span);
 }
 
 #define CompFloats(x, y) (fabs(x - y) < 0.001f)
@@ -810,7 +811,8 @@ visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop)
 //
 // R_makeSpans
 //
-static void R_makeSpans(cb_plane_t &plane, int x, int t1, int b1, int t2, int b2)
+static void R_makeSpans(cb_span_t &span, const cb_plane_t &plane,
+                        int x, int t1, int b1, int t2, int b2)
 {
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
@@ -819,9 +821,9 @@ static void R_makeSpans(cb_plane_t &plane, int x, int t1, int b1, int t2, int b2
 #endif
 
    for(; t2 > t1 && t1 <= b1; t1++)
-      plane.MapFunc(plane, t1, spanstart[t1], x - 1);
+      plane.MapFunc(span, plane, t1, spanstart[t1], x - 1);
    for(; b2 < b1 && t1 <= b1; b1--)
-      plane.MapFunc(plane, b1, spanstart[b1], x - 1);
+      plane.MapFunc(span, plane, b1, spanstart[b1], x - 1);
    while(t2 < t1 && t2 <= b2)
       spanstart[t2++] = x;
    while(b2 > b1 && t2 <= b2)
@@ -1038,6 +1040,7 @@ static void do_draw_plane(visplane_t *pl)
       int        stop, light;
       int        stylenum;
 
+      cb_span_t  span  = {};
       cb_plane_t plane = {};
 
       int picnum = texturetranslation[pl->picnum];
@@ -1170,7 +1173,7 @@ static void do_draw_plane(visplane_t *pl)
       plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
 
       for(x = pl->minx ; x <= stop ; x++)
-         R_makeSpans(plane, x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
+         R_makeSpans(span, plane, x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
    }
 }
 

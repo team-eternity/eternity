@@ -29,6 +29,7 @@
 #include "r_defs.h"
 
 struct cb_column_t;
+struct cb_span_t;
 
 // haleyjd 05/02/13
 struct rrect_t
@@ -130,8 +131,8 @@ enum
 //
 struct spandrawer_t
 {
-   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])();
-   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])();
+   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_span_t &);
+   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_span_t &);
 };
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
