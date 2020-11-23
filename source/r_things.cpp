@@ -625,7 +625,7 @@ static vissprite_t *R_NewVisSprite()
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_drawMaskedColumn(const cb_maskedcolumn_t &maskedcolumn, column_t *tcolumn)
+static void R_drawMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn, column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -650,7 +650,7 @@ static void R_drawMaskedColumn(const cb_maskedcolumn_t &maskedcolumn, column_t *
          column.source = (byte *)tcolumn + 3;
          column.texmid = basetexturemid - (top << FRACBITS);
 
-         colfunc();
+         colfunc(column);
       }
 
       tcolumn = (column_t *)((byte *)tcolumn + tcolumn->length + 4);
@@ -662,7 +662,7 @@ static void R_drawMaskedColumn(const cb_maskedcolumn_t &maskedcolumn, column_t *
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(const cb_maskedcolumn_t &maskedcolumn,
+void R_DrawNewMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *const tex, const texcol_t *tcol)
 {
    float y1, y2;
@@ -701,7 +701,7 @@ void R_DrawNewMaskedColumn(const cb_maskedcolumn_t &maskedcolumn,
 
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
-         colfunc();
+         colfunc(column);
          if(last < texend && last > tex->bufferdata)
             *last = orig;
          localstart[-1] = origstart;
@@ -727,6 +727,8 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
    bool      footclipon = false;
    float     baseclip = 0;
    int       w;
+
+   cb_column_t column = {};
 
    if(vis->patch == -1)
    {
@@ -794,7 +796,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(maskedcolumn, tcolumn);
+         R_drawMaskedColumn(column, maskedcolumn, tcolumn);
       }
    }
    else
@@ -808,7 +810,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(maskedcolumn, tcolumn);
+         R_drawMaskedColumn(column, maskedcolumn, tcolumn);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98

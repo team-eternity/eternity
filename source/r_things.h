@@ -33,6 +33,7 @@ struct sector_t;
 struct particle_t;
 struct planehash_t;
 struct pwindow_t;
+struct cb_column_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -72,7 +73,7 @@ struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
-void R_DrawNewMaskedColumn(const cb_maskedcolumn_t &maskedcolumn,
+void R_DrawNewMaskedColumn(cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn);
 void R_AddSprites(sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);

@@ -46,7 +46,6 @@
 // OPTIMIZE: closed two sided lines as single sided
 // SoM: Done.
 // SoM: Cardboard globals
-cb_column_t column;
 cb_seg_t    seg;
 cb_seg_t    segclip;
 
@@ -67,6 +66,8 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    float    texmidf;
    line_t  *linedef;
    lighttable_t **wlight;
+
+   cb_column_t column = {};
 
    // Calculate light table.
    // Use different light tables
@@ -196,7 +197,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
-         R_DrawNewMaskedColumn(maskedcolumn, textures[texnum], col);
+         R_DrawNewMaskedColumn(column, maskedcolumn, textures[texnum], col);
          
          maskedtexturecol[column.x] = FLT_MAX;
       }
@@ -224,6 +225,8 @@ static void R_RenderSegLoop(void)
    int i;
    float texx;
    float basescale;
+
+   cb_column_t column = {};
 
 #ifdef RANGECHECK
    if(segclip.x1 < 0 || segclip.x2 >= viewwindow.width || segclip.x1 > segclip.x2)
@@ -379,7 +382,7 @@ static void R_RenderSegLoop(void)
                         column.texmid = segclip.toptexmid;
                         column.source = R_GetRawColumn(segclip.toptex, (int)texx);
                         column.texheight = segclip.toptexh;
-                        colfunc();
+                        colfunc(column);
                         ceilingclip[i] = (float)(column.y2 + 1);
                      }
                      else
@@ -398,7 +401,7 @@ static void R_RenderSegLoop(void)
                         column.texmid = segclip.bottomtexmid;
                         column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
                         column.texheight = segclip.bottomtexh;
-                        colfunc();
+                        colfunc(column);
                         floorclip[i] = (float)(column.y1 - 1);
                      }
                      else
@@ -426,7 +429,7 @@ static void R_RenderSegLoop(void)
                column.source = R_GetRawColumn(segclip.midtex, (int)texx);
                column.texheight = segclip.midtexh;
 
-               colfunc();
+               colfunc(column);
 
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -460,7 +463,7 @@ static void R_RenderSegLoop(void)
                   column.source = R_GetRawColumn(segclip.toptex, (int)texx);
                   column.texheight = segclip.toptexh;
 
-                  colfunc();
+                  colfunc(column);
 
                   ceilingclip[i] = (float)(column.y2 + 1);
                }
@@ -499,7 +502,7 @@ static void R_RenderSegLoop(void)
                   column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
                   column.texheight = segclip.bottomtexh;
 
-                  colfunc();
+                  colfunc(column);
 
                   floorclip[i] = (float)(column.y1 - 1);
                }

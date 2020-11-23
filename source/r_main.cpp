@@ -145,7 +145,7 @@ lighttable_t **colormaps;
 
 int extralight;                           // bumped light from gun blasts
 
-void (*colfunc)(void);                    // current column draw function
+void (*colfunc)(cb_column_t &);           // current column draw function
 
 // haleyjd 09/04/06: column drawing engines
 columndrawer_t *r_column_engine;

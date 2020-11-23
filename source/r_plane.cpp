@@ -841,6 +841,8 @@ static void do_draw_newsky(visplane_t *pl)
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
    
+   cb_column_t column = {};
+
    angle_t an = viewangle;
    
    // render two layers
@@ -881,7 +883,7 @@ static void do_draw_newsky(visplane_t *pl)
             R_GetRawColumn(skyTexture2,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset2);
             
-         colfunc();
+         colfunc(column);
       }
    }
       
@@ -904,7 +906,7 @@ static void do_draw_newsky(visplane_t *pl)
             R_GetRawColumn(skyTexture,
                (((an + xtoviewangle[x])) >> (ANGLETOSKYSHIFT))+offset);
             
-         colfunc();
+         colfunc(column);
       }
    }
    colfunc = r_column_engine->DrawColumn;
@@ -953,6 +955,7 @@ static void do_draw_plane(visplane_t *pl)
 
       an = viewangle;
       
+      cb_column_t column = {};
       if(pl->picnum & PL_SKYFLAT)
       { 
          // Sky Linedef
@@ -1032,7 +1035,7 @@ static void do_draw_plane(visplane_t *pl)
             column.source = R_GetRawColumn(texture,
                (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
             
-            colfunc();
+            colfunc(column);
          }
       }
    }

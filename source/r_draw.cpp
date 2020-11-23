@@ -102,7 +102,7 @@ int fuzzpos = 0;
 //  be used. It has also been used with Wolfenstein 3D.
 // 
 
-void CB_DrawColumn_8()
+void CB_DrawColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -166,7 +166,7 @@ void CB_DrawColumn_8()
 
 // haleyjd: experimental column drawer for masked sky textures
 // ioanch: confirmed OK, but only for basic r_draw (non-quad) mode.
-static void CB_DrawNewSkyColumn_8()
+static void CB_DrawNewSkyColumn_8(cb_column_t &column)
 {
    int      count;
    byte    *dest;            // killough
@@ -265,7 +265,7 @@ static void CB_DrawNewSkyColumn_8()
 #define SRCPIXEL \
    tranmap[(*dest<<8)+colormap[source[(frac>>FRACBITS) & heightmask]]]
 
-void CB_DrawTLColumn_8(void)
+void CB_DrawTLColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -340,7 +340,7 @@ void CB_DrawTLColumn_8(void)
 //
 // haleyjd 02/08/05: BOOM TL/Tlated was neglected.
 //
-void CB_DrawTLTRColumn_8(void)
+void CB_DrawTLTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -429,7 +429,7 @@ void CB_DrawTLTRColumn_8(void)
 #define SRCPIXEL \
    colormap[6*256+dest[fuzzoffset[fuzzpos] ? linesize : -linesize]]
 
-void CB_DrawFuzzColumn_8(void)
+void CB_DrawFuzzColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -496,7 +496,7 @@ static int numtranslations = 0;
 #define SRCPIXEL \
    colormap[column.translation[source[(frac>>FRACBITS) & heightmask]]]
 
-void CB_DrawTRColumn_8(void)
+void CB_DrawTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -565,7 +565,7 @@ void CB_DrawTRColumn_8(void)
 //
 // haleyjd 09/01/02: zdoom-style translucency
 //
-void CB_DrawFlexColumn_8(void)
+void CB_DrawFlexColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -675,7 +675,7 @@ void CB_DrawFlexColumn_8(void)
 // haleyjd 11/05/02: zdoom-style translucency w/translation, for
 // player sprites
 //
-void CB_DrawFlexTRColumn_8(void)
+void CB_DrawFlexTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -786,7 +786,7 @@ void CB_DrawFlexTRColumn_8(void)
 //
 // haleyjd 02/08/05: additive translucency
 //
-void CB_DrawAddColumn_8(void)
+void CB_DrawAddColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;
@@ -914,7 +914,7 @@ void CB_DrawAddColumn_8(void)
 // haleyjd 02/08/05: additive translucency + translation
 // The slowest of all column drawers!
 //
-void CB_DrawAddTRColumn_8(void)
+void CB_DrawAddTRColumn_8(cb_column_t &column)
 {
    int count;
    byte *dest;

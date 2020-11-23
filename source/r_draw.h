@@ -28,6 +28,8 @@
 
 #include "r_defs.h"
 
+struct cb_column_t;
+
 // haleyjd 05/02/13
 struct rrect_t
 {
@@ -65,20 +67,20 @@ enum
 //
 struct columndrawer_t
 {
-   void (*DrawColumn)();       // normal
-   void (*DrawNewSkyColumn)(); // double-sky drawing (index 0 = transparent)
-   void (*DrawTLColumn)();     // translucent
-   void (*DrawTRColumn)();     // translated
-   void (*DrawTLTRColumn)();   // translucent/translated
-   void (*DrawFuzzColumn)();   // spectre fuzz
-   void (*DrawFlexColumn)();   // flex translucent
-   void (*DrawFlexTRColumn)(); // flex translucent/translated
-   void (*DrawAddColumn)();    // additive flextran
-   void (*DrawAddTRColumn)();  // additive flextran/translated
+   void (*DrawColumn)(cb_column_t &);       // normal
+   void (*DrawNewSkyColumn)(cb_column_t &); // double-sky drawing (index 0 = transparent)
+   void (*DrawTLColumn)(cb_column_t &);     // translucent
+   void (*DrawTRColumn)(cb_column_t &);     // translated
+   void (*DrawTLTRColumn)(cb_column_t &);   // translucent/translated
+   void (*DrawFuzzColumn)(cb_column_t &);   // spectre fuzz
+   void (*DrawFlexColumn)(cb_column_t &);   // flex translucent
+   void (*DrawFlexTRColumn)(cb_column_t &); // flex translucent/translated
+   void (*DrawAddColumn)(cb_column_t &);    // additive flextran
+   void (*DrawAddTRColumn)(cb_column_t &);  // additive flextran/translated
 
-   void (*ResetBuffer)();      // reset function (may be null)
+   void (*ResetBuffer)();                   // reset function (may be null)
    
-   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])();
+   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])(cb_column_t &);
 };
 
 extern columndrawer_t r_normal_drawer;
@@ -182,9 +184,6 @@ struct cb_column_t
 
    const void *source;
 };
-
-
-extern cb_column_t column;
 
 #endif
 

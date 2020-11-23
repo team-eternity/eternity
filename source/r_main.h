@@ -43,6 +43,7 @@
 struct pwindow_t;
 struct columndrawer_t;
 struct spandrawer_t;
+struct cb_column_t;
 
 //
 // POV related.
@@ -82,7 +83,7 @@ void R_ResetTrans();
 // Function pointer to switch refresh/drawing functions.
 //
 
-extern void (*colfunc)();
+extern void (*colfunc)(cb_column_t &);
 
 //
 // Utility functions.
