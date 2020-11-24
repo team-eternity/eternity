@@ -86,7 +86,6 @@ extern menu_t menu_newmission;
 extern menu_t menu_main;
 extern menu_t menu_episode;
 extern menu_t menu_d2episode;
-extern menu_t menu_startmap;
 
 int screenSize;      // screen size
 
@@ -248,7 +247,7 @@ void MN_Doom2NewGame()
 // mn_newgame
 // 
 // called from main menu:
-// starts menu according to use_startmap, gametype and modifiedgame
+// starts menu according to menuStartMap, gametype and modifiedgame
 //
 CONSOLE_COMMAND(mn_newgame, 0)
 {
@@ -264,12 +263,16 @@ CONSOLE_COMMAND(mn_newgame, 0)
 
    // haleyjd 05/14/06: check for episode menu override now
    if(mn_episode_override)
-   {
       MN_StartMenu(mn_episode_override);
-      return;
+   else if(GameModeInfo->menuStartMap &&
+           *GameModeInfo->menuStartMap &&
+           W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
+   {
+      G_DeferedInitNew((skill_t)defaultskill, GameModeInfo->menuStartMap);
+      MN_ClearMenus();
    }
-   
-   GameModeInfo->OnNewGame();
+   else
+      GameModeInfo->OnNewGame();
 }
 
 // menu item to quit doom:
@@ -603,38 +606,6 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    MN_ClearMenus();
 }
 
-//////////////////////////////////////////////////
-//
-// First-time Query menu to use start map
-//
-
-static menuitem_t mn_startmap_items[] =
-{
-   {it_title,  "New Game",          nullptr,               "M_NEWG"},
-   {it_gap},
-   {it_info,   "Eternity includes a 'start map' to let"},
-   {it_info,   "you start new games from in a level."},
-   {it_gap},
-   {it_info,   "In the future would you rather:"},
-   {it_gap},
-   {it_runcmd, "Use the start map", "use_startmap 1; mn_newgame"},
-   {it_runcmd, "Use the menu",      "use_startmap 0; mn_newgame"},
-   {it_end}
-};
-
-menu_t menu_startmap =
-{
-   mn_startmap_items,          // menu items
-   nullptr, nullptr, nullptr,  // pages
-   40, 15,                     // x,y offsets
-   7,                          // starting item: start map
-   mf_leftaligned | mf_background,
-};
-
-const char *str_startmap[] = {"ask", "no", "yes"};
-VARIABLE_INT(use_startmap, nullptr, -1, 1, str_startmap);
-CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
-
 
 ////////////////////////////////////////////////
 //
@@ -739,11 +710,6 @@ static menuitem_t mn_wadmisc_items[] =
 {
    {it_title,    "Wad Options",          nullptr,                "M_WADOPT"},
    {it_gap},
-   // FIXME: startmap restoration?
-   //{it_info,     "Misc Settings",        nullptr,                nullptr, MENUITEM_CENTERED },
-   //{it_gap},
-   //{it_toggle,   "Use start map",        "use_startmap" },
-   //{it_gap},
    {it_info,     "Autoloaded Files",     nullptr,                nullptr, MENUITEM_CENTERED },
    {it_gap},
    {it_variable, "WAD file 1:",          "auto_wad_1",           nullptr, MENUITEM_LALIGNED },

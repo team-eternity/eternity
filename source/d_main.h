@@ -53,8 +53,6 @@ inline static bool D_noWindow()
    return nodrawers && nosfxparm && nomusicparm;
 }
 
-extern int use_startmap;
-
 // Called by IO functions when input is detected.
 struct event_t;
 void D_PostEvent(const event_t* ev);
