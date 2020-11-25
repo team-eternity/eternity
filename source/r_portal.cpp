@@ -87,7 +87,6 @@ static PODCollection<portalentry_t> gPortals;   // defined portals
 //
 
 static portal_t *portals = nullptr, *last = nullptr;
-static pwindow_t *unusedhead = nullptr, *windowhead = nullptr, *windowlast = nullptr;
 
 //
 // VALLOCATION(portals)
@@ -107,49 +106,53 @@ VALLOCATION(portals)
       }
    }
 
-   // free portal window structures on the main list
-   pwindow_t *rover = windowhead;
-   while(rover)
-   {
-      pwindow_t *child = rover->child;
-      pwindow_t *next;
+   R_ForEachContext([](rendercontext_t &context) {
+      // free portal window structures on the main list
+      planehash_t *hash;
 
-      // free any child windows
-      while(child)
+      pwindow_t *rover = context.windowhead;
+      while(rover)
       {
-         next = child->child;
-         if((hash = child->poverlay))
+         pwindow_t *child = rover->child;
+         pwindow_t *next;
+
+         // free any child windows
+         while(child)
+         {
+            next = child->child;
+            if((hash = child->poverlay))
+               for(int i = 0; i < hash->chaincount; ++i)
+                  hash->chains[i] = nullptr;
+            efree(child->top);
+            efree(child);
+            child = next;
+         }
+
+         // free this window
+         next = rover->next;
+         if((hash = rover->poverlay))
             for(int i = 0; i < hash->chaincount; ++i)
                hash->chains[i] = nullptr;
-         efree(child->top);
-         efree(child);
-         child = next;
+         efree(rover->top);
+         efree(rover);
+         rover = next;
       }
 
-      // free this window
-      next = rover->next;
-      if((hash = rover->poverlay))
-         for(int i = 0; i < hash->chaincount; ++i)
-            hash->chains[i] = nullptr;
-      efree(rover->top);
-      efree(rover);
-      rover = next;
-   }
+      // free portal window structures on the freelist
+      rover = context.unusedhead;
+      while(rover)
+      {
+         pwindow_t *next = rover->next;
+         if((hash = rover->poverlay))
+            for(int i = 0; i < hash->chaincount; ++i)
+               hash->chains[i] = nullptr;
+         efree(rover->top);
+         efree(rover);
+         rover = next;
+      }
 
-   // free portal window structures on the freelist
-   rover = unusedhead;
-   while(rover)
-   {
-      pwindow_t *next = rover->next;
-      if((hash = rover->poverlay))
-         for(int i = 0; i < hash->chaincount; ++i)
-            hash->chains[i] = nullptr;
-      efree(rover->top);
-      efree(rover);
-      rover = next;
-   }
-
-   windowhead = windowlast = unusedhead = nullptr;   
+      context.windowhead = context.windowlast = context.unusedhead = nullptr;
+   });
 }
 
 // This flag is set when a portal is being rendered. This flag is checked in 
@@ -198,6 +201,8 @@ static void R_clearPortalWindow(rendercontext_t &context, pwindow_t *window, boo
 
 static pwindow_t *newPortalWindow(rendercontext_t &context, bool noplanes = false)
 {
+   pwindow_t *&unusedhead = context.unusedhead;
+
    pwindow_t *ret;
 
    if(unusedhead)
@@ -300,6 +305,9 @@ void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box)
 static pwindow_t *R_newPortalWindow(rendercontext_t &context,
                                     portal_t *p, const line_t *linedef, pwindowtype_e type)
 {
+   pwindow_t *&windowhead = context.windowhead;
+   pwindow_t *&windowlast = context.windowlast;
+
    pwindow_t *ret = newPortalWindow(context);
    
    ret->portal = p;
@@ -671,7 +679,9 @@ portal_t *R_GetPlanePortal(const sector_t *sector)
 void R_InitPortals()
 {
    portals = last = nullptr;
-   windowhead = unusedhead = windowlast = nullptr;
+   R_ForEachContext([](rendercontext_t &context) {
+      context.windowhead = context.unusedhead = context.windowlast = nullptr;
+   });
    R_MapInitOverlaySets();
 
    gPortals.clear(); // clear the portal list
@@ -1382,7 +1392,7 @@ pwindow_t *R_GetSectorPortalWindow(rendercontext_t &context, surf_e surf, const 
       R_applyPortalTransformTo(surface.portal, linegenTransformed);;
    }
 
-   for(pwindow_t *rover = windowhead; rover; rover = rover->next)
+   for(pwindow_t *rover = context.windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
          rover->planez == surface.height && R_windowMatchesCurrentView(rover))
       {
@@ -1446,7 +1456,7 @@ static void R_updateLinePortalWindowGenerator(pwindow_t *window, const seg_t *se
 
 pwindow_t *R_GetLinePortalWindow(rendercontext_t &context, portal_t *portal, const seg_t *seg)
 {
-   pwindow_t *rover = windowhead;
+   pwindow_t *rover = context.windowhead;
 
    while(rover)
    {
@@ -1508,6 +1518,9 @@ void R_ClearPortals(rendercontext_t &context)
 //
 void R_RenderPortals(rendercontext_t &context)
 {
+   pwindow_t *&windowhead = context.windowhead;
+   pwindow_t *&unusedhead = context.unusedhead;
+
    pwindow_t *w;
 
    while(windowhead)
@@ -1543,7 +1556,7 @@ void R_RenderPortals(rendercontext_t &context)
       windowhead = w;
    }
 
-   windowlast = windowhead;
+   context.windowlast = windowhead;
 }
 
 //=============================================================================

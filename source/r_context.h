@@ -32,6 +32,7 @@
 
 struct cb_column_t;
 struct cliprange_t;
+struct pwindow_t;
 
 struct rendercontext_t
 {
@@ -63,6 +64,11 @@ struct rendercontext_t
 
    // Free list of overlay portals. Used by portal windows and the post-BSP stack.
    planehash_t *r_overlayfreesets;
+
+
+   // r_portal.cpp
+   pwindow_t *unusedhead, *windowhead, *windowlast;
+
 
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);
