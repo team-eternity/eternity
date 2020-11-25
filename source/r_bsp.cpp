@@ -113,16 +113,13 @@ struct cliprange_t
 
 VALLOCATION(solidsegs)
 {
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
+   R_ForEachContext([w](rendercontext_t &context) {
       cliprange_t *buf = ecalloctag(cliprange_t *, MAXSEGS * 2, sizeof(cliprange_t), PU_VALLOC, nullptr);
 
       context.solidsegs = buf;
       context.addedsegs = buf + MAXSEGS;
       context.addend    = context.addedsegs;
-   }
+   });
 }
 
 
@@ -687,12 +684,9 @@ const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
 
 VALLOCATION(slopemark)
 {
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
+   R_ForEachContext([w](rendercontext_t &context) {
       context.slopemark = ecalloctag(float *, w, sizeof(float), PU_VALLOC, nullptr);
-   }
+   });
 }
 
 void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindowtype_e type)

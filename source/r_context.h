@@ -75,6 +75,13 @@ rendercontext_t &R_GetContext(int context);
 
 void R_InitContexts(const int width);
 
+template<typename F>
+void R_ForEachContext(F &&f)
+{
+   for(int i = 0; i < r_numcontexts; i++)
+      f(R_GetContext(i));
+}
+
 #endif
 
 // EOF

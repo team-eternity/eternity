@@ -73,10 +73,7 @@
 //
 VALLOCATION(mainhash)
 {
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
+   R_ForEachContext([](rendercontext_t &context) {
       context.freetail = nullptr;
       context.freehead = &context.freetail;
       context.floorplane = context.ceilingplane = nullptr;
@@ -85,7 +82,7 @@ VALLOCATION(mainhash)
          visplane_t **, MAINHASHCHAINS, sizeof(visplane_t *), PU_VALLOC, nullptr
       );
       context.mainhash = { MAINHASHCHAINS, context.mainchains, nullptr };
-   }
+   });
 }
 
 // killough -- hash function for visplanes
@@ -1197,13 +1194,10 @@ void R_DrawPlanes(rendercontext_t &context, planehash_t *table)
 
 VALLOCATION(overlaySets)
 {
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
+   R_ForEachContext([](rendercontext_t &context) {
       for(planehash_t *set = context.r_overlayfreesets; set; set = set->next)
          memset(set->chains, 0, set->chaincount * sizeof(*set->chains));
-   }
+   });
 }
 
 //
@@ -1241,12 +1235,9 @@ void R_FreeOverlaySet(rendercontext_t &context, planehash_t *set)
 //
 void R_MapInitOverlaySets()
 {
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
+   R_ForEachContext([](rendercontext_t &context) {
       context.r_overlayfreesets = nullptr;
-   }
+   });
 }
 
 //----------------------------------------------------------------------------

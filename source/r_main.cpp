@@ -1082,11 +1082,9 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.ycenter = (float)centery;
 
    // use drawcolumn
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
+   R_ForEachContext([](rendercontext_t &context) {
       context.colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
-   }
+   });
 
    ++validcount;
 }
