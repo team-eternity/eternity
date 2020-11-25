@@ -1885,7 +1885,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             r_column_engine->ResetBuffer();
             
          R_DrawPlanes(context, pstack[pstacksize].overlay);
-         R_FreeOverlaySet(pstack[pstacksize].overlay);
+         R_FreeOverlaySet(context, pstack[pstacksize].overlay);
       }
    }
 

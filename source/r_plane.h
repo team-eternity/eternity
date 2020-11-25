@@ -127,7 +127,7 @@ struct cb_plane_t
 
 
 planehash_t *R_NewOverlaySet(rendercontext_t &context);
-void R_FreeOverlaySet(planehash_t *set);
+void R_FreeOverlaySet(rendercontext_t &context, planehash_t *set);
 void R_MapInitOverlaySets();
 
 #endif

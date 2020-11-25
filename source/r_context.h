@@ -61,6 +61,9 @@ struct rendercontext_t
    visplane_t **mainchains;
    planehash_t  mainhash;
 
+   // Free list of overlay portals. Used by portal windows and the post-BSP stack.
+   planehash_t *r_overlayfreesets;
+
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);
    void (*flatfunc)();

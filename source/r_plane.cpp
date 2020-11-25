@@ -63,10 +63,6 @@
 
 #define MAINHASHCHAINS 1021 // prime numbers are good for hashes with modulo-based functions
 
-
-// Free list of overlay portals. Used by portal windows and the post-BSP stack.
-static planehash_t *r_overlayfreesets;
-
 //
 // VALLOCATION(mainhash)
 //
@@ -1201,8 +1197,13 @@ void R_DrawPlanes(rendercontext_t &context, planehash_t *table)
 
 VALLOCATION(overlaySets)
 {
-   for(planehash_t *set = r_overlayfreesets; set; set = set->next)
-      memset(set->chains, 0, set->chaincount * sizeof(*set->chains));
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
+
+      for(planehash_t *set = context.r_overlayfreesets; set; set = set->next)
+         memset(set->chains, 0, set->chaincount * sizeof(*set->chains));
+   }
 }
 
 //
@@ -1210,6 +1211,8 @@ VALLOCATION(overlaySets)
 //
 planehash_t *R_NewOverlaySet(rendercontext_t &context)
 {
+   planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
+
    planehash_t *set;
    if(!r_overlayfreesets)
    {
@@ -1225,8 +1228,10 @@ planehash_t *R_NewOverlaySet(rendercontext_t &context)
 //
 // Puts the overlay set in the free list
 //
-void R_FreeOverlaySet(planehash_t *set)
+void R_FreeOverlaySet(rendercontext_t &context, planehash_t *set)
 {
+   planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
+
    set->next = r_overlayfreesets;
    r_overlayfreesets = set;
 }
@@ -1236,7 +1241,12 @@ void R_FreeOverlaySet(planehash_t *set)
 //
 void R_MapInitOverlaySets()
 {
-   r_overlayfreesets = nullptr;
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
+
+      context.r_overlayfreesets = nullptr;
+   }
 }
 
 //----------------------------------------------------------------------------
