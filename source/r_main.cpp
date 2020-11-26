@@ -1294,7 +1294,12 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // Draw Post-BSP elements such as sprites, masked textures, and portal 
    // overlays
    R_DrawPostBSP(context);
-   
+
+   // draw the psprites on top of everything
+   //  but does not draw on side views
+      if(!viewangleoffset)
+         R_DrawPlayerSprites();
+
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();

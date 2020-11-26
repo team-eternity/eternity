@@ -75,6 +75,10 @@ struct rendercontext_t
    void (*flatfunc)();
 };
 
+// The global context is for single-threaded things that still require a context
+// It doesn't contribute to r_numcontexts
+inline rendercontext_t r_globalcontext;
+
 inline int r_numcontexts = 0;
 
 rendercontext_t &R_GetContext(int context);
@@ -84,6 +88,8 @@ void R_InitContexts(const int width);
 template<typename F>
 void R_ForEachContext(F &&f)
 {
+   f(r_globalcontext);
+
    for(int i = 0; i < r_numcontexts; i++)
       f(R_GetContext(i));
 }

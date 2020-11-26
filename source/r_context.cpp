@@ -61,6 +61,11 @@ rendercontext_t &R_GetContext(int index)
 //
 void R_InitContexts(const int width)
 {
+   r_globalcontext = {};
+   r_globalcontext.bufferindex = -1;
+   r_globalcontext.startcolumn = 0;
+   r_globalcontext.endcolumn   = width;
+
    if(renderdatas)
       efree(renderdatas);
 

@@ -81,6 +81,7 @@ void R_AddSprites(sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
 void R_DrawPostBSP(rendercontext_t &context);
+void R_DrawPlayerSprites();
 void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);

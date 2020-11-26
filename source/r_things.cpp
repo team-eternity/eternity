@@ -1226,7 +1226,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
 //
 // Draws player gun sprites.
 //
-static void R_drawPSprite(rendercontext_t &context, const pspdef_t *psp)
+static void R_drawPSprite(const pspdef_t *psp)
 {
    float         tx;
    float         x1, x2, w;
@@ -1381,15 +1381,15 @@ static void R_drawPSprite(rendercontext_t &context, const pspdef_t *psp)
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_drawVisSprite(context, vis, vis->x1, vis->x2);
+   R_drawVisSprite(r_globalcontext, vis, vis->x1, vis->x2);
    
    view.ycenter = oldycenter;
 }
 
 //
-// R_drawPlayerSprites
+// R_DrawPlayerSprites
 //
-static void R_drawPlayerSprites(rendercontext_t &context)
+void R_DrawPlayerSprites()
 {
    int i, lightnum;
    const pspdef_t *psp;
@@ -1427,8 +1427,10 @@ static void R_drawPlayerSprites(rendercontext_t &context)
    {
       // add all active psprites
       for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
+      {
          if(psp->state)
-            R_drawPSprite(context, psp);
+            R_drawPSprite(psp);
+      }
    }
 }
 
@@ -1888,11 +1890,6 @@ void R_DrawPostBSP(rendercontext_t &context)
          R_FreeOverlaySet(context, pstack[pstacksize].overlay);
       }
    }
-
-   // draw the psprites on top of everything
-   //  but does not draw on side views
-   if(!viewangleoffset)
-      R_drawPlayerSprites(context);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
