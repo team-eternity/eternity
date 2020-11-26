@@ -282,8 +282,8 @@ VALLOCATION(clipbot)
 //
 
 // Forward declarations:
-static void R_DrawParticle(vissprite_t *vis);
-static void R_ProjectParticle(particle_t *particle);
+static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis);
+static void R_projectParticle(const rendercontext_t &context, particle_t *particle);
 
 //
 // R_SetMaskedSilhouette
@@ -737,7 +737,7 @@ static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, 
    if(vis->patch == -1)
    {
       // this vissprite belongs to a particle
-      R_DrawParticle(vis);
+      R_drawParticle(context, vis);
       return;
    }
   
@@ -867,12 +867,11 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 }
 
 //
-// R_ProjectSprite
-//
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
+static void R_projectSprite(const rendercontext_t &context,
+                            Mobj *thing, v3fixed_t *delta = nullptr,
                             const line_t *portalline = nullptr)
 {
    spritepos_t    spritepos;
@@ -1093,8 +1092,8 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    vis->gzt    = gzt;                          // killough 3/27/98
 
    // Cardboard
-   vis->x1 = x1 < 0.0f ? 0 : intx1;
-   vis->x2 = x2 >= view.width ? viewwindow.width - 1 : intx2;
+   vis->x1 = x1 < 0.0f ? context.startcolumn : intx1;
+   vis->x2 = x2 >= view.width ? context.endcolumn - 1 : intx2;
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;
@@ -1172,12 +1171,10 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
 }
 
 //
-// R_AddSprites
-//
 // During BSP traversal, this adds sprites by sector.
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 //
-void R_AddSprites(sector_t* sec, int lightlevel)
+void R_AddSprites(const rendercontext_t &context, sector_t* sec, int lightlevel)
 {
    Mobj *thing;
    int    lightnum;
@@ -1205,12 +1202,12 @@ void R_AddSprites(sector_t* sec, int lightlevel)
    // Handle all things in sector.
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
-      R_ProjectSprite(thing);
+      R_projectSprite(context, thing);
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
-         R_ProjectSprite((*item)->mobj, &(*item)->delta, (*item)->portalline);
+         R_projectSprite(context, (*item)->mobj, &(*item)->delta, (*item)->portalline);
 
    // haleyjd 02/20/04: Handle all particles in sector.
 
@@ -1219,7 +1216,7 @@ void R_AddSprites(sector_t* sec, int lightlevel)
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_ProjectParticle(*link);
+         R_projectParticle(context, *link);
    }
 }
 
@@ -2221,9 +2218,9 @@ void R_ClearParticles()
 }
 
 //
-// R_ProjectParticle
+// R_projectParticle
 //
-static void R_ProjectParticle(particle_t *particle)
+static void R_projectParticle(const rendercontext_t &context, particle_t *particle)
 {
    fixed_t gzt;
    int x1, x2;
@@ -2263,7 +2260,7 @@ static void R_ProjectParticle(particle_t *particle)
    if(x2 < x1) x2 = x1;
 
    // off either side?
-   if(x1 >= viewwindow.width || x2 < 0)
+   if(x1 >= context.endcolumn || x2 < context.startcolumn)
       return;
 
    tz = M_FixedToFloat(particle->z) - view.z;
@@ -2318,8 +2315,8 @@ static void R_ProjectParticle(particle_t *particle)
    vis->gz = particle->z;
    vis->gzt = gzt;
    vis->texturemid = vis->gzt - viewz;
-   vis->x1 = x1 < 0 ? 0 : x1;
-   vis->x2 = x2 >= viewwindow.width ? viewwindow.width-1 : x2;
+   vis->x1 = emax(context.startcolumn,   x1);
+   vis->x2 = emin(context.endcolumn - 1, x2);
    vis->colour = particle->color;
    vis->patch = -1;
    vis->translucency = static_cast<uint16_t>(particle->trans - 1);
@@ -2374,11 +2371,9 @@ static void R_ProjectParticle(particle_t *particle)
 }
 
 //
-// R_DrawParticle
-//
 // haleyjd: this function had to be mostly rewritten
 //
-static void R_DrawParticle(vissprite_t *vis)
+static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis)
 {
    int x1, x2, ox1, ox2;
    int yl, yh;
@@ -2387,10 +2382,10 @@ static void R_DrawParticle(vissprite_t *vis)
    ox1 = x1 = vis->x1;
    ox2 = x2 = vis->x2;
 
-   if(x1 < 0)
-      x1 = 0;
-   if(x2 >= viewwindow.width)
-      x2 = viewwindow.width - 1;
+   if(x1 < context.startcolumn)
+      x1 = context.startcolumn;
+   if(x2 >= context.endcolumn)
+      x2 = context.endcolumn - 1;
 
    // due to square shape, it is unnecessary to clip the entire
    // particle

@@ -171,8 +171,8 @@ static void R_SetPortalFunction(pwindow_t *window);
 
 static void R_clearPortalWindow(rendercontext_t &context, pwindow_t *window, bool noplanes)
 {
-   window->maxx = 0;
-   window->minx = viewwindow.width - 1;
+   window->maxx = context.startcolumn;
+   window->minx = context.endcolumn - 1;
 
    for(int i = 0; i < video.width; i++)
    {

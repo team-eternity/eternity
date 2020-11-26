@@ -647,8 +647,8 @@ visplane_t *R_FindPlane(rendercontext_t &context,
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
-   check->minx = viewwindow.width;     // Was SCREENWIDTH -- killough 11/98
-   check->maxx = -1;
+   check->minx = context.endcolumn;     // Was SCREENWIDTH -- killough 11/98
+   check->maxx = context.startcolumn - 1;
    check->offs = offs;               // killough 2/28/98: Save offsets
    check->scale = scale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle

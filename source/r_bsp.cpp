@@ -84,8 +84,8 @@ void R_ClearDrawSegs(void)
 // SoM 05/14/09: This actually becomes a bit of an optimization problem
 // see, currently the code has to clip segs to the screen manually, and
 // then clip them based on solid segs. This could be reduced to a single
-// clip based on solidsegs because the first solidseg is from MININT, -1
-// to viewwindow.width, MAXINT
+// clip based on solidsegs because the first solidseg is from MININT,
+// context.startcolumn - 1 to context.endcolumn, MAXINT
 
 struct cliprange_t
 {
@@ -353,10 +353,10 @@ static void R_clipPassWallSegment(rendercontext_t &context, const cb_seg_t &seg,
 //
 void R_ClearClipSegs(rendercontext_t &context)
 {
-   context.solidsegs[0].first = D_MININT + 1;
-   context.solidsegs[0].last  = -1;
-   context.solidsegs[1].first = viewwindow.width;
-   context.solidsegs[1].last  = D_MAXINT - 1;
+   context.solidsegs[context.startcolumn].first     = D_MININT + 1;
+   context.solidsegs[context.startcolumn].last      = context.startcolumn - 1;
+   context.solidsegs[context.startcolumn + 1].first = context.endcolumn;
+   context.solidsegs[context.startcolumn + 1].last  = D_MAXINT - 1;
    context.newend = context.solidsegs+2;
    context.addend = context.addedsegs;
 }
@@ -404,7 +404,7 @@ bool R_SetupPortalClipsegs(rendercontext_t &context,
          ++i;
       }
       
-      if(i == viewwindow.width)
+      if(i == context.endcolumn)
          goto endopen;
 
       // set the solidsegs
@@ -2428,7 +2428,8 @@ static const int checkcoord[12][4] = // killough -- static const
 // Checks BSP node/subtree bounding box.
 // Returns true if some part of the bbox might be visible.
 //
-static bool R_checkBBox(const cliprange_t *const solidsegs,
+static bool R_checkBBox(const rendercontext_t &context,
+                        const cliprange_t *const solidsegs,
                         const fixed_t *bspcoord) // killough 1/28/98: static
 {
    int     boxpos, boxx, boxy;
@@ -2497,8 +2498,8 @@ static bool R_checkBBox(const cliprange_t *const solidsegs,
    // make adjustments.
    // SoM: Moved this to before the "does not cross a pixel" check to fix 
    // another slime trail
-   if(sx1 > 0) sx1--;
-   if(sx2 < viewwindow.width - 1) sx2++;
+   if(sx1 > context.startcolumn) sx1--;
+   if(sx2 < context.endcolumn - 1) sx2++;
 
    // SoM: Removed the "does not cross a pixel" test
 
@@ -2792,7 +2793,7 @@ static void R_subsector(rendercontext_t &context, int num)
    // real sector, or you must account for the lighting in some other way, 
    // like passing it as an argument.
 
-   R_AddSprites(sub->sector, (floorlightlevel+ceilinglightlevel)/2);
+   R_AddSprites(context, sub->sector, (floorlightlevel+ceilinglightlevel)/2);
 
    // haleyjd 02/19/06: draw polyobjects before static lines
    // haleyjd 10/09/06: skip call entirely if no polyobjects
@@ -2825,7 +2826,7 @@ void R_RenderBSPNode(rendercontext_t &context, int bspnum)
       
       // Possibly divide back space.
       
-      if(!R_checkBBox(context.solidsegs, bsp->bbox[side^=1]))
+      if(!R_checkBBox(context, context.solidsegs, bsp->bbox[side^=1]))
          return;
       
       bspnum = bsp->children[side];

@@ -227,7 +227,7 @@ static void R_renderSegLoop(rendercontext_t &context, cb_seg_t &segclip)
    cb_column_t column = {};
 
 #ifdef RANGECHECK
-   if(segclip.x1 < 0 || segclip.x2 >= viewwindow.width || segclip.x1 > segclip.x2)
+   if(segclip.x1 < context.startcolumn || segclip.x2 >= context.endcolumn || segclip.x1 > segclip.x2)
    {
       I_Error("R_renderSegLoop: invalid seg x values!\n"
               "   x1 = %d, x2 = %d, linenum = %d\n", 
@@ -670,8 +670,8 @@ static void R_detectClosedColumns(rendercontext_t &context, cb_seg_t &segclip)
 
       // from startx to i - 1 is solid.
 #ifdef RANGECHECK
-      if(startx > i - 1 || startx < 0 || i - 1 >= viewwindow.width || 
-         startx >= viewwindow.width || i - 1 < 0)
+      if(startx > i - 1 || startx < context.startcolumn || i - 1 >= context.endcolumn ||
+         startx >= context.endcolumn || i - 1 < context.startcolumn)
          I_Error("R_detectClosedColumns: bad range %i, %i\n", startx, i - 1);
 #endif
 
