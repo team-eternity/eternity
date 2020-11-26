@@ -61,7 +61,7 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bool pushmasked, pwindow_t *window);
+void R_PushPost(rendercontext_t &context, bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const rendercontext_t &context,

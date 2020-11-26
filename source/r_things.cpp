@@ -214,47 +214,48 @@ static int numParticles;
 static vissprite_t *vissprites, **vissprite_ptrs;  // killough
 static size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
 
-// SoM 12/13/03: the post-BSP stack
-static poststack_t   *pstack       = nullptr;
-static int            pstacksize   = 0;
-static int            pstackmax    = 0;
-static maskedrange_t *unusedmasked = nullptr;
-
 // MaxW: 2018/07/01: Whether or not to draw psprites
 static bool r_drawplayersprites = true;
 
 VALLOCATION(pstack)
 {
-   if(pstack)
-   {
-      // free all maskedrange_t on the pstack
-      for(int i = 0; i < pstacksize; i++)
+   R_ForEachContext([](rendercontext_t &context) {
+      poststack_t   *&pstack       = context.pstack;
+      int            &pstacksize   = context.pstacksize;
+      int            &pstackmax    = context.pstackmax;
+      maskedrange_t *&unusedmasked = context.unusedmasked;
+
+      if(pstack)
       {
-         if(pstack[i].masked)
+         // free all maskedrange_t on the pstack
+         for(int i = 0; i < pstacksize; i++)
          {
-            efree(pstack[i].masked->ceilingclip);
-            efree(pstack[i].masked);
+            if(pstack[i].masked)
+            {
+               efree(pstack[i].masked->ceilingclip);
+               efree(pstack[i].masked);
+            }
          }
+
+         // free the pstack
+         efree(pstack);
       }
 
-      // free the pstack
-      efree(pstack);
-   }
+      // free the maskedrange freelist 
+      maskedrange_t *mr = unusedmasked;
+      while(mr)
+      {
+         maskedrange_t *next = mr->next;
+         efree(mr->ceilingclip);
+         efree(mr);
+         mr = next;
+      }
 
-   // free the maskedrange freelist 
-   maskedrange_t *mr = unusedmasked;
-   while(mr)
-   {
-      maskedrange_t *next = mr->next;
-      efree(mr->ceilingclip);
-      efree(mr);
-      mr = next;
-   }
-
-   pstack       = nullptr;
-   pstacksize   = 0;
-   pstackmax    = 0;
-   unusedmasked = nullptr;
+      pstack       = nullptr;
+      pstacksize   = 0;
+      pstackmax    = 0;
+      unusedmasked = nullptr;
+   });
 }
 
 // Used solely by R_drawSpriteInDSRange and passed as mfloorclip/mceilingclip
@@ -532,12 +533,15 @@ void R_ClearSprites()
 }
 
 //
-// R_PushPost
+// Pushes a new element on the post-BSP stack.
 //
-// Pushes a new element on the post-BSP stack. 
-//
-void R_PushPost(bool pushmasked, pwindow_t *window)
+void R_PushPost(rendercontext_t &context, bool pushmasked, pwindow_t *window)
 {
+   poststack_t   *&pstack       = context.pstack;
+   int            &pstacksize   = context.pstacksize;
+   int            &pstackmax    = context.pstackmax;
+   maskedrange_t *&unusedmasked = context.unusedmasked;
+
    poststack_t *post;
    
    if(pstacksize == pstackmax)
@@ -559,7 +563,7 @@ void R_PushPost(bool pushmasked, pwindow_t *window)
    if(pushmasked)
    {
       int i;
-      
+
       // Get an unused maskedrange object, or allocate a new one
       if(unusedmasked)
       {
@@ -573,18 +577,18 @@ void R_PushPost(bool pushmasked, pwindow_t *window)
       else
       {
          post->masked = estructalloc(maskedrange_t, 1);
-       
-         float *buf = emalloc(float *, 2 * video.width * sizeof(float));
+
+         float *buf = emalloc(float *, 2 * context.numcolumns * sizeof(float));
          post->masked->ceilingclip = buf;
-         post->masked->floorclip   = buf + video.width;
+         post->masked->floorclip   = buf + context.numcolumns;
       }
-         
+
       for(i = pstacksize - 1; i >= 0; i--)
       {
          if(pstack[i].masked)
             break;
       }
-      
+
       if(i >= 0)
       {
          post->masked->firstds     = pstack[i].masked->lastds;
@@ -592,12 +596,12 @@ void R_PushPost(bool pushmasked, pwindow_t *window)
       }
       else
          post->masked->firstds = post->masked->firstsprite = 0;
-         
+
       post->masked->lastds     = int(ds_p - drawsegs);
       post->masked->lastsprite = int(num_vissprite);
-      
-      memcpy(post->masked->ceilingclip, portaltop,    sizeof(*portaltop)    * video.width);
-      memcpy(post->masked->floorclip,   portalbottom, sizeof(*portalbottom) * video.width);
+
+      memcpy(post->masked->ceilingclip, portaltop    + context.startcolumn, sizeof(*portaltop)    * context.numcolumns);
+      memcpy(post->masked->floorclip,   portalbottom + context.startcolumn, sizeof(*portalbottom) * context.numcolumns);
    }
    else
       post->masked = nullptr;
@@ -1787,14 +1791,15 @@ static void R_drawSpriteInDSRange(rendercontext_t &context,
 
    // all clipping has been performed, so draw the sprite
    // check for unclipped columns
-   
+
+   // THREAD_FIXME: Verify correctness
    for(x = spr->x1; x <= spr->x2; x++)
    {
-      if(clipbot[x] == CLIP_UNDEF || clipbot[x] > pbottom[x])
-         clipbot[x] = pbottom[x];
+      if(clipbot[x] == CLIP_UNDEF || clipbot[x] > pbottom[x - context.startcolumn])
+         clipbot[x] = pbottom[x - context.startcolumn];
 
-      if(cliptop[x] == CLIP_UNDEF || cliptop[x] < ptop[x])
-         cliptop[x] = ptop[x];
+      if(cliptop[x] == CLIP_UNDEF || cliptop[x] < ptop[x - context.startcolumn])
+         cliptop[x] = ptop[x - context.startcolumn];
    }
 
    R_drawVisSprite(context, spr, spr->x1, spr->x2, clipbot, cliptop);
@@ -1805,6 +1810,10 @@ static void R_drawSpriteInDSRange(rendercontext_t &context,
 //
 void R_DrawPostBSP(rendercontext_t &context)
 {
+   poststack_t   *&pstack       = context.pstack;
+   int            &pstacksize   = context.pstacksize;
+   maskedrange_t *&unusedmasked = context.unusedmasked;
+
    maskedrange_t *masked;
    drawseg_t     *ds;
    int           firstds, lastds, firstsprite, lastsprite;

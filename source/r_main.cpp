@@ -1281,7 +1281,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_SetMaskedSilhouette(context, nullptr, nullptr);
    
    // Push the first element on the Post-BSP stack
-   R_PushPost(true, nullptr);
+   R_PushPost(context, true, nullptr);
    
    // SoM 12/9/03: render the portals.
    R_RenderPortals(context);

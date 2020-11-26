@@ -761,7 +761,7 @@ static void R_RenderPlanePortal(rendercontext_t &context, pwindow_t *window)
    }
 
    if(window->head == window && window->poverlay)
-      R_PushPost(false, window);
+      R_PushPost(context, false, window);
       
    viewx = lastx;
    viewy = lasty;
@@ -882,7 +882,7 @@ static void R_RenderHorizonPortal(rendercontext_t &context, pwindow_t *window)
    }
 
    if(window->head == window && window->poverlay)
-      R_PushPost(false, window);
+      R_PushPost(context, false, window);
       
    viewx  = lastx; 
    viewy  = lasty; 
@@ -983,7 +983,7 @@ static void R_RenderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
    
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window : nullptr);
+   R_PushPost(context, true, window->head == window ? window : nullptr);
 
    floorclip   = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1177,7 +1177,7 @@ static void R_RenderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window : nullptr);
+   R_PushPost(context, true, window->head == window ? window : nullptr);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;
@@ -1287,7 +1287,7 @@ static void R_RenderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
-   R_PushPost(true, window->head == window ? window : nullptr);
+   R_PushPost(context, true, window->head == window ? window : nullptr);
 
    floorclip = floorcliparray;
    ceilingclip = ceilingcliparray;

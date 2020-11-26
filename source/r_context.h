@@ -32,6 +32,8 @@
 
 struct cb_column_t;
 struct cliprange_t;
+struct maskedrange_t;
+struct poststack_t;
 struct pwindow_t;
 
 struct rendercontext_t
@@ -69,6 +71,14 @@ struct rendercontext_t
 
    // r_portal.cpp
    pwindow_t *unusedhead, *windowhead, *windowlast;
+
+
+   // r_things.cpp
+   // SoM 12/13/03: the post-BSP stack
+   poststack_t   *pstack;
+   int            pstacksize;
+   int            pstackmax;
+   maskedrange_t *unusedmasked;
 
 
    // Currently uncategorised
