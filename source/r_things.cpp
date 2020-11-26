@@ -197,8 +197,6 @@ VALLOCATION(portaltop)
    portalbottom = buf + w;
 }
 
-static float *ptop, *pbottom;
-
 // haleyjd 04/25/10: drawsegs optimization
 static drawsegs_xrange_t *drawsegs_xrange;
 static unsigned int drawsegs_xrange_size = 0;
@@ -1547,7 +1545,8 @@ static void R_SortVisSpriteRange(int first, int last)
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(rendercontext_t &context,
-                                  vissprite_t *spr, int firstds, int lastds)
+                                  vissprite_t *spr, int firstds, int lastds,
+                                  float *ptop, float *pbottom)
 {
    drawseg_t *ds;
    int        x;
@@ -1850,11 +1849,13 @@ void R_DrawPostBSP(rendercontext_t &context)
                drawsegs_xrange[drawsegs_xrange_count].user = nullptr;
             }
 
-            ptop    = masked->ceilingclip;
-            pbottom = masked->floorclip;
-
             for(int i = lastsprite - firstsprite; --i >= 0; )
-               R_drawSpriteInDSRange(context, vissprite_ptrs[i], firstds, lastds);         // killough
+            {
+               R_drawSpriteInDSRange(
+                  context, vissprite_ptrs[i], firstds, lastds,
+                  masked->ceilingclip, masked->floorclip
+               );         // killough
+            }
          }
 
          // render any remaining masked mid textures
