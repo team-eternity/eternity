@@ -1027,11 +1027,11 @@ static void R_projectSprite(const rendercontext_t &context,
    distxscale = idist * view.xfoc;
 
    x1 = view.xcenter + (tx1 * distxscale);
-   if(x1 >= view.width)
+   if(x1 >= context.fendcolumn)
       return;
 
    x2 = view.xcenter + (tx2 * distxscale);
-   if(x2 < 0.0f)
+   if(x2 < context.fstartcolumn)
       return;
 
    intx1 = (int)(x1 + 0.999f);
@@ -1092,8 +1092,8 @@ static void R_projectSprite(const rendercontext_t &context,
    vis->gzt    = gzt;                          // killough 3/27/98
 
    // Cardboard
-   vis->x1 = x1 < 0.0f ? context.startcolumn : intx1;
-   vis->x2 = x2 >= view.width ? context.endcolumn - 1 : intx2;
+   vis->x1 = x1 < context.fstartcolumn ? context.startcolumn : intx1;
+   vis->x2 = x2 >= context.fendcolumn ? context.endcolumn - 1 : intx2;
 
    vis->xstep = flip ? -(swidth * pstep) : swidth * pstep;
    vis->startx = flip ? swidth - 1.0f : 0.0f;

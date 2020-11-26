@@ -2187,7 +2187,7 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
 
    i1 = 1.0f / t1.y;
    x1 = (view.xcenter + (t1.x * i1 * view.xfoc));
-   if(lineisportal && x1 > 0 && clipped)
+   if(lineisportal && x1 > context.fstartcolumn && clipped)
       markx1cover = true;
 
    clipped = false;
@@ -2208,10 +2208,10 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
    x2 = (view.xcenter + (t2.x * i2 * view.xfoc));
 
    // Fix now any wall or edge portal viewport cutoffs
-   if(lineisportal && x2 < view.width && clipped && x2 >= x1)
-      x2 = view.width;
+   if(lineisportal && x2 < context.fendcolumn && clipped && x2 >= x1)
+      x2 = context.fendcolumn;
    if(markx1cover && x2 >= x1)
-      x1 = 0;
+      x1 = context.fstartcolumn;
 
    // SoM: Handle the case where a wall is only occupying a single post but 
    // still needs to be rendered to keep groups of single post walls from not
@@ -2224,7 +2224,7 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
       return;
 
    // off the screen rejection
-   if(floorx2 < 0 || floorx1 >= view.width)
+   if(floorx2 < context.fstartcolumn || floorx1 >= context.fendcolumn)
       return;
 
    if(x2 > x1)
@@ -2355,9 +2355,9 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
    // than ints do. If the clipping is done after the casting, the step values
    // will no longer be accurate. This ensures more correct projection and 
    // texturing.
-   if(x1 < 0)
+   if(x1 < context.fstartcolumn)
    {
-      float clipx = -x1;
+      float clipx = context.fstartcolumn - x1;
 
       seg.dist += clipx * seg.diststep;
       seg.len += clipx * seg.lenstep;
@@ -2370,12 +2370,12 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
       if(seg.bottomtex || seg.b_window)
          seg.low += clipx * seg.lowstep;
 
-      x1 = floorx1 = 0;
+      x1 = floorx1 = context.fstartcolumn;
    }
 
-   if(x2 >= view.width)
+   if(x2 >= context.fendcolumn)
    {
-      float clipx = x2 - (view.width - 1.0f);
+      float clipx = x2 - (context.fendcolumn - 1.0f);
 
       seg.dist2 -= clipx * seg.diststep;
       seg.len2 -= clipx * seg.lenstep;
@@ -2388,7 +2388,7 @@ static void R_addLine(rendercontext_t &context, cb_seg_t &seg,
       if(seg.bottomtex || seg.b_window)
          seg.low2 -= clipx * seg.lowstep;
 
-      x2 = floorx2 = (view.width - 1.0f);
+      x2 = floorx2 = (context.fendcolumn - 1.0f);
    }
 
    seg.x1 = (int)floorx1;
