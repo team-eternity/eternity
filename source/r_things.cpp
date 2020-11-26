@@ -117,8 +117,6 @@ int        inactiveParticles;
 particle_t *Particles;
 int        particle_trans;
 
-float *mfloorclip, *mceilingclip;
-
 //=============================================================================
 //
 // Structures
@@ -278,7 +276,8 @@ VALLOCATION(clipbot)
 //
 
 // Forward declarations:
-static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis);
+static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis,
+                           const float *const mfloorclip, const float *const mceilingclip);
 static void R_projectParticle(const rendercontext_t &context, particle_t *particle);
 
 //
@@ -624,7 +623,8 @@ static vissprite_t *R_NewVisSprite()
 //
 static void R_drawMaskedColumn(const rendercontext_t &context,
                                cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                               column_t *tcolumn)
+                               column_t *tcolumn,
+                               const float *const mfloorclip, const float *const mceilingclip)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -663,7 +663,8 @@ static void R_drawMaskedColumn(const rendercontext_t &context,
 //
 void R_DrawNewMaskedColumn(const rendercontext_t &context,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                           const texture_t *const tex, const texcol_t *tcol)
+                           const texture_t *const tex, const texcol_t *tcol,
+                           const float *const mfloorclip, const float *const mceilingclip)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
@@ -716,7 +717,8 @@ void R_DrawNewMaskedColumn(const rendercontext_t &context,
 //
 //  mfloorclip and mceilingclip should also be set.
 //
-static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, int x2)
+static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, int x2,
+                            float *const mfloorclip, float *const mceilingclip)
 {
    void (*&colfunc)(cb_column_t &) = context.colfunc;
 
@@ -733,7 +735,7 @@ static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, 
    if(vis->patch == -1)
    {
       // this vissprite belongs to a particle
-      R_drawParticle(context, vis);
+      R_drawParticle(context, vis, mfloorclip, mceilingclip);
       return;
    }
   
@@ -796,7 +798,7 @@ static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, 
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(context, column, maskedcolumn, tcolumn);
+         R_drawMaskedColumn(context, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
       }
    }
    else
@@ -810,7 +812,7 @@ static void R_drawVisSprite(rendercontext_t &context, vissprite_t *vis, int x1, 
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_drawMaskedColumn(context, column, maskedcolumn, tcolumn);
+         R_drawMaskedColumn(context, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
@@ -1223,7 +1225,8 @@ void R_AddSprites(const rendercontext_t &context, sector_t* sec, int lightlevel)
 // Draws player gun sprites.
 //
 static void R_drawPSprite(const pspdef_t *psp,
-                          lighttable_t *const *const spritelights)
+                          lighttable_t *const *const spritelights,
+                          float *const mfloorclip, float *const mceilingclip)
 {
    float         tx;
    float         x1, x2, w;
@@ -1378,7 +1381,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_drawVisSprite(r_globalcontext, vis, vis->x1, vis->x2);
+   R_drawVisSprite(r_globalcontext, vis, vis->x1, vis->x2, mfloorclip, mceilingclip);
    
    view.ycenter = oldycenter;
 }
@@ -1416,10 +1419,6 @@ void R_DrawPlayerSprites()
 
    for(i = 0; i < viewwindow.width; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
-   
-   // clip to screen bounds
-   mfloorclip   = pscreenheightarray;
-   mceilingclip = zeroarray;
 
    if(r_drawplayersprites)
    {
@@ -1427,7 +1426,7 @@ void R_DrawPlayerSprites()
       for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
       {
          if(psp->state)
-            R_drawPSprite(psp, spritelights);
+            R_drawPSprite(psp, spritelights, pscreenheightarray, zeroarray);
       }
    }
 }
@@ -1793,9 +1792,7 @@ static void R_drawSpriteInDSRange(rendercontext_t &context,
          cliptop[x] = ptop[x];
    }
 
-   mfloorclip   = clipbot;
-   mceilingclip = cliptop;
-   R_drawVisSprite(context, spr, spr->x1, spr->x2);
+   R_drawVisSprite(context, spr, spr->x1, spr->x2, clipbot, cliptop);
 }
 
 //
@@ -2377,7 +2374,8 @@ static void R_projectParticle(const rendercontext_t &context, particle_t *partic
 //
 // haleyjd: this function had to be mostly rewritten
 //
-static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis)
+static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis,
+                           const float *const mfloorclip, const float *const mceilingclip)
 {
    int x1, x2, ox1, ox2;
    int yl, yh;

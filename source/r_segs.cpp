@@ -132,9 +132,6 @@ void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int
 
    maskedtexturecol = ds->maskedtexturecol;
 
-   mfloorclip   = ds->sprbottomclip;
-   mceilingclip = ds->sprtopclip;
-
    diststep = ds->diststep;
    dist = ds->dist1 + (x1 - ds->x1) * diststep;
 
@@ -195,8 +192,11 @@ void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int
 
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
-         R_DrawNewMaskedColumn(context, column, maskedcolumn, textures[texnum], col);
-         
+         R_DrawNewMaskedColumn(
+            context, column, maskedcolumn,
+            textures[texnum], col, ds->sprbottomclip, ds->sprtopclip
+         );
+
          maskedtexturecol[column.x] = FLT_MAX;
       }
    }

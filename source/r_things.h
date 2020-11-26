@@ -41,10 +41,6 @@ struct rendercontext_t;
 extern float *zeroarray;
 extern float *screenheightarray;
 
-// Vars for R_DrawMaskedColumn
-
-extern float *mfloorclip, *mceilingclip;
-
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
 {
@@ -76,7 +72,8 @@ struct texcol_t;
 
 void R_DrawNewMaskedColumn(const rendercontext_t &context,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
-                           const texture_t *tex, const texcol_t *tcolumn);
+                           const texture_t *tex, const texcol_t *tcolumn,
+                           const float *const mfloorclip, const float *const mceilingclip);
 void R_AddSprites(const rendercontext_t &context, sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(void);
