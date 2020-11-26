@@ -64,7 +64,8 @@ struct poststack_t
 void R_PushPost(bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
-void R_SetMaskedSilhouette(const float *top, const float *bottom);
+void R_SetMaskedSilhouette(const rendercontext_t &context,
+                           const float *top, const float *bottom);
 
 struct cb_maskedcolumn_t;
 struct texture_t;

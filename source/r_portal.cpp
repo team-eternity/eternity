@@ -952,7 +952,7 @@ static void R_RenderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    portalrender.maxx = window->maxx;
 
    ++validcount;
-   R_SetMaskedSilhouette(ceilingclip, floorclip);
+   R_SetMaskedSilhouette(context, ceilingclip, floorclip);
 
    lastx = viewx;
    lasty = viewy;
@@ -1144,7 +1144,7 @@ static void R_RenderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    portalrender.maxx = window->maxx;
 
    ++validcount;
-   R_SetMaskedSilhouette(ceilingclip, floorclip);
+   R_SetMaskedSilhouette(context, ceilingclip, floorclip);
 
    lastx = viewx;
    lasty = viewy;
@@ -1254,7 +1254,7 @@ static void R_RenderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    portalrender.maxx = window->maxx;
 
    ++validcount;
-   R_SetMaskedSilhouette(ceilingclip, floorclip);
+   R_SetMaskedSilhouette(context, ceilingclip, floorclip);
 
    lastx  = viewx;
    lasty  = viewy;

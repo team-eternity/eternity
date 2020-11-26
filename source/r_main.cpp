@@ -1278,7 +1278,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // Check for new console commands.
    NetUpdate();
 
-   R_SetMaskedSilhouette(nullptr, nullptr);
+   R_SetMaskedSilhouette(context, nullptr, nullptr);
    
    // Push the first element on the Post-BSP stack
    R_PushPost(true, nullptr);

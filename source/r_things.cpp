@@ -281,12 +281,14 @@ static void R_projectParticle(const rendercontext_t &context, particle_t *partic
 //
 // R_SetMaskedSilhouette
 //
-void R_SetMaskedSilhouette(const float *top, const float *bottom)
+void R_SetMaskedSilhouette(const rendercontext_t &context,
+                           const float *top, const float *bottom)
 {
    if(!top || !bottom)
    {
-      float *topp  = portaltop, *bottomp = portalbottom, 
-            *stopp = portaltop + video.width;
+      float *topp    = portaltop    + context.startcolumn;
+      float *bottomp = portalbottom + context.startcolumn;
+      float *stopp   = portaltop    + context.endcolumn;
 
       while(topp < stopp)
       {
@@ -296,8 +298,8 @@ void R_SetMaskedSilhouette(const float *top, const float *bottom)
    }
    else
    {
-      memcpy(portaltop,    top,    sizeof(*portaltop   ) * video.width);
-      memcpy(portalbottom, bottom, sizeof(*portalbottom) * video.width);
+      memcpy(portaltop    + context.startcolumn, top,    sizeof(*portaltop   ) * context.numcolumns);
+      memcpy(portalbottom + context.startcolumn, bottom, sizeof(*portalbottom) * context.numcolumns);
    }
 }
 
