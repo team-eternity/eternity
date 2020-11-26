@@ -62,9 +62,11 @@ rendercontext_t &R_GetContext(int index)
 void R_InitContexts(const int width)
 {
    r_globalcontext = {};
-   r_globalcontext.bufferindex = -1;
-   r_globalcontext.startcolumn = 0;
-   r_globalcontext.endcolumn   = width;
+   r_globalcontext.bufferindex  = -1;
+   r_globalcontext.startcolumn  = 0;
+   r_globalcontext.endcolumn    = width;
+   r_globalcontext.fstartcolumn = 0.0f;
+   r_globalcontext.fendcolumn   = static_cast<float>(width);
 
    if(renderdatas)
       efree(renderdatas);
@@ -79,9 +81,11 @@ void R_InitContexts(const int width)
 
       context.bufferindex = currentcontext;
 
-      context.startcolumn = static_cast<int>(roundf(static_cast<float>(currentcontext)     * contextwidth));
-      context.endcolumn   = static_cast<int>(roundf(static_cast<float>(currentcontext + 1) * contextwidth));
-      context.numcolumns  = context.endcolumn - context.startcolumn;
+      context.fstartcolumn = static_cast<float>(currentcontext)     * contextwidth;
+      context.fendcolumn   = static_cast<float>(currentcontext + 1) * contextwidth;
+      context.startcolumn  = static_cast<int>(roundf(context.fstartcolumn));
+      context.endcolumn    = static_cast<int>(roundf(context.fendcolumn));
+      context.numcolumns   = context.endcolumn - context.startcolumn;
    }
 }
 
