@@ -209,8 +209,6 @@ VALLOCATION(pscreenheightarray)
    pscreenheightarray = ecalloctag(float *, w, sizeof(float), PU_VALLOC, nullptr);
 }
 
-static lighttable_t **spritelights; // killough 1/25/98 made static
-
 static spriteframe_t sprtemp[MAX_SPRITE_FRAMES];
 static int maxframe;
 
@@ -869,7 +867,9 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
 static void R_projectSprite(const rendercontext_t &context,
-                            Mobj *thing, v3fixed_t *delta = nullptr,
+                            Mobj *thing,
+                            lighttable_t *const *const spritelights,
+                            v3fixed_t *delta = nullptr,
                             const line_t *portalline = nullptr)
 {
    spritepos_t    spritepos;
@@ -1174,9 +1174,10 @@ static void R_projectSprite(const rendercontext_t &context,
 //
 void R_AddSprites(const rendercontext_t &context, sector_t* sec, int lightlevel)
 {
-   Mobj *thing;
-   int    lightnum;
-   
+   Mobj          *thing;
+   int            lightnum;
+   lighttable_t **spritelights;
+
    // BSP is traversed by subsector.
    // A sector might have been split into several
    //  subsectors during BSP building.
@@ -1200,12 +1201,12 @@ void R_AddSprites(const rendercontext_t &context, sector_t* sec, int lightlevel)
    // Handle all things in sector.
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
-      R_projectSprite(context, thing);
+      R_projectSprite(context, thing, spritelights);
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
-         R_projectSprite(context, (*item)->mobj, &(*item)->delta, (*item)->portalline);
+         R_projectSprite(context, (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline);
 
    // haleyjd 02/20/04: Handle all particles in sector.
 
@@ -1221,7 +1222,8 @@ void R_AddSprites(const rendercontext_t &context, sector_t* sec, int lightlevel)
 //
 // Draws player gun sprites.
 //
-static void R_drawPSprite(const pspdef_t *psp)
+static void R_drawPSprite(const pspdef_t *psp,
+                          lighttable_t *const *const spritelights)
 {
    float         tx;
    float         x1, x2, w;
@@ -1390,6 +1392,7 @@ void R_DrawPlayerSprites()
    const pspdef_t *psp;
    sector_t tmpsec;
    int floorlightlevel, ceilinglightlevel;
+   lighttable_t **spritelights;
    
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
@@ -1424,7 +1427,7 @@ void R_DrawPlayerSprites()
       for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
       {
          if(psp->state)
-            R_drawPSprite(psp);
+            R_drawPSprite(psp, spritelights);
       }
    }
 }
