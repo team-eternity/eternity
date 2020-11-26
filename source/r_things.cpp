@@ -207,9 +207,6 @@ VALLOCATION(pscreenheightarray)
    pscreenheightarray = ecalloctag(float *, w, sizeof(float), PU_VALLOC, nullptr);
 }
 
-static spriteframe_t sprtemp[MAX_SPRITE_FRAMES];
-static int maxframe;
-
 // Max number of particles
 static int numParticles;
 
@@ -316,15 +313,14 @@ void R_SetMaskedSilhouette(const float *top, const float *bottom)
 //
 
 //
-// R_InstallSpriteLump
-//
 // Local function for R_InitSprites.
 //
-static void R_InstallSpriteLump(lumpinfo_t *lump, int lumpnum, unsigned frame,
-                                unsigned rotation, bool flipped)
+static void R_installSpriteLump(lumpinfo_t *lump, int lumpnum, unsigned frame,
+                                unsigned rotation, bool flipped,
+                                spriteframe_t *const sprtemp, int &maxframe)
 {
    if(frame >= MAX_SPRITE_FRAMES || rotation > 8)
-      I_Error("R_InstallSpriteLump: Bad frame characters in lump %s\n", lump->name);
+      I_Error("R_installSpriteLump: Bad frame characters in lump %s\n", lump->name);
 
    if((int)frame > maxframe)
       maxframe = frame;
@@ -362,7 +358,6 @@ static void R_InstallSpriteLump(lumpinfo_t *lump, int lumpnum, unsigned frame,
 struct rsprhash_s { int index, next; };
 
 //
-// R_InitSpriteDefs
 // Pass a null terminated list of sprite names
 // (4 chars exactly) to be used.
 //
@@ -382,8 +377,11 @@ struct rsprhash_s { int index, next; };
 //
 // 1/25/98, 1/31/98 killough : Rewritten for performance
 //
-static void R_InitSpriteDefs(char **namelist)
+static void R_initSpriteDefs(char **namelist)
 {
+   static spriteframe_t sprtemp[MAX_SPRITE_FRAMES];
+   static int maxframe;
+
    size_t numentries = lastspritelump - firstspritelump + 1;
    rsprhash_s *hash;
    unsigned int i;
@@ -439,15 +437,19 @@ static void R_InitSpriteDefs(char **namelist)
                  (lump->name[2] ^ spritename[2]) |
                  (lump->name[3] ^ spritename[3])))
             {
-               R_InstallSpriteLump(lump, j+firstspritelump,
-                                   lump->name[4] - 'A',
-                                   lump->name[5] - '0',
-                                   false);
+               R_installSpriteLump(
+                  lump, j+firstspritelump,
+                  lump->name[4] - 'A', lump->name[5] - '0',
+                  false, // not flipped
+                  sprtemp, maxframe
+               );
                if(lump->name[6])
-                  R_InstallSpriteLump(lump, j+firstspritelump,
-                                      lump->name[6] - 'A',
-                                      lump->name[7] - '0',
-                                      true);
+                  R_installSpriteLump(
+                     lump, j+firstspritelump,
+                     lump->name[6] - 'A', lump->name[7] - '0',
+                     true, // flipped
+                     sprtemp, maxframe
+                  );
             }
          }
          while((j = hash[j].next) >= 0);
@@ -512,7 +514,7 @@ static void R_InitSpriteDefs(char **namelist)
 //
 void R_InitSprites(char **namelist)
 {
-   R_InitSpriteDefs(namelist);
+   R_initSpriteDefs(namelist);
    R_InitSpriteProjSpan();
 }
 
