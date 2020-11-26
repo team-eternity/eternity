@@ -200,6 +200,7 @@ static drawsegs_xrange_t *drawsegs_xrange;
 static unsigned int drawsegs_xrange_size = 0;
 static int drawsegs_xrange_count = 0;
 
+// Used solely by R_DrawPlayerSprites and passed as mfloorclip
 static float *pscreenheightarray; // for psprites
 
 VALLOCATION(pscreenheightarray)
@@ -256,7 +257,7 @@ VALLOCATION(pstack)
    unusedmasked = nullptr;
 }
 
-// haleyjd: made static global
+// Used solely by R_drawSpriteInDSRange and passed as mfloorclip/mceilingclip
 static float *clipbot;
 static float *cliptop;
 
