@@ -29,9 +29,11 @@
 
 #include "c_io.h"
 #include "c_runcmd.h"
+#include "doomstat.h"
 #include "m_misc.h"
 #include "i_video.h"
 #include "r_context.h"
+#include "r_state.h"
 #include "v_misc.h"
 
 using threadhandle_t = void (*)(); // FIXME: This elsewhere when threading real
@@ -68,6 +70,8 @@ void R_freeContext(rendercontext_t &context)
       efree(context.vissprites);
    if(context.vissprite_ptrs)
       efree(context.vissprite_ptrs);
+   if(context.sectorvisited)
+      efree(context.sectorvisited);
 }
 
 //
@@ -107,6 +111,19 @@ void R_InitContexts(const int width)
       context.startcolumn  = static_cast<int>(roundf(context.fstartcolumn));
       context.endcolumn    = static_cast<int>(roundf(context.fendcolumn));
       context.numcolumns   = context.endcolumn - context.startcolumn;
+
+      if(numsectors && gamestate == GS_LEVEL)
+         context.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+   }
+}
+
+void R_RefreshContexts()
+{
+   for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+   {
+      rendercontext_t &context = renderdatas[currentcontext].context;
+
+      context.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
    }
 }
 

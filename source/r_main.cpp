@@ -1261,6 +1261,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    {
       rendercontext_t &context = R_GetContext(i);
 
+      memset(context.sectorvisited, 0, sizeof(bool) * numsectors);
+
       // Clear buffers.
       // THREAD_TODO: Make these rendercontext_t methods?
       R_ClearClipSegs(context);
@@ -1268,7 +1270,6 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       R_ClearPlanes(context);
       R_ClearPortals(context);
       R_ClearSprites(context);
-
 
       // check for new console commands.
       NetUpdate();

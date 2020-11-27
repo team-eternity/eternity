@@ -1185,11 +1185,11 @@ void R_AddSprites(rendercontext_t &context, sector_t* sec, int lightlevel)
    //  subsectors during BSP building.
    // Thus we check whether its already added.
 
-   if(sec->validcount == validcount)
+   if(context.sectorvisited[sec - sectors])
       return;
    
    // Well, now it will be done.
-   sec->validcount = validcount;
+   context.sectorvisited[sec - sectors] = true;
    
    lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
    
