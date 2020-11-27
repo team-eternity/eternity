@@ -1085,8 +1085,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    R_ForEachContext([](rendercontext_t &context) {
       context.colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
    });
-
-   ++validcount;
 }
 
 //

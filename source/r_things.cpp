@@ -290,8 +290,8 @@ void R_SetMaskedSilhouette(const rendercontext_t &context,
    }
    else
    {
-      memcpy(portaltop    + context.startcolumn, top,    sizeof(*portaltop   ) * context.numcolumns);
-      memcpy(portalbottom + context.startcolumn, bottom, sizeof(*portalbottom) * context.numcolumns);
+      memcpy(portaltop    + context.startcolumn, top    + context.startcolumn, sizeof(*portaltop   ) * context.numcolumns);
+      memcpy(portalbottom + context.startcolumn, bottom + context.startcolumn, sizeof(*portalbottom) * context.numcolumns);
    }
 }
 

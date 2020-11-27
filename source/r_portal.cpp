@@ -951,7 +951,7 @@ static void R_RenderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
 
-   ++validcount;
+   memset(context.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(context, ceilingclip, floorclip);
 
    lastx = viewx;
@@ -1143,7 +1143,7 @@ static void R_RenderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
 
-   ++validcount;
+   memset(context.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(context, ceilingclip, floorclip);
 
    lastx = viewx;
@@ -1253,7 +1253,7 @@ static void R_RenderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    portalrender.minx = window->minx;
    portalrender.maxx = window->maxx;
 
-   ++validcount;
+   memset(context.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(context, ceilingclip, floorclip);
 
    lastx  = viewx;
