@@ -49,7 +49,7 @@ struct renderdata_t
 static renderdata_t *renderdatas = nullptr;
 
 //
-// Grab a given render context
+// Grabs a given render context
 //
 rendercontext_t &R_GetContext(int index)
 {
@@ -57,10 +57,26 @@ rendercontext_t &R_GetContext(int index)
 }
 
 //
+// Frees up the dynamically allocated members of a context that aren't tagged PU_VALLOC
+//
+void R_freeContext(rendercontext_t &context)
+{
+   // THREAD_FIXME: Verify this catches everything
+   if(context.drawsegs_xrange)
+      efree(context.drawsegs_xrange);
+   if(context.vissprites)
+      efree(context.vissprites);
+   if(context.vissprite_ptrs)
+      efree(context.vissprite_ptrs);
+}
+
+//
 // Initialises all the render contexts
 //
 void R_InitContexts(const int width)
 {
+   static int prev_numcontexts = r_numcontexts;
+
    r_globalcontext = {};
    r_globalcontext.bufferindex  = -1;
    r_globalcontext.startcolumn  = 0;
@@ -69,7 +85,12 @@ void R_InitContexts(const int width)
    r_globalcontext.fendcolumn   = static_cast<float>(width);
 
    if(renderdatas)
+   {
+      for(int currentcontext = 0; currentcontext < prev_numcontexts; currentcontext++)
+         R_freeContext(renderdatas[currentcontext].context);
       efree(renderdatas);
+      prev_numcontexts = r_numcontexts;
+   }
 
    renderdatas = estructalloc(renderdata_t, r_numcontexts);
 

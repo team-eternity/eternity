@@ -194,11 +194,6 @@ VALLOCATION(portaltop)
    portalbottom = buf + w;
 }
 
-// haleyjd 04/25/10: drawsegs optimization
-static drawsegs_xrange_t *drawsegs_xrange;
-static unsigned int drawsegs_xrange_size = 0;
-static int drawsegs_xrange_count = 0;
-
 // Used solely by R_DrawPlayerSprites and passed as mfloorclip
 static float *pscreenheightarray; // for psprites
 
@@ -1570,9 +1565,9 @@ static void R_drawSpriteInDSRange(rendercontext_t &context,
 
    // haleyjd 04/25/10:
    // e6y: optimization
-   if(drawsegs_xrange_count)
+   if(context.drawsegs_xrange_count)
    {
-      drawsegs_xrange_t *dsx = drawsegs_xrange;
+      drawsegs_xrange_t *dsx = context.drawsegs_xrange;
 
       // drawsegs_xrange is sorted by ::x1
       // haleyjd: way faster to use a pointer here
@@ -1830,6 +1825,10 @@ void R_DrawPostBSP(rendercontext_t &context)
 
          if(lastsprite > firstsprite)
          {
+            drawsegs_xrange_t *&drawsegs_xrange       = context.drawsegs_xrange;
+            unsigned int       &drawsegs_xrange_size  = context.drawsegs_xrange_size;
+            int                &drawsegs_xrange_count = context.drawsegs_xrange_count;
+
             R_sortVisSpriteRange(context, firstsprite, lastsprite);
 
             // haleyjd 04/25/10: 
