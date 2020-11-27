@@ -68,7 +68,6 @@
 // External Declarations
 //
 
-extern int *columnofs;
 extern int global_cmap_index; // haleyjd: NGCS
 
 //=============================================================================
@@ -211,9 +210,6 @@ VALLOCATION(pscreenheightarray)
 // Max number of particles
 static int numParticles;
 
-static vissprite_t *vissprites, **vissprite_ptrs;  // killough
-static size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
-
 // MaxW: 2018/07/01: Whether or not to draw psprites
 static bool r_drawplayersprites = true;
 
@@ -277,7 +273,7 @@ VALLOCATION(clipbot)
 // Forward declarations:
 static void R_drawParticle(const rendercontext_t &context, vissprite_t *vis,
                            const float *const mfloorclip, const float *const mceilingclip);
-static void R_projectParticle(const rendercontext_t &context, particle_t *particle);
+static void R_projectParticle(rendercontext_t &context, particle_t *particle);
 
 //
 // R_SetMaskedSilhouette
@@ -523,13 +519,11 @@ void R_InitSprites(char **namelist)
 }
 
 //
-// R_ClearSprites
-//
 // Called at frame start.
 //
-void R_ClearSprites()
+void R_ClearSprites(rendercontext_t &context)
 {
-   num_vissprite = 0; // killough
+   context.num_vissprite = 0; // killough
 }
 
 //
@@ -598,7 +592,7 @@ void R_PushPost(rendercontext_t &context, bool pushmasked, pwindow_t *window)
          post->masked->firstds = post->masked->firstsprite = 0;
 
       post->masked->lastds     = int(ds_p - drawsegs);
-      post->masked->lastsprite = int(num_vissprite);
+      post->masked->lastsprite = int(context.num_vissprite);
 
       memcpy(post->masked->ceilingclip, portaltop    + context.startcolumn, sizeof(*portaltop)    * context.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + context.startcolumn, sizeof(*portalbottom) * context.numcolumns);
@@ -610,12 +604,14 @@ void R_PushPost(rendercontext_t &context, bool pushmasked, pwindow_t *window)
 }
 
 //
-// R_NewVisSprite
-//
 // Creates a new vissprite if needed, or recycles an unused one.
 //
-static vissprite_t *R_NewVisSprite()
+static vissprite_t *R_newVisSprite(rendercontext_t &context)
 {
+   vissprite_t *&vissprites          = context.vissprites;
+   size_t       &num_vissprite       = context.num_vissprite;
+   size_t       &num_vissprite_alloc = context.num_vissprite_alloc;
+
    if(num_vissprite >= num_vissprite_alloc)             // killough
    {
       num_vissprite_alloc = num_vissprite_alloc ? num_vissprite_alloc*2 : 128;
@@ -877,7 +873,7 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_projectSprite(const rendercontext_t &context,
+static void R_projectSprite(rendercontext_t &context,
                             Mobj *thing,
                             lighttable_t *const *const spritelights,
                             v3fixed_t *delta = nullptr,
@@ -1089,7 +1085,7 @@ static void R_projectSprite(const rendercontext_t &context,
    }
 
    // store information in a vissprite
-   vis = R_NewVisSprite();
+   vis = R_newVisSprite(context);
 
    // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
@@ -1183,7 +1179,7 @@ static void R_projectSprite(const rendercontext_t &context,
 // During BSP traversal, this adds sprites by sector.
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 //
-void R_AddSprites(const rendercontext_t &context, sector_t* sec, int lightlevel)
+void R_AddSprites(rendercontext_t &context, sector_t* sec, int lightlevel)
 {
    Mobj          *thing;
    int            lightnum;
@@ -1518,12 +1514,15 @@ static void R_SortVisSprites()
 #endif
 
 //
-// R_SortVisSpriteRange
-//
 // Sorts only a subset of the vissprites, for portal rendering.
 //
-static void R_SortVisSpriteRange(int first, int last)
+static void R_sortVisSpriteRange(rendercontext_t &context, int first, int last)
 {
+   vissprite_t  *&vissprites          = context.vissprites;
+   vissprite_t **&vissprite_ptrs      = context.vissprite_ptrs;
+   size_t        &num_vissprite_alloc = context.num_vissprite_alloc;
+   size_t        &num_vissprite_ptrs  = context.num_vissprite_ptrs;
+
    unsigned int numsprites = last - first;
    
    if(numsprites > 0)
@@ -1831,7 +1830,7 @@ void R_DrawPostBSP(rendercontext_t &context)
 
          if(lastsprite > firstsprite)
          {
-            R_SortVisSpriteRange(firstsprite, lastsprite);
+            R_sortVisSpriteRange(context, firstsprite, lastsprite);
 
             // haleyjd 04/25/10: 
             // e6y
@@ -1839,7 +1838,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             // Makes sense for scenes with huge amount of drawsegs.
             // ~12% of speed improvement on epic.wad map05
             drawsegs_xrange_count = 0;
-            if(num_vissprite > 0)
+            if(context.num_vissprite > 0)
             {
                if(drawsegs_xrange_size <= maxdrawsegs+1)
                {
@@ -1866,7 +1865,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             for(int i = lastsprite - firstsprite; --i >= 0; )
             {
                R_drawSpriteInDSRange(
-                  context, vissprite_ptrs[i], firstds, lastds,
+                  context, context.vissprite_ptrs[i], firstds, lastds,
                   masked->ceilingclip, masked->floorclip
                );         // killough
             }
@@ -2235,7 +2234,7 @@ void R_ClearParticles()
 //
 // R_projectParticle
 //
-static void R_projectParticle(const rendercontext_t &context, particle_t *particle)
+static void R_projectParticle(rendercontext_t &context, particle_t *particle)
 {
    fixed_t gzt;
    int x1, x2;
@@ -2323,7 +2322,7 @@ static void R_projectParticle(const rendercontext_t &context, particle_t *partic
    }
 
    // store information in a vissprite
-   vis = R_NewVisSprite();
+   vis = R_newVisSprite(context);
    vis->heightsec = heightsec;
    vis->gx = particle->x;
    vis->gy = particle->y;

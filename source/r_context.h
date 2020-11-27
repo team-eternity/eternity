@@ -35,6 +35,7 @@ struct cliprange_t;
 struct maskedrange_t;
 struct poststack_t;
 struct pwindow_t;
+struct vissprite_t;
 
 struct rendercontext_t
 {
@@ -74,6 +75,9 @@ struct rendercontext_t
 
 
    // r_things.cpp
+   vissprite_t *vissprites, **vissprite_ptrs;  // killough
+   size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
+
    // SoM 12/13/03: the post-BSP stack
    poststack_t   *pstack;
    int            pstacksize;

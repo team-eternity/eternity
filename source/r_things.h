@@ -75,9 +75,9 @@ void R_DrawNewMaskedColumn(const rendercontext_t &context,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn,
                            const float *const mfloorclip, const float *const mceilingclip);
-void R_AddSprites(const rendercontext_t &context, sector_t *sec, int); // killough 9/18/98
+void R_AddSprites(rendercontext_t &context, sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
-void R_ClearSprites(void);
+void R_ClearSprites(rendercontext_t &context);
 void R_DrawPostBSP(rendercontext_t &context);
 void R_DrawPlayerSprites();
 void R_ClearParticles(void);

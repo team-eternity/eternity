@@ -1250,7 +1250,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    R_ClearDrawSegs();
    R_ClearPlanes(context);
    R_ClearPortals(context);
-   R_ClearSprites();
+   R_ClearSprites(context);
 
    if(autodetect_hom)
       R_HOMdrawer();
