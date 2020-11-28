@@ -58,7 +58,7 @@ extern drawseg_t *ds_p;
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
 void R_MarkSolidSeg(bspcontext_t &context, int x1, int x2);
 
-bool R_SetupPortalClipsegs(bspcontext_t &context, const  contextbounds_t &bounds,
+bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
    int minx, int maxx, const float *top, const float *bottom);
 
 void R_ClearClipSegs(bspcontext_t &context);
