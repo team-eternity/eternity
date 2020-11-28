@@ -26,8 +26,10 @@
 #ifndef R_PLANE_H__
 #define R_PLANE_H__
 
+struct cb_column_t;
+struct contextbounds_t;
+struct planecontext_t;
 struct planehash_t;
-struct rendercontext_t;
 struct rslope_t;
 struct texture_t;
 
@@ -45,16 +47,17 @@ extern float *floorcliparray, *ceilingcliparray;
 // SoM: We have to use secondary clipping arrays for portal overlays
 extern float *overlayfclip, *overlaycclip;
 
-void R_ClearPlanes(rendercontext_t &context);
-void R_ClearOverlayClips(rendercontext_t &context);
-void R_DrawPlanes(rendercontext_t &context, planehash_t *table);
+void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
+void R_ClearOverlayClips(const contextbounds_t &bounds);
+void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &), planehash_t *table);
 
 // Planehash stuff
 planehash_t *R_NewPlaneHash(int chaincount);
-void R_ClearPlaneHash(rendercontext_t &context, planehash_t *table);
+void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
-visplane_t *R_FindPlane(rendercontext_t &context,
+visplane_t *R_FindPlane(planecontext_t &context,
+                        const contextbounds_t &bounds,
                         fixed_t height,
                         int picnum,
                         int lightlevel,
@@ -66,8 +69,8 @@ visplane_t *R_FindPlane(rendercontext_t &context,
                         byte opacity,        // SoM: Opacity for translucent planes
                         planehash_t *table); // SoM: Table. Can be nullptr
 
-visplane_t *R_DupPlane(rendercontext_t &context, const visplane_t *pl, int start, int stop);
-visplane_t *R_CheckPlane(rendercontext_t &context, visplane_t *pl, int start, int stop);
+visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop);
+visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
@@ -126,8 +129,8 @@ struct cb_plane_t
 };
 
 
-planehash_t *R_NewOverlaySet(rendercontext_t &context);
-void R_FreeOverlaySet(rendercontext_t &context, planehash_t *set);
+planehash_t *R_NewOverlaySet(planecontext_t &context);
+void R_FreeOverlaySet(planehash_t *&r_overlayfreesets, planehash_t *set);
 void R_MapInitOverlaySets();
 
 #endif

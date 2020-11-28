@@ -38,14 +38,15 @@ struct poststack_t;
 struct pwindow_t;
 struct vissprite_t;
 
-struct rendercontext_t
+struct contextbounds_t
 {
-   int   bufferindex;
    int   startcolumn, endcolumn; // for(int x = startcolumn; x < endcolumn; x++)
    float fstartcolumn, fendcolumn;
    int   numcolumns; // cached endcolumn - startcolumn
+};
 
-   // r_bsp.cpp
+struct bspcontext_t
+{
    // newend is one past the last valid seg
    cliprange_t *newend;
    cliprange_t *solidsegs;
@@ -55,9 +56,10 @@ struct rendercontext_t
    cliprange_t *addend;
 
    float *slopemark;
+};
 
-
-   // r_plane.cpp
+struct planecontext_t
+{
    visplane_t *floorplane, *ceilingplane;
    visplane_t *freetail;
    visplane_t **freehead = &freetail;
@@ -69,22 +71,22 @@ struct rendercontext_t
 
    // Free list of overlay portals. Used by portal windows and the post-BSP stack.
    planehash_t *r_overlayfreesets;
+};
 
-
-   // r_portal.cpp
+struct portalcontext_t
+{
    pwindow_t *unusedhead, *windowhead, *windowlast;
+};
 
-
-   // r_things.cpp
+struct spritecontext_t
+{
    // haleyjd 04/25/10: drawsegs optimization
    drawsegs_xrange_t *drawsegs_xrange;
-   unsigned int drawsegs_xrange_size;
-   int drawsegs_xrange_count;
+   unsigned int       drawsegs_xrange_size;
+   int                drawsegs_xrange_count;
 
    vissprite_t *vissprites, **vissprite_ptrs;  // killough
    size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
-
-   bool *sectorvisited;
 
    // SoM 12/13/03: the post-BSP stack
    poststack_t   *pstack;
@@ -92,6 +94,18 @@ struct rendercontext_t
    int            pstackmax;
    maskedrange_t *unusedmasked;
 
+   bool *sectorvisited;
+};
+
+struct rendercontext_t
+{
+   int   bufferindex;
+
+   contextbounds_t bounds;
+   bspcontext_t    bspcontext;
+   planecontext_t  planecontext;
+   portalcontext_t portalcontext;
+   spritecontext_t spritecontext;
 
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);

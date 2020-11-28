@@ -73,7 +73,9 @@
 //
 VALLOCATION(mainhash)
 {
-   R_ForEachContext([](rendercontext_t &context) {
+   R_ForEachContext([](rendercontext_t &basecontext) {
+      planecontext_t &context = basecontext.planecontext;
+
       context.freetail = nullptr;
       context.freehead = &context.freetail;
       context.floorplane = context.ceilingplane = nullptr;
@@ -488,10 +490,8 @@ planehash_t *R_NewPlaneHash(int chaincount)
 // Empties the chains of the given hash table and places the planes within 
 // in the free stack.
 //
-void R_ClearPlaneHash(rendercontext_t &context, planehash_t *table)
+void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table)
 {
-   visplane_t **&freehead = context.freehead;
-
    for(int i = 0; i < table->chaincount; i++)    // new code -- killough
    {
       for(*freehead = table->chains[i], table->chains[i] = nullptr; *freehead; )
@@ -503,12 +503,12 @@ void R_ClearPlaneHash(rendercontext_t &context, planehash_t *table)
 // Clears the arrays used to clip portal overlays. This function is called before the start of
 // each portal rendering.
 //
-void R_ClearOverlayClips(rendercontext_t &context)
+void R_ClearOverlayClips(const contextbounds_t &bounds)
 {
    int i;
 
    // opening / clipping determination
-   for(i = context.startcolumn; i < context.endcolumn; ++i)
+   for(i = bounds.startcolumn; i < bounds.endcolumn; ++i)
    {
       overlayfclip[i] = view.height - 1.0f;
       overlaycclip[i] = 0.0f;
@@ -520,7 +520,7 @@ void R_ClearOverlayClips(rendercontext_t &context)
 //
 // At begining of frame.
 //
-void R_ClearPlanes(rendercontext_t &context)
+void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 {
    int i;
    float a = 0.0f;
@@ -529,13 +529,13 @@ void R_ClearPlanes(rendercontext_t &context)
    ceilingclip = ceilingcliparray;
 
    // opening / clipping determination
-   for(i = context.startcolumn; i < context.endcolumn; ++i)
+   for(i = bounds.startcolumn; i < bounds.endcolumn; ++i)
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;
    }
 
-   R_ClearPlaneHash(context, &context.mainhash);
+   R_ClearPlaneHash(context.freehead, &context.mainhash);
 
    lastopening = openings;
 }
@@ -544,7 +544,7 @@ void R_ClearPlanes(rendercontext_t &context)
 //
 // New function, by Lee Killough
 //
-static visplane_t *new_visplane(rendercontext_t &context,
+static visplane_t *new_visplane(planecontext_t &context,
                                 unsigned hash, planehash_t *table)
 {
    visplane_t *&freetail  = context.freetail;
@@ -583,7 +583,7 @@ static visplane_t *new_visplane(rendercontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(rendercontext_t &context,
+visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
                         v2fixed_t offs, v2float_t scale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
@@ -649,8 +649,8 @@ visplane_t *R_FindPlane(rendercontext_t &context,
    check->picnum = picnum;
    check->lightlevel = lightlevel;
    // THREAD_TODO: Verify it should be these two values and not viewwindow.width and -1
-   check->minx = context.endcolumn;     // Was SCREENWIDTH -- killough 11/98
-   check->maxx = context.startcolumn - 1;
+   check->minx = bounds.endcolumn;     // Was SCREENWIDTH -- killough 11/98
+   check->maxx = bounds.startcolumn - 1;
    check->offs = offs;               // killough 2/28/98: Save offsets
    check->scale = scale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
@@ -708,7 +708,7 @@ visplane_t *R_FindPlane(rendercontext_t &context,
 // From PrBoom+
 // cph 2003/04/18 - create duplicate of existing visplane and set initial range
 //
-visplane_t *R_DupPlane(rendercontext_t &context, const visplane_t *pl, int start, int stop)
+visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop)
 {
    planehash_t *table = pl->table;
    unsigned hash = visplane_hash(pl->picnum, pl->lightlevel, pl->height, table->chaincount);
@@ -763,7 +763,7 @@ visplane_t *R_DupPlane(rendercontext_t &context, const visplane_t *pl, int start
 //
 // R_CheckPlane
 //
-visplane_t *R_CheckPlane(rendercontext_t &context, visplane_t *pl, int start, int stop)
+visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop)
 {
    int intrl, intrh, unionl, unionh, x;
    
@@ -826,10 +826,8 @@ static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_pla
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(rendercontext_t &context, visplane_t *pl)
+static void do_draw_newsky(void (*&colfunc)(cb_column_t &), visplane_t *pl)
 {
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
-
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
    
@@ -915,9 +913,9 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(rendercontext_t &context, visplane_t *pl)
+static void do_draw_plane(void (*&colfunc)(cb_column_t &), visplane_t *pl)
 {
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
+   void (*&colfunc)(cb_column_t &) = colfunc;
 
    int x;
 
@@ -927,7 +925,7 @@ static void do_draw_plane(rendercontext_t &context, visplane_t *pl)
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(context, pl);
+      do_draw_newsky(colfunc, pl);
       return;
    }
    
@@ -1179,25 +1177,25 @@ static void do_draw_plane(rendercontext_t &context, visplane_t *pl)
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(rendercontext_t &context, planehash_t *table)
+void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &), planehash_t *table)
 {
    visplane_t *pl;
    int i;
    
    if(!table)
-      table = &context.mainhash;
+      table = &mainhash;
    
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(context, pl);
+         do_draw_plane(colfunc, pl);
    }
 }
 
 VALLOCATION(overlaySets)
 {
-   R_ForEachContext([](rendercontext_t &context) {
-      for(planehash_t *set = context.r_overlayfreesets; set; set = set->next)
+   R_ForEachContext([](rendercontext_t &basecontext) {
+      for(planehash_t *set = basecontext.planecontext.r_overlayfreesets; set; set = set->next)
          memset(set->chains, 0, set->chaincount * sizeof(*set->chains));
    });
 }
@@ -1205,7 +1203,7 @@ VALLOCATION(overlaySets)
 //
 // Gets a free portal overlay plane set
 //
-planehash_t *R_NewOverlaySet(rendercontext_t &context)
+planehash_t *R_NewOverlaySet(planecontext_t &context)
 {
    planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
 
@@ -1217,17 +1215,15 @@ planehash_t *R_NewOverlaySet(rendercontext_t &context)
    }
    set = r_overlayfreesets;
    r_overlayfreesets = r_overlayfreesets->next;
-   R_ClearPlaneHash(context, set);
+   R_ClearPlaneHash(context.freehead, set);
    return set;
 }
 
 //
 // Puts the overlay set in the free list
 //
-void R_FreeOverlaySet(rendercontext_t &context, planehash_t *set)
+void R_FreeOverlaySet(planehash_t *&r_overlayfreesets, planehash_t *set)
 {
-   planehash_t *&r_overlayfreesets = context.r_overlayfreesets;
-
    set->next = r_overlayfreesets;
    r_overlayfreesets = set;
 }
@@ -1237,7 +1233,9 @@ void R_FreeOverlaySet(rendercontext_t &context, planehash_t *set)
 //
 void R_MapInitOverlaySets()
 {
-   R_ForEachContext([](rendercontext_t &context) {
+   R_ForEachContext([](rendercontext_t &basecontext) {
+      planecontext_t &context = basecontext.planecontext;
+
       context.r_overlayfreesets = nullptr;
    });
 }

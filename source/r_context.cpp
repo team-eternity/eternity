@@ -64,14 +64,14 @@ rendercontext_t &R_GetContext(int index)
 void R_freeContext(rendercontext_t &context)
 {
    // THREAD_FIXME: Verify this catches everything
-   if(context.drawsegs_xrange)
-      efree(context.drawsegs_xrange);
-   if(context.vissprites)
-      efree(context.vissprites);
-   if(context.vissprite_ptrs)
-      efree(context.vissprite_ptrs);
-   if(context.sectorvisited)
-      efree(context.sectorvisited);
+   if(context.spritecontext.drawsegs_xrange)
+      efree(context.spritecontext.drawsegs_xrange);
+   if(context.spritecontext.vissprites)
+      efree(context.spritecontext.vissprites);
+   if(context.spritecontext.vissprite_ptrs)
+      efree(context.spritecontext.vissprite_ptrs);
+   if(context.spritecontext.sectorvisited)
+      efree(context.spritecontext.sectorvisited);
 }
 
 //
@@ -83,10 +83,10 @@ void R_InitContexts(const int width)
 
    r_globalcontext = {};
    r_globalcontext.bufferindex  = -1;
-   r_globalcontext.startcolumn  = 0;
-   r_globalcontext.endcolumn    = width;
-   r_globalcontext.fstartcolumn = 0.0f;
-   r_globalcontext.fendcolumn   = static_cast<float>(width);
+   r_globalcontext.bounds.startcolumn  = 0;
+   r_globalcontext.bounds.endcolumn    = width;
+   r_globalcontext.bounds.fstartcolumn = 0.0f;
+   r_globalcontext.bounds.fendcolumn   = static_cast<float>(width);
 
    if(renderdatas)
    {
@@ -106,14 +106,14 @@ void R_InitContexts(const int width)
 
       context.bufferindex = currentcontext;
 
-      context.fstartcolumn = static_cast<float>(currentcontext)     * contextwidth;
-      context.fendcolumn   = static_cast<float>(currentcontext + 1) * contextwidth;
-      context.startcolumn  = static_cast<int>(roundf(context.fstartcolumn));
-      context.endcolumn    = static_cast<int>(roundf(context.fendcolumn));
-      context.numcolumns   = context.endcolumn - context.startcolumn;
+      context.bounds.fstartcolumn = static_cast<float>(currentcontext)     * contextwidth;
+      context.bounds.fendcolumn   = static_cast<float>(currentcontext + 1) * contextwidth;
+      context.bounds.startcolumn  = static_cast<int>(roundf(context.bounds.fstartcolumn));
+      context.bounds.endcolumn    = static_cast<int>(roundf(context.bounds.fendcolumn));
+      context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
 
       if(numsectors && gamestate == GS_LEVEL)
-         context.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+         context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
    }
 }
 
@@ -123,7 +123,7 @@ void R_RefreshContexts()
    {
       rendercontext_t &context = renderdatas[currentcontext].context;
 
-      context.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
    }
 }
 

@@ -1259,13 +1259,13 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    {
       rendercontext_t &context = R_GetContext(i);
 
-      memset(context.sectorvisited, 0, sizeof(bool) * numsectors);
+      memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
 
       // Clear buffers.
       // THREAD_TODO: Make these rendercontext_t methods?
       R_ClearClipSegs(context);
       R_ClearDrawSegs();
-      R_ClearPlanes(context);
+      R_ClearPlanes(context.planecontext, context.bounds);
       R_ClearPortals(context);
       R_ClearSprites(context);
 
@@ -1286,7 +1286,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // SoM 12/9/03: render the portals.
       R_RenderPortals(context);
 
-      R_DrawPlanes(context, nullptr);
+      R_DrawPlanes(context.planecontext.mainhash, context.colfunc, nullptr);
 
       // Check for new console commands.
       NetUpdate();

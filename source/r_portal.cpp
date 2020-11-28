@@ -106,7 +106,9 @@ VALLOCATION(portals)
       }
    }
 
-   R_ForEachContext([](rendercontext_t &context) {
+   R_ForEachContext([](rendercontext_t &basecontext) {
+      portalcontext_t &context = basecontext.portalcontext;
+
       // free portal window structures on the main list
       planehash_t *hash;
 
