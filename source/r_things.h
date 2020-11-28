@@ -35,6 +35,8 @@ struct planehash_t;
 struct pwindow_t;
 struct cb_column_t;
 struct rendercontext_t;
+struct spritecontext_t;
+struct contextbounds_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -61,10 +63,11 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(rendercontext_t &context, bool pushmasked, pwindow_t *window);
+void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
+                bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
-void R_SetMaskedSilhouette(const rendercontext_t &context,
+void R_SetMaskedSilhouette(const contextbounds_t &context,
                            const float *top, const float *bottom);
 
 struct cb_maskedcolumn_t;
@@ -75,10 +78,12 @@ void R_DrawNewMaskedColumn(const rendercontext_t &context,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn,
                            const float *const mfloorclip, const float *const mceilingclip);
-void R_AddSprites(rendercontext_t &context, sector_t *sec, int); // killough 9/18/98
+void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
+                  sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
-void R_ClearSprites(rendercontext_t &context);
-void R_DrawPostBSP(rendercontext_t &context);
+void R_ClearSprites(spritecontext_t &context);
+void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
+                   void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds);
 void R_DrawPlayerSprites();
 void R_ClearParticles(void);
 void R_InitParticles(void);
