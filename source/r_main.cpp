@@ -1275,7 +1275,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // The head node is the last node output.
       R_RenderBSPNode(
          context.bspcontext, context.planecontext, context.spritecontext,
-         context.portalcontext, context.bounds, numnodes - 1
+         context.portalcontext, context.colfunc, context.bounds, numnodes - 1
       );
 
       // Check for new console commands.
@@ -1287,7 +1287,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       R_PushPost(context.spritecontext, context.bounds, true, nullptr);
 
       // SoM 12/9/03: render the portals.
-      R_RenderPortals(context.portalcontext);
+      R_RenderPortals(
+         context.bspcontext, context.planecontext, context.portalcontext,
+         context.spritecontext, context.colfunc, context.bounds
+      );
 
       R_DrawPlanes(context.planecontext.mainhash, context.colfunc, nullptr);
 

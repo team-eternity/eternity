@@ -50,10 +50,8 @@ static float  *maskedtexturecol;
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), drawseg_t *ds, int x1, int x2)
 {
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
-
    texcol_t *col;
    int      lightnum;
    int      texnum;
@@ -193,7 +191,7 @@ void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
          R_DrawNewMaskedColumn(
-            context, column, maskedcolumn,
+            colfunc, column, maskedcolumn,
             textures[texnum], col, ds->sprbottomclip, ds->sprtopclip
          );
 
@@ -214,7 +212,8 @@ void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_column_t &),
+static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                            void (*const colfunc)(cb_column_t &),
                             const contextbounds_t &bounds, cb_seg_t &segclip)
 {
    int t, b, line;
@@ -241,9 +240,11 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      skyplane = R_FindPlane(context, bounds, viewz - 1, segclip.skyflat,
-                             144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr);
-      skyplane = R_CheckPlane(context, skyplane, segclip.x1, segclip.x2);
+      skyplane = R_FindPlane(
+         planecontext, bounds, viewz - 1, segclip.skyflat,
+         144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr
+      );
+      skyplane = R_CheckPlane(planecontext, skyplane, segclip.x1, segclip.x2);
    }
 
    // haleyjd 06/30/07: cardboard invuln fix.
@@ -284,7 +285,10 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
             
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
-               R_WindowAdd(context, segclip.secwindow.ceiling, i, (float)cliptop, (float)line);
+               R_WindowAdd(
+                  planecontext, portalcontext, bounds,
+                  segclip.secwindow.ceiling, i, (float)cliptop, (float)line
+               );
                ceilingclip[i] = (float)t;
             }
             else if(segclip.plane.ceiling && segclip.markflags & SEG_MARKCEILING)
@@ -321,7 +325,10 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
             
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
-               R_WindowAdd(context, segclip.secwindow.floor, i, (float)line, (float)clipbot);
+               R_WindowAdd(
+                  planecontext, portalcontext, bounds,
+                  segclip.secwindow.floor, i, (float)line, (float)clipbot
+               );
                floorclip[i] = (float)b;
             }
             else if(segclip.plane.floor && segclip.markflags & SEG_MARKFLOOR)
@@ -407,11 +414,17 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
                      
                   }
 
-                  R_WindowAdd(context, segclip.l_window, i, ceilingclip[i], floorclip[i]);
+                  R_WindowAdd(
+                     planecontext, portalcontext, bounds,
+                     segclip.l_window, i, ceilingclip[i], floorclip[i]
+                  );
                }
                else
                {
-                  R_WindowAdd(context, segclip.l_window, i, (float)t, (float)b);
+                  R_WindowAdd(
+                     planecontext, portalcontext, bounds,
+                     segclip.l_window, i, (float)t, (float)b
+                  );
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -440,7 +453,8 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
                column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(context,
+                  R_WindowAdd(
+                     planecontext, portalcontext, bounds,
                      segclip.t_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
@@ -481,7 +495,8 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
                column.y2 = b;
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(context,
+                  R_WindowAdd(
+                     planecontext, portalcontext, bounds,
                      segclip.b_window, i,
                      static_cast<float>(column.y1), static_cast<float>(column.y2)
                   );
@@ -518,7 +533,10 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
 
             if(segclip.l_window)
             {
-               R_WindowAdd(context, segclip.l_window, i, ceilingclip[i], floorclip[i]);
+               R_WindowAdd(
+                  planecontext, portalcontext, bounds,
+                  segclip.l_window, i, ceilingclip[i], floorclip[i]
+               );
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
@@ -536,7 +554,10 @@ static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_co
       }
       else if(segclip.l_window)
       {
-         R_WindowAdd(context, segclip.l_window, i, (float)t, (float)b);
+         R_WindowAdd(
+            planecontext, portalcontext, bounds,
+            segclip.l_window, i, (float)t, (float)b
+         );
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
@@ -615,7 +636,7 @@ static void R_CloseDSP(void)
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_detectClosedColumns(rendercontext_t &context, cb_seg_t &segclip)
+static void R_detectClosedColumns(bspcontext_t &context, cb_seg_t &segclip)
 {
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
@@ -735,13 +756,13 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 }
 
 //
-// R_StoreWallRange
-//
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-void R_StoreWallRange(planecontext_t &context, const cb_seg_t &seg,
-                      const int start, const int stop)
+void R_StoreWallRange(bspcontext_t &bspcontext,
+                      planecontext_t &planecontext, portalcontext_t &portalcontext,
+                      void (*const colfunc)(cb_column_t &), const contextbounds_t &bounds,
+                      const cb_seg_t &seg, const int start, const int stop)
 {
    float clipx1;
    float clipx2;
@@ -769,7 +790,7 @@ void R_StoreWallRange(planecontext_t &context, const cb_seg_t &seg,
    segclip.x2 = stop;
 
    if(segclip.plane.floor)
-      segclip.plane.floor = R_CheckPlane(context, segclip.plane.floor, start, stop);
+      segclip.plane.floor = R_CheckPlane(planecontext, segclip.plane.floor, start, stop);
 
    if(segclip.plane.ceiling)
    {
@@ -788,9 +809,9 @@ void R_StoreWallRange(planecontext_t &context, const cb_seg_t &seg,
       // duplication when it encounters the floorplane, not the ceilingplane like here.
 
       if(segclip.plane.ceiling == segclip.plane.floor)
-         segclip.plane.ceiling = R_DupPlane(context, segclip.plane.ceiling, start, stop);
+         segclip.plane.ceiling = R_DupPlane(planecontext, segclip.plane.ceiling, start, stop);
       else
-         segclip.plane.ceiling = R_CheckPlane(context, segclip.plane.ceiling, start, stop);
+         segclip.plane.ceiling = R_CheckPlane(planecontext, segclip.plane.ceiling, start, stop);
    }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
@@ -948,7 +969,7 @@ void R_StoreWallRange(planecontext_t &context, const cb_seg_t &seg,
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
-      R_renderSegLoop(context, segclip);
+      R_renderSegLoop(planecontext, portalcontext, colfunc, bounds, segclip);
    else
       R_storeTextureColumns(segclip);
    
@@ -1006,7 +1027,7 @@ void R_StoreWallRange(planecontext_t &context, const cb_seg_t &seg,
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_detectClosedColumns(context, segclip);
+      R_detectClosedColumns(bspcontext, segclip);
 
    ++ds_p;
 }

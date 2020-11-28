@@ -66,6 +66,7 @@ void R_ClearDrawSegs();
 
 void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
                      spritecontext_t &spritecontext, portalcontext_t &portalcontext,
+                     void (*&colfunc)(cb_column_t &),
                      const contextbounds_t &bounds, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:

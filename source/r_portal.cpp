@@ -165,7 +165,8 @@ VALLOCATION(portals)
 portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
 
 static void R_RenderPortalNOP(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                              spritecontext_t &spritecontext,
+                              portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                              void (*&colfunc)(cb_column_t &),
                               const contextbounds_t &bounds, pwindow_t *window)
 {
    I_Error("R_RenderPortalNOP called\n");
@@ -707,7 +708,8 @@ void R_InitPortals()
 // R_renderPlanePortal
 //
 static void R_renderPlanePortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                                spritecontext_t &spritecontext,
+                                portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                                void (*&colfunc)(cb_column_t &),
                                 const contextbounds_t &bounds, pwindow_t *window)
 {
    visplane_t *vplane;
@@ -791,14 +793,15 @@ static void R_renderPlanePortal(bspcontext_t &bspcontext, planecontext_t &planec
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_renderPlanePortal(bspcontext, planecontext, spritecontext, bounds, window->child);
+      R_renderPlanePortal(bspcontext, planecontext, portalcontext, spritecontext, colfunc, bounds, window->child);
 }
 
 //
 // R_renderHorizonPortal
 //
 static void R_renderHorizonPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                                  spritecontext_t &spritecontext,
+                                  portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                                  void (*&colfunc)(cb_column_t &),
                                   const contextbounds_t &bounds, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz; // SoM 3/10/2005
@@ -916,7 +919,7 @@ static void R_renderHorizonPortal(bspcontext_t &bspcontext, planecontext_t &plan
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_renderHorizonPortal(bspcontext, planecontext, spritecontext, bounds, window->child);
+      R_renderHorizonPortal(bspcontext, planecontext, portalcontext, spritecontext, colfunc, bounds, window->child);
 }
 
 //=============================================================================
@@ -930,7 +933,8 @@ extern void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindow
 // R_renderSkyboxPortal
 //
 static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                                 spritecontext_t &spritecontext,
+                                 portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                                 void (*&colfunc)(cb_column_t &),
                                  const contextbounds_t &bounds, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz, lastangle;
@@ -1000,7 +1004,7 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
    view.cos = (float)cos(view.angle);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(bspcontext, planecontext, spritecontext, bounds, numnodes - 1);
+   R_RenderBSPNode(bspcontext, planecontext, spritecontext, portalcontext, colfunc, bounds, numnodes - 1);
    
    // Only push the overlay if this is the head window
    R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
@@ -1024,7 +1028,7 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_renderSkyboxPortal(bspcontext, planecontext, spritecontext, bounds, window->child);
+      R_renderSkyboxPortal(bspcontext, planecontext, portalcontext, spritecontext, colfunc, bounds, window->child);
 }
 
 //=============================================================================
@@ -1111,7 +1115,8 @@ static void R_showTainted(planecontext_t &context, const contextbounds_t &bounds
 // R_renderAnchoredPortal
 //
 static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                                   spritecontext_t &spritecontext,
+                                   portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                                   void (*&colfunc)(cb_column_t &),
                                    const contextbounds_t &bounds, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
@@ -1197,7 +1202,7 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
    view.cos = cosf(view.angle);
 
    R_IncrementFrameid();
-   R_RenderBSPNode(bspcontext, planecontext, spritecontext, bounds, numnodes - 1);
+   R_RenderBSPNode(bspcontext, planecontext, spritecontext, portalcontext, colfunc, bounds, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
@@ -1220,11 +1225,12 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_renderAnchoredPortal(bspcontext, planecontext, spritecontext, bounds, window->child);
+      R_renderAnchoredPortal(bspcontext, planecontext, portalcontext, spritecontext, colfunc, bounds, window->child);
 }
 
 static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                                 spritecontext_t &spritecontext,
+                                 portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                                 void (*&colfunc)(cb_column_t &),
                                  const contextbounds_t &bounds, pwindow_t *window)
 {
    fixed_t lastx, lasty, lastz;
@@ -1309,7 +1315,7 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
    }
 
    R_IncrementFrameid();
-   R_RenderBSPNode(bspcontext, planecontext, spritecontext, bounds, numnodes - 1);
+   R_RenderBSPNode(bspcontext, planecontext, spritecontext, portalcontext, colfunc, bounds, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
@@ -1331,7 +1337,7 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
    view.cos = (float)cos(view.angle);
 
    if(window->child)
-      R_renderLinkedPortal(bspcontext, planecontext, spritecontext, bounds, window->child);
+      R_renderLinkedPortal(bspcontext, planecontext, portalcontext, spritecontext, colfunc, bounds, window->child);
 }
 
 //
@@ -1546,8 +1552,7 @@ void R_ClearPortals(visplane_t **&freehead)
 //
 void R_RenderPortals(bspcontext_t &bspcontext, planecontext_t &planecontext,
                      portalcontext_t &portalcontext, spritecontext_t &spritecontext,
-                     const contextbounds_t &bounds,
-                     portal_t *portal, const seg_t *seg)
+                     void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds)
 {
    pwindow_t *&windowhead = portalcontext.windowhead;
    pwindow_t *&unusedhead = portalcontext.unusedhead;
@@ -1562,7 +1567,7 @@ void R_RenderPortals(bspcontext_t &bspcontext, planecontext_t &planecontext,
 //      portalrender.overlay = windowhead->portal->poverlay;
 
       if(windowhead->maxx >= windowhead->minx)
-         windowhead->func(bspcontext, planecontext, spritecontext, bounds, windowhead);
+         windowhead->func(bspcontext, planecontext, portalcontext, spritecontext, colfunc, bounds, windowhead);
 
       portalrender.active = false;
       portalrender.w = nullptr;

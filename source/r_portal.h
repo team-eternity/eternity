@@ -217,7 +217,9 @@ portal_t *R_GetPlanePortal(const sector_t *sector);
 void R_MovePortalOverlayToWindow(planecontext_t &context, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf);
 void R_ClearPortals(visplane_t **&freehead);
-void R_RenderPortals(portalcontext_t &context);
+void R_RenderPortals(bspcontext_t &bspcontext, planecontext_t &planecontext,
+                     portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                     void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
@@ -256,9 +258,12 @@ enum pwindowtype_e
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
 using R_WindowFunc = void (*)(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                              spritecontext_t &spritecontext, const contextbounds_t &bounds,
-                              pwindow_t *window);
+                              portalcontext_t &portalcontext, spritecontext_t &spritecontext,
+                              void (*&colfunc)(cb_column_t &),
+                              const contextbounds_t &bounds, pwindow_t *window);
 using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, planecontext_t &planecontext,
+                               portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                               const contextbounds_t &bounds,
                                const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
@@ -335,7 +340,9 @@ struct pwindow_t
 };
 
 // SoM: Cardboard
-void R_WindowAdd(rendercontext_t &context, pwindow_t *window, int x, float ytop, float ybottom);
+void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                 const contextbounds_t &bounds,
+                 pwindow_t *window, int x, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
                                    const contextbounds_t &bounds, surf_e surf, const surface_t &surface);
@@ -351,7 +358,9 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)(bspcontext_t &, planecontext_t &, const cb_seg_t &);
+   void (*segClipFunc)(bspcontext_t &, planecontext_t &,
+                       portalcontext_t &, void (*&)(cb_column_t &),
+                       const contextbounds_t &, const cb_seg_t &);
 
 //   planehash_t *overlay;
 };

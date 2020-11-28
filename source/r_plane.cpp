@@ -915,8 +915,6 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 //
 static void do_draw_plane(void (*&colfunc)(cb_column_t &), visplane_t *pl)
 {
-   void (*&colfunc)(cb_column_t &) = colfunc;
-
    int x;
 
    if(!(pl->minx <= pl->maxx))

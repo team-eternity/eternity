@@ -1605,7 +1605,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
             {
                r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-               R_RenderMaskedSegRange(context, ds, r1, r2);
+               R_RenderMaskedSegRange(colfunc, ds, r1, r2);
             }
             continue;                // seg is behind sprite
          }
@@ -1667,7 +1667,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
             !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
          {
             if(ds->maskedtexturecol) // masked mid texture?
-               R_RenderMaskedSegRange(context, ds, r1, r2);
+               R_RenderMaskedSegRange(colfunc, ds, r1, r2);
             continue;                // seg is behind sprite
          }
 
@@ -1887,7 +1887,7 @@ void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(context, ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(colfunc, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
