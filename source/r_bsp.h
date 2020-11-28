@@ -33,6 +33,7 @@ struct seg_t;
 struct sector_t;
 struct side_t;
 struct rendercontext_t;
+struct bspcontext_t;
 
 extern seg_t    *curline;
 extern side_t   *sidedef;
@@ -51,15 +52,17 @@ extern drawseg_t *ds_p;
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
-void R_MarkSolidSeg(rendercontext_t &context, int x1, int x2);
+void R_MarkSolidSeg(bspcontext_t &context, int x1, int x2);
 
-bool R_SetupPortalClipsegs(rendercontext_t &context,
+bool R_SetupPortalClipsegs(bspcontext_t &context, const  contextbounds_t &bounds,
    int minx, int maxx, const float *top, const float *bottom);
 
-void R_ClearClipSegs(rendercontext_t &context);
+void R_ClearClipSegs(bspcontext_t &context);
 void R_ClearDrawSegs();
 
-void R_RenderBSPNode(rendercontext_t &context, int bspnum);
+void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
+                     spritecontext_t &spritecontext, const contextbounds_t &bounds,
+                     int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);

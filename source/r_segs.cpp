@@ -214,10 +214,9 @@ void R_RenderMaskedSegRange(rendercontext_t &context, drawseg_t *ds, int x1, int
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_renderSegLoop(rendercontext_t &context, cb_seg_t &segclip)
+static void R_renderSegLoop(planecontext_t &context, void (*const colfunc)(cb_column_t &),
+                            const contextbounds_t &bounds, cb_seg_t &segclip)
 {
-   void (*colfunc)(cb_column_t &) = context.colfunc;
-
    int t, b, line;
    int cliptop, clipbot;
    int i;
@@ -227,7 +226,7 @@ static void R_renderSegLoop(rendercontext_t &context, cb_seg_t &segclip)
    cb_column_t column = {};
 
 #ifdef RANGECHECK
-   if(segclip.x1 < context.startcolumn || segclip.x2 >= context.endcolumn || segclip.x1 > segclip.x2)
+   if(segclip.x1 < bounds.startcolumn || segclip.x2 >= bounds.endcolumn || segclip.x1 > segclip.x2)
    {
       I_Error("R_renderSegLoop: invalid seg x values!\n"
               "   x1 = %d, x2 = %d, linenum = %d\n", 
@@ -242,7 +241,7 @@ static void R_renderSegLoop(rendercontext_t &context, cb_seg_t &segclip)
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      skyplane = R_FindPlane(context, viewz - 1, segclip.skyflat,
+      skyplane = R_FindPlane(context, bounds, viewz - 1, segclip.skyflat,
                              144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr);
       skyplane = R_CheckPlane(context, skyplane, segclip.x1, segclip.x2);
    }
@@ -741,7 +740,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-void R_StoreWallRange(rendercontext_t &context, const cb_seg_t &seg,
+void R_StoreWallRange(planecontext_t &context, const cb_seg_t &seg,
                       const int start, const int stop)
 {
    float clipx1;

@@ -67,14 +67,14 @@ void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
                 bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
-void R_SetMaskedSilhouette(const contextbounds_t &context,
+void R_SetMaskedSilhouette(const contextbounds_t &bounds,
                            const float *top, const float *bottom);
 
 struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
-void R_DrawNewMaskedColumn(const rendercontext_t &context,
+void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn,
                            const float *const mfloorclip, const float *const mceilingclip);

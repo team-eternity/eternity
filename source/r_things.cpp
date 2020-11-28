@@ -664,7 +664,7 @@ static void R_drawMaskedColumn(void (*&colfunc)(cb_column_t &),
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(const rendercontext_t &context,
+void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *const tex, const texcol_t *tcol,
                            const float *const mfloorclip, const float *const mceilingclip)
@@ -705,7 +705,7 @@ void R_DrawNewMaskedColumn(const rendercontext_t &context,
 
          // Drawn by either R_DrawColumn
          //  or (SHADOW) R_DrawFuzzColumn.
-         context.colfunc(column);
+         colfunc(column);
          if(last < texend && last > tex->bufferdata)
             *last = orig;
          localstart[-1] = origstart;

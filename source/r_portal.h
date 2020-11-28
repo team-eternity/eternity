@@ -249,8 +249,9 @@ enum pwindowtype_e
 
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
-typedef void (*R_WindowFunc)(rendercontext_t &context, pwindow_t *);
-typedef void (*R_ClipSegFunc)(rendercontext_t &context, const cb_seg_t &seg);
+using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *);
+using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, planecontext_t &planecontext,
+                               const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
 
@@ -340,7 +341,7 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)(rendercontext_t &context, const cb_seg_t &);
+   void (*segClipFunc)(bspcontext_t &, planecontext_t &, const cb_seg_t &);
 
 //   planehash_t *overlay;
 };
