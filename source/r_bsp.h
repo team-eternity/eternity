@@ -34,6 +34,9 @@ struct sector_t;
 struct side_t;
 struct rendercontext_t;
 struct bspcontext_t;
+struct planecontext_t;
+struct spritecontext_t;
+struct contextbounds_t;
 
 extern seg_t    *curline;
 extern side_t   *sidedef;

@@ -37,6 +37,7 @@ struct cb_column_t;
 struct rendercontext_t;
 struct spritecontext_t;
 struct contextbounds_t;
+struct planecontext_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
