@@ -290,8 +290,8 @@ void R_SetMaskedSilhouette(const rendercontext_t &context,
    }
    else
    {
-      memcpy(portaltop    + context.startcolumn, top,    sizeof(*portaltop   ) * context.numcolumns);
-      memcpy(portalbottom + context.startcolumn, bottom, sizeof(*portalbottom) * context.numcolumns);
+      memcpy(portaltop    + context.startcolumn, top    + context.startcolumn, sizeof(*portaltop   ) * context.numcolumns);
+      memcpy(portalbottom + context.startcolumn, bottom + context.startcolumn, sizeof(*portalbottom) * context.numcolumns);
    }
 }
 
@@ -1185,11 +1185,11 @@ void R_AddSprites(rendercontext_t &context, sector_t* sec, int lightlevel)
    //  subsectors during BSP building.
    // Thus we check whether its already added.
 
-   if(sec->validcount == validcount)
+   if(context.sectorvisited[sec - sectors])
       return;
    
    // Well, now it will be done.
-   sec->validcount = validcount;
+   context.sectorvisited[sec - sectors] = true;
    
    lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
    

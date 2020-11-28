@@ -529,7 +529,7 @@ void R_ClearPlanes(rendercontext_t &context)
    ceilingclip = ceilingcliparray;
 
    // opening / clipping determination
-   for(i = 0; i < video.width; ++i)
+   for(i = context.startcolumn; i < context.endcolumn; ++i)
    {
       floorclip[i] = overlayfclip[i] = view.height - 1.0f;
       ceilingclip[i] = overlaycclip[i] = a;
@@ -567,9 +567,10 @@ static visplane_t *new_visplane(rendercontext_t &context,
    {
       int *paddedTop, *paddedBottom;
 
-      check->max_width = static_cast<unsigned int>(context.numcolumns);
-      paddedTop        = ecalloctag(int *, 2 * (context.numcolumns + 2), sizeof(int), PU_VALLOC, nullptr);
-      paddedBottom     = paddedTop + context.numcolumns + 2;
+      // THREAD_TODO: Try make this use context.numcolumns again
+      check->max_width = static_cast<unsigned int>(video.width);
+      paddedTop        = ecalloctag(int *, 2 * (video.width + 2), sizeof(int), PU_VALLOC, nullptr);
+      paddedBottom     = paddedTop + video.width + 2;
 
       check->top    = paddedTop    + 1;
       check->bottom = paddedBottom + 1;
@@ -647,6 +648,7 @@ visplane_t *R_FindPlane(rendercontext_t &context,
    check->height = height;
    check->picnum = picnum;
    check->lightlevel = lightlevel;
+   // THREAD_TODO: Verify it should be these two values and not viewwindow.width and -1
    check->minx = context.endcolumn;     // Was SCREENWIDTH -- killough 11/98
    check->maxx = context.startcolumn - 1;
    check->offs = offs;               // killough 2/28/98: Save offsets

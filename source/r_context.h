@@ -84,6 +84,8 @@ struct rendercontext_t
    vissprite_t *vissprites, **vissprite_ptrs;  // killough
    size_t num_vissprite, num_vissprite_alloc, num_vissprite_ptrs;
 
+   bool *sectorvisited;
+
    // SoM 12/13/03: the post-BSP stack
    poststack_t   *pstack;
    int            pstacksize;
@@ -105,6 +107,7 @@ inline int r_numcontexts = 0;
 rendercontext_t &R_GetContext(int context);
 
 void R_InitContexts(const int width);
+void R_RefreshContexts();
 
 template<typename F>
 void R_ForEachContext(F &&f)

@@ -1085,8 +1085,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    R_ForEachContext([](rendercontext_t &context) {
       context.colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
    });
-
-   ++validcount;
 }
 
 //
@@ -1237,26 +1235,13 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    bool quake = false;
    unsigned int savedflags = 0;
 
-   rendercontext_t &context = R_GetContext(0); // THREAD_FIXME
-
    R_SetupFrame(player, camerapoint);
 
    // haleyjd: untaint portals
    R_UntaintPortals();
 
-   // Clear buffers.
-   // THREAD_TODO: Make these rendercontext_t methods?
-   R_ClearClipSegs(context);
-   R_ClearDrawSegs();
-   R_ClearPlanes(context);
-   R_ClearPortals(context);
-   R_ClearSprites(context);
-
    if(autodetect_hom)
       R_HOMdrawer();
-   
-   // check for new console commands.
-   NetUpdate();
 
    // haleyjd 01/21/07: earthquakes -- make player invisible to himself
    if(player->quake && !camerapoint)
@@ -1269,31 +1254,47 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
-   // The head node is the last node output.
-   R_RenderBSPNode(context, numnodes - 1);
 
-   if(quake)
-      player->mo->flags2 = savedflags;
-   
-   // Check for new console commands.
-   NetUpdate();
+   for(int i = 0; i < r_numcontexts; i++)
+   {
+      rendercontext_t &context = R_GetContext(i);
 
-   R_SetMaskedSilhouette(context, nullptr, nullptr);
-   
-   // Push the first element on the Post-BSP stack
-   R_PushPost(context, true, nullptr);
-   
-   // SoM 12/9/03: render the portals.
-   R_RenderPortals(context);
+      memset(context.sectorvisited, 0, sizeof(bool) * numsectors);
 
-   R_DrawPlanes(context, nullptr);
-   
-   // Check for new console commands.
-   NetUpdate();
+      // Clear buffers.
+      // THREAD_TODO: Make these rendercontext_t methods?
+      R_ClearClipSegs(context);
+      R_ClearDrawSegs();
+      R_ClearPlanes(context);
+      R_ClearPortals(context);
+      R_ClearSprites(context);
 
-   // Draw Post-BSP elements such as sprites, masked textures, and portal 
-   // overlays
-   R_DrawPostBSP(context);
+      // check for new console commands.
+      NetUpdate();
+
+      // The head node is the last node output.
+      R_RenderBSPNode(context, numnodes - 1);
+
+      // Check for new console commands.
+      NetUpdate();
+
+      R_SetMaskedSilhouette(context, nullptr, nullptr);
+
+      // Push the first element on the Post-BSP stack
+      R_PushPost(context, true, nullptr);
+
+      // SoM 12/9/03: render the portals.
+      R_RenderPortals(context);
+
+      R_DrawPlanes(context, nullptr);
+
+      // Check for new console commands.
+      NetUpdate();
+
+      // Draw Post-BSP elements such as sprites, masked textures, and portal
+      // overlays
+      R_DrawPostBSP(context);
+   }
 
    // draw the psprites on top of everything
    //  but does not draw on side views
@@ -1303,6 +1304,9 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
+
+   if(quake)
+      player->mo->flags2 = savedflags;
 
    // haleyjd: remove sector interpolations
    if(view.lerp != FRACUNIT)

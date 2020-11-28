@@ -353,10 +353,10 @@ static void R_clipPassWallSegment(rendercontext_t &context, const cb_seg_t &seg,
 //
 void R_ClearClipSegs(rendercontext_t &context)
 {
-   context.solidsegs[context.startcolumn].first     = D_MININT + 1;
-   context.solidsegs[context.startcolumn].last      = context.startcolumn - 1;
-   context.solidsegs[context.startcolumn + 1].first = context.endcolumn;
-   context.solidsegs[context.startcolumn + 1].last  = D_MAXINT - 1;
+   context.solidsegs[0].first     = D_MININT + 1;
+   context.solidsegs[0].last      = -1;
+   context.solidsegs[1].first = viewwindow.width;
+   context.solidsegs[1].last  = D_MAXINT - 1;
    context.newend = context.solidsegs+2;
    context.addend = context.addedsegs;
 }
