@@ -636,7 +636,9 @@ static void R_CloseDSP(void)
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_detectClosedColumns(bspcontext_t &context, cb_seg_t &segclip)
+static void R_detectClosedColumns(bspcontext_t &context,
+                                  [[maybe_unused]] const contextbounds_t &bounds,
+                                  cb_seg_t &segclip)
 {
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
@@ -690,8 +692,8 @@ static void R_detectClosedColumns(bspcontext_t &context, cb_seg_t &segclip)
 
       // from startx to i - 1 is solid.
 #ifdef RANGECHECK
-      if(startx > i - 1 || startx < context.startcolumn || i - 1 >= context.endcolumn ||
-         startx >= context.endcolumn || i - 1 < context.startcolumn)
+      if(startx > i - 1 || startx < bounds.startcolumn || i - 1 >= bounds.endcolumn ||
+         startx >= bounds.endcolumn || i - 1 < bounds.startcolumn)
          I_Error("R_detectClosedColumns: bad range %i, %i\n", startx, i - 1);
 #endif
 
@@ -1027,7 +1029,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext,
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_detectClosedColumns(bspcontext, segclip);
+      R_detectClosedColumns(bspcontext, bounds, segclip);
 
    ++ds_p;
 }
