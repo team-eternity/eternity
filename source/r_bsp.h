@@ -37,6 +37,7 @@ struct bspcontext_t;
 struct planecontext_t;
 struct spritecontext_t;
 struct contextbounds_t;
+struct portalcontext_t;
 
 extern seg_t    *curline;
 extern side_t   *sidedef;
@@ -64,8 +65,8 @@ void R_ClearClipSegs(bspcontext_t &context);
 void R_ClearDrawSegs();
 
 void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                     spritecontext_t &spritecontext, const contextbounds_t &bounds,
-                     int bspnum);
+                     spritecontext_t &spritecontext, portalcontext_t &portalcontext,
+                     const contextbounds_t &bounds, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);

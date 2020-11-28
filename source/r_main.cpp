@@ -1263,28 +1263,31 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
       // Clear buffers.
       // THREAD_TODO: Make these rendercontext_t methods?
-      R_ClearClipSegs(context);
+      R_ClearClipSegs(context.bspcontext);
       R_ClearDrawSegs();
       R_ClearPlanes(context.planecontext, context.bounds);
-      R_ClearPortals(context);
-      R_ClearSprites(context);
+      R_ClearPortals(context.planecontext.freehead);
+      R_ClearSprites(context.spritecontext);
 
       // check for new console commands.
       NetUpdate();
 
       // The head node is the last node output.
-      R_RenderBSPNode(context, numnodes - 1);
+      R_RenderBSPNode(
+         context.bspcontext, context.planecontext, context.spritecontext,
+         context.portalcontext, context.bounds, numnodes - 1
+      );
 
       // Check for new console commands.
       NetUpdate();
 
-      R_SetMaskedSilhouette(context, nullptr, nullptr);
+      R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
       // Push the first element on the Post-BSP stack
-      R_PushPost(context, true, nullptr);
+      R_PushPost(context.spritecontext, context.bounds, true, nullptr);
 
       // SoM 12/9/03: render the portals.
-      R_RenderPortals(context);
+      R_RenderPortals(context.portalcontext);
 
       R_DrawPlanes(context.planecontext.mainhash, context.colfunc, nullptr);
 
@@ -1293,7 +1296,9 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
 
       // Draw Post-BSP elements such as sprites, masked textures, and portal
       // overlays
-      R_DrawPostBSP(context);
+      R_DrawPostBSP(
+         context.spritecontext, context.planecontext, context.colfunc, context.bounds
+      );
    }
 
    // draw the psprites on top of everything
