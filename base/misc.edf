@@ -89,13 +89,15 @@ compatibilityhacks
 }
 
 # comp_model solves the "shortest lower texture" ambiguity
-# NOTE: the following levels have harmless changes:
-# - sudtic e2m6
-# - teutic e3m4
 compatibilityhacks
 {
   hashes
-  941E4CB56EE4184E0B1ED43486AB0BBF  // av map07
+  941E4CB56EE4184E0B1ED43486AB0BBF, // av map07
+  9F2BE080A33F775294BD78822456924E, // nukemine (doom) e1m4
+  CD31793D3A4B00231B124C0C23649644, // strain map02
+  19094AEB53D12EFC8E0568424F659F11, // strain map31
+  0EECBF37B328C9CAAF20DED4949A4157, // sudtic e2m6
+  4ACE0644883BDA0CBA254FA02C9ACF83  // teutic e3m4
 
   on comp_model
 }
