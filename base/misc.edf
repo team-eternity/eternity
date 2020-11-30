@@ -77,6 +77,8 @@ endif()
 #
 # Gameplay compatibility for maps which didn't have certain settings
 #
+
+# enable jumping for mods before this was disabled by default
 compatibilityhacks
 {
   hashes
@@ -84,4 +86,13 @@ compatibilityhacks
   866A8726DC29E29AF8CFF691513D02EE  // vaprdemo map01
 
   off comp_jump
+}
+
+# comp_model solves the "shortest lower texture" ambiguity
+compatibilityhacks
+{
+  hashes
+  A779A6194E26DFDB2C40513CD62C7370  // av map07
+
+  on comp_model
 }
