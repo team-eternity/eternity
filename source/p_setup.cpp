@@ -3606,7 +3606,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior);
 
    if(isUdmf || demo_version >= 401)
    {

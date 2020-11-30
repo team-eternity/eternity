@@ -82,8 +82,8 @@ endif()
 compatibilityhacks
 {
   hashes
-  7D97556143568B497B84119F99E83962, // e2l11 map01
-  866A8726DC29E29AF8CFF691513D02EE  // vaprdemo map01
+  22A66807262CF8D8C75061B6914F7758, // e2l11 map01
+  ADC5B1D395B0267C4BFE6BDEF3E8C12F  // vaprdemo map01
 
   off comp_jump
 }
@@ -92,7 +92,7 @@ compatibilityhacks
 compatibilityhacks
 {
   hashes
-  A779A6194E26DFDB2C40513CD62C7370  // av map07
+  941E4CB56EE4184E0B1ED43486AB0BBF  // av map07
 
   on comp_model
 }
