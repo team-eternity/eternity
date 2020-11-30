@@ -104,7 +104,8 @@ compatibilityhacks
 compatibilityhacks
 {
   hashes
-  C749D8A5B6C5FC3B37CAE3617FC7C402  // aoddoom1 e3m5
+  C749D8A5B6C5FC3B37CAE3617FC7C402, // aoddoom1, aodtcup1 e3m5, aoddoom2 map05
+  F24F25C6572F3399BA700A1C2592CE6A  // aodtclv1 e3m5
 
   on sts_traditional_keys
 }
