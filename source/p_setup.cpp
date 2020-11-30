@@ -3495,8 +3495,6 @@ static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool 
 {
    p_currentLevelHashDigest.clear();
    E_RestoreCompatibilities();
-   if(demo_version < 401)
-      return;  // never do this for old demo versions
    HashData md5(HashData::MD5);
    ZAutoBuffer buf;
 

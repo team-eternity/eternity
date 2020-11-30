@@ -99,3 +99,12 @@ compatibilityhacks
 
   on comp_model
 }
+
+# Some mods expect the skull key graphics to override the keycards
+compatibilityhacks
+{
+  hashes
+  C749D8A5B6C5FC3B37CAE3617FC7C402  // aoddoom1 e3m5
+
+  on sts_traditional_keys
+}

@@ -34,6 +34,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_compatibility.h"
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_weapons.h"
@@ -721,7 +722,7 @@ static void ST_updateWidgets()
       
       amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
       if(amount > 0)
-         keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
+         keyboxes[i] = ((keyboxes[i] == -1 || E_Get(overridableSetting_stsTraditionalKeys)) ? i + 3 : i + 6);
    }
 
    // used by the w_armsbg widget
