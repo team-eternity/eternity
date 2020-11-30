@@ -30,6 +30,15 @@ compatibilityhacks
   on comp_model
 }
 
+# Pain elemental lost soul limit
+compatibilityhacks
+{
+  hashes
+  811A0C97777A198BC9B2BB558CB46E6A  // hr map19
+
+  on comp_pain
+}
+
 # Necessary ghosts
 compatibilityhacks
 {
