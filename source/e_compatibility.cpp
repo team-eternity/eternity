@@ -54,7 +54,7 @@ cfg_opt_t edf_compatibility_opts[] =
    CFG_END()
 };
 
-static int s_overriden[NUM_overridableSetting];
+static int s_overridden[NUM_overridableSetting];
 static bool s_overrideEnabled[NUM_overridableSetting];
 static int *const sk_overrideTarget[NUM_overridableSetting] =
 {
@@ -135,7 +135,7 @@ void E_RestoreCompatibilities()
 {
    memset(level_compat_comp, 0, sizeof(level_compat_comp));
    memset(level_compat_compactive, 0, sizeof(level_compat_compactive));
-   memset(s_overriden, 0, sizeof(s_overriden));
+   memset(s_overridden, 0, sizeof(s_overridden));
    memset(s_overrideEnabled, 0, sizeof(s_overrideEnabled));
 }
 
@@ -152,7 +152,7 @@ static void E_setItem(const char *name, bool enable)
    if(!strcasecmp(name, "sts_traditional_keys"))
    {
       s_overrideEnabled[overridableSetting_stsTraditionalKeys] = true;
-      s_overriden[overridableSetting_stsTraditionalKeys] = enable ? 1 : 0;
+      s_overridden[overridableSetting_stsTraditionalKeys] = enable ? 1 : 0;
       return;
    }
 
@@ -196,7 +196,7 @@ void E_ApplyCompatibility(const char *digest)
 //
 int E_Get(overridableSetting_e setting)
 {
-   return s_overrideEnabled[setting] ? s_overriden[setting] : *sk_overrideTarget[setting];
+   return s_overrideEnabled[setting] ? s_overridden[setting] : *sk_overrideTarget[setting];
 }
 
 // EOF
