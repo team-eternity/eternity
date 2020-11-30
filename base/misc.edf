@@ -89,6 +89,8 @@ compatibilityhacks
 }
 
 # comp_model solves the "shortest lower texture" ambiguity
+# NOTE: the following levels have harmless changes:
+# - sudtic e2m6
 compatibilityhacks
 {
   hashes
