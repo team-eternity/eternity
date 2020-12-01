@@ -781,6 +781,7 @@ static void R_clipSegToFPortal(bspcontext_t &bspcontext, planecontext_t &planeco
                                const cb_seg_t &seg)
 {
    float                *&slopemark    = bspcontext.slopemark;
+   float           *const floorclip    = planecontext.floorclip;
    const portalrender_t  &portalrender = portalcontext.portalrender;
 
    int i, startx;
@@ -870,7 +871,8 @@ static void R_clipSegToCPortal(bspcontext_t &bspcontext, planecontext_t &planeco
                                const contextbounds_t &bounds,
                                const cb_seg_t &seg)
 {
-   float                *&slopemark = bspcontext.slopemark;
+   float                *&slopemark    = bspcontext.slopemark;
+   float           *const ceilingclip  = planecontext.ceilingclip;
    const portalrender_t  &portalrender = portalcontext.portalrender;
 
    int i, startx;
@@ -955,6 +957,8 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
                                const contextbounds_t &bounds,
                                const cb_seg_t &seg)
 {
+   float          *const floorclip    = planecontext.floorclip;
+   float          *const ceilingclip  = planecontext.ceilingclip;
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    int i, startx;

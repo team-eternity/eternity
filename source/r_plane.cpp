@@ -111,17 +111,21 @@ VALLOCATION(openings)
 //  floorclip starts out SCREENHEIGHT
 //  ceilingclip starts out -1
 
-// SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
-// to the clipping arrays of portals.
 float *floorcliparray, *ceilingcliparray;
-float *floorclip, *ceilingclip;
 
 VALLOCATION(floorcliparray)
 {
    float *buffer = ecalloctag(float *, w*2, sizeof(float), PU_VALLOC, nullptr);
 
-   floorclip   = floorcliparray   = buffer;
-   ceilingclip = ceilingcliparray = buffer + w;
+   floorcliparray   = buffer;
+   ceilingcliparray = buffer + w;
+
+   R_ForEachContext([](rendercontext_t &basecontext) {
+      planecontext_t &context = basecontext.planecontext;
+
+      context.floorclip   = floorcliparray;
+      context.ceilingclip = ceilingcliparray;
+   });
 }
 
 // SoM: We have to use secondary clipping arrays for portal overlays
@@ -525,14 +529,14 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
    int i;
    float a = 0.0f;
 
-   floorclip   = floorcliparray;
-   ceilingclip = ceilingcliparray;
+   context.floorclip   = floorcliparray;
+   context.ceilingclip = ceilingcliparray;
 
    // opening / clipping determination
    for(i = bounds.startcolumn; i < bounds.endcolumn; ++i)
    {
-      floorclip[i] = overlayfclip[i] = view.height - 1.0f;
-      ceilingclip[i] = overlaycclip[i] = a;
+      context.floorclip[i]   = overlayfclip[i] = view.height - 1.0f;
+      context.ceilingclip[i] = overlaycclip[i] = a;
    }
 
    R_ClearPlaneHash(context.freehead, &context.mainhash);

@@ -962,8 +962,8 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
 
    R_ClearSlopeMark(bspcontext.slopemark, window->minx, window->maxx, window->type);
 
-   floorclip   = window->bottom;
-   ceilingclip = window->top;
+   planecontext.floorclip   = window->bottom;
+   planecontext.ceilingclip = window->top;
 
    R_ClearOverlayClips(bounds);
 
@@ -971,7 +971,7 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, ceilingclip, floorclip);
+   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx = viewx;
    lasty = viewy;
@@ -1004,8 +1004,8 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
    // Only push the overlay if this is the head window
    R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
 
-   floorclip   = floorcliparray;
-   ceilingclip = ceilingcliparray;
+   planecontext.floorclip   = floorcliparray;
+   planecontext.ceilingclip = ceilingcliparray;
 
    // SoM: "pop" the view state.
    viewx = lastx;
@@ -1159,8 +1159,8 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
    // haleyjd: temporary debug
    portal->tainted++;
 
-   floorclip   = window->bottom;
-   ceilingclip = window->top;
+   planecontext.floorclip   = window->bottom;
+   planecontext.ceilingclip = window->top;
 
    R_ClearOverlayClips(bounds);
    
@@ -1168,7 +1168,7 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, ceilingclip, floorclip);
+   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx = viewx;
    lasty = viewy;
@@ -1203,8 +1203,8 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
    // Only push the overlay if this is the head window
    R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
 
-   floorclip = floorcliparray;
-   ceilingclip = ceilingcliparray;
+   planecontext.floorclip   = floorcliparray;
+   planecontext.ceilingclip = ceilingcliparray;
 
    viewx  = lastx;
    viewy  = lasty;
@@ -1273,8 +1273,8 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
    // haleyjd: temporary debug
    portal->tainted++;
 
-   floorclip   = window->bottom;
-   ceilingclip = window->top;
+   planecontext.floorclip   = window->bottom;
+   planecontext.ceilingclip = window->top;
 
    R_ClearOverlayClips(bounds);
    
@@ -1282,7 +1282,7 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
    portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-   R_SetMaskedSilhouette(bounds, ceilingclip, floorclip);
+   R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
    lastx  = viewx;
    lasty  = viewy;
@@ -1317,8 +1317,8 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
    // Only push the overlay if this is the head window
    R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
 
-   floorclip = floorcliparray;
-   ceilingclip = ceilingcliparray;
+   planecontext.floorclip   = floorcliparray;
+   planecontext.ceilingclip = ceilingcliparray;
 
    viewx  = lastx;
    viewy  = lasty;

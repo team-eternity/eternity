@@ -41,7 +41,6 @@ struct texture_t;
 extern float *lastopening;
 
 // SoM 12/8/03
-extern float *floorclip, *ceilingclip;
 extern float *floorcliparray, *ceilingcliparray;
 
 // SoM: We have to use secondary clipping arrays for portal overlays

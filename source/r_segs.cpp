@@ -216,6 +216,9 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
                             void (*const colfunc)(cb_column_t &),
                             const contextbounds_t &bounds, cb_seg_t &segclip)
 {
+   float *const floorclip   = planecontext.floorclip;
+   float *const ceilingclip = planecontext.ceilingclip;
+
    int t, b, line;
    int cliptop, clipbot;
    int i;
@@ -636,10 +639,14 @@ static void R_CloseDSP(void)
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_detectClosedColumns(bspcontext_t &context,
+static void R_detectClosedColumns(bspcontext_t &bspcontext,
+                                  planecontext_t &planecontext,
                                   [[maybe_unused]] const contextbounds_t &bounds,
                                   cb_seg_t &segclip)
 {
+   float *const floorclip   = planecontext.floorclip;
+   float *const ceilingclip = planecontext.ceilingclip;
+
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
    int       stop   = segclip.x2 + 1;
@@ -654,7 +661,7 @@ static void R_detectClosedColumns(bspcontext_t &context,
 
       // Mark the closed area.
       R_CloseDSP();
-      R_MarkSolidSeg(context, startx, i - 1);
+      R_MarkSolidSeg(bspcontext, startx, i - 1);
 
       // End closed
       if(i == stop)
@@ -702,7 +709,7 @@ static void R_detectClosedColumns(bspcontext_t &context,
       // as solid? Sprites appear through architecture. The solution is to
       // modify the drawseg created before this function was called to only be 
       // open where the seg has not created a solid seg.
-      R_MarkSolidSeg(context, startx, i-1);
+      R_MarkSolidSeg(bspcontext, startx, i-1);
 
       // End closed
       if(i == stop)
@@ -976,8 +983,10 @@ void R_StoreWallRange(bspcontext_t &bspcontext,
       R_renderSegLoop(planecontext, portalcontext, colfunc, bounds, segclip);
    else
       R_storeTextureColumns(segclip);
-   
+
    // store clipping arrays
+   float *const floorclip   = planecontext.floorclip;
+   float *const ceilingclip = planecontext.ceilingclip;
    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
@@ -1031,7 +1040,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext,
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_detectClosedColumns(bspcontext, bounds, segclip);
+      R_detectClosedColumns(bspcontext, planecontext, bounds, segclip);
 
    ++ds_p;
 }
