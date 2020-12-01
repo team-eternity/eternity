@@ -42,7 +42,6 @@ struct planecontext_t;
 struct planehash_t;
 struct portalcontext_t;
 struct pwindow_t;
-struct rendercontext_t;
 struct sectorbox_t;
 struct spritecontext_t;
 
@@ -365,7 +364,6 @@ struct portalrender_t
 //   planehash_t *overlay;
 };
 
-extern portalrender_t  portalrender;
 #endif
 
 //----------------------------------------------------------------------------

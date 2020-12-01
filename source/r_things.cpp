@@ -872,6 +872,7 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
 static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bounds,
+                            const portalrender_t &portalrender,
                             Mobj *thing,
                             lighttable_t *const *const spritelights,
                             v3fixed_t *delta = nullptr,
@@ -1178,6 +1179,7 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 //
 void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
+                  const portalrender_t &portalrender,
                   sector_t* sec, int lightlevel)
 {
    Mobj          *thing;
@@ -1207,12 +1209,19 @@ void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
    // Handle all things in sector.
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
-      R_projectSprite(context, bounds, thing, spritelights);
+      R_projectSprite(context, bounds, portalrender, thing, spritelights);
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
+   {
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
-         R_projectSprite(context, bounds, (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline);
+      {
+         R_projectSprite(
+            context, bounds, portalrender,
+            (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
+         );
+      }
+   }
 
    // haleyjd 02/20/04: Handle all particles in sector.
 

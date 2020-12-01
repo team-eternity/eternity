@@ -157,13 +157,6 @@ VALLOCATION(portals)
    });
 }
 
-// This flag is set when a portal is being rendered. This flag is checked in 
-// r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
-// extra function (R_ClipSegToPortal) is called to prevent certain types of HOM
-// in portals.
-
-portalrender_t portalrender = { false, MAX_SCREENWIDTH, 0 };
-
 static void R_RenderPortalNOP(bspcontext_t &bspcontext, planecontext_t &planecontext,
                               portalcontext_t &portalcontext, spritecontext_t &spritecontext,
                               void (*&colfunc)(cb_column_t &),
@@ -962,7 +955,9 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
    }
 #endif
 
-   if(!R_SetupPortalClipsegs(bspcontext, bounds, window->minx, window->maxx, window->top, window->bottom))
+   if(!R_SetupPortalClipsegs(
+      bspcontext, bounds, portalcontext.portalrender,
+      window->minx, window->maxx, window->top, window->bottom))
       return;
 
    R_ClearSlopeMark(bspcontext.slopemark, window->minx, window->maxx, window->type);
@@ -972,8 +967,8 @@ static void R_renderSkyboxPortal(bspcontext_t &bspcontext, planecontext_t &plane
 
    R_ClearOverlayClips(bounds);
 
-   portalrender.minx = window->minx;
-   portalrender.maxx = window->maxx;
+   portalcontext.portalrender.minx = window->minx;
+   portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(bounds, ceilingclip, floorclip);
@@ -1155,7 +1150,8 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
    }
 #endif
    
-   if(!R_SetupPortalClipsegs(bspcontext, bounds, window->minx, window->maxx, window->top, window->bottom))
+   if(!R_SetupPortalClipsegs(bspcontext, bounds, portalcontext.portalrender,
+                             window->minx, window->maxx, window->top, window->bottom))
       return;
 
    R_ClearSlopeMark(bspcontext.slopemark, window->minx, window->maxx, window->type);
@@ -1168,8 +1164,8 @@ static void R_renderAnchoredPortal(bspcontext_t &bspcontext, planecontext_t &pla
 
    R_ClearOverlayClips(bounds);
    
-   portalrender.minx = window->minx;
-   portalrender.maxx = window->maxx;
+   portalcontext.portalrender.minx = window->minx;
+   portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(bounds, ceilingclip, floorclip);
@@ -1268,7 +1264,8 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
    }
 #endif
    
-   if(!R_SetupPortalClipsegs(bspcontext, bounds, window->minx, window->maxx, window->top, window->bottom))
+   if(!R_SetupPortalClipsegs(bspcontext, bounds, portalcontext.portalrender,
+                             window->minx, window->maxx, window->top, window->bottom))
       return;
 
    R_ClearSlopeMark(bspcontext.slopemark, window->minx, window->maxx, window->type);
@@ -1281,8 +1278,8 @@ static void R_renderLinkedPortal(bspcontext_t &bspcontext, planecontext_t &plane
 
    R_ClearOverlayClips(bounds);
    
-   portalrender.minx = window->minx;
-   portalrender.maxx = window->maxx;
+   portalcontext.portalrender.minx = window->minx;
+   portalcontext.portalrender.maxx = window->maxx;
 
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(bounds, ceilingclip, floorclip);
@@ -1413,6 +1410,8 @@ static bool R_windowMatchesCurrentView(const pwindow_t *window)
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
                                    const contextbounds_t &bounds, surf_e surf, const surface_t &surface)
 {
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    // SoM: TODO: There could be the possibility of multiple portals
    // being able to share a single window set.
    // ioanch: also added plane checks
@@ -1554,8 +1553,9 @@ void R_RenderPortals(bspcontext_t &bspcontext, planecontext_t &planecontext,
                      portalcontext_t &portalcontext, spritecontext_t &spritecontext,
                      void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds)
 {
-   pwindow_t *&windowhead = portalcontext.windowhead;
-   pwindow_t *&unusedhead = portalcontext.unusedhead;
+   pwindow_t      *&windowhead   = portalcontext.windowhead;
+   pwindow_t      *&unusedhead   = portalcontext.unusedhead;
+   portalrender_t  &portalrender = portalcontext.portalrender;
 
    pwindow_t *w;
 

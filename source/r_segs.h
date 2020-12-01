@@ -32,7 +32,6 @@ struct cb_seg_t;
 struct contextbounds_t;
 struct drawseg_t;
 struct portalcontext_t;
-struct rendercontext_t;
 
 void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), drawseg_t *ds, int x1, int x2);
 void R_StoreWallRange(bspcontext_t &bspcontext,

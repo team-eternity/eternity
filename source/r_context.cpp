@@ -112,6 +112,8 @@ void R_InitContexts(const int width)
       context.bounds.endcolumn    = static_cast<int>(roundf(context.bounds.fendcolumn));
       context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
 
+      context.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
+
       if(numsectors && gamestate == GS_LEVEL)
          context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
    }

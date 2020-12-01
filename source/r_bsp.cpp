@@ -389,6 +389,7 @@ void R_ClearClipSegs(bspcontext_t &context)
 // R_SetupPortalClipsegs
 //
 bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
+                           portalrender_t  &portalrender,
                            int minx, int maxx, const float *top, const float *bottom)
 {
    cliprange_t *&solidsegs = context.solidsegs;
@@ -738,7 +739,8 @@ void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindowtype_e 
 // quickly reject segs that are all the way off the left or right edges
 // of the portal window.
 //
-static bool R_clipInitialSegRange(const cb_seg_t &seg, int *start, int *stop, float *clipx1, float *clipx2)
+static bool R_clipInitialSegRange(const cb_seg_t &seg, const portalrender_t &portalrender,
+                                  int *start, int *stop, float *clipx1, float *clipx2)
 {
    // SoM: Quickly reject the seg based on the bounding box of the portal
    if(seg.x1 > portalrender.maxx || seg.x2 < portalrender.minx)
@@ -778,13 +780,14 @@ static void R_clipSegToFPortal(bspcontext_t &bspcontext, planecontext_t &planeco
                                const contextbounds_t &bounds,
                                const cb_seg_t &seg)
 {
-   float *&slopemark = bspcontext.slopemark;
+   float                *&slopemark    = bspcontext.slopemark;
+   const portalrender_t  &portalrender = portalcontext.portalrender;
 
    int i, startx;
    float clipx1, clipx2;
    int start, stop;
 
-   if(!R_clipInitialSegRange(seg, &start, &stop, &clipx1, &clipx2))
+   if(!R_clipInitialSegRange(seg, portalrender, &start, &stop, &clipx1, &clipx2))
       return;
 
    if(seg.plane.ceiling && seg.plane.ceiling->pslope)
@@ -867,13 +870,14 @@ static void R_clipSegToCPortal(bspcontext_t &bspcontext, planecontext_t &planeco
                                const contextbounds_t &bounds,
                                const cb_seg_t &seg)
 {
-   float *&slopemark = bspcontext.slopemark;
+   float                *&slopemark = bspcontext.slopemark;
+   const portalrender_t  &portalrender = portalcontext.portalrender;
 
    int i, startx;
    float clipx1, clipx2;
    int start, stop;
 
-   if(!R_clipInitialSegRange(seg, &start, &stop, &clipx1, &clipx2))
+   if(!R_clipInitialSegRange(seg, portalrender, &start, &stop, &clipx1, &clipx2))
       return;
 
    if(seg.plane.floor && seg.plane.floor->pslope)
@@ -951,12 +955,14 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
                                const contextbounds_t &bounds,
                                const cb_seg_t &seg)
 {
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    int i, startx;
    float clipx1, clipx2;
    int start, stop;
 
    // Line based portal. This requires special clipping...
-   if(!R_clipInitialSegRange(seg, &start, &stop, &clipx1, &clipx2))
+   if(!R_clipInitialSegRange(seg, portalrender, &start, &stop, &clipx1, &clipx2))
       return;
 
    // This can actually happen with slopes!
@@ -1167,6 +1173,8 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
                         float texbottom, const vertex_t *v1, const vertex_t *v2, 
                         float lclip1, float lclip2)
 {
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    bool mark, markblend; // haleyjd
    // ioanch: needed to prevent transfer_heights from affecting sky hacks.
    bool marktheight, blocktheight;
@@ -1507,6 +1515,8 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
                         float pstep, float i1, float i2, float textop,
                         float texbottom)
 {
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    bool mark, markblend; // haleyjd
    // ioanch: needed to prevent transfer_heights from affecting sky hacks.
    bool marktheight, blocktheight;
@@ -2144,6 +2154,8 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
                       const contextbounds_t &bounds, cb_seg_t &seg,
                       const seg_t *line, bool dynasegs)
 {
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    static sector_t tempsec;
 
    float x1, x2;
@@ -2781,6 +2793,8 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
                         void (*&colfunc)(cb_column_t &),
                         const contextbounds_t &bounds, int num)
 {
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    int         count;
    const seg_t *line;
    subsector_t *sub;
@@ -2963,7 +2977,7 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
    // real sector, or you must account for the lighting in some other way, 
    // like passing it as an argument.
 
-   R_AddSprites(spritecontext, bounds, sub->sector, (floorlightlevel+ceilinglightlevel)/2);
+   R_AddSprites(spritecontext, bounds, portalrender, sub->sector, (floorlightlevel+ceilinglightlevel)/2);
 
    // haleyjd 02/19/06: draw polyobjects before static lines
    // haleyjd 10/09/06: skip call entirely if no polyobjects

@@ -29,6 +29,7 @@
 #define R_CONTEXT_H__
 
 #include "r_defs.h"
+#include "r_portal.h"
 
 struct cb_column_t;
 struct cliprange_t;
@@ -76,6 +77,13 @@ struct planecontext_t
 struct portalcontext_t
 {
    pwindow_t *unusedhead, *windowhead, *windowlast;
+
+   // This flag is set when a portal is being rendered. This flag is checked in
+   // r_bsp.c when rendering camera portals (skybox, anchored, linked) so that an
+   // extra function (R_ClipSegToPortal) is called to prevent certain types of HOM
+   // in portals.
+
+   portalrender_t portalrender;
 };
 
 struct spritecontext_t

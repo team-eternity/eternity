@@ -34,10 +34,10 @@ struct particle_t;
 struct planehash_t;
 struct pwindow_t;
 struct cb_column_t;
-struct rendercontext_t;
 struct spritecontext_t;
 struct contextbounds_t;
 struct planecontext_t;
+struct portalrender_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -80,6 +80,7 @@ void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
                            const texture_t *tex, const texcol_t *tcolumn,
                            const float *const mfloorclip, const float *const mceilingclip);
 void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
+                  const portalrender_t &portalrender,
                   sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(spritecontext_t &context);

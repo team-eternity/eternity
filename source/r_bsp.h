@@ -32,12 +32,12 @@ struct line_t;
 struct seg_t;
 struct sector_t;
 struct side_t;
-struct rendercontext_t;
 struct bspcontext_t;
 struct planecontext_t;
 struct spritecontext_t;
 struct contextbounds_t;
 struct portalcontext_t;
+struct portalrender_t;
 
 extern seg_t    *curline;
 extern side_t   *sidedef;
@@ -59,7 +59,8 @@ extern drawseg_t *ds_p;
 void R_MarkSolidSeg(bspcontext_t &context, int x1, int x2);
 
 bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
-   int minx, int maxx, const float *top, const float *bottom);
+                           portalrender_t  &portalrender,
+                           int minx, int maxx, const float *top, const float *bottom);
 
 void R_ClearClipSegs(bspcontext_t &context);
 void R_ClearDrawSegs();
