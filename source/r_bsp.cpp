@@ -389,7 +389,7 @@ void R_ClearClipSegs(bspcontext_t &context)
 // R_SetupPortalClipsegs
 //
 bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
-                           portalrender_t  &portalrender,
+                           portalrender_t &portalrender,
                            int minx, int maxx, const float *top, const float *bottom)
 {
    cliprange_t *&solidsegs = context.solidsegs;
