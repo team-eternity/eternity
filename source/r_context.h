@@ -80,6 +80,8 @@ struct planecontext_t
 
 struct portalcontext_t
 {
+   uint16_t renderdepth; // THREAD_TODO: Rename this, it's a misnomer
+
    pwindow_t *unusedhead, *windowhead, *windowlast;
 
    // This flag is set when a portal is being rendered. This flag is checked in
@@ -111,7 +113,7 @@ struct spritecontext_t
 
 struct rendercontext_t
 {
-   int   bufferindex;
+   int16_t         bufferindex;
 
    contextbounds_t bounds;
    bspcontext_t    bspcontext;

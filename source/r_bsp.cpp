@@ -1151,12 +1151,12 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
 // When a new seg obtains a sector portal window, make sure to update the render barrier accordingly
 // Needs to be done each time a sector window is detected.
 //
-static void R_updateWindowSectorBarrier(cb_seg_t &seg, surf_e surf)
+static void R_updateWindowSectorBarrier(const uint64_t visitid, cb_seg_t &seg, surf_e surf)
 {
    sectorbox_t &box = pSectorBoxes[seg.line->frontsector - sectors];
-   if(seg.secwindow[surf] && box.frameid[surf] != frameid)
+   if(seg.secwindow[surf] && box.visitid[surf] != visitid)
    {
-      box.frameid[surf] = frameid;
+      box.visitid[surf] = visitid;
       R_CalcRenderBarrier(*seg.secwindow[surf], box);
    }
 }
@@ -1172,7 +1172,8 @@ R_ClipSegFunc segclipfuncs[] =
 #define NEARCLIP 0.05f
 
 static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                        const contextbounds_t &bounds, cb_seg_t &seg,
+                        const contextbounds_t &bounds, const uint64_t visitid,
+                        cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
                         float texbottom, const vertex_t *v1, const vertex_t *v2, 
                         float lclip1, float lclip2)
@@ -1318,7 +1319,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
-         R_updateWindowSectorBarrier(seg, surf_ceil);
+         R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
@@ -1326,7 +1327,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
-         R_updateWindowSectorBarrier(seg, surf_ceil);
+         R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
@@ -1404,7 +1405,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.floor = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
          );
-         R_updateWindowSectorBarrier(seg, surf_floor);
+         R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
@@ -1412,7 +1413,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.floor = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
          );
-         R_updateWindowSectorBarrier(seg, surf_floor);
+         R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
@@ -1515,7 +1516,8 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
 }
 
 static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                        const contextbounds_t &bounds, cb_seg_t &seg,
+                        const contextbounds_t &bounds, const uint64_t visitid,
+                        cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
                         float texbottom)
 {
@@ -1638,7 +1640,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
-         R_updateWindowSectorBarrier(seg, surf_ceil);
+         R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
       }
       else if(seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal &&
@@ -1648,7 +1650,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
-         R_updateWindowSectorBarrier(seg, surf_ceil);
+         R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
@@ -1724,7 +1726,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.floor = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
          );
-         R_updateWindowSectorBarrier(seg, surf_floor);
+         R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
       }
       else if(seg.frontsec->srf.floor.height == seg.backsec->srf.floor.height &&
@@ -1734,7 +1736,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.secwindow.floor = R_GetSectorPortalWindow(
             planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
          );
-         R_updateWindowSectorBarrier(seg, surf_floor);
+         R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
@@ -1833,7 +1835,8 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
 // beyond is the optional sector on the other side of a polyobject/1-sided wall portal
 //
 static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                         const contextbounds_t &bounds, cb_seg_t &seg,
+                         const contextbounds_t &bounds, const uint64_t visitid,
+                         cb_seg_t &seg,
                          float pstep, float i1, float i2, float textop, float texbottom,
                          const sector_t *beyond, const side_t *side, const seg_t *line)
 {
@@ -1914,7 +1917,7 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
       seg.secwindow.ceiling = R_GetSectorPortalWindow(
          planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
       );
-      R_updateWindowSectorBarrier(seg, surf_ceil);
+      R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
       R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
    }
 
@@ -1925,7 +1928,7 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
       seg.secwindow.floor = R_GetSectorPortalWindow(
          planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
       );
-      R_updateWindowSectorBarrier(seg, surf_floor);
+      R_updateWindowSectorBarrier(visitid, seg, surf_floor);
       R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
    }
 
@@ -2155,7 +2158,8 @@ static bool R_allowBehindSectorPortal(const float fbox[4], const seg_t &tryseg)
 //
 static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                      const contextbounds_t &bounds, cb_seg_t &seg,
+                      const contextbounds_t &bounds, const uint64_t visitid,
+                      cb_seg_t &seg,
                       const seg_t *line, bool dynasegs)
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
@@ -2492,7 +2496,7 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
    if(!seg.backsec || beyond) 
    {
       R_1SidedLine(
-         planecontext, portalcontext, bounds, seg, pstep,
+         planecontext, portalcontext, bounds, visitid, seg, pstep,
          i1, i2, textop, texbottom, beyond, side, line
       );
    }
@@ -2501,12 +2505,12 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
       if(seg.frontsec->srf.floor.slope || seg.frontsec->srf.ceiling.slope ||
          seg.backsec->srf.floor.slope || seg.backsec->srf.ceiling.slope)
       {
-         R_2S_Sloped(planecontext, portalcontext, bounds, seg, pstep,
+         R_2S_Sloped(planecontext, portalcontext, bounds, visitid, seg, pstep,
             i1, i2, textop, texbottom, v1, v2, lclip1, lclip2
          );
       }
       else
-         R_2S_Normal(planecontext, portalcontext, bounds, seg, pstep, i1, i2, textop, texbottom);
+         R_2S_Normal(planecontext, portalcontext, bounds, visitid, seg, pstep, i1, i2, textop, texbottom);
    }
 
    // SoM: This really needs to be handled here. The float values need to be 
@@ -2705,7 +2709,8 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 //
 static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
                              portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                             const contextbounds_t &bounds, cb_seg_t &cbseg,
+                             const contextbounds_t &bounds, const uint64_t visitid,
+                             cb_seg_t &cbseg,
                              const rpolynode_t *node)
 {
    while(node)
@@ -2714,7 +2719,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecont
       
       // render frontspace
       R_renderPolyNode(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, cbseg, node->children[side]
+         bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, cbseg, node->children[side]
       );
 
       // render partition seg
@@ -2734,7 +2739,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecont
       }
 
       R_addLine(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, cbseg, seg, true
+         bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, cbseg, seg, true
       );
       seg->offset = orgofs;
       seg->len = orglen;
@@ -2766,7 +2771,8 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecont
 //
 static void R_addDynaSegs(bspcontext_t &bspcontext, planecontext_t &planecontext,
                           portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                          const contextbounds_t &bounds, cb_seg_t &seg,
+                          const contextbounds_t &bounds, const uint64_t visitid,
+                          cb_seg_t &seg,
                           subsector_t *sub)
 {
    bool needbsp = (!sub->bsp || sub->bsp->dirty);
@@ -2780,7 +2786,7 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, planecontext_t &planecontext
    if(sub->bsp)
    {
       R_renderPolyNode(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, seg, sub->bsp->root
+         bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, seg, sub->bsp->root
       );
    }
 }
@@ -2795,7 +2801,8 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, planecontext_t &planecontext
 static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
                         portalcontext_t &portalcontext, spritecontext_t &spritecontext,
                         void (*&colfunc)(cb_column_t &),
-                        const contextbounds_t &bounds, int num)
+                        const contextbounds_t &bounds,
+                        const uint64_t visitid, const int num)
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
@@ -2987,10 +2994,10 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
    // haleyjd 10/09/06: skip call entirely if no polyobjects
 
    if(sub->polyList)
-      R_addDynaSegs(bspcontext, planecontext, portalcontext, colfunc, bounds, seg, sub);
+      R_addDynaSegs(bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, seg, sub);
 
    while(count--)
-      R_addLine(bspcontext, planecontext, portalcontext, colfunc, bounds, seg, line++, false);
+      R_addLine(bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, seg, line++, false);
 }
 
 //
@@ -3003,7 +3010,8 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
 void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
                      spritecontext_t &spritecontext, portalcontext_t &portalcontext,
                      void (*&colfunc)(cb_column_t &),
-                     const contextbounds_t &bounds, int bspnum)
+                     const contextbounds_t &bounds,
+                     const uint64_t visitid, int bspnum)
 {
    while(!(bspnum & NF_SUBSECTOR))  // Found a subsector?
    {
@@ -3015,7 +3023,8 @@ void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
       // Recursively divide front space.
       R_RenderBSPNode(
          bspcontext, planecontext, spritecontext,
-         portalcontext, colfunc, bounds, bsp->children[side]
+         portalcontext, colfunc, bounds,
+         visitid, bsp->children[side]
       );
 
       // Possibly divide back space.
@@ -3027,7 +3036,8 @@ void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
    }
    R_subsector(
       bspcontext, planecontext, portalcontext, spritecontext,
-      colfunc, bounds, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR
+      colfunc, bounds,
+      visitid, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR
    );
 }
 

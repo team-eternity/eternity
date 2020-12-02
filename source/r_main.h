@@ -242,8 +242,9 @@ struct cb_seg_t
 extern cb_view_t  view;
 
 // SoM: frameid frame counter.
-void R_IncrementFrameid(); // Needed by the portal functions... 
 extern unsigned   frameid;
+
+uint64_t R_GetVisitID(const uint16_t renderdepth, const int16_t contextid);
 
 //
 // R_doubleToUint32

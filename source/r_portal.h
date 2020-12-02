@@ -42,6 +42,7 @@ struct planecontext_t;
 struct planehash_t;
 struct portalcontext_t;
 struct pwindow_t;
+struct rendercontext_t;
 struct sectorbox_t;
 struct spritecontext_t;
 
@@ -216,9 +217,7 @@ portal_t *R_GetPlanePortal(const sector_t *sector);
 void R_MovePortalOverlayToWindow(planecontext_t &context, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf);
 void R_ClearPortals(visplane_t **&freehead);
-void R_RenderPortals(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                     portalcontext_t &portalcontext, spritecontext_t &spritecontext,
-                     void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds);
+void R_RenderPortals(rendercontext_t &context);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
@@ -256,10 +255,7 @@ enum pwindowtype_e
 
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
-using R_WindowFunc = void (*)(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                              portalcontext_t &portalcontext, spritecontext_t &spritecontext,
-                              void (*&colfunc)(cb_column_t &),
-                              const contextbounds_t &bounds, pwindow_t *window);
+using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *window);
 using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
                                const contextbounds_t &bounds,

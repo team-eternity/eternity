@@ -748,8 +748,6 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 unsigned int frameid = 0;
 
 //
-// R_IncrementFrameid
-//
 // SoM: frameid is an unsigned integer that represents the number of the frame 
 // currently being rendered for use in caching data used by the renderer which 
 // is unique to each frame. frameid is incremented every frame. When the number
@@ -757,7 +755,7 @@ unsigned int frameid = 0;
 // be searched and all frameids reset to prevent mishaps in the rendering 
 // process.
 //
-void R_IncrementFrameid()
+static void R_incrementFrameid()
 {
    frameid++;
 
@@ -773,8 +771,17 @@ void R_IncrementFrameid()
 
       // Do as the description says...
       for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].frameid.floor = pSectorBoxes[i].frameid.ceiling = 0;
+         pSectorBoxes[i].visitid.floor = pSectorBoxes[i].visitid.ceiling = 0;
    }
+}
+
+//
+// Stuffs the renderdepth, the ID of a context, and frame ID into a uint64_t
+//
+uint64_t R_GetVisitID(const uint16_t renderdepth, const int16_t contextid)
+{
+   uint64_t upper32 = (uint64_t(renderdepth) << 16) | uint64_t(uint16_t(contextid));
+   return (upper32 << 32) | uint64_t(frameid);
 }
 
 //
@@ -1004,7 +1011,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
    R_SetSpanEngine();
-   R_IncrementFrameid(); // Cardboard
+   R_incrementFrameid(); // Cardboard
    
    viewplayer = player;
    viewcamera = camera;
@@ -1260,6 +1267,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       rendercontext_t &context = R_GetContext(i);
 
       memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
+      context.portalcontext.renderdepth = 0;
 
       // Clear buffers.
       // THREAD_TODO: Make these rendercontext_t methods?
@@ -1275,7 +1283,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // The head node is the last node output.
       R_RenderBSPNode(
          context.bspcontext, context.planecontext, context.spritecontext,
-         context.portalcontext, context.colfunc, context.bounds, numnodes - 1
+         context.portalcontext, context.colfunc, context.bounds,
+         R_GetVisitID(context.portalcontext.renderdepth, context.bufferindex), numnodes - 1
       );
 
       // Check for new console commands.
@@ -1287,10 +1296,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       R_PushPost(context.spritecontext, context.bounds, true, nullptr);
 
       // SoM 12/9/03: render the portals.
-      R_RenderPortals(
-         context.bspcontext, context.planecontext, context.portalcontext,
-         context.spritecontext, context.colfunc, context.bounds
-      );
+      R_RenderPortals(context);
 
       R_DrawPlanes(context.planecontext.mainhash, context.colfunc, nullptr);
 
