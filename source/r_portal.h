@@ -45,6 +45,7 @@ struct pwindow_t;
 struct rendercontext_t;
 struct sectorbox_t;
 struct spritecontext_t;
+struct viewpoint_t;
 
 typedef enum
 {
@@ -336,13 +337,15 @@ struct pwindow_t
 
 // SoM: Cardboard
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                 const contextbounds_t &bounds,
+                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                  pwindow_t *window, int x, float ytop, float ybottom);
 
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                   const contextbounds_t &bounds, surf_e surf, const surface_t &surface);
+                                   const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                                   surf_e surf, const surface_t &surface);
 pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                 const contextbounds_t &bounds, portal_t *portal, const seg_t *seg);
+                                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
+                                 portal_t *portal, const seg_t *seg);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t

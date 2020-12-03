@@ -365,7 +365,7 @@ static void R_createChildWindow(planecontext_t &planecontext, portalcontext_t &p
 // be created.
 //
 void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                 const contextbounds_t &bounds,
+                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
                  pwindow_t *window, int x, float ytop, float ybottom)
 {
    float windowtop, windowbottom;
@@ -418,7 +418,7 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
          if(!window->child)
             R_createChildWindow(planecontext, portalcontext, bounds, window);
 
-         R_WindowAdd(planecontext, portalcontext, bounds, window->child, x, ytop, ybottom);
+         R_WindowAdd(planecontext, portalcontext, viewpoint, bounds, window->child, x, ytop, ybottom);
          return;
       }
 
@@ -441,10 +441,10 @@ void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
       window->bottom[x] = ybottom;
 
       // SoM 3/10/2005: store the viewz in the portal struct for later use
-      window->vx = viewx;
-      window->vy = viewy;
-      window->vz = viewz;
-      window->vangle = viewangle;
+      window->vx = viewpoint.x;
+      window->vy = viewpoint.y;
+      window->vz = viewpoint.z;
+      window->vangle = viewpoint.angle;
       return;
    }
 
@@ -1452,19 +1452,20 @@ static void R_SetPortalFunction(pwindow_t *window)
 //
 // Checks if window matches current view, if set
 //
-static bool R_windowMatchesCurrentView(const pwindow_t *window)
+static bool R_windowMatchesCurrentView(const viewpoint_t &viewpoint, const pwindow_t *window)
 {
    if(window->minx > window->maxx)  // Empty window won't have initialized coordinates, so skip
       return true;
-   return window->vx == viewx && window->vy == viewy && window->vz == viewz &&
-      window->vangle == viewangle;
+   return window->vx == viewpoint.x && window->vy == viewpoint.y && window->vz == viewpoint.z &&
+      window->vangle == viewpoint.angle;
 }
 
 //
 // Get sector portal window. 
 //
 pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                   const contextbounds_t &bounds, surf_e surf, const surface_t &surface)
+                                   const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                                   surf_e surf, const surface_t &surface)
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
@@ -1481,7 +1482,7 @@ pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t
 
    for(pwindow_t *rover = portalcontext.windowhead; rover; rover = rover->next)
       if(rover->portal == surface.portal && rover->type == pw_surface[surf] &&
-         rover->planez == surface.height && R_windowMatchesCurrentView(rover))
+         rover->planez == surface.height && R_windowMatchesCurrentView(viewpoint, rover))
       {
          // If within a line-bounded portal, keep track of that too           )
          if(portalrender.active)
@@ -1544,14 +1545,15 @@ static void R_updateLinePortalWindowGenerator(pwindow_t *window, const seg_t *se
 }
 
 pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                 const contextbounds_t &bounds, portal_t *portal, const seg_t *seg)
+                                 const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                                 portal_t *portal, const seg_t *seg)
 {
    pwindow_t *rover = portalcontext.windowhead;
 
    while(rover)
    {
       if(rover->portal == portal && rover->type == pw_line && rover->line == seg->linedef &&
-         R_windowMatchesCurrentView(rover))
+         R_windowMatchesCurrentView(viewpoint, rover))
       {
          R_updateLinePortalWindowGenerator(rover, seg);
          return rover;
