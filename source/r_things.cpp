@@ -871,7 +871,9 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bounds,
+static void R_projectSprite(spritecontext_t &context,
+                            const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                            const contextbounds_t &bounds,
                             const portalrender_t &portalrender,
                             Mobj *thing,
                             lighttable_t *const *const spritelights,
@@ -914,9 +916,9 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
    }
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
-   tempx = M_FixedToFloat(spritepos.x) - view.x;
-   tempy = M_FixedToFloat(spritepos.y) - view.y;
-   roty  = (tempy * view.cos) + (tempx * view.sin);
+   tempx = M_FixedToFloat(spritepos.x) - cb_viewpoint.x;
+   tempy = M_FixedToFloat(spritepos.y) - cb_viewpoint.y;
+   roty  = (tempy * cb_viewpoint.cos) + (tempx * cb_viewpoint.sin);
 
    // lies in front of the front view plane
    if(roty < 1.0f)
@@ -959,7 +961,7 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
       }
    }
 
-   rotx = (tempx * view.cos) - (tempy * view.sin);
+   rotx = (tempx * cb_viewpoint.cos) - (tempy * cb_viewpoint.sin);
 
    // decide which patch to use for sprite relative to player
    if((unsigned int)thing->sprite >= (unsigned int)numsprites)
@@ -1005,7 +1007,7 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
    {
       // SoM: Use old rotation code
       // choose a different rotation based on player view
-      angle_t ang = R_PointToAngle(spritepos.x, spritepos.y);
+      angle_t ang = R_PointToAngle(viewpoint.x, viewpoint.y, spritepos.x, spritepos.y);
       unsigned int rot = (ang - thing->angle + (unsigned int)(ANG45/2)*9) >> 29;
       lump = sprframe->lump[rot];
       flip = !!sprframe->flip[rot];
@@ -1043,7 +1045,7 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
 
    distyscale = idist * view.yfoc;
    // SoM: forgot about footclipping
-   tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - thing->floorclip) - view.z;
+   tz1 = thing->yscale * stopoffset + M_FixedToFloat(spritepos.z - thing->floorclip) - cb_viewpoint.z;
    y1  = view.ycenter - (tz1 * distyscale);
    if(y1 >= view.height)
       return;
@@ -1074,11 +1076,11 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
       auto &hsec = sectors[heightsec];
       int   phs  = view.sector->heightsec;
 
-      if(phs != -1 && viewz < sectors[phs].srf.floor.height ?
+      if(phs != -1 && viewpoint.z < sectors[phs].srf.floor.height ?
          thing->z >= hsec.srf.floor.height : gzt < hsec.srf.floor.height)
          return;
-      if(phs != -1 && viewz > sectors[phs].srf.ceiling.height ?
-         gzt < hsec.srf.ceiling.height && viewz >= hsec.srf.ceiling.height :
+      if(phs != -1 && viewpoint.z > sectors[phs].srf.ceiling.height ?
+         gzt < hsec.srf.ceiling.height && viewpoint.z >= hsec.srf.ceiling.height :
          thing->z >= hsec.srf.ceiling.height)
          return;
    }
@@ -1125,7 +1127,7 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
 
    // haleyjd: moved this down, added footclip term
    // This needs to be scaled down (?) I don't get why this works...
-   vis->texturemid = (fixed_t)((gzt - viewz - vis->footclip) / thing->yscale);
+   vis->texturemid = (fixed_t)((gzt - viewpoint.z - vis->footclip) / thing->yscale);
 
    vis->patch = lump;
 
@@ -1178,7 +1180,9 @@ static void R_projectSprite(spritecontext_t &context, const contextbounds_t &bou
 // During BSP traversal, this adds sprites by sector.
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 //
-void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
+void R_AddSprites(spritecontext_t &context,
+                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                  const contextbounds_t &bounds,
                   const portalrender_t &portalrender,
                   sector_t* sec, int lightlevel)
 {
@@ -1209,7 +1213,7 @@ void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
    // Handle all things in sector.
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
-      R_projectSprite(context, bounds, portalrender, thing, spritelights);
+      R_projectSprite(context, viewpoint, cb_viewpoint, bounds, portalrender, thing, spritelights);
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
@@ -1217,7 +1221,7 @@ void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
       {
          R_projectSprite(
-            context, bounds, portalrender,
+            context, viewpoint, cb_viewpoint, bounds, portalrender,
             (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
          );
       }
@@ -1414,7 +1418,7 @@ void R_DrawPlayerSprites()
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
    
-   R_SectorColormap(view.sector);
+   R_SectorColormap(r_globalcontext.view.z, view.sector);
 
    // get light level
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
@@ -1564,6 +1568,7 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_column_t &),
+                                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds,
                                   vissprite_t *spr, int firstds, int lastds,
                                   float *ptop, float *pbottom)
@@ -1713,12 +1718,12 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
       
       int phs = view.sector->heightsec;
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].srf.floor.height) - view.z;
+      mh = M_FixedToFloat(sectors[spr->heightsec].srf.floor.height) - cb_viewpoint.z;
       if(sectors[spr->heightsec].srf.floor.height > spr->gz &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(mh <= 0.0 || (phs != -1 && viewz > sectors[phs].srf.floor.height))
+         if(mh <= 0.0 || (phs != -1 && viewpoint.z > sectors[phs].srf.floor.height))
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -1729,7 +1734,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
          }
          else  // clip top
          {
-            if(phs != -1 && viewz <= sectors[phs].srf.floor.height) // killough 11/98
+            if(phs != -1 && viewpoint.z <= sectors[phs].srf.floor.height) // killough 11/98
             {
                for(x = spr->x1; x <= spr->x2; x++)
                {
@@ -1740,12 +1745,12 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
          }
       }
 
-      mh = M_FixedToFloat(sectors[spr->heightsec].srf.ceiling.height) - view.z;
+      mh = M_FixedToFloat(sectors[spr->heightsec].srf.ceiling.height) - cb_viewpoint.z;
       if(sectors[spr->heightsec].srf.ceiling.height < spr->gzt &&
          (h = view.ycenter - (mh * spr->scale)) >= 0.0f &&
          (h < view.height))
       {
-         if(phs != -1 && viewz >= sectors[phs].srf.ceiling.height)
+         if(phs != -1 && viewpoint.z >= sectors[phs].srf.ceiling.height)
          {
             // clip bottom
             for(x = spr->x1; x <= spr->x2; x++)
@@ -1773,7 +1778,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
 
       sector_t *sector = sectors + spr->sector;
 
-      mh = M_FixedToFloat(sector->srf.floor.height) - view.z;
+      mh = M_FixedToFloat(sector->srf.floor.height) - cb_viewpoint.z;
       if(sector->srf.floor.pflags & PS_PASSABLE && sector->srf.floor.height > spr->gz)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
@@ -1785,7 +1790,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
          }
       }
 
-      mh = M_FixedToFloat(sector->srf.ceiling.height) - view.z;
+      mh = M_FixedToFloat(sector->srf.ceiling.height) - cb_viewpoint.z;
       if(sector->srf.ceiling.pflags & PS_PASSABLE && sector->srf.ceiling.height < spr->gzt)
       {
          h = eclamp(view.ycenter - (mh * spr->scale), 0.0f, view.height - 1);
@@ -1818,7 +1823,9 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
 // Draws the items in the Post-BSP stack.
 //
 void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
-                  void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds)
+                   void (*&colfunc)(cb_column_t &),
+                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                   const contextbounds_t &bounds)
 {
    poststack_t   *&pstack       = spritecontext.pstack;
    int            &pstacksize   = spritecontext.pstacksize;
@@ -1880,7 +1887,8 @@ void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
             for(int i = lastsprite - firstsprite; --i >= 0; )
             {
                R_drawSpriteInDSRange(
-                  spritecontext, colfunc, bounds,
+                  spritecontext, colfunc,
+                  viewpoint, cb_viewpoint, bounds,
                   spritecontext.vissprite_ptrs[i], firstds, lastds,
                   masked->ceilingclip, masked->floorclip
                );         // killough
@@ -2250,7 +2258,9 @@ void R_ClearParticles()
 //
 // R_projectParticle
 //
-static void R_projectParticle(spritecontext_t &context, const contextbounds_t &bounds, particle_t *particle)
+static void R_projectParticle(spritecontext_t &context,
+                              const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                              const contextbounds_t &bounds, particle_t *particle)
 {
    fixed_t gzt;
    int x1, x2;
@@ -2263,9 +2273,9 @@ static void R_projectParticle(spritecontext_t &context, const contextbounds_t &b
    float y1, y2;
 
    // SoM: Cardboard translate the mobj coords and just project the sprite.
-   tempx = M_FixedToFloat(particle->x) - view.x;
-   tempy = M_FixedToFloat(particle->y) - view.y;
-   ty1   = (tempy * view.cos) + (tempx * view.sin);
+   tempx = M_FixedToFloat(particle->x) - cb_viewpoint.x;
+   tempy = M_FixedToFloat(particle->y) - cb_viewpoint.y;
+   ty1   = (tempy * cb_viewpoint.cos) + (tempx * cb_viewpoint.sin);
 
    // lies in front of the front view plane
    if(ty1 < 1.0f)
@@ -2275,7 +2285,7 @@ static void R_projectParticle(spritecontext_t &context, const contextbounds_t &b
    if(!particle->trans)
       return;
 
-   tx1 = (tempx * view.cos) - (tempy * view.sin);
+   tx1 = (tempx * cb_viewpoint.cos) - (tempy * cb_viewpoint.sin);
 
    tx2 = tx1 + 1.0f;
 
@@ -2293,7 +2303,7 @@ static void R_projectParticle(spritecontext_t &context, const contextbounds_t &b
    if(x1 >= bounds.endcolumn || x2 < bounds.startcolumn)
       return;
 
-   tz = M_FixedToFloat(particle->z) - view.z;
+   tz = M_FixedToFloat(particle->z) - cb_viewpoint.z;
 
    y1 = (view.ycenter - (tz * yscale));
    y2 = (view.ycenter - ((tz - 1.0f) * yscale));
@@ -2324,15 +2334,15 @@ static void R_projectParticle(spritecontext_t &context, const contextbounds_t &b
       int phs = view.sector->heightsec;
 
       if(phs != -1 &&
-	 viewz < sectors[phs].srf.floor.height ?
+	 viewpoint.z < sectors[phs].srf.floor.height ?
 	 particle->z >= sectors[heightsec].srf.floor.height :
          gzt < sectors[heightsec].srf.floor.height)
          return;
 
       if(phs != -1 &&
-	 viewz > sectors[phs].srf.ceiling.height ?
+	 viewpoint.z > sectors[phs].srf.ceiling.height ?
 	 gzt < sectors[heightsec].srf.ceiling.height &&
-	 viewz >= sectors[heightsec].srf.ceiling.height :
+	 viewpoint.z >= sectors[heightsec].srf.ceiling.height :
          particle->z >= sectors[heightsec].srf.ceiling.height)
          return;
    }
@@ -2344,7 +2354,7 @@ static void R_projectParticle(spritecontext_t &context, const contextbounds_t &b
    vis->gy = particle->y;
    vis->gz = particle->z;
    vis->gzt = gzt;
-   vis->texturemid = vis->gzt - viewz;
+   vis->texturemid = vis->gzt - viewpoint.z;
    vis->x1 = emax(bounds.startcolumn,   x1);
    vis->x2 = emin(bounds.endcolumn - 1, x2);
    vis->colour = particle->color;
@@ -2366,7 +2376,7 @@ static void R_projectParticle(spritecontext_t &context, const contextbounds_t &b
    } 
    else
    {
-      R_SectorColormap(sector);
+      R_SectorColormap(viewpoint.z, sector);
 
       if(LevelInfo.useFullBright && (particle->styleflags & PS_FULLBRIGHT))
       {

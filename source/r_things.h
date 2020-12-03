@@ -38,6 +38,8 @@ struct spritecontext_t;
 struct contextbounds_t;
 struct planecontext_t;
 struct portalrender_t;
+struct viewpoint_t;
+struct cbviewpoint_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -79,13 +81,17 @@ void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn,
                            const float *const mfloorclip, const float *const mceilingclip);
-void R_AddSprites(spritecontext_t &context, const contextbounds_t &bounds,
+void R_AddSprites(spritecontext_t &context,
+                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                  const contextbounds_t &bounds,
                   const portalrender_t &portalrender,
                   sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(spritecontext_t &context);
 void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
-                   void (*&colfunc)(cb_column_t &), const contextbounds_t &bounds);
+                   void (*&colfunc)(cb_column_t &),
+                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                   const contextbounds_t &bounds);
 void R_DrawPlayerSprites();
 void R_ClearParticles(void);
 void R_InitParticles(void);

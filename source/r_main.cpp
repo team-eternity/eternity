@@ -1313,7 +1313,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // Draw Post-BSP elements such as sprites, masked textures, and portal
       // overlays
       R_DrawPostBSP(
-         context.spritecontext, context.planecontext, context.colfunc, context.bounds
+         context.spritecontext, context.planecontext, context.colfunc,
+         context.view, context.cb_view, context.bounds
       );
    }
 
