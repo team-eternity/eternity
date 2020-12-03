@@ -381,7 +381,7 @@ angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y)
    return 0;
 }
 
-angle_t R_PointToAngle(fixed_t x, fixed_t y)
+angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y)
 {
    return R_PointToAngle2(viewx, viewy, x, y);
 }
@@ -1138,7 +1138,7 @@ static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(const sector_t *s)
+void R_SectorColormap(const fixed_t viewz, const sector_t *s)
 {
    int colormapIndex = 0;
    bool boomStyleOverride = false;

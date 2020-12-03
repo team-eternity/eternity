@@ -92,11 +92,11 @@ extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
 
 int SlopeDiv(unsigned int num, unsigned int den);
-angle_t R_PointToAngle(fixed_t x, fixed_t y);
+angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(const sector_t *s);
+void R_SectorColormap(const fixed_t viewz, const sector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
