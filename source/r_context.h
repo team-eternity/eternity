@@ -111,6 +111,21 @@ struct spritecontext_t
    bool *sectorvisited;
 };
 
+struct viewpoint_t
+{
+   fixed_t x, y, z;
+   angle_t angle; // No pitch as portals don't modify it
+   fixed_t sin, cos;
+};
+
+// Separate for now. Maybe merge later with viewpoint_t
+struct cbviewpoint_t
+{
+   float x, y, z;
+   float angle; // No pitch as portals don't modify it
+   float sin, cos;
+};
+
 struct rendercontext_t
 {
    int16_t         bufferindex;
@@ -120,6 +135,8 @@ struct rendercontext_t
    planecontext_t  planecontext;
    portalcontext_t portalcontext;
    spritecontext_t spritecontext;
+   viewpoint_t     view;
+   cbviewpoint_t   cb_view;
 
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);

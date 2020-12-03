@@ -722,6 +722,8 @@ void R_InitPortals()
 //
 static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
 {
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
@@ -737,36 +739,36 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
    if(window->maxx < window->minx)
       return;
 
-   fixed_t lastx = viewx;
-   fixed_t lasty = viewy;
-   fixed_t lastz = viewz;
-   float lastxf = view.x;
-   float lastyf = view.y;
-   float lastzf = view.z;
-   angle_t lastangle = viewangle;
-   float lastanglef = view.angle;
+   const fixed_t lastx = viewpoint.x;
+   const fixed_t lasty = viewpoint.y;
+   const fixed_t lastz = viewpoint.z;
+   const float lastxf  = cb_viewpoint.x;
+   const float lastyf  = cb_viewpoint.y;
+   const float lastzf  = cb_viewpoint.z;
+   const angle_t lastangle = viewpoint.angle;
+   const float lastanglef  = cb_viewpoint.angle;
 
-   viewx = window->vx;
-   viewy = window->vy;
-   viewz = window->vz;
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
-   if(window->vangle != viewangle)
+   viewpoint.x = window->vx;
+   viewpoint.y = window->vy;
+   viewpoint.z = window->vz;
+   cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
+   cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
+   cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
+   if(window->vangle != viewpoint.angle)
    {
-      viewangle = window->vangle;
-      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-      view.angle = (ANG90 - viewangle) * PI / ANG180;
-      view.sin = sinf(view.angle);
-      view.cos = cosf(view.angle);
+      viewpoint.angle = window->vangle;
+      viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+      viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+      cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+      cb_viewpoint.sin = sinf(cb_viewpoint.angle);
+      cb_viewpoint.cos = cosf(cb_viewpoint.angle);
    }
 
    const sector_t *sector = portal->data.sector;
    vplane = R_FindPlane(
       planecontext,
       bounds,
-      sector->srf.ceiling.height + viewz,
+      sector->srf.ceiling.height + viewpoint.z,
       sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
       ? sector->sky : sector->srf.ceiling.pic,
       R_GetSurfaceLightLevel(surf_ceil, sector),
@@ -793,19 +795,19 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
 
    if(window->head == window && window->poverlay)
       R_PushPost(spritecontext, bounds, false, window);
-      
-   viewx = lastx;
-   viewy = lasty;
-   viewz = lastz;
-   viewangle = lastangle;
-   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-   view.x = lastxf;
-   view.y = lastyf;
-   view.z = lastzf;
-   view.angle = lastanglef;
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+
+   viewpoint.x  = lastx;
+   viewpoint.y  = lasty;
+   viewpoint.z  = lastz;
+   viewpoint.angle = lastangle;
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.x = lastxf;
+   cb_viewpoint.y = lastyf;
+   cb_viewpoint.z = lastzf;
+   cb_viewpoint.angle = lastanglef;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    if(window->child)
       R_renderPlanePortal(context, window->child);
@@ -816,12 +818,16 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
 //
 static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
 {
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
    planecontext_t  &planecontext   = context.planecontext;
    spritecontext_t &spritecontext  = context.spritecontext;
    const contextbounds_t &bounds   = context.bounds;
 
    fixed_t lastx, lasty, lastz; // SoM 3/10/2005
+   angle_t lastangle;
    float   lastxf, lastyf, lastzf;
+   float   lastanglef;
    visplane_t *topplane, *bottomplane;
    int x;
    portal_t *portal = window->portal;
@@ -832,29 +838,29 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
    if(window->maxx < window->minx)
       return;
 
-   lastx  = viewx; 
-   lasty  = viewy; 
-   lastz  = viewz;
-   lastxf = view.x;
-   lastyf = view.y;
-   lastzf = view.z;
-   angle_t lastangle = viewangle;
-   float lastanglef = view.angle;
+   lastx  = viewpoint.x;
+   lasty  = viewpoint.y;
+   lastz  = viewpoint.z;
+   lastxf = cb_viewpoint.x;
+   lastyf = cb_viewpoint.y;
+   lastzf = cb_viewpoint.z;
+   lastangle  = viewpoint.angle;
+   lastanglef = cb_viewpoint.angle;
 
-   viewx = window->vx;   
-   viewy = window->vy;   
-   viewz = window->vz;   
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
-   if(window->vangle != viewangle)
+   viewpoint.x = window->vx;
+   viewpoint.y = window->vy;
+   viewpoint.z = window->vz;
+   cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
+   cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
+   cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
+   if(window->vangle != viewpoint.angle)
    {
-      viewangle = window->vangle;
-      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-      view.angle = (ANG90 - viewangle) * PI / ANG180;
-      view.sin = sinf(view.angle);
-      view.cos = cosf(view.angle);
+      viewpoint.angle = window->vangle;
+      viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+      viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+      cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+      cb_viewpoint.sin = sinf(cb_viewpoint.angle);
+      cb_viewpoint.cos = cosf(cb_viewpoint.angle);
    }
 
    const sector_t *sector = portal->data.sector;
@@ -920,19 +926,19 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
 
    if(window->head == window && window->poverlay)
       R_PushPost(spritecontext, bounds, false, window);
-      
-   viewx  = lastx; 
-   viewy  = lasty; 
-   viewz  = lastz;
-   viewangle = lastangle;
-   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-   view.x = lastxf;
-   view.y = lastyf;
-   view.z = lastzf;
-   view.angle = lastanglef;
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+
+   viewpoint.x  = lastx;
+   viewpoint.y  = lasty;
+   viewpoint.z  = lastz;
+   viewpoint.angle = lastangle;
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.x = lastxf;
+   cb_viewpoint.y = lastyf;
+   cb_viewpoint.z = lastzf;
+   cb_viewpoint.angle = lastanglef;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    if(window->child)
       R_renderHorizonPortal(context, window->child);
@@ -950,6 +956,8 @@ extern void R_ClearSlopeMark(float *const slopemark, int minx, int maxx, pwindow
 //
 static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
 {
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
    bspcontext_t    &bspcontext     = context.bspcontext;
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
@@ -1000,30 +1008,30 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
-   lastx = viewx;
-   lasty = viewy;
-   lastz = viewz;
-   lastangle = viewangle;
-   lastxf = view.x;
-   lastyf = view.y;
-   lastzf = view.z;
-   lastanglef = view.angle;
+   lastx  = viewpoint.x;
+   lasty  = viewpoint.y;
+   lastz  = viewpoint.z;
+   lastxf = cb_viewpoint.x;
+   lastyf = cb_viewpoint.y;
+   lastzf = cb_viewpoint.z;
+   lastangle  = viewpoint.angle;
+   lastanglef = cb_viewpoint.angle;
 
-   viewx = portal->data.camera->x;
-   viewy = portal->data.camera->y;
-   viewz = portal->data.camera->z;
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
+   viewpoint.x = portal->data.camera->x;
+   viewpoint.y = portal->data.camera->y;
+   viewpoint.z = portal->data.camera->z;
+   cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
+   cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
+   cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
 
    // SoM: The viewangle should also be offset by the skybox camera angle.
-   viewangle += portal->data.camera->angle;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+   viewpoint.angle += portal->data.camera->angle;
+   viewpoint.sin    = finesine[viewpoint.angle >>ANGLETOFINESHIFT];
+   viewpoint.cos    = finecosine[viewpoint.angle >>ANGLETOFINESHIFT];
 
-   view.angle = (ANG90 - viewangle) * PI / ANG180;
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+   cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    R_incrementRenderDepth(portalcontext.renderdepth);
    R_RenderBSPNode(
@@ -1038,19 +1046,18 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    planecontext.ceilingclip = ceilingcliparray;
 
    // SoM: "pop" the view state.
-   viewx = lastx;
-   viewy = lasty;
-   viewz = lastz;
-   viewangle = lastangle;
-   view.x = lastxf;
-   view.y = lastyf;
-   view.z = lastzf;
-   view.angle = lastanglef;
-
-   viewsin  = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos  = finecosine[viewangle>>ANGLETOFINESHIFT];
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+   viewpoint.x  = lastx;
+   viewpoint.y  = lasty;
+   viewpoint.z  = lastz;
+   viewpoint.angle = lastangle;
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.x = lastxf;
+   cb_viewpoint.y = lastyf;
+   cb_viewpoint.z = lastzf;
+   cb_viewpoint.angle = lastanglef;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    if(window->child)
       R_renderSkyboxPortal(context, window->child);
@@ -1141,6 +1148,8 @@ static void R_showTainted(planecontext_t &context, const contextbounds_t &bounds
 //
 static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
 {
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
    bspcontext_t    &bspcontext     = context.bspcontext;
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
@@ -1149,7 +1158,9 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    const contextbounds_t &bounds   = context.bounds;
 
    fixed_t lastx, lasty, lastz;
+   angle_t lastangle;
    float   lastxf, lastyf, lastzf;
+   float   lastanglef;
    portal_t *portal = window->portal;
 
    if(portal->type != R_ANCHORED && portal->type != R_TWOWAY)
@@ -1204,32 +1215,32 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
-   lastx = viewx;
-   lasty = viewy;
-   lastz = viewz;
-   lastxf = view.x;
-   lastyf = view.y;
-   lastzf = view.z;
-   angle_t lastangle = viewangle;
-   float lastanglef = view.angle;
+   lastx  = viewpoint.x;
+   lasty  = viewpoint.y;
+   lastz  = viewpoint.z;
+   lastxf = cb_viewpoint.x;
+   lastyf = cb_viewpoint.y;
+   lastzf = cb_viewpoint.z;
+   lastangle  = viewpoint.angle;
+   lastanglef = cb_viewpoint.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
    const portaltransform_t &tr = portal->data.anchor.transform;
-   viewx = window->vx;
-   viewy = window->vy;
-   tr.applyTo(viewx, viewy, &view.x, &view.y);
+   viewpoint.x = window->vx;
+   viewpoint.y = window->vy;
+   tr.applyTo(viewpoint.x, viewpoint.y, &cb_viewpoint.x, &cb_viewpoint.y);
    double vz = M_FixedToDouble(window->vz) + tr.move.z;
-   viewz = M_DoubleToFixed(vz);
-   view.z = static_cast<float>(vz);
+   viewpoint.z    = M_DoubleToFixed(vz);
+   cb_viewpoint.z = static_cast<float>(vz);
 
    // IMPORTANT: cast the double first to signed integer, THEN to angle. Otherwise, on 32-bit MSVC
    // at least, it will fail to convert, returning 0xFFFFFFFF instead!
-   viewangle = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
-   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-   view.angle = (ANG90 - viewangle) * PI / ANG180;
-   view.sin = sinf(view.angle);
-   view.cos = cosf(view.angle);
+   viewpoint.angle = window->vangle + R_doubleToUint32(tr.angle * ANG180 / PI);
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.sin   = sinf(cb_viewpoint.angle);
+   cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
 
    R_incrementRenderDepth(portalcontext.renderdepth);
    R_RenderBSPNode(
@@ -1243,19 +1254,18 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
 
-   viewx  = lastx;
-   viewy  = lasty;
-   viewz  = lastz;
-   viewangle = lastangle;
-   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-   view.x = lastxf;
-   view.y = lastyf;
-   view.z = lastzf;
-   view.angle = lastanglef;
-
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+   viewpoint.x  = lastx;
+   viewpoint.y  = lasty;
+   viewpoint.z  = lastz;
+   viewpoint.angle = lastangle;
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.x = lastxf;
+   cb_viewpoint.y = lastyf;
+   cb_viewpoint.z = lastzf;
+   cb_viewpoint.angle = lastanglef;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    if(window->child)
       R_renderAnchoredPortal(context, window->child);
@@ -1263,6 +1273,8 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
 
 static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
 {
+   viewpoint_t     &viewpoint      = context.view;
+   cbviewpoint_t   &cb_viewpoint   = context.cb_view;
    bspcontext_t    &bspcontext     = context.bspcontext;
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
@@ -1325,31 +1337,31 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    memset(spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
    R_SetMaskedSilhouette(bounds, planecontext.ceilingclip, planecontext.floorclip);
 
-   lastx  = viewx;
-   lasty  = viewy;
-   lastz  = viewz;
-   lastxf = view.x;
-   lastyf = view.y;
-   lastzf = view.z;
-   lastangle = viewangle;
-   lastanglef = view.angle;
+   lastx  = viewpoint.x;
+   lasty  = viewpoint.y;
+   lastz  = viewpoint.z;
+   lastxf = cb_viewpoint.x;
+   lastyf = cb_viewpoint.y;
+   lastzf = cb_viewpoint.z;
+   lastangle  = viewpoint.angle;
+   lastanglef = cb_viewpoint.angle;
 
    // SoM 3/10/2005: Use the coordinates stored in the portal struct
-   viewx  = window->vx + portal->data.link.delta.x;
-   viewy  = window->vy + portal->data.link.delta.y;
-   viewz  = window->vz + portal->data.link.delta.z;
-   view.x = M_FixedToFloat(viewx);
-   view.y = M_FixedToFloat(viewy);
-   view.z = M_FixedToFloat(viewz);
+   viewpoint.x    = window->vx + portal->data.link.delta.x;
+   viewpoint.y    = window->vy + portal->data.link.delta.y;
+   viewpoint.z    = window->vz + portal->data.link.delta.z;
+   cb_viewpoint.x = M_FixedToFloat(viewpoint.x);
+   cb_viewpoint.y = M_FixedToFloat(viewpoint.y);
+   cb_viewpoint.z = M_FixedToFloat(viewpoint.z);
 
-   if(window->vangle != viewangle)
+   if(window->vangle != viewpoint.angle)
    {
-      viewangle = window->vangle;
-      viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-      viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-      view.angle = (ANG90 - viewangle) * PI / ANG180;
-      view.sin = sinf(view.angle);
-      view.cos = cosf(view.angle);
+      viewpoint.angle = window->vangle;
+      viewpoint.sin = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+      viewpoint.cos = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+      cb_viewpoint.angle = (ANG90 - viewpoint.angle) * PI / ANG180;
+      cb_viewpoint.sin = sinf(cb_viewpoint.angle);
+      cb_viewpoint.cos = cosf(cb_viewpoint.angle);
    }
 
    R_incrementRenderDepth(portalcontext.renderdepth);
@@ -1364,18 +1376,18 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
 
-   viewx  = lastx;
-   viewy  = lasty;
-   viewz  = lastz;
-   viewangle = lastangle;
-   viewsin = finesine[viewangle >> ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle >> ANGLETOFINESHIFT];
-   view.x = lastxf;
-   view.y = lastyf;
-   view.z = lastzf;
-   view.angle = lastanglef;
-   view.sin = (float)sin(view.angle);
-   view.cos = (float)cos(view.angle);
+   viewpoint.x  = lastx;
+   viewpoint.y  = lasty;
+   viewpoint.z  = lastz;
+   viewpoint.angle = lastangle;
+   viewpoint.sin   = finesine[viewpoint.angle >> ANGLETOFINESHIFT];
+   viewpoint.cos   = finecosine[viewpoint.angle >> ANGLETOFINESHIFT];
+   cb_viewpoint.x = lastxf;
+   cb_viewpoint.y = lastyf;
+   cb_viewpoint.z = lastzf;
+   cb_viewpoint.angle = lastanglef;
+   cb_viewpoint.sin   = (float)sin(cb_viewpoint.angle);
+   cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    if(window->child)
       R_renderLinkedPortal(context, window->child);

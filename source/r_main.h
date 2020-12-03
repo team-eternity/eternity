@@ -49,9 +49,6 @@ struct cb_column_t;
 // POV related.
 //
 
-extern fixed_t  viewcos;
-extern fixed_t  viewsin;
-
 extern int      centerx;
 extern int      centery;
 extern fixed_t  centerxfrac;
@@ -152,9 +149,7 @@ extern const float PI;
 
 struct cb_view_t
 {
-   float x, y, z;
-   float angle, pitch;
-   float sin, cos;
+   float pitch;
 
    float width, height;
    float xcenter, ycenter;

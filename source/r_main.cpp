@@ -87,9 +87,6 @@ int validcount = 1;         // increment every time a check is made
 lighttable_t *fixedcolormap;
 int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
-fixed_t  viewx, viewy, viewz;
-angle_t  viewangle;
-fixed_t  viewcos, viewsin;
 fixed_t  viewpitch;
 const player_t *viewplayer;
 bool     showpsprites = 1; //sf
@@ -791,17 +788,19 @@ uint64_t R_GetVisitID(const uint16_t renderdepth, const int16_t contextid)
 //
 static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
 {
+   viewpoint_t &viewpoint = r_globalcontext.view;
+
    if(lerp == FRACUNIT)
    {
-      viewx     = player->mo->x;
-      viewy     = player->mo->y;
-      viewz     = player->viewz;
-      viewangle = player->mo->angle; //+ viewangleoffset;
-      viewpitch = player->pitch;
+      viewpoint.x     = player->mo->x;
+      viewpoint.y     = player->mo->y;
+      viewpoint.z     = player->viewz;
+      viewpoint.angle = player->mo->angle; //+ viewangleoffset;
+      viewpitch       = player->pitch;
    }
    else
    {
-      viewz = lerpCoord(lerp, player->prevviewz, player->viewz);
+      viewpoint.z = lerpCoord(lerp, player->prevviewz, player->viewz);
       Mobj *thing = player->mo;
 
       if(const linkdata_t * psec = thing->prevpos.ldata)
@@ -811,12 +810,12 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             thing->x - psec->delta.x,
             thing->y - psec->delta.y
          };
-         viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
-         viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
+         viewpoint.x = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
+         viewpoint.y = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
 
          bool execute = false;
          const line_t *pline = thing->prevpos.portalline;
-         if(pline && P_PointOnLineSidePrecise(viewx, viewy, pline))
+         if(pline && P_PointOnLineSidePrecise(viewpoint.x, viewpoint.y, pline))
             execute = true;
          if(!execute && !pline)
          {
@@ -824,7 +823,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             if(psurface)
             {
                fixed_t planez = P_PortalZ(*psurface);
-               execute = FixedMul(viewz - planez, player->prevviewz - planez) < 0;
+               execute = FixedMul(viewpoint.z - planez, player->prevviewz - planez) < 0;
             }
          }
 
@@ -836,16 +835,16 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             thing->prevpos.portalsurface = nullptr;
             thing->prevpos.x += psec->delta.x;
             thing->prevpos.y += psec->delta.y;
-            viewx += psec->delta.x;
-            viewy += psec->delta.y;
+            viewpoint.x += psec->delta.x;
+            viewpoint.y += psec->delta.y;
          }
       }
       else
       {
-         viewx = lerpCoord(lerp, thing->prevpos.x, thing->x);
-         viewy = lerpCoord(lerp, thing->prevpos.y, thing->y);
+         viewpoint.x = lerpCoord(lerp, thing->prevpos.x, thing->x);
+         viewpoint.y = lerpCoord(lerp, thing->prevpos.y, thing->y);
       }
-      viewangle = lerpAngle(lerp, thing->prevpos.angle, thing->angle);
+      viewpoint.angle = lerpAngle(lerp, thing->prevpos.angle, thing->angle);
       viewpitch = lerpAngle(lerp, player->prevpitch,         player->pitch);
    }
 }
@@ -857,21 +856,23 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
 //
 static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
 {
+   viewpoint_t &viewpoint = r_globalcontext.view;
+
    if(lerp == FRACUNIT)
    {
-      viewx     = camera->x;
-      viewy     = camera->y;
-      viewz     = camera->z;
-      viewangle = camera->angle;
-      viewpitch = camera->pitch;
+      viewpoint.x     = camera->x;
+      viewpoint.y     = camera->y;
+      viewpoint.z     = camera->z;
+      viewpoint.angle = camera->angle;
+      viewpitch       = camera->pitch;
    }
    else
    {
-      viewx     = lerpCoord(lerp, camera->prevpos.x,     camera->x);
-      viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
-      viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
-      viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
-      viewpitch = lerpAngle(lerp, camera->prevpitch, camera->pitch);
+      viewpoint.x     = lerpCoord(lerp, camera->prevpos.x,     camera->x);
+      viewpoint.y     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
+      viewpoint.z     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
+      viewpoint.angle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+      viewpitch       = lerpAngle(lerp, camera->prevpitch, camera->pitch);
    }
 }
 
@@ -1004,6 +1005,9 @@ fixed_t R_GetLerp(bool ignorepause)
 //
 static void R_SetupFrame(player_t *player, camera_t *camera)
 {
+   viewpoint_t   &viewpoint    = r_globalcontext.view;
+   cbviewpoint_t &cb_viewpoint = r_globalcontext.cb_view;
+
    fixed_t  viewheightfrac;
    fixed_t  lerp = R_GetLerp(false);
    
@@ -1026,8 +1030,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
       {
          int strength = player->quake;
 
-         viewx += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
-         viewy += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+         viewpoint.x += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+         viewpoint.y += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
       }
    }
    else
@@ -1042,19 +1046,19 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
       viewpitch = ANGLE_1 * MAXPITCHDOWN;
 
    extralight = player->extralight;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+   viewpoint.sin = finesine[viewpoint.angle>>ANGLETOFINESHIFT];
+   viewpoint.cos = finecosine[viewpoint.angle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
-   view.x      = M_FixedToFloat(viewx);
-   view.y      = M_FixedToFloat(viewy);
-   view.z      = M_FixedToFloat(viewz);
-   view.angle  = (ANG90 - viewangle) * PI / ANG180;
+   cb_viewpoint.x      = M_FixedToFloat(viewpoint.x);
+   cb_viewpoint.y      = M_FixedToFloat(viewpoint.y);
+   cb_viewpoint.z      = M_FixedToFloat(viewpoint.z);
+   cb_viewpoint.angle  = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.sin    = sinf(cb_viewpoint.angle);
+   cb_viewpoint.cos    = cosf(cb_viewpoint.angle);
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
-   view.sin    = sinf(view.angle);
-   view.cos    = cosf(view.angle);
    view.lerp   = lerp;
-   view.sector = R_PointInSubsector(viewx, viewy)->sector;
+   view.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
 
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
@@ -1091,6 +1095,9 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    // use drawcolumn
    R_ForEachContext([](rendercontext_t &context) {
       context.colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
+
+      context.view    = r_globalcontext.view;
+      context.cb_view = r_globalcontext.cb_view;
    });
 }
 

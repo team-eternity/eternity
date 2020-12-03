@@ -120,10 +120,6 @@ extern int              numthings;
 //
 // POV data.
 //
-extern fixed_t          viewx;
-extern fixed_t          viewy;
-extern fixed_t          viewz;
-extern angle_t          viewangle;
 extern const player_t   *viewplayer;
 extern camera_t         *viewcamera;
 extern angle_t          clipangle;
