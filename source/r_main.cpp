@@ -1131,8 +1131,6 @@ static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
 }
 
 //
-// R_SectorColormap
-//
 // killough 3/20/98, 4/4/98: select colormap based on player status
 // haleyjd 03/04/07: rewritten to get colormaps from the sector itself
 // instead of from its heightsec if it has one (heightsec colormaps are
@@ -1306,7 +1304,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // SoM 12/9/03: render the portals.
       R_RenderPortals(context);
 
-      R_DrawPlanes(context.planecontext.mainhash, context.colfunc, nullptr);
+      R_DrawPlanes(context.planecontext.mainhash, context.colfunc, context.view.angle, nullptr);
 
       // Check for new console commands.
       NetUpdate();

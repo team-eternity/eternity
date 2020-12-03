@@ -373,12 +373,10 @@ bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
 #undef CompFloats
 
 //
-// R_CalcSlope
-//
 // SoM: Calculates the rslope info from the OHV vectors and rotation/offset 
 // information in the plane struct
 //
-static void R_CalcSlope(visplane_t *pl)
+static void R_calcSlope(const cbviewpoint_t &cb_viewpoint, visplane_t *pl)
 {
    // This is where the crap gets calculated. Yay
    double         xl, yl, tsin, tcos;
@@ -423,9 +421,9 @@ static void R_CalcSlope(visplane_t *pl)
    N.z = P.z + yl * tsin;
    N.y = P_GetZAtf(pl->pslope, (float)N.x, (float)N.z);
 
-   M_TranslateVec3(&P);
-   M_TranslateVec3(&M);
-   M_TranslateVec3(&N);
+   M_TranslateVec3(cb_viewpoint, &P);
+   M_TranslateVec3(cb_viewpoint, &M);
+   M_TranslateVec3(cb_viewpoint, &N);
 
    M_SubVec3(&M, &M, &P);
    M_SubVec3(&N, &N, &P);
@@ -587,7 +585,9 @@ static visplane_t *new_visplane(planecontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
+visplane_t *R_FindPlane(planecontext_t &context,
+                        const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                        const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
                         v2fixed_t offs, v2float_t scale, float angle,
                         pslope_t *slope, int blendflags, byte opacity,
@@ -615,10 +615,10 @@ visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
    {
       lightlevel = 0;   // killough 7/19/98: most skies map together
 
-      // haleyjd 05/06/08: but not all. If height > viewz, set height to
+      // haleyjd 05/06/08: but not all. If height > viewpoint.z, set height to
       // 1 instead of 0, to keep ceilings mapping with ceilings, and floors
       // mapping with floors.
-      if(height > viewz)
+      if(height > viewpoint.z)
          height = 1;
    }
 
@@ -637,9 +637,9 @@ visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
          zlight == check->colormap &&
          fixedcolormap == check->fixedcolormap &&
-         viewx == check->viewx &&
-         viewy == check->viewy &&
-         viewz == check->viewz &&
+         viewpoint.x == check->viewx &&
+         viewpoint.y == check->viewy &&
+         viewpoint.z == check->viewz &&
          blendflags == check->bflags &&
          opacity == check->opacity &&
          R_CompareSlopes(check->pslope, slope)
@@ -662,9 +662,9 @@ visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
    check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
    check->fullcolormap = fullcolormap;
    
-   check->viewx = viewx;
-   check->viewy = viewy;
-   check->viewz = viewz;
+   check->viewx = viewpoint.x;
+   check->viewy = viewpoint.y;
+   check->viewz = viewpoint.z;
    
    check->heightf = M_FixedToFloat(height);
    check->xoffsf  = M_FixedToFloat(offs.x);
@@ -674,16 +674,16 @@ visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
    check->opacity = opacity;
 
    // haleyjd 01/05/08: modify viewing angle with respect to flat angle
-   check->viewsin = sinf(view.angle + check->angle);
-   check->viewcos = cosf(view.angle + check->angle);
+   check->viewsin = sinf(cb_viewpoint.angle + check->angle);
+   check->viewcos = cosf(cb_viewpoint.angle + check->angle);
    
    // SoM: set up slope type stuff
    if((check->pslope = slope))
    {
-      check->viewxf = view.x;
-      check->viewyf = view.y;
-      check->viewzf = view.z;
-      R_CalcSlope(check);
+      check->viewxf = cb_viewpoint.x;
+      check->viewyf = cb_viewpoint.y;
+      check->viewzf = cb_viewpoint.z;
+      R_calcSlope(cb_viewpoint, check);
    }
    else
    {
@@ -693,9 +693,9 @@ visplane_t *R_FindPlane(planecontext_t &context, const contextbounds_t &bounds,
 
       tsin = (float) sin(check->angle);
       tcos = (float) cos(check->angle);
-      check->viewxf =  view.x * tcos + view.y * tsin;
-      check->viewyf = -view.x * tsin + view.y * tcos;
-      check->viewzf =  view.z;
+      check->viewxf =  cb_viewpoint.x * tcos + cb_viewpoint.y * tsin;
+      check->viewyf = -cb_viewpoint.x * tsin + cb_viewpoint.y * tcos;
+      check->viewzf =  cb_viewpoint.z;
    }
    
    {
@@ -830,7 +830,7 @@ static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_pla
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(void (*&colfunc)(cb_column_t &), visplane_t *pl)
+static void do_draw_newsky(void (*&colfunc)(cb_column_t &), const angle_t viewangle, visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
@@ -917,7 +917,7 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(void (*&colfunc)(cb_column_t &), visplane_t *pl)
+static void do_draw_plane(void (*&colfunc)(cb_column_t &), const angle_t viewangle, visplane_t *pl)
 {
    int x;
 
@@ -927,7 +927,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), visplane_t *pl)
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(colfunc, pl);
+      do_draw_newsky(colfunc, viewangle, pl);
       return;
    }
    
@@ -1179,7 +1179,8 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), visplane_t *pl)
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &), planehash_t *table)
+void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
+                  const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
    int i;
@@ -1190,7 +1191,7 @@ void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &), planeh
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(colfunc, pl);
+         do_draw_plane(colfunc, viewangle, pl);
    }
 }
 

@@ -210,6 +210,7 @@ static void R_addMarkedSegs(bspcontext_t &context)
 //
 static void R_clipSolidWallSegment(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                    portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                    const contextbounds_t &bounds,
                                    const cb_seg_t &seg, const int x1, const int x2)
 {
@@ -231,7 +232,8 @@ static void R_clipSolidWallSegment(bspcontext_t &bspcontext, planecontext_t &pla
       {
          // Post is entirely visible (above start), so insert a new clippost.
          R_StoreWallRange(
-            bspcontext, planecontext, portalcontext, colfunc, bounds, seg, x1, x2
+            bspcontext, planecontext, portalcontext, colfunc,
+            viewpoint, cb_viewpoint, bounds, seg, x1, x2
          );
 
          // 1/11/98 killough: performance tuning using fast memmove
@@ -243,7 +245,8 @@ static void R_clipSolidWallSegment(bspcontext_t &bspcontext, planecontext_t &pla
 
       // There is a fragment above *start.
       R_StoreWallRange(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, seg, x1, start->first - 1
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, seg, x1, start->first - 1
       );
 
       // Now adjust the clip size.
@@ -258,7 +261,8 @@ static void R_clipSolidWallSegment(bspcontext_t &bspcontext, planecontext_t &pla
    while(x2 >= (next + 1)->first - 1)
    {      // There is a fragment between two posts.
       R_StoreWallRange(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, seg, next->last + 1, (next + 1)->first - 1
+         bspcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint,
+         bounds, seg, next->last + 1, (next + 1)->first - 1
       );
       ++next;
       if(x2 <= next->last)
@@ -271,7 +275,8 @@ static void R_clipSolidWallSegment(bspcontext_t &bspcontext, planecontext_t &pla
 
    // There is a fragment after *next.
    R_StoreWallRange(
-      bspcontext, planecontext, portalcontext, colfunc, bounds, seg, next->last + 1, x2
+      bspcontext, planecontext, portalcontext, colfunc,
+      viewpoint, cb_viewpoint, bounds, seg, next->last + 1, x2
    );
 
    // Adjust the clip size.
@@ -316,8 +321,8 @@ crunch:
 //
 static void R_clipPassWallSegment(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                   portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                                  const contextbounds_t &bounds,
-                                  const cb_seg_t &seg,
+                                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                                  const contextbounds_t &bounds, const cb_seg_t &seg,
                                   const int x1, const int x2)
 {
    cliprange_t *&solidsegs = bspcontext.solidsegs;
@@ -338,14 +343,16 @@ static void R_clipPassWallSegment(bspcontext_t &bspcontext, planecontext_t &plan
       {
          // Post is entirely visible (above start).
          R_StoreWallRange(
-            bspcontext, planecontext, portalcontext, colfunc, bounds, seg, x1, x2
+            bspcontext, planecontext, portalcontext, colfunc,
+            viewpoint, cb_viewpoint, bounds, seg, x1, x2
          );
          return;
       }
 
       // There is a fragment above *start.
       R_StoreWallRange(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, seg, x1, start->first - 1
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, seg, x1, start->first - 1
       );
    }
 
@@ -357,7 +364,7 @@ static void R_clipPassWallSegment(bspcontext_t &bspcontext, planecontext_t &plan
    {
       // There is a fragment between two posts.
       R_StoreWallRange(
-         bspcontext, planecontext, portalcontext, colfunc,
+         bspcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint,
          bounds, seg, start->last + 1, (start + 1)->first - 1
       );
       ++start;
@@ -368,7 +375,8 @@ static void R_clipPassWallSegment(bspcontext_t &bspcontext, planecontext_t &plan
    
    // There is a fragment after *next.
    R_StoreWallRange(
-      bspcontext, planecontext, portalcontext, colfunc, bounds, seg, start->last + 1, x2
+      bspcontext, planecontext, portalcontext, colfunc,
+      viewpoint, cb_viewpoint, bounds, seg, start->last + 1, x2
    );
 }
 
@@ -777,8 +785,8 @@ static bool R_clipInitialSegRange(const cb_seg_t &seg, const portalrender_t &por
 
 static void R_clipSegToFPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                               const contextbounds_t &bounds,
-                               const cb_seg_t &seg)
+                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                               const contextbounds_t &bounds, const cb_seg_t &seg)
 {
    float                *&slopemark    = bspcontext.slopemark;
    float           *const floorclip    = planecontext.floorclip;
@@ -810,13 +818,15 @@ static void R_clipSegToFPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -853,13 +863,15 @@ static void R_clipSegToFPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -868,8 +880,8 @@ static void R_clipSegToFPortal(bspcontext_t &bspcontext, planecontext_t &planeco
 
 static void R_clipSegToCPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                               const contextbounds_t &bounds,
-                               const cb_seg_t &seg)
+                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                               const contextbounds_t &bounds, const cb_seg_t &seg)
 {
    float                *&slopemark    = bspcontext.slopemark;
    float           *const ceilingclip  = planecontext.ceilingclip;
@@ -898,13 +910,15 @@ static void R_clipSegToCPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -939,13 +953,15 @@ static void R_clipSegToCPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -954,8 +970,8 @@ static void R_clipSegToCPortal(bspcontext_t &bspcontext, planecontext_t &planeco
 
 static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                               const contextbounds_t &bounds,
-                               const cb_seg_t &seg)
+                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                               const contextbounds_t &bounds, const cb_seg_t &seg)
 {
    float          *const floorclip    = planecontext.floorclip;
    float          *const ceilingclip  = planecontext.ceilingclip;
@@ -1014,13 +1030,15 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -1058,13 +1076,15 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -1107,13 +1127,15 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -1134,13 +1156,15 @@ static void R_clipSegToLPortal(bspcontext_t &bspcontext, planecontext_t &planeco
          if(seg.clipsolid)
          {
             R_clipSolidWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
          else
          {
             R_clipPassWallSegment(
-               bspcontext, planecontext, portalcontext, colfunc, bounds, seg, startx, i - 1
+               bspcontext, planecontext, portalcontext, colfunc,
+               viewpoint, cb_viewpoint, bounds, seg, startx, i - 1
             );
          }
       }
@@ -1321,7 +1345,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
       }
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
@@ -1329,7 +1353,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
       else
@@ -1407,7 +1431,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
       }
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
@@ -1415,7 +1439,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
       else
@@ -1643,7 +1667,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
       }
       else if(seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal &&
               seg.frontsec->srf.ceiling.height == seg.backsec->srf.ceiling.height)
@@ -1653,7 +1677,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
          seg.secwindow.ceiling = nullptr;
       }
       else
@@ -1729,7 +1753,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
       }
       else if(seg.frontsec->srf.floor.height == seg.backsec->srf.floor.height &&
               seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
@@ -1739,7 +1763,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
             planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
-         R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
+         R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
          seg.secwindow.floor = nullptr;
       }
       else
@@ -1921,7 +1945,7 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
          planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
       );
       R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
-      R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
+      R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_ceil);
    }
 
    if(seg.frontsec->srf.floor.portal && (seg.frontsec->srf.floor.portal->type < R_TWOWAY ||
@@ -1932,7 +1956,7 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
          planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
       );
       R_updateWindowSectorBarrier(visitid, seg, surf_floor);
-      R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
+      R_MovePortalOverlayToWindow(planecontext, viewpoint, cb_viewpoint, bounds, seg, surf_floor);
    }
 
    if(seg.plane.ceiling != nullptr)
@@ -2574,17 +2598,24 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
    seg.x2frac = x2;
 
    if(portalrender.active && portalrender.segClipFunc)
-      portalrender.segClipFunc(bspcontext, planecontext, portalcontext, colfunc, bounds, seg);
+   {
+      portalrender.segClipFunc(
+         bspcontext, planecontext, portalcontext,
+         colfunc, viewpoint, cb_viewpoint, bounds, seg
+      );
+   }
    else if(seg.clipsolid)
    {
       R_clipSolidWallSegment(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, seg, seg.x1, seg.x2
+         bspcontext, planecontext, portalcontext, colfunc, viewpoint,
+         cb_viewpoint, bounds, seg, seg.x1, seg.x2
       );
    }
    else
    {
       R_clipPassWallSegment(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, seg, seg.x1, seg.x2
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, seg, seg.x1, seg.x2
       );
    }
 
@@ -2914,6 +2945,8 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
       seg.plane.floor = visible && seg.frontsec->srf.floor.pflags & PS_OVERLAY ?
         R_FindPlane(planecontext,
+                    viewpoint,
+                    cb_viewpoint,
                     bounds,
                     seg.frontsec->srf.floor.height,
                     seg.frontsec->srf.floor.pflags & PS_USEGLOBALTEX ?
@@ -2933,6 +2966,8 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
          (seg.frontsec->heightsec != -1 &&
           sectors[seg.frontsec->heightsec].intflags & SIF_SKY)) ?
         R_FindPlane(planecontext,
+                    viewpoint,
+                    cb_viewpoint,
                     bounds,
                     seg.frontsec->srf.floor.height,
                     R_IsSkyFlat(seg.frontsec->srf.floor.pic) &&  // kilough 10/98
@@ -2966,6 +3001,8 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
       seg.plane.ceiling = visible && seg.frontsec->srf.ceiling.pflags & PS_OVERLAY ?
         R_FindPlane(planecontext,
+                    viewpoint,
+                    cb_viewpoint,
                     bounds,
                     seg.frontsec->srf.ceiling.height,
                     seg.frontsec->srf.ceiling.pflags & PS_USEGLOBALTEX ?
@@ -2985,6 +3022,8 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
         (seg.frontsec->heightsec != -1 &&
          R_IsSkyFlat(sectors[seg.frontsec->heightsec].srf.floor.pic))) ?
         R_FindPlane(planecontext,
+                    viewpoint,
+                    cb_viewpoint,
                     bounds,
                     seg.frontsec->srf.ceiling.height,     // killough 3/8/98
                     (seg.frontsec->intflags & SIF_SKY) &&  // kilough 10/98

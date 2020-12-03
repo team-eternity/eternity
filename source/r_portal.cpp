@@ -767,6 +767,8 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
    const sector_t *sector = portal->data.sector;
    vplane = R_FindPlane(
       planecontext,
+      viewpoint,
+      cb_viewpoint,
       bounds,
       sector->srf.ceiling.height + viewpoint.z,
       sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT
@@ -873,6 +875,8 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
       
    topplane = R_FindPlane(
       planecontext,
+      viewpoint,
+      cb_viewpoint,
       bounds,
       sector->srf.ceiling.height,
       sector->intflags & SIF_SKY && sector->sky & PL_SKYFLAT 
@@ -885,6 +889,8 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
    );
    bottomplane = R_FindPlane(
       planecontext,
+      viewpoint,
+      cb_viewpoint,
       bounds,
       sector->srf.floor.height,
       R_IsSkyFlat(sector->srf.floor.pic) && sector->sky & PL_SKYFLAT
@@ -1035,7 +1041,8 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
 
    R_incrementRenderDepth(portalcontext.renderdepth);
    R_RenderBSPNode(
-      bspcontext, planecontext, spritecontext, portalcontext, colfunc, bounds,
+      bspcontext, planecontext, spritecontext, portalcontext,
+      colfunc, viewpoint, cb_viewpoint, bounds,
       R_GetVisitID(portalcontext.renderdepth, context.bufferindex), numnodes - 1
    );
 
@@ -1070,8 +1077,9 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
 
 extern int    showtainted;
 
-static void R_showTainted(planecontext_t &context, const contextbounds_t &bounds,
-                          pwindow_t *window)
+static void R_showTainted(planecontext_t &context,
+                          const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                          const contextbounds_t &bounds, pwindow_t *window)
 {
    int y1, y2, count;
 
@@ -1081,12 +1089,12 @@ static void R_showTainted(planecontext_t &context, const contextbounds_t &bounds
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(
-         context, bounds, sector->srf.ceiling.height,
+         context, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
          sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset,
          sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr
       );
       visplane_t *bottomplane = R_FindPlane(
-         context, bounds, sector->srf.floor.height,
+         context, viewpoint, cb_viewpoint, bounds, sector->srf.floor.height,
          sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset,
          sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr
       );
@@ -1172,7 +1180,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_showTainted(planecontext, bounds, window);
+      R_showTainted(planecontext, viewpoint, cb_viewpoint, bounds, window);
 
       portal->tainted++;
       doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.anchor.maker,
@@ -1244,7 +1252,8 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
 
    R_incrementRenderDepth(portalcontext.renderdepth);
    R_RenderBSPNode(
-      bspcontext, planecontext, spritecontext, portalcontext, colfunc, bounds,
+      bspcontext, planecontext, spritecontext, portalcontext,
+      colfunc, viewpoint, cb_viewpoint, bounds,
       R_GetVisitID(portalcontext.renderdepth, context.bufferindex), numnodes - 1
    );
 
@@ -1294,7 +1303,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_showTainted(planecontext, bounds, window);
+      R_showTainted(planecontext, viewpoint, cb_viewpoint, bounds, window);
 
       portal->tainted++;
       doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.link.maker,
@@ -1366,7 +1375,8 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
 
    R_incrementRenderDepth(portalcontext.renderdepth);
    R_RenderBSPNode(
-      bspcontext, planecontext, spritecontext, portalcontext, colfunc, bounds,
+      bspcontext, planecontext, spritecontext, portalcontext,
+      colfunc, viewpoint, cb_viewpoint, bounds,
       R_GetVisitID(portalcontext.renderdepth, context.bufferindex), numnodes - 1
    );
 
@@ -1571,7 +1581,8 @@ pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(planecontext_t &context, const contextbounds_t &bounds,
+void R_MovePortalOverlayToWindow(planecontext_t &context, const viewpoint_t &viewpoint,
+                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf)
 {
 //   const portal_t *portal = isceiling ? seg.c_portal : seg.f_portal;
@@ -1580,8 +1591,8 @@ void R_MovePortalOverlayToWindow(planecontext_t &context, const contextbounds_t 
    if(plane)
    {
       plane = R_FindPlane(
-         context, bounds, plane->height, plane->picnum, plane->lightlevel,
-         plane->offs, plane->scale, plane->angle,
+         context, viewpoint, cb_viewpoint, bounds, plane->height, plane->picnum,
+         plane->lightlevel, plane->offs, plane->scale, plane->angle,
          plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
    }
 //   if(portal)

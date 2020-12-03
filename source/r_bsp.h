@@ -77,8 +77,9 @@ void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);
 const sector_t *R_FakeFlat(const fixed_t, const sector_t *, sector_t *, int *, int *, bool);
-bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
-   windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
+bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
+                           const float fbox[4], windowlinegen_t &linegen1,
+                           windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
 
 extern int detaillevel;
 

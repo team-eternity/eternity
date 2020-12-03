@@ -270,7 +270,9 @@ VALLOCATION(clipbot)
 // Forward declarations:
 static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
                            const float *const mfloorclip, const float *const mceilingclip);
-static void R_projectParticle(spritecontext_t &context, const contextbounds_t &bounds, particle_t *particle);
+static void R_projectParticle(spritecontext_t &context, const viewpoint_t &viewpoint,
+                              const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+                              particle_t *particle);
 
 //
 // R_SetMaskedSilhouette
@@ -950,7 +952,7 @@ static void R_projectSprite(spritecontext_t &context,
             return;
          }
          windowlinegen_t linegen1, linegen2;
-         if(R_PickNearestBoxLines(barrier.fbox, linegen1, linegen2))
+         if(R_PickNearestBoxLines(cb_viewpoint, barrier.fbox, linegen1, linegen2))
          {
 
             if(linegen1.normal * (posf - linegen1.start) >= 0)
@@ -1234,7 +1236,7 @@ void R_AddSprites(spritecontext_t &context,
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_projectParticle(context, bounds, *link);
+         R_projectParticle(context, viewpoint, cb_viewpoint, bounds, *link);
    }
 }
 
@@ -1424,7 +1426,7 @@ void R_DrawPlayerSprites()
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
    // (see r_bsp.c for similar calculations for non-player sprites)
 
-   R_FakeFlat(view.sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, 0);
+   R_FakeFlat(r_globalcontext.view.z, view.sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, 0);
    lightnum = ((floorlightlevel+ceilinglightlevel) >> (LIGHTSEGSHIFT+1)) 
                  + (extralight * LIGHTBRIGHT);
 
@@ -1619,7 +1621,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
             {
                r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-               R_RenderMaskedSegRange(colfunc, ds, r1, r2);
+               R_RenderMaskedSegRange(colfunc, viewpoint.z, ds, r1, r2);
             }
             continue;                // seg is behind sprite
          }
@@ -1681,7 +1683,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
             !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
          {
             if(ds->maskedtexturecol) // masked mid texture?
-               R_RenderMaskedSegRange(colfunc, ds, r1, r2);
+               R_RenderMaskedSegRange(colfunc, viewpoint.z, ds, r1, r2);
             continue;                // seg is behind sprite
          }
 
@@ -1904,7 +1906,7 @@ void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(colfunc, ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(colfunc, viewpoint.z, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
@@ -1921,7 +1923,7 @@ void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
          if(r_column_engine->ResetBuffer)
             r_column_engine->ResetBuffer();
             
-         R_DrawPlanes(planecontext.mainhash, colfunc, pstack[pstacksize].overlay);
+         R_DrawPlanes(planecontext.mainhash, colfunc, viewpoint.angle, pstack[pstacksize].overlay);
          R_FreeOverlaySet(planecontext.r_overlayfreesets, pstack[pstacksize].overlay);
       }
    }
@@ -2388,8 +2390,7 @@ static void R_projectParticle(spritecontext_t &context,
          sector_t tmpsec;
          int floorlightlevel, ceilinglightlevel, lightnum, index;
 
-         R_FakeFlat(sector, &tmpsec, &floorlightlevel, 
-                    &ceilinglightlevel, false);
+         R_FakeFlat(viewpoint.z, sector, &tmpsec, &floorlightlevel, &ceilinglightlevel, false);
 
          lightnum = (floorlightlevel + ceilinglightlevel) / 2;
          lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);

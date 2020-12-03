@@ -34,8 +34,9 @@
 #define SECTOR_PORTAL_LOOP_PROTECTION 128
 
 struct bspcontext_t;
-struct contextbounds_t;
 struct cb_seg_t;
+struct cbviewpoint_t;
+struct contextbounds_t;
 struct line_t;
 class  Mobj;
 struct planecontext_t;
@@ -215,7 +216,8 @@ portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(planecontext_t &context, const contextbounds_t &bounds,
+void R_MovePortalOverlayToWindow(planecontext_t &context, const viewpoint_t &viewpoint,
+                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf);
 void R_ClearPortals(visplane_t **&freehead);
 void R_RenderPortals(rendercontext_t &context);
@@ -259,8 +261,8 @@ static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *window);
 using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, planecontext_t &planecontext,
                                portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
-                               const contextbounds_t &bounds,
-                               const cb_seg_t &seg);
+                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                               const contextbounds_t &bounds, const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
 
@@ -358,6 +360,7 @@ struct portalrender_t
 
    void (*segClipFunc)(bspcontext_t &, planecontext_t &,
                        portalcontext_t &, void (*&)(cb_column_t &),
+                       const viewpoint_t &, const cbviewpoint_t &,
                        const contextbounds_t &, const cb_seg_t &);
 
 //   planehash_t *overlay;

@@ -27,11 +27,13 @@
 #define R_PLANE_H__
 
 struct cb_column_t;
+struct cbviewpoint_t;
 struct contextbounds_t;
 struct planecontext_t;
 struct planehash_t;
 struct rslope_t;
 struct texture_t;
+struct viewpoint_t;
 
 // killough 10/98: special mask indicates sky flat comes from sidedef
 #define PL_SKYFLAT (0x80000000)
@@ -48,7 +50,8 @@ extern float *overlayfclip, *overlaycclip;
 
 void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
 void R_ClearOverlayClips(const contextbounds_t &bounds);
-void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &), planehash_t *table);
+void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
+                  const angle_t viewangle, planehash_t *table);
 
 // Planehash stuff
 planehash_t *R_NewPlaneHash(int chaincount);
@@ -56,6 +59,8 @@ void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
 visplane_t *R_FindPlane(planecontext_t &context,
+                        const viewpoint_t &viewpoint,
+                        const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height,
                         int picnum,

@@ -50,7 +50,7 @@ static float  *maskedtexturecol;
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(const fixed_t viewz, void (*&colfunc)(cb_column_t &), drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
    texcol_t *col;
    int      lightnum;
@@ -214,7 +214,7 @@ void R_RenderMaskedSegRange(const fixed_t viewz, void (*&colfunc)(cb_column_t &)
 //
 static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &portalcontext,
                             void (*const colfunc)(cb_column_t &),
-                            const viewpoint_t &viewpoint,
+                            const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                             const contextbounds_t &bounds, cb_seg_t &segclip)
 {
    float *const floorclip   = planecontext.floorclip;
@@ -245,7 +245,8 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
       skyplane = R_FindPlane(
-         planecontext, bounds, viewpoint.z - 1, segclip.skyflat,
+         planecontext, viewpoint, cb_viewpoint,
+         bounds, viewpoint.z - 1, segclip.skyflat,
          144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr
       );
       skyplane = R_CheckPlane(planecontext, skyplane, segclip.x1, segclip.x2);
@@ -771,7 +772,8 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 //
 void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, void (*const colfunc)(cb_column_t &),
-                      const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                      const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                      const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop)
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
@@ -981,7 +983,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
-      R_renderSegLoop(planecontext, portalcontext, colfunc, viewpoint, bounds, segclip);
+      R_renderSegLoop(planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, segclip);
    else
       R_storeTextureColumns(segclip);
 
