@@ -480,7 +480,7 @@ int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec)
 
 extern camera_t *camera; // haleyjd
 
-const sector_t *R_FakeFlat(const sector_t *sec, sector_t *tempsec,
+const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *tempsec,
                            int *floorlightlevel, int *ceilinglightlevel, bool back)
 {
    if(!sec)
@@ -1172,6 +1172,7 @@ R_ClipSegFunc segclipfuncs[] =
 #define NEARCLIP 0.05f
 
 static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                        const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds, const uint64_t visitid,
                         cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
@@ -1221,22 +1222,22 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
 
-      seg.high = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
-      seg.high2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+      seg.high = view.ycenter - ((z1 - cb_viewpoint.z) * i1) - 1.0f;
+      seg.high2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2) - 1.0f;
 
       seg.minbackceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
    }
    else
    {
-      seg.high = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i1) - 1.0f;
-      seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i2) - 1.0f;
+      seg.high = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
+      seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
       seg.minbackceil = seg.backsec->srf.ceiling.height;
    }
 
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
-   texhigh = seg.line->backsector->srf.ceiling.heightf - view.z;
+   texhigh = seg.line->backsector->srf.ceiling.heightf - cb_viewpoint.z;
 
    if(seg.backsec->srf.floor.slope)
    {
@@ -1248,15 +1249,15 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
-      seg.low = view.ycenter - ((z1 - view.z) * i1);
-      seg.low2 = view.ycenter - ((z2 - view.z) * i2);
+      seg.low = view.ycenter - ((z1 - cb_viewpoint.z) * i1);
+      seg.low2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2);
 
       seg.maxbackfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
    }
    else
    {
-      seg.low = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i1);
-      seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i2);
+      seg.low = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i1);
+      seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i2);
       seg.maxbackfloor = seg.backsec->srf.floor.height;
    }
 
@@ -1317,7 +1318,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
@@ -1325,7 +1326,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
       else if(!heightchange && seg.frontsec->srf.ceiling.portal == seg.backsec->srf.ceiling.portal)
       {
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
@@ -1360,7 +1361,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
 
    bool toohigh = havetportal && portalrender.w &&
    portalrender.w->type == pw_floor && portalrender.w->portal->type != R_SKYBOX &&
-   portalrender.w->planez + viewz - portalrender.w->vz <= seg.backsec->srf.ceiling.height;
+   portalrender.w->planez + viewpoint.z - portalrender.w->vz <= seg.backsec->srf.ceiling.height;
 
    if(!toohigh && !havetportal && heightchange && 
       !(seg.frontsec->intflags & SIF_SKY && seg.backsec->intflags & SIF_SKY) && 
@@ -1380,7 +1381,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
    if(!toohigh && havetportal && heightchange)
    {
       seg.t_window = R_GetLinePortalWindow(
-         planecontext, portalcontext, bounds, seg.backsec->srf.ceiling.portal, line
+         planecontext, portalcontext, viewpoint, bounds, seg.backsec->srf.ceiling.portal, line
       );
       seg.segtextured = true;
    }
@@ -1403,7 +1404,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
@@ -1411,7 +1412,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
       else if(!heightchange && seg.frontsec->srf.floor.portal == seg.backsec->srf.floor.portal)
       {
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
@@ -1464,11 +1465,11 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
    bool toolow = havebportal && portalrender.w &&
    portalrender.w->type == pw_ceiling && portalrender.w->portal->type != R_SKYBOX &&
-   portalrender.w->planez + viewz - portalrender.w->vz >= seg.backsec->srf.floor.height;
+   portalrender.w->planez + viewpoint.z - portalrender.w->vz >= seg.backsec->srf.floor.height;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
 
-   texlow = seg.line->backsector->srf.floor.heightf - view.z;
+   texlow = seg.line->backsector->srf.floor.heightf - cb_viewpoint.z;
    if(!toolow && !havebportal && (b > l || b2 > l2) && side->bottomtexture)
    {
       seg.bottomtex = texturetranslation[side->bottomtexture];
@@ -1490,7 +1491,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
       seg.l_window = R_GetLinePortalWindow(
-         planecontext, portalcontext, bounds, line->linedef->portal, line
+         planecontext, portalcontext, viewpoint, bounds, line->linedef->portal, line
       );
       seg.clipsolid = true;
    }
@@ -1507,7 +1508,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
    if(!toolow && havebportal && (b > l || b2 > l2))
    {
       seg.b_window = R_GetLinePortalWindow(
-         planecontext, portalcontext, bounds, seg.backsec->srf.floor.portal, line
+         planecontext, portalcontext, viewpoint, bounds, seg.backsec->srf.floor.portal, line
       );
       seg.segtextured = true;
    }
@@ -1516,6 +1517,7 @@ static void R_2S_Sloped(planecontext_t &planecontext, portalcontext_t &portalcon
 }
 
 static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                        const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds, const uint64_t visitid,
                         cb_seg_t &seg,
                         float pstep, float i1, float i2, float textop,
@@ -1550,14 +1552,14 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
    frontc = seg.frontsec->srf.ceiling.height;
    backc  = seg.backsec->srf.ceiling.height;
 
-   seg.high  = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i1) - 1.0f;
-   seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - view.z) * i2) - 1.0f;
+   seg.high  = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
+   seg.high2 = view.ycenter - ((seg.backsec->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
    seg.highstep = (seg.high2 - seg.high) * pstep;
 
    seg.minbackceil = backc;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
-   texhigh = seg.line->backsector->srf.ceiling.heightf - view.z;
+   texhigh = seg.line->backsector->srf.ceiling.heightf - cb_viewpoint.z;
 
    uppermissing = (seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height &&
                    seg.side->toptexture == 0);
@@ -1638,7 +1640,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       {
          seg.markflags |= SEG_MARKCPORTAL;
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
@@ -1648,7 +1650,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       {
          // We need to do this just to transfer the plane
          seg.secwindow.ceiling = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
+            planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
@@ -1664,7 +1666,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.line->linedef->extflags & EX_ML_UPPERPORTAL;
    bool toohigh = havetportal && portalrender.w &&
    portalrender.w->type == pw_floor && portalrender.w->portal->type != R_SKYBOX &&
-   portalrender.w->planez + viewz - portalrender.w->vz <= seg.backsec->srf.ceiling.height;
+   portalrender.w->planez + viewpoint.z - portalrender.w->vz <= seg.backsec->srf.ceiling.height;
 
    if(!toohigh && !havetportal &&
       seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height &&
@@ -1686,7 +1688,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       seg.frontsec->srf.ceiling.height > seg.backsec->srf.ceiling.height)
    {
       seg.t_window = R_GetLinePortalWindow(
-         planecontext, portalcontext, bounds, seg.backsec->srf.ceiling.portal, line
+         planecontext, portalcontext, viewpoint, bounds, seg.backsec->srf.ceiling.portal, line
       );
       seg.segtextured = true;
    }
@@ -1724,7 +1726,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       {
          seg.markflags |= SEG_MARKFPORTAL;
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
@@ -1734,7 +1736,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       {
          // We need to do this just to transfer the plane
          seg.secwindow.floor = R_GetSectorPortalWindow(
-            planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
+            planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
          );
          R_updateWindowSectorBarrier(visitid, seg, surf_floor);
          R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
@@ -1765,8 +1767,8 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.c_portalignore = true;
    }
 
-   seg.low  = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i1);
-   seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - view.z) * i2);
+   seg.low  = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i1);
+   seg.low2 = view.ycenter - ((seg.backsec->srf.floor.heightf - cb_viewpoint.z) * i2);
    seg.lowstep = (seg.low2 - seg.low) * pstep;
    seg.maxbackfloor = seg.backsec->srf.floor.height;
 
@@ -1776,11 +1778,11 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
          seg.line->linedef->extflags & EX_ML_LOWERPORTAL;
    bool toolow = havebportal && portalrender.w &&
    portalrender.w->type == pw_ceiling && portalrender.w->portal->type != R_SKYBOX &&
-   portalrender.w->planez + viewz - portalrender.w->vz >= seg.backsec->srf.floor.height;
+   portalrender.w->planez + viewpoint.z - portalrender.w->vz >= seg.backsec->srf.floor.height;
 
    // SoM: Get this from the actual sector because R_FakeFlat can mess with heights.
 
-   texlow = seg.line->backsector->srf.floor.heightf - view.z;
+   texlow = seg.line->backsector->srf.floor.heightf - cb_viewpoint.z;
    if(!toolow && !havebportal
       && seg.frontsec->srf.floor.height < seg.backsec->srf.floor.height
       && side->bottomtexture)
@@ -1804,7 +1806,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       line->linedef->sidenum[0] == line->sidedef - sides)
    {
       seg.l_window = R_GetLinePortalWindow(
-         planecontext, portalcontext, bounds, line->linedef->portal, line
+         planecontext, portalcontext, viewpoint, bounds, line->linedef->portal, line
       );
       seg.clipsolid = true;
    }
@@ -1822,7 +1824,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
       seg.frontsec->srf.floor.height < seg.backsec->srf.floor.height)
    {
       seg.b_window = R_GetLinePortalWindow(
-         planecontext, portalcontext, bounds, seg.backsec->srf.floor.portal, line
+         planecontext, portalcontext, viewpoint, bounds, seg.backsec->srf.floor.portal, line
       );
       seg.segtextured = true;
    }
@@ -1835,6 +1837,7 @@ static void R_2S_Normal(planecontext_t &planecontext, portalcontext_t &portalcon
 // beyond is the optional sector on the other side of a polyobject/1-sided wall portal
 //
 static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                         const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                          const contextbounds_t &bounds, const uint64_t visitid,
                          cb_seg_t &seg,
                          float pstep, float i1, float i2, float textop, float texbottom,
@@ -1853,15 +1856,15 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
          seg.toptex = texturetranslation[side->toptexture];
          seg.toptexh = textures[side->toptexture]->height;
 
-         float texhigh = beyond->srf.ceiling.heightf - view.z;
+         float texhigh = beyond->srf.ceiling.heightf - cb_viewpoint.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGTOP)
             seg.toptexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
          else
             seg.toptexmid = M_FloatToFixed(texhigh + seg.toptexh + seg.toffsety); // SCALE_TODO: Y scale-factor here
 
-         seg.high  = view.ycenter - ((beyond->srf.ceiling.heightf - view.z) * i1) - 1.0f;
-         seg.high2 = view.ycenter - ((beyond->srf.ceiling.heightf - view.z) * i2) - 1.0f;
+         seg.high  = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i1) - 1.0f;
+         seg.high2 = view.ycenter - ((beyond->srf.ceiling.heightf - cb_viewpoint.z) * i2) - 1.0f;
          seg.highstep = (seg.high2 - seg.high) * pstep;
       }
       else
@@ -1872,15 +1875,15 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
          seg.bottomtex  = texturetranslation[side->bottomtexture];
          seg.bottomtexh = textures[side->bottomtexture]->height;
 
-         float texlow = beyond->srf.floor.heightf - view.z;
+         float texlow = beyond->srf.floor.heightf - cb_viewpoint.z;
 
          if(seg.line->linedef->flags & ML_DONTPEGBOTTOM)
             seg.bottomtexmid = M_FloatToFixed(textop + seg.toffsety); // SCALE_TODO: Y scale-factor here
          else
             seg.bottomtexmid = M_FloatToFixed(texlow + seg.toffsety); // SCALE_TODO: Y scale-factor here
 
-         seg.low  = view.ycenter - ((beyond->srf.floor.heightf - view.z) * i1);
-         seg.low2 = view.ycenter - ((beyond->srf.floor.heightf - view.z) * i2);
+         seg.low  = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i1);
+         seg.low2 = view.ycenter - ((beyond->srf.floor.heightf - cb_viewpoint.z) * i2);
          seg.lowstep = (seg.low2 - seg.low) * pstep;
       }
       else
@@ -1911,22 +1914,22 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
 
    // SoM: these should be treated differently!
    if(seg.frontsec->srf.ceiling.portal && (seg.frontsec->srf.ceiling.portal->type < R_TWOWAY ||
-                                 (seg.frontsec->srf.ceiling.pflags & PS_VISIBLE && seg.frontsec->srf.ceiling.height > viewz)))
+                                 (seg.frontsec->srf.ceiling.pflags & PS_VISIBLE && seg.frontsec->srf.ceiling.height > viewpoint.z)))
    {
       seg.markflags |= SEG_MARKCPORTAL;
       seg.secwindow.ceiling = R_GetSectorPortalWindow(
-         planecontext, portalcontext, bounds, surf_ceil, seg.frontsec->srf.ceiling
+         planecontext, portalcontext, viewpoint, bounds, surf_ceil, seg.frontsec->srf.ceiling
       );
       R_updateWindowSectorBarrier(visitid, seg, surf_ceil);
       R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_ceil);
    }
 
    if(seg.frontsec->srf.floor.portal && (seg.frontsec->srf.floor.portal->type < R_TWOWAY ||
-                                 (seg.frontsec->srf.floor.pflags & PS_VISIBLE && seg.frontsec->srf.floor.height <= viewz)))
+                                 (seg.frontsec->srf.floor.pflags & PS_VISIBLE && seg.frontsec->srf.floor.height <= viewpoint.z)))
    {
       seg.markflags |= SEG_MARKFPORTAL;
       seg.secwindow.floor = R_GetSectorPortalWindow(
-         planecontext, portalcontext, bounds, surf_floor, seg.frontsec->srf.floor
+         planecontext, portalcontext, viewpoint, bounds, surf_floor, seg.frontsec->srf.floor
       );
       R_updateWindowSectorBarrier(visitid, seg, surf_floor);
       R_MovePortalOverlayToWindow(planecontext, bounds, seg, surf_floor);
@@ -1940,7 +1943,7 @@ static void R_1SidedLine(planecontext_t &planecontext, portalcontext_t &portalco
    seg.clipsolid   = true;
    seg.segtextured = seg.midtex || seg.toptex || seg.bottomtex;
    seg.l_window    = line->linedef->portal ?
-   R_GetLinePortalWindow(planecontext, portalcontext, bounds, line->linedef->portal, line) : nullptr;
+   R_GetLinePortalWindow(planecontext, portalcontext, viewpoint, bounds, line->linedef->portal, line) : nullptr;
 
    // haleyjd 03/12/06: inverted predicates to simplify
    if(seg.frontsec->srf.floor.portal && seg.frontsec->srf.floor.portal->type != R_LINKED &&
@@ -1997,13 +2000,14 @@ static bool R_allowBehindBarrier(const windowlinegen_t &linegen, const seg_t *re
 //
 // Picks the two bounding box lines pointed towards the viewer.
 //
-bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
-   windowlinegen_t &linegen2, slopetype_t *slope)
+bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
+                           const float fbox[4], windowlinegen_t &linegen1,
+                           windowlinegen_t &linegen2, slopetype_t *slope)
 {
    linegen2.normal = {};   // mark normal as empty to prevent stuff
-   if(view.x < fbox[BOXLEFT])
+   if(cb_viewpoint.x < fbox[BOXLEFT])
    {
-      if(view.y < fbox[BOXBOTTOM])
+      if(cb_viewpoint.y < fbox[BOXBOTTOM])
       {
          linegen1.start = { fbox[BOXLEFT], fbox[BOXTOP] };
          linegen1.delta = { 0, fbox[BOXBOTTOM] - fbox[BOXTOP] };
@@ -2016,7 +2020,7 @@ bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
          if(slope)
             *slope = ST_POSITIVE;
       }
-      else if(view.y > fbox[BOXTOP])
+      else if(cb_viewpoint.y > fbox[BOXTOP])
       {
          // The divlines MUST be left to right relative to view.
          linegen1.start = { fbox[BOXRIGHT], fbox[BOXTOP] };
@@ -2040,15 +2044,15 @@ bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
             *slope = ST_VERTICAL;
       }
    }
-   else if(view.x <= fbox[BOXRIGHT])
+   else if(cb_viewpoint.x <= fbox[BOXRIGHT])
    {
-      if(view.y < fbox[BOXBOTTOM])
+      if(cb_viewpoint.y < fbox[BOXBOTTOM])
       {
          linegen1.start = { fbox[BOXLEFT], fbox[BOXBOTTOM] };
          linegen1.delta = { fbox[BOXRIGHT] - fbox[BOXLEFT], 0 };
          linegen1.normal = { 0, -1 };
       }
-      else if(view.y <= fbox[BOXTOP])
+      else if(cb_viewpoint.y <= fbox[BOXTOP])
          return false;   // if actor is below portal, just render everything
       else
       {
@@ -2062,7 +2066,7 @@ bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
    }
    else
    {
-      if(view.y < fbox[BOXBOTTOM])
+      if(cb_viewpoint.y < fbox[BOXBOTTOM])
       {
          linegen1.start = { fbox[BOXLEFT], fbox[BOXBOTTOM] };
          linegen1.delta = { fbox[BOXRIGHT] - fbox[BOXLEFT], 0 };
@@ -2075,7 +2079,7 @@ bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
          if(slope)
             *slope = ST_NEGATIVE;
       }
-      else if(view.y > fbox[BOXTOP])
+      else if(cb_viewpoint.y > fbox[BOXTOP])
       {
          linegen1.start = { fbox[BOXRIGHT], fbox[BOXBOTTOM] };
          linegen1.delta = { 0, fbox[BOXTOP] - fbox[BOXBOTTOM] };
@@ -2104,7 +2108,8 @@ bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
 //
 // Check seg against barrier bbox
 //
-static bool R_allowBehindSectorPortal(const float fbox[4], const seg_t &tryseg)
+static bool R_allowBehindSectorPortal(const cbviewpoint_t &cb_viewpoint,
+                                      const float fbox[4], const seg_t &tryseg)
 {
    v2float_t start = { tryseg.v1->fx, tryseg.v1->fy };
    v2float_t delta = { tryseg.v2->fx - start.x, tryseg.v2->fy - start.y };
@@ -2119,7 +2124,7 @@ static bool R_allowBehindSectorPortal(const float fbox[4], const seg_t &tryseg)
    windowlinegen_t linegen1, linegen2;
 
    slopetype_t slope, lnslope = tryseg.linedef->slopetype;
-   if(!R_PickNearestBoxLines(fbox, linegen1, linegen2, &slope))
+   if(!R_PickNearestBoxLines(cb_viewpoint, fbox, linegen1, linegen2, &slope))
       return true;
 
    if(slope == ST_VERTICAL || slope == ST_HORIZONTAL)
@@ -2158,6 +2163,7 @@ static bool R_allowBehindSectorPortal(const float fbox[4], const seg_t &tryseg)
 //
 static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                      const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds, const uint64_t visitid,
                       cb_seg_t &seg,
                       const seg_t *line, bool dynasegs)
@@ -2187,7 +2193,7 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
       {
          if(portalrender.w->line && !R_allowBehindBarrier(portalrender.w->barrier.linegen, line))
             return;
-         if(!R_allowBehindSectorPortal(portalrender.w->barrier.fbox, *line))
+         if(!R_allowBehindSectorPortal(cb_viewpoint, portalrender.w->barrier.fbox, *line))
             return;
       }
    }
@@ -2200,7 +2206,7 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
    seg.clipsolid = false;
    seg.line = line;
 
-   seg.backsec = R_FakeFlat(line->backsector, &tempsec, nullptr, nullptr, true);
+   seg.backsec = R_FakeFlat(viewpoint.z, line->backsector, &tempsec, nullptr, nullptr, true);
 
    // haleyjd: TEST
    // This seems to fix fiffy5, but smells like a hack to me.
@@ -2224,9 +2230,9 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
       seg.frontsec->srf.ceiling.height <= seg.frontsec->srf.floor.height &&
       !(seg.frontsec->intflags & SIF_SKY) &&
       !((seg.frontsec->srf.ceiling.pflags & PS_PASSABLE && seg.frontsec->srf.ceiling.portal &&
-        viewz > P_PortalZ(surf_ceil, *seg.frontsec)) ||
+        viewpoint.z > P_PortalZ(surf_ceil, *seg.frontsec)) ||
         (seg.frontsec->srf.floor.pflags & PS_PASSABLE && seg.frontsec->srf.floor.portal &&
-        viewz < P_PortalZ(surf_floor, *seg.frontsec))))
+        viewpoint.z < P_PortalZ(surf_floor, *seg.frontsec))))
       return;
 
    // Reject empty two-sided lines used for line specials.
@@ -2288,14 +2294,14 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
    lclip2 = line->len;
    lclip1 = 0.0f;
 
-   temp.x = v1->fx - view.x;
-   temp.y = v1->fy - view.y;
-   t1.x   = (temp.x * view.cos) - (temp.y * view.sin);
-   t1.y   = (temp.y * view.cos) + (temp.x * view.sin);
-   temp.x = v2->fx - view.x;
-   temp.y = v2->fy - view.y;
-   t2.x   = (temp.x * view.cos) - (temp.y * view.sin);
-   t2.y   = (temp.y * view.cos) + (temp.x * view.sin);
+   temp.x = v1->fx - cb_viewpoint.x;
+   temp.y = v1->fy - cb_viewpoint.y;
+   t1.x   = (temp.x * cb_viewpoint.cos) - (temp.y * cb_viewpoint.sin);
+   t1.y   = (temp.y * cb_viewpoint.cos) + (temp.x * cb_viewpoint.sin);
+   temp.x = v2->fx - cb_viewpoint.x;
+   temp.y = v2->fy - cb_viewpoint.y;
+   t2.x   = (temp.x * cb_viewpoint.cos) - (temp.y * cb_viewpoint.sin);
+   t2.y   = (temp.y * cb_viewpoint.cos) + (temp.x * cb_viewpoint.sin);
 
    // SoM: Portal lines are not texture and as a result can be clipped MUCH 
    // closer to the camera than normal lines can. This closer clipping 
@@ -2445,15 +2451,15 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
-      seg.top = view.ycenter - ((z1 - view.z) * i1);
-      seg.top2 = view.ycenter - ((z2 - view.z) * i2);
+      seg.top = view.ycenter - ((z1 - cb_viewpoint.z) * i1);
+      seg.top2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2);
 
       seg.minfrontceil = M_FloatToFixed(z1 < z2 ? z1 : z2);
    }
    else
    {
-      seg.top = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - view.z) * i1);
-      seg.top2 = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - view.z) * i2);
+      seg.top = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - cb_viewpoint.z) * i1);
+      seg.top2 = view.ycenter - ((seg.frontsec->srf.ceiling.heightf - cb_viewpoint.z) * i2);
       seg.minfrontceil = seg.frontsec->srf.ceiling.height;
    }
    seg.topstep = (seg.top2 - seg.top) * pstep;
@@ -2469,23 +2475,23 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
       z1 += lclip1 * zstep;
       z2 -= (seg.line->len - lclip2) * zstep;
-      seg.bottom = view.ycenter - ((z1 - view.z) * i1) - 1.0f;
-      seg.bottom2 = view.ycenter - ((z2 - view.z) * i2) - 1.0f;
+      seg.bottom = view.ycenter - ((z1 - cb_viewpoint.z) * i1) - 1.0f;
+      seg.bottom2 = view.ycenter - ((z2 - cb_viewpoint.z) * i2) - 1.0f;
 
       seg.maxfrontfloor = M_FloatToFixed(z1 > z2 ? z1 : z2);
    }
    else
    {      
-      seg.bottom  = view.ycenter - ((seg.frontsec->srf.floor.heightf - view.z) * i1) - 1.0f;
-      seg.bottom2 = view.ycenter - ((seg.frontsec->srf.floor.heightf - view.z) * i2) - 1.0f;
+      seg.bottom  = view.ycenter - ((seg.frontsec->srf.floor.heightf - cb_viewpoint.z) * i1) - 1.0f;
+      seg.bottom2 = view.ycenter - ((seg.frontsec->srf.floor.heightf - cb_viewpoint.z) * i2) - 1.0f;
       seg.maxfrontfloor = seg.frontsec->srf.floor.height;
    }
 
    seg.bottomstep = (seg.bottom2 - seg.bottom) * pstep;
 
    // Get these from the actual sectors because R_FakeFlat could have changed the actual heights.
-   textop    = seg.line->frontsector->srf.ceiling.heightf - view.z;
-   texbottom = seg.line->frontsector->srf.floor.heightf - view.z;
+   textop    = seg.line->frontsector->srf.ceiling.heightf - cb_viewpoint.z;
+   texbottom = seg.line->frontsector->srf.floor.heightf - cb_viewpoint.z;
 
    seg.f_portalignore = seg.c_portalignore = false;
 
@@ -2496,7 +2502,8 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
    if(!seg.backsec || beyond) 
    {
       R_1SidedLine(
-         planecontext, portalcontext, bounds, visitid, seg, pstep,
+         planecontext, portalcontext, viewpoint, cb_viewpoint,
+         bounds, visitid, seg, pstep,
          i1, i2, textop, texbottom, beyond, side, line
       );
    }
@@ -2505,12 +2512,19 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
       if(seg.frontsec->srf.floor.slope || seg.frontsec->srf.ceiling.slope ||
          seg.backsec->srf.floor.slope || seg.backsec->srf.ceiling.slope)
       {
-         R_2S_Sloped(planecontext, portalcontext, bounds, visitid, seg, pstep,
+         R_2S_Sloped(
+            planecontext, portalcontext, viewpoint, cb_viewpoint,
+            bounds, visitid, seg, pstep,
             i1, i2, textop, texbottom, v1, v2, lclip1, lclip2
          );
       }
       else
-         R_2S_Normal(planecontext, portalcontext, bounds, visitid, seg, pstep, i1, i2, textop, texbottom);
+      {
+         R_2S_Normal(
+            planecontext, portalcontext, viewpoint, cb_viewpoint,
+            bounds, visitid, seg, pstep, i1, i2, textop, texbottom
+         );
+      }
    }
 
    // SoM: This really needs to be handled here. The float values need to be 
@@ -2599,7 +2613,8 @@ static const int checkcoord[12][4] = // killough -- static const
 // Checks BSP node/subtree bounding box.
 // Returns true if some part of the bbox might be visible.
 //
-static bool R_checkBBox(const contextbounds_t &bounds,
+static bool R_checkBBox(const viewpoint_t &viewpoint,
+                        const contextbounds_t &bounds,
                         const cliprange_t *const solidsegs,
                         const fixed_t *bspcoord) // killough 1/28/98: static
 {
@@ -2611,8 +2626,8 @@ static bool R_checkBBox(const contextbounds_t &bounds,
 
    // Find the corners of the box
    // that define the edges from current viewpoint.
-   boxx = viewx <= bspcoord[BOXLEFT] ? 0 : viewx < bspcoord[BOXRIGHT ] ? 1 : 2;
-   boxy = viewy >= bspcoord[BOXTOP ] ? 0 : viewy > bspcoord[BOXBOTTOM] ? 1 : 2;
+   boxx = viewpoint.x <= bspcoord[BOXLEFT] ? 0 : viewpoint.x < bspcoord[BOXRIGHT ] ? 1 : 2;
+   boxy = viewpoint.y >= bspcoord[BOXTOP ] ? 0 : viewpoint.y > bspcoord[BOXBOTTOM] ? 1 : 2;
 
    boxpos = (boxy << 2) + boxx;
    if(boxpos == 5)
@@ -2624,8 +2639,8 @@ static bool R_checkBBox(const contextbounds_t &bounds,
    y2 = bspcoord[checkcoord[boxpos][3]];
 
    // check clip list for an open space
-   angle1 = R_PointToAngle (x1, y1) - viewangle;
-   angle2 = R_PointToAngle (x2, y2) - viewangle;
+   angle1 = R_PointToAngle(viewpoint.x, viewpoint.y, x1, y1) - viewpoint.angle;
+   angle2 = R_PointToAngle(viewpoint.x, viewpoint.y, x2, y2) - viewpoint.angle;
    
    span = angle1 - angle2;
    
@@ -2709,17 +2724,19 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 //
 static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
                              portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                             const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                              const contextbounds_t &bounds, const uint64_t visitid,
                              cb_seg_t &cbseg,
                              const rpolynode_t *node)
 {
    while(node)
    {
-      int side = R_PointOnDynaSegSide(node->partition, view.x, view.y);
+      int side = R_PointOnDynaSegSide(node->partition, cb_viewpoint.x, cb_viewpoint.y);
       
       // render frontspace
       R_renderPolyNode(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, cbseg, node->children[side]
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, visitid, cbseg, node->children[side]
       );
 
       // render partition seg
@@ -2739,7 +2756,8 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecont
       }
 
       R_addLine(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, cbseg, seg, true
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, visitid, cbseg, seg, true
       );
       seg->offset = orgofs;
       seg->len = orglen;
@@ -2771,6 +2789,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, planecontext_t &planecont
 //
 static void R_addDynaSegs(bspcontext_t &bspcontext, planecontext_t &planecontext,
                           portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                          const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                           const contextbounds_t &bounds, const uint64_t visitid,
                           cb_seg_t &seg,
                           subsector_t *sub)
@@ -2786,7 +2805,8 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, planecontext_t &planecontext
    if(sub->bsp)
    {
       R_renderPolyNode(
-         bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, seg, sub->bsp->root
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, visitid, seg, sub->bsp->root
       );
    }
 }
@@ -2801,6 +2821,7 @@ static void R_addDynaSegs(bspcontext_t &bspcontext, planecontext_t &planecontext
 static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
                         portalcontext_t &portalcontext, spritecontext_t &spritecontext,
                         void (*&colfunc)(cb_column_t &),
+                        const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         const uint64_t visitid, const int num)
 {
@@ -2843,18 +2864,18 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
    count = sub->numlines;
    line = &segs[sub->firstline];
 
-   R_SectorColormap(seg.frontsec);
+   R_SectorColormap(viewpoint.z, seg.frontsec);
 
    // killough 3/8/98, 4/4/98: Deep water / fake ceiling effect
-   seg.frontsec = R_FakeFlat(seg.frontsec, &tempsec, &floorlightlevel,
-                             &ceilinglightlevel, false);   // killough 4/11/98
+   seg.frontsec = R_FakeFlat(viewpoint. z, seg.frontsec, &tempsec,
+                             &floorlightlevel, &ceilinglightlevel, false);   // killough 4/11/98
 
    // ioanch: reject all sectors fully above or below a sector portal.
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX &&
       ((portalrender.w->type == pw_ceiling &&
-        seg.frontsec->srf.ceiling.height < portalrender.w->planez + viewz - portalrender.w->vz) ||
+        seg.frontsec->srf.ceiling.height < portalrender.w->planez + viewpoint.z - portalrender.w->vz) ||
        (portalrender.w->type == pw_floor &&
-        seg.frontsec->srf.floor.height > portalrender.w->planez + viewz - portalrender.w->vz)))
+        seg.frontsec->srf.floor.height > portalrender.w->planez + viewpoint.z - portalrender.w->vz)))
    {
       return;
    }
@@ -2868,12 +2889,12 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
    // killough 10/98: add support for skies transferred from sidedefs
 
    // SoM: Slopes!
-   cam.x = view.x;
-   cam.y = view.y;
-   cam.z = view.z;
+   cam.x = cb_viewpoint.x;
+   cam.y = cb_viewpoint.y;
+   cam.z = cb_viewpoint.z;
 
    // -- Floor plane and portal --
-   visible  = (!seg.frontsec->srf.floor.slope && seg.frontsec->srf.floor.height < viewz)
+   visible  = (!seg.frontsec->srf.floor.slope && seg.frontsec->srf.floor.height < viewpoint.z)
            || (seg.frontsec->srf.floor.slope
            &&  P_DistFromPlanef(&cam, &seg.frontsec->srf.floor.slope->of,
                                 &seg.frontsec->srf.floor.slope->normalf) > 0.0f);
@@ -2925,7 +2946,7 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
 
    // -- Ceiling plane and portal --
-   visible  = (!seg.frontsec->srf.ceiling.slope && seg.frontsec->srf.ceiling.height > viewz)
+   visible  = (!seg.frontsec->srf.ceiling.slope && seg.frontsec->srf.ceiling.height > viewpoint.z)
            || (seg.frontsec->srf.ceiling.slope
            &&  P_DistFromPlanef(&cam, &seg.frontsec->srf.ceiling.slope->of,
                                 &seg.frontsec->srf.ceiling.slope->normalf) > 0.0f);
@@ -2988,16 +3009,29 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
    // real sector, or you must account for the lighting in some other way, 
    // like passing it as an argument.
 
-   R_AddSprites(spritecontext, bounds, portalrender, sub->sector, (floorlightlevel+ceilinglightlevel)/2);
+   R_AddSprites(
+      spritecontext, viewpoint, cb_viewpoint, bounds,
+      portalrender, sub->sector, (floorlightlevel + ceilinglightlevel) / 2
+   );
 
    // haleyjd 02/19/06: draw polyobjects before static lines
    // haleyjd 10/09/06: skip call entirely if no polyobjects
 
    if(sub->polyList)
-      R_addDynaSegs(bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, seg, sub);
+   {
+      R_addDynaSegs(
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, visitid, seg, sub
+      );
+   }
 
    while(count--)
-      R_addLine(bspcontext, planecontext, portalcontext, colfunc, bounds, visitid, seg, line++, false);
+   {
+      R_addLine(
+         bspcontext, planecontext, portalcontext, colfunc,
+         viewpoint, cb_viewpoint, bounds, visitid, seg, line++, false
+      );
+   }
 }
 
 //
@@ -3010,6 +3044,7 @@ static void R_subsector(bspcontext_t &bspcontext, planecontext_t &planecontext,
 void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
                      spritecontext_t &spritecontext, portalcontext_t &portalcontext,
                      void (*&colfunc)(cb_column_t &),
+                     const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                      const contextbounds_t &bounds,
                      const uint64_t visitid, int bspnum)
 {
@@ -3018,26 +3053,27 @@ void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
       const node_t *bsp = &nodes[bspnum];
       
       // Decide which side the view point is on.
-      int side = R_PointOnSide(viewx, viewy, bsp);
+      int side = R_PointOnSide(viewpoint.x, viewpoint.y, bsp);
       
       // Recursively divide front space.
       R_RenderBSPNode(
          bspcontext, planecontext, spritecontext,
-         portalcontext, colfunc, bounds,
-         visitid, bsp->children[side]
+         portalcontext, colfunc,
+         viewpoint, cb_viewpoint,
+         bounds, visitid, bsp->children[side]
       );
 
       // Possibly divide back space.
       
-      if(!R_checkBBox(bounds, bspcontext.solidsegs, bsp->bbox[side^=1]))
+      if(!R_checkBBox(viewpoint, bounds, bspcontext.solidsegs, bsp->bbox[side^=1]))
          return;
       
       bspnum = bsp->children[side];
    }
    R_subsector(
       bspcontext, planecontext, portalcontext, spritecontext,
-      colfunc, bounds,
-      visitid, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR
+      colfunc, viewpoint, cb_viewpoint,
+      bounds, visitid, bspnum == -1 ? 0 : bspnum & ~NF_SUBSECTOR
    );
 }
 

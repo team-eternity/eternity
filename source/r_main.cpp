@@ -1290,7 +1290,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // The head node is the last node output.
       R_RenderBSPNode(
          context.bspcontext, context.planecontext, context.spritecontext,
-         context.portalcontext, context.colfunc, context.bounds,
+         context.portalcontext, context.colfunc,
+         context.view, context.cb_view, context.bounds,
          R_GetVisitID(context.portalcontext.renderdepth, context.bufferindex), numnodes - 1
       );
 
