@@ -40,8 +40,6 @@ struct viewpoint_t;
 
 // Visplane related.
 
-extern float *lastopening;
-
 // SoM 12/8/03
 extern float *floorcliparray, *ceilingcliparray;
 

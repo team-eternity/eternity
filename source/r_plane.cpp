@@ -98,12 +98,15 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
 
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-float *openings, *lastopening;
+float *openings;
 
 VALLOCATION(openings)
 {
    openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, nullptr);
-   lastopening = openings;
+   R_ForEachContext([](rendercontext_t &context)
+   {
+      context.planecontext.lastopening = openings;
+   });
 }
 
 
@@ -538,7 +541,7 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 
    R_ClearPlaneHash(context.freehead, &context.mainhash);
 
-   lastopening = openings;
+   context.lastopening = openings;
 }
 
 

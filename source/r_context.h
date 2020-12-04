@@ -78,6 +78,8 @@ struct planecontext_t
    // Free list of overlay portals. Used by portal windows and the post-BSP stack.
    planehash_t *r_overlayfreesets;
 
+   float *lastopening;
+
    // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
    // to the clipping arrays of portals.
    float *floorclip, *ceilingclip;

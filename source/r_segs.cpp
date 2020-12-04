@@ -777,6 +777,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
                       const cb_seg_t &seg, const int start, const int stop)
 {
    drawseg_t           *&ds_p         = bspcontext.ds_p;
+   float               *&lastopening  = planecontext.lastopening;
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    float clipx1;
