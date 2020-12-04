@@ -41,12 +41,6 @@ struct portalrender_t;
 struct viewpoint_t;
 struct cbviewpoint_t;
 
-extern seg_t    *curline;
-extern side_t   *sidedef;
-extern line_t   *linedef;
-extern sector_t *frontsector;
-extern sector_t *backsector;
-
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
@@ -72,8 +66,6 @@ const sector_t *R_FakeFlat(const fixed_t, const sector_t *, sector_t *, int *, i
 bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
                            const float fbox[4], windowlinegen_t &linegen1,
                            windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
-
-extern int detaillevel;
 
 #endif
 
