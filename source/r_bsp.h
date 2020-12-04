@@ -47,12 +47,6 @@ extern line_t   *linedef;
 extern sector_t *frontsector;
 extern sector_t *backsector;
 
-// old code -- killough:
-// extern drawseg_t drawsegs[MAXDRAWSEGS];
-// new code -- killough:
-extern drawseg_t *drawsegs;
-extern unsigned int maxdrawsegs;
-
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<

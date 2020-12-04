@@ -40,7 +40,7 @@ struct planecontext_t;
 struct portalrender_t;
 struct viewpoint_t;
 struct cbviewpoint_t;
-struct drawseg_t;
+struct bspcontext_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -67,8 +67,8 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
-                drawseg_t *const ds_p, bool pushmasked, pwindow_t *window);
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const contextbounds_t &bounds,
@@ -89,8 +89,8 @@ void R_AddSprites(spritecontext_t &context,
                   sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
 void R_ClearSprites(spritecontext_t &context);
-void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
-                   void (*&colfunc)(cb_column_t &),
+void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+                   planecontext_t &planecontext, void (*&colfunc)(cb_column_t &),
                    const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                    const contextbounds_t &bounds);
 void R_DrawPlayerSprites();

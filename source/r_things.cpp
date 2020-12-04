@@ -528,13 +528,16 @@ void R_ClearSprites(spritecontext_t &context)
 //
 // Pushes a new element on the post-BSP stack.
 //
-void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
-                drawseg_t *const ds_p, bool pushmasked, pwindow_t *window)
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window)
 {
-   poststack_t   *&pstack       = context.pstack;
-   int            &pstacksize   = context.pstacksize;
-   int            &pstackmax    = context.pstackmax;
-   maskedrange_t *&unusedmasked = context.unusedmasked;
+   drawseg_t     *&drawsegs     = bspcontext.drawsegs;
+   unsigned int   &maxdrawsegs  = bspcontext.maxdrawsegs;
+   drawseg_t     *&ds_p         = bspcontext.ds_p;
+   poststack_t   *&pstack       = spritecontext.pstack;
+   int            &pstacksize   = spritecontext.pstacksize;
+   int            &pstackmax    = spritecontext.pstackmax;
+   maskedrange_t *&unusedmasked = spritecontext.unusedmasked;
 
    poststack_t *post;
    
@@ -592,7 +595,7 @@ void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
          post->masked->firstds = post->masked->firstsprite = 0;
 
       post->masked->lastds     = int(ds_p - drawsegs);
-      post->masked->lastsprite = int(context.num_vissprite);
+      post->masked->lastsprite = int(spritecontext.num_vissprite);
 
       memcpy(post->masked->ceilingclip, portaltop    + bounds.startcolumn, sizeof(*portaltop)    * bounds.numcolumns);
       memcpy(post->masked->floorclip,   portalbottom + bounds.startcolumn, sizeof(*portalbottom) * bounds.numcolumns);
@@ -1572,6 +1575,7 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
 static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_column_t &),
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds,
+                                  drawseg_t *const drawsegs,
                                   vissprite_t *spr, int firstds, int lastds,
                                   float *ptop, float *pbottom)
 {
@@ -1824,14 +1828,16 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
 //
 // Draws the items in the Post-BSP stack.
 //
-void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
-                   void (*&colfunc)(cb_column_t &),
+void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+                   planecontext_t &planecontext, void (*&colfunc)(cb_column_t &),
                    const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                    const contextbounds_t &bounds)
 {
-   poststack_t   *&pstack       = spritecontext.pstack;
-   int            &pstacksize   = spritecontext.pstacksize;
-   maskedrange_t *&unusedmasked = spritecontext.unusedmasked;
+   drawseg_t *const drawsegs     = bspcontext.drawsegs;
+   const unsigned   maxdrawsegs  = bspcontext.maxdrawsegs;
+   poststack_t    *&pstack       = spritecontext.pstack;
+   int             &pstacksize   = spritecontext.pstacksize;
+   maskedrange_t  *&unusedmasked = spritecontext.unusedmasked;
 
    maskedrange_t *masked;
    drawseg_t     *ds;
@@ -1890,7 +1896,7 @@ void R_DrawPostBSP(spritecontext_t &spritecontext, planecontext_t &planecontext,
             {
                R_drawSpriteInDSRange(
                   spritecontext, colfunc,
-                  viewpoint, cb_viewpoint, bounds,
+                  viewpoint, cb_viewpoint, bounds, drawsegs,
                   spritecontext.vissprite_ptrs[i], firstds, lastds,
                   masked->ceilingclip, masked->floorclip
                );         // killough

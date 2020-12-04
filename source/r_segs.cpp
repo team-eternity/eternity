@@ -595,8 +595,12 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
 // SoM: This function is needed in multiple places now to fix some cases
 // of sprites showing up behind walls in some portal areas.
 //
-static void R_checkDSAlloc(drawseg_t *&ds_p)
+static void R_checkDSAlloc(bspcontext_t &context)
 {
+   drawseg_t *&drawsegs      = context.drawsegs;
+   unsigned int &maxdrawsegs = context.maxdrawsegs;
+   drawseg_t *&ds_p          = context.ds_p;
+
    // drawsegs need to be taken care of here
    if(ds_p == drawsegs + maxdrawsegs)
    {
@@ -623,7 +627,7 @@ static void R_closeDSP(drawseg_t *const ds_p)
 
 #define NEXTDSP(model, newx1) \
    ds_p++; \
-   R_checkDSAlloc(ds_p); \
+   R_checkDSAlloc(bspcontext); \
    *ds_p = model; \
    ds_p->x1 = newx1; \
    ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
@@ -906,7 +910,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
 
    // drawsegs need to be taken care of here
-   R_checkDSAlloc(ds_p);
+   R_checkDSAlloc(bspcontext);
 
    ds_p->x1       = start;
    ds_p->x2       = stop;

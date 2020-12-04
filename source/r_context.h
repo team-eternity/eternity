@@ -49,7 +49,9 @@ struct contextbounds_t
 
 struct bspcontext_t
 {
-   drawseg_t  *ds_p;
+   drawseg_t   *drawsegs;
+   unsigned int maxdrawsegs;
+   drawseg_t   *ds_p;
 
    // newend is one past the last valid seg
    cliprange_t *newend;

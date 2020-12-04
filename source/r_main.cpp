@@ -1299,7 +1299,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
 
       // Push the first element on the Post-BSP stack
-      R_PushPost(context.spritecontext, context.bounds, context.bspcontext.ds_p, true, nullptr);
+      R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
 
       // SoM 12/9/03: render the portals.
       R_RenderPortals(context);
@@ -1312,8 +1312,8 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // Draw Post-BSP elements such as sprites, masked textures, and portal
       // overlays
       R_DrawPostBSP(
-         context.spritecontext, context.planecontext, context.colfunc,
-         context.view, context.cb_view, context.bounds
+         context.bspcontext, context.spritecontext, context.planecontext,
+         context.colfunc, context.view, context.cb_view, context.bounds
       );
    }
 
