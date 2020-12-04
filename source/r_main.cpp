@@ -1232,13 +1232,64 @@ angle_t R_WadToAngle(int wadangle)
              : wadangle * (ANG45 / 45);
 }
 
+//
+// Render a single context
+//
+void R_RenderViewContext(rendercontext_t &context)
+{
+   memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
+   context.portalcontext.renderdepth = 0;
+
+   // Clear buffers.
+   R_ClearClipSegs(context.bspcontext);
+   R_ClearDrawSegs(context.bspcontext);
+   R_ClearPlanes(context.planecontext, context.bounds);
+   R_ClearPortals(context.planecontext.freehead);
+   R_ClearSprites(context.spritecontext);
+
+   // check for new console commands.
+   //NetUpdate();
+
+   // The head node is the last node output.
+   R_RenderBSPNode(
+      context.bspcontext, context.planecontext, context.spritecontext,
+      context.portalcontext, context.colfunc,
+      context.view, context.cb_view, context.bounds,
+      R_GetVisitID(context.portalcontext.renderdepth, context.bufferindex), numnodes - 1
+   );
+
+   // Check for new console commands.
+   //NetUpdate();
+
+   R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
+
+   // Push the first element on the Post-BSP stack
+   R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
+
+   // SoM 12/9/03: render the portals.
+   R_RenderPortals(context);
+
+   R_DrawPlanes(
+      context.planecontext.mainhash, context.colfunc,
+      context.planecontext.spanstart, context.view.angle, nullptr
+   );
+
+   // Check for new console commands.
+   //NetUpdate();
+
+   // Draw Post-BSP elements such as sprites, masked textures, and portal
+   // overlays
+   R_DrawPostBSP(
+      context.bspcontext, context.spritecontext, context.planecontext,
+      context.colfunc, context.view, context.cb_view, context.bounds
+   );
+}
+
 static int render_ticker = 0;
 
 // haleyjd: temporary debug
 extern void R_UntaintPortals();
 
-//
-// R_RenderPlayerView
 //
 // Primary renderer entry point.
 //
@@ -1266,59 +1317,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
-
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
-      memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-      context.portalcontext.renderdepth = 0;
-
-      // Clear buffers.
-      // THREAD_TODO: Make these rendercontext_t methods?
-      R_ClearClipSegs(context.bspcontext);
-      R_ClearDrawSegs(context.bspcontext);
-      R_ClearPlanes(context.planecontext, context.bounds);
-      R_ClearPortals(context.planecontext.freehead);
-      R_ClearSprites(context.spritecontext);
-
-      // check for new console commands.
-      NetUpdate();
-
-      // The head node is the last node output.
-      R_RenderBSPNode(
-         context.bspcontext, context.planecontext, context.spritecontext,
-         context.portalcontext, context.colfunc,
-         context.view, context.cb_view, context.bounds,
-         R_GetVisitID(context.portalcontext.renderdepth, context.bufferindex), numnodes - 1
-      );
-
-      // Check for new console commands.
-      NetUpdate();
-
-      R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
-
-      // Push the first element on the Post-BSP stack
-      R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
-
-      // SoM 12/9/03: render the portals.
-      R_RenderPortals(context);
-
-      R_DrawPlanes(
-         context.planecontext.mainhash, context.colfunc,
-         context.planecontext.spanstart, context.view.angle, nullptr
-      );
-
-      // Check for new console commands.
-      NetUpdate();
-
-      // Draw Post-BSP elements such as sprites, masked textures, and portal
-      // overlays
-      R_DrawPostBSP(
-         context.bspcontext, context.spritecontext, context.planecontext,
-         context.colfunc, context.view, context.cb_view, context.bounds
-      );
-   }
+   R_RunContexts();
 
    // draw the psprites on top of everything
    //  but does not draw on side views

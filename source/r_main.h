@@ -44,6 +44,7 @@ struct pwindow_t;
 struct columndrawer_t;
 struct spandrawer_t;
 struct cb_column_t;
+struct rendercontext_t;
 
 //
 // POV related.
@@ -110,6 +111,7 @@ inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 struct camera_t;
 struct player_t;
 
+void R_RenderViewContext(rendercontext_t &context);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
 
 //

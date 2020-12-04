@@ -25,27 +25,28 @@
 // Authors: Max Waine
 //
 
+#include <atomic>
 #include <thread>
 
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "doomstat.h"
 #include "m_misc.h"
+#include "hal/i_timer.h"
 #include "i_video.h"
 #include "r_context.h"
+#include "r_main.h"
 #include "r_state.h"
 #include "v_misc.h"
 
-using threadhandle_t = void (*)(); // FIXME: This elsewhere when threading real
-using atomicval_t = ptrdiff_t; // FIXME: This elsewhere when threading real
 struct renderdata_t
 {
-   rendercontext_t context;
-   threadhandle_t	 thread;
-   atomicval_t     running;
-   atomicval_t     shouldquit;
-   atomicval_t     framewaiting;
-   atomicval_t     framefinished;
+   rendercontext_t  context;
+   std::thread      thread;
+   std::atomic_bool running;
+   std::atomic_bool shouldquit;
+   std::atomic_bool framewaiting;
+   std::atomic_bool framefinished;
 };
 
 static renderdata_t *renderdatas = nullptr;
@@ -72,6 +73,24 @@ void R_freeContext(rendercontext_t &context)
       efree(context.spritecontext.vissprite_ptrs);
    if(context.spritecontext.sectorvisited)
       efree(context.spritecontext.sectorvisited);
+}
+
+static void R_contextThreadFunc(renderdata_t *data)
+{
+   data->running.exchange(true);
+
+   while(!data->shouldquit.load())
+   {
+      if(data->framewaiting.exchange(false))
+      {
+         R_RenderViewContext(data->context);
+         data->framefinished.store(true);
+      }
+
+      i_haltimer.Sleep(1);
+   }
+
+   data->running.exchange(false);
 }
 
 //
@@ -116,6 +135,8 @@ void R_InitContexts(const int width)
 
       if(numsectors && gamestate == GS_LEVEL)
          context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+
+      renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
    }
 }
 
@@ -126,6 +147,28 @@ void R_RefreshContexts()
       rendercontext_t &context = renderdatas[currentcontext].context;
 
       context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+   }
+}
+
+//
+// Runs all the contexts by setting the waiting-for-frame atomics bool to true,
+// then waits for the frame-finished-rendering atomic bools to be true
+// (setting them to false after)
+//
+void R_RunContexts()
+{
+   int finishedcontexts = 0;
+
+   for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+      renderdatas[currentcontext].framewaiting.store(true);
+
+   while(finishedcontexts != r_numcontexts)
+   {
+      for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+      {
+         if(renderdatas[currentcontext].framefinished.exchange(false))
+            finishedcontexts++;
+      }
    }
 }
 
