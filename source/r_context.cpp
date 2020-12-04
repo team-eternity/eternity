@@ -61,9 +61,14 @@ rendercontext_t &R_GetContext(int index)
 
 //
 // Frees up the dynamically allocated members of a context that aren't tagged PU_VALLOC
+// Also tidies up threads of that context's data
 //
-void R_freeContext(rendercontext_t &context)
+void R_freeData(renderdata_t &data)
 {
+   rendercontext_t &context = data.context;
+
+   data.shouldquit.store(true);
+
    // THREAD_FIXME: Verify this catches everything
    if(context.spritecontext.drawsegs_xrange)
       efree(context.spritecontext.drawsegs_xrange);
@@ -110,7 +115,7 @@ void R_InitContexts(const int width)
    if(renderdatas)
    {
       for(int currentcontext = 0; currentcontext < prev_numcontexts; currentcontext++)
-         R_freeContext(renderdatas[currentcontext].context);
+         R_freeData(renderdatas[currentcontext]);
       efree(renderdatas);
       prev_numcontexts = r_numcontexts;
    }
@@ -136,6 +141,9 @@ void R_InitContexts(const int width)
       if(numsectors && gamestate == GS_LEVEL)
          context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
 
+      // Wait until this context's thread are done running before creating new ones
+      while(renderdatas[currentcontext].running.load())
+         i_haltimer.Sleep(1);
       renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
    }
 }
