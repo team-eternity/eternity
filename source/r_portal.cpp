@@ -796,7 +796,7 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
    }
 
    if(window->head == window && window->poverlay)
-      R_PushPost(spritecontext, bounds, false, window);
+      R_PushPost(spritecontext, bounds, context.bspcontext.ds_p, false, window);
 
    viewpoint.x  = lastx;
    viewpoint.y  = lasty;
@@ -931,7 +931,7 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
    }
 
    if(window->head == window && window->poverlay)
-      R_PushPost(spritecontext, bounds, false, window);
+      R_PushPost(spritecontext, bounds, context.bspcontext.ds_p, false, window);
 
    viewpoint.x  = lastx;
    viewpoint.y  = lasty;
@@ -1047,7 +1047,7 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    );
 
    // Only push the overlay if this is the head window
-   R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
+   R_PushPost(spritecontext, bounds, context.bspcontext.ds_p, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
@@ -1258,7 +1258,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    );
 
    // Only push the overlay if this is the head window
-   R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
+   R_PushPost(spritecontext, bounds, context.bspcontext.ds_p, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;
@@ -1381,7 +1381,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    );
 
    // Only push the overlay if this is the head window
-   R_PushPost(spritecontext, bounds, true, window->head == window ? window : nullptr);
+   R_PushPost(spritecontext, bounds, context.bspcontext.ds_p, true, window->head == window ? window : nullptr);
 
    planecontext.floorclip   = floorcliparray;
    planecontext.ceilingclip = ceilingcliparray;

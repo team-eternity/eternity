@@ -33,6 +33,7 @@
 
 struct cb_column_t;
 struct cliprange_t;
+struct drawseg_t;
 struct drawsegs_xrange_t;
 struct maskedrange_t;
 struct poststack_t;
@@ -48,6 +49,8 @@ struct contextbounds_t
 
 struct bspcontext_t
 {
+   drawseg_t  *ds_p;
+
    // newend is one past the last valid seg
    cliprange_t *newend;
    cliprange_t *solidsegs;

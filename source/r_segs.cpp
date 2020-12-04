@@ -213,12 +213,12 @@ void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz
 // CALLED: CORE LOOPING ROUTINE.
 //
 static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &portalcontext,
-                            void (*const colfunc)(cb_column_t &),
-                            const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                            const contextbounds_t &bounds, cb_seg_t &segclip)
+                            void (*const colfunc)(cb_column_t &), const viewpoint_t &viewpoint,
+                            const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+                            drawseg_t *const ds_p,cb_seg_t &segclip)
 {
-   float *const floorclip   = planecontext.floorclip;
-   float *const ceilingclip = planecontext.ceilingclip;
+   float     *const floorclip   = planecontext.floorclip;
+   float     *const ceilingclip = planecontext.ceilingclip;
 
    int t, b, line;
    int cliptop, clipbot;
@@ -592,12 +592,10 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
 }
 
 //
-// R_CheckDSAlloc
-//
 // SoM: This function is needed in multiple places now to fix some cases
 // of sprites showing up behind walls in some portal areas.
 //
-static void R_CheckDSAlloc(void)
+static void R_checkDSAlloc(drawseg_t *&ds_p)
 {
    // drawsegs need to be taken care of here
    if(ds_p == drawsegs + maxdrawsegs)
@@ -610,12 +608,11 @@ static void R_CheckDSAlloc(void)
 }
 
 //
-// R_CloseDSP
-//
 // Simply sets ds_p's properties to that of a closed drawseg.
 //
-static void R_CloseDSP(void)
+static void R_closeDSP(drawseg_t *const ds_p)
 {
+
    ds_p->silhouette       = SIL_BOTH;
    ds_p->sprtopclip       = screenheightarray;
    ds_p->sprbottomclip    = zeroarray;
@@ -626,7 +623,7 @@ static void R_CloseDSP(void)
 
 #define NEXTDSP(model, newx1) \
    ds_p++; \
-   R_CheckDSAlloc(); \
+   R_checkDSAlloc(ds_p); \
    *ds_p = model; \
    ds_p->x1 = newx1; \
    ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
@@ -646,8 +643,9 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext,
                                   [[maybe_unused]] const contextbounds_t &bounds,
                                   cb_seg_t &segclip)
 {
-   float *const floorclip   = planecontext.floorclip;
-   float *const ceilingclip = planecontext.ceilingclip;
+   drawseg_t      *&ds_p        = bspcontext.ds_p;
+   float     *const floorclip   = planecontext.floorclip;
+   float     *const ceilingclip = planecontext.ceilingclip;
 
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
@@ -662,7 +660,7 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext,
       while(i < stop && floorclip[i] < ceilingclip[i]) i++;
 
       // Mark the closed area.
-      R_CloseDSP();
+      R_closeDSP(ds_p);
       R_MarkSolidSeg(bspcontext, startx, i - 1);
 
       // End closed
@@ -691,7 +689,7 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext,
 
       // There is at least one closed column, so create another drawseg.
       NEXTDSP(model, i);
-      R_CloseDSP();
+      R_closeDSP(ds_p);
 
       startx = i;
 
@@ -727,7 +725,7 @@ static void R_detectClosedColumns(bspcontext_t &bspcontext,
 #undef NEXTDSP
 #undef SETX2
 
-static void R_storeTextureColumns(cb_seg_t &segclip)
+static void R_storeTextureColumns(float *const maskedtexturecol, cb_seg_t &segclip)
 {
    int i;
    float texx;
@@ -738,8 +736,8 @@ static void R_storeTextureColumns(cb_seg_t &segclip)
       basescale = 1.0f / (segclip.dist * view.yfoc);
       texx = segclip.len * basescale + segclip.toffsetx;
 
-      if(ds_p->maskedtexturecol)
-         ds_p->maskedtexturecol[i] = texx;
+      if(maskedtexturecol)
+         maskedtexturecol[i] = texx;
 
       segclip.len  += segclip.lenstep;
       segclip.dist += segclip.diststep;
@@ -776,6 +774,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
                       const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop)
 {
+   drawseg_t           *&ds_p         = bspcontext.ds_p;
    const portalrender_t &portalrender = portalcontext.portalrender;
 
    float clipx1;
@@ -907,7 +906,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
 
 
    // drawsegs need to be taken care of here
-   R_CheckDSAlloc();
+   R_checkDSAlloc(ds_p);
 
    ds_p->x1       = start;
    ds_p->x2       = stop;
@@ -919,7 +918,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
    ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)
-      R_CloseDSP();
+      R_closeDSP(ds_p);
    else
    {
       ds_p->sprtopclip = ds_p->sprbottomclip = nullptr;
@@ -983,9 +982,13 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
-      R_renderSegLoop(planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, segclip);
+   {
+      R_renderSegLoop(
+         planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
+      );
+   }
    else
-      R_storeTextureColumns(segclip);
+      R_storeTextureColumns(ds_p->maskedtexturecol, segclip);
 
    // store clipping arrays
    float *const floorclip   = planecontext.floorclip;

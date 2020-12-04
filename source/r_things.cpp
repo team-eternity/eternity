@@ -529,7 +529,7 @@ void R_ClearSprites(spritecontext_t &context)
 // Pushes a new element on the post-BSP stack.
 //
 void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
-                bool pushmasked, pwindow_t *window)
+                drawseg_t *const ds_p, bool pushmasked, pwindow_t *window)
 {
    poststack_t   *&pstack       = context.pstack;
    int            &pstacksize   = context.pstacksize;

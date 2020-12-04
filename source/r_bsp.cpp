@@ -53,8 +53,6 @@
 // on line overlaps.
 static constexpr float kPortalSegRejectionFudge = 1.f / 256;
 
-drawseg_t *ds_p;
-
 // killough 4/7/98: indicates doors closed wrt automap bugfix:
 int      doorclosed;
 
@@ -67,9 +65,9 @@ unsigned int maxdrawsegs;
 //
 // R_ClearDrawSegs
 //
-void R_ClearDrawSegs(void)
+void R_ClearDrawSegs(bspcontext_t &context)
 {
-   ds_p = drawsegs;
+   context.ds_p = drawsegs;
 }
 
 //

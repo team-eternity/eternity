@@ -53,8 +53,6 @@ extern sector_t *backsector;
 extern drawseg_t *drawsegs;
 extern unsigned int maxdrawsegs;
 
-extern drawseg_t *ds_p;
-
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
@@ -65,7 +63,7 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
                            int minx, int maxx, const float *top, const float *bottom);
 
 void R_ClearClipSegs(bspcontext_t &context);
-void R_ClearDrawSegs();
+void R_ClearDrawSegs(bspcontext_t &context);
 
 void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
                      spritecontext_t &spritecontext, portalcontext_t &portalcontext,

@@ -40,6 +40,7 @@ struct planecontext_t;
 struct portalrender_t;
 struct viewpoint_t;
 struct cbviewpoint_t;
+struct drawseg_t;
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
@@ -67,7 +68,7 @@ struct poststack_t
 };
 
 void R_PushPost(spritecontext_t &context, const contextbounds_t &bounds,
-                bool pushmasked, pwindow_t *window);
+                drawseg_t *const ds_p, bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
 void R_SetMaskedSilhouette(const contextbounds_t &bounds,
