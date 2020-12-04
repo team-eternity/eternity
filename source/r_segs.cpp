@@ -595,9 +595,9 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
 //
 static void R_checkDSAlloc(bspcontext_t &context)
 {
-   drawseg_t *&drawsegs      = context.drawsegs;
+   drawseg_t   *&drawsegs    = context.drawsegs;
    unsigned int &maxdrawsegs = context.maxdrawsegs;
-   drawseg_t *&ds_p          = context.ds_p;
+   drawseg_t   *&ds_p        = context.ds_p;
 
    // drawsegs need to be taken care of here
    if(ds_p == drawsegs + maxdrawsegs)
