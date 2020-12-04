@@ -44,9 +44,6 @@
 #include "r_things.h"
 #include "w_wad.h"
 
-// killough 1/6/98: replaced globals with statics where appropriate
-static float  *maskedtexturecol;
-
 //
 // R_RenderMaskedSegRange
 //
@@ -61,6 +58,7 @@ void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz
    float    texmidf;
    line_t  *linedef;
    lighttable_t **wlight;
+   float   *maskedtexturecol;
 
    cb_column_t column  = {};
    cb_seg_t    segclip = {};
