@@ -1929,7 +1929,10 @@ void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
          if(r_column_engine->ResetBuffer)
             r_column_engine->ResetBuffer();
             
-         R_DrawPlanes(planecontext.mainhash, colfunc, viewpoint.angle, pstack[pstacksize].overlay);
+         R_DrawPlanes(
+            planecontext.mainhash, colfunc, planecontext.spanstart,
+            viewpoint.angle, pstack[pstacksize].overlay
+         );
          R_FreeOverlaySet(planecontext.r_overlayfreesets, pstack[pstacksize].overlay);
       }
    }

@@ -81,6 +81,9 @@ struct planecontext_t
    // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
    // to the clipping arrays of portals.
    float *floorclip, *ceilingclip;
+
+   // spanstart holds the start of a plane span; initialized to 0 at start
+   int *spanstart;
 };
 
 struct portalcontext_t

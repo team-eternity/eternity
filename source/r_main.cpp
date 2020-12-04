@@ -1304,7 +1304,10 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
       // SoM 12/9/03: render the portals.
       R_RenderPortals(context);
 
-      R_DrawPlanes(context.planecontext.mainhash, context.colfunc, context.view.angle, nullptr);
+      R_DrawPlanes(
+         context.planecontext.mainhash, context.colfunc,
+         context.planecontext.spanstart, context.view.angle, nullptr
+      );
 
       // Check for new console commands.
       NetUpdate();

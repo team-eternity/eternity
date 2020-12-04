@@ -138,12 +138,11 @@ VALLOCATION(overlayfclip)
    overlaycclip = buffer + w;
 }
 
-// spanstart holds the start of a plane span; initialized to 0 at start
-static int *spanstart;
-
 VALLOCATION(spanstart)
 {
-   spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
+   R_ForEachContext([h](rendercontext_t &context) {
+      context.planecontext.spanstart = ecalloctag(int *, h, sizeof(int), PU_VALLOC, nullptr);
+   });
 }
 
 //
@@ -811,7 +810,7 @@ visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int
 // R_makeSpans
 //
 static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
-                        int x, int t1, int b1, int t2, int b2)
+                        int *const spanstart, int x, int t1, int b1, int t2, int b2)
 {
 #ifdef RANGECHECK
    // haleyjd: do not allow this loop to trash the BSS data
@@ -917,7 +916,8 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(void (*&colfunc)(cb_column_t &), const angle_t viewangle, visplane_t *pl)
+static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
+                          const angle_t viewangle, visplane_t *pl)
 {
    int x;
 
@@ -1170,8 +1170,13 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), const angle_t viewang
 
       plane.MapFunc = (plane.slope == nullptr ? R_mapPlane : R_mapSlope);
 
-      for(x = pl->minx ; x <= stop ; x++)
-         R_makeSpans(span, slopespan, plane, x, pl->top[x-1], pl->bottom[x-1], pl->top[x], pl->bottom[x]);
+      for(x = pl->minx; x <= stop; x++)
+      {
+         R_makeSpans(
+            span, slopespan, plane, spanstart, x,
+            pl->top[x - 1], pl->bottom[x - 1], pl->top[x], pl->bottom[x]
+         );
+      }
    }
 }
 
@@ -1180,7 +1185,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), const angle_t viewang
 // function is also now used to render portal overlays.
 //
 void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
-                  const angle_t viewangle, planehash_t *table)
+                  int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
    int i;
@@ -1191,7 +1196,7 @@ void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(colfunc, viewangle, pl);
+         do_draw_plane(colfunc, spanstart, viewangle, pl);
    }
 }
 
