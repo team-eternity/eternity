@@ -2187,7 +2187,7 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
 {
    const portalrender_t &portalrender = portalcontext.portalrender;
 
-   static sector_t tempsec;
+   sector_t tempsec;
 
    float x1, x2;
    float i1, i2, pstep;
@@ -2196,6 +2196,8 @@ static void R_addLine(bspcontext_t &bspcontext, planecontext_t &planecontext,
    const side_t *side;
    float floorx1, floorx2;
    const vertex_t *v1, *v2;
+
+   tempsec = {};
 
    // ioanch 20160125: reject segs in front of line when rendering line portal
    if(portalrender.active && portalrender.w->portal->type != R_SKYBOX)
