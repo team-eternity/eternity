@@ -150,7 +150,6 @@ struct rendercontext_t
 
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);
-   void (*flatfunc)();
 };
 
 // The global context is for single-threaded things that still require a context

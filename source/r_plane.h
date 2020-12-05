@@ -27,6 +27,7 @@
 #define R_PLANE_H__
 
 struct cb_column_t;
+struct cb_plane_t;
 struct cbviewpoint_t;
 struct contextbounds_t;
 struct planecontext_t;
@@ -103,6 +104,11 @@ struct cb_slopespan_t
    static inline lighttable_t **colormap;
 };
 
+using R_FlatFunc  = void (*)(const cb_span_t &);
+using R_SlopeFunc = void (*)(const cb_slopespan_t &, const cb_span_t &);
+using R_MapFunc   = void (*)(const R_FlatFunc, const R_SlopeFunc, cb_span_t &,
+                             cb_slopespan_t &, const cb_plane_t &, int, int, int);
+
 struct cb_plane_t
 {
    float xoffset, yoffset;
@@ -127,7 +133,7 @@ struct cb_plane_t
    // SoM: slopes.
    rslope_t *slope;
 
-   void (*MapFunc)(cb_span_t &, cb_slopespan_t &, const cb_plane_t &, int, int, int);
+   R_MapFunc MapFunc;
 };
 
 
