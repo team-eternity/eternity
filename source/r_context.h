@@ -66,9 +66,9 @@ struct bspcontext_t
 
 struct planecontext_t
 {
-   visplane_t *floorplane, *ceilingplane;
-   visplane_t *freetail;
-   visplane_t **freehead = &freetail;
+   visplane_t  *floorplane, *ceilingplane;
+   visplane_t  *freetail;
+   visplane_t **freehead;
 
    // SoM: New visplane hash
    // This is the main hash object used by the normal scene.

@@ -324,12 +324,12 @@ struct pwindow_t
    float *bottom;
    int minx, maxx;
 
-   R_WindowFunc func;
+   R_WindowFunc  func;
    R_ClipSegFunc clipfunc;
 
    // Next window in the main chain
    pwindow_t *next;
-   
+
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
    pwindow_t *head, *child;
@@ -358,10 +358,7 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)(bspcontext_t &, planecontext_t &,
-                       portalcontext_t &, void (*&)(cb_column_t &),
-                       const viewpoint_t &, const cbviewpoint_t &,
-                       const contextbounds_t &, const cb_seg_t &);
+   R_ClipSegFunc segClipFunc;
 
 //   planehash_t *overlay;
 };
