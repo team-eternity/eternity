@@ -95,17 +95,15 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
    return ((picnum * 3) + lightlevel + (height * 7)) % chains;
 }
 
-
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-float *openings;
-
+// THREAD_FIXME: Can openings somehow be de-contextified? I feel like it should be possible.
 VALLOCATION(openings)
 {
-   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, nullptr);
-   R_ForEachContext([](rendercontext_t &context)
+   R_ForEachContext([w, h](rendercontext_t &context)
    {
-      context.planecontext.lastopening = openings;
+      context.planecontext.openings    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+      context.planecontext.lastopening = context.planecontext.openings;
    });
 }
 
@@ -541,7 +539,7 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 
    R_ClearPlaneHash(context.freehead, &context.mainhash);
 
-   context.lastopening = openings;
+   context.lastopening = context.openings;
 }
 
 
