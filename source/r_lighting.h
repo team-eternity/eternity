@@ -75,15 +75,11 @@ typedef byte  lighttable_t;
 //
 
 // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
-extern lighttable_t *(*scalelight)[MAXLIGHTSCALE];
-extern lighttable_t *(*zlight)[MAXLIGHTZ];
-extern lighttable_t *fullcolormap;
 extern int numcolormaps;    // killough 4/4/98: dynamic number of maps
 extern lighttable_t **colormaps;
 // killough 3/20/98, 4/4/98: end dynamic colormaps
 
 extern int           extralight;
-extern lighttable_t *fixedcolormap;
 
 #endif
 

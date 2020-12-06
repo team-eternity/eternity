@@ -29,6 +29,7 @@
 #define R_CONTEXT_H__
 
 #include "r_defs.h"
+#include "r_lighting.h"
 #include "r_portal.h"
 
 struct cb_column_t;
@@ -62,6 +63,17 @@ struct bspcontext_t
    cliprange_t *addend;
 
    float *slopemark;
+};
+
+struct cmapcontext_t
+{
+   // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
+   lighttable_t *(*scalelight)[MAXLIGHTSCALE];
+   lighttable_t *(*zlight)[MAXLIGHTZ];
+   lighttable_t *fullcolormap;
+   // killough 3/20/98, 4/4/98: end dynamic colormaps
+
+   lighttable_t *fixedcolormap;
 };
 
 struct planecontext_t
@@ -142,6 +154,7 @@ struct rendercontext_t
 
    contextbounds_t bounds;
    bspcontext_t    bspcontext;
+   cmapcontext_t   cmapcontext;
    planecontext_t  planecontext;
    portalcontext_t portalcontext;
    spritecontext_t spritecontext;

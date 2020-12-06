@@ -583,7 +583,8 @@ static visplane_t *new_visplane(planecontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(planecontext_t &context,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
+                        planecontext_t &planecontext,
                         const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
@@ -597,7 +598,7 @@ visplane_t *R_FindPlane(planecontext_t &context,
 
    // SoM: table == nullptr means use main table
    if(!table)
-      table = &context.mainhash;
+      table = &planecontext.mainhash;
       
    blendflags &= PS_OBLENDFLAGS;
 
@@ -633,8 +634,8 @@ visplane_t *R_FindPlane(planecontext_t &context,
          offs == check->offs &&      // killough 2/28/98: Add offset checks
          scale == check->scale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
-         zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap &&
+         cmapcontext.zlight == check->colormap &&
+         cmapcontext.fixedcolormap == check->fixedcolormap &&
          viewpoint.x == check->viewx &&
          viewpoint.y == check->viewy &&
          viewpoint.z == check->viewz &&
@@ -645,7 +646,7 @@ visplane_t *R_FindPlane(planecontext_t &context,
         return check;
    }
 
-   check = new_visplane(context, hash, table);         // killough
+   check = new_visplane(planecontext, hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
@@ -656,9 +657,9 @@ visplane_t *R_FindPlane(planecontext_t &context,
    check->offs = offs;               // killough 2/28/98: Save offsets
    check->scale = scale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
-   check->colormap = zlight;
-   check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
-   check->fullcolormap = fullcolormap;
+   check->colormap      = cmapcontext.zlight;
+   check->fixedcolormap = cmapcontext.fixedcolormap; // haleyjd 10/16/06
+   check->fullcolormap  = cmapcontext.fullcolormap;
    
    check->viewx = viewpoint.x;
    check->viewy = viewpoint.y;
@@ -829,7 +830,8 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(void (*&colfunc)(cb_column_t &), const angle_t viewangle, visplane_t *pl)
+static void do_draw_newsky(cmapcontext_t &context, void (*&colfunc)(cb_column_t &),
+                           const angle_t viewangle, visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
@@ -855,8 +857,8 @@ static void do_draw_newsky(void (*&colfunc)(cb_column_t &), const angle_t viewan
    sky1 = R_GetSkyTexture(skyTexture);
    sky2 = R_GetSkyTexture(skyTexture2);
       
-   if(getComp(comp_skymap) || !(column.colormap = fixedcolormap))
-      column.colormap = fullcolormap;
+   if(getComp(comp_skymap) || !(column.colormap = context.fixedcolormap))
+      column.colormap = context.fullcolormap;
       
    // first draw sky 2 with R_DrawColumn (unmasked)
    column.texmid    = sky2->texturemid;      
@@ -916,8 +918,8 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
-                          const angle_t viewangle, visplane_t *pl)
+static void do_draw_plane(cmapcontext_t &context, void (*&colfunc)(cb_column_t &),
+                          int *const spanstart, const angle_t viewangle, visplane_t *pl)
 {
    int x;
 
@@ -927,7 +929,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(colfunc, viewangle, pl);
+      do_draw_newsky(context, colfunc, viewangle, pl);
       return;
    }
    
@@ -1150,7 +1152,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
       plane.height   = pl->heightf - pl->viewzf;
       
       // SoM 10/19/02: deep water colormap fix
-      if(fixedcolormap)
+      if(context.fixedcolormap)
          light = (255  >> LIGHTSEGSHIFT);
       else
          light = (pl->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
@@ -1187,7 +1189,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
+void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
@@ -1199,7 +1201,7 @@ void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(colfunc, spanstart, viewangle, pl);
+         do_draw_plane(context, colfunc, spanstart, viewangle, pl);
    }
 }
 

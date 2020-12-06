@@ -45,6 +45,7 @@ struct columndrawer_t;
 struct spandrawer_t;
 struct cb_column_t;
 struct rendercontext_t;
+struct cmapcontext_t;
 
 //
 // POV related.
@@ -97,7 +98,7 @@ angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(const fixed_t viewz, const sector_t *s);
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
@@ -241,7 +242,7 @@ extern cb_view_t  view;
 // SoM: frameid frame counter.
 extern unsigned   frameid;
 
-uint64_t R_GetVisitID(const uint16_t renderdepth, const int16_t contextid);
+uint64_t R_GetVisitID(const rendercontext_t &context);
 
 //
 // R_doubleToUint32
