@@ -49,7 +49,8 @@ struct renderdata_t
    std::atomic_bool framefinished;
 };
 
-static renderdata_t *renderdatas = nullptr;
+static renderdata_t *renderdatas      = nullptr;
+static int           prev_numcontexts = 0;
 
 //
 // Grabs a given render context
@@ -69,6 +70,9 @@ void R_freeData(renderdata_t &data)
 
    data.shouldquit.store(true);
 
+   while(data.running.load())
+      i_haltimer.Sleep(1);
+
    // THREAD_FIXME: Verify this catches everything
    if(context.spritecontext.drawsegs_xrange)
       efree(context.spritecontext.drawsegs_xrange);
@@ -78,6 +82,16 @@ void R_freeData(renderdata_t &data)
       efree(context.spritecontext.vissprite_ptrs);
    if(context.spritecontext.sectorvisited)
       efree(context.spritecontext.sectorvisited);
+}
+
+void R_FreeContexts()
+{
+   if(renderdatas)
+   {
+      for(int currentcontext = 0; currentcontext < prev_numcontexts; currentcontext++)
+         R_freeData(renderdatas[currentcontext]);
+      efree(renderdatas);
+   }
 }
 
 static void R_contextThreadFunc(renderdata_t *data)
@@ -103,7 +117,7 @@ static void R_contextThreadFunc(renderdata_t *data)
 //
 void R_InitContexts(const int width)
 {
-   static int prev_numcontexts = r_numcontexts;
+   prev_numcontexts = r_numcontexts;
 
    r_globalcontext = {};
    r_globalcontext.bufferindex  = -1;
@@ -111,14 +125,6 @@ void R_InitContexts(const int width)
    r_globalcontext.bounds.endcolumn    = width;
    r_globalcontext.bounds.fstartcolumn = 0.0f;
    r_globalcontext.bounds.fendcolumn   = static_cast<float>(width);
-
-   if(renderdatas)
-   {
-      for(int currentcontext = 0; currentcontext < prev_numcontexts; currentcontext++)
-         R_freeData(renderdatas[currentcontext]);
-      efree(renderdatas);
-      prev_numcontexts = r_numcontexts;
-   }
 
    renderdatas = estructalloc(renderdata_t, r_numcontexts);
 

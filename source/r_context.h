@@ -172,7 +172,7 @@ inline rendercontext_t r_globalcontext;
 inline int r_numcontexts = 0;
 
 rendercontext_t &R_GetContext(int context);
-
+void R_FreeContexts();
 void R_InitContexts(const int width);
 void R_RefreshContexts();
 void R_RunContexts();
