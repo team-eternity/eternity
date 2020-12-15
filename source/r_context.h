@@ -152,12 +152,13 @@ struct rendercontext_t
 {
    int16_t         bufferindex;
 
-   contextbounds_t bounds;
    bspcontext_t    bspcontext;
    cmapcontext_t   cmapcontext;
    planecontext_t  planecontext;
    portalcontext_t portalcontext;
    spritecontext_t spritecontext;
+
+   contextbounds_t bounds;
    viewpoint_t     view;
    cbviewpoint_t   cb_view;
 

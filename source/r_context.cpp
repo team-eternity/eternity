@@ -124,11 +124,11 @@ void R_InitContexts(const int width)
    r_globalcontext.bounds.startcolumn  = 0;
    r_globalcontext.bounds.endcolumn    = width;
    r_globalcontext.bounds.fstartcolumn = 0.0f;
-   r_globalcontext.bounds.fendcolumn   = static_cast<float>(width);
+   r_globalcontext.bounds.fendcolumn   = float(width);
 
    renderdatas = estructalloc(renderdata_t, r_numcontexts);
 
-   const float contextwidth = static_cast<float>(width) / static_cast<float>(r_numcontexts);
+   const float contextwidth = float(width) / float(r_numcontexts);
 
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
    {
@@ -136,10 +136,10 @@ void R_InitContexts(const int width)
 
       context.bufferindex = currentcontext;
 
-      context.bounds.fstartcolumn = static_cast<float>(currentcontext)     * contextwidth;
-      context.bounds.fendcolumn   = static_cast<float>(currentcontext + 1) * contextwidth;
-      context.bounds.startcolumn  = static_cast<int>(roundf(context.bounds.fstartcolumn));
-      context.bounds.endcolumn    = static_cast<int>(roundf(context.bounds.fendcolumn));
+      context.bounds.fstartcolumn = float(currentcontext)     * contextwidth;
+      context.bounds.fendcolumn   = float(currentcontext + 1) * contextwidth;
+      context.bounds.startcolumn  = int(roundf(context.bounds.fstartcolumn));
+      context.bounds.endcolumn    = int(roundf(context.bounds.fendcolumn));
       context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
 
       context.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
