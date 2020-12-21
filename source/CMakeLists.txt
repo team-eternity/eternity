@@ -65,46 +65,46 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
       include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
       set(ARCH_SPECIFIC_SOURCES ${ARCH_SPECIFIC_SOURCES} midiproc_c.c)
-	  
+
       include_directories(Win32/)
    endif()
 endif()
 
-IF (APPLE)
-        INCLUDE_DIRECTORIES (sdl/macosx/)
-        FILE (GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
-ENDIF (APPLE)
+if(APPLE)
+        include_directories(sdl/macosx/)
+        file(GLOB ARCH_SPECIFIC_SOURCES sdl/macosx/*.m)
+endif(APPLE)
 
-IF (LINUX)
-        INCLUDE_DIRECTORIES (linux/)
-        FILE (GLOB ARCH_SPECIFIC_SOURCES linux/*.cpp)
-ENDIF (LINUX)
+if(LINUX)
+        include_directories(linux/)
+        file(GLOB ARCH_SPECIFIC_SOURCES linux/*.cpp)
+endif(LINUX)
 
-INCLUDE_DIRECTORIES (Confuse/)
-FILE (GLOB CONFUSE_SOURCES Confuse/*.cpp)
+include_directories(Confuse/)
+file(GLOB CONFUSE_SOURCES Confuse/*.cpp)
 
-INCLUDE_DIRECTORIES (textscreen/)
-FILE (GLOB TEXTSCREEN_SOURCES textscreen/*.c)
+include_directories(textscreen/)
+file(GLOB TEXTSCREEN_SOURCES textscreen/*.c)
 
-INCLUDE_DIRECTORIES (./)
-FILE (GLOB ETERNITY_SOURCES *.cpp)
+include_directories(./)
+file(GLOB ETERNITY_SOURCES *.cpp)
 
-INCLUDE_DIRECTORIES (hal/)
-FILE (GLOB HAL_SOURCES hal/*.cpp)
+include_directories(hal/)
+file(GLOB HAL_SOURCES hal/*.cpp)
 
-INCLUDE_DIRECTORIES (gl/)
-FILE (GLOB GL_SOURCES gl/*.cpp)
+include_directories(gl/)
+file(GLOB GL_SOURCES gl/*.cpp)
 
-INCLUDE_DIRECTORIES (sdl/)
-FILE (GLOB SDL_SOURCES sdl/*.cpp)
+include_directories(sdl/)
+file(GLOB SDL_SOURCES sdl/*.cpp)
 
 ################################################################################
 ######################### Set Build Targets   ##################################
 ## Eternity is a Windows CONSOLE application, so it's entry point is main,
 ## not WinMain. Adding the WIN32 qualifier sets the entry point to WinMain.
-ADD_EXECUTABLE (eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
-                ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
-                
+add_executable(eternity ${ARCH_SPECIFIC_SOURCES} ${ETERNITY_SOURCES} ${CONFUSE_SOURCES}
+               ${TEXTSCREEN_SOURCES} ${HAL_SOURCES} ${GL_SOURCES} ${SDL_SOURCES})
+
 set_target_properties(eternity
    PROPERTIES
    CXX_STANDARD          17
@@ -119,7 +119,7 @@ endif()
 
 if(MSVC)
    target_link_libraries(eternity rpcrt4)
-   
+
    target_compile_options(eternity PUBLIC "/utf-8")
 
    if(NOT MSVC_VERSION LESS  "1914")
@@ -133,12 +133,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   target_link_libraries(eternity version)
 endif()
 
-INSTALL (TARGETS eternity
+install(TARGETS eternity
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
         ARCHIVE DESTINATION ${LIB_DIR})
 
-INSTALL (DIRECTORY ${CMAKE_SOURCE_DIR}/base
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/base
         DESTINATION ${SHARE_DIR}
         PATTERN "delete.me" EXCLUDE
         PATTERN ".svn" EXCLUDE)
