@@ -18,35 +18,33 @@
 ################################################################################
 ######################### Set Project Source  ##################################
 
-# General flags.
+function(eternity_target_compile_definitions _TARGET)
+   # General flags.
+   target_compile_definitions("${_TARGET}" PRIVATE _SDL_VER PUBLIC _CONSOLE HAVE_SPCLIB HAVE_ADLMIDILIB)
 
-add_definitions(-D_SDL_VER -D_CONSOLE -DHAVE_SPCLIB -DHAVE_ADLMIDILIB)
-
-# Library search flags.
-
-if(OPENGL_LIBRARY)
-   add_definitions(-DEE_FEATURE_OPENGL)
-endif()
-
-# Build specific flags.
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-   add_definitions(-D_DEBUG -DRANGECHECK -DINSTRUMENTED -DZONEIDCHECK)
-endif()
-
-# System specific flags.
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-   add_definitions(-DLINUX)
-endif()
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-   add_definitions(-DEE_FEATURE_REGISTRYSCAN)
-
-   if(MSVC)
-      add_definitions(-DEE_FEATURE_MIDIRPC -DEE_FEATURE_XINPUT)
+   # Library search flags.
+   if(OPENGL_LIBRARY)
+      target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_OPENGL)
    endif()
-endif()
+
+   # Build specific flags.
+   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      target_compile_definitions("${_TARGET}" PRIVATE _DEBUG RANGECHECK INSTRUMENTED ZONEIDCHECK)
+   endif()
+
+   # System specific flags.
+   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+      target_compile_definitions("${_TARGET}" PRIVATE LINUX)
+   endif()
+
+   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+      target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_REGISTRYSCAN)
+
+      if(MSVC)
+      target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_MIDIRPC EE_FEATURE_XINPUT)
+      endif()
+   endif()
+endfunction()
 
 # Source files.
 
@@ -110,6 +108,8 @@ set_target_properties(eternity
    CXX_STANDARD          17
    CXX_STANDARD_REQUIRED ON
 )
+
+eternity_target_compile_definitions(eternity)
 
 target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 

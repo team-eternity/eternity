@@ -18,16 +18,18 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-project("Eternity Engine" C CXX)
 cmake_minimum_required(VERSION 3.0)
+project("Eternity Engine"
+        VERSION 4.2.0
+        LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 if(COMMAND cmake_policy)
-        CMAKE_POLICY (SET CMP0003 NEW)
+   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 if(${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
-        MESSAGE( FATAL_ERROR "In-tree Builds are NOT supported.")
+   message(FATAL_ERROR "In-tree Builds are NOT supported.")
 endif(${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
 
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/adlmidi/CMakeLists.txt)
@@ -113,13 +115,13 @@ endif()
 ######################### Find Needed Libs #####################################
 find_package(OpenGL)
 
-find_package (SDL2 REQUIRED)
+find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 
-find_package (SDL2_mixer REQUIRED)
+find_package(SDL2_mixer REQUIRED)
 include_directories(${SDL2_MIXER_INCLUDE_DIR})
 
-find_package (SDL2_net REQUIRED)
+find_package(SDL2_net REQUIRED)
 include_directories(${SDL2_NET_INCLUDE_DIR})
 
 ## FIXME: This is an inelegant hack to find, and grab all needed

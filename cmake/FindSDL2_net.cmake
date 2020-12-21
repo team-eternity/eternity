@@ -24,7 +24,7 @@ find_library(SDL2_NET_LIBRARY SDL2_net
              PATH_SUFFIXES lib)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(SDL2_NET REQUIRED_VARS SDL2_NET_LIBRARY SDL2_NET_INCLUDE_DIR)
+find_package_handle_standard_args(SDL2_net REQUIRED_VARS SDL2_NET_LIBRARY SDL2_NET_INCLUDE_DIR)
 
 ## EOF
 
