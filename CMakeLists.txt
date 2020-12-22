@@ -38,6 +38,18 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+if(NOT CMAKE_EXPORT_COMPILE_COMMANDS)
+  # Export compile commands unless we're generating a modern project.
+   if(CMAKE_GENERATOR MATCHES "Make" OR CMAKE_GENERATOR MATCHES "Ninja")
+      set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+   else()
+      set(CMAKE_EXPORT_COMPILE_COMMANDS OFF)
+   endif()
+endif()
+set(CMAKE_EXPORT_COMPILE_COMMANDS "${CMAKE_EXPORT_COMPILE_COMMANDS}" CACHE BOOL
+    "Export compile commands for use in supported editors."
+    FORCE)
+
 # Supported Build Types are:
 #    * Debug (CMAKE_C_FLAGS_DEBUG)
 #    * Release (CMAKE_C_FLAGS_RELEASE)
