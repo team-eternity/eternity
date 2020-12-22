@@ -1,4 +1,5 @@
 ## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
+## Copyright (C) 2020 Max Waine
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
@@ -738,6 +739,7 @@ set_target_properties(eternity
 eternity_target_compile_definitions(eternity)
 eternity_target_sources(eternity)
 
+target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
 target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
 if(OPENGL_LIBRARY)

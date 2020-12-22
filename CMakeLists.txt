@@ -1,5 +1,6 @@
 ## Copyright (c) 2010 Jamie Jones <jamie_jones_au@yahoo.com.au>
 ## Copyright (C) 2013 David Hill
+## Copyright (C) 2020 Max Waine
 ##
 ## This software is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as published by
@@ -18,12 +19,14 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.6)
 project("Eternity Engine"
         VERSION 4.2.0
         LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "eternity")
 
 if(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)
@@ -77,7 +80,6 @@ include(CheckIncludeFiles)
 ######################### Set Package Details  #################################
 include(Packaging)
 
-
 ################################################################################
 ######################### Documentation  #######################################
 
@@ -100,41 +102,20 @@ if(ASCIIDOC_EXE)
       )
 endif()
 
-
 ################################################################################
 ############ Compiler: Features, Warnings, Hardening, Optimisation  ############
 include(Compiler)
 
-
 ################################################################################
 ######################### Find Headers #########################################
-check_include_files(stdint.h HAVE_STDINT_H)
-if(NOT HAVE_STDINT_H)
-        if(MSVC)
-                ## FIXME: This is bad. stdint.h and inttypes.h should be
-                ## moved to a seperate folder. They are not used by MinGW or
-                ## in Visual Studio 2010 onwards, and break those builds.
-                include_directories(${CMAKE_SOURCE_DIR}/source/win32/)
-        endif(MSVC)
-endif(NOT HAVE_STDINT_H)
-
 check_include_files(xlocale.h HAVE_XLOCALE_H)
 if(HAVE_XLOCALE_H)
-        add_definitions(-DHAVE_XLOCALE_H)
+   add_definitions(-DHAVE_XLOCALE_H)
 endif()
 
 ################################################################################
 ######################### Find Needed Libs #####################################
-find_package(OpenGL)
-
-find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIR})
-
-find_package(SDL2_mixer REQUIRED)
-include_directories(${SDL2_MIXER_INCLUDE_DIR})
-
-find_package(SDL2_net REQUIRED)
-include_directories(${SDL2_NET_INCLUDE_DIR})
+include(ExternalLibraries)
 
 ## FIXME: This is an inelegant hack to find, and grab all needed
 ## .dll support files on windows. It works by looking for SDL2.dll
