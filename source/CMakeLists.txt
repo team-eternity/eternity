@@ -755,7 +755,13 @@ endif()
 if(MSVC)
    target_link_libraries(eternity rpcrt4)
 
-   target_compile_options(eternity PUBLIC "/utf-8" "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/fp:fast>")
+   target_compile_options(eternity PUBLIC
+                          "/MP" "/utf-8" "/permissive-"
+                          "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+
+   target_link_options(eternity PUBLIC
+                       "/DYNAMICBASE:NO" "/SAFESEH:NO"
+                       "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/MAP:$(OutDir)$(TargetName).map>")
 
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
