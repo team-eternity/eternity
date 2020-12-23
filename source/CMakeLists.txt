@@ -95,7 +95,12 @@ endfunction()
 
 function(eternity_target_sources _TARGET)
    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+      configure_file(Win32/Eternity.rc.in "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc" @ONLY)
       add_sources(
+         SOURCE_GROUP "Resource Files"
+         "${CMAKE_CURRENT_SOURCE_DIR}/Win32/ee.ico"
+         SOURCE_GROUP "Source Files"
+         "${CMAKE_CURRENT_BINARY_DIR}/Eternity.rc"
          SOURCE_GROUP "Source Files\\\\Win32\\\\Win32 Headers"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_fnames.h"
          "${CMAKE_CURRENT_SOURCE_DIR}/Win32/i_winversion.h"
@@ -750,7 +755,7 @@ endif()
 if(MSVC)
    target_link_libraries(eternity rpcrt4)
 
-   target_compile_options(eternity PUBLIC "/utf-8")
+   target_compile_options(eternity PUBLIC "/utf-8" "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:/fp:fast>")
 
    if(NOT MSVC_VERSION LESS  "1914")
       target_compile_options(eternity PUBLIC "/std:c++17")
