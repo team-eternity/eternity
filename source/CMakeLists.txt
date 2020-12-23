@@ -126,7 +126,7 @@ function(eternity_target_sources _TARGET)
 
          add_sources(
             SOURCE_GROUP "Source Files\\\\SDL\\\\midiproc"
-            "${CMAKE_CURRENT_SOURCE_DIR}/../midiproc/midiproc_c.c"
+            "${CMAKE_CURRENT_BINARY_DIR}/midiproc_c.c"
          )
 
          target_include_directories("${_TARGET}" PRIVATE Win32/)
