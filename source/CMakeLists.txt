@@ -56,6 +56,7 @@ macro(add_sources)
             source_group("" FILES ${ARG})
          endif()
 
+         # TODO: Remove this if?
          if(EXISTS ${ARG})
             target_sources("${_TARGET}" PRIVATE ${ARG})
          endif()
@@ -175,7 +176,7 @@ function(eternity_target_sources _TARGET)
       SOURCE_GROUP "Source Files\\\\ACS_"
       "${CMAKE_CURRENT_SOURCE_DIR}/acs_func.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/acs_intr.cpp"
-      "${CMAKE_CURRENT_SOURCE_DIR}/act_intr.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/acs_intr.h"
       SOURCE_GROUP "Source Files\\\\AM_"
       "${CMAKE_CURRENT_SOURCE_DIR}/am_color.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/am_map.cpp"
@@ -209,7 +210,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/d_dehtbl.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/d_diskfile.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/d_dwfile.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/d_english.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/d_englsh.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/d_event.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/d_files.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/d_findiwads.h"
@@ -437,7 +438,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/autopalette.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/info.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/psnprntf.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/resource.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/tables.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/version.h"
       SOURCE_GROUP "Source Files\\\\Misc\\\\Misc Source"
@@ -476,7 +476,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/p_mobj.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_mobjcol.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_partcl.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/p_potal.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_portal.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_portalblockmap.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_portalclip.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_portalcross.h"
@@ -487,7 +487,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/p_sector.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_setup.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_skin.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/p_slops.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/p_slopes.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_spec.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_things.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_tick.h"
@@ -541,7 +541,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/r_data.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_defs.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_draw.h"
-      "${CMAKE_CURRENT_SOURCE_DIR}/r_drawq.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_dynabsp.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_dynseg.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_interpolate.h"
@@ -562,7 +561,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/r_bsp.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_data.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_draw.cpp"
-      "${CMAKE_CURRENT_SOURCE_DIR}/r_drawq.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_dynabsp.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_dynseg.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_main.cpp"
@@ -590,7 +588,6 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/s_sound.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/sounds.cpp"
       SOURCE_GROUP "Source Files\\\\SDL\\\\SDL Headers"
-      "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_main.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_midirpc.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/i_net.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/sdl/i_sdlgamepads.h"
