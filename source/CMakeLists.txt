@@ -17,7 +17,7 @@
 ## Boston, MA  02110-1301  USA
 ##
 
-include(EternityCopyLibs)
+include(EternityCopyFiles)
 
 ################################################################################
 ######################### Set Project Source  ##################################
@@ -743,6 +743,7 @@ set_target_properties(eternity
 eternity_target_compile_definitions(eternity)
 eternity_target_sources(eternity)
 eternity_copy_libs(eternity)
+eternity_copy_base_and_user(eternity)
 
 target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
 target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
