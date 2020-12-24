@@ -141,7 +141,7 @@ if(WIN32 AND MSVC)
    add_subdirectory(eecrashreport)
    add_subdirectory(midiproc)
 
-   add_dependencies(eternity midiproc)
+   add_dependencies(eternity eecrashreport midiproc)
 endif()
 
 # EOF
