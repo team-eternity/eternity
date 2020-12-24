@@ -737,6 +737,7 @@ set_target_properties(eternity
    PROPERTIES
    CXX_STANDARD          17
    CXX_STANDARD_REQUIRED ON
+   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity"
 )
 
 eternity_target_compile_definitions(eternity)

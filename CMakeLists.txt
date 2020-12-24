@@ -139,5 +139,10 @@ add_subdirectory(source)
 
 if(WIN32 AND MSVC)
    add_subdirectory(eecrashreport)
-endif(WIN32 AND MSVC)
+   add_subdirectory(midiproc)
+
+   add_dependencies(eternity midiproc)
+endif()
+
+# EOF
 
