@@ -59,10 +59,7 @@ macro(add_sources)
             source_group("" FILES ${ARG})
          endif()
 
-         # TODO: Remove this if?
-         if(EXISTS ${ARG})
-            target_sources("${_TARGET}" PRIVATE ${ARG})
-         endif()
+         target_sources("${_TARGET}" PRIVATE ${ARG})
       endif()
    endforeach()
 endmacro()
