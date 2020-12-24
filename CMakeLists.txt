@@ -117,19 +117,6 @@ endif()
 ######################### Find Needed Libs #####################################
 include(ExternalLibraries)
 
-## FIXME: This is an inelegant hack to find, and grab all needed
-## .dll support files on windows. It works by looking for SDL2.dll
-## then taking every .dll file found in that directory from your SDK.
-## This ensures you get sdl and all of it's needed .dll files, but may
-## also grab unneeded .dll files.
-if(WIN32)
-        find_path(SDL2_SUPPORT_LIBS_DIR SDL2.dll
-                  HINTS
-                  $ENV{SDL2DIR}
-                  PATH_SUFFIXES lib64 lib
-                  PATHS)
-       file(GLOB SDL2_SUPPORT_LIBS ${SDL2_SUPPORT_LIBS_DIR}/*.dll)
-endif(WIN32)
 ################################################################################
 ######################### Set Build Targets   ##################################
 
@@ -151,13 +138,6 @@ add_subdirectory(snes_spc)
 add_subdirectory(source)
 
 if(WIN32 AND MSVC)
-        add_subdirectory(eecrashreport)
+   add_subdirectory(eecrashreport)
 endif(WIN32 AND MSVC)
-
-## FIXME: This is a continuation of the Windows SDL inelegant hack. This does
-## the actual installation of those support libraries.
-if(WIN32)
-        install(PROGRAMS ${SDL2_SUPPORT_LIBS}
-                DESTINATION ${LIB_DIR})
-endif(WIN32)
 
