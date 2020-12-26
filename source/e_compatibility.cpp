@@ -31,6 +31,7 @@
 #include "e_compatibility.h"
 #include "m_collection.h"
 #include "metaapi.h"
+#include "st_stuff.h"
 
 #define ITEM_COMPATIBILITY_HASHES "hashes"
 #define ITEM_COMPATIBILITY_ENABLE "on"
@@ -51,6 +52,13 @@ cfg_opt_t edf_compatibility_opts[] =
    CFG_STR(ITEM_COMPATIBILITY_DISABLE, 0, CFGF_LIST),
 
    CFG_END()
+};
+
+static int s_overridden[NUM_overridableSetting];
+static bool s_overrideEnabled[NUM_overridableSetting];
+static int *const sk_overrideTarget[NUM_overridableSetting] =
+{
+   &sts_traditional_keys
 };
 
 //
@@ -127,31 +135,44 @@ void E_RestoreCompatibilities()
 {
    memset(level_compat_comp, 0, sizeof(level_compat_comp));
    memset(level_compat_compactive, 0, sizeof(level_compat_compactive));
+   memset(s_overridden, 0, sizeof(s_overridden));
+   memset(s_overrideEnabled, 0, sizeof(s_overrideEnabled));
 }
 
 //
-// Look into comp_strings
+// Look into settings and set them.
+//
+// IMPORTANT: all the comp_ and gameplay-affecting settings will require demo_version 401.
+// Others are tolerated on -vanilla too
 //
 static void E_setItem(const char *name, bool enable)
 {
    extern const char *comp_strings[];
-   // Look in the list of comp strings
-   if(strncasecmp(name, "comp_", 5) != 0)
-      return;
 
-   for(int i = 0; i < COMP_NUM_USED; ++i)
+   if(!strcasecmp(name, "sts_traditional_keys"))
    {
-      if(!strcasecmp(name + 5, comp_strings[i]))
-      {
-         level_compat_compactive[i] = true;
-         level_compat_comp[i] = enable;
-         return;
-      }
+      s_overrideEnabled[overridableSetting_stsTraditionalKeys] = true;
+      s_overridden[overridableSetting_stsTraditionalKeys] = enable ? 1 : 0;
+      return;
    }
-   if(!strcasecmp(name, "comp_jump"))  // the only badly named entry
+
+   // Look in the list of comp strings
+   if(demo_version >= 401 && !strncasecmp(name, "comp_", 5))
    {
-      level_compat_compactive[comp_jump] = true;
-      level_compat_comp[comp_jump] = enable;
+      for(int i = 0; i < COMP_NUM_USED; ++i)
+      {
+         if(!strcasecmp(name + 5, comp_strings[i]))
+         {
+            level_compat_compactive[i] = true;
+            level_compat_comp[i] = enable ? 1 : 0;
+            return;
+         }
+      }
+      if(!strcasecmp(name, "comp_jump"))  // the only badly named entry
+      {
+         level_compat_compactive[comp_jump] = true;
+         level_compat_comp[comp_jump] = enable ? 1 : 0;
+      }
    }
 }
 
@@ -168,6 +189,14 @@ void E_ApplyCompatibility(const char *digest)
    metaSetting = nullptr;
    while((metaSetting = offtable.getNextKeyAndTypeEx(metaSetting, digest)))
       E_setItem(metaSetting->getValue(), false);
+}
+
+//
+// Gets the overridable setting depending on compatibility setup
+//
+int E_Get(overridableSetting_e setting)
+{
+   return s_overrideEnabled[setting] ? s_overridden[setting] : *sk_overrideTarget[setting];
 }
 
 // EOF

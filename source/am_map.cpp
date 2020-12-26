@@ -2306,8 +2306,6 @@ static void AM_drawMarks()
 }
 
 //
-// AM_drawCrosshair()
-//
 // Draw the single point crosshair representing map center
 //
 // Passed the color to draw the pixel with
@@ -2316,8 +2314,7 @@ static void AM_drawMarks()
 //
 inline static void AM_drawCrosshair(int color)
 {
-   vbscreen.data[(vbscreen.pitch * ((f_h + 1) >> 1)) + (vbscreen.width >> 1)] =
-      color; // single point for now
+   PUTDOT((f_w + 1) >> 1, vbscreen.pitch >> 1, color); // single point for now
 }
 
 //

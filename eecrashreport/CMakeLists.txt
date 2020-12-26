@@ -17,22 +17,35 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-CMAKE_MINIMUM_REQUIRED (VERSION 2.4)
-IF (COMMAND cmake_policy)
-        CMAKE_POLICY (SET CMP0003 NEW)
-ENDIF (COMMAND cmake_policy)
+cmake_minimum_required(VERSION 3.0)
+if(COMMAND cmake_policy)
+   cmake_policy(SET CMP0003 NEW)
+endif()
 
 ################################################################################
 ######################### Set Project Source  ##################################
-ADD_DEFINITIONS(-D_AFXDLL)
-FILE (GLOB EECRASHREPORT_SOURCES *.cpp)
-INCLUDE_DIRECTORIES (.)
+function(set_eecrashreport_source TARGET)
+   target_compile_definitions("${TARGET}" PRIVATE _AFXDLL)
+   target_sources("${TARGET}" PRIVATE
+                  "${CMAKE_CURRENT_SOURCE_DIR}/eecrashreport.rc"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/eecrashreport.cpp"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/eecrashreportDlg.cpp"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.cpp")
+   target_include_directories("${TARGET}" PRIVATE .)
+endfunction()
 
 ################################################################################
 ######################### Set Build Targets   ##################################
-ADD_EXECUTABLE (eecrashreport WIN32 ${EECRASHREPORT_SOURCES})
-TARGET_LINK_LIBRARIES (eecrashreport)
-INSTALL (TARGETS eecrashreport
+add_executable(eecrashreport WIN32)
+
+set_target_properties(eecrashreport PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity")
+
+set_eecrashreport_source(eecrashreport)
+target_link_libraries(eecrashreport)
+install(TARGETS eecrashreport
         RUNTIME DESTINATION ${BIN_DIR}
         LIBRARY DESTINATION ${LIB_DIR}
         ARCHIVE DESTINATION ${LIB_DIR})
+
+# EOF
+

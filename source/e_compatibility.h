@@ -31,11 +31,23 @@
 struct cfg_opt_t;
 struct cfg_t;
 
+//
+// List of settings overridable by EDF for compatibility.
+// CAUTION when adding fields! Check if any arrays use NUM_overridableSetting.
+//
+enum overridableSetting_e
+{
+   overridableSetting_stsTraditionalKeys,
+   NUM_overridableSetting
+};
+
 extern cfg_opt_t edf_compatibility_opts[];
 
 void E_ProcessCompatibilities(cfg_t *cfg);
 void E_RestoreCompatibilities();
 void E_ApplyCompatibility(const char *digest);
+
+int E_Get(overridableSetting_e setting);
 
 #endif
 
