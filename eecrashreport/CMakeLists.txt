@@ -24,16 +24,23 @@ endif()
 
 ################################################################################
 ######################### Set Project Source  ##################################
-add_definitions(-D_AFXDLL)
-file(GLOB EECRASHREPORT_SOURCES *.cpp)
-include_directories(.)
+function(set_eecrashreport_source TARGET)
+   target_compile_definitions("${TARGET}" PRIVATE _AFXDLL)
+   target_sources("${TARGET}" PRIVATE
+                  "${CMAKE_CURRENT_SOURCE_DIR}/eecrashreport.rc"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/eecrashreport.cpp"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/eecrashreportDlg.cpp"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.cpp")
+   target_include_directories("${TARGET}" PRIVATE .)
+endfunction()
 
 ################################################################################
 ######################### Set Build Targets   ##################################
-add_executable(eecrashreport WIN32 ${EECRASHREPORT_SOURCES})
+add_executable(eecrashreport WIN32)
 
 set_target_properties(eecrashreport PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity")
 
+set_eecrashreport_source(eecrashreport)
 target_link_libraries(eecrashreport)
 install(TARGETS eecrashreport
         RUNTIME DESTINATION ${BIN_DIR}
