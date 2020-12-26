@@ -29,7 +29,7 @@ add_executable(midiproc WIN32)
 
 set_target_properties(midiproc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/eternity")
 
-target_include_directories(midiproc PRIVATE . ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR})
+target_include_directories(midiproc PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR})
 target_link_libraries(midiproc rpcrt4 ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY})
 target_sources(midiproc PRIVATE
                "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"

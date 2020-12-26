@@ -58,12 +58,12 @@ endfunction()
 
 function(eternity_copy_base_and_user TARGET)
   add_custom_command(TARGET ${TARGET} POST_BUILD
-  COMMAND "${CMAKE_COMMAND}" -E copy_directory
-  "${CMAKE_SOURCE_DIR}/base" "$<TARGET_FILE_DIR:${TARGET}>/base" VERBATIM)
+    COMMAND "${CMAKE_COMMAND}" -E copy_directory
+    "${CMAKE_SOURCE_DIR}/base" "$<TARGET_FILE_DIR:${TARGET}>/base" VERBATIM)
 
   add_custom_command(TARGET ${TARGET} POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E copy_directory
-  "${CMAKE_SOURCE_DIR}/user" "$<TARGET_FILE_DIR:${TARGET}>/user" VERBATIM)
+    "${CMAKE_SOURCE_DIR}/user" "$<TARGET_FILE_DIR:${TARGET}>/user" VERBATIM)
 endfunction()
 
 # EOF
