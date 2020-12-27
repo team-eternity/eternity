@@ -29,6 +29,7 @@
 #define R_CONTEXT_H__
 
 #include "r_defs.h"
+#include "r_lighting.h"
 #include "r_portal.h"
 
 struct cb_column_t;
@@ -64,11 +65,22 @@ struct bspcontext_t
    float *slopemark;
 };
 
+struct cmapcontext_t
+{
+   // killough 3/20/98: Allow colormaps to be dynamic (e.g. underwater)
+   lighttable_t *(*scalelight)[MAXLIGHTSCALE];
+   lighttable_t *(*zlight)[MAXLIGHTZ];
+   lighttable_t *fullcolormap;
+   // killough 3/20/98, 4/4/98: end dynamic colormaps
+
+   lighttable_t *fixedcolormap;
+};
+
 struct planecontext_t
 {
-   visplane_t *floorplane, *ceilingplane;
-   visplane_t *freetail;
-   visplane_t **freehead = &freetail;
+   visplane_t  *floorplane, *ceilingplane;
+   visplane_t  *freetail;
+   visplane_t **freehead;
 
    // SoM: New visplane hash
    // This is the main hash object used by the normal scene.
@@ -78,7 +90,7 @@ struct planecontext_t
    // Free list of overlay portals. Used by portal windows and the post-BSP stack.
    planehash_t *r_overlayfreesets;
 
-   float *lastopening;
+   float *openings, *lastopening;
 
    // SoM 12/8/03: floorclip and ceilingclip changed to pointers so they can be set
    // to the clipping arrays of portals.
@@ -140,17 +152,18 @@ struct rendercontext_t
 {
    int16_t         bufferindex;
 
-   contextbounds_t bounds;
    bspcontext_t    bspcontext;
+   cmapcontext_t   cmapcontext;
    planecontext_t  planecontext;
    portalcontext_t portalcontext;
    spritecontext_t spritecontext;
+
+   contextbounds_t bounds;
    viewpoint_t     view;
    cbviewpoint_t   cb_view;
 
    // Currently uncategorised
    void (*colfunc)(cb_column_t &);
-   void (*flatfunc)();
 };
 
 // The global context is for single-threaded things that still require a context
@@ -160,9 +173,10 @@ inline rendercontext_t r_globalcontext;
 inline int r_numcontexts = 0;
 
 rendercontext_t &R_GetContext(int context);
-
+void R_FreeContexts();
 void R_InitContexts(const int width);
 void R_RefreshContexts();
+void R_RunContexts();
 
 template<typename F>
 void R_ForEachContext(F &&f)

@@ -766,6 +766,7 @@ static void R_renderPlanePortal(rendercontext_t &context, pwindow_t *window)
 
    const sector_t *sector = portal->data.sector;
    vplane = R_FindPlane(
+      context.cmapcontext,
       planecontext,
       viewpoint,
       cb_viewpoint,
@@ -874,6 +875,7 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
    };
       
    topplane = R_FindPlane(
+      context.cmapcontext,
       planecontext,
       viewpoint,
       cb_viewpoint,
@@ -888,6 +890,7 @@ static void R_renderHorizonPortal(rendercontext_t &context, pwindow_t *window)
       nullptr, 0, 255, nullptr
    );
    bottomplane = R_FindPlane(
+      context.cmapcontext,
       planecontext,
       viewpoint,
       cb_viewpoint,
@@ -1040,11 +1043,7 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    cb_viewpoint.cos   = (float)cos(cb_viewpoint.angle);
 
    R_incrementRenderDepth(portalcontext.renderdepth);
-   R_RenderBSPNode(
-      bspcontext, planecontext, spritecontext, portalcontext,
-      colfunc, viewpoint, cb_viewpoint, bounds,
-      R_GetVisitID(portalcontext.renderdepth, context.bufferindex), numnodes - 1
-   );
+   R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
@@ -1077,7 +1076,7 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
 
 extern int    showtainted;
 
-static void R_showTainted(planecontext_t &context,
+static void R_showTainted(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                           const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                           const contextbounds_t &bounds, pwindow_t *window)
 {
@@ -1089,17 +1088,17 @@ static void R_showTainted(planecontext_t &context,
       float floorangle = sector->srf.floor.baseangle + sector->srf.floor.angle;
       float ceilingangle = sector->srf.ceiling.baseangle + sector->srf.ceiling.angle;
       visplane_t *topplane = R_FindPlane(
-         context, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
+         cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, sector->srf.ceiling.height,
          sector->srf.ceiling.pic, sector->lightlevel, sector->srf.ceiling.offset,
          sector->srf.ceiling.scale, ceilingangle, nullptr, 0, 255, nullptr
       );
       visplane_t *bottomplane = R_FindPlane(
-         context, viewpoint, cb_viewpoint, bounds, sector->srf.floor.height,
+         cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, sector->srf.floor.height,
          sector->srf.floor.pic, sector->lightlevel, sector->srf.floor.offset,
          sector->srf.floor.scale, floorangle, nullptr, 0, 255, nullptr
       );
-      topplane = R_CheckPlane(context, topplane, window->minx, window->maxx);
-      bottomplane = R_CheckPlane(context, bottomplane, window->minx, window->maxx);
+      topplane    = R_CheckPlane(planecontext, topplane, window->minx, window->maxx);
+      bottomplane = R_CheckPlane(planecontext, bottomplane, window->minx, window->maxx);
 
       for(int x = window->minx; x <= window->maxx; x++)
       {
@@ -1180,7 +1179,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_showTainted(planecontext, viewpoint, cb_viewpoint, bounds, window);
+      R_showTainted(context.cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, window);
 
       portal->tainted++;
       doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.anchor.maker,
@@ -1251,11 +1250,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    cb_viewpoint.cos   = cosf(cb_viewpoint.angle);
 
    R_incrementRenderDepth(portalcontext.renderdepth);
-   R_RenderBSPNode(
-      bspcontext, planecontext, spritecontext, portalcontext,
-      colfunc, viewpoint, cb_viewpoint, bounds,
-      R_GetVisitID(portalcontext.renderdepth, context.bufferindex), numnodes - 1
-   );
+   R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
@@ -1303,7 +1298,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    // haleyjd: temporary debug
    if(portal->tainted > PORTAL_RECURSION_LIMIT)
    {
-      R_showTainted(planecontext, viewpoint, cb_viewpoint, bounds, window);
+      R_showTainted(context.cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, window);
 
       portal->tainted++;
       doom_warningf("Refused to draw portal (line=%i) (t=%d)", portal->data.link.maker,
@@ -1374,11 +1369,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    }
 
    R_incrementRenderDepth(portalcontext.renderdepth);
-   R_RenderBSPNode(
-      bspcontext, planecontext, spritecontext, portalcontext,
-      colfunc, viewpoint, cb_viewpoint, bounds,
-      R_GetVisitID(portalcontext.renderdepth, context.bufferindex), numnodes - 1
-   );
+   R_RenderBSPNode(context, numnodes - 1);
 
    // Only push the overlay if this is the head window
    R_PushPost(bspcontext, spritecontext, bounds, true, window->head == window ? window : nullptr);
@@ -1581,7 +1572,7 @@ pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &
 //
 // Moves portal overlay to window, clearing data from portal.
 //
-void R_MovePortalOverlayToWindow(planecontext_t &context, const viewpoint_t &viewpoint,
+void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &planecontext, const viewpoint_t &viewpoint,
                                  const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                  cb_seg_t &seg, surf_e surf)
 {
@@ -1591,7 +1582,7 @@ void R_MovePortalOverlayToWindow(planecontext_t &context, const viewpoint_t &vie
    if(plane)
    {
       plane = R_FindPlane(
-         context, viewpoint, cb_viewpoint, bounds, plane->height, plane->picnum,
+         cmapcontext, planecontext, viewpoint, cb_viewpoint, bounds, plane->height, plane->picnum,
          plane->lightlevel, plane->offs, plane->scale, plane->angle,
          plane->pslope, plane->bflags, plane->opacity, window->head->poverlay);
    }

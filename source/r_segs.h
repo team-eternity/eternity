@@ -30,13 +30,16 @@ struct bspcontext_t;
 struct cb_column_t;
 struct cb_seg_t;
 struct cbviewpoint_t;
+struct cmapcontext_t;
 struct contextbounds_t;
 struct drawseg_t;
+struct planecontext_t;
 struct portalcontext_t;
 struct viewpoint_t;
 
-void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz, drawseg_t *ds, int x1, int x2);
-void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, void (*&colfunc)(cb_column_t &),
+                            const fixed_t viewz, drawseg_t *ds, int x1, int x2);
+void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, void (*const colfunc)(cb_column_t &),
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,

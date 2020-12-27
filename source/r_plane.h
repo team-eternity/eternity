@@ -27,7 +27,9 @@
 #define R_PLANE_H__
 
 struct cb_column_t;
+struct cb_plane_t;
 struct cbviewpoint_t;
+struct cmapcontext_t;
 struct contextbounds_t;
 struct planecontext_t;
 struct planehash_t;
@@ -48,7 +50,7 @@ extern float *overlayfclip, *overlaycclip;
 
 void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
 void R_ClearOverlayClips(const contextbounds_t &bounds);
-void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
+void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
                   int *const spanstart, const angle_t viewangle, planehash_t *table);
 
 // Planehash stuff
@@ -56,7 +58,8 @@ planehash_t *R_NewPlaneHash(int chaincount);
 void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
-visplane_t *R_FindPlane(planecontext_t &context,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
+                        planecontext_t &planecontext,
                         const viewpoint_t &viewpoint,
                         const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
@@ -103,6 +106,11 @@ struct cb_slopespan_t
    static inline lighttable_t **colormap;
 };
 
+using R_FlatFunc  = void (*)(const cb_span_t &);
+using R_SlopeFunc = void (*)(const cb_slopespan_t &, const cb_span_t &);
+using R_MapFunc   = void (*)(const R_FlatFunc, const R_SlopeFunc, cb_span_t &,
+                             cb_slopespan_t &, const cb_plane_t &, int, int, int);
+
 struct cb_plane_t
 {
    float xoffset, yoffset;
@@ -127,7 +135,7 @@ struct cb_plane_t
    // SoM: slopes.
    rslope_t *slope;
 
-   void (*MapFunc)(cb_span_t &, cb_slopespan_t &, const cb_plane_t &, int, int, int);
+   R_MapFunc MapFunc;
 };
 
 

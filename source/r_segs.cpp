@@ -47,7 +47,8 @@
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz, drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, void (*&colfunc)(cb_column_t &),
+                            const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
    texcol_t *col;
    int      lightnum;
@@ -122,7 +123,7 @@ void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz
 
    // SoM 10/19/02: deep water colormap fix
    wlight = 
-      ds->colormap[lightnum >= LIGHTLEVELS || fixedcolormap ? 
+      ds->colormap[lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap ?
                    LIGHTLEVELS-1 :
                    lightnum <  0 ? 0 : lightnum ] ;
 
@@ -210,10 +211,11 @@ void R_RenderMaskedSegRange(void (*&colfunc)(cb_column_t &), const fixed_t viewz
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &portalcontext,
+static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
+                            portalcontext_t &portalcontext,
                             void (*const colfunc)(cb_column_t &), const viewpoint_t &viewpoint,
                             const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
-                            drawseg_t *const ds_p,cb_seg_t &segclip)
+                            drawseg_t *const ds_p, cb_seg_t &segclip)
 {
    float     *const floorclip   = planecontext.floorclip;
    float     *const ceilingclip = planecontext.ceilingclip;
@@ -243,7 +245,7 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
       skyplane = R_FindPlane(
-         planecontext, viewpoint, cb_viewpoint,
+         cmapcontext, planecontext, viewpoint, cb_viewpoint,
          bounds, viewpoint.z - 1, segclip.skyflat,
          144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr
       );
@@ -252,8 +254,8 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
 
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
-   if(fixedcolormap)
-      column.colormap = fixedcolormap;
+   if(cmapcontext.fixedcolormap)
+      column.colormap = cmapcontext.fixedcolormap;
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
@@ -359,7 +361,7 @@ static void R_renderSegLoop(planecontext_t &planecontext, portalcontext_t &porta
 
          // calculate lighting
          // SoM: ANYRES
-         if(!fixedcolormap)
+         if(!cmapcontext.fixedcolormap)
          {
             // SoM: it took me about 5 solid minutes of looking at the old doom code
             // and running test levels through it to do the math and get 2560 as the
@@ -770,7 +772,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
+void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                       portalcontext_t &portalcontext, void (*const colfunc)(cb_column_t &),
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,
@@ -886,7 +888,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
    //  use different light tables
    //  for horizontal / vertical / diagonal
    // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
-   if(!fixedcolormap)
+   if(!cmapcontext.fixedcolormap)
    {
       int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
@@ -900,11 +902,11 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
       }
 
       if(lightnum < 0)
-         segclip.walllights = scalelight[0];
+         segclip.walllights = cmapcontext.scalelight[0];
       else if(lightnum >= LIGHTLEVELS)
-         segclip.walllights = scalelight[LIGHTLEVELS-1];
+         segclip.walllights = cmapcontext.scalelight[LIGHTLEVELS-1];
       else
-         segclip.walllights = scalelight[lightnum];
+         segclip.walllights = cmapcontext.scalelight[lightnum];
    }
 
 
@@ -916,8 +918,8 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
    ds_p->curline  = segclip.line;
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
-   ds_p->colormap = scalelight;
-   ds_p->fixedcolormap = fixedcolormap;
+   ds_p->colormap = cmapcontext.scalelight;
+   ds_p->fixedcolormap = cmapcontext.fixedcolormap;
    ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)
@@ -987,7 +989,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, planecontext_t &planecontext,
    if(usesegloop)
    {
       R_renderSegLoop(
-         planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
+         cmapcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
       );
    }
    else

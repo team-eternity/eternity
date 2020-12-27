@@ -68,7 +68,6 @@ struct spritespan_t
 extern spritespan_t **r_spritespan;
 
 extern lighttable_t **colormaps;         // killough 3/20/98, 4/4/98
-extern lighttable_t  *fullcolormap;      // killough 3/20/98
 
 extern int firstflat;
 

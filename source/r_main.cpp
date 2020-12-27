@@ -84,7 +84,6 @@ fixed_t focallen_y;
 int viewdir;    // 0 = forward, 1 = left, 2 = right
 int viewangleoffset;
 int validcount = 1;         // increment every time a check is made
-lighttable_t *fixedcolormap;
 int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewpitch;
@@ -134,9 +133,6 @@ VALLOCATION(xtoviewangle)
 int numcolormaps;
 lighttable_t *(*c_scalelight)[LIGHTLEVELS][MAXLIGHTSCALE];
 lighttable_t *(*c_zlight)[LIGHTLEVELS][MAXLIGHTZ];
-lighttable_t *(*scalelight)[MAXLIGHTSCALE];
-lighttable_t *(*zlight)[MAXLIGHTZ];
-lighttable_t *fullcolormap;
 lighttable_t **colormaps;
 
 // killough 3/20/98, 4/4/98: end dynamic colormaps
@@ -775,9 +771,10 @@ static void R_incrementFrameid()
 //
 // Stuffs the renderdepth, the ID of a context, and frame ID into a uint64_t
 //
-uint64_t R_GetVisitID(const uint16_t renderdepth, const int16_t contextid)
+uint64_t R_GetVisitID(const rendercontext_t &context)
 {
-   uint64_t upper32 = (uint64_t(renderdepth) << 16) | uint64_t(uint16_t(contextid));
+   const uint64_t upper32 =
+      (uint64_t(context.portalcontext.renderdepth) << 16) | uint64_t(uint16_t(context.bufferindex));
    return (upper32 << 32) | uint64_t(frameid);
 }
 
@@ -1136,7 +1133,7 @@ static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(const fixed_t viewz, const sector_t *s)
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s)
 {
    int colormapIndex = 0;
    bool boomStyleOverride = false;
@@ -1207,18 +1204,18 @@ void R_SectorColormap(const fixed_t viewz, const sector_t *s)
       colormapIndex &= ~COLORMAP_BOOMKIND;
    }
 
-   fullcolormap = colormaps[colormapIndex];
-   zlight = c_zlight[colormapIndex];
-   scalelight = c_scalelight[colormapIndex];
+   context.fullcolormap = colormaps[colormapIndex];
+   context.zlight       = c_zlight[colormapIndex];
+   context.scalelight   = c_scalelight[colormapIndex];
 
    if(viewplayer->fixedcolormap)
    {
       // killough 3/20/98: localize scalelightfixed (readability/optimization)
-      fixedcolormap = fullcolormap   // killough 3/20/98: use fullcolormap
+      context.fixedcolormap = context.fullcolormap   // killough 3/20/98: use fullcolormap
         + viewplayer->fixedcolormap*256*sizeof(lighttable_t);
    }
    else
-      fixedcolormap = nullptr;   
+      context.fixedcolormap = nullptr;
 }
 
 angle_t R_WadToAngle(int wadangle)
@@ -1232,13 +1229,56 @@ angle_t R_WadToAngle(int wadangle)
              : wadangle * (ANG45 / 45);
 }
 
+//
+// Render a single context
+//
+void R_RenderViewContext(rendercontext_t &context)
+{
+   memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
+   context.portalcontext.renderdepth = 0;
+
+   // Clear buffers.
+   R_ClearClipSegs(context.bspcontext);
+   R_ClearDrawSegs(context.bspcontext);
+   R_ClearPlanes(context.planecontext, context.bounds);
+   R_ClearPortals(context.planecontext.freehead);
+   R_ClearSprites(context.spritecontext);
+
+   // check for new console commands.
+   //NetUpdate();
+
+   // The head node is the last node output.
+   R_RenderBSPNode(context, numnodes - 1);
+
+   // Check for new console commands.
+   //NetUpdate();
+
+   R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
+
+   // Push the first element on the Post-BSP stack
+   R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
+
+   // SoM 12/9/03: render the portals.
+   R_RenderPortals(context);
+
+   R_DrawPlanes(
+      context.cmapcontext, context.planecontext.mainhash, context.colfunc,
+      context.planecontext.spanstart, context.view.angle, nullptr
+   );
+
+   // Check for new console commands.
+   //NetUpdate();
+
+   // Draw Post-BSP elements such as sprites, masked textures, and portal
+   // overlays
+   R_DrawPostBSP(context);
+}
+
 static int render_ticker = 0;
 
 // haleyjd: temporary debug
 extern void R_UntaintPortals();
 
-//
-// R_RenderPlayerView
 //
 // Primary renderer entry point.
 //
@@ -1266,59 +1306,7 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
-
-   for(int i = 0; i < r_numcontexts; i++)
-   {
-      rendercontext_t &context = R_GetContext(i);
-
-      memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
-      context.portalcontext.renderdepth = 0;
-
-      // Clear buffers.
-      // THREAD_TODO: Make these rendercontext_t methods?
-      R_ClearClipSegs(context.bspcontext);
-      R_ClearDrawSegs(context.bspcontext);
-      R_ClearPlanes(context.planecontext, context.bounds);
-      R_ClearPortals(context.planecontext.freehead);
-      R_ClearSprites(context.spritecontext);
-
-      // check for new console commands.
-      NetUpdate();
-
-      // The head node is the last node output.
-      R_RenderBSPNode(
-         context.bspcontext, context.planecontext, context.spritecontext,
-         context.portalcontext, context.colfunc,
-         context.view, context.cb_view, context.bounds,
-         R_GetVisitID(context.portalcontext.renderdepth, context.bufferindex), numnodes - 1
-      );
-
-      // Check for new console commands.
-      NetUpdate();
-
-      R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
-
-      // Push the first element on the Post-BSP stack
-      R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
-
-      // SoM 12/9/03: render the portals.
-      R_RenderPortals(context);
-
-      R_DrawPlanes(
-         context.planecontext.mainhash, context.colfunc,
-         context.planecontext.spanstart, context.view.angle, nullptr
-      );
-
-      // Check for new console commands.
-      NetUpdate();
-
-      // Draw Post-BSP elements such as sprites, masked textures, and portal
-      // overlays
-      R_DrawPostBSP(
-         context.bspcontext, context.spritecontext, context.planecontext,
-         context.colfunc, context.view, context.cb_view, context.bounds
-      );
-   }
+   R_RunContexts();
 
    // draw the psprites on top of everything
    //  but does not draw on side views

@@ -42,6 +42,7 @@
 #include "../m_argv.h"
 #include "../m_misc.h"
 #include "../m_qstr.h"
+#include "../r_context.h"
 #include "../r_main.h"
 #include "../st_stuff.h"
 #include "../v_misc.h"
@@ -224,6 +225,7 @@ void I_ShutdownGraphics()
 {
    if(in_graphics_mode)
    {
+      R_FreeContexts();
       i_video_driver->ShutdownGraphics();
       in_graphics_mode = false;
       in_textmode = true;
@@ -552,6 +554,7 @@ static void I_ResetScreen()
    // Switch out of old graphics mode
    if(in_graphics_mode)
    {
+      R_FreeContexts();
       i_video_driver->ShutdownGraphicsPartway();
       in_graphics_mode = false;
       in_textmode = true;

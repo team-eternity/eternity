@@ -33,19 +33,10 @@ struct seg_t;
 struct sector_t;
 struct side_t;
 struct bspcontext_t;
-struct planecontext_t;
-struct spritecontext_t;
 struct contextbounds_t;
-struct portalcontext_t;
 struct portalrender_t;
-struct viewpoint_t;
 struct cbviewpoint_t;
-
-extern seg_t    *curline;
-extern side_t   *sidedef;
-extern line_t   *linedef;
-extern sector_t *frontsector;
-extern sector_t *backsector;
+struct rendercontext_t;
 
 // SoM: mark a range of the screen as being solid (closed).
 // these marks are then added to the solidsegs list by R_addLine after all segments
@@ -59,12 +50,7 @@ bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
 void R_ClearClipSegs(bspcontext_t &context);
 void R_ClearDrawSegs(bspcontext_t &context);
 
-void R_RenderBSPNode(bspcontext_t &bspcontext, planecontext_t &planecontext,
-                     spritecontext_t &spritecontext, portalcontext_t &portalcontext,
-                     void (*&colfunc)(cb_column_t &),
-                     const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                     const contextbounds_t &bounds,
-                     const uint64_t visitid, int bspnum);
+void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);
@@ -72,8 +58,6 @@ const sector_t *R_FakeFlat(const fixed_t, const sector_t *, sector_t *, int *, i
 bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
                            const float fbox[4], windowlinegen_t &linegen1,
                            windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
-
-extern int detaillevel;
 
 #endif
 

@@ -95,17 +95,15 @@ constexpr unsigned int visplane_hash(const unsigned int picnum, const unsigned i
    return ((picnum * 3) + lightlevel + (height * 7)) % chains;
 }
 
-
 // killough 8/1/98: set static number of openings to be large enough
 // (a static limit is okay in this case and avoids difficulties in r_segs.c)
-float *openings;
-
+// THREAD_FIXME: Can openings somehow be de-contextified? I feel like it should be possible.
 VALLOCATION(openings)
 {
-   openings = ecalloctag(float *, w*h, sizeof(float), PU_VALLOC, nullptr);
-   R_ForEachContext([](rendercontext_t &context)
+   R_ForEachContext([w, h](rendercontext_t &context)
    {
-      context.planecontext.lastopening = openings;
+      context.planecontext.openings    = ecalloctag(float *, w * h, sizeof(float), PU_VALLOC, nullptr);
+      context.planecontext.lastopening = context.planecontext.openings;
    });
 }
 
@@ -171,9 +169,6 @@ static void R_ThrowSlope(const cb_slopespan_t &, const cb_span_t &)
    I_Error("R_Throw called.\n");
 }
 
-void (*flatfunc)(const cb_span_t &)  = R_Throw;
-void (*slopefunc)(const cb_slopespan_t &, const cb_span_t &) = R_ThrowSlope;
-
 //
 // Returns a colormap index from the given distance and lightlevel info
 //
@@ -198,8 +193,8 @@ static void R_planeLight(cb_plane_t &plane)
 //
 // BASIC PRIMITIVE
 //
-static void R_mapPlane(cb_span_t &span, cb_slopespan_t &, const cb_plane_t &plane,
-                       int y, int x1, int x2)
+static void R_mapPlane(const R_FlatFunc flatfunc, const R_SlopeFunc, cb_span_t &span,
+                       cb_slopespan_t &, const cb_plane_t &plane, int y, int x1, int x2)
 {
    float dy, xstep, ystep, realy, slope;
 
@@ -308,7 +303,8 @@ static void R_slopeLights(const cb_plane_t &plane, int len, double startcmap, do
 //
 // R_mapSlope
 //
-static void R_mapSlope(cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
+static void R_mapSlope(const R_FlatFunc, const R_SlopeFunc slopefunc,
+                       cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
                        int y, int x1, int x2)
 {
    rslope_t *slope = plane.slope;
@@ -541,7 +537,7 @@ void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds)
 
    R_ClearPlaneHash(context.freehead, &context.mainhash);
 
-   context.lastopening = openings;
+   context.lastopening = context.openings;
 }
 
 
@@ -587,7 +583,8 @@ static visplane_t *new_visplane(planecontext_t &context,
 // killough 2/28/98: Add offsets
 // haleyjd 01/05/08: Add angle
 //
-visplane_t *R_FindPlane(planecontext_t &context,
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
+                        planecontext_t &planecontext,
                         const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                         const contextbounds_t &bounds,
                         fixed_t height, int picnum, int lightlevel,
@@ -601,7 +598,7 @@ visplane_t *R_FindPlane(planecontext_t &context,
 
    // SoM: table == nullptr means use main table
    if(!table)
-      table = &context.mainhash;
+      table = &planecontext.mainhash;
       
    blendflags &= PS_OBLENDFLAGS;
 
@@ -637,8 +634,8 @@ visplane_t *R_FindPlane(planecontext_t &context,
          offs == check->offs &&      // killough 2/28/98: Add offset checks
          scale == check->scale &&
          angle == check->angle &&      // haleyjd 01/05/08: Add angle
-         zlight == check->colormap &&
-         fixedcolormap == check->fixedcolormap &&
+         cmapcontext.zlight == check->colormap &&
+         cmapcontext.fixedcolormap == check->fixedcolormap &&
          viewpoint.x == check->viewx &&
          viewpoint.y == check->viewy &&
          viewpoint.z == check->viewz &&
@@ -649,7 +646,7 @@ visplane_t *R_FindPlane(planecontext_t &context,
         return check;
    }
 
-   check = new_visplane(context, hash, table);         // killough
+   check = new_visplane(planecontext, hash, table);         // killough
 
    check->height = height;
    check->picnum = picnum;
@@ -660,9 +657,9 @@ visplane_t *R_FindPlane(planecontext_t &context,
    check->offs = offs;               // killough 2/28/98: Save offsets
    check->scale = scale;
    check->angle = angle;               // haleyjd 01/05/08: Save angle
-   check->colormap = zlight;
-   check->fixedcolormap = fixedcolormap; // haleyjd 10/16/06
-   check->fullcolormap = fullcolormap;
+   check->colormap      = cmapcontext.zlight;
+   check->fixedcolormap = cmapcontext.fixedcolormap; // haleyjd 10/16/06
+   check->fullcolormap  = cmapcontext.fullcolormap;
    
    check->viewx = viewpoint.x;
    check->viewy = viewpoint.y;
@@ -812,7 +809,8 @@ visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int
 //
 // R_makeSpans
 //
-static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
+static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
+                        cb_span_t &span, cb_slopespan_t &slopespan, const cb_plane_t &plane,
                         int *const spanstart, int x, int t1, int b1, int t2, int b2)
 {
 #ifdef RANGECHECK
@@ -822,9 +820,9 @@ static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_pla
 #endif
 
    for(; t2 > t1 && t1 <= b1; t1++)
-      plane.MapFunc(span, slopespan, plane, t1, spanstart[t1], x - 1);
+      plane.MapFunc(flatfunc, slopefunc, span, slopespan, plane, t1, spanstart[t1], x - 1);
    for(; b2 < b1 && t1 <= b1; b1--)
-      plane.MapFunc(span, slopespan, plane, b1, spanstart[b1], x - 1);
+      plane.MapFunc(flatfunc, slopefunc, span, slopespan, plane, b1, spanstart[b1], x - 1);
    while(t2 < t1 && t2 <= b2)
       spanstart[t2++] = x;
    while(b2 > b1 && t2 <= b2)
@@ -832,7 +830,8 @@ static void R_makeSpans(cb_span_t &span, cb_slopespan_t &slopespan, const cb_pla
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(void (*&colfunc)(cb_column_t &), const angle_t viewangle, visplane_t *pl)
+static void do_draw_newsky(cmapcontext_t &context, void (*&colfunc)(cb_column_t &),
+                           const angle_t viewangle, visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
@@ -858,8 +857,8 @@ static void do_draw_newsky(void (*&colfunc)(cb_column_t &), const angle_t viewan
    sky1 = R_GetSkyTexture(skyTexture);
    sky2 = R_GetSkyTexture(skyTexture2);
       
-   if(getComp(comp_skymap) || !(column.colormap = fixedcolormap))
-      column.colormap = fullcolormap;
+   if(getComp(comp_skymap) || !(column.colormap = context.fixedcolormap))
+      column.colormap = context.fullcolormap;
       
    // first draw sky 2 with R_DrawColumn (unmasked)
    column.texmid    = sky2->texturemid;      
@@ -919,8 +918,8 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
-                          const angle_t viewangle, visplane_t *pl)
+static void do_draw_plane(cmapcontext_t &context, void (*&colfunc)(cb_column_t &),
+                          int *const spanstart, const angle_t viewangle, visplane_t *pl)
 {
    int x;
 
@@ -930,7 +929,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(colfunc, viewangle, pl);
+      do_draw_newsky(context, colfunc, viewangle, pl);
       return;
    }
    
@@ -1044,6 +1043,9 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
       cb_slopespan_t slopespan = {};
       cb_plane_t     plane     = {};
 
+      R_FlatFunc  flatfunc  = R_Throw;
+      R_SlopeFunc slopefunc = R_ThrowSlope;
+
       int picnum = texturetranslation[pl->picnum];
 
       // haleyjd 05/19/06: rewritten to avoid crashes
@@ -1150,7 +1152,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
       plane.height   = pl->heightf - pl->viewzf;
       
       // SoM 10/19/02: deep water colormap fix
-      if(fixedcolormap)
+      if(context.fixedcolormap)
          light = (255  >> LIGHTSEGSHIFT);
       else
          light = (pl->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
@@ -1176,7 +1178,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
       for(x = pl->minx; x <= stop; x++)
       {
          R_makeSpans(
-            span, slopespan, plane, spanstart, x,
+            flatfunc, slopefunc, span, slopespan, plane, spanstart, x,
             pl->top[x - 1], pl->bottom[x - 1], pl->top[x], pl->bottom[x]
          );
       }
@@ -1187,7 +1189,7 @@ static void do_draw_plane(void (*&colfunc)(cb_column_t &), int *const spanstart,
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
+void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
@@ -1199,7 +1201,7 @@ void R_DrawPlanes(planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(colfunc, spanstart, viewangle, pl);
+         do_draw_plane(context, colfunc, spanstart, viewangle, pl);
    }
 }
 

@@ -421,6 +421,10 @@ static void V_initSubScreen43()
                                  static_cast<double>(vbscreen.height);
       unscaledw = static_cast<int>(round(SCREENHEIGHT * scaleaspect));
 
+      // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
+      // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)
+      if(unscaledw > vbscreen.width)
+         unscaledw = vbscreen.width;
       // FIXME(?): our scaling code cannot handle a subscreen smaller than 320x200
       if(subwidth < SCREENWIDTH)
       {

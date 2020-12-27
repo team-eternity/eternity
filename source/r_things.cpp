@@ -270,9 +270,9 @@ VALLOCATION(clipbot)
 // Forward declarations:
 static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
                            const float *const mfloorclip, const float *const mceilingclip);
-static void R_projectParticle(spritecontext_t &context, const viewpoint_t &viewpoint,
-                              const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
-                              particle_t *particle);
+static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
+                              const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                              const contextbounds_t &bounds, particle_t *particle);
 
 //
 // R_SetMaskedSilhouette
@@ -876,7 +876,8 @@ static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 // Generates a vissprite for a thing if it might be visible.
 // ioanch 20160109: added optional arguments for offsetting the sprite
 //
-static void R_projectSprite(spritecontext_t &context,
+static void R_projectSprite(cmapcontext_t &cmapcontext,
+                            spritecontext_t &spritecontext,
                             const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                             const contextbounds_t &bounds,
                             const portalrender_t &portalrender,
@@ -1091,7 +1092,7 @@ static void R_projectSprite(spritecontext_t &context,
    }
 
    // store information in a vissprite
-   vis = R_newVisSprite(context);
+   vis = R_newVisSprite(spritecontext);
 
    // killough 3/27/98: save sector for special clipping later
    vis->heightsec = heightsec;
@@ -1139,10 +1140,10 @@ static void R_projectSprite(spritecontext_t &context,
    // get light level
    if(thing->flags & MF_SHADOW)     // sf
       vis->colormap = colormaps[global_cmap_index]; // haleyjd: NGCS -- was 0
-   else if(fixedcolormap)
-      vis->colormap = fixedcolormap;      // fixed map
+   else if(cmapcontext.fixedcolormap)
+      vis->colormap = cmapcontext.fixedcolormap;      // fixed map
    else if(LevelInfo.useFullBright && IS_FULLBRIGHT(thing)) // haleyjd
-      vis->colormap = fullcolormap;       // full bright  // killough 3/20/98
+      vis->colormap = cmapcontext.fullcolormap;       // full bright  // killough 3/20/98
    else
    {     
       // diminished light
@@ -1185,7 +1186,8 @@ static void R_projectSprite(spritecontext_t &context,
 // During BSP traversal, this adds sprites by sector.
 // killough 9/18/98: add lightlevel as parameter, fixing underwater lighting
 //
-void R_AddSprites(spritecontext_t &context,
+void R_AddSprites(cmapcontext_t &cmapcontext,
+                  spritecontext_t &spritecontext,
                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                   const contextbounds_t &bounds,
                   const portalrender_t &portalrender,
@@ -1200,25 +1202,30 @@ void R_AddSprites(spritecontext_t &context,
    //  subsectors during BSP building.
    // Thus we check whether its already added.
 
-   if(context.sectorvisited[sec - sectors])
+   if(spritecontext.sectorvisited[sec - sectors])
       return;
    
    // Well, now it will be done.
-   context.sectorvisited[sec - sectors] = true;
+   spritecontext.sectorvisited[sec - sectors] = true;
    
    lightnum = (lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
    
    if(lightnum < 0)
-      spritelights = scalelight[0];
+      spritelights = cmapcontext.scalelight[0];
    else if(lightnum >= LIGHTLEVELS)
-      spritelights = scalelight[LIGHTLEVELS-1];
+      spritelights = cmapcontext.scalelight[LIGHTLEVELS-1];
    else
-      spritelights = scalelight[lightnum];
+      spritelights = cmapcontext.scalelight[lightnum];
    
    // Handle all things in sector.
    
    for(thing = sec->thinglist; thing; thing = thing->snext)
-      R_projectSprite(context, viewpoint, cb_viewpoint, bounds, portalrender, thing, spritelights);
+   {
+      R_projectSprite(
+         cmapcontext, spritecontext, viewpoint,
+         cb_viewpoint, bounds, portalrender, thing, spritelights
+      );
+   }
 
    // ioanch 20160109: handle partial sprite projections
    for(auto item = sec->spriteproj; item; item = item->dllNext)
@@ -1226,7 +1233,7 @@ void R_AddSprites(spritecontext_t &context,
       if(!((*item)->mobj->intflags & MIF_HIDDENBYQUAKE))
       {
          R_projectSprite(
-            context, viewpoint, cb_viewpoint, bounds, portalrender,
+            cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, portalrender,
             (*item)->mobj, spritelights, &(*item)->delta, (*item)->portalline
          );
       }
@@ -1239,7 +1246,7 @@ void R_AddSprites(spritecontext_t &context,
       DLListItem<particle_t> *link;
 
       for(link = sec->ptcllist; link; link = link->dllNext)
-         R_projectParticle(context, viewpoint, cb_viewpoint, bounds, *link);
+         R_projectParticle(cmapcontext, spritecontext, viewpoint, cb_viewpoint, bounds, *link);
    }
 }
 
@@ -1390,10 +1397,10 @@ static void R_drawPSprite(const pspdef_t *psp,
       }
       vis->colormap     = spritelights[MAXLIGHTSCALE-1];
    }
-   else if(fixedcolormap)
-      vis->colormap = fixedcolormap;           // fixed color
+   else if(r_globalcontext.cmapcontext.fixedcolormap)
+      vis->colormap = r_globalcontext.cmapcontext.fixedcolormap; // fixed color
    else if(psp->state->frame & FF_FULLBRIGHT)
-      vis->colormap = fullcolormap;            // full bright // killough 3/20/98
+      vis->colormap = r_globalcontext.cmapcontext.fullcolormap; // full bright // killough 3/20/98
    else
       vis->colormap = spritelights[MAXLIGHTSCALE-1];  // local light
    
@@ -1423,7 +1430,7 @@ void R_DrawPlayerSprites()
    // sf: psprite switch
    if(!showpsprites || viewcamera) return;
    
-   R_SectorColormap(r_globalcontext.view.z, view.sector);
+   R_SectorColormap(r_globalcontext.cmapcontext, r_globalcontext.view.z, view.sector);
 
    // get light level
    // killough 9/18/98: compute lightlevel from floor and ceiling lightlevels
@@ -1434,11 +1441,11 @@ void R_DrawPlayerSprites()
                  + (extralight * LIGHTBRIGHT);
 
    if(lightnum < 0)
-      spritelights = scalelight[0];
+      spritelights = r_globalcontext.cmapcontext.scalelight[0];
    else if(lightnum >= LIGHTLEVELS)
-      spritelights = scalelight[LIGHTLEVELS-1];
+      spritelights = r_globalcontext.cmapcontext.scalelight[LIGHTLEVELS-1];
    else
-      spritelights = scalelight[lightnum];
+      spritelights = r_globalcontext.cmapcontext.scalelight[lightnum];
 
    for(i = 0; i < viewwindow.width; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
@@ -1572,7 +1579,8 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
 //
 // Draws a sprite within a given drawseg range, for portals.
 //
-static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_column_t &),
+static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
+                                  void (*&colfunc)(cb_column_t &),
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds,
                                   drawseg_t *const drawsegs,
@@ -1591,9 +1599,9 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
 
    // haleyjd 04/25/10:
    // e6y: optimization
-   if(context.drawsegs_xrange_count)
+   if(spritecontext.drawsegs_xrange_count)
    {
-      drawsegs_xrange_t *dsx = context.drawsegs_xrange;
+      drawsegs_xrange_t *dsx = spritecontext.drawsegs_xrange;
 
       // drawsegs_xrange is sorted by ::x1
       // haleyjd: way faster to use a pointer here
@@ -1625,7 +1633,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
             {
                r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-               R_RenderMaskedSegRange(colfunc, viewpoint.z, ds, r1, r2);
+               R_RenderMaskedSegRange(cmapcontext, colfunc, viewpoint.z, ds, r1, r2);
             }
             continue;                // seg is behind sprite
          }
@@ -1687,7 +1695,7 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
             !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
          {
             if(ds->maskedtexturecol) // masked mid texture?
-               R_RenderMaskedSegRange(colfunc, viewpoint.z, ds, r1, r2);
+               R_RenderMaskedSegRange(cmapcontext, colfunc, viewpoint.z, ds, r1, r2);
             continue;                // seg is behind sprite
          }
 
@@ -1822,17 +1830,18 @@ static void R_drawSpriteInDSRange(spritecontext_t &context, void (*&colfunc)(cb_
          cliptop[x] = ptop[x - bounds.startcolumn];
    }
 
-   R_drawVisSprite(context, colfunc, bounds, spr, spr->x1, spr->x2, clipbot, cliptop);
+   R_drawVisSprite(spritecontext, colfunc, bounds, spr, spr->x1, spr->x2, clipbot, cliptop);
 }
 
 //
 // Draws the items in the Post-BSP stack.
 //
-void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
-                   planecontext_t &planecontext, void (*&colfunc)(cb_column_t &),
-                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
-                   const contextbounds_t &bounds)
+void R_DrawPostBSP(rendercontext_t &context)
 {
+   bspcontext_t    &bspcontext    = context.bspcontext;
+   spritecontext_t &spritecontext = context.spritecontext;
+   planecontext_t  &planecontext  = context.planecontext;
+
    drawseg_t *const drawsegs     = bspcontext.drawsegs;
    const unsigned   maxdrawsegs  = bspcontext.maxdrawsegs;
    poststack_t    *&pstack       = spritecontext.pstack;
@@ -1895,8 +1904,9 @@ void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
             for(int i = lastsprite - firstsprite; --i >= 0; )
             {
                R_drawSpriteInDSRange(
-                  spritecontext, colfunc,
-                  viewpoint, cb_viewpoint, bounds, drawsegs,
+                  context.cmapcontext,
+                  spritecontext, context.colfunc,
+                  context.view, context.cb_view, context.bounds, drawsegs,
                   spritecontext.vissprite_ptrs[i], firstds, lastds,
                   masked->ceilingclip, masked->floorclip
                );         // killough
@@ -1912,7 +1922,7 @@ void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(colfunc, viewpoint.z, ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(context.cmapcontext, context.colfunc, context.view.z, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
@@ -1930,8 +1940,9 @@ void R_DrawPostBSP(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
             r_column_engine->ResetBuffer();
             
          R_DrawPlanes(
-            planecontext.mainhash, colfunc, planecontext.spanstart,
-            viewpoint.angle, pstack[pstacksize].overlay
+            context.cmapcontext,
+            planecontext.mainhash, context.colfunc, planecontext.spanstart,
+            context.view.angle, pstack[pstacksize].overlay
          );
          R_FreeOverlaySet(planecontext.r_overlayfreesets, pstack[pstacksize].overlay);
       }
@@ -2269,7 +2280,7 @@ void R_ClearParticles()
 //
 // R_projectParticle
 //
-static void R_projectParticle(spritecontext_t &context,
+static void R_projectParticle(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                               const contextbounds_t &bounds, particle_t *particle)
 {
@@ -2359,7 +2370,7 @@ static void R_projectParticle(spritecontext_t &context,
    }
 
    // store information in a vissprite
-   vis = R_newVisSprite(context);
+   vis = R_newVisSprite(spritecontext);
    vis->heightsec = heightsec;
    vis->gx = particle->x;
    vis->gy = particle->y;
@@ -2380,18 +2391,18 @@ static void R_projectParticle(spritecontext_t &context,
    vis->scale = yscale;
    vis->sector = int(sector - sectors);
    
-   if(fixedcolormap ==
-      fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
+   if(cmapcontext.fixedcolormap ==
+      cmapcontext.fullcolormap + INVERSECOLORMAP*256*sizeof(lighttable_t))
    {
-      vis->colormap = fixedcolormap;
+      vis->colormap = cmapcontext.fixedcolormap;
    } 
    else
    {
-      R_SectorColormap(viewpoint.z, sector);
+      R_SectorColormap(cmapcontext, viewpoint.z, sector);
 
       if(LevelInfo.useFullBright && (particle->styleflags & PS_FULLBRIGHT))
       {
-         vis->colormap = fullcolormap;
+         vis->colormap = cmapcontext.fullcolormap;
       }
       else
       {
@@ -2404,12 +2415,12 @@ static void R_projectParticle(spritecontext_t &context,
          lightnum = (floorlightlevel + ceilinglightlevel) / 2;
          lightnum = (lightnum >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
          
-         if(lightnum >= LIGHTLEVELS || fixedcolormap)
-            ltable = scalelight[LIGHTLEVELS - 1];      
+         if(lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap)
+            ltable = cmapcontext.scalelight[LIGHTLEVELS - 1];
          else if(lightnum < 0)
-            ltable = scalelight[0];
+            ltable = cmapcontext.scalelight[0];
          else
-            ltable = scalelight[lightnum];
+            ltable = cmapcontext.scalelight[lightnum];
          
          index = (int)(idist * 2560.0f);
          if(index >= MAXLIGHTSCALE)

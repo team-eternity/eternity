@@ -3496,8 +3496,6 @@ static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool 
 {
    p_currentLevelHashDigest.clear();
    E_RestoreCompatibilities();
-   if(demo_version < 401)
-      return;  // never do this for old demo versions
    HashData md5(HashData::MD5);
    ZAutoBuffer buf;
 
@@ -3607,7 +3605,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior);
 
    if(isUdmf || demo_version >= 401)
    {
