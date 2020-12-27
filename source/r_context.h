@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: Renderer context
-// Some code is derived from Rum & Raisin Doom, Ethan Watson, used under
+// Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
 // terms of the GPLv3.
 //
 // Authors: Max Waine

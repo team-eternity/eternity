@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: Renderer context
-// Some code is derived from Rum & Raisin Doom, Ethan Watson, used under
+// Some code is derived from Rum & Raisin Doom, by Ethan Watson, used under
 // terms of the GPLv3.
 //
 // Authors: Max Waine
@@ -51,6 +51,8 @@ struct renderdata_t
 
 static renderdata_t *renderdatas      = nullptr;
 static int           prev_numcontexts = 0;
+
+static bool          temp_dgafaboutyourcpu = true; // THREAD_FIXME: DELETE THIS
 
 //
 // Grabs a given render context
@@ -94,6 +96,10 @@ void R_FreeContexts()
    }
 }
 
+//
+// This function is always going on in the background
+// so that threads don't need to constantly be spawned
+//
 static void R_contextThreadFunc(renderdata_t *data)
 {
    data->running.exchange(true);
@@ -104,9 +110,13 @@ static void R_contextThreadFunc(renderdata_t *data)
       {
          R_RenderViewContext(data->context);
          data->framefinished.store(true);
+         // THREAD_TODO: Wait here an appropriate amount of time once FPS limiting is in
       }
 
-      i_haltimer.Sleep(1);
+      if(temp_dgafaboutyourcpu)
+         std::this_thread::yield(); // I YIELD MY TIME, FUCK YOU!
+      else
+         i_haltimer.Sleep(1);
    }
 
    data->running.exchange(false);
@@ -186,6 +196,9 @@ void R_RunContexts()
    }
 }
 
+
+VARIABLE_BOOLEAN(temp_dgafaboutyourcpu, nullptr, yesno);
+CONSOLE_VARIABLE(r_gofast, temp_dgafaboutyourcpu, cf_buffered) {}
 
 VARIABLE_INT(r_numcontexts, nullptr, 0, UL, nullptr);
 CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
