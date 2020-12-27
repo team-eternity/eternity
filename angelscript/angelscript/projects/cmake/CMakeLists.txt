@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.5)
 
 project(angelscript)
 
-option(BUILD_SHARED_LIBS "Build shared library" OFF)
+if(NOT DEFINED BUILD_SHARED_LIBS)
+    option(BUILD_SHARED_LIBS "Build shared library" OFF)
+endif()
 option(AS_NO_EXCEPTIONS "Disable exception handling in script context" OFF)
 
 if(MSVC)
-    option(MSVC_COMPILE_FLAGS "Compiler flags to use with MSVC" "/MP")
+    set(MSVC_COMPILE_FLAGS "/MP" CACHE STRING "Compiler flags to use with MSVC")
 endif()
 
 if(APPLE)
@@ -167,8 +169,8 @@ if(BUILD_FRAMEWORK)
     )
 endif()
 
-if(MSVC)
-    set_target_properties(${ANGELSCRIPT_LIBRARY_NAME} PROPERTIES COMPILE_FLAGS "${MSVC_COMPILE_FLAGS}")
+if(MSVC AND MSVC_COMPILE_FLAGS)
+    target_compile_options(${ANGELSCRIPT_LIBRARY_NAME} PRIVATE "${MSVC_COMPILE_FLAGS}")
 endif()
 
 # Don't override the default runtime output path to avoid conflicts when building for multiple target platforms
