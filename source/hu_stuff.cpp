@@ -959,8 +959,8 @@ void HUDCrossHairWidget::drawer()
    w = patch->width;
    h = patch->height;
    
-   drawx = (SCREENWIDTH - w) / 2;
-   drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
+   drawx = (SCREENWIDTH + 1 - w) / 2;
+   drawy = scaledwindow.y + (scaledwindow.height + 1 - h) / 2;
   
    if(pal == notargetcolour)
       V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);

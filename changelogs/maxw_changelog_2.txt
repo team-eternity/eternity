@@ -1,0 +1,51 @@
+================================================================================
+Changes since Eternity Engine v4.01.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2020/10/16
+Increased visplane hash chain amount again, which should increase FPS in super
+nasty scenes.
+
+--------------------------------------------------------------------------------
+2020/10/24
+Added the ability to scale set the renderer's resolution independent of window
+size.
+
+--------------------------------------------------------------------------------
+2020/10/27
+Default so that holding run whilst autorun is on makes you walk (runiswalk).
+
+--------------------------------------------------------------------------------
+2020/11/03
+Made the backbuffer everything is rendered to transposed. This improves
+rendering times in some cases, and opens the door to many more optimisations.
+The old quad buffer column drawer has been deleted.
+
+--------------------------------------------------------------------------------
+2020/11/08
+Added tall patch support to masked columns (e.g.: sprites, masked midtexes).
+
+--------------------------------------------------------------------------------
+2020/11/11
+Added a provisional fix for intercept traversal when some intercepts are in
+front of the player on the map, but behind them relatively (due to portals).
+Made SetThingSpecial actually set the thing's special in addition to args.
+
+--------------------------------------------------------------------------------
+2020/11/12
+Fixed blockmap generation errors when the 0th vertex has the largest x or yo
+co-ordinates.
+
+--------------------------------------------------------------------------------
+2020/11/17
+Fixed slope rendering in weird niche circumstances with high scale values.
+
+--------------------------------------------------------------------------------
+2020/11/22
+Fixed Eternity hard-locking if a dynavertex has the same position after
+interpolation.
+
+================================================================================
+EOF
+================================================================================

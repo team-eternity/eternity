@@ -4,6 +4,19 @@ Changes by Ioan Chera in Eternity Engine
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 ========================
+Since v4.01.00 "Tyrfing"
+========================
+
+--------------------------------------------------------------------------------
+15.11.2020
+
+BUGFIX: Fixed fullscreen-desktop transition errors causing the display to mess
+        up in macOS. Weird stuff may still happens if somebody pulls the monitor
+        from the laptop.
+
+IMPROVEMENT: Classic (exclusive) fullscreen is once again available on macOS.
+
+========================
 Since v4.00.00 "Völuspá"
 ========================
 

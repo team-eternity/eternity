@@ -108,27 +108,11 @@ static void R_DrawSpanSolid_8()
 
    byte *source = (byte *)span.source;
    byte *dest   = R_ADDRESS(span.x1, span.y);
-   
-   while(count >= 4) 
-   {
-      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest  += 4;
-      count -= 4;
-   }
+
    while(count-- > 0)
    {
-      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      *dest = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      dest += linesize;
       xf += xs;
       yf += ys;
    }
@@ -147,27 +131,12 @@ static void R_DrawSpanSolid_8_GEN()
    unsigned int xshift = span.xshift;
    unsigned int xmask  = span.xmask;
    unsigned int yshift = span.yshift;
-   
-   while(count >= 4) 
-   {
-      dest[0] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest[1] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest[2] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest[3] = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
-      xf += xs;
-      yf += ys;
-      dest  += 4;
-      count -= 4;
-   }
+
+
    while(count-- > 0)
    {
-      *dest++ = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      *dest = colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]];
+      dest += linesize;
       xf += xs;
       yf += ys;
    }
@@ -256,9 +225,10 @@ static void R_DrawSpanTL_8()
       t = span.bg2rgb[*dest] +
           span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       t |= 0x01f07c1f;
-      *dest++ = RGB32k[0][0][t & (t >> 15)];
-      xf += xs;
-      yf += ys;
+      *dest = RGB32k[0][0][t & (t >> 15)];
+      dest += linesize;
+      xf   += xs;
+      yf   += ys;
    }
 }
 
@@ -282,9 +252,10 @@ static void R_DrawSpanTL_8_GEN()
       t = span.bg2rgb[*dest] +
           span.fg2rgb[colormap[source[((xf >> xshift) & xmask) | (yf >> yshift)]]];
       t |= 0x01f07c1f;
-      *dest++ = RGB32k[0][0][t & (t >> 15)];
-      xf += xs;
-      yf += ys;
+      *dest = RGB32k[0][0][t & (t >> 15)];
+      dest += linesize;
+      xf   += xs;
+      yf   += ys;
    }
 }
 
@@ -312,9 +283,10 @@ static void R_DrawSpanAdd_8()
       a &= 0x3fffffff;
       b  = b - (b >> 5);
       a |= b;
-      *dest++ = RGB32k[0][0][a & (a >> 15)];
-      xf += xs;
-      yf += ys;
+      *dest = RGB32k[0][0][a & (a >> 15)];
+      dest += linesize;
+      xf   += xs;
+      yf   += ys;
    }
 }
 
@@ -343,9 +315,10 @@ static void R_DrawSpanAdd_8_GEN()
       a &= 0x3fffffff;
       b  = b - (b >> 5);
       a |= b;
-      *dest++ = RGB32k[0][0][a & (a >> 15)];
-      xf += xs;
-      yf += ys;
+      *dest = RGB32k[0][0][a & (a >> 15)];
+      dest += linesize;
+      xf   += xs;
+      yf   += ys;
    }
 }
 
@@ -381,20 +354,20 @@ static void R_DrawSpanSolidMasked_8()
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[1] = colormap[source[i]];
+         dest[linesize] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[2] = colormap[source[i]];
+         dest[linesize * 2] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[3] = colormap[source[i]];
+         dest[linesize * 3] = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest  += 4;
+      dest  += linesize * 4;
       count -= 4;
    }
    while(count-- > 0)
@@ -404,7 +377,7 @@ static void R_DrawSpanSolidMasked_8()
          *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 static void R_DrawSpanSolidMasked_8_GEN()
@@ -433,20 +406,20 @@ static void R_DrawSpanSolidMasked_8_GEN()
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[1] = colormap[source[i]];
+         dest[linesize] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[2] = colormap[source[i]];
+         dest[linesize * 2] = colormap[source[i]];
       xf += xs;
       yf += ys;
       i = ((xf >> xshift) & xmask) | (yf >> yshift);
       if(MASK(alpham, i))
-         dest[3] = colormap[source[i]];
+         dest[linesize * 3] = colormap[source[i]];
       xf += xs;
       yf += ys;
-      dest  += 4;
+      dest  += linesize * 4;
       count -= 4;
    }
    while(count-- > 0)
@@ -456,7 +429,7 @@ static void R_DrawSpanSolidMasked_8_GEN()
          *dest = colormap[source[i]];
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -485,7 +458,7 @@ static void R_DrawSpanTLMasked_8()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 static void R_DrawSpanTLMasked_8_GEN()
@@ -517,7 +490,7 @@ static void R_DrawSpanTLMasked_8_GEN()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 template<int xshift, int yshift, int xmask>
@@ -551,7 +524,7 @@ static void R_DrawSpanAddMasked_8()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+      dest += linesize;
    }
 }
 static void R_DrawSpanAddMasked_8_GEN()
@@ -588,7 +561,7 @@ static void R_DrawSpanAddMasked_8_GEN()
       }
       xf += xs;
       yf += ys;
-      ++dest;
+     dest += linesize;
    }
 }
 
@@ -648,21 +621,22 @@ static void R_DrawSlope_8()
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
+      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
+      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         dest  += linesize;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -681,21 +655,22 @@ static void R_DrawSlope_8()
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
+      ustep = static_cast<unsigned int>((uend - ustart) / count);
+      vstep = static_cast<unsigned int>((vend - vstart) / count);
 
       incount = count;
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         dest  += linesize;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -734,21 +709,22 @@ static void R_DrawSlope_8_GEN()
       id += ids * SPANJUMP;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * SPANJUMP;
       iv += ivs * SPANJUMP;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) * INTERPSTEP);
-      vstep = (int)((vend - vstart) * INTERPSTEP);
+      ustep = static_cast<unsigned int>((uend - ustart) * INTERPSTEP);
+      vstep = static_cast<unsigned int>((vend - vstart) * INTERPSTEP);
 
       incount = SPANJUMP;
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         dest  += linesize;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -767,21 +743,22 @@ static void R_DrawSlope_8_GEN()
       id += ids * count;
       mulend = 65536.0f / id;
 
-      ufrac = (int)(ustart = iu * mulstart);
-      vfrac = (int)(vstart = iv * mulstart);
+      ufrac = static_cast<unsigned int>(ustart = iu * mulstart);
+      vfrac = static_cast<unsigned int>(vstart = iv * mulstart);
       iu += ius * count;
       iv += ivs * count;
       uend = iu * mulend;
       vend = iv * mulend;
 
-      ustep = (int)((uend - ustart) / count);
-      vstep = (int)((vend - vstart) / count);
+      ustep = static_cast<unsigned int>((uend - ustart) / count);
+      vstep = static_cast<unsigned int>((vend - vstart) / count);
 
       incount = count;
       while(incount--)
       {
          colormap = slopespan.colormap[mapindex++];
-         *dest++ = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
+         dest  += linesize;
          ufrac += ustep;
          vfrac += vstep;
       }
@@ -801,6 +778,9 @@ spandrawer_t r_spandrawer =
 {
    // Orthogonal span drawers
    {
+      // R_DrawSpan<32-2*n, 32-n, n 1s then n 0s> // 2^n x 2^n
+      // NB: n 1s then n 0s can be represented as ((1 << n) - 1) << n
+
       // Solid
       {
          R_DrawSpanSolid_8<20, 26, 0x00FC0>, // 64x64
@@ -853,6 +833,9 @@ spandrawer_t r_spandrawer =
 
    // SoM: Sloped span drawers
    {
+      // R_DrawSlope<16-n, n 1s then n 0s, n 1s>
+      // NB: n 1s can be represented as (1 << n) - 1
+
       { 
          R_DrawSlope_8<10, 0x00FC0, 0x03F>,  // 64x64 
          R_DrawSlope_8< 9, 0x03F80, 0x07F>,  // 128x128

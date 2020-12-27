@@ -757,7 +757,7 @@ static void F_InitDemonScroller()
    lsize2 = W_LumpLength(lnum2);
 
    // init VBuffer
-   V_InitVBufferFrom(&vbuf, 320, 400, 320, video.bitdepth, DemonBuffer);
+   V_InitVBufferFrom(&vbuf, 320, 400, 400, video.bitdepth, DemonBuffer);
    
    if(lsize2 == 64000) // raw screen
       wGlobalDir.readLump(lnum2, DemonBuffer);

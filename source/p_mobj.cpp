@@ -1013,14 +1013,11 @@ floater:
       mo->target)     // killough 11/98: simplify
    {
       fixed_t delta;
-#ifdef R_LINKEDPORTALS
       if(P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo)) <
          D_abs(delta = getTargetZ(mo) + (mo->height>>1) - mo->z)*3)
-#else
-      if(P_AproxDistance(mo->x - mo->target->x, mo->y - mo->target->y) <
-         D_abs(delta = mo->target->z + (mo->height>>1) - mo->z)*3)
-#endif
+      {
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
+      }
    }
 
    // haleyjd 06/05/12: flying players
@@ -1891,9 +1888,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    mobj->effects = info->particlefx; // haleyjd 07/13/03
    mobj->damage  = info->damage;     // haleyjd 08/02/04
 
-#ifdef R_LINKEDPORTALS
    mobj->groupid = R_NOGROUP;
-#endif
 
    // haleyjd 09/26/04: rudimentary support for monster skins
    if(info->altsprite != -1)

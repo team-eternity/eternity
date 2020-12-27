@@ -321,7 +321,7 @@ void A_DeathBallImpact(actionargs_t *actionargs)
 {
    int      i;
    Mobj    *target, *ball = actionargs->actor;
-   angle_t  angle;
+   angle_t  angle = 0;
    bool     newAngle;
 
    if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))

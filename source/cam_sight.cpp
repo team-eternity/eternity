@@ -330,7 +330,7 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    {
       fixed_t slope = state.slope[surf];
       const surface_t &surface = sector->srf[surf];
-      int newfromid;
+      int newfromid = R_NOGROUP;
       if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
          (newfromid = surface.portal->data.link.toid) != params->cgroupid)
       {

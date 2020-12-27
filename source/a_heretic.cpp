@@ -1256,13 +1256,8 @@ void A_MinotaurDecide(actionargs_t *actionargs)
 
    S_StartSound(actor, sfx_minsit);
    
-#ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor));
-#else   
-   dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
-#endif
-   
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
    {
@@ -1545,13 +1540,8 @@ void A_LichAttack(actionargs_t *actionargs)
    }
    
    // determine distance and use it to alter attack probabilities
-#ifdef R_LINKEDPORTALS
-   dist = (P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor)) > 512*FRACUNIT);
-#else
-   dist = (P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT);
-#endif
-   
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) > 512*FRACUNIT;
+
    randAttack = P_Random(pr_lichattack);
    
    if(randAttack < (dist ? 150 : 50))

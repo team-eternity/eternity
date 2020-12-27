@@ -12,11 +12,7 @@
 	#error include 'stdafx.h' before including this file for PCH
 #endif
 
-#if _MSC_VER >= 1400
-#include "vc2008/resource.h"		// main symbols
-#else
-#include "vc6/resource.h"
-#endif
+#include "resource.h" // main symbols
 
 /////////////////////////////////////////////////////////////////////////////
 // CEECrashReportApp:

@@ -16,16 +16,16 @@
 ################################################################################
 
 find_path(SDL2_INCLUDE_DIR SDL.h
-		  HINTS ENV SDL2DIR
-		  PATH_SUFFIXES SDL2 include include/SDL2)
+			 HINTS ENV SDL2DIR
+			 PATH_SUFFIXES SDL2 include include/SDL2)
 
 find_library(SDL2_LIBRARY SDL2
-		     HINTS ENV SDL2DIR
-		     PATH_SUFFIXES lib)
+			    HINTS ENV SDL2DIR
+				 PATH_SUFFIXES lib)
 
 find_library(SDL2_MAIN_LIBRARY SDL2main
-		     HINTS ENV SDL2DIR
-		     PATH_SUFFIXES lib)
+				 HINTS ENV SDL2DIR
+				 PATH_SUFFIXES lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SDL2 REQUIRED_VARS SDL2_LIBRARY SDL2_INCLUDE_DIR)

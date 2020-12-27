@@ -67,9 +67,7 @@
 camera_t chasecam;
 int chasecam_active = 0;
 static v3fixed_t pCamTarget;
-#ifdef R_LINKEDPORTALS
 static int pCamTargetGroupId;
-#endif
 
                 // for simplicity
 #define playermobj players[displayplayer].mo
@@ -270,9 +268,7 @@ static void P_GetChasecamTarget()
    pCamTarget.y = playermobj->y - chasecam_dist * trace.sin;
    pCamTarget.z = playermobj->z + aimfor;
 
-#ifdef R_LINKEDPORTALS
    pCamTargetGroupId = playermobj->groupid;
-#endif
 
    // the intersections test mucks up the first time, but
    // aiming at something seems to cure it
@@ -425,9 +421,7 @@ void P_ResetChasecam()
    chasecam.y = pCamTarget.y;
    chasecam.z = pCamTarget.z;
    
-#ifdef R_LINKEDPORTALS
    chasecam.groupid = pCamTargetGroupId;
-#endif
 
    chasecam.backupPosition();
 }

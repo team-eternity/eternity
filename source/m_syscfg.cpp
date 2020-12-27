@@ -207,6 +207,9 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, nullptr, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
+   DEFAULT_STR("i_resolution", &i_default_resolution, &i_resolution, "native", default_t::wad_no,
+               "Resolution of the renderer's target (WWWWxHHHH or native)"),
+
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 

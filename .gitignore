@@ -21,6 +21,7 @@ build*/
 SDL2.framework
 SDL2_mixer.framework
 SDL2_net.framework
+.idea
 .vscode
 *.VC.db
 vc2017/Debug/
@@ -68,3 +69,4 @@ user/shots/*.bmp
 user/shots/*.pcx
 user/shots/*.png
 user/shots/*.tga
+macosx/EternityEngine.xcodeproj/xcshareddata/xcschemes

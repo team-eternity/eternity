@@ -51,7 +51,6 @@
 #include "p_xenemy.h"
 #include "r_bsp.h"
 #include "r_draw.h"
-#include "r_drawq.h"
 #include "r_dynseg.h"
 #include "r_interpolate.h"
 #include "r_main.h"
@@ -155,7 +154,7 @@ int r_column_engine_num;
 static columndrawer_t *r_column_engines[NUMCOLUMNENGINES] =
 {
    &r_normal_drawer, // normal engine
-   &r_quad_drawer,   // quad cache engine
+   // Here lies Quad Cache Engine: 2006/09/04 - 2020/10/31
 };
 
 //
@@ -1089,28 +1088,32 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    ++validcount;
 }
 
-typedef enum
+//
+// Designators for Boom fake-surface sector view area
+//
+enum class ViewArea
 {
-   area_normal,
-   area_below,
-   area_above
-} area_t;
+   normal,
+   below,
+   above
+};
 
+// CVAR to force Boom viewpoint-dependent global colormaps.
 bool r_boomcolormaps;
 
 //
 // Get sector colormap based on the view area constant
 //
-static int R_getSectorColormap(const sector_t &sector, area_t viewarea)
+static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
 {
    switch(viewarea)
    {
-   case area_above:
-      return sector.topmap;
-   case area_below:
-      return sector.bottommap;
-   default:
-      return sector.midmap;
+      case ViewArea::above:
+         return sector.topmap;
+      case ViewArea::below:
+         return sector.bottommap;
+      default:
+         return sector.midmap;
    }
 }
 
@@ -1124,67 +1127,78 @@ static int R_getSectorColormap(const sector_t &sector, area_t viewarea)
 //
 void R_SectorColormap(const sector_t *s)
 {
-   int cm = 0;
-   area_t viewarea;
-   bool boomover = false;
+   int colormapIndex = 0;
+   bool boomStyleOverride = false;
+   ViewArea area = ViewArea::normal;
 
-   // haleyjd: Under BOOM logic, the view sector determines the colormap of
-   // all sectors in view. This is supported for backward compatibility.
-   if(r_boomcolormaps || demo_version <= 203 ||
-      LevelInfo.sectorColormaps == INFO_SECMAP_BOOM)
-   {
+   // haleyjd: Under BOOM logic, the view sector determines the colormap of all sectors in view.
+   // This is supported for backward compatibility.
+   if(r_boomcolormaps || demo_version <= 203 || LevelInfo.sectorColormaps == INFO_SECMAP_BOOM)
       s = view.sector;
-   }
-   else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && 
-      view.sector->heightsec != -1 && 
-      (view.sector->topmap | view.sector->midmap | view.sector->bottommap) & 
-      COLORMAP_BOOMKIND)
+   else if(LevelInfo.sectorColormaps != INFO_SECMAP_SMMU && view.sector->heightsec != -1 &&
+      (view.sector->topmap | view.sector->midmap | view.sector->bottommap) & COLORMAP_BOOMKIND)
    {
-      // We're in a Boom-kind sector. Now check each area
-      int hs = view.sector->heightsec;
-      viewarea = (viewz < sectors[hs].srf.floor.height ? area_below :
-         viewz > sectors[hs].srf.ceiling.height ? area_above : area_normal);
-      cm = R_getSectorColormap(*view.sector, viewarea);
-      if(cm & COLORMAP_BOOMKIND)
+      // Boom colormap compatibility disabled from both console and EMAPINFO and game mode is modern
+      // Eternity.
+
+      // On the other hand, modern SMMU coloured sectors is not enforced in EMAPINFO, so we may
+      // still have Boom-style global colormap changing (as opposed to direct ExtraData/UDMF
+      // setting). We're in a fake-surfaces sector which has Boom-style colormaps set on some of the
+      // layers. Check each area.
+      const sector_t &heightSector = sectors[view.sector->heightsec];
+
+      // Pick area ID the viewer is in
+      if(viewz < heightSector.srf.floor.height)
+         area = ViewArea::below;
+      else if(viewz > heightSector.srf.ceiling.height)
+         area = ViewArea::above;
+      else
+         area = ViewArea::normal;
+
+      colormapIndex = R_getSectorColormap(*view.sector, area);
+      if(colormapIndex & COLORMAP_BOOMKIND)  // is it one of those set via the Boom method?
       {
-         boomover = true;
+         boomStyleOverride = true;
          s = view.sector;
       }
    }
     
-   if(!boomover)  // if overridden by Boom transfers, don't process this again
+   if(!boomStyleOverride)  // if overridden by Boom transfers, don't process this again
    {
       if(s->heightsec == -1)
-         viewarea = area_normal;
+         area = ViewArea::normal;
       else
       {
-         // find which area the viewpoint is in
+         // find which actual area the viewpoint is in. Must check from the viewer's sector.
          int hs = view.sector->heightsec;
-         viewarea =
-            (hs == -1 ? area_normal :
-               viewz < sectors[hs].srf.floor.height ? area_below :
-               viewz > sectors[hs].srf.ceiling.height ? area_above : area_normal);
+
+         if(hs == -1)
+            area = ViewArea::normal;
+         else if(viewz < sectors[hs].srf.floor.height)
+            area = ViewArea::below;
+         else if(viewz > sectors[hs].srf.ceiling.height)
+            area = ViewArea::above;
+         else
+            area = ViewArea::normal;
+
       }
-      cm = R_getSectorColormap(*s, viewarea);
+      colormapIndex = R_getSectorColormap(*s, area);
    }
 
-   if(cm & COLORMAP_BOOMKIND)
+   if(colormapIndex & COLORMAP_BOOMKIND)
    {
-      // If we got Boom-set colormaps on OTHER sectors than the view sector,
-      // then use the view sector's colormap. Needed to prevent Boom-coloured
-      // sectors from showing up when seen from non-coloured sectors.
-      if(!r_boomcolormaps && !boomover &&
-         LevelInfo.sectorColormaps != INFO_SECMAP_SMMU)
-      {
-         cm = R_getSectorColormap(*view.sector, viewarea);
-      }
+      // If we got Boom-set colormaps on OTHER sectors than the view sector, then use the view
+      // sector's colormap. Needed to prevent Boom-coloured sectors from showing up when seen from
+      // non-coloured sectors.
+      if(!r_boomcolormaps && !boomStyleOverride && LevelInfo.sectorColormaps != INFO_SECMAP_SMMU)
+         colormapIndex = R_getSectorColormap(*view.sector, area);
 
-      cm &= ~COLORMAP_BOOMKIND;
+      colormapIndex &= ~COLORMAP_BOOMKIND;
    }
 
-   fullcolormap = colormaps[cm];
-   zlight = c_zlight[cm];
-   scalelight = c_scalelight[cm];
+   fullcolormap = colormaps[colormapIndex];
+   zlight = c_zlight[colormapIndex];
+   scalelight = c_scalelight[colormapIndex];
 
    if(viewplayer->fixedcolormap)
    {
@@ -1463,7 +1477,7 @@ void R_DoomTLStyle()
 
 static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
-static const char *coleng[]     = { "normal", "quad" };
+static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
 static const char *tlstylestr[] = { "none", "boom", "new" };
 

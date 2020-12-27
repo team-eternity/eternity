@@ -83,10 +83,10 @@ static void V_DrawPatchColumn()
       while((count -= 2) >= 0)
       {
          *dest = source[frac >> FRACBITS];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          *dest = source[frac >> FRACBITS];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -134,10 +134,10 @@ static void V_DrawPatchColumnTR()
       while((count -= 2) >= 0)
       {
          *dest = patchcol.translation[source[frac >> FRACBITS]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          *dest = patchcol.translation[source[frac >> FRACBITS]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -185,10 +185,10 @@ static void V_DrawPatchColumnTRLit()
       while((count -= 2) >= 0)
       {
          *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -240,12 +240,12 @@ void V_DrawPatchColumnTL(void)
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -300,12 +300,12 @@ void V_DrawPatchColumnTRTL()
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -365,12 +365,12 @@ void V_DrawPatchColumnAdd()
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -430,12 +430,12 @@ void V_DrawPatchColumnAddTR()
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          
          DO_COLOR_BLEND();
          
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)

@@ -623,23 +623,24 @@ static vissprite_t *R_NewVisSprite()
 }
 
 //
-// R_DrawMaskedColumn
-//
 // Used for sprites and masked mid textures.
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_DrawMaskedColumn(column_t *tcolumn)
+static void R_drawMaskedColumn(column_t *tcolumn)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
    
    column.texheight = 0; // killough 11/98
 
+   int top = 0;
    while(tcolumn->topdelta != 0xff)
    {
+      top = tcolumn->topdelta <= top ? tcolumn->topdelta + top : tcolumn->topdelta;
+
       // calculate unclipped screen coordinates for post
-      y1 = maskedcolumn.ytop + (maskedcolumn.scale * tcolumn->topdelta);
+      y1 = maskedcolumn.ytop + (maskedcolumn.scale * top);
       y2 = y1 + (maskedcolumn.scale * tcolumn->length) - 1;
 
       column.y1 = (int)(y1 < mceilingclip[column.x] ? mceilingclip[column.x] : y1);
@@ -649,7 +650,7 @@ static void R_DrawMaskedColumn(column_t *tcolumn)
       if(column.y1 <= column.y2 && column.y2 < viewwindow.height)
       {
          column.source = (byte *)tcolumn + 3;
-         column.texmid = basetexturemid - (tcolumn->topdelta << FRACBITS);
+         column.texmid = basetexturemid - (top << FRACBITS);
 
          colfunc();
       }
@@ -663,14 +664,14 @@ static void R_DrawMaskedColumn(column_t *tcolumn)
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
+void R_DrawNewMaskedColumn(const texture_t *const tex, const texcol_t *tcol)
 {
    float y1, y2;
    fixed_t basetexturemid = column.texmid;
    
    column.texheight = 0; // killough 11/98
 
-   const byte *texend = tex->bufferdata + tex->width * tex->height + 1;
+   const byte *const texend = tex->bufferdata + tex->width * tex->height + 1;
 
    while(tcol)
    {
@@ -688,8 +689,8 @@ void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcol)
          column.source = localstart;
          column.texmid = basetexturemid - (tcol->yoff << FRACBITS);
 
-         byte *last = localstart + tcol->len;
-         byte orig;
+         byte *const last = localstart + tcol->len;
+         byte orig = 0;
          if(last < texend && last > tex->bufferdata)
          {
             orig = *last;
@@ -795,7 +796,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_DrawMaskedColumn(tcolumn);
+         R_drawMaskedColumn(tcolumn);
       }
    }
    else
@@ -809,7 +810,7 @@ static void R_DrawVisSprite(vissprite_t *vis, int x1, int x2)
             continue;
          
          tcolumn = (column_t *)((byte *) patch + patch->columnofs[texturecolumn]);
-         R_DrawMaskedColumn(tcolumn);
+         R_drawMaskedColumn(tcolumn);
       }
    }
    colfunc = r_column_engine->DrawColumn; // killough 3/14/98
@@ -957,7 +958,7 @@ static void R_ProjectSprite(Mobj *thing, v3fixed_t *delta = nullptr,
    if((unsigned int)thing->sprite >= (unsigned int)numsprites)
    {
       // haleyjd 08/12/02: modified error handling
-      doom_printf(FC_ERROR "Bad sprite number %i\n", thing->sprite);
+      doom_printf(FC_ERROR "Bad sprite number %i for thingtype %s\n", thing->sprite, thing->info->name);
 
       // blank the thing's state sprite and frame so that this error does not
       // occur perpetually, flooding the message widget and console.
@@ -2424,7 +2425,7 @@ static void R_DrawParticle(vissprite_t *vis)
          return;
       ++ycount;
 
-      spacing = video.pitch - xcount;
+      spacing = video.pitch - ycount;
       dest    = R_ADDRESS(x1, yl);
 
       // haleyjd 02/08/05: rewritten to remove inner loop invariants
@@ -2443,7 +2444,7 @@ static void R_DrawParticle(vissprite_t *vis)
 
          do // step in y
          {
-            int count = xcount;
+            int count = ycount;
 
             do // step in x
             {
@@ -2454,20 +2455,20 @@ static void R_DrawParticle(vissprite_t *vis)
             while(--count);
             dest += spacing;  // go to next row
          } 
-         while(--ycount);
+         while(--xcount);
       }
       else // opaque (fast, and looks terrible)
       {
          do // step in y
          {
-            int count = xcount;
+            int count = ycount;
             
             do // step in x
                *dest++ = color;
             while(--count);
             dest += spacing;  // go to next row
          } 
-         while(--ycount);
+         while(--xcount);
       } // end else [!general_translucency]
    } // end local block
 }

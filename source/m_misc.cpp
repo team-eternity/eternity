@@ -278,7 +278,7 @@ default_t defaults[] =
                "1 to make percent signs on status bar always gray"),
    
    // killough 2/28/98
-   DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, nullptr, 1, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, nullptr, 0, 0, 1, default_t::wad_yes,
                "1 to disable doubled card and skull key display on status bar"),
 
    // killough 3/6/98
@@ -334,7 +334,7 @@ default_t defaults[] =
    DEFAULT_INT("autorun", &autorun, nullptr, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
 
    // haleyjd 08/23/09: allow shift to cancel autorun
-   DEFAULT_INT("runiswalk", &runiswalk, nullptr, 0, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("runiswalk", &runiswalk, nullptr, 1, 0, 1, default_t::wad_no, 
                "1 to walk with shift when autorun is enabled"),
 
    // killough 2/21/98: default to 10
@@ -830,12 +830,12 @@ default_t defaults[] =
                "user's default wad directory"),
    
    DEFAULT_INT("r_columnengine",&r_column_engine_num, nullptr, 
-               1, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
-               "0 = normal, 1 = optimized quad cache"),
+               0, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
+               "0 = normal"),
    
    DEFAULT_INT("r_spanengine",&r_span_engine_num, nullptr,
                0, 0, NUMSPANENGINES - 1, default_t::wad_no, 
-               "0 = high precision, 1 = low precision"),
+               "0 = high precision"),
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, nullptr, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_yes,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),

@@ -748,7 +748,7 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
 //
 // davidph 01/14/14: split from deh_ParseFlags
 //
-dehflags_t *deh_ParseFlag(dehflagset_t *flagset, const char *name)
+dehflags_t *deh_ParseFlag(const dehflagset_t *flagset, const char *name)
 {
    int mode = flagset->mode;
 

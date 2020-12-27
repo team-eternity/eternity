@@ -118,7 +118,17 @@ extern char gamemapname[9];
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
 
-extern int cooldemo;
+//
+// Cool demo setting
+//
+enum class CoolDemo: int
+{
+   off,
+   random,
+   follow
+};
+
+extern CoolDemo cooldemo;
 extern bool hub_changelevel;
 
 extern bool scriptSecret;   // haleyjd

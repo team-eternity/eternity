@@ -616,9 +616,7 @@ void P_SetThingPosition(Mobj *thing)
 
    P_LogThingPosition(thing, " set ");
 
-#ifdef R_LINKEDPORTALS
    thing->groupid = ss->sector->groupid;
-#endif
 
    if(!(thing->flags & MF_NOSECTOR))
    {

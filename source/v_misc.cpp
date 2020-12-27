@@ -420,6 +420,10 @@ static void V_initSubScreen43()
                                  static_cast<double>(vbscreen.height);
       unscaledw = static_cast<int>(round(SCREENHEIGHT * scaleaspect));
 
+      // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
+      // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)
+      if(unscaledw > vbscreen.width)
+         unscaledw = vbscreen.width;
       // FIXME(?): our scaling code cannot handle a subscreen smaller than 320x200
       if(subwidth < SCREENWIDTH)
       {
@@ -456,14 +460,14 @@ static void V_InitScreenVBuffer()
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.height,
                      video.bitdepth, video.screens[1]);
    V_SetScaling(&backscreen1, SCREENWIDTH, SCREENHEIGHT);
 
    // Only vbscreen and backscreen1 need scaling set.
-   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.height,
                      video.bitdepth, video.screens[2]);
-   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.height,
                      video.bitdepth, video.screens[3]);
 
    // Init subscreen43

@@ -1169,7 +1169,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
       line_t *ldef;
-      uint32_t v1, v2;
+      uint32_t v1, v2 = 0;
       uint32_t linedef;
       byte side;
       seg_t *li = segs+actualSegIndex;
@@ -2444,7 +2444,15 @@ static void P_CreateBlockMap()
       return P_createBlockMapBoom();   // use Boom mode (which is also in PrBoom+)
 
    // First find limits of map
-   
+
+   // This fixes MBF's code, which has a bug where maxx/maxy
+   // are wrong if the 0th node has the largest x or y
+   if(demo_version > 401 && numvertexes)
+   {
+      minx = maxx = vertexes->x >> FRACBITS;
+      miny = maxy = vertexes->y >> FRACBITS;
+   }
+
    for(i = 0; i < (unsigned int)numvertexes; i++)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
@@ -3487,8 +3495,6 @@ static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool 
 {
    p_currentLevelHashDigest.clear();
    E_RestoreCompatibilities();
-   if(demo_version < 401)
-      return;  // never do this for old demo versions
    HashData md5(HashData::MD5);
    ZAutoBuffer buf;
 
@@ -3598,7 +3604,7 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       return;
    }
 
-   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior != -1);
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior);
 
    if(isUdmf || demo_version >= 401)
    {
