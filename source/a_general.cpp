@@ -229,7 +229,7 @@ void A_Turn(actionargs_t *actionargs)
    {
    default:
    case 0: // default, compatibility mode
-      angle = static_cast<angle_t>(static_cast<uint64_t>(mo->state->misc1) << 32) / 360;
+      angle = static_cast<angle_t>((static_cast<uint64_t>(mo->state->misc1) << 32) / 360);
       break;
    case 1: // use a counter as degrees
       cnum = E_ArgAsInt(args, 1, 0);
