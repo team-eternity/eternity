@@ -830,7 +830,7 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(cmapcontext_t &context, void (*&colfunc)(cb_column_t &),
+static void do_draw_newsky(cmapcontext_t &context, R_ColumnFunc &colfunc,
                            const angle_t viewangle, visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
@@ -918,7 +918,7 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(cmapcontext_t &context, void (*&colfunc)(cb_column_t &),
+static void do_draw_plane(cmapcontext_t &context, R_ColumnFunc &colfunc,
                           int *const spanstart, const angle_t viewangle, visplane_t *pl)
 {
    int x;
@@ -1189,7 +1189,7 @@ static void do_draw_plane(cmapcontext_t &context, void (*&colfunc)(cb_column_t &
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, void (*&colfunc)(cb_column_t &),
+void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, R_ColumnFunc &colfunc,
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;

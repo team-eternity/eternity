@@ -629,7 +629,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context)
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_drawMaskedColumn(void (*&colfunc)(cb_column_t &),
+static void R_drawMaskedColumn(R_ColumnFunc &colfunc,
                                cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                                column_t *tcolumn,
                                const float *const mfloorclip, const float *const mceilingclip)
@@ -669,7 +669,7 @@ static void R_drawMaskedColumn(void (*&colfunc)(cb_column_t &),
 //
 // R_DrawNewMaskedColumn
 //
-void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
+void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *const tex, const texcol_t *tcol,
                            const float *const mfloorclip, const float *const mceilingclip)
@@ -725,7 +725,7 @@ void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
 //
 //  mfloorclip and mceilingclip should also be set.
 //
-static void R_drawVisSprite(spritecontext_t &context, void (*&colfunc)(cb_column_t &),
+static void R_drawVisSprite(spritecontext_t &context, R_ColumnFunc &colfunc,
                             const contextbounds_t &bounds,
                             vissprite_t *vis, int x1, int x2,
                             float *const mfloorclip, float *const mceilingclip)
@@ -1580,7 +1580,7 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
-                                  void (*&colfunc)(cb_column_t &),
+                                  R_ColumnFunc &colfunc,
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds,
                                   drawseg_t *const drawsegs,

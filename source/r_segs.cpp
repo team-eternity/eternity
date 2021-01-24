@@ -47,7 +47,7 @@
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, void (*&colfunc)(cb_column_t &),
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, R_ColumnFunc &colfunc,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
    texcol_t *col;
@@ -213,7 +213,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, void (*&colfunc)(cb_colu
 //
 static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
                             portalcontext_t &portalcontext,
-                            void (*const colfunc)(cb_column_t &), const viewpoint_t &viewpoint,
+                            const R_ColumnFunc colfunc, const viewpoint_t &viewpoint,
                             const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                             drawseg_t *const ds_p, cb_seg_t &segclip)
 {
@@ -773,7 +773,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 //  between start and stop pixels (inclusive).
 //
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext, void (*const colfunc)(cb_column_t &),
+                      portalcontext_t &portalcontext, const R_ColumnFunc colfunc,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop)

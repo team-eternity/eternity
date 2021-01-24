@@ -971,7 +971,7 @@ static void R_renderSkyboxPortal(rendercontext_t &context, pwindow_t *window)
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
+   R_ColumnFunc    &colfunc        = context.colfunc;
    const contextbounds_t &bounds   = context.bounds;
 
    fixed_t lastx, lasty, lastz, lastangle;
@@ -1161,7 +1161,7 @@ static void R_renderAnchoredPortal(rendercontext_t &context, pwindow_t *window)
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
+   R_ColumnFunc    &colfunc        = context.colfunc;
    const contextbounds_t &bounds   = context.bounds;
 
    fixed_t lastx, lasty, lastz;
@@ -1283,7 +1283,7 @@ static void R_renderLinkedPortal(rendercontext_t &context, pwindow_t *window)
    planecontext_t  &planecontext   = context.planecontext;
    portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
+   R_ColumnFunc    &colfunc        = context.colfunc;
    const contextbounds_t &bounds   = context.bounds;
 
    fixed_t lastx, lasty, lastz;

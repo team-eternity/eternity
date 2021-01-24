@@ -203,7 +203,7 @@ static void R_addMarkedSegs(bspcontext_t &context)
 //
 static void R_clipSolidWallSegment(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext,
                                    planecontext_t &planecontext, portalcontext_t &portalcontext,
-                                   void (*&colfunc)(cb_column_t &), const viewpoint_t &viewpoint,
+                                   R_ColumnFunc &colfunc, const viewpoint_t &viewpoint,
                                    const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
                                    const cb_seg_t &seg, const int x1, const int x2)
 {
@@ -314,7 +314,7 @@ crunch:
 //
 static void R_clipPassWallSegment(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext,
                                   planecontext_t &planecontext,
-                                  portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                                  portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds, const cb_seg_t &seg,
                                   const int x1, const int x2)
@@ -778,7 +778,7 @@ static bool R_clipInitialSegRange(const cb_seg_t &seg, const portalrender_t &por
 }
 
 static void R_clipSegToFPortal(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                               portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                               portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                                const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                const contextbounds_t &bounds, const cb_seg_t &seg)
 {
@@ -873,7 +873,7 @@ static void R_clipSegToFPortal(bspcontext_t &bspcontext, cmapcontext_t &cmapcont
 }
 
 static void R_clipSegToCPortal(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                               portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                               portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                                const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                const contextbounds_t &bounds, const cb_seg_t &seg)
 {
@@ -963,7 +963,7 @@ static void R_clipSegToCPortal(bspcontext_t &bspcontext, cmapcontext_t &cmapcont
 }
 
 static void R_clipSegToLPortal(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                               portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                               portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                                const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                const contextbounds_t &bounds, const cb_seg_t &seg)
 {
@@ -2178,7 +2178,7 @@ static bool R_allowBehindSectorPortal(const cbviewpoint_t &cb_viewpoint,
 // and adds any visible pieces to the line list.
 //
 static void R_addLine(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                      portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds, const uint64_t visitid,
                       cb_seg_t &seg,
@@ -2748,7 +2748,7 @@ static void R_interpolateVertex(dynavertex_t &v, v2fixed_t &org, v2float_t &forg
 // Recurse through a polynode mini-BSP
 //
 static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                             portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                             portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                              const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                              const contextbounds_t &bounds, const uint64_t visitid,
                              cb_seg_t &cbseg,
@@ -2813,7 +2813,7 @@ static void R_renderPolyNode(bspcontext_t &bspcontext, cmapcontext_t &cmapcontex
 // See r_dynabsp.cpp for rpolybsp generation.
 //
 static void R_addDynaSegs(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                          portalcontext_t &portalcontext, void (*&colfunc)(cb_column_t &),
+                          portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
                           const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                           const contextbounds_t &bounds, const uint64_t visitid,
                           cb_seg_t &seg,
@@ -2851,7 +2851,7 @@ static void R_subsector(rendercontext_t &context, const int num)
    portalcontext_t &portalcontext  = context.portalcontext;
    spritecontext_t &spritecontext  = context.spritecontext;
 
-   void (*&colfunc)(cb_column_t &) = context.colfunc;
+   R_ColumnFunc    &colfunc        = context.colfunc;
 
    const viewpoint_t     &viewpoint    = context.view;
    const cbviewpoint_t   &cb_viewpoint = context.cb_view;

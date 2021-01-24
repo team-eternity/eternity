@@ -60,8 +60,8 @@ enum
    VS_NUMSTYLES
 };
 
-//
-// columndrawer_t
+using R_ColumnFunc = void (*)(cb_column_t &);
+
 //
 // haleyjd 09/04/06: This structure is used to allow the game engine to use
 // multiple sets of column drawing functions (ie., normal, low detail, and
@@ -69,20 +69,20 @@ enum
 //
 struct columndrawer_t
 {
-   void (*DrawColumn)(cb_column_t &);       // normal
-   void (*DrawNewSkyColumn)(cb_column_t &); // double-sky drawing (index 0 = transparent)
-   void (*DrawTLColumn)(cb_column_t &);     // translucent
-   void (*DrawTRColumn)(cb_column_t &);     // translated
-   void (*DrawTLTRColumn)(cb_column_t &);   // translucent/translated
-   void (*DrawFuzzColumn)(cb_column_t &);   // spectre fuzz
-   void (*DrawFlexColumn)(cb_column_t &);   // flex translucent
-   void (*DrawFlexTRColumn)(cb_column_t &); // flex translucent/translated
-   void (*DrawAddColumn)(cb_column_t &);    // additive flextran
-   void (*DrawAddTRColumn)(cb_column_t &);  // additive flextran/translated
+   R_ColumnFunc DrawColumn;       // normal
+   R_ColumnFunc DrawNewSkyColumn; // double-sky drawing (index 0 = transparent)
+   R_ColumnFunc DrawTLColumn;     // translucent
+   R_ColumnFunc DrawTRColumn;     // translated
+   R_ColumnFunc DrawTLTRColumn;   // translucent/translated
+   R_ColumnFunc DrawFuzzColumn;   // spectre fuzz
+   R_ColumnFunc DrawFlexColumn;   // flex translucent
+   R_ColumnFunc DrawFlexTRColumn; // flex translucent/translated
+   R_ColumnFunc DrawAddColumn;    // additive flextran
+   R_ColumnFunc DrawAddTRColumn;  // additive flextran/translated
 
-   void (*ResetBuffer)();                   // reset function (may be null)
-   
-   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])(cb_column_t &);
+   void       (*ResetBuffer)();   // reset function (may be null)
+
+   R_ColumnFunc ByVisSpriteStyle[VS_NUMSTYLES][2];
 };
 
 extern columndrawer_t r_normal_drawer;

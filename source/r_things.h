@@ -43,6 +43,8 @@ struct bspcontext_t;
 struct cmapcontext_t;
 struct rendercontext_t;
 
+using R_ColumnFunc = void (*)(cb_column_t &);
+
 // Constant arrays used for psprite clipping and initializing clipping.
 
 extern float *zeroarray;
@@ -79,7 +81,7 @@ struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
-void R_DrawNewMaskedColumn(void (*const colfunc)(cb_column_t &),
+void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
                            cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                            const texture_t *tex, const texcol_t *tcolumn,
                            const float *const mfloorclip, const float *const mceilingclip);
