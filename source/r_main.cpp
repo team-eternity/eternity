@@ -1091,8 +1091,6 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
 
    // use drawcolumn
    R_ForEachContext([](rendercontext_t &context) {
-      context.colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
-
       context.view    = r_globalcontext.view;
       context.cb_view = r_globalcontext.cb_view;
    });
@@ -1262,7 +1260,7 @@ void R_RenderViewContext(rendercontext_t &context)
    R_RenderPortals(context);
 
    R_DrawPlanes(
-      context.cmapcontext, context.planecontext.mainhash, context.colfunc,
+      context.cmapcontext, context.planecontext.mainhash,
       context.planecontext.spanstart, context.view.angle, nullptr
    );
 

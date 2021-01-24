@@ -49,8 +49,6 @@ struct sectorbox_t;
 struct spritecontext_t;
 struct viewpoint_t;
 
-using R_ColumnFunc = void (*)(cb_column_t &);
-
 typedef enum
 {
    R_NONE,
@@ -262,8 +260,8 @@ enum pwindowtype_e
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
 using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *window);
-using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                               portalcontext_t &portalcontext, R_ColumnFunc &colfunc,
+using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext,
+                               planecontext_t &planecontext, portalcontext_t &portalcontext,
                                const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                const contextbounds_t &bounds, const cb_seg_t &seg);
 

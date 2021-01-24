@@ -830,16 +830,17 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
 }
 
 // haleyjd: moved here from r_newsky.c
-static void do_draw_newsky(cmapcontext_t &context, R_ColumnFunc &colfunc,
-                           const angle_t viewangle, visplane_t *pl)
+static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
    int x, offset, skyTexture, offset2, skyTexture2;
    skytexture_t *sky1, *sky2;
-   
+
    cb_column_t column = {};
 
+   R_ColumnFunc colfunc = r_column_engine->DrawColumn;
+
    angle_t an = viewangle;
-   
+
    // render two layers
 
    // get scrolling offsets and textures
@@ -918,8 +919,8 @@ static const int MultiplyDeBruijnBitPosition2[32] =
 // New function, by Lee Killough
 // haleyjd 08/30/02: slight restructuring to use hashed sky texture info cache.
 //
-static void do_draw_plane(cmapcontext_t &context, R_ColumnFunc &colfunc,
-                          int *const spanstart, const angle_t viewangle, visplane_t *pl)
+static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
+                          const angle_t viewangle, visplane_t *pl)
 {
    int x;
 
@@ -929,7 +930,7 @@ static void do_draw_plane(cmapcontext_t &context, R_ColumnFunc &colfunc,
    // haleyjd: hexen-style skies
    if(R_IsSkyFlat(pl->picnum) && LevelInfo.doubleSky)
    {
-      do_draw_newsky(context, colfunc, viewangle, pl);
+      do_draw_newsky(context, viewangle, pl);
       return;
    }
    
@@ -1029,7 +1030,7 @@ static void do_draw_plane(cmapcontext_t &context, R_ColumnFunc &colfunc,
             column.source = R_GetRawColumn(texture,
                (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
             
-            colfunc(column);
+            r_column_engine->DrawColumn(column);
          }
       }
    }
@@ -1189,7 +1190,7 @@ static void do_draw_plane(cmapcontext_t &context, R_ColumnFunc &colfunc,
 // Called after the BSP has been traversed and walls have rendered. This 
 // function is also now used to render portal overlays.
 //
-void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, R_ColumnFunc &colfunc,
+void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
                   int *const spanstart, const angle_t viewangle, planehash_t *table)
 {
    visplane_t *pl;
@@ -1201,7 +1202,7 @@ void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash, R_ColumnFunc &c
    for(i = 0; i < table->chaincount; ++i)
    {
       for(pl = table->chains[i]; pl; pl = pl->next)
-         do_draw_plane(context, colfunc, spanstart, viewangle, pl);
+         do_draw_plane(context, spanstart, viewangle, pl);
    }
 }
 

@@ -41,8 +41,6 @@ struct poststack_t;
 struct pwindow_t;
 struct vissprite_t;
 
-using R_ColumnFunc = void (*)(cb_column_t &);
-
 struct contextbounds_t
 {
    int   startcolumn, endcolumn; // for(int x = startcolumn; x < endcolumn; x++)
@@ -163,9 +161,6 @@ struct rendercontext_t
    contextbounds_t bounds;
    viewpoint_t     view;
    cbviewpoint_t   cb_view;
-
-   // Currently uncategorised
-   R_ColumnFunc    colfunc;
 };
 
 // The global context is for single-threaded things that still require a context

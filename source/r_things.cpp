@@ -629,7 +629,7 @@ static vissprite_t *R_newVisSprite(spritecontext_t &context)
 // Masked means: partly transparent, i.e. stored
 //  in posts/runs of opaque pixels.
 //
-static void R_drawMaskedColumn(R_ColumnFunc &colfunc,
+static void R_drawMaskedColumn(const R_ColumnFunc colfunc,
                                cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
                                column_t *tcolumn,
                                const float *const mfloorclip, const float *const mceilingclip)
@@ -725,7 +725,7 @@ void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
 //
 //  mfloorclip and mceilingclip should also be set.
 //
-static void R_drawVisSprite(spritecontext_t &context, R_ColumnFunc &colfunc,
+static void R_drawVisSprite(spritecontext_t &context,
                             const contextbounds_t &bounds,
                             vissprite_t *vis, int x1, int x2,
                             float *const mfloorclip, float *const mceilingclip)
@@ -770,7 +770,7 @@ static void R_drawVisSprite(spritecontext_t &context, R_ColumnFunc &colfunc,
       tranmap = main_tranmap; // killough 4/11/98   
    
    // haleyjd: faster selection for drawstyles
-   colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];
+   const R_ColumnFunc colfunc = r_column_engine->ByVisSpriteStyle[vis->drawstyle][!!vis->colour];
 
    //column.step = M_FloatToFixed(vis->ystep);
    column.step = M_FloatToFixed(1.0f / vis->scale);
@@ -823,7 +823,6 @@ static void R_drawVisSprite(spritecontext_t &context, R_ColumnFunc &colfunc,
          R_drawMaskedColumn(colfunc, column, maskedcolumn, tcolumn, mfloorclip, mceilingclip);
       }
    }
-   colfunc = r_column_engine->DrawColumn; // killough 3/14/98
 }
 
 struct spritepos_t
@@ -1410,7 +1409,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    oldycenter = view.ycenter;
    view.ycenter = (view.height * 0.5f);
    
-   R_drawVisSprite(r_globalcontext.spritecontext, r_globalcontext.colfunc, r_globalcontext.bounds,
+   R_drawVisSprite(r_globalcontext.spritecontext, r_globalcontext.bounds,
                    vis, vis->x1, vis->x2, mfloorclip, mceilingclip);
    
    view.ycenter = oldycenter;
@@ -1580,7 +1579,6 @@ static void R_sortVisSpriteRange(spritecontext_t &context, int first, int last)
 // Draws a sprite within a given drawseg range, for portals.
 //
 static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &spritecontext,
-                                  R_ColumnFunc &colfunc,
                                   const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                                   const contextbounds_t &bounds,
                                   drawseg_t *const drawsegs,
@@ -1633,7 +1631,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             {
                r1 = ds->x1 < spr->x1 ? spr->x1 : ds->x1;
                r2 = ds->x2 > spr->x2 ? spr->x2 : ds->x2;
-               R_RenderMaskedSegRange(cmapcontext, colfunc, viewpoint.z, ds, r1, r2);
+               R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
             }
             continue;                // seg is behind sprite
          }
@@ -1695,7 +1693,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
             !R_PointOnSegSide(spr->gx, spr->gy, ds->curline)))
          {
             if(ds->maskedtexturecol) // masked mid texture?
-               R_RenderMaskedSegRange(cmapcontext, colfunc, viewpoint.z, ds, r1, r2);
+               R_RenderMaskedSegRange(cmapcontext, viewpoint.z, ds, r1, r2);
             continue;                // seg is behind sprite
          }
 
@@ -1830,7 +1828,7 @@ static void R_drawSpriteInDSRange(cmapcontext_t &cmapcontext, spritecontext_t &s
          cliptop[x] = ptop[x - bounds.startcolumn];
    }
 
-   R_drawVisSprite(spritecontext, colfunc, bounds, spr, spr->x1, spr->x2, clipbot, cliptop);
+   R_drawVisSprite(spritecontext, bounds, spr, spr->x1, spr->x2, clipbot, cliptop);
 }
 
 //
@@ -1905,7 +1903,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             {
                R_drawSpriteInDSRange(
                   context.cmapcontext,
-                  spritecontext, context.colfunc,
+                  spritecontext,
                   context.view, context.cb_view, context.bounds, drawsegs,
                   spritecontext.vissprite_ptrs[i], firstds, lastds,
                   masked->ceilingclip, masked->floorclip
@@ -1922,7 +1920,7 @@ void R_DrawPostBSP(rendercontext_t &context)
          for(ds = drawsegs + lastds; ds-- > drawsegs + firstds; )  // new -- killough
          {
             if(ds->maskedtexturecol)
-               R_RenderMaskedSegRange(context.cmapcontext, context.colfunc, context.view.z, ds, ds->x1, ds->x2);
+               R_RenderMaskedSegRange(context.cmapcontext, context.view.z, ds, ds->x1, ds->x2);
          }
          
          // Done with the masked range
@@ -1941,7 +1939,7 @@ void R_DrawPostBSP(rendercontext_t &context)
             
          R_DrawPlanes(
             context.cmapcontext,
-            planecontext.mainhash, context.colfunc, planecontext.spanstart,
+            planecontext.mainhash, planecontext.spanstart,
             context.view.angle, pstack[pstacksize].overlay
          );
          R_FreeOverlaySet(planecontext.r_overlayfreesets, pstack[pstacksize].overlay);

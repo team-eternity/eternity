@@ -47,7 +47,7 @@
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, R_ColumnFunc &colfunc,
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
                             const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
    texcol_t *col;
@@ -71,7 +71,7 @@ void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext, R_ColumnFunc &colfunc,
    segclip.line = ds->curline;
    linedef      = segclip.line->linedef;
 
-   colfunc = r_column_engine->DrawColumn;
+   R_ColumnFunc colfunc = r_column_engine->DrawColumn;
 
    // killough 4/11/98: draw translucent 2s normal textures
    if(general_translucency)
@@ -773,7 +773,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 //  between start and stop pixels (inclusive).
 //
 void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
-                      portalcontext_t &portalcontext, const R_ColumnFunc colfunc,
+                      portalcontext_t &portalcontext,
                       const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
                       const contextbounds_t &bounds,
                       const cb_seg_t &seg, const int start, const int stop)
@@ -988,6 +988,7 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
 
    if(usesegloop)
    {
+      const R_ColumnFunc colfunc = r_column_engine->DrawColumn;
       R_renderSegLoop(
          cmapcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
       );
