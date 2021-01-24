@@ -596,8 +596,8 @@ void A_SpawnEx(actionargs_t *actionargs)
       // If we're spawning a projectile then we want to set its target as its owner
       if(mo->flags & MF_MISSILE)
       {
-         // If the spawner is a projectile then set target as spawner's owner (if it exists)
-         if((actor->flags & MF_MISSILE) && actor->target)
+         // If the spawner is (or spawned as) a projectile then set target as spawner's owner (if it exists)
+         if(((actor->flags & MF_MISSILE) || actor->info->flags & MF_MISSILE) && actor->target)
             P_SetTarget<Mobj>(&mo->target, actor->target);
          else
             P_SetTarget<Mobj>(&mo->target, actor);
