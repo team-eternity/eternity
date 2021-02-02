@@ -759,7 +759,7 @@ if(MSVC)
                           "/MP" "/utf-8" "/permissive-")
 
    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      target_compile_options(eternity PUBLIC"$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+      target_compile_options(eternity PUBLIC "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
    endif()
 
    target_link_options(eternity PUBLIC
