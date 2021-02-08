@@ -4,6 +4,16 @@ Changes by Ioan Chera in Eternity Engine
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 ========================
+Since v4.02.00 "Forseti"
+========================
+
+--------------------------------------------------------------------------------
+08.02.2021
+
+BUGFIX: Skip __macosx/... files from PKE resources from listing as embedded WADs
+        and exiting with error.
+
+========================
 Since v4.01.00 "Tyrfing"
 ========================
 
