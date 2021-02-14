@@ -1505,7 +1505,6 @@ thingtype BulletPuff : Mobj, -1, 38
 thingtype DoomBlood : Mobj, -1, 39
 {
   compatname  Blood
-  dehackednum 39
   cflags      NOBLOCKMAP|NOSPLASH
   acs_spawndata
   {
