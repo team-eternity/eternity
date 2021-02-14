@@ -310,6 +310,8 @@ bool P_CheckMissileRange(Mobj *actor)
 
    if(actor->flags2 & MF2_RANGEHALF)
       dist >>= 1;
+   if(actor->flags4 & MF4_RANGEEIGHTH)
+      dist >>= 3;
 
    if(dist > 200)
       dist = 200;

@@ -47,5 +47,15 @@ Fixed Eternity hard-locking if a dynavertex has the same position after
 interpolation.
 
 ================================================================================
+Changes since Eternity Engine v4.02.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2021/02/14
+Add RANGEEIGHTH flag for thingtypes, required for Strife compat. It cuts
+considered distance to target by eight, giving a way higher missile attack
+probability.
+
+================================================================================
 EOF
 ================================================================================
