@@ -45,6 +45,7 @@
 #include "e_sound.h"
 #include "e_sprite.h"
 #include "e_states.h"
+#include "e_string.h"
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
@@ -2913,7 +2914,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT1);
       if(strcasecmp(tempstr, "NONE"))
+      {
+         if(tempstr[0] == '$')
+            tempstr = E_StringOrDehForName(tempstr + 1);
          mobjinfo[i]->obituary = estrdup(tempstr);
+      }
       else
          mobjinfo[i]->obituary = nullptr;
    }
@@ -2927,7 +2932,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT2);
       if(strcasecmp(tempstr, "NONE"))
+      {
+         if(tempstr[0] == '$')
+            tempstr = E_StringOrDehForName(tempstr + 1);
          mobjinfo[i]->meleeobit = estrdup(tempstr);
+      }
       else
          mobjinfo[i]->meleeobit = nullptr;
    }

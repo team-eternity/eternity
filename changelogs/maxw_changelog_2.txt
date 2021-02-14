@@ -56,6 +56,7 @@ Added RANGEEIGHTH flag for thingtypes, required for Strife compat. It cuts
 considered distance to target by eight, giving a way higher missile attack
 probability.
 Added spawn type param to A_FatAttack codepointers.
+Made thing-based obituaries use deh or EDF strings if they start with $.
 
 ================================================================================
 EOF
