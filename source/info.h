@@ -398,6 +398,7 @@ struct mobjinfo_t
    unsigned int flags2; // More bit masks for lots of other things -- haleyjd
    unsigned int flags3; // haleyjd 11/03/02: flags3
    unsigned int flags4; // haleyjd 09/13/09: flags4
+   unsigned int flags5; // MaxW: 2021/02/14: flags5
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.

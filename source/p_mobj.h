@@ -285,6 +285,7 @@ public:
    unsigned int  flags2;    // haleyjd 04/09/99: I know, kill me now
    unsigned int  flags3;    // haleyjd 11/03/02
    unsigned int  flags4;    // haleyjd 09/13/09
+   unsigned int  flags5;    // MaxW: 2021/02/14: flags5
    int           intflags;  // killough 9/15/98: internal flags
    int           health;
 
@@ -727,6 +728,11 @@ enum mobjflags4_e : unsigned int
    MF4_SLIDEOVERTHINGS    = 0x20000000, // thing will keep sliding when on top of things
    MF4_UNSTEPPABLE        = 0x40000000, // thing cannot be stepped on like stairs
    MF4_RANGEEIGHTH        = 0x80000000  // uses eighth actual distance
+};
+
+enum mobjflags5_e : unsigned int
+{
+
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

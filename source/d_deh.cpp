@@ -349,6 +349,9 @@ static dehflags_t deh_mobjflags[] =
   {"UNSTEPPABLE",        0x40000000, 3}, // thing cannot be stepped on like stairs
   {"RANGEEIGHTH",        0x80000000, 3}, // uses eighth actual distance
 
+   // flags5 bits
+  //{"SOMETHINGLOLIDK",      0x00000001, 4},
+
   { nullptr,             0 }             // nullptr terminator
 };
 
