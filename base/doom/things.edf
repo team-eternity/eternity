@@ -14,7 +14,7 @@ thingtype DoomPlayer : Mobj, -1, 1
   radius       16.0
   height       56.0
   cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|TELESTOMP|WINDTHRUST|PASSMOBJ
-  flags2       SLIDE
+  flags3       SLIDE
   mod          PlayerMisc
 
   firstdecoratestate S_PLAY
