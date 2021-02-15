@@ -204,6 +204,10 @@ default_t defaults[] =
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, nullptr, false, default_t::wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
 
+   // MaxW: 2021/02/15
+   DEFAULT_BOOL("crosshair_scale", &crosshair_scale, nullptr, true, default_t::wad_yes,
+                "0 - scale crosshair, 1 - draw crosshair unscaled"),
+
    // sf
    DEFAULT_INT("show_scores", &show_scores, nullptr, 0, 0, 1, default_t::wad_yes,
                "show scores in deathmatch"),

@@ -58,6 +58,11 @@ probability.
 Added spawn type param to A_FatAttack codepointers.
 Made thing-based obituaries use deh or EDF strings if they start with $.
 
+--------------------------------------------------------------------------------
+2021/02/15
+Added cvar "hu_crosshair_scale" which can toggle scaling of the crosshair off or
+on. It's saved in the config as "crosshair_scale".
+
 ================================================================================
 EOF
 ================================================================================

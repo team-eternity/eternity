@@ -385,12 +385,14 @@ static void V_TextFPSDrawer()
 // automatic scaling.
 //
 
-VBuffer vbscreen;        // vbscreen encapsulates the primary video surface
-VBuffer backscreen1;     // backscreen1 is a temporary buffer for in_lude, border
-VBuffer backscreen2;     // backscreen2 is a temporary buffer for screenshots
-VBuffer backscreen3;     // backscreen3 is a temporary buffer for f_wipe
-VBuffer subscreen43;     // provides a 4:3 sub-surface on vbscreen
-VBuffer vbscreenyscaled; // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreen;         // vbscreen encapsulates the primary video surface
+VBuffer backscreen1;      // backscreen1 is a temporary buffer for in_lude, border
+VBuffer backscreen2;      // backscreen2 is a temporary buffer for screenshots
+VBuffer backscreen3;      // backscreen3 is a temporary buffer for f_wipe
+VBuffer subscreen43;      // provides a 4:3 sub-surface on vbscreen
+VBuffer vbscreenyscaled;  // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreenunscaled; // hi-res unscaled screen for whatever you wanna draw 1:1
+
 
 static bool vbscreenneedsfree = false;
 
@@ -452,6 +454,7 @@ static void V_InitScreenVBuffer()
       V_FreeVBuffer(&backscreen3);
       V_FreeVBuffer(&subscreen43);
       V_FreeVBuffer(&vbscreenyscaled);
+      V_FreeVBuffer(&vbscreenunscaled);
    }
    else
       vbscreenneedsfree = true;
@@ -459,6 +462,9 @@ static void V_InitScreenVBuffer()
    V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, 
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
+
+   V_InitVBufferFrom(&vbscreenunscaled, video.width, video.height, video.pitch,
+                     video.bitdepth, video.screens[0]);
 
    V_InitVBufferFrom(&backscreen1, video.width, video.height, video.height,
                      video.bitdepth, video.screens[1]);

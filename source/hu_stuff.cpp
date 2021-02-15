@@ -874,6 +874,7 @@ int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 bool crosshair_hilite; // haleyjd 06/07/05
+bool crosshair_scale = true;
 const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 class HUDCrossHairWidget : public HUDPatchWidget
@@ -945,11 +946,12 @@ void HUDCrossHairWidget::ticker()
 //
 void HUDCrossHairWidget::drawer()
 {
-   int   drawx, drawy, h, w;
-   byte *pal = color;
-   
+   VBuffer *buffer;
+   int      drawx, drawy, h, w;
+   byte    *pal = color;
+
    // haleyjd 03/03/07: don't display while showing a center message
-   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
+   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 ||
       viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
       return;
 
@@ -958,14 +960,25 @@ void HUDCrossHairWidget::drawer()
    // where to draw??
    w = patch->width;
    h = patch->height;
-   
-   drawx = (SCREENWIDTH + 1 - w) / 2;
-   drawy = scaledwindow.y + (scaledwindow.height + 1 - h) / 2;
-  
-   if(pal == notargetcolour)
-      V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
+
+   if(!crosshair_scale)
+   {
+      drawx  = (video.width  + 1 - w) / 2;
+      drawy  = (video.height + 1 - h) / 2;
+      buffer = &vbscreenunscaled;
+   }
    else
-      V_DrawPatchTranslated(drawx, drawy, &subscreen43, patch, pal, false);
+   {
+      drawx  = (SCREENWIDTH + 1 - w) / 2;
+      drawy  = scaledwindow.y + (scaledwindow.height + 1 - h) / 2;
+      buffer = &subscreen43;
+   }
+
+   if(pal == notargetcolour)
+      V_DrawPatchTL(drawx, drawy, buffer, patch, pal, FTRANLEVEL);
+   else
+      V_DrawPatchTranslated(drawx, drawy, buffer, patch, pal, false);
+
 }
 
 //
@@ -1542,11 +1555,13 @@ VARIABLE_INT(hu_coordscolor,         nullptr, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  nullptr,            yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   nullptr,            onoff);
+VARIABLE_BOOLEAN(crosshair_scale,   nullptr,            onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
+CONSOLE_VARIABLE(hu_crosshair_scale, crosshair_scale, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}
