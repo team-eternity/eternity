@@ -13,9 +13,7 @@ thingtype DoomPlayer : Mobj, -1, 1
   deathsound   pldeth
   radius       16.0
   height       56.0
-  flags        SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
-  flags2       FOOTCLIP
-  flags3       SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
   mod          PlayerMisc
 
   firstdecoratestate S_PLAY
