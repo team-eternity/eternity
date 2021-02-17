@@ -1304,7 +1304,11 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
-   R_RunContexts();
+   // We don't need to multithread if we only have one context
+   if(r_numcontexts == 1)
+      R_RenderViewContext(r_globalcontext);
+   else
+      R_RunContexts();
 
    // draw the psprites on top of everything
    //  but does not draw on side views

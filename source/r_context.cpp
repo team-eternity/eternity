@@ -143,6 +143,17 @@ void R_InitContexts(const int width)
    r_globalcontext.bounds.endcolumn    = width;
    r_globalcontext.bounds.fstartcolumn = 0.0f;
    r_globalcontext.bounds.fendcolumn   = float(width);
+   r_globalcontext.bounds.numcolumns   = width;
+
+   if(r_numcontexts == 1)
+   {
+      r_globalcontext.portalcontext.portalrender = { false, MAX_SCREENWIDTH, 0 };
+
+      if(numsectors && gamestate == GS_LEVEL)
+         r_globalcontext.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+
+      return;
+   }
 
    renderdatas = estructalloc(renderdata_t, r_numcontexts);
 
@@ -165,7 +176,7 @@ void R_InitContexts(const int width)
       if(numsectors && gamestate == GS_LEVEL)
          context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
 
-      // Wait until this context's thread are done running before creating new ones
+      // Wait until this context's thread is done running before creating a new one
       while(renderdatas[currentcontext].running.load())
          i_haltimer.Sleep(1);
       renderdatas[currentcontext].thread = std::thread(&R_contextThreadFunc, &renderdatas[currentcontext]);
@@ -174,6 +185,12 @@ void R_InitContexts(const int width)
 
 void R_RefreshContexts()
 {
+   if(r_numcontexts == 1)
+   {
+      r_globalcontext.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+      return;
+   }
+
    for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
    {
       rendercontext_t &context = renderdatas[currentcontext].context;
@@ -204,7 +221,7 @@ void R_RunContexts()
    }
 }
 
-
+#if 0
 VARIABLE_BOOLEAN(temp_dgafaboutyourcpu, nullptr, yesno);
 CONSOLE_VARIABLE(r_gofast, temp_dgafaboutyourcpu, cf_buffered) {}
 
@@ -225,6 +242,7 @@ CONSOLE_VARIABLE(r_numcontexts, r_numcontexts, cf_buffered)
 
    I_SetMode();
 }
+#endif
 
 // EOF
 
