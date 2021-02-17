@@ -66,15 +66,8 @@ rendercontext_t &R_GetContext(int index)
 // Frees up the dynamically allocated members of a context that aren't tagged PU_VALLOC
 // Also tidies up threads of that context's data
 //
-void R_freeData(renderdata_t &data)
+void R_freeContext(rendercontext_t &context)
 {
-   rendercontext_t &context = data.context;
-
-   data.shouldquit.store(true);
-
-   while(data.running.load())
-      i_haltimer.Sleep(1);
-
    // THREAD_FIXME: Verify this catches everything
    if(context.spritecontext.drawsegs_xrange)
       efree(context.spritecontext.drawsegs_xrange);
@@ -86,8 +79,23 @@ void R_freeData(renderdata_t &data)
       efree(context.spritecontext.sectorvisited);
 }
 
+//
+// Frees up actual renderdatas, which need waiting on before we can safely free
+//
+void R_freeData(renderdata_t &data)
+{
+   data.shouldquit.store(true);
+
+   while(data.running.load())
+      i_haltimer.Sleep(1);
+
+   R_freeContext(data.context);
+}
+
 void R_FreeContexts()
 {
+   R_freeContext(r_globalcontext);
+
    if(renderdatas)
    {
       for(int currentcontext = 0; currentcontext < prev_numcontexts; currentcontext++)
