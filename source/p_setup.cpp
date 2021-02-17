@@ -69,6 +69,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "polyobj.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_dynseg.h"
@@ -3856,6 +3857,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_ResetWalkcam();
    else
       camera = nullptr;        // camera off
+
+   R_RefreshContexts();
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo

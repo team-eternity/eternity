@@ -212,7 +212,7 @@ struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
    float fbox[4];
-   Surfaces<unsigned> frameid;   // updated to avoid visiting more than once
+   Surfaces<uint64_t> visitid;   // updated to avoid visiting more than once
 };
 
 //
@@ -272,7 +272,7 @@ struct surface_t
    portal_t *portal;
 
    // Cardboard optimization
-   // They are set in R_Subsector and R_FakeFlat and are
+   // They are set in R_subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
    float heightf;
 
