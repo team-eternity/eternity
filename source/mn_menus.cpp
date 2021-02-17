@@ -2411,7 +2411,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "Novert emulation",              "mouse_novert"   },
+   {it_toggle,     "No vertical mouse movement",    "mouse_novert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
@@ -2449,6 +2449,7 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_info,       "Mouselook"},
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
+   {it_binding,    "Bind mouselook key",  "mlook"      },
    {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
@@ -3019,6 +3020,7 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_info,       "Crosshair Options"},
    {it_toggle,     "Crosshair type",               "hu_crosshair"},
    {it_toggle,     "Monster highlighting",         "hu_crosshair_hilite"},
+   {it_toggle,     "Crosshair scaling",            "hu_crosshair_scale"},
    {it_gap},
    {it_info,       "Automap Options"},
    {it_toggle,     "Show coords widget",           "hu_showcoords"},
@@ -3089,9 +3091,25 @@ static void MN_HUDPg2Drawer(void)
       int16_t to = patch->topoffset;
       int16_t lo = patch->leftoffset;
 
-      V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
-                    y + 12 - (h >> 1) + to, 
-                    &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL);
+      if(!crosshair_scale)
+      {
+         const double x_ratio = video.width  / SCREENWIDTH;
+         const double y_ratio = video.height / SCREENHEIGHT;
+
+         V_DrawPatchTL(
+            subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
+            subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
+            &vbscreenunscaled, patch, colrngs[CR_RED], FTRANLEVEL
+         );
+      }
+      else
+      {
+         V_DrawPatchTL(
+            270 + 12 - (w >> 1) + lo,
+            y + 12 - (h >> 1) + to,
+            &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL
+         );
+      }
    }
 }
 

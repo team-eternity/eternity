@@ -1687,6 +1687,9 @@ void Mobj::serialize(SaveArchive &arc)
       // Scripting related fields
       << special;
 
+   if(arc.saveVersion() >= 2)
+      arc << flags5;
+
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
    P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
@@ -1883,6 +1886,7 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    mobj->flags2  = info->flags2;     // haleyjd
    mobj->flags3  = info->flags3;     // haleyjd
    mobj->flags4  = info->flags4;     // haleyjd
+   mobj->flags5  = info->flags5;     // MaxW
    mobj->effects = info->particlefx; // haleyjd 07/13/03
    mobj->damage  = info->damage;     // haleyjd 08/02/04
 

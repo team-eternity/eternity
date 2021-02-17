@@ -758,8 +758,11 @@ if(MSVC)
    target_link_libraries(eternity rpcrt4)
 
    target_compile_options(eternity PUBLIC
-                          "/MP" "/utf-8" "/permissive-"
-                          "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+                          "/MP" "/utf-8" "/permissive-")
+
+   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      target_compile_options(eternity PUBLIC "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+   endif()
 
    target_link_options(eternity PUBLIC
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"

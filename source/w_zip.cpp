@@ -410,7 +410,8 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 
    // Is this lump an embedded wad file?
    const char *dotpos = strrchr(lump.name, '.');
-   if(dotpos && !strncmp(dotpos, ".wad", 4))
+   // Must block macOS archiving artifacts
+   if(dotpos && strncmp(lump.name, "__macosx/", 9) && !strncmp(dotpos, ".wad", 4))
       lump.flags |= LF_ISEMBEDDEDWAD;
 
    return true;

@@ -69,7 +69,7 @@ struct dehflags_t
    int index;
 };
 
-#define MAXFLAGFIELDS 4
+inline constexpr int MAXFLAGFIELDS = 5;
 
 enum
 {
@@ -77,6 +77,7 @@ enum
    DEHFLAGS_MODE2,
    DEHFLAGS_MODE3,
    DEHFLAGS_MODE4,
+   DEHFLAGS_MODE5,
    DEHFLAGS_MODE_ALL
 };
 

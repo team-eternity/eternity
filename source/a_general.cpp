@@ -229,7 +229,7 @@ void A_Turn(actionargs_t *actionargs)
    {
    default:
    case 0: // default, compatibility mode
-      angle = static_cast<angle_t>(static_cast<uint64_t>(mo->state->misc1) << 32) / 360;
+      angle = static_cast<angle_t>((static_cast<uint64_t>(mo->state->misc1) << 32) / 360);
       break;
    case 1: // use a counter as degrees
       cnum = E_ArgAsInt(args, 1, 0);
@@ -596,8 +596,8 @@ void A_SpawnEx(actionargs_t *actionargs)
       // If we're spawning a projectile then we want to set its target as its owner
       if(mo->flags & MF_MISSILE)
       {
-         // If the spawner is a projectile then set target as spawner's owner (if it exists)
-         if((actor->flags & MF_MISSILE) && actor->target)
+         // If the spawner is (or spawned as) a projectile then set target as spawner's owner (if it exists)
+         if(((actor->flags & MF_MISSILE) || actor->info->flags & MF_MISSILE) && actor->target)
             P_SetTarget<Mobj>(&mo->target, actor->target);
          else
             P_SetTarget<Mobj>(&mo->target, actor);

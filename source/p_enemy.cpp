@@ -310,6 +310,8 @@ bool P_CheckMissileRange(Mobj *actor)
 
    if(actor->flags2 & MF2_RANGEHALF)
       dist >>= 1;
+   if(actor->flags4 & MF4_RANGEEIGHTH)
+      dist >>= 3;
 
    if(dist > 200)
       dist = 200;
@@ -1668,18 +1670,21 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          newmobj->flags2 = res[1];
          newmobj->flags3 = res[2];
          newmobj->flags4 = res[3];
+         newmobj->flags5 = res[4];
          break;
       case 1: // add flags
          newmobj->flags  |= res[0];
          newmobj->flags2 |= res[1];
          newmobj->flags3 |= res[2];
          newmobj->flags4 |= res[3];
+         newmobj->flags5 |= res[4];
          break;
       case 2: // rem flags
          newmobj->flags  &= ~res[0];
          newmobj->flags2 &= ~res[1];
          newmobj->flags3 &= ~res[2];
          newmobj->flags4 &= ~res[3];
+         newmobj->flags5 &= ~res[4];
          break;
       default:
          break;

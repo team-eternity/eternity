@@ -36,11 +36,11 @@ const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Tyrfing";
+const char version_name[] = "Forseti";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = u8"Eternity Engine v4.02.00 \"Tyrfing\"";
+const char ee_wmCaption[] = u8"Eternity Engine v4.02.00 \"Forseti\"";
 #endif
 
 // haleyjd: Eternity release history
@@ -82,6 +82,7 @@ const char ee_wmCaption[] = u8"Eternity Engine v4.02.00 \"Tyrfing\"";
 // 3.42.03 'Heimdal 2' -- 08/02/17
 // 4.00.00 'Völuspá'   -- 03/17/18
 // 4.01.00 'Tyrfing'   -- 10/13/20
+// 4.02.00 'Forseti'   -- 01/24/21
 
 // auxilliary releases
 // Caverns of Darkness -- 3.29 dev beta 5 joel-2 04/24/02
