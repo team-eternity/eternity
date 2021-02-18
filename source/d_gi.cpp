@@ -2041,6 +2041,7 @@ static gamemodeinfo_t giStrifeReg =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    smus_None,         // interMusNum
@@ -2065,6 +2066,8 @@ static gamemodeinfo_t giStrifeReg =
    strf_skindefs,      // skinSounds
    strf_soundnums,     // playerSounds
    nullptr,            // titleMusName
+   "DSYEAH" ,          // secretSoundName
+   sfx_yeah,           // defSecretSound
 
    1,              // switchEpisode
    &StrifeSkyData, // skyData
