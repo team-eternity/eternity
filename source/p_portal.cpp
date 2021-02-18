@@ -1188,24 +1188,12 @@ void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
 }
 
 //
-// Returns ceiling portal Z, which depends on whether planez is used or not.
-// Assumes linked portal exists and is active.
+// Returns a surface's portal Z, aware of whether it's an attached portal or not
 //
-fixed_t P_CeilingPortalZ(const sector_t &sector)
+fixed_t P_PortalZ(const surface_t &surface)
 {
-   return !sector.srf.ceiling.portal || sector.srf.ceiling.portal->type != R_LINKED ||
-   sector.srf.ceiling.pflags & PF_ATTACHEDPORTAL ?
-   sector.srf.ceiling.height : sector.srf.ceiling.portal->data.link.planez;
-}
-
-//
-// Same but for floors
-//
-fixed_t P_FloorPortalZ(const sector_t &sector)
-{
-   return !sector.srf.floor.portal || sector.srf.floor.portal->type != R_LINKED ||
-   sector.srf.floor.pflags & PF_ATTACHEDPORTAL ?
-   sector.srf.floor.height : sector.srf.floor.portal->data.link.planez;
+   return !surface.portal || surface.portal->type != R_LINKED ||
+         surface.pflags & PF_ATTACHEDPORTAL ? surface.height : surface.portal->data.link.planez;
 }
 
 //

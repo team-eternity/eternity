@@ -301,7 +301,7 @@ static void MakeMAPxy(qstring &mapName)
    auto  num    = mapName.toLong(&endptr, 10);
 
    if(*endptr == '\0' && num >= 1 && num <= 99)
-      mapName.Printf(9, "MAP%02d", num);
+      mapName.Printf(9, "MAP%02ld", num);
 }
 
 // Expecting the map lump name or number after "map"

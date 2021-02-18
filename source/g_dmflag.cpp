@@ -130,7 +130,7 @@ CONSOLE_COMMAND(defdmflags, cf_server)
       break;
    }
 
-   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %lu", flags);
+   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %u", flags);
    C_RunTextCmd(cmdbuf);
 
    C_Printf("dmflags set to default for %s\n", gm);

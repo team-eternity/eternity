@@ -213,7 +213,7 @@ void A_MaceBallImpact(actionargs_t *actionargs)
    constexpr int MAGIC_JUNK = 1234;
 
    Mobj *ball = actionargs->actor;
-   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
    {
       // Landed in some sort of liquid
       ball->remove();
@@ -244,7 +244,7 @@ void A_MaceBallImpact2(actionargs_t *actionargs)
    angle_t   angle;
    const int tnum = E_SafeThingType(MT_MACEFX3);
 
-   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
    {
       // Landed in some sort of liquid
       ball->remove();
@@ -321,10 +321,10 @@ void A_DeathBallImpact(actionargs_t *actionargs)
 {
    int      i;
    Mobj    *target, *ball = actionargs->actor;
-   angle_t  angle;
+   angle_t  angle = 0;
    bool     newAngle;
 
-   if((ball->z <= ball->zref.floor) && E_HitFloor(ball))
+   if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
    {
       // Landed in some sort of liquid
       ball->remove();
@@ -704,7 +704,7 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
    // The footclip check turns into:
    //   (mo->flags2 & 1)
    // due to C operator precedence and a lack of parens/brackets.
-   const fixed_t z = comp[comp_terrain] || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
+   const fixed_t z = getComp(comp_terrain) || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
                      mo->z : mo->z - (15 * FRACUNIT);
    bomb = P_SpawnMobj(mo->x + (24 * finecosine[angle]),
                       mo->y + (24 * finesine[angle]),

@@ -99,6 +99,7 @@ extern int demo_subversion;
 
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
+#define vanilla_heretic    (ancient_demo && GameModeInfo->type == Game_Heretic)
 
 // haleyjd 10/16/10: full version macros
 #define make_full_version(v, sv) ((v << 8) | sv)
@@ -165,6 +166,12 @@ enum {
 };
 
 extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
+extern int level_compat_comp[COMP_TOTAL];  // ioanch: level compat active?
+extern bool level_compat_compactive[COMP_TOTAL];   // true if use level_compat_comp instead of comp
+inline static int getComp(int index)
+{
+   return level_compat_compactive[index] ? level_compat_comp[index] : comp[index];
+}
 
 // -------------------------------------------
 // Language.

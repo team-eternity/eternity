@@ -470,8 +470,7 @@ bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst, v
                               bool (*func)(int x, int y, int groupid, void *data))
 {
    int gcount = P_PortalGroupCount();
-   if(gcount <= 1 || groupid == R_NOGROUP ||
-      full_demo_version < make_full_version(340, 48))
+   if(gcount <= 1 || groupid == R_NOGROUP || full_demo_version < make_full_version(340, 48))
    {
       return P_simpleBlockWalker(bbox, xfirst, data, func);
    }
@@ -605,9 +604,9 @@ bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj)
    fixed_t topz = mobj->z + mobj->height;
    if(topz < sector->srf.floor.height || mobj->z > sector->srf.ceiling.height)
       return false;
-   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_FloorPortalZ(*sector))
+   if(sector->srf.floor.pflags & PS_PASSABLE && topz < P_PortalZ(surf_floor, *sector))
       return false;
-   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_CeilingPortalZ(*sector))
+   if(sector->srf.ceiling.pflags & PS_PASSABLE && mobj->z > P_PortalZ(surf_ceil, *sector))
       return false;
    return true;
 }

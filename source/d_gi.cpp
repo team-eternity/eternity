@@ -156,12 +156,12 @@
 //
 
 #define DOOM_GIFLAGS \
-   (GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | \
+   (GIF_FLIGHTINERTIA | GIF_HASEXITSOUNDS | GIF_CLASSICMENUS | GIF_SKILL5RESPAWN | \
     GIF_SKILL5WARNING | GIF_HUDSTATBARNAME | GIF_DOOMWEAPONOFFSET)
 
 #define HERETIC_GIFLAGS \
    (GIF_MNBIGFONT | GIF_SAVESOUND | GIF_HASADVISORY | GIF_SHADOWTITLES | \
-    GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST)
+    GIF_HASMADMELEE | GIF_CENTERHUDMSG | GIF_CHEATSOUND | GIF_CHASEFAST | GIF_WPNSWITCHSUPER)
 
 #define FINALDOOM_MIFLAGS (MI_DEMOIFDEMO4 | MI_NOTELEPORTZ)
 
@@ -1281,6 +1281,7 @@ static gamemodeinfo_t giDoomSW =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1305,6 +1306,8 @@ static gamemodeinfo_t giDoomSW =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
    nullptr,           // titleMusName
+   "DSSECRET",        // secretSoundName
+   sfx_itmbk,         // defSecretSound
 
    1,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1404,6 +1407,7 @@ static gamemodeinfo_t giDoomReg =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1428,6 +1432,8 @@ static gamemodeinfo_t giDoomReg =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
    nullptr,           // titleMusName
+   "DSSECRET",        // secretSoundName
+   sfx_itmbk,         // defSecretSound
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1527,6 +1533,7 @@ static gamemodeinfo_t giDoomRetail =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_inter,         // interMusNum
@@ -1551,6 +1558,8 @@ static gamemodeinfo_t giDoomRetail =
    doom_skindefs,     // skinSounds
    doom_soundnums,    // playerSounds
    nullptr,           // titleMusName
+   "DSSECRET",        // secretSoundName
+   sfx_itmbk,         // defSecretSound
 
    2,                  // switchEpisode
    &DoomSkyData,       // skyData
@@ -1650,6 +1659,7 @@ static gamemodeinfo_t giDoomCommercial =
    2,                // skillAmmoMultiplier
    meleecalc_doom,   // monsterMeleeRange
    8 * FRACUNIT,     // itemHeight
+   nullptr,          // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    mus_dm2int,        // interMusNum
@@ -1674,6 +1684,8 @@ static gamemodeinfo_t giDoomCommercial =
    doom_skindefs,      // skinSounds
    doom_soundnums,     // playerSounds
    nullptr,            // titleMusName
+   "DSSECRET",         // secretSoundName
+   sfx_itmbk,          // defSecretSound
 
    3,              // switchEpisode
    &Doom2SkyData,  // skyData
@@ -1773,6 +1785,7 @@ static gamemodeinfo_t giHereticSW =
    1.5,                // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
+   "ArtiFly",         // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1797,6 +1810,8 @@ static gamemodeinfo_t giHereticSW =
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
    nullptr,             // titleMusName
+   "DSSECRET",          // secretSoundName
+   sfx_chat,            // defSecretSound
 
    1,                  // switchEpisode
    &HereticSkyData,    // skyData
@@ -1900,6 +1915,7 @@ static gamemodeinfo_t giHereticReg =
    1.5,               // skillAmmoMultiplier
    meleecalc_raven,     // monsterMeleeRange
    32 * FRACUNIT,     // itemHeight
+   "ArtiFly",         // autoFlightArtifact
 
    INTERPIC_DOOM,     // interPic
    hmus_intr,         // interMusNum
@@ -1924,6 +1940,8 @@ static gamemodeinfo_t giHereticReg =
    htic_skindefs,       // skinSounds
    htic_soundnums,      // playerSounds
    nullptr,             // titleMusName
+   "DSSECRET" ,         // secretSoundName
+   sfx_chat,            // defSecretSound
 
    2,                  // switchEpisode
    &HereticSkyData,    // skyData

@@ -63,8 +63,8 @@
 static void P_spawnGlitter(Mobj *actor, int type)
 {
    // ioanch 20160116: make it portal-aware BOTH beyond line and sector gates
-   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    fixed_t dy = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
+   fixed_t dx = ((P_Random(pr_tglit) & 31) - 16) * FRACUNIT;
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
    Mobj *mo = P_SpawnMobj(pos.x, pos.y,
@@ -563,7 +563,7 @@ void P_SpawnSorcSpots()
 
 void A_Srcr2Decide(actionargs_t *actionargs)
 {
-   static int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
+   static const int chance[] = { 192, 120, 120, 120, 64, 64, 32, 16, 0 };
 
    Mobj *actor = actionargs->actor;
    int   index = actor->health / (actor->getModifiedSpawnHealth() / 8);
@@ -1089,8 +1089,8 @@ void A_DripBlood(actionargs_t *actionargs)
    Mobj *mo;
    fixed_t x, y;
 
-   x = actor->x + (P_SubRandom(pr_dripblood) << 11);
    y = actor->y + (P_SubRandom(pr_dripblood) << 11);
+   x = actor->x + (P_SubRandom(pr_dripblood) << 11);
 
    mo = P_SpawnMobj(x, y, actor->z, E_SafeThingType(MT_HTICBLOOD));
    
@@ -1133,9 +1133,9 @@ void A_BeastPuff(actionargs_t *actionargs)
       fixed_t x, y, z;
       Mobj *mo;
 
-      x = actor->x + (P_SubRandom(pr_puffy) << 10);      
-      y = actor->y + (P_SubRandom(pr_puffy) << 10);
       z = actor->z + (P_SubRandom(pr_puffy) << 10);
+      y = actor->y + (P_SubRandom(pr_puffy) << 10);
+      x = actor->x + (P_SubRandom(pr_puffy) << 10);
 
       mo = P_SpawnMobj(x, y, z, E_SafeThingType(MT_PUFFY));
 
@@ -1256,13 +1256,8 @@ void A_MinotaurDecide(actionargs_t *actionargs)
 
    S_StartSound(actor, sfx_minsit);
    
-#ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor));
-#else   
-   dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
-#endif
-   
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
    {
@@ -1271,6 +1266,7 @@ void A_MinotaurDecide(actionargs_t *actionargs)
       // set to charge state and start skull-flying
       P_SetMobjStateNF(actor, E_SafeState(S_MNTR_ATK4_1));
       actor->flags |= MF_SKULLFLY;
+      actor->intflags |= MIF_SKULLFLYSEE;
       
       // give him momentum
       angle_t angle = actor->angle >> ANGLETOFINESHIFT;
@@ -1313,6 +1309,7 @@ void A_MinotaurCharge(actionargs_t *actionargs)
    {
       // end of the charge
       actor->flags &= ~MF_SKULLFLY;
+      actor->intflags &= ~MIF_SKULLFLYSEE;
       P_SetMobjState(actor, actor->info->seestate);
    }
 }
@@ -1543,13 +1540,8 @@ void A_LichAttack(actionargs_t *actionargs)
    }
    
    // determine distance and use it to alter attack probabilities
-#ifdef R_LINKEDPORTALS
-   dist = (P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor)) > 512*FRACUNIT);
-#else
-   dist = (P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT);
-#endif
-   
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) > 512*FRACUNIT;
+
    randAttack = P_Random(pr_lichattack);
    
    if(randAttack < (dist ? 150 : 50))
@@ -1590,9 +1582,7 @@ void A_WhirlwindSeek(actionargs_t *actionargs)
    }
    
    // test if tracer has become an invalid target
-   if(!ancient_demo && actor->tracer && 
-      (actor->tracer->flags3 & MF3_GHOST ||
-       actor->tracer->health < 0))
+   if(actor->tracer && (actor->tracer->flags3 & MF3_GHOST || actor->tracer->health < 0))
    {
       Mobj *originator = actor->target;
       Mobj *origtarget = originator ? originator->target : nullptr;
@@ -1688,7 +1678,7 @@ void A_ImpChargeAtk(actionargs_t *actionargs)
    {   
       S_StartSound(actor, actor->info->attacksound);
 
-      P_SkullFly(actor, 12 * FRACUNIT);
+      P_SkullFly(actor, 12 * FRACUNIT, true);
    }
 }
 

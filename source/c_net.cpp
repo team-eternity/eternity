@@ -269,9 +269,9 @@ void C_UpdateVar(command_t *command)
 {
   char tempstr[100];
   
-  sprintf(tempstr,"\"%s\"", C_VariableValue(command->variable) );
+  snprintf(tempstr, sizeof(tempstr), "\"%s\"", C_VariableValue(command->variable) );
   
-  C_SendCmd(CN_BROADCAST, command->netcmd, tempstr);
+  C_SendCmd(CN_BROADCAST, command->netcmd, "%s", tempstr);
 }
 
 // EOF

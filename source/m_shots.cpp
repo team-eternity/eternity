@@ -51,18 +51,19 @@ int screenshot_gamma;
 
 // jff 3/30/98 binary file write with error detection
 // killough 10/98: changed into macro to return failure instead of aborting
+// MaxW: This uses the do { foo } while(false) pattern now to prevent side-effects
 
 #define SafeWrite(ob, data, size) \
-   if(!ob->write(data, size)) return false
+   do { if(!ob->write(data, size)) return false; } while(false)
 
 #define SafeWrite32(ob, data) \
-   if(!ob->writeUint32(data)) return false
+   do { if(!ob->writeUint32(data)) return false; } while(false)
 
 #define SafeWrite16(ob, data) \
-   if(!ob->writeUint16(data)) return false
+   do { if(!ob->writeUint16(data)) return false; } while(false)
 
 #define SafeWrite8(ob, data) \
-   if(!ob->writeUint8(data)) return false
+   do { if(!ob->writeUint8(data)) return false; } while(false)
 
 //=============================================================================
 //
@@ -138,19 +139,21 @@ static bool pcx_Writer(OutBuffer *ob, byte *data,
    SafeWrite(  ob, pcx.filler, sizeof(pcx.filler));
 
    // Pack the image
-   for(i = 0; i < width*height; ++i)
+   byte *row;
+   for(unsigned int y = 0; y < height; y++)
    {
-      if((*data & 0xc0) != 0xc0)
+      row = data + y;
+      for(unsigned int x = 0; x < width; x++)
       {
-         SafeWrite8(ob, *data);
-         ++data;
-      }
-      else
-      {
-         if(!ob->writeUint8(0xc1) || 
-            !ob->writeUint8(*data))
-            return false;
-         ++data;
+         if((*row & 0xc0) != 0xc0)
+            SafeWrite8(ob, *row);
+         else
+         {
+            if(!ob->writeUint8(0xc1) ||
+               !ob->writeUint8(*row))
+               return false;
+         }
+         row += height;
       }
    }
 
@@ -296,8 +299,11 @@ static bool bmp_Writer(OutBuffer *ob, byte *data,
    }
    SafeWrite(ob, temppal, 1024);
 
-   for(i = 0; i < height; ++i)
-      SafeWrite(ob, data + (height-1-i)*width, wid);
+   for(unsigned int y = 0; y < height; y++)
+   {
+      for(unsigned int x = 0; x < wid; x++)
+         SafeWrite8(ob, data[(height * x) + (height - (y + 1))]);
+   }
 
    return true; // killough 10/98
 }
@@ -387,8 +393,11 @@ static bool tga_Writer(OutBuffer *ob, byte *data,
    SafeWrite(ob, temppal, 768);
 
    // Write image data
-   for(i = 0; i < height; ++i)
-      SafeWrite(ob, data + (height-1-i)*width, width);
+   for(unsigned int y = 0; y < height; y++)
+   {
+      for(unsigned int x = 0; x < width; x++)
+         SafeWrite8(ob, data[(height * x) + (height - (y + 1))]);
+   }
 
    return true;
 }
@@ -469,7 +478,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    pngIoData.ob      = ob;
    pngIoData.writeOK = true;
 
-   byte **row_pointers;
+   byte *row_pointer;
 
    // setup png structure pointer
    if(!(pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, &pngIoData, 
@@ -485,8 +494,8 @@ static bool png_Writer(OutBuffer *ob, byte *data,
       return false;
    }
    
-   row_pointers = ecalloc(byte **, height, sizeof(byte *));
-   pngPalette   = ecalloc(png_colorp, 256, sizeof(png_color));
+   row_pointer = ecalloc(byte *, width, sizeof(byte));
+   pngPalette  = ecalloc(png_colorp, 256, sizeof(png_color));
 
    try
    {
@@ -527,11 +536,15 @@ static bool png_Writer(OutBuffer *ob, byte *data,
       png_set_packing(pngStruct);
       png_set_packswap(pngStruct);
 
-      // copy data over
-      for(uint32_t i = 0; i < height; i++)
-         row_pointers[i] = &data[i*width];
+      for(uint32_t y = 0; y < height; y++)
+      {
+         // translate current row from transposed buffer for libpng
+         for(uint32_t x = 0; x < width; x++)
+            row_pointer[x] = data[((height * x) + y)];
 
-      png_write_image(pngStruct, row_pointers);
+         // copy data over
+         png_write_row(pngStruct, row_pointer);
+      }
 
       // end
       png_write_end(pngStruct, pngInfo);
@@ -543,7 +556,7 @@ static bool png_Writer(OutBuffer *ob, byte *data,
    
    // cleanup
    png_destroy_write_struct(&pngStruct, &pngInfo);
-   efree(row_pointers);
+   efree(row_pointer);
    efree(pngPalette);
 
    return pngIoData.writeOK;

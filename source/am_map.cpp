@@ -1888,12 +1888,12 @@ static void AM_drawNodeLines()
 
    for(int i = 0; i < numnodes; i++)
    {
-      fnode_t *fnode = &fnodes[i];
+      const node_t &node = nodes[i];
 
-      l.a.x = fnode->fx;
-      l.a.y = fnode->fy;
-      l.b.x = fnode->fx + fnode->fdx;
-      l.b.y = fnode->fy + fnode->fdy;
+      l.a.x = M_FixedToDouble(node.x);
+      l.a.y = M_FixedToDouble(node.y);
+      l.b.x = M_FixedToDouble(node.x + node.dx);
+      l.b.y = M_FixedToDouble(node.y + node.dy);
 
       AM_drawMline(&l, mapcolor_frnd);
    }
@@ -2306,8 +2306,6 @@ static void AM_drawMarks()
 }
 
 //
-// AM_drawCrosshair()
-//
 // Draw the single point crosshair representing map center
 //
 // Passed the color to draw the pixel with
@@ -2316,8 +2314,7 @@ static void AM_drawMarks()
 //
 inline static void AM_drawCrosshair(int color)
 {
-   vbscreen.data[(vbscreen.pitch * ((f_h + 1) >> 1)) + (vbscreen.width >> 1)] =
-      color; // single point for now
+   PUTDOT((f_w + 1) >> 1, vbscreen.pitch >> 1, color); // single point for now
 }
 
 //

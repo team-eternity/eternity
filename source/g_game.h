@@ -118,7 +118,17 @@ extern char gamemapname[9];
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
 
-extern int cooldemo;
+//
+// Cool demo setting
+//
+enum class CoolDemo: int
+{
+   off,
+   random,
+   follow
+};
+
+extern CoolDemo cooldemo;
 extern bool hub_changelevel;
 
 extern bool scriptSecret;   // haleyjd
@@ -131,7 +141,7 @@ extern int smooth_turning;
 #define VERSIONSIZE   16
 
 // killough 2/22/98: version id string format for savegames
-#define VERSIONID "MBF %d"
+#define VERSIONID "EE"
 
 extern WadDirectory *g_dir;
 extern WadDirectory *d_dir;

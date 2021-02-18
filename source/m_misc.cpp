@@ -95,6 +95,8 @@ extern int hud_msg_scrollup;// killough 11/98: whether message list scrolls up
 extern int message_timer;   // killough 11/98: timer used for normal messages
 extern int show_scores;
 
+extern bool secret_notification_enabled;
+
 // haleyjd: SDL-specific configuration values
 #ifdef _SDL_VER
 extern int  showendoom;
@@ -202,6 +204,10 @@ default_t defaults[] =
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, nullptr, false, default_t::wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
 
+   // MaxW: 2021/02/15
+   DEFAULT_BOOL("crosshair_scale", &crosshair_scale, nullptr, true, default_t::wad_yes,
+                "0 - scale crosshair, 1 - draw crosshair unscaled"),
+
    // sf
    DEFAULT_INT("show_scores", &show_scores, nullptr, 0, 0, 1, default_t::wad_yes,
                "show scores in deathmatch"),
@@ -219,7 +225,7 @@ default_t defaults[] =
 
    // killough 3/1/98
    DEFAULT_INT("monsters_remember", &default_monsters_remember, &monsters_remember,
-               1, 0, 1, default_t::wad_yes,
+               0, 0, 1, default_t::wad_yes,
                "1 to enable monsters remembering enemies after killing others"),
 
    // killough 7/19/98
@@ -233,7 +239,7 @@ default_t defaults[] =
 
    //killough 9/9/98:
    DEFAULT_INT("monster_avoid_hazards", &default_monster_avoid_hazards, &monster_avoid_hazards,
-               1, 0, 1, default_t::wad_yes, "1 to enable monsters to intelligently avoid hazards"),
+               0, 0, 1, default_t::wad_yes, "1 to enable monsters to intelligently avoid hazards"),
    
    DEFAULT_INT("monkeys", &default_monkeys, &monkeys, 0, 0, 1, default_t::wad_yes,
                "1 to enable monsters to move up/down steep stairs"),
@@ -276,7 +282,7 @@ default_t defaults[] =
                "1 to make percent signs on status bar always gray"),
    
    // killough 2/28/98
-   DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, nullptr, 1, 0, 1, default_t::wad_yes,
+   DEFAULT_INT("sts_traditional_keys", &sts_traditional_keys, nullptr, 0, 0, 1, default_t::wad_yes,
                "1 to disable doubled card and skull key display on status bar"),
 
    // killough 3/6/98
@@ -332,7 +338,7 @@ default_t defaults[] =
    DEFAULT_INT("autorun", &autorun, nullptr, 0, 0, 1, default_t::wad_no, "1 to enable autorun"),
 
    // haleyjd 08/23/09: allow shift to cancel autorun
-   DEFAULT_INT("runiswalk", &runiswalk, nullptr, 0, 0, 1, default_t::wad_no, 
+   DEFAULT_INT("runiswalk", &runiswalk, nullptr, 1, 0, 1, default_t::wad_no, 
                "1 to walk with shift when autorun is enabled"),
 
    // killough 2/21/98: default to 10
@@ -664,6 +670,9 @@ default_t defaults[] =
    // show secret after gotten
    DEFAULT_INT("map_secret_after",&map_secret_after, nullptr, 1, 0, 1, default_t::wad_yes,
                "1 to not show secret sectors till after entered"),
+
+   DEFAULT_BOOL("secret_notification", &secret_notification_enabled, nullptr, true, default_t::wad_yes,
+                "enable secret notification"),
    
    //jff 1/7/98 end additions for automap
 
@@ -825,12 +834,12 @@ default_t defaults[] =
                "user's default wad directory"),
    
    DEFAULT_INT("r_columnengine",&r_column_engine_num, nullptr, 
-               1, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
-               "0 = normal, 1 = optimized quad cache"),
+               0, 0, NUMCOLUMNENGINES - 1, default_t::wad_no, 
+               "0 = normal"),
    
    DEFAULT_INT("r_spanengine",&r_span_engine_num, nullptr,
                0, 0, NUMSPANENGINES - 1, default_t::wad_no, 
-               "0 = high precision, 1 = low precision"),
+               "0 = high precision"),
 
    DEFAULT_INT("r_tlstyle", &r_tlstyle, nullptr, 1, 0, R_TLSTYLE_NUM - 1, default_t::wad_yes,
                "Doom object translucency style (0 = none, 1 = Boom, 2 = new)"),

@@ -400,10 +400,6 @@ left, or centred.
 
 -------------------------------------------------------------------------------
 2019/11/03
-Made FoV save in configs.
-
--------------------------------------------------------------------------------
-2019/11/03
 Fixed cfg saving ignoring symlinks (and just overwriting the link).
 
 -------------------------------------------------------------------------------
@@ -492,6 +488,31 @@ in colour.
 2020/09/07
 Fixed SpawnProjectile speed. Add SetSectorDamage (ACS function). Add ACS
 variant of Sector_SetFriction.
+
+-------------------------------------------------------------------------------
+2020/09/11
+Extended line flags are now archived. Saves now have a version, allowing
+backwards compatibility.
+
+-------------------------------------------------------------------------------
+2020/09/19
+Added secret notifications. The defaults are DSITMBK for Doom and CHAT for
+Heretic. They can be overriden by providing a "DSSECRET" lump, or "DSYEAH" in
+Strife (when Strife is a thing).
+
+-------------------------------------------------------------------------------
+2020/09/22
+Secret notifications are now toggleable on/off via the "secret_notification"
+console variable.
+
+-------------------------------------------------------------------------------
+2020/10/11
+Changed monsters_remember & monster_avoid_hazards to 0 by default.
+
+-------------------------------------------------------------------------------
+2020/10/13
+Added a folder selector popup on Windows for when no IWADs are found.
+Added the 200 DEHEXTRA sounds.
 
 ================================================================================
 EOF

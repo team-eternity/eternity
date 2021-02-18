@@ -830,7 +830,7 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
    color1 = grey1;
    color2 = grey5;
    
-   if(!comp[comp_terrain])
+   if(!getComp(comp_terrain))
    {
       // 06/21/02: make bullet puff colors responsive to 
       // TerrainTypes -- this is very cool and Quake-2-like ^_^      

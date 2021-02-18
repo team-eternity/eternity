@@ -191,7 +191,7 @@ void P_CalcHeight(player_t *player)
    }
 
    // haleyjd 06/05/12: flying players
-   if(player->mo->flags4 & MF4_FLY && !onground)
+   if(player->mo->flags4 & MF4_FLY && !P_OnGroundOrThing(*player->mo))
       player->bob = FRACUNIT / 2;
 
    if(!onground || player->cheats & CF_NOMOMENTUM)
@@ -259,7 +259,7 @@ void P_CalcHeight(player_t *player)
 //
 // haleyjd 06/05/12: flying logic for players
 //
-static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
+static void P_PlayerFlight(player_t *player, const ticcmd_t *cmd)
 {
    int fly = cmd->fly;
 
@@ -275,9 +275,11 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
       else
          P_PlayerStopFlight(player);
    }
-   // TODO:
-   // else
-   // * If have a flight-granting powerup, activate it now
+   else if(fly > 0 && estrnonempty(GameModeInfo->autoFlightArtifact) &&
+           E_GetItemOwnedAmountName(player, GameModeInfo->autoFlightArtifact) >= 1)
+   {
+      E_TryUseItem(player, E_ItemIDForName(GameModeInfo->autoFlightArtifact));
+   }
 
    if(player->mo->flags4 & MF4_FLY)
    {
@@ -291,6 +293,10 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
       {
          player->mo->momz = player->flyheight * FRACUNIT;
          player->flyheight /= 2;
+         // When flyheight turns to 0 from this location, mark it to become 0 instead of letting it
+         // be subject to P_ZMovement flying friction.
+         if(!(GameModeInfo->flags & GIF_FLIGHTINERTIA) && !player->flyheight)
+            player->mo->intflags |= MIF_CLEARMOMZ;
       }
    }
 }
@@ -304,17 +310,14 @@ static void P_PlayerFlight(player_t *player, ticcmd_t *cmd)
 //
 void P_MovePlayer(player_t* player)
 {
-   ticcmd_t *cmd = &player->cmd;
+   const ticcmd_t *cmd = &player->cmd;
    Mobj *mo = player->mo;
    
    mo->angle += cmd->angleturn << 16;
    
    // haleyjd: OVER_UNDER
    // 06/05/12: flying players
-   onground = 
-      mo->z <= mo->zref.floor ||
-      (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ) || 
-      (mo->flags4 & MF4_FLY);
+   onground = P_OnGroundOrThing(*mo) || (mo->flags4 & MF4_FLY);
    
    // killough 10/98:
    //
@@ -429,12 +432,8 @@ void P_DeathThink(player_t *player)
       player->momx = player->momy = 0;
    }
    else
-   {
-      onground = player->mo->z <= player->mo->zref.floor ||
-                    (P_Use3DClipping() &&
-                     player->mo->intflags & MIF_ONMOBJ);
-   }
-   
+      onground = P_OnGroundOrThing(*player->mo);
+
    P_CalcHeight(player);
    
    if(player->attacker && player->attacker != player->mo)
@@ -630,7 +629,7 @@ void P_PlayerThink(player_t *player)
 
    cmd = &player->cmd;
 
-   if(cmd->itemID && demo_version >= 401)
+   if(cmd->itemID && (demo_version >= 401 || vanilla_heretic))
       E_TryUseItem(player, cmd->itemID - 1); // ticcmd ID is off by one
 
    if(player->mo->flags & MF_JUSTATTACKED)
@@ -720,7 +719,7 @@ void P_PlayerThink(player_t *player)
    P_CalcHeight(player); // Determines view height and bobbing
    
    // haleyjd: are we falling? might need to scream :->
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!getComp(comp_fallingdmg) && demo_version >= 329)
    {  
       if(player->mo->momz >= 0)
          player->mo->intflags &= ~MIF_SCREAMED;
@@ -755,7 +754,7 @@ void P_PlayerThink(player_t *player)
    if(cmd->buttons & BT_SPECIAL)
       cmd->buttons = 0;
 
-   if(demo_version >= 401)
+   if(demo_version >= 401 || vanilla_heretic)
    {
       if(cmd->weaponID)
       {
@@ -984,7 +983,7 @@ void P_SetPlayerAttacker(player_t *player, Mobj *attacker)
 //
 void P_PlayerStartFlight(player_t *player, bool thrustup)
 {
-   if(full_demo_version < make_full_version(340, 23))
+   if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
    player->mo->flags4 |= MF4_FLY;
@@ -1003,7 +1002,7 @@ void P_PlayerStartFlight(player_t *player, bool thrustup)
 //
 void P_PlayerStopFlight(player_t *player)
 {
-   if(full_demo_version < make_full_version(340, 23))
+   if(full_demo_version < make_full_version(340, 23) && !vanilla_heretic)
       return;
 
    player->mo->flags4 &= ~MF4_FLY;

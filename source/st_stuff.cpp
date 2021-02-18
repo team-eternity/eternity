@@ -34,6 +34,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_compatibility.h"
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_weapons.h"
@@ -692,7 +693,7 @@ static void ST_updateWidgets()
    auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
-   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : INT_MIN;
    w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
 
    // update armor
@@ -721,7 +722,7 @@ static void ST_updateWidgets()
       
       amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
       if(amount > 0)
-         keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
+         keyboxes[i] = ((keyboxes[i] == -1 || E_Get(overridableSetting_stsTraditionalKeys)) ? i + 3 : i + 6);
    }
 
    // used by the w_armsbg widget
@@ -919,8 +920,7 @@ static void ST_drawInventory()
                     nullptr, (FRACUNIT * 6) / 10);
    }
 
-   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43,
-               PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
+   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43, inv_selectbox);
 }
 
 static void ST_drawWidgets()

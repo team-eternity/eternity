@@ -969,6 +969,12 @@ sound ht_noway
 
 ifgametype(HERETIC)
 
+enviromanager
+{
+  minstartwait 560
+  maxstartwait 815
+}
+
 sound EE_DoorOpen   { alias  ht_doropn }
 sound EE_DoorClose  { alias  ht_dorcls }
 sound EE_BDoorOpen  { alias  ht_doropn }
@@ -987,7 +993,11 @@ soundsequence EEHticAmbScream
 {
   type     environment
   id       0
-  commands @" playuntildone ht_amb1 "@
+  commands
+  @"
+    play ht_amb1
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none
@@ -997,7 +1007,11 @@ soundsequence EEHticAmbSquish
 {
   type     environment
   id       1
-  commands @" playuntildone ht_amb2 "@
+  commands
+  @"
+    playuntildone ht_amb2
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none
@@ -1010,16 +1024,24 @@ soundsequence EEHticAmbDrops
   commands 
   @"
     play ht_amb3
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb7
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb3
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb7
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb3
-    delayrand 16 47
-    playuntildone ht_amb7
+    delay 16
+    delayrand 0 31
+    play ht_amb7
+    delay 16
+    delayrand 0 31
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -1062,7 +1084,8 @@ soundsequence EEHticHeartBeat
     playtime ht_amb5 35
     playtime ht_amb5 35
     playtime ht_amb5 35
-    playuntildone ht_amb5
+    play ht_amb5
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -1092,7 +1115,11 @@ soundsequence EEHticGrowl
 {
   type     environment
   id       6
-  commands @" playuntildone ht_bstsit "@
+  commands
+  @"
+    play ht_bstsit
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none
@@ -1102,7 +1129,11 @@ soundsequence EEHticMagic
 {
   type     environment
   id       7
-  commands @" playuntildone ht_amb8 "@
+  commands
+  @"
+    play ht_amb8
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none

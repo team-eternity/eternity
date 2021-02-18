@@ -94,19 +94,31 @@ static int numfloors;
 #define ITEM_SPLASH_BASEZVEL   "chunkbasezvel"
 #define ITEM_SPLASH_SOUND      "sound"
 
+#define ITEM_SPLASHDELTA_NAME "name"
+
 // Splash Options
+#define COMMON_SPLASH_OPTIONS                                  \
+      CFG_STR(ITEM_SPLASH_SMALLCLASS, "",        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_SMALLCLIP,  0,         CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_SMALLSOUND, "none",    CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_BASECLASS,  "",        CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_CHUNKCLASS, "",        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_XVELSHIFT,  -1,        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_YVELSHIFT,  -1,        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_ZVELSHIFT,  -1,        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_BASEZVEL,   0,         CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_SOUND,      "none",    CFGF_NONE),
+
 cfg_opt_t edf_splash_opts[] =
 {
-   CFG_STR(ITEM_SPLASH_SMALLCLASS, "",        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_SMALLCLIP,  0,         CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_SMALLSOUND, "none",    CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_BASECLASS,  "",        CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_CHUNKCLASS, "",        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_XVELSHIFT,  -1,        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_YVELSHIFT,  -1,        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_ZVELSHIFT,  -1,        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_BASEZVEL,   0,         CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_SOUND,      "none",    CFGF_NONE),
+   COMMON_SPLASH_OPTIONS
+   CFG_END()
+};
+
+cfg_opt_t edf_spldelta_opts[] =
+{
+   CFG_STR(ITEM_SPLASHDELTA_NAME, nullptr, CFGF_NONE),
+   COMMON_SPLASH_OPTIONS
    CFG_END()
 };
 
@@ -209,6 +221,8 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
    ++numsplashes;
 }
 
+#define IS_SET(name) (def || cfg_size(cfg, (name)) > 0)
+
 //
 // E_ProcessSplash
 //
@@ -218,73 +232,107 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
 // new one created. This will allow terrain lumps to have additive
 // behavior over EDF.
 //
-static void E_ProcessSplash(cfg_t *cfg)
+static void E_ProcessSplash(cfg_t *cfg, bool def)
 {
    const char *tempstr;
    ETerrainSplash *newSplash;
    bool newsp = false;
 
    // init name and add to hash table
-   tempstr = cfg_title(cfg);
-
-   // If one already exists, modify it. Otherwise, allocate a new
-   // splash and add it to the splash hash table.
-   if(!(newSplash = E_SplashForName(tempstr)))
+   if(def)
    {
-      newSplash = estructalloc(ETerrainSplash, 1);
-      
-      if(strlen(tempstr) >= sizeof(newSplash->name))
+      // definition:
+      tempstr = cfg_title(cfg);
+
+      // If one already exists, modify it. Otherwise, allocate a new
+      // splash and add it to the splash hash table.
+      if(!(newSplash = E_SplashForName(tempstr)))
       {
-         E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
-                        tempstr);
+         newSplash = estructalloc(ETerrainSplash, 1);
+         if(strlen(tempstr) >= sizeof(newSplash->name))
+         {
+            E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
+                           tempstr);
+         }
+         strncpy(newSplash->name, tempstr, sizeof(newSplash->name));
+         E_AddSplashToHash(newSplash);
+         newsp = true;
       }
-      strncpy(newSplash->name, tempstr, sizeof(newSplash->name));
-      
-      E_AddSplashToHash(newSplash);
-      newsp = true;
+   }
+   else
+   {
+      // delta:
+      tempstr = cfg_getstr(cfg, ITEM_SPLASHDELTA_NAME);
+      if(!tempstr)
+         E_EDFLoggedErr(3, "E_ProcessSplash: splash delta requires name field!\n");
+
+      if(!(newSplash = E_SplashForName(tempstr)))
+      {
+         E_EDFLoggedWarning(3, "Warning: splash '%s' doesn't exist\n", tempstr);
+         return;
+      }
    }
 
    // process smallclass
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLCLASS);
-   newSplash->smallclass = E_ThingNumForName(tempstr);
+   if(IS_SET(ITEM_SPLASH_SMALLCLASS))
+   {
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLCLASS);
+      newSplash->smallclass = E_ThingNumForName(tempstr);
+   }
 
    // process smallclip
-   newSplash->smallclip = cfg_getint(cfg, ITEM_SPLASH_SMALLCLIP) * FRACUNIT;
+   if(IS_SET(ITEM_SPLASH_SMALLCLIP))
+      newSplash->smallclip = cfg_getint(cfg, ITEM_SPLASH_SMALLCLIP) * FRACUNIT;
 
    // process smallsound
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLSOUND);
-   if(strlen(tempstr) >= sizeof(newSplash->smallsound))
+   if(IS_SET(ITEM_SPLASH_SMALLSOUND))
    {
-      E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
-                     tempstr);
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLSOUND);
+      if(strlen(tempstr) >= sizeof(newSplash->smallsound))
+      {
+         E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
+                        tempstr);
+      }
+      strncpy(newSplash->smallsound, tempstr, sizeof(newSplash->smallsound));
    }
-   strncpy(newSplash->smallsound, tempstr, sizeof(newSplash->smallsound));
 
    // process baseclass
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
-   newSplash->baseclass = E_ThingNumForName(tempstr);
+   if(IS_SET(ITEM_SPLASH_BASECLASS))
+   {
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
+      newSplash->baseclass = E_ThingNumForName(tempstr);
+   }
    
    // process chunkclass
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_CHUNKCLASS);
-   newSplash->chunkclass = E_ThingNumForName(tempstr);
+   if(IS_SET(ITEM_SPLASH_CHUNKCLASS))
+   {
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_CHUNKCLASS);
+      newSplash->chunkclass = E_ThingNumForName(tempstr);
+   }
    
    // process chunkxvelshift, yvelshift, zvelshift
-   newSplash->chunkxvelshift = cfg_getint(cfg, ITEM_SPLASH_XVELSHIFT);
-   newSplash->chunkyvelshift = cfg_getint(cfg, ITEM_SPLASH_YVELSHIFT);
-   newSplash->chunkzvelshift = cfg_getint(cfg, ITEM_SPLASH_ZVELSHIFT);
+   if(IS_SET(ITEM_SPLASH_XVELSHIFT))
+      newSplash->chunkxvelshift = cfg_getint(cfg, ITEM_SPLASH_XVELSHIFT);
+   if(IS_SET(ITEM_SPLASH_YVELSHIFT))
+      newSplash->chunkyvelshift = cfg_getint(cfg, ITEM_SPLASH_YVELSHIFT);
+   if(IS_SET(ITEM_SPLASH_ZVELSHIFT))
+      newSplash->chunkzvelshift = cfg_getint(cfg, ITEM_SPLASH_ZVELSHIFT);
   
    // process chunkbasezvel
-   newSplash->chunkbasezvel = 
-      cfg_getint(cfg, ITEM_SPLASH_BASEZVEL) * FRACUNIT;
+   if(IS_SET(ITEM_SPLASH_BASEZVEL))
+      newSplash->chunkbasezvel = cfg_getint(cfg, ITEM_SPLASH_BASEZVEL) * FRACUNIT;
    
    // process sound
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
-   if(strlen(tempstr) >= sizeof(newSplash->sound))
+   if(IS_SET(ITEM_SPLASH_SOUND))
    {
-      E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
-                     tempstr);
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
+      if(strlen(tempstr) >= sizeof(newSplash->sound))
+      {
+         E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
+                        tempstr);
+      }
+      strncpy(newSplash->sound, tempstr, sizeof(newSplash->sound));
    }
-   strncpy(newSplash->sound, tempstr, sizeof(newSplash->sound));
 
    E_EDFLogPrintf("\t\t\t%s splash '%s'\n", 
                   newsp ? "Finished" : "Modified", 
@@ -302,7 +350,24 @@ static void E_ProcessSplashes(cfg_t *cfg)
    for(i = 0; i < numSplashes; ++i)
    {
       cfg_t *splashsec = cfg_getnsec(cfg, EDF_SEC_SPLASH, i);
-      E_ProcessSplash(splashsec);
+      E_ProcessSplash(splashsec, true);
+   }
+}
+
+//
+// Processes delta for splashes
+//
+static void E_processSplashDeltas(cfg_t *cfg)
+{
+   unsigned numSplashDeltas = cfg_size(cfg, EDF_SEC_SPLASHDELTA);
+
+   E_EDFLogPrintf("\t\t* Processing splash deltas\n"
+                  "\t\t\t%u splash delta(s) defined\n", numSplashDeltas);
+
+   for(unsigned i = 0; i < numSplashDeltas; ++i)
+   {
+      cfg_t *splashdeltasec = cfg_getnsec(cfg, EDF_SEC_SPLASHDELTA, i);
+      E_ProcessSplash(splashdeltasec, false);
    }
 }
 
@@ -338,8 +403,6 @@ static void E_AddTerrainToHash(ETerrain *terrain)
    // keep track of how many there are
    ++numterrains;
 }
-
-#define IS_SET(name) (def || cfg_size(cfg, (name)) > 0)
 
 static void E_ProcessTerrain(cfg_t *cfg, bool def)
 {
@@ -618,8 +681,9 @@ void E_ProcessTerrainTypes(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing TerrainTypes\n");
 
-   // First, process splashes
+   // First, process splashes and their deltas
    E_ProcessSplashes(cfg);
+   E_processSplashDeltas(cfg);
 
    // Second, process terrains
    E_ProcessTerrains(cfg);
@@ -709,7 +773,7 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
          terrain = TerrainTypes[thing->subsector->sector->srf.floor.pic];
    }
    
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   if(demo_version < terrain->minversion || getComp(comp_terrain))
       terrain = &solid;
 
    return terrain;
@@ -776,7 +840,7 @@ void E_PtclTerrainHit(particle_t *p)
    sector_t *sector = nullptr;
 
    // particles could never hit terrain before v3.33
-   if(demo_version < 333 || comp[comp_terrain])
+   if(demo_version < 333 || getComp(comp_terrain))
       return;
 
    // no particle hits during netgames or demos;
@@ -824,7 +888,7 @@ void E_PtclTerrainHit(particle_t *p)
 // Executes mobj terrain effects.
 // ioanch 20160116: also use "sector" to change the group ID if needed
 //
-static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
+static void E_TerrainHit(const ETerrain *terrain, Mobj *thing, fixed_t z, const sector_t *sector)
 {
    ETerrainSplash *splash = terrain->splash;
    Mobj *mo = nullptr;
@@ -861,7 +925,7 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector
             mo->momy = P_SubRandom(pr_splash) << splash->chunkyvelshift;
          mo->momz = splash->chunkbasezvel;
          if(splash->chunkzvelshift != -1)
-            mo->momz += P_SubRandom(pr_splash) << splash->chunkzvelshift;
+            mo->momz += P_Random(pr_splash) << splash->chunkzvelshift;
       }
 
       // some terrains may awaken enemies when hit
@@ -877,6 +941,32 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector
 }
 
 //
+// Get the information for the thing's floor terrain. Also gets the resulting z value
+//
+static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sector, fixed_t *z)
+{
+   // override with sector terrain if one is specified
+   const ETerrain *terrain = sector.srf.floor.terrain;
+   if(!terrain)
+      terrain = TerrainTypes[sector.srf.floor.pic];
+
+   // no TerrainTypes in old demos or if comp enabled
+   if(demo_version < terrain->minversion || getComp(comp_terrain))
+      terrain = &solid;
+
+   // some things don't cause splashes
+   if(thing.flags2 & MF2_NOSPLASH || thing.flags2 & MF2_FLOATBOB)
+      terrain = &solid;
+
+   if(z)
+   {
+      *z = sector.heightsec != -1 ? sectors[sector.heightsec].srf.floor.height :
+                                    sector.srf.floor.height;
+   }
+   return *terrain;
+}
+
+//
 // E_HitWater
 //
 // Called when a thing hits a floor or passes a deep water plane.
@@ -884,27 +974,12 @@ static void E_TerrainHit(ETerrain *terrain, Mobj *thing, fixed_t z, const sector
 bool E_HitWater(Mobj *thing, const sector_t *sector)
 {
    fixed_t z;
-   ETerrain *terrain;
-
-   // override with sector terrain if one is specified
-   if(!(terrain = sector->srf.floor.terrain))
-      terrain = TerrainTypes[sector->srf.floor.pic];
-
-   // no TerrainTypes in old demos or if comp enabled
-   if(demo_version < terrain->minversion || comp[comp_terrain])
-      terrain = &solid;
-
-   // some things don't cause splashes
-   if(thing->flags2 & MF2_NOSPLASH || thing->flags2 & MF2_FLOATBOB)
-      terrain = &solid;
-
-   z = sector->heightsec != -1 ? sectors[sector->heightsec].srf.floor.height : 
-      sector->srf.floor.height;
+   const ETerrain &terrain = E_getFloorTerrain(*thing, *sector, &z);
 
    // ioanch 20160116: also use "sector" as a parameter in case it's in another group
-   E_TerrainHit(terrain, thing, z, sector);
+   E_TerrainHit(&terrain, thing, z, sector);
 
-   return terrain->liquid;
+   return terrain.liquid;
 }
 
 //
@@ -912,7 +987,15 @@ bool E_HitWater(Mobj *thing, const sector_t *sector)
 //
 void E_ExplosionHitWater(Mobj *thing, int damage)
 {
-   if(thing->z <= thing->zref.secfloor + damage * FRACUNIT)
+   // Vanilla Heretic didn't really imply impact splash, only explosion, so avoid creating 2
+   // splashes at once in vHeretic
+   if(vanilla_heretic && thing->flags & MF_MISSILE && !(thing->flags2 & MF2_NOSPLASH) &&
+      E_WouldHitFloorWater(*thing))
+   {
+      return;
+   }
+   // VANILLA_HERETIC: explosion infinite height
+   if(vanilla_heretic || thing->z <= thing->zref.secfloor + damage * FRACUNIT)
       E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));
 }
 
@@ -938,6 +1021,26 @@ bool E_HitFloor(Mobj *thing)
       return false;
 
    return E_HitWater(thing, m->m_sector);
+}
+
+//
+// Checks if E_HitFloor would happen without actually triggering a splash. Needed for certain things
+// whose behavior changes when hitting liquids
+//
+bool E_WouldHitFloorWater(const Mobj &thing)
+{
+   const msecnode_t *m;
+   for(m = thing.touching_sectorlist; m; m = m->m_tnext)
+      if(thing.z == m->m_sector->srf.floor.height)
+         break;
+
+   // NOTE: same conditions as E_HitFloor
+   if(!m || m->m_sector->heightsec != -1)
+      return false;
+
+   const sector_t &sector = *m->m_sector;
+   const ETerrain &terrain = E_getFloorTerrain(thing, sector, nullptr);
+   return terrain.liquid;
 }
 
 // EOF

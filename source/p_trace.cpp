@@ -66,6 +66,10 @@ bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimfla
    if(!(th->flags & MF_SHOOTABLE))
       return false; // corpse or something
 
+   // VANILLA_HERETIC: the pods have LOWAIMPRIO so reject hitting them
+   if(vanilla_heretic && th->flags4 & MF4_LOWAIMPRIO)
+      return false;
+
    // killough 7/19/98, 8/2/98:
    // friends don't aim at friends (except players), at least not first
    // ioanch: also avoid aiming for LOWAIMPRIO things
@@ -206,8 +210,8 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
 
    if(pitch == 0 || demo_version < 333)
    {
-      trace.topslope    =  100*FRACUNIT/160;
-      trace.bottomslope = -100*FRACUNIT/160;
+      trace.topslope    =  DEFAULT_AIM_SLOPE;
+      trace.bottomslope = -DEFAULT_AIM_SLOPE;
    }
    else
    {
@@ -447,7 +451,7 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    sector_t *fs = li->frontsector;
    sector_t *bs = li->backsector;
 
-   bool becomp      = (demo_version < 333 || comp[comp_planeshoot]);
+   bool becomp      = (demo_version < 333 || getComp(comp_planeshoot));
    bool floorsame   = (fs->srf.floor.height == bs->srf.floor.height && becomp);
    bool ceilingsame = (fs->srf.ceiling.height == bs->srf.ceiling.height && becomp);
 
@@ -533,7 +537,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // SoM: If we are in no-clip and are shooting on the backside of a
       // 1s line, don't crash!
-      if(sidesector && !comp[comp_planeshoot])
+      if(sidesector && !getComp(comp_planeshoot))
       {
          if(z < sidesector->srf.floor.height)
          {

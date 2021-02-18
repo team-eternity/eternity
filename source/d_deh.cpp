@@ -341,11 +341,16 @@ static dehflags_t deh_mobjflags[] =
   {"FRIENDFOEMISSILE",   0x00400000, 3}, // friends and foes of same species hurt each other
   {"BLOODLESSIMPACT",    0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
   {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
-  {"MONSTERPASS",        0x02000000, 3},
-  {"LOWAIMPRIO",         0x04000000, 3},
-  {"STICKYCARRY",        0x08000000, 3},
-  {"SETTARGETONDEATH",   0x10000000, 3},
-  {"SLIDEOVERTHINGS",    0x20000000, 3},
+  {"MONSTERPASS",        0x02000000, 3}, // not blocked by blockmonsters.
+  {"LOWAIMPRIO",         0x04000000, 3}, // can't be autoaimed.
+  {"STICKYCARRY",        0x08000000, 3}, // can carry other things on top of it.
+  {"SETTARGETONDEATH",   0x10000000, 3}, // target is updated even when one-shot
+  {"SLIDEOVERTHINGS",    0x20000000, 3}, // thing will keep sliding when on top of things
+  {"UNSTEPPABLE",        0x40000000, 3}, // thing cannot be stepped on like stairs
+  {"RANGEEIGHTH",        0x80000000, 3}, // uses eighth actual distance
+
+   // flags5 bits
+  //{"SOMETHINGLOLIDK",      0x00000001, 4},
 
   { nullptr,             0 }             // nullptr terminator
 };
@@ -747,7 +752,7 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
 //
 // davidph 01/14/14: split from deh_ParseFlags
 //
-dehflags_t *deh_ParseFlag(dehflagset_t *flagset, const char *name)
+dehflags_t *deh_ParseFlag(const dehflagset_t *flagset, const char *name)
 {
    int mode = flagset->mode;
 

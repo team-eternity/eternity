@@ -228,6 +228,12 @@ enum
    // Weapon frame X offset must be nonzero for both XY offsets to be enabled. Needed for DeHackEd
    // compatibility.
    GIF_DOOMWEAPONOFFSET = 0x00400000,
+   GIF_INVALWAYSOPEN  = 0x00800000, // Inventory is always open (like Strife, but not Heretic)
+
+   // TODO: make this public for EDF gameprops (in a good public form)
+   GIF_FLIGHTINERTIA  = 0x01000000, // player flight retains some inertia
+   // TODO: make this public for EDF gameprops (in a good public form)
+   GIF_WPNSWITCHSUPER = 0x02000000, // only switch to superior weapon when picking up
 };
 
 // Game mode handling - identify IWAD version
@@ -446,6 +452,7 @@ struct gamemodeinfo_t
    double skillAmmoMultiplier;     // how much more ammo to give on baby and nightmare
    meleecalc_e monsterMeleeRange;  // how monster melee range is calculated
    fixed_t itemHeight;             // item pick-up height (independent of thing height)
+   const char *autoFlightArtifact; // name of artifact to trigger when commanding to fly
 
    // Intermission and Finale stuff
    const char *interPic;          // default intermission backdrop
@@ -473,6 +480,8 @@ struct gamemodeinfo_t
    const char **skinSounds;       // default skin sound mnemonics array
    int *playerSounds;             // player sound dehnum indirection
    const char *titleMusName;      // [XA] title music override, for EDF
+   const char *secretSoundName;   // name of the secret lump (DSSECRET for non-Strife games)
+   int         defSecretSound;    // dehnum of default secret sound
 
    // Renderer stuff
    int switchEpisode;             // "episode" number for switch texture defs

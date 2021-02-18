@@ -38,6 +38,7 @@
 #include "i_video.h"
 #include "m_qstr.h"
 #include "m_swap.h"
+#include "r_context.h"
 #include "r_main.h" // haleyjd
 #include "r_patch.h"
 #include "r_state.h"
@@ -385,12 +386,14 @@ static void V_TextFPSDrawer()
 // automatic scaling.
 //
 
-VBuffer vbscreen;        // vbscreen encapsulates the primary video surface
-VBuffer backscreen1;     // backscreen1 is a temporary buffer for in_lude, border
-VBuffer backscreen2;     // backscreen2 is a temporary buffer for screenshots
-VBuffer backscreen3;     // backscreen3 is a temporary buffer for f_wipe
-VBuffer subscreen43;     // provides a 4:3 sub-surface on vbscreen
-VBuffer vbscreenyscaled; // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreen;         // vbscreen encapsulates the primary video surface
+VBuffer backscreen1;      // backscreen1 is a temporary buffer for in_lude, border
+VBuffer backscreen2;      // backscreen2 is a temporary buffer for screenshots
+VBuffer backscreen3;      // backscreen3 is a temporary buffer for f_wipe
+VBuffer subscreen43;      // provides a 4:3 sub-surface on vbscreen
+VBuffer vbscreenyscaled;  // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreenunscaled; // hi-res unscaled screen for whatever you wanna draw 1:1
+
 
 static bool vbscreenneedsfree = false;
 
@@ -420,6 +423,10 @@ static void V_initSubScreen43()
                                  static_cast<double>(vbscreen.height);
       unscaledw = static_cast<int>(round(SCREENHEIGHT * scaleaspect));
 
+      // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
+      // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)
+      if(unscaledw > vbscreen.width)
+         unscaledw = vbscreen.width;
       // FIXME(?): our scaling code cannot handle a subscreen smaller than 320x200
       if(subwidth < SCREENWIDTH)
       {
@@ -448,6 +455,7 @@ static void V_InitScreenVBuffer()
       V_FreeVBuffer(&backscreen3);
       V_FreeVBuffer(&subscreen43);
       V_FreeVBuffer(&vbscreenyscaled);
+      V_FreeVBuffer(&vbscreenunscaled);
    }
    else
       vbscreenneedsfree = true;
@@ -456,14 +464,17 @@ static void V_InitScreenVBuffer()
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&vbscreenunscaled, video.width, video.height, video.pitch,
+                     video.bitdepth, video.screens[0]);
+
+   V_InitVBufferFrom(&backscreen1, video.width, video.height, video.height,
                      video.bitdepth, video.screens[1]);
    V_SetScaling(&backscreen1, SCREENWIDTH, SCREENHEIGHT);
 
    // Only vbscreen and backscreen1 need scaling set.
-   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen2, video.width, video.height, video.height,
                      video.bitdepth, video.screens[2]);
-   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.width, 
+   V_InitVBufferFrom(&backscreen3, video.width, video.height, video.height,
                      video.bitdepth, video.screens[3]);
 
    // Init subscreen43
@@ -481,6 +492,8 @@ void V_Init()
    static byte *s = nullptr;
    
    int size = video.width * video.height;
+
+   R_InitContexts(video.width);
 
    // haleyjd 04/29/13: purge and reallocate all VAllocItem instances
    VAllocItem::FreeAllocs();

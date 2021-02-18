@@ -24,6 +24,7 @@ frame S_POD_DIE1  { +decorate; dehackednum 2009 }
 frame S_POD_DIE2  { +decorate; dehackednum 2010 }
 frame S_POD_DIE3  { +decorate; dehackednum 2011 }
 frame S_POD_DIE4  { +decorate; dehackednum 2012 }
+frame S_FREETARGMOBJ { +decorate }  // for vanilla Heretic compatibility
 frame S_POD_GROW1 { +decorate; dehackednum 2013 }
 frame S_POD_GROW2 { +decorate; dehackednum 2014 }
 frame S_POD_GROW3 { +decorate; dehackednum 2015 }

@@ -61,7 +61,7 @@ extern fixed_t FloatBobOffsets[64];
 //
 bool P_Use3DClipping()
 {
-   return (!comp[comp_overunder] || useportalgroups);
+   return (!getComp(comp_overunder) || useportalgroups);
 }
 
 //
@@ -139,8 +139,17 @@ floater:
    }
 
    // haleyjd 06/05/12: flying players
+   // VANILLA_HERETIC: maybe make it choppier per 4 tics?
    if(mo->player && mo->flags4 & MF4_FLY && mo->z > mo->zref.floor)
-      mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   {
+      if(vanilla_heretic)
+      {
+         if(leveltime & 2)
+            mo->z += finesine[(FINEANGLES / 20 * leveltime >> 2) & FINEMASK];
+      }
+      else
+         mo->z += finesine[(FINEANGLES / 80 * leveltime) & FINEMASK] / 8;
+   }
 
    // clip movement
    
@@ -314,8 +323,7 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
    blockdist = thing->radius + clip.thing->radius;
 
    // ioanch 20160110: portal aware
-   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, 
-      thing->groupid);
+   const linkoffset_t *link = P_GetLinkOffset(clip.thing->groupid, thing->groupid);
 
    if(D_abs(thing->x - link->x - clip.x) >= blockdist ||
       D_abs(thing->y - link->y - clip.y) >= blockdist)
@@ -390,14 +398,20 @@ static bool PIT_CheckThing3D(Mobj *thing) // killough 3/26/98: make static
          }
       }
 
-      if((clip.thing->z >= topz) || (clip.thing->z + clip.thing->height <= thing->z))
+      if(clip.thing->z >= topz || clip.thing->z + clip.thing->height <= thing->z)
       {
-         if(thing->flags & MF_SPECIAL && clip.thing->z >= topz &&
-            clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+         if(thing->flags & MF_SPECIAL)
          {
-            return P_CheckPickUp(thing);
+            // VANILLA_HERETIC: it's critical to avoid this pick-up check here.
+            if(!vanilla_heretic)
+            {
+               if(clip.thing->z >= topz && clip.thing->z - thing->z <= GameModeInfo->itemHeight)
+                  return P_CheckPickUp(thing);
+               return true;
+            }
          }
-         return true;
+         else
+            return true;
       }
    }
 
@@ -561,7 +575,8 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
                }
                else if(!clip.BlockingMobj->player && 
                        !(thing->flags & (MF_FLOAT|MF_MISSILE|MF_SKULLFLY)) &&
-                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE)
+                       clip.BlockingMobj->z + clip.BlockingMobj->height - thing->z <= STEPSIZE &&
+                       !(clip.BlockingMobj->flags4 & MF4_UNSTEPPABLE))
                {
                   if(thingblocker == nullptr || clip.BlockingMobj->z > thingblocker->z)
                      thingblocker = clip.BlockingMobj;
@@ -720,15 +735,15 @@ static bool P_AdjustFloorCeil(Mobj *thing, bool midtex)
    thing->flags3 = oldfl3;
 
    // no sector linear interpolation tic
-   // Use this to prevent all subsequent movement from interpolating if one just
-   // triggered a portal teleport
+   // Use this to prevent all subsequent movement from interpolating if one just triggered a portal
+   // teleport
    static int noseclerptic = INT_MIN;
 
-   // Teleport thngs in the way if this is a portal sector. If targeted thing
-   // is the displayplayer, prevent interpolation.
-   if(noseclerptic == gametic || (demo_version >= 342 &&
-      P_CheckPortalTeleport(thing) && !camera &&
-      thing == players[displayplayer].mo))
+   // Teleport things in the way if this is a portal sector. If targeted thing is the displayplayer,
+   // prevent interpolation.
+   bool portalled = P_CheckPortalTeleport(thing);
+   if(noseclerptic == gametic || (demo_version >= 342 && portalled && !camera &&
+                                  thing == players[displayplayer].mo))
    {
       // Prevent interpolation both for moving sector and player's destination 
       // sector.

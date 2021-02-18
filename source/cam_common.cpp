@@ -29,6 +29,7 @@
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_compare.h"
@@ -75,7 +76,8 @@ bool PathTraverser::traverseIntercepts() const
       if(!scan->isaline)
          continue;   // ioanch 20151230: only lines need this treatment
       P_MakeDivline(scan->d.line, &dl);
-      scan->frac = P_InterceptVector(&trace, &dl);
+      if(scan->frac = P_InterceptVector(&trace, &dl); scan->frac < 0)
+         scan->frac = D_MAXINT;
    }
 
    //
@@ -402,7 +404,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
 
-   if(abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
+   if(!vanilla_heretic && abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
    {
       if(ystep < 0)
          partialx = FRACUNIT - partialx;
@@ -436,7 +438,25 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
       if((mapxstep | mapystep) == 0)
          break;
 
-#if 1
+      if(vanilla_heretic)
+      {
+         // vanilla Heretic demo compatibility
+         if(mapx == xt2 && mapy == yt2)
+            break;
+         // Original code - this fails to account for all cases.
+         if((yintercept >> FRACBITS) == mapy)
+         {
+            yintercept += ystep;
+            mapx += mapxstep;
+         }
+         else if((xintercept >> FRACBITS) == mapx)
+         {
+            xintercept += xstep;
+            mapy += mapystep;
+         }
+         continue;
+      }
+
       // From ZDoom (usable under the GPLv3):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
@@ -497,19 +517,6 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
             mapystep = 0;
          break;
       }
-#else
-      // Original code - this fails to account for all cases.
-      if((yintercept >> FRACBITS) == mapy)
-      {
-         yintercept += ystep;
-         mapx += mapxstep;
-      }
-      else if((xintercept >> FRACBITS) == mapx)
-      {
-         xintercept += xstep;
-         mapy += mapystep;
-      }
-#endif
    }
 
    //
@@ -539,15 +546,15 @@ void lineopening_t::calculate(const line_t *linedef)
 
    // no need to apply the portal hack (1024 units) here fortunately
    if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
-      opentop = front->srf.ceiling.height;
+      open.ceiling = front->srf.ceiling.height;
    else
-      opentop = emin(front->srf.ceiling.height, back->srf.ceiling.height);
+      open.ceiling = emin(front->srf.ceiling.height, back->srf.ceiling.height);
 
    if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
-      openbottom = front->srf.floor.height;
+      open.floor = front->srf.floor.height;
    else
-      openbottom = emax(front->srf.floor.height, back->srf.floor.height);
-   openrange = opentop - openbottom;
+      open.floor = emax(front->srf.floor.height, back->srf.floor.height);
+   openrange = open.ceiling - open.floor;
 }
 
 //

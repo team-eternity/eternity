@@ -29,6 +29,8 @@
 
 #include "m_fixed.h"
 
+struct cbviewpoint_t;
+
 struct v3fixed_t
 {
    v3fixed_t operator + (const v3fixed_t &other) const
@@ -249,8 +251,8 @@ void M_NormalizeVec2(v2float_t &vec, float mag);
 // Translates the given vector (in doom's coordinate system) to the camera
 // space (in right-handed coordinate system) This function is used for slopes.
 // 
-void M_TranslateVec3f(v3float_t *vec);
-void M_TranslateVec3 (v3double_t *vec);
+void M_TranslateVec3f(const cbviewpoint_t &cb_viewpoint, v3float_t *vec);
+void M_TranslateVec3 (const cbviewpoint_t &cb_viewpoint, v3double_t *vec);
 
 
 // 

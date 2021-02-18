@@ -149,7 +149,6 @@ static bool telefrag; // killough 8/9/98: whether to telefrag at exit
 // such things so far.
 static bool ignore_inerts = true;
 
-#ifdef R_LINKEDPORTALS
 // SoM: for portal teleports, PIT_StompThing will stomp anything the player is touching on the
 // x/y plane which means if the player jumps through a mile above a demon, the demon will be
 // telefragged. This simply will not do.
@@ -200,8 +199,6 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    
    return true;
 }
-#endif
-
 
 static bool PIT_StompThing(Mobj *thing, void *context)
 {
@@ -257,12 +254,10 @@ int P_GetFriction(const Mobj *mo, int *frictionfactor)
    // floorheight that have different frictions, use the lowest
    // friction value (muddy has precedence over icy).
 
-   bool onfloor = mo->z <= mo->zref.floor || (P_Use3DClipping() && mo->intflags & MIF_ONMOBJ);
+   bool onfloor = P_OnGroundOrThing(*mo);
 
-   if(mo->flags4 & MF4_FLY)
-   {
+   if(mo->flags4 & MF4_FLY && !onfloor)
       friction = FRICTION_FLY;
-   }
    else if(mo->player && LevelInfo.airFriction < FRACUNIT && !onfloor)
    {
       // Air friction only affects players
@@ -387,7 +382,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
    telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!comp[comp_telefrag] ? boss : (gamemap == 30));
+              (!getComp(comp_telefrag) ? boss : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -447,11 +442,9 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.numspechit = 0;
    
    // stomp on any things contacted
-#ifdef R_LINKEDPORTALS
    if(stomp3d)
       func = PIT_StompThing3D;
    else
-#endif
       func = PIT_StompThing;
    
    xl = (clip.bbox[BOXLEFT  ] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -872,7 +865,11 @@ bool P_SkullHit(Mobj *thing)
       // A_Chase in turn calls P_TryMove and that can cause a lot of shit
       // to explode.
 
-      P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
+      if(clip.thing->intflags & MIF_SKULLFLYSEE)
+         P_SetMobjState(clip.thing, clip.thing->info->seestate);
+      else
+         P_SetMobjState(clip.thing, clip.thing->info->spawnstate);
+      clip.thing->intflags &= ~MIF_SKULLFLYSEE;
 
       clip.BlockingMobj = nullptr; // haleyjd: from zdoom
 
@@ -893,7 +890,7 @@ bool P_SkullHit(Mobj *thing)
 //
 int P_MissileBlockHeight(Mobj *mo)
 {
-   return (demo_version >= 333 && !comp[comp_theights] &&
+   return (demo_version >= 333 && !getComp(comp_theights) &&
            mo->flags3 & MF3_3DDECORATION) ? mo->info->height : mo->height;
 }
 
@@ -968,8 +965,7 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
          // TODO: ripper sound - gamemode dependent? thing dependent?
          //S_StartSound(clip.thing, sfx_ripslop);
 
-         P_DamageMobj(thing, clip.thing, clip.thing->target, damage,
-                      clip.thing->info->mod);
+         P_DamageMobj(thing, clip.thing, clip.thing->target, damage, clip.thing->info->mod);
          
          if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
          { 
@@ -1040,8 +1036,11 @@ ItemCheckResult P_CheckThingCommon(Mobj *thing)
    if(thing->flags2 & MF2_PUSHABLE && !(clip.thing->flags3 & MF3_CANNOTPUSH))
    {
       // transfer one-fourth momentum along the x and y axes
-      thing->momx += clip.thing->momx / 4;
-      thing->momy += clip.thing->momy / 4;
+      // ioanch: this may be pedantic, but do '& ~3' to make the '/ 4' operation equivalent to the
+      // old '>> 2' arithmetic right shift. We can't add more '>>' here because it's only implemen-
+      // tation defined.
+      thing->momx += (clip.thing->momx & ~3) / 4;
+      thing->momy += (clip.thing->momy & ~3) / 4;
    }
 
    return ItemCheck_furtherNeeded;
@@ -1332,7 +1331,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
 
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
    {
-      if(comp[comp_dropoff])
+      if(getComp(comp_dropoff))
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
@@ -1406,7 +1405,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          return true;
       }
 
-      if(comp[comp_dropoff])
+      if(getComp(comp_dropoff))
       {
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
@@ -1550,7 +1549,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    bool groupidchange = false;
-   fixed_t prex, prey;
+   fixed_t prex = x, prey = y;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
@@ -1606,7 +1605,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          y = dest.y;
       }
 
-      bool check;
+      bool check = false;
       if(groupidchange)
       {
          oldgroupid = thing->groupid;
@@ -1615,8 +1614,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          thing->groupid = oldgroupid;
       }
 
-      if((groupidchange && !check)
-         || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
+      if((groupidchange && !check) || (!groupidchange && !P_CheckPosition3D(thing, x, y, pPushHit)))
       {
          // Solid wall or thing
          if(!clip.BlockingMobj || clip.BlockingMobj->player || !thing->player)
@@ -1629,8 +1627,11 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
             // haleyjd: yikes...
             // ioanch 20160111: updated for portals
             fixed_t steplimit;
-            if(clip.BlockingMobj->flags & MF_CORPSE && LevelInfo.levelType != LI_TYPE_HEXEN)
+            if((clip.BlockingMobj->flags & MF_CORPSE && LevelInfo.levelType != LI_TYPE_HEXEN) ||
+               clip.BlockingMobj->flags4 & MF4_UNSTEPPABLE)
+            {
                steplimit = 0;
+            }
             else
                steplimit = STEPSIZE;
 
@@ -1729,6 +1730,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          }
          else if(P_Use3DClipping() && thing->z < clip.zref.floor)
          { 
+            // TODO: make sure to add projectile impact checking if MISSILE
             // haleyjd: OVER_UNDER:
             // [RH] Check to make sure there's nothing in the way for the step up
             fixed_t savedz = thing->z;
@@ -1833,12 +1835,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
 // PTODO
          // ioanch 20160113: no longer use portals unless demo version is low
-#ifdef R_LINKEDPORTALS
          line_t *line = clip.spechit[clip.numspechit];
          if(!line)   // skip if it's nulled out
             continue;
 
-#endif
          if(line->special)  // see if the line was crossed
          {
             link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
@@ -2695,7 +2695,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    msecnode_t *n;
    
    // killough 10/98: sometimes use Doom's method
-   if(comp[comp_floors] && (demo_version >= 203 || demo_compatibility))
+   if(getComp(comp_floors) && (demo_version >= 203 || demo_compatibility))
       return P_ChangeSector(sector, crunch);
 
    // haleyjd: call down to P_ChangeSector3D instead.
@@ -3146,6 +3146,16 @@ msecnode_t *P_CreateSecNodeList(Mobj *thing, fixed_t x, fixed_t y)
 void P_ClearGlobalMobjReferences()
 {
    P_ClearTarget(clip.linetarget);
+}
+
+//
+// Return true if mobj is either on ground or another thing
+//
+bool P_OnGroundOrThing(const Mobj &mobj)
+{
+   return mobj.z <= mobj.zref.floor || ( P_Use3DClipping() &&   mobj.intflags & MIF_ONMOBJ);
+   // negative:
+   //     mobj.z >  mobj.zref.floor && (!P_Use3DClipping() || !(mobj.intflags & MIF_ONMOBJ))
 }
 
 //----------------------------------------------------------------------------

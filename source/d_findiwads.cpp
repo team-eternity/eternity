@@ -657,7 +657,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 // Check a path for any of the standard IWAD file names.
 //
-static void D_checkPathForIWADs(const qstring &path)
+void D_CheckPathForIWADs(const qstring &path)
 {
    if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
@@ -792,7 +792,7 @@ void D_FindIWADs()
 
    // Check all paths that were found for IWADs
    for(qstring &path : paths)
-      D_checkPathForIWADs(path);
+      D_CheckPathForIWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL

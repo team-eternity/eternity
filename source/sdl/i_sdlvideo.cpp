@@ -37,6 +37,7 @@
 #include "../i_system.h"
 #include "../m_argv.h"
 #include "../m_misc.h"
+#include "../m_vector.h"
 #include "../v_misc.h"
 #include "../v_video.h"
 #include "../version.h"
@@ -75,8 +76,7 @@ extern bool noblit;
 static SDL_Color basepal[256], colors[256];
 static bool setpalette = false;
 
-// haleyjd 07/15/09
-extern char *i_default_videomode;
+extern char *i_resolution;
 extern char *i_videomode;
 
 // MaxW: 2017/10/20: display number
@@ -112,7 +112,7 @@ void SDLVideoDriver::FinishUpdate()
       // Don't bother checking for errors. It should just cancel itself in that case.
       SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
       SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
-      SDL_RenderCopy(renderer, sdltexture, nullptr, destrect);
+      SDL_RenderCopyEx(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
    }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
@@ -129,8 +129,8 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
-                     vbscreen.width, video.bitdepth, scr);
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height,
+                     vbscreen.height, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
 }
@@ -222,7 +222,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
    if(window)
    {
       // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
-      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                        0, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
@@ -231,7 +231,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
          pixelformat = SDL_PIXELFORMAT_RGBA32;
 
-      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.width + bump, video.height,
+      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
                                                     0, pixelformat);
       if(!rgba_surface)
       {
@@ -240,7 +240,7 @@ void SDLVideoDriver::SetPrimaryBuffer()
       }
       sdltexture = SDL_CreateTexture(renderer, pixelformat,
                                      SDL_TEXTUREACCESS_STREAMING,
-                                     video.width + bump, video.height);
+                                     video.height, video.width + bump);
       if(!sdltexture)
       {
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create rendering texture: %s\n",
@@ -263,6 +263,15 @@ void SDLVideoDriver::ShutdownGraphicsPartway()
 {
    // haleyjd 06/21/06: use UpdateGrab here, not release
    UpdateGrab(window);
+
+   // NOTE: must do this in macOS to avoid weird glitches when modifying fullscreen-desktop.
+   // Exclusive fullscreen must not do this though.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   Uint32 flags = SDL_GetWindowFlags(window);
+   if((flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP)
+      SDL_SetWindowFullscreen(window, 0); // window mode
+#endif
+
    if(sdltexture)
    {
       SDL_DestroyTexture(sdltexture);
@@ -293,6 +302,32 @@ void SDLVideoDriver::ShutdownGraphics()
 extern bool setsizeneeded;
 
 //
+// Computes rectangle re-scale and displacement
+//
+static double I_calcScaleAndDisplacement(SDL_Renderer *renderer, int width, int height,
+                                         v2double_t *displacement)
+{
+   double destScale = 1;
+   *displacement = {};
+
+   int renderWidth, renderHeight;
+   if(SDL_GetRendererOutputSize(renderer, &renderWidth, &renderHeight))
+      printf("Error: %s\n", SDL_GetError());
+   else
+   {
+      double widthScale = double(renderWidth) / width;
+      double heightScale = double(renderHeight) / height;
+      destScale = widthScale < heightScale ? widthScale : heightScale;
+      if(widthScale < heightScale)  // monitor letterbox
+         displacement->y = fabs(renderHeight - height * destScale) / 2;
+      else if(heightScale < widthScale) // monitor pillarbox
+         displacement->x = fabs(renderWidth - width * destScale) / 2;
+   }
+
+   return destScale;
+}
+
+//
 // SDLVideoDriver::InitGraphicsMode
 //
 // killough 11/98: New routine, for setting hires and page flipping
@@ -303,45 +338,51 @@ bool SDLVideoDriver::InitGraphicsMode()
    // haleyjd 06/19/11: remember characteristics of last successful modeset
    static int fallback_w       = 640;
    static int fallback_h       = 480;
-   static int fallback_w_flags = SDL_WINDOW_ALLOW_HIGHDPI;
-   // SDL_RENDERER_SOFTWARE causes failures in creating renderer
+   static int fallback_w_flags = 0;
    static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
-   screentype_e screentype   = screentype_e::WINDOWED;
-   bool         wantvsync    = false;
-   bool         wanthardware = false;
-   bool         wantframe    = true;
-   int          v_w          = 640;
-   int          v_h          = 480;
-   int          v_displaynum = 0;
-   int          window_flags = SDL_WINDOW_ALLOW_HIGHDPI;
-   // SDL_RENDERER_SOFTWARE causes failures in creating renderer
-   int  renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   int          v_displaynum   = 0;
+   int          window_flags   = 0;
+   int          renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   int          resolutionWidth = 640;
+   int          resolutionHeight = 480;
 
-   // haleyjd 04/11/03: "vsync" or page-flipping support
-   if(use_vsync)
-      wantvsync = true;
+   Geom geom;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
+   geom.parse(i_videomode);
+
+   // haleyjd 04/11/03: "vsync" or page-flipping support
+   bool actualVSync;
+   if(geom.vsync == Geom::TriState::neutral)
+      actualVSync = use_vsync;
+   else
+      actualVSync = geom.vsync == Geom::TriState::on;
 
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(v_w, v_h, screentype, wantvsync, wanthardware, wantframe);
+   I_CheckVideoCmdsOnce(geom);
+
+   if(geom.screentype == screentype_e::FULLSCREEN ||
+      geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
+   {
+      window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+      fallback_w_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+   }
 
    // Wanting vsync forces framebuffer acceleration on
-   if(wantvsync)
+   if(actualVSync)
    {
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
       renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
    }
-   else if(wanthardware)
+   else if(geom.hardware)
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
    else
       SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
 
    // haleyjd 10/27/09
-   if(!wantframe)
+   if(!geom.wantframe)
       window_flags |= SDL_WINDOW_BORDERLESS;
 
    if(displaynum < SDL_GetNumVideoDisplays())
@@ -352,7 +393,7 @@ bool SDLVideoDriver::InitGraphicsMode()
    if(!(window = SDL_CreateWindow(ee_wmCaption,
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
                                   SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
-                                  v_w, v_h, window_flags)))
+                                  geom.width, geom.height, window_flags)))
    {
       // try 320x200w safety mode
       if(!(window = SDL_CreateWindow(ee_wmCaption,
@@ -365,26 +406,23 @@ bool SDLVideoDriver::InitGraphicsMode()
                       "I_SDLInitGraphicsMode: couldn't create window for mode %dx%d;\n"
                       "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, fallback_w, fallback_h);
+                      geom.width, geom.height, fallback_w, fallback_h);
       }
 
       // reset these for below population of video struct
-      v_w          = fallback_w;
-      v_h          = fallback_h;
+      geom.width   = fallback_w;
+      geom.height  = fallback_h;
       window_flags = fallback_w_flags;
    }
 
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-   // this and the below #else block are done here as monitor video mode isn't
-   // set when SDL_WINDOW_FULLSCREEN (sans desktop) is ORed in during window creation
-   if(screentype == screentype_e::FULLSCREEN || screentype == screentype_e::FULLSCREEN_DESKTOP)
+   I_ParseResolution(i_resolution, resolutionWidth, resolutionHeight, geom.width, geom.height);
+
+   // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop) is
+   // ORed in during window creation
+   if(geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-#else
-   if(screentype == screentype_e::FULLSCREEN_DESKTOP)
-      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-   else if(screentype == screentype_e::FULLSCREEN)
+   else if(geom.screentype == screentype_e::FULLSCREEN)
       SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
-#endif
 
    if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
    {
@@ -395,15 +433,15 @@ bool SDLVideoDriver::InitGraphicsMode()
                       "I_SDLInitGraphicsMode: couldn't create renderer for mode %dx%d;\n"
                       "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, fallback_w, fallback_h);
+                      geom.width, geom.height, fallback_w, fallback_h);
       }
 
       fallback_r_flags = renderer_flags;
    }
 
    // Record successful mode set for use as a fallback mode
-   fallback_w     = v_w;
-   fallback_h     = v_h;
+   fallback_w     = geom.width;
+   fallback_h     = geom.height;
    fallback_w_flags = window_flags;
    fallback_r_flags = renderer_flags;
 
@@ -414,26 +452,45 @@ bool SDLVideoDriver::InitGraphicsMode()
    UpdateGrab(window);
 
    // check for letterboxing
-   if(I_VideoShouldLetterbox(v_w, v_h))
+   const int bump = (resolutionWidth == 512 || resolutionWidth == 1024) ? 4 : 0;
+   const int bumpedWidth = geom.width + bump;
+
+   if(I_VideoShouldLetterbox(geom.width, geom.height))
    {
-      int hs = I_VideoLetterboxHeight(v_w);
+      const int letterboxHeight = I_VideoLetterboxHeight(resolutionWidth);
 
-      staticDestRect.x = 0;
-      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(v_h, hs));
-      staticDestRect.w = static_cast<Uint16>(v_w);
-      staticDestRect.h = static_cast<Uint16>(hs);
+      staticDestRect.x = (bumpedWidth - letterboxHeight) / 2;
+      staticDestRect.y = I_VideoLetterboxOffset(geom.height, bumpedWidth);
+      staticDestRect.w = letterboxHeight;
+      staticDestRect.h = bumpedWidth;
 
-      video.width  = v_w;
-      video.height = hs;
+      video.width  = resolutionWidth;
+      video.height = letterboxHeight;
       destrect     = &staticDestRect;
    }
    else
    {
-      video.width  = v_w;
-      video.height = v_h;
-      destrect     = nullptr;
+      staticDestRect.x = (bumpedWidth - geom.height) / 2;
+      staticDestRect.y = (geom.height - bumpedWidth) / 2;
+      staticDestRect.w = geom.height;
+      staticDestRect.h = bumpedWidth;
+
+      video.width  = resolutionWidth;
+      video.height = resolutionHeight;
+      destrect     = &staticDestRect;
    }
 
+   // We need to adjust the static destination rectangle position and size based on renderer or real
+   // screen size and ratio.
+   if(fullscreen)
+   {
+      v2double_t displacement;
+      double scale = I_calcScaleAndDisplacement(renderer, bumpedWidth, geom.height, &displacement);
+      staticDestRect.x = int(floor(staticDestRect.x * scale + displacement.x));
+      staticDestRect.y = int(floor(staticDestRect.y * scale + displacement.y));
+      staticDestRect.w = int(floor(staticDestRect.w * scale));
+      staticDestRect.h = int(floor(staticDestRect.h * scale));
+   }
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
@@ -442,6 +499,13 @@ bool SDLVideoDriver::InitGraphicsMode()
 
    // haleyjd 11/12/09: set surface palettes immediately
    I_SDLSetPaletteDirect(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
+
+   // Update the i_videomode cvar to correspond to the real state
+   efree(i_videomode);
+   i_videomode = geom.toString().duplicate();
+   // Also update the vsync variable
+   if(geom.vsync != Geom::TriState::neutral)
+      use_vsync = geom.vsync == Geom::TriState::on;
 
    return false;
 }
@@ -459,7 +523,7 @@ CONSOLE_COMMAND(maxdisplaynum, 0)
 }
 
 VARIABLE_INT(displaynum, nullptr, -1, UL, nullptr);
-CONSOLE_VARIABLE(displaynum, displaynum, 0)
+CONSOLE_VARIABLE(displaynum, displaynum, cf_buffered)
 {
    const int numdisplays = SDL_GetNumVideoDisplays();
 

@@ -4,8 +4,68 @@ Changes by Ioan Chera in Eternity Engine
 Dates are in dd.mm.yyyy format. Most recent update is first.
 
 ========================
+Since v4.02.00 "Forseti"
+========================
+
+--------------------------------------------------------------------------------
+08.02.2021
+
+BUGFIX: Skip __macosx/... files from PKE resources from listing as embedded WADs
+        and exiting with error.
+
+========================
+Since v4.01.00 "Tyrfing"
+========================
+
+--------------------------------------------------------------------------------
+15.11.2020
+
+BUGFIX: Fixed fullscreen-desktop transition errors causing the display to mess
+        up in macOS. Weird stuff may still happens if somebody pulls the monitor
+        from the laptop.
+
+IMPROVEMENT: Classic (exclusive) fullscreen is once again available on macOS.
+
+========================
 Since v4.00.00 "Völuspá"
 ========================
+
+--------------------------------------------------------------------------------
+12.10.2020
+
+IMPROVEMENT: Added a new EDF feature, compatibilityhacks, which shall be used
+             with MD5 checksums to setup comp_ settings.
+
+             To helps us here, we shall have the "mapchecksum" console command.
+
+--------------------------------------------------------------------------------
+11.10.2020
+
+FEATURE: New delta structure, splashdelta. It's similar to terraindelta but
+         applies to splash definitions.
+
+--------------------------------------------------------------------------------
+10.10.2020
+
+IMPROVEMENT: Flying now has the properties from Heretic: when on ground, the
+             friction is as on ground, and when on air, bobbing is removed
+             (having bobbing in air was actually an old Eternity regression).
+             Also, in Heretic if you press "fly up" you will automatically
+             activate the powerup.
+
+--------------------------------------------------------------------------------
+09.10.2020
+
+FEATURE: New EDF game property, game.autoflightartifact, which names the
+         artifact to use when attempting to fly.
+
+--------------------------------------------------------------------------------
+05.10.2020
+
+FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific
+         situation of being unable to step on things. Makes sense when playing
+         without jumping. All Heretic solid things shall inherit from a common
+         thing with SOLID and this flag.
 
 --------------------------------------------------------------------------------
 25.07.2020

@@ -375,7 +375,7 @@ void A_Chase(actionargs_t *actionargs)
                // If current target is bad and a new one is found, return:
 
                if(!(actor->target && actor->target->health > 0 &&
-                   ((comp[comp_pursuit] && !netgame) || 
+                   ((getComp(comp_pursuit) && !netgame) ||
                     (((actor->target->flags ^ actor->flags) & MF_FRIEND ||
                       (!(actor->flags & MF_FRIEND) && monster_infighting)) &&
                     P_CheckSight(actor, actor->target)))) &&
@@ -574,7 +574,7 @@ void A_PlayerScream(actionargs_t *actionargs)
    }
 
    // if died falling, gross falling death sound
-   if(!comp[comp_fallingdmg] && demo_version >= 329 &&
+   if(!getComp(comp_fallingdmg) && demo_version >= 329 &&
       mo->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
@@ -615,7 +615,7 @@ void A_RavenPlayerScream(actionargs_t *actionargs)
    }
 
    // if died falling, gross falling death sound
-   if(!comp[comp_fallingdmg] && actor->intflags & MIF_DIEDFALLING)
+   if(!getComp(comp_fallingdmg) && actor->intflags & MIF_DIEDFALLING)
       sound = sk_fallht;
       
    S_StartSound(actor, GameModeInfo->playerSounds[sound]);
@@ -668,7 +668,7 @@ void A_XScream(actionargs_t *actionargs)
    int sound   = GameModeInfo->playerSounds[sk_slop];
    
    // haleyjd: falling damage
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!getComp(comp_fallingdmg) && demo_version >= 329)
    {
       if(actor->player && actor->intflags & MIF_DIEDFALLING)
          sound = GameModeInfo->playerSounds[sk_fallht];
@@ -708,7 +708,9 @@ void A_Explode(actionargs_t *actionargs)
    P_RadiusAttack(thingy, thingy->target, 128, 128, thingy->info->mod, 0);
 
    // ioanch 20160116: portal aware Z
-   E_ExplosionHitWater(thingy, 128);
+   // VANILLA_HERETIC: apply the same check as in vanilla
+   if(!vanilla_heretic || thingy->zref.floor == thingy->subsector->sector->srf.floor.height)
+      E_ExplosionHitWater(thingy, 128);
 }
 
 //

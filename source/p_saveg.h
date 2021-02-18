@@ -47,6 +47,10 @@ protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
+   static constexpr int WRITE_SAVE_VERSION = 2; // Version of saves that EE writes
+   int read_save_version;                       // Version of currently-read save
+
+
 public:
    explicit SaveArchive(OutBuffer *pSaveFile);
    explicit SaveArchive(InBuffer  *pLoadFile);
@@ -56,6 +60,15 @@ public:
    bool isLoading() const   { return (loadfile != nullptr); }
    OutBuffer *getSaveFile() { return savefile; }
    InBuffer  *getLoadFile() { return loadfile; }
+
+   int saveVersion() const
+   {
+      if(savefile)
+         return WRITE_SAVE_VERSION;
+      else if(loadfile)
+         return read_save_version;
+      return -1;
+   }
 
    // Methods
    void archiveCString(char *str,  size_t maxLen);
@@ -68,6 +81,11 @@ public:
 
    // archive a size_t
    void archiveSize(size_t &value);
+
+   // read in the version number
+   bool readSaveVersion();
+   // write out the version number
+   void writeSaveVersion();
 
    // Operators
    // Similar to ZDoom's FArchive class, these are symmetric - they are used

@@ -567,6 +567,7 @@ enum prefixkwd_e
    PREFIX_FLAGS2,
    PREFIX_FLAGS3,
    PREFIX_FLAGS4,
+   PREFIX_FLAGS5,
    PREFIX_BEXPTR,
    PREFIX_STRING,
    NUM_MISC_PREFIXES
@@ -722,6 +723,9 @@ static void E_ParseMiscField(const char *value, int *target)
          break;
       case PREFIX_FLAGS4:
          *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
+         break;
+      case PREFIX_FLAGS5:
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE5);
          break;
       case PREFIX_BEXPTR:
          {

@@ -248,7 +248,7 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
 
-   if((player->health > 0) || comp[comp_zombie])
+   if((player->health > 0) || getComp(comp_zombie))
       G_ExitLevel();
 }
 

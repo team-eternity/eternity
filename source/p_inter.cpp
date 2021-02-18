@@ -42,6 +42,7 @@
 #include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_string.h"
 #include "e_things.h"
@@ -124,9 +125,18 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
-      player->pendingweapon = E_FindBestBetterWeaponUsingAmmo(player, ammo);
-      if(player->pendingweapon)
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      // FIXME: This assumes that the powered variant has the same
+      // ammo usage as the unpowered variant, which is not always true
+      if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
+      {
+         weaponinfo_t *sister = wp->sisterWeapon;
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+         else
+            player->pendingweapon = wp;
+
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
@@ -296,12 +306,40 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 }
 
 //
+// Check if player should switch to new weapon upon picking it up. It's assumed as unowned yet.
+//
+static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t &newWeapon)
+{
+   if(!(GameModeInfo->flags & GIF_WPNSWITCHSUPER))
+      return true;   // no limiting flag? Always switch
+
+   const weaponinfo_t *curWeapon = player.readyweapon;
+   if(E_IsPoweredVariant(curWeapon))
+      curWeapon = curWeapon->sisterWeapon;
+
+   for(const weaponslot_t *slot : player.pclass->weaponslots)
+   {
+      for(const BDListItem<weaponslot_t> *item = E_LastInSlot(slot); !item->isDummy();
+          item = item->bdPrev)
+      {
+         weapontype_t firstId = item->bdObject->weapon->id;
+         if(firstId == curWeapon->id)  // first encountered weapon is mine? Switch.
+            return true;
+         if(firstId == newWeapon.id)   // first encountered weapon is the picked one? Don't switch.
+            return false;
+      }
+   }
+   // We found neither ids in the possession? Weird case, but switch
+   return true;
+}
+
+//
 // The weapon name may have a MF_DROPPED flag ored in.
 //
 static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
                          const char *sound)
 {
-   if(demo_version < 401)
+   if(demo_version < 401 && !vanilla_heretic)
       return P_giveWeaponCompat(player, giver, dropped, special, sound);
 
    bool gaveammo = false;
@@ -379,11 +417,14 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    }
    else if(!E_PlayerOwnsWeapon(player, wp))
    {
-      weaponinfo_t *sister = wp->sisterWeapon;
-      player->pendingweapon = wp;
-      player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
-      if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
-         player->pendingweapon = sister;
+      if(P_shouldSwitchToNewWeapon(*player, *wp))
+      {
+         weaponinfo_t *sister = wp->sisterWeapon;
+         player->pendingweapon = wp;
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+      }
       E_GiveWeapon(player, wp);
       return true;
    }
@@ -915,6 +956,10 @@ static void P_KillMobj(Mobj *source, Mobj *target, emod_t *mod)
 {
    target->flags &= ~(MF_SHOOTABLE|MF_FLOAT|MF_SKULLFLY);
    target->flags2 &= ~MF2_INVULNERABLE; // haleyjd 04/09/99
+   target->intflags &= ~MIF_SKULLFLYSEE;
+   // VANILLA_HERETIC: Mandatory to pass demos
+   if(vanilla_heretic)
+      target->flags3 &= ~MF3_PASSMOBJ;
 
    if(!(target->flags3 & MF3_DEADFLOAT))
       target->flags &= ~MF_NOGRAVITY;
@@ -1223,7 +1268,7 @@ static bool P_touchPoweredMaceBall(dmgspecdata_t *dmgspec)
       if(chaosdevice)
       {
          const int itemid = chaosdevice->getInt("itemid", -1);
-         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) > 1)
+         if(itemid != -1 && E_GetItemOwnedAmount(player, chaosdevice) >= 1)
          {
             E_TryUseItem(target->player, itemid);
             player->health = player->mo->health = (player->health + 1) / 2;
@@ -1406,7 +1451,6 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // SoM: restructured a bit
       fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
-#ifdef R_LINKEDPORTALS
       unsigned ang;
 
       {
@@ -1422,10 +1466,6 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                                   target->x + link->x, target->y + link->y);
          }
       }
-#else
-      unsigned ang = P_PointToAngle (inflictor->x, inflictor->y,
-                                      target->x, target->y);
-#endif
 
       // make fall forwards sometimes
       if(damage < 40 && damage > target->health
@@ -1465,7 +1505,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // ignore damage in GOD mode, or with INVUL power.
       // killough 3/26/98: make god mode 100% god mode in non-compat mode
 
-      if((damage < 1000 || (!comp[comp_god] && player->cheats&CF_GODMODE)) &&
+      if((damage < 1000 || (!getComp(comp_god) && player->cheats&CF_GODMODE)) &&
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
@@ -1569,8 +1609,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       }
    }
 
-   if(P_Random(pr_painchance) < target->info->painchance &&
-      !(target->flags & MF_SKULLFLY))
+   if(P_Random(pr_painchance) < target->info->painchance && !(target->flags & MF_SKULLFLY))
    {
       //killough 11/98: see below
       if(demo_version >= 203)
@@ -1757,7 +1796,7 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 {
    corpse->momx = corpse->momy = 0;
    bool check;
-   if(comp[comp_vile])
+   if(getComp(comp_vile))
    {
       corpse->height <<= 2;
 
@@ -1809,7 +1848,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
 
    P_SetMobjState(corpse, info->raisestate);
 
-   if(comp[comp_vile])
+   if(getComp(comp_vile))
       corpse->height <<= 2;                        // phares
    else                                               //   V
    {

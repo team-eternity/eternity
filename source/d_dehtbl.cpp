@@ -563,6 +563,9 @@ static const char *s_OB_GRENADE = OB_GRENADE;
 static const char *s_OB_TELEFRAG = OB_TELEFRAG;
 static const char *s_OB_QUAKE = OB_QUAKE;
 
+// misc new strings
+static const char *s_SECRETMESSAGE = SECRETMESSAGE;
+
 // Ty 05/03/98 - externalized
 const char *savegamename;
 
@@ -1079,6 +1082,7 @@ dehstr_t deh_strlookup[] =
    { &s_OB_GRENADE,        "OB_GRENADE"        },
    { &s_OB_TELEFRAG,       "OB_TELEFRAG"       },
    { &s_OB_QUAKE,          "OB_QUAKE"          },
+   { &s_SECRETMESSAGE,     "SECRETMESSAGE"     },
 };
 
 static size_t deh_numstrlookup = earrlen(deh_strlookup);

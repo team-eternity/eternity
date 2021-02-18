@@ -33,11 +33,20 @@
 
 #define SECTOR_PORTAL_LOOP_PROTECTION 128
 
+struct bspcontext_t;
+struct cb_seg_t;
+struct cbviewpoint_t;
+struct cmapcontext_t;
+struct contextbounds_t;
 struct line_t;
 class  Mobj;
+struct planecontext_t;
 struct planehash_t;
+struct portalcontext_t;
 struct pwindow_t;
+struct rendercontext_t;
 struct sectorbox_t;
+struct viewpoint_t;
 
 typedef enum
 {
@@ -207,9 +216,11 @@ portal_t *R_GetHorizonPortal(const sector_t *sector);
 
 portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_MovePortalOverlayToWindow(surf_e surf);
-void R_ClearPortals();
-void R_RenderPortals();
+void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &context, const viewpoint_t &viewpoint,
+                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+                                 cb_seg_t &seg, surf_e surf);
+void R_ClearPortals(visplane_t **&freehead);
+void R_RenderPortals(rendercontext_t &context);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
@@ -247,8 +258,11 @@ enum pwindowtype_e
 
 static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
 
-typedef void (*R_WindowFunc)(pwindow_t *);
-typedef void (*R_ClipSegFunc)();
+using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *window);
+using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext,
+                               planecontext_t &planecontext, portalcontext_t &portalcontext,
+                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                               const contextbounds_t &bounds, const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
 
@@ -310,12 +324,12 @@ struct pwindow_t
    float *bottom;
    int minx, maxx;
 
-   R_WindowFunc func;
+   R_WindowFunc  func;
    R_ClipSegFunc clipfunc;
 
    // Next window in the main chain
    pwindow_t *next;
-   
+
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
    pwindow_t *head, *child;
@@ -324,10 +338,16 @@ struct pwindow_t
 };
 
 // SoM: Cardboard
-void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
+void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
+                 pwindow_t *window, int x, float ytop, float ybottom);
 
-pwindow_t *R_GetSectorPortalWindow(surf_e surf, const surface_t &surface);
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, const seg_t *seg);
+pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                                   const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                                   surf_e surf, const surface_t &surface);
+pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
+                                 portal_t *portal, const seg_t *seg);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t
@@ -338,12 +358,11 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)();
+   R_ClipSegFunc segClipFunc;
 
 //   planehash_t *overlay;
 };
 
-extern portalrender_t  portalrender;
 #endif
 
 //----------------------------------------------------------------------------

@@ -43,8 +43,10 @@ struct sector_t;
 #define EDF_SEC_SPLASH   "splash"
 #define EDF_SEC_TERRAIN  "terrain"
 #define EDF_SEC_FLOOR    "floor"
+#define EDF_SEC_SPLASHDELTA "splashdelta"
 #define EDF_SEC_TERDELTA "terraindelta"
 extern cfg_opt_t edf_splash_opts[];
+extern cfg_opt_t edf_spldelta_opts[];
 extern cfg_opt_t edf_terrn_opts[];
 extern cfg_opt_t edf_terdelta_opts[];
 extern cfg_opt_t edf_floor_opts[];
@@ -105,6 +107,7 @@ fixed_t   E_SectorFloorClip(sector_t *sector);
 bool      E_HitWater(Mobj *thing, const sector_t *sector);
 void      E_ExplosionHitWater(Mobj *thing, int damage);
 bool      E_HitFloor(Mobj *thing);
+bool      E_WouldHitFloorWater(const Mobj &thing);
 void      E_PtclTerrainHit(particle_t *);
 
 #endif

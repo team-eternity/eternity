@@ -27,6 +27,7 @@
 #include "i_system.h"
 
 #include "cam_sight.h"
+#include "d_gi.h"
 #include "doomstat.h"
 #include "e_exdata.h"
 #include "m_bbox.h"
@@ -340,7 +341,8 @@ static bool P_CrossBSPNode(int bspnum, los_t *los)
 //
 bool P_CheckSight(Mobj *t1, Mobj *t2)
 {
-   if(full_demo_version >= make_full_version(340, 24))
+   // VANILLA_HERETIC: both in modern and Heretic demo gameplay use CAM_CheckSight
+   if(full_demo_version >= make_full_version(340, 24) || vanilla_heretic)
    {
       camsightparams_t camparams;
       camparams.prev = nullptr;

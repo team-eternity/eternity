@@ -32,41 +32,32 @@ struct line_t;
 struct seg_t;
 struct sector_t;
 struct side_t;
-
-extern seg_t    *curline;
-extern side_t   *sidedef;
-extern line_t   *linedef;
-extern sector_t *frontsector;
-extern sector_t *backsector;
-
-// old code -- killough:
-// extern drawseg_t drawsegs[MAXDRAWSEGS];
-// new code -- killough:
-extern drawseg_t *drawsegs;
-extern unsigned int maxdrawsegs;
-
-extern drawseg_t *ds_p;
+struct bspcontext_t;
+struct contextbounds_t;
+struct portalrender_t;
+struct cbviewpoint_t;
+struct rendercontext_t;
 
 // SoM: mark a range of the screen as being solid (closed).
-// these marks are then added to the solidsegs list by R_AddLine after all segments
+// these marks are then added to the solidsegs list by R_addLine after all segments
 // of the line are rendered and the solidsegs array isn't being traversed.. >_<
-void R_MarkSolidSeg(int x1, int x2);
+void R_MarkSolidSeg(bspcontext_t &context, int x1, int x2);
 
-bool R_SetupPortalClipsegs(int minx, int maxx, 
-   const float *top, const float *bottom);
+bool R_SetupPortalClipsegs(bspcontext_t &context, const contextbounds_t &bounds,
+                           portalrender_t &portalrender,
+                           int minx, int maxx, const float *top, const float *bottom);
 
-void R_ClearClipSegs();
-void R_ClearDrawSegs();
+void R_ClearClipSegs(bspcontext_t &context);
+void R_ClearDrawSegs(bspcontext_t &context);
 
-void R_RenderBSPNode(int bspnum);
+void R_RenderBSPNode(rendercontext_t &context, int bspnum);
 
 // killough 4/13/98: fake floors/ceilings for deep water / fake ceilings:
 int R_GetSurfaceLightLevel(surf_e surf, const sector_t *sec);
-const sector_t *R_FakeFlat(const sector_t *, sector_t *, int *, int *, bool);
-bool R_PickNearestBoxLines(const float fbox[4], windowlinegen_t &linegen1,
-   windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
-
-extern int detaillevel;
+const sector_t *R_FakeFlat(const fixed_t, const sector_t *, sector_t *, int *, int *, bool);
+bool R_PickNearestBoxLines(const cbviewpoint_t &cb_viewpoint,
+                           const float fbox[4], windowlinegen_t &linegen1,
+                           windowlinegen_t &linegen2, slopetype_t *slope = nullptr);
 
 #endif
 

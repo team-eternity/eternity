@@ -1488,8 +1488,28 @@ static void D_identifyDisk()
 static void D_identifyIWAD()
 {
    qstring iwad;
-   
+
    D_findIWADFile(iwad);
+
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+   if(iwad.empty())
+   {
+      extern bool I_TryIWADSearchAgain();
+      extern qstring I_OpenWindowsDirectory();
+
+      qstring dirpath {};
+
+      do
+      {
+         dirpath = I_OpenWindowsDirectory();
+         if(dirpath.length())
+         {
+            D_CheckPathForIWADs(dirpath);
+            D_findIWADFile(iwad);
+         }
+      } while(iwad.empty() && !dirpath.empty() && I_TryIWADSearchAgain());
+   }
+#endif
 
    if(iwad.length())
    {

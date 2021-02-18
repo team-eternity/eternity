@@ -876,6 +876,7 @@ void A_FatRaise(actionargs_t *actionargs)
 // A_FatAttack1
 //
 // Mancubus attack 1.
+// * args[0] = type to spawn
 //
 void A_FatAttack1(actionargs_t *actionargs)
 {
@@ -883,7 +884,9 @@ void A_FatAttack1(actionargs_t *actionargs)
    Mobj   *mo;
    int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   int FatShotType = E_SafeThingType(MT_FATSHOT);
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_FATSHOT);
 
    // haleyjd: no crashing
    if(!actor->target)
@@ -893,10 +896,10 @@ void A_FatAttack1(actionargs_t *actionargs)
 
    // Change direction  to ...
    actor->angle += FATSPREAD;
-   
-   P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+   P_SpawnMissile(actor, actor->target, thingType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle += FATSPREAD;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
@@ -907,6 +910,7 @@ void A_FatAttack1(actionargs_t *actionargs)
 // A_FatAttack2
 //
 // Mancubus attack 2.
+// * args[0] = type to spawn
 //
 void A_FatAttack2(actionargs_t *actionargs)
 {
@@ -914,7 +918,9 @@ void A_FatAttack2(actionargs_t *actionargs)
    Mobj   *mo;
    int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   int     FatShotType = E_SafeThingType(MT_FATSHOT);
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_FATSHOT);
 
    // haleyjd: no crashing
    if(!actor->target)
@@ -924,9 +930,9 @@ void A_FatAttack2(actionargs_t *actionargs)
 
    // Now here choose opposite deviation.
    actor->angle -= FATSPREAD;
-   P_SpawnMissile(actor, actor->target, FatShotType, z);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+   P_SpawnMissile(actor, actor->target, thingType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle -= FATSPREAD*2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
@@ -937,6 +943,7 @@ void A_FatAttack2(actionargs_t *actionargs)
 // A_FatAttack3
 //
 // Mancubus attack 3.
+// * args[0] = type to spawn
 //
 void A_FatAttack3(actionargs_t *actionargs)
 {
@@ -944,21 +951,22 @@ void A_FatAttack3(actionargs_t *actionargs)
    Mobj   *mo;
    int     an;
    fixed_t z = actor->z + DEFAULTMISSILEZ;
-   int     FatShotType = E_SafeThingType(MT_FATSHOT);
-
+   int thingType = E_ArgAsThingNumG0(actionargs->args, 0);
+   if(thingType < 0)
+      thingType = E_SafeThingType(MT_FATSHOT);
    // haleyjd: no crashing
    if(!actor->target)
       return;
-   
+
    A_FaceTarget(actionargs);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle -= FATSPREAD/2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
    mo->momy = FixedMul(mo->info->speed, finesine[an]);
-   
-   mo = P_SpawnMissile(actor, actor->target, FatShotType, z);
+
+   mo = P_SpawnMissile(actor, actor->target, thingType, z);
    mo->angle += FATSPREAD/2;
    an = mo->angle >> ANGLETOFINESHIFT;
    mo->momx = FixedMul(mo->info->speed, finecosine[an]);
@@ -987,7 +995,7 @@ void A_SkullAttack(actionargs_t *actionargs)
    S_StartSound(actor, actor->info->attacksound);
 
    // haleyjd 08/07/04: use new P_SkullFly function
-   P_SkullFly(actor, SKULLSPEED);
+   P_SkullFly(actor, SKULLSPEED, false);
 }
 
 //
@@ -1046,7 +1054,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    // and wouldn't spit another one if there were. If not in   // phares
    // compatibility mode, we remove the limit.                 // phares
 
-   if((comp[comp_pain] && count < 0) || count > 0)  // killough 10/98: compatibility-optioned
+   if((getComp(comp_pain) && count < 0) || count > 0)  // killough 10/98: compatibility-optioned
    {
       // count total number of skulls currently on the level
       if(count < 0)
@@ -1083,7 +1091,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
    y = pos.y;
    z = actor->z + 8*FRACUNIT;
    
-   if(comp[comp_skull])   // killough 10/98: compatibility-optioned
+   if(getComp(comp_skull))   // killough 10/98: compatibility-optioned
       newmobj = P_SpawnMobj(x, y, z, thingType);                    // phares
    else                                                             //   V
    {

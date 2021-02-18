@@ -37,6 +37,7 @@
 #include "d_main.h"
 #include "d_mod.h"
 #include "doomstat.h"
+#include "e_compatibility.h"
 #include "e_exdata.h" // haleyjd: ExtraData!
 #include "e_reverbs.h"
 #include "e_ttypes.h"
@@ -50,6 +51,7 @@
 #include "m_argv.h"
 #include "m_bbox.h"
 #include "m_binary.h"
+#include "m_hash.h"
 #include "p_anim.h"  // haleyjd: lightning
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -67,6 +69,7 @@
 #include "p_spec.h"
 #include "p_tick.h"
 #include "polyobj.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_defs.h"
 #include "r_dynseg.h"
@@ -201,6 +204,9 @@ mapthing_t playerstarts[MAXPLAYERS];
 
 // haleyjd 06/14/10: level wad directory
 static WadDirectory *setupwad;
+
+// Current level's hash digest, for showing on console
+static qstring p_currentLevelHashDigest;
 
 //
 // ShortToLong
@@ -827,16 +833,16 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 {
    // haleyjd 05/16/08: keep floating point versions as well for dynamic
    // seg splitting operations
-   fnode->fx  = (double)node->x;
-   fnode->fy  = (double)node->y;
-   fnode->fdx = (double)node->dx;
-   fnode->fdy = (double)node->dy;
+   double fx = (double)node->x;
+   double fy = (double)node->y;
+   double fdx = (double)node->dx;
+   double fdy = (double)node->dy;
 
    // haleyjd 05/20/08: precalculate general line equation coefficients
-   fnode->a   = -fnode->fdy;
-   fnode->b   =  fnode->fdx;
-   fnode->c   =  fnode->fdy * fnode->fx - fnode->fdx * fnode->fy;
-   fnode->len = sqrt(fnode->fdx * fnode->fdx + fnode->fdy * fnode->fdy);
+   fnode->a = -fdy;
+   fnode->b = fdx;
+   fnode->c = fdy * fx - fdx * fy;
+   fnode->len = sqrt(fdx * fdx + fdy * fdy);
 }
 
 //
@@ -846,16 +852,16 @@ static void P_CalcNodeCoefficients(node_t *node, fnode_t *fnode)
 //
 static void P_CalcNodeCoefficients2(const node_t &node, fnode_t &fnode)
 {
-   fnode.fx = M_FixedToDouble(node.x);
-   fnode.fy = M_FixedToDouble(node.y);
-   fnode.fdx = M_FixedToDouble(node.dx);
-   fnode.fdy = M_FixedToDouble(node.dy);
+   double fx = M_FixedToDouble(node.x);
+   double fy = M_FixedToDouble(node.y);
+   double fdx = M_FixedToDouble(node.dx);
+   double fdy = M_FixedToDouble(node.dy);
    
    // IOANCH: same as code above
-   fnode.a   = -fnode.fdy;
-   fnode.b   =  fnode.fdx;
-   fnode.c   =  fnode.fdy * fnode.fx - fnode.fdx * fnode.fy;
-   fnode.len = sqrt(fnode.fdx * fnode.fdx + fnode.fdy * fnode.fdy);
+   fnode.a = -fdy;
+   fnode.b = fdx;
+   fnode.c = fdy * fx - fdx * fy;
+   fnode.len = sqrt(fdx * fdx + fdy * fdy);
 }
 
 //
@@ -1164,7 +1170,7 @@ static void P_LoadZSegs(byte *data, ZNodeType signature)
    for(i = 0; i < numsegs; i++, ++actualSegIndex)
    {
       line_t *ldef;
-      uint32_t v1, v2;
+      uint32_t v1, v2 = 0;
       uint32_t linedef;
       byte side;
       seg_t *li = segs+actualSegIndex;
@@ -2442,7 +2448,15 @@ static void P_CreateBlockMap()
       return P_createBlockMapBoom();   // use Boom mode (which is also in PrBoom+)
 
    // First find limits of map
-   
+
+   // This fixes MBF's code, which has a bug where maxx/maxy
+   // are wrong if the 0th node has the largest x or y
+   if(demo_version > 401 && numvertexes)
+   {
+      minx = maxx = vertexes->x >> FRACBITS;
+      miny = maxy = vertexes->y >> FRACBITS;
+   }
+
    for(i = 0; i < (unsigned int)numvertexes; i++)
    {
       if((vertexes[i].x >> FRACBITS) < minx)
@@ -3477,6 +3491,67 @@ void P_InitThingLists()
 }
 
 //
+// Computes the compatibility hash. Use the same content as in GZDoom:
+// github.com/coelckers/gzdoom: src/p_openmap.cpp#MapData::GetChecksum
+//
+static void P_resolveCompatibilities(const WadDirectory &dir, int lumpnum, bool isUdmf,
+                                     int behaviorIndex)
+{
+   p_currentLevelHashDigest.clear();
+   E_RestoreCompatibilities();
+   HashData md5(HashData::MD5);
+   ZAutoBuffer buf;
+
+   if(isUdmf)
+   {
+      dir.cacheLumpAuto(lumpnum + 1, buf); // TEXTMAP
+      md5.addData(buf.getAs<const uint8_t *>(), static_cast<uint32_t>(buf.getSize()));
+   }
+   else
+   {
+
+      dir.cacheLumpAuto(lumpnum, buf); // level marker
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_THINGS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_LINEDEFS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_SIDEDEFS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+
+      dir.cacheLumpAuto(lumpnum + ML_SECTORS, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+   }
+
+   if(behaviorIndex != -1)
+   {
+      dir.cacheLumpAuto(behaviorIndex, buf);
+      md5.addData(buf.getAs<const uint8_t*>(), static_cast<uint32_t>(buf.getSize()));
+   }
+
+   md5.wrapUp();
+
+   char *digest = md5.digestToString();
+   E_ApplyCompatibility(digest);
+   p_currentLevelHashDigest = digest;
+   efree(digest);
+}
+
+//
+// Console command to get the currently obtained MD5 checksum (if available)
+//
+CONSOLE_COMMAND(mapchecksum, 0)
+{
+   if(p_currentLevelHashDigest.empty())
+      C_Puts("Current map MD5 checksum not available.");
+   else
+      C_Printf("Current map MD5: %s\n", p_currentLevelHashDigest.constPtr());
+}
+
+//
 // CHECK_ERROR
 //
 // Checks to see if level_error has been set to a valid error message.
@@ -3532,6 +3607,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_SetupLevelError("Not a valid level", mapname);
       return;
    }
+
+   P_resolveCompatibilities(*setupwad, lumpnum, isUdmf, mgla.behavior);
 
    if(isUdmf || demo_version >= 401)
    {
@@ -3783,6 +3860,8 @@ void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask,
       P_ResetWalkcam();
    else
       camera = nullptr;        // camera off
+
+   R_RefreshContexts();
 
    // haleyjd 01/07/07: initialize ACS for Hexen maps
    //         03/19/11: also allow for DOOM-format maps via MapInfo

@@ -86,15 +86,11 @@ struct maptexture_t
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
 // to (flatstop - 1)
-int       wallstart, wallstop;
+static int wallstart, wallstop;
+static int numwalls;
 int       flatstart, flatstop;
-int       numwalls, numflats;
+int       numflats;
 int       firstflat, lastflat;
-
-// SoM: This is the number of textures/flats loaded from wads.
-// This distinction is important because any textures that EE generates
-// will not be cachable. 
-int       numwadtex;
 
 // SoM: Index of the BAADF00D invalid texture marker
 int       badtex;
@@ -1433,28 +1429,22 @@ static void R_AddFlats()
 void R_InitTextures()
 {
    auto &tns = wGlobalDir.getNamespace(lumpinfo_t::ns_textures);
-   int *patchlookup;
-   int errors = 0;
-   int i, texnum = 0;
-   bool needDummy = false;
-   
-   texturelump_t *maptex1;
-   texturelump_t *maptex2;
 
    // load PNAMES
    int nummappatches;
-   patchlookup = R_LoadPNames(nummappatches);
+   int *patchlookup = R_LoadPNames(nummappatches);
 
    // Load the map texture definitions from textures.lmp.
    // The data is contained in one or two lumps,
    //  TEXTURE1 for shareware, plus TEXTURE2 for commercial.
-   maptex1 = R_InitTextureLump("TEXTURE1");
-   maptex2 = R_InitTextureLump("TEXTURE2");
+   texturelump_t *maptex1 = R_InitTextureLump("TEXTURE1");
+   texturelump_t *maptex2 = R_InitTextureLump("TEXTURE2");
 
    // calculate total textures before ns_textures namespace
    numwalls = maptex1->numtextures + maptex2->numtextures;
 
    // if there are no TEXTURE1/2 lookups, we need to create a dummy texture
+   bool needDummy = false;
    if(!numwalls)
    {
       ++numwalls;
@@ -1473,7 +1463,6 @@ void R_InitTextures()
    flatstop = flatstart + numflats;
       
    // SoM: Add one more for the missing texture texture
-   numwadtex = numwalls + numflats;
    texturecount = numwalls + numflats + 1;
    
    // Allocate textures
@@ -1491,6 +1480,7 @@ void R_InitTextures()
    R_DetectTextureFormat(maptex2);
 
    // if we need a dummy texture, add it now.
+   int texnum = 0;
    if(needDummy)
    {
       R_MakeDummyTexture();
@@ -1502,6 +1492,7 @@ void R_InitTextures()
    duptable.initialize(wallstop - wallstart + 31);
 
    // read texture lumps
+   int errors = 0;
    texnum = R_ReadTextureLump(maptex1, patchlookup, nummappatches, texnum, &errors, duptable);
    texnum = R_ReadTextureLump(maptex2, patchlookup, nummappatches, texnum, &errors, duptable);
    R_ReadTextureNamespace(texnum);
@@ -1520,7 +1511,7 @@ void R_InitTextures()
    // SoM: This REALLY hits us when starting EE with large wads. Caching 
    // textures on map start would probably be preferable 99.9% of the time...
    // Precache textures
-   for(i = wallstart; i < wallstop; i++)
+   for(int i = wallstart; i < wallstop; i++)
    {
       R_checkInvalidTexture(i);
       R_CacheTexture(i);

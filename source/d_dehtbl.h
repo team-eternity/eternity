@@ -69,7 +69,7 @@ struct dehflags_t
    int index;
 };
 
-#define MAXFLAGFIELDS 4
+inline constexpr int MAXFLAGFIELDS = 5;
 
 enum
 {
@@ -77,6 +77,7 @@ enum
    DEHFLAGS_MODE2,
    DEHFLAGS_MODE3,
    DEHFLAGS_MODE4,
+   DEHFLAGS_MODE5,
    DEHFLAGS_MODE_ALL
 };
 
@@ -87,7 +88,7 @@ struct dehflagset_t
    unsigned int results[MAXFLAGFIELDS];
 };
 
-dehflags_t   *deh_ParseFlag(dehflagset_t *flagset, const char *name);
+dehflags_t   *deh_ParseFlag(const dehflagset_t *flagset, const char *name);
 dehflags_t   *deh_ParseFlagCombined(const char *name);
 void          deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 unsigned int  deh_ParseFlagsSingle(const char *strval, int mode);

@@ -35,6 +35,7 @@
 
 #include "tables.h"
 
+#include "m_surf.h"
 #include "m_vector.h"
 // haleyjd 12/15/2010: Lighting data is required
 #include "r_lighting.h"
@@ -42,13 +43,12 @@
 struct pwindow_t;
 struct columndrawer_t;
 struct spandrawer_t;
+struct rendercontext_t;
+struct cmapcontext_t;
 
 //
 // POV related.
 //
-
-extern fixed_t  viewcos;
-extern fixed_t  viewsin;
 
 extern int      centerx;
 extern int      centery;
@@ -78,12 +78,6 @@ void R_DoomTLStyle();
 void R_ResetTrans();
 
 //
-// Function pointer to switch refresh/drawing functions.
-//
-
-extern void (*colfunc)();
-
-//
 // Utility functions.
 //
 
@@ -99,11 +93,11 @@ extern int (*R_PointOnSide)(fixed_t, fixed_t, const node_t *);
 int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line);
 
 int SlopeDiv(unsigned int num, unsigned int den);
-angle_t R_PointToAngle(fixed_t x, fixed_t y);
+angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y);
 angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y);
 subsector_t *R_PointInSubsector(fixed_t x, fixed_t y);
 fixed_t R_GetLerp(bool ignorepause);
-void R_SectorColormap(const sector_t *s);
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s);
 
 inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 {
@@ -117,6 +111,7 @@ inline static subsector_t *R_PointInSubsector(v2fixed_t v)
 struct camera_t;
 struct player_t;
 
+void R_RenderViewContext(rendercontext_t &context);
 void R_RenderPlayerView(player_t *player, camera_t *viewcamera);
 
 //
@@ -141,8 +136,7 @@ angle_t R_WadToAngle(int wadangle);
 
 extern int viewdir;
 
-// haleyjd 09/04/06
-#define NUMCOLUMNENGINES 2
+#define NUMCOLUMNENGINES 1
 #define NUMSPANENGINES 1
 extern int r_column_engine_num;
 extern int r_span_engine_num;
@@ -157,9 +151,7 @@ extern const float PI;
 
 struct cb_view_t
 {
-   float x, y, z;
-   float angle, pitch;
-   float sin, cos;
+   float pitch;
 
    float width, height;
    float xcenter, ycenter;
@@ -228,11 +220,12 @@ struct cb_seg_t
 
    const side_t *side;
    const sector_t *frontsec, *backsec;
-   visplane_t *floorplane, *ceilingplane;
+   Surfaces<visplane_t *> plane;
    const seg_t *line;
 
-   const portal_t *f_portal, *c_portal;
-   pwindow_t *l_window, *f_window, *c_window, *b_window, *t_window;
+   Surfaces<const portal_t *> portal;
+   pwindow_t *l_window, *b_window, *t_window;
+   Surfaces<pwindow_t *> secwindow;   // surface windows
    // ioanch: added b_window for bottom edge portal
 
    // Extreme plane point Z for sloped sectors: used for sprite-clipping silhouettes.
@@ -244,12 +237,11 @@ struct cb_seg_t
 
 
 extern cb_view_t  view;
-extern cb_seg_t   seg;
-extern cb_seg_t   segclip;
 
 // SoM: frameid frame counter.
-void R_IncrementFrameid(); // Needed by the portal functions... 
 extern unsigned   frameid;
+
+uint64_t R_GetVisitID(const rendercontext_t &context);
 
 //
 // R_doubleToUint32

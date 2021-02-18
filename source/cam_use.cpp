@@ -221,8 +221,8 @@ bool UseContext::noWayTraverse(const intercept_t *in, void *vcontext,
 
    return
       !(lo.openrange <= 0 ||                                  // No opening
-         lo.openbottom > context->thing->z + STEPSIZE ||// Too high, it blocks
-         lo.opentop    < context->thing->z + context->thing->height);
+         lo.open.floor > context->thing->z + STEPSIZE ||// Too high, it blocks
+         lo.open.ceiling < context->thing->z + context->thing->height);
    // Too low, it blocks
 }
 

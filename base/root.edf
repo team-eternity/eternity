@@ -7,6 +7,7 @@
 
 setdialect("Alfheim");
 
+include("compatibility.edf")
 include("sprites.edf");
 include("sounds.edf");
 include("frames.edf");

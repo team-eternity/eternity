@@ -65,7 +65,7 @@ void R_LoadDoom1();
 // ============================================================================
 // SoM: Moved textures to r_textur.c
 
-void R_InitTextures(void);
+void R_InitTextures();
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
 int         firstcolormaplump; // killough 4/17/98

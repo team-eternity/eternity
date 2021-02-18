@@ -1091,7 +1091,7 @@ static void MN_DMFlagsDrawer()
 
    menuitem = &(menu_dmflags.menuitems[DMF_MENU_DMFLAGS]);
    // draw dmflags value
-   psnprintf(buf, sizeof(buf), "%c%lu", GameModeInfo->infoColor, dmflags);
+   psnprintf(buf, sizeof(buf), "%c%u", GameModeInfo->infoColor, dmflags);
    V_FontWriteText(menu_font, buf, menuitem->x + 4, menuitem->y, &subscreen43);
 }
 
@@ -1099,7 +1099,7 @@ static void toggle_dm_flag(unsigned int flag)
 {
    char cmdbuf[64];
    dmflags ^= flag;
-   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %lu", dmflags);
+   psnprintf(cmdbuf, sizeof(cmdbuf), "dmflags %u", dmflags);
    C_RunTextCmd(cmdbuf);
 }
 
@@ -1921,31 +1921,34 @@ static int mn_vidmode_num;
 static char **mn_vidmode_desc;
 static char **mn_vidmode_cmds;
 
-//
-// MN_BuildVidmodeTables
+enum class tableType_e
+{
+   VIDEO_MODE,
+   RESOLUTION
+};
+
 //
 // haleyjd 06/19/11: Resurrected and restructured to allow choosing modes
 // from the precomposited lists above based on the user's favorite aspect
 // ratio and fullscreen/windowed settings.
 //
-static void MN_BuildVidmodeTables()
+static void MN_BuildVidmodeTables(const tableType_e type)
 {
    int useraspect = mn_favaspectratio;
    int userfs     = mn_favscreentype;
    const char **reslist = nullptr;
-   int i = 0;
-   int nummodes;
+   int offset = 0;
 
    if(mn_vidmode_desc)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_desc[i]);
       efree(mn_vidmode_desc);
       mn_vidmode_desc = nullptr;
    }
    if(mn_vidmode_cmds)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_cmds[i]);
       efree(mn_vidmode_cmds);
       mn_vidmode_cmds = nullptr;
@@ -1958,50 +1961,75 @@ static void MN_BuildVidmodeTables()
       reslist = resListForAspectRatio[AR_LEGACY]; // A safe pick.
 
    // count the modes on that list
-   while(reslist[i])
-      ++i;
+   mn_vidmode_num = 0;
+   while(reslist[mn_vidmode_num])
+      mn_vidmode_num++;
 
-   nummodes = i;
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_num++;
+      offset = 1;
+   }
 
    // allocate arrays
-   mn_vidmode_desc = ecalloc(char **, i+1, sizeof(const char *));
-   mn_vidmode_cmds = ecalloc(char **, i+1, sizeof(const char *));
+   mn_vidmode_desc = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
+   mn_vidmode_cmds = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
 
-   for(i = 0; i < nummodes; i++)
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_desc[0] = estrdup("native");
+      mn_vidmode_cmds[0] = estrdup("i_resolution native");
+   }
+
+   const char *cmdstr = (type == tableType_e::RESOLUTION) ? "i_resolution" : "i_videomode";
+   for(int i = offset; i < mn_vidmode_num; i++)
    {
       qstring cmd, description;
 
-      description = reslist[i];
-      switch(userfs)
+      description = reslist[i - offset];
+      if(type == tableType_e::VIDEO_MODE)
       {
-      case MN_FULLSCREEN:
-         description += 'f';
-         break;
-      case MN_FULLSCREEN_DESKTOP:
-         description += 'd';
-         break;
-      case MN_WINDOWED:
-      default:
-         description += 'w';
-         break;
+         switch(userfs)
+         {
+         case MN_FULLSCREEN:
+            description += 'f';
+            break;
+         case MN_FULLSCREEN_DESKTOP:
+            description += 'd';
+            break;
+         case MN_WINDOWED:
+         default:
+            description += 'w';
+            break;
+         }
       }
 
       // set the mode description
       mn_vidmode_desc[i] = description.duplicate();
-      
-      cmd << "i_videomode " << description;
-      
+
+      cmd << cmdstr << " " << description;
+
       mn_vidmode_cmds[i] = cmd.duplicate();
    }
 
    // null-terminate the lists
-   mn_vidmode_desc[nummodes] = nullptr;
-   mn_vidmode_cmds[nummodes] = nullptr;
+   mn_vidmode_desc[mn_vidmode_num] = nullptr;
+   mn_vidmode_cmds[mn_vidmode_num] = nullptr;
+}
+
+CONSOLE_COMMAND(mn_resolution, cf_hidden)
+{
+   MN_BuildVidmodeTables(tableType_e::RESOLUTION);
+
+   MN_SetupBoxWidget("Choose a Resolution",
+                     (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
+                     (const char **)mn_vidmode_cmds);
+   MN_ShowBoxWidget();
 }
 
 CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
-   MN_BuildVidmodeTables();
+   MN_BuildVidmodeTables(tableType_e::VIDEO_MODE);
 
    MN_SetupBoxWidget("Choose a Video Mode", 
                      (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
@@ -2040,8 +2068,6 @@ static menu_t *mn_vidpage_menus[] =
    nullptr
 };
 
-static void MN_VideoModeDrawer();
-
 static menuitem_t mn_video_items[] =
 {
    {it_title,        "Video Options",           nullptr, "m_video"     },
@@ -2049,17 +2075,15 @@ static menuitem_t mn_video_items[] =
    {it_info,         "Mode"                                            },
    {it_runcmd,       "Choose a mode...",        "mn_vidmode"           },
    {it_variable,     "Video mode",              "i_videomode"          },
+   {it_runcmd,       "Choose a resolution...",  "mn_resolution"        },
+   {it_variable,     "Renderer resolution",     "i_resolution"         },
    {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_gap},
+   {it_info,         "Display Properties"                              },
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
    {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
    {it_slider,       "Gamma correction",        "gamma"                },
-   {it_gap},
-   {it_info,         "Rendering"                                       },
-   {it_slider,       "Screen size",             "screensize"           },
-   {it_toggle,       "HOM detector flashes",    "r_homflash"           },
-   {it_toggle,       "Translucency",            "r_trans"              },
-   {it_variable,     "Opacity percentage",      "r_tranpct"            },
    {it_end}
 };
 
@@ -2072,39 +2096,10 @@ menu_t menu_video =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   MN_VideoModeDrawer,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
-
-static void MN_VideoModeDrawer()
-{
-   int lump, y;
-   patch_t *patch;
-   spritedef_t *sprdef;
-   spriteframe_t *sprframe;
-   int frame = E_SafeState(GameModeInfo->transFrame);
-
-   // draw an imp fireball
-
-   // don't draw anything before the menu has been initialized
-   if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
-      return;
-   
-   sprdef = &sprites[states[frame]->sprite];
-   // haleyjd 08/15/02
-   if(!(sprdef->spriteframes))
-      return;
-   sprframe = &sprdef->spriteframes[0];
-   lump = sprframe->lump[0];
-   
-   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   
-   // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[14].y - 5;
-   V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
-}
 
 CONSOLE_COMMAND(mn_video, 0)
 {
@@ -2115,19 +2110,24 @@ static menuitem_t mn_sysvideo_items[] =
 {
    { it_title,  "Video Options",            nullptr, "m_video" },
    { it_gap },
-   { it_info,   "Framerate"   },
-   { it_toggle, "Uncapped framerate",       "d_fastrefresh"    },
-   { it_toggle, "Interpolation",            "d_interpolate"    },
+   { it_info,     "Rendering"                                    },
+   { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "HOM detector flashes",     "r_homflash"       },
+   { it_toggle,   "Translucency",             "r_trans"          },
+   { it_variable, "Opacity percentage",       "r_tranpct"        },
    { it_gap },
-   { it_info,   "Screenshots"},
-   { it_toggle, "Screenshot format",        "shot_type"        },
-   { it_toggle, "Gamma correct shots",      "shot_gamma"       },
+   { it_info,     "Framerate"   },
+   { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
+   { it_toggle,   "Interpolation",            "d_interpolate"    },
    { it_gap },
-   { it_info,   "Screen Wipe" },
-   { it_toggle, "Wipe style",               "wipetype"         },
-   { it_toggle, "Game waits for wipe",      "wipewait"         },
+   { it_info,     "Screen Wipe" },
+   { it_toggle,   "Wipe style",               "wipetype"         },
+   { it_toggle,   "Game waits for wipe",      "wipewait"         },
    { it_end }
 };
+
+
+static void MN_SysVideoModeDrawer();
 
 menu_t menu_sysvideo =
 {
@@ -2138,14 +2138,48 @@ menu_t menu_sysvideo =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   nullptr,
+   MN_SysVideoModeDrawer,
    mn_vidpage_names,
    mn_vidpage_menus
 };
 
+static void MN_SysVideoModeDrawer()
+{
+   int lump, y;
+   patch_t *patch;
+   spritedef_t *sprdef;
+   spriteframe_t *sprframe;
+   int frame = E_SafeState(GameModeInfo->transFrame);
+
+   // draw an imp fireball
+
+   // don't draw anything before the menu has been initialized
+   if(!(menu_sysvideo.menuitems[5].flags & MENUITEM_POSINIT))
+      return;
+
+   sprdef = &sprites[states[frame]->sprite];
+   // haleyjd 08/15/02
+   if(!(sprdef->spriteframes))
+      return;
+   sprframe = &sprdef->spriteframes[0];
+   lump = sprframe->lump[0];
+
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
+
+   // approximately center box on "translucency" item in menu
+   y = menu_video.menuitems[5].y - 5;
+   V_DrawBox(270, y, 20, 20);
+   V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+}
+
+
 static menuitem_t mn_video_page2_items[] =
 {
    {it_title,    "Video Options",           nullptr, "m_video"},
+   {it_gap },
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_gap},
    {it_info,     "System"},
    {it_toggle,   "DOS-like startup",        "textmode_startup"},
@@ -2381,7 +2415,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "Novert emulation",              "mouse_novert"   },
+   {it_toggle,     "No vertical mouse movement",    "mouse_novert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
@@ -2419,6 +2453,7 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_info,       "Mouselook"},
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
+   {it_binding,    "Bind mouselook key",  "mlook"      },
    {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
@@ -2989,6 +3024,7 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_info,       "Crosshair Options"},
    {it_toggle,     "Crosshair type",               "hu_crosshair"},
    {it_toggle,     "Monster highlighting",         "hu_crosshair_hilite"},
+   {it_toggle,     "Crosshair scaling",            "hu_crosshair_scale"},
    {it_gap},
    {it_info,       "Automap Options"},
    {it_toggle,     "Show coords widget",           "hu_showcoords"},
@@ -3059,9 +3095,25 @@ static void MN_HUDPg2Drawer(void)
       int16_t to = patch->topoffset;
       int16_t lo = patch->leftoffset;
 
-      V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
-                    y + 12 - (h >> 1) + to, 
-                    &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL);
+      if(!crosshair_scale)
+      {
+         const double x_ratio = video.width  / SCREENWIDTH;
+         const double y_ratio = video.height / SCREENHEIGHT;
+
+         V_DrawPatchTL(
+            subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
+            subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
+            &vbscreenunscaled, patch, colrngs[CR_RED], FTRANLEVEL
+         );
+      }
+      else
+      {
+         V_DrawPatchTL(
+            270 + 12 - (w >> 1) + lo,
+            y + 12 - (h >> 1) + to,
+            &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL
+         );
+      }
    }
 }
 

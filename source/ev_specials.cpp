@@ -70,7 +70,7 @@
 //
 inline static bool EV_ClearSwitchOnFail(void)
 {
-   return demo_compatibility || (demo_version >= 335 && comp[comp_special]);
+   return demo_compatibility || (demo_version >= 335 && getComp(comp_special));
 }
 
 //
@@ -172,7 +172,7 @@ static bool EV_DOOMPreCrossLine(ev_action_t *action, ev_instance_t *instance)
 
    // jff 2/27/98 disallow zero tag on some types
    // killough 11/98: compatibility option:
-   if(!(instance->tag || comp[comp_zerotags] || (flags & EV_PREALLOWZEROTAG)))
+   if(!(instance->tag || getComp(comp_zerotags) || (flags & EV_PREALLOWZEROTAG)))
       return false;
 
    // check for first-side-only instance
@@ -244,7 +244,7 @@ static bool EV_DOOMPreUseLine(ev_action_t *action, ev_instance_t *instance)
    }
 
    // check for zero tag
-   if(!(instance->tag || comp[comp_zerotags] || (flags & EV_PREALLOWZEROTAG)))
+   if(!(instance->tag || getComp(comp_zerotags) || (flags & EV_PREALLOWZEROTAG)))
       return false;
 
    return true;
@@ -303,7 +303,7 @@ static bool EV_DOOMPreShootLine(ev_action_t *action, ev_instance_t *instance)
    }
 
    // check for zero tag
-   if(!(instance->tag || comp[comp_zerotags] || (flags & EV_PREALLOWZEROTAG)))
+   if(!(instance->tag || getComp(comp_zerotags) || (flags & EV_PREALLOWZEROTAG)))
       return false;
 
    return true;

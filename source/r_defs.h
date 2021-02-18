@@ -29,6 +29,8 @@
 // haleyjd 12/15/10: lighting data is required here
 #include "r_lighting.h"
 
+#include "m_surf.h"
+
 // SoM: Slopes need vectors!
 #include "m_vector.h"
 
@@ -210,8 +212,7 @@ struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
    float fbox[4];
-   unsigned fframeid;   // updated to avoid visiting more than once
-   unsigned cframeid;
+   Surfaces<uint64_t> visitid;   // updated to avoid visiting more than once
 };
 
 //
@@ -221,76 +222,6 @@ struct soundzone_t
 {
    ereverb_t *reverb;
 };
-
-//
-// Common enum to get surface index to avoid repeating floor/ceiling etc.
-//
-enum surf_e
-{
-   surf_floor,
-   surf_ceil,
-   surf_NUM
-};
-
-//
-// More convenient than raw array. Must be POD
-//
-template<typename T>
-union Surfaces
-{
-   // THESE MUST BE the same order as the surf_e enum
-   struct
-   {
-      T floor;
-      T ceiling;
-   };
-   T items[2];
-
-   Surfaces() = default;
-   Surfaces(const T &first, const T &second) : floor(first), ceiling(second)
-   {
-   }
-   
-   T &operator[](int surf)
-   {
-      return items[surf];
-   }
-   const T &operator[](int surf) const
-   {
-      return items[surf];
-   }
-   template<typename FUNC, typename U>
-   void operate(FUNC &&func, const Surfaces<U> &other)
-   {
-      floor = func(other.floor);
-      ceiling = func(other.ceiling);
-   }
-};
-
-//
-// Check if floor is higher or ceiling is lower, respectively viceversa
-// Also have template versions
-//
-template<typename T>
-inline static bool isInner(surf_e surf, const T &a, const T &b)
-{
-   return surf == surf_floor ? a > b : a < b;
-}
-template<surf_e S, typename T>
-inline static bool isInner(const T &a, const T &b)
-{
-   return S == surf_floor ? a > b : a < b;
-}
-template<typename T>
-inline static bool isOuter(surf_e surf, const T &a, const T &b)
-{
-   return surf == surf_floor ? a < b : a > b;
-}
-template<surf_e S, typename T>
-inline static bool isOuter(const T &a, const T &b)
-{
-   return S == surf_floor ? a < b : a > b;
-}
 
 static const unsigned secf_surfLightAbsolute[surf_NUM] = {
    SECF_FLOORLIGHTABSOLUTE, SECF_CEILLIGHTABSOLUTE
@@ -341,7 +272,7 @@ struct surface_t
    portal_t *portal;
 
    // Cardboard optimization
-   // They are set in R_Subsector and R_FakeFlat and are
+   // They are set in R_subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
    float heightf;
 
@@ -611,7 +542,6 @@ struct node_t
 //
 struct fnode_t
 {
-   double fx, fy, fdx, fdy; // haleyjd 05/16/08: float versions
    double a, b, c;          // haleyjd 05/20/08: coefficients for general line equation
    double len;              // length of partition line, for normalization
 };

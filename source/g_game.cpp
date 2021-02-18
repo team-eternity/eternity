@@ -61,6 +61,7 @@
 #include "in_lude.h"
 #include "m_argv.h"
 #include "m_buffer.h"
+#include "m_cheat.h"
 #include "m_collection.h"
 #include "m_misc.h"
 #include "m_random.h"
@@ -219,7 +220,7 @@ void *statcopy;       // for statistics driver
 
 int keylookspeed = 5;
 
-int cooldemo = 0;
+CoolDemo cooldemo = CoolDemo::off;
 int cooldemo_tics;      // number of tics until changing view
 
 static void G_CoolViewPoint();
@@ -228,6 +229,11 @@ static bool gameactions[NUMKEYACTIONS];
 
 int inventoryTics;
 bool usearti = true;
+
+static bool InventoryCanClose()
+{
+   return (GameModeInfo->flags & GIF_INVALWAYSOPEN) != GIF_INVALWAYSOPEN;
+}
 
 //
 // G_BuildTiccmd
@@ -258,13 +264,14 @@ void G_BuildTiccmd(ticcmd_t *cmd)
    cmd->itemID = 0; // Nothing to see here
    if(gameactions[ka_inventory_use] && demo_version >= 401)
    {
-      // FIXME: Handle noartiskip?
-      if(invbarstate.inventory)
+      // FIXME: Handle noartiskip
+      const bool inventorycanclose = InventoryCanClose();
+      if(invbarstate.inventory && inventorycanclose)
       {
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti)
+      else if(usearti || inventorycanclose)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -900,7 +907,7 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_left])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
@@ -911,7 +918,7 @@ bool G_Responder(const event_t* ev)
       if(gameactions[ka_inventory_right])
       {
          inventoryTics = 5 * TICRATE;
-         if(!invbarstate.inventory)
+         if(!invbarstate.inventory && InventoryCanClose())
          {
             invbarstate.inventory = true;
             break;
@@ -1402,6 +1409,31 @@ void G_DoPlayDemo(void)
    }
 }
 
+//
+// Converts classic demo "buttons" byte into weapon ID. Needed for vanilla Heretic demos.
+//
+static void G_convertButtonsToWeaponID(ticcmd_t &cmd)
+{
+   if(!(cmd.buttons & BT_CHANGE))
+      return;
+
+   int index = (cmd.buttons & BT_WEAPONMASK_OLD) >> BT_WEAPONSHIFT;
+
+   // HACK: check if ticcmd_t is part of a player. If it is, proceed.
+   for(const player_t &player : players)
+      if((byte*)&cmd == (byte*)&player + offsetof(player_t, cmd))
+      {
+         const weaponinfo_t *info = P_GetPlayerWeapon(&player, index);
+         if(info)
+         {
+            const weaponslot_t *slot = E_FindEntryForWeaponInSlotIndex(&player, info, index);
+            cmd.weaponID = info->id + 1;
+            cmd.slotIndex = slot->slotindex;
+         }
+         break;
+      }
+}
+
 #define DEMOMARKER    0x80
 
 //
@@ -1434,37 +1466,42 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
    cmd->buttons = (unsigned char)*p++;
 
    // old Heretic demo?
-   if(demo_version <= 4 && GameModeInfo->type == Game_Heretic)
+   if(vanilla_heretic)
    {
-      p++;
-      p++; // TODO/FIXME: put into cmd->fly as is mostly compatible
-   }
-
-   if(demo_version >= 335)
-      cmd->actions = *p++;
-   else
-      cmd->actions = 0;
-
-   if(demo_version >= 333)
-   {
-      cmd->look  =  *p++;
-      cmd->look |= (*p++) << 8;
-   }
-   else if(demo_version >= 329)
-   {
-      // haleyjd: 329 and 331 store updownangle, but we can't use
-      // it any longer. Demos recorded with mlook will desync,
-      // but ones without can still play with this here.
-      p++;
-      cmd->look = 0;
+      byte lookfly = *p++;
+      // TODO: look
+      cmd->fly = lookfly >> 4;
+      if(cmd->fly > 7)
+         cmd->fly -= 16;
    }
    else
-      cmd->look = 0;
+   {
+      if(demo_version >= 335)
+         cmd->actions = *p++;
+      else
+         cmd->actions = 0;
 
-   if(full_demo_version >= make_full_version(340, 23))
-      cmd->fly = *p++;
-   else
-      cmd->fly = 0;
+      if(demo_version >= 333)
+      {
+         cmd->look  =  *p++;
+         cmd->look |= (*p++) << 8;
+      }
+      else if(demo_version >= 329)
+      {
+         // haleyjd: 329 and 331 store updownangle, but we can't use
+         // it any longer. Demos recorded with mlook will desync,
+         // but ones without can still play with this here.
+         p++;
+         cmd->look = 0;
+      }
+      else
+         cmd->look = 0;
+
+      if(full_demo_version >= make_full_version(340, 23))
+         cmd->fly = *p++;
+      else
+         cmd->fly = 0;
+   }
 
    if(demo_version >= 401)
    {
@@ -1473,6 +1510,16 @@ static byte *G_ReadTic(ticcmd_t *cmd, byte *p)
       cmd->weaponID = *p++;
       cmd->weaponID |= (*p++) << 8;
       cmd->slotIndex = *p++;
+   }
+   else if(vanilla_heretic)
+   {
+      // One byte for the inventory usage
+      byte index = *p++;
+      if(!index || index > earrlen(hartiNames))
+         cmd->itemID = 0;
+      else
+         cmd->itemID = E_ItemIDForName(hartiNames[index - 1]) + 1;
+      G_convertButtonsToWeaponID(*cmd);
    }
    else
    {
@@ -2123,12 +2170,14 @@ static void G_CameraTicker(void)
    }
 
    // cooldemo countdown   
-   if(demoplayback && cooldemo)
+   if(demoplayback && cooldemo != CoolDemo::off)
    {
       // force refresh on death (or rebirth in follow mode) of displayed player
       if(players[displayplayer].health <= 0 ||
-         (cooldemo == 2 && camera != &followcam))
+         (cooldemo == CoolDemo::follow && camera != &followcam))
+      {
          cooldemo_tics = 0;
+      }
 
       if(cooldemo_tics)
          cooldemo_tics--;
@@ -2310,10 +2359,13 @@ void G_Ticker()
       }
    }
 
-   // turn inventory off after a certain amount of time
-   invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
-   if(invbarstate.inventory && !(--inventoryTics))
-      invbarstate.inventory = false;
+   if(InventoryCanClose())
+   {
+      // turn inventory off after a certain amount of time
+      invbarstate_t &invbarstate = players[consoleplayer].invbarstate;
+      if(invbarstate.inventory && !(--inventoryTics))
+         invbarstate.inventory = false;
+   }
 
    // do main actions
    
@@ -2578,7 +2630,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // which is missing the fog and sound, as it spawns somewhere out in the
    // far reaches of the void.
 
-   if(!comp[comp_ninja])
+   if(!getComp(comp_ninja))
    {
       an = ANG45 * (angle_t)(mthing->angle / 45);
       mtcos = finecosine[an >> ANGLETOFINESHIFT];
@@ -3868,13 +3920,21 @@ extern camera_t intercam;
 //
 static void G_CoolViewPoint()
 {
-   int viewtype;
+   enum viewtype_e
+   {
+      viewtype_1stperson,
+      viewtype_chase,
+      viewtype_follow,
+      NUM_viewtype
+   };
+
+   viewtype_e viewtype;
    int old_displayplayer = displayplayer;
 
-   if(cooldemo == 2) // always followcam?
-      viewtype = 2;
-   else
-      viewtype = M_Random() % 3;
+   if(cooldemo == CoolDemo::follow) // always followcam?
+      viewtype = viewtype_follow;
+   else  // "random" cooldemo
+      viewtype = static_cast<viewtype_e>(M_Random() % NUM_viewtype);
    
    // pick the next player
    do
@@ -3893,10 +3953,10 @@ static void G_CoolViewPoint()
    }
 
    if(players[displayplayer].health <= 0)
-      viewtype = 1; // use chasecam when player is dead
+      viewtype = viewtype_chase; // use chasecam when player is dead
   
    // turn off the chasecam?
-   if(chasecam_active && viewtype != 1)
+   if(chasecam_active && viewtype != viewtype_chase)
    {
       chasecam_active = false;
       P_ChaseEnd();
@@ -3907,12 +3967,12 @@ static void G_CoolViewPoint()
    if(camera == &followcam)
       camera = nullptr;
   
-   if(viewtype == 1)  // view from the chasecam
+   if(viewtype == viewtype_chase)  // view from the chasecam
    {
       chasecam_active = true;
       P_ChaseStart();
    }
-   else if(viewtype == 2) // follow camera view
+   else if(viewtype == viewtype_follow) // follow camera view
    {
       fixed_t x, y;
       Mobj *spot = players[displayplayer].mo;

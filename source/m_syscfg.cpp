@@ -41,6 +41,7 @@
 #include "m_misc.h"
 #include "m_shots.h"
 #include "mn_menus.h"
+#include "r_context.h"
 #include "s_sound.h"
 #include "s_sndseq.h"
 #include "w_wad.h"
@@ -211,6 +212,9 @@ static default_t sysdefaults[] =
    DEFAULT_INT("i_videodriverid", &i_videodriverid, nullptr, -1, -1, VDR_MAXDRIVERS-1, 
                default_t::wad_no, i_videohelpstr),
 
+   DEFAULT_STR("i_resolution", &i_default_resolution, &i_resolution, "native", default_t::wad_no,
+               "Resolution of the renderer's target (WWWWxHHHH or native)"),
+
    DEFAULT_STR("i_videomode", &i_default_videomode, &i_videomode, "640x480w", default_t::wad_no,
                "Description of video mode parameters (WWWWxHHHH[flags])"),
 
@@ -248,8 +252,10 @@ static default_t sysdefaults[] =
    DEFAULT_BOOL("i_forcefeedback", &i_forcefeedback, nullptr, true, default_t::wad_no,
                 "1 to enable force feedback through gamepads where supported"),
 
-   DEFAULT_INT("r_fov", &fov, nullptr, 90, 20, 179, default_t::wad_no,
-               "The renderer's field of view angle (in degrees)"),
+#if 0
+   DEFAULT_INT("r_numcontexts", &r_numcontexts, nullptr, 1, 1, UL, default_t::wad_no,
+               "Amount of renderer threads to run"),
+#endif
 
 #ifdef _SDL_VER
    DEFAULT_INT("displaynum", &displaynum, nullptr, 0, 0, UL, default_t::wad_no,

@@ -312,7 +312,7 @@ static void C_doErrorMsg(command_t *command, const char *errormsg)
    {
       C_Printf("%s: %s\n", command->name, errormsg);
       if(menuactive)
-         MN_ErrorMsg(errormsg);
+         MN_ErrorMsg("%s", errormsg);
    }
 }
 
@@ -905,7 +905,7 @@ static void C_SetVariable(command_t *command)
    
    if(errormsg)
    {
-      MN_ErrorMsg(errormsg);
+      MN_ErrorMsg("%s", errormsg);
       C_Puts(errormsg);
       return;
    }

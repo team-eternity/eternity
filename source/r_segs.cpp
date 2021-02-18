@@ -34,6 +34,7 @@
 #include "p_user.h"
 #include "r_draw.h"
 #include "r_bsp.h"
+#include "r_context.h"
 #include "r_data.h"
 #include "r_main.h"
 #include "r_plane.h"
@@ -43,20 +44,11 @@
 #include "r_things.h"
 #include "w_wad.h"
 
-// OPTIMIZE: closed two sided lines as single sided
-// SoM: Done.
-// SoM: Cardboard globals
-cb_column_t column;
-cb_seg_t    seg;
-cb_seg_t    segclip;
-
-// killough 1/6/98: replaced globals with statics where appropriate
-static float  *maskedtexturecol;
-
 //
 // R_RenderMaskedSegRange
 //
-void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
+                            const fixed_t viewz, drawseg_t *ds, int x1, int x2)
 {
    texcol_t *col;
    int      lightnum;
@@ -67,6 +59,10 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    float    texmidf;
    line_t  *linedef;
    lighttable_t **wlight;
+   float   *maskedtexturecol;
+
+   cb_column_t column  = {};
+   cb_seg_t    segclip = {};
 
    // Calculate light table.
    // Use different light tables
@@ -75,7 +71,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    segclip.line = ds->curline;
    linedef      = segclip.line->linedef;
 
-   colfunc = r_column_engine->DrawColumn;
+   R_ColumnFunc colfunc = r_column_engine->DrawColumn;
 
    // killough 4/11/98: draw translucent 2s normal textures
    if(general_translucency)
@@ -113,7 +109,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
    texnum = texturetranslation[segclip.line->sidedef->midtexture];
    
    // killough 4/13/98: get correct lightlevel for 2s normal textures
-   lightnum = (R_FakeFlat(segclip.frontsec, &tempsec, nullptr, nullptr, false)
+   lightnum = (R_FakeFlat(viewz, segclip.frontsec, &tempsec, nullptr, nullptr, false)
                ->lightlevel >> LIGHTSEGSHIFT)+(extralight * LIGHTBRIGHT);
 
    // haleyjd 08/11/00: optionally skip this to evenly apply colormap
@@ -127,14 +123,11 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
    // SoM 10/19/02: deep water colormap fix
    wlight = 
-      ds->colormap[lightnum >= LIGHTLEVELS || fixedcolormap ? 
+      ds->colormap[lightnum >= LIGHTLEVELS || cmapcontext.fixedcolormap ?
                    LIGHTLEVELS-1 :
                    lightnum <  0 ? 0 : lightnum ] ;
 
    maskedtexturecol = ds->maskedtexturecol;
-
-   mfloorclip   = ds->sprbottomclip;
-   mceilingclip = ds->sprtopclip;
 
    diststep = ds->diststep;
    dist = ds->dist1 + (x1 - ds->x1) * diststep;
@@ -183,8 +176,7 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
          }
 
 
-         maskedcolumn.scale = scale;
-         maskedcolumn.ytop = view.ycenter - (texmidf * scale);
+         const cb_maskedcolumn_t maskedcolumn = { view.ycenter - (texmidf * scale), scale };
          column.step = (int)(FPFRACUNIT / scale);
 
          // killough 1/25/98: here's where Medusa came in, because
@@ -197,8 +189,11 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
          // draw the texture
          col = R_GetMaskedColumn(texnum, (int)(maskedtexturecol[column.x]));
-         R_DrawNewMaskedColumn(textures[texnum], col);
-         
+         R_DrawNewMaskedColumn(
+            colfunc, column, maskedcolumn,
+            textures[texnum], col, ds->sprbottomclip, ds->sprtopclip
+         );
+
          maskedtexturecol[column.x] = FLT_MAX;
       }
    }
@@ -212,24 +207,31 @@ void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2)
 
 
 //
-// R_RenderSegLoop
-//
 // Draws zero, one, or two textures (and possibly a masked texture) for walls.
 // Can draw or mark the starting pixel of floor and ceiling textures.
 // CALLED: CORE LOOPING ROUTINE.
 //
-static void R_RenderSegLoop(void)
+static void R_renderSegLoop(cmapcontext_t &cmapcontext, planecontext_t &planecontext,
+                            portalcontext_t &portalcontext,
+                            const R_ColumnFunc colfunc, const viewpoint_t &viewpoint,
+                            const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+                            drawseg_t *const ds_p, cb_seg_t &segclip)
 {
+   float     *const floorclip   = planecontext.floorclip;
+   float     *const ceilingclip = planecontext.ceilingclip;
+
    int t, b, line;
    int cliptop, clipbot;
    int i;
    float texx;
    float basescale;
 
+   cb_column_t column = {};
+
 #ifdef RANGECHECK
-   if(segclip.x1 < 0 || segclip.x2 >= viewwindow.width || segclip.x1 > segclip.x2)
+   if(segclip.x1 < bounds.startcolumn || segclip.x2 >= bounds.endcolumn || segclip.x1 > segclip.x2)
    {
-      I_Error("R_RenderSegLoop: invalid seg x values!\n"
+      I_Error("R_renderSegLoop: invalid seg x values!\n"
               "   x1 = %d, x2 = %d, linenum = %d\n", 
               segclip.x1, segclip.x2,
               static_cast<int>(segclip.line->linedef - lines));
@@ -242,15 +244,18 @@ static void R_RenderSegLoop(void)
    {
       // Use value -1 which is extremely hard to reach, and different to the hardcoded ceiling 1,
       // to avoid HOM
-      skyplane = R_FindPlane(viewz - 1, segclip.skyflat, 144, {}, { 1, 1 }, 0, nullptr, 0,
-                          255, nullptr);
-      skyplane = R_CheckPlane(skyplane, segclip.x1, segclip.x2);
+      skyplane = R_FindPlane(
+         cmapcontext, planecontext, viewpoint, cb_viewpoint,
+         bounds, viewpoint.z - 1, segclip.skyflat,
+         144, {}, { 1, 1 }, 0, nullptr, 0, 255, nullptr
+      );
+      skyplane = R_CheckPlane(planecontext, skyplane, segclip.x1, segclip.x2);
    }
 
    // haleyjd 06/30/07: cardboard invuln fix.
    // haleyjd 10/21/08: moved up loop-invariant calculation
-   if(fixedcolormap)
-      column.colormap = fixedcolormap;
+   if(cmapcontext.fixedcolormap)
+      column.colormap = cmapcontext.fixedcolormap;
 
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
@@ -274,10 +279,10 @@ static void R_RenderSegLoop(void)
             {
                int otop = ceilingclip[i] > overlaycclip[i] ? cliptop : (int)overlaycclip[i];
                
-               if(segclip.ceilingplane && line >= otop)
+               if(segclip.plane.ceiling && line >= otop)
                {
-                  segclip.ceilingplane->top[i]    = otop;
-                  segclip.ceilingplane->bottom[i] = line;
+                  segclip.plane.ceiling->top[i]    = otop;
+                  segclip.plane.ceiling->bottom[i] = line;
                }
 
                overlaycclip[i] = (float)t;
@@ -285,13 +290,16 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKCPORTAL)
             {
-               R_WindowAdd(segclip.c_window, i, (float)cliptop, (float)line);
+               R_WindowAdd(
+                  planecontext, portalcontext, viewpoint, bounds,
+                  segclip.secwindow.ceiling, i, (float)cliptop, (float)line
+               );
                ceilingclip[i] = (float)t;
             }
-            else if(segclip.ceilingplane && segclip.markflags & SEG_MARKCEILING)
+            else if(segclip.plane.ceiling && segclip.markflags & SEG_MARKCEILING)
             {
-               segclip.ceilingplane->top[i]    = cliptop;
-               segclip.ceilingplane->bottom[i] = line;
+               segclip.plane.ceiling->top[i]    = cliptop;
+               segclip.plane.ceiling->bottom[i] = line;
                ceilingclip[i] = (float)t;
             }
          }
@@ -311,10 +319,10 @@ static void R_RenderSegLoop(void)
             {
                int olow = floorclip[i] < overlayfclip[i] ? clipbot : (int)overlayfclip[i];
                
-               if(segclip.floorplane && line <= olow)
+               if(segclip.plane.floor && line <= olow)
                {
-                  segclip.floorplane->top[i]    = line;
-                  segclip.floorplane->bottom[i] = olow;
+                  segclip.plane.floor->top[i]    = line;
+                  segclip.plane.floor->bottom[i] = olow;
                }
 
                overlayfclip[i] = (float)b;
@@ -322,13 +330,16 @@ static void R_RenderSegLoop(void)
             
             if(segclip.markflags & SEG_MARKFPORTAL)
             {
-               R_WindowAdd(segclip.f_window, i, (float)line, (float)clipbot);
+               R_WindowAdd(
+                  planecontext, portalcontext, viewpoint, bounds,
+                  segclip.secwindow.floor, i, (float)line, (float)clipbot
+               );
                floorclip[i] = (float)b;
             }
-            else if(segclip.floorplane && segclip.markflags & SEG_MARKFLOOR)
+            else if(segclip.plane.floor && segclip.markflags & SEG_MARKFLOOR)
             {
-               segclip.floorplane->top[i]    = line;
-               segclip.floorplane->bottom[i] = clipbot;
+               segclip.plane.floor->top[i]    = line;
+               segclip.plane.floor->bottom[i] = clipbot;
                floorclip[i] = (float)b;
             }
          }
@@ -350,7 +361,7 @@ static void R_RenderSegLoop(void)
 
          // calculate lighting
          // SoM: ANYRES
-         if(!fixedcolormap)
+         if(!cmapcontext.fixedcolormap)
          {
             // SoM: it took me about 5 solid minutes of looking at the old doom code
             // and running test levels through it to do the math and get 2560 as the
@@ -380,7 +391,7 @@ static void R_RenderSegLoop(void)
                         column.texmid = segclip.toptexmid;
                         column.source = R_GetRawColumn(segclip.toptex, (int)texx);
                         column.texheight = segclip.toptexh;
-                        colfunc();
+                        colfunc(column);
                         ceilingclip[i] = (float)(column.y2 + 1);
                      }
                      else
@@ -399,7 +410,7 @@ static void R_RenderSegLoop(void)
                         column.texmid = segclip.bottomtexmid;
                         column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
                         column.texheight = segclip.bottomtexh;
-                        colfunc();
+                        colfunc(column);
                         floorclip[i] = (float)(column.y1 - 1);
                      }
                      else
@@ -408,11 +419,17 @@ static void R_RenderSegLoop(void)
                      
                   }
 
-                  R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+                  R_WindowAdd(
+                     planecontext, portalcontext, viewpoint, bounds,
+                     segclip.l_window, i, ceilingclip[i], floorclip[i]
+                  );
                }
                else
                {
-                  R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+                  R_WindowAdd(
+                     planecontext, portalcontext, viewpoint, bounds,
+                     segclip.l_window, i, (float)t, (float)b
+                  );
                }
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -427,7 +444,7 @@ static void R_RenderSegLoop(void)
                column.source = R_GetRawColumn(segclip.midtex, (int)texx);
                column.texheight = segclip.midtexh;
 
-               colfunc();
+               colfunc(column);
 
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
@@ -441,8 +458,11 @@ static void R_RenderSegLoop(void)
                column.y2 = (int)(segclip.high > floorclip[i] ? floorclip[i] : segclip.high);
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.t_window, i, 
-                     static_cast<float>(column.y1), static_cast<float>(column.y2));
+                  R_WindowAdd(
+                     planecontext, portalcontext, viewpoint, bounds,
+                     segclip.t_window, i,
+                     static_cast<float>(column.y1), static_cast<float>(column.y2)
+                  );
                   ceilingclip[i] = static_cast<float>(column.y2 + 1);
                }
                else
@@ -461,7 +481,7 @@ static void R_RenderSegLoop(void)
                   column.source = R_GetRawColumn(segclip.toptex, (int)texx);
                   column.texheight = segclip.toptexh;
 
-                  colfunc();
+                  colfunc(column);
 
                   ceilingclip[i] = (float)(column.y2 + 1);
                }
@@ -480,8 +500,11 @@ static void R_RenderSegLoop(void)
                column.y2 = b;
                if(column.y2 >= column.y1)
                {
-                  R_WindowAdd(segclip.b_window, i, 
-                     static_cast<float>(column.y1), static_cast<float>(column.y2));
+                  R_WindowAdd(
+                     planecontext, portalcontext, viewpoint, bounds,
+                     segclip.b_window, i,
+                     static_cast<float>(column.y1), static_cast<float>(column.y2)
+                  );
                   floorclip[i] = static_cast<float>(column.y1 - 1);
                }
                else
@@ -500,7 +523,7 @@ static void R_RenderSegLoop(void)
                   column.source = R_GetRawColumn(segclip.bottomtex, (int)texx);
                   column.texheight = segclip.bottomtexh;
 
-                  colfunc();
+                  colfunc(column);
 
                   floorclip[i] = (float)(column.y1 - 1);
                }
@@ -515,7 +538,10 @@ static void R_RenderSegLoop(void)
 
             if(segclip.l_window)
             {
-               R_WindowAdd(segclip.l_window, i, ceilingclip[i], floorclip[i]);
+               R_WindowAdd(
+                  planecontext, portalcontext, viewpoint, bounds,
+                  segclip.l_window, i, ceilingclip[i], floorclip[i]
+               );
                ceilingclip[i] = view.height - 1.0f;
                floorclip[i] = 0.0f;
             }
@@ -533,7 +559,10 @@ static void R_RenderSegLoop(void)
       }
       else if(segclip.l_window)
       {
-         R_WindowAdd(segclip.l_window, i, (float)t, (float)b);
+         R_WindowAdd(
+            planecontext, portalcontext, viewpoint, bounds,
+            segclip.l_window, i, (float)t, (float)b
+         );
          ceilingclip[i] = view.height - 1.0f;
          floorclip[i] = 0.0f;
       }
@@ -563,13 +592,15 @@ static void R_RenderSegLoop(void)
 }
 
 //
-// R_CheckDSAlloc
-//
 // SoM: This function is needed in multiple places now to fix some cases
 // of sprites showing up behind walls in some portal areas.
 //
-static void R_CheckDSAlloc(void)
+static void R_checkDSAlloc(bspcontext_t &context)
 {
+   drawseg_t   *&drawsegs    = context.drawsegs;
+   unsigned int &maxdrawsegs = context.maxdrawsegs;
+   drawseg_t   *&ds_p        = context.ds_p;
+
    // drawsegs need to be taken care of here
    if(ds_p == drawsegs + maxdrawsegs)
    {
@@ -581,12 +612,11 @@ static void R_CheckDSAlloc(void)
 }
 
 //
-// R_CloseDSP
-//
 // Simply sets ds_p's properties to that of a closed drawseg.
 //
-static void R_CloseDSP(void)
+static void R_closeDSP(drawseg_t *const ds_p)
 {
+
    ds_p->silhouette       = SIL_BOTH;
    ds_p->sprtopclip       = screenheightarray;
    ds_p->sprbottomclip    = zeroarray;
@@ -597,7 +627,7 @@ static void R_CloseDSP(void)
 
 #define NEXTDSP(model, newx1) \
    ds_p++; \
-   R_CheckDSAlloc(); \
+   R_checkDSAlloc(bspcontext); \
    *ds_p = model; \
    ds_p->x1 = newx1; \
    ds_p->dist1 += segclip.diststep * (newx1 - model.x1)
@@ -607,15 +637,20 @@ static void R_CloseDSP(void)
    ds_p->x2 = newx2
 
 //
-// R_DetectClosedColumns
-//
 // This function iterates through the x range of segclip, and checks for columns
 // that became closed in the clipping arrays after the segclip is rendered. Any
 // new closed regions are then added to the solidsegs array to speed up 
 // rejection of new segs trying to render to closed areas of clipping space.
 //
-static void R_DetectClosedColumns()
+static void R_detectClosedColumns(bspcontext_t &bspcontext,
+                                  planecontext_t &planecontext,
+                                  [[maybe_unused]] const contextbounds_t &bounds,
+                                  cb_seg_t &segclip)
 {
+   drawseg_t      *&ds_p        = bspcontext.ds_p;
+   float     *const floorclip   = planecontext.floorclip;
+   float     *const ceilingclip = planecontext.ceilingclip;
+
    drawseg_t model  = *ds_p;
    int       startx = segclip.x1;
    int       stop   = segclip.x2 + 1;
@@ -629,8 +664,8 @@ static void R_DetectClosedColumns()
       while(i < stop && floorclip[i] < ceilingclip[i]) i++;
 
       // Mark the closed area.
-      R_CloseDSP();
-      R_MarkSolidSeg(startx, i - 1);
+      R_closeDSP(ds_p);
+      R_MarkSolidSeg(bspcontext, startx, i - 1);
 
       // End closed
       if(i == stop)
@@ -658,7 +693,7 @@ static void R_DetectClosedColumns()
 
       // There is at least one closed column, so create another drawseg.
       NEXTDSP(model, i);
-      R_CloseDSP();
+      R_closeDSP(ds_p);
 
       startx = i;
 
@@ -668,9 +703,9 @@ static void R_DetectClosedColumns()
 
       // from startx to i - 1 is solid.
 #ifdef RANGECHECK
-      if(startx > i - 1 || startx < 0 || i - 1 >= viewwindow.width || 
-         startx >= viewwindow.width || i - 1 < 0)
-         I_Error("R_DetectClosedColumns: bad range %i, %i\n", startx, i - 1);
+      if(startx > i - 1 || startx < bounds.startcolumn || i - 1 >= bounds.endcolumn ||
+         startx >= bounds.endcolumn || i - 1 < bounds.startcolumn)
+         I_Error("R_detectClosedColumns: bad range %i, %i\n", startx, i - 1);
 #endif
 
       // SoM: This creates a bug clipping sprites:
@@ -678,7 +713,7 @@ static void R_DetectClosedColumns()
       // as solid? Sprites appear through architecture. The solution is to
       // modify the drawseg created before this function was called to only be 
       // open where the seg has not created a solid seg.
-      R_MarkSolidSeg(startx, i-1);
+      R_MarkSolidSeg(bspcontext, startx, i-1);
 
       // End closed
       if(i == stop)
@@ -694,19 +729,19 @@ static void R_DetectClosedColumns()
 #undef NEXTDSP
 #undef SETX2
 
-static void R_StoreTextureColumns(void)
+static void R_storeTextureColumns(float *const maskedtexturecol, cb_seg_t &segclip)
 {
    int i;
    float texx;
    float basescale;
-   
+
    for(i = segclip.x1; i <= segclip.x2; i++)
    {
       basescale = 1.0f / (segclip.dist * view.yfoc);
       texx = segclip.len * basescale + segclip.toffsetx;
 
-      if(ds_p->maskedtexturecol)
-         ds_p->maskedtexturecol[i] = texx;
+      if(maskedtexturecol)
+         maskedtexturecol[i] = texx;
 
       segclip.len  += segclip.lenstep;
       segclip.dist += segclip.diststep;
@@ -734,20 +769,28 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2)
 }
 
 //
-// R_StoreWallRange
-//
 // A wall segment will be drawn
 //  between start and stop pixels (inclusive).
 //
-void R_StoreWallRange(const int start, const int stop)
+void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
+                      portalcontext_t &portalcontext,
+                      const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                      const contextbounds_t &bounds,
+                      const cb_seg_t &seg, const int start, const int stop)
 {
+   drawseg_t           *&ds_p         = bspcontext.ds_p;
+   float               *&lastopening  = planecontext.lastopening;
+   const portalrender_t &portalrender = portalcontext.portalrender;
+
    float clipx1;
    float clipx2;
 
    float pstep;
 
    bool usesegloop;
-   
+
+   cb_seg_t segclip;
+
    // haleyjd 09/22/07: must be before use of segclip below
    memcpy(&segclip, &seg, sizeof(seg));
 
@@ -764,10 +807,10 @@ void R_StoreWallRange(const int start, const int stop)
    segclip.x1 = start;
    segclip.x2 = stop;
 
-   if(segclip.floorplane)
-      segclip.floorplane = R_CheckPlane(segclip.floorplane, start, stop);
+   if(segclip.plane.floor)
+      segclip.plane.floor = R_CheckPlane(planecontext, segclip.plane.floor, start, stop);
 
-   if(segclip.ceilingplane)
+   if(segclip.plane.ceiling)
    {
       // From PrBoom
       /* cph 2003/04/18  - ceilingplane and floorplane might be the same
@@ -783,10 +826,10 @@ void R_StoreWallRange(const int start, const int stop)
       // NOTE: PrBoom sets the floorplane AFTER the ceilingplane, unlike Eternity. So it does this
       // duplication when it encounters the floorplane, not the ceilingplane like here.
 
-      if(segclip.ceilingplane == segclip.floorplane)
-         segclip.ceilingplane = R_DupPlane(segclip.ceilingplane, start, stop);
+      if(segclip.plane.ceiling == segclip.plane.floor)
+         segclip.plane.ceiling = R_DupPlane(planecontext, segclip.plane.ceiling, start, stop);
       else
-         segclip.ceilingplane = R_CheckPlane(segclip.ceilingplane, start, stop);
+         segclip.plane.ceiling = R_CheckPlane(planecontext, segclip.plane.ceiling, start, stop);
    }
 
    if(!(segclip.line->linedef->flags & (ML_MAPPED | ML_DONTDRAW)))
@@ -845,7 +888,7 @@ void R_StoreWallRange(const int start, const int stop)
    //  use different light tables
    //  for horizontal / vertical / diagonal
    // OPTIMIZE: get rid of LIGHTSEGSHIFT globally
-   if(!fixedcolormap)
+   if(!cmapcontext.fixedcolormap)
    {
       int lightnum = (segclip.frontsec->lightlevel >> LIGHTSEGSHIFT) + (extralight * LIGHTBRIGHT);
 
@@ -859,28 +902,28 @@ void R_StoreWallRange(const int start, const int stop)
       }
 
       if(lightnum < 0)
-         segclip.walllights = scalelight[0];
+         segclip.walllights = cmapcontext.scalelight[0];
       else if(lightnum >= LIGHTLEVELS)
-         segclip.walllights = scalelight[LIGHTLEVELS-1];
+         segclip.walllights = cmapcontext.scalelight[LIGHTLEVELS-1];
       else
-         segclip.walllights = scalelight[lightnum];
+         segclip.walllights = cmapcontext.scalelight[lightnum];
    }
 
 
    // drawsegs need to be taken care of here
-   R_CheckDSAlloc();
+   R_checkDSAlloc(bspcontext);
 
    ds_p->x1       = start;
    ds_p->x2       = stop;
    ds_p->curline  = segclip.line;
    ds_p->dist2    = (ds_p->dist1 = segclip.dist) + segclip.diststep * (segclip.x2 - segclip.x1);
    ds_p->diststep = segclip.diststep;
-   ds_p->colormap = scalelight;
-   ds_p->fixedcolormap = fixedcolormap;
+   ds_p->colormap = cmapcontext.scalelight;
+   ds_p->fixedcolormap = cmapcontext.fixedcolormap;
    ds_p->deltaz = 0; // init with 0
    
    if(segclip.clipsolid)
-      R_CloseDSP();
+      R_closeDSP(ds_p);
    else
    {
       ds_p->sprtopclip = ds_p->sprbottomclip = nullptr;
@@ -893,7 +936,7 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = segclip.maxfrontfloor;
       }
-      else if(segclip.maxbackfloor > viewz)
+      else if(segclip.maxbackfloor > viewpoint.z)
       {
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
@@ -903,7 +946,7 @@ void R_StoreWallRange(const int start, const int stop)
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = segclip.minfrontceil;
       }
-      else if(segclip.minbackceil < viewz)
+      else if(segclip.minbackceil < viewpoint.z)
       {
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;
@@ -918,7 +961,7 @@ void R_StoreWallRange(const int start, const int stop)
 
          ds_p->maskedtexturecol = lastopening - segclip.x1;
          if(portalrender.active)
-            ds_p->deltaz = viewz - portalrender.w->vz;
+            ds_p->deltaz = viewpoint.z - portalrender.w->vz;
          
          mtc = lastopening;
 
@@ -944,11 +987,18 @@ void R_StoreWallRange(const int start, const int stop)
                  !ds_p->maskedtexturecol;
 
    if(usesegloop)
-      R_RenderSegLoop();
+   {
+      const R_ColumnFunc colfunc = r_column_engine->DrawColumn;
+      R_renderSegLoop(
+         cmapcontext, planecontext, portalcontext, colfunc, viewpoint, cb_viewpoint, bounds, ds_p, segclip
+      );
+   }
    else
-      R_StoreTextureColumns();
-   
+      R_storeTextureColumns(ds_p->maskedtexturecol, segclip);
+
    // store clipping arrays
+   float *const floorclip   = planecontext.floorclip;
+   float *const ceilingclip = planecontext.ceilingclip;
    if((ds_p->silhouette & SIL_TOP || segclip.maskedtex) && !ds_p->sprtopclip)
    {
       int xlen = segclip.x2 - segclip.x1 + 1;
@@ -1002,7 +1052,7 @@ void R_StoreWallRange(const int start, const int stop)
    // portal window, which would otherwise be ignored. Necessary for correct
    // sprite rendering.
    if(!segclip.clipsolid && (ds_p->silhouette || portalrender.active))
-      R_DetectClosedColumns();
+      R_detectClosedColumns(bspcontext, planecontext, bounds, segclip);
 
    ++ds_p;
 }
