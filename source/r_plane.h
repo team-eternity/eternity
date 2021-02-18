@@ -26,7 +26,6 @@
 #ifndef R_PLANE_H__
 #define R_PLANE_H__
 
-struct cb_column_t;
 struct cb_plane_t;
 struct cbviewpoint_t;
 struct cmapcontext_t;

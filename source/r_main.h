@@ -43,7 +43,6 @@
 struct pwindow_t;
 struct columndrawer_t;
 struct spandrawer_t;
-struct cb_column_t;
 struct rendercontext_t;
 struct cmapcontext_t;
 

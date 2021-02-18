@@ -27,7 +27,6 @@
 #define __R_SEGS__
 
 struct bspcontext_t;
-struct cb_column_t;
 struct cb_seg_t;
 struct cbviewpoint_t;
 struct cmapcontext_t;

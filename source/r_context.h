@@ -32,7 +32,6 @@
 #include "r_lighting.h"
 #include "r_portal.h"
 
-struct cb_column_t;
 struct cliprange_t;
 struct drawseg_t;
 struct drawsegs_xrange_t;
