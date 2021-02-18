@@ -1569,7 +1569,7 @@ static void P_LoadThings(int lump)
       if(LevelInfo.levelType == LI_TYPE_HERETIC)
          P_ConvertHereticThing(ft);
 
-      if(LevelInfo.levelType = LI_TYPE_STRIFE)
+      if(LevelInfo.levelType == LI_TYPE_STRIFE)
          P_ConvertStrifeThing(ft);
 
       // haleyjd 12/27/13: convert Doom extended thing numbers
