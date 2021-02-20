@@ -1,5 +1,5 @@
 //
-// EDF for Eternity Engine v4.01.00+
+// EDF for Eternity Engine v4.03.00+
 //
 // Thing type definitions for Strife gamemode.
 //
@@ -413,3 +413,301 @@ thingtype Peasant1 : Peasant, 7781
   translation TR_STCS7
 }
 
+thingtype Zombie : Mobj, 7769
+{
+  //speakerid/conversationid 28
+
+  spawnhealth  31
+  deathsound   psdtha
+
+  translation TR_STCS1
+
+  cflags SOLID|SHOOTABLE|COUNTKILL // STRIFE_TODO: MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    PEAS A 5 // // STRIFE_TODO: A_ZombieInSpecialSector
+    loop
+  Pain:
+    AGRD A 5 // // STRIFE_TODO: A_ZombieInSpecialSector
+    loop
+  Death:
+    GIBS M 5 // STRIFE_TODO: A_BodyParts
+    GIBS N 5 A_XScream
+    GIBS O 5 A_Fall
+    GIBS PQRS 4 // STRIFE_TODO: A_BodyParts
+    GIBS T 4
+    GIBS U 5
+    GIBS V 1400
+    stop
+  "@
+}
+
+thingtype Becoming : Mobj, 7801
+{
+  //speakerid/conversationid 29
+
+  spawnhealth   61
+  deathsound    psdtha
+  painchance    255
+
+  radius        16.0 // [SVE]: made smaller due to bizarre bug on MAP27
+
+  cflags SOLID|SHOOTABLE|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD|MF2_IGNORENOMONSTERS
+
+  states
+  @"
+  Spawn:
+    ARMR A -1
+    stop
+  Death:
+    GIBS A 5 A_Fall
+    GIBS BC 5 // STRIFE_TODO: A_BodyParts
+    GIBS D 4 // STRIFE_TODO: A_BodyParts
+    GIBS E 4 A_XScream
+    GIBS F 4 // STRIFE_TODO: A_BodyParts
+    GIBS G 4
+    GIBS H 4
+    GIBS I 5
+    GIBS J 5 // STRIFE_TODO: A_AcolyteSpecial
+    GIBS K 5
+    GIBS L 1400
+    stop
+  "@
+}
+
+thingtype ZombieSpawner : Mobj, 7770
+{
+  //speakerid/conversationid 30
+
+  spawnhealth 20
+
+  activesound st_telept
+
+  radius      20.0
+  height      20.0
+
+  cflags SHOOTABLE|NOSECTOR
+
+  states
+  @"
+  Spawn:
+    PLAY A 175 // STRIFE_TODO: A_SpawnZombie
+    loop
+  "@
+}
+
+thingtype HugeTank : Mobj
+{
+  radius 16.0
+  height 192.0
+  mass   50000
+
+  cflags SOLID // SVE_TODO: MF2_DRAWBILLBOARD
+}
+
+thingtype HugeTank1 : HugeTank, 7809
+{
+  //speakerid/conversationid 31
+
+  states
+  @"
+  Spawn:
+    TNK1 A 15
+    TNK1 B 11
+    TNK1 C 40
+    loop
+  "@
+}
+
+thingtype HugeTank2 : HugeTank, 7810
+{
+  //speakerid/conversationid 32
+
+  states
+  @"
+  Spawn:
+    TNK2 A 15
+    TNK2 B 11
+    TNK2 C 40
+    loop
+  "@
+}
+
+thingtype HugeTank3 : HugeTank, 7811
+{
+  //speakerid/conversationid 33
+
+  states
+  @"
+  Spawn:
+    TNK3 A 15
+    TNK3 B 11
+    TNK3 C 40
+    loop
+  "@
+}
+
+thingtype Tank : HugeTank { height 56.0 }
+
+thingtype Tank4 : Tank, 7813
+{
+  //speakerid/conversationid 34
+
+  states
+  @"
+  Spawn:
+    TNK4 A 15
+    TNK4 B 11
+    TNK4 C 40
+    loop
+  "@
+}
+
+thingtype Tank5 : Tank, 7814
+{
+  //speakerid/conversationid 35
+
+  states
+  @"
+  Spawn:
+    TNK5 A 15
+    TNK5 B 11
+    TNK5 C 40
+    loop
+  "@
+}
+
+thingtype Tank6 : Tank, 7829
+{
+  //speakerid/conversationid 36
+
+  states
+  @"
+  Spawn:
+    TNK6 A 15
+    TNK6 B 11
+    TNK6 C 40
+    loop
+  "@
+}
+
+thingtype KneelingGuy : Mobj, 7804
+{
+  //speakerid/conversationid 37
+
+  spawnhealth 51
+  painchance  255
+
+  painsound   static
+  deathsound  static
+  activesound chant
+
+  radius      6.0
+  height      6.0
+  mass        50000
+
+  cflags SOLID|SHOOTABLE|NOBLOOD|COUNTKILL // STRIFE_TODO: NODIALOG, SVE_TODO: MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    NEAL A 15 // STRIFE_TODO: A_ActiveSound
+    NEAL B 40 // STRIFE_TODO: A_ActiveSound
+    goto See
+  See:
+    NEAL A 15 // STRIFE_TODO: A_ActiveSound
+    NEAL B 40 // STRIFE_TODO: A_ActiveSound
+    loop
+  Death:
+    NEAL D 5
+    NEAL E 5 A_Scream
+    NEAL F 6
+    NEAL G 5 A_Fall
+    NEAL H 5
+    NEAL I 6
+    NEAL J -1
+    stop
+  Crash:
+    NEAL B 6
+    NEAL C 13 // STRIFE_TODO: A_PeasantCrash
+    loop
+  "@
+}
+
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
+thingtype Beggar : Mobj
+{
+  spawnhealth 20
+  painchance  250
+  speed       3
+
+  attacksound  meatht
+  painsound    pespna
+  deathsound   psdtha
+
+  height 56.0
+
+  cflags SOLID|SHOOTABLE|JUSTHIT|COUNTKILL // SVE_TODO: MF2_NOSTONECOLD|MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+  states
+  @"
+  Spawn:
+    BEGR A 10 // STRIFE_TODO: A_FriendLook
+  See:
+    BEGR AABBCC 4 A_RandomWalk
+    loop
+  Melee:
+    BEGR D 7
+    BEGR E 8 // STRIFE_TODO: A_PeasantPunch
+    BEGR E 1 A_Chase
+    BEGR D 8 // STRIFE_TODO: A_CheckTargetVisible
+    loop
+  Pain:
+    BEGR A 3 A_Pain
+    BEGR A 3 A_Chase
+    goto Melee
+  Death:
+    BEGR F 4
+    BEGR G 4 A_Scream
+    BEGR H 4
+    BEGR I 4 A_Fall
+    BEGR JKLM 4
+    BEGR N -1
+    stop
+  XDeath:
+    BEGR F 5 // STRIFE_TODO: A_BodyParts
+    GIBS N 5 A_XScream
+    GIBS O 5 A_Fall
+    GIBS PQRS 4 // STRIFE_TODO: A_BodyParts
+    GIBS T 4
+    GIBS U 5
+    GIBS V 1400
+    stop
+  "@
+}
+
+thingtype Beggar1 : Beggar, 7841
+{
+  //speakerid/conversationid 38
+}
+
+thingtype Beggar2 : Beggar, 7855
+{
+  //speakerid/conversationid 39
+}
+
+thingtype Beggar3 : Beggar, 7856
+{
+  //speakerid/conversationid 40
+}
+
+thingtype Beggar3 : Beggar, 7857
+{
+  //speakerid/conversationid 41
+}
+
+thingtype Beggar3 : Beggar, 7858
+{
+  //speakerid/conversationid 42
+}

@@ -574,7 +574,7 @@ typedef enum {
   sfx_hnoway,
 
   // Strife sounds
-  sfx_swish = 600,
+  sfx_swish = 700,
   sfx_meatht,
   sfx_mtalht,
   sfx_swpnup,
