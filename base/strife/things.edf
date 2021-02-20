@@ -613,9 +613,6 @@ thingtype KneelingGuy : Mobj, 7804
   states
   @"
   Spawn:
-    NEAL A 15 // STRIFE_TODO: A_ActiveSound
-    NEAL B 40 // STRIFE_TODO: A_ActiveSound
-    goto See
   See:
     NEAL A 15 // STRIFE_TODO: A_ActiveSound
     NEAL B 40 // STRIFE_TODO: A_ActiveSound
@@ -702,12 +699,12 @@ thingtype Beggar3 : Beggar, 7856
   //speakerid/conversationid 40
 }
 
-thingtype Beggar3 : Beggar, 7857
+thingtype Beggar4 : Beggar, 7857
 {
   //speakerid/conversationid 41
 }
 
-thingtype Beggar3 : Beggar, 7858
+thingtype Beggar5 : Beggar, 7858
 {
   //speakerid/conversationid 42
 }
