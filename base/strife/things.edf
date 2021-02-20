@@ -684,27 +684,175 @@ thingtype Beggar : Mobj
   "@
 }
 
-thingtype Beggar1 : Beggar, 7841
+thingtype Beggar1 : Beggar, 7741
 {
   //speakerid/conversationid 38
 }
 
-thingtype Beggar2 : Beggar, 7855
+thingtype Beggar2 : Beggar, 7755
 {
   //speakerid/conversationid 39
 }
 
-thingtype Beggar3 : Beggar, 7856
+thingtype Beggar3 : Beggar, 7756
 {
   //speakerid/conversationid 40
 }
 
-thingtype Beggar4 : Beggar, 7857
+thingtype Beggar4 : Beggar, 7757
 {
   //speakerid/conversationid 41
 }
 
-thingtype Beggar5 : Beggar, 7858
+thingtype Beggar5 : Beggar, 7758
 {
   //speakerid/conversationid 42
 }
+
+thingtype Rebel : Mobj
+{
+  spawnhealth 60
+  painchance  250
+  speed       8
+
+  seesound     st_wpnup
+  painsound    pespna
+  deathsound   rebdth
+  activesound  rebact
+
+  height       56.0
+  mass         100
+
+  cflags       SOLID|SHOOTABLE|COUNTKILL // STRIFE_TODO: MF_ALLY, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    HMN1 P 5 // STRIFE_TODO: A_FriendLook
+    loop
+  See:
+    HMN1 AABBCCDD 3 A_Chase
+    loop
+  Missile:
+    HMN1 E 10 A_FaceTarget
+    HMN1 E 10 bright // STRIFE_TODO: Strife's A_BulletAttack
+    HMN1 E 10 // STRIFE_TODO: Strife's A_BulletAttack
+    goto See
+  Pain:
+    HMN1 N 3
+    HMN1 N 3 A_Pain
+    goto See
+  Death:
+    HMN1 G 5
+    HMN1 H 5 A_Scream
+    HMN1 I 3 A_Fall
+    HMN1 J 4
+    HMN1 KLM 3
+    HMN1 N -1
+    stop
+  XDeath:
+    RGIB A 4 // STRIFE_TODO: A_BodyParts
+    RGIB B 4 A_XScream
+    RGIB C 3 A_Fall
+    RGIB DEF 3 // STRIFE_TODO: A_BodyParts
+    RGIB G 3
+    RGIB H 1400
+    stop
+  "@
+}
+
+thingtype Rebel1 : Rebel, 7609
+{
+  //speakerid/conversationid 43
+}
+
+thingtype Rebel2 : Rebel, 7744
+{
+  //speakerid/conversationid 44
+}
+
+thingtype Rebel3 : Rebel, 7745
+{
+  //speakerid/conversationid 45
+}
+
+thingtype Rebel4 : Rebel, 7749
+{
+  //speakerid/conversationid 46
+}
+
+thingtype Rebel5 : Rebel, 7750
+{
+  //speakerid/conversationid 47
+}
+
+thingtype Rebel6 : Rebel, 7751
+{
+  //speakerid/conversationid 48
+}
+
+thingtype RLeader : Mobj, 7664
+{
+  //speakerid/conversationid 49
+
+  spawnhealth 95
+  painchance  250
+  speed       8
+
+  seesound     agrsee
+  painsound    pespna
+  activesound  rebact
+
+  height       56.0
+  mass         100
+
+  cflags       SOLID|SHOOTABLE|COUNTKILL|NOTDMATCH // SVE_TODO: MF2_NOSTONECOLD|MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    LEDR C 5 // STRIFE_TODO: A_FriendLook
+    loop
+  See:
+  Death:
+    LEAD AABBCCDD 3 A_Chase
+    loop
+  Missile:
+    LEAD E 2 A_FaceTarget
+    LEAD E 2 bright // STRIFE_TODO: Strife's A_BulletAttack
+    LEAD E 1 // STRIFE_TODO: A_CheckTargetVisible
+    goto See
+  Pain:
+    LEAD Y 3
+    LEAD Y 3 A_Pain
+    goto See
+  "@
+}
+
+thingtype RLeader2 : Mobj, 7800
+{
+  //speakerid/conversationid 50
+
+  painchance  200
+
+  deathsound  pespna
+  activesound rebact
+
+  // STRIFE_TODO: addflags MF_SPECTRAL
+
+  states
+  @"
+  Death:
+  XDeath:
+    LEAD G 5
+    LEAD H 5 A_Scream
+    LEAD IJ 4
+    LEAD K 3
+    LEAD L 3 A_Fall
+    LEAD MNOPQRSTUV 3
+    LEAD W 3 // STRIFE_TODO: A_SpawnSpectreD
+    LEAD X -1
+    stop
+  "@
+}
+
