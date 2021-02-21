@@ -190,7 +190,6 @@ thingtype Peasant : Mobj
 
   radius       20.0
   height       56.0
-  mass         100
 
   cflags       SOLID|SHOOTABLE|JUSTHIT|COUNTKILL // SVE_TODO: MF2_NOSTONECOLD|MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
 
@@ -721,7 +720,6 @@ thingtype Rebel : Mobj
   activesound  rebact
 
   height       56.0
-  mass         100
 
   cflags       SOLID|SHOOTABLE|COUNTKILL // STRIFE_TODO: MF_ALLY, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
 
@@ -804,7 +802,6 @@ thingtype RLeader : Mobj, 7664
   activesound  rebact
 
   height       56.0
-  mass         100
 
   cflags       SOLID|SHOOTABLE|COUNTKILL|NOTDMATCH // SVE_TODO: MF2_NOSTONECOLD|MF2_NOREBELATTACK|MF2_DRAWBILLBOARD
 
@@ -829,7 +826,7 @@ thingtype RLeader : Mobj, 7664
   "@
 }
 
-thingtype RLeader2 : Mobj, 7800
+thingtype RLeader2 : RLeader, 7800
 {
   //speakerid/conversationid 50
 
@@ -856,3 +853,243 @@ thingtype RLeader2 : Mobj, 7800
   "@
 }
 
+thingtype MissileSmoke : Mobj
+{
+  //speakerid/conversationid 51
+
+  //seesound rflite STRIFE_TODO
+
+  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: MF_SHADOW for Strife
+
+  states
+  @"
+  Spawn:
+    PUFY BCBCD 4
+    stop
+  "@
+}
+
+thingtype Reaver : Mobj, 7951
+{
+  //speakerid/conversationid 52
+
+  spawnhealth 150
+  painchance  128
+  speed       12
+
+  seesound    revsee
+  painsound   reavpn
+  deathsound  revdth
+  activesound revact
+
+  height      60.0
+  mass        500
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ROB1 AA 10 A_Look
+    loop
+  See:
+    ROB1 AABBCCDDEE 3 A_Chase
+    loop
+  Pain:
+    ROB1 A 2
+    ROB1 A 2 A_Pain
+    goto See
+  Melee:
+    ROB1 H 6 A_FaceTarget
+    ROB1 I 8 // STRIFE_TODO: A_RobotMelee
+    ROB1 H 8
+    goto See
+  Missile:
+    ROB1 F 8 A_FaceTarget
+    ROB1 G 11 bright // STRIFE_TODO: A_ReaverAttack
+    goto See
+  Death:
+    ROB1 J 6 bright
+    ROB1 K 6 bright A_Scream
+    ROB1 L 5 bright
+    ROB1 M 5 A_Fall
+    ROB1 NOP 5 bright
+    ROB1 Q 6 bright // STRIFE_TODO: A_DeathExplode3
+    ROB1 R -1
+    stop
+  XDeath:
+    ROB1 L 5 bright // STRIFE_TODO: A_BodyParts
+    ROB1 M 5 bright A_XScream
+    ROB1 N 5 bright // STRIFE_TODO: A_BodyParts
+    ROB1 O 5 bright A_Fall
+    ROB1 P 5 bright // STRIFE_TODO: A_BodyParts
+    ROB1 Q 5 bright // STRIFE_TODO: A_DeathExplode3
+    ROB1 R -1
+    stop
+  "@
+}
+
+thingtype Guard : Mobj
+{
+  spawnhealth 70
+  painchance  150
+  speed       7
+
+  seesound    agrsee
+  attacksound rifle
+  painsound   agrdpn
+  deathsound  agrdth
+  activesound agrac1
+
+  radius      24.0
+  height      64.0
+  mass        400
+
+  cflags      SOLID|SHOOTABLE|COUNTKILL // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    AGRD A 5 // STRIFE_TODO: A_FriendLook
+    loop
+  See:
+    AGRD A 5 // STRIFE_TODO: A_SetTLOptions
+    AGRD BCD A_Chase
+    loop
+  Pain:
+    AGRD O 8 A_Pain
+    goto See
+  Missile:
+    AGRD E 8 A_FaceTarget
+    AGRD FE 4 // STRIFE_TODO: Strife's A_BulletAttack
+    AGRD F 6 // STRIFE_TODO: Strife's A_BulletAttack
+    goto See
+  Death:
+    AGRD G 4
+    AGRD H 4 A_Scream
+    AGRD I 4
+    AGRD J 3
+    AGRD K 3 A_Fall
+    AGRD L 3 // STRIFE_TODO: A_AcolyteSpecial
+    AGRD M 1400
+    goto DeathJump
+  XDeath:
+    GIBS A 5 A_Fall
+    GIBS BC 5 // STRIFE_TODO: A_BodyParts
+    GIBS D 4 // STRIFE_TODO: A_BodyParts
+    GIBS E 4 A_XScream
+    GIBS F 4 // STRIFE_TODO: A_BodyParts
+    GIBS G 4
+    GIBS H 4
+    GIBS I 5
+    GIBS J 5 // STRIFE_TODO: A_AcolyteSpecial
+  DeathJump:
+    GIBS K 5
+    GIBS L 1400
+    stop
+  "@
+}
+
+thingtype Guard1 : Guard, 7952
+{
+  //speakerid/conversationid 53
+
+  addflags RANGEHALF|RANGEEIGHTH
+}
+
+thingtype Guard2 : Guard, 7742
+{
+  //speakerid/conversationid 54
+
+  activesound agrac2
+
+  translation TR_STCS1
+
+  addflags RANGEHALF|RANGEEIGHTH
+}
+
+thingtype Guard3 : Guard, 7743
+{
+  //speakerid/conversationid 55
+
+  activesound agrac3
+
+  translation TR_STCS2
+
+  addflags RANGEHALF|RANGEEIGHTH
+}
+
+thingtype Guard4 : Guard, 7746
+{
+  //speakerid/conversationid 56
+
+  translation TR_STCS3
+
+  addflags RANGEHALF|RANGEEIGHTH
+}
+
+thingtype Guard5 : Guard, 7747
+{
+  //speakerid/conversationid 57
+
+  activesound agrac2
+
+  translation TR_STCS4
+
+  addflags RANGEHALF|RANGEEIGHTH
+}
+
+thingtype Guard6 : Guard, 7748
+{
+  //speakerid/conversationid 58
+
+  activesound agrac3
+
+  translation TR_STCS5
+
+  addflags RANGEHALF|RANGEEIGHTH
+}
+
+thingtype Guard7 : Guard, 7832
+{
+  //speakerid/conversationid 59
+
+  spawnhealth 60
+
+  activesound agrac3
+
+  translation TR_STCS6
+}
+
+thingtype Guard8 : Guard, 7831
+{
+  //speakerid/conversationid 60
+
+  spawnhealth 60
+
+  activesound agrac3
+
+  translation TR_STCS7
+}
+
+thingtype ShadowGuard : Guard, 7658
+{
+  //speakerid/conversationid 61
+
+  activesound agrac2
+
+  translation TR_STCS5
+
+  addflags RANGEHALF
+
+  states
+  @"
+  See:
+    AGRD A 6 // STRIFE_TODO: A_ModifyVisiblity
+    goto Super::See+1
+  Pain:
+    AGRD O 0 // STRIFE_TODO: A_ShadowOn
+    AGRD O 8 A_Pain
+    goto See
+  "@
+}
