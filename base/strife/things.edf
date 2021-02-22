@@ -1385,3 +1385,193 @@ thingtype Priest : Mobj, 7612
   "@
 }
 
+thingtype Spectre : Mobj
+{
+  painchance  50
+  speed       12
+
+  seesound    alnsee
+  attacksound revbld
+  painsound   alnpn
+  deathsound  alndth
+  activesound alnact
+
+  radius      24.0
+  height      64.0
+  mass        1000
+
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG|MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    ALN1 A 10 A_Look
+    ALN1 B 10 // STRIFE_TODO: A_FloatWeave
+    loop
+  See:
+    ALN1 AB 4 bright A_Chase
+  PostMelee:
+    ALN1 C 4 bright // STRIFE_TODO: A_FloatWeave
+    ALN1 DEF 4 bright A_Chase
+  PostPain:
+    ALN1 G 4 bright // STRIFE_TODO: A_FloatWeave
+    ALN1 HIJ 4 bright A_Chase
+  PostMissile:
+    ALN1 K 4 bright // STRIFE_TODO: A_FloatWeave
+    loop
+  Pain:
+    ALN1 J 2 A_Pain
+    goto PostPain
+  Melee:
+    ALN1 J 4 bright A_FaceTarget
+    ALN1 I 4 bright // STRIFE_TODO: A_BossMeleeAtk
+    ALN1 H 4 bright
+    goto PostMelee
+  Death:
+    AL1P A 6 bright // STRIFE_TODO: A_NodeChunk
+    AL1P B 6 bright A_Scream
+    AL1P C 6 bright // STRIFE_TODO: A_NodeChunk
+    AL1P DE 6 bright
+    AL1P F 6 bright // STRIFE_TODO: A_NodeChunk
+    AL1P G 6 bright
+    AL1P H 6 bright // STRIFE_TODO: A_NodeChunk
+    AL1P IJK 6 bright
+    AL1P LM 5 bright
+    AL1P N 5 bright // STRIFE_TODO: A_HeadChunk
+    AL1P OPQ 5 bright
+    AL1P R bright 5 // STRIFE_TODO: Strife's A_BossDeath
+    stop
+  "@
+}
+
+thingtype SpectreA : Spectre, 7729
+{
+  //speakerid/conversationid 67
+
+  painchance 250
+  radius     64.0
+
+  states
+  @"
+  Missile:
+    ALN1 J 4 bright A_FaceTarget
+    ALN1 I 4 bright // STRIFE_TODO: A_ProgrammerAttack
+    ALN1 H 4 bright
+    goto Super::PostMissile
+  "@
+}
+
+thingtype Node : Mobj
+{
+  //speakerid/conversationid 68
+
+  cflags NOBLOCKMAP|NOCLIP|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    NODE ABCDEFG 6 bright
+    stop
+  "@
+}
+
+thingtype SpectreHead : Mobj
+{
+  //speakerid/conversationid 69
+
+  cflags NOBLOCKMAP|NOCLIP|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    MTHD ABCDEFGHIJK 5 bright
+    stop
+  "@
+}
+
+thingtype SpectreB : Spectre, 7675
+{
+  //speakerid/conversationid 70
+
+  spawnhealth 1200
+
+  states
+  @"
+  Missile:
+    ALN1 F 4 A_FaceTarget
+    ALN1 I 4 // STRIFE_TODO: A_FireSigilEOffshoot
+    ALN1 E 4
+    goto Super::PostMissile
+  "@
+}
+
+thingtype SpectreC : Spectre, 7676
+{
+  //speakerid/conversationid 71
+
+  spawnhealth 1500
+
+  states
+  @"
+  Spawn:
+    ALN1 ABCDEFGHIJK 5 // STRIFE_TODO: A_FloatWeave
+    loop
+  See:
+    ALN1 AB 5 A_Chase
+  PostMelee:
+    ALN1 C 5 // STRIFE_TODO: A_FloatWeave
+    ALN1 DEF 5 A_Chase
+  PostPain:
+    ALN1 G 5 // STRIFE_TODO: A_FloatWeave
+    ALN1 HIJ 5 A_Chase
+  PostMissile:
+    ALN1 K 5 // STRIFE_TODO: A_FloatWeave
+    loop
+  Pain:
+    ALN1 J 2 A_Pain
+    goto PostPain
+  Melee:
+    ALN1 J 4 A_FaceTarget
+    ALN1 I 4 // STRIFE_TODO: A_BossMeleeAtk
+    ALN1 C 4
+    goto PostMelee
+  Missile:
+    ALN1 F 4 A_FaceTarget
+    ALN1 I 4 // STRIFE_TODO: A_SpectreCAttack
+    ALN1 E 4
+    goto PostMissile
+  "@
+}
+
+thingtype SpectreD : Spectre, 7767
+{
+  //speakerid/conversationid 72
+
+  spawnhealth 1700
+
+  states
+  @"
+  Missile:
+    ALN1 F 4 A_FaceTarget
+    ALN1 I 4 // STRIFE_TODO: A_SpectreDAttack
+    ALN1 E 4
+    goto Super::PostMissile
+  "@
+}
+
+thingtype SpectreE : Spectre, 7768
+{
+  //speakerid/conversationid 73
+
+  spawnhealth 2000
+
+  states
+  @"
+  Missile:
+    ALN1 F 4 A_FaceTarget
+    ALN1 I 4 // STRIFE_TODO: A_SpectreEAttack
+    ALN1 E 4
+    goto Super::PostMissile
+  "@
+}
+
