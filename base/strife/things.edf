@@ -106,15 +106,15 @@ thingtype Merchant : Mobj
     loop
   Idle1:
     MRLK A 30 // STRIFE_TODO: A_ActiveSound
-    loop
+    goto Spawn
   Idle2:
     MRLK B 30
-    loop
-  Idle3:
+    goto Spawn
+  Wander:
     MRBD ABCDEDCB 4
     MRBD A 5
     MRBD F 6
-    loop
+    goto Spawn
   See:
   Pain:
     MRPN A 3
@@ -198,10 +198,12 @@ thingtype Peasant : Mobj
     PEAS A 10 // STRIFE_TODO: A_FriendLook
     loop
   See:
-    PEAS AA 5 A_RandomWalk
-    PEAS BB 5 A_RandomWalk
-    PEAS CC 5 A_RandomWalk
-    PEAS DD 5 A_RandomWalk
+  Idle1:
+    PEAS A 5 A_RandomWalk
+  Idle2:
+    PEAS A 5 A_RandomWalk
+  Wander:
+    PEAS BBCCDD 5 A_RandomWalk
     goto Spawn
   Melee:
     PEAS E 10 A_FaceTarget
@@ -651,8 +653,13 @@ thingtype Beggar : Mobj
   Spawn:
     BEGR A 10 // STRIFE_TODO: A_FriendLook
   See:
-    BEGR AABBCC 4 A_RandomWalk
-    loop
+  Idle1:
+    BEGR A 4 A_RandomWalk
+  Idle2:
+    BEGR A 4 A_RandomWalk
+  Wander:
+    BEGR BBCC 4 A_RandomWalk
+    goto See
   Melee:
     BEGR D 7
     BEGR E 8 // STRIFE_TODO: A_PeasantPunch
@@ -708,6 +715,7 @@ thingtype Beggar5 : Beggar, 7758
   //speakerid/conversationid 42
 }
 
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype Rebel : Mobj
 {
   spawnhealth 60
@@ -728,6 +736,14 @@ thingtype Rebel : Mobj
   Spawn:
     HMN1 P 5 // STRIFE_TODO: A_FriendLook
     loop
+  Idle1:
+    HMN1 Q 8
+    goto Spawn
+  Idle2:
+    HMN1 R 8
+    goto Spawn
+  Wander:
+    HMN1 ABCDABCD 6 A_RandomWalk
   See:
     HMN1 AABBCCDD 3 A_Chase
     loop
@@ -789,6 +805,7 @@ thingtype Rebel6 : Rebel, 7751
   //speakerid/conversationid 48
 }
 
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype RLeader : Mobj, 7664
 {
   //speakerid/conversationid 49
@@ -810,6 +827,15 @@ thingtype RLeader : Mobj, 7664
   Spawn:
     LEDR C 5 // STRIFE_TODO: A_FriendLook
     loop
+  Idle1:
+    LEDR A 8
+    goto Spawn
+  Idle2:
+    LEDR B 8
+    goto Spawn
+  Wander:
+    LEDR ABCD 6 A_RandomWalk
+    goto Spawn
   See:
   Death:
     LEAD AABBCCDD 3 A_Chase
@@ -929,6 +955,7 @@ thingtype Reaver : Mobj, 7951
   "@
 }
 
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype Guard : Mobj
 {
   spawnhealth 70
@@ -952,6 +979,15 @@ thingtype Guard : Mobj
   Spawn:
     AGRD A 5 // STRIFE_TODO: A_FriendLook
     loop
+  Idle1:
+    AGRD B 8 // STRIFE_TODO: A_ShadowOff
+    goto Spawn
+  Idle2:
+    AGRD D 8
+    goto Spawn
+  Wander:
+    AGRD ABCDABCD 5 A_RandomWalk
+    goto Spawn
   See:
     AGRD A 5 // STRIFE_TODO: A_SetTLOptions
     AGRD BCD A_Chase
@@ -970,8 +1006,9 @@ thingtype Guard : Mobj
     AGRD I 4
     AGRD J 3
     AGRD K 3 A_Fall
-    AGRD L 3 // STRIFE_TODO: A_AcolyteSpecial
-    AGRD M 1400
+    AGRD L 3 A_Fall
+    AGRD M 3 // STRIFE_TODO: A_AcolyteSpecial
+    AGRD N 1400
     goto DeathJump
   XDeath:
     GIBS A 5 A_Fall
@@ -1094,6 +1131,7 @@ thingtype ShadowGuard : Guard, 7658
   "@
 }
 
+// STRIFE_FIXME: Should A_RandomWalk be replaced w/ a new codepointer called A_Wander?
 thingtype PGuard : Mobj, 7953
 {
   //speakerid/conversationid 62
@@ -1117,6 +1155,15 @@ thingtype PGuard : Mobj, 7953
   Spawn:
     PGRD A 5 // STRIFE_TODO: A_FriendLook
     loop
+  Idle1:
+    PGRD B 10
+    goto Spawn
+  Idle2:
+    PGRD C 10
+    goto Spawn
+  Wander:
+    PGRD B 10 A_RandomWalk
+    goto Spawn
   See:
     PGRD AABBCCDD 3 A_Chase
     loop
