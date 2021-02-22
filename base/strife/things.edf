@@ -1439,7 +1439,7 @@ thingtype Spectre : Mobj
     AL1P LM 5 bright
     AL1P N 5 bright // STRIFE_TODO: A_HeadChunk
     AL1P OPQ 5 bright
-    AL1P R bright 5 // STRIFE_TODO: Strife's A_BossDeath
+    AL1P R 5 bright // STRIFE_TODO: Strife's A_BossDeath
     stop
   "@
 }
@@ -1526,7 +1526,7 @@ thingtype SpectreC : Spectre, 7676
     ALN1 HIJ 5 A_Chase
   PostMissile:
     ALN1 K 5 // STRIFE_TODO: A_FloatWeave
-    loop
+    goto See
   Pain:
     ALN1 J 2 A_Pain
     goto PostPain
@@ -1572,6 +1572,167 @@ thingtype SpectreE : Spectre, 7768
     ALN1 I 4 // STRIFE_TODO: A_SpectreEAttack
     ALN1 E 4
     goto Super::PostMissile
+  "@
+}
+
+thingtype Entity : Mobj, 7728
+{
+  //speakerid/conversationid 74
+
+  spawnhealth 2500
+  painchance  255
+  speed       13
+
+  seesound    mnalse
+  attacksound revbld
+  painsound   alnpn
+  deathsound  mnaldt
+  activesound alnact
+
+  radius      130.0
+  height      200.0
+  mass        1000
+
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG|MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    MNAM A 100 // STRIFE_TODO: A_FloatWeave
+    MNAM BCDEFGHIJKL 10 bright // STRIFE_TODO: A_FloatWeave
+  Look:
+    MNAL A 4 bright A_Look
+    MNAL B 4 bright // STRIFE_TODO: A_FloatWeave
+    loop
+  See:
+    MNAL AB 4 bright A_Chase
+  PostMelee:
+    MNAL C 4 bright // STRIFE_TODO: A_FloatWeave
+    MNAL DEF 4 bright A_Chase
+  PostPain:
+    MNAL G 4 bright // STRIFE_TODO: A_FloatWeave
+    MNAL HIJ 4 bright A_Chase
+  PostMissile:
+    MNAL K 4 bright // STRIFE_TODO: A_FloatWeave
+    goto See
+  Pain:
+    MNAL J 2 A_Pain
+    goto PostPain
+  Melee:
+    MNAL J 4 bright A_FaceTarget
+    MNAL I 4 bright // STRIFE_TODO: A_BossMeleeAtk
+    MNAL C 4 bright
+    goto PostMelee
+  Missile:
+    MNAL F 4 bright A_FaceTarget
+    MNAL I 4 bright // STRIFE_TODO: A_FireSigilWeapon
+    MNAL L 4 bright
+    goto PostMissile
+  Death:
+    MNAL L 7 bright // STRIFE_TODO: A_NodeChunk
+    MNAL M 7 bright A_Scream
+    MNAL NO 7 bright // STRIFE_TODO: A_NodeChunk
+    MNAL P 7 bright // STRIFE_TODO: A_HeadChunk
+    MNAL Q 64 bright // STRIFE_TODO: A_NodeChunk
+    MNAL Q 6 bright // STRIFE_TODO: A_EntityDeath
+    stop
+  "@
+}
+
+thingtype SubEntity : Mobj
+{
+  //speakerid/conversationid 75
+
+  spawnhealth 990
+  painchance  255
+  speed       14
+
+  seesound    alnsee
+  attacksound revbld
+  painsound   alnpn
+  deathsound  alndth
+  activesound alnact
+
+  radius      130.0
+  height      200.0
+  mass        1000
+
+  cflags      SPECIAL|SOLID|SHOOTABLE|NOGRAVITY|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG|MF_MVIS|MF_SPECTRAL Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    MNAL R 10 bright A_Look
+    loop
+  See:
+    MNAL R 5 bright // STRIFE_TODO: A_FloatWeave
+  PostMelee:
+    MNAL ST 5 bright A_Chase
+    MNAL U 5 bright // STRIFE_TODO: A_FloatWeave
+  PostMissile:
+    MNAL V 5 bright A_Chase
+    MNAL W 5 bright // STRIFE_TODO: A_FloatWeave
+    goto See
+  Pain:
+    MNAL R 2 bright A_Pain
+    goto See
+  Melee:
+    MNAL S 4 bright A_FaceTarget
+    MNAL R 4 bright // STRIFE_TODO: A_BossMeleeAtk
+    MNAL T 4 bright // STRIFE_TODO: A_FloatWeave
+    goto PostMelee
+  Missile:
+    MNAL W 4 bright A_FaceTarget
+    MNAL U 4 bright // STRIFE_TODO: A_FireSigilEOffshoot
+    MNAL V 4 bright
+    goto PostMissile
+  Death:
+    MDTH A 3 bright A_Scream
+    MDTH B 3 bright A_Fall
+    MDTH CDEFGHIJKLMN 3 bright // STRIFE_TODO: A_BodyParts
+    MDTH O 3 bright // STRIFE_TODO: Strife's A_BossDeath
+    stop
+  "@
+}
+
+thingtype Nest : Mobj, 7626
+{
+  //speakerid/conversationid 76
+
+  radius 84.0
+  height 47.0
+
+  cflags SOLID|NOTDMATCH // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    NEST A -1
+    stop
+  "@
+}
+
+thingtype Pod : Mobj, 7798
+{
+  //speakerid/conversationid 77
+
+  radius 25.0
+  height 91.0
+
+  cflags SOLID|NOTDMATCH // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    PODD A 60 A_Look
+    loop
+  See:
+    PODD A 360
+    PODD B 9 A_Fall
+    PODD C 9
+    PODD D 9 // STRIFE_TODO: A_SpawnEntity
+    PODD E -1
+    stop
   "@
 }
 
