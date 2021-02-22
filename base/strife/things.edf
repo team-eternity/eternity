@@ -1299,3 +1299,89 @@ thingtype Bishop : Mobj, 7787
   "@
 }
 
+thingtype Oracle : Mobj, 7799
+{
+  //speakerid/conversationid 65
+
+  spawnhealth 1
+
+  radius      15.0
+  height      56.0
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|NOTDMATCH // SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ORCL A -1
+    stop
+  Death:
+    ORCL BCDEFGHIJK 5
+    ORCL L 5 A_Fall
+    ORCL M 5
+    ORCL N 5 // STRIFE_TODO: A_AlertSpectreC
+    ORCL OP 5
+    ORCL Q -1
+    stop
+  "@
+}
+
+thingtype Priest : Mobj, 7612
+{
+  //speakerid/conversationid 66
+
+  spawnhealth 800
+  speed       10
+
+  seesound    lorsee
+  attacksound revbld
+  painsound   lorpn
+  deathsound  st_slop
+  activesound tend
+
+  radius      15.0
+  height      16.0
+
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    PRST A 10 A_Look
+    PRST B 10 // STRIFE_TODO: A_FloatWeave
+    loop
+  See:
+    PRST A 4 A_Chase
+    PRST A 4 // STRIFE_TODO: A_FloatWeave
+    PRST B 4 A_Chase
+    PRST B 4 // STRIFE_TODO: A_FloatWeave
+    PRST C 4 A_Chase
+    PRST C 4 // STRIFE_TODO: A_FloatWeave
+    PRST D 4 A_Chase
+    PRST D 4 // STRIFE_TODO: A_FloatWeave
+    loop
+  Melee:
+    PRST E 4 A_FaceTarget
+    PRST F 4 // STRIFE_TODO: A_BossMeleeAtk
+    PRST E 4 // STRIFE_TODO: A_FloatWeave
+    goto See
+  Missile:
+    PRST E 4 A_FaceTarget
+    PRST F 4 // STRIFE_TODO: A_FireHookShot
+    PRST E 4 // STRIFE_TODO: A_FloatWeave
+    goto See
+  Death:
+    PDED A 6
+    PDED B 6 A_Scream
+    PDED C 6
+    PDED D 6 A_Fall
+    PDED E 6
+    PDED FGHIJKL 5
+    PDED MNOP 4
+    PDED Q 4 // STRIFE_TODO: A_SpawnSpectreE
+    PDED RS 4
+    PDED T -1
+    stop
+  "@
+}
+
