@@ -1093,3 +1093,162 @@ thingtype ShadowGuard : Guard, 7658
     goto See
   "@
 }
+
+thingtype PGuard : Mobj, 7953
+{
+  //speakerid/conversationid 62
+
+  spawnhealth 300
+  painchance  100
+  speed       8
+
+  seesound    pgrsee
+  painsound   pgrdpn
+  deathsound  pgrdth
+  activesound pgract
+
+  height      64.0
+  mass        500
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    PGRD A 5 // STRIFE_TODO: A_FriendLook
+    loop
+  See:
+    PGRD AABBCCDD 3 A_Chase
+    loop
+  Pain:
+    PGRD A 2
+    PGRD A 2 A_Pain
+    goto See
+  Melee:
+    PGRD E 8 // STRIFE_TODO: A_FaceTarget
+    PGRD F 8 // STRIFE_TODO: A_FaceTarget
+    goto See
+  Missile:
+    PGRD G 8 A_FaceTarget
+    PGRD H 8 // A_TemplarMauler
+    goto See
+  Death:
+    PGRD I 4 bright // STRIFE_TODO: A_BodyParts
+    PGRD J 4 bright A_Scream
+    PGRD K 4 bright // STRIFE_TODO: A_BodyParts
+    PGRD L 4 bright A_Fall
+    PGRD MN 4 bright
+    PGRD O 4 // STRIFE_TODO: A_BodyParts
+    PGRD PQR 4
+    PGRD "STUVWXYZ[" 3
+    PGRD "\" -1
+    stop
+  "@
+}
+
+thingtype Crusader : Mobj, 7955
+{
+  //speakerid/conversationid 63
+
+  spawnhealth 400
+  painchance  128
+  speed       8
+
+  seesound    rb2see
+  painsound   rb2pn
+  deathsound  rb2dth
+  activesound rb2act
+
+  radius      40.0
+  height      56.0
+  mass        400
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ROB2 Q 10 A_Look
+    loop
+  See:
+    ROB2 AABBCCDD A_Chase
+    loop
+  Pain:
+    ROB2 D 1 A_Pain
+    goto See
+  Missile:
+    ROB2 E 3 A_FaceTarget
+    ROB2 F 2 bright // STRIFE_TODO: A_CrusaderAttack
+    ROB2 E 2 bright // STRIFE_TODO: A_CrusaderLeft
+    ROB2 F 3 bright // STRIFE_TODO: A_CrusaderLeft
+    ROB2 EF 2 bright // STRIFE_TODO: A_CrusaderLeft
+    ROB2 EFE 2 bright // STRIFE_TODO: A_CrusaderRight
+    ROB2 F 5 // STRIFE_TODO: A_CheckTargetVisible2
+    goto See
+  Death:
+    ROB2 G 3 A_Scream
+    ROB2 H 6 // STRIFE_TODO: A_BodyParts
+    ROB2 I 4 bright // STRIFE_TODO: A_BodyParts
+    ROB2 J 4 bright // STRIFE_TODO: A_DeathExplode2
+    ROB2 K 4 bright A_Fall
+    ROB2 L 4 // STRIFE_TODO: A_DeathExplode2
+    ROB2 MN 4 // STRIFE_TODO: A_BodyParts
+    ROB2 O 4 // STRIFE_TODO: A_DeathExplode2
+    ROB2 P -1 // STRIFE_TODO: Strife's A_BossDeath
+    stop
+  "@
+}
+
+thingtype Bishop : Mobj, 7787
+{
+  //speakerid/conversationid 64
+
+  spawnhealth 500
+  painchance  128
+  speed       8
+
+  seesound    rb2see
+  painsound   rb2pn
+  deathsound  pgrdth
+  activesound rb2act
+
+  radius      40.0
+  height      56.0
+  mass        400
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD|COUNTKILL|NOTDMATCH // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    MLDR A 10 A_Look
+    loop
+  See:
+    MLDR AABBCCDD 3 A_Chase
+    loop
+  Pain:
+    MLDR D 1 A_Pain
+    goto See
+  Missile:
+    MLDR E 3 A_FaceTarget
+    MLDR F 2 bright // STRIFE_TODO: Strife's A_BishopAttack
+  Death:
+    MLDR G 3 bright
+    MLDR H 5 A_Scream
+    MLDR I 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR J 4 bright // STRIFE_TODO: A_DeathExplode2
+    MLDR KL 4 bright
+    MLDR M 4 bright A_Fall
+    MLDR N 4 bright
+    MLDR O 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR P 4 bright
+    MLDR Q 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR R 4 bright
+    MLDR S 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR T 4 bright
+    MLDR U 4 bright // STRIFE_TODO: A_BodyParts
+    MLDR V 4 // STRIFE_TODO: A_SpawnSpectreB
+    stop
+  "@
+}
+
