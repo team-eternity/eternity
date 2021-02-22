@@ -1736,3 +1736,216 @@ thingtype Pod : Mobj, 7798
   "@
 }
 
+thingtype SigilShotBase : Mobj
+{
+  seesound   sigil
+  deathsound sglhit
+
+  cflags     NOBLOCKMAP
+
+  states
+  @"
+  Death:
+    ZAP1 B 3 // STRIFE_TODO: A_DeathExplode3
+    ZAP1 A 3 // STRIFE_TODO: A_RaiseAlarm
+    ZAP1 BCDEFE 3
+    ZAP1 DCB 2
+    ZAP1 A 1
+    stop
+  "@
+}
+
+thingtype SigilBShot : SigilShotBase
+{
+  //speakerid/conversationid 78
+
+  speed  30.0
+
+  radius 8.0
+
+  damage 70
+
+  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+
+  states
+  @"
+  Spawn:
+    ZAP6 A 4 bright
+    ZAP6 B 4 // STRIFE_TODO: A_SigilTrail
+    ZAP6 C 4 // STRIFE_TODO: A_SigilTrail
+    loop
+  "@
+}
+
+thingtype SigilSBShot : SigilBShot
+{
+  //speakerid/conversationid 79
+
+  damage 20
+}
+
+thingtype SigilCShot : SigilShotBase
+{
+  //speakerid/conversationid 80
+
+  speed  30.0
+
+  radius 8.0
+
+  damage 70
+
+  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+
+  states
+  @"
+  Spawn:
+    ZOT3 ABCDE 4 bright
+    ZAP6 ABC 5 bright
+    stop
+  "@
+}
+
+thingtype SigilSCShot : SigilCShot
+{
+  //speakerid/conversationid 81
+
+  damage 20
+}
+
+thingtype SigilEOffshoot : SigilBShot
+{
+  //speakerid/conversationid 82
+
+  damage 10
+}
+
+thingtype SigilTrail : Mobj
+{
+  //speakerid/conversationid 83
+
+  cflags NOBLOCKMAP|NOGRAVITY|DROPOFF
+
+  states
+  @"
+  Spawn:
+    ZAP6 ABC 5 bright
+    stop
+  "@
+}
+
+thingtype SigilEShot : SigilShotBase
+{
+  //speakerid/conversationid 84
+
+  speed  18.0
+
+  height 40.0
+
+  damage 130
+
+  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+
+  states
+  @"
+  Spawn:
+    ZAP7 AB 4 bright // STRIFE_TODO: A_Sigil_E_Action
+    ZAP7 CDE 6 bright // STRIFE_TODO: A_Sigil_E_Action
+    loop
+  Death:
+    goto Super::Death+2
+  "@
+}
+
+thingtype SigilSEShot : SigilShotBase
+{
+  //speakerid/conversationid 85
+
+  damage 30
+}
+
+thingtype SigilAZapLeft : SigilShotBase
+{
+  //speakerid/conversationid 86
+
+  speed  22.0
+
+  radius 8.0
+  height 24.0
+
+  damage 100
+
+  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: MF_SPECTRAL
+
+  states
+  @"
+  Spawn:
+    ZOT1 AB 4 bright
+    ZOT1 CDE 6 bright
+    loop
+  Death:
+    goto Super::Death+6
+  "@
+}
+
+thingtype SigilAZapRight : SigilAZapLeft
+{
+  //speakerid/conversationid 87
+
+  damage 50
+}
+
+thingtype SigilAGround : SigilShotBase
+{
+  //speakerid/conversationid 88
+
+  reactiontime 70
+
+  seesound     none
+  deathsound   none
+
+  speed        18.0
+
+  //STRIFE_TODO: addflags Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    ZAP5 A 4 bright // STRIFE_TODO: A_MissileTick
+    ZAP5 B 4 bright // STRIFE_TODO: A_Sigil_A_Action
+    ZAP5 CD 4 bright // STRIFE_TODO: A_MissileTick
+    loop
+  Death:
+    goto Super::Death+1
+  "@
+}
+
+thingtype SigilDShot : SigilShotBase
+{
+  //speakerid/conversationid 89
+
+  speed    28.0
+  radius   8.0
+
+  damage   120
+
+  addflags NOGRAVITY|DROPOFF|MISSILE // STRIFE_TODO: Strife's MF_SPECTRAL
+
+  states
+  @"
+  Spawn:
+    ZOT2 AB 4 bright // STRIFE_TODO: Strife's A_Tracer
+    ZOT2 CD 6 bright // STRIFE_TODO: Strife's A_Tracer
+    ZOT2 E 5 bright // STRIFE_TODO: Strife's A_Tracer
+    loop
+  Death:
+    goto Super::Death+1
+  "@
+}
+
+thingtype SigilSDShot : SigilDShot
+{
+  //speakerid/conversationid 90
+
+  damage 60
+}
+
