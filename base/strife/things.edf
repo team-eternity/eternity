@@ -1949,3 +1949,198 @@ thingtype SigilSDShot : SigilDShot
   damage 60
 }
 
+thingtype Sentinel : Mobj, 7956
+{
+  //speakerid/conversationid 91
+
+  spawnhealth 100
+  painchance  255
+  speed       7
+
+  seesound    sntsee
+  deathsound  sntdth
+  activesound sntact
+
+  radius      23.0
+  height      53.0
+  mass        300
+
+  cflags      SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SEWR A 10 A_Look
+    loop
+  See:
+    SEWR A 6 // STRIFE_TODO: A_FloatWeave
+    SEWR A 6 A_Chase
+    loop
+  Pain:
+    SEWR D 5 A_Pain
+    goto Missile+2
+  Missile:
+    SEWR B 4 A_FaceTarget
+    SEWR C 8 bright // STRIFE_TODO: A_SentinelAttack
+    SEWR C 4 bright // STRIFE_TODO: A_CheckTargetVisible
+    loop
+  Death:
+    SEWR D 7 A_Fall
+    SEWR E 8 bright // STRIFE_TODO: A_BodyParts
+    SEWR F 5 bright A_Scream
+    SEWR GH 4 bright // STRIFE_TODO: A_BodyParts
+    SEWR I 4
+    // The single state below is vanilla-only
+    SEWR J 5
+    // SVE_TODO: Enable these states when SVE is detected somehow
+    //SEWR J 44
+    //SEWR H 4 bright
+    //SEWR K 3 bright
+    //SEWR L 3 bright // STRIFE_TODO: A_BodyParts
+    //JUNK G 35 // STRIFE_TODO: A_BodyParts
+    stop
+  "@
+}
+
+thingtype Stalker : Mobj, 7786
+{
+  //speakerid/conversationid 92
+
+  spawnhealth 80
+  painchance  40
+  speed       16
+
+  seesound    st_spisit
+  painsound   spdatk
+  deathsound  st_spidth
+  activesound st_spisit
+
+  radius      31.0
+  height      25.0
+
+  cflags      SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|DROPOFF|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_NODIALOG, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SPID A 1 // STRIFE_TODO: A_StalkerSetLook
+  LookCeiling:
+    SPID A 10 A_Look
+    loop
+  LookFloor:
+    SPID J 10 A_Look
+    loop
+  See:
+    SPID A 1 // STRIFE_TODO: A_StalkerThink
+    SPID ABB 3 A_Chase
+    SPID C 3 // STRIFE_TODO: A_StalkerChase
+    SPID C 3 A_Chase
+    loop
+  Pain:
+    SPID L 1
+    goto See
+  Melee:
+    SPID J 3 A_FaceTarget
+    SPID K 3 // STRIFE_TODO: A_StalkerScratch
+    goto SeeFloor
+  Drop:
+    SPID C 2 // STRIFE_TODO: A_StalkerDrop
+    SPID IHGFED 3
+    goto Melee
+  SeeFloor:
+    SPID J 3  // STRIFE_TODO: A_StalkerChase
+    SPID JKK 3 A_Chase
+    SPID L 3 // STRIFE_TODO: A_StalkerChase
+    SPID L 3 A_Chase
+    loop
+  Death:
+    SPID O 4
+    SPID P 4 A_Scream
+    SPID QRST 4
+    SPID U 4 A_Fall
+    SPID VW 4
+    SPID "XYZ[" 4 bright
+    stop
+  "@
+}
+
+thingtype Inquisitor : Mobj, 7616
+{
+  //speakerid/conversationid 93
+
+  speed       12
+
+  seesound    inqsee
+  deathsound  inqdth
+  activesound inqact
+
+  radius      40.0
+  height      110.0
+
+  cflags      SOLID|SHOOTABLE|DROPOFF|NOBLOOD|COUNTKILL // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    ROB3 AB 10 A_Look
+    loop
+  See:
+    ROB3 B 3 // STRIFE_TODO: A_InqChase
+    ROB3 B 3
+    ROB3 CCCDD 4 A_Chase
+    ROB3 E 3 // STRIFE_TODO: A_InqChase
+    ROB3 E 3 // STRIFE_TODO: A_InqFlyCheck
+    loop
+  Missile:
+    ROB3 A 2 // STRIFE_TODO: A_InqFlyCheck
+    ROB3 F 6 A_FaceTarget
+    ROB3 G 8 bright // STRIFE_TODO: A_ReaverAttack
+    ROB3 G 8 // STRIFE_TODO: A_ReaverAttack
+    loop
+  Grenade:
+    ROB3 K 12 A_FaceTarget
+    ROB3 J 6 bright // STRIFE_TODO: A_InqGrenade
+    ROB3 K 12
+    goto See
+  Fly:
+    ROB3 H 8 bright // STRIFE_TODO: A_InqTakeOff
+    ROB3 IH 4 bright // STRIFE_TODO: A_InqFly
+    goto Fly+1
+  Death:
+    ROB3 L 4 // STRIFE_TODO: A_BodyParts
+    ROB3 M 4 A_Scream
+    ROB3 N 4 // STRIFE_TODO: A_BodyParts
+    ROB3 O 4 bright // STRIFE_TODO: A_DeathExplode1
+    ROB3 P 4 bright // STRIFE_TODO: A_BodyParts
+    ROB3 Q 4 bright A_Fall
+    ROB3 RSTUV 4 // STRIFE_TODO: A_BodyParts
+    ROB3 W 4 bright // STRIFE_TODO: A_DeathExplode1
+    ROB3 XY 4 bright // STRIFE_TODO: A_BodyParts
+    ROB3 "Z[" 4 // STRIFE_TODO: A_BodyParts
+    ROB3 "\" 3 // STRIFE_TODO: A_BodyParts
+    ROB3 "]" 3 bright // STRIFE_TODO: A_DeathExplode1
+    RBB3 A 3 bright // STRIFE_TODO: A_InqTossArm
+    RBB3 B 3 bright // STRIFE_TODO: A_BodyParts
+    RBB3 CD 3 // STRIFE_TODO: A_BodyParts
+    RBB3 E -1 // STRIFE_TODO: Strife's A_BossDeath
+    stop
+  "@
+}
+
+thingtype InqArm : Mobj
+{
+  //speakerid/conversationid 94
+
+  speed 25
+
+  cflags NOBLOCKMAP|NOCLIP|NOBLOOD
+
+  states
+  @"
+  Spawn:
+    RBB3 FG 5 bright
+    RBB3 H -1
+    stop
+  "@
+}
+
