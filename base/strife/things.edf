@@ -2227,3 +2227,303 @@ thingtype ProgrammerBase : Mobj
   "@
 }
 
+thingtype Hookshot : Mobj
+{
+  //speakerid/conversationid 97
+
+  seesound    chain
+  activesound swish
+
+  speed       20.0
+  radius      10.0
+  height      14.0
+
+  damage      2
+
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    OCLW A 2 // STRIFE_TODO: A_FireChainShot
+    loop
+  Death:
+    CCLW A 6
+    stop
+  "@
+}
+
+thingtype Chainshot : Mobj
+{
+  //speakerid/conversationid 98
+
+  seesound tend
+
+  cflags   NOBLOCKMAP|NOGRAVITY
+
+  states
+  @"
+  Spawn:
+    TEND A 20
+    stop
+  "@
+}
+
+thingtype MiniMissile : CMissile
+{
+  //speakerid/conversationid 99
+
+  damage     10
+
+  states
+  @"
+  Spawn:
+  Death:
+    goto Super::Death+1
+  "@
+}
+
+thingtype CMissile : Mobj
+{
+  //speakerid/conversationid 100
+
+  seesound   st_rlaunc
+  deathsound mislht
+
+  speed      20.0
+  radius     10.0
+  height     14.0
+
+  damage     7
+
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE // SVE_TODO: MF2_MARKDECAL
+
+  states
+  @"
+  Spawn:
+    MICR A 6 bright // STRIFE_TODO: A_MissileSmoke
+    loop
+  Death:
+    MISL A 5 bright
+    MISL A 5 bright // STRIFE_TODO: A_DeathExplode2
+    MISL B 5 bright
+    MISL C 4 bright
+    MISL DEFG 2 bright
+    stop
+  "@
+}
+
+thingtype SeekMissile : MiniMissile
+{
+  //speakerid/conversationid 101
+
+  // SVE_TODO: remflags MF2_MARKDECAL
+
+  states
+  @"
+  Spawn:
+    MISS A 4 bright // STRIFE_TODO: A_MissileSmoke
+    MISS B 3 bright // STRIFE_TODO: Strife's A_Tracer
+    loop
+  "@
+}
+
+thingtype ElecArrow : Mobj
+{
+  //speakerid/conversationid 102
+
+  seesound    swish
+  deathsound  st_firxpl
+  activesound swish
+
+  speed       30.0
+  radius      10.0
+  height      10.0
+
+  damage      10
+
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    AROW A 10 // STRIFE_TODO: A_ActiveSound
+    loop
+  Death:
+    ZAP1 A 3 // STRIFE_TODO: A_RaiseAlarm
+    ZAP1 BCDEFE 3
+    ZAP1 DCB 2
+    ZAP1 A 1
+    stop
+  "@
+}
+
+thingtype PoisArrow : ElecArrow
+{
+  //speakerid/conversationid 103
+
+  deathsound none
+
+  damage     500
+
+  states
+  @"
+  Spawn:
+    ARWP A 10 // STRIFE_TODO: A_ActiveSound
+    loop
+  Death:
+    AROW A 1
+    stop
+  "@
+}
+
+thingtype RLaser : Mobj
+{
+  //speakerid/conversationid 104
+
+  speed       40.0
+  radius      10.0
+  height      8.0
+
+  cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    SHT1 AB 4
+    loop
+  Death:
+    POW1 J 4
+    stop
+  "@
+}
+
+thingtype LLaser : RLaser
+{
+  //speakerid/conversationid 105
+
+  seesound st_plasma
+
+  damage   1
+}
+
+thingtype HEGrenade : Mobj
+{
+  //speakerid/conversationid 106
+
+  reactiontime 30
+
+  seesound    phoot
+  deathsound  explod
+
+  speed       15.0
+  radius      13.0
+  height      13.0
+  mass        20
+
+  damage      1
+
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    GRAP AB 3 // STRIFE_TODO: A_MissileTick
+    loop
+  Death:
+    BNG4 A 2 bright // STRIFE_TODO: A_DeathExplode5
+    BNG4 BCDEFGHIJKLMN 3 bright
+    stop
+  "@
+}
+
+thingtype PGrenade : HEGrenade
+{
+  //speakerid/conversationid 107
+
+  reactiontime 40
+
+  states
+  @"
+  Spawn:
+    GRIN AB 3 // STRIFE_TODO: A_MissileTick
+    loop
+  Death:
+    BNG3 A 1 // STRIFE_TODO: A_SpawnGrenadeFire
+    BNG3 B 2 bright // STRIFE_TODO: A_DeathExplode1
+    BNG3 C 2 bright // STRIFE_TODO: A_MissileTick
+    FLBE A 2 bright // STRIFE_TODO: A_BurnSpread
+    FLBE B 2 bright // STRIFE_TODO: A_MissileTick
+    FLBE C 2 bright // STRIFE_TODO: A_DeathExplode1
+    FLBE D 2 bright // STRIFE_TODO: A_MissileTick
+    FLBE E 2 bright // STRIFE_TODO: A_DeathExplode1
+    FLBE F 2 bright // STRIFE_TODO: A_MissileTick
+    FLBE G 2 bright // STRIFE_TODO: A_BurnSpread
+    FLBE H 2 bright
+    FLBE I 2 bright // STRIFE_TODO: A_BurnSpread
+    FLBE JK 2 bright
+    stop
+  "@
+}
+
+thingtype InqGrenade : Mobj
+{
+  //speakerid/conversationid 108
+
+  reactiontime 16
+
+  seesound    phoot
+  deathsound  explod
+
+  speed       25.0
+  radius      13.0
+  height      13.0
+  mass        15
+
+  damage      0
+
+  cflags      NOBLOCKMAP|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    UBAM AB 3 // STRIFE_TODO: A_MissileTick
+    loop
+  Death:
+    BNG2 A 4 bright // STRIFE_TODO: A_DeathExplode5
+    BNG4 BCDEFGHI 4 bright
+    stop
+  "@
+}
+
+thingtype PFlame : PGrenade
+{
+  //speakerid/conversationid 109
+
+  reactiontime 120
+
+  seesound    none
+  deathsound  none
+
+  speed       0.0
+  radius      20.0
+  height      16.0
+  mass        100
+
+  damage      0
+
+  // SVE_TODO: addflags MF2_DRAWBILLBOARD
+  remflags DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    goto Super::Death+1
+  Death:
+    FLBE H 2 bright
+    FLBE I 2 bright // STRIFE_TODO: A_BurnSpread
+    FLBE JK 2 bright
+    stop
+  "@
+}
+
