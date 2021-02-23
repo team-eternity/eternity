@@ -2144,3 +2144,86 @@ thingtype InqArm : Mobj
   "@
 }
 
+thingtype Programmer : Mobj, 7671
+{
+  //speakerid/conversationid 95
+
+  spawnhealth 1100
+  painchance  50
+  speed       26
+
+  attacksound revbld
+  painsound   prgpn
+  deathsound  rb2dth
+  activesound progac
+
+  radius      45.0
+  height      60.0
+  mass        800
+
+  damage      4
+
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOBLOOD|COUNTKILL|NOTDMATH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    PRGR A 5 A_Look
+    PRGR A 1 // STRIFE_TODO: A_FloatWeave
+    loop
+  See:
+    PRGR A 160 // STRIFE_TODO: A_FloatWeave
+    PRGR BCD 5 // STRIFE_TODO: A_FloatWeave
+  SeeLoop:
+    PRGR EFG 2 // STRIFE_TODO: A_FloatWeave
+    PRGR EF 3 A_Chase
+    goto SeeLoop
+  Pain:
+    PRGR K 5 A_Pain
+    PRGR L 5 // STRIFE_TODO: A_FloatWeave
+    goto SeeLoop
+  Melee:
+    PRGR E 2 // STRIFE_TODO: A_FloatWeave
+    PRGR F 3 // STRIFE_TODO: A_FloatWeave
+    PRGR E 3 A_FaceTarget
+    PRGR F 4 // STRIFE_TODO: A_ProgrammerMelee
+    goto SeeLoop
+  Missile:
+    PRGR G 5 A_FaceTarget
+    PRGR H 5 // STRIFE_TODO: A_FloatWeave
+    PRGR I 5 bright A_FaceTarget
+    PRGR J 5 bright // STRIFE_TODO: A_ProgrammerAttack
+    goto SeeLoop
+  Death:
+    PRGR L 7 bright // STRIFE_TODO: A_BodyParts
+    PRGR M 7 bright A_Scream
+    PRGR N 7 bright // STRIFE_TODO: A_BodyParts
+    PRGR O 7 bright A_Fall
+    PRGR P 7 bright // STRIFE_TODO: A_BodyParts
+    PRGR Q 7 bright // STRIFE_TODO: A_ProgrammerDie
+    PRGR R 7 bright
+    PRGR S 6 bright
+    PRGR TUVW 5 bright
+    PRGR X 32 bright
+    PRGR X -1 bright // STRIFE_TODO: Strife's A_BossDeath
+    stop
+  "@
+}
+
+thingtype ProgrammerBase : Mobj
+{
+  //speakerid/conversationid 96
+
+  cflags NOBLOCKMAP|NOCLIP|NOBLOOD // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BASE A 5 bright // STRIFE_TODO: A_DeathExplode3
+    BASE BCD 5 bright
+    BASE EFG 5
+    BASE H -1
+    stop
+  "@
+}
+
