@@ -165,7 +165,7 @@ thingtype Armorer : WeaponSmith, 7673
   translation TR_STCS6
 }
 
-thingtype Medic : WeaponSmith, 7673
+thingtype Medic : WeaponSmith, 7674
 {
   //speakerid/conversationid 5
 
@@ -2821,6 +2821,520 @@ thingtype Computer : Mobj, 7782
     SECR N 5
     SECR O 5 // STRIFE_TODO: A_SpawnSparkPuff
     SECR P -1
+    stop
+  "@
+}
+
+thingtype InvMed1 : Mobj, 7101
+{
+  //speakerid/conversationid 125
+
+  mass  20
+
+  cflags MF_SPECIAL
+
+  states
+  @"
+  Spawn:
+    STMP A -1
+    stop
+  "@
+}
+
+thingtype InvMed2 : Mobj, 7102
+{
+  //speakerid/conversationid 126
+
+  mass  15
+
+  cflags MF_SPECIAL
+
+  states
+  @"
+  Spawn:
+    MDKT A -1
+    stop
+  "@
+}
+
+thingtype InvMed3 : Mobj, 7683
+{
+  //speakerid/conversationid 127
+
+  mass  5
+
+  cflags MF_SPECIAL
+
+  states
+  @"
+  Spawn:
+    FULL A 35
+    FULL B 35
+    loop
+  "@
+}
+
+thingtype DegninOre : Mobj, 7659
+{
+  //speakerid/conversationid 128
+
+  mass   10
+
+  radius 16.0
+
+  cflags MF_SPECIAL
+
+  states
+  @"
+  Spawn:
+    XPRK A 2 // STRIFE_TODO: A_ZombieInSpecialSector
+    loop
+  Death:
+    XPRK B 1 // STRIFE_TODO: A_ClearForceField
+    BNG3 A 3 bright // STRIFE_TODO: A_DeathExplode5
+    BNG3 BCDEFGH 3 bright
+    stop
+  "@
+}
+
+thingtype InvArmor2 : Mobj, 7109
+{
+  //speakerid/conversationid 129
+
+  mass  3
+
+  cflags MF_SPECIAL
+
+  states
+  @"
+  Spawn:
+    ARM1 A -1
+    stop
+  "@
+}
+
+thingtype InvArmor1 : Mobj, 7108
+{
+  //speakerid/conversationid 130
+
+  mass  5
+
+  cflags MF_SPECIAL
+
+  states
+  @"
+  Spawn:
+    ARM2 A -1
+    stop
+  "@
+}
+
+thingtype Misc22 : Mobj, 7104
+{
+  //speakerid/conversationid 131
+
+  // SVE_TODO: cflags MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    WATR A -1
+    stop
+  "@
+}
+
+thingtype Misc11 : Mobj, 7764
+{
+  //speakerid/conversationid 132
+
+  // SVE_TODO: cflags MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    MUGG A -1
+    stop
+  "@
+}
+
+thingtype KeyBase : Mobj, 7830
+{
+  //speakerid/conversationid 133
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    FUSL A -1
+    stop
+  "@
+}
+
+thingtype GovsKey : Mobj
+{
+  //speakerid/conversationid 134
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    REBL A -1
+    stop
+  "@
+}
+
+thingtype KeyTravel : Mobj, 7785
+{
+  //speakerid/conversationid 135
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    TPAS A -1
+    stop
+  "@
+}
+
+thingtype KeyIDBlue : Mobj, 7784
+{
+  //speakerid/conversationid 136
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    CRD1 A -1
+    stop
+  "@
+}
+
+thingtype PrisonKey : Mobj
+{
+  //speakerid/conversationid 137
+
+  speed 11
+
+  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    PRIS A -1
+    stop
+  "@
+}
+
+thingtype KeyHand : Mobj, 7691
+{
+  //speakerid/conversationid 138
+
+  speed 12
+
+  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    HAND A -1
+    stop
+  "@
+}
+
+thingtype Power1Key : Mobj
+{
+  //speakerid/conversationid 139
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    PWR1 A -1
+    stop
+  "@
+}
+
+thingtype Power2Key : Mobj
+{
+  //speakerid/conversationid 140
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    PWR2 A -1
+    stop
+  "@
+}
+
+thingtype Power3Key : Mobj
+{
+  //speakerid/conversationid 141
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    PWR3 A -1
+    stop
+  "@
+}
+
+thingtype KeyGold : Mobj, 7640
+{
+  //speakerid/conversationid 142
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    KY1G A -1
+    stop
+  "@
+}
+
+thingtype KeyIDGold : Mobj, 7640
+{
+  //speakerid/conversationid 143
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    CRD2 A -1
+    stop
+  "@
+}
+
+thingtype KeySilver : Mobj, 7638
+{
+  //speakerid/conversationid 144
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    KY2S A -1
+    stop
+  "@
+}
+
+thingtype KeySilver : Mobj, 7661
+{
+  //speakerid/conversationid 145
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    ORAC A -1
+    stop
+  "@
+}
+
+thingtype MilitaryID : Mobj
+{
+  //speakerid/conversationid 146
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    GYID A -1
+    stop
+  "@
+}
+
+thingtype KeyOrder : Mobj, 7686
+{
+  //speakerid/conversationid 147
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    FUBR A -1
+    stop
+  "@
+}
+
+thingtype KeyWarehouse : Mobj, 7766
+{
+  //speakerid/conversationid 148
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    WARE A -1
+    stop
+  "@
+}
+
+thingtype KeyBrass : Mobj, 7639
+{
+  //speakerid/conversationid 149
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    KY3B A -1
+    stop
+  "@
+}
+
+thingtype KeyRedCrystal : Mobj, 7792
+{
+  //speakerid/conversationid 150
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    RCRY A -1 bright
+    stop
+  "@
+}
+
+thingtype KeyBlueCrystal : Mobj, 7793
+{
+  //speakerid/conversationid 151
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    BCRY A -1 bright
+    stop
+  "@
+}
+
+thingtype KeyChapel : Mobj, 7795
+{
+  //speakerid/conversationid 152
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    CHAP A -1
+    stop
+  "@
+}
+
+thingtype CatacombKey : Mobj
+{
+  //speakerid/conversationid 153
+
+  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    TUNL A -1
+    stop
+  "@
+}
+
+thingtype SecurityKey : Mobj
+{
+  //speakerid/conversationid 154
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    SECK A -1
+    stop
+  "@
+}
+
+thingtype KeyCore : Mobj, 7836
+{
+  //speakerid/conversationid 155
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    GOID A -1
+    stop
+  "@
+}
+
+thingtype KeyMauler : Mobj, 7836
+{
+  //speakerid/conversationid 156
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    BLTK A -1
+    stop
+  "@
+}
+
+thingtype KeyFactory : Mobj, 7834
+{
+  //speakerid/conversationid 157
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    PROC A -1
+    stop
+  "@
+}
+
+thingtype KeyMine : Mobj, 7835
+{
+  //speakerid/conversationid 158
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    MINE A -1
+    stop
+  "@
+}
+
+thingtype NewKey5 : Mobj
+{
+  //speakerid/conversationid 159
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    BLTK A -1
     stop
   "@
 }
