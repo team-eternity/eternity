@@ -4,6 +4,17 @@
 // Thing type definitions for Strife gamemode.
 //
 
+// Base type for thing-based pickup or forcefield guard
+thingtype StrifeToken : Mobj
+{
+  states
+  @"
+  Spawn:
+    TOKN A -1
+    stop
+  "@
+}
+
 thingtype StrifePlayer : Mobj
 {
   //speakerid/conversationid 1
@@ -52,7 +63,7 @@ thingtype StrifePlayer : Mobj
   "@
 }
 
-thingtype ForceFieldGuard : Mobj, 7625
+thingtype ForceFieldGuard : StrifeToken, 7625
 {
   //speakerid/conversationid 0
 
@@ -2831,7 +2842,7 @@ thingtype InvMed1 : Mobj, 7101
 
   mass  20
 
-  cflags MF_SPECIAL
+  cflags SPECIAL
 
   states
   @"
@@ -2847,7 +2858,7 @@ thingtype InvMed2 : Mobj, 7102
 
   mass  15
 
-  cflags MF_SPECIAL
+  cflags SPECIAL
 
   states
   @"
@@ -2863,7 +2874,7 @@ thingtype InvMed3 : Mobj, 7683
 
   mass  5
 
-  cflags MF_SPECIAL
+  cflags SPECIAL
 
   states
   @"
@@ -2882,7 +2893,7 @@ thingtype DegninOre : Mobj, 7659
 
   radius 16.0
 
-  cflags MF_SPECIAL
+  cflags SPECIAL
 
   states
   @"
@@ -2903,7 +2914,7 @@ thingtype InvArmor2 : Mobj, 7109
 
   mass  3
 
-  cflags MF_SPECIAL
+  cflags SPECIAL
 
   states
   @"
@@ -2919,7 +2930,7 @@ thingtype InvArmor1 : Mobj, 7108
 
   mass  5
 
-  cflags MF_SPECIAL
+  cflags SPECIAL
 
   states
   @"
@@ -3335,6 +3346,266 @@ thingtype NewKey5 : Mobj
   @"
   Spawn:
     BLTK A -1
+    stop
+  "@
+}
+
+thingtype InvShadowArmor : Mobj, 7114
+{
+  //speakerid/conversationid 160
+
+  mass  2
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    SHD1 A 17 // STRIFE_TODO: A_ShadowOff
+    SHD1 A 17 // STRIFE_TODO: A_ModifyVisiblity
+    SHD1 A 17 // STRIFE_TODO: A_ShadowOff
+    SHD1 A 17 // STRIFE_TODO: A_ModifyVisiblity
+    loop
+  "@
+}
+
+thingtype InvSuit : Mobj, 7115
+{
+  //speakerid/conversationid 161
+
+  mass  5
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    MASK A -1
+    stop
+  "@
+}
+
+thingtype QuestUniform : Mobj, 7690
+{
+  //speakerid/conversationid 162
+
+  speed 15
+
+  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    UNIF A -1
+    stop
+  "@
+}
+
+thingtype QuestGuardUniform : Mobj, 7652
+{
+  //speakerid/conversationid 163
+
+  cflags SPECIAL|NOTDMATCH // SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    OFIC A -1
+    stop
+  "@
+}
+
+thingtype InvSupermap : Mobj, 7116
+{
+  //speakerid/conversationid 164
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    PMAP AB 6 bright
+    loop
+  "@
+}
+
+thingtype InvRadar : Mobj, 7117
+{
+  //speakerid/conversationid 165
+
+  mass   3
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    PMUP AB 6 bright
+    loop
+  "@
+}
+
+thingtype Beacon : Mobj, 7610
+{
+  //speakerid/conversationid 166
+
+  radius 16.0
+  mass   3
+
+  cflags SPECIAL|DROPPED // SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    BEAC A -1
+    stop
+  See:
+    BEAC A 30
+    BEAC A 160 // STRIFE_TODO: A_TeleportBeacon
+    loop
+  "@
+}
+
+thingtype InvTargeter : Mobj, 7807
+{
+  //speakerid/conversationid 167
+
+  mass   5
+
+  cflags SPECIAL
+
+  states
+  @"
+  Spawn:
+    TARG A -1
+    loop
+  "@
+}
+
+thingtype Mony1 : Mobj, 7693
+{
+  //speakerid/conversationid 168
+
+  mass   2147483647
+
+  cflags SPECIAL|DROPPED|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    COIN A -1
+    loop
+  "@
+}
+
+thingtype Mony10 : Mobj, 7738
+{
+  //speakerid/conversationid 169
+
+  cflags SPECIAL|DROPPED|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    CRED A -1
+    loop
+  "@
+}
+
+thingtype Mony25 : Mobj, 7739
+{
+  //speakerid/conversationid 170
+
+  cflags SPECIAL|DROPPED|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    SACK A -1
+    loop
+  "@
+}
+
+thingtype Mony50 : Mobj, 7740
+{
+  //speakerid/conversationid 171
+
+  cflags SPECIAL|DROPPED|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    CHST A -1
+    loop
+  "@
+}
+
+thingtype Mony300 : StrifeToken
+{
+  //speakerid/conversationid 172
+
+  cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST
+}
+
+thingtype TokenRing : Mobj
+{
+  //speakerid/conversationid 173
+
+  speed  1
+
+  cflags SPECIAL|NOTDMATCH // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWOUTLINE
+
+  states
+  @"
+  Spawn:
+    RING A -1
+    stop
+  "@
+}
+
+thingtype InvChalice : Mobj, 7805
+{
+  //speakerid/conversationid 174
+
+  speed  2
+  radius 10.0
+
+  cflags SPECIAL|DROPPED // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    RELC A -1 bright
+    stop
+  "@
+}
+
+thingtype TokenEar : Mobj
+{
+  //speakerid/conversationid 175
+
+  speed  9
+
+  cflags SPECIAL // STRIFE_TODO: MF_GIVEQUEST, SVE_TODO: MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    EARS A -1 bright
+    stop
+  "@
+}
+
+thingtype InvCommunicator : Mobj, 7806
+{
+  //speakerid/conversationid 176
+
+  cflags SPECIAL|NOTDMATCH
+
+  states
+  @"
+  Spawn:
+    COMM A -1 bright
     stop
   "@
 }
