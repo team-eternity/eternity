@@ -1218,7 +1218,7 @@ thingtype Crusader : Mobj, 7955
     ROB2 Q 10 A_Look
     loop
   See:
-    ROB2 AABBCCDD A_Chase
+    ROB2 AABBCCDD 3 A_Chase
     loop
   Pain:
     ROB2 D 1 A_Pain
