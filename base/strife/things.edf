@@ -2527,3 +2527,301 @@ thingtype PFlame : PGrenade
   "@
 }
 
+thingtype Torpedo : Mobj
+{
+  //speakerid/conversationid 110
+
+  seesound   protfl
+  deathsound explod
+
+  speed      20.0
+  radius     13.0
+  height     8.0
+
+  damage     1
+
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    TORP ABCD 4 bright
+    loop
+  Death:
+    THIT AB 8 bright
+    THIT C 8 bright // STRIFE_TODO: A_TorpedoExplode
+    THIT DE 8 bright
+    stop
+  "@
+}
+
+thingtype TorpedoSpread : Mobj
+{
+  //speakerid/conversationid 111
+
+  speed      35.0
+  radius     13.0
+  height     13.0
+
+  damage     10
+
+  cflags     NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE
+
+  states
+  @"
+  Spawn:
+    TWAV AB 4 bright
+  Death:
+    TWAV C 4 bright
+    stop
+  "@
+}
+
+thingtype SFireball : Mobj
+{
+  //speakerid/conversationid 112
+
+  seesound   flburn
+
+  speed      15.0
+  radius     8.0
+  height     1.0
+  mass       10
+
+  damage     4
+
+  cflags     NOBLOCKMAP|DROPOFF|MISSILE // SVE_TODO: MF2_MARKDECAL
+
+  states
+  @"
+  Spawn:
+    FRBL AB 3 bright
+    FRBL C 3 bright // STRIFE_TODO: A_MissileTick
+    loop
+  Death:
+    FRBL D 5 bright // STRIFE_TODO: A_FlameDeath
+    FRBL EFGHI 5 bright
+    stop
+  "@
+}
+
+thingtype CFlame : SFireball
+{
+  //speakerid/conversationid 113
+
+  speed  35.0
+  mass   50
+
+  damage 1
+}
+
+thingtype StrifePuff3 : Mobj
+{
+  //speakerid/conversationid 114
+
+  cflags NOBLOCKMAP|NOGRAVITY
+
+  states
+  @"
+  Spawn:
+    SHT2 AB 5
+    POW1 ABCDE 4
+    stop
+  "@
+}
+
+thingtype StrifePuff : Mobj
+{
+  //speakerid/conversationid 115
+
+  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    PUFY A 4 bright
+    PUFY BCD 4
+    stop
+  "@
+}
+
+thingtype SparkPuff : Mobj
+{
+  //speakerid/conversationid 116
+
+  cflags NOBLOCKMAP|NOGRAVITY
+
+  states
+  @"
+  Spawn:
+    POW3 ABCDEFGH 3
+    stop
+  "@
+}
+
+thingtype BloodDeath : Mobj
+{
+  //speakerid/conversationid 117
+
+  cflags NOBLOCKMAP
+
+  states
+  @"
+  Spawn:
+    SPRY ABCDEF 3
+    SPRY G 2
+    stop
+  "@
+}
+
+thingtype TFog : Mobj
+{
+  //speakerid/conversationid 118
+
+  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    TFOG ABCDEFEDCB 6 bright
+    stop
+  "@
+}
+
+thingtype IFog : Mobj
+{
+  //speakerid/conversationid 119
+
+  cflags NOBLOCKMAP|NOGRAVITY // STRIFE_TODO: Strife's MF_SHADOW
+
+  states
+  @"
+  Spawn:
+    TFOG ABABCDE 6 bright
+    stop
+  "@
+}
+
+// Note: TeleportSpot is shared between all gamemodes
+//speakerid/conversationid 120
+
+thingtype Misc01 : Mobj, 7624
+{
+  //speakerid/conversationid 121
+
+  cflags NOBLOCKMAP|SPAWNCEILING|NOGRAVITY // STRIFE_TODO: MF_STAND
+
+  states
+  @"
+  Spawn:
+    KLAX A 5 // STRIFE_TODO: A_Listen
+    loop
+  See:
+    KLAX B 6 // STRIFE_TODO: A_ClaxonBlare
+    KLAX c 60
+    loop
+  "@
+}
+
+thingtype Turret : Mobj, 7627
+{
+  //speakerid/conversationid 122
+
+  spawnhealth 125
+
+  deathsound  mislht
+
+  mass        10000000
+
+  cflags      SHOOTABLE|SPAWNCEILING|NOGRAVITY|NOBLOOD|COUNTKILL // STRIFE_TODO: MF_STAND
+
+  states
+  @"
+  Spawn:
+    TURT A 5 // STRIFE_TODO: A_Listen
+    loop
+  See:
+    TURT A 2 // STRIFE_TODO: A_Chase
+    loop
+  Pain:
+  Missile:
+    TURT B 4 // STRIFE_TODO: A_BulletAttack
+    TURT DA 3 // STRIFE_TODO: A_CheckTargetVisible
+    loop
+  Death:
+    BALL ABCDE 6 bright
+    TURT C -1
+    stop
+  "@
+}
+
+thingtype Gate : Mobj, 7645
+{
+  //speakerid/conversationid 123
+
+  spawnhealth 100
+
+  deathsound  explod
+
+  speed       16
+  height      76.0
+  mass        10000000
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    PSTN AB 8
+    loop
+  Death:
+    PSTN A 4 bright A_Scream
+    PSTN B 4 bright A_Fall
+    PSTN C 4 bright // STRIFE_TODO: A_QuestMsg
+    PSTN D 4 bright // STRIFE_TODO: A_SpawnSparkPuff
+    PSTN E 4 bright // STRIFE_TODO: A_BodyParts
+    PSTN F 4 bright
+    PSTN G 4 bright // STRIFE_TODO: A_SpawnSparkPuff
+    PSTN H 4
+    PSTN I -1
+    stop
+  "@
+}
+
+thingtype Computer : Mobj, 7782
+{
+  //speakerid/conversationid 124
+
+  spawnhealth 80
+
+  deathsound  explod
+
+  speed       27
+  radius      26
+  height      128.0
+  mass        100000
+
+  cflags      SOLID|SHOOTABLE|NOBLOOD // STRIFE_TODO: MF_GIVEQUEST|MF_NODIALOG, SVE_TODO: MF2_NOSTONECOLD|MF2_DRAWBILLBOARD
+
+  states
+  @"
+  Spawn:
+    SECR ABCD 4 bright
+    loop
+  Death:
+    SECR E 5 bright // STRIFE_TODO: A_SpawnSparkPuff
+    SECR F 5 bright A_Fall
+    SECR G 5 bright // STRIFE_TODO: A_QuestMsg
+    SECR H 5 bright // STRIFE_TODO: A_BodyParts
+    SECR I 5 bright // STRIFE_TODO: A_SpawnSparkPuff
+    SECR J 5
+    SECR K 5 // STRIFE_TODO: A_SpawnSparkPuff
+    SECR L 5
+    SECR M 5 // STRIFE_TODO: A_SpawnSparkPuff
+    SECR N 5
+    SECR O 5 // STRIFE_TODO: A_SpawnSparkPuff
+    SECR P -1
+    stop
+  "@
+}
+
