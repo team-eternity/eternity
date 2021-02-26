@@ -63,6 +63,11 @@ Made thing-based obituaries use deh or EDF strings if they start with $.
 Added cvar "hu_crosshair_scale" which can toggle scaling of the crosshair off or
 on. It's saved in the config as "crosshair_scale".
 
+--------------------------------------------------------------------------------
+2021/02/26
+Fixed an issue where crushers would desync and permanently close when saving and
+loading.
+
 ================================================================================
 EOF
 ================================================================================

@@ -321,6 +321,9 @@ void CeilingThinker::serialize(SaveArchive &arc)
        << crush << special << texture << direction << inStasis << tag 
        << olddirection;
 
+   if((arc.saveVersion() >= 3))
+      arc << upspeed << crushflags;
+
    // Reattach to active ceilings list
    if(arc.isLoading())
       P_AddActiveCeiling(this);
