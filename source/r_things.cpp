@@ -1246,8 +1246,6 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    }
 }
 
-extern void A_Raise(actionargs_t *);
-
 //
 // Draws player gun sprites.
 //
@@ -1305,7 +1303,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    // calculate edges of the shape
    v2fixed_t pspos;
    if(centerfire && (viewplayer->attackdown & AT_ALL) != 0 &&
-      !viewplayer->pendingweapon && viewplayer->psprites[0].state->action != A_Raise)
+      !(psp->sy >= WEAPONTOP && psp->sy <= WEAPONBOTTOM))
       pspos = { 0, WEAPONTOP };
    else
       R_interpolatePSpritePosition(*psp, pspos);
