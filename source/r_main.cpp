@@ -1578,6 +1578,7 @@ CONSOLE_VARIABLE(r_blockmap, r_blockmap, 0) {}
 CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
+CONSOLE_VARIABLE(r_drawplayersprites, showpsprites, 0) {}
 
 CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
 {

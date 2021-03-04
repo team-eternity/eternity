@@ -205,9 +205,6 @@ VALLOCATION(pscreenheightarray)
 // Max number of particles
 static int numParticles;
 
-// MaxW: 2018/07/01: Whether or not to draw psprites
-static bool r_drawplayersprites = true;
-
 VALLOCATION(pstack)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
@@ -1449,14 +1446,11 @@ void R_DrawPlayerSprites()
    for(i = 0; i < viewwindow.width; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
 
-   if(r_drawplayersprites)
+   // add all active psprites
+   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
    {
-      // add all active psprites
-      for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
-      {
-         if(psp->state)
-            R_drawPSprite(psp, spritelights, pscreenheightarray, zeroarray);
-      }
+      if(psp->state)
+         R_drawPSprite(psp, spritelights, pscreenheightarray, zeroarray);
    }
 }
 
@@ -2523,14 +2517,6 @@ static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
       } // end else [!general_translucency]
    } // end local block
 }
-
-//============================================================================
-//
-// Console Commands
-//
-
-VARIABLE_TOGGLE(r_drawplayersprites, nullptr, onoff);
-CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------
 //
