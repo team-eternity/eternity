@@ -89,6 +89,7 @@ fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewpitch;
 const player_t *viewplayer;
 bool     showpsprites = 1; //sf
+bool     centerfire = false;
 camera_t *viewcamera;
 
 // SoM: removed the old zoom code infavor of actual field of view!
@@ -1513,6 +1514,7 @@ VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);
 VARIABLE_BOOLEAN(flashing_hom, nullptr,             onoff);
 VARIABLE_BOOLEAN(r_precache, nullptr,               onoff);
 VARIABLE_TOGGLE(showpsprites,  nullptr,             yesno);
+VARIABLE_TOGGLE(centerfire, nullptr,                onoff);
 VARIABLE_BOOLEAN(stretchsky, nullptr,               onoff);
 VARIABLE_BOOLEAN(r_swirl, nullptr,                  onoff);
 VARIABLE_BOOLEAN(general_translucency, nullptr,     onoff);
@@ -1579,6 +1581,7 @@ CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
 CONSOLE_VARIABLE(r_drawplayersprites, showpsprites, 0) {}
+CONSOLE_VARIABLE(r_centerfire, centerfire, 0) {}
 
 CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
 {

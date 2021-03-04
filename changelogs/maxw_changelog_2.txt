@@ -68,6 +68,10 @@ on. It's saved in the config as "crosshair_scale".
 Fixed an issue where crushers would desync and permanently close when saving and
 loading.
 
+--------------------------------------------------------------------------------
+2021/03/04
+Added an option to centre weapons when firing. It's in the weapons menu.
+
 ================================================================================
 EOF
 ================================================================================

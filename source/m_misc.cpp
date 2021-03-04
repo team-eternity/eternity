@@ -190,6 +190,9 @@ default_t defaults[] =
    DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, default_t::wad_yes,
                "1 to enable recoil from weapon fire"),
 
+   DEFAULT_BOOL("r_centerfire", &centerfire, nullptr, false, default_t::wad_no,
+                "0 - don't center weapon when firing, 1 - center weapon when firing"),
+
    // killough 7/19/98
    // sf:changed to bfgtype
    // haleyjd: FIXME - variable is of enum type, non-portable

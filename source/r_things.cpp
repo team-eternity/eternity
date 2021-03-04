@@ -1302,7 +1302,10 @@ static void R_drawPSprite(const pspdef_t *psp,
    
    // calculate edges of the shape
    v2fixed_t pspos;
-   R_interpolatePSpritePosition(*psp, pspos);
+   if(centerfire && (viewplayer->attackdown & AT_ALL) != 0)
+      pspos = { 0, WEAPONTOP };
+   else
+      R_interpolatePSpritePosition(*psp, pspos);
 
    tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
