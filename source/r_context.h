@@ -173,6 +173,7 @@ rendercontext_t &R_GetContext(int context);
 void R_FreeContexts();
 void R_InitContexts(const int width);
 void R_RefreshContexts();
+void R_UpdateContextBounds();
 void R_RunContexts();
 
 template<typename F>

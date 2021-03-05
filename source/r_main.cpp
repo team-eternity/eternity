@@ -635,6 +635,7 @@ void R_SetupViewScaling()
    view.ycenter = (view.height = (float)viewwindow.height) * 0.5f;
 
    R_InitBuffer(scaledwindow.width, scaledwindow.height);       // killough 11/98
+   R_UpdateContextBounds();
 }
 
 //
