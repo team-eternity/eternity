@@ -21,14 +21,17 @@
 // Authors: Simon Howard, James Haley, Max Waine
 //
 
-#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#if (__cplusplus >= 201703L || _MSC_VER >= 1914) && (!defined(__GNUC__) || __GNUC__ > 7)
 #include "hal/i_platform.h"
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
 #include "hal/i_directory.h"
 namespace fs = fsStopgap;
-#else
+#elif __has_include(<filesystem>)
 #include <filesystem>
 namespace fs = std::filesystem;
+#else // Fucking shitty GCC7
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 #endif
 #else
 #include <experimental/filesystem>
