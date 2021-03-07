@@ -1503,7 +1503,7 @@ void P_LoadGame(const char *filename)
       int     tmp_demo_version    = demo_version;
       int     tmp_demo_subversion = demo_subversion;
       char    tmp_gamemapname[9]  = {};
-      strncpy(tmp_gamemapname, gamemapname, 8);
+      strncpy(tmp_gamemapname, gamemapname, 9);
 
       // skip description
       char throwaway[SAVESTRINGSIZE];
@@ -1613,7 +1613,7 @@ void P_LoadGame(const char *filename)
             vanilla_mode    = tmp_vanilla_mode;
             demo_version    = tmp_demo_version;
             demo_subversion = tmp_demo_subversion;
-            strncpy(gamemapname, tmp_gamemapname, 8);
+            strncpy(gamemapname, tmp_gamemapname, 9);
 
             C_Puts(msg.constPtr());
             G_LoadGameErr(msg.constPtr());
