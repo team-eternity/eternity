@@ -2037,9 +2037,8 @@ void G_LoadGame(const char *name, int slot, bool command)
 // killough 5/15/98:
 // Consistency Error when attempting to load savegame.
 
-static void G_LoadGameErr(char *msg)
+void G_LoadGameErr(const char *msg)
 {
-   Z_Free(savebuffer);           // Free the savegame buffer
    MN_ForcedLoadGame(msg);       // Print message asking for 'Y' to force
    if(command_loadgame)          // If this was a command-line -loadgame
    {

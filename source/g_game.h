@@ -48,6 +48,7 @@ void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(const char *name, bool showmenu);
 void G_LoadGame(const char *name, int slot, bool is_command); // killough 5/15/98
 void G_ForcedLoadGame();                      // killough 5/15/98: forced loadgames
+void G_LoadGameErr(const char *msg);
 void G_SaveGame(int slot, const char *description); // Called by M_Responder.
 void G_RecordDemo(const char *name);                // Only called by startup code.
 void G_RecordDemoContinue(const char *in, const char *name);

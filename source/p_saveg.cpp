@@ -32,6 +32,7 @@
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_event.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_main.h"
 #include "d_net.h"
@@ -236,6 +237,26 @@ void SaveArchive::archiveSize(size_t &value)
 //
 // IO operators
 //
+
+SaveArchive &SaveArchive::operator << (int64_t &x)
+{
+   if(savefile)
+      savefile->writeSint64(x);
+   else
+      loadfile->readSint64(x);
+
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (uint64_t &x)
+{
+   if(savefile)
+      savefile->writeUint64(x);
+   else
+      loadfile->readUint64(x);
+
+   return *this;
+}
 
 SaveArchive &SaveArchive::operator << (int32_t &x)
 {
@@ -1367,23 +1388,20 @@ void P_SaveCurrentLevel(char *filename, char *description)
          size_t len = 0;
          arc.archiveSize(len);
       }
-  
-      // killough 3/16/98, 12/98: store lump name checksum
-      // FIXME/TODO: Will be simple with future save format
-      /*
-      uint64_t checksum = G_Signature(g_dir);
-      savefile.Write(&checksum, sizeof(checksum));
 
-      // killough 3/16/98: store pwad filenames in savegame  
+      // killough 3/16/98, 12/98: store lump name checksum
+      uint64_t checksum    = G_Signature(g_dir);
+      int      numwadfiles = D_GetNumWadFiles();
+
+      arc << checksum;
+      arc << numwadfiles;
+      // killough 3/16/98: store pwad filenames in savegame
       for(wfileadd_t *file = wadfiles; file->filename; ++file)
       {
          const char *fn = file->filename;
-         savefile.Write(fn, strlen(fn));
-         savefile.WriteUint8((uint8_t)'\n');
+         arc.writeLString(fn, 0);
       }
-      savefile.WriteUint8(0);
-      */
-  
+
       for(i = 0; i < MAXPLAYERS; i++)
          arc << playeringame[i];
 
@@ -1463,7 +1481,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
 void P_LoadGame(const char *filename)
 {
    int i;
-   //uint64_t checksum, rchecksum;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
 
@@ -1479,6 +1496,15 @@ void P_LoadGame(const char *filename)
 
    try
    {
+      int     tmp_compatibility   = compatibility;
+      skill_t tmp_gameskill       = gameskill;
+      int     tmp_inmanageddir    = inmanageddir;
+      bool    tmp_vanilla_mode    = vanilla_mode;
+      int     tmp_demo_version    = demo_version;
+      int     tmp_demo_subversion = demo_subversion;
+      char    tmp_gamemapname[9]  = {};
+      strncpy(tmp_gamemapname, gamemapname, 8);
+
       // skip description
       char throwaway[SAVESTRINGSIZE];
 
@@ -1491,14 +1517,13 @@ void P_LoadGame(const char *filename)
       // haleyjd 06/16/10: reload "inmasterlevels" state
       int tempskill;
       arc << compatibility << tempskill << inmanageddir;
-
       gameskill = (skill_t)tempskill;
-  
+
       arc << vanilla_mode;  // -vanilla setting
       if(vanilla_mode)      // use UDoom version (no point for longtics now).
       {
          // All the other settings (save longtics) are stored in the save
-         demo_version = 109;
+         demo_version    = 109;
          demo_subversion = 0;
       }
       else
@@ -1551,27 +1576,52 @@ void P_LoadGame(const char *filename)
          // requirements, such as metadata for NR4TL.
          W_InitManagedMission(inmanageddir);
       }
-   
+
       // killough 3/16/98, 12/98: check lump name checksum
-      // FIXME/TODO: advanced savegame verification is needed
-      /*
-      checksum = G_Signature(g_dir);
-
-      loadfile.Read(&rchecksum, sizeof(rchecksum));
-
-      if(memcmp(&checksum, &rchecksum, sizeof checksum))
+      if(arc.saveVersion() >= 4)
       {
-         char *msg = ecalloc(char *, 1, strlen((const char *)(save_p + sizeof checksum)) + 128);
-         strcpy(msg,"Incompatible Savegame!!!\n");
-         if(save_p[sizeof checksum])
-            strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
-         strcat(msg, "\nAre you sure?");
-         C_Puts(msg);
-         G_LoadGameErr(msg);
-         efree(msg);
-         return;
+         uint64_t checksum, rchecksum;
+         int      numwadfiles;
+         qstring  msg{ "Possibly Incompatible Savegame.\nWads expected:\n\n" };
+
+         checksum = G_Signature(g_dir);
+
+         arc << rchecksum;
+         arc << numwadfiles;
+
+         for(int i = 0; i < numwadfiles; i++)
+         {
+            qstring fn;
+            char   *wad = nullptr;
+            size_t  len = 0;
+
+            arc.archiveLString(wad, len);
+            qstring(wad).extractFileBase(fn);
+            msg << fn.constPtr() << '\n';
+
+            efree(wad);
+         }
+
+         msg << "\nAre you sure?";
+
+         if(checksum != rchecksum && !forced_loadgame)
+         {
+            // If we don't restore some state things will go very awry
+            compatibility   = tmp_compatibility;
+            gameskill       = tmp_gameskill;
+            inmanageddir    = tmp_inmanageddir;
+            vanilla_mode    = tmp_vanilla_mode;
+            demo_version    = tmp_demo_version;
+            demo_subversion = tmp_demo_subversion;
+            strncpy(gamemapname, tmp_gamemapname, 8);
+
+            C_Puts(msg.constPtr());
+            G_LoadGameErr(msg.constPtr());
+            loadfile.close();
+
+            return;
+         }
       }
-      */
 
       for(i = 0; i < MAXPLAYERS; ++i)
          arc << playeringame[i];

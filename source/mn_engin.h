@@ -213,7 +213,7 @@ void MN_Init();
 
 void MN_StartControlPanel();
 
-void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
+void MN_ForcedLoadGame(const char *msg); // killough 5/15/98: forced loadgames
 
 void MN_DrawCredits();    // killough 11/98
 

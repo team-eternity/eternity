@@ -1261,7 +1261,7 @@ CONSOLE_COMMAND(forceload, cf_hidden)
    MN_ClearMenus();
 }
 
-void MN_ForcedLoadGame(char *msg)
+void MN_ForcedLoadGame(const char *msg)
 {
    MN_Question(msg, "forceload");
 }

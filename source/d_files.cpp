@@ -98,6 +98,11 @@ static void D_reAllocFiles()
    }
 }
 
+int D_GetNumWadFiles()
+{
+   return numwadfiles;
+}
+
 //
 // D_AddFile
 //
