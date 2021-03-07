@@ -1246,6 +1246,10 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    }
 }
 
+// TODO: Delete and use less-awful logic
+extern void A_Lower(actionargs_t *);
+extern void A_Raise(actionargs_t *);
+
 //
 // Draws player gun sprites.
 //
@@ -1299,11 +1303,12 @@ static void R_drawPSprite(const pspdef_t *psp,
    
    lump = sprframe->lump[0];
    flip = !!(sprframe->flip[0] ^ lefthanded);
-   
+
    // calculate edges of the shape
+   void (*playeraction)(actionargs_t *) = viewplayer->psprites[0].state->action;
    v2fixed_t pspos;
    if(centerfire && (viewplayer->attackdown & AT_ALL) != 0 &&
-      !(psp->sy >= WEAPONTOP && psp->sy <= WEAPONBOTTOM))
+      playeraction != A_Lower && playeraction != A_Raise)
       pspos = { 0, WEAPONTOP };
    else
       R_interpolatePSpritePosition(*psp, pspos);
