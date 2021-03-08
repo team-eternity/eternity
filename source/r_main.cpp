@@ -1508,7 +1508,7 @@ static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
-static const char *tlstylestr[] = { "none", "boom", "new" };
+static const char *tlstylestr[] = { "opaque", "boom", "additive" };
 
 VARIABLE_BOOLEAN(lefthanded, nullptr,               handedstr);
 VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);

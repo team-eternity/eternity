@@ -67,6 +67,7 @@
 #include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_main.h"
 #include "r_patch.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -2111,6 +2112,7 @@ static menuitem_t mn_sysvideo_items[] =
    { it_toggle,   "HOM detector flashes",     "r_homflash"       },
    { it_toggle,   "Translucency",             "r_trans"          },
    { it_variable, "Opacity percentage",       "r_tranpct"        },
+   { it_toggle,   "Stock Doom object style",  "r_tlstyle"        },
    { it_gap },
    { it_info,     "Framerate"   },
    { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
@@ -2165,7 +2167,12 @@ static void MN_SysVideoModeDrawer()
    // approximately center box on "translucency" item in menu
    y = menu_video.menuitems[5].y - 5;
    V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   if(r_tlstyle == R_TLSTYLE_BOOM)
+      V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   else if(r_tlstyle == R_TLSTYLE_NEW)
+      V_DrawPatchAdd(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   else
+      V_DrawPatch(282, y + 12, &subscreen43, patch);
 }
 
 
