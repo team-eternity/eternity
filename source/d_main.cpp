@@ -95,7 +95,6 @@ char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 char *csc_files[MAXLOADFILES];
 
 int textmode_startup = 0;  // sf: textmode_startup for old-fashioned people
-int use_startmap = -1;     // default to -1 for asking in menu
 bool devparm;              // started game with -devparm
 
 // jff 1/24/98 add new versions of these variables to remember command line

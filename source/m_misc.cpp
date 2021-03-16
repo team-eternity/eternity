@@ -372,9 +372,6 @@ default_t defaults[] =
   
    DEFAULT_STR("cscript_2", &csc_files[1], nullptr, "", default_t::wad_no,
                "Console script executed at program startup"),
-  
-   DEFAULT_INT("use_startmap", &use_startmap, nullptr, -1, -1, 1, default_t::wad_yes,
-               "use start map instead of menu"),
 
    // killough 10/98: compatibility vector:
 
