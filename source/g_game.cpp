@@ -2057,7 +2057,12 @@ void G_SaveGame(int slot, const char *description)
 {
    savegameslot = slot;
    strcpy(savedescription, description);
-   sendsave = true;
+   if(demo_version >= 403 && !netgame)
+      gameaction = ga_savegame;
+   else if(slot <= 8)
+      sendsave = true;
+   else if(netgame)
+      doom_printf("Can't save game with slot >= 8 during netgame");
    hub_changelevel = false;
 }
 
