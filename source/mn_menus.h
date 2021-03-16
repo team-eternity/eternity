@@ -22,6 +22,7 @@
 #define MN_MENUS_H__
 
 void MN_InitMenus();
+void MN_InitSaveGameMenus();
 void MN_LinkClassicMenus(int link);
 
 void MN_UpdateJoystickMenus();
