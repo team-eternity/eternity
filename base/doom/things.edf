@@ -884,7 +884,7 @@ thingtype Spiderdemon : Mobj, 7, 20
   mass        1000
   activesound dmact
   cflags      SOLID|SHOOTABLE|COUNTKILL|E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF|SPACMONSTER|PASSMOBJ
-  obituary_normal "stood in awe of the Spiderdemon"
+  obituary_normal "stood in awe of the Spider Mastermind"
   acs_spawndata
   {
     num   7
