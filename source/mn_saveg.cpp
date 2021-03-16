@@ -72,7 +72,6 @@ struct saveslot_t
    qstring fileTimeStr;
 };
 
-static saveslot_t slotProto;
 static Collection<saveslot_t> e_saveSlots;
 
 #define SAVESTRINGSIZE 24
@@ -93,8 +92,6 @@ void MN_InitSaveGameMenus()
       savegamenames[i] = estrdup("");
       savegamepresent[i] = false;
    }
-
-   e_saveSlots.setPrototype(&slotProto);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -177,7 +174,7 @@ static void MN_readSaveStrings()
 
       savename.erase(0, strlen(savegamename));
 
-      saveslot_t &newSlot = e_saveSlots.addNew();
+      saveslot_t newSlot;
       newSlot.saveNum = savename.toInt();
 
       // file time
@@ -202,6 +199,7 @@ static void MN_readSaveStrings()
          newSlot.saveVersion = 0;
          // don't try to load anything else...
          loadFile.close();
+         e_saveSlots.add(newSlot);
          continue;
       }
       else
@@ -239,6 +237,7 @@ static void MN_readSaveStrings()
       arc << newSlot.levelTime;
 
       loadFile.close();
+      e_saveSlots.add(newSlot);
    }
 }
 
