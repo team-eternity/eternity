@@ -1750,7 +1750,7 @@ int mn_favaspectratio;
 
 static const char *aspect_ratio_desc[] =
 {
-   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9"
+   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9", "21:9"
 };
 
 VARIABLE_INT(mn_favaspectratio, nullptr, 0, AR_NUMASPECTRATIOS-1, aspect_ratio_desc);
@@ -1864,20 +1864,30 @@ static const char *sixteenNineModes[] =
    nullptr
 };
 
+// 21:9 modes (2.333... / 0.428571...)
+static const char *twentyoneNineModes[] =
+{
+   "1720x720",
+   "2560×1080",
+   "3440x1440",
+   nullptr
+};
+
 // TODO: Not supported as menu choices yet:
 // 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
 // 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
 
 static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
 {
-   legacyModes,      // Low-res 16:10, 4:3 modes and their multiples
-   fiveFourModes,    // 5:4 - very square
-   fourThreeModes,   // 4:3 (standard CRT)
-   threeTwoModes,    // 3:2 (similar to European TV)
-   sixteenTenModes,  // 16:10, common LCD widescreen monitors
-   fiveThreeModes,   // 5:3 
-   wsvgaModes,       // 128:75 (or 16:9.375), common netbook resolution
-   sixteenNineModes  // 16:9, consumer HD widescreen TVs/monitors
+   legacyModes,        // Low-res 16:10, 4:3 modes and their multiples
+   fiveFourModes,      // 5:4 - very square
+   fourThreeModes,     // 4:3 (standard CRT)
+   threeTwoModes,      // 3:2 (similar to European TV)
+   sixteenTenModes,    // 16:10, common LCD widescreen monitors
+   fiveThreeModes,     // 5:3 
+   wsvgaModes,         // 128:75 (or 16:9.375), common netbook resolution
+   sixteenNineModes,   // 16:9, consumer HD widescreen TVs/monitors
+   twentyoneNineModes, // 21:9, consumder HD ultrawide TVs/monitors
 };
 
 static int mn_vidmode_num;

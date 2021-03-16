@@ -46,6 +46,7 @@ enum
    AR_5TO3,
    AR_WSVGA,  // 128:75 (1024x600 mode)
    AR_16TO9,
+   AR_21TO9,
    AR_NUMASPECTRATIOS
 };
 
