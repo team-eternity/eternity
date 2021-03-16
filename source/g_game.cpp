@@ -95,6 +95,7 @@
 #include "version.h"
 #include "w_levels.h" // haleyjd
 #include "w_wad.h"
+#include "xl_emapinfo.h"
 
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
@@ -1780,10 +1781,18 @@ enum levelkind_t
 //
 static const char *G_getNextLevelName(levelkind_t kind, int map)
 {
-   const char *nextName = kind == lk_secret ? LevelInfo.nextSecret :
-   LevelInfo.nextLevel;
-   if(!wminfo.nextexplicit && nextName && *nextName)
+   const char *nextName = nullptr;
+
+   if(wminfo.nextexplicit)
+      // derekmd: for Teleport_NewMap() calls, detect EMAPINFO 'levelnum'
+      nextName = XL_MapNameForLevelNum(map);
+   else
+      nextName = kind == lk_secret ?
+         LevelInfo.nextSecret : LevelInfo.nextLevel;
+
+   if(nextName && *nextName)
       return nextName;
+
    return G_GetNameForMap(gameepisode, map);
 }
 
