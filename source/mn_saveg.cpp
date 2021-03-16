@@ -68,7 +68,8 @@ struct saveslot_t
    int     skill;
    qstring mapName;
    int     levelTime;
-   qstring fileTime;
+   time_t  fileTime;
+   qstring fileTimeStr;
 };
 
 static saveslot_t slotProto;
@@ -185,7 +186,8 @@ static void MN_readSaveStrings()
       {
          char timeStr[64 + 1];
          strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));
-         newSlot.fileTime = timeStr;
+         newSlot.fileTime    = statbuf.st_mtime;
+         newSlot.fileTimeStr = timeStr;
       }
 
       // description
