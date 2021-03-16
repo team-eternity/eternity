@@ -65,7 +65,7 @@ thingtype Zombieman : Mobj, 3004, 2
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    AmmoClip
-  obituary_normal "was capped by a zombie"
+  obituary_normal "was capped by a zombieman"
   acs_spawndata
   {
     num   4
@@ -123,7 +123,7 @@ thingtype Sergeant : Mobj, 9, 3
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    WeaponShotgun
-  obituary_normal "was blasted by a former sergeant"
+  obituary_normal "was blasted by a shotgun guy"
   acs_spawndata
   {
     num   1
@@ -180,7 +180,7 @@ thingtype Archvile : Mobj, 64, 4
   mass        500
   activesound vilact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SHORTMRANGE|DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
-  obituary_normal "was fried by an archvile"
+  obituary_normal "was fried by an arch-vile"
   acs_spawndata
   {
     num   111
@@ -447,7 +447,7 @@ thingtype Chaingunner : Mobj, 65, 11
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    WeaponChaingun
-  obituary_normal "felt the heat from a chaingunner"
+  obituary_normal "felt the heat from a heavy weapon dude"
   acs_spawndata
   {
     num   2
