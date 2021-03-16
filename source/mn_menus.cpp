@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Simon Howard et al.
+// The Eternity Engine
+// Copyright(C) 2021 James Haley, Simon Howard et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,15 +17,26 @@
 //
 //--------------------------------------------------------------------------
 //
-// Menus
+// Purpose: The actual menus: Structs and handler functions (if any),
+//          console commands to activate each menu
 //
-// the actual menus: structs and handler functions (if any)
-// console commands to activate each menu
+// Authors: Simon Howard, James Haley, Max Waine, Devin Acker
 //
-// By Simon Howard
-//
-//-----------------------------------------------------------------------------
 
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#include "hal/i_platform.h"
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#include "hal/i_directory.h"
+namespace fs = fsStopgap;
+#else
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
+#endif
 #include "z_zone.h"
 
 #include "hal/i_gamepads.h"
@@ -41,6 +51,7 @@
 #include "d_io.h"
 #include "d_iwad.h"
 #include "d_main.h"
+#include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dhticstr.h" // haleyjd
@@ -54,6 +65,7 @@
 #include "hu_stuff.h" // haleyjd
 #include "i_system.h"
 #include "i_video.h"
+#include "m_buffer.h"
 #include "m_random.h"
 #include "m_swap.h"
 #include "m_utils.h"
@@ -63,6 +75,7 @@
 #include "mn_menus.h"
 #include "mn_misc.h"
 #include "mn_files.h"
+#include "p_saveg.h"
 #include "p_setup.h"
 #include "p_skin.h"
 #include "r_defs.h"
@@ -94,6 +107,20 @@ char *mn_demoname;           // demo to play
 
 // haleyjd: moved these up here to fix Z_Free error
 
+struct saveslot_t
+{
+   int     saveNum;
+   qstring description;
+   int     saveVersion;
+   int     skill;
+   qstring mapName;
+   int     levelTime;
+   qstring fileTime;
+};
+
+static saveslot_t slotProto;
+static Collection<saveslot_t> e_saveSlots;
+
 // haleyjd: was 7
 #define SAVESLOTS 8
 
@@ -113,7 +140,9 @@ void MN_InitMenus()
    mn_demoname = estrdup("demo1");
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
-   
+
+   e_saveSlots.setPrototype(&slotProto);
+
    // haleyjd: initialize via zone memory
    for(int i = 0; i < SAVESLOTS; i++)
    {
@@ -1304,47 +1333,103 @@ void MN_CreateSaveCmds()
 
 
 //
-// MN_ReadSaveStrings
-//  read the strings from the savegame files
-// based on the mbf sources
+// Read the strings from the savegame files
+// Partially based on the "savemenu" branch from Devin Acker's EE fork
 //
-static void MN_ReadSaveStrings()
+static void MN_readSaveStrings()
 {
-   for(int i = 0; i < SAVESLOTS; i++)
+   int      dummy;
+   uint64_t dummy64;
+   bool     bdummy;
+
+   // test for failure
+   if(std::error_code ec; !fs::is_directory(basesavegame, ec))
+      return;
+
+   const fs::directory_iterator itr(basesavegame);
+   for(const fs::directory_entry &ent : itr)
    {
-      char *name = nullptr;    // killough 3/22/98
-      size_t len;
-      char description[SAVESTRINGSIZE+1]; // sf
-      FILE *fp;  // killough 11/98: change to use stdio
+      size_t      len;
+      char        description[SAVESTRINGSIZE + 1]; // sf
+      char        vread[VERSIONSIZE];
+      InBuffer    loadFile;
+      SaveArchive arc(&loadFile);
+      fs::path    savePath(ent.path());
+      qstring     pathStr(savePath.generic_u8string().c_str());
 
-      len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-
-      G_SaveGameName(name, len, i);
-
-      // haleyjd: fraggle got rid of this - perhaps cause of the crash?
-      //          I've re-implemented it below to try to resolve the
-      //          zoneid check error -- bingo, along with new init code.
-      // if(savegamenames[i])
-      //  Z_Free(savegamenames[i]);
-
-      fp = fopen(name,"rb");
-      if(!fp)
-      {   // Ty 03/27/98 - externalized:
-         // haleyjd
-         if(savegamenames[i])
-            Z_Free(savegamenames[i]);
-         savegamenames[i] = Z_Strdup(DEH_String("EMPTYSTRING"), PU_STATIC, nullptr);
+      if(ent.is_directory() || !savePath.has_stem() || !savePath.has_extension() || savePath.extension() != ".dsg")
          continue;
+
+      if(!loadFile.openFile(pathStr.constPtr(), InBuffer::NENDIAN))
+         continue;
+
+      qstring savename(savePath.stem().generic_u8string().c_str());
+      if(savename.strNCaseCmp(savegamename, strlen(savegamename)))
+         continue;
+
+      savename.erase(0, strlen(savegamename));
+
+      saveslot_t &newSlot = e_saveSlots.addNew();
+      newSlot.saveNum = savename.toInt();
+
+      // file time
+      struct stat statbuf;
+      if(!stat(pathStr.constPtr(), &statbuf))
+      {
+         char timeStr[64 + 1];
+         strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));
+         newSlot.fileTime = timeStr;
       }
 
+      // description
       memset(description, 0, sizeof(description));
-      if(fread(description, SAVESTRINGSIZE, 1, fp) < 1)
-         doom_printf("%s", FC_ERROR "Warning: savestring read failed");
-      if(savegamenames[i])
-         Z_Free(savegamenames[i]);
-      savegamenames[i] = Z_Strdup(description, PU_STATIC, nullptr);  // haleyjd
-      savegamepresent[i] = true;
-      fclose(fp);
+      arc.archiveCString(description, SAVESTRINGSIZE);
+      newSlot.description = description;
+
+      // version
+      arc.archiveCString(vread, VERSIONSIZE);
+      if(strncmp(vread, "EE", 2))
+      {
+         newSlot.saveVersion = 0;
+         // don't try to load anything else...
+         loadFile.close();
+         continue;
+      }
+      else
+         arc << newSlot.saveVersion;
+
+      // compatibility, skill level, manager dir, vanilla mode
+      arc << dummy << newSlot.skill << dummy << bdummy;
+
+      // map
+      newSlot.mapName = qstring(9);
+      for(int j = 0; j < 8; j++)
+      {
+         int8_t lvc;
+         arc << lvc;
+         newSlot.mapName[j] = static_cast<char>(lvc);
+      }
+      newSlot.mapName[8] = '\0';
+
+      // skip managed directory stuff, checksum (if present), and players
+      arc.archiveSize(len);
+      loadFile.skip(len);
+      if(arc.saveVersion() >= 4)
+         arc << dummy64;
+      for(int j = 0; j < MIN_MAXPLAYERS; j++)
+         arc << bdummy;
+
+      // music num, gametype
+      arc << dummy << dummy;
+
+      // skip options
+      byte options[GAME_OPTION_SIZE];
+      loadFile.read(options, sizeof(options));
+
+      // level time
+      arc << newSlot.levelTime;
+
+      loadFile.close();
    }
 }
 
@@ -1437,7 +1522,7 @@ CONSOLE_COMMAND(mn_loadgame, 0)
       return;
    }
    
-   MN_ReadSaveStrings();  // get savegame descriptions
+   MN_readSaveStrings();  // get savegame descriptions
    MN_StartMenu(GameModeInfo->loadMenu);
 }
 
@@ -1573,7 +1658,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
    if(gamestate != GS_LEVEL)
       return;    // only save in levels
    
-   MN_ReadSaveStrings();
+   MN_readSaveStrings();
 
    MN_StartMenu(GameModeInfo->saveMenu);
 }
@@ -1596,7 +1681,7 @@ CONSOLE_COMMAND(quicksave, 0)
    if(quickSaveSlot < 0)
    {
       quickSaveSlot = -2; // means to pick a slot now
-      MN_ReadSaveStrings();
+      MN_readSaveStrings();
       MN_StartMenu(GameModeInfo->saveMenu);
       return;
    }
