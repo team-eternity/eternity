@@ -462,6 +462,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_menus.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_misc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_skinv.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/mn_saveg.cpp"
       SOURCE_GROUP "Source Files\\\\P_\\\\P_ Headers"
       "${CMAKE_CURRENT_SOURCE_DIR}/linkoffs.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_anim.h"
