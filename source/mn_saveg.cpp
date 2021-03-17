@@ -79,23 +79,8 @@ struct saveslot_t
 
 static Collection<saveslot_t> e_saveSlots;
 
-// DELETE START
-// haleyjd: was 7
-#define SAVESLOTS 8
-char *savegamenames[SAVESLOTS];
-// DELETE END
-
 static qstring desc_buffer;
 static bool    typing_save_desc = false;
-
-void MN_InitSaveGameMenus()
-{
-   // haleyjd: initialize via zone memory
-   for(int i = 0; i < SAVESLOTS; i++)
-   {
-      savegamenames[i] = estrdup("");
-   }
-}
 
 /////////////////////////////////////////////////////////////////
 //
@@ -460,7 +445,7 @@ CONSOLE_COMMAND(quickload, 0)
    }
 
    psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT,
-             savegamenames[quickSaveSlot]);
+             e_saveSlots[quickSaveSlot].description.constPtr());
    MN_Question(tempstring, "qload");
 }
 
@@ -738,13 +723,13 @@ CONSOLE_COMMAND(quicksave, 0)
    }
 
    psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
-             savegamenames[quickSaveSlot]);
+             e_saveSlots[quickSaveSlot].description.constPtr());
    MN_Question(tempstring, "qsave");
 }
 
 CONSOLE_COMMAND(qsave, cf_hidden)
 {
-   G_SaveGame(quickSaveSlot, savegamenames[quickSaveSlot]);
+   G_SaveGame(quickSaveSlot, e_saveSlots[quickSaveSlot].description.constPtr());
 }
 
 //VARIABLE_STRING(save_game_desc, nullptr, SAVESTRINGSIZE);

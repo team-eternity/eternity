@@ -102,7 +102,6 @@ void MN_InitMenus()
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
 
-   MN_InitSaveGameMenus();
    MN_InitCustomMenu();      // haleyjd 03/14/06
    MN_InitSearchStr();       // haleyjd 03/15/06
 }
