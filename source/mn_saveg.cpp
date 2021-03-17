@@ -677,45 +677,42 @@ CONSOLE_COMMAND(mn_save, 0)
    if(save_slot < -1 || save_slot >= int(numSlots))
       return; // sanity check
 
-   if(save_slot == -1)
+   if(numSlots == 0)
    {
-      if(numSlots == 0)
-      {
-         save_slot     = 0;
-         save_file_num = 0;
-      }
-      else
-      {
-         int *fileNums = emalloc(int *, numSlots * sizeof(int));
+      save_slot     = 0;
+      save_file_num = 0;
+   }
+   else if(save_slot == -1)
+   {
+      int *fileNums = emalloc(int *, numSlots * sizeof(int));
 
-         for(int i = 0; i < numSlots; i++)
-            fileNums[i] = e_saveSlots[i].fileNum;
+      for(int i = 0; i < numSlots; i++)
+         fileNums[i] = e_saveSlots[i].fileNum;
 
-         qsort(
-            fileNums, numSlots, sizeof(int),
-            [](const void *i1, const void *i2) {
-               return *static_cast<const int *>(i1) - *static_cast<const int *>(i2);
-            }
-         );
-
-         int lowestSaveNum = -1;
-         int lastSaveNum   = -1;
-         for(int i = 0; i < numSlots; i++)
-         {
-            if(fileNums[i] > lastSaveNum + 1)
-            {
-               lowestSaveNum = lastSaveNum + 1;
-               break;
-            }
-            lastSaveNum = fileNums[i];
+      qsort(
+         fileNums, numSlots, sizeof(int),
+         [](const void *i1, const void *i2) {
+            return *static_cast<const int *>(i1) - *static_cast<const int *>(i2);
          }
-         if(lowestSaveNum == -1)
-            save_file_num = numSlots;
-         else
-            save_file_num = lowestSaveNum;
+      );
 
-         efree(fileNums);
+      int lowestSaveNum = -1;
+      int lastSaveNum   = -1;
+      for(int i = 0; i < numSlots; i++)
+      {
+         if(fileNums[i] > lastSaveNum + 1)
+         {
+            lowestSaveNum = lastSaveNum + 1;
+            break;
+         }
+         lastSaveNum = fileNums[i];
       }
+      if(lowestSaveNum == -1)
+         save_file_num = numSlots;
+      else
+         save_file_num = lowestSaveNum;
+
+      efree(fileNums);
    }
    else
       save_file_num = e_saveSlots[save_slot].fileNum;
