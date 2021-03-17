@@ -254,12 +254,12 @@ static void MN_drawSaveInfo(int savenum)
    const int lineh = menu_font->cy;
    const int namew = MN_StringWidth("xxxxxx");
 
+   V_DrawBox(x, y, SCREENWIDTH - x, h);
+
    if(savenum > e_saveSlots.getLength())
       return;
 
    const saveslot_t &saveSlot = e_saveSlots[savenum];
-
-   V_DrawBox(x, y, SCREENWIDTH - x, h);
 
    MN_WriteTextColored(saveSlot.fileTimeStr.constPtr(), GameModeInfo->infoColor, x + 4, y + 4);
 
@@ -577,15 +577,123 @@ static menuitem_t mn_savegame_items[] =
    {it_end}
 };
 
-menu_t menu_savegame = 
+static void MN_saveGameOpen(menu_t *menu);
+static void MN_saveGameDrawer();
+static bool MN_saveGameResponder(event_t *ev, int action);
+
+static int save_slot    = -1;
+static int save_saveNum = -1;
+static menuwidget_t save_selector = { MN_saveGameDrawer, MN_saveGameResponder, nullptr, true };
+
+
+menu_t menu_savegame =
 {
-   mn_savegame_items,
+   nullptr,
    nullptr, nullptr, nullptr,        // pages
-   80, 44,                           // x, y
+   10, 44,                           // x, y
    0,                                // starting slot
-   mf_skullmenu | mf_emulated,       // skull menu
-   MN_SaveGameDrawer,
+   0,                                // no flags
+   nullptr, nullptr, nullptr,        // drawer and content
+   0,                                // gap override
+   MN_saveGameOpen
 };
+
+static void MN_saveGameOpen(menu_t *menu)
+{
+   if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
+   {
+      save_slot    = -1;
+      save_saveNum = -1;
+   }
+   else
+   {
+      if(save_slot == -1)
+         save_saveNum = -1;
+      else
+      {
+         bool foundSave = false;
+         for(size_t i = 0; i < numSaveSlots; i++)
+         {
+            if(e_saveSlots[i].saveNum == save_saveNum)
+            {
+               save_slot = int(i);
+               foundSave = true;
+            }
+         }
+         if(!foundSave)
+         {
+            save_slot    = -1;
+            save_saveNum = -1;
+         }
+      }
+   }
+   MN_PushWidget(&save_selector);
+}
+
+static void MN_saveGameDrawer()
+{
+   int y = menu_savegame.y;
+
+   patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE);
+   V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
+
+   V_DrawBox(0, menu_savegame.y - 4, 23 * 8, 8 * 16);
+   {
+      const int color = save_slot == -1 ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
+      MN_WriteTextColored("<New Save Game>", color, menu_savegame.x, y);
+      y += menu_font->cy;
+   }
+   for(int i = 0; i < e_saveSlots.getLength(); i++)
+   {
+      const int color = i == save_slot ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
+      MN_WriteTextColored(e_saveSlots[i].description.constPtr(), color, menu_savegame.x, y);
+      y += menu_font->cy;
+   }
+   MN_drawSaveInfo(save_slot);
+}
+
+static bool MN_saveGameResponder(event_t *ev, int action)
+{
+   int *menuSounds = GameModeInfo->menuSounds;
+
+   if(action == ka_menu_toggle || action == ka_menu_previous)
+   {
+      if(menu_toggleisback || action == ka_menu_previous)
+      {
+         MN_PopWidget();
+         MN_PrevMenu();
+      }
+      else
+      {
+         MN_ClearMenus();
+         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
+      }
+      return true;
+   }
+
+   if(e_saveSlots.getLength() != 0 && (action == ka_menu_down || action == ka_menu_up))
+   {
+      const int numSlots   = int(e_saveSlots.getLength());
+      const int slotChange = action == ka_menu_down ? 1 : -1;
+      save_slot    = ((save_slot + slotChange + numSlots + 2) % (numSlots + 1)) - 1; // [-1, numSlots)
+      save_saveNum = save_slot == -1 ? -1 : e_saveSlots[save_slot].saveNum;
+
+      S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
+      return true;
+   }
+
+   if(action == ka_menu_confirm)
+   {
+      qstring saveCmd = qstring("mn_save ") << save_slot;
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
+      Console.cmdtype = c_menu;
+      C_RunTextCmd(saveCmd.constPtr());
+      return true;
+   }
+
+   return false;
+}
 
 static void MN_SaveGameDrawer()
 {
