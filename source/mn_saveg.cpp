@@ -349,7 +349,8 @@ static void MN_loadGameOpen(menu_t *menu);
 static void MN_loadGameDrawer();
 static bool MN_loadGameResponder(event_t *ev, int action);
 
-static int load_slot = 0;
+static int load_slot    = -1;
+static int load_saveNum = -1;
 static menuwidget_t load_selector = { MN_loadGameDrawer, MN_loadGameResponder, nullptr, true };
 
 menu_t menu_loadgame =
@@ -366,6 +367,36 @@ menu_t menu_loadgame =
 
 static void MN_loadGameOpen(menu_t *menu)
 {
+   if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
+   {
+      load_slot    = -1;
+      load_saveNum = -1;
+   }
+   else
+   {
+      if(load_slot == -1)
+      {
+         load_slot    = 0;
+         load_saveNum = e_saveSlots[0].saveNum;
+      }
+      else
+      {
+         bool foundSave = false;
+         for(size_t i = 0; i < numSaveSlots; i++)
+         {
+            if(e_saveSlots[i].saveNum == load_saveNum)
+            {
+               load_slot = int(i);
+               foundSave = true;
+            }
+         }
+         if(!foundSave)
+         {
+            load_slot    = 0;
+            load_saveNum = e_saveSlots[0].saveNum;
+         }
+      }
+   }
    MN_PushWidget(&load_selector);
 }
 
@@ -390,17 +421,6 @@ static bool MN_loadGameResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
 
-   if(action == ka_menu_down || action == ka_menu_up)
-   {
-      const int numSlots   = int(e_saveSlots.getLength());
-      const int slotChange = action == ka_menu_down ? 1 : -1;
-      load_slot = (load_slot + slotChange + numSlots) % numSlots;
-
-      S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
-
-      return true;
-   }
-
    if(action == ka_menu_toggle || action == ka_menu_previous)
    {
       if(menu_toggleisback || action == ka_menu_previous)
@@ -413,6 +433,22 @@ static bool MN_loadGameResponder(event_t *ev, int action)
          MN_ClearMenus();
          S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
       }
+      return true;
+   }
+
+   // Nothing to interact with
+   if(e_saveSlots.getLength() == 0)
+      return false;
+
+   if(action == ka_menu_down || action == ka_menu_up)
+   {
+      const int numSlots   = int(e_saveSlots.getLength());
+      const int slotChange = action == ka_menu_down ? 1 : -1;
+      load_slot    = (load_slot + slotChange + numSlots) % numSlots;
+      load_saveNum = e_saveSlots[load_slot].saveNum;
+
+      S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
       return true;
    }
 
