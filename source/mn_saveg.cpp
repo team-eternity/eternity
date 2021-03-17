@@ -347,8 +347,9 @@ static bool MN_loadGameResponder(event_t *ev, int action)
 
    if(action == ka_menu_down || action == ka_menu_up)
    {
-      int slot_change = action == ka_menu_down ? 1 : -1;
-      load_slot = (load_slot + slot_change + e_saveSlots.getLength()) % e_saveSlots.getLength();
+      const int numSlots   = int(e_saveSlots.getLength());
+      const int slotChange = action == ka_menu_down ? 1 : -1;
+      load_slot = (load_slot + slotChange + numSlots) % numSlots;
 
       S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
