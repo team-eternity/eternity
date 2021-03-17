@@ -246,6 +246,50 @@ static void MN_readSaveStrings()
    }
 }
 
+static void MN_drawSaveInfo(int savenum)
+{
+   const int x = 23 * 8;
+   const int y = 40;
+   const int h = 7 * 8;
+   const int lineh = menu_font->cy;
+   const int namew = MN_StringWidth("xxxxxx");
+
+   if(savenum > e_saveSlots.getLength())
+      return;
+
+   const saveslot_t &saveSlot = e_saveSlots[savenum];
+
+   V_DrawBox(x, y, SCREENWIDTH - x, h);
+
+   MN_WriteTextColored(saveSlot.fileTimeStr.constPtr(), GameModeInfo->infoColor, x + 4, y + 4);
+
+   if(saveSlot.saveVersion > 0)
+   {
+      char temp[32 + 1];
+      const char *const mapName = saveSlot.mapName.constPtr();
+
+      snprintf(temp, sizeof(temp), "%d", saveSlot.skill);
+      MN_WriteTextColored("map:",   GameModeInfo->infoColor, x + 4,         y + (lineh * 3) + 4);
+      MN_WriteTextColored(mapName,  GameModeInfo->infoColor, x + namew + 4, y + (lineh * 3) + 4);
+      MN_WriteTextColored("skill:", GameModeInfo->infoColor, x + 4,         y + (lineh * 4) + 4);
+      MN_WriteTextColored(temp,     GameModeInfo->infoColor, x + namew + 4, y + (lineh * 4) + 4);
+
+      const int time     = saveSlot.levelTime / TICRATE;
+      const int hours    = (time / 3600);
+      const int minutes  = (time % 3600) / 60;
+      const int seconds  = (time % 60);
+
+      snprintf(temp, sizeof(temp), "%02d:%02d:%02d", hours, minutes, seconds);
+      MN_WriteTextColored("time:", GameModeInfo->infoColor, x + 4,         y + (lineh * 5) + 4);
+      MN_WriteTextColored(temp,    GameModeInfo->infoColor, x + namew + 4, y + (lineh * 5) + 4);
+   }
+   else
+   {
+      MN_WriteTextColored("warning:",         GameModeInfo->unselectColor, x + 4, y + (lineh * 3) + 4);
+      MN_WriteTextColored("save is too old!", GameModeInfo->infoColor,     x + 4, y + (lineh * 4) + 4);
+   }
+}
+
 // create the savegame console commands
 void MN_CreateSaveCmds()
 {
@@ -339,6 +383,7 @@ static void MN_loadGameDrawer()
       MN_WriteTextColored(e_saveSlots[i].description.constPtr(), color, menu_loadgame.x, y);
       y += menu_font->cy;
    }
+   MN_drawSaveInfo(load_slot);
 }
 
 static bool MN_loadGameResponder(event_t *ev, int action)
