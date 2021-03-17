@@ -50,6 +50,7 @@ namespace fs = std::experimental::filesystem;
 #include "g_game.h"
 #include "m_buffer.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "m_qstr.h"
 #include "mn_engin.h"
 #include "mn_menus.h"
@@ -679,6 +680,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
 CONSOLE_COMMAND(mn_save, 0)
 {
    int save_slot;
+   int save_num;
 
    if(Console.argc < 1)
       return;
@@ -688,18 +690,27 @@ CONSOLE_COMMAND(mn_save, 0)
    if(gamestate != GS_LEVEL)
       return; // only save in level
 
-   if(save_slot < -1)
+   if(save_slot < -1 || save_slot > e_saveSlots.getLength())
       return; // sanity check
 
-   G_SaveGame(save_slot, e_saveSlots[save_slot].description.constPtr());
+   if(save_slot == -1)
+   {
+      int lowestSaveNum = INT_MAX;
+      for(const saveslot_t &slot : e_saveSlots)
+         lowestSaveNum = emin(lowestSaveNum, slot.saveNum);
+      save_num = lowestSaveNum;
+   }
+   else
+      save_num = e_saveSlots[save_slot].saveNum;
+
+   G_SaveGame(save_slot, desc_buffer.constPtr());
    MN_ClearMenus();
+
+   // TODO: Add a save to the slots and modify save_slot
 
    // haleyjd 02/23/02: restored from MBF
    if(quickSaveSlot == -2)
       quickSaveSlot = save_slot;
-
-   // haleyjd: keep track of valid saveslots
-   savegamepresent[save_slot] = true;
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
