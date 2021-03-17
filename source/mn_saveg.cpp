@@ -473,7 +473,6 @@ static int save_slot    = -1;
 static int save_fileNum = -1;
 static menuwidget_t save_selector = { MN_saveGameDrawer, MN_saveGameResponder, nullptr, true };
 
-
 menu_t menu_savegame =
 {
    nullptr,
@@ -719,8 +718,6 @@ CONSOLE_COMMAND(mn_save, 0)
 
    G_SaveGame(save_file_num, desc_buffer.constPtr());
    MN_ClearMenus();
-
-   // TODO: Add a save to the slots and modify save_slot
 
    // haleyjd 02/23/02: restored from MBF
    if(quickSaveSlot == -2)
