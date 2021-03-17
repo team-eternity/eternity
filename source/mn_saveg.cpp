@@ -67,7 +67,7 @@ namespace fs = std::experimental::filesystem;
 
 struct saveslot_t
 {
-   int     saveNum;
+   int     fileNum;
    qstring description;
    int     saveVersion;
    int     skill;
@@ -83,8 +83,6 @@ static Collection<saveslot_t> e_saveSlots;
 // haleyjd: was 7
 #define SAVESLOTS 8
 char *savegamenames[SAVESLOTS];
-// haleyjd: keep track of valid save slots
-bool savegamepresent[SAVESLOTS];
 // DELETE END
 
 static qstring desc_buffer;
@@ -96,7 +94,6 @@ void MN_InitSaveGameMenus()
    for(int i = 0; i < SAVESLOTS; i++)
    {
       savegamenames[i] = estrdup("");
-      savegamepresent[i] = false;
    }
 }
 
@@ -158,7 +155,7 @@ static void MN_readSaveStrings()
       savename.erase(0, strlen(savegamename));
 
       saveslot_t newSlot;
-      newSlot.saveNum = savename.toInt();
+      newSlot.fileNum = savename.toInt();
 
       // file time
       struct stat statbuf;
@@ -224,7 +221,7 @@ static void MN_readSaveStrings()
    }
 }
 
-static void MN_drawSaveInfo(int savenum)
+static void MN_drawSaveInfo(int slotIndex)
 {
    const int x = 23 * 8;
    const int y = 40;
@@ -234,10 +231,10 @@ static void MN_drawSaveInfo(int savenum)
 
    V_DrawBox(x, y, SCREENWIDTH - x, h);
 
-   if(savenum > e_saveSlots.getLength())
+   if(slotIndex > e_saveSlots.getLength())
       return;
 
-   const saveslot_t &saveSlot = e_saveSlots[savenum];
+   const saveslot_t &saveSlot = e_saveSlots[slotIndex];
 
    MN_WriteTextColored(saveSlot.fileTimeStr.constPtr(), GameModeInfo->infoColor, x + 4, y + 4);
 
@@ -273,7 +270,7 @@ static void MN_loadGameDrawer();
 static bool MN_loadGameResponder(event_t *ev, int action);
 
 static int load_slot    = -1;
-static int load_saveNum = -1;
+static int load_fileNum = -1;
 static menuwidget_t load_selector = { MN_loadGameDrawer, MN_loadGameResponder, nullptr, true };
 
 menu_t menu_loadgame =
@@ -293,21 +290,21 @@ static void MN_loadGameOpen(menu_t *menu)
    if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
    {
       load_slot    = -1;
-      load_saveNum = -1;
+      load_fileNum = -1;
    }
    else
    {
       if(load_slot == -1)
       {
          load_slot    = 0;
-         load_saveNum = e_saveSlots[0].saveNum;
+         load_fileNum = e_saveSlots[0].fileNum;
       }
       else
       {
          bool foundSave = false;
          for(size_t i = 0; i < numSaveSlots; i++)
          {
-            if(e_saveSlots[i].saveNum == load_saveNum)
+            if(e_saveSlots[i].fileNum == load_fileNum)
             {
                load_slot = int(i);
                foundSave = true;
@@ -316,7 +313,7 @@ static void MN_loadGameOpen(menu_t *menu)
          if(!foundSave)
          {
             load_slot    = 0;
-            load_saveNum = e_saveSlots[0].saveNum;
+            load_fileNum = e_saveSlots[0].fileNum;
          }
       }
    }
@@ -368,7 +365,7 @@ static bool MN_loadGameResponder(event_t *ev, int action)
       const int numSlots   = int(e_saveSlots.getLength());
       const int slotChange = action == ka_menu_down ? 1 : -1;
       load_slot    = (load_slot + slotChange + numSlots) % numSlots;
-      load_saveNum = e_saveSlots[load_slot].saveNum;
+      load_fileNum = e_saveSlots[load_slot].fileNum;
 
       S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
@@ -488,7 +485,7 @@ static void MN_saveGameDrawer();
 static bool MN_saveGameResponder(event_t *ev, int action);
 
 static int save_slot    = -1;
-static int save_saveNum = -1;
+static int save_fileNum = -1;
 static menuwidget_t save_selector = { MN_saveGameDrawer, MN_saveGameResponder, nullptr, true };
 
 
@@ -509,18 +506,18 @@ static void MN_saveGameOpen(menu_t *menu)
    if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
    {
       save_slot    = -1;
-      save_saveNum = -1;
+      save_fileNum = -1;
    }
    else
    {
       if(save_slot == -1)
-         save_saveNum = -1;
+         save_fileNum = -1;
       else
       {
          bool foundSave = false;
          for(size_t i = 0; i < numSaveSlots; i++)
          {
-            if(e_saveSlots[i].saveNum == save_saveNum)
+            if(e_saveSlots[i].fileNum == save_fileNum)
             {
                save_slot = int(i);
                foundSave = true;
@@ -529,7 +526,7 @@ static void MN_saveGameOpen(menu_t *menu)
          if(!foundSave)
          {
             save_slot    = -1;
-            save_saveNum = -1;
+            save_fileNum = -1;
          }
       }
    }
@@ -636,7 +633,7 @@ static bool MN_saveGameResponder(event_t *ev, int action)
       const int numSlots   = int(e_saveSlots.getLength());
       const int slotChange = action == ka_menu_down ? 1 : -1;
       save_slot    = ((save_slot + slotChange + numSlots + 2) % (numSlots + 1)) - 1; // [-1, numSlots)
-      save_saveNum = save_slot == -1 ? -1 : e_saveSlots[save_slot].saveNum;
+      save_fileNum = save_slot == -1 ? -1 : e_saveSlots[save_slot].fileNum;
 
       S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
@@ -680,7 +677,7 @@ CONSOLE_COMMAND(mn_savegame, 0)
 CONSOLE_COMMAND(mn_save, 0)
 {
    int save_slot;
-   int save_num;
+   int save_file_num;
 
    if(Console.argc < 1)
       return;
@@ -697,11 +694,11 @@ CONSOLE_COMMAND(mn_save, 0)
    {
       int lowestSaveNum = INT_MAX;
       for(const saveslot_t &slot : e_saveSlots)
-         lowestSaveNum = emin(lowestSaveNum, slot.saveNum);
-      save_num = lowestSaveNum;
+         lowestSaveNum = emin(lowestSaveNum, slot.fileNum);
+      save_file_num = lowestSaveNum;
    }
    else
-      save_num = e_saveSlots[save_slot].saveNum;
+      save_file_num = e_saveSlots[save_slot].fileNum;
 
    G_SaveGame(save_slot, desc_buffer.constPtr());
    MN_ClearMenus();
