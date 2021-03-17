@@ -672,7 +672,7 @@ CONSOLE_COMMAND(mn_save, 0)
    if(gamestate != GS_LEVEL)
       return; // only save in level
 
-   if(save_slot < -1 || save_slot > e_saveSlots.getLength())
+   if(save_slot < -1 || save_slot >= e_saveSlots.getLength())
       return; // sanity check
 
    if(save_slot == -1)
