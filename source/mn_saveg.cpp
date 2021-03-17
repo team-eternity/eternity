@@ -40,6 +40,7 @@ namespace fs = std::experimental::filesystem;
 #include "c_runcmd.h"
 #include "d_deh.h"
 #include "d_dehtbl.h"
+#include "d_event.h"
 #include "d_gi.h"
 #include "d_main.h"
 #include "d_net.h"
@@ -77,8 +78,6 @@ struct saveslot_t
 
 static Collection<saveslot_t> e_saveSlots;
 
-#define SAVESTRINGSIZE 24
-
 // DELETE START
 // haleyjd: was 7
 #define SAVESLOTS 8
@@ -86,6 +85,9 @@ char *savegamenames[SAVESLOTS];
 // haleyjd: keep track of valid save slots
 bool savegamepresent[SAVESLOTS];
 // DELETE END
+
+static qstring desc_buffer;
+static bool    typing_save_desc = false;
 
 void MN_InitSaveGameMenus()
 {
@@ -114,31 +116,6 @@ void MN_InitSaveGameMenus()
 
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
-
-static void MN_SaveGame()
-{
-   int save_slot = static_cast<int>((char **)(Console.command->variable->variable) - savegamenames);
-
-   if(gamestate != GS_LEVEL)
-      return; // only save in level
-
-   if(save_slot < 0 || save_slot >= SAVESLOTS)
-      return; // sanity check
-
-   G_SaveGame(save_slot, savegamenames[save_slot]);
-   MN_ClearMenus();
-
-   // haleyjd 02/23/02: restored from MBF
-   if(quickSaveSlot == -2)
-      quickSaveSlot = save_slot;
-
-   // haleyjd: keep track of valid saveslots
-   savegamepresent[save_slot] = true;
-
-   // haleyjd 10/08/08: GIF_SAVESOUND flag
-   if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-}
 
 //
 // Read the strings from the savegame files
@@ -288,61 +265,6 @@ static void MN_drawSaveInfo(int savenum)
       MN_WriteTextColored("warning:",         GameModeInfo->unselectColor, x + 4, y + (lineh * 3) + 4);
       MN_WriteTextColored("save is too old!", GameModeInfo->infoColor,     x + 4, y + (lineh * 4) + 4);
    }
-}
-
-// create the savegame console commands
-void MN_CreateSaveCmds()
-{
-   for(int i = 0; i < SAVESLOTS; i++)  // haleyjd
-   {
-      command_t  *save_command;
-      variable_t *save_variable;
-      char tempstr[16];
-
-      // create the variable first
-      save_variable = estructalloc(variable_t, 1);
-      save_variable->variable  = &savegamenames[i];
-      save_variable->v_default = nullptr;
-      save_variable->type      = vt_string;      // string value
-      save_variable->min       = 0;
-      save_variable->max       = SAVESTRINGSIZE;
-      save_variable->defines   = nullptr;
-
-      // now the command
-      save_command = estructalloc(command_t, 1);
-
-      sprintf(tempstr, "savegame_%i", i);
-      save_command->name     = estrdup(tempstr);
-      save_command->type     = ct_variable;
-      save_command->flags    = 0;
-      save_command->variable = save_variable;
-      save_command->handler  = MN_SaveGame;
-      save_command->netcmd   = 0;
-
-      C_AddCommand(save_command); // hook into cmdlist
-   }
-}
-
-static void MN_DrawSaveLoadBorder(int x, int y)
-{
-   patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
-   patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
-   patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
-
-   V_DrawPatch(x - 8, y + 7, &subscreen43, patch_left);
-
-   for(int i = 0; i < 24; i++)
-   {
-      V_DrawPatch(x, y + 7, &subscreen43, patch_mid);
-      x += 8;
-   }
-
-   V_DrawPatch(x, y + 7, &subscreen43, patch_right);
-
-   // haleyjd: make purgable
-   Z_ChangeTag(patch_left,  PU_CACHE);
-   Z_ChangeTag(patch_mid,   PU_CACHE);
-   Z_ChangeTag(patch_right, PU_CACHE);
 }
 
 static void MN_loadGameOpen(menu_t *menu);
@@ -560,23 +482,6 @@ CONSOLE_COMMAND(qload, cf_hidden)
 // Save Game
 //
 
-static void MN_SaveGameDrawer();
-
-// haleyjd: fixes continue here from 8-17 build
-
-static menuitem_t mn_savegame_items[] =
-{
-   {it_variable, "",                          "savegame_0"},
-   {it_variable, "",                          "savegame_1"},
-   {it_variable, "",                          "savegame_2"},
-   {it_variable, "",                          "savegame_3"},
-   {it_variable, "",                          "savegame_4"},
-   {it_variable, "",                          "savegame_5"},
-   {it_variable, "",                          "savegame_6"},
-   {it_variable, "",                          "savegame_7"},
-   {it_end}
-};
-
 static void MN_saveGameOpen(menu_t *menu);
 static void MN_saveGameDrawer();
 static bool MN_saveGameResponder(event_t *ev, int action);
@@ -634,19 +539,37 @@ static void MN_saveGameDrawer()
 {
    int y = menu_savegame.y;
 
-   patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_SAVEG", PU_CACHE);
-   V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
+   int lumpnum = W_CheckNumForName("M_SGTTL");
+   if(mn_classic_menus || lumpnum == -1)
+      lumpnum = W_CheckNumForName("M_SAVEG");
+
+   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
 
    V_DrawBox(0, menu_savegame.y - 4, 23 * 8, 8 * 16);
    {
-      const int color = save_slot == -1 ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
-      MN_WriteTextColored("<New Save Game>", color, menu_savegame.x, y);
+      int         color   = GameModeInfo->unselectColor;
+      const char *descStr = "<New Save Game>";
+      if(save_slot == -1)
+      {
+         color = GameModeInfo->selectColor;
+         if(typing_save_desc)
+            descStr = desc_buffer.constPtr();
+      }
+      MN_WriteTextColored(descStr, color, menu_savegame.x, y);
       y += menu_font->cy;
    }
    for(int i = 0; i < e_saveSlots.getLength(); i++)
    {
-      const int color = i == save_slot ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
-      MN_WriteTextColored(e_saveSlots[i].description.constPtr(), color, menu_savegame.x, y);
+      int         color = GameModeInfo->unselectColor;
+      const char *descStr = e_saveSlots[i].description.constPtr();
+      if(save_slot == i)
+      {
+         color = GameModeInfo->selectColor;
+         if(typing_save_desc)
+            descStr = desc_buffer.constPtr();
+      }
+
+      MN_WriteTextColored(descStr, color, menu_savegame.x, y);
       y += menu_font->cy;
    }
    MN_drawSaveInfo(save_slot);
@@ -655,6 +578,42 @@ static void MN_saveGameDrawer()
 static bool MN_saveGameResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
+
+   if(ev->type == ev_keydown && typing_save_desc)
+   {
+      if(action == ka_menu_toggle) // cancel input
+         typing_save_desc = false;
+      else if(action == ka_menu_confirm)
+      {
+         if(desc_buffer.length())
+         {
+            qstring saveCmd = qstring("mn_save ") << save_slot;
+            S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
+            Console.cmdtype = c_menu;
+            C_RunTextCmd(saveCmd.constPtr());
+
+            typing_save_desc = false;
+         }
+         return true;
+      }
+      else if(ev->data1 == KEYD_BACKSPACE)
+      {
+         desc_buffer.Delc();
+         return true;
+      }
+
+      return true;
+   }
+   else if(ev->type == ev_text && typing_save_desc)
+   {
+      // just a normal character
+      const unsigned char ich = static_cast<unsigned char>(ev->data1);
+
+      if(ectype::isPrint(ich) && desc_buffer.length() < SAVESTRINGSIZE)
+         desc_buffer += static_cast<char>(ich);
+
+      return true;
+   }
 
    if(action == ka_menu_toggle || action == ka_menu_previous)
    {
@@ -685,28 +644,16 @@ static bool MN_saveGameResponder(event_t *ev, int action)
 
    if(action == ka_menu_confirm)
    {
-      qstring saveCmd = qstring("mn_save ") << save_slot;
-      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
-      Console.cmdtype = c_menu;
-      C_RunTextCmd(saveCmd.constPtr());
+      if(save_slot == -1)
+         desc_buffer.clear();
+      else
+         desc_buffer = e_saveSlots[save_slot].description;
+
+      typing_save_desc = true;
       return true;
    }
 
    return false;
-}
-
-static void MN_SaveGameDrawer()
-{
-   int lumpnum = W_CheckNumForName("M_SGTTL");
-
-   if(mn_classic_menus || lumpnum == -1)
-      lumpnum = W_CheckNumForName("M_SAVEG");
-
-   V_DrawPatch(72, 18, &subscreen43,
-               PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
-
-   for(int i = 0; i < SAVESLOTS; i++)
-      MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);
 }
 
 CONSOLE_COMMAND(mn_savegame, 0)
@@ -727,6 +674,36 @@ CONSOLE_COMMAND(mn_savegame, 0)
    MN_readSaveStrings();
 
    MN_StartMenu(GameModeInfo->saveMenu);
+}
+
+CONSOLE_COMMAND(mn_save, 0)
+{
+   int save_slot;
+
+   if(Console.argc < 1)
+      return;
+
+   save_slot = Console.argv[0]->toInt();
+
+   if(gamestate != GS_LEVEL)
+      return; // only save in level
+
+   if(save_slot < -1)
+      return; // sanity check
+
+   G_SaveGame(save_slot, e_saveSlots[save_slot].description.constPtr());
+   MN_ClearMenus();
+
+   // haleyjd 02/23/02: restored from MBF
+   if(quickSaveSlot == -2)
+      quickSaveSlot = save_slot;
+
+   // haleyjd: keep track of valid saveslots
+   savegamepresent[save_slot] = true;
+
+   // haleyjd 10/08/08: GIF_SAVESOUND flag
+   if(GameModeInfo->flags & GIF_SAVESOUND)
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
 }
 
 // haleyjd 02/23/02: Quick Save -- restored from MBF, converted to
@@ -761,6 +738,9 @@ CONSOLE_COMMAND(qsave, cf_hidden)
 {
    G_SaveGame(quickSaveSlot, savegamenames[quickSaveSlot]);
 }
+
+//VARIABLE_STRING(save_game_desc, nullptr, SAVESTRINGSIZE);
+//CONSOLE_VARIABLE(mn_savegamedesc, save_game_desc, 0) {}
 
 // EOF
 
