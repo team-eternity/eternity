@@ -45,6 +45,7 @@ namespace fs = std::experimental::filesystem;
 #include "d_net.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "g_bind.h"
 #include "g_game.h"
 #include "m_buffer.h"
 #include "m_collection.h"
@@ -57,6 +58,8 @@ namespace fs = std::experimental::filesystem;
 #include "p_skin.h"
 #include "r_patch.h"
 #include "s_sound.h"
+#include "v_font.h"
+#include "v_misc.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
 
@@ -146,6 +149,8 @@ static void MN_readSaveStrings()
    int      dummy;
    uint64_t dummy64;
    bool     bdummy;
+
+   e_saveSlots.clear();
 
    // test for failure
    if(std::error_code ec; !fs::is_directory(basesavegame, ec))
@@ -296,55 +301,85 @@ static void MN_DrawSaveLoadBorder(int x, int y)
    Z_ChangeTag(patch_right, PU_CACHE);
 }
 
-static void MN_LoadGameDrawer();
+static void MN_loadGameOpen(menu_t *menu);
+static void MN_loadGameDrawer();
+static bool MN_loadGameResponder(event_t *ev, int action);
 
-// haleyjd: all saveslot names changed to be consistent
-
-static menuitem_t mn_loadgame_items[] =
-{
-   {it_runcmd, "save slot 0",       "mn_load 0"},
-   {it_runcmd, "save slot 1",       "mn_load 1"},
-   {it_runcmd, "save slot 2",       "mn_load 2"},
-   {it_runcmd, "save slot 3",       "mn_load 3"},
-   {it_runcmd, "save slot 4",       "mn_load 4"},
-   {it_runcmd, "save slot 5",       "mn_load 5"},
-   {it_runcmd, "save slot 6",       "mn_load 6"},
-   {it_runcmd, "save slot 7",       "mn_load 7"},
-   {it_end}
-};
+static int load_slot = 0;
+static menuwidget_t load_selector = { MN_loadGameDrawer, MN_loadGameResponder, nullptr, true };
 
 menu_t menu_loadgame =
 {
-   mn_loadgame_items,
+   nullptr,
    nullptr, nullptr, nullptr,        // pages
-   80, 44,                           // x, y
+   10, 44,                           // x, y
    0,                                // starting slot
-   mf_skullmenu | mf_emulated,       // skull menu
-   MN_LoadGameDrawer,
+   0,                                // no flags
+   nullptr, nullptr, nullptr,        // drawer and content
+   0,                                // gap override
+   MN_loadGameOpen
 };
 
-
-static void MN_LoadGameDrawer()
+static void MN_loadGameOpen(menu_t *menu)
 {
-   static char *emptystr = nullptr;
+   MN_PushWidget(&load_selector);
+}
 
-   int lumpnum = W_CheckNumForName("M_LGTTL");
+static void MN_loadGameDrawer()
+{
+   int y = menu_loadgame.y;
 
-   if(mn_classic_menus || lumpnum == -1)
-      lumpnum = W_CheckNumForName("M_LOADG");
+   patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE);
+   V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
 
-   V_DrawPatch(72, 18, &subscreen43,
-               PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
-
-   if(!emptystr)
-      emptystr = estrdup(DEH_String("EMPTYSTRING"));
-
-   for(int i = 0;  i < SAVESLOTS; i++)
+   V_DrawBox(0, menu_loadgame.y - 4, 23 * 8, 8 * 16);
+   for(int i = 0; i < e_saveSlots.getLength(); i++)
    {
-      MN_DrawSaveLoadBorder(menu_loadgame.x, menu_loadgame.y + i*16);
-      menu_loadgame.menuitems[i].description =
-         savegamenames[i] ? savegamenames[i] : emptystr;
+      const int color = i == load_slot ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
+      MN_WriteTextColored(e_saveSlots[i].description.constPtr(), color, menu_loadgame.x, y);
+      y += menu_font->cy;
    }
+}
+
+static bool MN_loadGameResponder(event_t *ev, int action)
+{
+   int *menuSounds = GameModeInfo->menuSounds;
+
+   if(action == ka_menu_down || action == ka_menu_up)
+   {
+      int slot_change = action == ka_menu_down ? 1 : -1;
+      load_slot = (load_slot + slot_change + e_saveSlots.getLength()) % e_saveSlots.getLength();
+
+      S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
+      return true;
+   }
+
+   if(action == ka_menu_toggle || action == ka_menu_previous)
+   {
+      if(menu_toggleisback || action == ka_menu_previous)
+      {
+         MN_PopWidget();
+         MN_PrevMenu();
+      }
+      else
+      {
+         MN_ClearMenus();
+         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
+      }
+      return true;
+   }
+
+   if(action == ka_menu_confirm)
+   {
+      qstring loadCmd = qstring("mn_load ") << load_slot;
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
+      Console.cmdtype = c_menu;
+      C_RunTextCmd(loadCmd.constPtr());
+      return true;
+   }
+
+   return false;
 }
 
 CONSOLE_COMMAND(mn_loadgame, 0)
@@ -379,9 +414,9 @@ CONSOLE_COMMAND(mn_load, 0)
    slot = Console.argv[0]->toInt();
 
    // haleyjd 08/25/02: giant bug here
-   if(!savegamepresent[slot])
+   if(slot >= e_saveSlots.getLength())
    {
-      MN_Alert("You can't load an empty game!\n%s", DEH_String("PRESSKEY"));
+      MN_Alert("Attempted to load save that doesn't exist\n%s", DEH_String("PRESSKEY"));
       return;     // empty slot
    }
 
