@@ -65,6 +65,12 @@ namespace fs = std::experimental::filesystem;
 #include "v_patchfmt.h"
 #include "v_video.h"
 
+struct saveID_t
+{
+   int slot;
+   int fileNum;
+};
+
 struct saveslot_t
 {
    int     fileNum;
@@ -660,9 +666,6 @@ CONSOLE_COMMAND(mn_savegame, 0)
 
 CONSOLE_COMMAND(mn_save, 0)
 {
-   int save_slot;
-   int save_file_num;
-
    const size_t numSlots = e_saveSlots.getLength();
 
    if(Console.argc < 1)
@@ -678,45 +681,51 @@ CONSOLE_COMMAND(mn_save, 0)
 
    if(numSlots == 0)
    {
-      save_slot     = 0;
-      save_file_num = 0;
+      save_slot    = 0;
+      save_fileNum = 0;
    }
    else if(save_slot == -1)
    {
-      int *fileNums = emalloc(int *, numSlots * sizeof(int));
+      saveID_t *saveIDs = estructalloc(saveID_t, numSlots);
 
       for(int i = 0; i < numSlots; i++)
-         fileNums[i] = e_saveSlots[i].fileNum;
+         saveIDs[i] = { i, e_saveSlots[i].fileNum };
 
       qsort(
-         fileNums, numSlots, sizeof(int),
+         saveIDs, numSlots, sizeof(int),
          [](const void *i1, const void *i2) {
-            return *static_cast<const int *>(i1) - *static_cast<const int *>(i2);
+            return static_cast<const saveID_t *>(i1)->fileNum - static_cast<const saveID_t *>(i2)->fileNum;
          }
       );
 
-      int lowestSaveNum = -1;
-      int lastSaveNum   = -1;
+      saveID_t lowestSaveID = { -1, -1 };
+      int      lastSaveNum  = -1;
       for(int i = 0; i < numSlots; i++)
       {
-         if(fileNums[i] > lastSaveNum + 1)
+         if(saveIDs[i].fileNum > lastSaveNum + 1)
          {
-            lowestSaveNum = lastSaveNum + 1;
+            lowestSaveID = { i, lastSaveNum + 1 };
             break;
          }
-         lastSaveNum = fileNums[i];
+         lastSaveNum = saveIDs[i].fileNum;
       }
-      if(lowestSaveNum == -1)
-         save_file_num = numSlots;
+      if(lowestSaveID.fileNum == -1)
+      {
+         save_slot    = numSlots;
+         save_fileNum = numSlots;
+      }
       else
-         save_file_num = lowestSaveNum;
+      {
+         save_slot    = lowestSaveID.slot;
+         save_fileNum = lowestSaveID.fileNum;
+      }
 
-      efree(fileNums);
+      efree(saveIDs);
    }
    else
-      save_file_num = e_saveSlots[save_slot].fileNum;
+      save_fileNum = e_saveSlots[save_slot].fileNum;
 
-   G_SaveGame(save_file_num, desc_buffer.constPtr());
+   G_SaveGame(save_fileNum, desc_buffer.constPtr());
    MN_ClearMenus();
 
    // haleyjd 02/23/02: restored from MBF
