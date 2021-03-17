@@ -717,7 +717,7 @@ CONSOLE_COMMAND(mn_save, 0)
    else
       save_file_num = e_saveSlots[save_slot].fileNum;
 
-   G_SaveGame(save_slot, desc_buffer.constPtr());
+   G_SaveGame(save_file_num, desc_buffer.constPtr());
    MN_ClearMenus();
 
    // TODO: Add a save to the slots and modify save_slot
