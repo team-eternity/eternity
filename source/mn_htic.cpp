@@ -288,7 +288,7 @@ menu_t menu_hloadgame =
 
 #define SAVESLOTS 8
 
-extern char *savegamenames[];
+char *savegamenames[SAVESLOTS];
 
 static void MN_HLoadDrawer()
 {
