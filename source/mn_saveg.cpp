@@ -692,7 +692,7 @@ CONSOLE_COMMAND(mn_save, 0)
          saveIDs[i] = { i, e_saveSlots[i].fileNum };
 
       qsort(
-         saveIDs, numSlots, sizeof(int),
+         saveIDs, numSlots, sizeof(saveID_t),
          [](const void *i1, const void *i2) {
             return static_cast<const saveID_t *>(i1)->fileNum - static_cast<const saveID_t *>(i2)->fileNum;
          }
