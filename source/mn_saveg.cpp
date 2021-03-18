@@ -101,7 +101,8 @@ static bool    typing_save_desc = false;
 
 // haleyjd: numerous fixes here from 8-17 version of SMMU
 
-#define SAVESTRINGSIZE  24
+constexpr int SAVESTRINGSIZE  = 24;
+constexpr int NUMSAVEBOXLINES = 15;
 
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
@@ -525,6 +526,9 @@ static void MN_saveGameOpen(menu_t *menu)
 
 static void MN_saveGameDrawer()
 {
+   int min, max;
+   const int numslots = int(e_saveSlots.getLength());
+   const int lheight  = menu_font->absh;
    int y = menu_savegame.y;
 
    int lumpnum = W_CheckNumForName("M_SGTTL");
@@ -532,8 +536,21 @@ static void MN_saveGameDrawer()
       lumpnum = W_CheckNumForName("M_SAVEG");
 
    V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
+   V_DrawBox(0, menu_savegame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
-   V_DrawBox(0, menu_savegame.y - 4, 23 * 8, 8 * 16);
+   min = save_slot - NUMSAVEBOXLINES / 2;
+   if(min < 0)
+      min = 0;
+   max = min + NUMSAVEBOXLINES - 1;
+   if(max >= numslots)
+   {
+      max = numslots - 1;
+      min = max - NUMSAVEBOXLINES + 1;
+      if(min < 0)
+         min = 0;
+   }
+
+   if(min == 0)
    {
       int         color   = GameModeInfo->unselectColor;
       const char *descStr = "<New Save Game>";
@@ -545,20 +562,25 @@ static void MN_saveGameDrawer()
       }
       MN_WriteTextColored(descStr, color, menu_savegame.x, y);
       y += menu_font->cy;
+      max--;
    }
-   for(int i = 0; i < e_saveSlots.getLength(); i++)
+
+   for(int i = min; i <= max; i++)
    {
-      int         color = GameModeInfo->unselectColor;
-      const char *descStr = e_saveSlots[i].description.constPtr();
-      if(save_slot == i)
+      int    color = GameModeInfo->unselectColor;
+      qstring text = e_saveSlots[i].description;
+
+      if((i == min && min > 0) || (i == max && max < numslots - 1))
+         text = FC_GOLD "More...";
+      else if(save_slot == i)
       {
          color = GameModeInfo->selectColor;
          if(typing_save_desc)
-            descStr = desc_buffer.constPtr();
+            text = desc_buffer;
       }
 
-      MN_WriteTextColored(descStr, color, menu_savegame.x, y);
-      y += menu_font->cy;
+      MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
+      y += lheight;
    }
    MN_drawSaveInfo(save_slot);
 }
@@ -711,8 +733,8 @@ CONSOLE_COMMAND(mn_save, 0)
       }
       if(lowestSaveID.fileNum == -1)
       {
-         save_slot    = numSlots;
-         save_fileNum = numSlots;
+         save_slot    = int(numSlots);
+         save_fileNum = int(numSlots);
       }
       else
       {
