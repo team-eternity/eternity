@@ -314,16 +314,38 @@ static void MN_loadGameOpen(menu_t *menu)
 
 static void MN_loadGameDrawer()
 {
+   int min, max;
+   const int numslots = int(e_saveSlots.getLength());
+   const int lheight  = menu_font->absh;
    int y = menu_loadgame.y;
 
    patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE);
    V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
+   V_DrawBox(0, menu_loadgame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
-   V_DrawBox(0, menu_loadgame.y - 4, 23 * 8, 8 * 16);
-   for(int i = 0; i < e_saveSlots.getLength(); i++)
+   min = load_slot - NUMSAVEBOXLINES / 2;
+   if(min < 0)
+      min = 0;
+   max = min + NUMSAVEBOXLINES - 1;
+   if(max >= numslots)
    {
+      max = numslots - 1;
+      min = max - NUMSAVEBOXLINES + 1;
+      if(min < 0)
+         min = 0;
+   }
+
+   for(int i = min; i <= max; i++)
+   {
+      qstring text;
       const int color = i == load_slot ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
-      MN_WriteTextColored(e_saveSlots[i].description.constPtr(), color, menu_loadgame.x, y);
+
+      if((i == min && min > 0) || (i == max && max < numslots - 1))
+         text = FC_GOLD "More...";
+      else
+         text = e_saveSlots[i].description;
+
+      MN_WriteTextColored(text.constPtr(), color, menu_loadgame.x, y);
       y += menu_font->cy;
    }
    MN_drawSaveInfo(load_slot);
