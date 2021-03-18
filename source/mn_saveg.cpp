@@ -552,15 +552,15 @@ static void MN_saveGameDrawer()
 
    if(min == 0)
    {
-      int         color   = GameModeInfo->unselectColor;
-      const char *descStr = "<New Save Game>";
+      int         color = GameModeInfo->unselectColor;
+      qstring     text("<New Save Game>");
       if(save_slot == -1)
       {
          color = GameModeInfo->selectColor;
          if(typing_save_desc)
-            descStr = desc_buffer.constPtr();
+            text = desc_buffer;
       }
-      MN_WriteTextColored(descStr, color, menu_savegame.x, y);
+      MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += menu_font->cy;
       max--;
    }
