@@ -558,7 +558,11 @@ static void MN_saveGameDrawer()
       {
          color = GameModeInfo->selectColor;
          if(typing_save_desc)
+         {
             text = desc_buffer;
+            if(text.length() < SAVESTRINGSIZE)
+               text += '_';
+         }
       }
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += menu_font->cy;
@@ -576,7 +580,11 @@ static void MN_saveGameDrawer()
       {
          color = GameModeInfo->selectColor;
          if(typing_save_desc)
+         {
             text = desc_buffer;
+            if(text.length() < SAVESTRINGSIZE)
+               text += '_';
+         }
       }
 
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
