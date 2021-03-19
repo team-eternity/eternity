@@ -422,6 +422,7 @@ CONSOLE_COMMAND(mn_load, 0)
 {
    char *name;     // killough 3/22/98
    int slot;
+   int fileNum;
    size_t len;
 
    if(Console.argc < 1)
@@ -436,10 +437,12 @@ CONSOLE_COMMAND(mn_load, 0)
       return;     // empty slot
    }
 
+   fileNum = e_saveSlots[slot].fileNum;
+
    len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
 
-   G_SaveGameName(name, len, slot);
-   G_LoadGame(name, slot, false);
+   G_SaveGameName(name, len, fileNum);
+   G_LoadGame(name, fileNum, false);
 
    MN_ClearMenus();
 
