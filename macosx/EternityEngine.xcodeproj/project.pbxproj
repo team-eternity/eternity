@@ -24,6 +24,7 @@
 		4F02C38823126DB3004DBBA7 /* nukedopl3.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C38623126DB3004DBBA7 /* nukedopl3.c */; };
 		4F02C38A23126DD0004DBBA7 /* wopl_file.c in Sources */ = {isa = PBXBuildFile; fileRef = 4F02C38923126DD0004DBBA7 /* wopl_file.c */; };
 		4F21BAF51E9C05C10040B4DF /* s_musinfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */; };
+		4F2BBE5926053435000356B3 /* r_context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2BBE5826053435000356B3 /* r_context.cpp */; };
 		4F2F32AC1867100100EED7DE /* e_reverbs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A21867100100EED7DE /* e_reverbs.cpp */; };
 		4F2F32AE1867100100EED7DE /* s_reverb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A71867100100EED7DE /* s_reverb.cpp */; };
 		4F2F32B01867100100EED7DE /* v_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4F2F32A91867100100EED7DE /* v_image.cpp */; };
@@ -998,6 +999,8 @@
 		4F0A2C7816ED36FD00400F41 /* i_sdlgamepads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = i_sdlgamepads.h; path = ../source/sdl/i_sdlgamepads.h; sourceTree = "<group>"; };
 		4F21BAF31E9C05C10040B4DF /* s_musinfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = s_musinfo.cpp; path = ../source/s_musinfo.cpp; sourceTree = "<group>"; };
 		4F21BAF41E9C05C10040B4DF /* s_musinfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = s_musinfo.h; path = ../source/s_musinfo.h; sourceTree = "<group>"; };
+		4F2BBE5726053435000356B3 /* r_context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = r_context.h; path = ../source/r_context.h; sourceTree = "<group>"; };
+		4F2BBE5826053435000356B3 /* r_context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = r_context.cpp; path = ../source/r_context.cpp; sourceTree = "<group>"; };
 		4F2F32A21867100100EED7DE /* e_reverbs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = e_reverbs.cpp; path = ../source/e_reverbs.cpp; sourceTree = "<group>"; };
 		4F2F32A31867100100EED7DE /* e_reverbs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = e_reverbs.h; path = ../source/e_reverbs.h; sourceTree = "<group>"; };
 		4F2F32A41867100100EED7DE /* m_binary.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = m_binary.h; path = ../source/m_binary.h; sourceTree = "<group>"; };
@@ -2451,6 +2454,8 @@
 			children = (
 				FABF5D33158BF42800C49E93 /* r_bsp.cpp */,
 				FACACB5B1652F2660091AF2E /* r_bsp.h */,
+				4F2BBE5826053435000356B3 /* r_context.cpp */,
+				4F2BBE5726053435000356B3 /* r_context.h */,
 				FABF5D34158BF42800C49E93 /* r_data.cpp */,
 				FA16D43915E01E96002318D1 /* r_data.h */,
 				FACACB5C1652F2660091AF2E /* r_defs.h */,
@@ -3053,6 +3058,7 @@
 				4FC0A93E1E1E2ABC006CEC45 /* cam_aim.cpp in Sources */,
 				4F5F38C4182D9AC00027813A /* ev_bindings.cpp in Sources */,
 				4F5F38C5182D9AC00027813A /* ev_specials.cpp in Sources */,
+				4F2BBE5926053435000356B3 /* r_context.cpp in Sources */,
 				4F5F38C6182D9AC00027813A /* ev_static.cpp in Sources */,
 				4F5F38C7182D9AC00027813A /* f_wipe.cpp in Sources */,
 				4F93B8B6207BEE3F0040A0B8 /* e_puff.cpp in Sources */,
