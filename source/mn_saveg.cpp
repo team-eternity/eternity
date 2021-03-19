@@ -549,6 +549,7 @@ static void MN_saveGameOpen(menu_t *menu)
 static void MN_saveGameDrawer()
 {
    int min, max;
+   int minOffset = 0;
    const int numslots = int(e_saveSlots.getLength());
    const int lheight  = menu_font->absh;
    int y = menu_savegame.y;
@@ -568,8 +569,8 @@ static void MN_saveGameDrawer()
    {
       max = numslots - 1;
       min = max - NUMSAVEBOXLINES + 1;
-      if(min < 0)
-         min = 0;
+      if(min < -1)
+         min = -1;
    }
 
    if(min == -1)
@@ -589,14 +590,14 @@ static void MN_saveGameDrawer()
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += menu_font->cy;
       min++;
+      minOffset++;
    }
-
    for(int i = min; i <= max; i++)
    {
       int    color;
       qstring text;
 
-      if((i == min && min > 0) || (i == max && max < numslots - 1))
+      if((i == min && min >= minOffset) || (i == max && max < numslots - 1))
       {
          color = CR_GOLD;
          text  = FC_GOLD "More...";
