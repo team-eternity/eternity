@@ -493,11 +493,14 @@ CONSOLE_COMMAND(qload, cf_hidden)
 {
    char *name = nullptr;     // killough 3/22/98
    size_t len;
+   int fileNum;
 
    len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
 
-   G_SaveGameName(name, len, quickSaveSlot);
-   G_LoadGame(name, quickSaveSlot, false);
+   fileNum = e_saveSlots[quickSaveSlot].fileNum;
+
+   G_SaveGameName(name, len, fileNum);
+   G_LoadGame(name, fileNum, false);
 }
 
 /////////////////////////////////////////////////////////////////
@@ -840,7 +843,7 @@ CONSOLE_COMMAND(quicksave, 0)
 
 CONSOLE_COMMAND(qsave, cf_hidden)
 {
-   G_SaveGame(quickSaveSlot, e_saveSlots[quickSaveSlot].description.constPtr());
+   G_SaveGame(e_saveSlots[quickSaveSlot].fileNum, e_saveSlots[quickSaveSlot].description.constPtr());
 }
 
 //VARIABLE_STRING(save_game_desc, nullptr, SAVESTRINGSIZE);
