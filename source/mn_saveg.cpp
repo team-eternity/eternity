@@ -128,7 +128,6 @@ static void MN_readSaveStrings()
    {
       size_t      len;
       char        description[SAVESTRINGSIZE + 1]; // sf
-      char        vread[VERSIONSIZE];
       InBuffer    loadFile;
       SaveArchive arc(&loadFile);
       fs::path    savePath(ent.path());
