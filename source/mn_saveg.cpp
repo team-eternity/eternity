@@ -561,8 +561,8 @@ static void MN_saveGameDrawer()
    V_DrawBox(0, menu_savegame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
    min = save_slot - NUMSAVEBOXLINES / 2;
-   if(min < 0)
-      min = 0;
+   if(min <= -1)
+      min = -1;
    max = min + NUMSAVEBOXLINES - 1;
    if(max >= numslots)
    {
@@ -572,7 +572,7 @@ static void MN_saveGameDrawer()
          min = 0;
    }
 
-   if(min == 0)
+   if(min == -1)
    {
       int         color = GameModeInfo->unselectColor;
       qstring     text("<New Save Game>");
@@ -588,25 +588,34 @@ static void MN_saveGameDrawer()
       }
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += menu_font->cy;
-      max--;
+      min++;
    }
 
    for(int i = min; i <= max; i++)
    {
-      int    color = GameModeInfo->unselectColor;
-      qstring text = e_saveSlots[i].description;
+      int    color;
+      qstring text;
 
       if((i == min && min > 0) || (i == max && max < numslots - 1))
-         text = FC_GOLD "More...";
-      else if(save_slot == i)
       {
-         color = GameModeInfo->selectColor;
-         if(typing_save_desc)
+         color = CR_GOLD;
+         text  = FC_GOLD "More...";
+      }
+      else
+      {
+         text  = e_saveSlots[i].description;
+         if(save_slot == i)
          {
-            text = desc_buffer;
-            if(text.length() < SAVESTRINGSIZE)
-               text += '_';
+            color = GameModeInfo->selectColor;
+            if(typing_save_desc)
+            {
+               text = desc_buffer;
+               if(text.length() < SAVESTRINGSIZE)
+                  text += '_';
+            }
          }
+         else
+            color = GameModeInfo->unselectColor;
       }
 
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
