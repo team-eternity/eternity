@@ -1312,6 +1312,9 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       R_RunContexts();
 
+   if(quake)
+      player->mo->flags2 = savedflags;
+
    // draw the psprites on top of everything
    //  but does not draw on side views
    if(!viewangleoffset)
@@ -1320,9 +1323,6 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
-
-   if(quake)
-      player->mo->flags2 = savedflags;
 
    // haleyjd: remove sector interpolations
    if(view.lerp != FRACUNIT)
