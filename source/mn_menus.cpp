@@ -1868,7 +1868,7 @@ static const char *sixteenNineModes[] =
 static const char *twentyoneNineModes[] =
 {
    "1720x720",
-   "2560×1080",
+   "2560x1080",
    "3440x1440",
    nullptr
 };
