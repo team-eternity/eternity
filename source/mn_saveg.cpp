@@ -165,8 +165,7 @@ static void MN_readSaveStrings()
       newSlot.description = description;
 
       // version
-      arc.archiveCString(vread, VERSIONSIZE);
-      if(strncmp(vread, "EE", 2))
+      if(!arc.readSaveVersion())
       {
          newSlot.saveVersion = 0;
          // don't try to load anything else...
@@ -174,8 +173,7 @@ static void MN_readSaveStrings()
          e_saveSlots.add(newSlot);
          continue;
       }
-      else
-         arc << newSlot.saveVersion;
+      newSlot.saveVersion = arc.saveVersion();
 
       // compatibility, skill level, manager dir, vanilla mode
       arc << dummy << newSlot.skill << dummy << bdummy;
@@ -194,7 +192,17 @@ static void MN_readSaveStrings()
       arc.archiveSize(len);
       loadFile.skip(len);
       if(arc.saveVersion() >= 4)
+      {
+         int numwadfiles;
          arc << dummy64;
+         arc << numwadfiles;
+         for(int i = 0; i < numwadfiles; i++)
+         {
+            size_t len;
+            arc.archiveSize(len);
+            loadFile.skip(len);
+         }
+      }
       for(int j = 0; j < MIN_MAXPLAYERS; j++)
          arc << bdummy;
 
