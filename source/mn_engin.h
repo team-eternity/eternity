@@ -181,9 +181,15 @@ struct menuwidget_t
   menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
 };
 
+enum class consumeText_e : bool
+{
+   YES = true,
+   NO  = false
+};
+
 // haleyjd 08/31/12: A proper widget stack
 void   MN_PushWidget(menuwidget_t *widget);
-void   MN_PopWidget();
+void   MN_PopWidget(const consumeText_e consume = consumeText_e::YES);
 size_t MN_NumActiveWidgets();
 
 // responder for events

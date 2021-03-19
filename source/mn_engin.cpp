@@ -618,7 +618,7 @@ void MN_PushWidget(menuwidget_t *widget)
 //
 // Back up one widget on the stack
 //
-void MN_PopWidget()
+void MN_PopWidget(const consumeText_e consume)
 {
    size_t len;
 
@@ -635,7 +635,8 @@ void MN_PopWidget()
       current_menuwidget = menuwidget_stack[len - 1];
    else
       current_menuwidget = nullptr;
-   widget_consume_text = true;
+   if(consume == consumeText_e::YES)
+      widget_consume_text = true;
 }
 
 //

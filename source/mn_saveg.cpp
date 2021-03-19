@@ -83,10 +83,23 @@ struct saveslot_t
    qstring fileTimeStr;
 };
 
+static void MN_deleteSave();
+
 static Collection<saveslot_t> e_saveSlots;
 
 static qstring desc_buffer;
 static bool    typing_save_desc = false;
+
+constexpr int SAVESTRINGSIZE  = 24;
+constexpr int NUMSAVEBOXLINES = 15;
+
+static int load_slot    = -1;
+static int load_fileNum = -1;
+static int save_slot    = -1;
+static int save_fileNum = -1;
+
+// load/save box patches
+patch_t *patch_left, *patch_mid, *patch_right;
 
 /////////////////////////////////////////////////////////////////
 //
@@ -101,11 +114,40 @@ static bool    typing_save_desc = false;
 
 // haleyjd: numerous fixes here from 8-17 version of SMMU
 
-constexpr int SAVESTRINGSIZE  = 24;
-constexpr int NUMSAVEBOXLINES = 15;
 
-// load/save box patches
-patch_t *patch_left, *patch_mid, *patch_right;
+static void MN_updateSlotAndFileNum(int &slot, int &fileNum, const int minimum)
+{
+   if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
+   {
+      slot    = -1;
+      fileNum = -1;
+   }
+   else
+   {
+      if(slot == -1)
+      {
+         slot    = minimum;
+         fileNum = e_saveSlots[0].fileNum;
+      }
+      else
+      {
+         bool foundSave = false;
+         for(size_t i = 0; i < numSaveSlots; i++)
+         {
+            if(e_saveSlots[i].fileNum == fileNum)
+            {
+               slot = int(i);
+               foundSave = true;
+            }
+         }
+         if(!foundSave)
+         {
+            slot    = minimum;
+            fileNum = e_saveSlots[0].fileNum;
+         }
+      }
+   }
+}
 
 //
 // Read the strings from the savegame files
@@ -218,6 +260,9 @@ static void MN_readSaveStrings()
       loadFile.close();
       e_saveSlots.add(newSlot);
    }
+
+   MN_updateSlotAndFileNum(load_slot, load_fileNum, 0);
+   MN_updateSlotAndFileNum(save_slot, save_fileNum, -1);
 }
 
 static void MN_drawSaveInfo(int slotIndex)
@@ -268,8 +313,6 @@ static void MN_loadGameOpen(menu_t *menu);
 static void MN_loadGameDrawer();
 static bool MN_loadGameResponder(event_t *ev, int action);
 
-static int load_slot    = -1;
-static int load_fileNum = -1;
 static menuwidget_t load_selector = { MN_loadGameDrawer, MN_loadGameResponder, nullptr, true };
 
 menu_t menu_loadgame =
@@ -286,36 +329,6 @@ menu_t menu_loadgame =
 
 static void MN_loadGameOpen(menu_t *menu)
 {
-   if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
-   {
-      load_slot    = -1;
-      load_fileNum = -1;
-   }
-   else
-   {
-      if(load_slot == -1)
-      {
-         load_slot    = 0;
-         load_fileNum = e_saveSlots[0].fileNum;
-      }
-      else
-      {
-         bool foundSave = false;
-         for(size_t i = 0; i < numSaveSlots; i++)
-         {
-            if(e_saveSlots[i].fileNum == load_fileNum)
-            {
-               load_slot = int(i);
-               foundSave = true;
-            }
-         }
-         if(!foundSave)
-         {
-            load_slot    = 0;
-            load_fileNum = e_saveSlots[0].fileNum;
-         }
-      }
-   }
    MN_PushWidget(&load_selector);
 }
 
@@ -361,6 +374,12 @@ static void MN_loadGameDrawer()
 static bool MN_loadGameResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
+
+   if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && load_fileNum != -1)
+   {
+      MN_QuestionFunc("Delete save?", MN_deleteSave);
+      return true;
+   }
 
    if(action == ka_menu_toggle || action == ka_menu_previous)
    {
@@ -511,8 +530,6 @@ static void MN_saveGameOpen(menu_t *menu);
 static void MN_saveGameDrawer();
 static bool MN_saveGameResponder(event_t *ev, int action);
 
-static int save_slot    = -1;
-static int save_fileNum = -1;
 static menuwidget_t save_selector = { MN_saveGameDrawer, MN_saveGameResponder, nullptr, true };
 
 menu_t menu_savegame =
@@ -675,6 +692,11 @@ static bool MN_saveGameResponder(event_t *ev, int action)
       if(ectype::isPrint(ich) && desc_buffer.length() < SAVESTRINGSIZE)
          desc_buffer += static_cast<char>(ich);
 
+      return true;
+   }
+   else if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && !typing_save_desc && save_fileNum != -1)
+   {
+      MN_QuestionFunc("Delete save?", MN_deleteSave);
       return true;
    }
 
@@ -847,6 +869,29 @@ CONSOLE_COMMAND(qsave, cf_hidden)
 
 //VARIABLE_STRING(save_game_desc, nullptr, SAVESTRINGSIZE);
 //CONSOLE_VARIABLE(mn_savegamedesc, save_game_desc, 0) {}
+
+static void MN_deleteSave()
+{
+   char *name;
+   size_t len;
+   int fileNum;
+
+   if(!menuactive)
+      return;
+
+   if(current_menu == &menu_loadgame)
+      fileNum = load_fileNum;
+   else if(current_menu == &menu_savegame)
+      fileNum = save_fileNum;
+   else
+      return;
+
+   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
+
+   G_SaveGameName(name, len, fileNum);
+   remove(name);
+   MN_readSaveStrings();
+}
 
 // EOF
 
