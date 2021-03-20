@@ -131,6 +131,32 @@ static void MN_drawHereticHeader(const char *title)
    );
 }
 
+bool MN_handleNavigation(saveID_t &saveID, const int action, const int min)
+{
+   int slotChange;
+   switch(action)
+   {
+   case ka_menu_down:     slotChange =  1;               break;
+   case ka_menu_up:       slotChange = -1;               break;
+   case ka_menu_pagedown: slotChange =  NUMSAVEBOXLINES; break;
+   case ka_menu_pageup:   slotChange = -NUMSAVEBOXLINES; break;
+   default:               slotChange =  0;               break;
+   }
+
+   if(slotChange)
+   {
+      const int numSlots   = int(e_saveSlots.getLength());
+      saveID.slot          = WrapSlot(saveID.slot, slotChange, min, numSlots);
+      saveID.fileNum       = saveID.slot == -1 ? -1 : e_saveSlots[saveID.slot].fileNum;;
+
+      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
+      return true;
+   }
+
+   return false;
+}
+
 static void MN_updateSaveID(saveID_t &saveID, const int minimum)
 {
    if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
@@ -474,26 +500,8 @@ static bool MN_loadGameResponder(event_t *ev, int action)
    if(e_saveSlots.getLength() == 0)
       return false;
 
-   int slotChange;
-   switch(action)
-   {
-   case ka_menu_down:     slotChange =  1;               break;
-   case ka_menu_up:       slotChange = -1;               break;
-   case ka_menu_pagedown: slotChange =  NUMSAVEBOXLINES; break;
-   case ka_menu_pageup:   slotChange = -NUMSAVEBOXLINES; break;
-   default:               slotChange =  0;               break;
-   }
-
-   if(slotChange)
-   {
-      const int numSlots   = int(e_saveSlots.getLength());
-      loadID.slot          = WrapSlot(loadID.slot, slotChange, 0, numSlots);
-      loadID.fileNum       = e_saveSlots[loadID.slot].fileNum;
-
-      S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
-
+   if(MN_handleNavigation(loadID, action, 0))
       return true;
-   }
 
    if(action == ka_menu_confirm)
    {
@@ -770,29 +778,8 @@ static bool MN_saveGameResponder(event_t *ev, int action)
       return true;
    }
 
-   if(e_saveSlots.getLength() != 0)
-   {
-      int slotChange;
-      switch(action)
-      {
-      case ka_menu_down:     slotChange =  1;               break;
-      case ka_menu_up:       slotChange = -1;               break;
-      case ka_menu_pagedown: slotChange =  NUMSAVEBOXLINES; break;
-      case ka_menu_pageup:   slotChange = -NUMSAVEBOXLINES; break;
-      default:               slotChange =  0;               break;
-      }
-
-      if(slotChange)
-      {
-         const int numSlots = int(e_saveSlots.getLength());
-         saveID.slot        = WrapSlot(saveID.slot, slotChange, -1, numSlots);
-         saveID.fileNum     = saveID.slot == -1 ? -1 : e_saveSlots[saveID.slot].fileNum;
-
-         S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
-
-         return true;
-      }
-   }
+   if(e_saveSlots.getLength() != 0 && MN_handleNavigation(saveID, action, -1))
+      return true;
 
    if(action == ka_menu_confirm)
    {
