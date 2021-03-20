@@ -135,7 +135,7 @@ static void MN_updateSlotAndFileNum(int &slot, int &fileNum, const int minimum)
       if(slot == -1)
       {
          slot    = minimum;
-         fileNum = e_saveSlots[0].fileNum;
+         fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
       }
       else
       {
@@ -151,7 +151,7 @@ static void MN_updateSlotAndFileNum(int &slot, int &fileNum, const int minimum)
          if(!foundSave)
          {
             slot    = minimum;
-            fileNum = e_saveSlots[0].fileNum;
+            fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
          }
       }
    }
@@ -292,7 +292,7 @@ static void MN_readSaveStrings()
       efree(slotTimes);
    }
 
-   MN_updateSlotAndFileNum(load_slot, load_fileNum, 0);
+   MN_updateSlotAndFileNum(load_slot, load_fileNum,  0);
    MN_updateSlotAndFileNum(save_slot, save_fileNum, -1);
 }
 
@@ -407,13 +407,22 @@ static void MN_loadGameDrawer()
 
    for(int i = min; i <= max; i++)
    {
+      int     color;
       qstring text;
-      const int color = i == load_slot ? GameModeInfo->selectColor : GameModeInfo->unselectColor;
 
       if((i == min && min > 0) || (i == max && max < numslots - 1))
-         text = FC_GOLD "More...";
+      {
+         color = CR_GOLD;
+         text = "More...";
+      }
       else
+      {
+         if(load_slot == i)
+            color = GameModeInfo->selectColor;
+         else
+            color = GameModeInfo->unselectColor;
          text = e_saveSlots[i].description;
+      }
 
       MN_WriteTextColored(text.constPtr(), color, menu_loadgame.x, y);
       y += lheight;
@@ -438,7 +447,7 @@ static bool MN_loadGameResponder(event_t *ev, int action)
    {
       if(menu_toggleisback || action == ka_menu_previous)
       {
-         MN_PopWidget();
+         MN_PopWidget(consumeText_e::NO);
          MN_PrevMenu();
       }
       else
@@ -599,40 +608,13 @@ menu_t menu_savegame =
 
 static void MN_saveGameOpen(menu_t *menu)
 {
-   if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
-   {
-      save_slot    = -1;
-      save_fileNum = -1;
-   }
-   else
-   {
-      if(save_slot == -1)
-         save_fileNum = -1;
-      else
-      {
-         bool foundSave = false;
-         for(size_t i = 0; i < numSaveSlots; i++)
-         {
-            if(e_saveSlots[i].fileNum == save_fileNum)
-            {
-               save_slot = int(i);
-               foundSave = true;
-            }
-         }
-         if(!foundSave)
-         {
-            save_slot    = -1;
-            save_fileNum = -1;
-         }
-      }
-   }
    MN_PushWidget(&save_selector);
 }
 
 static void MN_saveGameDrawer()
 {
    int min, max;
-   int minOffset = 0;
+   int minOffset = -1;
    const int numslots = int(e_saveSlots.getLength());
    const int lheight  = menu_font->cy;
    int y = menu_savegame.y;
@@ -686,10 +668,10 @@ static void MN_saveGameDrawer()
       int    color;
       qstring text;
 
-      if((i == min && min >= minOffset) || (i == max && max < numslots - 1))
+      if((i == min && min > minOffset) || (i == max && max < numslots - 1))
       {
          color = CR_GOLD;
-         text  = FC_GOLD "More...";
+         text  = "More...";
       }
       else
       {
@@ -766,7 +748,7 @@ static bool MN_saveGameResponder(event_t *ev, int action)
    {
       if(menu_toggleisback || action == ka_menu_previous)
       {
-         MN_PopWidget();
+         MN_PopWidget(consumeText_e::NO);
          MN_PrevMenu();
       }
       else
