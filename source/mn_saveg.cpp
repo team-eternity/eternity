@@ -247,7 +247,6 @@ static void MN_readSaveStrings()
          arc << numwadfiles;
          for(int i = 0; i < numwadfiles; i++)
          {
-            size_t len;
             arc.archiveSize(len);
             loadFile.skip(len);
          }
@@ -827,6 +826,7 @@ CONSOLE_COMMAND(mn_save, 0)
       for(int i = 0; i < numSlots; i++)
          saveIDs[i] = { i, e_saveSlots[i].fileNum };
 
+      // Sort the save IDs from most lowest to highest file number
       qsort(
          saveIDs, numSlots, sizeof(saveID_t),
          [](const void *i1, const void *i2) {
