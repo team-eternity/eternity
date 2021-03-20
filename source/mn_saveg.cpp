@@ -577,6 +577,9 @@ CONSOLE_COMMAND(mn_load, 0)
    G_SaveGameName(name, len, fileNum);
    G_LoadGame(name, fileNum, false);
 
+   if(quickID.slot == -2)
+      quickID = loadID;
+
    MN_ClearMenus();
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
@@ -605,7 +608,9 @@ CONSOLE_COMMAND(quickload, 0)
 
    if(quickID.slot < 0)
    {
-      MN_Alert("%s", DEH_String("QSAVESPOT"));
+      quickID.slot = -2; // means to pick a slot now
+      MN_readSaveStrings();
+      MN_StartMenu(GameModeInfo->loadMenu);
       return;
    }
 
