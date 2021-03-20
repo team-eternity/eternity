@@ -67,7 +67,7 @@ namespace fs = std::experimental::filesystem;
 
 #define DSPROMPT "Delete save named\n\n'%s'?\n\n" PRESSYN
 
-constexpr int SAVESTRINGSIZE = 24;
+constexpr int SAVESTRINGSIZE  = 24;
 constexpr int NUMSAVEBOXLINES = 15;
 
 struct saveID_t
@@ -112,6 +112,15 @@ patch_t *patch_left, *patch_mid, *patch_right;
 //
 // Save & Load Game
 //
+
+static int WrapSlot(int slot, const int delta, const int min, const int max)
+{
+   const int mod = max - min;
+   slot += delta - min;
+   slot += (1 - (slot / mod)) * mod;
+   slot  = (slot % mod) + min;
+   return slot;
+}
 
 static void MN_drawHereticHeader(const char *title)
 {
@@ -465,12 +474,21 @@ static bool MN_loadGameResponder(event_t *ev, int action)
    if(e_saveSlots.getLength() == 0)
       return false;
 
-   if(action == ka_menu_down || action == ka_menu_up)
+   int slotChange;
+   switch(action)
+   {
+   case ka_menu_down:     slotChange =  1;               break;
+   case ka_menu_up:       slotChange = -1;               break;
+   case ka_menu_pagedown: slotChange =  NUMSAVEBOXLINES; break;
+   case ka_menu_pageup:   slotChange = -NUMSAVEBOXLINES; break;
+   default:               slotChange =  0;               break;
+   }
+
+   if(slotChange)
    {
       const int numSlots   = int(e_saveSlots.getLength());
-      const int slotChange = action == ka_menu_down ? 1 : -1;
-      loadID.slot    = (loadID.slot + slotChange + numSlots) % numSlots;
-      loadID.fileNum = e_saveSlots[loadID.slot].fileNum;
+      loadID.slot          = WrapSlot(loadID.slot, slotChange, 0, numSlots);
+      loadID.fileNum       = e_saveSlots[loadID.slot].fileNum;
 
       S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
@@ -752,16 +770,28 @@ static bool MN_saveGameResponder(event_t *ev, int action)
       return true;
    }
 
-   if(e_saveSlots.getLength() != 0 && (action == ka_menu_down || action == ka_menu_up))
+   if(e_saveSlots.getLength() != 0)
    {
-      const int numSlots   = int(e_saveSlots.getLength());
-      const int slotChange = action == ka_menu_down ? 1 : -1;
-      saveID.slot    = ((saveID.slot + slotChange + numSlots + 2) % (numSlots + 1)) - 1; // [-1, numSlots)
-      saveID.fileNum = saveID.slot == -1 ? -1 : e_saveSlots[saveID.slot].fileNum;
+      int slotChange;
+      switch(action)
+      {
+      case ka_menu_down:     slotChange =  1;               break;
+      case ka_menu_up:       slotChange = -1;               break;
+      case ka_menu_pagedown: slotChange =  NUMSAVEBOXLINES; break;
+      case ka_menu_pageup:   slotChange = -NUMSAVEBOXLINES; break;
+      default:               slotChange =  0;               break;
+      }
 
-      S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
+      if(slotChange)
+      {
+         const int numSlots = int(e_saveSlots.getLength());
+         saveID.slot        = WrapSlot(saveID.slot, slotChange, -1, numSlots);
+         saveID.fileNum     = saveID.slot == -1 ? -1 : e_saveSlots[saveID.slot].fileNum;
 
-      return true;
+         S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
+
+         return true;
+      }
    }
 
    if(action == ka_menu_confirm)
