@@ -340,6 +340,21 @@ static void MN_drawSaveInfo(int slotIndex)
    }
 }
 
+static void MN_getMinAndMaxSlot(int &min, int &max, const int save_slot, const int minSlot, const int numSlots)
+{
+   min = save_slot - NUMSAVEBOXLINES / 2;
+   if(min < minSlot)
+      min = minSlot;
+   max = min + NUMSAVEBOXLINES - 1;
+   if(max >= numSlots)
+   {
+      max = numSlots - 1;
+      min = max - NUMSAVEBOXLINES + 1;
+      if(min < minSlot)
+         min = minSlot;
+   }
+}
+
 /////////////////////////////////////////////////////////////////
 //
 // Load Game
@@ -379,7 +394,7 @@ static void MN_loadGameOpen(menu_t *menu)
 static void MN_loadGameDrawer()
 {
    int min, max;
-   const int numslots = int(e_saveSlots.getLength());
+   const int numSlots = int(e_saveSlots.getLength());
    const int lheight  = menu_font->cy;
    int y = menu_loadgame.y;
 
@@ -393,24 +408,14 @@ static void MN_loadGameDrawer()
 
    V_DrawBox(0, menu_loadgame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
-   min = load_slot - NUMSAVEBOXLINES / 2;
-   if(min < 0)
-      min = 0;
-   max = min + NUMSAVEBOXLINES - 1;
-   if(max >= numslots)
-   {
-      max = numslots - 1;
-      min = max - NUMSAVEBOXLINES + 1;
-      if(min < 0)
-         min = 0;
-   }
+   MN_getMinAndMaxSlot(min, max, load_slot, 0, numSlots);
 
    for(int i = min; i <= max; i++)
    {
       int     color;
       qstring text;
 
-      if((i == min && min > 0) || (i == max && max < numslots - 1))
+      if((i == min && min > 0) || (i == max && max < numSlots - 1))
       {
          color = CR_GOLD;
          text = "More...";
@@ -615,7 +620,7 @@ static void MN_saveGameDrawer()
 {
    int min, max;
    int minOffset = -1;
-   const int numslots = int(e_saveSlots.getLength());
+   const int numSlots = int(e_saveSlots.getLength());
    const int lheight  = menu_font->cy;
    int y = menu_savegame.y;
 
@@ -632,17 +637,7 @@ static void MN_saveGameDrawer()
 
    V_DrawBox(0, menu_savegame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
-   min = save_slot - NUMSAVEBOXLINES / 2;
-   if(min <= -1)
-      min = -1;
-   max = min + NUMSAVEBOXLINES - 1;
-   if(max >= numslots)
-   {
-      max = numslots - 1;
-      min = max - NUMSAVEBOXLINES + 1;
-      if(min < -1)
-         min = -1;
-   }
+   MN_getMinAndMaxSlot(min, max, save_slot, -1, numSlots);
 
    if(min == -1)
    {
@@ -668,7 +663,7 @@ static void MN_saveGameDrawer()
       int    color;
       qstring text;
 
-      if((i == min && min > minOffset) || (i == max && max < numslots - 1))
+      if((i == min && min > minOffset) || (i == max && max < numSlots - 1))
       {
          color = CR_GOLD;
          text  = "More...";
