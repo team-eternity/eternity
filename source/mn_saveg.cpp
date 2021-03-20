@@ -131,7 +131,7 @@ static void MN_drawHereticHeader(const char *title)
    );
 }
 
-bool MN_handleNavigation(saveID_t &saveID, const int action, const int min)
+bool MN_handleNavigationInput(saveID_t &saveID, const int action, const int min)
 {
    int slotChange;
    switch(action)
@@ -151,39 +151,73 @@ bool MN_handleNavigation(saveID_t &saveID, const int action, const int min)
 
       S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
-      return true;
+      return true; // eat input
    }
 
    return false;
 }
 
-static void MN_updateSaveID(saveID_t &saveID, const int minimum)
+bool MN_handleMenuCloseInput(const int action)
+{
+   if(action == ka_menu_toggle || action == ka_menu_previous)
+   {
+      if(menu_toggleisback || action == ka_menu_previous)
+      {
+         MN_PopWidget(consumeText_e::NO);
+         MN_PrevMenu();
+      }
+      else
+      {
+         MN_ClearMenus();
+         S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
+      }
+      return true; // eat input
+   }
+
+   return false;
+}
+
+bool MN_handleSaveDeleteInput(saveID_t &id, const event_t *const ev, const int action)
+{
+   if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && id.fileNum != -1)
+   {
+      char tempstring[80];
+      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[id.slot].description.constPtr());
+
+      MN_QuestionFunc(tempstring, MN_deleteSave);
+      return true; // eat input
+   }
+
+   return false;
+}
+
+static void MN_updateSaveID(saveID_t &id, const int minimum)
 {
    if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
-      saveID = { -1, -1 };
+      id = { -1, -1 };
    else
    {
-      if(saveID.slot == -1)
+      if(id.slot == -1)
       {
-         saveID.slot    = minimum;
-         saveID.fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
+         id.slot    = minimum;
+         id.fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
       }
       else
       {
          bool foundSave = false;
          for(size_t i = 0; i < numSaveSlots; i++)
          {
-            if(e_saveSlots[i].fileNum == saveID.fileNum)
+            if(e_saveSlots[i].fileNum == id.fileNum)
             {
-               saveID.slot = int(i);
+               id.slot = int(i);
                foundSave   = true;
                break;
             }
          }
          if(!foundSave)
          {
-            saveID.slot    = minimum;
-            saveID.fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
+            id.slot    = minimum;
+            id.fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
          }
       }
    }
@@ -472,35 +506,17 @@ static bool MN_loadGameResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
 
-   if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && loadID.fileNum != -1)
-   {
-      char tempstring[80];
-      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[loadID.slot].description.constPtr());
-
-      MN_QuestionFunc(tempstring, MN_deleteSave);
+   if(MN_handleSaveDeleteInput(loadID, ev, action))
       return true;
-   }
 
-   if(action == ka_menu_toggle || action == ka_menu_previous)
-   {
-      if(menu_toggleisback || action == ka_menu_previous)
-      {
-         MN_PopWidget(consumeText_e::NO);
-         MN_PrevMenu();
-      }
-      else
-      {
-         MN_ClearMenus();
-         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-      }
+   if(MN_handleMenuCloseInput(action))
       return true;
-   }
 
    // Nothing to interact with
    if(e_saveSlots.getLength() == 0)
       return false;
 
-   if(MN_handleNavigation(loadID, action, 0))
+   if(MN_handleNavigationInput(loadID, action, 0))
       return true;
 
    if(action == ka_menu_confirm)
@@ -643,7 +659,7 @@ static void MN_saveGameOpen(menu_t *menu)
 static void MN_saveGameDrawer()
 {
    int min, max;
-   int minOffset = -1;
+   int minOffset      = -1;
    const int numSlots = int(e_saveSlots.getLength());
    const int lheight  = menu_font->cy;
    int y = menu_savegame.y;
@@ -666,7 +682,7 @@ static void MN_saveGameDrawer()
    if(min == -1)
    {
       int         color = GameModeInfo->unselectColor;
-      qstring     text("<New Save Game>");
+      qstring     text("(New Save Game)");
       if(saveID.slot == -1)
       {
          color = GameModeInfo->selectColor;
@@ -754,31 +770,13 @@ static bool MN_saveGameResponder(event_t *ev, int action)
 
       return true;
    }
-   else if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && !typing_save_desc && saveID.fileNum != -1)
-   {
-      char tempstring[80];
-      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[saveID.slot].description.constPtr());
-
-      MN_QuestionFunc(tempstring, MN_deleteSave);
+   else if(!typing_save_desc && MN_handleSaveDeleteInput(saveID, ev, action))
       return true;
-   }
 
-   if(action == ka_menu_toggle || action == ka_menu_previous)
-   {
-      if(menu_toggleisback || action == ka_menu_previous)
-      {
-         MN_PopWidget(consumeText_e::NO);
-         MN_PrevMenu();
-      }
-      else
-      {
-         MN_ClearMenus();
-         S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-      }
+   if(MN_handleMenuCloseInput(action))
       return true;
-   }
 
-   if(e_saveSlots.getLength() != 0 && MN_handleNavigation(saveID, action, -1))
+   if(e_saveSlots.getLength() != 0 && MN_handleNavigationInput(saveID, action, -1))
       return true;
 
    if(action == ka_menu_confirm)
