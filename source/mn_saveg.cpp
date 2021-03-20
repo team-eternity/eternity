@@ -370,8 +370,22 @@ static void MN_loadGameDrawer()
    const int lheight  = menu_font->cy;
    int y = menu_loadgame.y;
 
-   patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE);
-   V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
+   if(GameModeInfo->type == Game_Heretic)
+   {
+      const char *title = "Save Game";
+
+      V_FontWriteText(
+         menu_font_big, title,
+         160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
+         &subscreen43
+      );
+   }
+   else
+   {
+      patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE);
+      V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
+   }
+
    V_DrawBox(0, menu_loadgame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
    min = load_slot - NUMSAVEBOXLINES / 2;
@@ -618,11 +632,25 @@ static void MN_saveGameDrawer()
    const int lheight  = menu_font->cy;
    int y = menu_savegame.y;
 
-   int lumpnum = W_CheckNumForName("M_SGTTL");
-   if(mn_classic_menus || lumpnum == -1)
-      lumpnum = W_CheckNumForName("M_SAVEG");
+   if(GameModeInfo->type == Game_Heretic)
+   {
+      const char *title = "Save Game";
 
-   V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
+      V_FontWriteText(
+         menu_font_big, title,
+         160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
+         &subscreen43
+      );
+   }
+   else
+   {
+      int lumpnum = W_CheckNumForName("M_SGTTL");
+      if(mn_classic_menus || lumpnum == -1)
+         lumpnum = W_CheckNumForName("M_SAVEG");
+      V_DrawPatch(72, 18, &subscreen43, PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
+
+   }
+
    V_DrawBox(0, menu_savegame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
    min = save_slot - NUMSAVEBOXLINES / 2;
