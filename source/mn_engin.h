@@ -269,7 +269,6 @@ extern int hide_menu;
 extern int menutime;
 
 // haleyjd
-extern int quickSaveSlot;
 extern bool menu_toggleisback;
 extern char *mn_fontname;
 extern char *mn_bigfontname;

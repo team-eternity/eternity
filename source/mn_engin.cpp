@@ -596,8 +596,6 @@ menuwidget_t *current_menuwidget  = nullptr;
 static PODCollection<menuwidget_t *> menuwidget_stack;
 static bool widget_consume_text = false; // consume text after widget is closed
 
-int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
-
 static void MN_InitFonts(void);
 
 //
@@ -704,8 +702,6 @@ void MN_Init()
       smallptr_dims[0] = ptr0->width;
       smallptr_dims[1] = ptr0->height;
    }
-      
-   quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
 
    // haleyjd: init heretic stuff if appropriate
    if(GameModeInfo->type == Game_Heretic)

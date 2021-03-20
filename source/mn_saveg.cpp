@@ -101,10 +101,12 @@ static Collection<saveslot_t> e_saveSlots;
 static qstring desc_buffer;
 static bool    typing_save_desc = false;
 
-static int load_slot    = -1;
-static int load_fileNum = -1;
-static int save_slot    = -1;
-static int save_fileNum = -1;
+static int quickSaveSlot    = -1;
+static int quickSaveFileNum = -1;
+static int load_slot        = -1;
+static int load_fileNum     = -1;
+static int save_slot        = -1;
+static int save_fileNum     = -1;
 
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
@@ -293,6 +295,8 @@ static void MN_readSaveStrings()
 
    MN_updateSlotAndFileNum(load_slot, load_fileNum,  0);
    MN_updateSlotAndFileNum(save_slot, save_fileNum, -1);
+   if(quickSaveSlot >= 0)
+      MN_updateSlotAndFileNum(quickSaveSlot, quickSaveFileNum, -1);
 }
 
 static void MN_drawSaveInfo(int slotIndex)
@@ -866,7 +870,10 @@ CONSOLE_COMMAND(mn_save, 0)
 
    // haleyjd 02/23/02: restored from MBF
    if(quickSaveSlot == -2)
-      quickSaveSlot = save_slot;
+   {
+      quickSaveSlot    = save_slot;
+      quickSaveFileNum = save_fileNum;
+   }
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
