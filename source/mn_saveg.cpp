@@ -76,6 +76,12 @@ struct saveID_t
    int fileNum;
 };
 
+struct saveSlotTimePair_t
+{
+   int    slot;
+   time_t fileTime;
+};
+
 struct saveslot_t
 {
    int     fileNum;
@@ -261,6 +267,29 @@ static void MN_readSaveStrings()
 
       loadFile.close();
       e_saveSlots.add(newSlot);
+   }
+
+   // Sort the slots from most recent to least recent
+   if(const size_t numSlots = e_saveSlots.getLength(); numSlots != 0)
+   {
+      Collection<saveslot_t> tempSlots;
+      saveSlotTimePair_t *slotTimes = estructalloc(saveSlotTimePair_t, numSlots);
+
+      for(int i = 0; i < numSlots; i++)
+         slotTimes[i] = { i, e_saveSlots[i].fileTime };
+
+      qsort(
+         slotTimes, numSlots, sizeof(saveSlotTimePair_t),
+         [](const void *i1, const void *i2) {
+            return int(static_cast<const saveSlotTimePair_t *>(i2)->fileTime - static_cast<const saveSlotTimePair_t *>(i1)->fileTime);
+         }
+      );
+
+      for(int i = 0; i < numSlots; i++)
+         tempSlots.add(e_saveSlots[slotTimes[i].slot]);
+      e_saveSlots = std::move(tempSlots);
+
+      efree(slotTimes);
    }
 
    MN_updateSlotAndFileNum(load_slot, load_fileNum, 0);
