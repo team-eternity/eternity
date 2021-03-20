@@ -300,8 +300,8 @@ static void MN_drawSaveInfo(int slotIndex)
 {
    const int x = 23 * 8;
    const int y = 40;
-   const int h = 7 * 8;
    const int lineh = menu_font->cy;
+   const int h     = 7 * lineh;
    const int namew = MN_StringWidth("xxxxxx");
 
    V_DrawBox(x, y, SCREENWIDTH - x, h);
@@ -367,7 +367,7 @@ static void MN_loadGameDrawer()
 {
    int min, max;
    const int numslots = int(e_saveSlots.getLength());
-   const int lheight  = menu_font->absh;
+   const int lheight  = menu_font->cy;
    int y = menu_loadgame.y;
 
    patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE);
@@ -397,7 +397,7 @@ static void MN_loadGameDrawer()
          text = e_saveSlots[i].description;
 
       MN_WriteTextColored(text.constPtr(), color, menu_loadgame.x, y);
-      y += menu_font->cy;
+      y += lheight;
    }
    MN_drawSaveInfo(load_slot);
 }
@@ -615,7 +615,7 @@ static void MN_saveGameDrawer()
    int min, max;
    int minOffset = 0;
    const int numslots = int(e_saveSlots.getLength());
-   const int lheight  = menu_font->absh;
+   const int lheight  = menu_font->cy;
    int y = menu_savegame.y;
 
    int lumpnum = W_CheckNumForName("M_SGTTL");
@@ -652,7 +652,7 @@ static void MN_saveGameDrawer()
          }
       }
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
-      y += menu_font->cy;
+      y += lheight;
       min++;
       minOffset++;
    }
