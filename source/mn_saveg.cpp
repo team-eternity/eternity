@@ -101,12 +101,9 @@ static Collection<saveslot_t> e_saveSlots;
 static qstring desc_buffer;
 static bool    typing_save_desc = false;
 
-static int quickSaveSlot    = -1;
-static int quickSaveFileNum = -1;
-static int load_slot        = -1;
-static int load_fileNum     = -1;
-static int save_slot        = -1;
-static int save_fileNum     = -1;
+static saveID_t quickID = { -1, -1 };
+static saveID_t loadID  = { -1, -1 };
+static saveID_t saveID  = { -1, -1 };
 
 // load/save box patches
 patch_t *patch_left, *patch_mid, *patch_right;
@@ -125,35 +122,33 @@ static void MN_drawHereticHeader(const char *title)
    );
 }
 
-static void MN_updateSlotAndFileNum(int &slot, int &fileNum, const int minimum)
+static void MN_updateSaveID(saveID_t &saveID, const int minimum)
 {
    if(const size_t numSaveSlots = e_saveSlots.getLength(); numSaveSlots == 0)
-   {
-      slot    = -1;
-      fileNum = -1;
-   }
+      saveID = { -1, -1 };
    else
    {
-      if(slot == -1)
+      if(saveID.slot == -1)
       {
-         slot    = minimum;
-         fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
+         saveID.slot    = minimum;
+         saveID.fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
       }
       else
       {
          bool foundSave = false;
          for(size_t i = 0; i < numSaveSlots; i++)
          {
-            if(e_saveSlots[i].fileNum == fileNum)
+            if(e_saveSlots[i].fileNum == saveID.fileNum)
             {
-               slot = int(i);
-               foundSave = true;
+               saveID.slot = int(i);
+               foundSave   = true;
+               break;
             }
          }
          if(!foundSave)
          {
-            slot    = minimum;
-            fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
+            saveID.slot    = minimum;
+            saveID.fileNum = minimum == -1 ? -1 : e_saveSlots[0].fileNum;
          }
       }
    }
@@ -293,10 +288,10 @@ static void MN_readSaveStrings()
       efree(slotTimes);
    }
 
-   MN_updateSlotAndFileNum(load_slot, load_fileNum,  0);
-   MN_updateSlotAndFileNum(save_slot, save_fileNum, -1);
-   if(quickSaveSlot >= 0)
-      MN_updateSlotAndFileNum(quickSaveSlot, quickSaveFileNum, -1);
+   MN_updateSaveID(loadID,  0);
+   MN_updateSaveID(saveID, -1);
+   if(quickID.slot >= 0)
+      MN_updateSaveID(quickID, -1);
 }
 
 static void MN_drawSaveInfo(int slotIndex)
@@ -343,9 +338,9 @@ static void MN_drawSaveInfo(int slotIndex)
    }
 }
 
-static void MN_getMinAndMaxSlot(int &min, int &max, const int save_slot, const int minSlot, const int numSlots)
+static void MN_getMinAndMaxSlot(int &min, int &max, const int slot, const int minSlot, const int numSlots)
 {
-   min = save_slot - NUMSAVEBOXLINES / 2;
+   min = slot - NUMSAVEBOXLINES / 2;
    if(min < minSlot)
       min = minSlot;
    max = min + NUMSAVEBOXLINES - 1;
@@ -411,7 +406,7 @@ static void MN_loadGameDrawer()
 
    V_DrawBox(0, menu_loadgame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
-   MN_getMinAndMaxSlot(min, max, load_slot, 0, numSlots);
+   MN_getMinAndMaxSlot(min, max, loadID.slot, 0, numSlots);
 
    for(int i = min; i <= max; i++)
    {
@@ -425,7 +420,7 @@ static void MN_loadGameDrawer()
       }
       else
       {
-         if(load_slot == i)
+         if(loadID.slot == i)
             color = GameModeInfo->selectColor;
          else
             color = GameModeInfo->unselectColor;
@@ -435,17 +430,17 @@ static void MN_loadGameDrawer()
       MN_WriteTextColored(text.constPtr(), color, menu_loadgame.x, y);
       y += lheight;
    }
-   MN_drawSaveInfo(load_slot);
+   MN_drawSaveInfo(loadID.slot);
 }
 
 static bool MN_loadGameResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
 
-   if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && load_fileNum != -1)
+   if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && loadID.fileNum != -1)
    {
       char tempstring[80];
-      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[load_slot].description.constPtr());
+      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[loadID.slot].description.constPtr());
 
       MN_QuestionFunc(tempstring, MN_deleteSave);
       return true;
@@ -474,8 +469,8 @@ static bool MN_loadGameResponder(event_t *ev, int action)
    {
       const int numSlots   = int(e_saveSlots.getLength());
       const int slotChange = action == ka_menu_down ? 1 : -1;
-      load_slot    = (load_slot + slotChange + numSlots) % numSlots;
-      load_fileNum = e_saveSlots[load_slot].fileNum;
+      loadID.slot    = (loadID.slot + slotChange + numSlots) % numSlots;
+      loadID.fileNum = e_saveSlots[loadID.slot].fileNum;
 
       S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
@@ -484,7 +479,7 @@ static bool MN_loadGameResponder(event_t *ev, int action)
 
    if(action == ka_menu_confirm)
    {
-      qstring loadCmd = qstring("mn_load ") << load_slot;
+      qstring loadCmd = qstring("mn_load ") << loadID.slot;
       S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
       Console.cmdtype = c_menu;
       C_RunTextCmd(loadCmd.constPtr());
@@ -566,14 +561,14 @@ CONSOLE_COMMAND(quickload, 0)
       return;
    }
 
-   if(quickSaveSlot < 0)
+   if(quickID.slot < 0)
    {
       MN_Alert("%s", DEH_String("QSAVESPOT"));
       return;
    }
 
    psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT,
-             e_saveSlots[quickSaveSlot].description.constPtr());
+             e_saveSlots[quickID.slot].description.constPtr());
    MN_Question(tempstring, "qload");
 }
 
@@ -585,7 +580,7 @@ CONSOLE_COMMAND(qload, cf_hidden)
 
    len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
 
-   fileNum = e_saveSlots[quickSaveSlot].fileNum;
+   fileNum = e_saveSlots[quickID.slot].fileNum;
 
    G_SaveGameName(name, len, fileNum);
    G_LoadGame(name, fileNum, false);
@@ -640,13 +635,13 @@ static void MN_saveGameDrawer()
 
    V_DrawBox(0, menu_savegame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
 
-   MN_getMinAndMaxSlot(min, max, save_slot, -1, numSlots);
+   MN_getMinAndMaxSlot(min, max, saveID.slot, -1, numSlots);
 
    if(min == -1)
    {
       int         color = GameModeInfo->unselectColor;
       qstring     text("<New Save Game>");
-      if(save_slot == -1)
+      if(saveID.slot == -1)
       {
          color = GameModeInfo->selectColor;
          if(typing_save_desc)
@@ -674,7 +669,7 @@ static void MN_saveGameDrawer()
       else
       {
          text  = e_saveSlots[i].description;
-         if(save_slot == i)
+         if(saveID.slot == i)
          {
             color = GameModeInfo->selectColor;
             if(typing_save_desc)
@@ -691,7 +686,7 @@ static void MN_saveGameDrawer()
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += lheight;
    }
-   MN_drawSaveInfo(save_slot);
+   MN_drawSaveInfo(saveID.slot);
 }
 
 static bool MN_saveGameResponder(event_t *ev, int action)
@@ -706,7 +701,7 @@ static bool MN_saveGameResponder(event_t *ev, int action)
       {
          if(desc_buffer.length())
          {
-            qstring saveCmd = qstring("mn_save ") << save_slot;
+            qstring saveCmd = qstring("mn_save ") << saveID.slot;
             S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
             Console.cmdtype = c_menu;
             C_RunTextCmd(saveCmd.constPtr());
@@ -733,10 +728,10 @@ static bool MN_saveGameResponder(event_t *ev, int action)
 
       return true;
    }
-   else if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && !typing_save_desc && save_fileNum != -1)
+   else if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && !typing_save_desc && saveID.fileNum != -1)
    {
       char tempstring[80];
-      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[save_slot].description.constPtr());
+      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[saveID.slot].description.constPtr());
 
       MN_QuestionFunc(tempstring, MN_deleteSave);
       return true;
@@ -761,8 +756,8 @@ static bool MN_saveGameResponder(event_t *ev, int action)
    {
       const int numSlots   = int(e_saveSlots.getLength());
       const int slotChange = action == ka_menu_down ? 1 : -1;
-      save_slot    = ((save_slot + slotChange + numSlots + 2) % (numSlots + 1)) - 1; // [-1, numSlots)
-      save_fileNum = save_slot == -1 ? -1 : e_saveSlots[save_slot].fileNum;
+      saveID.slot    = ((saveID.slot + slotChange + numSlots + 2) % (numSlots + 1)) - 1; // [-1, numSlots)
+      saveID.fileNum = saveID.slot == -1 ? -1 : e_saveSlots[saveID.slot].fileNum;
 
       S_StartInterfaceSound(menuSounds[MN_SND_KEYUPDOWN]); // make sound
 
@@ -771,10 +766,10 @@ static bool MN_saveGameResponder(event_t *ev, int action)
 
    if(action == ka_menu_confirm)
    {
-      if(save_slot == -1)
+      if(saveID.slot == -1)
          desc_buffer.clear();
       else
-         desc_buffer = e_saveSlots[save_slot].description;
+         desc_buffer = e_saveSlots[saveID.slot].description;
 
       typing_save_desc = true;
       return true;
@@ -810,20 +805,17 @@ CONSOLE_COMMAND(mn_save, 0)
    if(Console.argc < 1)
       return;
 
-   save_slot = Console.argv[0]->toInt();
+   saveID.slot = Console.argv[0]->toInt();
 
    if(gamestate != GS_LEVEL)
       return; // only save in level
 
-   if(save_slot < -1 || save_slot >= int(numSlots))
+   if(saveID.slot < -1 || saveID.slot >= int(numSlots))
       return; // sanity check
 
    if(numSlots == 0)
-   {
-      save_slot    = 0;
-      save_fileNum = 0;
-   }
-   else if(save_slot == -1)
+      saveID = { 0, 0 };
+   else if(saveID.slot == -1)
    {
       saveID_t *saveIDs = estructalloc(saveID_t, numSlots);
 
@@ -850,30 +842,21 @@ CONSOLE_COMMAND(mn_save, 0)
          lastSaveNum = saveIDs[i].fileNum;
       }
       if(lowestSaveID.fileNum == -1)
-      {
-         save_slot    = int(numSlots);
-         save_fileNum = int(numSlots);
-      }
+         saveID = { int(numSlots), int(numSlots) };
       else
-      {
-         save_slot    = lowestSaveID.slot;
-         save_fileNum = lowestSaveID.fileNum;
-      }
+         saveID = lowestSaveID;
 
       efree(saveIDs);
    }
    else
-      save_fileNum = e_saveSlots[save_slot].fileNum;
+      saveID.fileNum = e_saveSlots[saveID.slot].fileNum;
 
-   G_SaveGame(save_fileNum, desc_buffer.constPtr());
+   G_SaveGame(saveID.fileNum, desc_buffer.constPtr());
    MN_ClearMenus();
 
    // haleyjd 02/23/02: restored from MBF
-   if(quickSaveSlot == -2)
-   {
-      quickSaveSlot    = save_slot;
-      quickSaveFileNum = save_fileNum;
-   }
+   if(quickID.slot == -2)
+      quickID = saveID;
 
    // haleyjd 10/08/08: GIF_SAVESOUND flag
    if(GameModeInfo->flags & GIF_SAVESOUND)
@@ -895,22 +878,22 @@ CONSOLE_COMMAND(quicksave, 0)
    if(gamestate != GS_LEVEL)
       return;
 
-   if(quickSaveSlot < 0)
+   if(quickID.slot < 0)
    {
-      quickSaveSlot = -2; // means to pick a slot now
+      quickID.slot = -2; // means to pick a slot now
       MN_readSaveStrings();
       MN_StartMenu(GameModeInfo->saveMenu);
       return;
    }
 
    psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
-             e_saveSlots[quickSaveSlot].description.constPtr());
+             e_saveSlots[quickID.slot].description.constPtr());
    MN_Question(tempstring, "qsave");
 }
 
 CONSOLE_COMMAND(qsave, cf_hidden)
 {
-   G_SaveGame(e_saveSlots[quickSaveSlot].fileNum, e_saveSlots[quickSaveSlot].description.constPtr());
+   G_SaveGame(e_saveSlots[quickID.slot].fileNum, e_saveSlots[quickID.slot].description.constPtr());
 }
 
 //VARIABLE_STRING(save_game_desc, nullptr, SAVESTRINGSIZE);
@@ -926,9 +909,9 @@ static void MN_deleteSave()
       return;
 
    if(current_menu == &menu_loadgame)
-      fileNum = load_fileNum;
+      fileNum = loadID.fileNum;
    else if(current_menu == &menu_savegame)
-      fileNum = save_fileNum;
+      fileNum = saveID.fileNum;
    else
       return;
 
