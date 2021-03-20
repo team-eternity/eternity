@@ -65,6 +65,11 @@ namespace fs = std::experimental::filesystem;
 #include "v_patchfmt.h"
 #include "v_video.h"
 
+#define DSPROMPT "Delete save named\n\n'%s'?\n\n" PRESSYN
+
+constexpr int SAVESTRINGSIZE = 24;
+constexpr int NUMSAVEBOXLINES = 15;
+
 struct saveID_t
 {
    int slot;
@@ -89,9 +94,6 @@ static Collection<saveslot_t> e_saveSlots;
 
 static qstring desc_buffer;
 static bool    typing_save_desc = false;
-
-constexpr int SAVESTRINGSIZE  = 24;
-constexpr int NUMSAVEBOXLINES = 15;
 
 static int load_slot    = -1;
 static int load_fileNum = -1;
@@ -377,7 +379,10 @@ static bool MN_loadGameResponder(event_t *ev, int action)
 
    if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && load_fileNum != -1)
    {
-      MN_QuestionFunc("Delete save?", MN_deleteSave);
+      char tempstring[80];
+      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[load_slot].description.constPtr());
+
+      MN_QuestionFunc(tempstring, MN_deleteSave);
       return true;
    }
 
@@ -696,7 +701,10 @@ static bool MN_saveGameResponder(event_t *ev, int action)
    }
    else if(ev->type == ev_keydown && ev->data1 == KEYD_DEL && !typing_save_desc && save_fileNum != -1)
    {
-      MN_QuestionFunc("Delete save?", MN_deleteSave);
+      char tempstring[80];
+      psnprintf(tempstring, sizeof(tempstring), DSPROMPT, e_saveSlots[save_slot].description.constPtr());
+
+      MN_QuestionFunc(tempstring, MN_deleteSave);
       return true;
    }
 
