@@ -111,17 +111,17 @@ patch_t *patch_left, *patch_mid, *patch_right;
 
 /////////////////////////////////////////////////////////////////
 //
-// Load Game
+// Save & Load Game
 //
 
-//
-// NETCODE_FIXME: Ensure that loading/saving are handled properly in
-// netgames when it comes to the menus. Some deficiencies have already
-// been caught in the past, so some may still exist.
-//
-
-// haleyjd: numerous fixes here from 8-17 version of SMMU
-
+static void MN_drawHereticHeader(const char *title)
+{
+   V_FontWriteText(
+      menu_font_big, title,
+      160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
+      &subscreen43
+   );
+}
 
 static void MN_updateSlotAndFileNum(int &slot, int &fileNum, const int minimum)
 {
@@ -340,6 +340,19 @@ static void MN_drawSaveInfo(int slotIndex)
    }
 }
 
+/////////////////////////////////////////////////////////////////
+//
+// Load Game
+//
+
+//
+// NETCODE_FIXME: Ensure that loading/saving are handled properly in
+// netgames when it comes to the menus. Some deficiencies have already
+// been caught in the past, so some may still exist.
+//
+
+// haleyjd: numerous fixes here from 8-17 version of SMMU
+
 static void MN_loadGameOpen(menu_t *menu);
 static void MN_loadGameDrawer();
 static bool MN_loadGameResponder(event_t *ev, int action);
@@ -371,15 +384,7 @@ static void MN_loadGameDrawer()
    int y = menu_loadgame.y;
 
    if(GameModeInfo->type == Game_Heretic)
-   {
-      const char *title = "Save Game";
-
-      V_FontWriteText(
-         menu_font_big, title,
-         160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
-         &subscreen43
-      );
-   }
+      MN_drawHereticHeader("Load Game");
    else
    {
       patch_t *patch = PatchLoader::CacheName(wGlobalDir, "M_LOADG", PU_CACHE);
@@ -633,15 +638,7 @@ static void MN_saveGameDrawer()
    int y = menu_savegame.y;
 
    if(GameModeInfo->type == Game_Heretic)
-   {
-      const char *title = "Save Game";
-
-      V_FontWriteText(
-         menu_font_big, title,
-         160 - V_FontStringWidth(menu_font_big, title) / 2, 10,
-         &subscreen43
-      );
-   }
+      MN_drawHereticHeader("Save Game");
    else
    {
       int lumpnum = W_CheckNumForName("M_SGTTL");
