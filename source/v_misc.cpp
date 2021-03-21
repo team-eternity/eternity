@@ -410,11 +410,17 @@ void V_InitSubScreenModernHUD()
    int offset;
    int unscaledw;
 
-   if(vbscreen.getVirtualAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
+   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
    {
-      subwidth  = vbscreen.height * (16 * 3) / (9 * 4);
+      subwidth  = vbscreen.width;
+      offset    = 0;
+      unscaledw = SCREENWIDTH;
+   }
+   else if(vbscreen.getVirtualAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
+   {
+      subwidth  = vbscreen.height * 16 / 9;
       offset    = (vbscreen.width - subwidth) / 2;
-      unscaledw = int(round(SCREENHEIGHT * (16.0 * 3.0) / (9.0 * 4.0)));
+      unscaledw = int(round(SCREENHEIGHT * 16.0 / 9.0));
    }
    else
    {
