@@ -456,9 +456,8 @@ static void V_initSubScreen43()
       subwidth = vbscreen.height * 4 / 3;
       offset   = (vbscreen.width - subwidth) / 2;
 
-      const double scaleaspect = 1.2 * static_cast<double>(vbscreen.width) /
-                                 static_cast<double>(vbscreen.height);
-      unscaledw = static_cast<int>(round(SCREENHEIGHT * scaleaspect));
+      const double scaleaspect = 1.2 * double(vbscreen.width) / double(vbscreen.height);
+      unscaledw                = int(round(SCREENHEIGHT * scaleaspect));
 
       // FIXME(?): vbscreenyscaled doesn't work if unscaledw is larger than vbscreen.width,
       // which happens if the vbscreen.height < SCREENHEIGHT * 1.2 (roughly)

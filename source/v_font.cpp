@@ -147,7 +147,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
    // (abscenter toggle), then center line
    
    cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
-          (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+          (screen->unscaledw - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
    cy = textdraw.y;
    
    while((c = *ch++))
@@ -207,7 +207,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
       else if(c == '\n')
       {
          cx = (flags & VTXT_ABSCENTER) ? 
-               (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+               (screen->unscaledw - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
          cy += font->cy;
          continue;
       }
