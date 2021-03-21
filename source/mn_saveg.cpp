@@ -67,8 +67,10 @@ namespace fs = std::experimental::filesystem;
 
 #define DSPROMPT "Delete save named\n\n'%s'?\n\n" PRESSYN
 
-constexpr int SAVESTRINGSIZE  = 24;
-constexpr int NUMSAVEBOXLINES = 15;
+static constexpr int SAVESTRINGSIZE  = 24;
+static constexpr int NUMSAVEBOXLINES = 15;
+static constexpr int SAVEBOXUNIT     = 8;
+static constexpr int SAVEBOXWIDTH    = (SAVESTRINGSIZE - 1) * SAVEBOXUNIT;
 
 struct saveID_t
 {
@@ -365,7 +367,7 @@ static void MN_readSaveStrings()
 
 static void MN_drawSaveInfo(int slotIndex)
 {
-   const int x = 23 * 8;
+   const int x = SAVEBOXWIDTH;
    const int y = 40;
    const int lineh = menu_font->cy;
    const int h     = 7 * lineh;
@@ -473,7 +475,7 @@ static void MN_loadGameDrawer()
       V_DrawPatch((SCREENWIDTH - patch->width) >> 1, 18, &subscreen43, patch);
    }
 
-   V_DrawBox(0, menu_loadgame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
+   V_DrawBox(0, menu_loadgame.y - 4, SAVEBOXWIDTH, lheight * (NUMSAVEBOXLINES + 1));
 
    MN_getMinAndMaxSlot(min, max, loadID.slot, 0, numSlots);
 
@@ -680,7 +682,7 @@ static void MN_saveGameDrawer()
 
    }
 
-   V_DrawBox(0, menu_savegame.y - 4, (SAVESTRINGSIZE - 1) * 8, lheight * (NUMSAVEBOXLINES + 1));
+   V_DrawBox(0, menu_savegame.y - 4, SAVEBOXWIDTH, lheight * (NUMSAVEBOXLINES + 1));
 
    MN_getMinAndMaxSlot(min, max, saveID.slot, -1, numSlots);
 
