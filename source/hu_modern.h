@@ -29,6 +29,8 @@
 // Required for HUDOverlay
 #include "hu_over.h"
 
+struct VBuffer;
+
 class ModernHUD : public HUDOverlay
 {
 protected:
@@ -40,6 +42,8 @@ protected:
    virtual void DrawKeys   (int x, int y);
    virtual void DrawFrags  (int x, int y);
    virtual void Setup();
+
+   VBuffer *m_screen;
 };
 
 extern ModernHUD modern_overlay;
