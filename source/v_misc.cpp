@@ -412,9 +412,9 @@ void V_InitSubScreenModernHUD()
 
    if(vbscreen.getVirtualAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
    {
-      subwidth  = vbscreen.height * 16 / 9;
+      subwidth  = vbscreen.height * (16 * 3) / (9 * 4);
       offset    = (vbscreen.width - subwidth) / 2;
-      unscaledw = int(round(SCREENHEIGHT * 16.0 / 9.0));
+      unscaledw = int(round(SCREENHEIGHT * (16.0 * 3.0) / (9.0 * 4.0)));
    }
    else
    {
