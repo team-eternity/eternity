@@ -67,10 +67,11 @@ namespace fs = std::experimental::filesystem;
 
 #define DSPROMPT "Delete save named\n\n'%s'?\n\n" PRESSYN
 
-static constexpr int SAVESTRINGSIZE  = 24;
-static constexpr int NUMSAVEBOXLINES = 15;
-static constexpr int SAVEBOXUNIT     = 8;
-static constexpr int SAVEBOXWIDTH    = (SAVESTRINGSIZE - 1) * SAVEBOXUNIT;
+static constexpr int SAVESTRINGSIZE     = 24;
+static constexpr int NUMSAVEBOXLINES    = 15;
+static constexpr int SAVEBOXUNIT        = 8;
+static constexpr int SAVEBOXWIDTH       = (SAVESTRINGSIZE - 1) * SAVEBOXUNIT;
+static constexpr int MAXSAVESTRINGWIDTH = SAVEBOXWIDTH - SAVEBOXUNIT;
 
 struct saveID_t
 {
@@ -245,7 +246,7 @@ static void MN_readSaveStrings()
    for(const fs::directory_entry &ent : itr)
    {
       size_t      len;
-      char        description[SAVESTRINGSIZE + 1]; // sf
+      char        description[64]; // sf
       InBuffer    loadFile;
       SaveArchive arc(&loadFile);
       fs::path    savePath(ent.path());
@@ -270,7 +271,7 @@ static void MN_readSaveStrings()
       struct stat statbuf;
       if(!stat(pathStr.constPtr(), &statbuf))
       {
-         char timeStr[64 + 1];
+         char timeStr[SAVESTRINGSIZE + 1];
          strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));
          newSlot.fileTime    = statbuf.st_mtime;
          newSlot.fileTimeStr = timeStr;
@@ -447,7 +448,7 @@ menu_t menu_loadgame =
 {
    nullptr,
    nullptr, nullptr, nullptr,        // pages
-   10, 44,                           // x, y
+   4, 44,                            // x, y
    0,                                // starting slot
    0,                                // no flags
    nullptr, nullptr, nullptr,        // drawer and content
@@ -650,7 +651,7 @@ menu_t menu_savegame =
 {
    nullptr,
    nullptr, nullptr, nullptr,        // pages
-   10, 44,                           // x, y
+   4, 44,                            // x, y
    0,                                // starting slot
    0,                                // no flags
    nullptr, nullptr, nullptr,        // drawer and content
@@ -696,7 +697,8 @@ static void MN_saveGameDrawer()
          if(typing_save_desc)
          {
             text = desc_buffer;
-            if(text.length() < SAVESTRINGSIZE)
+            if(text.length() < SAVESTRINGSIZE &&
+               V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontMinWidth(menu_font) <= MAXSAVESTRINGWIDTH)
                text += '_';
          }
       }
@@ -724,7 +726,8 @@ static void MN_saveGameDrawer()
             if(typing_save_desc)
             {
                text = desc_buffer;
-               if(text.length() < SAVESTRINGSIZE)
+               if(text.length() < SAVESTRINGSIZE &&
+                  V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontMinWidth(menu_font) <= MAXSAVESTRINGWIDTH)
                   text += '_';
             }
          }
@@ -771,9 +774,11 @@ static bool MN_saveGameResponder(event_t *ev, int action)
    {
       // just a normal character
       const unsigned char ich = static_cast<unsigned char>(ev->data1);
+      const char          uch = static_cast<char>(ich);
 
-      if(ectype::isPrint(ich) && desc_buffer.length() < SAVESTRINGSIZE)
-         desc_buffer += static_cast<char>(ich);
+      if(ectype::isPrint(ich) && desc_buffer.length() < SAVESTRINGSIZE &&
+         V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontCharWidth(menu_font, uch) <= MAXSAVESTRINGWIDTH)
+         desc_buffer += uch;
 
       return true;
    }

@@ -502,6 +502,31 @@ int16_t V_FontMaxWidth(vfont_t *font)
 }
 
 //
+// finds the narrowest character in the font
+//
+int16_t V_FontMinWidth(vfont_t *font)
+{
+   unsigned int i;
+   int16_t w = INT16_MAX, pw;
+
+   if(font->linear)
+      return font->lsize;
+
+   for(i = 0; i < font->size; ++i)
+   {
+      if(font->fontgfx[i])
+      {
+         pw = font->fontgfx[i]->width;
+
+         if(pw < w)
+            w = pw;
+      }
+   }
+
+   return w;
+}
+
+//
 // V_FontFitTextToRect
 //
 // Modify text so that it fits within a given rect, based on the width and height
