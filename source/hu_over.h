@@ -183,6 +183,8 @@ extern int hud_overlaylayout;
 extern int hud_enabled;
 extern int hud_hidestatus;
 
+inline bool hud_restrictoverlaywidth = true;
+
 #endif
 
 // EOF

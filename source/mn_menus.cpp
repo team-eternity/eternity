@@ -2676,7 +2676,7 @@ static void MN_HUDPg2Drawer(void)
          V_DrawPatchTL(
             subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
             subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
-            &vbscreenunscaled, patch, colrngs[CR_RED], FTRANLEVEL
+            &vbscreenfullres, patch, colrngs[CR_RED], FTRANLEVEL
          );
       }
       else

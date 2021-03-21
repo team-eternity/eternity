@@ -34,6 +34,7 @@
 #include "doomstat.h"
 #include "e_fonts.h"
 #include "hal/i_timer.h"
+#include "hu_over.h"
 #include "i_system.h"
 #include "i_video.h"
 #include "m_qstr.h"
@@ -386,19 +387,49 @@ static void V_TextFPSDrawer()
 // automatic scaling.
 //
 
-VBuffer vbscreen;         // vbscreen encapsulates the primary video surface
-VBuffer backscreen1;      // backscreen1 is a temporary buffer for in_lude, border
-VBuffer backscreen2;      // backscreen2 is a temporary buffer for screenshots
-VBuffer backscreen3;      // backscreen3 is a temporary buffer for f_wipe
-VBuffer subscreen43;      // provides a 4:3 sub-surface on vbscreen
-VBuffer vbscreenyscaled;  // fits whole vbscreen but stretches pixels vertically by 20%
-VBuffer vbscreenunscaled; // hi-res unscaled screen for whatever you wanna draw 1:1
+VBuffer vbscreen;          // vbscreen encapsulates the primary video surface
+VBuffer backscreen1;       // backscreen1 is a temporary buffer for in_lude, border
+VBuffer backscreen2;       // backscreen2 is a temporary buffer for screenshots
+VBuffer backscreen3;       // backscreen3 is a temporary buffer for f_wipe
+VBuffer subscreen43;       // provides a 4:3 sub-surface on vbscreen
+VBuffer vbscreenyscaled;   // fits whole vbscreen but stretches pixels vertically by 20%
+VBuffer vbscreenfullres;   // hi-res unscaled screen for whatever you wanna draw 1:1
+VBuffer vbscreenmodernhud; // fits whole vbscreen or 16:9 subscreem, but with square pixels
 
 
 static bool vbscreenneedsfree = false;
 
 //
-// V_initSubScreen43
+// Initialise or update the Modern HUD's subscreen
+//
+void V_InitSubScreenModernHUD()
+{
+   V_UnsetScaling(&vbscreenmodernhud);
+
+   int subwidth;
+   int offset;
+   int unscaledw;
+
+   if(vbscreen.getVirtualAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
+   {
+      subwidth  = vbscreen.height * 16 / 9;
+      offset    = (vbscreen.width - subwidth) / 2;
+      unscaledw = int(round(SCREENHEIGHT * 16.0 / 9.0));
+   }
+   else
+   {
+      const double scaleaspect = double(vbscreen.width) / double(vbscreen.height);
+
+      subwidth  = vbscreen.width;
+      offset    = 0;
+      unscaledw = int(round(SCREENHEIGHT * scaleaspect));
+   }
+
+
+   V_InitSubVBuffer(&vbscreenmodernhud, &vbscreen, offset, 0, subwidth, vbscreen.height);
+   V_SetScaling(&vbscreenmodernhud, unscaledw, SCREENHEIGHT);
+}
+
 //
 // Initialize a 4:3 subscreen on top of the vbscreen VBuffer.
 //
@@ -455,7 +486,8 @@ static void V_InitScreenVBuffer()
       V_FreeVBuffer(&backscreen3);
       V_FreeVBuffer(&subscreen43);
       V_FreeVBuffer(&vbscreenyscaled);
-      V_FreeVBuffer(&vbscreenunscaled);
+      V_FreeVBuffer(&vbscreenmodernhud);
+      V_FreeVBuffer(&vbscreenfullres);
    }
    else
       vbscreenneedsfree = true;
@@ -464,7 +496,7 @@ static void V_InitScreenVBuffer()
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
 
-   V_InitVBufferFrom(&vbscreenunscaled, video.width, video.height, video.pitch,
+   V_InitVBufferFrom(&vbscreenfullres, video.width, video.height, video.pitch,
                      video.bitdepth, video.screens[0]);
 
    V_InitVBufferFrom(&backscreen1, video.width, video.height, video.height,
@@ -477,8 +509,9 @@ static void V_InitScreenVBuffer()
    V_InitVBufferFrom(&backscreen3, video.width, video.height, video.height,
                      video.bitdepth, video.screens[3]);
 
-   // Init subscreen43
+   // Init subscreen43 and subscreenmodernhud
    V_initSubScreen43();
+   V_InitSubScreenModernHUD();
 }
 
 //

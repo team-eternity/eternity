@@ -702,6 +702,9 @@ default_t defaults[] =
    
    DEFAULT_INT("hud_hidestatus",&hud_hidestatus, nullptr, 0, 0, 1, default_t::wad_yes,
                "hide kills/items/secrets info on fullscreen hud"),
+
+   DEFAULT_BOOL("hud_restrictoverlaywidth", &hud_restrictoverlaywidth, nullptr, true, default_t::wad_no,
+               "restrict HUD overlays to be no wider than 16:9"),
    
    DEFAULT_BOOL("hu_showtime", &hu_showtime, nullptr, true, default_t::wad_yes,
                 "display current level time on automap"),
