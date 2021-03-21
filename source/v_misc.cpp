@@ -388,6 +388,7 @@ static void V_TextFPSDrawer()
 //
 
 VBuffer vbscreen;          // vbscreen encapsulates the primary video surface
+VBuffer vbscreensquarepx;  // like vbscreen but without aspect-ratio correction
 VBuffer backscreen1;       // backscreen1 is a temporary buffer for in_lude, border
 VBuffer backscreen2;       // backscreen2 is a temporary buffer for screenshots
 VBuffer backscreen3;       // backscreen3 is a temporary buffer for f_wipe
@@ -408,19 +409,13 @@ void V_InitSubScreenModernHUD()
 
    int subwidth;
    int offset;
-   int unscaledh;
+   int unscaledw;
 
-   if(vbscreen.getVirtualAspectRatio() <= 4 * FRACUNIT / 3)
+   if(vbscreensquarepx.getRealAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
    {
-      subwidth  = vbscreen.width;
-      offset    = 0;
-      unscaledh = SCREENHEIGHT;
-   }
-   else if(vbscreen.getVirtualAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
-   {
-      subwidth  = vbscreen.height * 16 / 9;
-      offset    = (vbscreen.width - subwidth) / 2;
-      unscaledh = int(round(SCREENWIDTH * 9.0 / 16.0));
+      subwidth  = vbscreensquarepx.height * 16 / 9;
+      offset    = (vbscreensquarepx.width - subwidth) / 2;
+      unscaledw = int(round(vbscreensquarepx.unscaledh * 16.0 / 9.0));
    }
    else
    {
@@ -428,12 +423,12 @@ void V_InitSubScreenModernHUD()
 
       subwidth  = vbscreen.width;
       offset    = 0;
-      unscaledh = int(round(SCREENWIDTH / scaleaspect));
+      unscaledw = int(round(vbscreensquarepx.unscaledh * scaleaspect));
    }
 
 
    V_InitSubVBuffer(&vbscreenmodernhud, &vbscreen, offset, 0, subwidth, vbscreen.height);
-   V_SetScaling(&vbscreenmodernhud, SCREENWIDTH, unscaledh);
+   V_SetScaling(&vbscreenmodernhud, unscaledw, vbscreensquarepx.unscaledh);
 }
 
 //
@@ -486,6 +481,7 @@ static void V_InitScreenVBuffer()
    if(vbscreenneedsfree)
    {
       V_FreeVBuffer(&vbscreen);
+      V_FreeVBuffer(&vbscreensquarepx);
       V_FreeVBuffer(&backscreen1);
       V_FreeVBuffer(&backscreen2);
       V_FreeVBuffer(&backscreen3);
@@ -497,9 +493,13 @@ static void V_InitScreenVBuffer()
    else
       vbscreenneedsfree = true;
 
-   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch, 
+   V_InitVBufferFrom(&vbscreen, video.width, video.height, video.pitch,
                      video.bitdepth, video.screens[0]);
    V_SetScaling(&vbscreen, SCREENWIDTH, SCREENHEIGHT);
+
+   V_InitVBufferFrom(&vbscreensquarepx, video.width, video.height, video.pitch,
+                     video.bitdepth, video.screens[0]);
+   V_SetScaling(&vbscreensquarepx, SCREENWIDTH, int(SCREENHEIGHT * 1.2));
 
    V_InitVBufferFrom(&vbscreenfullres, video.width, video.height, video.pitch,
                      video.bitdepth, video.screens[0]);
