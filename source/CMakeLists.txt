@@ -715,7 +715,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_scripts.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_sndinfo.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_umapinfo.h"
-      SOURCE_GROUP "Source Files\\\\X_\\\\XL_ Source"
+      SOURCE_GROUP "Source Files\\\\XL_\\\\XL_ Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_animdefs.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_emapinfo.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_mapinfo.cpp"
