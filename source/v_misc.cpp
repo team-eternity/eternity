@@ -644,8 +644,7 @@ CONSOLE_COMMAND(v_fontcolors, 0)
       return;
    }
 
-   path = userpath;
-   path.pathConcatenate(Console.argv[1]->constPtr());
+   path = userpath / *Console.argv[1];
 
    if((f = fopen(path.constPtr(), "w")))
    {
@@ -680,8 +679,7 @@ CONSOLE_COMMAND(v_dumppatch, 0)
    }
 
    lump = Console.argv[0]->constPtr();
-   filename = usergamepath;
-   filename.pathConcatenate(Console.argv[1]->constPtr());
+   filename = usergamepath / *Console.argv[1];
    filename.addDefaultExtension(".png");
 
    fillcolor = Console.argv[2]->toInt();

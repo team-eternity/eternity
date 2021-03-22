@@ -288,7 +288,7 @@ int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
       {
          qstring path(read_dir);
 
-         path.pathConcatenate(filename.constPtr());
+         path.pathConcatenate(filename);
 
          // "." and ".." are explicitly skipped by fs::directory_entry
          if(ent.is_directory())
@@ -657,15 +657,14 @@ CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset)
    }
    else if(newVal.findFirstOf('/') == 0)
    {
-      wad_cur_directory.pathConcatenate(newVal.constPtr());
+      wad_cur_directory.pathConcatenate(newVal);
       MN_doSelectWad(nullptr);
    }
    else
    {
       if(mn_wadname)
          efree(mn_wadname);
-      qstring fullPath = wad_cur_directory;
-      fullPath.pathConcatenate(newVal.constPtr());
+      qstring fullPath = wad_cur_directory / newVal;
       mn_wadname = fullPath.duplicate();
    }
 }
