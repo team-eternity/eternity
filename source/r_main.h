@@ -60,6 +60,7 @@ extern int      linecount;
 extern int      loopcount;
 
 extern bool     showpsprites;
+extern bool     centerfire;
 extern bool     r_boomcolormaps;
 
 // haleyjd 11/21/09: enumeration for R_DoomTLStyle

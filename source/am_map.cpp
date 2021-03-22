@@ -2314,7 +2314,7 @@ static void AM_drawMarks()
 //
 inline static void AM_drawCrosshair(int color)
 {
-   PUTDOT((f_w + 1) >> 1, vbscreen.pitch >> 1, color); // single point for now
+   PUTDOT((f_w + 1) >> 1, (f_h + 1) >> 1, color); // single point for now
 }
 
 //

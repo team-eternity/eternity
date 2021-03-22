@@ -1,7 +1,11 @@
 // Based on the old Eternity.rc file, as well as Odamex's client.rc.in
 // (used under terms of the GPLv2 Copyright (C) Alex Mayfield 2020)
 
+#if _MSC_VER >= 1920
 #include <winuser.h>
+#else
+#include <windows.h>
+#endif
 
 #define VFT_APP     0x00000001L
 #define VOS_NT      0x00040000L

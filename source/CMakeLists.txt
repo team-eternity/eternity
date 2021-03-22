@@ -464,6 +464,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_menus.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_misc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_skinv.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/mn_saveg.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_strife.cpp"
       SOURCE_GROUP "Source Files\\\\P_\\\\P_ Headers"
       "${CMAKE_CURRENT_SOURCE_DIR}/linkoffs.h"
@@ -762,7 +763,11 @@ if(MSVC)
    target_link_libraries(eternity rpcrt4)
 
    target_compile_options(eternity PUBLIC
-                          "/MP" "/utf-8" "/permissive-")
+                          "/MP" "/utf-8")
+                          
+    if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
+        target_compile_options(eternity PUBLIC "/permissive-")
+    endif()
 
    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       target_compile_options(eternity PUBLIC "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")

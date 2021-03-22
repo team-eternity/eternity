@@ -89,6 +89,7 @@ fixed_t  centerxfrac, centeryfrac;
 fixed_t  viewpitch;
 const player_t *viewplayer;
 bool     showpsprites = 1; //sf
+bool     centerfire = false;
 camera_t *viewcamera;
 
 // SoM: removed the old zoom code infavor of actual field of view!
@@ -634,6 +635,7 @@ void R_SetupViewScaling()
    view.ycenter = (view.height = (float)viewwindow.height) * 0.5f;
 
    R_InitBuffer(scaledwindow.width, scaledwindow.height);       // killough 11/98
+   R_UpdateContextBounds();
 }
 
 //
@@ -1310,6 +1312,9 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       R_RunContexts();
 
+   if(quake)
+      player->mo->flags2 = savedflags;
+
    // draw the psprites on top of everything
    //  but does not draw on side views
    if(!viewangleoffset)
@@ -1318,9 +1323,6 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
-
-   if(quake)
-      player->mo->flags2 = savedflags;
 
    // haleyjd: remove sector interpolations
    if(view.lerp != FRACUNIT)
@@ -1506,13 +1508,14 @@ static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
-static const char *tlstylestr[] = { "none", "boom", "new" };
+static const char *tlstylestr[] = { "opaque", "boom", "additive" };
 
 VARIABLE_BOOLEAN(lefthanded, nullptr,               handedstr);
 VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);
 VARIABLE_BOOLEAN(flashing_hom, nullptr,             onoff);
 VARIABLE_BOOLEAN(r_precache, nullptr,               onoff);
 VARIABLE_TOGGLE(showpsprites,  nullptr,             yesno);
+VARIABLE_TOGGLE(centerfire, nullptr,                onoff);
 VARIABLE_BOOLEAN(stretchsky, nullptr,               onoff);
 VARIABLE_BOOLEAN(r_swirl, nullptr,                  onoff);
 VARIABLE_BOOLEAN(general_translucency, nullptr,     onoff);
@@ -1578,6 +1581,8 @@ CONSOLE_VARIABLE(r_blockmap, r_blockmap, 0) {}
 CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
+CONSOLE_VARIABLE(r_drawplayersprites, showpsprites, 0) {}
+CONSOLE_VARIABLE(r_centerfire, centerfire, 0) {}
 
 CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
 {

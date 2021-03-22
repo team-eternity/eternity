@@ -258,7 +258,7 @@ void BoomHUD::DrawFrags(int x, int y)
 //
 void BoomHUD::Setup()
 {
-      int x, y;
+   int x, y;
 
    // decide where to put all the widgets
 
@@ -306,7 +306,7 @@ void BoomHUD::Setup()
       break;
 
    case HUD_FLAT: // all at bottom of screen
-      x = vbscreenyscaled.unscaledw / 2;
+      x = vbscreenyscaled.unscaledw - 138;
       y = vbscreenyscaled.unscaledh - 8;
 
       // haleyjd 06/14/06: rewrote to restore a sensible ordering

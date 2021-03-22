@@ -965,7 +965,7 @@ void HUDCrossHairWidget::drawer()
    {
       drawx  = (video.width  + 1 - w) / 2;
       drawy  = (video.height + 1 - h) / 2;
-      buffer = &vbscreenunscaled;
+      buffer = &vbscreenfullres;
    }
    else
    {

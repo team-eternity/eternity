@@ -65,6 +65,7 @@
 #define ITEM_GPROP_MENUOFFSET  "menu.offset"
 #define ITEM_GPROP_MENUPTR1    "menu.pointer1"
 #define ITEM_GPROP_MENUPTR2    "menu.pointer2"
+#define ITEM_GPROP_MENUSTRTMAP "menu.startmap"
 #define ITEM_GPROP_BORDERFLAT  "border.flat"
 #define ITEM_GPROP_BORDERTL    "border.topleft"
 #define ITEM_GPROP_BORDERTOP   "border.top"
@@ -136,6 +137,7 @@ enum
    GI_STR_BLOODNORM,
    GI_STR_BLOODRIP,
    GI_STR_BLOODCRUSH,
+   GI_STR_MENUSTRTMAP,
 
    GI_STR_NUMSTRS
 };
@@ -232,6 +234,7 @@ cfg_opt_t edf_game_opts[] =
    CFG_INT(ITEM_GPROP_MENUOFFSET,  0,    CFGF_NONE),
    CFG_STR(ITEM_GPROP_MENUPTR1,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_MENUPTR2,    "",   CFGF_NONE),
+   CFG_STR(ITEM_GPROP_MENUSTRTMAP, "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BORDERFLAT,  "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BORDERTL,    "",   CFGF_NONE),
    CFG_STR(ITEM_GPROP_BORDERTOP,   "",   CFGF_NONE),
@@ -387,6 +390,12 @@ static void E_processGamePropsBlock(cfg_t *props)
    {
       E_setDynamicString(GameModeInfo->menuCursor->patches[1], GI_STR_MENUPTR2,
                          cfg_getstr(props, ITEM_GPROP_MENUPTR2));
+   }
+
+   if(IS_SET(ITEM_GPROP_MENUSTRTMAP))
+   {
+      E_setDynamicString(GameModeInfo->menuStartMap, GI_STR_MENUSTRTMAP,
+         cfg_getstr(props, ITEM_GPROP_MENUSTRTMAP));
    }
 
    // Border Properties

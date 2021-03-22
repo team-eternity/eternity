@@ -63,6 +63,33 @@ Made thing-based obituaries use deh or EDF strings if they start with $.
 Added cvar "hu_crosshair_scale" which can toggle scaling of the crosshair off or
 on. It's saved in the config as "crosshair_scale".
 
+--------------------------------------------------------------------------------
+2021/02/26
+Fixed an issue where crushers would desync and permanently close when saving and
+loading.
+
+--------------------------------------------------------------------------------
+2021/03/04
+Added an option to centre weapons when firing. It's in the weapons menu.
+
+--------------------------------------------------------------------------------
+2021/03/07
+Re-introduce a warning for potentially-incompatible savegames.
+
+--------------------------------------------------------------------------------
+2021/03/21
+Overhaul save and load menus. You can now have an arbitrary amount of savegames,
+can delete selected savegames with the delete key, and info on the save like
+when it was saved, what map it's on, etc. Saves in the list are sorted from most
+recent to least recent. Quickload now allows you to select a quicksave slot if
+one isn't already selected.
+Credit goes to Devin Acker (Revenant) for the idea and initial code for that
+ended up defining the layout and such that I went with for this.
+
+Fixed the modern HUD being stretched horizontally.
+Restricted the modern HUD to a 16:9 subscreen (if at 16:9 or wider aspect). Can
+be toggled on/off with the cvar "hu_restrictoverlaywidth".
+
 ================================================================================
 EOF
 ================================================================================

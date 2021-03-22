@@ -205,9 +205,6 @@ VALLOCATION(pscreenheightarray)
 // Max number of particles
 static int numParticles;
 
-// MaxW: 2018/07/01: Whether or not to draw psprites
-static bool r_drawplayersprites = true;
-
 VALLOCATION(pstack)
 {
    R_ForEachContext([](rendercontext_t &basecontext) {
@@ -1249,6 +1246,10 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    }
 }
 
+// TODO: Delete and use less-awful logic
+extern void A_Lower(actionargs_t *);
+extern void A_Raise(actionargs_t *);
+
 //
 // Draws player gun sprites.
 //
@@ -1302,10 +1303,15 @@ static void R_drawPSprite(const pspdef_t *psp,
    
    lump = sprframe->lump[0];
    flip = !!(sprframe->flip[0] ^ lefthanded);
-   
+
    // calculate edges of the shape
+   void (*playeraction)(actionargs_t *) = viewplayer->psprites[0].state->action;
    v2fixed_t pspos;
-   R_interpolatePSpritePosition(*psp, pspos);
+   if(centerfire && (viewplayer->attackdown & AT_ALL) != 0 &&
+      playeraction != A_Lower && playeraction != A_Raise)
+      pspos = { 0, WEAPONTOP };
+   else
+      R_interpolatePSpritePosition(*psp, pspos);
 
    tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);
@@ -1449,14 +1455,11 @@ void R_DrawPlayerSprites()
    for(i = 0; i < viewwindow.width; ++i)
       pscreenheightarray[i] = view.height - 1.0f;
 
-   if(r_drawplayersprites)
+   // add all active psprites
+   for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
    {
-      // add all active psprites
-      for(i = 0, psp = viewplayer->psprites; i < NUMPSPRITES; i++, psp++)
-      {
-         if(psp->state)
-            R_drawPSprite(psp, spritelights, pscreenheightarray, zeroarray);
-      }
+      if(psp->state)
+         R_drawPSprite(psp, spritelights, pscreenheightarray, zeroarray);
    }
 }
 
@@ -2523,14 +2526,6 @@ static void R_drawParticle(const contextbounds_t &bounds, vissprite_t *vis,
       } // end else [!general_translucency]
    } // end local block
 }
-
-//============================================================================
-//
-// Console Commands
-//
-
-VARIABLE_TOGGLE(r_drawplayersprites, nullptr, onoff);
-CONSOLE_VARIABLE(r_drawplayersprites, r_drawplayersprites, 0) {}
 
 //----------------------------------------------------------------------------
 //

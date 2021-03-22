@@ -35,6 +35,7 @@
 #include "hal/i_timer.h"
 #include "i_video.h"
 #include "r_context.h"
+#include "r_draw.h"
 #include "r_main.h"
 #include "r_state.h"
 #include "v_misc.h"
@@ -196,6 +197,30 @@ void R_RefreshContexts()
       rendercontext_t &context = renderdatas[currentcontext].context;
 
       context.spritecontext.sectorvisited = ecalloctag(bool *, numsectors, sizeof(bool), PU_LEVEL, nullptr);
+   }
+}
+
+void R_UpdateContextBounds()
+{
+   if(r_numcontexts == 1)
+   {
+      r_globalcontext.bounds.startcolumn   = 0;
+      r_globalcontext.bounds.endcolumn     = viewwindow.width;
+      r_globalcontext.bounds.fstartcolumn = 0.0f;
+      r_globalcontext.bounds.fendcolumn   = float(viewwindow.width);
+      return;
+   }
+
+   const float contextwidth = float(viewwindow.width) / float(r_numcontexts);
+   for(int currentcontext = 0; currentcontext < r_numcontexts; currentcontext++)
+   {
+      rendercontext_t &context = renderdatas[currentcontext].context;
+
+      context.bounds.fstartcolumn = float(currentcontext)     * contextwidth;
+      context.bounds.fendcolumn   = float(currentcontext + 1) * contextwidth;
+      context.bounds.startcolumn  = int(roundf(context.bounds.fstartcolumn));
+      context.bounds.endcolumn    = int(roundf(context.bounds.fendcolumn));
+      context.bounds.numcolumns   = context.bounds.endcolumn - context.bounds.startcolumn;
    }
 }
 

@@ -27,7 +27,7 @@
 #include "version.h"
 
 // sf: made int from define
-int version = 402;
+int version = 403;
 
 // haleyjd: subversion -- range from 0 to 255
 unsigned char subversion = 0;
@@ -36,11 +36,11 @@ const char version_date[] = __DATE__;
 const char version_time[] = __TIME__; // haleyjd
 
 // sf: version name -- at the suggestion of mystican
-const char version_name[] = "Forseti";
+const char version_name[] = "Unnamed";
 
 // haleyjd: caption for SDL window
 #ifdef _SDL_VER
-const char ee_wmCaption[] = u8"Eternity Engine v4.02.00 \"Forseti\"";
+const char ee_wmCaption[] = u8"Eternity Engine v4.03.00-pre \"Unnamed\"";
 #endif
 
 // haleyjd: Eternity release history

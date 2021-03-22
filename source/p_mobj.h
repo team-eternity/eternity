@@ -721,9 +721,9 @@ enum mobjflags4_e : unsigned int
    MF4_FRIENDFOEMISSILE   = 0x00400000, // friends and foes of same species hurt each other
    MF4_BLOODLESSIMPACT    = 0x00800000, // doesn't draw blood when it hits or rips a thing
    MF4_HERETICBOUNCES     = 0x01000000, // thing bounces à la Heretic
-   MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters.
-   MF4_LOWAIMPRIO         = 0x04000000, // can't be autoaimed.
-   MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it.
+   MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters
+   MF4_LOWAIMPRIO         = 0x04000000, // less likely to be autoaimed
+   MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it
    MF4_SETTARGETONDEATH   = 0x10000000, // target is updated even when one-shot
    MF4_SLIDEOVERTHINGS    = 0x20000000, // thing will keep sliding when on top of things
    MF4_UNSTEPPABLE        = 0x40000000, // thing cannot be stepped on like stairs
@@ -732,7 +732,7 @@ enum mobjflags4_e : unsigned int
 
 enum mobjflags5_e : unsigned int
 {
-
+   MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh

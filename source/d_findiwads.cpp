@@ -713,7 +713,7 @@ static void D_checkForNoRest()
          const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
          if(filename == "nerve.wad")
          {
-            nrvpath.pathConcatenate(filename.constPtr());
+            nrvpath.pathConcatenate(filename);
             w_norestpath = nrvpath.duplicate();
             break;
          }

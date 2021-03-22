@@ -454,6 +454,7 @@ bool ACS_CF_ChkThingFlag(ACS_CF_ARGS)
    case 1: res = !!(mo->flags2 & flag->value); break;
    case 2: res = !!(mo->flags3 & flag->value); break;
    case 3: res = !!(mo->flags4 & flag->value); break;
+   case 4: res = !!(mo->flags5 & flag->value); break;
    }
 
    thread->dataStk.push(res);

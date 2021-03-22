@@ -93,7 +93,7 @@ FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
    for(size_t i = 0; i < numpaths; i++)
    {
       const char *path = D_GetDoomWadPath(i);
-      qstring pathandfn = qstring(path).pathConcatenate(filename.constPtr());
+      qstring pathandfn = qstring(path) / filename;
 
       if((f = fopen(pathandfn.constPtr(), "rb")))
       {

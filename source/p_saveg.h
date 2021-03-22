@@ -47,7 +47,7 @@ protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
-   static constexpr int WRITE_SAVE_VERSION = 2; // Version of saves that EE writes
+   static constexpr int WRITE_SAVE_VERSION = 4; // Version of saves that EE writes
    int read_save_version;                       // Version of currently-read save
 
 
@@ -91,6 +91,8 @@ public:
    // Similar to ZDoom's FArchive class, these are symmetric - they are used
    // both for reading and writing.
    // Basic types:
+   SaveArchive &operator << (int64_t  &x);
+   SaveArchive &operator << (uint64_t &x);
    SaveArchive &operator << (int32_t  &x);
    SaveArchive &operator << (uint32_t &x);
    SaveArchive &operator << (int16_t  &x);
