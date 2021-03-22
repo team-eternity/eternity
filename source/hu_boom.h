@@ -29,6 +29,8 @@
 // Required for HUDOverlay
 #include "hu_over.h"
 
+struct VBuffer;
+
 class BoomHUD : public HUDOverlay
 {
 protected:
