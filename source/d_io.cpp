@@ -93,7 +93,7 @@ char *DWFILE::getStr(char *buf, size_t n)
 int DWFILE::atEof() const
 {
    return (type == DWF_FILE) ? 
-           feof((FILE *)inp) : !*inp || size <= 0;
+           feof((FILE *)inp) : size <= 0 || !*inp;;
 }
 
 //
