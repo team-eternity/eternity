@@ -1989,6 +1989,7 @@ static gamemodeinfo_t giStrifeReg =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   nullptr,          // menuStartMap
    strfMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_pgrdat,       // skvAtkSound
