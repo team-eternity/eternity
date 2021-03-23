@@ -271,7 +271,7 @@ static void MN_readSaveStrings()
       struct stat statbuf;
       if(!stat(pathStr.constPtr(), &statbuf))
       {
-         char timeStr[SAVESTRINGSIZE + 1];
+         char timeStr[64 + 1];
          strftime(timeStr, sizeof(timeStr), "%a. %b %d %Y\n%r", localtime(&statbuf.st_mtime));
          newSlot.fileTime    = statbuf.st_mtime;
          newSlot.fileTimeStr = timeStr;
