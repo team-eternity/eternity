@@ -272,7 +272,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti || inventorycanclose)
+      else if(usearti)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -832,9 +832,9 @@ bool G_Responder(const event_t* ev)
    if(G_KeyResponder(ev, kac_cmd))
       return true;
 
-   // This code is like Heretic's (to an extent). If the key is up and is the
+   // This code is like Heretic's (to an extent). If the key is down and is the
    // inventory key (and the player isn't dead) then use the current artifact.
-   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
+   if(ev->type == ev_keydown && G_KeyResponder(ev, kac_game) == ka_inventory_use
       && players[consoleplayer].playerstate != PST_DEAD)
    {
       usearti = true;
