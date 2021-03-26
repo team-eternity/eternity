@@ -108,6 +108,9 @@ extern byte RGB32k[32][32][32];
 // Loads color translation lumps
 void V_InitColorTranslation(void);
 
+// Initialises or updates the modern HUD's subscreen
+void V_InitSubScreenModernHUD();
+
 // V_Init
 // Allocates buffer screens and sets up the VBuffers for the screen surfaces.
 void V_Init (void);
@@ -209,6 +212,8 @@ extern VBuffer backscreen2;
 extern VBuffer backscreen3;
 extern VBuffer subscreen43;
 extern VBuffer vbscreenyscaled;
+extern VBuffer vbscreenfullres;
+extern VBuffer vbscreenmodernhud;
 
 #endif
 

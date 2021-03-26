@@ -876,6 +876,20 @@ class MenuItemBinding : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemBinding, MenuItem)
 
 public:
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
+   {
+      extern menuwidget_t binding_widget;
+
+      if(current_menuwidget == &binding_widget)
+         return "Press any input to bind/unbind";
+      else
+      {
+         const char *key = G_FirstBoundKey("menu_confirm");
+         psnprintf(msgbuffer, 64, "Press %s to start binding/unbinding", key);
+         return msgbuffer;
+      }
+   }
+
    virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       qstring boundkeys;

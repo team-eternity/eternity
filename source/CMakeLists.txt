@@ -481,6 +481,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_menus.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_misc.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/mn_skinv.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/mn_saveg.cpp"
       SOURCE_GROUP "Source Files\\\\P_\\\\P_ Headers"
       "${CMAKE_CURRENT_SOURCE_DIR}/linkoffs.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/p_anim.h"
@@ -557,6 +558,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/polyobj.cpp"
       SOURCE_GROUP "Source Files\\\\R_\\\\R_ Headers"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_bsp.h"
+      "${CMAKE_CURRENT_SOURCE_DIR}/r_context.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_data.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_defs.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_draw.h"
@@ -578,6 +580,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/r_voxels.h"
       SOURCE_GROUP "Source Files\\\\R_\\\\R_ Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_bsp.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/r_context.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_data.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_draw.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/r_dynabsp.cpp"
@@ -731,7 +734,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_scripts.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_sndinfo.h"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_umapinfo.h"
-      SOURCE_GROUP "Source Files\\\\X_\\\\XL_ Source"
+      SOURCE_GROUP "Source Files\\\\XL_\\\\XL_ Source"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_animdefs.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_emapinfo.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/xl_mapinfo.cpp"
@@ -775,8 +778,15 @@ if(MSVC)
    target_link_libraries(eternity rpcrt4)
 
    target_compile_options(eternity PUBLIC
-                          "/MP" "/utf-8" "/permissive-"
-                          "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+                          "/MP" "/utf-8")
+                          
+    if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
+        target_compile_options(eternity PUBLIC "/permissive-")
+    endif()
+
+   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+      target_compile_options(eternity PUBLIC "$<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>,$<CONFIG:MinSizeRel>>:/fp:fast>")
+   endif()
 
    target_link_options(eternity PUBLIC
                        "/DYNAMICBASE:NO" "/SAFESEH:NO"

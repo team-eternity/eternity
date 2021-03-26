@@ -168,7 +168,7 @@ static bool MN_PopupResponder(event_t *ev, int action)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         MN_PopWidget();
+         MN_PopWidget(consumeText_e::NO);
          S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
       }
       break;
@@ -189,7 +189,7 @@ static bool MN_PopupResponder(event_t *ev, int action)
             C_RunTextCmd(popup_message_command);
          }
          S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
-         MN_PopWidget();  // kill message
+         MN_PopWidget(consumeText_e::NO);  // kill message
       }
       if(ch == 'n' || action == ka_menu_toggle || action == ka_menu_previous) // no!
       {
@@ -197,7 +197,7 @@ static bool MN_PopupResponder(event_t *ev, int action)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-         MN_PopWidget(); // kill message
+         MN_PopWidget(consumeText_e::NO); // kill message
       }
       break;
       

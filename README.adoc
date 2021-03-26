@@ -70,6 +70,9 @@ Git repository, in the top-level directory you should see a
 . Create a new empty directory and change to it, eg: +mkdir build+
 followed by +cd build+. You cannot do an in-tree build.
 
+. If using Visual Studio make sure that you have installed the MFC
+and ATL components for whatever version you are using.
+
 . Run CMake. Usually you will want to run +cmake ..+, but you might
 want to change the generator with a special command, for example:
 +

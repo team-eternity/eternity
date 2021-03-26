@@ -63,8 +63,8 @@ bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimfla
    if(th == source)
       return false; // can't shoot self
 
-   if(!(th->flags & MF_SHOOTABLE))
-      return false; // corpse or something
+   if(!(th->flags & MF_SHOOTABLE) || (th->flags5 & MF5_NOTAUTOAIMED) != 0)
+      return false; // corpse or something, or cannot be autoaimed
 
    // VANILLA_HERETIC: the pods have LOWAIMPRIO so reject hitting them
    if(vanilla_heretic && th->flags4 & MF4_LOWAIMPRIO)

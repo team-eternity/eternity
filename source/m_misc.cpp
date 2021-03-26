@@ -190,6 +190,9 @@ default_t defaults[] =
    DEFAULT_INT("weapon_recoil", &default_weapon_recoil, &weapon_recoil, 0, 0, 1, default_t::wad_yes,
                "1 to enable recoil from weapon fire"),
 
+   DEFAULT_BOOL("r_centerfire", &centerfire, nullptr, false, default_t::wad_no,
+                "0 - don't center weapon when firing, 1 - center weapon when firing"),
+
    // killough 7/19/98
    // sf:changed to bfgtype
    // haleyjd: FIXME - variable is of enum type, non-portable
@@ -203,6 +206,10 @@ default_t defaults[] =
    // haleyjd 06/07/05
    DEFAULT_BOOL("crosshair_hilite", &crosshair_hilite, nullptr, false, default_t::wad_yes,
                 "0 - no highlighting, 1 - aim highlighting enabled"),
+
+   // MaxW: 2021/02/15
+   DEFAULT_BOOL("crosshair_scale", &crosshair_scale, nullptr, true, default_t::wad_yes,
+                "0 - scale crosshair, 1 - draw crosshair unscaled"),
 
    // sf
    DEFAULT_INT("show_scores", &show_scores, nullptr, 0, 0, 1, default_t::wad_yes,
@@ -365,9 +372,6 @@ default_t defaults[] =
   
    DEFAULT_STR("cscript_2", &csc_files[1], nullptr, "", default_t::wad_no,
                "Console script executed at program startup"),
-  
-   DEFAULT_INT("use_startmap", &use_startmap, nullptr, -1, -1, 1, default_t::wad_yes,
-               "use start map instead of menu"),
 
    // killough 10/98: compatibility vector:
 
@@ -698,6 +702,9 @@ default_t defaults[] =
    
    DEFAULT_INT("hud_hidestatus",&hud_hidestatus, nullptr, 0, 0, 1, default_t::wad_yes,
                "hide kills/items/secrets info on fullscreen hud"),
+
+   DEFAULT_BOOL("hud_restrictoverlaywidth", &hud_restrictoverlaywidth, nullptr, true, default_t::wad_no,
+               "restrict HUD overlays to be no wider than 16:9"),
    
    DEFAULT_BOOL("hu_showtime", &hu_showtime, nullptr, true, default_t::wad_yes,
                 "display current level time on automap"),

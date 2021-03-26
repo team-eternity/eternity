@@ -264,9 +264,7 @@ static int hticMenuSounds[MN_SND_NUMSOUNDS] =
 
 // gamemode-dependent menus (defined in mn_menus.c et al.)
 extern menu_t menu_savegame;
-extern menu_t menu_hsavegame;
 extern menu_t menu_loadgame;
-extern menu_t menu_hloadgame;
 extern menu_t menu_newgame;
 extern menu_t menu_hnewgame;
 
@@ -1106,6 +1104,7 @@ static gamemodeinfo_t giDoomSW =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -1232,6 +1231,7 @@ static gamemodeinfo_t giDoomReg =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -1358,6 +1358,7 @@ static gamemodeinfo_t giDoomRetail =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -1484,6 +1485,7 @@ static gamemodeinfo_t giDoomCommercial =
    &menu_savegame,   // saveMenu
    &menu_loadgame,   // loadMenu
    &menu_newgame,    // newGameMenu
+   nullptr,          // menuStartMap
    doomMenuSounds,   // menuSounds
    S_TBALL1,         // transFrame
    sfx_shotgn,       // skvAtkSound
@@ -1607,9 +1609,10 @@ static gamemodeinfo_t giHereticSW =
    8,                // creditTitleStep
    &giArrowCursor,   // menuCursor
    &menu_hmain,      // mainMenu
-   &menu_hsavegame,  // saveMenu
-   &menu_hloadgame,  // loadMenu
+   &menu_savegame,  // saveMenu
+   &menu_loadgame,  // loadMenu
    &menu_hnewgame,   // newGameMenu
+   nullptr,          // menuStartMap
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
    sfx_gldhit,       // skvAtkSound
@@ -1737,9 +1740,10 @@ static gamemodeinfo_t giHereticReg =
    8,                // creditTitleStep
    &giArrowCursor,   // menuCursor
    &menu_hmain,      // mainMenu
-   &menu_hsavegame,  // saveMenu
-   &menu_hloadgame,  // loadMenu
+   &menu_savegame,  // saveMenu
+   &menu_loadgame,  // loadMenu
    &menu_hnewgame,   // newGameMenu
+   nullptr,          // menuStartMap
    hticMenuSounds,   // menuSounds
    S_MUMMYFX1_1,     // transFrame
    sfx_gldhit,       // skvAtkSound

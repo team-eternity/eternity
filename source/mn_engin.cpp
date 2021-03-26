@@ -596,8 +596,6 @@ menuwidget_t *current_menuwidget  = nullptr;
 static PODCollection<menuwidget_t *> menuwidget_stack;
 static bool widget_consume_text = false; // consume text after widget is closed
 
-int quickSaveSlot;  // haleyjd 02/23/02: restored from MBF
-
 static void MN_InitFonts(void);
 
 //
@@ -618,7 +616,7 @@ void MN_PushWidget(menuwidget_t *widget)
 //
 // Back up one widget on the stack
 //
-void MN_PopWidget()
+void MN_PopWidget(const consumeText_e consume)
 {
    size_t len;
 
@@ -635,7 +633,8 @@ void MN_PopWidget()
       current_menuwidget = menuwidget_stack[len - 1];
    else
       current_menuwidget = nullptr;
-   widget_consume_text = true;
+   if(consume == consumeText_e::YES)
+      widget_consume_text = true;
 }
 
 //
@@ -703,8 +702,6 @@ void MN_Init()
       smallptr_dims[0] = ptr0->width;
       smallptr_dims[1] = ptr0->height;
    }
-      
-   quickSaveSlot = -1; // haleyjd: -1 == no slot selected yet
 
    // haleyjd: init heretic stuff if appropriate
    if(GameModeInfo->type == Game_Heretic)
@@ -1261,7 +1258,7 @@ CONSOLE_COMMAND(forceload, cf_hidden)
    MN_ClearMenus();
 }
 
-void MN_ForcedLoadGame(char *msg)
+void MN_ForcedLoadGame(const char *msg)
 {
    MN_Question(msg, "forceload");
 }

@@ -453,6 +453,8 @@ void MidiRPC_StopServer()
 
    // Stop RPC server
    RpcMgmtStopServerListening(NULL);
+
+   quitting = true;
 }
 
 //
@@ -559,6 +561,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
    while(sentinel_running)
       Sleep(1);
+
+   watcher.join();
 
    return 0;
 }

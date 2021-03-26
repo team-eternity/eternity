@@ -147,7 +147,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
    // (abscenter toggle), then center line
    
    cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
-          (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+          (screen->unscaledw - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
    cy = textdraw.y;
    
    while((c = *ch++))
@@ -207,7 +207,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
       else if(c == '\n')
       {
          cx = (flags & VTXT_ABSCENTER) ? 
-               (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+               (screen->unscaledw - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
          cy += font->cy;
          continue;
       }
@@ -494,6 +494,31 @@ int16_t V_FontMaxWidth(vfont_t *font)
          pw = font->fontgfx[i]->width;
 
          if(pw > w)
+            w = pw;
+      }
+   }
+
+   return w;
+}
+
+//
+// finds the narrowest character in the font
+//
+int16_t V_FontMinWidth(vfont_t *font)
+{
+   unsigned int i;
+   int16_t w = INT16_MAX, pw;
+
+   if(font->linear)
+      return font->lsize;
+
+   for(i = 0; i < font->size; ++i)
+   {
+      if(font->fontgfx[i])
+      {
+         pw = font->fontgfx[i]->width;
+
+         if(pw < w)
             w = pw;
       }
    }

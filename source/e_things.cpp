@@ -46,6 +46,7 @@
 #include "e_sound.h"
 #include "e_sprite.h"
 #include "e_states.h"
+#include "e_string.h"
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
@@ -162,6 +163,7 @@ int UnknownThingType;
 #define ITEM_TNG_FLAGS2       "flags2"
 #define ITEM_TNG_FLAGS3       "flags3"
 #define ITEM_TNG_FLAGS4       "flags4"
+#define ITEM_TNG_FLAGS5       "flags5"
 #define ITEM_TNG_PARTICLEFX   "particlefx"
 
 // Graphic Properites
@@ -576,6 +578,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_FLAGS2,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_FLAGS3,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_FLAGS4,          "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS5,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_PARTICLEFX,      "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_SKINSPRITE,      "noskin",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEFSPRITE,       nullptr,       CFGF_NONE), \
@@ -2741,7 +2744,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          mobjinfo[i]->flags2 = results[1];
          mobjinfo[i]->flags3 = results[2];
          mobjinfo[i]->flags4 = results[3];
-         
+         mobjinfo[i]->flags5 = results[4];
+
          cflags = true; // values were set from cflags
       }
    }
@@ -2787,6 +2791,16 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          else
             mobjinfo[i]->flags4 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE4);
       }
+
+      // process flags5
+      if(IS_SET(ITEM_TNG_FLAGS5))
+      {
+         tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS5);
+         if(*tempstr == '\0')
+            mobjinfo[i]->flags5 = 0;
+         else
+            mobjinfo[i]->flags5 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE5);
+      }
    }
 
    // process addflags and remflags modifiers
@@ -2803,6 +2817,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       mobjinfo[i]->flags2 |= results[1];
       mobjinfo[i]->flags3 |= results[2];
       mobjinfo[i]->flags4 |= results[3];
+      mobjinfo[i]->flags5 |= results[4];
    }
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
@@ -2817,6 +2832,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       mobjinfo[i]->flags2 &= ~(results[1]);
       mobjinfo[i]->flags3 &= ~(results[2]);
       mobjinfo[i]->flags4 &= ~(results[3]);
+      mobjinfo[i]->flags5 &= ~(results[4]);
    }
 
    // 07/13/03: process nukespecial
@@ -2914,7 +2930,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT1);
       if(strcasecmp(tempstr, "NONE"))
+      {
+         if(tempstr[0] == '$')
+            tempstr = E_StringOrDehForName(tempstr + 1);
          mobjinfo[i]->obituary = estrdup(tempstr);
+      }
       else
          mobjinfo[i]->obituary = nullptr;
    }
@@ -2928,7 +2948,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT2);
       if(strcasecmp(tempstr, "NONE"))
+      {
+         if(tempstr[0] == '$')
+            tempstr = E_StringOrDehForName(tempstr + 1);
          mobjinfo[i]->meleeobit = estrdup(tempstr);
+      }
       else
          mobjinfo[i]->meleeobit = nullptr;
    }

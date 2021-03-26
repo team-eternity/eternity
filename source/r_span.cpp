@@ -99,7 +99,7 @@ struct slopevalues
 // is now FASTER than doom's original span renderer. Whodathunkit?
 
 template<int xshift, int yshift, int xmask>
-static void R_DrawSpanSolid_8()
+static void R_DrawSpanSolid_8(const cb_span_t &span)
 {
    unsigned int xf = span.xfrac, xs = span.xstep; 
    unsigned int yf = span.yfrac, ys = span.ystep; 
@@ -118,7 +118,7 @@ static void R_DrawSpanSolid_8()
    }
 }
 
-static void R_DrawSpanSolid_8_GEN()
+static void R_DrawSpanSolid_8_GEN(const cb_span_t &span)
 {
    unsigned int xf = span.xfrac, xs = span.xstep; 
    unsigned int yf = span.yfrac, ys = span.ystep; 
@@ -209,7 +209,7 @@ static void R_DrawSpan_OLD()
 //
 
 template<int xshift, int yshift, int xmask>
-static void R_DrawSpanTL_8()
+static void R_DrawSpanTL_8(const cb_span_t &span)
 {
    unsigned int t;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -232,7 +232,7 @@ static void R_DrawSpanTL_8()
    }
 }
 
-static void R_DrawSpanTL_8_GEN()
+static void R_DrawSpanTL_8_GEN(const cb_span_t &span)
 {
    unsigned int t;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -262,7 +262,7 @@ static void R_DrawSpanTL_8_GEN()
 // Additive blending
 
 template<int xshift, int yshift, int xmask>
-static void R_DrawSpanAdd_8()
+static void R_DrawSpanAdd_8(const cb_span_t &span)
 {
    unsigned int a, b;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -290,7 +290,7 @@ static void R_DrawSpanAdd_8()
    }
 }
 
-static void R_DrawSpanAdd_8_GEN()
+static void R_DrawSpanAdd_8_GEN(const cb_span_t &span)
 {
    unsigned int a, b;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -332,7 +332,7 @@ static void R_DrawSpanAdd_8_GEN()
 #define MASK(alpham, i) ((alpham)[(i)>>3] & 1 << ((i) & 7))
 
 template<int xshift, int yshift, int xmask>
-static void R_DrawSpanSolidMasked_8()
+static void R_DrawSpanSolidMasked_8(const cb_span_t &span)
 {
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
@@ -380,7 +380,7 @@ static void R_DrawSpanSolidMasked_8()
       dest += linesize;
    }
 }
-static void R_DrawSpanSolidMasked_8_GEN()
+static void R_DrawSpanSolidMasked_8_GEN(const cb_span_t &span)
 {
    unsigned int xf = span.xfrac, xs = span.xstep;
    unsigned int yf = span.yfrac, ys = span.ystep;
@@ -433,7 +433,7 @@ static void R_DrawSpanSolidMasked_8_GEN()
    }
 }
 template<int xshift, int yshift, int xmask>
-static void R_DrawSpanTLMasked_8()
+static void R_DrawSpanTLMasked_8(const cb_span_t &span)
 {
    unsigned int t;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -461,7 +461,7 @@ static void R_DrawSpanTLMasked_8()
       dest += linesize;
    }
 }
-static void R_DrawSpanTLMasked_8_GEN()
+static void R_DrawSpanTLMasked_8_GEN(const cb_span_t &span)
 {
    unsigned int t;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -494,7 +494,7 @@ static void R_DrawSpanTLMasked_8_GEN()
    }
 }
 template<int xshift, int yshift, int xmask>
-static void R_DrawSpanAddMasked_8()
+static void R_DrawSpanAddMasked_8(const cb_span_t &span)
 {
    unsigned int a, b;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -527,7 +527,7 @@ static void R_DrawSpanAddMasked_8()
       dest += linesize;
    }
 }
-static void R_DrawSpanAddMasked_8_GEN()
+static void R_DrawSpanAddMasked_8_GEN(const cb_span_t &span)
 {
    unsigned int a, b;
    unsigned int xf = span.xfrac, xs = span.xstep;
@@ -593,7 +593,7 @@ static void R_DrawSpanAddMasked_8_GEN()
 #define INTERPSTEP (0.0625f)
 
 template<int xshift, int xmask, int ymask>
-static void R_DrawSlope_8()
+static void R_DrawSlope_8(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -634,7 +634,7 @@ static void R_DrawSlope_8()
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
@@ -668,7 +668,7 @@ static void R_DrawSlope_8()
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
@@ -677,7 +677,7 @@ static void R_DrawSlope_8()
    }
 }
 
-static void R_DrawSlope_8_GEN()
+static void R_DrawSlope_8_GEN(const cb_slopespan_t &slopespan, const cb_span_t &span)
 {
    double iu  = slopespan.iufrac, iv  = slopespan.ivfrac;
    double ius = slopespan.iustep, ivs = slopespan.ivstep;
@@ -722,7 +722,7 @@ static void R_DrawSlope_8_GEN()
       incount = SPANJUMP;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;
@@ -756,7 +756,7 @@ static void R_DrawSlope_8_GEN()
       incount = count;
       while(incount--)
       {
-         colormap = slopespan.colormap[mapindex++];
+         colormap = cb_slopespan_t::colormap[mapindex++];
          *dest = colormap[src[((vfrac >> xshift) & xmask) | ((ufrac >> 16) & ymask)]];
          dest  += linesize;
          ufrac += ustep;

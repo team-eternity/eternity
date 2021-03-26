@@ -97,7 +97,7 @@ BEGIN
     PUSHBUTTON      "Close",IDCANCEL,150,199,50,14
     EDITTEXT        IDC_EDIT1,7,54,278,137,ES_MULTILINE | ES_AUTOHSCROLL | 
                     ES_READONLY | WS_VSCROLL
-    LTEXT           "You can help us solve this problem by submitting the information below to the Doomworld Forums. Click ""Report"" to launch your default web browser, and then press Control+V to paste this information into a new message.",
+    LTEXT           "You can help us solve this problem by submitting the information below to the Doomworld Forums. Click ""Report"" to launch your default web browser, and then upload CRASHLOG.txt and eternity.dmp in a zip.",
                     IDC_STATIC,36,20,249,26
     ICON            "",IDC_STATIC_ICON,7,15,20,20
     LTEXT           "Eternity has experienced a problem and needs to shut down.",

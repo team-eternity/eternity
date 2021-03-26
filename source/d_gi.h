@@ -387,6 +387,7 @@ struct gamemodeinfo_t
    menu_t *saveMenu;              // pointer to save menu structure
    menu_t *loadMenu;              // pointer to load menu structure
    menu_t *newGameMenu;           // pointer to new game menu structure
+   const char *menuStartMap;      // new game map lump for skill selection
    int *menuSounds;               // menu sound indices
    int transFrame;                // frame DEH # used on video menu
    int skvAtkSound;               // skin viewer attack sound

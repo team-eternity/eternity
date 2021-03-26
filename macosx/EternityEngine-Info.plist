@@ -5,7 +5,7 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>CFBundleShortVersionString</key>
-	<string>4.2.0</string>
+	<string>4.3.0</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
@@ -23,7 +23,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>4.2.0</string>
+	<string>4.3.0</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.action-games</string>
 	<key>LSMinimumSystemVersion</key>

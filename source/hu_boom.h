@@ -29,6 +29,8 @@
 // Required for HUDOverlay
 #include "hu_over.h"
 
+struct VBuffer;
+
 class BoomHUD : public HUDOverlay
 {
 protected:
@@ -39,6 +41,8 @@ protected:
    virtual void DrawAmmo   (int x, int y);
    virtual void DrawKeys   (int x, int y);
    virtual void DrawFrags  (int x, int y);
+
+   VBuffer *m_screen;
 public:
    virtual void Setup();
 };

@@ -95,6 +95,7 @@
 #include "version.h"
 #include "w_levels.h" // haleyjd
 #include "w_wad.h"
+#include "xl_emapinfo.h"
 
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
@@ -271,7 +272,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti || inventorycanclose)
+      else if(usearti)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -831,9 +832,9 @@ bool G_Responder(const event_t* ev)
    if(G_KeyResponder(ev, kac_cmd))
       return true;
 
-   // This code is like Heretic's (to an extent). If the key is up and is the
+   // This code is like Heretic's (to an extent). If the key is down and is the
    // inventory key (and the player isn't dead) then use the current artifact.
-   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
+   if(ev->type == ev_keydown && G_KeyResponder(ev, kac_game) == ka_inventory_use
       && players[consoleplayer].playerstate != PST_DEAD)
    {
       usearti = true;
@@ -1780,10 +1781,18 @@ enum levelkind_t
 //
 static const char *G_getNextLevelName(levelkind_t kind, int map)
 {
-   const char *nextName = kind == lk_secret ? LevelInfo.nextSecret :
-   LevelInfo.nextLevel;
-   if(!wminfo.nextexplicit && nextName && *nextName)
+   const char *nextName = nullptr;
+
+   if(wminfo.nextexplicit)
+      // derekmd: for Teleport_NewMap() calls, detect EMAPINFO 'levelnum'
+      nextName = XL_MapNameForLevelNum(map);
+   else
+      nextName = kind == lk_secret ?
+         LevelInfo.nextSecret : LevelInfo.nextLevel;
+
+   if(nextName && *nextName)
       return nextName;
+
    return G_GetNameForMap(gameepisode, map);
 }
 
@@ -2037,9 +2046,8 @@ void G_LoadGame(const char *name, int slot, bool command)
 // killough 5/15/98:
 // Consistency Error when attempting to load savegame.
 
-static void G_LoadGameErr(char *msg)
+void G_LoadGameErr(const char *msg)
 {
-   Z_Free(savebuffer);           // Free the savegame buffer
    MN_ForcedLoadGame(msg);       // Print message asking for 'Y' to force
    if(command_loadgame)          // If this was a command-line -loadgame
    {
@@ -2058,7 +2066,12 @@ void G_SaveGame(int slot, const char *description)
 {
    savegameslot = slot;
    strcpy(savedescription, description);
-   sendsave = true;
+   if(demo_version >= 403 && !netgame)
+      gameaction = ga_savegame;
+   else if(slot <= 8)
+      sendsave = true;
+   else if(netgame)
+      doom_printf("Can't save game with slot >= 8 during netgame");
    hub_changelevel = false;
 }
 

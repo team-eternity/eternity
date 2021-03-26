@@ -150,13 +150,9 @@ void qstring::freeBuffer()
 }
 
 //
-// qstring Move Constructor
+// Move from the other qstring instance
 //
-// haleyjd 05/22/2013: Enable C++11 move semantics for qstring instances.
-// Required for efficiency when using qstring with Collection<T>.
-//
-qstring::qstring(qstring &&other) noexcept
-   : ZoneObject(), index(0), size(16)
+void qstring::moveFrom(qstring &&other) noexcept
 {
    // When other is not localized, take direct ownership of its buffer
    if(!other.isLocal())
@@ -166,7 +162,6 @@ qstring::qstring(qstring &&other) noexcept
       size   = other.size;
       memset(local, 0, sizeof(local));
 
-      // leave the other object in a usable state, it's not necessarily dead.
       other.buffer = nullptr;
       other.freeBuffer(); // returns to being localized
    }
@@ -177,6 +172,16 @@ qstring::qstring(qstring &&other) noexcept
       buffer = local;
       index  = other.index;
    }
+}
+
+//
+// haleyjd 05/22/2013: Enable C++11 move semantics for qstring instances.
+// Required for efficiency when using qstring with Collection<T>.
+//
+qstring::qstring(qstring &&other) noexcept
+   : index(0), size(16)
+{
+   moveFrom(std::move(other));
 }
 
 //=============================================================================
@@ -494,6 +499,16 @@ qstring &qstring::operator = (const char *other)
 }
 
 //
+// Move-assign qstring
+//
+qstring &qstring::operator = (qstring &&other)
+{
+   freeBuffer();
+   moveFrom(std::move(other));
+   return *this;
+}
+
+//
 // qstring::copyInto
 //
 // Copies the qstring into a C string buffer.
@@ -639,6 +654,20 @@ qstring &qstring::erase(size_t pos, size_t n)
    return *this;
 }
 
+//=============================================================================
+//
+// Addition
+//
+
+qstring qstring::operator + (const qstring &other) const
+{
+   return qstring(*this).concat(other);
+}
+
+qstring qstring::operator + (const char *other) const
+{
+   return qstring(*this).concat(other);
+}
 
 //=============================================================================
 //
@@ -974,8 +1003,16 @@ size_t qstring::find(const char *s, size_t pos) const
 
    char *base   = buffer + pos;
    char *substr = strstr(base, s);
-   
+
    return substr ? substr - buffer : npos;
+}
+
+//
+// Test if the given character occurs at the end of the string
+//
+bool qstring::endsWith(char c) const
+{
+   return index > 0 ? buffer[index - 1] == c : false;
 }
 
 //=============================================================================
@@ -1182,6 +1219,14 @@ qstring &qstring::pathConcatenate(const char *addend)
 }
 
 //
+// Convenience overload for qstring
+//
+qstring &qstring::pathConcatenate(const qstring &other)
+{
+   return pathConcatenate(other.constPtr());
+}
+
+//
 // qstring::addDefaultExtension
 //
 // Similar to M_AddDefaultExtension, but for qstrings.
@@ -1248,6 +1293,26 @@ void qstring::extractFileBase(qstring &dest) const
    }
 
    dest = src;
+}
+
+qstring qstring::operator / (const qstring &other) const
+{
+   return qstring(*this).pathConcatenate(other);
+}
+
+qstring qstring::operator / (const char *other) const
+{
+   return qstring(*this).pathConcatenate(other);
+}
+
+qstring &qstring::operator /= (const qstring &other)
+{
+   return this->pathConcatenate(other);
+}
+
+qstring &qstring::operator /= (const char *other)
+{
+   return this->pathConcatenate(other);
 }
 
 //=============================================================================

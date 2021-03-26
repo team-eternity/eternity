@@ -19,9 +19,9 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.11)
 project("Eternity Engine"
-        VERSION 4.2.0
+        VERSION 4.3.0
         LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)

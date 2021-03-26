@@ -181,9 +181,15 @@ struct menuwidget_t
   menuwidget_t *prev; // haleyjd 08/31/12: previous on stack, if any
 };
 
+enum class consumeText_e : bool
+{
+   YES = true,
+   NO  = false
+};
+
 // haleyjd 08/31/12: A proper widget stack
 void   MN_PushWidget(menuwidget_t *widget);
-void   MN_PopWidget();
+void   MN_PopWidget(const consumeText_e consume = consumeText_e::YES);
 size_t MN_NumActiveWidgets();
 
 // responder for events
@@ -213,7 +219,7 @@ void MN_Init();
 
 void MN_StartControlPanel();
 
-void MN_ForcedLoadGame(char *msg); // killough 5/15/98: forced loadgames
+void MN_ForcedLoadGame(const char *msg); // killough 5/15/98: forced loadgames
 
 void MN_DrawCredits();    // killough 11/98
 
@@ -263,7 +269,6 @@ extern int hide_menu;
 extern int menutime;
 
 // haleyjd
-extern int quickSaveSlot;
 extern bool menu_toggleisback;
 extern char *mn_fontname;
 extern char *mn_bigfontname;

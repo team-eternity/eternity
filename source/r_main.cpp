@@ -50,6 +50,7 @@
 #include "p_scroll.h"
 #include "p_xenemy.h"
 #include "r_bsp.h"
+#include "r_context.h"
 #include "r_draw.h"
 #include "r_dynseg.h"
 #include "r_interpolate.h"
@@ -83,15 +84,12 @@ fixed_t focallen_y;
 int viewdir;    // 0 = forward, 1 = left, 2 = right
 int viewangleoffset;
 int validcount = 1;         // increment every time a check is made
-lighttable_t *fixedcolormap;
 int      centerx, centery;
 fixed_t  centerxfrac, centeryfrac;
-fixed_t  viewx, viewy, viewz;
-angle_t  viewangle;
-fixed_t  viewcos, viewsin;
 fixed_t  viewpitch;
 const player_t *viewplayer;
 bool     showpsprites = 1; //sf
+bool     centerfire = false;
 camera_t *viewcamera;
 
 // SoM: removed the old zoom code infavor of actual field of view!
@@ -136,16 +134,11 @@ VALLOCATION(xtoviewangle)
 int numcolormaps;
 lighttable_t *(*c_scalelight)[LIGHTLEVELS][MAXLIGHTSCALE];
 lighttable_t *(*c_zlight)[LIGHTLEVELS][MAXLIGHTZ];
-lighttable_t *(*scalelight)[MAXLIGHTSCALE];
-lighttable_t *(*zlight)[MAXLIGHTZ];
-lighttable_t *fullcolormap;
 lighttable_t **colormaps;
 
 // killough 3/20/98, 4/4/98: end dynamic colormaps
 
 int extralight;                           // bumped light from gun blasts
-
-void (*colfunc)(void);                    // current column draw function
 
 // haleyjd 09/04/06: column drawing engines
 columndrawer_t *r_column_engine;
@@ -385,7 +378,7 @@ angle_t R_PointToAngle2(fixed_t pviewx, fixed_t pviewy, fixed_t x, fixed_t y)
    return 0;
 }
 
-angle_t R_PointToAngle(fixed_t x, fixed_t y)
+angle_t R_PointToAngle(const fixed_t viewx, const fixed_t viewy, const fixed_t x, const fixed_t y)
 {
    return R_PointToAngle2(viewx, viewy, x, y);
 }
@@ -456,7 +449,7 @@ static void R_InitTextureMapping()
 
    // SoM: Thanks to 'Randi' of Zdoom fame!
    slopet = (float)tan((90.0f + (float)fov / 2.0f) * PI / 180.0f);
-   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width;
+   slopevis = 8.0f * slopet * 16.0f * 320.0f / (float)view.width; // THREAD_FIXME: context.fendcolumn?
 
    // SoM: rewrote old LUT generation code to work with variable FOV
    i = 0;
@@ -642,6 +635,7 @@ void R_SetupViewScaling()
    view.ycenter = (view.height = (float)viewwindow.height) * 0.5f;
 
    R_InitBuffer(scaledwindow.width, scaledwindow.height);       // killough 11/98
+   R_UpdateContextBounds();
 }
 
 //
@@ -749,8 +743,6 @@ int autodetect_hom = 0;       // killough 2/7/98: HOM autodetection flag
 unsigned int frameid = 0;
 
 //
-// R_IncrementFrameid
-//
 // SoM: frameid is an unsigned integer that represents the number of the frame 
 // currently being rendered for use in caching data used by the renderer which 
 // is unique to each frame. frameid is incremented every frame. When the number
@@ -758,7 +750,7 @@ unsigned int frameid = 0;
 // be searched and all frameids reset to prevent mishaps in the rendering 
 // process.
 //
-void R_IncrementFrameid()
+static void R_incrementFrameid()
 {
    frameid++;
 
@@ -774,8 +766,18 @@ void R_IncrementFrameid()
 
       // Do as the description says...
       for(int i = 0; i < numsectors; ++i)
-         pSectorBoxes[i].frameid.floor = pSectorBoxes[i].frameid.ceiling = 0;
+         pSectorBoxes[i].visitid.floor = pSectorBoxes[i].visitid.ceiling = 0;
    }
+}
+
+//
+// Stuffs the renderdepth, the ID of a context, and frame ID into a uint64_t
+//
+uint64_t R_GetVisitID(const rendercontext_t &context)
+{
+   const uint64_t upper32 =
+      (uint64_t(context.portalcontext.renderdepth) << 16) | uint64_t(uint16_t(context.bufferindex));
+   return (upper32 << 32) | uint64_t(frameid);
 }
 
 //
@@ -785,17 +787,19 @@ void R_IncrementFrameid()
 //
 static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
 {
+   viewpoint_t &viewpoint = r_globalcontext.view;
+
    if(lerp == FRACUNIT)
    {
-      viewx     = player->mo->x;
-      viewy     = player->mo->y;
-      viewz     = player->viewz;
-      viewangle = player->mo->angle; //+ viewangleoffset;
-      viewpitch = player->pitch;
+      viewpoint.x     = player->mo->x;
+      viewpoint.y     = player->mo->y;
+      viewpoint.z     = player->viewz;
+      viewpoint.angle = player->mo->angle; //+ viewangleoffset;
+      viewpitch       = player->pitch;
    }
    else
    {
-      viewz = lerpCoord(lerp, player->prevviewz, player->viewz);
+      viewpoint.z = lerpCoord(lerp, player->prevviewz, player->viewz);
       Mobj *thing = player->mo;
 
       if(const linkdata_t * psec = thing->prevpos.ldata)
@@ -805,12 +809,12 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             thing->x - psec->delta.x,
             thing->y - psec->delta.y
          };
-         viewx = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
-         viewy = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
+         viewpoint.x = lerpCoord(lerp, thing->prevpos.x, orgtarg.x);
+         viewpoint.y = lerpCoord(lerp, thing->prevpos.y, orgtarg.y);
 
          bool execute = false;
          const line_t *pline = thing->prevpos.portalline;
-         if(pline && P_PointOnLineSidePrecise(viewx, viewy, pline))
+         if(pline && P_PointOnLineSidePrecise(viewpoint.x, viewpoint.y, pline))
             execute = true;
          if(!execute && !pline)
          {
@@ -818,7 +822,7 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             if(psurface)
             {
                fixed_t planez = P_PortalZ(*psurface);
-               execute = FixedMul(viewz - planez, player->prevviewz - planez) < 0;
+               execute = FixedMul(viewpoint.z - planez, player->prevviewz - planez) < 0;
             }
          }
 
@@ -830,16 +834,16 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
             thing->prevpos.portalsurface = nullptr;
             thing->prevpos.x += psec->delta.x;
             thing->prevpos.y += psec->delta.y;
-            viewx += psec->delta.x;
-            viewy += psec->delta.y;
+            viewpoint.x += psec->delta.x;
+            viewpoint.y += psec->delta.y;
          }
       }
       else
       {
-         viewx = lerpCoord(lerp, thing->prevpos.x, thing->x);
-         viewy = lerpCoord(lerp, thing->prevpos.y, thing->y);
+         viewpoint.x = lerpCoord(lerp, thing->prevpos.x, thing->x);
+         viewpoint.y = lerpCoord(lerp, thing->prevpos.y, thing->y);
       }
-      viewangle = lerpAngle(lerp, thing->prevpos.angle, thing->angle);
+      viewpoint.angle = lerpAngle(lerp, thing->prevpos.angle, thing->angle);
       viewpitch = lerpAngle(lerp, player->prevpitch,         player->pitch);
    }
 }
@@ -851,21 +855,23 @@ static void R_interpolateViewPoint(player_t *player, fixed_t lerp)
 //
 static void R_interpolateViewPoint(camera_t *camera, fixed_t lerp)
 {
+   viewpoint_t &viewpoint = r_globalcontext.view;
+
    if(lerp == FRACUNIT)
    {
-      viewx     = camera->x;
-      viewy     = camera->y;
-      viewz     = camera->z;
-      viewangle = camera->angle;
-      viewpitch = camera->pitch;
+      viewpoint.x     = camera->x;
+      viewpoint.y     = camera->y;
+      viewpoint.z     = camera->z;
+      viewpoint.angle = camera->angle;
+      viewpitch       = camera->pitch;
    }
    else
    {
-      viewx     = lerpCoord(lerp, camera->prevpos.x,     camera->x);
-      viewy     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
-      viewz     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
-      viewangle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
-      viewpitch = lerpAngle(lerp, camera->prevpitch, camera->pitch);
+      viewpoint.x     = lerpCoord(lerp, camera->prevpos.x,     camera->x);
+      viewpoint.y     = lerpCoord(lerp, camera->prevpos.y,     camera->y);
+      viewpoint.z     = lerpCoord(lerp, camera->prevpos.z,     camera->z);
+      viewpoint.angle = lerpAngle(lerp, camera->prevpos.angle, camera->angle);
+      viewpitch       = lerpAngle(lerp, camera->prevpitch, camera->pitch);
    }
 }
 
@@ -998,6 +1004,9 @@ fixed_t R_GetLerp(bool ignorepause)
 //
 static void R_SetupFrame(player_t *player, camera_t *camera)
 {
+   viewpoint_t   &viewpoint    = r_globalcontext.view;
+   cbviewpoint_t &cb_viewpoint = r_globalcontext.cb_view;
+
    fixed_t  viewheightfrac;
    fixed_t  lerp = R_GetLerp(false);
    
@@ -1005,7 +1014,7 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    // haleyjd 09/10/06: set or change span drawing engine
    R_SetColumnEngine();
    R_SetSpanEngine();
-   R_IncrementFrameid(); // Cardboard
+   R_incrementFrameid(); // Cardboard
    
    viewplayer = player;
    viewcamera = camera;
@@ -1020,8 +1029,8 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
       {
          int strength = player->quake;
 
-         viewx += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
-         viewy += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+         viewpoint.x += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
+         viewpoint.y += (M_Random() % (strength * 4) - (strength * 2)) << FRACBITS;
       }
    }
    else
@@ -1036,19 +1045,19 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
       viewpitch = ANGLE_1 * MAXPITCHDOWN;
 
    extralight = player->extralight;
-   viewsin = finesine[viewangle>>ANGLETOFINESHIFT];
-   viewcos = finecosine[viewangle>>ANGLETOFINESHIFT];
+   viewpoint.sin = finesine[viewpoint.angle>>ANGLETOFINESHIFT];
+   viewpoint.cos = finecosine[viewpoint.angle>>ANGLETOFINESHIFT];
 
    // SoM: Cardboard
-   view.x      = M_FixedToFloat(viewx);
-   view.y      = M_FixedToFloat(viewy);
-   view.z      = M_FixedToFloat(viewz);
-   view.angle  = (ANG90 - viewangle) * PI / ANG180;
+   cb_viewpoint.x      = M_FixedToFloat(viewpoint.x);
+   cb_viewpoint.y      = M_FixedToFloat(viewpoint.y);
+   cb_viewpoint.z      = M_FixedToFloat(viewpoint.z);
+   cb_viewpoint.angle  = (ANG90 - viewpoint.angle) * PI / ANG180;
+   cb_viewpoint.sin    = sinf(cb_viewpoint.angle);
+   cb_viewpoint.cos    = cosf(cb_viewpoint.angle);
    view.pitch  = (ANG90 - viewpitch) * PI / ANG180;
-   view.sin    = sinf(view.angle);
-   view.cos    = cosf(view.angle);
    view.lerp   = lerp;
-   view.sector = R_PointInSubsector(viewx, viewy)->sector;
+   view.sector = R_PointInSubsector(viewpoint.x, viewpoint.y)->sector;
 
    // set interpolated sector heights
    if(view.lerp != FRACUNIT)
@@ -1083,9 +1092,10 @@ static void R_SetupFrame(player_t *player, camera_t *camera)
    view.ycenter = (float)centery;
 
    // use drawcolumn
-   colfunc = r_column_engine->DrawColumn; // haleyjd 09/04/06
-   
-   ++validcount;
+   R_ForEachContext([](rendercontext_t &context) {
+      context.view    = r_globalcontext.view;
+      context.cb_view = r_globalcontext.cb_view;
+   });
 }
 
 //
@@ -1118,14 +1128,12 @@ static int R_getSectorColormap(const sector_t &sector, ViewArea viewarea)
 }
 
 //
-// R_SectorColormap
-//
 // killough 3/20/98, 4/4/98: select colormap based on player status
 // haleyjd 03/04/07: rewritten to get colormaps from the sector itself
 // instead of from its heightsec if it has one (heightsec colormaps are
 // transferred to their affected sectors at level setup now).
 //
-void R_SectorColormap(const sector_t *s)
+void R_SectorColormap(cmapcontext_t &context, const fixed_t viewz, const sector_t *s)
 {
    int colormapIndex = 0;
    bool boomStyleOverride = false;
@@ -1196,18 +1204,18 @@ void R_SectorColormap(const sector_t *s)
       colormapIndex &= ~COLORMAP_BOOMKIND;
    }
 
-   fullcolormap = colormaps[colormapIndex];
-   zlight = c_zlight[colormapIndex];
-   scalelight = c_scalelight[colormapIndex];
+   context.fullcolormap = colormaps[colormapIndex];
+   context.zlight       = c_zlight[colormapIndex];
+   context.scalelight   = c_scalelight[colormapIndex];
 
    if(viewplayer->fixedcolormap)
    {
       // killough 3/20/98: localize scalelightfixed (readability/optimization)
-      fixedcolormap = fullcolormap   // killough 3/20/98: use fullcolormap
+      context.fixedcolormap = context.fullcolormap   // killough 3/20/98: use fullcolormap
         + viewplayer->fixedcolormap*256*sizeof(lighttable_t);
    }
    else
-      fixedcolormap = nullptr;   
+      context.fixedcolormap = nullptr;
 }
 
 angle_t R_WadToAngle(int wadangle)
@@ -1221,13 +1229,56 @@ angle_t R_WadToAngle(int wadangle)
              : wadangle * (ANG45 / 45);
 }
 
+//
+// Render a single context
+//
+void R_RenderViewContext(rendercontext_t &context)
+{
+   memset(context.spritecontext.sectorvisited, 0, sizeof(bool) * numsectors);
+   context.portalcontext.renderdepth = 0;
+
+   // Clear buffers.
+   R_ClearClipSegs(context.bspcontext);
+   R_ClearDrawSegs(context.bspcontext);
+   R_ClearPlanes(context.planecontext, context.bounds);
+   R_ClearPortals(context.planecontext.freehead);
+   R_ClearSprites(context.spritecontext);
+
+   // check for new console commands.
+   //NetUpdate();
+
+   // The head node is the last node output.
+   R_RenderBSPNode(context, numnodes - 1);
+
+   // Check for new console commands.
+   //NetUpdate();
+
+   R_SetMaskedSilhouette(context.bounds, nullptr, nullptr);
+
+   // Push the first element on the Post-BSP stack
+   R_PushPost(context.bspcontext, context.spritecontext, context.bounds, true, nullptr);
+
+   // SoM 12/9/03: render the portals.
+   R_RenderPortals(context);
+
+   R_DrawPlanes(
+      context.cmapcontext, context.planecontext.mainhash,
+      context.planecontext.spanstart, context.view.angle, nullptr
+   );
+
+   // Check for new console commands.
+   //NetUpdate();
+
+   // Draw Post-BSP elements such as sprites, masked textures, and portal
+   // overlays
+   R_DrawPostBSP(context);
+}
+
 static int render_ticker = 0;
 
 // haleyjd: temporary debug
 extern void R_UntaintPortals();
 
-//
-// R_RenderPlayerView
 //
 // Primary renderer entry point.
 //
@@ -1237,22 +1288,12 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    unsigned int savedflags = 0;
 
    R_SetupFrame(player, camerapoint);
-   
+
    // haleyjd: untaint portals
    R_UntaintPortals();
 
-   // Clear buffers.
-   R_ClearClipSegs();
-   R_ClearDrawSegs();
-   R_ClearPlanes();
-   R_ClearPortals();
-   R_ClearSprites();
-
    if(autodetect_hom)
       R_HOMdrawer();
-   
-   // check for new console commands.
-   NetUpdate();
 
    // haleyjd 01/21/07: earthquakes -- make player invisible to himself
    if(player->quake && !camerapoint)
@@ -1265,32 +1306,20 @@ void R_RenderPlayerView(player_t* player, camera_t *camerapoint)
    else
       player->mo->intflags &= ~MIF_HIDDENBYQUAKE;  // zero it otherwise
 
-   // The head node is the last node output.
-   R_RenderBSPNode(numnodes - 1);
+   // We don't need to multithread if we only have one context
+   if(r_numcontexts == 1)
+      R_RenderViewContext(r_globalcontext);
+   else
+      R_RunContexts();
 
    if(quake)
       player->mo->flags2 = savedflags;
-   
-   // Check for new console commands.
-   NetUpdate();
 
-   R_SetMaskedSilhouette(nullptr, nullptr);
-   
-   // Push the first element on the Post-BSP stack
-   R_PushPost(true, nullptr);
-   
-   // SoM 12/9/03: render the portals.
-   R_RenderPortals();
+   // draw the psprites on top of everything
+   //  but does not draw on side views
+   if(!viewangleoffset)
+      R_DrawPlayerSprites();
 
-   R_DrawPlanes(nullptr);
-   
-   // Check for new console commands.
-   NetUpdate();
-
-   // Draw Post-BSP elements such as sprites, masked textures, and portal 
-   // overlays
-   R_DrawPostBSP();
-   
    // haleyjd 09/04/06: handle through column engine
    if(r_column_engine->ResetBuffer)
       r_column_engine->ResetBuffer();
@@ -1479,13 +1508,14 @@ static const char *handedstr[]  = { "right", "left" };
 static const char *ptranstr[]   = { "none", "smooth", "general" };
 static const char *coleng[]     = { "normal" };
 static const char *spaneng[]    = { "highprecision" };
-static const char *tlstylestr[] = { "none", "boom", "new" };
+static const char *tlstylestr[] = { "opaque", "boom", "additive" };
 
 VARIABLE_BOOLEAN(lefthanded, nullptr,               handedstr);
 VARIABLE_BOOLEAN(r_blockmap, nullptr,               onoff);
 VARIABLE_BOOLEAN(flashing_hom, nullptr,             onoff);
 VARIABLE_BOOLEAN(r_precache, nullptr,               onoff);
 VARIABLE_TOGGLE(showpsprites,  nullptr,             yesno);
+VARIABLE_TOGGLE(centerfire, nullptr,                onoff);
 VARIABLE_BOOLEAN(stretchsky, nullptr,               onoff);
 VARIABLE_BOOLEAN(r_swirl, nullptr,                  onoff);
 VARIABLE_BOOLEAN(general_translucency, nullptr,     onoff);
@@ -1551,6 +1581,8 @@ CONSOLE_VARIABLE(r_blockmap, r_blockmap, 0) {}
 CONSOLE_VARIABLE(r_homflash, flashing_hom, 0) {}
 CONSOLE_VARIABLE(r_precache, r_precache, 0) {}
 CONSOLE_VARIABLE(r_showgun, showpsprites, 0) {}
+CONSOLE_VARIABLE(r_drawplayersprites, showpsprites, 0) {}
+CONSOLE_VARIABLE(r_centerfire, centerfire, 0) {}
 
 CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
 {
