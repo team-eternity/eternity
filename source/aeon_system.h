@@ -28,6 +28,8 @@ class  asIScriptFunction;
 class  asIScriptModule;
 struct asSMessageInfo;
 
+class  qstring;
+
 namespace Aeon
 {
    //
@@ -35,12 +37,15 @@ namespace Aeon
    //
    class ScriptManager
    {
+   // aeon_system.cpp
    public:
       ScriptManager() = delete;
 
       static void Init();
       static void Build();
       static void Shutdown();
+
+      static void LoadRoots();
 
       static asIScriptEngine  *Engine()  { return engine; }
       static asIScriptContext *Context() { return ctx;    }
@@ -59,11 +64,18 @@ namespace Aeon
       static void RegisterGlobalProperties();
       static void MessageCallback(const asSMessageInfo *msg, void *param);
 
+      static void LoadAeonFileRecursive(const char *name, int lumpnum);
+
       static asIScriptEngine  *engine;
       static asIScriptContext *ctx;
       static asIScriptModule  *module;
 
       static int state;
+
+   // aeon_process.cpp
+   private:
+      static void   ProcessAeonFile(qstring &fileStr);
+      static size_t SkipStatement(qstring &fileStr, size_t pos);
    };
 }
 

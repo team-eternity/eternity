@@ -34,9 +34,11 @@
 #include "aeon_string.h"
 #include "aeon_system.h"
 #include "c_io.h"
+#include "d_dwfile.h"
 #include "doomstat.h"
 #include "i_system.h"
 #include "m_utils.h"
+#include "m_qstr.h"
 #include "p_map.h"
 #include "sounds.h"
 #include "w_wad.h"
@@ -180,6 +182,51 @@ namespace Aeon
    {
       ctx->Release();
       engine->Release();
+   }
+
+   void ScriptManager::LoadAeonFileRecursive(const char *name, int lumpnum)
+   {
+      if(lumpnum >= 0) // terminal case - lumpnum is -1
+      {
+         lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
+
+         // recurse on next item
+         LoadAeonFileRecursive(name, lumpinfo[lumpnum]->next);
+
+         // handle this lump
+         if(!strncasecmp(lumpinfo[lumpnum]->name, name, 8) &&         // name match
+            lumpinfo[lumpnum]->li_namespace == lumpinfo_t::ns_global) // is global
+         {
+            if(!wGlobalDir.getLumpInfo()[lumpnum]->size)
+               return;  // just quit as if nothing happened
+
+            DWFILE dwfile; // haleyjd
+
+            dwfile.openLump(lumpnum);
+
+            if(!dwfile.isOpen())
+            {
+               // TODO: Some kind of error?
+               return;
+            }
+
+            const size_t fileLen = dwfile.fileLength() + 1;
+            qstring fileStr(fileLen);
+            dwfile.read(fileStr.getBuffer(), 1, fileLen - 1);
+            fileStr[fileLen - 1] = '\0';
+
+            ProcessAeonFile(fileStr);
+         }
+      }
+   }
+
+   void ScriptManager::LoadRoots()
+   {
+      if(W_CheckNumForName("AEONROOT") != -1)
+      {
+         lumpinfo_t *lumpinfo = wGlobalDir.getLumpNameChain("AEONROOT");
+         LoadAeonFileRecursive("AEONROOT", lumpinfo->index);
+      }
    }
 
    void ScriptManager::PushState()

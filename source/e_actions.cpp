@@ -339,17 +339,10 @@ static inline bool E_isReservedCodePointer(const char *name)
 }
 
 //
-// Creates a single Aeon action
+// Verify the appropriateness of an action name
 //
-static void E_createAction(cfg_t *actionsec)
+static void E_verifyActionName(const char *name)
 {
-   // This is static as E_createAction is called many times
-   static asIScriptModule *const module = Aeon::ScriptManager::Module();
-
-   // The function and its constituent components
-   const char *name = cfg_title(actionsec);
-   const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
-
    if(E_isReservedCodePointer(name))
    {
       E_EDFLoggedErr(2, "E_processAction: Action '%s' is reserved and cannot be "
@@ -374,6 +367,34 @@ static void E_createAction(cfg_t *actionsec)
                            " action name after the '::'.\n", name);
       }
    }
+}
+
+//
+// Create a single Aeon action that comes from a plain AngelScript file
+//
+void E_DefineAction(const char *name)
+{
+   E_verifyActionName(name);
+
+   actiondef_t *info = estructalloc(actiondef_t, 1);
+   info->name = estrdup(name);
+
+   e_ActionDefHash.addObject(info);
+}
+
+//
+// Creates a single Aeon action
+//
+static void E_createAction(cfg_t *actionsec)
+{
+   // This is static as E_createAction is called many times
+   static asIScriptModule *const module = Aeon::ScriptManager::Module();
+
+   // The function and its constituent components
+   const char *name = cfg_title(actionsec);
+   const char *code = cfg_getstr(actionsec, ITEM_ACT_CODE);
+
+   E_verifyActionName(name);
 
    qstring altname = E_alternateFuncName(name);
    if(e_ActionDefHash.objectForKey(altname.constPtr()))

@@ -1666,6 +1666,8 @@ static void E_DoEDFProcessing(cfg_t *cfg, bool firsttime)
 
    // -- AEON START --
 
+   Aeon::ScriptManager::LoadRoots();
+
    // create actions (codepointers)
    E_CreateActions(cfg);
 

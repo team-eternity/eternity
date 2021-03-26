@@ -192,6 +192,7 @@ function(eternity_target_sources _TARGET)
       "${CMAKE_CURRENT_SOURCE_DIR}/aeon_math.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/aeon_mobj.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/aeon_player.cpp"
+      "${CMAKE_CURRENT_SOURCE_DIR}/aeon_process.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/aeon_string.cpp"
       "${CMAKE_CURRENT_SOURCE_DIR}/aeon_system.cpp"
       SOURCE_GROUP "Source Files\\\\AM_"
