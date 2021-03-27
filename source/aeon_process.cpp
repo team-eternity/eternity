@@ -93,6 +93,7 @@ namespace Aeon
    {
       // TODO: C preprocessing here
       Collection<qstring> actions;
+      Collection<qstring> currNamespaces;
 
       size_t pos = 0;
       while(pos < fileStr.getSize())
@@ -101,6 +102,50 @@ namespace Aeon
          asETokenClass t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
          if(t == asTC_COMMENT || t == asTC_WHITESPACE)
          {
+            pos += len;
+            continue;
+         }
+
+         // Check if namespace
+         qstring tokStr(len);
+         strncpy(tokStr.getBuffer(), fileStr.bufferAt(pos), len);
+         if(tokStr == "namespace")
+         {
+            // Get the identifier after "namespace"
+            do
+            {
+               pos += len;
+               t = engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+            }
+            while(t == asTC_COMMENT || t == asTC_WHITESPACE);
+
+            qstring newNamespace(len);
+            strncpy(newNamespace.getBuffer(), fileStr.bufferAt(pos), len);
+            currNamespaces.add(std::move(newNamespace));
+
+            // Search until first { is encountered
+            while(pos < fileStr.length())
+            {
+               engine->ParseToken(fileStr.bufferAt(pos), fileStr.getSize() - pos, &len);
+
+               // If start of namespace section encountered stop
+               if(fileStr[pos] == '{')
+               {
+                  pos += len;
+                  break;
+               }
+
+               // Check next symbol
+               pos += len;
+            }
+
+            continue;
+         }
+
+         // Check if end of namespace
+         if(!currNamespaces.isEmpty() && fileStr[pos] == '}')
+         {
+            currNamespaces.pop();
             pos += len;
             continue;
          }
@@ -128,13 +173,20 @@ namespace Aeon
 
                   if(t == asTC_IDENTIFIER)
                   {
-                     // Get the include file
+                     // Get the action function
                      qstring actionFunction;
+                     qstring fullyQualifiedAction;
+
                      actionFunction.copy(fileStr.bufferAt(pos), len);
+
+                     for(const qstring &currNS : currNamespaces)
+                        fullyQualifiedAction += currNS + "::";
+                     fullyQualifiedAction += actionFunction;
+
                      pos += len;
 
                      // Store it for later processing
-                     actions.add(actionFunction);
+                     actions.add(std::move(fullyQualifiedAction));
 
                      // Overwrite the action directive with space characters and 'void' to avoid compiler error
                      OverwriteCode(fileStr, directiveStart, strlen("$action"));
@@ -143,9 +195,11 @@ namespace Aeon
                }
             }
          }
-         // Don't search for metadata/actions within statement blocks or between tokens in statements
          else
+         {
+            // Don't search for metadata/actions within statement blocks or between tokens in statements
             pos = SkipStatement(fileStr, pos);
+         }
       }
 
       // FIXME: Proper script section name. Maybe getLumpFileName and use that?
