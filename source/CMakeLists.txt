@@ -769,7 +769,7 @@ eternity_copy_libs(eternity)
 eternity_copy_base_and_user(eternity)
 
 target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_NET_INCLUDE_DIR})
-target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} ${ANGELSCRIPT_LIBRARY_NAME} acsvm png_static snes_spc ADLMIDI_static)
+target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} ${ANGELSCRIPT_LIBRARY_NAME} acsvm png_static snes_spc ADLMIDI_static mcpp)
 
 if(OPENGL_LIBRARY)
    target_link_libraries(eternity ${OPENGL_LIBRARY})
