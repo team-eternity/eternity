@@ -49,7 +49,6 @@
 namespace Aeon
 {
    static lumpinfo_t *ppLumpinfo; // Pre-processing lump info
-   static constexpr size_t MCPP_NUM_ARGS = 6;
 
    void ScriptManager::InitMCPP()
    {
@@ -93,32 +92,26 @@ namespace Aeon
 
    static const char *GetMCPPOutput(lumpinfo_t *lumpinfo)
    {
+      PODCollection<char *> argv;
+
       ppLumpinfo = lumpinfo;
-
-      char **argv;
-      uint32_t argc = MCPP_NUM_ARGS;
-
-      argv = new char*[MCPP_NUM_ARGS];
-
-      argv[0] = estrdup("mcpp.exe");
-      argv[1] = estrdup("-P");
-      argv[2] = estrdup(lumpinfo->name); // FIXME: lfn if suitable
-      argv[3] = estrdup("-Y");
-      argv[4] = estrdup("-e");
-      argv[5] = estrdup("utf8");
+      argv.add(estrdup("mcpp.exe"));
+      argv.add(estrdup("-P"));
+      argv.add(estrdup(lumpinfo->name)); // FIXME: lfn if suitable
+      argv.add(estrdup("-Y"));
+      argv.add(estrdup("-e"));
+      argv.add(estrdup("utf8"));
 
       mcpp_use_mem_buffers(1);
-      mcpp_lib_main((int)argc, argv);
+      mcpp_lib_main(int(argv.getLength()), &argv[0]);
 
       const char *output = mcpp_get_mem_buffer(OUTDEST::OUT);
       const char *error  = mcpp_get_mem_buffer(OUTDEST::ERR);
       const char *debug  = mcpp_get_mem_buffer(OUTDEST::DBG);
 
-      for(uint32_t i = 0; i < argc; ++i)
-         efree(argv[i]);
-
-      delete[] argv;
       ppLumpinfo = nullptr;
+      for(char *const arg : argv)
+         efree(arg);
 
       return output;
    }
