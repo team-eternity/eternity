@@ -47,7 +47,7 @@
 
 namespace Aeon
 {
-   static int currSource;
+   static int ppSource; // As in lumpinfo_t source
    static constexpr size_t MCPP_NUM_ARGS = 6;
 
    void ScriptManager::InitMCPP()
@@ -62,7 +62,7 @@ namespace Aeon
 
          while(lumpnum >= 0 &&
               (strncasecmp(lumpinfo[lumpnum]->name, fileName, 8) || lumpinfo[lumpnum]->li_namespace != lumpinfo_t::ns_global)
-               && lumpinfo[lumpnum]->source != currSource)
+               && lumpinfo[lumpnum]->source != ppSource)
             lumpnum = lumpinfo[lumpnum]->next;
 
          if(lumpnum < 0)
@@ -99,7 +99,7 @@ namespace Aeon
 
    static void GetMCPPOutput(const qstring &fileStr, lumpinfo_t *lumpinfo)
    {
-      currSource = lumpinfo->source;
+      ppSource = lumpinfo->source;
 
       char** argv;
       uint32_t argc = MCPP_NUM_ARGS;
