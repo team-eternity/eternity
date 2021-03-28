@@ -1305,7 +1305,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    flip = !!(sprframe->flip[0] ^ lefthanded);
 
    // calculate edges of the shape
-   codeptr_t playeraction = viewplayer->psprites[0].state->action->codeptr;
+   codeptr_t playeraction = viewplayer->psprites[0].state->action ? viewplayer->psprites[0].state->action->codeptr : nullptr;
    v2fixed_t pspos;
    if(centerfire && (viewplayer->attackdown & AT_ALL) != 0 &&
       playeraction != A_Lower && playeraction != A_Raise)
