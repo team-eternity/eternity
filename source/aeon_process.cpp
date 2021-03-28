@@ -53,47 +53,49 @@ namespace Aeon
 
    void ScriptManager::InitMCPP()
    {
-      mcpp_setopencallback([](const char *fileName, const char *mode) -> void *
-      {
-         DWFILE     dwfile;
-         size_t     buffsize;
-         byte      *buffer;
-         const int  lumpnum  = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
+      mcpp_setopencallback(
+         [] (const char *fileName, const char *mode) -> void * {
+            DWFILE     dwfile;
+            size_t     buffsize;
+            byte      *buffer;
+            const int  lumpnum  = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
 
-         if(lumpnum < 0)
-         {
-            E_EDFLoggedWarning(2, "mcpp_setopencallback: #include '%s' not found\n", fileName);
-            return nullptr;
+            if(lumpnum < 0)
+            {
+               E_EDFLoggedWarning(2, "mcpp_setopencallback: #include '%s' not found\n", fileName);
+               return nullptr;
+            }
+
+            dwfile.openLump(lumpnum);
+
+            if(!dwfile.isOpen())
+            {
+               E_EDFLoggedWarning(2, "mcpp_setopencallback: could not open #include '%s'\n", fileName);
+               return nullptr;
+            }
+
+            buffsize = dwfile.fileLength() + 1;
+            buffer   = emalloc(byte *, buffsize);
+            dwfile.read(buffer, 1, buffsize - 1);
+            buffer[buffsize - 1] = '\0';
+
+            return mcpp_openmemory(buffer, buffsize);
          }
+      );
 
-         dwfile.openLump(lumpnum);
-
-         if(!dwfile.isOpen())
-         {
-            E_EDFLoggedWarning(2, "mcpp_setopencallback: could not open #include '%s'\n", fileName);
-            return nullptr;
+      mcpp_setclosecallback(
+         [] (void *data) {
+            if(data)
+               efree(data);
          }
-
-         buffsize = dwfile.fileLength() + 1;
-         buffer   = emalloc(byte *, buffsize);
-         dwfile.read(buffer, 1, buffsize - 1);
-         buffer[buffsize - 1] = '\0';
-
-         return mcpp_openmemory(buffer, buffsize);
-      });
-
-      mcpp_setclosecallback([](void* pData)
-      {
-         if(pData)
-            efree(pData);
-      });
+      );
    }
 
    static const char *GetMCPPOutput(lumpinfo_t *lumpinfo)
    {
       ppLumpinfo = lumpinfo;
 
-      char** argv;
+      char **argv;
       uint32_t argc = MCPP_NUM_ARGS;
 
       argv = new char*[MCPP_NUM_ARGS];
@@ -116,6 +118,7 @@ namespace Aeon
          efree(argv[i]);
 
       delete[] argv;
+      ppLumpinfo = nullptr;
 
       return output;
    }
