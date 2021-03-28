@@ -81,6 +81,8 @@ void E_CfgListToCommaString(cfg_t *sec, const char *optname, qstring &output);
 
 #endif
 
+int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const char *name);
+
 bool E_CheckInclude(const char *data, size_t size);
 
 const char *E_BuildDefaultFn(const char *filename);

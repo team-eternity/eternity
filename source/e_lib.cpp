@@ -198,13 +198,12 @@ static int E_FindLumpInclude(const int includinglumpnum, const char *name)
 // Finds a file from the same data source as the including file.
 // Returns -1 if no such lump can be found.
 //
-static int E_findFileInclude(const char *parentfile, const int includinglumpnum, const char *name)
+int E_FindFileInclude(const char *parentfile, const int includinglumpnum, const char *name)
 {
    lumpinfo_t  *inclump;
    lumpinfo_t **lumpinfo  = wGlobalDir.getLumpInfo();
    qstring      qname     = qstring(name).toLower();
    qstring      includepath;
-   int          includinglumpnum;
 
    // this is not for files
    if(includinglumpnum < 0)
@@ -341,7 +340,7 @@ int E_Include(cfg_t *cfg, cfg_opt_t *opt, int argc, const char **argv)
    default: // data source
       // haleyjd 03/19/10:
       // find a lump of the requested name in the same data source only
-      if((lumpnum = E_findFileInclude(cfg->filename, cfg_lexer_source_type(cfg), argv[0])) < 0)
+      if((lumpnum = E_FindFileInclude(cfg->filename, cfg_lexer_source_type(cfg), argv[0])) < 0)
       {
          cfg_error(cfg, "include: %s not found\n", argv[0]);
          return 1;
