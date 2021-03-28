@@ -103,6 +103,8 @@ namespace Aeon
 
    void ScriptManager::RegisterScriptObjs()
    {
+      InitMCPP();
+
       ScriptObjMobj::PreInit();
       ScriptObjPlayer::PreInit();
 
@@ -197,7 +199,7 @@ namespace Aeon
          if(!strncasecmp(lumpinfo[lumpnum]->name, name, 8) &&         // name match
             lumpinfo[lumpnum]->li_namespace == lumpinfo_t::ns_global) // is global
          {
-            if(!wGlobalDir.getLumpInfo()[lumpnum]->size)
+            if(!lumpinfo[lumpnum]->size)
                return;  // just quit as if nothing happened
 
             DWFILE dwfile; // haleyjd
@@ -210,12 +212,7 @@ namespace Aeon
                return;
             }
 
-            const size_t fileLen = dwfile.fileLength() + 1;
-            qstring fileStr(fileLen);
-            dwfile.read(fileStr.getBuffer(), 1, fileLen - 1);
-            fileStr[fileLen - 1] = '\0';
-
-            ProcessAeonFile(fileStr);
+            ProcessAeonFile(lumpinfo[lumpnum]);
          }
       }
    }

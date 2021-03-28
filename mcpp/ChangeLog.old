@@ -1,0 +1,351 @@
+ChangeLog.old of MCPP and its accompanying Validation Suite
+
+2005/03/19  kmatsui
+        * V.2.5
+        * Absorbed POST_STANDARD mode into STANDARD as an execution time
+        option, absorbed OLD_PREPROCESSOR mode as an execution time
+        option of PRE_STANDARD.  (all the sources)
+        * Changed the evaluation of #if expression in PRE_STANDARD mode
+        to use only (signed) long, not to use unsigned long.  (eval.c)
+        * Revised the Standard mode macro expansion routine using GCC 3.
+        2 testsuite and Wave 1.0 testcases.  Revised "blue painting" of
+        the same name macro.  Revised debugging information.  Revised
+        handling of token separator in STANDARD mode.  Split
+        is_macro_call() from is_macro().  (expand.c)
+        * Revised the old-preprocessor mode to follow "Reiser cpp model".
+        (expand.c)
+        * Removed FOLD_CASE settings.  (system.c)
+        * Renamed most of #pragma __* directives as #pragma MCPP *.
+        (system.c)
+        * Added porting to GCC V.3.3 and 3.4.  Changed some options
+        accordingly (changed -c to -@compat, changed -m to -e, removed
+        -E, added -finput-charset=).  Created init_gcc_macro(),
+        undef_gcc_macro().  (system.c)
+        * Sorted usage() message lines alphabetically.
+        * Removed documents on older preprocessors (DJGPP, compiler
+        systems on MS-DOS except Borland C).
+        * Revised judgment of GCC version and include directories.
+        (configure.ac).
+        * Provided man page.
+        * Renamed the documents.
+        * Validation Suite: Moved tests of multi-byte character encoding
+        to quality matters.
+        * Validation Suite: Changed points allocation of the test items.
+        * Validation Suite: Added a few testcases for macro expansion.
+        * Updated Japanese and English documents.
+
+2004/03/20  kmatsui
+        * V.2.4.1
+        * Revised recursive macro expansion.  (expand.c)
+        * Added -c option (compatible mode to GCC expansion of recursive
+        macro).  (expand.c, system.c)
+        * Revised some testcases in cpp-test/test-t directory.
+
+2004/02/25  kmatsui
+        * V.2.4 release.
+        * Implemented handling of multi-byte character encodings other
+        than 2-byte encodings.  Made various encodings available
+        simultaneously.  Added #pragma __setlocale.  Added -m <encoding>
+        option.  Enabled environment variable LC_ALL, LC_CTYPE and LANG
+        to specify the encoding.  (all the sources)
+        * Created mbchar.c.  Moved type[] from system.c.  Created type_*
+        [] tables for various encodings of multi-byte character.
+        Created encoding_name[][] table.  Created mb_init(),
+        mb_read_2byte(), mb_read_iso2022_jp(), mb_read_utf8(), mb_eval(),
+        set_encoding(), search_encoding() and strip_bar().  (mbchar.c)
+        * Added porting to Plan 9 / pcc.  (noconfig.H, system.c)
+        * Validation Suite: Added tests of various multi-byte character
+        encodings.
+        * Updated Japanese documents.
+        * Updated English documents which were translated by Highwell,
+        inc. ltd. from the Japanese documents.
+        * Renamed the documents.
+
+2003/11/28  kmatsui
+        * V.2.4 prerelease.
+        * Named this proprocessor as MCPP (This is not necessarily the
+        name of its executable).
+        * Changed predefined macro __decus_cpp as __MCPP.
+        * Created configure script to make mcpp executable automatically.
+        Accordingly, reorganized system.H, created configed.H and
+        noconfig.H, and changed some macro names.
+        * Diagnostics on macro expansion or macro redefinition were made
+        to show the original macro definition and its location.
+        * Changed DEFBUF and FILEINFO structure, reorganized some
+        functions and variables.  Created set_fname() in system.c.
+        (other than system.H, eval.c lib.c)
+        * Created look_and_install().  (control.c)
+        * Removed CON_NOEXPAND and CON_EXPAND modes.  Renamed CON_FALSE
+        mode as PRE_STANDARD.  (all the sources)
+        * Removed append_string(), catenate() and conv_st_quote().
+        (expand.c)
+        * Added #pragma __push_macro, #pragma __pop_macro, #pragma
+        __preprocess, #pragma __preprocessed.  Created push_or_pop() and
+        do_preprocess(), revised do_pragma() accordingly.  (system.c)
+        * Implemented -MF, -MT, -MP, -MQ options for GCC-3-compatibility.
+        Created md_init() and md_quote().  (system.c)
+        * Added porting to Visual C++ .net.  (system.H, system.c)
+        * Removed the oldest settings on VMS, DEC C and OS-9/09.  And
+        removed accordingly vmsparse(), reopen_stdout(), set_stdin(),
+        get_redirection(), put_start_file(), put_fname() and put_source().
+        (system.H, system.c)
+        * Added strstr() and strcspn().  (lib.c)
+        * Moved open_file() and add_file() from main.c to system.c.
+        Moved sharp() from system.c to main.c.
+        * Updated test-reports on LCC-Win32 and ucpp.
+        * Updated the Japanese documents. (The English documents are not
+        yet updated.)
+
+2003/03/29  kmatsui
+        * V.2.3 patch 1.
+        * Debugged the modes other than STANDARD.  (system.c)
+
+2003/02/28  kmatsui
+        * V.2.3 release.
+        * Implemented identifier-like operators in C++98.  Created
+        chk_ops() in eval.c and id_operator() in support.c.  (eval.c,
+        control.c, support.c)
+        * Reinforced checking of __VA_ARGS__.  (control.c)
+        * Enabled interspersed options between filename arguments.
+        (system.c)
+        * Renamed #pragma __debug and #pragma __warning to #pragma
+        __debug_cpp and #pragma __warning_cpp.  (system.c)
+        * Created the edition of Validation Suite for GCC / testsuite.
+        * -j option (GCC-compatible diagnostic format) added for testsuite.
+        * Created the document named mcpp-summary.pdf.
+        * Updated documents.
+        * Released English version of documents which were translated by
+        Highwell, inc. ltd. from the Japanese documents and revised by
+        kmatsui.
+
+2002/12/16  kmatsui
+        * V.2.3 prerelease 2.
+        * Port to GCC 3.2.  (system.H, system.c)
+        * Fixed the bug of #include_next.  (system.c)
+        * GCC-compatible options (-I-, -std=*) added.  (system.c)
+        * Created norm_path() to normalize include directories.  (system.
+        c)
+        * Fixed the bug of rescan() which warns an innocent macro call.
+        (expand.c)
+        * Updated documents.  Renamed the documents.
+
+2002/08/26  kmatsui
+        * V.2.3 prerelease 1.
+        * Updated according to C99 (ISO/IEC 9899:1999).
+        * Added compatibility mode of C++ to C99.  (eval.c, expand.c,
+        system.c)
+        * Increased the class of warnings from four (OR of 1, 2, 4, 8)
+        to five (OR of 1, 2, 4, 8, 16).  Changed some errors to warnings.
+        * Fixed the bug of 0-parameter function-like macro.  Modified re-
+        examination of macro of the same name.  (expand.c)
+        * Fixed the bug of handling digraphs.  Implemented UCN in pp-
+        number and string-literal.  (support.c)
+        * Fixed the bugs of parse_env() and bsl2sl().  (system.c)
+        * Implemented many GCC-compatible options.  Added -dM, -dD,
+        -include and -isystem option for GCC.  Added -a (-lang-asm, -x
+        assembler-with-cpp) option.  Extended -D option to enable
+        function-like macro definition.  Changed specification of -S
+        option and added -V, -h option.  (system.c)
+        * Implemented #include_next and #warning for GCC.  Implemented
+        also #pragma __include_next and #pragma __warning_cpp.  (system.
+        c)
+        * Created conv_case(), chk_env() and at_end().  Split set_limit(),
+        set_pragma_op(), def_a_macro() from dooptions().  Split
+        search_dir() from openinclude().  Removed is_id().  (system.c)
+        * Port to Linux / GCC 2.95.3, LCC-Win32, Borland C 5.5.  (system.
+        H, control.c, system.c)
+        * Renamed functions and some variables using underscore to
+        separate the two words.  (internal.H, all the *.c files)
+        * Updated the Validation Suite.
+        * Updated the documents.
+        * Renamed the directories and the documents by NIIBE Yutaka.
+        * Registered to CVS repository at m17n.org by NIIBE Yutaka
+        <gniibe@fsij.org>.
+
+1998/11     kmatsui
+        * V.2.2
+        * Updated according to C++98 (ISO/IEC 14882:1998)
+        * Changed to evaluate "true" as 1 and "false" as 0 on C++,
+        according to C++ Standard.  (eval.c)
+        * Updated UCN constraint on C++ according to C++ Standard.
+        (support.c)
+        * Fixed the bug of interaction of predefined non-standard macro
+        with -D option.  (main.c, control.c, expand.c, system.c)
+        * Created undef_a_predef().  (main.c)
+        * Removed alloc_mem().  (system.c)
+
+1998/09     kmatsui
+        * V.2.1
+        * Updated C99 features according to 1998/08 draft (including UCN,
+        optional multi-byte-character in identifier, type of #if
+        expression in integer of maximum size and concatenation of wide-
+        character-string-literal and character-string-literal).  (main.c,
+        eval.c, support.c)
+
+1998/08     kmatsui (Kiyoshi Matsui <kmatsui@t3.rim.or.jp>)
+        * V.2.0
+        * First release of MCPP (DECUS cpp V.2) at nifty-serve and
+        vector/software-pack.
+        * Re-written according to ISO 9899:1990 and it's Amendment 1,
+        Corrigendum 1, 2.
+        * Implemented translation phases precisely.  (support.c)
+        * Revised tokenization according to the Standard and Amendment1.
+        (support.c & others)
+        * Implemented the pre-defined macros __STDC__, __STDC_VERSION__,
+        __TIME__, and revised __DATE__.  Made these standard macros
+        cannot be undefined nor redefined.  (main.c)
+        * Implemented _Pragma() operator.  (main.c & others)
+        * Revised some non-standard pre-defined macros.  (main.c)
+        * Implemented #error directive.  The error message is output to
+        the stderr.  (control.c)
+        * Implemented #pragma __once directive, -i option and -M* option,
+        imported from GCC.  (control.c & others)
+        * Implemented #pragma __put_defines, #pragma __debug directives
+        and the old style directives corresponding to them.  (system.c &
+        others)
+        * Made #pragma lines to be output with warning to the stderr for
+        the compiler which can't recognize the directive.  (system.c)
+        * Made #line argument to be subject to macro expansion.
+        (control.c, support.c)
+        * Reinforced the test of #define syntax.  (control.c)
+        * Created Standard conforming mode of macro-expansion (including
+        the processing of #, ## operators).  (expand.c)
+        * Created "post-Standard" mode of preprocessing, which is a
+        simplified version of Standard mode.  (all the sources)
+        * Simplified CON_FALSE mode corresponding to K&R 1st.
+        specifications.  CON_NOEXPAND, CON_EXPAND modes of the original
+        version are retained (after revising).  (main.c, control.c eval.
+        c, expand.c)
+        * Revised # operator so as to inserts \ before \ or " in
+        stringized arguments (except in MBCHAR) in Standard mode.
+        (expand.c)
+        * Changed the type of #if expression from int to long / unsigned
+        long.  Reinforced expression evaluation.  (eval.c)
+        * Implemented wide character constant, multi-character character
+        constant, and revised multi-byte character constant in #if
+        expression.  (eval.c)
+        * Revised the handling of MBCHAR in string literal and character
+        constant.  (support.c, expand.c, eval.c, main.c)
+        * Supplemented the optional phase for the pre-Standard compiler-
+        proper to concatenate adjacent string literals, convert '\a' and
+        '\v' to octals, convert digraphs.  (main.c)
+        * Implemented the features of C99-1997/11 draft except Unicode-
+        related features (_Pragma operator, variable arguments of macro,
+        // comments, long long of #if expression, p+ of pp-number) (all
+        the sources)
+        * Supplemented the C++ preprocessor option.  (support.c, system.
+        c)
+        * Refined error checks and diagnostic messages.  (all the
+        sources)
+        * Implemented -M* option.  (main.c, system.c)
+        * Updated MS-DOS memory model option.  (system.c)
+        * Revised command line options.  (system.c)
+        * Made the source files compilable by C++ as well as C.  (all
+        the sources)
+        * Re-organized and re-written the source files to be portable to
+        many systems.  (all the sources)
+        *
+        * main.c:
+        * Renamed cpp1.c main.c.
+        * Created do_pragma_op(), de_stringize(), devide_line(), putout(),
+        putline(), post_preproc(), conv_esc(), conv2oct(), is_last_esc(),
+        esc_mbchar(), conv_a_digraph().
+        * Removed output().
+        * Moved sharp() from cpp1.c to system.c, addfile(), openfile(),
+        initdefines(), unpredefine() from cpp3.c to main.c,
+        * Revised most of the functions and variables.
+        *
+        * control.c:
+        * Renamed cpp2.c control.c.
+        * Moved dodefine(), is_formal(), mtokensave(), stparmscan(),
+        doundef() from cpp4.c to control.c.
+        * Moved lookid(), defendel(), dump_a_def() from cpp6.c to
+        control.c.
+        * Moved doinclude(), openinclude(), vmsparse() from cpp2.c to
+        system.c.
+        * Split doline() from control().
+        * Split getparm(), getrepl(), def_stringization() from dodefine().
+        * Split dumprepl() from dump_a_def().
+        * Devided defendel() to install(), undefine(), lookprev().
+        * Removed textput(), charput(), checkparm() from cpp4.c.
+        * Expanded specification of stparmscan().
+        * Revised most of the functions.
+        *
+        * eval.c:
+        * Renamed cpp5.c eval.c.
+        * Created overflow(), dumpval().
+        * Split evalsval(), evaluval() from evaleval().
+        * Made #if error returns 0 (rather than 1).
+        * Changed the type of #if evaluation from int to long / unsigned
+        long (unsigned long is only for the compiler which has that type)
+        or long long / unsigned long long for C99.
+        * Reinforced expression evaluation (eval(), opdope[]).
+        * Implemented evaluation of multi-character character constant,
+        wide character constant and revised evaluation of multi-byte
+        character constant.
+        * Revised most of the functions.
+        *
+        * expand.c:
+        * Split from cpp4.c and cpp6.c (support.c).
+        * Created Standard conforming mode of macro expansion.
+        * Created is_macro(), squeeze_ws(), skip_macro() as common
+        routines, expand(), replace(), def_special(), prescan(),
+        catenate(), stringize(), substitute(), rescan(), disable_repl(),
+        enable_repl(), is_able_repl() for MODE >= STANDARD, expand(),
+        conv_st_quote() for MODE < STANDARD.
+        * Split expcollect() into collect_args() and get_an_arg().
+        * Renamed macroid() to rescan(), expand() to replace(), expstuff
+        () to substitute() for MODE < STANDARD, dumpparm() to dump_args().
+        * Revised most of the functions.
+        *
+        * support.c:
+        * Renamed cpp6.c support.c.
+        * Created get_unexpandable(), scantoken(), cat_line(), scanop(),
+        parse_line(), last_is_mbchar(), cnv_digraph(), at_eof(),
+        xrealloc(), putline(), dumptoken().
+        * Split getline(), read_a_comment() from get().
+        * Extended cfatal(), cerror(), cwarn(), removing cierror(),
+        ciwarn().
+        * Removed save(), cget().
+        * Moved macroid(), catenate(), appendstring() from cpp6.c to
+        expand.c, lookid(), defendel() from cpp6.c to control.c.
+        * Renamed scanstring() to scanquote(), getmem() to xmalloc().
+        * Revised most of the functions.
+        * Revised line splicing and tokenization.
+        *
+        * system.c:
+        * Created this file gathering routines from other files.  Moved
+        sharp(), sharpsub(), getredirection() from cpp1.c to system.c,
+        doinclude(), openinclude(), hasdirectory(), vmsparse() from cpp2.
+        c to system.c, setincdirs(), dooptions(), zap_uc() from cpp3.c
+        to system.c,
+        * Created setoptlist(), setcplus(), bsl2sl(), put_depend(),
+        dopragma(), doonce(), included(), dumppath(), is_junk(),
+        alloc_mem(), print_heap();
+        * Split reopen_stdout(), setstdin() from main(), put_start_file(),
+        putfname() from cppmain(), setfiles(), usage(), mem_model(),
+        is_id() from dooptions(), doold(), dodebug(), doasm(), put_asm()
+        from control().
+        * Split setincdirs() to setsysdirs(), setenvdirs(), parse_env(),
+        set_a_dir().
+        * Moved type[] from cpp6.c to system.c.
+        * Revised most of the functions.
+        *
+        * system.H:
+        * Re-written and renamed from cppdef.h.
+        *
+        * internal.H:
+        * Re-written and renamed from cpp.h.
+        *
+        * Created Validation Suite for C/C++ preprocessing.
+        *
+        * Provided some supplementary tools for preprocessor testing.
+        *
+        * Wrote comprehensive documents (in Japanese).
+
+* Edit history of DECUS CPP (MM: Martin Minow)
+        * 21-May-84    MM      "Field test" release
+        * 11-Jul-84    MM      "Official" first release (that's what I thought!)
+        * 31-Aug-84    MM      USENET net.sources release.
+        *  7-Dec-84    MM      Stuff in Nov 12 Draft Standard
+        * 07-Jun-85    KR      Latest revision

@@ -28,6 +28,7 @@ class  asIScriptFunction;
 class  asIScriptModule;
 struct asSMessageInfo;
 
+struct lumpinfo_t;
 class  qstring;
 
 namespace Aeon
@@ -74,7 +75,9 @@ namespace Aeon
 
    // aeon_process.cpp
    private:
-      static void   ProcessAeonFile(qstring &fileStr);
+      static void InitMCPP();
+
+      static void   ProcessAeonFile(lumpinfo_t *lumpinfo);
       static size_t SkipStatement(qstring &fileStr, size_t pos);
    };
 }
