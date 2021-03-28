@@ -212,13 +212,7 @@ namespace Aeon
                return;
             }
 
-            const size_t fileLen = dwfile.fileLength() + 1;
-            qstring fileStr(fileLen);
-            dwfile.read(fileStr.getBuffer(), 1, fileLen - 1);
-            fileStr[fileLen - 1] = '\0';
-            dwfile.close();
-
-            ProcessAeonFile(fileStr, lumpinfo[lumpnum]);
+            ProcessAeonFile(lumpinfo[lumpnum]);
          }
       }
    }

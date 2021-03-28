@@ -77,7 +77,7 @@ namespace Aeon
    private:
       static void InitMCPP();
 
-      static void   ProcessAeonFile(qstring &fileStr, lumpinfo_t *lumpinfo);
+      static void   ProcessAeonFile(lumpinfo_t *lumpinfo);
       static size_t SkipStatement(qstring &fileStr, size_t pos);
    };
 }

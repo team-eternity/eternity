@@ -80,7 +80,7 @@ namespace Aeon
          }
 
          buffsize = dwfile.fileLength() + 1;
-         buffer = emalloc(byte *, buffsize);
+         buffer   = emalloc(byte *, buffsize);
          dwfile.read(buffer, 1, buffsize - 1);
          buffer[buffsize - 1] = '\0';
 
@@ -94,7 +94,7 @@ namespace Aeon
       });
    }
 
-   static void GetMCPPOutput(const qstring &fileStr, lumpinfo_t *lumpinfo)
+   static const char *GetMCPPOutput(lumpinfo_t *lumpinfo)
    {
       ppLumpinfo = lumpinfo;
 
@@ -121,6 +121,8 @@ namespace Aeon
          efree(argv[i]);
 
       delete[] argv;
+
+      return output;
    }
 
    static void OverwriteCode(qstring &fileStr, size_t start, size_t len)
@@ -172,13 +174,13 @@ namespace Aeon
       return pos;
    }
 
-   void ScriptManager::ProcessAeonFile(qstring &fileStr, lumpinfo_t *lumpinfo)
+   void ScriptManager::ProcessAeonFile(lumpinfo_t *lumpinfo)
    {
       // TODO: C preprocessing here
       Collection<qstring> actions;
       Collection<qstring> currNamespaces;
 
-      GetMCPPOutput(fileStr, lumpinfo);
+      qstring fileStr{ GetMCPPOutput(lumpinfo) };
 
       size_t pos = 0;
       while(pos < fileStr.getSize())
