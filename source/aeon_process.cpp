@@ -47,7 +47,7 @@
 
 namespace Aeon
 {
-   static int ppSource; // As in lumpinfo_t source
+   static lumpinfo_t *ppLumpinfo; // Pre-processing lump info
    static constexpr size_t MCPP_NUM_ARGS = 6;
 
    void ScriptManager::InitMCPP()
@@ -62,7 +62,7 @@ namespace Aeon
 
          while(lumpnum >= 0 &&
               (strncasecmp(lumpinfo[lumpnum]->name, fileName, 8) || lumpinfo[lumpnum]->li_namespace != lumpinfo_t::ns_global)
-               && lumpinfo[lumpnum]->source != ppSource)
+               && lumpinfo[lumpnum]->source != ppLumpinfo->source)
             lumpnum = lumpinfo[lumpnum]->next;
 
          if(lumpnum < 0)
@@ -79,15 +79,12 @@ namespace Aeon
             return nullptr;
          }
 
-         const size_t fileLen = dwfile.fileLength() + 1;
-         qstring fileStr(fileLen);
-         dwfile.read(fileStr.getBuffer(), 1, fileLen - 1);
-         fileStr[fileLen - 1] = '\0';
+         buffsize = dwfile.fileLength() + 1;
+         buffer = emalloc(byte *, buffsize);
+         dwfile.read(buffer, 1, buffsize - 1);
+         buffer[buffsize - 1] = '\0';
 
-         buffer = emalloc(byte *, fileLen);
-         fileStr.copyInto(reinterpret_cast<char *>(buffer), fileLen);
-
-         return mcpp_openmemory(buffer, fileLen);
+         return mcpp_openmemory(buffer, buffsize);
       });
 
       mcpp_setclosecallback([](void* pData)
@@ -99,7 +96,7 @@ namespace Aeon
 
    static void GetMCPPOutput(const qstring &fileStr, lumpinfo_t *lumpinfo)
    {
-      ppSource = lumpinfo->source;
+      ppLumpinfo = lumpinfo;
 
       char** argv;
       uint32_t argc = MCPP_NUM_ARGS;
@@ -108,7 +105,7 @@ namespace Aeon
 
       argv[0] = estrdup("mcpp.exe");
       argv[1] = estrdup("-P");
-      argv[2] = estrdup(lumpinfo->name); // FIXME: lfn
+      argv[2] = estrdup(lumpinfo->name); // FIXME: lfn if suitable
       argv[3] = estrdup("-Y");
       argv[4] = estrdup("-e");
       argv[5] = estrdup("utf8");
