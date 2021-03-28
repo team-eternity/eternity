@@ -38,6 +38,7 @@
 #include "doomstat.h"
 #include "e_actions.h"
 #include "e_edf.h"
+#include "e_lib.h"
 #include "i_system.h"
 #include "m_utils.h"
 #include "m_qstr.h"
@@ -58,16 +59,11 @@ namespace Aeon
          size_t buffsize;
          byte*  buffer;
          lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-         int          lumpnum  = wGlobalDir.getLumpNameChain(fileName)->index;
-
-         while(lumpnum >= 0 &&
-              (strncasecmp(lumpinfo[lumpnum]->name, fileName, 8) || lumpinfo[lumpnum]->li_namespace != lumpinfo_t::ns_global)
-               && lumpinfo[lumpnum]->source != ppLumpinfo->source)
-            lumpnum = lumpinfo[lumpnum]->next;
+         int          lumpnum  = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
 
          if(lumpnum < 0)
          {
-            E_EDFLoggedWarning(2, "mcpp_setopencallback: %s not found\n", fileName);
+            E_EDFLoggedWarning(2, "mcpp_setopencallback: #include '%s' not found\n", fileName);
             return nullptr;
          }
 
@@ -75,7 +71,7 @@ namespace Aeon
 
          if(!dwfile.isOpen())
          {
-            E_EDFLoggedWarning(2, "mcpp_setopencallback: %s not found\n", fileName);
+            E_EDFLoggedWarning(2, "mcpp_setopencallback: could not open #include '%s'\n", fileName);
             return nullptr;
          }
 
