@@ -62,7 +62,7 @@ namespace Aeon
    // Sanity checked getter for plyr->weaponctrs->getIndexedCounterForPlayer(plyr, ctrnum)
    // Returns 0 on failure
    //
-   static int getWeaponCounter(const unsigned int ctrnum, player_t *player)
+   static int getWeaponCounter(const int ctrnum, player_t *player)
    {
       if(ctrnum >= 0 && ctrnum < NUMWEAPONTYPES)
          return *player->weaponctrs->getIndexedCounterForPlayer(player, ctrnum);
@@ -74,7 +74,7 @@ namespace Aeon
    // Sanity checked setter for plyr->weaponctrs->setCounter(plyr, ctrnum, val)
    // Doesn't set on failure
    //
-   static void setWeaponCounter(const unsigned int ctrnum, const int val, player_t *player)
+   static void setWeaponCounter(const int ctrnum, const int val, player_t *player)
    {
       if(ctrnum >= 0 && ctrnum < NUMWEAPONTYPES)
           player->weaponctrs->setCounter(player, ctrnum, val);
@@ -121,8 +121,8 @@ namespace Aeon
       { "bool checkAmmo() const",                                    WRAP_OBJ_FIRST(P_CheckAmmo)        },
 
       // Indexed property accessors (enables [] syntax for counters)
-      { "int get_weaponcounters(const uint ctrnum) const property",           WRAP_OBJ_LAST(getWeaponCounter)    },
-      { "void set_weaponcounters(const uint ctrnum, const int val) property", WRAP_OBJ_LAST(setWeaponCounter)    },
+      { "int get_weaponcounters(const int ctrnum) const property",           WRAP_OBJ_LAST(getWeaponCounter)    },
+      { "void set_weaponcounters(const int ctrnum, const int val) property", WRAP_OBJ_LAST(setWeaponCounter)    },
 
       // Getters and settings for ready and pending weapon
       { "Weapon @get_readyweapon() const property",                  WRAP_OBJ_LAST(getReadyWeapon)      },

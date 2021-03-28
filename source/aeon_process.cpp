@@ -55,11 +55,10 @@ namespace Aeon
    {
       mcpp_setopencallback([](const char *fileName, const char *mode) -> void *
       {
-         DWFILE dwfile;
-         size_t buffsize;
-         byte*  buffer;
-         lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-         int          lumpnum  = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
+         DWFILE     dwfile;
+         size_t     buffsize;
+         byte      *buffer;
+         const int  lumpnum  = E_FindFileInclude(ppLumpinfo->name, ppLumpinfo->selfindex, fileName);
 
          if(lumpnum < 0)
          {

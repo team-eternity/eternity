@@ -87,7 +87,7 @@ namespace Aeon
       {
          auto qstr = static_cast<const qstring *>(str);
          if(data == nullptr)
-            *length = qstr->length() + 1;
+            *length = asUINT(qstr->length() + 1);
          else
             qstr->copyInto(data, *length);
          return 0;
@@ -100,7 +100,7 @@ namespace Aeon
    //
    static unsigned int qstrGetNpos(qstring *qstr)
    {
-      return qstring::npos;
+      return unsigned(qstring::npos);
    }
 
    //
