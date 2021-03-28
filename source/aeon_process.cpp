@@ -19,18 +19,25 @@
 //----------------------------------------------------------------------------
 //
 // Purpose: Aeon system
-// Authors: Max Waine, Andreas Jönsson
+// Authors: Max Waine, James Haley, Samuel Villarreal, Andreas Jönsson
 //
 // ScriptManager::ProcessAeonFile, ScriptManager::SkipStatement, and
 // OverwriteCode are based on code from AngelScript's Script Builder addon,
 // licenced under the zlib and written by Andreas Jönsson
 //
+// mcpp-related code is cribbed from Kex which, whilst people can't pulicly
+// see (at the time of typing), I'd feel guilty for not crediting
+//
+
+#include "mcpp_lib.h"
+#include "rwops.h"
 
 #include "aeon_common.h"
 #include "aeon_system.h"
 #include "d_dwfile.h"
 #include "doomstat.h"
 #include "e_actions.h"
+#include "e_edf.h"
 #include "i_system.h"
 #include "m_utils.h"
 #include "m_qstr.h"
@@ -40,6 +47,85 @@
 
 namespace Aeon
 {
+   static int currSource;
+   static constexpr size_t MCPP_NUM_ARGS = 6;
+
+   void ScriptManager::InitMCPP()
+   {
+      mcpp_setopencallback([](const char *fileName, const char *mode) -> void *
+      {
+         DWFILE dwfile;
+         size_t buffsize;
+         byte*  buffer;
+         lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
+         int          lumpnum  = wGlobalDir.getLumpNameChain(fileName)->index;
+
+         while(lumpnum >= 0 &&
+              (strncasecmp(lumpinfo[lumpnum]->name, fileName, 8) || lumpinfo[lumpnum]->li_namespace != lumpinfo_t::ns_global)
+               && lumpinfo[lumpnum]->source != currSource)
+            lumpnum = lumpinfo[lumpnum]->next;
+
+         if(lumpnum < 0)
+         {
+            E_EDFLoggedWarning(2, "mcpp_setopencallback: %s not found\n", fileName);
+            return nullptr;
+         }
+
+         dwfile.openLump(lumpnum);
+
+         if(!dwfile.isOpen())
+         {
+            E_EDFLoggedWarning(2, "mcpp_setopencallback: %s not found\n", fileName);
+            return nullptr;
+         }
+
+         const size_t fileLen = dwfile.fileLength() + 1;
+         qstring fileStr(fileLen);
+         dwfile.read(fileStr.getBuffer(), 1, fileLen - 1);
+         fileStr[fileLen - 1] = '\0';
+
+         buffer = emalloc(byte *, fileLen);
+         fileStr.copyInto(reinterpret_cast<char *>(buffer), fileLen);
+
+         return mcpp_openmemory(buffer, fileLen);
+      });
+
+      mcpp_setclosecallback([](void* pData)
+      {
+         if(pData)
+            efree(pData);
+      });
+   }
+
+   static void GetMCPPOutput(const qstring &fileStr, lumpinfo_t *lumpinfo)
+   {
+      currSource = lumpinfo->source;
+
+      char** argv;
+      uint32_t argc = MCPP_NUM_ARGS;
+
+      argv = new char*[MCPP_NUM_ARGS];
+
+      argv[0] = estrdup("mcpp.exe");
+      argv[1] = estrdup("-P");
+      argv[2] = estrdup(lumpinfo->name); // FIXME: lfn
+      argv[3] = estrdup("-Y");
+      argv[4] = estrdup("-e");
+      argv[5] = estrdup("utf8");
+
+      mcpp_use_mem_buffers(1);
+      mcpp_lib_main((int)argc, argv);
+
+      const char *output = mcpp_get_mem_buffer(OUTDEST::OUT);
+      const char *error  = mcpp_get_mem_buffer(OUTDEST::ERR);
+      const char *debug  = mcpp_get_mem_buffer(OUTDEST::DBG);
+
+      for(uint32_t i = 0; i < argc; ++i)
+         efree(argv[i]);
+
+      delete[] argv;
+   }
+
    static void OverwriteCode(qstring &fileStr, size_t start, size_t len)
    {
       char *code = fileStr.bufferAt(start);
@@ -89,11 +175,13 @@ namespace Aeon
       return pos;
    }
 
-   void ScriptManager::ProcessAeonFile(qstring &fileStr)
+   void ScriptManager::ProcessAeonFile(qstring &fileStr, lumpinfo_t *lumpinfo)
    {
       // TODO: C preprocessing here
       Collection<qstring> actions;
       Collection<qstring> currNamespaces;
+
+      GetMCPPOutput(fileStr, lumpinfo);
 
       size_t pos = 0;
       while(pos < fileStr.getSize())
