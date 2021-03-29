@@ -311,6 +311,9 @@ namespace Aeon
       FLAG_ACCESSOR(settargetondeath,   MF4_SETTARGETONDEATH,   flags4),
       FLAG_ACCESSOR(slideroverthings,   MF4_SLIDEOVERTHINGS,    flags4),
       FLAG_ACCESSOR(unsteppable,        MF4_UNSTEPPABLE,        flags4),
+      FLAG_ACCESSOR(rangeeighth,        MF4_RANGEEIGHTH,        flags4),
+
+      FLAG_ACCESSOR(notautoaimed,       MF5_NOTAUTOAIMED,       flags5),
 
    };
 
