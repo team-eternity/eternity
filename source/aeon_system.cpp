@@ -67,15 +67,15 @@ namespace Aeon
 
    void ScriptManager::RegisterPrimitivePrintFuncs()
    {
-      engine->RegisterGlobalFunction("void print(int)",
-                                     WRAP_FN_PR(asPrint, (int), void),
-                                     asCALL_GENERIC);
-      engine->RegisterGlobalFunction("void print(uint)",
-                                     WRAP_FN_PR(asPrint, (unsigned int), void),
-                                     asCALL_GENERIC);
-      engine->RegisterGlobalFunction("void print(float)",
-                                     WRAP_FN_PR(asPrint, (float), void),
-                                     asCALL_GENERIC);
+      engine->RegisterGlobalFunction(
+         "void print(int)", WRAP_FN_PR(asPrint, (int), void), asCALL_GENERIC
+      );
+      engine->RegisterGlobalFunction(
+         "void print(uint)", WRAP_FN_PR(asPrint, (unsigned int), void), asCALL_GENERIC
+      );
+      engine->RegisterGlobalFunction(
+         "void print(float)", WRAP_FN_PR(asPrint, (float), void), asCALL_GENERIC
+      );
    }
 
    void ScriptManager::RegisterTypedefs()
@@ -126,8 +126,7 @@ namespace Aeon
 
    void ScriptManager::RegisterGlobalProperties()
    {
-      engine->RegisterGlobalProperty("const fixed_t MISSILERANGE",
-                                     static_cast<void *>(&MISSILERANGE_prop));
+      engine->RegisterGlobalProperty("const fixed_t MISSILERANGE", static_cast<void *>(&MISSILERANGE_prop));
    }
 
    void ScriptManager::MessageCallback(const asSMessageInfo *msg, void *param)

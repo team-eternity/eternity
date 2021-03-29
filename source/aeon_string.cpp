@@ -190,14 +190,22 @@ namespace Aeon
       e->RegisterObjectType("String", 0, asOBJ_REF);
 
       // register behaviors
-      e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f()",
-                                 WRAP_FN(RefQString::Factory), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("String", asBEHAVE_FACTORY, "String @f(const String &in)",
-                                 WRAP_FN(RefQString::FactoryFromOther), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("String", asBEHAVE_ADDREF, "void f()",
-                                 WRAP_OBJ_FIRST(RefQString::AddRef), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("String", asBEHAVE_RELEASE, "void f()",
-                                 WRAP_OBJ_FIRST(RefQString::Release), asCALL_GENERIC);
+      e->RegisterObjectBehaviour(
+         "String", asBEHAVE_FACTORY, "String @f()",
+         WRAP_FN(RefQString::Factory), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "String", asBEHAVE_FACTORY, "String @f(const String &in)",
+         WRAP_FN(RefQString::FactoryFromOther), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "String", asBEHAVE_ADDREF, "void f()",
+         WRAP_OBJ_FIRST(RefQString::AddRef), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "String", asBEHAVE_RELEASE, "void f()",
+         WRAP_OBJ_FIRST(RefQString::Release), asCALL_GENERIC
+      );
 
       // register String as the string factory
       // "qstring @"???
@@ -207,9 +215,9 @@ namespace Aeon
          e->RegisterObjectMethod("String", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
       // register global print func
-      e->RegisterGlobalFunction("void print(const String &in)",
-                                WRAP_FN_PR(asPrint, (const qstring &), void),
-                                asCALL_GENERIC);
+      e->RegisterGlobalFunction(
+         "void print(const String &in)", WRAP_FN_PR(asPrint, (const qstring &), void), asCALL_GENERIC
+      );
    }
 
    //

@@ -46,8 +46,7 @@ namespace Aeon
       return *CreateRefQString(ACSenv.getString(idx)->str);
    }
 
-   static bool startACSScriptS(Mobj *mo, const qstring &name,
-                               const uint32_t mapnum, const CScriptArray *args)
+   static bool startACSScriptS(Mobj *mo, const qstring &name, const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
       uint32_t *argv = nullptr;
@@ -66,8 +65,7 @@ namespace Aeon
       return ret;
    }
 
-   static bool startACSScriptSAlways(Mobj *mo, const qstring &name,
-                                     const uint32_t mapnum, const CScriptArray *args)
+   static bool startACSScriptSAlways(Mobj *mo, const qstring &name, const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
       uint32_t *argv = nullptr;
@@ -79,8 +77,7 @@ namespace Aeon
             argv[i] = *static_cast<const uint32_t *>(args->At(i));
       }
 
-      const bool ret = ACS_ExecuteScriptSAlways(name.constPtr(), mapnum, argv, argc, mo,
-                                                nullptr, 0, nullptr);
+      const bool ret = ACS_ExecuteScriptSAlways(name.constPtr(), mapnum, argv, argc, mo, nullptr, 0, nullptr);
       if(argv)
          efree(argv);
       return ret;
@@ -98,15 +95,13 @@ namespace Aeon
             argv[i] = *static_cast<const uint32_t *>(args->At(i));
       }
 
-      const uint32_t ret = ACS_ExecuteScriptSResult(name.constPtr(), argv, argc,
-                                                    mo, nullptr, 0, nullptr);
+      const uint32_t ret = ACS_ExecuteScriptSResult(name.constPtr(), argv, argc, mo, nullptr, 0, nullptr);
       if(argv)
          efree(argv);
       return ret;
    }
 
-   static bool startACSScriptI(Mobj *mo, const int scriptnum,
-                               const uint32_t mapnum, const CScriptArray *args)
+   static bool startACSScriptI(Mobj *mo, const int scriptnum, const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
       uint32_t *argv = nullptr;
@@ -118,15 +113,13 @@ namespace Aeon
             argv[i] = *static_cast<const uint32_t *>(args->At(i));
       }
 
-      const bool ret = ACS_ExecuteScriptI(scriptnum, mapnum, argv, argc, mo,
-                                          nullptr, 0, nullptr);
+      const bool ret = ACS_ExecuteScriptI(scriptnum, mapnum, argv, argc, mo, nullptr, 0, nullptr);
       if(argv)
          efree(argv);
       return ret;
    }
 
-   static bool startACSScriptIAlways(Mobj *mo, const int scriptnum,
-                                     const uint32_t mapnum, const CScriptArray *args)
+   static bool startACSScriptIAlways(Mobj *mo, const int scriptnum, const uint32_t mapnum, const CScriptArray *args)
    {
       const uint32_t argc = args ? args->GetSize() : 0;
       uint32_t *argv = nullptr;
@@ -138,8 +131,7 @@ namespace Aeon
             argv[i] = *static_cast<const uint32_t *>(args->At(i));
       }
 
-      const bool ret = ACS_ExecuteScriptIAlways(scriptnum, mapnum, argv, argc, mo,
-                                                nullptr, 0, nullptr);
+      const bool ret = ACS_ExecuteScriptIAlways(scriptnum, mapnum, argv, argc, mo, nullptr, 0, nullptr);
       if(argv)
          efree(argv);
       return ret;
@@ -157,20 +149,19 @@ namespace Aeon
             argv[i] = *static_cast<const uint32_t *>(args->At(i));
       }
 
-      const uint32_t ret = ACS_ExecuteScriptIResult(scriptnum, argv, argc, mo,
-                                                    nullptr, 0, nullptr);
+      const uint32_t ret = ACS_ExecuteScriptIResult(scriptnum, argv, argc, mo, nullptr, 0, nullptr);
       if(argv)
          efree(argv);
       return ret;
    }
 
    // ACS script-starting function that requires map number as a parameter
-   #define MAPSIG(name, idarg) "bool " name "(EE::Mobj @mo, " idarg ","        \
-                                             "const uint32 mapnum,"            \
-                                             "const array<int> @args = null)"
+   #define MAPSIG(name, idarg) \
+      "bool " name "(EE::Mobj @mo, " idarg ", const uint32 mapnum, const array<int> @args = null)"
+
    // ACS script-starting function that returns a result (and has no mapnum parameter)
-   #define RSLTSIG(name, idarg) "uint32 " name "(EE::Mobj @mo, " idarg ","      \
-                                               "const array<int> @args = null)"
+   #define RSLTSIG(name, idarg) \
+      "uint32 " name "(EE::Mobj @mo, " idarg ", const array<int> @args = null)"
 
    static const aeonfuncreg_t acsFuncs[] =
    {

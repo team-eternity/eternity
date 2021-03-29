@@ -295,27 +295,39 @@ namespace Aeon
       e->RegisterObjectType("fixed_t", sizeof(Fixed),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
-      e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f()",
-                                 WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t &in)",
-                                 WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const double)",
-                                 WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const int)",
-                                 WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("fixed_t", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
-                                 WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC);
+      e->RegisterObjectBehaviour(
+         "fixed_t", asBEHAVE_CONSTRUCT, "void f()",
+         WRAP_OBJ_LAST(Construct), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t &in)",
+         WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const double)",
+         WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const int)",
+         WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
+         WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC
+      );
 
       e->SetDefaultNamespace("fixed_t");
-      e->RegisterGlobalFunction("fixed_t FromBits(const int val)",
-                                WRAP_FN(ConstructFromBits), asCALL_GENERIC);
+      e->RegisterGlobalFunction(
+         "fixed_t FromBits(const int val)", WRAP_FN(ConstructFromBits), asCALL_GENERIC
+      );
       e->SetDefaultNamespace("");
 
       for(const aeonfuncreg_t &fn : fixedFuncs)
          e->RegisterObjectMethod("fixed_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      e->RegisterGlobalFunction("void print(fixed_t)", WRAP_FN_PR(asPrint, (Fixed), void),
-                                asCALL_GENERIC);
+      e->RegisterGlobalFunction(
+         "void print(fixed_t)", WRAP_FN_PR(asPrint, (Fixed), void), asCALL_GENERIC
+      );
    }
 
    //=============================================================================
@@ -491,29 +503,39 @@ namespace Aeon
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->RegisterObjectType("angle_t", sizeof(Angle),
-                            asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
+      e->RegisterObjectType(
+         "angle_t", sizeof(Angle),
+         asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
+      );
 
-      e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f()",
-                                 WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const angle_t &in)",
-                                 WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const double)",
-                                 WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("angle_t", asBEHAVE_CONSTRUCT, "void f(const int)",
-                                 WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC);
+      e->RegisterObjectBehaviour(
+         "angle_t", asBEHAVE_CONSTRUCT, "void f()",
+         WRAP_OBJ_LAST(Construct), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "angle_t", asBEHAVE_CONSTRUCT, "void f(const angle_t &in)",
+         WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "angle_t", asBEHAVE_CONSTRUCT, "void f(const double)",
+         WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "angle_t", asBEHAVE_CONSTRUCT, "void f(const int)",
+         WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC
+      );
 
       // AEON_TODO: Figure if there's a nicer way to do this
       e->SetDefaultNamespace("angle_t");
-      e->RegisterGlobalFunction("angle_t FromBits(const uint val)",
-                                WRAP_FN(ConstructFromBits), asCALL_GENERIC);
+      e->RegisterGlobalFunction("angle_t FromBits(const uint val)", WRAP_FN(ConstructFromBits), asCALL_GENERIC);
       e->SetDefaultNamespace("");
 
       for(const aeonfuncreg_t &fn : angleFuncs)
          e->RegisterObjectMethod("angle_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      e->RegisterGlobalFunction("void print(angle_t)", WRAP_FN_PR(asPrint, (Angle), void),
-                                asCALL_GENERIC);
+      e->RegisterGlobalFunction(
+         "void print(angle_t)", WRAP_FN_PR(asPrint, (Angle), void), asCALL_GENERIC
+      );
    }
 
    //=============================================================================

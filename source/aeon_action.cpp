@@ -154,20 +154,30 @@ namespace Aeon
       // Register actionarg_t, which is just a qstring that stuff automatically converts to
       e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CDAK);
 
-      e->RegisterObjectBehaviour("actionarg_t", asBEHAVE_CONSTRUCT, "void f()",
-                                 WRAP_OBJ_LAST(ActionArg::Construct), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("actionarg_t", asBEHAVE_CONSTRUCT, "void f(const int)",
-                                 WRAP_OBJ_LAST(ActionArg::IntConstructor), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("actionarg_t", asBEHAVE_DESTRUCT, "void f()",
-                                 WRAP_OBJ_LAST(ActionArg::Destruct), asCALL_GENERIC);
+      e->RegisterObjectBehaviour(
+         "actionarg_t", asBEHAVE_CONSTRUCT, "void f()",
+         WRAP_OBJ_LAST(ActionArg::Construct), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "actionarg_t", asBEHAVE_CONSTRUCT, "void f(const int)",
+         WRAP_OBJ_LAST(ActionArg::IntConstructor), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "actionarg_t", asBEHAVE_DESTRUCT, "void f()",
+         WRAP_OBJ_LAST(ActionArg::Destruct), asCALL_GENERIC
+      );
       for(const aeonfuncreg_t &fn : actionargFuncs)
          e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
-      e->RegisterObjectMethod("Mobj", EXECSIG("executeAction"),
-                              WRAP_OBJ_FIRST(executeActionMobj), asCALL_GENERIC);
+      e->RegisterObjectMethod(
+         "Mobj", EXECSIG("executeAction"),
+         WRAP_OBJ_FIRST(executeActionMobj), asCALL_GENERIC
+      );
 
-      //e->RegisterObjectMethod("Player", EXECSIG("executeAction"),
-       //                       WRAP_OBJ_FIRST(executeActionPlayer), asCALL_GENERIC);
+      //e->RegisterObjectMethod(
+      //   "Player", EXECSIG("executeAction"),
+      //   WRAP_OBJ_FIRST(executeActionPlayer), asCALL_GENERIC
+      //);
 
       e->SetDefaultNamespace("");
    }

@@ -353,15 +353,22 @@ namespace Aeon
 
       e->SetDefaultNamespace("EE");
 
-      e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f()",
-                                 WRAP_FN(mobjFactory), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
-                                 WRAP_FN_PR(mobjFactoryFromOther, (const Mobj &), Mobj *),
-                                 asCALL_GENERIC);
-      e->RegisterObjectBehaviour("Mobj", asBEHAVE_ADDREF, "void f()",
-                                 WRAP_MFN(Mobj, addReference), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("Mobj", asBEHAVE_RELEASE, "void f()",
-                                 WRAP_MFN(Mobj, delReference), asCALL_GENERIC);
+      e->RegisterObjectBehaviour(
+         "Mobj", asBEHAVE_FACTORY, "Mobj @f()",
+         WRAP_FN(mobjFactory), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
+         WRAP_FN_PR(mobjFactoryFromOther, (const Mobj &), Mobj *), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "Mobj", asBEHAVE_ADDREF, "void f()",
+         WRAP_MFN(Mobj, addReference), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "Mobj", asBEHAVE_RELEASE, "void f()",
+         WRAP_MFN(Mobj, delReference), asCALL_GENERIC
+      );
 
       for(const aeonpropreg_t &prop : mobjProps)
          e->RegisterObjectProperty("Mobj", prop.declaration, prop.byteOffset);
@@ -383,10 +390,14 @@ namespace Aeon
 
       // It's Mobj-related, OK?
       e->SetDefaultNamespace("EE::Mobj");
-      e->RegisterGlobalFunction("fixed_t FloatBobOffsets(const int index)",
-                                WRAP_FN(floatBobOffsets), asCALL_GENERIC);
-      e->RegisterGlobalFunction("EE::Mobj @Spawn(fixed_t x, fixed_t y, fixed_t z, const String &type)",
-                                WRAP_FN(spawnMobj), asCALL_GENERIC);
+      e->RegisterGlobalFunction(
+         "fixed_t FloatBobOffsets(const int index)",
+         WRAP_FN(floatBobOffsets), asCALL_GENERIC
+      );
+      e->RegisterGlobalFunction(
+         "EE::Mobj @Spawn(fixed_t x, fixed_t y, fixed_t z, const String &type)",
+         WRAP_FN(spawnMobj), asCALL_GENERIC
+      );
       e->SetDefaultNamespace("");
    }
 }
