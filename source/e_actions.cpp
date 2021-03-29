@@ -253,7 +253,7 @@ static void E_registerScriptAction(actiondef_t *action,
          args[i - 1] = AAT_INTEGER;
          if(estrnonempty(defaultArgs[i]))
          {
-            int *temp       = emalloc(int *, 1);
+            int *temp       = emalloc(int *, sizeof(int));
             *temp           = static_cast<int>(strtol(defaultArgs[i], nullptr, 0));
             defaults[i - 1] = temp;
          }
@@ -263,7 +263,7 @@ static void E_registerScriptAction(actiondef_t *action,
          args[i - 1] = AAT_FIXED;
          if(estrnonempty(defaultArgs[i]))
          {
-            fixed_t *temp     = emalloc(fixed_t *, 1);
+            fixed_t *temp     = emalloc(fixed_t *, sizeof(fixed_t));
             *temp             = M_DoubleToFixed(strtod(defaultArgs[i], nullptr));
             defaults[i - 1]   = temp;
          }
@@ -514,24 +514,22 @@ static void E_populateAction(actiondef_t *action, PODCollection<actiondef_t *> &
 
    Collection<qstring>      argNameTypes;
    Collection<const char *> argDefaults;
-   qstring     strTemp;
    const char *argTemp;
    // This loop is effectively kexScriptManager::GetArgTypesFromFunction from Powerslave EX
    for(unsigned int i = 0; i < paramCount; i++)
    {
-      size_t idx;
-
-      strTemp = func->GetVarDecl(i);
+      size_t  idx;
+      qstring strTemp{ func->GetVarDecl(i) };
 
       // Remove everything except for the type: no identifier,
       // no const, just the type (and if it's a handle)
-      if((idx = strTemp.find("@const")) != -1)
+      if(idx = strTemp.find("@const"); idx != -1)
           strTemp.erase(idx + 1, 4 + 1);
-      if((idx = strTemp.find("const")) != -1)
+      if(idx = strTemp.find("const");  idx != -1)
          strTemp.erase(idx, strTemp.find(" ") + 1 - idx);
       strTemp.erase(strTemp.find(" "), strTemp.length() - strTemp.find(" "));
 
-      argNameTypes.add(qstring(strTemp));
+      argNameTypes.add(std::move(strTemp));
 
       func->GetParam(i, nullptr, nullptr, nullptr, &argTemp);
       argDefaults.add(argTemp);
