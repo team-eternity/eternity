@@ -37,90 +37,15 @@ namespace Aeon
       static void Init();
    };
 
-   class Fixed
-   {
-   public:
-      fixed_t value;
-
-      Fixed() : value(0) { }
-
-      Fixed(fixed_t value) : value(value) { }
-
-      Fixed operator +  (const Fixed &in);
-      Fixed operator +  (const int val);
-      Fixed operator -  (const Fixed &in);
-      Fixed operator -  (const int val);
-      Fixed operator *  (const Fixed &in);
-      Fixed operator *  (const int val);
-      Fixed operator /  (const Fixed &in);
-      Fixed operator /  (const int val);
-      Fixed operator << (const int val);
-
-      Fixed &operator += (const Fixed &in);
-      Fixed &operator += (const int val);
-      Fixed &operator -= (const Fixed &in);
-      Fixed &operator -= (const int val);
-      Fixed &operator *= (const Fixed &in);
-      Fixed &operator *= (const int val);
-      Fixed &operator /= (const Fixed &in);
-      Fixed &operator /= (const int val);
-
-      operator double() const;
-      operator fixed_t() const { return value; }
-   };
-
-   class Angle
-   {
-   public:
-      angle_t value;
-
-      Angle() : value(0) { }
-
-      Angle(fixed_t value) : value(value) { }
-
-      Angle operator + (const Angle &in);
-      Angle operator + (const Fixed &in);
-      Angle operator + (const int val);
-
-      Angle operator - (const Angle &in);
-      Angle operator - (const Fixed &in);
-      Angle operator - (const int val);
-
-      Angle operator * (const Fixed &in);
-      Angle operator * (const int val);
-
-      Angle operator / (const Angle &in);
-      Angle operator / (const Fixed &in);
-      Angle operator / (const int val);
-
-      Angle &operator += (const Angle &in);
-      Angle &operator += (const Fixed &in);
-      Angle &operator += (const int val);
-
-      Angle &operator -= (const Angle &in);
-      Angle &operator -= (const Fixed &in);
-      Angle &operator -= (const int val);
-
-      Angle &operator *= (const Fixed &in);
-      Angle &operator *= (const int val);
-
-      Angle &operator /= (const Angle &in);
-      Angle &operator /= (const Fixed &in);
-      Angle &operator /= (const int val);
-
-      operator Fixed() const;
-      operator angle_t() const { return value; }
-   };
-
    class ScriptObjFixed
    {
    public:
-      static void  Construct(Fixed *thisFixed);
-      static void  ConstructFromOther(const Fixed &other, Fixed *thisFixed);
-      static void  ConstructFromDouble(double other, Fixed *thisFixed);
-      static void  ConstructFromInt(int other, Fixed *thisFixed);
-      static void  ConstructFromPair(int16_t integer, double frac, Fixed *thisFixed);
-      static Fixed ConstructFromBits(int bits);
+      static void    Construct(fixed_t *thisFixed);
+      static void    ConstructFromOther(const fixed_t other, fixed_t *thisFixed);
+      static void    ConstructFromDouble(double other, fixed_t *thisFixed);
+      static void    ConstructFromInt(int other, fixed_t *thisFixed);
+      static void    ConstructFromPair(int16_t integer, double frac, fixed_t *thisFixed);
+      static fixed_t ConstructFromBits(int bits);
 
       static void Init();
    };
@@ -128,11 +53,11 @@ namespace Aeon
    class ScriptObjAngle
    {
    public:
-      static void  Construct(Angle *thisAngle);
-      static void  ConstructFromOther(const Angle &other, Angle *thisAngle);
-      static void  ConstructFromDouble(double other, Angle *thisAngle);
-      static void  ConstructFromInt(int other, Angle *thisAngle);
-      static Angle ConstructFromBits(angle_t bits);
+      static void    Construct(angle_t *thisAngle);
+      static void    ConstructFromOther(const angle_t other, angle_t *thisAngle);
+      static void    ConstructFromDouble(double other, angle_t *thisAngle);
+      static void    ConstructFromInt(int other, angle_t *thisAngle);
+      static angle_t ConstructFromBits(angle_t bits);
 
       static void Init();
    };

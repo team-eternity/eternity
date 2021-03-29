@@ -122,7 +122,7 @@ namespace Aeon
       ScriptObjACS::Init();
    }
 
-   static Fixed MISSILERANGE_prop(MISSILERANGE);
+   static fixed_t MISSILERANGE_prop(MISSILERANGE);
 
    void ScriptManager::RegisterGlobalProperties()
    {

@@ -118,10 +118,10 @@ namespace Aeon
          *self << val;
          return *self;
       }
-      static qstring &AssignFixed(const Fixed &val, qstring *self)
+      static qstring &AssignFixed(const fixed_t val, qstring *self)
       {
          char buf[19]; // minus, 5 digits max, dot, 11 digits max, null terminator
-         psnprintf(buf, sizeof(buf), "%.11f", M_FixedToDouble(val.value));
+         psnprintf(buf, sizeof(buf), "%.11f", M_FixedToDouble(val));
 
          *self = buf;
          return *self;
@@ -138,7 +138,7 @@ namespace Aeon
       { ASSIGNSIG("const String &in"),      WRAP_OBJ_LAST(ActionArg::AssignString) },
       { ASSIGNSIG("const int"),             WRAP_OBJ_LAST(ActionArg::AssignInt)    },
       { ASSIGNSIG("const double"),          WRAP_OBJ_LAST(ActionArg::AssignDouble) },
-      { ASSIGNSIG("const fixed_t &in"),     WRAP_OBJ_LAST(ActionArg::AssignFixed)  }
+      { ASSIGNSIG("const fixed_t"),         WRAP_OBJ_LAST(ActionArg::AssignFixed)  }
    };
 
    #define EXECSIG(name) "void " name "(const String &name," \

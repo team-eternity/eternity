@@ -43,34 +43,34 @@ namespace Aeon
    class Math
    {
    public:
-      static Fixed Sin(const Angle val)
+      static fixed_t Sin(const angle_t val)
       {
-         return Fixed(finesine[val.value >> ANGLETOFINESHIFT]);
+         return fixed_t(finesine[val >> ANGLETOFINESHIFT]);
       }
 
-      static Fixed Cos(const Angle val)
+      static fixed_t Cos(const angle_t val)
       {
-         return Fixed(finecosine[val.value >> ANGLETOFINESHIFT]);
+         return fixed_t(finecosine[val >> ANGLETOFINESHIFT]);
       }
 
-      static Fixed Tan(const Angle val)
+      static fixed_t Tan(const angle_t val)
       {
-         return Fixed(finetangent[val.value >> ANGLETOFINESHIFT]);
+         return fixed_t(finetangent[val >> ANGLETOFINESHIFT]);
       }
 
-      static Fixed Atan2(const Fixed y, const Fixed x)
+      static fixed_t Atan2(const fixed_t y, const fixed_t x)
       {
-         return Fixed(P_PointToAngle(0, 0, x, y));
+         return fixed_t(P_PointToAngle(0, 0, x, y));
       }
 
-      static Fixed Fabs(const Fixed val)
+      static fixed_t Fabs(const fixed_t val)
       {
-         return Fixed(D_abs(val.value));
+         return fixed_t(D_abs(val));
       }
 
-      static Fixed Sqrt(const Fixed val)
+      static fixed_t Sqrt(const fixed_t val)
       {
-         return Fixed(M_DoubleToFixed(sqrt(M_FixedToDouble(val.value))));
+         return fixed_t(M_DoubleToFixed(sqrt(M_FixedToDouble(val))));
       }
 
       static int Abs(const int val)
@@ -78,17 +78,17 @@ namespace Aeon
          return abs(val);
       }
 
-      static Fixed Ceil(const Fixed val)
+      static fixed_t Ceil(const fixed_t val)
       {
-         if(val.value & (FRACUNIT - 1))
-            return Fixed((val.value & ~(FRACUNIT - 1)) + FRACUNIT);
+         if(val & (FRACUNIT - 1))
+            return fixed_t((val & ~(FRACUNIT - 1)) + FRACUNIT);
          else
             return val;
       }
 
-      static Fixed Floor(const Fixed val)
+      static fixed_t Floor(const fixed_t val)
       {
-         return Fixed(val.value & ~(FRACUNIT - 1));
+         return fixed_t(val & ~(FRACUNIT - 1));
       }
    };
 
@@ -98,7 +98,7 @@ namespace Aeon
       static unsigned int UInt()             { return P_RandomEx(pr_aeon);              }
       static uint8_t      Byte()             { return P_Random(pr_aeon);                }
       static unsigned int Max(const int max) { return P_RangeRandomEx(pr_aeon, 0, max); }
-      static Aeon::Fixed  Fixed()            { return Aeon::Fixed(P_RandomEx(pr_aeon)); }
+      static fixed_t      Fixed()            { return fixed_t(P_RandomEx(pr_aeon)); }
       static int RangeUInt(const int min, const int max)
       {
          return P_RangeRandomEx(pr_aeon, min, max);
@@ -107,18 +107,17 @@ namespace Aeon
       {
          return P_RangeRandom(pr_aeon, min, max);
       }
-      static Aeon::Fixed RangeFixed(const Aeon::Fixed min, const Aeon::Fixed max)
+      static fixed_t RangeFixed(const fixed_t min, const fixed_t max)
       {
-         if(min.value >= 0)
-            return Aeon::Fixed(P_RangeRandomEx(pr_aeon, min.value, max.value));
-         return Aeon::Fixed(P_RangeRandomEx(pr_aeon, min.value - min.value,
-                                            max.value - min.value) + min.value);
+         if(min >= 0)
+            return fixed_t(P_RangeRandomEx(pr_aeon, min, max));
+         return fixed_t(P_RangeRandomEx(pr_aeon, min - min, max - min) + min);
       }
 
       static int SubInt(const unsigned int max) { return P_SubRandomEx(pr_aeon, max); }
-      /*static Aeon::Fixed SubFixed(const Fixed max)
+      /*static fixed_t SubFixed(const fixed_t max)
       {
-         return Aeon::Fixed(P_SubRandomEx(pr_script, max.value));
+         return fixed_t(P_SubRandomEx(pr_script, max));
       }*/
    };
 
@@ -163,136 +162,126 @@ namespace Aeon
 
    //=============================================================================
    //
-   // Aeon Fixed-point Class
+   // Aeon fixed_t
    //
 
-   Fixed Fixed::operator +  (const Fixed &in) { return value + in.value;          }
-   Fixed Fixed::operator +  (const int val)   { return value + (val * FRACUNIT);  }
-   Fixed Fixed::operator -  (const Fixed &in) { return value - in.value;          }
-   Fixed Fixed::operator -  (const int val)   { return value - (val * FRACUNIT);  }
-   Fixed Fixed::operator *  (const Fixed &in) { return FixedMul(value, in.value); }
-   Fixed Fixed::operator *  (const int val)   { return value * val;               }
-   Fixed Fixed::operator /  (const Fixed &in) { return FixedDiv(value, in.value); }
-   Fixed Fixed::operator /  (const int val)   { return value / val;               }
-   Fixed Fixed::operator << (const int val)   { return value << val;              }
+   fixed_t FixedAddFixed(const fixed_t *lval, const fixed_t rval) { return *lval + rval;              }
+   fixed_t FixedAddInt  (const fixed_t *lval, const int rval)     { return *lval + (rval * FRACUNIT); }
+   fixed_t FixedSubFixed(const fixed_t *lval, const fixed_t rval) { return *lval - rval;              }
+   fixed_t FixedSubInt  (const fixed_t *lval, const int rval)     { return *lval - (rval * FRACUNIT); }
+   fixed_t FixedMulFixed(const fixed_t *lval, const fixed_t rval) { return FixedMul(*lval, rval);     }
+   fixed_t FixedMulInt  (const fixed_t *lval, const int rval)     { return *lval * rval;              }
+   fixed_t FixedDivFixed(const fixed_t *lval, const fixed_t rval) { return FixedDiv(*lval, rval);     }
+   fixed_t FixedDivInt  (const fixed_t *lval, const int rval)     { return *lval / rval;              }
+   fixed_t FixedLshInt  (const fixed_t *lval, const int rval)     { return *lval << rval;             }
 
-   Fixed &Fixed::operator += (const Fixed &in)
+   fixed_t &FixedAssignAddFixed(fixed_t *lval, const fixed_t rval)
    {
-      value += in.value;
-      return *this;
+      *lval += rval;
+      return *lval;
    }
-   Fixed &Fixed::operator += (const int val)
+   fixed_t &FixedAssignAddInt(fixed_t *lval, const int rval)
    {
-      value += val * FRACUNIT;
-      return *this;
+      *lval += rval * FRACUNIT;
+      return *lval;
    }
-   Fixed &Fixed::operator -= (const Fixed &in)
+   fixed_t &FixedAssignSubFixed(fixed_t *lval, const fixed_t rval)
    {
-      value -= in.value;
-      return *this;
+      *lval -= rval;
+      return *lval;
    }
-   Fixed &Fixed::operator -= (const int val)
+   fixed_t &FixedAssignSubInt(fixed_t *lval, const int rval)
    {
-      value -= val * FRACUNIT;
-      return *this;
+      *lval -= rval * FRACUNIT;
+      return *lval;
    }
-   Fixed &Fixed::operator *= (const Fixed &in)
+   fixed_t &FixedAssignMulFixed(fixed_t *lval, const fixed_t rval)
    {
-      value = FixedMul(value, in.value);
-      return *this;
+      *lval = FixedMul(*lval, rval);
+      return *lval;
    }
-   Fixed &Fixed::operator *= (const int val)
+   fixed_t &FixedAssignMulInt(fixed_t *lval, const int rval)
    {
-      value *= val;
-      return *this;
+      *lval *= rval;
+      return *lval;
    }
-
-   Fixed &Fixed::operator /= (const Fixed &in)
+   fixed_t &FixedAssignDivFixed(fixed_t *lval, const fixed_t rval)
    {
-      value = FixedDiv(value, in.value);
-      return *this;
+      *lval = FixedDiv(*lval, rval);
+      return *lval;
    }
-   Fixed &Fixed::operator /= (const int val)
+   fixed_t &FixedAssignDivInt(fixed_t *lval, const int rval)
    {
-      value /= val;
-      return *this;
-   }
-
-   Fixed::operator double() const { return M_FixedToDouble(value); }
-
-   void ScriptObjFixed::Construct(Fixed *thisFixed)
-   {
-      *thisFixed = Fixed();
+      *lval /= rval;
+      return *lval;
    }
 
-   void ScriptObjFixed::ConstructFromOther(const Fixed &other, Fixed *thisFixed)
+   double FixedToDouble(const fixed_t *value) { return M_FixedToDouble(*value); }
+
+   void ScriptObjFixed::Construct(fixed_t *thisFixed)
    {
-      *thisFixed = Fixed(other);
+      *thisFixed = 0;
    }
 
-   void ScriptObjFixed::ConstructFromDouble(const double other, Fixed *thisFixed)
+   void ScriptObjFixed::ConstructFromOther(const fixed_t other, fixed_t *thisFixed)
    {
-      thisFixed->value = M_DoubleToFixed(other);
+      *thisFixed = other;
    }
 
-   void ScriptObjFixed::ConstructFromInt(const int other, Fixed *thisFixed)
+   void ScriptObjFixed::ConstructFromDouble(const double other, fixed_t *thisFixed)
    {
-      thisFixed->value = other * FRACUNIT;
+      *thisFixed = M_DoubleToFixed(other);
    }
 
-   void ScriptObjFixed::ConstructFromPair(const int16_t integer, const double frac,
-                                          Fixed *thisFixed)
+   void ScriptObjFixed::ConstructFromInt(const int other, fixed_t *thisFixed)
    {
-      thisFixed->value = static_cast<int32_t>(integer) * FRACUNIT;
+      *thisFixed = other * FRACUNIT;
+   }
+
+   void ScriptObjFixed::ConstructFromPair(const int16_t integer, const double frac, fixed_t *thisFixed)
+   {
+      *thisFixed = static_cast<int32_t>(integer) * FRACUNIT;
       if(frac < 1.0 && frac >= 0.0)
-         thisFixed->value |= M_DoubleToFixed(frac);
+         *thisFixed |= M_DoubleToFixed(frac);
    }
 
-   Fixed ScriptObjFixed::ConstructFromBits(int bits)
+   fixed_t ScriptObjFixed::ConstructFromBits(const int bits)
    {
-      Fixed ret = Fixed();
-      ret.value = bits;
-      return ret;
+      return bits;
    }
 
-   static void asPrint(Fixed f)
+   static void asPrint(const fixed_t f)
    {
-      C_Printf("%.11f\n", M_FixedToDouble(f.value));
+      C_Printf("%.11f\n", M_FixedToDouble(f));
    }
-
-   #define FIXEDBINOP(op, param) \
-      WRAP_MFN_PR(Fixed, operator op,  (param), Fixed)
-
-   #define FIXEDASSIGNOP(op, param) \
-      WRAP_MFN_PR(Fixed, operator op,  (param), Fixed &)
 
    static const aeonfuncreg_t fixedFuncs[] =
    {
-      { "fixed_t opAdd(const fixed_t &in)",        FIXEDBINOP(+, const Fixed &)     },
-      { "fixed_t opAdd(const int val)",            FIXEDBINOP(+, const int),        },
-      { "fixed_t opSub(const fixed_t &in)",        FIXEDBINOP(-, const Fixed &)     },
-      { "fixed_t opSub(const int val)",            FIXEDBINOP(-, const int),        },
-      { "fixed_t opMul(const fixed_t &in)",        FIXEDBINOP(*, const Fixed &)     },
-      { "fixed_t opMul(const int val)",            FIXEDBINOP(*, const int)         },
-      { "fixed_t opDiv(const fixed_t &in)",        FIXEDBINOP(/, const Fixed &)     },
-      { "fixed_t opDiv(const int val)",            FIXEDBINOP(/, const int)         },
-      { "fixed_t opShl(const int val)",            FIXEDBINOP(<<, const int)        },
-      { "fixed_t &opAddAssign(const fixed_t &in)", FIXEDASSIGNOP(+=, const Fixed &) },
-      { "fixed_t &opAddAssign(const int val)",     FIXEDASSIGNOP(+=, const int)     },
-      { "fixed_t &opSubAssign(const fixed_t &in)", FIXEDASSIGNOP(-=, const Fixed &) },
-      { "fixed_t &opSubAssign(const int val)",     FIXEDASSIGNOP(-=, const int)     },
-      { "fixed_t &opMulAssign(const fixed_t &in)", FIXEDASSIGNOP(*=, const Fixed &) },
-      { "fixed_t &opMulAssign(const int val)",     FIXEDASSIGNOP(*=, const int)     },
-      { "fixed_t &opDivAssign(const fixed_t &in)", FIXEDASSIGNOP(/=, const Fixed &) },
-      { "fixed_t &opDivAssign(const int val)",     FIXEDASSIGNOP(/=, const int)     },
-      { "double  opImplConv() const",              WRAP_MFN(Fixed, operator double) },
+      { "fixed_t opAdd(const fixed_t val) const",  WRAP_OBJ_FIRST(FixedAddFixed)       },
+      { "fixed_t opAdd(const int val) const",      WRAP_OBJ_FIRST(FixedAddInt),        },
+      { "fixed_t opSub(const fixed_t val) const",  WRAP_OBJ_FIRST(FixedSubFixed)       },
+      { "fixed_t opSub(const int val) const",      WRAP_OBJ_FIRST(FixedSubInt),        },
+      { "fixed_t opMul(const fixed_t val) const",  WRAP_OBJ_FIRST(FixedMulFixed)       },
+      { "fixed_t opMul(const int val) const",      WRAP_OBJ_FIRST(FixedMulInt)         },
+      { "fixed_t opDiv(const fixed_t val) const",  WRAP_OBJ_FIRST(FixedDivFixed)       },
+      { "fixed_t opDiv(const int val) const",      WRAP_OBJ_FIRST(FixedDivInt)         },
+      { "fixed_t opShl(const int val) const",      WRAP_OBJ_FIRST(FixedLshInt)         },
+      { "fixed_t &opAddAssign(const fixed_t val)", WRAP_OBJ_FIRST(FixedAssignAddFixed) },
+      { "fixed_t &opAddAssign(const int val)",     WRAP_OBJ_FIRST(FixedAssignAddInt)   },
+      { "fixed_t &opSubAssign(const fixed_t val)", WRAP_OBJ_FIRST(FixedAssignSubFixed) },
+      { "fixed_t &opSubAssign(const int val)",     WRAP_OBJ_FIRST(FixedAssignSubInt)   },
+      { "fixed_t &opMulAssign(const fixed_t val)", WRAP_OBJ_FIRST(FixedAssignMulFixed) },
+      { "fixed_t &opMulAssign(const int val)",     WRAP_OBJ_FIRST(FixedAssignMulInt)   },
+      { "fixed_t &opDivAssign(const fixed_t val)", WRAP_OBJ_FIRST(FixedAssignDivFixed) },
+      { "fixed_t &opDivAssign(const int val)",     WRAP_OBJ_FIRST(FixedAssignDivInt)   },
+      { "double  opImplConv() const",              WRAP_OBJ_FIRST(FixedToDouble)       },
    };
 
    void ScriptObjFixed::Init()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->RegisterObjectType("fixed_t", sizeof(Fixed),
+      e->RegisterObjectType("fixed_t", sizeof(fixed_t),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
       e->RegisterObjectBehaviour(
@@ -300,7 +289,7 @@ namespace Aeon
          WRAP_OBJ_LAST(Construct), asCALL_GENERIC
       );
       e->RegisterObjectBehaviour(
-         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t &in)",
+         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t)",
          WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
       );
       e->RegisterObjectBehaviour(
@@ -326,13 +315,13 @@ namespace Aeon
          e->RegisterObjectMethod("fixed_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
       e->RegisterGlobalFunction(
-         "void print(fixed_t)", WRAP_FN_PR(asPrint, (Fixed), void), asCALL_GENERIC
+         "void print(fixed_t)", WRAP_FN_PR(asPrint, (const fixed_t), void), asCALL_GENERIC
       );
    }
 
    //=============================================================================
    //
-   // Aeon Angle Class
+   // Aeon angle_t
    //
 
    //
@@ -356,147 +345,139 @@ namespace Aeon
          return (val / 45) * ANG45;
    }
 
-   Angle Angle::operator + (const Angle &in)  { return value + in.value;                 }
-   Angle Angle::operator + (const Fixed &in)  { return value + (FixedToAngle(in.value)); }
-   Angle Angle::operator + (const int val)    { return value + intToAngle(val);          }
-   Angle Angle::operator - (const Angle &in)  { return value - in.value;                 }
-   Angle Angle::operator - (const Fixed &in)  { return value - (FixedToAngle(in.value)); }
-   Angle Angle::operator - (const int val)    { return value - intToAngle(val);          }
+   angle_t AngleAddAngle(const angle_t *lval, const angle_t rval) { return *lval + rval;                 }
+   angle_t AngleAddFixed(const angle_t *lval, const fixed_t rval) { return *lval + (FixedToAngle(rval)); }
+   angle_t AngleAddInt  (const angle_t *lval, const int rval)     { return *lval + intToAngle(rval);     }
+   angle_t AngleSubAngle(const angle_t *lval, const angle_t rval) { return *lval - rval;                 }
+   angle_t AngleSubFixed(const angle_t *lval, const fixed_t rval) { return *lval - (FixedToAngle(rval)); }
+   angle_t AngleSubInt  (const angle_t *lval, const int rval)     { return *lval - intToAngle(rval);     }
 
-   Angle Angle::operator * (const Fixed &in)
+   angle_t AngleMulFixed(const angle_t *lval, const fixed_t rval)
    {
-      return fixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
+      return fixedToAngleClamped(FixedMul(AngleToFixed(*lval), rval));
    }
-   Angle Angle::operator * (const int val)    { return value * val;      }
-   Angle Angle::operator / (const Angle &in)  { return value / in.value; }
-   Angle Angle::operator / (const Fixed &in)
+   angle_t AngleMulInt(const angle_t *lval, const int rval)       { return *lval * rval; }
+   angle_t AngleDivAngle(const angle_t *lval, const angle_t rval) { return *lval / rval; }
+   angle_t AngleDivFixed(const angle_t *lval, const fixed_t rval)
    {
-      return fixedToAngleClamped(FixedDiv(AngleToFixed(value), in.value));
+      return fixedToAngleClamped(FixedDiv(AngleToFixed(*lval), rval));
    }
-   Angle Angle::operator / (const int val) { return value / val; }
+   angle_t AngleDivInt(const angle_t *lval, const int rval) { return *lval / rval; }
 
-   Angle &Angle::operator += (const Angle &in)
+   angle_t &AngleAssignAddAngle(angle_t *lval, const angle_t rval)
    {
-      value += in.value;
-      return *this;
+      *lval += rval;
+      return *lval;
    }
-   Angle &Angle::operator += (const Fixed &in)
+   angle_t &AngleAssignAddFixed(angle_t *lval, const fixed_t rval)
    {
-      value += fixedToAngleClamped(in.value);
-      return *this;
+      *lval += fixedToAngleClamped(rval);
+      return *lval;
    }
-   Angle &Angle::operator += (const int val)
+   angle_t &AngleAssignAddInt(angle_t *lval, const int rval)
    {
-      value += intToAngle(val);
-      return *this;
+      *lval += intToAngle(rval);
+      return *lval;
    }
-   Angle &Angle::operator -= (const Angle &in)
+   angle_t &AngleAssignSubAngle(angle_t *lval, const angle_t rval)
    {
-      value -= in.value;
-      return *this;
+      *lval -= rval;
+      return *lval;
    }
-   Angle &Angle::operator -= (const Fixed &in)
+   angle_t &AngleAssignSubFixed(angle_t *lval, const fixed_t rval)
    {
-      value -= fixedToAngleClamped(in.value);
-      return *this;
+      *lval -= fixedToAngleClamped(rval);
+      return *lval;
    }
-   Angle &Angle::operator -= (const int val)
+   angle_t &AngleAssignSubInt(angle_t *lval, const int rval)
    {
-      value -= intToAngle(val);
-      return *this;
-   }
-
-   Angle &Angle::operator *= (const Fixed &in)
-   {
-      value = fixedToAngleClamped(FixedMul(AngleToFixed(value), in.value));
-      return *this;
-   }
-   Angle &Angle::operator *= (const int val)
-   {
-      value *= val;
-      return *this;
-   }
-   Angle &Angle::operator /= (const Angle &in)
-   {
-      value /= in.value;
-      return *this;
-   }
-   Angle &Angle::operator /= (const Fixed &in)
-   {
-      value = fixedToAngleClamped(FixedDiv(AngleToFixed(value), in.value));
-      return *this;
-   }
-   Angle &Angle::operator /= (const int val)
-   {
-      value /= val;
-      return *this;
+      *lval -= intToAngle(rval);
+      return *lval;
    }
 
-   Angle::operator Fixed() const { return Fixed(AngleToFixed(value)); }
-
-   #define ANGLEBINOP(op, param) \
-      WRAP_MFN_PR(Angle, operator op,  (param), Angle)
-
-   #define ANGLEASSIGNOP(op, param) \
-      WRAP_MFN_PR(Angle, operator op,  (param), Angle &)
-
-   void ScriptObjAngle::Construct(Angle *thisFixed)
+   angle_t &AngleAssignMulFixed(angle_t *lval, const fixed_t rval)
    {
-      *thisFixed = Angle();
+      *lval = fixedToAngleClamped(FixedMul(AngleToFixed(*lval), rval));
+      return *lval;
+   }
+   angle_t &AngleAssignMulInt(angle_t *lval, const int rval)
+   {
+      *lval *= rval;
+      return *lval;
+   }
+   angle_t &AngleAssignDivAngle(angle_t *lval, const angle_t rval)
+   {
+      *lval /= rval;
+      return *lval;
+   }
+   angle_t &AngleAssignDivFixed(angle_t *lval, const fixed_t rval)
+   {
+      *lval = fixedToAngleClamped(FixedDiv(AngleToFixed(*lval), rval));
+      return *lval;
+   }
+   angle_t &AngleAssignDivInt(angle_t *lval, const int rval)
+   {
+      *lval /= rval;
+      return *lval;
    }
 
-   void ScriptObjAngle::ConstructFromOther(const Angle &other, Angle *thisAngle)
+   fixed_t AeonAngleToFixed(fixed_t *thisAngle) { return AngleToFixed(*thisAngle); }
+
+   void ScriptObjAngle::Construct(angle_t *thisFixed)
    {
-      *thisAngle = Angle(other);
+      *thisFixed = 0;
    }
 
-   void ScriptObjAngle::ConstructFromDouble(const double other, Angle *thisAngle)
+   void ScriptObjAngle::ConstructFromOther(const angle_t other, angle_t *thisAngle)
    {
-      thisAngle->value = fixedToAngleClamped(M_DoubleToFixed(other));
+      *thisAngle = other;
    }
 
-   void ScriptObjAngle::ConstructFromInt(const int other, Angle *thisAngle)
+   void ScriptObjAngle::ConstructFromDouble(const double other, angle_t *thisAngle)
    {
-      thisAngle->value = intToAngle(other);
+      *thisAngle = fixedToAngleClamped(M_DoubleToFixed(other));
    }
 
-   Angle ScriptObjAngle::ConstructFromBits(angle_t bits)
+   void ScriptObjAngle::ConstructFromInt(const int other, angle_t *thisAngle)
    {
-      Angle ret = Angle();
-      ret.value = bits;
-      return ret;
+      *thisAngle = intToAngle(other);
    }
 
-   static void asPrint(Angle f)
+   angle_t ScriptObjAngle::ConstructFromBits(angle_t bits)
    {
-      C_Printf("%f\n", M_FixedToDouble(AngleToFixed(f.value)));
+      return bits;
+   }
+
+   static void asPrint(const angle_t angle)
+   {
+      C_Printf("%f\n", M_FixedToDouble(AngleToFixed(angle)));
    }
 
    static const aeonfuncreg_t angleFuncs[] =
    {
-      { "angle_t opAdd(const angle_t &in)",        ANGLEBINOP(+, const Angle &)     },
-      { "angle_t opAdd(const fixed_t &in)",        ANGLEBINOP(+, const Fixed &)     },
-      { "angle_t opAdd(const int val)",            ANGLEBINOP(+, const int),        },
-      { "angle_t opSub(const angle_t &in)",        ANGLEBINOP(-, const Angle &)     },
-      { "angle_t opSub(const fixed_t &in)",        ANGLEBINOP(-, const Fixed &)     },
-      { "angle_t opSub(const int val)",            ANGLEBINOP(-, const int),        },
-      { "angle_t opMul(const fixed_t &in)",        ANGLEBINOP(*, const Fixed &)     },
-      { "angle_t opMul(const int val)",            ANGLEBINOP(*, const int)         },
-      { "angle_t opDiv(const angle_t &in)",        ANGLEBINOP(/, const Angle &)     },
-      { "angle_t opDiv(const fixed_t &in)",        ANGLEBINOP(/, const Fixed &)     },
-      { "angle_t opDiv(const int val)",            ANGLEBINOP(/, const int)         },
-      { "angle_t &opAddAssign(const angle_t &in)", ANGLEASSIGNOP(+=, const Angle &) },
-      { "angle_t &opAddAssign(const fixed_t &in)", ANGLEASSIGNOP(+=, const Fixed &) },
-      { "angle_t &opAddAssign(const int val)",     ANGLEASSIGNOP(+=, const int)     },
-      { "angle_t &opSubAssign(const angle_t &in)", ANGLEASSIGNOP(-=, const Angle &) },
-      { "angle_t &opSubAssign(const fixed_t &in)", ANGLEASSIGNOP(-=, const Fixed &) },
-      { "angle_t &opSubAssign(const int val)",     ANGLEASSIGNOP(-=, const int)     },
-      { "angle_t &opMulAssign(const angle_t &in)", ANGLEASSIGNOP(*=, const Fixed &) },
-      { "angle_t &opMulAssign(const int val)",     ANGLEASSIGNOP(*=, const int)     },
-      { "angle_t &opDivAssign(const angle_t &in)", ANGLEASSIGNOP(/=, const Angle &) },
-      { "angle_t &opDivAssign(const fixed_t &in)", ANGLEASSIGNOP(/=, const Fixed &) },
-      { "angle_t &opDivAssign(const int val)",     ANGLEASSIGNOP(/=, const int)     },
-      { "fixed_t opImplConv() const",              WRAP_MFN(Angle, operator Fixed)  },
+      { "angle_t opAdd(const angle_t val) const",  WRAP_OBJ_FIRST(AngleAddAngle)       },
+      { "angle_t opAdd(const fixed_t val) const",  WRAP_OBJ_FIRST(AngleAddFixed)       },
+      { "angle_t opAdd(const int val) const",      WRAP_OBJ_FIRST(AngleAddInt)         },
+      { "angle_t opSub(const angle_t val) const",  WRAP_OBJ_FIRST(AngleSubAngle)       },
+      { "angle_t opSub(const fixed_t val) const",  WRAP_OBJ_FIRST(AngleSubFixed)       },
+      { "angle_t opSub(const int val) const",      WRAP_OBJ_FIRST(AngleSubInt)         },
+      { "angle_t opMul(const fixed_t val) const",  WRAP_OBJ_FIRST(AngleMulFixed)       },
+      { "angle_t opMul(const int val) const",      WRAP_OBJ_FIRST(AngleMulInt)         },
+      { "angle_t opDiv(const angle_t val) const",  WRAP_OBJ_FIRST(AngleDivAngle)       },
+      { "angle_t opDiv(const fixed_t val) const",  WRAP_OBJ_FIRST(AngleDivFixed)       },
+      { "angle_t opDiv(const int val) const",      WRAP_OBJ_FIRST(AngleDivInt)         },
+      { "angle_t &opAddAssign(const angle_t val)", WRAP_OBJ_FIRST(AngleAssignAddAngle) },
+      { "angle_t &opAddAssign(const fixed_t val)", WRAP_OBJ_FIRST(AngleAssignAddFixed) },
+      { "angle_t &opAddAssign(const int val)",     WRAP_OBJ_FIRST(AngleAssignAddInt)   },
+      { "angle_t &opSubAssign(const angle_t val)", WRAP_OBJ_FIRST(AngleAssignSubAngle) },
+      { "angle_t &opSubAssign(const fixed_t val)", WRAP_OBJ_FIRST(AngleAssignSubFixed) },
+      { "angle_t &opSubAssign(const int val)",     WRAP_OBJ_FIRST(AngleAssignSubInt)   },
+      { "angle_t &opMulAssign(const fixed_t val)", WRAP_OBJ_FIRST(AngleAssignMulFixed) },
+      { "angle_t &opMulAssign(const int val)",     WRAP_OBJ_FIRST(AngleAssignMulInt)   },
+      { "angle_t &opDivAssign(const angle_t val)", WRAP_OBJ_FIRST(AngleAssignDivAngle) },
+      { "angle_t &opDivAssign(const fixed_t val)", WRAP_OBJ_FIRST(AngleAssignDivFixed) },
+      { "angle_t &opDivAssign(const int val)",     WRAP_OBJ_FIRST(AngleAssignDivInt)   },
+      { "fixed_t opImplConv() const",              WRAP_OBJ_FIRST(AeonAngleToFixed)    },
    };
 
    void ScriptObjAngle::Init()
@@ -504,7 +485,7 @@ namespace Aeon
       asIScriptEngine *const e = ScriptManager::Engine();
 
       e->RegisterObjectType(
-         "angle_t", sizeof(Angle),
+         "angle_t", sizeof(angle_t),
          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
       );
 
@@ -513,7 +494,7 @@ namespace Aeon
          WRAP_OBJ_LAST(Construct), asCALL_GENERIC
       );
       e->RegisterObjectBehaviour(
-         "angle_t", asBEHAVE_CONSTRUCT, "void f(const angle_t &in)",
+         "angle_t", asBEHAVE_CONSTRUCT, "void f(const angle_t)",
          WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
       );
       e->RegisterObjectBehaviour(
@@ -534,7 +515,7 @@ namespace Aeon
          e->RegisterObjectMethod("angle_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 
       e->RegisterGlobalFunction(
-         "void print(angle_t)", WRAP_FN_PR(asPrint, (Angle), void), asCALL_GENERIC
+         "void print(angle_t)", WRAP_FN_PR(asPrint, (const angle_t), void), asCALL_GENERIC
       );
    }
 

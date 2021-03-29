@@ -85,7 +85,7 @@ namespace Aeon
          mo->*flagMember &= ~flag;
    }
 
-   static Fixed floatBobOffsets(const int in)
+   static fixed_t floatBobOffsets(const int in)
    {
       static constexpr int NUMFLOATBOBOFFSETS = earrlen(FloatBobOffsets);
       if(in < 0 || in > NUMFLOATBOBOFFSETS)
@@ -93,20 +93,20 @@ namespace Aeon
       return FloatBobOffsets[in];
    }
 
-   static Mobj *spawnMobj(Fixed x, Fixed y, Fixed z, const qstring &name)
+   static Mobj *spawnMobj(fixed_t x, fixed_t y, fixed_t z, const qstring &name)
    {
-      return P_SpawnMobj(x.value, y.value, z.value, E_SafeThingName(name.constPtr()));
+      return P_SpawnMobj(x, y, z, E_SafeThingName(name.constPtr()));
    }
 
-   static Mobj *spawnMissile(Mobj *source, Mobj *dest, const qstring &type, Fixed z)
+   static Mobj *spawnMissile(Mobj *source, Mobj *dest, const qstring &type, fixed_t z)
    {
-      return P_SpawnMissile(source, dest, E_SafeThingName(type.constPtr()), z.value);
+      return P_SpawnMissile(source, dest, E_SafeThingName(type.constPtr()), z);
    }
 
-   static Mobj *spawnMissileAngle(Mobj *source, const qstring &type, Angle angle, Fixed momz, Fixed z)
+   static Mobj *spawnMissileAngle(Mobj *source, const qstring &type, angle_t angle, fixed_t momz, fixed_t z)
    {
       return P_SpawnMissileAngle(source, E_SafeThingName(type.constPtr()),
-                                 angle.value, momz.value, z.value);
+                                 angle, momz, z);
    }
 
    static void startSound(const PointThinker *origin, const sfxinfo_t &sfxinfo)
@@ -119,21 +119,20 @@ namespace Aeon
       P_WeaponSound(t1, sfxinfo.dehackednum);
    }
 
-   static Fixed doAutoAim(Mobj *t1, Angle angle, Fixed distance)
+   static fixed_t doAutoAim(Mobj *t1, angle_t angle, fixed_t distance)
    {
-      return Fixed(P_DoAutoAim(t1, angle.value, distance.value));
+      return P_DoAutoAim(t1, angle, distance);
    }
 
-   static Fixed aimLineAttack(Mobj *t1, Angle angle, Fixed distance, int flags)
+   static fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int flags)
    {
-      return Fixed(P_AimLineAttack(t1, angle.value, distance.value,
-                                   flags & 1 ? true : false));
+      return P_AimLineAttack(t1, angle, distance, flags & 1 ? true : false);
    }
 
-   static void lineAttack(Mobj *t1, Angle angle, Fixed distance, Fixed slope,
-                              int damage, const qstring &pufftype)
+   static void lineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope,
+                          int damage, const qstring &pufftype)
    {
-      P_LineAttack(t1, angle.value, distance.value, slope.value, damage, pufftype.constPtr());
+      P_LineAttack(t1, angle, distance, slope, damage, pufftype.constPtr());
    }
 
 #define FLAG_ACCESSOR(name, flag, member) \

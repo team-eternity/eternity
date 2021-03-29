@@ -122,11 +122,11 @@ void A_Aeon(actionargs_t *actionargs)
    for(int i = 0; i < actionargs->aeonaction->numArgs; i++)
    {
       char        *argstr;
-      Aeon::Fixed  argfx;
+      fixed_t      argfx;
 
       char        *defaultarg   = nullptr;
       int          defaultint   = 0;
-      Aeon::Fixed  defaultfixed = Aeon::Fixed(0);
+      fixed_t      defaultfixed = 0;
       char        *defaultstr   = nullptr;
 
       switch(actionargs->aeonaction->argTypes[i])
@@ -139,7 +139,7 @@ void A_Aeon(actionargs_t *actionargs)
       case AAT_FIXED:
          if(actionargs->aeonaction->defaultArgs[i])
             defaultfixed = *static_cast<fixed_t *>(actionargs->aeonaction->defaultArgs[i]);
-         argfx = Aeon::Fixed(E_ArgAsFixed(actionargs->args, i, defaultfixed));
+         argfx = E_ArgAsFixed(actionargs->args, i, defaultfixed);
          ctx->SetArgObject(i + argoffs, &argfx);
          break;
       case AAT_STRING:

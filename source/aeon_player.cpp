@@ -34,9 +34,9 @@
 
 namespace Aeon
 {
-   static void thrust(player_t *plyr, Angle angle, Angle pitch, Fixed move)
+   static void thrust(player_t *plyr, fixed_t angle, fixed_t pitch, fixed_t move)
    {
-      P_Thrust(plyr, angle.value, pitch.value, move.value);
+      P_Thrust(plyr, angle, pitch, move);
    }
 
    static void subtractAmmo(player_t *plyr, int amount = -1)
