@@ -103,8 +103,6 @@ namespace Aeon
 
    void ScriptManager::RegisterScriptObjs()
    {
-      InitMCPP();
-
       ScriptObjMobj::PreInit();
       ScriptObjPlayer::PreInit();
 
@@ -163,6 +161,8 @@ namespace Aeon
       RegisterHandleOnlyClasses();
       RegisterScriptObjs();
       RegisterGlobalProperties();
+
+      InitMCPP();
 
       if(!(module = engine->GetModule("core", asGM_CREATE_IF_NOT_EXISTS)))
          I_Error("Aeon::ScriptManager::Init: Could not create module\n");
