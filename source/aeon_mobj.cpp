@@ -119,11 +119,6 @@ namespace Aeon
       P_WeaponSound(t1, sfxinfo.dehackednum);
    }
 
-   static fixed_t doAutoAim(Mobj *t1, angle_t angle, fixed_t distance)
-   {
-      return P_DoAutoAim(t1, angle, distance);
-   }
-
    static fixed_t aimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, int flags)
    {
       return P_AimLineAttack(t1, angle, distance, flags & 1 ? true : false);
@@ -155,7 +150,7 @@ namespace Aeon
       { "void startSound(const EE::Sound &in)",                WRAP_OBJ_FIRST(startSound)          },
       { "void weaponSound(const EE::Sound &in)",               WRAP_OBJ_FIRST(weaponSound)         },
       { "bool tryMove(fixed_t x, fixed_t y, int dropoff = 0)", WRAP_OBJ_FIRST(P_TryMove)           },
-      { "fixed_t doAutoAim(angle_t angle, fixed_t distance)",  WRAP_OBJ_FIRST(doAutoAim)           },
+      { "fixed_t doAutoAim(angle_t angle, fixed_t distance)",  WRAP_OBJ_FIRST(P_DoAutoAim)         },
       { "bool lookForPlayers(lftype_e looktype)",              WRAP_OBJ_FIRST(P_LookForPlayers)    },
       { "bool lookForTargets(lftype_e looktype)",              WRAP_OBJ_FIRST(P_LookForTargets)    },
       {
