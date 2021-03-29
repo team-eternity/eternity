@@ -174,6 +174,12 @@ namespace Aeon
       return pos;
    }
 
+
+   static bool IsReservedNamespace(const qstring &ns)
+   {
+      return ns == "EE" || ns == "Math";
+   }
+
    void ScriptManager::ProcessAeonFile(lumpinfo_t *lumpinfo)
    {
       // TODO: C preprocessing here
@@ -194,8 +200,8 @@ namespace Aeon
          }
 
          // Check if namespace
-         qstring tokStr(len);
-         strncpy(tokStr.getBuffer(), fileStr.bufferAt(pos), len);
+         qstring tokStr;
+         tokStr.copy(fileStr.bufferAt(pos), len);
          if(tokStr == "namespace")
          {
             // Get the identifier after "namespace"
@@ -206,8 +212,16 @@ namespace Aeon
             }
             while(t == asTC_COMMENT || t == asTC_WHITESPACE);
 
-            qstring newNamespace(len);
-            strncpy(newNamespace.getBuffer(), fileStr.bufferAt(pos), len);
+            qstring newNamespace;
+            newNamespace.copy(fileStr.bufferAt(pos), len);
+            if(currNamespaces.isEmpty() && IsReservedNamespace(newNamespace))
+            {
+               E_EDFLoggedErr(
+                  2,
+                  "ScriptManager::ProcessAeonFile: Namespace '%s' is reserved and cannot be extended via Aeon\n",
+                  newNamespace.constPtr()
+               );
+            }
             currNamespaces.add(std::move(newNamespace));
 
             // Search until first { is encountered
