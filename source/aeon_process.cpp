@@ -113,6 +113,15 @@ namespace Aeon
       for(char *const arg : argv)
          efree(arg);
 
+      if(error)
+      {
+         E_EDFLoggedErr(
+            2,
+            "Aeon::GetMCPPOutput: Error encounted preprocessing Aeon files in %s:\n%s",
+            wGlobalDir.getLumpFileName(lumpinfo->selfindex), error
+         );
+      }
+
       return output;
    }
 
