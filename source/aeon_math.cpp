@@ -551,23 +551,28 @@ namespace Aeon
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->RegisterObjectType("vector_t", sizeof(v3fixed_t),
-                            asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
+      e->RegisterObjectType(
+         "vector_t", sizeof(v3fixed_t), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
+      );
 
-      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f()",
-                                 WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f(const vector_t)",
-                                 WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT,
-                                 "void f(const fixed_t, const fixed_t, const fixed_t)",
-                                 WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC);
+      e->RegisterObjectBehaviour(
+         "vector_t", asBEHAVE_CONSTRUCT, "void f()",
+         WRAP_OBJ_LAST(Construct), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "vector_t", asBEHAVE_CONSTRUCT, "void f(const vector_t)",
+         WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
+      );
+      e->RegisterObjectBehaviour(
+         "vector_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t, const fixed_t, const fixed_t)",
+         WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC
+      );
 
       e->RegisterObjectProperty("vector_t", "fixed_t x", asOFFSET(v3fixed_t, x));
       e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(v3fixed_t, y));
       e->RegisterObjectProperty("vector_t", "fixed_t z", asOFFSET(v3fixed_t, z));
 
-      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(asPrint, (const v3fixed_t), void),
-                                 asCALL_GENERIC);
+      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(asPrint, (const v3fixed_t), void), asCALL_GENERIC);
    }
 }
 
