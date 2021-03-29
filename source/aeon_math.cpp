@@ -521,63 +521,52 @@ namespace Aeon
 
    //=============================================================================
    //
-   // Aeon Vector Class
+   // Aeon v3fixed_t
    //
 
-   class Vector
+   void ScriptObjVector::Construct(v3fixed_t *thisVector)
    {
-   public:
-      v3fixed_t value;
-
-      Vector() : value() { }
-
-      Vector(fixed_t x, fixed_t y, fixed_t z) : value({x, y, z}) { }
-
-   };
-
-   void ScriptObjVector::Construct(Vector *thisVector)
-   {
-      *thisVector = Vector();
+      *thisVector = v3fixed_t{ };
    }
 
-   void ScriptObjVector::ConstructFromOther(const Vector &other, Vector *thisVector)
+   void ScriptObjVector::ConstructFromOther(const v3fixed_t other, v3fixed_t *thisVector)
    {
-      *thisVector = Vector(other);
+      *thisVector = other;
    }
 
    void ScriptObjVector::ConstructFromFixed(const fixed_t x, const fixed_t y,
-                                            const fixed_t z, Vector *thisVector)
+                                            const fixed_t z, v3fixed_t *thisVector)
    {
-      *thisVector = Vector(x, y, z);
+      *thisVector = v3fixed_t{ x, y, z };
    }
 
-   static void asPrint(Vector f)
+   static void asPrint(const v3fixed_t vec)
    {
-      C_Printf("x: %.11f, y: %.11f, z: %.11f\n", M_FixedToDouble(f.value.x),
-                                                 M_FixedToDouble(f.value.y),
-                                                 M_FixedToDouble(f.value.z));
+      C_Printf("x: %.11f, y: %.11f, z: %.11f\n", M_FixedToDouble(vec.x),
+                                                 M_FixedToDouble(vec.y),
+                                                 M_FixedToDouble(vec.z));
    }
 
    void ScriptObjVector::Init()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->RegisterObjectType("vector_t", sizeof(Vector),
+      e->RegisterObjectType("vector_t", sizeof(v3fixed_t),
                             asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
 
       e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f()",
                                  WRAP_OBJ_LAST(Construct), asCALL_GENERIC);
-      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f(const vector_t &in)",
+      e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT, "void f(const vector_t)",
                                  WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC);
       e->RegisterObjectBehaviour("vector_t", asBEHAVE_CONSTRUCT,
                                  "void f(const fixed_t, const fixed_t, const fixed_t)",
                                  WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC);
 
-      e->RegisterObjectProperty("vector_t", "fixed_t x", asOFFSET(Vector, value.x));
-      e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(Vector, value.y));
-      e->RegisterObjectProperty("vector_t", "fixed_t z", asOFFSET(Vector, value.z));
+      e->RegisterObjectProperty("vector_t", "fixed_t x", asOFFSET(v3fixed_t, x));
+      e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(v3fixed_t, y));
+      e->RegisterObjectProperty("vector_t", "fixed_t z", asOFFSET(v3fixed_t, z));
 
-      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(asPrint, (Vector), void),
+      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(asPrint, (const v3fixed_t), void),
                                  asCALL_GENERIC);
    }
 }

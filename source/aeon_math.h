@@ -27,6 +27,7 @@
 
 #include "doomtype.h"
 #include "m_fixed.h"
+#include "m_vector.h"
 #include "tables.h"
 
 namespace Aeon
@@ -62,14 +63,12 @@ namespace Aeon
       static void Init();
    };
 
-   class Vector;
-
    class ScriptObjVector
    {
    public:
-      static void Construct(Vector *thisVector);
-      static void ConstructFromOther(const Vector &other, Vector *thisVector);
-      static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, Vector *thisVector);
+      static void Construct(v3fixed_t *thisVector);
+      static void ConstructFromOther(const v3fixed_t other, v3fixed_t *thisVector);
+      static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, v3fixed_t *thisVector);
 
       static void Init();
    };
