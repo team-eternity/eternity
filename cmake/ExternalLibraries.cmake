@@ -60,6 +60,17 @@ if(WIN32 AND (NOT DEFINED SDL2_LIBRARY OR NOT DEFINED SDL2_INCLUDE_DIR))
    endif()
 endif()
 
+if(APPLE)   # TODO: also check the cached variables
+   execute_process(
+      COMMAND ${CMAKE_SOURCE_DIR}/macosx/download_sdl.sh
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+   )
+   set(SDL2_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/SDL2.Framework CACHE FILEPATH "")
+   # TODO: fix up the include dir and whatever SDL main is supposed to mean
+   set(SDL2_MIXER_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/SDL2_mixer.Framework CACHE FILEPATH "")
+   set(SDL2_NET_LIBRARY ${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.Framework CACHE FILEPATH "")
+endif()
+
 find_package(SDL2)
 
 if(SDL2_FOUND)
