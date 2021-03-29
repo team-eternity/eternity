@@ -49,7 +49,7 @@ endfunction()
 
 ################################################################################
 ######################### Compiler: Features  ##################################
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
    try_c_compiler_flag(-std=c++17 FLAG_CXX_stdcxx17)
 endif()
 
@@ -61,12 +61,12 @@ endif()
 
 ################################################################################
 ######################### Compiler: Warnings  ##################################
-if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
    try_c_compiler_flag(-Wall   FLAG_C_Wall)
   #try_c_compiler_flag(-Wextra FLAG_C_Wextra)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
    try_c_compiler_flag(-Wall   FLAG_CXX_Wall)
   #try_c_compiler_flag(-Wextra FLAG_CXX_Wextra)
 endif()
@@ -94,7 +94,7 @@ endif()
 ################################################################################
 ######################### Compiler: Hardening  #################################
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
       try_c_compiler_flag(-fstack-protector FLAG_C_fstack_protector)
 
       if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -107,7 +107,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
       endif()
    endif()
 
-   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       try_c_compiler_flag(-fstack-protector FLAG_CXX_fstack_protector)
 
       if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -151,11 +151,11 @@ endif()
 ################################################################################
 ######################### Compiler: Optimisation  ##############################
 if(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel" OR CMAKE_BUILD_TYPE STREQUAL "Release")
-   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       try_c_compiler_flag(-fomit-frame-pointer FLAG_C_fomit_frame_pointer)
    endif()
 
-   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       try_c_compiler_flag(-fomit-frame-pointer FLAG_CXX_fomit_frame_pointer)
    endif()
 
