@@ -216,7 +216,7 @@ int asCReader::ReadInner()
 			// Set this module as the owner
 			et->module = module;
 		}
-		module->m_enumTypes.PushLast(et);
+		module->AddEnumType(et);
 
 		if (isExternal)
 			module->m_externalTypes.PushLast(et);
@@ -290,7 +290,7 @@ int asCReader::ReadInner()
 			// Set this module as the owner
 			ot->module = module;
 		}
-		module->m_classTypes.PushLast(ot);
+		module->AddClassType(ot);
 
 		if (isExternal)
 			module->m_externalTypes.PushLast(ot);
@@ -312,7 +312,7 @@ int asCReader::ReadInner()
 			asCFuncdefType *fdt = funcDef->funcdefType;
 			fdt->module = module;
 
-			module->m_funcDefs.PushLast(fdt);
+			module->AddFuncDef(fdt);
 			engine->funcDefs.PushLast(fdt);
 
 			// TODO: clean up: This is also done by the builder. It should probably be moved to a method in the module
@@ -334,7 +334,7 @@ int asCReader::ReadInner()
 						f2->funcdef->IsSignatureExceptNameEqual(funcDef) )
 					{
 						// Replace our funcdef for the existing one
-						module->m_funcDefs[module->m_funcDefs.IndexOf(fdt)] = f2;
+						module->ReplaceFuncDef(fdt, f2);
 						f2->AddRefInternal();
 
 						if (isExternal)
@@ -415,7 +415,7 @@ int asCReader::ReadInner()
 		bool isExternal = false;
 		ReadTypeDeclaration(td, 1, &isExternal);
 		td->module = module;
-		module->m_typeDefs.PushLast(td);
+		module->AddTypeDef(td);
 		ReadTypeDeclaration(td, 2);
 	}
 
@@ -922,23 +922,17 @@ void asCReader::ReadUsedFunctions()
 								usedFunctions[n] = f;
 						}
 					}
-					else if( func.name == "$beh4" )
-					{
-						// This is a list factory, so check the return type's list factory
-						asCObjectType *objType = CastToObjectType(func.returnType.GetTypeInfo());
-						if( objType )
-						{
-							asCScriptFunction *f = engine->scriptFunctions[objType->beh.listFactory];
-							if( f && func.IsSignatureExceptNameAndObjectTypeEqual(f) )
-								usedFunctions[n] = f;
-						}
-					}
 					else if( func.name == "$dlgte" )
 					{
 						// This is the delegate factory
 						asCScriptFunction *f = engine->registeredGlobalFuncs.GetFirst(engine->nameSpaces[0], DELEGATE_FACTORY);
 						asASSERT( f && func.IsSignatureEqual(f) );
 						usedFunctions[n] = f;
+					}
+					else
+					{
+						// Must match one of the above cases
+						asASSERT(false);
 					}
 				}
 				else if( func.objectType == 0 )
@@ -1429,6 +1423,106 @@ asCScriptFunction *asCReader::ReadFunction(bool &isNew, bool addToModule, bool a
 		fdt->parentClass = parentClass;
 	}
 
+	// Methods loaded for shared objects, owned by other modules should not be created as new functions
+	if( func->objectType && func->objectType->module != module )
+	{
+		// Return the real function from the object
+		asCScriptFunction *realFunc = 0;
+		bool found = false;
+		if( func->funcType == asFUNC_SCRIPT )
+		{
+			realFunc = engine->scriptFunctions[func->objectType->beh.destruct];
+			if( realFunc && realFunc->funcType != asFUNC_VIRTUAL && func->IsSignatureEqual(realFunc) )
+			{
+				found = true;
+			}
+			for( asUINT n = 0; !found && n < func->objectType->beh.constructors.GetLength(); n++ )
+			{
+				realFunc = engine->scriptFunctions[func->objectType->beh.constructors[n]];
+				if( realFunc && realFunc->funcType != asFUNC_VIRTUAL && func->IsSignatureEqual(realFunc) )
+				{
+					found = true;
+					break;
+				}
+			}	
+			for( asUINT n = 0; !found && n < func->objectType->beh.factories.GetLength(); n++ )
+			{
+				realFunc = engine->scriptFunctions[func->objectType->beh.factories[n]];
+				if( realFunc && realFunc->funcType != asFUNC_VIRTUAL && func->IsSignatureEqual(realFunc) )
+				{
+					found = true;
+					break;
+				}
+			}	
+			for( asUINT n = 0; !found && n < func->objectType->methods.GetLength(); n++ )
+			{
+				realFunc = engine->scriptFunctions[func->objectType->methods[n]];
+				if( realFunc && realFunc->funcType == func->funcType && func->IsSignatureEqual(realFunc) )
+				{
+					found = true;
+					break;
+				}
+			}
+			for( asUINT n = 0; !found && n < func->objectType->virtualFunctionTable.GetLength(); n++ )
+			{
+				realFunc = func->objectType->virtualFunctionTable[n];
+				if( realFunc && realFunc->funcType == func->funcType && func->IsSignatureEqual(realFunc) )
+				{
+					found = true;
+					break;
+				}
+			}
+		}
+		else if( func->funcType == asFUNC_VIRTUAL || func->funcType == asFUNC_INTERFACE )
+		{
+			// If the loaded function is a virtual function, then look for the identical virtual function in the methods array
+			for( asUINT n = 0; n < func->objectType->methods.GetLength(); n++ )
+			{
+				realFunc = engine->scriptFunctions[func->objectType->methods[n]];
+				if( realFunc && realFunc->funcType == func->funcType && func->IsSignatureEqual(realFunc) )
+				{
+					asASSERT( func->vfTableIdx == realFunc->vfTableIdx );
+					found = true;
+					break;
+				}
+			}
+		}
+
+		if( found )
+		{
+			// as this is an existing function it shouldn't be translated as if just loaded
+			dontTranslate.Insert(realFunc, true);
+
+			// update the saved functions for future references
+			savedFunctions[savedFunctions.GetLength() - 1] = realFunc;
+
+			if( realFunc->funcType == asFUNC_VIRTUAL && addToModule )
+			{
+				// Virtual methods must be added to the module's script functions array, 
+				// even if they are not owned by the module
+				module->m_scriptFunctions.PushLast(realFunc);
+				realFunc->AddRefInternal();		
+			}				
+		}
+		else
+		{
+			asCString str;
+			str.Format(TXT_SHARED_s_DOESNT_MATCH_ORIGINAL, func->objectType->GetName());
+			engine->WriteMessage("", 0, 0, asMSGTYPE_ERROR, str.AddressOf());
+			
+			Error(TXT_INVALID_BYTECODE_d);
+			savedFunctions.PopLast();
+			realFunc = 0;
+		}
+
+		// Destroy the newly created function instance since it has been replaced by an existing function
+		isNew = false;
+		func->DestroyHalfCreated();
+		
+		// As it is an existing function it shouldn't be added to the module or the engine
+		return realFunc;
+	}	
+
 	if( addToModule )
 	{
 		// The refCount is already 1
@@ -1668,8 +1762,6 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 							func->scriptData->byteCode.SetLength(0);
 							func->ReleaseInternal();
 						}
-						module->m_scriptFunctions.PushLast(realFunc);
-						realFunc->AddRefInternal();
 						dontTranslate.Insert(realFunc, true);
 					}
 				}
@@ -1703,8 +1795,6 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 									if( savedFunctions[savedFunctions.GetLength()-1] == func )
 										savedFunctions[savedFunctions.GetLength()-1] = realFunc;
 									found = true;
-									module->m_scriptFunctions.PushLast(realFunc);
-									realFunc->AddRefInternal();
 									dontTranslate.Insert(realFunc, true);
 									break;
 								}
@@ -1754,8 +1844,6 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 									if( savedFunctions[savedFunctions.GetLength()-1] == func )
 										savedFunctions[savedFunctions.GetLength()-1] = realFunc;
 									found = true;
-									module->m_scriptFunctions.PushLast(realFunc);
-									realFunc->AddRefInternal();
 									dontTranslate.Insert(realFunc, true);
 									break;
 								}
@@ -1813,8 +1901,6 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 								if( savedFunctions[savedFunctions.GetLength()-1] == func )
 									savedFunctions[savedFunctions.GetLength()-1] = realFunc;
 								found = true;
-								module->m_scriptFunctions.PushLast(realFunc);
-								realFunc->AddRefInternal();
 								dontTranslate.Insert(realFunc, true);
 								break;
 							}
@@ -1880,8 +1966,6 @@ void asCReader::ReadTypeDeclaration(asCTypeInfo *type, int phase, bool *isExtern
 								if( savedFunctions[savedFunctions.GetLength()-1] == func )
 									savedFunctions[savedFunctions.GetLength()-1] = realFunc;
 								found = true;
-								module->m_scriptFunctions.PushLast(realFunc);
-								realFunc->AddRefInternal();
 								dontTranslate.Insert(realFunc, true);
 								break;
 							}
@@ -4026,9 +4110,9 @@ void asCWriter::WriteUsedFunctions()
 			// Is the function from the module or the application?
 			c = func->module ? 'm' : 'a';
 
-			// Functions and methods that are shared and not owned by the module can be
-			// stored as 's' to tell the reader that these are received from other modules.
-			if (c == 'm' && func->IsShared() && module->m_scriptFunctions.IndexOf(func) < 0 )
+			// Functions and methods that are shared should be stored as 's' as the bytecode
+			// may be imported from other modules (even if the current module have received ownership)
+			if (c == 'm' && func->IsShared() )
 				c = 's';
 
 			WriteData(&c, 1);

@@ -1972,7 +1972,7 @@ void asCBuilder::CompleteFuncDef(sFuncDef *funcDef)
 			{
 				// Replace our funcdef for the existing one
 				funcDef->idx = fdt2->funcdef->id;
-				module->m_funcDefs[module->m_funcDefs.IndexOf(fdt)] = fdt2;
+				module->ReplaceFuncDef(fdt, fdt2);
 				fdt2->AddRefInternal();
 
 				engine->funcDefs.RemoveValue(fdt);
@@ -2259,7 +2259,7 @@ int asCBuilder::RegisterClass(asCScriptNode *node, asCScriptCode *file, asSNameS
 				// We'll use the existing type
 				decl->isExistingShared = true;
 				decl->typeInfo         = st;
-				module->m_classTypes.PushLast(st);
+				module->AddClassType(st);
 				st->AddRefInternal();
 				break;
 			}
@@ -2310,7 +2310,7 @@ int asCBuilder::RegisterClass(asCScriptNode *node, asCScriptCode *file, asSNameS
 		st->name = name;
 		st->nameSpace = ns;
 		st->module = module;
-		module->m_classTypes.PushLast(st);
+		module->AddClassType(st);
 		if (isShared)
 		{
 			engine->sharedScriptTypes.PushLast(st);
@@ -2429,7 +2429,7 @@ int asCBuilder::RegisterInterface(asCScriptNode *node, asCScriptCode *file, asSN
 				// We'll use the existing type
 				decl->isExistingShared = true;
 				decl->typeInfo = st;
-				module->m_classTypes.PushLast(st);
+				module->AddClassType(st);
 				st->AddRefInternal();
 
 				// Remember if the interface was declared as external so the saved bytecode can be flagged accordingly
@@ -2463,7 +2463,7 @@ int asCBuilder::RegisterInterface(asCScriptNode *node, asCScriptCode *file, asSN
 	st->name = name;
 	st->nameSpace = ns;
 	st->module = module;
-	module->m_classTypes.PushLast(st);
+	module->AddClassType(st);
 	if( isShared )
 	{
 		engine->sharedScriptTypes.PushLast(st);
@@ -4347,7 +4347,7 @@ int asCBuilder::RegisterEnum(asCScriptNode *node, asCScriptCode *file, asSNameSp
 			st->nameSpace = ns;
 			st->module    = module;
 		}
-		module->m_enumTypes.PushLast(st);
+		module->AddEnumType(st);
 
 		if( !existingSharedType && isShared )
 		{
@@ -4513,7 +4513,7 @@ int asCBuilder::RegisterTypedef(asCScriptNode *node, asCScriptCode *file, asSNam
 		st->aliasForType    = dataType;
 		st->module          = module;
 
-		module->m_typeDefs.PushLast(st);
+		module->AddTypeDef(st);
 
 		// Store the location of this declaration for reference in name collisions
 		sClassDeclaration *decl = asNEW(sClassDeclaration);
@@ -5136,7 +5136,9 @@ int asCBuilder::RegisterScriptFunction(asCScriptNode *node, asCScriptCode *file,
 			else
 			{
 				// The copy constructor needs to be marked for easy finding
-				if (parameterTypes.GetLength() == 1 && parameterTypes[0].GetTypeInfo() == objType)
+				if( parameterTypes.GetLength() == 1 && 
+				    parameterTypes[0].GetTypeInfo() == objType && 
+					(parameterTypes[0].IsReference() || parameterTypes[0].IsObjectHandle()) )
 				{
 					// Verify that there are not multiple options matching the copy constructor
 					// TODO: Need a better message, since the parameters can be slightly different, e.g. & vs @

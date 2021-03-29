@@ -403,34 +403,71 @@ int asCModule::CallInit(asIScriptContext *myCtx)
 					break;
 			}
 
-			r = ctx->Prepare(desc->GetInitFunc());
-			if( r >= 0 )
+			r = InitGlobalProp(desc, ctx);
+		}
+	}
+
+	if( ctx && !myCtx )
+	{
+		m_engine->ReturnContext(ctx);
+		ctx = 0;
+	}
+
+	// Even if the initialization failed we need to set the
+	// flag that the variables have been initialized, otherwise
+	// the module won't free those variables that really were
+	// initialized.
+	m_isGlobalVarInitialized = true;
+
+	if( r != asEXECUTION_FINISHED )
+		return asINIT_GLOBAL_VARS_FAILED;
+
+	return asSUCCESS;
+}
+
+// internal
+// This function assumes the memory for the global property is already cleared
+int asCModule::InitGlobalProp(asCGlobalProperty *prop, asIScriptContext *myCtx)
+{
+	// Call the init function for each of the global variables
+	asIScriptContext *ctx = myCtx;
+	int r = asEXECUTION_FINISHED;
+	if( prop->GetInitFunc() )
+	{
+		if( ctx == 0 )
+		{
+			ctx = m_engine->RequestContext();
+			if( ctx == 0 )
+				return asERROR;
+		}
+
+		r = ctx->Prepare(prop->GetInitFunc());
+		if( r >= 0 )
+		{
+			r = ctx->Execute();
+			if( r != asEXECUTION_FINISHED )
 			{
-				r = ctx->Execute();
-				if( r != asEXECUTION_FINISHED )
+				asCString msg;
+				msg.Format(TXT_FAILED_TO_INITIALIZE_s, prop->name.AddressOf());
+				asCScriptFunction *func = prop->GetInitFunc();
+
+				m_engine->WriteMessage(func->scriptData->scriptSectionIdx >= 0 ? m_engine->scriptSectionNames[func->scriptData->scriptSectionIdx]->AddressOf() : "",
+									 func->GetLineNumber(0, 0) & 0xFFFFF,
+									 func->GetLineNumber(0, 0) >> 20,
+									 asMSGTYPE_ERROR,
+									 msg.AddressOf());
+
+				if( r == asEXECUTION_EXCEPTION )
 				{
-					asCString msg;
-					msg.Format(TXT_FAILED_TO_INITIALIZE_s, desc->name.AddressOf());
-					asCScriptFunction *func = desc->GetInitFunc();
+					const asIScriptFunction *function = ctx->GetExceptionFunction();
 
-					m_engine->WriteMessage(func->scriptData->scriptSectionIdx >= 0 ? m_engine->scriptSectionNames[func->scriptData->scriptSectionIdx]->AddressOf() : "",
-										 func->GetLineNumber(0, 0) & 0xFFFFF,
-										 func->GetLineNumber(0, 0) >> 20,
-										 asMSGTYPE_ERROR,
-										 msg.AddressOf());
+					msg.Format(TXT_EXCEPTION_s_IN_s, ctx->GetExceptionString(), function->GetDeclaration());
 
-					if( r == asEXECUTION_EXCEPTION )
-					{
-						const asIScriptFunction *function = ctx->GetExceptionFunction();
-
-						msg.Format(TXT_EXCEPTION_s_IN_s, ctx->GetExceptionString(), function->GetDeclaration());
-
-						m_engine->WriteMessage(function->GetScriptSectionName(),
-											 ctx->GetExceptionLineNumber(),
-											 0,
-											 asMSGTYPE_INFORMATION,
-											 msg.AddressOf());
-					}
+					m_engine->WriteMessage(function->GetScriptSectionName(),
+										   ctx->GetExceptionLineNumber(),
+										   0,
+										   asMSGTYPE_INFORMATION,
+										   msg.AddressOf());
 				}
 			}
 		}
@@ -811,6 +848,10 @@ void asCModule::InternalReset()
 	}
 	m_scriptGlobals.Clear();
 
+	// Clear the type lookup
+	// The references were already released as the types were removed from the respective arrays
+	m_typeLookup.EraseAll();
+
 	asASSERT( IsEmpty() );
 }
 
@@ -1120,28 +1161,10 @@ asITypeInfo *asCModule::GetTypeInfoByName(const char *in_name) const
 		
 	while (ns)
 	{
-		for (asUINT n = 0; n < m_classTypes.GetLength(); n++)
+		asITypeInfo* info = GetType(name, ns);
+		if(info)
 		{
-			if (m_classTypes[n] &&
-				m_classTypes[n]->name == name &&
-				m_classTypes[n]->nameSpace == ns)
-				return m_classTypes[n];
-		}
-
-		for (asUINT n = 0; n < m_enumTypes.GetLength(); n++)
-		{
-			if (m_enumTypes[n] &&
-				m_enumTypes[n]->name == name &&
-				m_enumTypes[n]->nameSpace == ns)
-				return m_enumTypes[n];
-		}
-
-		for (asUINT n = 0; n < m_typeDefs.GetLength(); n++)
-		{
-			if (m_typeDefs[n] &&
-				m_typeDefs[n]->name == name &&
-				m_typeDefs[n]->nameSpace == ns)
-				return m_typeDefs[n];
+			return info;
 		}
 
 		// Recursively search parent namespace
@@ -1510,45 +1533,71 @@ int asCModule::UnbindAllImportedFunctions()
 }
 
 // internal
-asCTypeInfo *asCModule::GetType(const char *type, asSNameSpace *ns)
+void asCModule::AddClassType(asCObjectType* type)
 {
-	asUINT n;
+	m_classTypes.PushLast(type);
+	m_typeLookup.Insert({type->nameSpace, type->name}, type);
+}
 
-	// TODO: optimize: Improve linear search
-	for (n = 0; n < m_classTypes.GetLength(); n++)
-		if (m_classTypes[n]->name == type &&
-			m_classTypes[n]->nameSpace == ns)
-			return m_classTypes[n];
+// internal
+void asCModule::AddEnumType(asCEnumType* type)
+{
+	m_enumTypes.PushLast(type);
+	m_typeLookup.Insert({type->nameSpace, type->name}, type);
+}
 
-	for (n = 0; n < m_enumTypes.GetLength(); n++)
-		if (m_enumTypes[n]->name == type &&
-			m_enumTypes[n]->nameSpace == ns)
-			return m_enumTypes[n];
+// internal
+void asCModule::AddTypeDef(asCTypedefType* type)
+{
+	m_typeDefs.PushLast(type);
+	m_typeLookup.Insert({type->nameSpace, type->name}, type);
+}
 
-	for (n = 0; n < m_typeDefs.GetLength(); n++)
-		if (m_typeDefs[n]->name == type &&
-			m_typeDefs[n]->nameSpace == ns)
-			return m_typeDefs[n];
+// internal
+void asCModule::AddFuncDef(asCFuncdefType* type)
+{
+	m_funcDefs.PushLast(type);
+	m_typeLookup.Insert({type->nameSpace, type->name}, type);
+}
 
-	for (n = 0; n < m_funcDefs.GetLength(); n++)
-		if (m_funcDefs[n]->name == type &&
-			m_funcDefs[n]->nameSpace == ns)
-			return m_funcDefs[n];
+// internal
+void asCModule::ReplaceFuncDef(asCFuncdefType* type, asCFuncdefType* newType)
+{
+	int i = m_funcDefs.IndexOf(type);
+	if( i >= 0 )
+	{
+		m_funcDefs[i] = newType;
+		
+		// Replace it in the lookup map too
+		asSMapNode<asSNameSpaceNamePair, asCTypeInfo*>* result = nullptr;
+		if(m_typeLookup.MoveTo(&result, {type->nameSpace, type->name}))
+		{
+			asASSERT( result->value == type );
+			result->value = newType;
+		}
+	}
+}
 
+// internal
+asCTypeInfo *asCModule::GetType(const asCString &type, asSNameSpace *ns) const
+{
+	asSMapNode<asSNameSpaceNamePair, asCTypeInfo*>* result = nullptr;
+	if(m_typeLookup.MoveTo(&result, {ns, type}))
+	{
+		return result->value;
+	}
 	return 0;
 }
 
 // internal
-asCObjectType *asCModule::GetObjectType(const char *type, asSNameSpace *ns)
+asCObjectType *asCModule::GetObjectType(const char *type, asSNameSpace *ns) const
 {
-	asUINT n;
-
-	// TODO: optimize: Improve linear search
-	for( n = 0; n < m_classTypes.GetLength(); n++ )
-		if( m_classTypes[n]->name == type &&
-			m_classTypes[n]->nameSpace == ns )
-			return m_classTypes[n];
-
+	asSMapNode<asSNameSpaceNamePair, asCTypeInfo*>* result = nullptr;
+	if(m_typeLookup.MoveTo(&result, {ns, type}))
+	{
+		return CastToObjectType(result->value);
+	}
+ 
 	return 0;
 }
 
@@ -1687,28 +1736,21 @@ int asCModule::CompileGlobalVar(const char *sectionName, const char *code, int l
 	m_engine->BuildCompleted();
 
 	// Initialize the variable
-	if( r >= 0 && m_engine->ep.initGlobalVarsAfterBuild )
+	if( r >= 0 )
 	{
 		// Clear the memory
 		asCGlobalProperty *prop = m_scriptGlobals.GetLast();
 		if( prop )
 		{
 			memset(prop->GetAddressOfValue(), 0, sizeof(asDWORD)*prop->type.GetSizeOnStackDWords());
+		}
 
-			if( prop->GetInitFunc() )
-			{
-				// Call the init function for the global variable
-				asIScriptContext *ctx = 0;
-				r = m_engine->CreateContext(&ctx, true);
-				if( r < 0 )
-					return r;
+		if( prop && m_engine->ep.initGlobalVarsAfterBuild )
+		{
+			// Flag that there are initialized global variables
+			m_isGlobalVarInitialized = true;
 
-				r = ctx->Prepare(prop->GetInitFunc());
-				if( r >= 0 )
-					r = ctx->Execute();
-
-				ctx->Release();
-			}
+			r = InitGlobalProp(prop, 0);
 		}
 	}
 
@@ -1807,7 +1849,7 @@ int asCModule::AddFuncDef(const asCString &funcName, asSNameSpace *ns, asCObject
 	func->module    = this;
 
 	asCFuncdefType *fdt = asNEW(asCFuncdefType)(m_engine, func);
-	m_funcDefs.PushLast(fdt); // The constructor set the refcount to 1
+	AddFuncDef(fdt); // The constructor set the refcount to 1
 
 	m_engine->funcDefs.PushLast(fdt); // doesn't increase refcount
 	func->id = m_engine->GetNextScriptFunctionId();
