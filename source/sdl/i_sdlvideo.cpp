@@ -19,11 +19,7 @@
 // Authors: James Haley, Max Waine
 //
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#else
 #include "SDL.h"
-#endif
 
 #include "../hal/i_platform.h"
 

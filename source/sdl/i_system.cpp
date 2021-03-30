@@ -24,11 +24,7 @@
 #include <conio.h>
 #endif
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#else
 #include "SDL.h"
-#endif
 
 // HAL modules
 #include "../hal/i_gamepads.h"
