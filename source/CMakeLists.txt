@@ -145,7 +145,9 @@ function(eternity_target_sources _TARGET)
             EXPECTED_HASH SHA256=c7642621f4aabf073683e73ce3210a9d2f33e5a19544cef941138ac76b86a1ce
          )
       endif()
-      target_include_directories("${_TARGET}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+      # Add the base binary dir for the SDL2 symlink added from ExternalLibraries
+      target_include_directories("${_TARGET}" PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR})
    endif(APPLE)
 
    if(LINUX)

@@ -28,13 +28,8 @@
 
 #include <optional>
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2_mixer/SDL_mixer.h"
-#else
 #include "SDL.h"
 #include "SDL_mixer.h"
-#endif
 
 #include "i_midirpc.h"
 

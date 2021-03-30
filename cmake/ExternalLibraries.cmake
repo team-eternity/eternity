@@ -75,6 +75,14 @@ if(APPLE)   # TODO: also check the cached variables
 
    set(SDL2_NET_LIBRARY "-framework ${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.Framework" CACHE FILEPATH "")
    set(SDL2_NET_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.Framework/Headers CACHE FILEPATH "")
+
+   # Needed for access
+   if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/SDL2)
+      file(
+         CREATE_LINK ${CMAKE_CURRENT_BINARY_DIR}/SDL2.Framework/Headers
+               ${CMAKE_CURRENT_BINARY_DIR}/SDL2 SYMBOLIC
+      )
+   endif()
 endif()
 
 find_package(SDL2)
