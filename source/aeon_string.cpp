@@ -179,6 +179,14 @@ namespace Aeon
       { "void set_opIndex(int, int)",     WRAP_OBJ_FIRST(qstrSetOpIdx) },
    };
 
+   const aeonbehaviorreg_t stringBehaviors[] =
+   {
+      { asBEHAVE_FACTORY, "String @f()",                 WRAP_FN(RefQString::Factory)          },
+      { asBEHAVE_FACTORY, "String @f(const String &in)", WRAP_FN(RefQString::FactoryFromOther) },
+      { asBEHAVE_ADDREF,  "void f()" ,                   WRAP_OBJ_FIRST(RefQString::AddRef)    },
+      { asBEHAVE_RELEASE, "void f()",                    WRAP_OBJ_FIRST(RefQString::Release)   },
+   };
+
    //
    // Register String (qstring) as a reftype and register desired methods
    //
@@ -189,23 +197,8 @@ namespace Aeon
       // register type
       e->RegisterObjectType("String", 0, asOBJ_REF);
 
-      // register behaviors
-      e->RegisterObjectBehaviour(
-         "String", asBEHAVE_FACTORY, "String @f()",
-         WRAP_FN(RefQString::Factory), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "String", asBEHAVE_FACTORY, "String @f(const String &in)",
-         WRAP_FN(RefQString::FactoryFromOther), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "String", asBEHAVE_ADDREF, "void f()",
-         WRAP_OBJ_FIRST(RefQString::AddRef), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "String", asBEHAVE_RELEASE, "void f()",
-         WRAP_OBJ_FIRST(RefQString::Release), asCALL_GENERIC
-      );
+      for(const aeonbehaviorreg_t &behavior : stringBehaviors)
+         e->RegisterObjectBehaviour("String", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
 
       // register String as the string factory
       // "qstring @"???

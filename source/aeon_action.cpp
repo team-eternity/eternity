@@ -144,6 +144,13 @@ namespace Aeon
    #define EXECSIG(name) "void " name "(const String &name," \
                                        "const array<EE::actionarg_t> @args = null)"
 
+   static const aeonbehaviorreg_t actionargBehaviors[] =
+   {
+      { asBEHAVE_CONSTRUCT, "void f()",          WRAP_OBJ_LAST(ActionArg::Construct)      },
+      { asBEHAVE_CONSTRUCT, "void f(const int)", WRAP_OBJ_LAST(ActionArg::IntConstructor) },
+      { asBEHAVE_DESTRUCT,  "void f()",          WRAP_OBJ_LAST(ActionArg::Destruct)       },
+   };
+
 
    void ScriptObjAction::Init()
    {
@@ -152,20 +159,11 @@ namespace Aeon
       e->SetDefaultNamespace("EE");
 
       // Register actionarg_t, which is just a qstring that stuff automatically converts to
-      e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CDAK);
+      e->RegisterObjectType("actionarg_t", sizeof(qstring), asOBJ_VALUE | asOBJ_APP_CLASS_CD);
 
-      e->RegisterObjectBehaviour(
-         "actionarg_t", asBEHAVE_CONSTRUCT, "void f()",
-         WRAP_OBJ_LAST(ActionArg::Construct), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "actionarg_t", asBEHAVE_CONSTRUCT, "void f(const int)",
-         WRAP_OBJ_LAST(ActionArg::IntConstructor), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "actionarg_t", asBEHAVE_DESTRUCT, "void f()",
-         WRAP_OBJ_LAST(ActionArg::Destruct), asCALL_GENERIC
-      );
+      for(const aeonbehaviorreg_t &behavior : actionargBehaviors)
+         e->RegisterObjectBehaviour("actionarg_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
+
       for(const aeonfuncreg_t &fn : actionargFuncs)
          e->RegisterObjectMethod("actionarg_t", fn.declaration, fn.funcPointer, asCALL_GENERIC);
 

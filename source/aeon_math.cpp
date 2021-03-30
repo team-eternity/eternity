@@ -277,33 +277,25 @@ namespace Aeon
       { "double  opImplConv() const",              WRAP_OBJ_FIRST(FixedToDouble)       },
    };
 
+   static const aeonbehaviorreg_t fixedBehaviors[] =
+   {
+      { asBEHAVE_CONSTRUCT, "void f()",                          WRAP_OBJ_LAST(ScriptObjFixed::Construct)           },
+      { asBEHAVE_CONSTRUCT, "void f(const fixed_t)",             WRAP_OBJ_LAST(ScriptObjFixed::ConstructFromOther)  },
+      { asBEHAVE_CONSTRUCT, "void f(const double)",              WRAP_OBJ_LAST(ScriptObjFixed::ConstructFromDouble) },
+      { asBEHAVE_CONSTRUCT, "void f(const int)",                 WRAP_OBJ_LAST(ScriptObjFixed::ConstructFromInt)    },
+      { asBEHAVE_CONSTRUCT, "void f(const int16, const double)", WRAP_OBJ_LAST(ScriptObjFixed::ConstructFromPair)   },
+   };
+
    void ScriptObjFixed::Init()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
-      e->RegisterObjectType("fixed_t", sizeof(fixed_t),
-                            asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS);
+      e->RegisterObjectType(
+         "fixed_t", sizeof(fixed_t), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
+      );
 
-      e->RegisterObjectBehaviour(
-         "fixed_t", asBEHAVE_CONSTRUCT, "void f()",
-         WRAP_OBJ_LAST(Construct), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t)",
-         WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const double)",
-         WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const int)",
-         WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "fixed_t", asBEHAVE_CONSTRUCT, "void f(const int16, const double)",
-         WRAP_OBJ_LAST(ConstructFromPair), asCALL_GENERIC
-      );
+      for(const aeonbehaviorreg_t &behavior : fixedBehaviors)
+         e->RegisterObjectBehaviour("fixed_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
 
       e->SetDefaultNamespace("fixed_t");
       e->RegisterGlobalFunction(
@@ -480,6 +472,14 @@ namespace Aeon
       { "fixed_t opImplConv() const",              WRAP_OBJ_FIRST(AeonAngleToFixed)    },
    };
 
+   static const aeonbehaviorreg_t angleBehaviors[] =
+   {
+      { asBEHAVE_CONSTRUCT, "void f()",              WRAP_OBJ_LAST(ScriptObjAngle::Construct)           },
+      { asBEHAVE_CONSTRUCT, "void f(const angle_t)", WRAP_OBJ_LAST(ScriptObjAngle::ConstructFromOther)  },
+      { asBEHAVE_CONSTRUCT, "void f(const double)",  WRAP_OBJ_LAST(ScriptObjAngle::ConstructFromDouble) },
+      { asBEHAVE_CONSTRUCT, "void f(const int)",     WRAP_OBJ_LAST(ScriptObjAngle::ConstructFromInt)    },
+   };
+
    void ScriptObjAngle::Init()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
@@ -489,22 +489,8 @@ namespace Aeon
          asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
       );
 
-      e->RegisterObjectBehaviour(
-         "angle_t", asBEHAVE_CONSTRUCT, "void f()",
-         WRAP_OBJ_LAST(Construct), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "angle_t", asBEHAVE_CONSTRUCT, "void f(const angle_t)",
-         WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "angle_t", asBEHAVE_CONSTRUCT, "void f(const double)",
-         WRAP_OBJ_LAST(ConstructFromDouble), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "angle_t", asBEHAVE_CONSTRUCT, "void f(const int)",
-         WRAP_OBJ_LAST(ConstructFromInt), asCALL_GENERIC
-      );
+      for(const aeonbehaviorreg_t &behavior : angleBehaviors)
+         e->RegisterObjectBehaviour("angle_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
 
       // AEON_TODO: Figure if there's a nicer way to do this
       e->SetDefaultNamespace("angle_t");
@@ -547,6 +533,13 @@ namespace Aeon
                                                  M_FixedToDouble(vec.z));
    }
 
+   static const aeonbehaviorreg_t vectorBehaviors[] =
+   {
+      { asBEHAVE_CONSTRUCT, "void f()",                                            WRAP_OBJ_LAST(ScriptObjVector::Construct)          },
+      { asBEHAVE_CONSTRUCT, "void f(const vector_t)",                              WRAP_OBJ_LAST(ScriptObjVector::ConstructFromOther) },
+      { asBEHAVE_CONSTRUCT, "void f(const fixed_t, const fixed_t, const fixed_t)", WRAP_OBJ_LAST(ScriptObjVector::ConstructFromFixed) },
+   };
+
    void ScriptObjVector::Init()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
@@ -555,18 +548,8 @@ namespace Aeon
          "vector_t", sizeof(v3fixed_t), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
       );
 
-      e->RegisterObjectBehaviour(
-         "vector_t", asBEHAVE_CONSTRUCT, "void f()",
-         WRAP_OBJ_LAST(Construct), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "vector_t", asBEHAVE_CONSTRUCT, "void f(const vector_t)",
-         WRAP_OBJ_LAST(ConstructFromOther), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "vector_t", asBEHAVE_CONSTRUCT, "void f(const fixed_t, const fixed_t, const fixed_t)",
-         WRAP_OBJ_LAST(ConstructFromFixed), asCALL_GENERIC
-      );
+      for(const aeonbehaviorreg_t &behavior : vectorBehaviors)
+         e->RegisterObjectBehaviour("vector_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
 
       e->RegisterObjectProperty("vector_t", "fixed_t x", asOFFSET(v3fixed_t, x));
       e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(v3fixed_t, y));

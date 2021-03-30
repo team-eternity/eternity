@@ -28,6 +28,16 @@
 #include "angelscript.h"
 #include "aswrappedcall.h"
 
+struct aeonbehaviorreg_t
+{
+   asEBehaviours  behavior;
+   const char    *declaration;
+   asSFuncPtr     funcPointer;
+   // TODO: Re-implement when ARM and Mac get non-generic calling conventions
+   //       i.e.: when AS_MAX_PORTABILITY doesn't need to be defined
+   // asDWORD     callConv;
+};
+
 struct aeonfuncreg_t
 {
    const char *declaration;

@@ -330,6 +330,14 @@ namespace Aeon
       { "Player @const player", asOFFSET(Mobj, player) },
    };
 
+   static const aeonbehaviorreg_t mobjBehaviors[] =
+   {
+      { asBEHAVE_FACTORY, "Mobj @f()",               WRAP_FN(mobjFactory)          },
+      { asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)", WRAP_FN(mobjFactoryFromOther) },
+      { asBEHAVE_ADDREF,  "void f()",                WRAP_MFN(Mobj, addReference)  },
+      { asBEHAVE_RELEASE, "void f()",                WRAP_MFN(Mobj, delReference)  },
+   };
+
    void ScriptObjMobj::PreInit()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
@@ -347,22 +355,8 @@ namespace Aeon
 
       e->SetDefaultNamespace("EE");
 
-      e->RegisterObjectBehaviour(
-         "Mobj", asBEHAVE_FACTORY, "Mobj @f()",
-         WRAP_FN(mobjFactory), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "Mobj", asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)",
-         WRAP_FN_PR(mobjFactoryFromOther, (const Mobj &), Mobj *), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "Mobj", asBEHAVE_ADDREF, "void f()",
-         WRAP_MFN(Mobj, addReference), asCALL_GENERIC
-      );
-      e->RegisterObjectBehaviour(
-         "Mobj", asBEHAVE_RELEASE, "void f()",
-         WRAP_MFN(Mobj, delReference), asCALL_GENERIC
-      );
+      for(const aeonbehaviorreg_t &behavior : mobjBehaviors)
+         e->RegisterObjectBehaviour("Mobj", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
 
       for(const aeonpropreg_t &prop : mobjProps)
          e->RegisterObjectProperty("Mobj", prop.declaration, prop.byteOffset);
