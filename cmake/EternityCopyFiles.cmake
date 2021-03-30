@@ -48,6 +48,20 @@ function(eternity_copy_libs TARGET)
     list(APPEND ETERNITY_DLLS "${SDL2_NET_DLL_DIR}/SDL2_net.dll")
   endif()
 
+  if(APPLE)
+    list(APPEND ETERNITY_FWS SDL2.framework)
+    list(APPEND ETERNITY_FWS SDL2_mixer.framework)
+    list(APPEND ETERNITY_FWS SDL2_net.framework)
+
+    foreach(ETERNITY_FW ${ETERNITY_FWS})
+    add_custom_command(
+      TARGET ${TARGET} POST_BUILD
+      COMMAND cp -RT ${CMAKE_BINARY_DIR}/${ETERNITY_FW} "$<TARGET_FILE_DIR:${TARGET}>/${ETERNITY_FW}"
+      VERBATIM
+    )
+    endforeach()
+  endif()
+
   # Copy library files to target directory.
   foreach(ETERNITY_DLL ${ETERNITY_DLLS})
     add_custom_command(TARGET ${TARGET} POST_BUILD
