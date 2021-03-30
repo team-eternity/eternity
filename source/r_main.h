@@ -27,11 +27,7 @@
 #define R_MAIN_H__
 
 // NEEDED BY R_doubleToUint32 below
-#ifdef __APPLE__
-#include "SDL2/SDL_endian.h"
-#else
 #include "SDL_endian.h"
-#endif
 
 #include "tables.h"
 
