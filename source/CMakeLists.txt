@@ -136,12 +136,17 @@ function(eternity_target_sources _TARGET)
    endif()
 
    # macOS has no unique files currently
-   #if(APPLE)
-   #   include_directories(sdl/macosx/)
-   #   target_sources("${_TARGET}" PRIVATE
-   #      sdl/macosx/
-   #   )
-   #endif(APPLE)
+   if(APPLE)
+      if(NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp)
+         message(STATUS "Downloading gulrak filesystem to replace the C++17 one")
+         file(
+            DOWNLOAD "https://github.com/gulrak/filesystem/releases/download/v1.5.4/filesystem.hpp"
+            ${CMAKE_CURRENT_BINARY_DIR}/filesystem.hpp
+            EXPECTED_HASH SHA256=c7642621f4aabf073683e73ce3210a9d2f33e5a19544cef941138ac76b86a1ce
+         )
+      endif()
+      target_include_directories("${_TARGET}" PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+   endif(APPLE)
 
    if(LINUX)
       target_include_directories("${_TARGET}" PRIVATE linux/)
@@ -760,7 +765,7 @@ if(MSVC)
 
    target_compile_options(eternity PUBLIC
                           "/MP" "/utf-8")
-                          
+
     if(NOT CMAKE_GENERATOR_TOOLSET MATCHES "_xp")
         target_compile_options(eternity PUBLIC "/permissive-")
     endif()
