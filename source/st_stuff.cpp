@@ -782,10 +782,16 @@ static void ST_doPaletteStuff()
 
    if(plyr->powers[pw_strength])
    {
-      // slowly fade the berzerk out
-      int bzc = 12 - (plyr->powers[pw_strength]>>6);
-      if(bzc > cnt)
-         cnt = bzc;
+      if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
+      {
+         // slowly fade the berzerk out
+         int bzc = 12 - (plyr->powers[pw_strength] >> 6);
+         if(bzc > cnt)
+            cnt = bzc;
+      }
+      else if((plyr->powers[pw_strength] < -4 * 32 || (plyr->powers[pw_strength] & 8)) &&
+              plyr->powers[pw_strength] && cnt == 0)
+         cnt = 1;
    }
 
    if(cnt)
