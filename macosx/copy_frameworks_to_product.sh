@@ -14,7 +14,7 @@ fi
 framework_path="$1"
 target_dir="$2"
 
-target_path="$target_dir/$(basename $framework_path)"
+target_path="$target_dir/$(basename "$framework_path")"
 
 if [ ! -d "$target_path" ]; then
     echo "Copying $framework_path to $target_dir"

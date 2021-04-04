@@ -818,6 +818,8 @@ if(APPLE)
       XCODE_ATTRIBUTE_CLANG_WARN_SUSPICIOUS_MOVE               YES
 
       XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS                  "@executable_path"
+
+      XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS                   "\"${CMAKE_BINARY_DIR}\""
    )
 endif()
 
