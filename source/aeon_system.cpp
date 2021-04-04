@@ -98,6 +98,7 @@ namespace Aeon
       engine->SetDefaultNamespace("EE");
       engine->RegisterObjectType("Sound",  sizeof(sfxinfo_t),    asOBJ_REF | asOBJ_NOCOUNT);
       engine->RegisterObjectType("Weapon", sizeof(weaponinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
+      engine->RegisterObjectType("State",  sizeof(state_t),      asOBJ_REF | asOBJ_NOCOUNT);
       engine->SetDefaultNamespace("");
    }
 

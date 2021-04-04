@@ -132,7 +132,7 @@ namespace Aeon
 
 #define FLAG_ACCESSOR(name, flag, member) \
    { "bool get_" #name "() const property", WRAP_OBJ_LAST((getFlag<flag, &Mobj:: ##member>)) }, \
-   { "void set_" #name "(const bool val) const property", WRAP_OBJ_LAST((setFlag<flag, &Mobj:: ##member>)) }
+   { "void set_" #name "(const bool val) property", WRAP_OBJ_LAST((setFlag<flag, &Mobj:: ##member>)) }
 
    static const aeonfuncreg_t mobjFuncs[] =
    {
@@ -313,21 +313,23 @@ namespace Aeon
 
    static const aeonpropreg_t mobjProps[] =
    {
-      { "fixed_t x",            asOFFSET(Mobj, x)      },
-      { "fixed_t y",            asOFFSET(Mobj, y)      },
-      { "fixed_t z",            asOFFSET(Mobj, z)      },
-      { "angle_t angle",        asOFFSET(Mobj, angle)  },
+      { "fixed_t x",                  asOFFSET(Mobj, x)      },
+      { "fixed_t y",                  asOFFSET(Mobj, y)      },
+      { "fixed_t z",                  asOFFSET(Mobj, z)      },
+      { "angle_t angle",              asOFFSET(Mobj, angle)  },
 
-      { "fixed_t radius",       asOFFSET(Mobj, radius) },
-      { "fixed_t height",       asOFFSET(Mobj, height) },
-      { "vector_t mom",         asOFFSET(Mobj, mom)    },
+      { "fixed_t radius",             asOFFSET(Mobj, radius) },
+      { "fixed_t height",             asOFFSET(Mobj, height) },
+      { "vector_t mom",               asOFFSET(Mobj, mom)    },
 
-      { "int health",           asOFFSET(Mobj, health) },
+      { "int health",                 asOFFSET(Mobj, health) },
 
-      { "Mobj @target",         asOFFSET(Mobj, target) },
-      { "Mobj @tracer",         asOFFSET(Mobj, tracer) },
+      { "Mobj @target",               asOFFSET(Mobj, target) },
+      { "Mobj @tracer",               asOFFSET(Mobj, tracer) },
 
-      { "Player @const player", asOFFSET(Mobj, player) },
+      { "Player @const player",       asOFFSET(Mobj, player) },
+
+      { "const MobjInfo @const info", asOFFSET(Mobj, info)   },
    };
 
    static const aeonbehaviorreg_t mobjBehaviors[] =
@@ -336,6 +338,38 @@ namespace Aeon
       { asBEHAVE_FACTORY, "Mobj @f(const Mobj &in)", WRAP_FN(mobjFactoryFromOther) },
       { asBEHAVE_ADDREF,  "void f()",                WRAP_MFN(Mobj, addReference)  },
       { asBEHAVE_RELEASE, "void f()",                WRAP_MFN(Mobj, delReference)  },
+   };
+
+   template <int mobjinfo_t::* state>
+   static state_t *getState(const mobjinfo_t *info)
+   {
+      if(info->spawnstate == -1)
+         return nullptr;
+      return states[info->*state];
+   }
+
+   static const aeonfuncreg_t mobjinfoFuncs[] =
+   {
+      { "const EE::State @const get_spawnstate()    const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::spawnstate>)    },
+      { "const EE::State @const get_seestate()      const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::seestate>)      },
+      { "const EE::State @const get_painstate()     const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::painstate>)     },
+      { "const EE::State @const get_meleestate()    const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::meleestate>)    },
+      { "const EE::State @const get_missilestate()  const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::missilestate>)  },
+      { "const EE::State @const get_deathstate()    const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::deathstate>)    },
+      { "const EE::State @const get_xdeathstate()   const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::xdeathstate>)   },
+      { "const EE::State @const get_raisestate()    const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::raisestate>)    },
+      { "const EE::State @const get_crashstate()    const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::crashstate>)    },
+      { "const EE::State @const get_activestate()   const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::activestate>)   },
+      { "const EE::State @const get_inactivestate() const property", WRAP_OBJ_LAST(getState<&mobjinfo_t::inactivestate>) },
+      { "const fixed_t get_height() const property",                 WRAP_OBJ_LAST(P_ThingInfoHeight)                    },
+   };
+
+   static const aeonpropreg_t mobjinfoProps[] =
+   {
+      { "const int speed",      asOFFSET(mobjinfo_t, speed)      },
+      { "const int painchance", asOFFSET(mobjinfo_t, painchance) },
+      { "const fixed_t radius", asOFFSET(mobjinfo_t, radius)     },
+      { "const int mass",       asOFFSET(mobjinfo_t, mass)       },
    };
 
    void ScriptObjMobj::PreInit()
@@ -354,6 +388,15 @@ namespace Aeon
       asIScriptEngine *const e = ScriptManager::Engine();
 
       e->SetDefaultNamespace("EE");
+
+      e->RegisterObjectType("MobjInfo", sizeof(mobjinfo_t), asOBJ_REF | asOBJ_NOCOUNT);
+
+      for(const aeonpropreg_t &prop : mobjinfoProps)
+         e->RegisterObjectProperty("MobjInfo", prop.declaration, prop.byteOffset);
+
+      for(const aeonfuncreg_t &fn : mobjinfoFuncs)
+         e->RegisterObjectMethod("MobjInfo", fn.declaration, fn.funcPointer, asCALL_GENERIC);
+
 
       for(const aeonbehaviorreg_t &behavior : mobjBehaviors)
          e->RegisterObjectBehaviour("Mobj", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
@@ -386,6 +429,7 @@ namespace Aeon
          "EE::Mobj @Spawn(fixed_t x, fixed_t y, fixed_t z, const String &type)",
          WRAP_FN(spawnMobj), asCALL_GENERIC
       );
+
       e->SetDefaultNamespace("");
    }
 }
