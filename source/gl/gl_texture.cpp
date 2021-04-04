@@ -83,6 +83,16 @@ void GL_BindTextureIfNeeded(GLuint texture)
       glBindTexture(GL_TEXTURE_2D, texture);
 }
 
+
+//
+// Rebinds the currently-bound texture
+//
+void GL_RebindBoundTexture()
+{
+   if(boundtexture)
+      glBindTexture(GL_TEXTURE_2D, boundtexture);
+}
+
 //
 // GL_ClearBoundTexture
 //
