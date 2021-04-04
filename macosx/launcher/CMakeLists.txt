@@ -14,7 +14,7 @@ function(add_path_resource target folder)
         set_property(SOURCE ${resfile} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/${folder}/${newfilepath}")
 
     endforeach()
-    source_group("eureka-res-clutter" FILES ${resources})
+    source_group("eternity-res-clutter" FILES ${resources})
 endfunction()
 
 set(resource_dirs
