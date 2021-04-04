@@ -71,6 +71,10 @@ function(eternity_target_compile_definitions _TARGET)
    # Library search flags.
    if(OPENGL_LIBRARY)
       target_compile_definitions("${_TARGET}" PRIVATE EE_FEATURE_OPENGL)
+      if(APPLE)
+         # Recommended by the compiler if I want to silence those warnings
+         target_compile_definitions("${_TARGET}" PRIVATE GL_SILENCE_DEPRECATION)
+      endif()
    endif()
 
    # Build specific flags.
