@@ -830,6 +830,7 @@ if(APPLE)
       XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS                  "@executable_path"
 
       XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS                   "\"${CMAKE_BINARY_DIR}\""
+      XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME                  YES
    )
 endif()
 
