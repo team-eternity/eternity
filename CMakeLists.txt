@@ -20,6 +20,11 @@
 ################################################################################
 ######################### CMake Configuration ##################################
 cmake_minimum_required(VERSION 3.11)
+
+# Must be before project()
+# Can't set anything below 10.9 now. Xcode will show a warning if I attempt 10.7 like before
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9" CACHE STRING "Minimum macOS deployment version")
+
 project("Eternity Engine"
         VERSION 4.3.0
         LANGUAGES C CXX)
@@ -143,6 +148,8 @@ if(WIN32 AND MSVC)
 
    add_dependencies(eternity eecrashreport midiproc)
 endif()
-
+if(APPLE)
+   add_subdirectory(macosx/launcher)
+endif()
 # EOF
 

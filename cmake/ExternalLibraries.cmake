@@ -60,7 +60,7 @@ if(WIN32 AND (NOT DEFINED SDL2_LIBRARY OR NOT DEFINED SDL2_INCLUDE_DIR))
    endif()
 endif()
 
-if(APPLE)   # TODO: also check the cached variables
+if(APPLE)
    execute_process(
       COMMAND ${CMAKE_SOURCE_DIR}/macosx/download_sdl.sh
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

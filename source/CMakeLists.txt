@@ -816,6 +816,8 @@ if(APPLE)
 
       XCODE_ATTRIBUTE_CLANG_WARN_RANGE_LOOP_ANALYSIS           YES
       XCODE_ATTRIBUTE_CLANG_WARN_SUSPICIOUS_MOVE               YES
+
+      XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS                  "@executable_path"
    )
 endif()
 
