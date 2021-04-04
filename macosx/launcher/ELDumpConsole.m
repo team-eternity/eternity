@@ -157,10 +157,23 @@
 
 	if([data length])
 	{
+
 		if(!outputMessageString)
 			outputMessageString = [[NSMutableString alloc] init];
+
+      char *rawdata = malloc([data length] + 1);
+      memcpy(rawdata, [data bytes], [data length]);
+      rawdata[[data length]] = 0;
+
+      NSString *toWrite = [NSString stringWithCString:rawdata encoding:NSUTF8StringEncoding];
+      if(!toWrite)
+      {
+         free(rawdata);
+         return;  // garbage stuff, mitigate it
+      }
+      free(rawdata);
 		
-		[outputMessageString setString:[NSString stringWithCString:[data bytes] encoding:NSUTF8StringEncoding]];
+		[outputMessageString setString:toWrite];
 		
 		[textField setEditable:YES];
 		[textField setSelectedRange:NSMakeRange([[textField string] length], 0)];
