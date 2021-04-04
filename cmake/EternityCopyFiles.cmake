@@ -56,7 +56,7 @@ function(eternity_copy_libs TARGET)
     foreach(ETERNITY_FW ${ETERNITY_FWS})
     add_custom_command(
       TARGET ${TARGET} POST_BUILD
-      COMMAND cp -RT ${CMAKE_BINARY_DIR}/${ETERNITY_FW} "$<TARGET_FILE_DIR:${TARGET}>/${ETERNITY_FW}"
+      COMMAND ${CMAKE_SOURCE_DIR}/macosx/copy_frameworks_to_product.sh ${CMAKE_BINARY_DIR}/${ETERNITY_FW} $<TARGET_FILE_DIR:${TARGET}>
       VERBATIM
     )
     endforeach()
