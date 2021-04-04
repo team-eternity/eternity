@@ -56,11 +56,29 @@ add_executable(
 )
 
 add_custom_command(
-    TARGET EternityLauncher POST_BUILD
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/copy_game_to_bundle.sh
+    TARGET EternityLauncher PRE_BUILD
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/prepare_game_binaries.sh
     $<TARGET_FILE_DIR:eternity>
-    $<TARGET_FILE_DIR:EternityLauncher>
+    ${CMAKE_CURRENT_BINARY_DIR}
     VERBATIM
+)
+
+set(binary_resources
+    ${CMAKE_CURRENT_BINARY_DIR}/eternity
+    ${CMAKE_CURRENT_BINARY_DIR}/SDL2.framework
+    ${CMAKE_CURRENT_BINARY_DIR}/SDL2_mixer.framework
+    ${CMAKE_CURRENT_BINARY_DIR}/SDL2_net.framework
+)
+
+target_sources(
+    EternityLauncher PRIVATE
+    ${binary_resources}
+)
+
+set_source_files_properties(
+    ${binary_resources} PROPERTIES
+    MACOSX_PACKAGE_LOCATION Resources
+    GENERATED TRUE
 )
 
 foreach(dir ${resource_dirs})
