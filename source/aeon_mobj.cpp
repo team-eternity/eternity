@@ -313,10 +313,16 @@ namespace Aeon
 
    static const aeonpropreg_t mobjinfoProps[] =
    {
-      { "const int speed",      asOFFSET(mobjinfo_t, speed)      },
-      { "const int painchance", asOFFSET(mobjinfo_t, painchance) },
-      { "const fixed_t radius", asOFFSET(mobjinfo_t, radius)     },
-      { "const int mass",       asOFFSET(mobjinfo_t, mass)       },
+      { "const int speed",         asOFFSET(mobjinfo_t, speed)         },
+      { "const int painchance",    asOFFSET(mobjinfo_t, painchance)    },
+      { "const fixed_t radius",    asOFFSET(mobjinfo_t, radius)        },
+      { "const int mass",          asOFFSET(mobjinfo_t, mass)          },
+      { "const int damage",        asOFFSET(mobjinfo_t, damage)        },
+      { "const int damagemodulus", asOFFSET(mobjinfo_t, damagemod)     },
+      { "const int spawnhealth",   asOFFSET(mobjinfo_t, spawnhealth)   },
+      { "const int gibhealth",     asOFFSET(mobjinfo_t, gibhealth)     },
+      { "const int respawntime",   asOFFSET(mobjinfo_t, respawntime)   },
+      { "const int respawnchance", asOFFSET(mobjinfo_t, respawnchance) },
    };
 
    void ScriptObjMobj::PreInit()
