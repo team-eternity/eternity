@@ -857,14 +857,11 @@ static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
 static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 {
    if(view.lerp == FRACUNIT)
-   {
-      pos.x = pspr.rsx;
-      pos.y = pspr.rsy;
-   }
+      pos = pspr.renderpos;
    else
    {
-      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.rsx);
-      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.rsy);
+      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.renderpos.x);
+      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.renderpos.y);
    }
 }
 
