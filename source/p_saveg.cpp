@@ -526,6 +526,9 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
 {
    arc << pspr.sx << pspr.sy << pspr.tics << pspr.trans;
 
+   if(arc.saveVersion() >= 5)
+      arc << pspr.rsx << pspr.rsy;
+
    if(arc.isSaving())
    {
       int statenum = pspr.state ? pspr.state->index : -1;

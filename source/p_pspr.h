@@ -80,14 +80,14 @@ struct pspdef_t
   state_t *state;       // a nullptr state means not active
   int     tics;
   v2fixed_t prevpos;
-  fixed_t sx;
-  fixed_t sy;
+  fixed_t sx,  sy;
+  fixed_t rsx, rsy; // sx and sy but render-only
   int trans;
 
   void backupPosition()
   {
-     prevpos.x = sx;
-     prevpos.y = sy;
+     prevpos.x = rsx;
+     prevpos.y = rsy;
   }
 };
 
