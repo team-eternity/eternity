@@ -857,14 +857,11 @@ static void R_interpolateThingPosition(Mobj *thing, spritepos_t &pos)
 static void R_interpolatePSpritePosition(const pspdef_t &pspr, v2fixed_t &pos)
 {
    if(view.lerp == FRACUNIT)
-   {
-      pos.x = pspr.sx;
-      pos.y = pspr.sy;
-   }
+      pos = pspr.renderpos;
    else
    {
-      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.sx);
-      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.sy);
+      pos.x = lerpCoord(view.lerp, pspr.prevpos.x, pspr.renderpos.x);
+      pos.y = lerpCoord(view.lerp, pspr.prevpos.y, pspr.renderpos.y);
    }
 }
 
@@ -1246,10 +1243,6 @@ void R_AddSprites(cmapcontext_t &cmapcontext,
    }
 }
 
-// TODO: Delete and use less-awful logic
-extern void A_Lower(actionargs_t *);
-extern void A_Raise(actionargs_t *);
-
 //
 // Draws player gun sprites.
 //
@@ -1307,11 +1300,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    // calculate edges of the shape
    codeptr_t playeraction = viewplayer->psprites[0].state->action ? viewplayer->psprites[0].state->action->codeptr : nullptr;
    v2fixed_t pspos;
-   if(centerfire && (viewplayer->attackdown & AT_ALL) != 0 &&
-      playeraction != A_Lower && playeraction != A_Raise)
-      pspos = { 0, WEAPONTOP };
-   else
-      R_interpolatePSpritePosition(*psp, pspos);
+   R_interpolatePSpritePosition(*psp, pspos);
 
    tx  = M_FixedToFloat(pspos.x) - 160.0f;
    tx -= M_FixedToFloat(spriteoffset[lump]);

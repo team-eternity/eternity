@@ -734,7 +734,8 @@ void G_SetGameMap(void)
 //
 void G_SetGameMapName(const char *s)
 {
-   strncpy(gamemapname, s, 8);
+   if(s != gamemapname) // check against having same position
+      strncpy(gamemapname, s, 8);
    M_Strupr(gamemapname);
 }
 

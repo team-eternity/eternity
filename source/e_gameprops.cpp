@@ -182,6 +182,7 @@ static dehflags_t gmi_flags[] =
    { "CHASEFAST",      GIF_CHASEFAST      },
    { "DOOMWEAPONOFFSET", GIF_DOOMWEAPONOFFSET },
    { "INVALWAYSOPEN",  GIF_INVALWAYSOPEN  },
+   { "BERZERKISPENTA", GIF_BERZERKISPENTA },
    { nullptr,          0                  }
 };
 

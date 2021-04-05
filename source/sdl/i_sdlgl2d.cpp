@@ -201,6 +201,8 @@ void SDLGL2DVideoDriver::FinishUpdate()
    if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
       return;
 
+   GL_RebindBoundTexture();
+
    if(!use_arb_pbo)
    {
       // Convert the game's 8-bit output to the 32-bit texture buffer

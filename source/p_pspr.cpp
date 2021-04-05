@@ -107,8 +107,8 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
          if(state->misc1)
          {
             // coordinate set
-            psp->sx = state->misc1 << FRACBITS;
-            psp->sy = state->misc2 << FRACBITS;
+            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
+            psp->playpos.y = psp->renderpos.y = state->misc2 << FRACBITS;
             if(!(state->flags & STATEF_INTERPOLATE))
                psp->backupPosition();
          }
@@ -117,15 +117,15 @@ void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
       {
          if(state->misc1)
          {
-            psp->sx = state->misc1 << FRACBITS;
+            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
             if(!(state->flags & STATEF_INTERPOLATE))
-               psp->prevpos.x = psp->sx;
+               psp->prevpos.x = psp->renderpos.x;
          }
          if(state->misc2)
          {
-            psp->sy = state->misc2 << FRACBITS;
+            psp->playpos.y = psp->renderpos.y =  state->misc2 << FRACBITS;
             if(!(state->flags & STATEF_INTERPOLATE))
-               psp->prevpos.y = psp->sy;
+               psp->prevpos.y = psp->renderpos.y;
          }
       }
 
@@ -190,7 +190,7 @@ static void P_BringUpWeapon(player_t *player)
       player->pendingweaponslot = nullptr;
    
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-      player->psprites[ps_weapon].sy = demo_version >= 203 ? 
+      player->psprites[ps_weapon].playpos.y = player->psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
          WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
    
       P_SetPsprite(player, ps_weapon, newstate);
@@ -602,7 +602,7 @@ static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*stat
 // Try to execute a weapon states if the user inputs that.
 // Returns true if a state is executed, and false otherwise.
 //
-static bool P_tryExecuteWeaponState(player_t *player)
+static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
 {
    if(player->cmd.buttons & BT_ATTACK)
    {
@@ -610,6 +610,11 @@ static bool P_tryExecuteWeaponState(player_t *player)
       {
          player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return true;
       }
    }
@@ -619,6 +624,11 @@ static bool P_tryExecuteWeaponState(player_t *player)
       {
          player->attackdown = AT_SECONDARY;
          P_fireWeaponAlt(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return true;
       }
    }
@@ -844,7 +854,7 @@ void A_WeaponReady(actionargs_t *actionargs)
    // certain weapons do not auto fire
    if(demo_version >= 401)
    {
-      if(P_tryExecuteWeaponState(player))
+      if(P_tryExecuteWeaponState(player, psp))
          return;
    }
    else if(player->cmd.buttons & BT_ATTACK)
@@ -853,6 +863,11 @@ void A_WeaponReady(actionargs_t *actionargs)
       {
          player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return;
       }
    }
@@ -861,9 +876,9 @@ void A_WeaponReady(actionargs_t *actionargs)
 
    // bob the weapon based on movement speed
    int angle = (128*leveltime) & FINEMASK;
-   psp->sx = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+   psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
    angle &= FINEANGLES/2-1;
-   psp->sy = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
 }
 
 static void A_reFireNew(actionargs_t *actionargs)
@@ -970,22 +985,23 @@ void A_Lower(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   psp->sy += lowerspeed;
-   
+   psp->playpos.y += lowerspeed;
+   psp->renderpos.y = psp->renderpos.y;
+
    // Is already down.
-   if(psp->sy < WEAPONBOTTOM)
+   if(psp->playpos.y < WEAPONBOTTOM)
       return;
 
    // Player is dead.
    if(player->playerstate == PST_DEAD)
    {
-      psp->sy = WEAPONBOTTOM;
+      psp->playpos.y = psp->renderpos.y = WEAPONBOTTOM;
       return;      // don't bring weapon back up
    }
 
    // The old weapon has been lowered off the screen,
    // so change the weapon and start raising it
-   
+
    if(!player->health)
    {      // Player is dead, so keep the weapon off screen.
       P_SetPsprite(player,  ps_weapon, NullStateNum);
@@ -1019,19 +1035,20 @@ void A_Raise(actionargs_t *actionargs)
 
    if(!(psp = actionargs->pspr))
       return;
-   
-   psp->sy -= raisespeed;
-   
-   if(psp->sy > WEAPONTOP)
+
+   psp->playpos.y -= raisespeed;
+   psp->renderpos.y = psp->playpos.y;
+
+   if(psp->playpos.y > WEAPONTOP)
       return;
-   
-   psp->sy = WEAPONTOP;
-   
+
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP;
+
    // The weapon has been raised all the way,
    //  so change to the ready state.
-   
+
    newstate = player->readyweapon->readystate;
-   
+
    P_SetPsprite(player, ps_weapon, newstate);
 }
 
@@ -1236,10 +1253,10 @@ void P_MovePsprites(player_t *player)
          P_SetPsprite(player, i, psp->state->nextstate);
    }
    
-   player->psprites[ps_flash].sx = player->psprites[ps_weapon].sx;
-   player->psprites[ps_flash].sy = player->psprites[ps_weapon].sy;
+   player->psprites[ps_flash].playpos   = player->psprites[ps_weapon].playpos;
+   player->psprites[ps_flash].renderpos = player->psprites[ps_weapon].renderpos;
    // also preserve interpolation
-   player->psprites[ps_flash].prevpos = player->psprites[ps_weapon].prevpos;
+   player->psprites[ps_flash].prevpos   = player->psprites[ps_weapon].prevpos;
 }
 
 //===============================

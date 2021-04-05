@@ -90,6 +90,10 @@ Fixed the modern HUD being stretched horizontally.
 Restricted the modern HUD to a 16:9 subscreen (if at 16:9 or wider aspect). Can
 be toggled on/off with the cvar "hu_restrictoverlaywidth".
 
+--------------------------------------------------------------------------------
+2021/04/02
+Fixed screen going black when streaming on Discord.
+
 ================================================================================
 EOF
 ================================================================================

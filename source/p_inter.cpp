@@ -1399,6 +1399,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(player && gameskill == sk_baby)
       damage >>= 1;   // take half damage in trainer mode
 
+   if(source && source->player && (GameModeInfo->flags & GIF_BERZERKISPENTA) &&
+      source->player->powers[pw_strength])
+      damage *= 5;
+
    // haleyjd 08/01/04: dmgspecial -- special inflictor types
    if(inflictor && inflictor->info->dmgspecial)
    {

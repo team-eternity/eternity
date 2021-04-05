@@ -388,7 +388,7 @@ static void MN_drawSaveInfo(int slotIndex)
       char temp[32 + 1];
       const char *const mapName = saveSlot.mapName.constPtr();
 
-      snprintf(temp, sizeof(temp), "%d", saveSlot.skill);
+      snprintf(temp, sizeof(temp), "%d", saveSlot.skill + 1); // Accursed people and their 1-indexing
       MN_WriteTextColored("map:",   GameModeInfo->infoColor, x + 4,         y + (lineh * 3) + 4);
       MN_WriteTextColored(mapName,  GameModeInfo->infoColor, x + namew + 4, y + (lineh * 3) + 4);
       MN_WriteTextColored("skill:", GameModeInfo->infoColor, x + 4,         y + (lineh * 4) + 4);

@@ -181,8 +181,8 @@ void A_FireMacePL1(actionargs_t *actionargs)
    const int tnum = E_SafeThingType(MT_MACEFX1);
 
    P_SubtractAmmo(player, -1);
-   psp->sx = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
-   psp->sy = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
+   psp->playpos.x = psp->renderpos.x = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
    ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
                                            ((P_Random(pr_firemace) & 7) - 4) * PO2(24),
                                            SPMAH_AIMFRIENDSTOO);
@@ -587,8 +587,8 @@ void A_GauntletAttack(actionargs_t *actionargs)
 
    int powered = E_ArgAsInt(args, 0, 0);
 
-   psp->sx = ((P_Random(pr_gauntlets) & 3) - 2) * FRACUNIT;
-   psp->sy = WEAPONTOP + (P_Random(pr_gauntlets) & 3) * FRACUNIT;
+   psp->playpos.x = psp->renderpos.x = ((P_Random(pr_gauntlets) & 3) - 2) * FRACUNIT;
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + (P_Random(pr_gauntlets) & 3) * FRACUNIT;
    angle = mo->angle;
 
    if(powered)
