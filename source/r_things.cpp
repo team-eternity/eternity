@@ -1309,7 +1309,7 @@ static void R_drawPSprite(const pspdef_t *psp,
    v2fixed_t pspos;
    if(centerfire && (viewplayer->attackdown & AT_ALL) != 0 &&
       playeraction != A_Lower && playeraction != A_Raise)
-      pspos = { 0, WEAPONTOP };
+      pspos = { FRACUNIT, WEAPONTOP };
    else
       R_interpolatePSpritePosition(*psp, pspos);
 
