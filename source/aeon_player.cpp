@@ -138,9 +138,9 @@ namespace Aeon
    static const aeonpropreg_t pspriteProps[] =
    {
       // I don't think state is required
-      { "int tics",   asOFFSET(pspdef_t, tics) },
-      { "fixed_t sx", asOFFSET(pspdef_t, sx)   },
-      { "fixed_t sy", asOFFSET(pspdef_t, sy)   },
+      { "int tics",            asOFFSET(pspdef_t, tics)      },
+      { "vector2_t playpos",   asOFFSET(pspdef_t, playpos)   },
+      { "vector2_t renderpos", asOFFSET(pspdef_t, renderpos) },
       // trans is never set anywhere, seemingly. The hell?
    };
 

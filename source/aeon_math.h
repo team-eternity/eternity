@@ -63,7 +63,18 @@ namespace Aeon
       static void Init();
    };
 
-   class ScriptObjVector
+   class ScriptObjVector2
+   {
+   public:
+      static void Construct(v2fixed_t *thisVector);
+      static void ConstructFromOther(const v2fixed_t other, v2fixed_t *thisVector);
+      static void ConstructFromFixed(fixed_t x, fixed_t y, fixed_t z, v2fixed_t *thisVector);
+
+      static void Init();
+
+   };
+
+   class ScriptObjVector3
    {
    public:
       static void Construct(v3fixed_t *thisVector);

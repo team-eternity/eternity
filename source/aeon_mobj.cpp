@@ -260,7 +260,7 @@ namespace Aeon
 
       { "fixed_t radius",             asOFFSET(Mobj, radius) },
       { "fixed_t height",             asOFFSET(Mobj, height) },
-      { "vector_t mom",               asOFFSET(Mobj, mom)    },
+      { "vector3_t mom",              asOFFSET(Mobj, mom)    },
 
       { "int health",                 asOFFSET(Mobj, health) },
 

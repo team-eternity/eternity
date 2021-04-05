@@ -507,55 +507,106 @@ namespace Aeon
 
    //=============================================================================
    //
-   // Aeon v3fixed_t
+   // Aeon v2fixed_t
    //
 
-   void ScriptObjVector::Construct(v3fixed_t *thisVector)
+   void ScriptObjVector2::Construct(v2fixed_t *thisVector)
    {
-      *thisVector = v3fixed_t{ };
+      *thisVector = v2fixed_t{ };
    }
 
-   void ScriptObjVector::ConstructFromOther(const v3fixed_t other, v3fixed_t *thisVector)
+   void ScriptObjVector2::ConstructFromOther(const v2fixed_t other, v2fixed_t *thisVector)
    {
       *thisVector = other;
    }
 
-   void ScriptObjVector::ConstructFromFixed(const fixed_t x, const fixed_t y,
-                                            const fixed_t z, v3fixed_t *thisVector)
+   void ScriptObjVector2::ConstructFromFixed(const fixed_t x, const fixed_t y,
+                                             const fixed_t z, v2fixed_t *thisVector)
+   {
+      *thisVector = v2fixed_t{ x, y };
+   }
+
+   static void asPrint(const v2fixed_t vec)
+   {
+      C_Printf( "x: %.11f, y: %.11f\n", M_FixedToDouble(vec.x), M_FixedToDouble(vec.y));
+   }
+
+   static const aeonbehaviorreg_t vector2Behaviors[] =
+   {
+      { asBEHAVE_CONSTRUCT, "void f()",                             WRAP_OBJ_LAST(ScriptObjVector2::Construct)          },
+      { asBEHAVE_CONSTRUCT, "void f(const vector2_t)",              WRAP_OBJ_LAST(ScriptObjVector2::ConstructFromOther) },
+      { asBEHAVE_CONSTRUCT, "void f(const fixed_t, const fixed_t)", WRAP_OBJ_LAST(ScriptObjVector2::ConstructFromFixed) },
+   };
+
+   void ScriptObjVector2::Init()
+   {
+      asIScriptEngine *const e = ScriptManager::Engine();
+
+      e->RegisterObjectType(
+         "vector2_t", sizeof(v2fixed_t), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
+      );
+
+      for(const aeonbehaviorreg_t &behavior : vector2Behaviors)
+         e->RegisterObjectBehaviour("vector2_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
+
+      e->RegisterObjectProperty("vector2_t", "fixed_t x", asOFFSET(v2fixed_t, x));
+      e->RegisterObjectProperty("vector2_t", "fixed_t y", asOFFSET(v2fixed_t, y));
+
+      e->RegisterGlobalFunction("void print(vector2_t)", WRAP_FN_PR(asPrint, (const v2fixed_t), void), asCALL_GENERIC);
+   }
+
+   //=============================================================================
+   //
+   // Aeon v3fixed_t
+   //
+
+   void ScriptObjVector3::Construct(v3fixed_t *thisVector)
+   {
+      *thisVector = v3fixed_t{ };
+   }
+
+   void ScriptObjVector3::ConstructFromOther(const v3fixed_t other, v3fixed_t *thisVector)
+   {
+      *thisVector = other;
+   }
+
+   void ScriptObjVector3::ConstructFromFixed(const fixed_t x, const fixed_t y,
+                                             const fixed_t z, v3fixed_t *thisVector)
    {
       *thisVector = v3fixed_t{ x, y, z };
    }
 
    static void asPrint(const v3fixed_t vec)
    {
-      C_Printf("x: %.11f, y: %.11f, z: %.11f\n", M_FixedToDouble(vec.x),
-                                                 M_FixedToDouble(vec.y),
-                                                 M_FixedToDouble(vec.z));
+      C_Printf(
+         "x: %.11f, y: %.11f, z: %.11f\n",
+         M_FixedToDouble(vec.x), M_FixedToDouble(vec.y), M_FixedToDouble(vec.z)
+      );
    }
 
-   static const aeonbehaviorreg_t vectorBehaviors[] =
+   static const aeonbehaviorreg_t vector3Behaviors[] =
    {
-      { asBEHAVE_CONSTRUCT, "void f()",                                            WRAP_OBJ_LAST(ScriptObjVector::Construct)          },
-      { asBEHAVE_CONSTRUCT, "void f(const vector_t)",                              WRAP_OBJ_LAST(ScriptObjVector::ConstructFromOther) },
-      { asBEHAVE_CONSTRUCT, "void f(const fixed_t, const fixed_t, const fixed_t)", WRAP_OBJ_LAST(ScriptObjVector::ConstructFromFixed) },
+      { asBEHAVE_CONSTRUCT, "void f()",                                            WRAP_OBJ_LAST(ScriptObjVector3::Construct)          },
+      { asBEHAVE_CONSTRUCT, "void f(const vector3_t)",                             WRAP_OBJ_LAST(ScriptObjVector3::ConstructFromOther) },
+      { asBEHAVE_CONSTRUCT, "void f(const fixed_t, const fixed_t, const fixed_t)", WRAP_OBJ_LAST(ScriptObjVector3::ConstructFromFixed) },
    };
 
-   void ScriptObjVector::Init()
+   void ScriptObjVector3::Init()
    {
       asIScriptEngine *const e = ScriptManager::Engine();
 
       e->RegisterObjectType(
-         "vector_t", sizeof(v3fixed_t), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
+         "vector3_t", sizeof(v3fixed_t), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CA | asOBJ_APP_CLASS_ALLINTS
       );
 
-      for(const aeonbehaviorreg_t &behavior : vectorBehaviors)
-         e->RegisterObjectBehaviour("vector_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
+      for(const aeonbehaviorreg_t &behavior : vector3Behaviors)
+         e->RegisterObjectBehaviour("vector3_t", behavior.behavior, behavior.declaration, behavior.funcPointer, asCALL_GENERIC);
 
-      e->RegisterObjectProperty("vector_t", "fixed_t x", asOFFSET(v3fixed_t, x));
-      e->RegisterObjectProperty("vector_t", "fixed_t y", asOFFSET(v3fixed_t, y));
-      e->RegisterObjectProperty("vector_t", "fixed_t z", asOFFSET(v3fixed_t, z));
+      e->RegisterObjectProperty("vector3_t", "fixed_t x", asOFFSET(v3fixed_t, x));
+      e->RegisterObjectProperty("vector3_t", "fixed_t y", asOFFSET(v3fixed_t, y));
+      e->RegisterObjectProperty("vector3_t", "fixed_t z", asOFFSET(v3fixed_t, z));
 
-      e->RegisterGlobalFunction("void print(vector_t)", WRAP_FN_PR(asPrint, (const v3fixed_t), void), asCALL_GENERIC);
+      e->RegisterGlobalFunction("void print(vector3_t)", WRAP_FN_PR(asPrint, (const v3fixed_t), void), asCALL_GENERIC);
    }
 }
 

@@ -111,7 +111,8 @@ namespace Aeon
 
       ScriptObjFixed::Init();
       ScriptObjAngle::Init();
-      ScriptObjVector::Init();
+      ScriptObjVector2::Init();
+      ScriptObjVector3::Init();
       ScriptObjMath::Init();
 
       ScriptObjMobj::Init();
