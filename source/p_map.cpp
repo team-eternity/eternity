@@ -1269,6 +1269,11 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
    yh = (clip.bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
+   // From dsda-doom, originally fixed by kraflab
+   // heretic - this must be incremented before iterating over the lines
+   if(!vanilla_heretic)
+      validcount++;
+
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
