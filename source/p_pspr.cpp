@@ -985,7 +985,7 @@ void A_Lower(actionargs_t *actionargs)
       return;
 
    psp->playpos.y += lowerspeed;
-   psp->renderpos.y = psp->renderpos.y;
+   psp->renderpos.y = psp->playpos.y;
 
    // Is already down.
    if(psp->playpos.y < WEAPONBOTTOM)
