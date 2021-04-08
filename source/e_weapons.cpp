@@ -140,8 +140,8 @@ cfg_opt_t wpninfo_tprops[] =
    CFG_STR(ITEM_WPN_REMFLAGS,        "",       CFGF_NONE), \
    CFG_STR(ITEM_WPN_MOD,             "",       CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_RECOIL,        0.0,      CFGF_NONE), \
-   CFG_INT(ITEM_WPN_HAPTICRECOIL,    0,        CFGF_NONE), \
-   CFG_INT(ITEM_WPN_HAPTICTIME,      0,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_HAPTICRECOIL,    1,        CFGF_NONE), \
+   CFG_INT(ITEM_WPN_HAPTICTIME,      1,        CFGF_NONE), \
    CFG_STR(ITEM_WPN_UPSOUND,         "none",   CFGF_NONE), \
    CFG_STR(ITEM_WPN_READYSOUND,      "none",   CFGF_NONE), \
    CFG_FLOAT(ITEM_WPN_FSOFFSET,      0.0,      CFGF_NONE), \
