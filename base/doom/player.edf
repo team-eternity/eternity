@@ -86,7 +86,7 @@ weaponinfo Pistol : DoomWeapon, 1
 
   selectionorder 8.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|AUTOSWITCHFROM
+  flags        SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
   mod          Pistol
   recoil       10.0
   hapticrecoil 1
@@ -123,7 +123,7 @@ weaponinfo Shotgun : DoomWeapon, 2
 
   selectionorder 4.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   mod          Shotgun
   recoil       30.0
   hapticrecoil 3
@@ -164,7 +164,7 @@ weaponinfo Chaingun : DoomWeapon, 3
 
   selectionorder 3.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   mod          Chaingun
   recoil       10.0
   hapticrecoil 1
@@ -202,7 +202,7 @@ weaponinfo RocketLauncher : DoomWeapon, 4
 
   selectionorder 7.0
 
-  flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE|HAPTICRECOIL
+  flags        NOAUTOFIRE|DISABLEAPS|SILENCEABLE
   recoil       100.0
   hapticrecoil 6
   haptictime   8
@@ -239,7 +239,7 @@ weaponinfo PlasmaRifle : DoomWeapon, 5
 
   selectionorder 1.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  flags        SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   recoil       20.0
   hapticrecoil 2
   haptictime   1
@@ -276,7 +276,7 @@ weaponinfo BFG9000 : DoomWeapon, 6
 
   selectionorder 5.0
 
-  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   recoil       100.0
   hapticrecoil 10
   haptictime   10
@@ -360,7 +360,7 @@ weaponinfo SuperShotgun : DoomWeapon, 8
 
   selectionorder 2.0
 
-  flags        SILENCEABLE|HAPTICRECOIL|DISABLEAPS
+  flags        SILENCEABLE|DISABLEAPS
   mod          SShotgun
   recoil       80.0
   hapticrecoil 5

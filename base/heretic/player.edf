@@ -102,7 +102,7 @@ weaponinfo GoldWand
 
   sisterweapon GoldWandPowered
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   //mod          ""
   recoil       10
   hapticrecoil 1
@@ -158,7 +158,7 @@ weaponinfo Crossbow
 
   sisterweapon   CrossbowPowered
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   //mod          ""
   recoil       30
   hapticrecoil 3
@@ -216,7 +216,7 @@ weaponinfo Blaster
 
   selectionorder 2.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   //mod          ""
   recoil       10
   hapticrecoil 1
@@ -253,7 +253,7 @@ weaponinfo SkullRod
 
   selectionorder 1.0
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL
+  flags        SILENCEABLE|DISABLEAPS
   //mod          ""
   recoil       100
   hapticrecoil 6
@@ -289,7 +289,7 @@ weaponinfo PhoenixRod
 
   sisterweapon PhoenixRodPowered
 
-  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  flags        NOAUTOFIRE|SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   //mod          ""
   recoil       20
   hapticrecoil 2
@@ -347,7 +347,7 @@ weaponinfo Mace
 
   sisterweapon MacePowered
 
-  flags        SILENCEABLE|DISABLEAPS|HAPTICRECOIL|NOTSHAREWARE
+  flags        SILENCEABLE|DISABLEAPS|NOTSHAREWARE
   //mod          ""
   recoil       20
   hapticrecoil 2

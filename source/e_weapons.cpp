@@ -190,6 +190,7 @@ static SelectOrderTree *selectordertree = nullptr;
 
 static dehflags_t e_weaponFlags[] =
 {
+   { "HAPTICRECOIL",   0                  },
    { "NOTHRUST",       WPF_NOTHRUST       },
    { "NOHITGHOSTS",    WPF_NOHITGHOSTS    },
    { "NOTSHAREWARE",   WPF_NOTSHAREWARE   },
@@ -199,7 +200,7 @@ static dehflags_t e_weaponFlags[] =
    { "NOAUTOFIRE",     WPF_NOAUTOFIRE     },
    { "FLEEMELEE",      WPF_FLEEMELEE      },
    { "ALWAYSRECOIL",   WPF_ALWAYSRECOIL   },
-   { "HAPTICRECOIL",   WPF_HAPTICRECOIL   },
+   { "NOHAPTICRECOIL", WPF_NOHAPTICRECOIL },
    { "READYSNDHALF",   WPF_READYSNDHALF   },
    { "AUTOSWITCHFROM", WPF_AUTOSWITCHFROM },
    { "POWEREDUP",      WPF_POWEREDUP      },
