@@ -492,11 +492,15 @@ static void MN_loadGameDrawer()
       }
       else
       {
+         text = e_saveSlots[i].description;
          if(loadID.slot == i)
+         {
+            const int skull_x = menu_loadgame.x + 1 + MN_StringWidth(text.constPtr());
+            MN_DrawSmallPtr(skull_x, y);
             color = GameModeInfo->selectColor;
+         }
          else
             color = GameModeInfo->unselectColor;
-         text = e_saveSlots[i].description;
       }
 
       MN_WriteTextColored(text.constPtr(), color, menu_loadgame.x, y);
@@ -701,6 +705,8 @@ static void MN_saveGameDrawer()
                V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontMinWidth(menu_font) <= MAXSAVESTRINGWIDTH)
                text += '_';
          }
+         const int skull_x = menu_loadgame.x + 1 + MN_StringWidth(text.constPtr());
+         MN_DrawSmallPtr(skull_x, y);
       }
       MN_WriteTextColored(text.constPtr(), color, menu_savegame.x, y);
       y += lheight;
@@ -730,6 +736,8 @@ static void MN_saveGameDrawer()
                   V_FontStringWidth(menu_font, desc_buffer.constPtr()) + V_FontMinWidth(menu_font) <= MAXSAVESTRINGWIDTH)
                   text += '_';
             }
+            const int skull_x = menu_loadgame.x + 1 + MN_StringWidth(text.constPtr());
+            MN_DrawSmallPtr(skull_x, y);
          }
          else
             color = GameModeInfo->unselectColor;
