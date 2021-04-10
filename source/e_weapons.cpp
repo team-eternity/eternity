@@ -60,54 +60,54 @@ weapontype_t UnknownWeaponInfo;
 
 // Weapon Keywords
 // TODO: Reorder
-#define ITEM_WPN_DEHNUM       "dehackednum"
+constexpr const char ITEM_WPN_DEHNUM[]          = "dehackednum";
 
-#define ITEM_WPN_AMMO         "ammotype"
-#define ITEM_WPN_UPSTATE      "upstate"
-#define ITEM_WPN_DOWNSTATE    "downstate"
-#define ITEM_WPN_READYSTATE   "readystate"
-#define ITEM_WPN_ATKSTATE     "attackstate"
-#define ITEM_WPN_FLASHSTATE   "flashstate"
-#define ITEM_WPN_HOLDSTATE    "holdstate"
-#define ITEM_WPN_AMMOPERSHOT  "ammouse"
+constexpr const char ITEM_WPN_AMMO[]            = "ammotype";
+constexpr const char ITEM_WPN_UPSTATE[]         = "upstate";
+constexpr const char ITEM_WPN_DOWNSTATE[]       = "downstate";
+constexpr const char ITEM_WPN_READYSTATE[]      = "readystate";
+constexpr const char ITEM_WPN_ATKSTATE[]        = "attackstate";
+constexpr const char ITEM_WPN_FLASHSTATE[]      = "flashstate";
+constexpr const char ITEM_WPN_HOLDSTATE[]       = "holdstate";
+constexpr const char ITEM_WPN_AMMOPERSHOT[]     = "ammouse";
 
-#define ITEM_WPN_AMMO_ALT        "ammotype2"
-#define ITEM_WPN_ATKSTATE_ALT    "attackstate2"
-#define ITEM_WPN_FLASHSTATE_ALT  "flashstate2"
-#define ITEM_WPN_HOLDSTATE_ALT   "holdstate2"
-#define ITEM_WPN_AMMOPERSHOT_ALT "ammouse2"
+constexpr const char ITEM_WPN_AMMO_ALT[]        = "ammotype2";
+constexpr const char ITEM_WPN_ATKSTATE_ALT[]    = "attackstate2";
+constexpr const char ITEM_WPN_FLASHSTATE_ALT[]  = "flashstate2";
+constexpr const char ITEM_WPN_HOLDSTATE_ALT[]   = "holdstate2";
+constexpr const char ITEM_WPN_AMMOPERSHOT_ALT[] = "ammouse2";
 
-#define ITEM_WPN_SELECTORDER  "selectionorder"
-#define ITEM_WPN_SISTERWEAPON "sisterweapon"
+constexpr const char ITEM_WPN_SELECTORDER[]     = "selectionorder";
+constexpr const char ITEM_WPN_SISTERWEAPON[]    = "sisterweapon";
 
-#define ITEM_WPN_SLOTNUM      "slotnumber"
-#define ITEM_WPN_SLOTRANK     "slotselectionorder"
+constexpr const char ITEM_WPN_SLOTNUM[]         = "slotnumber";
+constexpr const char ITEM_WPN_SLOTRANK[]        = "slotselectionorder";
 
-#define ITEM_WPN_FLAGS        "flags"
-#define ITEM_WPN_ADDFLAGS     "addflags"
-#define ITEM_WPN_REMFLAGS     "remflags"
-#define ITEM_WPN_MOD          "mod"
-#define ITEM_WPN_RECOIL       "recoil"
-#define ITEM_WPN_HAPTICRECOIL "hapticrecoil"
-#define ITEM_WPN_HAPTICTIME   "haptictime"
-#define ITEM_WPN_UPSOUND      "upsound"
-#define ITEM_WPN_READYSOUND   "readysound"
+constexpr const char ITEM_WPN_FLAGS[]           = "flags";
+constexpr const char ITEM_WPN_ADDFLAGS[]        = "addflags";
+constexpr const char ITEM_WPN_REMFLAGS[]        = "remflags";
+constexpr const char ITEM_WPN_MOD[]             = "mod";
+constexpr const char ITEM_WPN_RECOIL[]          = "recoil";
+constexpr const char ITEM_WPN_HAPTICRECOIL[]    = "hapticrecoil";
+constexpr const char ITEM_WPN_HAPTICTIME[]      = "haptictime";
+constexpr const char ITEM_WPN_UPSOUND[]         = "upsound";
+constexpr const char ITEM_WPN_READYSOUND[]      = "readysound";
 
-#define ITEM_WPN_FSOFFSET "fullscreenoffset"
+constexpr const char ITEM_WPN_FSOFFSET[]        = "fullscreenoffset";
 
-#define ITEM_WPN_FIRSTDECSTATE "firstdecoratestate"
+constexpr const char ITEM_WPN_FIRSTDECSTATE[]   = "firstdecoratestate";
 
 // DECORATE state block
-#define ITEM_WPN_STATES        "states"
+constexpr const char ITEM_WPN_STATES[]          = "states";
 
-#define ITEM_WPN_INHERITS      "inherits"
+constexpr const char ITEM_WPN_INHERITS[]        = "inherits";
 
 // WeaponInfo Delta Keywords
-#define ITEM_DELTA_NAME "name"
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 // Title properties
-#define ITEM_WPN_TITLE_SUPER   "superclass"
-#define ITEM_WPN_TITLE_DEHNUM  "dehackednum"
+constexpr const char ITEM_WPN_TITLE_SUPER[]  = "superclass";
+constexpr const char ITEM_WPN_TITLE_DEHNUM[] = "dehackednum";
 
 cfg_opt_t wpninfo_tprops[] =
 {
@@ -621,7 +621,7 @@ enum wepstatetypes_e
    WSTATE_USER4,
 };
 
-#define NUMNATIVEWSTATES earrlen(nativeWepStateLabels)
+constexpr size_t NUMNATIVEWSTATES = earrlen(nativeWepStateLabels);
 
 //
 // Gets a state that is stored inside an weaponinfo metatable.

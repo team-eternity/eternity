@@ -304,23 +304,23 @@ extern MetaKeyIndex keyAmmoGiven;
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
-#define EDF_SEC_HEALTHFX "healtheffect"
-#define EDF_SEC_ARMORFX  "armoreffect"
-#define EDF_SEC_AMMOFX   "ammoeffect"
-#define EDF_SEC_POWERFX  "powereffect"
-#define EDF_SEC_WEAPGFX  "weapongiver"
-#define EDF_SEC_ARTIFACT "artifact"
+constexpr const char EDF_SEC_HEALTHFX[] = "healtheffect";
+constexpr const char EDF_SEC_ARMORFX[]  = "armoreffect";
+constexpr const char EDF_SEC_AMMOFX[]   = "ammoeffect";
+constexpr const char EDF_SEC_POWERFX[]  = "powereffect";
+constexpr const char EDF_SEC_WEAPGFX[]  = "weapongiver";
+constexpr const char EDF_SEC_ARTIFACT[] = "artifact";
 
-#define EDF_SEC_HEALTHFXDELTA "healthdelta"
-#define EDF_SEC_ARMORFXDELTA  "armordelta"
-#define EDF_SEC_AMMOFXDELTA   "ammodelta"
-#define EDF_SEC_POWERFXDELTA  "powerdelta"
-#define EDF_SEC_WEAPGFXDELTA  "weapongiverdelta"
-#define EDF_SEC_ARTIFACTDELTA "artifactdelta"
+constexpr const char EDF_SEC_HEALTHFXDELTA[] = "healthdelta";
+constexpr const char EDF_SEC_ARMORFXDELTA[]  = "armordelta";
+constexpr const char EDF_SEC_AMMOFXDELTA[]   = "ammodelta";
+constexpr const char EDF_SEC_POWERFXDELTA[]  = "powerdelta";
+constexpr const char EDF_SEC_WEAPGFXDELTA[]  = "weapongiverdelta";
+constexpr const char EDF_SEC_ARTIFACTDELTA[] = "artifactdelta";
 
-#define EDF_SEC_SPRPKUP  "pickupitem"
-#define EDF_SEC_PICKUPFX "pickupeffect"
-#define EDF_SEC_LOCKDEF  "lockdef"
+constexpr const char EDF_SEC_SPRPKUP[]  = "pickupitem";
+constexpr const char EDF_SEC_PICKUPFX[] = "pickupeffect";
+constexpr const char EDF_SEC_LOCKDEF[]  = "lockdef";
 
 // Section Defs
 extern cfg_opt_t edf_healthfx_opts[];
