@@ -44,10 +44,10 @@
 static char e_argemptystr[] = "";
 
 // test if a string is empty
-#define ISEMPTY(s) (*(s) == '\0')
+constexpr bool ISEMPTY(const char *s) { return *(s) == '\0'; }
 
 // test if a string is the global arg empty string
-#define ISARGEMPTYSTR(s) ((s) == e_argemptystr)
+constexpr bool ISARGEMPTYSTR(const char *s) { return (s) == e_argemptystr; }
 
 //
 // Adds an argument to the end of an argument list, if possible.

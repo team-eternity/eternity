@@ -33,9 +33,9 @@
 #include "metaapi.h"
 #include "st_stuff.h"
 
-#define ITEM_COMPATIBILITY_HASHES "hashes"
-#define ITEM_COMPATIBILITY_ENABLE "on"
-#define ITEM_COMPATIBILITY_DISABLE "off"
+constexpr const char ITEM_COMPATIBILITY_HASHES[]  = "hashes";
+constexpr const char ITEM_COMPATIBILITY_ENABLE[]  = "on";
+constexpr const char ITEM_COMPATIBILITY_DISABLE[] = "off";
 
 
 // The EDF-set table
@@ -47,9 +47,9 @@ static MetaTable offtable;
 //
 cfg_opt_t edf_compatibility_opts[] =
 {
-   CFG_STR(ITEM_COMPATIBILITY_HASHES, 0, CFGF_LIST),
-   CFG_STR(ITEM_COMPATIBILITY_ENABLE, 0, CFGF_LIST),
-   CFG_STR(ITEM_COMPATIBILITY_DISABLE, 0, CFGF_LIST),
+   CFG_STR(ITEM_COMPATIBILITY_HASHES,  nullptr, CFGF_LIST),
+   CFG_STR(ITEM_COMPATIBILITY_ENABLE,  nullptr, CFGF_LIST),
+   CFG_STR(ITEM_COMPATIBILITY_DISABLE, nullptr, CFGF_LIST),
 
    CFG_END()
 };

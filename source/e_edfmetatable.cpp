@@ -29,7 +29,7 @@
 #include "e_lib.h"
 #include "metaapi.h"
 
-#define ITEM_GENERIC_TITLE_SUPER "super"
+constexpr const char ITEM_GENERIC_TITLE_SUPER[] = "super";
 
 //
 // Title properties

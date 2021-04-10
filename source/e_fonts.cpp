@@ -64,49 +64,49 @@
 // Data Tables
 //
 
-#define ITEM_FONT_ID     "id"
-#define ITEM_FONT_START  "start"
-#define ITEM_FONT_END    "end"
-#define ITEM_FONT_CY     "linesize"
-#define ITEM_FONT_SPACE  "spacesize"
-#define ITEM_FONT_DW     "widthdelta"
-#define ITEM_FONT_ABSH   "tallestchar"
-#define ITEM_FONT_CW     "centerwidth"
-#define ITEM_FONT_LFMT   "linearformat"
-#define ITEM_FONT_LLUMP  "linearlump"
-#define ITEM_FONT_REQUAN "requantize"
-#define ITEM_FONT_FILTER "filter"
-#define ITEM_FONT_COLOR  "colorable"
-#define ITEM_FONT_UPPER  "uppercase"
-#define ITEM_FONT_CENTER "blockcentered"
-#define ITEM_FONT_POFFS  "patchnumoffset"
-#define ITEM_FONT_COLORD "defaultcolor"
-#define ITEM_FONT_COLORN "normalcolor"
-#define ITEM_FONT_COLORH "highlightcolor"
-#define ITEM_FONT_COLORE "errorcolor"
-#define ITEM_FONT_COLORS "colortables"
+constexpr const char ITEM_FONT_ID[]     = "id";
+constexpr const char ITEM_FONT_START[]  = "start";
+constexpr const char ITEM_FONT_END[]    = "end";
+constexpr const char ITEM_FONT_CY[]     = "linesize";
+constexpr const char ITEM_FONT_SPACE[]  = "spacesize";
+constexpr const char ITEM_FONT_DW[]     = "widthdelta";
+constexpr const char ITEM_FONT_ABSH[]   = "tallestchar";
+constexpr const char ITEM_FONT_CW[]     = "centerwidth";
+constexpr const char ITEM_FONT_LFMT[]   = "linearformat";
+constexpr const char ITEM_FONT_LLUMP[]  = "linearlump";
+constexpr const char ITEM_FONT_REQUAN[] = "requantize";
+constexpr const char ITEM_FONT_FILTER[] = "filter";
+constexpr const char ITEM_FONT_COLOR[]  = "colorable";
+constexpr const char ITEM_FONT_UPPER[]  = "uppercase";
+constexpr const char ITEM_FONT_CENTER[] = "blockcentered";
+constexpr const char ITEM_FONT_POFFS[]  = "patchnumoffset";
+constexpr const char ITEM_FONT_COLORD[] = "defaultcolor";
+constexpr const char ITEM_FONT_COLORN[] = "normalcolor";
+constexpr const char ITEM_FONT_COLORH[] = "highlightcolor";
+constexpr const char ITEM_FONT_COLORE[] = "errorcolor";
+constexpr const char ITEM_FONT_COLORS[] = "colortables";
 
-#define ITEM_FILTER_CHARS "chars"
-#define ITEM_FILTER_START "start"
-#define ITEM_FILTER_END   "end"
-#define ITEM_FILTER_MASK  "mask"
+constexpr const char ITEM_FILTER_CHARS[] = "chars";
+constexpr const char ITEM_FILTER_START[] = "start";
+constexpr const char ITEM_FILTER_END[]   = "end";
+constexpr const char ITEM_FILTER_MASK[]  = "mask";
 
-#define ITEM_COLOR_BRICK   "brick"
-#define ITEM_COLOR_TAN     "tan"
-#define ITEM_COLOR_GRAY    "gray"
-#define ITEM_COLOR_GREEN   "green"
-#define ITEM_COLOR_BROWN   "brown"
-#define ITEM_COLOR_GOLD    "gold"
-#define ITEM_COLOR_RED     "red"
-#define ITEM_COLOR_BLUE    "blue"
-#define ITEM_COLOR_ORANGE  "orange"
-#define ITEM_COLOR_YELLOW  "yellow"
-#define ITEM_COLOR_CUSTOM1 "custom1"
-#define ITEM_COLOR_CUSTOM2 "custom2"
-#define ITEM_COLOR_CUSTOM3 "custom3"
-#define ITEM_COLOR_CUSTOM4 "custom4"
+constexpr const char ITEM_COLOR_BRICK[]   = "brick";
+constexpr const char ITEM_COLOR_TAN[]     = "tan";
+constexpr const char ITEM_COLOR_GRAY[]    = "gray";
+constexpr const char ITEM_COLOR_GREEN[]   = "green";
+constexpr const char ITEM_COLOR_BROWN[]   = "brown";
+constexpr const char ITEM_COLOR_GOLD[]    = "gold";
+constexpr const char ITEM_COLOR_RED[]     = "red";
+constexpr const char ITEM_COLOR_BLUE[]    = "blue";
+constexpr const char ITEM_COLOR_ORANGE[]  = "orange";
+constexpr const char ITEM_COLOR_YELLOW[]  = "yellow";
+constexpr const char ITEM_COLOR_CUSTOM1[] = "custom1";
+constexpr const char ITEM_COLOR_CUSTOM2[] = "custom2";
+constexpr const char ITEM_COLOR_CUSTOM3[] = "custom3";
+constexpr const char ITEM_COLOR_CUSTOM4[] = "custom4";
 
-#define ITEM_DELTA_NAME    "name"
+constexpr const char ITEM_DELTA_NAME[]    = "name";
 
 static cfg_opt_t filter_opts[] =
 {
