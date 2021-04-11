@@ -47,12 +47,12 @@
 // damagetype options
 //
 
-#define ITEM_DAMAGETYPE_NUM        "num"
-#define ITEM_DAMAGETYPE_OBIT       "obituary"
-#define ITEM_DAMAGETYPE_SELFOBIT   "obituaryself"
-#define ITEM_DAMAGETYPE_SOURCELESS "sourceless"
-#define ITEM_DAMAGETYPE_ABSPUSH    "absolute.push"
-#define ITEM_DAMAGETYPE_ABSHOP     "absolute.hop"
+constexpr const char ITEM_DAMAGETYPE_NUM[]        = "num";
+constexpr const char ITEM_DAMAGETYPE_OBIT[]       = "obituary";
+constexpr const char ITEM_DAMAGETYPE_SELFOBIT[]   = "obituaryself";
+constexpr const char ITEM_DAMAGETYPE_SOURCELESS[] = "sourceless";
+constexpr const char ITEM_DAMAGETYPE_ABSPUSH[]    = "absolute.push";
+constexpr const char ITEM_DAMAGETYPE_ABSHOP[]     = "absolute.hop";
 
 cfg_opt_t edf_dmgtype_opts[] =
 {
@@ -71,7 +71,7 @@ cfg_opt_t edf_dmgtype_opts[] =
 
 // hash tables
 
-#define NUMMODCHAINS 67
+constexpr int NUMMODCHAINS = 67;
 
 static EHashTable<emod_t, ENCStringHashKey,
                  &emod_t::name, &emod_t::namelinks> e_mod_namehash(NUMMODCHAINS);

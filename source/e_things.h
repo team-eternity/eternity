@@ -42,9 +42,9 @@ extern int UnknownThingType;
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
-#define EDF_SEC_THING    "thingtype"
-#define EDF_SEC_TNGDELTA "thingdelta"
-#define EDF_SEC_THINGGROUP "thinggroup"
+constexpr const char EDF_SEC_THING[]      = "thingtype";
+constexpr const char EDF_SEC_TNGDELTA[]   = "thingdelta";
+constexpr const char EDF_SEC_THINGGROUP[] = "thinggroup";
 
 // Section Options
 extern cfg_opt_t edf_thing_opts[];

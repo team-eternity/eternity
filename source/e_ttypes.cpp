@@ -63,15 +63,15 @@
 //
 
 // Splashes
-#define NUMSPLASHCHAINS 37
+constexpr int NUMSPLASHCHAINS = 37;
 static ETerrainSplash *SplashChains[NUMSPLASHCHAINS];
 
 // Terrain
-#define NUMTERRAINCHAINS 37
+constexpr int NUMTERRAINCHAINS = 37;
 static ETerrain *TerrainChains[NUMTERRAINCHAINS];
 
 // Floors
-#define NUMFLOORCHAINS 37
+constexpr int NUMFLOORCHAINS = 37;
 static EFloor *FloorChains[NUMFLOORCHAINS];
 
 static int numsplashes;
@@ -83,18 +83,18 @@ static int numfloors;
 //
 
 // Splash Keywords
-#define ITEM_SPLASH_SMALLCLASS "smallclass"
-#define ITEM_SPLASH_SMALLCLIP  "smallclip"
-#define ITEM_SPLASH_SMALLSOUND "smallsound"
-#define ITEM_SPLASH_BASECLASS  "baseclass"
-#define ITEM_SPLASH_CHUNKCLASS "chunkclass"
-#define ITEM_SPLASH_XVELSHIFT  "chunkxvelshift"
-#define ITEM_SPLASH_YVELSHIFT  "chunkyvelshift"
-#define ITEM_SPLASH_ZVELSHIFT  "chunkzvelshift"
-#define ITEM_SPLASH_BASEZVEL   "chunkbasezvel"
-#define ITEM_SPLASH_SOUND      "sound"
+constexpr const char ITEM_SPLASH_SMALLCLASS[] = "smallclass";
+constexpr const char ITEM_SPLASH_SMALLCLIP[]  = "smallclip";
+constexpr const char ITEM_SPLASH_SMALLSOUND[] = "smallsound";
+constexpr const char ITEM_SPLASH_BASECLASS[]  = "baseclass";
+constexpr const char ITEM_SPLASH_CHUNKCLASS[] = "chunkclass";
+constexpr const char ITEM_SPLASH_XVELSHIFT[]  = "chunkxvelshift";
+constexpr const char ITEM_SPLASH_YVELSHIFT[]  = "chunkyvelshift";
+constexpr const char ITEM_SPLASH_ZVELSHIFT[]  = "chunkzvelshift";
+constexpr const char ITEM_SPLASH_BASEZVEL[]   = "chunkbasezvel";
+constexpr const char ITEM_SPLASH_SOUND[]      = "sound";
 
-#define ITEM_SPLASHDELTA_NAME "name"
+constexpr const char ITEM_SPLASHDELTA_NAME[] = "name";
 
 // Splash Options
 #define COMMON_SPLASH_OPTIONS                                  \
@@ -123,19 +123,19 @@ cfg_opt_t edf_spldelta_opts[] =
 };
 
 // Terrain Keywords
-#define ITEM_TERRAIN_SPLASH   "splash"
-#define ITEM_TERRAIN_DMGAMT   "damageamount"
-#define ITEM_TERRAIN_DMGTYPE  "damagetype"
-#define ITEM_TERRAIN_DMGMASK  "damagetimemask"
-#define ITEM_TERRAIN_FOOTCLIP "footclip"
-#define ITEM_TERRAIN_LIQUID   "liquid"
-#define ITEM_TERRAIN_SPALERT  "splashalert"
-#define ITEM_TERRAIN_USECOLS  "useptclcolors"
-#define ITEM_TERRAIN_COL1     "ptclcolor1"
-#define ITEM_TERRAIN_COL2     "ptclcolor2"
-#define ITEM_TERRAIN_MINVER   "minversion"
+constexpr const char ITEM_TERRAIN_SPLASH[]   = "splash";
+constexpr const char ITEM_TERRAIN_DMGAMT[]   = "damageamount";
+constexpr const char ITEM_TERRAIN_DMGTYPE[]  = "damagetype";
+constexpr const char ITEM_TERRAIN_DMGMASK[]  = "damagetimemask";
+constexpr const char ITEM_TERRAIN_FOOTCLIP[] = "footclip";
+constexpr const char ITEM_TERRAIN_LIQUID[]   = "liquid";
+constexpr const char ITEM_TERRAIN_SPALERT[]  = "splashalert";
+constexpr const char ITEM_TERRAIN_USECOLS[]  = "useptclcolors";
+constexpr const char ITEM_TERRAIN_COL1[]     = "ptclcolor1";
+constexpr const char ITEM_TERRAIN_COL2[]     = "ptclcolor2";
+constexpr const char ITEM_TERRAIN_MINVER[]   = "minversion";
 
-#define ITEM_TERDELTA_NAME "name"
+constexpr const char ITEM_TERDELTA_NAME[] = "name";
 
 // Terrain Options
 cfg_opt_t edf_terrn_opts[] =
@@ -177,8 +177,8 @@ cfg_opt_t edf_terdelta_opts[] =
 };
 
 // Floor Keywords
-#define ITEM_FLOOR_FLAT    "flat"
-#define ITEM_FLOOR_TERRAIN "terrain"
+constexpr const char ITEM_FLOOR_FLAT[]    = "flat";
+constexpr const char ITEM_FLOOR_TERRAIN[] = "terrain";
 
 // Floor Options
 cfg_opt_t edf_floor_opts[] =

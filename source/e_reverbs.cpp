@@ -82,21 +82,21 @@ ereverb_t *E_ReverbForID(int id)
 // EDF Processing
 //
 
-#define ITEM_TP_ID1 "id1"
-#define ITEM_TP_ID2 "id2"
+constexpr const char ITEM_TP_ID1[] = "id1";
+constexpr const char ITEM_TP_ID2[] = "id2";
 
-#define ITEM_REVERB_ROOMSIZE  "roomsize"
-#define ITEM_REVERB_DAMPING   "damping"
-#define ITEM_REVERB_WETSCALE  "wetscale"
-#define ITEM_REVERB_DRYSCALE  "dryscale"
-#define ITEM_REVERB_WIDTH     "width"
-#define ITEM_REVERB_PREDELAY  "predelay"
-#define ITEM_REVERB_EQUALIZED "equalized"
-#define ITEM_REVERB_EQLOWFREQ "eq.lowfreq"
-#define ITEM_REVERB_EQHIFREQ  "eq.highfreq"
-#define ITEM_REVERB_EQLOWGAIN "eq.lowgain"
-#define ITEM_REVERB_EQMIDGAIN "eq.midgain"
-#define ITEM_REVERB_EQHIGAIN  "eq.highgain"
+constexpr const char ITEM_REVERB_ROOMSIZE[]  = "roomsize";
+constexpr const char ITEM_REVERB_DAMPING[]   = "damping";
+constexpr const char ITEM_REVERB_WETSCALE[]  = "wetscale";
+constexpr const char ITEM_REVERB_DRYSCALE[]  = "dryscale";
+constexpr const char ITEM_REVERB_WIDTH[]     = "width";
+constexpr const char ITEM_REVERB_PREDELAY[]  = "predelay";
+constexpr const char ITEM_REVERB_EQUALIZED[] = "equalized";
+constexpr const char ITEM_REVERB_EQLOWFREQ[] = "eq.lowfreq";
+constexpr const char ITEM_REVERB_EQHIFREQ[]  = "eq.highfreq";
+constexpr const char ITEM_REVERB_EQLOWGAIN[] = "eq.lowgain";
+constexpr const char ITEM_REVERB_EQMIDGAIN[] = "eq.midgain";
+constexpr const char ITEM_REVERB_EQHIGAIN[]  = "eq.highgain";
 
 // titleprops subsection
 static cfg_opt_t titleprops[] =

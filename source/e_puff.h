@@ -25,8 +25,8 @@
 #ifndef E_PUFF_H_
 #define E_PUFF_H_
 
-#define EDF_SEC_PUFFTYPE "pufftype"
-#define EDF_SEC_PUFFDELTA "puffdelta"
+constexpr const char EDF_SEC_PUFFTYPE[]  = "pufftype";
+constexpr const char EDF_SEC_PUFFDELTA[] = "puffdelta";
 
 #include "metaapi.h"
 

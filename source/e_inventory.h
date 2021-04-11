@@ -64,44 +64,44 @@ enum
 typedef int artitype_t;
 
 // Hard-coded names for specially treated items (needed in DeHackEd, etc.)
-#define ITEMNAME_BERSERKHEALTH "BerserkHealth" // The health
-#define ITEMNAME_HEALTHBONUS   "HealthBonus"
-#define ITEMNAME_MEDIKIT       "Medikit"
-#define ITEMNAME_MEGASPHERE    "MegasphereHealth"
-#define ITEMNAME_SOULSPHERE    "Soulsphere"
-#define ITEMNAME_STIMPACK      "Stimpack"
-#define ITEMNAME_GREENARMOR    "GreenArmor"
-#define ITEMNAME_BLUEARMOR     "BlueArmor"
-#define ITEMNAME_IDFAARMOR     "IDFAArmor"
-#define ITEMNAME_ARMORBONUS    "ArmorBonus"
-#define ITEMNAME_RAMBOARMOR    "RAMBOArmor"
+constexpr const char ITEMNAME_BERSERKHEALTH[] = "BerserkHealth"; // The health
+constexpr const char ITEMNAME_HEALTHBONUS[]   = "HealthBonus";
+constexpr const char ITEMNAME_MEDIKIT[]       = "Medikit";
+constexpr const char ITEMNAME_MEGASPHERE[]    = "MegasphereHealth";
+constexpr const char ITEMNAME_SOULSPHERE[]    = "Soulsphere";
+constexpr const char ITEMNAME_STIMPACK[]      = "Stimpack";
+constexpr const char ITEMNAME_GREENARMOR[]    = "GreenArmor";
+constexpr const char ITEMNAME_BLUEARMOR[]     = "BlueArmor";
+constexpr const char ITEMNAME_IDFAARMOR[]     = "IDFAArmor";
+constexpr const char ITEMNAME_ARMORBONUS[]    = "ArmorBonus";
+constexpr const char ITEMNAME_RAMBOARMOR[]    = "RAMBOArmor";
 
 // Hard-coded names for specially treated artifact types
-#define ARTI_BACKPACKITEM "BackpackItem"
-#define ARTI_BLUECARD     "BlueCard"
-#define ARTI_BLUESKULL    "BlueSkull"
-#define ARTI_REDCARD      "RedCard"
-#define ARTI_REDSKULL     "RedSkull"
-#define ARTI_YELLOWCARD   "YellowCard"
-#define ARTI_YELLOWSKULL  "YellowSkull"
-#define ARTI_KEYGREEN     "KeyGreen"
-#define ARTI_KEYYELLOW    "KeyYellow"
-#define ARTI_KEYBLUE      "KeyBlue"
+constexpr const char ARTI_BACKPACKITEM[] = "BackpackItem";
+constexpr const char ARTI_BLUECARD[]     = "BlueCard";
+constexpr const char ARTI_BLUESKULL[]    = "BlueSkull";
+constexpr const char ARTI_REDCARD[]      = "RedCard";
+constexpr const char ARTI_REDSKULL[]     = "RedSkull";
+constexpr const char ARTI_YELLOWCARD[]   = "YellowCard";
+constexpr const char ARTI_YELLOWSKULL[]  = "YellowSkull";
+constexpr const char ARTI_KEYGREEN[]     = "KeyGreen";
+constexpr const char ARTI_KEYYELLOW[]    = "KeyYellow";
+constexpr const char ARTI_KEYBLUE[]      = "KeyBlue";
 
 // Hard-coded names for the (currently) 11 specially treated powers in powertype_t.
 // These are listed in ascending order of enumeration, as opposed to alphabetical.
-#define POWER_INVULNERABLE "PowerInvulnerable"      // pw_invulnerability
-#define POWER_STRENGTH     "PowerStrength"          // pw_strength (Berserk)
-#define POWER_PARTIALINVIS "PowerPartialInvisibility" // pw_invisibility
-#define POWER_IRONFEET     "PowerIronFeet"          // pw_ironfeet (Env. protection)
-#define POWER_ALLMAP       "PowerAllmap"            // pw_allmap
-#define POWER_INFRARED     "PowerLightAmp"          // pw_infrared (Fullbright)
-#define POWER_TOTALINVIS   "PowerTotalInvisibility" // pw_totalinvis
-#define POWER_GHOST        "PowerGhost"             // pw_ghost
-#define POWER_SILENT       "PowerSilent"            // pw_silencer
-#define POWER_FLIGHT       "PowerFlight"            // pw_flight
-#define POWER_TORCH        "PowerTorch"             // pw_torch (Fullbright w/ flicker)
-#define POWER_WEAPONLEVEL2 "PowerWeaponLevel2"      // pw_weaponlevel2
+constexpr const char POWER_INVULNERABLE[] = "PowerInvulnerable";        // pw_invulnerability
+constexpr const char POWER_STRENGTH[]     = "PowerStrength";            // pw_strength (Berserk)
+constexpr const char POWER_PARTIALINVIS[] = "PowerPartialInvisibility"; // pw_invisibility
+constexpr const char POWER_IRONFEET[]     = "PowerIronFeet";            // pw_ironfeet (Env. protection)
+constexpr const char POWER_ALLMAP[]       = "PowerAllmap";              // pw_allmap
+constexpr const char POWER_INFRARED[]     = "PowerLightAmp";            // pw_infrared (Fullbright)
+constexpr const char POWER_TOTALINVIS[]   = "PowerTotalInvisibility";   // pw_totalinvis
+constexpr const char POWER_GHOST[]        = "PowerGhost";               // pw_ghost
+constexpr const char POWER_SILENT[]       = "PowerSilent";              // pw_silencer
+constexpr const char POWER_FLIGHT[]       = "PowerFlight";              // pw_flight
+constexpr const char POWER_TORCH[]        = "PowerTorch";               // pw_torch (Fullbright w/ flicker)
+constexpr const char POWER_WEAPONLEVEL2[] = "PowerWeaponLevel2";        // pw_weaponlevel2
 
 extern const char *powerStrings[NUMPOWERS];
 

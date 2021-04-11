@@ -45,21 +45,21 @@
 // particle support? How many?
 
 // metakey vocabulary
-#define ITEM_PUFF_THINGTYPE       "thingtype"
-#define ITEM_PUFF_SOUND           "sound"
-#define ITEM_PUFF_HITSOUND        "hitsound"
-#define ITEM_PUFF_HITPUFFTYPE     "hitpufftype"
-#define ITEM_PUFF_NOBLOODPUFFTYPE "nobloodpufftype"
-#define ITEM_PUFF_UPSPEED         "upspeed"
-#define ITEM_PUFF_ZSPREAD         "zspread"
-#define ITEM_PUFF_PUNCHHACK       "punchhack"
-#define ITEM_PUFF_PARTICLES       "particles"
+constexpr const char ITEM_PUFF_THINGTYPE[]       = "thingtype";
+constexpr const char ITEM_PUFF_SOUND[]           = "sound";
+constexpr const char ITEM_PUFF_HITSOUND[]        = "hitsound";
+constexpr const char ITEM_PUFF_HITPUFFTYPE[]     = "hitpufftype";
+constexpr const char ITEM_PUFF_NOBLOODPUFFTYPE[] = "nobloodpufftype";
+constexpr const char ITEM_PUFF_UPSPEED[]         = "upspeed";
+constexpr const char ITEM_PUFF_ZSPREAD[]         = "zspread";
+constexpr const char ITEM_PUFF_PUNCHHACK[]       = "punchhack";
+constexpr const char ITEM_PUFF_PARTICLES[]       = "particles";
 
-#define ITEM_PUFF_PUFFONACTORS    "PUFFONACTORS"
-#define ITEM_PUFF_BLOODLESS       "BLOODLESS"
-#define ITEM_PUFF_LOCALTHRUST     "LOCALTHRUST"
-#define ITEM_PUFF_RANDOMTICS      "RANDOMTICS"
-#define ITEM_PUFF_TARGETSHOOTER   "TARGETSHOOTER"
+constexpr const char ITEM_PUFF_PUFFONACTORS[]  = "PUFFONACTORS";
+constexpr const char ITEM_PUFF_BLOODLESS[]     = "BLOODLESS";
+constexpr const char ITEM_PUFF_LOCALTHRUST[]   = "LOCALTHRUST";
+constexpr const char ITEM_PUFF_RANDOMTICS[]    = "RANDOMTICS";
+constexpr const char ITEM_PUFF_TARGETSHOOTER[] = "TARGETSHOOTER";
 
 // Interned metatable keys
 MetaKeyIndex keyPuffThingType      (ITEM_PUFF_THINGTYPE      );

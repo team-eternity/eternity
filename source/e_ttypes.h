@@ -40,11 +40,11 @@ struct sector_t;
 
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_SPLASH   "splash"
-#define EDF_SEC_TERRAIN  "terrain"
-#define EDF_SEC_FLOOR    "floor"
-#define EDF_SEC_SPLASHDELTA "splashdelta"
-#define EDF_SEC_TERDELTA "terraindelta"
+constexpr const char EDF_SEC_SPLASH[]      = "splash";
+constexpr const char EDF_SEC_TERRAIN[]     = "terrain";
+constexpr const char EDF_SEC_FLOOR[]       = "floor";
+constexpr const char EDF_SEC_SPLASHDELTA[] = "splashdelta";
+constexpr const char EDF_SEC_TERDELTA[]    = "terraindelta";
 extern cfg_opt_t edf_splash_opts[];
 extern cfg_opt_t edf_spldelta_opts[];
 extern cfg_opt_t edf_terrn_opts[];

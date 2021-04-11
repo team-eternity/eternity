@@ -53,26 +53,26 @@
 int NullStateNum;
 
 // Frame section keywords
-#define ITEM_FRAME_DECORATE  "decorate"
-#define ITEM_FRAME_SPRITE    "sprite"
-#define ITEM_FRAME_SPRFRAME  "spriteframe"
-#define ITEM_FRAME_FULLBRT   "fullbright"
-#define ITEM_FRAME_TICS      "tics"
-#define ITEM_FRAME_ACTION    "action"
-#define ITEM_FRAME_NEXTFRAME "nextframe"
-#define ITEM_FRAME_MISC1     "misc1"
-#define ITEM_FRAME_MISC2     "misc2"
-#define ITEM_FRAME_PTCLEVENT "particle_event"
-#define ITEM_FRAME_ARGS      "args"
-#define ITEM_FRAME_DEHNUM    "dehackednum"
-#define ITEM_FRAME_CMP       "cmp"
-#define ITEM_FRAME_SKILL5FAST "SKILL5FAST"
-#define ITEM_FRAME_INTERPOLATE "INTERPOLATE"
+constexpr const char ITEM_FRAME_DECORATE[]    = "decorate";
+constexpr const char ITEM_FRAME_SPRITE[]      = "sprite";
+constexpr const char ITEM_FRAME_SPRFRAME[]    = "spriteframe";
+constexpr const char ITEM_FRAME_FULLBRT[]     = "fullbright";
+constexpr const char ITEM_FRAME_TICS[]        = "tics";
+constexpr const char ITEM_FRAME_ACTION[]      = "action";
+constexpr const char ITEM_FRAME_NEXTFRAME[]   = "nextframe";
+constexpr const char ITEM_FRAME_MISC1[]       = "misc1";
+constexpr const char ITEM_FRAME_MISC2[]       = "misc2";
+constexpr const char ITEM_FRAME_PTCLEVENT[]   = "particle_event";
+constexpr const char ITEM_FRAME_ARGS[]        = "args";
+constexpr const char ITEM_FRAME_DEHNUM[]      = "dehackednum";
+constexpr const char ITEM_FRAME_CMP[]         = "cmp";
+constexpr const char ITEM_FRAME_SKILL5FAST[]  = "SKILL5FAST";
+constexpr const char ITEM_FRAME_INTERPOLATE[] = "INTERPOLATE";
 
-#define ITEM_DELTA_NAME      "name"
+constexpr const char ITEM_DELTA_NAME[]        = "name";
 
-#define ITEM_FRAMEBLOCK_FDS    "firststate"
-#define ITEM_FRAMEBLOCK_STATES "states"
+constexpr const char ITEM_FRAMEBLOCK_FDS[]    = "firststate";
+constexpr const char ITEM_FRAMEBLOCK_STATES[] = "states";
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -132,7 +132,7 @@ static const dehflags_t frameFlagSet[] =
 // State hash tables
 
 // State Hashing
-#define NUMSTATECHAINS 2003
+constexpr int NUMSTATECHAINS = 2003;
 
 // hash by name
 static EHashTable<state_t, ENCStringHashKey, 
