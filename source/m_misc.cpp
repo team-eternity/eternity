@@ -1053,6 +1053,8 @@ static void M_setDefaultValueString(default_t *dp, void *value, bool wad)
       efree(*(char **)dp->current);                // Free old value
       *(char **)dp->current = estrdup(strparm);    // Change current value
    }
+   if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
+      cmd->handler();
 }
 
 // Read a string option and set it
@@ -1167,6 +1169,8 @@ static void M_setDefaultValueInt(default_t *dp, void *value, bool wad)
       }
       *(int *)dp->location = parm;  // Change default
    }
+   if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
+      cmd->handler();
 }
 
 // Read the value of an integer option and set it to the default
@@ -1271,6 +1275,8 @@ static void M_setDefaultValueFloat(default_t *dp, void *value, bool wad)
       }
       *(double *)dp->location = tmp;  // Change default
    }
+   if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
+      cmd->handler();
 }
 
 // Read the value of a float option from a string and set it
@@ -1339,6 +1345,8 @@ static void M_setDefaultValueBool(default_t *dp, void *value, bool wad)
          *(bool *)dp->current = !!parm;
    }
    *(bool *)dp->location = !!parm;  // Change default
+   if(const command_t *const cmd = C_GetCmdForName(dp->name); cmd && cmd->handler)
+      cmd->handler();
 }
 
 // Reads the value of a bool option from a string and sets it
