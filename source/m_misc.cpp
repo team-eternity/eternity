@@ -830,7 +830,7 @@ default_t defaults[] =
    DEFAULT_INT("mn_classic_menus", &mn_classic_menus, nullptr, 0, 0, 1, default_t::wad_game,
                "1 to enable use of full classic menu emulation"),
 
-   DEFAULT_STR("mn_background", &mn_background, nullptr, "default", default_t::wad_game,
+   DEFAULT_STR("mn_background", &mn_background, nullptr, "default", default_t::wad_startup,
                "menu background"),
    
    DEFAULT_STR("wad_directory", &wad_directory, nullptr, ".", default_t::wad_no,
@@ -869,17 +869,17 @@ default_t defaults[] =
 #endif
 
 #ifdef HAVE_ADLMIDILIB
-   DEFAULT_INT("snd_mididevice", &midi_device, nullptr, -1, -1, 0, default_t::wad_game,
+   DEFAULT_INT("snd_mididevice", &midi_device, nullptr, -1, -1, 0, default_t::wad_startup,
                "device used for MIDI playback"),
 
    DEFAULT_INT("snd_oplemulator", &adlmidi_emulator, nullptr, ADLMIDI_EMU_DOSBOX, 0, ADLMIDI_EMU_end - 1, default_t::wad_no,
-               "TODO: adlmidi_bank description"),
+               "OPL3 emulator used for ADLMIDI"),
 
-   DEFAULT_INT("snd_numchips", &adlmidi_numchips, nullptr, 2, 1, 8, default_t::wad_game,
-               "TODO: adlmidi_numcards description"),
+   DEFAULT_INT("snd_numchips", &adlmidi_numchips, nullptr, 2, 1, 8, default_t::wad_startup,
+               "OPL3 chips to emulate for ADLMIDI"),
 
-   DEFAULT_INT("snd_bank", &adlmidi_bank, nullptr, 72, 0, BANKS_MAX, default_t::wad_game,
-               "TODO: adlmidi_bank description"),
+   DEFAULT_INT("snd_bank", &adlmidi_bank, nullptr, 72, 0, BANKS_MAX, default_t::wad_startup,
+               "sound bank used for ADLMIDI"),
 #endif
 
 
@@ -1586,17 +1586,15 @@ void M_SaveDefaults(void)
 }
 
 //
-// M_ParseOption()
-//
 // killough 11/98:
 //
 // This function parses .cfg file lines, or lines in OPTIONS lumps
 //
-bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
+static bool M_parseOption(defaultfile_t *df, const char *p, default_t::wad_e minimum_allowed)
 {
    char name[80], strparm[100];
    default_t *dp;
-   
+
    while(ectype::isSpace(*p))  // killough 10/98: skip leading whitespace
       p++;
 
@@ -1606,22 +1604,20 @@ bool M_ParseOption(defaultfile_t *df, const char *p, bool wad)
    if(sscanf(p, "%79s %99[^\n]", name, strparm) != 2 || !ectype::isAlnum(*name) ||
       !(dp = M_LookupDefault(df, name)) || 
       (*strparm == '"') == (dp->type != dt_string) ||
-      (wad && !dp->wad_allowed))
+      (dp->wad_allowed < minimum_allowed))
    {
       return true;
    }
 
-   return dp->methods->readOpt(dp, strparm, wad); // Success (false) or failure (true)
+   return dp->methods->readOpt(dp, strparm, minimum_allowed != default_t::wad_no); // Success (false) or failure (true)
 }
 
-//
-// M_LoadOptions()
 //
 // killough 11/98:
 // This function is used to load the OPTIONS lump.
 // It allows wads to change game options.
 //
-void M_LoadOptions()
+void M_LoadOptions(const default_t::wad_e minimum_allowed)
 {
    int lump;
    
@@ -1641,7 +1637,7 @@ void M_LoadOptions()
          strncpy(buf, p, len)[len] = 0;
          p += len;
          size -= len;
-         M_ParseOption(&maindefaults, buf, true);
+         M_parseOption(&maindefaults, buf, minimum_allowed);
       }
       efree(buf);
       Z_ChangeTag(options, PU_CACHE);
@@ -1692,7 +1688,7 @@ void M_LoadDefaultFile(defaultfile_t *df)
 
       while(fgets(s, sizeof s, f))
       {
-         if(!M_ParseOption(df, s, false))
+         if(!M_parseOption(df, s, default_t::wad_no))
             line++;       // Line numbers
          else
          {             // Remember comment lines

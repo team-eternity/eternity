@@ -32,8 +32,6 @@
 // MISC
 //
 
-void  M_LoadOptions(); // killough 11/98
-
 extern int config_help;
 
 // haleyjd 07/27/09: default file portability fix - separate types for config
@@ -74,7 +72,8 @@ struct default_t
    enum wad_e
    {
       wad_no,
-      wad_game, // read from OPTIONS when game is started (G_InitNew)
+      wad_game,    // read from OPTIONS when gameplay is started (G_InitNew)
+      wad_startup, // read from OPTIONS during program init
    };
 
    const char *const   name;                 // name
@@ -110,10 +109,10 @@ struct default_t
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
-#define DEFAULT_ARGS(type) const char *const name, void *const loc, void *const cur, const type def, \
+#define DEFAULT_ARGS(type) const char *const name, void *const loc, void *const cur, type def, \
    const default_t::wad_e wad, const char *const help
 
-#define DEFAULT_NUM_ARGS(type) const char *const name, void *const loc, void *const cur, const type def, \
+#define DEFAULT_NUM_ARGS(type) const char *const name, void *const loc, void *const cur, type def, \
    const int min, const int max, const default_t::wad_e wad, const char *const help
 
 constexpr default_t DEFAULT_END()
@@ -174,8 +173,9 @@ struct default_or_t
    int defaultvalue;
 };
 
+void  M_LoadOptions(const default_t::wad_e minimum_allowed); // killough 11/98
+
 // killough 11/98:
-bool       M_ParseOption(defaultfile_t *df, const char *name, bool wad);
 void       M_LoadDefaultFile(defaultfile_t *df);
 void       M_SaveDefaultFile(defaultfile_t *df);
 void       M_LoadDefaults(void);

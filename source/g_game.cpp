@@ -3280,7 +3280,7 @@ void G_InitNew(skill_t skill, const char *name)
    G_SetGameMap();  // sf
   
    if(demo_version >= 203)
-      M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
+      M_LoadOptions(default_t::wad_game);     // killough 11/98: read OPTIONS lump from wad
   
    //G_StopDemo();
 
