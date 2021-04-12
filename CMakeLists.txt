@@ -107,13 +107,6 @@ endif()
 include(Compiler)
 
 ################################################################################
-######################### Find Headers #########################################
-check_include_files(xlocale.h HAVE_XLOCALE_H)
-if(HAVE_XLOCALE_H)
-   add_definitions(-DHAVE_XLOCALE_H)
-endif()
-
-################################################################################
 ######################### Find Needed Libs #####################################
 include(ExternalLibraries)
 
