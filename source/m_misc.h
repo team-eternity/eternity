@@ -71,58 +71,91 @@ struct default_i
 
 struct default_t
 {
+   enum wad_e
+   {
+      wad_no,
+      wad_game, // read from OPTIONS when game is started (G_InitNew)
+   };
+
    const char *const   name;                 // name
    const defaulttype_e type;                 // type
 
    void *const location;                     // default variable
    void *const current;                      // possible nondefault variable
-   
+
    int         defaultvalue_i;               // built-in default value
    const char *defaultvalue_s;
    double      defaultvalue_f;
    bool        defaultvalue_b;
 
-   struct { int min, max; } const limit;       // numerical limits
-      
-   enum { wad_no, wad_yes } const wad_allowed; // whether it's allowed in wads
-   const char *const help;                     // description of parameter
-   
+   struct { int min, max; } const limit;     // numerical limits
+
+   const wad_e wad_allowed;                  // whether it's allowed in wads & when it's read
+   const char *const help;                   // description of parameter
+
    // internal fields (initialized implicitly to 0) follow
-   
+
    default_t *first, *next;                  // hash table pointers
    int modified;                             // Whether it's been modified
-   
+
    int         orig_default_i;               // Original default, if modified
    const char *orig_default_s;
    double      orig_default_f;
    bool        orig_default_b;
 
    default_i  *methods;
-   
+
    //struct setup_menu_s *setup_menu;          // Xref to setup menu item, if any
 };
 
 // haleyjd 07/27/09: Macros for defining configuration values.
 
-#define DEFAULT_END() \
-   { nullptr, dt_integer, nullptr, nullptr, 0, nullptr, 0.0, false, { 0, 0 }, default_t::wad_no, nullptr, \
-     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
+#define DEFAULT_ARGS(type) const char *const name, void *const loc, void *const cur, const type def, \
+   const default_t::wad_e wad, const char *const help
 
-#define DEFAULT_INT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_integer, loc, cur, def, nullptr, 0.0, false, { min, max }, wad, help, \
-     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
+#define DEFAULT_NUM_ARGS(type) const char *const name, void *const loc, void *const cur, const type def, \
+   const int min, const int max, const default_t::wad_e wad, const char *const help
 
-#define DEFAULT_STR(name, loc, cur, def, wad, help) \
-   { name, dt_string, loc, cur, 0, def, 0.0, false, { 0, 0 }, wad, help, \
-     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
+constexpr default_t DEFAULT_END()
+{
+   return {
+      nullptr, dt_integer, nullptr, nullptr, 0, nullptr, 0.0, false,
+      { 0, 0 }, default_t::wad_no, nullptr,
+      nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr
+   };
+}
 
-#define DEFAULT_FLOAT(name, loc, cur, def, min, max, wad, help) \
-   { name, dt_float, loc, cur, 0, nullptr, def, false, { min, max }, wad, help, \
-     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
+constexpr default_t DEFAULT_INT(DEFAULT_NUM_ARGS(const int))
+{
+   return {
+      name, dt_integer, loc, cur, def, nullptr, 0.0, false, { min, max }, wad, help,
+      nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr
+   };
+}
 
-#define DEFAULT_BOOL(name, loc, cur, def, wad, help) \
-   { name, dt_boolean, loc, cur, 0, nullptr, 0.0, def, { 0, 1 }, wad, help, \
-     nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr }
+constexpr default_t DEFAULT_STR(DEFAULT_ARGS(const char *))
+{
+   return {
+      name, dt_string, loc, cur, 0, def, 0.0, false, { 0, 0 }, wad, help,
+      nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr
+   };
+}
+
+constexpr default_t DEFAULT_FLOAT(DEFAULT_NUM_ARGS(const double))
+{
+   return {
+      name, dt_float, loc, cur, 0, nullptr, def, false, { min, max }, wad, help,
+      nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr
+   };
+}
+
+constexpr default_t DEFAULT_BOOL(DEFAULT_ARGS(const bool))
+{
+   return {
+      name, dt_boolean, loc, cur, 0, nullptr, 0.0, def, { 0, 1 }, wad, help,
+      nullptr, nullptr, 0, 0, nullptr, 0.0, false, nullptr
+   };
+}
 
 // haleyjd 03/14/09: defaultfile_t structure
 struct defaultfile_t
