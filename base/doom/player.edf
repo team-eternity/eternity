@@ -51,6 +51,8 @@ weaponinfo DoomWeapon
 
 weaponinfo Fist : DoomWeapon, 0
 {
+  ammouse      1
+
   selectionorder 9.0
 
   flags        FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS|AUTOSWITCHFROM
@@ -327,6 +329,8 @@ weaponinfo OldBFG : BFG9000
 
 weaponinfo Chainsaw : DoomWeapon, 7
 {
+  ammouse      1
+
   selectionorder 6.0
 
   flags        NOTHRUST|FLEEMELEE|NOHITGHOSTS|SILENCEABLE|DISABLEAPS
