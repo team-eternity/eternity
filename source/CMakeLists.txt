@@ -831,6 +831,8 @@ if(APPLE)
 
       XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS                   "\"${CMAKE_BINARY_DIR}\""
       XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME                  YES
+
+      XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_SOURCE_DIR}/macosx/eternity/eternity.entitlements
    )
 endif()
 
