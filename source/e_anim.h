@@ -26,7 +26,7 @@
 #ifndef E_ANIM_H_
 #define E_ANIM_H_
 
-#define EDF_SEC_ANIMATION "animation"
+constexpr const char EDF_SEC_ANIMATION[] = "animation";
 
 #include "Confuse/confuse.h"
 #include "m_collection.h"

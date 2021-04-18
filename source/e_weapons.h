@@ -44,8 +44,8 @@ extern weapontype_t UnknownWeaponInfo;
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
-#define EDF_SEC_WEAPONINFO "weaponinfo"
-#define EDF_SEC_WPNDELTA   "weapondelta"
+constexpr const char EDF_SEC_WEAPONINFO[] = "weaponinfo";
+constexpr const char EDF_SEC_WPNDELTA[]   = "weapondelta";
 
 // Section Options
 extern cfg_opt_t edf_wpninfo_opts[];
@@ -121,7 +121,7 @@ protected:
 using WeaponSlotTree = SelectOrderTree;
 using WeaponSlotNode = WeaponSlotTree::avlnode_t;
 
-#define NUMWEAPCOUNTERS 3
+constexpr size_t NUMWEAPCOUNTERS = 3;
 using WeaponCounter = int[NUMWEAPCOUNTERS];
 using WeaponCounterTreeBase = AVLTree<int, WeaponCounter>;
 using WeaponCounterNode = WeaponCounterTreeBase::avlnode_t;

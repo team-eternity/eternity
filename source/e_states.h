@@ -47,9 +47,9 @@ extern int NullStateNum;
 // EDF-Only Definitions/Declarations
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_FRAME      "frame"
-#define EDF_SEC_FRMDELTA   "framedelta"
-#define EDF_SEC_FRAMEBLOCK "frameblock"
+constexpr const char EDF_SEC_FRAME[]      = "frame";
+constexpr const char EDF_SEC_FRMDELTA[]   = "framedelta";
+constexpr const char EDF_SEC_FRAMEBLOCK[] = "frameblock";
 
 extern cfg_opt_t edf_frame_opts[];
 extern cfg_opt_t edf_fdelta_opts[];

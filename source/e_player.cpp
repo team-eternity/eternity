@@ -56,19 +56,19 @@
 // Player Class and Skin Options
 //
 
-#define ITEM_SKINSND_PAIN    "pain"
-#define ITEM_SKINSND_DIEHI   "diehi"
-#define ITEM_SKINSND_OOF     "oof"
-#define ITEM_SKINSND_GIB     "gib"
-#define ITEM_SKINSND_PUNCH   "punch"
-#define ITEM_SKINSND_RADIO   "radio"
-#define ITEM_SKINSND_DIE     "die"
-#define ITEM_SKINSND_FALL    "fall"
-#define ITEM_SKINSND_FEET    "feet"
-#define ITEM_SKINSND_FALLHIT "fallhit"
-#define ITEM_SKINSND_PLWDTH  "plwdth"
-#define ITEM_SKINSND_NOWAY   "noway"
-#define ITEM_SKINSND_JUMP    "jump"
+constexpr const char ITEM_SKINSND_PAIN[]    = "pain";
+constexpr const char ITEM_SKINSND_DIEHI[]   = "diehi";
+constexpr const char ITEM_SKINSND_OOF[]     = "oof";
+constexpr const char ITEM_SKINSND_GIB[]     = "gib";
+constexpr const char ITEM_SKINSND_PUNCH[]   = "punch";
+constexpr const char ITEM_SKINSND_RADIO[]   = "radio";
+constexpr const char ITEM_SKINSND_DIE[]     = "die";
+constexpr const char ITEM_SKINSND_FALL[]    = "fall";
+constexpr const char ITEM_SKINSND_FEET[]    = "feet";
+constexpr const char ITEM_SKINSND_FALLHIT[] = "fallhit";
+constexpr const char ITEM_SKINSND_PLWDTH[]  = "plwdth";
+constexpr const char ITEM_SKINSND_NOWAY[]   = "noway";
+constexpr const char ITEM_SKINSND_JUMP[]    = "jump";
 
 static cfg_opt_t pc_skin_sound_opts[] =
 {
@@ -88,9 +88,9 @@ static cfg_opt_t pc_skin_sound_opts[] =
    CFG_END()
 };
 
-#define ITEM_SKIN_SPRITE  "sprite"
-#define ITEM_SKIN_FACES   "faces"
-#define ITEM_SKIN_SOUNDS  "sounds"
+constexpr const char ITEM_SKIN_SPRITE[] = "sprite";
+constexpr const char ITEM_SKIN_FACES[]  = "faces";
+constexpr const char ITEM_SKIN_SOUNDS[] = "sounds";
 
 cfg_opt_t edf_skin_opts[] =
 {
@@ -100,36 +100,36 @@ cfg_opt_t edf_skin_opts[] =
    CFG_END()
 };
 
-#define ITEM_PCLASS_DEFAULT        "default"
-#define ITEM_PCLASS_DEFAULTSKIN    "defaultskin"
-#define ITEM_PCLASS_THINGTYPE      "thingtype"
-#define ITEM_PCLASS_ALTATTACK      "altattackstate"
-#define ITEM_PCLASS_INITIALHEALTH  "initialhealth"
-#define ITEM_PCLASS_MAXHEALTH      "maxhealth"
-#define ITEM_PCLASS_SUPERHEALTH    "superhealth"
-#define ITEM_PCLASS_VIEWHEIGHT     "viewheight"
-#define ITEM_PCLASS_SPEEDWALK      "speedwalk"
-#define ITEM_PCLASS_SPEEDRUN       "speedrun"
-#define ITEM_PCLASS_SPEEDSTRAFE    "speedstrafe"
-#define ITEM_PCLASS_SPEEDSTRAFERUN "speedstraferun"
-#define ITEM_PCLASS_SPEEDTURN      "speedturn"
-#define ITEM_PCLASS_SPEEDTURNFAST  "speedturnfast"
-#define ITEM_PCLASS_SPEEDTURNSLOW  "speedturnslow"
-#define ITEM_PCLASS_SPEEDLOOKSLOW  "speedlookslow"
-#define ITEM_PCLASS_SPEEDLOOKFAST  "speedlookfast"
-#define ITEM_PCLASS_SPEEDJUMP      "speedjump"
-#define ITEM_PCLASS_CLRREBORNITEMS "clearrebornitems"
-#define ITEM_PCLASS_REBORNITEM     "rebornitem"
-#define ITEM_PCLASS_WEAPONSLOT     "weaponslot"
-#define ITEM_PCLASS_ALWAYSJUMP     "alwaysjump"
+constexpr const char ITEM_PCLASS_DEFAULT[]        = "default";
+constexpr const char ITEM_PCLASS_DEFAULTSKIN[]    = "defaultskin";
+constexpr const char ITEM_PCLASS_THINGTYPE[]      = "thingtype";
+constexpr const char ITEM_PCLASS_ALTATTACK[]      = "altattackstate";
+constexpr const char ITEM_PCLASS_INITIALHEALTH[]  = "initialhealth";
+constexpr const char ITEM_PCLASS_MAXHEALTH[]      = "maxhealth";
+constexpr const char ITEM_PCLASS_SUPERHEALTH[]    = "superhealth";
+constexpr const char ITEM_PCLASS_VIEWHEIGHT[]     = "viewheight";
+constexpr const char ITEM_PCLASS_SPEEDWALK[]      = "speedwalk";
+constexpr const char ITEM_PCLASS_SPEEDRUN[]       = "speedrun";
+constexpr const char ITEM_PCLASS_SPEEDSTRAFE[]    = "speedstrafe";
+constexpr const char ITEM_PCLASS_SPEEDSTRAFERUN[] = "speedstraferun";
+constexpr const char ITEM_PCLASS_SPEEDTURN[]      = "speedturn";
+constexpr const char ITEM_PCLASS_SPEEDTURNFAST[]  = "speedturnfast";
+constexpr const char ITEM_PCLASS_SPEEDTURNSLOW[]  = "speedturnslow";
+constexpr const char ITEM_PCLASS_SPEEDLOOKSLOW[]  = "speedlookslow";
+constexpr const char ITEM_PCLASS_SPEEDLOOKFAST[]  = "speedlookfast";
+constexpr const char ITEM_PCLASS_SPEEDJUMP[]      = "speedjump";
+constexpr const char ITEM_PCLASS_CLRREBORNITEMS[] = "clearrebornitems";
+constexpr const char ITEM_PCLASS_REBORNITEM[]     = "rebornitem";
+constexpr const char ITEM_PCLASS_WEAPONSLOT[]     = "weaponslot";
+constexpr const char ITEM_PCLASS_ALWAYSJUMP[]     = "alwaysjump";
 
-#define ITEM_REBORN_NAME   "name"
-#define ITEM_REBORN_AMOUNT "amount"
+constexpr const char ITEM_REBORN_NAME[]   = "name";
+constexpr const char ITEM_REBORN_AMOUNT[] = "amount";
 
-#define ITEM_WPNSLOT_WPNS  "weapons"
-#define ITEM_WPNSLOT_CLEAR "clear"
+constexpr const char ITEM_WPNSLOT_WPNS[]  = "weapons";
+constexpr const char ITEM_WPNSLOT_CLEAR[] = "clear";
 
-#define ITEM_DELTA_NAME "name"
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 static cfg_opt_t wpnslot_opts[] =
 {
@@ -202,7 +202,7 @@ skin_t *edf_skins[NUMEDFSKINCHAINS];
 
 // Player classes
 
-#define NUMEDFPCLASSCHAINS 17
+constexpr int NUMEDFPCLASSCHAINS = 17;
 
 playerclass_t *edf_player_classes[NUMEDFPCLASSCHAINS];
 

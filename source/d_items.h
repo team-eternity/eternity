@@ -47,7 +47,7 @@ enum wepflags_e : unsigned int
    WPF_NOAUTOFIRE     = 0x00000040, // weapon won't autofire in A_WeaponReady
    WPF_FLEEMELEE      = 0x00000080, // monsters consider it a melee weapon
    WPF_ALWAYSRECOIL   = 0x00000100, // weapon always has recoil
-   WPF_HAPTICRECOIL   = 0x00000200, // use recoil-style haptic effect
+   WPF_NOHAPTICRECOIL = 0x00000200, // use no recoil-style haptic effect
    WPF_READYSNDHALF   = 0x00000400, // readysound has 50% chance to play
    WPF_AUTOSWITCHFROM = 0x00000800, // switches away if ammo for a better wep is picked up
    WPF_POWEREDUP      = 0x00001000, // powered up weapon (tomed weapons in Heretic)

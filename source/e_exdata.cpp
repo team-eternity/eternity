@@ -70,78 +70,78 @@
 static mapthing_t *EDThings;
 static unsigned int numEDMapThings;
 
-#define NUMMTCHAINS 1021
+constexpr int NUMMTCHAINS = 1021;
 static unsigned int mapthing_chains[NUMMTCHAINS];
 
 static maplinedefext_t *EDLines;
 static unsigned int numEDLines;
 
-#define NUMLDCHAINS 1021
+constexpr int NUMLDCHAINS = 1021;
 static unsigned int linedef_chains[NUMLDCHAINS];
 
 static mapsectorext_t *EDSectors;
 static unsigned int numEDSectors;
 
-#define NUMSECCHAINS 1021
+constexpr int NUMSECCHAINS = 1021;
 static unsigned int sector_chains[NUMSECCHAINS];
 
 // ExtraData section names
-#define SEC_MAPTHING "mapthing"
-#define SEC_LINEDEF  "linedef"
-#define SEC_SECTOR   "sector"
+constexpr const char SEC_MAPTHING[] = "mapthing";
+constexpr const char SEC_LINEDEF[]  = "linedef";
+constexpr const char SEC_SECTOR[]   = "sector";
 
 // ExtraData field names
 // mapthing fields:
-#define FIELD_NUM     "recordnum"
-#define FIELD_TID     "tid"
-#define FIELD_TYPE    "type"
-#define FIELD_OPTIONS "options"
-#define FIELD_ARGS    "args"
-#define FIELD_HEIGHT  "height"
-#define FIELD_SPECIAL "special"
+constexpr const char FIELD_NUM[]     = "recordnum";
+constexpr const char FIELD_TID[]     = "tid";
+constexpr const char FIELD_TYPE[]    = "type";
+constexpr const char FIELD_OPTIONS[] = "options";
+constexpr const char FIELD_ARGS[]    = "args";
+constexpr const char FIELD_HEIGHT[]  = "height";
+constexpr const char FIELD_SPECIAL[] = "special";
 
 // linedef fields:
-#define FIELD_LINE_NUM       "recordnum"
-#define FIELD_LINE_PORTALID  "portalid"
-#define FIELD_LINE_SPECIAL   "special"
-#define FIELD_LINE_TAG       "tag"
-#define FIELD_LINE_EXTFLAGS  "extflags"
-#define FIELD_LINE_ARGS      "args"
-#define FIELD_LINE_ID        "id"
-#define FIELD_LINE_ALPHA     "alpha"
+constexpr const char FIELD_LINE_NUM[]       = "recordnum";
+constexpr const char FIELD_LINE_PORTALID[]  = "portalid";
+constexpr const char FIELD_LINE_SPECIAL[]   = "special";
+constexpr const char FIELD_LINE_TAG[]       = "tag";
+constexpr const char FIELD_LINE_EXTFLAGS[]  = "extflags";
+constexpr const char FIELD_LINE_ARGS[]      = "args";
+constexpr const char FIELD_LINE_ID[]        = "id";
+constexpr const char FIELD_LINE_ALPHA[]     = "alpha";
 
 // sector fields:
-#define FIELD_SECTOR_NUM            "recordnum"
-#define FIELD_SECTOR_FLAGS          "flags"
-#define FIELD_SECTOR_FLAGSADD       "flags.add"
-#define FIELD_SECTOR_FLAGSREM       "flags.remove"
-#define FIELD_SECTOR_DAMAGE         "damage"
-#define FIELD_SECTOR_DAMAGEMASK     "damagemask"
-#define FIELD_SECTOR_DAMAGEMOD      "damagemod"
-#define FIELD_SECTOR_DAMAGEFLAGS    "damageflags"
-#define FIELD_SECTOR_DMGFLAGSADD    "damageflags.add"
-#define FIELD_SECTOR_DMGFLAGSREM    "damageflags.remove"
-#define FIELD_SECTOR_FLOORTERRAIN   "floorterrain"
-#define FIELD_SECTOR_FLOORANGLE     "floorangle"
-#define FIELD_SECTOR_FLOOROFFSETX   "flooroffsetx"
-#define FIELD_SECTOR_FLOOROFFSETY   "flooroffsety"
-#define FIELD_SECTOR_FLOORSCALEX    "floorscalex"
-#define FIELD_SECTOR_FLOORSCALEY    "floorscaley"
-#define FIELD_SECTOR_CEILINGTERRAIN "ceilingterrain"
-#define FIELD_SECTOR_CEILINGANGLE   "ceilingangle"
-#define FIELD_SECTOR_CEILINGOFFSETX "ceilingoffsetx"
-#define FIELD_SECTOR_CEILINGOFFSETY "ceilingoffsety"
-#define FIELD_SECTOR_CEILINGSCALEX  "ceilingscalex"
-#define FIELD_SECTOR_CEILINGSCALEY  "ceilingscaley"
-#define FIELD_SECTOR_TOPMAP         "colormaptop"
-#define FIELD_SECTOR_MIDMAP         "colormapmid"
-#define FIELD_SECTOR_BOTTOMMAP      "colormapbottom"
-#define FIELD_SECTOR_PORTALFLAGS_F  "portalflags.floor"
-#define FIELD_SECTOR_PORTALFLAGS_C  "portalflags.ceiling"
-#define FIELD_SECTOR_OVERLAYALPHA_F "overlayalpha.floor"
-#define FIELD_SECTOR_OVERLAYALPHA_C "overlayalpha.ceiling"
-#define FIELD_SECTOR_PORTALID_F     "portalid.floor"
-#define FIELD_SECTOR_PORTALID_C     "portalid.ceiling"
+constexpr const char FIELD_SECTOR_NUM[]            = "recordnum";
+constexpr const char FIELD_SECTOR_FLAGS[]          = "flags";
+constexpr const char FIELD_SECTOR_FLAGSADD[]       = "flags.add";
+constexpr const char FIELD_SECTOR_FLAGSREM[]       = "flags.remove";
+constexpr const char FIELD_SECTOR_DAMAGE[]         = "damage";
+constexpr const char FIELD_SECTOR_DAMAGEMASK[]     = "damagemask";
+constexpr const char FIELD_SECTOR_DAMAGEMOD[]      = "damagemod";
+constexpr const char FIELD_SECTOR_DAMAGEFLAGS[]    = "damageflags";
+constexpr const char FIELD_SECTOR_DMGFLAGSADD[]    = "damageflags.add";
+constexpr const char FIELD_SECTOR_DMGFLAGSREM[]    = "damageflags.remove";
+constexpr const char FIELD_SECTOR_FLOORTERRAIN[]   = "floorterrain";
+constexpr const char FIELD_SECTOR_FLOORANGLE[]     = "floorangle";
+constexpr const char FIELD_SECTOR_FLOOROFFSETX[]   = "flooroffsetx";
+constexpr const char FIELD_SECTOR_FLOOROFFSETY[]   = "flooroffsety";
+constexpr const char FIELD_SECTOR_FLOORSCALEX[]    = "floorscalex";
+constexpr const char FIELD_SECTOR_FLOORSCALEY[]    = "floorscaley";
+constexpr const char FIELD_SECTOR_CEILINGTERRAIN[] = "ceilingterrain";
+constexpr const char FIELD_SECTOR_CEILINGANGLE[]   = "ceilingangle";
+constexpr const char FIELD_SECTOR_CEILINGOFFSETX[] = "ceilingoffsetx";
+constexpr const char FIELD_SECTOR_CEILINGOFFSETY[] = "ceilingoffsety";
+constexpr const char FIELD_SECTOR_CEILINGSCALEX[]  = "ceilingscalex";
+constexpr const char FIELD_SECTOR_CEILINGSCALEY[]  = "ceilingscaley";
+constexpr const char FIELD_SECTOR_TOPMAP[]         = "colormaptop";
+constexpr const char FIELD_SECTOR_MIDMAP[]         = "colormapmid";
+constexpr const char FIELD_SECTOR_BOTTOMMAP[]      = "colormapbottom";
+constexpr const char FIELD_SECTOR_PORTALFLAGS_F[]  = "portalflags.floor";
+constexpr const char FIELD_SECTOR_PORTALFLAGS_C[]  = "portalflags.ceiling";
+constexpr const char FIELD_SECTOR_OVERLAYALPHA_F[] = "overlayalpha.floor";
+constexpr const char FIELD_SECTOR_OVERLAYALPHA_C[] = "overlayalpha.ceiling";
+constexpr const char FIELD_SECTOR_PORTALID_F[]     = "portalid.floor";
+constexpr const char FIELD_SECTOR_PORTALID_C[]     = "portalid.ceiling";
 
 // mapthing options and related data structures
 

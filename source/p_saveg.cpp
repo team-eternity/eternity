@@ -524,7 +524,10 @@ Thinker *P_ThinkerForNum(unsigned int n)
 //
 static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
 {
-   arc << pspr.sx << pspr.sy << pspr.tics << pspr.trans;
+   arc << pspr.playpos.x << pspr.playpos.y << pspr.tics << pspr.trans;
+
+   if(arc.saveVersion() >= 5)
+      arc << pspr.renderpos.x << pspr.renderpos.y;
 
    if(arc.isSaving())
    {
