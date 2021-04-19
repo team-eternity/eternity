@@ -882,14 +882,22 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_zoomout: // zoom out
-         mtof_zoommul = M_ZOOMOUT;
-         ftom_zoommul = M_ZOOMIN;
-         return true;
+         if(automapstate == amstate_full)
+         {
+            mtof_zoommul = M_ZOOMOUT;
+            ftom_zoommul = M_ZOOMIN;
+            return true;
+         }
+         return false;
 
       case ka_map_zoomin: // zoom in
-         mtof_zoommul = M_ZOOMIN;
-         ftom_zoommul = M_ZOOMOUT;
-         return true;
+         if(automapstate == amstate_full)
+         {
+            mtof_zoommul = M_ZOOMIN;
+            ftom_zoommul = M_ZOOMOUT;
+            return true;
+         }
+         return false;
 
       case ka_map_toggle: // deactivate map
          if(automapstate == amstate_over)
