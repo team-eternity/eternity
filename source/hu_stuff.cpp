@@ -874,7 +874,7 @@ int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 bool crosshair_hilite; // haleyjd 06/07/05
-int crosshair_scale = 1;
+bool crosshair_scale = true;
 const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 class HUDCrossHairWidget : public HUDPatchWidget
@@ -1555,7 +1555,7 @@ VARIABLE_INT(hu_coordscolor,         nullptr, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  nullptr,            yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   nullptr,            onoff);
-VARIABLE_BOOLEAN(crosshair_scale,   nullptr,            onoff);
+VARIABLE_TOGGLE(crosshair_scale,    nullptr,            onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}

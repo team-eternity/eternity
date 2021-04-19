@@ -208,7 +208,7 @@ default_t defaults[] =
                 "0 - no highlighting, 1 - aim highlighting enabled"),
 
    // MaxW: 2021/02/15
-   DEFAULT_INT("crosshair_scale", &crosshair_scale, nullptr, 1, 0, 1, default_t::wad_game,
+   DEFAULT_BOOL("crosshair_scale", &crosshair_scale, nullptr, true, default_t::wad_game,
                 "0 - scale crosshair, 1 - draw crosshair unscaled"),
 
    // sf
