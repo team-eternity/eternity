@@ -601,7 +601,7 @@ void A_Srcr2Attack(actionargs_t *actionargs)
    if(!actor->target)
       return;
    
-   S_StartSound(actor, actor->info->attacksound);
+   S_StartSound(nullptr, actor->info->attacksound);
 
    if(P_CheckMeleeRange(actor))
    {
