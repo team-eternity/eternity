@@ -8,6 +8,11 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+19.04.2021
+
+BUGFIX: Fix negative ExtraData recordnums causing undefined behaviour.
+
+--------------------------------------------------------------------------------
 08.02.2021
 
 BUGFIX: Skip __macosx/... files from PKE resources from listing as embedded WADs
@@ -73,7 +78,7 @@ FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific
 BUGFIX: Fixed HOM happening when trying to render same portal from two separate
         windows.
 
-IMPROVEMENT: Self-tagging Portal_Define flipped-anchor visual portals are now 
+IMPROVEMENT: Self-tagging Portal_Define flipped-anchor visual portals are now
         possible, though there'll be no mirror.
 
 --------------------------------------------------------------------------------
@@ -121,7 +126,7 @@ FEATURE: New console command: warp, which, like in ZDoom, teleports player to
 BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
         called from ACS, and crashing when such a script is triggered from the
         console.
-        
+
         Fixed a crash happening when entering a sector with an invalid colormap
         specified in the UDMF editor or ExtraData.
 
@@ -131,14 +136,14 @@ BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
 FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
          is used to set the misc1 and misc2 flags, which are also capable of
          setting weapon coordinates.
-         
+
          Eternity is also capable of interpolation when using offset(). By
          default it's disabled, but you can enable it by using the "interpolate"
          specifier as a third argument, for example: offset(1, 32, interpolate).
          When inheriting via the Decorate syntax and reapplying offset(),
          interpolation will be disabled again unless you specify it again.
-         
-         For the standard "frame" EDF section, you can use the +|-interpolate 
+
+         For the standard "frame" EDF section, you can use the +|-interpolate
          specifier to add or remove the flag.
 
          Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
@@ -356,8 +361,8 @@ FEATURE: F_SKY1 now when applied on middle textures has the same effect as floor
 --------------------------------------------------------------------------------
 25.01.2019
 
-FEATURE: Added some UDMF-exclusive fields to ExtraData: linedef portalid and 
-         sector portalid.floor and portalid.ceiling, so that Portal_Define 
+FEATURE: Added some UDMF-exclusive fields to ExtraData: linedef portalid and
+         sector portalid.floor and portalid.ceiling, so that Portal_Define
          doesn't require UDMF any longer.
 
 --------------------------------------------------------------------------------
@@ -530,7 +535,7 @@ BUGFIX: Sounds with "alias" or "random" entries didn't work correctly in sound
         implementations in EDF.
 
         Fixed the ceiling movement sound sequence from being cut off on stop.
-        This was breaking mods which were replacing DSSTNMOV with something 
+        This was breaking mods which were replacing DSSTNMOV with something
         longer, which would only fully play when a ceiling stopped moving.
 
 --------------------------------------------------------------------------------
@@ -559,7 +564,7 @@ FEATURE: Fixed Heretic pods to act properly. For this, I had to add five new
             non-player things (notably pods) don't stop when falling on other
             things, but instead keep moving until they fall or hit a wall.
 
-         Due to shared behaviour, the HereticPlayer thingtype also has 
+         Due to shared behaviour, the HereticPlayer thingtype also has
          STICKYCARRY.
 
 --------------------------------------------------------------------------------
@@ -620,7 +625,7 @@ FEATURE: Added the push activation from Hexen. The feature was long advertised
 IMPROVEMENT: Polyobjects are now properly cut off by 1-sided walls, instead of
              their graphics "bleeding" through them when outside the playable
              area.
-             
+
 BUGFIX: 2-sided polyobjects now show correctly in Eternity. The back side was
         hidden, which was a regression from vanilla Hexen's polyobjects.
 
@@ -630,7 +635,7 @@ BUGFIX: 2-sided polyobjects now show correctly in Eternity. The back side was
 FEATURE: Added Polyobj_MoveTo, Polyobj_MoveToSpot, Polyobj_OR_MoveTo and
          Polyobj_OR_MoveToSpot, based on the GZDoom extensions.
 
-BUGFIX: Fixed the weird texture glitches happening with multiple polyobjects in 
+BUGFIX: Fixed the weird texture glitches happening with multiple polyobjects in
         a sector, some stationary and some moving.
 
 --------------------------------------------------------------------------------
@@ -638,13 +643,13 @@ BUGFIX: Fixed the weird texture glitches happening with multiple polyobjects in
 
 FEATURE: Incosistent linked portals between separate sector islands are now
          supported! This means you can now place "wormholes" in the map without
-         getting errors! The link offsets are updated dynamically in order to 
+         getting errors! The link offsets are updated dynamically in order to
          provide a gameplay as good as possible.
-         
+
          There is still a restriction left: do not place portals between two
          areas already interconnected by sectors. That would still error out.
-         
-BUGFIX: Concealed sector portals were previously missed by the blockmap, 
+
+BUGFIX: Concealed sector portals were previously missed by the blockmap,
         resulting in buggy behaviour when clipping against things inside some
         through-portal elevators.
 
@@ -664,10 +669,10 @@ IMPROVEMENT: Weapon sprite motion is now interpolated (smooth).
 
 FEATURE: Polyobjects with portals no longer require their origin box to be
          connected to sectors from the spawn spot's layer.
-         
+
          Did this by marking the box sector as a "neighbour" of the spawn spot
          sector, for the P_GatherSector function.
-         
+
 FEATURE: Visual portals on polyobjects now rotate along with the poly.
 
 BUGFIX: Fixed polyobjects not setting up their linedefs' sound origins correctly
@@ -719,7 +724,7 @@ FEATURE: configurable air control and friction. This is so the player can move
          extreme velocity. Default value is 0, like in the normal game. Maximum
          value is 65535.
 
-         Also added two ACS functions for this: SetAirControl(fixed) and 
+         Also added two ACS functions for this: SetAirControl(fixed) and
          SetAirFriction(fixed), the latter which is an external function, desig-
          nated by index 302.
 
@@ -729,7 +734,7 @@ BUGFIX: Gravity is now stored in save games, as well as air control and
 --------------------------------------------------------------------------------
 25.02.2018
 
-FEATURE: comp_zombie, comp_infcheat, comp_vile, comp_skull, comp_god and 
+FEATURE: comp_zombie, comp_infcheat, comp_vile, comp_skull, comp_god and
          comp_skymap are now "YES" by default, because they're either more
          useful in common megawads, or are related to cheating.
 
@@ -871,7 +876,7 @@ BUGFIX: Hopefully fixed an insidious optimization bug (that only occurs in
         hard-coded number instead. But even after replacing that with sizeof(),
         followed by a small margin, the game would still lock up! So to be safe,
         I doubled that buffer size.
-        
+
         Problem is that I don't know why that happens; what could be optimized...
 
 --------------------------------------------------------------------------------
@@ -881,7 +886,7 @@ FEATURE: Added "ee_compat = true" global field in UDMF. This makes Eternity
          treat any other namespace the same as "eternity", and may be used by
          editors to save UDMF wads with features common Eternity and other ports
          (like GZDoom).
-         
+
          Thanks to anotak for implementing and submitting it.
 
 --------------------------------------------------------------------------------
