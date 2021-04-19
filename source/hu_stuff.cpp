@@ -874,7 +874,7 @@ int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 bool crosshair_hilite; // haleyjd 06/07/05
-bool crosshair_scale = true;
+int crosshair_scale = 1;
 const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 class HUDCrossHairWidget : public HUDPatchWidget
