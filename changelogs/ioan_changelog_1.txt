@@ -12,6 +12,9 @@ Since v4.02.00 "Forseti"
 
 BUGFIX: Fix negative ExtraData recordnums causing undefined behaviour.
 
+        Dehacked-based chainsaw replacement no longer make the rattling sound if
+        not intended.
+
 --------------------------------------------------------------------------------
 08.02.2021
 
