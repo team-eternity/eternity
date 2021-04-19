@@ -152,7 +152,7 @@ int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
 int             automlook = false;
 int             smooth_turning = 0;   // sf
-int             novert;               // haleyjd
+int             mouse_vert;               // haleyjd
 
 // sf: moved sensitivity here
 double          mouseSensitivity_horiz;   // has default   //  killough
@@ -613,7 +613,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          sendcenterview = true;
 
       // haleyjd 10/24/08: novert support
-      if(!novert)
+      // MaxW: It's now mouse_vert
+      if(mouse_vert)
          forward += (int)tmousey;
    }
    prevmlook = mlook;

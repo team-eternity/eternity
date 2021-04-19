@@ -316,8 +316,8 @@ default_t defaults[] =
                  "amount of mouse acceleration to apply (custom acceleration mode only)"),
 
    // haleyjd 10/24/08
-   DEFAULT_INT("mouse_novert", &novert, nullptr, 0, 0, 1, default_t::wad_no,
-               "0 for normal mouse, 1 for no vertical movement"),
+   DEFAULT_INT("mouse_vert", &mouse_vert, nullptr, 0, 0, 1, default_t::wad_no,
+               "0 for no vertical movement, 1 for vertical movement"),
 
    DEFAULT_INT("smooth_turning", &smooth_turning, nullptr, 0, 0, 1, default_t::wad_no,
                "average mouse input when turning player"),
