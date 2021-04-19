@@ -37,7 +37,9 @@
 #include <windows.h>
 #include <winbase.h>
 
-extern void I_FatalError(int code, const char *error, ...);
+#include "../d_keywds.h"
+
+extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 extern void M_GetFilePath(const char *fn, char *base, size_t len);
 
 //
@@ -55,7 +57,7 @@ extern void M_GetFilePath(const char *fn, char *base, size_t len);
 void WIN_GetExeDir(char *buffer, unsigned int size)
 {
    // get the name of the current process's module
-   DWORD nRet = GetModuleFileName(NULL, (LPTSTR)buffer, (DWORD)size);
+   DWORD nRet = GetModuleFileName(nullptr, (LPTSTR)buffer, (DWORD)size);
    char *dupstr;
 
    // if 0 or if the full buffer size, it's not a value we can use

@@ -36,23 +36,24 @@ class  WadDirectory;
 char *G_GetNameForMap(int episode, int map);
 int   G_GetMapForName(const char *name);
 
-bool G_Responder(event_t *ev);
+bool G_Responder(const event_t *ev);
 bool G_CheckDemoStatus();
 void G_DeathMatchSpawnPlayer(int playernum);
-void G_DeQueuePlayerCorpse(Mobj *mo);
+void G_DeQueuePlayerCorpse(const Mobj *mo);
 void G_ClearPlayerCorpseQueue();
 void G_DeferedInitNewNum(skill_t skill, int episode, int map);
 void G_DeferedInitNew(skill_t skill, const char *levelname);
 void G_DeferedInitNewFromDir(skill_t skill, const char *levelname, WadDirectory *dir);
 void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(const char *name, bool showmenu);
-void G_LoadGame(char *name, int slot, bool is_command); // killough 5/15/98
+void G_LoadGame(const char *name, int slot, bool is_command); // killough 5/15/98
 void G_ForcedLoadGame();                      // killough 5/15/98: forced loadgames
-void G_SaveGame(int slot, char *description); // Called by M_Responder.
-void G_RecordDemo(char *name);                // Only called by startup code.
+void G_LoadGameErr(const char *msg);
+void G_SaveGame(int slot, const char *description); // Called by M_Responder.
+void G_RecordDemo(const char *name);                // Only called by startup code.
+void G_RecordDemoContinue(const char *in, const char *name);
 void G_SetOldDemoOptions();
 void G_BeginRecording();
-void G_PlayDemo(char *name);
 void G_StopDemo();
 void G_ScrambleRand();
 void G_ExitLevel(int destmap = 0);
@@ -71,12 +72,11 @@ byte *G_ReadOptions(byte *demoptr);         // killough 3/1/98
 byte *G_WriteOptions(byte *demoptr);        // killough 3/1/98
 void G_PlayerReborn(int player);
 void G_InitNewNum(skill_t skill, int episode, int map);
-void G_InitNew(skill_t skill, char*);
-void G_DoVictory();
+void G_InitNew(skill_t skill, const char*);
 void G_SetGameMapName(const char *s); // haleyjd
 void G_SetGameMap();
 void G_SpeedSetAddThing(int thingtype, int nspeed, int fspeed); // haleyjd
-uint64_t G_Signature(WadDirectory *dir);
+uint64_t G_Signature(const WadDirectory *dir);
 void G_DoPlayDemo();
 
 void R_InitPortals();
@@ -86,10 +86,10 @@ int G_TotalFoundItems();
 int G_TotalFoundSecrets();
 
 // killough 1/18/98: Doom-style printf;   killough 4/25/98: add gcc attributes
-void doom_printf(const char *, ...) __attribute__((format(printf,1,2)));
+void doom_printf(E_FORMAT_STRING(const char *), ...) E_PRINTF(1, 2);
 
         // sf: player_printf
-void player_printf(player_t *player, const char *s, ...);
+void player_printf(const player_t *player, E_FORMAT_STRING(const char *s), ...) E_PRINTF(2, 3);
 
 // killough 5/2/98: moved from m_misc.c:
 
@@ -119,7 +119,17 @@ extern char gamemapname[9];
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
 
-extern int cooldemo;
+//
+// Cool demo setting
+//
+enum class CoolDemo: int
+{
+   off,
+   random,
+   follow
+};
+
+extern CoolDemo cooldemo;
 extern bool hub_changelevel;
 
 extern bool scriptSecret;   // haleyjd
@@ -132,7 +142,7 @@ extern int smooth_turning;
 #define VERSIONSIZE   16
 
 // killough 2/22/98: version id string format for savegames
-#define VERSIONID "MBF %d"
+#define VERSIONID "EE"
 
 extern WadDirectory *g_dir;
 extern WadDirectory *d_dir;

@@ -1,6 +1,10 @@
 //
+//
 // The Eternity Engine
-// Copyright(C) 2016 James Haley, Ioan Chera, et al.
+// Copyright (C) 2018 James Haley, Ioan Chera, et al.
+//
+// ZDoom
+// Copyright (C) 1998-2012 Marisa Heit
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,51 +21,20 @@
 //
 //--------------------------------------------------------------------------
 //
-// For portions of code explicitly marked as being under the 
-// ZDoom Source Distribution License only:
-//
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//--------------------------------------------------------------------------
-//
-// Purpose: reentrant path traversing, used by several new functions
-// Authors: James Haley, Ioan Chera
+// Purpose: Reentrant path traversing, used by several new functions
+// Authors: James Haley, Ioan Chera, Max Waine
 //
 
 #include "z_zone.h"
 
 #include "cam_common.h"
 #include "cam_sight.h"
+#include "d_gi.h"
+#include "doomstat.h"
 #include "e_exdata.h"
-#include "m_collection.h"
 #include "m_compare.h"
-#include "p_maputl.h"
 #include "p_portal.h"
+#include "p_portalblockmap.h"
 #include "p_setup.h"
 #include "polyobj.h"
 #include "r_portal.h"
@@ -103,13 +76,14 @@ bool PathTraverser::traverseIntercepts() const
       if(!scan->isaline)
          continue;   // ioanch 20151230: only lines need this treatment
       P_MakeDivline(scan->d.line, &dl);
-      scan->frac = P_InterceptVector(&trace, &dl);
+      if(scan->frac = P_InterceptVector(&trace, &dl); scan->frac < 0)
+         scan->frac = D_MAXINT;
    }
 
    //
    // go through in order
    //	
-   in = NULL; // shut up compiler warning
+   in = nullptr; // shut up compiler warning
 
    while(count--)
    {
@@ -173,8 +147,8 @@ bool PathTraverser::blockThingsIterator(int x, int y)
          y2 = thing->y + thing->radius;
       }
 
-      s1 = P_PointOnDivlineSide(x1, y1, &trace);
-      s2 = P_PointOnDivlineSide(x2, y2, &trace);
+      s1 = P_PointOnDivlineSidePrecise(x1, y1, &trace);
+      s2 = P_PointOnDivlineSidePrecise(x2, y2, &trace);
 
       if(s1 == s2)
          continue;
@@ -208,14 +182,17 @@ bool PathTraverser::checkLine(size_t linenum)
 
    VALID_SET(validlines, linenum);
 
-   s1 = P_PointOnDivlineSide(ld->v1->x, ld->v1->y, &trace);
-   s2 = P_PointOnDivlineSide(ld->v2->x, ld->v2->y, &trace);
+   if(def.flags & CAM_REQUIRELINEPORTALS && !(ld->pflags & PS_PASSABLE))
+      return true;
+
+   s1 = P_PointOnDivlineSidePrecise(ld->v1->x, ld->v1->y, &trace);
+   s2 = P_PointOnDivlineSidePrecise(ld->v2->x, ld->v2->y, &trace);
    if(s1 == s2)
       return true; // line isn't crossed
 
    P_MakeDivline(ld, &dl);
-   s1 = P_PointOnDivlineSide(trace.x, trace.y, &dl);
-   s2 = P_PointOnDivlineSide(trace.x + trace.dx,
+   s1 = P_PointOnDivlineSidePrecise(trace.x, trace.y, &dl);
+   s2 = P_PointOnDivlineSidePrecise(trace.x + trace.dx,
       trace.y + trace.dy, &dl);
    if(s1 == s2)
       return true; // line isn't crossed
@@ -242,8 +219,8 @@ bool PathTraverser::checkLine(size_t linenum)
    // ioanch 20151229: also check sectors
    const sector_t *fsec = ld->frontsector, *bsec = ld->backsector;
    if(ld->pflags & PS_PASSABLE
-      || (fsec && (fsec->c_pflags & PS_PASSABLE || fsec->f_pflags & PS_PASSABLE))
-      || (bsec && (bsec->c_pflags & PS_PASSABLE || bsec->f_pflags & PS_PASSABLE)))
+      || (fsec && (fsec->srf.ceiling.pflags & PS_PASSABLE || fsec->srf.floor.pflags & PS_PASSABLE))
+      || (bsec && (bsec->srf.ceiling.pflags & PS_PASSABLE || bsec->srf.floor.pflags & PS_PASSABLE)))
    {
       portalguard.addedportal = true;
    }
@@ -283,7 +260,7 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    while(plink)
    {
       polyobj_t *po = (*plink)->po;
-      int polynum = po - PolyObjects;
+      int polynum = eindex(po - PolyObjects);
 
       // if polyobj hasn't been checked
       if(!VALID_ISSET(validpolys, polynum))
@@ -292,7 +269,7 @@ bool PathTraverser::blockLinesIterator(int x, int y)
 
          for(int i = 0; i < po->numLines; ++i)
          {
-            int linenum = po->lines[i] - lines;
+            int linenum = eindex(po->lines[i] - lines);
 
             if(VALID_ISSET(validlines, linenum))
                continue; // line has already been checked
@@ -309,7 +286,11 @@ bool PathTraverser::blockLinesIterator(int x, int y)
    list = blockmaplump + offset;
 
    // skip 0 starting delimiter
-   ++list;
+   // MaxW: 2016/02/02: if before 3.42 always skip, skip if all blocklists start w/ 0
+   // killough 2/22/98: demo_compatibility check
+   // skip 0 starting delimiter -- phares
+   if((!demo_compatibility && demo_version < 342) || (demo_version >= 342 && skipblstart))
+      ++list;
 
    for(; *list != -1; list++)
    {
@@ -418,12 +399,12 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 
    xintercept = (cx >> MAPBTOFRAC) + FixedMul(partialy, xstep);
 
-   // From ZDoom (usable under ZDoom code license):
+   // From ZDoom (usable under the GPLv3):
    // [RH] Fix for traces that pass only through blockmap corners. In that case,
    // xintercept and yintercept can both be set ahead of mapx and mapy, so the
    // for loop would never advance anywhere.
 
-   if(abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
+   if(!vanilla_heretic && abs(xstep) == FRACUNIT && abs(ystep) == FRACUNIT)
    {
       if(ystep < 0)
          partialx = FRACUNIT - partialx;
@@ -457,8 +438,26 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
       if((mapxstep | mapystep) == 0)
          break;
 
-#if 1
-      // From ZDoom (usable under the ZDoom code license):
+      if(vanilla_heretic)
+      {
+         // vanilla Heretic demo compatibility
+         if(mapx == xt2 && mapy == yt2)
+            break;
+         // Original code - this fails to account for all cases.
+         if((yintercept >> FRACBITS) == mapy)
+         {
+            yintercept += ystep;
+            mapx += mapxstep;
+         }
+         else if((xintercept >> FRACBITS) == mapx)
+         {
+            xintercept += xstep;
+            mapy += mapystep;
+         }
+         continue;
+      }
+
+      // From ZDoom (usable under the GPLv3):
       // This is the fix for the "Anywhere Moo" bug, which caused monsters to
       // occasionally see the player through an arbitrary number of walls in
       // Doom 1.2, and persisted into Heretic, Hexen, and some versions of 
@@ -518,19 +517,6 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
             mapystep = 0;
          break;
       }
-#else
-      // Original code - this fails to account for all cases.
-      if((yintercept >> FRACBITS) == mapy)
-      {
-         yintercept += ystep;
-         mapx += mapxstep;
-      }
-      else if((xintercept >> FRACBITS) == mapx)
-      {
-         xintercept += xstep;
-         mapy += mapystep;
-      }
-#endif
    }
 
    //
@@ -553,17 +539,22 @@ void lineopening_t::calculate(const line_t *linedef)
    const sector_t *front = linedef->frontsector;
    const sector_t *back = linedef->backsector;
 
-   // no need to apply the portal hack (1024 units) here fortunately
-   if(linedef->extflags & EX_ML_UPPERPORTAL)
-      opentop = front->ceilingheight;
-   else
-      opentop = emin(front->ceilingheight, back->ceilingheight);
+   const sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
+      linedef->beyondportalline ? linedef->beyondportalline->frontsector : nullptr;
+   if(beyond)
+      back = beyond;
 
-   if(linedef->extflags & EX_ML_LOWERPORTAL)
-      openbottom = front->floorheight;
+   // no need to apply the portal hack (1024 units) here fortunately
+   if(linedef->extflags & EX_ML_UPPERPORTAL && back->srf.ceiling.pflags & PS_PASSABLE)
+      open.ceiling = front->srf.ceiling.height;
    else
-      openbottom = emax(front->floorheight, back->floorheight);
-   openrange = opentop - openbottom;
+      open.ceiling = emin(front->srf.ceiling.height, back->srf.ceiling.height);
+
+   if(linedef->extflags & EX_ML_LOWERPORTAL && back->srf.floor.pflags & PS_PASSABLE)
+      open.floor = front->srf.floor.height;
+   else
+      open.floor = emax(front->srf.floor.height, back->srf.floor.height);
+   openrange = open.ceiling - open.floor;
 }
 
 //

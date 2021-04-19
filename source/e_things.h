@@ -42,14 +42,26 @@ extern int UnknownThingType;
 #ifdef NEED_EDF_DEFINITIONS
 
 // Section Names
-#define EDF_SEC_THING    "thingtype"
-#define EDF_SEC_TNGDELTA "thingdelta"
+constexpr const char EDF_SEC_THING[]      = "thingtype";
+constexpr const char EDF_SEC_TNGDELTA[]   = "thingdelta";
+constexpr const char EDF_SEC_THINGGROUP[] = "thinggroup";
 
 // Section Options
 extern cfg_opt_t edf_thing_opts[];
 extern cfg_opt_t edf_tdelta_opts[];
+extern cfg_opt_t edf_tgroup_opts[];
 
 #endif
+
+//
+// Thinggroup flags
+//
+enum
+{
+   TGF_PROJECTILEALLIANCE = 1,   // things in group are immune to their projectiles
+   TGF_DAMAGEIGNORE = 2,         // things in group don't react to being damaged
+   TGF_INHERITED = 4,            // make sure to also apply these to inheriting objects
+};
 
 // Global Functions
 
@@ -59,7 +71,9 @@ extern cfg_opt_t edf_tdelta_opts[];
 void E_CollectThings(cfg_t *cfg);
 void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def);
 void E_ProcessThings(cfg_t *cfg);
+void E_ProcessThingPickups(cfg_t *cfg);
 void E_ProcessThingDeltas(cfg_t *cfg);
+void E_ProcessThingGroups(cfg_t *cfg);
 bool E_AutoAllocThingDEHNum(int thingnum);
 void E_SetThingDefaultSprites(void);
 #endif
@@ -73,17 +87,28 @@ int E_GetThingNumForName(const char *name);    //   fatal error version
 int E_SafeThingName(const char *name);         //   fallback version
 int E_ThingNumForCompatName(const char *name); //   ACS compat version
 
+void E_SetDropItem(mobjinfo_t *mi, const int itemnum);
+
 // setup default gibhealth
 void E_ThingDefaultGibHealth(mobjinfo_t *mi);
 
 // thingtype custom-damagetype pain/death states
-state_t *E_StateForMod(mobjinfo_t *mi, const char *base, emod_t *mod);
-state_t *E_StateForModNum(mobjinfo_t *mi, const char *base, int num);
+state_t *E_StateForMod(const mobjinfo_t *mi, const char *base,
+                       const emod_t *mod);
+state_t *E_StateForModNum(const mobjinfo_t *mi, const char *base, int num);
 
 void     E_SplitTypeAndState(char *src, char **type, char **state);
 int     *E_GetNativeStateLoc(mobjinfo_t *mi, const char *label);
-state_t *E_GetStateForMobjInfo(mobjinfo_t *mi, const char *label);
-state_t *E_GetStateForMobj(Mobj *mo, const char *label);
+inline static const int *E_GetNativeStateLoc(const mobjinfo_t *mi,
+                                             const char *label)
+{
+   return E_GetNativeStateLoc(const_cast<mobjinfo_t *>(mi), label);
+}
+state_t *E_GetStateForMobjInfo(const mobjinfo_t *mi, const char *label);
+state_t *E_GetStateForMobj(const Mobj *mo, const char *label);
+
+// Thing groups
+bool E_ThingPairValid(int t1, int t2, unsigned flags);
 
 // ioanch 20160220: metastate key names used throughout the code. They also
 // work as DECORATE state label names.
@@ -104,7 +129,7 @@ enum bloodtype_e : int
    BLOODTYPE_MAX // must be last
 };
 
-int E_BloodTypeForThing(Mobj *mo, bloodaction_e action);
+int E_BloodTypeForThing(const Mobj *mo, bloodaction_e action);
 bloodtype_e E_GetBloodBehaviorForAction(mobjinfo_t *info, bloodaction_e action);
 
 #endif

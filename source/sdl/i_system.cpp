@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,14 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: General-purpose system-specific routines, including timer
+//  installation, keyboard, mouse, and joystick code.
 //
-// DESCRIPTION:
+// Authors: James Haley, Max Waine
 //
-//   General-purpose system-specific routines, including timer
-//   installation, keyboard, mouse, and joystick code.
-//
-//-----------------------------------------------------------------------------
 
 #ifdef _MSC_VER
 #include <conio.h>
@@ -33,6 +28,7 @@
 
 // HAL modules
 #include "../hal/i_gamepads.h"
+#include "../hal/i_platform.h"
 #include "../hal/i_timer.h"
 
 #include "../z_zone.h"
@@ -46,6 +42,8 @@
 #include "../doomstat.h"
 #include "../m_misc.h"
 #include "../m_syscfg.h"
+#include "../mn_menus.h"
+#include "../g_demolog.h"
 #include "../g_game.h"
 #include "../w_wad.h"
 #include "../v_video.h"
@@ -68,9 +66,8 @@ ticcmd_t *I_BaseTiccmd()
 
 int mousepresent;
 
-int keyboard_installed = 0;
 extern int autorun;          // Autorun state
-static SDLMod oldmod; // SoM 3/20/2002: save old modifier key state
+static SDL_Keymod oldmod; // SoM 3/20/2002: save old modifier key state
 
 //
 // I_Shutdown
@@ -85,23 +82,6 @@ void I_Shutdown()
    I_ShutdownGamePads();
 }
 
-extern bool unicodeinput;
-
-//
-// I_InitKeyboard
-//
-void I_InitKeyboard()
-{   
-   keyboard_installed = 1;
-
-   if(unicodeinput)
-      SDL_EnableUNICODE(1);
-
-   // haleyjd 05/10/11: moved here from video module
-   // enable key repeat
-   SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY/2, SDL_DEFAULT_REPEAT_INTERVAL*4);
-}
-
 //
 // I_Init
 //
@@ -111,7 +91,7 @@ void I_Init()
    I_InitHALTimer();
 
    // haleyjd 04/15/02: initialize joystick
-   I_InitGamePads();
+   I_InitGamePads(MN_UpdateJoystickMenus);
  
    atexit(I_Shutdown);
    
@@ -141,6 +121,10 @@ static int error_exitcode;
 
 #define IFNOTFATAL(a) if(error_exitcode < I_ERRORLEVEL_FATAL) a
 
+// MaxW: If we wanna exit fast, skip ENDOOM stuff regardless of player setting,
+// but we DON'T wanna overwrite the user's showendoom setting in their cfg
+static bool speedyexit = false;
+
 //
 // I_Quit
 //
@@ -157,7 +141,10 @@ void I_Quit(void)
    // sf : rearrange this so the errmsg doesn't get messed up
    if(error_exitcode >= I_ERRORLEVEL_MESSAGE)
       puts(errmsg);   // killough 8/8/98
-   else
+
+   // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
+   // affecting functions. MUST FIX.
+   else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
@@ -175,7 +162,9 @@ void I_Quit(void)
 #ifdef _MSC_VER
    // Under Visual C++, the console window likes to rudely slam
    // shut -- this can stop it, but is now optional except when an error occurs
-   if(error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit)
+   // ioanch 20160313: do not pause if demo logging is enabled
+   if(!G_DemoLogEnabled() && 
+      (error_exitcode >= I_ERRORLEVEL_NORMAL || waitAtExit))
    {
       puts("Press any key to continue\n");
       getch();
@@ -184,12 +173,22 @@ void I_Quit(void)
 }
 
 //
+// MaxW: 2017/08/04: Exit quickly and cleanly (skip ENDOOM display)
+//
+void I_QuitFast()
+{
+   puts("Eternity quit quickly.");
+   speedyexit = true;
+   exit(0);
+}
+
+//
 // I_FatalError
 //
 // haleyjd 05/21/10: Call this for super-evil errors such as heap corruption,
 // system-related problems, etc.
 //
-void I_FatalError(int code, const char *error, ...)
+void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...)
 {
    // Flag a fatal error, so that some shutdown code will not be executed;
    // chiefly, saving the configuration files, which can malfunction in
@@ -230,7 +229,7 @@ void I_FatalError(int code, const char *error, ...)
 // haleyjd 06/05/10: exit with a message which is not technically an error. The
 // code used to call I_Error for this, but it wasn't semantically correct.
 //
-void I_ExitWithMessage(const char *msg, ...)
+void I_ExitWithMessage(E_FORMAT_STRING(const char *msg), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_MESSAGE)
@@ -256,7 +255,7 @@ void I_ExitWithMessage(const char *msg, ...)
 //
 // Normal error reporting / exit routine.
 //
-void I_Error(const char *error, ...) // killough 3/20/98: add const
+void I_Error(E_FORMAT_STRING(const char *error), ...)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -284,7 +283,7 @@ void I_Error(const char *error, ...) // killough 3/20/98: add const
 //
 // haleyjd: varargs version of I_Error used chiefly by libConfuse.
 //
-void I_ErrorVA(const char *error, va_list args)
+void I_ErrorVA(E_FORMAT_STRING(const char *error), va_list args)
 {
    // do not demote error level
    if(error_exitcode < I_ERRORLEVEL_NORMAL)
@@ -337,7 +336,7 @@ void I_EndDoom()
       return;
    
    // Make sure the new window has the right title and icon
-   SDL_WM_SetCaption("Thanks for using the Eternity Engine!", NULL);
+   TXT_SetWindowTitle("Thanks for using the Eternity Engine!");
    
    // Write the data to the screen memory   
    screendata = TXT_GetScreenData();
@@ -386,17 +385,17 @@ int I_CheckAbort()
  *************************/
 int leds_always_off;
 
-VARIABLE_BOOLEAN(leds_always_off, NULL,     yesno);
+VARIABLE_BOOLEAN(leds_always_off, nullptr,  yesno);
 CONSOLE_VARIABLE(i_ledsoff, leds_always_off, 0) {}
 
 #ifdef _SDL_VER
-VARIABLE_BOOLEAN(waitAtExit, NULL, yesno);
+VARIABLE_BOOLEAN(waitAtExit, nullptr, yesno);
 CONSOLE_VARIABLE(i_waitatexit, waitAtExit, 0) {}
 
-VARIABLE_BOOLEAN(showendoom, NULL, yesno);
+VARIABLE_BOOLEAN(showendoom, nullptr, yesno);
 CONSOLE_VARIABLE(i_showendoom, showendoom, 0) {}
 
-VARIABLE_INT(endoomdelay, NULL, 35, 3500, NULL);
+VARIABLE_INT(endoomdelay, nullptr, 35, 3500, nullptr);
 CONSOLE_VARIABLE(i_endoomdelay, endoomdelay, 0) {}
 #endif
 

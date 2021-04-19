@@ -41,6 +41,7 @@
 #include "d_event.h"
 #include "d_mod.h"
 #include "e_inventory.h"
+#include "e_weapons.h"
 #include "g_game.h"
 #include "m_random.h"
 #include "p_enemy.h"
@@ -67,13 +68,6 @@
 #include "e_args.h"
 #include "e_player.h"
 
-#define LOWERSPEED   (FRACUNIT*6)
-#define RAISESPEED   (FRACUNIT*6)
-#define WEAPONBOTTOM (FRACUNIT*128)
-#define WEAPONTOP    (FRACUNIT*32)
-
-#define BFGCELLS bfgcells        /* Ty 03/09/98 externalized in p_inter.c */
-
 // The following array holds the recoil values         // phares
 // haleyjd 08/18/08: recoil moved into weaponinfo
 
@@ -84,7 +78,7 @@
 //
 // haleyjd 06/22/13: Set psprite state from pspdef_t
 //
-void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum)
+void P_SetPspritePtr(const player_t *player, pspdef_t *psp, statenum_t stnum)
 {
    // haleyjd 06/22/13: rewrote again to use actionargs structure
    do
@@ -94,7 +88,7 @@ void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum)
       if(!stnum)
       {
          // object removed itself
-         psp->state = NULL;
+         psp->state = nullptr;
          break;
       }
 
@@ -108,11 +102,31 @@ void P_SetPspritePtr(player_t *player, pspdef_t *psp, statenum_t stnum)
       psp->state = state;
       psp->tics = state->tics;        // could be 0
 
-      if(state->misc1)
+      if(GameModeInfo->flags & GIF_DOOMWEAPONOFFSET)
       {
-         // coordinate set
-         psp->sx = state->misc1 << FRACBITS;
-         psp->sy = state->misc2 << FRACBITS;
+         if(state->misc1)
+         {
+            // coordinate set
+            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
+            psp->playpos.y = psp->renderpos.y = state->misc2 << FRACBITS;
+            if(!(state->flags & STATEF_INTERPOLATE))
+               psp->backupPosition();
+         }
+      }
+      else
+      {
+         if(state->misc1)
+         {
+            psp->playpos.x = psp->renderpos.x = state->misc1 << FRACBITS;
+            if(!(state->flags & STATEF_INTERPOLATE))
+               psp->prevpos.x = psp->renderpos.x;
+         }
+         if(state->misc2)
+         {
+            psp->playpos.y = psp->renderpos.y =  state->misc2 << FRACBITS;
+            if(!(state->flags & STATEF_INTERPOLATE))
+               psp->prevpos.y = psp->renderpos.y;
+         }
       }
 
       // Call action routine.
@@ -156,22 +170,26 @@ static void P_BringUpWeapon(player_t *player)
 {
    statenum_t newstate;
    
-   if(player->pendingweapon == wp_nochange)
+   if(player->pendingweapon == nullptr)
+   {
       player->pendingweapon = player->readyweapon;
+      player->pendingweaponslot = player->readyweaponslot;
+   }
    
    weaponinfo_t *pendingweapon;
-   if((pendingweapon = P_GetPendingWeapon(player)))
+   if((pendingweapon = player->pendingweapon))
    {
       // haleyjd 06/28/13: weapon upsound
       if(pendingweapon->upsound)
-         S_StartSound(player->mo, pendingweapon->upsound);
+         S_StartSoundName(player->mo, pendingweapon->upsound);
   
       newstate = pendingweapon->upstate;
   
-      player->pendingweapon = wp_nochange;
+      player->pendingweapon = nullptr;
+      player->pendingweaponslot = nullptr;
    
       // killough 12/98: prevent pistol from starting visibly at bottom of screen:
-      player->psprites[ps_weapon].sy = demo_version >= 203 ? 
+      player->psprites[ps_weapon].playpos.y = player->psprites[ps_weapon].renderpos.y = demo_version >= 203 ?
          WEAPONBOTTOM+FRACUNIT*2 : WEAPONBOTTOM;
    
       P_SetPsprite(player, ps_weapon, newstate);
@@ -183,7 +201,7 @@ static void P_BringUpWeapon(player_t *player)
 //
 // haleyjd 08/05/13: Test if a player has ammo for a weapon
 //
-bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
+bool P_WeaponHasAmmo(const player_t *player, const weaponinfo_t *weapon)
 {
    itemeffect_t *ammoType = weapon->ammo;
 
@@ -196,26 +214,96 @@ bool P_WeaponHasAmmo(player_t *player, weaponinfo_t *weapon)
 }
 
 //
+// MaxW: 2018/01/03: Test if a player has alt ammo for a weapon
+//
+static bool P_WeaponHasAmmoAlt(player_t *player, weaponinfo_t *weapon)
+{
+   itemeffect_t *ammoType = weapon->ammo_alt;
+
+   // a weapon without an ammotype has infinite ammo
+   if(!ammoType)
+      return true;
+
+   // otherwise, read the inventory slot
+   return (E_GetItemOwnedAmount(player, ammoType) >= weapon->ammopershot_alt);
+}
+
+//
+// Find the first weaponslot that isn't nullptr for a given player
+//
+static weaponslot_t *P_findFirstNonNullWeaponSlot(const player_t *player)
+{
+   // Don't ask
+   if(demo_version < 401)
+      return E_FindFirstWeaponSlot(player, player->readyweapon);
+
+   for(weaponslot_t *&weaponslot : player->pclass->weaponslots)
+   {
+      if(weaponslot != nullptr)
+         return weaponslot;
+   }
+
+   return nullptr;
+}
+
+//
 // P_NextWeapon
 //
 // haleyjd 05/31/14: Rewritten to use next and previous in cycle pointers
 // in weaponinfo_t, for friendliness with future dynamic weapons system.
 //
-int P_NextWeapon(player_t *player)
+int P_NextWeapon(const player_t *player, uint8_t *slotindex)
 {
-   weaponinfo_t *currentweapon = P_GetReadyWeapon(player);
-   weaponinfo_t *newweapon     = currentweapon;
-   bool          ammototry;
+   const weaponinfo_t             *currentweapon = player->readyweapon;
+   const weaponinfo_t             *newweapon     = player->readyweapon;
+   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const BDListItem<weaponslot_t> *newweaponlink;
+   bool                            ammototry;
+
+   if(newweaponslot == nullptr)
+      newweaponslot = P_findFirstNonNullWeaponSlot(player);
+   newweaponlink = &newweaponslot->links;
 
    do
    {
-      newweapon = newweapon->nextInCycle;
+      newweaponlink = newweaponlink->bdPrev;
+      newweapon = newweaponlink->bdObject->weapon;
+      if(newweaponlink->isDummy())
+      {
+         const int slotindex = newweaponlink->bdObject->slotindex;
+         bool firsttime = true;
+         for(int i = (slotindex + 1) % NUMWEAPONSLOTS;
+             i  != slotindex + 1 || firsttime; i = (i + 1) % NUMWEAPONSLOTS)
+         {
+            if(player->pclass->weaponslots[i] != nullptr)
+            {
+               newweaponlink = E_LastInSlot(player->pclass->weaponslots[i]);
+               newweapon = newweaponlink->bdObject->weapon;
+               break;
+            }
+            firsttime = false;
+         }
+      }
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
-   return newweapon != currentweapon ? newweapon->id : wp_nochange;
+   if(demo_version >= 401)
+   {
+      if(newweapon != currentweapon)
+      {
+         *slotindex = newweaponlink->bdObject->slotindex;
+         return newweapon->id;
+      }
+      else
+      {
+         *slotindex = -1;
+         return -1;
+      }
+   }
+   else
+      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 //
@@ -223,21 +311,51 @@ int P_NextWeapon(player_t *player)
 //
 // haleyjd 03/06/09: Like the above.
 //
-int P_PrevWeapon(player_t *player)
+int P_PrevWeapon(const player_t *player, uint8_t *slotindex)
 {
-   weaponinfo_t *currentweapon = P_GetReadyWeapon(player);
-   weaponinfo_t *newweapon     = currentweapon;
-   bool          ammototry;
+   const weaponinfo_t             *currentweapon = player->readyweapon;
+   const weaponinfo_t             *newweapon     = player->readyweapon;
+   const weaponslot_t             *newweaponslot = player->readyweaponslot;
+   const BDListItem<weaponslot_t> *newweaponlink;
+   bool                            ammototry;
+
+   if(newweaponslot == nullptr)
+      newweaponslot = P_findFirstNonNullWeaponSlot(player);
+   newweaponlink = &newweaponslot->links;
 
    do
    {
-      newweapon = newweapon->prevInCycle;
+      newweaponlink = newweaponlink->bdNext;
+      newweapon = newweaponlink->bdObject->weapon;
+      if(newweaponlink->isDummy())
+      {
+         const int slotindex = newweaponlink->bdObject->slotindex;
+         bool firsttime = true;
+         for(int i = slotindex == 0 ? NUMWEAPONSLOTS - 1 : slotindex - 1;
+             i  != slotindex - 1 || firsttime; i = i == 0 ? NUMWEAPONSLOTS - 1 : i - 1)
+         {
+            if(player->pclass->weaponslots[i] != nullptr)
+            {
+               newweaponlink = E_FirstInSlot(player->pclass->weaponslots[i]);
+               newweapon = newweaponlink->bdObject->weapon;
+               break;
+            }
+         }
+
+      }
       ammototry = P_WeaponHasAmmo(player, newweapon);
    }
-   while((!player->weaponowned[newweapon->id] || !ammototry) &&
-         newweapon != currentweapon);
+   while((!E_PlayerOwnsWeapon(player, newweapon) || !ammototry) &&
+         newweapon->id != currentweapon->id);
 
-   return newweapon != currentweapon ? newweapon->id : wp_nochange;
+   if(demo_version >= 401)
+   {
+      if(slotindex != nullptr)
+         *slotindex = newweaponlink->bdObject->slotindex;
+      return newweapon != currentweapon ? newweapon->id : -1;
+   }
+   else
+      return newweapon != currentweapon ? newweapon->dehnum : wp_nochange;
 }
 
 // The first set is where the weapon preferences from             // killough,
@@ -245,12 +363,7 @@ int P_PrevWeapon(player_t *player)
 // in DOOM2 to bring up the weapon, i.e. 6 = plasma gun. These    //    |
 // are NOT the wp_* constants.                                    //    V
 
-// WEAPON_FIXME: retained for now as a hard-coded array. When EDF weapons are 
-// complete, the preference order of weapons will be a modder-determined factor,
-// or in other words, part of the game logic like it originally was meant to be,
-// and not an end-user setting. It's impractical to maintain N preference 
-// settings for an ever-constantly changing number of weapons, and for multiple
-// potential sets of weapons, one per player class.
+// Exists for ye olde compat
 
 static int weapon_preferences[NUMWEAPONS+1] =
 {
@@ -258,31 +371,20 @@ static int weapon_preferences[NUMWEAPONS+1] =
 };
 
 //
-// P_SwitchWeapon
+// P_SwitchWeaponOld
 //
 // Checks current ammo levels and gives you the most preferred weapon with ammo.
 // It will not pick the currently raised weapon. When called from P_CheckAmmo 
 // this won't matter, because the raised weapon has no ammo anyway. When called
 // from G_BuildTiccmd you want to toggle to a different weapon regardless.
 //
-weapontype_t P_SwitchWeapon(player_t *player)
+weapontype_t P_SwitchWeaponOld(const player_t *player)
 {
    int *prefer = weapon_preferences; // killough 3/22/98
-   weapontype_t currentweapon = player->readyweapon;
+   weapontype_t currentweapon = player->readyweapon->dehnum;
    weapontype_t newweapon = currentweapon;
    int i = NUMWEAPONS + 1;   // killough 5/2/98   
 
-   // killough 2/8/98: follow preferences and fix BFG/SSG bugs
-
-   // haleyjd WEAPON_FIXME: makes assumptions about ammo per shot
-   // haleyjd WEAPON_FIXME: makes assumptions about ammotypes used by weapons!
-   // haleyjd WEAPON_FIXME: shareware-only must become EDF weapon property
-   // haleyjd WEAPON_FIXME: must support arbitrary weapons
-   // haleyjd WEAPON_FIXME: chainsaw/fist issues
-
-   // INVENTORY_FIXME: This is COMPLETE AND TOTAL bullshit. Hardcoded for now...
-   // How in the sweet fuck am I supposed to generalize this mess, AND remain
-   // backwardly compatible with DeHackEd bullshit??
    int clips   = E_GetItemOwnedAmountName(player, "AmmoClip"); 
    int shells  = E_GetItemOwnedAmountName(player, "AmmoShell");
    int cells   = E_GetItemOwnedAmountName(player, "AmmoCell");
@@ -303,32 +405,33 @@ weapontype_t P_SwitchWeapon(player_t *player)
             newweapon = wp_pistol;
          break;
       case 3:
-         if(player->weaponowned[wp_shotgun] && shells)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_shotgun) && shells)
             newweapon = wp_shotgun;
          break;
       case 4:
-         if(player->weaponowned[wp_chaingun] && clips)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chaingun) && clips)
             newweapon = wp_chaingun;
          break;
       case 5:
-         if(player->weaponowned[wp_missile] && rockets)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_missile) && rockets)
             newweapon = wp_missile;
          break;
       case 6:
-         if(player->weaponowned[wp_plasma] && cells && GameModeInfo->id != shareware)
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_plasma) && cells &&
+            GameModeInfo->id != shareware)
             newweapon = wp_plasma;
          break;
       case 7:
-         if(player->weaponowned[wp_bfg] && GameModeInfo->id != shareware &&
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_bfg) && GameModeInfo->id != shareware &&
             cells >= (demo_compatibility ? 41 : 40))
             newweapon = wp_bfg;
          break;
       case 8:
-         if(player->weaponowned[wp_chainsaw])
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_chainsaw))
             newweapon = wp_chainsaw;
          break;
       case 9:
-         if(player->weaponowned[wp_supershotgun] && 
+         if(E_PlayerOwnsWeaponForDEHNum(player, wp_supershotgun) &&
             enable_ssg &&
             shells >= (demo_compatibility ? 3 : 2))
             newweapon = wp_supershotgun;
@@ -369,7 +472,7 @@ int P_WeaponPreferred(int w1, int w2)
 bool P_CheckAmmo(player_t *player)
 {
    // Return if current ammunition sufficient.
-   if(P_WeaponHasAmmo(player, P_GetReadyWeapon(player)))
+   if(P_WeaponHasAmmo(player, player->readyweapon))
       return true;
    
    // Out of ammo, pick a weapon to change to.
@@ -381,9 +484,10 @@ bool P_CheckAmmo(player_t *player)
    
    if(demo_compatibility)
    {
-      player->pendingweapon = P_SwitchWeapon(player);      // phares
+      player->pendingweapon = E_WeaponForDEHNum(P_SwitchWeaponOld(player));      // phares
       // Now set appropriate weapon overlay.
-      P_SetPsprite(player,ps_weapon,weaponinfo[player->readyweapon].downstate);
+      // WEAPON_FIXME
+      P_SetPsprite(player,ps_weapon,player->readyweapon->downstate);
    }
      
    return false;
@@ -396,15 +500,34 @@ bool P_CheckAmmo(player_t *player)
 // Subtracts ammo from weapons in a uniform fashion. Unfortunately, this
 // operation is complicated by compatibility issues and extra features.
 //
-void P_SubtractAmmo(player_t *player, int compat_amt)
+void P_SubtractAmmo(const player_t *player, int compat_amt)
 {
-   weaponinfo_t *weapon = P_GetReadyWeapon(player);
+   weaponinfo_t *weapon = player->readyweapon;
+   itemeffect_t *ammo;
+   int amount;
 
-   if(player->cheats & CF_INFAMMO || !weapon->ammo)
+   // EDF_FEATURES_FIXME: Needs to fire the wimpy version's amount of ammo if in deathmatch, or at least
+   // do it for Heretic.
+   if(demo_version >= 401 && (player->attackdown & AT_ITEM))
+      return;
+   else if(demo_version >= 401 && (player->attackdown & AT_SECONDARY))
+   {
+      ammo = weapon->ammo_alt;
+      amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot_alt :
+                                                                       compat_amt;
+   }
+   else
+   {
+      ammo = weapon->ammo;
+      amount = (!(weapon->flags & WPF_DISABLEAPS) || compat_amt < 0) ? weapon->ammopershot :
+                                                                       compat_amt;
+   }
+
+   if(player->cheats & CF_INFAMMO || !ammo)
       return;
 
-   int amount = ((weapon->flags & WPF_ENABLEAPS) || compat_amt < 0) ? weapon->ammopershot : compat_amt;
-   E_RemoveInventoryItem(player, weapon->ammo, amount);
+   
+   E_RemoveInventoryItem(player, ammo, amount);
 }
 
 int lastshottic; // killough 3/22/98
@@ -414,25 +537,117 @@ int lastshottic; // killough 3/22/98
 //
 static void P_FireWeapon(player_t *player)
 {
-   statenum_t newstate;
+   statenum_t    newstate;
    weaponinfo_t *weapon;
-   
+
    if(!P_CheckAmmo(player))
       return;
 
-   weapon = P_GetReadyWeapon(player);
+   weapon = player->readyweapon;
 
    P_SetMobjState(player->mo, player->mo->info->missilestate);
-   newstate = weapon->atkstate;
+   newstate = player->refire && weapon->holdstate ? weapon->holdstate : weapon->atkstate;
    P_SetPsprite(player, ps_weapon, newstate);
 
    // haleyjd 04/06/03: silencer powerup
    // haleyjd 09/14/07: per-weapon silencer, always silent support
-   if(!(weapon->flags & WPF_SILENCER && player->powers[pw_silencer]) &&
-      !(weapon->flags & WPF_SILENT)) 
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+      !(weapon->flags & WPF_SILENT))
       P_NoiseAlert(player->mo, player->mo);
 
    lastshottic = gametic;                       // killough 3/22/98
+}
+
+//
+// Do a weapon's alt fire
+//
+static void P_fireWeaponAlt(player_t *player)
+{
+   statenum_t    newstate;
+   weaponinfo_t *weapon = player->readyweapon;
+
+   if(!P_WeaponHasAmmoAlt(player, weapon) || !E_WeaponHasAltFire(weapon))
+      return;
+
+   P_SetMobjState(player->mo, player->mo->info->missilestate);
+   newstate = player->refire && weapon->holdstate_alt ? weapon->holdstate_alt :
+                                                        weapon->atkstate_alt;
+   P_SetPsprite(player, ps_weapon, newstate);
+
+   // haleyjd 04/06/03: silencer powerup
+   // haleyjd 09/14/07: per-weapon silencer, always silent support
+   if(!(weapon->flags & WPF_SILENCEABLE && player->powers[pw_silencer]) &&
+      !(weapon->flags & WPF_SILENT))
+      P_NoiseAlert(player->mo, player->mo);
+
+   lastshottic = gametic;                       // killough 3/22/98
+}
+
+//
+// Execute a generic weapon state (Reload/Zoom/User[1-4])
+//
+static bool P_executeWeaponState(player_t *player, const int weaponinfo_t::*state)
+{
+   const int statenum = player->readyweapon->*state;
+   if(statenum == E_SafeState(S_NULL))
+      return false;
+
+   P_SetMobjState(player->mo, player->mo->info->missilestate);
+   P_SetPsprite(player, ps_weapon, statenum);
+   return true;
+}
+
+//
+// Try to execute a weapon states if the user inputs that.
+// Returns true if a state is executed, and false otherwise.
+//
+static bool P_tryExecuteWeaponState(player_t *player, pspdef_t *psp)
+{
+   if(player->cmd.buttons & BT_ATTACK)
+   {
+      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      {
+         player->attackdown = AT_PRIMARY;
+         P_FireWeapon(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
+         return true;
+      }
+   }
+   else if(player->cmd.buttons & BTN_ATTACK_ALT && E_WeaponHasAltFire(player->readyweapon))
+   {
+      if(!(player->attackdown & AT_ALL) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
+      {
+         player->attackdown = AT_SECONDARY;
+         P_fireWeaponAlt(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
+         return true;
+      }
+   }
+   else
+      player->attackdown = AT_NONE;
+
+   if(player->cmd.actions & AC_RELOAD)
+      return P_executeWeaponState(player, &weaponinfo_t::reloadstate);
+   else if(player->cmd.actions & AC_ZOOM)
+      return P_executeWeaponState(player, &weaponinfo_t::zoomstate);
+   else if(player->cmd.actions & AC_USER1)
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_1);
+   else if(player->cmd.actions & AC_USER2)
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_2);
+   else if(player->cmd.actions & AC_USER3)
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_3);
+   else if(player->cmd.actions & AC_USER4)
+      return P_executeWeaponState(player, &weaponinfo_t::userstate_4);
+
+   return false;
 }
 
 //
@@ -442,7 +657,7 @@ static void P_FireWeapon(player_t *player)
 //
 void P_DropWeapon(player_t *player)
 {
-   P_SetPsprite(player, ps_weapon, weaponinfo[player->readyweapon].downstate);
+   P_SetPsprite(player, ps_weapon, player->readyweapon->downstate);
 }
 
 //=============================================================================
@@ -453,50 +668,86 @@ void P_DropWeapon(player_t *player)
 //
 
 //
-// P_GetReadyWeapon
-//
-// haleyjd 09/13/07: 
-// Retrieves a pointer to the proper weaponinfo_t structure for the 
-// readyweapon index stored in the player.
-//
-// WEAPON_TODO: Will need to change as system evolves.
-// PCLASS_FIXME: weapons
-//
-weaponinfo_t *P_GetReadyWeapon(player_t *player)
-{
-   return &(weaponinfo[player->readyweapon]);
-}
-
-//
-// P_GetPendingWeapon
-//
-// haleyjd 06/28/13:
-// Retrieves a pointer to the proper weaponinfo_t structure for the
-// pendingweapon index stored in the player.
-//
-// WEAPON_TODO: Will need to change as system evolves.
-// PCLASS_FIXME: weapons
-//
-weaponinfo_t *P_GetPendingWeapon(player_t *player)
-{
-   return 
-      (player->pendingweapon >= 0 && player->pendingweapon < NUMWEAPONS) ? 
-       &(weaponinfo[player->pendingweapon]) : NULL;
-}
-
-//
 // P_GetPlayerWeapon
 //
 // haleyjd 09/16/07:
 // Gets weapon at given index for the given player.
-// 
-// WEAPON_TODO: must redirect through playerclass lookup
-// PCLASS_FIXME: weapons
 //
-weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
+weaponinfo_t *P_GetPlayerWeapon(const player_t *player, int slot)
 {
-   // currently there is only one linear weaponinfo
-   return &weaponinfo[index];
+   if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
+      return E_WeaponForDEHNum(slot);
+
+   if(!player->pclass->weaponslots[slot])
+      return nullptr;
+
+   // Backup demo compat code, in case something goes *really*
+   // wrong with the DeHackEd num check.
+   /*if(demo_version < 401 && GameModeInfo->type == Game_DOOM)
+   {
+      DLListItem<weaponslot_t> *weaponslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+      while(!weaponslot->dllNext->isDummy())
+         weaponslot = weaponslot->dllNext;
+      return weaponslot->dllObject->weapon;
+   }*/
+
+   bool hit = false;
+   BDListItem<weaponslot_t> *weaponslot, *baseslot;
+   const auto *wp = E_IsPoweredVariant(player->readyweapon) ?
+                    player->readyweapon->sisterWeapon : player->readyweapon;
+
+   if(!weapon_hotkey_cycling)
+   {
+      weaponslot = E_LastInSlot(player->pclass->weaponslots[slot]);
+      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+         return nullptr;
+      else
+         return weaponslot ? weaponslot->bdObject->weapon : nullptr;
+   }
+
+   // This initial call assures us that
+   // player->pclass->weaponslots[slot]->bdNext is valid.
+   baseslot = E_FirstInSlot(player->pclass->weaponslots[slot]);
+
+   // Try finding the player's currently-equipped weapon.
+   while(!baseslot->isDummy())
+   {
+      if(baseslot->bdObject->weapon->id == wp->id)
+      {
+         hit = true;
+         break;
+      }
+      else
+         baseslot = baseslot->bdNext;
+   }
+
+   // Reset starting point if we couldn't find player's weapon in this slot.
+   if(baseslot->isDummy())
+      baseslot = baseslot->bdNext;
+
+   weaponslot = baseslot;
+
+   // If we found the player's readyweapon in the current slot, or the player
+   // doesn't own the first weapon in the slot, we'll need to iterate through.
+   if(hit || !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+   {
+      // The next weapon we find that the player owns is what we're looking for.
+      do
+      {
+         weaponslot = weaponslot->bdNext;
+         // Start from the start the list if we get to the end.
+         if(weaponslot->isDummy())
+            weaponslot = weaponslot->bdNext;
+
+      } while(weaponslot != baseslot &&
+              !E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon));
+
+      // If the player doesn't own weaponslot's weapon, don't allow the change.
+      if(!E_PlayerOwnsWeapon(player, weaponslot->bdObject->weapon))
+         weaponslot = nullptr;
+   }
+
+   return weaponslot ? weaponslot->bdObject->weapon : nullptr;
 }
 
 //
@@ -504,7 +755,7 @@ weaponinfo_t *P_GetPlayerWeapon(player_t *player, int index)
 //
 // Plays a sound originating from the player's weapon by sfxinfo_t *
 //
-static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
+void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 {
    soundparams_t params;
    
@@ -512,7 +763,7 @@ static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
    params.setNormalDefaults(mo);
 
    if(mo->player && mo->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
+      mo->player->readyweapon->flags & WPF_SILENCEABLE)
       params.volumeScale = WEAPON_VOLUME_SILENCED;
 
    S_StartSfxInfo(params);
@@ -523,12 +774,12 @@ static void P_WeaponSoundInfo(Mobj *mo, sfxinfo_t *sound)
 //
 // Plays a sound originating from the player's weapon
 //
-static void P_WeaponSound(Mobj *mo, int sfx_id)
+void P_WeaponSound(Mobj *mo, int sfx_id)
 {
    int volume = 127;
 
    if(mo->player && mo->player->powers[pw_silencer] &&
-      P_GetReadyWeapon(mo->player)->flags & WPF_SILENCER)
+      mo->player->readyweapon->flags & WPF_SILENCEABLE)
       volume = WEAPON_VOLUME_SILENCED;
 
    S_StartSoundAtVolume(mo, sfx_id, volume, ATTN_NORMAL, CHAN_AUTO);
@@ -560,19 +811,32 @@ void A_WeaponReady(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: chainsaw particulars (idle sound)
-
-   // get out of attack state
-   if(mo->state == states[mo->info->missilestate] || 
-      mo->state == states[player->pclass->altattack])
+   // EDF_FEATURES_FIXME: Demo guard this as well?
+   if(!player->pendingweapon && !E_PlayerOwnsWeapon(player, player->readyweapon) &&
+      player->readyweapon->id != UnknownWeaponInfo)
    {
-      P_SetMobjState(mo, mo->info->spawnstate);
+      player->pendingweapon = E_FindBestWeapon(player);
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
    }
 
-   if(player->readyweapon == wp_chainsaw && 
-      psp->state == states[E_SafeState(S_SAW)])
+   // get out of attack state
+   if(mo->state == states[mo->info->missilestate] || mo->state == states[player->pclass->altattack])
+      P_SetMobjState(mo, mo->info->spawnstate);
+
+   // Play sound if the readyweapon has a sound to play and the current
+   // state is the ready state, and do it only 50% of the time if the
+   // according flag is set.
+   if(player->readyweapon->readysound &&
+      psp->state->index == player->readyweapon->readystate &&
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128) &&
+      !(player->readyweapon->intflags & WIF_SUPPRESSREADYSOUND))
    {
-      S_StartSound(player->mo, sfx_sawidl);
+      S_StartSoundName(player->mo, player->readyweapon->readysound);
+   }
+
+   // WEAPON_FIXME: chainsaw particulars (haptic feedback)
+   if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])
+   {
       if(player == &players[consoleplayer])
          I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 3, 108);
    }
@@ -580,35 +844,73 @@ void A_WeaponReady(actionargs_t *actionargs)
    // check for change
    //  if player is dead, put the weapon away
    
-   if(player->pendingweapon != wp_nochange || !player->health)
+   if(player->pendingweapon != nullptr || !player->health)
    {
       // change weapon (pending weapon should already be validated)
-      statenum_t newstate = weaponinfo[player->readyweapon].downstate;
+      statenum_t newstate = player->readyweapon->downstate;
       P_SetPsprite(player, ps_weapon, newstate);
       return;
    }
 
    // check for fire
-   //  the missile launcher and bfg do not auto fire
-   
-   if(player->cmd.buttons & BT_ATTACK)
+   // certain weapons do not auto fire
+   if(demo_version >= 401)
    {
-      if(!player->attackdown || 
-         !(P_GetReadyWeapon(player)->flags & WPF_NOAUTOFIRE))
+      if(P_tryExecuteWeaponState(player, psp))
+         return;
+   }
+   else if(player->cmd.buttons & BT_ATTACK)
+   {
+      if(!(player->attackdown & AT_PRIMARY) || !(player->readyweapon->flags & WPF_NOAUTOFIRE))
       {
-         player->attackdown = true;
+         player->attackdown = AT_PRIMARY;
          P_FireWeapon(player);
+         if(centerfire)
+         {
+            psp->renderpos = { FRACUNIT, WEAPONTOP };
+            psp->backupPosition();
+         }
          return;
       }
    }
    else
-      player->attackdown = false;
+      player->attackdown = AT_NONE;
 
    // bob the weapon based on movement speed
    int angle = (128*leveltime) & FINEMASK;
-   psp->sx = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
+   psp->playpos.x = psp->renderpos.x = FRACUNIT + FixedMul(player->bob, finecosine[angle]);
    angle &= FINEANGLES/2-1;
-   psp->sy = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + FixedMul(player->bob, finesine[angle]);
+}
+
+static void A_reFireNew(actionargs_t *actionargs)
+{
+   player_t *player = actionargs->actor->player;
+
+   if(!player)
+      return;
+
+   // check for fire
+   //  (if a weaponchange is pending, let it go through instead)
+
+   if((player->cmd.buttons & BT_ATTACK) && player->pendingweapon == nullptr &&
+       player->health && !(player->attackdown & AT_SECONDARY))
+   {
+      player->refire++;
+      P_FireWeapon(player);
+   }
+   else if((player->cmd.buttons & BTN_ATTACK_ALT) && player->pendingweapon == nullptr &&
+            player->health &&
+            !(player->attackdown & AT_PRIMARY))
+   {
+      player->refire++;
+      P_fireWeaponAlt(player);
+   }
+   else
+   {
+      player->refire = 0;
+      P_CheckAmmo(player);
+   }
 }
 
 //
@@ -619,6 +921,12 @@ void A_WeaponReady(actionargs_t *actionargs)
 //
 void A_ReFire(actionargs_t *actionargs)
 {
+   if(demo_version >= 401)
+   {
+      A_reFireNew(actionargs);
+      return;
+   }
+
    player_t *player = actionargs->actor->player;
 
    if(!player)
@@ -628,7 +936,7 @@ void A_ReFire(actionargs_t *actionargs)
    //  (if a weaponchange is pending, let it go through instead)
    
    if((player->cmd.buttons & BT_ATTACK)
-      && player->pendingweapon == wp_nochange && player->health)
+      && player->pendingweapon == nullptr && player->health)
    {
       player->refire++;
       P_FireWeapon(player);
@@ -657,10 +965,7 @@ void A_CheckReload(actionargs_t *actionargs)
       return;
 
    if(!P_CheckAmmo(player) && demo_version >= 331)
-   {
-      P_SetPsprite(player, ps_weapon,
-                   weaponinfo[player->readyweapon].downstate);
-   }
+      P_SetPsprite(player, ps_weapon, player->readyweapon->downstate);
 }
 
 //
@@ -670,8 +975,11 @@ void A_CheckReload(actionargs_t *actionargs)
 //
 void A_Lower(actionargs_t *actionargs)
 {
-   player_t *player;
-   pspdef_t *psp;
+   player_t     *player;
+   pspdef_t     *psp;
+   arglist_t    *args = actionargs->args;
+   // WEAPON_FIXME: Default LOWERSPEED property of EDF weapons?
+   const fixed_t lowerspeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, LOWERSPEED));
 
    if(!(player = actionargs->actor->player))
       return;
@@ -679,23 +987,23 @@ void A_Lower(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: LOWERSPEED property of EDF weapons?
-   psp->sy += LOWERSPEED;
-   
+   psp->playpos.y += lowerspeed;
+   psp->renderpos.y = psp->playpos.y;
+
    // Is already down.
-   if(psp->sy < WEAPONBOTTOM)
+   if(psp->playpos.y < WEAPONBOTTOM)
       return;
 
    // Player is dead.
    if(player->playerstate == PST_DEAD)
    {
-      psp->sy = WEAPONBOTTOM;
+      psp->playpos.y = psp->renderpos.y = WEAPONBOTTOM;
       return;      // don't bring weapon back up
    }
 
    // The old weapon has been lowered off the screen,
    // so change the weapon and start raising it
-   
+
    if(!player->health)
    {      // Player is dead, so keep the weapon off screen.
       P_SetPsprite(player,  ps_weapon, NullStateNum);
@@ -703,8 +1011,11 @@ void A_Lower(actionargs_t *actionargs)
    }
 
    // haleyjd 03/28/10: do not assume pendingweapon is valid
-   if(player->pendingweapon < NUMWEAPONS)
+   if(player->pendingweapon != nullptr)
+   {
       player->readyweapon = player->pendingweapon;
+      player->readyweaponslot = player->pendingweaponslot;
+   }
 
    P_BringUpWeapon(player);
 }
@@ -714,9 +1025,12 @@ void A_Lower(actionargs_t *actionargs)
 //
 void A_Raise(actionargs_t *actionargs)
 {
-   statenum_t newstate;
-   player_t *player;
-   pspdef_t *psp;
+   statenum_t    newstate;
+   player_t     *player;
+   pspdef_t     *psp;
+   arglist_t    *args = actionargs->args;
+   // WEAPON_FIXME: Default RAISESPEED property of EDF weapons?
+   const fixed_t raisespeed = FixedMul(FRACUNIT, E_ArgAsFixed(args, 0, RAISESPEED));
 
    if(!(player = actionargs->actor->player))
       return;
@@ -724,20 +1038,19 @@ void A_Raise(actionargs_t *actionargs)
    if(!(psp = actionargs->pspr))
       return;
 
-   // WEAPON_FIXME: RAISESPEED property of EDF weapons?
-   
-   psp->sy -= RAISESPEED;
-   
-   if(psp->sy > WEAPONTOP)
+   psp->playpos.y -= raisespeed;
+   psp->renderpos.y = psp->playpos.y;
+
+   if(psp->playpos.y > WEAPONTOP)
       return;
-   
-   psp->sy = WEAPONTOP;
-   
+
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP;
+
    // The weapon has been raised all the way,
    //  so change to the ready state.
-   
-   newstate = weaponinfo[player->readyweapon].readystate;
-   
+
+   newstate = player->readyweapon->readystate;
+
    P_SetPsprite(player, ps_weapon, newstate);
 }
 
@@ -748,7 +1061,7 @@ void A_Raise(actionargs_t *actionargs)
 //
 void P_WeaponRecoil(player_t *player)
 {
-   weaponinfo_t *readyweapon = P_GetReadyWeapon(player);
+   weaponinfo_t *readyweapon = player->readyweapon;
 
    // killough 3/27/98: prevent recoil in no-clipping mode
    if(!(player->mo->flags & MF_NOCLIP))
@@ -757,13 +1070,13 @@ void P_WeaponRecoil(player_t *player)
       if(readyweapon->flags & WPF_ALWAYSRECOIL ||
          (weapon_recoil && (demo_version >= 203 || !compatibility)))
       {
-         P_Thrust(player, ANG180 + player->mo->angle, 0,
-                  2048 * readyweapon->recoil); // phares
+         // MaxW: 2018/11/04: Changed to allow for fixed-point recoil
+         P_Thrust(player, ANG180 + player->mo->angle, 0, readyweapon->recoil / 32);
       }
    }
 
    // haleyjd 06/05/13: if weapon is flagged for it, do haptic recoil effect here.
-   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_HAPTICRECOIL))
+   if(player == &players[consoleplayer] && (readyweapon->flags & WPF_NOHAPTICRECOIL) == 0)
       I_StartHaptic(HALHapticInterface::EFFECT_FIRE, readyweapon->hapticrecoil, readyweapon->haptictime);
 }
 
@@ -776,11 +1089,13 @@ void P_WeaponRecoil(player_t *player)
 //
 // WEAPON_FIXME: "adder" parameter is not reliable for EDF editing
 //
-static void A_FireSomething(player_t* player, int adder)
+void A_FireSomething(player_t* player, int adder)
 {
-   P_SetPsprite(player, ps_flash,
-      weaponinfo[player->readyweapon].flashstate+adder);
-   
+   if(demo_version >= 401 && player->attackdown & AT_SECONDARY)
+      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate_alt);
+   else
+      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate+adder);
+ 
    P_WeaponRecoil(player);
 }
 
@@ -806,17 +1121,17 @@ void A_GunFlash(actionargs_t *actionargs)
 //
 
 //
-// P_doAutoAim
+// P_DoAutoAim
 //
 // Does basic autoaiming logic and returns the slope value calculated by
 // P_AimLineAttack.
 //
-static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
+fixed_t P_DoAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
 {
    if(demo_version >= 203)
    {
       // killough 8/2/98: make autoaiming prefer enemies
-      fixed_t slope = P_AimLineAttack(mo, angle, distance, MF_FRIEND);
+      fixed_t slope = P_AimLineAttack(mo, angle, distance, true);
 
       // autoaiming is disabled?
       if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
@@ -826,7 +1141,7 @@ static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
          return slope;
    }
    
-   return P_AimLineAttack(mo, angle, distance, 0);
+   return P_AimLineAttack(mo, angle, distance, false);
 }
 
 //=============================================================================
@@ -834,247 +1149,7 @@ static fixed_t P_doAutoAim(Mobj *mo, angle_t angle, fixed_t distance)
 // WEAPON ATTACKS
 //
 
-//
-// A_Punch
-//
-void A_Punch(actionargs_t *actionargs)
-{
-   angle_t angle;
-   fixed_t slope;
-   int damage = (P_Random(pr_punch) % 10 + 1) << 1;
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
-
-   if(!player)
-      return;
-   
-   if(player->powers[pw_strength])
-      damage *= 10;
-   
-   angle = mo->angle;
-
-   // haleyjd 08/05/04: use new function
-   angle += P_SubRandom(pr_punchangle) << 18;
-
-   slope = P_doAutoAim(mo, angle, MELEERANGE);
-
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage);
-
-   if(!clip.linetarget)
-      return;
-
-   P_WeaponSound(mo, GameModeInfo->playerSounds[sk_punch]);
-
-   // turn to face target
-   mo->angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
-}
-
-//
-// A_Saw
-//
-void A_Saw(actionargs_t *actionargs)
-{
-   fixed_t slope;
-   int     damage = 2 * (P_Random(pr_saw) % 10 + 1);
-   Mobj   *mo    = actionargs->actor;
-   angle_t angle = mo->angle;
-   
-   // haleyjd 08/05/04: use new function
-   angle += P_SubRandom(pr_saw) << 18;
-
-   // Use meleerange + 1 so that the puff doesn't skip the flash
-   slope = P_doAutoAim(mo, angle, MELEERANGE + 1);
-   P_LineAttack(mo, angle, MELEERANGE+1, slope, damage);
-   
-   I_StartHaptic(HALHapticInterface::EFFECT_CONSTANT, 4, 108);   
-   
-   if(!clip.linetarget)
-   {
-      P_WeaponSound(mo, sfx_sawful);
-      return;
-   }
-
-   P_WeaponSound(mo, sfx_sawhit);
-   I_StartHaptic(HALHapticInterface::EFFECT_RUMBLE, 5, 108);
-   
-   // turn to face target
-   angle = P_PointToAngle(mo->x, mo->y, clip.linetarget->x, clip.linetarget->y);
-
-   if(angle - mo->angle > ANG180)
-   {
-      if(angle - mo->angle < -ANG90/20)
-         mo->angle = angle + ANG90/21;
-      else
-         mo->angle -= ANG90/20;
-   }
-   else
-   {
-      if(angle - mo->angle > ANG90/20)
-         mo->angle = angle - ANG90/21;
-      else
-         mo->angle += ANG90/20;
-   }
-
-   mo->flags |= MF_JUSTATTACKED;
-}
-
-//
-// A_FireMissile
-//
-void A_FireMissile(actionargs_t *actionargs)
-{
-   player_t *player = actionargs->actor->player;
-
-   if(!player)
-      return;
-
-   P_SubtractAmmo(player, 1);
-
-   P_SpawnPlayerMissile(player->mo, E_SafeThingType(MT_ROCKET));
-}
-
-//
-// A_FireBFG
-//
-
-#define BFGBOUNCE 16
-
-void A_FireBFG(actionargs_t *actionargs)
-{
-   Mobj *mo;
-   player_t *player = actionargs->actor->player;
-
-   if(!player)
-      return;
-
-   P_SubtractAmmo(player, BFGCELLS);
-   
-   mo = P_SpawnPlayerMissile(actionargs->actor, E_SafeThingType(MT_BFG));
-   mo->extradata.bfgcount = BFGBOUNCE;   // for bouncing bfg - redundant
-}
-
-//
-// A_FireOldBFG
-//
-// This function emulates Doom's Pre-Beta BFG
-// By Lee Killough 6/6/98, 7/11/98, 7/19/98, 8/20/98
-//
-// This code may not be used in other mods without appropriate credit given.
-// Code leeches will be telefragged.
-//
-void A_FireOldBFG(actionargs_t *actionargs)
-{
-   Mobj *mo  = actionargs->actor;
-   int type1 = E_SafeThingType(MT_PLASMA1);
-   int type2 = E_SafeThingType(MT_PLASMA2);
-   int type;
-   player_t *player = mo->player;
-
-   if(!player)
-      return;
-
-   type = type1;
-
-   // PCLASS_FIXME: second attack state
-   
-   // sf: make sure the player is in firing frame, or it looks silly
-   if(demo_version > 300)
-      P_SetMobjState(mo, player->pclass->altattack);
-   
-   // WEAPON_FIXME: recoil for classic BFG
-
-   if(weapon_recoil && !(mo->flags & MF_NOCLIP))
-      P_Thrust(player, ANG180 + mo->angle, 0,
-               512*weaponinfo[wp_plasma].recoil);
-
-   // WEAPON_FIXME: ammopershot for classic BFG
-   auto weapon   = P_GetReadyWeapon(player);
-   auto ammoType = weapon->ammo;   
-   if(ammoType && !(player->cheats & CF_INFAMMO))
-      E_RemoveInventoryItem(player, ammoType, 1);
-
-   if(LevelInfo.useFullBright) // haleyjd
-      player->extralight = 2;
-
-   do
-   {
-      Mobj *th;
-      angle_t an = mo->angle;
-      angle_t an1 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 768) + an;
-      angle_t an2 = ((P_Random(pr_bfg) & 127) - 64) * (ANG90 / 640) + ANG90;
-      extern int autoaim;
-      fixed_t slope;
-
-      if(autoaim)
-      {
-         // killough 8/2/98: make autoaiming prefer enemies
-         int mask = MF_FRIEND;
-         do
-         {
-            slope = P_AimLineAttack(mo, an, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an += 1<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget)
-               slope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
-            if(!clip.linetarget) // sf: looking up/down
-            {
-               slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
-               an = mo->angle;
-            }
-         }
-         while(mask && (mask=0, !clip.linetarget));     // killough 8/2/98
-         an1 += an - mo->angle;
-         // sf: despite killough's infinite wisdom.. even
-         // he is prone to mistakes. seems negative numbers
-         // won't survive a bitshift!
-         if(slope < 0 && demo_version >= 303)
-            an2 -= tantoangle[-slope >> DBITS];
-         else
-            an2 += tantoangle[slope >> DBITS];
-      }
-      else
-      {
-         slope = finetangent[(ANG90-player->pitch)>>ANGLETOFINESHIFT];
-         if(slope < 0 && demo_version >= 303)
-            an2 -= tantoangle[-slope >> DBITS];
-         else
-            an2 += tantoangle[slope >> DBITS];
-      }
-
-      th = P_SpawnMobj(mo->x, mo->y,
-                       mo->z + 62*FRACUNIT - player->psprites[ps_weapon].sy,
-                       type);
-
-      P_SetTarget<Mobj>(&th->target, mo);
-      th->angle = an1;
-      th->momx = finecosine[an1>>ANGLETOFINESHIFT] * 25;
-      th->momy = finesine[an1>>ANGLETOFINESHIFT] * 25;
-      th->momz = finetangent[an2>>ANGLETOFINESHIFT] * 25;
-      P_CheckMissileSpawn(th);
-   }
-   while((type != type2) && (type = type2)); //killough: obfuscated!
-}
-
-//
-// A_FirePlasma
-//
-void A_FirePlasma(actionargs_t *actionargs)
-{
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
-
-   if(!player)
-      return;
-
-   P_SubtractAmmo(player, 1);
-
-   A_FireSomething(player, P_Random(pr_plasma) & 1);
-   
-   // sf: removed beta
-   P_SpawnPlayerMissile(mo, E_SafeThingType(MT_PLASMA));
-}
-
-static fixed_t bulletslope;
+fixed_t bulletslope;
 
 //
 // P_BulletSlope
@@ -1087,7 +1162,7 @@ void P_BulletSlope(Mobj *mo)
    angle_t an = mo->angle;    // see which target is to be aimed at
    
    // killough 8/2/98: make autoaiming prefer enemies
-   int mask = demo_version < 203 ? 0 : MF_FRIEND;
+   int mask = demo_version < 203 ? false : true;
 
    // haleyjd 08/09/11: allow autoaim disable
    if(full_demo_version > make_full_version(340, 15) && !autoaim && mo->player)
@@ -1105,163 +1180,7 @@ void P_BulletSlope(Mobj *mo)
       if(!clip.linetarget)
          bulletslope = P_AimLineAttack(mo, an -= 2<<26, 16*64*FRACUNIT, mask);
    }
-   while (mask && (mask=0, !clip.linetarget));  // killough 8/2/98
-}
-
-//
-// P_GunShot
-//
-void P_GunShot(Mobj *mo, bool accurate)
-{
-   int damage = 5 * (P_Random(pr_gunshot) % 3 + 1);
-   angle_t angle = mo->angle;
-   
-   if(!accurate)
-      angle += P_SubRandom(pr_misfire) << 18;
-   
-   P_LineAttack(mo, angle, MISSILERANGE, bulletslope, damage);
-}
-
-//
-// A_FirePistol
-//
-void A_FirePistol(actionargs_t *actionargs)
-{
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
-
-   if(!player)
-      return;
-
-   P_WeaponSound(mo, sfx_pistol);
-   
-   // PCLASS_FIXME: attack state two
-
-   P_SetMobjState(mo, player->pclass->altattack);
-
-   P_SubtractAmmo(player, 1);
-   
-   A_FireSomething(player, 0); // phares
-   P_BulletSlope(mo);
-   P_GunShot(mo, !player->refire);
-}
-
-//
-// A_FireShotgun
-//
-void A_FireShotgun(actionargs_t *actionargs)
-{
-   int i;
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
-
-   if(!player)
-      return;
-
-   P_WeaponSound(mo, sfx_shotgn);
-   P_SetMobjState(mo, player->pclass->altattack);
-   
-   P_SubtractAmmo(player, 1);
-   
-   A_FireSomething(player, 0); // phares
-   
-   P_BulletSlope(mo);
-   
-   for(i = 0; i < 7; ++i)
-      P_GunShot(mo, false);
-}
-
-//
-// A_FireShotgun2
-//
-void A_FireShotgun2(actionargs_t *actionargs)
-{
-   int i;
-   Mobj     *mo     = actionargs->actor;
-   player_t *player = mo->player;
-
-   if(!player)
-      return;
-
-   P_WeaponSound(mo, sfx_dshtgn);
-   P_SetMobjState(mo, player->pclass->altattack);
-
-   P_SubtractAmmo(player, 2);
-   
-   A_FireSomething(player, 0); // phares
-   
-   P_BulletSlope(mo);
-   
-   for(i = 0; i < 20; i++)
-   {
-      int damage = 5 * (P_Random(pr_shotgun) % 3 + 1);
-      angle_t angle = mo->angle;
-
-      angle += P_SubRandom(pr_shotgun) << 19;
-      
-      P_LineAttack(mo, angle, MISSILERANGE, bulletslope +
-                   (P_SubRandom(pr_shotgun) << 5), damage);
-   }
-}
-
-// haleyjd 04/05/07: moved all SSG codepointers here
-
-void A_OpenShotgun2(actionargs_t *actionargs)
-{
-   P_WeaponSound(actionargs->actor, sfx_dbopn);
-}
-
-void A_LoadShotgun2(actionargs_t *actionargs)
-{
-   P_WeaponSound(actionargs->actor, sfx_dbload);
-}
-
-void A_CloseShotgun2(actionargs_t *actionargs)
-{
-   P_WeaponSound(actionargs->actor, sfx_dbcls);
-   A_ReFire(actionargs);
-}
-
-//
-// A_FireCGun
-//
-void A_FireCGun(actionargs_t *actionargs)
-{
-   Mobj     *mo = actionargs->actor;
-   player_t *player;
-   pspdef_t *psp;
-
-   if(!(player = mo->player))
-      return;
-
-   if(!(psp = actionargs->pspr))
-      return;
-
-   P_WeaponSound(mo, sfx_chgun);
-
-   if(!P_WeaponHasAmmo(player, P_GetReadyWeapon(player)))
-      return;
-   
-   P_SetMobjState(mo, player->pclass->altattack);
-   
-   P_SubtractAmmo(player, 1);
-
-   // haleyjd 08/28/03: this is not safe for DeHackEd/EDF, so it
-   // needs some modification to be safer
-   // haleyjd WEAPON_FIXME: hackish and dangerous for EDF, needs fix.
-   if(demo_version < 331 || 
-      (psp->state->index >= E_StateNumForDEHNum(S_CHAIN1) &&
-       psp->state->index < E_StateNumForDEHNum(S_CHAIN3)))
-   {      
-      // phares
-      A_FireSomething(player, psp->state->index - states[E_SafeState(S_CHAIN1)]->index);
-   }
-   else
-      A_FireSomething(player, 0); // new default behavior
-   
-   P_BulletSlope(mo);
-   
-   P_GunShot(mo, !player->refire);
+   while (mask && (mask=false, !clip.linetarget));  // killough 8/2/98
 }
 
 void A_Light0(actionargs_t *actionargs)
@@ -1296,243 +1215,6 @@ void A_Light2(actionargs_t *actionargs)
       mo->player->extralight = 2;
 }
 
-void A_BouncingBFG(actionargs_t *actionargs);
-void A_BFG11KHit(actionargs_t *actionargs);
-void A_BFGBurst(actionargs_t *actionargs); // haleyjd
-
-//
-// A_BFGSpray
-//
-// Spawn a BFG explosion on every monster in view
-//
-void A_BFGSpray(actionargs_t *actionargs)
-{
-   // WEAPON_FIXME: BFG type stuff
-   switch(bfgtype)
-   {
-   case bfg_11k:
-      A_BFG11KHit(actionargs);
-      return;
-   case bfg_bouncing:
-      A_BouncingBFG(actionargs);
-      return;
-   case bfg_burst:
-      A_BFGBurst(actionargs);
-      return;
-   default:
-      break;
-   }
-
-   Mobj *mo = actionargs->actor;
-   
-   for(int i = 0; i < 40; i++)  // offset angles from its attack angle
-   {
-      int j, damage;
-      angle_t an = mo->angle - ANG90/2 + ANG90/40*i;
-      
-      // mo->target is the originator (player) of the missile
-      
-      // killough 8/2/98: make autoaiming prefer enemies
-      if(demo_version < 203 || 
-         (P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, MF_FRIEND), 
-         !clip.linetarget))
-         P_AimLineAttack(mo->target, an, 16*64*FRACUNIT, 0);
-      
-      if(!clip.linetarget)
-         continue;
-      
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2), 
-                  E_SafeThingType(MT_EXTRABFG));
-      
-      for(damage = j = 0; j < 15; j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
-      
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
-                   MOD_BFG_SPLASH);
-   }
-}
-
-//
-// A_BouncingBFG
-//
-// haleyjd: The bouncing BFG from SMMU, but fixed to work better.
-//
-void A_BouncingBFG(actionargs_t *actionargs)
-{
-   Mobj *mo = actionargs->actor;
-   Mobj *newmo;
-   
-   if(!mo->extradata.bfgcount)
-      return;
-   
-   for(int i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
-   {
-      angle_t an2, an = (ANG360/40)*i;
-      int dist;
-      
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
-      
-      // haleyjd: track last target with mo->tracer, don't fire
-      // at same target more than one time in a row
-      if(!clip.linetarget || (mo->tracer && mo->tracer == clip.linetarget))
-         continue;
-      if(an/6 == mo->angle/6) continue;
-      
-      // don't aim for shooter, or for friends of shooter
-      if(clip.linetarget == mo->target ||
-         (clip.linetarget->flags & mo->target->flags & MF_FRIEND))
-         continue; 
-      
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2),
-                  E_SafeThingType(MT_EXTRABFG));
-
-      // spawn new bfg      
-      // haleyjd: can't use P_SpawnMissile here
-      newmo = P_SpawnMobj(mo->x, mo->y, mo->z, E_SafeThingType(MT_BFG));
-      S_StartSound(newmo, newmo->info->seesound);
-      P_SetTarget<Mobj>(&newmo->target, mo->target); // pass on the player
-
-      // ioanch 20151230: make portal aware
-      fixed_t ltx = getThingX(newmo, clip.linetarget);
-      fixed_t lty = getThingY(newmo, clip.linetarget);
-      fixed_t ltz = getThingZ(newmo, clip.linetarget);
-
-      an2 = P_PointToAngle(newmo->x, newmo->y, ltx, lty);
-      newmo->angle = an2;
-      
-      an2 >>= ANGLETOFINESHIFT;
-      newmo->momx = FixedMul(newmo->info->speed, finecosine[an2]);
-      newmo->momy = FixedMul(newmo->info->speed, finesine[an2]);
-
-      dist = P_AproxDistance(ltx - newmo->x, lty - newmo->y);
-      dist = dist / newmo->info->speed;
-      
-      if(dist < 1)
-         dist = 1;
-      
-      newmo->momz = (ltz + (clip.linetarget->height>>1) - newmo->z) / dist;
-
-      newmo->extradata.bfgcount = mo->extradata.bfgcount - 1; // count down
-      P_SetTarget<Mobj>(&newmo->tracer, clip.linetarget); // haleyjd: track target
-
-      P_CheckMissileSpawn(newmo);
-
-      mo->removeThinker(); // remove the old one
-
-      break; //only spawn 1
-   }
-}
-
-//
-// A_BFG11KHit
-//
-// Explosion pointer for SMMU BFG11k.
-//
-void A_BFG11KHit(actionargs_t *actionargs)
-{
-   int i = 0;
-   int j, damage;
-   int origdist;
-   Mobj *mo = actionargs->actor;
-
-   if(!mo->target)
-      return;
-   
-   // check the originator and hurt them if too close
-   origdist = P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo));
-   
-   if(origdist < 96*FRACUNIT)
-   {
-      // decide on damage
-      // damage decreases with distance
-      for(damage = j = 0; j < 48 - (origdist/(FRACUNIT*2)); j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
-      
-      // flash
-      P_SpawnMobj(mo->target->x, mo->target->y,
-                  mo->target->z + (mo->target->height>>2), 
-                  E_SafeThingType(MT_EXTRABFG));
-      
-      P_DamageMobj(mo->target, mo, mo->target, damage, 
-                   MOD_BFG11K_SPLASH);
-   }
-   
-   // now check everyone else
-   
-   for(i = 0 ; i < 40 ; i++)  // offset angles from its attack angle
-   {
-      angle_t an = (ANG360/40)*i;
-      
-      // mo->target is the originator (player) of the missile
-      
-      P_AimLineAttack(mo, an, 16*64*FRACUNIT,0);
-      
-      if(!clip.linetarget) continue;
-      if(clip.linetarget == mo->target)
-         continue;
-      
-      // decide on damage
-      for(damage = j = 0; j < 20; j++)
-         damage += (P_Random(pr_bfg)&7) + 1;
-      
-      // dumbass flash
-      P_SpawnMobj(clip.linetarget->x, clip.linetarget->y,
-                  clip.linetarget->z + (clip.linetarget->height>>2), 
-                  E_SafeThingType(MT_EXTRABFG));
-      
-      P_DamageMobj(clip.linetarget, mo->target, mo->target, damage,
-                   MOD_BFG_SPLASH);
-   }
-}
-
-//
-// A_BFGBurst
-//
-// This implements the projectile burst that was featured
-// in Cephaler's unreleased MagDoom port. Much thanks to my
-// long lost friend for giving me the source to his port back
-// when he stopped working on it. This is a tribute to his bold
-// spirit ^_^
-//
-void A_BFGBurst(actionargs_t *actionargs)
-{
-   int      a;
-   angle_t  an = 0;
-   Mobj    *mo = actionargs->actor;
-   Mobj    *th;
-   int      plasmaType = E_SafeThingType(MT_PLASMA3);
-
-   for(a = 0; a < 40; a++)
-   {
-      an += ANG90 / 10;
-
-      th = P_SpawnMobj(mo->x, mo->y, mo->z, plasmaType);
-      P_SetTarget<Mobj>(&th->target, mo->target);
-
-      th->angle = an;
-      th->momx = finecosine[an >> ANGLETOFINESHIFT] << 4;
-      th->momy = finesine[an >> ANGLETOFINESHIFT] << 4;
-      th->momz = FRACUNIT * ((16 - P_Random(pr_bfg)) >> 5);
-
-      P_CheckMissileSpawn(th);      
-   }
-}
-
-//
-// A_BFGsound
-//
-void A_BFGsound(actionargs_t *actionargs)
-{
-   Mobj *mo = actionargs->actor;
-
-   P_WeaponSound(mo, sfx_bfg);
-
-   if(mo->player == &players[consoleplayer])
-      I_StartHaptic(HALHapticInterface::EFFECT_RAMPUP, 5, 850);
-}
-
 //
 // P_SetupPsprites
 //
@@ -1540,14 +1222,13 @@ void A_BFGsound(actionargs_t *actionargs)
 //
 void P_SetupPsprites(player_t *player)
 {
-   int i;
-   
    // remove all psprites
-   for(i = 0; i < NUMPSPRITES; ++i)
-      player->psprites[i].state = NULL;
-   
+   for(pspdef_t &psprite : player->psprites)
+      psprite.state = nullptr;
+
    // spawn the gun
-   player->pendingweapon = player->readyweapon;
+   player->pendingweapon     = player->readyweapon;
+   player->pendingweaponslot = player->readyweaponslot;
    P_BringUpWeapon(player);
 }
 
@@ -1564,6 +1245,9 @@ void P_MovePsprites(player_t *player)
    // a null state means not active
    // drop tic count and possibly change state
    // a -1 tic count never changes
+
+   player->psprites[ps_weapon].backupPosition();
+   player->psprites[ps_flash].backupPosition();
    
    for(i = 0; i < NUMPSPRITES; ++i, ++psp)
    {
@@ -1571,8 +1255,10 @@ void P_MovePsprites(player_t *player)
          P_SetPsprite(player, i, psp->state->nextstate);
    }
    
-   player->psprites[ps_flash].sx = player->psprites[ps_weapon].sx;
-   player->psprites[ps_flash].sy = player->psprites[ps_weapon].sy;
+   player->psprites[ps_flash].playpos   = player->psprites[ps_weapon].playpos;
+   player->psprites[ps_flash].renderpos = player->psprites[ps_weapon].renderpos;
+   // also preserve interpolation
+   player->psprites[ps_flash].prevpos   = player->psprites[ps_weapon].prevpos;
 }
 
 //===============================
@@ -1581,7 +1267,20 @@ void P_MovePsprites(player_t *player)
 //
 //===============================
 
-static const char *kwds_A_FireCustomBullets[] =
+enum custombulletaccuracy_e : uint8_t
+{
+   CBA_NONE,
+   CBA_ALWAYS, // MaxW: It me
+   CBA_FIRST,
+   CBA_NEVER,
+   CBA_SSG,
+   CBA_MONSTER,
+   CBA_CUSTOM,
+
+   NUMCUSTOMBULLETACCURACIES
+};
+
+static const char *kwds_A_FireCustomBullets[NUMCUSTOMBULLETACCURACIES] =
 {
    "{DUMMY}",           // 0
    "always",            // 1
@@ -1589,12 +1288,13 @@ static const char *kwds_A_FireCustomBullets[] =
    "never",             // 3
    "ssg",               // 4
    "monster",           // 5
+   "custom",            // 6
 };
 
 static argkeywd_t fcbkwds =
 {
-   kwds_A_FireCustomBullets, 
-   sizeof(kwds_A_FireCustomBullets) / sizeof(const char *)
+   kwds_A_FireCustomBullets,
+   earrlen(kwds_A_FireCustomBullets)
 };
 
 //
@@ -1608,16 +1308,21 @@ static argkeywd_t fcbkwds =
 // args[3] : damage factor of bullets
 // args[4] : damage modulus of bullets
 // args[5] : if not zero, set specific flash state; if < 0, don't change it.
+// args[6] : horizontal spread angle if args[1] is "custom"
+// args[7] : vertical spread angle if args[1] is "custom"
+// args[8] : optional pufftype ("" for default)
 //
 void A_FireCustomBullets(actionargs_t *actionargs)
 {
    Mobj      *mo   = actionargs->actor;
    arglist_t *args = actionargs->args;
-   int i, accurate, numbullets, damage, dmgmod;
+   int i, numbullets, damage, dmgmod;
    int flashint, flashstate;
+   angle_t horizontal, vertical;
    sfxinfo_t *sfx;
    player_t *player;
    pspdef_t *psp;
+   custombulletaccuracy_e accurate;
 
    if(!(player = mo->player))
       return;
@@ -1626,16 +1331,21 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       return;
 
    sfx        = E_ArgAsSound(args, 0);
-   accurate   = E_ArgAsKwd(args, 1, &fcbkwds, 0);
+   accurate   = static_cast<custombulletaccuracy_e>(E_ArgAsKwd(args, 1, &fcbkwds, CBA_NONE));
    numbullets = E_ArgAsInt(args, 2, 0);
    damage     = E_ArgAsInt(args, 3, 0);
    dmgmod     = E_ArgAsInt(args, 4, 0);
    
    flashint   = E_ArgAsInt(args, 5, 0);
-   flashstate = E_ArgAsStateNum(args, 5, NULL);
+   flashstate = E_ArgAsStateNum(args, 5, player);
 
-   if(!accurate)
-      accurate = 1;
+   horizontal = E_ArgAsAngle(args, 6, 0);
+   vertical   = E_ArgAsAngle(args, 7, 0);
+
+   const char *pufftype = E_ArgAsString(args, 8, nullptr);
+
+   if(accurate == CBA_NONE)
+      accurate = CBA_ALWAYS;
 
    if(dmgmod < 1)
       dmgmod = 1;
@@ -1653,7 +1363,7 @@ void A_FireCustomBullets(actionargs_t *actionargs)
    if(flashint >= 0 && flashstate != NullStateNum)
       P_SetPsprite(player, ps_flash, flashstate);
    else if(flashint == 0) // zero means default behavior
-      P_SetPsprite(player, ps_flash, P_GetReadyWeapon(player)->flashstate);
+      P_SetPsprite(player, ps_flash, player->readyweapon->flashstate);
 
    P_WeaponRecoil(player);
 
@@ -1666,39 +1376,59 @@ void A_FireCustomBullets(actionargs_t *actionargs)
       angle_t angle = mo->angle;
       fixed_t slope = bulletslope; // haleyjd 01/03/07: bug fix
       
-      if(accurate <= 3 || accurate == 5)
+      if(accurate == CBA_CUSTOM)
+      {
+         constexpr unsigned int ANG_VALS = ANGLE_1;
+         angle += (static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * horizontal) /
+                  (ANG_VALS * 2);
+         const angle_t pitch = static_cast<angle_t>((static_cast<int64_t>(P_SubRandomEx(pr_custommisfire, ANG_VALS)) * vertical) /
+                                                    (ANG_VALS * 2));
+         // convert pitch to the same "unit" as slope, then add it on
+         slope += finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
+
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
+      }
+      else if(accurate <= CBA_NEVER || accurate == CBA_MONSTER)
       {
          // if never accurate, monster accurate, or accurate only on 
          // refire and player is refiring, add some to the angle
-         if(accurate == 3 || accurate == 5 || 
-            (accurate == 2 && player->refire))
+         if(accurate == CBA_NEVER || accurate == CBA_MONSTER ||
+            (accurate == CBA_FIRST && player->refire))
          {
-            int aimshift = ((accurate == 5) ? 20 : 18);
+            int aimshift = ((accurate == CBA_MONSTER) ? 20 : 18);
             angle += P_SubRandom(pr_custommisfire) << aimshift;
          }
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
       }
-      else if(accurate == 4) // ssg spread
+      else if(accurate == CBA_SSG) // ssg spread
       {
          angle += P_SubRandom(pr_custommisfire) << 19;
          slope += P_SubRandom(pr_custommisfire) << 5;
 
-         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg);
+         P_LineAttack(mo, angle, MISSILERANGE, slope, dmg, pufftype);
       }
    }
 }
 
-static const char *kwds_A_FirePlayerMissile[] =
+enum fireplayermissile_flags : unsigned int
 {
-   "normal",           //  0
-   "homing",           //  1
+   FIREPLAYERMISSILE_HOMING = 0x00000001,
+   FIREPLAYERMISSILE_NOAMMO = 0x00000002
 };
 
-static argkeywd_t seekkwds =
+static dehflags_t fireplayermissile_flaglist[] =
 {
-   kwds_A_FirePlayerMissile,
-   sizeof(kwds_A_FirePlayerMissile) / sizeof(const char *)
+   { "normal",    0x00000000               }, // [XA] explicit no-op. :P
+   { "homing",    FIREPLAYERMISSILE_HOMING },
+   { "noammo",    FIREPLAYERMISSILE_NOAMMO },
+   { nullptr,     0 }
+};
+
+static dehflagset_t fireplayermissile_flagset =
+{
+   fireplayermissile_flaglist, // flaglist
+   0,                          // mode
 };
 
 //
@@ -1707,15 +1437,17 @@ static argkeywd_t seekkwds =
 // A parameterized code pointer function for custom missiles
 // Parameters:
 // args[0] : thing type to shoot
-// args[1] : whether or not to home at current autoaim target
-//           (missile requires homing maintenance pointers, however)
+// args[1] : flags:
+//           1: whether or not to home at current autoaim target
+//             (missile requires homing maintenance pointers, however)
+//           2: don't consume ammo when firing
 //
 void A_FirePlayerMissile(actionargs_t *actionargs)
 {
    int thingnum;
    Mobj *actor = actionargs->actor;
    Mobj *mo;
-   bool seek;
+   unsigned int flags;
    player_t  *player;
    pspdef_t  *psp;
    arglist_t *args = actionargs->args;
@@ -1727,18 +1459,19 @@ void A_FirePlayerMissile(actionargs_t *actionargs)
       return;
 
    thingnum = E_ArgAsThingNumG0(args, 0);
-   seek     = !!E_ArgAsKwd(args, 1, &seekkwds, 0);
+   flags    = E_ArgAsFlags(args, 1, &fireplayermissile_flagset);
 
    // validate thingtype
-   if(thingnum < 0 || thingnum == -1)
+   if(thingnum < 0/* || thingnum == -1*/)
       return;
 
    // decrement ammo if appropriate
-   P_SubtractAmmo(player, -1);
+   if(!(flags & FIREPLAYERMISSILE_NOAMMO))
+      P_SubtractAmmo(player, -1);
 
    mo = P_SpawnPlayerMissile(actor, thingnum);
 
-   if(mo && seek)
+   if(mo && (flags & FIREPLAYERMISSILE_HOMING))
    {
       P_BulletSlope(actor);
 
@@ -1758,7 +1491,7 @@ const char *kwds_A_CustomPlayerMelee[] =
 static argkeywd_t cpmkwds =
 {
    kwds_A_CustomPlayerMelee,
-   sizeof(kwds_A_CustomPlayerMelee) / sizeof(const char *)
+   earrlen(kwds_A_CustomPlayerMelee)
 };
 
 //
@@ -1771,12 +1504,15 @@ static argkeywd_t cpmkwds =
 // args[2] : berzerk multiplier
 // args[3] : angle deflection type (none, punch, chainsaw)
 // args[4] : sound to make (dehacked number)
+// args[5] : range
+// args[6] : pufftype
 //
 void A_CustomPlayerMelee(actionargs_t *actionargs)
 {
    angle_t angle;
    fixed_t slope;
    int damage, dmgfactor, dmgmod, berzerkmul, deftype;
+   fixed_t range;
    sfxinfo_t *sfx;
    Mobj      *mo = actionargs->actor;
    player_t  *player;
@@ -1794,6 +1530,8 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
    berzerkmul = E_ArgAsInt(args, 2, 0);
    deftype    = E_ArgAsKwd(args, 3, &cpmkwds, 0);
    sfx        = E_ArgAsSound(args, 4);
+   range      = E_ArgAsFixed(args, 5, MELEERANGE);
+   const char *pufftype = E_ArgAsString(args, 6, nullptr);
 
    // adjust parameters
 
@@ -1811,19 +1549,19 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
    // decrement ammo if appropriate
    P_SubtractAmmo(player, -1);
-   
+
    angle = player->mo->angle;
-   
+
    if(deftype == 2 || deftype == 3)
       angle += P_SubRandom(pr_custompunch) << 18;
-   
-   slope = P_doAutoAim(mo, angle, MELEERANGE);
+
+   slope = P_DoAutoAim(mo, angle, range);
 
    // WEAPON_FIXME: does this pointer fail to set the player into an attack state?
    // WEAPON_FIXME: check ALL new weapon pointers for this problem.
-   
-   P_LineAttack(mo, angle, MELEERANGE, slope, damage);
-   
+
+   P_LineAttack(mo, angle, range, slope, damage, pufftype);
+
    if(!clip.linetarget)
    {
       // assume they want sawful on miss if sawhit specified
@@ -1834,17 +1572,18 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
 
    // start sound
    P_WeaponSoundInfo(mo, sfx);
-   
-   // turn to face target   
+
+   // turn to face target
    player->mo->angle = P_PointToAngle(mo->x, mo->y,
-                                       clip.linetarget->x, clip.linetarget->y);
+                                      getThingX(mo, clip.linetarget),
+                                      getThingY(mo, clip.linetarget));
 
    // apply chainsaw deflection if selected
    if(deftype == 3)
    {
       if(angle - mo->angle > ANG180)
       {
-         if(angle - mo->angle < -ANG90/20)
+         if(angle - mo->angle < static_cast<angle_t>(-ANG90/20))
             mo->angle = angle + ANG90/21;
          else
             mo->angle -= ANG90/20;
@@ -1856,7 +1595,7 @@ void A_CustomPlayerMelee(actionargs_t *actionargs)
          else
             mo->angle += ANG90/20;
       }
-      
+
       mo->flags |= MF_JUSTATTACKED;
    }
 }
@@ -1902,8 +1641,8 @@ void A_PlayerThunk(actionargs_t *actionargs)
    bool settarget;
    bool useammo;
    int cptrnum, statenum;
-   state_t *oldstate = 0;
-   Mobj *oldtarget = NULL, *localtarget = NULL;
+   state_t *oldstate = nullptr;
+   Mobj *oldtarget = nullptr, *localtarget = nullptr;
    Mobj *mo = actionargs->actor;
    player_t  *player;
    pspdef_t  *psp;
@@ -1917,7 +1656,7 @@ void A_PlayerThunk(actionargs_t *actionargs)
 
    cptrnum   =   E_ArgAsBexptr(args, 0);
    face      = !!E_ArgAsKwd(args, 1, &facekwds, 0);
-   statenum  =   E_ArgAsStateNumG0(args, 2, NULL);
+   statenum  =   E_ArgAsStateNumG0(args, 2, player);
    settarget = !!E_ArgAsKwd(args, 3, &targetkwds, 0);
    useammo   = !!E_ArgAsKwd(args, 4, &ammokwds, 0);
 

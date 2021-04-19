@@ -27,7 +27,6 @@
 // killough 5/3/98: reformatted
 
 #include "z_zone.h"
-#include "doomtype.h"
 #include "sounds.h"
 #include "p_skin.h"
 
@@ -37,7 +36,7 @@
 
 musicinfo_t S_music[] = 
 {
-  { 0 },
+  { nullptr },
   { "e1m1", true },
   { "e1m2", true },
   { "e1m3", true },
@@ -109,7 +108,7 @@ musicinfo_t S_music[] =
 
 musicinfo_t H_music[] =
 {
-   { 0 },
+   { nullptr },
    { "e1m1", true }, // 1
    { "e1m2", true }, // 2
    { "e1m3", true }, // 3

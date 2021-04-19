@@ -35,7 +35,6 @@
 #include "e_string.h"
 #include "g_game.h"
 #include "hu_stuff.h"
-#include "in_lude.h"
 #include "m_qstr.h"
 #include "m_random.h"
 #include "m_swap.h"
@@ -127,56 +126,56 @@ typedef enum
    ANIM_LEVEL     // continuous
 } animenum_t;
 
-typedef struct point_s
+struct point_t
 {
    int   x;       // x/y coordinate pair structure
    int   y;
-} point_t;
+};
 
 //
 // Animation.
 // There is another anim_t used in p_spec.
 //
-typedef struct anim_s
+struct anim_t
 {
    animenum_t  type;
-   
+
    // period in tics between animations
    int   period;
-   
+
    // number of animation frames
    int   nanims;
-   
+
    // location of animation
    point_t loc;
-   
+
    // ALWAYS: n/a,
    // RANDOM: period deviation (<256),
    // LEVEL: level
    int   data1;
-   
+
    // ALWAYS: n/a,
    // RANDOM: random base period,
    // LEVEL: n/a
-   int   data2; 
-   
+   int   data2;
+
    // actual graphics for frames of animations
-   patch_t*  p[3]; 
-   
+   patch_t*  p[3];
+
    // following must be initialized to zero before use!
-   
+
    // next value of intertime (used in conjunction with period)
    int   nexttic;
-   
+
    // last drawn animation frame
    int   lastdrawn;
-   
+
    // next frame number to animate
    int   ctr;
-   
+
    // used by RANDOM and LEVEL when animating
-   int   state;  
-} anim_t;
+   int   state;
+};
 
 static point_t lnodes[NUMEPISODES][NUMMAPS] =
 {
@@ -421,14 +420,14 @@ static void WI_OverlayBackground();
 static void WI_drawLF()
 {
    int y = WI_TITLEY;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    
    // haleyjd 07/08/04: fixed to work for any map
    // haleyjd 03/27/05: added string functionality
    // haleyjd 06/17/06: only the needed patch is now cached
 
-   if(LevelInfo.levelPic)
-      patch = PatchLoader::CacheName(wGlobalDir, LevelInfo.levelPic, PU_STATIC);
+   if(wbs->li_lastlevelpic)
+      patch = PatchLoader::CacheName(wGlobalDir, wbs->li_lastlevelpic, PU_STATIC);
    else
       patch = wi_lname_this;
 
@@ -469,7 +468,7 @@ static void WI_drawLF()
 static void WI_drawEL()
 {
    int y = WI_TITLEY;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    bool loadedInfoPatch = false;
 
    // haleyjd 10/24/10: Don't draw "Entering" when in Master Levels mode
@@ -491,7 +490,14 @@ static void WI_drawEL()
       loadedInfoPatch = true;
    }
 
-   // if no MapInfo patch was loaded, try the default (may also be NULL)
+   if(!patch && wbs->li_nextlevelpic && *wbs->li_nextlevelpic)
+   {
+      patch = PatchLoader::CacheName(wGlobalDir, wbs->li_nextlevelpic,
+                                     PU_STATIC);
+      loadedInfoPatch = true;
+   }
+
+   // if no MapInfo patch was loaded, try the default (may also be nullptr)
    if(!patch)
       patch = wi_lname_next;
 
@@ -580,11 +586,15 @@ static void WI_drawOnLnode(int n, patch_t *c[], int numpatches)
 // Args:    none
 // Returns: void
 //
-static void WI_initAnimatedBack()
+static void WI_initAnimatedBack(bool entering)
 {
    int   i;
    anim_t* a;
 
+   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+      return;
+   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && entering)
+      return;
    if(GameModeInfo->id == commercial)  // no animation for DOOM2
       return;
 
@@ -626,6 +636,10 @@ static void WI_updateAnimatedBack()
    int     i;
    anim_t *a;
 
+   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+      return;
+   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+      return;
    if(GameModeInfo->id == commercial)
       return;
 
@@ -685,6 +699,10 @@ static void WI_drawAnimatedBack()
    int     i;
    anim_t *a;
 
+   if(wbs->li_lastexitpic && *wbs->li_lastexitpic)
+      return;
+   if(wbs->li_nextenterpic && *wbs->li_nextenterpic && state != StatCount)
+      return;
    if(GameModeInfo->id == commercial) //jff 4/25/98 Someone forgot commercial an enum
       return;
 
@@ -714,6 +732,10 @@ static int WI_drawNum(int x, int y, int n, int digits)
 {
    int neg, temp, fontwidth = num[0]->width;
 
+   // if non-number, do not draw it
+   if(n == INT_MIN)
+      return 0;
+
    neg = n < 0;    // killough 11/98: move up to here, for /= 10 division below
    if(neg)
       n = -n;
@@ -730,7 +752,7 @@ static int WI_drawNum(int x, int y, int n, int digits)
          // figure out # of digits in #
          digits = 0;
          temp = n;
-         
+
          while(temp)
          {
             temp /= 10;
@@ -738,10 +760,6 @@ static int WI_drawNum(int x, int y, int n, int digits)
          }
       }
    }
-
-   // if non-number, do not draw it
-   if(n == 1994)
-      return 0;
 
    // draw the new number
    while(digits--)
@@ -754,7 +772,7 @@ static int WI_drawNum(int x, int y, int n, int digits)
    // draw a minus sign if necessary
    if(neg)
       V_DrawPatch(x -= 8, y, &subscreen43, wiminus);
-   
+
    return x;
 }
 
@@ -947,7 +965,7 @@ static void WI_initShowNextLoc()
    acceleratestage = 0;
    cnt = SHOWNEXTLOCDELAY * TICRATE;
    
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(true);
 }
 
 
@@ -981,7 +999,14 @@ static void WI_drawShowNextLoc()
    IN_slamBackground();
    
    // draw animated background
-   WI_drawAnimatedBack(); 
+   WI_drawAnimatedBack();
+
+   if(estrnonempty(wbs->li_lastexitpic) ||
+      (estrnonempty(wbs->li_nextenterpic) && state != StatCount))
+   {
+      WI_drawEL();
+      return;
+   }
 
    if(GameModeInfo->id != commercial)
    {
@@ -1086,7 +1111,7 @@ static void WI_initDeathmatchStats()
          dm_totals[i] = 0;
       }
    }
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(false);
 }
 
 
@@ -1191,8 +1216,10 @@ static void WI_updateDeathmatchStats()
       {   
          S_StartInterfaceSound(sfx_slop);
 
-         if(GameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
+         {
             WI_initNoState();
+         }
          else
             WI_initShowNextLoc();
       }
@@ -1341,7 +1368,7 @@ static void WI_initNetgameStats()
    
    dofrags = !!dofrags; // set to true or false - did we have frags?
    
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(false);
 }
 
 
@@ -1505,7 +1532,7 @@ static void WI_updateNetgameStats()
       if(acceleratestage)
       {
          S_StartInterfaceSound(sfx_sgcock);
-         if(GameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1608,7 +1635,7 @@ static void WI_initStats()
    cnt_time = cnt_par = -1;
    cnt_pause = TICRATE;
 
-   WI_initAnimatedBack();
+   WI_initAnimatedBack(false);
 }
 
 // ====================================================================
@@ -1728,7 +1755,7 @@ static void WI_updateStats()
       {
          S_StartInterfaceSound(sfx_sgcock);
          
-         if(GameModeInfo->id == commercial)
+         if(GameModeInfo->id == commercial && estrempty(wbs->li_nextenterpic))
             WI_initNoState();
          else
             WI_initShowNextLoc();
@@ -1861,11 +1888,21 @@ static void WI_OverlayBackground()
 static void WI_DrawBackground()
 {
    char  name[9];  // limited to 8 characters
-  
-   if(GameModeInfo->id == commercial || (GameModeInfo->id == retail && wbs->epsd == 3))
+
+   if(state != StatCount && estrnonempty(wbs->li_nextenterpic))
+      strncpy(name, wbs->li_nextenterpic, sizeof(name));
+   else if(estrnonempty(wbs->li_lastexitpic) ||
+      GameModeInfo->id == commercial || (GameModeInfo->id == retail &&
+                                         wbs->epsd == 3))
+   {
+      // Use LevelInfo's interpic here: it handles cases where li_lastexitpic IS
+      // empty. By the help of logic, the intermapinfo_t last exitpic must be
+      // equivalent to currently exited level's interPic.
       strcpy(name, LevelInfo.interPic);
-   else 
+   }
+   else
       sprintf(name, "WIMAP%d", wbs->epsd);
+   name[sizeof(name) - 1] = 0;
 
    // background
    V_DrawFSBackground(&subscreen43, wGlobalDir.checkNumForName(name));
@@ -1900,14 +1937,14 @@ static void WI_loadData()
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_this = NULL;
+            wi_lname_this = nullptr;
 
          psnprintf(name, sizeof(name), "CWILV%2.2d", wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_next = NULL;
+            wi_lname_next = nullptr;
       }
    }
    else
@@ -1922,14 +1959,14 @@ static void WI_loadData()
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_this = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_this = NULL;
+            wi_lname_this = nullptr;
 
          psnprintf(name, sizeof(name), "WILV%d%d", wbs->epsd, wbs->next);
 
          if((lumpnum = g_dir->checkNumForName(name)) != -1)
             wi_lname_next = PatchLoader::CacheNum(*g_dir, lumpnum, PU_STATIC);
          else
-            wi_lname_next = NULL;
+            wi_lname_next = nullptr;
       }
       
       // you are here
@@ -2115,8 +2152,20 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName     = NULL;
-   nextMapName = NULL;
+   mapName     = nullptr;
+   nextMapName = nullptr;
+
+   // NOTE: in UMAPINFO, level-pic has priority
+   if((!wbs->li_lastlevelpic || !*wbs->li_lastlevelpic) &&
+      wbs->li_lastlevelname && *wbs->li_lastlevelname)
+   {
+      mapName = wbs->li_lastlevelname;
+   }
+   if((!wbs->li_nextlevelpic || !*wbs->li_nextlevelpic) &&
+      wbs->li_nextlevelname && *wbs->li_nextlevelname)
+   {
+      nextMapName = wbs->li_nextlevelname;
+   }
 
    if(LevelInfo.useEDFInterName || inmanageddir)
    {
@@ -2124,56 +2173,62 @@ static void WI_initVariables(wbstartstruct_t *wbstartstruct)
       const char *basename;
 
       // set current map
-      if(inmanageddir == MD_MASTERLEVELS)
+      if(!mapName)
       {
-         // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
-         qstring buffer;
-         qstring lvname;
+         if(inmanageddir == MD_MASTERLEVELS)
+         {
+            // haleyjd 08/31/12: In Master Levels mode, synthesize one here.
+            qstring buffer;
+            qstring lvname;
 
-         lvname << FC_ABSCENTER << FC_GOLD << LevelInfo.levelName;
+            lvname << FC_ABSCENTER << FC_GOLD << LevelInfo.levelName;
 
-         V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
+            V_FontFitTextToRect(in_bigfont, lvname, 0, 0, 320, 200);
 
-         buffer << "{EE_MLEV_" << lvname << "}";
-         mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1)->string;
-      }
-      else
-      {
-         edf_string_t *str;
-         psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
-         if((str = E_StringForName(nameBuffer)))
-            mapName = str->string;
+            buffer << "{EE_MLEV_" << lvname << "}";
+            mapName = E_CreateString(lvname.constPtr(), buffer.constPtr(), -1)->string;
+         }
+         else
+         {
+            edf_string_t *str;
+            psnprintf(nameBuffer, sizeof(nameBuffer), "_IN_NAME_%s", gamemapname);
+            if((str = E_StringForName(nameBuffer)))
+               mapName = str->string;
+         }
       }
 
       // are we going to a secret level?
-      basename = wbs->gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
-
-      // set next map
-      if(*basename)
+      if(!nextMapName)
       {
-         edf_string_t *str;
-         psnprintf(nameBuffer, 24, "_IN_NAME_%s", basename);
+         basename = wbs->gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
 
-         if((str = E_StringForName(nameBuffer)))
-            nextMapName = str->string;
-      }
-      else
-      {
-         // try ExMy and MAPxy defaults for normally-named maps
-         if(isExMy(gamemapname))
+         // set next map
+         if(*basename)
          {
             edf_string_t *str;
-            psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d", 
-                      wbs->epsd + 1, wbs->next + 1);
+            psnprintf(nameBuffer, 24, "_IN_NAME_%s", basename);
+
             if((str = E_StringForName(nameBuffer)))
                nextMapName = str->string;
          }
-         else if(isMAPxy(gamemapname))
+         else
          {
-            edf_string_t *str;
-            psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);
-            if((str = E_StringForName(nameBuffer)))
-               nextMapName = str->string;
+            // try ExMy and MAPxy defaults for normally-named maps
+            if(isExMy(gamemapname))
+            {
+               edf_string_t *str;
+               psnprintf(nameBuffer, 24, "_IN_NAME_E%01dM%01d",
+                         wbs->epsd + 1, wbs->next + 1);
+               if((str = E_StringForName(nameBuffer)))
+                  nextMapName = str->string;
+            }
+            else if(isMAPxy(gamemapname))
+            {
+               edf_string_t *str;
+               psnprintf(nameBuffer, 24, "_IN_NAME_MAP%02d", wbs->next + 1);
+               if((str = E_StringForName(nameBuffer)))
+                  nextMapName = str->string;
+            }
          }
       }
    }

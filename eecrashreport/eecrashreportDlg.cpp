@@ -261,6 +261,6 @@ void CEECrashReportDlg::LoadErrorFile()
 void CEECrashReportDlg::LaunchBrowser()
 {
    ShellExecute(NULL, "open", 
-                "http://www.doomworld.com/vb/newthread.php?action=newthread&forumid=25", 
+                "https://www.doomworld.com/forum/25-eternity/?do=add", 
                 NULL, NULL, SW_SHOWNORMAL);
 }

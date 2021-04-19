@@ -47,6 +47,9 @@
 
 struct playerclass_t;
 struct skin_t;
+struct weaponslot_t;
+
+class WeaponCounterTree;
 
 // Inventory item ID is just an integer. The inventory item type can be looked
 // up using this.
@@ -106,9 +109,28 @@ typedef enum
   CF_IMMORTAL         = 0x10,
 } cheat_t;
 
+
+// TODO: Maybe re-add curpos
+// The problem is adapting code to handle variable lengths of inventory bars.
+struct invbarstate_t {
+   bool inventory;  // inventory is currently being viewed?
+   int  ArtifactFlash;
+};
+
 // These defines are in degrees:
-#define MAXPITCHUP   32
-#define MAXPITCHDOWN 32
+#define MAXPITCHUP   45
+#define MAXPITCHDOWN 45
+
+enum attacktype_e : unsigned int
+{
+   AT_NONE      = 0,
+   AT_PRIMARY   = 1,
+   AT_SECONDARY = 2,
+   AT_ITEM      = 4, // temporarily ORed in, indicates not to subtract ammo
+   AT_UNKNOWN   = 8,
+
+   AT_ALL = (AT_PRIMARY + AT_SECONDARY),
+};
 
 //
 // Extended player object info: player_t
@@ -150,15 +172,18 @@ struct player_t
    int            frags[MAXPLAYERS];
    int            totalfrags;
    
-   weapontype_t   readyweapon;
-   weapontype_t   pendingweapon; // Is wp_nochange if not changing.
+   weaponinfo_t  *readyweapon;
+   weaponinfo_t  *pendingweapon; // Is nullptr if not changing.
 
-   int            weaponowned[NUMWEAPONS];
-   int            weaponctrs[NUMWEAPONS][3]; // haleyjd 03/31/06
+   weaponslot_t  *readyweaponslot;
+   weaponslot_t  *pendingweaponslot; // Is nullptr if not changing.
+
+   // MaxW: 2018/01/02: Changed from `int weaponctrs[NUMWEAPONS][3]`
+   WeaponCounterTree *weaponctrs; // haleyjd 03/31/06
 
    int            extralight;    // So gun flashes light up areas.
    
-   int            attackdown; // True if button down last tic.
+   attacktype_e   attackdown; // True if button down last tic.
    int            usedown;
 
    int            cheats;      // Bit flags, for cheats and debug.
@@ -178,7 +203,7 @@ struct player_t
    int            newtorch;      // haleyjd 08/31/13: change torch level?
    int            torchdelta;    // haleyjd 08/31/13: amount to change torch level
 
-   Mobj          *attacker;      // Who did damage (NULL for floors/ceilings).
+   Mobj          *attacker;      // Who did damage (nullptr for floors/ceilings).
 
    int            colormap;      // colorshift for player sprites
 
@@ -190,8 +215,10 @@ struct player_t
    int            flyheight;     // haleyjd 06/05/12: flying
 
    // Inventory
-   inventory_t    inventory;     // haleyjd 07/06/13: player's inventory
-   
+   inventory_t      inventory;   // haleyjd 07/06/13: player's inventory
+   inventoryindex_t inv_ptr;     // MaxW: 2017/12/28: Player's currently selected item
+   invbarstate_t    invbarstate; // MaxW: 2017/12/28: player's inventory bar state
+
    // Player name
    char           name[20];
 };
@@ -230,6 +257,14 @@ struct wbstartstruct_t
   int         next;
   bool        nextexplicit; // true if next was set by g_destmap
     
+  // Explicit level-info stuff
+  const char *li_lastlevelname;
+  const char *li_nextlevelname;
+  const char *li_lastlevelpic;
+  const char *li_nextlevelpic;
+  const char *li_lastexitpic;
+  const char *li_nextenterpic;
+
   int         maxkills;
   int         maxitems;
   int         maxsecret;

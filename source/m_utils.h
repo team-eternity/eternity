@@ -22,6 +22,7 @@
 #ifndef M_UTILS_H__
 #define M_UTILS_H__
 
+#include "d_keywds.h"
 #include "doomtype.h"
 
 // File IO utilities
@@ -52,6 +53,8 @@ void   M_ExtractFileBase(const char *, char *);               // killough
 char  *M_AddDefaultExtension(char *, const char *);           // killough 1/18/98
 void   M_NormalizeSlashes(char *);                            // killough 11/98
 char  *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
+
+int M_PositiveModulo(int op1, int op2);
 
 #endif
 

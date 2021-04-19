@@ -49,16 +49,18 @@ private:
    char   *buffer;
    size_t  index;
    size_t  size;
-   
+
    bool isLocal() const { return (buffer == local); }
    void unLocalize(size_t pSize);
+
+   void moveFrom(qstring &&other) noexcept;
 
 public:
    static const size_t npos;
    static const size_t basesize;
 
    // Constructors / Destructor
-   qstring(size_t startSize = 0) 
+   explicit qstring(size_t startSize = 0) 
       : ZoneObject(), index(0), size(16)
    {
       buffer = local;
@@ -186,9 +188,10 @@ public:
    // File Path Utilities
    qstring &normalizeSlashes();
    qstring &pathConcatenate(const char *addend);
+   qstring &pathConcatenate(const qstring &other);
    qstring &addDefaultExtension(const char *ext);
    qstring &removeFileSpec();
-   void     extractFileBase(qstring &dest);
+   void     extractFileBase(qstring &dest) const;
 
    // Zone strdup wrappers
    char *duplicate(int tag = PU_STATIC) const;
@@ -197,7 +200,7 @@ public:
    // Numeric Conversions
    int    toInt() const;
    long   toLong(char **endptr, int radix) const;
-   double toDouble(char **endptr);
+   double toDouble(char **endptr) const;
 
    // Searching/Substring Finding Routines
    const char *strChr(char c) const;
@@ -208,6 +211,7 @@ public:
    const char *findSubStr(const char *substr) const;
    const char *findSubStrNoCase(const char *substr) const;
    size_t      find(const char *s, size_t pos = 0) const;
+   bool        endsWith(char c) const;
 
    // Stripping and Truncation
    qstring &lstrip(char c);
@@ -217,7 +221,7 @@ public:
 
    // Special Formatting 
    qstring &makeQuoted();
-   int      Printf(size_t maxlen, const char *fmt, ...);
+   int      Printf(size_t maxlen, E_FORMAT_STRING(const char *fmt), ...) E_PRINTF(3, 4);
 
    // Operators
    bool     operator == (const qstring &other) const;
@@ -226,15 +230,32 @@ public:
    bool     operator != (const char    *other) const;
    qstring &operator  = (const qstring &other);
    qstring &operator  = (const char    *other);
+   qstring &operator  = (qstring      &&other);
    qstring &operator += (const qstring &other);
    qstring &operator += (const char    *other);
    qstring &operator += (char  ch);
+   qstring  operator +  (const qstring &other) const;
+   qstring  operator +  (const char    *other) const;
    qstring &operator << (const qstring &other);
    qstring &operator << (const char    *other);
    qstring &operator << (char   ch);
    qstring &operator << (int    i);
    qstring &operator << (double d);
-   
+   qstring  operator /  (const qstring &other) const;
+   qstring  operator /  (const char    *other) const;
+   qstring &operator /= (const qstring &other);
+   qstring &operator /= (const char    *other);
+
+   friend qstring operator + (const char *a, const qstring &b)
+   {
+      return qstring(a).concat(b);
+   }
+
+   friend qstring operator / (const char *a, const qstring &b)
+   {
+      return qstring(a).pathConcatenate(b);
+   }
+
    char       &operator [] (size_t idx);
    const char &operator [] (size_t idx) const;
 

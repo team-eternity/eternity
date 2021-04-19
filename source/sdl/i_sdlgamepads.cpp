@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*- 
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,7 +23,11 @@
 //
 //-----------------------------------------------------------------------------
 
+#ifdef __APPLE__
+#include "SDL2/SDL.h"
+#else
 #include "SDL.h"
+#endif
 
 #include "../z_zone.h"
 
@@ -66,7 +70,7 @@ void SDLGamePadDriver::shutdown()
    if(joystick)
    {
       SDL_JoystickClose(joystick);
-      joystick = NULL;
+      joystick = nullptr;
    }
 }
 
@@ -104,7 +108,7 @@ IMPLEMENT_RTTI_TYPE(SDLGamePad)
 SDLGamePad::SDLGamePad(int idx) 
    : Super(), sdlIndex(idx)
 {
-   name << "SDL " << SDL_JoystickName(sdlIndex);
+   name << "SDL " << SDL_JoystickNameForIndex(sdlIndex);
    num = i_sdlGamePadDriver.getBaseDeviceNum() + sdlIndex;
 }
 
@@ -121,10 +125,11 @@ bool SDLGamePad::select()
    // remember who is in use internally
    activeIdx = sdlIndex;
 
-   if((joystick = SDL_JoystickOpen(sdlIndex)) != NULL)
+   if((joystick = SDL_JoystickOpen(sdlIndex)) != nullptr)
    {
       numAxes    = SDL_JoystickNumAxes(joystick);
       numButtons = SDL_JoystickNumButtons(joystick);
+      numHats    = SDL_JoystickNumHats(joystick);
       return true;
    }
    else
@@ -144,7 +149,7 @@ void SDLGamePad::deselect()
    if(joystick)
    {
       SDL_JoystickClose(joystick);
-      joystick  = NULL;
+      joystick  = nullptr;
       activeIdx = -1;
    }
 }
@@ -164,6 +169,19 @@ void SDLGamePad::poll()
    // get button states
    for(int i = 0; i < numButtons && i < MAXBUTTONS; i++)
       state.buttons[i] = !!SDL_JoystickGetButton(joystick, i);
+   for(int i = 0; i < numHats && i < MAXHATS; i++)
+   {
+      Uint8 sdlhat = SDL_JoystickGetHat(joystick, i);
+      state.hats[i] = 0;
+      if(sdlhat & SDL_HAT_RIGHT)
+         state.hats[i] |= HAT_RIGHT;
+      if(sdlhat & SDL_HAT_UP)
+         state.hats[i] |= HAT_UP;
+      if(sdlhat & SDL_HAT_LEFT)
+         state.hats[i] |= HAT_LEFT;
+      if(sdlhat & SDL_HAT_DOWN)
+         state.hats[i] |= HAT_DOWN;
+   }
 
    // get axis states
    for(int i = 0; i < numAxes && i < MAXAXES; i++)

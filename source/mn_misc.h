@@ -27,15 +27,13 @@
 #ifndef MN_MISC_H__
 #define MN_MISC_H__
 
+#include "d_keywds.h"
+
 // pop-up messages
 
-void MN_Alert(const char *message, ...);
+void MN_Alert(E_FORMAT_STRING(const char *message), ...) E_PRINTF(1, 2);
 void MN_Question(const char *message, const char *command);
 void MN_QuestionFunc(const char *message, void (*handler)(void));
-
-// help screens
-
-void MN_StartHelpScreen();
 
 // map colour selection
 

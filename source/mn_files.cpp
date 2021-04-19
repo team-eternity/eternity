@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//---------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Simon Howard, James Haley, et al.
+// Copyright(C) 2019 Simon Howard, James Haley, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,25 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//--------------------------------------------------------------------------
+// Purpose: Menu file selector
+//  eg. For selecting a wad to load or demo to play
+//  Revisions by James Haley taken from SMMU v3.30 8/11/00 build
 //
-// Menu file selector
+// Authors: Simon Howard, James Haley, Max Waine
 //
-// eg. For selecting a wad to load or demo to play
-//
-// By Simon Howard
-// Revisions by James Haley (taken from SMMU v3.30 8/11/00 build)
-//
-//---------------------------------------------------------------------------
 
-#ifdef _MSC_VER
-// for Visual C++:
-#include "Win32/i_opndir.h"
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#include "hal/i_platform.h"
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
-// for SANE compilers:
-#include <dirent.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 #endif
-
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 #include "z_zone.h"
 
 #include "c_io.h"
@@ -60,6 +59,12 @@
 #include "v_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
+
+#ifdef HAVE_ADLMIDILIB
+#include "adlmidi.h"
+extern int adlmidi_bank;
+#endif
+
 
 //=============================================================================
 //
@@ -223,7 +228,7 @@ void MN_ClearDirectory(mndir_t *dir)
    for(int i = 0; i < dir->numfiles; i++)
    {
       efree(dir->filenames[i]);
-      dir->filenames[i] = NULL;
+      dir->filenames[i] = nullptr;
    }
 
    dir->numfiles = 0;
@@ -256,60 +261,53 @@ static void MN_sortFiles(mndir_t *dir)
 //
 // MN_ReadDirectory
 //
-// Uses POSIX opendir to read the indicated directory and saves off all file
+// Uses C++17 filesystem to read the indicated directory and saves off all file
 // names within it that match the provided wildcard string.
-//
-// Note: for Visual C++, customized versions of MinGW's opendir functions
-// are used, which are implemented in i_opndir.c.
 //
 // haleyjd 06/15/10: made global
 //
-int MN_ReadDirectory(mndir_t *dir, const char *read_dir, 
+int MN_ReadDirectory(mndir_t *dir, const char *read_dir,
                      const char *const *read_wildcards,
                      size_t numwildcards, bool allowsubdirs)
 {
-   DIR *directory;
-   struct dirent *direntry;
-
    // clear directory
    MN_ClearDirectory(dir);
-  
-   // open directory and read filenames  
+
+   // open directory and read filenames
    dir->dirpath = read_dir;
-   directory = opendir(dir->dirpath);
 
    // test for failure
-   if(!directory)
-      return errno;
-  
-   while((direntry = readdir(directory)))
+   if(std::error_code ec; !fs::is_directory(dir->dirpath, ec))
+      return ec.value();
+
+   const fs::directory_iterator itr(dir->dirpath);
+   for(const fs::directory_entry &ent : itr)
    {
+      qstring filename(ent.path().filename().generic_u8string().c_str());
       if(allowsubdirs)
       {
          qstring path(read_dir);
-         struct stat sbuf;
-         path.pathConcatenate(direntry->d_name);
 
-         if(!strcmp(direntry->d_name, "."))
-            continue;
-         else if(!strcmp(direntry->d_name, ".."))
-            MN_addFile(dir, "..");
-         else if(!stat(path.constPtr(), &sbuf) && S_ISDIR(sbuf.st_mode))
+         path.pathConcatenate(filename);
+
+         // "." and ".." are explicitly skipped by fs::directory_entry
+         if(ent.is_directory())
          {
             path = "/";
-            path += direntry->d_name;
+            path += filename.constPtr();
             MN_addFile(dir, path.constPtr());
          }
       }
       for(size_t i = 0; i < numwildcards; i++)
       {
-         if(filecmp(direntry->d_name, read_wildcards[i]))
-            MN_addFile(dir, direntry->d_name); // add file to list
+         if(filecmp(filename.constPtr(), read_wildcards[i]))
+            MN_addFile(dir, filename.constPtr()); // add file to list
       }
    }
 
-   // done with directory listing
-   closedir(directory);
+   // If there's a parent directory then add it
+   if(fs::exists(fs::path(dir->dirpath) / ".."))
+      MN_addFile(dir, "..");
 
    // sort the list
    MN_sortFiles(dir);
@@ -332,7 +330,7 @@ static bool MN_FileResponder(event_t *ev, int action);
 
 // file selector is handled using a menu widget
 
-static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, NULL, true };
+static menuwidget_t file_selector = { MN_FileDrawer, MN_FileResponder, nullptr, true };
 static int selected_item;
 static const char *variable_name;
 static const char *help_description;
@@ -466,7 +464,7 @@ static void MN_doExitFileWidget()
 //
 static bool MN_FileResponder(event_t *ev, int action)
 {
-   unsigned char ch;
+   unsigned char ch = 0;
 
    if(action == ka_menu_up || action == ka_menu_left)
    {
@@ -548,9 +546,7 @@ static bool MN_FileResponder(event_t *ev, int action)
 
    // search for matching item in file list
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
+   if(ev->type == ev_text)
       ch = ectype::toLower(ev->data1);
 
    if(ectype::isGraph(ch))
@@ -588,7 +584,7 @@ char *wad_directory; // directory where user keeps wads
 
 static qstring wad_cur_directory; // current directory being viewed
 
-VARIABLE_STRING(wad_directory,  NULL,          1024);
+VARIABLE_STRING(wad_directory,  nullptr,       1024);
 CONSOLE_VARIABLE(wad_directory, wad_directory, cf_allowblank)
 {
    // normalize slashes
@@ -610,13 +606,13 @@ static void MN_doSelectWad(const char *path)
    if(path)
       wad_cur_directory = path;
 
-   int ret = MN_ReadDirectory(&mn_diskdir, wad_cur_directory.constPtr(), 
+   int ret = MN_ReadDirectory(&mn_diskdir, wad_cur_directory.constPtr(),
                               exts, earrlen(exts), true);
 
    // check for standard errors
    if(ret)
    {
-      MN_ErrorMsg("opendir error: %d (%s)", ret, strerror(ret));
+      MN_ErrorMsg("Failed to open directory %s: errno %d", wad_cur_directory.constPtr(), ret);
       return;
    }
 
@@ -644,7 +640,7 @@ CONSOLE_COMMAND(mn_selectwad, 0)
 
 char *mn_wadname; // wad to load
 
-VARIABLE_STRING(mn_wadname,  NULL,       UL);
+VARIABLE_STRING(mn_wadname,  nullptr,    UL);
 CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset) 
 {
    if(!Console.argc)
@@ -657,19 +653,18 @@ CONSOLE_VARIABLE(mn_wadname, mn_wadname, cf_handlerset)
       size_t lastslash;
       if((lastslash = wad_cur_directory.findLastOf('/')) != qstring::npos)
          wad_cur_directory.truncate(lastslash);
-      MN_doSelectWad(NULL);
+      MN_doSelectWad(nullptr);
    }
    else if(newVal.findFirstOf('/') == 0)
    {
-      wad_cur_directory.pathConcatenate(newVal.constPtr());
-      MN_doSelectWad(NULL);
+      wad_cur_directory.pathConcatenate(newVal);
+      MN_doSelectWad(nullptr);
    }
    else
    {
       if(mn_wadname)
          efree(mn_wadname);
-      qstring fullPath = wad_cur_directory;
-      fullPath.pathConcatenate(newVal.constPtr());
+      qstring fullPath = wad_cur_directory / newVal;
       mn_wadname = fullPath.duplicate();
    }
 }
@@ -845,6 +840,43 @@ CONSOLE_COMMAND(mn_selectflat, 0)
 
    MN_PushWidget(&file_selector);
 }
+
+#ifdef HAVE_ADLMIDILIB
+CONSOLE_COMMAND(snd_selectbank, 0)
+{
+   static const char *const *banknames = adl_getBankNames();
+   int curnum;
+
+   // clear directory
+   MN_ClearDirectory(&mn_diskdir);
+
+   // run through banks
+   for(int i = 0; i <= BANKS_MAX; i++)
+      MN_addFile(&mn_diskdir, banknames[i]);
+
+   if(mn_diskdir.numfiles < 1)
+   {
+      MN_ErrorMsg("No banks found");
+      return;
+   }
+
+   // sort the list
+   MN_sortFiles(&mn_diskdir);
+
+   selected_item = 0;
+
+   if((curnum = MN_findFile(&mn_diskdir, banknames[adlmidi_bank])) != mn_diskdir.numfiles)
+      selected_item = curnum;
+
+   mn_currentdir    = &mn_diskdir;
+   help_description = "select sound bank:";
+   variable_name    = "snd_bank";
+   select_dismiss   = true;
+   allow_exit       = true;
+
+   MN_PushWidget(&file_selector);
+}
+#endif
 
 // EOF
 

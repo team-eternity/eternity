@@ -32,6 +32,7 @@
 #include "c_io.h"
 #include "d_dehtbl.h"
 #include "d_event.h"
+#include "d_files.h"
 #include "d_gi.h"
 #include "d_main.h"
 #include "d_net.h"
@@ -39,10 +40,13 @@
 #include "e_edf.h"
 #include "e_inventory.h"
 #include "e_player.h"
+#include "e_weapons.h"
 #include "g_dmflag.h"
 #include "g_game.h"
+#include "m_argv.h"
 #include "m_buffer.h"
 #include "m_random.h"
+#include "p_info.h"
 #include "p_maputl.h"
 #include "p_spec.h"
 #include "p_tick.h"
@@ -56,6 +60,7 @@
 #include "r_draw.h"
 #include "r_main.h"
 #include "r_state.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 #include "st_stuff.h"
 #include "v_misc.h"
@@ -81,7 +86,7 @@
 // Constructs a SaveArchive object in saving mode.
 //
 SaveArchive::SaveArchive(OutBuffer *pSaveFile) 
-   : savefile(pSaveFile), loadfile(nullptr)
+   : savefile(pSaveFile), loadfile(nullptr), read_save_version(0)
 {
    if(!pSaveFile)
       I_Error("SaveArchive: created a save file without a valid OutBuffer\n");
@@ -91,7 +96,7 @@ SaveArchive::SaveArchive(OutBuffer *pSaveFile)
 // Constructs a SaveArchive object in loading mode.
 //
 SaveArchive::SaveArchive(InBuffer *pLoadFile)
-   : savefile(nullptr), loadfile(pLoadFile)
+   : savefile(nullptr), loadfile(pLoadFile), read_save_version(0)
 {
    if(!pLoadFile)
       I_Error("SaveArchive: created a load file without a valid InBuffer\n");
@@ -142,6 +147,51 @@ void SaveArchive::archiveLString(char *&str, size_t &len)
 }
 
 //
+// Attempts to read save version, returning false if it fails
+//
+bool SaveArchive::readSaveVersion()
+{
+   char vread[VERSIONSIZE];
+
+   if(!loadfile)
+      I_Error("SaveArchive::readSaveVersion: cannot read version if not loading file!\n");
+
+   archiveCString(vread, VERSIONSIZE);
+
+   if(!strncmp(vread, "MBF ", 4))
+   {
+      const long tempver = strtol(vread + 4, nullptr, 10);
+      if(tempver != 401)
+      {
+         C_Printf(FC_ERROR "Warning: Save too old to be read (pre 4.01.00)!\a");
+         return false;
+      }
+
+      read_save_version = 0;
+   }
+   else if(strncmp(vread, "EE", 2))
+   {
+      C_Printf(FC_ERROR "Warning: unsupported save format!\a"); // blah...
+      return false;
+   }
+   else
+      loadfile->readSint32(read_save_version);
+
+   return true;
+}
+
+//
+// Writes save version
+//
+void SaveArchive::writeSaveVersion()
+{
+   if(!savefile)
+      I_Error("SaveArchive::writeSaveVersion: cannot save version if not writing file!\n");
+
+   savefile->writeSint32(WRITE_SAVE_VERSION);
+}
+
+//
 // Writes a C string with prepended length field. Do not call when loading!
 // Instead you must call archiveLString.
 //
@@ -187,6 +237,26 @@ void SaveArchive::archiveSize(size_t &value)
 //
 // IO operators
 //
+
+SaveArchive &SaveArchive::operator << (int64_t &x)
+{
+   if(savefile)
+      savefile->writeSint64(x);
+   else
+      loadfile->readSint64(x);
+
+   return *this;
+}
+
+SaveArchive &SaveArchive::operator << (uint64_t &x)
+{
+   if(savefile)
+      savefile->writeUint64(x);
+   else
+      loadfile->readUint64(x);
+
+   return *this;
+}
 
 SaveArchive &SaveArchive::operator << (int32_t &x)
 {
@@ -322,7 +392,7 @@ SaveArchive &SaveArchive::operator << (line_t *&ln)
    else
    {
       loadfile->readSint32(linenum);
-      if(linenum == -1) // Some line pointers can be NULL
+      if(linenum == -1) // Some line pointers can be nullptr
          ln = nullptr;
       else if(linenum < 0 || linenum >= numlines)
       {
@@ -361,6 +431,21 @@ SaveArchive &SaveArchive::operator << (mapthing_t &mt)
 SaveArchive &SaveArchive::operator << (inventoryslot_t &slot)
 {
    *this << slot.amount << slot.item;
+   return *this;
+}
+
+// Serializes a vector
+SaveArchive &SaveArchive::operator << (v2fixed_t &vec)
+{
+   *this << vec.x << vec.y;
+   return *this;
+}
+
+// Serialize a z plane reference
+SaveArchive &SaveArchive::operator << (zrefs_t &zref)
+{
+   *this << zref.floor << zref.ceiling << zref.dropoff << zref.secfloor << zref.secceil
+         << zref.passfloor << zref.passceil;
    return *this;
 }
 
@@ -416,7 +501,7 @@ static void P_DeNumberThinkers()
 //
 unsigned int P_NumForThinker(Thinker *th)
 {
-   return th ? th->getOrdinal() : 0; // 0 == NULL
+   return th ? th->getOrdinal() : 0; // 0 == nullptr
 }
 
 //
@@ -424,7 +509,7 @@ unsigned int P_NumForThinker(Thinker *th)
 //
 Thinker *P_ThinkerForNum(unsigned int n)
 {
-   return n <= num_thinkers ? thinker_p[n] : NULL;
+   return n <= num_thinkers ? thinker_p[n] : nullptr;
 }
 
 //=============================================================================
@@ -439,7 +524,10 @@ Thinker *P_ThinkerForNum(unsigned int n)
 //
 static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
 {
-   arc << pspr.sx << pspr.sy << pspr.tics << pspr.trans;
+   arc << pspr.playpos.x << pspr.playpos.y << pspr.tics << pspr.trans;
+
+   if(arc.saveVersion() >= 5)
+      arc << pspr.renderpos.x << pspr.renderpos.y;
 
    if(arc.isSaving())
    {
@@ -454,6 +542,55 @@ static void P_ArchivePSprite(SaveArchive &arc, pspdef_t &pspr)
          pspr.state = states[statenum];
       else
          pspr.state = nullptr;
+      pspr.backupPosition();
+   }
+}
+
+//
+// Recursively save weapon counters
+//
+static void P_saveWeaponCounters(SaveArchive &arc, WeaponCounterNode *node)
+{
+   if(arc.isSaving())
+   {
+      if(node->left)
+         P_saveWeaponCounters(arc, node->left);
+      if(node->right)
+         P_saveWeaponCounters(arc, node->right);
+      arc.writeLString(E_WeaponForID(node->key)->name);
+      for(int &counter : *node->object)
+         arc << counter;
+   }
+}
+
+//
+// Load all the weapon counters if there are any
+// TODO: This function is kinda ugly, probably could be rewritten
+//
+static void P_loadWeaponCounters(SaveArchive &arc, player_t &p)
+{
+   int numCounters;
+
+   delete p.weaponctrs;
+   p.weaponctrs = new WeaponCounterTree();
+   arc << numCounters;
+   if(numCounters)
+   {
+      WeaponCounter *weaponCounters = estructalloc(WeaponCounter, numCounters);
+      for(int i = 0; i < numCounters; i++)
+      {
+         size_t len;
+         char *className = nullptr;
+
+         arc.archiveLString(className, len);
+         weaponinfo_t *wp = E_WeaponForName(className);
+         if(!wp)
+            I_Error("P_loadWeaponCounters: weapon '%s' not found\n", className);
+         WeaponCounter &wc = weaponCounters[i];
+         for(int &counter : wc)
+            arc << counter;
+         p.weaponctrs->insert(wp->id, &wc);
+      }
    }
 }
 
@@ -470,50 +607,86 @@ static void P_ArchivePlayers(SaveArchive &arc)
          int j;
          player_t &p = players[i];
 
-         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn 
+         arc << p.playerstate  << p.cmd.actions     << p.cmd.angleturn
              << p.cmd.chatchar << p.cmd.consistency << p.cmd.forwardmove
              << p.cmd.look     << p.cmd.sidemove    << p.viewz
              << p.viewheight   << p.deltaviewheight << p.bob
              << p.pitch        << p.momx            << p.momy
              << p.health       << p.armorpoints     << p.armorfactor
-             << p.armordivisor << p.totalfrags
-             << p.readyweapon  << p.pendingweapon   << p.extralight
+             << p.armordivisor << p.totalfrags      << p.extralight
              << p.cheats       << p.refire          << p.killcount
              << p.itemcount    << p.secretcount     << p.didsecret
              << p.damagecount  << p.bonuscount      << p.fixedcolormap
-             << p.colormap     << p.quake           << p.jumptime;
+             << p.colormap     << p.quake           << p.jumptime
+             << p.inv_ptr;
 
          int inventorySize;
          if(arc.isSaving())
          {
+            int numCounters, slotIndex;
+            size_t noLen = 0;
+
             inventorySize = E_GetInventoryAllocSize();
             arc << inventorySize;
+
+            // Save ready and pending weapon via string
+            if(p.readyweapon)
+               arc.writeLString(p.readyweapon->name);
+            else
+               arc.archiveSize(noLen);
+            if(p.pendingweapon)
+               arc.writeLString(p.pendingweapon->name);
+            else
+               arc.archiveSize(noLen);
+
+            slotIndex = p.readyweaponslot != nullptr ? p.readyweaponslot->slotindex : 0;
+            arc << slotIndex;
+            slotIndex = p.pendingweaponslot != nullptr ? p.pendingweaponslot->slotindex : 0;
+            arc << slotIndex;
+
+            // Save numcounters, then counters if there's a need to
+            numCounters = p.weaponctrs->numNodes();
+            arc << numCounters;
+            if(numCounters)
+               P_saveWeaponCounters(arc, p.weaponctrs->root); // Recursively save
          }
          else
          {
+            int slotIndex;
+            char *className = nullptr;
+            size_t len;
+
             arc << inventorySize;
             if(inventorySize != E_GetInventoryAllocSize())
                I_Error("P_ArchivePlayers: inventory size mismatch\n");
+
+            // Load ready and pending weapon via string
+            arc.archiveLString(className, len);
+            if(estrnonempty(className) && !(p.readyweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: readyweapon '%s' not found\n", className);
+            arc.archiveLString(className, len);
+            if(estrnonempty(className) && !(p.pendingweapon = E_WeaponForName(className)))
+               I_Error("P_ArchivePlayers: pendingweapon '%s' not found\n", className);
+
+            arc << slotIndex;
+            p.readyweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.readyweapon, slotIndex);
+            arc << slotIndex;
+            if(p.pendingweapon != nullptr)
+               p.pendingweaponslot = E_FindEntryForWeaponInSlotIndex(&p, p.pendingweapon, slotIndex);
+
+            // Load counters if there's a need to
+            P_loadWeaponCounters(arc, p);
          }
          P_ArchiveArray<inventoryslot_t>(arc, p.inventory, inventorySize);
 
-         for(j = 0; j < NUMPOWERS; j++)
-            arc << p.powers[j];
+         for(int &power : p.powers)
+            arc << power;
 
          for(j = 0; j < MAXPLAYERS; j++)
             arc << p.frags[j];
 
-         for(j = 0; j < NUMWEAPONS; j++)
-            arc << p.weaponowned[j];
-
-         for(j = 0; j < NUMWEAPONS; j++)
-         {
-            for(int k = 0; k < 3; k++)
-               arc << p.weaponctrs[j][k];
-         }
-
-         for(j = 0; j < NUMPSPRITES; j++)
-            P_ArchivePSprite(arc, p.psprites[j]);
+         for(pspdef_t &psprite : p.psprites)
+            P_ArchivePSprite(arc, psprite);
 
          arc.archiveCString(p.name, 20);
 
@@ -524,9 +697,9 @@ static void P_ArchivePlayers(SaveArchive &arc)
             p.attacker    = nullptr;
             p.skin        = nullptr;
             p.pclass      = nullptr;
-            p.attackdown  = false; // sf
-            p.usedown     = false; // sf
-            p.cmd.buttons = 0;     // sf
+            p.attackdown  = AT_NONE; // sf, MaxW
+            p.usedown     = false;   // sf
+            p.cmd.buttons = 0;       // sf
             p.prevviewz   = p.viewz;
             p.prevpitch   = p.pitch;
          }
@@ -551,7 +724,7 @@ static void P_ArchiveWorld(SaveArchive &arc)
    sector_t *sec;
    line_t   *li;
    side_t   *si;
-  
+
    // do sectors
    for(i = 0, sec = sectors; i < numsectors; ++i, ++sec)
    {
@@ -563,28 +736,27 @@ static void P_ArchiveWorld(SaveArchive &arc)
       // haleyjd 03/02/09: save sector damage properties
       // haleyjd 08/30/09: save floorpic/ceilingpic as ints
 
-      arc << sec->floorheight << sec->ceilingheight 
-          << sec->friction << sec->movefactor  
+      arc << sec->srf.floor.height << sec->srf.ceiling.height
+          << sec->friction << sec->movefactor
           << sec->topmap << sec->midmap << sec->bottommap
-          << sec->flags << sec->intflags 
+          << sec->flags << sec->intflags
           << sec->damage << sec->damageflags << sec->leakiness << sec->damagemask
           << sec->damagemod
-          << sec->floorpic << sec->ceilingpic
+          << sec->srf.floor.pic << sec->srf.ceiling.pic
           << sec->lightlevel << sec->oldlightlevel
-          << sec->floorlightdelta << sec->ceilinglightdelta
+          << sec->srf.floor.lightdelta << sec->srf.ceiling.lightdelta
           << sec->special << sec->tag; // needed?   yes -- transfer types -- killough
 
       if(arc.isLoading())
       {
          // jff 2/22/98 now three thinker fields, not two
-         sec->ceilingdata  = nullptr;
-         sec->floordata    = nullptr;
-         sec->lightingdata = nullptr;
+         sec->srf.ceiling.data = nullptr;
+         sec->srf.floor.data = nullptr;
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->floorheight);
-         P_SetCeilingHeight(sec, sec->ceilingheight);
+         P_SetFloorHeight(sec, sec->srf.floor.height);
+         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
       }
    }
 
@@ -594,7 +766,10 @@ static void P_ArchiveWorld(SaveArchive &arc)
       int j;
 
       arc << li->flags << li->special << li->tag
-         << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
+          << li->args[0] << li->args[1] << li->args[2] << li->args[3] << li->args[4];
+
+      if((arc.saveVersion() >= 1))
+         arc << li->extflags;
 
       for(j = 0; j < 2; j++)
       {
@@ -616,6 +791,18 @@ static void P_ArchiveWorld(SaveArchive &arc)
 
    // haleyjd 08/30/09: save state of lightning engine
    arc << NextLightningFlash << LightningFlash << LevelSky << LevelTempSky;
+
+   // ioanch: musinfo stuff
+   S_MusInfoArchive(arc);
+}
+
+//
+// Dynamically alterable EMAPINFO stuff
+//
+static void P_ArchiveLevelInfo(SaveArchive &arc)
+{
+   arc << LevelInfo.airControl << LevelInfo.airFriction << LevelInfo.gravity <<
+          LevelInfo.skyDelta << LevelInfo.sky2Delta;
 }
 
 //
@@ -682,7 +869,7 @@ static void P_RemoveAllThinkers()
       Thinker *next = th->next;
 
       if(th->isInstanceOf(RTTI(Mobj)))
-         th->removeThinker();
+         th->remove();
       else
          delete th;
       
@@ -721,7 +908,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    {
       char *className = nullptr;
       size_t len;
-      unsigned int idx = 1; // Start at index 1, as 0 means NULL
+      unsigned int idx = 1; // Start at index 1, as 0 means nullptr
       Thinker::Type *thinkerType;
       Thinker     *newThinker;
 
@@ -813,27 +1000,28 @@ static void P_ArchiveMap(SaveArchive &arc)
    arc << amactive << followplayer << automap_grid << markpointnum;
    automapstate = (amstate_t)amactive;
 
-   if(markpointnum)
+   if(arc.isSaving())
    {
-      if(arc.isSaving())
-      {
+      if(markpointnum)
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
-      }
-      else
-      {
-         if(automapstate != amstate_off)
-            AM_Start();
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
+   }
+   else
+   {
+      if(automapstate != amstate_off)
+         AM_Start();
 
+      if(markpointnum)
+      {
          while(markpointnum >= markpointnum_max)
          {
             markpointnum_max = markpointnum_max ? markpointnum_max * 2 : 16;
-            markpoints = erealloc(mpoint_t *, markpoints, 
-                                  sizeof *markpoints * markpointnum_max);
+            markpoints = erealloc(markpoint_t *, markpoints,
+               sizeof *markpoints * markpointnum_max);
          }
 
          for(int i = 0; i < markpointnum; i++)
-            arc << markpoints[i].x << markpoints[i].y;
+            arc << markpoints[i].x << markpoints[i].y << markpoints[i].groupid;
       }
    }
 }
@@ -935,7 +1123,7 @@ static void P_ArchiveSndSeq(SaveArchive &arc, SndSeq_t *seq)
    arc.archiveCString(seq->sequence->name, 33);
 
    // twizzle command pointer
-   twizzle = seq->cmdPtr - seq->sequence->commands;
+   twizzle = static_cast<unsigned>(seq->cmdPtr - seq->sequence->commands);
    arc << twizzle;
 
    // save origin type
@@ -1042,7 +1230,7 @@ static void P_UnArchiveSndSeq(SaveArchive &arc)
    S_SetSequenceStatus(newSeq);
 }
 
-void P_ArchiveSoundSequences(SaveArchive &arc)
+static void P_ArchiveSoundSequences(SaveArchive &arc)
 {
    DLListItem<SndSeq_t> *item = SoundSequences;
    int count = 0;
@@ -1073,7 +1261,7 @@ void P_ArchiveSoundSequences(SaveArchive &arc)
       P_ArchiveSndSeq(arc, EnviroSequence);
 }
 
-void P_UnArchiveSoundSequences(SaveArchive &arc)
+static void P_UnArchiveSoundSequences(SaveArchive &arc)
 {
    int i, count = 0;
 
@@ -1100,7 +1288,7 @@ void P_UnArchiveSoundSequences(SaveArchive &arc)
 // never did so after loading the save. No longer!
 //
 
-void P_ArchiveButtons(SaveArchive &arc)
+static void P_ArchiveButtons(SaveArchive &arc)
 {
    int numsaved = 0;
 
@@ -1123,7 +1311,8 @@ void P_ArchiveButtons(SaveArchive &arc)
    {
       arc << buttonlist[i].btexture << buttonlist[i].btimer
           << buttonlist[i].dopopout << buttonlist[i].line
-          << buttonlist[i].side     << buttonlist[i].where;
+          << buttonlist[i].side     << buttonlist[i].where
+          << buttonlist[i].switchindex;
    }
 }
 
@@ -1132,7 +1321,7 @@ void P_ArchiveButtons(SaveArchive &arc)
 // haleyjd 07/06/09: ACS Save/Load
 //
 
-void P_ArchiveACS(SaveArchive &arc)
+static void P_ArchiveACS(SaveArchive &arc)
 {
    ACS_Archive(arc);
 }
@@ -1169,15 +1358,18 @@ void P_SaveCurrentLevel(char *filename, char *description)
       
       // killough 2/22/98: "proprietary" version string :-)
       memset(name2, 0, sizeof(name2));
-      sprintf(name2, VERSIONID, version);
+      sprintf(name2, VERSIONID);
    
       arc.archiveCString(name2, VERSIONSIZE);
+
+      arc.writeSaveVersion();
    
       // killough 2/14/98: save old compatibility flag:
       // haleyjd 06/16/10: save "inmasterlevels" state
       int tempskill = (int)gameskill;
       
       arc << compatibility << tempskill << inmanageddir;
+      arc << vanilla_mode;
    
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
@@ -1191,35 +1383,30 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       if((fn = W_GetManagedDirFN(g_dir))) // returns null if g_dir == &w_GlobalDir
       {
-         int len = 0;
-
          // save length of managed directory filename string and
          // managed directory filename string
-         arc.writeLString(fn, len);
+         arc.writeLString(fn);
       }
       else
       {
          // just save 0; there is no name to save
-         int len = 0;
-         arc << len;
+         size_t len = 0;
+         arc.archiveSize(len);
       }
-  
-      // killough 3/16/98, 12/98: store lump name checksum
-      // FIXME/TODO: Will be simple with future save format
-      /*
-      uint64_t checksum = G_Signature(g_dir);
-      savefile.Write(&checksum, sizeof(checksum));
 
-      // killough 3/16/98: store pwad filenames in savegame  
+      // killough 3/16/98, 12/98: store lump name checksum
+      uint64_t checksum    = G_Signature(g_dir);
+      int      numwadfiles = D_GetNumWadFiles();
+
+      arc << checksum;
+      arc << numwadfiles;
+      // killough 3/16/98: store pwad filenames in savegame
       for(wfileadd_t *file = wadfiles; file->filename; ++file)
       {
          const char *fn = file->filename;
-         savefile.Write(fn, strlen(fn));
-         savefile.WriteUint8((uint8_t)'\n');
+         arc.writeLString(fn, 0);
       }
-      savefile.WriteUint8(0);
-      */
-  
+
       for(i = 0; i < MAXPLAYERS; i++)
          arc << playeringame[i];
 
@@ -1253,6 +1440,7 @@ void P_SaveCurrentLevel(char *filename, char *description)
 
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
+      P_ArchiveLevelInfo(arc);
       P_ArchivePolyObjects(arc); // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);    // killough 1/18/98: save RNG information
@@ -1298,9 +1486,6 @@ void P_SaveCurrentLevel(char *filename, char *description)
 void P_LoadGame(const char *filename)
 {
    int i;
-   char vcheck[VERSIONSIZE], vread[VERSIONSIZE];
-   //uint64_t checksum, rchecksum;
-   int len;
    InBuffer loadfile;
    SaveArchive arc(&loadfile);
 
@@ -1316,31 +1501,42 @@ void P_LoadGame(const char *filename)
 
    try
    {
+      int     tmp_compatibility   = compatibility;
+      skill_t tmp_gameskill       = gameskill;
+      int     tmp_inmanageddir    = inmanageddir;
+      bool    tmp_vanilla_mode    = vanilla_mode;
+      int     tmp_demo_version    = demo_version;
+      int     tmp_demo_subversion = demo_subversion;
+      char    tmp_gamemapname[9]  = {};
+      strncpy(tmp_gamemapname, gamemapname, 9);
+
       // skip description
       char throwaway[SAVESTRINGSIZE];
 
       arc.archiveCString(throwaway, SAVESTRINGSIZE);
-      
-      // killough 2/22/98: "proprietary" version string :-)
-      sprintf(vcheck, VERSIONID, version);
 
-      arc.archiveCString(vread, VERSIONSIZE);
-   
-      // killough 2/22/98: Friendly savegame version difference message
-      // FIXME/TODO: restore proper version verification
-      if(strncmp(vread, vcheck, VERSIONSIZE))
-         C_Printf(FC_ERROR "Warning: save version mismatch!\a"); // blah...
+      if(!arc.readSaveVersion())
+         return;
 
       // killough 2/14/98: load compatibility mode
       // haleyjd 06/16/10: reload "inmasterlevels" state
       int tempskill;
       arc << compatibility << tempskill << inmanageddir;
-
       gameskill = (skill_t)tempskill;
-      
-      demo_version    = version;    // killough 7/19/98: use this version's id
-      demo_subversion = subversion; // haleyjd 06/17/01   
-  
+
+      arc << vanilla_mode;  // -vanilla setting
+      if(vanilla_mode)      // use UDoom version (no point for longtics now).
+      {
+         // All the other settings (save longtics) are stored in the save
+         demo_version    = 109;
+         demo_subversion = 0;
+      }
+      else
+      {
+         demo_version    = version;    // killough 7/19/98: use this version's id
+         demo_subversion = subversion; // haleyjd 06/17/01
+      }
+
       // sf: use string rather than episode, map
       for(i = 0; i < 8; i++)
       {
@@ -1348,7 +1544,7 @@ void P_LoadGame(const char *filename)
          arc << lvc;
          gamemapname[i] = (char)lvc;
       }
-      gamemapname[8] = '\0'; // ending NULL
+      gamemapname[8] = '\0'; // ending nullptr
 
       G_SetGameMap(); // get gameepisode, map
 
@@ -1359,7 +1555,8 @@ void P_LoadGame(const char *filename)
       // directory, we need to restore the managed directory to g_dir when loading
       // the game here. When this is the case, the file name of the managed directory
       // has been saved into the save game.
-      arc << len;
+      size_t len;
+      arc.archiveSize(len);
 
       if(len)
       {
@@ -1367,7 +1564,7 @@ void P_LoadGame(const char *filename)
 
          // read a name of len bytes 
          char *fn = ecalloc(char *, 1, len);
-         arc.archiveCString(fn, (size_t)len);
+         arc.archiveCString(fn, len);
 
          // Try to get an existing managed wad first. If none such exists, try
          // adding it now. If that doesn't work, the normal error message appears
@@ -1384,27 +1581,52 @@ void P_LoadGame(const char *filename)
          // requirements, such as metadata for NR4TL.
          W_InitManagedMission(inmanageddir);
       }
-   
+
       // killough 3/16/98, 12/98: check lump name checksum
-      // FIXME/TODO: advanced savegame verification is needed
-      /*
-      checksum = G_Signature(g_dir);
-
-      loadfile.Read(&rchecksum, sizeof(rchecksum));
-
-      if(memcmp(&checksum, &rchecksum, sizeof checksum))
+      if(arc.saveVersion() >= 4)
       {
-         char *msg = ecalloc(char *, 1, strlen((const char *)(save_p + sizeof checksum)) + 128);
-         strcpy(msg,"Incompatible Savegame!!!\n");
-         if(save_p[sizeof checksum])
-            strcat(strcat(msg,"Wads expected:\n\n"), (char *)(save_p + sizeof checksum));
-         strcat(msg, "\nAre you sure?");
-         C_Puts(msg);
-         G_LoadGameErr(msg);
-         efree(msg);
-         return;
+         uint64_t checksum, rchecksum;
+         int      numwadfiles;
+         qstring  msg{ "Possibly Incompatible Savegame.\nWads expected:\n\n" };
+
+         checksum = G_Signature(g_dir);
+
+         arc << rchecksum;
+         arc << numwadfiles;
+
+         for(int i = 0; i < numwadfiles; i++)
+         {
+            qstring fn;
+            char   *wad = nullptr;
+            size_t  len = 0;
+
+            arc.archiveLString(wad, len);
+            qstring(wad).extractFileBase(fn);
+            msg << fn.constPtr() << '\n';
+
+            efree(wad);
+         }
+
+         msg << "\nAre you sure?";
+
+         if(checksum != rchecksum && !forced_loadgame)
+         {
+            // If we don't restore some state things will go very awry
+            compatibility   = tmp_compatibility;
+            gameskill       = tmp_gameskill;
+            inmanageddir    = tmp_inmanageddir;
+            vanilla_mode    = tmp_vanilla_mode;
+            demo_version    = tmp_demo_version;
+            demo_subversion = tmp_demo_subversion;
+            strncpy(gamemapname, tmp_gamemapname, 9);
+
+            C_Puts(msg.constPtr());
+            G_LoadGameErr(msg.constPtr());
+            loadfile.close();
+
+            return;
+         }
       }
-      */
 
       for(i = 0; i < MAXPLAYERS; ++i)
          arc << playeringame[i];
@@ -1460,6 +1682,7 @@ void P_LoadGame(const char *filename)
       // dearchive all the modifications
       P_ArchivePlayers(arc);
       P_ArchiveWorld(arc);
+      P_ArchiveLevelInfo(arc);
       P_ArchivePolyObjects(arc);    // haleyjd 03/27/06
       P_ArchiveThinkers(arc);
       P_ArchiveRNG(arc);            // killough 1/18/98: load RNG information

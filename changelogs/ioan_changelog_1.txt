@@ -1,0 +1,1021 @@
+========================================
+Changes by Ioan Chera in Eternity Engine
+========================================
+Dates are in dd.mm.yyyy format. Most recent update is first.
+
+========================
+Since v4.02.00 "Forseti"
+========================
+
+--------------------------------------------------------------------------------
+19.04.2021
+
+BUGFIX: Fix negative ExtraData recordnums causing undefined behaviour.
+
+        Dehacked-based chainsaw replacement no longer make the rattling sound if
+        not intended.
+
+--------------------------------------------------------------------------------
+08.02.2021
+
+BUGFIX: Skip __macosx/... files from PKE resources from listing as embedded WADs
+        and exiting with error.
+
+========================
+Since v4.01.00 "Tyrfing"
+========================
+
+--------------------------------------------------------------------------------
+15.11.2020
+
+BUGFIX: Fixed fullscreen-desktop transition errors causing the display to mess
+        up in macOS. Weird stuff may still happens if somebody pulls the monitor
+        from the laptop.
+
+IMPROVEMENT: Classic (exclusive) fullscreen is once again available on macOS.
+
+========================
+Since v4.00.00 "Völuspá"
+========================
+
+--------------------------------------------------------------------------------
+12.10.2020
+
+IMPROVEMENT: Added a new EDF feature, compatibilityhacks, which shall be used
+             with MD5 checksums to setup comp_ settings.
+
+             To helps us here, we shall have the "mapchecksum" console command.
+
+--------------------------------------------------------------------------------
+11.10.2020
+
+FEATURE: New delta structure, splashdelta. It's similar to terraindelta but
+         applies to splash definitions.
+
+--------------------------------------------------------------------------------
+10.10.2020
+
+IMPROVEMENT: Flying now has the properties from Heretic: when on ground, the
+             friction is as on ground, and when on air, bobbing is removed
+             (having bobbing in air was actually an old Eternity regression).
+             Also, in Heretic if you press "fly up" you will automatically
+             activate the powerup.
+
+--------------------------------------------------------------------------------
+09.10.2020
+
+FEATURE: New EDF game property, game.autoflightartifact, which names the
+         artifact to use when attempting to fly.
+
+--------------------------------------------------------------------------------
+05.10.2020
+
+FEATURE: new thing flag, UNSTEPPABLE, which implements the Heretic specific
+         situation of being unable to step on things. Makes sense when playing
+         without jumping. All Heretic solid things shall inherit from a common
+         thing with SOLID and this flag.
+
+--------------------------------------------------------------------------------
+25.07.2020
+
+BUGFIX: Fixed HOM happening when trying to render same portal from two separate
+        windows.
+
+IMPROVEMENT: Self-tagging Portal_Define flipped-anchor visual portals are now
+        possible, though there'll be no mirror.
+
+--------------------------------------------------------------------------------
+19.07.2020
+
+IMPROVEMENT: Thing_Destroy now works like in GZDoom, unless level is vanilla
+             Hexen (where it will still support arg 3). Most notably, arg 2 is
+             now "flags" and 1 means "extreme death".
+
+--------------------------------------------------------------------------------
+19.06.2020
+
+IMPROVEMENT: Plane portals can now render sloped visplanes, with the slope
+             copied from the source sector. Note that horizon portals still lack
+             this feature, due to how they were designed.
+
+--------------------------------------------------------------------------------
+13.06.2020
+
+BUGFIX: Fixed the FLIES thingtype particlefx from sounding badly.
+
+--------------------------------------------------------------------------------
+25.05.2020
+
+BUGFIX: Fixed an occasional crash happening when starting maps with things with
+        negative doomednums.
+
+--------------------------------------------------------------------------------
+3.05.2020
+
+BUGFIX: Odd-duration frames now restore correctly when returning to nightmare
+        mode to normal.
+
+        Fixed the CLIPMIDTEX linedef flag not working over portals.
+
+--------------------------------------------------------------------------------
+26.04.2020
+
+FEATURE: New console command: warp, which, like in ZDoom, teleports player to
+         given coordinates.
+
+--------------------------------------------------------------------------------
+23.04.2020
+
+BUGFIX: Fixed the ChangeSkill linedef special acting completely wrong when
+        called from ACS, and crashing when such a script is triggered from the
+        console.
+
+        Fixed a crash happening when entering a sector with an invalid colormap
+        specified in the UDMF editor or ExtraData.
+
+--------------------------------------------------------------------------------
+5.04.2020
+
+FEATURE: Added the offset(,) Decorate state specifier which exists in ZDoom and
+         is used to set the misc1 and misc2 flags, which are also capable of
+         setting weapon coordinates.
+
+         Eternity is also capable of interpolation when using offset(). By
+         default it's disabled, but you can enable it by using the "interpolate"
+         specifier as a third argument, for example: offset(1, 32, interpolate).
+         When inheriting via the Decorate syntax and reapplying offset(),
+         interpolation will be disabled again unless you specify it again.
+
+         For the standard "frame" EDF section, you can use the +|-interpolate
+         specifier to add or remove the flag.
+
+         Added the DOOMWEAPONOFFSET gameproperties flag which is already enabled
+         for DOOM (solely for Dehacked and past EDF mod compatibility) and
+         enables the less intuitive DOOM rule on when offsets have effect.
+         Otherwise the better Hexen rule applies.
+
+--------------------------------------------------------------------------------
+27.03.2020
+
+IMPROVEMENT: Added damagefactor.remove and cleardamagefactors to thingtype and
+             thingdelta to be able to remove them from the list.
+
+--------------------------------------------------------------------------------
+24.03.2020
+
+IMPROVEMENT: Now ExtraData mapthings also support names in the "special" field,
+             just like linedefs. It was badly missing.
+
+--------------------------------------------------------------------------------
+22.03.2020
+
+BUGFIX: Fixed the "ignoreskill" flag of "ammoeffect" not working as advertised.
+
+BUGFIX: Fixed 1-sided linedef wall portals showing HOM if their middle texture
+        isn't set.
+
+--------------------------------------------------------------------------------
+21.03.2020
+
+BUGFIX: Fixed a sky rendering HOM happening in maps like Sargasso level 2 and
+        any place where both floor and ceiling of a zero-height sector have
+        F_SKY1 and it's expected to see a sky wall. Eternity would show HOM,
+        whereas both Chocolate-Doom and PrBoom would render the sky properly.
+
+BUGFIX: Fixed EDF thingtype translation 14 (white) not having any effect.
+
+BUGFIX: Fixed buggy rendering of masked middle textures when mixing sector
+        colormaps with player invulnerability or light amplification.
+
+--------------------------------------------------------------------------------
+21.02.2020
+
+FEATURE: Now the TINTTAB Heretic lump works as a BOOM-like translucency map for
+         the ghost effect.
+
+--------------------------------------------------------------------------------
+08.02.2020
+
+FEATURE: New weapon flag PHOENIXRESET, which implements the hacky Heretic way of
+         resetting the Phoenix Rod from the powered state. Its drawback is that
+         sometimes it can consume more ammo than intended. You can still use
+         FORCETOREADY as a more general-purpose counterpart.
+
+--------------------------------------------------------------------------------
+01.11.2019
+
+IMPROVEMENT: Jumping is now a compatibility setting. By default it's disabled.
+             If player attempts to jump anyway, a message will be shown that it
+             needs to be explicitly enabled in settings.
+
+             EDF player classes now support an "+AlwaysJump" option, which will
+             enable jumping regardless of compatibility setting or EMAPINFO
+             disable-jump. Also, setting "speedjump" to 0 will completely
+             disable jumping for that class.
+
+--------------------------------------------------------------------------------
+28.10.2019
+
+FEATURE: Now playerclass has two new fields: maxhealth (default 100) and
+         superhealth (default = maxhealth). They're needed for some built-in
+         effects, mainly the HealThing special and the powered A_GauntletAttack.
+
+         Also updated the EDF healtheffect items to use the new @maxhealth and
+         @superhealth keywords instead of absolute values to refer to the
+         current playerclass values. They're safely replaceable by Dehacked and
+         healthdelta structures.
+
+FEATURE: New optional "jump" ("dsjump") player skin sound, as needed by some
+         skin mods.
+
+--------------------------------------------------------------------------------
+27.10.2019
+
+BUGFIX: Stop HealThing from attempting to heal dead bodies. Crazy stuff would
+        happen, such as the view getting garbled and Eternity crashing.
+
+--------------------------------------------------------------------------------
+26.10.2019
+
+BUGFIX: For macOS, fixed the failure to start Eternity from Terminal if its
+        locale was set to non-English settings. This may apply to other
+        UNIX-like systems too.
+
+Feature: Finally added support for Dehacked "Monsters Infight" misc setting.
+
+--------------------------------------------------------------------------------
+23.10.2019
+
+FEATURE: Added the Generic_Stairs special. Needed for proper support of BOOM ge-
+         neralized stairs, which the current parameterized specials aren't
+         capable of.
+
+--------------------------------------------------------------------------------
+22.09.2019
+
+BUGFIX: If there are multiple textures with the same name in TEXTURE1+TEXTURE2,
+        the first one should be loaded, not the last. This fixes mods such as
+        Army of Darkness DOOM, which looked wrong in Eternity.
+
+--------------------------------------------------------------------------------
+23.07.2019
+
+BUGFIX: Fixed EDF thingtype droptype to actually remove inherited object's item.
+
+--------------------------------------------------------------------------------
+22.06.2019
+
+FEATURE: Added CPXF_ANCESTOR to CheckProximity.
+
+IMPROVEMENT: You can now use level lump names with -warp at the command line.
+
+--------------------------------------------------------------------------------
+20.06.2019
+
+BUGFIX: Fixed ACS function CheckProximity failing to work when counting players.
+
+--------------------------------------------------------------------------------
+31.03.2019
+
+BUGFIX: Fixed a serious crash happening when having 3D clipping on, going first
+        to a map with linked portals, then going to a map without portals. The
+        crash would occur randomly and not always.
+
+--------------------------------------------------------------------------------
+21.03.2019
+
+BUGFIX: Fixed a crash happening when seeing for the first time progressively
+        larger swirling textures.
+
+        Fixed a crash happening when loading a game with alpha-cycling sprites.
+
+--------------------------------------------------------------------------------
+18.03.2019
+
+FEATURE: Added the Generic_Lift special, which ZDoom had added, because there
+         are a few Boom generalized specials which can't be represented by other
+         parameterized lift specials.
+
+--------------------------------------------------------------------------------
+09.03.2019
+
+BUGFIX: Fixed PointPush_SetForce not using argument for magnitude when tagging
+        sectors.
+
+--------------------------------------------------------------------------------
+24.02.2019
+
+FEATURE: Added UDMF linedef "monstershoot" boolean field. Needed because the
+         ill-named "impact" field only allows players to shoot the linedef.
+         This one allows monsters too. The ones who wrote the original UDMF
+         specs must have been unaware that vanilla Doom has some specials
+         (such as GR: Open Door) which are triggerable by both monsters and
+         players, while others (the rising platforms) only by players.
+
+         Added UDMF sector "phasedlight", "lightsequence" and "lightseqalt"
+         boolean fields, because ExtraData supports adding them individually,
+         without resorting to the "special" field.
+
+--------------------------------------------------------------------------------
+23.02.2019
+
+BUGFIX: The scrolling sky scrolling speed, changeable through ACS, wasn't stored
+        in save games.
+
+IMPROVEMENT: EMAPINFO skyDelta and sky2Delta now accept fractional values. It
+             was appropriate to add this because an ACS function already
+             supports fixed-point for changing these states.
+
+             Currently legacy Hexen MAPINFO doesn't have it however.
+
+--------------------------------------------------------------------------------
+22.02.2019
+
+BUGFIX: Fixed a crash happening with sub-unit linedef length maps (made in UDMF).
+        Now the slime-trail reduction function uses floating-point.
+
+--------------------------------------------------------------------------------
+13.02.2019
+
+BUGFIX: Fixed a crash happening with slopes having MBF-transferred skies.
+
+        Fixed wrong drawing of animated textures on slopes when the textures are
+        of different sizes.
+
+--------------------------------------------------------------------------------
+09.02.2019
+
+BUGFIX: Fixed a memory leak where things with alphavelocity would never be
+        deallocated and gradually slow the game to a crawl.
+
+--------------------------------------------------------------------------------
+07.02.2019
+
+IMPROVEMENT: Masked textures (such as mid-grates) can now be applied on portal
+             overlays. They can even use the SMMU rippling animation (unlike the
+             2-sided linedef midtextures).
+
+--------------------------------------------------------------------------------
+27.01.2019
+
+FEATURE: F_SKY1 now when applied on middle textures has the same effect as floor
+         and ceiling skies.
+
+--------------------------------------------------------------------------------
+25.01.2019
+
+FEATURE: Added some UDMF-exclusive fields to ExtraData: linedef portalid and
+         sector portalid.floor and portalid.ceiling, so that Portal_Define
+         doesn't require UDMF any longer.
+
+--------------------------------------------------------------------------------
+22.01.2019
+
+FEATURE: Added a "game.itemheight" property to EDF game properties which
+         overrides item pickup height, which is set to 8 in Doom/Strife and to
+         32 in Heretic/Hexen.
+
+--------------------------------------------------------------------------------
+20.01.2019
+
+BUGFIX: Fixed the wrong drawing of Heretic weapons when no status bar is drawn.
+        Added a "fullscreenoffset" floating-point field in weaponinfo for that,
+        because Heretic weapons have different hardcoded offsets.
+
+--------------------------------------------------------------------------------
+12.01.2019
+
+BUGFIX: Fixed polyobject doors which rotate more than 180 degrees from
+        malfunctioning when blocked by things when closing.
+
+IMPROVEMENT: Scrolling texture movement (including attached 3dmidtex) is now
+             interpolated.
+
+--------------------------------------------------------------------------------
+25.12.2018
+
+IMPROVEMENT: Chasecam and walkcam are now portal-aware. Interpolation is however
+             disabled.
+
+--------------------------------------------------------------------------------
+25.11.2018
+
+IMPROVEMENT: Now if an action is bound to more than one key, and two of the keys
+             are being pressed, releasing just one of them will not stop the
+             action. You need to release all of them.
+
+--------------------------------------------------------------------------------
+19.11.2018
+
+IMPROVEMENT: Changed how floating objects move in relation to portal
+             polyobjects. They no longer remain fixed relative to the inner
+             chamber sectors, but are shifted in the opposite direction, so they
+             appear as remaining fixed relative to the main world. This
+             behaviour is more consistent with how thing movement isn't
+             influenced by traditional vertically moving sectors, and more
+             stable as well than just adapting velocity when passing the portal.
+             It also avoids unrealistic direction changes when the containing
+             polyobject changes movement.
+
+             Polyobject portals now show in the map as part of the main area,
+             because indeed they rarely ever overlap anything vertically.
+
+--------------------------------------------------------------------------------
+17.11.2018
+
+BUGFIX: Interpolate the walkcam while the game is paused. Previously it would
+        only interpolate while the game was running, but the walkcam is one of
+        the few cameras controllable even while the game is paused.
+
+        Fixed a bug where the walkcam would move a bit backwards when opening
+        the console.
+
+        Fixed objects standing on the outer edges of portal polyobjects not up-
+        dating their floor reference Z, thus floating above ground when the
+        polyobject is gone from below them.
+
+IMPROVEMENT: Console movement is now interpolated.
+
+--------------------------------------------------------------------------------
+13.11.2018
+
+BUGFIX: Fixed edge-case situations where line portal teleportation would fail,
+        such as when sliding really slowly along a wall, or almost parallel to
+        one.
+
+        Also fixed several cases where portal interpolation would fail display-
+        ing correctly.
+
+--------------------------------------------------------------------------------
+05.07.2018
+
+BUGFIX: Fixed a problem where particles appeared in the wrong place, because of
+        nearby portals.
+
+--------------------------------------------------------------------------------
+29.06.2018
+
+IMPROVEMENT: Movement through portals is finally interpolated. No more hops or
+             slight discontinuities.
+
+--------------------------------------------------------------------------------
+27.06.2018
+
+BUGFIX: Fixed a situation where linedefs would still block despite being in
+        different portal layers.
+
+--------------------------------------------------------------------------------
+20.06.2018
+
+BUGFIX: Fixed a rare glitch, which would sometimes even crash the macOS-based
+        launcher app, due to malformed or otherwise bad IWAD file URLs.
+
+        Now building Eternity from macOS is easier, as the dependencies are
+        automatically downloaded.
+
+--------------------------------------------------------------------------------
+06.06.2018
+
+BUGFIX: Fixed a problem with the macOS launcher putting IWADs in the PWAD list
+        when user is alerted when attempting to start game with no IWAD.
+
+--------------------------------------------------------------------------------
+02.06.2018
+
+BUGFIX: Fixed a regression with portal autoaiming. It would sometimes fail when
+        attempting to aim through a sector portal.
+
+--------------------------------------------------------------------------------
+07.05.2018
+
+FEATURE: Added a CHASEFAST EDF game property flag. Needed to support Raven games
+         (Heretic and Hexen) where the monster A_Chase frames are speeded up on
+         -fast and skill 5.
+
+         Added the SKILL5FAST prefix flag for non-Decorate frame and framedelta
+         definitions, which supports halving the frame time on skill 5 and -fast
+         (Doom's demons), same as what Decorate has been having with "fast".
+
+--------------------------------------------------------------------------------
+06.05.2018
+
+BUGFIX: ChangeSkill (linedef special) must also update the fast parameters when
+        switching to or from nightmare or black plague mode.
+
+        Fixed a lockup caused by having an EDF animation block of different tex-
+        ture type than something already defined internally.
+
+--------------------------------------------------------------------------------
+03.05.2018
+
+FEATURE: Added absolute.push and absolute.hop to damagetype. Needed by Heretic's
+         powered staff.
+
+--------------------------------------------------------------------------------
+02.05.2018
+
+BUGFIX: The Heretic skills 1 and 5 now multiply the ammo per item correctly.
+
+FEATURE: Added game.skillammomultiplier EDF gameprop specifier to customize this.
+
+--------------------------------------------------------------------------------
+01.05.2018
+
+BUGFIX: Fixed a buffer reading runaway when a demo has no marker at the end.
+        Thanks to vita for the bug fix.
+
+        Disabled interpolation for polyobjects with portals, until we add inter-
+        polation for portal deltas and transforms. It was suffering from
+        flickering.
+
+--------------------------------------------------------------------------------
+29.04.2018
+
+BUGFIX: Sounds with "alias" or "random" entries didn't work correctly in sound
+        sequences with "playrepeat" and other similar commands.
+
+        Fixed wrong Heretic sound sequences, by adding more gamemode specific
+        implementations in EDF.
+
+        Fixed the ceiling movement sound sequence from being cut off on stop.
+        This was breaking mods which were replacing DSSTNMOV with something
+        longer, which would only fully play when a ceiling stopped moving.
+
+--------------------------------------------------------------------------------
+28.04.2018
+
+FEATURE: Fixed Heretic pods to act properly. For this, I had to add five new
+         thing flags to Eternity, all in the flags4 list:
+
+         1. MONSTERPASS: makes the object pass through monster-blocking lines
+            even if it's not a player or friend.
+
+         2. LOWAIMPRIO: object has low autoaim priority, like MBF friends do.
+            Useful for destructible props as well.
+
+         3. STICKYCARRY: needed for the weird Heretic pod (and player) specific
+            behaviour. Players on top move with the object, and have difficulty
+            moving themselves off. They can also be carried upstairs.
+
+         4. SETTARGETONDEATH: target (attacker) is registered even when thing is
+            instantly killed on first hit. Normally the target is only changed
+            if the thing is alive, but Raven discovered this is not enough for
+            pods if they're used in a chain reaction to damage and provoke
+            monsters or score frags.
+
+         5. SLIDEOVERTHINGS: emulate Heretic 3D-clipping behaviour where
+            non-player things (notably pods) don't stop when falling on other
+            things, but instead keep moving until they fall or hit a wall.
+
+         Due to shared behaviour, the HereticPlayer thingtype also has
+         STICKYCARRY.
+
+--------------------------------------------------------------------------------
+22.04.2018
+
+BUGFIX: Fixed a long-standing problem with double skies (feature from Hexen) not
+        working at all as expected.
+
+        Fixed an off-by-one overflow (otherwise harmless) which caused
+        transparent midtextures to show extra black (or index 0) pixels below
+        most columns.
+
+--------------------------------------------------------------------------------
+19.04.2018
+
+FEATURE: Added hitscan puff type EDF definitions, which is necessary for Heretic
+         support. Consideration has also been made for future Hexen and Strife
+         in Eternity. The syntax is as follows:
+
+         pufftype <name> [: <base>]
+         {
+           thingtype       <name>
+           sound           <name>
+           hitsound        <name>
+           hitpufftype     <name>
+           nobloodpufftype <name>
+           upspeed         <number>
+           zspread         <number>
+           punchhack       <name>
+           particles       <number>
+           +|-AlwaysPuff
+           +|-Bloodless
+           +|-LocalThrust
+           +|-RandomTics
+         }
+
+         effects.edf files have been added in base/doom and base/heretic.
+
+         Each pufftype defines how a hitscan attack should spawn a thing of a
+         given class, with options such as dragonclaw alternate blast, or Strife
+         mauler behaviour etc.
+
+IMPROVEMENT: Besides preparing all non-game-specific codepointers for setting
+             pufftype, Nailbomb is now fully customizable.
+
+IMPROVEMENT: Fixed the custom spread distribution of FireCustomBullets to be
+             triangular, just like the vanilla Doom hitscans.
+
+--------------------------------------------------------------------------------
+09.04.2018
+
+FEATURE: Added the push activation from Hexen. The feature was long advertised
+         in ExtraData (and later UDMF) but only now it has been implemented.
+
+--------------------------------------------------------------------------------
+31.03.2018
+
+IMPROVEMENT: Polyobjects are now properly cut off by 1-sided walls, instead of
+             their graphics "bleeding" through them when outside the playable
+             area.
+
+BUGFIX: 2-sided polyobjects now show correctly in Eternity. The back side was
+        hidden, which was a regression from vanilla Hexen's polyobjects.
+
+--------------------------------------------------------------------------------
+30.03.2018
+
+FEATURE: Added Polyobj_MoveTo, Polyobj_MoveToSpot, Polyobj_OR_MoveTo and
+         Polyobj_OR_MoveToSpot, based on the GZDoom extensions.
+
+BUGFIX: Fixed the weird texture glitches happening with multiple polyobjects in
+        a sector, some stationary and some moving.
+
+--------------------------------------------------------------------------------
+26.03.2018
+
+FEATURE: Incosistent linked portals between separate sector islands are now
+         supported! This means you can now place "wormholes" in the map without
+         getting errors! The link offsets are updated dynamically in order to
+         provide a gameplay as good as possible.
+
+         There is still a restriction left: do not place portals between two
+         areas already interconnected by sectors. That would still error out.
+
+BUGFIX: Concealed sector portals were previously missed by the blockmap,
+        resulting in buggy behaviour when clipping against things inside some
+        through-portal elevators.
+
+--------------------------------------------------------------------------------
+23.03.2018
+
+IMPROVEMENT: Polyobject movement is now interpolated, though moving portals not
+             so yet.
+
+--------------------------------------------------------------------------------
+21.03.2018
+
+IMPROVEMENT: Weapon sprite motion is now interpolated (smooth).
+
+--------------------------------------------------------------------------------
+19.03.2018
+
+FEATURE: Polyobjects with portals no longer require their origin box to be
+         connected to sectors from the spawn spot's layer.
+
+         Did this by marking the box sector as a "neighbour" of the spawn spot
+         sector, for the P_GatherSector function.
+
+FEATURE: Visual portals on polyobjects now rotate along with the poly.
+
+BUGFIX: Fixed polyobjects not setting up their linedefs' sound origins correctly
+        at spawn.
+
+BUGFIX: Fixed two-way non-interactive portals generated by Line_QuickPortal or
+        Portal_Define on one-sided linedefs not showing the upper and lower
+        textures, unlike the linked portals.
+
+==================================
+Since v3.42.03 "Heimdal" release 2
+==================================
+
+--------------------------------------------------------------------------------
+14.03.2018
+
+BUGFIX: Fixed an oversight where the ExtraData-assigned specials weren't
+        assigned to the front sidedef's "special" entry, which is a shortcut
+        made by Lee Killough to store information about translucent walls or
+        colourmaps.
+
+--------------------------------------------------------------------------------
+12.03.2018
+
+BUGFIX: Fixed sky hack linedefs from showing up when any of the sectors has a
+        heightsec (Boom transfer-heights target) different from the other. This
+        problem reportedly doesn't occur other Boom-based ports.
+
+--------------------------------------------------------------------------------
+03.03.2018
+
+FEATURE: Polyobjects now accept clusters of portals inside them.
+
+--------------------------------------------------------------------------------
+28.02.2018
+
+FEATURE: configurable air control and friction. This is so the player can move
+         in mid-air better than what's possible under Hexen or Strife.
+
+         It's set in EMAPINFO by setting the "aircontrol" and "airfriction"
+         properties.
+
+         AirControl defaults to 0, which is like in Doom or Hexen,
+         depending on whether the comp_aircontrol flag is set. Full control is
+         set by 65536.
+
+         AirFriction was added by Altazimuth because it's useful
+         if air control is high enough, to prevent the player from reaching
+         extreme velocity. Default value is 0, like in the normal game. Maximum
+         value is 65535.
+
+         Also added two ACS functions for this: SetAirControl(fixed) and
+         SetAirFriction(fixed), the latter which is an external function, desig-
+         nated by index 302.
+
+BUGFIX: Gravity is now stored in save games, as well as air control and
+        friction.
+
+--------------------------------------------------------------------------------
+25.02.2018
+
+FEATURE: comp_zombie, comp_infcheat, comp_vile, comp_skull, comp_god and
+         comp_skymap are now "YES" by default, because they're either more
+         useful in common megawads, or are related to cheating.
+
+BUGFIX: PNAMES is now properly bounds-checked, instead of tolerating buffer
+        overflows.
+
+        Also fixed various macOS compilation issues or situations detected by
+        the compiler used there.
+
+--------------------------------------------------------------------------------
+02.01.2018
+
+BUGFIX: various demo playback fixes, including proper -solo-net playback or
+        better crushing stair emulation (which can't be 100% done however, due
+        to undefined behaviour in vanilla Doom).
+
+--------------------------------------------------------------------------------
+23.12.2017
+
+FEATURE: the demo-test facility is now available in official builds. Made major
+         fixes before merging it to master.
+
+--------------------------------------------------------------------------------
+10.11.2017
+
+BUGFIX: fixed fullscreen mode on macOS to always use the SDL-desktop mode,
+        because true fullscreen is pretty broken and doesn't abide by the human
+        interface design guidelines, which require allowing the user to switch
+        out of the game using mission control. Also changed the Cmd+Ctrl+F full-
+        screen command with Cmd+F, because ctrl can be bound to player actions.
+
+--------------------------------------------------------------------------------
+30.10.2017
+
+FEATURE: Added FRIENDFOEMISSILE thing type flag, which will make projectiles
+         shot by friends harm enemies of the same species, and viceversa.
+
+--------------------------------------------------------------------------------
+28.10.2017
+
+FEATURE: Monster infighting can now be customized. Several EDF features have
+         been added. Make sure to update the "base" folder now. If a development
+         build has no "base" folder, it's broken! "Doom/things.edf" has been
+         updated with a new entry.
+
+         1. First feature is the new "thinggroup" EDF block. It has the following
+         structure (as usual, replace all <> enclosed text with your text):
+
+         thinggroup <name>
+         {
+           flags <flags>
+           types { <thingtype1>, <thingtype2>, ... }
+         }
+
+         A group has a list of thingtype mnemonics in "types". The "flags" are
+         the following:
+
+         * PROJECTILEALLIANCE: monsters in the list won't harm each other with
+           their projectiles. This generalizes the Doom 2 baron of hell / hell
+           knight alliance. They may still be harmed by other kinds of damage
+           (explosions, bullets etc.) and react to it. To prevent that kind of
+           damage, use "damagefactor <x>, immune" on thingtype (see new feature
+           below).
+
+         * DAMAGEIGNORE: monsters in the list may be damaged by each other, but
+           will not infight as a result. This generalizes the deprecated
+           BOSSIGNORE thingtype flag. It will NOT prevent monsters from infighting
+           others of the SAME species; for that, use a new thingtype
+           flag (see below).
+
+         * INHERITED: only has meaning if any of the other flags above is set.
+           It makes it so any thingtypes inheriting the ones from the list are
+           also included in the group. By default they don't inherit.
+
+         Note: they don't have to be monsters specifically, any thingtype will do.
+
+         Currently the "name" is merely descriptive but must be unique per
+         thinggroup.
+
+         Example: the following EDF makes imps and cacodemons immune to each
+         other's attacks:
+
+           thinggroup ClassicDevils	// name can be anything but must be unique
+           {
+             flags ProjectileAlliance
+             types { DoomImp, Cacodemon }
+           }
+           // EXAMPLE END
+
+         2. New thingtype "damagefactor" attribute: "immune". Unlike
+         "damagefactor <X>, 0", this one also prevents pain, thrusting and
+         retaliation. Useful to prevent friendly fire and infighting for arbitrary
+         damage types (means of death / MODs) between monsters.
+
+         Example: this makes zombiemen immune to their own attacks:
+
+           thingdelta
+           {
+             name Zombieman
+
+             mod ZombiemanMOD      // their default MOD is "unknown"; it needs to
+                                   // be set to a custom one.
+             damagefactor ZombiemanMOD, immune
+           }
+
+           // MOD definition (use a number that doesn't conflict with the stock
+           // ones):
+           damagetype ZombiemanMOD { num 100 }
+           // EXAMPLE END
+
+         3. New thingtype flags:
+
+         * NOSPECIESINFIGHT: this one prevents monsters of the same species from
+           hating each other, even if they harm each other with friendly fire.
+           This flag is needed because the aforementioned thinggroup
+           DAMAGEIGNORE flag only has effect between monsters of different
+           species (that is a limitation inherited from the deprecated EDF
+           BOSSIGNORE thingtype flag).
+
+         * HARMSPECIESMISSILE: this one allows monsters of the same species to
+           be affected by each other's projectiles, overriding the default
+           immunity from classic Doom.
+
+--------------------------------------------------------------------------------
+15.10.2017
+
+FEATURE: Added a "Show Eternity Log" menu option in the macOS start-up dialog
+         box. Something like this was long overdue and necessary to read any
+         load-time warning that occurred without Eternity quitting with error.
+
+--------------------------------------------------------------------------------
+10.10.2017
+
+BUGFIX: Hopefully fixed an insidious optimization bug (that only occurs in
+        release builds) that would make realloc() lock up Eternity if new fields
+        are added to ticcmd_t (very likely to happen when inventory is added)
+        and a demo is recorded. First sign of error was right in the code,
+        because the Boom team didn't bother to properly put sizeof(), putting a
+        hard-coded number instead. But even after replacing that with sizeof(),
+        followed by a small margin, the game would still lock up! So to be safe,
+        I doubled that buffer size.
+
+        Problem is that I don't know why that happens; what could be optimized...
+
+--------------------------------------------------------------------------------
+08.10.2017
+
+FEATURE: Added "ee_compat = true" global field in UDMF. This makes Eternity
+         treat any other namespace the same as "eternity", and may be used by
+         editors to save UDMF wads with features common Eternity and other ports
+         (like GZDoom).
+
+         Thanks to anotak for implementing and submitting it.
+
+--------------------------------------------------------------------------------
+06.10.2017
+
+FEATURE: Added EDF animation and switch definitions. Added ANIMDEFS support --
+         a subset with what Eternity supports.
+
+--------------------------------------------------------------------------------
+06.09.2017
+
+BUGFIX: Fixed looping problems in non-conventional linked portal maps, where
+        autoaim would lock up the game because the sector portals were spotted
+        outside the intended sector, and sprite projections would slow down to
+        a crawl because the loop protection was too big (so I reduced that).
+
+--------------------------------------------------------------------------------
+05.09.2017
+
+BUGFIX: Fixed a problem with polyobject portals failing to capture things,
+        especially those placed at their spawn point. Now they also capture
+        things if they have moving pits.
+
+--------------------------------------------------------------------------------
+03.09.2017
+
+FEATURE: Added EDF thingtype tranmap. Works like the Boom linedef special.
+
+--------------------------------------------------------------------------------
+18.08.2017
+
+FEATURE: Hexen's vanilla ANIMDEFS lump is now supported.
+
+--------------------------------------------------------------------------------
+17.08.2017
+
+WORKAROUND: Removed sprite projections from moving wall portals for the time
+            being. The phantom sprites were trailing behind, ruining the view.
+
+--------------------------------------------------------------------------------
+16.08.2017
+
+BUGFIX: The sector portal seg rejector still had issues. Added easy checks when
+        the bounding box is entirely in front or at the back of the checked seg.
+
+--------------------------------------------------------------------------------
+09.08.2017
+
+FEATURE: -vanilla is now stored in savegames, which means that you can now
+         preserve vanilla-compatible campaigns.
+
+--------------------------------------------------------------------------------
+07.08.2017
+
+BUGFIX: The Heretic AUTOPAGE background wasn't moving along with the map. Fixed.
+        Now it moves at the same speed, without the displacement from vanilla
+        Heretic.
+
+--------------------------------------------------------------------------------
+06.08.2017
+
+BUGFIX: Fixed case sensitive parsing of DECORATE state "stop" keyword, causing
+        Eternity to crash if it was expressed in other ways, such as "Stop".
+
+========================
+Since v3.42.02 "Heimdal"
+========================
+
+--------------------------------------------------------------------------------
+31.07.2017
+
+BUGFIX: Demos recorded with MBF or less compatibility level in ports such as
+        PrBoom+ now ignore EMAPINFO when loaded in Eternity. This fixes some E1
+        Valiant megawad demos from the Doomed Speed Demo Archive.
+
+--------------------------------------------------------------------------------
+30.07.2017
+
+FEATURE: new EMAPINFO field, inter-levelname. The only way so far to set the in-
+         termission level name has been through levelpic. Also fixed the broken
+         handling of "entering next level" behaviour in the score intermission
+         screen.
+
+         UMAPINFO support has also started (UMAPINFO is a proposed map-info
+         format which may also appear in PrBoom+, and Eternity will read it be-
+         fore reading EMAPINFO).
+
+--------------------------------------------------------------------------------
+19.07.2017
+
+BUGFIX: fixed seg rejection problems with anchored portals.
+
+--------------------------------------------------------------------------------
+15.07.2017
+
+BUGFIX: multiline UDMF comments were pretty much broken. It was lucky that the
+        editors don't generate such comments.
+
+--------------------------------------------------------------------------------
+04.07.2017
+
+BUGFIX: linked portals were getting overflows when they were crossing a line of
+        constant X or constant Y of +/-16384, because of the average calculation
+        not being safe for int32. This caused portal maps to fail and act
+        strangely unless they were moved around in the editor, but not too much.
+
+--------------------------------------------------------------------------------
+25.06.2017
+
+BUGFIX: fixed a crash happening at map startup when linked portals had an error
+        and the map also had polyobject linked portals.
+
+--------------------------------------------------------------------------------
+26.05.2017
+
+FEATURE: linked portals can now move together with the sector surfaces. Use the
+         UDMF portal_ceil_attached or portal_floor_attached boolean sector
+         properties for this, or the ExtraData ATTACHEDPORTAL portalflag.
+
+         Added because of proposed scenarios in mods, such as vertically moving
+         platforms.
+
+--------------------------------------------------------------------------------
+14.05.2017
+
+BUGFIX: comp_planeshoot was wrongly preventing gunfire specials from being
+        activated when crossed (not impacted) by hitscans.
+
+================================================================================

@@ -126,6 +126,8 @@
 	[pwindow center];
 
 	[textField setFont:[NSFont fontWithName:@"Andale Mono" size:12]];
+   [textField setTextColor:[NSColor whiteColor]];
+   [textField setBackgroundColor:[NSColor blackColor]];
 	
 	pipe = [NSPipe pipe];
 	
@@ -155,10 +157,23 @@
 
 	if([data length])
 	{
+
 		if(!outputMessageString)
 			outputMessageString = [[NSMutableString alloc] init];
+
+      char *rawdata = malloc([data length] + 1);
+      memcpy(rawdata, [data bytes], [data length]);
+      rawdata[[data length]] = 0;
+
+      NSString *toWrite = [NSString stringWithCString:rawdata encoding:NSUTF8StringEncoding];
+      if(!toWrite)
+      {
+         free(rawdata);
+         return;  // garbage stuff, mitigate it
+      }
+      free(rawdata);
 		
-		[outputMessageString setString:[NSString stringWithCString:[data bytes] encoding:NSUTF8StringEncoding]];
+		[outputMessageString setString:toWrite];
 		
 		[textField setEditable:YES];
 		[textField setSelectedRange:NSMakeRange([[textField string] length], 0)];
@@ -174,6 +189,17 @@
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleReadCompletionNotification object:[notification object]];
 	}
 }
+
+//
+// Makes the console visible, from a user command
+//
+-(void)makeVisible
+{
+   [self window]; // make sure the window is loaded
+   [pwindow orderFront:self];
+   [pwindow setAsPanel:YES];
+}
+
 @end
 
 // EOF

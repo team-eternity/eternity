@@ -83,7 +83,7 @@ void V_InitVBuffer(VBuffer *vb, int width, int height, int bitdepth)
    vb->width = width;
    vb->height = height;
    vb->pixelsize = psize;
-   vb->pitch = width * psize;
+   vb->pitch = height * psize;
    vb->scaled = false;
    vb->needfree = false;
    vb->freelookups = false;
@@ -223,7 +223,7 @@ void V_InitSubVBuffer(VBuffer *vb, VBuffer *parent, int x, int y,
    vb->needfree = false;
    vb->freelookups = false;
 
-   VB_SetData(vb, parent->data + y * parent->pitch + x * parent->pixelsize);
+   VB_SetData(vb, parent->data + x * parent->pitch + y * parent->pixelsize);
 
    V_SetupBufferFuncs(vb, DRAWTYPE_UNSCALED);
 }
@@ -258,7 +258,7 @@ void V_FreeVBuffer(VBuffer *buffer)
    if(buffer->owndata)
    {
       efree(buffer->data);
-      buffer->data = NULL;
+      buffer->data = nullptr;
       buffer->owndata = false;
    }
 
@@ -289,7 +289,7 @@ void V_UnsetScaling(VBuffer *buffer)
    }
 
    buffer->x1lookup = buffer->x2lookup 
-      = buffer->y1lookup = buffer->y2lookup = NULL;
+      = buffer->y1lookup = buffer->y2lookup = nullptr;
 
    V_SetupBufferFuncs(buffer, DRAWTYPE_UNSCALED);
 }
@@ -425,12 +425,12 @@ void V_BlitVBuffer(VBuffer *dest, int dx, int dy, VBuffer *src,
    if(slice < 0 || i < 0)
       return;
 
-   dbuf = dest->data + (dpitch * dy) + dx;
-   sbuf = src->data + (spitch * sy) + sx;
+   dbuf = dest->data + (dpitch * dx) + dy;
+   sbuf = src->data + (spitch * sx) + sy;
 
-   while(i--)
+   while(slice--)
    {
-      memcpy(dbuf, sbuf, slice);
+      memcpy(dbuf, sbuf, i);
       dbuf += dpitch;
       sbuf += spitch;
    }

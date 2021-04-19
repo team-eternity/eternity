@@ -166,7 +166,7 @@ W1LINE(W1BuildStairsUp8, BuildStairsUp8, 0, 0);
 S1LINE(S1DoDonut, DoDonut, 0, 0);
 
 // DOOM Line Type 10 - W1 Plat Down-Wait-Up-Stay
-W1LINE(W1PlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS, 0);
+W1LINE(W1PlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS | EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 11 - S1 Exit Level
 S1LINE(S1ExitLevel, SwitchExitLevel, EV_PREALLOWZEROTAG | EV_ISMAPPEDEXIT, 0);
@@ -178,10 +178,10 @@ W1LINE(W1LightTurnOn, LightTurnOn, EV_PREALLOWZEROTAG, 0);
 W1LINE(W1LightTurnOn255, LightTurnOn255, EV_PREALLOWZEROTAG, 0);
 
 // DOOM Line Type 14 - S1 Plat Raise 32 and Change
-S1LINE(S1PlatRaise32Change, PlatRaise32Change, 0, 0);
+S1LINE(S1PlatRaise32Change, PlatRaise32Change, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 15 - S1 Plat Raise 24 and Change
-S1LINE(S1PlatRaise24Change, PlatRaise24Change, 0, 0);
+S1LINE(S1PlatRaise24Change, PlatRaise24Change, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 16 - W1 Close Door, Open in 30
 W1LINE(W1CloseDoor30, CloseDoor30, 0, 0);
@@ -196,13 +196,13 @@ S1LINE(S1FloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
 W1LINE(W1LowerFloor, LowerFloor, 0, 0);
 
 // DOOM Line Type 20 - S1 Plat Raise to Nearest and Change
-S1LINE(S1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+S1LINE(S1PlatRaiseNearestChange, PlatRaiseNearestChange, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 21 - S1 Plat Down Wait Up Stay
-S1LINE(S1PlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
+S1LINE(S1PlatDownWaitUpStay, PlatDownWaitUpStay, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 22 - W1 Plat Raise to Nearest and Change
-W1LINE(W1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+W1LINE(W1PlatRaiseNearestChange, PlatRaiseNearestChange, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 23 - S1 Floor Lower to Lowest
 S1LINE(S1FloorLowerToLowest, FloorLowerToLowest, 0, 0);
@@ -281,7 +281,7 @@ SRLINE(SRLowerFloor, LowerFloor, 0, 0);
 GRLINE(GROpenDoor, OpenDoor, EV_PREALLOWMONSTERS | EV_POSTCHANGEALWAYS, 0);
 
 // DOOM Line Type 47 - G1 Plat Raise to Nearest and Change
-G1LINE(G1PlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+G1LINE(G1PlatRaiseNearestChange, PlatRaiseNearestChange, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 49 - S1 Ceiling Crush And Raise
 S1LINE(S1CeilingCrushAndRaise, CeilingCrushAndRaise, 0, 0);
@@ -296,7 +296,7 @@ S1LINE(S1SecretExit, SwitchSecretExit, EV_PREALLOWZEROTAG | EV_ISMAPPEDEXIT, 0);
 WRLINE(WRExitLevel, ExitLevel, EV_PREALLOWZEROTAG | EV_ISMAPPEDEXIT, 0);
 
 // DOOM Line Type 53 - W1 Perpetual Platform Raise
-W1LINE(W1PlatPerpetualRaise, PlatPerpetualRaise, 0, 0);
+W1LINE(W1PlatPerpetualRaise, PlatPerpetualRaise, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 54 - W1 Platform Stop
 W1LINE(W1PlatStop, PlatStop, 0, 0);
@@ -323,7 +323,7 @@ SRLINE(SRFloorLowerToLowest, FloorLowerToLowest, 0, 0);
 SRLINE(SROpenDoor, OpenDoor, 0, 0);
 
 // DOOM Line Type 62 - SR Plat Down Wait Up Stay
-SRLINE(SRPlatDownWaitUpStay, PlatDownWaitUpStay, 0, 0);
+SRLINE(SRPlatDownWaitUpStay, PlatDownWaitUpStay, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 63 - SR Raise Door
 SRLINE(SRRaiseDoor, RaiseDoor, 0, 0);
@@ -335,13 +335,13 @@ SRLINE(SRRaiseFloor, RaiseFloor, 0, 0);
 SRLINE(SRFloorRaiseCrush, FloorRaiseCrush, 0, 0);
 
 // DOOM Line Type 66 - SR Plat Raise 24 and Change
-SRLINE(SRPlatRaise24Change, PlatRaise24Change, 0, 0);
+SRLINE(SRPlatRaise24Change, PlatRaise24Change, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 67 - SR Plat Raise 32 and Change
-SRLINE(SRPlatRaise32Change, PlatRaise32Change, 0, 0);
+SRLINE(SRPlatRaise32Change, PlatRaise32Change, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 68 - SR Plat Raise to Nearest and Change
-SRLINE(SRPlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+SRLINE(SRPlatRaiseNearestChange, PlatRaiseNearestChange, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 69 - SR Floor Raise to Next Highest Floor
 SRLINE(SRFloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
@@ -395,10 +395,10 @@ WRLINE(WRFloorLowerAndChange, FloorLowerAndChange, 0, 0);
 WRLINE(WROpenDoor, OpenDoor, 0, 0);
 
 // DOOM Line Type 87 - WR Plat Perpetual Raise
-WRLINE(WRPlatPerpetualRaise, PlatPerpetualRaise, 0, 0);
+WRLINE(WRPlatPerpetualRaise, PlatPerpetualRaise, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 88 - WR Plat DWUS
-WRLINE(WRPlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS, 0);
+WRLINE(WRPlatDownWaitUpStay, PlatDownWaitUpStay, EV_PREALLOWMONSTERS | EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 89 - WR Platform Stop
 WRLINE(WRPlatStop, PlatStop, 0, 0);
@@ -419,7 +419,7 @@ WRLINE(WRRaiseFloor24Change, RaiseFloor24Change, 0, 0);
 WRLINE(WRFloorRaiseCrush, FloorRaiseCrush, 0, 0);
 
 // DOOM Line Type 95 - WR Plat Raise to Nearest & Change
-WRLINE(WRPlatRaiseNearestChange, PlatRaiseNearestChange, 0, 0);
+WRLINE(WRPlatRaiseNearestChange, PlatRaiseNearestChange, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 96 - WR Floor Raise to Texture
 WRLINE(WRFloorRaiseToTexture, FloorRaiseToTexture, 0, 0);
@@ -494,16 +494,16 @@ DRLINE(D1DoorBlazeOpen, VerticalDoor, 0, 0);
 W1LINE(W1FloorRaiseToNearest, FloorRaiseToNearest, 0, 0);
 
 // DOOM Line Type 120 - WR Plat Blaze DWUS
-WRLINE(WRPlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
+WRLINE(WRPlatBlazeDWUS, PlatBlazeDWUS, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 121 - W1 Plat Blaze Down-Wait-Up-Stay
-W1LINE(W1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
+W1LINE(W1PlatBlazeDWUS, PlatBlazeDWUS, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 122 - S1 Plat Blaze Down-Wait-Up-Stay
-S1LINE(S1PlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
+S1LINE(S1PlatBlazeDWUS, PlatBlazeDWUS, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 123 - SR Plat Blaze Down-Wait-Up-Stay
-SRLINE(SRPlatBlazeDWUS, PlatBlazeDWUS, 0, 0);
+SRLINE(SRPlatBlazeDWUS, PlatBlazeDWUS, EV_ISMBFLIFT, 0);
 
 // DOOM Line Type 124 - WR Secret Exit
 WRLINE(WRSecretExit, SecretExit, EV_PREALLOWZEROTAG | EV_ISMAPPEDEXIT, 0);
@@ -564,10 +564,10 @@ W1LINE(W1SilentCrushAndRaise, SilentCrushAndRaise, 0, 0);
 W1LINE(W1RaiseFloor512, RaiseFloor512, 0, 200);
 
 // BOOM Extended Line Type 143 - W1 Plat Raise 24 and Change
-W1LINE(W1PlatRaise24Change, PlatRaise24Change, 0, 200);
+W1LINE(W1PlatRaise24Change, PlatRaise24Change, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 144 - W1 Plat Raise 32 and Change
-W1LINE(W1PlatRaise32Change, PlatRaise32Change, 0, 200);
+W1LINE(W1PlatRaise32Change, PlatRaise32Change, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 145 - W1 Ceiling Lower to Floor
 W1LINE(W1CeilingLowerToFloor, CeilingLowerToFloor, 0, 200);
@@ -579,10 +579,10 @@ W1LINE(W1DoDonut, DoDonut, 0, 200);
 WRLINE(WRRaiseFloor512, RaiseFloor512, 0, 200);
 
 // BOOM Extended Line Type 148 - WR Raise Floor 24 and Change
-WRLINE(WRPlatRaise24Change, PlatRaise24Change, 0, 200);
+WRLINE(WRPlatRaise24Change, PlatRaise24Change, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 149 - WR Raise Floor 32 and Change
-WRLINE(WRPlatRaise32Change, PlatRaise32Change, 0, 200);
+WRLINE(WRPlatRaise32Change, PlatRaise32Change, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 150 - WR Start Slow Silent Crusher
 WRLINE(WRSilentCrushAndRaise, SilentCrushAndRaise, 0, 200);
@@ -622,10 +622,10 @@ S1LINE(S1RaiseFloor24Change, RaiseFloor24Change, 0, 200);
 S1LINE(S1RaiseFloor24, RaiseFloor24, 0, 200);
 
 // BOOM Extended Line Type 162 - S1 Plat Perpetual Raise
-S1LINE(S1PlatPerpetualRaise, PlatPerpetualRaise, 0, 200);
+S1LINE(S1PlatPerpetualRaise, PlatPerpetualRaise, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 163 - S1 Stop Plat
-S1LINE(S1PlatStop, PlatStop, EV_POSTCHANGEALWAYS, 200);
+S1LINE(S1PlatStop, PlatStop, EV_POSTCHANGEALWAYS | EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 164 - S1 Ceiling Fast Crush and Raise
 S1LINE(S1FastCeilCrushRaise, FastCeilCrushRaise, 0, 200);
@@ -681,10 +681,10 @@ SRLINE(SRRaiseFloor24Change, RaiseFloor24Change, 0, 200);
 SRLINE(SRRaiseFloor24, RaiseFloor24, 0, 200);
 
 // BOOM Extended Line Type 181 - SR Plat Perpetual Raise
-SRLINE(SRPlatPerpetualRaise, PlatPerpetualRaise, 0, 200);
+SRLINE(SRPlatPerpetualRaise, PlatPerpetualRaise, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 182 - SR Plat Stop
-SRLINE(SRPlatStop, PlatStop, 0, 200);
+SRLINE(SRPlatStop, PlatStop, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 183 - SR Fast Ceiling Crush and Raise
 SRLINE(SRFastCeilCrushRaise, FastCeilCrushRaise, 0, 200);
@@ -773,7 +773,7 @@ SRLINE(SRSilentTeleport, SilentTeleport, EV_PREALLOWZEROTAG | EV_PREALLOWMONSTER
 
 // BOOM Extended Line Type 211 - SSR Plat Toggle Floor Instant C/F
 // jff 3/14/98 create instant toggle floor type
-SRLINE(SRPlatToggleUpDown, PlatToggleUpDown, 0, 200);
+SRLINE(SRPlatToggleUpDown, PlatToggleUpDown, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 212 - WR Plat Toggle Floor Instant C/F
 WRLINE(WRPlatToggleUpDown, PlatToggleUpDown, 0, 200);
@@ -791,10 +791,10 @@ S1LINE(S1FloorLowerToNearest, FloorLowerToNearest, 0, 200);
 SRLINE(SRFloorLowerToNearest, FloorLowerToNearest, 0, 200);
 
 // BOOM Extended Line Type 227 - W1 Raise Elevator to Next Floor
-W1LINE(W1ElevatorUp, ElevatorUp, 0, 200);
+W1LINE(W1ElevatorUp, ElevatorUp, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 228 - WR Raise Elevator to Next Floor
-WRLINE(WRElevatorUp, ElevatorUp, 0, 200);
+WRLINE(WRElevatorUp, ElevatorUp, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 229 - S1 Raise Elevator to Next Floor
 S1LINE(S1ElevatorUp, ElevatorUp, 0, 200);
@@ -803,10 +803,10 @@ S1LINE(S1ElevatorUp, ElevatorUp, 0, 200);
 SRLINE(SRElevatorUp, ElevatorUp, 0, 200);
 
 // BOOM Extended Line Type 231 - W1 Lower Elevator to Next Floor
-W1LINE(W1ElevatorDown, ElevatorDown, 0, 200);
+W1LINE(W1ElevatorDown, ElevatorDown, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 232 - WR Lower Elevator to Next Floor
-WRLINE(WRElevatorDown, ElevatorDown, 0, 200);
+WRLINE(WRElevatorDown, ElevatorDown, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 233 - S1 Lower Elevator to Next Floor
 S1LINE(S1ElevatorDown, ElevatorDown, 0, 200);
@@ -815,10 +815,10 @@ S1LINE(S1ElevatorDown, ElevatorDown, 0, 200);
 SRLINE(SRElevatorDown, ElevatorDown, 0, 200);
 
 // BOOM Extended Line Type 235 - W1 Elevator to Current Floor
-W1LINE(W1ElevatorCurrent, ElevatorCurrent, 0, 200);
+W1LINE(W1ElevatorCurrent, ElevatorCurrent, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 236 - WR Elevator to Current Floor
-WRLINE(WRElevatorCurrent, ElevatorCurrent, 0, 200);
+WRLINE(WRElevatorCurrent, ElevatorCurrent, EV_ISMBFLIFT, 200);
 
 // BOOM Extended Line Type 237 - S1 Elevator to Current Floor
 S1LINE(S1ElevatorCurrent, ElevatorCurrent, 0, 200);
@@ -1067,12 +1067,17 @@ PARAMLINE(ParamStairsBuildUpDoomCrush);
 PARAMLINE(ParamStairsBuildDownDoom);
 PARAMLINE(ParamStairsBuildUpDoomSync);
 PARAMLINE(ParamStairsBuildDownDoomSync);
+PARAMLINE(ParamGenStairs);
 PARAMLINE(PolyobjDoorSlide);
 PARAMLINE(PolyobjDoorSwing);
 PARAMLINE(PolyobjMove);
 PARAMLINE(PolyobjMoveTimes8);
+PARAMLINE(PolyobjMoveTo);
+PARAMLINE(PolyobjMoveToSpot);
 PARAMLINE(PolyobjORMove);
 PARAMLINE(PolyobjORMoveTimes8);
+PARAMLINE(PolyobjORMoveTo);
+PARAMLINE(PolyobjORMoveToSpot);
 PARAMLINE(PolyobjRotateRight);
 PARAMLINE(PolyobjORRotateRight);
 PARAMLINE(PolyobjRotateLeft);
@@ -1097,6 +1102,7 @@ PARAMLINE(ParamLightFlicker);
 PARAMLINE(ParamLightStrobe);
 PARAMLINE(ParamLightStrobeDoom);
 PARAMLINE(RadiusQuake);
+PARAMLINE(CeilingWaggle);
 PARAMLINE(FloorWaggle);
 PARAMLINE(ThingSpawn);
 PARAMLINE(ThingSpawnNoFog);
@@ -1126,6 +1132,7 @@ PARAMLINE(ParamPlatUpByValue);
 PARAMLINE(ParamPlatRaiseNearestChange);
 PARAMLINE(ParamPlatRaiseChange);
 PARAMLINE(ParamPlatToggleCeiling);
+PARAMLINE(ParamPlatGeneric);
 PARAMLINE(ParamDonut);
 PARAMLINEFLAGGED(ParamTeleport, EV_ISTELEPORTER);
 PARAMLINE(ParamTeleportNoFog);
@@ -1146,6 +1153,7 @@ PARAMLINE(ParamSectorSetCeilingPanning);
 PARAMLINE(ParamSectorChangeSound);
 PARAMLINE(TurnTagLightsOff);
 
+PARAMLINE(ACSSetFriction);
 PARAMLINE(ACSScrollFloor);
 PARAMLINE(ACSScrollCeiling);
 
@@ -1158,8 +1166,8 @@ PARAMLINE(ACSScrollCeiling);
 // additions (many of which conflict with BOOM extensions).
 //
 
-#define LINESPEC(number, action)            { number, &action, NULL },
-#define LINESPECNAMED(number, action, name) { number, &action, name },
+#define LINESPEC(number, action)            { number, &action, nullptr },
+#define LINESPECNAMED(number, action, name) { number, &action, name    },
 
 // DOOM Bindings
 ev_binding_t DOOMBindings[] =
@@ -1558,6 +1566,13 @@ ev_binding_t DOOMBindings[] =
    LINESPECNAMED(490, ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
    LINESPECNAMED(494, ParamStairsBuildUpDoomCrush,         "Stairs_BuildUpDoomCrush")
    LINESPECNAMED(495, ParamSectorChangeSound,              "Sector_ChangeSound")
+   LINESPECNAMED(496, PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
+   LINESPECNAMED(497, PolyobjMoveTo,                       "Polyobj_MoveTo")
+   LINESPECNAMED(498, PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
+   LINESPECNAMED(499, PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
+   LINESPECNAMED(500, CeilingWaggle,                       "Ceiling_Waggle")
+   LINESPECNAMED(501, ParamPlatGeneric,                    "Generic_Lift")
+   LINESPECNAMED(502, ParamGenStairs,                      "Generic_Stairs")
 };
 
 const size_t DOOMBindingsLen = earrlen(DOOMBindings);
@@ -1643,6 +1658,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(35,  ParamFloorRaiseByValueTimes8,        "Floor_RaiseByValueTimes8")
    LINESPECNAMED(36,  ParamFloorLowerByValueTimes8,        "Floor_LowerByValueTimes8")
    LINESPECNAMED(37,  ParamFloorMoveToValue,               "Floor_MoveToValue")
+   LINESPECNAMED(38,  CeilingWaggle,                       "Ceiling_Waggle")
    LINESPECNAMED(40,  ParamCeilingLowerByValue,            "Ceiling_LowerByValue")
    LINESPECNAMED(41,  ParamCeilingRaiseByValue,            "Ceiling_RaiseByValue")
    LINESPECNAMED(42,  ParamCeilingCrushAndRaise,           "Ceiling_CrushAndRaise")
@@ -1651,6 +1667,7 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(45,  ParamCeilingCrushRaiseAndStay,       "Ceiling_CrushRaiseAndStay")
    LINESPECNAMED(46,  ParamFloorCrushStop,                 "Floor_CrushStop")
    LINESPECNAMED(47,  ParamCeilingMoveToValue,             "Ceiling_MoveToValue")
+   LINESPECNAMED(59,  PolyobjORMoveToSpot,                 "Polyobj_OR_MoveToSpot")
    LINESPECNAMED(60,  ParamPlatPerpetualRaise,             "Plat_PerpetualRaise")
    LINESPECNAMED(61,  ParamPlatStop,                       "Plat_Stop")
    LINESPECNAMED(62,  ParamPlatDWUS,                       "Plat_DownWaitUpStay")
@@ -1673,7 +1690,10 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(83,  ACSLockedExecute,                    "ACS_LockedExecute")
    LINESPECNAMED(84,  ACSExecuteWithResult,                "ACS_ExecuteWithResult")
    LINESPECNAMED(85,  ACSLockedExecuteDoor,                "ACS_LockedExecuteDoor")
+   LINESPECNAMED(86,  PolyobjMoveToSpot,                   "Polyobj_MoveToSpot")
    LINESPECNAMED(87,  PolyobjStop,                         "Polyobj_Stop")
+   LINESPECNAMED(88,  PolyobjMoveTo,                       "Polyobj_MoveTo")
+   LINESPECNAMED(89,  PolyobjORMoveTo,                     "Polyobj_OR_MoveTo")
    LINESPECNAMED(90,  PolyobjORRotateLeft,                 "Polyobj_OR_RotateLeft")
    LINESPECNAMED(91,  PolyobjORRotateRight,                "Polyobj_OR_RotateRight")
    LINESPECNAMED(92,  PolyobjORMove,                       "Polyobj_OR_Move")
@@ -1721,6 +1741,8 @@ ev_binding_t HexenBindings[] =
    LINESPECNAMED(199, ParamCeilingLowerByValueTimes8,      "Ceiling_LowerByValueTimes8")
    LINESPECNAMED(200, ParamFloorGeneric,                   "Generic_Floor")
    LINESPECNAMED(201, ParamCeilingGeneric,                 "Generic_Ceiling")
+   LINESPECNAMED(203, ParamPlatGeneric,                    "Generic_Lift")
+   LINESPECNAMED(204, ParamGenStairs,                      "Generic_Stairs")
    LINESPECNAMED(205, ParamGenCrusher,                     "Generic_Crusher")
    LINESPECNAMED(206, ParamPlatDWUSLip,                    "Plat_DownWaitUpStayLip")
    LINESPECNAMED(207, ParamPlatPerpetualRaiseLip,          "Plat_PerpetualRaiseLip")
@@ -1799,11 +1821,70 @@ const size_t UDMFEternityBindingsLen = earrlen(UDMFEternityBindings);
 // accessible by ACS, or that have multiple definitions, one for lines, one for ACS
 ev_binding_t ACSBindings[] =
 {
+   LINESPEC(219, ACSSetFriction)
    LINESPEC(223, ACSScrollFloor)
    LINESPEC(224, ACSScrollCeiling)
 };
 
 const size_t ACSBindingsLen = earrlen(ACSBindings);
+
+//=============================================================================
+//
+// UDMF-to-ExtraData Reverse Special Lookups
+//
+// For ACS we sometimes need to walk backwards from a UDMF-compatible special
+// number to a special number in the DOOM/ExtraData binding set.
+//
+//=============================================================================
+
+//
+// Initialize the UDMF-to-ExtraData binding pointers
+//
+void EV_InitUDMFToExtraDataLookup()
+{
+   static bool isInit = false;
+
+   if(isInit)
+      return;
+   isInit = true;
+
+   // do the Hexen binding table first
+   for(size_t i = 0; i < HexenBindingsLen; i++)
+   {
+      ev_binding_t &hexenBind = HexenBindings[i];
+
+      // try to find the same action in the DOOM bindings table
+      for(size_t j = 0; j < DOOMBindingsLen; j++)
+      {
+         ev_binding_t &doomBind = DOOMBindings[j];
+
+         if(doomBind.action == hexenBind.action)
+         {
+            hexenBind.pEDBinding = &doomBind;
+            break;
+         }
+      }
+   }
+
+   // also do the UDMF table
+   for(size_t i = 0; i < UDMFEternityBindingsLen; i++)
+   {
+      ev_binding_t &udmfBind = UDMFEternityBindings[i];
+
+      for(size_t j = 0; j < DOOMBindingsLen; j++)
+      {
+         ev_binding_t &doomBind = DOOMBindings[j];
+
+         if(doomBind.action == udmfBind.action)
+         {
+            udmfBind.pEDBinding = &doomBind;
+            break;
+         }
+      }
+   }
+}
+
+
 
 // EOF
 

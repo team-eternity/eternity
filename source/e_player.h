@@ -1,7 +1,5 @@
-// Emacs style mode select -*- C++ -*-
-//----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,27 +19,41 @@
 //
 //----------------------------------------------------------------------------
 //
-// EDF Player Class Module
+// Purpose: EDF Player Class Module
+// Authors: James Haley, Max Waine
 //
-// By James Haley
-//
-//----------------------------------------------------------------------------
 
 #ifndef E_PLAYER_H__
 #define E_PLAYER_H__
 
 // macros
-#define NUMEDFSKINCHAINS 17
+constexpr int NUMEDFSKINCHAINS = 17;
+constexpr int NUMWEAPONSLOTS   = 16;
 
 struct skin_t;
+struct weaponslot_t;
 
 extern skin_t *edf_skins[NUMEDFSKINCHAINS];
+
+enum rebornitemflag_e
+{
+   RBIF_IGNORE = 0x01 // this reborn item has been canceled, ie., by DeHackEd
+};
+
+//
+// Player class flags
+//
+enum
+{
+   PCF_ALWAYSJUMP = 1,   // class is designed to jump, do not allow disabling it
+};
 
 // default inventory items
 struct reborninventory_t
 {
-   char *itemname; // EDF itemeffect name
-   int   amount;   // amount of item to give when reborn
+   char         *itemname; // EDF itemeffect name
+   int           amount;   // amount of item to give when reborn
+   unsigned int  flags;    // special flags
 };
 
 //
@@ -53,12 +65,16 @@ struct playerclass_t
    mobjtype_t type;      // index of mobj type used
    statenum_t altattack; // index of alternate attack state for weapon code
    int initialhealth;    // initial health when reborn
+   int maxhealth;        // max health for regular items, HealThing and Gauntlets
+   int superhealth;      // max health for superchargers and HealThing
+   fixed_t viewheight;   // [XA] view height, relative to player's 'z' position
 
    // speeds
    fixed_t forwardmove[2];
    fixed_t sidemove[2];
    fixed_t angleturn[3]; // + slow turn
    fixed_t lookspeed[2]; // haleyjd: look speeds (from zdoom)
+   fixed_t jumpspeed;
 
    // original speeds - before turbo is applied.
    fixed_t oforwardmove[2];
@@ -67,6 +83,13 @@ struct playerclass_t
    // reborn inventory
    unsigned int       numrebornitems;
    reborninventory_t *rebornitems;
+
+   // weaponslots
+   weaponslot_t *weaponslots[NUMWEAPONSLOTS];
+   bool          hasslots;
+
+   // flags
+   unsigned flags;
 
    // hashing data
    char mnemonic[129];
@@ -80,17 +103,25 @@ bool E_IsPlayerClassThingType(mobjtype_t);
 bool E_PlayerInWalkingState(player_t *);
 void E_ApplyTurbo(int ts);
 
+bool E_CanJump(const playerclass_t &pclass);
+bool E_MayJumpIfOverriden(const playerclass_t &pclass);
+
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_SKIN "skin"
+constexpr const char EDF_SEC_SKIN[] = "skin";
 extern cfg_opt_t edf_skin_opts[];
 
-#define EDF_SEC_PCLASS "playerclass"
+constexpr const char EDF_SEC_PCLASS[] = "playerclass";
+constexpr const char EDF_SEC_PDELTA[] = "playerdelta";
 extern cfg_opt_t edf_pclass_opts[];
+extern cfg_opt_t edf_pdelta_opts[];
 
 void E_ProcessSkins(cfg_t *cfg);
 void E_ProcessPlayerClasses(cfg_t *cfg);
+void E_ProcessPlayerDeltas(cfg_t *cfg);
+
+void E_ProcessFinalWeaponSlots();
 
 #endif // NEED_EDF_DEFINITIONS
 

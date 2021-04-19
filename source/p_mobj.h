@@ -38,6 +38,7 @@
 #include "info.h"
 #include "m_fixed.h"
 #include "m_vector.h"   // ioanch 20160109: for portal rendering
+#include "p_map.h"
 #include "r_interpolate.h"
 #include "r_things.h"   // ioanch 20160109: for portal rendering
 #include "tables.h"
@@ -51,7 +52,7 @@ class  BloodSpawner;
 
 // Defines
 
-#define VIEWHEIGHT      (41*FRACUNIT)
+// [XA] VIEWHEIGHT is now a playerclass property
 
 // sf: gravity >>> defaultgravity
 #define DEFAULTGRAVITY  FRACUNIT
@@ -158,8 +159,8 @@ public:
    PointThinker() : Super(), x(0), y(0), z(0), groupid(0) {}
 
    // Methods
-   virtual void serialize(SaveArchive &arc);
-   virtual void removeThinker();
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void remove() override;
    
    // Data Members
    fixed_t x, y, z;
@@ -175,6 +176,7 @@ struct sprojlast_t
    v3fixed_t pos;    // holds coordinates
    uint32_t sprite;  // holds both sprite num and frame num
    float yscale;     // if scale changes, sprojheight may also do
+   float xscale;
 };
 
 //
@@ -211,17 +213,17 @@ protected:
    deswizzle_info *dsInfo; // valid only during deserialization
 
    // Methods
-   void Think();
+   void Think() override;
 
    bool shouldApplyTorque();
 
 public:   
    // Virtual methods (overridables)
    // Inherited from Thinker:
-   virtual void updateThinker();
-   virtual void removeThinker();
-   virtual void serialize(SaveArchive &arc);
-   virtual void deSwizzle();
+   virtual void updateThinker() override;
+   virtual void remove() override;
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void deSwizzle() override;
 
    // Methods
    void backupPosition();
@@ -251,11 +253,7 @@ public:
    subsector_t *subsector;
 
    // The closest interval over all contacted Sectors.
-   fixed_t floorz;
-   fixed_t ceilingz;
-
-   // killough 11/98: the lowest floor over all contacted Sectors.
-   fixed_t dropoffz;
+   zrefs_t zref;
 
    // For movement checking.
    fixed_t radius;
@@ -273,6 +271,7 @@ public:
    mobjinfo_t *info;   // mobjinfo[mobj->type]
 
    int colour; // sf: the sprite colour
+   int tranmap;   // the translucency map
 
    // INVENTORY_FIXME: eliminate union
    union
@@ -286,6 +285,7 @@ public:
    unsigned int  flags2;    // haleyjd 04/09/99: I know, kill me now
    unsigned int  flags3;    // haleyjd 11/03/02
    unsigned int  flags4;    // haleyjd 09/13/09
+   unsigned int  flags5;    // MaxW: 2021/02/14: flags5
    int           intflags;  // killough 9/15/98: internal flags
    int           health;
 
@@ -294,7 +294,7 @@ public:
    int16_t movecount;      // when 0, select a new dir
    int16_t strafecount;    // killough 9/8/98: monster strafing
 
-   // Thing being chased/attacked (or NULL),
+   // Thing being chased/attacked (or nullptr),
    // also the originator for missiles.
    Mobj *target;
 
@@ -359,16 +359,6 @@ public:
    float xscale;      // haleyjd 11/22/09: x scaling
    float yscale;      // haleyjd 11/22/09: y scaling
 
-   fixed_t secfloorz;
-   fixed_t secceilz;
-
-   // SoM 11/6/02: Yet again! Two more z values that must be stored
-   // in the mobj struct 9_9
-   // These are the floor and ceiling heights given by the first
-   // clipping pass (map architecture + 3d sides).
-   fixed_t passfloorz;
-   fixed_t passceilz;
-
    prevpos_t prevpos;   // previous position for interpolation
 
    // scripting fields
@@ -398,13 +388,13 @@ protected:
    Mobj *target;
    unsigned int swizzled_target; // for serialization
 
-   virtual void Think();
+   virtual void Think() override;
 
 public:
-   MobjFadeThinker() : Super(), target(NULL), swizzled_target(0) {}
-   virtual void removeThinker();
-   virtual void serialize(SaveArchive &arc);
-   virtual void deSwizzle();
+   MobjFadeThinker() : Super(), target(nullptr), swizzled_target(0) {}
+   virtual void remove() override;
+   virtual void serialize(SaveArchive &arc) override;
+   virtual void deSwizzle() override;
 
    Mobj *getTarget() const { return target; }
    void setTarget(Mobj *pTarget);
@@ -432,14 +422,17 @@ enum bloodaction_e : int
 };
 
 void  P_RespawnSpecials();
-Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type);
+Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
+                  bool nolastlook = false);
 bool  P_SetMobjState(Mobj *mobj, statenum_t state);
-void  P_MobjThinker(Mobj *mobj);
-void  P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown, bool ptcl);
+Mobj *P_SpawnPuff(fixed_t x, fixed_t y, fixed_t z, angle_t dir, int updown,
+                  bool ptcl, Mobj *shooter, const MetaTable *pufftype = nullptr,
+                  const Mobj *hitmobj = nullptr);
 void  P_SpawnUnknownThings();
 Mobj *P_SpawnMapThing(mapthing_t *mt);
 bool  P_CheckMissileSpawn(Mobj *);  // killough 8/2/98
-void  P_ExplodeMissile(Mobj *);     // killough
+void  P_ExplodeMissile(Mobj *, const sector_t *topedgesec);     // killough
+bool P_CheckPortalTeleport(Mobj *mobj);
 
 //
 // Blood spawning
@@ -503,12 +496,36 @@ struct missileinfo_t
    uint32_t    flags;  // flags to affect firing (use enum values)
 };
 
+//
+// Feedback from targetting
+//
+struct playertargetinfo_t
+{
+   bool isfriend;
+   fixed_t slope;
+};
+
+//
+// SpawnPlayerMissile flags
+//
+enum
+{
+   SPM_ADDSLOPETOZ = 1,
+
+   SPMAH_FOLLOWTARGETFRIENDSLOPE = 1,
+   SPMAH_AIMFRIENDSTOO = 2,
+};
+
 Mobj *P_SpawnMissileEx(const missileinfo_t &missileinfo);
 
 // Convenience routines for missile shooting
 Mobj *P_SpawnMissile(Mobj *source, Mobj *dest, mobjtype_t type, fixed_t z);
-Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type);
+Mobj *P_SpawnPlayerMissile(Mobj *source, mobjtype_t type, unsigned flags = 0,
+                           playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileAngle(Mobj *source, mobjtype_t type, angle_t angle, fixed_t momz, fixed_t z);
+Mobj *P_SpawnPlayerMissileAngleHeretic(Mobj *source, mobjtype_t type, angle_t angle,
+                                       unsigned flags = 0,
+                                       const playertargetinfo_t *targetinfo = nullptr);
 Mobj *P_SpawnMissileWithDest(Mobj* source, Mobj* dest, mobjtype_t type, fixed_t srcz, 
                              fixed_t destx, fixed_t desty, fixed_t destz);
 
@@ -591,7 +608,8 @@ enum mobjflags_e : unsigned int
    MF_INFLOAT      = 0x00200000, // Floating to a height for a move.
    MF_COUNTKILL    = 0x00400000, // On kill, count this enemy object towards intermission kill total. Happy gathering.
    MF_COUNTITEM    = 0x00800000, // On picking up, count this item object towards intermission item total.
-   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a missile.
+   MF_SKULLFLY     = 0x01000000, // Special handling: skull in flight. Neither a cacodemon nor a
+                                 // missile. ALSO CHECK intflag MIF_SKULLFLYSEE.
    MF_NOTDMATCH    = 0x02000000, // Don't spawn this object in deathmatch mode (e.g. key cards).
    MF_TRANSLATION  = 0x0c000000, // Player translation mask for sprite re-indexing.
    MF_TRANSSHIFT   = 26,         // Hmm ???. -- well, what? sf  -- Bernd Kremeier again, probably. haleyjd
@@ -698,19 +716,40 @@ enum mobjflags4_e : unsigned int
    MF4_TOTALINVISIBLE = 0x00020000, // Thing is invisible to monsters
    MF4_DRAWSBLOOD     = 0x00040000, // For missiles, spawn blood when hitting bleeding things
    MF4_SPACPUSHWALL   = 0x00080000, // thing can activate push walls
+   MF4_NOSPECIESINFIGHT   = 0x00100000, // no infighting in this species, but still damage
+   MF4_HARMSPECIESMISSILE = 0x00200000, // harmed even by projectiles of same species
+   MF4_FRIENDFOEMISSILE   = 0x00400000, // friends and foes of same species hurt each other
+   MF4_BLOODLESSIMPACT    = 0x00800000, // doesn't draw blood when it hits or rips a thing
+   MF4_HERETICBOUNCES     = 0x01000000, // thing bounces à la Heretic
+   MF4_MONSTERPASS        = 0x02000000, // not blocked by blockmonsters
+   MF4_LOWAIMPRIO         = 0x04000000, // less likely to be autoaimed
+   MF4_STICKYCARRY        = 0x08000000, // can carry other things on top of it
+   MF4_SETTARGETONDEATH   = 0x10000000, // target is updated even when one-shot
+   MF4_SLIDEOVERTHINGS    = 0x20000000, // thing will keep sliding when on top of things
+   MF4_UNSTEPPABLE        = 0x40000000, // thing cannot be stepped on like stairs
+   MF4_RANGEEIGHTH        = 0x80000000  // uses eighth actual distance
+};
+
+enum mobjflags5_e : unsigned int
+{
+   MF5_NOTAUTOAIMED       = 0x00000001, // can't be autoaimed (for real)
 };
 
 // killough 9/15/98: Same, but internal flags, not intended for .deh
 // (some degree of opaqueness is good, to avoid compatibility woes)
 
+//
+// IMPORTANT: if you want to reuse any of the UNUSED bits, remember to increment WRITE_SAVE_VERSION
+//            and clear them in Mobj::serialize when loading older saves.
+//
 enum
 {
    MIF_FALLING     = 0x00000001, // Object is falling
    MIF_ARMED       = 0x00000002, // Object is armed (for MF_TOUCHY objects)
    MIF_LINEDONE    = 0x00000004, // Object has activated W1 or S1 linedef via DEH frame
    MIF_DIEDFALLING = 0x00000008, // haleyjd: object died by falling
-   MIF_ONFLOOR     = 0x00000010, // SoM: object stands on floor
-   MIF_ONSECFLOOR  = 0x00000020, // SoM: Object stands on sector floor *specific*
+   MIF_ONFLOOR     = 0x00000010, // [UNUSED] SoM: object stands on floor
+   MIF_ONSECFLOOR  = 0x00000020, // [UNUSED] SoM: Object stands on sector floor *specific*
    MIF_SCREAMED    = 0x00000040, // haleyjd: player has screamed
    MIF_NOFACE      = 0x00000080, // haleyjd: thing won't face its target
    MIF_CRASHED     = 0x00000100, // haleyjd: thing has entered crashstate
@@ -728,9 +767,29 @@ enum
    // was added to keep track.
    MIF_HIDDENBYQUAKE = 0x00010000,
 
+   // A substitute for calling E_SafeThingName every tic for every Mobj
+   MIF_MUSICCHANGER = 0x00020000,
+
+   MIF_MAYPLAYPARTICLESOUNDS = 0x00040000,   // Hint that it may be playing particle sounds
+   MIF_SKULLFLYSEE = 0x00080000, // ioanch: when MF_SKULLFLY is set, return to seestate, not spawn
+
    // these should be cleared when a thing is being raised
-   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_WIMPYDEATH),
+   MIF_CLEARRAISED = (MIF_DIEDFALLING|MIF_SCREAMED|MIF_CRASHED|MIF_SKULLFLYSEE|MIF_WIMPYDEATH),
 };
+
+//=============================================================================
+//
+// Functions which depend on flags
+//
+
+//
+// True if thing is on floor or hanging from ceiling
+//
+inline static bool P_mobjOnSurface(const Mobj &mobj)
+{
+   return mobj.z <= mobj.zref.floor || (mobj.z + mobj.height >= mobj.zref.ceiling &&
+                                        mobj.flags & MF_SPAWNCEILING && mobj.flags & MF_NOGRAVITY);
+}
 
 #endif
 

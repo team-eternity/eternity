@@ -55,6 +55,7 @@
 #include "f_finale.h"
 #include "f_wipe.h"
 #include "g_bind.h"
+#include "g_demolog.h"
 #include "g_dmflag.h"
 #include "g_game.h"
 #include "g_gfs.h"
@@ -94,7 +95,6 @@ char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 char *csc_files[MAXLOADFILES];
 
 int textmode_startup = 0;  // sf: textmode_startup for old-fashioned people
-int use_startmap = -1;     // default to -1 for asking in menu
 bool devparm;              // started game with -devparm
 
 // jff 1/24/98 add new versions of these variables to remember command line
@@ -119,8 +119,7 @@ bool nomusicparm;
 extern bool inhelpscreens;
 
 skill_t startskill;
-int     startepisode;
-int     startmap;
+startlevel_t d_startlevel;
 char    *startlevel;
 bool autostart;
 
@@ -137,12 +136,12 @@ char    *basegamepath;            // haleyjd 11/23/06: path of base/game directo
 char    *userpath;                // haleyjd 02/05/12: path of "user" directory
 char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
 
-void D_CheckNetGame(void);
-void D_ProcessEvents(void);
+void D_CheckNetGame();
+void D_ProcessEvents();
 void G_BuildTiccmd(ticcmd_t* cmd);
-void D_DoAdvanceDemo(void);
+void D_DoAdvanceDemo();
 
-void usermsg(const char *s, ...)
+void usermsg(E_FORMAT_STRING(const char *s), ...)
 {
    static char msg[1024];
    va_list v;
@@ -187,7 +186,7 @@ static int eventhead, eventtail;
 // D_PostEvent
 // Called by the I/O functions when input is detected
 //
-void D_PostEvent(event_t *ev)
+void D_PostEvent(const event_t *ev)
 {
    events[eventhead++] = *ev;
    eventhead &= MAXEVENTS-1;
@@ -251,7 +250,7 @@ void D_PageTicker(void)
 //
 // killough 11/98: add credits screen
 //
-void D_PageDrawer()
+static void D_PageDrawer()
 {
    int l;
 
@@ -279,7 +278,11 @@ static void D_SetPageName(const char *name)
 
 static void D_DrawTitle(const char *name)
 {
-   S_StartMusic(GameModeInfo->titleMusNum);
+   if(GameModeInfo->titleMusName != nullptr && *GameModeInfo->titleMusName)
+      S_ChangeMusicName(GameModeInfo->titleMusName, false);
+   else
+      S_StartMusic(GameModeInfo->titleMusNum);
+
    pagetic = GameModeInfo->titleTics;
 
    if(GameModeInfo->missionInfo->flags & MI_CONBACKTITLE)
@@ -300,34 +303,34 @@ const demostate_t demostates_doom[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // shareware, registered
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "HELP2"    },
    { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_doom2[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // commercial
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "CREDIT"   },
    { G_DeferedPlayDemo, "DEMO3"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_udoom[] =
 {
    { D_DrawTitle,       "TITLEPIC" }, // retail
    { G_DeferedPlayDemo, "DEMO1"    },
-   { D_SetPageName,     NULL       },
+   { D_SetPageName,     nullptr    },
    { G_DeferedPlayDemo, "DEMO2"    },
    { D_SetPageName,     "CREDIT"   },
    { G_DeferedPlayDemo, "DEMO3"    },
    { G_DeferedPlayDemo, "DEMO4"    },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_hsw[] =
@@ -337,9 +340,9 @@ const demostate_t demostates_hsw[] =
    { G_DeferedPlayDemo, "DEMO1" },
    { D_SetPageName,     "ORDER" },
    { G_DeferedPlayDemo, "DEMO2" },
-   { D_SetPageName,     NULL    },
+   { D_SetPageName,     nullptr },
    { G_DeferedPlayDemo, "DEMO3" },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_hreg[] =
@@ -349,15 +352,15 @@ const demostate_t demostates_hreg[] =
    { G_DeferedPlayDemo, "DEMO1"  },
    { D_SetPageName,     "CREDIT" },
    { G_DeferedPlayDemo, "DEMO2"  },
-   { D_SetPageName,     NULL     },
+   { D_SetPageName,     nullptr  },
    { G_DeferedPlayDemo, "DEMO3"  },
-   { NULL }
+   { nullptr }
 };
 
 const demostate_t demostates_unknown[] =
 {
-   { D_SetPageName, NULL }, // indetermined - haleyjd 04/01/08
-   { NULL }
+   { D_SetPageName, nullptr }, // indetermined - haleyjd 04/01/08
+   { nullptr }
 };
 
 //
@@ -487,13 +490,13 @@ static void D_showMemStats()
          psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%", 
                    cachelevels[i].name,
                    memorybytag[tag], memorybytag[tag] * s);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+         V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
       else
       {
          psnprintf(buffer, sizeof(buffer), "%s%9lu %7.02f%%",
                    cachelevels[i].name, total_memory, 100.0f);
-         V_FontWriteText(font, buffer, 1, 1 + i*font->cy);
+         V_FontWriteText(font, buffer, 1, static_cast<int>(1 + i*font->cy));
       }
    }
 }
@@ -566,7 +569,7 @@ void D_DrawWings()
 // D_Display
 //  draw current display, possibly wiping it from the previous
 //
-void D_Display()
+static void D_Display()
 {
    if(nodrawers)                // for comparative timing / profiling
       return;
@@ -599,7 +602,7 @@ void D_Display()
          // see if the border needs to be initially drawn
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
-         
+
          if(automapstate == amstate_full)
          {
             AM_Drawer();
@@ -735,7 +738,7 @@ void D_Display()
 //
 char *D_DoomExeDir()
 {
-   static char *base = NULL;
+   static char *base = nullptr;
 
    if(!base) // cache multiple requests
    {
@@ -768,7 +771,7 @@ static const char *game_name; // description of iwad
 // D_SetGameName
 //
 // Sets the game_name variable for displaying what version of the game is being
-// played at startup. "iwad" may be NULL. GameModeInfo must be initialized prior
+// played at startup. "iwad" may be nullptr. GameModeInfo must be initialized prior
 // to calling this.
 //
 void D_SetGameName(const char *iwad)
@@ -782,7 +785,7 @@ void D_SetGameName(const char *iwad)
       // joel 10/16/98 Final DOOM fix
       if(GameModeInfo->missionInfo->id == doom2)
       {
-         int i = strlen(iwad);
+         int i = static_cast<int>(strlen(iwad));
          if(i >= 10 && !strncasecmp(iwad+i-10, "doom2f.wad", 10))
          {
             language = french;
@@ -871,7 +874,7 @@ void D_InitPaths()
 // haleyjd 04/17/03: copied, slightly modified prboom's code to
 // allow quoted LFNs in response files.
 //
-void FindResponseFile()
+static void FindResponseFile()
 {
    int i;
 
@@ -881,7 +884,7 @@ void FindResponseFile()
       {
          int size, index, indexinfile;
          byte *f;
-         char *file = NULL, *firstargv;
+         char *file = nullptr, *firstargv;
          char **moreargs = ecalloc(char **, myargc, sizeof(char *));
          char **newargv;
          qstring fname;
@@ -1048,10 +1051,8 @@ static void D_ProcessWadPreincludes()
    // haleyjd 09/30/08: don't do in shareware
    if(!M_CheckParm("-noload") && !(GameModeInfo->flags & GIF_SHAREWARE))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; ++i)
-         if((s = wad_files[i]))
+      for(char *s : wad_files)
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1076,11 +1077,9 @@ static void D_ProcessDehPreincludes(void)
 {
    if(!M_CheckParm ("-noload"))
    {
-      int i;
-      char *s;
-      for(i = 0; i < MAXLOADFILES; i++)
+      for(char *s : deh_files)
       {
-         if((s = deh_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1119,10 +1118,9 @@ static void D_AutoExecScripts()
 
    if(!M_CheckParm("-nocscload")) // separate param from above
    {
-      char *s;
-      for(int i = 0; i < MAXLOADFILES; i++)
+      for(char *s : csc_files)
       {
-         if((s = csc_files[i]))
+         if(s)
          {
             while(ectype::isSpace(*s))
                s++;
@@ -1149,7 +1147,7 @@ static void D_AutoExecScripts()
 //
 // If there are multiple instances of "DEHACKED", we process each, in first
 // to last order (we must reverse the order since they will be stored in
-// last to first order in the chain). Passing NULL as first argument to
+// last to first order in the chain). Passing nullptr as first argument to
 // ProcessDehFile() indicates that the data comes from the lump number
 // indicated by the third argument, instead of from a file.
 
@@ -1162,10 +1160,10 @@ static void D_ProcessDehInWad(int i)
    if(i >= 0)
    {
       lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
-      D_ProcessDehInWad(lumpinfo[i]->namehash.next);
+      D_ProcessDehInWad(lumpinfo[i]->next);
       if(!strncasecmp(lumpinfo[i]->name, "DEHACKED", 8) &&
          lumpinfo[i]->li_namespace == lumpinfo_t::ns_global)
-         D_QueueDEH(NULL, i); // haleyjd: queue it
+         D_QueueDEH(nullptr, i); // haleyjd: queue it
    }
 }
 
@@ -1174,7 +1172,7 @@ static void D_ProcessDehInWads()
    // haleyjd: start at the top of the hash chain
    lumpinfo_t *root = wGlobalDir.getLumpNameChain("DEHACKED");
 
-   D_ProcessDehInWad(root->namehash.index);
+   D_ProcessDehInWad(root->index);
 }
 
 //=============================================================================
@@ -1234,15 +1232,20 @@ extern int levelFragLimit;
 //
 static void D_StartupMessage()
 {
-   puts("The Eternity Engine\n"
-        "Copyright 2016 James Haley, Stephen McGranahan, et al.\n"
-        "http://www.doomworld.com/eternity\n"
-        "\n"
-        "This program is free software distributed under the terms of\n"
-        "the GNU General Public License. See the file \"COPYING\" for\n"
-        "full details. Commercial sale or distribution of this product\n"
-        "without its license, source code, and copyright notices is an\n"
-        "infringement of US and international copyright laws.\n");
+   static char copyright[] =
+      "The Eternity Engine\n"
+      "Copyright YEAR James Haley, Stephen McGranahan, et al.\n"
+      "http://www.doomworld.com/eternity\n"
+      "\n"
+      "This program is free software distributed under the terms of\n"
+      "the GNU General Public License. See the file \"COPYING\" for\n"
+      "full details. Commercial sale or distribution of this product\n"
+      "without its license, source code, and copyright notices is an\n"
+      "infringement of US and international copyright laws.\n";
+
+   memcpy(copyright + 30, &__DATE__[7], 4); // Automatically update copyright year
+
+   puts(copyright);
 }
 
 //
@@ -1256,7 +1259,7 @@ static void D_DoomInit()
    int p, slot;
    int dmtype = 0;          // haleyjd 04/14/03
    bool haveGFS = false;    // haleyjd 03/10/03
-   gfs_t *gfs = NULL;
+   gfs_t *gfs = nullptr;
 
    gamestate = GS_STARTUP; // haleyjd 01/01/10
 
@@ -1410,13 +1413,17 @@ static void D_DoomInit()
          else
          {
             if(file)
-               D_AddFile(myargv[p], lumpinfo_t::ns_global, NULL, 0, DAF_NONE);
+               D_AddFile(myargv[p], lumpinfo_t::ns_global, nullptr, 0, DAF_NONE);
          }
       }
    }
 
+   // ioanch 20160313: demo testing
+   if((p = M_CheckParm("-demolog")) && p < myargc - 1)
+      G_DemoLogInit(myargv[p + 1]);
+
    // haleyjd 01/17/11: allow -play also
-   const char *playdemoparms[] = { "-playdemo", "-play", NULL };
+   const char *playdemoparms[] = { "-playdemo", "-play", nullptr };
 
    if(!(p = M_CheckMultiParm(playdemoparms, 1)) || p >= myargc-1)   // killough
    {
@@ -1427,7 +1434,7 @@ static void D_DoomInit()
    }
 
    // haleyjd 02/29/2012: support a loose demo on the command line
-   const char *loosedemo = NULL;
+   const char *loosedemo = nullptr;
    if(!p)
       loosedemo = D_LooseDemo();
 
@@ -1439,7 +1446,7 @@ static void D_DoomInit()
       file = demosource;
       file.addDefaultExtension(".lmp"); // killough
 
-      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, NULL, 0, DAF_DEMO);
+      D_AddFile(file.constPtr(), lumpinfo_t::ns_demos, nullptr, 0, DAF_DEMO);
       usermsg("Playing demo '%s'\n", file.constPtr());
    }
 
@@ -1447,8 +1454,7 @@ static void D_DoomInit()
 
    // jff 3/24/98 was sk_medium, just note not picked
    startskill = sk_none;
-   startepisode = 1;
-   startmap = 1;
+   d_startlevel = { 1, 1 };
    autostart = false;
 
    if((p = M_CheckParm("-skill")) && p < myargc - 1)
@@ -1459,8 +1465,8 @@ static void D_DoomInit()
 
    if((p = M_CheckParm("-episode")) && p < myargc - 1)
    {
-      startepisode = myargv[p+1][0]-'0';
-      startmap = 1;
+      d_startlevel.episode = myargv[p+1][0]-'0';
+      d_startlevel.map = 1;
       autostart = true;
    }
 
@@ -1497,16 +1503,23 @@ static void D_DoomInit()
    if(((p = M_CheckParm("-warp")) ||      // killough 5/2/98
        (p = M_CheckParm("-wart"))) && p < myargc - 1)
    {
-      // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
-      if(GameModeInfo->flags & GIF_MAPXY)
+      char *endptr = nullptr;
+      strtol(myargv[p + 1], &endptr, 10);
+      if(*endptr) // if not a number, use map name
       {
-         startmap = atoi(myargv[p + 1]);
+         d_startlevel.mapname = myargv[p + 1];
+         autostart = true;
+      }
+      else if(GameModeInfo->flags & GIF_MAPXY)
+      {
+         // 1/25/98 killough: fix -warp xxx from crashing Doom 1 / UD
+         d_startlevel.map = atoi(myargv[p + 1]);
          autostart = true;
       }
       else if(p < myargc - 2)
       {
-         startepisode = atoi(myargv[++p]);
-         startmap = atoi(myargv[p + 1]);
+         d_startlevel.episode = atoi(myargv[++p]);
+         d_startlevel.map = atoi(myargv[p + 1]);
          autostart = true;
       }
    }
@@ -1719,7 +1732,6 @@ static void D_DoomInit()
 
       // this is the last GFS action, so free the gfs now
       G_FreeGFS(gfs);
-      haveGFS = false;
    }
 
    // haleyjd: GFS is no longer valid from here!
@@ -1764,6 +1776,15 @@ static void D_DoomInit()
    // haleyjd 08/29/08
    C_Printf(FC_GREEN "Dedicated to the memory of our friend\n"
             "Jason 'Amaster' Masihdas 12 Oct 1981 - 14 Jun 2007\n");
+#elif defined(KATE_MEMORIAL)
+   // MaxW: 2017/12/27
+   // Note: FC_CUSTOM1 is temporarily pink/purple
+   C_Printf(FC_CUSTOM1 "Dedicated to team member\n"
+            "and our dear friend:\n"
+            "Kaitlyn Anne Fox\n"
+            "(withheld) - 19 Dec 2017\n"
+            "May her spirit and memory\n"
+            "live on into Eternity\n");
 #endif
 
    // haleyjd: if we didn't do textmode startup, these didn't show up
@@ -1787,6 +1808,9 @@ static void D_DoomInit()
       C_Update();
 
    idmusnum = -1; //jff 3/17/98 insure idmus number is blank
+
+   // Load OPTIONS that are safe to read at startup
+   M_LoadOptions(default_t::wad_startup);
 
 #if 0
    // check for a driver that wants intermission stats
@@ -1812,10 +1836,15 @@ static void D_DoomInit()
    // Support -loadgame with -record and reimplement -recordfrom.
    if((slot = M_CheckParm("-recordfrom")) && (p = slot+2) < myargc)
       G_RecordDemo(myargv[p]);
+   else if((p = M_CheckParm("-recordfromto")) && p < myargc - 2)
+   {
+      autostart = true;
+      G_RecordDemoContinue(myargv[p + 1], myargv[p + 2]);
+   }
    else
    {
       // haleyjd 01/17/11: allow -recorddemo as well
-      const char *recordparms[] = { "-record", "-recorddemo", NULL };
+      const char *recordparms[] = { "-record", "-recorddemo", nullptr };
 
       slot = M_CheckParm("-loadgame");
  
@@ -1852,11 +1881,12 @@ static void D_DoomInit()
       singledemo = true;
    }
 
-   startlevel = estrdup(G_GetNameForMap(startepisode, startmap));
+   startlevel = estrdup(d_startlevel.mapname ? d_startlevel.mapname :
+                        G_GetNameForMap(d_startlevel.episode, d_startlevel.map));
 
    if(slot && ++slot < myargc)
    {
-      char *file = NULL;
+      char *file = nullptr;
       size_t len = M_StringAlloca(&file, 2, 26, basesavegame, savegamename);
       slot = atoi(myargv[slot]);        // killough 3/16/98: add slot info
       G_SaveGameName(file, len, slot); // killough 3/22/98
@@ -1870,7 +1900,11 @@ static void D_DoomInit()
          if(M_CheckParm("-vanilla") > 0)
             G_SetOldDemoOptions();
 
-         G_InitNewNum(startskill, startepisode, startmap);
+         if(d_startlevel.mapname)
+            G_InitNew(startskill, d_startlevel.mapname);
+         else
+            G_InitNewNum(startskill, d_startlevel.episode, d_startlevel.map);
+
          if(demorecording)
             G_BeginRecording();
       }
@@ -1944,7 +1978,7 @@ void D_DoomMain()
 // Console Commands
 //
 
-VARIABLE_TOGGLE(d_drawfps, NULL, onoff);
+VARIABLE_TOGGLE(d_drawfps, nullptr, onoff);
 CONSOLE_VARIABLE(d_drawfps, d_drawfps, 0) {}
 
 //----------------------------------------------------------------------------

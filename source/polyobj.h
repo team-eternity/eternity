@@ -65,7 +65,7 @@ struct polymaplink_t;
 //
 // Polyobject Structure
 //
-typedef struct polyobj_s
+struct polyobj_t
 {
    int id;    // numeric id
    int first; // for hashing: index of first polyobject in this hash chain
@@ -81,8 +81,8 @@ typedef struct polyobj_s
    int numVerticesAlloc;       // number of vertices allocated
    vertex_t *origVerts;        // original positions relative to spawn spot
    vertex_t *tmpVerts;         // temporary vertex backups for rotation
-   vertex_t **vertices;        // vertices this polyobject must move   
-   
+   vertex_t **vertices;        // vertices this polyobject must move
+
    int numLines;               // number of linedefs
    int numLinesAlloc;          // number of linedefs allocated
    line_t **lines;             // linedefs this polyobject must move
@@ -107,8 +107,8 @@ typedef struct polyobj_s
    size_t numPortals;          // ioanch 20160228: quick cache if it has
    portal_t **portals;         // portals. NO NEED TO SERIALIZE THIS. 
    bool hasLinkedPortals;      // quick check if any portal is linked
-                               
-} polyobj_t;
+
+};
 
 //
 // Polyobject Blockmap Link Structure
@@ -126,16 +126,16 @@ struct polymaplink_t
 
 class SaveArchive;
 
-class PolyRotateThinker : public Thinker
+class PolyRotateThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolyRotateThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;    // numeric id of polyobject (avoid C pointers here)
@@ -144,16 +144,16 @@ public:
    bool hasBeenPositive;  // MaxW: 20160106: flag to differentiate angles of >=180 from < 0
 };
 
-class PolyMoveThinker : public Thinker
+class PolyMoveThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolyMoveThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;     // numeric id of polyobject
@@ -164,16 +164,36 @@ public:
    unsigned int angle; // angle along which to move
 };
 
-class PolySlideDoorThinker : public Thinker
+//
+// This is like above, but with a movement vector instead of angle. Needed because we don't have
+// an accurate fixed-point square root function.
+//
+class PolyMoveXYThinker final : public Thinker
+{
+   DECLARE_THINKER_TYPE(PolyMoveXYThinker, Thinker)
+
+protected:
+   void Think() override;
+
+public:
+   void serialize(SaveArchive &arc) override;
+
+   int polyObjNum;
+   fixed_t speed;       // velocity absolute (cached)
+   v2fixed_t velocity;  // velocity to move
+   v2fixed_t distance;  // distance to travel (absolute X and absolute Y)
+};
+
+class PolySlideDoorThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolySlideDoorThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;         // numeric id of affected polyobject
@@ -191,16 +211,16 @@ public:
    bool closing;           // if true, is closing
 };
 
-class PolySwingDoorThinker : public Thinker
+class PolySwingDoorThinker final : public Thinker
 {
    DECLARE_THINKER_TYPE(PolySwingDoorThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
    
    // Data Members
    int polyObjNum;        // numeric id of affected polyobject
@@ -218,23 +238,23 @@ public:
 // Line Activation Data Structures
 //
 
-typedef struct polyrotdata_s
+struct polyrotdata_t
 {
    int polyObjNum;   // numeric id of polyobject to affect
    int direction;    // direction of rotation
    int speed;        // angular speed
    int distance;     // distance to move
    bool overRide;    // if true, will override any action on the object
-} polyrotdata_t;
+};
 
-typedef struct polymovedata_s
+struct polymovedata_t
 {
    int polyObjNum;     // numeric id of polyobject to affect
    fixed_t distance;   // distance to move
    fixed_t speed;      // linear speed
    unsigned int angle; // angle of movement
    bool overRide;      // if true, will override any action on the object
-} polymovedata_t;
+};
 
 // polyobject door types
 typedef enum
@@ -243,7 +263,7 @@ typedef enum
    POLY_DOOR_SWING,
 } polydoor_e;
 
-typedef struct polydoordata_s
+struct polydoordata_t
 {
    int polyObjNum;     // numeric id of polyobject to affect
    int doorType;       // polyobj door type
@@ -251,20 +271,39 @@ typedef struct polydoordata_s
    unsigned int angle; // for slide door only, angle of motion
    int distance;       // distance to move
    int delay;          // delay time after opening
-} polydoordata_t;
+};
+
+//
+// Polyobj_[OR]_MoveTo[Spot] data
+//
+struct polymoveto_t
+{
+   int polyObjNum;   // poly id
+   int speed;        // speed
+   bool targetMobj;  // true if target is a tid, false if absolute coordinates
+   union
+   {
+      int tid;       // target tid
+      v2fixed_t pos; // or coordinates
+   };
+   bool overRide;    // whether it can override
+   Mobj *activator;  // activator if TID == 0
+};
 
 //
 // Functions
 //
 
 polyobj_t *Polyobj_GetForNum(int id);
+bool Polyobj_IsSpawnSpot(const Mobj &mo);
 void Polyobj_InitLevel(void);
 void Polyobj_MoveOnLoad(polyobj_t *po, angle_t angle, fixed_t x, fixed_t y);
 
-int EV_DoPolyDoor(polydoordata_t *);
-int EV_DoPolyObjMove(polymovedata_t *);
-int EV_DoPolyObjRotate(polyrotdata_t *);
+int EV_DoPolyDoor(const polydoordata_t *);
+int EV_DoPolyObjMove(const polymovedata_t *);
+int EV_DoPolyObjRotate(const polyrotdata_t *);
 int EV_DoPolyObjStop(int polyObjNum);
+int EV_DoPolyObjMoveToSpot(const polymoveto_t &);
 
 //
 // External Variables

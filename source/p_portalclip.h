@@ -28,7 +28,7 @@
 #define P_PORTALCLIP_H_
 
 struct line_t;
-struct polyobj_s;
+struct polyobj_t;
 
 //
 // Data output by P_LineOpening, portal aware
@@ -43,7 +43,7 @@ enum
    LINECLIP_UNDERPORTAL = 8,     // ceiling portal is above line, both sides
 };
 
-bool PIT_CheckLine3D(line_t *ld, polyobj_s *po);
+bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context);
 
 #endif
 

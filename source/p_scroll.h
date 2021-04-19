@@ -29,7 +29,8 @@
 #include "m_fixed.h" // for fixed_t
 #include "p_tick.h"  // for Thinker
 
-class SaveArchive;
+class  SaveArchive;
+struct side_t;
 
 // killough 3/7/98: Add generalized scroll effects
 
@@ -38,11 +39,11 @@ class ScrollThinker : public Thinker
    DECLARE_THINKER_TYPE(ScrollThinker, Thinker)
 
 protected:
-   void Think();
+   void Think() override;
 
 public:
    // Overridden Methods
-   virtual void serialize(SaveArchive &arc);
+   virtual void serialize(SaveArchive &arc) override;
 
    // Methods
    void addScroller();
@@ -76,6 +77,23 @@ void Add_Scroller(int type, fixed_t dx, fixed_t dy,
 void P_SpawnScrollers();
 void P_SpawnFloorParam(const line_t *l, bool acs);
 void P_SpawnCeilingParam(const line_t *l, bool acs);
+
+enum udmfscrolltype_e : int
+{
+   SCROLLTYPE_NONE,
+   SCROLLTYPE_TEXTURE,
+   SCROLLTYPE_CARRY,
+   SCROLLTYPE_BOTH,
+   NUMSCROLLTYPES
+};
+
+void P_SpawnFloorUDMF(int s, int type, double scrollx, double scrolly);
+void P_SpawnCeilingUDMF(int s, int type, double scrollx, double scrolly);
+
+void P_TicResetLerpScrolledSides();
+void P_AddScrolledSide(side_t *side, fixed_t dx, fixed_t dy);
+void P_ForEachScrolledSide(void (*func)(side_t *side, v2fixed_t offset));
+void P_ForEachScrolledSector(void (*func)(sector_t *sector, bool isceiling, v2fixed_t offset));
 
 #endif
 

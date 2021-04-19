@@ -32,13 +32,14 @@
 //
 
 // Input event types.
-typedef enum
+enum evtype_t : int
 {
   ev_keydown,
   ev_keyup,
   ev_mouse,
-  ev_joystick
-} evtype_t;
+  ev_joystick,
+  ev_text
+};
 
 // Event structure.
 struct event_t
@@ -47,7 +48,7 @@ struct event_t
   int       data1;     // keys / mouse/joystick buttons
   double    data2;     // mouse/joystick x move
   double    data3;     // mouse/joystick y move
-  char      character; // actual character input when supported
+  bool      repeat;    // true if this input is a repeat
 };
  
 typedef enum
@@ -98,7 +99,18 @@ typedef enum
   // Savegame slot numbers occupy the second byte of buttons.    
   BTS_SAVEMASK    = (4+8+16),
   BTS_SAVESHIFT   = 2,
-  
+
+  // New buttons, used in v4.01+, as the old weapon bits (5 of them!) are unused
+
+  // Press "Alt-fire".
+  BTN_ATTACK_ALT  = 4,
+
+  // Next weapon button
+  BTN_WEAPON_UP   = 8,
+
+  // Previous weapon button
+  BTN_WEAPON_DOWN = 16,
+
 } buttoncode_t;
 
 //
@@ -108,6 +120,14 @@ typedef enum
 {
    // Bouncy bouncy jump jump
    AC_JUMP       = 1,
+
+   // New weapon buttons
+   AC_RELOAD     = 2,
+   AC_ZOOM       = 4,
+   AC_USER1      = 8,
+   AC_USER2      = 16,
+   AC_USER3      = 32,
+   AC_USER4      = 64,
 } actioncode_t;
 
 //

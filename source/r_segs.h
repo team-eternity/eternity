@@ -26,10 +26,23 @@
 #ifndef __R_SEGS__
 #define __R_SEGS__
 
+struct bspcontext_t;
+struct cb_seg_t;
+struct cbviewpoint_t;
+struct cmapcontext_t;
+struct contextbounds_t;
 struct drawseg_t;
+struct planecontext_t;
+struct portalcontext_t;
+struct viewpoint_t;
 
-void R_RenderMaskedSegRange(drawseg_t *ds, int x1, int x2);
-void R_StoreWallRange(const int start, const int stop);
+void R_RenderMaskedSegRange(cmapcontext_t &cmapcontext,
+                            const fixed_t viewz, drawseg_t *ds, int x1, int x2);
+void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, planecontext_t &planecontext,
+                      portalcontext_t &portalcontext,
+                      const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                      const contextbounds_t &bounds,
+                      const cb_seg_t &seg, const int start, const int stop);
 
 fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
@@ -39,7 +52,7 @@ fixed_t R_PointToDist2(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
 struct drawseg_t
 {
-   seg_t *curline;
+   const seg_t *curline;
    int x1, x2;
    float dist1, dist2, diststep;
    fixed_t bsilheight;                   // do not clip sprites above this
@@ -48,6 +61,7 @@ struct drawseg_t
    // sf: colormap to be used when drawing the drawseg
    // for coloured lighting
    lighttable_t *(*colormap)[MAXLIGHTSCALE];
+   lighttable_t *fixedcolormap;
 
    // Pointers to lists for sprite clipping,
    // all three adjusted so [x1] is first value.
@@ -55,6 +69,8 @@ struct drawseg_t
    float *maskedtexturecol;
 
    byte silhouette;                      // 0=none, 1=bottom, 2=top, 3=both
+
+   fixed_t deltaz;   // z offset if seen behind anchored portals
 };
 
 #endif

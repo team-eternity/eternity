@@ -93,6 +93,12 @@ sound Earthquake
 
 // NOTE: DeHackEd num 125 == plwdth in doom/sounds.edf
 
+// Placeholder for jumping
+sound jump
+{
+  dehackednum 126
+  skinindex sk_jump
+}
 
 // Default Sector Sound Sequences ----------------------------------------------
 
@@ -180,6 +186,8 @@ endif()
 
 // Plat Sequences
 
+ifgametype(DOOM)
+
 // This is used by most plat types, like the ordinary down-wait-up-stay type
 soundsequence EEPlatNormal
 {
@@ -200,6 +208,31 @@ soundsequence EEPlatRaise
   "@
 }
 
+endif()
+
+ifgametype(HERETIC)
+
+soundsequence EEPlatNormal
+{
+  commands
+  @"
+    play EE_PlatStart
+	playloop EE_PlatMove 32
+    stopsound EE_PlatStop
+  "@
+}
+
+soundsequence EEPlatRaise
+{
+  commands
+  @"
+    playloop EE_PlatMove 32
+    stopsound EE_PlatStop
+  "@
+}
+
+endif()
+
 // This may seem pointless, but defining it allows the silent behavior of 
 // instant move plats to be overridden by redefining this sequence.
 soundsequence EEPlatSilent
@@ -214,6 +247,7 @@ soundsequence EECeilingNormal
   commands
   @"
     playloop EE_FCMove 8
+	nostopcutoff
   "@
 }
 
@@ -233,6 +267,8 @@ soundsequence EECeilingSilent
 
 // Floor Sequences
 
+ifgametype(DOOM)
+
 soundsequence EEFloor
 {
   commands
@@ -241,6 +277,30 @@ soundsequence EEFloor
     stopsound EE_PlatStop
   "@
 }
+
+endif()
+
+ifgametype(HERETIC)
+
+soundsequence EEFloor
+{
+  commands
+  @"
+    playloop EE_FCMove 8
+	nostopcutoff
+  "@
+}
+
+soundsequence EEFloorStair
+{
+  commands
+  @"
+    playloop EE_FCMove 8
+    stopsound EE_PlatStop
+  "@
+}
+
+endif()
 
 // Sound Environment Presets ---------------------------------------------------
 
@@ -331,6 +391,209 @@ reverb LargeHallDark : 254, 8
   eq.midgain  0.84
   eq.highgain 0.0
 }
+
+// DEHEXTRA Sounds ---------------------------------------------------
+
+sound fre000 { pitchvariance = Doom; priority = 127; dehackednum = 500 }
+sound fre001 { pitchvariance = Doom; priority = 127; dehackednum = 501 }
+sound fre002 { pitchvariance = Doom; priority = 127; dehackednum = 502 }
+sound fre003 { pitchvariance = Doom; priority = 127; dehackednum = 503 }
+sound fre004 { pitchvariance = Doom; priority = 127; dehackednum = 504 }
+sound fre005 { pitchvariance = Doom; priority = 127; dehackednum = 505 }
+sound fre006 { pitchvariance = Doom; priority = 127; dehackednum = 506 }
+sound fre007 { pitchvariance = Doom; priority = 127; dehackednum = 507 }
+sound fre008 { pitchvariance = Doom; priority = 127; dehackednum = 508 }
+sound fre009 { pitchvariance = Doom; priority = 127; dehackednum = 509 }
+sound fre010 { pitchvariance = Doom; priority = 127; dehackednum = 510 }
+sound fre011 { pitchvariance = Doom; priority = 127; dehackednum = 511 }
+sound fre012 { pitchvariance = Doom; priority = 127; dehackednum = 512 }
+sound fre013 { pitchvariance = Doom; priority = 127; dehackednum = 513 }
+sound fre014 { pitchvariance = Doom; priority = 127; dehackednum = 514 }
+sound fre015 { pitchvariance = Doom; priority = 127; dehackednum = 515 }
+sound fre016 { pitchvariance = Doom; priority = 127; dehackednum = 516 }
+sound fre017 { pitchvariance = Doom; priority = 127; dehackednum = 517 }
+sound fre018 { pitchvariance = Doom; priority = 127; dehackednum = 518 }
+sound fre019 { pitchvariance = Doom; priority = 127; dehackednum = 519 }
+sound fre020 { pitchvariance = Doom; priority = 127; dehackednum = 520 }
+sound fre021 { pitchvariance = Doom; priority = 127; dehackednum = 521 }
+sound fre022 { pitchvariance = Doom; priority = 127; dehackednum = 522 }
+sound fre023 { pitchvariance = Doom; priority = 127; dehackednum = 523 }
+sound fre024 { pitchvariance = Doom; priority = 127; dehackednum = 524 }
+sound fre025 { pitchvariance = Doom; priority = 127; dehackednum = 525 }
+sound fre026 { pitchvariance = Doom; priority = 127; dehackednum = 526 }
+sound fre027 { pitchvariance = Doom; priority = 127; dehackednum = 527 }
+sound fre028 { pitchvariance = Doom; priority = 127; dehackednum = 528 }
+sound fre029 { pitchvariance = Doom; priority = 127; dehackednum = 529 }
+sound fre030 { pitchvariance = Doom; priority = 127; dehackednum = 530 }
+sound fre031 { pitchvariance = Doom; priority = 127; dehackednum = 531 }
+sound fre032 { pitchvariance = Doom; priority = 127; dehackednum = 532 }
+sound fre033 { pitchvariance = Doom; priority = 127; dehackednum = 533 }
+sound fre034 { pitchvariance = Doom; priority = 127; dehackednum = 534 }
+sound fre035 { pitchvariance = Doom; priority = 127; dehackednum = 535 }
+sound fre036 { pitchvariance = Doom; priority = 127; dehackednum = 536 }
+sound fre037 { pitchvariance = Doom; priority = 127; dehackednum = 537 }
+sound fre038 { pitchvariance = Doom; priority = 127; dehackednum = 538 }
+sound fre039 { pitchvariance = Doom; priority = 127; dehackednum = 539 }
+sound fre040 { pitchvariance = Doom; priority = 127; dehackednum = 540 }
+sound fre041 { pitchvariance = Doom; priority = 127; dehackednum = 541 }
+sound fre042 { pitchvariance = Doom; priority = 127; dehackednum = 542 }
+sound fre043 { pitchvariance = Doom; priority = 127; dehackednum = 543 }
+sound fre044 { pitchvariance = Doom; priority = 127; dehackednum = 544 }
+sound fre045 { pitchvariance = Doom; priority = 127; dehackednum = 545 }
+sound fre046 { pitchvariance = Doom; priority = 127; dehackednum = 546 }
+sound fre047 { pitchvariance = Doom; priority = 127; dehackednum = 547 }
+sound fre048 { pitchvariance = Doom; priority = 127; dehackednum = 548 }
+sound fre049 { pitchvariance = Doom; priority = 127; dehackednum = 549 }
+sound fre050 { pitchvariance = Doom; priority = 127; dehackednum = 550 }
+sound fre051 { pitchvariance = Doom; priority = 127; dehackednum = 551 }
+sound fre052 { pitchvariance = Doom; priority = 127; dehackednum = 552 }
+sound fre053 { pitchvariance = Doom; priority = 127; dehackednum = 553 }
+sound fre054 { pitchvariance = Doom; priority = 127; dehackednum = 554 }
+sound fre055 { pitchvariance = Doom; priority = 127; dehackednum = 555 }
+sound fre056 { pitchvariance = Doom; priority = 127; dehackednum = 556 }
+sound fre057 { pitchvariance = Doom; priority = 127; dehackednum = 557 }
+sound fre058 { pitchvariance = Doom; priority = 127; dehackednum = 558 }
+sound fre059 { pitchvariance = Doom; priority = 127; dehackednum = 559 }
+sound fre060 { pitchvariance = Doom; priority = 127; dehackednum = 560 }
+sound fre061 { pitchvariance = Doom; priority = 127; dehackednum = 561 }
+sound fre062 { pitchvariance = Doom; priority = 127; dehackednum = 562 }
+sound fre063 { pitchvariance = Doom; priority = 127; dehackednum = 563 }
+sound fre064 { pitchvariance = Doom; priority = 127; dehackednum = 564 }
+sound fre065 { pitchvariance = Doom; priority = 127; dehackednum = 565 }
+sound fre066 { pitchvariance = Doom; priority = 127; dehackednum = 566 }
+sound fre067 { pitchvariance = Doom; priority = 127; dehackednum = 567 }
+sound fre068 { pitchvariance = Doom; priority = 127; dehackednum = 568 }
+sound fre069 { pitchvariance = Doom; priority = 127; dehackednum = 569 }
+sound fre070 { pitchvariance = Doom; priority = 127; dehackednum = 570 }
+sound fre071 { pitchvariance = Doom; priority = 127; dehackednum = 571 }
+sound fre072 { pitchvariance = Doom; priority = 127; dehackednum = 572 }
+sound fre073 { pitchvariance = Doom; priority = 127; dehackednum = 573 }
+sound fre074 { pitchvariance = Doom; priority = 127; dehackednum = 574 }
+sound fre075 { pitchvariance = Doom; priority = 127; dehackednum = 575 }
+sound fre076 { pitchvariance = Doom; priority = 127; dehackednum = 576 }
+sound fre077 { pitchvariance = Doom; priority = 127; dehackednum = 577 }
+sound fre078 { pitchvariance = Doom; priority = 127; dehackednum = 578 }
+sound fre079 { pitchvariance = Doom; priority = 127; dehackednum = 579 }
+sound fre080 { pitchvariance = Doom; priority = 127; dehackednum = 580 }
+sound fre081 { pitchvariance = Doom; priority = 127; dehackednum = 581 }
+sound fre082 { pitchvariance = Doom; priority = 127; dehackednum = 582 }
+sound fre083 { pitchvariance = Doom; priority = 127; dehackednum = 583 }
+sound fre084 { pitchvariance = Doom; priority = 127; dehackednum = 584 }
+sound fre085 { pitchvariance = Doom; priority = 127; dehackednum = 585 }
+sound fre086 { pitchvariance = Doom; priority = 127; dehackednum = 586 }
+sound fre087 { pitchvariance = Doom; priority = 127; dehackednum = 587 }
+sound fre088 { pitchvariance = Doom; priority = 127; dehackednum = 588 }
+sound fre089 { pitchvariance = Doom; priority = 127; dehackednum = 589 }
+sound fre090 { pitchvariance = Doom; priority = 127; dehackednum = 590 }
+sound fre091 { pitchvariance = Doom; priority = 127; dehackednum = 591 }
+sound fre092 { pitchvariance = Doom; priority = 127; dehackednum = 592 }
+sound fre093 { pitchvariance = Doom; priority = 127; dehackednum = 593 }
+sound fre094 { pitchvariance = Doom; priority = 127; dehackednum = 594 }
+sound fre095 { pitchvariance = Doom; priority = 127; dehackednum = 595 }
+sound fre096 { pitchvariance = Doom; priority = 127; dehackednum = 596 }
+sound fre097 { pitchvariance = Doom; priority = 127; dehackednum = 597 }
+sound fre098 { pitchvariance = Doom; priority = 127; dehackednum = 598 }
+sound fre099 { pitchvariance = Doom; priority = 127; dehackednum = 599 }
+sound fre100 { pitchvariance = Doom; priority = 127; dehackednum = 600 }
+sound fre101 { pitchvariance = Doom; priority = 127; dehackednum = 601 }
+sound fre102 { pitchvariance = Doom; priority = 127; dehackednum = 602 }
+sound fre103 { pitchvariance = Doom; priority = 127; dehackednum = 603 }
+sound fre104 { pitchvariance = Doom; priority = 127; dehackednum = 604 }
+sound fre105 { pitchvariance = Doom; priority = 127; dehackednum = 605 }
+sound fre106 { pitchvariance = Doom; priority = 127; dehackednum = 606 }
+sound fre107 { pitchvariance = Doom; priority = 127; dehackednum = 607 }
+sound fre108 { pitchvariance = Doom; priority = 127; dehackednum = 608 }
+sound fre109 { pitchvariance = Doom; priority = 127; dehackednum = 609 }
+sound fre110 { pitchvariance = Doom; priority = 127; dehackednum = 610 }
+sound fre111 { pitchvariance = Doom; priority = 127; dehackednum = 611 }
+sound fre112 { pitchvariance = Doom; priority = 127; dehackednum = 612 }
+sound fre113 { pitchvariance = Doom; priority = 127; dehackednum = 613 }
+sound fre114 { pitchvariance = Doom; priority = 127; dehackednum = 614 }
+sound fre115 { pitchvariance = Doom; priority = 127; dehackednum = 615 }
+sound fre116 { pitchvariance = Doom; priority = 127; dehackednum = 616 }
+sound fre117 { pitchvariance = Doom; priority = 127; dehackednum = 617 }
+sound fre118 { pitchvariance = Doom; priority = 127; dehackednum = 618 }
+sound fre119 { pitchvariance = Doom; priority = 127; dehackednum = 619 }
+sound fre120 { pitchvariance = Doom; priority = 127; dehackednum = 620 }
+sound fre121 { pitchvariance = Doom; priority = 127; dehackednum = 621 }
+sound fre122 { pitchvariance = Doom; priority = 127; dehackednum = 622 }
+sound fre123 { pitchvariance = Doom; priority = 127; dehackednum = 623 }
+sound fre124 { pitchvariance = Doom; priority = 127; dehackednum = 624 }
+sound fre125 { pitchvariance = Doom; priority = 127; dehackednum = 625 }
+sound fre126 { pitchvariance = Doom; priority = 127; dehackednum = 626 }
+sound fre127 { pitchvariance = Doom; priority = 127; dehackednum = 627 }
+sound fre128 { pitchvariance = Doom; priority = 127; dehackednum = 628 }
+sound fre129 { pitchvariance = Doom; priority = 127; dehackednum = 629 }
+sound fre130 { pitchvariance = Doom; priority = 127; dehackednum = 630 }
+sound fre131 { pitchvariance = Doom; priority = 127; dehackednum = 631 }
+sound fre132 { pitchvariance = Doom; priority = 127; dehackednum = 632 }
+sound fre133 { pitchvariance = Doom; priority = 127; dehackednum = 633 }
+sound fre134 { pitchvariance = Doom; priority = 127; dehackednum = 634 }
+sound fre135 { pitchvariance = Doom; priority = 127; dehackednum = 635 }
+sound fre136 { pitchvariance = Doom; priority = 127; dehackednum = 636 }
+sound fre137 { pitchvariance = Doom; priority = 127; dehackednum = 637 }
+sound fre138 { pitchvariance = Doom; priority = 127; dehackednum = 638 }
+sound fre139 { pitchvariance = Doom; priority = 127; dehackednum = 639 }
+sound fre140 { pitchvariance = Doom; priority = 127; dehackednum = 640 }
+sound fre141 { pitchvariance = Doom; priority = 127; dehackednum = 641 }
+sound fre142 { pitchvariance = Doom; priority = 127; dehackednum = 642 }
+sound fre143 { pitchvariance = Doom; priority = 127; dehackednum = 643 }
+sound fre144 { pitchvariance = Doom; priority = 127; dehackednum = 644 }
+sound fre145 { pitchvariance = Doom; priority = 127; dehackednum = 645 }
+sound fre146 { pitchvariance = Doom; priority = 127; dehackednum = 646 }
+sound fre147 { pitchvariance = Doom; priority = 127; dehackednum = 647 }
+sound fre148 { pitchvariance = Doom; priority = 127; dehackednum = 648 }
+sound fre149 { pitchvariance = Doom; priority = 127; dehackednum = 649 }
+sound fre150 { pitchvariance = Doom; priority = 127; dehackednum = 650 }
+sound fre151 { pitchvariance = Doom; priority = 127; dehackednum = 651 }
+sound fre152 { pitchvariance = Doom; priority = 127; dehackednum = 652 }
+sound fre153 { pitchvariance = Doom; priority = 127; dehackednum = 653 }
+sound fre154 { pitchvariance = Doom; priority = 127; dehackednum = 654 }
+sound fre155 { pitchvariance = Doom; priority = 127; dehackednum = 655 }
+sound fre156 { pitchvariance = Doom; priority = 127; dehackednum = 656 }
+sound fre157 { pitchvariance = Doom; priority = 127; dehackednum = 657 }
+sound fre158 { pitchvariance = Doom; priority = 127; dehackednum = 658 }
+sound fre159 { pitchvariance = Doom; priority = 127; dehackednum = 659 }
+sound fre160 { pitchvariance = Doom; priority = 127; dehackednum = 660 }
+sound fre161 { pitchvariance = Doom; priority = 127; dehackednum = 661 }
+sound fre162 { pitchvariance = Doom; priority = 127; dehackednum = 662 }
+sound fre163 { pitchvariance = Doom; priority = 127; dehackednum = 663 }
+sound fre164 { pitchvariance = Doom; priority = 127; dehackednum = 664 }
+sound fre165 { pitchvariance = Doom; priority = 127; dehackednum = 665 }
+sound fre166 { pitchvariance = Doom; priority = 127; dehackednum = 666 }
+sound fre167 { pitchvariance = Doom; priority = 127; dehackednum = 667 }
+sound fre168 { pitchvariance = Doom; priority = 127; dehackednum = 668 }
+sound fre169 { pitchvariance = Doom; priority = 127; dehackednum = 669 }
+sound fre170 { pitchvariance = Doom; priority = 127; dehackednum = 670 }
+sound fre171 { pitchvariance = Doom; priority = 127; dehackednum = 671 }
+sound fre172 { pitchvariance = Doom; priority = 127; dehackednum = 672 }
+sound fre173 { pitchvariance = Doom; priority = 127; dehackednum = 673 }
+sound fre174 { pitchvariance = Doom; priority = 127; dehackednum = 674 }
+sound fre175 { pitchvariance = Doom; priority = 127; dehackednum = 675 }
+sound fre176 { pitchvariance = Doom; priority = 127; dehackednum = 676 }
+sound fre177 { pitchvariance = Doom; priority = 127; dehackednum = 677 }
+sound fre178 { pitchvariance = Doom; priority = 127; dehackednum = 678 }
+sound fre179 { pitchvariance = Doom; priority = 127; dehackednum = 679 }
+sound fre180 { pitchvariance = Doom; priority = 127; dehackednum = 680 }
+sound fre181 { pitchvariance = Doom; priority = 127; dehackednum = 681 }
+sound fre182 { pitchvariance = Doom; priority = 127; dehackednum = 682 }
+sound fre183 { pitchvariance = Doom; priority = 127; dehackednum = 683 }
+sound fre184 { pitchvariance = Doom; priority = 127; dehackednum = 684 }
+sound fre185 { pitchvariance = Doom; priority = 127; dehackednum = 685 }
+sound fre186 { pitchvariance = Doom; priority = 127; dehackednum = 686 }
+sound fre187 { pitchvariance = Doom; priority = 127; dehackednum = 687 }
+sound fre188 { pitchvariance = Doom; priority = 127; dehackednum = 688 }
+sound fre189 { pitchvariance = Doom; priority = 127; dehackednum = 689 }
+sound fre190 { pitchvariance = Doom; priority = 127; dehackednum = 690 }
+sound fre191 { pitchvariance = Doom; priority = 127; dehackednum = 691 }
+sound fre192 { pitchvariance = Doom; priority = 127; dehackednum = 692 }
+sound fre193 { pitchvariance = Doom; priority = 127; dehackednum = 693 }
+sound fre194 { pitchvariance = Doom; priority = 127; dehackednum = 694 }
+sound fre195 { pitchvariance = Doom; priority = 127; dehackednum = 695 }
+sound fre196 { pitchvariance = Doom; priority = 127; dehackednum = 696 }
+sound fre197 { pitchvariance = Doom; priority = 127; dehackednum = 697 }
+sound fre198 { pitchvariance = Doom; priority = 127; dehackednum = 698 }
+sound fre199 { pitchvariance = Doom; priority = 127; dehackednum = 699 }
 
 // EOF
 

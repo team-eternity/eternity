@@ -31,6 +31,7 @@
 #include "d_mod.h"
 #include "e_inventory.h"
 #include "ev_specials.h"
+#include "m_cheat.h"
 #include "metaapi.h"
 #include "p_inter.h"
 #include "p_mobj.h"
@@ -41,6 +42,7 @@
 #include "p_things.h"
 #include "a_small.h"
 #include "acs_intr.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_things.h"
 #include "p_info.h"
@@ -59,7 +61,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
    fixed_t speed;
    fixed_t vspeed;
    mobjtype_t moType;
-   Mobj *mobj = NULL, *newMobj;
+   Mobj *mobj = nullptr, *newMobj;
    mobjinfo_t *mi;
    bool success = false;
 
@@ -81,7 +83,7 @@ int EV_ThingProjectile(const int *args, bool gravity)
    speed     = (fixed_t)args[3] << 13;
    vspeed    = (fixed_t)args[4] << 13;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       newMobj = P_SpawnMobj(mobj->x, mobj->y, mobj->z, moType);
       if(newMobj->info->seesound)
@@ -112,50 +114,52 @@ int EV_ThingProjectile(const int *args, bool gravity)
 //
 int EV_ThingSpawn(const int *args, bool fog)
 {
-   int tid;
+   int tid, newtid;
    angle_t angle;
-   Mobj *mobj = NULL, *newMobj, *fogMobj;
+   Mobj *mobj = nullptr, *newMobj, *fogMobj;
    mobjtype_t moType;
    mobjinfo_t *mi;
    bool success = false;
    fixed_t z;
-   
+
    tid = args[0];
-   
+
    if(args[1] >= 0 && args[1] < ACS_NUM_THINGTYPES)
       moType = ACS_thingtypes[args[1]];
    else
       moType = UnknownThingType;
 
    mi = mobjinfo[moType];
-   
-   // Don't spawn monsters if -nomonsters 
+
+   // Don't spawn monsters if -nomonsters
    if(nomonsters && (mi->flags & MF_COUNTKILL || mi->flags3 & MF3_KILLABLE))
       return false;
 
    angle = (angle_t)args[2] << 24;
-   
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   newtid = args[3];
+
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       z = mobj->z;
 
       newMobj = P_SpawnMobj(mobj->x, mobj->y, z, moType);
-      
+
       if(!P_CheckPositionExt(newMobj, newMobj->x, newMobj->y, newMobj->z)) // Didn't fit?
-         newMobj->removeThinker();
+         newMobj->remove();
       else
       {
+         if(newtid)
+            P_AddThingTID(newMobj, newtid);
          newMobj->angle = angle;
 
          if(fog)
          {
-            fogMobj = 
-               P_SpawnMobj(mobj->x, mobj->y,
-                           mobj->z + GameModeInfo->teleFogHeight, 
-                           E_SafeThingName(GameModeInfo->teleFogType));
+            fogMobj = P_SpawnMobj(mobj->x, mobj->y,
+                                  mobj->z + GameModeInfo->teleFogHeight,
+                                  E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogMobj, GameModeInfo->teleSound);
          }
-         
+
          // don't item-respawn
          newMobj->flags3 |= MF3_NOITEMRESP;
 
@@ -166,17 +170,17 @@ int EV_ThingSpawn(const int *args, bool fog)
    return success;
 }
 
-// 
+//
 // EV_ThingActivate
 //
 // Implements Thing_Activate(tid)
 //
 int EV_ThingActivate(int tid)
 {
-   Mobj *mobj = NULL;
+   Mobj *mobj = nullptr;
    int success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
       {
@@ -208,10 +212,10 @@ int EV_ThingActivate(int tid)
 //
 int EV_ThingDeactivate(int tid)
 {
-   Mobj *mobj = NULL;
+   Mobj *mobj = nullptr;
    int success = 0;
 
-   while((mobj = P_FindMobjFromTID(tid, mobj, NULL)))
+   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
    {
       if((mobj->flags & MF_COUNTKILL) || (mobj->flags3 & MF3_KILLABLE))
       {
@@ -244,9 +248,9 @@ int EV_ThingDeactivate(int tid)
 //
 int EV_ThingChangeTID(Mobj *actor, int oldtid, int newtid)
 {
-   Mobj   *mo     = nullptr;
+   Mobj   *mo;
    Mobj   *next   = nullptr;
-   bool    found  = false;
+   bool    found;
 
    mo    = P_FindMobjFromTID(oldtid, nullptr, actor);
    found = mo != nullptr;
@@ -378,19 +382,62 @@ int EV_DamageThing(Mobj *actor, int damage, int mod, int tid)
 //
 // EV_ThingDestroy
 //
-// Implements Thing_Destroy(tid, reserved, sectortag)
+// Implements Thing_Destroy(tid, flags, sectortag)
 //
-int EV_ThingDestroy(int tid, int sectortag)
+int EV_ThingDestroy(int tid, int flags, int sectortag)
 {
    Mobj *mobj = nullptr;
    int success = 0;
-   while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+   if(P_LevelIsVanillaHexen())   // Support vanilla Hexen behavior
    {
-      if(mobj->flags & MF_SHOOTABLE &&
-         (!sectortag || mobj->subsector->sector->tag == sectortag))
+      while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
       {
-         P_DamageMobj(mobj, nullptr, nullptr, 10000, MOD_UNKNOWN);
-         success = 1;
+         // Also support sector tags because it's harmless
+         if(mobj->flags & MF_SHOOTABLE && (!sectortag || mobj->subsector->sector->tag == sectortag))
+         {
+            P_DamageMobj(mobj, nullptr, nullptr, GOD_BREACH_DAMAGE, MOD_UNKNOWN);
+            success = 1;
+         }
+      }
+   }
+   else if(!tid && !sectortag)   // zero tagging: kill all monsters
+      success = M_NukeMonsters() > 0;
+   else
+   {
+      //
+      // Common function to kill iterated thing
+      //
+      auto killthing = [](Mobj *mobj, int sectortag, bool extreme)
+      {
+         if(!(mobj->flags & MF_SHOOTABLE) ||
+            (sectortag && mobj->subsector->sector->tag != sectortag))
+         {
+            return false;
+         }
+         int damage;
+         damage = extreme ? GOD_BREACH_DAMAGE : mobj->health;
+         P_DamageMobj(mobj, nullptr, nullptr, damage, MOD_UNKNOWN);
+         return true;
+      };
+
+      bool extreme = !!(flags & 1);
+      // Normal, GZDoom-compatible behavior
+      if(!tid)
+      {
+         for(Thinker *th = thinkercap.next; th != &thinkercap; th = th->next)
+         {
+            if(!(mobj = thinker_cast<Mobj *>(th)) || !killthing(mobj, sectortag, extreme))
+               continue;
+            success = 1;
+         }
+      }
+      else
+      {
+         while((mobj = P_FindMobjFromTID(tid, mobj, nullptr)))
+         {
+            if(killthing(mobj, sectortag, extreme))
+               success = 1;
+         }
       }
    }
    return success;
@@ -403,29 +450,18 @@ int EV_ThingDestroy(int tid, int sectortag)
 //
 int EV_HealThing(Mobj *actor, int amount, int maxhealth)
 {
-   if(!actor)
+   if(!actor || actor->health <= 0)
       return 0;
 
    if(!maxhealth || !actor->player)
    {
       // If second arg is 0, or the activator isn't a player
-      // then set the maxhealth to the activator's spawning health.
-      maxhealth = actor->getModifiedSpawnHealth();
+      // then set the maxhealth to the activator's spawning health or pclass maxhealth.
+      maxhealth = actor->player ? actor->player->pclass->maxhealth :
+            actor->getModifiedSpawnHealth();
    }
    else if(maxhealth == 1)
-   {
-      // Otherwise if second arg is 1 and the SoulSphere's effect is present,
-      // then set maxhealth to the maximum health provided by a SoulSphere.
-      itemeffect_t *soulsphereeffect = E_ItemEffectForName(ITEMNAME_SOULSPHERE);
-
-      if(soulsphereeffect)
-         maxhealth = soulsphereeffect->getInt("maxamount", 0);
-      else
-      {
-         // FIXME: Handle this with a bit more finesse.
-         maxhealth = actor->getModifiedSpawnHealth() + 100;
-      }
-   }
+      maxhealth = actor->player->pclass->superhealth;
 
    // If the activator can be given health then activate the switch
    return EV_DoHealThing(actor, amount, maxhealth) ? 1 : 0;
@@ -455,7 +491,10 @@ int EV_ThingRemove(int tid)
       removed = mobj;
       mobj = P_FindMobjFromTID(tid, mobj, nullptr);
 
-      removed->removeThinker();
+      // clean up as best as we can
+      removed->health = 0;
+      removed->flags &= ~MF_SHOOTABLE;
+      removed->remove();
 
       rtn = 1;
    }
@@ -510,7 +549,7 @@ void LevelActionThinker::Think()
    // Execute special
    ev_action_t *action = EV_HexenActionForSpecial(special);
    if(action && EV_ActivateAction(action, args, thePlayer->mo))
-      removeThinker();
+      remove();
 }
 
 //

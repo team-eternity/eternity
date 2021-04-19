@@ -40,13 +40,12 @@
 #include "v_font.h"
 #include "v_misc.h"
 #include "v_patchfmt.h"
-#include "v_video.h"
 #include "w_wad.h"
 
 /*
 static bool fixedColor = false;
 static int fixedColNum = 0;
-static char *altMap = NULL;
+static char *altMap = nullptr;
 static bool shadowChar = false;
 static bool absCentered = false; // 03/04/06: every line will be centered
 */
@@ -60,7 +59,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 {
    int length = 0;        // current line width
    unsigned char c;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    
    for(; *s; s++)
    {
@@ -106,15 +105,15 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 //
 void V_FontWriteTextEx(const vtextdraw_t &textdraw)
 {
-   patch_t *patch = NULL;   // patch for current character -OR-
-   byte    *src   = NULL;   // source char for linear font
+   patch_t *patch = nullptr;   // patch for current character -OR-
+   byte    *src   = nullptr;   // source char for linear font
    int     w;               // width of patch
    
    const unsigned char *ch; // pointer to string
    unsigned int c;          // current character
    int cx, cy, tx;          // current screen position
 
-   byte *color = NULL;      // current color range translation tbl
+   byte *color = nullptr;      // current color range translation tbl
    bool tl = false;         // current translucency state
    bool useAltMap = false;  // using alternate colormap source?
 
@@ -148,7 +147,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
    // (abscenter toggle), then center line
    
    cx = (*ch == TEXT_CONTROL_ABSCENTER) ? 
-          (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+          (screen->unscaledw - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
    cy = textdraw.y;
    
    while((c = *ch++))
@@ -208,7 +207,7 @@ void V_FontWriteTextEx(const vtextdraw_t &textdraw)
       else if(c == '\n')
       {
          cx = (flags & VTXT_ABSCENTER) ? 
-               (SCREENWIDTH - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
+               (screen->unscaledw - V_FontLineWidth(font, ch)) >> 1 : textdraw.x;
          cy += font->cy;
          continue;
       }
@@ -393,7 +392,7 @@ int V_FontStringWidth(vfont_t *font, const char *s)
    int length = 0;        // current line width
    int longest_width = 0; // longest line width so far
    unsigned char c;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    
    for(; *s; s++)
    {
@@ -444,7 +443,7 @@ int V_FontCharWidth(vfont_t *font, char pChar)
 {
    unsigned char c;
    int width;
-   patch_t *patch = NULL;
+   patch_t *patch = nullptr;
    
    c = (unsigned char)pChar;
 
@@ -503,6 +502,31 @@ int16_t V_FontMaxWidth(vfont_t *font)
 }
 
 //
+// finds the narrowest character in the font
+//
+int16_t V_FontMinWidth(vfont_t *font)
+{
+   unsigned int i;
+   int16_t w = INT16_MAX, pw;
+
+   if(font->linear)
+      return font->lsize;
+
+   for(i = 0; i < font->size; ++i)
+   {
+      if(font->fontgfx[i])
+      {
+         pw = font->fontgfx[i]->width;
+
+         if(pw < w)
+            w = pw;
+      }
+   }
+
+   return w;
+}
+
+//
 // V_FontFitTextToRect
 //
 // Modify text so that it fits within a given rect, based on the width and height
@@ -529,7 +553,7 @@ void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y
    if(!fitsWidth)
    {
       char *rover = msg;
-      char *currentBreakPos = NULL;
+      char *currentBreakPos = nullptr;
       int width = 0;
       int widthSinceLastBreak = 0;
 
@@ -546,7 +570,7 @@ void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y
          }
          else if(*rover == '\n')
          {
-            currentBreakPos = NULL;
+            currentBreakPos = nullptr;
             width = widthSinceLastBreak = 0;
          }
 
@@ -557,7 +581,7 @@ void V_FontFitTextToRect(vfont_t *font, char *msg, int x1, int y1, int x2, int y
                *currentBreakPos = '\n';
                width = widthSinceLastBreak;
             }
-            currentBreakPos = NULL;
+            currentBreakPos = nullptr;
          }
          ++rover;
       }
@@ -671,7 +695,7 @@ void V_FontFitTextToRect(vfont_t *font, qstring &msg, int x1, int y1, int x2, in
 byte *V_FontGetUsedColors(vfont_t *font)
 {
    if(font->linear) // not supported yet...
-      return NULL;
+      return nullptr;
 
    byte *colorsUsed = ecalloc(byte *, 1, 256);
 

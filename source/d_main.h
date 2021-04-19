@@ -44,14 +44,18 @@ extern bool clrespawnparm; // checkparm of -respawn
 extern bool clfastparm;    // checkparm of -fast
 //jff end of external declaration of command line playmode
 
+extern bool nodrawers;
 extern bool nosfxparm;
 extern bool nomusicparm;
 
-extern int use_startmap;
+inline static bool D_noWindow()
+{
+   return nodrawers && nosfxparm && nomusicparm;
+}
 
 // Called by IO functions when input is detected.
 struct event_t;
-void D_PostEvent(event_t* ev);
+void D_PostEvent(const event_t* ev);
 
 struct camera_t;
 extern camera_t *camera;
@@ -61,7 +65,6 @@ extern camera_t *camera;
 //
 
 void D_PageTicker();
-void D_PageDrawer();
 void D_DrawPillars();
 void D_DrawWings();
 void D_AdvanceDemo();
@@ -69,7 +72,7 @@ void D_StartTitle();
 void D_DoomMain();
 
 // sf: display a message to the player: either in text mode or graphics
-void usermsg(E_FORMAT_STRING(const char *s), ...);
+void usermsg(E_FORMAT_STRING(const char *s), ...) E_PRINTF(1, 2);
 void startupmsg(const char *func, const char *desc);
 
 #endif

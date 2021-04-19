@@ -1,20 +1,15 @@
-// Emacs style mode select   -*- C -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 
 #include <stdarg.h>
@@ -31,6 +26,20 @@
 #include "txt_strut.h"
 #include "txt_table.h"
 
+txt_widget_t txt_table_overflow_right;
+txt_widget_t txt_table_overflow_down;
+txt_widget_t txt_table_eol;
+txt_widget_t txt_table_empty;
+
+// Returns true if the given widget in the table's widgets[] array refers
+// to an actual widget - not NULL, or one of the special overflow pointers.
+static int IsActualWidget(txt_widget_t *widget)
+{
+    return widget != NULL
+        && widget != &txt_table_overflow_right
+        && widget != &txt_table_overflow_down;
+}
+
 // Remove all entries from a table
 
 void TXT_ClearTable(TXT_UNCAST_ARG(table))
@@ -44,12 +53,12 @@ void TXT_ClearTable(TXT_UNCAST_ARG(table))
 
     for (i=table->columns; i<table->num_widgets; ++i)
     {
-        if (table->widgets[i] != NULL)
+        if (IsActualWidget(table->widgets[i]))
         {
             TXT_DestroyWidget(table->widgets[i]);
         }
     }
-    
+
     // Shrink the table to just the column strut widgets
 
     table->num_widgets = table->columns;
@@ -67,8 +76,101 @@ static int TableRows(txt_table_t *table)
     return (table->num_widgets + table->columns - 1) / table->columns;
 }
 
-static void CalcRowColSizes(txt_table_t *table, 
-                            unsigned int *row_heights, 
+// Most widgets occupy just one cell of a table, but if the special
+// overflow constants are used, they can occupy multiple cells.
+// This function figures out for a widget in a given cell, which
+// cells it should actually occupy (always a rectangle).
+static void CellOverflowedSize(txt_table_t *table, int x, int y,
+                               int *w, int *h)
+{
+    txt_widget_t *widget;
+    int x1, y1;
+
+    if (!IsActualWidget(table->widgets[y * table->columns + x]))
+    {
+        *w = 0; *h = 0;
+        return;
+    }
+
+    *w = table->columns - x;
+    *h = 0;
+    for (y1 = y; y1 < TableRows(table); ++y1)
+    {
+        // Every overflow cell must point to either (x, y) or another
+        // overflow cell. This means the first in every row must be
+        // txt_table_overflow_down.
+
+        if (y1 * table->columns + x >= table->num_widgets)
+        {
+            break;
+        }
+
+        widget = table->widgets[y1 * table->columns + x];
+
+        if (y1 != y && widget != &txt_table_overflow_down)
+        {
+            break;
+        }
+
+        for (x1 = x + 1; x1 < x + *w; ++x1)
+        {
+            if (y1 * table->columns + x1 >= table->num_widgets)
+            {
+                break;
+            }
+
+            // Can be either type of overflow, except on the first row.
+            // Otherwise we impose a limit on the width.
+            widget = table->widgets[y1 * table->columns + x1];
+            if (widget != &txt_table_overflow_right
+             && (widget != &txt_table_overflow_down || y1 == y))
+            {
+                *w = x1 - x;
+                break;
+            }
+        }
+
+        ++*h;
+    }
+}
+
+static int IsOverflowingCell(txt_table_t *table, int x, int y)
+{
+    int w, h;
+    CellOverflowedSize(table, x, y, &w, &h);
+    return w > 1 || h > 1;
+}
+
+// Using the given column/row size tables, calculate the size of the given
+// widget, storing the result in (w, h).
+static void CalculateWidgetDimensions(txt_table_t *table,
+                                      int x, int y,
+                                      unsigned int *column_widths,
+                                      unsigned int *row_heights,
+                                      unsigned int *w, unsigned int *h)
+{
+    int cell_w, cell_h;
+    int x1, y1;
+
+    // Find which cells this widget occupies.
+    CellOverflowedSize(table, x, y, &cell_w, &cell_h);
+
+    // Add up column / row widths / heights to get the actual dimensions.
+    *w = 0;
+    for (x1 = x; x1 < x + cell_w; ++x1)
+    {
+        *w += column_widths[x1];
+    }
+
+    *h = 0;
+    for (y1 = y; y1 < y + cell_h; ++y1)
+    {
+        *h += row_heights[y1];
+    }
+}
+
+static void CalcRowColSizes(txt_table_t *table,
+                            unsigned int *row_heights,
                             unsigned int *col_widths)
 {
     int x, y;
@@ -79,26 +181,66 @@ static void CalcRowColSizes(txt_table_t *table,
 
     memset(col_widths, 0, sizeof(int) * table->columns);
 
-    for (y=0; y<rows; ++y)
+    for (y = 0; y < rows; ++y)
     {
         row_heights[y] = 0;
 
-        for (x=0; x<table->columns; ++x)
+        for (x = 0; x < table->columns; ++x)
         {
             if (y * table->columns + x >= table->num_widgets)
                 break;
 
             widget = table->widgets[y * table->columns + x];
 
-            // NULL represents an empty spacer
-
-            if (widget != NULL)
+            if (IsActualWidget(widget))
             {
                 TXT_CalcWidgetSize(widget);
+            }
+
+            // In the first pass we ignore overflowing cells.
+            if (IsOverflowingCell(table, x, y))
+            {
+                continue;
+            }
+
+            // NULL represents an empty spacer
+            if (IsActualWidget(widget))
+            {
                 if (widget->h > row_heights[y])
                     row_heights[y] = widget->h;
                 if (widget->w > col_widths[x])
                     col_widths[x] = widget->w;
+            }
+        }
+    }
+
+    // In the second pass, we go through again and process overflowing
+    // widgets, to ensure that they will fit.
+    for (y = 0; y < rows; ++y)
+    {
+        for (x = 0; x < table->columns; ++x)
+        {
+            unsigned int w, h;
+
+            if (y * table->columns + x >= table->num_widgets)
+                break;
+
+            widget = table->widgets[y * table->columns + x];
+            if (!IsActualWidget(widget))
+            {
+                continue;
+            }
+
+            // Expand column width and row heights as needed.
+            CalculateWidgetDimensions(table, x, y, col_widths, row_heights,
+                                      &w, &h);
+            if (w < widget->w)
+            {
+                col_widths[x] += widget->w - w;
+            }
+            if (h < widget->h)
+            {
+                row_heights[y] += widget->h - h;
             }
         }
     }
@@ -137,40 +279,83 @@ static void TXT_CalcTableSize(TXT_UNCAST_ARG(table))
     free(column_widths);
 }
 
+static void FillRowToEnd(txt_table_t *table)
+{
+    while ((table->num_widgets % table->columns) != 0)
+    {
+        TXT_AddWidget(table, &txt_table_overflow_right);
+    }
+}
+
 void TXT_AddWidget(TXT_UNCAST_ARG(table), TXT_UNCAST_ARG(widget))
 {
     TXT_CAST_ARG(txt_table_t, table);
     TXT_CAST_ARG(txt_widget_t, widget);
+    int is_separator;
+    int i;
 
-    if (table->num_widgets > 0)
+    // Convenience alias for NULL:
+    if (widget == &txt_table_empty)
     {
-        txt_widget_t *last_widget;
+        widget = NULL;
+    }
+    else if (widget == &txt_table_eol)
+    {
+        FillRowToEnd(table);
+        return;
+    }
 
-        last_widget = table->widgets[table->num_widgets - 1];
+    // We have special handling for the separator widget:
+    is_separator = IsActualWidget(widget)
+                && widget->widget_class == &txt_separator_class;
 
-        if (widget != NULL && last_widget != NULL
-         && widget->widget_class == &txt_separator_class
-         && last_widget->widget_class == &txt_separator_class)
+    // If we add two separators consecutively, the new separator replaces the
+    // first. This allows us to override the "implicit" separator that is
+    // added at the top of a window when it is created.
+    if (is_separator)
+    {
+        for (i = table->num_widgets - 1; i >= 0; --i)
         {
-            // The previous widget added was a separator; replace 
-            // it with this one.
-            //
-            // This way, if the first widget added to a window is 
-            // a separator, it replaces the "default" separator that
-            // the window itself adds on creation.
+            txt_widget_t *last_widget;
+            last_widget = table->widgets[i];
 
-            table->widgets[table->num_widgets - 1] = widget;
-
-            TXT_DestroyWidget(last_widget);
-
-            return;
+            if (IsActualWidget(last_widget)
+             && widget->widget_class == &txt_separator_class
+             && last_widget->widget_class == &txt_separator_class)
+            {
+                table->widgets[i] = widget;
+                TXT_DestroyWidget(last_widget);
+                return;
+            }
+            else if (last_widget != &txt_table_overflow_right)
+            {
+                break;
+            }
         }
+    }
+
+    // Separators begin on a new line.
+    if (is_separator)
+    {
+        FillRowToEnd(table);
     }
 
     table->widgets = realloc(table->widgets,
                              sizeof(txt_widget_t *) * (table->num_widgets + 1));
     table->widgets[table->num_widgets] = widget;
     ++table->num_widgets;
+
+    // Maintain parent pointer.
+    if (IsActualWidget(widget))
+    {
+        widget->parent = &table->widget;
+    }
+
+    // Separators always take up the entire line.
+    if (is_separator)
+    {
+        FillRowToEnd(table);
+    }
 }
 
 // Add multiple widgets to a table.
@@ -200,7 +385,7 @@ void TXT_AddWidgets(TXT_UNCAST_ARG(table), ...)
     va_end(args);
 }
 
-static int SelectableWidget(txt_table_t *table, int x, int y)
+static int SelectableCell(txt_table_t *table, int x, int y)
 {
     txt_widget_t *widget;
     int i;
@@ -215,7 +400,9 @@ static int SelectableWidget(txt_table_t *table, int x, int y)
     if (i >= 0 && i < table->num_widgets)
     {
         widget = table->widgets[i];
-        return widget != NULL && widget->selectable && widget->visible;
+        return IsActualWidget(widget)
+            && TXT_SelectableWidget(widget)
+            && widget->visible;
     }
 
     return 0;
@@ -235,14 +422,14 @@ static int FindSelectableColumn(txt_table_t *table, int row, int start_col)
     {
         // Search to the right
 
-        if (SelectableWidget(table, start_col + x, row))
+        if (SelectableCell(table, start_col + x, row))
         {
             return start_col + x;
         }
 
         // Search to the left
 
-        if (SelectableWidget(table, start_col - x, row))
+        if (SelectableCell(table, start_col - x, row))
         {
             return start_col - x;
         }
@@ -251,6 +438,48 @@ static int FindSelectableColumn(txt_table_t *table, int row, int start_col)
     // None available
 
     return -1;
+}
+
+// Change the selected widget.
+
+static void ChangeSelection(txt_table_t *table, int x, int y)
+{
+    txt_widget_t *cur_widget;
+    txt_widget_t *new_widget;
+    int i;
+
+    // No change?
+
+    if (x == table->selected_x && y == table->selected_y)
+    {
+        return;
+    }
+
+    // Unfocus current widget:
+
+    i = table->selected_y * table->columns + table->selected_x;
+
+    if (i < table->num_widgets)
+    {
+        cur_widget = table->widgets[i];
+
+        if (table->widget.focused && IsActualWidget(cur_widget))
+        {
+            TXT_SetWidgetFocus(cur_widget, 0);
+        }
+    }
+
+    // Focus new widget.
+
+    new_widget = table->widgets[y * table->columns + x];
+
+    table->selected_x = x;
+    table->selected_y = y;
+
+    if (table->widget.focused && new_widget != NULL)
+    {
+        TXT_SetWidgetFocus(new_widget, 1);
+    }
 }
 
 static int TXT_TableKeyPress(TXT_UNCAST_ARG(table), int key)
@@ -267,12 +496,35 @@ static int TXT_TableKeyPress(TXT_UNCAST_ARG(table), int key)
 
     if (selected >= 0 && selected < table->num_widgets)
     {
-        if (table->widgets[selected] != NULL
-         && table->widgets[selected]->selectable
+        if (IsActualWidget(table->widgets[selected])
+         && TXT_SelectableWidget(table->widgets[selected])
          && TXT_WidgetKeyPress(table->widgets[selected], key))
         {
             return 1;
         }
+    }
+
+    if (key == KEY_TAB)
+    {
+        int dir;
+        int i;
+
+        dir = TXT_GetModifierState(TXT_MOD_SHIFT) ? -1 : 1;
+
+        // Cycle through all widgets until we find one that can be selected.
+        for (i = table->selected_y * table->columns + table->selected_x + dir;
+             i >= 0 && i < table->num_widgets;
+             i += dir)
+        {
+            if (IsActualWidget(table->widgets[i])
+             && TXT_SelectableWidget(table->widgets[i]))
+            {
+                ChangeSelection(table, i % table->columns, i / table->columns);
+                return 1;
+            }
+        }
+
+        return 0;
     }
 
     if (key == KEY_DOWNARROW)
@@ -284,17 +536,16 @@ static int TXT_TableKeyPress(TXT_UNCAST_ARG(table), int key)
         for (new_y = table->selected_y + 1; new_y < rows; ++new_y)
         {
             new_x = FindSelectableColumn(table, new_y, table->selected_x);
-                            
+
             if (new_x >= 0)
             {
                 // Found a selectable widget in this column!
 
-                table->selected_x = new_x;
-                table->selected_y = new_y;
+                ChangeSelection(table, new_x, new_y);
 
                 return 1;
             }
-        } 
+        }
     }
 
     if (key == KEY_UPARROW)
@@ -306,17 +557,16 @@ static int TXT_TableKeyPress(TXT_UNCAST_ARG(table), int key)
         for (new_y = table->selected_y - 1; new_y >= 0; --new_y)
         {
             new_x = FindSelectableColumn(table, new_y, table->selected_x);
-                            
+
             if (new_x >= 0)
             {
                 // Found a selectable widget in this column!
 
-                table->selected_x = new_x;
-                table->selected_y = new_y;
+                ChangeSelection(table, new_x, new_y);
 
                 return 1;
             }
-        } 
+        }
     }
 
     if (key == KEY_LEFTARROW)
@@ -327,11 +577,11 @@ static int TXT_TableKeyPress(TXT_UNCAST_ARG(table), int key)
 
         for (new_x = table->selected_x - 1; new_x >= 0; --new_x)
         {
-            if (SelectableWidget(table, new_x, table->selected_y))
+            if (SelectableCell(table, new_x, table->selected_y))
             {
                 // Found a selectable widget!
 
-                table->selected_x = new_x;
+                ChangeSelection(table, new_x, table->selected_y);
 
                 return 1;
             }
@@ -346,11 +596,11 @@ static int TXT_TableKeyPress(TXT_UNCAST_ARG(table), int key)
 
         for (new_x = table->selected_x + 1; new_x < table->columns; ++new_x)
         {
-            if (SelectableWidget(table, new_x, table->selected_y))
+            if (SelectableCell(table, new_x, table->selected_y))
             {
                 // Found a selectable widget!
 
-                table->selected_x = new_x;
+                ChangeSelection(table, new_x, table->selected_y);
 
                 return 1;
             }
@@ -377,20 +627,22 @@ static void CheckValidSelection(txt_table_t *table)
         {
             // Found a selectable column.
 
-            table->selected_x = new_x;
-            table->selected_y = new_y;
+            ChangeSelection(table, new_x, new_y);
 
             break;
         }
     }
 }
 
-static void LayoutCell(txt_table_t *table, int x, int y, int col_width,
+static void LayoutCell(txt_table_t *table, int x, int y,
                        int draw_x, int draw_y)
 {
     txt_widget_t *widget;
+    int col_width;
 
     widget = table->widgets[y * table->columns + x];
+
+    col_width = widget->w;
 
     // Adjust x position based on alignment property
 
@@ -402,24 +654,23 @@ static void LayoutCell(txt_table_t *table, int x, int y, int col_width,
 
         case TXT_HORIZ_CENTER:
             TXT_CalcWidgetSize(widget);
-            
+
             // Separators are always drawn left-aligned.
 
             if (widget->widget_class != &txt_separator_class)
             {
                 draw_x += (col_width - widget->w) / 2;
             }
-            
+
             break;
 
         case TXT_HORIZ_RIGHT:
             TXT_CalcWidgetSize(widget);
-            
+
             if (widget->widget_class != &txt_separator_class)
             {
                 draw_x += col_width - widget->w;
             }
-            
             break;
     }
 
@@ -438,6 +689,7 @@ static void TXT_TableLayout(TXT_UNCAST_ARG(table))
     TXT_CAST_ARG(txt_table_t, table);
     unsigned int *column_widths;
     unsigned int *row_heights;
+    txt_widget_t *widget;
     int draw_x, draw_y;
     int x, y;
     int i;
@@ -462,9 +714,9 @@ static void TXT_TableLayout(TXT_UNCAST_ARG(table))
     }
 
     // Draw all cells
-    
+
     draw_y = table->widget.y;
-    
+
     for (y=0; y<rows; ++y)
     {
         draw_x = table->widget.x;
@@ -476,10 +728,14 @@ static void TXT_TableLayout(TXT_UNCAST_ARG(table))
             if (i >= table->num_widgets)
                 break;
 
-            if (table->widgets[i] != NULL)
+            widget = table->widgets[i];
+
+            if (IsActualWidget(widget))
             {
-                LayoutCell(table, x, y, column_widths[x], 
-                           draw_x, draw_y);
+                CalculateWidgetDimensions(table, x, y,
+                                          column_widths, row_heights,
+                                          &widget->w, &widget->h);
+                LayoutCell(table, x, y, draw_x, draw_y);
             }
 
             draw_x += column_widths[x];
@@ -491,33 +747,28 @@ static void TXT_TableLayout(TXT_UNCAST_ARG(table))
     free(row_heights);
     free(column_widths);
 }
-                
-static void TXT_TableDrawer(TXT_UNCAST_ARG(table), int selected)
+
+static void TXT_TableDrawer(TXT_UNCAST_ARG(table))
 {
     TXT_CAST_ARG(txt_table_t, table);
     txt_widget_t *widget;
-    int selected_cell;
     int i;
-    
+
     // Check the table's current selection points at something valid before
     // drawing.
 
     CheckValidSelection(table);
 
-    // Find the index of the currently-selected widget.
-
-    selected_cell = table->selected_y * table->columns + table->selected_x;
-    
     // Draw all cells
-    
+
     for (i=0; i<table->num_widgets; ++i)
     {
         widget = table->widgets[i];
 
-        if (widget != NULL)
+        if (IsActualWidget(widget))
         {
             TXT_GotoXY(widget->x, widget->y);
-            TXT_DrawWidget(widget, selected && i == selected_cell);
+            TXT_DrawWidget(widget);
         }
     }
 }
@@ -536,7 +787,7 @@ static void TXT_TableMousePress(TXT_UNCAST_ARG(table), int x, int y, int b)
 
         // NULL widgets are spacers
 
-        if (widget != NULL)
+        if (IsActualWidget(widget))
         {
             if (x >= widget->x && x < (signed) (widget->x + widget->w)
              && y >= widget->y && y < (signed) (widget->y + widget->h))
@@ -545,10 +796,10 @@ static void TXT_TableMousePress(TXT_UNCAST_ARG(table), int x, int y, int b)
 
                 // Select the cell if the widget is selectable
 
-                if (widget->selectable)
+                if (TXT_SelectableWidget(widget))
                 {
-                    table->selected_x = i % table->columns;
-                    table->selected_y = i / table->columns;
+                    ChangeSelection(table, i % table->columns,
+                                           i / table->columns);
                 }
 
                 // Propagate click
@@ -561,14 +812,65 @@ static void TXT_TableMousePress(TXT_UNCAST_ARG(table), int x, int y, int b)
     }
 }
 
+// Determine whether the table is selectable.
+
+static int TXT_TableSelectable(TXT_UNCAST_ARG(table))
+{
+    TXT_CAST_ARG(txt_table_t, table);
+    int i;
+
+    // Is the currently-selected cell selectable?
+
+    if (SelectableCell(table, table->selected_x, table->selected_y))
+    {
+        return 1;
+    }
+
+    // Find the first selectable cell and set selected_x, selected_y.
+
+    for (i = 0; i < table->num_widgets; ++i)
+    {
+        if (IsActualWidget(table->widgets[i])
+         && TXT_SelectableWidget(table->widgets[i]))
+        {
+            ChangeSelection(table, i % table->columns, i / table->columns);
+            return 1;
+        }
+    }
+
+    // No selectable widgets exist within the table.
+
+    return 0;
+}
+
+// Need to pass through focus changes to the selected child widget.
+
+static void TXT_TableFocused(TXT_UNCAST_ARG(table), int focused)
+{
+    TXT_CAST_ARG(txt_table_t, table);
+    int i;
+
+    i = table->selected_y * table->columns + table->selected_x;
+
+    if (i < table->num_widgets)
+    {
+        if (IsActualWidget(table->widgets[i]))
+        {
+            TXT_SetWidgetFocus(table->widgets[i], focused);
+        }
+    }
+}
+
 txt_widget_class_t txt_table_class =
 {
+    TXT_TableSelectable,
     TXT_CalcTableSize,
     TXT_TableDrawer,
     TXT_TableKeyPress,
     TXT_TableDestructor,
     TXT_TableMousePress,
     TXT_TableLayout,
+    TXT_TableFocused,
 };
 
 void TXT_InitTable(txt_table_t *table, int columns)
@@ -600,6 +902,37 @@ txt_table_t *TXT_NewTable(int columns)
     table = malloc(sizeof(txt_table_t));
 
     TXT_InitTable(table, columns);
+
+    return table;
+}
+
+// Alternative to TXT_NewTable() that allows a list of widgets to be
+// provided in its arguments.
+txt_table_t *TXT_MakeTable(int columns, TXT_UNCAST_ARG(first_widget), ...)
+{
+    TXT_CAST_ARG(txt_widget_t, first_widget);
+    txt_table_t *table;
+    va_list args;
+
+    table = TXT_NewTable(columns);
+    TXT_AddWidget(table, first_widget);
+
+    va_start(args, TXT_UNCAST_ARG_NAME(first_widget));
+
+    for (;;)
+    {
+        txt_widget_t *widget;
+        widget = va_arg(args, txt_widget_t *);
+
+        if (widget == NULL)
+        {
+            break;
+        }
+
+        TXT_AddWidget(table, widget);
+    }
+
+    va_end(args);
 
     return table;
 }
@@ -688,6 +1021,11 @@ txt_widget_t *TXT_GetSelectedWidget(TXT_UNCAST_ARG(table))
     if (index >= 0 && index < table->num_widgets)
     {
         result = table->widgets[index];
+
+        if (!IsActualWidget(result))
+        {
+            result = NULL;
+        }
     }
 
     if (result != NULL && result->widget_class == &txt_table_class)
@@ -709,21 +1047,20 @@ int TXT_SelectWidget(TXT_UNCAST_ARG(table), TXT_UNCAST_ARG(widget))
 
     for (i=0; i<table->num_widgets; ++i)
     {
-        if (table->widgets[i] == NULL)
+        if (!IsActualWidget(table->widgets[i]))
         {
             continue;
         }
-        
+
         if (table->widgets[i] == widget)
         {
             // Found the item!  Select it and return.
-            
-            table->selected_x = i % table->columns;
-            table->selected_y = i / table->columns;
+
+            ChangeSelection(table, i % table->columns, i / table->columns);
 
             return 1;
         }
-        
+
         if (table->widgets[i]->widget_class == &txt_table_class)
         {
             // This item is a subtable.  Recursively search this table.
@@ -732,8 +1069,7 @@ int TXT_SelectWidget(TXT_UNCAST_ARG(table), TXT_UNCAST_ARG(widget))
             {
                 // Found it in the subtable.  Select this subtable and return.
 
-                table->selected_x = i % table->columns;
-                table->selected_y = i / table->columns;
+                ChangeSelection(table, i % table->columns, i / table->columns);
 
                 return 1;
             }
@@ -743,6 +1079,66 @@ int TXT_SelectWidget(TXT_UNCAST_ARG(table), TXT_UNCAST_ARG(widget))
     // Not found.
 
     return 0;
+}
+
+void TXT_SetTableColumns(TXT_UNCAST_ARG(table), int new_columns)
+{
+    TXT_CAST_ARG(txt_table_t, table);
+    txt_widget_t **new_widgets;
+    txt_widget_t *widget;
+    int new_num_widgets;
+    int i, j, x;
+
+    // We need as many full rows as are in the current list, plus the
+    // remainder from the last row.
+    new_num_widgets = (table->num_widgets / table->columns) * new_columns
+                    + (table->num_widgets % table->columns);
+    new_widgets = calloc(new_num_widgets, sizeof(txt_widget_t *));
+
+    // Reset and add one by one from the old table.
+    new_num_widgets = 0;
+
+    for (i = 0; i < table->num_widgets; ++i)
+    {
+        widget = table->widgets[i];
+        x = i % table->columns;
+
+        if (x < new_columns)
+        {
+            new_widgets[new_num_widgets] = widget;
+            ++new_num_widgets;
+        }
+        else if (IsActualWidget(widget))
+        {
+            TXT_DestroyWidget(widget);
+        }
+
+        // When we reach the last column of a row, we must pad it out with
+        // extra widgets to reach the next row.
+        if (x == table->columns - 1)
+        {
+            for (j = table->columns; j < new_columns; ++j)
+            {
+                // First row? We need to add struts that are used to apply
+                // the column widths.
+                if (i < table->columns)
+                {
+                    widget = &TXT_NewStrut(0, 0)->widget;
+                }
+                else
+                {
+                    widget = &txt_table_overflow_right;
+                }
+                new_widgets[new_num_widgets] = widget;
+                ++new_num_widgets;
+            }
+        }
+    }
+
+    free(table->widgets);
+    table->widgets = new_widgets;
+    table->num_widgets = new_num_widgets;
+    table->columns = new_columns;
 }
 
 // Sets the widths of columns in a table.
@@ -766,5 +1162,86 @@ void TXT_SetColumnWidths(TXT_UNCAST_ARG(table), ...)
     }
 
     va_end(args);
+}
+
+// Moves the select by at least the given number of characters.
+// Currently quietly ignores pagex, as we don't use it.
+
+int TXT_PageTable(TXT_UNCAST_ARG(table), int pagex, int pagey)
+{
+    TXT_CAST_ARG(txt_table_t, table);
+    unsigned int *column_widths;
+    unsigned int *row_heights;
+    int rows;
+    int changed = 0;
+
+    rows = TableRows(table);
+
+    row_heights = malloc(sizeof(int) * rows);
+    column_widths = malloc(sizeof(int) * table->columns);
+
+    CalcRowColSizes(table, row_heights, column_widths);
+
+    if (pagex)
+    {
+        // @todo Jump selection to the left or right as needed
+    }
+
+    if (pagey)
+    {
+        int new_x, new_y;
+        int distance = 0;
+        int dir;
+
+        // What direction are we moving?
+
+        if (pagey > 0)
+        {
+            dir = 1;
+        }
+        else
+        {
+            dir = -1;
+        }
+
+        // Move the cursor until the desired distance is reached.
+
+        new_y = table->selected_y;
+
+        while (new_y >= 0 && new_y < rows)
+        {
+            // We are about to travel a distance equal to the height of the row
+            // we are about to leave.
+
+            distance += row_heights[new_y];
+
+            // *Now* increment the loop.
+
+            new_y += dir;
+
+            new_x = FindSelectableColumn(table, new_y, table->selected_x);
+
+            if (new_x >= 0)
+            {
+                // Found a selectable widget in this column!
+                // Select it anyway in case we don't find something better.
+
+                ChangeSelection(table, new_x, new_y);
+                changed = 1;
+
+                // ...but is it far enough away?
+
+                if (distance >= abs(pagey))
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    free(row_heights);
+    free(column_widths);
+
+    return changed;
 }
 

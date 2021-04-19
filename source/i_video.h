@@ -27,6 +27,16 @@
 #define I_VIDEO_H__
 
 #include "doomtype.h"
+#include "m_qstr.h"
+
+struct SDL_Window;
+
+enum class screentype_e : int
+{
+   WINDOWED,
+   FULLSCREEN_DESKTOP,
+   FULLSCREEN,
+};
 
 //
 // Video Driver Base Class
@@ -46,8 +56,53 @@ public:
    virtual void ShutdownGraphics()        = 0;
    virtual void ShutdownGraphicsPartway() = 0;
    virtual bool InitGraphicsMode()        = 0;
+
+   SDL_Window *window = nullptr;
 };
 
+//
+// Geom string data
+//
+struct Geom
+{
+   //
+   // Some fields may have neutral flags, as affected by other fields
+   //
+   enum class TriState
+   {
+      off,
+      on,
+      neutral
+   };
+
+   enum
+   {
+      minimumWidth = 320,
+      minimumHeight = 200,
+      fallbackWidth = 640,
+      fallbackHeight = 480,
+   };
+
+   Geom() = default;
+   Geom(const char *geom)
+   {
+      parse(geom);
+   }
+
+   void parse(const char *geom);
+   static bool validateWidth(int width);
+   static bool validateHeight(int height);
+   qstring toString() const;
+
+   int width = fallbackWidth;
+   int height = fallbackHeight;
+   screentype_e screentype = screentype_e::WINDOWED;
+   TriState vsync = TriState::neutral;
+   bool hardware = false;
+   bool wantframe = true;
+};
+
+void I_StartTic();
 
 // Called by D_DoomMain,
 // determines the hardware configuration
@@ -63,14 +118,15 @@ void I_FinishUpdate();
 
 void I_ReadScreen(byte *scr);
 
-void I_CheckVideoCmds(int *w, int *h, bool *fs, bool *vs, bool *hw, bool *wf);
-void I_ParseGeom(const char *geom, int *w, int *h, bool *fs, bool *vs, bool *hw,
-                 bool *wf);
+void I_CheckVideoCmdsOnce(Geom &geom);
+void I_ParseResolution(const char *resolution, int &w, int &h, const int window_w, const int window_h);
 
 // letterboxing utilities
 bool I_VideoShouldLetterbox(int w, int h);
 int  I_VideoLetterboxHeight(int w);
 int  I_VideoLetterboxOffset(int h, int hl);
+
+void I_ToggleFullscreen();
 
 extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 
@@ -78,16 +134,18 @@ extern int use_vsync;  // killough 2/8/98: controls whether vsync is called
 
 void I_SetMode();
 
+extern char *i_default_resolution;
+extern char *i_resolution;
 extern char *i_videomode;
 extern char *i_default_videomode;
 extern int   i_videodriverid;
-extern int   i_softbitdepth;
 extern bool  i_letterbox;
+extern int   displaynum;
 
 // Driver enumeration
-enum
+enum halvdr_e
 {
-   VDR_SDLSOFT,
+   VDR_SDLDEFAULT,
    VDR_SDLGL2D,
    VDR_MAXDRIVERS
 };

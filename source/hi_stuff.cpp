@@ -63,11 +63,11 @@ extern char gamemapname[9];
 
 // Private Data
 
-typedef struct hipoint_s
+struct hipoint_t
 {
    int x;
    int y;
-} hipoint_t;
+};
 
 static hipoint_t hipoints[3][9] =
 {
@@ -125,6 +125,7 @@ static wbstartstruct_t hi_wbs;
 
 // graphic patches
 static patch_t *hi_interpic;
+static patch_t *hi_exitpic;
 static patch_t *hi_in_x;
 static patch_t *hi_in_yah;
 
@@ -156,9 +157,21 @@ static void HI_loadData(void)
    memset(mapname, 0, 9);
 
    // load interpic
-   hi_interpic = NULL;
+   hi_interpic = nullptr;
+   hi_exitpic = nullptr;
 
-   if(gameepisode <= 3)
+   if(estrnonempty(hi_wbs.li_lastexitpic))
+   {
+      hi_exitpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_lastexitpic,
+                                          PU_STATIC);
+   }
+
+   if(estrnonempty(hi_wbs.li_nextenterpic))
+   {
+      hi_interpic = PatchLoader::CacheName(wGlobalDir, hi_wbs.li_nextenterpic,
+                                           PU_STATIC);
+   }
+   else if(gameepisode <= 3)
    {
       sprintf(mapname, "MAPE%d", gameepisode);
       hi_interpic = PatchLoader::CacheName(wGlobalDir, mapname, PU_STATIC);
@@ -183,8 +196,8 @@ static void HI_loadData(void)
    }
 
    // haleyjd 03/27/05: EDF-defined intermission map names
-   mapName     = NULL;
-   nextMapName = NULL;
+   mapName     = nullptr;
+   nextMapName = nullptr;
 
    {
       char nameBuffer[24];
@@ -192,9 +205,20 @@ static void HI_loadData(void)
       edf_string_t *str;
 
       // set current map
-      psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);
-      if((str = E_StringForName(nameBuffer)))
-         mapName = str->string;
+      if(hi_wbs.li_lastlevelname && *hi_wbs.li_lastlevelname)
+         mapName = hi_wbs.li_lastlevelname;
+      else
+      {
+         psnprintf(nameBuffer, 24, "_IN_NAME_%s", gamemapname);
+         if((str = E_StringForName(nameBuffer)))
+            mapName = str->string;
+      }
+
+      if(hi_wbs.li_nextlevelname && *hi_wbs.li_nextlevelname)
+      {
+         nextMapName = hi_wbs.li_nextlevelname;
+         return;
+      }
 
       // are we going to a secret level?
       basename = hi_wbs.gotosecret ? LevelInfo.nextSecret : LevelInfo.nextLevel;
@@ -300,6 +324,8 @@ static void HI_Stop(void)
 {
    if(hi_interpic)
       Z_ChangeTag(hi_interpic, PU_CACHE);
+   if(hi_exitpic)
+      Z_ChangeTag(hi_exitpic, PU_CACHE);
 
    Z_ChangeTag(hi_in_x, PU_CACHE);
    Z_ChangeTag(hi_in_yah, PU_CACHE);
@@ -364,10 +390,15 @@ static void HI_drawGoing()
 {
    int i, previous;
 
-   if(gameepisode > 3)
+   if(gameepisode > 3 && estrempty(hi_wbs.li_nextenterpic))
       return;
  
    HI_drawNewLevelName(10);
+
+   // don't proceed by drawing the location indicators if using "enterpic".
+   // Keep them for a more advanced scripting.
+   if(estrnonempty(hi_wbs.li_nextenterpic))
+      return;
    
    previous = hi_wbs.last;
 
@@ -417,10 +448,13 @@ static void HI_drawLeaving(void)
    int lastlevel, thislevel;
    bool drawsecret;
 
-   if(gameepisode > 3)
+   if(gameepisode > 3 && estrempty(hi_wbs.li_nextenterpic))
       return;
 
    HI_drawOldLevelName(3);
+
+   if(estrnonempty(hi_wbs.li_nextenterpic))
+      return;
 
    if(hi_wbs.last == 8)
    {
@@ -605,7 +639,7 @@ static void HI_drawSingleStats(void)
          statstage = 4;
       }
 
-      if(gameepisode < 4)
+      if(gameepisode < 4 || estrnonempty(hi_wbs.li_nextenterpic))
       {         
          int time, hours, minutes, seconds;
          
@@ -660,9 +694,11 @@ static void HI_drawCoopStats(void)
    {
       if(HI_playerInGame(i))
       {
-         V_DrawPatchShadowed(25, ypos, &subscreen43, 
-            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE), 
-            NULL, FRACUNIT);
+         V_DrawPatchShadowed(
+            25, ypos, &subscreen43,
+            PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
+            nullptr, FRACUNIT
+         );
 
          if(statstage == 1)
          {
@@ -713,7 +749,7 @@ static fixed_t HI_dmFaceTLLevel(int playernum)
 //
 static void HI_drawDMStats(void)
 {
-   int i, j;
+   int i;
    int xpos, ypos, kpos;
    const char *killers = HIS_KILLERS;
 
@@ -782,16 +818,20 @@ static void HI_drawDMStats(void)
                                     FRACUNIT/3);
             }
 
-            V_DrawPatchTL(40, ypos, &subscreen43,
+            V_DrawPatchTL(
+               40, ypos, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_faces[i], PU_CACHE),
-               NULL, tllevel);
-            V_DrawPatchTL(xpos, 18, &subscreen43,
+               nullptr, tllevel
+            );
+            V_DrawPatchTL(
+               xpos, 18, &subscreen43,
                PatchLoader::CacheNum(wGlobalDir, hi_dead_faces[i], PU_CACHE),
-               NULL, tllevel);
+               nullptr, tllevel
+            );
 
             kpos = 86;
 
-            for(j = 0; j < MAXPLAYERS; ++j)
+            for(int j = 0; j < MAXPLAYERS; ++j)
             {
                if(HI_playerInGame(j))
                {
@@ -845,7 +885,8 @@ static void HI_Ticker(void)
    {
       interstate++;
       
-      if(gameepisode > 3 && interstate > INTR_STATS)
+      if(gameepisode > 3 && interstate > INTR_STATS &&
+         estrempty(hi_wbs.li_nextenterpic))
       {
          // extended episodes have no map screens
          interstate = INTR_WAITING;
@@ -854,10 +895,15 @@ static void HI_Ticker(void)
       switch(interstate)
       {
       case INTR_STATS:
-         statetime = intertime + ((gameepisode > 3) ? 1200 : 300);
+         statetime = intertime + ((gameepisode > 3 &&
+                                   estrempty(hi_wbs.li_nextenterpic)) ? 1200 :
+                                  300);
          break;
       case INTR_LEAVING:
-         statetime = intertime + 200;
+         if(estrnonempty(hi_wbs.li_nextenterpic))
+            statetime = intertime + 35;
+         else
+            statetime = intertime + 200;
          HI_DrawBackground();             // change the background
          break;
       case INTR_GOING:
@@ -881,7 +927,8 @@ static void HI_Ticker(void)
       {
          intertime = 150;
       }
-      else if(interstate < INTR_GOING && gameepisode < 4)
+      else if(interstate < INTR_GOING && (gameepisode < 4 ||
+                                          estrnonempty(hi_wbs.li_nextenterpic)))
       {
          interstate = INTR_GOING;
          HI_DrawBackground(); // force a background change
@@ -908,14 +955,18 @@ static void HI_Ticker(void)
 //
 static void HI_DrawBackground(void)
 {
-   if(interstate > INTR_STATS && hi_interpic)
-   {
+   int comparestate = estrnonempty(hi_wbs.li_nextenterpic) ? INTR_GOING :
+   INTR_STATS + 1;
+   if(interstate >= comparestate && hi_interpic)
       V_DrawPatch(0, 0, &subscreen43, hi_interpic);
-   }
    else
    {
       // TODO: externalize flat name
-      V_DrawBackground("FLOOR16", &subscreen43);
+
+      if(estrnonempty(hi_wbs.li_lastexitpic))
+         V_DrawPatch(0, 0, &subscreen43, hi_exitpic);
+      else
+         V_DrawBackground("FLOOR16", &subscreen43);
    }
 }
 

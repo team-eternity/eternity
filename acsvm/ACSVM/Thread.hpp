@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -17,9 +17,6 @@
 #include "PrintBuf.hpp"
 #include "Stack.hpp"
 #include "Store.hpp"
-
-#include <istream>
-#include <ostream>
 
 
 //----------------------------------------------------------------------------|
@@ -109,13 +106,13 @@ namespace ACSVM
 
       virtual ThreadInfo const *getInfo() const;
 
-      virtual void loadState(std::istream &in);
+      virtual void loadState(Serial &in);
 
       virtual void lockStrings() const;
 
       virtual void refStrings() const;
 
-      virtual void saveState(std::ostream &out) const;
+      virtual void saveState(Serial &out) const;
 
       virtual void start(Script *script, MapScope *map, ThreadInfo const *info,
          Word const *argV, Word argC);
@@ -150,9 +147,9 @@ namespace ACSVM
       static constexpr std::size_t DataStkSize = 256;
 
    private:
-      CallFrame readCallFrame(std::istream &in) const;
+      CallFrame readCallFrame(Serial &in) const;
 
-      void writeCallFrame(std::ostream &out, CallFrame const &in) const;
+      void writeCallFrame(Serial &out, CallFrame const &in) const;
    };
 }
 

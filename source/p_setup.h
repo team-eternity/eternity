@@ -49,10 +49,8 @@ class WadDirectory;
 // IOANCH 20151213: modify P_CheckLevel to support one extra parameter
 struct maplumpindex_t;
  // haleyjd: now used in d_main.c
-int P_CheckLevel(WadDirectory *dir, int lumpnum, 
+int P_CheckLevel(const WadDirectory *dir, int lumpnum, 
                  maplumpindex_t *mgla = nullptr, bool *udmf = nullptr);
-int P_CheckLevelName(WadDirectory *dir, const char *mapname);
-int P_CheckLevelMapNum(WadDirectory *dir, int mapnum);
 
 void P_SetupLevel(WadDirectory *dir, const char *mapname, int playermask, skill_t skill);
 void P_Init();                   // Called by startup code.
@@ -60,6 +58,7 @@ void P_InitThingLists();
 
 // IOANCH 20151210: made these global so they can be accessed from e_udmf
 struct line_t;
+struct linkdata_t;
 struct mapthing_t;
 struct sector_t;
 struct side_t;
@@ -73,7 +72,6 @@ bool P_CheckThingDoomBan(int16_t type);
 void P_ConvertHereticThing(mapthing_t *mthing);
 void P_ConvertDoomExtendedSpawnNum(mapthing_t *mthing);
 
-
 extern byte     *rejectmatrix;   // for fast sight rejection
 
 // killough 3/1/98: change blockmap from "short" to "long" offsets:
@@ -85,7 +83,6 @@ extern fixed_t  bmaporgx;
 extern fixed_t  bmaporgy;        // origin of block map
 extern Mobj   **blocklinks;      // for thing chains
 extern byte    *portalmap;       // haleyjd: for fast linked portal checks
-extern int    **gBlockGroups;    // ioanch 20160106: for each block, prt. groups
 extern bool     skipblstart;     // MaxW: Skip initial blocklist short
 
 // haleyjd 05/17/13: portalmap flags
@@ -97,7 +94,6 @@ enum
 };
 
 extern bool     newlevel;
-extern int      doom1level;
 extern char     levelmapname[10];
 
 #if 0
@@ -125,7 +121,6 @@ extern int olo_loaded;
 #endif
 
 struct seg_t;
-void P_CalcSegLength(seg_t *lseg);
 
 #endif
 

@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015 David Hill
+// Copyright (C) 2015-2017 David Hill
 //
 // See COPYING for license information.
 //
@@ -18,6 +18,7 @@
 #include "Module.hpp"
 #include "Scope.hpp"
 #include "Script.hpp"
+#include "Serial.hpp"
 
 #include <algorithm>
 
@@ -66,9 +67,11 @@ namespace ACSVM
    //
    // Thread::loadState
    //
-   void Thread::loadState(std::istream &in)
+   void Thread::loadState(Serial &in)
    {
       std::size_t count, countFull;
+
+      in.readSign(Signature::Thread);
 
       module   = env->getModule(env->readModuleName(in));
       codePtr  = &module->codeV[ReadVLN<std::size_t>(in)];
@@ -104,11 +107,13 @@ namespace ACSVM
 
       countFull = ReadVLN<std::size_t>(in);
       count     = ReadVLN<std::size_t>(in);
-      in.read(printBuf.getLoadBuf(countFull, count), countFull);
+      in.in->read(printBuf.getLoadBuf(countFull, count), countFull);
 
       state.state = static_cast<ThreadState::State>(ReadVLN<int>(in));
       state.data = ReadVLN<Word>(in);
       state.type = ReadVLN<Word>(in);
+
+      in.readSign(~Signature::Thread);
    }
 
    //
@@ -132,7 +137,7 @@ namespace ACSVM
    //
    // Thread::readCallFrame
    //
-   CallFrame Thread::readCallFrame(std::istream &in) const
+   CallFrame Thread::readCallFrame(Serial &in) const
    {
       CallFrame out;
 
@@ -166,8 +171,10 @@ namespace ACSVM
    //
    // Thread::saveState
    //
-   void Thread::saveState(std::ostream &out) const
+   void Thread::saveState(Serial &out) const
    {
+      out.writeSign(Signature::Thread);
+
       env->writeModuleName(out, module->name);
       WriteVLN(out, codePtr - module->codeV.data());
       WriteVLN(out, scopeGbl->id);
@@ -197,11 +204,13 @@ namespace ACSVM
 
       WriteVLN(out, printBuf.sizeFull());
       WriteVLN(out, printBuf.size());
-      out.write(printBuf.dataFull(), printBuf.sizeFull());
+      out.out->write(printBuf.dataFull(), printBuf.sizeFull());
 
       WriteVLN<int>(out, state.state);
       WriteVLN(out, state.data);
       WriteVLN(out, state.type);
+
+      out.writeSign(~Signature::Thread);
    }
 
    //
@@ -270,7 +279,7 @@ namespace ACSVM
    //
    // Thread::writeCallFrame
    //
-   void Thread::writeCallFrame(std::ostream &out, CallFrame const &in) const
+   void Thread::writeCallFrame(Serial &out, CallFrame const &in) const
    {
       env->writeModuleName(out, in.module->name);
       WriteVLN(out, in.codePtr - in.module->codeV.data());

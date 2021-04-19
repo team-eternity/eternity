@@ -32,7 +32,6 @@
 #include "i_system.h"
 #include "doomtype.h"
 #include "m_collection.h"
-#include "m_dllist.h"
 #include "e_hash.h"
 #include "m_qstr.h"
 #include "m_utils.h"
@@ -86,7 +85,7 @@ static void MetaHashRebuild(HashType &hash)
       int i;
 
       // find the next larger prime
-      for(i = 0; curNumChains < metaPrimes[i]; i++);
+      for(i = 0; metaPrimes[i] <= curNumChains; i++);
 
       hash.rebuild(metaPrimes[i]);
    }
@@ -320,7 +319,7 @@ IMPLEMENT_RTTI_TYPE(MetaString)
 //
 // Non-trivial, unlike the other MetaObjects' setValue methods.
 // This one can return the current value of the MetaString in *ret if the
-// pointer-to-pointer is non-NULL. If it IS NULL, the current value will
+// pointer-to-pointer is non-nullptr. If it IS nullptr, the current value will
 // be freed instead.
 //
 void MetaString::setValue(const char *s, char **ret)
@@ -570,7 +569,7 @@ MetaTable::~MetaTable()
    clearTable();
 
    delete pImpl;
-   pImpl = NULL;
+   pImpl = nullptr;
 }
 
 //
@@ -768,10 +767,40 @@ void MetaTable::removeObject(MetaObject &object)
 }
 
 //
+// Removes and deletes all objects of the given key and (optionally) type
+//
+void MetaTable::removeAndDeleteAllObjects(size_t keyIndex)
+{
+   MetaObject *obj;
+   while((obj = getNextObject(nullptr, keyIndex)))
+   {
+      removeObject(obj);
+      delete obj;
+   }
+}
+void MetaTable::removeAndDeleteAllObjects(const char *key)
+{
+   removeAndDeleteAllObjects(MetaKey(key).index);
+}
+void MetaTable::removeAndDeleteAllObjects(size_t keyIndex, const MetaObject::Type *type)
+{
+   MetaObject *obj;
+   while((obj = getObjectKeyAndType(keyIndex, type)))
+   {
+      removeObject(obj);
+      delete obj;
+   }
+}
+void MetaTable::removeAndDeleteAllObjects(const char *key, const MetaObject::Type *type)
+{
+   removeAndDeleteAllObjects(MetaKey(key).index, type);
+}
+
+//
 // MetaTable::getObject
 //
 // Returns the first object found in the metatable with the given key, 
-// regardless of its type. Returns NULL if no such object exists.
+// regardless of its type. Returns nullptr if no such object exists.
 //
 MetaObject *MetaTable::getObject(const char *key) const
 {
@@ -793,7 +822,7 @@ MetaObject *MetaTable::getObject(size_t keyIndex) const
 // MetaTable::getObjectType
 //
 // Returns the first object found in the metatable which matches the type. 
-// Returns NULL if no such object exists.
+// Returns nullptr if no such object exists.
 //
 MetaObject *MetaTable::getObjectType(const char *type) const
 {
@@ -877,7 +906,7 @@ MetaObject *MetaTable::getObjectKeyAndType(size_t keyIndex, const char *type) co
 // MetaTable::getNextObject
 //
 // Returns the next object with the same key, or the first such object
-// in the table if NULL is passed in the object pointer. Returns NULL
+// in the table if nullptr is passed in the object pointer. Returns nullptr
 // when no further objects of the same key are available.
 //
 MetaObject *MetaTable::getNextObject(MetaObject *object, const char *key) const
@@ -968,6 +997,28 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key, co
 
    return obj;
 }
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, const char *key, const char *type) const
+{
+   const MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow null in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
 
 //
 // MetaTable::getNextKeyAndType
@@ -981,7 +1032,27 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx, cons
 
    if(object)
    {
-      // As above, allow NULL in type to mean "same as current"
+      // As above, allow nullptr in type to mean "same as current"
+      if(!type)
+         type = object->getClassName();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t keyIdx, const char *type) const
+{
+   const MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow nullptr in type to mean "same as current"
       if(!type)
          type = object->getClassName();
    }
@@ -1023,6 +1094,29 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, const char *key,
 
    return obj;
 }
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, const char *key,
+                                               const MetaObject::Type *type) const
+{
+   const MetaObject *obj = object;
+
+   if(object)
+   {
+      // As above, allow null in either key or type to mean "same as current"
+      if(!key)
+         key = object->getKey();
+
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, key)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
 
 //
 // MetaTable::getNextKeyAndType
@@ -1033,6 +1127,27 @@ MetaObject *MetaTable::getNextKeyAndType(MetaObject *object, size_t keyIdx,
                                          const MetaObject::Type *type) const
 {
    MetaObject *obj    = object;
+   metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
+
+   if(object)
+   {
+      // As above, allow null in type to mean "same as current"
+      if(!type)
+         type = object->getDynamicType();
+   }
+
+   while((obj = pImpl->keyhash.keyIterator(obj, keyObj.key, keyObj.unmodHC)))
+   {
+      if(obj->isInstanceOf(type))
+         break;
+   }
+
+   return obj;
+}
+const MetaObject *MetaTable::getNextKeyAndType(const MetaObject *object, size_t keyIdx,
+                                               const MetaObject::Type *type) const
+{
+   const MetaObject *obj    = object;
    metakey_t  &keyObj = MetaKeyForIndex(keyIdx);
 
    if(object)
@@ -1213,14 +1328,14 @@ void MetaTable::addDouble(const char *key, double value)
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-double MetaTable::getDouble(const char *key, double defValue) const
+double MetaTable::getDouble(size_t keyIndex, double defValue) const
 {
    double retval;
    const MetaDouble *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaDouble>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaDouble>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -1229,6 +1344,10 @@ double MetaTable::getDouble(const char *key, double defValue) const
       retval = obj->value;
 
    return retval;
+}
+double MetaTable::getDouble(const char *key, double defValue) const
+{
+   return getDouble(MetaKey(key).index, defValue);
 }
 
 //
@@ -1293,21 +1412,21 @@ void MetaTable::addString(const char *key, const char *value)
 // MetaTable::getString
 //
 // Get a string from the metatable. This routine returns the value
-// rather than a pointer to a metastring_t. If an object of the requested
-// name doesn't exist in the table, defvalue is returned and metaerrno is set
+// rather than a pointer to a metastring_t. If an object with the requested
+// index doesn't exist in the table, defvalue is returned and metaerrno is set
 // to indicate the problem.
 //
 // Use of this routine only returns the first such value in the table.
 // This routine is meant for singleton fields.
 //
-const char *MetaTable::getString(const char *key, const char *defValue) const
+const char *MetaTable::getString(size_t keyIndex, const char *defValue) const
 {
    const char *retval;
    const MetaString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval = defValue;
@@ -1316,6 +1435,14 @@ const char *MetaTable::getString(const char *key, const char *defValue) const
       retval = obj->value;
 
    return retval;
+}
+
+//
+// Overload for raw key strings.
+//
+const char *MetaTable::getString(const char *key, const char *defValue) const
+{
+   return getString(MetaKey(key).index, defValue);
 }
 
 //
@@ -1343,19 +1470,19 @@ void MetaTable::setString(const char *key, const char *newValue)
 // exists, you would need to call this routine until metaerrno is
 // set to META_ERR_NOSUCHOBJECT.
 //
-// When calling this routine, the value of the object is returned 
-// in case it is needed, and you will need to then free it yourself 
+// When calling this routine, the value of the object is returned
+// in case it is needed, and you will need to then free it yourself
 // using free(). If the return value is not needed, call
 // MetaTable::removeStringNR instead and the string value will be destroyed.
 //
-char *MetaTable::removeString(const char *key)
+char *MetaTable::removeString(size_t keyIndex)
 {
    MetaString *str;
    char *value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(str = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(str = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return nullptr;
@@ -1365,16 +1492,21 @@ char *MetaTable::removeString(const char *key)
 
    // Destroying the MetaString will destroy the value inside it too, unless we
    // get and then nullify its value manually. This is one reason why MetaTable
-   // is a friend to these basic types, as it makes some simple management 
-   // chores like this more efficient. Otherwise I'd have to estrdup the string 
+   // is a friend to these basic types, as it makes some simple management
+   // chores like this more efficient. Otherwise I'd have to estrdup the string
    // and that's stupid.
- 
+
    value = str->value;
    str->value = nullptr; // destructor does nothing if this is cleared first
 
    delete str;
 
    return value;
+}
+
+char *MetaTable::removeString(const char *key)
+{
+   return removeString(MetaKey(key).index);
 }
 
 //
@@ -1384,13 +1516,13 @@ char *MetaTable::removeString(const char *key)
 // alleviate any need the user code might have to free string values in
 // which it isn't interested.
 //
-void MetaTable::removeStringNR(const char *key)
+void MetaTable::removeStringNR(size_t keyIndex)
 {
    MetaString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return;
@@ -1399,6 +1531,10 @@ void MetaTable::removeStringNR(const char *key)
    removeObject(obj);
 
    delete obj;
+}
+void MetaTable::removeStringNR(const char *key)
+{
+   removeStringNR(MetaKey(key).index);
 }
 
 //
@@ -1431,14 +1567,14 @@ void MetaTable::addConstString(const char *key, const char *value)
 // META_ERR_NOSUCHOBJECT. Otherwise, the string constant value is returned and
 // metaerrno is META_ERR_NOERR.
 //
-const char *MetaTable::getConstString(const char *key, const char *defValue) const
+const char *MetaTable::getConstString(size_t keyIndex, const char *defValue) const
 {
    const char *retval;
    const MetaConstString *obj;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(obj = getObjectKeyAndTypeEx<MetaConstString>(key)))
+   if(!(obj = getObjectKeyAndTypeEx<MetaConstString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       retval    = defValue;
@@ -1447,6 +1583,10 @@ const char *MetaTable::getConstString(const char *key, const char *defValue) con
       retval = obj->value;
 
    return retval;
+}
+const char *MetaTable::getConstString(const char *key, const char *defValue) const
+{
+   return getConstString(MetaKey(key).index, defValue);
 }
 
 //
@@ -1480,18 +1620,18 @@ void MetaTable::setConstString(const char *key, const char *newValue)
 // MetaTable::removeConstString
 //
 // Removes a constant string from the table with the given key. If no such
-// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and NULL is returned.
+// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and nullptr is returned.
 // Otherwise, metaerrno is META_ERR_NOERR and the shared string value that 
 // was in the MetaConstString instance is returned.
 //
-const char *MetaTable::removeConstString(const char *key)
+const char *MetaTable::removeConstString(size_t keyIndex)
 {
    MetaConstString *str;
    const char *value;
 
    metaerrno = META_ERR_NOERR;
 
-   if(!(str = getObjectKeyAndTypeEx<MetaConstString>(key)))
+   if(!(str = getObjectKeyAndTypeEx<MetaConstString>(keyIndex)))
    {
       metaerrno = META_ERR_NOSUCHOBJECT;
       return nullptr;
@@ -1503,6 +1643,118 @@ const char *MetaTable::removeConstString(const char *key)
    delete str;
 
    return value;
+}
+const char *MetaTable::removeConstString(const char *key)
+{
+   return removeConstString(MetaKey(key).index);
+}
+
+//
+// Add a nested MetaTable to the MetaTable
+//
+void MetaTable::addMetaTable(size_t keyIndex, MetaTable *value)
+{
+   addObject(value);
+}
+
+//
+// Overload for raw key strings.
+//
+void MetaTable::addMetaTable(const char *key, MetaTable *newValue)
+{
+   addMetaTable(MetaKey(key).index, newValue);
+}
+
+//
+// Get a MetaTable pointer from the MetaTable *hornfx*. If the requested
+// property does not exist as a MetaTable, the value provided by the defValue
+// parameter will be returned, and metaerrno will be set to META_ERR_NOSUCHOBJECT.
+// Otherwise, the MetaTable pointer is returned and metaerrno is META_ERR_NOERR.
+//
+MetaTable *MetaTable::getMetaTable(size_t keyIndex, MetaTable *defValue) const
+{
+   MetaTable *retval, *obj;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex)))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval = defValue;
+   }
+   else
+      retval = obj;
+
+   return retval;
+}
+
+//
+// Overload for raw key strings.
+//
+MetaTable *MetaTable::getMetaTable(const char *key, MetaTable *defValue) const
+{
+   MetaTable *retval, *obj;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(obj = getObjectKeyAndTypeEx<MetaTable>(key)))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      retval = defValue;
+   }
+   else
+      retval = obj;
+
+   return retval;
+}
+
+//
+// If the metatable already contains a metatable of the given name, it will
+// be edited to have the provided value if the MVPROP isn't CFGF_MULTI.
+// Otherwise, a new metatable will be added to the table with that value. 
+//
+void MetaTable::setMetaTable(size_t keyIndex, MetaTable *newValue)
+{
+   MetaTable *obj = getObjectKeyAndTypeEx<MetaTable>(keyIndex);
+   // FIXME: Is it possible for this to run?
+   if(obj)
+   {
+      // FIXME: Should obj be deleted? Is this even correct?
+      pImpl->keyhash.removeObject(obj);
+      pImpl->typehash.removeObject(obj);
+   }   
+
+   addMetaTable(keyIndex, newValue);
+}
+
+//
+// Overload for raw key strings.
+//
+void MetaTable::setMetaTable(const char *key, MetaTable *newValue)
+{
+   setMetaTable(MetaKey(key).index, newValue);
+}
+
+//
+// Removes a meta table from the table with the given key. If no such
+// object exists, metaerrno will be META_ERR_NOSUCHOBJECT and nullptr is returned.
+// Otherwise, metaerrno is META_ERR_NOERR.
+//
+void MetaTable::removeMetaTableNR(size_t keyIndex)
+{
+   MetaTable *table;
+
+   metaerrno = META_ERR_NOERR;
+
+   if(!(table = getObjectKeyAndTypeEx<MetaTable>(keyIndex)))
+   {
+      metaerrno = META_ERR_NOSUCHOBJECT;
+      return;
+   }
+
+   removeObject(table);
+
+   delete table;
 }
 
 //

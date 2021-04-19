@@ -34,7 +34,7 @@
 struct ev_action_t;
 struct line_t;
 class  Mobj;
-struct polyobj_s;
+struct polyobj_t;
 
 // Action flags
 enum EVActionFlags
@@ -63,16 +63,16 @@ enum EVActionFlags
 // Data related to an instance of a special activation.
 struct ev_instance_t
 {
-   Mobj   *actor;   // actor, if any
-   line_t *line;    // line, if any
-   int     special; // special to activate (may == line->special)
-   int    *args;    // arguments (may point to line->args)
-   int     tag;     // tag (may == line->tag or line->args[0]) // ioanch 20160304: only args[0]
-   int     side;    // side of activation
-   int     spac;    // special activation type
-   int     gentype; // generalized type, if is generalized (-1 otherwise)
-   int     genspac; // generalized activation type, if generalized
-   polyobj_s *poly;  // possible polyobject activator
+   Mobj      *actor;   // actor, if any
+   line_t    *line;    // line, if any
+   int        special; // special to activate (may == line->special)
+   int       *args;    // arguments (may point to line->args)
+   int        tag;     // tag (may == line->args[0])
+   int        side;    // side of activation
+   int        spac;    // special activation type
+   int        gentype; // generalized type, if is generalized (-1 otherwise)
+   int        genspac; // generalized activation type, if generalized
+   polyobj_t *poly;    // possible polyobject activator
 };
 
 //
@@ -131,9 +131,11 @@ struct ev_action_t
 // Binds a line special action to a specific action number.
 struct ev_binding_t
 {
-   int actionNumber;    // line action number
-   ev_action_t *action; // the actual action to execute
-   const char *name;    // name, if this binding has one
+   int           actionNumber; // line action number
+   ev_action_t  *action;       // the actual action to execute
+   const char   *name;         // name, if this binding has one
+
+   ev_binding_t *pEDBinding;   // corresponding ExtraData binding, if one exists
 
    DLListItem<ev_binding_t> links;     // hash links by number
    DLListItem<ev_binding_t> namelinks; // hash links by name
@@ -192,6 +194,9 @@ ev_action_t  *EV_HexenActionForSpecial(int special);
 ev_action_t  *EV_ACSActionForSpecial(int special);
 ev_action_t  *EV_ActionForSpecial(int special);
 
+// Get map-specific action number for an ACS action
+int EV_ActionForACSAction(int acsActionNum);
+
 // Lockdef ID for Special
 int EV_LockDefIDForSpecial(int special);
 
@@ -202,11 +207,9 @@ int EV_LockDefIDForLine(const line_t *line);
 bool EV_IsParamLineSpec(int special);
 
 // Activation
-bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing,
-   polyobj_s *poly, int spac);
+bool EV_ActivateSpecialLineWithSpac(line_t *line, int side, Mobj *thing, polyobj_t *poly, int spac);
 bool EV_ActivateSpecialNum(int special, int *args, Mobj *thing);
-int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing,
-   polyobj_s *poly);
+int  EV_ActivateACSSpecial(line_t *line, int special, int *args, int side, Mobj *thing, polyobj_t *poly);
 bool EV_ActivateAction(ev_action_t *action, int *args, Mobj *thing);
 
 //

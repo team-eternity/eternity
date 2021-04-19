@@ -21,6 +21,8 @@
 #ifndef C_NET_H__
 #define C_NET_H__
 
+#include "d_keywds.h"
+
 struct command_t;
 
 // net command numbers
@@ -58,6 +60,7 @@ enum
   netcmd_monhelpfriends,
   netcmd_mondistfriend,
   netcmd_map,
+  netcmd_restartmap,
   netcmd_nukage,
   netcmd_timelimit,
   netcmd_fraglimit,
@@ -93,12 +96,13 @@ enum
   netcmd_comp_planeshoot,  //          plane shooting
   netcmd_comp_special,     //          special failure
   netcmd_comp_ninja,       //          ninja spawn
-  netcmd_comp_aircontrol,  // ioanch:  air control for jumping
+  netcmd_comp_jump,        // ioanch:  air control for jumping
+  netcmd_comp_aircontrol = netcmd_comp_jump,
   NUMNETCMDS
 };
 
 void C_InitPlayerName(void); // haleyjd
-void C_SendCmd(int dest, int, const char *s,...);
+void C_SendCmd(int dest, int cmdnum, E_FORMAT_STRING(const char *s), ...) E_PRINTF(3, 4);
 void C_queueChatChar(unsigned char c);
 unsigned char C_dequeueChatChar(void);
 void C_NetTicker(void);

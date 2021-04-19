@@ -1,6 +1,6 @@
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2015-2017 David Hill
+// Copyright (C) 2015-2020 David Hill
 //
 // See COPYING for license information.
 //
@@ -20,6 +20,7 @@
 #include "Init.hpp"
 #include "Module.hpp"
 #include "Script.hpp"
+#include "Serial.hpp"
 #include "Thread.hpp"
 
 #include <algorithm>
@@ -185,9 +186,11 @@ namespace ACSVM
    //
    // GlobalScope::loadState
    //
-   void GlobalScope::loadState(std::istream &in)
+   void GlobalScope::loadState(Serial &in)
    {
       reset();
+
+      in.readSign(Signature::GlobalScope);
 
       for(auto &arr : arrV)
          arr.loadState(in);
@@ -197,10 +200,12 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.get() != '\0';
+      active = in.in->get() != '\0';
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getHubScope(ReadVLN<Word>(in))->loadState(in);
+
+      in.readSign(~Signature::GlobalScope);
    }
 
    //
@@ -247,8 +252,10 @@ namespace ACSVM
    //
    // GlobalScope::saveState
    //
-   void GlobalScope::saveState(std::ostream &out) const
+   void GlobalScope::saveState(Serial &out) const
    {
+      out.writeSign(Signature::GlobalScope);
+
       for(auto &arr : arrV)
          arr.saveState(out);
 
@@ -257,7 +264,7 @@ namespace ACSVM
 
       env->writeScriptActions(out, scriptAction);
 
-      out.put(active ? '\1' : '\0');
+      out.out->put(active ? '\1' : '\0');
 
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -265,6 +272,8 @@ namespace ACSVM
          WriteVLN(out, scope.id);
          scope.saveState(out);
       }
+
+      out.writeSign(~Signature::GlobalScope);
    }
 
    //
@@ -387,9 +396,11 @@ namespace ACSVM
    //
    // HubScope::loadState
    //
-   void HubScope::loadState(std::istream &in)
+   void HubScope::loadState(Serial &in)
    {
       reset();
+
+      in.readSign(Signature::HubScope);
 
       for(auto &arr : arrV)
          arr.loadState(in);
@@ -399,10 +410,12 @@ namespace ACSVM
 
       env->readScriptActions(in, scriptAction);
 
-      active = in.get() != '\0';
+      active = in.in->get() != '\0';
 
       for(auto n = ReadVLN<std::size_t>(in); n--;)
          getMapScope(ReadVLN<Word>(in))->loadState(in);
+
+      in.readSign(~Signature::HubScope);
    }
 
    //
@@ -449,8 +462,10 @@ namespace ACSVM
    //
    // HubScope::saveState
    //
-   void HubScope::saveState(std::ostream &out) const
+   void HubScope::saveState(Serial &out) const
    {
+      out.writeSign(Signature::HubScope);
+
       for(auto &arr : arrV)
          arr.saveState(out);
 
@@ -459,7 +474,7 @@ namespace ACSVM
 
       env->writeScriptActions(out, scriptAction);
 
-      out.put(active ? '\1' : '\0');
+      out.out->put(active ? '\1' : '\0');
 
       WriteVLN(out, pd->scopes.size());
       for(auto &scope : pd->scopes)
@@ -467,6 +482,8 @@ namespace ACSVM
          WriteVLN(out, scope.id);
          scope.saveState(out);
       }
+
+      out.writeSign(~Signature::HubScope);
    }
 
    //
@@ -524,12 +541,15 @@ namespace ACSVM
       struct
       {
          std::unordered_set<Module *> set;
+         std::vector<Module *>        vec;
 
          void add(Module *module)
          {
-            if(set.insert(module).second)
-               for(auto &import : module->importV)
-                  add(import);
+            if(!set.insert(module).second) return;
+
+            vec.push_back(module);
+            for(auto &import : module->importV)
+               add(import);
          }
       } modules;
 
@@ -542,7 +562,7 @@ namespace ACSVM
       std::size_t scriptIntC = 0;
       std::size_t scriptStrC = 0;
 
-      for(auto &module : modules.set)
+      for(auto &module : modules.vec)
       {
          for(auto &script : module->scriptV)
          {
@@ -556,7 +576,7 @@ namespace ACSVM
 
       // Create lookup tables.
 
-      pd->scopes.alloc(modules.set.size());
+      pd->scopes.alloc(modules.vec.size());
       pd->scriptInt.alloc(scriptIntC);
       pd->scriptStr.alloc(scriptStrC);
       pd->scriptThread.alloc(scriptThrC);
@@ -566,7 +586,7 @@ namespace ACSVM
       auto scriptStrItr = pd->scriptStr.begin();
       auto scriptThrItr = pd->scriptThread.begin();
 
-      for(auto &module : modules.set)
+      for(auto &module : modules.vec)
       {
          using ElemScope = HashMapFixed<Module *, ModuleScope>::Elem;
 
@@ -746,7 +766,7 @@ namespace ACSVM
    //
    // MapScope::loadModules
    //
-   void MapScope::loadModules(std::istream &in)
+   void MapScope::loadModules(Serial &in)
    {
       auto count = ReadVLN<std::size_t>(in);
       std::vector<Module *> modules;
@@ -764,20 +784,24 @@ namespace ACSVM
    //
    // MapScope::loadState
    //
-   void MapScope::loadState(std::istream &in)
+   void MapScope::loadState(Serial &in)
    {
       reset();
 
+      in.readSign(Signature::MapScope);
+
       env->readScriptActions(in, scriptAction);
-      active = in.get() != '\0';
+      active = in.in->get() != '\0';
       loadModules(in);
       loadThreads(in);
+
+      in.readSign(~Signature::MapScope);
    }
 
    //
    // MapScope::loadThreads
    //
-   void MapScope::loadThreads(std::istream &in)
+   void MapScope::loadThreads(Serial &in)
    {
       for(auto n = ReadVLN<std::size_t>(in); n--;)
       {
@@ -785,7 +809,7 @@ namespace ACSVM
          thread->link.insert(&threadActive);
          thread->loadState(in);
 
-         if(in.get())
+         if(in.in->get())
          {
             auto scrThread = pd->scriptThread.find(thread->script);
             if(scrThread)
@@ -851,7 +875,7 @@ namespace ACSVM
    //
    // MapScope::saveModules
    //
-   void MapScope::saveModules(std::ostream &out) const
+   void MapScope::saveModules(Serial &out) const
    {
       WriteVLN(out, pd->scopes.size());
 
@@ -865,18 +889,22 @@ namespace ACSVM
    //
    // MapScope::saveState
    //
-   void MapScope::saveState(std::ostream &out) const
+   void MapScope::saveState(Serial &out) const
    {
+      out.writeSign(Signature::MapScope);
+
       env->writeScriptActions(out, scriptAction);
-      out.put(active ? '\1' : '\0');
+      out.out->put(active ? '\1' : '\0');
       saveModules(out);
       saveThreads(out);
+
+      out.writeSign(~Signature::MapScope);
    }
 
    //
    // MapScope::saveThreads
    //
-   void MapScope::saveThreads(std::ostream &out) const
+   void MapScope::saveThreads(Serial &out) const
    {
       WriteVLN(out, threadActive.size());
       for(auto &thread : threadActive)
@@ -884,7 +912,7 @@ namespace ACSVM
          thread.saveState(out);
 
          auto scrThread = pd->scriptThread.find(thread.script);
-         out.put(scrThread && *scrThread == &thread ? '\1' : '\0');
+         out.out->put(scrThread && *scrThread == &thread ? '\1' : '\0');
       }
    }
 
@@ -951,7 +979,7 @@ namespace ACSVM
       else
       {
          thread = env->getFreeThread();
-         thread->start(script, this, info.info, info.argV, info.argC);
+         thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
          if(info.func) info.func(thread);
          if(info.funcc) info.funcc(thread);
          return true;
@@ -982,7 +1010,7 @@ namespace ACSVM
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info.info, info.argV, info.argC);
+      thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
       if(info.func) info.func(thread);
       if(info.funcc) info.funcc(thread);
       return true;
@@ -1012,7 +1040,7 @@ namespace ACSVM
    {
       Thread *thread = env->getFreeThread();
 
-      thread->start(script, this, info.info, info.argV, info.argC);
+      thread->start(script, this, info.info, info.argV, static_cast<Word>(info.argC));
       if(info.func) info.func(thread);
       if(info.funcc) info.funcc(thread);
       thread->exec();
@@ -1210,13 +1238,17 @@ namespace ACSVM
    //
    // ModuleScope::loadState
    //
-   void ModuleScope::loadState(std::istream &in)
+   void ModuleScope::loadState(Serial &in)
    {
+      in.readSign(Signature::ModuleScope);
+
       for(auto &arr : selfArrV)
          arr.loadState(in);
 
       for(auto &reg : selfRegV)
          reg = ReadVLN<Word>(in);
+
+      in.readSign(~Signature::ModuleScope);
    }
 
    //
@@ -1240,13 +1272,17 @@ namespace ACSVM
    //
    // ModuleScope::saveState
    //
-   void ModuleScope::saveState(std::ostream &out) const
+   void ModuleScope::saveState(Serial &out) const
    {
+      out.writeSign(Signature::ModuleScope);
+
       for(auto &arr : selfArrV)
          arr.saveState(out);
 
       for(auto &reg : selfRegV)
          WriteVLN(out, reg);
+
+      out.writeSign(~Signature::ModuleScope);
    }
 
    //

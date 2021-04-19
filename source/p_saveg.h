@@ -38,6 +38,8 @@ struct spectransfer_t;
 struct mapthing_t;
 struct sector_t;
 struct line_t;
+struct v2fixed_t;
+struct zrefs_t;
 
 class SaveArchive
 {
@@ -45,15 +47,28 @@ protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
+   static constexpr int WRITE_SAVE_VERSION = 5; // Version of saves that EE writes
+   int read_save_version;                       // Version of currently-read save
+
+
 public:
-   SaveArchive(OutBuffer *pSaveFile);
-   SaveArchive(InBuffer  *pLoadFile);
+   explicit SaveArchive(OutBuffer *pSaveFile);
+   explicit SaveArchive(InBuffer  *pLoadFile);
 
    // Accessors
    bool isSaving()  const   { return (savefile != nullptr); }
    bool isLoading() const   { return (loadfile != nullptr); }
    OutBuffer *getSaveFile() { return savefile; }
    InBuffer  *getLoadFile() { return loadfile; }
+
+   int saveVersion() const
+   {
+      if(savefile)
+         return WRITE_SAVE_VERSION;
+      else if(loadfile)
+         return read_save_version;
+      return -1;
+   }
 
    // Methods
    void archiveCString(char *str,  size_t maxLen);
@@ -67,10 +82,17 @@ public:
    // archive a size_t
    void archiveSize(size_t &value);
 
+   // read in the version number
+   bool readSaveVersion();
+   // write out the version number
+   void writeSaveVersion();
+
    // Operators
    // Similar to ZDoom's FArchive class, these are symmetric - they are used
    // both for reading and writing.
    // Basic types:
+   SaveArchive &operator << (int64_t  &x);
+   SaveArchive &operator << (uint64_t &x);
    SaveArchive &operator << (int32_t  &x);
    SaveArchive &operator << (uint32_t &x);
    SaveArchive &operator << (int16_t  &x);
@@ -87,6 +109,8 @@ public:
    SaveArchive &operator << (spectransfer_t  &st);
    SaveArchive &operator << (mapthing_t      &mt);
    SaveArchive &operator << (inventoryslot_t &slot);
+   SaveArchive &operator << (v2fixed_t &vec);
+   SaveArchive &operator << (zrefs_t &zref);
 };
 
 // Global template functions for SaveArchive

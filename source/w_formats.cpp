@@ -28,6 +28,7 @@
 
 #include "z_zone.h"
 
+#include "d_iwad.h"
 #include "m_qstr.h"
 #include "m_utils.h"
 #include "w_formats.h"
@@ -54,39 +55,68 @@ static const char *W_defaultExtensions[] =
 };
 
 //
-// W_TryOpenFile
-//
 // Tries to open a file using the given filename first. If that fails, it
 // will try all of the available default extensions. Returns the open file
-// if it was found (NULL if not), and sets filename equal to the filename
+// if it was found (nullptr if not), and sets filename equal to the filename
 // that was successfully opened, with slashes normalized and the default
 // extension added if one was needed.
 //
 FILE *W_TryOpenFile(qstring &filename, bool allowInexact)
 {
-   FILE *f = NULL;
+   FILE *f = nullptr;
    qstring basefn;
 
    filename.normalizeSlashes();
    basefn = filename;
 
    // Try opening without an added extension first
-   if((f = fopen(basefn.constPtr(), "rb")) == NULL && allowInexact)
+   if((f = fopen(basefn.constPtr(), "rb")))
+      return f;
+
+   if(!allowInexact)
+      return nullptr;
+
+   // Try default extensions
+   for(int i = 0; i < EXT_NUMEXTENSIONS; i++)
    {
-      // Try default extensions
-      for(int i = 0; i < EXT_NUMEXTENSIONS; i++)
+      basefn = filename;
+      basefn.addDefaultExtension(W_defaultExtensions[i]);
+      if((f = fopen(basefn.constPtr(), "rb")))
       {
-         basefn = filename;
-         basefn.addDefaultExtension(W_defaultExtensions[i]);
-         if((f = fopen(basefn.constPtr(), "rb")))
+         filename = basefn;
+         return f;
+      }
+   }
+
+   // Try searching the dirs in DOOMWADPATH
+   const size_t numpaths = D_GetNumDoomWadPaths();
+   for(size_t i = 0; i < numpaths; i++)
+   {
+      const char *path = D_GetDoomWadPath(i);
+      qstring pathandfn = qstring(path) / filename;
+
+      if((f = fopen(pathandfn.constPtr(), "rb")))
+      {
+         filename = pathandfn;
+         return f;
+      }
+      else
+      {
+         // Try default extensions
+         for(int j = 0; j < EXT_NUMEXTENSIONS; j++)
          {
-            filename = basefn;
-            break;
+            basefn = pathandfn;
+            basefn.addDefaultExtension(W_defaultExtensions[j]);
+            if((f = fopen(basefn.constPtr(), "rb")))
+            {
+               filename = basefn;
+               return f;
+            }
          }
       }
    }
 
-   return f;      
+   return nullptr;
 }
 
 typedef bool (*FormatFunc)(FILE *, long);
@@ -206,21 +236,21 @@ static namespace_matcher_t matchers[] =
    { "acs/",          lumpinfo_t::ns_acs          },
    { "colormaps/",    lumpinfo_t::ns_colormaps    },
    { "demos/",        lumpinfo_t::ns_demos        }, // EE extension
-   { "flats/",        lumpinfo_t::ns_flats        },   
+   { "flats/",        lumpinfo_t::ns_flats        },
    //{ "graphics/",     lumpinfo_t::ns_graphics     }, FIXME - as soon as VImage is done!
-   { "graphics/",     lumpinfo_t::ns_global       }, 
+   { "graphics/",     lumpinfo_t::ns_global       },
+   { "hires/",        lumpinfo_t::ns_hires        }, // TODO: Implement
    { "music/",        lumpinfo_t::ns_global       }, // Treated as global in EE
-   { "sounds/",       lumpinfo_t::ns_sounds       }, 
+   { "sounds/",       lumpinfo_t::ns_sounds       },
    { "sprites/",      lumpinfo_t::ns_sprites      },
    { "translations/", lumpinfo_t::ns_translations }, // EE extension
    { "gamepads/",     lumpinfo_t::ns_pads         }, // EE extension
    { "textures/",     lumpinfo_t::ns_textures     },
 
-   { NULL,            -1                          }  // keep this last
+   { nullptr,         -1                          }  // keep this last
 
    // TODO ??
    /*
-   { "hires/",        lumpinfo_t::ns_hires        },
    { "patches/",      lumpinfo_t::ns_patches      },
    { "voices/",       lumpinfo_t::ns_voices       },
    { "voxels/",       lumpinfo_t::ns_voxels       },

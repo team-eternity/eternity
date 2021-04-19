@@ -26,6 +26,9 @@
 #ifndef I_DIRECTORY_H__
 #define I_DIRECTORY_H__
 
+#include "i_platform.h"
+#include "../m_qstr.h"
+
 class qstring;
 
 

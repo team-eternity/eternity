@@ -451,6 +451,7 @@ sound ht_stnmov
   priority      119
   dehackednum   355
   pitchvariance Heretic
+  subchannel    Body
 }
 
 sound ht_sbtpai
@@ -843,12 +844,136 @@ sound ht_respawn
   pitchvariance Heretic
 }
 
+sound ht_artiup
+{
+  lump          "artiup"
+  priority      78
+  dehackednum   404
+  pitchvariance Heretic
+}
+
+sound ht_artiuse
+{
+  lump          "artiuse"
+  priority      78
+  dehackednum   405
+  pitchvariance Heretic
+}
+
+sound ht_blssht
+{
+  lump          "blssht"
+  priority      64
+  dehackednum   406
+  pitchvariance Heretic
+}
+
+sound ht_bowsht
+{
+  lump          "bowsht"
+  priority      64
+  dehackednum   407
+  pitchvariance Heretic
+}
+
+sound ht_gntful
+{
+  lump          "gntful"
+  priority      64
+  dehackednum   408
+  pitchvariance Heretic
+}
+
+sound ht_gnthit
+{
+  lump          "gnthit"
+  priority      64
+  dehackednum   409
+  pitchvariance Heretic
+}
+
+sound ht_gntpow
+{
+  lump          "gntpow"
+  priority      64
+  dehackednum   410
+  pitchvariance Heretic
+}
+
+sound ht_gntact
+{
+  lump          "gntact"
+  priority      64
+  dehackednum   411
+  pitchvariance Heretic
+}
+
+sound ht_gntuse
+{
+  lump          "gntuse"
+  priority      64
+  dehackednum   412
+  pitchvariance Heretic
+}
+
+sound ht_stfcrk
+{
+  lump          "stfcrk"
+  priority      64
+  dehackednum   413
+  pitchvariance Heretic
+}
+
+sound ht_lobsht
+{
+  lump          "lobsht"
+  priority      64
+  dehackednum   414
+  pitchvariance Heretic
+}
+
+sound ht_bounce
+{
+  lump          "bounce"
+  priority      64
+  dehackednum   415
+  pitchvariance Heretic
+}
+
+sound ht_phopow
+{
+  lump          "phopow"
+  priority      64
+  dehackednum   416
+  pitchvariance Heretic
+}
+
+sound ht_blshit
+{
+  lump          "blshit"
+  priority      64
+  dehackednum   417
+  pitchvariance Heretic
+}
+
+sound ht_noway
+{
+  link        ht_plroof
+  skinindex   sk_noway
+  dehackednum 418
+}
 
 // Environmental Sound Defaults
 // These are altered by the game engine to point to sounds specifed by MapInfo.
 // Use these names in sound sequences to refer to the MapInfo-defined defaults.
 
 ifgametype(HERETIC)
+
+enviromanager
+{
+  minstartwait 560
+  maxstartwait 815
+}
 
 sound EE_DoorOpen   { alias  ht_doropn }
 sound EE_DoorClose  { alias  ht_dorcls }
@@ -868,7 +993,11 @@ soundsequence EEHticAmbScream
 {
   type     environment
   id       0
-  commands @" playuntildone ht_amb1 "@
+  commands
+  @"
+    play ht_amb1
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none
@@ -878,7 +1007,11 @@ soundsequence EEHticAmbSquish
 {
   type     environment
   id       1
-  commands @" playuntildone ht_amb2 "@
+  commands
+  @"
+    playuntildone ht_amb2
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none
@@ -891,16 +1024,24 @@ soundsequence EEHticAmbDrops
   commands 
   @"
     play ht_amb3
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb7
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb3
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb7
-    delayrand 16 47
+    delay 16
+    delayrand 0 31
     play ht_amb3
-    delayrand 16 47
-    playuntildone ht_amb7
+    delay 16
+    delayrand 0 31
+    play ht_amb7
+    delay 16
+    delayrand 0 31
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -943,7 +1084,8 @@ soundsequence EEHticHeartBeat
     playtime ht_amb5 35
     playtime ht_amb5 35
     playtime ht_amb5 35
-    playuntildone ht_amb5
+    play ht_amb5
+    nostopcutoff
   "@
    
   randomplayvol true
@@ -973,7 +1115,11 @@ soundsequence EEHticGrowl
 {
   type     environment
   id       6
-  commands @" playuntildone ht_bstsit "@
+  commands
+  @"
+    play ht_bstsit
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none
@@ -983,7 +1129,11 @@ soundsequence EEHticMagic
 {
   type     environment
   id       7
-  commands @" playuntildone ht_amb8 "@
+  commands
+  @"
+    play ht_amb8
+    nostopcutoff
+  "@
    
   randomplayvol true
   attenuation   none

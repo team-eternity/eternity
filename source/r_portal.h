@@ -29,11 +29,24 @@
 
 #include "doomdef.h"
 #include "p_maputl.h"
+#include "r_defs.h"
 
+#define SECTOR_PORTAL_LOOP_PROTECTION 128
+
+struct bspcontext_t;
+struct cb_seg_t;
+struct cbviewpoint_t;
+struct cmapcontext_t;
+struct contextbounds_t;
 struct line_t;
 class  Mobj;
+struct planecontext_t;
 struct planehash_t;
+struct portalcontext_t;
 struct pwindow_t;
+struct rendercontext_t;
+struct sectorbox_t;
+struct viewpoint_t;
 
 typedef enum
 {
@@ -59,8 +72,6 @@ typedef enum
    PF_NOPASS             = 0x004,
    // Portal does not allow recursive sound to pass through
    PF_BLOCKSOUND         = 0x008,
-   // Mask for the flags portion
-   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND,
    
    // -- Overlay flags --
    // Only used per-surface and indicate various overlay options for the portal
@@ -86,8 +97,16 @@ typedef enum
    PS_PASSSOUND          = 0x200,
    // Mask for state flags
    PS_STATEMASK          = PS_VISIBLE | PS_PASSABLE | PS_PASSSOUND,
-   
-   // -- Opactiy -- 
+
+   // More flags added along...
+   PF_ATTACHEDPORTAL     = 0x400,
+
+   // Mask for the flags portion
+   PF_FLAGMASK           = PF_DISABLED | PF_NORENDER | PF_NOPASS | PF_BLOCKSOUND
+   | PF_ATTACHEDPORTAL,
+
+
+   // -- Opactiy --
    // The left-most 8 bits are reserved for the opacity value of the portal overlay
    PO_OPACITYSHIFT       = 24,
    PO_OPACITYMASK        = 0xFF000000,
@@ -101,7 +120,7 @@ typedef enum
 struct linkdata_t
 {
    // SoM: linked portals are similar to anchored portals
-   fixed_t   deltax, deltay, deltaz;
+   v3fixed_t delta;
    fixed_t   planez;
    
    // fromid is the group where the portal actually is, toid is the group on 
@@ -115,12 +134,6 @@ struct linkdata_t
    // ioanch 20160226: access the partner portal (if any) in case of polyobject
    // cars
    portal_t *polyportalpartner;
-
-   inline bool deltaEquals(const linkdata_t &data) const
-   {
-      return deltax == data.deltax && deltay == data.deltay &&
-             deltaz == data.deltaz;
-   }
 };
 
 struct portaltransform_t
@@ -128,10 +141,17 @@ struct portaltransform_t
    double rot[2][2];
    v3double_t move;   // TODO: z offset
    double angle;
+
+   const line_t *sourceline;
+   const line_t *targetline;   // for rotating anchored portals
+   bool flipped;
+   fixed_t zoffset;
    
    void applyTo(fixed_t &x, fixed_t &y,
       float *fx = nullptr, float *fy = nullptr, bool nomove = false) const;
    void applyTo(float &x, float &y, bool nomove = false) const;
+
+   void updateFromLines(bool allowrotate);
 };
 
 // Represents the information needed for an anchored portal
@@ -149,31 +169,6 @@ struct anchordata_t
    int       maker, anchor;
 };
 
-
-// Represents the data needed for a horizon portal
-struct horizondata_t
-{
-   int     *floorpic, *ceilingpic;
-   fixed_t *floorz, *ceilingz;
-   int16_t *floorlight, *ceilinglight;
-   fixed_t *floorxoff, *flooryoff;
-   fixed_t *ceilingxoff, *ceilingyoff;
-   float   *floorbaseangle, *floorangle;     // haleyjd 01/05/08: flat angles
-   float   *ceilingbaseangle, *ceilingangle;
-};
-
-
-// The data needed for a skyplane portal
-struct skyplanedata_t
-{
-   int     *pic;
-   fixed_t *delta;
-   int16_t *lightlevel;
-   fixed_t *xoff, *yoff;
-   float   *baseangle, *angle; // haleyjd 01/05/08: angles
-};
-
-
 // The portal struct. This is what is assigned to sectors and can represent any
 // kind of portal.
 struct portal_t
@@ -182,8 +177,7 @@ struct portal_t
 
    union portaldata_u
    {
-      skyplanedata_t plane;
-      horizondata_t  horizon;
+      const sector_t *sector; // when a single sector reference is enough
       anchordata_t   anchor;
       linkdata_t     link;
       Mobj          *camera;
@@ -207,9 +201,10 @@ struct portal_t
 //
 inline static bool R_portalIsAnchored(const portal_t *portal)
 {
-   return portal->type == R_ANCHORED || portal->type == R_TWOWAY || 
-      portal->type == R_LINKED;
+   return portal->type == R_ANCHORED || portal->type == R_TWOWAY || portal->type == R_LINKED;
 }
+
+const portal_t *R_GetPortalHead();
 
 portal_t *R_GetSkyBoxPortal(Mobj *camera);
 portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
@@ -217,25 +212,24 @@ portal_t *R_GetAnchoredPortal(int markerlinenum, int anchorlinenum,
 portal_t *R_GetTwoWayPortal(int markerlinenum, int anchorlinenum, 
    bool allowrotate, bool flipped, fixed_t zoffset);
 
-portal_t *R_GetHorizonPortal(int *floorpic, int *ceilingpic, 
-                             fixed_t *floorz, fixed_t *ceilingz, 
-                             int16_t *floorlight, int16_t *ceilinglight, 
-                             fixed_t *floorxoff, fixed_t *flooryoff, 
-                             fixed_t *ceilingxoff, fixed_t *ceilingyoff,
-                             float *floorbaseangle, float *floorangle,
-                             float *ceilingbaseangle, float *ceilingangle);
+portal_t *R_GetHorizonPortal(const sector_t *sector);
 
-portal_t *R_GetPlanePortal(int *pic, fixed_t *delta, int16_t *lightlevel, 
-                           fixed_t *xoff, fixed_t *yoff, float *baseangle,
-                           float *angle);
+portal_t *R_GetPlanePortal(const sector_t *sector);
 
-void R_ClearPortals();
-void R_RenderPortals();
+void R_MovePortalOverlayToWindow(cmapcontext_t &cmapcontext, planecontext_t &context, const viewpoint_t &viewpoint,
+                                 const cbviewpoint_t &cb_viewpoint, const contextbounds_t &bounds,
+                                 cb_seg_t &seg, surf_e surf);
+void R_ClearPortals(visplane_t **&freehead);
+void R_RenderPortals(rendercontext_t &context);
 
 portal_t *R_GetLinkedPortal(int markerlinenum, int anchorlinenum, 
                             fixed_t planez, int fromid, int toid);
 
-void R_CalcRenderBarrier(pwindow_t *window, const subsector_t *ss);
+void R_CalcRenderBarrier(pwindow_t &window, const sectorbox_t &box);
+
+bool R_IsSkyLikePortalCeiling(const sector_t &sector);
+bool R_IsSkyLikePortalFloor(const sector_t &sector);
+bool R_IsSkyWall(const line_t &line);
 
 //=============================================================================
 //
@@ -255,17 +249,50 @@ void R_ApplyPortal(line_t &line, int portal);
 // 'looking' at the portal.
 //
 
-typedef enum
+enum pwindowtype_e
 {
    pw_floor,
    pw_ceiling,
    pw_line
-} pwindowtype_e;
+};
 
-typedef void (*R_WindowFunc)(pwindow_t *);
-typedef void (*R_ClipSegFunc)();
+static const pwindowtype_e pw_surface[surf_NUM] = { pw_floor, pw_ceiling };
+
+using R_WindowFunc = void (*)(rendercontext_t &context, pwindow_t *window);
+using R_ClipSegFunc = void (*)(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext,
+                               planecontext_t &planecontext, portalcontext_t &portalcontext,
+                               const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                               const contextbounds_t &bounds, const cb_seg_t &seg);
 
 extern R_ClipSegFunc segclipfuncs[];
+
+//
+// Line portal window barrier generator. Starts based on source linedef and is shifted by each seg,
+// if dented away from the line (can happen with dynasegs and result in infinite recursions or HOMs
+// if not taken care of). It's always on the source viewer's space, not the portal target's space,
+// unlike renderbarrier.
+//
+struct windowlinegen_t
+{
+   v2float_t start;  // start vertex
+   v2float_t delta;  // delta to end vertex
+   v2float_t normal; // line normal. 1 length.
+
+   void makeFrom(const line_t *line)
+   {
+      start.x = line->v1->fx;
+      start.y = line->v1->fy;
+      delta.x = line->v2->fx - start.x;
+      delta.y = line->v2->fy - start.y;
+      normal.x = line->nx;
+      normal.y = line->ny;
+   }
+
+   operator bool() const
+   {
+      return start || delta || normal;
+   }
+};
 
 //
 // Render barrier: used by anchored portals to mark limits for rendering
@@ -274,24 +301,21 @@ extern R_ClipSegFunc segclipfuncs[];
 struct renderbarrier_t
 {
    // Selection depends on context
-   union
-   {
-      dlnormal_t dln;
-      fixed_t bbox[4];  // for sector portals (very rough, won't cover all cases)
-   };
+   windowlinegen_t linegen;
+   float fbox[4]; // for sector portals (very rough, won't cover all cases)
 };
 
 // SoM: TODO: Overlays go in here.
 struct pwindow_t
 {
    portal_t *portal;
-   line_t *line;
+   const line_t *line;
+   windowlinegen_t linegen;   // Generator, prepared to be stored on barrier after transforming
    // rendering barrier: blocks unwanted objects from showing
    renderbarrier_t barrier;
    pwindowtype_e type;
 
    fixed_t planez;   // if line == nullptr, this is the sector portal plane z
-   bool up;          // if line == nullptr, this is true if portal is upwards
 
    fixed_t  vx, vy, vz;
    angle_t  vangle;
@@ -300,24 +324,30 @@ struct pwindow_t
    float *bottom;
    int minx, maxx;
 
-   R_WindowFunc func;
+   R_WindowFunc  func;
    R_ClipSegFunc clipfunc;
 
    // Next window in the main chain
    pwindow_t *next;
-   
+
    // Families of windows. Head is the main window, and child is the next
    // child down the chain.
    pwindow_t *head, *child;
+
+   planehash_t *poverlay;  // Portal overlays are now stored per window
 };
 
 // SoM: Cardboard
-void R_WindowAdd(pwindow_t *window, int x, float ytop, float ybottom);
+void R_WindowAdd(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
+                 pwindow_t *window, int x, float ytop, float ybottom);
 
-pwindow_t *R_GetFloorPortalWindow(portal_t *portal, fixed_t planez);
-pwindow_t *R_GetCeilingPortalWindow(portal_t *portal, fixed_t planez);
-pwindow_t *R_GetLinePortalWindow(portal_t *portal, line_t *line);
-
+pwindow_t *R_GetSectorPortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                                   const viewpoint_t &viewpoint, const contextbounds_t &bounds,
+                                   surf_e surf, const surface_t &surface);
+pwindow_t *R_GetLinePortalWindow(planecontext_t &planecontext, portalcontext_t &portalcontext,
+                                 const viewpoint_t &viewpoint,const contextbounds_t &bounds,
+                                 portal_t *portal, const seg_t *seg);
 
 // SoM 3/14/2004: flag if we are rendering portals.
 struct portalrender_t
@@ -328,12 +358,11 @@ struct portalrender_t
 
    pwindow_t *w;
 
-   void (*segClipFunc)();
-   
-   planehash_t *overlay;
+   R_ClipSegFunc segClipFunc;
+
+//   planehash_t *overlay;
 };
 
-extern portalrender_t  portalrender;
 #endif
 
 //----------------------------------------------------------------------------

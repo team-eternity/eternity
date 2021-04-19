@@ -34,8 +34,10 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_compatibility.h"
 #include "e_inventory.h"
 #include "e_lib.h"
+#include "e_weapons.h"
 #include "hu_over.h"    // haleyjd
 #include "i_video.h"
 #include "metaapi.h"
@@ -175,6 +177,12 @@
 #define ST_MAXAMMO3X            314
 #define ST_MAXAMMO3Y            185
 
+// Inventory bar stuff.
+constexpr int ST_INVBARBGWIDTH  = 216;
+constexpr int ST_INVBARBGHEIGHT = 32;
+constexpr int ST_INVBARBGX      = SCREENWIDTH  - ST_INVBARBGWIDTH;
+constexpr int ST_INVBARBGY      = SCREENHEIGHT - ST_INVBARBGHEIGHT;
+
 // killough 2/8/98: weapon info position macros UNUSED, removed here
 
 // main player in game
@@ -232,6 +240,9 @@ static bool st_armson;
 // !deathmatch
 static bool st_fragson;
 
+// plyr->invbarstate.inventory
+static bool st_invbar;
+
 // main bar left
 static patch_t *sbar;
 
@@ -252,6 +263,12 @@ patch_t *keys[NUMCARDS+3];
 // face status patches
 patch_t *default_faces[ST_NUMFACES];
 
+// New HUD patches
+patch_t *nfs_health;
+patch_t *nfs_divider;
+patch_t *nfs_armor;
+patch_t *nfs_inf;
+
 // face background
 static patch_t *faceback; // sf: change to use one and colormap
 
@@ -266,6 +283,14 @@ static patch_t *fs_health;
 static patch_t *fs_armorg;
 static patch_t *fs_armorb;
 static patch_t *fs_ammo[4];
+
+// MaxW: inventory bar patches
+static patch_t *inv_bar;
+static patch_t *inv_selectbox;
+static patch_t *inv_lgem1;
+static patch_t *inv_lgem2;
+static patch_t *inv_rgem1;
+static patch_t *inv_rgem2;
 
 // ready-weapon widget
 static st_number_t w_ready;
@@ -311,6 +336,9 @@ static st_number_t   w_ammo[4];
 // max ammo widgets
 static st_number_t   w_maxammo[4];
 
+// inventory background
+static st_binicon_t  w_invbarbg;
+
  // number of frags so far in deathmatch
 static int      st_fragscount;
 
@@ -319,6 +347,9 @@ static int      st_oldhealth = -1;
 
 // used for evil grin
 static int      oldweaponsowned[NUMWEAPONS];
+
+// used for number colouring
+static int      weaponsowned[NUMWEAPONS];
 
  // count until face changes
 static int      st_facecount = 0;
@@ -335,6 +366,33 @@ extern byte     **translationtables;
 // STATUS BAR CODE
 //
 
+//
+// Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
+// x is expected to be 8 more than its equivalent Heretic calls.
+//
+static void ST_drawSmallNumber(int val, int x, int y)
+{
+   if(val > 1)
+   {
+      patch_t *patch;
+      char buf[6];
+
+      // If you want more than 99,999 of something then you probably
+      // know enough about coding to change this hard limit.
+      if(val > 99999)
+         val = 99999;
+      sprintf(buf, "%d", val);
+      x -= static_cast<int>(4 * (strlen(buf)));
+      for(char *rover = buf; *rover; rover++)
+      {
+         int i = *rover - '0';
+         patch = shortnum[i];
+         V_DrawPatch(x, y, &subscreen43, patch);
+         x += 4;
+      }
+   }
+}
+
 static void ST_refreshBackground()
 {
    if(st_statusbaron)
@@ -348,7 +406,7 @@ static void ST_refreshBackground()
          V_DrawPatchTranslated(ST_FX, ST_FY, &subscreen43, faceback,
             plyr->colormap ?
                translationtables[(plyr->colormap - 1)] :
-               NULL, 
+               nullptr, 
             false);
       }
 
@@ -386,7 +444,7 @@ void ST_AutomapEvent(int type)
 // Respond to keyboard input events, intercept cheats.
 // This code is shared by all status bars.
 //
-bool ST_Responder(event_t *ev)
+bool ST_Responder(const event_t *ev)
 {
    // TODO: allow cheat input to be disabled
    // if a user keypress...
@@ -445,7 +503,7 @@ static void ST_updateFaceWidget()
    if(priority < ST_PRIORITY_MAX)
    {
       // dead
-      if(!plyr->health)
+      if(plyr->health <= 0)
       {
          priority = ST_PRIORITY_DEAD;
          st_faceindex = ST_DEADFACE;
@@ -473,10 +531,10 @@ static void ST_updateFaceWidget()
 
          for(i = 0; i < NUMWEAPONS; i++)
          {
-            if(oldweaponsowned[i] != plyr->weaponowned[i])
+            if(oldweaponsowned[i] != weaponsowned[i])
             {
                doevilgrin = true;
-               oldweaponsowned[i] = plyr->weaponowned[i];
+               oldweaponsowned[i] = weaponsowned[i];
             }
          }
          if(doevilgrin)
@@ -509,8 +567,8 @@ static void ST_updateFaceWidget()
          {
             badguyangle = R_PointToAngle2(plyr->mo->x,
                                           plyr->mo->y,
-                                          plyr->attacker->x,
-                                          plyr->attacker->y);
+                                          getThingX(plyr->mo, plyr->attacker),
+                                          getThingY(plyr->mo, plyr->attacker));
 
             if(badguyangle > plyr->mo->angle)
             {
@@ -613,6 +671,12 @@ static void ST_updateFaceWidget()
    st_facecount--;
 }
 
+static void ST_updateWeaponsOwned()
+{
+   for(int i = 0; i < NUMWEAPONS; i++)
+      weaponsowned[i] = E_PlayerOwnsWeaponInSlot(plyr, i) ? 1 : 0;
+}
+
 int sts_traditional_keys; // killough 2/28/98: traditional status bar keys
 
 static const char *st_AmmoForNum[NUMAMMO] =
@@ -626,11 +690,10 @@ static const char *st_AmmoForNum[NUMAMMO] =
 static void ST_updateWidgets()
 {
    // update ready weapon ammo
-   w_ready.data  = plyr->readyweapon;
-   auto weapon   = P_GetReadyWeapon(plyr);
+   auto weapon   = plyr->readyweapon;
    auto ammoType = weapon->ammo;
 
-   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : 1994;
+   w_ready.num = ammoType ? E_GetItemOwnedAmount(plyr, ammoType) : INT_MIN;
    w_ready.max = E_GetMaxAmountForArtifact(plyr, ammoType);
 
    // update armor
@@ -659,7 +722,7 @@ static void ST_updateWidgets()
       
       amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
       if(amount > 0)
-         keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
+         keyboxes[i] = ((keyboxes[i] == -1 || E_Get(overridableSetting_stsTraditionalKeys)) ? i + 3 : i + 6);
    }
 
    // used by the w_armsbg widget
@@ -673,6 +736,9 @@ static void ST_updateWidgets()
 
    st_fragscount = plyr->totalfrags;     // sf 15/10/99 use totalfrags
    w_frags.num   = st_fragscount;
+
+   // used by w_invbarbg widget
+   st_invbar = plyr->invbarstate.inventory;
 }
 
 //
@@ -683,6 +749,8 @@ static void ST_updateWidgets()
 static void ST_DoomTicker()
 {
    st_clock++;
+   // update weapons owned array
+   ST_updateWeaponsOwned();
    // refresh everything if this is him coming back to life
    ST_updateFaceWidget();
    st_oldhealth = plyr->health;
@@ -714,10 +782,16 @@ static void ST_doPaletteStuff()
 
    if(plyr->powers[pw_strength])
    {
-      // slowly fade the berzerk out
-      int bzc = 12 - (plyr->powers[pw_strength]>>6);
-      if(bzc > cnt)
-         cnt = bzc;
+      if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
+      {
+         // slowly fade the berzerk out
+         int bzc = 12 - (plyr->powers[pw_strength] >> 6);
+         if(bzc > cnt)
+            cnt = bzc;
+      }
+      else if((plyr->powers[pw_strength] < -4 * 32 || (plyr->powers[pw_strength] & 8)) &&
+              plyr->powers[pw_strength] && cnt == 0)
+         cnt = 1;
    }
 
    if(cnt)
@@ -789,6 +863,72 @@ static void ST_drawCommonWidgets(int alpha)
       STlib_updateMultIcon(&w_keyboxes[i], alpha);
 }
 
+static void ST_drawInventory()
+{
+   const int inv_ptr = plyr->inv_ptr;
+   int leftoffs;
+
+   // This makes is so that leftoffs keeps the box in
+   // the middle unless at either edge of the inventory
+   if(inv_ptr >= 4 && E_CanMoveInventoryCursor(plyr, 6, 0))
+   {
+      leftoffs = inv_ptr - 3;
+      int temp = 1;
+      while(E_CanMoveInventoryCursor(plyr, temp, inv_ptr))
+         temp++;
+      if(temp <= 3)
+         leftoffs -= 4 - temp;
+   }
+   else
+      leftoffs = 0;
+
+   int i = -1;
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   {
+      // Safety check that the player has an inventory item, then that the effect exists
+      // for the selected item, then that there is an associated patch for that effect.
+      if(plyr->inventory[i + leftoffs].amount > 0)
+      {
+         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         if(artifact)
+         {
+            const char *patchname = artifact->getString("icon", nullptr);
+            if(estrnonempty(patchname))
+            {
+               int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+                           lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+               patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+
+               const int xoffs = artifact->getInt("icon.offset.x", 0);
+               const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+               V_DrawPatch(ST_INVBARBGX + (i * 31) - xoffs, ST_INVBARBGY - yoffs,
+                           &subscreen43, patch);
+               ST_drawSmallNumber(E_GetItemOwnedAmount(plyr, artifact),
+                                  ST_INVBARBGX + 27 + (i * 31), ST_INVBARBGY + 22);
+            }
+         }
+      }
+   }
+
+   if(leftoffs)
+   {
+      V_DrawPatchTL(ST_INVBARBGX + 2, SCREENHEIGHT - (ST_INVBARBGHEIGHT / 2),
+                    &subscreen43, !(leveltime & 4) ? inv_lgem1 : inv_lgem2,
+                    nullptr, (FRACUNIT * 6) / 10);
+   }
+   if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
+   {
+      V_DrawPatchTL(SCREENWIDTH - 3, SCREENHEIGHT - (ST_INVBARBGHEIGHT / 2),
+                    &subscreen43, !(leveltime & 4) ? inv_rgem1 : inv_rgem2,
+                    nullptr, (FRACUNIT * 6) / 10);
+   }
+
+   V_DrawPatch(ST_INVBARBGX + (inv_ptr - leftoffs) * 31, ST_INVBARBGY, &subscreen43, inv_selectbox);
+}
+
 static void ST_drawWidgets()
 {
    int i;
@@ -804,8 +944,8 @@ static void ST_drawWidgets()
 
    for(i = 0; i < 4; i++)
    {
-      STlib_updateNum(&w_ammo[i],    NULL, FRACUNIT);   //jff 2/16/98 no xlation
-      STlib_updateNum(&w_maxammo[i], NULL, FRACUNIT);
+      STlib_updateNum(&w_ammo[i],    nullptr, FRACUNIT);   //jff 2/16/98 no xlation
+      STlib_updateNum(&w_maxammo[i], nullptr, FRACUNIT);
    }
 
    STlib_updateBinIcon(&w_armsbg);
@@ -815,7 +955,11 @@ static void ST_drawWidgets()
 
    STlib_updateMultIcon(&w_faces, FRACUNIT);
 
-   STlib_updateNum(&w_frags, NULL, FRACUNIT);
+   STlib_updateNum(&w_frags, nullptr, FRACUNIT);
+
+   STlib_updateBinIcon(&w_invbarbg);
+   if(*w_invbarbg.on && *w_invbarbg.val)
+      ST_drawInventory();
 }
 
 static void ST_doRefresh()
@@ -910,26 +1054,26 @@ static void ST_DoomFSDrawer()
    // draw graphics
 
    // health
-   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, NULL, ST_ALPHA);
+   V_DrawPatchTL(ST_FSGFX_X, 152, &subscreen43, fs_health, nullptr, ST_ALPHA);
    
    // armor
    fixed_t armorclass = 0;
    if(plyr->armordivisor)
       armorclass = (plyr->armorfactor * FRACUNIT) / plyr->armordivisor;
    if(armorclass > FRACUNIT/3)
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorb, nullptr, ST_ALPHA);
    else
-      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, NULL, ST_ALPHA);
+      V_DrawPatchTL(ST_FSGFX_X, ST_FS_BY, &subscreen43, fs_armorg, nullptr, ST_ALPHA);
 
    ST_updateWidgets();
 
    // ammo
-   itemeffect_t *ammo = weaponinfo[w_ready.data].ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
    {
       int num = E_StrToNumLinear(st_AmmoForNum, NUMAMMO, ammo->getKey());
       if(num != NUMAMMO)
-         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], NULL, ST_ALPHA);
+         V_DrawPatchTL(256, ST_FS_BY, &subscreen43, fs_ammo[num], nullptr, ST_ALPHA);
    }
 
    // draw common number widgets (always refresh since no background)
@@ -947,7 +1091,7 @@ void ST_Drawer(bool fullscreen)
    stbarfns_t *StatusBar = GameModeInfo->StatusBar;
 
    // haleyjd: test whether fullscreen graphical hud is enabled
-   bool fshud = hud_enabled && hud_overlaystyle == 4;
+   bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
    st_statusbaron  = !fullscreen || automapstate == amstate_full || fshud;
    st_backgroundon = !fullscreen || automapstate == amstate_full;
@@ -966,6 +1110,14 @@ void ST_Drawer(bool fullscreen)
    }
    else
       StatusBar->Drawer();
+}
+
+//
+// Check if status bar will be fullscreen or disabled
+//
+bool ST_IsHUDLike()
+{
+   return !st_backgroundon;
 }
 
 //
@@ -1078,6 +1230,14 @@ static void ST_loadGraphics()
       fs_ammo[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
+   // MaxW: inventory bar graphics
+   inv_bar       = PatchLoader::CacheName(wGlobalDir, "INVBAR",   PU_STATIC);
+   inv_selectbox = PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_STATIC);
+   inv_lgem1     = PatchLoader::CacheName(wGlobalDir, "INVGEML1", PU_STATIC);
+   inv_lgem2     = PatchLoader::CacheName(wGlobalDir, "INVGEML2", PU_STATIC);
+   inv_rgem1     = PatchLoader::CacheName(wGlobalDir, "INVGEMR1", PU_STATIC);
+   inv_rgem2     = PatchLoader::CacheName(wGlobalDir, "INVGEMR2", PU_STATIC);
+
    ST_CacheFaces(default_faces, "STF");
 }
 
@@ -1102,23 +1262,23 @@ void ST_CacheFaces(patch_t **faces, const char *facename)
    {
       for(int j = 0; j < ST_NUMSTRAIGHTFACES; j++)
       {
-         sprintf(namebuf, "%sST%d%d", facename, i, j);
+         snprintf(namebuf, sizeof(namebuf), "%sST%d%d", facename, i, j);
          faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
       }
-      sprintf(namebuf, "%sTR%d0", facename, i);        // turn right
+      snprintf(namebuf, sizeof(namebuf), "%sTR%d0", facename, i);        // turn right
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sTL%d0", facename, i);        // turn left
+      snprintf(namebuf, sizeof(namebuf), "%sTL%d0", facename, i);        // turn left
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sOUCH%d", facename, i);       // ouch!
+      snprintf(namebuf, sizeof(namebuf), "%sOUCH%d", facename, i);       // ouch!
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sEVL%d", facename, i);        // evil grin ;)
+      snprintf(namebuf, sizeof(namebuf), "%sEVL%d", facename, i);        // evil grin ;)
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-      sprintf(namebuf, "%sKILL%d", facename, i);       // pissed off
+      snprintf(namebuf, sizeof(namebuf), "%sKILL%d", facename, i);       // pissed off
       faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
-   sprintf(namebuf, "%sGOD0",facename);
+   snprintf(namebuf, sizeof(namebuf), "%sGOD0",facename);
    faces[facenum++] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
-   sprintf(namebuf, "%sDEAD0",facename);
+   snprintf(namebuf, sizeof(namebuf), "%sDEAD0",facename);
    faces[facenum]   = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
 }
 
@@ -1191,7 +1351,7 @@ static void ST_initData()
    st_oldhealth = -1;
 
    for(i = 0; i < NUMWEAPONS; i++)
-      oldweaponsowned[i] = plyr->weaponowned[i];
+      oldweaponsowned[i] = weaponsowned[i] = E_PlayerOwnsWeaponInSlot(plyr, i) ? 1 : 0;
 
    for(i = 0; i < 3; i++)
       keyboxes[i] = -1;
@@ -1211,9 +1371,6 @@ static void ST_createWidgets()
                  0, 0,
                  &st_statusbaron,
                  ST_AMMOWIDTH );
-
-   // the last weapon type
-   w_ready.data = plyr->readyweapon;
 
    // health percentage
    STlib_initPercent(&w_health,
@@ -1238,7 +1395,7 @@ static void ST_createWidgets()
       STlib_initMultIcon(&w_arms[i],
                          ST_ARMSX+(i%3)*ST_ARMSXSPACE,
                          ST_ARMSY+(i/3)*ST_ARMSYSPACE,
-                         arms[i], &plyr->weaponowned[i+1],
+                         arms[i], &weaponsowned[i+1],
                          &st_armson);
    }
 
@@ -1355,6 +1512,14 @@ static void ST_createWidgets()
                  0, 0,
                  &st_statusbaron,
                  ST_MAXAMMO3WIDTH);
+
+   // inventory bar
+   STlib_initBinIcon(&w_invbarbg,
+                     ST_INVBARBGX,
+                     ST_INVBARBGY,
+                     inv_bar,
+                     &st_invbar,
+                     &st_statusbaron);
 }
 
 //
@@ -1422,6 +1587,12 @@ void ST_Init()
    // game modes will need it.
    lu_palette = W_GetNumForName("PLAYPAL");
 
+   // new hud patches are required across all game modes
+   nfs_health  = PatchLoader::CacheName(wGlobalDir, "nhud_hlt", PU_STATIC);
+   nfs_armor   = PatchLoader::CacheName(wGlobalDir, "nhud_amr", PU_STATIC);
+   nfs_divider = PatchLoader::CacheName(wGlobalDir, "nhud_div", PU_STATIC);
+   nfs_inf     = PatchLoader::CacheName(wGlobalDir, "nhud_inf", PU_STATIC);
+
    GameModeInfo->StatusBar->Init();
 }
 
@@ -1429,21 +1600,21 @@ void ST_Init()
         CONSOLE COMMANDS
  ***********************/
 
-VARIABLE_INT(ammo_red,      NULL,          0, 100, NULL);
-VARIABLE_INT(ammo_yellow,   NULL,          0, 100, NULL);
-VARIABLE_INT(health_red,    NULL,          0, 200, NULL);
-VARIABLE_INT(health_yellow, NULL,          0, 200, NULL);
-VARIABLE_INT(health_green,  NULL,          0, 200, NULL);
-VARIABLE_INT(armor_red,     NULL,          0, 200, NULL);
-VARIABLE_INT(armor_yellow,  NULL,          0, 200, NULL);
-VARIABLE_INT(armor_green,   NULL,          0, 200, NULL);
+VARIABLE_INT(ammo_red,      nullptr,       0, 100, nullptr);
+VARIABLE_INT(ammo_yellow,   nullptr,       0, 100, nullptr);
+VARIABLE_INT(health_red,    nullptr,       0, 200, nullptr);
+VARIABLE_INT(health_yellow, nullptr,       0, 200, nullptr);
+VARIABLE_INT(health_green,  nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_red,     nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_yellow,  nullptr,       0, 200, nullptr);
+VARIABLE_INT(armor_green,   nullptr,       0, 200, nullptr);
 
-VARIABLE_TOGGLE(armor_byclass,             NULL,   yesno);
-VARIABLE_BOOLEAN(sts_pct_always_gray,      NULL,   yesno);
-VARIABLE_BOOLEAN(sts_always_red,           NULL,   yesno);
-VARIABLE_BOOLEAN(sts_traditional_keys,     NULL,   yesno);
+VARIABLE_TOGGLE(armor_byclass,             nullptr,yesno);
+VARIABLE_BOOLEAN(sts_pct_always_gray,      nullptr,yesno);
+VARIABLE_BOOLEAN(sts_always_red,           nullptr,yesno);
+VARIABLE_BOOLEAN(sts_traditional_keys,     nullptr,yesno);
 
-VARIABLE_INT(st_fsalpha, NULL,             0, 100, NULL);
+VARIABLE_INT(st_fsalpha, nullptr,          0, 100, nullptr);
 
 CONSOLE_VARIABLE(ammo_red,      ammo_red,      0) {}
 CONSOLE_VARIABLE(ammo_yellow,   ammo_yellow,   0) {}

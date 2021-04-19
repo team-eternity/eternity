@@ -213,6 +213,7 @@ typedef enum {
   pw_silencer,    // haleyjd: silencer
   pw_flight,      // haleyjd: flight
   pw_torch,       // haleyjd: infrared w/flicker
+  pw_weaponlevel2, //  MaxW: powered-up weapons (tome of power)
   NUMPOWERS
 } powertype_t;
 
@@ -247,6 +248,10 @@ enum keycode_e
 
    KEYD_BACKSPACE      = 0x7f,
 
+   // FIXME: The values for these two might need adjusting
+   KEYD_NONUSBACKSLASH = 0x80,
+   KEYD_NONUSHASH,
+
    KEYD_RCTRL          = 0x9d,
 
    KEYD_LEFTARROW      = 0xac,
@@ -270,11 +275,11 @@ enum keycode_e
    KEYD_F8,
    KEYD_F9,
    KEYD_F10,
+   KEYD_PRINTSCREEN,
    KEYD_NUMLOCK,
    KEYD_SCROLLLOCK,
-   KEYD_HOME,
-   
-   KEYD_PAGEUP         = 0xc9,
+   KEYD_HOME,   
+   KEYD_PAGEUP,
    KEYD_END            = 0xcf,
    KEYD_PAGEDOWN       = 0xd1,
    KEYD_INSERT         = 0xd2,
@@ -288,6 +293,9 @@ enum keycode_e
    KEYD_MOUSE3,
    KEYD_MOUSE4,
    KEYD_MOUSE5,
+   KEYD_MOUSE6,
+   KEYD_MOUSE7,
+   KEYD_MOUSE8,
    KEYD_MWHEELUP,
    KEYD_MWHEELDOWN,
 
@@ -328,6 +336,24 @@ enum keycode_e
    KEYD_JOY14,
    KEYD_JOY15,
    KEYD_JOY16,
+
+   // joystick hats
+   KEYD_HAT1RIGHT,
+   KEYD_HAT1UP,
+   KEYD_HAT1LEFT,
+   KEYD_HAT1DOWN,
+   KEYD_HAT2RIGHT,
+   KEYD_HAT2UP,
+   KEYD_HAT2LEFT,
+   KEYD_HAT2DOWN,
+   KEYD_HAT3RIGHT,
+   KEYD_HAT3UP,
+   KEYD_HAT3LEFT,
+   KEYD_HAT3DOWN,
+   KEYD_HAT4RIGHT,
+   KEYD_HAT4UP,
+   KEYD_HAT4LEFT,
+   KEYD_HAT4DOWN,
 
    // axis activation events
    KEYD_AXISON01,

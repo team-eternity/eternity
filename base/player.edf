@@ -5,34 +5,49 @@
 // skins, player classes, and weapons.
 //
 
-ifenabled(DOOM)
+// The Base Weapon Class
 
-skin marine {}
-
-playerclass DoomMarine
+weaponinfo Weapon
 {
-   defaultskin    marine
-   thingtype      DoomPlayer
-   altattackstate S_PLAY_ATK2
-   
-   // INVENTORY_TODO: reborn weapons
-   rebornitem AmmoClip, 50
+  states
+  @"
+  LightDone:
+    TNT1 A 0 A_Light0
+    stop
+  "@
 }
 
-endif()
-
-ifenabled(HERETIC)
-
-skin corvus {}
-
-playerclass Corvus
+weaponinfo Unknown
 {
-   defaultskin    corvus
-   thingtype      HereticPlayer
-   altattackstate S_HPLAY_ATK2
-   
-   // INVENTORY_TODO: reborn items
+  states
+  @"
+  Ready:
+    TNT1 A 1 A_WeaponReady
+    loop
+  Deselect:
+    TNT1 A 1 A_Lower
+    loop
+  Select:
+    TNT1 A 1 A_Raise
+    loop
+  Fire:
+    TNT1 A 1
+    goto Ready
+  "@
 }
+
+//=============================================================================
+//
+// Game Includes
+//
+
+// DOOM Player and Weapons ----------------------------------------------------
+
+includeifenabled("doom/player.edf", "DOOM");
+
+// Heretic Player and Weapons -------------------------------------------------
+
+includeifenabled("heretic/player.edf", "HERETIC");
 
 endif()
 

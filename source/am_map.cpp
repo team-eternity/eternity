@@ -127,25 +127,25 @@ bool am_dynasegs_bysubsec;
 #define HORZ_PAN_SCALE(x) ((x) * f_w / SCREENWIDTH )
 #define VERT_PAN_SCALE(y) ((y) * f_h / SCREENHEIGHT)
 
-typedef struct fpoint_s
+struct fpoint_t
 {
    int x, y;
-} fpoint_t;
+};
 
-typedef struct fline_s
+struct fline_t
 {
    fpoint_t a, b;
-} fline_t;
+};
 
-typedef struct mline_s
+struct mline_t
 {
    mpoint_t a, b;
-} mline_t;
+};
 
-typedef struct islope_s
+struct islope_t
 {
    double slp, islp;
-} islope_t;
+};
 
 // haleyjd: moved here, as this is the only place it is used
 #define PLAYERRADIUS    (16.0)
@@ -241,6 +241,9 @@ static double ftom_zoommul; // how far the window zooms each tic (fb coords)
 static double m_x,  m_y;    // LL x,y window location on the map (map coords)
 static double m_x2, m_y2;   // UR x,y window location on the map (map coords)
 
+// coordinates of backdrop. Separate from m_x and m_y because of zooming.
+static double backdrop_fx, backdrop_fy;
+
 //
 // width/height of window on map (map coords)
 //
@@ -268,7 +271,7 @@ static double old_m_w, old_m_h;
 static double old_m_x, old_m_y;
 
 // old location used by the Follower routine
-static mpoint_t f_oldloc;
+static v2fixed_t f_oldloc;
 
 // used by MTOF to scale from map-to-frame-buffer coords
 static double scale_mtof = INITSCALEMTOF;
@@ -282,7 +285,7 @@ static patch_t *marknums[10];   // numbers used for marking by the automap
 // killough 2/22/98: Remove limit on automap marks,
 // and make variables external for use in savegames.
 
-mpoint_t *markpoints = NULL;    // where the points are
+markpoint_t *markpoints = nullptr;    // where the points are
 int markpointnum = 0; // next point to be assigned (also number of points now)
 int markpointnum_max = 0;       // killough 2/22/98
 int followplayer = 1; // specifies whether to follow the player around
@@ -293,7 +296,7 @@ static bool am_needbackscreen; // haleyjd 05/03/13
 // haleyjd 12/22/02: Heretic stuff
 
 // backdrop
-static byte *am_backdrop = NULL;
+static byte *am_backdrop = nullptr;
 static bool am_usebackdrop = false;
 
 // haleyjd 08/01/09: this function is unused
@@ -380,18 +383,8 @@ static void AM_restoreScaleAndLoc()
    }
    else
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-
-         m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
-      }
-      else
-      {
-         m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
-      }
+      m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
+      m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
    }
    m_x2 = m_x + m_w;
    m_y2 = m_y + m_h;
@@ -415,12 +408,13 @@ static void AM_addMark()
    // remove limit on automap marks
    
    if(markpointnum >= markpointnum_max)
-      markpoints = erealloc(mpoint_t *, markpoints,
+      markpoints = erealloc(markpoint_t *, markpoints,
                             (markpointnum_max = markpointnum_max ? 
                              markpointnum_max*2 : 16) * sizeof(*markpoints));
 
    markpoints[markpointnum].x = m_x + m_w/2;
    markpoints[markpointnum].y = m_y + m_h/2;
+   markpoints[markpointnum].groupid = plr->mo->groupid;
    markpointnum++;
 }
 
@@ -442,42 +436,45 @@ static void AM_findMinMaxBoundaries()
    // haleyjd: rewritten to work by line so as to have access to portal groups
    for(int i = 0; i < numlines; i++)
    {
-      double x1, x2, y1, y2;
-
-      x1 = lines[i].v1->fx;
-      y1 = lines[i].v1->fy;
-      x2 = lines[i].v2->fx;
-      y2 = lines[i].v2->fy;
-
-      if(mapportal_overlay && lines[i].frontsector->groupid > 0)
+      for(int groupid = 0; groupid < (mapportal_overlay ? P_PortalGroupCount() : 1); ++groupid)
       {
-         auto link = P_GetLinkOffset(lines[i].frontsector->groupid, 0);
+         double x1, x2, y1, y2;
 
-         x1 += M_FixedToDouble(link->x);
-         y1 += M_FixedToDouble(link->y);
-         x2 += M_FixedToDouble(link->x);
-         y2 += M_FixedToDouble(link->y);
+         x1 = lines[i].v1->fx;
+         y1 = lines[i].v1->fy;
+         x2 = lines[i].v2->fx;
+         y2 = lines[i].v2->fy;
+
+         if(mapportal_overlay && lines[i].frontsector->groupid != groupid)
+         {
+            auto link = P_GetLinkOffset(lines[i].frontsector->groupid, groupid);
+
+            x1 += M_FixedToDouble(link->x);
+            y1 += M_FixedToDouble(link->y);
+            x2 += M_FixedToDouble(link->x);
+            y2 += M_FixedToDouble(link->y);
+         }
+
+         if(x1 < min_x)
+            min_x = x1;
+         else if(x1 > max_x)
+            max_x = x1;
+
+         if(x2 < min_x)
+            min_x = x2;
+         else if(x2 > max_x)
+            max_x = x2;
+
+         if(y1 < min_y)
+            min_y = y1;
+         else if(y1 > max_y)
+            max_y = y1;
+
+         if(y2 < min_y)
+            min_y = y2;
+         else if(y2 > max_y)
+            max_y = y2;
       }
-
-      if(x1 < min_x)
-         min_x = x1;
-      else if(x1 > max_x)
-         max_x = x1;
-
-      if(x2 < min_x)
-         min_x = x2;
-      else if(x2 > max_x)
-         max_x = x2;
-
-      if(y1 < min_y)
-         min_y = y1;
-      else if(y1 > max_y)
-         max_y = y1;
-
-      if(y2 < min_y)
-         min_y = y2;
-      else if(y2 > max_y)
-         max_y = y2;
    }
      
    max_w = max_x - min_x;
@@ -568,17 +565,8 @@ static void AM_initVariables()
    plr = &players[pnum];
 
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         m_x = M_FixedToDouble(plr->mo->x + link->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y + link->y) - m_h/2;
-      }
-      else
-      {
-         m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
-         m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
-      }
+      m_x = M_FixedToDouble(plr->mo->x) - m_w/2;
+      m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
    }
 
    AM_changeWindowLoc();
@@ -609,7 +597,7 @@ static void AM_loadPics()
    // haleyjd 10/09/05: get format string from GameModeInfo
    for(int i = 0; i < 10; i++)
    {
-      sprintf(namebuf, GameModeInfo->markNumFmt, i);
+      snprintf(namebuf, earrlen(namebuf), GameModeInfo->markNumFmt, i);
       marknums[i] = PatchLoader::CacheName(wGlobalDir, namebuf, PU_STATIC);
    }
 
@@ -622,7 +610,7 @@ static void AM_loadPics()
 
       // allocate backdrop
       if(!am_backdrop)
-         am_backdrop = (byte *)(Z_Malloc(SCREENWIDTH*SCREENHEIGHT, PU_STATIC, NULL));
+         am_backdrop = emalloctag(byte *, SCREENWIDTH*SCREENHEIGHT, PU_STATIC, nullptr);
 
       // must be at least 100 tall
       if(height < 100 || height > SCREENHEIGHT)
@@ -662,7 +650,7 @@ static void AM_unloadPics()
    if(am_backdrop)
    {
       Z_Free(am_backdrop);
-      am_backdrop = NULL;
+      am_backdrop = nullptr;
       am_usebackdrop = false;
    }
 }
@@ -806,10 +794,8 @@ static void AM_maxOutWindowScale()
 //
 // haleyjd 07/07/04: rewritten to support new keybindings
 //
-bool AM_Responder(event_t *ev)
+bool AM_Responder(const event_t *ev)
 {
-   static int bigstate = 0;
-  
    // haleyjd 07/07/04: dynamic bindings
    int action = G_KeyResponder(ev, kac_map);
 
@@ -858,6 +844,8 @@ bool AM_Responder(event_t *ev)
       // all other events are keydown only
       if(ev->type != ev_keydown)
          return false;
+
+      static int bigstate = 0;
 
       switch(action)
       {
@@ -1002,21 +990,12 @@ static void AM_doFollowPlayer()
 {
    if(f_oldloc.x != plr->mo->x || f_oldloc.y != plr->mo->y)
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x + link->x))) - m_w/2;
-         m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y + link->y))) - m_h/2;
-      }
-      else
-      {
-         m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x))) - m_w/2;
-         m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
-      }
+      m_x = FTOM(MTOF(M_FixedToDouble(plr->mo->x))) - m_w/2;
+      m_y = FTOM(MTOF(M_FixedToDouble(plr->mo->y))) - m_h/2;
       m_x2 = m_x + m_w;
       m_y2 = m_y + m_h;
-      f_oldloc.x = M_FixedToDouble(plr->mo->x);
-      f_oldloc.y = M_FixedToDouble(plr->mo->y);
+      f_oldloc.x = plr->mo->x;
+      f_oldloc.y = plr->mo->y;
    }
 }
 
@@ -1033,15 +1012,17 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 {
    if(followplayer || !map_point_coordinates)
    {
-      x = mo->x;
-      y = mo->y;
-      z = mo->z;
+      const linkoffset_t &link = *P_GetLinkOffset(mo->groupid, 0);
+      x = mo->x + link.x;
+      y = mo->y + link.y;
+      z = mo->z + link.z;
    }
    else
    {
-      x = M_DoubleToFixed(m_x + m_w / 2);
-      y = M_DoubleToFixed(m_y + m_h / 2);
-      z = R_PointInSubsector(x, y)->sector->floorheight;
+      const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
+      x = M_DoubleToFixed(m_x + m_w / 2) + link.x;
+      y = M_DoubleToFixed(m_y + m_h / 2) + link.y;
+      z = R_PointInSubsector(x, y)->sector->srf.floor.height + link.z;
    }
 }
 
@@ -1058,6 +1039,9 @@ void AM_Ticker()
       return;
    
    amclock++;
+
+   double oldmx = m_x + m_w / 2;
+   double oldmy = m_y + m_h / 2;
    
    if(followplayer || automapstate == amstate_over)
       AM_doFollowPlayer();
@@ -1069,6 +1053,9 @@ void AM_Ticker()
    // Change x,y location
    if(m_paninc.x != 0.0 || m_paninc.y != 0.0)
       AM_changeWindowLoc();
+
+   backdrop_fx += MTOF(m_x + m_w / 2 - oldmx);
+   backdrop_fy += MTOF(m_y + m_h / 2 - oldmy);
 }
 
 
@@ -1092,10 +1079,52 @@ static void AM_clearFB(int color)
    // haleyjd 12/22/02: backdrop support
    if(am_usebackdrop && am_backdrop)
    {
+      // Must put round() or floor() because of stupid C (int) truncating, which
+      // merely cuts off whatever's after the decimal, instead of rounding
+      // *DOWN*.
+      double bfx, bfy;
+      if(plr && plr->mo)
+      {
+         const linkoffset_t &link = *P_GetLinkOffset(plr->mo->groupid, 0);
+         bfx = backdrop_fx + MTOF(M_FixedToDouble(link.x));
+         bfy = backdrop_fy + MTOF(M_FixedToDouble(link.y));
+      }
+      else
+      {
+         bfx = backdrop_fx;
+         bfy = backdrop_fy;
+      }
+      int offx = static_cast<int>(round(-bfx / M_FixedToDouble(video.xscale)));
+      int offy = static_cast<int>(round(bfy / M_FixedToDouble(video.yscale)));
+
+      int screenheight = (f_h << FRACBITS) / video.yscale;
+
+      // Now get the coordinates of the four tiles
+      offx -= SCREENWIDTH * (offx / SCREENWIDTH);
+      offy -= screenheight * (offy / screenheight);
+
+      // Fix for stupid C division rules (same thing as above) when first
+      // operand is negative.
+      if(offx > 0)
+         offx -= SCREENWIDTH;
+      if(offy > 0)
+         offy -= screenheight;
+
       // SoM 2-4-04: ANYRES
-      V_DrawBlock(0, 0, &vbscreen, 
-                  SCREENWIDTH, (f_h << FRACBITS) / video.yscale, 
-                  am_backdrop);
+      V_DrawBlock(offx, offy, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
+      if(offx)
+         V_DrawBlock(offx + SCREENWIDTH, offy, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
+      if(offy)
+      {
+         V_DrawBlock(offx, offy + screenheight, &vbscreen, SCREENWIDTH, -offy, am_backdrop);
+         if(offx)
+         {
+            V_DrawBlock(offx + SCREENWIDTH, offy + screenheight, &vbscreen, SCREENWIDTH, -offy,
+                        am_backdrop);
+         }
+      }
+
+//      V_DrawBlock(0, 0, &vbscreen, SCREENWIDTH, screenheight, am_backdrop);
    }
    else
       V_ColorBlock(&vbscreen, (unsigned char)color, 0, 0, f_w, f_h);
@@ -1631,8 +1660,8 @@ inline static bool AM_drawAsLockedDoor(const line_t *line)
 //
 inline static bool AM_isDoorClosed(const line_t *line)
 {
-   return !line->backsector->ceilingdata ||
-          !line->backsector->ceilingdata->isDescendantOf(RTTI(VerticalDoorThinker));
+   return !line->backsector->srf.ceiling.data ||
+          !line->backsector->srf.ceiling.data->isDescendantOf(RTTI(VerticalDoorThinker));
 }
 
 //
@@ -1646,24 +1675,20 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&
-           (line->backsector->floorheight == line->backsector->ceilingheight ||
-            line->frontsector->floorheight == line->backsector->ceilingheight));
+           (line->backsector->srf.floor.height == line->backsector->srf.ceiling.height ||
+            line->frontsector->srf.floor.height == line->backsector->srf.ceiling.height));
 }
 
 //
 // True if floor or ceiling heights are different, lower or upper portal aware
 //
-inline static bool AM_differentFloor(const line_t &line)
+template<surf_e surf>
+inline static bool AM_different(const line_t &line)
 {
-   return line.frontsector->floorheight > line.backsector->floorheight ||
-   (line.frontsector->floorheight < line.backsector->floorheight &&
-    !(line.extflags & EX_ML_LOWERPORTAL));
-}
-inline static bool AM_differentCeiling(const line_t &line)
-{
-   return line.frontsector->ceilingheight < line.backsector->ceilingheight ||
-   (line.frontsector->ceilingheight > line.backsector->ceilingheight &&
-    !(line.extflags & EX_ML_UPPERPORTAL));
+   return isInner<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) ||
+      (isOuter<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) &&
+         (!(line.extflags & e_edgePortalFlags[surf]) ||
+            !(line.backsector->srf[surf].pflags & PS_PASSABLE)));
 }
 
 inline static bool AM_dontDraw(const line_t &line)
@@ -1703,23 +1728,24 @@ static void AM_drawWalls()
       {
          const line_t *line = &lines[i];
 
-         if(line->frontsector->groupid == plrgroup)
+         if(line->frontsector->groupid == plrgroup ||
+            P_PortalLayersByPoly(line->frontsector->groupid, plrgroup))
+         {
             continue;
+         }
 
          l.a.x = line->v1->fx;
          l.a.y = line->v1->fy;
          l.b.x = line->v2->fx;
          l.b.y = line->v2->fy;
 
-         if(line->frontsector->groupid > 0)
-         {
-            auto link = P_GetLinkOffset(line->frontsector->groupid, 0);
+         auto link = P_GetLinkOffset(line->frontsector->groupid, plrgroup);
 
-            l.a.x += M_FixedToDouble(link->x);
-            l.a.y += M_FixedToDouble(link->y);
-            l.b.x += M_FixedToDouble(link->x);
-            l.b.y += M_FixedToDouble(link->y);
-         }
+         l.a.x += M_FixedToDouble(link->x);
+         l.a.y += M_FixedToDouble(link->y);
+         l.b.x += M_FixedToDouble(link->x);
+         l.b.y += M_FixedToDouble(link->y);
+
          // if line has been seen or IDDT has been used
          if(ddt_cheating || (line->flags & ML_MAPPED))
          {
@@ -1729,7 +1755,7 @@ static void AM_drawWalls()
                continue;
 
             if(!line->backsector ||
-               AM_differentFloor(*line) || AM_differentCeiling(*line))
+               AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_prtl);
             }
@@ -1740,7 +1766,7 @@ static void AM_drawWalls()
             if(!AM_dontDraw(*line)) // invisible flag lines do not show
             {
                if(!line->backsector ||
-                  AM_differentFloor(*line) || AM_differentCeiling(*line))
+                  AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
                {
                   AM_drawMline(&l, mapcolor_prtl);
                }
@@ -1761,12 +1787,15 @@ static void AM_drawWalls()
 
       if(mapportal_overlay && useportalgroups)
       {
-         if(line->frontsector && line->frontsector->groupid != plrgroup)
-            continue;
-
-         if(line->frontsector && line->frontsector->groupid > 0)
+         if(line->frontsector && (line->frontsector->groupid != plrgroup &&
+                                  !P_PortalLayersByPoly(line->frontsector->groupid, plrgroup)))
          {
-            linkoffset_t *link = P_GetLinkOffset(line->frontsector->groupid, 0);
+            continue;
+         }
+
+         if(line->frontsector)
+         {
+            linkoffset_t *link = P_GetLinkOffset(line->frontsector->groupid, plrgroup);
 
             l.a.x += M_FixedToDouble(link->x);
             l.a.y += M_FixedToDouble(link->y);
@@ -1841,11 +1870,11 @@ static void AM_drawWalls()
             {
                AM_drawMline(&l, mapcolor_secr); // line bounding secret sector
             } 
-            else if(AM_differentFloor(*line))
+            else if(AM_different<surf_floor>(*line))
             {
                AM_drawMline(&l, mapcolor_fchg); // floor level change
             }
-            else if(AM_differentCeiling(*line))
+            else if(AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_cchg); // ceiling level change
             }
@@ -1861,7 +1890,7 @@ static void AM_drawWalls()
          if(!AM_dontDraw(*line)) // invisible flag lines do not show
          {
             if(mapcolor_flat || !line->backsector ||
-               AM_differentFloor(*line) || AM_differentCeiling(*line))
+               AM_different<surf_floor>(*line) || AM_different<surf_ceil>(*line))
             {
                AM_drawMline(&l, mapcolor_unsn);
             }
@@ -1883,12 +1912,12 @@ static void AM_drawNodeLines()
 
    for(int i = 0; i < numnodes; i++)
    {
-      fnode_t *fnode = &fnodes[i];
+      const node_t &node = nodes[i];
 
-      l.a.x = fnode->fx;
-      l.a.y = fnode->fy;
-      l.b.x = fnode->fx + fnode->fdx;
-      l.b.y = fnode->fy + fnode->fdy;
+      l.a.x = M_FixedToDouble(node.x);
+      l.a.y = M_FixedToDouble(node.y);
+      l.b.x = M_FixedToDouble(node.x + node.dx);
+      l.b.y = M_FixedToDouble(node.y + node.dy);
 
       AM_drawMline(&l, mapcolor_frnd);
    }
@@ -2052,17 +2081,8 @@ static void AM_drawPlayers()
 
    if(!netgame)
    {
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         px = plr->mo->x + link->x;
-         py = plr->mo->y + link->y;
-      }
-      else
-      {
-         px = plr->mo->x;
-         py = plr->mo->y;
-      }
+      px = plr->mo->x;
+      py = plr->mo->y;
 
       if(ddt_cheating)
       {
@@ -2105,17 +2125,8 @@ static void AM_drawPlayers()
       if(!playeringame[i])
          continue;
       
-      if(mapportal_overlay && plr->mo->groupid > 0)
-      {
-         auto link = P_GetLinkOffset(plr->mo->groupid, 0);
-         px = p->mo->x + link->x;
-         py = p->mo->y + link->y;
-      }
-      else
-      {
-         px = p->mo->x;
-         py = p->mo->y;
-      }
+      px = p->mo->x;
+      py = p->mo->y;
 
       // haleyjd: add total invisibility
       
@@ -2173,9 +2184,9 @@ static void AM_drawThings(int colors, int colorrange)
          tx = t->x;
          ty = t->y;
 
-         if(mapportal_overlay && t->subsector->sector->groupid > 0)
+         if(mapportal_overlay && t->subsector->sector->groupid != plr->mo->groupid)
          {
-            auto link = P_GetLinkOffset(t->subsector->sector->groupid, 0);
+            auto link = P_GetLinkOffset(t->subsector->sector->groupid, plr->mo->groupid);
             tx += link->x;
             ty += link->y;
          }
@@ -2270,8 +2281,18 @@ static void AM_drawMarks()
       {
          int w  = (5 * video.xscale) >> FRACBITS;
          int h  = (6 * video.yscale) >> FRACBITS;
-         int fx = CXMTOF(markpoints[i].x);
-         int fy = CYMTOF(markpoints[i].y);
+         double mx = markpoints[i].x;
+         double my = markpoints[i].y;
+         bool trans = false;
+         if(markpoints[i].groupid != plr->mo->groupid)
+         {
+            trans = true;
+            const linkoffset_t *link = P_GetLinkOffset(markpoints[i].groupid, plr->mo->groupid);
+            mx += M_FixedToDouble(link->x);
+            my += M_FixedToDouble(link->y);
+         }
+         int fx = CXMTOF(mx);
+         int fy = CYMTOF(my);
          int j  = i;
          
          do
@@ -2283,10 +2304,20 @@ static void AM_drawMarks()
             
             if(fx >= f_x && fx < f_w - w && fy >= f_y && fy < f_h - h)
             {
-               V_DrawPatch((fx<<FRACBITS)/video.xscale, 
-                           (fy<<FRACBITS)/video.yscale, 
-                           &vbscreen, 
-                           marknums[d]);
+               if(trans)
+               {
+                  V_DrawPatchTL((fx<<FRACBITS)/video.xscale,
+                                (fy<<FRACBITS)/video.yscale,
+                                &vbscreen,
+                                marknums[d], nullptr, FRACUNIT >> 1);
+               }
+               else
+               {
+                  V_DrawPatch((fx<<FRACBITS)/video.xscale,
+                              (fy<<FRACBITS)/video.yscale,
+                              &vbscreen,
+                              marknums[d]);
+               }
             }
             
             fx -= w - (video.xscale >> FRACBITS); // killough 2/22/98: 1 space backwards
@@ -2299,8 +2330,6 @@ static void AM_drawMarks()
 }
 
 //
-// AM_drawCrosshair()
-//
 // Draw the single point crosshair representing map center
 //
 // Passed the color to draw the pixel with
@@ -2309,8 +2338,7 @@ static void AM_drawMarks()
 //
 inline static void AM_drawCrosshair(int color)
 {
-   vbscreen.data[(vbscreen.pitch * ((f_h + 1) >> 1)) + (vbscreen.width >> 1)] =
-      color; // single point for now
+   PUTDOT((f_w + 1) >> 1, (f_h + 1) >> 1, color); // single point for now
 }
 
 //
@@ -2356,10 +2384,10 @@ void AM_Drawer()
 // Console Commands
 //
 
-VARIABLE_TOGGLE(am_drawnodelines, NULL, onoff);
+VARIABLE_TOGGLE(am_drawnodelines, nullptr, onoff);
 CONSOLE_VARIABLE(am_drawnodelines, am_drawnodelines, 0) {}
 
-VARIABLE_TOGGLE(am_dynasegs_bysubsec, NULL, yesno);
+VARIABLE_TOGGLE(am_dynasegs_bysubsec, nullptr, yesno);
 CONSOLE_VARIABLE(am_dynasegs_bysubsec, am_dynasegs_bysubsec, 0) {}
 
 //----------------------------------------------------------------------------

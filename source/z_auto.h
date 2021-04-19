@@ -48,10 +48,10 @@ protected:
    size_t  size;
 
 public:
-   ZAutoBuffer() : buffer(NULL), size(0) {}
+   ZAutoBuffer() : buffer(nullptr), size(0) {}
 
    ZAutoBuffer(size_t pSize, bool initZero) 
-      : buffer(NULL), size(pSize)
+      : buffer(nullptr), size(pSize)
    {
       alloc(size, initZero);
    }
@@ -70,7 +70,7 @@ public:
       if(buffer)
       {
          efree(buffer);
-         buffer = NULL;
+         buffer = nullptr;
       }
    }
 
@@ -79,7 +79,7 @@ public:
       if(buffer)
       {
          efree(buffer);
-         buffer = NULL;
+         buffer = nullptr;
       }
 
       if((size = pSize))

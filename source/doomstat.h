@@ -59,6 +59,15 @@ enum amstate_t
    amstate_full
 };
 
+enum acceltype_e : int
+{
+   ACCELTYPE_NONE,
+   ACCELTYPE_LINEAR,
+   ACCELTYPE_CHOCO,
+   ACCELTYPE_CUSTOM,
+   ACCELTYPE_MAX = ACCELTYPE_CUSTOM
+};
+
 extern int use_doom_config;
 
 // ------------------------
@@ -87,6 +96,7 @@ extern bool modifiedgame;
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 extern int compatibility, default_compatibility;          // killough 1/31/98
+extern bool vanilla_mode;  // ioanch
 
 extern int demo_version;           // killough 7/19/98: Version of demo
 extern int demo_subversion;
@@ -96,6 +106,7 @@ extern int demo_subversion;
 
 #define demo_compatibility (demo_version < 200) /* killough 11/98: macroized */
 #define ancient_demo       (demo_version < 5)   /* haleyjd  03/17: for old demos */
+#define vanilla_heretic    (ancient_demo && GameModeInfo->type == Game_Heretic)
 
 // haleyjd 10/16/10: full version macros
 #define make_full_version(v, sv) ((v << 8) | sv)
@@ -104,6 +115,8 @@ extern int demo_subversion;
 
 // killough 7/19/98: whether monsters should fight against each other
 extern int monster_infighting, default_monster_infighting;
+
+extern bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
 
 extern int monkeys, default_monkeys;
 
@@ -153,12 +166,19 @@ enum {
   comp_planeshoot,  //         09/22/07: ability to shoot floor/ceiling
   comp_special,     //         08/29/09: special failure behavior
   comp_ninja,       //         04/18/10: ninja spawn in G_CheckSpot
-  comp_aircontrol,  // Disable air control
+  comp_jump,        // Disable jumping and air control
+  comp_aircontrol = comp_jump,
   COMP_NUM_USED,    // counts the used comps. MUST BE LAST ONE + 1.
   COMP_TOTAL=32  // Some extra room for additional variables
 };
 
 extern int comp[COMP_TOTAL], default_comp[COMP_TOTAL];
+extern int level_compat_comp[COMP_TOTAL];  // ioanch: level compat active?
+extern bool level_compat_compactive[COMP_TOTAL];   // true if use level_compat_comp instead of comp
+inline static int getComp(int index)
+{
+   return level_compat_compactive[index] ? level_compat_comp[index] : comp[index];
+}
 
 // -------------------------------------------
 // Language.
@@ -170,8 +190,18 @@ extern  Language_t   language;
 
 // Defaults for menu, methinks.
 extern  skill_t startskill;
-extern  int     startepisode;
-extern  int     startmap;
+
+//
+// Startup structure to be able to warp to named map
+//
+struct startlevel_t
+{
+   int episode;
+   int map;
+   const char *mapname;
+};
+
+extern startlevel_t d_startlevel;
 
 extern  bool    autostart;
 
@@ -321,7 +351,7 @@ extern  double          mouseSensitivity_vert;
 extern  bool            mouseSensitivity_vanilla; // [CG] 01/20/12
 
 // SoM: 
-extern  int             mouseAccel_type;
+extern  acceltype_e     mouseAccel_type;
 
 // [CG] 01/20/12
 extern  int             mouseAccel_threshold;
@@ -391,7 +421,7 @@ extern int allowmlook, default_allowmlook; // haleyjd
 
 extern int flashing_hom; // killough 10/98
 
-extern int doom_weapon_toggles;   // killough 10/98
+extern int weapon_hotkey_cycling;   // killough 10/98
 
 //=======================================================
 //

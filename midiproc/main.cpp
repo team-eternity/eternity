@@ -1,7 +1,5 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2012 James Haley
+// Copyright(C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +31,14 @@
 //-----------------------------------------------------------------------------
 
 #include <windows.h>
+#include <Psapi.h>
+
 #include <stdlib.h>
+
+#include <atomic>
+#include <thread>
+#include <vector>
+
 #include "SDL.h"
 #include "SDL_mixer.h"
 #include "midiproc.h"
@@ -42,7 +47,131 @@
 static Mix_Music *music = NULL;
 static SDL_RWops *rw    = NULL;
 
+static std::atomic_bool quitting = false;
+static std::atomic_bool sentinel_running = false;
+
 static void UnregisterSong();
+
+//=============================================================================
+//
+// Sentinel That Checks Eternity Is Actually Running
+//
+
+class AutoHandle
+{
+public:
+   HANDLE handle;
+   AutoHandle(HANDLE h) : handle(h) {}
+   ~AutoHandle()
+   {
+      if(handle != nullptr)
+      {
+         CloseHandle(handle);
+      }
+   }
+};
+
+static bool Sentinel_EnumerateProcesses(std::vector<DWORD> &ndwPIDs, size_t &numValidPIDs)
+{
+#pragma comment(lib, "psapi.lib")
+
+   while(1)
+   {
+      DWORD cb = static_cast<DWORD>(ndwPIDs.size() * sizeof(DWORD));
+      DWORD cbNeeded = 0;
+
+      if(!EnumProcesses(&ndwPIDs[0], cb, &cbNeeded))
+         return false;
+      if(cb == cbNeeded)
+      {
+         // try again with a larger array
+         ndwPIDs.resize(ndwPIDs.size() * 2);
+      }
+      else
+      {
+         // successful
+         numValidPIDs = cbNeeded / sizeof(DWORD);
+         return true;
+      }
+   }
+}
+
+static bool Sentinel_FindEternityPID(const std::vector<DWORD> &ndwPIDs,
+                                     HANDLE &pHandle, size_t numValidPIDs)
+{
+#pragma comment(lib, "psapi.lib")
+
+   for(size_t i = 0; i < numValidPIDs; i++)
+   {
+      AutoHandle chProcess(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ndwPIDs[i]));
+      if(chProcess.handle != nullptr)
+      {
+         char szProcessImage[MAX_PATH];
+         ZeroMemory(szProcessImage, sizeof(szProcessImage));
+         if(GetProcessImageFileNameA(chProcess.handle, szProcessImage, sizeof(szProcessImage)))
+         {
+            constexpr char   szProcessName[]   = "Eternity.exe"; // Case-insensitive
+            constexpr size_t processNameLength = sizeof(szProcessName) - 1; // -1 to remove ending '\0'
+
+            const size_t imageLength = strlen(szProcessImage);
+            if(imageLength < processNameLength)
+               continue;
+
+            // Lop off the start of szProcessImage
+            if(!strnicmp(szProcessImage + imageLength - processNameLength, szProcessName, processNameLength))
+            {
+               pHandle = chProcess.handle;
+               chProcess.handle = nullptr; // Abuse AutoHandle's destructor behaviour
+               return true;
+            }
+         }
+      }
+   }
+
+   return false;
+}
+
+void Sentinel_Main()
+{
+   constexpr size_t initMaxNumPIDs = 1024;
+   std::vector<DWORD> ndwPIDs(initMaxNumPIDs, 0);
+   HANDLE pEternityHandle;
+   size_t numValidPIDs;
+
+   sentinel_running = true;
+
+   if(!Sentinel_EnumerateProcesses(ndwPIDs, numValidPIDs))
+   {
+      sentinel_running = false;
+      exit(-1);
+   }
+   if(!Sentinel_FindEternityPID(ndwPIDs, pEternityHandle, numValidPIDs))
+   {
+      MessageBox(
+         NULL, TEXT("eternity.exe not currently running"), TEXT("midiproc: Error"), MB_ICONERROR
+      );
+      sentinel_running = false;
+      exit(-1);
+   }
+
+   DWORD dwExitCode;
+   do
+   {
+      if(quitting)
+      {
+         sentinel_running = false;
+         return;
+      }
+      else if(GetExitCodeProcess(pEternityHandle, &dwExitCode) == 0)
+      {
+         sentinel_running = false;
+         exit(-1);
+      }
+      Sleep(100);
+   } while(dwExitCode == STILL_ACTIVE);
+
+   exit(-1);
+}
 
 //=============================================================================
 //
@@ -89,7 +218,7 @@ static void RegisterSong(void *data, size_t size)
       UnregisterSong();
 
    rw    = SDL_RWFromMem(data, size);
-   music = Mix_LoadMUS_RW(rw);
+   music = Mix_LoadMUS_RW(rw, true);
 }
 
 //
@@ -324,6 +453,8 @@ void MidiRPC_StopServer()
 
    // Stop RPC server
    RpcMgmtStopServerListening(NULL);
+
+   quitting = true;
 }
 
 //
@@ -358,6 +489,48 @@ static bool MidiRPC_InitServer()
    return !status;
 }
 
+//
+// Checks if Windows version is 10 or higher, for audio kludge.
+// I wish we could use the Win 8.1 API and Versionhelpers.h
+//
+inline bool I_IsWindowsVistaOrHigher()
+{
+#pragma comment(lib, "version.lib")
+
+   static const CHAR kernel32[] = "\\kernel32.dll";
+   CHAR *path;
+   void *ver, *block;
+   UINT  dirLength;
+   DWORD versionSize;
+   UINT  blockSize;
+   VS_FIXEDFILEINFO *vInfo;
+   WORD  majorVer;
+
+   path = static_cast<CHAR *>(malloc(sizeof(*path) * MAX_PATH));
+
+   dirLength = GetSystemDirectory(path, MAX_PATH);
+   if(dirLength >= MAX_PATH || dirLength == 0 ||
+      dirLength > MAX_PATH - sizeof(kernel32) / sizeof(*kernel32))
+      abort();
+   memcpy(path + dirLength, kernel32, sizeof(kernel32));
+
+   versionSize = GetFileVersionInfoSize(path, nullptr);
+   if(versionSize == 0)
+      abort();
+   ver = malloc(versionSize);
+   if(!GetFileVersionInfo(path, 0, versionSize, ver))
+      abort();
+   if(!VerQueryValue(ver, "\\", &block, &blockSize) || blockSize < sizeof(VS_FIXEDFILEINFO))
+      abort();
+   vInfo = static_cast<VS_FIXEDFILEINFO *>(block);
+   majorVer = HIWORD(vInfo->dwProductVersionMS);
+   //minorVer = LOWORD(vInfo->dwProductVersionMS);
+   //buildNum = HIWORD(vInfo->dwProductVersionLS);
+   free(path);
+   free(ver);
+   return majorVer >= 6; // Vista is NT 6.0
+}
+
 //=============================================================================
 //
 // Main Program
@@ -368,16 +541,28 @@ static bool MidiRPC_InitServer()
 //
 // Application entry point.
 //
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, 
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                      LPSTR lpCmdLine, int nCmdShow)
 {
    // Initialize SDL
    if(!InitSDL())
       return -1;
 
+   if(I_IsWindowsVistaOrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
+   else
+      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
+
+   std::thread watcher(Sentinel_Main);
+
    // Initialize RPC Server
    if(!MidiRPC_InitServer())
       return -1;
+
+   while(sentinel_running)
+      Sleep(1);
+
+   watcher.join();
 
    return 0;
 }

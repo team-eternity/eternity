@@ -1,6 +1,6 @@
 //
 // The Eternity Engine
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2019 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,17 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-// Purpose: Code for automated location of users' IWAD files and important 
-//  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used 
+// Purpose: Code for automated location of users' IWAD files and important
+//  PWADs. Some code is derived from Chocolate Doom, by Simon Howard, used
 //  under terms of the GPLv2.
 //
 // Authors: Simon Howard, James Haley, David Hill
 //
 
-#ifdef _MSC_VER
-#include "Win32/i_opndir.h"
+#if __cplusplus >= 201703L || _MSC_VER >= 1914
+#include "hal/i_platform.h"
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
-#include <dirent.h>
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 #endif
 
 #include "z_zone.h"
@@ -76,13 +84,15 @@ protected:
 
 public:
    // Constructor. Open the key described by rval.
-   AutoRegKey(const registry_value_t &rval) : valid(false)
+   explicit AutoRegKey(const registry_value_t &rval) : valid(false)
    {
       if(!RegOpenKeyEx(rval.root, rval.path, 0, KEY_READ, &key))
          valid = true;
    }
 
-   // TODO: Add deleted copy constructor and operator = when VC2012 is out of the picture
+   // Disallow copying
+   AutoRegKey(const AutoRegKey &) = delete;
+   AutoRegKey &operator = (const AutoRegKey &) = delete;
 
    // Destructor. Close the key handle, if it is valid.
    ~AutoRegKey()
@@ -212,6 +222,7 @@ enum gogkeys_e
    GOG_KEY_ULTIMATE,
    GOG_KEY_DOOM2,
    GOG_KEY_FINAL,
+   GOG_KEY_DOOM3BFG,
    GOG_KEY_MAX
 };
 
@@ -239,6 +250,13 @@ static registry_value_t gogInstallValues[GOG_KEY_MAX+1] =
       "PATH"
    },
 
+   // Doom 3: BFG install
+   {
+     HKEY_LOCAL_MACHINE,
+     SOFTWARE_KEY "\\GOG.com\\Games\\1135892318",
+     "PATH"
+   },
+
    // terminating entry
    { nullptr, nullptr, nullptr }
 };
@@ -250,6 +268,7 @@ static const char *gogInstallSubDirs[] =
    "doom2",
    "TNT",
    "Plutonia",
+   "base\\wads",
 };
 
 // Master Levels from GOG.com. These are installed with Doom II
@@ -449,27 +468,15 @@ static void D_addDoomWadDir(Collection<qstring> &paths)
 //
 // Add all subdirectories of an open directory
 //
-static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
-                                const char *base)
+static void D_addSubDirectories(Collection<qstring> &paths, const char *base)
 {
-   dirent *ent;
-
-   while((ent = readdir(dir)))
+   const fs::directory_iterator itr(base);
+   for(const fs::directory_entry &ent : itr)
    {
-      if(!strcmp(ent->d_name, ".") ||
-         !strcmp(ent->d_name, ".."))
-         continue;
-      
-      struct stat sbuf;
-      qstring fullpath;
-      fullpath = base;
-      fullpath.pathConcatenate(ent->d_name);
+      std::string filename = ent.path().filename().generic_u8string();
 
-      if(!stat(fullpath.constPtr(), &sbuf))
-      {
-         if(S_ISDIR(sbuf.st_mode))
-            paths.add(fullpath);
-      }
+      if(ent.exists() && ent.is_directory())
+         paths.add(qstring(ent.path().filename().generic_u8string().c_str()));
    }
 }
 
@@ -478,8 +485,7 @@ static void D_addSubDirectories(Collection<qstring> &paths, DIR *dir,
 //
 static void D_addDefaultDirectories(Collection<qstring> &paths)
 {
-   DIR *dir;
-
+   std::error_code ec;
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX
    // Default Linux locations
    paths.addNew() = "/usr/local/share/games/doom";
@@ -489,18 +495,12 @@ static void D_addDefaultDirectories(Collection<qstring> &paths)
 #endif
 
    // add base/game paths
-   if((dir = opendir(basepath)))
-   {
-      D_addSubDirectories(paths, dir, basepath);
-      closedir(dir);
-   }
+   if(fs::is_directory(basepath, ec))
+      D_addSubDirectories(paths, basepath);
 
    // add user/game paths, if userpath != basepath
-   if(strcmp(basepath, userpath) && (dir = opendir(userpath)))
-   {
-      D_addSubDirectories(paths, dir, userpath);
-      closedir(dir);
-   }
+   if(strcmp(basepath, userpath) && fs::is_directory(userpath, ec))
+      D_addSubDirectories(paths, userpath);
 
    paths.addNew() = D_DoomExeDir(); // executable directory
    paths.addNew() = ".";            // current directory
@@ -551,6 +551,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    version.freedoom    = false;
    version.freedm      = false;
    version.bfgedition  = false;
+   version.rekkr       = false;
    version.error       = false;
    version.flags       = IWADF_NOERRORS;
 
@@ -559,7 +560,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
    if(version.error) // Not a WAD, or could not access
       return;
 
-   char **var = NULL;
+   char **var = nullptr;
 
    switch(version.gamemode)
    {
@@ -576,6 +577,11 @@ static void D_determineIWADVersion(const qstring &fullpath)
       { 
          if(estrempty(gi_path_fdoomu)) // Ultimate FreeDoom
             var = &gi_path_fdoomu;
+      }
+      else if(version.rekkr)
+      {
+         if(estrempty(gi_path_rekkr)) // Rekkr
+            var = &gi_path_rekkr;
       }
       else if(estrempty(gi_path_doomu)) // Ultimate Doom
          var = &gi_path_doomu;
@@ -651,12 +657,9 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 // Check a path for any of the standard IWAD file names.
 //
-static void D_checkPathForIWADs(const qstring &path)
+void D_CheckPathForIWADs(const qstring &path)
 {
-   DIR    *dir;
-   dirent *ent;
-
-   if(!(dir = opendir(path.constPtr())))
+   if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
       // check to see if this is just a regular .wad file
       const char *dot = path.findSubStrNoCase(".wad");
@@ -665,25 +668,22 @@ static void D_checkPathForIWADs(const qstring &path)
       return;
    }
 
-   while((ent = readdir(dir)))
+   const fs::directory_iterator itr(path.constPtr());
+   for(const fs::directory_entry &ent : itr)
    {
+      const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
       for(int i = 0; i < nstandard_iwads; i++)
       {
-         if(!strcasecmp(ent->d_name, standard_iwads[i] + 1))
+         if(filename == standard_iwads[i] + 1)
          {
             // found one.
-            qstring fullpath = path;
-            fullpath.pathConcatenate(ent->d_name);
-
             // determine if we want to store this path.
-            D_determineIWADVersion(fullpath);
+            D_determineIWADVersion(qstring(ent.path().generic_u8string().c_str()));
 
             break; // break inner loop
          }
       }
    }
-
-   closedir(dir);
 }
 
 //
@@ -700,27 +700,24 @@ static void D_checkForNoRest()
    if(estrnonempty(w_norestpath))
       return;
 
-   DIR    *dir;
    qstring nrvpath;
 
    nrvpath = gi_path_bfgdoom2;
    nrvpath.removeFileSpec();
 
-   if((dir = opendir(nrvpath.constPtr())))
+   if(std::error_code ec; fs::is_directory(nrvpath.constPtr(), ec))
    {
-      dirent *ent;
-
-      while((ent = readdir(dir)))
+      const fs::directory_iterator itr(nrvpath.constPtr());
+      for(const fs::directory_entry &ent : itr)
       {
-         if(!strcasecmp(ent->d_name, "nerve.wad"))
+         const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
+         if(filename == "nerve.wad")
          {
-            nrvpath.pathConcatenate(ent->d_name);
+            nrvpath.pathConcatenate(filename);
             w_norestpath = nrvpath.duplicate();
             break;
          }
       }
-
-      closedir(dir);
    }
 }
 
@@ -794,14 +791,14 @@ void D_FindIWADs()
    D_collectIWADPaths(paths);
 
    // Check all paths that were found for IWADs
-   for(auto i = paths.begin(); i != paths.end(); i++)
-      D_checkPathForIWADs(*i);
+   for(qstring &path : paths)
+      D_CheckPathForIWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL
 
    // TODO: DKotDC, when Hexen is supported
-   
+
    // Master Levels detection
    D_findMasterLevels();
 }

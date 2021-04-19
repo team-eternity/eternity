@@ -26,47 +26,55 @@
 #ifndef R_PLANE_H__
 #define R_PLANE_H__
 
+struct cb_plane_t;
+struct cbviewpoint_t;
+struct cmapcontext_t;
+struct contextbounds_t;
+struct planecontext_t;
 struct planehash_t;
 struct rslope_t;
 struct texture_t;
+struct viewpoint_t;
 
 // killough 10/98: special mask indicates sky flat comes from sidedef
 #define PL_SKYFLAT (0x80000000)
 
 // Visplane related.
 
-extern float *lastopening;
-
 // SoM 12/8/03
-extern float *floorclip, *ceilingclip;
 extern float *floorcliparray, *ceilingcliparray;
 
 // SoM: We have to use secondary clipping arrays for portal overlays
 extern float *overlayfclip, *overlaycclip;
 
-void R_ClearPlanes(void);
-void R_ClearOverlayClips(void);
-void R_DrawPlanes(planehash_t *table);
+void R_ClearPlanes(planecontext_t &context, const contextbounds_t &bounds);
+void R_ClearOverlayClips(const contextbounds_t &bounds);
+void R_DrawPlanes(cmapcontext_t &context, planehash_t &mainhash,
+                  int *const spanstart, const angle_t viewangle, planehash_t *table);
 
 // Planehash stuff
 planehash_t *R_NewPlaneHash(int chaincount);
-void R_ClearPlaneHash(planehash_t *table);
+void R_ClearPlaneHash(visplane_t **&freehead, planehash_t *table);
 
 
-visplane_t *R_FindPlane(fixed_t height, 
+visplane_t *R_FindPlane(cmapcontext_t &cmapcontext,
+                        planecontext_t &planecontext,
+                        const viewpoint_t &viewpoint,
+                        const cbviewpoint_t &cb_viewpoint,
+                        const contextbounds_t &bounds,
+                        fixed_t height,
                         int picnum,
                         int lightlevel,
-                        fixed_t xoffs,       // killough 2/28/98: add x-y offsets
-                        fixed_t yoffs,
-                        float xscale,
-                        float yscale,
+                        v2fixed_t offs,       // killough 2/28/98: add x-y offsets
+                        v2float_t scale,
                         float angle,         // haleyjd 01/08/05: add angle
                         pslope_t *slope,     // SoM: slopes
                         int blendflags,      // SoM: Blending flags for the plane
                         byte opacity,        // SoM: Opacity for translucent planes
-                        planehash_t *table); // SoM: Table. Can be NULL
+                        planehash_t *table); // SoM: Table. Can be nullptr
 
-visplane_t *R_CheckPlane(visplane_t *pl, int start, int stop);
+visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start, int stop);
+visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
 
@@ -80,7 +88,27 @@ struct cb_span_t
 
    // SoM: some values for the generalizede span drawers
    unsigned int xshift, xmask, yshift, ymask;
+
+   // ioanch: more ptrs
+   const void *alphamask;  // pointer to alphamask if applicable
 };
+
+struct cb_slopespan_t
+{
+   int y, x1, x2;
+
+   double iufrac, ivfrac, idfrac;
+   double iustep, ivstep, idstep;
+
+   void *source;
+
+   static inline lighttable_t **colormap;
+};
+
+using R_FlatFunc  = void (*)(const cb_span_t &);
+using R_SlopeFunc = void (*)(const cb_slopespan_t &, const cb_span_t &);
+using R_MapFunc   = void (*)(const R_FlatFunc, const R_SlopeFunc, cb_span_t &,
+                             cb_slopespan_t &, const cb_plane_t &, int, int, int);
 
 struct cb_plane_t
 {
@@ -106,26 +134,13 @@ struct cb_plane_t
    // SoM: slopes.
    rslope_t *slope;
 
-   void (*MapFunc)(int, int, int);
-};
-
-struct cb_slopespan_t
-{
-   int y, x1, x2;
-
-   double iufrac, ivfrac, idfrac;
-   double iustep, ivstep, idstep;
-
-   void *source;
-
-   lighttable_t **colormap;
+   R_MapFunc MapFunc;
 };
 
 
-extern cb_span_t  span;
-extern cb_plane_t plane;
-
-extern cb_slopespan_t slopespan;
+planehash_t *R_NewOverlaySet(planecontext_t &context);
+void R_FreeOverlaySet(planehash_t *&r_overlayfreesets, planehash_t *set);
+void R_MapInitOverlaySets();
 
 #endif
 

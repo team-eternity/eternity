@@ -42,39 +42,18 @@ int  cfg_gl_texture_format;  // texture internal format
 bool cfg_gl_use_extensions;  // must be true for extensions to be used
 bool cfg_gl_arb_pixelbuffer; // enable ARB PBO extension
 
-VARIABLE_INT(cfg_gl_colordepth, NULL, 16, 32, NULL);
+VARIABLE_INT(cfg_gl_colordepth, nullptr, 16, 32, nullptr);
 CONSOLE_VARIABLE(gl_colordepth, cfg_gl_colordepth, 0) {}
 
 static const char *gl_filter_names[] = { "GL_LINEAR", "GL_NEAREST" };
 
-VARIABLE_INT(cfg_gl_filter_type, NULL, CFG_GL_LINEAR, CFG_GL_NEAREST, gl_filter_names);
+VARIABLE_INT(cfg_gl_filter_type, nullptr, CFG_GL_LINEAR, CFG_GL_NEAREST, gl_filter_names);
 CONSOLE_VARIABLE(gl_filter_type, cfg_gl_filter_type, 0) {}
 
-static const char *gl_int_texture_names[] =
-{
-   "R3_G3_B2",
-   "RGB4",
-   "RGB5",
-   "RGB8",
-   "RGB10",
-   "RGB12",
-   "RGB16",
-   "RGBA2",
-   "RGBA4",
-   "RGB5_A1",
-   "RGBA8",
-   "RGB10_A2",
-   "RGBA12",
-   "RGBA16"
-};
-
-VARIABLE_INT(cfg_gl_texture_format, NULL, CFG_GL_R3_G3_B2, CFG_GL_RGBA16, gl_int_texture_names);
-CONSOLE_VARIABLE(gl_texture_format, cfg_gl_texture_format, 0) {}
-
-VARIABLE_TOGGLE(cfg_gl_use_extensions, NULL, yesno);
+VARIABLE_TOGGLE(cfg_gl_use_extensions, nullptr, yesno);
 CONSOLE_VARIABLE(gl_use_extensions, cfg_gl_use_extensions, 0) {}
 
-VARIABLE_TOGGLE(cfg_gl_arb_pixelbuffer, NULL, yesno);
+VARIABLE_TOGGLE(cfg_gl_arb_pixelbuffer, nullptr, yesno);
 CONSOLE_VARIABLE(gl_arb_pixelbuffer, cfg_gl_arb_pixelbuffer, 0) {}
 
 // EOF

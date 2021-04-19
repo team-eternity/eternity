@@ -25,15 +25,14 @@
 //-----------------------------------------------------------------------------
 
 #include "z_zone.h"
-#include "i_system.h"
 #include "doomstat.h"
+#include "d_dehtbl.h"
 #include "e_inventory.h"
-#include "m_random.h"
-#include "m_swap.h"
-#include "p_mobj.h"
+#include "hu_inventory.h"
+#include "metaapi.h"
+#include "r_patch.h"
 #include "v_patchfmt.h"
 #include "v_video.h"
-#include "w_wad.h"
 #include "st_stuff.h"
 
 //
@@ -47,11 +46,75 @@
 //
 
 // cached patches
-static patch_t *invnums[10];   // inventory numbers
+static patch_t *invnums[10];      // inventory numbers
+static patch_t *smallinvnums[10]; // small inventory numbers
+static patch_t *bigfsnums[10];    // large fullscreen numbers
+static patch_t *PatchINVLFGEM1;
+static patch_t *PatchINVLFGEM2;
+static patch_t *PatchINVRTGEM1;
+static patch_t *PatchINVRTGEM2;
+static patch_t *PatchBLACKSQ;
 
 // current state variables
 static int chainhealth;        // current position of the gem
 static int chainwiggle;        // small randomized addend for chain y coord.
+
+//
+// ST_drawSmallNumber
+//
+// Draws a small (at most) 5 digit number. It is RIGHT aligned for x and y.
+// x is expected to be 8 more than its equivalent Heretic calls.
+//
+void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen)
+{
+   if(val > 1)
+   {
+      patch_t *patch;
+      char buf[6];
+
+      // If you want more than 99,999 of something then you probably
+      // know enough about coding to change this hard limit.
+      if(val > 99999)
+         val = 99999;
+      sprintf(buf, "%d", val);
+      x -= static_cast<int>(4 * (strlen(buf)));
+      for(char *rover = buf; *rover; rover++)
+      {
+         int i = *rover - '0';
+         patch = smallinvnums[i];
+         V_DrawPatch(x, y, fullscreen ? &vbscreenyscaled : &subscreen43, patch);
+         x += 4;
+      }
+   }
+}
+
+//
+// Big green numbers for fullscreen graphical HUD
+//
+static void ST_drawBigNumber(int val, int x, int y)
+{
+   int oldval = val;
+   int xpos = x;
+   if(val < 0)
+      val = 0;
+   patch_t *patch;
+   if(val > 99)
+   {
+      patch = bigfsnums[val / 100 % 10];
+      V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+   }
+   val %= 100;
+   xpos += 12;
+   if(val > 9 || oldval > 99)
+   {
+      patch = bigfsnums[val / 10 % 10];
+      V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+   }
+   val %= 10;
+   xpos += 12;
+   patch = bigfsnums[val % 10];
+   V_DrawPatchShadowed(xpos + 6 - patch->width / 2, y, &vbscreenyscaled, patch, nullptr, FRACUNIT);
+}
 
 //
 // ST_HticInit
@@ -74,6 +137,26 @@ static void ST_HticInit()
       efree(invnums[i]);
       invnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
    }
+
+   // load small inventory numbers
+   for(i = 0; i < 10; ++i)
+   {
+      char lumpname[9];
+
+      memset(lumpname, 0, 9);
+      sprintf(lumpname, "SMALLIN%d", i);
+
+      smallinvnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+
+      snprintf(lumpname, sizeof(lumpname), "FONTB%d", 16 + i); // FONTB16-FONTB25
+      bigfsnums[i] = PatchLoader::CacheName(wGlobalDir, lumpname, PU_STATIC);
+   }
+
+   PatchINVLFGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML1"), PU_STATIC);
+   PatchINVLFGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEML2"), PU_STATIC);
+   PatchINVRTGEM1 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR1"), PU_STATIC);
+   PatchINVRTGEM2 = PatchLoader::CacheName(wGlobalDir, DEH_String("INVGEMR2"), PU_STATIC);
+   PatchBLACKSQ   = PatchLoader::CacheName(wGlobalDir, DEH_String("BLACKSQ"),  PU_STATIC);
 
    // haleyjd 10/09/05: load key graphics for HUD
    for(i = 0; i < NUMCARDS+3; ++i)  //jff 2/23/98 show both keys too
@@ -140,7 +223,7 @@ static void ST_HticTicker()
 
    // update chain wiggle value
    if(leveltime & 1)
-      chainwiggle = M_Random() & 1;
+      chainwiggle = M_VHereticPRandom(pr_chainwiggle) & 1;
 }
 
 static void ST_drawInvNum(int num, int x, int y)
@@ -205,9 +288,9 @@ static void ST_drawBackground()
 #define SHADOW_BOX_WIDTH  16
 #define SHADOW_BOX_HEIGHT 10
 
-static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
+static void ST_blockDrawerS(int x, int y, int startcmap, int mapdir)
 {
-   byte *dest, *row, *colormap;
+   byte *dest, *col, *colormap;
    int w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2;
 
@@ -217,13 +300,13 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    cy1 = y;
    cx2 = x + SHADOW_BOX_WIDTH  - 1;
    cy2 = y + SHADOW_BOX_HEIGHT - 1;
-               
+
    realx = subscreen43.x1lookup[cx1];
    realy = subscreen43.y1lookup[cy1];
    w     = subscreen43.x2lookup[cx2] - realx + 1;
    h     = subscreen43.y2lookup[cy2] - realy + 1;
 
-   dest = subscreen43.data + realy * subscreen43.pitch + realx;
+   dest = subscreen43.data + realx * subscreen43.pitch + realy;
 
    mapstep = mapdir * (16 << FRACBITS) / w;
 
@@ -232,25 +315,25 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
    if(realx < 0 || realx + w > subscreen43.width ||
       realy < 0 || realy + h > subscreen43.height)
    {
-      I_Error("ST_BlockDrawerS: block exceeds buffer boundaries.\n");
+      I_Error("ST_blockDrawerS: block exceeds buffer boundaries.\n");
    }
 #endif
 
    while(h--)
    {
-      row = dest;
+      col = dest;
       i = w;
       mapnum = startcmap << FRACBITS;
-      
+
       while(i--)
       {
          colormap = colormaps[0] + (mapnum >> FRACBITS) * 256;
-         *row = colormap[*row];
-         ++row;
+         *col = colormap[*col];
+         col += subscreen43.height;
          mapnum += mapstep;
       }
 
-      dest += subscreen43.pitch;
+      dest += 1;
    }
 }
 
@@ -262,8 +345,8 @@ static void ST_BlockDrawerS(int x, int y, int startcmap, int mapdir)
 //
 static void ST_chainShadow()
 {
-   ST_BlockDrawerS(277, 190,  9,  1);
-   ST_BlockDrawerS( 19, 190, 23, -1);
+   ST_blockDrawerS(277, 190,  9,  1);
+   ST_blockDrawerS( 19, 190, 23, -1);
 }
 
 //
@@ -319,6 +402,10 @@ static void ST_drawStatBar()
 {
    int temp;
    patch_t *statbar;
+   const char *patch;
+   itemeffect_t *artifact;
+   static int prevleveltime = 0;
+   invbarstate_t &invbarstate = players[displayplayer].invbarstate;
 
    // update the status bar patch for the appropriate game mode
    switch(GameType)
@@ -333,7 +420,35 @@ static void ST_drawStatBar()
 
    V_DrawPatch(34, 160, &subscreen43, statbar);
 
-   // TODO: inventory stuff
+   // ArtifactFlash, it's a gas! Gas! Gas!
+   if(invbarstate.ArtifactFlash)
+   {
+      V_DrawPatch(180, 161, &subscreen43, PatchBLACKSQ);
+
+      temp = W_GetNumForName(DEH_String("useartia")) + invbarstate.ArtifactFlash - 1;
+
+      V_DrawPatch(182, 161, &subscreen43, PatchLoader::CacheNum(wGlobalDir, temp, PU_CACHE));
+      if(leveltime != prevleveltime)
+      {
+         invbarstate.ArtifactFlash--;
+         prevleveltime = leveltime;
+      }
+   }
+   // It's safety checks all the way down!
+   else if(plyr->inventory[plyr->inv_ptr].amount)
+   {
+      if((artifact = E_EffectForInventoryIndex(plyr, plyr->inv_ptr)))
+      {
+         patch = artifact->getString("icon", nullptr);
+         if(estrnonempty(patch) && artifact->getInt("invbar", 0))
+         {
+            V_DrawPatch(179, 160, &subscreen43,
+                        PatchLoader::CacheName(wGlobalDir, patch,
+                                               PU_CACHE, lumpinfo_t::ns_sprites));
+            ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), 209, 182, false);
+         }
+      }
+   }
 
    // draw frags or health
    if(GameType == gt_dm)
@@ -361,11 +476,71 @@ static void ST_drawStatBar()
    if(E_GetItemOwnedAmountName(plyr, ARTI_KEYBLUE) > 0)
       V_DrawPatch(153, 180, &subscreen43, PatchLoader::CacheName(wGlobalDir, "BKEYICON", PU_CACHE));
 
-   // TODO: ammo icon stuff
    // draw ammo amount
-   itemeffect_t *ammo = P_GetReadyWeapon(plyr)->ammo;
+   itemeffect_t *ammo = plyr->readyweapon->ammo;
    if(ammo)
+   {
+      V_DrawPatch(108, 161, &subscreen43, PatchBLACKSQ);
+      patch = ammo->getString("icon", "");
+      if(estrnonempty(patch))
+      {
+         V_DrawPatch(111, 172, &subscreen43,
+                     PatchLoader::CacheName(wGlobalDir, patch, PU_CACHE));
+      }
       ST_drawInvNum(E_GetItemOwnedAmount(plyr, ammo), 136, 162);
+   }
+}
+
+static void ST_drawInvBar()
+{
+   constexpr int ST_INVBARBGX = 34; // You'd think it'd be (SCREENWIDTH - 248) / 2 (= 36)? Nope.
+   constexpr int ST_INVBARBGY = SCREENHEIGHT - 40; // 31 high but 9 extra pixels
+   constexpr int ST_INVSLOTSTARTX = ST_INVBARBGX + 16;
+
+   const int inv_ptr  = players[displayplayer].inv_ptr;
+   const int leftoffs = inv_ptr >= 7 ? inv_ptr - 6 : 0;
+
+   V_DrawPatch(ST_INVBARBGX, ST_INVBARBGY, &subscreen43,
+               PatchLoader::CacheName(wGlobalDir, "INVBAR", PU_CACHE));
+
+   int i = -1;
+   // E_MoveInventoryCursor returns false when it hits the boundary of the visible inventory,
+   // so it's a useful iterator here.
+   while(E_MoveInventoryCursor(plyr, 1, i) && i < 7)
+   {
+      // Safety check that the player has an inventory item, then that the effect exists
+      // for the selected item, then that there is an associated patch for that effect.
+      if(plyr->inventory[i + leftoffs].amount > 0)
+      {
+         itemeffect_t *artifact = E_EffectForInventoryIndex(plyr, i + leftoffs);
+         if(artifact)
+         {
+            const char *patchname = artifact->getString("icon", nullptr);
+            if(estrnonempty(patchname))
+            {
+               int ns = wGlobalDir.checkNumForName(patchname, lumpinfo_t::ns_global) >= 0 ?
+                           lumpinfo_t::ns_global : lumpinfo_t::ns_sprites;
+               patch_t *patch = PatchLoader::CacheName(wGlobalDir, patchname, PU_CACHE, ns);
+
+               const int xoffs = artifact->getInt("icon.offset.x", 0);
+               const int yoffs = artifact->getInt("icon.offset.y", 0);
+
+               V_DrawPatch(ST_INVSLOTSTARTX + (i * 31) - xoffs, 160 - yoffs,
+                           &subscreen43, patch);
+               ST_DrawSmallHereticNumber(E_GetItemOwnedAmount(plyr, artifact), ST_INVSLOTSTARTX +
+                                         27 + (i * 31), ST_INVBARBGY + 22, false);
+            }
+         }
+      }
+   }
+
+   if(leftoffs)
+      V_DrawPatch(38, 159, &subscreen43, !(leveltime & 4) ? PatchINVLFGEM1 : PatchINVLFGEM2);
+   if(i == 7 && E_CanMoveInventoryCursor(plyr, 1, i + leftoffs - 1))
+      V_DrawPatch(269, 159, &subscreen43, !(leveltime & 4) ? PatchINVRTGEM1 : PatchINVRTGEM2);
+
+   V_DrawPatch(ST_INVSLOTSTARTX + ((inv_ptr - leftoffs) * 31), SCREENHEIGHT - 11,
+               &subscreen43, PatchLoader::CacheName(wGlobalDir, "SELECTBO", PU_CACHE));
 }
 
 //
@@ -378,9 +553,10 @@ static void ST_HticDrawer()
    ST_drawBackground();
    ST_drawLifeChain();
 
-   // TODO: choose whether to draw statbar or inventory bar here
-   // based on whether the inventory is active
-   ST_drawStatBar();
+   if(players[displayplayer].invbarstate.inventory)
+      ST_drawInvBar();
+   else
+      ST_drawStatBar();
 }
 
 //
@@ -390,6 +566,13 @@ static void ST_HticDrawer()
 //
 static void ST_HticFSDrawer()
 {
+   ST_drawBigNumber(plyr->health, 5, 180);
+   if(GameType == gt_dm)
+      ST_drawInvNum(plyr->totalfrags, 45, 185);
+
+   int posx, posy;
+   HU_InventoryGetCurrentBoxHints(posx, posy);
+   HU_InventoryDrawCurrentBox(posx, posy);
 }
 
 //

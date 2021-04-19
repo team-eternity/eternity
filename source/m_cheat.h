@@ -91,6 +91,8 @@ enum cheatnum_e
    CHEAT_HTICPOWERF,
    CHEAT_HTICPOWERR,
    CHEAT_HTICPOWER,
+   CHEAT_HTICGIMME,
+   CHEAT_HTICRAMBO,
 
    // Shared Cheats
    CHEAT_COMP,
@@ -128,12 +130,27 @@ struct cheat_s
 extern cheat_s cheat[CHEAT_NUMCHEATS];
 
 bool M_FindCheats(int key);
-void M_DoCheat(char *cheatname);
-
-void M_AddNukeSpec(int mobjType, void (*func)(Mobj *)); // haleyjd
-void M_CopyNukeSpec(int destType, int srcType);
+void M_DoCheat(const char *cheatname);
+int M_NukeMonsters();
 
 extern int idmusnum;
+
+//
+// Shared both by cheats and by vanilla Heretic demos
+//
+static constexpr char const *hartiNames[] =
+{
+   "ArtiInvulnerability",
+   "ArtiInvisibility",
+   "ArtiHealth",
+   "ArtiSuperHealth",
+   "ArtiTomeOfPower",
+   "ArtiTorch",
+   "ArtiTimeBomb",
+   "ArtiEgg",
+   "ArtiFly",
+   "ArtiTeleport"
+};
 
 #endif
 

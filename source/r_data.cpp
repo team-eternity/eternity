@@ -65,7 +65,7 @@ void R_LoadDoom1();
 // ============================================================================
 // SoM: Moved textures to r_textur.c
 
-void R_InitTextures(void);
+void R_InitTextures();
 
 // killough 4/17/98: make firstcolormaplump,lastcolormaplump external
 int         firstcolormaplump; // killough 4/17/98
@@ -76,7 +76,7 @@ fixed_t     *spritewidth, *spriteoffset, *spritetopoffset;
 // SoM: used by cardboard
 float       *spriteheight;
 // ioanch: portal sprite copying cache info
-sprvertspan_t **r_sprvertspan;
+spritespan_t **r_spritespan;
 
 //
 // R_InitSpriteLumps
@@ -85,7 +85,7 @@ sprvertspan_t **r_sprvertspan;
 // so the sprite does not need to be cached completely
 // just for having the header info ready during rendering.
 //
-void R_InitSpriteLumps(void)
+static void R_InitSpriteLumps(void)
 {
    int i;
    patch_t *patch;
@@ -100,14 +100,10 @@ void R_InitSpriteLumps(void)
    // killough 4/9/98: make columnd offsets 32-bit;
    // clean up malloc-ing to use sizeof
    
-   spritewidth = 
-      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritewidth), PU_RENDERER, 0));
-   spriteoffset = 
-      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spriteoffset), PU_RENDERER, 0));
-   spritetopoffset =
-      (fixed_t *)(Z_Malloc(numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, 0));
-   spriteheight = 
-      (float *)(Z_Malloc(numspritelumps * sizeof(float), PU_RENDERER, 0));
+   spritewidth     = emalloctag(fixed_t *, numspritelumps * sizeof(*spritewidth),     PU_RENDERER, nullptr);
+   spriteoffset    = emalloctag(fixed_t *, numspritelumps * sizeof(*spriteoffset),    PU_RENDERER, nullptr);
+   spritetopoffset = emalloctag(fixed_t *, numspritelumps * sizeof(*spritetopoffset), PU_RENDERER, nullptr);
+   spriteheight    = emalloctag(float *,   numspritelumps * sizeof(*spriteheight),    PU_RENDERER, nullptr);
    
    for(i = 0; i < numspritelumps; ++i)
    {
@@ -129,39 +125,48 @@ void R_InitSpriteLumps(void)
 //
 void R_InitSpriteProjSpan()
 {
-   r_sprvertspan = emalloctag(decltype(r_sprvertspan),
-                              numsprites * sizeof(*r_sprvertspan), PU_RENDERER,
+   r_spritespan = emalloctag(decltype(r_spritespan),
+                              numsprites * sizeof(*r_spritespan), PU_RENDERER,
                               nullptr);
    for(int i = 0; i < numsprites; ++i)
    {
       const spritedef_t &sprite = sprites[i];
-      r_sprvertspan[i] = emalloctag(sprvertspan_t *,
-                                    sprite.numframes * sizeof(**r_sprvertspan),
+      r_spritespan[i] = emalloctag(spritespan_t *,
+                                    sprite.numframes * sizeof(**r_spritespan),
                                     PU_RENDERER, nullptr);
       for(int j = 0; j < sprite.numframes; ++j)
       {
          const spriteframe_t &frame = sprite.spriteframes[j];
-         sprvertspan_t &span = r_sprvertspan[i][j];
+         spritespan_t &span = r_spritespan[i][j];
          if(frame.rotate)
          {
             span.bottom = FLT_MAX;
             span.top = -FLT_MAX;
+            span.side = 0;
             for(int16_t lump : frame.lump)
             {
                float height = spriteheight[lump];
-               auto yofs = static_cast<float>(spritetopoffset[lump] >> FRACBITS);
+               auto yofs = M_FixedToFloat(spritetopoffset[lump]);
+               float side = M_FixedToFloat(emax(spritewidth[lump] -
+                                                spriteoffset[lump],
+                                                spriteoffset[lump]));
 
                if(yofs - height < span.bottom)
                   span.bottom = yofs - height;
                if(yofs > span.top)
                   span.top = yofs;
+               if(side > span.side)
+                  span.side = side;
             }
          }
          else
          {
             int16_t lump = frame.lump[0];
-            span.top = static_cast<float>(spritetopoffset[lump] >> FRACBITS);
+            span.top = M_FixedToFloat(spritetopoffset[lump]);
             span.bottom = span.top - spriteheight[lump];
+            span.side = M_FixedToFloat(emax(spritewidth[lump] -
+                                            spriteoffset[lump],
+                                            spriteoffset[lump]));
          }
       }
    }
@@ -177,7 +182,7 @@ static int r_numglobalmaps;
 //
 // killough 4/4/98: Add support for C_START/C_END markers
 //
-void R_InitColormaps()
+static void R_InitColormaps()
 {
    const WadDirectory::namespace_t &ns =
       wGlobalDir.getNamespace(lumpinfo_t::ns_colormaps);
@@ -195,7 +200,7 @@ void R_InitColormaps()
    size_t numbytes = sizeof(*colormaps) * numcolormaps;
    int    cmlump   = W_GetNumForName("COLORMAP");
 
-   colormaps    = emalloctag(lighttable_t **, numbytes, PU_RENDERER, 0);
+   colormaps    = emalloctag(lighttable_t **, numbytes, PU_RENDERER, nullptr);
    colormaps[0] = (lighttable_t *)(wGlobalDir.cacheLumpNum(cmlump, PU_RENDERER));
 
    // colormaps[1] is FOGMAP, if it exists
@@ -372,7 +377,10 @@ void R_InitTranMap(bool force)
             {
                if((err = tot[color] - pal[0][color]*r
                   - pal[1][color]*g - pal[2][color]*b) < best)
-                  best = err, *tp = color;
+               {
+                  best = err;
+                  *tp = color;
+               }
             }
             while(--color >= 0);
          }
@@ -481,7 +489,10 @@ void R_InitSubMap(bool force)
             {
                if((err = tot[color] - pal[0][color]*r
                   - pal[1][color]*g - pal[2][color]*b) < best)
-                  best = err, *tp = color;
+               {
+                  best = err;
+                  *tp = color;
+               }
             }
             while(--color >= 0);
          }
@@ -571,7 +582,7 @@ void R_PrecacheLevel(void)
    
    // Mark floors and ceilings
    for(i = numsectors; --i >= 0; )
-      hitlist[sectors[i].floorpic] = hitlist[sectors[i].ceilingpic] = 1;
+      hitlist[sectors[i].srf.floor.pic] = hitlist[sectors[i].srf.ceiling.pic] = 1;
       
    // Mark walls
    for(i = numsides; --i >= 0; )

@@ -1,4 +1,4 @@
-// Emacs style mode select   -*- C++ -*- 
+// Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
 // Copyright (C) 2013 James Haley et al.
@@ -21,7 +21,7 @@
 //
 //--------------------------------------------------------------------------
 //
-// DESCRIPTION:  
+// DESCRIPTION:
 //    Custom damage types, or "Means of Death" flags.
 //
 //-----------------------------------------------------------------------------
@@ -30,6 +30,7 @@
 #define E_MOD_H__
 
 #include "m_dllist.h"
+#include "m_fixed.h"
 
 //
 // emod structure
@@ -45,9 +46,12 @@ struct emod_t
 
    char *obituary;
    char *selfobituary;
-   bool obitIsBexString;
-   bool selfObitIsBexString;
+   bool obitIsIndirect;
+   bool selfObitIsIndirect;
    bool sourceless;
+
+   fixed_t absolutePush;   // if set, push things by this amount
+   fixed_t absoluteHop;    // if set, hop gravity things by this amount
 
    // For faster damagetype lookups in metatables
    size_t dfKeyIndex;
@@ -58,12 +62,12 @@ emod_t *E_DamageTypeForNum(int num);
 int     E_DamageTypeNumForName(const char *name);
 
 // This is actually in e_things.c but should be prototyped here.
-const char *E_ModFieldName(const char *base, emod_t *mod);
+const char *E_ModFieldName(const char *base, const emod_t *mod);
 
 // EDF-only stuff
 #ifdef NEED_EDF_DEFINITIONS
 
-#define EDF_SEC_MOD "damagetype"
+constexpr const char EDF_SEC_MOD[] = "damagetype";
 
 extern cfg_opt_t edf_dmgtype_opts[];
 

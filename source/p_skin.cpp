@@ -36,7 +36,6 @@
 #include "d_player.h"
 #include "doomstat.h"
 #include "d_main.h"
-#include "info.h"
 #include "p_info.h"
 #include "p_skin.h"
 #include "r_things.h"
@@ -55,12 +54,12 @@
 static int numskins = 0;      // haleyjd 03/22/03
 static int numskinsalloc = 0; // haleyjd 03/22/03
 static int numedfskins;       // haleyjd 11/14/06
-static skin_t **skins = NULL;
+static skin_t **skins = nullptr;
 
-static skin_t **monster_skins = NULL; // haleyjd 09/26/04
+static skin_t **monster_skins = nullptr; // haleyjd 09/26/04
 
-char **spritelist = NULL;
-char *default_skin = NULL;     // name of currently selected skin
+char **spritelist = nullptr;
+char *default_skin = nullptr;     // name of currently selected skin
 
 static const char *skinsoundnames[NUMSKINSOUNDS] =
 {
@@ -76,6 +75,7 @@ static const char *skinsoundnames[NUMSKINSOUNDS] =
    "dsfallht",
    "dsplwdth",
    "dsnoway",
+   "dsjump",
 };
 
 // forward prototypes
@@ -121,7 +121,7 @@ void P_InitSkins(void)
    P_InitMonsterSkins();
 
    // FIXME: problem here with preferences
-   if(default_skin == NULL) 
+   if(default_skin == nullptr) 
    {
       playerclass_t *dpc = E_PlayerClassForName(GameModeInfo->defPClassName);
       default_skin = estrdup(dpc->defaultskin->skinname);
@@ -157,14 +157,14 @@ void P_InitSkins(void)
       if(!skins[i]->edfskin)
       {
          *currentsprite   = skins[i]->spritename;
-         skins[i]->sprite = currentsprite - spritelist;
+         skins[i]->sprite = static_cast<spritenum_t>(currentsprite - spritelist);
          currentsprite++;
       }
       P_ResolveSkinSounds(skins[i]); // haleyjd 10/17/05: resolve sounds
       P_CacheFaces(skins[i]);
    }
 
-   *currentsprite = NULL;     // end in null
+   *currentsprite = nullptr;     // end in null
 }
 
 
@@ -176,13 +176,9 @@ void P_InitSkins(void)
 //
 static void P_AddEDFSkins(void)
 {
-   int i;
-
    // go down every hash chain
-   for(i = 0; i < NUMEDFSKINCHAINS; ++i)
+   for(skin_t *chain : edf_skins)
    {
-      skin_t *chain = edf_skins[i];
-
       while(chain)
       {
          // add the skin only if one of this name doesn't already exist
@@ -217,15 +213,32 @@ static void P_AddSkin(skin_t *newskin)
    numskins++;
 }
 
+//
+// Checks if it's a valid sprite name, to mitigate false finds
+//
+static bool P_isValidSpriteName(const char *name)
+{
+   size_t len = strlen(name);
+   if(len != 6 && len != 8)
+      return false;
+   if(name[4] - 'A' >= MAX_SPRITE_FRAMES || name[5] - '0' > 8)
+      return false;
+   if(len == 8 && (name[6] - 'A' >= MAX_SPRITE_FRAMES || name[7] - '0' > 8))
+      return false;
+   return true;
+}
+
 static void P_AddSpriteLumps(const char *named)
 {
-   int i, n = strlen(named);
+   int i, n = static_cast<int>(strlen(named));
    int numlumps = wGlobalDir.getNumLumps();
    lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
    
    for(i = 0; i < numlumps; i++)
    {
-      if(!strncasecmp(lumpinfo[i]->name, named, n))
+      if(!strncasecmp(lumpinfo[i]->name, named, n) &&
+         lumpinfo[i]->li_namespace == lumpinfo_t::ns_global &&
+         P_isValidSpriteName(lumpinfo[i]->name))
       {
          // mark as sprites so that W_CoalesceMarkedResource
          // will group them as sprites
@@ -236,7 +249,7 @@ static void P_AddSpriteLumps(const char *named)
 
 static skin_t *newskin;
 
-static void P_ParseSkinCmd(char *line)
+static void P_ParseSkinCmd(const char *line)
 {
    int i;
    
@@ -247,66 +260,72 @@ static void P_ParseSkinCmd(char *line)
    
    if(!strncasecmp(line, "name", 4))
    {
-      char *skinname = line+4;
+      const char *skinname = line+4;
       while(*skinname == ' ') 
          skinname++;
+      efree(newskin->skinname);
       newskin->skinname = estrdup(skinname);
+      return;
    }
    if(!strncasecmp(line, "sprite", 6))
    {
-      char *spritename = line+6;
-      while(*spritename == ' ') spritename++;
+      const char *spritename = line+6;
+      while(*spritename == ' ')
+         spritename++;
       strncpy(newskin->spritename, spritename, 4);
+      newskin->spritename[0] = ectype::toUpper(newskin->spritename[0]);
+      newskin->spritename[1] = ectype::toUpper(newskin->spritename[1]);
+      newskin->spritename[2] = ectype::toUpper(newskin->spritename[2]);
+      newskin->spritename[3] = ectype::toUpper(newskin->spritename[3]);
       newskin->spritename[4] = 0;
+      return;
    }
    if(!strncasecmp(line, "face", 4))
    {
-      char *facename = line+4;
-      while(*facename == ' ') facename++;
+      const char *facename = line+4;
+      while(*facename == ' ')
+         facename++;
+      efree(newskin->facename);
       newskin->facename = estrdup(facename);
-      newskin->facename[3] = 0;
+      if(strlen(newskin->facename) > 3)
+         newskin->facename[3] = 0;
+      return;
    }
-
-   // is it a sound?
-   
    for(i = 0; i < NUMSKINSOUNDS; i++)
    {
-      if(!strncasecmp(line, skinsoundnames[i], 
-                      strlen(skinsoundnames[i])))
+      // is it a sound?
+      if(!strncasecmp(line, skinsoundnames[i], strlen(skinsoundnames[i])))
       {                    // yes!
-         char *newsoundname = line + strlen(skinsoundnames[i]);
+         const char *newsoundname = line + strlen(skinsoundnames[i]);
          while(*newsoundname == ' ')
             newsoundname++;
          
-         // FIXME: only increment past DS if DS is provided; otherwise,
-         // the value is a raw sound mnemonic already
-         newsoundname += 2;        // ds
+         if(ectype::toUpper(newsoundname[0]) == 'D' && ectype::toUpper(newsoundname[1]) == 'S')
+            newsoundname += 2;        // ds
          
          newskin->sounds[i] = estrdup(newsoundname);
+         return;
       }
    }
 }
 
 void P_ParseSkin(int lumpnum)
 {
-   char *lump;
-   char *rover;
-   char inputline[256];
-   bool comment;
-   lumpinfo_t **lumpinfo = wGlobalDir.getLumpInfo();
+   lumpinfo_t *const *lumpinfo = wGlobalDir.getLumpInfo();
 
    // FIXME: revise to use finite-state-automaton parser and qstring buffers
 
-   memset(inputline, 0, 256);
-      
    newskin = estructalloc(skin_t, 1);
 
-   newskin->spritename = (char *)(Z_Malloc(5, PU_STATIC, 0));
-   strncpy(newskin->spritename, lumpinfo[lumpnum+1]->name, 4);
+   newskin->spritename = emalloctag(char *, 5, PU_STATIC, nullptr);
+   if(lumpnum + 1 < wGlobalDir.getNumLumps())
+      strncpy(newskin->spritename, lumpinfo[lumpnum + 1]->name, 4);
+   else
+      newskin->spritename[0] = 0;
    newskin->spritename[4] = 0;
 
    newskin->facename = estrdup("STF");      // default status bar face
-   newskin->faces    = NULL;
+   newskin->faces    = nullptr;
 
    newskin->type    = SKIN_PLAYER; // haleyjd: it's a player skin
    newskin->edfskin = false;       // haleyjd: it's not an EDF skin
@@ -314,17 +333,28 @@ void P_ParseSkin(int lumpnum)
    // set sounds to defaults
    // haleyjd 10/17/05: nope, can't do it here now, see top of file
 
-   lump = (char *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));  // get the lump
-   
-   rover = lump; 
-   comment = false;
-
-   while(rover < lump + lumpinfo[lumpnum]->size)
+   auto lump = (char *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));  // get the lump
+   if(!lump)
    {
-      if((*rover=='/' && *(rover+1)=='/') ||        // '//'
-         (*rover==';') || (*rover=='#') )           // ';', '#'
+      efree(newskin->facename);
+      efree(newskin->spritename);
+      efree(newskin);
+      return;
+   }
+   
+   const char *rover = lump;
+   bool comment = false;
+
+   char inputline[256] = {};
+   const char *lumpend = lump + lumpinfo[lumpnum]->size;
+   while(rover < lumpend)
+   {
+      if((*rover == '/' && rover + 1 < lumpend && *(rover + 1) == '/') ||        // '//'
+         *rover == ';' || *rover == '#')           // ';', '#'
+      {
          comment = true;
-      if(*rover>31 && !comment)
+      }
+      if(*rover > 31 && !comment)
       {
          psnprintf(inputline, sizeof(inputline), "%s%c", 
                    inputline, (*rover == '=') ? ' ' : *rover);
@@ -332,7 +362,7 @@ void P_ParseSkin(int lumpnum)
       if(*rover=='\n') // end of line
       {
          P_ParseSkinCmd(inputline);    // parse the line
-         memset(inputline, 0, 256);
+         memset(inputline, 0, sizeof(inputline));
          comment = false;
       }
       rover++;
@@ -340,6 +370,17 @@ void P_ParseSkin(int lumpnum)
    P_ParseSkinCmd(inputline);    // parse the last line
    
    Z_ChangeTag(lump, PU_CACHE); // mark lump purgable
+
+   if(!newskin->skinname || !*newskin->spritename)
+   {
+      // Reject unnamed or last skin in file without mention
+      for(int i = 0; i < earrlen(newskin->sounds); ++i)
+         efree(newskin->sounds[i]);
+      efree(newskin->facename);
+      efree(newskin->spritename);
+      efree(newskin);
+      return;
+   }
    
    P_AddSkin(newskin);
    P_AddSpriteLumps(newskin->spritename);
@@ -356,7 +397,7 @@ static void P_CacheFaces(skin_t *skin)
    }
    else
    {
-      skin->faces = (patch_t **)(Z_Malloc(ST_NUMFACES * sizeof(patch_t *), PU_STATIC, 0));
+      skin->faces = emalloctag(patch_t **, ST_NUMFACES * sizeof(patch_t *), PU_STATIC, nullptr);
       ST_CacheFaces(skin->faces, skin->facename);
    }
 }
@@ -376,7 +417,7 @@ static skin_t *P_SkinForName(const char *s)
       s++;
    
    if(!skins)
-      return NULL;
+      return nullptr;
 
    for(i = 0; i < numskins; i++)
    {
@@ -384,7 +425,7 @@ static skin_t *P_SkinForName(const char *s)
          return skins[i];
    }
 
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -440,7 +481,7 @@ static skin_t *P_PrevSkin(int player)
    }
          
    if(skinnum == numskins)
-      return NULL;         // not found (?)
+      return nullptr;         // not found (?)
 
    --skinnum;      // previous skin
    
@@ -464,7 +505,7 @@ static skin_t *P_NextSkin(int player)
    }
 
    if(skinnum == numskins)
-      return NULL;         // not found (?)
+      return nullptr;         // not found (?)
    
    ++skinnum;      // next skin
    
@@ -484,7 +525,7 @@ static skin_t *P_NextSkin(int player)
 static void P_InitMonsterSkins(void)
 {
    if(!monster_skins)
-      monster_skins = (skin_t **)(Z_Calloc(NUMSPRITES, sizeof(skin_t *), PU_STATIC, 0));
+      monster_skins = ecalloctag(skin_t **, NUMSPRITES, sizeof(skin_t *), PU_STATIC, nullptr);
 }
 
 //
@@ -529,7 +570,7 @@ CONSOLE_COMMAND(listskins, 0)
 #define isvowel(c)              \
         ( (c)=='a' || (c)=='e' || (c)=='i' || (c)=='o' || (c)=='u' )
 
-VARIABLE_STRING(default_skin, NULL, 256);
+VARIABLE_STRING(default_skin, nullptr, 256);
 
         // player skin
 CONSOLE_NETVAR(skin, default_skin, cf_handlerset, netcmd_skin)

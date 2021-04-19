@@ -41,8 +41,11 @@ bool in_textmode = true;        // game in graphics mode yet?
 
 // compatibility with old engines (monster behavior, metrics, etc.)
 int compatibility, default_compatibility;          // killough 1/31/98
+bool vanilla_mode;   // ioanch: store -vanilla in a global flag
 
 int comp[COMP_TOTAL], default_comp[COMP_TOTAL];    // killough 10/98
+int level_compat_comp[COMP_TOTAL];  // ioanch: level compat active?
+bool level_compat_compactive[COMP_TOTAL]; // // true if use level_compat_comp instead of comp
 
 int demo_version;           // killough 7/19/98: Boom version of demo
 int demo_subversion;        // haleyjd 06/17/01: subversion for betas
@@ -73,6 +76,8 @@ int default_monsters_remember=1;
 
 int monster_infighting=1;       // killough 7/19/98: monster<=>monster attacks
 int default_monster_infighting=1;
+
+bool deh_species_infighting;  // Dehacked setting: from Chocolate-Doom
 
 int monster_friction=1;       // killough 10/98: monsters affected by friction 
 int default_monster_friction=1;
@@ -106,7 +111,7 @@ int help_friends, default_help_friends;
 
 int flashing_hom;     // killough 10/98
 
-int doom_weapon_toggles; // killough 10/98
+int weapon_hotkey_cycling; // killough 10/98
 
 int monkeys, default_monkeys;
 

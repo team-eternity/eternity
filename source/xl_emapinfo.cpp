@@ -31,6 +31,7 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "e_lib.h"
+#include "in_lude.h"
 #include "m_qstr.h"
 #include "metaapi.h"
 #include "v_misc.h"
@@ -124,7 +125,7 @@ protected:
 public:
    XLEMapInfoParser() 
       : XLParser("EMAPINFO"), state(STATE_EXPECTHEADER), nextstate(-1),
-        isGlobal(true), curInfo(NULL), key(), value(), allowMultiValue(false)
+        isGlobal(true), curInfo(nullptr), key(), value(), allowMultiValue(false)
    {
    }
 
@@ -155,7 +156,7 @@ void XLEMapInfoParser::startLump()
 {
    state     = STATE_EXPECTHEADER;
    nextstate = -1;
-   curInfo   = NULL;
+   curInfo   = nullptr;
    key       = "";
    value     = "";
    allowMultiValue = false;
@@ -352,7 +353,7 @@ MetaTable *XL_EMapInfoForMapName(const char *mapname)
 //
 // XL_EMapInfoForMapNum
 //
-// Retrieve and EMAPINFO definition by episode and map. Send in episode
+// Retrieve an EMAPINFO definition by episode and map. Send in episode
 // 0 for MAPxy maps.
 //
 MetaTable *XL_EMapInfoForMapNum(int episode, int map)
@@ -365,6 +366,29 @@ MetaTable *XL_EMapInfoForMapNum(int episode, int map)
       mapname.Printf(9, "MAP%02d", map);
 
    return emapInfoTable.getObjectKeyAndTypeEx<MetaTable>(mapname.constPtr());
+}
+
+//
+// XL_MapNameForLevelNum
+//
+// Retrieve the map name by EMAPINFO levelnum.
+//
+const char* XL_MapNameForLevelNum(int map)
+{
+   MetaTable* level = nullptr;
+   qstring levelnum;
+
+   levelnum.Printf(2, "%d", map);
+
+   while((level = emapInfoTable.getNextTypeEx(level)))
+   {
+      auto str = level->getString("levelnum", "");
+
+      if(*str && strcmp(str, levelnum.constPtr()) == 0)
+         return level->getKey();
+   }
+
+   return nullptr;
 }
 
 //
@@ -398,6 +422,32 @@ MetaTable *XL_ParseLevelInfo(WadDirectory *dir, int lumpnum)
    return parser.getCurrentInfo();
 }
 
+//
+// Builds the intermission info from EMAPINFO
+//
+void XL_BuildInterEMapInfo()
+{
+   MetaTable *level = nullptr;
+   while((level = emapInfoTable.getNextTypeEx(level)))
+   {
+      intermapinfo_t &info = IN_GetMapInfo(level->getKey());
+
+      auto str = level->getString("inter-levelname", "");
+      if(*str)
+         info.levelname = str;
+
+      str = level->getString("levelpic", "");
+      if(*str)
+         info.levelpic = str;
+
+      // TODO: enterpic not implemented yet
+
+      str = level->getString("interpic", "");
+      if(*str)
+         info.exitpic = str;
+   }
+}
+
 //=============================================================================
 //
 // Console Commands
@@ -416,10 +466,10 @@ CONSOLE_COMMAND(xl_dumpemapinfo, 0)
       return;
    }
 
-   MetaTable *mapInfo = NULL;
+   MetaTable *mapInfo = nullptr;
    if((mapInfo = XL_EMapInfoForMapName(Console.argv[0]->constPtr())))
    {
-      const MetaObject *obj = NULL;
+      const MetaObject *obj = nullptr;
 
       C_Printf("EMAPINFO Entry for %s:\n", mapInfo->getKey());
       while((obj = mapInfo->tableIterator(obj)))

@@ -82,7 +82,7 @@
 
 	NSArray *pwadTypes;
 	NSMutableArray *pwadArray;
-  	NSMutableSet *iwadSet;  // set of IWADs
+  	NSMutableArray *iwadSet;  // set of IWADs
 	
 	ELCommandLineArray *param;
 	char *callName;
@@ -125,6 +125,7 @@
 -(IBAction)showUserInFinder:(id)sender;
 -(IBAction)showFileInFinder:(id)sender;
 -(IBAction)accessBaseFolder:(id)sender;
+-(IBAction)showConsole:(id)sender;
 
 -(IBAction)makeCheckboxUndo:(id)sender;
 

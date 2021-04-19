@@ -46,7 +46,7 @@ struct patch_t;
 //
 
 // Called by main loop.
-bool ST_Responder(event_t* ev);
+bool ST_Responder(const event_t* ev);
 
 // Called by main loop.
 void ST_Ticker(void);
@@ -61,6 +61,10 @@ void ST_Start(void);
 void ST_Init(void);
 
 void ST_CacheFaces(patch_t **faces, const char *facename);
+
+// Others
+void ST_DrawSmallHereticNumber(int val, int x, int y, bool fullscreen);
+bool ST_IsHUDLike();
 
 // haleyjd 10/12/03: structure for gamemode-independent status bar interface
 

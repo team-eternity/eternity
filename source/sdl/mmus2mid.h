@@ -42,26 +42,29 @@ typedef enum
 // some names for integers of various sizes, all unsigned 
 typedef uint8_t  UBYTE;  // a one-byte int 
 typedef uint16_t UWORD; // a two-byte int 
+#ifndef BASETYPES
 // proff: changed from unsigned int to unsigned long to avoid warning
 typedef uint32_t ULONG;   // a four-byte int (assumes int 4 bytes) 
+#endif
 
 #ifndef DJGPP // proff: This is from allegro.h
 #define MIDI_TRACKS           32       
 
-typedef struct MIDI                    /* a midi file */
+struct MIDI                    /* a midi file */
 {
    int divisions;                      /* number of ticks per quarter note */
    struct {
       unsigned char *data;             /* MIDI message stream */
       size_t len;                      /* length of the track data */
-   } track[MIDI_TRACKS]; 
-} MIDI;
+   } track[MIDI_TRACKS];
+};
 #endif // DJGPP
 
 bool mmuscheckformat(UBYTE *mus, int size);
 int  mmus2mid(UBYTE *mus, size_t size, MIDI *mid, UWORD division, int nocomp);
-int  MIDIToMidi(MIDI *mididata, UBYTE **mid, int *midlen);
+int  MIDIToMidi(const MIDI *mididata, UBYTE **mid, int *midlen);
 int  MidiToMIDI(UBYTE *mid,MIDI *mididata);
+void FreeMIDIData(MIDI *mididata);
 
 #endif
 

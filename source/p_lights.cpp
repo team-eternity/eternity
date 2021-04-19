@@ -61,6 +61,7 @@ void FireFlickerThinker::Think()
       return;
    
    amount = (P_Random(pr_lights)&3)*16;
+   M_RandomLog("FireFlickerThinker\n");
    
    if(this->sector->lightlevel - amount < this->minlight)
       this->sector->lightlevel = this->minlight;
@@ -102,11 +103,13 @@ void LightFlashThinker::Think()
    {
       this->sector->lightlevel = this->minlight;
       this->count = (P_Random(pr_lights)&this->mintime)+1;
+      M_RandomLog("LightFlashThinkerMax %d\n", (int)(sector - sectors));
    }
    else
    {
       this->sector->lightlevel = this->maxlight;
       this->count = (P_Random(pr_lights)&this->maxtime)+1;
+      M_RandomLog("LightFlashThinker %d\n", (int)(sector - sectors));
    }
 }
 
@@ -346,7 +349,7 @@ void LightFadeThinker::Think()
    if(done)
    {
       if(this->type == fade_once)
-         this->removeThinker();
+         this->remove();
       else
       {
          // reverse glow direction
@@ -557,6 +560,7 @@ void P_SpawnLightFlash(sector_t *sector)
    flash->maxtime = 64;
    flash->mintime = 7;
    flash->count = (P_Random(pr_lights)&flash->maxtime)+1;
+   M_RandomLog("SpawnLightFlash\n");
 }
 
 //
@@ -590,7 +594,10 @@ void P_SpawnStrobeFlash(sector_t *sector, int darkTime, int brightTime,
    sector->special &= ~LIGHT_MASK; //jff 3/14/98 clear non-generalized sector type
    
    if(!inSync)
+   {
       flash->count = (P_Random(pr_lights)&7)+1;
+      M_RandomLog("SpawnStrobeFlash\n");
+   }
    else
       flash->count = 1;
 }
@@ -615,7 +622,10 @@ void P_SpawnPSXStrobeFlash(sector_t *sector, int speed, bool inSync)
       flash->minlight = 0;
 
    if(!inSync)
+   {
       flash->count = (P_Random(pr_lights) & 7) + 1;
+      M_RandomLog("SpawnPSXStrobeFlash\n");
+   }
    else
       flash->count = 1;
 }
@@ -693,7 +703,7 @@ void P_SpawnPSXGlowingLight(sector_t *sector, psxglow_e glowtype)
 int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
                           int brightTime, bool isParam)
 {
-   int   secnum;
+   int   secnum = -1;
    sector_t* sec;
 
    bool manual = false;
@@ -705,7 +715,6 @@ int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
       goto manualLight;
    }
    
-   secnum = -1;
    // start lights strobing in all sectors tagged same as line
    while(!manual && (secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
    {
@@ -732,7 +741,7 @@ int EV_StartLightStrobing(const line_t *line, int tag, int darkTime,
 //
 int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 {
-   int j;
+   int j = -1;
    // search sectors for those with same tag as activating line
    
    // MaxW: Param tag0 support
@@ -747,7 +756,7 @@ int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
    }
 
    // killough 10/98: replaced inefficient search with fast search
-   for(j = -1; (j = P_FindSectorFromTag(tag, j)) >= 0; )
+   while((j = P_FindSectorFromTag(tag, j)) >= 0)
    {
       sector = sectors + j;
 
@@ -786,7 +795,7 @@ int EV_TurnTagLightsOff(const line_t* line, int tag, bool isParam)
 //
 int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
 {
-   int i;
+   int i = -1;
    
    // search all sectors for ones with same tag as activating line
 
@@ -802,20 +811,20 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
    }
 
    // killough 10/98: replace inefficient search with fast search
-   for(i = -1; (i = P_FindSectorFromTag(tag, i)) >= 0;)
+   while((i = P_FindSectorFromTag(tag, i)) >= 0)
    {
       sector = sectors+i;
 
    manualLight:
       ;
       sector_t *temp;
-      int j, tbright = bright; //jff 5/17/98 search for maximum PER sector
+      int tbright = bright; //jff 5/17/98 search for maximum PER sector
       
       // bright = 0 means to search for highest light level surrounding sector
       
       if(!bright)
       {
-         for(j = 0;j < sector->linecount; j++)
+         for(int j = 0;j < sector->linecount; j++)
          {
             if((temp = getNextSector(sector->lines[j],sector)) &&
                temp->lightlevel > tbright)
@@ -828,7 +837,7 @@ int EV_LightTurnOn(const line_t *line, int tag, int bright, bool isParam)
       //jff 5/17/98 unless compatibility optioned 
       //then maximum near ANY tagged sector
       
-      if(comp[comp_model])
+      if(getComp(comp_model))
          bright = tbright;
 
       if(manual)
@@ -904,7 +913,7 @@ int EV_SetLight(const line_t *line, int tag, setlight_e type, int lvl)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = eindex(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -963,7 +972,7 @@ int EV_FadeLight(const line_t *line, int tag, int destvalue, int speed)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = eindex(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -1023,7 +1032,7 @@ int EV_GlowLight(const line_t *line, int tag, int maxval, int minval, int speed)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = eindex(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -1076,7 +1085,7 @@ int EV_StrobeLight(const line_t *line, int tag,
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = eindex(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -1122,7 +1131,7 @@ int EV_FlickerLight(const line_t *line, int tag, int maxval, int minval)
    {
       if(!line->backsector)
          return rtn;
-      i = line->backsector - sectors;
+      i = eindex(line->backsector - sectors);
       backside = true;
       goto dobackside;
    }
@@ -1140,6 +1149,7 @@ dobackside:
       flash->maxtime  = 64;
       flash->mintime  = 7;
       flash->count    = (P_Random(pr_lights) & flash->maxtime) + 1;
+      M_RandomLog("EVFlickerLight\n");
 
       flash->sector->lightlevel = flash->maxlight;
 

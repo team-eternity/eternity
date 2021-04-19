@@ -58,7 +58,9 @@ struct maplumpindex_t
 enum
 {
    // colormap has been set by UDMF or ExtraData
-   UDMF_SECTOR_INIT_COLORMAPPED = 1,
+   UDMF_SECTOR_INIT_COLOR_TOP = 1,
+   UDMF_SECTOR_INIT_COLOR_MIDDLE = 2,
+   UDMF_SECTOR_INIT_COLOR_BOTTOM = 4,
 };
 
 //
@@ -191,6 +193,7 @@ public:
    bool loadSidedefs2();
    bool loadThings();
 
+   bool checkForCompatibilityFlag(qstring nstext);
    bool parse(WadDirectory &setupwad, int lump);
 
    qstring error() const;
@@ -259,7 +262,7 @@ private:
       bool translucent, jumpover, blockfloaters;   // Strife
 
       // Activation specials
-      bool playercross, playeruse, monstercross, monsteruse, impact, playerpush,
+      bool playercross, playeruse, monstercross, monsteruse, impact, monstershoot, playerpush,
       monsterpush, missilecross, repeatspecial, polycross;
 
       int special, arg[5];       // linedef special and args
@@ -332,6 +335,15 @@ private:
       double rotationfloor;
       double rotationceiling;
 
+      // Brand new UDMF scroller properties
+      double scroll_ceil_x;
+      double scroll_ceil_y;
+      qstring scroll_ceil_type;
+
+      double scroll_floor_x;
+      double scroll_floor_y;
+      qstring scroll_floor_type;
+
       bool secret;
       int friction;
 
@@ -349,6 +361,9 @@ private:
       int lightceiling;
       bool lightfloorabsolute;
       bool lightceilingabsolute;
+      bool phasedlight;
+      bool lightsequence;
+      bool lightseqalt;
 
       qstring colormaptop;
       qstring colormapmid;
@@ -374,6 +389,7 @@ private:
       bool         portal_ceil_blocksound;
       bool         portal_ceil_useglobaltex;
       qstring      portal_ceil_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
+      bool         portal_ceil_attached;
       double       alphaceiling;
 
       // ED's portalflags.floor, and overlayalpha.floor
@@ -383,17 +399,19 @@ private:
       bool         portal_floor_blocksound;
       bool         portal_floor_useglobaltex;
       qstring      portal_floor_overlaytype; // OVERLAY and ADDITIVE consolidated into a single property
+      bool         portal_floor_attached;
       double       alphafloor;
 
       int          portalceiling;   // floor portal id
       int          portalfloor;     // floor portal id
 
       USector() : xscalefloor(1.0), yscalefloor(1.0), xscaleceiling(1.0), yscaleceiling(1.0),
-         friction(-1), damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
+         scroll_ceil_type("none"), scroll_floor_type("none"), friction(-1), damageinterval(32),
+         damagetype("Unknown"), floorterrain("@flat"), ceilingterrain("@flat"),
          colormaptop("@default"), colormapmid("@default"), colormapbottom("@default"),
+         lightlevel(160),
          portal_ceil_overlaytype("none"), alphaceiling(1.0),
-         portal_floor_overlaytype("none"), alphafloor(1.0),
-         lightlevel(160)
+         portal_floor_overlaytype("none"), alphafloor(1.0)
       {
       }
    };
@@ -418,6 +436,7 @@ private:
    };
 
    void setData(const char *data, size_t size);
+   void reset();
 
    void readFixed(fixed_t &target) const;
    void requireFixed(fixed_t &target, bool &flagtarget) const;

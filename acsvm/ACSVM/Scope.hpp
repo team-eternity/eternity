@@ -51,13 +51,13 @@ namespace ACSVM
 
       void lockStrings() const;
 
-      void loadState(std::istream &in);
+      void loadState(Serial &in);
 
       void refStrings() const;
 
       void reset();
 
-      void saveState(std::ostream &out) const;
+      void saveState(Serial &out) const;
 
       void unlockStrings() const;
 
@@ -104,13 +104,13 @@ namespace ACSVM
 
       void lockStrings() const;
 
-      void loadState(std::istream &in);
+      void loadState(Serial &in);
 
       void refStrings() const;
 
       void reset();
 
-      void saveState(std::ostream &out) const;
+      void saveState(Serial &out) const;
 
       void unlockStrings() const;
 
@@ -188,7 +188,7 @@ namespace ACSVM
 
       bool isScriptActive(Script *script);
 
-      void loadState(std::istream &in);
+      void loadState(Serial &in);
 
       void lockStrings() const;
 
@@ -196,7 +196,7 @@ namespace ACSVM
 
       void reset();
 
-      void saveState(std::ostream &out) const;
+      void saveState(Serial &out) const;
 
       bool scriptPause(Script *script);
       bool scriptPause(ScriptName name, ScopeID scope);
@@ -233,11 +233,11 @@ namespace ACSVM
    private:
       struct PrivData;
 
-      void loadModules(std::istream &in);
-      void loadThreads(std::istream &in);
+      void loadModules(Serial &in);
+      void loadThreads(Serial &in);
 
-      void saveModules(std::ostream &out) const;
-      void saveThreads(std::ostream &out) const;
+      void saveModules(Serial &out) const;
+      void saveThreads(Serial &out) const;
 
       PrivData *pd;
    };
@@ -258,13 +258,13 @@ namespace ACSVM
 
       void import();
 
-      void loadState(std::istream &in);
+      void loadState(Serial &in);
 
       void lockStrings() const;
 
       void refStrings() const;
 
-      void saveState(std::ostream &out) const;
+      void saveState(Serial &out) const;
 
       void unlockStrings() const;
 

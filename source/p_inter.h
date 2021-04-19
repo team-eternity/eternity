@@ -29,11 +29,26 @@
 
 struct player_t;
 class  Mobj;
+class  MetaTable;
+typedef MetaTable itemeffect_t;
 
 // follow a player exlusively for 3 seconds
 #define BASETHRESHOLD   (100)
 
-bool P_GivePower(player_t *, int);
+enum
+{
+   GOD_BREACH_DAMAGE = 10000, // common damage that bypasses invulnerability
+};
+
+bool P_GiveAmmoPickup(player_t *, const itemeffect_t *, bool, int);
+bool P_GiveBody(player_t *, const itemeffect_t *);
+bool P_GiveArmor(player_t *, const itemeffect_t *);
+// MaxW 2016/07/23: P_GivePower is no longer required for external use;
+// previously it was used in m_cheats, but the CheatX powereffects mean
+// that P_GivePowerForItem can be used.
+bool P_GivePowerForItem(player_t *, const itemeffect_t *);
+
+bool P_GivePower(player_t *player, int power, int duration, bool additiveTime);
 void P_TouchSpecialThing(Mobj *special, Mobj *toucher);
 void P_DamageMobj(Mobj *target,Mobj *inflictor,Mobj *source,int damage,int mod);
 void P_DropItems(Mobj *actor, bool tossitems);
@@ -52,9 +67,8 @@ bool EV_DoHealThing(Mobj *actor, int amount, int max);
 
 // killough 5/2/98: moved from d_deh.c, g_game.c, m_misc.c, others:
 
-extern int god_health;   // Ty 03/09/98 - deh support, see also p_inter.c
+extern int god_health_override;   // Ty 03/09/98 - deh support, see also p_inter.c
 // Ty 03/13/98 - externalized initial settings for respawned player
-extern int god_health;
 extern int bfgcells;
 
 // haleyjd 08/01/04: special inflictor types
@@ -63,6 +77,7 @@ typedef enum
    INFLICTOR_NONE,
    INFLICTOR_MINOTAUR,  // minotaur charge
    INFLICTOR_WHIRLWIND, // whirlwinds
+   INFLICTOR_MACEBALL,  // powered mace ball
    INFLICTOR_NUMTYPES
 } inflictor_type_e;
 

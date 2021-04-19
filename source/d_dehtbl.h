@@ -22,24 +22,24 @@
 
 struct actionargs_t;
 
-typedef struct deh_bexptr_s
+struct deh_bexptr
 {
    void (*cptr)(actionargs_t *); // actual pointer to the subroutine
    const char *lookup;           // mnemonic lookup string to be specified in BEX
    int next;                     // haleyjd: for bex hash chaining   
-} deh_bexptr;
+};
 
 extern deh_bexptr deh_bexptrs[]; // still needed in d_deh.c
 extern int num_bexptrs;
 
-typedef struct dehstr_s
+struct dehstr_t
 {
    const char **ppstr;   // doubly indirect pointer to string   
    const char *lookup;   // pointer to lookup string name
    const char *original; // haleyjd 10/08/06: original string
    size_t bnext;         // haleyjd: for bex hash chaining (by mnemonic)
    size_t dnext;         // haleyjd: for deh hash chaining (by value)
-} dehstr_t;
+};
 
 extern char **deh_spritenames;
 extern char **deh_musicnames;
@@ -69,7 +69,7 @@ struct dehflags_t
    int index;
 };
 
-#define MAXFLAGFIELDS 4
+inline constexpr int MAXFLAGFIELDS = 5;
 
 enum
 {
@@ -77,6 +77,7 @@ enum
    DEHFLAGS_MODE2,
    DEHFLAGS_MODE3,
    DEHFLAGS_MODE4,
+   DEHFLAGS_MODE5,
    DEHFLAGS_MODE_ALL
 };
 
@@ -87,7 +88,7 @@ struct dehflagset_t
    unsigned int results[MAXFLAGFIELDS];
 };
 
-dehflags_t   *deh_ParseFlag(dehflagset_t *flagset, const char *name);
+dehflags_t   *deh_ParseFlag(const dehflagset_t *flagset, const char *name);
 dehflags_t   *deh_ParseFlagCombined(const char *name);
 void          deh_ParseFlags(dehflagset_t *dehflags, char **strval);
 unsigned int  deh_ParseFlagsSingle(const char *strval, int mode);

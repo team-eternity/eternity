@@ -135,13 +135,13 @@ void V_DrawBackground(const char *patchname, VBuffer *back_dest);
 void V_DrawDistortedBackground(const char* patchname, VBuffer *back_dest);
 
 // SoM: replaced globals with a struct and a single global
-typedef struct cb_video_s
+struct cb_video_t
 {
    // SoM: Not implemented (yet)
    int         bitdepth, pixelsize;
 
    int         width, height;
-   int         pitch;
+   int         pitch; // This is TRANSPOSED, PRE-TRANSFORMED pitch
    fixed_t     widthfrac, heightfrac;
    fixed_t     xscale, yscale;
    fixed_t     xstep, ystep;
@@ -157,7 +157,7 @@ typedef struct cb_video_s
    int y1lookup[201];
    int x2lookup[321];
    int y2lookup[201];
-} cb_video_t;
+};
 
 extern cb_video_t video;
 

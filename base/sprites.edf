@@ -12,100 +12,55 @@
 //    As with all strings, quotations are not required when the string contains
 //    no whitespace or special characters (which sprite names should not).
 
-ifenabled(DOOM)
-
-// Doom Sprites
-spritenames
-{
-  TROO, SHTG, PUNG, PISG, PISF, SHTF, SHT2, CHGG, CHGF, MISG, MISF, SAWG, PLSG,
-  PLSF, BFGG, BFGF, BLUD, PUFF, BAL1, BAL2, PLSS, PLSE, MISL, BFS1, BFE1, BFE2,
-  TFOG, IFOG, PLAY, POSS, SPOS, VILE, FIRE, FATB, FBXP, SKEL, MANF, FATT, CPOS,
-  SARG, HEAD, BAL7, BOSS, BOS2, SKUL, SPID, BSPI, APLS, APBX, CYBR, PAIN, SSWV, 
-  KEEN, BBRN, BOSF, ARM1, ARM2, BAR1, BEXP, FCAN, BON1, BON2, BKEY, RKEY, YKEY,
-  BSKU, RSKU, YSKU, STIM, MEDI, SOUL, PINV, PSTR, PINS, MEGA, SUIT, PMAP, PVIS,
-  CLIP, AMMO, ROCK, BROK, CELL, CELP, SHEL, SBOX, BPAK, BFUG, MGUN, CSAW, LAUN,
-  PLAS, SHOT, SGN2, COLU, SMT2, GOR1, POL2, POL5, POL4, POL3, POL1, POL6, GOR2,
-  GOR3, GOR4, GOR5, SMIT, COL1, COL2, COL3, COL4, CAND, CBRA, COL6, TRE1, TRE2,
-  ELEC, CEYE, FSKU, COL5, TBLU, TGRN, TRED, SMBT, SMGT, SMRT, HDB1, HDB2, HDB3,
-  HDB4, HDB5, HDB6, POB1, POB2, BRS1, TLMP, TLP2
-}
-
-endif()
-
-// Eternity Engine Sprites -- Always defined
-spritenames += { TNT1, DOGS, PLS1, PLS2, UNKN, SPSH, SLDG, LVAS, EERV }
-
-
-// pickup item effects -- format: pickupitem <spritename> { effect = <effect> }
+// pickup item effects -- format:
+//    OLD SYNTAX:
+//    pickupitem <spritename> { effect = <effect> }
+//    NEW SYNTAX
+//    pickupitem <spritename>
+//    {
+//      effect = <effect>
+//      message = <message>
+//      sound = <sound>
+//      flags = <flags>
+//
+//      pfxname = <compatibility name>
+//    }
 //    Sprite-based pickup items are currently limited to one per sprite.
 //    Pickup items may be defined anywhere, and order is unimportant.
 
-ifenabled(DOOM)
+includeifenabled("doom/sprites.edf", "DOOM");
 
-pickupitem ARM1 { effect PFX_GREENARMOR }
-pickupitem ARM2 { effect PFX_BLUEARMOR }
-pickupitem BON1 { effect PFX_POTION }
-pickupitem BON2 { effect PFX_ARMORBONUS }
-pickupitem SOUL { effect PFX_SOULSPHERE }
-pickupitem MEGA { effect PFX_MEGASPHERE }
-pickupitem BKEY { effect PFX_BLUEKEY }
-pickupitem YKEY { effect PFX_YELLOWKEY }
-pickupitem RKEY { effect PFX_REDKEY }
-pickupitem BSKU { effect PFX_BLUESKULL }
-pickupitem YSKU { effect PFX_YELLOWSKULL }
-pickupitem RSKU { effect PFX_REDSKULL }
-pickupitem STIM { effect PFX_STIMPACK }
-pickupitem MEDI { effect PFX_MEDIKIT }
-pickupitem PINV { effect PFX_INVULNSPHERE }
-pickupitem PSTR { effect PFX_BERZERKBOX }
-pickupitem PINS { effect PFX_INVISISPHERE }
-pickupitem SUIT { effect PFX_RADSUIT }
-pickupitem PMAP { effect PFX_ALLMAP }
-pickupitem PVIS { effect PFX_LIGHTAMP }
-pickupitem CLIP { effect PFX_CLIP }
-pickupitem AMMO { effect PFX_CLIPBOX }
-pickupitem ROCK { effect PFX_ROCKET }
-pickupitem BROK { effect PFX_ROCKETBOX }
-pickupitem CELL { effect PFX_CELL }
-pickupitem CELP { effect PFX_CELLPACK }
-pickupitem SHEL { effect PFX_SHELL }
-pickupitem SBOX { effect PFX_SHELLBOX }
-pickupitem BPAK { effect PFX_BACKPACK }
-pickupitem BFUG { effect PFX_BFG }
-pickupitem MGUN { effect PFX_CHAINGUN }
-pickupitem CSAW { effect PFX_CHAINSAW }
-pickupitem LAUN { effect PFX_LAUNCHER }
-pickupitem PLAS { effect PFX_PLASMA }
-pickupitem SHOT { effect PFX_SHOTGUN }
-pickupitem SGN2 { effect PFX_SSG }
+includeifenabled("heretic/sprites.edf", "HERETIC");
 
-endif()
+// Eternity Engine Sprites -- Always defined
+spritenames +=
+{
+   TNT1, DOGS, PLS1, PLS2,
+   BON3, BON4, // evil scepter and unholy bible from beta
+   BLD2, // Doom Retro blood splats
+   // 100 extra sprite names for dehacked patch use (from Doom Retro)
+   SP00, SP01, SP02, SP03, SP04, SP05, SP06, SP07, SP08, SP09,
+   SP10, SP11, SP12, SP13, SP14, SP15, SP16, SP17, SP18, SP19,
+   SP20, SP21, SP22, SP23, SP24, SP25, SP26, SP27, SP28, SP29,
+   SP30, SP31, SP32, SP33, SP34, SP35, SP36, SP37, SP38, SP39,
+   SP40, SP41, SP42, SP43, SP44, SP45, SP46, SP47, SP48, SP49,
+   SP50, SP51, SP52, SP53, SP54, SP55, SP56, SP57, SP58, SP59,
+   SP60, SP61, SP62, SP63, SP64, SP65, SP66, SP67, SP68, SP69,
+   SP70, SP71, SP72, SP73, SP74, SP75, SP76, SP77, SP78, SP79,
+   SP80, SP81, SP82, SP83, SP84, SP85, SP86, SP87, SP88, SP89,
+   SP90, SP91, SP92, SP93, SP94, SP95, SP96, SP97, SP98, SP99,
+   // New to Eternity
+   UNKN, SPSH, SLDG, LVAS, EERV
+}
 
-ifenabled(HERETIC)
+pickupeffect ETCTotalInvisiSphere
+{
+  effects TotalInvisiSphere
+  message "Total Invisibility!"
+  sound   getpow
+  flags   ALWAYSPICKUP
 
-pickupitem AKYY { effect PFX_HGREENKEY }
-pickupitem BKYY { effect PFX_HBLUEKEY }
-pickupitem CKYY { effect PFX_HYELLOWKEY }
-pickupitem PTN1 { effect PFX_HPOTION }
-pickupitem SHLD { effect PFX_SILVERSHIELD }
-pickupitem SHD2 { effect PFX_ENCHANTEDSHIELD }
-pickupitem BAGH { effect PFX_BAGOFHOLDING }
-pickupitem SPMP { effect PFX_HMAP }
-pickupitem AMG1 { effect PFX_GWNDWIMPY }
-pickupitem AMG2 { effect PFX_GWNDHEFTY }
-pickupitem AMM1 { effect PFX_MACEWIMPY }
-pickupitem AMM2 { effect PFX_MACEHEFTY }
-pickupitem AMC1 { effect PFX_CBOWWIMPY }
-pickupitem AMC2 { effect PFX_CBOWHEFTY }
-pickupitem AMB1 { effect PFX_BLSRWIMPY }
-pickupitem AMB2 { effect PFX_BLSRHEFTY }
-pickupitem AMS1 { effect PFX_SKRDWIMPY }
-pickupitem AMS2 { effect PFX_SKRDHEFTY }
-pickupitem AMP1 { effect PFX_PHRDWIMPY }
-pickupitem AMP2 { effect PFX_PHRDHEFTY }
-
-endif()
-
-pickupitem PNS2 { effect PFX_TOTALINVIS }
+  pfxname PFX_TOTALINVIS
+}
 
 

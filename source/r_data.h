@@ -30,6 +30,13 @@
 // Required for: DLListItem
 #include "m_dllist.h"
 
+enum
+{
+    // Flag applied on sector_t topmap/midmap/bottommap when colormap should 
+    // render like in Boom. Remove it to get the real colormap index.
+    COLORMAP_BOOMKIND = 0x80000000, 
+};
+
 // haleyjd 08/30/02: externalized these structures
 
 typedef enum
@@ -39,15 +46,15 @@ typedef enum
 } cmptype_e;
 
 // Generalized graphic
-typedef struct tcomponent_s
+struct tcomponent_t
 {
    int32_t   originx, originy;  // Block origin, which has already accounted
    uint32_t  width, height;     // Unscaled dimensions of the graphic. 
-   
+
    int32_t   lump;              // Lump number of the
-    
+
    cmptype_e type;              // Type of lump
-} tcomponent_t;
+};
 
 
 // SoM: Columns are used inside the texture struct to reference the linear
@@ -104,7 +111,8 @@ struct texture_t
    byte       flatsize;
    
    texcol_t   **columns;     // SoM: width length list of columns
-   byte       *buffer;       // SoM: Linear buffer the texture occupies
+   byte       *bufferalloc;   // ioanch: allocate this one with a leading padding for safety
+   byte       *bufferdata;    // SoM: Linear buffer the texture occupies (ioanch: points to real data)
    
    // New texture system can put either textures or flats (or anything, really)
    // into a texture, so the old patches idea has been scrapped for 'graphics'
@@ -132,14 +140,8 @@ texture_t *R_CacheTexture(int num);
 // SoM: all textures/flats are now stored in a single array (textures)
 // Walls start from wallstart to (wallstop - 1) and flats go from flatstart 
 // to (flatstop - 1)
-extern int         wallstart, wallstop;
 extern int         flatstart, flatstop;
-extern int         numwalls, numflats;
-
-// SoM: This is the number of textures/flats loaded from wads
-// this distinction is important because any textures that EE generates
-// will not be cachable. 
-extern int         numwadtex;
+extern int         numflats;
 
 // SoM: Index of the BAADF00D invalid texture marker
 extern int         badtex;
@@ -172,8 +174,6 @@ int R_CheckForWall(const char *name);
 void R_InitTranMap(bool force);      // killough 3/6/98: translucency initialization
 void R_InitSubMap(bool force);
 int  R_ColormapNumForName(const char *name);      // killough 4/4/98
-
-void R_InitColormaps(void);   // killough 8/9/98
 
 // haleyjd: new global colormap method
 void R_SetGlobalLevelColormap(void);

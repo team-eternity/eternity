@@ -27,10 +27,9 @@
 #ifndef P_PORTAL_H__
 #define P_PORTAL_H__
 
-#include "m_vector.h"
 #include "r_defs.h"
 
-struct polyobj_s;
+struct polyobj_t;
 
 extern bool useportalgroups;
 
@@ -38,7 +37,7 @@ extern bool useportalgroups;
 extern bool gMapHasSectorPortals;
 extern bool gMapHasLinePortals;  // ioanch 20160131: also check line portals
 extern bool *gGroupVisit;  // ioanch 20160121: a global helper array
-extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
+extern const polyobj_t **gGroupPolyobject; // ioanch 20160227
 
 #ifndef R_NOGROUP
 // No link group. I know this means there is a signed limit on portal groups but
@@ -47,9 +46,7 @@ extern const polyobj_s **gGroupPolyobject; // ioanch 20160227
 #define R_NOGROUP -1
 #endif
 
-struct line_t;
 struct linkdata_t;
-struct linkoffset_t;
 struct portal_t;
 struct sector_t;
 
@@ -75,7 +72,6 @@ enum
    paramPortal_linked = 6,
 };
 
-
 //
 // P_PortalGroupCount
 //
@@ -94,27 +90,25 @@ int P_CreatePortalGroup(sector_t *from);
 //
 void P_GatherSectors(sector_t *from, int groupid);
 
+void P_FindPolyobjectSectorCouples();  // called in P_SpawnSpecials
+
 //
 // R_BuildLinkTable
 // Builds the link table. This should only be called after all the portals for
 // the level have been created.
 //
 bool P_BuildLinkTable();
-
-//
-// P_LinkRejectTable
-// Currently just clears each group for every other group.
-//
-void P_LinkRejectTable();
+void P_MarkPortalClusters();
+void P_MarkPolyobjPortalLinks();
 
 void P_InitPortals();
 
-bool EV_PortalTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                       int fromid, int toid);
-void P_LinePortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz,
-                             int fromid, int toid);
+bool EV_SectorPortalTeleport(Mobj *mo, const linkdata_t &ldata);
+void P_PortalDidTeleport(Mobj *mo, fixed_t dx, fixed_t dy, fixed_t dz, int fromid, int toid);
 
 void R_SetSectorGroupID(sector_t *sector, int groupid);
+
+void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 
 //
 // P_CheckCPortalState
@@ -187,84 +181,21 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior);
 //
 void P_SetLPortalBehavior(line_t *line, int newbehavior);
 
-//
-// P_LinePortalCrossing
-//
-// ioanch 20160106: function to trace one or more paths through potential line
-// portals. Needed because some objects are spawned at given offsets from
-// others, and there's no other way to detect line portal change.
-//
-v2fixed_t P_LinePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
-                               int *group = nullptr, bool *passed = nullptr);
+void P_MoveGroupCluster(int outgroup, int ingroup, bool *groupvisit, fixed_t dx,
+                        fixed_t dy, bool setpolyref, const polyobj_t *po);
+void P_ForEachClusterGroup(int outgroup, int ingroup, bool *groupvisit,
+                           bool (*func)(int groupid, void *context), void *context);
 
-template <typename T> 
-inline static v2fixed_t P_LinePortalCrossing(T &&u, fixed_t dx, fixed_t dy, 
-                                             int *group = nullptr)
+fixed_t P_PortalZ(const surface_t &surface);
+inline fixed_t P_PortalZ(surf_e surf, const sector_t &sector)
 {
-   return P_LinePortalCrossing(u.x, u.y, dx, dy, group);
+   return P_PortalZ(sector.srf[surf]);
 }
 
-template <typename T, typename U> 
-inline static v2fixed_t P_LinePortalCrossing(T &&u, U &&dv, int *group = nullptr)
-{
-   return P_LinePortalCrossing(u.x, u.y, dv.x, dv.y, group);
-}
-
-//
-// P_ExtremeSectorAtPoint
-// ioanch 20160107
-//
-sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, bool ceiling, 
-                                 sector_t *preCalcSector = nullptr);
-
-inline static sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, bool ceiling)
-{
-   return P_ExtremeSectorAtPoint(mo->x, mo->y, ceiling, mo->subsector->sector);
-}
-
-//
-// P_TransPortalBlockWalker
-// ioanch 20160107
-//
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              void *data, 
-                              bool (*func)(int x, int y, int groupid, void *data));
-
-// variant with generic callable
-template <typename C> inline static
-bool P_TransPortalBlockWalker(const fixed_t bbox[4], int groupid, bool xfirst,
-                              C &&callable)
-{
-   return P_TransPortalBlockWalker(bbox, groupid, xfirst, &callable, 
-      [](int x, int y, int groupid, void *data)
-   {
-      auto c = static_cast<C *>(data);
-      return (*c)(x, y, groupid);
-   });
-}
-
-//
-//P_SectorTouchesThing
-// ioanch 20160115
-//
-bool P_SectorTouchesThingVertically(const sector_t *sector, const Mobj *mobj);
-
-// ioanch 20160222
-sector_t *P_PointReachesGroupVertically(fixed_t cx, fixed_t cy, fixed_t cmidz,
-                                        int cgroupid, int tgroupid,
-                                        sector_t *csector, fixed_t midzhint);
-inline static sector_t *P_ThingReachesGroupVertically(const Mobj *mo,
-                                                      int groupid,
-                                                      fixed_t midzhint)
-{
-   return P_PointReachesGroupVertically(mo->x, mo->y, mo->z + mo->height / 2,
-      mo->groupid, groupid, mo->subsector->sector, midzhint);
-}
-
-void P_MoveLinkedPortal(portal_t *portal, fixed_t dx, fixed_t dy,
-                        bool movebehind);
-
-bool P_BlockHasLinkedPortals(int index, bool includesectors);
+// Group mappings
+void P_BuildSectorGroupMappings();
+sector_t **P_GetSectorsWithGroupId(int groupid, int *count);
+bool P_PortalLayersByPoly(int groupid1, int groupid2);
 
 #endif
 

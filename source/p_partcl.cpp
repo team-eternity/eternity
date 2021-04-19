@@ -1,7 +1,9 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
+//
+// ZDoom
+// Copyright (C) 1998-2012 Marisa Heit
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,45 +18,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//-----------------------------------------------------------------------------
+//--------------------------------------------------------------------------
 //
-// For portions of code under the ZDoom Source Distribution License:
+// Purpose: Code that ties particle effects to map objects,
+//          adapted from ZDoom. Thanks to Marisa Heit.
+// Authors: James Haley, Ioan Chera
 //
-// Copyright 1998-2012 Randy Heit  All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions 
-// are met:
-//
-// 1. Redistributions of source code must retain the above copyright
-//    notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-//    notice, this list of conditions and the following disclaimer in the
-//    documentation and/or other materials provided with the distribution.
-//
-// 3. The name of the author may not be used to endorse or promote products
-//    derived from this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
-// IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
-// OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-// IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
-// INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
-// NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-//----------------------------------------------------------------------------
-//
-// DESCRIPTION:
-//
-//   Code that ties particle effects to map objects, adapted
-//   from zdoom. Thanks to Randy Heit.
-//
-//----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -64,6 +33,7 @@
 #include "d_main.h"
 #include "doomstat.h"
 #include "doomtype.h"
+#include "e_sound.h"
 #include "e_ttypes.h"
 #include "m_random.h"
 #include "p_chase.h"
@@ -71,6 +41,8 @@
 #include "p_maputl.h"
 #include "p_mobj.h"
 #include "p_partcl.h"
+#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_setup.h"
 #include "p_spec.h"
 #include "r_defs.h"
@@ -121,7 +93,7 @@ static struct particleColorList {
    {&maroon2,   125, 24,  24 },
    {&mdred,     165, 0,   0  },
    {&dred2,     115, 0,   0  },
-   {NULL}
+   {nullptr}
 };
 
 //
@@ -324,10 +296,8 @@ static void P_BFGExplosion(Mobj *actor);
 //
 static void P_GenVelocities(void)
 {
-   int i, j;
-
-   for(i = 0; i < NUMVERTEXNORMALS; ++i) for(j = 0; j < 3; ++j)
-      avelocities[i][j] = M_Random() * 0.01f;
+   for(vec3_t &avelocity : avelocities) for(float &component : avelocity)
+      component = M_Random() * 0.01f;
 }
 
 void P_InitParticleEffects(void)
@@ -355,7 +325,7 @@ void P_InitParticleEffects(void)
 static void P_UnsetParticlePosition(particle_t *ptcl)
 {
    ptcl->seclinks.remove();
-   ptcl->subsector = NULL;
+   ptcl->subsector = nullptr;
 }
 
 //
@@ -378,15 +348,13 @@ void P_ParticleThinker(void)
 {
    int i;
    particle_t *particle, *prev;
-   sector_t *psec;
+   const sector_t *psec;
    fixed_t floorheight;
    
    i = activeParticles;
-   prev = NULL;
+   prev = nullptr;
    while(i != -1) 
    {
-      unsigned int oldtrans;
-      
       particle = Particles + i;
       i = particle->next;
 
@@ -398,7 +366,7 @@ void P_ParticleThinker(void)
       if(!(particle->styleflags & PS_FALLTOGROUND))
       {
          // perform fading
-         oldtrans = particle->trans;
+         unsigned oldtrans = particle->trans;
          particle->trans -= particle->fade;
          
          // is it time to kill this particle?
@@ -410,16 +378,32 @@ void P_ParticleThinker(void)
             else
                activeParticles = i;
             particle->next = inactiveParticles;
-            inactiveParticles = particle - Particles;
+            inactiveParticles = eindex(particle - Particles);
             continue;
          }
       }
 
-      // update and link to new position
-      particle->x += particle->velx;
-      particle->y += particle->vely;
+      // Check for wall portals
+      if(gMapHasLinePortals && particle->velx | particle->vely)
+      {
+         v2fixed_t destination = P_LinePortalCrossing(particle->x, particle->y, 
+            particle->velx, particle->vely);
+         particle->x = destination.x;
+         particle->y = destination.y;
+      }
+      else
+      {
+         // update and link to new position
+         particle->x += particle->velx;
+         particle->y += particle->vely;
+      }
       particle->z += particle->velz;
       P_SetParticlePosition(particle);
+      if(P_IsInVoid(particle->x, particle->y, *particle->subsector))
+      {
+         particle->ttl = 1;
+         particle->trans = 0;
+      }
 
       // apply accelerations
       particle->velx += particle->accx;
@@ -432,25 +416,25 @@ void P_ParticleThinker(void)
 
       // haleyjd 09/04/05: use deep water floor if it is higher
       // than the real floor.
-      floorheight = 
-         (psec->heightsec != -1 && 
-          sectors[psec->heightsec].floorheight > psec->floorheight) ?
-          sectors[psec->heightsec].floorheight :
-          psec->floorheight; 
+      floorheight =
+         (psec->heightsec != -1 &&
+          sectors[psec->heightsec].srf.floor.height > psec->srf.floor.height) ?
+          sectors[psec->heightsec].srf.floor.height :
+          psec->srf.floor.height;
 
       // did particle hit ground, but is now no longer on it?
       if(particle->styleflags & PS_HITGROUND && particle->z != floorheight)
          particle->z = floorheight;
 
       // floor clipping
-      if(particle->z < floorheight && psec->f_pflags & PS_PASSABLE)
+      if(particle->z < floorheight && psec->srf.floor.pflags & PS_PASSABLE)
       {
-         linkdata_t *ldata = R_FPLink(psec);
+         const linkdata_t *ldata = R_FPLink(psec);
 
          P_UnsetParticlePosition(particle);
-         particle->x += ldata->deltax;
-         particle->y += ldata->deltay;
-         particle->z += ldata->deltaz;
+         particle->x += ldata->delta.x;
+         particle->y += ldata->delta.y;
+         particle->z += ldata->delta.z;
          P_SetParticlePosition(particle);
       }
       else if(particle->z < floorheight)
@@ -471,9 +455,62 @@ void P_ParticleThinker(void)
                E_PtclTerrainHit(particle);
          }
       }
+      else if(particle->z > psec->srf.ceiling.height && psec->srf.ceiling.pflags & PS_PASSABLE)
+      {
+         const linkdata_t *ldata = R_CPLink(psec);
+
+         P_UnsetParticlePosition(particle);
+         particle->x += ldata->delta.x;
+         particle->y += ldata->delta.y;
+         particle->z += ldata->delta.z;
+         P_SetParticlePosition(particle);
+      }
       
       prev = particle;
    }
+}
+
+//
+// Various hardcoded particle sounds
+//
+enum particlesound_e
+{
+   particlesound_flies,
+   particlesound_MAX
+};
+static const int particlesounds[particlesound_MAX] =
+{
+   sfx_eefly
+};
+
+//
+// Maintains a particle's associated ambient sound
+//
+static void P_maintainParticleAmbientSound(Mobj *actor, particlesound_e psoundid)
+{
+   int dehnum = particlesounds[psoundid];
+   if(S_CheckSoundPlaying(actor, dehnum))
+      return;
+   S_StartSoundLooped(actor, dehnum);
+   actor->intflags |= MIF_MAYPLAYPARTICLESOUNDS;
+}
+
+//
+// Stops a particle's associated ambient sound. Special psoundid MAX disables ALL sounds.
+//
+static void P_stopParticleAmbientSounds(Mobj *actor, particlesound_e psoundid)
+{
+   if(!(actor->intflags & MIF_MAYPLAYPARTICLESOUNDS)) // early out
+      return;
+   if(psoundid == particlesound_MAX)
+   {
+      for(int i = 0; i < particlesound_MAX; ++i)
+         S_StopSoundId(actor, particlesounds[i]);
+      actor->intflags &= ~MIF_MAYPLAYPARTICLESOUNDS;  // guaranteed not to be making noise now
+      return;
+   }
+   S_StopSoundId(actor, particlesounds[psoundid]);
+   // Do not clear the flag; other sounds might be playing.
 }
 
 void P_RunEffects(void)
@@ -484,12 +521,12 @@ void P_RunEffects(void)
    if(camera)
    {
       subsector_t *ss = R_PointInSubsector(camera->x, camera->y);
-      snum = (ss->sector - sectors) * numsectors;
+      snum = eindex(ss->sector - sectors) * numsectors;
    }
    else
    {
       subsector_t *ss = players[displayplayer].mo->subsector;
-      snum = (ss->sector - sectors) * numsectors;
+      snum = eindex(ss->sector - sectors) * numsectors;
    }
 
    while((th = th->next) != &thinkercap)
@@ -497,13 +534,17 @@ void P_RunEffects(void)
       Mobj *mobj;
       if((mobj = thinker_cast<Mobj *>(th)))
       {
-         int rnum = snum + (mobj->subsector->sector - sectors);
+         int rnum = snum + eindex(mobj->subsector->sector - sectors);
          if(mobj->effects)
          {
             // run only if possibly visible
-            if(!(rejectmatrix[rnum>>3] & (1<<(rnum&7))))
+            if(!(rejectmatrix[rnum >> 3] & (1 << (rnum & 7))))
                P_RunEffect(mobj, mobj->effects);
+            else
+               P_stopParticleAmbientSounds(mobj, particlesound_MAX);
          }
+         else
+            P_stopParticleAmbientSounds(mobj, particlesound_MAX);
       }
    }
 }
@@ -584,16 +625,16 @@ static void MakeFountain(Mobj *actor, byte color1, byte color2)
 static void P_RunEffect(Mobj *actor, unsigned int effects)
 {
    angle_t moveangle = P_PointToAngle(0,0,actor->momx,actor->momy);
-   particle_t *particle;
 
    if(effects & FX_FLIES || 
       (effects & FX_FLIESONDEATH && actor->tics == -1 &&
        actor->movecount >= 4*TICRATE))
    {       
       P_FlyEffect(actor);
-      if(!(actor->movecount % (2*TICRATE)))
-         S_StartSound(actor, sfx_eefly);
+      P_maintainParticleAmbientSound(actor, particlesound_flies);
    }
+   else
+      P_stopParticleAmbientSounds(actor, particlesound_flies);
    
    if((effects & FX_ROCKET) && drawrockettrails)
    {
@@ -612,7 +653,7 @@ static void P_RunEffect(Mobj *actor, unsigned int effects)
       
       angle_t an = (moveangle + ANG90) >> ANGLETOFINESHIFT;
 
-      particle = JitterParticle(3 + (M_Random() & 31));
+      particle_t *particle = JitterParticle(3 + (M_Random() & 31));
       if(particle)
       {
          fixed_t pathdist = M_Random()<<8;
@@ -772,7 +813,7 @@ static void P_BloodDrop(int count, fixed_t x, fixed_t y, fixed_t z,
 // P_SmokePuff
 //
 // haleyjd 09/10/07: SoM's vastly improved smoke puff effect, improved even
-// more to replace the god-awful Quake 2-wannabe splash from zdoom.
+// more to replace the god-awful Quake 2-wannabe splash from ZDoom.
 // This code is under the GPL.
 //
 void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle, 
@@ -789,7 +830,7 @@ void P_SmokePuff(int count, fixed_t x, fixed_t y, fixed_t z, angle_t angle,
    color1 = grey1;
    color2 = grey5;
    
-   if(!comp[comp_terrain])
+   if(!getComp(comp_terrain))
    {
       // 06/21/02: make bullet puff colors responsive to 
       // TerrainTypes -- this is very cool and Quake-2-like ^_^      
@@ -912,7 +953,6 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    particle_t *p;
    angle_t an;
    int bloodcolor = mo->info->bloodcolor;
-   int tempcol;
 
    // get blood colors
    if(bloodcolor < 0 || bloodcolor >= NUMBLOODCOLORS)
@@ -929,7 +969,7 @@ void P_BloodSpray(Mobj *mo, int count, fixed_t x, fixed_t y, fixed_t z,
    // swap colors if reversed
    if(color2 < color1)
    {
-      tempcol = color1;
+      int tempcol = color1;
       color1  = color2;
       color2  = tempcol;
    }
@@ -1207,7 +1247,7 @@ static void P_DripEffect(Mobj *actor)
       p->styleflags |= PS_FULLBRIGHT;
    p->x = actor->x;
    p->y = actor->y;
-   p->z = actor->subsector->sector->ceilingheight;
+   p->z = actor->subsector->sector->srf.ceiling.height;
    P_SetParticlePosition(p);
 }
 
@@ -1222,7 +1262,7 @@ static void P_DripEffect(Mobj *actor)
 
 particle_event_t particleEvents[P_EVENT_NUMEVENTS] =
 {
-   { NULL,              "pevt_none"    },       // P_EVENT_NONE
+   { nullptr,           "pevt_none"    },       // P_EVENT_NONE
    { P_RocketExplosion, "pevt_rexpl"   },       // P_EVENT_ROCKET_EXPLODE
    { P_BFGExplosion,    "pevt_bfgexpl" },       // P_EVENT_BFG_EXPLODE
 };
@@ -1241,7 +1281,7 @@ void P_RunEvent(Mobj *actor)
       return;
 
    // haleyjd: 
-   // if actor->state is NULL, the thing has been removed, or
+   // if actor->state is nullptr, the thing has been removed, or
    // if MIF_NOPTCLEVTS is set, don't run events for this thing
    if(!actor || !actor->state || (actor->intflags & MIF_NOPTCLEVTS))
       return;
@@ -1329,20 +1369,20 @@ void P_AddEventVars()
       variable_t *variable;
       command_t  *command;
 
-      variable = (variable_t *)(Z_Malloc(sizeof(variable_t), PU_STATIC, NULL));
+      variable = emalloctag(variable_t *, sizeof(variable_t), PU_STATIC, nullptr);
       variable->variable  = &(particleEvents[i].enabled);
-      variable->v_default = NULL;
+      variable->v_default = nullptr;
       variable->type      = vt_int;
       variable->min       = 0;
       variable->max       = 1;
       variable->defines   = onoff;
 
-      command = (command_t *)(Z_Malloc(sizeof(command_t), PU_STATIC, NULL));
+      command = emalloctag(command_t *, sizeof(command_t), PU_STATIC, nullptr);
       command->name     = particleEvents[i].name;
       command->type     = ct_variable;
       command->flags    = 0;
       command->variable = variable;
-      command->handler  = NULL;
+      command->handler  = nullptr;
       command->netcmd   = 0;
 
       C_AddCommand(command);
@@ -1380,7 +1420,7 @@ static cell AMX_NATIVE_CALL sm_ptclexplosionthing(AMX *amx, cell *params)
 {
    int tid;
    byte col1, col2;
-   Mobj *mo = NULL;
+   Mobj *mo = nullptr;
    SmallContext_t *ctx = SM_GetContextForAMX(amx);
 
    if(gamestate != GS_LEVEL)
@@ -1403,7 +1443,7 @@ AMX_NATIVE_INFO ptcl_Natives[] =
 {
    { "_PtclExplosionPos",   sm_ptclexplosionpos   },
    { "_PtclExplosionThing", sm_ptclexplosionthing },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

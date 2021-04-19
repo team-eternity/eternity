@@ -124,7 +124,7 @@ unsigned char C_dequeueChatChar(void)
    return c;
 }
 
-void C_SendCmd(int dest, int cmdnum, const char *s,...)
+void C_SendCmd(int dest, int cmdnum, E_FORMAT_STRING(const char *s), ...)
 {
    va_list args;
    char tempstr[500];
@@ -166,16 +166,14 @@ void C_NetInit(void)
   }  
 }
 
-void C_DealWithChar(unsigned char c, int source);
+static void C_DealWithChar(unsigned char c, int source);
 
 void C_NetTicker(void)
 {
-   int i;
-
    if(netgame && !demoplayback)      // only deal with chat chars in netgames
    {
       // check for incoming chat chars
-      for(i=0; i<MAXPLAYERS; i++)
+      for(int i=0; i<MAXPLAYERS; i++)
       {
          if(!playeringame[i]) 
             continue;
@@ -187,7 +185,7 @@ void C_NetTicker(void)
    C_RunBuffer(c_netcmd);
 }
 
-void C_DealWithChar(unsigned char c, int source)
+static void C_DealWithChar(unsigned char c, int source)
 {
    int netcmdnum;
    
@@ -231,12 +229,8 @@ char *G_GetNameForMap(int episode, int map);
 
 void C_SendNetData()
 {
-  char tempstr[100];
-  command_t *command;
-  int i;
-
   C_SetConsole();
-  
+
   // display message according to what we're about to do
 
   C_Printf(consoleplayer ?
@@ -244,14 +238,12 @@ void C_SendNetData()
            FC_HI "Please Wait" FC_NORMAL " Sending game data..\n");
 
 
-  // go thru all hash chains, check for net sync variables  
-  for(i = 0; i < CMDCHAINS; i++)
+  // go thru all hash chains, check for net sync variables
+  for(command_t *command : cmdroots)
   {
-     command = cmdroots[i];
-
      while(command)
      {
-        if(command->type == ct_variable && command->flags & cf_netvar && 
+        if(command->type == ct_variable && command->flags & cf_netvar &&
            (consoleplayer == 0 || !(command->flags & cf_server)))
         {
            C_UpdateVar(command);
@@ -261,10 +253,11 @@ void C_SendNetData()
   }
 
   demo_insurance = 1;      // always use 1 in multiplayer
-  
+
   if(consoleplayer == 0)      // if server, send command to warp to map
   {
-     sprintf(tempstr, "map %s", startlevel);
+     char tempstr[100];
+     snprintf(tempstr, earrlen(tempstr), "map %s", startlevel);
      C_RunTextCmd(tempstr);
   }
 }
@@ -276,9 +269,9 @@ void C_UpdateVar(command_t *command)
 {
   char tempstr[100];
   
-  sprintf(tempstr,"\"%s\"", C_VariableValue(command->variable) );
+  snprintf(tempstr, sizeof(tempstr), "\"%s\"", C_VariableValue(command->variable) );
   
-  C_SendCmd(CN_BROADCAST, command->netcmd, tempstr);
+  C_SendCmd(CN_BROADCAST, command->netcmd, "%s", tempstr);
 }
 
 // EOF

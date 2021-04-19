@@ -26,6 +26,13 @@
 //
 //-----------------------------------------------------------------------------
 
+#if _MSC_VER >= 1914
+#include <locale>
+#include <filesystem>
+namespace fs = std::filesystem;
+#include <string>
+#endif
+
 #include "../z_zone.h"
 
 #include "i_directory.h"
@@ -40,6 +47,8 @@
  || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \
  || EE_CURRENT_PLATFORM == EE_PLATFORM_FREEBSD
 #include <limits.h>
+#elif EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
+#include <windows.h>
 #endif
 
 //=============================================================================
@@ -85,8 +94,22 @@ const char *I_PlatformInstallDirectory()
 void I_GetRealPath(const char *path, qstring &real)
 {
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   // TODO
-   real = path;
+   fs::path pathobj(path);
+   pathobj = fs::canonical(pathobj);
+
+   // Has to be converted since fs::value_type is wchar_t on Windows
+   std::wstring wpath(pathobj.c_str());
+   char *ret = ecalloc(char *, wpath.length() + 1, 1);
+   WideCharToMultiByte(CP_UTF8, 0, wpath.c_str(), -1, ret,
+                       static_cast<int>(wpath.length()), nullptr, nullptr);
+   real = ret;
+   efree(ret);
+
+   // wstring_convert became deprecated and didn't get replaced
+   //std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+   //std::string spath(convertor.to_bytes(wpath));
+   //real = spath.c_str();
+
 
 #elif EE_CURRENT_PLATFORM == EE_PLATFORM_LINUX \
    || EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX \

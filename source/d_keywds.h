@@ -28,9 +28,12 @@
 #define D_KEYWDS_H__
 
 // attribute hints are available only under GNU C
-
+// Note: The idea of E_PRINTF is lifted from q2pro's q_printf macro.
+// q2pro is licenced under the GPL v2.0.
 #ifndef __GNUC__
-#define __attribute__(x)
+#define E_PRINTF(f, a)
+#else
+#define E_PRINTF(f, a) __attribute__((format(printf, f, a)))
 #endif
 
 #if _MSC_VER >= 1400 && defined(_DEBUG) && !defined(EE_NO_SAL)

@@ -53,24 +53,26 @@
 int NullStateNum;
 
 // Frame section keywords
-#define ITEM_FRAME_DECORATE  "decorate"
-#define ITEM_FRAME_SPRITE    "sprite"
-#define ITEM_FRAME_SPRFRAME  "spriteframe"
-#define ITEM_FRAME_FULLBRT   "fullbright"
-#define ITEM_FRAME_TICS      "tics"
-#define ITEM_FRAME_ACTION    "action"
-#define ITEM_FRAME_NEXTFRAME "nextframe"
-#define ITEM_FRAME_MISC1     "misc1"
-#define ITEM_FRAME_MISC2     "misc2"
-#define ITEM_FRAME_PTCLEVENT "particle_event"
-#define ITEM_FRAME_ARGS      "args"
-#define ITEM_FRAME_DEHNUM    "dehackednum"
-#define ITEM_FRAME_CMP       "cmp"
+constexpr const char ITEM_FRAME_DECORATE[]    = "decorate";
+constexpr const char ITEM_FRAME_SPRITE[]      = "sprite";
+constexpr const char ITEM_FRAME_SPRFRAME[]    = "spriteframe";
+constexpr const char ITEM_FRAME_FULLBRT[]     = "fullbright";
+constexpr const char ITEM_FRAME_TICS[]        = "tics";
+constexpr const char ITEM_FRAME_ACTION[]      = "action";
+constexpr const char ITEM_FRAME_NEXTFRAME[]   = "nextframe";
+constexpr const char ITEM_FRAME_MISC1[]       = "misc1";
+constexpr const char ITEM_FRAME_MISC2[]       = "misc2";
+constexpr const char ITEM_FRAME_PTCLEVENT[]   = "particle_event";
+constexpr const char ITEM_FRAME_ARGS[]        = "args";
+constexpr const char ITEM_FRAME_DEHNUM[]      = "dehackednum";
+constexpr const char ITEM_FRAME_CMP[]         = "cmp";
+constexpr const char ITEM_FRAME_SKILL5FAST[]  = "SKILL5FAST";
+constexpr const char ITEM_FRAME_INTERPOLATE[] = "INTERPOLATE";
 
-#define ITEM_DELTA_NAME      "name"
+constexpr const char ITEM_DELTA_NAME[]        = "name";
 
-#define ITEM_FRAMEBLOCK_FDS    "firststate"
-#define ITEM_FRAMEBLOCK_STATES "states"
+constexpr const char ITEM_FRAMEBLOCK_FDS[]    = "firststate";
+constexpr const char ITEM_FRAMEBLOCK_STATES[] = "states";
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -90,20 +92,22 @@ static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
    CFG_STR(ITEM_FRAME_MISC1,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_MISC2,       "0",         CFGF_NONE), \
    CFG_STR(ITEM_FRAME_PTCLEVENT,   "pevt_none", CFGF_NONE), \
-   CFG_STR(ITEM_FRAME_ARGS,        0,           CFGF_LIST), \
+   CFG_STR(ITEM_FRAME_ARGS,        nullptr,     CFGF_LIST), \
    CFG_INT(ITEM_FRAME_DEHNUM,      -1,          CFGF_NONE), \
+   CFG_FLAG(ITEM_FRAME_SKILL5FAST, 0,           CFGF_SIGNPREFIX), \
+   CFG_FLAG(ITEM_FRAME_INTERPOLATE, 0,          CFGF_SIGNPREFIX), \
    CFG_END()
 
 cfg_opt_t edf_frame_opts[] =
 {
    CFG_FLAG(ITEM_FRAME_DECORATE, 0, CFGF_SIGNPREFIX),
-   CFG_STR(ITEM_FRAME_CMP, 0, CFGF_NONE),
+   CFG_STR(ITEM_FRAME_CMP, nullptr, CFGF_NONE),
    FRAME_FIELDS
 };
 
 cfg_opt_t edf_fdelta_opts[] =
 {
-   CFG_STR(ITEM_DELTA_NAME, 0, CFGF_NONE),
+   CFG_STR(ITEM_DELTA_NAME, nullptr, CFGF_NONE),
    FRAME_FIELDS
 };
 
@@ -114,6 +118,13 @@ cfg_opt_t edf_fblock_opts[] =
    CFG_END()
 };
 
+static const dehflags_t frameFlagSet[] =
+{
+   { ITEM_FRAME_SKILL5FAST, STATEF_SKILL5FAST },
+   { ITEM_FRAME_INTERPOLATE, STATEF_INTERPOLATE },
+   { nullptr },
+};
+
 //
 // State Hash Lookup Functions
 //
@@ -121,7 +132,7 @@ cfg_opt_t edf_fblock_opts[] =
 // State hash tables
 
 // State Hashing
-#define NUMSTATECHAINS 2003
+constexpr int NUMSTATECHAINS = 2003;
 
 // hash by name
 static EHashTable<state_t, ENCStringHashKey, 
@@ -227,7 +238,7 @@ int E_SafeStateName(const char *name)
 // Allows lookup of what may either be an EDF global state name, DECORATE state 
 // label relative to a particular mobjinfo, or a state DeHackEd number.
 //
-int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
+int E_SafeStateNameOrLabel(const mobjinfo_t *mi, const char *name)
 {
    char *pos = nullptr;
    long  num = strtol(name, &pos, 0);
@@ -235,8 +246,8 @@ int E_SafeStateNameOrLabel(mobjinfo_t *mi, const char *name)
    // Not a number? It is a state name.
    if(estrnonempty(pos))
    {
-      int      statenum = NullStateNum;
-      state_t *state    = nullptr;
+      int      statenum;
+      const state_t *state = nullptr;
       
       // Try global resolution first.
       if((statenum = E_StateNumForName(name)) < 0)
@@ -350,7 +361,7 @@ void E_ReallocStates(int numnewstates)
       // reallocate states[]
       states = erealloc(state_t **, states, numstatesalloc * sizeof(state_t *));
 
-      // set the new state pointers to NULL
+      // set the new state pointers to nullptr
       for(i = NUMSTATES; i < numstatesalloc; ++i)
          states[i] = nullptr;
    }
@@ -368,7 +379,6 @@ void E_CollectStates(cfg_t *cfg)
    unsigned int i;
    unsigned int numstates;         // number of states defined by the cfg
    unsigned int numnew;            // number of states that are new
-   unsigned int firstnewstate = 0; // index of first new state
    unsigned int curnewstate = 0;   // index of current new state being used
    state_t *statestructs = nullptr;
    static bool firsttime = true;
@@ -384,6 +394,7 @@ void E_CollectStates(cfg_t *cfg)
 
    if(numnew)
    {
+      unsigned firstnewstate = 0;   // index of first new state
       // allocate state_t structures for the new states
       statestructs = estructalloc(state_t, numnew);
 
@@ -556,6 +567,7 @@ enum prefixkwd_e
    PREFIX_FLAGS2,
    PREFIX_FLAGS3,
    PREFIX_FLAGS4,
+   PREFIX_FLAGS5,
    PREFIX_BEXPTR,
    PREFIX_STRING,
    NUM_MISC_PREFIXES
@@ -599,7 +611,7 @@ static void E_AssignMiscState(int *target, int framenum)
 
 static void E_AssignMiscSound(int *target, sfxinfo_t *sfx)
 {
-   // 01/04/09: check for NULL just in case
+   // 01/04/09: check for nullptr just in case
    if(!sfx)
       sfx = &NullSound;
 
@@ -633,7 +645,7 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
    
    // get the index of this deh_bexptr in the master
    // deh_bexptrs array, and store it in the arg field
-   *target = dp - deh_bexptrs;
+   *target = eindex(dp - deh_bexptrs);
 }
 
 //
@@ -644,9 +656,8 @@ static void E_AssignMiscBexptr(int *target, deh_bexptr *dp, const char *name)
 //
 static void E_ParseMiscField(const char *value, int *target)
 {
-   int i;
    char prefix[16];
-   const char *colonloc, *strval;
+   const char *colonloc;
    
    memset(prefix, 0, 16);
 
@@ -656,9 +667,9 @@ static void E_ParseMiscField(const char *value, int *target)
    if(colonloc)
    {
       // a colon was found, so identify the prefix
-      strval = colonloc + 1;
+      const char *strval = colonloc + 1;
 
-      i = E_StrToNumLinear(misc_prefixes, NUM_MISC_PREFIXES, prefix);
+      int i = E_StrToNumLinear(misc_prefixes, NUM_MISC_PREFIXES, prefix);
 
       switch(i)
       {
@@ -713,6 +724,9 @@ static void E_ParseMiscField(const char *value, int *target)
       case PREFIX_FLAGS4:
          *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
          break;
+      case PREFIX_FLAGS5:
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE5);
+         break;
       case PREFIX_BEXPTR:
          {
             deh_bexptr *dp = D_GetBexPtr(strval);
@@ -736,12 +750,11 @@ static void E_ParseMiscField(const char *value, int *target)
    {
       char  *endptr;
       int    val;
-      double dval;
 
       // see if it is a number
       if(strchr(value, '.')) // has a decimal point?
       {
-         dval = strtod(value, &endptr);
+         double dval = strtod(value, &endptr);
 
          // convert result to fixed-point
          val = (fixed_t)(dval * FRACUNIT);
@@ -749,7 +762,7 @@ static void E_ParseMiscField(const char *value, int *target)
       else
       {
          // 11/11/03: use strtol to support hex and oct input
-         val = strtol(value, &endptr, 0);
+         val = static_cast<int>(strtol(value, &endptr, 0));
       }
 
       // haleyjd 04/02/08:
@@ -919,7 +932,7 @@ static char *E_CmpTokenizer(const char *text, int *index, qstring *token)
    char c;
    int state = 0;
 
-   // if we're already at the end, return NULL
+   // if we're already at the end, return nullptr
    if(text[*index] == '\0')
       return nullptr;
 
@@ -1022,7 +1035,7 @@ static void E_ProcessCmpState(const char *value, int i)
 {
    qstring buffer;
    char *curtoken = nullptr;
-   int tok_index = 0, j;
+   int tok_index = 0;
 
    // initialize tokenizer variables
    in_action = false;
@@ -1068,7 +1081,7 @@ static void E_ProcessCmpState(const char *value, int i)
    if(DEFAULTS(curtoken))
       states[i]->tics = 1;
    else
-      states[i]->tics = strtol(curtoken, nullptr, 0);
+      states[i]->tics = static_cast<int>(strtol(curtoken, nullptr, 0));
 
    // process action
    in_action = true;
@@ -1088,10 +1101,8 @@ static void E_ProcessCmpState(const char *value, int i)
       while(!early_args_end)
       {
          NEXTTOKEN();
-         
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
@@ -1137,13 +1148,11 @@ static void E_ProcessCmpState(const char *value, int i)
       E_CreateArgList(states[i]);
 
       // process args
-      for(j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
+      for(int j = 0; j < 5; ++j) // Only 5 args are supported here. Deprecated.
       {
          NEXTTOKEN();
 
-         if(DEFAULTS(curtoken))
-            E_AddArgToList(states[i]->args, "");
-         else
+         if(!DEFAULTS(curtoken))
             E_AddArgToList(states[i]->args, E_GetArgument(curtoken));
       }
    }
@@ -1183,11 +1192,11 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
 
       if(decoratestate)
       {
-         states[i]->flags |= STATEF_DECORATE;
+         states[i]->flags |= STATEFI_DECORATE;
          goto hitdecorate; // skip most processing
       }
       else
-         states[i]->flags &= ~STATEF_DECORATE;
+         states[i]->flags &= ~STATEFI_DECORATE;
 
       if(cfg_size(framesec, ITEM_FRAME_CMP) > 0)
       {
@@ -1261,6 +1270,9 @@ hitcmp:
          E_AddArgToList(states[i]->args, E_GetArgument(tempstr));
       }
    }
+
+   // Set flags
+   E_SetFlagsFromPrefixCfg(framesec, states[i]->flags, frameFlagSet);
 
    // 01/01/12: the following fields are allowed when processing a 
    // DECORATE-reserved state

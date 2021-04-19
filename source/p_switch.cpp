@@ -30,8 +30,11 @@
 #include "d_io.h"
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "e_switch.h"
 #include "ev_specials.h"
 #include "g_game.h"
+#include "m_collection.h"
+#include "m_qstr.h"
 #include "m_swap.h"
 #include "p_info.h"
 #include "p_skin.h"
@@ -52,8 +55,40 @@ static int *switchlist;                           // killough
 static int max_numswitches;                       // killough
 static int numswitches;                           // killough
 
-button_t *buttonlist     = NULL; // haleyjd 04/16/08: made dynamic
-int      numbuttonsalloc = 0;    // haleyjd 04/16/08: number allocated
+static Collection<qstring> switchsounds;
+static Collection<qstring> offswitchsounds;
+
+button_t *buttonlist     = nullptr; // haleyjd 04/16/08: made dynamic
+int      numbuttonsalloc = 0;       // haleyjd 04/16/08: number allocated
+
+//
+// Being given an EDF switch, check if we have SWITCHES entries which can be
+// replaced by it, instead of adding something new
+//
+static bool P_replaceSwitchWithEDF(const ESwitchDef &esd)
+{
+   int pic = R_FindWall(esd.offpic.constPtr());
+   for(int i = 0; i < numswitches; ++i)
+   {
+      if(switchlist[2 * i] == pic)
+      {
+         // Got one.
+         if(!esd.onpic.empty())
+            switchlist[2 * i + 1] = R_FindWall(esd.onpic.constPtr());
+
+         // only replace if set
+         if(!esd.onsound.empty())
+            switchsounds[i] = esd.onsound;
+
+         if(!esd.offsound.empty())
+            offswitchsounds[i] = esd.offsound;
+         else if(!esd.onsound.empty() && offswitchsounds[i].empty())
+            offswitchsounds[i] = esd.onsound;   // only if original had nothing
+         return true;
+      }
+   }
+   return false;
+}
 
 //
 // P_InitSwitchList()
@@ -105,6 +140,16 @@ void P_InitSwitchList(void)
 
    for(int i = 0; ; i++)
    {
+      // Check for a deleting EDF definition
+      const ESwitchDef *esd = E_SwitchForName(alphSwitchList[i].name1);
+      if(esd && (esd->offpic.empty() || esd->emptyDef() ||
+                 esd->episode > episode))
+      {
+         // skip it now, because it's too hard to retroactively delete when we
+         // scan EDF below
+         continue;
+      }
+
       if(index + 1 >= max_numswitches)
       {
          max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
@@ -118,7 +163,32 @@ void P_InitSwitchList(void)
             R_FindWall(alphSwitchList[i].name1);
          switchlist[index++] =
             R_FindWall(alphSwitchList[i].name2);
+         switchsounds.add(qstring());  // empty means default
+         offswitchsounds.add(qstring());
       }
+   }
+
+   // update now so we can scan the list while adding EDF
+   numswitches = index / 2;
+
+   // Now read the EDF/ANIMDEFS switches.
+   for(const ESwitchDef *esd : eswitches)
+   {
+      if(esd->offpic.empty() || esd->emptyDef() || esd->episode > episode ||
+         P_replaceSwitchWithEDF(*esd))
+      {
+         continue;
+      }
+
+      if(index + 1 >= max_numswitches)
+      {
+         max_numswitches = max_numswitches ? max_numswitches * 2 : 8;
+         switchlist = erealloc(int *, switchlist, sizeof(*switchlist) * max_numswitches);
+      }
+      switchlist[index++] = R_FindWall(esd->offpic.constPtr());
+      switchlist[index++] = R_FindWall(esd->onpic.constPtr());
+      switchsounds.add(esd->onsound);
+      offswitchsounds.add(esd->offsound.empty() ? esd->onsound : esd->offsound);
    }
 
    numswitches = index / 2;
@@ -131,7 +201,7 @@ void P_InitSwitchList(void)
 //
 // haleyjd 04/16/08: Made buttons dynamic.
 //
-button_t *P_FindFreeButton()
+static button_t *P_FindFreeButton()
 {
    int i;
    int oldnumbuttons;
@@ -170,7 +240,7 @@ button_t *P_FindFreeButton()
 //
 static void P_StartButton(int sidenum, line_t *line, sector_t *sector, 
                           bwhere_e w, int texture, int time, bool dopopout,
-                          const char *startsound)
+                          const char *startsound, int swindex)
 {
    int i;
    button_t *button;
@@ -184,12 +254,13 @@ static void P_StartButton(int sidenum, line_t *line, sector_t *sector,
 
    button = P_FindFreeButton();
    
-   button->line     = line - lines;
+   button->line     = eindex(line - lines);
    button->side     = sidenum;
    button->where    = w;
    button->btexture = texture;
    button->btimer   = time;
    button->dopopout = dopopout;
+   button->switchindex = swindex;
 
    // 04/19/09: rewritten to use linedef sound origin
 
@@ -254,8 +325,13 @@ void P_RunButtons()
                   sides[button->side].bottomtexture = button->btexture;
                   break;
                }
-               
-               S_StartSoundName(&line->soundorg, "EE_SwitchOn");
+
+               int idx = button->switchindex;
+               const char *sound =
+               (idx % 2 ? switchsounds : offswitchsounds)[idx / 2].constPtr();
+               if(!*sound)
+                  sound = "EE_SwitchOn";
+               S_StartSoundName(&line->soundorg, sound);
             }
             
             // clear out the button
@@ -284,7 +360,8 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    int       texMid;
    int       texBot;
    int       i;
-   const char *sound;     // haleyjd
+   const char *defsound;     // haleyjd
+   const char *sound;
    int       sidenum;
    sector_t *sector;
    
@@ -307,12 +384,14 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
    texMid = sides[sidenum].midtexture;
    texBot = sides[sidenum].bottomtexture;
 
-   sound = "EE_SwitchOn"; // haleyjd
+   defsound = "EE_SwitchOn"; // haleyjd
    
    // EXIT SWITCH?
-   // FIXME: should apply to all exits? Go through special binding system
-   if(line->special == 11)
-      sound = "EE_SwitchEx"; // haleyjd
+   if(EV_CompositeActionFlags(EV_ActionForSpecial(line->special)) &
+      EV_ISMAPPEDEXIT)
+   {
+      defsound = "EE_SwitchEx"; // haleyjd
+   }
 
    for(i = 0; i < numswitches * 2; ++i)
    {
@@ -320,12 +399,17 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
       if(switchlist[i] == 0)
          continue;
 
+      // Check if the switch has a dedicated sound ("none" can silence it)
+      sound = (i % 2 ? offswitchsounds : switchsounds)[i / 2].constPtr();
+      if(!*sound)
+         sound = defsound;
+
       if(switchlist[i] == texTop) // if an upper texture
       {
          sides[sidenum].toptexture = switchlist[i^1]; // chg texture
          
          P_StartButton(sidenum, line, sector, top, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound); // start timer
+                       !!useAgain, sound, i); // start timer
          
          return;
       }
@@ -334,7 +418,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].midtexture = switchlist[i^1]; // chg texture
          
          P_StartButton(sidenum, line, sector, middle, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound); // start timer
+                       !!useAgain, sound, i); // start timer
          
          return;
       }
@@ -343,7 +427,7 @@ void P_ChangeSwitchTexture(line_t *line, int useAgain, int side)
          sides[sidenum].bottomtexture = switchlist[i^1]; //chg texture
          
          P_StartButton(sidenum, line, sector, bottom, switchlist[i], BUTTONTIME,
-                       !!useAgain, sound); // start timer
+                       !!useAgain, sound, i); // start timer
          
          return;
       }

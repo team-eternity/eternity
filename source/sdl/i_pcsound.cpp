@@ -26,15 +26,15 @@
 //-----------------------------------------------------------------------------
 
 #include "SDL.h"
-#include "SDL_audio.h"
-#include "SDL_thread.h"
 #include "SDL_mixer.h"
 
 #include "../z_zone.h"
+#include "../d_main.h"
 #include "../w_wad.h"
 #include "../sounds.h"
 #include "../i_sound.h"
 #include "../psnprntf.h"
+#include "../m_compare.h"
 
 //=============================================================================
 //
@@ -54,11 +54,9 @@ typedef void (*pcsound_callback_func)(int *duration, int *frequency);
 
 static pcsound_callback_func callback;
 
-// Output sound format
-
-static int mixing_freq;
-static Uint16 mixing_format;
-static int mixing_channels;
+// Externs
+extern SDL_AudioSpec audio_spec;
+extern bool float_samples;
 
 // Currently playing sound
 // current_remaining is the number of remaining samples that must be played
@@ -76,83 +74,96 @@ static void PCSound_SetSampleRate(int rate)
     pcsound_sample_rate = rate;
 }
 
-
-//
-// PCSound_Mix_Callback
 //
 // Mixer function that does the PC speaker emulation
 //
+template<typename T>
 static void PCSound_Mix_Callback(void *udata, Uint8 *stream, int len)
 {
-   Sint16 *leftptr;
-   Sint16 *rightptr;
+   static constexpr int SAMPLESIZE = sizeof(T);
+   T *leftptr;
+   T *rightptr;
    Sint16 this_value;
    int oldfreq;
    int i;
    int nsamples;
-   
-   // Number of samples is quadrupled, because of 16-bit and stereo   
-   nsamples = len / 4;
-   
-   leftptr = (Sint16 *) stream;
-   rightptr = ((Sint16 *) stream) + 1;
-    
-   // Fill the output buffer   
+
+   // Number of samples is quadrupled, because of 16-bit and stereo
+   nsamples = len / (audio_spec.channels * SAMPLESIZE);
+
+   leftptr  = reinterpret_cast<T *>(stream);
+   rightptr = reinterpret_cast<T *>(stream) + 1;
+
+   // Fill the output buffer
    for(i = 0; i < nsamples; i++)
    {
-      // Has this sound expired? If so, invoke the callback to get 
-      // the next frequency.      
-      while(current_remaining == 0) 
+      // Has this sound expired? If so, invoke the callback to get
+      // the next frequency.
+      while(current_remaining == 0)
       {
          oldfreq = current_freq;
-         
+
          // Get the next frequency to play
-         
+
          callback(&current_remaining, &current_freq);
-         
+
          if(current_freq != 0)
          {
             // Adjust phase to match to the new frequency.
             // This gives us a smooth transition between different tones,
-            // with no impulse changes.            
+            // with no impulse changes.
             phase_offset = (phase_offset * oldfreq) / current_freq;
          }
-         
-         current_remaining = (current_remaining * mixing_freq) / 1000;
+
+         current_remaining = (current_remaining * audio_spec.freq) / 1000;
       }
-      
-      // Set the value for this sample.      
+
+      // Set the value for this sample.
       if(current_freq == 0)
       {
-         // Silence         
+         // Silence
          this_value = 0;
       }
-      else 
+      else
       {
          int frac;
-         
+
          // Determine whether we are at a peak or trough in the current
-         // sound.  Multiply by 2 so that frac % 2 will give 0 or 1 
+         // sound.  Multiply by 2 so that frac % 2 will give 0 or 1
          // depending on whether we are at a peak or trough.
-         
-         frac = (phase_offset * current_freq * 2) / mixing_freq;
-         
-         if((frac % 2) == 0) 
+
+         frac = (phase_offset * current_freq * 2) / audio_spec.freq;
+
+         if((frac % 2) == 0)
             this_value =  SQUARE_WAVE_AMP;
          else
             this_value = -SQUARE_WAVE_AMP;
-         
+
          ++phase_offset;
       }
-      
+
       --current_remaining;
-      
-      // Use the same value for the left and right channels.      
-      *leftptr  += this_value;
-      *rightptr += this_value;
-      
-      leftptr  += 2;
-      rightptr += 2;
+
+      // Use the same value for the left and right channels.
+      if constexpr(std::is_same_v<T, Sint16>)
+      {
+         const Sint32 dl = static_cast<Sint32>(*leftptr)  + static_cast<Sint32>(this_value);
+         const Sint32 dr = static_cast<Sint32>(*rightptr) + static_cast<Sint32>(this_value);
+         *leftptr  = static_cast<Sint16>(eclamp(dl, SHRT_MIN, SHRT_MAX));
+         *rightptr = static_cast<Sint16>(eclamp(dr, SHRT_MIN, SHRT_MAX));
+      }
+      else if constexpr(std::is_same_v<T, float>)
+      {
+         *leftptr  += static_cast<float>(this_value) * (1.0f / 32768.0f);
+         *rightptr += static_cast<float>(this_value) * (1.0f / 32768.0f);
+         *leftptr  = eclamp(*leftptr,  -1.0f, 1.0f);
+         *rightptr = eclamp(*rightptr, -1.0f, 1.0f);
+      }
+      static_assert(std::is_same_v<T, Sint16> || std::is_same_v<T, float>,
+                    "PCSound_Mix_Callback called with incompatible template parameter");
+
+      leftptr  += audio_spec.channels;
+      rightptr += audio_spec.channels;
    }
 }
 
@@ -162,6 +173,8 @@ static void PCSound_SDL_Shutdown()
    SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
+extern bool I_GenSDLAudioSpec(int, SDL_AudioFormat, int, int);
+
 static int PCSound_SDL_Init(pcsound_callback_func callback_func)
 {
    if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
@@ -169,40 +182,34 @@ static int PCSound_SDL_Init(pcsound_callback_func callback_func)
       fprintf(stderr, "Unable to set up sound.\n");
       return 0;
    }
-   
-   if(Mix_OpenAudio(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024) < 0)
+
+   // Figure out mix buffer sizes
+   if(!I_GenSDLAudioSpec(pcsound_sample_rate, AUDIO_S16SYS, 2, 1024))
+   {
+      printf("Couldn't determine sound mixing buffer size.\n");
+      nomusicparm = true;
+      return 0;
+   }
+
+   if(Mix_OpenAudio(audio_spec.freq, audio_spec.format, audio_spec.channels, audio_spec.samples) < 0)
    {
       fprintf(stderr, "Error initialising SDL_mixer: %s\n", Mix_GetError());
-      
+
       SDL_QuitSubSystem(SDL_INIT_AUDIO);
       return 0;
    }
-   
+
+   float_samples = SDL_AUDIO_ISFLOAT(audio_spec.format);
+
    SDL_PauseAudio(0);
 
-    // Get the mixer frequency, format and number of channels.
+   callback          = callback_func;
+   current_freq      = 0;
+   current_remaining = 0;
 
-    Mix_QuerySpec(&mixing_freq, &mixing_format, &mixing_channels);
+   Mix_SetPostMix(float_samples ? PCSound_Mix_Callback<float> : PCSound_Mix_Callback<Sint16>, nullptr);
 
-    // Only supports AUDIO_S16SYS
-
-    if (mixing_format != AUDIO_S16SYS || mixing_channels != 2)
-    {
-        fprintf(stderr, 
-                "PCSound_SDL only supports native signed 16-bit LSB, "
-                "stereo format!\n");
-
-        PCSound_SDL_Shutdown();
-        return 0;
-    }
-
-    callback = callback_func;
-    current_freq = 0;
-    current_remaining = 0;
-
-    Mix_SetPostMix(PCSound_Mix_Callback, NULL);
-
-    return 1;
+   return 1;
 }
 
 
@@ -215,13 +222,13 @@ static bool pcs_initialised = false;
 
 static SDL_mutex *sound_lock;
 
-static Uint8 *current_sound_lump = NULL;
-static Uint8 *current_sound_pos = NULL;
+static Uint8 *current_sound_lump = nullptr;
+static Uint8 *current_sound_pos = nullptr;
 static unsigned int current_sound_remaining = 0;
 static int current_sound_handle = 0;
 static int current_sound_lump_num = -1;
 
-static const float frequencies[] = 
+static const float frequencies[] =
 {
        0.0f,  175.00f,  180.02f,  185.01f,  190.02f,  196.02f,  202.02f,  208.01f,
     214.02f,  220.02f,  226.02f,  233.04f,  240.02f,  247.03f,  254.03f,  262.00f,
@@ -247,25 +254,25 @@ static const float frequencies[] =
 static void PCSCallbackFunc(int *duration, int *freq)
 {
    unsigned int tone;
-   
+
    *duration = 1000 / 140;
-   
+
    if(SDL_LockMutex(sound_lock) < 0)
    {
       *freq = 0;
       return;
    }
-   
-   if(current_sound_lump != NULL && current_sound_remaining > 0)
+
+   if(current_sound_lump != nullptr && current_sound_remaining > 0)
    {
       // Read the next tone
-      
+
       tone = *current_sound_pos;
-      
+
       // Use the tone -> frequency lookup table.  See pcspkr10.zip
       // for a full discussion of this.
       // Check we don't overflow the frequency table.
-      
+
       if(tone < NUMFREQUENCIES)
       {
          *freq = (int) frequencies[tone];
@@ -274,28 +281,33 @@ static void PCSCallbackFunc(int *duration, int *freq)
       {
          *freq = 0;
       }
-      
+
       ++current_sound_pos;
       --current_sound_remaining;
    }
    else
       *freq = 0;
-   
+
    SDL_UnlockMutex(sound_lock);
 }
 
 static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
 {
    int lumpnum = -1;
-   char soundName[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+   char soundName[9] = { 0 };
    bool nameToTry = false;
 
-   // 1. use explicit PC speaker sound name if provided
-   // 2. if sound name is prefixed, use DP%s
-   // 3. if sound name starts with DS, replace DS with DP
+   // 1. use explicit PC speaker long file name if provided
+   // 2. use explicit PC speaker sound name if provided
+   // 3. if sound name is prefixed, use DP%s
+   // 4. if sound name starts with DS, replace DS with DP
    // Otherwise, there is no locatable PC speaker sound for this effect
 
-   if(sfx->pcslump[0] != '\0')
+   if(sfx->pcslfn)
+   {
+      lumpnum = wGlobalDir.checkNumForLFNNSG(sfx->pcslfn, lumpinfo_t::ns_sounds);
+   }
+   else if(sfx->pcslump[0] != '\0')
    {
       nameToTry = true;
       psnprintf(soundName, 9, "%s", sfx->pcslump);
@@ -305,7 +317,7 @@ static int I_PCSGetSfxLumpNum(sfxinfo_t *sfx)
       nameToTry = true;
       psnprintf(soundName, 9, "DP%s", sfx->name);
    }
-   else if(ectype::toUpper(sfx->name[0]) == 'D' && 
+   else if(ectype::toUpper(sfx->name[0]) == 'D' &&
            ectype::toUpper(sfx->name[1]) == 'S')
    {
       nameToTry = true;
@@ -323,38 +335,38 @@ static bool CachePCSLump(sfxinfo_t *sfx)
    int lumpnum;
    int lumplen;
    int headerlen;
-   
-   // Free the current sound lump back to the cache   
-   if(current_sound_lump != NULL)
+
+   // Free the current sound lump back to the cache
+   if(current_sound_lump != nullptr)
    {
       Z_ChangeTag(current_sound_lump, PU_CACHE);
-      current_sound_lump = NULL;
+      current_sound_lump = nullptr;
    }
-   
+
    // Load from WAD
-   
+
    // haleyjd: check for validity
    if((lumpnum = I_PCSGetSfxLumpNum(sfx)) == -1)
       return false;
 
    current_sound_lump = (Uint8 *)(wGlobalDir.cacheLumpNum(lumpnum, PU_STATIC));
    lumplen            = W_LumpLength(lumpnum);
-   
-   // Read header   
+
+   // Read header
 
    if(current_sound_lump[0] != 0x00 || current_sound_lump[1] != 0x00)
       return false;
-   
+
    headerlen = (current_sound_lump[3] << 8) | current_sound_lump[2];
-   
+
    if(headerlen > lumplen - 4)
       return false;
-   
-   // Header checks out ok   
+
+   // Header checks out ok
    current_sound_remaining = headerlen;
    current_sound_pos       = current_sound_lump + 4;
    current_sound_lump_num  = lumpnum;
-   
+
    return true;
 }
 
@@ -365,13 +377,13 @@ static bool CachePCSLump(sfxinfo_t *sfx)
 
 static int I_PCSInitSound()
 {
-   // Use the sample rate from the configuration file   
+   // Use the sample rate from the configuration file
    PCSound_SetSampleRate(44100);
-   
+
    // Initialise the PC speaker subsystem.
-   
+
    pcs_initialised = !!PCSound_SDL_Init(PCSCallbackFunc);
-   
+
    if(pcs_initialised)
    {
       sound_lock = SDL_CreateMutex();
@@ -379,7 +391,7 @@ static int I_PCSInitSound()
    }
    else
       printf("Failed to initialize PC speaker emulation\n");
-   
+
    return pcs_initialised;
 }
 
@@ -404,7 +416,7 @@ static void I_PCSShutdownSound()
       PCSound_SDL_Shutdown();
 }
 
-static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep, 
+static int I_PCSStartSound(sfxinfo_t *sfx, int cnum, int vol, int sep,
                           int pitch, int pri, int loop, bool reverb)
 {
    int result;
@@ -440,7 +452,7 @@ static void I_PCSStopSound(int handle, int id)
    if(SDL_LockMutex(sound_lock) < 0)
       return;
 
-   // If this is the channel currently playing, immediately end it.   
+   // If this is the channel currently playing, immediately end it.
    if(current_sound_handle == handle)
       current_sound_remaining = 0;
 
@@ -450,7 +462,7 @@ static void I_PCSStopSound(int handle, int id)
 static int I_PCSSoundIsPlaying(int handle)
 {
    return pcs_initialised && handle == current_sound_handle &&
-          current_sound_lump != NULL && current_sound_remaining > 0;
+          current_sound_lump != nullptr && current_sound_remaining > 0;
 }
 
 static void I_PCSUpdateSoundParams(int handle, int vol, int sep, int pitch)
@@ -474,7 +486,7 @@ i_sounddriver_t i_pcsound_driver =
    I_PCSStopSound,         // StopSound
    I_PCSSoundIsPlaying,    // SoundIsPlaying
    I_PCSUpdateSoundParams, // UpdateSoundParams
-   NULL,                   // UpdateEQParams
+   nullptr,                // UpdateEQParams
 };
 
 // EOF

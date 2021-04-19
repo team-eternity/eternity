@@ -12,7 +12,11 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-project(acsvm)
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0048 NEW)
+endif(COMMAND cmake_policy)
+
+project(acsvm VERSION 0)
 
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -85,18 +89,16 @@ endfunction()
 set(ACSVM_SHARED_DEFAULT ON)
 
 if(NOT ACSVM_NOFLAGS)
-   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+   if(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_C_COMPILER_ID MATCHES "Clang")
       ACSVM_TRY_C_FLAG(-Wall    Wall)
       ACSVM_TRY_C_FLAG(-Wextra  Wextra)
-      ACSVM_TRY_C_FLAG(-Wshadow Wshadow)
 
       ACSVM_TRY_C_FLAG(-std=c11 STD_C)
    endif()
 
-   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       ACSVM_TRY_CXX_FLAG(-Wall    Wall)
       ACSVM_TRY_CXX_FLAG(-Wextra  Wextra)
-      ACSVM_TRY_CXX_FLAG(-Wshadow Wshadow)
 
       ACSVM_TRY_CXX_FLAG(-std=c++11 STD_CXX)
    endif()

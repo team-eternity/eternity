@@ -21,6 +21,7 @@
 #define __P_ANIM_H__
 
 void P_InitLightning(void);
+void P_InitHexenAnims();
 void P_AnimateSurfaces(void);
 void P_ForceLightning(void);
 

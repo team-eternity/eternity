@@ -39,13 +39,20 @@
 struct dynaseg_t
 {
    seg_t seg; // a dynaseg is a seg, after all ;)
+   bool backside; // true if it's for the backside
+
+   dynavertex_t *originalv2;  // reference to original v2 before a split
+   dynavertex_t *linev1, *linev2;   // dynavertices belonging to the endpoint segs, for interpolation
 
    dynaseg_t *subnext;         // next dynaseg in fragment
    dynaseg_t *freenext;        // next dynaseg on freelist
-   struct polyobj_s *polyobj;  // polyobject
+   polyobj_t *polyobj;  // polyobject
 
    DLListItem<dynaseg_t> bsplink;   // link for BSP chains
    DLListItem<dynaseg_t> ownerlink; // link for owning node chain
+   DLListItem<dynaseg_t> alterlink; // link for non-dynaBSP segs changed by dynaBSP
+
+   float prevlen, prevofs; // for interpolation (keep them out of seg_t)
 
    // properties needed for efficiency in the BSP builder
    double psx, psy, pex, pey; // end points
@@ -76,15 +83,38 @@ struct rpolyobj_t
    rpolyobj_t *freenext; // next on freelist
 };
 
-vertex_t  *R_GetFreeDynaVertex();
-void       R_FreeDynaVertex(vertex_t **vtx);
-void       R_SetDynaVertexRef(vertex_t **target, vertex_t *vtx);
-dynaseg_t *R_CreateDynaSeg(dynaseg_t *proto, vertex_t *v1, vertex_t *v2);
+struct dynavertex_t : vertex_t
+{
+   struct dynavertex_t *dynanext;
+   int refcount;
+   v2fixed_t backup;
+   v2float_t fbackup;
+};
+
+void R_AddTicDynaSeg(dynaseg_t &seg);
+void P_CalcDynaSegLength(dynaseg_t *lseg);
+
+dynavertex_t  *R_GetFreeDynaVertex();
+void       R_FreeDynaVertex(dynavertex_t **vtx);
+void       R_SetDynaVertexRef(dynavertex_t **target, dynavertex_t *vtx);
+dynaseg_t *R_CreateDynaSeg(const dynaseg_t *proto, dynavertex_t *v1, dynavertex_t *v2);
 void       R_FreeDynaSeg(dynaseg_t *dseg);
+
+void R_SaveDynasegPositions();
 
 void R_AttachPolyObject(polyobj_t *poly);
 void R_DetachPolyObject(polyobj_t *poly);
 void R_ClearDynaSegs();
+
+//
+// Quick way to calculate previous length
+//
+inline static float R_calcPrevLen(seg_t &seg)
+{
+   float dx = seg.dyv2->fbackup.x - seg.dyv1->fbackup.x;
+   float dy = seg.dyv2->fbackup.y - seg.dyv1->fbackup.y;
+   return sqrtf(dy * dy + dx * dx);
+}
 
 #endif
 

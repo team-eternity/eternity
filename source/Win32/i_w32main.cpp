@@ -1,7 +1,7 @@
 // Emacs style mode select   -*- C++ -*-
 //-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -35,18 +35,19 @@
 #include <windows.h>
 #include "SDL_syswm.h"
 
+#include "../d_keywds.h"
+
+extern void I_W32InitExceptionHandler(void);
 extern int __cdecl I_W32ExceptionHandler(PEXCEPTION_POINTERS ep);
 extern int common_main(int argc, char **argv);
-extern void I_FatalError(int code, const char *error, ...);
+extern void I_FatalError(int code, E_FORMAT_STRING(const char *error), ...) E_PRINTF(2, 3);
 
 int disable_sysmenu;
 
 //
-// I_TweakConsole
+// Enables the Win32 console window's close button.
 //
-// Disable the Win32 console window's close button and set its title.
-//
-static void I_TweakConsole()
+static void I_untweakConsole()
 {
 #if _WIN32_WINNT > 0x500
    HWND hwnd = GetConsoleWindow();
@@ -54,24 +55,42 @@ static void I_TweakConsole()
    if(hwnd)
    {
       HMENU hMenu = GetSystemMenu(hwnd, FALSE);
-      DeleteMenu(hMenu, SC_CLOSE, MF_BYCOMMAND);
+      EnableMenuItem(hMenu, SC_CLOSE, MF_ENABLED);
+   }
+#endif
+}
+
+//
+// Disable the Win32 console window's close button and set its title.
+//
+static void I_tweakConsole()
+{
+#if _WIN32_WINNT > 0x500
+   HWND hwnd = GetConsoleWindow();
+
+   if(hwnd)
+   {
+      HMENU hMenu = GetSystemMenu(hwnd, FALSE);
+      EnableMenuItem(hMenu, SC_CLOSE, MF_DISABLED|MF_GRAYED);
+      atexit(I_untweakConsole);
    }
    SetConsoleTitle("Eternity Engine System Console");
 #endif
 }
 
-
 #if !defined(_DEBUG)
 int main(int argc, char **argv)
 {
+   I_W32InitExceptionHandler();
+
    __try
    {
-      I_TweakConsole();
+      I_tweakConsole();
       common_main(argc, argv);
    }
    __except(I_W32ExceptionHandler(GetExceptionInformation()))
    {
-      I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info\n");
+      I_FatalError(0, "Exception caught in main: see CRASHLOG.TXT for info, and in the same directory please upload eternity.dmp along with the crash log\n");
    }
 
    return 0;
@@ -86,7 +105,7 @@ int main(int argc, char **argv)
 // option, the default control scheme for DOOM becomes broken in windowed
 // mode under the default SDL setup.
 //
-void I_DisableSysMenu()
+void I_DisableSysMenu(SDL_Window *window)
 {
    if(disable_sysmenu)
    {
@@ -94,11 +113,11 @@ void I_DisableSysMenu()
       
       SDL_VERSION(&info.version); // this is important!
       
-      if(SDL_GetWMInfo(&info))
+      if(SDL_GetWindowWMInfo(window, &info))
       {
-         LONG window_style = GetWindowLongPtr(info.window, GWL_STYLE);
+         LONG_PTR window_style = GetWindowLongPtr(info.info.win.window, GWL_STYLE);
          window_style &= ~WS_SYSMENU;
-         SetWindowLongPtr(info.window, GWL_STYLE, window_style);
+         SetWindowLongPtr(info.info.win.window, GWL_STYLE, window_style);
       }
    }
 }

@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2018 James Haley et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,12 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: Main program, simply calls D_DoomMain high level loop
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//      Main program, simply calls D_DoomMain high level loop.
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
 #include "SDL_net.h"
@@ -34,6 +30,14 @@
 #include "../d_main.h"
 #include "../i_system.h"
 
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS)
+#if __has_include(<xlocale.h>)
+#include <xlocale.h>
+#elif __has_include(<locale.h>)
+#include <locale.h>
+#endif
+#endif
+
 // main Tweaks for Windows Platforms
 #if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS) && !defined(_WIN32_WCE)
 
@@ -42,25 +46,22 @@
 
 // haleyjd 07/23/09:
 // For Visual Studio only, in release mode, rename this function to common_main
-// and use the main defined in i_w32main.c, which contains an exception handler 
-// to replace the useless SDL parachute.
+// and use the main defined in i_w32main.c, which contains an exception handler.
 #if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) && !defined(_DEBUG)
 #define main common_main
 #endif
+
+// MaxW: Necessary for a specific check that seems to help with audio issues
+#include "../Win32/i_winversion.h"
 
 #endif // (EE_CURRENT_PLATFORM==EE_PLATFORM_WINDOWS)&&!defined(_WIN32_WCE)
 
 // SoM 3/11/2002: Disable the parachute for debugging.
 // haleyjd 07/06/04: changed to a macro to eliminate local variable
+// MaxW: 2017/10/14: SDL_INIT_NOPARACHUTE got removed
 // note: sound init is handled separately in i_sound.c
 
-#define BASE_INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
-
-#if (EE_CURRENT_COMPILER == EE_COMPILER_MSVC) || defined(_DEBUG)
-#define INIT_FLAGS (BASE_INIT_FLAGS | SDL_INIT_NOPARACHUTE)
-#else
-#define INIT_FLAGS BASE_INIT_FLAGS
-#endif
+#define INIT_FLAGS (SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)
 
 #ifdef _DEBUG
 static void VerifySDLVersions();
@@ -70,39 +71,33 @@ int SDLIsInit;
 
 int main(int argc, char **argv)
 {
-   static char env_vidwinpos[] = "SDL_VIDEO_WINDOW_POS=center";
-   static char env_vidcenter[] = "SDL_VIDEO_CENTERED=1";
-
    myargc = argc;
    myargv = argv;
 
-   // Set SDL video centering
-   putenv(env_vidwinpos);
-   putenv(env_vidcenter);
-   
-   // SoM: From CHOCODOOM Thank you fraggle!!
-#if EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS
-   // Allow -gdi as a shortcut for using the windib driver.
-   
-   //!
-   // @category video 
-   // @platform windows
-   //
-   // Use the Windows GDI driver instead of DirectX.
-   //
-      
-   // SoM: the gdi interface is much faster for windowed modes which are more
-   // commonly used. Thus, GDI is default.
-   if(M_CheckParm("-directx"))
-      putenv("SDL_VIDEODRIVER=directx");
-   else if(M_CheckParm("-gdi") || getenv("SDL_VIDEODRIVER") == NULL)
-      putenv("SDL_VIDEODRIVER=windib");
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+   if(I_IsWindowsVistaOrHigher())
+      SDL_setenv("SDL_AUDIODRIVER", "wasapi", true);
+   else
+      SDL_setenv("SDL_AUDIODRIVER", "winmm", true);
 #endif
 
+#if (EE_CURRENT_PLATFORM != EE_PLATFORM_WINDOWS) && (__has_include(<xlocale.h>) || __has_include(<locale.h>))
+   // We need to prevent any calling terminal from changing Eternity's locale
+   // Unconfirmed if needed in Windows. If so, it should be added there too.
+   uselocale(newlocale(LC_ALL_MASK, "C", NULL));
+#endif
+
+   // MaxW: 2017/09/16: Now prints the error on failure
    // haleyjd 04/15/02: added check for failure
-   if(SDL_Init(INIT_FLAGS) == -1)
+   // ioanch: avoid loading SDL_VIDEO if -nodraw and -nosound are combined.
+   // FIXME: code duplication; the global booleans aren't assigned yet.
+   Uint32 initflags = (M_CheckParm("-nodraw") &&
+                       (M_CheckParm("-nosound") || (M_CheckParm("-nosfx") &&
+                                                    M_CheckParm("-nomusic")))) ?
+   SDL_INIT_JOYSTICK : SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
+   if(SDL_Init(initflags) == -1)
    {
-      puts("Failed to initialize SDL library.\n");
+      printf("Failed to initialize SDL library: %s\n", SDL_GetError());
       return -1;
    }
 
@@ -112,9 +107,9 @@ int main(int argc, char **argv)
    // in debug builds, verify SDL versions are the same
    VerifySDLVersions();
 #endif
-   
+
    D_DoomMain();
-   
+
    return 0;
 }
 
@@ -138,94 +133,95 @@ enum
 static void VerifySDLVersions()
 {
    SDL_version cv;       // compiled version
-   const SDL_version *lv; // linked version
+   SDL_version lv = {}; // linked version
    int error = 0;
 
    // expected versions
    // must update these when SDL is updated.
-   static SDL_version ex_vers[3] = 
+   static SDL_version ex_vers[3] =
    {
-      { 1, 2, 15 }, // SDL
-      { 1, 2, 12 }, // SDL_mixer
-      { 1, 2,  8 }, // SDL_net
+      { 2, 0, 7 }, // SDL
+      { 2, 0, 2 }, // SDL_mixer
+      { 2, 0, 1 }, // SDL_net
    };
 
    // test SDL
    SDL_VERSION(&cv);
-   lv = SDL_Linked_Version();
+   SDL_GetVersion(&lv);
 
-   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   if(cv.major != lv.major || cv.minor != lv.minor || cv.patch != lv.patch)
    {
       error |= ERROR_SDL;
       printf("WARNING: SDL linked and compiled versions do not match!\n"
              "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
-             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+             cv.major, cv.minor, cv.patch, lv.major, lv.minor, lv.patch);
    }
 
-   if(lv->major != ex_vers[0].major || lv->minor != ex_vers[0].minor ||
-      lv->patch != ex_vers[0].patch)
+   if(lv.major != ex_vers[0].major || lv.minor != ex_vers[0].minor ||
+      lv.patch < ex_vers[0].patch)
    {
       error |= ERROR_SDL;
       printf("WARNING: SDL linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
-             lv->major, lv->minor, lv->patch,
+             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n",
+             lv.major, lv.minor, lv.patch,
              ex_vers[0].major, ex_vers[0].minor, ex_vers[0].patch);
    }
 
    if(!(error & ERROR_SDL))
       printf("DEBUG: Using SDL version %d.%d.%d\n",
-             lv->major, lv->minor, lv->patch);
+             lv.major, lv.minor, lv.patch);
 
    // test SDL_mixer
    SDL_MIXER_VERSION(&cv);
-   lv = Mix_Linked_Version();
+   const SDL_version *lv2;
+   lv2 = Mix_Linked_Version();
 
-   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   if(cv.major != lv2->major || cv.minor != lv2->minor || cv.patch != lv2->patch)
    {
       error |= ERROR_SDL_MIXER;
       printf("WARNING: SDL_mixer linked and compiled versions do not match!\n"
              "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
-             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+             cv.major, cv.minor, cv.patch, lv2->major, lv2->minor, lv2->patch);
    }
-   
-   if(lv->major != ex_vers[1].major || lv->minor != ex_vers[1].minor ||
-      lv->patch != ex_vers[1].patch)
+
+   if(lv2->major != ex_vers[1].major || lv2->minor != ex_vers[1].minor ||
+      lv2->patch < ex_vers[1].patch)
    {
       error |= ERROR_SDL_MIXER;
       printf("WARNING: SDL_mixer linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n",
-             lv->major, lv->minor, lv->patch,
+             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n",
+             lv2->major, lv2->minor, lv2->patch,
              ex_vers[1].major, ex_vers[1].minor, ex_vers[1].patch);
    }
-   
+
    if(!(error & ERROR_SDL_MIXER))
       printf("DEBUG: Using SDL_mixer version %d.%d.%d\n",
-             lv->major, lv->minor, lv->patch);
+             lv2->major, lv2->minor, lv2->patch);
 
    SDL_NET_VERSION(&cv);
-   lv = SDLNet_Linked_Version();
+   lv2 = SDLNet_Linked_Version();
 
-   if(cv.major != lv->major || cv.minor != lv->minor || cv.patch != lv->patch)
+   if(cv.major != lv2->major || cv.minor != lv2->minor || cv.patch != lv2->patch)
    {
       error |= ERROR_SDL_NET;
       printf("WARNING: SDL_net linked and compiled versions do not match!\n"
              "%d.%d.%d (compiled) != %d.%d.%d (linked)\n\n",
-             cv.major, cv.minor, cv.patch, lv->major, lv->minor, lv->patch);
+             cv.major, cv.minor, cv.patch, lv2->major, lv2->minor, lv2->patch);
    }
 
-   if(lv->major != ex_vers[2].major || lv->minor != ex_vers[2].minor ||
-      lv->patch != ex_vers[2].patch)
+   if(lv2->major != ex_vers[2].major || lv2->minor != ex_vers[2].minor ||
+      lv2->patch < ex_vers[2].patch)
    {
       error |= ERROR_SDL_NET;
       printf("WARNING: SDL_net linked version is not the expected version\n"
-             "%d.%d.%d (linked) != %d.%d.%d (expected)\n\n",
-             lv->major, lv->minor, lv->patch,
+             "%d.%d.%d (linked) != %d.%d.(%d+) (expected)\n\n",
+             lv2->major, lv2->minor, lv2->patch,
              ex_vers[2].major, ex_vers[2].minor, ex_vers[2].patch);
    }
-   
+
    if(!(error & ERROR_SDL_NET))
       printf("DEBUG: Using SDL_net version %d.%d.%d\n",
-             lv->major, lv->minor, lv->patch);
+             lv2->major, lv2->minor, lv2->patch);
 }
 #endif
 

@@ -29,6 +29,10 @@
 #include "doomtype.h"
 #include "tables.h"
 
+struct line_t;
+struct linkdata_t;
+struct surface_t;
+
 // prevpos_t represents an Mobj or camera's previous position for purposes of
 // frame interpolation in the renderer. - haleyjd 01/04/14
 struct prevpos_t
@@ -37,6 +41,9 @@ struct prevpos_t
    fixed_t y;
    fixed_t z;
    angle_t angle;
+   const line_t *portalline;  // portal line being passed for interpolation
+   const linkdata_t *ldata;   // portal sector data being passed
+   const surface_t *portalsurface;  // portal surface for interpolation
 };
 
 //
@@ -48,6 +55,11 @@ struct prevpos_t
 inline fixed_t lerpCoord(fixed_t lerp, fixed_t oldpos, fixed_t newpos)
 {
    return oldpos + FixedMul(lerp, newpos - oldpos);
+}
+// Intentionally give a different name to prevent accidental overloads
+inline float lerpCoordf(fixed_t lerp, float oldpos, float newpos)
+{
+   return oldpos + lerp / (float)FPFRACUNIT * (newpos - oldpos);
 }
 
 #define LLANG360 4294967296LL

@@ -269,7 +269,7 @@ ZipFile::~ZipFile()
 
       // free the lump directory
       efree(lumps);
-      lumps    = NULL;
+      lumps    = nullptr;
       numLumps = 0;
    }
 
@@ -285,14 +285,14 @@ ZipFile::~ZipFile()
          efree(zw.buffer); // free the in-memory wad file
          efree(&zw);       // free the ZipWad structure
       }
-      wads = NULL;
+      wads = nullptr;
    }
 
    // close the disk file if it is open
    if(file)
    {
       fclose(file);
-      file = NULL;
+      file = nullptr;
    }
 }
 
@@ -342,7 +342,7 @@ bool ZipFile::readEndOfCentralDir(InBuffer &fin, ZIPEndOfCentralDir &zcd)
 bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 {
    qstring namestr;
-   ZIPCentralDirEntry entry;
+   edefstructvar(ZIPCentralDirEntry, entry);
 
    if(!centralDirReader.readFields(entry, fin))
       return false;
@@ -410,7 +410,8 @@ bool ZipFile::readCentralDirEntry(InBuffer &fin, ZipLump &lump, bool &skip)
 
    // Is this lump an embedded wad file?
    const char *dotpos = strrchr(lump.name, '.');
-   if(dotpos && !strncmp(dotpos, ".wad", 4))
+   // Must block macOS archiving artifacts
+   if(dotpos && strncmp(lump.name, "__macosx/", 9) && !strncmp(dotpos, ".wad", 4))
       lump.flags |= LF_ISEMBEDDEDWAD;
 
    return true;
@@ -471,7 +472,7 @@ static int ZIP_LumpSortCB(const void *va, const void *vb)
 bool ZipFile::readFromFile(FILE *f)
 {
    InBuffer reader;
-   ZIPEndOfCentralDir zcd;
+   edefstructvar(ZIPEndOfCentralDir, zcd);
 
    // remember our disk file
    file = f;
@@ -514,7 +515,7 @@ void ZipFile::checkForWadFiles(WadDirectory &parentDir)
       ZipWad *zipwad = estructalloc(ZipWad, 1);
 
       zipwad->size   = static_cast<size_t>(lumps[i].size);
-      zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, NULL);
+      zipwad->buffer = Z_Malloc(zipwad->size, PU_STATIC, nullptr);
 
       lumps[i].read(zipwad->buffer);
 
@@ -627,8 +628,8 @@ public:
    {
       int code;
       
-      zlStream.zalloc = NULL;
-      zlStream.zfree  = NULL;
+      zlStream.zalloc = nullptr;
+      zlStream.zfree  = nullptr;
 
       buffer();
       
@@ -685,7 +686,7 @@ static void ZIP_ReadDeflated(InBuffer &fin, void *buffer, size_t len)
 //
 void ZipLump::setAddress(InBuffer &fin)
 {
-   ZIPLocalFileHeader lfh;
+   edefstructvar(ZIPLocalFileHeader, lfh);
 
    if(!(flags & ZipFile::LF_CALCOFFSET))
       return;
@@ -707,7 +708,7 @@ void ZipLump::setAddress(InBuffer &fin)
       I_Error("ZipLump::setAddress: could not skip local name for '%s'\n", name);
 
    // calculate total length of the local file header and advance offset
-   offset += (ZIP_LOCAL_FILE_SIZE + skipSize);
+   offset += static_cast<long>(ZIP_LOCAL_FILE_SIZE + skipSize);
 
    // clear LF_CALCOFFSET flag
    flags &= ~ZipFile::LF_CALCOFFSET;

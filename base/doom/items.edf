@@ -12,21 +12,21 @@
 healtheffect HealthBonus
 {
   amount    1
-  maxamount 200
+  maxamount @superhealth
   +alwayspickup
 }
 
 healtheffect Medikit
 {
   amount     25
-  maxamount  100
+  maxamount  @maxhealth
   lowmessage "$GOTMEDINEED"
 }
 
 healtheffect MegasphereHealth
 {
-  amount    200
-  maxamount 200
+  amount    @superhealth
+  maxamount @superhealth
   +alwayspickup
   +sethealth
 }
@@ -34,14 +34,14 @@ healtheffect MegasphereHealth
 healtheffect Soulsphere
 {
   amount    100
-  maxamount 200
+  maxamount @superhealth
   +alwayspickup
 }
 
 healtheffect Stimpack
 {
   amount    10
-  maxamount 100
+  maxamount @maxhealth
 }
 
 //=============================================================================
@@ -53,7 +53,8 @@ armoreffect GreenArmor
 {
   saveamount  100
   savefactor  1
-  savedivisor 3   // 33% absorption (1/3)   
+  savedivisor 3   // 33% absorption (1/3)
+  +setabsorption   
 }
 
 armoreffect BlueArmor
@@ -61,6 +62,7 @@ armoreffect BlueArmor
   saveamount  200
   savefactor  1
   savedivisor 2   // 50% absorption (1/2)
+  +setabsorption
 }
 
 armoreffect ArmorBonus
@@ -70,7 +72,8 @@ armoreffect ArmorBonus
   savedivisor   3   // 33% absorption, if player has no armor
   maxsaveamount 200
   +alwayspickup
-  +bonus
+  +additive
+  -setabsorption
 }
 
 // This armor is what is given when using IDFA or IDKFA cheats in DOOM.
@@ -83,6 +86,7 @@ armoreffect IDFAArmor
   saveamount  200
   savefactor  1
   savedivisor 2
+  +setabsorption
 }
 
 //=============================================================================
@@ -384,5 +388,59 @@ ammoeffect RocketBox
   amount 5
 }
 
+//=============================================================================
+//
+// Power Givers (All Doom powerups are NOT artefacts)
+//
+
+powereffect InvulnerabilitySphere
+{
+  duration 30
+  type     PowerInvulnerable
+
+  +overridesself
+}
+
+powereffect Berserk
+{
+  duration 1
+  type     PowerStrength
+
+  // Not permanent, because that sets duration to -1, and this counts up
+  +overridesself
+}
+
+powereffect BlurSphere
+{
+  duration 60
+  type     PowerPartialInvisibility
+
+  +overridesself
+}
+
+powereffect RadSuit
+{
+  duration 60
+  type     PowerIronFeet
+
+  +overridesself
+}
+
+powereffect Allmap
+{
+  duration 1
+  type     PowerAllmap
+
+  -overridesself
+  +permanent
+}
+
+powereffect Infrared
+{
+  duration 120
+  type     PowerLightAmp
+
+  +overridesself
+}
 
 

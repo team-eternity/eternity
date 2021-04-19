@@ -281,7 +281,7 @@ ACSVM_CodeListACS0(StrLen,       253, "",       CallFunc,     1, StrLen)
 ACSVM_CodeListACS0(Jcnd_Tab,     256, "",       Jcnd_Tab,     1, None)
 ACSVM_CodeListACS0(Drop_ScrRet,  257, "",       Drop_ScrRet,  1, None)
 
-ACSVM_CodeListACS0(CallSpec_5R1, 263, "W",      CallSpec_R1,  5, None)
+ACSVM_CodeListACS0(CallSpec_5R1, 263, "b",      CallSpec_R1,  5, None)
 
 ACSVM_CodeListACS0(PrintModArr,  273, "",       CallFunc,     2, PrintModArr)
 ACSVM_CodeListACS0(PrintHubArr,  274, "",       CallFunc,     2, PrintHubArr)

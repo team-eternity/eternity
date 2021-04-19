@@ -4,9 +4,8 @@
 // Thing type definitions for Doom gamemodes.
 //
 
-thingtype DoomPlayer 
+thingtype DoomPlayer : Mobj, -1, 1
 {
-  dehackednum  1
   spawnhealth  100
   reactiontime 0
   painchance   255
@@ -14,11 +13,9 @@ thingtype DoomPlayer
   deathsound   pldeth
   radius       16.0
   height       56.0
-  flags        SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH
-  flags2       FOOTCLIP
-  flags3       SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
+  cflags       SOLID|SHOOTABLE|DROPOFF|PICKUP|NOTDMATCH|FOOTCLIP|SLIDE|TELESTOMP|WINDTHRUST|PASSMOBJ
   mod          PlayerMisc
-  
+
   firstdecoratestate S_PLAY
   states
   @"
@@ -29,7 +26,7 @@ thingtype DoomPlayer
     PLAY ABCD 4
     loop
   Missile:
-    PLAY E 12 
+    PLAY E 12
     goto Spawn
   Missile2:
     PLAY F 6 bright
@@ -37,7 +34,7 @@ thingtype DoomPlayer
   Pain:
     PLAY G 4
     PLAY G 4 A_Pain
-    goto Spawn    
+    goto Spawn
   Death:
     PLAY H   10
     PLAY I   10 A_PlayerScream
@@ -55,10 +52,8 @@ thingtype DoomPlayer
   "@
 }
 
-thingtype Zombieman 
+thingtype Zombieman : Mobj, 3004, 2
 {
-  doomednum   3004
-  dehackednum 2
   spawnhealth 20
   seesound    posit1
   attacksound pistol
@@ -70,13 +65,13 @@ thingtype Zombieman
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    AmmoClip
-  obituary_normal "was capped by a zombie"
-  acs_spawndata 
-  { 
-    num   4 
+  obituary_normal "was capped by a zombieman"
+  acs_spawndata
+  {
+    num   4
     modes doom
   }
-    
+
   firstdecoratestate S_POSS_STND
   states
   @"
@@ -112,14 +107,12 @@ thingtype Zombieman
   Raise:
     POSS KJIH 5
     goto See
-  "@  
+  "@
 }
 
-thingtype Sergeant 
+thingtype Sergeant : Mobj, 9, 3
 {
   compatname  ShotgunGuy
-  doomednum   9
-  dehackednum 3
   spawnhealth 30
   seesound    posit2
   painchance  170
@@ -130,13 +123,13 @@ thingtype Sergeant
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    WeaponShotgun
-  obituary_normal "was blasted by a former sergeant"
-  acs_spawndata 
-  { 
-    num   1 
+  obituary_normal "was blasted by a shotgun guy"
+  acs_spawndata
+  {
+    num   1
     modes doom
   }
-    
+
   firstdecoratestate S_SPOS_STND
   states
   @"
@@ -172,13 +165,11 @@ thingtype Sergeant
   Raise:
     SPOS LKJIH 5
     goto See
-  "@  
+  "@
 }
 
-thingtype Archvile 
+thingtype Archvile : Mobj, 64, 4
 {
-  doomednum   64
-  dehackednum 4
   spawnhealth 700
   seesound    vilsit
   painchance  10
@@ -188,16 +179,14 @@ thingtype Archvile
   height      56.0
   mass        500
   activesound vilact
-  flags       SOLID|SHOOTABLE|COUNTKILL
-  flags2      FOOTCLIP|SHORTMRANGE
-  flags3      DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
-  obituary_normal "was fried by an archvile"
-  acs_spawndata 
-  { 
-    num   111 
+  cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SHORTMRANGE|DMGIGNORED|NOTHRESHOLD|SPACMONSTER|PASSMOBJ
+  obituary_normal "was fried by an arch-vile"
+  acs_spawndata
+  {
+    num   111
     modes doom
   }
-  
+
   firstdecoratestate S_VILE_STND
   states
   @"
@@ -235,12 +224,11 @@ thingtype Archvile
   "@
 }
 
-thingtype VileFire 
+thingtype VileFire : Mobj, -1, 5
 {
   compatname  ArchvileFire
-  dehackednum 5
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  
+
   firstdecoratestate S_FIRE1
   states
   @"
@@ -252,13 +240,11 @@ thingtype VileFire
     FIRE E             2 bright A_FireCrackle
     FIRE FEFEFGHGHGH   2 bright A_Fire
     stop
-  "@  
+  "@
 }
 
-thingtype Revenant 
+thingtype Revenant : Mobj, 66, 6
 {
-  doomednum   66
-  dehackednum 6
   spawnhealth 300
   seesound    skesit
   painchance  100
@@ -271,12 +257,12 @@ thingtype Revenant
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|LONGMELEE|RANGEHALF|SPACMONSTER|PASSMOBJ
   obituary_normal "couldn't hide from a revenant missile"
   obituary_melee  "was sucker-punched by a revenant"
-  acs_spawndata 
-  { 
-    num   20 
-    modes doom 
+  acs_spawndata
+  {
+    num   20
+    modes doom
   }
-    
+
   firstdecoratestate S_SKEL_STND
   states
   @"
@@ -312,13 +298,12 @@ thingtype Revenant
   Raise:
     SKEL QPONML 5
     goto See
-  "@  
+  "@
 }
 
-thingtype TracerShot 
+thingtype TracerShot : Mobj, -1, 7
 {
   compatname  RevenantTracer
-  dehackednum 7
   seesound    skeatk
   deathsound  barexp
   speed       10.0
@@ -326,12 +311,12 @@ thingtype TracerShot
   height      8.0
   damage      10
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|SEEKERMISSILE|SPACMISSILE
-  acs_spawndata 
-  { 
-    num   52 
-    modes doom 
+  acs_spawndata
+  {
+    num   52
+    modes doom
   }
-    
+
   firstdecoratestate S_TRACER
   states
   @"
@@ -346,12 +331,11 @@ thingtype TracerShot
   "@
 }
 
-thingtype TracerSmoke 
+thingtype TracerSmoke : Mobj, -1, 8
 {
   compatname  RevenantTracerSmoke
-  dehackednum 8
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-    
+
   firstdecoratestate S_SMOKE1
   states
   @"
@@ -361,11 +345,9 @@ thingtype TracerSmoke
   "@
 }
 
-thingtype Mancubus 
+thingtype Mancubus : Mobj, 67, 9
 {
   compatname  Fatso
-  doomednum   67
-  dehackednum 9
   spawnhealth 600
   seesound    mansit
   painchance  80
@@ -378,12 +360,12 @@ thingtype Mancubus
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS1|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "was flattened by a mancubus"
-  acs_spawndata 
-  { 
-    num   112 
-    modes doom 
+  acs_spawndata
+  {
+    num   112
+    modes doom
   }
-    
+
   firstdecoratestate S_FATT_STND
   states
   @"
@@ -422,10 +404,9 @@ thingtype Mancubus
   "@
 }
 
-thingtype MancubusShot 
+thingtype MancubusShot : Mobj, -1, 10
 {
   compatname  FatShot
-  dehackednum 10
   seesound    firsht
   deathsound  firxpl
   speed       20.0
@@ -433,12 +414,12 @@ thingtype MancubusShot
   height      8.0
   damage      8
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|SPACMISSILE
-  acs_spawndata 
-  { 
+  acs_spawndata
+  {
     num   153
-    modes doom 
+    modes doom
   }
-    
+
   firstdecoratestate S_FATSHOT1
   states
   @"
@@ -453,11 +434,9 @@ thingtype MancubusShot
   "@
 }
 
-thingtype Chaingunner 
+thingtype Chaingunner : Mobj, 65, 11
 {
   compatname  ChaingunGuy
-  doomednum   65
-  dehackednum 11
   spawnhealth 70
   seesound    posit2
   painchance  170
@@ -468,13 +447,13 @@ thingtype Chaingunner
   activesound posact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    WeaponChaingun
-  obituary_normal "felt the heat from a chaingunner"
-  acs_spawndata 
-  { 
-    num   2 
-    modes doom 
+  obituary_normal "felt the heat from a heavy weapon dude"
+  acs_spawndata
+  {
+    num   2
+    modes doom
   }
-    
+
   firstdecoratestate S_CPOS_STND
   states
   @"
@@ -514,10 +493,8 @@ thingtype Chaingunner
   "@
 }
 
-thingtype DoomImp 
+thingtype DoomImp : Mobj, 3001, 12
 {
-  doomednum   3001
-  dehackednum 12
   spawnhealth 60
   seesound    bgsit1
   painchance  200
@@ -531,10 +508,10 @@ thingtype DoomImp
   obituary_melee  "was torn apart by an imp"
   acs_spawndata
   {
-    num   5 
+    num   5
     modes doom
   }
-    
+
   firstdecoratestate S_TROO_STND
   states
   @"
@@ -572,13 +549,11 @@ thingtype DoomImp
     TROO ML  8
     TROO KJI 6
     goto See
-  "@  
+  "@
 }
 
-thingtype Demon 
+thingtype Demon : Mobj, 3002, 13
 {
-  doomednum   3002
-  dehackednum 13
   spawnhealth 150
   seesound    sgtsit
   attacksound sgtatk
@@ -592,12 +567,12 @@ thingtype Demon
   activesound dmact
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "was chewed on by a demon"
-  acs_spawndata 
-  { 
+  acs_spawndata
+  {
     num   8
     modes doom
   }
-    
+
   firstdecoratestate S_SARG_STND
   states
   @"
@@ -625,14 +600,12 @@ thingtype Demon
     stop
   Raise:
     SARG NMLKJI 5
-    goto See  
-  "@  
+    goto See
+  "@
 }
 
-thingtype Spectre 
+thingtype Spectre : Mobj, 58, 14
 {
-  doomednum   58
-  dehackednum 14
   spawnhealth 150
   seesound    sgtsit
   attacksound sgtatk
@@ -646,25 +619,23 @@ thingtype Spectre
   activesound dmact
   cflags      SOLID|SHOOTABLE|SHADOW|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_melee "didn't see the spectre"
-  acs_spawndata 
+  acs_spawndata
   {
-    num   9 
+    num   9
     modes doom
   }
-  
+
   // States are shared with/defined by the Demon
   spawnstate S_SARG_STND
-  seestate   S_SARG_RUN1  
+  seestate   S_SARG_RUN1
   painstate  S_SARG_PAIN
   meleestate S_SARG_ATK1
   deathstate S_SARG_DIE1
   raisestate S_SARG_RAISE1
 }
 
-thingtype Cacodemon 
+thingtype Cacodemon : Mobj, 3005, 15
 {
-  doomednum   3005
-  dehackednum 15
   spawnhealth 400
   seesound    cacsit
   painchance  128
@@ -683,7 +654,7 @@ thingtype Cacodemon
     num   19
     modes doom
   }
-    
+
   firstdecoratestate S_HEAD_STND
   states
   @"
@@ -715,10 +686,8 @@ thingtype Cacodemon
   "@
 }
 
-thingtype BaronOfHell 
+thingtype BaronOfHell : Mobj, 3003, 16
 {
-  doomednum   3003
-  dehackednum 16
   seesound    brssit
   painchance  50
   painsound   dmpain
@@ -736,7 +705,7 @@ thingtype BaronOfHell
     num   3
     modes doom
   }
-    
+
   firstdecoratestate S_BOSS_STND
   states
   @"
@@ -766,13 +735,12 @@ thingtype BaronOfHell
   Raise:
     BOSS ONMLKJI 8
     goto See
-  "@  
+  "@
 }
 
-thingtype BaronShot 
+thingtype BaronShot : Mobj, -1, 17
 {
   compatname  BaronBall
-  dehackednum 17
   seesound    firsht
   deathsound  firxpl
   speed       15.0
@@ -783,10 +751,10 @@ thingtype BaronShot
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
   acs_spawndata
   {
-    num   154 
+    num   154
     modes doom
   }
-  
+
   firstdecoratestate S_BRBALL1
   states
   @"
@@ -799,10 +767,8 @@ thingtype BaronShot
   "@
 }
 
-thingtype HellKnight 
+thingtype HellKnight : Mobj, 69, 18
 {
-  doomednum   69
-  dehackednum 18
   spawnhealth 500
   seesound    kntsit
   painchance  50
@@ -821,7 +787,7 @@ thingtype HellKnight
     num   113
     modes doom
   }
-    
+
   firstdecoratestate S_BOS2_STND
   states
   @"
@@ -854,10 +820,8 @@ thingtype HellKnight
   "@
 }
 
-thingtype LostSoul 
+thingtype LostSoul : Mobj, 3006, 19
 {
-  doomednum   3006
-  dehackednum 19
   spawnhealth 100
   attacksound sklatk
   painchance  256
@@ -869,16 +833,14 @@ thingtype LostSoul
   mass        50
   damage      3
   activesound dmact
-  flags       SOLID|SHOOTABLE|NOGRAVITY|FLOAT
-  flags2      NOSTRAFE|RANGEHALF
-  flags3      KILLABLE|DEADFLOAT|SPACMONSTER|PASSMOBJ
+  cflags      SOLID|SHOOTABLE|NOGRAVITY|FLOAT|NOSTRAFE|RANGEHALF|KILLABLE|DEADFLOAT|SPACMONSTER|PASSMOBJ
   obituary_normal "was spooked by a lost soul"
   acs_spawndata
   {
     num   110
     modes doom
   }
-    
+
   firstdecoratestate S_SKULL_STND
   states
   @"
@@ -904,14 +866,12 @@ thingtype LostSoul
     SKUL I   6 bright A_Fall
     SKUL JK  6
     stop
-  "@  
+  "@
 }
 
-thingtype Spiderdemon 
+thingtype Spiderdemon : Mobj, 7, 20
 {
   compatname  SpiderMastermind
-  doomednum   7
-  dehackednum 20
   spawnhealth 3000
   seesound    spisit
   attacksound shotgn
@@ -923,16 +883,14 @@ thingtype Spiderdemon
   height      100.0
   mass        1000
   activesound dmact
-  flags       SOLID|SHOOTABLE|COUNTKILL
-  flags2      E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF
-  flags3      SPACMONSTER|PASSMOBJ
-  obituary_normal "stood in awe of the Spiderdemon"
+  cflags      SOLID|SHOOTABLE|COUNTKILL|E3M8BOSS|BOSS|E4M8BOSS|FOOTCLIP|RANGEHALF|SPACMONSTER|PASSMOBJ
+  obituary_normal "stood in awe of the Spider Mastermind"
   acs_spawndata
   {
     num   7
     modes doom
   }
-   
+
   firstdecoratestate S_SPID_STND
   states
   @"
@@ -966,10 +924,8 @@ thingtype Spiderdemon
   "@
 }
 
-thingtype Arachnotron 
+thingtype Arachnotron : Mobj, 68, 21
 {
-  doomednum   68
-  dehackednum 21
   spawnhealth 500
   seesound    bspsit
   painchance  128
@@ -980,16 +936,14 @@ thingtype Arachnotron
   height      64.0
   mass        600
   activesound bspact
-  flags       SOLID|SHOOTABLE|COUNTKILL
-  flags2      MAP07BOSS2|FOOTCLIP
-  flags3      SPACMONSTER|PASSMOBJ
+  cflags      SOLID|SHOOTABLE|COUNTKILL|MAP07BOSS2|FOOTCLIP|SPACMONSTER|PASSMOBJ
   obituary_normal "tried to stare down an arachnotron"
   acs_spawndata
   {
     num   6
     modes doom
   }
-    
+
   firstdecoratestate S_BSPI_STND
   states
   @"
@@ -1022,13 +976,11 @@ thingtype Arachnotron
   Raise:
     BSPI PONMLKJ 5
     goto See+1
-  "@  
+  "@
 }
 
-thingtype Cyberdemon 
+thingtype Cyberdemon : Mobj, 16, 22
 {
-  doomednum   16
-  dehackednum 22
   spawnhealth 4000
   seesound    cybsit
   painchance  20
@@ -1039,16 +991,14 @@ thingtype Cyberdemon
   height      110.0
   mass        1000
   activesound dmact
-  flags       SOLID|SHOOTABLE|COUNTKILL
-  flags2      E2M8BOSS|BOSS|E4M6BOSS|FOOTCLIP|RANGEHALF|HIGHERMPROB
-  flags3      SPACMONSTER|PASSMOBJ
+  cflags      SOLID|SHOOTABLE|COUNTKILL|E2M8BOSS|BOSS|E4M6BOSS|FOOTCLIP|RANGEHALF|HIGHERMPROB|SPACMONSTER|PASSMOBJ
   obituary_normal "gulped down a Cyberdemon's rocket"
   acs_spawndata
   {
     num   114
     modes doom
   }
-    
+
   firstdecoratestate S_CYBER_STND
   states
   @"
@@ -1084,10 +1034,8 @@ thingtype Cyberdemon
   "@
 }
 
-thingtype PainElemental 
+thingtype PainElemental : Mobj, 71, 23
 {
-  doomednum   71
-  dehackednum 23
   spawnhealth 400
   seesound    pesit
   painchance  128
@@ -1105,7 +1053,7 @@ thingtype PainElemental
     num   115
     modes doom
   }
-    
+
   firstdecoratestate S_PAIN_STND
   states
   @"
@@ -1137,11 +1085,9 @@ thingtype PainElemental
   "@
 }
 
-thingtype WolfSS 
+thingtype WolfSS : Mobj, 84, 24
 {
   compatname  WolfensteinSS
-  doomednum   84
-  dehackednum 24
   spawnhealth 50
   seesound    sssit
   painchance  170
@@ -1153,12 +1099,12 @@ thingtype WolfSS
   cflags      SOLID|SHOOTABLE|COUNTKILL|FOOTCLIP|SPACMONSTER|PASSMOBJ
   droptype    AmmoClip
   obituary_normal "was no match for the past"
-  acs_spawndata 
+  acs_spawndata
   {
     num   116
-    modes doom 
+    modes doom
   }
-    
+
   firstdecoratestate S_SSWV_STND
   states
   @"
@@ -1199,10 +1145,8 @@ thingtype WolfSS
   "@
 }
 
-thingtype CommanderKeen 
+thingtype CommanderKeen : Mobj, 72, 25
 {
-  doomednum      72
-  dehackednum    25
   spawnhealth    100
   painchance     256
   painsound      keenpn
@@ -1212,7 +1156,7 @@ thingtype CommanderKeen
   correct_height 51.0
   mass           10000000
   flags          SOLID|SHOOTABLE|SPAWNCEILING|NOGRAVITY|COUNTKILL|PASSMOBJ
-    
+
   firstdecoratestate S_KEENSTND
   states
   @"
@@ -1233,10 +1177,8 @@ thingtype CommanderKeen
   "@
 }
 
-thingtype BossBrain 
+thingtype BossBrain : Mobj, 88, 26
 {
-  doomednum   88
-  dehackednum 26
   spawnhealth 250
   painchance  255
   painsound   bospn
@@ -1244,7 +1186,7 @@ thingtype BossBrain
   radius      16.0
   mass        10000000
   cflags      SOLID|SHOOTABLE|NOTORQUE
-  
+
   firstdecoratestate S_BRAIN
   states
   @"
@@ -1262,14 +1204,12 @@ thingtype BossBrain
   "@
 }
 
-thingtype BossCubeSpitter 
+thingtype BossCubeSpitter : Mobj, 89, 27
 {
   compatname  BossEye
-  doomednum   89
-  dehackednum 27
   height      32.0
   flags       NOSECTOR|NOBLOCKMAP
-    
+
   firstdecoratestate S_BRAINEYE
   states
   @"
@@ -1283,19 +1223,16 @@ thingtype BossCubeSpitter
   "@
 }
 
-thingtype BossSpawnSpot 
+thingtype BossSpawnSpot : Mobj, 87, 28
 {
   compatname  BossTarget
-  doomednum   87
-  dehackednum 28
   height      32.0
   flags       NOSECTOR|NOBLOCKMAP
 }
 
-thingtype BossSpawnCube 
+thingtype BossSpawnCube : Mobj, -1, 29
 {
   compatname  SpawnShot
-  dehackednum 29
   seesound    bospit
   deathsound  firxpl
   speed       10.0
@@ -1303,7 +1240,7 @@ thingtype BossSpawnCube
   height      32.0
   damage      3
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|NOCLIP|MISSILE|SPACMISSILE
-  
+
   firstdecoratestate S_SPAWN1
   states
   @"
@@ -1313,16 +1250,15 @@ thingtype BossSpawnCube
     BOSF C 3 bright A_SpawnFly
     BOSF D 3 bright A_SpawnFly
     loop
-  "@  
+  "@
 }
 
-thingtype BossSpawnFire 
+thingtype BossSpawnFire : Mobj, -1, 30
 {
   compatname  SpawnFire
-  dehackednum 30  
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-  acs_spawndata 
-  { 
+  acs_spawndata
+  {
     num   98
     modes doom
   }
@@ -1336,11 +1272,9 @@ thingtype BossSpawnFire
   "@
 }
 
-thingtype DoomBarrel 
+thingtype DoomBarrel : Mobj, 2035, 31
 {
   compatname     ExplosiveBarrel
-  doomednum      2035
-  dehackednum    31
   spawnhealth    20
   deathsound     barexp
   radius         10.0
@@ -1348,12 +1282,12 @@ thingtype DoomBarrel
   correct_height 34.0
   flags          SOLID|SHOOTABLE|NOBLOOD
   mod            Barrel
-  acs_spawndata 
+  acs_spawndata
   {
     num   125
     modes doom
   }
-  
+
   firstdecoratestate S_BAR1
   states
   @"
@@ -1370,11 +1304,10 @@ thingtype DoomBarrel
   "@
 }
 
-thingtype DoomImpShot 
+thingtype DoomImpShot : Mobj, -1, 32
 {
   compatname  DoomImpBall
-  dehackednum 32
-  seesound    firsht  
+  seesound    firsht
   deathsound  firxpl
   speed       10.0
   fastspeed   20.0
@@ -1382,12 +1315,12 @@ thingtype DoomImpShot
   height      8.0
   damage      3
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
-  acs_spawndata 
-  { 
-    num   10 
-    modes doom 
+  acs_spawndata
+  {
+    num   10
+    modes doom
   }
-    
+
   firstdecoratestate S_TBALL1
   states
   @"
@@ -1400,10 +1333,9 @@ thingtype DoomImpShot
   "@
 }
 
-thingtype CacodemonShot 
+thingtype CacodemonShot : Mobj, -1, 33
 {
   compatname  CacodemonBall
-  dehackednum 33
   seesound    firsht
   deathsound  firxpl
   speed       10.0
@@ -1412,12 +1344,12 @@ thingtype CacodemonShot
   height      8.0
   damage      5
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS
-  acs_spawndata 
-  { 
-    num   126 
+  acs_spawndata
+  {
+    num   126
     modes doom
   }
-    
+
   firstdecoratestate S_RBALL1
   states
   @"
@@ -1430,10 +1362,9 @@ thingtype CacodemonShot
   "@
 }
 
-thingtype RocketShot 
+thingtype RocketShot : Mobj, -1, 34
 {
   compatname  Rocket
-  dehackednum 34
   seesound    rlaunc
   deathsound  barexp
   speed       20.0
@@ -1443,12 +1374,12 @@ thingtype RocketShot
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|NOCROSS|SPACMISSILE
   particlefx  ROCKET
   mod         Rocket
-  acs_spawndata 
-  { 
-    num   127 
+  acs_spawndata
+  {
+    num   127
     modes doom
   }
-    
+
   firstdecoratestate S_ROCKET
   states
   @"
@@ -1463,11 +1394,10 @@ thingtype RocketShot
   "@
 }
 
-thingtype PlasmaShot 
+thingtype PlasmaShot : Mobj, -1, 35
 {
   compatname  PlasmaBall
-  dehackednum 35
-  seesound    plasma  
+  seesound    plasma
   deathsound  firxpl
   speed       25.0
   radius      13.0
@@ -1475,12 +1405,12 @@ thingtype PlasmaShot
   damage      5
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
   mod         Plasma
-  acs_spawndata 
-  { 
-    num   51 
+  acs_spawndata
+  {
+    num   51
     modes doom
   }
-  
+
   firstdecoratestate S_PLASBALL
   states
   @"
@@ -1493,10 +1423,9 @@ thingtype PlasmaShot
   "@
 }
 
-thingtype BFGShot 
+thingtype BFGShot : Mobj, -1, 36
 {
   compatname  BFGBall
-  dehackednum 36
   deathsound  rxplod
   speed       25.0
   radius      13.0
@@ -1505,12 +1434,12 @@ thingtype BFGShot
   cflags      NOBLOCKMAP|NOGRAVITY|DROPOFF|MISSILE|TRANSLUCENT|NOCROSS|SPACMISSILE
   particlefx  BFG
   mod         BFG
-  acs_spawndata 
-  { 
-    num   128 
-    modes doom 
+  acs_spawndata
+  {
+    num   128
+    modes doom
   }
-    
+
   firstdecoratestate S_BFGSHOT
   states
   @"
@@ -1525,10 +1454,9 @@ thingtype BFGShot
   "@
 }
 
-thingtype ArachnotronShot 
+thingtype ArachnotronShot : Mobj, -1, 37
 {
   compatname  ArachnotronPlasma
-  dehackednum 37
   seesound    plasma
   deathsound  firxpl
   speed       25.0
@@ -1541,7 +1469,7 @@ thingtype ArachnotronShot
     num   129
     modes doom
   }
-    
+
   firstdecoratestate S_ARACH_PLAZ
   states
   @"
@@ -1554,37 +1482,35 @@ thingtype ArachnotronShot
   "@
 }
 
-thingtype BulletPuff 
+thingtype BulletPuff : Mobj, -1, 38
 {
-  dehackednum 38
   cflags      NOBLOCKMAP|NOGRAVITY|TRANSLUCENT|NOSPLASH
-  acs_spawndata 
-  { 
-    num   131 
-    modes doom 
+  acs_spawndata
+  {
+    num   131
+    modes doom
   }
-    
+
   firstdecoratestate S_PUFF1
   states
   @"
   Spawn:
-    PUFF A 4 bright 
+    PUFF A 4 bright
     PUFF BCD 4
     stop
   "@
 }
 
-thingtype DoomBlood 
+thingtype DoomBlood : Mobj, -1, 39
 {
   compatname  Blood
-  dehackednum 39
   cflags      NOBLOCKMAP|NOSPLASH
-  acs_spawndata 
-  { 
-    num   130 
-    modes doom 
+  acs_spawndata
+  {
+    num   130
+    modes doom
   }
-    
+
   firstdecoratestate S_BLOOD1
   states
   @"
@@ -1594,10 +1520,9 @@ thingtype DoomBlood
   "@
 }
 
-thingtype DoomTeleFog 
+thingtype DoomTeleFog : Mobj, -1, 40
 {
   compatname  TeleportFog
-  dehackednum 40
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
 
   firstdecoratestate S_TFOG
@@ -1609,12 +1534,11 @@ thingtype DoomTeleFog
   "@
 }
 
-thingtype DoomItemFog 
+thingtype DoomItemFog : Mobj, -1, 41
 {
   compatname  ItemFog
-  dehackednum 41
   flags       NOBLOCKMAP|NOGRAVITY|TRANSLUCENT
-    
+
   firstdecoratestate S_IFOG
   states
   @"
@@ -1626,32 +1550,29 @@ thingtype DoomItemFog
 
 // Note: TeleportSpot is shared between all gamemodes
 
-thingtype BFGFlash 
+thingtype BFGFlash : Mobj, -1, 43
 {
   compatname  BFGExtra
-  dehackednum 43
   flags       NOBLOCKMAP|NOGRAVITY
-    
+
   firstdecoratestate S_BFGEXP
   states
   @"
   Spawn:
     BFE2 ABCD 8 bright
-    stop    
+    stop
   "@
 }
 
-thingtype GreenArmor 
+thingtype GreenArmor : Mobj, 2018, 44
 {
-  doomednum   2018
-  dehackednum 44
   flags       SPECIAL
   acs_spawndata
   {
     num   68
     modes doom
   }
-  
+
   firstdecoratestate S_ARM1
   states
   @"
@@ -1662,17 +1583,15 @@ thingtype GreenArmor
   "@
 }
 
-thingtype BlueArmor 
+thingtype BlueArmor : Mobj, 2019, 45
 {
-  doomednum   2019
-  dehackednum 45  
   flags       SPECIAL
   acs_spawndata
-  { 
+  {
     num   69
     modes doom
   }
-  
+
   firstdecoratestate S_ARM2
   states
   @"
@@ -1683,17 +1602,15 @@ thingtype BlueArmor
   "@
 }
 
-thingtype HealthBonus 
+thingtype HealthBonus : Mobj, 2014, 46
 {
-  doomednum   2014
-  dehackednum 46
   flags       SPECIAL|COUNTITEM
   acs_spawndata
   {
     num   152
     modes doom
   }
-  
+
   firstdecoratestate S_BON1
   states
   @"
@@ -1703,10 +1620,8 @@ thingtype HealthBonus
   "@
 }
 
-thingtype ArmorBonus 
+thingtype ArmorBonus : Mobj, 2015, 47
 {
-  doomednum   2015
-  dehackednum 47
   flags       SPECIAL|COUNTITEM
   acs_spawndata
   {
@@ -1723,18 +1638,16 @@ thingtype ArmorBonus
   "@
 }
 
-thingtype DoomBlueCard 
+thingtype DoomBlueCard : Mobj, 5, 48
 {
   compatname  BlueCard
-  doomednum   5
-  dehackednum 48
   flags       SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   85
     modes doom
   }
-  
+
   firstdecoratestate S_BKEY
   states
   @"
@@ -1745,18 +1658,16 @@ thingtype DoomBlueCard
   "@
 }
 
-thingtype DoomRedCard 
+thingtype DoomRedCard : Mobj, 13, 49
 {
   compatname  RedCard
-  doomednum   13
-  dehackednum 49
   flags       SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   86
     modes doom
   }
-    
+
   firstdecoratestate S_RKEY
   states
   @"
@@ -1767,14 +1678,12 @@ thingtype DoomRedCard
   "@
 }
 
-thingtype DoomYellowCard 
+thingtype DoomYellowCard : Mobj, 6, 50
 {
   compatname  YellowCard
-  doomednum   6
-  dehackednum 50
   flags       SPECIAL|NOTDMATCH
   acs_spawndata
-  { 
+  {
     num   87
     modes doom
   }
@@ -1789,18 +1698,16 @@ thingtype DoomYellowCard
   "@
 }
 
-thingtype DoomYellowSkull 
+thingtype DoomYellowSkull : Mobj, 39, 51
 {
   compatname  YellowSkull
-  doomednum   39
-  dehackednum 51
   flags       SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   88
     modes doom
   }
-  
+
   firstdecoratestate S_YSKULL
   states
   @"
@@ -1811,18 +1718,16 @@ thingtype DoomYellowSkull
   "@
 }
 
-thingtype DoomRedSkull 
+thingtype DoomRedSkull : Mobj, 38, 52
 {
   compatname  RedSkull
-  doomednum   38
-  dehackednum 52
   flags       SPECIAL|NOTDMATCH
   acs_spawndata
   {
     num   89
     modes doom
   }
-  
+
   firstdecoratestate S_RSKULL
   states
   @"
@@ -1833,11 +1738,9 @@ thingtype DoomRedSkull
   "@
 }
 
-thingtype DoomBlueSkull 
+thingtype DoomBlueSkull : Mobj, 40, 53
 {
   compatname  BlueSkull
-  doomednum   40
-  dehackednum 53
   flags       SPECIAL|NOTDMATCH
   acs_spawndata
   {
@@ -1855,10 +1758,8 @@ thingtype DoomBlueSkull
   "@
 }
 
-thingtype StimPack 
+thingtype StimPack : Mobj, 2011, 54
 {
-  doomednum   2011
-  dehackednum 54
   flags       SPECIAL
   acs_spawndata
   {
@@ -1875,10 +1776,8 @@ thingtype StimPack
   "@
 }
 
-thingtype MediKit 
+thingtype MediKit : Mobj, 2012, 55
 {
-  doomednum   2012
-  dehackednum 55
   flags       SPECIAL
   acs_spawndata
   {
@@ -1895,10 +1794,8 @@ thingtype MediKit
   "@
 }
 
-thingtype SoulSphere 
+thingtype SoulSphere : Mobj, 2013, 56
 {
-  doomednum   2013
-  dehackednum 56
   flags       SPECIAL|COUNTITEM|TRANSLUCENT
   acs_spawndata
   {
@@ -1915,11 +1812,9 @@ thingtype SoulSphere
   "@
 }
 
-thingtype InvulnSphere 
+thingtype InvulnSphere : Mobj, 2022, 57
 {
   compatname  InvulnerabilitySphere
-  doomednum   2022
-  dehackednum 57
   cflags      SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
   acs_spawndata
   {
@@ -1936,11 +1831,9 @@ thingtype InvulnSphere
   "@
 }
 
-thingtype BerzerkBox 
+thingtype BerzerkBox : Mobj, 2023, 58
 {
   compatname  Berserk
-  doomednum   2023
-  dehackednum 58
   flags       SPECIAL|COUNTITEM
   acs_spawndata
   {
@@ -1957,39 +1850,35 @@ thingtype BerzerkBox
   "@
 }
 
-thingtype InvisiSphere 
+thingtype InvisiSphere : Mobj, 2024, 59
 {
   compatname  BlurSphere
-  doomednum   2024
-  dehackednum 59
   cflags      SPECIAL|COUNTITEM|TRANSLUCENT|SUPERITEM
   acs_spawndata
   {
     num   135
     modes doom
   }
-  
+
   firstdecoratestate S_PINS
   states
   @"
   Spawn:
     PINS ABCD 6 bright
     loop
-  "@  
+  "@
 }
 
-thingtype RadiationSuit 
+thingtype RadiationSuit : Mobj, 2025, 60
 {
   compatname  RadSuit
-  doomednum   2025
-  dehackednum 60
   flags       SPECIAL
   acs_spawndata
   {
     num   136
     modes doom
   }
-  
+
   firstdecoratestate S_SUIT
   states
   @"
@@ -1999,18 +1888,16 @@ thingtype RadiationSuit
   "@
 }
 
-thingtype ComputerMap 
+thingtype ComputerMap : Mobj, 2026, 61
 {
   compatname  Allmap
-  doomednum   2026
-  dehackednum 61
   flags       SPECIAL|COUNTITEM
   acs_spawndata
   {
     num   137
     modes doom
   }
-  
+
   firstdecoratestate S_PMAP
   states
   @"
@@ -2020,18 +1907,16 @@ thingtype ComputerMap
   "@
 }
 
-thingtype LightAmpVisor 
+thingtype LightAmpVisor : Mobj, 2045, 62
 {
   compatname  Infrared
-  doomednum   2045
-  dehackednum 62
   flags       SPECIAL|COUNTITEM
   acs_spawndata
   {
     num   138
     modes doom
   }
-  
+
   firstdecoratestate S_PVIS
   states
   @"
@@ -2042,10 +1927,8 @@ thingtype LightAmpVisor
   "@
 }
 
-thingtype MegaSphere 
+thingtype MegaSphere : Mobj, 83, 63
 {
-  doomednum   83
-  dehackednum 63
   flags       SPECIAL|COUNTITEM|TRANSLUCENT
   acs_spawndata
   {
@@ -2062,18 +1945,16 @@ thingtype MegaSphere
   "@
 }
 
-thingtype AmmoClip 
+thingtype AmmoClip : Mobj, 2007, 64
 {
   compatname  Clip
-  doomednum   2007
-  dehackednum 64
   flags       SPECIAL
-  acs_spawndata 
+  acs_spawndata
   {
     num   11
     modes doom
   }
-  
+
   firstdecoratestate S_CLIP
   states
   @"
@@ -2083,18 +1964,16 @@ thingtype AmmoClip
   "@
 }
 
-thingtype AmmoBulletBox 
+thingtype AmmoBulletBox : Mobj, 2048, 65
 {
   compatname  ClipBox
-  doomednum   2048
-  dehackednum 65
   flags       SPECIAL
   acs_spawndata
   {
     num   139
     modes doom
   }
-  
+
   firstdecoratestate S_AMMO
   states
   @"
@@ -2104,11 +1983,9 @@ thingtype AmmoBulletBox
   "@
 }
 
-thingtype AmmoRocket 
+thingtype AmmoRocket : Mobj, 2010, 66
 {
   compatname  RocketAmmo
-  doomednum   2010
-  dehackednum 66
   flags       SPECIAL
   acs_spawndata
   {
@@ -2125,18 +2002,16 @@ thingtype AmmoRocket
   "@
 }
 
-thingtype AmmoRocketBox 
+thingtype AmmoRocketBox : Mobj, 2046, 67
 {
   compatname  RocketBox
-  doomednum   2046
-  dehackednum 67
   flags       SPECIAL
   acs_spawndata
   {
     num   141
     modes doom
   }
-  
+
   firstdecoratestate S_BROK
   states
   @"
@@ -2146,11 +2021,9 @@ thingtype AmmoRocketBox
   "@
 }
 
-thingtype AmmoCell 
+thingtype AmmoCell : Mobj, 2047, 68
 {
   compatname  Cell
-  doomednum   2047
-  dehackednum 68
   flags       SPECIAL
   acs_spawndata
   {
@@ -2167,11 +2040,9 @@ thingtype AmmoCell
   "@
 }
 
-thingtype AmmoCellPack 
+thingtype AmmoCellPack : Mobj, 17, 69
 {
   compatname  CellPack
-  doomednum   17
-  dehackednum 69
   flags       SPECIAL
   acs_spawndata
   {
@@ -2188,11 +2059,9 @@ thingtype AmmoCellPack
   "@
 }
 
-thingtype AmmoShells 
+thingtype AmmoShells : Mobj, 2008, 70
 {
   compatname  Shell
-  doomednum   2008
-  dehackednum 70
   flags       SPECIAL
   acs_spawndata
   {
@@ -2209,11 +2078,9 @@ thingtype AmmoShells
   "@
 }
 
-thingtype AmmoShellBox 
+thingtype AmmoShellBox : Mobj, 2049, 71
 {
   compatname  ShellBox
-  doomednum   2049
-  dehackednum 71
   flags       SPECIAL
   acs_spawndata
   {
@@ -2230,10 +2097,8 @@ thingtype AmmoShellBox
   "@
 }
 
-thingtype Backpack 
+thingtype Backpack : Mobj, 8, 72
 {
-  doomednum   8
-  dehackednum 72
   flags       SPECIAL
   acs_spawndata
   {
@@ -2250,11 +2115,9 @@ thingtype Backpack
   "@
 }
 
-thingtype WeaponBFG 
+thingtype WeaponBFG : Mobj, 2006, 73
 {
   compatname  BFG9000
-  doomednum   2006
-  dehackednum 73
   flags       SPECIAL
   acs_spawndata
   {
@@ -2271,11 +2134,9 @@ thingtype WeaponBFG
   "@
 }
 
-thingtype WeaponChaingun 
+thingtype WeaponChaingun : Mobj, 2002, 74
 {
   compatname  Chaingun
-  doomednum   2002
-  dehackednum 74
   flags       SPECIAL
   acs_spawndata
   {
@@ -2292,11 +2153,9 @@ thingtype WeaponChaingun
   "@
 }
 
-thingtype WeaponChainsaw 
+thingtype WeaponChainsaw : Mobj, 2005, 75
 {
   compatname  Chainsaw
-  doomednum   2005
-  dehackednum 75
   flags       SPECIAL
   acs_spawndata
   {
@@ -2313,11 +2172,9 @@ thingtype WeaponChainsaw
   "@
 }
 
-thingtype WeaponRocketLauncher 
+thingtype WeaponRocketLauncher : Mobj, 2003, 76
 {
   compatname  RocketLauncher
-  doomednum   2003
-  dehackednum 76
   flags       SPECIAL
   acs_spawndata
   {
@@ -2334,11 +2191,9 @@ thingtype WeaponRocketLauncher
   "@
 }
 
-thingtype WeaponPlasmaGun 
+thingtype WeaponPlasmaGun : Mobj, 2004, 77
 {
   compatname  PlasmaRifle
-  doomednum   2004
-  dehackednum 77
   flags       SPECIAL
   acs_spawndata
   {
@@ -2355,11 +2210,9 @@ thingtype WeaponPlasmaGun
   "@
 }
 
-thingtype WeaponShotgun 
+thingtype WeaponShotgun : Mobj, 2001, 78
 {
   compatname  Shotgun
-  doomednum   2001
-  dehackednum 78
   flags       SPECIAL
   acs_spawndata
   {
@@ -2376,11 +2229,9 @@ thingtype WeaponShotgun
   "@
 }
 
-thingtype WeaponSSG 
+thingtype WeaponSSG : Mobj, 82, 79
 {
   compatname  SuperShotgun
-  doomednum   82
-  dehackednum 79
   flags       SPECIAL
   acs_spawndata
   {
@@ -2397,11 +2248,9 @@ thingtype WeaponSSG
   "@
 }
 
-thingtype TechLamp1 
+thingtype TechLamp1 : Mobj, 85, 80
 {
   compatname     TechLamp
-  doomednum      85
-  dehackednum    80
   radius         16.0
   correct_height 74.0
   cflags         SOLID|3DDECORATION
@@ -2415,10 +2264,8 @@ thingtype TechLamp1
   "@
 }
 
-thingtype TechLamp2 
+thingtype TechLamp2 : Mobj, 86, 81
 {
-  doomednum      86
-  dehackednum    81
   radius         16.0
   correct_height 54.0
   cflags         SOLID|3DDECORATION
@@ -2432,11 +2279,9 @@ thingtype TechLamp2
   "@
 }
 
-thingtype ShortLamp 
+thingtype ShortLamp : Mobj, 2028, 82
 {
   compatname     Column
-  doomednum      2028
-  dehackednum    82
   radius         16.0
   correct_height 44.0
   cflags         SOLID|3DDECORATION
@@ -2450,15 +2295,13 @@ thingtype ShortLamp
   "@
 }
 
-thingtype ColumnGreenTall 
+thingtype ColumnGreenTall : Mobj, 30, 83
 {
   compatname     TallGreenColumn
-  doomednum      30
-  dehackednum    83
   radius         16.0
   correct_height 48.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_TALLGRNCOL
   states
   @"
@@ -2468,11 +2311,9 @@ thingtype ColumnGreenTall
   "@
 }
 
-thingtype ColumnGreenShort 
+thingtype ColumnGreenShort : Mobj, 31, 84
 {
   compatname     ShortGreenColumn
-  doomednum      31
-  dehackednum    84
   radius         16.0
   correct_height 34.0
   cflags         SOLID|3DDECORATION
@@ -2486,15 +2327,13 @@ thingtype ColumnGreenShort
   "@
 }
 
-thingtype ColumnRedTall 
+thingtype ColumnRedTall : Mobj, 32, 85
 {
   compatname     TallRedColumn
-  doomednum      32
-  dehackednum    85
   radius         16.0
   correct_height 48.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_TALLREDCOL
   states
   @"
@@ -2504,11 +2343,9 @@ thingtype ColumnRedTall
   "@
 }
 
-thingtype ColumnRedShort 
+thingtype ColumnRedShort : Mobj, 33, 86
 {
   compatname     ShortRedColumn
-  doomednum      33
-  dehackednum    86
   radius         16.0
   correct_height 34.0
   cflags         SOLID|3DDECORATION
@@ -2522,15 +2359,13 @@ thingtype ColumnRedShort
   "@
 }
 
-thingtype ColumnRedSkull 
+thingtype ColumnRedSkull : Mobj, 37, 87
 {
   compatname     SkullColumn
-  doomednum      37
-  dehackednum    87
   radius         16.0
   correct_height 44.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_SKULLCOL
   states
   @"
@@ -2540,15 +2375,13 @@ thingtype ColumnRedSkull
   "@
 }
 
-thingtype ColumnGreenHeart 
+thingtype ColumnGreenHeart : Mobj, 36, 88
 {
   compatname     HeartColumn
-  doomednum      36
-  dehackednum    88
   radius         16.0
   correct_height 40.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_HEARTCOL
   states
   @"
@@ -2558,14 +2391,12 @@ thingtype ColumnGreenHeart
   "@
 }
 
-thingtype EvilEye 
+thingtype EvilEye : Mobj, 41, 89
 {
-  doomednum      41
-  dehackednum    89
   radius         16.0
   correct_height 50.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_EVILEYE
   states
   @"
@@ -2575,15 +2406,13 @@ thingtype EvilEye
   "@
 }
 
-thingtype FloatingSkulls 
+thingtype FloatingSkulls : Mobj, 42, 90
 {
   compatname     FloatingSkull
-  doomednum      42
-  dehackednum    90
   radius         16.0
   correct_height 48.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_FLOATSKULL
   states
   @"
@@ -2593,11 +2422,9 @@ thingtype FloatingSkulls
   "@
 }
 
-thingtype TreeGrayShort 
+thingtype TreeGrayShort : Mobj, 43, 91
 {
   compatname     TorchTree
-  doomednum      43
-  dehackednum    91
   radius         16.0
   correct_height 62.0
   cflags         SOLID|3DDECORATION|NOTORQUE
@@ -2611,15 +2438,13 @@ thingtype TreeGrayShort
   "@
 }
 
-thingtype TorchBlueTall 
+thingtype TorchBlueTall : Mobj, 44, 92
 {
   compatname     BlueTorch
-  doomednum      44
-  dehackednum    92
   radius         16.0
   correct_height 82.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_BLUETORCH
   states
   @"
@@ -2629,15 +2454,13 @@ thingtype TorchBlueTall
   "@
 }
 
-thingtype TorchGreenTall 
+thingtype TorchGreenTall : Mobj, 45, 93
 {
   compatname     GreenTorch
-  doomednum      45
-  dehackednum    93
   radius         16.0
   correct_height 82.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_GREENTORCH
   states
   @"
@@ -2647,15 +2470,13 @@ thingtype TorchGreenTall
   "@
 }
 
-thingtype TorchRedTall 
+thingtype TorchRedTall : Mobj, 46, 94
 {
   compatname     RedTorch
-  doomednum      46
-  dehackednum    94
   radius         16.0
   correct_height 82.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_REDTORCH
   states
   @"
@@ -2665,15 +2486,13 @@ thingtype TorchRedTall
   "@
 }
 
-thingtype TorchBlueShort 
+thingtype TorchBlueShort : Mobj, 55, 95
 {
   compatname     ShortBlueTorch
-  doomednum      55
-  dehackednum    95
   radius         16.0
   correct_height 64.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_BTORCHSHRT
   states
   @"
@@ -2683,15 +2502,13 @@ thingtype TorchBlueShort
   "@
 }
 
-thingtype TorchGreenShort 
+thingtype TorchGreenShort : Mobj, 56, 96
 {
   compatname     ShortGreenTorch
-  doomednum      56
-  dehackednum    96
   radius         16.0
   correct_height 64.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_GTORCHSHRT
   states
   @"
@@ -2701,11 +2518,9 @@ thingtype TorchGreenShort
   "@
 }
 
-thingtype TorchRedShort 
+thingtype TorchRedShort : Mobj, 57, 97
 {
   compatname     ShortRedTorch
-  doomednum      57
-  dehackednum    97
   radius         16.0
   correct_height 64.0
   cflags         SOLID|3DDECORATION|NOTORQUE
@@ -2719,11 +2534,9 @@ thingtype TorchRedShort
   "@
 }
 
-thingtype ThornySpikes 
+thingtype ThornySpikes : Mobj, 47, 98
 {
   compatname     Stalagtite
-  doomednum      47
-  dehackednum    98
   radius         16.0
   correct_height 47.0
   cflags         SOLID|3DDECORATION|NOTORQUE
@@ -2737,11 +2550,9 @@ thingtype ThornySpikes
   "@
 }
 
-thingtype TechPillar 
+thingtype TechPillar : Mobj, 48, 99
 {
   compatname     PillarTechno
-  doomednum      48
-  dehackednum    99
   radius         16.0
   correct_height 120.0
   cflags         SOLID|3DDECORATION
@@ -2755,12 +2566,10 @@ thingtype TechPillar
   "@
 }
 
-thingtype BlackCandle 
+thingtype BlackCandle : Mobj, 34, 100
 {
   compatname  Candlestick
-  doomednum   34
-  dehackednum 100
-  
+
   firstdecoratestate S_CANDLESTIK
   states
   @"
@@ -2770,14 +2579,12 @@ thingtype BlackCandle
   "@
 }
 
-thingtype Candelabra 
+thingtype Candelabra : Mobj, 35, 101
 {
-  doomednum      35
-  dehackednum    101
   radius         16.0
   correct_height 54.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_CANDELABRA
   states
   @"
@@ -2787,11 +2594,9 @@ thingtype Candelabra
   "@
 }
 
-thingtype HangingBodyTwitch 
+thingtype HangingBodyTwitch : Mobj, 49, 102
 {
   compatname  BloodyTwitch
-  doomednum   49
-  dehackednum 102
   radius      16.0
   height      68.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
@@ -2808,11 +2613,9 @@ thingtype HangingBodyTwitch
   "@
 }
 
-thingtype HangingBodyJacket 
+thingtype HangingBodyJacket : Mobj, 50, 103
 {
   compatname  Meat2
-  doomednum   50
-  dehackednum 103
   radius      16.0
   height      84.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
@@ -2826,11 +2629,9 @@ thingtype HangingBodyJacket
   "@
 }
 
-thingtype HangingBodyNoLeg 
+thingtype HangingBodyNoLeg : Mobj, 51, 104
 {
   compatname     Meat3
-  doomednum      51
-  dehackednum    104
   radius         16.0
   height         84.0
   correct_height 79.0
@@ -2845,16 +2646,14 @@ thingtype HangingBodyNoLeg
   "@
 }
 
-thingtype HangingBodyTorso 
+thingtype HangingBodyTorso : Mobj, 52, 105
 {
   compatname     Meat4
-  doomednum      52
-  dehackednum    105
   radius         16.0
   height         68.0
   correct_height 64.0
   flags          SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_MEAT4
   states
   @"
@@ -2864,11 +2663,9 @@ thingtype HangingBodyTorso
   "@
 }
 
-thingtype HangingBodyLeg 
+thingtype HangingBodyLeg : Mobj, 53, 106
 {
   compatname   Meat5
-  doomednum    53
-  dehackednum  106
   radius       16.0
   height       52.0
   flags        SOLID|SPAWNCEILING|NOGRAVITY
@@ -2882,151 +2679,116 @@ thingtype HangingBodyLeg
   "@
 }
 
-thingtype HangingBodyJacketPass 
+thingtype HangingBodyJacketPass : Mobj, 59, 107
 {
   compatname  NonsolidMeat2
-  doomednum   59
-  dehackednum 107
   height      84.0
   flags       SPAWNCEILING|NOGRAVITY
 
   spawnstate  S_MEAT2
 }
 
-thingtype HangingBodyTorsoPass 
+thingtype HangingBodyTorsoPass : Mobj, 60, 108
 {
   compatname  NonsolidMeat4
-  doomednum   60
-  dehackednum 108
   height      68.0
   flags       SPAWNCEILING|NOGRAVITY
-  
+
   spawnstate  S_MEAT4
 }
 
-thingtype HangingBodyNoLegPass 
+thingtype HangingBodyNoLegPass : Mobj, 61, 109
 {
   compatname  NonsolidMeat3
-  doomednum   61
-  dehackednum 109
   height      52.0
   flags       SPAWNCEILING|NOGRAVITY
-  
+
   spawnstate  S_MEAT3
 }
 
-thingtype HangingBodyLegPass 
+thingtype HangingBodyLegPass : Mobj, 62, 110
 {
   compatname  NonsolidMeat5
-  doomednum   62
-  dehackednum 110
   height      52.0
   flags       SPAWNCEILING|NOGRAVITY
-  
+
   spawnstate  S_MEAT5
 }
 
-thingtype HangingBodyTwitchPass 
+thingtype HangingBodyTwitchPass : Mobj, 63, 111
 {
   compatname  NonsolidTwitch
-  doomednum   63
-  dehackednum 111
   height      68.0
   flags       SPAWNCEILING|NOGRAVITY
 
   spawnstate  S_BLOODYTWITCH
 }
 
-thingtype DeadCacodemon 
+thingtype DeadCacodemon : Mobj, 22, 112
 {
-  doomednum   22
-  dehackednum 112
-  
   spawnstate  S_HEAD_DIE6
 }
 
-thingtype DeadDoomPlayer 
+thingtype DeadDoomPlayer : Mobj, 15, 113
 {
   compatname  DeadMarine
-  doomednum   15
-  dehackednum 113
-  
+
   spawnstate  S_PLAY_DIE7
 }
 
-thingtype DeadZombieman 
+thingtype DeadZombieman : Mobj, 18, 114
 {
-  doomednum   18
-  dehackednum 114
-  
   spawnstate  S_POSS_DIE5
 }
 
-thingtype DeadDemon 
+thingtype DeadDemon : Mobj, 21, 115
 {
-  doomednum   21
-  dehackednum 115
-  
   spawnstate  S_SARG_DIE6
 }
 
-thingtype DeadLostSoul 
+thingtype DeadLostSoul : Mobj, 23, 116
 {
-  doomednum   23
-  dehackednum 116
-  
   spawnstate  S_SKULL_DIE6
 }
 
-thingtype DeadDoomImp 
+thingtype DeadDoomImp : Mobj, 20, 117
 {
-  doomednum   20
-  dehackednum 117
-  
   spawnstate  S_TROO_DIE5
 }
 
-thingtype DeadSergeant 
+thingtype DeadSergeant : Mobj, 19, 118
 {
   compatname  DeadShotgunGuy
-  doomednum   19
-  dehackednum 118
-  
+
   spawnstate  S_SPOS_DIE5
 }
 
-thingtype DeadDoomPlayerGibs 
+thingtype DeadDoomPlayerGibs : Mobj, 10, 119
 {
   compatname  GibbedMarine
-  doomednum   10
-  dehackednum 119
   acs_spawndata
   {
     num   145
     modes doom
   }
-  
+
   spawnstate  S_PLAY_XDIE9
 }
 
-thingtype DeadDoomPlayerGibs2 
+thingtype DeadDoomPlayerGibs2 : Mobj, 12, 120
 {
   compatname  GibbedMarineExtra
-  doomednum   12
-  dehackednum 120
-  
+
   spawnstate  S_PLAY_XDIE9
 }
 
-thingtype HeadShishkabob 
+thingtype HeadShishkabob : Mobj, 28, 121
 {
   compatname     HeadsOnAStick
-  doomednum      28
-  dehackednum    121
   radius         16.0
   correct_height 60.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_HEADSONSTICK
   states
   @"
@@ -3036,17 +2798,15 @@ thingtype HeadShishkabob
   "@
 }
 
-thingtype CrushedGibs 
+thingtype CrushedGibs : Mobj, 24, 122
 {
   compatname  Gibs
-  doomednum   24
-  dehackednum 122
-  acs_spawndata 
+  acs_spawndata
   {
     num   146
     modes doom
   }
-  
+
   firstdecoratestate S_GIBS
   states
   @"
@@ -3056,11 +2816,9 @@ thingtype CrushedGibs
   "@
 }
 
-thingtype HeadOnStick 
+thingtype HeadOnStick : Mobj, 27, 123
 {
   compatname     HeadOnAStick
-  doomednum      27
-  dehackednum    123
   radius         16.0
   correct_height 54.0
   cflags         SOLID|3DDECORATION|NOTORQUE
@@ -3074,15 +2832,13 @@ thingtype HeadOnStick
   "@
 }
 
-thingtype SkullsAndCandles 
+thingtype SkullsAndCandles : Mobj, 29, 124
 {
   compatname     HeadCandles
-  doomednum      29
-  dehackednum    124
   radius         16.0
   correct_height 40.0
   cflags         SOLID|3DDECORATION
-  
+
   firstdecoratestate S_HEADCANDLES
   states
   @"
@@ -3090,20 +2846,18 @@ thingtype SkullsAndCandles
     POL3 A 6 bright
     POL3 B 6 bright
     loop
-  "@  
+  "@
 }
 
-thingtype ImpaledZombieman 
+thingtype ImpaledZombieman : Mobj, 25, 125
 {
   compatname     DeadStick
-  doomednum      25
-  dehackednum    125
   radius         16.0
   correct_height 64.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_DEADSTICK
-  states 
+  states
   @"
   Spawn:
     POL1 A -1
@@ -3111,15 +2865,13 @@ thingtype ImpaledZombieman
   "@
 }
 
-thingtype ImpaledZombiemanAlive 
+thingtype ImpaledZombiemanAlive : Mobj, 26, 126
 {
   compatname     LiveStick
-  doomednum      26
-  dehackednum    126
   radius         16.0
   correct_height 64.0
   cflags         SOLID|3DDECORATION|NOTORQUE
-  
+
   firstdecoratestate S_LIVESTICK
   states
   @"
@@ -3130,11 +2882,9 @@ thingtype ImpaledZombiemanAlive
   "@
 }
 
-thingtype TreeTanLarge 
+thingtype TreeTanLarge : Mobj, 54, 127
 {
   compatname     BigTree
-  doomednum      54
-  dehackednum    127
   radius         32.0
   correct_height 124.0
   cflags         SOLID|3DDECORATION|NOTORQUE
@@ -3148,20 +2898,18 @@ thingtype TreeTanLarge
   "@
 }
 
-thingtype FlamingBarrel 
+thingtype FlamingBarrel : Mobj, 70, 128
 {
   compatname     BurningBarrel
-  doomednum      70
-  dehackednum    128
   radius         16.0
   correct_height 46.0
   cflags         SOLID|3DDECORATION
-  acs_spawndata 
+  acs_spawndata
   {
     num   149
     modes doom
   }
-  
+
   firstdecoratestate S_BBAR1
   states
   @"
@@ -3171,15 +2919,13 @@ thingtype FlamingBarrel
   "@
 }
 
-thingtype HangingCorpseNoGuts 
+thingtype HangingCorpseNoGuts : Mobj, 73, 129
 {
   compatname  HangNoGuts
-  doomednum   73
-  dehackednum 129
   radius      16.0
   height      88.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_HANGNOGUTS
   states
   @"
@@ -3189,11 +2935,9 @@ thingtype HangingCorpseNoGuts
   "@
 }
 
-thingtype HangingCorpseNoBrain 
+thingtype HangingCorpseNoBrain : Mobj, 74, 130
 {
   compatname  HangBNoBrain
-  doomednum   74
-  dehackednum 130
   radius      16.0
   height      88.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
@@ -3207,15 +2951,13 @@ thingtype HangingCorpseNoBrain
   "@
 }
 
-thingtype HangingCorpseTop 
+thingtype HangingCorpseTop : Mobj, 75, 131
 {
   compatname  HangTLookingDown
-  doomednum   75
-  dehackednum 131
   radius      16.0
   height      64.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_HANGTLOOKDN
   states
   @"
@@ -3225,11 +2967,9 @@ thingtype HangingCorpseTop
   "@
 }
 
-thingtype HangingCorpseTopBrain 
+thingtype HangingCorpseTopBrain : Mobj, 76, 132
 {
   compatname  HangTSkull
-  doomednum   76
-  dehackednum 132
   radius      16.0
   height      64.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
@@ -3243,15 +2983,13 @@ thingtype HangingCorpseTopBrain
   "@
 }
 
-thingtype HangingCorpseTopLookUp 
+thingtype HangingCorpseTopLookUp : Mobj, 77, 133
 {
   compatname  HangTLookingUp
-  doomednum   77
-  dehackednum 133
   radius      16.0
   height      64.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_HANGTLOOKUP
   states
   @"
@@ -3261,15 +2999,13 @@ thingtype HangingCorpseTopLookUp
   "@
 }
 
-thingtype HangingCorpseTopNoBrain 
+thingtype HangingCorpseTopNoBrain : Mobj, 78, 134
 {
   compatname  HangTNoBrain
-  doomednum   78
-  dehackednum 134
   radius      16.0
   height      64.0
   flags       SOLID|SPAWNCEILING|NOGRAVITY
-  
+
   firstdecoratestate S_HANGTNOBRAIN
   states
   @"
@@ -3279,18 +3015,16 @@ thingtype HangingCorpseTopNoBrain
   "@
 }
 
-thingtype PoolBloodAndGuts 
+thingtype PoolBloodAndGuts : Mobj, 79, 135
 {
   compatname  ColonGibs
-  doomednum   79
-  dehackednum 135
   flags       NOBLOCKMAP
   acs_spawndata
   {
     num   147
     modes doom
   }
-  
+
   firstdecoratestate S_COLONGIBS
   states
   @"
@@ -3300,18 +3034,16 @@ thingtype PoolBloodAndGuts
   "@
 }
 
-thingtype PoolBlood 
+thingtype PoolBlood : Mobj, 80, 136
 {
   compatname  SmallBloodPool
-  doomednum   80
-  dehackednum 136
   flags       NOBLOCKMAP
   acs_spawndata
   {
     num   148
     modes doom
   }
-  
+
   firstdecoratestate S_SMALLPOOL
   states
   @"
@@ -3321,18 +3053,16 @@ thingtype PoolBlood
   "@
 }
 
-thingtype PoolBrain 
+thingtype PoolBrain : Mobj, 81, 137
 {
   compatname  BrainStem
-  doomednum   81
-  dehackednum 137
   flags       NOBLOCKMAP
   acs_spawndata
   {
     num   150
     modes doom
   }
-  
+
   firstdecoratestate S_BRAINSTEM
   states
   @"
@@ -3346,10 +3076,9 @@ thingtype PoolBrain
 
 // Fireballs for Pre-Beta BFG
 
-thingtype MBFBetaPlasma1 
+thingtype MBFBetaPlasma1 : Mobj, -1, 141
 {
   compatname  PlasmaBall1
-  dehackednum 141
   spawnstate  S_PLS1BALL
   seesound    plasma
   deathstate  S_PLS1EXP
@@ -3362,10 +3091,9 @@ thingtype MBFBetaPlasma1
   mod         BetaBFG
 }
 
-thingtype MBFBetaPlasma2 
+thingtype MBFBetaPlasma2 : Mobj, -1, 142
 {
   compatname  PlasmaBall2
-  dehackednum 142
   spawnstate  S_PLS2BALL
   seesound    plasma
   deathstate  S_PLS2BALLX1
@@ -3378,13 +3106,44 @@ thingtype MBFBetaPlasma2
   mod         BetaBFG
 }
 
+// Pre-Beta bonus items
+
+thingtype MBFBetaSceptre : Mobj, 2016, 143
+{
+  compatname  EvilSceptre
+  radius      10.0
+  cflags      SPECIAL|COUNTITEM
+
+  firstdecoratestate S_BON3
+  states
+  @"
+  Spawn:
+    BON3 A 6
+    loop
+  "@
+}
+
+thingtype MBFBetaBible : Mobj, 2017, 144
+{
+  compatname  UnholyBible
+  radius      10.0
+  cflags      SPECIAL|COUNTITEM
+
+  firstdecoratestate S_BON4
+  states
+  @"
+  Spawn:
+    BON4 A 6
+    loop
+  "@
+}
+
 // EE DOOM-Specific Objects ---------------------------------------------------
 
 // Sub-Fireball for Cephaler's Plasma Burst BFG
 
-thingtype EEBetaPlasma3 
+thingtype EEBetaPlasma3 : Mobj, -1, 1063
 {
-  dehackednum 144
   spawnstate  S_PLS1BALL
   deathstate  S_PLS1EXP
   speed       25.0
@@ -3397,18 +3156,18 @@ thingtype EEBetaPlasma3
 
 // Nightmare Spectre, from the PlayStation verson of Doom
 
-thingtype EENightmareSpectre : Demon, 889, 158
+thingtype EENightmareSpectre : Demon, 889, 1058
 {
   spawnhealth 300
   addflags    TLSTYLESUB
   aimshift    21
-  
+
   obituary_melee "was devoured by a Nightmare Spectre!"
 }
 
 // PlayStation-style Spectre (25%)
 
-thingtype EEPSXSpectre : Spectre, 890, 159
+thingtype EEPSXSpectre : Spectre, 890, 1059
 {
   addflags     TLSTYLEADD
   remflags     SHADOW
@@ -3418,12 +3177,12 @@ thingtype EEPSXSpectre : Spectre, 890, 159
 
 // PlayStation bloody chain object
 
-thingtype EEPSXBloodyChain : Mobj, 891, 160
+thingtype EEPSXBloodyChain : Mobj, 891, 1060
 {
   cflags SPAWNCEILING|NOGRAVITY
   radius 8.0
   height 99.0
-  
+
   states
   @"
   Spawn:
@@ -3469,13 +3228,13 @@ frameblock
   "@
 }
 
-thingtype EEBetaLostSoul : LostSoul, 9037, 161
+thingtype EEBetaLostSoul : LostSoul, 9037, 1061
 {
   compatname BetaSkull
   addflags   COUNTKILL
   remflags   KILLABLE|DEADFLOAT
   damage     1
-  
+
   states
   @"
   Spawn:
@@ -3499,10 +3258,16 @@ thingtype EEBetaLostSoul : LostSoul, 9037, 161
     EEBS M    5 bright A_Scream
     EEBS N    5 bright A_Fall
     EEBS O    5 bright
-    EEBS P    5 bright 
+    EEBS P    5 bright
     EEBS Q   -1
     stop
   "@
+}
+
+thinggroup Bruiser
+{
+  flags PROJECTILEALLIANCE
+  types { BaronOfHell, HellKnight }
 }
 
 // EOF

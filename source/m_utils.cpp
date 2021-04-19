@@ -75,7 +75,7 @@ int M_ReadFile(char const *name, byte **buffer)
       if(fread(*buffer, 1, length, fp) == length)
       {
          fclose(fp);
-         return length;
+         return static_cast<int>(length);
       }
       fclose(fp);
    }
@@ -237,12 +237,12 @@ int M_CountNumLines(const char *str)
 {
    const char *rover = str;
    int numlines = 0;
-   char c;
 
    if(strlen(str))
    {
       numlines = 1;
 
+      char c;
       while((c = *rover++))
       {
          if(c == '\n')
@@ -403,7 +403,6 @@ void M_NormalizeSlashes(char *str)
 //
 int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 {
-   va_list args;
    size_t len = extra;
 
    if(numstrs < 1)
@@ -415,6 +414,7 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 
    if(numstrs != 0)
    {   
+      va_list args;
       va_start(args, str1);
       
       while(numstrs != 0)
@@ -433,7 +433,7 @@ int M_StringAlloca(char **str, int numstrs, size_t extra, const char *str1, ...)
 
    *str = static_cast<char *>(Z_Alloca(len));
 
-   return len;
+   return static_cast<int>(len);
 }
 
 //
@@ -451,6 +451,16 @@ char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)
    M_NormalizeSlashes(newstr);
 
    return newstr;
+}
+
+//
+// Modulo which adjusts to have positive result always. Needed because we use it throughout the code
+// for hash tables
+//
+int M_PositiveModulo(int op1, int op2)
+{
+   int result = op1 % op2;
+   return result < 0 ? result + abs(op2) : result;
 }
 
 // EOF

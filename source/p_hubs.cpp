@@ -53,8 +53,7 @@
 
 #define MAXHUBLEVELS 128
 
-typedef struct hublevel_s hublevel_t;
-struct hublevel_s
+struct hublevel_t
 {
    char levelname[8];
    char *tmpfile;        // temporary file holding the saved level
@@ -103,7 +102,7 @@ void P_ClearHubs(void)
 
 // seperate function: ensure that atexit is not set twice
 
-void P_ClearHubsAtExit(void)
+static void P_ClearHubsAtExit(void)
 {
    static bool atexit_set = false;
    
@@ -131,13 +130,13 @@ static hublevel_t *HublevelForName(char *name)
          return &hub_levels[i];
    }
    
-   return NULL;  // not found
+   return nullptr;  // not found
 }
 
 static hublevel_t *AddHublevel(char *levelname)
 {
    strncpy(hub_levels[num_hub_levels].levelname, levelname, 8);
-   hub_levels[num_hub_levels].tmpfile = NULL;
+   hub_levels[num_hub_levels].tmpfile = nullptr;
    
    return &hub_levels[num_hub_levels++];
 }

@@ -26,18 +26,29 @@
 #ifndef R_THINGS_H__
 #define R_THINGS_H__
 
+#define MAX_SPRITE_FRAMES 29          /* Macroized -- killough 1/25/98 */
+
+struct line_t;
 struct sector_t;
 struct particle_t;
 struct planehash_t;
+struct pwindow_t;
+struct cb_column_t;
+struct spritecontext_t;
+struct contextbounds_t;
+struct portalrender_t;
+struct viewpoint_t;
+struct cbviewpoint_t;
+struct bspcontext_t;
+struct cmapcontext_t;
+struct rendercontext_t;
+
+using R_ColumnFunc = void (*)(cb_column_t &);
 
 // Constant arrays used for psprite clipping and initializing clipping.
 
 extern float *zeroarray;
 extern float *screenheightarray;
-
-// Vars for R_DrawMaskedColumn
-
-extern float *mfloorclip, *mceilingclip;
 
 // SoM 12/13/03: the stack for use with portals
 struct maskedrange_t
@@ -59,32 +70,40 @@ struct poststack_t
    maskedrange_t *masked;
 };
 
-void R_PushPost(bool pushmasked, planehash_t *overlay);
+void R_PushPost(bspcontext_t &bspcontext, spritecontext_t &spritecontext,
+                const contextbounds_t &bounds, bool pushmasked, pwindow_t *window);
 
 // SoM: Cardboard
-void R_SetMaskedSilhouette(const float *top, const float *bottom);
+void R_SetMaskedSilhouette(const contextbounds_t &bounds,
+                           const float *top, const float *bottom);
 
+struct cb_maskedcolumn_t;
 struct texture_t;
 struct texcol_t;
 
-void R_DrawNewMaskedColumn(texture_t *tex, texcol_t *tcolumn);
-void R_AddSprites(sector_t *sec, int); // killough 9/18/98
-void R_AddPSprites(void);
-void R_DrawSprites(void);
+void R_DrawNewMaskedColumn(const R_ColumnFunc colfunc,
+                           cb_column_t &column, const cb_maskedcolumn_t &maskedcolumn,
+                           const texture_t *tex, const texcol_t *tcolumn,
+                           const float *const mfloorclip, const float *const mceilingclip);
+void R_AddSprites(cmapcontext_t &cmapcontext,
+                  spritecontext_t &spritecontext,
+                  const viewpoint_t &viewpoint, const cbviewpoint_t &cb_viewpoint,
+                  const contextbounds_t &bounds,
+                  const portalrender_t &portalrender,
+                  sector_t *sec, int); // killough 9/18/98
 void R_InitSprites(char **namelist);
-void R_ClearSprites(void);
-void R_DrawPostBSP(void);
+void R_ClearSprites(spritecontext_t &context);
+void R_DrawPostBSP(rendercontext_t &context);
+void R_DrawPlayerSprites();
 void R_ClearParticles(void);
 void R_InitParticles(void);
 particle_t *newParticle(void);
 
-typedef struct cb_maskedcolumn_s
+struct cb_maskedcolumn_t
 {
    float ytop;
    float scale;
-} cb_maskedcolumn_t;
-
-extern cb_maskedcolumn_t maskedcolumn;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -98,17 +117,18 @@ extern cb_maskedcolumn_t maskedcolumn;
 //
 struct spriteprojnode_t
 {
-   v3fixed_t delta;                       // portal accumulated delta (do not
-                                          // link offsets)
    Mobj *mobj;                            // source mobj
    const sector_t *sector;                // sector where this appears
+   v3fixed_t delta;                       // portal accumulated delta (do not
+                                          // link offsets)
+   const line_t *portalline;              // portal line (if applicable)
    DLListItem<spriteprojnode_t> mobjlink; // vertical link (links separate layers)
    DLListItem<spriteprojnode_t> sectlink; // horizontal link (links separate mobjs)
    DLListItem<spriteprojnode_t> freelink; // free list link (for recycling)
 };
 
 void R_RemoveMobjProjections(Mobj *mobj);
-void R_CheckMobjProjections(Mobj *mobj);
+void R_CheckMobjProjections(Mobj *mobj, bool checklines);
 
 ///////////////////////////////////////////////////////////////////////////////
 

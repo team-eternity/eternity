@@ -35,16 +35,21 @@
 #include "d_net.h"
 #include "doomdef.h"
 #include "doomstat.h"
+#include "e_exdata.h"
 #include "g_game.h"
 #include "info.h"
 #include "m_collection.h"
+#include "m_compare.h"
 #include "p_chase.h"
 #include "p_map.h"
 #include "p_maputl.h"
 #include "p_mobj.h"
+#include "p_portal.h"
+#include "p_portalcross.h"
 #include "p_tick.h"
 #include "r_defs.h"
 #include "r_main.h"
+#include "r_pcheck.h"
 #include "r_portal.h"
 #include "r_state.h"
 
@@ -60,13 +65,9 @@
 //
 
 camera_t chasecam;
-int chaseviewz;
 int chasecam_active = 0;
-int targetx, targety, targetz;
-#ifdef R_LINKEDPORTALS
-int targetgroupid;
-#endif
-int chasecam_turnoff = 0;
+static v3fixed_t pCamTarget;
+static int pCamTargetGroupId;
 
                 // for simplicity
 #define playermobj players[displayplayer].mo
@@ -91,95 +92,183 @@ static int zi(int64_t dist, int64_t totaldist, int64_t ztarget, int64_t playerz)
 }
 
 //
+// Chase traverse context
+//
+struct chasetraverse_t
+{
+   const linkdata_t *link; // if set, a portal was passed
+   fixed_t startz;         // start Z position
+   v2fixed_t intersection; // intersection position
+};
+
+//
+// Check for a sector portal being hit
+//
+static bool P_checkSectorPortal(fixed_t z, fixed_t frac, const sector_t *sector, 
+   chasetraverse_t &traverse)
+{
+   for(surf_e surf : SURFS)
+   {
+      const surface_t &surface = sector->srf[surf];
+      fixed_t pz = P_PortalZ(surface);
+      if(surface.pflags & PS_PASSABLE && isOuter(surf, z, pz))
+      {
+         if(!isOuter(surf, pz, traverse.startz))
+            pz = traverse.startz;
+         fixed_t zfrac = FixedDiv(pz - traverse.startz, z - traverse.startz);
+         fixed_t hfrac = FixedMul(zfrac, frac);
+         traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(hfrac);
+         traverse.link = &surface.portal->data.link;
+         traverse.startz = pz;
+         return true;
+      }
+   }
+
+   return false;
+}
+
+//
+// Check if it's an edge portal
+//
+static bool P_checkEdgePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
+{
+   for(surf_e surf : SURFS)
+   {
+      if(li->extflags & e_edgePortalFlags[surf] && li->backsector->srf[surf].pflags & PS_PASSABLE &&
+         isOuter(surf, z, P_PortalZ(li->backsector->srf[surf])) &&
+         !isOuter(surf, z, li->frontsector->srf[surf].height))
+      {
+         traverse.intersection = trace.dl.v + trace.dl.dv.fixedMul(frac);
+         traverse.link = &li->backsector->srf[surf].portal->data.link;
+         traverse.startz = z;
+         return true;
+      }
+   }
+   return false;
+}
+
+//
+// Checks if the line is a line portal and updates traverse
+//
+static bool P_checkLinePortal(const line_t *li, fixed_t z, fixed_t frac, chasetraverse_t &traverse)
+{
+   if(li->pflags & PS_PASSABLE)
+   {
+      // Exact target pos
+      v2fixed_t targpos = { trace.dl.x + trace.dl.dx, trace.dl.y + trace.dl.dy };
+      // Portal stuff. Only count it if truly crossed
+      if(P_PointOnLineSidePrecise(targpos.x, targpos.y, li) &&
+         !P_PointOnLineSidePrecise(trace.dl.x, trace.dl.y, li))
+      {
+         traverse.intersection.x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+         traverse.intersection.y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+         traverse.link = &li->portal->data.link;
+         traverse.startz = z;
+
+         return true;
+      }
+   }
+   return false;
+}
+
+//
 // PTR_chaseTraverse
 //
 // go til you hit a wall
 // set the chasecam target x and ys if you hit one
 // originally based on the shooting traverse function in p_maputl.c
 //
-static bool PTR_chaseTraverse(intercept_t *in)
+static bool PTR_chaseTraverse(intercept_t *in, void *context)
 {
-   fixed_t dist, frac;
-   subsector_t *ss;
-   int x, y;
-   int z;
-   sector_t *othersector;
-
    if(in->isaline)
    {
       line_t *li = in->d.line;
+
+      auto &traverse = *static_cast<chasetraverse_t *>(context);
       
-      dist = FixedMul(trace.attackrange, in->frac);
-      frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
+      // Keep using trace.attackrange even when passing portals, because dist is only used in ratio
+      // with fractional part. Safer because trace.attackrange is always MELEERANGE here.
+      fixed_t dist = FixedMul(trace.attackrange, in->frac);
+      fixed_t frac = in->frac - FixedDiv(12*FRACUNIT, trace.attackrange);
       
       // hit line
       // position a bit closer
       
-      x = trace.dl.x + FixedMul(trace.dl.dx, frac);
-      y = trace.dl.y + FixedMul(trace.dl.dy, frac);
+      fixed_t x = trace.dl.x + FixedMul(trace.dl.dx, frac);
+      fixed_t y = trace.dl.y + FixedMul(trace.dl.dy, frac);
 
-      // ioanch 20160225: portal lines are currently not crossed
-      if(li->flags & ML_TWOSIDED && !(li->pflags & PS_PASSABLE))
+      if(li->flags & ML_TWOSIDED)
       {  // crosses a two sided line
-
          // sf: find which side it hit
          
-         ss = R_PointInSubsector (x, y);
+         subsector_t *ss = R_PointInSubsector (x, y);
          
-         othersector = li->backsector;
+         const sector_t *othersector = li->backsector;
+         const sector_t *mysector = li->frontsector;
          
-         if(ss->sector==li->backsector)      // other side
+         if(ss->sector == li->backsector)      // other side
+         {
             othersector = li->frontsector;
+            mysector = li->backsector;
+         }
 
          // interpolate, find z at the point of intersection
          
-         z = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
+         int z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
+
+         // First check if the Z went low enough to hit a sector portal
+         if(mysector && P_checkSectorPortal(z, in->frac, mysector, traverse))
+            return false;
          
          // found which side, check for intersections
-         if((li->flags & ML_BLOCKING) || 
-            (othersector->floorheight>z) || (othersector->ceilingheight<z)
-            || (othersector->ceilingheight-othersector->floorheight
+
+         // NOTE: for portal lines, "othersector" may lapse into the hidden buffer sector.
+         // Let's tolerate this for now, even though correctly it should mean the sector
+         // behind the portal.
+
+         // Check for edge portals here
+         if(!(li->flags & ML_BLOCKING) && mysector == li->frontsector &&
+            P_checkEdgePortal(li, z, in->frac, traverse))
+         {
+            return false;
+         }
+
+         if((li->flags & ML_BLOCKING) ||
+            (othersector->srf.floor.height >z) || (othersector->srf.ceiling.height <z)
+            || (othersector->srf.ceiling.height -othersector->srf.floor.height
                 < 40*FRACUNIT));          // hit
          else
-         {
-            return true;    // continue
-         }
+            return !P_checkLinePortal(li, z, in->frac, traverse);
       }
 
-      targetx = x;        // point the new chasecam target at the intersection
-      targety = y;
-      targetz = zi(dist, trace.attackrange, targetz, playermobj->z+28*FRACUNIT);
-      
+      pCamTarget.x = x; // point the new chasecam target at the intersection
+      pCamTarget.y = y;
+      pCamTarget.z = zi(dist, trace.attackrange, pCamTarget.z, traverse.startz);
+
       // don't go any farther
-      
+
       return false;
    }
-   
+
    return true;
 }
 
 static void P_GetChasecamTarget()
 {
-   int aimfor;
-   subsector_t *ss;
-   int ceilingheight, floorheight;
-
    // aimfor is the preferred height of the chasecam above
    // the player
    // haleyjd: 1 unit for each degree of pitch works surprisingly well
-   aimfor = players[displayplayer].viewheight + chasecam_height*FRACUNIT 
-               + FixedDiv(players[displayplayer].pitch, ANGLE_1);
-      
+   fixed_t aimfor = players[displayplayer].viewheight + chasecam_height * FRACUNIT
+      + FixedDiv(players[displayplayer].pitch, ANGLE_1);
+
    trace.sin = finesine[playerangle>>ANGLETOFINESHIFT];
    trace.cos = finecosine[playerangle>>ANGLETOFINESHIFT];
    
-   targetx = playermobj->x - chasecam_dist * trace.cos;
-   targety = playermobj->y - chasecam_dist * trace.sin;
-   targetz = playermobj->z + aimfor;
+   pCamTarget.x = playermobj->x - chasecam_dist * trace.cos;
+   pCamTarget.y = playermobj->y - chasecam_dist * trace.sin;
+   pCamTarget.z = playermobj->z + aimfor;
 
-#ifdef R_LINKEDPORTALS
-   targetgroupid = playermobj->groupid;
-#endif
+   pCamTargetGroupId = playermobj->groupid;
 
    // the intersections test mucks up the first time, but
    // aiming at something seems to cure it
@@ -189,20 +278,40 @@ static void P_GetChasecamTarget()
    trace.attackrange = MELEERANGE;
    
    // check for intersections
-   P_PathTraverse(playermobj->x, playermobj->y, targetx, targety,
-                  PT_ADDLINES, PTR_chaseTraverse);
+   chasetraverse_t traverse;
+   traverse.startz = playermobj->z + 28 * FRACUNIT;
+   v2fixed_t travstart = { playermobj->x, playermobj->y };
+   int repprotection = 0;
+   do
+   {
+      traverse.link = nullptr;
+      bool clear = P_PathTraverse(travstart.x, travstart.y, pCamTarget.x, pCamTarget.y,
+         PT_ADDLINES, PTR_chaseTraverse, &traverse);
+      if(!traverse.link && clear)
+      {
+         const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
+         P_checkSectorPortal(pCamTarget.z, FRACUNIT, ss->sector, traverse);
+      }
+      if(traverse.link)
+      {
+         travstart = traverse.intersection + v2fixed_t(traverse.link->delta);
+         traverse.startz += traverse.link->delta.z;
+         pCamTarget += traverse.link->delta;
+         pCamTargetGroupId = traverse.link->toid;
+      }
+   } while(traverse.link && repprotection++ < 64);
    trace.attackrange = oldAttackRange;
 
-   ss = R_PointInSubsector(targetx, targety);
-   
-   floorheight = ss->sector->floorheight;
-   ceilingheight = ss->sector->ceilingheight;
+   const subsector_t *ss = R_PointInSubsector(pCamTarget.x, pCamTarget.y);
+
+   fixed_t floorheight = ss->sector->srf.floor.height;
+   fixed_t ceilingheight = ss->sector->srf.ceiling.height;
 
    // don't aim above the ceiling or below the floor
-   if(targetz > ceilingheight - 10*FRACUNIT)
-      targetz = ceilingheight - 10*FRACUNIT;
-   if(targetz < floorheight + 10*FRACUNIT)
-      targetz = floorheight + 10*FRACUNIT;
+   if(!(ss->sector->srf.floor.pflags & PS_PASSABLE) && pCamTarget.z < floorheight + 10 * FRACUNIT)
+      pCamTarget.z = floorheight + 10 * FRACUNIT;
+   if(!(ss->sector->srf.ceiling.pflags & PS_PASSABLE) && pCamTarget.z > ceilingheight - 10 * FRACUNIT)
+      pCamTarget.z = ceilingheight - 10 * FRACUNIT;
 }
 
 // the 'speed' of the chasecam: the percentage closer we
@@ -220,15 +329,32 @@ void P_ChaseTicker()
    P_GetChasecamTarget();
    
    // find distance to target..
-   xdist = targetx - chasecam.x;
-   ydist = targety - chasecam.y;
-   zdist = targetz - chasecam.z;
-   
+
+   if(chasecam.groupid != pCamTargetGroupId)
+   {
+      // FIXME: this causes some twitching, need to improve it.
+      chasecam.x = pCamTarget.x;
+      chasecam.y = pCamTarget.y;
+      chasecam.z = pCamTarget.z;
+      chasecam.groupid = pCamTargetGroupId;
+      chasecam.backupPosition();
+      return;
+   }
+
+   xdist = pCamTarget.x - chasecam.x;
+   ydist = pCamTarget.y - chasecam.y;
+   zdist = pCamTarget.z - chasecam.z;
    // haleyjd: patched these lines with cph's fix
    //          for overflow occuring in the multiplication
    // now move chasecam
-   chasecam.x += FixedMul(xdist, chasecam_speed*(FRACUNIT/100));
-   chasecam.y += FixedMul(ydist, chasecam_speed*(FRACUNIT/100));
+
+   chasecam.groupid = R_PointInSubsector(chasecam.x, chasecam.y)->sector->groupid;
+   v2fixed_t dest = P_LinePortalCrossing(chasecam.x, chasecam.y, 
+      FixedMul(xdist, chasecam_speed*(FRACUNIT / 100)), 
+      FixedMul(ydist, chasecam_speed*(FRACUNIT / 100)), &chasecam.groupid);
+   
+   chasecam.x = dest.x;
+   chasecam.y = dest.y;
    chasecam.z += FixedMul(zdist, chasecam_speed*(FRACUNIT/100));
    
    chasecam.pitch = players[displayplayer].pitch;
@@ -237,7 +363,7 @@ void P_ChaseTicker()
 
 // console commands
 
-VARIABLE_BOOLEAN(chasecam_active, NULL, onoff);
+VARIABLE_BOOLEAN(chasecam_active, nullptr, onoff);
 
 CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
 {
@@ -250,13 +376,13 @@ CONSOLE_VARIABLE(chasecam, chasecam_active, 0)
       P_ChaseEnd();
 }
 
-VARIABLE_INT(chasecam_height, NULL, -31, 100, NULL);
+VARIABLE_INT(chasecam_height, nullptr, -31, 100, nullptr);
 CONSOLE_VARIABLE(chasecam_height, chasecam_height, 0) {}
 
-VARIABLE_INT(chasecam_dist, NULL, 10, 1024, NULL);
+VARIABLE_INT(chasecam_dist, nullptr, 10, 1024, nullptr);
 CONSOLE_VARIABLE(chasecam_dist, chasecam_dist, 0) {}
 
-VARIABLE_INT(chasecam_speed, NULL, 1, 100, NULL);
+VARIABLE_INT(chasecam_speed, nullptr, 1, 100, nullptr);
 CONSOLE_VARIABLE(chasecam_speed, chasecam_speed, 0) {}
 
 void P_ChaseStart()
@@ -269,7 +395,7 @@ void P_ChaseStart()
 void P_ChaseEnd()
 {
    chasecam_active = false;
-   camera = NULL;
+   camera = nullptr;
 }
 
 // SoM: moved globals into linetracer_t see p_maputil.h
@@ -291,13 +417,11 @@ void P_ResetChasecam()
    // find the chasecam target
    P_GetChasecamTarget();
    
-   chasecam.x = targetx;
-   chasecam.y = targety;
-   chasecam.z = targetz;
+   chasecam.x = pCamTarget.x;
+   chasecam.y = pCamTarget.y;
+   chasecam.z = pCamTarget.z;
    
-#ifdef R_LINKEDPORTALS
-   chasecam.groupid = targetgroupid;
-#endif
+   chasecam.groupid = pCamTargetGroupId;
 
    chasecam.backupPosition();
 }
@@ -313,6 +437,38 @@ void P_ResetChasecam()
 camera_t walkcamera;
 int walkcam_active = 0;
 
+//
+// Checks walkcam for passing through an interactive portal plane.
+//
+static void P_checkWalkcamSectorPortal(const sector_t *sector)
+{
+   static const int MAXIMUM_PER_TIC = 8;
+   bool movedalready = false;
+
+   for(surf_e surf : SURFS)
+   {
+      if(movedalready)
+         return;
+      const surface_t &surface = sector->srf[surf];
+      for(int j = 0; j < MAXIMUM_PER_TIC; ++j)
+      {
+         if(!(surface.pflags & PS_PASSABLE))
+            break;
+         fixed_t planez = P_PortalZ(surface);
+         if(!isOuter(surf, walkcamera.z, planez))
+            break;
+         const linkdata_t &ldata = surface.portal->data.link;
+         walkcamera.x += ldata.delta.x;
+         walkcamera.y += ldata.delta.y;
+         walkcamera.z += ldata.delta.z;
+         walkcamera.groupid = ldata.toid;
+         sector = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
+         movedalready = true;
+         walkcamera.backupPosition();
+      }
+   }
+}
+
 void P_WalkTicker()
 {
    ticcmd_t *walktic = &netcmds[consoleplayer][(gametic/ticdup)%BACKUPTICS];
@@ -324,6 +480,7 @@ void P_WalkTicker()
    walkcamera.backupPosition();
 
    walkcamera.angle += walktic->angleturn << 16;
+   bool moved = false;
    
    // looking up/down 
    // haleyjd: this is the same as new code in p_user.c, but for walkcam
@@ -347,6 +504,7 @@ void P_WalkTicker()
    else if(fly)
    {
       walkcamera.z += 2 * fly * FRACUNIT;
+      moved = true;
       walkcamera.flying = true;
    }
 
@@ -355,42 +513,77 @@ void P_WalkTicker()
       angle_t an = static_cast<angle_t>(walkcamera.pitch);
       an >>= ANGLETOFINESHIFT;
       walkcamera.z -= FixedMul((ORIG_FRICTION/4)*walktic->forwardmove, finesine[an]);
+      moved = true;
    }
 
+   v2fixed_t dest = { walkcamera.x, walkcamera.y };
+
    // moving forward
-   fwan = walkcamera.angle;
-   fwan >>= ANGLETOFINESHIFT;
-   walkcamera.x += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finecosine[fwan]);
-   walkcamera.y += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finesine[fwan]);
+   if(walktic->forwardmove)
+   {
+      fwan = walkcamera.angle;
+      fwan >>= ANGLETOFINESHIFT;
+      dest.x += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finecosine[fwan]);
+      dest.y += FixedMul((ORIG_FRICTION / 4) * walktic->forwardmove, finesine[fwan]);
+   }
 
    // strafing
-   san = walkcamera.angle - ANG90;
-   san >>= ANGLETOFINESHIFT;
-   walkcamera.x += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finecosine[san]);
-   walkcamera.y += FixedMul((ORIG_FRICTION/6) * walktic->sidemove, finesine[san]);
+   if(walktic->sidemove)
+   {
+      san = walkcamera.angle - ANG90;
+      san >>= ANGLETOFINESHIFT;
+      dest.x += FixedMul((ORIG_FRICTION / 6) * walktic->sidemove, finecosine[san]);
+      dest.y += FixedMul((ORIG_FRICTION / 6) * walktic->sidemove, finesine[san]);
+   }
+
+   if(dest.x != walkcamera.x || dest.y != walkcamera.y)
+   {
+      int oldgroupid = walkcamera.groupid;
+      dest = P_LinePortalCrossing(walkcamera.x, walkcamera.y, dest.x - walkcamera.x, 
+         dest.y - walkcamera.y, &walkcamera.groupid);
+      walkcamera.x = dest.x;
+      walkcamera.y = dest.y;
+      if(walkcamera.groupid != oldgroupid)
+         walkcamera.backupPosition();
+      moved = true;
+   }
 
    // haleyjd: FIXME -- this could be optimized by only
    // doing a traversal when the camera actually moves, rather
    // than every frame, naively
+   if(!moved)
+      return;
+
    subsector_t *subsec = R_PointInSubsector(walkcamera.x, walkcamera.y);
+
+   const sector_t *topsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_ceil, 
+      subsec->sector);
+   const sector_t *bottomsector = P_ExtremeSectorAtPoint(walkcamera.x, walkcamera.y, surf_floor,
+      subsec->sector);
 
    if(!walkcamera.flying)
    {
       // keep on the ground
-      walkcamera.z = subsec->sector->floorheight + 41*FRACUNIT;
+      walkcamera.z = bottomsector->srf.floor.height + 41 * FRACUNIT;
    }
 
-   fixed_t maxheight = subsec->sector->ceilingheight - 8*FRACUNIT;
-   fixed_t minheight = subsec->sector->floorheight   + 4*FRACUNIT;
+   fixed_t maxheight = topsector->srf.ceiling.height - 8*FRACUNIT;
+   fixed_t minheight = bottomsector->srf.floor.height + 4*FRACUNIT;
 
    if(walkcamera.z > maxheight)
       walkcamera.z = maxheight;
    if(walkcamera.z < minheight)
       walkcamera.z = minheight;
+
+   // Now check portal teleport
+   P_checkWalkcamSectorPortal(subsec->sector);
 }
 
-static void P_ResetWalkcam()
+void P_ResetWalkcam()
 {
+   if(gamestate != GS_LEVEL)
+      return; // only in level
+
    sector_t *sec;
    // ioanch 20151218: fixed point mapthing coordinates
    walkcamera.x      = playerstarts[0].x;
@@ -401,26 +594,35 @@ static void P_ResetWalkcam()
    
    // haleyjd
    sec = R_PointInSubsector(walkcamera.x, walkcamera.y)->sector;
-   walkcamera.z = sec->floorheight + 41*FRACUNIT;
+   walkcamera.z = sec->srf.floor.height + 41*FRACUNIT;
+   walkcamera.groupid = sec->groupid;
 
    walkcamera.backupPosition();
 }
 
-VARIABLE_BOOLEAN(walkcam_active, NULL,    onoff);
+VARIABLE_BOOLEAN(walkcam_active, nullptr, onoff);
 CONSOLE_VARIABLE(walkcam, walkcam_active, cf_notnet)
 {
    if(!Console.argc)
-      walkcam_active = !walkcam_active;
-   else
-      walkcam_active = Console.argv[0]->toInt();
+      return;
 
-   if(walkcam_active)
-   {
-      camera = &walkcamera;
-      P_ResetWalkcam();
-   }
+   if(Console.argv[0]->toInt())
+      P_WalkStart();
    else
-      camera = NULL;
+      P_WalkEnd();
+}
+
+void P_WalkStart()
+{
+   walkcam_active = true;
+   camera = &walkcamera;
+   P_ResetWalkcam();
+}
+
+void P_WalkEnd()
+{
+   walkcam_active = false;
+   camera = nullptr;
 }
 
 //==============================================================================
@@ -465,17 +667,16 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
    });
 
    // Find the furthest one from which the target is visible
-   for(auto vitr = cvertexes.begin(); vitr != cvertexes.end(); vitr++)
+   for(vertex_t *&v : cvertexes)
    {
-      vertex_t *v = *vitr;
       camsightparams_t camparams;
 
       camparams.cx       = v->x;
       camparams.cy       = v->y;
-      camparams.cz       = sec->floorheight;
+      camparams.cz       = sec->srf.floor.height;
       camparams.cheight  = 41 * FRACUNIT;
       camparams.cgroupid = sec->groupid;
-      camparams.prev     = NULL;
+      camparams.prev     = nullptr;
       camparams.setTargetMobj(target);
 
       if(CAM_CheckSight(camparams))
@@ -487,7 +688,7 @@ void P_LocateFollowCam(Mobj *target, fixed_t &destX, fixed_t &destY)
          destY = v->y + 10 * finesine[ang >> ANGLETOFINESHIFT];
 
          return; // We've found our location
-      }                   
+      }
    }
 
    // If we got here, somehow the target isn't visible... (shouldn't happen)
@@ -537,7 +738,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
 
    P_setFollowPitch();
    followcam.backupPosition();
@@ -545,7 +746,7 @@ void P_SetFollowCam(fixed_t x, fixed_t y, Mobj *target)
 
 void P_FollowCamOff()
 {
-   P_SetTarget<Mobj>(&followtarget, NULL);
+   P_SetTarget<Mobj>(&followtarget, nullptr);
 }
 
 bool P_FollowCamTicker()
@@ -561,13 +762,13 @@ bool P_FollowCamTicker()
                                     followtarget->x, followtarget->y);
 
    subsec = R_PointInSubsector(followcam.x, followcam.y);
-   followcam.z       = subsec->sector->floorheight + 41*FRACUNIT;
+   followcam.z       = subsec->sector->srf.floor.height + 41*FRACUNIT;
    followcam.groupid = subsec->sector->groupid;
    P_setFollowPitch();
 
    // still visible?
    camsightparams_t camparams;
-   camparams.prev = NULL;
+   camparams.prev = nullptr;
    camparams.setCamera(followcam, 41 * FRACUNIT);
    camparams.setTargetMobj(followtarget);
 
@@ -608,7 +809,7 @@ AMX_NATIVE_INFO chase_Natives[] =
 {
    { "_ToggleChasecam", sm_chasecam  },
    { "_IsChasecamOn",   sm_ischaseon },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

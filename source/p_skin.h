@@ -40,6 +40,7 @@ enum
    sk_fallht,
    sk_plwdth, // haleyjd: wimpy death
    sk_noway,  // haleyjd: noway sound, separate from oof
+   sk_jump,
    NUMSKINSOUNDS
 };
 
@@ -72,8 +73,6 @@ extern char **spritelist; // new spritelist, same format as sprnames
 
 void P_InitSkins(void);
 
-void P_ListSkins(void);
-void P_ChangeSkin(void);
 void P_ParseSkin(int lumpnum);
 void P_SetSkin(skin_t *skin, int playernum);
 

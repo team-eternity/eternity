@@ -69,10 +69,10 @@ static int finalecount;
 #define NEWTEXTSPEED 0.01  // new value                         // phares
 #define NEWTEXTWAIT  1000  // new value                         // phares
 
-void F_StartCast();
-void F_CastTicker();
-bool F_CastResponder(event_t *ev);
-void F_CastDrawer();
+static void F_StartCast();
+static void F_CastTicker();
+static bool F_CastResponder(const event_t *ev);
+static void F_CastDrawer();
 
 void IN_checkForAccelerate();    // killough 3/28/98: used to
 extern int acceleratestage;      // accelerate intermission screens
@@ -154,7 +154,7 @@ void F_StartFinale(bool secret)
 //
 // F_Responder
 //
-bool F_Responder(event_t *event)
+bool F_Responder(const event_t *event)
 {
    if(finalestage == 2)
       return F_CastResponder(event);
@@ -179,10 +179,10 @@ bool F_Responder(event_t *event)
 //
 static float Get_TextSpeed()
 {
-   return 
+   return
       (float)(midstage ? NEWTEXTSPEED : 
               (midstage=acceleratestage) ? 
-               acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
+              acceleratestage=0, NEWTEXTSPEED : TEXTSPEED);
 }
 
 
@@ -291,7 +291,7 @@ void F_Ticker()
 // text can be increased, and there's still time to read what's     //   |
 // written.                                                         // phares
 //
-void F_TextWrite()
+static void F_TextWrite()
 {
    int     count;
    size_t  len;
@@ -372,7 +372,7 @@ static const char *oldnames[OLDCASTMAX] =
 //
 // haleyjd 07/05/03: rewritten for EDF support
 //
-void F_StartCast()
+static void F_StartCast()
 {
    int i;
 
@@ -380,7 +380,7 @@ void F_StartCast()
    
    // haleyjd 04/17/09: check against max_castorder; don't trash memory.
 
-   // if a cast name was left NULL by EDF, it means we're going to
+   // if a cast name was left nullptr by EDF, it means we're going to
    // use the old DeHackEd names
    for(i = 0; i < OLDCASTMAX && i < max_castorder; i++)
    {
@@ -404,7 +404,7 @@ void F_StartCast()
 //
 // F_CastTicker
 //
-void F_CastTicker()
+static void F_CastTicker()
 {
    int st;
    int sfx;
@@ -417,7 +417,7 @@ void F_CastTicker()
       // switch from deathstate to next monster
       castnum++;
       castdeath = false;
-      if(castorder[castnum].name == NULL)
+      if(castorder[castnum].name == nullptr)
          castnum = 0;
       S_StartInterfaceSound(mobjinfo[castorder[castnum].type]->seesound);
       caststate = states[mobjinfo[castorder[castnum].type]->seestate];
@@ -457,7 +457,7 @@ void F_CastTicker()
       
    if(castframes == 12)
    {
-      int i, stnum;
+      int stnum;
 
       // go into attack frame
       castattacking = true;
@@ -483,7 +483,7 @@ void F_CastTicker()
       if(!castorder[castnum].stopattack)
       {
          sfx = 0;
-         for(i = 0; i < 4; ++i)
+         for(int i = 0; i < 4; ++i)
          {
             if(stnum == castorder[castnum].sounds[i].frame)
                sfx = castorder[castnum].sounds[i].sound;
@@ -514,7 +514,7 @@ void F_CastTicker()
 //
 // F_CastResponder
 //
-bool F_CastResponder(event_t* ev)
+static bool F_CastResponder(const event_t* ev)
 {
    if(ev->type != ev_keydown)
       return false;
@@ -587,7 +587,7 @@ static void F_CastTitle()
 // methods instead of duplicating that code unnecessarily. It's 
 // about 200 lines shorter now.
 //
-void F_CastPrint(const char *text)
+static void F_CastPrint(const char *text)
 {
    V_FontWriteText(f_font, text, 
                    160 - V_FontStringWidth(f_font, text) / 2, 
@@ -599,14 +599,14 @@ void F_CastPrint(const char *text)
 //
 // F_CastDrawer
 //
-void F_CastDrawer()
+static void F_CastDrawer()
 {
    spritedef_t   *sprdef;
    spriteframe_t *sprframe;
    int            lump, rot = 0;
    bool           flip;
    patch_t       *patch;
-   byte          *translate = NULL;
+   byte          *translate = nullptr;
    castinfo_t    *cast    = &castorder[castnum];
    mobjinfo_t    *mi      =  mobjinfo[cast->type];
    player_t      *cplayer = &players[consoleplayer];
@@ -633,7 +633,7 @@ void F_CastDrawer()
       int colormap = cplayer->colormap;
       
       sprdef    = &sprites[cplayer->skin->sprite];
-      translate = colormap ? translationtables[colormap - 1] : NULL;
+      translate = colormap ? translationtables[colormap - 1] : nullptr;
    }
    
    // haleyjd 08/15/02
@@ -654,7 +654,7 @@ void F_CastDrawer()
 //
 // F_BunnyScroll
 //
-void F_BunnyScroll()
+static void F_BunnyScroll()
 {
    int         scrolled;
    patch_t*    p1;
@@ -705,7 +705,7 @@ void F_BunnyScroll()
 }
 
 // haleyjd: heretic e2 ending -- sort of hackish
-void F_DrawUnderwater()
+static void F_DrawUnderwater()
 {
    switch(finalestage)
    {
@@ -748,7 +748,7 @@ static void F_InitDemonScroller()
    int lsize1, lsize2;
    VBuffer vbuf;
 
-   DemonBuffer = (byte *)(Z_Malloc(128000, PU_LEVEL, (void **)(&DemonBuffer)));
+   DemonBuffer = emalloctag(byte *, 128000, PU_LEVEL, reinterpret_cast<void **>(&DemonBuffer));
 
    // get screens
    lnum1  = W_GetNumForName("FINAL1");
@@ -757,7 +757,7 @@ static void F_InitDemonScroller()
    lsize2 = W_LumpLength(lnum2);
 
    // init VBuffer
-   V_InitVBufferFrom(&vbuf, 320, 400, 320, video.bitdepth, DemonBuffer);
+   V_InitVBufferFrom(&vbuf, 320, 400, 400, video.bitdepth, DemonBuffer);
    
    if(lsize2 == 64000) // raw screen
       wGlobalDir.readLump(lnum2, DemonBuffer);
@@ -783,7 +783,7 @@ static void F_InitDemonScroller()
 //
 // haleyjd: Heretic episode 3 demon scroller
 //
-void F_DemonScroll()
+static void F_DemonScroll()
 {
    static int yval = 0;
    static int nextscroll = 0;

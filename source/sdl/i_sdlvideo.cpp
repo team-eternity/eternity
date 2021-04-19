@@ -1,7 +1,6 @@
-// Emacs style mode select   -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright (C) 2013 James Haley et al.
+// The Eternity Engine
+// Copyright (C) 2017 James Haley, Max Waine, et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,25 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/
 //
-//----------------------------------------------------------------------------
+// Purpose: SDL-specific graphics code
+// Authors: James Haley, Max Waine
 //
-// DESCRIPTION:
-//   
-//   SDL-specific graphics code.
-//
-//-----------------------------------------------------------------------------
 
 #include "SDL.h"
+
+#include "../hal/i_platform.h"
 
 #include "../z_zone.h"  /* memory allocation wrappers -- killough */
 
 #include "i_sdlvideo.h"
 
+#include "../c_io.h"
+#include "../c_runcmd.h"
 #include "../d_main.h"
 #include "../i_system.h"
 #include "../m_argv.h"
+#include "../m_misc.h"
+#include "../m_vector.h"
 #include "../v_misc.h"
-#include "../v_patchfmt.h"
 #include "../v_video.h"
 #include "../version.h"
 #include "../w_wad.h"
@@ -48,18 +48,20 @@ extern int  grabmouse;
 extern int  usemouse;   // killough 10/98
 extern bool fullscreen;
 
-void UpdateGrab();
+void UpdateGrab(SDL_Window *window);
 bool MouseShouldBeGrabbed();
-void UpdateFocus();
+void UpdateFocus(SDL_Window *window);
 
 //=============================================================================
 //
 // Graphics Code
 //
 
-static SDL_Surface *sdlscreen;
-static SDL_Surface *primary_surface;
-static SDL_Rect    *destrect;
+static SDL_Surface  *primary_surface;
+static SDL_Surface  *rgba_surface;
+static SDL_Texture  *sdltexture; // the texture to use for rendering
+static SDL_Renderer *renderer;
+static SDL_Rect     *destrect;
 
 // used when rendering to a subregion, such as for letterboxing
 static SDL_Rect staticDestRect;
@@ -70,12 +72,11 @@ extern bool noblit;
 static SDL_Color basepal[256], colors[256];
 static bool setpalette = false;
 
-// haleyjd 07/15/09
-extern char *i_default_videomode;
+extern char *i_resolution;
 extern char *i_videomode;
 
-// haleyjd 12/03/07: 8-on-32 graphics support
-static bool crossbitdepth;
+// MaxW: 2017/10/20: display number
+int displaynum = 0;
 
 //
 // SDLVideoDriver::FinishUpdate
@@ -85,32 +86,34 @@ static bool crossbitdepth;
 void SDLVideoDriver::FinishUpdate()
 {
    // haleyjd 10/08/05: from Chocolate DOOM:
-   UpdateGrab();
+   UpdateGrab(window);
 
    // Don't update the screen if the window isn't visible.
    // Not doing this breaks under Windows when we alt-tab away 
    // while fullscreen.   
-   if(!(SDL_GetAppState() & SDL_APPACTIVE))
+   if(!(SDL_GetWindowFlags(window) & SDL_WINDOW_SHOWN))
       return;
 
    if(setpalette)
    {
-      if(!crossbitdepth)
-         SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
-
       if(primary_surface)
-         SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+         SDL_SetPaletteColors(primary_surface->format->palette, colors, 0, 256);
 
       setpalette = false;
    }
 
    // haleyjd 11/12/09: blit *after* palette set improves behavior.
    if(primary_surface)
-      SDL_BlitSurface(primary_surface, NULL, sdlscreen, destrect);
+   {
+      // Don't bother checking for errors. It should just cancel itself in that case.
+      SDL_BlitSurface(primary_surface, nullptr, rgba_surface, nullptr);
+      SDL_UpdateTexture(sdltexture, nullptr, rgba_surface->pixels, rgba_surface->pitch);
+      SDL_RenderCopyEx(renderer, sdltexture, nullptr, destrect, 90.0, nullptr, SDL_FLIP_VERTICAL);
+   }
 
    // haleyjd 11/12/09: ALWAYS update. Causes problems with some video surface
    // types otherwise.
-   SDL_Flip(sdlscreen);
+   SDL_RenderPresent(renderer);
 }
 
 //
@@ -122,8 +125,8 @@ void SDLVideoDriver::ReadScreen(byte *scr)
 {
    VBuffer temp;
 
-   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height, 
-                     vbscreen.width, video.bitdepth, scr);
+   V_InitVBufferFrom(&temp, vbscreen.width, vbscreen.height,
+                     vbscreen.height, video.bitdepth, scr);
    V_BlitVBuffer(&temp, 0, 0, &vbscreen, 0, 0, vbscreen.width, vbscreen.height);
    V_FreeVBuffer(&temp);
 }
@@ -142,17 +145,14 @@ static void I_SDLSetPaletteDirect(byte *palette)
       colors[i].b = gammatable[usegamma][(basepal[i].b = *palette++)];
    }
 
-   if(sdlscreen && !crossbitdepth)
-      SDL_SetPalette(sdlscreen, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
-
    if(primary_surface)
-      SDL_SetPalette(primary_surface, SDL_LOGPAL|SDL_PHYSPAL, colors, 0, 256);
+      SDL_SetPaletteColors(primary_surface->format->palette, colors, 0, 256);
 }
 
 //
 // SDLVideoDriver::SetPalette
 //
-// Set the palette, or, if palette is NULL, update the current palette to use 
+// Set the palette, or, if palette is nullptr, update the current palette to use 
 // the current gamma setting.
 //
 void SDLVideoDriver::SetPalette(byte *palette)
@@ -187,12 +187,22 @@ void SDLVideoDriver::SetPalette(byte *palette)
 //
 void SDLVideoDriver::UnsetPrimaryBuffer()
 {
+   if(sdltexture) // this may have already been deleted, but make sure.
+   {
+      SDL_DestroyTexture(sdltexture);
+      sdltexture = nullptr;
+   }
+   if(rgba_surface)
+   {
+      SDL_FreeSurface(rgba_surface);
+      rgba_surface = nullptr;
+   }
    if(primary_surface)
    {
       SDL_FreeSurface(primary_surface);
-      primary_surface = NULL;
+      primary_surface = nullptr;
    }
-   video.screens[0] = NULL;
+   video.screens[0] = nullptr;
 }
 
 //
@@ -205,15 +215,35 @@ void SDLVideoDriver::SetPrimaryBuffer()
 {
    int bump = (video.width == 512 || video.width == 1024) ? 4 : 0;
 
-   if(sdlscreen)
+   if(window)
    {
-      primary_surface = 
-         SDL_CreateRGBSurface(SDL_SWSURFACE, video.width + bump, video.height,
-                              8, 0, 0, 0, 0);
+      // SDL_FIXME: This won't be sufficient once a truecolour renderer is implemented
+      primary_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
+                                                       0, SDL_PIXELFORMAT_INDEX8);
       if(!primary_surface)
          I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create screen temp buffer\n");
 
-      video.screens[0] = (byte *)primary_surface->pixels;
+      Uint32 pixelformat = SDL_GetWindowPixelFormat(window);
+      if(pixelformat == SDL_PIXELFORMAT_UNKNOWN)
+         pixelformat = SDL_PIXELFORMAT_RGBA32;
+
+      rgba_surface = SDL_CreateRGBSurfaceWithFormat(0, video.height, video.width + bump,
+                                                    0, pixelformat);
+      if(!rgba_surface)
+      {
+         I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create true-colour buffer: %s\n",
+                 SDL_GetError());
+      }
+      sdltexture = SDL_CreateTexture(renderer, pixelformat,
+                                     SDL_TEXTUREACCESS_STREAMING,
+                                     video.height, video.width + bump);
+      if(!sdltexture)
+      {
+         I_Error("SDLVideoDriver::SetPrimaryBuffer: failed to create rendering texture: %s\n",
+                 SDL_GetError());
+      }
+
+      video.screens[0] = static_cast<byte *>(primary_surface->pixels);
       video.pitch = primary_surface->pitch;
    }
 }
@@ -228,8 +258,25 @@ void SDLVideoDriver::SetPrimaryBuffer()
 void SDLVideoDriver::ShutdownGraphicsPartway()
 {
    // haleyjd 06/21/06: use UpdateGrab here, not release
-   UpdateGrab();
-   sdlscreen = NULL;
+   UpdateGrab(window);
+
+   // NOTE: must do this in macOS to avoid weird glitches when modifying fullscreen-desktop.
+   // Exclusive fullscreen must not do this though.
+#if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
+   Uint32 flags = SDL_GetWindowFlags(window);
+   if((flags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN_DESKTOP)
+      SDL_SetWindowFullscreen(window, 0); // window mode
+#endif
+
+   if(sdltexture)
+   {
+      SDL_DestroyTexture(sdltexture);
+      sdltexture = nullptr;
+   }
+   SDL_DestroyRenderer(renderer);
+   renderer = nullptr;
+   SDL_DestroyWindow(window);
+   window = nullptr;
    UnsetPrimaryBuffer();
 }
 
@@ -251,6 +298,32 @@ void SDLVideoDriver::ShutdownGraphics()
 extern bool setsizeneeded;
 
 //
+// Computes rectangle re-scale and displacement
+//
+static double I_calcScaleAndDisplacement(SDL_Renderer *renderer, int width, int height,
+                                         v2double_t *displacement)
+{
+   double destScale = 1;
+   *displacement = {};
+
+   int renderWidth, renderHeight;
+   if(SDL_GetRendererOutputSize(renderer, &renderWidth, &renderHeight))
+      printf("Error: %s\n", SDL_GetError());
+   else
+   {
+      double widthScale = double(renderWidth) / width;
+      double heightScale = double(renderHeight) / height;
+      destScale = widthScale < heightScale ? widthScale : heightScale;
+      if(widthScale < heightScale)  // monitor letterbox
+         displacement->y = fabs(renderHeight - height * destScale) / 2;
+      else if(heightScale < widthScale) // monitor pillarbox
+         displacement->x = fabs(renderWidth - width * destScale) / 2;
+   }
+
+   return destScale;
+}
+
+//
 // SDLVideoDriver::InitGraphicsMode
 //
 // killough 11/98: New routine, for setting hires and page flipping
@@ -259,142 +332,211 @@ extern bool setsizeneeded;
 bool SDLVideoDriver::InitGraphicsMode()
 {
    // haleyjd 06/19/11: remember characteristics of last successful modeset
-   static int fallback_w     = 640;
-   static int fallback_h     = 480;
-   static int fallback_bd    =   8;
-   static int fallback_flags = SDL_SWSURFACE;
+   static int fallback_w       = 640;
+   static int fallback_h       = 480;
+   static int fallback_w_flags = 0;
+   static int fallback_r_flags = SDL_RENDERER_TARGETTEXTURE;
 
-   bool wantfullscreen = false;
-   bool wantvsync      = false;
-   bool wanthardware   = false;
-   bool wantframe      = true;
-   int  v_w            = 640;
-   int  v_h            = 480;
-   int  v_bd           = 8;
-   int  flags          = SDL_SWSURFACE;
+   int          v_displaynum   = 0;
+   int          window_flags   = 0;
+   int          renderer_flags = SDL_RENDERER_TARGETTEXTURE;
+   int          resolutionWidth = 640;
+   int          resolutionHeight = 480;
 
-   // haleyjd 12/03/07: cross-bit-depth support
-   if(M_CheckParm("-8in32"))
-     v_bd = 32;
-   else if(i_softbitdepth > 8)
-   {
-      switch(i_softbitdepth)
-      {
-      case 16: // Valid screen bitdepth settings
-      case 24:
-      case 32:
-         v_bd = i_softbitdepth;
-         break;
-      default:
-         break;
-      }
-   }
-
-   if(v_bd != 8)
-      crossbitdepth = true;
-
-   // haleyjd 04/11/03: "vsync" or page-flipping support
-   if(use_vsync)
-      wantvsync = true;
+   Geom geom;
 
    // haleyjd 07/15/09: set defaults using geom string from configuration file
-   I_ParseGeom(i_videomode, &v_w, &v_h, &wantfullscreen, &wantvsync, 
-               &wanthardware, &wantframe);
-   
+   geom.parse(i_videomode);
+
+   // haleyjd 04/11/03: "vsync" or page-flipping support
+   bool actualVSync;
+   if(geom.vsync == Geom::TriState::neutral)
+      actualVSync = use_vsync;
+   else
+      actualVSync = geom.vsync == Geom::TriState::on;
+
    // haleyjd 06/21/06: allow complete command line overrides but only
    // on initial video mode set (setting from menu doesn't support this)
-   I_CheckVideoCmds(&v_w, &v_h, &wantfullscreen, &wantvsync, &wanthardware,
-                    &wantframe);
+   I_CheckVideoCmdsOnce(geom);
 
-   if(wanthardware)
-      flags = SDL_HWSURFACE;
+   if(geom.screentype == screentype_e::FULLSCREEN ||
+      geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
+   {
+      window_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+      fallback_w_flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+   }
 
-   if(wantvsync)
-      flags = SDL_HWSURFACE | SDL_DOUBLEBUF;
-
-   if(wantfullscreen)
-      flags |= SDL_FULLSCREEN;
+   // Wanting vsync forces framebuffer acceleration on
+   if(actualVSync)
+   {
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
+      renderer_flags |= SDL_RENDERER_PRESENTVSYNC;
+   }
+   else if(geom.hardware)
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "1");
+   else
+      SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
 
    // haleyjd 10/27/09
-   if(!wantframe)
-      flags |= SDL_NOFRAME;
-     
-   if(!SDL_VideoModeOK(v_w, v_h, v_bd, flags) ||
-      !(sdlscreen = SDL_SetVideoMode(v_w, v_h, v_bd, flags)))
+   if(!geom.wantframe)
+      window_flags |= SDL_WINDOW_BORDERLESS;
+
+   if(displaynum < SDL_GetNumVideoDisplays())
+      v_displaynum = displaynum;
+   else
+      displaynum = 0;
+
+   if(!(window = SDL_CreateWindow(ee_wmCaption,
+                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                  SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                  geom.width, geom.height, window_flags)))
    {
       // try 320x200w safety mode
-      if(!SDL_VideoModeOK(fallback_w, fallback_h, fallback_bd, fallback_flags) ||
-         !(sdlscreen = SDL_SetVideoMode(fallback_w, fallback_h, fallback_bd, fallback_flags)))
+      if(!(window = SDL_CreateWindow(ee_wmCaption,
+                                     SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                     SDL_WINDOWPOS_CENTERED_DISPLAY(v_displaynum),
+                                     fallback_w, fallback_h, fallback_w_flags)))
       {
+         // SDL_TODO: Trim fat from this error message
          I_FatalError(I_ERR_KILL,
-                      "I_SDLInitGraphicsMode: couldn't set mode %dx%dx%d;\n"
-                      "   Also failed to restore fallback mode %dx%dx%d.\n"
+                      "I_SDLInitGraphicsMode: couldn't create window for mode %dx%d;\n"
+                      "   Also failed to restore fallback mode %dx%d.\n"
                       "   Check your SDL video driver settings.\n",
-                      v_w, v_h, v_bd,
-                      fallback_w, fallback_h, fallback_bd);
+                      geom.width, geom.height, fallback_w, fallback_h);
       }
 
       // reset these for below population of video struct
-      v_w   = fallback_w;
-      v_h   = fallback_h;
-      v_bd  = fallback_bd;
-      flags = fallback_flags;
+      geom.width   = fallback_w;
+      geom.height  = fallback_h;
+      window_flags = fallback_w_flags;
+   }
+
+   I_ParseResolution(i_resolution, resolutionWidth, resolutionHeight, geom.width, geom.height);
+
+   // this is done here as monitor video mode isn't set when SDL_WINDOW_FULLSCREEN (sans desktop) is
+   // ORed in during window creation
+   if(geom.screentype == screentype_e::FULLSCREEN_DESKTOP)
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+   else if(geom.screentype == screentype_e::FULLSCREEN)
+      SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+
+   if(!(renderer = SDL_CreateRenderer(window, -1, renderer_flags)))
+   {
+      if(!(renderer = SDL_CreateRenderer(window, -1, fallback_r_flags)))
+      {
+         // SDL_TODO: Trim fat from this error message
+         I_FatalError(I_ERR_KILL,
+                      "I_SDLInitGraphicsMode: couldn't create renderer for mode %dx%d;\n"
+                      "   Also failed to restore fallback mode %dx%d.\n"
+                      "   Check your SDL video driver settings.\n",
+                      geom.width, geom.height, fallback_w, fallback_h);
+      }
+
+      fallback_r_flags = renderer_flags;
    }
 
    // Record successful mode set for use as a fallback mode
-   fallback_w     = v_w;
-   fallback_h     = v_h;
-   fallback_bd    = v_bd;
-   fallback_flags = flags;
+   fallback_w     = geom.width;
+   fallback_h     = geom.height;
+   fallback_w_flags = window_flags;
+   fallback_r_flags = renderer_flags;
 
    // haleyjd 10/09/05: keep track of fullscreen state
-   fullscreen = (sdlscreen->flags & SDL_FULLSCREEN) == SDL_FULLSCREEN;
+   fullscreen = !!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP);
 
-   // haleyjd 12/03/07: if the video surface is not high-color, we
-   // disable cross-bit-depth drawing for efficiency
-   if(sdlscreen->format->BitsPerPixel == 8)
-      crossbitdepth = false;
-
-   SDL_WM_SetCaption(ee_wmCaption, ee_wmCaption);
-
-   UpdateFocus();
-   UpdateGrab();
+   UpdateFocus(window);
+   UpdateGrab(window);
 
    // check for letterboxing
-   if(I_VideoShouldLetterbox(v_w, v_h))
+   const int bump = (resolutionWidth == 512 || resolutionWidth == 1024) ? 4 : 0;
+   const int bumpedWidth = geom.width + bump;
+
+   if(I_VideoShouldLetterbox(geom.width, geom.height))
    {
-      int hs = I_VideoLetterboxHeight(v_w);
+      const int letterboxHeight = I_VideoLetterboxHeight(resolutionWidth);
 
-      staticDestRect.x = 0;
-      staticDestRect.y = static_cast<Sint16>(I_VideoLetterboxOffset(v_h, hs));
-      staticDestRect.w = static_cast<Uint16>(v_w);
-      staticDestRect.h = static_cast<Uint16>(hs);
+      staticDestRect.x = (bumpedWidth - letterboxHeight) / 2;
+      staticDestRect.y = I_VideoLetterboxOffset(geom.height, bumpedWidth);
+      staticDestRect.w = letterboxHeight;
+      staticDestRect.h = bumpedWidth;
 
-      video.width  = v_w;
-      video.height = hs;
+      video.width  = resolutionWidth;
+      video.height = letterboxHeight;
       destrect     = &staticDestRect;
    }
    else
    {
-      video.width  = v_w;
-      video.height = v_h;
-      destrect     = NULL;
+      staticDestRect.x = (bumpedWidth - geom.height) / 2;
+      staticDestRect.y = (geom.height - bumpedWidth) / 2;
+      staticDestRect.w = geom.height;
+      staticDestRect.h = bumpedWidth;
+
+      video.width  = resolutionWidth;
+      video.height = resolutionHeight;
+      destrect     = &staticDestRect;
    }
 
+   // We need to adjust the static destination rectangle position and size based on renderer or real
+   // screen size and ratio.
+   if(fullscreen)
+   {
+      v2double_t displacement;
+      double scale = I_calcScaleAndDisplacement(renderer, bumpedWidth, geom.height, &displacement);
+      staticDestRect.x = int(floor(staticDestRect.x * scale + displacement.x));
+      staticDestRect.y = int(floor(staticDestRect.y * scale + displacement.y));
+      staticDestRect.w = int(floor(staticDestRect.w * scale));
+      staticDestRect.h = int(floor(staticDestRect.h * scale));
+   }
    video.bitdepth  = 8;
    video.pixelsize = 1;
 
    UnsetPrimaryBuffer();
    SetPrimaryBuffer();
-   
+
    // haleyjd 11/12/09: set surface palettes immediately
-   I_SDLSetPaletteDirect((byte *)wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE));
+   I_SDLSetPaletteDirect(static_cast<byte *>(wGlobalDir.cacheLumpName("PLAYPAL", PU_CACHE)));
+
+   // Update the i_videomode cvar to correspond to the real state
+   efree(i_videomode);
+   i_videomode = geom.toString().duplicate();
+   // Also update the vsync variable
+   if(geom.vsync != Geom::TriState::neutral)
+      use_vsync = geom.vsync == Geom::TriState::on;
 
    return false;
 }
 
 // The one and only global instance of the SDL video driver.
 SDLVideoDriver i_sdlvideodriver;
+
+/************************
+CONSOLE COMMANDS
+************************/
+
+CONSOLE_COMMAND(maxdisplaynum, 0)
+{
+   C_Printf("%d", SDL_GetNumVideoDisplays() - 1);
+}
+
+VARIABLE_INT(displaynum, nullptr, -1, UL, nullptr);
+CONSOLE_VARIABLE(displaynum, displaynum, cf_buffered)
+{
+   const int numdisplays = SDL_GetNumVideoDisplays();
+
+   if(displaynum == -1)
+      displaynum = numdisplays - 1; // allow scrolling left from 0 to maxdisplaynum
+   else if(displaynum == numdisplays)
+      displaynum = 0; // allow scrolling right from maxdisplaynum to 0
+   else if(displaynum > numdisplays)
+   {
+      C_Printf(FC_ERROR "Warning: displaynum's current maximum is %d, resetting to 0",
+               numdisplays - 1);
+      displaynum = 0;
+   }
+
+   I_SetMode();
+}
+
 
 // EOF
 

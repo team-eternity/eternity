@@ -57,6 +57,7 @@ struct iwadcheck_t
    bool          freedoom;
    bool          freedm;
    bool          bfgedition;
+   bool          rekkr;
 };
 
 void D_CheckIWAD(const char *iwadname, iwadcheck_t &version);

@@ -95,6 +95,10 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
 
    int   neg;
 
+   // if non-number, do not draw it
+   if(num == INT_MIN)
+      return;
+
    neg = num < 0;
 
    if(neg)
@@ -103,16 +107,9 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
          num = -9;
       else if(numdigits == 3 && num < -99)
          num = -99;
-      
+
       num = -num;
    }
-
-   // clear the area
-   x = n->x - numdigits*w;
-
-   // if non-number, do not draw it
-   if(num == 1994)
-      return;
 
    x = n->x;
 
@@ -122,7 +119,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    {
       //jff 2/18/98 allow use of faster draw routine from config
       V_DrawPatchTL(x - w, n->y, &subscreen43, n->p[0], 
-                    sts_always_red ? NULL : outrng, alpha);
+                    sts_always_red ? nullptr : outrng, alpha);
    }
 
    // draw the new number
@@ -132,7 +129,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
       x -= w;
       //jff 2/18/98 allow use of faster draw routine from config
       V_DrawPatchTL(x, n->y, &subscreen43, n->p[ num % 10 ],
-                    sts_always_red ? NULL : outrng, alpha);
+                    sts_always_red ? nullptr : outrng, alpha);
       num /= 10;
    }
 
@@ -142,7 +139,7 @@ static void STlib_drawNum(st_number_t *n, byte *outrng, int alpha)
    {
       //jff 2/18/98 allow use of faster draw routine from config
       V_DrawPatchTL(x - 8, n->y, &subscreen43, sttminus,
-                    sts_always_red ? NULL : outrng, alpha);
+                    sts_always_red ? nullptr : outrng, alpha);
    }
 }
 
@@ -193,7 +190,7 @@ void STlib_updatePercent(st_percent_t *per, byte *outrng, int alpha)
 {
    if(*per->n.on) // killough 2/21/98: fix percents not updated
    {
-      byte *tlate = NULL;
+      byte *tlate = nullptr;
 
       // jff 2/18/98 allow use of faster draw routine from config
       // also support gray-only percents
@@ -242,7 +239,7 @@ void STlib_updateMultIcon(st_multicon_t *mi, int alpha)
    {
       // killough 2/16/98: redraw only if != -1
       if(*mi->inum != -1)
-         V_DrawPatchTL(mi->x, mi->y, &subscreen43, mi->p[*mi->inum], NULL, alpha);
+         V_DrawPatchTL(mi->x, mi->y, &subscreen43, mi->p[*mi->inum], nullptr, alpha);
    }
 }
 

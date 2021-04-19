@@ -14,7 +14,7 @@ jump to, and the number of states does not need to be specified.
 -------------------------------------------------------------------------------
 2016/09/28
 
-Altered IWAD detection so that FreeDM and Freedoom 2 are now  in the correct
+Altered IWAD detection so that FreeDM and Freedoom 2 are now in the correct
 positions when autodetected.
 
 -------------------------------------------------------------------------------
@@ -73,8 +73,8 @@ Add Plane_Copy. It copies slopes.
 -------------------------------------------------------------------------------
 2017/01/06
 
-Updated the credits screen to include myself, and amend Sarah Mancuso's name.
-The credits now have two names per column, and are separated down the middle.
+The credits screen now includes myself and I amended Sarah Mancuso's name.
+The credits now have two names per column and are separated down the middle.
 
 -------------------------------------------------------------------------------
 2017/01/08
@@ -125,6 +125,394 @@ is in, as opposed to where the x and y args are.
 
 Add a 4th arg to A_Scratch, which designates means-of-death. This is achieved
 by referring to the key (string), or the "num" property (int).
+
+-------------------------------------------------------------------------------
+2017/03/26
+Added solutions and folders for Visual Studio 2017.
+
+-------------------------------------------------------------------------------
+2017/04/22
+Allowed UDMF->ExtraData special lookup to work, for SetLineSpecial.
+
+-------------------------------------------------------------------------------
+2017/05/21
+Fixed Thing_Remove not cleaning up properly. Thing_Remove'd stuff would still
+be targeted by monsters even after removal.
+
+-------------------------------------------------------------------------------
+2017/06/04
+Added sector scroller UDMF properties, and fixed ACS scroll speeds. Also fixed
+overriding that the ACS specials do.
+
+-------------------------------------------------------------------------------
+2017/07/18
+Tall and transparent PNGs are now supported, though the transparency could do
+with being mask-based, instead of just using a "this is transparent" index.
+
+-------------------------------------------------------------------------------
+2017/08/04
+ALT+F4 now exits the program in a quick and clean fashion. Thanks to anotak for
+bringing this up.
+
+Fixed ACS scrollers again.
+
+-------------------------------------------------------------------------------
+2017/08/26
+The player view no longer vibrates once their decapitated head hits the floor,
+if they have interpolation on.
+
+-------------------------------------------------------------------------------
+2017/08/27
+Console aliases for idk and idfa have been added: "givearsenal" and "givekeys"
+respectively.
+
+-------------------------------------------------------------------------------
+2017/09/06
+Fixed UDMF damageinterval having a default of 0 when it should be 32.
+
+-------------------------------------------------------------------------------
+2017/09/12
+Building with Visual Studio no longer includes any batch files. Both Eternity
+and midiproc both use the "MIDL" section in project properties.
+
+Removed the ability to pick internal texture format.
+
+-------------------------------------------------------------------------------
+2017/11/10
+Merged in SDL2 branch. Changes I can remember:
+ • Moved to SDL 2.0.7, SDL_mixer 2.0.2, and SDL_net 2.0.1
+ • "unicodeinput" is gone. All text input is UTF-8.
+ • -8in32 and the software bitdepth setting are gone.
+ • A new console variable "displaynum" exists, and lets you set what display
+   the window is created on when you run Eternity.
+ • A new console command "maxdisplaynum" has been added (guess what it does).
+ • -directx and -gdi are gone.
+
+Also whilst I was at it I added a fullscreen toggle,
+bound to Alt+Enter on non-Apple, Cmd+f on Apple).
+
+-------------------------------------------------------------------------------
+2018/01/31
+Changed GL extensions and pixelbuffers to be on by default.
+
+-------------------------------------------------------------------------------
+2018/02/05
+Fixed hitscan impact not activating lines that only have impact activation in
+UDMF. This means that players always activate them now (with impact), as do
+monsters with SPAC.
+
+-------------------------------------------------------------------------------
+2018/02/07
+Fix EV_ThingSpawn not assigning tid of spawned mobj.
+
+-------------------------------------------------------------------------------
+2018/02/10
+Fixed lumps in the HI_ markers overriding regular textures. This means that
+wads like Bloody Steel don't have invisible menu options.
+
+-------------------------------------------------------------------------------
+2018/02/14
+Added a "restartmap" command. It's basically the same as using the "map"
+command but to the same level.
+
+================================================================================
+Changes since Eternity Engine v4.00.00
+================================================================================
+-------------------------------------------------------------------------------
+2018/04/01
+Incremented version to 4.01.00.
+
+-------------------------------------------------------------------------------
+2018/04/05
+O-H-S-N-A-P-O-H-S-N-A-P-O-H-S-N-A-P-O-H-S
+|Merged edf-features-branch into master.|
+P-A-N-S-H-O-P-A-N-S-H-O-P-A-N-S-H-O-P-A-N  
+ 
+MAJOR CHANGES:
+ • Introduced EDF weapons:
+  - Users can now define brand new weapons.
+  - All the original Doom weapons are now defined through this system.
+  - Almost all Heretic weapons are now defined through this system (the others
+    aren't defined at all).
+  - Almost all of the Heretic weapon codepointers have been added.
+  - Additionally, weapondeltas have been added.
+ • Introduced EDF pickupeffects:
+  - Users can now define brand new pickups.
+  - These can define either thing-based or sprite-based pickups. They can also
+    be defined externally, or inside a thingtype definition.
+  - They encompass health, armor, ammo, power-ups, weapons, and artefacts.
+  - All the Doom and Heretic pickups now use this system.  
+  - PICKUPITEMS ARE DEPRECATED, PLEASE DO NOT USE THEM.
+ • Introduced support for Heretic-style inventory
+  - Items can only be used in Heretic at the moment, but support will be
+    extended to other IWADs.
+  - All the Heretic artefacts now use this system (except for the egg).
+ • EDF playerclasses now have more options.
+ • Added EDF playerdeltas.
+ 
+There's probably more stuff I'm forgetting but that's the big stuff.
+
+-------------------------------------------------------------------------------
+2018/04/07
+Splitted armor's +bonus into +additive and -setabsorption.
+Added the RAMBO cheat from Heretic, and improved givearsenal to give armor in
+Heretic too.
+
+-------------------------------------------------------------------------------
+2018/05/17
+Added EDF fontdeltas.
+
+-------------------------------------------------------------------------------
+2018/06/13
+Changed version name to "Tyrfing".
+
+-------------------------------------------------------------------------------
+2018/06/16
+Made A_Jump now work for weapons with DECORATE states.
+
+-------------------------------------------------------------------------------
+2018/07/20
+Add support for the Rekkr stand-alone IWAD.
+
+-------------------------------------------------------------------------------
+2018/07/01
+Added r_drawplayersprites, which lets players choose to not render weapons if
+they don't want to (for example, if taking photos).
+
+-------------------------------------------------------------------------------
+2018/07/23
+Fix ev_text events causing some issues, such as menu navigation occurring when
+inserting specific keys for key bindings on certain menus.
+
+-------------------------------------------------------------------------------
+2018/12/02
+The edf "include" directive can now include files with longer names or using
+paths (e.g.: "whereveredfis/monsters/somethingidunno.edf"). This is
+case-insensitive, and all \s are converted to /s when internally hashed.
+Additionally these includes are relative to the file making the include
+(e.g: if "edf/monsters.edf" does "include("monsters/something.edf")" it will
+include "edf/monsters/something.edf"). Includes can be made non-relative by
+putting a '/' before the rest of the path.
+
+. AND .. ARE NOT SUPPORTED!
+
+-------------------------------------------------------------------------------
+2018/12/18
+Re-implemented the MBF pickups.
+
+-------------------------------------------------------------------------------
+2018/12/25
+Merry Christmas!
+Added the new Modern HUD (with graphics courtesy of ptoing), which supports all
+the layouts the BOOM HUD does as well. Along with this the Modern HUD and flat
+layouts have been made to be the new default for overlay-style HUDs.
+Added an inventory bar to Doom. Currently it only works when not using the
+regular Doom HUD, and currently selected items are not rendered  outside of
+when the inventory bar is active.
+
+-------------------------------------------------------------------------------
+2019/01/11
+Fixed the FOV parameter for A_JumpIfTargetInLOS, which was read in as an int
+FRACUNIT times smaller than it should have been before being converted to an
+angle. It is now read in as a fixed.
+
+-------------------------------------------------------------------------------
+2019/01/13
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/14
+Added SetWeapon and CheckWeapon ACS functions.
+
+-------------------------------------------------------------------------------
+2019/01/26
+Greatly improved performance of R_doubleToUint32, which becomes significantly
+noticeable in maps with lots of flats (think central area of Mothership).
+
+-------------------------------------------------------------------------------
+2019/02/05
+Add range parameter to A_CustomPlayerMelee. This displaces the new-ish pufftype
+parameter, punting that to last position.
+
+-------------------------------------------------------------------------------
+2019/02/07
+Made A_AlertMonsters work properly for weapons. Now it actually just alerts all
+the things without being contingent on you pointing your gun at an enemy.
+Thanks to Xaser for this.
+A_CustomPlayerMelee now correctly turns you through portals.
+
+-------------------------------------------------------------------------------
+2019/0//12
+Made it so the Windows close button on the console is re-enabled when Eternity
+is closed.
+
+-------------------------------------------------------------------------------
+2019/02/12
+Added Ceiling_Waggle action special.
+Added "speedjump" playerclass property. Its value is a fixed, and is how much
+upwards speed is added to momz when the player successfully jumps.
+
+-------------------------------------------------------------------------------
+2019/02/25
+Implemented deltas for itemeffects (healtheffect, armoreffect, ammoeffect,
+powereffect, weapongiver, artifact). Replace effect with delta for those ending
+with effect, and append delta to the end of the others to get the name of the
+appropriate delta structure. weapongiverdelta also has clearammogiven, which
+does what it says on the tin.
+
+The artifact's args are implicitly cleared if a delta specifies a useaction
+or args in a delta structure targetting said artifact.
+
+-------------------------------------------------------------------------------
+2019/03/23
+Change the key bindings menus.
+Fix an issue with window grabbing not working.
+
+-------------------------------------------------------------------------------
+2019/07/07
+Fix crashes when using music packs (I think this only impacted devbuilds).
+
+-------------------------------------------------------------------------------
+2019/08/10
+Fix next and previous weapon (weapon scrolling) in vanilla recordings.
+
+-------------------------------------------------------------------------------
+2019/08/14
+Fix a crash caused by ANIMATED lumps of size 0. It hard errors now.
+
+-------------------------------------------------------------------------------
+2019/08/25-2019/08/26
+Working past midnight so yeah.
+Fixed crashes due to not being able to handle floating 32-bit audio samples.
+Made Eternity use WASAPI on Windows Vista and later.
+Added libADLMIDI support, which enables OPL3 MIDI playback. The default
+emulator is Nuked OPL3 1.8, with 2 chips, and DMXOPL as the bank.
+
+-------------------------------------------------------------------------------
+2019/09/02
+Made the "idmypos" cheat toggle location display. Additionally, a new console
+variable "hu_alwaysshowcoords" has been introduced to control the same thing.
+
+-------------------------------------------------------------------------------
+2019/09/08
+Added an option that allows you to set message alignment to either default,
+left, or centred.
+
+-------------------------------------------------------------------------------
+2019/11/03
+Fixed cfg saving ignoring symlinks (and just overwriting the link).
+
+-------------------------------------------------------------------------------
+2019/11/23
+Fixed crashing if the CONSOLE lump isn't a valid graphic.
+
+-------------------------------------------------------------------------------
+2020/02/29
+Extended A_PainAttack to have ZDoom's parameters.
+Extended A_PainDie to have thingtype arg.
+
+-------------------------------------------------------------------------------
+2020/03/04
+Extended -file to search DOOMWADPATH directories if required.
+
+-------------------------------------------------------------------------------
+2020/03/10
+Add "clearrebornitems" flag for playerdeltas. Fix rebornitem allocation logic.
+
+-------------------------------------------------------------------------------
+2020/03/21
+Parameterise A_Turn to be able to take a constant value, or using a counter
+as either a BAM or degrees.
+Add A_TurnProjectile which is A_Turn but updates momentum for projectiles.
+
+-------------------------------------------------------------------------------
+2020/04/12
+Added support for stereo WAVs (8 and 16 bit). Additionally relax WAV loading,
+so that WAVs with incorret chunk size will successfully load.
+Allowed 0-tic initial states if the states are DECORATE, and don't have their
+duration modified—or aren't made the spawnstate of a thing—by dehacked.
+
+-------------------------------------------------------------------------------
+2020/04/26
+Added A_SeekerMissile, based on the ZDoom wiki docs for the same codepointer.
+Added A_CounterDiceRoll, which can do a TTRPG-style damage dice calculation.
+Made midiproc shut down if Eternity isn't running.
+
+-------------------------------------------------------------------------------
+2020/05/05
+Added console command "s_stopmusic" as well as the alias "stopmus".
+
+-------------------------------------------------------------------------------
+2020/05/17
+Made "summon" console command check thing num for compat name if no thing is
+found for the regular name.
+
+-------------------------------------------------------------------------------
+2020/06/21
+Increased repeat backspace speed. Before it only accepted a repeat input
+every 120ms.
+Made it so if Eternity sets its Windows mixer volume it will not use the volume
+it was set to during its runtime.
+
+-------------------------------------------------------------------------------
+2020/07/07
+Added turning sensitivity for joysticks.
+
+-------------------------------------------------------------------------------
+2020/07/10
+Added the vast majority of dehacked extensions made by Doom Retro. Allow
+non-contiguous sprite frames (e.g. TROO G is missing but F and H are present).
+
+-------------------------------------------------------------------------------
+2020/07/11
+Extend dehacked to be able to set drop item.
+
+-------------------------------------------------------------------------------
+2020/07/12
+Made it so your aim is always the centre of the actual non-HUD viewport. This
+removes the need to move the crosshair up/down depending on player pitch.
+Split "Fullscreen Desktop" into its own option for favoured screen type.
+
+-------------------------------------------------------------------------------
+2020/07/18
+Fixed replacing music when both tracks have a length of 4 (after the "D_").
+Thanks to JadingTsunami for the code fix and esselfortium for reporting the bug
+with a minimum failing case.
+
+-------------------------------------------------------------------------------
+2020/08/29
+Changed my age from 23 to 24. Made empty weapons in the BOOM-style HUDs brown
+in colour.
+
+-------------------------------------------------------------------------------
+2020/09/07
+Fixed SpawnProjectile speed. Add SetSectorDamage (ACS function). Add ACS
+variant of Sector_SetFriction.
+
+-------------------------------------------------------------------------------
+2020/09/11
+Extended line flags are now archived. Saves now have a version, allowing
+backwards compatibility.
+
+-------------------------------------------------------------------------------
+2020/09/19
+Added secret notifications. The defaults are DSITMBK for Doom and CHAT for
+Heretic. They can be overriden by providing a "DSSECRET" lump, or "DSYEAH" in
+Strife (when Strife is a thing).
+
+-------------------------------------------------------------------------------
+2020/09/22
+Secret notifications are now toggleable on/off via the "secret_notification"
+console variable.
+
+-------------------------------------------------------------------------------
+2020/10/11
+Changed monsters_remember & monster_avoid_hazards to 0 by default.
+
+-------------------------------------------------------------------------------
+2020/10/13
+Added a folder selector popup on Windows for when no IWADs are found.
+Added the 200 DEHEXTRA sounds.
 
 ================================================================================
 EOF

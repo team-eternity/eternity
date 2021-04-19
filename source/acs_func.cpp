@@ -41,9 +41,12 @@
 #include "e_args.h"
 #include "e_exdata.h"
 #include "e_hash.h"
+#include "e_inventory.h"
 #include "e_mod.h"
 #include "e_states.h"
 #include "e_things.h"
+#include "e_weapons.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "hu_stuff.h"
 #include "m_random.h"
@@ -191,7 +194,7 @@ bool ACS_CF_AmbientSound(ACS_CF_ARGS)
    const char *snd = thread->scopeMap->getString(argV[0])->str;
    int         vol = argV[1];
 
-   S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+   S_StartSoundNameAtVolume(nullptr, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
    return false;
 }
@@ -208,7 +211,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
    int         vol  = argV[1];
 
    if(info->mo == players[displayplayer].mo)
-      S_StartSoundNameAtVolume(NULL, snd, vol, ATTN_NORMAL, CHAN_AUTO);
+      S_StartSoundNameAtVolume(nullptr, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
    return false;
 }
@@ -220,7 +223,7 @@ bool ACS_CF_AmbientSoundLoc(ACS_CF_ARGS)
 //
 bool ACS_CF_ATan2(ACS_CF_ARGS)
 {
-   thread->dataStk.push(P_PointToAngle(0, 0, argV[0], argV[1]));
+   thread->dataStk.push(P_PointToAngle(0, 0, argV[0], argV[1]) >> FRACBITS);
    return false;
 }
 
@@ -243,6 +246,137 @@ bool ACS_CF_ChangeCeil(ACS_CF_ARGS)
 bool ACS_CF_ChangeFloor(ACS_CF_ARGS)
 {
    P_ChangeFloorTex(thread->scopeMap->getString(argV[1])->str, argV[0]);
+   return false;
+}
+
+enum
+{
+   CPXF_ANCESTOR    = 0x00000001,
+   CPXF_LESSOREQUAL = 0x00000002,
+   CPXF_NOZ         = 0x00000004,
+   CPXF_COUNTDEAD   = 0x00000008,
+   CPXF_DEADONLY    = 0x00000010,
+   CPXF_EXACT       = 0x00000020,
+   CPXF_SETTARGET   = 0x00000040,
+   CPXF_SETMASTER   = 0x00000080, // unimplemented
+   CPXF_SETTRACER   = 0x00000100,
+   CPXF_FARTHEST    = 0x00000200,
+   CPXF_CLOSEST     = 0x00000400,
+   CPXF_SETONPTR    = 0x00000800, // unimplemented
+   CPXF_CHECKSIGHT  = 0x00001000,
+};
+
+//
+// ACS_CF_CheckProximity
+//
+// int CheckProximity(int tid, str classname, fixed distance, int limit, int flags)
+//
+bool ACS_CF_CheckProximity(ACS_CF_ARGS)
+{
+   auto       info  = &static_cast<ACSThread *>(thread)->info;
+   Mobj      *orig  = P_FindMobjFromTID(argV[0], nullptr, info->mo);
+
+   if(!orig)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   mobjtype_t type  = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
+   fixed_t    dist  = argV[2];
+   uint32_t   limit = argC > 3 ? argV[3] : 1;
+   uint32_t   flags = argC > 4 ? argV[4] : 0;
+
+   uint32_t res;
+   Mobj    *resMo = nullptr;
+   fixed_t  resDist = 0;
+
+   uint32_t count = 0;
+
+   for(Mobj *mo = nullptr; (mo = P_NextThinker(mo));)
+   {
+      // Check type.
+
+      if(type >= 0)
+      {
+         if(flags & CPXF_ANCESTOR)
+         {
+            for(const mobjinfo_t *info = mo->info; info; info = info->parent)
+               if(info->index == type)
+                  goto typeok;
+            continue;
+         }
+         else if(mo->type != type)
+            continue;
+      }
+      else
+         continue;   // reject invalid things, don't accept them
+   typeok:
+
+      // Check health.
+      if(mo->health > 0)
+      {
+         if(flags & CPXF_DEADONLY)
+            continue;
+      }
+      else
+      {
+         if(!(flags & CPXF_COUNTDEAD))
+            continue;
+      }
+
+      // Check distance.
+      auto    moLink = P_GetLinkOffset(orig->groupid, mo->groupid);
+      fixed_t moDist = P_AproxDistance(orig->x - mo->x + moLink->x, orig->y - mo->y + moLink->y);
+      if(!(flags & CPXF_NOZ))
+         moDist = P_AproxDistance(moDist, orig->z - mo->z + moLink->z);
+
+      if(moDist > dist)
+         continue;
+
+      // Check sight.
+      if((flags & CPXF_CHECKSIGHT) && !P_CheckSight(orig, mo))
+         continue;
+
+      ++count;
+
+      if(!resMo ||
+         ((flags & CPXF_FARTHEST) && moDist > resDist) ||
+         ((flags & CPXF_CLOSEST)  && moDist < resDist))
+      {
+         resDist = moDist;
+         resMo   = mo;
+      }
+
+      // Possibly short-circuit?
+      if(!(flags & (CPXF_FARTHEST | CPXF_CLOSEST)))
+      {
+         if(flags & (CPXF_LESSOREQUAL | CPXF_EXACT))
+         {
+            if(count > limit)
+               break;
+         }
+         else if(count >= limit)
+            break;
+      }
+   }
+
+   if(resMo)
+   {
+      if(flags & CPXF_SETTARGET)
+         P_SetTarget(&orig->target, resMo);
+      if(flags & CPXF_SETTRACER)
+         P_SetTarget(&orig->tracer, resMo);
+   }
+
+   if(flags & CPXF_LESSOREQUAL)
+      res = count <= limit;
+   else if(flags & CPXF_EXACT)
+      res = count == limit;
+   else
+      res = count >= limit;
+
+   thread->dataStk.push(res);
    return false;
 }
 
@@ -276,6 +410,23 @@ bool ACS_CF_CheckSight(ACS_CF_ARGS)
 }
 
 //
+// int CheckWeapon(str weapon)
+//
+bool ACS_CF_CheckWeapon(ACS_CF_ARGS)
+{
+   const auto info = &static_cast<ACSThread *>(thread)->info;
+   if(!info->mo || !info->mo->player)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+   const char *const readyWeaponStr = info->mo->player->readyweapon->name;
+   const char *const weaponStr      = thread->scopeMap->getString(argV[0])->str;
+   thread->dataStk.push(strcasecmp(readyWeaponStr, weaponStr) == 0 ? 1 : 0);
+   return false;
+}
+
+//
 // ACS_CF_ChkThingCeilTex
 //
 // int CheckThingCeilingTexture(int tid, str texture)
@@ -303,6 +454,7 @@ bool ACS_CF_ChkThingFlag(ACS_CF_ARGS)
    case 1: res = !!(mo->flags2 & flag->value); break;
    case 2: res = !!(mo->flags3 & flag->value); break;
    case 3: res = !!(mo->flags4 & flag->value); break;
+   case 4: res = !!(mo->flags5 & flag->value); break;
    }
 
    thread->dataStk.push(res);
@@ -328,10 +480,10 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
 
    switch(var)
    {
-   case ACS_TP_Health:       return mo->health == val;
-   case ACS_TP_Speed:        return mo->info->speed == val;
-   case ACS_TP_Damage:       return mo->damage == val;
-   case ACS_TP_Alpha:        return mo->translucency == val;
+   case ACS_TP_Health:       return static_cast<uint32_t>(mo->health) == val;
+   case ACS_TP_Speed:        return static_cast<uint32_t>(mo->info->speed) == val;
+   case ACS_TP_Damage:       return static_cast<uint32_t>(mo->damage) == val;
+   case ACS_TP_Alpha:        return static_cast<uint32_t>(mo->translucency) == val;
    case ACS_TP_RenderStyle:  return false;
    case ACS_TP_SeeSound:     return false;
    case ACS_TP_AttackSound:  return false;
@@ -344,7 +496,7 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_ChaseGoal:    return false;
    case ACS_TP_Frightened:   return false;
    case ACS_TP_Friendly:     return !!(mo->flags & MF_FRIEND) == !!val;
-   case ACS_TP_SpawnHealth:  return mo->getModifiedSpawnHealth() == val;
+   case ACS_TP_SpawnHealth:  return static_cast<uint32_t>(mo->getModifiedSpawnHealth()) == val;
    case ACS_TP_Dropped:      return !!(mo->flags & MF_DROPPED) == !!val;
    case ACS_TP_NoTarget:     return false;
    case ACS_TP_Species:      return false;
@@ -356,49 +508,52 @@ bool ACS_ChkThingProp(Mobj *mo, uint32_t var, uint32_t val)
    case ACS_TP_TargetTID:    return mo->target ? mo->target->tid == val : false;
    case ACS_TP_TracerTID:    return mo->tracer ? mo->tracer->tid == val : false;
    case ACS_TP_WaterLevel:   return false;
-   case ACS_TP_ScaleX:       return M_FloatToFixed(mo->xscale) == val;
-   case ACS_TP_ScaleY:       return M_FloatToFixed(mo->yscale) == val;
+   case ACS_TP_ScaleX:       return static_cast<uint32_t>(M_FloatToFixed(mo->xscale)) == val;
+   case ACS_TP_ScaleY:       return static_cast<uint32_t>(M_FloatToFixed(mo->yscale)) == val;
    case ACS_TP_Dormant:      return !!(mo->flags2 & MF2_DORMANT) == !!val;
-   case ACS_TP_Mass:         return mo->info->mass == val;
+   case ACS_TP_Mass:         return static_cast<uint32_t>(mo->info->mass) == val;
    case ACS_TP_Accuracy:     return false;
    case ACS_TP_Stamina:      return false;
-   case ACS_TP_Height:       return mo->height == val;
-   case ACS_TP_Radius:       return mo->radius == val;
-   case ACS_TP_ReactionTime: return mo->reactiontime == val;
+   case ACS_TP_Height:       return static_cast<uint32_t>(mo->height) == val;
+   case ACS_TP_Radius:       return static_cast<uint32_t>(mo->radius) == val;
+   case ACS_TP_ReactionTime: return static_cast<uint32_t>(mo->reactiontime) == val;
    case ACS_TP_MeleeRange:   return MELEERANGE == val;
    case ACS_TP_ViewHeight:   return false;
    case ACS_TP_AttackZOff:   return false;
    case ACS_TP_StencilColor: return false;
    case ACS_TP_Friction:     return false;
    case ACS_TP_DamageMult:   return false;
-   case ACS_TP_Counter0:     return mo->counters[0] == val;
-   case ACS_TP_Counter1:     return mo->counters[1] == val;
-   case ACS_TP_Counter2:     return mo->counters[2] == val;
-   case ACS_TP_Counter3:     return mo->counters[3] == val;
-   case ACS_TP_Counter4:     return mo->counters[4] == val;
-   case ACS_TP_Counter5:     return mo->counters[5] == val;
-   case ACS_TP_Counter6:     return mo->counters[6] == val;
-   case ACS_TP_Counter7:     return mo->counters[7] == val;
+   case ACS_TP_Counter0:     return static_cast<uint32_t>(mo->counters[0]) == val;
+   case ACS_TP_Counter1:     return static_cast<uint32_t>(mo->counters[1]) == val;
+   case ACS_TP_Counter2:     return static_cast<uint32_t>(mo->counters[2]) == val;
+   case ACS_TP_Counter3:     return static_cast<uint32_t>(mo->counters[3]) == val;
+   case ACS_TP_Counter4:     return static_cast<uint32_t>(mo->counters[4]) == val;
+   case ACS_TP_Counter5:     return static_cast<uint32_t>(mo->counters[5]) == val;
+   case ACS_TP_Counter6:     return static_cast<uint32_t>(mo->counters[6]) == val;
+   case ACS_TP_Counter7:     return static_cast<uint32_t>(mo->counters[7]) == val;
 
    case ACS_TP_Angle:        return mo->angle >> 16 == (uint32_t)val;
-   case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints == val : false;
-   case ACS_TP_CeilTex:      return mo->subsector->sector->ceilingpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_CeilZ:        return mo->ceilingz == val;
-   case ACS_TP_FloorTex:     return mo->subsector->sector->floorpic == R_FindWall(ACSenv.getString(val)->str);
-   case ACS_TP_FloorZ:       return mo->floorz == val;
-   case ACS_TP_Frags:        return mo->player ? mo->player->totalfrags == val : false;
-   case ACS_TP_LightLevel:   return mo->subsector->sector->lightlevel == val;
-   case ACS_TP_MomX:         return mo->momx == val;
-   case ACS_TP_MomY:         return mo->momy == val;
-   case ACS_TP_MomZ:         return mo->momz == val;
-   case ACS_TP_Pitch:        return mo->player ? mo->player->pitch >> 16 == val : false;
+   case ACS_TP_Armor:        return mo->player ?
+                                    static_cast<uint32_t>(mo->player->armorpoints) == val : false;
+   case ACS_TP_CeilTex:      return mo->subsector->sector->srf.ceiling.pic == R_FindWall(ACSenv.getString(val)->str);
+   case ACS_TP_CeilZ:        return static_cast<uint32_t>(mo->zref.ceiling) == val;
+   case ACS_TP_FloorTex:     return mo->subsector->sector->srf.floor.pic == R_FindWall(ACSenv.getString(val)->str);
+   case ACS_TP_FloorZ:       return static_cast<uint32_t>(mo->zref.floor) == val;
+   case ACS_TP_Frags:        return mo->player ?
+                                    static_cast<uint32_t>(mo->player->totalfrags) == val : false;
+   case ACS_TP_LightLevel:   return static_cast<uint32_t>(mo->subsector->sector->lightlevel) == val;
+   case ACS_TP_MomX:         return static_cast<uint32_t>(mo->momx) == val;
+   case ACS_TP_MomY:         return static_cast<uint32_t>(mo->momy) == val;
+   case ACS_TP_MomZ:         return static_cast<uint32_t>(mo->momz) == val;
+   case ACS_TP_Pitch:        return mo->player ?
+                                    static_cast<uint32_t>(mo->player->pitch >> 16) == val : false;
    case ACS_TP_PlayerNumber: return mo->player ? mo->player - players == val : false;
    case ACS_TP_SigilPieces:  return false;
    case ACS_TP_TID:          return mo->tid == val;
    case ACS_TP_Type:         return mo->type == E_ThingNumForCompatName(ACSenv.getString(val)->str);
-   case ACS_TP_X:            return mo->x == val;
-   case ACS_TP_Y:            return mo->y == val;
-   case ACS_TP_Z:            return mo->z == val;
+   case ACS_TP_X:            return static_cast<uint32_t>(mo->x) == val;
+   case ACS_TP_Y:            return static_cast<uint32_t>(mo->y) == val;
+   case ACS_TP_Z:            return static_cast<uint32_t>(mo->z) == val;
 
    default: return false;
    }
@@ -634,6 +789,30 @@ bool ACS_CF_GetCVarStr(ACS_CF_ARGS)
 }
 
 //
+// int CheckInventory(str itemname);
+//
+bool ACS_CF_GetInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   // We could use E_GetItemOwnedAmountName but let's inform the player if stuff's broke
+   if(!item)
+   {
+      doom_printf("ACS_CF_GetInventory: Inventory item '%s' not found\a\n", itemname);
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   if(!info->mo || !info->mo->player)
+      thread->dataStk.push(0);
+   else
+      thread->dataStk.push(E_GetItemOwnedAmount(info->mo->player, item));
+   return false;
+}
+
+//
 // ACS_GetLevelProp
 //
 uint32_t ACS_GetLevelProp(uint32_t var)
@@ -779,7 +958,7 @@ bool ACS_CF_GetLineY(ACS_CF_ARGS)
       angle_t angle = P_PointToAngle(line->v1->x, line->v1->y, line->v2->x, line->v2->y);
       angle -= ANG90;
       unsigned fineangle = angle >> ANGLETOFINESHIFT;
-      result += FixedMul(finecosine[fineangle], linedist);
+      result += FixedMul(finesine[fineangle], linedist);
    }
    thread->dataStk.push(result);
    return false;
@@ -921,7 +1100,7 @@ bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
    if(secnum >= 0)
    {
       // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].ceilingheight);
+      thread->dataStk.push(sectors[secnum].srf.ceiling.height);
    }
    else
       thread->dataStk.push(0);
@@ -941,7 +1120,7 @@ bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS)
    if(secnum >= 0)
    {
       // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].floorheight);
+      thread->dataStk.push(sectors[secnum].srf.floor.height);
    }
    else
       thread->dataStk.push(0);
@@ -1103,16 +1282,16 @@ uint32_t ACS_GetThingProp(Mobj *mo, uint32_t prop)
    case ACS_TP_Angle:        return mo->angle >> 16;
    case ACS_TP_Armor:        return mo->player ? mo->player->armorpoints : 0;
    case ACS_TP_CeilTex:      return 0;
-   case ACS_TP_CeilZ:        return mo->ceilingz;
+   case ACS_TP_CeilZ:        return mo->zref.ceiling;
    case ACS_TP_FloorTex:     return 0;
-   case ACS_TP_FloorZ:       return mo->floorz;
+   case ACS_TP_FloorZ:       return mo->zref.floor;
    case ACS_TP_Frags:        return mo->player ? mo->player->totalfrags : 0;
    case ACS_TP_LightLevel:   return mo->subsector->sector->lightlevel;
    case ACS_TP_MomX:         return mo->momx;
    case ACS_TP_MomY:         return mo->momy;
    case ACS_TP_MomZ:         return mo->momz;
    case ACS_TP_Pitch:        return mo->player ? mo->player->pitch >> 16 : 0;
-   case ACS_TP_PlayerNumber: return mo->player ? mo->player - players : -1;
+   case ACS_TP_PlayerNumber: return mo->player ? eindex(mo->player - players) : -1;
    case ACS_TP_SigilPieces:  return 0;
    case ACS_TP_TID:          return mo->tid;
    case ACS_TP_Type:         return ~ACSenv.getString(mo->info->name)->idx;
@@ -1162,6 +1341,20 @@ bool ACS_CF_GetThingY(ACS_CF_ARGS)
 bool ACS_CF_GetThingZ(ACS_CF_ARGS)
 {
    return ACS_GetThingProp(static_cast<ACSThread *>(thread), argV[0], ACS_TP_Z);
+}
+
+
+//
+// str GetWeapon(void);
+//
+bool ACS_CF_GetWeapon(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   if(info->mo && info->mo->player)
+      thread->dataStk.push(~ACSenv.getString(info->mo->player->readyweapon->name)->idx);
+   else
+      thread->dataStk.push(0);
+   return false;
 }
 
 //
@@ -1293,6 +1486,12 @@ bool ACS_CF_PlayThingSound(ACS_CF_ARGS)
    int        snd  = argV[1];
    sfxinfo_t *sfx;
 
+   if(!mo)
+   {
+      thread->dataStk.push(0);
+      return false;  // prevent crash
+   }
+
    switch(snd)
    {
    case SOUND_See:    sfx = E_SoundForDEHNum(mo->info->seesound);    break;
@@ -1376,7 +1575,7 @@ bool ACS_CF_RadiusQuake(ACS_CF_ARGS)
    int32_t     damageRadius = argV[3];
    int32_t     quakeRadius  = argV[4];
    const char *snd          = thread->scopeMap->getString(argV[5])->str;
-   Mobj       *mo           = NULL;
+   Mobj       *mo           = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
    {
@@ -1457,11 +1656,11 @@ bool ACS_CF_ReplaceTex(ACS_CF_ARGS)
    {
       for(sector_t *sector = sectors, *end = sector + numsectors; sector != end; ++sector)
       {
-         if(!(flags & RETEX_NOT_FLOOR) && sector->floorpic == oldtex)
-            sector->floorpic = newtex;
+         if(!(flags & RETEX_NOT_FLOOR) && sector->srf.floor.pic == oldtex)
+            sector->srf.floor.pic = newtex;
 
-         if(!(flags & RETEX_NOT_CEIL) && sector->ceilingpic == oldtex)
-            sector->ceilingpic = newtex;
+         if(!(flags & RETEX_NOT_CEIL) && sector->srf.ceiling.pic == oldtex)
+            sector->srf.ceiling.pic = newtex;
       }
    }
 
@@ -1503,10 +1702,10 @@ bool ACS_CF_SectorDamage(ACS_CF_ARGS)
          if(!mo->player && !(flags & SECDAM_NONPLAYERS))
             continue;
 
-         if(mo->z != mo->floorz && !(flags & SECDAM_IN_AIR))
+         if(mo->z != mo->zref.floor && !(flags & SECDAM_IN_AIR))
             continue;
 
-         P_DamageMobj(mo, NULL, NULL, damage, mod);
+         P_DamageMobj(mo, nullptr, nullptr, damage, mod);
       }
    }
 
@@ -1529,7 +1728,7 @@ bool ACS_CF_SectorSound(ACS_CF_ARGS)
    if(info->line)
       src = &(info->line->frontsector->soundorg);
    else
-      src = NULL;
+      src = nullptr;
 
    S_StartSoundNameAtVolume(src, snd, vol, ATTN_NORMAL, CHAN_AUTO);
 
@@ -1576,6 +1775,25 @@ bool ACS_CF_SetActivatorToTarget(ACS_CF_ARGS)
 }
 
 //
+// void SetAirControl(fixed amount);
+//
+bool ACS_CF_SetAirControl(ACS_CF_ARGS)
+{
+   LevelInfo.airControl = argV[0];
+   return false;
+}
+
+//
+// void SetAirFriction(fixed amount);
+//
+bool ACS_CF_SetAirFriction(ACS_CF_ARGS)
+{
+   thread->dataStk.push(0);
+   LevelInfo.airFriction = argV[0];
+   return false;
+}
+
+//
 // ACS_CF_SetGravity
 //
 // void SetGravity(fixed gravity);
@@ -1610,7 +1828,7 @@ static void ACS_setLineBlocking(int tag, int block)
    line_t *l;
    int linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != nullptr)
    {
       switch(block)
       {
@@ -1666,16 +1884,16 @@ bool ACS_CF_SetLineBlockMon(ACS_CF_ARGS)
 //
 // void SetLineSpecial(int tag, int spec, int arg0, int arg1, int arg2, int arg3, int arg4);
 //
-bool ACS_CF_SetLineSpec(ACS_CF_ARGS)
+bool ACS_CF_SetLineSpecial(ACS_CF_ARGS)
 {
    int     tag  = argV[0];
    int     spec = argV[1];
    line_t *l;
    int     linenum = -1;
 
-   while((l = P_FindLine(tag, &linenum)) != NULL)
+   while((l = P_FindLine(tag, &linenum)) != nullptr)
    {
-      l->special = spec;
+      l->special = EV_ActionForACSAction(spec);
       for(int i = NUMLINEARGS; i--;)
          l->args[i] = argV[i + 2];
    }
@@ -1719,6 +1937,32 @@ bool ACS_CF_SetMusicLoc(ACS_CF_ARGS)
 }
 
 //
+// void SetSectorDamage(int tag, int amount, string damagetype = "Unknown", int interval = 32, int leaky = 0)
+//
+bool ACS_CF_SetSectorDamage(ACS_CF_ARGS)
+{
+   const int   tag        = argV[0];
+   const int   amount     = argV[1];
+   const char *damageType = argC > 2 ? thread->scopeMap->getString(argV[2])->str : "Unknown";
+   const int   interval   = argC > 3 ? argV[3] : 32;
+   const int   leakiness  = argC > 4 ? argV[4] : 0;
+
+   int secnum = -1;
+   while((secnum = P_FindSectorFromTag(tag, secnum)) >= 0)
+   {
+      sector_t &sector = sectors[secnum];
+
+      sector.damage     = amount;
+      sector.damagemod  = E_DamageTypeNumForName(damageType);
+      sector.damagemask = interval;
+      sector.leakiness  = eclamp(leakiness, 0, 256);
+   }
+
+   thread->dataStk.push(0);
+   return false;
+}
+
+//
 // ACS_CF_SetSkyDelta
 //
 // int SetSkyScrollSpeed(int sky, fixed speed);
@@ -1727,8 +1971,11 @@ bool ACS_CF_SetSkyDelta(ACS_CF_ARGS)
 {
    switch(argV[0])
    {
-   case 1: LevelInfo.skyDelta  = argV[1] >> FRACBITS; break;
-   case 2: LevelInfo.sky2Delta = argV[1] >> FRACBITS; break;
+   case 1: LevelInfo.skyDelta  = argV[1]; break;
+   case 2: LevelInfo.sky2Delta = argV[1]; break;
+   default:
+         doom_warningf("SetSkyScrollSpeed: unknown sky %d", argV[0]);
+         break;
    }
 
    thread->dataStk.push(0);
@@ -1826,7 +2073,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
    fixed_t  z    = argV[3];
    bool     fog  = argV[4] ? true : false;
    uint32_t res  = 0;
-   Mobj    *mo, *fogmo;
+   Mobj    *mo;
 
    if((mo = P_FindMobjFromTID(tid, nullptr, info->mo)))
    {
@@ -1845,10 +2092,11 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
-         mo->floorz = mo->dropoffz = newsubsec->sector->floorheight;
-         mo->ceilingz = newsubsec->sector->ceilingheight;
-         mo->passfloorz = mo->secfloorz = mo->floorz;
-         mo->passceilz = mo->secceilz = mo->ceilingz;
+         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.height;
+         mo->zref.floorgroupid = newsubsec->sector->groupid;
+         mo->zref.ceiling = newsubsec->sector->srf.ceiling.height;
+         mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
+         mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 
          mo->x = x;
          mo->y = y;
@@ -1861,7 +2109,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          if(fog)
          {
             // Teleport fog at source...
-            fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
+            Mobj *fogmo = P_SpawnMobj(oldx, oldy, oldz + GameModeInfo->teleFogHeight,
                                 E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
 
@@ -1921,8 +2169,8 @@ void ACS_SetThingProp(Mobj *thing, uint32_t var, uint32_t val)
    case ACS_TP_NoTrigger:    break;
    case ACS_TP_DamageFactor: break;
    case ACS_TP_MasterTID:    break;
-   case ACS_TP_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, 0, 0)); break;
-   case ACS_TP_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, 0, 0)); break;
+   case ACS_TP_TargetTID:    P_SetTarget(&thing->target, P_FindMobjFromTID(val, nullptr, nullptr)); break;
+   case ACS_TP_TracerTID:    P_SetTarget(&thing->tracer, P_FindMobjFromTID(val, nullptr, nullptr)); break;
    case ACS_TP_WaterLevel:   break;
    case ACS_TP_ScaleX:       thing->xscale = M_FixedToFloat(val); break;
    case ACS_TP_ScaleY:       thing->yscale = M_FixedToFloat(val); break;
@@ -1990,12 +2238,12 @@ bool ACS_CF_SetThingSpec(ACS_CF_ARGS)
 {
    auto  info = &static_cast<ACSThread *>(thread)->info;
    int   tid  = argV[0];
-   //int spec = argV[1]; // HEXEN_TODO
-   Mobj *mo   = NULL;
+   int   spec = argV[1];
+   Mobj *mo   = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
    {
-      //mo->special = spec; // HEXEN_TODO
+      mo->special = spec;
       for(int i = 0; i != 5; ++i)
          mo->args[i] = argV[i + 2];
    }
@@ -2014,7 +2262,7 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
    int32_t     tid       = argV[0];
    const char *statename = thread->scopeMap->getString(argV[1])->str;
    statenum_t  statenum  = E_StateNumForName(statename);
-   state_t    *state;
+   const state_t *state;
    uint32_t    count     = 0;
    Mobj       *mo        = nullptr;
 
@@ -2035,6 +2283,32 @@ bool ACS_CF_SetThingState(ACS_CF_ARGS)
    }
 
    thread->dataStk.push(count);
+   return false;
+}
+
+//
+// int SetWeapon(str weapon)
+//
+bool ACS_CF_SetWeapon(ACS_CF_ARGS)
+{
+   const auto    info   = &static_cast<ACSThread *>(thread)->info;
+   weaponinfo_t *weapon = E_WeaponForName(thread->scopeMap->getString(argV[0])->str);
+   if(!info->mo || !info->mo->player || !weapon)
+   {
+      thread->dataStk.push(0);
+      return false;
+   }
+
+   player_t *player = info->mo->player;
+   if(E_PlayerOwnsWeapon(player, weapon))
+   {
+      player->pendingweapon     = weapon;
+      player->pendingweaponslot = E_FindFirstWeaponSlot(player, weapon);
+      thread->dataStk.push(1);
+   }
+   else
+      thread->dataStk.push(0);
+
    return false;
 }
 
@@ -2074,7 +2348,7 @@ bool ACS_CF_SoundSeq(ACS_CF_ARGS)
    if(info->line && (sec = info->line->frontsector))
       S_StartSectorSequenceName(sec, snd, SEQ_ORIGIN_SECTOR_F);
    else
-      S_StartSequenceName(NULL, snd, SEQ_ORIGIN_OTHER, -1);
+      S_StartSequenceName(nullptr, snd, SEQ_ORIGIN_OTHER, -1);
 
    return false;
 }
@@ -2092,9 +2366,9 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
       if(!forced && !P_CheckPositionExt(mo, mo->x, mo->y, mo->z))
       {
          // And if not, unmake the Mobj.
-         mo->state = NULL;
-         mo->removeThinker();
-         return NULL;
+         mo->state = nullptr;
+         mo->remove();
+         return nullptr;
       }
 
       if(tid) P_AddThingTID(mo, tid);
@@ -2102,7 +2376,7 @@ static Mobj *ACS_spawn(mobjtype_t type, fixed_t x, fixed_t y, fixed_t z,
       return mo;
    }
    else
-      return NULL;
+      return nullptr;
 }
 
 //
@@ -2149,8 +2423,8 @@ bool ACS_CF_SpawnMissile(ACS_CF_ARGS)
    int32_t    spotid  = argV[0];
    mobjtype_t type    = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
    angle_t    angle   = argV[2] << 24;
-   int32_t    speed   = argV[3] * 8;
-   int32_t    vspeed  = argV[4] * 8;
+   int32_t    speed   = argV[3] / 8;
+   int32_t    vspeed  = argV[4] / 8;
    bool       gravity = argV[5] ? true : false;
    int32_t    tid     = argV[6];
    Mobj      *spot    = nullptr;
@@ -2326,6 +2600,39 @@ bool ACS_CF_StopSound(ACS_CF_ARGS)
 }
 
 //
+// void TakeInventory(str itemname, int amount);
+//
+bool ACS_CF_SubInventory(ACS_CF_ARGS)
+{
+   auto info = &static_cast<ACSThread *>(thread)->info;
+   char const *itemname = thread->scopeMap->getString(argV[0])->str;
+   int amount = argV[1];
+   itemeffect_t *item = E_ItemEffectForName(itemname);
+
+   if(!item)
+   {
+      doom_printf("ACS_CF_SubInventory: Inventory item '%s' not found\a\n", itemname);
+      return false;
+   }
+
+   if(info->mo)
+   {
+      // FIXME: Needs to be adapted for when Mobjs get inventory if they get inventory
+      if(info->mo->player)
+         E_RemoveInventoryItem(info->mo->player, item, amount);
+   }
+   else
+   {
+      for(int pnum = 0; pnum != MAXPLAYERS; ++pnum)
+      {
+         if(playeringame[pnum])
+            E_RemoveInventoryItem(&players[pnum], item, amount);
+      }
+   }
+   return false;
+}
+
+//
 // ACS_thingCount
 //
 static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)
@@ -2335,7 +2642,7 @@ static uint32_t ACS_thingCount(mobjtype_t type, int32_t tid)
 
    if(tid)
    {
-      while((mo = P_FindMobjFromTID(tid, mo, NULL)))
+      while((mo = P_FindMobjFromTID(tid, mo, nullptr)))
       {
          if(type == 0 || mo->type == type)
          {
@@ -2403,7 +2710,7 @@ bool ACS_CF_ThingCountStr(ACS_CF_ARGS)
 //
 // ACS_thingCountSec
 //
-static uint32_t ACS_thingCountSec(int32_t tag, mobjtype_t type, int32_t tid)
+static uint32_t ACS_thingCountSec(mobjtype_t type, int32_t tid, int32_t tag)
 {
    sector_t *sector;
    uint32_t  count  = 0;
@@ -2432,18 +2739,18 @@ static uint32_t ACS_thingCountSec(int32_t tag, mobjtype_t type, int32_t tid)
 //
 // ACS_CF_ThingCountSec
 //
-// int ThingCountSector(int tag, int type, int tid);
+// int ThingCountSector(int type, int tid, int tag);
 //
 bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 {
-   int32_t tag  = argV[0];
-   int32_t type = argV[1];
-   int32_t tid  = argV[2];
+   int32_t type = argV[0];
+   int32_t tid  = argV[1];
+   int32_t tag  = argV[2];
 
    if(type == 0)
-      thread->dataStk.push(ACS_thingCountSec(tag, 0, tid));
+      thread->dataStk.push(ACS_thingCountSec(0, tid, tag));
    else if(type > 0 && type < ACS_NUM_THINGTYPES)
-      thread->dataStk.push(ACS_thingCountSec(tag, ACS_thingtypes[type], tid));
+      thread->dataStk.push(ACS_thingCountSec(ACS_thingtypes[type], tid, tag));
    else
       thread->dataStk.push(0);
 
@@ -2453,15 +2760,15 @@ bool ACS_CF_ThingCountSec(ACS_CF_ARGS)
 //
 // ACS_CF_ThingCountSecStr
 //
-// int ThingCountNameSector(int tag, str type, int tid);
+// int ThingCountNameSector(str type, int tid, int tag);
 //
 bool ACS_CF_ThingCountSecStr(ACS_CF_ARGS)
 {
-   int32_t    tag  = argV[0];
-   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[1])->str);
-   int32_t    tid  = argV[2];
+   mobjtype_t type = E_ThingNumForCompatName(thread->scopeMap->getString(argV[0])->str);
+   int32_t    tid  = argV[1];
+   int32_t    tag  = argV[2];
 
-   thread->dataStk.push(ACS_thingCountSec(tag, type, tid));
+   thread->dataStk.push(ACS_thingCountSec(type, tid, tag));
 
    return false;
 }
@@ -2536,7 +2843,7 @@ bool ACS_CF_ThingSound(ACS_CF_ARGS)
    int         tid  = argV[0];
    const char *snd  = thread->scopeMap->getString(argV[1])->str;
    int         vol  = argV[2];
-   Mobj       *mo   = NULL;
+   Mobj       *mo   = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
       S_StartSoundNameAtVolume(mo, snd, vol, ATTN_NORMAL, CHAN_AUTO);

@@ -336,14 +336,14 @@ class MenuItemTitle : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemTitle, MenuItem)
 
 protected:
-   virtual int adjustPatchXCoord(int x, int16_t width)
+   virtual int adjustPatchXCoord(int x, int16_t width) override
    {
       // adjust x to center title
       return (SCREENWIDTH - width)/2;
    }
 
    virtual void drawDescription(menuitem_t *item, int &item_height, 
-                                int &item_width, int alignment, int color)
+                                int &item_width, int alignment, int color) override
    {
       // draw the description centered
       const char *text = item->description;
@@ -395,14 +395,14 @@ class MenuItemRunCmd : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemRunCmd, MenuItem)
 
 public:
-   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer)
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
       const char *key = G_FirstBoundKey("menu_confirm");
       psnprintf(msgbuffer, 64, "press %s to execute", key);
       return msgbuffer;
    }
 
-   virtual void onConfirm(menuitem_t *item)
+   virtual void onConfirm(menuitem_t *item) override
    {
       S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_COMMAND]); // make sound
       Console.cmdtype = c_menu;
@@ -425,7 +425,7 @@ class MenuItemValued : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemValued, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width)
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       qstring varvalue;
       int x = item->x;
@@ -482,7 +482,7 @@ class MenuItemVariable : public MenuItemValued
    DECLARE_RTTI_TYPE(MenuItemVariable, MenuItemValued)
 
 public:
-   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer)
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
       if(input_command)
          return "Press escape to cancel";
@@ -494,7 +494,7 @@ public:
       }
    }
 
-   virtual void onConfirm(menuitem_t *item)
+   virtual void onConfirm(menuitem_t *item) override
    {
       qstring &input_buffer = MN_GetInputBuffer();
 
@@ -528,7 +528,7 @@ class MenuItemVariableND : public MenuItemVariable
    DECLARE_RTTI_TYPE(MenuItemVariableND, MenuItemVariable)
 
 public:
-   virtual void onConfirm(menuitem_t *item)
+   virtual void onConfirm(menuitem_t *item) override
    {
       Super::onConfirm(item);
 
@@ -552,12 +552,12 @@ class MenuItemSlidable : public MenuItemValued
    DECLARE_RTTI_TYPE(MenuItemSlidable, MenuItemValued)
 
 public:
-   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer)
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
       return "use left/right to change value";
    }
 
-   virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown)
+   virtual void onLeft(menuitem_t *item, bool altdown, bool shiftdown) override
    {
       qstring tempstr(1024);
 
@@ -596,7 +596,7 @@ public:
       S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_KEYLEFTRIGHT]);
    }
 
-   virtual void onRight(menuitem_t *item, bool altdown, bool shiftdown)
+   virtual void onRight(menuitem_t *item, bool altdown, bool shiftdown) override
    {
       qstring tempstr(1024);
 
@@ -651,7 +651,7 @@ class MenuItemToggle : public MenuItemSlidable
    DECLARE_RTTI_TYPE(MenuItemToggle, MenuItemSlidable)
 
 public:
-   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer)
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
    {
       // enter to change boolean variables
       // left/right otherwise
@@ -666,7 +666,7 @@ public:
          return Super::getHelpString(item, msgbuffer);
    }
 
-   virtual void onConfirm(menuitem_t *item)
+   virtual void onConfirm(menuitem_t *item) override
    {
       qstring tempstr;
 
@@ -697,7 +697,7 @@ class MenuItemSlider : public MenuItemSlidable
    DECLARE_RTTI_TYPE(MenuItemSlider, MenuItemSlidable)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width)
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       variable_t *var;
       int x = item->x;
@@ -769,10 +769,10 @@ class MenuItemBigSlider : public MenuItemSlidable
 
 protected:
    // A big slider should only draw its description if it has no patch
-   virtual bool shouldDrawDescription(menuitem_t *item) { return !item->patch; }
+   virtual bool shouldDrawDescription(menuitem_t *item) override { return !item->patch; }
 
 public:
-   virtual bool drawPatchForItem(menuitem_t *item, int &item_height, int alignment)
+   virtual bool drawPatchForItem(menuitem_t *item, int &item_height, int alignment) override
    {
       Super::drawPatchForItem(item, item_height, alignment);
 
@@ -782,7 +782,7 @@ public:
       return false;
    }
 
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width)
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       int x = item->x;
       int y = item->y;
@@ -816,7 +816,7 @@ class MenuItemAutomap : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemAutomap, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width)
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       int ix = item->x;
       int iy = item->y;
@@ -856,7 +856,7 @@ public:
       }
    }
 
-   virtual void onConfirm(menuitem_t *item)
+   virtual void onConfirm(menuitem_t *item) override
    {
       MN_SelectColour(item->data);
    }
@@ -876,7 +876,21 @@ class MenuItemBinding : public MenuItem
    DECLARE_RTTI_TYPE(MenuItemBinding, MenuItem)
 
 public:
-   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width)
+   virtual const char *getHelpString(menuitem_t *item, char *msgbuffer) override
+   {
+      extern menuwidget_t binding_widget;
+
+      if(current_menuwidget == &binding_widget)
+         return "Press any input to bind/unbind";
+      else
+      {
+         const char *key = G_FirstBoundKey("menu_confirm");
+         psnprintf(msgbuffer, 64, "Press %s to start binding/unbinding", key);
+         return msgbuffer;
+      }
+   }
+
+   virtual void drawData(menuitem_t *item, int color, int alignment, int desc_width) override
    {
       qstring boundkeys;
       int x = item->x;
@@ -899,7 +913,7 @@ public:
                           x + (alignment == ALIGNMENT_LEFT ? desc_width : 0), y);
    }
 
-   virtual void onConfirm(menuitem_t *item)
+   virtual void onConfirm(menuitem_t *item) override
    {
       G_EditBinding(item->data);
    }

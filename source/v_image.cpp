@@ -32,7 +32,6 @@
 #include "m_qstrkeys.h"
 #include "m_binary.h"
 #include "v_image.h"
-#include "w_wad.h"
 #include "z_auto.h"
 
 // Need libpng
@@ -58,7 +57,7 @@
 VImage *VImage::FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -69,7 +68,7 @@ VImage *VImage::FromPNG(const vimageprops_t &props, int lumpnum, VPalette *pal)
 VImage *VImage::FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 //
@@ -80,7 +79,7 @@ VImage *VImage::FromPatch(const vimageprops_t &props, int lumpnum, VPalette *pal
 VImage *VImage::FromLinear(const vimageprops_t &props, int lumpnum, VPalette *pal)
 {
    // TODO
-   return NULL;
+   return nullptr;
 }
 
 //=============================================================================
@@ -122,12 +121,12 @@ int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name,
                                      int li_namespace, bool allowglobal)
 {
    bool useNSG = false;
-   bool lfn;
+   bool lfn = false;
 
    if(allowglobal && li_namespace != lumpinfo_t::ns_global)
       useNSG = true;
 
-   if(strlen(name) > 8 || strchr(name, '/') != NULL)
+   if(strlen(name) > 8 || strchr(name, '/') != nullptr)
       lfn = true;
 
    // NSG lookup prefers a resource in the given namespace if it is available,
@@ -156,7 +155,7 @@ int VImageManager::lookupResourceNum(WadDirectory &dir, const char *name,
 //
 VImage *VImageManager::findDefaultResource(int expectedWidth, int expectedHeight)
 {
-   VImage *ret = NULL;
+   VImage *ret = nullptr;
    auto img = pImpl->defaultResources.head;
 
    while(img)
@@ -183,7 +182,7 @@ VImage *VImageManager::findDefaultResource(int expectedWidth, int expectedHeight
 //
 VImage *VImageManager::generateDefaultResource(int expectedWidth, int expectedHeight)
 {
-   VImage *ret = NULL;
+   VImage *ret = nullptr;
 
    // check if we already have a default resource with these properties
    if((ret = findDefaultResource(expectedWidth, expectedHeight)))
@@ -209,10 +208,10 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
 
    auto    base   = static_cast<uint8_t *>(data);
    auto    header = base;
-   int16_t width  = GetBinaryWord(&header);
-   int16_t height = GetBinaryWord(&header);
-   int16_t left   = GetBinaryWord(&header);
-   int16_t top    = GetBinaryWord(&header);
+   int16_t width  = GetBinaryWord(header);
+   int16_t height = GetBinaryWord(header);
+   int16_t left   = GetBinaryWord(header);
+   int16_t top    = GetBinaryWord(header);
 
    // Check for sane header values
    if(width < 0     || width > 4096 || height < 0     || height > 4096 ||
@@ -227,7 +226,7 @@ bool VImageManager::resourceIsPatch(void *data, size_t size)
    // Verify all columns
    for(int i = 0; i < width; i++)
    {
-      size_t offset = static_cast<size_t>(GetBinaryUDWord(&header));
+      size_t offset = static_cast<size_t>(GetBinaryUDWord(header));
 
       if(offset < 12 || offset >= size)
          return false; // offset lies outside the data
@@ -332,7 +331,7 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
    {
       for(int i = 5; i <= 32; i++)
       {
-         if(i * i * 128 == size)
+         if(static_cast<size_t>(i * i * 128) == size)
          {
             w = i * 16;
             h = i * 8;
@@ -368,7 +367,7 @@ void VImageManager::determineLinearDimensions(void *data, size_t size,
          if(!(size % 320)) // covers fullscreen gfx and Heretic AUTOPAGE
          {
             w = 320;
-            h = size / 320;
+            h = static_cast<int>(size / 320);
          }
          else
             V_linearOptimalSize(size, w, h);
@@ -425,7 +424,7 @@ VImage *VImageManager::loadResource(WadDirectory &dir, int lumpnum,
                                     vimgformathint_e expectedFormat,
                                     int expectedWidth, int expectedHeight)
 {
-   VImage *ret = NULL;
+   VImage *ret = nullptr;
 
    // missing resource, generate a default with characteristics that best
    // match any expected ones passed in.
@@ -483,7 +482,7 @@ VImage *VImageManager::loadResource(WadDirectory &dir, const char *name,
 //
 bool VImageManager::hasResource(int lumpnum) const
 {
-   return pImpl->hash.objectForKey(lumpnum) != NULL;
+   return pImpl->hash.objectForKey(lumpnum) != nullptr;
 }
 
 // EOF

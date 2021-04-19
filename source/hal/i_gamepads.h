@@ -38,6 +38,9 @@ class HALGamePad;
 // Joystick device number, for config file
 extern int i_joysticknum;
 
+// Joystick turning sensitvity
+extern double i_joyturnsens;
+
 // Generic sensitivity value, for drivers that need it
 extern int i_joysticksens;
 
@@ -120,26 +123,38 @@ public:
    virtual void poll() = 0;     // Refresh all input state data
 
    // Haptic interface
-   virtual HALHapticInterface *getHapticInterface() { return NULL; }
+   virtual HALHapticInterface *getHapticInterface() { return nullptr; }
 
    // Data
    int     num;         // Device number
    qstring name;        // Device name
    int     numAxes;     // Number of axes supported
    int     numButtons;  // Number of buttons supported
+   int     numHats;     // Number of hats supported
 
    enum
    {
       // In interest of efficiency, we have caps on the number of device inputs
       // we will monitor.
       MAXAXES = 8,
-      MAXBUTTONS = 16
+      MAXBUTTONS = 16,
+      MAXHATS = 4,
+   };
+
+   enum
+   {
+      HAT_RIGHT = 1,
+      HAT_UP = 2,
+      HAT_LEFT = 4,
+      HAT_DOWN = 8,
    };
 
    struct padstate_t
    {
       bool  prevbuttons[MAXBUTTONS]; // backed-up previous button states
       bool  buttons[MAXBUTTONS];     // current button states
+      uint8_t prevhats[MAXHATS];  // previous hats
+      uint8_t hats[MAXHATS];      // max hats
       float prevaxes[MAXAXES];       // backed-up previous axis states
       float axes[MAXAXES];           // normalized axis states (-1.0 : 1.0)
    };
@@ -148,8 +163,10 @@ public:
 
 // Global interface
 
+typedef void (*gamePadChangeCallback_t)();
+
 bool I_SelectDefaultGamePad();
-void I_InitGamePads();
+void I_InitGamePads(gamePadChangeCallback_t callback);
 void I_ShutdownGamePads();
 HALGamePad::padstate_t *I_PollActiveGamePad();
 

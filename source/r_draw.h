@@ -28,6 +28,10 @@
 
 #include "r_defs.h"
 
+struct cb_column_t;
+struct cb_slopespan_t;
+struct cb_span_t;
+
 // haleyjd 05/02/13
 struct rrect_t
 {
@@ -56,8 +60,8 @@ enum
    VS_NUMSTYLES
 };
 
-//
-// columndrawer_t
+using R_ColumnFunc = void (*)(cb_column_t &);
+
 //
 // haleyjd 09/04/06: This structure is used to allow the game engine to use
 // multiple sets of column drawing functions (ie., normal, low detail, and
@@ -65,19 +69,20 @@ enum
 //
 struct columndrawer_t
 {
-   void (*DrawColumn)();       // normal
-   void (*DrawTLColumn)();     // translucent
-   void (*DrawTRColumn)();     // translated
-   void (*DrawTLTRColumn)();   // translucent/translated
-   void (*DrawFuzzColumn)();   // spectre fuzz
-   void (*DrawFlexColumn)();   // flex translucent
-   void (*DrawFlexTRColumn)(); // flex translucent/translated
-   void (*DrawAddColumn)();    // additive flextran
-   void (*DrawAddTRColumn)();  // additive flextran/translated
+   R_ColumnFunc DrawColumn;       // normal
+   R_ColumnFunc DrawNewSkyColumn; // double-sky drawing (index 0 = transparent)
+   R_ColumnFunc DrawTLColumn;     // translucent
+   R_ColumnFunc DrawTRColumn;     // translated
+   R_ColumnFunc DrawTLTRColumn;   // translucent/translated
+   R_ColumnFunc DrawFuzzColumn;   // spectre fuzz
+   R_ColumnFunc DrawFlexColumn;   // flex translucent
+   R_ColumnFunc DrawFlexTRColumn; // flex translucent/translated
+   R_ColumnFunc DrawAddColumn;    // additive flextran
+   R_ColumnFunc DrawAddTRColumn;  // additive flextran/translated
 
-   void (*ResetBuffer)();      // reset function (may be null)
-   
-   void (*ByVisSpriteStyle[VS_NUMSTYLES][2])();
+   void       (*ResetBuffer)();   // reset function (may be null)
+
+   R_ColumnFunc ByVisSpriteStyle[VS_NUMSTYLES][2];
 };
 
 extern columndrawer_t r_normal_drawer;
@@ -93,12 +98,17 @@ void R_VideoEraseScaled(unsigned int x, unsigned int y, unsigned int w, unsigned
 // start of a 64*64 tile image
 extern byte **translationtables; // haleyjd 01/12/04: now ptr-to-ptr
 
+extern int rTintTableIndex;   // check if we have a TINTTAB lump in the directory
+
 // haleyjd 06/22/08: Span styles enumeration
 enum
 {
    SPAN_STYLE_NORMAL,
    SPAN_STYLE_TL,
    SPAN_STYLE_ADD,
+   SPAN_STYLE_NORMAL_MASKED,
+   SPAN_STYLE_TL_MASKED,
+   SPAN_STYLE_ADD_MASKED,
    SPAN_NUMSTYLES
 };
 
@@ -122,8 +132,8 @@ enum
 //
 struct spandrawer_t
 {
-   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])();
-   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])();
+   void (*DrawSpan [SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_span_t &);
+   void (*DrawSlope[SPAN_NUMSTYLES][FLAT_NUMSIZES])(const cb_slopespan_t &, const cb_span_t &);
 };
 
 extern spandrawer_t r_lpspandrawer;  // low-precision
@@ -151,7 +161,7 @@ extern byte  *main_tranmap;  // killough 4/11/98
 extern byte  *main_submap;   // haleyjd 11/30/13
 
 #define R_ADDRESS(px, py) \
-   (renderscreen + (viewwindow.y + (py)) * linesize + (viewwindow.x + (px)))
+   (renderscreen + (viewwindow.y + (py)) + linesize * (viewwindow.x + (px)))
 
 #define FUZZTABLE 50 
 #define FUZZOFF (SCREENWIDTH)
@@ -160,7 +170,7 @@ extern const int fuzzoffset[];
 extern int fuzzpos;
 
 // Cardboard
-typedef struct cb_column_s
+struct cb_column_t
 {
    int x, y1, y2;
 
@@ -170,15 +180,12 @@ typedef struct cb_column_s
    int texmid;
 
    // 8-bit lighting
-   lighttable_t *colormap;
-   byte *translation;
+   const lighttable_t *colormap;
+   const byte *translation;
    fixed_t translevel; // haleyjd: zdoom style trans level
 
-   void *source;
-} cb_column_t;
-
-
-extern cb_column_t column;
+   const void *source;
+};
 
 #endif
 

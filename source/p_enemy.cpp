@@ -45,13 +45,12 @@
 #include "e_states.h"
 #include "e_things.h"
 #include "e_ttypes.h"
+#include "ev_specials.h"
 #include "g_game.h"
 #include "m_bbox.h"
-#include "m_random.h"
 #include "metaapi.h"
 #include "p_anim.h"      // haleyjd
 #include "p_enemy.h"
-#include "p_info.h"
 #include "p_inter.h"
 #include "p_map.h"
 #include "p_map3d.h"
@@ -105,8 +104,7 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
    sec->soundtraversed = soundblocks+1;
    P_SetTarget<Mobj>(&sec->soundtarget, soundtarget);    // killough 11/98
 
-#ifdef R_LINKEDPORTALS
-   if(sec->f_pflags & PS_PASSSOUND)
+   if(sec->srf.floor.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even
       // lines, the portal structure won't tell you what sector is on the
@@ -115,15 +113,13 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_FPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_FPLink(sec)->deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_FPLink(sec)->delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + R_FPLink(sec)->delta.y)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
    
-   if(sec->c_pflags & PS_PASSSOUND)
+   if(sec->srf.ceiling.pflags & PS_PASSSOUND)
    {
       // Ok, because the same portal can be used on many sectors and even 
       // lines, the portal structure won't tell you what sector is on the 
@@ -132,36 +128,31 @@ static void P_RecursiveSound(sector_t *sec, int soundblocks,
       line_t *check = sec->lines[0];
 
       other = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) 
-                             + R_CPLink(sec)->deltax,
-                            ((check->v1->y + check->v2->y) / 2) 
-                             + R_CPLink(sec)->deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + R_CPLink(sec)->delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + R_CPLink(sec)->delta.y)->sector;
 
       P_RecursiveSound(other, soundblocks, soundtarget);
    }
-#endif
 
    for(i=0; i<sec->linecount; i++)
    {
       sector_t *other;
       line_t *check = sec->lines[i];
       
-#ifdef R_LINKEDPORTALS
       if(check->pflags & PS_PASSSOUND)
       {
          sector_t *iother;
 
          iother = 
-         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.deltax,
-                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.deltay)->sector;
+         R_PointInSubsector(((check->v1->x + check->v2->x) / 2) + check->portal->data.link.delta.x,
+                            ((check->v1->y + check->v2->y) / 2) + check->portal->data.link.delta.y)->sector;
 
          P_RecursiveSound(iother, soundblocks, soundtarget);
       }
-#endif
       if(!(check->flags & ML_TWOSIDED))
          continue;
 
-      P_LineOpening(check, NULL);
+      P_LineOpening(check, nullptr);
       
       if(clip.openrange <= 0)
          continue;       // closed door
@@ -193,29 +184,30 @@ void P_NoiseAlert(Mobj *target, Mobj *emitter)
 bool P_CheckMeleeRange(Mobj *actor)
 {
    Mobj *pl = actor->target;
+   if (!pl)
+       return false;
    
    // haleyjd 02/15/02: revision of joel's fix for z height check
-   if(pl && P_Use3DClipping())
+   if(P_Use3DClipping())
    {
       if(pl->z > actor->z + actor->height || // pl is too far above
          actor->z > pl->z + pl->height)      // pl is too far below
          return false;
+      // TODO: add support for Strife's z-clipping which doesn't limit vertical
+      // range if target is below attacker!
    }
 
    // ioanch 20151225: make it linked-portal aware
    fixed_t tx, ty;
-#ifdef R_LINKEDPORTALS
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
-#else
-   tx = pl->x;
-   ty = pl->y;
-#endif
+
+   fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
+   MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
 
    return  // killough 7/18/98: friendly monsters don't attack other friends
       pl && !(actor->flags & pl->flags & MF_FRIEND) &&
-      (P_AproxDistance(tx - actor->x, ty - actor->y) <
-       MELEERANGE - 20*FRACUNIT + pl->info->radius) &&
+      (P_AproxDistance(tx - actor->x, ty - actor->y) < range) &&
       P_CheckSight(actor, actor->target);
 }
 
@@ -238,17 +230,12 @@ bool P_HitFriend(Mobj *actor)
       angle_t angle;
       fixed_t dist, tx, ty;
 
-#ifdef R_LINKEDPORTALS
       tx = getTargetX(actor);
       ty = getTargetY(actor);
-#else
-      tx = actor->target->x;
-      ty = actor->target->y;
-#endif
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
-      P_AimLineAttack(actor, angle, dist, 0);
+      P_AimLineAttack(actor, angle, dist, false);
 
       if(clip.linetarget 
          && clip.linetarget != actor->target 
@@ -297,13 +284,8 @@ bool P_CheckMissileRange(Mobj *actor)
       return false;       // do not attack yet
 
    // OPTIMIZE: get this from a global checksight
-#ifdef R_LINKEDPORTALS
    dist = P_AproxDistance(actor->x - getTargetX(actor),
                           actor->y - getTargetY(actor)) - 64*FRACUNIT;
-#else
-   dist = P_AproxDistance(actor->x - actor->target->x,
-                          actor->y - actor->target->y) - 64*FRACUNIT;
-#endif
 
    if(actor->info->meleestate == NullStateNum)
       dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -328,6 +310,8 @@ bool P_CheckMissileRange(Mobj *actor)
 
    if(actor->flags2 & MF2_RANGEHALF)
       dist >>= 1;
+   if(actor->flags4 & MF4_RANGEEIGHTH)
+      dist >>= 3;
 
    if(dist > 200)
       dist = 200;
@@ -358,10 +342,9 @@ static bool P_IsOnLift(const Mobj *actor)
 {
    const sector_t *sec = actor->subsector->sector;
    line_t line;
-   int l;
 
    // Short-circuit: it's on a lift which is active.
-   if(thinker_cast<PlatThinker *>(sec->floordata) != NULL)
+   if(thinker_cast<PlatThinker *>(sec->srf.floor.data) != nullptr)
       return true;
 
    // Check to see if it's in a sector which can be 
@@ -369,16 +352,27 @@ static bool P_IsOnLift(const Mobj *actor)
    // ioanch 20160303: use args[0]
    if((line.args[0] = sec->tag))
    {
-      for(l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
+      for(int l = -1; (l = P_FindLineFromLineArg0(&line, l)) >= 0;)
       {
-         switch(lines[l].special)
+         // FIXME: I'm still keeping the old code because I don't know of any MBF
+         // demos which can verify all of this. If you're confident you found one,
+         // feel free to remove this block.
+         if(demo_version <= 203)
          {
-         case  10: case  14: case  15: case  20: case  21: case  22:
-         case  47: case  53: case  62: case  66: case  67: case  68:
-         case  87: case  88: case  95: case 120: case 121: case 122:
-         case 123: case 143: case 162: case 163: case 181: case 182:
-         case 144: case 148: case 149: case 211: case 227: case 228:
-         case 231: case 232: case 235: case 236:
+            switch(lines[l].special)
+            {
+            case  10: case  14: case  15: case  20: case  21: case  22:
+            case  47: case  53: case  62: case  66: case  67: case  68:
+            case  87: case  88: case  95: case 120: case 121: case 122:
+            case 123: case 143: case 162: case 163: case 181: case 182:
+            case 144: case 148: case 149: case 211: case 227: case 228:
+            case 231: case 232: case 235: case 236:
+               return true;
+            }
+         }
+         else if(EV_CompositeActionFlags(EV_ActionForSpecial(lines[l].special)) &
+            EV_ISMBFLIFT)
+         {
             return true;
          }
       }
@@ -404,7 +398,7 @@ static int P_IsUnderDamage(Mobj *actor)
 
    for(seclist = actor->touching_sectorlist; seclist; seclist = seclist->m_tnext)
    {
-      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->ceilingdata)) &&
+      if((cl = thinker_cast<CeilingThinker *>(seclist->m_sector->srf.ceiling.data)) &&
          !cl->inStasis)
          dir |= cl->direction;
    }
@@ -440,13 +434,12 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    // let gravity drop them down, unless they're moving down a step.
    if(P_Use3DClipping())
    {
-      if(!(actor->flags & MF_FLOAT) && actor->z > actor->floorz && 
-         !(actor->intflags & MIF_ONMOBJ))
+      if(!(actor->flags & MF_FLOAT) && !P_OnGroundOrThing(*actor))
       {
-         if (actor->z > actor->floorz + STEPSIZE)
+         if (actor->z > actor->zref.floor + STEPSIZE)
             return false;
          else
-            actor->z = actor->floorz;
+            actor->z = actor->zref.floor;
       }
    }
 
@@ -480,9 +473,10 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
    {
       fixed_t x = actor->x;
       fixed_t y = actor->y;
-      fixed_t floorz = actor->floorz;
-      fixed_t ceilingz = actor->ceilingz;
-      fixed_t dropoffz = actor->dropoffz;
+      fixed_t floorz = actor->zref.floor;
+      int floorgroupid = actor->zref.floorgroupid;
+      fixed_t ceilingz = actor->zref.ceiling;
+      fixed_t dropoffz = actor->zref.dropoff;
       
       try_ok = P_TryMove(actor, tryx, tryy, dropoff);
       
@@ -494,9 +488,10 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          P_UnsetThingPosition(actor);
          actor->x = x;
          actor->y = y;
-         actor->floorz = floorz;
-         actor->ceilingz = ceilingz;
-         actor->dropoffz = dropoffz;
+         actor->zref.floor = floorz;
+         actor->zref.floorgroupid = floorgroupid;
+         actor->zref.ceiling = ceilingz;
+         actor->zref.dropoff = dropoffz;
          P_SetThingPosition(actor);
          movefactor *= FRACUNIT / ORIG_FRICTION_FACTOR / 4;
          actor->momx += FixedMul(deltax, movefactor);
@@ -512,7 +507,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       {
          fixed_t savedz = actor->z;
 
-         if(actor->z < clip.floorz)          // must adjust height
+         if(actor->z < clip.zref.floor)          // must adjust height
             actor->z += FLOATSPEED;
          else
             actor->z -= FLOATSPEED;
@@ -521,7 +516,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
          // [RH] Check to make sure there's nothing in the way of the float
          if(P_Use3DClipping())
          {
-            if(P_TestMobjZ(actor))
+            if(P_TestMobjZ(actor, clip))
             {
                actor->flags |= MF_INFLOAT;
                return true;
@@ -572,7 +567,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       clip.numspechit = 0;
 
       // haleyjd 04/11/10: wider compatibility range
-      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+      if(!good || getComp(comp_doorstuck)) // v1.9, or BOOM 2.01 compatibility
          return good;
       else if(demo_version == 202) // BOOM 2.02
          return (P_Random(pr_trywalk) & 3);
@@ -591,12 +586,13 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
 
    // killough 11/98: fall more slowly, under gravity, if felldown==true
    // haleyjd: OVER_UNDER: not while in 3D clipping mode
-   if(!P_Use3DClipping())
+   // VANILLA_HERETIC: inferior 3D clipping engine
+   if(!P_Use3DClipping() || vanilla_heretic)
    {
       if(!(actor->flags & MF_FLOAT) && (!clip.felldown || demo_version < 203))
       {
          fixed_t oldz = actor->z;
-         actor->z = actor->floorz;
+         actor->z = actor->zref.floor;
          
          if(actor->z < oldz)
             E_HitFloor(actor);
@@ -616,7 +612,7 @@ bool P_SmartMove(Mobj *actor)
    int on_lift, dropoff = 0, under_damage;
 
    // killough 9/12/98: Stay on a lift if target is on one
-   on_lift = !comp[comp_staylift] && target && target->health > 0 &&
+   on_lift = !getComp(comp_staylift) && target && target->health > 0 &&
       target->subsector->sector->tag==actor->subsector->sector->tag &&
       P_IsOnLift(actor);
 
@@ -633,13 +629,7 @@ bool P_SmartMove(Mobj *actor)
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
       target && dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
-#ifdef R_LINKEDPORTALS
-      P_AproxDistance(actor->x - getTargetX(actor),
-                      actor->y - getTargetY(actor)) < FRACUNIT*144 &&
-#else
-      P_AproxDistance(actor->x - target->x,
-                      actor->y - target->y) < FRACUNIT*144 &&
-#endif      
+      P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) < FRACUNIT*144 &&
       P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
@@ -715,7 +705,11 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
    // try other directions
    if(P_Random(pr_newchase) > 200 || D_abs(deltay)>abs(deltax))
-      tdir = xdir, xdir = ydir, ydir = tdir;
+   {
+      tdir = xdir;
+      xdir = ydir;
+      ydir = tdir;
+   }
 
    if((xdir == turnaround ? xdir = DI_NODIR : xdir) != DI_NODIR &&
       (actor->movedir = xdir, P_TryWalk(actor)))
@@ -766,7 +760,7 @@ static void P_DoNewChaseDir(Mobj *actor, fixed_t deltax, fixed_t deltay)
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 
-static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po)
+static bool PIT_AvoidDropoff(line_t *line, polyobj_t *po, void *context)
 {
    if(line->backsector                          && // Ignore one-sided linedefs
       clip.bbox[BOXRIGHT]  > line->bbox[BOXLEFT]   &&
@@ -775,8 +769,8 @@ static bool PIT_AvoidDropoff(line_t *line, polyobj_s *po)
       clip.bbox[BOXBOTTOM] < line->bbox[BOXTOP]    &&
       P_BoxOnLineSide(clip.bbox, line) == -1)
    {
-      fixed_t front = line->frontsector->floorheight;
-      fixed_t back  = line->backsector->floorheight;
+      fixed_t front = line->frontsector->srf.floor.height;
+      fixed_t back  = line->backsector->srf.floor.height;
       angle_t angle;
 
       // The monster must contact one of the two floors,
@@ -844,13 +838,8 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
 void P_NewChaseDir(Mobj *actor)
 {
    Mobj *target = actor->target;
-#ifdef R_LINKEDPORTALS
    fixed_t deltax = getTargetX(actor) - actor->x;
    fixed_t deltay = getTargetY(actor) - actor->y;
-#else
-   fixed_t deltax = target->x - actor->x;
-   fixed_t deltay = target->y - actor->y;
-#endif
 
    // killough 8/8/98: sometimes move away from target, keeping distance
    //
@@ -861,12 +850,12 @@ void P_NewChaseDir(Mobj *actor)
 
    if(demo_version >= 203)
    {
-      if(actor->floorz - actor->dropoffz > STEPSIZE &&
-         actor->z <= actor->floorz &&
+      if(actor->zref.floor - actor->zref.dropoff > STEPSIZE &&
+         actor->z <= actor->zref.floor &&
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
-         !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
+         !getComp(comp_dropoff) && P_AvoidDropoff(actor)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
          
@@ -887,7 +876,8 @@ void P_NewChaseDir(Mobj *actor)
             distfriend << FRACBITS > dist && 
             !P_IsOnLift(target) && !P_IsUnderDamage(actor))
          {
-            deltax = -deltax, deltay = -deltay;
+            deltax = -deltax;
+            deltay = -deltay;
          }
          else
          {
@@ -900,11 +890,12 @@ void P_NewChaseDir(Mobj *actor)
                   !(actor->flags2 & MF2_NOSTRAFE) &&
                   ((target->info->missilestate == NullStateNum && dist < MELEERANGE*2) ||
                    (target->player && dist < MELEERANGE*3 &&
-                    P_GetReadyWeapon(target->player)->flags & WPF_FLEEMELEE)))
+                    target->player->readyweapon->flags & WPF_FLEEMELEE)))
                {
                   // Back away from melee attacker
                   actor->strafecount = P_Random(pr_enemystrafe) & 15;
-                  deltax = -deltax, deltay = -deltay;
+                  deltax = -deltax;
+                  deltay = -deltay;
                }
             }
          }
@@ -944,7 +935,8 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
          // to be "sneaking"
          return false;
       }
-      if(P_Random(pr_ghostsneak) < 225)
+      // VANILLA_HERETIC: move this check _after_ P_CheckSight for demo compatibility
+      if(!vanilla_heretic && P_Random(pr_ghostsneak) < 225)
          return false;
    }
 
@@ -957,7 +949,13 @@ static bool P_IsVisible(Mobj *actor, Mobj *mo, int allaround)
          return false;
    }
 
-   return P_CheckSight(actor, mo);
+   if(!P_CheckSight(actor, mo))
+      return false;
+
+   if(vanilla_heretic && mo->flags3 & MF3_GHOST && P_Random(pr_ghostsneak) < 225)
+      return false;
+
+   return true;
 }
 
 int p_lastenemyroar;
@@ -986,7 +984,7 @@ static int current_allaround;
 //
 // Finds monster targets for other monsters
 //
-static bool PIT_FindTarget(Mobj *mo)
+static bool PIT_FindTarget(Mobj *mo, void *context)
 {
    Mobj *actor = current_actor;
 
@@ -1131,6 +1129,8 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
    stopc = demo_version < 203 && !demo_compatibility && monsters_remember ?
            MAXPLAYERS : 2;       // killough 9/9/98
 
+   bool unseen[MAXPLAYERS] = {};
+
    for(;; actor->lastlook = (actor->lastlook + 1) & (MAXPLAYERS - 1))
    {
       if(!playeringame[actor->lastlook])
@@ -1153,7 +1153,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
                // would ideally remain balanced (lastenemy already has a ref
                // from actor, so it's only moving to target).
                actor->target = actor->lastenemy;
-               actor->lastenemy = NULL;
+               actor->lastenemy = nullptr;
                return true;
             }
          }
@@ -1166,14 +1166,17 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
       if(player->health <= 0)
          continue;               // dead
       
-      if(!P_IsVisible(actor, player->mo, allaround))
+      if(unseen[actor->lastlook] || !P_IsVisible(actor, player->mo, allaround))
+      {
+         unseen[actor->lastlook] = true;
          continue;
+      }
       
       P_SetTarget<Mobj>(&actor->target, player->mo);
 
       // killough 9/9/98: give monsters a threshold towards getting players
       // (we don't want it to be too easy for a player with dogs :)
-      if(demo_version >= 203 && !comp[comp_pursuit])
+      if(demo_version >= 203 && !getComp(comp_pursuit))
          actor->threshold = 60;
       
       return true;
@@ -1202,7 +1205,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
       if(actor->target != actor->lastenemy)
          P_LastEnemyRoar(actor);
       P_SetTarget<Mobj>(&actor->target, actor->lastenemy);
-      P_SetTarget<Mobj>(&actor->lastenemy, NULL);
+      P_SetTarget<Mobj>(&actor->lastenemy, nullptr);
       return true;
    }
 
@@ -1264,7 +1267,7 @@ static bool P_LookForMonsters(Mobj *actor, int allaround)
             }
             else if(th->isInstanceOf(RTTI(Mobj)))
             {
-               if(!PIT_FindTarget(static_cast<Mobj *>(th))) // If target sighted
+               if(!PIT_FindTarget(static_cast<Mobj *>(th), nullptr)) // If target sighted
                   return true;
             }
          }
@@ -1323,7 +1326,7 @@ bool P_HelpFriend(Mobj *actor)
          if(mo->flags & MF_JUSTHIT &&
             mo->target && 
             mo->target != actor->target &&
-            !PIT_FindTarget(mo->target))
+            !PIT_FindTarget(mo->target, nullptr))
          {
             // Ignore any attacking monsters, while searching for 
             // friend
@@ -1341,7 +1344,7 @@ bool P_HelpFriend(Mobj *actor)
 // haleyjd 08/07/04: generalized code to make a thing skullfly.
 // actor->target must be valid.
 //
-void P_SkullFly(Mobj *actor, fixed_t speed)
+void P_SkullFly(Mobj *actor, fixed_t speed, bool useSeeState)
 {
    Mobj *dest;
    angle_t an;
@@ -1349,13 +1352,17 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 
    dest = actor->target;
    actor->flags |= MF_SKULLFLY;
+   if(useSeeState)
+      actor->intflags |= MIF_SKULLFLYSEE;
+   else
+      actor->intflags &= ~MIF_SKULLFLYSEE;
 
    actionargs_t actionargs;
 
    actionargs.actiontype = actionargs_t::MOBJFRAME;
    actionargs.actor      = actor;
    actionargs.args       = ESAFEARGS(actor);
-   actionargs.pspr       = NULL;
+   actionargs.pspr       = nullptr;
 
    A_FaceTarget(&actionargs);
    an = actor->angle >> ANGLETOFINESHIFT;
@@ -1383,7 +1390,7 @@ void P_SkullFly(Mobj *actor, fixed_t speed)
 //
 void P_BossTeleport(bossteleport_t *bt)
 {
-   Mobj *boss, *mo, *targ;
+   Mobj *boss, *targ;
    fixed_t prevx, prevy, prevz;
 
    if(bt->mc->isEmpty())
@@ -1405,7 +1412,7 @@ void P_BossTeleport(bossteleport_t *bt)
          // ioanch 20151230: portal aware
          x = getThingX(boss, targ);
          y = getThingY(boss, targ);
-         if(P_AproxDistance(boss->x - x, boss->y - y) > bt->minDistance)
+         if(P_AproxDistance(boss->x - x, boss->y - y) >= bt->minDistance)
          {
             foundSpot = true;
             break;
@@ -1429,10 +1436,9 @@ void P_BossTeleport(bossteleport_t *bt)
 
    if(P_TeleportMove(boss, targ->x, targ->y, false))
    {
-      if(bt->hereThere <= BOSSTELE_BOTH &&
-         bt->hereThere != BOSSTELE_NONE)
+      if(bt->hereThere <= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
       {
-         mo = P_SpawnMobj(prevx, prevy, prevz + bt->zpamt, bt->fxtype);
+         Mobj *mo = P_SpawnMobj(prevx, prevy, prevz + bt->zpamt, bt->fxtype);
          S_StartSound(mo, bt->soundNum);
       }
 
@@ -1440,11 +1446,10 @@ void P_BossTeleport(bossteleport_t *bt)
          P_SetMobjState(boss, bt->state);
       S_StartSound(boss, bt->soundNum);
 
-      if(bt->hereThere >= BOSSTELE_BOTH &&
-         bt->hereThere != BOSSTELE_NONE)
+      if(bt->hereThere >= BOSSTELE_BOTH && bt->hereThere != BOSSTELE_NONE)
          P_SpawnMobj(boss->x, boss->y, boss->z + bt->zpamt, bt->fxtype);
 
-      boss->z = boss->floorz;
+      boss->z = boss->zref.floor;
       boss->angle = targ->angle;
       boss->momx = boss->momy = boss->momz = 0;
       boss->backupPosition();
@@ -1517,8 +1522,7 @@ void A_PlayerStartScript(actionargs_t *actionargs)
 void A_FogSpawn(actionargs_t *actionargs)
 {
    Mobj *actor = actionargs->actor;
-   Mobj *mo = NULL;
-   angle_t delta;
+   Mobj *mo = nullptr;
 
    if(actor->counters[0]-- > 0)
      return;
@@ -1542,7 +1546,7 @@ void A_FogSpawn(actionargs_t *actionargs)
    }
    if(mo)
    {
-      delta = (P_Random(pr_fogangle)&0x7f)+1;
+      angle_t delta = (P_Random(pr_fogangle)&0x7f)+1;
       mo->angle = actor->angle + (((P_Random(pr_fogangle)%delta)-(delta>>1))<<24);
       mo->target = actor;
       mo->args[0] = (P_Random(pr_fogangle)%FOGSPEED)+1; // haleyjd: narrowed range
@@ -1561,7 +1565,6 @@ void A_FogMove(actionargs_t *actionargs)
    Mobj *actor = actionargs->actor;
    int speed = actor->args[0]<<FRACBITS;
    angle_t angle;
-   int weaveindex;
 
    if(!(actor->args[4]))
      return;
@@ -1574,7 +1577,7 @@ void A_FogMove(actionargs_t *actionargs)
 
    if((actor->args[3]%4) == 0)
    {
-      weaveindex = actor->counters[1];
+      int weaveindex = actor->counters[1];
       actor->z += FloatBobOffsets[weaveindex]>>1;
       actor->counters[1] = (weaveindex+1)&63;
    }
@@ -1623,9 +1626,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    int vileFireType  = E_ThingNumForName("VileFire");
    int spawnSpotType = E_ThingNumForName("BossSpawnSpot");
 
-   fixed_t  x, y, z;
    Mobj   *newmobj;
-   int      prestep;
    player_t *plyr = &players[consoleplayer];
 
    // if it's a missile, shoot it
@@ -1642,14 +1643,14 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
    {
       // do a good old Pain-Elemental style summoning
       an = (plyr->mo->angle + an) >> ANGLETOFINESHIFT;
-      prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type]->radius)/2;
+      int prestep = 4*FRACUNIT + 3*(plyr->mo->info->radius + mobjinfo[type]->radius)/2;
       
-      x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
-      y = plyr->mo->y + FixedMul(prestep, finesine[an]);
+      fixed_t x = plyr->mo->x + FixedMul(prestep, finecosine[an]);
+      fixed_t y = plyr->mo->y + FixedMul(prestep, finesine[an]);
       
-      z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
+      fixed_t z = (mobjinfo[type]->flags & MF_SPAWNCEILING) ? ONCEILINGZ : ONFLOORZ;
       
-      if(Check_Sides(plyr->mo, x, y))
+      if(Check_Sides(plyr->mo, x, y, type))
          return;
       
       newmobj = P_SpawnMobj(x, y, z, type);
@@ -1669,18 +1670,21 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          newmobj->flags2 = res[1];
          newmobj->flags3 = res[2];
          newmobj->flags4 = res[3];
+         newmobj->flags5 = res[4];
          break;
       case 1: // add flags
          newmobj->flags  |= res[0];
          newmobj->flags2 |= res[1];
          newmobj->flags3 |= res[2];
          newmobj->flags4 |= res[3];
+         newmobj->flags5 |= res[4];
          break;
       case 2: // rem flags
          newmobj->flags  &= ~res[0];
          newmobj->flags2 &= ~res[1];
          newmobj->flags3 &= ~res[2];
          newmobj->flags4 &= ~res[3];
+         newmobj->flags5 &= ~res[4];
          break;
       default:
          break;
@@ -1700,7 +1704,7 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          fireargs.actiontype = actionargs_t::MOBJFRAME;
          fireargs.actor      = newmobj;
          fireargs.args       = ESAFEARGS(newmobj);
-         fireargs.pspr       = NULL;
+         fireargs.pspr       = nullptr;
 
          A_Fire(&fireargs);
       }
@@ -1772,7 +1776,7 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
 {
    int type;
    int flagsmode = -1;
-   const char *flags = NULL;
+   const char *flags = nullptr;
 
    if(!Console.argc)
    {
@@ -1794,7 +1798,8 @@ CONSOLE_COMMAND(summon, cf_notnet|cf_level|cf_hidden)
          flagsmode = 2; // remove
    }
 
-   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1)
+   if((type = E_ThingNumForName(Console.argv[0]->constPtr())) == -1 &&
+      (type = E_ThingNumForCompatName(Console.argv[0]->constPtr())) == -1)
    {
       C_Printf("unknown thing type\n");
       return;
@@ -1851,7 +1856,7 @@ CONSOLE_COMMAND(give, cf_notnet|cf_level)
 
       // if it wasn't picked up, remove it
       if(!mo->isRemoved())
-         mo->removeThinker();
+         mo->remove();
    }
 }
 
@@ -1883,9 +1888,9 @@ CONSOLE_COMMAND(mdk, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
-   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   slope = P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget
       && !(clip.linetarget->flags2 & MF2_INVULNERABLE) // use 10k damage to
@@ -1899,13 +1904,13 @@ CONSOLE_COMMAND(mdkbomb, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
    fixed_t slope;
-   int damage = 10000;
+   int damage = GOD_BREACH_DAMAGE;
 
    for(int i = 0; i < 60; i++)  // offset angles from its attack angle
    {
       angle_t an = (ANG360/60)*i;
       
-      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,0);
+      slope = P_AimLineAttack(plyr->mo, an, MISSILERANGE,false);
 
       if(clip.linetarget)
          damage = clip.linetarget->health;
@@ -1918,10 +1923,10 @@ CONSOLE_COMMAND(banish, cf_notnet|cf_level)
 {
    player_t *plyr = &players[consoleplayer];
 
-   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, 0);
+   P_AimLineAttack(plyr->mo, plyr->mo->angle, MISSILERANGE, false);
 
    if(clip.linetarget)
-      clip.linetarget->removeThinker();
+      clip.linetarget->remove();
 }
 
 CONSOLE_COMMAND(vilehit, cf_notnet|cf_level)
@@ -1957,11 +1962,11 @@ static void P_ResurrectPlayer()
       mthing.x     = p->mo->x & ~(FRACUNIT - 1);
       mthing.y     = p->mo->y & ~(FRACUNIT - 1);
       mthing.angle = (int16_t)(p->mo->angle / ANGLE_1);
-      mthing.type  = (p - players) + 1;
+      mthing.type  = static_cast<int16_t>(p - players + 1);
 
-      p->health = 100;
+      p->health = p->pclass->initialhealth;
       P_SpawnPlayer(&mthing);
-      oldmo->player = NULL;
+      oldmo->player = nullptr;
       P_TeleportMove(p->mo, p->mo->x, p->mo->y, true);
    }
 }
@@ -1971,7 +1976,7 @@ CONSOLE_COMMAND(resurrect, cf_notnet|cf_level)
    P_ResurrectPlayer();
 }
 
-VARIABLE_BOOLEAN(p_lastenemyroar, NULL, onoff);
+VARIABLE_BOOLEAN(p_lastenemyroar, nullptr, onoff);
 CONSOLE_VARIABLE(p_lastenemyroar, p_lastenemyroar, 0) {}
 
 //----------------------------------------------------------------------------

@@ -26,7 +26,6 @@
 
 #include "z_zone.h"
 #include "i_system.h"
-#include "doomtype.h"
 #include "m_hash.h"
 
 //

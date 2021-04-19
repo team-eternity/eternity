@@ -32,6 +32,7 @@
 
 struct actionargs_t;
 struct arglist_t;
+struct e_pickupfx_t;
 class  MetaTable;
 class  Mobj;
 
@@ -154,10 +155,13 @@ enum
 typedef int statenum_t;
 
 // state flags
+// NOTE: STATEFI = internal flag, not meant for user consumption
 enum stateflags_e
 {
-   STATEF_DECORATE   = 0x00000001, // 01/01/12: reserved for DECORATE definition
-   STATEF_SKILL5FAST = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEFI_DECORATE    = 0x00000001, // 01/01/12: reserved for DECORATE definition
+   STATEF_SKILL5FAST   = 0x00000002, // 08/02/13: tics halve on nightmare skill
+   STATEFI_VANILLA0TIC = 0x00000004, // always use old 0-tic behaviour (when spawnstate)
+   STATEF_INTERPOLATE  = 0x00000008, // Interpolate when given offset
 };
 
 // ********************************************************************
@@ -239,8 +243,6 @@ enum
   MT_DOGS,       // killough 7/19/98: Marine's best friend
   MT_PLASMA1,    // killough 7/11/98: first  of alternating beta plasma fireballs
   MT_PLASMA2,    // killough 7/11/98: second of alternating beta plasma fireballs
-  MT_CAMERA,
-  MT_PLASMA3,    // haleyjd: for burst bfg
 
   // haleyjd 10/08/02: Heretic things
   MT_POD = 305,
@@ -282,7 +284,8 @@ enum
   MT_MNTRFX3,
   MT_PHOENIXPUFF,
 
-  MT_LICHFX1 = 377,
+  MT_LICH = 376,
+  MT_LICHFX1,
   MT_LICHFX2,
   MT_LICHFX3,
   MT_WHIRLWIND,
@@ -293,6 +296,35 @@ enum
 
   MT_HPLAYERSKULL = 399,
 
+  MT_HFIREBOMB = 409,
+
+  // Heretic weapon-associated things (not actual weapons)
+  MT_STAFFPUFF = 416,
+  MT_STAFFPUFF2,
+  MT_BEAKPUFF,
+  MT_GAUNTLETPUFF1,
+  MT_GAUNTLETPUFF2,
+  MT_BLASTERSMOKE,
+  MT_RIPPER,
+  MT_BLASTERPUFF1,
+  MT_BLASTERPUFF2,
+  MT_HORNRODFX1,
+  MT_GOLDWANDFX1,
+  MT_GOLDWANDFX2,
+  MT_GOLDWANDPUFF1,
+  MT_GOLDWANDPUFF2,
+  MT_PHOENIXFX1,
+
+  MT_CRBOWFX1 = 434,
+  MT_CRBOWFX2,
+  MT_CRBOWFX3,
+  MT_CRBOWFX4,
+  MT_MACEFX1,
+  MT_MACEFX2,
+  MT_MACEFX3,
+  MT_MACEFX4,
+  MT_PHOENIXFX2,
+
 // Start Eternity TC New Things
 
   MT_FOGPATCHS = 228,
@@ -300,6 +332,9 @@ enum
   MT_FOGPATCHL,
   
 // End Eternity TC New Things
+
+  MT_CAMERA = 1062, // SMMU camera spot
+  MT_PLASMA3,       // haleyjd: for burst bfg
 
   // haleyjd: NUMMOBJTYPES is a variable now
   //NUMMOBJTYPES  // Counter of how many there are
@@ -356,16 +391,19 @@ struct mobjinfo_t
                         //  seem to retreat when shot because they have
                         //  very little mass and are moved by impact
    int damage;          // If this is a missile, how much does it hurt?
+   int damagemod;       // [XA] damage modulus (i.e. the 8 in '1d8')
    int activesound;     // What sound it makes wandering around, once
                         //  in a while.  Chance is 3/256 it will.
    unsigned int flags;  // Bit masks for lots of things.  See p_mobj.h
    unsigned int flags2; // More bit masks for lots of other things -- haleyjd
    unsigned int flags3; // haleyjd 11/03/02: flags3
    unsigned int flags4; // haleyjd 09/13/09: flags4
+   unsigned int flags5; // MaxW: 2021/02/14: flags5
    int raisestate;      // The first state for an Archvile or respawn
                         //  resurrection.  Zero means it won't come
                         //  back to life.
    int translucency;    // haleyjd 09/01/02: zdoom-style translucency
+   int tranmap;         // ioanch  20170903: Boom-style translucency map
    int bloodcolor;      // haleyjd 05/08/03: particle blood color
    unsigned int particlefx; // haleyjd 07/13/03: particle effects
    int mod;             // haleyjd 07/13/03: method of death
@@ -389,6 +427,8 @@ struct mobjinfo_t
    int activatesound;   // haleyjd 03/19/11: Hexen activation sound
    int deactivatesound; // haleyjd 03/19/11: Hexen deactivation sound
    int gibhealth;       // haleyjd 09/12/13: health at which actor gibs
+
+   e_pickupfx_t *pickupfx;
 
    void (*nukespec)(actionargs_t *); // haleyjd 08/18/09: nukespec made a native property
    

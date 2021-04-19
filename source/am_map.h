@@ -38,15 +38,7 @@ enum
 struct event_t;
 
 // Called by main loop.
-bool AM_Responder(event_t *ev);
-
-// haleyjd 10/06/05: key binding handlers made global
-void AM_HandlerRight(event_t *ev);
-void AM_HandlerLeft(event_t *ev);
-void AM_HandlerUp(event_t *ev);
-void AM_HandlerDown(event_t *ev);
-void AM_HandlerZoomin(event_t *ev);
-void AM_HandlerZoomout(event_t *ev);
+bool AM_Responder(const event_t *ev);
 
 // Called by main loop.
 void AM_Ticker(void);
@@ -70,12 +62,21 @@ void AM_clearMarks(void);
 class Mobj;
 void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z);
 
-typedef struct mpoint_s
+struct mpoint_t
 {
    double x, y;
-} mpoint_t;
+};
 
-extern mpoint_t *markpoints;
+//
+// mark point (portal aware)
+//
+struct markpoint_t
+{
+   double x, y;
+   int groupid;
+};
+
+extern markpoint_t *markpoints;
 extern int markpointnum, markpointnum_max;
 extern int followplayer;
 extern int automap_grid;

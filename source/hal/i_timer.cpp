@@ -76,8 +76,8 @@ static haltimerdriveritem_t halTimerDrivers[] =
       I_SDLInitTimer,
       I_SDLChangeClockRate
 #else
-      NULL,
-      NULL
+      nullptr,
+      nullptr
 #endif
    },
 
@@ -120,7 +120,7 @@ void I_InitHALTimer()
    timer->Init();
 }
 
-VARIABLE_INT(realtic_clock_rate, NULL,  0, 500, NULL);
+VARIABLE_INT(realtic_clock_rate, nullptr,  0, 500, nullptr);
 CONSOLE_VARIABLE(i_gamespeed, realtic_clock_rate, 0)
 {
    if(realtic_clock_rate != 100)

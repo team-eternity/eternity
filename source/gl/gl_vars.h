@@ -39,29 +39,8 @@ enum
    CFG_GL_NUMFILTERS
 };
 
-// Supported internal texture format values
-enum
-{
-   CFG_GL_R3_G3_B2,
-   CFG_GL_RGB4,
-   CFG_GL_RGB5,
-   CFG_GL_RGB8,
-   CFG_GL_RGB10,
-   CFG_GL_RGB12,
-   CFG_GL_RGB16,
-   CFG_GL_RGBA2,
-   CFG_GL_RGBA4,
-   CFG_GL_RGB5_A1,
-   CFG_GL_RGBA8,
-   CFG_GL_RGB10_A2,
-   CFG_GL_RGBA12,
-   CFG_GL_RGBA16,
-   CFG_GL_NUMTEXFORMATS
-};
-
 extern int  cfg_gl_colordepth;
 extern int  cfg_gl_filter_type;
-extern int  cfg_gl_texture_format;
 extern bool cfg_gl_use_extensions;
 extern bool cfg_gl_arb_pixelbuffer;
 

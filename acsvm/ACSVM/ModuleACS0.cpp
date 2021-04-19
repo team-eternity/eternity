@@ -37,15 +37,15 @@ namespace ACSVM
 
          switch(ReadLE4(data))
          {
-         case ChunkID("ACS\0"):
+         case MakeID("ACS\0"):
             readBytecodeACS0(data, size);
             break;
 
-         case ChunkID("ACSE"):
+         case MakeID("ACSE"):
             readBytecodeACSE(data, size, false);
             break;
 
-         case ChunkID("ACSe"):
+         case MakeID("ACSe"):
             readBytecodeACSE(data, size, true);
             break;
          }
@@ -77,10 +77,10 @@ namespace ACSVM
       {
          switch(ReadLE4(data + (iter - 4)))
          {
-         case ChunkID("ACSE"):
+         case MakeID("ACSE"):
             return readBytecodeACSE(data, size, false, iter - 8);
 
-         case ChunkID("ACSe"):
+         case MakeID("ACSe"):
             return readBytecodeACSE(data, size, true, iter - 8);
          }
       }

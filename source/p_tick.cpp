@@ -29,18 +29,22 @@
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_dehtbl.h"
+#include "d_gi.h"
 #include "d_main.h"
 #include "doomstat.h"
 #include "i_system.h"
 #include "p_anim.h"
 #include "p_chase.h"
 #include "p_saveg.h"
+#include "p_scroll.h"
 #include "p_sector.h"
 #include "p_spec.h"
 #include "p_tick.h"
 #include "p_user.h"
 #include "p_partcl.h"
 #include "polyobj.h"
+#include "r_dynseg.h"
+#include "s_musinfo.h"
 #include "s_sndseq.h"
 
 int leveltime;
@@ -74,11 +78,9 @@ IMPLEMENT_RTTI_TYPE(Thinker)
 //
 void Thinker::InitThinkers(void)
 {
-   int i;
-   
-   for(i = 0; i < NUMTHCLASS; i++)  // killough 8/29/98: initialize threaded lists
-      thinkerclasscap[i].cprev = thinkerclasscap[i].cnext = &thinkerclasscap[i];
-   
+   for(Thinker &thinker : thinkerclasscap)  // killough 8/29/98: initialize threaded lists
+      thinker.cprev = thinker.cnext = &thinker;
+
    thinkercap.prev = thinkercap.next  = &thinkercap;
 }
 
@@ -93,7 +95,7 @@ void Thinker::addToThreadedList(int tclass)
    Thinker *th;
    
    // Remove from current thread, if in one -- haleyjd: from PrBoom
-   if((th = this->cnext) != NULL)
+   if((th = this->cnext) != nullptr)
       (th->cprev = this->cprev)->cnext = th;
 
    // Add to appropriate thread
@@ -133,8 +135,6 @@ void Thinker::addThinker()
    next = &thinkercap;
    prev = thinkercap.prev;
    thinkercap.prev = this;
-   
-   references = 0;    // killough 11/98: init reference counter to 0
    
    // killough 8/29/98: set sentinel pointers, and then add to appropriate list
    cnext = cprev = this;
@@ -185,7 +185,7 @@ void Thinker::removeDelayed()
 // set the function to P_RemoveThinkerDelayed(), so that later, it will be
 // removed automatically as part of the thinker process.
 //
-void Thinker::removeThinker()
+void Thinker::remove()
 {
    removed = true;
    
@@ -237,6 +237,7 @@ void Thinker::RunThinkers(void)
       else
          currentthinker->Think();
    }
+   S_MusInfoUpdate();
 }
 
 //
@@ -279,10 +280,16 @@ void P_Ticker()
 
    // interpolation: save current sector heights
    P_SaveSectorPositions();
+   // save dynaseg positions (or reset them to avoid shaking)
+   R_SaveDynasegPositions();
+   // Reset any interpolated scrolled sidedefs
+   P_TicResetLerpScrolledSides();
    
    P_ParticleThinker(); // haleyjd: think for particles
 
-   S_RunSequences(); // haleyjd 06/06/06
+   // VANILLA_HERETIC: it's critical to postpone S_RunSequences below
+   if(!vanilla_heretic)
+      S_RunSequences(); // haleyjd 06/06/06
 
    // not if this is an intermission screen
    // haleyjd: players don't think during cinematic pauses
@@ -298,6 +305,8 @@ void P_Ticker()
    Thinker::RunThinkers();
    ACS_Exec();
    P_UpdateSpecials();
+   if(vanilla_heretic)
+      S_RunSequences();
    P_RespawnSpecials();
    if(demo_version >= 329)
       P_AnimateSurfaces(); // haleyjd 04/14/99

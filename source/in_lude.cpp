@@ -35,6 +35,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "e_fonts.h"
+#include "e_hash.h"
 #include "e_things.h" 
 #include "g_game.h"
 #include "in_lude.h"
@@ -57,7 +58,7 @@ int intertime;
 // used to accelerate or skip a stage
 int acceleratestage; // killough 3/28/98: made global
 
-static interfns_t *InterFuncs = NULL;
+static interfns_t *InterFuncs = nullptr;
 
 vfont_t *in_font;
 vfont_t *in_bigfont;
@@ -79,6 +80,12 @@ MobjCollection camerathings;
 
 // chosen camera
 Mobj *wi_camera;
+
+//
+// Intermission map info
+//
+static EHashTable<intermapinfo_t, ENCStringHashKey,
+&intermapinfo_t::lumpname, &intermapinfo_t::link> in_mapinfo;
 
 //
 // IN_AddCameras
@@ -104,7 +111,7 @@ void IN_AddCameras()
 //
 // Set up the intermissions camera
 //
-void IN_StartCamera()
+static void IN_StartCamera()
 {
    if(!camerathings.isEmpty())
    {
@@ -123,7 +130,7 @@ void IN_StartCamera()
          // even kill it!) even tho it has been removed from the level. I make
          // it unshootable first so they lose interest.
          players[i].mo->flags &= ~MF_SHOOTABLE;
-         players[i].mo->removeThinker();
+         players[i].mo->remove();
       }
 #endif
             
@@ -133,7 +140,7 @@ void IN_StartCamera()
       intercam.pitch = 0;
 
       subsector_t *subsec = R_PointInSubsector(intercam.x, intercam.y);
-      intercam.z = subsec->sector->floorheight + 41*FRACUNIT;
+      intercam.z = subsec->sector->srf.floor.height + 41*FRACUNIT;
 
       intercam.backupPosition();
       
@@ -143,7 +150,7 @@ void IN_StartCamera()
    else            // no camera, boring interpic
    {
       realbackdrop = 0;
-      wi_camera = NULL;
+      wi_camera = nullptr;
       S_StopAllSequences(); // haleyjd 06/06/06
       S_StopLoopedSounds(); // haleyjd 10/06/06
    }
@@ -183,12 +190,12 @@ void IN_checkForAccelerate()
       {
          if(player->cmd.buttons & BT_ATTACK)
          {
-            if(!player->attackdown)
+            if(!(player->attackdown & AT_PRIMARY))
                acceleratestage = 1;
-            player->attackdown = true;
+            player->attackdown = AT_PRIMARY;
          }
          else
-            player->attackdown = false;
+            player->attackdown = AT_NONE;
          
          if (player->cmd.buttons & BT_USE)
          {
@@ -284,6 +291,22 @@ void IN_Start(wbstartstruct_t *wbstartstruct)
    InterFuncs = GameModeInfo->interfuncs;
 
    InterFuncs->Start(wbstartstruct);
+}
+
+//
+// Gets the map info based on lump name. If none is there, then create and
+// return it.
+//
+intermapinfo_t &IN_GetMapInfo(const char *lumpname)
+{
+   intermapinfo_t *info;
+   if(!(info = in_mapinfo.objectForKey(lumpname)))
+   {
+      info = estructalloc(intermapinfo_t, 1);
+      info->lumpname = estrdup(lumpname);
+      in_mapinfo.addObject(info);
+   }
+   return *info;
 }
 
 // EOF

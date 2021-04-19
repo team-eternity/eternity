@@ -43,10 +43,10 @@ protected:
    lumpinfo_t *lump;
 
 public:
-   WadIterator() : lump(NULL) {}
+   WadIterator() : lump(nullptr) {}
 
-   lumpinfo_t *current() const { return lump; }
-   lumpinfo_t *end()     const { return NULL; }
+   lumpinfo_t *current() const { return lump;    }
+   lumpinfo_t *end()     const { return nullptr; }
 
    // virtuals
    virtual lumpinfo_t *begin() = 0;
@@ -78,21 +78,21 @@ public:
       lumpinfo = dir.getLumpInfo();
    }
 
-   // Iteration will begin at the first lump in that namespace. If the
-   // namespace is empty, NULL will be returned immediately.
+   // Iteration will begin at the first lump in that namespace.
+   // If the namespace is empty, nullptr will be returned immediately.
    virtual lumpinfo_t *begin()
    {
-      return (lump = (ns.numLumps ? lumpinfo[ns.firstLump] : NULL));
+      return (lump = (ns.numLumps ? lumpinfo[ns.firstLump] : nullptr));
    }
 
-   // Step to the next lump in the namespace, if one exists. Returns NULL once
-   // the end of the namespace has been reached.
+   // Step to the next lump in the namespace, if one exists.
+   // Returns nullptr once the end of the namespace has been reached.
    virtual lumpinfo_t *next()
    {
       if(lump)
       {
          int next = lump->selfindex + 1;
-         lump = ((next < ns.firstLump + ns.numLumps) ? lumpinfo[next] : NULL);
+         lump = ((next < ns.firstLump + ns.numLumps) ? lumpinfo[next] : nullptr);
       }
       return lump;
    }
@@ -111,34 +111,50 @@ class WadChainIterator : public WadIterator
 {
 protected:
    const char  *lumpname;
+   bool         nameislfn;
    lumpinfo_t  *chain;
    lumpinfo_t **lumpinfo;
 
 public:
    WadChainIterator(const WadDirectory &dir, const char *name)
-      : WadIterator(), lumpname(name)
+      : WadIterator(), lumpname(name), nameislfn(false)
    {
       chain    = dir.getLumpNameChain(name);
       lumpinfo = dir.getLumpInfo();
    }
 
+   WadChainIterator(const WadDirectory &dir, const char *name, bool lfn)
+      : WadIterator(), lumpname(name), nameislfn(lfn)
+   {
+      chain    = dir.getLumpLFNChain(name);
+      lumpinfo = dir.getLumpInfo();
+   }
+
    // Iteration will begin at the first lump on the hash chain for
-   // the name that was passed into the constructor. Returns NULL
+   // the name that was passed into the constructor. Returns nullptr
    // if the hash chain is empty.
    virtual lumpinfo_t *begin()
    {
-      int idx = chain->namehash.index;
-      return (lump = (idx >= 0 ? lumpinfo[idx] : NULL));
+      if(nameislfn)
+      {
+         lump = chain; // I'm not using `return (lump = chain);` as it scans worse
+         return lump;
+      }
+
+      int idx = chain->index;
+      return (lump = (idx >= 0 ? lumpinfo[idx] : nullptr));
    }
 
-   // Step to the next lump on the hash chain. Returns NULL when the
+   // Step to the next lump on the hash chain. Returns nullptr when the
    // end of the chain has been reached.
    virtual lumpinfo_t *next()
    {
       if(lump)
       {
-         int next = lump->namehash.next;
-         lump = (next >= 0 ? lumpinfo[next] : NULL);
+         if(nameislfn)
+            return W_NextInLFNHash(lump);
+         int next = lump->next;
+         lump = (next >= 0 ? lumpinfo[next] : nullptr);
       }
       return lump;
    }
@@ -149,9 +165,18 @@ public:
    // be considered relevant.
    bool testLump(int li_namespace = -1) const
    {
-      return (lump &&
-              !strcasecmp(lump->name, lumpname) &&
-              (li_namespace == -1 || lump->li_namespace == li_namespace));
+      if(nameislfn)
+      {
+         return (lump &&
+                 !strcasecmp(lump->lfn, lumpname) &&
+                 (li_namespace == -1 || lump->li_namespace == li_namespace));
+      }
+      else
+      {
+         return (lump &&
+                 !strcasecmp(lump->name, lumpname) &&
+                 (li_namespace == -1 || lump->li_namespace == li_namespace));
+      }
    }
 };
 

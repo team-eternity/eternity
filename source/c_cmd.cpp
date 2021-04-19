@@ -120,12 +120,11 @@ CONSOLE_CONST(opt, cmdoptions);
 CONSOLE_COMMAND(cmdlist, 0)
 {
    command_t *current;
-   int i;
    int charnum = 33;
    int maxchar = 'z';
 
    // SoM: This could be a little better
-   const char *mask = NULL;
+   const char *mask = nullptr;
    unsigned int masklen = 0;
 
    // haleyjd 07/08/04: optional filter parameter -- the provided
@@ -133,7 +132,7 @@ CONSOLE_COMMAND(cmdlist, 0)
    // letter
    if(Console.argc == 1)
    {
-      unsigned int len = Console.argv[0]->length();
+      unsigned int len = static_cast<unsigned>(Console.argv[0]->length());
 
       if(len == 1)
          charnum = maxchar = Console.argv[0]->charAt(0);
@@ -153,11 +152,11 @@ CONSOLE_COMMAND(cmdlist, 0)
 
    for(; charnum <= maxchar; ++charnum) // go thru each char in alphabet
    {
-      for(i = 0; i < CMDCHAINS; ++i)
+      for(command_t *&cmdroot : cmdroots)
       {
-         for(current = cmdroots[i]; current; current = current->next)
+         for(current = cmdroot; current; current = current->next)
          {
-            if(current->name[0] == charnum && 
+            if(current->name[0] == charnum &&
                (!mask || !strncasecmp(current->name, mask, masklen)) &&
                !(current->flags & cf_hidden))
             {
@@ -170,12 +169,12 @@ CONSOLE_COMMAND(cmdlist, 0)
 
 // console height
 
-VARIABLE_INT(c_height,  NULL,                   20, 200, NULL);
+VARIABLE_INT(c_height,  nullptr,                   20, 200, nullptr);
 CONSOLE_VARIABLE(c_height, c_height, 0) {}
 
 // console speed
 
-VARIABLE_INT(c_speed,   NULL,                   1, 200, NULL);
+VARIABLE_INT(c_speed,   nullptr,                   1, 200, nullptr);
 CONSOLE_VARIABLE(c_speed, c_speed, 0) {}
 
 // echo string to console
@@ -236,9 +235,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
 {
    command_t  *current;
    variable_t *var;
-   int         count;
    const char *name;
-   default_t  *def;
 
    if(Console.argc != 1)
    {
@@ -255,7 +252,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
    if(current && current->type == ct_variable && !(current->flags & cf_hidden))
    {
       var = current->variable;
-      def = current->variable->cfgDefault; // haleyjd 07/05/10: print defaults
+      default_t *def = current->variable->cfgDefault; // haleyjd 07/05/10: print defaults
 
       switch(var->type)
       {
@@ -263,7 +260,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
          if(var->defines && var->min <= var->max)
          {
             C_Printf("Possible values for '%s':\n", name);
-            for(count = var->min; count <= var->max; count++)
+            for(int count = var->min; count <= var->max; count++)
             {
                C_Printf("%s\n", var->defines[count - var->min]);
             }
@@ -307,7 +304,7 @@ CONSOLE_COMMAND(cvarhelp, 0)
          if(var->defines)
          {
             C_Printf("Possible values for '%s':\n", name);
-            for(count = var->min; count <= var->max; count++)
+            for(int count = var->min; count <= var->max; count++)
                C_Printf(" %s\n", var->defines[count - var->min]);
 
             if(def)
@@ -406,7 +403,6 @@ extern void G_AddChatMacros();
 extern void G_AddAutoloadFiles();
 extern void G_AddCompat();
 extern void G_CreateAxisActionVars();
-extern void MN_CreateSaveCmds();
 extern void P_AddEventVars();
 
 //
@@ -424,7 +420,6 @@ void C_AddCommands()
    G_AddAutoloadFiles();
    G_AddCompat();
    G_CreateAxisActionVars();
-   MN_CreateSaveCmds();
    P_AddEventVars();
 }
 
@@ -437,7 +432,7 @@ static cell AMX_NATIVE_CALL sm_version(AMX *amx, cell *params)
 AMX_NATIVE_INFO ccmd_Natives[] =
 {
    {"_EngineVersion", sm_version },
-   { NULL, NULL }
+   { nullptr, nullptr }
 };
 #endif
 

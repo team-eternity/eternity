@@ -26,11 +26,14 @@
 #ifndef P_MAP_H__
 #define P_MAP_H__
 
+#include "m_collection.h"
+#include "tables.h"
+
 struct line_t;
 struct mobjinfo_t;
 struct msecnode_t;
 struct player_t;
-struct polyobj_s; // ioanch 20160122
+struct polyobj_t; // ioanch 20160122
 struct sector_t;
 
 //=============================================================================
@@ -65,14 +68,27 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
-bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y);
+bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
 
-bool PIT_CheckLine(line_t *ld, polyobj_s *po);  // ioanch: used in the code
+bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context);  // ioanch: used in the code
 
 void P_SlideMove(Mobj *mo);
 
 // ioanch
-void P_CollectSpechits(line_t *ld);
+void P_CollectSpechits(line_t *ld, PODCollection<line_t *> *pushhit);
+
+bool P_BlockedAsMonster(const Mobj &mo);
+
+//
+// Various results
+//
+enum ItemCheckResult
+{
+   ItemCheck_furtherNeeded,
+   ItemCheck_pass,
+   ItemCheck_hit
+};
+ItemCheckResult P_CheckThingCommon(Mobj *thing);
 
 //=============================================================================
 //
@@ -85,12 +101,6 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y,bool boss);
 // haleyjd 06/06/05: new function that won't stick the thing inside inert objects
 bool P_TeleportMoveStrict(Mobj *thing, fixed_t x, fixed_t y, bool boss);
 
-// SoM: new function that won't telefrag things which the transporting mobj isn't
-// touching on the z axis.
-#ifdef R_LINKEDPORTALS
-bool P_PortalTeleportMove(Mobj *thing, fixed_t x, fixed_t y);
-#endif
-
 //=============================================================================
 //
 // Sight Checks, Tracers, Path Traversal
@@ -100,12 +110,12 @@ bool P_CheckSight(Mobj *t1, Mobj *t2);
 void P_UseLines(player_t *player);
 
 // killough 8/2/98: add 'mask' argument to prevent friends autoaiming at others
-fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance,int mask);
+fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask);
 
 void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance, fixed_t slope, 
-                  int damage, mobjinfo_t *puff = nullptr);
+                  int damage, const char *pufftype = nullptr);
 
-bool Check_Sides(Mobj *, int, int); // phares
+bool Check_Sides(Mobj *, int, int, mobjtype_t type); // phares
 
 //=============================================================================
 //
@@ -158,6 +168,31 @@ msecnode_t *P_CreateSecNodeList(Mobj *, fixed_t, fixed_t);  // phares 3/14/98
 // reentrantly by pushing and popping an instance of it onto the clip stack.
 //
 
+//
+// All the various Z coordinates carried around when clipping with lines and sectors
+//
+struct zrefs_t
+{
+   // The closest interval over all contacted Sectors.
+   fixed_t floor;
+   fixed_t ceiling;
+   // killough 11/98: the lowest floor over all contacted Sectors.
+   fixed_t dropoff;
+
+   int floorgroupid;
+
+   // Strictly sector floor and ceiling z, not counting 3dmidtex
+   fixed_t secfloor;
+   fixed_t secceil;
+
+   // SoM 11/6/02: Yet again! Two more z values that must be stored
+   // in the mobj struct 9_9
+   // These are the floor and ceiling heights given by the first
+   // clipping pass (map architecture + 3d sides).
+   fixed_t passfloor;
+   fixed_t passceil;
+};
+
 struct doom_mapinter_t
 {
    doom_mapinter_t *prev; // SoM: previous entry in stack (for pop)
@@ -179,15 +214,7 @@ struct doom_mapinter_t
    fixed_t    y;         // y position, usually where we want to move
 
    fixed_t    bbox[4];   // bounding box for thing/line intersection checks
-   fixed_t    floorz;    // floor you'd hit if free to fall
-   fixed_t    ceilingz;  // ceiling of sector you're in
-   fixed_t    dropoffz;  // dropoff on other side of line you're crossing
-
-   fixed_t    secfloorz; // SoM: floorz considering only sector heights
-   fixed_t    secceilz;  // SoM: ceilingz considering only sector heights
-   
-   fixed_t    passfloorz; // SoM 11/6/02: UGHAH
-   fixed_t    passceilz;
+   zrefs_t zref;  // keep all various plane Z here
 
    int        floorpic;  // haleyjd: for CANTLEAVEFLOORPIC flag
 
@@ -205,7 +232,7 @@ struct doom_mapinter_t
    line_t    *blockline;   // killough 8/11/98: blocking linedef
    line_t    *floorline;   // killough 8/1/98: Highest touched floor
 
-   Mobj      *linetarget;  // who got hit (or NULL)
+   Mobj      *linetarget;  // who got hit (or nullptr)
 
    // keep track of special lines as they are hit,
    // but don't process them until the move is proven valid
@@ -221,6 +248,8 @@ struct doom_mapinter_t
    fixed_t    lowfloor;     // lowest floorheight involved   
    fixed_t    opensecfloor; // SoM 11/3/02: considering only sector floor
    fixed_t    opensecceil;  // SoM 11/3/02: considering only sector ceiling
+
+   int bottomgroupid;   // openbottom group id
 
    // moved front and back outside P_LineOpening and changed -- phares 3/7/98
    // them to these so we can pick up the new friction value
@@ -238,7 +267,7 @@ struct doom_mapinter_t
    struct linepoly_t
    {
       line_t *ld;
-      polyobj_s *po;
+      polyobj_t *po;
    } *portalhit;
    int         portalhit_max;
    int         numportalhit;
@@ -249,6 +278,10 @@ void P_PushClipStack();
 
 // Pops the tm stack, storing the discarded element for later re-insertion.
 void P_PopClipStack();
+
+void P_ClearGlobalMobjReferences();
+
+bool P_OnGroundOrThing(const Mobj &mobj);
 
 extern doom_mapinter_t  clip;  // haleyjd 04/16/10: made global, renamed
 extern doom_mapinter_t *pClip; // haleyjd 04/16/10: renamed

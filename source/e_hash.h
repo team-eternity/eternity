@@ -75,7 +75,7 @@ public:
    {
    }
 
-   EHashTable(unsigned int pNumChains)
+   explicit EHashTable(unsigned int pNumChains)
       : chains(nullptr), isInit(false), numChains(0), numItems(0),
         loadFactor(0.0f), iteratorPos(-1)
    {
@@ -205,7 +205,7 @@ public:
 
    //
    // Returns the first object on the hash chain used by the given
-   // unmodulated hash code, or NULL if that hash chain is empty. The
+   // unmodulated hash code, or nullptr if that hash chain is empty. The
    // object returned does not necessarily match the given hash code.
    //
    item_type *chainForKey(param_key_type key, unsigned int unmodHC)
@@ -222,7 +222,7 @@ public:
    }
 
    //
-   // Returns the first object on the hash chain used by the given key, or NULL
+   // Returns the first object on the hash chain used by the given key, or nullptr
    // if that hash chain is empty. The object returned does not necessarily 
    // match the given key.
    //
@@ -257,11 +257,11 @@ public:
 
    //
    // Looks for the next object after the current one specified having the
-   // same key. If passed NULL in object, it will start a new search.
-   // Returns NULL when the search has reached the end of the hash chain.
+   // same key. If passed nullptr in object, it will start a new search.
+   // Returns nullptr when the search has reached the end of the hash chain.
    // Overload for pre-computed unmodulated hash codes.
    //
-   item_type *keyIterator(item_type *object, param_key_type key, unsigned int unmodHC) const
+   item_type *keyIterator(const item_type *object, param_key_type key, unsigned int unmodHC) const
    {
       item_type *ret;
 
@@ -272,7 +272,7 @@ public:
          ret = objectForKey(key, unmodHC);
       else
       {
-         link_type *link = &(object->*linkPtr);
+         const link_type *link = &(object->*linkPtr);
 
          // start on next object in hash chain
          link = link->dllNext;
@@ -289,10 +289,10 @@ public:
 
    //
    // Looks for the next object after the current one specified having the
-   // same key. If passed NULL in object, it will start a new search.
-   // Returns NULL when the search has reached the end of the hash chain.
+   // same key. If passed nullptr in object, it will start a new search.
+   // Returns nullptr when the search has reached the end of the hash chain.
    //
-   item_type *keyIterator(item_type *object, param_key_type key) const
+   item_type *keyIterator(const item_type *object, param_key_type key) const
    {
       item_type *ret;
 
@@ -303,7 +303,7 @@ public:
          ret = objectForKey(key);
       else
       {
-         link_type *link = &(object->*linkPtr);
+         const link_type *link = &(object->*linkPtr);
 
          // start on next object in hash chain
          link = link->dllNext;
@@ -320,7 +320,7 @@ public:
 
    //
    // Iterates over all objects in a hash table, in chain order.
-   // Pass NULL in object to start a new search. NULL is returned when the 
+   // Pass nullptr in object to start a new search. nullptr is returned when the 
    // entire table has been iterated over.
    //
    const item_type *tableIterator(const item_type *object)

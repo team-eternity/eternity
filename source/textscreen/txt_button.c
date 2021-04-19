@@ -1,20 +1,15 @@
-// Emacs style mode select   -*- C -*- 
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2006 Simon Howard
+// Copyright(C) 2005-2014 Simon Howard
 //
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see http://www.gnu.org/licenses/
 //
 
 #include <stdlib.h>
@@ -26,17 +21,18 @@
 #include "txt_gui.h"
 #include "txt_io.h"
 #include "txt_main.h"
+#include "txt_utf8.h"
 #include "txt_window.h"
 
 static void TXT_ButtonSizeCalc(TXT_UNCAST_ARG(button))
 {
     TXT_CAST_ARG(txt_button_t, button);
 
-    button->widget.w = strlen(button->label);
+    button->widget.w = TXT_UTF8_Strlen(button->label);
     button->widget.h = 1;
 }
 
-static void TXT_ButtonDrawer(TXT_UNCAST_ARG(button), int selected)
+static void TXT_ButtonDrawer(TXT_UNCAST_ARG(button))
 {
     TXT_CAST_ARG(txt_button_t, button);
     int i;
@@ -44,17 +40,11 @@ static void TXT_ButtonDrawer(TXT_UNCAST_ARG(button), int selected)
 
     w = button->widget.w;
 
-    TXT_BGColor(TXT_COLOR_BLUE, 0);
-    TXT_FGColor(TXT_COLOR_BRIGHT_WHITE);
-
-    if (selected)
-    {
-        TXT_BGColor(TXT_COLOR_GREY, 0);
-    }
+    TXT_SetWidgetBG(button);
 
     TXT_DrawString(button->label);
-    
-    for (i=strlen(button->label); i < w; ++i)
+
+    for (i = TXT_UTF8_Strlen(button->label); i < w; ++i)
     {
         TXT_DrawString(" ");
     }
@@ -94,6 +84,7 @@ static void TXT_ButtonMousePress(TXT_UNCAST_ARG(button), int x, int y, int b)
 
 txt_widget_class_t txt_button_class =
 {
+    TXT_AlwaysSelectable,
     TXT_ButtonSizeCalc,
     TXT_ButtonDrawer,
     TXT_ButtonKeyPress,

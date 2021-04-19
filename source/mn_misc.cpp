@@ -137,7 +137,7 @@ static void WriteCenteredText(char *message)
    V_FontWriteText(menu_font_normal, buffer, x, y, &subscreen43);   
 }
 
-void MN_PopupDrawer(void)
+static void MN_PopupDrawer(void)
 {
    // haleyjd 08/31/12: If we popped up over another widget, draw it.
    if(popup_widget.prev && popup_widget.prev->drawer)
@@ -146,18 +146,20 @@ void MN_PopupDrawer(void)
    WriteCenteredText(popup_message);
 }
 
-bool MN_PopupResponder(event_t *ev, int action)
+static bool MN_PopupResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    char ch;
    
-   if(ev->type != ev_keydown)
+   if(ev->type != ev_keydown && ev->type != ev_text)
       return false;
 
-   if(ev->character)
-      ch = ectype::toLower(ev->character);
-   else
+   if(ev->type == ev_text)
+      ch = ectype::toLower(ev->data1);
+   else if(!ectype::isPrint(ev->data1))
       ch = ev->data1;
+   else
+      return false;
    
    switch(popup_message_type)
    {
@@ -166,7 +168,7 @@ bool MN_PopupResponder(event_t *ev, int action)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          // kill message
-         MN_PopWidget();
+         MN_PopWidget(consumeText_e::NO);
          S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
       }
       break;
@@ -187,7 +189,7 @@ bool MN_PopupResponder(event_t *ev, int action)
             C_RunTextCmd(popup_message_command);
          }
          S_StartInterfaceSound(menuSounds[MN_SND_COMMAND]);
-         MN_PopWidget();  // kill message
+         MN_PopWidget(consumeText_e::NO);  // kill message
       }
       if(ch == 'n' || action == ka_menu_toggle || action == ka_menu_previous) // no!
       {
@@ -195,7 +197,7 @@ bool MN_PopupResponder(event_t *ev, int action)
          // haleyjd 02/24/02: restore saved menuactive state
          menuactive = popupMenuActive;
          S_StartInterfaceSound(menuSounds[MN_SND_DEACTIVATE]);
-         MN_PopWidget(); // kill message
+         MN_PopWidget(consumeText_e::NO); // kill message
       }
       break;
       
@@ -212,7 +214,7 @@ bool MN_PopupResponder(event_t *ev, int action)
 // alert message
 // -- just press enter
 //
-void MN_Alert(const char *message, ...)
+void MN_Alert(E_FORMAT_STRING(const char *message), ...)
 {
    va_list args;
    
@@ -290,11 +292,11 @@ void MN_QuestionFunc(const char *message, void (*handler)(void))
 
 void MN_DrawCredits(void);
 
-typedef struct helpscreen_s
+struct helpscreen_t
 {
    int lumpnum;
    void (*Drawer)(); // alternate drawer
-} helpscreen_t;
+};
 
 static helpscreen_t helpscreens[120];  // 100 + credit/built-in help screens
 static int num_helpscreens;
@@ -307,7 +309,7 @@ static void AddHelpScreen(const char *screenname)
    
    if((lumpnum = W_CheckNumForName(screenname)) != -1)
    {
-      helpscreens[num_helpscreens].Drawer = NULL;   // no drawer
+      helpscreens[num_helpscreens].Drawer = nullptr;   // no drawer
       helpscreens[num_helpscreens++].lumpnum = lumpnum;
    }  
 }
@@ -399,15 +401,15 @@ struct val_str_t
 
 static const val_str_t val_programmers[] =
 {
-   { "James Haley", nullptr, "David Hill" },
-   { "Ioan Chera", nullptr, "Max Waine" },
-   { nullptr, FC_ABSCENTER "Stephen McGranahan\n", nullptr },
+   { "James Haley", nullptr,     "David Hill"                  },
+   { "Ioan Chera",  nullptr,     "Max Waine"                   },
+   { nullptr,       FC_ABSCENTER "Stephen McGranahan", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
 static const val_str_t val_basedon[] =
 {
-   {nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr},
+   { nullptr, FC_ABSCENTER FC_HI "SMMU" FC_NORMAL " by Simon Howard", nullptr },
    { nullptr, nullptr, nullptr }
 };
 
@@ -418,9 +420,9 @@ static const val_str_t val_graphics[] = {
 
 static const val_str_t val_thanks[] =
 {
-   { "Joe Kennedy", nullptr, "Julian Aubourg" },
-   { "Joel Murdoch", nullptr, "Anders Astrand" },
-   { nullptr, FC_ABSCENTER "SargeBaldy", nullptr },
+   { "Joe Kennedy",  nullptr, "Julian Aubourg"   },
+   { "Joel Murdoch", nullptr, "Anders Astrand"   },
+   { "SargeBaldy",   nullptr, "Kaitlyn Anne Fox" },
    { nullptr, nullptr, nullptr }
 };
 
@@ -487,14 +489,19 @@ void MN_DrawCredits()
       y += V_FontStringHeight(menu_font_normal, "");
    }
 
-   V_FontWriteText(menu_font_normal, 
-                   FC_ABSCENTER "Copyright 2017 Team Eternity et al.", 
-                   0, y, &subscreen43);
+   // MaxW: I'm going to hell for this. Automatically update copyright year.
+   static const char *const copyright_text = []() {
+      static char temp[] = FC_ABSCENTER "Copyright YEAR Team Eternity et al.";
+      memcpy(temp + 11, &__DATE__[7], 4); // Overwrite YEAR in temp.
+      return temp;
+   }();
+
+   V_FontWriteText(menu_font_normal, copyright_text, 0, y, &subscreen43);
 }
 
 extern menuwidget_t helpscreen_widget; // actually just below...
 
-void MN_HelpDrawer()
+static void MN_HelpDrawer()
 {
    if(helpscreens[viewing_helpscreen].Drawer)
    {
@@ -518,7 +525,7 @@ void MN_HelpDrawer()
 // haleyjd 05/29/06: record state of menu activation
 static bool help_prev_menuactive;
 
-bool MN_HelpResponder(event_t *ev, int action)
+static bool MN_HelpResponder(event_t *ev, int action)
 {
    int *menuSounds = GameModeInfo->menuSounds;
    
@@ -566,7 +573,7 @@ cancel:
    return false;
 }
 
-menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, NULL, true};
+menuwidget_t helpscreen_widget = {MN_HelpDrawer, MN_HelpResponder, nullptr, true};
 
 CONSOLE_COMMAND(help, 0)
 {
@@ -610,7 +617,7 @@ int selected_colour;
 
 #define HIGHLIGHT_COLOUR (GameModeInfo->whiteIndex)
 
-void MN_MapColourDrawer()
+static void MN_MapColourDrawer()
 {
    patch_t *patch;
    int x, y;
@@ -653,7 +660,7 @@ void MN_MapColourDrawer()
    }
 }
 
-bool MN_MapColourResponder(event_t *ev, int action)
+static bool MN_MapColourResponder(event_t *ev, int action)
 {
    if(action == ka_menu_left)
       selected_colour--;
@@ -699,7 +706,7 @@ menuwidget_t colour_widget =
 {
    MN_MapColourDrawer, 
    MN_MapColourResponder,
-   NULL,
+   nullptr,
    true
 };
 
@@ -750,7 +757,7 @@ static menuwidget_t fonttest_widget =
 {
    MN_fontTestDrawer, 
    MN_fontTestResponder, 
-   NULL, 
+   nullptr,
    true
 };
 
