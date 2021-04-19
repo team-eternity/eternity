@@ -54,6 +54,7 @@
 #include "doomstat.h"
 #include "ev_specials.h"
 #include "m_qstr.h"
+#include "m_utils.h"
 #include "p_info.h"
 #include "p_mobj.h"
 #include "p_portal.h"
@@ -363,7 +364,7 @@ static void E_ParseArg(const char *str, int *dest)
 static unsigned int E_EDThingForRecordNum(int recnum)
 {
    unsigned int num;
-   int key = recnum % NUMMTCHAINS;
+   int key = M_PositiveModulo(recnum, NUMMTCHAINS);
 
    num = mapthing_chains[key];
    while(num != numEDMapThings && EDThings[num].recordnum != recnum)
@@ -478,7 +479,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
          I_Error("E_ProcessEDThings: duplicate record number %d\n", tempint);
 
       // hash this ExtraData mapthing record by its recordnum field
-      tempint = EDThings[i].recordnum % NUMMTCHAINS;
+      tempint = M_PositiveModulo(EDThings[i].recordnum, NUMMTCHAINS);
       EDThings[i].next = mapthing_chains[tempint];
       mapthing_chains[tempint] = i;
 
@@ -536,7 +537,7 @@ static void E_ProcessEDThings(cfg_t *cfg)
 static unsigned int E_EDLineForRecordNum(int recnum)
 {
    unsigned int num;
-   int key = recnum % NUMLDCHAINS;
+   int key = M_PositiveModulo(recnum, NUMLDCHAINS);
 
    num = linedef_chains[key];
    while(num != numEDLines && EDLines[num].recordnum != recnum)
@@ -1159,7 +1160,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
          I_Error("E_ProcessEDLines: duplicate record number %d\n", tempint);
 
       // hash this ExtraData linedef record by its recordnum field
-      tempint = EDLines[i].recordnum % NUMLDCHAINS;
+      tempint = M_PositiveModulo(EDLines[i].recordnum, NUMLDCHAINS);
       EDLines[i].next = linedef_chains[tempint];
       linedef_chains[tempint] = i;
 
@@ -1216,7 +1217,7 @@ static void E_ProcessEDLines(cfg_t *cfg)
 static unsigned int E_EDSectorForRecordNum(int recnum)
 {
    unsigned int num;
-   int key = recnum % NUMSECCHAINS;
+   int key = M_PositiveModulo(recnum, NUMSECCHAINS);
 
    num = sector_chains[key];
    while(num != numEDSectors && EDSectors[num].recordnum != recnum)
@@ -1295,7 +1296,7 @@ static void E_ProcessEDSectors(cfg_t *cfg)
          I_Error("E_ProcessEDSectors: duplicate record number %d\n", tempint);
 
       // hash this ExtraData sector record by its recordnum field
-      tempint = sec->recordnum % NUMSECCHAINS;
+      tempint = M_PositiveModulo(sec->recordnum, NUMSECCHAINS);
       sec->next = sector_chains[tempint];
       sector_chains[tempint] = i;
 
