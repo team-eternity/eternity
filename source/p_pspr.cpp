@@ -828,8 +828,11 @@ void A_WeaponReady(actionargs_t *actionargs)
    // according flag is set.
    if(player->readyweapon->readysound &&
       psp->state->index == player->readyweapon->readystate &&
-      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128))
+      (!(player->readyweapon->flags & WPF_READYSNDHALF) || M_VHereticPRandom(pr_wpnreadysnd) < 128) &&
+      !(player->readyweapon->intflags & WIF_SUPPRESSREADYSOUND))
+   {
       S_StartSoundName(player->mo, player->readyweapon->readysound);
+   }
 
    // WEAPON_FIXME: chainsaw particulars (haptic feedback)
    if(E_WeaponIsCurrentDEHNum(player, wp_chainsaw) && psp->state == states[E_SafeState(S_SAW)])

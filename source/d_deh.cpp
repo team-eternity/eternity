@@ -444,6 +444,17 @@ static const char *deh_weapon[] =
   "Ammo per shot",  // haleyjd 08/10/02: .ammopershot 
 };
 
+enum dehweaponid_e
+{
+   dehweaponid_ammoType,
+   dehweaponid_deselect,
+   dehweaponid_select,
+   dehweaponid_bobbing,
+   dehweaponid_shooting,
+   dehweaponid_firing,
+   dehweaponid_ammoPerShot,
+};
+
 // MISC - Dehacked block name = "Misc"
 // Usage: Misc 0
 // Always uses a zero in the dehacked file, for consistency.  No meaning.
@@ -1574,24 +1585,34 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
 
       weaponinfo_t &weaponinfo = *E_WeaponForDEHNum(indexnum);
       // haleyjd: resolution adjusted for EDF
-      if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
+      if(!strcasecmp(key, deh_weapon[dehweaponid_ammoType]))
       {
          if(value < 0 || value >= NUMAMMO)
             weaponinfo.ammo = nullptr; // no ammo
          else
             weaponinfo.ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
       }
-      else if(!strcasecmp(key, deh_weapon[1]))  // Deselect frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_deselect]))
          weaponinfo.upstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[2]))  // Select frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_select]))
          weaponinfo.downstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[3]))  // Bobbing frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_bobbing]))
+      {
          weaponinfo.readystate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[4]))  // Shooting frame
+         // Apply chainsaw replacement hack by suppressing ready sound
+         if(indexnum == wp_chainsaw)
+         {
+            if(weaponinfo.readystate == E_SafeState(S_SAW))
+               weaponinfo.intflags &= ~WIF_SUPPRESSREADYSOUND;
+            else
+               weaponinfo.intflags |= WIF_SUPPRESSREADYSOUND;
+         }
+      }
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_shooting]))
          weaponinfo.atkstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[5]))  // Firing frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_firing]))
          weaponinfo.flashstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[6])) // haleyjd: Ammo per shot
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_ammoPerShot]))
       {
          weaponinfo.ammopershot = value;
          // enable ammo per shot value usage for this weapon

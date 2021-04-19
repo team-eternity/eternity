@@ -63,6 +63,7 @@ enum wepinternalflags_e : uint8_t
 {
    WIF_HASSORTORDER = 0x01, // has had a sort order assigned to it
    WIF_INGLOBALSLOT = 0x02, // has been placed in the global weaponslots
+   WIF_SUPPRESSREADYSOUND = 0x04,   // for Dehacked chainsaw replacements
 };
 
 // Weapon info: sprite frames, ammunition use.
