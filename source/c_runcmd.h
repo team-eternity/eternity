@@ -185,8 +185,7 @@ struct variable_t;
 // haleyjd 04/21/10: support for vt_float
 //
 #define VARIABLE_FLOAT(name, defaultvar, min, max)           \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeDouble(&name, defaultvar, min, max);
 
 // basic variable_t creators for constants.
 
@@ -287,6 +286,12 @@ struct variable_t
    static variable_t makeBool(bool *target, bool *defaultTarget, const char **strings)
    {
       return { target, defaultTarget, vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // Floating point
+   static variable_t makeDouble(double *target, double *defaultTarget, double min, double max)
+   {
+      return { target, defaultTarget, vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
    }
 
 
