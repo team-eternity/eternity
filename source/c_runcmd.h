@@ -177,8 +177,7 @@ struct variable_t;
 // haleyjd: for actual C++ "bool" variables.
 //
 #define VARIABLE_TOGGLE(name, defaultvar, strings)           \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                   vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeBool(&name, defaultvar, strings);
 
 //
 // VARIABLE_FLOAT
@@ -282,6 +281,12 @@ struct variable_t
    static variable_t makeBoolInt(int *target, int *defaultTarget, const char **strings)
    {
       return { target, defaultTarget, vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // Real boolean
+   static variable_t makeBool(bool *target, bool *defaultTarget, const char **strings)
+   {
+      return { target, defaultTarget, vt_toggle, 0, 1, strings, 0, 0, nullptr, nullptr };
    }
 
 
