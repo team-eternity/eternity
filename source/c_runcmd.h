@@ -190,12 +190,10 @@ struct variable_t;
 // basic variable_t creators for constants.
 
 #define CONST_INT(name)                                      \
-        variable_t var_ ## name = { &name, nullptr,          \
-                  vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeConstInt(&name);
 
 #define CONST_STRING(name)                                   \
-        variable_t var_ ## name = { &name, nullptr,          \
-                  vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeConstString(&name);
 
 //=============================================================================
 //
@@ -292,6 +290,18 @@ struct variable_t
    static variable_t makeDouble(double *target, double *defaultTarget, double min, double max)
    {
       return { target, defaultTarget, vt_float, 0, 0, nullptr, min, max, nullptr, nullptr };
+   }
+
+   // Constants
+   template<typename T>
+   static variable_t makeConstInt(T *target)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, nullptr, vt_int, -1, -1, nullptr, 0, 0, nullptr, nullptr };
+   }
+   static variable_t makeConstString(char **target)
+   {
+      return { target, nullptr, vt_string, -1, -1, nullptr, 0, 0, nullptr, nullptr };
    }
 
 
