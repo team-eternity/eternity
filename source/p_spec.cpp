@@ -3467,7 +3467,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    }
 }
 
-VARIABLE_BOOLEAN(secret_notification_enabled, nullptr, onoff);
+VARIABLE_TOGGLE(secret_notification_enabled, nullptr, onoff);
 CONSOLE_VARIABLE(secret_notification, secret_notification_enabled, 0) {}
 
 #if 0

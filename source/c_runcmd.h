@@ -169,8 +169,7 @@ struct variable_t;
 // haleyjd 07/05/10: For real booleans, use vt_toggle type with VARIABLE_TOGGLE
 //
 #define VARIABLE_BOOLEAN(name, defaultvar, strings)          \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeBoolInt(&name, defaultvar, strings);
 
 //
 // VARIABLE_TOGGLE
@@ -278,6 +277,13 @@ struct variable_t
    {
       return { target, defaultTarget, vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr };
    }
+
+   // Boolean as int
+   static variable_t makeBoolInt(int *target, int *defaultTarget, const char **strings)
+   {
+      return { target, defaultTarget, vt_int, 0, 1, strings, 0, 0, nullptr, nullptr };
+   }
+
 
   void *variable;        // NB: for strings, this is char ** not char *
   void *v_default;       // the default 
