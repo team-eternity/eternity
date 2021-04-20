@@ -27,6 +27,7 @@
 
 #include "z_zone.h"
 
+#include "am_map.h"
 #include "c_io.h"
 #include "c_runcmd.h"
 #include "d_deh.h"
@@ -1623,6 +1624,8 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
          HU_DisableHUD();
          break;
       }
+      if(automapstate != amstate_off)
+         AM_UpdateWindowHeight(screenSize == 8);
    }
 }
 

@@ -26,6 +26,7 @@
 #ifndef __AMMAP_H__
 #define __AMMAP_H__
 
+#include "doomstat.h"
 #include "m_fixed.h"
 
 // Used by ST StatusBar stuff.
@@ -53,7 +54,9 @@ void AM_Stop(void);
 
 // killough 2/22/98: for saving automap information in savegame:
 
-void AM_Start();
+void AM_Start(amstate_t state);
+
+void AM_UpdateWindowHeight(bool fullscreen);
 
 //jff 4/16/98 make externally available
 

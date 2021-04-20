@@ -723,7 +723,7 @@ void AM_Stop()
 //
 // Passed nothing, returns nothing
 //
-void AM_Start()
+void AM_Start(amstate_t state)
 {
    static int lastlevel = -1, lastepisode = -1, 
               last_width = -1, last_height = -1,
@@ -731,6 +731,8 @@ void AM_Start()
    
    if(!stopped)
       AM_Stop();
+
+   automapstate = state;   // set the state here
 
    stopped = false;
    
@@ -755,6 +757,24 @@ void AM_Start()
 
    AM_initVariables();
    AM_loadPics();
+}
+
+//
+// Updates automap window height. Called when view is changed.
+//
+void AM_UpdateWindowHeight(bool fullscreen)
+{
+   if(automapstate != amstate_over)
+      return;
+   f_h = fullscreen ?
+      video.height : video.height - ((GameModeInfo->StatusBar->height *
+                                      video.yscale) >> FRACBITS);
+
+   m_h = FTOM(f_h);
+   m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
+
+   AM_changeWindowLoc();
+   old_m_h = m_h;
 }
 
 //
@@ -807,8 +827,7 @@ bool AM_Responder(const event_t *ev)
       switch(action)
       {
       case ka_map_toggle: // activate automap
-         automapstate = amstate_over;
-         AM_Start();
+         AM_Start(amstate_over);
          return true;
       default:
          return false;
@@ -902,8 +921,7 @@ bool AM_Responder(const event_t *ev)
       case ka_map_toggle: // deactivate map
          if(automapstate == amstate_over)
          {
-            automapstate = amstate_full;
-            AM_Start();
+            AM_Start(amstate_full);
          }
          else
          {

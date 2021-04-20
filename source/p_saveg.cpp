@@ -1009,7 +1009,7 @@ static void P_ArchiveMap(SaveArchive &arc)
    else
    {
       if(automapstate != amstate_off)
-         AM_Start();
+         AM_Start(automapstate);
 
       if(markpointnum)
       {
