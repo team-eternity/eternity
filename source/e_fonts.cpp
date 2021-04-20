@@ -79,6 +79,7 @@ constexpr const char ITEM_FONT_FILTER[] = "filter";
 constexpr const char ITEM_FONT_COLOR[]  = "colorable";
 constexpr const char ITEM_FONT_UPPER[]  = "uppercase";
 constexpr const char ITEM_FONT_CENTER[] = "blockcentered";
+constexpr const char ITEM_FONT_USPACE[] = "usespacesize";
 constexpr const char ITEM_FONT_POFFS[]  = "patchnumoffset";
 constexpr const char ITEM_FONT_COLORD[] = "defaultcolor";
 constexpr const char ITEM_FONT_COLORN[] = "normalcolor";
@@ -176,6 +177,7 @@ static cfg_opt_t color_opts[] =
    CFG_BOOL(ITEM_FONT_COLOR,  false,      CFGF_NONE), \
    CFG_BOOL(ITEM_FONT_UPPER,  false,      CFGF_NONE), \
    CFG_BOOL(ITEM_FONT_CENTER, false,      CFGF_NONE), \
+   CFG_BOOL(ITEM_FONT_USPACE, false,      CFGF_NONE), \
    CFG_BOOL(ITEM_FONT_REQUAN, false,      CFGF_NONE), \
                                                       \
    CFG_END()
@@ -473,7 +475,8 @@ static void E_LoadLinearFont(vfont_t *font, const char *name, int fmt,
    font->cy    = font->lsize;
    font->dw    = 0;
    font->absh  = font->lsize;
-   font->space = font->lsize;
+   if(!font->useSpaceSize)
+      font->space = font->lsize;
 
    // set flags
    font->centered = false; // not block-centered
@@ -862,6 +865,9 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // process blockcentered flag
    if(IS_SET(sec, ITEM_FONT_CENTER))
       font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
+
+   if(IS_SET(sec, ITEM_FONT_USPACE))
+      font->useSpaceSize = cfg_getbool(sec, ITEM_FONT_USPACE);
 
    // haleyjd 09/06/12: colors
    // default color

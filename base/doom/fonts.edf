@@ -229,8 +229,10 @@ font ee_bignumfont
 // Menu font - it's just the console font
 font ee_menufont
 {
-   id         5
-   linearlump CONCHARS
+   id           5
+   linearlump   CONCHARS
+   spacesize    4
+   usespacesize true
 }
 
 // Finale font - this is yet another copy of the smallfont, used by the finale.
