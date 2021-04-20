@@ -250,7 +250,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
            *GameModeInfo->menuStartMap &&
            W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
    {
-      G_DeferedInitNew((skill_t)defaultskill, GameModeInfo->menuStartMap);
+      G_DeferedInitNew(defaultskill, GameModeInfo->menuStartMap);
       MN_ClearMenus();
    }
    else

@@ -43,14 +43,14 @@ struct doomcom_t;
 struct doomdata_t;
 struct mapthing_t;
 
-typedef enum
+enum bfg_t : int
 {
   bfg_normal,
   bfg_classic,
   bfg_11k,
   bfg_bouncing, // haleyjd
   bfg_burst,    // haleyjd
-} bfg_t;
+};
 
 enum acceltype_e : int
 {
@@ -441,12 +441,12 @@ extern int forceFlipPan;
 // and deathmatch variables being used to mean multiple things
 // haleyjd 04/14/03: deathmatch type is now controlled via dmflags
 
-typedef enum
+enum gametype_t : int
 {
    gt_single,
    gt_coop,
    gt_dm,
-} gametype_t;
+};
 
 extern gametype_t GameType, DefaultGameType;
 

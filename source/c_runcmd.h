@@ -142,8 +142,7 @@ struct variable_t;
 // Simpler macro for int. You do not need to specify the type.
 //
 #define VARIABLE_INT(name, defaultvar, min, max, strings)    \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                        vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+        variable_t var_ ## name = variable_t::makeInt(&name, defaultvar, min, max, strings);
 
 //
 // VARIABLE_STRING
@@ -258,7 +257,23 @@ enum
 //
 
 struct variable_t
-{  
+{
+   // Static type-safe factories
+   template<typename T>
+   static variable_t makeInt(T *target, T *defaultTarget, int min, int max,
+                             const char **strings)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, defaultTarget, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+   // Stupid boilerplate though
+   template<typename T>
+   static variable_t makeInt(T *target, std::nullptr_t, int min, int max, const char **strings)
+   {
+      static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
+      return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+
   void *variable;        // NB: for strings, this is char ** not char *
   void *v_default;       // the default 
   int type;              // vt_?? variable type: int, string

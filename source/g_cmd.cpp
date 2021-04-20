@@ -449,7 +449,7 @@ VARIABLE_BOOLEAN(smooth_turning, nullptr,       onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
-int default_mouse_accel_type = ACCELTYPE_NONE;
+acceltype_e default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
 VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
              ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);

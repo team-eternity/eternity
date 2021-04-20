@@ -211,7 +211,7 @@ char savedescription[32];
 
 //jff 3/24/98 declare startskill external, define defaultskill here
 extern skill_t startskill;      //note 0-based
-int defaultskill;               //note 1-based
+skill_t defaultskill;           //note 1-based
 
 // killough 2/8/98: make corpse queue variable in size
 size_t bodyqueslot; 
@@ -3025,7 +3025,7 @@ void G_ReloadDefaults()
    //jff 3/24/98 set startskill from defaultskill in config file, unless
    // it has already been set by a -skill parameter
    if(startskill == sk_none)
-      startskill = (skill_t)(defaultskill - 1);
+      startskill = static_cast<skill_t>(defaultskill - 1);
    
    demoplayback = false;
    singledemo = false; // haleyjd: restore from MBF
