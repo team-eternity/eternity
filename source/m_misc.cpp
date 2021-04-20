@@ -322,10 +322,10 @@ default_t defaults[] =
    DEFAULT_INT("smooth_turning", &smooth_turning, nullptr, 0, 0, 1, default_t::wad_no,
                "average mouse input when turning player"),
 
-   DEFAULT_INT("sfx_volume", &snd_SfxVolume, nullptr, 8, 0, 15, default_t::wad_no,
+   DEFAULT_INT("sfx_volume", &snd_SfxVolume, nullptr, 8, 0, SND_MAXVOLUME, default_t::wad_no,
                "adjust sound effects volume"),
 
-   DEFAULT_INT("music_volume", &snd_MusicVolume, nullptr, 8, 0, 15, default_t::wad_no,
+   DEFAULT_INT("music_volume", &snd_MusicVolume, nullptr, 8, 0, SND_MAXVOLUME, default_t::wad_no,
                "adjust music volume"),
 
    DEFAULT_INT("show_messages", &showMessages, nullptr, 1, 0, 1, default_t::wad_no,
