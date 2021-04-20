@@ -150,8 +150,7 @@ struct variable_t;
 // Simplified to create strings: 'max' is the maximum string length
 //
 #define VARIABLE_STRING(name, defaultvar, max)               \
-        variable_t var_ ## name = { &name, defaultvar,       \
-                  vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr};
+        variable_t var_ ## name = variable_t::makeString(&name, defaultvar, max);
 
 //
 // VARIABLE_CHARARRAY
@@ -272,6 +271,12 @@ struct variable_t
    {
       static_assert(sizeof(T) == sizeof(int), "Type T must be int-like");
       return { target, nullptr, vt_int, min, max, strings, 0, 0, nullptr, nullptr };
+   }
+
+   // String variable factory
+   static variable_t makeString(char **target, char **defaultTarget, int max)
+   {
+      return { target, defaultTarget, vt_string, 0, max, nullptr, 0, 0, nullptr, nullptr };
    }
 
   void *variable;        // NB: for strings, this is char ** not char *
