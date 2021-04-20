@@ -152,7 +152,7 @@ int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
 int             automlook = false;
 int             smooth_turning = 0;   // sf
-int             novert;               // haleyjd
+int             mouse_vert;               // haleyjd
 
 // sf: moved sensitivity here
 double          mouseSensitivity_horiz;   // has default   //  killough
@@ -211,7 +211,7 @@ char savedescription[32];
 
 //jff 3/24/98 declare startskill external, define defaultskill here
 extern skill_t startskill;      //note 0-based
-int defaultskill;               //note 1-based
+skill_t defaultskill;           //note 1-based
 
 // killough 2/8/98: make corpse queue variable in size
 size_t bodyqueslot; 
@@ -613,7 +613,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          sendcenterview = true;
 
       // haleyjd 10/24/08: novert support
-      if(!novert)
+      // MaxW: It's now mouse_vert
+      if(mouse_vert)
          forward += (int)tmousey;
    }
    prevmlook = mlook;
@@ -3024,7 +3025,7 @@ void G_ReloadDefaults()
    //jff 3/24/98 set startskill from defaultskill in config file, unless
    // it has already been set by a -skill parameter
    if(startskill == sk_none)
-      startskill = (skill_t)(defaultskill - 1);
+      startskill = static_cast<skill_t>(defaultskill - 1);
    
    demoplayback = false;
    singledemo = false; // haleyjd: restore from MBF

@@ -434,7 +434,7 @@ CONSOLE_VARIABLE(hu_overlaystyle, hud_overlaylayout, 0) {}
 VARIABLE_BOOLEAN(hud_hidestatus, nullptr, yesno);
 CONSOLE_VARIABLE(hu_hidesecrets, hud_hidestatus, 0) {}
 
-VARIABLE_BOOLEAN(hud_restrictoverlaywidth, nullptr, yesno);
+VARIABLE_TOGGLE(hud_restrictoverlaywidth, nullptr, yesno);
 CONSOLE_VARIABLE(hu_restrictoverlaywidth, hud_restrictoverlaywidth, cf_buffered)
 {
    V_InitSubScreenModernHUD();

@@ -43,14 +43,14 @@ struct doomcom_t;
 struct doomdata_t;
 struct mapthing_t;
 
-typedef enum
+enum bfg_t : int
 {
   bfg_normal,
   bfg_classic,
   bfg_11k,
   bfg_bouncing, // haleyjd
   bfg_burst,    // haleyjd
-} bfg_t;
+};
 
 enum amstate_t
 {
@@ -226,10 +226,13 @@ extern  bool deathmatch;
 //  but are not (yet) supported with Linux
 //  (e.g. no sound volume adjustment with menu.
 
+// Maximum value for any volume
+constexpr int SND_MAXVOLUME = 15;
+
 // These are not used, but should be (menu).
 // From m_menu.c:
-//  Sound FX volume has default, 0 - 15
-//  Music volume has default, 0 - 15
+//  Sound FX volume has default, 0 - SND_MAXVOLUME
+//  Music volume has default, 0 - SND_MAXVOLUME
 // These are multiplied by 8.
 extern int snd_SfxVolume;      // maximum volume for sound
 extern int snd_MusicVolume;    // maximum volume for music
@@ -445,12 +448,12 @@ extern int forceFlipPan;
 // and deathmatch variables being used to mean multiple things
 // haleyjd 04/14/03: deathmatch type is now controlled via dmflags
 
-typedef enum
+enum gametype_t : int
 {
    gt_single,
    gt_coop,
    gt_dm,
-} gametype_t;
+};
 
 extern gametype_t GameType, DefaultGameType;
 

@@ -964,7 +964,7 @@ void HUDCrossHairWidget::drawer()
    if(!crosshair_scale)
    {
       drawx  = (video.width  + 1 - w) / 2;
-      drawy  = (video.height + 1 - h) / 2;
+      drawy  = viewwindow.y + (viewwindow.height + 1 - h) / 2;
       buffer = &vbscreenfullres;
    }
    else

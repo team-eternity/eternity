@@ -250,7 +250,7 @@ CONSOLE_COMMAND(mn_newgame, 0)
            *GameModeInfo->menuStartMap &&
            W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
    {
-      G_DeferedInitNew((skill_t)defaultskill, GameModeInfo->menuStartMap);
+      G_DeferedInitNew(defaultskill, GameModeInfo->menuStartMap);
       MN_ClearMenus();
    }
    else
@@ -1988,7 +1988,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "No vertical mouse movement",    "mouse_novert"   },
+   {it_toggle,     "Vertical mouse movement",       "mouse_vert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif

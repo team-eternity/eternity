@@ -109,7 +109,7 @@ extern int mouseb_dblc2;  // causes a use action
 
 //extern angle_t consoleangle;
 
-extern int  defaultskill;     // jff 3/24/98 default skill
+extern skill_t defaultskill;     // jff 3/24/98 default skill
 extern bool haswolflevels;    // jff 4/18/98 wolf levels present
 extern bool demorecording;    // killough 12/98
 extern bool forced_loadgame;
@@ -136,7 +136,7 @@ extern bool scriptSecret;   // haleyjd
 
 extern bool sendpause;
 
-extern int novert; // haleyjd
+extern int mouse_vert; // haleyjd
 extern int smooth_turning;
 
 #define VERSIONSIZE   16

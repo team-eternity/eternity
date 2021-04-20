@@ -316,16 +316,16 @@ default_t defaults[] =
                  "amount of mouse acceleration to apply (custom acceleration mode only)"),
 
    // haleyjd 10/24/08
-   DEFAULT_INT("mouse_novert", &novert, nullptr, 0, 0, 1, default_t::wad_no,
-               "0 for normal mouse, 1 for no vertical movement"),
+   DEFAULT_INT("mouse_vert", &mouse_vert, nullptr, 0, 0, 1, default_t::wad_no,
+               "0 for no vertical movement, 1 for vertical movement"),
 
    DEFAULT_INT("smooth_turning", &smooth_turning, nullptr, 0, 0, 1, default_t::wad_no,
                "average mouse input when turning player"),
 
-   DEFAULT_INT("sfx_volume", &snd_SfxVolume, nullptr, 8, 0, 15, default_t::wad_no,
+   DEFAULT_INT("sfx_volume", &snd_SfxVolume, nullptr, 8, 0, SND_MAXVOLUME, default_t::wad_no,
                "adjust sound effects volume"),
 
-   DEFAULT_INT("music_volume", &snd_MusicVolume, nullptr, 8, 0, 15, default_t::wad_no,
+   DEFAULT_INT("music_volume", &snd_MusicVolume, nullptr, 8, 0, SND_MAXVOLUME, default_t::wad_no,
                "adjust music volume"),
 
    DEFAULT_INT("show_messages", &showMessages, nullptr, 1, 0, 1, default_t::wad_no,

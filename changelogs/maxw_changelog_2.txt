@@ -94,6 +94,19 @@ be toggled on/off with the cvar "hu_restrictoverlaywidth".
 2021/04/02
 Fixed screen going black when streaming on Discord.
 
+--------------------------------------------------------------------------------
+2021/04/17
+Allowed certain OPTIONS to be read at startup.
+
+--------------------------------------------------------------------------------
+2021/04/17
+Fixed Chainsaw and Fist not being switched away from if dehacked made them use
+ammo.
+
+--------------------------------------------------------------------------------
+2021/04/19
+Made the menus use the console font by default.
+
 ================================================================================
 EOF
 ================================================================================
