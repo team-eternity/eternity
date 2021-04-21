@@ -26,7 +26,6 @@
 #ifndef __AMMAP_H__
 #define __AMMAP_H__
 
-#include "doomstat.h"
 #include "m_fixed.h"
 
 // Used by ST StatusBar stuff.
