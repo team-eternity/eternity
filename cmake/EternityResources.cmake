@@ -17,31 +17,21 @@
 ##
 
 function(eternity_build_resources TARGET)
-   file(GLOB_RECURSE ETERNITY_DOOM_RESOURCES    "${CMAKE_SOURCE_DIR}/base/doom/res/*"   )
-   file(GLOB_RECURSE ETERNITY_HERETIC_RESOURCES "${CMAKE_SOURCE_DIR}/base/heretic/res/*")
+  foreach(GAME IN ITEMS "doom" "heretic")
+    file(GLOB_RECURSE ETERNITY_GAME_RESOURCES "${CMAKE_SOURCE_DIR}/base/${GAME}/res/*")
 
-  add_custom_command(OUTPUT "${CMAKE_SOURCE_DIR}/base/doom/eternity.pke"
-    COMMAND "${CMAKE_COMMAND}" -E tar "cvf" "${CMAKE_SOURCE_DIR}/base/doom/eternity.pke" --format=zip "./"
-    DEPENDS ${ETERNITY_DOOM_RESOURCES}
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/base/doom/res"
-  )
-  add_custom_command(OUTPUT "${CMAKE_SOURCE_DIR}/base/heretic/eternity.pke"
-    COMMAND "${CMAKE_COMMAND}" -E tar "cvf" "${CMAKE_SOURCE_DIR}/base/heretic/eternity.pke" --format=zip "./"
-    DEPENDS ${ETERNITY_HERETIC_RESOURCES}
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/base/heretic/res"
-  )
+    add_custom_command(OUTPUT "${CMAKE_SOURCE_DIR}/base/${GAME}/eternity.pke"
+      COMMAND "${CMAKE_COMMAND}" -E tar "cvf" "${CMAKE_SOURCE_DIR}/base/${GAME}/eternity.pke" --format=zip "./"
+      DEPENDS ${ETERNITY_GAME_RESOURCES}
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/base/${GAME}/res"
+    )
 
-  source_group("Resource Files\\base\\doom"    FILES "${CMAKE_SOURCE_DIR}/base/doom/eternity.pke"   )
-  source_group("Resource Files\\base\\heretic" FILES "${CMAKE_SOURCE_DIR}/base/heretic/eternity.pke")
+    source_group("Resource Files\\base\\${GAME}" FILES "${CMAKE_SOURCE_DIR}/base/${GAME}/eternity.pke")
 
-  target_sources(${TARGET} PRIVATE
-    "${CMAKE_SOURCE_DIR}/base/doom/eternity.pke"
-    "${CMAKE_SOURCE_DIR}/base/heretic/eternity.pke"
-  )
-
-  #add_custom_command(TARGET ${TARGET} POST_BUILD
-  #  COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/user" "$<TARGET_FILE_DIR:${TARGET}>/user"
-  #  VERBATIM)
+    target_sources(${TARGET} PRIVATE
+      "${CMAKE_SOURCE_DIR}/base/${GAME}/eternity.pke"
+    )
+  endforeach()
 endfunction()
 
 # EOF
