@@ -16,6 +16,8 @@
 ## Boston, MA  02110-1301  USA
 ##
 
+include(EternityResources)
+
 function(eternity_copy_libs TARGET)
   set(ETERNITY_DLLS "")
 
@@ -71,6 +73,8 @@ function(eternity_copy_libs TARGET)
 endfunction()
 
 function(eternity_copy_base_and_user TARGET)
+  eternity_build_resources(${TARGET})
+
   add_custom_command(TARGET ${TARGET} POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/base" "$<TARGET_FILE_DIR:${TARGET}>/base"
     VERBATIM)

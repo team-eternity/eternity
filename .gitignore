@@ -29,6 +29,7 @@ vc2017/Debug/
 *.framework.version.txt
 base/*.bak
 base/system.cfg
+base/doom/eternity.pke
 base/doom/keys.csc
 base/doom/Eternity.cfg
 base/doom/tranmap.dat
@@ -41,6 +42,7 @@ base/doom2/*.dsg
 base/hacx/tranmap.dat
 base/hacx/keys.csc
 base/hacx/*.dsg
+base/heretic/eternity.pke
 base/heretic/*.dat
 base/heretic/*.dsg
 base/heretic/Eternity.cfg
