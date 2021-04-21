@@ -3476,6 +3476,7 @@ static menuitem_t mn_automapkeys_items[] =
    {it_binding, "Mark spot",            "map_mark"},
    {it_binding, "Clear spots",          "map_clear"},
    {it_binding, "Show grid",            "map_grid"},
+   {it_binding, "Overlay mode",         "map_overlay"},
    {it_end}
 };
 
