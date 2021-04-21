@@ -18,6 +18,7 @@
 ##
 
 include(EternityCopyFiles)
+include(EternityMacProperties)
 
 ################################################################################
 ######################### Set Project Source  ##################################
@@ -763,13 +764,7 @@ target_include_directories(eternity PRIVATE ${SDL2_INCLUDE_DIR} ${SDL2_MIXER_INC
 target_link_libraries(eternity ${SDL2_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_NET_LIBRARY} acsvm png_static snes_spc ADLMIDI_static)
 
 if(APPLE)
-   # This is needed to be able to archive (produce) release builds in Xcode!
-   # https://stackoverflow.com/a/30328846/11738219
-   set_target_properties(acsvm PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-   set_target_properties(ADLMIDI_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-   set_target_properties(png_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-   set_target_properties(snes_spc PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-   set_target_properties(zlibstatic PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+   eternity_set_mac_library_output()
 endif()
 
 if(OPENGL_LIBRARY)
@@ -805,35 +800,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   target_link_libraries(eternity version)
 endif()
 if(APPLE)
-   set_target_properties(
-      eternity PROPERTIES
-      XCODE_ATTRIBUTE_CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING   YES
-      XCODE_ATTRIBUTE_CLANG_WARN_BOOL_CONVERSION               YES
-      XCODE_ATTRIBUTE_CLANG_WARN_CONSTANT_CONVERSION           YES
-      XCODE_ATTRIBUTE_CLANG_WARN_EMPTY_BODY                    YES
-      XCODE_ATTRIBUTE_CLANG_WARN_ENUM_CONVERSION               YES
-      XCODE_ATTRIBUTE_CLANG_WARN_INFINITE_RECURSION            YES
-      XCODE_ATTRIBUTE_CLANG_WARN_INT_CONVERSION                YES
-      XCODE_ATTRIBUTE_CLANG_WARN_NON_LITERAL_NULL_CONVERSION   YES
-      XCODE_ATTRIBUTE_CLANG_WARN_STRICT_PROTOTYPES             YES
-      XCODE_ATTRIBUTE_CLANG_WARN_UNGUARDED_AVAILABILITY        YES_AGGRESSIVE
-      XCODE_ATTRIBUTE_CLANG_WARN_UNREACHABLE_CODE              YES
-      XCODE_ATTRIBUTE_GCC_WARN_64_TO_32_BIT_CONVERSION         YES
-      XCODE_ATTRIBUTE_GCC_WARN_ABOUT_RETURN_TYPE               YES_ERROR
-      XCODE_ATTRIBUTE_GCC_WARN_UNINITIALIZED_AUTOS             YES_AGGRESSIVE
-      XCODE_ATTRIBUTE_GCC_WARN_UNUSED_FUNCTION                 YES
-      XCODE_ATTRIBUTE_GCC_WARN_UNUSED_VARIABLE                 YES
-
-      XCODE_ATTRIBUTE_CLANG_WARN_RANGE_LOOP_ANALYSIS           YES
-      XCODE_ATTRIBUTE_CLANG_WARN_SUSPICIOUS_MOVE               YES
-
-      XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS                  "@executable_path"
-
-      XCODE_ATTRIBUTE_FRAMEWORK_SEARCH_PATHS                   "\"${CMAKE_BINARY_DIR}\""
-      XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME                  YES
-
-      XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS ${CMAKE_SOURCE_DIR}/macosx/eternity/eternity.entitlements
-   )
+   eternity_set_xcode_attributes(eternity)
 endif()
 
 install(TARGETS eternity
