@@ -2360,12 +2360,10 @@ void AM_Drawer()
       return;
 
    if(!automap_overlay)
-   {
       AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
    
-      if(automap_grid)                 // killough 2/28/98: change var name
-         AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
-   }
+   if(automap_grid)                 // killough 2/28/98: change var name
+      AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
 
    AM_drawWalls();
 
