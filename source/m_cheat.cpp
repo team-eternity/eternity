@@ -512,8 +512,8 @@ static void cheat_massacre(const void *arg)
 static void cheat_ddt(const void *arg)
 {
    extern int ddt_cheating;
-   extern amstate_t automapstate;
-   if(automapstate != amstate_off)
+   extern bool automapactive;
+   if(automapactive)
       ddt_cheating = (ddt_cheating + 1) % 3;
 }
 

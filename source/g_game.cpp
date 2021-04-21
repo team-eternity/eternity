@@ -872,8 +872,9 @@ bool G_Responder(const event_t* ev)
 
       if(!walkcam_active) // if so, we need to go on below
       {
+         // TODO: check overlay mode (!automap or overlay)
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
-            !consoleactive && automapstate != amstate_full &&
+            !consoleactive && !automapactive &&
             (ev->type == ev_keydown || (ev->type == ev_mouse && ev->data1)))
          {
             // popup menu
@@ -1840,7 +1841,7 @@ static void G_DoCompleted()
    // clear hubs now
    P_ClearHubs();
    
-   if(automapstate != amstate_off)
+   if(automapactive)
       AM_Stop();
 
    if(LevelInfo.finaleEarly && G_doFinale())
@@ -1926,7 +1927,7 @@ static void G_DoCompleted()
    }
   
    gamestate = GS_INTERMISSION;
-   automapstate = amstate_off;
+   automapactive = false;
    
    if(statcopy)
       memcpy(statcopy, &wminfo, sizeof(wminfo));
@@ -3273,7 +3274,7 @@ void G_InitNew(skill_t skill, const char *name)
    
    //G_StopDemo();
    
-   automapstate = amstate_off;
+   automapactive = false;
    gameskill = skill;
 
    G_SetGameMapName(name);

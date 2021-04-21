@@ -52,13 +52,6 @@ enum bfg_t : int
   bfg_burst,    // haleyjd
 };
 
-enum amstate_t
-{
-   amstate_off,
-   amstate_over,
-   amstate_full
-};
-
 enum acceltype_e : int
 {
    ACCELTYPE_NONE,
@@ -257,7 +250,7 @@ extern int snd_DesiredSfxDevice;
 //  status bar explicitely.
 extern  bool statusbaractive;
 
-extern  amstate_t automapstate; // In AutoMap mode?
+extern  bool automapactive; // In AutoMap mode?
 extern  bool menuactive;    // Menu overlayed?
 extern  int  paused;        // Game Pause?
 extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display

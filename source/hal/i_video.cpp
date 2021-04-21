@@ -568,8 +568,8 @@ static void I_ResetScreen()
    // reset other modules
    
    // Reset automap dimensions
-   if(automapstate != amstate_off)
-      AM_Start(automapstate);
+   if(automapactive)
+      AM_Start();
    
    // Reset palette
    ST_Start();

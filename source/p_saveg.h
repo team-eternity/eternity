@@ -47,7 +47,7 @@ protected:
    OutBuffer *savefile;        // valid when saving
    InBuffer  *loadfile;        // valid when loading
 
-   static constexpr int WRITE_SAVE_VERSION = 6; // Version of saves that EE writes
+   static constexpr int WRITE_SAVE_VERSION = 5; // Version of saves that EE writes
    int read_save_version;                       // Version of currently-read save
 
 

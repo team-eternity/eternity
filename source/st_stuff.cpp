@@ -1093,15 +1093,17 @@ void ST_Drawer(bool fullscreen)
    // haleyjd: test whether fullscreen graphical hud is enabled
    bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
-   st_statusbaron  = !fullscreen || automapstate == amstate_full || fshud;
-   st_backgroundon = !fullscreen || automapstate == amstate_full;
+   // TODO: check overlay mode (automapactive && !overlay)
+   st_statusbaron  = !fullscreen || automapactive || fshud;
+   st_backgroundon = !fullscreen || automapactive;
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
    // sf: draw nothing in fullscreen
    // tiny bit faster and also removes the problem of status bar
    // percent '%' signs being drawn in fullscreen
-   if(fullscreen && automapstate != amstate_full)
+   // TODO: check overlay mode (!automapactive || overlay)
+   if(fullscreen && !automapactive)
    {
       // haleyjd: call game mode's fullscreen drawer when 
       // hud is enabled and hud_overlaystyle is "graphical"

@@ -219,7 +219,7 @@ int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 
 int automap_grid = 0;
 
-amstate_t automapstate = amstate_off;
+bool automapactive = false;
 
 // location of window on screen
 static int  f_x;
@@ -537,8 +537,7 @@ static void AM_initVariables()
 {
    int pnum;   
 
-   if(automapstate == amstate_off)
-      automapstate = amstate_full;
+   automapactive = true;
 
    // haleyjd: need to redraw the backscreen?
    am_needbackscreen = (vbscreen.getVirtualAspectRatio() > 4*FRACUNIT/3);
@@ -706,7 +705,7 @@ static void AM_LevelInit()
 void AM_Stop()
 {  
    AM_unloadPics();
-   automapstate = amstate_off;
+   automapactive = false;
    am_needbackscreen = false;
    ST_AutomapEvent(AM_MSGEXITED);
    stopped = true;
@@ -723,7 +722,7 @@ void AM_Stop()
 //
 // Passed nothing, returns nothing
 //
-void AM_Start(amstate_t state)
+void AM_Start()
 {
    static int lastlevel = -1, lastepisode = -1, 
               last_width = -1, last_height = -1,
@@ -731,8 +730,6 @@ void AM_Start(amstate_t state)
    
    if(!stopped)
       AM_Stop();
-
-   automapstate = state;   // set the state here
 
    stopped = false;
    
@@ -751,9 +748,11 @@ void AM_Start(amstate_t state)
       lastlevel = gamemap;
       lastepisode = gameepisode;
    }
-   f_h = automapstate == amstate_over && scaledwindow.height == SCREENHEIGHT ?
-   video.height : video.height - ((GameModeInfo->StatusBar->height *
-                                   video.yscale) >> FRACBITS);
+
+   // TODO: check overlay state here
+//   f_h = automapstate == amstate_over && scaledwindow.height == SCREENHEIGHT ?
+//   video.height : video.height - ((GameModeInfo->StatusBar->height *
+//                                   video.yscale) >> FRACBITS);
 
    AM_initVariables();
    AM_loadPics();
@@ -764,8 +763,9 @@ void AM_Start(amstate_t state)
 //
 void AM_UpdateWindowHeight(bool fullscreen)
 {
-   if(automapstate != amstate_over)
-      return;
+   // TODO: check the overlay state here
+//   if(automapstate != amstate_over)
+//      return;
    f_h = fullscreen ?
       video.height : video.height - ((GameModeInfo->StatusBar->height *
                                       video.yscale) >> FRACBITS);
@@ -819,7 +819,7 @@ bool AM_Responder(const event_t *ev)
    // haleyjd 07/07/04: dynamic bindings
    int action = G_KeyResponder(ev, kac_map);
 
-   if(automapstate == amstate_off)
+   if(!automapactive)
    {
       if(ev->type != ev_keydown)
          return false;
@@ -827,7 +827,7 @@ bool AM_Responder(const event_t *ev)
       switch(action)
       {
       case ka_map_toggle: // activate automap
-         AM_Start(amstate_over);
+         AM_Start();
          return true;
       default:
          return false;
@@ -869,7 +869,8 @@ bool AM_Responder(const event_t *ev)
       switch(action)
       {
       case ka_map_right: // pan right
-         if(automapstate == amstate_full && !followplayer)
+         // TODO: check overlay mode
+         if(!followplayer)
          {
             m_paninc.x = FTOM(HORZ_PAN_SCALE(F_PANINC));
             return true;
@@ -877,7 +878,8 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_left: // pan left
-         if(automapstate == amstate_full && !followplayer)
+         // TODO: check overlay mode
+         if(!followplayer)
          {
             m_paninc.x = -FTOM(HORZ_PAN_SCALE(F_PANINC));
             return true;
@@ -885,7 +887,8 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_up: // pan up
-         if(automapstate == amstate_full && !followplayer)
+         // TODO: check overlay mode
+         if(!followplayer)
          {
             m_paninc.y = FTOM(VERT_PAN_SCALE(F_PANINC));
             return true;
@@ -893,7 +896,8 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_down: // pan down
-         if(automapstate == amstate_full && !followplayer)
+         // TODO: check overlay mode
+         if(!followplayer)
          {
             m_paninc.y = -FTOM(VERT_PAN_SCALE(F_PANINC));
             return true;
@@ -901,7 +905,8 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_zoomout: // zoom out
-         if(automapstate == amstate_full)
+         // TODO: check overlay mode
+//         if(automapstate == amstate_full)
          {
             mtof_zoommul = M_ZOOMOUT;
             ftom_zoommul = M_ZOOMIN;
@@ -910,7 +915,8 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_zoomin: // zoom in
-         if(automapstate == amstate_full)
+         // TODO: check overlay mode
+//         if(automapstate == amstate_full)
          {
             mtof_zoommul = M_ZOOMIN;
             ftom_zoommul = M_ZOOMOUT;
@@ -919,20 +925,14 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_toggle: // deactivate map
-         if(automapstate == amstate_over)
-         {
-            AM_Start(amstate_full);
-         }
-         else
-         {
-            bigstate = 0;
-            AM_Stop();
-         }
+         bigstate = 0;
+         AM_Stop();
          return true;
 
       case ka_map_gobig: // "go big"
-         if(automapstate != amstate_full)
-            return false;
+         // TODO: check overlay mode
+//         if(automapstate != amstate_full)
+//            return false;
          bigstate = !bigstate;
          if(bigstate)
          {
@@ -944,8 +944,9 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_follow: // toggle follow mode
-         if(automapstate != amstate_full)
-            return false;
+         // TODO: check overlay mode
+//         if(automapstate != amstate_full)
+//            return false;
          followplayer = !followplayer;
          f_oldloc.x = D_MAXINT;
          // Ty 03/27/98 - externalized
@@ -954,8 +955,9 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_grid: // toggle grid
-         if(automapstate != amstate_full)
-            return false;
+         // TODO: check overlay mode
+//         if(automapstate != amstate_full)
+//            return false;
          automap_grid = !automap_grid; // killough 2/28/98
          // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
@@ -963,8 +965,9 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_mark: // mark a spot
-         if(automapstate != amstate_full)
-            return false;
+         // TODO: check overlay mode
+//         if(automapstate != amstate_full)
+//            return false;
          // Ty 03/27/98 - *not* externalized
          // sf: fixed this (buffer at start, presumably from an old sprintf
          doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
@@ -972,8 +975,9 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_clear: // clear all marked spots
-         if(automapstate != amstate_full)
-            return false;
+         // TODO: check overlay mode
+//         if(automapstate != amstate_full)
+//            return false;
          AM_clearMarks();  // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
          return true;
@@ -1061,15 +1065,16 @@ void AM_Coordinates(const Mobj *mo, fixed_t &x, fixed_t &y, fixed_t &z)
 //
 void AM_Ticker()
 {
-   if(automapstate == amstate_off)
+   if(!automapactive)
       return;
    
    amclock++;
 
    double oldmx = m_x + m_w / 2;
    double oldmy = m_y + m_h / 2;
-   
-   if(followplayer || automapstate == amstate_over)
+
+   // TODO: check overlay mode
+   if(followplayer/* || automapstate == amstate_over*/)
       AM_doFollowPlayer();
    
    // Change the zoom if necessary
@@ -2376,10 +2381,11 @@ inline static void AM_drawCrosshair(int color)
 //
 void AM_Drawer()
 {
-   if(automapstate == amstate_off)
+   if(!automapactive)
       return;
 
-   if(automapstate == amstate_full)
+   // TODO: check overlay mode
+//   if(automapstate == amstate_full)
    {
       AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
    

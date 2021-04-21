@@ -996,9 +996,7 @@ static void P_ArchiveRNG(SaveArchive &arc)
 //
 static void P_ArchiveMap(SaveArchive &arc)
 {
-   int8_t amactive = (int8_t)automapstate;
-
-   arc << amactive << followplayer << automap_grid << markpointnum;
+   arc << automapactive << followplayer << automap_grid << markpointnum;
 
    if(arc.isSaving())
    {
@@ -1008,13 +1006,8 @@ static void P_ArchiveMap(SaveArchive &arc)
    }
    else
    {
-      if(arc.saveVersion() <= 5)
-         automapstate = amactive ? amstate_full : amstate_off;
-      else
-         automapstate = (amstate_t)amactive;
-
-      if(automapstate != amstate_off)
-         AM_Start(automapstate);
+      if(automapactive)
+         AM_Start();
 
       if(markpointnum)
       {

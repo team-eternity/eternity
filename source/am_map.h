@@ -54,7 +54,7 @@ void AM_Stop(void);
 
 // killough 2/22/98: for saving automap information in savegame:
 
-void AM_Start(amstate_t state);
+void AM_Start();
 
 void AM_UpdateWindowHeight(bool fullscreen);
 

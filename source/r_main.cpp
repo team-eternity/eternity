@@ -1624,7 +1624,7 @@ CONSOLE_VARIABLE(screensize, screenSize, cf_buffered)
          HU_DisableHUD();
          break;
       }
-      if(automapstate != amstate_off)
+      if(automapactive)
          AM_UpdateWindowHeight(screenSize == 8);
    }
 }
