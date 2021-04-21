@@ -389,7 +389,7 @@ void HU_OverlayDraw(int &leftoffset, int &rightoffset)
    // SoM 2-4-04: ANYRES
    leftoffset = 0;
    rightoffset = 0;
-   if(viewwindow.height != video.height || automapactive || !hud_enabled)
+   if(viewwindow.height != video.height || (automapactive && !automap_overlay) || !hud_enabled)
       return;  // fullscreen only
 
    HU_overlaySetup();

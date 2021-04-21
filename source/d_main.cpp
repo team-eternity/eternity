@@ -545,8 +545,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      // TODO: check overlay mode, (automapactive && !overlay)
-      if(scaledwindow.height != SCREENHEIGHT || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || (automapactive && !automap_overlay))
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -604,8 +603,7 @@ static void D_Display()
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
 
-         // TODO: check overlay mode (and !overlay)
-         if(automapactive)
+         if(automapactive && !automap_overlay)
          {
             AM_Drawer();
          }
@@ -613,8 +611,7 @@ static void D_Display()
          {
             R_DrawViewBorder();    // redraw border
             R_RenderPlayerView(&players[displayplayer], camera);
-            // TODO: check overlay mode (and YES overlay)
-            if(automapactive)
+            if(automapactive && automap_overlay)
                AM_Drawer();
          }
          
@@ -654,8 +651,7 @@ static void D_Display()
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
 
-         // TODO: check overlay mode (and !overlay)
-         int y = 4 + (automapactive ? 0 : scaledwindow.y);
+         int y = 4 + (automapactive && !automap_overlay ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }

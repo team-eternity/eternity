@@ -220,6 +220,7 @@ int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 int automap_grid = 0;
 
 bool automapactive = false;
+bool automap_overlay;
 
 // location of window on screen
 static int  f_x;
@@ -749,10 +750,9 @@ void AM_Start()
       lastepisode = gameepisode;
    }
 
-   // TODO: check overlay state here
-//   f_h = automapstate == amstate_over && scaledwindow.height == SCREENHEIGHT ?
-//   video.height : video.height - ((GameModeInfo->StatusBar->height *
-//                                   video.yscale) >> FRACBITS);
+   f_h = automap_overlay && scaledwindow.height == SCREENHEIGHT ?
+      video.height : video.height - ((GameModeInfo->StatusBar->height *
+                                      video.yscale) >> FRACBITS);
 
    AM_initVariables();
    AM_loadPics();
@@ -763,9 +763,8 @@ void AM_Start()
 //
 void AM_UpdateWindowHeight(bool fullscreen)
 {
-   // TODO: check the overlay state here
-//   if(automapstate != amstate_over)
-//      return;
+   if(!automap_overlay)
+      return;
    f_h = fullscreen ?
       video.height : video.height - ((GameModeInfo->StatusBar->height *
                                       video.yscale) >> FRACBITS);
@@ -869,7 +868,6 @@ bool AM_Responder(const event_t *ev)
       switch(action)
       {
       case ka_map_right: // pan right
-         // TODO: check overlay mode
          if(!followplayer)
          {
             m_paninc.x = FTOM(HORZ_PAN_SCALE(F_PANINC));
@@ -878,7 +876,6 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_left: // pan left
-         // TODO: check overlay mode
          if(!followplayer)
          {
             m_paninc.x = -FTOM(HORZ_PAN_SCALE(F_PANINC));
@@ -887,7 +884,6 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_up: // pan up
-         // TODO: check overlay mode
          if(!followplayer)
          {
             m_paninc.y = FTOM(VERT_PAN_SCALE(F_PANINC));
@@ -896,7 +892,6 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_down: // pan down
-         // TODO: check overlay mode
          if(!followplayer)
          {
             m_paninc.y = -FTOM(VERT_PAN_SCALE(F_PANINC));
@@ -905,24 +900,14 @@ bool AM_Responder(const event_t *ev)
          return false;
 
       case ka_map_zoomout: // zoom out
-         // TODO: check overlay mode
-//         if(automapstate == amstate_full)
-         {
-            mtof_zoommul = M_ZOOMOUT;
-            ftom_zoommul = M_ZOOMIN;
-            return true;
-         }
-         return false;
+         mtof_zoommul = M_ZOOMOUT;
+         ftom_zoommul = M_ZOOMIN;
+         return true;
 
       case ka_map_zoomin: // zoom in
-         // TODO: check overlay mode
-//         if(automapstate == amstate_full)
-         {
-            mtof_zoommul = M_ZOOMIN;
-            ftom_zoommul = M_ZOOMOUT;
-            return true;
-         }
-         return false;
+         mtof_zoommul = M_ZOOMIN;
+         ftom_zoommul = M_ZOOMOUT;
+         return true;
 
       case ka_map_toggle: // deactivate map
          bigstate = 0;
@@ -930,9 +915,6 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_gobig: // "go big"
-         // TODO: check overlay mode
-//         if(automapstate != amstate_full)
-//            return false;
          bigstate = !bigstate;
          if(bigstate)
          {
@@ -944,9 +926,6 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_follow: // toggle follow mode
-         // TODO: check overlay mode
-//         if(automapstate != amstate_full)
-//            return false;
          followplayer = !followplayer;
          f_oldloc.x = D_MAXINT;
          // Ty 03/27/98 - externalized
@@ -955,9 +934,6 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_grid: // toggle grid
-         // TODO: check overlay mode
-//         if(automapstate != amstate_full)
-//            return false;
          automap_grid = !automap_grid; // killough 2/28/98
          // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String(automap_grid ? "AMSTR_GRIDON" 
@@ -965,9 +941,6 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_mark: // mark a spot
-         // TODO: check overlay mode
-//         if(automapstate != amstate_full)
-//            return false;
          // Ty 03/27/98 - *not* externalized
          // sf: fixed this (buffer at start, presumably from an old sprintf
          doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
@@ -975,11 +948,14 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_clear: // clear all marked spots
-         // TODO: check overlay mode
-//         if(automapstate != amstate_full)
-//            return false;
          AM_clearMarks();  // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
+         return true;
+
+      case ka_map_overlay:
+         automap_overlay = !automap_overlay;
+         doom_printf("Overlay mode %s.\n", automap_overlay ? "on" : "off");
+         AM_Start(); // refresh view size
          return true;
 
       default:
@@ -1073,8 +1049,7 @@ void AM_Ticker()
    double oldmx = m_x + m_w / 2;
    double oldmy = m_y + m_h / 2;
 
-   // TODO: check overlay mode
-   if(followplayer/* || automapstate == amstate_over*/)
+   if(followplayer)
       AM_doFollowPlayer();
    
    // Change the zoom if necessary
@@ -2384,8 +2359,7 @@ void AM_Drawer()
    if(!automapactive)
       return;
 
-   // TODO: check overlay mode
-//   if(automapstate == amstate_full)
+   if(!automap_overlay)
    {
       AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
    

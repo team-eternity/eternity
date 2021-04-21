@@ -251,6 +251,7 @@ extern int snd_DesiredSfxDevice;
 extern  bool statusbaractive;
 
 extern  bool automapactive; // In AutoMap mode?
+extern  bool automap_overlay; // automap is in overlay mode?
 extern  bool menuactive;    // Menu overlayed?
 extern  int  paused;        // Game Pause?
 extern  int  hud_active;    //jff 2/17/98 toggles heads-up status display

@@ -85,6 +85,14 @@ static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
 
+//
+// True if to allow map widget
+//
+inline static bool HU_allowMapWidget()
+{
+   return automapactive;   // this may be a placeholder to more checks, or remove this function
+}
+
 // widget hash table
 HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
 
@@ -698,7 +706,7 @@ void HUDTextWidget::drawer()
 {
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(flags & TW_AUTOMAP_ONLY && !HU_allowMapWidget())
       return;
 
    // 10/08/05: boxed message support
@@ -952,7 +960,7 @@ void HUDCrossHairWidget::drawer()
 
    // haleyjd 03/03/07: don't display while showing a center message
    if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 ||
-      viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
+      viewcamera || (automapactive && !automap_overlay) || centermessage_widget.cleartic > leveltime)
       return;
 
    patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
@@ -1054,7 +1062,7 @@ void HUDLevelTimeWidget::ticker()
    static char timestr[32];
    int seconds;
    
-   if(!automapactive || !hu_showtime)
+   if(!HU_allowMapWidget() || !hu_showtime)
    {
       message = nullptr;
       return;
@@ -1149,7 +1157,7 @@ int hu_levelnamecolor;
 //
 void HUDLevelNameWidget::ticker()
 {
-   message = automapactive ? LevelInfo.levelName : nullptr;
+   message = HU_allowMapWidget() ? LevelInfo.levelName : nullptr;
    color   = hu_levelnamecolor + 1;
 }
 
@@ -1416,7 +1424,7 @@ void HUDCoordWidget::ticker()
    static char coordzstr[16];
    static char coordastr[16];
 
-   if(!hu_alwaysshowcoords && (!automapactive || !hu_showcoords))
+   if(!hu_alwaysshowcoords && (!HU_allowMapWidget() || !hu_showcoords))
    {
       message = nullptr;
       return;
@@ -1888,7 +1896,7 @@ static cell AMX_NATIVE_CALL sm_centermsgtimed(AMX *amx, cell *params)
 //
 static cell AMX_NATIVE_CALL sm_inautomap(AMX *amx, cell *params)
 {
-   return (cell)(automapactive);
+   return (cell)automapactive;
 }
 
 static cell AMX_NATIVE_CALL sm_gethudmode(AMX *amx, cell *params)

@@ -872,7 +872,6 @@ bool G_Responder(const event_t* ev)
 
       if(!walkcam_active) // if so, we need to go on below
       {
-         // TODO: check overlay mode (!automap or overlay)
          if(gamestate == GS_DEMOSCREEN && !(paused & 2) && 
             !consoleactive && !automapactive &&
             (ev->type == ev_keydown || (ev->type == ev_mouse && ev->data1)))
