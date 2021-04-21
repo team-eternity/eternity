@@ -954,7 +954,7 @@ bool AM_Responder(const event_t *ev)
 
       case ka_map_overlay:
          automap_overlay = !automap_overlay;
-         doom_printf("Overlay mode %s.\n", automap_overlay ? "on" : "off");
+         doom_printf("Overlay mode %s\n", automap_overlay ? "on" : "off");
          AM_Start(); // refresh view size
          return true;
 
