@@ -8,6 +8,13 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+22.04.2021
+
+FEATURE: Now the automap has an overlay mode like in PrBoom+ and Crispy Doom. It
+         can be activated with the 'o' key (you may need to bind it manually if
+         you upgraded Eternity to this version).
+
+--------------------------------------------------------------------------------
 19.04.2021
 
 BUGFIX: Fix negative ExtraData recordnums causing undefined behaviour.
