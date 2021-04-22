@@ -85,6 +85,14 @@ static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
 
+//
+// True if to allow map widget
+//
+inline static bool HU_allowMapWidget()
+{
+   return automapactive;   // this may be a placeholder to more checks, or remove this function
+}
+
 // widget hash table
 HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
 
@@ -698,7 +706,7 @@ void HUDTextWidget::drawer()
 {
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(flags & TW_AUTOMAP_ONLY && !HU_allowMapWidget())
       return;
 
    // 10/08/05: boxed message support
@@ -1054,7 +1062,7 @@ void HUDLevelTimeWidget::ticker()
    static char timestr[32];
    int seconds;
    
-   if(!automapactive || !hu_showtime)
+   if(!HU_allowMapWidget() || !hu_showtime)
    {
       message = nullptr;
       return;
@@ -1149,7 +1157,7 @@ int hu_levelnamecolor;
 //
 void HUDLevelNameWidget::ticker()
 {
-   message = automapactive ? LevelInfo.levelName : nullptr;
+   message = HU_allowMapWidget() ? LevelInfo.levelName : nullptr;
    color   = hu_levelnamecolor + 1;
 }
 
@@ -1416,7 +1424,7 @@ void HUDCoordWidget::ticker()
    static char coordzstr[16];
    static char coordastr[16];
 
-   if(!hu_alwaysshowcoords && (!automapactive || !hu_showcoords))
+   if(!hu_alwaysshowcoords && (!HU_allowMapWidget() || !hu_showcoords))
    {
       message = nullptr;
       return;
