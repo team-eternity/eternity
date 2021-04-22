@@ -1,7 +1,6 @@
 set(resource_dirs
-    ${CMAKE_SOURCE_DIR}/base
     ${CMAKE_SOURCE_DIR}/docs
-    ${CMAKE_SOURCE_DIR}/user
+    ${CMAKE_SOURCE_DIR}/user    # base/ is no longer static, it's loaded with the binaries
 )
 set(resource_files
     ${CMAKE_SOURCE_DIR}/AUTHORS
@@ -45,6 +44,7 @@ add_custom_command(
 )
 
 set(binary_resources
+    ${CMAKE_CURRENT_BINARY_DIR}/base
     ${CMAKE_CURRENT_BINARY_DIR}/eternity
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2.framework
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2_mixer.framework
