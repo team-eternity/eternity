@@ -1,26 +1,6 @@
-#
-# Add path as resource (also used in Eureka when deploying its paths)
-# https://stackoverflow.com/a/66401708/11738219
-#
-function(add_path_resource target folder)
-    file(GLOB_RECURSE resources "${CMAKE_CURRENT_SOURCE_DIR}/${folder}/*")
-    target_sources(${target} PRIVATE ${resources})
-    foreach(resfile ${resources})
-        #Get the relative path from the data-folder to the particular file
-        file(RELATIVE_PATH newfile "${CMAKE_CURRENT_SOURCE_DIR}/${folder}" ${resfile})
-
-        get_filename_component(newfilepath ${newfile} DIRECTORY)
-        #Set its location inside the app package (under Resources)
-        set_property(SOURCE ${resfile} PROPERTY MACOSX_PACKAGE_LOCATION "Resources/${folder}/${newfilepath}")
-
-    endforeach()
-    source_group("eternity-res-clutter" FILES ${resources})
-endfunction()
-
 set(resource_dirs
-    ${CMAKE_SOURCE_DIR}/base
     ${CMAKE_SOURCE_DIR}/docs
-    ${CMAKE_SOURCE_DIR}/user
+    ${CMAKE_SOURCE_DIR}/user    # base/ is no longer static, it's loaded with the binaries
 )
 set(resource_files
     ${CMAKE_SOURCE_DIR}/AUTHORS
@@ -64,6 +44,7 @@ add_custom_command(
 )
 
 set(binary_resources
+    ${CMAKE_CURRENT_BINARY_DIR}/base
     ${CMAKE_CURRENT_BINARY_DIR}/eternity
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2.framework
     ${CMAKE_CURRENT_BINARY_DIR}/SDL2_mixer.framework
@@ -80,10 +61,6 @@ set_source_files_properties(
     MACOSX_PACKAGE_LOCATION Resources
     GENERATED TRUE
 )
-
-foreach(dir ${resource_dirs})
-    add_path_resource(EternityLauncher ${dir})
-endforeach()
 
 set(app_display_name "Eternity Engine")
 set_target_properties(
