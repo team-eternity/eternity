@@ -20,9 +20,14 @@ function(eternity_build_resources TARGET)
   foreach(GAME IN ITEMS "doom" "heretic")
     set(RESOURCE_FILE "${CMAKE_SOURCE_DIR}/base/${GAME}/eternity.pke")
     file(GLOB_RECURSE ETERNITY_GAME_RESOURCES LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/base/${GAME}/res/*")
+    if(UNIX AND NOT APPLE)
+      set(INPUT ${ETERNITY_GAME_RESOURCES})
+    else()
+      set(INPUT "./")
+    endif()
 
     add_custom_command(OUTPUT ${RESOURCE_FILE}
-      COMMAND "${CMAKE_COMMAND}" -E tar "cf" ${RESOURCE_FILE} --format=zip ${ETERNITY_GAME_RESOURCES}
+      COMMAND "${CMAKE_COMMAND}" -E tar "cf" ${RESOURCE_FILE} --format=zip ${INPUT}
       DEPENDS ${ETERNITY_GAME_RESOURCES}
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/base/${GAME}/res"
     )
