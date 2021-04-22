@@ -86,11 +86,11 @@ static bool HU_ChatRespond(const event_t *ev);
 //=============================================================================
 
 //
-// True if to allow map widget
+// True if to allow automap widget. Overlay mode is stricter.
 //
 inline static bool HU_allowMapWidget()
 {
-   return automapactive;   // this may be a placeholder to more checks, or remove this function
+   return automapactive && !automap_overlay;
 }
 
 // widget hash table
