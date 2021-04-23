@@ -293,13 +293,13 @@ static const char *skin_sound_names[NUMSKINSOUNDS] =
 //
 // Creates and adds a new EDF player skin
 //
-static void E_CreatePlayerSkin(cfg_t *skinsec)
+static void E_CreatePlayerSkin(cfg_t *const skinsec)
 {
    skin_t *newSkin;
    const char *tempstr;
    bool def; // if defining true; if modifying, false
 
-   const auto IS_SET = [skinsec, def](const char *const name) -> bool {
+   const auto IS_SET = [skinsec, &def](const char *const name) -> bool {
       return def || cfg_size(skinsec, name) > 0;
    };
 
@@ -550,13 +550,13 @@ static void E_processWeaponSlot(cfg_t *slot, playerclass_t *pc)
 //
 // Processes a single EDF player class section.
 //
-static void E_processPlayerClass(cfg_t *pcsec, bool delta)
+static void E_processPlayerClass(cfg_t *const pcsec, bool delta)
 {
    const char *tempstr;
    playerclass_t *pc;
    bool def;
 
-   const auto IS_SET = [pcsec, def](const char *const name) -> bool {
+   const auto IS_SET = [pcsec, &def](const char *const name) -> bool {
       return def || cfg_size(pcsec, name) > 0;
    };
 
