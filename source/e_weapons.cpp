@@ -1221,7 +1221,7 @@ static void E_updateVanillaStatesByDehNum(weaponinfo_t &wp)
 //
 // Process a single weaponinfo, or weapondelta
 //
-static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool def)
+static void E_processWeapon(weapontype_t i, cfg_t *const weaponsec, cfg_t *pcfg, const bool def)
 {
    int tempint;
    const char *tempstr;
@@ -1230,7 +1230,7 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    weapontitleprops_t titleprops;
    weaponinfo_t &wp = *weaponinfo[i];
 
-   const auto IS_SET = [weaponsec, def, inherits](const char *const name) -> bool {
+   const auto IS_SET = [weaponsec, def, &inherits](const char *const name) -> bool {
       return (def && !inherits) || cfg_size(weaponsec, (name)) > 0;
    };
 

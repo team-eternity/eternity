@@ -304,7 +304,7 @@ static void E_setDynamicString(const char *&dest, int index, const char *value)
 //
 // Process a single gameproperties block.
 //
-static void E_processGamePropsBlock(cfg_t *props)
+static void E_processGamePropsBlock(cfg_t *const props)
 {
    const auto IS_SET = [props](const char *const name) -> bool {
       return cfg_size(props, name) > 0;

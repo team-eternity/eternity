@@ -192,14 +192,14 @@ static emod_t *E_EDFDamageTypeForName(const char *name)
 //
 // Adds a single damage type.
 //
-static void E_ProcessDamageType(cfg_t *dtsec)
+static void E_ProcessDamageType(cfg_t *const dtsec)
 {
    emod_t *mod;
    const char *title, *obituary;
    bool def = true;
    int num;
 
-   const auto IS_SET = [dtsec, def](const char *const name) -> bool {
+   const auto IS_SET = [dtsec, &def](const char *const name) -> bool {
       return def || cfg_size(dtsec, name) > 0;
    };
 

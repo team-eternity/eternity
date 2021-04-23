@@ -230,7 +230,7 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
 // new one created. This will allow terrain lumps to have additive
 // behavior over EDF.
 //
-static void E_ProcessSplash(cfg_t *cfg, bool def)
+static void E_ProcessSplash(cfg_t *const cfg, const bool def)
 {
    const char *tempstr;
    ETerrainSplash *newSplash;
@@ -406,7 +406,7 @@ static void E_AddTerrainToHash(ETerrain *terrain)
    ++numterrains;
 }
 
-static void E_ProcessTerrain(cfg_t *cfg, bool def)
+static void E_ProcessTerrain(cfg_t *const cfg, const bool def)
 {
    const char *tempstr;
    ETerrain *newTerrain;

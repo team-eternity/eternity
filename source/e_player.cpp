@@ -257,7 +257,7 @@ static skin_t *E_EDFSkinForName(const char *name)
 //
 // Sets an EDF skin sound name.
 //
-static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
+static void E_DoSkinSound(cfg_t *const sndsec, const bool def, skin_t *skin, int idx,
                           const char *itemname)
 {
    const auto IS_SET = [sndsec, def](const char *const name) -> bool {

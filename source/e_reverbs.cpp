@@ -137,8 +137,8 @@ cfg_opt_t edf_reverb_opts[] =
 // Get a floating point property from the cfg_t and clamp it into a given
 // range inclusive.
 //
-static void E_getFloatAndClamp(cfg_t *cfg, const char *name, double &dest, 
-                               double min, double max, bool def)
+static void E_getFloatAndClamp(cfg_t *const cfg, const char *name, double &dest,
+                               double min, double max, const bool def)
 {
    // Test if the item is defined explicitly, or the default should be gotten
    const auto IS_SET = [cfg, def](const char *const s) -> bool {
@@ -189,14 +189,14 @@ static void E_initDefaultEnvironment()
 //
 // Process a single EDF reverb definition.
 //
-static void E_processReverb(cfg_t *sec)
+static void E_processReverb(cfg_t *const sec)
 {
    bool        def    = false;
    const char *title  = cfg_title(sec);
    cfg_t      *tprops = cfg_gettitleprops(sec);
 
    // Test if the item is defined explicitly, or the default should be gotten
-   const auto IS_SET = [sec, def](const char *const s) -> bool {
+   const auto IS_SET = [sec, &def](const char *const s) -> bool {
       return def || cfg_size((sec), (s)) > 0;
    };
 

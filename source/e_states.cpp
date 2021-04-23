@@ -1167,7 +1167,7 @@ static void E_ProcessCmpState(const char *value, int i)
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
 //
-static void E_ProcessState(int i, cfg_t *framesec, bool def)
+static void E_ProcessState(int i, cfg_t *const framesec, bool def)
 {
    int j;
    int tempint;
@@ -1176,7 +1176,7 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
 
    // IS_SET: Tests whether or not a particular field should
    // be set. When applying deltas, we should not retrieve defaults.
-   const auto IS_SET = [framesec, def](const char *const name) -> bool {
+   const auto IS_SET = [framesec, &def](const char *const name) -> bool {
       return def || cfg_size(framesec, (name)) > 0;
    };
 

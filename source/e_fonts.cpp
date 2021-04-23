@@ -781,7 +781,7 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 //
 // Processes a single EDF font object.
 //
-static void E_ProcessFont(cfg_t *sec, bool delta)
+static void E_ProcessFont(cfg_t *const sec, bool delta)
 {
    vfont_t *font;
    const char *tempstr;
@@ -800,7 +800,7 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // processed before, or in other words, this is a new font by name.
    // Otherwise, this definition's fields are treated additively over the
    // existing font's data.
-   bool def = !(font->linear || font->numfilters);
+   const bool def = !(font->linear || font->numfilters);
 
    const auto IS_SET = [sec, def](const char *const name) -> bool {
       return def || cfg_size(sec, name) > 0;

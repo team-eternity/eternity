@@ -2332,7 +2332,7 @@ static int E_resolveParentThingType(cfg_t *thingsec,
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
 //
-void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
+void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 {
    double tempfloat;
    int tempint;
@@ -2345,14 +2345,14 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    // Tests whether or not a particular field should be set.
    // When applying deltas, we should not retrieve defaults.
    // Also, if inheritance is taking place, we should not
-   const auto IS_SET = [def, inherits, thingsec](const char *const name) -> bool {
+   const auto IS_SET = [def, &inherits, thingsec](const char *const name) -> bool {
       return (def && !inherits) || cfg_size(thingsec, (name)) > 0;
    };
 
    // Same as above, but also considers if the basictype has set fields in the thing.
    // In that case, fields which are affected by basictype don't set defaults unless
    // they are explicitly specified.
-   const auto IS_SET_BT = [def, inherits, hasbtype, thingsec](const char *const name) -> bool {
+   const auto IS_SET_BT = [def, &inherits, &hasbtype, thingsec](const char *const name) -> bool {
       return (def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0;
    };
 

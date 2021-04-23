@@ -511,7 +511,7 @@ void E_UpdateSoundCache()
 //
 // Processes an EDF sound definition
 //
-static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
+static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *const section, const bool def)
 {
    bool setLink = false;
    bool explicitLumpName = false;
