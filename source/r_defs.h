@@ -151,7 +151,7 @@ enum
 struct pslope_t
 {
    // --- Information used in clipping/projection ---
-   // Origin vector for the plane
+   // Origin vector for the plane. Z is always the host sector's floor height.
    v3fixed_t o;
    v3float_t of;
 

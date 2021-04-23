@@ -1035,6 +1035,13 @@ void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h)
    surface.height = h;
    surface.heightf = M_FixedToFloat(surface.height);
 
+   // Update slope origin
+   if(surface.slope)
+   {
+      surface.slope->o.z = surface.height;
+      surface.slope->of.z = surface.heightf;
+   }
+
    // check portal state
    P_CheckSectorPortalState(sec, surf);
 }
