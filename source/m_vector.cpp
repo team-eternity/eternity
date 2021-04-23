@@ -30,6 +30,14 @@
 #include "r_context.h"
 #include "r_main.h"
 
+//
+// Get absolute value of vector
+//
+float v3float_t::abs() const
+{
+   return sqrtf(x * x + y * y + z * z);
+}
+
 // 
 // M_MagnitudeVec2
 //
