@@ -43,7 +43,7 @@
 // Alocates and fill the contents of a slope structure.
 //
 static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d, 
-                             const float zdelta, bool isceiling)
+                             const float zdelta, surf_e type)
 {
    pslope_t *ret = emalloctag(pslope_t *, sizeof(pslope_t), PU_LEVEL, nullptr);
    memset(ret, 0, sizeof(*ret));
@@ -73,7 +73,7 @@ static pslope_t *P_MakeSlope(const v3float_t *o, const v2float_t *d,
       v3.y = v1.y;
       v3.z = P_GetZAtf(ret, v3.x, v3.y);
 
-      if(isceiling)
+      if(type == surf_ceil)
       {
          M_SubVec3f(&d1, &v1, &v3);
          M_SubVec3f(&d2, &v2, &v3);
@@ -282,14 +282,14 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
          point.z = line->frontsector->srf.floor.heightf;
          dz = (line->backsector->srf.floor.heightf - point.z) / extent;
 
-         line->frontsector->srf.floor.slope = P_MakeSlope(&point, &direction, dz, false);
+         line->frontsector->srf.floor.slope = P_MakeSlope(&point, &direction, dz, surf_floor);
       }
       if(frontceil)
       {
          point.z = line->frontsector->srf.ceiling.heightf;
          dz = (line->backsector->srf.ceiling.heightf - point.z) / extent;
 
-         line->frontsector->srf.ceiling.slope = P_MakeSlope(&point, &direction, dz, true);
+         line->frontsector->srf.ceiling.slope = P_MakeSlope(&point, &direction, dz, surf_ceil);
       }
    }
 
@@ -318,14 +318,14 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
          point.z = line->backsector->srf.floor.heightf;
          dz = (line->frontsector->srf.floor.heightf - point.z) / extent;
 
-         line->backsector->srf.floor.slope = P_MakeSlope(&point, &direction, dz, false);
+         line->backsector->srf.floor.slope = P_MakeSlope(&point, &direction, dz, surf_floor);
       }
       if(backceil)
       {
          point.z = line->backsector->srf.ceiling.heightf;
          dz = (line->frontsector->srf.ceiling.heightf - point.z) / extent;
 
-         line->backsector->srf.ceiling.slope = P_MakeSlope(&point, &direction, dz, true);
+         line->backsector->srf.ceiling.slope = P_MakeSlope(&point, &direction, dz, surf_ceil);
       }
    }
 
