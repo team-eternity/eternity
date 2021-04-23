@@ -62,7 +62,7 @@
 //
 // Default Error Callback
 //
-void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap)
+void E_ErrorCB(const cfg_t *const cfg, const char *fmt, va_list ap)
 {
    I_ErrorVA(fmt, ap);
 }

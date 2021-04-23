@@ -501,7 +501,7 @@ static void E_EDFResetWarnings()
 // This function is given to all cfg_t structures as the error
 // callback.
 //
-static void edf_error(cfg_t *cfg, const char *fmt, va_list ap)
+static void edf_error(const cfg_t *const cfg, const char *fmt, va_list ap)
 {
    E_EDFLogPuts("Exiting due to parser error\n");
 
