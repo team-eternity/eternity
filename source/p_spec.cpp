@@ -2401,7 +2401,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
    {
       if(list[i].type & AS_CEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height + delta);
+         P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
          if(nointerp)
@@ -2409,7 +2409,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height - delta);
+         P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
          if(nointerp)
@@ -2418,7 +2418,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
 
       if(list[i].type & AS_FLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height + delta);
+         P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
          if(nointerp)
@@ -2426,7 +2426,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height - delta);
+         P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
          if(nointerp)
@@ -2804,16 +2804,16 @@ void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect ef
    {
    case portal_ceiling:
       sec->srf.ceiling.portal = portal;
-      P_CheckCPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_ceil);
       break;
    case portal_floor:
       sec->srf.floor.portal = portal;
-      P_CheckFPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_floor);
       break;
    case portal_both:
       sec->srf.ceiling.portal = sec->srf.floor.portal = portal;
-      P_CheckCPortalState(sec);
-      P_CheckFPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_ceil);
+      P_CheckSectorPortalState(*sec, surf_floor);
       break;
    case portal_lineonly:
       line->portal = portal;

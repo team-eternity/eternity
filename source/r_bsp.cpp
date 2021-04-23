@@ -658,7 +658,7 @@ const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *t
             tempsec->srf.ceiling.pflags = 0;
          }
          else
-            P_SetCeilingHeight(tempsec, R_CPLink(sec)->planez);
+            P_SetSectorHeight(*tempsec, surf_ceil, R_CPLink(sec)->planez);
          sec = tempsec;
       }
       else if(!(sec->srf.ceiling.pflags & PS_VISIBLE))
@@ -678,7 +678,7 @@ const sector_t *R_FakeFlat(const fixed_t viewz, const sector_t *sec, sector_t *t
             tempsec->srf.floor.pflags = 0;
          }
          else
-            P_SetFloorHeight(tempsec, R_FPLink(sec)->planez);
+            P_SetSectorHeight(*tempsec, surf_floor, R_FPLink(sec)->planez);
             
          sec = tempsec;
       }

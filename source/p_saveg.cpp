@@ -755,8 +755,8 @@ static void P_ArchiveWorld(SaveArchive &arc)
          sec->soundtarget  = nullptr;
 
          // SoM: update the heights
-         P_SetFloorHeight(sec, sec->srf.floor.height);
-         P_SetCeilingHeight(sec, sec->srf.ceiling.height);
+         P_SetSectorHeight(*sec, surf_floor, sec->srf.floor.height);
+         P_SetSectorHeight(*sec, surf_ceil, sec->srf.ceiling.height);
       }
    }
 

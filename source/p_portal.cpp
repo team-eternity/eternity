@@ -517,9 +517,9 @@ static void P_GlobalPortalStateCheck()
       sec = sectors + i;
       
       if(sec->srf.ceiling.portal)
-         P_CheckCPortalState(sec);
+         P_CheckSectorPortalState(*sec, surf_ceil);
       if(sec->srf.floor.portal)
-         P_CheckFPortalState(sec);
+         P_CheckSectorPortalState(*sec, surf_floor);
    }
    
    for(i = 0; i < numlines; i++)
@@ -1000,38 +1000,18 @@ static int P_GetPortalState(const portal_t *portal, int sflags, bool obscured)
    return ret;
 }
 
-void P_CheckCPortalState(sector_t *sec)
+void P_CheckSectorPortalState(sector_t &sector, surf_e type)
 {
-   bool     obscured;
-
-   if(!sec->srf.ceiling.portal)
+   surface_t &surface = sector.srf[type];
+   if(!surface.portal)
    {
-      sec->srf.ceiling.pflags = 0;
+      surface.pflags = 0;
       return;
    }
+   bool obscured = surface.portal->type == R_LINKED && !(surface.pflags & PF_ATTACHEDPORTAL) &&
+         isInner(type, surface.height, surface.portal->data.link.planez);
 
-   obscured = (sec->srf.ceiling.portal->type == R_LINKED &&
-               !(sec->srf.ceiling.pflags & PF_ATTACHEDPORTAL) &&
-               sec->srf.ceiling.height < sec->srf.ceiling.portal->data.link.planez);
-
-   sec->srf.ceiling.pflags = P_GetPortalState(sec->srf.ceiling.portal, sec->srf.ceiling.pflags, obscured);
-}
-
-void P_CheckFPortalState(sector_t *sec)
-{
-   bool     obscured;
-
-   if(!sec->srf.floor.portal)
-   {
-      sec->srf.floor.pflags = 0;
-      return;
-   }
-
-   obscured = (sec->srf.floor.portal->type == R_LINKED &&
-               !(sec->srf.floor.pflags & PF_ATTACHEDPORTAL) &&
-               sec->srf.floor.height > sec->srf.floor.portal->data.link.planez);
-
-   sec->srf.floor.pflags = P_GetPortalState(sec->srf.floor.portal, sec->srf.floor.pflags, obscured);
+   surface.pflags = P_GetPortalState(surface.portal, surface.pflags, obscured);
 }
 
 void P_CheckLPortalState(line_t *line)
@@ -1046,35 +1026,17 @@ void P_CheckLPortalState(line_t *line)
 }
 
 //
-// P_SetFloorHeight
+// This function will set the floor or ceiling height, and update
+// the float version of the floor or ceiling height as well. It also updates portals.
 //
-// This function will set the floor height, and update
-// the float version of the floor height as well.
-//
-void P_SetFloorHeight(sector_t *sec, fixed_t h)
+void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h)
 {
-   // set new value
-   sec->srf.floor.height = h;
-   sec->srf.floor.heightf = M_FixedToFloat(sec->srf.floor.height);
+   surface_t &surface = sec.srf[surf];
+   surface.height = h;
+   surface.heightf = M_FixedToFloat(surface.height);
 
-   // check floor portal state
-   P_CheckFPortalState(sec);
-}
-
-//
-// P_SetCeilingHeight
-//
-// This function will set the ceiling height, and update
-// the float version of the ceiling height as well.
-//
-void P_SetCeilingHeight(sector_t *sec, fixed_t h)
-{
-   // set new value
-   sec->srf.ceiling.height = h;
-   sec->srf.ceiling.heightf = M_FixedToFloat(sec->srf.ceiling.height);
-
-   // check ceiling portal state
-   P_CheckCPortalState(sec);
+   // check portal state
+   P_CheckSectorPortalState(sec, surf);
 }
 
 void P_SetPortalBehavior(portal_t *portal, int newbehavior)
@@ -1087,9 +1049,9 @@ void P_SetPortalBehavior(portal_t *portal, int newbehavior)
       sector_t *sec = sectors + i;
       
       if(sec->srf.ceiling.portal == portal)
-         P_CheckCPortalState(sec);
+         P_CheckSectorPortalState(*sec, surf_ceil);
       if(sec->srf.floor.portal == portal)
-         P_CheckFPortalState(sec);
+         P_CheckSectorPortalState(*sec, surf_floor);
    }
    
    for(i = 0; i < numlines; i++)
@@ -1105,7 +1067,7 @@ void P_SetFPortalBehavior(sector_t *sec, int newbehavior)
       return;
       
    sec->srf.floor.pflags = newbehavior;
-   P_CheckFPortalState(sec);
+   P_CheckSectorPortalState(*sec, surf_floor);
 }
 
 void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
@@ -1114,7 +1076,7 @@ void P_SetCPortalBehavior(sector_t *sec, int newbehavior)
       return;
       
    sec->srf.ceiling.pflags = newbehavior;
-   P_CheckCPortalState(sec);
+   P_CheckSectorPortalState(*sec, surf_ceil);
 }
 
 void P_SetLPortalBehavior(line_t *line, int newbehavior)
