@@ -339,21 +339,15 @@ void P_SpawnSlope_Line(int linenum, int staticFn)
 //
 // Copies a slope plane (ceil/floor) from tagged sector to dest
 //
-static void P_copyPlane(int tag, sector_t *dest, bool copyCeil)
+static void P_copyPlane(int tag, sector_t *dest, surf_e type)
 {
    for(int secnum = -1; (secnum = P_FindSectorFromTag(tag, secnum)) != -1; )
    {
       // Deliberately overwrite the plane_align slope
       const sector_t &srcsec = sectors[secnum];
-      if(copyCeil && srcsec.srf.ceiling.slope)
+      if(srcsec.srf[type].slope)
       {
-         dest->srf.ceiling.slope = P_CopySlope(srcsec.srf.ceiling.slope);
-         return;
-      }
-
-      if(!copyCeil && srcsec.srf.floor.slope)
-      {
-         dest->srf.floor.slope = P_CopySlope(srcsec.srf.floor.slope);
+         dest->srf[type].slope = P_CopySlope(srcsec.srf[type].slope);
          return;
       }
    }
@@ -376,7 +370,7 @@ static void P_copySectorSlopeParam(line_t *line)
       if(line->args[i])
       {
          // If i is 2 or 3, backsector is dest, else frontsec is. If i is odd then copy to ceil
-         P_copyPlane(line->args[i], i & 2 ? line->backsector : line->frontsector, i & 1);
+         P_copyPlane(line->args[i], i & 2 ? line->backsector : line->frontsector, i & 1 ? surf_ceil : surf_floor);
       }
    }
 
