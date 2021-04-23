@@ -1218,9 +1218,6 @@ static void E_updateVanillaStatesByDehNum(weaponinfo_t &wp)
    TryUpdateStateByDehNum(wp.flashstate);
 }
 
-#undef  IS_SET
-#define IS_SET(name) ((def && !inherits) || cfg_size(weaponsec, (name)) > 0)
-
 //
 // Process a single weaponinfo, or weapondelta
 //
@@ -1232,6 +1229,10 @@ static void E_processWeapon(weapontype_t i, cfg_t *weaponsec, cfg_t *pcfg, bool 
    bool inherits = false;
    weapontitleprops_t titleprops;
    weaponinfo_t &wp = *weaponinfo[i];
+
+   const auto IS_SET = [weaponsec, def, inherits](const char *const name) -> bool {
+      return (def && !inherits) || cfg_size(weaponsec, (name)) > 0;
+   };
 
    // if weaponsec is null, we are in the situation of inheriting from a weapon
    // that was processed in a previous EDF generation, so no processing is

@@ -2328,21 +2328,6 @@ static int E_resolveParentThingType(cfg_t *thingsec,
    return pnum;
 }
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-// 01/27/04: Also, if inheritance is taking place, we should not
-// retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) ((def && !inherits) || cfg_size(thingsec, (name)) > 0)
-
-// Same as above, but also considers if the basictype has set fields in the thing.
-// In that case, fields which are affected by basictype don't set defaults unless
-// they are explicitly specified.
-
-#define IS_SET_BT(name) \
-   ((def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
@@ -2356,6 +2341,20 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool cflags   = false;
    bool hasbtype = false;
    thingtitleprops_t titleprops;
+
+   // Tests whether or not a particular field should be set.
+   // When applying deltas, we should not retrieve defaults.
+   // Also, if inheritance is taking place, we should not
+   const auto IS_SET = [def, inherits, thingsec](const char *const name) -> bool {
+      return (def && !inherits) || cfg_size(thingsec, (name)) > 0;
+   };
+
+   // Same as above, but also considers if the basictype has set fields in the thing.
+   // In that case, fields which are affected by basictype don't set defaults unless
+   // they are explicitly specified.
+   const auto IS_SET_BT = [def, inherits, hasbtype, thingsec](const char *const name) -> bool {
+      return (def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0;
+   };
 
    // if thingsec is null, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is

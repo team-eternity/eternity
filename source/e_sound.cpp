@@ -506,8 +506,6 @@ void E_UpdateSoundCache()
 // EDF Processing Functions
 //
 
-#define IS_SET(name) (def || cfg_size(section, name) > 0)
-
 //
 // E_ProcessSound
 //
@@ -518,6 +516,11 @@ static void E_ProcessSound(sfxinfo_t *sfx, cfg_t *section, bool def)
    bool setLink = false;
    bool explicitLumpName = false;
    int tempint;
+
+   const auto IS_SET = [section, def](const char *const name) -> bool {
+      return def || cfg_size(section, name) > 0;
+   };
+
 
    // preconditions:
 

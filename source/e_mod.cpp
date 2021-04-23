@@ -187,8 +187,6 @@ static emod_t *E_EDFDamageTypeForName(const char *name)
    return e_mod_namehash.objectForKey(name);
 }
 
-#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
-
 //
 // E_ProcessDamageType
 //
@@ -200,6 +198,10 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    const char *title, *obituary;
    bool def = true;
    int num;
+
+   const auto IS_SET = [dtsec, def](const char *const name) -> bool {
+      return def || cfg_size(dtsec, name) > 0;
+   };
 
    title = cfg_title(dtsec);
    num   = cfg_getint(dtsec, ITEM_DAMAGETYPE_NUM);
@@ -244,7 +246,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
       E_AddDamageTypeToNumHash(mod);
    }
 
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_OBIT))
+   if(IS_SET(ITEM_DAMAGETYPE_OBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_OBIT);
 
@@ -271,7 +273,7 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
 
    // get self-obituary
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_SELFOBIT))
+   if(IS_SET(ITEM_DAMAGETYPE_SELFOBIT))
    {
       obituary = cfg_getstr(dtsec, ITEM_DAMAGETYPE_SELFOBIT);
 
@@ -298,15 +300,15 @@ static void E_ProcessDamageType(cfg_t *dtsec)
    }
 
    // process sourceless flag
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_SOURCELESS))
+   if(IS_SET(ITEM_DAMAGETYPE_SOURCELESS))
       mod->sourceless = cfg_getbool(dtsec, ITEM_DAMAGETYPE_SOURCELESS);
 
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSPUSH))
+   if(IS_SET(ITEM_DAMAGETYPE_ABSPUSH))
    {
       mod->absolutePush = M_DoubleToFixed(cfg_getfloat(dtsec,
                                                        ITEM_DAMAGETYPE_ABSPUSH));
    }
-   if(IS_SET(dtsec, ITEM_DAMAGETYPE_ABSHOP))
+   if(IS_SET(ITEM_DAMAGETYPE_ABSHOP))
    {
       mod->absoluteHop = M_DoubleToFixed(cfg_getfloat(dtsec,
                                                       ITEM_DAMAGETYPE_ABSHOP));

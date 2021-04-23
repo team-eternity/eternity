@@ -776,8 +776,6 @@ static void E_loadTranslation(vfont_t *font, int index, const char *lumpname)
 // EDF Processing
 //
 
-#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
-
 //
 // E_ProcessFont
 //
@@ -804,8 +802,12 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    // existing font's data.
    bool def = !(font->linear || font->numfilters);
 
+   const auto IS_SET = [sec, def](const char *const name) -> bool {
+      return def || cfg_size(sec, name) > 0;
+   };
+
    // process start
-   if(IS_SET(sec, ITEM_FONT_START))
+   if(IS_SET(ITEM_FONT_START))
    {
       char *pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FONT_START);
@@ -820,7 +822,7 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    }
 
    // process end
-   if(IS_SET(sec, ITEM_FONT_END))
+   if(IS_SET(ITEM_FONT_END))
    {
       char *pos = nullptr;
       tempstr = cfg_getstr(sec, ITEM_FONT_END);
@@ -835,64 +837,64 @@ static void E_ProcessFont(cfg_t *sec, bool delta)
    }
 
    // process linebreak height
-   if(IS_SET(sec, ITEM_FONT_CY))
+   if(IS_SET(ITEM_FONT_CY))
       font->cy = cfg_getint(sec, ITEM_FONT_CY);
 
    // process space size
-   if(IS_SET(sec, ITEM_FONT_SPACE))
+   if(IS_SET(ITEM_FONT_SPACE))
       font->space = cfg_getint(sec, ITEM_FONT_SPACE);
 
    // process width delta
-   if(IS_SET(sec, ITEM_FONT_DW))
+   if(IS_SET(ITEM_FONT_DW))
       font->dw = cfg_getint(sec, ITEM_FONT_DW);
 
    // process absolute height (tallest character)
-   if(IS_SET(sec, ITEM_FONT_ABSH))
+   if(IS_SET(ITEM_FONT_ABSH))
       font->absh = cfg_getint(sec, ITEM_FONT_ABSH);
 
    // process centered width
-   if(IS_SET(sec, ITEM_FONT_CW))
+   if(IS_SET(ITEM_FONT_CW))
       font->cw = cfg_getint(sec, ITEM_FONT_CW);
 
    // process colorable flag
-   if(IS_SET(sec, ITEM_FONT_COLOR))
+   if(IS_SET(ITEM_FONT_COLOR))
       font->color = cfg_getbool(sec, ITEM_FONT_COLOR);
 
    // process uppercase flag
-   if(IS_SET(sec, ITEM_FONT_UPPER))
+   if(IS_SET(ITEM_FONT_UPPER))
       font->upper = cfg_getbool(sec, ITEM_FONT_UPPER);
 
    // process blockcentered flag
-   if(IS_SET(sec, ITEM_FONT_CENTER))
+   if(IS_SET(ITEM_FONT_CENTER))
       font->centered = cfg_getbool(sec, ITEM_FONT_CENTER);
 
-   if(IS_SET(sec, ITEM_FONT_USPACE))
+   if(IS_SET(ITEM_FONT_USPACE))
       font->useSpaceSize = cfg_getbool(sec, ITEM_FONT_USPACE);
 
    // haleyjd 09/06/12: colors
    // default color
-   if(IS_SET(sec, ITEM_FONT_COLORD))
+   if(IS_SET(ITEM_FONT_COLORD))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORD,
          &vfont_t::colorDefault, &gamemodeinfo_t::defTextTrans);
    }
 
    // normal color
-   if(IS_SET(sec, ITEM_FONT_COLORN))
+   if(IS_SET(ITEM_FONT_COLORN))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORN, 
          &vfont_t::colorNormal, &gamemodeinfo_t::colorNormal);
    }
    
    // high color
-   if(IS_SET(sec, ITEM_FONT_COLORH))
+   if(IS_SET(ITEM_FONT_COLORH))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORH, 
          &vfont_t::colorHigh, &gamemodeinfo_t::colorHigh);
    }
 
    // error color
-   if(IS_SET(sec, ITEM_FONT_COLORE))
+   if(IS_SET(ITEM_FONT_COLORE))
    {
       E_setFontColor(sec, font, ITEM_FONT_COLORE, 
          &vfont_t::colorError, &gamemodeinfo_t::colorError);

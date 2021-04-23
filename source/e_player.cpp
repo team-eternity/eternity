@@ -252,8 +252,6 @@ static skin_t *E_EDFSkinForName(const char *name)
    return skin;
 }
 
-#define IS_SET(sec, name) (def || cfg_size(sec, name) > 0)
-
 //
 // E_DoSkinSound
 //
@@ -262,7 +260,11 @@ static skin_t *E_EDFSkinForName(const char *name)
 static void E_DoSkinSound(cfg_t *sndsec, bool def, skin_t *skin, int idx,
                           const char *itemname)
 {
-   if(IS_SET(sndsec, itemname))
+   const auto IS_SET = [sndsec, def](const char *const name) -> bool {
+      return def || cfg_size(sndsec, name) > 0;
+   };
+
+   if(IS_SET(itemname))
       E_ReplaceString(skin->sounds[idx], cfg_getstrdup(sndsec, itemname));
 }
 
@@ -296,6 +298,10 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    skin_t *newSkin;
    const char *tempstr;
    bool def; // if defining true; if modifying, false
+
+   const auto IS_SET = [skinsec, def](const char *const name) -> bool {
+      return def || cfg_size(skinsec, name) > 0;
+   };
 
    // skin name is section title
    tempstr = cfg_title(skinsec);
@@ -331,7 +337,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    }
 
    // set sprite information
-   if(IS_SET(skinsec, ITEM_SKIN_SPRITE))
+   if(IS_SET(ITEM_SKIN_SPRITE))
    {
       tempstr = cfg_getstr(skinsec, ITEM_SKIN_SPRITE);
 
@@ -351,7 +357,7 @@ static void E_CreatePlayerSkin(cfg_t *skinsec)
    }
 
    // set faces
-   if(IS_SET(skinsec, ITEM_SKIN_FACES))
+   if(IS_SET(ITEM_SKIN_FACES))
    {
       E_ReplaceString(newSkin->facename, cfg_getstrdup(skinsec, ITEM_SKIN_FACES));
 
@@ -550,6 +556,10 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    playerclass_t *pc;
    bool def;
 
+   const auto IS_SET = [pcsec, def](const char *const name) -> bool {
+      return def || cfg_size(pcsec, name) > 0;
+   };
+
    if(!delta)
    {
       // get mnemonic from section title
@@ -594,7 +604,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // default skin name
-   if(IS_SET(pcsec, ITEM_PCLASS_DEFAULTSKIN))
+   if(IS_SET(ITEM_PCLASS_DEFAULTSKIN))
    {
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_DEFAULTSKIN);
 
@@ -613,7 +623,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
       }
    }
 
-   if(IS_SET(pcsec, ITEM_PCLASS_ALWAYSJUMP))
+   if(IS_SET(ITEM_PCLASS_ALWAYSJUMP))
    {
       if(cfg_getflag(pcsec, ITEM_PCLASS_ALWAYSJUMP))
          pc->flags |= PCF_ALWAYSJUMP;
@@ -622,7 +632,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // mobj type
-   if(IS_SET(pcsec, ITEM_PCLASS_THINGTYPE))
+   if(IS_SET(ITEM_PCLASS_THINGTYPE))
    {
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_THINGTYPE);
 
@@ -638,7 +648,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // altattack state
-   if(IS_SET(pcsec, ITEM_PCLASS_ALTATTACK))
+   if(IS_SET(ITEM_PCLASS_ALTATTACK))
    {
       statenum_t statenum = 0;
       tempstr = cfg_getstr(pcsec, ITEM_PCLASS_ALTATTACK);
@@ -655,13 +665,13 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    }
 
    // initial health
-   if(IS_SET(pcsec, ITEM_PCLASS_INITIALHEALTH))
+   if(IS_SET(ITEM_PCLASS_INITIALHEALTH))
       pc->initialhealth = cfg_getint(pcsec, ITEM_PCLASS_INITIALHEALTH);
    // max health
-   if(IS_SET(pcsec, ITEM_PCLASS_MAXHEALTH))
+   if(IS_SET(ITEM_PCLASS_MAXHEALTH))
       pc->maxhealth = cfg_getint(pcsec, ITEM_PCLASS_MAXHEALTH);
    // supercharge health
-   if(IS_SET(pcsec, ITEM_PCLASS_SUPERHEALTH))
+   if(IS_SET(ITEM_PCLASS_SUPERHEALTH))
    {
       // Use max health if newly defined but unspecified
       if(def && !cfg_size(pcsec, ITEM_PCLASS_SUPERHEALTH))
@@ -670,39 +680,39 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          pc->superhealth = cfg_getint(pcsec, ITEM_PCLASS_SUPERHEALTH);
    }
    // view height
-   if(IS_SET(pcsec, ITEM_PCLASS_VIEWHEIGHT))
+   if(IS_SET(ITEM_PCLASS_VIEWHEIGHT))
       pc->viewheight = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_VIEWHEIGHT));
 
    // process player speed fields
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDWALK))
+   if(IS_SET(ITEM_PCLASS_SPEEDWALK))
       pc->forwardmove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDWALK);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDRUN))
+   if(IS_SET(ITEM_PCLASS_SPEEDRUN))
       pc->forwardmove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDRUN);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDSTRAFE))
+   if(IS_SET(ITEM_PCLASS_SPEEDSTRAFE))
       pc->sidemove[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFE);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN))
+   if(IS_SET(ITEM_PCLASS_SPEEDSTRAFERUN))
       pc->sidemove[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDSTRAFERUN);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURN))
+   if(IS_SET(ITEM_PCLASS_SPEEDTURN))
       pc->angleturn[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURN);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURNFAST))
+   if(IS_SET(ITEM_PCLASS_SPEEDTURNFAST))
       pc->angleturn[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURNFAST);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDTURNSLOW))
+   if(IS_SET(ITEM_PCLASS_SPEEDTURNSLOW))
       pc->angleturn[2] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDTURNSLOW);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKSLOW))
+   if(IS_SET(ITEM_PCLASS_SPEEDLOOKSLOW))
       pc->lookspeed[0] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKSLOW);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDLOOKFAST))
+   if(IS_SET(ITEM_PCLASS_SPEEDLOOKFAST))
       pc->lookspeed[1] = cfg_getint(pcsec, ITEM_PCLASS_SPEEDLOOKFAST);
 
-   if(IS_SET(pcsec, ITEM_PCLASS_SPEEDJUMP))
+   if(IS_SET(ITEM_PCLASS_SPEEDJUMP))
       pc->jumpspeed = M_DoubleToFixed(cfg_getfloat(pcsec, ITEM_PCLASS_SPEEDJUMP));
 
    // copy speeds to original speeds
@@ -710,7 +720,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
    memcpy(pc->osidemove,    pc->sidemove,    2 * sizeof(fixed_t));
 
    // default flag
-   if(IS_SET(pcsec, ITEM_PCLASS_DEFAULT))
+   if(IS_SET(ITEM_PCLASS_DEFAULT))
    {
       bool tmp = cfg_getbool(pcsec, ITEM_PCLASS_DEFAULT);
 
@@ -720,7 +730,7 @@ static void E_processPlayerClass(cfg_t *pcsec, bool delta)
          GameModeInfo->defPClassName = pc->mnemonic;
    }
 
-   if(IS_SET(pcsec, ITEM_PCLASS_CLRREBORNITEMS) && cfg_getflag(pcsec, ITEM_PCLASS_CLRREBORNITEMS))
+   if(IS_SET(ITEM_PCLASS_CLRREBORNITEMS) && cfg_getflag(pcsec, ITEM_PCLASS_CLRREBORNITEMS))
       E_freeRebornItems(pc);
 
    if(const unsigned int numitems = cfg_size(pcsec, ITEM_PCLASS_REBORNITEM); numitems > 0)

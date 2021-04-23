@@ -1163,12 +1163,6 @@ static void E_ProcessCmpState(const char *value, int i)
 #undef NEXTTOKEN
 #undef DEFAULTS
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) (def || cfg_size(framesec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
@@ -1178,6 +1172,13 @@ static void E_ProcessState(int i, cfg_t *framesec, bool def)
    int j;
    int tempint;
    const char *tempstr;
+
+
+   // IS_SET: Tests whether or not a particular field should
+   // be set. When applying deltas, we should not retrieve defaults.
+   const auto IS_SET = [framesec, def](const char *const name) -> bool {
+      return def || cfg_size(framesec, (name)) > 0;
+   };
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,

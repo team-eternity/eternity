@@ -221,8 +221,6 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
    ++numsplashes;
 }
 
-#define IS_SET(name) (def || cfg_size(cfg, (name)) > 0)
-
 //
 // E_ProcessSplash
 //
@@ -237,6 +235,10 @@ static void E_ProcessSplash(cfg_t *cfg, bool def)
    const char *tempstr;
    ETerrainSplash *newSplash;
    bool newsp = false;
+
+   const auto IS_SET = [cfg, def](const char *const name) -> bool {
+      return def || cfg_size(cfg, (name)) > 0;
+   };
 
    // init name and add to hash table
    if(def)
@@ -409,6 +411,10 @@ static void E_ProcessTerrain(cfg_t *cfg, bool def)
    const char *tempstr;
    ETerrain *newTerrain;
    bool newtr = false;
+
+   const auto IS_SET = [cfg, def](const char *const name) -> bool {
+      return def || cfg_size(cfg, (name)) > 0;
+   };
 
    // init name and add to hash table
    if(def)

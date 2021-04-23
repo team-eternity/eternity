@@ -299,8 +299,6 @@ static void E_setDynamicString(const char *&dest, int index, const char *value)
    dest = dynamicStrings[index];
 }
 
-#define IS_SET(name) (cfg_size(props, name) > 0)
-
 //
 // E_processGamePropsBlock
 //
@@ -308,6 +306,10 @@ static void E_setDynamicString(const char *&dest, int index, const char *value)
 //
 static void E_processGamePropsBlock(cfg_t *props)
 {
+   const auto IS_SET = [props](const char *const name) -> bool {
+      return cfg_size(props, name) > 0;
+   };
+
    // Flags
 
    if(IS_SET(ITEM_GPROP_FLAGSADD))
