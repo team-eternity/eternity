@@ -45,6 +45,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "st_stuff.h"
+#include "r_plane.h"
 #include "r_draw.h"
 #include "r_dynseg.h"
 #include "r_main.h"
@@ -1691,10 +1692,15 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 template<surf_e surf>
 inline static bool AM_different(const line_t &line)
 {
-   return isInner<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) ||
-      (isOuter<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) &&
-         (!(line.extflags & e_edgePortalFlags[surf]) ||
-            !(line.backsector->srf[surf].pflags & PS_PASSABLE)));
+   const surface_t &frontsurf = line.frontsector->srf[surf];
+   const surface_t &backsurf = line.backsector->srf[surf];
+   if(frontsurf.slope && R_CompareSlopes(frontsurf.slope, backsurf.slope))
+      return false;
+
+   return (!frontsurf.slope ^ !backsurf.slope) ||
+   isInner<surf>(frontsurf.height, backsurf.height) ||
+   (isOuter<surf>(frontsurf.height, backsurf.height) &&
+    (!(line.extflags & e_edgePortalFlags[surf]) || !(backsurf.pflags & PS_PASSABLE)));
 }
 
 inline static bool AM_dontDraw(const line_t &line)
