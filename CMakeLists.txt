@@ -19,7 +19,7 @@
 ##
 ################################################################################
 ######################### CMake Configuration ##################################
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.11)
 
 # Must be before project()
 # Can't set anything below 10.9 now. Xcode will show a warning if I attempt 10.7 like before
