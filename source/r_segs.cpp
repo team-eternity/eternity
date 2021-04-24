@@ -30,6 +30,7 @@
 
 #include "doomstat.h"
 #include "e_exdata.h"
+#include "m_compare.h"
 #include "p_info.h"
 #include "p_user.h"
 #include "r_draw.h"
@@ -941,6 +942,11 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
          ds_p->silhouette = SIL_BOTTOM;
          ds_p->bsilheight = D_MAXINT;
       }
+      else if(segclip.backsec->srf.floor.slope)
+      {
+         ds_p->silhouette = SIL_BOTTOM;
+         ds_p->bsilheight = emax(segclip.maxfrontfloor, segclip.maxbackfloor);
+      }
       if(segclip.minfrontceil < segclip.minbackceil)
       {
          ds_p->silhouette |= SIL_TOP;
@@ -950,6 +956,11 @@ void R_StoreWallRange(bspcontext_t &bspcontext, cmapcontext_t &cmapcontext, plan
       {
          ds_p->silhouette |= SIL_TOP;
          ds_p->tsilheight = D_MININT;
+      }
+      else if(segclip.backsec->srf.ceiling.slope)
+      {
+         ds_p->silhouette |= SIL_TOP;
+         ds_p->tsilheight = emin(segclip.minfrontceil, segclip.minbackceil);
       }
 
       if(segclip.maskedtex)
