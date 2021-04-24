@@ -503,5 +503,15 @@ float P_DistFromPlanef(const v3float_t *point, const v3float_t *pori,
           (point->z - pori->z) * pnormal->z;
 }
 
+//
+// Get height of a potentially sloped surface
+//
+fixed_t surface_t::getZAt(fixed_t x, fixed_t y) const
+{
+   if(slope)
+      return P_GetZAt(slope, x, y);
+   return height;
+}
+
 // EOF
 

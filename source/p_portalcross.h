@@ -73,9 +73,10 @@ v2fixed_t P_PrecisePortalCrossing(fixed_t x, fixed_t y, fixed_t dx, fixed_t dy,
 // ioanch 20160107
 //
 sector_t *P_ExtremeSectorAtPoint(fixed_t x, fixed_t y, surf_e surf,
-                                 sector_t *preCalcSector = nullptr);
+                                 sector_t *preCalcSector = nullptr,
+                                 v2fixed_t *totaldelta = nullptr);
 
-sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf);
+sector_t *P_ExtremeSectorAtPoint(const Mobj *mo, surf_e surf, v2fixed_t *totaldelta = nullptr);
 //
 // P_TransPortalBlockWalker
 // ioanch 20160107
