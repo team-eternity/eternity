@@ -166,6 +166,18 @@ struct pslope_t
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
+
+   //
+   // IMPORTANT
+   //
+   // The following are references to the containing sector. They work simply because we follow the
+   // rule that each sector may have its own slope, no slopes are shared. If we decide to share
+   // slopes, we MUST make sure to decouple the following fields from pslope_t
+   //
+
+   // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
+   fixed_t surfaceZOffset;
+   float surfaceZOffsetF;  // floating-point variant
 };
 
 //

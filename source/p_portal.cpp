@@ -1038,8 +1038,8 @@ void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h)
    // Update slope origin
    if(surface.slope)
    {
-      surface.slope->o.z = surface.height;
-      surface.slope->of.z = surface.heightf;
+      surface.slope->o.z = surface.height + surface.slope->surfaceZOffset;
+      surface.slope->of.z = surface.heightf + surface.slope->surfaceZOffsetF;
    }
 
    // check portal state
