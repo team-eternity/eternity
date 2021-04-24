@@ -96,7 +96,7 @@ static pslope_t *P_MakeSlope(const v3float_t &o, const v2float_t &d,
 static pslope_t *P_CopySlope(const pslope_t *src)
 {
    pslope_t *ret = emalloctag(pslope_t *, sizeof(pslope_t), PU_LEVEL, nullptr);
-   memcpy(ret, src, sizeof(*ret));
+   *ret = *src;
 
    return ret;
 }
