@@ -35,6 +35,14 @@ namespace fs = std::filesystem;
 namespace fs = std::experimental::filesystem;
 #endif
 
+#if (EE_CURRENT_PLATFORM == EE_PLATFORM_WINDOWS)
+#define START_UTF8() setlocale(LC_ALL, ".65001")
+#define END_UTF8()   setlocale(LC_ALL, "C")
+#else
+#define START_UTF8()
+#define END_UTF8()
+#endif
+
 #include "z_zone.h"
 
 #include "c_runcmd.h"
@@ -255,7 +263,10 @@ static void MN_readSaveStrings()
       if(ent.is_directory() || !savePath.has_stem() || !savePath.has_extension() || savePath.extension() != ".dsg")
          continue;
 
-      if(!loadFile.openFile(pathStr.constPtr(), InBuffer::NENDIAN))
+      START_UTF8();
+      const bool fileLoaded = !loadFile.openFile(pathStr.constPtr(), InBuffer::NENDIAN);
+      END_UTF8();
+      if(fileLoaded)
          continue;
 
       qstring savename(savePath.stem().generic_u8string().c_str());
@@ -268,6 +279,7 @@ static void MN_readSaveStrings()
       newSlot.fileNum = savename.toInt();
 
       // file time
+      START_UTF8();
       struct stat statbuf;
       if(!stat(pathStr.constPtr(), &statbuf))
       {
@@ -276,6 +288,7 @@ static void MN_readSaveStrings()
          newSlot.fileTime    = statbuf.st_mtime;
          newSlot.fileTimeStr = timeStr;
       }
+      END_UTF8();
 
       // description
       memset(description, 0, sizeof(description));
