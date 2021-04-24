@@ -293,6 +293,8 @@ struct surface_t
 
    // haleyjd 10/17/10: terrain type overrides
    ETerrain *terrain;
+
+   fixed_t getZAt(fixed_t x, fixed_t y) const;
 };
 
 //
