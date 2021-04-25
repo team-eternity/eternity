@@ -664,10 +664,7 @@ void A_GenWizard(actionargs_t *actionargs)
                     wizType);
 
    // ioanch 20160116: portal aware
-   if(!P_CheckPosition(mo, mo->x, mo->y) ||
-      (mo->z >
-      (P_ExtremeSectorAtPoint(mo, surf_ceil)->srf.ceiling.height - mo->height)) ||
-      (mo->z < P_ExtremeSectorAtPoint(mo, surf_floor)->srf.floor.height))
+   if(!P_CheckPosition(mo, mo->x, mo->y) || !P_CheckFloorCeilingForSpawning(*mo))
    {
       // doesn't fit, so remove it immediately
       mo->remove();
