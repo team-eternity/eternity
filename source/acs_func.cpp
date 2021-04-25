@@ -119,14 +119,20 @@ inline static PointThinker *ACS_getSoundSource(const ACSThreadInfo *info)
 //
 static fixed_t ACS_getSurfaceZ(int tag, surf_e type, fixed_t x, fixed_t y)
 {
+   const sector_t &pointedSector = *R_PointInSubsector(x, y)->sector;
    if(!tag)
    {
       // tag 0 means to look at x and y and get the sector from there
-      const sector_t &sector = *R_PointInSubsector(x, y)->sector;
-      return sector.srf[type].getZAt(x, y);
+      return pointedSector.srf[type].getZAt(x, y);
    }
 
    // In this case it's tagged, focus on that sector
+
+   // But first prioritize the coordinate if the sector is tagged.
+   if(pointedSector.tag == tag)
+      return pointedSector.srf[type].getZAt(x, y);
+
+   // Otherwise pick the first sector   
    int secnum = P_FindSectorFromTag(tag, -1);
    if(secnum < 0)
       return 0;   // In case of no sector, return 0
