@@ -100,11 +100,11 @@ struct channel_t
 static channel_t *channels;
 
 // Maximum volume of a sound effect.
-// Internal default is max out of 0-15.
-int snd_SfxVolume = 15;
+// Internal default is max out of 0-SND_MAXVOLUME.
+int snd_SfxVolume = SND_MAXVOLUME;
 
 // Maximum volume of music.
-int snd_MusicVolume = 15;
+int snd_MusicVolume = SND_MAXVOLUME;
 
 // precache sounds ?
 int s_precache = 1;
@@ -248,7 +248,7 @@ static int S_AdjustSoundParams(camera_t *listener, const PointThinker *source,
                                         + ANG90) >> ANGLETOFINESHIFT]) : 0;
 
    // haleyjd 05/29/06: allow per-channel volume scaling
-   basevolume = (snd_SfxVolume * chanvol) / 15;
+   basevolume = (snd_SfxVolume * chanvol) / SND_MAXVOLUME;
 
    // haleyjd 05/30/06: allow per-channel attenuation behavior
    switch(chanattn)
@@ -576,7 +576,7 @@ void S_StartSfxInfo(const soundparams_t &params)
    if(!origin || (!extcamera && origin == players[displayplayer].mo))
    {
       sep = NORM_SEP;
-      volume = (volume * volumeScale) / 15; // haleyjd 05/29/06: scale volume
+      volume = (volume * volumeScale) / SND_MAXVOLUME; // haleyjd 05/29/06: scale volume
       volume = eclamp(volume, 0, 127);
       if(volume < 1) // clip due to inaudibility
          return;
@@ -1610,9 +1610,9 @@ musicinfo_t *S_MusicForName(const char *name)
 
 VARIABLE_BOOLEAN(s_precache,      nullptr, onoff);
 VARIABLE_BOOLEAN(pitched_sounds,  nullptr, onoff);
-VARIABLE_INT(default_numChannels, nullptr, 1, 32,  nullptr);
-VARIABLE_INT(snd_SfxVolume,       nullptr, 0, 15,  nullptr);
-VARIABLE_INT(snd_MusicVolume,     nullptr, 0, 15,  nullptr);
+VARIABLE_INT(default_numChannels, nullptr, 1, 32,                nullptr);
+VARIABLE_INT(snd_SfxVolume,       nullptr, 0, SND_MAXVOLUME,  nullptr);
+VARIABLE_INT(snd_MusicVolume,     nullptr, 0, SND_MAXVOLUME,  nullptr);
 VARIABLE_BOOLEAN(forceFlipPan,    nullptr, onoff);
 VARIABLE_TOGGLE(s_hidefmusic,     nullptr, onoff);
 

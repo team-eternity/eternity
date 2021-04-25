@@ -45,6 +45,7 @@
 #include "p_setup.h"
 #include "p_spec.h"
 #include "st_stuff.h"
+#include "r_plane.h"
 #include "r_draw.h"
 #include "r_dynseg.h"
 #include "r_main.h"
@@ -220,6 +221,7 @@ int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 int automap_grid = 0;
 
 bool automapactive = false;
+bool automap_overlay;
 
 // location of window on screen
 static int  f_x;
@@ -536,7 +538,7 @@ extern void ST_AutomapEvent(int type);
 static void AM_initVariables()
 {
    int pnum;   
-   
+
    automapactive = true;
 
    // haleyjd: need to redraw the backscreen?
@@ -748,8 +750,31 @@ void AM_Start()
       lastlevel = gamemap;
       lastepisode = gameepisode;
    }
+
+   f_h = automap_overlay && scaledwindow.height == SCREENHEIGHT ?
+      video.height : video.height - ((GameModeInfo->StatusBar->height *
+                                      video.yscale) >> FRACBITS);
+
    AM_initVariables();
    AM_loadPics();
+}
+
+//
+// Updates automap window height. Called when view is changed.
+//
+void AM_UpdateWindowHeight(bool fullscreen)
+{
+   if(!automap_overlay)
+      return;
+   f_h = fullscreen ?
+      video.height : video.height - ((GameModeInfo->StatusBar->height *
+                                      video.yscale) >> FRACBITS);
+
+   m_h = FTOM(f_h);
+   m_y = M_FixedToDouble(plr->mo->y) - m_h/2;
+
+   AM_changeWindowLoc();
+   old_m_h = m_h;
 }
 
 //
@@ -917,7 +942,7 @@ bool AM_Responder(const event_t *ev)
          return true;
 
       case ka_map_mark: // mark a spot
-         // Ty 03/27/98 - *not* externalized     
+         // Ty 03/27/98 - *not* externalized
          // sf: fixed this (buffer at start, presumably from an old sprintf
          doom_printf("%s %d", DEH_String("AMSTR_MARKEDSPOT"), markpointnum);
          AM_addMark();
@@ -926,6 +951,12 @@ bool AM_Responder(const event_t *ev)
       case ka_map_clear: // clear all marked spots
          AM_clearMarks();  // Ty 03/27/98 - *not* externalized
          doom_printf("%s", DEH_String("AMSTR_MARKSCLEARED"));
+         return true;
+
+      case ka_map_overlay:
+         automap_overlay = !automap_overlay;
+         doom_printf("Overlay mode %s\n", automap_overlay ? "on" : "off");
+         AM_Start(); // refresh view size
          return true;
 
       default:
@@ -1018,7 +1049,7 @@ void AM_Ticker()
 
    double oldmx = m_x + m_w / 2;
    double oldmy = m_y + m_h / 2;
-   
+
    if(followplayer)
       AM_doFollowPlayer();
    
@@ -1661,10 +1692,15 @@ inline static bool AM_drawAsClosedDoor(const line_t *line)
 template<surf_e surf>
 inline static bool AM_different(const line_t &line)
 {
-   return isInner<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) ||
-      (isOuter<surf>(line.frontsector->srf[surf].height, line.backsector->srf[surf].height) &&
-         (!(line.extflags & e_edgePortalFlags[surf]) ||
-            !(line.backsector->srf[surf].pflags & PS_PASSABLE)));
+   const surface_t &frontsurf = line.frontsector->srf[surf];
+   const surface_t &backsurf = line.backsector->srf[surf];
+   if(frontsurf.slope && R_CompareSlopes(frontsurf.slope, backsurf.slope))
+      return false;
+
+   return (!frontsurf.slope ^ !backsurf.slope) ||
+   isInner<surf>(frontsurf.height, backsurf.height) ||
+   (isOuter<surf>(frontsurf.height, backsurf.height) &&
+    (!(line.extflags & e_edgePortalFlags[surf]) || !(backsurf.pflags & PS_PASSABLE)));
 }
 
 inline static bool AM_dontDraw(const line_t &line)
@@ -2306,8 +2342,6 @@ static void AM_drawMarks()
 }
 
 //
-// AM_drawCrosshair()
-//
 // Draw the single point crosshair representing map center
 //
 // Passed the color to draw the pixel with
@@ -2316,8 +2350,7 @@ static void AM_drawMarks()
 //
 inline static void AM_drawCrosshair(int color)
 {
-   vbscreen.data[(vbscreen.pitch * ((f_h + 1) >> 1)) + (vbscreen.width >> 1)] =
-      color; // single point for now
+   PUTDOT((f_w + 1) >> 1, (f_h + 1) >> 1, color); // single point for now
 }
 
 //
@@ -2332,11 +2365,12 @@ void AM_Drawer()
    if(!automapactive)
       return;
 
-   AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
+   if(!automap_overlay)
+      AM_clearFB(mapcolor_back);       //jff 1/5/98 background default color
    
    if(automap_grid)                 // killough 2/28/98: change var name
       AM_drawGrid(mapcolor_grid);   //jff 1/7/98 grid default color
-   
+
    AM_drawWalls();
 
    // haleyjd 05/17/08:

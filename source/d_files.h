@@ -39,6 +39,7 @@ enum dafflags_e
 };
 
 // WAD Files
+int D_GetNumWadFiles();
 void D_AddFile(const char *file, int li_namespace, FILE *fp, size_t baseoffset,
                dafflags_e addflags);
 void D_AddDirectory(const char *dir);

@@ -95,7 +95,6 @@ char *wad_files[MAXLOADFILES], *deh_files[MAXLOADFILES];
 char *csc_files[MAXLOADFILES];
 
 int textmode_startup = 0;  // sf: textmode_startup for old-fashioned people
-int use_startmap = -1;     // default to -1 for asking in menu
 bool devparm;              // started game with -devparm
 
 // jff 1/24/98 add new versions of these variables to remember command line
@@ -137,10 +136,10 @@ char    *basegamepath;            // haleyjd 11/23/06: path of base/game directo
 char    *userpath;                // haleyjd 02/05/12: path of "user" directory
 char    *usergamepath;            // haleyjd 02/05/12: path of user/game directory
 
-void D_CheckNetGame(void);
-void D_ProcessEvents(void);
+void D_CheckNetGame();
+void D_ProcessEvents();
 void G_BuildTiccmd(ticcmd_t* cmd);
-void D_DoAdvanceDemo(void);
+void D_DoAdvanceDemo();
 
 void usermsg(E_FORMAT_STRING(const char *s), ...)
 {
@@ -546,7 +545,7 @@ void D_DrawWings()
 
    if(gamestate == GS_LEVEL && !MN_CheckFullScreen())
    {
-      if(scaledwindow.height != SCREENHEIGHT || automapactive)
+      if(scaledwindow.height != SCREENHEIGHT || (automapactive && !automap_overlay))
       {
          unsigned int bottom   = SCREENHEIGHT - 1;
          unsigned int statbarh = static_cast<unsigned int>(GameModeInfo->StatusBar->height);
@@ -604,7 +603,7 @@ static void D_Display()
          if(oldgamestate != GS_LEVEL)
             R_FillBackScreen(scaledwindow); // draw the pattern into the back screen
 
-         if(automapactive)
+         if(automapactive && !automap_overlay)
          {
             AM_Drawer();
          }
@@ -612,6 +611,8 @@ static void D_Display()
          {
             R_DrawViewBorder();    // redraw border
             R_RenderPlayerView(&players[displayplayer], camera);
+            if(automapactive && automap_overlay)
+               AM_Drawer();
          }
          
          ST_Drawer(scaledwindow.height == SCREENHEIGHT);  // killough 11/98
@@ -649,7 +650,8 @@ static void D_Display()
          int width = patch->width;
          int x = (SCREENWIDTH - width) / 2 + patch->leftoffset;
          // SoM 2-4-04: ANYRES
-         int y = 4 + (automapactive ? 0 : scaledwindow.y);
+
+         int y = 4 + (automapactive && !automap_overlay ? 0 : scaledwindow.y);
          
          V_DrawPatch(x, y, &subscreen43, patch);
       }
@@ -1231,15 +1233,20 @@ extern int levelFragLimit;
 //
 static void D_StartupMessage()
 {
-   puts("The Eternity Engine\n"
-        "Copyright 2017 James Haley, Stephen McGranahan, et al.\n"
-        "http://www.doomworld.com/eternity\n"
-        "\n"
-        "This program is free software distributed under the terms of\n"
-        "the GNU General Public License. See the file \"COPYING\" for\n"
-        "full details. Commercial sale or distribution of this product\n"
-        "without its license, source code, and copyright notices is an\n"
-        "infringement of US and international copyright laws.\n");
+   static char copyright[] =
+      "The Eternity Engine\n"
+      "Copyright YEAR James Haley, Stephen McGranahan, et al.\n"
+      "http://www.doomworld.com/eternity\n"
+      "\n"
+      "This program is free software distributed under the terms of\n"
+      "the GNU General Public License. See the file \"COPYING\" for\n"
+      "full details. Commercial sale or distribution of this product\n"
+      "without its license, source code, and copyright notices is an\n"
+      "infringement of US and international copyright laws.\n";
+
+   memcpy(copyright + 30, &__DATE__[7], 4); // Automatically update copyright year
+
+   puts(copyright);
 }
 
 //
@@ -1802,6 +1809,9 @@ static void D_DoomInit()
       C_Update();
 
    idmusnum = -1; //jff 3/17/98 insure idmus number is blank
+
+   // Load OPTIONS that are safe to read at startup
+   M_LoadOptions(default_t::wad_startup);
 
 #if 0
    // check for a driver that wants intermission stats

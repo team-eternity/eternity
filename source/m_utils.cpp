@@ -453,5 +453,15 @@ char *M_SafeFilePath(const char *pbasepath, const char *newcomponent)
    return newstr;
 }
 
+//
+// Modulo which adjusts to have positive result always. Needed because we use it throughout the code
+// for hash tables
+//
+int M_PositiveModulo(int op1, int op2)
+{
+   int result = op1 % op2;
+   return result < 0 ? result + abs(op2) : result;
+}
+
 // EOF
 

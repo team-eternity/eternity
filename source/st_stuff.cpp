@@ -34,6 +34,7 @@
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
+#include "e_compatibility.h"
 #include "e_inventory.h"
 #include "e_lib.h"
 #include "e_weapons.h"
@@ -721,7 +722,7 @@ static void ST_updateWidgets()
       
       amount = E_GetItemOwnedAmountName(plyr, GameModeInfo->cardNames[i + 3]);
       if(amount > 0)
-         keyboxes[i] = ((keyboxes[i] == -1 || sts_traditional_keys) ? i + 3 : i + 6);
+         keyboxes[i] = ((keyboxes[i] == -1 || E_Get(overridableSetting_stsTraditionalKeys)) ? i + 3 : i + 6);
    }
 
    // used by the w_armsbg widget
@@ -781,10 +782,16 @@ static void ST_doPaletteStuff()
 
    if(plyr->powers[pw_strength])
    {
-      // slowly fade the berzerk out
-      int bzc = 12 - (plyr->powers[pw_strength]>>6);
-      if(bzc > cnt)
-         cnt = bzc;
+      if(!(GameModeInfo->flags & GIF_BERZERKISPENTA))
+      {
+         // slowly fade the berzerk out
+         int bzc = 12 - (plyr->powers[pw_strength] >> 6);
+         if(bzc > cnt)
+            cnt = bzc;
+      }
+      else if((plyr->powers[pw_strength] < -4 * 32 || (plyr->powers[pw_strength] & 8)) &&
+              plyr->powers[pw_strength] && cnt == 0)
+         cnt = 1;
    }
 
    if(cnt)
@@ -1086,15 +1093,15 @@ void ST_Drawer(bool fullscreen)
    // haleyjd: test whether fullscreen graphical hud is enabled
    bool fshud = hud_enabled && hud_overlaylayout == HUD_GRAPHICAL;
 
-   st_statusbaron  = !fullscreen || automapactive || fshud;
-   st_backgroundon = !fullscreen || automapactive;
+   st_statusbaron  = !fullscreen || (automapactive && !automap_overlay) || fshud;
+   st_backgroundon = !fullscreen || (automapactive && !automap_overlay);
 
    ST_doPaletteStuff();  // Do red-/gold-shifts from damage/items
 
    // sf: draw nothing in fullscreen
    // tiny bit faster and also removes the problem of status bar
    // percent '%' signs being drawn in fullscreen
-   if(fullscreen && !automapactive)
+   if(fullscreen && (!automapactive || automap_overlay))
    {
       // haleyjd: call game mode's fullscreen drawer when 
       // hud is enabled and hud_overlaystyle is "graphical"

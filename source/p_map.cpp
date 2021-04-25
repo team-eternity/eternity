@@ -149,7 +149,6 @@ static bool telefrag; // killough 8/9/98: whether to telefrag at exit
 // such things so far.
 static bool ignore_inerts = true;
 
-#ifdef R_LINKEDPORTALS
 // SoM: for portal teleports, PIT_StompThing will stomp anything the player is touching on the
 // x/y plane which means if the player jumps through a mile above a demon, the demon will be
 // telefragged. This simply will not do.
@@ -200,8 +199,6 @@ static bool PIT_StompThing3D(Mobj *thing, void *context)
    
    return true;
 }
-#endif
-
 
 static bool PIT_StompThing(Mobj *thing, void *context)
 {
@@ -387,7 +384,7 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    // killough 8/9/98: make telefragging more consistent, preserve compatibility
    // haleyjd 03/25/03: TELESTOMP flag handling moved here (was thing->player)
    telefrag = (thing->flags3 & MF3_TELESTOMP) || 
-              (!comp[comp_telefrag] ? boss : (gamemap == 30));
+              (!getComp(comp_telefrag) ? boss : (gamemap == 30));
 
    // kill anything occupying the position
    
@@ -447,11 +444,9 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
    clip.numspechit = 0;
    
    // stomp on any things contacted
-#ifdef R_LINKEDPORTALS
    if(stomp3d)
       func = PIT_StompThing3D;
    else
-#endif
       func = PIT_StompThing;
    
    xl = (clip.bbox[BOXLEFT  ] - bmaporgx - MAXRADIUS) >> MAPBLOCKSHIFT;
@@ -897,7 +892,7 @@ bool P_SkullHit(Mobj *thing)
 //
 int P_MissileBlockHeight(Mobj *mo)
 {
-   return (demo_version >= 333 && !comp[comp_theights] &&
+   return (demo_version >= 333 && !getComp(comp_theights) &&
            mo->flags3 & MF3_3DDECORATION) ? mo->info->height : mo->height;
 }
 
@@ -1276,6 +1271,11 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    yl = (clip.bbox[BOXBOTTOM] - bmaporgy) >> MAPBLOCKSHIFT;
    yh = (clip.bbox[BOXTOP]    - bmaporgy) >> MAPBLOCKSHIFT;
 
+   // From dsda-doom, originally fixed by kraflab
+   // heretic - this must be incremented before iterating over the lines
+   if(!vanilla_heretic)
+      validcount++;
+
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
@@ -1338,7 +1338,7 @@ static bool P_CheckDropOffMBF(Mobj *thing, int dropoff)
 
    if(!(thing->flags & (MF_DROPOFF|MF_FLOAT)))
    {
-      if(comp[comp_dropoff])
+      if(getComp(comp_dropoff))
       {
          // haleyjd: note missing 202 compatibility... WOOPS!
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
@@ -1412,7 +1412,7 @@ static bool P_CheckDropOffEE(Mobj *thing, int dropoff)
          return true;
       }
 
-      if(comp[comp_dropoff])
+      if(getComp(comp_dropoff))
       {
          if(clip.zref.floor - clip.zref.dropoff > STEPSIZE)
             return false; // don't stand over a dropoff
@@ -1556,7 +1556,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
    clip.felldown = clip.floatok = false;               // killough 11/98
 
    bool groupidchange = false;
-   fixed_t prex, prey;
+   fixed_t prex = x, prey = y;
 
    PODCollection<line_t *> pushhit;
    PODCollection<line_t *> *pPushHit = full_demo_version >= make_full_version(401, 0) ? &pushhit : 
@@ -1612,7 +1612,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
          y = dest.y;
       }
 
-      bool check;
+      bool check = false;
       if(groupidchange)
       {
          oldgroupid = thing->groupid;
@@ -1844,12 +1844,10 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       {
 // PTODO
          // ioanch 20160113: no longer use portals unless demo version is low
-#ifdef R_LINKEDPORTALS
          line_t *line = clip.spechit[clip.numspechit];
          if(!line)   // skip if it's nulled out
             continue;
 
-#endif
          if(line->special)  // see if the line was crossed
          {
             link = P_GetLinkOffset(thing->groupid, line->frontsector->groupid);
@@ -2706,7 +2704,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
    msecnode_t *n;
    
    // killough 10/98: sometimes use Doom's method
-   if(comp[comp_floors] && (demo_version >= 203 || demo_compatibility))
+   if(getComp(comp_floors) && (demo_version >= 203 || demo_compatibility))
       return P_ChangeSector(sector, crunch);
 
    // haleyjd: call down to P_ChangeSector3D instead.

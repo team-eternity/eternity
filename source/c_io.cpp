@@ -1061,7 +1061,7 @@ static void Egg()
       {
          byte *s = egg + ((y % 44 * 42) + (x % 42));
          if(*s)
-            cback.data[y * video.width + x] = *s;
+            cback.data[x * video.height + y] = *s;
       }
    }
 

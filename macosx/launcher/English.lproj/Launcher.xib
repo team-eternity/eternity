@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -47,7 +47,7 @@
                 <menuItem title="EternityLaunch" id="56">
                     <menu key="submenu" title="EternityLaunch" systemMenu="apple" id="57">
                         <items>
-                            <menuItem title="About EternityLaunch" id="58">
+                            <menuItem title="About Eternity Engine" id="58">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
                                     <action selector="showAboutPanel:" target="-2" id="CGP-kv-kn6"/>
@@ -445,18 +445,19 @@
                     </menu>
                 </menuItem>
             </items>
+            <point key="canvasLocation" x="85" y="135"/>
         </menu>
         <window title="Eternity Engine" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" frameAutosaveName="EternityLaunchMainWindow" animationBehavior="default" id="371">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="371" y="123" width="557" height="411"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="877"/>
             <value key="minSize" type="size" width="525" height="411"/>
             <view key="contentView" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="557" height="411"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <button toolTip="Start Eternity." verticalHuggingPriority="750" id="535">
+                    <button toolTip="Start Eternity." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="535">
                         <rect key="frame" x="433" y="110" width="110" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="push" title="Start Game" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="536">
@@ -470,7 +471,7 @@ DQ
                             <action selector="launchGame:" target="-2" id="537"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="613">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="613">
                         <rect key="frame" x="47" y="117" width="384" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <string key="toolTip">Type here other parameters not included in the user interface. You can click on the question mark button to visit the wiki page on available parameters.</string>
@@ -483,7 +484,7 @@ DQ
                             <outlet property="delegate" destination="984" id="986"/>
                         </connections>
                     </textField>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="615">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="615">
                         <rect key="frame" x="44" y="143" width="119" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Other Parameters:" id="616">
@@ -492,7 +493,7 @@ DQ
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <button toolTip="Opens the Eternity wiki web page on command-line parameters." horizontalHuggingPriority="750" verticalHuggingPriority="750" id="617">
+                    <button toolTip="Opens the Eternity wiki web page on command-line parameters." horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="617">
                         <rect key="frame" x="17" y="114" width="25" height="25"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="help" bezelStyle="helpButton" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="618">
@@ -503,14 +504,14 @@ DQ
                             <action selector="goGetHelp:" target="-2" id="957"/>
                         </connections>
                     </button>
-                    <box autoresizesSubviews="NO" borderType="line" title="Files and Add-ons" id="620">
+                    <box autoresizesSubviews="NO" fixedFrame="YES" borderType="line" title="Files and Add-ons" translatesAutoresizingMaskIntoConstraints="NO" id="620">
                         <rect key="frame" x="17" y="173" width="220" height="134"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <view key="contentView" id="X3a-KI-wWX">
                             <rect key="frame" x="3" y="3" width="214" height="116"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <scrollView toolTip="Lists the game files to load at startup time." autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" id="541">
+                                <scrollView toolTip="Lists the game files to load at startup time." fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="541">
                                     <rect key="frame" x="18" y="14" width="178" height="69"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <clipView key="contentView" id="vn8-a4-5s6">
@@ -519,14 +520,13 @@ DQ
                                         <subviews>
                                             <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnSelection="YES" columnResizing="NO" autosaveColumns="NO" id="544">
                                                 <rect key="frame" x="0.0" y="0.0" width="176" height="67"/>
-                                                <autoresizingMask key="autoresizingMask"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <size key="intercellSpacing" width="3" height="2"/>
                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                                 <tableColumns>
                                                     <tableColumn identifier="pwadName" width="173" minWidth="10" maxWidth="3.4028234663852886e+38" id="580">
                                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
-                                                            <font key="font" metaFont="smallSystem"/>
                                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                             <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                                         </tableHeaderCell>
@@ -553,7 +553,7 @@ DQ
                                         <autoresizingMask key="autoresizingMask"/>
                                     </scroller>
                                 </scrollView>
-                                <button verticalHuggingPriority="750" id="571">
+                                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="571">
                                     <rect key="frame" x="155" y="90" width="21" height="23"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <string key="toolTip">Adds game files, including main game WADs (IWADs) and add-on files.
@@ -574,7 +574,7 @@ RSP — response files</string>
                                         <action selector="addPwad:" target="-2" id="808"/>
                                     </connections>
                                 </button>
-                                <button toolTip="Removes selected files from the list." verticalHuggingPriority="750" tag="1" id="573">
+                                <button toolTip="Removes selected files from the list." verticalHuggingPriority="750" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="573">
                                     <rect key="frame" x="175" y="90" width="21" height="23"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="574">
@@ -585,7 +585,7 @@ RSP — response files</string>
                                         <action selector="removePwad:" target="-2" id="839"/>
                                     </connections>
                                 </button>
-                                <button toolTip="Saves the currently chosen files into a GFS file." verticalHuggingPriority="750" id="971">
+                                <button toolTip="Saves the currently chosen files into a GFS file." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="971">
                                     <rect key="frame" x="18" y="90" width="103" height="23"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="smallSquare" title="Save as GFS..." bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="972">
@@ -599,11 +599,11 @@ RSP — response files</string>
                             </subviews>
                         </view>
                     </box>
-                    <box verticalHuggingPriority="750" boxType="separator" id="639">
+                    <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="639">
                         <rect key="frame" x="20" y="166" width="517" height="5"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                     </box>
-                    <tabView id="699">
+                    <tabView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="699">
                         <rect key="frame" x="235" y="167" width="309" height="220"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" heightSizable="YES"/>
                         <font key="font" metaFont="system"/>
@@ -613,7 +613,7 @@ RSP — response files</string>
                                     <rect key="frame" x="10" y="33" width="289" height="174"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="594">
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="594">
                                             <rect key="frame" x="102" y="149" width="106" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <string key="toolTip">Select the level where to go on startup. For Doom 1, type episode (1-4) and level number (1-9). For Doom 2, type level number (1-32).</string>
@@ -626,7 +626,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1473"/>
                                             </connections>
                                         </textField>
-                                        <textField toolTip="Skill level to start on, from 1 to 5." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="598">
+                                        <textField toolTip="Skill level to start on, from 1 to 5." verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="598">
                                             <rect key="frame" x="102" y="117" width="106" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Start Normally" drawsBackground="YES" id="599">
@@ -638,7 +638,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1474"/>
                                             </connections>
                                         </textField>
-                                        <button toolTip="Whether monsters will come back from the dead after a random time." id="600">
+                                        <button toolTip="Whether monsters will come back from the dead after a random time." fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="600">
                                             <rect key="frame" x="15" y="93" width="140" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Respawn Monsters" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="601">
@@ -649,7 +649,7 @@ RSP — response files</string>
                                                 <action selector="makeCheckboxUndo:" target="-2" id="1458"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Whether monsters will be quick to attack." id="602">
+                                        <button toolTip="Whether monsters will be quick to attack." fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="602">
                                             <rect key="frame" x="15" y="73" width="140" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Fast Monsters" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="603">
@@ -660,7 +660,7 @@ RSP — response files</string>
                                                 <action selector="makeCheckboxUndo:" target="-2" id="1459"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Don't spawn any monsters." id="604">
+                                        <button toolTip="Don't spawn any monsters." fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="604">
                                             <rect key="frame" x="166" y="93" width="140" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="No Monsters" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="605">
@@ -671,7 +671,7 @@ RSP — response files</string>
                                                 <action selector="makeCheckboxUndo:" target="-2" id="1460"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="650">
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="650">
                                             <rect key="frame" x="35" y="122" width="65" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" enabled="NO" sendsActionOnEndEditing="YES" title="Difficulty:" id="651">
@@ -680,7 +680,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="The filename of the demo to record." verticalHuggingPriority="750" alphaValue="0.50000000000000011" allowsCharacterPickerTouchBarItem="YES" id="706">
+                                        <textField toolTip="The filename of the demo to record." verticalHuggingPriority="750" fixedFrame="YES" alphaValue="0.50000000000000011" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="706">
                                             <rect key="frame" x="17" y="5" width="255" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingHead" selectable="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" placeholderString="No Demo Recording" drawsBackground="YES" id="707">
@@ -692,7 +692,7 @@ RSP — response files</string>
                                                 <action selector="updateParameters:" target="-2" id="942"/>
                                             </connections>
                                         </textField>
-                                        <button toolTip="Draws a browser dialog to choose the demo to record." verticalHuggingPriority="750" id="723">
+                                        <button toolTip="Draws a browser dialog to choose the demo to record." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="723">
                                             <rect key="frame" x="112" y="34" width="96" height="24"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="smallSquare" title="Choose..." bezelStyle="smallSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="724">
@@ -703,7 +703,7 @@ RSP — response files</string>
                                                 <action selector="chooseRecordDemo:" target="-2" id="840"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Clears all entries in this tab." verticalHuggingPriority="750" id="848">
+                                        <button toolTip="Clears all entries in this tab." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="848">
                                             <rect key="frame" x="216" y="34" width="56" height="24"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="smallSquare" title="Clear" bezelStyle="smallSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="849">
@@ -714,7 +714,7 @@ RSP — response files</string>
                                                 <action selector="clearRecordDemo:" target="-2" id="851"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Vanilla Doom emulation mode, useful for recording DOS Doom compatible demos." id="725">
+                                        <button toolTip="Vanilla Doom emulation mode, useful for recording DOS Doom compatible demos." fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="725">
                                             <rect key="frame" x="166" y="73" width="108" height="18"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Vanilla Mode" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="726">
@@ -725,7 +725,7 @@ RSP — response files</string>
                                                 <action selector="makeCheckboxUndo:" target="-2" id="1461"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="757">
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="757">
                                             <rect key="frame" x="7" y="151" width="93" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Warp to Level:" id="758">
@@ -734,7 +734,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="800">
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="800">
                                             <rect key="frame" x="14" y="35" width="93" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Record Demo:" id="801">
@@ -751,7 +751,7 @@ RSP — response files</string>
                                     <rect key="frame" x="10" y="33" width="289" height="174"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <textField toolTip="The filename of the demo to play back." verticalHuggingPriority="750" alphaValue="0.50000000000000011" allowsCharacterPickerTouchBarItem="YES" id="728">
+                                        <textField toolTip="The filename of the demo to play back." verticalHuggingPriority="750" alphaValue="0.50000000000000011" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="728">
                                             <rect key="frame" x="17" y="117" width="255" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="truncatingHead" selectable="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="left" placeholderString="No Demo to Play" drawsBackground="YES" id="731">
@@ -763,7 +763,7 @@ RSP — response files</string>
                                                 <action selector="updateParameters:" target="-2" id="943"/>
                                             </connections>
                                         </textField>
-                                        <button toolTip="Draws a browser dialog to choose the demo to play." verticalHuggingPriority="750" id="729">
+                                        <button toolTip="Draws a browser dialog to choose the demo to play." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="729">
                                             <rect key="frame" x="102" y="148" width="106" height="24"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="smallSquare" title="Choose..." bezelStyle="smallSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="730">
@@ -774,7 +774,7 @@ RSP — response files</string>
                                                 <action selector="choosePlayDemo:" target="-2" id="842"/>
                                             </connections>
                                         </button>
-                                        <button toolTip="Clears all entries in this tab." verticalHuggingPriority="750" id="844">
+                                        <button toolTip="Clears all entries in this tab." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="844">
                                             <rect key="frame" x="216" y="148" width="56" height="24"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="smallSquare" title="Clear" bezelStyle="smallSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="845">
@@ -785,7 +785,7 @@ RSP — response files</string>
                                                 <action selector="clearPlayDemo:" target="-2" id="847"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="802">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="802">
                                             <rect key="frame" x="14" y="151" width="75" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Play Demo:" id="803">
@@ -794,7 +794,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autosizesCells="NO" id="1464">
+                                        <matrix verticalHuggingPriority="750" allowsEmptySelection="NO" autosizesCells="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1464">
                                             <rect key="frame" x="17" y="51" width="147" height="58"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -832,7 +832,7 @@ RSP — response files</string>
                                     <rect key="frame" x="10" y="33" width="289" height="174"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <popUpButton toolTip="Choose the multiplayer game type. For single player, choose Single/Coop." verticalHuggingPriority="750" id="741">
+                                        <popUpButton toolTip="Choose the multiplayer game type. For single player, choose Single/Coop." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="741">
                                             <rect key="frame" x="98" y="147" width="137" height="26"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <popUpButtonCell key="cell" type="push" title="Single/Coop" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="744" id="742">
@@ -865,7 +865,7 @@ RSP — response files</string>
                                                 </menu>
                                             </popUpButtonCell>
                                         </popUpButton>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="747">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="747">
                                             <rect key="frame" x="17" y="154" width="79" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Game Type:" id="748">
@@ -874,7 +874,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="749">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="749">
                                             <rect key="frame" x="24" y="126" width="72" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Frag Limit:" id="750">
@@ -883,7 +883,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Maximum number of frags per level a player can have before the level automatically exists." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="751">
+                                        <textField toolTip="Maximum number of frags per level a player can have before the level automatically exists." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="751">
                                             <rect key="frame" x="101" y="124" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Inf." drawsBackground="YES" id="752">
@@ -895,7 +895,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1475"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="753">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="753">
                                             <rect key="frame" x="20" y="96" width="76" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Time Limit:" id="756">
@@ -904,7 +904,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Time before level automatically exits — useful for deathmatch." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="754">
+                                        <textField toolTip="Time before level automatically exits — useful for deathmatch." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="754">
                                             <rect key="frame" x="101" y="94" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="Inf." drawsBackground="YES" id="755">
@@ -916,7 +916,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1476"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="761">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="761">
                                             <rect key="frame" x="173" y="126" width="46" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Turbo:" id="764">
@@ -925,7 +925,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Percentage of player speed, considered cheating in single player or cooperative, intended for deathmatch play." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="762">
+                                        <textField toolTip="Percentage of player speed, considered cheating in single player or cooperative, intended for deathmatch play." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="762">
                                             <rect key="frame" x="224" y="124" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="100" drawsBackground="YES" id="763">
@@ -937,7 +937,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1477"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="765">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="765">
                                             <rect key="frame" x="153" y="96" width="66" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="DM Flags:" id="768">
@@ -946,7 +946,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Deathmatch flags." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="766">
+                                        <textField toolTip="Deathmatch flags." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="766">
                                             <rect key="frame" x="224" y="94" width="47" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="767">
@@ -958,7 +958,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1478"/>
                                             </connections>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="773">
+                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="773">
                                             <rect key="frame" x="16" y="41" width="80" height="17"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Connection:" id="774">
@@ -967,7 +967,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="775">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="775">
                                             <rect key="frame" x="101" y="41" width="171" height="47"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" borderStyle="border" title="Type your node number (1-4) and the IP addresses of the other players." id="776">
@@ -976,7 +976,7 @@ RSP — response files</string>
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField toolTip="Connection setup." verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="777">
+                                        <textField toolTip="Connection setup." verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="777">
                                             <rect key="frame" x="17" y="11" width="263" height="22"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" heightSizable="YES"/>
                                             <textFieldCell key="cell" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="--Set Up Multiplayer Here--" drawsBackground="YES" id="778">
@@ -988,7 +988,7 @@ RSP — response files</string>
                                                 <outlet property="delegate" destination="984" id="1479"/>
                                             </connections>
                                         </textField>
-                                        <button toolTip="Clears all entries in this tab." verticalHuggingPriority="750" id="919">
+                                        <button toolTip="Clears all entries in this tab." verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="919">
                                             <rect key="frame" x="17" y="65" width="56" height="24"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="smallSquare" title="Clear" bezelStyle="smallSquare" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="920">
@@ -1004,7 +1004,7 @@ RSP — response files</string>
                             </tabViewItem>
                         </tabViewItems>
                     </tabView>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="708">
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="708">
                         <rect key="frame" x="17" y="344" width="113" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Main Game WAD:" id="716">
@@ -1013,7 +1013,7 @@ RSP — response files</string>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <popUpButton toolTip="Lists all main WADs to choose from. If the list is empty, click on the plus sign below." verticalHuggingPriority="750" id="709">
+                    <popUpButton toolTip="Lists all main WADs to choose from. If the list is empty, click on the plus sign below." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="709">
                         <rect key="frame" x="17" y="312" width="171" height="26"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                         <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingMiddle" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="714">
@@ -1022,7 +1022,7 @@ RSP — response files</string>
                             <menu key="menu" title="OtherViews" id="715"/>
                         </popUpButtonCell>
                     </popUpButton>
-                    <imageView wantsLayer="YES" focusRingType="none" id="583">
+                    <imageView wantsLayer="YES" focusRingType="none" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="583">
                         <rect key="frame" x="20" y="20" width="82" height="82"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <shadow key="shadow" blurRadius="2">
@@ -1031,7 +1031,7 @@ RSP — response files</string>
                         </shadow>
                         <imageCell key="cell" refusesFirstResponder="YES" focusRingType="none" alignment="left" imageScaling="proportionallyDown" image="Eternity" id="584"/>
                     </imageView>
-                    <button toolTip="Removes the selected IWAD file from the pop-up list." verticalHuggingPriority="750" tag="2" id="797">
+                    <button toolTip="Removes the selected IWAD file from the pop-up list." verticalHuggingPriority="750" fixedFrame="YES" tag="2" translatesAutoresizingMaskIntoConstraints="NO" id="797">
                         <rect key="frame" x="213" y="314" width="21" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" image="NSRemoveTemplate" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="798">
@@ -1042,7 +1042,7 @@ RSP — response files</string>
                             <action selector="removeIwad:" target="-2" id="805"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" id="975">
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="975">
                         <rect key="frame" x="193" y="314" width="21" height="23"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                         <string key="toolTip">Adds game files, including main game WADs (IWADs) and add-on files.
@@ -1063,10 +1063,10 @@ RSP — response files</string>
                             <action selector="addIwad:" target="-2" id="978"/>
                         </connections>
                     </button>
-                    <button toolTip="Access the Eternity data folder for captured screenshots and for reviewing configuration files." verticalHuggingPriority="750" id="1233">
-                        <rect key="frame" x="20.5" y="367" width="215" height="25"/>
+                    <button toolTip="Access the Eternity data folder for captured screenshots and for reviewing configuration files." verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1233">
+                        <rect key="frame" x="17" y="367" width="219" height="25"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
-                        <buttonCell key="cell" type="roundTextured" title="Screenshots, Configs" bezelStyle="texturedRounded" image="NSFollowLinkFreestandingTemplate" imagePosition="left" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1234">
+                        <buttonCell key="cell" type="roundTextured" title="View Screenshots and Configs" bezelStyle="texturedRounded" image="NSFollowLinkFreestandingTemplate" imagePosition="left" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1234">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
@@ -1074,7 +1074,7 @@ RSP — response files</string>
                             <action selector="showUserInFinder:" target="-2" id="1235"/>
                         </connections>
                     </button>
-                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" id="1239">
+                    <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1239">
                         <rect key="frame" x="110" y="20" width="427" height="82"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                         <clipView key="contentView" copiesOnScroll="NO" id="WeX-2v-mMc">
@@ -1106,6 +1106,7 @@ RSP — response files</string>
             <connections>
                 <outlet property="delegate" destination="-2" id="534"/>
             </connections>
+            <point key="canvasLocation" x="-46.5" y="-165.5"/>
         </window>
         <customObject id="420" customClass="NSFontManager"/>
         <menu title="Pwad Table Menu" id="810">

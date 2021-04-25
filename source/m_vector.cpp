@@ -27,7 +27,16 @@
 #include "z_zone.h"
 #include "linkoffs.h"
 #include "m_vector.h"
+#include "r_context.h"
 #include "r_main.h"
+
+//
+// Get absolute value of vector
+//
+float v3float_t::abs() const
+{
+   return sqrtf(x * x + y * y + z * z);
+}
 
 // 
 // M_MagnitudeVec2
@@ -70,31 +79,31 @@ void M_NormalizeVec2(v2float_t &vec, float mag)
 // Translates the given vector (in doom's coordinate system) to the camera
 // space (in right-handed coordinate system) This function is used for slopes.
 // 
-void M_TranslateVec3f(v3float_t *vec)
+void M_TranslateVec3f(const cbviewpoint_t &cb_viewpoint, v3float_t *vec)
 {
    float tx, ty, tz;
 
-   tx = vec->x - view.x;
-   ty = view.z - vec->y;
-   tz = vec->z - view.y;
+   tx = vec->x - cb_viewpoint.x;
+   ty = cb_viewpoint.z - vec->y;
+   tz = vec->z - cb_viewpoint.y;
 
    // Just like wall projection.
-   vec->x = (tx * view.cos) - (tz * view.sin);
-   vec->z = (tz * view.cos) + (tx * view.sin);
+   vec->x = (tx * cb_viewpoint.cos) - (tz * cb_viewpoint.sin);
+   vec->z = (tz * cb_viewpoint.cos) + (tx * cb_viewpoint.sin);
    vec->y = ty;
 }
 
-void M_TranslateVec3 (v3double_t *vec)
+void M_TranslateVec3 (const cbviewpoint_t &cb_viewpoint, v3double_t *vec)
 {
    double tx, ty, tz;
 
-   tx = vec->x - view.x;
-   ty = view.z - vec->y;
-   tz = vec->z - view.y;
+   tx = vec->x - cb_viewpoint.x;
+   ty = cb_viewpoint.z - vec->y;
+   tz = vec->z - cb_viewpoint.y;
 
    // Just like wall projection.
-   vec->x = (tx * view.cos) - (tz * view.sin);
-   vec->z = (tz * view.cos) + (tx * view.sin);
+   vec->x = (tx * cb_viewpoint.cos) - (tz * cb_viewpoint.sin);
+   vec->z = (tz * cb_viewpoint.cos) + (tx * cb_viewpoint.sin);
    vec->y = ty;
 }
 

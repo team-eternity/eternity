@@ -63,15 +63,15 @@
 //
 
 // Splashes
-#define NUMSPLASHCHAINS 37
+constexpr int NUMSPLASHCHAINS = 37;
 static ETerrainSplash *SplashChains[NUMSPLASHCHAINS];
 
 // Terrain
-#define NUMTERRAINCHAINS 37
+constexpr int NUMTERRAINCHAINS = 37;
 static ETerrain *TerrainChains[NUMTERRAINCHAINS];
 
 // Floors
-#define NUMFLOORCHAINS 37
+constexpr int NUMFLOORCHAINS = 37;
 static EFloor *FloorChains[NUMFLOORCHAINS];
 
 static int numsplashes;
@@ -83,47 +83,59 @@ static int numfloors;
 //
 
 // Splash Keywords
-#define ITEM_SPLASH_SMALLCLASS "smallclass"
-#define ITEM_SPLASH_SMALLCLIP  "smallclip"
-#define ITEM_SPLASH_SMALLSOUND "smallsound"
-#define ITEM_SPLASH_BASECLASS  "baseclass"
-#define ITEM_SPLASH_CHUNKCLASS "chunkclass"
-#define ITEM_SPLASH_XVELSHIFT  "chunkxvelshift"
-#define ITEM_SPLASH_YVELSHIFT  "chunkyvelshift"
-#define ITEM_SPLASH_ZVELSHIFT  "chunkzvelshift"
-#define ITEM_SPLASH_BASEZVEL   "chunkbasezvel"
-#define ITEM_SPLASH_SOUND      "sound"
+constexpr const char ITEM_SPLASH_SMALLCLASS[] = "smallclass";
+constexpr const char ITEM_SPLASH_SMALLCLIP[]  = "smallclip";
+constexpr const char ITEM_SPLASH_SMALLSOUND[] = "smallsound";
+constexpr const char ITEM_SPLASH_BASECLASS[]  = "baseclass";
+constexpr const char ITEM_SPLASH_CHUNKCLASS[] = "chunkclass";
+constexpr const char ITEM_SPLASH_XVELSHIFT[]  = "chunkxvelshift";
+constexpr const char ITEM_SPLASH_YVELSHIFT[]  = "chunkyvelshift";
+constexpr const char ITEM_SPLASH_ZVELSHIFT[]  = "chunkzvelshift";
+constexpr const char ITEM_SPLASH_BASEZVEL[]   = "chunkbasezvel";
+constexpr const char ITEM_SPLASH_SOUND[]      = "sound";
+
+constexpr const char ITEM_SPLASHDELTA_NAME[] = "name";
 
 // Splash Options
+#define COMMON_SPLASH_OPTIONS                                  \
+      CFG_STR(ITEM_SPLASH_SMALLCLASS, "",        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_SMALLCLIP,  0,         CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_SMALLSOUND, "none",    CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_BASECLASS,  "",        CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_CHUNKCLASS, "",        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_XVELSHIFT,  -1,        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_YVELSHIFT,  -1,        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_ZVELSHIFT,  -1,        CFGF_NONE),   \
+      CFG_INT(ITEM_SPLASH_BASEZVEL,   0,         CFGF_NONE),   \
+      CFG_STR(ITEM_SPLASH_SOUND,      "none",    CFGF_NONE),
+
 cfg_opt_t edf_splash_opts[] =
 {
-   CFG_STR(ITEM_SPLASH_SMALLCLASS, "",        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_SMALLCLIP,  0,         CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_SMALLSOUND, "none",    CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_BASECLASS,  "",        CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_CHUNKCLASS, "",        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_XVELSHIFT,  -1,        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_YVELSHIFT,  -1,        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_ZVELSHIFT,  -1,        CFGF_NONE),
-   CFG_INT(ITEM_SPLASH_BASEZVEL,   0,         CFGF_NONE),
-   CFG_STR(ITEM_SPLASH_SOUND,      "none",    CFGF_NONE),
+   COMMON_SPLASH_OPTIONS
+   CFG_END()
+};
+
+cfg_opt_t edf_spldelta_opts[] =
+{
+   CFG_STR(ITEM_SPLASHDELTA_NAME, nullptr, CFGF_NONE),
+   COMMON_SPLASH_OPTIONS
    CFG_END()
 };
 
 // Terrain Keywords
-#define ITEM_TERRAIN_SPLASH   "splash"
-#define ITEM_TERRAIN_DMGAMT   "damageamount"
-#define ITEM_TERRAIN_DMGTYPE  "damagetype"
-#define ITEM_TERRAIN_DMGMASK  "damagetimemask"
-#define ITEM_TERRAIN_FOOTCLIP "footclip"
-#define ITEM_TERRAIN_LIQUID   "liquid"
-#define ITEM_TERRAIN_SPALERT  "splashalert"
-#define ITEM_TERRAIN_USECOLS  "useptclcolors"
-#define ITEM_TERRAIN_COL1     "ptclcolor1"
-#define ITEM_TERRAIN_COL2     "ptclcolor2"
-#define ITEM_TERRAIN_MINVER   "minversion"
+constexpr const char ITEM_TERRAIN_SPLASH[]   = "splash";
+constexpr const char ITEM_TERRAIN_DMGAMT[]   = "damageamount";
+constexpr const char ITEM_TERRAIN_DMGTYPE[]  = "damagetype";
+constexpr const char ITEM_TERRAIN_DMGMASK[]  = "damagetimemask";
+constexpr const char ITEM_TERRAIN_FOOTCLIP[] = "footclip";
+constexpr const char ITEM_TERRAIN_LIQUID[]   = "liquid";
+constexpr const char ITEM_TERRAIN_SPALERT[]  = "splashalert";
+constexpr const char ITEM_TERRAIN_USECOLS[]  = "useptclcolors";
+constexpr const char ITEM_TERRAIN_COL1[]     = "ptclcolor1";
+constexpr const char ITEM_TERRAIN_COL2[]     = "ptclcolor2";
+constexpr const char ITEM_TERRAIN_MINVER[]   = "minversion";
 
-#define ITEM_TERDELTA_NAME "name"
+constexpr const char ITEM_TERDELTA_NAME[] = "name";
 
 // Terrain Options
 cfg_opt_t edf_terrn_opts[] =
@@ -165,8 +177,8 @@ cfg_opt_t edf_terdelta_opts[] =
 };
 
 // Floor Keywords
-#define ITEM_FLOOR_FLAT    "flat"
-#define ITEM_FLOOR_TERRAIN "terrain"
+constexpr const char ITEM_FLOOR_FLAT[]    = "flat";
+constexpr const char ITEM_FLOOR_TERRAIN[] = "terrain";
 
 // Floor Options
 cfg_opt_t edf_floor_opts[] =
@@ -218,73 +230,111 @@ static void E_AddSplashToHash(ETerrainSplash *splash)
 // new one created. This will allow terrain lumps to have additive
 // behavior over EDF.
 //
-static void E_ProcessSplash(cfg_t *cfg)
+static void E_ProcessSplash(cfg_t *const cfg, const bool def)
 {
    const char *tempstr;
    ETerrainSplash *newSplash;
    bool newsp = false;
 
-   // init name and add to hash table
-   tempstr = cfg_title(cfg);
+   const auto IS_SET = [cfg, def](const char *const name) -> bool {
+      return def || cfg_size(cfg, (name)) > 0;
+   };
 
-   // If one already exists, modify it. Otherwise, allocate a new
-   // splash and add it to the splash hash table.
-   if(!(newSplash = E_SplashForName(tempstr)))
+   // init name and add to hash table
+   if(def)
    {
-      newSplash = estructalloc(ETerrainSplash, 1);
-      
-      if(strlen(tempstr) >= sizeof(newSplash->name))
+      // definition:
+      tempstr = cfg_title(cfg);
+
+      // If one already exists, modify it. Otherwise, allocate a new
+      // splash and add it to the splash hash table.
+      if(!(newSplash = E_SplashForName(tempstr)))
       {
-         E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
-                        tempstr);
+         newSplash = estructalloc(ETerrainSplash, 1);
+         if(strlen(tempstr) >= sizeof(newSplash->name))
+         {
+            E_EDFLoggedErr(3, "E_ProcessSplash: invalid splash mnemonic '%s'\n",
+                           tempstr);
+         }
+         strncpy(newSplash->name, tempstr, sizeof(newSplash->name));
+         E_AddSplashToHash(newSplash);
+         newsp = true;
       }
-      strncpy(newSplash->name, tempstr, sizeof(newSplash->name));
-      
-      E_AddSplashToHash(newSplash);
-      newsp = true;
+   }
+   else
+   {
+      // delta:
+      tempstr = cfg_getstr(cfg, ITEM_SPLASHDELTA_NAME);
+      if(!tempstr)
+         E_EDFLoggedErr(3, "E_ProcessSplash: splash delta requires name field!\n");
+
+      if(!(newSplash = E_SplashForName(tempstr)))
+      {
+         E_EDFLoggedWarning(3, "Warning: splash '%s' doesn't exist\n", tempstr);
+         return;
+      }
    }
 
    // process smallclass
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLCLASS);
-   newSplash->smallclass = E_ThingNumForName(tempstr);
+   if(IS_SET(ITEM_SPLASH_SMALLCLASS))
+   {
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLCLASS);
+      newSplash->smallclass = E_ThingNumForName(tempstr);
+   }
 
    // process smallclip
-   newSplash->smallclip = cfg_getint(cfg, ITEM_SPLASH_SMALLCLIP) * FRACUNIT;
+   if(IS_SET(ITEM_SPLASH_SMALLCLIP))
+      newSplash->smallclip = cfg_getint(cfg, ITEM_SPLASH_SMALLCLIP) * FRACUNIT;
 
    // process smallsound
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLSOUND);
-   if(strlen(tempstr) >= sizeof(newSplash->smallsound))
+   if(IS_SET(ITEM_SPLASH_SMALLSOUND))
    {
-      E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
-                     tempstr);
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_SMALLSOUND);
+      if(strlen(tempstr) >= sizeof(newSplash->smallsound))
+      {
+         E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
+                        tempstr);
+      }
+      strncpy(newSplash->smallsound, tempstr, sizeof(newSplash->smallsound));
    }
-   strncpy(newSplash->smallsound, tempstr, sizeof(newSplash->smallsound));
 
    // process baseclass
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
-   newSplash->baseclass = E_ThingNumForName(tempstr);
+   if(IS_SET(ITEM_SPLASH_BASECLASS))
+   {
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_BASECLASS);
+      newSplash->baseclass = E_ThingNumForName(tempstr);
+   }
    
    // process chunkclass
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_CHUNKCLASS);
-   newSplash->chunkclass = E_ThingNumForName(tempstr);
+   if(IS_SET(ITEM_SPLASH_CHUNKCLASS))
+   {
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_CHUNKCLASS);
+      newSplash->chunkclass = E_ThingNumForName(tempstr);
+   }
    
    // process chunkxvelshift, yvelshift, zvelshift
-   newSplash->chunkxvelshift = cfg_getint(cfg, ITEM_SPLASH_XVELSHIFT);
-   newSplash->chunkyvelshift = cfg_getint(cfg, ITEM_SPLASH_YVELSHIFT);
-   newSplash->chunkzvelshift = cfg_getint(cfg, ITEM_SPLASH_ZVELSHIFT);
+   if(IS_SET(ITEM_SPLASH_XVELSHIFT))
+      newSplash->chunkxvelshift = cfg_getint(cfg, ITEM_SPLASH_XVELSHIFT);
+   if(IS_SET(ITEM_SPLASH_YVELSHIFT))
+      newSplash->chunkyvelshift = cfg_getint(cfg, ITEM_SPLASH_YVELSHIFT);
+   if(IS_SET(ITEM_SPLASH_ZVELSHIFT))
+      newSplash->chunkzvelshift = cfg_getint(cfg, ITEM_SPLASH_ZVELSHIFT);
   
    // process chunkbasezvel
-   newSplash->chunkbasezvel = 
-      cfg_getint(cfg, ITEM_SPLASH_BASEZVEL) * FRACUNIT;
+   if(IS_SET(ITEM_SPLASH_BASEZVEL))
+      newSplash->chunkbasezvel = cfg_getint(cfg, ITEM_SPLASH_BASEZVEL) * FRACUNIT;
    
    // process sound
-   tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
-   if(strlen(tempstr) >= sizeof(newSplash->sound))
+   if(IS_SET(ITEM_SPLASH_SOUND))
    {
-      E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
-                     tempstr);
+      tempstr = cfg_getstr(cfg, ITEM_SPLASH_SOUND);
+      if(strlen(tempstr) >= sizeof(newSplash->sound))
+      {
+         E_EDFLoggedErr(3, "E_ProcessSplash: invalid sound mnemonic '%s'\n",
+                        tempstr);
+      }
+      strncpy(newSplash->sound, tempstr, sizeof(newSplash->sound));
    }
-   strncpy(newSplash->sound, tempstr, sizeof(newSplash->sound));
 
    E_EDFLogPrintf("\t\t\t%s splash '%s'\n", 
                   newsp ? "Finished" : "Modified", 
@@ -302,7 +352,24 @@ static void E_ProcessSplashes(cfg_t *cfg)
    for(i = 0; i < numSplashes; ++i)
    {
       cfg_t *splashsec = cfg_getnsec(cfg, EDF_SEC_SPLASH, i);
-      E_ProcessSplash(splashsec);
+      E_ProcessSplash(splashsec, true);
+   }
+}
+
+//
+// Processes delta for splashes
+//
+static void E_processSplashDeltas(cfg_t *cfg)
+{
+   unsigned numSplashDeltas = cfg_size(cfg, EDF_SEC_SPLASHDELTA);
+
+   E_EDFLogPrintf("\t\t* Processing splash deltas\n"
+                  "\t\t\t%u splash delta(s) defined\n", numSplashDeltas);
+
+   for(unsigned i = 0; i < numSplashDeltas; ++i)
+   {
+      cfg_t *splashdeltasec = cfg_getnsec(cfg, EDF_SEC_SPLASHDELTA, i);
+      E_ProcessSplash(splashdeltasec, false);
    }
 }
 
@@ -339,13 +406,15 @@ static void E_AddTerrainToHash(ETerrain *terrain)
    ++numterrains;
 }
 
-#define IS_SET(name) (def || cfg_size(cfg, (name)) > 0)
-
-static void E_ProcessTerrain(cfg_t *cfg, bool def)
+static void E_ProcessTerrain(cfg_t *const cfg, const bool def)
 {
    const char *tempstr;
    ETerrain *newTerrain;
    bool newtr = false;
+
+   const auto IS_SET = [cfg, def](const char *const name) -> bool {
+      return def || cfg_size(cfg, (name)) > 0;
+   };
 
    // init name and add to hash table
    if(def)
@@ -618,8 +687,9 @@ void E_ProcessTerrainTypes(cfg_t *cfg)
 {
    E_EDFLogPuts("\t* Processing TerrainTypes\n");
 
-   // First, process splashes
+   // First, process splashes and their deltas
    E_ProcessSplashes(cfg);
+   E_processSplashDeltas(cfg);
 
    // Second, process terrains
    E_ProcessTerrains(cfg);
@@ -709,7 +779,7 @@ ETerrain *E_GetThingFloorType(Mobj *thing, bool usefloorz)
          terrain = TerrainTypes[thing->subsector->sector->srf.floor.pic];
    }
    
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   if(demo_version < terrain->minversion || getComp(comp_terrain))
       terrain = &solid;
 
    return terrain;
@@ -776,7 +846,7 @@ void E_PtclTerrainHit(particle_t *p)
    sector_t *sector = nullptr;
 
    // particles could never hit terrain before v3.33
-   if(demo_version < 333 || comp[comp_terrain])
+   if(demo_version < 333 || getComp(comp_terrain))
       return;
 
    // no particle hits during netgames or demos;
@@ -887,7 +957,7 @@ static const ETerrain &E_getFloorTerrain(const Mobj &thing, const sector_t &sect
       terrain = TerrainTypes[sector.srf.floor.pic];
 
    // no TerrainTypes in old demos or if comp enabled
-   if(demo_version < terrain->minversion || comp[comp_terrain])
+   if(demo_version < terrain->minversion || getComp(comp_terrain))
       terrain = &solid;
 
    // some things don't cause splashes
@@ -923,6 +993,13 @@ bool E_HitWater(Mobj *thing, const sector_t *sector)
 //
 void E_ExplosionHitWater(Mobj *thing, int damage)
 {
+   // Vanilla Heretic didn't really imply impact splash, only explosion, so avoid creating 2
+   // splashes at once in vHeretic
+   if(vanilla_heretic && thing->flags & MF_MISSILE && !(thing->flags2 & MF2_NOSPLASH) &&
+      E_WouldHitFloorWater(*thing))
+   {
+      return;
+   }
    // VANILLA_HERETIC: explosion infinite height
    if(vanilla_heretic || thing->z <= thing->zref.secfloor + damage * FRACUNIT)
       E_HitWater(thing, P_ExtremeSectorAtPoint(thing, surf_floor));

@@ -483,7 +483,7 @@ enum
    KWD_GOTO
 };
 
-#define NUMDECKWDS (sizeof(decorate_kwds) / sizeof(const char *))
+constexpr int NUMDECKWDS = earrlen(decorate_kwds);
 
 //
 // isDecorateKeyword
@@ -707,8 +707,10 @@ static int E_GetDSToken(pstate_t *ps)
 // utilities
 
 // for unnecessarily precise grammatical correctness ;)
-#define hasvowel(str) \
-   (*str == 'a' || *str == 'e' || *str == 'i' || *str == 'o' || *str == 'u')
+constexpr bool hasvowel(const char *str)
+{
+   return *str == 'a' || *str == 'e' || *str == 'i' || *str == 'o' || *str == 'u';
+}
 
 //
 // PSExpectedErr

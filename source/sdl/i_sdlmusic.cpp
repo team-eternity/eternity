@@ -28,13 +28,8 @@
 
 #include <optional>
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#include "SDL2_mixer/SDL_mixer.h"
-#else
 #include "SDL.h"
 #include "SDL_mixer.h"
-#endif
 
 #include "i_midirpc.h"
 
@@ -60,7 +55,7 @@
 #endif
 
 #ifdef HAVE_ADLMIDILIB
-#include "adlmidi.hpp"
+#include "adlmidi.h"
 #endif
 
 #ifdef EE_FEATURE_MIDIRPC
@@ -226,12 +221,14 @@ static void I_effectADLMIDI(void *udata, Uint8 *stream, int len)
    ADL_UInt8 *const r_out = reinterpret_cast<ADL_UInt8 *>(adlmidi_buffer + 1);
    const int gotlen = adl_playFormat(adlmidi_player, numsamples, l_out, r_out, &fmt) *
                       fmt.sampleOffset / 2;
-   if(snd_MusicVolume == 15)
+   if(snd_MusicVolume == SND_MAXVOLUME)
       memcpy(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), size_t(gotlen));
    else
    {
-      SDL_MixAudioFormat(stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), audio_spec.format,
-                         gotlen, (snd_MusicVolume * 128) / 15);
+      SDL_MixAudioFormat(
+         stream, reinterpret_cast<Uint8 *>(adlmidi_buffer), audio_spec.format,
+         gotlen, (snd_MusicVolume * 128) / SND_MAXVOLUME
+      );
    }
    adlplaying = false;
 }
@@ -400,8 +397,8 @@ static void I_SDLPlaySong(int handle, int looping)
 //
 static void I_SDLSetMusicVolume(int volume)
 {
-   // haleyjd 09/04/06: adjust to use scale from 0 to 15
-   Mix_VolumeMusic((volume * 128) / 15);
+   // haleyjd 09/04/06: adjust to use scale from 0 to SND_MAXVOLUME
+   Mix_VolumeMusic((volume * 128) / SND_MAXVOLUME);
 
 #ifdef EE_FEATURE_MIDIRPC
    // adjust server volume
@@ -412,7 +409,7 @@ static void I_SDLSetMusicVolume(int volume)
    if(snes_spc)
    {
       // if a SPC is playing, set its volume too
-      spc_filter_set_gain(spc_filter, volume * (256 * spc_preamp) / 15);
+      spc_filter_set_gain(spc_filter, volume * (256 * spc_preamp) / SND_MAXVOLUME);
    }
 #endif
 }
@@ -606,7 +603,7 @@ static int I_TryLoadSPC(void *data, int size)
    spc_filter_clear(spc_filter);
 
    // set initial gain and bass parameters
-   spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / 15);
+   spc_filter_set_gain(spc_filter, snd_MusicVolume * (256 * spc_preamp) / SND_MAXVOLUME);
    spc_filter_set_bass(spc_filter, spc_bass_boost);
 
    return 0;

@@ -719,7 +719,7 @@ void P_PlayerThink(player_t *player)
    P_CalcHeight(player); // Determines view height and bobbing
    
    // haleyjd: are we falling? might need to scream :->
-   if(!comp[comp_fallingdmg] && demo_version >= 329)
+   if(!getComp(comp_fallingdmg) && demo_version >= 329)
    {  
       if(player->mo->momz >= 0)
          player->mo->intflags &= ~MIF_SCREAMED;

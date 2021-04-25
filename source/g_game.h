@@ -48,6 +48,7 @@ void G_DeferedPlayDemo(const char *demo);
 void G_TimeDemo(const char *name, bool showmenu);
 void G_LoadGame(const char *name, int slot, bool is_command); // killough 5/15/98
 void G_ForcedLoadGame();                      // killough 5/15/98: forced loadgames
+void G_LoadGameErr(const char *msg);
 void G_SaveGame(int slot, const char *description); // Called by M_Responder.
 void G_RecordDemo(const char *name);                // Only called by startup code.
 void G_RecordDemoContinue(const char *in, const char *name);
@@ -108,7 +109,7 @@ extern int mouseb_dblc2;  // causes a use action
 
 //extern angle_t consoleangle;
 
-extern int  defaultskill;     // jff 3/24/98 default skill
+extern skill_t defaultskill;     // jff 3/24/98 default skill
 extern bool haswolflevels;    // jff 4/18/98 wolf levels present
 extern bool demorecording;    // killough 12/98
 extern bool forced_loadgame;
@@ -118,14 +119,24 @@ extern char gamemapname[9];
 extern int  bodyquesize, default_bodyquesize; // killough 2/8/98, 10/98
 extern int  animscreenshot;       // animated screenshots
 
-extern int cooldemo;
+//
+// Cool demo setting
+//
+enum class CoolDemo: int
+{
+   off,
+   random,
+   follow
+};
+
+extern CoolDemo cooldemo;
 extern bool hub_changelevel;
 
 extern bool scriptSecret;   // haleyjd
 
 extern bool sendpause;
 
-extern int novert; // haleyjd
+extern int mouse_vert; // haleyjd
 extern int smooth_turning;
 
 #define VERSIONSIZE   16

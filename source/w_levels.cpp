@@ -53,7 +53,7 @@
 // Externs
 //
 
-extern int defaultskill;
+extern skill_t defaultskill;
 
 //=============================================================================
 //

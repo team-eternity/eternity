@@ -1,0 +1,33 @@
+bind joy1 lookup
+bind joy1 menu_up
+bind joy1 map_up
+bind joy2 lookdown
+bind joy2 menu_down
+bind joy2 map_down
+bind joy3 center
+bind joy3 menu_left
+bind joy3 map_left
+bind joy4 menu_right
+bind joy4 map_right
+bind joy5 menu_toggle
+bind joy6 menu_previous
+bind joy8 flycenter
+bind joy9 weapondown
+bind joy9 menu_pageup
+bind joy9 map_zoomout
+bind joy10 weaponup
+bind joy10 menu_pagedown
+bind joy10 map_zoomin
+bind joy11 use
+bind joy11 menu_confirm
+bind joy12 flip
+bind joy12 menu_previous
+bind joy13 jump
+bind joy14 map_toggle
+bind axis5 attack
+bind axis6 strafe
+
+g_axisaction1 strafe
+g_axisaction2 move
+g_axisaction3 turn
+g_axisaction4 fly

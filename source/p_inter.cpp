@@ -42,6 +42,7 @@
 #include "e_lib.h"
 #include "e_metastate.h"
 #include "e_mod.h"
+#include "e_player.h"
 #include "e_states.h"
 #include "e_string.h"
 #include "e_things.h"
@@ -124,9 +125,18 @@ static bool P_GiveAmmo(player_t *player, itemeffect_t *ammo, int num, bool ignor
    if(demo_version >= 401 &&
       (!player->readyweapon || (player->readyweapon->flags & WPF_AUTOSWITCHFROM)))
    {
-      player->pendingweapon = E_FindBestBetterWeaponUsingAmmo(player, ammo);
-      if(player->pendingweapon)
-         player->pendingweaponslot = E_FindFirstWeaponSlot(player, player->pendingweapon);
+      // FIXME: This assumes that the powered variant has the same
+      // ammo usage as the unpowered variant, which is not always true
+      if(weaponinfo_t *const wp = E_FindBestBetterWeaponUsingAmmo(player, ammo); wp)
+      {
+         weaponinfo_t *sister = wp->sisterWeapon;
+         if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
+            player->pendingweapon = sister;
+         else
+            player->pendingweapon = wp;
+
+         player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
+      }
    }
    else if(!strcasecmp(ammo->getKey(), "AmmoClip"))
    {
@@ -296,6 +306,34 @@ static bool P_giveWeaponCompat(player_t *player, const itemeffect_t *giver, bool
 }
 
 //
+// Check if player should switch to new weapon upon picking it up. It's assumed as unowned yet.
+//
+static bool P_shouldSwitchToNewWeapon(const player_t &player, const weaponinfo_t &newWeapon)
+{
+   if(!(GameModeInfo->flags & GIF_WPNSWITCHSUPER))
+      return true;   // no limiting flag? Always switch
+
+   const weaponinfo_t *curWeapon = player.readyweapon;
+   if(E_IsPoweredVariant(curWeapon))
+      curWeapon = curWeapon->sisterWeapon;
+
+   for(const weaponslot_t *slot : player.pclass->weaponslots)
+   {
+      for(const BDListItem<weaponslot_t> *item = E_LastInSlot(slot); !item->isDummy();
+          item = item->bdPrev)
+      {
+         weapontype_t firstId = item->bdObject->weapon->id;
+         if(firstId == curWeapon->id)  // first encountered weapon is mine? Switch.
+            return true;
+         if(firstId == newWeapon.id)   // first encountered weapon is the picked one? Don't switch.
+            return false;
+      }
+   }
+   // We found neither ids in the possession? Weird case, but switch
+   return true;
+}
+
+//
 // The weapon name may have a MF_DROPPED flag ored in.
 //
 static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropped, Mobj *special,
@@ -379,11 +417,9 @@ static bool P_giveWeapon(player_t *player, const itemeffect_t *giver, bool dropp
    }
    else if(!E_PlayerOwnsWeapon(player, wp))
    {
-      weaponinfo_t *sister = wp->sisterWeapon;
-      // If none of the values are negative, then only switch if value is superior or equal
-      if(wp->autoswitchvalue < 0 || player->readyweapon->autoswitchvalue < 0 ||
-         wp->autoswitchvalue >= player->readyweapon->autoswitchvalue)
+      if(P_shouldSwitchToNewWeapon(*player, *wp))
       {
+         weaponinfo_t *sister = wp->sisterWeapon;
          player->pendingweapon = wp;
          player->pendingweaponslot = E_FindFirstWeaponSlot(player, wp);
          if(player->powers[pw_weaponlevel2] && E_IsPoweredVariant(sister))
@@ -1363,6 +1399,10 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
    if(player && gameskill == sk_baby)
       damage >>= 1;   // take half damage in trainer mode
 
+   if(source && source->player && (GameModeInfo->flags & GIF_BERZERKISPENTA) &&
+      source->player->powers[pw_strength])
+      damage *= 5;
+
    // haleyjd 08/01/04: dmgspecial -- special inflictor types
    if(inflictor && inflictor->info->dmgspecial)
    {
@@ -1415,7 +1455,6 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
 
       // SoM: restructured a bit
       fixed_t thrust = damage*(FRACUNIT>>3)*tf/target->info->mass;
-#ifdef R_LINKEDPORTALS
       unsigned ang;
 
       {
@@ -1431,10 +1470,6 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
                                   target->x + link->x, target->y + link->y);
          }
       }
-#else
-      unsigned ang = P_PointToAngle (inflictor->x, inflictor->y,
-                                      target->x, target->y);
-#endif
 
       // make fall forwards sometimes
       if(damage < 40 && damage > target->health
@@ -1474,7 +1509,7 @@ void P_DamageMobj(Mobj *target, Mobj *inflictor, Mobj *source,
       // ignore damage in GOD mode, or with INVUL power.
       // killough 3/26/98: make god mode 100% god mode in non-compat mode
 
-      if((damage < 1000 || (!comp[comp_god] && player->cheats&CF_GODMODE)) &&
+      if((damage < 1000 || (!getComp(comp_god) && player->cheats&CF_GODMODE)) &&
          (player->cheats&CF_GODMODE || player->powers[pw_invulnerability]))
          return;
 
@@ -1765,7 +1800,7 @@ bool P_CheckCorpseRaiseSpace(Mobj *corpse)
 {
    corpse->momx = corpse->momy = 0;
    bool check;
-   if(comp[comp_vile])
+   if(getComp(comp_vile))
    {
       corpse->height <<= 2;
 
@@ -1817,7 +1852,7 @@ void P_RaiseCorpse(Mobj *corpse, const Mobj *raiser)
 
    P_SetMobjState(corpse, info->raisestate);
 
-   if(comp[comp_vile])
+   if(getComp(comp_vile))
       corpse->height <<= 2;                        // phares
    else                                               //   V
    {

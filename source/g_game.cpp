@@ -95,6 +95,7 @@
 #include "version.h"
 #include "w_levels.h" // haleyjd
 #include "w_wad.h"
+#include "xl_emapinfo.h"
 
 // haleyjd: new demo format stuff
 static char     eedemosig[] = "ETERN";
@@ -151,7 +152,7 @@ int             autorun = false;      // always running?          // phares
 int             runiswalk = false;    // haleyjd 08/23/09
 int             automlook = false;
 int             smooth_turning = 0;   // sf
-int             novert;               // haleyjd
+int             mouse_vert;               // haleyjd
 
 // sf: moved sensitivity here
 double          mouseSensitivity_horiz;   // has default   //  killough
@@ -210,7 +211,7 @@ char savedescription[32];
 
 //jff 3/24/98 declare startskill external, define defaultskill here
 extern skill_t startskill;      //note 0-based
-int defaultskill;               //note 1-based
+skill_t defaultskill;           //note 1-based
 
 // killough 2/8/98: make corpse queue variable in size
 size_t bodyqueslot; 
@@ -220,7 +221,7 @@ void *statcopy;       // for statistics driver
 
 int keylookspeed = 5;
 
-int cooldemo = 0;
+CoolDemo cooldemo = CoolDemo::off;
 int cooldemo_tics;      // number of tics until changing view
 
 static void G_CoolViewPoint();
@@ -271,7 +272,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          invbarstate.inventory = false;
          usearti = false;
       }
-      else if(usearti || inventorycanclose)
+      else if(usearti)
       {
          if(E_PlayerHasVisibleInvItem(&p))
             cmd->itemID = p.inventory[p.inv_ptr].item + 1;
@@ -612,7 +613,8 @@ void G_BuildTiccmd(ticcmd_t *cmd)
          sendcenterview = true;
 
       // haleyjd 10/24/08: novert support
-      if(!novert)
+      // MaxW: It's now mouse_vert
+      if(mouse_vert)
          forward += (int)tmousey;
    }
    prevmlook = mlook;
@@ -733,7 +735,8 @@ void G_SetGameMap(void)
 //
 void G_SetGameMapName(const char *s)
 {
-   strncpy(gamemapname, s, 8);
+   if(s != gamemapname) // check against having same position
+      strncpy(gamemapname, s, 8);
    M_Strupr(gamemapname);
 }
 
@@ -831,9 +834,9 @@ bool G_Responder(const event_t* ev)
    if(G_KeyResponder(ev, kac_cmd))
       return true;
 
-   // This code is like Heretic's (to an extent). If the key is up and is the
+   // This code is like Heretic's (to an extent). If the key is down and is the
    // inventory key (and the player isn't dead) then use the current artifact.
-   if(ev->type == ev_keyup && G_KeyResponder(ev, kac_game) == ka_inventory_use
+   if(ev->type == ev_keydown && G_KeyResponder(ev, kac_game) == ka_inventory_use
       && players[consoleplayer].playerstate != PST_DEAD)
    {
       usearti = true;
@@ -1780,10 +1783,18 @@ enum levelkind_t
 //
 static const char *G_getNextLevelName(levelkind_t kind, int map)
 {
-   const char *nextName = kind == lk_secret ? LevelInfo.nextSecret :
-   LevelInfo.nextLevel;
-   if(!wminfo.nextexplicit && nextName && *nextName)
+   const char *nextName = nullptr;
+
+   if(wminfo.nextexplicit)
+      // derekmd: for Teleport_NewMap() calls, detect EMAPINFO 'levelnum'
+      nextName = XL_MapNameForLevelNum(map);
+   else
+      nextName = kind == lk_secret ?
+         LevelInfo.nextSecret : LevelInfo.nextLevel;
+
+   if(nextName && *nextName)
       return nextName;
+
    return G_GetNameForMap(gameepisode, map);
 }
 
@@ -2037,9 +2048,8 @@ void G_LoadGame(const char *name, int slot, bool command)
 // killough 5/15/98:
 // Consistency Error when attempting to load savegame.
 
-static void G_LoadGameErr(char *msg)
+void G_LoadGameErr(const char *msg)
 {
-   Z_Free(savebuffer);           // Free the savegame buffer
    MN_ForcedLoadGame(msg);       // Print message asking for 'Y' to force
    if(command_loadgame)          // If this was a command-line -loadgame
    {
@@ -2058,7 +2068,12 @@ void G_SaveGame(int slot, const char *description)
 {
    savegameslot = slot;
    strcpy(savedescription, description);
-   sendsave = true;
+   if(demo_version >= 403 && !netgame)
+      gameaction = ga_savegame;
+   else if(slot <= 8)
+      sendsave = true;
+   else if(netgame)
+      doom_printf("Can't save game with slot >= 8 during netgame");
    hub_changelevel = false;
 }
 
@@ -2170,12 +2185,14 @@ static void G_CameraTicker(void)
    }
 
    // cooldemo countdown   
-   if(demoplayback && cooldemo)
+   if(demoplayback && cooldemo != CoolDemo::off)
    {
       // force refresh on death (or rebirth in follow mode) of displayed player
       if(players[displayplayer].health <= 0 ||
-         (cooldemo == 2 && camera != &followcam))
+         (cooldemo == CoolDemo::follow && camera != &followcam))
+      {
          cooldemo_tics = 0;
+      }
 
       if(cooldemo_tics)
          cooldemo_tics--;
@@ -2628,7 +2645,7 @@ static bool G_CheckSpot(int playernum, mapthing_t *mthing, Mobj **fog)
    // which is missing the fog and sound, as it spawns somewhere out in the
    // far reaches of the void.
 
-   if(!comp[comp_ninja])
+   if(!getComp(comp_ninja))
    {
       an = ANG45 * (angle_t)(mthing->angle / 45);
       mtcos = finecosine[an >> ANGLETOFINESHIFT];
@@ -3008,7 +3025,7 @@ void G_ReloadDefaults()
    //jff 3/24/98 set startskill from defaultskill in config file, unless
    // it has already been set by a -skill parameter
    if(startskill == sk_none)
-      startskill = (skill_t)(defaultskill - 1);
+      startskill = static_cast<skill_t>(defaultskill - 1);
    
    demoplayback = false;
    singledemo = false; // haleyjd: restore from MBF
@@ -3264,7 +3281,7 @@ void G_InitNew(skill_t skill, const char *name)
    G_SetGameMap();  // sf
   
    if(demo_version >= 203)
-      M_LoadOptions();     // killough 11/98: read OPTIONS lump from wad
+      M_LoadOptions(default_t::wad_game);     // killough 11/98: read OPTIONS lump from wad
   
    //G_StopDemo();
 
@@ -3918,13 +3935,21 @@ extern camera_t intercam;
 //
 static void G_CoolViewPoint()
 {
-   int viewtype;
+   enum viewtype_e
+   {
+      viewtype_1stperson,
+      viewtype_chase,
+      viewtype_follow,
+      NUM_viewtype
+   };
+
+   viewtype_e viewtype;
    int old_displayplayer = displayplayer;
 
-   if(cooldemo == 2) // always followcam?
-      viewtype = 2;
-   else
-      viewtype = M_Random() % 3;
+   if(cooldemo == CoolDemo::follow) // always followcam?
+      viewtype = viewtype_follow;
+   else  // "random" cooldemo
+      viewtype = static_cast<viewtype_e>(M_Random() % NUM_viewtype);
    
    // pick the next player
    do
@@ -3943,10 +3968,10 @@ static void G_CoolViewPoint()
    }
 
    if(players[displayplayer].health <= 0)
-      viewtype = 1; // use chasecam when player is dead
+      viewtype = viewtype_chase; // use chasecam when player is dead
   
    // turn off the chasecam?
-   if(chasecam_active && viewtype != 1)
+   if(chasecam_active && viewtype != viewtype_chase)
    {
       chasecam_active = false;
       P_ChaseEnd();
@@ -3957,12 +3982,12 @@ static void G_CoolViewPoint()
    if(camera == &followcam)
       camera = nullptr;
   
-   if(viewtype == 1)  // view from the chasecam
+   if(viewtype == viewtype_chase)  // view from the chasecam
    {
       chasecam_active = true;
       P_ChaseStart();
    }
-   else if(viewtype == 2) // follow camera view
+   else if(viewtype == viewtype_follow) // follow camera view
    {
       fixed_t x, y;
       Mobj *spot = players[displayplayer].mo;

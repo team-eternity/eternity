@@ -35,6 +35,7 @@
 
 #include <stdlib.h>
 
+#include <atomic>
 #include <thread>
 #include <vector>
 
@@ -45,6 +46,9 @@
 // Currently playing music track
 static Mix_Music *music = NULL;
 static SDL_RWops *rw    = NULL;
+
+static std::atomic_bool quitting = false;
+static std::atomic_bool sentinel_running = false;
 
 static void UnregisterSong();
 
@@ -134,21 +138,35 @@ void Sentinel_Main()
    HANDLE pEternityHandle;
    size_t numValidPIDs;
 
+   sentinel_running = true;
+
    if(!Sentinel_EnumerateProcesses(ndwPIDs, numValidPIDs))
+   {
+      sentinel_running = false;
       exit(-1);
+   }
    if(!Sentinel_FindEternityPID(ndwPIDs, pEternityHandle, numValidPIDs))
    {
       MessageBox(
          NULL, TEXT("eternity.exe not currently running"), TEXT("midiproc: Error"), MB_ICONERROR
       );
+      sentinel_running = false;
       exit(-1);
    }
 
    DWORD dwExitCode;
    do
    {
-      if(GetExitCodeProcess(pEternityHandle, &dwExitCode) == 0)
+      if(quitting)
+      {
+         sentinel_running = false;
+         return;
+      }
+      else if(GetExitCodeProcess(pEternityHandle, &dwExitCode) == 0)
+      {
+         sentinel_running = false;
          exit(-1);
+      }
       Sleep(100);
    } while(dwExitCode == STILL_ACTIVE);
 
@@ -435,6 +453,8 @@ void MidiRPC_StopServer()
 
    // Stop RPC server
    RpcMgmtStopServerListening(NULL);
+
+   quitting = true;
 }
 
 //
@@ -538,6 +558,11 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
    // Initialize RPC Server
    if(!MidiRPC_InitServer())
       return -1;
+
+   while(sentinel_running)
+      Sleep(1);
+
+   watcher.join();
 
    return 0;
 }

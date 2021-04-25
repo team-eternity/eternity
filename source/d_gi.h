@@ -229,9 +229,12 @@ enum
    // compatibility.
    GIF_DOOMWEAPONOFFSET = 0x00400000,
    GIF_INVALWAYSOPEN  = 0x00800000, // Inventory is always open (like Strife, but not Heretic)
+   GIF_BERZERKISPENTA = 0x01000000, // Berzerk is actually penta damage
 
-   // TODO: make this public for EDF gameprops
-   GIF_FLIGHTINERTIA  = 0x01000000, // player flight retains some inertia
+   // TODO: make this public for EDF gameprops (in a good public form)
+   GIF_FLIGHTINERTIA  = 0x02000000, // player flight retains some inertia
+   // TODO: make this public for EDF gameprops (in a good public form)
+   GIF_WPNSWITCHSUPER = 0x04000000, // only switch to superior weapon when picking up
 };
 
 // Game mode handling - identify IWAD version
@@ -385,6 +388,7 @@ struct gamemodeinfo_t
    menu_t *saveMenu;              // pointer to save menu structure
    menu_t *loadMenu;              // pointer to load menu structure
    menu_t *newGameMenu;           // pointer to new game menu structure
+   const char *menuStartMap;      // new game map lump for skill selection
    int *menuSounds;               // menu sound indices
    int transFrame;                // frame DEH # used on video menu
    int skvAtkSound;               // skin viewer attack sound

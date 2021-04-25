@@ -45,7 +45,7 @@ struct state_t;
 struct weaponinfo_t;
 
 // 16 arguments ought to be enough for anybody.
-#define EMAXARGS 16
+constexpr int EMAXARGS = 16;
 
 // Get an arglist safely from an Mobj * even if the pointer or the 
 // Mobj's state is nullptr (nullptr is returned in either case).

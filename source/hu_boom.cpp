@@ -58,10 +58,10 @@
 // sf: write a text line to x, y
 // haleyjd 01/14/05: now uses vfont engine
 //
-static void HU_WriteText(const char *s, int x, int y)
+static void HU_WriteText(const char *s, int x, int y, VBuffer *screen)
 {
    if(hud_fontsloaded)
-      V_FontWriteText(hud_overfont, s, x, y, &vbscreenyscaled);
+      V_FontWriteText(hud_overfont, s, x, y, screen);
 }
 
 #define BARSIZE 15
@@ -112,23 +112,23 @@ void BoomHUD::DrawStatus(int x, int y)
 {
    qstring tempstr;
 
-   HU_WriteText(HUDCOLOR "Status", x, y); // draw, leave a gap
+   HU_WriteText(HUDCOLOR "Status", x, y, m_screen); // draw, leave a gap
    x += GAP;
 
    // haleyjd 06/14/06: restored original colors to K/I/S
    tempstr
-      << FC_RED  "K " FC_GREEN << hu_player.killcount << '/' << totalkills << ' '
-      << FC_BLUE "I " FC_GREEN << hu_player.itemcount << '/' << totalitems << ' '
+      << FC_RED  "K " FC_GREEN << hu_player.killcount   << '/' << totalkills << ' '
+      << FC_BLUE "I " FC_GREEN << hu_player.itemcount   << '/' << totalitems << ' '
       << FC_GOLD "S " FC_GREEN << hu_player.secretcount << '/' << totalsecret;
 
-   HU_WriteText(tempstr.constPtr(), x, y);
+   HU_WriteText(tempstr.constPtr(), x, y, m_screen);
 }
 
 void BoomHUD::DrawHealth(int x, int y)
 {
    qstring tempstr;
 
-   HU_WriteText(HUDCOLOR "Health", x, y);
+   HU_WriteText(HUDCOLOR "Health", x, y, m_screen);
    x += GAP; // leave a gap between name and bar
 
    //psnprintf(tempstr, sizeof(tempstr), "%c", fontcolor);
@@ -141,7 +141,7 @@ void BoomHUD::DrawHealth(int x, int y)
    tempstr << " " << hu_player.health;
 
    // write it
-   HU_WriteText(tempstr.constPtr(), x, y);
+   HU_WriteText(tempstr.constPtr(), x, y, m_screen);
 }
 
 
@@ -153,7 +153,7 @@ void BoomHUD::DrawArmor(int x, int y)
    qstring tempstr;
 
    // title first
-   HU_WriteText(HUDCOLOR "Armor", x, y);
+   HU_WriteText(HUDCOLOR "Armor", x, y, m_screen);
    x += GAP; // leave a gap between name and bar
 
    tempstr << HU_ArmorColor();
@@ -164,7 +164,7 @@ void BoomHUD::DrawArmor(int x, int y)
    // append the percentage itself
    tempstr << ' ' << hu_player.armorpoints;
 
-   HU_WriteText(tempstr.constPtr(), x, y);
+   HU_WriteText(tempstr.constPtr(), x, y, m_screen);
 }
 
 //
@@ -176,7 +176,7 @@ void BoomHUD::DrawAmmo(int x, int y)
    int fontcolor;
    int lmaxammo;
 
-   HU_WriteText(HUDCOLOR "Ammo", x, y);
+   HU_WriteText(HUDCOLOR "Ammo", x, y, m_screen);
    x += GAP;
 
    fontcolor = HU_WeapColor(hu_player.readyweapon);
@@ -193,7 +193,7 @@ void BoomHUD::DrawAmmo(int x, int y)
    else // fist or chainsaw
       tempstr << "N/A";
 
-   HU_WriteText(tempstr.constPtr(), x, y);
+   HU_WriteText(tempstr.constPtr(), x, y, m_screen);
 }
 
 //
@@ -203,7 +203,7 @@ void BoomHUD::DrawWeapons(int x, int y)
 {
    qstring tempstr;
 
-   HU_WriteText(HUDCOLOR "Weapons", x, y);  // draw then leave a gap
+   HU_WriteText(HUDCOLOR "Weapons", x, y, m_screen);  // draw then leave a gap
    x += GAP;
 
    for(int i = 0; i < NUMWEAPONS; i++)
@@ -214,7 +214,7 @@ void BoomHUD::DrawWeapons(int x, int y)
          tempstr << fontcolor << (i + 1) << ' ';
    }
 
-   HU_WriteText(tempstr.constPtr(), x, y);  // draw it
+   HU_WriteText(tempstr.constPtr(), x, y, m_screen);  // draw it
 }
 
 extern patch_t *keys[NUMCARDS+3];
@@ -224,7 +224,7 @@ extern patch_t *keys[NUMCARDS+3];
 //
 void BoomHUD::DrawKeys(int x, int y)
 {
-   HU_WriteText(HUDCOLOR "Keys", x, y);    // draw then leave a gap
+   HU_WriteText(HUDCOLOR "Keys", x, y, m_screen);    // draw then leave a gap
    x += GAP;
 
    // haleyjd 10/09/05: don't show double keys in Heretic
@@ -233,7 +233,7 @@ void BoomHUD::DrawKeys(int x, int y)
       if(E_GetItemOwnedAmountName(&hu_player, GameModeInfo->cardNames[i]) > 0)
       {
          // got that key
-         V_DrawPatch(x, y, &vbscreenyscaled, keys[i]);
+         V_DrawPatch(x, y, m_screen, keys[i]);
          x += 11;
       }
    }
@@ -246,11 +246,11 @@ void BoomHUD::DrawFrags(int x, int y)
 {
    qstring tempstr;
 
-   HU_WriteText(HUDCOLOR "Frags", x, y); // draw then leave a gap
+   HU_WriteText(HUDCOLOR "Frags", x, y, m_screen); // draw then leave a gap
    x += GAP;
 
    tempstr << HUDCOLOR << hu_player.totalfrags;
-   HU_WriteText(tempstr.constPtr(), x, y);
+   HU_WriteText(tempstr.constPtr(), x, y, m_screen);
 }
 
 //
@@ -258,7 +258,9 @@ void BoomHUD::DrawFrags(int x, int y)
 //
 void BoomHUD::Setup()
 {
-      int x, y;
+   int x, y;
+
+   m_screen = &vbscreenyscaled;
 
    // decide where to put all the widgets
 
@@ -272,7 +274,7 @@ void BoomHUD::Setup()
    // turn off frag counter or key display,
    // according to if we're in a deathmatch game or not
    if(GameType == gt_dm)
-      drawerdata[ol_key].enabled = false;
+      drawerdata[ol_key].enabled  = false;
    else
       drawerdata[ol_frag].enabled = false;
 
@@ -292,7 +294,7 @@ void BoomHUD::Setup()
       break;
 
    case HUD_BOOM: // 'bottom left' / 'BOOM' style
-      y = vbscreenyscaled.unscaledh - 8;
+      y = m_screen->unscaledh - 8;
 
       for(int i = NUMOVERLAY - 2; i >= 0; --i)
       {
@@ -306,8 +308,8 @@ void BoomHUD::Setup()
       break;
 
    case HUD_FLAT: // all at bottom of screen
-      x = vbscreenyscaled.unscaledw / 2;
-      y = vbscreenyscaled.unscaledh - 8;
+      x = m_screen->unscaledw - 138;
+      y = m_screen->unscaledh - 8;
 
       // haleyjd 06/14/06: rewrote to restore a sensible ordering
       for(int i = NUMOVERLAY - 2; i >= 0; --i)
@@ -320,26 +322,26 @@ void BoomHUD::Setup()
          if(i == ol_weap)
          {
             x = 0;
-            y = vbscreenyscaled.unscaledh - 8;
+            y = m_screen->unscaledh - 8;
          }
       }
       SetupOverlay(ol_invcurr, boxx, boxy);
       break;
 
    case HUD_DISTRIB: // similar to boom 'distributed' style
-      SetupOverlay(ol_health, vbscreenyscaled.unscaledw - 138,   0);
-      SetupOverlay(ol_armor,  vbscreenyscaled.unscaledw - 138,   8);
+      SetupOverlay(ol_health, m_screen->unscaledw - 138, 0);
+      SetupOverlay(ol_armor,  m_screen->unscaledw - 138, 8);
       rightoffset = 16;
-      SetupOverlay(ol_weap,   vbscreenyscaled.unscaledw - 138, vbscreenyscaled.unscaledh - 16);
-      SetupOverlay(ol_ammo,   vbscreenyscaled.unscaledw - 138, vbscreenyscaled.unscaledh - 8);
+      SetupOverlay(ol_weap,   m_screen->unscaledw - 138, m_screen->unscaledh - 16);
+      SetupOverlay(ol_ammo,   m_screen->unscaledw - 138, m_screen->unscaledh - 8);
 
       if(GameType == gt_dm)  // if dm, put frags in place of keys
-         SetupOverlay(ol_frag, 0, vbscreenyscaled.unscaledh - 8);
+         SetupOverlay(ol_frag, 0, m_screen->unscaledh - 8);
       else
-         SetupOverlay(ol_key,  0, vbscreenyscaled.unscaledh - 8);
+         SetupOverlay(ol_key,  0, m_screen->unscaledh - 8);
 
       if(!hud_hidestatus)
-         SetupOverlay(ol_status, 0, vbscreenyscaled.unscaledh - 16);
+         SetupOverlay(ol_status, 0, m_screen->unscaledh - 16);
       boxy -= 16;
       SetupOverlay(ol_invcurr, boxx, boxy);
       break;

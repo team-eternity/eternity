@@ -26,8 +26,8 @@
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -96,6 +96,11 @@ static void D_reAllocFiles()
 
       wadfiles = erealloc(wfileadd_t *, wadfiles, numwadfiles_alloc * sizeof(*wadfiles));
    }
+}
+
+int D_GetNumWadFiles()
+{
+   return numwadfiles;
 }
 
 //

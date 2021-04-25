@@ -110,21 +110,12 @@ void R_SetSectorGroupID(sector_t *sector, int groupid);
 
 void P_FitLinkOffsetsToPortal(const linkdata_t &ldata);
 
-//
-// P_CheckCPortalState
+// P_CheckSectorPortalState
 // 
-// Checks the state of the ceiling portal in the given sector and updates
+// Checks the state of the floor/ceiling portal in the given sector and updates
 // the state flags accordingly.
 //
-void P_CheckCPortalState(sector_t *sec);
-
-
-// P_CheckFPortalState
-// 
-// Checks the state of the floor portal in the given sector and updates
-// the state flags accordingly.
-//
-void P_CheckFPortalState(sector_t *sec);
+void P_CheckSectorPortalState(sector_t &sector, surf_e type);
 
 //
 // P_CheckLPortalState
@@ -134,19 +125,7 @@ void P_CheckFPortalState(sector_t *sec);
 //
 void P_CheckLPortalState(line_t *line);
 
-//
-// P_SetFloorHeight
-// This function will set the floor height, and update
-// the float version of the floor height as well.
-//
-void P_SetFloorHeight(sector_t *sec, fixed_t h);
-
-//
-// P_SetCeilingHeight
-// This function will set the ceiling height, and update
-// the float version of the ceiling height as well.
-//
-void P_SetCeilingHeight(sector_t *sec, fixed_t h);
+void P_SetSectorHeight(sector_t &sec, surf_e surf, fixed_t h);
 
 //
 // P_SetPortalBehavior

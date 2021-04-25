@@ -21,6 +21,7 @@ build*/
 SDL2.framework
 SDL2_mixer.framework
 SDL2_net.framework
+.idea
 .vscode
 *.VC.db
 vc2017/Debug/
@@ -28,6 +29,7 @@ vc2017/Debug/
 *.framework.version.txt
 base/*.bak
 base/system.cfg
+base/doom/eternity.pke
 base/doom/keys.csc
 base/doom/Eternity.cfg
 base/doom/tranmap.dat
@@ -40,6 +42,7 @@ base/doom2/*.dsg
 base/hacx/tranmap.dat
 base/hacx/keys.csc
 base/hacx/*.dsg
+base/heretic/eternity.pke
 base/heretic/*.dat
 base/heretic/*.dsg
 base/heretic/Eternity.cfg
@@ -68,3 +71,4 @@ user/shots/*.bmp
 user/shots/*.pcx
 user/shots/*.png
 user/shots/*.tga
+macosx/EternityEngine.xcodeproj/xcshareddata/xcschemes

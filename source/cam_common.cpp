@@ -76,7 +76,8 @@ bool PathTraverser::traverseIntercepts() const
       if(!scan->isaline)
          continue;   // ioanch 20151230: only lines need this treatment
       P_MakeDivline(scan->d.line, &dl);
-      scan->frac = P_InterceptVector(&trace, &dl);
+      if(scan->frac = P_InterceptVector(&trace, &dl); scan->frac < 0)
+         scan->frac = D_MAXINT;
    }
 
    //

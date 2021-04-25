@@ -44,6 +44,8 @@ int compatibility, default_compatibility;          // killough 1/31/98
 bool vanilla_mode;   // ioanch: store -vanilla in a global flag
 
 int comp[COMP_TOTAL], default_comp[COMP_TOTAL];    // killough 10/98
+int level_compat_comp[COMP_TOTAL];  // ioanch: level compat active?
+bool level_compat_compactive[COMP_TOTAL]; // // true if use level_compat_comp instead of comp
 
 int demo_version;           // killough 7/19/98: Boom version of demo
 int demo_subversion;        // haleyjd 06/17/01: subversion for betas

@@ -143,7 +143,7 @@ enum
 // a macro to find out whether to make moving sounds in a sector
 #define silentmove(s) ((s)->flags & SECF_KILLMOVESOUND)
 
-typedef enum 
+enum skill_t : int
 {
   sk_none=-1, //jff 3/24/98 create unpicked skill setting
   sk_baby=0,
@@ -151,7 +151,7 @@ typedef enum
   sk_medium,
   sk_hard,
   sk_nightmare
-} skill_t;
+};
 
 //
 // Key cards.

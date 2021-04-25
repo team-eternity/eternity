@@ -151,7 +151,7 @@ enum
 struct pslope_t
 {
    // --- Information used in clipping/projection ---
-   // Origin vector for the plane
+   // Origin vector for the plane. Z is always the host sector's floor height.
    v3fixed_t o;
    v3float_t of;
 
@@ -166,6 +166,18 @@ struct pslope_t
    // The rate at which z changes based on distance from the origin plane.
    fixed_t zdelta;
    float   zdeltaf;
+
+   //
+   // IMPORTANT
+   //
+   // The following are references to the containing sector. They work simply because we follow the
+   // rule that each sector may have its own slope, no slopes are shared. If we decide to share
+   // slopes, we MUST make sure to decouple the following fields from pslope_t
+   //
+
+   // Offset of this slope's origin from surface's height, set on sector assignment and kept constant
+   fixed_t surfaceZOffset;
+   float surfaceZOffsetF;  // floating-point variant
 };
 
 //
@@ -212,7 +224,7 @@ struct sectorbox_t
 {
    fixed_t box[4];      // bounding box per sector
    float fbox[4];
-   Surfaces<unsigned> frameid;   // updated to avoid visiting more than once
+   Surfaces<uint64_t> visitid;   // updated to avoid visiting more than once
 };
 
 //
@@ -272,7 +284,7 @@ struct surface_t
    portal_t *portal;
 
    // Cardboard optimization
-   // They are set in R_Subsector and R_FakeFlat and are
+   // They are set in R_subsector and R_FakeFlat and are
    // only valid for that sector for that frame.
    float heightf;
 
@@ -281,6 +293,12 @@ struct surface_t
 
    // haleyjd 10/17/10: terrain type overrides
    ETerrain *terrain;
+
+   fixed_t getZAt(fixed_t x, fixed_t y) const;
+   inline fixed_t getZAt(v2fixed_t v) const
+   {
+      return getZAt(v.x, v.y);
+   }
 };
 
 //

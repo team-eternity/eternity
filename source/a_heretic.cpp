@@ -68,7 +68,7 @@ static void P_spawnGlitter(Mobj *actor, int type)
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
    Mobj *mo = P_SpawnMobj(pos.x, pos.y,
-      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.height, type);
+      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.getZAt(pos), type);
    mo->momz = FRACUNIT / 4;
 }
 
@@ -601,7 +601,7 @@ void A_Srcr2Attack(actionargs_t *actionargs)
    if(!actor->target)
       return;
    
-   S_StartSound(actor, actor->info->attacksound);
+   S_StartSound(nullptr, actor->info->attacksound);
 
    if(P_CheckMeleeRange(actor))
    {
@@ -1256,13 +1256,8 @@ void A_MinotaurDecide(actionargs_t *actionargs)
 
    S_StartSound(actor, sfx_minsit);
    
-#ifdef R_LINKEDPORTALS
-   dist = P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor));
-#else   
-   dist = P_AproxDistance(actor->x - target->x, actor->y - target->y);
-#endif
-   
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
+
    // charge attack
    if(P_CheckMntrCharge(dist, actor, target))
    {
@@ -1545,13 +1540,8 @@ void A_LichAttack(actionargs_t *actionargs)
    }
    
    // determine distance and use it to alter attack probabilities
-#ifdef R_LINKEDPORTALS
-   dist = (P_AproxDistance(actor->x - getTargetX(actor), 
-                          actor->y - getTargetY(actor)) > 512*FRACUNIT);
-#else
-   dist = (P_AproxDistance(actor->x-target->x, actor->y-target->y) > 512*FRACUNIT);
-#endif
-   
+   dist = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) > 512*FRACUNIT;
+
    randAttack = P_Random(pr_lichattack);
    
    if(randAttack < (dist ? 150 : 50))

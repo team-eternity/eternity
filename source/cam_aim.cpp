@@ -139,7 +139,7 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
    {
       const surface_t &surface = sector->srf[surf];
       fixed_t slope = state.slope[surf];
-      int newfromid;
+      int newfromid = R_NOGROUP;
       if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
          (newfromid = surface.portal->data.link.toid) != state.groupid)
       {
@@ -174,12 +174,13 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
                fixed_t outDist;
 
                State newstate(state);
-               newstate.c.x = state.c.x;
-               newstate.c.y = state.c.y;
+               newstate.c.x = v.x;
+               newstate.c.y = v.y;
                newstate.groupid = newfromid;
                newstate.origindist = totalfrac;
                // don't allow the opposite slope to keep going forth
-               if(isInner(surf, newstate.slope[!surf], 0))
+               newstate.slope[!surf] = state.slope[!surf];
+               if(isOuter(!surf, newstate.slope[!surf], 0))
                   newstate.slope[!surf] = 0;
                newstate.reclevel = state.reclevel + 1;
 

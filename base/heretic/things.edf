@@ -2995,6 +2995,7 @@ thingtype HereticPhoenixFX1 : HereticMissile, -1, 430
   seesound   ht_phosht
   deathsound ht_phohit
   addflags   THRUGHOST
+  remflags   NOSPLASH
 
   firstdecoratestate S_PHOENIXFX1_1
   states

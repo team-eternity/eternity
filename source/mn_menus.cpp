@@ -1,7 +1,6 @@
-// Emacs style mode select -*- C++ -*-
-//-----------------------------------------------------------------------------
 //
-// Copyright(C) 2013 Simon Howard et al.
+// The Eternity Engine
+// Copyright(C) 2021 James Haley, Simon Howard et al.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,14 +17,11 @@
 //
 //--------------------------------------------------------------------------
 //
-// Menus
+// Purpose: The actual menus: Structs and handler functions (if any),
+//          console commands to activate each menu
 //
-// the actual menus: structs and handler functions (if any)
-// console commands to activate each menu
+// Authors: Simon Howard, James Haley, Max Waine, Devin Acker
 //
-// By Simon Howard
-//
-//-----------------------------------------------------------------------------
 
 #include "z_zone.h"
 
@@ -67,6 +63,7 @@
 #include "p_skin.h"
 #include "r_defs.h"
 #include "r_draw.h"
+#include "r_main.h"
 #include "r_patch.h"
 #include "r_state.h"
 #include "s_sound.h"
@@ -86,7 +83,6 @@ extern menu_t menu_newmission;
 extern menu_t menu_main;
 extern menu_t menu_episode;
 extern menu_t menu_d2episode;
-extern menu_t menu_startmap;
 
 int screenSize;      // screen size
 
@@ -94,15 +90,7 @@ char *mn_demoname;           // demo to play
 
 // haleyjd: moved these up here to fix Z_Free error
 
-// haleyjd: was 7
-#define SAVESLOTS 8
-
-char *savegamenames[SAVESLOTS];
-
 char *mn_start_mapname;
-
-// haleyjd: keep track of valid save slots
-bool savegamepresent[SAVESLOTS];
 
 static void MN_InitCustomMenu();
 static void MN_InitSearchStr();
@@ -113,13 +101,6 @@ void MN_InitMenus()
    mn_demoname = estrdup("demo1");
    mn_wadname  = estrdup("");
    mn_start_mapname = estrdup(""); // haleyjd 05/14/06
-   
-   // haleyjd: initialize via zone memory
-   for(int i = 0; i < SAVESLOTS; i++)
-   {
-      savegamenames[i]   = estrdup("");
-      savegamepresent[i] = false;
-   }
 
    MN_InitCustomMenu();      // haleyjd 03/14/06
    MN_InitSearchStr();       // haleyjd 03/15/06
@@ -248,7 +229,7 @@ void MN_Doom2NewGame()
 // mn_newgame
 // 
 // called from main menu:
-// starts menu according to use_startmap, gametype and modifiedgame
+// starts menu according to menuStartMap, gametype and modifiedgame
 //
 CONSOLE_COMMAND(mn_newgame, 0)
 {
@@ -264,12 +245,16 @@ CONSOLE_COMMAND(mn_newgame, 0)
 
    // haleyjd 05/14/06: check for episode menu override now
    if(mn_episode_override)
-   {
       MN_StartMenu(mn_episode_override);
-      return;
+   else if(GameModeInfo->menuStartMap &&
+           *GameModeInfo->menuStartMap &&
+           W_CheckNumForName(GameModeInfo->menuStartMap) >= 0)
+   {
+      G_DeferedInitNew(defaultskill, GameModeInfo->menuStartMap);
+      MN_ClearMenus();
    }
-   
-   GameModeInfo->OnNewGame();
+   else
+      GameModeInfo->OnNewGame();
 }
 
 // menu item to quit doom:
@@ -603,38 +588,6 @@ CONSOLE_COMMAND(newgame, cf_notnet)
    MN_ClearMenus();
 }
 
-//////////////////////////////////////////////////
-//
-// First-time Query menu to use start map
-//
-
-static menuitem_t mn_startmap_items[] =
-{
-   {it_title,  "New Game",          nullptr,               "M_NEWG"},
-   {it_gap},
-   {it_info,   "Eternity includes a 'start map' to let"},
-   {it_info,   "you start new games from in a level."},
-   {it_gap},
-   {it_info,   "In the future would you rather:"},
-   {it_gap},
-   {it_runcmd, "Use the start map", "use_startmap 1; mn_newgame"},
-   {it_runcmd, "Use the menu",      "use_startmap 0; mn_newgame"},
-   {it_end}
-};
-
-menu_t menu_startmap =
-{
-   mn_startmap_items,          // menu items
-   nullptr, nullptr, nullptr,  // pages
-   40, 15,                     // x,y offsets
-   7,                          // starting item: start map
-   mf_leftaligned | mf_background,
-};
-
-const char *str_startmap[] = {"ask", "no", "yes"};
-VARIABLE_INT(use_startmap, nullptr, -1, 1, str_startmap);
-CONSOLE_VARIABLE(use_startmap, use_startmap, 0) {}
-
 
 ////////////////////////////////////////////////
 //
@@ -739,11 +692,6 @@ static menuitem_t mn_wadmisc_items[] =
 {
    {it_title,    "Wad Options",          nullptr,                "M_WADOPT"},
    {it_gap},
-   // FIXME: startmap restoration?
-   //{it_info,     "Misc Settings",        nullptr,                nullptr, MENUITEM_CENTERED },
-   //{it_gap},
-   //{it_toggle,   "Use start map",        "use_startmap" },
-   //{it_gap},
    {it_info,     "Autoloaded Files",     nullptr,                nullptr, MENUITEM_CENTERED },
    {it_gap},
    {it_variable, "WAD file 1:",          "auto_wad_1",           nullptr, MENUITEM_LALIGNED },
@@ -1257,393 +1205,6 @@ CONSOLE_COMMAND(mn_player, 0)
    MN_StartMenu(&menu_player);
 }
 
-
-/////////////////////////////////////////////////////////////////
-//
-// Load Game
-//
-
-//
-// NETCODE_FIXME: Ensure that loading/saving are handled properly in
-// netgames when it comes to the menus. Some deficiencies have already
-// been caught in the past, so some may still exist.
-//
-
-// haleyjd: numerous fixes here from 8-17 version of SMMU
-
-#define SAVESTRINGSIZE  24
-
-// load/save box patches
-patch_t *patch_left, *patch_mid, *patch_right;
-
-static void MN_SaveGame()
-{
-   int save_slot = 
-      static_cast<int>((char **)(Console.command->variable->variable) - savegamenames);
-   
-   if(gamestate != GS_LEVEL) 
-      return; // only save in level
-   
-   if(save_slot < 0 || save_slot >= SAVESLOTS)
-      return; // sanity check
-   
-   G_SaveGame(save_slot, savegamenames[save_slot]);
-   MN_ClearMenus();
-   
-   // haleyjd 02/23/02: restored from MBF
-   if(quickSaveSlot == -2)
-      quickSaveSlot = save_slot;
-   
-   // haleyjd: keep track of valid saveslots
-   savegamepresent[save_slot] = true;
-
-   // haleyjd 10/08/08: GIF_SAVESOUND flag
-   if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-}
-
-// create the savegame console commands
-void MN_CreateSaveCmds()
-{
-   for(int i = 0; i < SAVESLOTS; i++)  // haleyjd
-   {
-      command_t  *save_command;
-      variable_t *save_variable;
-      char tempstr[16];
-
-      // create the variable first
-      save_variable = estructalloc(variable_t, 1);
-      save_variable->variable  = &savegamenames[i];
-      save_variable->v_default = nullptr;
-      save_variable->type      = vt_string;      // string value
-      save_variable->min       = 0;
-      save_variable->max       = SAVESTRINGSIZE;
-      save_variable->defines   = nullptr;
-      
-      // now the command
-      save_command = estructalloc(command_t, 1);
-      
-      sprintf(tempstr, "savegame_%i", i);
-      save_command->name     = estrdup(tempstr);
-      save_command->type     = ct_variable;
-      save_command->flags    = 0;
-      save_command->variable = save_variable;
-      save_command->handler  = MN_SaveGame;
-      save_command->netcmd   = 0;
-      
-      C_AddCommand(save_command); // hook into cmdlist
-   }
-}
-
-
-//
-// MN_ReadSaveStrings
-//  read the strings from the savegame files
-// based on the mbf sources
-//
-static void MN_ReadSaveStrings()
-{
-   for(int i = 0; i < SAVESLOTS; i++)
-   {
-      char *name = nullptr;    // killough 3/22/98
-      size_t len;
-      char description[SAVESTRINGSIZE+1]; // sf
-      FILE *fp;  // killough 11/98: change to use stdio
-
-      len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-
-      G_SaveGameName(name, len, i);
-
-      // haleyjd: fraggle got rid of this - perhaps cause of the crash?
-      //          I've re-implemented it below to try to resolve the
-      //          zoneid check error -- bingo, along with new init code.
-      // if(savegamenames[i])
-      //  Z_Free(savegamenames[i]);
-
-      fp = fopen(name,"rb");
-      if(!fp)
-      {   // Ty 03/27/98 - externalized:
-         // haleyjd
-         if(savegamenames[i])
-            Z_Free(savegamenames[i]);
-         savegamenames[i] = Z_Strdup(DEH_String("EMPTYSTRING"), PU_STATIC, nullptr);
-         continue;
-      }
-
-      memset(description, 0, sizeof(description));
-      if(fread(description, SAVESTRINGSIZE, 1, fp) < 1)
-         doom_printf("%s", FC_ERROR "Warning: savestring read failed");
-      if(savegamenames[i])
-         Z_Free(savegamenames[i]);
-      savegamenames[i] = Z_Strdup(description, PU_STATIC, nullptr);  // haleyjd
-      savegamepresent[i] = true;
-      fclose(fp);
-   }
-}
-
-static void MN_DrawSaveLoadBorder(int x, int y)
-{
-   patch_left  = PatchLoader::CacheName(wGlobalDir, "M_LSLEFT", PU_STATIC);
-   patch_mid   = PatchLoader::CacheName(wGlobalDir, "M_LSCNTR", PU_STATIC);
-   patch_right = PatchLoader::CacheName(wGlobalDir, "M_LSRGHT", PU_STATIC);
-
-   V_DrawPatch(x - 8, y + 7, &subscreen43, patch_left);
-   
-   for(int i = 0; i < 24; i++)
-   {
-      V_DrawPatch(x, y + 7, &subscreen43, patch_mid);
-      x += 8;
-   }
-   
-   V_DrawPatch(x, y + 7, &subscreen43, patch_right);
-
-   // haleyjd: make purgable
-   Z_ChangeTag(patch_left,  PU_CACHE);
-   Z_ChangeTag(patch_mid,   PU_CACHE);
-   Z_ChangeTag(patch_right, PU_CACHE);
-}
-
-static void MN_LoadGameDrawer();
-
-// haleyjd: all saveslot names changed to be consistent
-
-static menuitem_t mn_loadgame_items[] =
-{
-   {it_runcmd, "save slot 0",       "mn_load 0"},
-   {it_runcmd, "save slot 1",       "mn_load 1"},
-   {it_runcmd, "save slot 2",       "mn_load 2"},
-   {it_runcmd, "save slot 3",       "mn_load 3"},
-   {it_runcmd, "save slot 4",       "mn_load 4"},
-   {it_runcmd, "save slot 5",       "mn_load 5"},
-   {it_runcmd, "save slot 6",       "mn_load 6"},
-   {it_runcmd, "save slot 7",       "mn_load 7"},
-   {it_end}
-};
-
-menu_t menu_loadgame =
-{
-   mn_loadgame_items,
-   nullptr, nullptr, nullptr,        // pages
-   80, 44,                           // x, y
-   0,                                // starting slot
-   mf_skullmenu | mf_emulated,       // skull menu
-   MN_LoadGameDrawer,
-};
-
-
-static void MN_LoadGameDrawer()
-{
-   static char *emptystr = nullptr;
-
-   int lumpnum = W_CheckNumForName("M_LGTTL");
-
-   if(mn_classic_menus || lumpnum == -1)
-      lumpnum = W_CheckNumForName("M_LOADG");
-
-   V_DrawPatch(72, 18, &subscreen43,
-               PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
-
-   if(!emptystr)
-      emptystr = estrdup(DEH_String("EMPTYSTRING"));
-   
-   for(int i = 0;  i < SAVESLOTS; i++)
-   {
-      MN_DrawSaveLoadBorder(menu_loadgame.x, menu_loadgame.y + i*16);
-      menu_loadgame.menuitems[i].description =
-         savegamenames[i] ? savegamenames[i] : emptystr;
-   }
-}
-
-CONSOLE_COMMAND(mn_loadgame, 0)
-{
-   if(netgame && !demoplayback)
-   {
-      MN_Alert("%s", DEH_String("LOADNET"));
-      return;
-   }
-   
-   // haleyjd 02/23/02: restored from MBF
-   if(demorecording) // killough 5/26/98: exclude during demo recordings
-   {
-      MN_Alert("you can't load a game\n"
-               "while recording a demo!\n\n" PRESSKEY);
-      return;
-   }
-   
-   MN_ReadSaveStrings();  // get savegame descriptions
-   MN_StartMenu(GameModeInfo->loadMenu);
-}
-
-CONSOLE_COMMAND(mn_load, 0)
-{
-   char *name;     // killough 3/22/98
-   int slot;
-   size_t len;
-   
-   if(Console.argc < 1)
-      return;
-   
-   slot = Console.argv[0]->toInt();
-   
-   // haleyjd 08/25/02: giant bug here
-   if(!savegamepresent[slot])
-   {
-      MN_Alert("You can't load an empty game!\n%s", DEH_String("PRESSKEY"));
-      return;     // empty slot
-   }
-
-   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-   
-   G_SaveGameName(name, len, slot);
-   G_LoadGame(name, slot, false);
-   
-   MN_ClearMenus();
-
-   // haleyjd 10/08/08: GIF_SAVESOUND flag
-   if(GameModeInfo->flags & GIF_SAVESOUND)
-      S_StartInterfaceSound(GameModeInfo->menuSounds[MN_SND_DEACTIVATE]);
-}
-
-// haleyjd 02/23/02: Quick Load -- restored from MBF and converted
-// to use console commands
-CONSOLE_COMMAND(quickload, 0)
-{
-   char tempstring[80];
-   
-   if(netgame && !demoplayback)
-   {
-      MN_Alert("%s", DEH_String("QLOADNET"));
-      return;
-   }
-
-   if(demorecording)
-   {
-      MN_Alert("you can't quickload\n"
-               "while recording a demo!\n\n" PRESSKEY);
-      return;
-   }
-
-   if(quickSaveSlot < 0)
-   {
-      MN_Alert("%s", DEH_String("QSAVESPOT"));
-      return;
-   }
-   
-   psnprintf(tempstring, sizeof(tempstring), s_QLPROMPT,
-             savegamenames[quickSaveSlot]);
-   MN_Question(tempstring, "qload");
-}
-
-CONSOLE_COMMAND(qload, cf_hidden)
-{
-   char *name = nullptr;     // killough 3/22/98
-   size_t len;
-
-   len = M_StringAlloca(&name, 2, 26, basesavegame, savegamename);
-   
-   G_SaveGameName(name, len, quickSaveSlot);
-   G_LoadGame(name, quickSaveSlot, false);
-}
-
-/////////////////////////////////////////////////////////////////
-//
-// Save Game
-//
-
-static void MN_SaveGameDrawer();
-
-// haleyjd: fixes continue here from 8-17 build
-
-static menuitem_t mn_savegame_items[] =
-{
-   {it_variable, "",                          "savegame_0"},
-   {it_variable, "",                          "savegame_1"},
-   {it_variable, "",                          "savegame_2"},
-   {it_variable, "",                          "savegame_3"},
-   {it_variable, "",                          "savegame_4"},
-   {it_variable, "",                          "savegame_5"},
-   {it_variable, "",                          "savegame_6"},
-   {it_variable, "",                          "savegame_7"},
-   {it_end}
-};
-
-menu_t menu_savegame = 
-{
-   mn_savegame_items,
-   nullptr, nullptr, nullptr,        // pages
-   80, 44,                           // x, y
-   0,                                // starting slot
-   mf_skullmenu | mf_emulated,       // skull menu
-   MN_SaveGameDrawer,
-};
-
-static void MN_SaveGameDrawer()
-{
-   int lumpnum = W_CheckNumForName("M_SGTTL");
-
-   if(mn_classic_menus || lumpnum == -1)
-      lumpnum = W_CheckNumForName("M_SAVEG");
-
-   V_DrawPatch(72, 18, &subscreen43,
-               PatchLoader::CacheNum(wGlobalDir, lumpnum, PU_CACHE));
-
-   for(int i = 0; i < SAVESLOTS; i++)
-      MN_DrawSaveLoadBorder(menu_savegame.x, menu_savegame.y + 16*i);
-}
-
-CONSOLE_COMMAND(mn_savegame, 0)
-{
-   // haleyjd 02/23/02: restored from MBF
-   // killough 10/6/98: allow savegames during single-player demo 
-   // playback
-   
-   if(!usergame && (!demoplayback || netgame))
-   {
-      MN_Alert("%s", DEH_String("SAVEDEAD")); // Ty 03/27/98 - externalized
-      return;
-   }
-   
-   if(gamestate != GS_LEVEL)
-      return;    // only save in levels
-   
-   MN_ReadSaveStrings();
-
-   MN_StartMenu(GameModeInfo->saveMenu);
-}
-
-// haleyjd 02/23/02: Quick Save -- restored from MBF, converted to
-// use console commands
-CONSOLE_COMMAND(quicksave, 0)
-{
-   char tempstring[80];
-
-   if(!usergame && (!demoplayback || netgame))  // killough 10/98
-   {
-      S_StartInterfaceSound(GameModeInfo->playerSounds[sk_oof]);
-      return;
-   }
-   
-   if(gamestate != GS_LEVEL)
-      return;
-  
-   if(quickSaveSlot < 0)
-   {
-      quickSaveSlot = -2; // means to pick a slot now
-      MN_ReadSaveStrings();
-      MN_StartMenu(GameModeInfo->saveMenu);
-      return;
-   }
-   
-   psnprintf(tempstring, sizeof(tempstring), s_QSPROMPT,
-             savegamenames[quickSaveSlot]);
-   MN_Question(tempstring, "qsave");
-}
-
-CONSOLE_COMMAND(qsave, cf_hidden)
-{
-   G_SaveGame(quickSaveSlot, savegamenames[quickSaveSlot]);
-}
-
 /////////////////////////////////////////////////////////////////
 //
 // Options Menu
@@ -1783,7 +1344,7 @@ int mn_favaspectratio;
 
 static const char *aspect_ratio_desc[] =
 {
-   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9"
+   "Legacy", "5:4", "4:3", "3:2", "16:10", "5:3", "WSVGA", "16:9", "21:9"
 };
 
 VARIABLE_INT(mn_favaspectratio, nullptr, 0, AR_NUMASPECTRATIOS-1, aspect_ratio_desc);
@@ -1897,51 +1458,64 @@ static const char *sixteenNineModes[] =
    nullptr
 };
 
+// 21:9 modes (2.333... / 0.428571...)
+static const char *twentyoneNineModes[] =
+{
+   "1720x720",
+   "2560x1080",
+   "3440x1440",
+   nullptr
+};
+
 // TODO: Not supported as menu choices yet:
 // 17:9  (1.888... / 0.5294117647058823...) ex: 2048x1080 
 // 32:15, or 16:7.5 (2.1333... / 0.46875)   ex: 1280x600
 
 static const char **resListForAspectRatio[AR_NUMASPECTRATIOS] =
 {
-   legacyModes,      // Low-res 16:10, 4:3 modes and their multiples
-   fiveFourModes,    // 5:4 - very square
-   fourThreeModes,   // 4:3 (standard CRT)
-   threeTwoModes,    // 3:2 (similar to European TV)
-   sixteenTenModes,  // 16:10, common LCD widescreen monitors
-   fiveThreeModes,   // 5:3 
-   wsvgaModes,       // 128:75 (or 16:9.375), common netbook resolution
-   sixteenNineModes  // 16:9, consumer HD widescreen TVs/monitors
+   legacyModes,        // Low-res 16:10, 4:3 modes and their multiples
+   fiveFourModes,      // 5:4 - very square
+   fourThreeModes,     // 4:3 (standard CRT)
+   threeTwoModes,      // 3:2 (similar to European TV)
+   sixteenTenModes,    // 16:10, common LCD widescreen monitors
+   fiveThreeModes,     // 5:3 
+   wsvgaModes,         // 128:75 (or 16:9.375), common netbook resolution
+   sixteenNineModes,   // 16:9, consumer HD widescreen TVs/monitors
+   twentyoneNineModes, // 21:9, consumder HD ultrawide TVs/monitors
 };
 
 static int mn_vidmode_num;
 static char **mn_vidmode_desc;
 static char **mn_vidmode_cmds;
 
-//
-// MN_BuildVidmodeTables
+enum class tableType_e
+{
+   VIDEO_MODE,
+   RESOLUTION
+};
+
 //
 // haleyjd 06/19/11: Resurrected and restructured to allow choosing modes
 // from the precomposited lists above based on the user's favorite aspect
 // ratio and fullscreen/windowed settings.
 //
-static void MN_BuildVidmodeTables()
+static void MN_BuildVidmodeTables(const tableType_e type)
 {
    int useraspect = mn_favaspectratio;
    int userfs     = mn_favscreentype;
    const char **reslist = nullptr;
-   int i = 0;
-   int nummodes;
+   int offset = 0;
 
    if(mn_vidmode_desc)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_desc[i]);
       efree(mn_vidmode_desc);
       mn_vidmode_desc = nullptr;
    }
    if(mn_vidmode_cmds)
    {
-      for(i = 0; i < mn_vidmode_num; i++)
+      for(int i = 0; i < mn_vidmode_num; i++)
          efree(mn_vidmode_cmds[i]);
       efree(mn_vidmode_cmds);
       mn_vidmode_cmds = nullptr;
@@ -1954,50 +1528,75 @@ static void MN_BuildVidmodeTables()
       reslist = resListForAspectRatio[AR_LEGACY]; // A safe pick.
 
    // count the modes on that list
-   while(reslist[i])
-      ++i;
+   mn_vidmode_num = 0;
+   while(reslist[mn_vidmode_num])
+      mn_vidmode_num++;
 
-   nummodes = i;
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_num++;
+      offset = 1;
+   }
 
    // allocate arrays
-   mn_vidmode_desc = ecalloc(char **, i+1, sizeof(const char *));
-   mn_vidmode_cmds = ecalloc(char **, i+1, sizeof(const char *));
+   mn_vidmode_desc = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
+   mn_vidmode_cmds = ecalloc(char **, mn_vidmode_num+1, sizeof(const char *));
 
-   for(i = 0; i < nummodes; i++)
+   if(type == tableType_e::RESOLUTION)
+   {
+      mn_vidmode_desc[0] = estrdup("native");
+      mn_vidmode_cmds[0] = estrdup("i_resolution native");
+   }
+
+   const char *cmdstr = (type == tableType_e::RESOLUTION) ? "i_resolution" : "i_videomode";
+   for(int i = offset; i < mn_vidmode_num; i++)
    {
       qstring cmd, description;
 
-      description = reslist[i];
-      switch(userfs)
+      description = reslist[i - offset];
+      if(type == tableType_e::VIDEO_MODE)
       {
-      case MN_FULLSCREEN:
-         description += 'f';
-         break;
-      case MN_FULLSCREEN_DESKTOP:
-         description += 'd';
-         break;
-      case MN_WINDOWED:
-      default:
-         description += 'w';
-         break;
+         switch(userfs)
+         {
+         case MN_FULLSCREEN:
+            description += 'f';
+            break;
+         case MN_FULLSCREEN_DESKTOP:
+            description += 'd';
+            break;
+         case MN_WINDOWED:
+         default:
+            description += 'w';
+            break;
+         }
       }
 
       // set the mode description
       mn_vidmode_desc[i] = description.duplicate();
-      
-      cmd << "i_videomode " << description;
-      
+
+      cmd << cmdstr << " " << description;
+
       mn_vidmode_cmds[i] = cmd.duplicate();
    }
 
    // null-terminate the lists
-   mn_vidmode_desc[nummodes] = nullptr;
-   mn_vidmode_cmds[nummodes] = nullptr;
+   mn_vidmode_desc[mn_vidmode_num] = nullptr;
+   mn_vidmode_cmds[mn_vidmode_num] = nullptr;
+}
+
+CONSOLE_COMMAND(mn_resolution, cf_hidden)
+{
+   MN_BuildVidmodeTables(tableType_e::RESOLUTION);
+
+   MN_SetupBoxWidget("Choose a Resolution",
+                     (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
+                     (const char **)mn_vidmode_cmds);
+   MN_ShowBoxWidget();
 }
 
 CONSOLE_COMMAND(mn_vidmode, cf_hidden)
 {
-   MN_BuildVidmodeTables();
+   MN_BuildVidmodeTables(tableType_e::VIDEO_MODE);
 
    MN_SetupBoxWidget("Choose a Video Mode", 
                      (const char **)mn_vidmode_desc, boxwidget_command, nullptr,
@@ -2036,8 +1635,6 @@ static menu_t *mn_vidpage_menus[] =
    nullptr
 };
 
-static void MN_VideoModeDrawer();
-
 static menuitem_t mn_video_items[] =
 {
    {it_title,        "Video Options",           nullptr, "m_video"     },
@@ -2045,17 +1642,15 @@ static menuitem_t mn_video_items[] =
    {it_info,         "Mode"                                            },
    {it_runcmd,       "Choose a mode...",        "mn_vidmode"           },
    {it_variable,     "Video mode",              "i_videomode"          },
+   {it_runcmd,       "Choose a resolution...",  "mn_resolution"        },
+   {it_variable,     "Renderer resolution",     "i_resolution"         },
    {it_toggle,       "Favorite aspect ratio",   "mn_favaspectratio"    },
+   {it_gap},
+   {it_info,         "Display Properties"                              },
    {it_toggle,       "Favorite screen mode",    "mn_favscreentype"     },
    {it_toggle,       "Display number",          "displaynum"           },
    {it_toggle,       "Vertical sync",           "v_retrace"            },
    {it_slider,       "Gamma correction",        "gamma"                },
-   {it_gap},
-   {it_info,         "Rendering"                                       },
-   {it_slider,       "Screen size",             "screensize"           },
-   {it_toggle,       "HOM detector flashes",    "r_homflash"           },
-   {it_toggle,       "Translucency",            "r_trans"              },
-   {it_variable,     "Opacity percentage",      "r_tranpct"            },
    {it_end}
 };
 
@@ -2068,39 +1663,10 @@ menu_t menu_video =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   MN_VideoModeDrawer,
+   nullptr,
    mn_vidpage_names,
    mn_vidpage_menus
 };
-
-static void MN_VideoModeDrawer()
-{
-   int lump, y;
-   patch_t *patch;
-   spritedef_t *sprdef;
-   spriteframe_t *sprframe;
-   int frame = E_SafeState(GameModeInfo->transFrame);
-
-   // draw an imp fireball
-
-   // don't draw anything before the menu has been initialized
-   if(!(menu_video.menuitems[14].flags & MENUITEM_POSINIT))
-      return;
-   
-   sprdef = &sprites[states[frame]->sprite];
-   // haleyjd 08/15/02
-   if(!(sprdef->spriteframes))
-      return;
-   sprframe = &sprdef->spriteframes[0];
-   lump = sprframe->lump[0];
-   
-   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
-   
-   // approximately center box on "translucency" item in menu
-   y = menu_video.menuitems[14].y - 5;
-   V_DrawBox(270, y, 20, 20);
-   V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
-}
 
 CONSOLE_COMMAND(mn_video, 0)
 {
@@ -2111,19 +1677,25 @@ static menuitem_t mn_sysvideo_items[] =
 {
    { it_title,  "Video Options",            nullptr, "m_video" },
    { it_gap },
-   { it_info,   "Framerate"   },
-   { it_toggle, "Uncapped framerate",       "d_fastrefresh"    },
-   { it_toggle, "Interpolation",            "d_interpolate"    },
+   { it_info,     "Rendering"                                    },
+   { it_slider,   "Screen size",              "screensize"       },
+   { it_toggle,   "HOM detector flashes",     "r_homflash"       },
+   { it_toggle,   "Translucency",             "r_trans"          },
+   { it_variable, "Opacity percentage",       "r_tranpct"        },
+   { it_toggle,   "Stock Doom object style",  "r_tlstyle"        },
    { it_gap },
-   { it_info,   "Screenshots"},
-   { it_toggle, "Screenshot format",        "shot_type"        },
-   { it_toggle, "Gamma correct shots",      "shot_gamma"       },
+   { it_info,     "Framerate"   },
+   { it_toggle,   "Uncapped framerate",       "d_fastrefresh"    },
+   { it_toggle,   "Interpolation",            "d_interpolate"    },
    { it_gap },
-   { it_info,   "Screen Wipe" },
-   { it_toggle, "Wipe style",               "wipetype"         },
-   { it_toggle, "Game waits for wipe",      "wipewait"         },
+   { it_info,     "Screen Wipe" },
+   { it_toggle,   "Wipe style",               "wipetype"         },
+   { it_toggle,   "Game waits for wipe",      "wipewait"         },
    { it_end }
 };
+
+
+static void MN_SysVideoModeDrawer();
 
 menu_t menu_sysvideo =
 {
@@ -2134,14 +1706,53 @@ menu_t menu_sysvideo =
    200, 15,              // x,y offset
    3,                    // start on first selectable
    mf_background,        // full-screen menu
-   nullptr,
+   MN_SysVideoModeDrawer,
    mn_vidpage_names,
    mn_vidpage_menus
 };
 
+static void MN_SysVideoModeDrawer()
+{
+   int lump, y;
+   patch_t *patch;
+   spritedef_t *sprdef;
+   spriteframe_t *sprframe;
+   int frame = E_SafeState(GameModeInfo->transFrame);
+
+   // draw an imp fireball
+
+   // don't draw anything before the menu has been initialized
+   if(!(menu_sysvideo.menuitems[5].flags & MENUITEM_POSINIT))
+      return;
+
+   sprdef = &sprites[states[frame]->sprite];
+   // haleyjd 08/15/02
+   if(!(sprdef->spriteframes))
+      return;
+   sprframe = &sprdef->spriteframes[0];
+   lump = sprframe->lump[0];
+
+   patch = PatchLoader::CacheNum(wGlobalDir, lump + firstspritelump, PU_CACHE);
+
+   // approximately center box on "translucency" item in menu
+   y = menu_video.menuitems[5].y - 5;
+   V_DrawBox(270, y, 20, 20);
+   if(r_tlstyle == R_TLSTYLE_BOOM)
+      V_DrawPatchTL(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   else if(r_tlstyle == R_TLSTYLE_NEW)
+      V_DrawPatchAdd(282, y + 12, &subscreen43, patch, nullptr, FTRANLEVEL);
+   else
+      V_DrawPatch(282, y + 12, &subscreen43, patch);
+}
+
+
 static menuitem_t mn_video_page2_items[] =
 {
    {it_title,    "Video Options",           nullptr, "m_video"},
+   {it_gap },
+   {it_info,     "Screenshots"},
+   {it_toggle,   "Screenshot format",       "shot_type"},
+   {it_toggle,   "Gamma correct shots",     "shot_gamma"},
    {it_gap},
    {it_info,     "System"},
    {it_toggle,   "DOS-like startup",        "textmode_startup"},
@@ -2377,7 +1988,7 @@ static menuitem_t mn_mouse_items[] =
    {it_info,       "Miscellaneous"},
    {it_toggle,     "Invert mouse",                  "invertmouse"    },
    {it_toggle,     "Smooth turning",                "smooth_turning" },
-   {it_toggle,     "Novert emulation",              "mouse_novert"   },
+   {it_toggle,     "Vertical mouse movement",       "mouse_vert"   },
 #ifdef _SDL_VER
    {it_toggle,     "Window grabs mouse",            "i_grabmouse"    },
 #endif
@@ -2415,6 +2026,7 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_info,       "Mouselook"},
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
+   {it_binding,    "Bind mouselook key",  "mlook"      },
    {it_toggle,     "Stretch short skies", "r_stretchsky"},
    {it_end}
 };
@@ -2985,6 +2597,7 @@ static menuitem_t mn_hud_pg2_items[] =
    {it_info,       "Crosshair Options"},
    {it_toggle,     "Crosshair type",               "hu_crosshair"},
    {it_toggle,     "Monster highlighting",         "hu_crosshair_hilite"},
+   {it_toggle,     "Crosshair scaling",            "hu_crosshair_scale"},
    {it_gap},
    {it_info,       "Automap Options"},
    {it_toggle,     "Show coords widget",           "hu_showcoords"},
@@ -3055,9 +2668,25 @@ static void MN_HUDPg2Drawer(void)
       int16_t to = patch->topoffset;
       int16_t lo = patch->leftoffset;
 
-      V_DrawPatchTL(270 + 12 - (w >> 1) + lo, 
-                    y + 12 - (h >> 1) + to, 
-                    &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL);
+      if(!crosshair_scale)
+      {
+         const double x_ratio = video.width  / SCREENWIDTH;
+         const double y_ratio = video.height / SCREENHEIGHT;
+
+         V_DrawPatchTL(
+            subscreen43.x1lookup[270 + 12] + subscreen43.subx - (w >> 1) + lo,
+            subscreen43.y1lookup[y + 12] + subscreen43.suby - (h >> 1) + to,
+            &vbscreenfullres, patch, colrngs[CR_RED], FTRANLEVEL
+         );
+      }
+      else
+      {
+         V_DrawPatchTL(
+            270 + 12 - (w >> 1) + lo,
+            y + 12 - (h >> 1) + to,
+            &subscreen43, patch, colrngs[CR_RED], FTRANLEVEL
+         );
+      }
    }
 }
 
@@ -3292,6 +2921,7 @@ static menuitem_t mn_weapons_items[] =
    {it_gap},
    {it_toggle,     "Bfg type",                       "bfgtype"},
    {it_toggle,     "Bobbing",                        "bobbing"},
+   {it_toggle,     "Center when firing",             "r_centerfire"},
    {it_toggle,     "Recoil",                         "recoil"},
    {it_toggle,     "Weapon hotkey cycling",          "weapon_hotkey_cycling"},
    {it_toggle,     "Autoaiming",                     "autoaim"},
@@ -3846,6 +3476,7 @@ static menuitem_t mn_automapkeys_items[] =
    {it_binding, "Mark spot",            "map_mark"},
    {it_binding, "Clear spots",          "map_clear"},
    {it_binding, "Show grid",            "map_grid"},
+   {it_binding, "Overlay mode",         "map_overlay"},
    {it_end}
 };
 

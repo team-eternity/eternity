@@ -181,8 +181,8 @@ void A_FireMacePL1(actionargs_t *actionargs)
    const int tnum = E_SafeThingType(MT_MACEFX1);
 
    P_SubtractAmmo(player, -1);
-   psp->sx = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
-   psp->sy = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
+   psp->playpos.x = psp->renderpos.x = ((P_Random(pr_firemace) & 3) - 2) * FRACUNIT;
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + (P_Random(pr_firemace) & 3) * FRACUNIT;
    ball = P_SpawnPlayerMissileAngleHeretic(mo, tnum, mo->angle +
                                            ((P_Random(pr_firemace) & 7) - 4) * PO2(24),
                                            SPMAH_AIMFRIENDSTOO);
@@ -321,7 +321,7 @@ void A_DeathBallImpact(actionargs_t *actionargs)
 {
    int      i;
    Mobj    *target, *ball = actionargs->actor;
-   angle_t  angle;
+   angle_t  angle = 0;
    bool     newAngle;
 
    if((ball->z <= ball->zref.floor) && E_WouldHitFloorWater(*ball))
@@ -587,8 +587,8 @@ void A_GauntletAttack(actionargs_t *actionargs)
 
    int powered = E_ArgAsInt(args, 0, 0);
 
-   psp->sx = ((P_Random(pr_gauntlets) & 3) - 2) * FRACUNIT;
-   psp->sy = WEAPONTOP + (P_Random(pr_gauntlets) & 3) * FRACUNIT;
+   psp->playpos.x = psp->renderpos.x = ((P_Random(pr_gauntlets) & 3) - 2) * FRACUNIT;
+   psp->playpos.y = psp->renderpos.y = WEAPONTOP + (P_Random(pr_gauntlets) & 3) * FRACUNIT;
    angle = mo->angle;
 
    if(powered)
@@ -704,7 +704,7 @@ void A_HticSpawnFireBomb(actionargs_t *actionargs)
    // The footclip check turns into:
    //   (mo->flags2 & 1)
    // due to C operator precedence and a lack of parens/brackets.
-   const fixed_t z = comp[comp_terrain] || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
+   const fixed_t z = getComp(comp_terrain) || !((mo->flags2 & MF2_FOOTCLIP) && E_HitFloor(mo)) ?
                      mo->z : mo->z - (15 * FRACUNIT);
    bomb = P_SpawnMobj(mo->x + (24 * finecosine[angle]),
                       mo->y + (24 * finesine[angle]),

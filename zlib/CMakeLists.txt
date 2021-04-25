@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 2.4.4)
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 
-project(zlib C)
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0048 NEW)
+endif(COMMAND cmake_policy)
+
+project(zlib VERSION 1.2.11 LANGUAGES C)
 
 set(VERSION "1.2.11")
 
@@ -124,6 +128,15 @@ set(ZLIB_SRCS
     uncompr.c
     zutil.c
 )
+if(APPLE)
+    # At least on macOS these aren't needed
+    list(REMOVE_ITEM ZLIB_SRCS
+        gzclose.c
+        gzlib.c
+        gzread.c
+        gzwrite.c
+    )
+endif()
 
 # parse the full version number from zlib.h and include in ZLIB_FULL_VERSION
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/zlib.h _zlib_h_contents)

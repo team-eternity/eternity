@@ -27,6 +27,9 @@
 #ifndef D_FINDIWADS_H__
 #define D_FINDIWADS_H__
 
+class qstring;
+
+void D_CheckPathForIWADs(const qstring &path);
 void D_FindIWADs();
 
 #endif

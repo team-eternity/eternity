@@ -1,0 +1,112 @@
+================================================================================
+Changes since Eternity Engine v4.01.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2020/10/16
+Increased visplane hash chain amount again, which should increase FPS in super
+nasty scenes.
+
+--------------------------------------------------------------------------------
+2020/10/24
+Added the ability to scale set the renderer's resolution independent of window
+size.
+
+--------------------------------------------------------------------------------
+2020/10/27
+Default so that holding run whilst autorun is on makes you walk (runiswalk).
+
+--------------------------------------------------------------------------------
+2020/11/03
+Made the backbuffer everything is rendered to transposed. This improves
+rendering times in some cases, and opens the door to many more optimisations.
+The old quad buffer column drawer has been deleted.
+
+--------------------------------------------------------------------------------
+2020/11/08
+Added tall patch support to masked columns (e.g.: sprites, masked midtexes).
+
+--------------------------------------------------------------------------------
+2020/11/11
+Added a provisional fix for intercept traversal when some intercepts are in
+front of the player on the map, but behind them relatively (due to portals).
+Made SetThingSpecial actually set the thing's special in addition to args.
+
+--------------------------------------------------------------------------------
+2020/11/12
+Fixed blockmap generation errors when the 0th vertex has the largest x or yo
+co-ordinates.
+
+--------------------------------------------------------------------------------
+2020/11/17
+Fixed slope rendering in weird niche circumstances with high scale values.
+
+--------------------------------------------------------------------------------
+2020/11/22
+Fixed Eternity hard-locking if a dynavertex has the same position after
+interpolation.
+
+================================================================================
+Changes since Eternity Engine v4.02.00
+================================================================================
+
+--------------------------------------------------------------------------------
+2021/02/14
+Added RANGEEIGHTH flag for thingtypes, required for Strife compat. It cuts
+considered distance to target by eight, giving a way higher missile attack
+probability.
+Added spawn type param to A_FatAttack codepointers.
+Made thing-based obituaries use deh or EDF strings if they start with $.
+
+--------------------------------------------------------------------------------
+2021/02/15
+Added cvar "hu_crosshair_scale" which can toggle scaling of the crosshair off or
+on. It's saved in the config as "crosshair_scale".
+
+--------------------------------------------------------------------------------
+2021/02/26
+Fixed an issue where crushers would desync and permanently close when saving and
+loading.
+
+--------------------------------------------------------------------------------
+2021/03/04
+Added an option to centre weapons when firing. It's in the weapons menu.
+
+--------------------------------------------------------------------------------
+2021/03/07
+Re-introduce a warning for potentially-incompatible savegames.
+
+--------------------------------------------------------------------------------
+2021/03/21
+Overhaul save and load menus. You can now have an arbitrary amount of savegames,
+can delete selected savegames with the delete key, and info on the save like
+when it was saved, what map it's on, etc. Saves in the list are sorted from most
+recent to least recent. Quickload now allows you to select a quicksave slot if
+one isn't already selected.
+Credit goes to Devin Acker (Revenant) for the idea and initial code for that
+ended up defining the layout and such that I went with for this.
+
+Fixed the modern HUD being stretched horizontally.
+Restricted the modern HUD to a 16:9 subscreen (if at 16:9 or wider aspect). Can
+be toggled on/off with the cvar "hu_restrictoverlaywidth".
+
+--------------------------------------------------------------------------------
+2021/04/02
+Fixed screen going black when streaming on Discord.
+
+--------------------------------------------------------------------------------
+2021/04/17
+Allowed certain OPTIONS to be read at startup.
+
+--------------------------------------------------------------------------------
+2021/04/17
+Fixed Chainsaw and Fist not being switched away from if dehacked made them use
+ammo.
+
+--------------------------------------------------------------------------------
+2021/04/19
+Made the menus use the console font by default.
+
+================================================================================
+EOF
+================================================================================

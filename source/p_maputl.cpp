@@ -274,9 +274,22 @@ void P_MakeDivline(const line_t *li, divline_t *dl)
 //
 fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 {
-   fixed_t den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy);
-   return den ? FixedDiv((FixedMul((v1->x-v2->x)>>8, v1->dy) +
-                          FixedMul((v2->y-v1->y)>>8, v1->dx)), den) : 0;
+   if(demo_version < 403)
+   {
+      const fixed_t den = FixedMul(v1->dy>>8, v2->dx) - FixedMul(v1->dx>>8, v2->dy);
+      return den ? FixedDiv((FixedMul((v1->x-v2->x)>>8, v1->dy) +
+                             FixedMul((v2->y-v1->y)>>8, v1->dx)), den) : 0;
+   }
+   else
+   {
+      // This is from PRBoom+ by Colin Phipps , GPL 2
+      /* cph - This was introduced at prboom_4_compatibility - no precision/overflow problems */
+      int64_t den = int64_t(v1->dy) * v2->dx - int64_t(v1->dx) * v2->dy;
+      den >>= 16;
+      if(!den)
+         return 0;
+      return fixed_t((int64_t(v1->x - v2->x) * v1->dy - int64_t(v1->y - v2->y) * v1->dx) / den);
+   }
 }
 
 //
@@ -563,7 +576,7 @@ void P_UnsetThingPosition(Mobj *thing)
       // pointers, allows head node pointers to be treated like everything else
       Mobj **sprev = thing->sprev;
       Mobj  *snext = thing->snext;
-      if(sprev && (*sprev = snext))  // unlink from sector list
+      if((*sprev = snext))  // unlink from sector list
          snext->sprev = sprev;
 
       // phares 3/14/98
@@ -598,7 +611,6 @@ void P_UnsetThingPosition(Mobj *thing)
       Mobj *bnext, **bprev = thing->bprev;
       if(bprev && (*bprev = bnext = thing->bnext))  // unlink from block map
          bnext->bprev = bprev;
-      thing->bprev = nullptr; // set it to null: we need a way to tell if thing got unlinked
    }
 }
 

@@ -63,8 +63,8 @@ bool P_CheckThingAimAvailability(const Mobj *th, const Mobj *source, bool aimfla
    if(th == source)
       return false; // can't shoot self
 
-   if(!(th->flags & MF_SHOOTABLE))
-      return false; // corpse or something
+   if(!(th->flags & MF_SHOOTABLE) || (th->flags5 & MF5_NOTAUTOAIMED) != 0)
+      return false; // corpse or something, or cannot be autoaimed
 
    // VANILLA_HERETIC: the pods have LOWAIMPRIO so reject hitting them
    if(vanilla_heretic && th->flags4 & MF4_LOWAIMPRIO)
@@ -451,7 +451,7 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    sector_t *fs = li->frontsector;
    sector_t *bs = li->backsector;
 
-   bool becomp      = (demo_version < 333 || comp[comp_planeshoot]);
+   bool becomp      = (demo_version < 333 || getComp(comp_planeshoot));
    bool floorsame   = (fs->srf.floor.height == bs->srf.floor.height && becomp);
    bool ceilingsame = (fs->srf.ceiling.height == bs->srf.ceiling.height && becomp);
 
@@ -537,7 +537,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
       // SoM: If we are in no-clip and are shooting on the backside of a
       // 1s line, don't crash!
-      if(sidesector && !comp[comp_planeshoot])
+      if(sidesector && !getComp(comp_planeshoot))
       {
          if(z < sidesector->srf.floor.height)
          {

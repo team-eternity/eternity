@@ -199,13 +199,8 @@ bool P_CheckMeleeRange(Mobj *actor)
 
    // ioanch 20151225: make it linked-portal aware
    fixed_t tx, ty;
-#ifdef R_LINKEDPORTALS
    tx = getThingX(actor, pl);
    ty = getThingY(actor, pl);
-#else
-   tx = pl->x;
-   ty = pl->y;
-#endif
 
    fixed_t range = GameModeInfo->monsterMeleeRange == meleecalc_raven ?
    MELEERANGE : MELEERANGE - 20 * FRACUNIT + pl->info->radius;
@@ -235,13 +230,8 @@ bool P_HitFriend(Mobj *actor)
       angle_t angle;
       fixed_t dist, tx, ty;
 
-#ifdef R_LINKEDPORTALS
       tx = getTargetX(actor);
       ty = getTargetY(actor);
-#else
-      tx = actor->target->x;
-      ty = actor->target->y;
-#endif
       angle = P_PointToAngle(actor->x, actor->y, tx, ty);
       dist  = P_AproxDistance(actor->x - tx, actor->y - ty);
 
@@ -294,13 +284,8 @@ bool P_CheckMissileRange(Mobj *actor)
       return false;       // do not attack yet
 
    // OPTIMIZE: get this from a global checksight
-#ifdef R_LINKEDPORTALS
    dist = P_AproxDistance(actor->x - getTargetX(actor),
                           actor->y - getTargetY(actor)) - 64*FRACUNIT;
-#else
-   dist = P_AproxDistance(actor->x - actor->target->x,
-                          actor->y - actor->target->y) - 64*FRACUNIT;
-#endif
 
    if(actor->info->meleestate == NullStateNum)
       dist -= 128*FRACUNIT;       // no melee attack, so fire more
@@ -325,6 +310,8 @@ bool P_CheckMissileRange(Mobj *actor)
 
    if(actor->flags2 & MF2_RANGEHALF)
       dist >>= 1;
+   if(actor->flags4 & MF4_RANGEEIGHTH)
+      dist >>= 3;
 
    if(dist > 200)
       dist = 200;
@@ -580,7 +567,7 @@ int P_Move(Mobj *actor, int dropoff) // killough 9/12/98
       clip.numspechit = 0;
 
       // haleyjd 04/11/10: wider compatibility range
-      if(!good || comp[comp_doorstuck]) // v1.9, or BOOM 2.01 compatibility
+      if(!good || getComp(comp_doorstuck)) // v1.9, or BOOM 2.01 compatibility
          return good;
       else if(demo_version == 202) // BOOM 2.02
          return (P_Random(pr_trywalk) & 3);
@@ -625,7 +612,7 @@ bool P_SmartMove(Mobj *actor)
    int on_lift, dropoff = 0, under_damage;
 
    // killough 9/12/98: Stay on a lift if target is on one
-   on_lift = !comp[comp_staylift] && target && target->health > 0 &&
+   on_lift = !getComp(comp_staylift) && target && target->health > 0 &&
       target->subsector->sector->tag==actor->subsector->sector->tag &&
       P_IsOnLift(actor);
 
@@ -642,13 +629,7 @@ bool P_SmartMove(Mobj *actor)
    if((actor->flags2 & MF2_JUMPDOWN || (actor->type == HelperThing)) &&
       target && dog_jumping &&
       !((target->flags ^ actor->flags) & MF_FRIEND) &&
-#ifdef R_LINKEDPORTALS
-      P_AproxDistance(actor->x - getTargetX(actor),
-                      actor->y - getTargetY(actor)) < FRACUNIT*144 &&
-#else
-      P_AproxDistance(actor->x - target->x,
-                      actor->y - target->y) < FRACUNIT*144 &&
-#endif      
+      P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor)) < FRACUNIT*144 &&
       P_Random(pr_dropoff) < 235)
    {
       dropoff = 2;
@@ -857,13 +838,8 @@ static fixed_t P_AvoidDropoff(Mobj *actor)
 void P_NewChaseDir(Mobj *actor)
 {
    Mobj *target = actor->target;
-#ifdef R_LINKEDPORTALS
    fixed_t deltax = getTargetX(actor) - actor->x;
    fixed_t deltay = getTargetY(actor) - actor->y;
-#else
-   fixed_t deltax = target->x - actor->x;
-   fixed_t deltay = target->y - actor->y;
-#endif
 
    // killough 8/8/98: sometimes move away from target, keeping distance
    //
@@ -879,7 +855,7 @@ void P_NewChaseDir(Mobj *actor)
          !(actor->flags & (MF_DROPOFF|MF_FLOAT)) &&
          (!P_Use3DClipping() || 
           !(actor->intflags & MIF_ONMOBJ)) && // haleyjd: OVER_UNDER
-         !comp[comp_dropoff] && P_AvoidDropoff(actor)) // Move away from dropoff
+         !getComp(comp_dropoff) && P_AvoidDropoff(actor)) // Move away from dropoff
       {
          P_DoNewChaseDir(actor, dropoff_deltax, dropoff_deltay);
          
@@ -1200,7 +1176,7 @@ bool P_LookForPlayers(Mobj *actor, int allaround)
 
       // killough 9/9/98: give monsters a threshold towards getting players
       // (we don't want it to be too easy for a player with dogs :)
-      if(demo_version >= 203 && !comp[comp_pursuit])
+      if(demo_version >= 203 && !getComp(comp_pursuit))
          actor->threshold = 60;
       
       return true;
@@ -1694,18 +1670,21 @@ static void P_ConsoleSummon(int type, angle_t an, int flagsmode, const char *fla
          newmobj->flags2 = res[1];
          newmobj->flags3 = res[2];
          newmobj->flags4 = res[3];
+         newmobj->flags5 = res[4];
          break;
       case 1: // add flags
          newmobj->flags  |= res[0];
          newmobj->flags2 |= res[1];
          newmobj->flags3 |= res[2];
          newmobj->flags4 |= res[3];
+         newmobj->flags5 |= res[4];
          break;
       case 2: // rem flags
          newmobj->flags  &= ~res[0];
          newmobj->flags2 &= ~res[1];
          newmobj->flags3 &= ~res[2];
          newmobj->flags4 &= ~res[3];
+         newmobj->flags5 &= ~res[4];
          break;
       default:
          break;

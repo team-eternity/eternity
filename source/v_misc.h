@@ -141,7 +141,7 @@ struct cb_video_t
    int         bitdepth, pixelsize;
 
    int         width, height;
-   int         pitch;
+   int         pitch; // This is TRANSPOSED, PRE-TRANSFORMED pitch
    fixed_t     widthfrac, heightfrac;
    fixed_t     xscale, yscale;
    fixed_t     xstep, ystep;

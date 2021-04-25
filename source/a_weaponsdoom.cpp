@@ -266,7 +266,7 @@ void A_FireOldBFG(actionargs_t *actionargs)
       }
 
       th = P_SpawnMobj(mo->x, mo->y,
-                       mo->z + 62*FRACUNIT - player->psprites[ps_weapon].sy,
+                       mo->z + 62*FRACUNIT - player->psprites[ps_weapon].playpos.y,
                        type);
 
       P_SetTarget<Mobj>(&th->target, mo);

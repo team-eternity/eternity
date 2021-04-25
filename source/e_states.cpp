@@ -53,26 +53,26 @@
 int NullStateNum;
 
 // Frame section keywords
-#define ITEM_FRAME_DECORATE  "decorate"
-#define ITEM_FRAME_SPRITE    "sprite"
-#define ITEM_FRAME_SPRFRAME  "spriteframe"
-#define ITEM_FRAME_FULLBRT   "fullbright"
-#define ITEM_FRAME_TICS      "tics"
-#define ITEM_FRAME_ACTION    "action"
-#define ITEM_FRAME_NEXTFRAME "nextframe"
-#define ITEM_FRAME_MISC1     "misc1"
-#define ITEM_FRAME_MISC2     "misc2"
-#define ITEM_FRAME_PTCLEVENT "particle_event"
-#define ITEM_FRAME_ARGS      "args"
-#define ITEM_FRAME_DEHNUM    "dehackednum"
-#define ITEM_FRAME_CMP       "cmp"
-#define ITEM_FRAME_SKILL5FAST "SKILL5FAST"
-#define ITEM_FRAME_INTERPOLATE "INTERPOLATE"
+constexpr const char ITEM_FRAME_DECORATE[]    = "decorate";
+constexpr const char ITEM_FRAME_SPRITE[]      = "sprite";
+constexpr const char ITEM_FRAME_SPRFRAME[]    = "spriteframe";
+constexpr const char ITEM_FRAME_FULLBRT[]     = "fullbright";
+constexpr const char ITEM_FRAME_TICS[]        = "tics";
+constexpr const char ITEM_FRAME_ACTION[]      = "action";
+constexpr const char ITEM_FRAME_NEXTFRAME[]   = "nextframe";
+constexpr const char ITEM_FRAME_MISC1[]       = "misc1";
+constexpr const char ITEM_FRAME_MISC2[]       = "misc2";
+constexpr const char ITEM_FRAME_PTCLEVENT[]   = "particle_event";
+constexpr const char ITEM_FRAME_ARGS[]        = "args";
+constexpr const char ITEM_FRAME_DEHNUM[]      = "dehackednum";
+constexpr const char ITEM_FRAME_CMP[]         = "cmp";
+constexpr const char ITEM_FRAME_SKILL5FAST[]  = "SKILL5FAST";
+constexpr const char ITEM_FRAME_INTERPOLATE[] = "INTERPOLATE";
 
-#define ITEM_DELTA_NAME      "name"
+constexpr const char ITEM_DELTA_NAME[]        = "name";
 
-#define ITEM_FRAMEBLOCK_FDS    "firststate"
-#define ITEM_FRAMEBLOCK_STATES "states"
+constexpr const char ITEM_FRAMEBLOCK_FDS[]    = "firststate";
+constexpr const char ITEM_FRAMEBLOCK_STATES[] = "states";
 
 // forward prototype for action function dispatcher
 static int E_ActionFuncCB(cfg_t *cfg, cfg_opt_t *opt, int argc,
@@ -132,7 +132,7 @@ static const dehflags_t frameFlagSet[] =
 // State hash tables
 
 // State Hashing
-#define NUMSTATECHAINS 2003
+constexpr int NUMSTATECHAINS = 2003;
 
 // hash by name
 static EHashTable<state_t, ENCStringHashKey, 
@@ -567,6 +567,7 @@ enum prefixkwd_e
    PREFIX_FLAGS2,
    PREFIX_FLAGS3,
    PREFIX_FLAGS4,
+   PREFIX_FLAGS5,
    PREFIX_BEXPTR,
    PREFIX_STRING,
    NUM_MISC_PREFIXES
@@ -722,6 +723,9 @@ static void E_ParseMiscField(const char *value, int *target)
          break;
       case PREFIX_FLAGS4:
          *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE4);
+         break;
+      case PREFIX_FLAGS5:
+         *target = (int)deh_ParseFlagsSingle(strval, DEHFLAGS_MODE5);
          break;
       case PREFIX_BEXPTR:
          {
@@ -1159,21 +1163,22 @@ static void E_ProcessCmpState(const char *value, int i)
 #undef NEXTTOKEN
 #undef DEFAULTS
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) (def || cfg_size(framesec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single state
 // structure. Doubles as code for frame and framedelta.
 //
-static void E_ProcessState(int i, cfg_t *framesec, bool def)
+static void E_ProcessState(int i, cfg_t *const framesec, bool def)
 {
    int j;
    int tempint;
    const char *tempstr;
+
+
+   // IS_SET: Tests whether or not a particular field should
+   // be set. When applying deltas, we should not retrieve defaults.
+   const auto IS_SET = [framesec, &def](const char *const name) -> bool {
+      return def || cfg_size(framesec, (name)) > 0;
+   };
 
    // 11/14/03:
    // In definitions only, see if the cmp field is defined. If so,

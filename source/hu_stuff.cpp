@@ -85,6 +85,14 @@ static bool HU_ChatRespond(const event_t *ev);
 
 //=============================================================================
 
+//
+// True if to allow automap widget. Overlay mode is stricter.
+//
+inline static bool HU_allowMapWidget()
+{
+   return automapactive && !automap_overlay;
+}
+
 // widget hash table
 HUDWidget *HUDWidget::hu_chains[NUMWIDGETCHAINS];
 
@@ -698,7 +706,7 @@ void HUDTextWidget::drawer()
 {
    // Do not ever draw automap-only widgets if not in automap mode.
    // This fixes a long-standing bug automatically.
-   if(flags & TW_AUTOMAP_ONLY && !automapactive)
+   if(flags & TW_AUTOMAP_ONLY && !HU_allowMapWidget())
       return;
 
    // 10/08/05: boxed message support
@@ -874,6 +882,7 @@ int crosshairs[CROSSHAIRS];
 byte *targetcolour, *notargetcolour, *friendcolour;
 int crosshairnum;       // 0 = none
 bool crosshair_hilite; // haleyjd 06/07/05
+bool crosshair_scale = true;
 const char *cross_str[]= { "none", "cross", "angle" }; // for console
 
 class HUDCrossHairWidget : public HUDPatchWidget
@@ -945,12 +954,13 @@ void HUDCrossHairWidget::ticker()
 //
 void HUDCrossHairWidget::drawer()
 {
-   int   drawx, drawy, h, w;
-   byte *pal = color;
-   
+   VBuffer *buffer;
+   int      drawx, drawy, h, w;
+   byte    *pal = color;
+
    // haleyjd 03/03/07: don't display while showing a center message
-   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 || 
-      viewcamera || automapactive || centermessage_widget.cleartic > leveltime)
+   if(!crosshairnum || crosshairs[crosshairnum - 1] == -1 ||
+      viewcamera || (automapactive && !automap_overlay) || centermessage_widget.cleartic > leveltime)
       return;
 
    patch = PatchLoader::CacheNum(wGlobalDir, crosshairs[crosshairnum - 1], PU_CACHE);
@@ -958,14 +968,25 @@ void HUDCrossHairWidget::drawer()
    // where to draw??
    w = patch->width;
    h = patch->height;
-   
-   drawx = (SCREENWIDTH - w) / 2;
-   drawy = scaledwindow.y + (scaledwindow.height - h) / 2;
-  
-   if(pal == notargetcolour)
-      V_DrawPatchTL(drawx, drawy, &subscreen43, patch, pal, FTRANLEVEL);
+
+   if(!crosshair_scale)
+   {
+      drawx  = (video.width  + 1 - w) / 2;
+      drawy  = viewwindow.y + (viewwindow.height + 1 - h) / 2;
+      buffer = &vbscreenfullres;
+   }
    else
-      V_DrawPatchTranslated(drawx, drawy, &subscreen43, patch, pal, false);
+   {
+      drawx  = (SCREENWIDTH + 1 - w) / 2;
+      drawy  = scaledwindow.y + (scaledwindow.height + 1 - h) / 2;
+      buffer = &subscreen43;
+   }
+
+   if(pal == notargetcolour)
+      V_DrawPatchTL(drawx, drawy, buffer, patch, pal, FTRANLEVEL);
+   else
+      V_DrawPatchTranslated(drawx, drawy, buffer, patch, pal, false);
+
 }
 
 //
@@ -1041,7 +1062,7 @@ void HUDLevelTimeWidget::ticker()
    static char timestr[32];
    int seconds;
    
-   if(!automapactive || !hu_showtime)
+   if(!HU_allowMapWidget() || !hu_showtime)
    {
       message = nullptr;
       return;
@@ -1136,7 +1157,7 @@ int hu_levelnamecolor;
 //
 void HUDLevelNameWidget::ticker()
 {
-   message = automapactive ? LevelInfo.levelName : nullptr;
+   message = HU_allowMapWidget() ? LevelInfo.levelName : nullptr;
    color   = hu_levelnamecolor + 1;
 }
 
@@ -1403,7 +1424,7 @@ void HUDCoordWidget::ticker()
    static char coordzstr[16];
    static char coordastr[16];
 
-   if(!hu_alwaysshowcoords && (!automapactive || !hu_showcoords))
+   if(!hu_alwaysshowcoords && (!HU_allowMapWidget() || !hu_showcoords))
    {
       message = nullptr;
       return;
@@ -1542,11 +1563,13 @@ VARIABLE_INT(hu_coordscolor,         nullptr, 0, CR_BUILTIN,    textcolours);
 
 VARIABLE_BOOLEAN(hud_msg_scrollup,  nullptr,            yesno);
 VARIABLE_TOGGLE(crosshair_hilite,   nullptr,            onoff);
+VARIABLE_TOGGLE(crosshair_scale,    nullptr,            onoff);
 
 CONSOLE_VARIABLE(hu_obituaries, obituaries, 0) {}
 CONSOLE_VARIABLE(hu_obitcolor, obcolour, 0) {}
 CONSOLE_VARIABLE(hu_crosshair, crosshairnum, 0) {}
 CONSOLE_VARIABLE(hu_crosshair_hilite, crosshair_hilite, 0) {}
+CONSOLE_VARIABLE(hu_crosshair_scale, crosshair_scale, 0) {}
 CONSOLE_VARIABLE(hu_messages, showMessages, 0) {}
 CONSOLE_VARIABLE(hu_messagealignment, mess_align, 0) {}
 CONSOLE_VARIABLE(hu_messagecolor, mess_colour, 0) {}

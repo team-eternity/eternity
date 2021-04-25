@@ -43,7 +43,7 @@ struct E_Enable_t
 #ifdef NEED_EDF_DEFINITIONS
 
 // basic stuff
-void E_ErrorCB(cfg_t *cfg, const char *fmt, va_list ap);
+void E_ErrorCB(const cfg_t *const cfg, const char *fmt, va_list ap);
 
 // include tracking
 int E_CheckRoot(cfg_t *cfg, const char *data, int size);

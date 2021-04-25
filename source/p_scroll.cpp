@@ -348,14 +348,14 @@ static void Add_WallScroller(int64_t dx, int64_t dy, const line_t *l,
 }
 
 // Amount (dx,dy) vector linedef is shifted right to get scroll amount
-#define SCROLL_SHIFT 5
+static constexpr int SCROLL_SHIFT = 5;
 
 // Factor to scale scrolling effect into mobj-carrying properties = 3/32.
 // (This is so scrolling floors and objects on them can move at same speed.)
-#define CARRYFACTOR ((fixed_t)(FRACUNIT*.09375))
+static constexpr fixed_t CARRYFACTOR = fixed_t(FRACUNIT * .09375);
 
 // This makes it so certain values are approx 1 unit per second
-#define ZDSCROLLFACTOR 10
+static constexpr int ZDSCROLLFACTOR = 10;
 
 // killough 3/7/98: Types 245-249 are same as 250-254 except that the
 // first side's sector's heights cause scrolling when they change, and

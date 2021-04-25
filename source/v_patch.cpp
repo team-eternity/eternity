@@ -38,17 +38,11 @@
 #include "w_wad.h"
 #include "z_auto.h"
 
-// patch rendering globals -- like dc_ in r_draw.c
-static cb_patch_column_t patchcol;
-static int ytop;
 
-
-//
-// V_DrawPatchColumn
 //
 // Draws a plain patch column with no remappings.
 //
-static void V_DrawPatchColumn() 
+static void V_drawPatchColumn(const cb_patch_column_t &patchcol)
 { 
    int      count;
    byte    *dest;    // killough
@@ -61,7 +55,7 @@ static void V_DrawPatchColumn()
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumn: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumn: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -83,10 +77,10 @@ static void V_DrawPatchColumn()
       while((count -= 2) >= 0)
       {
          *dest = source[frac >> FRACBITS];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          *dest = source[frac >> FRACBITS];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -94,12 +88,10 @@ static void V_DrawPatchColumn()
    }
 } 
 
-//
-// V_DrawPatchColumnTR
 //
 // Draws a plain patch column with color translation.
 //
-static void V_DrawPatchColumnTR() 
+static void V_drawPatchColumnTR(const cb_patch_column_t &patchcol)
 { 
    int      count;
    byte    *dest;    // killough
@@ -112,7 +104,7 @@ static void V_DrawPatchColumnTR()
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -134,10 +126,10 @@ static void V_DrawPatchColumnTR()
       while((count -= 2) >= 0)
       {
          *dest = patchcol.translation[source[frac >> FRACBITS]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          *dest = patchcol.translation[source[frac >> FRACBITS]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -146,11 +138,9 @@ static void V_DrawPatchColumnTR()
 } 
 
 //
-// V_DrawPatchColumnTRLit
-//
 // Draws a plain patch column with color translation and light remapping
 //
-static void V_DrawPatchColumnTRLit() 
+static void V_drawPatchColumnTRLit(const cb_patch_column_t &patchcol)
 { 
    int      count;
    byte    *dest;    // killough
@@ -163,7 +153,7 @@ static void V_DrawPatchColumnTRLit()
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumnTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -185,10 +175,10 @@ static void V_DrawPatchColumnTRLit()
       while((count -= 2) >= 0)
       {
          *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          *dest = patchcol.light[patchcol.translation[source[frac >> FRACBITS]]];
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -204,12 +194,10 @@ static void V_DrawPatchColumnTRLit()
    *dest = RGB32k[0][0][fg & (fg >> 15)]
 
 //
-// V_DrawPatchColumnTL
-//
 // Draws a translucent patch column. The DosDoom/zdoom-style
 // translucency lookups must be set before getting here.
 //
-void V_DrawPatchColumnTL(void)
+void V_drawPatchColumnTL(const cb_patch_column_t &patchcol)
 { 
    int      count; 
    byte    *dest;           // killough
@@ -223,7 +211,7 @@ void V_DrawPatchColumnTL(void)
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumnTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -240,12 +228,12 @@ void V_DrawPatchColumnTL(void)
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -264,12 +252,10 @@ void V_DrawPatchColumnTL(void)
    *dest = RGB32k[0][0][fg & (fg >> 15)]
 
 //
-// V_DrawPatchColumnTRTL
-//
 // Draws translated translucent patch columns.
 // Requires both translucency lookups and a translation table.
 //
-void V_DrawPatchColumnTRTL()
+void V_drawPatchColumnTRTL(const cb_patch_column_t &patchcol)
 { 
    int      count; 
    byte    *dest;           // killough
@@ -283,7 +269,7 @@ void V_DrawPatchColumnTRTL()
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnTRTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumnTRTL: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -300,12 +286,12 @@ void V_DrawPatchColumnTRTL()
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -330,11 +316,9 @@ void V_DrawPatchColumnTRTL()
 
 
 //
-// V_DrawPatchColumnAdd
-//
 // Draws a patch column with additive translucency.
 //
-void V_DrawPatchColumnAdd()
+void V_drawPatchColumnAdd(const cb_patch_column_t &patchcol)
 { 
    int      count; 
    byte    *dest;           // killough
@@ -348,7 +332,7 @@ void V_DrawPatchColumnAdd()
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnAdd: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumnAdd: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -365,12 +349,12 @@ void V_DrawPatchColumnAdd()
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
 
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -394,12 +378,10 @@ void V_DrawPatchColumnAdd()
    *dest = RGB32k[0][0][a & (a >> 15)]
 
 //
-// V_DrawPatchColumnAddTR
-//
 // Draws a patch column with additive translucency and
 // translation.
 //
-void V_DrawPatchColumnAddTR()
+void V_drawPatchColumnAddTR(const cb_patch_column_t &patchcol)
 { 
    int      count; 
    byte    *dest;           // killough
@@ -413,7 +395,7 @@ void V_DrawPatchColumnAddTR()
 #ifdef RANGECHECK 
    if((unsigned int)patchcol.x  >= (unsigned int)patchcol.buffer->width || 
       (unsigned int)patchcol.y1 >= (unsigned int)patchcol.buffer->height) 
-      I_Error("V_DrawPatchColumnAddTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
+      I_Error("V_drawPatchColumnAddTR: %i to %i at %i\n", patchcol.y1, patchcol.y2, patchcol.x); 
 #endif 
 
    dest = VBADDRESS(patchcol.buffer, patchcol.x, patchcol.y1);
@@ -430,12 +412,12 @@ void V_DrawPatchColumnAddTR()
       {
          DO_COLOR_BLEND();
 
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
          
          DO_COLOR_BLEND();
          
-         dest += patchcol.buffer->pitch;
+         dest += 1;
          frac += fracstep;
       }
       if(count & 1)
@@ -449,7 +431,7 @@ void V_DrawPatchColumnAddTR()
 
 
 
-static void V_DrawMaskedColumn(column_t *column)
+static void V_drawMaskedColumn(cb_patch_column_t &patchcol, const int ytop, column_t *column)
 {
    for(;column->topdelta != 0xff; column = (column_t *)((byte *)column + column->length + 4))
    {
@@ -489,12 +471,12 @@ static void V_DrawMaskedColumn(column_t *column)
       if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
       {
          patchcol.source = (byte *)column + 3;
-         patchcol.colfunc();
+         patchcol.colfunc(patchcol);
       }
    }
 }
 
-static void V_DrawMaskedColumnUnscaled(column_t *column)
+static void V_drawMaskedColumnUnscaled(cb_patch_column_t &patchcol, const int ytop, column_t *column)
 {
    for(;column->topdelta != 0xff; column = (column_t *)((byte *)column + column->length + 4))
    {
@@ -522,26 +504,24 @@ static void V_DrawMaskedColumnUnscaled(column_t *column)
       if(patchcol.y1 <= patchcol.y2 && patchcol.y2 < patchcol.buffer->height)
       {
          patchcol.source = (byte *)column + 3;
-         patchcol.colfunc();
+         patchcol.colfunc(patchcol);
       }
    }
 }
 
-typedef void (*patchcolfunc_t)(void);
+typedef void (*patchcolfunc_t)(const cb_patch_column_t &);
 
 static patchcolfunc_t colfuncfordrawstyle[PSTYLE_NUMSTYLES] =
 {
-   V_DrawPatchColumn,
-   V_DrawPatchColumnTR,
-   V_DrawPatchColumnTL,
-   V_DrawPatchColumnTRTL,
-   V_DrawPatchColumnAdd,
-   V_DrawPatchColumnAddTR,
-   V_DrawPatchColumnTRLit
+   V_drawPatchColumn,
+   V_drawPatchColumnTR,
+   V_drawPatchColumnTL,
+   V_drawPatchColumnTRTL,
+   V_drawPatchColumnAdd,
+   V_drawPatchColumnAddTR,
+   V_drawPatchColumnTRLit
 };
 
-//
-// V_DrawPatchInt
 //
 // Draws patches to the screen via the same vissprite-style scaling
 // and clipping used to draw player gun sprites. This results in
@@ -549,13 +529,13 @@ static patchcolfunc_t colfuncfordrawstyle[PSTYLE_NUMSTYLES] =
 // eliminates mostly unnecessary special cases for certain resolutions
 // like 640x400.
 //
-void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
+void V_DrawPatchInt(cb_patch_column_t &patchcol, PatchInfo *pi, VBuffer *buffer)
 {
    int        x1, x2, w;
    fixed_t    iscale, xiscale, startfrac = 0;
    patch_t    *patch = pi->patch;
    int        maxw;
-   void       (*maskcolfunc)(column_t *);
+   void       (*maskcolfunc)(cb_patch_column_t &, const int, column_t *);
 
    w = patch->width;
    
@@ -583,13 +563,13 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
       iscale        = buffer->ixscale;
       patchcol.step = buffer->iyscale;
       maxw          = buffer->unscaledw;
-      maskcolfunc   = V_DrawMaskedColumn;
+      maskcolfunc   = V_drawMaskedColumn;
    }
    else
    {
       iscale = patchcol.step = FRACUNIT;
       maxw = buffer->width;
-      maskcolfunc   = V_DrawMaskedColumnUnscaled;
+      maskcolfunc   = V_drawMaskedColumnUnscaled;
    }
 
    // off the left or right side?
@@ -645,8 +625,7 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 #endif
       patchcol.colfunc = colfuncfordrawstyle[pi->drawstyle];
 
-      ytop = pi->y - patch->topoffset;
-      
+      const int ytop = pi->y - patch->topoffset;
       for(; patchcol.x <= x2; patchcol.x++, startfrac += xiscale)
       {
          texturecolumn = startfrac >> FRACBITS;
@@ -657,25 +636,9 @@ void V_DrawPatchInt(PatchInfo *pi, VBuffer *buffer)
 #endif
          
          column = (column_t *)((byte *)patch + patch->columnofs[texturecolumn]);
-         maskcolfunc(column);
+         maskcolfunc(patchcol, ytop, column);
       }
    }
-}
-
-void V_SetPatchColrng(byte *colrng)
-{
-   patchcol.translation = colrng;
-}
-
-void V_SetPatchLight(byte *lighttable)
-{
-   patchcol.light = lighttable;
-}
-
-void V_SetPatchTL(unsigned int *fg, unsigned int *bg)
-{
-   patchcol.fg2rgb = fg;
-   patchcol.bg2rgb = bg;
 }
 
 //

@@ -24,11 +24,7 @@
 #include <conio.h>
 #endif
 
-#ifdef __APPLE__
-#include "SDL2/SDL.h"
-#else
 #include "SDL.h"
-#endif
 
 // HAL modules
 #include "../hal/i_gamepads.h"
@@ -148,10 +144,8 @@ void I_Quit(void)
 
    // FIXME: TEMPORARILY disabled on MacOS because of some crash in SDL_Renderer
    // affecting functions. MUST FIX.
-#if EE_CURRENT_PLATFORM != EE_PLATFORM_MACOSX
    else if(!speedyexit) // MaxW: The user didn't Alt+F4
       I_EndDoom();
-#endif
 
    // SoM: 7/5/2002: Why I didn't remember this in the first place I'll never know.
    // haleyjd 10/09/05: moved down here

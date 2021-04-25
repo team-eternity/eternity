@@ -404,7 +404,7 @@ int twoSided(int sector, int line)
    //has two sidedefs, rather than whether the 2S flag is set
    
    return 
-      comp[comp_model] ? 
+      getComp(comp_model) ?
          sectors[sector].lines[line]->flags & ML_TWOSIDED :
          sectors[sector].lines[line]->sidenum[1] != -1;
 }
@@ -429,10 +429,10 @@ sector_t *getNextSector(const line_t *line, const sector_t *sec)
    // like floor->highest floor
 
    return 
-      comp[comp_model] && !(line->flags & ML_TWOSIDED) ? 
+      getComp(comp_model) && !(line->flags & ML_TWOSIDED) ?
          nullptr :
          line->frontsector == sec ? 
-            comp[comp_model] || line->backsector != sec ?
+            getComp(comp_model) || line->backsector != sec ?
                line->backsector : 
                nullptr : 
             line->frontsector;
@@ -482,7 +482,7 @@ fixed_t P_FindHighestFloorSurrounding(const sector_t *sec)
    //jff 1/26/98 Fix initial value for floor to not act differently
    //in sections of wad that are below -500 units
 
-   if(!comp[comp_model])          //jff 3/12/98 avoid ovf
+   if(!getComp(comp_model))          //jff 3/12/98 avoid ovf
       floor = -32000*FRACUNIT;      // in height calculations
 
    for(i = 0; i < sec->linecount; i++)
@@ -648,7 +648,7 @@ fixed_t P_FindLowestCeilingSurrounding(const sector_t* sec)
    fixed_t height = D_MAXINT;
    int i;
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       height = 32000*FRACUNIT; //jff 3/12/98 avoid ovf in height calculations
 
    if(demo_version >= 333)
@@ -702,7 +702,7 @@ fixed_t P_FindHighestCeilingSurrounding(const sector_t* sec)
    //jff 1/26/98 Fix initial value for floor to not act differently
    //in sections of wad that are below 0 units
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       height = -32000*FRACUNIT; //jff 3/12/98 avoid ovf in
 
    // height calculations
@@ -738,7 +738,7 @@ fixed_t P_FindShortestTextureAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
    
    for(i = 0; i < sec->linecount; i++)
@@ -782,7 +782,7 @@ fixed_t P_FindShortestUpperAround(int secnum)
    // the height of the first "garbage" texture (ie. AASTINKY)
    int lowtexnum = (demo_version == 202 || demo_version >= 331);
 
-   if(!comp[comp_model])
+   if(!getComp(comp_model))
       minsize = 32000<<FRACBITS; //jff 3/13/98 prevent overflow in height calcs
 
    for(i = 0; i < sec->linecount; i++)
@@ -1180,7 +1180,7 @@ void P_PlayerInSpecialSector(player_t *player, sector_t *sector)
          // disables god mode?
          // killough 2/21/98: add compatibility switch on godmode cheat clearing;
          //                   does not affect invulnerability
-         if(sector->damageflags & SDMG_ENDGODMODE && comp[comp_god])
+         if(sector->damageflags & SDMG_ENDGODMODE && getComp(comp_god))
             player->cheats &= ~CF_GODMODE;
 
          // check time
@@ -2401,7 +2401,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
    {
       if(list[i].type & AS_CEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height + delta);
+         P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 1))
             ok = false;
          if(nointerp)
@@ -2409,7 +2409,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       }
       else if(list[i].type & AS_MIRRORCEILING)
       {
-         P_SetCeilingHeight(list[i].sector, list[i].sector->srf.ceiling.height - delta);
+         P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 1))
             ok = false;
          if(nointerp)
@@ -2418,7 +2418,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
 
       if(list[i].type & AS_FLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height + delta);
+         P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height + delta);
          if(P_CheckSector(list[i].sector, crush, delta, 0))
             ok = false;
          if(nointerp)
@@ -2426,7 +2426,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       }
       else if(list[i].type & AS_MIRRORFLOOR)
       {
-         P_SetFloorHeight(list[i].sector, list[i].sector->srf.floor.height - delta);
+         P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height - delta);
          if(P_CheckSector(list[i].sector, crush, -delta, 0))
             ok = false;
          if(nointerp)
@@ -2804,16 +2804,16 @@ void P_SetPortal(sector_t *sec, line_t *line, portal_t *portal, portal_effect ef
    {
    case portal_ceiling:
       sec->srf.ceiling.portal = portal;
-      P_CheckCPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_ceil);
       break;
    case portal_floor:
       sec->srf.floor.portal = portal;
-      P_CheckFPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_floor);
       break;
    case portal_both:
       sec->srf.ceiling.portal = sec->srf.floor.portal = portal;
-      P_CheckCPortalState(sec);
-      P_CheckFPortalState(sec);
+      P_CheckSectorPortalState(*sec, surf_ceil);
+      P_CheckSectorPortalState(*sec, surf_floor);
       break;
    case portal_lineonly:
       line->portal = portal;
@@ -3467,7 +3467,7 @@ static void P_SpawnPortal(line_t *line, int staticFn)
    }
 }
 
-VARIABLE_BOOLEAN(secret_notification_enabled, nullptr, onoff);
+VARIABLE_TOGGLE(secret_notification_enabled, nullptr, onoff);
 CONSOLE_VARIABLE(secret_notification, secret_notification_enabled, 0) {}
 
 #if 0

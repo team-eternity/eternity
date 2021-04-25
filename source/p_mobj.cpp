@@ -834,7 +834,7 @@ void P_PlayerHitFloor(Mobj *mo, bool onthing)
    // haleyjd 05/09/99 no oof when dead :)
    if(demo_version < 329 || mo->health > 0)
    {
-      if(!comp[comp_fallingdmg] && demo_version >= 329)
+      if(!getComp(comp_fallingdmg) && demo_version >= 329)
       {
          // new features -- feet sound for normal hits,
          // grunt for harder, falling damage for worse
@@ -880,7 +880,7 @@ static void P_ZMovement(Mobj* mo)
    else if(demo_version < 331) // BOOM - EE v3.29
       correct_lost_soul_bounce = true;
    else // from now on...
-      correct_lost_soul_bounce = !comp[comp_soul];
+      correct_lost_soul_bounce = !getComp(comp_soul);
 
    // killough 7/11/98:
    // BFG fireballs bounced on floors and ceilings in Pre-Beta Doom
@@ -1014,14 +1014,11 @@ floater:
       mo->target)     // killough 11/98: simplify
    {
       fixed_t delta;
-#ifdef R_LINKEDPORTALS
       if(P_AproxDistance(mo->x - getTargetX(mo), mo->y - getTargetY(mo)) <
          D_abs(delta = getTargetZ(mo) + (mo->height>>1) - mo->z)*3)
-#else
-      if(P_AproxDistance(mo->x - mo->target->x, mo->y - mo->target->y) <
-         D_abs(delta = mo->target->z + (mo->height>>1) - mo->z)*3)
-#endif
+      {
          mo->z += delta < 0 ? -FLOATSPEED : FLOATSPEED;
+      }
    }
 
    // haleyjd 06/05/12: flying players
@@ -1170,7 +1167,7 @@ void P_NightmareRespawn(Mobj* mobj)
    y = mobj->spawnpoint.y;
 
    // stupid nightmare respawning bug fix
-   if(!comp[comp_respawnfix] && demo_version >= 329 && x == 0 && y == 0)
+   if(!getComp(comp_respawnfix) && demo_version >= 329 && x == 0 && y == 0)
    {
       // spawnpoint was zeroed out, so use point of death instead
       x = mobj->x;
@@ -1379,7 +1376,7 @@ bool Mobj::shouldApplyTorque()
 {
    if(demo_version < 203)
       return false; // never in old demos
-   if(comp[comp_falloff] && !(flags4 & MF4_ALWAYSTORQUE))
+   if(getComp(comp_falloff) && !(flags4 & MF4_ALWAYSTORQUE))
       return false; // torque is disabled
    if(flags & MF_NOGRAVITY  ||
       flags2 & MF2_FLOATBOB ||
@@ -1741,6 +1738,9 @@ void Mobj::serialize(SaveArchive &arc)
       // Scripting related fields
       << special;
 
+   if(arc.saveVersion() >= 2)
+      arc << flags5;
+
    // Arrays
    P_ArchiveArray<int>(arc, counters, NUMMOBJCOUNTERS); // Counters
    P_ArchiveArray<int>(arc, args,     NUMMTARGS);       // Arguments 
@@ -1937,12 +1937,11 @@ Mobj *P_SpawnMobj(fixed_t x, fixed_t y, fixed_t z, mobjtype_t type,
    mobj->flags2  = info->flags2;     // haleyjd
    mobj->flags3  = info->flags3;     // haleyjd
    mobj->flags4  = info->flags4;     // haleyjd
+   mobj->flags5  = info->flags5;     // MaxW
    mobj->effects = info->particlefx; // haleyjd 07/13/03
    mobj->damage  = info->damage;     // haleyjd 08/02/04
 
-#ifdef R_LINKEDPORTALS
    mobj->groupid = R_NOGROUP;
-#endif
 
    // haleyjd 09/26/04: rudimentary support for monster skins
    if(info->altsprite != -1)
@@ -2077,22 +2076,6 @@ static int itemrespawntime[ITEMQUESIZE];
 int iquehead, iquetail;
 
 //
-// Checks if the Mobj was previously linked and make sure to enable NOSECTOR or NOBLOCKMAP before
-// the next call to P_UnsetThingPosition, if it's necessary to unlink
-//
-static void P_guardMobjLinking(Mobj &thing)
-{
-   if(thing.touching_sectorlist)    // Having this set is enough clue that we were linked
-      thing.flags &= ~MF_NOSECTOR;  // we need to unlink from sectors
-   else
-      thing.flags |= MF_NOSECTOR;   // conversely, no such reference means it is implied NOSECTOR
-   if(thing.bprev)
-      thing.flags &= ~MF_NOBLOCKMAP;
-   else
-      thing.flags |= MF_NOBLOCKMAP;
-}
-
-//
 // P_RemoveMobj
 //
 void Mobj::remove()
@@ -2136,7 +2119,6 @@ void Mobj::remove()
    P_RemoveThingTID(this);
 
    // unlink from sector and block lists
-   P_guardMobjLinking(*this);
    P_UnsetThingPosition(this);
 
    // ioanch 20160109: remove portal sprite projections
@@ -3474,7 +3456,7 @@ void P_AdjustFloorClip(Mobj *thing)
    // VANILLA_HERETIC: adjust?
 
    // absorb test for FOOTCLIP flag here
-   if(comp[comp_terrain] || !(thing->flags2 & MF2_FOOTCLIP))
+   if(getComp(comp_terrain) || !(thing->flags2 & MF2_FOOTCLIP))
    {
       thing->floorclip = 0;
       return;
@@ -3519,7 +3501,7 @@ void P_AdjustFloorClip(Mobj *thing)
 int P_ThingInfoHeight(const mobjinfo_t *mi)
 {
    return
-      ((demo_version >= 333 && !comp[comp_theights] &&
+      ((demo_version >= 333 && !getComp(comp_theights) &&
        mi->c3dheight) ?
        mi->c3dheight : mi->height);
 }
@@ -3548,6 +3530,21 @@ void P_ChangeThingHeights(void)
             mo->height = P_ThingInfoHeight(mo->info);
       }
    }
+}
+
+//
+// Checks if mobj fits floor and ceiling of its current location. Used by the pain elemental
+// lost soul spawning when !comp_skull, and by newer summoning actions.
+//
+bool P_CheckFloorCeilingForSpawning(const Mobj &mobj)
+{
+   v2fixed_t floorpos, ceilingpos;
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(&mobj, surf_floor, &floorpos);
+   const sector_t *ceilingsector = P_ExtremeSectorAtPoint(&mobj, surf_ceil, &ceilingpos);
+   floorpos += v2fixed_t{ mobj.x, mobj.y };
+   ceilingpos += v2fixed_t{ mobj.x, mobj.y };
+   return mobj.z <= ceilingsector->srf.ceiling.getZAt(ceilingpos) - mobj.height && 
+      mobj.z >= floorsector->srf.floor.getZAt(floorpos);
 }
 
 //

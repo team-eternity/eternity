@@ -54,6 +54,8 @@ char  *M_AddDefaultExtension(char *, const char *);           // killough 1/18/9
 void   M_NormalizeSlashes(char *);                            // killough 11/98
 char  *M_SafeFilePath(const char *pbasepath, const char *newcomponent);
 
+int M_PositiveModulo(int op1, int op2);
+
 #endif
 
 // EOF

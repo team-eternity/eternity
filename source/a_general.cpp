@@ -229,7 +229,7 @@ void A_Turn(actionargs_t *actionargs)
    {
    default:
    case 0: // default, compatibility mode
-      angle = static_cast<angle_t>(static_cast<uint64_t>(mo->state->misc1) << 32) / 360;
+      angle = static_cast<angle_t>((static_cast<uint64_t>(mo->state->misc1) << 32) / 360);
       break;
    case 1: // use a counter as degrees
       cnum = E_ArgAsInt(args, 1, 0);
@@ -596,8 +596,8 @@ void A_SpawnEx(actionargs_t *actionargs)
       // If we're spawning a projectile then we want to set its target as its owner
       if(mo->flags & MF_MISSILE)
       {
-         // If the spawner is a projectile then set target as spawner's owner (if it exists)
-         if((actor->flags & MF_MISSILE) && actor->target)
+         // If the spawner is (or spawned as) a projectile then set target as spawner's owner (if it exists)
+         if(((actor->flags & MF_MISSILE) || actor->info->flags & MF_MISSILE) && actor->target)
             P_SetTarget<Mobj>(&mo->target, actor->target);
          else
             P_SetTarget<Mobj>(&mo->target, actor);
@@ -610,7 +610,7 @@ void A_SpawnEx(actionargs_t *actionargs)
 //
 // A parameterized codepointer that turns on thing flags
 //
-// args[0] == 0, 1, 2, 3, 4 -- flags field to affect (0 == combined)
+// args[0] == 0, 1, 2, 3, 4, 5 -- flags field to affect (0 == combined)
 // args[1] == flags value to OR with thing flags
 //
 void A_SetFlags(actionargs_t *actionargs)
@@ -632,6 +632,7 @@ void A_SetFlags(actionargs_t *actionargs)
       actor->flags2 |= (unsigned int)flags[1];
       actor->flags3 |= (unsigned int)flags[2];
       actor->flags4 |= (unsigned int)flags[3];
+      actor->flags5 |= (unsigned int)flags[4];
       break;
    case 1:
       actor->flags  |= (unsigned int)flags[0];
@@ -644,6 +645,9 @@ void A_SetFlags(actionargs_t *actionargs)
       break;
    case 4:
       actor->flags4 |= (unsigned int)flags[3];
+      break;
+   case 5:
+      actor->flags5 |= (unsigned int)flags[4];
       break;
    }
 }
@@ -675,6 +679,7 @@ void A_UnSetFlags(actionargs_t *actionargs)
       actor->flags2 &= ~flags[1];
       actor->flags3 &= ~flags[2];
       actor->flags4 &= ~flags[3];
+      actor->flags5 &= ~flags[4];
       break;
    case 1:
       actor->flags  &= ~flags[0];
@@ -687,6 +692,9 @@ void A_UnSetFlags(actionargs_t *actionargs)
       break;
    case 4:
       actor->flags4 &= ~flags[3];
+      break;
+   case 5:
+      actor->flags5 &= ~flags[4];
       break;
    }
 }
@@ -1092,16 +1100,9 @@ void A_MissileSpread(actionargs_t *actionargs)
    for(i = 0; i < num; ++i)
    {
       // calculate z momentum
-#ifdef R_LINKEDPORTALS
       momz = P_MissileMomz(getTargetX(actor) - actor->x,
                            getTargetY(actor) - actor->y,
-                           getTargetZ(actor) - actor->z,
-#else
-      momz = P_MissileMomz(actor->target->x - actor->x,
-                           actor->target->y - actor->y,
-                           actor->target->z - actor->z,
-#endif
-                           mobjinfo[type]->speed);
+                           getTargetZ(actor) - actor->z, mobjinfo[type]->speed);
 
       P_SpawnMissileAngle(actor, type, ang, momz, z);
 
@@ -1290,13 +1291,7 @@ void A_ThingSummon(actionargs_t *actionargs)
    // Check to see if the new thing's z value is above the
    // ceiling of its new sector, or below the floor. If so, kill it.
 
-   // ioanch 20160107: consider sectors when killing things stuck in floor or
-   // ceiling. Also remove redundant parentheses.
-   const sector_t *csector = P_ExtremeSectorAtPoint(newmobj, surf_ceil);
-   const sector_t *fsector = P_ExtremeSectorAtPoint(newmobj, surf_floor);
-
-   if(newmobj->z > csector->srf.ceiling.height - newmobj->height ||
-      newmobj->z < fsector->srf.floor.height)
+   if(!P_CheckFloorCeilingForSpawning(*newmobj))
    {
       actionargs_t dieaction;
 
@@ -1424,13 +1419,7 @@ void A_AproxDistance(actionargs_t *actionargs)
       return;
    }
    
-#ifdef R_LINKEDPORTALS
-   distance = P_AproxDistance(actor->x - getTargetX(actor), 
-                              actor->y - getTargetY(actor));
-#else   
-   distance = P_AproxDistance(actor->x - actor->target->x, 
-                              actor->y - actor->target->y);
-#endif
+   distance = P_AproxDistance(actor->x - getTargetX(actor), actor->y - getTargetY(actor));
 
    *dest = distance >> FRACBITS;
 }

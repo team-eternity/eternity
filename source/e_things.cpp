@@ -45,6 +45,7 @@
 #include "e_sound.h"
 #include "e_sprite.h"
 #include "e_states.h"
+#include "e_string.h"
 #include "e_things.h"
 #include "e_weapons.h"
 #include "g_game.h"
@@ -74,160 +75,161 @@ int UnknownThingType;
 // Thing Keywords
 
 // ID / Type Info
-#define ITEM_TNG_DOOMEDNUM    "doomednum"
-#define ITEM_TNG_DEHNUM       "dehackednum"
-#define ITEM_TNG_COMPATNAME   "compatname"
-#define ITEM_TNG_INHERITS     "inherits"
-#define ITEM_TNG_BASICTYPE    "basictype"
+constexpr const char ITEM_TNG_DOOMEDNUM[]  = "doomednum";
+constexpr const char ITEM_TNG_DEHNUM[]     = "dehackednum";
+constexpr const char ITEM_TNG_COMPATNAME[] = "compatname";
+constexpr const char ITEM_TNG_INHERITS[]   = "inherits";
+constexpr const char ITEM_TNG_BASICTYPE[]  = "basictype";
 
 // States
-#define ITEM_TNG_SPAWNSTATE    "spawnstate"
-#define ITEM_TNG_SEESTATE      "seestate"
-#define ITEM_TNG_PAINSTATE     "painstate"
-#define ITEM_TNG_PAINSTATES    "dmg_painstates"
-#define ITEM_TNG_PNSTATESADD   "dmg_painstates.add"
-#define ITEM_TNG_PNSTATESREM   "dmg_painstates.remove"
-#define ITEM_TNG_MELEESTATE    "meleestate"
-#define ITEM_TNG_MISSILESTATE  "missilestate"
-#define ITEM_TNG_DEATHSTATE    "deathstate"
-#define ITEM_TNG_DEATHSTATES   "dmg_deathstates"
-#define ITEM_TNG_DTHSTATESADD  "dmg_deathstates.add"
-#define ITEM_TNG_DTHSTATESREM  "dmg_deathstates.remove"
-#define ITEM_TNG_XDEATHSTATE   "xdeathstate"
-#define ITEM_TNG_RAISESTATE    "raisestate"
-#define ITEM_TNG_HEALSTATE     "healstate"   // ioanch 20160220
-#define ITEM_TNG_CRASHSTATE    "crashstate"
-#define ITEM_TNG_ACTIVESTATE   "activestate"
-#define ITEM_TNG_INACTIVESTATE "inactivestate"
-#define ITEM_TNG_FIRSTDECSTATE "firstdecoratestate"
+constexpr const char ITEM_TNG_SPAWNSTATE[]    = "spawnstate";
+constexpr const char ITEM_TNG_SEESTATE[]      = "seestate";
+constexpr const char ITEM_TNG_PAINSTATE[]     = "painstate";
+constexpr const char ITEM_TNG_PAINSTATES[]    = "dmg_painstates";
+constexpr const char ITEM_TNG_PNSTATESADD[]   = "dmg_painstates.add";
+constexpr const char ITEM_TNG_PNSTATESREM[]   = "dmg_painstates.remove";
+constexpr const char ITEM_TNG_MELEESTATE[]    = "meleestate";
+constexpr const char ITEM_TNG_MISSILESTATE[]  = "missilestate";
+constexpr const char ITEM_TNG_DEATHSTATE[]    = "deathstate";
+constexpr const char ITEM_TNG_DEATHSTATES[]   = "dmg_deathstates";
+constexpr const char ITEM_TNG_DTHSTATESADD[]  = "dmg_deathstates.add";
+constexpr const char ITEM_TNG_DTHSTATESREM[]  = "dmg_deathstates.remove";
+constexpr const char ITEM_TNG_XDEATHSTATE[]   = "xdeathstate";
+constexpr const char ITEM_TNG_RAISESTATE[]    = "raisestate";
+constexpr const char ITEM_TNG_HEALSTATE[]     = "healstate";   // ioanch 20160220
+constexpr const char ITEM_TNG_CRASHSTATE[]    = "crashstate";
+constexpr const char ITEM_TNG_ACTIVESTATE[]   = "activestate";
+constexpr const char ITEM_TNG_INACTIVESTATE[] = "inactivestate";
+constexpr const char ITEM_TNG_FIRSTDECSTATE[] = "firstdecoratestate";
 
 // DECORATE state block
-#define ITEM_TNG_STATES        "states"
+constexpr const char ITEM_TNG_STATES[]        = "states";
 
 // Sounds
-#define ITEM_TNG_SEESOUND      "seesound"
-#define ITEM_TNG_ATKSOUND      "attacksound"
-#define ITEM_TNG_PAINSOUND     "painsound"
-#define ITEM_TNG_DEATHSOUND    "deathsound"
-#define ITEM_TNG_ACTIVESOUND   "activesound"
-#define ITEM_TNG_ACTIVATESND   "activatesound"
-#define ITEM_TNG_DEACTIVATESND "deactivatesound"
+constexpr const char ITEM_TNG_SEESOUND[]      = "seesound";
+constexpr const char ITEM_TNG_ATKSOUND[]      = "attacksound";
+constexpr const char ITEM_TNG_PAINSOUND[]     = "painsound";
+constexpr const char ITEM_TNG_DEATHSOUND[]    = "deathsound";
+constexpr const char ITEM_TNG_ACTIVESOUND[]   = "activesound";
+constexpr const char ITEM_TNG_ACTIVATESND[]   = "activatesound";
+constexpr const char ITEM_TNG_DEACTIVATESND[] = "deactivatesound";
 
 // Basic Stats
-#define ITEM_TNG_SPAWNHEALTH  "spawnhealth"
-#define ITEM_TNG_GIBHEALTH    "gibhealth"
-#define ITEM_TNG_REACTTIME    "reactiontime"
-#define ITEM_TNG_PAINCHANCE   "painchance"
-#define ITEM_TNG_SPEED        "speed"
-#define ITEM_TNG_FASTSPEED    "fastspeed"
-#define ITEM_TNG_RADIUS       "radius"
-#define ITEM_TNG_HEIGHT       "height"
-#define ITEM_TNG_C3DHEIGHT    "correct_height"
-#define ITEM_TNG_MASS         "mass"
-#define ITEM_TNG_RESPAWNTIME  "respawntime"
-#define ITEM_TNG_RESPCHANCE   "respawnchance"
-#define ITEM_TNG_AIMSHIFT     "aimshift"
+constexpr const char ITEM_TNG_SPAWNHEALTH[]  = "spawnhealth";
+constexpr const char ITEM_TNG_GIBHEALTH[]    = "gibhealth";
+constexpr const char ITEM_TNG_REACTTIME[]    = "reactiontime";
+constexpr const char ITEM_TNG_PAINCHANCE[]   = "painchance";
+constexpr const char ITEM_TNG_SPEED[]        = "speed";
+constexpr const char ITEM_TNG_FASTSPEED[]    = "fastspeed";
+constexpr const char ITEM_TNG_RADIUS[]       = "radius";
+constexpr const char ITEM_TNG_HEIGHT[]       = "height";
+constexpr const char ITEM_TNG_C3DHEIGHT[]    = "correct_height";
+constexpr const char ITEM_TNG_MASS[]         = "mass";
+constexpr const char ITEM_TNG_RESPAWNTIME[]  = "respawntime";
+constexpr const char ITEM_TNG_RESPCHANCE[]   = "respawnchance";
+constexpr const char ITEM_TNG_AIMSHIFT[]     = "aimshift";
 
 // Special Spawning
-#define ITEM_TNG_COLSPAWN     "collectionspawn"
-#define ITEM_TNG_ITEMRESPAT   "itemrespawnat"
+constexpr const char ITEM_TNG_COLSPAWN[]     = "collectionspawn";
+constexpr const char ITEM_TNG_ITEMRESPAT[]   = "itemrespawnat";
 
 // Damage Properties
-#define ITEM_TNG_DAMAGE       "damage"
-#define ITEM_TNG_DAMAGEMOD    "damagemod"
-#define ITEM_TNG_DMGSPECIAL   "dmgspecial"
-#define ITEM_TNG_DAMAGEFACTOR "damagefactor"
-#define ITEM_TNG_REMDMGFACTOR "damagefactor.remove"
-#define ITEM_TNG_CLRDMGFACTOR "cleardamagefactors"
-#define ITEM_TNG_TOPDAMAGE    "topdamage"
-#define ITEM_TNG_TOPDMGMASK   "topdamagemask"
-#define ITEM_TNG_MOD          "mod"
-#define ITEM_TNG_OBIT1        "obituary_normal"
-#define ITEM_TNG_OBIT2        "obituary_melee"
+constexpr const char ITEM_TNG_DAMAGE[]       = "damage";
+constexpr const char ITEM_TNG_DAMAGEMOD[]    = "damagemod";
+constexpr const char ITEM_TNG_DMGSPECIAL[]   = "dmgspecial";
+constexpr const char ITEM_TNG_DAMAGEFACTOR[] = "damagefactor";
+constexpr const char ITEM_TNG_REMDMGFACTOR[] = "damagefactor.remove";
+constexpr const char ITEM_TNG_CLRDMGFACTOR[] = "cleardamagefactors";
+constexpr const char ITEM_TNG_TOPDAMAGE[]    = "topdamage";
+constexpr const char ITEM_TNG_TOPDMGMASK[]   = "topdamagemask";
+constexpr const char ITEM_TNG_MOD[]          = "mod";
+constexpr const char ITEM_TNG_OBIT1[]        = "obituary_normal";
+constexpr const char ITEM_TNG_OBIT2[]        = "obituary_melee";
 
 // Pain/Death Properties
-#define ITEM_TNG_BLOODCOLOR   "bloodcolor"
-#define ITEM_TNG_NUKESPEC     "nukespecial"
-#define ITEM_TNG_DROPTYPE     "droptype"
-#define ITEM_TNG_DROPITEM     "dropitem"
-#define ITEM_TNG_REMDROPITEM  "dropitem.remove"
-#define ITEM_TNG_CLRDROPITEM  "cleardropitems"
+constexpr const char ITEM_TNG_BLOODCOLOR[]   = "bloodcolor";
+constexpr const char ITEM_TNG_NUKESPEC[]     = "nukespecial";
+constexpr const char ITEM_TNG_DROPTYPE[]     = "droptype";
+constexpr const char ITEM_TNG_DROPITEM[]     = "dropitem";
+constexpr const char ITEM_TNG_REMDROPITEM[]  = "dropitem.remove";
+constexpr const char ITEM_TNG_CLRDROPITEM[]  = "cleardropitems";
 
 // Flags
-#define ITEM_TNG_CFLAGS       "cflags"
-#define ITEM_TNG_ADDFLAGS     "addflags"
-#define ITEM_TNG_REMFLAGS     "remflags"
-#define ITEM_TNG_FLAGS        "flags"
-#define ITEM_TNG_FLAGS2       "flags2"
-#define ITEM_TNG_FLAGS3       "flags3"
-#define ITEM_TNG_FLAGS4       "flags4"
-#define ITEM_TNG_PARTICLEFX   "particlefx"
+constexpr const char ITEM_TNG_CFLAGS[]       = "cflags";
+constexpr const char ITEM_TNG_ADDFLAGS[]     = "addflags";
+constexpr const char ITEM_TNG_REMFLAGS[]     = "remflags";
+constexpr const char ITEM_TNG_FLAGS[]        = "flags";
+constexpr const char ITEM_TNG_FLAGS2[]       = "flags2";
+constexpr const char ITEM_TNG_FLAGS3[]       = "flags3";
+constexpr const char ITEM_TNG_FLAGS4[]       = "flags4";
+constexpr const char ITEM_TNG_FLAGS5[]       = "flags5";
+constexpr const char ITEM_TNG_PARTICLEFX[]   = "particlefx";
 
 // Graphic Properites
-#define ITEM_TNG_TRANSLUC     "translucency"
-#define ITEM_TNG_TRANMAP      "tranmap"
-#define ITEM_TNG_COLOR        "translation"
-#define ITEM_TNG_SKINSPRITE   "skinsprite"
-#define ITEM_TNG_DEFSPRITE    "defaultsprite"
-#define ITEM_TNG_AVELOCITY    "alphavelocity"
-#define ITEM_TNG_XSCALE       "xscale"
-#define ITEM_TNG_YSCALE       "yscale"
+constexpr const char ITEM_TNG_TRANSLUC[]     = "translucency";
+constexpr const char ITEM_TNG_TRANMAP[]      = "tranmap";
+constexpr const char ITEM_TNG_COLOR[]        = "translation";
+constexpr const char ITEM_TNG_SKINSPRITE[]   = "skinsprite";
+constexpr const char ITEM_TNG_DEFSPRITE[]    = "defaultsprite";
+constexpr const char ITEM_TNG_AVELOCITY[]    = "alphavelocity";
+constexpr const char ITEM_TNG_XSCALE[]       = "xscale";
+constexpr const char ITEM_TNG_YSCALE[]       = "yscale";
 
 // Title properties
-#define ITEM_TNG_TITLE_SUPER     "superclass"
-#define ITEM_TNG_TITLE_DOOMEDNUM "doomednum"
-#define ITEM_TNG_TITLE_DEHNUM    "dehackednum"
+constexpr const char ITEM_TNG_TITLE_SUPER[]     = "superclass";
+constexpr const char ITEM_TNG_TITLE_DOOMEDNUM[] = "doomednum";
+constexpr const char ITEM_TNG_TITLE_DEHNUM[]    = "dehackednum";
 
 // ACS Spawn Data Sub-Block
-#define ITEM_TNG_ACS_SPAWN    "acs_spawndata"
-#define ITEM_TNG_ACS_NUM      "num"
-#define ITEM_TNG_ACS_MODES    "modes"
+constexpr const char ITEM_TNG_ACS_SPAWN[]    = "acs_spawndata";
+constexpr const char ITEM_TNG_ACS_NUM[]      = "num";
+constexpr const char ITEM_TNG_ACS_MODES[]    = "modes";
 
 // Damage factor multi-value property internal fields
-#define ITEM_TNG_DMGF_MODNAME "mod"
-#define ITEM_TNG_DMGF_FACTOR  "factor"
+constexpr const char ITEM_TNG_DMGF_MODNAME[] = "mod";
+constexpr const char ITEM_TNG_DMGF_FACTOR[]  = "factor";
 
 // DropItem multi-value property internal fields
-#define ITEM_TNG_DROPITEM_ITEM   "item"
-#define ITEM_TNG_DROPITEM_CHANCE "chance"
-#define ITEM_TNG_DROPITEM_AMOUNT "amount"
-#define ITEM_TNG_DROPITEM_TOSS   "toss"
+constexpr const char ITEM_TNG_DROPITEM_ITEM[]   = "item";
+constexpr const char ITEM_TNG_DROPITEM_CHANCE[] = "chance";
+constexpr const char ITEM_TNG_DROPITEM_AMOUNT[] = "amount";
+constexpr const char ITEM_TNG_DROPITEM_TOSS[]   = "toss";
 
 // Collection spawn multi-value property internal fields
-#define ITEM_TNG_COLSPAWN_TYPE   "type"
-#define ITEM_TNG_COLSPAWN_SP     "spchance"
-#define ITEM_TNG_COLSPAWN_COOP   "coopchance"
-#define ITEM_TNG_COLSPAWN_DM     "dmchance"
+constexpr const char ITEM_TNG_COLSPAWN_TYPE[]   = "type";
+constexpr const char ITEM_TNG_COLSPAWN_SP[]     = "spchance";
+constexpr const char ITEM_TNG_COLSPAWN_COOP[]   = "coopchance";
+constexpr const char ITEM_TNG_COLSPAWN_DM[]     = "dmchance";
 
 // Thing Delta Keywords
-#define ITEM_DELTA_NAME "name"
+constexpr const char ITEM_DELTA_NAME[] = "name";
 
 // Blood Properties
-#define ITEM_TNG_BLOODNORM   "bloodtype.normal"
-#define ITEM_TNG_BLOODIMPACT "bloodtype.impact"
-#define ITEM_TNG_BLOODRIP    "bloodtype.rip"
-#define ITEM_TNG_BLOODCRUSH  "bloodtype.crush"
+constexpr const char ITEM_TNG_BLOODNORM[]   = "bloodtype.normal";
+constexpr const char ITEM_TNG_BLOODIMPACT[] = "bloodtype.impact";
+constexpr const char ITEM_TNG_BLOODRIP[]    = "bloodtype.rip";
+constexpr const char ITEM_TNG_BLOODCRUSH[]  = "bloodtype.crush";
 
-#define ITEM_TNG_BLOODBEHAV  "bloodbehavior"
-#define ITEM_TNG_CLRBLOODBEH "clearbloodbehaviors"
+constexpr const char ITEM_TNG_BLOODBEHAV[]  = "bloodbehavior";
+constexpr const char ITEM_TNG_CLRBLOODBEH[] = "clearbloodbehaviors";
 
-#define ITEM_TNG_BB_ACTION   "action"
-#define ITEM_TNG_BB_BEHAVIOR "behavior"
+constexpr const char ITEM_TNG_BB_ACTION[]   = "action";
+constexpr const char ITEM_TNG_BB_BEHAVIOR[] = "behavior";
 
 // Pickup Property
-#define ITEM_TNG_PFX_PICKUPFX  "pickupeffect"
-#define ITEM_TNG_PFX_CLRPICKFX "clearpickupeffect"
-#define ITEM_TNG_PFX_EFFECTS   "effects"
-#define ITEM_TNG_PFX_CHANGEWPN "changeweapon"
-#define ITEM_TNG_PFX_MSG       "message"
-#define ITEM_TNG_PFX_SOUND     "sound"
-#define ITEM_TNG_PFX_FLAGS     "flags"
+constexpr const char ITEM_TNG_PFX_PICKUPFX[]  = "pickupeffect";
+constexpr const char ITEM_TNG_PFX_CLRPICKFX[] = "clearpickupeffect";
+constexpr const char ITEM_TNG_PFX_EFFECTS[]   = "effects";
+constexpr const char ITEM_TNG_PFX_CHANGEWPN[] = "changeweapon";
+constexpr const char ITEM_TNG_PFX_MSG[]       = "message";
+constexpr const char ITEM_TNG_PFX_SOUND[]     = "sound";
+constexpr const char ITEM_TNG_PFX_FLAGS[]     = "flags";
 
 //
 // Thing groups
 //
-#define ITEM_TGROUP_FLAGS "flags"
-#define ITEM_TGROUP_TYPES "types"
+constexpr const char ITEM_TGROUP_FLAGS[] = "flags";
+constexpr const char ITEM_TGROUP_TYPES[] = "types";
 
 //
 // Field-Specific Data
@@ -322,7 +324,7 @@ static const char *BasicTypeNames[] =
    "ControlPointGrav",  // a control point with gravity
 };
 
-#define NUMBASICTYPES earrlen(BasicTypeNames)
+constexpr int NUMBASICTYPES = earrlen(BasicTypeNames);
 
 struct basicttype_t
 {
@@ -575,6 +577,7 @@ static int E_TranMapCB(cfg_t *, cfg_opt_t *, const char *, void *);
    CFG_STR(ITEM_TNG_FLAGS2,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_FLAGS3,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_FLAGS4,          "",            CFGF_NONE), \
+   CFG_STR(ITEM_TNG_FLAGS5,          "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_PARTICLEFX,      "",            CFGF_NONE), \
    CFG_STR(ITEM_TNG_SKINSPRITE,      "noskin",      CFGF_NONE), \
    CFG_STR(ITEM_TNG_DEFSPRITE,       nullptr,       CFGF_NONE), \
@@ -694,7 +697,7 @@ struct thinggrouppair_t
 // number of types without causing significant hash collisions.
 
 // Number of chains
-#define NUMTHINGCHAINS 307
+constexpr int NUMTHINGCHAINS = 307;
 
 // hash by name
 static EHashTable<mobjinfo_t, ENCStringHashKey, 
@@ -2325,26 +2328,11 @@ static int E_resolveParentThingType(cfg_t *thingsec,
    return pnum;
 }
 
-// IS_SET: this macro tests whether or not a particular field should
-// be set. When applying deltas, we should not retrieve defaults.
-// 01/27/04: Also, if inheritance is taking place, we should not
-// retrieve defaults.
-
-#undef  IS_SET
-#define IS_SET(name) ((def && !inherits) || cfg_size(thingsec, (name)) > 0)
-
-// Same as above, but also considers if the basictype has set fields in the thing.
-// In that case, fields which are affected by basictype don't set defaults unless
-// they are explicitly specified.
-
-#define IS_SET_BT(name) \
-   ((def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0)
-
 //
 // Generalized code to process the data for a single thing type
 // structure. Doubles as code for thingtype and thingdelta.
 //
-void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
+void E_ProcessThing(int i, cfg_t *const thingsec, cfg_t *pcfg, const bool def)
 {
    double tempfloat;
    int tempint;
@@ -2353,6 +2341,20 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
    bool cflags   = false;
    bool hasbtype = false;
    thingtitleprops_t titleprops;
+
+   // Tests whether or not a particular field should be set.
+   // When applying deltas, we should not retrieve defaults.
+   // Also, if inheritance is taking place, we should not
+   const auto IS_SET = [def, &inherits, thingsec](const char *const name) -> bool {
+      return (def && !inherits) || cfg_size(thingsec, (name)) > 0;
+   };
+
+   // Same as above, but also considers if the basictype has set fields in the thing.
+   // In that case, fields which are affected by basictype don't set defaults unless
+   // they are explicitly specified.
+   const auto IS_SET_BT = [def, &inherits, &hasbtype, thingsec](const char *const name) -> bool {
+      return (def && !inherits && !hasbtype) || cfg_size(thingsec, (name)) > 0;
+   };
 
    // if thingsec is null, we are in the situation of inheriting from a thing
    // that was processed in a previous EDF generation, so no processing is
@@ -2740,7 +2742,8 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          mobjinfo[i]->flags2 = results[1];
          mobjinfo[i]->flags3 = results[2];
          mobjinfo[i]->flags4 = results[3];
-         
+         mobjinfo[i]->flags5 = results[4];
+
          cflags = true; // values were set from cflags
       }
    }
@@ -2786,6 +2789,16 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
          else
             mobjinfo[i]->flags4 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE4);
       }
+
+      // process flags5
+      if(IS_SET(ITEM_TNG_FLAGS5))
+      {
+         tempstr = cfg_getstr(thingsec, ITEM_TNG_FLAGS5);
+         if(*tempstr == '\0')
+            mobjinfo[i]->flags5 = 0;
+         else
+            mobjinfo[i]->flags5 = deh_ParseFlagsSingle(tempstr, DEHFLAGS_MODE5);
+      }
    }
 
    // process addflags and remflags modifiers
@@ -2802,6 +2815,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       mobjinfo[i]->flags2 |= results[1];
       mobjinfo[i]->flags3 |= results[2];
       mobjinfo[i]->flags4 |= results[3];
+      mobjinfo[i]->flags5 |= results[4];
    }
 
    if(cfg_size(thingsec, ITEM_TNG_REMFLAGS) > 0)
@@ -2816,6 +2830,7 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
       mobjinfo[i]->flags2 &= ~(results[1]);
       mobjinfo[i]->flags3 &= ~(results[2]);
       mobjinfo[i]->flags4 &= ~(results[3]);
+      mobjinfo[i]->flags5 &= ~(results[4]);
    }
 
    // 07/13/03: process nukespecial
@@ -2913,7 +2928,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT1);
       if(strcasecmp(tempstr, "NONE"))
+      {
+         if(tempstr[0] == '$')
+            tempstr = E_StringOrDehForName(tempstr + 1);
          mobjinfo[i]->obituary = estrdup(tempstr);
+      }
       else
          mobjinfo[i]->obituary = nullptr;
    }
@@ -2927,7 +2946,11 @@ void E_ProcessThing(int i, cfg_t *thingsec, cfg_t *pcfg, bool def)
 
       tempstr = cfg_getstr(thingsec, ITEM_TNG_OBIT2);
       if(strcasecmp(tempstr, "NONE"))
+      {
+         if(tempstr[0] == '$')
+            tempstr = E_StringOrDehForName(tempstr + 1);
          mobjinfo[i]->meleeobit = estrdup(tempstr);
+      }
       else
          mobjinfo[i]->meleeobit = nullptr;
    }
@@ -3461,7 +3484,7 @@ enum nstatetypes_e
    NSTATE_INACTIVE
 };
 
-#define NUMNATIVESTATES earrlen(nativeStateLabels)
+constexpr int NUMNATIVESTATES = earrlen(nativeStateLabels);
 
 //
 // Returns a pointer to an mobjinfo's native state field if the given name

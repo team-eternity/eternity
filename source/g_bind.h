@@ -125,6 +125,7 @@ enum keyaction_e
    ka_map_mark,
    ka_map_clear,
    ka_map_grid,
+   ka_map_overlay,
    ka_console_pageup,
    ka_console_pagedown,
    ka_console_toggle,

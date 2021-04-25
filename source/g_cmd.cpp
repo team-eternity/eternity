@@ -248,7 +248,7 @@ CONSOLE_NETCMD(exitlevel, cf_server|cf_level, netcmd_exitlevel)
    // haleyjd 09/04/02: prevent exit if dead, unless comp flag on
    player_t *player = &players[Console.cmdsrc];
 
-   if((player->health > 0) || comp[comp_zombie])
+   if((player->health > 0) || getComp(comp_zombie))
       G_ExitLevel();
 }
 
@@ -449,7 +449,7 @@ VARIABLE_BOOLEAN(smooth_turning, nullptr,       onoff);
 CONSOLE_VARIABLE(smooth_turning, smooth_turning, 0) {}
 
 // SoM: mouse accel
-int default_mouse_accel_type = ACCELTYPE_NONE;
+acceltype_e default_mouse_accel_type = ACCELTYPE_NONE;
 const char *accel_options[]={ "off", "linear", "choco", "custom" };
 VARIABLE_INT(mouseAccel_type, &default_mouse_accel_type,
              ACCELTYPE_NONE, ACCELTYPE_MAX, accel_options);
@@ -464,8 +464,8 @@ double default_mouse_accel_value = 2.0;
 VARIABLE_FLOAT(mouseAccel_value, &default_mouse_accel_value, 0.0, 100.0);
 CONSOLE_VARIABLE(mouse_accel_value, mouseAccel_value, 0) {}
 
-VARIABLE_BOOLEAN(novert, nullptr, onoff);
-CONSOLE_VARIABLE(mouse_novert, novert, 0) {}
+VARIABLE_BOOLEAN(mouse_vert, nullptr, onoff);
+CONSOLE_VARIABLE(mouse_vert, mouse_vert, 0) {}
 
 VARIABLE_INT(mouseb_dblc1, nullptr, -1, 2, nullptr);
 CONSOLE_VARIABLE(mouseb_dblc1, mouseb_dblc1, 0) {}

@@ -289,7 +289,7 @@ bool ACS_CF_CheckProximity(ACS_CF_ARGS)
 
    uint32_t res;
    Mobj    *resMo = nullptr;
-   fixed_t  resDist;
+   fixed_t  resDist = 0;
 
    uint32_t count = 0;
 
@@ -454,6 +454,7 @@ bool ACS_CF_ChkThingFlag(ACS_CF_ARGS)
    case 1: res = !!(mo->flags2 & flag->value); break;
    case 2: res = !!(mo->flags3 & flag->value); break;
    case 3: res = !!(mo->flags4 & flag->value); break;
+   case 4: res = !!(mo->flags5 & flag->value); break;
    }
 
    thread->dataStk.push(res);
@@ -2237,12 +2238,12 @@ bool ACS_CF_SetThingSpec(ACS_CF_ARGS)
 {
    auto  info = &static_cast<ACSThread *>(thread)->info;
    int   tid  = argV[0];
-   //int spec = argV[1]; // HEXEN_TODO
+   int   spec = argV[1];
    Mobj *mo   = nullptr;
 
    while((mo = P_FindMobjFromTID(tid, mo, info->mo)))
    {
-      //mo->special = spec; // HEXEN_TODO
+      mo->special = spec;
       for(int i = 0; i != 5; ++i)
          mo->args[i] = argV[i + 2];
    }

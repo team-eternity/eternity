@@ -361,7 +361,7 @@ static void cheat_pw(const void *arg)
          INFRATICS,  // haleyjd: torch
       };
       P_GivePower(plyr, pw, tics[pw], false);
-      if(pw != pw_strength && !comp[comp_infcheat])
+      if(pw != pw_strength && !getComp(comp_infcheat))
          plyr->powers[pw] = -1;      // infinite duration -- killough
    }
 

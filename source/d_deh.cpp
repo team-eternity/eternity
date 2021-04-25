@@ -341,12 +341,16 @@ static dehflags_t deh_mobjflags[] =
   {"FRIENDFOEMISSILE",   0x00400000, 3}, // friends and foes of same species hurt each other
   {"BLOODLESSIMPACT",    0x00800000, 3}, // doesn't draw blood when it hits or rips a thing
   {"HERETICBOUNCES",     0x01000000, 3}, // thing bounces à la Heretic
-  {"MONSTERPASS",        0x02000000, 3},
-  {"LOWAIMPRIO",         0x04000000, 3},
-  {"STICKYCARRY",        0x08000000, 3},
-  {"SETTARGETONDEATH",   0x10000000, 3},
-  {"SLIDEOVERTHINGS",    0x20000000, 3},
-  {"UNSTEPPABLE",        0x40000000, 3},
+  {"MONSTERPASS",        0x02000000, 3}, // not blocked by blockmonsters
+  {"LOWAIMPRIO",         0x04000000, 3}, // less likely to be autoaimed
+  {"STICKYCARRY",        0x08000000, 3}, // can carry other things on top of it
+  {"SETTARGETONDEATH",   0x10000000, 3}, // target is updated even when one-shot
+  {"SLIDEOVERTHINGS",    0x20000000, 3}, // thing will keep sliding when on top of things
+  {"UNSTEPPABLE",        0x40000000, 3}, // thing cannot be stepped on like stairs
+  {"RANGEEIGHTH",        0x80000000, 3}, // uses eighth actual distance
+
+   // flags5 bits
+  {"NOTAUTOAIMED",       0x00000001, 4}, // can't be autoaimed (for real)
 
   { nullptr,             0 }             // nullptr terminator
 };
@@ -438,6 +442,17 @@ static const char *deh_weapon[] =
   "Shooting frame", // .atkstate
   "Firing frame",   // .flashstate
   "Ammo per shot",  // haleyjd 08/10/02: .ammopershot 
+};
+
+enum dehweaponid_e
+{
+   dehweaponid_ammoType,
+   dehweaponid_deselect,
+   dehweaponid_select,
+   dehweaponid_bobbing,
+   dehweaponid_shooting,
+   dehweaponid_firing,
+   dehweaponid_ammoPerShot,
 };
 
 // MISC - Dehacked block name = "Misc"
@@ -748,7 +763,7 @@ static void deh_procBexCodePointers(DWFILE *fpin, char *line)
 //
 // davidph 01/14/14: split from deh_ParseFlags
 //
-dehflags_t *deh_ParseFlag(dehflagset_t *flagset, const char *name)
+dehflags_t *deh_ParseFlag(const dehflagset_t *flagset, const char *name)
 {
    int mode = flagset->mode;
 
@@ -1570,24 +1585,34 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
 
       weaponinfo_t &weaponinfo = *E_WeaponForDEHNum(indexnum);
       // haleyjd: resolution adjusted for EDF
-      if(!strcasecmp(key, deh_weapon[0]))  // Ammo type
+      if(!strcasecmp(key, deh_weapon[dehweaponid_ammoType]))
       {
          if(value < 0 || value >= NUMAMMO)
             weaponinfo.ammo = nullptr; // no ammo
          else
             weaponinfo.ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
       }
-      else if(!strcasecmp(key, deh_weapon[1]))  // Deselect frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_deselect]))
          weaponinfo.upstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[2]))  // Select frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_select]))
          weaponinfo.downstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[3]))  // Bobbing frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_bobbing]))
+      {
          weaponinfo.readystate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[4]))  // Shooting frame
+         // Apply chainsaw replacement hack by suppressing ready sound
+         if(indexnum == wp_chainsaw)
+         {
+            if(weaponinfo.readystate == E_SafeState(S_SAW))
+               weaponinfo.intflags &= ~WIF_SUPPRESSREADYSOUND;
+            else
+               weaponinfo.intflags |= WIF_SUPPRESSREADYSOUND;
+         }
+      }
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_shooting]))
          weaponinfo.atkstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[5]))  // Firing frame
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_firing]))
          weaponinfo.flashstate = E_GetStateNumForDEHNum(value);
-      else if(!strcasecmp(key, deh_weapon[6])) // haleyjd: Ammo per shot
+      else if(!strcasecmp(key, deh_weapon[dehweaponid_ammoPerShot]))
       {
          weaponinfo.ammopershot = value;
          // enable ammo per shot value usage for this weapon

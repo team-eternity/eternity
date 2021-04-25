@@ -25,8 +25,8 @@
 #if __cplusplus >= 201703L || _MSC_VER >= 1914
 #include "hal/i_platform.h"
 #if EE_CURRENT_PLATFORM == EE_PLATFORM_MACOSX
-#include "hal/i_directory.h"
-namespace fs = fsStopgap;
+#include "filesystem.hpp"
+namespace fs = ghc::filesystem;
 #else
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -657,7 +657,7 @@ static void D_determineIWADVersion(const qstring &fullpath)
 //
 // Check a path for any of the standard IWAD file names.
 //
-static void D_checkPathForIWADs(const qstring &path)
+void D_CheckPathForIWADs(const qstring &path)
 {
    if(std::error_code ec; !fs::is_directory(path.constPtr(), ec))
    {
@@ -713,7 +713,7 @@ static void D_checkForNoRest()
          const qstring filename = qstring(ent.path().filename().generic_u8string().c_str()).toLower();
          if(filename == "nerve.wad")
          {
-            nrvpath.pathConcatenate(filename.constPtr());
+            nrvpath.pathConcatenate(filename);
             w_norestpath = nrvpath.duplicate();
             break;
          }
@@ -792,7 +792,7 @@ void D_FindIWADs()
 
    // Check all paths that were found for IWADs
    for(qstring &path : paths)
-      D_checkPathForIWADs(path);
+      D_CheckPathForIWADs(path);
 
    // Check for special WADs
    D_checkForNoRest(); // NR4TL
