@@ -455,9 +455,9 @@ void A_Srcr1Attack(actionargs_t *actionargs)
       mo = P_SpawnMissile(actor, actor->target, srcrfxType, mheight);
       fixed_t momz = mo->momz;
       angle_t angle = mo->angle;
-      P_SpawnMissileAngle(actor, srcrfxType, angle-ANGLE_1*3, 
+      P_SpawnMissileAngle(actor, srcrfxType, angle - HTICANGLE_1 * 3,
                           momz, mheight);
-      P_SpawnMissileAngle(actor, srcrfxType, angle+ANGLE_1*3,
+      P_SpawnMissileAngle(actor, srcrfxType, angle + HTICANGLE_1 * 3,
                           momz, mheight);
       
       // desperation -- attack twice
