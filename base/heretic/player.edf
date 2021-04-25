@@ -39,7 +39,6 @@ playerclass Corvus
 weaponinfo Staff
 {
   selectionorder 8.0
-  autoswitchvalue 1.0
 
   sisterweapon StaffPowered
 
@@ -100,7 +99,6 @@ weaponinfo GoldWand
   ammouse      1
 
   selectionorder 5.0
-  autoswitchvalue 3.0
 
   sisterweapon GoldWandPowered
 
@@ -157,7 +155,6 @@ weaponinfo Crossbow
   ammouse      1
 
   selectionorder 3.0
-  autoswitchvalue 4.0
 
   sisterweapon   CrossbowPowered
 
@@ -218,7 +215,6 @@ weaponinfo Blaster
   ammouse      1
 
   selectionorder 2.0
-  autoswitchvalue 5.0
 
   flags        SILENCEABLE|DISABLEAPS
   //mod          ""
@@ -256,7 +252,6 @@ weaponinfo SkullRod
   ammouse      1
 
   selectionorder 1.0
-  autoswitchvalue 6.0
 
   flags        SILENCEABLE|DISABLEAPS
   //mod          ""
@@ -291,7 +286,6 @@ weaponinfo PhoenixRod
   ammouse      1
 
   selectionorder 7.0
-  autoswitchvalue 7.0
 
   sisterweapon PhoenixRodPowered
 
@@ -350,7 +344,6 @@ weaponinfo Mace
   ammouse      1
 
   selectionorder 4.0
-  autoswitchvalue 8.0
 
   sisterweapon MacePowered
 
