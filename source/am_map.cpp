@@ -1681,11 +1681,16 @@ inline static bool AM_isDoorClosed(const line_t *line)
 //
 inline static bool AM_drawAsClosedDoor(const line_t *line)
 {
+   const surface_t &backfloor = line->backsector->srf.floor;
+   const surface_t &backceil = line->backsector->srf.ceiling;
+   const surface_t &frontfloor = line->frontsector->srf.floor;
+   const surface_t &frontceil = line->frontsector->srf.ceiling;
    return (mapcolor_clsd &&  
            !(line->flags & ML_SECRET) &&    // non-secret closed door
            AM_isDoorClosed(line) &&
-           (line->backsector->srf.floor.height == line->backsector->srf.ceiling.height ||
-            line->frontsector->srf.floor.height == line->backsector->srf.ceiling.height));
+           (backfloor.height == backceil.height || frontfloor.height == frontceil.height ||
+            (frontfloor.slope && R_CompareSlopesFlipped(frontfloor.slope, frontceil.slope)) ||
+            (backfloor.slope && R_CompareSlopesFlipped(backfloor.slope, backceil.slope))));
 }
 
 //

@@ -77,6 +77,7 @@ visplane_t *R_DupPlane(planecontext_t &context, const visplane_t *pl, int start,
 visplane_t *R_CheckPlane(planecontext_t &context, visplane_t *pl, int start, int stop);
 
 bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2);
+bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2);
 
 struct cb_span_t
 {

@@ -368,6 +368,21 @@ bool R_CompareSlopes(const pslope_t *s1, const pslope_t *s2)
         fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
 }
 
+//
+// Compares slopes by swapping one's normal. Useful for checking if two slopes are touching
+// each other in the same sector.
+//
+bool R_CompareSlopesFlipped(const pslope_t *s1, const pslope_t *s2)
+{
+   return
+      (s1 == s2) ||                 // both are equal, including both nullptr; OR:
+       (s1 && s2 &&                 // both are valid and...
+        CompFloats(s1->normalf.x, -s2->normalf.x) &&  // components are equal and...
+        CompFloats(s1->normalf.y, -s2->normalf.y) &&
+        CompFloats(s1->normalf.z, -s2->normalf.z) &&
+        fabs(P_DistFromPlanef(&s2->of, &s1->of, &s1->normalf)) < 0.001f); // this.
+}
+
 #undef CompFloats
 
 //
