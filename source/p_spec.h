@@ -45,6 +45,7 @@ class  SaveArchive;
 struct sector_t;
 struct side_t;
 class  UDMFSetupSettings;
+struct v3fixed_t;
 
 //      Define values for map objects
 #define MO_TELEPORTMAN  14
