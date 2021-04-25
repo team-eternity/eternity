@@ -182,6 +182,8 @@ void       M_LoadDefaults(void);
 void       M_SaveDefaults(void);
 default_t *M_FindDefaultForCVar(variable_t *var);
 
+void M_HereticDemoLog(const char *format, ...);
+
 #define UL (-123456789) /* magic number for no min or max for parameter */
 
 // haleyjd 06/24/02: platform-dependent macros for sound/music defaults

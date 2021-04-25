@@ -1787,6 +1787,36 @@ default_t *M_FindDefaultForCVar(variable_t *var)
    return ret;
 }
 
+//
+// Logs stuff as for Heretic
+//
+void M_HereticDemoLog(const char *format, ...)
+{
+#ifdef _WIN32
+   static FILE *f;
+   if(!f)
+   {
+      f = fopen("heretic-demo-log.txt", "wt");
+   }
+   if(!f)
+   {
+      return;
+   }
+   va_list ap;
+   va_start(ap, format);
+   vfprintf(f, format, ap);
+   va_end(ap);
+
+   fflush(f);
+#else
+   // For UNIX, just print to stdout
+   va_list ap;
+   va_start(ap, format);
+   vprintf(format, ap);
+   va_end(ap);
+#endif
+}
+
 //----------------------------------------------------------------------------
 //
 // $Log: m_misc.c,v $

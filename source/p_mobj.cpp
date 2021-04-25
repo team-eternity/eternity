@@ -46,6 +46,7 @@
 #include "in_lude.h"
 #include "m_bbox.h"
 #include "m_collection.h"
+#include "m_misc.h"
 #include "m_random.h"
 #include "p_chase.h"
 #include "p_enemy.h"
@@ -1631,14 +1632,14 @@ void Mobj::Think()
 
       if(!removed && bef != v3fixed_t{x, y, z} && !(flags2 & MF2_FLOATBOB))
       {
-          printf("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
+         M_HereticDemoLog("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
          if(bef.x != x)
-            printf("x %g -> %g, ", bef.x/65536., x/65536.);
+            M_HereticDemoLog("x %g -> %g, ", bef.x/65536., x/65536.);
          if(bef.y != y)
-            printf("y %g -> %g, ", bef.y/65536., y/65536.);
+            M_HereticDemoLog("y %g -> %g, ", bef.y/65536., y/65536.);
          if(bef.z != z)
-            printf("z %g -> %g, ", bef.z/65536., z/65536.);
-          puts("");
+            M_HereticDemoLog("z %g -> %g, ", bef.z/65536., z/65536.);
+         M_HereticDemoLog("\n");
       }
    }
    else
@@ -1647,14 +1648,14 @@ void Mobj::Think()
       {
          if(!removed && bef != v3fixed_t{x, y, z} && !(flags2 & MF2_FLOATBOB))
          {
-             printf("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
+            M_HereticDemoLog("%d: MOVEACTOR %d ", gametic, P_deconvertHereticDoomednum(info->doomednum));
             if(bef.x != x)
-               printf("x %g -> %g, ", bef.x/65536., x/65536.);
+               M_HereticDemoLog("x %g -> %g, ", bef.x/65536., x/65536.);
             if(bef.y != y)
-               printf("y %g -> %g, ", bef.y/65536., y/65536.);
+               M_HereticDemoLog("y %g -> %g, ", bef.y/65536., y/65536.);
             if(bef.z != z)
-               printf("z %g -> %g, ", bef.z/65536., z/65536.);
-             puts("");
+               M_HereticDemoLog("z %g -> %g, ", bef.z/65536., z/65536.);
+            M_HereticDemoLog("\n");
          }
       }
       // A thing can respawn if:

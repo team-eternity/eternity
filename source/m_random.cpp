@@ -32,6 +32,7 @@
 #include "z_zone.h"
 #include "d_gi.h"
 #include "doomstat.h"
+#include "m_misc.h"
 #include "m_random.h"
 #include "a_small.h"
 
@@ -328,7 +329,7 @@ int P_Random(pr_class_t pr_class)
    if(demo_compatibility)
    {
       if(pr_class != pr_misc)
-         printf("%s: %d: %d\n", M_prcString(prc), gametic, rndtable[compat]);
+         M_HereticDemoLog("%s: %d: %d\n", M_prcString(prc), gametic, rndtable[compat]);
       return rndtable[compat];
    }
 
