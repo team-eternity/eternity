@@ -2124,7 +2124,8 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
             S_StartSound(fogmo, GameModeInfo->teleSound);
 
             // ... and destination.
-            fogmo = P_SpawnMobj(x, y, z + GameModeInfo->teleFogHeight,
+            v3fixed_t fogpos = P_GetArrivalTelefogLocation({ x, y, z }, mo->angle);
+            fogmo = P_SpawnMobj(fogpos.x, fogpos.y, fogpos.z, 
                                 E_SafeThingName(GameModeInfo->teleFogType));
             S_StartSound(fogmo, GameModeInfo->teleSound);
          }

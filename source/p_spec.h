@@ -1694,6 +1694,8 @@ void P_ZeroSectorSpecial(sector_t *);
 
 void P_SetLineID(line_t *line, int id);
 
+v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle);
+
 // haleyjd: parameterized lines
 
 // param special activation types

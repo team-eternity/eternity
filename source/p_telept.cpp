@@ -143,6 +143,17 @@ bool P_HereticTeleport(Mobj *thing, fixed_t x, fixed_t y, angle_t angle)
 }
 
 //
+// Gets the telefog coordinates for an arrival telefog, which must be in front of the thing
+//
+v3fixed_t P_GetArrivalTelefogLocation(v3fixed_t landing, angle_t angle)
+{
+   v2fixed_t pos = P_LinePortalCrossing(landing.x, landing.y, 
+                                        20 * finecosine[angle >> ANGLETOFINESHIFT], 
+                                        20 * finesine[angle >> ANGLETOFINESHIFT]);
+   return { pos.x, pos.y, landing.z + GameModeInfo->teleFogHeight };
+}
+
+//
 // ioanch 20160330
 // General teleportation routine. Needed because it's reused by Hexen's teleport
 //
@@ -179,13 +190,11 @@ static int P_Teleport(Mobj *thing, const Mobj *landing)
 
    // spawn teleport fog and emit sound at destination
    // ioanch 20160229: portal aware
-   v2fixed_t pos = P_LinePortalCrossing(landing->x, landing->y,
-      20 * finecosine[landing->angle >> ANGLETOFINESHIFT],
-      20 * finesine[landing->angle >> ANGLETOFINESHIFT]);
-   S_StartSound(P_SpawnMobj(pos.x, pos.y,
-                              thing->z + GameModeInfo->teleFogHeight, 
-                              E_SafeThingName(GameModeInfo->teleFogType)),
-                  GameModeInfo->teleSound);
+   v3fixed_t landingFogPos = P_GetArrivalTelefogLocation({ landing->x, landing->y, thing->z },
+                                                         landing->angle);
+   S_StartSound(P_SpawnMobj(landingFogPos.x, landingFogPos.y, landingFogPos.z, 
+                            E_SafeThingName(GameModeInfo->teleFogType)), 
+                GameModeInfo->teleSound);
             
    thing->backupPosition();
    P_AdjustFloorClip(thing);
