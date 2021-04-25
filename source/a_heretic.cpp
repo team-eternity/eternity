@@ -68,7 +68,7 @@ static void P_spawnGlitter(Mobj *actor, int type)
    v2fixed_t pos = P_LinePortalCrossing(*actor, dx, dy);
 
    Mobj *mo = P_SpawnMobj(pos.x, pos.y,
-      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.height, type);
+      P_ExtremeSectorAtPoint(actor, surf_floor)->srf.floor.getZAt(pos), type);
    mo->momz = FRACUNIT / 4;
 }
 
