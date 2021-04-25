@@ -2072,7 +2072,7 @@ bool ACS_CF_SetThingPitchRet(ACS_CF_ARGS)
 //
 // ACS_CF_SetThingPos
 //
-// int SetThingPosition(int tid, fixed x, fixed y, fixed z, int fog);
+// int SetActorPosition(int tid, fixed x, fixed y, fixed z, int fog);
 //
 bool ACS_CF_SetThingPos(ACS_CF_ARGS)
 {
@@ -2102,7 +2102,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
          // Set new position.
          P_UnsetThingPosition(mo);
 
-         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.height;
+         mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
          mo->zref.floorgroupid = newsubsec->sector->groupid;
          mo->zref.ceiling = newsubsec->sector->srf.ceiling.height;
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
