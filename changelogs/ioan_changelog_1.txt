@@ -10,6 +10,8 @@ Since v4.02.00 "Forseti"
 --------------------------------------------------------------------------------
 25.04.2021
 
+BUGFIX: Fixed the wrong coordinate display in automap when follow mode is off.
+
 IMPROVEMENT: If the SetActorPosition ACS function uses fog, make sure to spawn
              the fog in front of the destination area, not on top of it. If the
              player was targeted, they would not be able to see the fog (but
