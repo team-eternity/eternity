@@ -1522,7 +1522,7 @@ thingtype DsparilShot2 : HereticMissile, -1, 360
     FX11 A 35 bright
     FX11 A  5 bright A_GenWizard
     FX11 B  5 bright
-    loop
+    goto Spawn+1
   Death:
     FX11 CDEFG 5 bright
     stop
