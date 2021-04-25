@@ -8,6 +8,14 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+25.04.2021
+
+IMPROVEMENT: If the SetActorPosition ACS function uses fog, make sure to spawn
+             the fog in front of the destination area, not on top of it. If the
+             player was targeted, they would not be able to see the fog (but
+             hear it).
+
+--------------------------------------------------------------------------------
 22.04.2021
 
 FEATURE: Now the automap has an overlay mode like in PrBoom+ and Crispy Doom. It
