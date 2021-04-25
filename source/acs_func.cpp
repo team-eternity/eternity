@@ -2104,7 +2104,7 @@ bool ACS_CF_SetThingPos(ACS_CF_ARGS)
 
          mo->zref.floor = mo->zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
          mo->zref.floorgroupid = newsubsec->sector->groupid;
-         mo->zref.ceiling = newsubsec->sector->srf.ceiling.height;
+         mo->zref.ceiling = newsubsec->sector->srf.ceiling.getZAt(x, y);
          mo->zref.passfloor = mo->zref.secfloor = mo->zref.floor;
          mo->zref.passceil = mo->zref.secceil = mo->zref.ceiling;
 
