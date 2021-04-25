@@ -114,6 +114,26 @@ inline static PointThinker *ACS_getSoundSource(const ACSThreadInfo *info)
    return info->mo ? info->mo : info->po ? &info->po->spawnSpot : nullptr;
 }
 
+//
+// Getter for surface Z of given tag
+//
+static fixed_t ACS_getSurfaceZ(int tag, surf_e type, fixed_t x, fixed_t y)
+{
+   if(!tag)
+   {
+      // tag 0 means to look at x and y and get the sector from there
+      const sector_t &sector = *R_PointInSubsector(x, y)->sector;
+      return sector.srf[type].getZAt(x, y);
+   }
+
+   // In this case it's tagged, focus on that sector
+   int secnum = P_FindSectorFromTag(tag, -1);
+   if(secnum < 0)
+      return 0;   // In case of no sector, return 0
+
+   return sectors[secnum].srf[type].getZAt(x, y);
+}
+
 //=============================================================================
 // CallFuncs
 //
@@ -1095,16 +1115,8 @@ bool ACS_CF_GetScreenW(ACS_CF_ARGS)
 //
 bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
 {
-   int secnum = P_FindSectorFromTag(argV[0], -1);
-
-   if(secnum >= 0)
-   {
-      // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].srf.ceiling.height);
-   }
-   else
-      thread->dataStk.push(0);
-
+   thread->dataStk.push(ACS_getSurfaceZ(argV[0], surf_ceil, 
+                                        argV[1] * FRACUNIT, argV[2] * FRACUNIT));
    return false;
 }
 
@@ -1115,16 +1127,8 @@ bool ACS_CF_GetSectorCeilZ(ACS_CF_ARGS)
 //
 bool ACS_CF_GetSectorFloorZ(ACS_CF_ARGS)
 {
-   int secnum = P_FindSectorFromTag(argV[0], -1);
-
-   if(secnum >= 0)
-   {
-      // TODO/FIXME: sloped sectors
-      thread->dataStk.push(sectors[secnum].srf.floor.height);
-   }
-   else
-      thread->dataStk.push(0);
-
+   thread->dataStk.push(ACS_getSurfaceZ(argV[0], surf_floor,
+                                        argV[1] * FRACUNIT, argV[2] * FRACUNIT));
    return false;
 }
 
