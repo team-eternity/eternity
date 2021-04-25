@@ -1102,8 +1102,8 @@ thingtype Disciple : ClassicHereticSolid, 7015, 349
   addflags        SHOOTABLE|NOGRAVITY|FLOAT|COUNTKILL|ACTSEESOUND|BOSSIGNORE|SPACMONSTER|PASSMOBJ|DONTOVERLAP
   obituary_normal "was schooled by a Disciple"
   obituary_melee  "was slapped by a Disciple"
-  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   dropitem        HArtiTomeOfPower,   4,  0, +toss
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   19
@@ -1745,8 +1745,8 @@ thingtype Maulotaur : ClassicHereticSolid, 7009, 371
   addflags        SHOOTABLE|DROPOFF|COUNTKILL|BOSS|FOOTCLIP|E2M8BOSS|NOSTRAFE|INVULNCHARGE|E5M8BOSS|DMGIGNORED|SPACMONSTER|PASSMOBJ
   obituary_normal "bowed down before the Maulotaur"
   obituary_melee  "was pounded flat by the Maulotaur"
-  dropitem        HArtiSuperHeal,    51,  0, +toss
   dropitem        HAmmoPhoenixWimpy, 84, 10, +toss
+  dropitem        HArtiSuperHeal,    51,  0, +toss
   acs_spawndata
   {
     num   114     // note: different from zdoom
@@ -1926,8 +1926,8 @@ thingtype IronLich : ClassicHereticSolid, 7006, 376
   addflags        SHOOTABLE|COUNTKILL|NOBLOOD|E1M8BOSS|E4M8BOSS|NOSPLASH|SPACMONSTER|PASSMOBJ
   obituary_normal "was punished by the Iron Lich"
   obituary_melee  "was bitten by the Iron Lich"
-  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   dropitem        HArtiEgg,          51,  0, +toss
+  dropitem        HAmmoBlasterWimpy, 84, 10, +toss
   acs_spawndata
   {
     num   20
