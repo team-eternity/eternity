@@ -401,7 +401,6 @@ weaponinfo MacePowered : Mace
 weaponinfo Gauntlets
 {
   selectionorder 6.0
-  autoswitchvalue 2.0
 
   sisterweapon GauntletsPowered
 
