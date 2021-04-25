@@ -1114,16 +1114,7 @@ static void A_painShootSkull(Mobj *actor, const angle_t angle, int thingType,
 
       // ioanch 20160107: check against the floor or ceiling sector behind any
       // portals
-      v2fixed_t ceilingpos, floorpos;
-      const sector_t *ceilingsector = P_ExtremeSectorAtPoint(newmobj, surf_ceil, &ceilingpos);
-      const sector_t *floorsector = P_ExtremeSectorAtPoint(newmobj, surf_floor, &floorpos);
-      ceilingpos.x += newmobj->x;
-      ceilingpos.y += newmobj->y;
-      floorpos.x += newmobj->x;
-      floorpos.y += newmobj->y;
-      if(newmobj->z > ceilingsector->srf.ceiling.getZAt(ceilingpos.x,
-                                                        ceilingpos.y) - newmobj->height ||
-         newmobj->z < floorsector->srf.floor.getZAt(floorpos.x, floorpos.y))
+      if(!P_CheckFloorCeilingForSpawning(*newmobj))
       {
          // kill it immediately
          P_DamageMobj(newmobj,actor,actor,GOD_BREACH_DAMAGE,MOD_UNKNOWN);

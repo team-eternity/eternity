@@ -3478,6 +3478,21 @@ void P_ChangeThingHeights(void)
 }
 
 //
+// Checks if mobj fits floor and ceiling of its current location. Used by the pain elemental
+// lost soul spawning when !comp_skull, and by newer summoning actions.
+//
+bool P_CheckFloorCeilingForSpawning(const Mobj &mobj)
+{
+   v2fixed_t floorpos, ceilingpos;
+   const sector_t *floorsector = P_ExtremeSectorAtPoint(&mobj, surf_floor, &floorpos);
+   const sector_t *ceilingsector = P_ExtremeSectorAtPoint(&mobj, surf_ceil, &ceilingpos);
+   floorpos += v2fixed_t{ mobj.x, mobj.y };
+   ceilingpos += v2fixed_t{ mobj.x, mobj.y };
+   return mobj.z <= ceilingsector->srf.ceiling.getZAt(ceilingpos) - mobj.height && 
+      mobj.z >= floorsector->srf.floor.getZAt(floorpos);
+}
+
+//
 // haleyjd 02/02/04: Thing IDs (aka TIDs)
 //
 

@@ -577,6 +577,8 @@ inline static fixed_t getThingZ(Mobj *mo1, Mobj *mo2)
    return mo2->z + P_GetLinkOffset(mo2->groupid, mo1->groupid)->z;
 }
 
+bool P_CheckFloorCeilingForSpawning(const Mobj& mobj);
+
 //=============================================================================
 //
 // Misc. mobj flags

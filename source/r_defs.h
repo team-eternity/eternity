@@ -295,6 +295,10 @@ struct surface_t
    ETerrain *terrain;
 
    fixed_t getZAt(fixed_t x, fixed_t y) const;
+   inline fixed_t getZAt(v2fixed_t v) const
+   {
+      return getZAt(v.x, v.y);
+   }
 };
 
 //
