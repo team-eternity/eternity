@@ -226,27 +226,29 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       int lineside = P_PointOnLineSidePrecise(trace.x, trace.y, li);
 
       fixed_t dist = FixedMul(context.params.attackrange, in->frac);
+      v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
+
       if(context.shotCheck2SLine(li, lineside, dist))
       {
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;
          if(li->extflags & EX_ML_LOWERPORTAL && li->backsector &&
             li->backsector->srf.floor.pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->srf.floor.height - context.state.v.z, dist)
+            FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z, dist)
             >= context.params.aimslope)
          {
             portal = li->backsector->srf.floor.portal;
          }
          else if(li->extflags & EX_ML_UPPERPORTAL && li->backsector &&
             li->backsector->srf.ceiling.pflags & PS_PASSABLE &&
-            FixedDiv(li->backsector->srf.ceiling.height - context.state.v.z, dist)
+            FixedDiv(li->backsector->srf.ceiling.getZAt(edgepos) - context.state.v.z, dist)
             <= context.params.aimslope)
          {
             portal = li->backsector->srf.ceiling.portal;
          }
          else if(li->pflags & PS_PASSABLE &&
             (!(li->extflags & EX_ML_LOWERPORTAL) ||
-             FixedDiv(li->backsector->srf.floor.height - context.state.v.z, dist)
+             FixedDiv(li->backsector->srf.floor.getZAt(edgepos) - context.state.v.z, dist)
                < context.params.aimslope))
          {
             portal = li->portal;
@@ -361,15 +363,16 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          }
       }
 
+      fixed_t frontceilingz = li->frontsector->srf.ceiling.getZAt(edgepos);
+      fixed_t frontfloorz = li->frontsector->srf.floor.getZAt(edgepos);
+      fixed_t backceilingz = li->backsector ? li->backsector->srf.ceiling.getZAt(edgepos) : 0;
+      fixed_t backfloorz = li->backsector ? li->backsector->srf.floor.getZAt(edgepos) : 0;
+
       if(demo_version >= 342 && li->backsector &&
-         ((li->extflags & EX_ML_UPPERPORTAL &&
-            li->backsector->srf.ceiling.height < li->frontsector->srf.ceiling.height &&
-            li->backsector->srf.ceiling.height < z &&
-            R_IsSkyLikePortalCeiling(*li->backsector)) ||
-            (li->extflags & EX_ML_LOWERPORTAL &&
-               li->backsector->srf.floor.height > li->frontsector->srf.floor.height &&
-               li->backsector->srf.floor.height > z &&
-               R_IsSkyLikePortalFloor(*li->backsector))))
+         ((li->extflags & EX_ML_UPPERPORTAL && backceilingz < frontceilingz &&
+           backceilingz < z && R_IsSkyLikePortalCeiling(*li->backsector)) ||
+          (li->extflags & EX_ML_LOWERPORTAL && backfloorz > frontfloorz && backfloorz > z &&
+           R_IsSkyLikePortalFloor(*li->backsector))))
       {
          return false;
       }
