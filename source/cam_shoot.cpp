@@ -75,7 +75,7 @@ private:
 
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
    bool shoot2SLine(line_t *li, int lineside, fixed_t dist, const lineopening_t &lo) const;
-   bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const;
+   bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos) const;
    static bool shootTraverse(const intercept_t *in, void *data, const divline_t &trace);
    ShootContext(const params_t &params, const State *instate);
 
@@ -194,7 +194,8 @@ bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
 //
 // ShootContext::shotCheck2SLine
 //
-bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const
+bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos)
+   const
 {
    bool ret = false;
    if(li->extflags & EX_ML_BLOCKALL)
@@ -203,7 +204,7 @@ bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist) const
    if(li->flags & ML_TWOSIDED)
    {
       lineopening_t lo = { 0 };
-      lo.calculate(li);
+      lo.calculateAtPoint(*li, edgepos);
       if(shoot2SLine(li, lineside, dist, lo))
          ret = true;
    }
@@ -228,7 +229,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       fixed_t dist = FixedMul(context.params.attackrange, in->frac);
       v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
 
-      if(context.shotCheck2SLine(li, lineside, dist))
+      if(context.shotCheck2SLine(li, lineside, dist, edgepos))
       {
          // ioanch 20160101: line portal aware
          const portal_t *portal = nullptr;

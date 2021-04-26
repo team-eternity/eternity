@@ -92,6 +92,7 @@ struct lineopening_t
    Surfaces<fixed_t> open;
 
    void calculate(const line_t *linedef);
+   void calculateAtPoint(const line_t &line, v2fixed_t pos);
 };
 
 #endif
