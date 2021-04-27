@@ -82,6 +82,8 @@ private:
    const params_t params;
    fixed_t cos, sin;
    State state;
+
+   v2fixed_t prevedgepos = {};  // previous edge position, needed for slope intersection
 };
 
 //
@@ -258,10 +260,16 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          {
             int newfromid = portal->data.link.toid;
             if(newfromid == context.state.groupid)
+            {
+               context.prevedgepos = edgepos;
                return true;
+            }
 
             if(context.state.reclevel >= RECURSION_LIMIT)
+            {
+               context.prevedgepos = edgepos;
                return true;
+            }
 
             // NOTE: for line attacks, sightzstart also moves!
             v3fixed_t v;
@@ -292,6 +300,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             return false;
          }
 
+         context.prevedgepos = edgepos;
          return true;
       }
 
@@ -314,39 +323,27 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(context.checkShootFlatPortal(sidesector, in->frac))
             return false;  // done here
 
-         if(z < sidesector->srf.floor.height)
+         for(surf_e surf : SURFS)
          {
-            fixed_t pfrac = FixedDiv(sidesector->srf.floor.height
-                                     - context.state.v.z, context.params.aimslope);
-
-            if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
-               R_IsSkyLikePortalSurface(sidesector->srf.floor))
+            const surface_t &surface = sidesector->srf[surf];
+            if(isOuter(surf, z, surface.height))
             {
-               return false;
+               fixed_t pfrac = FixedDiv(surface.height - context.state.v.z,
+                                        context.params.aimslope);
+               bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
+                     R_IsSkyFlat(surface.pic);
+
+               if(skycheck || R_IsSkyLikePortalSurface(surface))
+                  return false;
+
+               x = trace.x + FixedMul(context.cos, pfrac);
+               y = trace.y + FixedMul(context.sin, pfrac);
+               z = surface.height;
+
+               hitplane = true;
+               updown = surf == surf_floor ? 0 : 1;
+               break;
             }
-
-            x = trace.x + FixedMul(context.cos, pfrac);
-            y = trace.y + FixedMul(context.sin, pfrac);
-            z = sidesector->srf.floor.height;
-
-            hitplane = true;
-            updown = 0;
-         }
-         else if(z > sidesector->srf.ceiling.height)
-         {
-            fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height
-                                     - context.state.v.z, context.params.aimslope);
-            if(sidesector->intflags & SIF_SKY ||
-               R_IsSkyLikePortalSurface(sidesector->srf.ceiling))
-            {
-               return false;
-            }
-            x = trace.x + FixedMul(context.cos, pfrac);
-            y = trace.y + FixedMul(context.sin, pfrac);
-            z = sidesector->srf.ceiling.height;
-
-            hitplane = true;
-            updown = 1;
          }
       }
 
@@ -419,6 +416,9 @@ ShootContext::ShootContext(const params_t &params, const State *instate) :
       state.origindist = 0;
       state.reclevel = 0;
    }
+
+   // Store the initial edge position
+   prevedgepos = v2fixed_t(state.v);
 }
 
 //
