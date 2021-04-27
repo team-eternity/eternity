@@ -84,6 +84,7 @@ private:
    State state;
 
    v2fixed_t prevedgepos = {};  // previous edge position, needed for slope intersection
+   fixed_t prevfrac = 0;
 };
 
 //
@@ -262,12 +263,14 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             if(newfromid == context.state.groupid)
             {
                context.prevedgepos = edgepos;
+               context.prevfrac = in->frac;
                return true;
             }
 
             if(context.state.reclevel >= RECURSION_LIMIT)
             {
                context.prevedgepos = edgepos;
+               context.prevfrac = in->frac;
                return true;
             }
 
@@ -301,6 +304,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          }
 
          context.prevedgepos = edgepos;
+         context.prevfrac = in->frac;
          return true;
       }
 
@@ -326,9 +330,33 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          for(surf_e surf : SURFS)
          {
             const surface_t &surface = sidesector->srf[surf];
-            if(isOuter(surf, z, surface.height))
+            fixed_t curslopez = surface.getZAt(x, y);
+            if(isOuter(surf, z, curslopez))
             {
-               fixed_t pfrac = FixedDiv(surface.height - context.state.v.z,
+               fixed_t hitheight;
+               if(surface.slope)
+               {
+                  fixed_t prevslopez = surface.getZAt(context.prevedgepos);
+                  fixed_t prevtracez = context.state.v.z +
+                     FixedMul(context.params.aimslope, FixedMul(context.prevfrac,
+                                                                context.params.attackrange));
+                  // And we have the surface height at the destination and the current z
+                  fixed_t curdeltaz = curslopez - z;  // current z should be below slope
+                  fixed_t prevdeltaz = prevtracez - prevslopez;   // previous z is above slope
+
+                  // If they're of opposite signs, we're in a wrong situation, so just end
+                  if((curdeltaz ^ prevdeltaz) < 0)
+                     return false;
+
+                  v2fixed_t intersection = context.prevedgepos +
+                        (v2fixed_t{ x, y } - context.prevedgepos)
+                           .fixedMul(FixedDiv(prevdeltaz, prevdeltaz + curdeltaz));
+                  hitheight = surface.getZAt(intersection);
+               }
+               else
+                  hitheight = surface.height;
+
+               fixed_t pfrac = FixedDiv(hitheight - context.state.v.z,
                                         context.params.aimslope);
                bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
                      R_IsSkyFlat(surface.pic);
@@ -338,7 +366,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 
                x = trace.x + FixedMul(context.cos, pfrac);
                y = trace.y + FixedMul(context.sin, pfrac);
-               z = surface.height;
+               z = hitheight;
 
                hitplane = true;
                updown = surf == surf_floor ? 0 : 1;
@@ -419,6 +447,7 @@ ShootContext::ShootContext(const params_t &params, const State *instate) :
 
    // Store the initial edge position
    prevedgepos = v2fixed_t(state.v);
+   prevfrac = 0;
 }
 
 //
