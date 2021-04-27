@@ -442,14 +442,14 @@ void P_ExplodeMissile(Mobj *mo, const sector_t *topedgesec)
    {
       const sector_t *ceilingsector = P_ExtremeSectorAtPoint(mo, surf_ceil);
       if((ceilingsector->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*ceilingsector)) &&
+         R_IsSkyLikePortalSurface(ceilingsector->srf.ceiling)) &&
          mo->z >= ceilingsector->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the actual sky itself
          return;
       }
       if(topedgesec && demo_version >= 342 && (topedgesec->intflags & SIF_SKY ||
-         R_IsSkyLikePortalCeiling(*topedgesec)) &&
+         R_IsSkyLikePortalSurface(topedgesec->srf.ceiling)) &&
          mo->z >= topedgesec->srf.ceiling.height - P_ThingInfoHeight(mo->info))
       {
          mo->remove(); // don't explode on the edge
@@ -654,7 +654,7 @@ void P_XYMovement(Mobj* mo)
                (clip.ceilingline->backsector->intflags & SIF_SKY || 
                (demo_version >= 342 && 
                   clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
-                  R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
+                  R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
             {
                if (demo_compatibility ||  // killough
                   mo->z > clip.ceilingline->backsector->srf.ceiling.height)
@@ -971,7 +971,7 @@ static void P_ZMovement(Mobj* mo)
             (clip.ceilingline->backsector->intflags & SIF_SKY ||
             (demo_version >= 342 &&
                clip.ceilingline->extflags & EX_ML_UPPERPORTAL &&
-               R_IsSkyLikePortalCeiling(*clip.ceilingline->backsector))))
+               R_IsSkyLikePortalSurface(clip.ceilingline->backsector->srf.ceiling))))
          {
             mo->remove();  // don't explode on skies
          }

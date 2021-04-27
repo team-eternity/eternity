@@ -546,7 +546,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
 
             // SoM: don't check for portals here anymore
             if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
-               R_IsSkyLikePortalFloor(*sidesector))
+               R_IsSkyLikePortalSurface(sidesector->srf.floor))
             {
                return false;
             }
@@ -572,7 +572,7 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
          {
             fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height - trace.z, trace.aimslope);
             if(sidesector->intflags & SIF_SKY ||
-               R_IsSkyLikePortalCeiling(*sidesector)) // SoM
+               R_IsSkyLikePortalSurface(sidesector->srf.ceiling)) // SoM
             {
                return false;
             }
@@ -620,11 +620,11 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
          ((li->extflags & EX_ML_UPPERPORTAL &&
             li->backsector->srf.ceiling.height < li->frontsector->srf.ceiling.height &&
             li->backsector->srf.ceiling.height < z &&
-            R_IsSkyLikePortalCeiling(*li->backsector)) ||
+            R_IsSkyLikePortalSurface(li->backsector->srf.ceiling)) ||
             (li->extflags & EX_ML_LOWERPORTAL &&
                li->backsector->srf.floor.height > li->frontsector->srf.floor.height &&
                li->backsector->srf.floor.height > z &&
-               R_IsSkyLikePortalFloor(*li->backsector))))
+               R_IsSkyLikePortalSurface(li->backsector->srf.floor))))
       {
          return false;
       }

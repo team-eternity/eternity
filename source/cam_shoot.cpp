@@ -320,7 +320,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
                                      - context.state.v.z, context.params.aimslope);
 
             if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
-               R_IsSkyLikePortalFloor(*sidesector))
+               R_IsSkyLikePortalSurface(sidesector->srf.floor))
             {
                return false;
             }
@@ -337,7 +337,7 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height
                                      - context.state.v.z, context.params.aimslope);
             if(sidesector->intflags & SIF_SKY ||
-               R_IsSkyLikePortalCeiling(*sidesector))
+               R_IsSkyLikePortalSurface(sidesector->srf.ceiling))
             {
                return false;
             }
@@ -371,9 +371,9 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
 
       if(demo_version >= 342 && li->backsector &&
          ((li->extflags & EX_ML_UPPERPORTAL && backceilingz < frontceilingz &&
-           backceilingz < z && R_IsSkyLikePortalCeiling(*li->backsector)) ||
+           backceilingz < z && R_IsSkyLikePortalSurface(li->backsector->srf.ceiling)) ||
           (li->extflags & EX_ML_LOWERPORTAL && backfloorz > frontfloorz && backfloorz > z &&
-           R_IsSkyLikePortalFloor(*li->backsector))))
+           R_IsSkyLikePortalSurface(li->backsector->srf.floor))))
       {
          return false;
       }

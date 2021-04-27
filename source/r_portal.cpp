@@ -2171,25 +2171,14 @@ void R_ApplyPortal(line_t &line, int portal)
 }
 
 //
-// True if ceiling is a basic portal without overlay
+// True if floor or ceiling is a basic portal without overlay
 //
-bool R_IsSkyLikePortalCeiling(const sector_t &sector)
+bool R_IsSkyLikePortalSurface(const surface_t &surface)
 {
-   return sector.srf.ceiling.portal && !(sector.srf.ceiling.pflags & (PF_DISABLED | PF_NOPASS)) &&
-   (!(sector.srf.ceiling.pflags & PS_OVERLAY) || !(sector.srf.ceiling.pflags & PO_OPACITYMASK)) &&
-   (sector.srf.ceiling.portal->type == R_SKYBOX || sector.srf.ceiling.portal->type == R_HORIZON ||
-    sector.srf.ceiling.portal->type == R_PLANE);
-}
-
-//
-// True if floor is a basic portal without overlay
-//
-bool R_IsSkyLikePortalFloor(const sector_t &sector)
-{
-   return sector.srf.floor.portal && !(sector.srf.floor.pflags & (PF_DISABLED | PF_NOPASS)) &&
-      (!(sector.srf.floor.pflags & PS_OVERLAY) || !(sector.srf.floor.pflags & PO_OPACITYMASK)) &&
-      (sector.srf.floor.portal->type == R_SKYBOX || sector.srf.floor.portal->type == R_HORIZON ||
-         sector.srf.floor.portal->type == R_PLANE);
+   return surface.portal && !(surface.pflags & (PF_DISABLED | PF_NOPASS)) &&
+   (!(surface.pflags & PS_OVERLAY) || !(surface.pflags & PO_OPACITYMASK)) &&
+   (surface.portal->type == R_SKYBOX || surface.portal->type == R_HORIZON ||
+    surface.portal->type == R_PLANE);
 }
 
 //
