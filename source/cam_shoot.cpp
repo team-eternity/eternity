@@ -378,13 +378,16 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(!hitplane && li->special)
          P_ShootSpecialLine(context.params.thing, li, lineside);
 
+      // NOTE: for gameplay fidelity, this uses the same flawed logic as PTR_ShootTraverse.
+      // frontsector and backsector are given special behaviour, despite being oriented in any
+      // way with the line.
       if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
       {
-         if(z > li->frontsector->srf.ceiling.height)
+         if(z > li->frontsector->srf.ceiling.getZAt(x, y))
             return false;
          if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
          {
-            if(li->backsector->srf.ceiling.height < z)
+            if(li->backsector->srf.ceiling.getZAt(x, y) < z)
                return false;
          }
       }
