@@ -397,7 +397,7 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 
    // better detection of in-portal lines
    uint32_t lineclipflags = 0;
-   P_LineOpening(ld, clip.thing, true, &lineclipflags);
+   P_LineOpening(ld, clip.thing, nullptr, true, &lineclipflags);
 
    // now apply correction to openings in case thing is positioned differently
    bool samegroupid = clip.thing->groupid == linegroupid;

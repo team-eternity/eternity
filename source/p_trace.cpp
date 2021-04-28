@@ -452,8 +452,18 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    sector_t *bs = li->backsector;
 
    bool becomp      = (demo_version < 333 || getComp(comp_planeshoot));
-   bool floorsame   = (fs->srf.floor.height == bs->srf.floor.height && becomp);
-   bool ceilingsame = (fs->srf.ceiling.height == bs->srf.ceiling.height && becomp);
+
+   bool floorsame;
+   if(fs->srf.floor.slope || bs->srf.floor.slope)  // don't support this in case of slopes
+      floorsame = false;
+   else
+      floorsame = becomp && fs->srf.floor.height == bs->srf.floor.height;
+
+   bool ceilingsame;
+   if(fs->srf.ceiling.slope || bs->srf.ceiling.slope)
+      ceilingsame = false;
+   else
+      ceilingsame = becomp && fs->srf.ceiling.height == bs->srf.ceiling.height;
 
    if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
       (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
@@ -473,7 +483,7 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
 // Routine to handle the crossing of a 2S line by a shot tracer.
 // Returns true if PTR_ShootTraverse should return.
 //
-static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
+static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside, v2fixed_t edgepos)
 {
    fixed_t dist;
    bool ret = false;
@@ -485,7 +495,8 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside)
    if(li->flags & ML_TWOSIDED)
    {  
       // crosses a two sided (really 2s) line
-      P_LineOpening(li, nullptr);
+      P_LineOpening(li, nullptr, &edgepos);
+      
       dist = FixedMul(trace.attackrange, in->frac);
       
       // killough 11/98: simplify
@@ -520,7 +531,9 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
       //if(li->special && (demo_version < 329 || comp[comp_planeshoot]))
       //   P_ShootSpecialLine(shootthing, li, lineside);
 
-      if(P_ShotCheck2SLine(in, li, lineside))
+      v2fixed_t edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+
+      if(P_ShotCheck2SLine(in, li, lineside, edgepos))
          return true;
 
       // hit line

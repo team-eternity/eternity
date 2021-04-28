@@ -124,8 +124,8 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta);
 
 //SoM 9/2/02: added mo parameter for 3dside clipping
 // ioanch 20150113: added optional portal detection
-void    P_LineOpening (const line_t *linedef, const Mobj *mo,
-                       bool portaldetect = false, uint32_t *lineclipflags = nullptr);
+void P_LineOpening(const line_t *linedef, const Mobj *mo, const v2fixed_t *ppoint = nullptr,
+                   bool portaldetect = false, uint32_t *lineclipflags = nullptr);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);
