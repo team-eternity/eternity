@@ -333,7 +333,13 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
             fixed_t curslopez = surface.getZAt(x, y);
             if(isOuter(surf, z, curslopez))
             {
-               fixed_t hitheight;
+               // Check first against the sky
+               bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
+                     R_IsSkyFlat(surface.pic);
+
+               if(skycheck || R_IsSkyLikePortalSurface(surface))
+                  return false;
+
                if(surface.slope)
                {
                   fixed_t prevslopez = surface.getZAt(context.prevedgepos);
@@ -351,22 +357,19 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
                   v2fixed_t intersection = context.prevedgepos +
                         (v2fixed_t{ x, y } - context.prevedgepos)
                            .fixedMul(FixedDiv(prevdeltaz, prevdeltaz + curdeltaz));
-                  hitheight = surface.getZAt(intersection);
+                  x = intersection.x;
+                  y = intersection.y;
+                  z = surface.getZAt(intersection);
                }
                else
-                  hitheight = surface.height;
+               {
+                  fixed_t pfrac = FixedDiv(surface.height - context.state.v.z,
+                                           context.params.aimslope);
 
-               fixed_t pfrac = FixedDiv(hitheight - context.state.v.z,
-                                        context.params.aimslope);
-               bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
-                     R_IsSkyFlat(surface.pic);
-
-               if(skycheck || R_IsSkyLikePortalSurface(surface))
-                  return false;
-
-               x = trace.x + FixedMul(context.cos, pfrac);
-               y = trace.y + FixedMul(context.sin, pfrac);
-               z = hitheight;
+                  x = trace.x + FixedMul(context.cos, pfrac);
+                  y = trace.y + FixedMul(context.sin, pfrac);
+                  z = surface.height;
+               }
 
                hitplane = true;
                updown = surf == surf_floor ? 0 : 1;
