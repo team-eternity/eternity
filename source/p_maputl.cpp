@@ -320,84 +320,79 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    }
    clip.openfrontsector = linedef->frontsector;
    clip.openbacksector  = linedef->backsector;
-   sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE &&
-      linedef->beyondportalline ?
+   sector_t *beyond = linedef->intflags & MLI_1SPORTALLINE && linedef->beyondportalline ?
       linedef->beyondportalline->frontsector : nullptr;
    if(beyond)
       clip.openbacksector = beyond;
 
    // SoM: ok, new plan. The only way a 2s line should give a lowered floor or hightened ceiling
    // z is if both sides of that line have the same portal.
+   const surface_t &frontceiling = clip.openfrontsector->srf.ceiling;
+   const surface_t &backceiling = clip.openbacksector->srf.ceiling;
    {
       if(mo && demo_version >= 333 &&
-         ((clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE &&
-         clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE &&
-         clip.openfrontsector->srf.ceiling.portal == clip.openbacksector->srf.ceiling.portal) ||
-         (clip.openfrontsector->srf.ceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
-          clip.openfrontsector->srf.ceiling.portal->data.link.delta ==
-          linedef->portal->data.link.delta)))
+         ((frontceiling.pflags & PS_PASSABLE && backceiling.pflags & PS_PASSABLE &&
+           frontceiling.portal == backceiling.portal) ||
+          (frontceiling.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+           frontceiling.portal->data.link.delta == linedef->portal->data.link.delta)))
       {
          // also handle line portal + ceiling portal, for edge portals
          if(!portaldetect) // ioanch
-         {
-            frontceilz = backceilz = clip.openfrontsector->srf.ceiling.height
-            + (1024 * FRACUNIT);
-         }
+            frontceilz = backceilz = frontceiling.height + 1024 * FRACUNIT;
          else
          {
             *lineclipflags |= LINECLIP_UNDERPORTAL;
-            frontceilz = clip.openfrontsector->srf.ceiling.height;
-            backceilz  = clip.openbacksector->srf.ceiling.height;
+            frontceilz = frontceiling.height;
+            backceilz  = backceiling.height;
          }
       }
       else
       {
-         frontceilz = clip.openfrontsector->srf.ceiling.height;
-         backceilz  = clip.openbacksector->srf.ceiling.height;
+         frontceilz = frontceiling.height;
+         backceilz  = backceiling.height;
       }
 
-      frontcz = clip.openfrontsector->srf.ceiling.height;
-      backcz  = clip.openbacksector->srf.ceiling.height;
+      frontcz = frontceiling.height;
+      backcz  = backceiling.height;
    }
 
-
+   const surface_t &frontfloor = clip.openfrontsector->srf.floor;
+   const surface_t &backfloor = clip.openbacksector->srf.floor;
    {
       if(mo && demo_version >= 333 &&
-         ((clip.openfrontsector->srf.floor.pflags & PS_PASSABLE &&
-         clip.openbacksector->srf.floor.pflags & PS_PASSABLE &&
-         clip.openfrontsector->srf.floor.portal == clip.openbacksector->srf.floor.portal) ||
-          (clip.openfrontsector->srf.floor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
-           clip.openfrontsector->srf.floor.portal->data.link.delta ==
-           linedef->portal->data.link.delta)))
+         ((frontfloor.pflags & PS_PASSABLE && backfloor.pflags & PS_PASSABLE &&
+           frontfloor.portal == backfloor.portal) ||
+          (frontfloor.pflags & PS_PASSABLE && linedef->pflags & PS_PASSABLE &&
+           frontfloor.portal->data.link.delta == linedef->portal->data.link.delta)))
       {
          if(!portaldetect)  // ioanch
          {
-            frontfloorz = backfloorz = clip.openfrontsector->srf.floor.height - (1024 * FRACUNIT); //mo->height;
-            frontfloorgroupid = backfloorgroupid =
-               clip.openfrontsector->srf.floor.portal->data.link.toid;  // Not exactly "extreme"
+            frontfloorz = backfloorz = frontfloor.height - 1024 * FRACUNIT; //mo->height;
+            // Not exactly "extreme"
+            frontfloorgroupid = backfloorgroupid = frontfloor.portal->data.link.toid;
          }
          else
          {
             *lineclipflags |= LINECLIP_ABOVEPORTAL;
-            frontfloorz = clip.openfrontsector->srf.floor.height;
+            frontfloorz = frontfloor.height;
             frontfloorgroupid = clip.openfrontsector->groupid;
-            backfloorz  = clip.openbacksector->srf.floor.height;
+            backfloorz  = backfloor.height;
             backfloorgroupid = clip.openbacksector->groupid;
          }
       }
       else
       {
-         frontfloorz = clip.openfrontsector->srf.floor.height;
+         frontfloorz = frontfloor.height;
          frontfloorgroupid = clip.openfrontsector->groupid;
-         backfloorz  = clip.openbacksector->srf.floor.height;
+         backfloorz  = backfloor.height;
          backfloorgroupid = clip.openbacksector->groupid;
       }
 
-      frontfz = clip.openfrontsector->srf.floor.height;
-      backfz = clip.openbacksector->srf.floor.height;
+      frontfz = frontfloor.height;
+      backfz = backfloor.height;
    }
 
-   if(linedef->extflags & EX_ML_UPPERPORTAL && clip.openbacksector->srf.ceiling.pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_UPPERPORTAL && backceiling.pflags & PS_PASSABLE)
       clip.opentop = frontceilz;
    else if(frontceilz < backceilz)
       clip.opentop = frontceilz;
@@ -405,13 +400,13 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.opentop = backceilz;
 
    // ioanch 20160114: don't change floorpic if portaldetect is on
-   if(linedef->extflags & EX_ML_LOWERPORTAL && clip.openbacksector->srf.floor.pflags & PS_PASSABLE)
+   if(linedef->extflags & EX_ML_LOWERPORTAL && backfloor.pflags & PS_PASSABLE)
    {
       clip.openbottom = frontfloorz;
       clip.bottomgroupid = frontfloorgroupid;
       clip.lowfloor = frontfloorz;
-      if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
-         clip.floorpic = clip.openfrontsector->srf.floor.pic;
+      if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
+         clip.floorpic = frontfloor.pic;
    }
    else if(frontfloorz > backfloorz)
    {
@@ -419,8 +414,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.bottomgroupid = frontfloorgroupid;
       clip.lowfloor = backfloorz;
       // haleyjd
-      if(!portaldetect || !(clip.openfrontsector->srf.floor.pflags & PS_PASSABLE))
-         clip.floorpic = clip.openfrontsector->srf.floor.pic;
+      if(!portaldetect || !(frontfloor.pflags & PS_PASSABLE))
+         clip.floorpic = frontfloor.pic;
    }
    else
    {
@@ -428,8 +423,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
       clip.bottomgroupid = backfloorgroupid;
       clip.lowfloor = frontfloorz;
       // haleyjd
-      if(!portaldetect || !(clip.openbacksector->srf.floor.pflags & PS_PASSABLE))
-         clip.floorpic = clip.openbacksector->srf.floor.pic;
+      if(!portaldetect || !(backfloor.pflags & PS_PASSABLE))
+         clip.floorpic = backfloor.pic;
    }
 
    if(frontcz < backcz)
@@ -448,9 +443,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
    // SoM 9/02/02: Um... I know I told Quasar` I would do this after 
    // I got SDL_Mixer support and all, but I WANT THIS NOW hehe
    if(demo_version >= 331 && mo && (linedef->flags & ML_3DMIDTEX) && 
-      sides[linedef->sidenum[0]].midtexture &&
-      (!(linedef->extflags & EX_ML_3DMTPASSPROJ) ||
-       !(mo->flags & (MF_MISSILE | MF_BOUNCES))))
+      sides[linedef->sidenum[0]].midtexture && (!(linedef->extflags & EX_ML_3DMTPASSPROJ) ||
+                                                !(mo->flags & (MF_MISSILE | MF_BOUNCES))))
    {
       // ioanch: also support midtex3dimpassible
 
@@ -486,11 +480,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
             clip.opentop = texbot;
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
-         if(portaldetect && (texbot < clip.openfrontsector->srf.ceiling.height ||
-                             texbot < clip.openbacksector->srf.ceiling.height))
-         {
+         if(portaldetect && (texbot < frontceiling.height || texbot < backceiling.height))
             *lineclipflags |= LINECLIP_UNDER3DMIDTEX;
-         }
       }
       else
       {
@@ -501,11 +492,8 @@ void P_LineOpening(const line_t *linedef, const Mobj *mo, bool portaldetect,
          }
          // ioanch 20160318: mark if 3dmidtex affects clipping
          // Also don't flag lines that are offset into the floor/ceiling
-         if(portaldetect && (textop > clip.openfrontsector->srf.floor.height ||
-                             textop > clip.openbacksector->srf.floor.height))
-         {
+         if(portaldetect && (textop > frontfloor.height || textop > backfloor.height))
             *lineclipflags |= LINECLIP_OVER3DMIDTEX;
-         }
 
          // The mobj is above the 3DMidTex, so check to see if it's ON the 3DMidTex
          // SoM 01/12/06: let monsters walk over dropoffs
