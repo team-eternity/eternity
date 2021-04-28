@@ -552,60 +552,39 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
       // 1s line, don't crash!
       if(sidesector && !getComp(comp_planeshoot))
       {
-         if(z < sidesector->srf.floor.height)
+         for(surf_e surf : SURFS)
          {
-            fixed_t pfrac = FixedDiv(sidesector->srf.floor.height - trace.z,
-                                     trace.aimslope);
+            const surface_t &surface = sidesector->srf[surf];
+            fixed_t curslopez = surface.getZAt(x, y);
+            if(isOuter(surf, z, curslopez))
+            {
+               // Check first against the sky
+               bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
+                     R_IsSkyFlat(surface.pic);
+               // SoM: don't check for portals here anymore
+               if(skycheck || R_IsSkyLikePortalSurface(surface))
+                  return false;
 
-            // SoM: don't check for portals here anymore
-            if(R_IsSkyFlat(sidesector->srf.floor.pic) ||
-               R_IsSkyLikePortalSurface(sidesector->srf.floor))
-            {
-               return false;
-            }
+               fixed_t pfrac = FixedDiv(surface.height - trace.z, trace.aimslope);
 
-            if(demo_version < 333)
-            {
-               fixed_t zdiff = FixedDiv(D_abs(z - sidesector->srf.floor.height),
-                                        D_abs(z - trace.z));
-               x += FixedMul(trace.dl.x - x, zdiff);
-               y += FixedMul(trace.dl.y - y, zdiff);
-            }
-            else
-            {
-               x = trace.dl.x + FixedMul(trace.cos, pfrac);
-               y = trace.dl.y + FixedMul(trace.sin, pfrac);
-            }
+               if(demo_version < 333)
+               {
+                  // no slopes here
+                  fixed_t zdiff = FixedDiv(D_abs(z - surface.height), D_abs(z - trace.z));
+                  x += FixedMul(trace.dl.x - x, zdiff);
+                  y += FixedMul(trace.dl.y - y, zdiff);
+               }
+               else
+               {
+                  x = trace.dl.x + FixedMul(trace.cos, pfrac);
+                  y = trace.dl.y + FixedMul(trace.sin, pfrac);
+               }
 
-            z = sidesector->srf.floor.height;
-            hitplane = true;
-            updown = 0; // haleyjd
-         }
-         else if(z > sidesector->srf.ceiling.height)
-         {
-            fixed_t pfrac = FixedDiv(sidesector->srf.ceiling.height - trace.z, trace.aimslope);
-            if(sidesector->intflags & SIF_SKY ||
-               R_IsSkyLikePortalSurface(sidesector->srf.ceiling)) // SoM
-            {
-               return false;
+               z = surface.height;
+               hitplane = true;
+               updown = surf == surf_floor ? 0 : 1;
+               break;
             }
-
-            if(demo_version < 333)
-            {
-               fixed_t zdiff = FixedDiv(D_abs(z - sidesector->srf.ceiling.height),
-                                        D_abs(z - trace.z));
-               x += FixedMul(trace.dl.x - x, zdiff);
-               y += FixedMul(trace.dl.y - y, zdiff);
-            }
-            else
-            {
-               x = trace.dl.x + FixedMul(trace.cos, pfrac);
-               y = trace.dl.y + FixedMul(trace.sin, pfrac);
-            }
-
-            z = sidesector->srf.ceiling.height;
-            hitplane = true;
-            updown = 1; // haleyjd
          }
       }
 
