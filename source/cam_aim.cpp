@@ -119,8 +119,8 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
       else
       {
          fixed_t topangle, bottomangle;
-         topangle = pitch - ANGLE_1 * MAXPITCHUP;
-         bottomangle = pitch + ANGLE_1 * MAXPITCHDOWN;
+         topangle = pitch - ANGLE_1 * AUTOAIM_PITCH_DEGREES;
+         bottomangle = pitch + ANGLE_1 * AUTOAIM_PITCH_DEGREES;
 
          state.slope.ceiling = finetangent[(ANG90 - topangle) >> ANGLETOFINESHIFT];
          state.slope.floor = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];

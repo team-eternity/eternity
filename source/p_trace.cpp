@@ -220,8 +220,8 @@ fixed_t P_AimLineAttack(Mobj *t1, angle_t angle, fixed_t distance, bool mask)
 
       lookslope   = finetangent[(ANG90 - pitch) >> ANGLETOFINESHIFT];
 
-      topangle    = pitch - ANGLE_1*MAXPITCHUP;
-      bottomangle = pitch + ANGLE_1*MAXPITCHDOWN;
+      topangle    = pitch - ANGLE_1 * AUTOAIM_PITCH_DEGREES;
+      bottomangle = pitch + ANGLE_1 * AUTOAIM_PITCH_DEGREES;
 
       trace.topslope    = finetangent[(ANG90 -    topangle) >> ANGLETOFINESHIFT];
       trace.bottomslope = finetangent[(ANG90 - bottomangle) >> ANGLETOFINESHIFT];
