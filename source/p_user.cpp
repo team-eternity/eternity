@@ -667,7 +667,8 @@ void P_PlayerThink(player_t *player)
             else if(player->pitch > ANGLE_1*MAXPITCHDOWN)
                player->pitch = ANGLE_1*MAXPITCHDOWN;
 
-            if(demo_version <= 402) // Eternity previously had ±32˚ pitch range
+            // Eternity previously had ±32˚ pitch range
+            if(demo_version >= 300 && demo_version <= 402)
                player->pitch = eclamp(player->pitch, -ANGLE_1 * 32, ANGLE_1 * 32);
          }
       }
