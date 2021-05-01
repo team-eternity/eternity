@@ -410,12 +410,21 @@ void V_InitSubScreenModernHUD()
    int subwidth;
    int offset;
    int unscaledw;
+   int unscaledh;
 
    if(vbscreensquarepx.getRealAspectRatio() >= 16 * FRACUNIT / 9 && hud_restrictoverlaywidth)
    {
       subwidth  = vbscreensquarepx.height * 16 / 9;
       offset    = (vbscreensquarepx.width - subwidth) / 2;
       unscaledw = int(round(vbscreensquarepx.unscaledh * 16.0 / 9.0));
+      unscaledh = vbscreensquarepx.unscaledh;
+   }
+   else if(vbscreen.getVirtualAspectRatio() == 4 * FRACUNIT / 3 && vbscreen.getRealAspectRatio() != vbscreen.getVirtualAspectRatio())
+   {
+      offset    = 0;
+      subwidth  = vbscreen.width;
+      unscaledw = vbscreen.unscaledw;
+      unscaledh = vbscreen.unscaledh;
    }
    else
    {
@@ -424,11 +433,12 @@ void V_InitSubScreenModernHUD()
       subwidth  = vbscreen.width;
       offset    = 0;
       unscaledw = int(round(vbscreensquarepx.unscaledh * scaleaspect));
+      unscaledh = vbscreensquarepx.unscaledh;
    }
 
 
    V_InitSubVBuffer(&vbscreenmodernhud, &vbscreen, offset, 0, subwidth, vbscreen.height);
-   V_SetScaling(&vbscreenmodernhud, unscaledw, vbscreensquarepx.unscaledh);
+   V_SetScaling(&vbscreenmodernhud, unscaledw, unscaledh);
 }
 
 //
