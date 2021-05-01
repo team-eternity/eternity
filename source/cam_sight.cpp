@@ -323,8 +323,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 // ioanch 20151229: check sector if it has portals and create cameras for them
 // Returns true if any branching sight check beyond a portal returned true
 //
-bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac, 
-                                   const divline_t &trace) const
+bool CamContext::checkPortalSector(const sector_t *sector, const fixed_t totalfrac,
+                                   const fixed_t partialfrac, const divline_t &trace) const
 {
    for(const surf_e surf : SURFS)
    {
@@ -348,32 +348,34 @@ bool CamContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
 
             // get x and y of position
             fixed_t x, y;
+            fixed_t newtotalfrac = totalfrac;
+            fixed_t newpartialfrac = partialfrac;
             if(linehitz == sightzstart)
             {
                // handle this edge case: put point right on line
-               x = trace.x + FixedMul(trace.dx, partialfrac);
-               y = trace.y + FixedMul(trace.dy, partialfrac);
+               x = trace.x + FixedMul(trace.dx, newpartialfrac);
+               y = trace.y + FixedMul(trace.dy, newpartialfrac);
             }
             else
             {
                fixed_t sectorfrac = FixedDiv(planez - sightzstart, linehitz - sightzstart);
                // update z frac
-               totalfrac = FixedMul(sectorfrac, totalfrac);
+               newtotalfrac = FixedMul(sectorfrac, newtotalfrac);
                // retrieve the xy frac using the origin frac
-               partialfrac = FixedDiv(totalfrac - state.originfrac,
+               newpartialfrac = FixedDiv(newtotalfrac - state.originfrac,
                                       FRACUNIT - state.originfrac);
 
                // HACK: add a unit just to ensure that it enters the sector
-               x = trace.x + FixedMul(partialfrac + 1, trace.dx);
-               y = trace.y + FixedMul(partialfrac + 1, trace.dy);
+               x = trace.x + FixedMul(newpartialfrac + 1, trace.dx);
+               y = trace.y + FixedMul(newpartialfrac + 1, trace.dy);
             }
 
-            if(partialfrac + 1 > 0) // don't allow going back
+            if(newpartialfrac + 1 > 0) // don't allow going back
             {
                State newstate;
                newstate.slope[surf] = slope;
                newstate.slope[!surf] = newslope;
-               newstate.originfrac = totalfrac;
+               newstate.originfrac = newtotalfrac;
                newstate.reclevel = state.reclevel + 1;
 
                bool result = false;

@@ -132,8 +132,8 @@ AimContext::AimContext(const Mobj *t1, angle_t inangle, fixed_t distance,
 //
 // AimContext::checkPortalSector
 //
-bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
-                                   const divline_t &trace)
+bool AimContext::checkPortalSector(const sector_t *sector, const fixed_t totaldist,
+                                   const fixed_t partialfrac, const divline_t &trace)
 {
    for(surf_e surf : SURFS)
    {
@@ -143,31 +143,33 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
       if(isOuter(surf, slope, 0) && surface.pflags & PS_PASSABLE &&
          (newfromid = surface.portal->data.link.toid) != state.groupid)
       {
-         fixed_t linehitz = state.c.z + FixedMul(slope, totalfrac);
+         fixed_t linehitz = state.c.z + FixedMul(slope, totaldist);
          fixed_t planez = P_PortalZ(surface);
          if(isOuter(surf, linehitz, planez))
          {
             // get x and y of position
             v2fixed_t v;
+            fixed_t newtotaldist = totaldist;
+            fixed_t newpartialfrac = partialfrac;
             if(linehitz == state.c.z)
             {
                // handle this edge case: put point right on line
-               v = trace.v + trace.dv.fixedMul(partialfrac);
+               v = trace.v + trace.dv.fixedMul(newpartialfrac);
             }
             else
             {
                // add a unit just to ensure that it enters the sector
                fixed_t fixedratio = FixedDiv(planez - state.c.z, linehitz - state.c.z);
                // update z frac
-               totalfrac = FixedMul(fixedratio, totalfrac);
+               newtotaldist = FixedMul(fixedratio, newtotaldist);
                // retrieve the xy frac using the origin frac
-               partialfrac = FixedDiv(totalfrac - state.origindist, attackrange);
+               newpartialfrac = FixedDiv(newtotaldist - state.origindist, attackrange);
 
-               v = trace.v + trace.dv.fixedMul(partialfrac + 1);
+               v = trace.v + trace.dv.fixedMul(newpartialfrac + 1);
             }
 
             // don't allow if it's going back
-            if(partialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
+            if(newpartialfrac + 1 > 0 && R_PointInSubsector(v)->sector == sector)
             {
                fixed_t outSlope;
                Mobj *outTarget = nullptr;
@@ -177,14 +179,14 @@ bool AimContext::checkPortalSector(const sector_t *sector, fixed_t totalfrac, fi
                newstate.c.x = v.x;
                newstate.c.y = v.y;
                newstate.groupid = newfromid;
-               newstate.origindist = totalfrac;
+               newstate.origindist = newtotaldist;
                // don't allow the opposite slope to keep going forth
                newstate.slope[!surf] = state.slope[!surf];
                if(isOuter(!surf, newstate.slope[!surf], 0))
                   newstate.slope[!surf] = 0;
                newstate.reclevel = state.reclevel + 1;
 
-               if(recurse(newstate, partialfrac, &outSlope, &outTarget, &outDist,
+               if(recurse(newstate, newpartialfrac, &outSlope, &outTarget, &outDist,
                           surface.portal->data.link))
                {
                   if(outTarget && (!linetarget || outDist < targetdist))
