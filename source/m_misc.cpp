@@ -798,8 +798,8 @@ default_t defaults[] =
    DEFAULT_INT("pevent_bfgexpl",&(particleEvents[P_EVENT_BFG_EXPLODE].enabled), nullptr,
                0, 0, 1, default_t::wad_game, "draw particle bfg explosions"),
 
-   DEFAULT_INT("stretchsky", &stretchsky, nullptr, 0, 0, 1, default_t::wad_game,
-               "stretch short sky textures for mlook"),
+   DEFAULT_INT("stretchsky", &r_fillsky, nullptr, 0, 0, 1, default_t::wad_game,
+               "fill short sky textures for mlook"),
 
 #ifdef _SDL_VER   
    DEFAULT_INT("showendoom", &showendoom, nullptr, 1, 0, 1, default_t::wad_game,

@@ -1517,7 +1517,7 @@ VARIABLE_BOOLEAN(flashing_hom, nullptr,             onoff);
 VARIABLE_BOOLEAN(r_precache, nullptr,               onoff);
 VARIABLE_TOGGLE(showpsprites,  nullptr,             yesno);
 VARIABLE_TOGGLE(centerfire, nullptr,                onoff);
-VARIABLE_BOOLEAN(stretchsky, nullptr,               onoff);
+VARIABLE_BOOLEAN(r_fillsky, nullptr,                onoff);
 VARIABLE_BOOLEAN(r_swirl, nullptr,                  onoff);
 VARIABLE_BOOLEAN(general_translucency, nullptr,     onoff);
 VARIABLE_BOOLEAN(autodetect_hom, nullptr,           yesno);
@@ -1590,7 +1590,7 @@ CONSOLE_VARIABLE(r_showhom, autodetect_hom, 0)
    doom_printf("hom detection %s", autodetect_hom ? "on" : "off");
 }
 
-CONSOLE_VARIABLE(r_stretchsky, stretchsky, 0) {}
+CONSOLE_VARIABLE(r_stretchsky, r_fillsky, 0) {}
 CONSOLE_VARIABLE(r_swirl, r_swirl, 0) {}
 
 CONSOLE_VARIABLE(r_trans, general_translucency, 0)

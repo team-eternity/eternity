@@ -59,7 +59,7 @@ struct skytexture_t
    skytexture_t *next; // next skytexture in hash chain
 };
 
-extern int stretchsky;
+extern int r_fillsky;
 
 // init sky at start of level
 void R_StartSky();

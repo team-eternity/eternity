@@ -881,7 +881,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    column.texheight = sky2->height;
 
    // haleyjd: don't stretch textures over 200 tall
-   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+   if(demo_version >= 300 && column.texheight < 200 && r_fillsky)
       column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
    else
       column.step = M_FloatToFixed(view.pspriteystep);
@@ -903,7 +903,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    column.texheight = sky1->height;
 
    // haleyjd: don't stretch textures over 200 tall
-   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+   if(demo_version >= 300 && column.texheight < 200 && r_fillsky)
       column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
    else
       column.step = M_FloatToFixed(view.pspriteystep);
@@ -1027,7 +1027,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       
       // haleyjd:  don't stretch textures over 200 tall
       // 10/07/06: don't stretch skies in old demos (no mlook)
-      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
+      if(demo_version >= 300 && column.texheight < 200 && r_fillsky)
          column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
       else
          column.step = M_FloatToFixed(view.pspriteystep);

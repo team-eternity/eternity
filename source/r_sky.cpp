@@ -42,7 +42,7 @@
 // sky mapping
 //
 
-int stretchsky;
+int r_fillsky;
 
 static int numskyflats;
 
