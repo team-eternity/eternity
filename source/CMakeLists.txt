@@ -79,9 +79,7 @@ function(eternity_target_compile_definitions _TARGET)
    endif()
 
    # Build specific flags.
-   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-      target_compile_definitions("${_TARGET}" PRIVATE _DEBUG RANGECHECK INSTRUMENTED ZONEIDCHECK)
-   endif()
+    target_compile_definitions("${_TARGET}" PRIVATE $<$<CONFIG:Debug>:_DEBUG;RANGECHECK;INSTRUMENTED;ZONEIDCHECK>)
 
    # System specific flags.
    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
