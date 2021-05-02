@@ -38,9 +38,10 @@
 //
 
 static void V_blockDrawer(int x, int y, VBuffer *buffer, 
-                          int width, int height, byte *source)
+                          int width, int height, const byte *source)
 {
-   byte *src, *dest;
+   const byte *src;
+   byte *dest;
    int cx1, cy1, cx2, cy2, cw, ch;
    int dx, dy;
 
@@ -90,9 +91,10 @@ static void V_blockDrawer(int x, int y, VBuffer *buffer,
 }
 
 static void V_blockDrawerS(int x, int y, VBuffer *buffer, 
-                           int width, int height, byte *source)
+                           int width, int height, const byte *source)
 {
-   byte *src, *dest, *col;
+   const byte *src;
+   byte *dest, *col;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
@@ -176,9 +178,10 @@ static void V_blockDrawerS(int x, int y, VBuffer *buffer,
 
 static void V_maskedBlockDrawer(int x, int y, VBuffer *buffer, 
                                 int width, int height, int srcpitch,
-                                byte *source, byte *cmap)
+                                const byte *source, byte *cmap)
 {
-   byte *src, *dest;
+   const byte *src;
+   byte *dest;
    int cx1, cy1, cx2, cy2, cw, ch;
    int dx, dy, i;
 
@@ -228,9 +231,10 @@ static void V_maskedBlockDrawer(int x, int y, VBuffer *buffer,
 
 static void V_maskedBlockDrawerS(int x, int y, VBuffer *buffer, 
                                  int width, int height, int srcpitch,
-                                 byte *source, byte *cmap)
+                                 const byte *source, byte *cmap)
 {
-   byte *src, *dest, *col;
+   const byte *src;
+   byte *dest, *col;
    fixed_t xstep, ystep, xfrac, yfrac;
    int xtex, ytex, w, h, i, realx, realy;
    int cx1, cy1, cx2, cy2, cw, ch;
@@ -503,7 +507,7 @@ void V_ColorBlockTL(VBuffer *buffer, byte color, int x, int y,
 //
 // Works for any video mode.
 //
-static void V_tileBlock64(VBuffer *buffer, byte *src)
+static void V_tileBlock64(VBuffer *buffer, const byte *src)
 {
    byte *col, *dest = buffer->data;
 
@@ -522,7 +526,7 @@ static void V_tileBlock64(VBuffer *buffer, byte *src)
 //
 // General scaling
 //
-static void V_tileBlock64S(VBuffer *buffer, byte *src)
+static void V_tileBlock64S(VBuffer *buffer, const byte *src)
 {
    byte *dest, *col;
    fixed_t xstep, ystep, xfrac = 0, yfrac;
@@ -562,7 +566,7 @@ static void V_tileBlock64S(VBuffer *buffer, byte *src)
 // Fill a VBuffer with a texture.
 //
 
-void V_FillBuffer(VBuffer *buffer, byte *src, int texw, int texh)
+void V_FillBuffer(VBuffer *buffer, const byte *src, int texw, int texh)
 {
    byte    *dest = buffer->data, *col;
    int      w = buffer->width;

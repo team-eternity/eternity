@@ -1542,9 +1542,9 @@ const char *level_error = nullptr;
 //
 // R_GetRawColumn
 //
-byte *R_GetRawColumn(int tex, int32_t col)
+const byte *R_GetRawColumn(int tex, int32_t col)
 {
-   texture_t  *t = textures[tex];
+   const texture_t *t = textures[tex];
 
    // haleyjd 05/28/14: support non-power-of-two widths
    if(t->flags & TF_WIDTHNP2)
@@ -1562,9 +1562,9 @@ byte *R_GetRawColumn(int tex, int32_t col)
 //
 // R_GetMaskedColumn
 //
-texcol_t *R_GetMaskedColumn(int tex, int32_t col)
+const texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 {
-   texture_t *t = textures[tex];
+   const texture_t *t = textures[tex];
    
    if(!t->bufferalloc)
       R_CacheTexture(tex);
@@ -1576,9 +1576,9 @@ texcol_t *R_GetMaskedColumn(int tex, int32_t col)
 //
 // R_GetLinearBuffer
 //
-byte *R_GetLinearBuffer(int tex)
+const byte *R_GetLinearBuffer(int tex)
 {
-   texture_t *t = textures[tex];
+   const texture_t *t = textures[tex];
    
    if(!t->bufferalloc)
       R_CacheTexture(tex);

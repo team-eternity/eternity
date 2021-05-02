@@ -107,7 +107,7 @@ static int V_FontLineWidth(vfont_t *font, const unsigned char *s)
 void V_FontWriteTextEx(const vtextdraw_t &textdraw)
 {
    patch_t *patch = nullptr;   // patch for current character -OR-
-   byte    *src   = nullptr;   // source char for linear font
+   const byte *src   = nullptr;   // source char for linear font
    int     w;               // width of patch
    
    const unsigned char *ch; // pointer to string

@@ -565,7 +565,7 @@ void V_Init()
 // Tiles a 64 x 64 flat over the entirety of the provided VBuffer
 // surface. Used by menus, intermissions, finales, etc.
 //
-void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
+void V_DrawBackgroundCached(const byte *src, VBuffer *back_dest)
 {
    back_dest->TileBlock64(back_dest, src);
 }
@@ -576,7 +576,7 @@ void V_DrawBackgroundCached(byte *src, VBuffer *back_dest)
 void V_DrawBackground(const char *patchname, VBuffer *back_dest)
 {
    int         tnum = R_FindFlat(patchname) - flatstart;
-   byte        *src;
+   const byte *src;
    
    // SoM: Extra protection, I don't think this should ever actually happen.
    if(tnum < 0 || tnum >= numflats)   
@@ -597,7 +597,7 @@ byte *R_DistortedFlat(int, bool);
 //
 void V_DrawDistortedBackground(const char *patchname, VBuffer *back_dest)
 {
-   byte *src = R_DistortedFlat(R_FindFlat(patchname), true);
+   const byte *src = R_DistortedFlat(R_FindFlat(patchname), true);
    
    back_dest->TileBlock64(back_dest, src);
 }

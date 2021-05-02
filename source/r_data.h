@@ -127,11 +127,11 @@ struct texture_t
 // SoM: This is replaced with two functions. For solid walls/skies, we only 
 // need the raw column data (direct buffer ptr). For masked mid-textures, we
 // need to return columns from the column list
-byte     *R_GetRawColumn(int tex, int32_t col);
-texcol_t *R_GetMaskedColumn(int tex, int32_t col);
+const byte *R_GetRawColumn(int tex, int32_t col);
+const texcol_t *R_GetMaskedColumn(int tex, int32_t col);
 
 // SoM: This function returns the linear texture buffer (recache if needed)
-byte *R_GetLinearBuffer(int tex);
+const byte *R_GetLinearBuffer(int tex);
 
 // Cache a given texture
 // Returns the texture for chaining.
