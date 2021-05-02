@@ -98,7 +98,7 @@ void R_StartSky()
 //
 
 // the sky texture hash table
-skytexture_t *skytextures[NUMSKYCHAINS];
+static skytexture_t *skytextures[NUMSKYCHAINS];
 
 #define skytexturekey(a) ((a) % NUMSKYCHAINS)
 

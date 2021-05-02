@@ -59,9 +59,6 @@ struct skytexture_t
    skytexture_t *next; // next skytexture in hash chain
 };
 
-// the sky texture hashtable
-extern skytexture_t *skytextures[NUMSKYCHAINS];
-
 extern int stretchsky;
 
 // init sky at start of level
