@@ -24,6 +24,7 @@
 //-----------------------------------------------------------------------------
 
 #include <algorithm>
+#include <random>
 #include "z_zone.h"
 #include "i_system.h"
 
@@ -508,7 +509,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
           !strcasecmp(tt.name, "sky3") || !strcasecmp(tt.name, "sky4")) && tt.patchcount == 1)
       {
          // TODO: use the right height to fill the screen
-         tt.height = 200;
+         tt.height = 256;
       }
 
       texture = textures[texnum] = 
@@ -529,7 +530,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
             tt.patchcount == 1)
          {
             // TODO: fit the correct origin
-            tp.originy = 72;
+            tp.originy = 128;
          }
 
          component->originx = tp.originx;
@@ -1047,12 +1048,13 @@ static void R_extendSkyTexture(texture_t *tex)
    // Options:
    // regular, rot90, rot180, rot270 + mirrored (8)
 
-   auto loadSquare = [&square, tex](int sqx)
+   auto loadSquare = [&square, tex](int sqx, int sqy)
    {
       const byte *texdata = tex->bufferdata;
       int texx = 16 * sqx;
+      int texy = 128 + 16 * sqy;
       for(int i = 0; i < 16; ++i)
-         memcpy(square + 16 * i, texdata + 72 + (texx + i) * tex->height, 16);
+         memcpy(square + 16 * i, texdata + texy + (texx + i) * tex->height, 16);
    };
 
    bool drawnslots[16] = {};
@@ -1062,7 +1064,7 @@ static void R_extendSkyTexture(texture_t *tex)
       int texx = 16 * targsqx;
       for(int i = 0; i < 16; ++i)
       {
-         memcpy(texdata + 56 + (texx + i) * tex->height, square + 16 * i, 16);
+         memcpy(texdata + 112 + (texx + i) * tex->height, square + 16 * i, 16);
          drawnslots[targsqx] = true;
       }
    };
@@ -1081,7 +1083,7 @@ static void R_extendSkyTexture(texture_t *tex)
       for(int x = 0; x < 16; ++x)
       {
          byte squareidx = square[15 + 16 * x];
-         byte texidx = texdata[72 + (texx + x) * tex->height];
+         byte texidx = texdata[128 + (texx + x) * tex->height];
          errsum += pow((double)playpal[3 * squareidx] - playpal[3 * texidx], 2);
          errsum += pow((double)playpal[3 * squareidx + 1] - playpal[3 * texidx + 1], 2);
          errsum += pow((double)playpal[3 * squareidx + 2] - playpal[3 * texidx + 2], 2);
@@ -1093,7 +1095,7 @@ static void R_extendSkyTexture(texture_t *tex)
          for(int y = 0; y < 16; ++y)
          {
             byte squareidx = square[y];
-            byte neighidx = texdata[56 + (neighsqx + 15) * tex->height + y];
+            byte neighidx = texdata[112 + (neighsqx + 15) * tex->height + y];
             errsum += pow((double)playpal[3 * squareidx] - playpal[3 * neighidx], 2);
             errsum += pow((double)playpal[3 * squareidx + 1] - playpal[3 * neighidx + 1], 2);
             errsum += pow((double)playpal[3 * squareidx + 2] - playpal[3 * neighidx + 2], 2);
@@ -1106,7 +1108,7 @@ static void R_extendSkyTexture(texture_t *tex)
          for(int y = 0; y < 16; ++y)
          {
             byte squareidx = square[y + 15 * 16];
-            byte neighidx = texdata[56 + neighsqx * tex->height + y];
+            byte neighidx = texdata[112 + neighsqx * tex->height + y];
             errsum += pow((double)playpal[3 * squareidx] - playpal[3 * neighidx], 2);
             errsum += pow((double)playpal[3 * squareidx + 1] - playpal[3 * neighidx + 1], 2);
             errsum += pow((double)playpal[3 * squareidx + 2] - playpal[3 * neighidx + 2], 2);
@@ -1132,7 +1134,7 @@ static void R_extendSkyTexture(texture_t *tex)
    for(int sqx = 0; sqx < 16; ++sqx)
    {
       // Pick a square
-      loadSquare(sqx);
+      loadSquare(M_Random() % 16, M_Random() % 8);
 
       // Put the variants
       memcpy(squares[0], square, 16 * 16);
@@ -1209,12 +1211,48 @@ static void R_extendSkyTexture2(texture_t *tex, int basey)
    }
 }
 
+static void R_extendSkyTexture3(texture_t *tex, int targy, int colh)
+{
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   int indexmap[256];
+   for(int i = 0; i < 256; ++i)
+      indexmap[i] = i;
+
+   byte *texdata = tex->bufferdata;
+   std::random_device rd;
+   std::mt19937 g(rd());
+   for(int tx = 0; tx < 256; ++tx)
+   {
+      double minErr = DBL_MAX;
+      int minCx = 0;
+      std::shuffle(indexmap, indexmap + 256, rd);
+      for(int idx = 0; idx < 256; ++idx)
+      {
+         int cx = indexmap[idx];
+         byte bottom = texdata[128 + colh - 1 + cx * tex->height];
+         byte top = texdata[targy + colh + tx * tex->height];
+         double errsum = 0;
+         errsum += pow((double)playpal[3 * bottom]     - playpal[3 * top], 2);
+         errsum += pow((double)playpal[3 * bottom + 1] - playpal[3 * top + 1], 2);
+         errsum += pow((double)playpal[3 * bottom + 2] - playpal[3 * top + 2], 2);
+         if(errsum < minErr)
+         {
+            minErr = errsum;
+            minCx = cx;
+         }
+      }
+      memcpy(texdata + targy + tx * tex->height, texdata + targy + colh + minCx * tex->height, colh);
+   }
+}
+
 static void R_applyGaussianFilter(texture_t *tex, int miny, int maxy)
 {
    AutoPalette pal(wGlobalDir);
    const byte *playpal = pal.get();
 
-   double r[3], g[3], b[3];
+   double r[9], g[9], b[9];
    double fr, fg, fb;
 
    auto getRGB = [tex, playpal](const byte *buf, int x, int y, double &r, double &g, double &b)
@@ -1254,14 +1292,22 @@ static void R_applyGaussianFilter(texture_t *tex, int miny, int maxy)
       {
          int prevx = x == 0 ? 255 : x - 1;
          int nextx = x == 255 ? 0 : x + 1;
+         int prevy = y <= miny ? y : y - 1;
+         int nexty = y + 1;
 
-         getRGB(tcopy, prevx, y, r[0], g[0], b[0]);
-         getRGB(tcopy, x, y, r[1], g[1], b[1]);
-         getRGB(tcopy, nextx, y, r[2], g[2], b[2]);
+         getRGB(tcopy, prevx, prevy, r[0], g[0], b[0]);
+         getRGB(tcopy, x, prevy, r[1], g[1], b[1]);
+         getRGB(tcopy, nextx, prevy, r[2], g[2], b[2]);
+         getRGB(tcopy, prevx, y, r[3], g[3], b[3]);
+         getRGB(tcopy, x, y, r[4], g[4], b[4]);
+         getRGB(tcopy, nextx, y, r[5], g[5], b[5]);
+         getRGB(tcopy, prevx, nexty, r[6], g[6], b[6]);
+         getRGB(tcopy, x, nexty, r[7], g[7], b[7]);
+         getRGB(tcopy, nextx, nexty, r[8], g[8], b[8]);
 
-         fr = (r[0] + 2 * r[1] + r[2]) / 4;
-         fg = (g[0] + 2 * g[1] + g[2]) / 4;
-         fb = (b[0] + 2 * b[1] + b[2]) / 4;
+         fr = (r[0] + 2 * r[1] + r[2] + 2 * r[3] + 4 * r[4] + 2 * r[5] + r[6] + 2 * r[7] + r[8]) / 16;
+         fg = (g[0] + 2 * g[1] + g[2] + 2 * g[3] + 4 * g[4] + 2 * g[5] + g[6] + 2 * g[7] + g[8]) / 16;
+         fb = (b[0] + 2 * b[1] + b[2] + 2 * b[3] + 4 * b[4] + 2 * b[5] + b[6] + 2 * b[7] + b[8]) / 16;
 
          int closest = findClosestIndex(fr, fg, fb);
          tex->bufferdata[x * tex->height + y] = (byte)closest;
@@ -1271,19 +1317,10 @@ static void R_applyGaussianFilter(texture_t *tex, int miny, int maxy)
    efree(tcopy);
 }
 
-static void R_applyMedianFilter(texture_t *tex, int miny, int maxy)
+static void R_applyMedianFilter(texture_t *tex, int miny, int maxy, int index)
 {
    AutoPalette pal(wGlobalDir);
    const byte *playpal = pal.get();
-
-//   auto getRGB = [tex, playpal](const byte *buf, int x, int y, double &r, double &g, double &b)
-//   {
-//      int h = tex->height;
-//      byte idx = buf[x * h + y];
-//      r = playpal[3 * idx];
-//      g = playpal[3 * idx + 1];
-//      b = playpal[3 * idx + 2];
-//   };
 
    byte *tcopy = ecalloc(byte *, 1, tex->width * tex->height);
    memcpy(tcopy, tex->bufferdata, tex->width * tex->height);
@@ -1303,13 +1340,9 @@ static void R_applyMedianFilter(texture_t *tex, int miny, int maxy)
    {
       for(int x = 0; x < 256; ++x)
       {
-         if(y == 0)
-            numcomps = 6;
-         else
-            numcomps = 9;
          int prevx = x == 0 ? 255 : x - 1;
          int nextx = x == 255 ? 0 : x + 1;
-         if(y == 0)
+         if(y == 0 || true)
          {
             components[0] = tcopy[y + prevx * tex->height];
             components[1] = tcopy[y + x * tex->height];
@@ -1317,6 +1350,7 @@ static void R_applyMedianFilter(texture_t *tex, int miny, int maxy)
             components[3] = tcopy[y + 1 + prevx * tex->height];
             components[4] = tcopy[y + 1 + x * tex->height];
             components[5] = tcopy[y + 1 + nextx * tex->height];
+            numcomps = 6;
          }
          else
          {
@@ -1329,6 +1363,7 @@ static void R_applyMedianFilter(texture_t *tex, int miny, int maxy)
             components[6] = tcopy[y + 1 + prevx * tex->height];
             components[7] = tcopy[y + 1 + x * tex->height];
             components[8] = tcopy[y + 1 + nextx * tex->height];
+            numcomps = 9;
          }
 
          std::sort(components, components + numcomps, [&getBrightness](byte c1, byte c2)
@@ -1336,12 +1371,201 @@ static void R_applyMedianFilter(texture_t *tex, int miny, int maxy)
             return getBrightness(c1) < getBrightness(c2);
          });
 
+         texdata[y + x * tex->height] = components[index];
+      }
+   }
+
+   efree(tcopy);
+}
+
+static void R_applyMedianFilterHorizontal(texture_t *tex, int miny, int maxy)
+{
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   byte *tcopy = ecalloc(byte *, 1, tex->width * tex->height);
+   memcpy(tcopy, tex->bufferdata, tex->width * tex->height);
+
+   byte components[9];
+   int numcomps = 9;
+
+   byte *texdata = tex->bufferdata;
+
+   auto getBrightness = [playpal](byte value)
+   {
+      return pow(playpal[3 * value], 2) + pow(playpal[3 * value + 1], 2) +
+         pow(playpal[3 * value + 2], 2);
+   };
+
+   for(int y = miny; y < maxy; ++y)
+   {
+      for(int x = 0; x < 256; ++x)
+      {
+         numcomps = 3;
+         int prevx = x == 0 ? 255 : x - 1;
+         int nextx = x == 255 ? 0 : x + 1;
+         components[0] = tcopy[y + prevx * tex->height];
+         components[1] = tcopy[y + x * tex->height];
+         components[2] = tcopy[y + nextx * tex->height];
+
+         std::sort(components, components + numcomps, [&getBrightness](byte c1, byte c2)
+                   {
+                      return getBrightness(c1) < getBrightness(c2);
+                   });
+
          texdata[y + x * tex->height] = components[numcomps / 2];
       }
    }
 
    efree(tcopy);
 }
+
+static void R_extendToAverage(texture_t *tex)
+{
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   byte *texdata = tex->bufferdata;
+
+   double rtot = 0, gtot = 0, btot = 0;
+
+   for(int x = 0; x < 256; ++x)
+   {
+      byte idx = texdata[128 + x * tex->height];
+      rtot += playpal[3 * idx];
+      gtot += playpal[3 * idx + 1];
+      btot += playpal[3 * idx + 2];
+   }
+   rtot /= 256;
+   gtot /= 256;
+   btot /= 256;
+
+   auto findClosestIndex = [playpal](double r, double g, double b, byte already)
+   {
+      double minErr = DBL_MAX;
+      int minIdx = 0;
+      for(int i = 0; i < 256; ++i)
+      {
+         if((byte)i == already)
+            continue;
+         double err = 0;
+         err += pow(r - playpal[3 * i], 2);
+         err += pow(g - playpal[3 * i + 1], 2);
+         err += pow(b - playpal[3 * i + 2], 2);
+         if(err < minErr)
+         {
+            minErr = err;
+            minIdx = i;
+         }
+      }
+      return minIdx;
+   };
+
+   for(int y = 127; y >= 0; --y)
+   {
+      for(int x = 0; x < 256; ++x)
+      {
+         double r, g, b;
+         byte belowIdx = texdata[y + 1 + x * tex->height];
+         r = playpal[3 * belowIdx];
+         g = playpal[3 * belowIdx + 1];
+         b = playpal[3 * belowIdx + 2];
+
+         double rmean, gmean, bmean;
+         rmean = (7 * r + rtot) / 8;
+         gmean = (7 * g + gtot) / 8;
+         bmean = (7 * b + btot) / 8;
+
+         byte setIdx = findClosestIndex(rmean, gmean, bmean, belowIdx);
+         texdata[y + x * tex->height] = setIdx;
+      }
+   }
+}
+
+static void R_extendRandomly(texture_t *tex)
+{
+   byte *texdata = tex->bufferdata;
+   for(int y = 127; y >= 0; --y)
+   {
+      for(int x = 0; x < 256; ++x)
+      {
+         int prevx = x == 0 ? 255 : x - 1;
+         int nextx = x == 255 ? 0 : x + 1;
+
+         byte vals[3];
+         vals[0] = texdata[y + 1 + (prevx) % 256 * tex->height];
+         vals[1] = texdata[y + 1 + (x) % 256 * tex->height];
+         vals[2] = texdata[y + 1 + (nextx) % 256 * tex->height];
+
+         texdata[y + x * tex->height] = vals[M_Random() % 3];
+      }
+   }
+}
+
+static void R_extendBlurry(texture_t *tex)
+{
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   auto findClosestIndex = [playpal](double r, double g, double b)
+   {
+      double minErr = DBL_MAX;
+      int minIdx = 0;
+      for(int i = 0; i < 256; ++i)
+      {
+         double err = 0;
+         err += pow(r - playpal[3 * i], 2);
+         err += pow(g - playpal[3 * i + 1], 2);
+         err += pow(b - playpal[3 * i + 2], 2);
+         if(err < minErr)
+         {
+            minErr = err;
+            minIdx = i;
+         }
+      }
+      return minIdx;
+   };
+
+   auto getBrightness = [playpal](byte value)
+   {
+      return pow(playpal[3 * value], 2) + pow(playpal[3 * value + 1], 2) +
+         pow(playpal[3 * value + 2], 2);
+   };
+
+   byte *texdata = tex->bufferdata;
+   for(int y = 127; y >= 0; --y)
+   {
+      for(int x = 0; x < 256; ++x)
+      {
+         int prevx = x == 0 ? 255 : x - 1;
+         int nextx = x == 255 ? 0 : x + 1;
+
+         byte vals[3];
+         vals[0] = texdata[y + 1 + (prevx) % 256 * tex->height];
+         vals[1] = texdata[y + 1 + (x) % 256 * tex->height];
+         vals[2] = texdata[y + 1 + (nextx) % 256 * tex->height];
+
+         std::sort(vals, vals + 3, [&getBrightness](byte a, byte b)
+                   {
+                      return getBrightness(a) < getBrightness(b);
+         });
+
+         //double br = (double)playpal[3 * vals[0]] + playpal[3 * vals[1]] + playpal[3 * vals[2]];
+         //double bg = (double)playpal[3 * vals[0] + 1] + playpal[3 * vals[1] + 1] + playpal[3 * vals[2] + 1];
+         //double bb = (double)playpal[3 * vals[0] + 2] + playpal[3 * vals[1] + 2] + playpal[3 * vals[2] + 2];
+         //br /= 3;
+         //bg /= 3;
+         //bb /= 3;
+
+         //byte closest = findClosestIndex(br, bg, bb);
+
+         // 000112
+         static const int mapper[6] = { 0, 0, 0, 1, 1, 2 };
+         texdata[y + x * tex->height] = vals[0];
+      }
+   }
+}
+
 
 //
 // R_CacheTexture
@@ -1406,17 +1630,39 @@ texture_t *R_CacheTexture(int num)
        !strcasecmp(tex->name, "sky3") || !strcasecmp(tex->name, "sky4")) &&
       tex->ccount == 1)
    {
-      R_extendSkyTexture2(tex, 72);
-      R_extendSkyTexture2(tex, 56);
-      R_extendSkyTexture2(tex, 40);
-//      R_extendSkyTexture(tex);
-//      R_applyMedianFilter(tex, 56, 72);
-//      R_applyMedianFilter(tex, 24, 72);
-//      R_applyMedianFilter(tex, 24, 72);
-      R_applyMedianFilter(tex, 24, 72);
-      R_applyGaussianFilter(tex, 24, 72);
-      R_applyGaussianFilter(tex, 24, 56);
-      R_applyGaussianFilter(tex, 24, 40);
+      static const int SZ = 8;
+      int index = 2;
+      for(int y = SZ; y <= 128; y += SZ)
+      {
+         R_extendSkyTexture3(tex, 128 - y, SZ);
+         //R_applyMedianFilter(tex, 128 - y, 128 - y + SZ, 1);
+         R_applyGaussianFilter(tex, 128 - y, 128 - y + SZ);
+      }
+            
+      //R_extendSkyTexture3(tex, 96, 32);
+      //R_extendSkyTexture3(tex, 64, 32);
+      //R_extendSkyTexture3(tex, 32, 32);
+      //R_extendSkyTexture3(tex, 0, 128);
+
+      //R_extendSkyTexture(tex);
+      //R_applyMedianFilter(tex, 0, 128);
+//      R_applyMedianFilter(tex, 96, 128);
+//      R_applyMedianFilter(tex, 80, 128);
+      //R_applyMedianFilterHorizontal(tex, 0, 128);
+      //R_applyMedianFilterHorizontal(tex, 0, 128);
+      //R_applyMedianFilterHorizontal(tex, 0, 128);
+      //R_applyGaussianFilter(tex, 80, 128);
+      //R_applyGaussianFilter(tex, 80, 112);
+      //R_applyGaussianFilter(tex, 80, 96);
+      
+      //R_applyGaussianFilter(tex, 0, 96);
+      //R_applyGaussianFilter(tex, 0, 64);
+      //R_applyGaussianFilter(tex, 0, 32);
+      //R_extendToAverage(tex);
+      //R_extendBlurry(tex);
+
+      //R_applyGaussianFilter(tex, 0, 128);
+      //R_applyGaussianFilter(tex, 0, 128);
    }
 
    // Finish texture
