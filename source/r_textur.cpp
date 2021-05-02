@@ -1628,7 +1628,7 @@ void texture_t::makePaddedSky()
    });
 
    // lower median actually
-   rgb_t medianrgb = topcolors[topcolors.getLength() / 2];
+   rgb_t medianrgb = topcolors[topcolors.getLength() / 3];
 
    // We now have the average colour.
    byte averageColor = V_FindBestColor(playpal, medianrgb.r, medianrgb.g, medianrgb.b);
