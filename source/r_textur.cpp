@@ -23,15 +23,18 @@
 //
 //-----------------------------------------------------------------------------
 
+#include <algorithm>
 #include "z_zone.h"
 #include "i_system.h"
 
+#include "autopalette.h"
 #include "c_io.h"
 #include "doomstat.h"
 #include "d_gi.h"
 #include "d_io.h"
 #include "d_main.h"
 #include "e_hash.h"
+#include "m_collection.h"
 #include "m_compare.h"
 #include "m_swap.h"
 #include "p_setup.h"
@@ -1584,6 +1587,101 @@ const byte *R_GetLinearBuffer(int tex)
       R_CacheTexture(tex);
 
    return t->bufferdata;
+}
+
+//
+// Builds a sky extension buffer if not made already
+//
+void texture_t::makePaddedSky()
+{
+   if(skypaddingbuffer)
+      return;
+   I_Assert(bufferalloc && bufferdata, "Bufferalloc or bufferdata not allocated\n");
+   I_Assert(width > 0, "Invalid width %d\n", width);
+
+   struct rgb_t
+   {
+      int r, g, b;
+      inline int sum() { return r*r + g*g + b*b; }
+   };
+
+   AutoPalette pal(wGlobalDir);
+   const byte *playpal = pal.get();
+
+   PODCollection<rgb_t> topcolors;
+
+   // Determine the average colour of the top row
+   int x;
+   for(x = 0; x < width; ++x)
+   {
+      rgb_t rgb;
+      int palindex = 3 * bufferdata[x * height];
+      rgb.r = playpal[palindex];
+      rgb.g = playpal[palindex + 1];
+      rgb.b = playpal[palindex + 2];
+      topcolors.add(rgb);
+   }
+
+   std::sort(topcolors.begin(), topcolors.end(), [](rgb_t c1, rgb_t c2)
+             {
+      return c1.sum() < c2.sum();
+   });
+
+   // lower median actually
+   rgb_t medianrgb = topcolors[topcolors.getLength() / 2];
+
+   // We now have the average colour.
+   byte averageColor = V_FindBestColor(playpal, medianrgb.r, medianrgb.g, medianrgb.b);
+
+   int extraHeight = height >= 200 ? 60 : 160;
+   paddedskyheight = height + extraHeight;
+   skypaddingbuffer = emalloctag(byte *, width * paddedskyheight, PU_RENDERER, nullptr);
+
+   int br, bg, bb;
+
+
+   for(int x = 0; x < width; ++x)
+   {
+      memcpy(skypaddingbuffer + extraHeight + x * paddedskyheight, bufferdata + x * height,
+             height);
+      for(int y = extraHeight - 1; y >= 0; --y)
+      {
+         byte bottomColor = skypaddingbuffer[y + 1 + x * paddedskyheight];
+//         byte bottomleftColor = skypaddingbuffer[y + 1 +
+//                                                 (x + width - 1) % width * paddedskyheight];
+//         byte bottomrightColor = skypaddingbuffer[y + 1 +
+//                                                  (x + 1) % width * paddedskyheight];
+         int bottompalindex = 3 * bottomColor;
+//         int bottomleftpalindex = 3 * bottomleftColor;
+//         int bottomrightpalindex = 3 * bottomrightColor;
+         br = (3 * playpal[bottompalindex] + medianrgb.r) / 4;
+         bg = (3 * playpal[bottompalindex + 1] + medianrgb.g) / 4;
+         bb = (3 * playpal[bottompalindex + 2] + medianrgb.b) / 4;
+//         br = (playpal[bottompalindex] + playpal[bottomleftpalindex] + playpal[bottomrightpalindex] + medianrgb.r) / 4;
+//         bg = (playpal[bottompalindex + 1] + playpal[bottomleftpalindex + 1] + playpal[bottomrightpalindex + 1] + medianrgb.g) / 4;
+//         bb = (playpal[bottompalindex + 2] + playpal[bottomleftpalindex + 2] + playpal[bottomrightpalindex + 2] + medianrgb.b) / 4;
+         byte fadedColor = V_FindBestColor(playpal, br, bg, bb);
+         if(fadedColor == bottomColor)
+         {
+            memset(skypaddingbuffer + x * paddedskyheight, averageColor, y + 1);
+            break;
+         }
+         skypaddingbuffer[y + x * paddedskyheight] = fadedColor;
+      }
+   }
+}
+
+//
+// Obtain the padded sky column
+//
+const byte *texture_t::getPaddedSkyColumn(int32_t col) const
+{
+   I_Assert(!!skypaddingbuffer, "Missing sky padding!\n");
+   if(flags & TF_WIDTHNP2)
+      col = (col % width) * paddedskyheight;
+   else
+      col = (col & widthmask) * paddedskyheight;
+   return skypaddingbuffer + col;
 }
 
 //

@@ -118,12 +118,11 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    // 02/11/04: only if patch height is greater than texture height
    // should we use it
    newSky->texturenum = texturenum;
-   newSky->height = textures[texturenum]->height;
-   
-   if(newSky->height >= 200)
-      newSky->texturemid = 200*FRACUNIT;
-   else
-      newSky->texturemid = 100*FRACUNIT;
+
+   textures[texturenum]->makePaddedSky();
+
+   newSky->height = textures[texturenum]->paddedskyheight;
+   newSky->texturemid = 260*FRACUNIT;
 
    key = skytexturekey(texturenum);
 

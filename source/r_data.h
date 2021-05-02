@@ -113,12 +113,17 @@ struct texture_t
    texcol_t   **columns;     // SoM: width length list of columns
    byte       *bufferalloc;   // ioanch: allocate this one with a leading padding for safety
    byte       *bufferdata;    // SoM: Linear buffer the texture occupies (ioanch: points to real data)
+   byte *skypaddingbuffer;  // needed to extend skies
+   int paddedskyheight;   // extra vertical space for the extension
    
    // New texture system can put either textures or flats (or anything, really)
    // into a texture, so the old patches idea has been scrapped for 'graphics'
    // which can be either patch graphics or linear graphics.
    int16_t        ccount;
    tcomponent_t   components[1]; // back-to-front into the cached texture.
+
+   void makePaddedSky();
+   const byte *getPaddedSkyColumn(int32_t col) const;
 };
 
 // Retrieve column data for span blitting.

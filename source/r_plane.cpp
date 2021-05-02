@@ -1042,8 +1042,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
          if(column.y1 <= column.y2)
          {
-            column.source = R_GetRawColumn(texture,
-               (((an + xtoviewangle[x])^flip) >> ANGLETOSKYSHIFT) + offset);
+            column.source = textures[texture]->getPaddedSkyColumn((((an + xtoviewangle[x]) ^ flip) >> ANGLETOSKYSHIFT) + offset);
             
             r_column_engine->DrawColumn(column);
          }
