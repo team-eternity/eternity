@@ -121,8 +121,11 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
 
    textures[texturenum]->makePaddedSky();
 
-   newSky->height = textures[texturenum]->paddedskyheight;
-   newSky->texturemid = 260*FRACUNIT;
+   newSky->padded_height = textures[texturenum]->paddedskyheight;
+   if(textures[texturenum]->height >= 200)
+      newSky->unpadded_texturemid = 200*FRACUNIT;
+   else
+      newSky->unpadded_texturemid = 100*FRACUNIT;
 
    key = skytexturekey(texturenum);
 

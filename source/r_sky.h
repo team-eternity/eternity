@@ -54,9 +54,16 @@ struct skyflat_t
 struct skytexture_t
 {
    int     texturenum; // hash key
-   int     height;     // true height of texture
-   fixed_t texturemid; // vertical offset
+   int     padded_height;     // true height of texture
+   fixed_t unpadded_texturemid; // vertical offset
    skytexture_t *next; // next skytexture in hash chain
+};
+
+enum
+{
+   // "texturemid" for the padded (filled) sky.
+   // 200 = 100 (half screen) + 160 (look above -- was 100 before)
+   PADDED_SKY_TEXTUREMID = 260 * FRACUNIT,
 };
 
 extern int r_fillsky;

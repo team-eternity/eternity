@@ -2027,7 +2027,7 @@ static menuitem_t mn_mouse_accel_and_mlook_items[] =
    {it_toggle,     "Enable mouselook",    "allowmlook" },
    {it_toggle,     "Always mouselook",    "alwaysmlook"},
    {it_binding,    "Bind mouselook key",  "mlook"      },
-   {it_toggle,     "Fill short skies",    "r_stretchsky"},
+   {it_toggle,     "Pad short skies",     "r_stretchsky"},
    {it_end}
 };
 

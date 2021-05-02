@@ -877,8 +877,8 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
       column.colormap = context.fullcolormap;
       
    // first draw sky 2 with R_DrawColumn (unmasked)
-   column.texmid    = sky2->texturemid;      
-   column.texheight = sky2->height;
+   column.texmid    = sky2->unpadded_texturemid;
+   column.texheight = sky2->padded_height;
 
    // haleyjd: don't stretch textures over 200 tall
    if(demo_version >= 300 && column.texheight < 200 && r_fillsky)
@@ -899,8 +899,8 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    }
       
    // now draw sky 1 with R_DrawNewSkyColumn (masked)
-   column.texmid = sky1->texturemid;
-   column.texheight = sky1->height;
+   column.texmid = sky1->unpadded_texturemid;
+   column.texheight = sky1->padded_height;
 
    // haleyjd: don't stretch textures over 200 tall
    if(demo_version >= 300 && column.texheight < 200 && r_fillsky)
@@ -988,8 +988,11 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
          an += s->textureoffset;
          
          // Vertical offset allows careful sky positioning.        
-         
-         column.texmid = s->rowoffset - 28*FRACUNIT;
+
+         if(r_fillsky)
+            column.texmid = s->rowoffset + PADDED_SKY_TEXTUREMID;
+         else
+            column.texmid = s->rowoffset - 28*FRACUNIT;
          
          // We sometimes flip the picture horizontally.
          //
@@ -1008,7 +1011,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       {
          texture       = skyflat->texture;            // Default texture
          sky           = R_GetSkyTexture(texture);    // haleyjd 08/30/02
-         column.texmid = sky->texturemid;             // Default y-offset
+         column.texmid = r_fillsky ? PADDED_SKY_TEXTUREMID : sky->unpadded_texturemid;
          flip          = 0;                           // Doom flips it
          offset        = skyflat->columnoffset >> 16; // Hexen-style scrolling
       }
@@ -1023,14 +1026,12 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
       //dc_texheight = (textureheight[texture])>>FRACBITS; // killough
       // haleyjd: use height determined from patches in texture
-      column.texheight = sky->height;
+      // ioanch: decide whether to fill sky or tile it
+      column.texheight = r_fillsky ? sky->padded_height : textures[texture]->height;
       
       // haleyjd:  don't stretch textures over 200 tall
       // 10/07/06: don't stretch skies in old demos (no mlook)
-      if(demo_version >= 300 && column.texheight < 200 && r_fillsky)
-         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-      else
-         column.step = M_FloatToFixed(view.pspriteystep);
+      column.step = M_FloatToFixed(view.pspriteystep);
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
       for(x = pl->minx; x <= pl->maxx; x++)
@@ -1042,7 +1043,11 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
 
          if(column.y1 <= column.y2)
          {
-            column.source = textures[texture]->getPaddedSkyColumn((((an + xtoviewangle[x]) ^ flip) >> ANGLETOSKYSHIFT) + offset);
+            int32_t col = (((an + xtoviewangle[x]) ^ flip) >> ANGLETOSKYSHIFT) + offset;
+            if(r_fillsky)
+               column.source = textures[texture]->getPaddedSkyColumn(col);
+            else
+               column.source = R_GetRawColumn(texture, col);
             
             r_column_engine->DrawColumn(column);
          }
