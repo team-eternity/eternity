@@ -327,54 +327,12 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
          if(context.checkShootFlatPortal(sidesector, in->frac))
             return false;  // done here
 
-         for(surf_e surf : SURFS)
+         if(!P_CheckShootPlane(*sidesector, trace.x, trace.y, context.state.v.z,
+                               context.params.aimslope, context.prevedgepos, context.prevfrac,
+                               context.params.attackrange, context.cos, context.sin, x, y, z,
+                               hitplane, updown))
          {
-            const surface_t &surface = sidesector->srf[surf];
-            fixed_t curslopez = surface.getZAt(x, y);
-            if(isOuter(surf, z, curslopez))
-            {
-               // Check first against the sky
-               bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
-                     R_IsSkyFlat(surface.pic);
-
-               if(skycheck || R_IsSkyLikePortalSurface(surface))
-                  return false;
-
-               if(surface.slope)
-               {
-                  fixed_t prevslopez = surface.getZAt(context.prevedgepos);
-                  fixed_t prevtracez = context.state.v.z +
-                     FixedMul(context.params.aimslope, FixedMul(context.prevfrac,
-                                                                context.params.attackrange));
-                  // And we have the surface height at the destination and the current z
-                  fixed_t curdeltaz = curslopez - z;  // current z should be below slope
-                  fixed_t prevdeltaz = prevtracez - prevslopez;   // previous z is above slope
-
-                  // If they're of opposite signs, we're in a wrong situation, so just end
-                  if((curdeltaz ^ prevdeltaz) < 0)
-                     return false;
-
-                  v2fixed_t intersection = context.prevedgepos +
-                        (v2fixed_t{ x, y } - context.prevedgepos)
-                           .fixedMul(FixedDiv(prevdeltaz, prevdeltaz + curdeltaz));
-                  x = intersection.x;
-                  y = intersection.y;
-                  z = surface.getZAt(intersection);
-               }
-               else
-               {
-                  fixed_t pfrac = FixedDiv(surface.height - context.state.v.z,
-                                           context.params.aimslope);
-
-                  x = trace.x + FixedMul(context.cos, pfrac);
-                  y = trace.y + FixedMul(context.sin, pfrac);
-                  z = surface.height;
-               }
-
-               hitplane = true;
-               updown = surf == surf_floor ? 0 : 1;
-               break;
-            }
+            return false;
          }
       }
 

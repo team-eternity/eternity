@@ -148,6 +148,12 @@ angle_t P_DoubleToAngle(double a);
 
 void P_RotatePoint(fixed_t &x, fixed_t &y, const angle_t angle);
 
+bool P_CheckShootPlane(const sector_t &sidesector, fixed_t origx, fixed_t origy,
+                       fixed_t origz, fixed_t aimslope, v2fixed_t prevedgepos,
+                       fixed_t prevfrac, fixed_t attackrange,
+                       fixed_t shootcos, fixed_t shootsin,
+                       fixed_t &x, fixed_t &y, fixed_t &z, bool &hitplane, int &updown);
+
 bool P_ShootThing(const intercept_t *in,
                   Mobj *shooter,
                   fixed_t attackrange_local,

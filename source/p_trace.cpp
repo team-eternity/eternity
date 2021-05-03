@@ -510,6 +510,65 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside, v2fixed
 }
 
 //
+// Check if the hitscan is hitting a sector plane
+//
+bool P_CheckShootPlane(const sector_t &sidesector, fixed_t origx, fixed_t origy,
+                       fixed_t origz, fixed_t aimslope,
+                       v2fixed_t prevedgepos, fixed_t prevfrac, fixed_t attackrange,
+                       fixed_t shootcos, fixed_t shootsin,
+                       fixed_t &x, fixed_t &y, fixed_t &z, bool &hitplane, int &updown)
+{
+   for(surf_e surf : SURFS)
+   {
+      const surface_t &surface = sidesector.srf[surf];
+      fixed_t curslopez = surface.getZAt(x, y);
+      if(isOuter(surf, z, curslopez))
+      {
+         // Check first against the sky
+         bool skycheck = surf == surf_ceil ? !!(sidesector.intflags & SIF_SKY) :
+               R_IsSkyFlat(surface.pic);
+
+         if(skycheck || R_IsSkyLikePortalSurface(surface))
+            return false;
+
+         if(surface.slope)
+         {
+            fixed_t prevslopez = surface.getZAt(prevedgepos);
+            fixed_t prevtracez = origz + FixedMul(aimslope, FixedMul(prevfrac, attackrange));
+            // And we have the surface height at the destination and the current z
+            fixed_t curdeltaz = curslopez - z;  // current z should be below slope
+            fixed_t prevdeltaz = prevtracez - prevslopez;   // previous z is above slope
+
+            // If they're of opposite signs, we're in a wrong situation, so just end
+            if((curdeltaz ^ prevdeltaz) < 0)
+               return false;
+
+            v2fixed_t intersection = prevedgepos +
+                  (v2fixed_t{ x, y } - prevedgepos)
+                     .fixedMul(FixedDiv(prevdeltaz, prevdeltaz + curdeltaz));
+            x = intersection.x;
+            y = intersection.y;
+            z = surface.getZAt(intersection);
+         }
+         else
+         {
+            fixed_t pfrac = FixedDiv(surface.height - origz, aimslope);
+
+            x = origx + FixedMul(shootcos, pfrac);
+            y = origy + FixedMul(shootsin, pfrac);
+            z = surface.height;
+         }
+
+         hitplane = true;
+         updown = surf == surf_floor ? 0 : 1;
+         break;
+      }
+   }
+
+   return true;
+}
+
+//
 // PTR_ShootTraverse
 //
 // haleyjd 11/21/01: fixed by SoM to allow bullets to puff on the
