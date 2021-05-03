@@ -554,8 +554,18 @@ bool P_CheckShootPlane(const sector_t &sidesector, fixed_t origx, fixed_t origy,
          {
             fixed_t pfrac = FixedDiv(surface.height - origz, aimslope);
 
-            x = origx + FixedMul(shootcos, pfrac);
-            y = origy + FixedMul(shootsin, pfrac);
+            if(demo_version < 333)
+            {
+               // no slopes here
+               fixed_t zdiff = FixedDiv(D_abs(z - surface.height), D_abs(z - origz));
+               x += FixedMul(origx - x, zdiff);
+               y += FixedMul(origy - y, zdiff);
+            }
+            else
+            {
+               x = origx + FixedMul(shootcos, pfrac);
+               y = origy + FixedMul(shootsin, pfrac);
+            }
             z = surface.height;
          }
 
@@ -569,15 +579,26 @@ bool P_CheckShootPlane(const sector_t &sidesector, fixed_t origx, fixed_t origy,
 }
 
 //
+// Shoot-traverse context
+//
+struct shoottraverse_t
+{
+   size_t puffidx;
+   v2fixed_t prevedgepos;
+   fixed_t prevfrac;
+};
+
+//
 // PTR_ShootTraverse
 //
 // haleyjd 11/21/01: fixed by SoM to allow bullets to puff on the
 // floors and ceilings rather than along the line which they actually
 // intersected far below or above the ceiling.
 //
-static bool PTR_ShootTraverse(intercept_t *in, void *context)
+static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
 {
-   auto puffidx = *static_cast<size_t *>(context);
+   auto context = static_cast<shoottraverse_t *>(vcontext);
+   size_t puffidx = context->puffidx;
    if(in->isaline)
    {
       line_t *li = in->d.line;
@@ -593,7 +614,11 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
       v2fixed_t edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
 
       if(P_ShotCheck2SLine(in, li, lineside, edgepos))
+      {
+         context->prevedgepos = edgepos;
+         context->prevfrac = in->frac;
          return true;
+      }
 
       // hit line
       // position a bit closer
@@ -611,39 +636,11 @@ static bool PTR_ShootTraverse(intercept_t *in, void *context)
       // 1s line, don't crash!
       if(sidesector && !getComp(comp_planeshoot))
       {
-         for(surf_e surf : SURFS)
+         if(!P_CheckShootPlane(*sidesector, trace.dl.x, trace.dl.y, trace.z, trace.aimslope,
+                               context->prevedgepos, context->prevfrac, trace.attackrange,
+                               trace.cos, trace.sin, x, y, z, hitplane, updown))
          {
-            const surface_t &surface = sidesector->srf[surf];
-            fixed_t curslopez = surface.getZAt(x, y);
-            if(isOuter(surf, z, curslopez))
-            {
-               // Check first against the sky
-               bool skycheck = surf == surf_ceil ? !!(sidesector->intflags & SIF_SKY) :
-                     R_IsSkyFlat(surface.pic);
-               // SoM: don't check for portals here anymore
-               if(skycheck || R_IsSkyLikePortalSurface(surface))
-                  return false;
-
-               fixed_t pfrac = FixedDiv(surface.height - trace.z, trace.aimslope);
-
-               if(demo_version < 333)
-               {
-                  // no slopes here
-                  fixed_t zdiff = FixedDiv(D_abs(z - surface.height), D_abs(z - trace.z));
-                  x += FixedMul(trace.dl.x - x, zdiff);
-                  y += FixedMul(trace.dl.y - y, zdiff);
-               }
-               else
-               {
-                  x = trace.dl.x + FixedMul(trace.cos, pfrac);
-                  y = trace.dl.y + FixedMul(trace.sin, pfrac);
-               }
-
-               z = surface.height;
-               hitplane = true;
-               updown = surf == surf_floor ? 0 : 1;
-               break;
-            }
+            return false;
          }
       }
 
@@ -740,8 +737,12 @@ void P_LineAttack(Mobj *t1, angle_t angle, fixed_t distance,
    else
       trav = PTR_ShootTraverse;
 
-   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav,
-                  &puffidx);
+   shoottraverse_t context = {};
+   context.puffidx = puffidx;
+   context.prevfrac = 0;
+   context.prevedgepos = { t1->x, t1->y };
+
+   P_PathTraverse(t1->x, t1->y, x2, y2, PT_ADDLINES|PT_ADDTHINGS, trav, &context);
 }
 
 //=============================================================================
