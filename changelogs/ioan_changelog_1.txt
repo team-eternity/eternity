@@ -8,6 +8,13 @@ Since v4.02.00 "Forseti"
 ========================
 
 --------------------------------------------------------------------------------
+03.05.2021
+
+IMPROVEMENT: Now sky textures of height 260 shall cover the entire viewport of
+             looking up. Taller sky textures than that will  continue to cover
+             the bottom of the viewport.
+
+--------------------------------------------------------------------------------
 25.04.2021
 
 BUGFIX: Fixed the wrong coordinate display in automap when follow mode is off.
