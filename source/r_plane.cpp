@@ -844,6 +844,23 @@ static void R_makeSpans(const R_FlatFunc flatfunc, const R_SlopeFunc slopefunc,
       spanstart[b2--] = x;
 }
 
+//
+// Returns the column step for the sky, depending on settings
+//
+static fixed_t R_getSkyColumnStep(const skytexture_t &sky)
+{
+   // haleyjd:  don't stretch textures over 200 tall (ioanch: will be 260 now)
+   // 10/07/06: don't stretch skies in old demos (no mlook)
+   if(demo_version >= 300 && stretchsky)
+   {
+      // Use sky's designated texturemid, not column's assigned one, which may be
+      // changed by scrolling.
+      return M_FloatToFixed(view.pspriteystep * 
+                            M_FixedToFloat(sky.texturemid) / SKY_FREELOOK_HEIGHT);
+   }
+   return M_FloatToFixed(view.pspriteystep);
+}
+
 // haleyjd: moved here from r_newsky.c
 static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visplane_t *pl)
 {
@@ -880,11 +897,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    column.texmid    = sky2->texturemid;      
    column.texheight = sky2->height;
 
-   // haleyjd: don't stretch textures over 200 tall
-   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-      column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-   else
-      column.step = M_FloatToFixed(view.pspriteystep);
+   column.step = R_getSkyColumnStep(*sky2);
       
    for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
    {
@@ -902,11 +915,7 @@ static void do_draw_newsky(cmapcontext_t &context, const angle_t viewangle, visp
    column.texmid = sky1->texturemid;
    column.texheight = sky1->height;
 
-   // haleyjd: don't stretch textures over 200 tall
-   if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-      column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-   else
-      column.step = M_FloatToFixed(view.pspriteystep);
+   column.step = R_getSkyColumnStep(*sky1);
       
    colfunc = r_column_engine->DrawNewSkyColumn;
    for(x = pl->minx; (column.x = x) <= pl->maxx; x++)
@@ -1025,12 +1034,7 @@ static void do_draw_plane(cmapcontext_t &context, int *const spanstart,
       // haleyjd: use height determined from patches in texture
       column.texheight = sky->height;
       
-      // haleyjd:  don't stretch textures over 200 tall
-      // 10/07/06: don't stretch skies in old demos (no mlook)
-      if(demo_version >= 300 && column.texheight < 200 && stretchsky)
-         column.step = M_FloatToFixed(view.pspriteystep * 0.5f);
-      else
-         column.step = M_FloatToFixed(view.pspriteystep);
+      column.step = R_getSkyColumnStep(*sky);
 
       // killough 10/98: Use sky scrolling offset, and possibly flip picture
       for(x = pl->minx; x <= pl->maxx; x++)

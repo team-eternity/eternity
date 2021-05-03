@@ -34,6 +34,9 @@
 // The sky map is 256*128*4 maps.
 #define ANGLETOSKYSHIFT         22
 
+// Necessary height of sky to prevent stretching for looking up
+static constexpr float SKY_FREELOOK_HEIGHT = 260.0f;
+
 // haleyjd: information on sky flats
 struct skyflat_t
 {
