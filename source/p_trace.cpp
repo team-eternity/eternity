@@ -652,14 +652,14 @@ static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
       if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
       {
          // don't shoot the sky!
-         if(z > li->frontsector->srf.ceiling.height)
+         if(z > li->frontsector->srf.ceiling.getZAt(x, y))
             return false;
 
          // it's a sky hack wall
          // fix bullet eaters -- killough
          if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
          {
-            if(li->backsector->srf.ceiling.height < z)
+            if(li->backsector->srf.ceiling.getZAt(x, y) < z)
                return false;
          }
       }
