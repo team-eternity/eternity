@@ -34,6 +34,7 @@ struct line_t;
 class  Mobj;
 struct mobjinfo_t;
 struct polyobj_t; // ioanch 20160114
+struct sector_t;
 struct subsector_t;
 
 // mapblocks are used to check movement against lines and things
