@@ -589,6 +589,30 @@ struct shoottraverse_t
 };
 
 //
+// Check whether the line attack is hitting a sky hack linedef
+//
+bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z)
+{
+   // don't shoot the sky
+   // don't shoot ceiling portals either
+   if(R_IsSkyFlat(li.frontsector->srf.ceiling.pic) || li.frontsector->srf.ceiling.portal)
+   {
+      // don't shoot the sky!
+      if(z > li.frontsector->srf.ceiling.getZAt(x, y))
+         return false;
+
+      // it's a sky hack wall
+      // fix bullet eaters -- killough
+      if(li.backsector && R_IsSkyFlat(li.backsector->srf.ceiling.pic))
+      {
+         if(li.backsector->srf.ceiling.getZAt(x, y) < z)
+            return false;
+      }
+   }
+   return true;
+}
+
+//
 // PTR_ShootTraverse
 //
 // haleyjd 11/21/01: fixed by SoM to allow bullets to puff on the
@@ -647,22 +671,8 @@ static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
       if(!hitplane && li->special)
          P_ShootSpecialLine(trace.thing, li, lineside);
 
-      // don't shoot the sky
-      // don't shoot ceiling portals either
-      if(R_IsSkyFlat(li->frontsector->srf.ceiling.pic) || li->frontsector->srf.ceiling.portal)
-      {
-         // don't shoot the sky!
-         if(z > li->frontsector->srf.ceiling.getZAt(x, y))
-            return false;
-
-         // it's a sky hack wall
-         // fix bullet eaters -- killough
-         if(li->backsector && R_IsSkyFlat(li->backsector->srf.ceiling.pic))
-         {
-            if(li->backsector->srf.ceiling.getZAt(x, y) < z)
-               return false;
-         }
-      }
+      if(!P_CheckShootSkyHack(*li, x, y, z))
+         return false;
 
       if(demo_version >= 342 && li->backsector &&
          ((li->extflags & EX_ML_UPPERPORTAL &&

@@ -153,6 +153,7 @@ bool P_CheckShootPlane(const sector_t &sidesector, fixed_t origx, fixed_t origy,
                        fixed_t prevfrac, fixed_t attackrange,
                        fixed_t shootcos, fixed_t shootsin,
                        fixed_t &x, fixed_t &y, fixed_t &z, bool &hitplane, int &updown);
+bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z);
 
 bool P_ShootThing(const intercept_t *in,
                   Mobj *shooter,
