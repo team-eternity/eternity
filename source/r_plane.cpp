@@ -851,7 +851,7 @@ static fixed_t R_getSkyColumnStep(const skytexture_t &sky)
 {
    // haleyjd:  don't stretch textures over 200 tall (ioanch: will be 260 now)
    // 10/07/06: don't stretch skies in old demos (no mlook)
-   if(demo_version >= 300 && stretchsky)
+   if(demo_version >= 300 && stretchsky && sky.texturemid > 0)
    {
       // Use sky's designated texturemid, not column's assigned one, which may be
       // changed by scrolling.
