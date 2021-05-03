@@ -458,17 +458,23 @@ bool CamContext::checkSight(const camsightparams_t &params,
    {
       // killough 4/19/98: make fake floors and ceilings block monster view
       if((csec->heightsec != -1 &&
-          ((params.cz + params.cheight <= sectors[csec->heightsec].srf.floor.height &&
-            params.tz >= sectors[csec->heightsec].srf.floor.height) ||
-           (params.cz >= sectors[csec->heightsec].srf.ceiling.height &&
-            params.tz + params.cheight <= sectors[csec->heightsec].srf.ceiling.height)))
+          ((params.cz + params.cheight <=
+            sectors[csec->heightsec].srf.floor.getZAt(params.cx, params.cy) &&
+            params.tz >= sectors[csec->heightsec].srf.floor.getZAt(params.tx, params.ty)) ||
+           (params.cz >= sectors[csec->heightsec].srf.ceiling.getZAt(params.cx, params.cy) &&
+            params.tz + params.cheight <=
+            sectors[csec->heightsec].srf.ceiling.getZAt(params.tx, params.ty))))
          ||
          (tsec->heightsec != -1 &&
-          ((params.tz + params.theight <= sectors[tsec->heightsec].srf.floor.height &&
-            params.cz >= sectors[tsec->heightsec].srf.floor.height) ||
-           (params.tz >= sectors[tsec->heightsec].srf.ceiling.height &&
-            params.cz + params.theight <= sectors[tsec->heightsec].srf.ceiling.height))))
+          ((params.tz + params.theight <=
+            sectors[tsec->heightsec].srf.floor.getZAt(params.tx, params.ty) &&
+            params.cz >= sectors[tsec->heightsec].srf.floor.getZAt(params.cx, params.cy)) ||
+           (params.tz >= sectors[tsec->heightsec].srf.ceiling.getZAt(params.tx, params.ty) &&
+            params.cz + params.theight <=
+            sectors[tsec->heightsec].srf.ceiling.getZAt(params.cx, params.cy)))))
+      {
          return false;
+      }
 
       //
       // check precisely
