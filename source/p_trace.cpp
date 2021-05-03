@@ -127,21 +127,24 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
 
       // Crosses a two sided line.
       // A two sided line will restrict the possible target ranges.
-      P_LineOpening(li, nullptr);
+      v2fixed_t edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
+      P_LineOpening(li, nullptr, &edgepos);
 
       if(clip.openbottom >= clip.opentop)
          return false;
 
       dist = FixedMul(trace.attackrange, in->frac);
 
-      if(li->frontsector->srf.floor.height != li->backsector->srf.floor.height)
+      if(li->frontsector->srf.floor.getZAt(edgepos) !=
+         li->backsector->srf.floor.getZAt(edgepos))
       {
          slope = FixedDiv(clip.openbottom - trace.z, dist);
          if(slope > trace.bottomslope)
             trace.bottomslope = slope;
       }
 
-      if(li->frontsector->srf.ceiling.height != li->backsector->srf.ceiling.height)
+      if(li->frontsector->srf.ceiling.getZAt(edgepos) !=
+         li->backsector->srf.ceiling.getZAt(edgepos))
       {
          slope = FixedDiv(clip.opentop - trace.z , dist);
          if(slope < trace.topslope)

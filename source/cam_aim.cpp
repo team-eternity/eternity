@@ -289,13 +289,12 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          return false;
    }
 
-   v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
-
    if(in->isaline)
    {
       if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
          return false;
 
+      v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
       lineopening_t lo = { 0 };
       lo.calculateAtPoint(*li, edgepos);
 
