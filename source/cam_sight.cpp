@@ -230,7 +230,8 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
 {
    const line_t *li = in->d.line;
    lineopening_t lo = { 0 };
-   lo.calculate(li);
+   v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
+   lo.calculateAtPoint(*li, edgepos);
 
    CamContext &context = *static_cast<CamContext *>(vcontext);
 
@@ -261,7 +262,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
    {
       const surface_t &surface = sector->srf[surf];
       const surface_t &otherSurface = osector->srf[surf];
-      if(surface.height != otherSurface.height ||
+      if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
          (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
       {
          slope = FixedDiv(lo.open[surf] - context.sightzstart, totalfrac);
@@ -281,7 +282,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       if(li->extflags & e_edgePortalFlags[surf] && li->backsector &&
          backSurface.pflags & PS_PASSABLE &&
          !isInner(surf, context.state.slope[surf],
-                  FixedDiv(backSurface.height - context.sightzstart, totalfrac)) &&
+                  FixedDiv(backSurface.getZAt(edgepos) - context.sightzstart, totalfrac)) &&
          P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 && in->frac > 0)
       {
          State state(context.state);
