@@ -509,7 +509,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
           !strcasecmp(tt.name, "sky3") || !strcasecmp(tt.name, "sky4")) && tt.patchcount == 1)
       {
          // TODO: use the right height to fill the screen
-         tt.height = 256;
+         tt.height += 160;
       }
 
       texture = textures[texnum] = 
@@ -530,7 +530,7 @@ static int R_ReadTextureLump(texturelump_t *tlump, int *patchlookup,
             tt.patchcount == 1)
          {
             // TODO: fit the correct origin
-            tp.originy = 128;
+            tp.originy = 160;
          }
 
          component->originx = tp.originx;
@@ -1632,11 +1632,11 @@ texture_t *R_CacheTexture(int num)
    {
       static const int SZ = 8;
       int index = 2;
-      for(int y = SZ; y <= 128; y += SZ)
+      for(int y = SZ; y <= 160; y += SZ)
       {
-         R_extendSkyTexture3(tex, 128 - y, SZ);
+         R_extendSkyTexture3(tex, 160 - y, SZ);
          //R_applyMedianFilter(tex, 128 - y, 128 - y + SZ, 1);
-         R_applyGaussianFilter(tex, 128 - y, 128 - y + SZ);
+         R_applyGaussianFilter(tex, 160 - y, 160 - y + SZ);
       }
             
       //R_extendSkyTexture3(tex, 96, 32);

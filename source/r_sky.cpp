@@ -120,10 +120,10 @@ static skytexture_t *R_AddSkyTexture(int texturenum)
    newSky->texturenum = texturenum;
    newSky->height = textures[texturenum]->height;
    
-   if(newSky->height >= 200)
-      newSky->texturemid = 200*FRACUNIT;
-   else
-      newSky->texturemid = 100*FRACUNIT;
+//   if(newSky->height >= 200)
+      newSky->texturemid = 260*FRACUNIT;
+//   else
+//      newSky->texturemid = 100*FRACUNIT;
 
    key = skytexturekey(texturenum);
 
