@@ -71,7 +71,7 @@ private:
    bool checkPortalSector(const sector_t *sector, fixed_t totalfrac, fixed_t partialfrac,
                           const divline_t &trace);
    void checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace,
-                         fixed_t frac);
+                         fixed_t frac, v2fixed_t edgepos);
    fixed_t recurse(State &newstate, fixed_t partialfrac, fixed_t *outSlope, Mobj **outTarget,
                    fixed_t *outDist, const linkdata_t &data) const;
 
@@ -228,7 +228,7 @@ fixed_t AimContext::recurse(State &newstate, fixed_t partialfrac, fixed_t *outSl
 // Check if hitting an edge portal line
 //
 void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const divline_t &trace,
-                                  fixed_t frac)
+                                  fixed_t frac, v2fixed_t edgepos)
 {
    if(!li->backsector || P_PointOnLineSidePrecise(trace.x, trace.y, li) != 0 || frac <= 0)
       return;
@@ -237,7 +237,7 @@ void AimContext::checkEdgePortals(const line_t *li, fixed_t totaldist, const div
    {
       const surface_t &surface = li->backsector->srf[surf];
       fixed_t contextslope = state.slope[surf];
-      fixed_t refslope = FixedDiv(surface.height - state.c.z, totaldist);
+      fixed_t refslope = FixedDiv(surface.getZAt(edgepos) - state.c.z, totaldist);
 
       if(li->extflags & e_edgePortalFlags[surf] && surface.pflags & PS_PASSABLE &&
          !isInner(surf, contextslope, refslope))
@@ -321,7 +321,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          return false;
 
       // Check for edge portals, but don't stop looking
-      context.checkEdgePortals(li, totaldist, trace, in->frac);
+      context.checkEdgePortals(li, totaldist, trace, in->frac, edgepos);
 
       if(li->pflags & PS_PASSABLE && P_PointOnLineSidePrecise(trace.x, trace.y, li) == 0 &&
          in->frac > 0)
