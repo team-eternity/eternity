@@ -342,19 +342,8 @@ bool ShootContext::shootTraverse(const intercept_t *in, void *data,
       if(!P_CheckShootSkyHack(*li, x, y, z))
          return false;
 
-      fixed_t frontceilingz = li->frontsector->srf.ceiling.getZAt(edgepos);
-      fixed_t frontfloorz = li->frontsector->srf.floor.getZAt(edgepos);
-      fixed_t backceilingz = li->backsector ? li->backsector->srf.ceiling.getZAt(edgepos) : 0;
-      fixed_t backfloorz = li->backsector ? li->backsector->srf.floor.getZAt(edgepos) : 0;
-
-      if(demo_version >= 342 && li->backsector &&
-         ((li->extflags & EX_ML_UPPERPORTAL && backceilingz < frontceilingz &&
-           backceilingz < z && R_IsSkyLikePortalSurface(li->backsector->srf.ceiling)) ||
-          (li->extflags & EX_ML_LOWERPORTAL && backfloorz > frontfloorz && backfloorz > z &&
-           R_IsSkyLikePortalSurface(li->backsector->srf.floor))))
-      {
+      if(!P_CheckShootSkyLikeEdgePortal(*li, edgepos, z))
          return false;
-      }
 
       if(!hitplane && !li->backsector && R_IsSkyWall(*li))
          return false;

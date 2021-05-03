@@ -613,6 +613,27 @@ bool P_CheckShootSkyHack(const line_t &li, fixed_t x, fixed_t y, fixed_t z)
 }
 
 //
+// Checks if the line attack hits an edge portal without anchor
+//
+bool P_CheckShootSkyLikeEdgePortal(const line_t &li, v2fixed_t edgepos, fixed_t z)
+{
+   fixed_t frontceilingz = li.frontsector->srf.ceiling.getZAt(edgepos);
+   fixed_t frontfloorz = li.frontsector->srf.floor.getZAt(edgepos);
+   fixed_t backceilingz = li.backsector ? li.backsector->srf.ceiling.getZAt(edgepos) : 0;
+   fixed_t backfloorz = li.backsector ? li.backsector->srf.floor.getZAt(edgepos) : 0;
+
+   if(demo_version >= 342 && li.backsector &&
+      ((li.extflags & EX_ML_UPPERPORTAL && backceilingz < frontceilingz &&
+        backceilingz < z && R_IsSkyLikePortalSurface(li.backsector->srf.ceiling)) ||
+       (li.extflags & EX_ML_LOWERPORTAL && backfloorz > frontfloorz && backfloorz > z &&
+        R_IsSkyLikePortalSurface(li.backsector->srf.floor))))
+   {
+      return false;
+   }
+   return true;
+}
+
+//
 // PTR_ShootTraverse
 //
 // haleyjd 11/21/01: fixed by SoM to allow bullets to puff on the
@@ -674,18 +695,8 @@ static bool PTR_ShootTraverse(intercept_t *in, void *vcontext)
       if(!P_CheckShootSkyHack(*li, x, y, z))
          return false;
 
-      if(demo_version >= 342 && li->backsector &&
-         ((li->extflags & EX_ML_UPPERPORTAL &&
-            li->backsector->srf.ceiling.height < li->frontsector->srf.ceiling.height &&
-            li->backsector->srf.ceiling.height < z &&
-            R_IsSkyLikePortalSurface(li->backsector->srf.ceiling)) ||
-            (li->extflags & EX_ML_LOWERPORTAL &&
-               li->backsector->srf.floor.height > li->frontsector->srf.floor.height &&
-               li->backsector->srf.floor.height > z &&
-               R_IsSkyLikePortalSurface(li->backsector->srf.floor))))
-      {
+      if(!P_CheckShootSkyLikeEdgePortal(*li, edgepos, z))
          return false;
-      }
 
       // don't shoot portal lines
       if(demo_version >= 342)
