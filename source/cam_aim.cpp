@@ -289,13 +289,15 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          return false;
    }
 
+   v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
+
    if(in->isaline)
    {
       if(!(li->flags & ML_TWOSIDED) || li->extflags & EX_ML_BLOCKALL)
          return false;
 
       lineopening_t lo = { 0 };
-      lo.calculate(li);
+      lo.calculateAtPoint(*li, edgepos);
 
       if(lo.openrange <= 0)
          return false;
@@ -307,7 +309,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
       {
          const surface_t &surface = sector->srf[surf];
          const surface_t &otherSurface = osector->srf[surf];
-         if(surface.height != otherSurface.height ||
+         if(surface.getZAt(edgepos) != otherSurface.getZAt(edgepos) ||
             (surface.pflags & PS_PASSABLE) != (otherSurface.pflags & PS_PASSABLE))
          {
             slope = FixedDiv(lo.open[surf] - context.state.c.z, totaldist);
