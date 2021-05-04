@@ -167,6 +167,19 @@ static constexpr mline_t player_arrow[] =
   { { -R+3*R/8, 0 }, { -R+R/8,  R/4 } }, // >>--->
   { { -R+3*R/8, 0 }, { -R+R/8, -R/4 } }
 };
+static constexpr mline_t player_arrow_raven[] = 
+{
+  { { -R + R / 4, 0 }, { 0, 0} }, // center line.
+  { { -R + R / 4, R / 8 }, { R, 0} }, // blade
+  { { -R + R / 4, -R / 8 }, { R, 0 } },
+  { { -R + R / 4, -R / 4 }, { -R + R / 4, R / 4 } }, // crosspiece
+  { { -R + R / 8, -R / 4 }, { -R + R / 8, R / 4 } },
+  { { -R + R / 8, -R / 4 }, { -R + R / 4, -R / 4} }, //crosspiece connectors
+  { { -R + R / 8, R / 4 }, { -R + R / 4, R / 4} },
+  { { -R - R / 4, R / 8 }, { -R - R / 4, -R / 8 } }, //pommel
+  { { -R - R / 4, R / 8 }, { -R + R / 8, R / 8 } },
+  { { -R - R / 4, -R / 8}, { -R + R / 8, -R / 8 } }
+};
 #undef R
 
 #define R ((8*PLAYERRADIUS)/7)
@@ -2086,12 +2099,28 @@ static void AM_drawPlayers()
    // SoM: player x and y
    fixed_t px, py;
 
+   // FIXME: make this a pclass property or something
+   const mline_t *arrow;
+   int arrowsize;
+   bool drawSword = GameModeInfo->type == Game_Heretic;  // TODO: Game_Hexen when it comes
+   if(drawSword) 
+   {
+      arrow = player_arrow_raven;
+      arrowsize = earrlen(player_arrow_raven);
+   }
+   else
+   {
+      arrow = player_arrow;
+      arrowsize = earrlen(player_arrow);
+   }
+   
+
    if(!netgame)
    {
       px = plr->mo->x;
       py = plr->mo->y;
 
-      if(ddt_cheating)
+      if(ddt_cheating && !drawSword)   // Raven games have no cheat arrow
       {
          AM_drawLineCharacter
           (
@@ -2108,8 +2137,8 @@ static void AM_drawPlayers()
       {
          AM_drawLineCharacter
           (
-            player_arrow,
-            earrlen(player_arrow),
+            arrow,
+            arrowsize,
             0.0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
@@ -2158,8 +2187,8 @@ static void AM_drawPlayers()
       
       AM_drawLineCharacter
        (
-         player_arrow,
-         earrlen(player_arrow),
+         arrow,
+         arrowsize,
          0.0,
          p->mo->angle,
          color,
