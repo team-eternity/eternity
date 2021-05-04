@@ -902,6 +902,7 @@ default_or_t HereticDefaultORs[] =
    // misc
    { "pitched_sounds",    1 }, // pitched sounds should be on
    { "allowmlook",        1 }, // mlook defaults to on
+   { "stretchsky",        1 }, // if mlook is on, we now need to stretch sthe sky.
    { "wipetype",          2 }, // use crossfade wipe by default
    { "hud_overlaylayout", 4 }, // use graphical HUD style
    
