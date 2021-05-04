@@ -99,8 +99,8 @@ int map_secret_after;
 #define FB    0
 
 // haleyjd 05/17/08: ability to draw node lines on map
-bool am_drawnodelines;
-bool am_dynasegs_bysubsec;
+static bool am_drawnodelines;
+static bool am_dynasegs_bysubsec;
 
 // haleyjd 07/07/04: removed key_map* variables
 
@@ -157,7 +157,7 @@ struct islope_t
 //   starting from the middle.
 //
 #define R ((8*PLAYERRADIUS)/7)
-mline_t player_arrow[] =
+static constexpr mline_t player_arrow[] =
 {
   { { -R+R/8,   0 }, {  R,      0   } }, // -----
   { {  R,       0 }, {  R-R/2,  R/4 } }, // ----->
@@ -168,10 +168,9 @@ mline_t player_arrow[] =
   { { -R+3*R/8, 0 }, { -R+R/8, -R/4 } }
 };
 #undef R
-#define NUMPLYRLINES (sizeof(player_arrow)/sizeof(mline_t))
 
 #define R ((8*PLAYERRADIUS)/7)
-mline_t cheat_player_arrow[] =
+static constexpr mline_t cheat_player_arrow[] =
 { // killough 3/22/98: He's alive, Jim :)
   { { -R+R/8,         0   }, {  R,             0   } }, // -----
   { {  R,             0   }, {  R-R/2,         R/4 } }, // ----->
@@ -189,32 +188,21 @@ mline_t cheat_player_arrow[] =
   { { -R/10+R/4,      R/4 }, { -R/10+R/4+R/8,  R/4 } },
 };
 #undef R
-#define NUMCHEATPLYRLINES (sizeof(cheat_player_arrow)/sizeof(mline_t))
-
-mline_t triangle_guy[] =
-{
-  { { -0.867, -0.5 }, {  0.867, -0.5 } },
-  { {  0.867, -0.5 }, {  0.0,    1.0 } },
-  { {  0.0,    1.0 }, { -0.867, -0.5 } }
-};
-#define NUMTRIANGLEGUYLINES (sizeof(triangle_guy)/sizeof(mline_t))
 
 //jff 1/5/98 new symbol for keys on automap
-mline_t cross_mark[] =
+static constexpr mline_t cross_mark[] =
 {
   { { -1.0,  0.0 }, { 1.0, 0.0 } },
   { {  0.0, -1.0 }, { 0.0, 1.0 } },
 };
-#define NUMCROSSMARKLINES (sizeof(cross_mark)/sizeof(mline_t))
 //jff 1/5/98 end of new symbol
 
-mline_t thintriangle_guy[] =
+static constexpr mline_t thintriangle_guy[] =
 {
   { { -0.5, -0.7 }, {  1.0,  0.0 } },
   { {  1.0,  0.0 }, { -0.5,  0.7 } },
   { { -0.5,  0.7 }, { -0.5, -0.7 } }
 };
-#define NUMTHINTRIANGLEGUYLINES (sizeof(thintriangle_guy)/sizeof(mline_t))
 
 int ddt_cheating = 0;         // killough 2/7/98: make global, rename to ddt_*
 
@@ -2036,7 +2024,7 @@ static void AM_rotate(double &x, double &y, angle_t a)
 // the color to draw it with, and the map coordinates to draw it at.
 // Returns nothing
 //
-static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines, 
+static void AM_drawLineCharacter(const mline_t *lineguy, int lineguylines, 
                                  double scale, angle_t angle, int color,
                                  fixed_t x, fixed_t y)
 {
@@ -2092,7 +2080,7 @@ static void AM_drawLineCharacter(mline_t *lineguy, int lineguylines,
 //
 static void AM_drawPlayers()
 {
-   player_t* p;
+   const player_t* p;
    int   their_color = -1;
    int   color;
    // SoM: player x and y
@@ -2108,7 +2096,7 @@ static void AM_drawPlayers()
          AM_drawLineCharacter
           (
             cheat_player_arrow,
-            NUMCHEATPLYRLINES,
+            earrlen(cheat_player_arrow),
             0.0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
@@ -2121,7 +2109,7 @@ static void AM_drawPlayers()
          AM_drawLineCharacter
           (
             player_arrow,
-            NUMPLYRLINES,
+            earrlen(player_arrow),
             0.0,
             plr->mo->angle,
             mapcolor_sngl,      //jff color
@@ -2171,7 +2159,7 @@ static void AM_drawPlayers()
       AM_drawLineCharacter
        (
          player_arrow,
-         NUMPLYRLINES,
+         earrlen(player_arrow),
          0.0,
          p->mo->angle,
          color,
@@ -2221,7 +2209,7 @@ static void AM_drawThings(int colors, int colorrange)
                AM_drawLineCharacter
                   (
                    cross_mark,
-                   NUMCROSSMARKLINES,
+                   earrlen(cross_mark),
                    16.0,
                    t->angle,
                    mapcolor_rkey!=-1? mapcolor_rkey : mapcolor_sprt,
@@ -2234,7 +2222,7 @@ static void AM_drawThings(int colors, int colorrange)
                AM_drawLineCharacter
                   (
                    cross_mark,
-                   NUMCROSSMARKLINES,
+                   earrlen(cross_mark),
                    16.0,
                    t->angle,
                    mapcolor_ykey!=-1? mapcolor_ykey : mapcolor_sprt,
@@ -2247,7 +2235,7 @@ static void AM_drawThings(int colors, int colorrange)
                AM_drawLineCharacter
                   (
                    cross_mark,
-                   NUMCROSSMARKLINES,
+                   earrlen(cross_mark),
                    16.0,
                    t->angle,
                    mapcolor_bkey!=-1? mapcolor_bkey : mapcolor_sprt,
@@ -2266,7 +2254,7 @@ static void AM_drawThings(int colors, int colorrange)
          AM_drawLineCharacter
             (
              thintriangle_guy,
-             NUMTHINTRIANGLEGUYLINES,
+             earrlen(thintriangle_guy),
              16.0,
              t->angle,
              // killough 8/8/98: mark friends specially
