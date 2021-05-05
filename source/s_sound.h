@@ -135,7 +135,7 @@ void S_PauseSound(void);
 void S_ResumeSound(void);
 
 sfxinfo_t *S_SfxInfoForName(const char *name);
-void S_Chgun(void);
+void S_Chgun();
 
 musicinfo_t *S_MusicForName(const char *name);
 
