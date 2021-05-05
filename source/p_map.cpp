@@ -1192,7 +1192,6 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit) 
 {
    int xl, xh, yl, yh, bx, by;
-   subsector_t *newsubsec;
 
    // haleyjd: OVER_UNDER
    if(P_Use3DClipping())
@@ -1208,7 +1207,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    clip.bbox[BOXRIGHT]  = x + clip.thing->radius;
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
-   newsubsec = R_PointInSubsector(x,y);
+   const subsector_t *newsubsec = R_PointInSubsector(x,y);
    clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
    // Whether object can get out of a sticky situation:
@@ -1221,9 +1220,10 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // Any contacted lines the step closer together
    // will adjust them.
 
-   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.height;
+   // Start with the height at (x, y), but be prepared to raise it to fit the thing
+   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
    clip.zref.floorgroupid = newsubsec->sector->groupid;
-   clip.zref.ceiling = newsubsec->sector->srf.ceiling.height;
+   clip.zref.ceiling = newsubsec->sector->srf.ceiling.getZAt(x, y);
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
