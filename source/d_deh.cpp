@@ -1587,10 +1587,28 @@ static void deh_procWeapon(DWFILE *fpin, char *line)
       // haleyjd: resolution adjusted for EDF
       if(!strcasecmp(key, deh_weapon[dehweaponid_ammoType]))
       {
+         itemeffect_t *giver = E_ItemEffectForName(deh_giverNames[weaponinfo.dehnum]);
+
+         // We want to remake the weapon's giver so that it's appropriate for the new ammo type
+         giver->removeMetaTableNR(keyAmmoGiven);
          if(value < 0 || value >= NUMAMMO)
             weaponinfo.ammo = nullptr; // no ammo
          else
+         {
+            itemeffect_t              *given     = nullptr;
+            const itemeffect_t *const  smallitem = E_ItemEffectForName(deh_itemsForAmmoNum[value][1]);
+            const int                  amount    = smallitem->getInt(keyAmount, 0);
+
             weaponinfo.ammo = E_ItemEffectForName(deh_itemsForAmmoNum[value][0]);
+            giver->addMetaTable(keyAmmoGiven, new MetaTable("ammogiven"));
+            given = giver->getMetaTable(keyAmmoGiven, nullptr);
+
+            given->setString("type", deh_itemsForAmmoNum[value][0]);
+            given->setInt("ammo.dmstay",   amount * 5);
+            given->setInt("ammo.coopstay", amount * 2);
+            given->setInt("ammo.give",     amount * 2);
+            given->setInt("ammo.dropped",  amount);
+         }
       }
       else if(!strcasecmp(key, deh_weapon[dehweaponid_deselect]))
          weaponinfo.upstate = E_GetStateNumForDEHNum(value);
