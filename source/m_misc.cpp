@@ -456,7 +456,7 @@ default_t defaults[] =
                0, 0, 1, default_t::wad_game, "DOOM thingtypes use inaccurate height information"),
    
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
-               0, 0, 1, default_t::wad_game, "Tracer shots cannot hit the floor or ceiling"),
+               1, 0, 1, default_t::wad_game, "Tracer shots cannot hit the floor or ceiling"),
 
    DEFAULT_INT("comp_special", &default_comp[comp_special], &comp[comp_special],
                0, 0, 1, default_t::wad_game, "One-time line specials are cleared on failure"),
