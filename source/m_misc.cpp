@@ -454,7 +454,9 @@ default_t defaults[] =
    
    DEFAULT_INT("comp_theights", &default_comp[comp_theights], &comp[comp_theights],
                0, 0, 1, default_t::wad_game, "DOOM thingtypes use inaccurate height information"),
-   
+
+   // NOTE: this defaults to OFF for better relation with freelook, but it may break wads.
+   // Any levels which depend on it to be ON will be stored in the EDF hashing.
    DEFAULT_INT("comp_planeshoot", &default_comp[comp_planeshoot], &comp[comp_planeshoot],
                0, 0, 1, default_t::wad_game, "Tracer shots cannot hit the floor or ceiling"),
 
