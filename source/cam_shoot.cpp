@@ -74,7 +74,8 @@ public:
 private:
 
    bool checkShootFlatPortal(const sector_t *sector, fixed_t infrac) const;
-   bool shoot2SLine(line_t *li, int lineside, fixed_t dist, const lineopening_t &lo) const;
+   bool shoot2SLine(line_t *li, int lineside, fixed_t dist,
+                    const tracelineopening_t &lo) const;
    bool shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fixed_t edgepos) const;
    static bool shootTraverse(const intercept_t *in, void *data, const divline_t &trace);
    ShootContext(const params_t &params, const State *instate);
@@ -181,7 +182,7 @@ bool ShootContext::checkShootFlatPortal(const sector_t *sidesector, fixed_t infr
 // ShootContext::shoot2SLine
 //
 bool ShootContext::shoot2SLine(line_t *li, int lineside, fixed_t dist,
-   const lineopening_t &lo) const
+   const tracelineopening_t &lo) const
 {
    // ioanch: no more need for demo version < 333 check. Also don't allow comp.
    if(FixedDiv(lo.open.floor - state.v.z, dist) <= params.aimslope &&
@@ -206,7 +207,7 @@ bool ShootContext::shotCheck2SLine(line_t *li, int lineside, fixed_t dist, v2fix
 
    if(li->flags & ML_TWOSIDED)
    {
-      lineopening_t lo = { 0 };
+      tracelineopening_t lo = { 0 };
       lo.calculateAtPoint(*li, edgepos);
       if(shoot2SLine(li, lineside, dist, lo))
          ret = true;

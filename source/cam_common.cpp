@@ -528,7 +528,7 @@ bool PathTraverser::traverse(fixed_t cx, fixed_t cy, fixed_t tx, fixed_t ty)
 //
 // Stores data into a LineOpening struct
 //
-void lineopening_t::calculate(const line_t *linedef)
+void tracelineopening_t::calculate(const line_t *linedef)
 {
    if(linedef->sidenum[1] == -1)
    {
@@ -560,7 +560,7 @@ void lineopening_t::calculate(const line_t *linedef)
 //
 // Calculates opening for a given zero-volume point. Needed for slopes.
 //
-void lineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
+void tracelineopening_t::calculateAtPoint(const line_t &line, v2fixed_t pos)
 {
    if(line.sidenum[1] == -1)
    {

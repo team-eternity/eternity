@@ -433,10 +433,10 @@ bool P_TeleportMove(Mobj *thing, fixed_t x, fixed_t y, bool boss)
 
    // haleyjd
    // ioanch 20160114: use the final sector below
-   clip.floorpic = bottomfloorsector->srf.floor.pic;
+   clip.open.floorpic = bottomfloorsector->srf.floor.pic;
    
    // SoM 09/07/02: 3dsides monster fix
-   clip.touch3dside = 0;
+   clip.open.touch3dside = 0;
    
    validcount++;
    clip.numspechit = 0;
@@ -746,44 +746,44 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       // Find the two intersections with the bounding box
       v2fixed_t i1, i2;
       P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
-      P_LineOpening(ld, clip.thing, &i1);
+      clip.open = P_LineOpening(ld, clip.thing, &i1);
       repeat = true;
       repeatv = i2;
    }
    else
-      P_LineOpening(ld, clip.thing);
+      clip.open = P_LineOpening(ld, clip.thing);
 
    // adjust floor & ceiling heights
    for(;;)
    {
-      if(clip.opentop < clip.zref.ceiling)
+      if(clip.open.height.ceiling < clip.zref.ceiling)
       {
-         clip.zref.ceiling = clip.opentop;
+         clip.zref.ceiling = clip.open.height.ceiling;
          clip.ceilingline = ld;
          clip.blockline = ld;
       }
 
-      if(clip.openbottom > clip.zref.floor)
+      if(clip.open.height.floor > clip.zref.floor)
       {
-         clip.zref.floor = clip.openbottom;
-         clip.zref.floorgroupid = clip.bottomgroupid;
+         clip.zref.floor = clip.open.height.floor;
+         clip.zref.floorgroupid = clip.open.bottomgroupid;
 
          clip.floorline = ld;          // killough 8/1/98: remember floor linedef
          clip.blockline = ld;
       }
 
-      if(clip.lowfloor < clip.zref.dropoff)
-         clip.zref.dropoff = clip.lowfloor;
+      if(clip.open.lowfloor < clip.zref.dropoff)
+         clip.zref.dropoff = clip.open.lowfloor;
 
       // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
       // touching 3DMidTex lines.
-      if(demo_version >= 331 && clip.touch3dside)
+      if(demo_version >= 331 && clip.open.touch3dside)
          clip.zref.dropoff = clip.zref.floor;
 
-      if(clip.opensecfloor > clip.zref.secfloor)
-         clip.zref.secfloor = clip.opensecfloor;
-      if(clip.opensecceil < clip.zref.secceil)
-         clip.zref.secceil = clip.opensecceil;
+      if(clip.open.sec.floor > clip.zref.secfloor)
+         clip.zref.secfloor = clip.open.sec.floor;
+      if(clip.open.sec.ceiling < clip.zref.secceil)
+         clip.zref.secceil = clip.open.sec.ceiling;
 
       // SoM 11/6/02: AGHAH
       if(clip.zref.floor > clip.zref.passfloor)
@@ -795,12 +795,50 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       if(!repeat)
          break;
       repeat = false;
-      P_LineOpening(ld, clip.thing, &repeatv);
+      clip.open = P_LineOpening(ld, clip.thing, &repeatv);
    }
    P_CollectSpechits(ld, pushhit);
 
    return true;
 }
+
+//static void P_updateFromOpening(const lineopening_t &open, doom_mapinter_t &inter, line_t *ld)
+//{
+//   if(open.height.ceiling < inter.zref.ceiling)
+//   {
+//      inter.zref.ceiling = open.height.ceiling;
+//      inter.ceilingline = ld;
+//      inter.blockline = ld;
+//   }
+//
+//   if(open.height.floor > inter.zref.floor)
+//   {
+//      inter.zref.floor = open.height.floor;
+//      inter.zref.floorgroupid = open.bottomgroupid;
+//
+//      inter.floorline = ld;          // killough 8/1/98: remember floor linedef
+//      inter.blockline = ld;
+//   }
+//
+//   if(open.lowfloor < inter.zref.dropoff)
+//      inter.zref.dropoff = open.lowfloor;
+//
+//   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+//   // touching 3DMidTex lines.
+//   if(demo_version >= 331 && open.touch3dside)
+//      clip.zref.dropoff = inter.zref.floor;
+//
+//   if(clip.open.sec.floor > clip.zref.secfloor)
+//      clip.zref.secfloor = clip.open.sec.floor;
+//   if(clip.open.sec.ceiling < clip.zref.secceil)
+//      clip.zref.secceil = clip.open.sec.ceiling;
+//
+//   // SoM 11/6/02: AGHAH
+//   if(clip.zref.floor > clip.zref.passfloor)
+//      clip.zref.passfloor = clip.zref.floor;
+//   if(clip.zref.ceiling < clip.zref.passceil)
+//      clip.zref.passceil = clip.zref.ceiling;
+//}
 
 //
 // P_Touched
@@ -1250,9 +1288,9 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
-   clip.floorpic = newsubsec->sector->srf.floor.pic;
+   clip.open.floorpic = newsubsec->sector->srf.floor.pic;
    // SoM: 09/07/02: 3dsides monster fix
-   clip.touch3dside = 0;
+   clip.open.touch3dside = 0;
    validcount++;
    clip.numspechit = 0;
 
@@ -1806,7 +1844,7 @@ bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff)
       // haleyjd: CANTLEAVEFLOORPIC flag
       // ioanch 20160114: use bottom sector floorpic
       if((thing->flags2 & MF2_CANTLEAVEFLOORPIC) &&
-         (clip.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
+         (clip.open.floorpic != P_ExtremeSectorAtPoint(thing, surf_floor)->srf.floor.pic ||
           clip.zref.floor - thing->z != 0))
       {
          // thing must stay within its current floor type
@@ -2270,23 +2308,23 @@ static bool PTR_SlideTraverse(intercept_t *in, void *context)
    // set openrange, opentop, openbottom.
    // These define a 'window' from one sector to another across a line
    
-   P_LineOpening(li, slidemo);
+   clip.open = P_LineOpening(li, slidemo);
    
-   if(clip.openrange < slidemo->height)
+   if(clip.open.range < slidemo->height)
       goto isblocking;  // doesn't fit
    
-   if(clip.opentop - slidemo->z < slidemo->height)
+   if(clip.open.height.ceiling - slidemo->z < slidemo->height)
       goto isblocking;  // mobj is too high
    
-   if(clip.openbottom - slidemo->z > STEPSIZE )
+   if(clip.open.height.floor - slidemo->z > STEPSIZE )
       goto isblocking;  // too big a step up
    else if(P_Use3DClipping() &&
-           slidemo->z < clip.openbottom) // haleyjd: OVER_UNDER
+           slidemo->z < clip.open.height.floor) // haleyjd: OVER_UNDER
    { 
       // [RH] Check to make sure there's nothing in the way for the step up
       bool good;
       fixed_t savedz = slidemo->z;
-      slidemo->z = clip.openbottom;
+      slidemo->z = clip.open.height.floor;
       good = P_TestMobjZ(slidemo, clip);
       slidemo->z = savedz;
       if(!good)

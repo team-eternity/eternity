@@ -229,7 +229,7 @@ bool CamContext::sightTraverse(const intercept_t *in, void *vcontext,
       const divline_t &trace)
 {
    const line_t *li = in->d.line;
-   lineopening_t lo = { 0 };
+   tracelineopening_t lo = { 0 };
    v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
    lo.calculateAtPoint(*li, edgepos);
 
