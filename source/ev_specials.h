@@ -79,7 +79,7 @@ struct ev_instance_t
    };
    int             gentype;      // generalized type, if is generalized (-1 otherwise)
    int             genspac;      // generalized activation type, if generalized
-   polyobj_s      *poly;         // possible polyobject activator
+   polyobj_t      *poly;         // possible polyobject activator
 };
 
 //
