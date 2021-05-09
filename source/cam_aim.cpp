@@ -295,7 +295,7 @@ bool AimContext::aimTraverse(const intercept_t *in, void *vdata, const divline_t
          return false;
 
       v2fixed_t edgepos = trace.v + trace.dv.fixedMul(in->frac);
-      lineopening_t lo = { 0 };
+      tracelineopening_t lo = { 0 };
       lo.calculateAtPoint(*li, edgepos);
 
       if(lo.openrange <= 0)

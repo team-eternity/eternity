@@ -128,9 +128,9 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
       // Crosses a two sided line.
       // A two sided line will restrict the possible target ranges.
       v2fixed_t edgepos = trace.dl.v + trace.dl.dv.fixedMul(in->frac);
-      P_LineOpening(li, nullptr, &edgepos);
+      clip.open = P_LineOpening(li, nullptr, &edgepos);
 
-      if(clip.openbottom >= clip.opentop)
+      if(clip.open.height.floor >= clip.open.height.ceiling)
          return false;
 
       dist = FixedMul(trace.attackrange, in->frac);
@@ -138,7 +138,7 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
       if(li->frontsector->srf.floor.getZAt(edgepos) !=
          li->backsector->srf.floor.getZAt(edgepos))
       {
-         slope = FixedDiv(clip.openbottom - trace.z, dist);
+         slope = FixedDiv(clip.open.height.floor - trace.z, dist);
          if(slope > trace.bottomslope)
             trace.bottomslope = slope;
       }
@@ -146,7 +146,7 @@ static bool PTR_AimTraverse(intercept_t *in, void *context)
       if(li->frontsector->srf.ceiling.getZAt(edgepos) !=
          li->backsector->srf.ceiling.getZAt(edgepos))
       {
-         slope = FixedDiv(clip.opentop - trace.z , dist);
+         slope = FixedDiv(clip.open.height.ceiling - trace.z , dist);
          if(slope < trace.topslope)
             trace.topslope = slope;
       }
@@ -382,15 +382,15 @@ static bool PTR_ShootTraverseVanilla(intercept_t *in, void *context)
 
       if(li->flags & ML_TWOSIDED)
       {
-         P_LineOpening(li, nullptr);
+         clip.open = P_LineOpening(li, nullptr);
          fixed_t dist = FixedMul(trace.attackrange, in->frac);
          fixed_t slope;
 
          // killough 11/98: simplify
          if((li->frontsector->srf.floor.height == li->backsector->srf.floor.height ||
-             (slope = FixedDiv(clip.openbottom - trace.z, dist)) <= trace.aimslope) &&
+             (slope = FixedDiv(clip.open.height.floor - trace.z, dist)) <= trace.aimslope) &&
             (li->frontsector->srf.ceiling.height == li->backsector->srf.ceiling.height ||
-             (slope = FixedDiv(clip.opentop - trace.z, dist)) >= trace.aimslope))
+             (slope = FixedDiv(clip.open.height.ceiling - trace.z, dist)) >= trace.aimslope))
          {
             // shot continues
             return true;
@@ -468,8 +468,8 @@ static bool P_Shoot2SLine(line_t *li, int side, fixed_t dist)
    else
       ceilingsame = becomp && fs->srf.ceiling.height == bs->srf.ceiling.height;
 
-   if((floorsame   || FixedDiv(clip.openbottom - trace.z , dist) <= trace.aimslope) &&
-      (ceilingsame || FixedDiv(clip.opentop - trace.z , dist) >= trace.aimslope))
+   if((floorsame   || FixedDiv(clip.open.height.floor - trace.z , dist) <= trace.aimslope) &&
+      (ceilingsame || FixedDiv(clip.open.height.ceiling - trace.z , dist) >= trace.aimslope))
    {
       if(li->special)
          P_ShootSpecialLine(trace.thing, li, side);
@@ -498,7 +498,7 @@ static bool P_ShotCheck2SLine(intercept_t *in, line_t *li, int lineside, v2fixed
    if(li->flags & ML_TWOSIDED)
    {  
       // crosses a two sided (really 2s) line
-      P_LineOpening(li, nullptr, &edgepos);
+      clip.open = P_LineOpening(li, nullptr, &edgepos);
       
       dist = FixedMul(trace.attackrange, in->frac);
       
@@ -788,11 +788,11 @@ static bool PTR_UseTraverse(intercept_t *in, void *context)
    else
    {
       if(in->d.line->extflags & EX_ML_BLOCKALL) // haleyjd 04/30/11
-         clip.openrange = 0;
+         clip.open.range = 0;
       else
-         P_LineOpening(in->d.line, nullptr);
+         clip.open = P_LineOpening(in->d.line, nullptr);
 
-      if(clip.openrange <= 0)
+      if(clip.open.range <= 0)
       {
          // can't use through a wall
          if(strcasecmp(trace.thing->player->skin->sounds[sk_noway], "none"))
@@ -828,12 +828,12 @@ static bool PTR_NoWayTraverse(intercept_t *in, void *context)
       return false;
 
    // Find openings
-   P_LineOpening(ld, nullptr);
+   clip.open = P_LineOpening(ld, nullptr);
 
    return 
-      !(clip.openrange  <= 0 ||                                  // No opening
-        clip.openbottom > trace.thing->z + STEPSIZE ||      // Too high, it blocks
-        clip.opentop    < trace.thing->z + trace.thing->height); // Too low, it blocks
+      !(clip.open.range  <= 0 ||                                  // No opening
+        clip.open.height.floor > trace.thing->z + STEPSIZE ||      // Too high, it blocks
+        clip.open.height.ceiling    < trace.thing->z + trace.thing->height); // Too low, it blocks
 }
 
 //

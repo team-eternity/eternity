@@ -518,9 +518,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
 
    // haleyjd
    // ioanch 20160114: use bottom sector
-   clip.floorpic = bottomsector->srf.floor.pic;
+   clip.open.floorpic = bottomsector->srf.floor.pic;
    // SoM: 09/07/02: 3dsides monster fix
-   clip.touch3dside = 0;
+   clip.open.touch3dside = 0;
    validcount++;
    
    clip.numspechit = 0;

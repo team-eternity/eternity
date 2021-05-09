@@ -86,7 +86,7 @@ private:
 //
 // Holds opening data just for the routines here
 //
-struct lineopening_t
+struct tracelineopening_t
 {
    fixed_t openrange;
    Surfaces<fixed_t> open;
