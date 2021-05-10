@@ -665,6 +665,47 @@ bool P_BlockedAsMonster(const Mobj &mo)
 }
 
 //
+// Given a line opening structure and a linedef, update a clip structure
+//
+static void P_updateFromOpening(const lineopening_t &open, line_t *ld, doom_mapinter_t &inter)
+{
+   if(open.height.ceiling < inter.zref.ceiling)
+   {
+      inter.zref.ceiling = open.height.ceiling;
+      inter.ceilingline = ld;
+      inter.blockline = ld;
+   }
+
+   if(open.height.floor > inter.zref.floor)
+   {
+      inter.zref.floor = open.height.floor;
+      inter.zref.floorgroupid = open.bottomgroupid;
+
+      inter.floorline = ld;          // killough 8/1/98: remember floor linedef
+      inter.blockline = ld;
+   }
+
+   if(open.lowfloor < inter.zref.dropoff)
+      inter.zref.dropoff = open.lowfloor;
+
+   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
+   // touching 3DMidTex lines.
+   if(demo_version >= 331 && open.touch3dside)
+      inter.zref.dropoff = inter.zref.floor;
+
+   if(open.sec.floor > inter.zref.secfloor)
+      inter.zref.secfloor = open.sec.floor;
+   if(open.sec.ceiling < inter.zref.secceil)
+      inter.zref.secceil = open.sec.ceiling;
+
+   // SoM 11/6/02: AGHAH
+   if(inter.zref.floor > inter.zref.passfloor)
+      inter.zref.passfloor = inter.zref.floor;
+   if(inter.zref.ceiling < inter.zref.passceil)
+      inter.zref.passceil = inter.zref.ceiling;
+}
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -737,8 +778,6 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
    // these define a 'window' from one sector to another across this line
 
    // At this point we have backsector
-   bool repeat = false;
-   v2fixed_t repeatv;
 
    if(ld->frontsector->srf.floor.slope || ld->frontsector->srf.ceiling.slope ||
       ld->backsector->srf.floor.slope || ld->backsector->srf.ceiling.slope)
@@ -746,99 +785,22 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       // Find the two intersections with the bounding box
       v2fixed_t i1, i2;
       P_ExactBoxLinePoints(clip.bbox, *ld, i1, i2);
-      clip.open = P_LineOpening(ld, clip.thing, &i1);
-      repeat = true;
-      repeatv = i2;
+
+      // Update from both openings
+      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i1), ld, clip);
+      P_updateFromOpening(P_LineOpening(ld, clip.thing, &i2), ld, clip);
    }
    else
-      clip.open = P_LineOpening(ld, clip.thing);
-
-   // adjust floor & ceiling heights
-   for(;;)
    {
-      if(clip.open.height.ceiling < clip.zref.ceiling)
-      {
-         clip.zref.ceiling = clip.open.height.ceiling;
-         clip.ceilingline = ld;
-         clip.blockline = ld;
-      }
-
-      if(clip.open.height.floor > clip.zref.floor)
-      {
-         clip.zref.floor = clip.open.height.floor;
-         clip.zref.floorgroupid = clip.open.bottomgroupid;
-
-         clip.floorline = ld;          // killough 8/1/98: remember floor linedef
-         clip.blockline = ld;
-      }
-
-      if(clip.open.lowfloor < clip.zref.dropoff)
-         clip.zref.dropoff = clip.open.lowfloor;
-
-      // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-      // touching 3DMidTex lines.
-      if(demo_version >= 331 && clip.open.touch3dside)
-         clip.zref.dropoff = clip.zref.floor;
-
-      if(clip.open.sec.floor > clip.zref.secfloor)
-         clip.zref.secfloor = clip.open.sec.floor;
-      if(clip.open.sec.ceiling < clip.zref.secceil)
-         clip.zref.secceil = clip.open.sec.ceiling;
-
-      // SoM 11/6/02: AGHAH
-      if(clip.zref.floor > clip.zref.passfloor)
-         clip.zref.passfloor = clip.zref.floor;
-      if(clip.zref.ceiling < clip.zref.passceil)
-         clip.zref.passceil = clip.zref.ceiling;
-
-      // ioanch 20160113: moved to a special function
-      if(!repeat)
-         break;
-      repeat = false;
-      clip.open = P_LineOpening(ld, clip.thing, &repeatv);
+      // Assign to "clip" for compatibility
+      clip.open = P_LineOpening(ld, clip.thing);
+      P_updateFromOpening(clip.open, ld, clip);
    }
+
    P_CollectSpechits(ld, pushhit);
 
    return true;
 }
-
-//static void P_updateFromOpening(const lineopening_t &open, doom_mapinter_t &inter, line_t *ld)
-//{
-//   if(open.height.ceiling < inter.zref.ceiling)
-//   {
-//      inter.zref.ceiling = open.height.ceiling;
-//      inter.ceilingline = ld;
-//      inter.blockline = ld;
-//   }
-//
-//   if(open.height.floor > inter.zref.floor)
-//   {
-//      inter.zref.floor = open.height.floor;
-//      inter.zref.floorgroupid = open.bottomgroupid;
-//
-//      inter.floorline = ld;          // killough 8/1/98: remember floor linedef
-//      inter.blockline = ld;
-//   }
-//
-//   if(open.lowfloor < inter.zref.dropoff)
-//      inter.zref.dropoff = open.lowfloor;
-//
-//   // haleyjd 11/10/04: 3DMidTex fix: never consider dropoffs when
-//   // touching 3DMidTex lines.
-//   if(demo_version >= 331 && open.touch3dside)
-//      clip.zref.dropoff = inter.zref.floor;
-//
-//   if(clip.open.sec.floor > clip.zref.secfloor)
-//      clip.zref.secfloor = clip.open.sec.floor;
-//   if(clip.open.sec.ceiling < clip.zref.secceil)
-//      clip.zref.secceil = clip.open.sec.ceiling;
-//
-//   // SoM 11/6/02: AGHAH
-//   if(clip.zref.floor > clip.zref.passfloor)
-//      clip.zref.passfloor = clip.zref.floor;
-//   if(clip.zref.ceiling < clip.zref.passceil)
-//      clip.zref.passceil = clip.zref.ceiling;
-//}
 
 //
 // P_Touched
