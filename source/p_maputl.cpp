@@ -375,6 +375,24 @@ fixed_t P_InterceptVector(const divline_t *v2, const divline_t *v1)
 }
 
 //
+// Get opening on a point, against slopes
+//
+lineopening_t P_SlopeOpening(v2fixed_t pos)
+{
+   const sector_t &sector = *R_PointInSubsector(pos.x, pos.y)->sector;
+   lineopening_t open = {};
+   open.height.floor = sector.srf.floor.getZAt(pos);
+   open.height.ceiling = sector.srf.ceiling.getZAt(pos);
+   open.sec = open.height; // do not consider 3dmidtex here
+   open.range = open.height.ceiling - open.height.floor;
+   open.bottomgroupid = sector.groupid;
+   open.lowfloor = open.height.floor;
+   open.floorpic = sector.srf.floor.pic;
+   open.touch3dside = 0;
+   return open;
+}
+
+//
 // P_LineOpening
 //
 // Sets opentop and openbottom to the window

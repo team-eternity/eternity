@@ -706,14 +706,25 @@ static void P_updateFromOpening(const lineopening_t &open, line_t *ld, doom_mapi
 }
 
 //
+// Context for PIT_CheckLine
+//
+struct pitcheckline_t
+{
+   PODCollection<line_t *> *pushhit;   // list of pushed lines
+   bool haveslopes;  // mark this if any slope got detected
+};
+
+//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
 //
 bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
 {
-   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
-   if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   || 
+   auto pcl = static_cast<pitcheckline_t *>(context);
+   PODCollection<line_t *> *pushhit = pcl->pushhit;
+
+   if(clip.bbox[BOXRIGHT]  <= ld->bbox[BOXLEFT]   ||
       clip.bbox[BOXLEFT]   >= ld->bbox[BOXRIGHT]  || 
       clip.bbox[BOXTOP]    <= ld->bbox[BOXBOTTOM] || 
       clip.bbox[BOXBOTTOM] >= ld->bbox[BOXTOP])
@@ -789,6 +800,8 @@ bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context)
       // Update from both openings
       P_updateFromOpening(P_LineOpening(ld, clip.thing, &i1), ld, clip);
       P_updateFromOpening(P_LineOpening(ld, clip.thing, &i2), ld, clip);
+
+      pcl->haveslopes = true;
    }
    else
    {
@@ -1229,6 +1242,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    clip.bbox[BOXLEFT]   = x - clip.thing->radius;
    
    const subsector_t *newsubsec = R_PointInSubsector(x,y);
+   const sector_t &sector = *newsubsec->sector;
    clip.floorline = clip.blockline = clip.ceilingline = nullptr; // killough 8/1/98
 
    // Whether object can get out of a sticky situation:
@@ -1242,15 +1256,15 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    // will adjust them.
 
    // Start with the height at (x, y), but be prepared to raise it to fit the thing
-   clip.zref.floor = clip.zref.dropoff = newsubsec->sector->srf.floor.getZAt(x, y);
-   clip.zref.floorgroupid = newsubsec->sector->groupid;
-   clip.zref.ceiling = newsubsec->sector->srf.ceiling.getZAt(x, y);
+   clip.zref.floor = clip.zref.dropoff = sector.srf.floor.getZAt(x, y);
+   clip.zref.floorgroupid = sector.groupid;
+   clip.zref.ceiling = sector.srf.ceiling.getZAt(x, y);
 
    clip.zref.secfloor = clip.zref.passfloor = clip.zref.floor;
    clip.zref.secceil = clip.zref.passceil = clip.zref.ceiling;
 
    // haleyjd
-   clip.open.floorpic = newsubsec->sector->srf.floor.pic;
+   clip.open.floorpic = sector.srf.floor.pic;
    // SoM: 09/07/02: 3dsides monster fix
    clip.open.touch3dside = 0;
    validcount++;
@@ -1295,12 +1309,31 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    if(!vanilla_heretic)
       validcount++;
 
+   pitcheckline_t pcl = {};
+   pcl.pushhit = pushhit;
+   pcl.haveslopes = sector.srf.floor.slope || sector.srf.ceiling.slope;
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)
       {
-         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, pushhit))
+         if(!P_BlockLinesIterator(bx, by, PIT_CheckLine, R_NOGROUP, &pcl))
             return false; // doesn't fit
+      }
+   }
+
+   if(pcl.haveslopes)
+   {
+      // Now also check the corners!
+      v2fixed_t corners[4] =
+      {
+         { clip.bbox[BOXLEFT], clip.bbox[BOXBOTTOM] },
+         { clip.bbox[BOXLEFT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXTOP] },
+         { clip.bbox[BOXRIGHT], clip.bbox[BOXBOTTOM] },
+      };
+      for(v2fixed_t corner : corners)
+      {
+         // TODO: 
       }
    }
 
