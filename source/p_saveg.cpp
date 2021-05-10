@@ -848,6 +848,9 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
 
 static void P_ArchiveSectorActions(SaveArchive &arc)
 {
+   if(arc.saveVersion() < 6)
+      return;
+
    if(arc.isSaving())
    {
       for(int i = 0; i < numsectors; i++)
