@@ -514,6 +514,8 @@ bool UDMFParser::loadThings()
          ft->options |= MTF_FRIEND;
       if(ut.dormant && (mNamespace == namespace_Hexen || mNamespace == namespace_Eternity))
          ft->options |= MTF_DORMANT;
+      if(ut.standing)
+         ft->extOptions |= MTF_EX_STAND;
       // TODO: class1, 2, 3
       // TODO: STRIFE
       if(mNamespace == namespace_Hexen || mNamespace == namespace_Eternity)

@@ -187,18 +187,22 @@ struct pslope_t
 #define NUMLINEARGS 5
 
 // sector action flags
-enum
+enum sectoractionflags_e : int
 {
-   SEC_ACTION_ENTER = 0x00000001
+   SEC_ACTION_NOTREPEAT  = 0x00000001,
+   SEC_ACTION_PROJECTILE = 0x00000002,
+   SEC_ACTION_MONSTER    = 0x00000004,
+   SEC_ACTION_NOPLAYER   = 0x00000008,
+   SEC_ACTION_ENTER      = 0x00000010,
+   SEC_ACTION_EXIT       = 0x00000020,
 };
 
 struct sectoraction_t
 {
    DLListItem<sectoraction_t> links;
 
-   int special;
-   int args[NUMLINEARGS];
-   int actionflags;
+   Mobj *mo;
+   int   actionflags;
 };
 
 // sector interpolation values
