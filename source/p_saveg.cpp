@@ -846,7 +846,7 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
    }
 }
 
-static void P_ArchiveSectorActions(SaveArchive &arc)
+static void P_archiveSectorActions(SaveArchive &arc)
 {
    if(arc.saveVersion() < 6)
       return;
@@ -879,7 +879,7 @@ static void P_ArchiveSectorActions(SaveArchive &arc)
          arc << numActions;
 
          if(numActions != mapNumActions)
-            I_Error("P_ArchiveSectorActions: sector action count mismatch\n");
+            I_Error("P_archiveSectorActions: sector action count mismatch\n");
 
          for(unsigned int j = 0; j < numActions; j++)
          {
@@ -1009,7 +1009,7 @@ static void P_ArchiveThinkers(SaveArchive &arc)
    // Do sound targets
    P_ArchiveSoundTargets(arc);
    // Do sector actions
-   P_ArchiveSectorActions(arc);
+   P_archiveSectorActions(arc);
 }
 
 //

@@ -187,7 +187,7 @@ struct pslope_t
 #define NUMLINEARGS 5
 
 // sector action flags
-enum sectoractionflags_e : int
+enum sectoractionflags_e : unsigned int
 {
    SEC_ACTION_NOTREPEAT  = 0x00000001,
    SEC_ACTION_PROJECTILE = 0x00000002,
