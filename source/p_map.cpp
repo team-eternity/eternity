@@ -540,7 +540,7 @@ static bool PIT_CrossLine(line_t *ld, polyobj_t *po, void *context)
 // killough 8/1/98: used to test intersection between thing and line
 // assuming NO movement occurs -- used to avoid sticky situations.
 
-static int untouched(line_t *ld)
+static int untouched(const line_t *ld)
 {
    fixed_t x, y, tmbbox[4];
    return 

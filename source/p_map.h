@@ -246,9 +246,9 @@ struct doom_mapinter_t
 
    // keep track of the line that lowers the ceiling,
    // so missiles don't explode against sky hack walls
-   line_t    *ceilingline;
-   line_t    *blockline;   // killough 8/11/98: blocking linedef
-   line_t    *floorline;   // killough 8/1/98: Highest touched floor
+   const line_t *ceilingline;
+   const line_t *blockline;   // killough 8/11/98: blocking linedef
+   const line_t *floorline;   // killough 8/1/98: Highest touched floor
 
    Mobj      *linetarget;  // who got hit (or nullptr)
 
