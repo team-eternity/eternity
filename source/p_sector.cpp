@@ -87,20 +87,37 @@ void SectorThinker::serialize(SaveArchive &arc)
 //
 
 //
-// P_NewSectorActionFromMobj
-//
 // Adds the Mobj's special to the sector
 //
 void P_NewSectorActionFromMobj(Mobj *actor)
 {
-#if 0
    sectoraction_t *newAction = estructalloc(sectoraction_t, 1);
 
-   if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+   newAction->mo = actor;
+   if(actor->type == E_ThingNumForName("EESectorActionExit"))
+      newAction->actionflags = SEC_ACTION_EXIT;
+   else if(actor->type == E_ThingNumForName("EESectorActionEnter"))
+      newAction->actionflags = SEC_ACTION_ENTER;
+   else
    {
-      // TODO
+      efree(newAction);
+      return;
    }
-#endif
+
+   // TODO: Gate off for certain actions that this doesn't apply to if/when they get added
+   if(actor->spawnpoint.options & MTF_AMBUSH)
+      newAction->actionflags |= SEC_ACTION_MONSTER;
+   if(actor->spawnpoint.options & MTF_DORMANT)
+      newAction->actionflags |= SEC_ACTION_PROJECTILE;
+   if(actor->spawnpoint.options & MTF_FRIEND)
+      newAction->actionflags |= SEC_ACTION_NOPLAYER;
+   if(actor->spawnpoint.extOptions & MTF_EX_STAND)
+      newAction->actionflags |= SEC_ACTION_NOTREPEAT;
+
+   sector_t *sec = actor->subsector->sector;
+   newAction->links.insert(newAction, &(sec->actions));
+   if(sec->actions->dllNext)
+      sec->actions->dllData = sec->actions->dllNext->dllData + 1;
 }
 
 //

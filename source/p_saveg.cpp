@@ -846,6 +846,52 @@ static void P_ArchiveSoundTargets(SaveArchive &arc)
    }
 }
 
+static void P_archiveSectorActions(SaveArchive &arc)
+{
+   if(arc.saveVersion() < 6)
+      return;
+
+   if(arc.isSaving())
+   {
+      for(int i = 0; i < numsectors; i++)
+      {
+         sector_t &sec = sectors[i];
+         unsigned int numActions = sec.actions ? sec.actions->dllData + 1 : 0;
+         DLListItem<sectoraction_t> *action = sec.actions;
+         arc << numActions;
+
+         for(unsigned int j = 0; j < numActions; j++)
+         {
+            unsigned int ordinal = action->dllObject->mo->getOrdinal();
+            arc << ordinal;
+            action = action->dllNext;
+         }
+      }
+   }
+   else
+   {
+      for(int i = 0; i < numsectors; i++)
+      {
+         sector_t &sec = sectors[i];
+         unsigned int mapNumActions = sec.actions ? sec.actions->dllData + 1 : 0;
+         unsigned int numActions;
+         DLListItem<sectoraction_t> *action = sec.actions;
+         arc << numActions;
+
+         if(numActions != mapNumActions)
+            I_Error("P_archiveSectorActions: sector action count mismatch\n");
+
+         for(unsigned int j = 0; j < numActions; j++)
+         {
+            unsigned int ordinal;
+            arc << ordinal;
+            action->dllObject->mo = thinker_cast<Mobj *>(P_ThinkerForNum(ordinal));
+            action = action->dllNext;
+         }
+      }
+   }
+}
+
 //
 // Thinkers
 //
@@ -962,6 +1008,8 @@ static void P_ArchiveThinkers(SaveArchive &arc)
 
    // Do sound targets
    P_ArchiveSoundTargets(arc);
+   // Do sector actions
+   P_archiveSectorActions(arc);
 }
 
 //

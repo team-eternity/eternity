@@ -104,6 +104,12 @@ Fixed Chainsaw and Fist not being switched away from if dehacked made them use
 ammo.
 
 --------------------------------------------------------------------------------
+2021/05/10
+Added sector actions for entering and leaving a sector, EESectorActionEnter and
+EESectorActionExit. They have doomednum 9997 and 9998 respectively, the same as
+ZDoom.
+
+--------------------------------------------------------------------------------
 2021/04/19
 Made the menus use the console font by default.
 
