@@ -130,6 +130,7 @@ int P_BoxOnDivlineSideFloat(const float *box, v2float_t start, v2float_t delta);
 lineopening_t P_LineOpening(const line_t *linedef, const Mobj *mo,
                             const v2fixed_t *ppoint = nullptr, bool portaldetect = false,
                             uint32_t *lineclipflags = nullptr);
+lineopening_t P_SlopeOpening(v2fixed_t pos);
 
 void P_UnsetThingPosition(Mobj *thing);
 void P_SetThingPosition(Mobj *thing);

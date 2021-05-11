@@ -667,7 +667,8 @@ bool P_BlockedAsMonster(const Mobj &mo)
 //
 // Given a line opening structure and a linedef, update a clip structure
 //
-static void P_updateFromOpening(const lineopening_t &open, line_t *ld, doom_mapinter_t &inter)
+static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
+                                doom_mapinter_t &inter)
 {
    if(open.height.ceiling < inter.zref.ceiling)
    {
@@ -1333,7 +1334,8 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
       };
       for(v2fixed_t corner : corners)
       {
-         // TODO: 
+         lineopening_t open = P_SlopeOpening(corner);
+         P_updateFromOpening(open, nullptr, clip);
       }
    }
 
