@@ -984,19 +984,28 @@ static void P_DoCrunch(Mobj *thing)
 static bool midtex_moving;
 
 //
+// Result of the thing-pushing sector-movement functions
+//
+enum class PushResult
+{
+   fit,        // thing fits
+   hitCeiling, // ceiling got in the way
+   noFitAbove, // something above it didn't fit
+};
+
+//
 // P_PushUp
 //
-// Returns 0 if thing fits, 1 if ceiling got in the way, or 2 if something
-// above it didn't fit. From zdoom.
+// From zdoom.
 //
-static int P_PushUp(Mobj *thing)
+static PushResult P_PushUp(Mobj *thing)
 {
    unsigned int firstintersect = static_cast<unsigned>(intersectors.getLength());
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
    if(thing->z + thing->height > thing->zref.ceiling)
-      return 1;
+      return PushResult::hitCeiling;
 
    P_FindAboveIntersectors(thing, clip, intersectors);
    lastintersect = static_cast<unsigned>(intersectors.getLength());
@@ -1011,20 +1020,20 @@ static int P_PushUp(Mobj *thing)
           intersect->info->mass > mymass))
       { 
          // Can't push things more massive than ourself
-         return 2;
+         return PushResult::noFitAbove;
       }
       
       P_AdjustFloorCeil(intersect, midtex_moving);
       intersect->z = thing->z + thing->height + 1;
-      if(P_PushUp(intersect))
+      if(P_PushUp(intersect) != PushResult::fit)
       { 
          // Move blocked
          P_DoCrunch(intersect);
          intersect->z = oldz;
-         return 2;
+         return PushResult::noFitAbove;
       }
    }
-   return 0;
+   return PushResult::fit;
 }
 
 //
@@ -1134,10 +1143,10 @@ static void PIT_FloorRaise(Mobj *thing)
       {
       default:
          break;
-      case 1:
+      case PushResult::hitCeiling:
          P_DoCrunch(thing);
          break;
-      case 2:
+      case PushResult::noFitAbove:
          P_DoCrunch(thing);
          thing->z = oldz;
          break;
