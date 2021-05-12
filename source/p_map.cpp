@@ -2695,7 +2695,7 @@ bool P_ChangeSector(sector_t *sector, int crunch)
 // haleyjd: OVER_UNDER: pass down more information to P_ChangeSector3D
 // when 3D object clipping is enabled.
 //
-bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
+bool P_CheckSector(sector_t *sector, int crunch, int amt, CheckSectorPlane plane)
 {
    msecnode_t *n;
    
@@ -2705,7 +2705,7 @@ bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil)
 
    // haleyjd: call down to P_ChangeSector3D instead.
    if(P_Use3DClipping())
-      return P_ChangeSector3D(sector, crunch, amt, floorOrCeil);
+      return P_ChangeSector3D(sector, crunch, amt, plane);
    
    nofit = 0;
    crushchange = crunch;

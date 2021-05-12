@@ -2135,7 +2135,7 @@ bool P_Scroll3DSides(const sector_t *sector, bool ceiling, fixed_t delta,
 
    for(i = 0; i < numattsectors; ++i)
    {
-      if(P_CheckSector(sectors + attsectors[i], crush, delta, 2))
+      if(P_CheckSector(sectors + attsectors[i], crush, delta, CheckSectorPlane::midtex3d))
          ok = false;
    }
 
@@ -2402,7 +2402,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       if(list[i].type & AS_CEILING)
       {
          P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height + delta);
-         if(P_CheckSector(list[i].sector, crush, delta, 1))
+         if(P_CheckSector(list[i].sector, crush, delta, CheckSectorPlane::ceiling))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
@@ -2410,7 +2410,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       else if(list[i].type & AS_MIRRORCEILING)
       {
          P_SetSectorHeight(*list[i].sector, surf_ceil, list[i].sector->srf.ceiling.height - delta);
-         if(P_CheckSector(list[i].sector, crush, -delta, 1))
+         if(P_CheckSector(list[i].sector, crush, -delta, CheckSectorPlane::ceiling))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_ceiling);
@@ -2419,7 +2419,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       if(list[i].type & AS_FLOOR)
       {
          P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height + delta);
-         if(P_CheckSector(list[i].sector, crush, delta, 0))
+         if(P_CheckSector(list[i].sector, crush, delta, CheckSectorPlane::floor))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_floor);
@@ -2427,7 +2427,7 @@ bool P_MoveAttached(const sector_t *sector, bool ceiling, fixed_t delta,
       else if(list[i].type & AS_MIRRORFLOOR)
       {
          P_SetSectorHeight(*list[i].sector, surf_floor, list[i].sector->srf.floor.height - delta);
-         if(P_CheckSector(list[i].sector, crush, -delta, 0))
+         if(P_CheckSector(list[i].sector, crush, -delta, CheckSectorPlane::floor))
             ok = false;
          if(nointerp)
             P_SaveSectorPosition(*list[i].sector, ssurf_floor);
