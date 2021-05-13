@@ -462,7 +462,9 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
       I_Error("P_CheckPosition3D: called in an old demo!\n");
 #endif
 
-   P_GetClipBasics(*thing, x, y, clip);
+   const sector_t *bottomsector;
+   const sector_t *topsector;
+   P_GetClipBasics(*thing, x, y, clip, bottomsector, topsector);
 
    // haleyjd 06/28/06: skullfly check from zdoom
    if(clip.thing->flags & MF_NOCLIP && !(clip.thing->flags & MF_SKULLFLY))
@@ -576,8 +578,12 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
       gGroupVisit[clip.thing->groupid] = true;
    }
 
+   pitcheckline_t pcl = {};
+   pcl.pushhit = pushhit;
+   pcl.haveslopes = bottomsector->srf.floor.slope || topsector->srf.ceiling.slope;
+
    // ioanch 20160112: portal-aware
-   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, pushhit, 
+   if(!P_TransPortalBlockWalker(bbox, thing->groupid, true, &pcl,
       [](int x, int y, int groupid, void *data) -> bool
    {
       // ioanch 20160112: try 3D portal check-line
@@ -594,9 +600,11 @@ bool P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *
    {
       // they will not change the spechit list
       if(gGroupVisit[clip.portalhit[i].ld->frontsector->groupid])
-         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, pushhit))
+         if(!PIT_CheckLine3D(clip.portalhit[i].ld, clip.portalhit[i].po, &pcl))
             return false;
    }
+
+   // TODO: check slopes, latest
 
    if(clip.zref.ceiling - clip.zref.floor < thing->height)
       return false;

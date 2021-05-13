@@ -40,6 +40,7 @@
 #include "m_compare.h"
 #include "p_info.h"
 #include "p_inter.h"
+#include "p_map.h"
 #include "p_map3d.h"
 #include "p_mobjcol.h"
 #include "p_portal.h"
@@ -707,15 +708,6 @@ static void P_updateFromOpening(const lineopening_t &open, const line_t *ld,
 }
 
 //
-// Context for PIT_CheckLine
-//
-struct pitcheckline_t
-{
-   PODCollection<line_t *> *pushhit;   // list of pushed lines
-   bool haveslopes;  // mark this if any slope got detected
-};
-
-//
 // PIT_CheckLine
 //
 // Adjusts tmfloorz and tmceilingz as lines are contacted
@@ -1203,7 +1195,8 @@ bool Check_Sides(Mobj *actor, int x, int y, mobjtype_t type)
 //
 // P_CheckPosition basics. Returns the sector in the designated area.
 //
-const sector_t &P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter)
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
+                     const sector_t *&bottomsector, const sector_t *&topsector)
 {
    inter.thing = &thing;
 
@@ -1230,7 +1223,7 @@ const sector_t &P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter
    // will adjust them.
 
    // ioanch 20160110: portal aware floor and ceiling z detection
-   const sector_t *bottomsector = &sector;
+   bottomsector = &sector;
    if(demo_version >= 333 && sector.srf.floor.pflags & PS_PASSABLE &&
       !(thing.flags & MF_NOCLIP))
    {
@@ -1246,12 +1239,12 @@ const sector_t &P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter
       inter.zref.floorgroupid = sector.groupid;
    }
 
+   topsector = &sector;
    if(demo_version >= 333 && sector.srf.ceiling.pflags & PS_PASSABLE &&
       !(thing.flags & MF_NOCLIP))
    {
       v2fixed_t totaldelta;
-      const sector_t *topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector,
-                                                         &totaldelta);
+      topsector = P_ExtremeSectorAtPoint(x, y, surf_ceil, &sector, &totaldelta);
       inter.zref.ceiling = topsector->srf.ceiling.getZAt(x + totaldelta.x, y + totaldelta.y);
    }
    else
@@ -1268,8 +1261,6 @@ const sector_t &P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter
    validcount++;
 
    inter.numspechit = 0;
-
-   return sector;
 }
 
 //
@@ -1304,7 +1295,8 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
    if(P_Use3DClipping())
       return P_CheckPosition3D(thing, x, y, pushhit);
 
-   const sector_t &sector = P_GetClipBasics(*thing, x, y, clip);
+   const sector_t *sector;
+   P_GetClipBasics(*thing, x, y, clip, sector, sector);
 
    if(clip.thing->flags & MF_NOCLIP)
       return true;
@@ -1347,7 +1339,7 @@ bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> 
 
    pitcheckline_t pcl = {};
    pcl.pushhit = pushhit;
-   pcl.haveslopes = sector.srf.floor.slope || sector.srf.ceiling.slope;
+   pcl.haveslopes = sector->srf.floor.slope || sector->srf.ceiling.slope;
    for(bx = xl; bx <= xh; bx++)
    {
       for(by = yl; by <= yh; by++)

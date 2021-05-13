@@ -70,9 +70,19 @@ extern bool donut_emulation;    // haleyjd 10/16/09
 // killough 3/15/98: add fourth argument to P_TryMove
 bool P_TryMove(Mobj *thing, fixed_t x, fixed_t y, int dropoff);
 
-const sector_t &P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter);
+void P_GetClipBasics(Mobj &thing, fixed_t x, fixed_t y, doom_mapinter_t &inter,
+                     const sector_t *&bottomsector, const sector_t *&topsector);
 
 bool P_CheckPosition(Mobj *thing, fixed_t x, fixed_t y, PODCollection<line_t *> *pushhit = nullptr);
+
+//
+// Context for PIT_CheckLine
+//
+struct pitcheckline_t
+{
+   PODCollection<line_t *> *pushhit;   // list of pushed lines
+   bool haveslopes;  // mark this if any slope got detected
+};
 
 bool PIT_CheckLine(line_t *ld, polyobj_t *po, void *context);  // ioanch: used in the code
 

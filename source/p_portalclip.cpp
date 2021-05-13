@@ -201,6 +201,9 @@ static void P_blockingLineDifferentLevel(line_t *ld, polyobj_t *po, fixed_t thin
 //
 bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
 {
+   auto pcl = static_cast<pitcheckline_t *>(context);
+   PODCollection<line_t *> *pushhit = pcl->pushhit;
+
    if(!useportalgroups || full_demo_version < make_full_version(340, 48))
       return PIT_CheckLine(ld, po, context);
 
@@ -325,7 +328,6 @@ bool PIT_CheckLine3D(line_t *ld, polyobj_t *po, void *context)
       }
    }
 
-   auto pushhit = static_cast<PODCollection<line_t *> *>(context);
    if(linebottom <= thingz && linetop >= thingtopz)
    {
       // classic Doom behaviour
