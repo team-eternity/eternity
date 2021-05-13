@@ -139,7 +139,18 @@ void P_RadiusAttack(Mobj *spot, Mobj *source, int damage, int distance,
 //
 
 //jff 3/19/98 P_CheckSector(): new routine to replace P_ChangeSector()
-bool P_CheckSector(sector_t *sector, int crunch, int amt, int floorOrCeil);
+
+//
+// Plane for P_CheckSector
+//
+enum class CheckSectorPlane
+{
+   floor,
+   ceiling,
+   midtex3d
+};
+
+bool P_CheckSector(sector_t *sector, int crunch, int amt, CheckSectorPlane plane);
 bool P_ChangeSector(sector_t *sector, int crunch);
 
 //=============================================================================

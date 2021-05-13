@@ -984,19 +984,28 @@ static void P_DoCrunch(Mobj *thing)
 static bool midtex_moving;
 
 //
+// Result of the thing-pushing sector-movement functions
+//
+enum class PushResult
+{
+   fit,        // thing fits
+   hitCeiling, // ceiling got in the way
+   noFitAbove, // something above it didn't fit
+};
+
+//
 // P_PushUp
 //
-// Returns 0 if thing fits, 1 if ceiling got in the way, or 2 if something
-// above it didn't fit. From zdoom.
+// From zdoom.
 //
-static int P_PushUp(Mobj *thing)
+static PushResult P_PushUp(Mobj *thing)
 {
    unsigned int firstintersect = static_cast<unsigned>(intersectors.getLength());
    unsigned int lastintersect;
    int mymass = thing->info->mass;
 
    if(thing->z + thing->height > thing->zref.ceiling)
-      return 1;
+      return PushResult::hitCeiling;
 
    P_FindAboveIntersectors(thing, clip, intersectors);
    lastintersect = static_cast<unsigned>(intersectors.getLength());
@@ -1011,20 +1020,20 @@ static int P_PushUp(Mobj *thing)
           intersect->info->mass > mymass))
       { 
          // Can't push things more massive than ourself
-         return 2;
+         return PushResult::noFitAbove;
       }
       
       P_AdjustFloorCeil(intersect, midtex_moving);
       intersect->z = thing->z + thing->height + 1;
-      if(P_PushUp(intersect))
+      if(P_PushUp(intersect) != PushResult::fit)
       { 
          // Move blocked
          P_DoCrunch(intersect);
          intersect->z = oldz;
-         return 2;
+         return PushResult::noFitAbove;
       }
    }
-   return 0;
+   return PushResult::fit;
 }
 
 //
@@ -1134,10 +1143,10 @@ static void PIT_FloorRaise(Mobj *thing)
       {
       default:
          break;
-      case 1:
+      case PushResult::hitCeiling:
          P_DoCrunch(thing);
          break;
-      case 2:
+      case PushResult::noFitAbove:
          P_DoCrunch(thing);
          thing->z = oldz;
          break;
@@ -1222,7 +1231,7 @@ static void PIT_CeilingRaise(Mobj *thing)
 // as both a floor and a ceiling move simultaneously, because things may not fit
 // both above and below the 3DMidTex. Tricky.
 //
-bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
+bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane plane)
 {
    void (*iterator)(Mobj *)  = nullptr;
    void (*iterator2)(Mobj *) = nullptr;
@@ -1237,21 +1246,21 @@ bool P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil)
    // [RH] Use different functions for the four different types of sector
    // movement.
 
-   switch(floorOrCeil)
+   switch(plane)
    {
-   case 0: // floor
+   case CheckSectorPlane::floor:
       iterator = (amt < 0) ? PIT_FloorDrop : PIT_FloorRaise;
       break;
-   case 1: // ceiling
+   case CheckSectorPlane::ceiling:
       iterator = (amt < 0) ? PIT_CeilingLower : PIT_CeilingRaise;
       break;
-   case 2: // 3DMidTex -- haleyjd
+   case CheckSectorPlane::midtex3d: // haleyjd
       iterator  = (amt < 0) ? PIT_FloorDrop : PIT_FloorRaise;
       iterator2 = (amt < 0) ? PIT_CeilingLower : PIT_CeilingRaise;
       midtex_moving = true;
       break; // haleyjd 10/29/09: probably nice.
    default:
-      I_Error("P_ChangeSector3D: unknown movement type %d\n", floorOrCeil);
+      I_Assert(false, "P_ChangeSector3D: unknown movement type %d\n", plane);
    }
 
    // killough 4/4/98: scan list front-to-back until empty or exhausted,

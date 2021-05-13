@@ -28,6 +28,7 @@
 
 #include "m_collection.h"
 
+enum class CheckSectorPlane;
 class Mobj;
 class MobjCollection;
 struct doom_mapinter_t;
@@ -38,7 +39,7 @@ bool  P_TestMobjZ(Mobj *mo, doom_mapinter_t &clip, Mobj **testz_mobj = nullptr);
 bool  P_CheckPosition3D(Mobj *thing, fixed_t x, fixed_t y, 
    PODCollection<line_t *> *pushhit = nullptr);
 bool  P_CheckPositionExt(Mobj *mo, fixed_t x, fixed_t y, fixed_t z);
-bool  P_ChangeSector3D(sector_t *sector, int crunch, int amt, int floorOrCeil);
+bool  P_ChangeSector3D(sector_t *sector, int crunch, int amt, CheckSectorPlane plane);
 Mobj *P_GetThingUnder(Mobj *mo);
 void P_FindAboveIntersectors(Mobj *actor, doom_mapinter_t &clip,
                              MobjCollection &coll);
