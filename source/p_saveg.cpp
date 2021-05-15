@@ -209,6 +209,62 @@ void SaveArchive::writeLString(const char *str, size_t len)
       I_Error("SaveArchive::writeLString: cannot deserialize!\n");
 }
 
+//
+// Archives a string that will be cached. Any equivalent values will only be referenced by an integer ID
+//
+void SaveArchive::archiveCachedString(qstring &string)
+{
+   if(isSaving())
+   {
+      // look up strings by content to get their ID
+      CachedString *cache = mStringTable.objectForKey(string.constPtr());
+      if(!cache)
+      {
+         cache = new CachedString;
+         mCacheStringHolder.add(cache);
+
+         cache->identifier = mNextCachedStringID;
+         cache->string = string;
+         ++mNextCachedStringID;
+         mStringTable.addObject(cache);
+
+         // Write both the new ID and the content
+         auto localID = static_cast<int32_t>(cache->identifier);
+         *this << localID;
+         qstring localString = string;
+         localString.archive(*this);
+      }
+      else
+      {
+         // We have it cached already
+         auto localID = static_cast<int32_t>(cache->identifier);
+         *this << localID;
+      }
+   }
+   else
+   {
+      // Loading
+      int32_t id;
+      *this << id;
+      CachedString *cache = mIdTable.objectForKey(id);   // look up strings by ID
+      if(!cache)
+      {
+         cache = new CachedString;
+         mCacheStringHolder.add(cache);
+
+         cache->identifier = id;
+         cache->string.archive(*this);
+         mIdTable.addObject(cache);
+
+         string = cache->string;
+      }
+      else
+      {
+         string = cache->string;
+      }
+   }
+}
+
 #define SAVE_MIN_SIZEOF_SIZE_T 4
 #define SAVE_MAX_SIZEOF_SIZE_T 8
 
