@@ -405,6 +405,7 @@ void G_BuildTiccmd(ticcmd_t *cmd)
                const auto slot = E_FindEntryForWeaponInSlotIndex(&p, weapon, i - ka_weapon1);
                newweapon = weapon->id;
                cmd->slotIndex = slot->slotindex;
+               gameactions[i] = false;
                break;
             }
          }
@@ -895,7 +896,7 @@ bool G_Responder(const event_t* ev)
    case ev_keydown:
       if(ev->data1 == key_pause) // phares
          C_RunTextCmd("pause");
-      else
+      else if(!ev->repeat)
       {
          action = G_KeyResponder(ev, kac_game); // haleyjd
          gameactions[action] = true;
